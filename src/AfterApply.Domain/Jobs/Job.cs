@@ -41,7 +41,7 @@ public sealed class Job : AuditableEntity
         {
             CompanyId = companyId,
             Title = title,
-            NormalizedTitle = NormalizeTitle(title),
+            NormalizedTitle = JobTitleNormalizer.Normalize(title),
             Description = description,
             Url = url,
             Source = source,
@@ -53,10 +53,5 @@ public sealed class Job : AuditableEntity
             CreatedAt = now,
             UpdatedAt = now
         };
-    }
-
-    private static string NormalizeTitle(string title)
-    {
-        return string.Join(' ', TurkishTextNormalizer.FoldCase(title.Trim()).Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 }

@@ -4,14 +4,18 @@ Job Application Tracker + Personal Analytics. See `afterapply-intelligence-platf
 for the product/technical spec, `DEVELOPMENT_PLAN.md` for the sprint roadmap,
 and `DECISIONS.md` for architecture/technical decisions.
 
-**Status: Sprint 3 (Personal Analytics).** Backend: auth, Application CRUD/
+**Status: Sprint 4 (Generic CSV Import).** Backend: auth, Application CRUD/
 status/timeline, paginated+filterable application list, dashboard summary
 counts, `GET /api/analytics/overview` (response/interview/offer/rejection/
-ghosting rates, average/median response time, status distribution), CORS.
-Frontend (`web/`, Next.js): login/register, dashboard (stat tiles +
-analytics rates + response-time card + status-distribution chart),
-application list/detail/create/edit, status changes, timeline. No import
-pipelines, no reminders yet — see `DEVELOPMENT_PLAN.md` for what's next.
+ghosting rates, average/median response time, status distribution), CORS,
+`POST /api/imports/csv` (generic CSV upload with auto-detected/overridable
+column mapping, validation + per-row error report, dedup/idempotent import
+summary) and `GET /api/imports/{id}`. Frontend (`web/`, Next.js):
+login/register, dashboard (stat tiles + analytics rates + response-time
+card + status-distribution chart), application list/detail/create/edit,
+status changes, timeline — no import UI yet (Sprint 4 is backend-only per
+`DEVELOPMENT_PLAN.md`). No LinkedIn import, no reminders yet — see
+`DEVELOPMENT_PLAN.md` for what's next.
 
 ## Architecture
 
@@ -74,10 +78,19 @@ curl -X POST http://localhost:5151/api/auth/register -H "Content-Type: applicati
 curl -X POST http://localhost:5151/api/applications -H "Authorization: Bearer <accessToken>" \
   -H "Content-Type: application/json" -d \
   '{"companyName":"Acme","jobTitle":"Backend Engineer","employmentType":"FullTime","appliedAt":"2026-08-20T10:00:00Z"}'
+
+# Generic CSV import — required columns auto-detected via TR/EN alias table
+# (Company/Şirket, Title/Pozisyon, Applied At/Tarih); Status/Job URL/Location
+# optional. See DECISIONS.md "Sprint 4" for the alias table and dedup rules.
+curl -X POST http://localhost:5151/api/imports/csv -H "Authorization: Bearer <accessToken>" \
+  -F "file=@applications.csv;type=text/csv"
+# → { "id": "...", "totalRecords": N, "newApplications": N, "duplicateRecords": N,
+#     "invalidRecords": N, "errors": [{ "rowNumber": ..., "errorMessage": ... }] }
+# Re-uploading the same file is idempotent (0 newApplications on the second run).
 ```
 
-See `/api/auth/*`, `/api/users/me`, `/api/applications/*` in
-`src/AfterApply.Api/Endpoints` for the full surface, or browse
+See `/api/auth/*`, `/api/users/me`, `/api/applications/*`, `/api/imports/*`
+in `src/AfterApply.Api/Endpoints` for the full surface, or browse
 `/openapi/v1.json` (Development only).
 
 ## Frontend (`web/`)

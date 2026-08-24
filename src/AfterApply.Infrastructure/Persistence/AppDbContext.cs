@@ -1,5 +1,6 @@
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Companies;
+using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -22,6 +23,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<ApplicationStatusHistory> ApplicationStatusHistories => Set<ApplicationStatusHistory>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    public DbSet<ImportBatch> ImportBatches => Set<ImportBatch>();
+
+    public DbSet<ImportRowError> ImportRowErrors => Set<ImportRowError>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

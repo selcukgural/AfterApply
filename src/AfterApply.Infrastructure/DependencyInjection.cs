@@ -2,9 +2,11 @@ using AfterApply.Application.Analytics;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
 using AfterApply.Application.Identity;
+using AfterApply.Application.Imports;
 using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Identity;
+using AfterApply.Infrastructure.Imports;
 using AfterApply.Infrastructure.Persistence;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,6 +28,7 @@ public static class DependencyInjection
         services.AddPersistence(configuration);
         services.AddIdentityAndJwt(configuration);
         services.AddApplicationServices();
+        services.Configure<ImportOptions>(configuration.GetSection("Imports"));
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
 
@@ -125,6 +128,7 @@ public static class DependencyInjection
         services.AddScoped<ICompanyResolver, CompanyResolver>();
         services.AddScoped<IApplicationService, ApplicationService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
+        services.AddScoped<IImportService, ImportService>();
 
         return services;
     }

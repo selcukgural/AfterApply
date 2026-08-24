@@ -35,6 +35,7 @@ app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapApplicationEndpoints();
 app.MapAnalyticsEndpoints();
+app.MapImportEndpoints();
 
 app.Run();
 

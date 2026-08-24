@@ -320,6 +320,83 @@ eşleşen sonuçlar gözlemlendi (bkz. `AnalyticsOverviewTests.cs`).
 
 ---
 
+## Sprint 4 kararları ve bulguları
+
+### CSV parser: CsvHelper — DECIDED
+
+.NET'te de-facto standart, dual MS-PL/Apache lisans (FluentAssertions'daki
+gibi ticari lisans riski yok — bkz. Sprint 0/1 test kütüphanesi kararı).
+
+### Column mapping: auto-detect + opsiyonel override — DECIDED
+
+Generic CSV farklı kullanıcılardan farklı başlıklarla gelebileceği için sabit
+sütun sırası varsayılmıyor. `CsvColumnMapper` (saf fonksiyon,
+`AnalyticsCalculations` paterni) bilinen TR/EN alias tablosuyla otomatik
+eşleme yapıyor (Company/Şirket, Title/Pozisyon, Applied At/Tarih zorunlu;
+Status/Durum, Job URL/Link, Location/Konum opsiyonel). Auto-detect zorunlu
+alanlardan birini bulamazsa, `POST /api/imports/csv` isteğindeki opsiyonel
+`columnMapping` form alanıyla (JSON, field adı → header adı) override
+edilebilir.
+
+### Dedup key'leri generic CSV'ye uyarlandı — DECIDED
+
+Spec §8'in sırası (Source+ExternalId → Job URL → Company+JobTitle+AppliedAt
+→ fuzzy) generic CSV'de birebir uygulanamıyor: stabil bir external id sütunu
+varsayılamaz, bu yüzden Source+ExternalId adımı atlanıyor. Uygulanan sıra:
+(1) `JobUrl` tam eşleşmesi (satırda varsa, kullanıcının mevcut
+application'larına karşı), (2) normalize edilmiş Company (`CompanyId` via
+mevcut `ICompanyResolver`) + normalize edilmiş JobTitle
+(`JobTitleNormalizer`, aşağıya bkz.) + `AppliedAt` (gün hassasiyeti)
+eşleşmesi. Bu iki set (URL'ler + company/title/date üçlüleri), import
+başında kullanıcının mevcut kayıtlarından bir kez yükleniyor ve yeni
+eklenen her satırla güncelleniyor — hem DB'deki mevcut kayıtlarla hem de
+**aynı CSV içindeki** tekrarlarla dedup sağlıyor (idempotency DoD'si:
+aynı dosya iki kez yüklendiğinde ikinci seferde 0 yeni kayıt — manuel ve
+integration testle doğrulandı). Fuzzy matching zaten post-MVP kararlı.
+
+### `JobTitleNormalizer` çıkarıldı — DECIDED
+
+`Job.NormalizeTitle` private static metodu, `CompanyNameNormalizer`'a
+paralel bir `Domain.Jobs.JobTitleNormalizer` public static sınıfına
+taşındı — hem `Job.Create` hem de import dedup'ının aynı normalizasyonu
+(Turkish-aware fold + whitespace collapse) kullanması gerekiyordu.
+
+### İçe aktarılan kayıtlarda `EmploymentType` — bilinen sınırlama
+
+`Application.Create` zorunlu bir `EmploymentType` alıyor ama generic CSV
+import'u bu sütunu map etmiyor (plan kapsamında yalnızca CompanyName/
+JobTitle/AppliedAt zorunlu, Status/JobUrl/Location opsiyonel tutuldu).
+İçe aktarılan tüm kayıtlar `EmploymentType.FullTime` ile oluşturuluyor.
+İleride bir EmploymentType alias sütunu eklenmesi gerekirse
+`CsvColumnMapper`/`ImportRowParser`'a yeni bir opsiyonel alan olarak
+eklenebilir.
+
+### İşleme senkron — DECIDED
+
+Hangfire henüz yok (Sprint 6). `Imports:MaxFileSizeBytes` (varsayılan 5 MB)
+ve `Imports:MaxRowCount` (varsayılan 5000) config'leri (appsettings'ten,
+hard-code değil) senkron işlemeyi güvenli kılıyor; aşılırsa
+`CsvImportValidationException` ile 400 dönüyor.
+
+### Bug: `IFormFile` bağlayan minimal API endpoint'i antiforgery ister — düzeltildi
+
+.NET 8+'ta minimal API'de `[FromForm]`/`IFormFile` bağlayan bir endpoint,
+antiforgery servisleri hiç register edilmemiş olsa bile varsayılan olarak
+antiforgery metadata'sı taşıyor; bu proje antiforgery/cookie kullanmadığı
+(Bearer JWT + `AllowCredentials()` yok — bkz. Sprint 2 CORS kararı) için
+`POST /api/imports/csv` her istekte 500 (unhandled exception, "no
+middleware found") atıyordu. `.DisableAntiforgery()` endpoint'e eklenerek
+düzeltildi — CSRF zaten bu API'de anlamsız, cookie-based auth yok.
+
+### dotnet-ef `bin\Debug` artifact'ı tekrar oluştu — bilgi amaçlı
+
+Sprint 1'de belgelenen aynı stray-artifact bug'ı (`dotnet ef migrations
+add`, global `dotnet-ef` 10.0.3'ün runtime 10.0.11'den eski olması
+yüzünden) bu sprintte de oluştu; aynı şekilde temizlendi
+(`rm -rf "bin\\Debug"`). Kalıcı çözüm hâlâ yapılmadı (bkz. Sprint 1 notu).
+
+---
+
 ## Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
