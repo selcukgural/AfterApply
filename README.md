@@ -4,12 +4,14 @@ Job Application Tracker + Personal Analytics. See `afterapply-intelligence-platf
 for the product/technical spec, `DEVELOPMENT_PLAN.md` for the sprint roadmap,
 and `DECISIONS.md` for architecture/technical decisions.
 
-**Status: Sprint 2 (Web UI MVP).** Backend: auth, Application CRUD/status/
-timeline, paginated+filterable application list, dashboard summary counts,
-CORS. Frontend (`web/`, Next.js): login/register, dashboard, application
-list/detail/create/edit, status changes, timeline. No analytics charts, no
-import pipelines, no reminders yet — see `DEVELOPMENT_PLAN.md` for what's
-next.
+**Status: Sprint 3 (Personal Analytics).** Backend: auth, Application CRUD/
+status/timeline, paginated+filterable application list, dashboard summary
+counts, `GET /api/analytics/overview` (response/interview/offer/rejection/
+ghosting rates, average/median response time, status distribution), CORS.
+Frontend (`web/`, Next.js): login/register, dashboard (stat tiles +
+analytics rates + response-time card + status-distribution chart),
+application list/detail/create/edit, status changes, timeline. No import
+pipelines, no reminders yet — see `DEVELOPMENT_PLAN.md` for what's next.
 
 ## Architecture
 

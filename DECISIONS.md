@@ -264,6 +264,62 @@ kapsamını percentage-height zincirine değil doğrudan garanti eder).
 
 ---
 
+## Sprint 3 kararları ve bulguları
+
+### "Yanıt aldı" tanımı — DECIDED
+
+Bir başvuru "yanıt aldı" sayılır ⇔ `ApplicationStatusHistory`'de
+`ToStatus ∈ {Screening, Interview, TechnicalInterview, FinalInterview,
+Offer, Rejected, Accepted}` olan en az bir kayıt varsa. Bilinçli olarak
+`Withdrawn`'ı dışarıda bırakıyor (aday-kaynaklı, işveren sinyali değil) ve
+`Ghosted`'ı da dışarıda bırakıyor (spec §5 ghosting'i açıkça "yanıt yok"
+olarak tanımlıyor). Bu, current-status yerine **history-tabanlı** ("hiç
+ulaştı mı") bir tanım — `Applied→Screening→Ghosted` gibi bir başvuru, güncel
+durumu `Ghosted` olsa bile doğru şekilde "yanıt aldı" sayılıyor.
+
+Mülakat Oranı / Teklif Oranı da aynı history-tabanlı mantığı kullanıyor
+(sırasıyla `{Interview,TechnicalInterview,FinalInterview}` /
+`{Offer,Accepted}`'a hiç ulaştı mı) — güncel durum yerine, çünkü mülakat
+sonrası reddedilen biri hâlâ Mülakat Oranı'na girmeli.
+
+**Red Oranı / Kayboldu Oranı ise *güncel* `Status`'u kullanıyor** —
+Sprint 2'nin `GetSummaryCountsAsync` dashboard tile mantığıyla tutarlı
+kalması için (aynı sayfada üstteki tile'larla çelişmesin diye).
+
+### Yanıt süresi — DECIDED
+
+`ChangedAt − AppliedAt`, "yanıt aldı" kümesine (yukarıdaki) uyan İLK
+history kaydı üzerinden. Hiç yanıt almamış başvurular (hâlâ `Applied`,
+veya sadece `Withdrawn`/`Ghosted`'a geçmiş) ortalama/medyandan tamamen
+hariç tutuluyor — 0 olarak sayılmıyor.
+
+### Tek endpoint: `GET /api/analytics/overview` — DECIDED
+
+Spec §21'in önerdiği 3 endpoint (`/overview`, `/response-times`,
+`/status-distribution`) yerine tek endpoint — üçü de aynı iki sorgudan
+besleniyor, ayırmak tek bir dashboard bölümü için 3 kat DB round-trip
+demek olurdu.
+
+### Medyan C#'ta hesaplanıyor — DECIDED
+
+Postgres'in `percentile_cont`'u yerine, kullanıcı-başına veri hacmi
+(response time listesi) bellekte medyan hesaplamak için yeterince küçük
+olduğundan, EF Core/LINQ'un native medyan çevirisi olmadığından, ve bu
+kod tabanında henüz raw-SQL pattern'i gerekmediğinden. Saf fonksiyon
+(`AnalyticsCalculations`, DB bağımlılığı yok) unit test'lerle doğrulandı.
+
+### Grafik: Recharts BarChart — DECIDED
+
+`recharts@3.10.1` (React 19 uyumlu, npm'den canlı doğrulandı). 10 sıralı
+pipeline aşaması pasta dilimlerinden çok soldan-sağa bar chart'ta daha
+okunaklı. Yeni `/analytics` route'u yok — mevcut dashboard sayfasına
+("Kişisel Analitik" bölümü) entegre edildi.
+
+Uçtan uca tarayıcı testinde entegrasyon testindeki hesaplamalarla birebir
+eşleşen sonuçlar gözlemlendi (bkz. `AnalyticsOverviewTests.cs`).
+
+---
+
 ## Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

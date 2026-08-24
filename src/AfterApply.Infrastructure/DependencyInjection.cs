@@ -1,6 +1,8 @@
+using AfterApply.Application.Analytics;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
 using AfterApply.Application.Identity;
+using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Persistence;
@@ -122,6 +124,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ICompanyResolver, CompanyResolver>();
         services.AddScoped<IApplicationService, ApplicationService>();
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
 
         return services;
     }

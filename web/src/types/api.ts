@@ -110,6 +110,37 @@ export interface ApplicationSummaryCountsResponse {
   ghosted: number;
 }
 
+export interface AnalyticsRatesResponse {
+  totalApplications: number;
+  respondedCount: number;
+  responseRate: number;
+  interviewCount: number;
+  interviewRate: number;
+  offerCount: number;
+  offerRate: number;
+  rejectedCount: number;
+  rejectionRate: number;
+  ghostedCount: number;
+  ghostingRate: number;
+}
+
+export interface ResponseTimeStatsResponse {
+  sampleSize: number;
+  averageDays: number | null;
+  medianDays: number | null;
+}
+
+export interface StatusDistributionItem {
+  status: ApplicationStatus;
+  count: number;
+}
+
+export interface AnalyticsOverviewResponse {
+  rates: AnalyticsRatesResponse;
+  responseTime: ResponseTimeStatsResponse;
+  statusDistribution: StatusDistributionItem[];
+}
+
 export interface CreateApplicationRequest {
   companyName: string;
   jobTitle: string;
