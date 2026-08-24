@@ -4,8 +4,10 @@ Job Application Tracker + Personal Analytics. See `afterapply-intelligence-platf
 for the product/technical spec, `DEVELOPMENT_PLAN.md` for the sprint roadmap,
 and `DECISIONS.md` for architecture/technical decisions.
 
-**Status: Sprint 0 (Foundation) only.** No domain features (Identity, Company,
-Job, Application) exist yet — see `DEVELOPMENT_PLAN.md` for what's next.
+**Status: Sprint 1 (Identity + Core Domain).** Registration/login/refresh/
+logout, Company/Job/Application/ApplicationEvent/ApplicationStatusHistory,
+Application CRUD + status transitions + timeline. No UI, no analytics, no
+import pipelines yet — see `DEVELOPMENT_PLAN.md` for what's next.
 
 ## Architecture
 
@@ -47,11 +49,29 @@ NetArchTest (`tests/AfterApply.UnitTests/Architecture`).
 4. ```bash
    dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=afterapply_dev;Username=$(whoami)" --project src/AfterApply.Api
    dotnet user-secrets set "ConnectionStrings:Redis" "localhost:6379" --project src/AfterApply.Api
+   dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -base64 48)" --project src/AfterApply.Api
    ```
    (adjust ports if you hit a conflict per the warning above)
-5. `dotnet build AfterApply.slnx`
-6. `ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/AfterApply.Api`
-7. `curl -i http://localhost:5151/health` → expect `200 Healthy`
+5. Apply migrations: `dotnet ef database update --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api`
+6. `dotnet build AfterApply.slnx`
+7. `ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/AfterApply.Api`
+8. `curl -i http://localhost:5151/health` → expect `200 Healthy`
+
+### Trying the API
+
+```bash
+curl -X POST http://localhost:5151/api/auth/register -H "Content-Type: application/json" -d \
+  '{"email":"you@example.com","password":"P@ssw0rd123!","firstName":"You","lastName":"There"}'
+# → { "accessToken": "...", "refreshToken": "...", ... }
+
+curl -X POST http://localhost:5151/api/applications -H "Authorization: Bearer <accessToken>" \
+  -H "Content-Type: application/json" -d \
+  '{"companyName":"Acme","jobTitle":"Backend Engineer","employmentType":"FullTime","appliedAt":"2026-08-20T10:00:00Z"}'
+```
+
+See `/api/auth/*`, `/api/users/me`, `/api/applications/*` in
+`src/AfterApply.Api/Endpoints` for the full surface, or browse
+`/openapi/v1.json` (Development only).
 
 ## Container environment (podman compose / docker compose)
 

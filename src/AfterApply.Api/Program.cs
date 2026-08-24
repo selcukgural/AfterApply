@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using AfterApply.Api.Endpoints;
 using AfterApply.Infrastructure;
 using Serilog;
 
@@ -7,6 +9,9 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)
     .Enrich.FromLogContext());
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -19,6 +24,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapHealthChecks("/health");
+app.MapAuthEndpoints();
+app.MapUserEndpoints();
+app.MapApplicationEndpoints();
 
 app.Run();
+
+public partial class Program;

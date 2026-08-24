@@ -94,6 +94,96 @@ manuel kablolama gerekir. Kullanıcının mevcut altyapı/deneyimi varsa o
 
 ---
 
+## Sprint 1 kararları ve bulguları
+
+### Entity Id — DECIDED
+
+`Guid.CreateVersion7()`, entity constructor'ında üretiliyor (DB default değil)
+— ileride offline/import-time id üretimi (Sprint 4/5) için önemli.
+
+### Domain, User'ı modellemez — DECIDED
+
+ASP.NET Core Identity'nin `ApplicationUser : IdentityUser<Guid>`'ı kimlik
+verisinin tek kaynağı; Domain/Application hiç referans almıyor, her entity
+sahiplik için düz bir `Guid UserId` taşıyor. Sebep: `IdentityUser<TKey>`
+`Microsoft.AspNetCore.Identity` namespace'inde, `LayerDependencyTests`'in
+Domain kuralını ihlal eder; ayrıca bu sprint'te User üzerinde gerçek bir
+domain davranışı yok (register/login/profile zaten `UserManager`/
+`SignInManager`'ın işi) — paralel bir `Domain.Identity.User` aggregate'i
+gereksiz ceremony olurdu (YAGNI).
+
+`AppDbContext` → `IdentityUserContext<ApplicationUser, Guid>` (roller
+gereksiz, `IdentityDbContext` değil).
+
+### Kullanılmayan pattern: MediatR — DECIDED
+
+Kullanılmıyor. Use-case orchestration düz interface-backed servis sınıfları
+ile yapılıyor (`IApplicationService`/`ApplicationService`, `IAuthService`/
+`AuthService` vb.) — interface Application katmanında, implementasyon
+Infrastructure'da. Sprint 2+ bu pattern'i takip etmeli.
+
+### ApplicationEventType spec'ten sapıyor — DECIDED
+
+Spec §280-292'nin örnek event listesi hem `Rejected`/`Withdrawn`'ı event tipi
+hem de `ApplicationStatus` değeri olarak veriyor — bu gerçek bir redundancy
+(spec kendi listesini "örnek" olarak işaretliyor, bağlayıcı değil). Final
+enum bu ikisini `StatusChanged`'a indirgiyor, 9 değer: ApplicationCreated,
+ApplicationSubmitted, RecruiterContacted, ScreeningStarted,
+InterviewScheduled, InterviewCompleted, OfferReceived, FollowUpSent,
+StatusChanged.
+
+### Company/Job normalization sınırı — DECIDED (bilinen sınırlama)
+
+`CompanyNameNormalizer`/`Job.NormalizeTitle` case/whitespace/suffix
+normalize ediyor. Bunun ötesinde: .NET invariant culture Türkçe noktalı/
+noktasız I (İ/I/ı/i) çiftini round-trip etmiyor (`ToUpperInvariant('ı')`
+'ı' olarak kalıyor, 'I'ya dönmüyor) — bu, Türkiye-first bir üründe
+"Yazılım" ile "YAZILIM"ın farklı normalize edilmesi gibi gerçek bir
+dedup bugı yaratıyordu. `Common/TurkishTextNormalizer.FoldCase` ile
+düzeltildi (test: `CompanyNameNormalizerTests.Normalize_Folds_Turkish_
+Dotted_And_Dotless_I_Together`). Hâlâ **yapmadığı**: "ABC Teknoloji" ile
+"ABC Tech" gibi textual synonym'leri birleştirmiyor — bu fuzzy matching,
+post-MVP.
+
+### Paket versiyonları 10.0.11'e hizalandı — DECIDED
+
+Sprint 0'ın `Microsoft.EntityFrameworkCore.Design`'ı 10.0.4'e indirip
+Npgsql'in floor'una eşleme "workaround"u yerine, tüm
+`Microsoft.AspNetCore.*`/`Microsoft.EntityFrameworkCore*` ailesi tek ve
+güncel patch'e (10.0.11) hizalandı; `Microsoft.EntityFrameworkCore`
+Infrastructure'a explicit paket referansı olarak eklendi (NuGet'in en
+düşük tatmin eden versiyona düşmesini önlemek için). `Microsoft.OpenApi`
+2.12.2'de bırakıldı (3.x'e geçiş OpenApi source generator'ını kırıyor,
+Sprint 0'da bulundu).
+
+### EF Core: sibling collection navigation + SaveChanges bug'ı — bilgi amaçlı
+
+`Application.Events`/`StatusHistory` gibi iki kardeş collection navigation'ı
+`.Include()` ile yükleyip sonra domain metoduyla yeni item eklemek
+(`_events.Add(...)`), EF Core'un change tracker'ının yeni item'ı `Added`
+yerine `Modified` (UPDATE) olarak işaretlemesine yol açtı — INSERT yerine
+var olmayan bir `Id`'ye UPDATE denendiği için `DbUpdateConcurrencyException`
+(0 rows affected) fırlatıyordu. `AsSplitQuery()` bunu çözmedi. Gerçek çözüm:
+`ChangeStatusAsync`/`AddEventAsync`, aggregate'i Include'sız yüklüyor, domain
+metodunu çağırdıktan sonra yeni child entity'yi `dbContext.ApplicationEvents
+.Add(...)` ile **açıkça** DbSet'e ekliyor — EF'in Include-tabanlı collection
+tracking belirsizliğine hiç girmiyor. Bu Sprint 2+'ta benzer "tracked
+aggregate + yeni child ekleme" senaryolarında hatırlanmalı.
+
+### dotnet-ef tooling: stray `bin\Debug` artifact — bilgi amaçlı
+
+Global `dotnet-ef` tool (10.0.3) runtime'dan (10.0.11) eski olduğu için
+`dotnet ef migrations add`/`database update` çalışırken (muhtemelen
+cross-platform path handling bug'ı yüzünden) `bin/` içine literal
+backslash'li bir `bin\Debug` klasörü yazdı — bu, `**/*.resx` glob hatası
+ve "nested bin" copy retry uyarılarına yol açan ve sonraki temiz build'leri
+bozan bir artifact'tı. Temizlendi (`rm -rf "bin\\Debug"`). Sprint 2+'ta yeni
+migration eklerken bu tekrar olursa aynı şekilde temizlenmeli; kalıcı çözüm
+`dotnet tool update -g dotnet-ef` ile global tool'u güncellemek olabilir
+(bu oturumda yapılmadı — proje dosyalarını etkileyen bir değişiklik değil).
+
+---
+
 ## Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
