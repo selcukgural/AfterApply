@@ -25,6 +25,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors(DependencyInjection.CorsPolicyName);
+
 app.UseAuthentication();
 app.UseAuthorization();
 

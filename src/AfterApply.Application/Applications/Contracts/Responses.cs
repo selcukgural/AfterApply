@@ -32,3 +32,14 @@ public sealed record ApplicationEventResponse(
     DateTimeOffset OccurredAt,
     Source Source,
     string? Metadata);
+
+public sealed record PagedResult<T>(IReadOnlyCollection<T> Items, int TotalCount, int Page, int PageSize);
+
+public sealed record ApplicationSummaryCountsResponse(
+    int Total,
+    int Active,
+    int Waiting,
+    int Interviews,
+    int Offers,
+    int Rejected,
+    int Ghosted);

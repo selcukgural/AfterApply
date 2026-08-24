@@ -40,12 +40,11 @@ seviyesinde bağımlı olması) test edilecek.
 yok, kullanıcı verisi tamamen kendi altyapımızda kalır (Privacy First
 ilkesiyle uyumlu, §2).
 
-## 3. Frontend framework — OPEN (Sprint 2'ye kadar ertelendi)
+## 3. Frontend framework — DECIDED
 
-Backend First ilkesi (§2) gereği bu karar Sprint 2 başına kadar
-ertelenebilir. Öneri hâlâ Next.js/React; Blazor alternatif olarak
-değerlendirilebilir (tek dil, daha az context-switch). Sprint 2 başında
-netleştirilecek.
+**Next.js (React), App Router, TypeScript, Tailwind CSS 4.** Blazor
+alternatifine karşı doğrudan sorulup Next.js/React seçildi (Sprint 2).
+`web/` klasöründe, `AfterApply.slnx`'in dışında, ayrı bir deployable.
 
 ## 4. Background jobs — DECIDED
 
@@ -181,6 +180,87 @@ bozan bir artifact'tı. Temizlendi (`rm -rf "bin\\Debug"`). Sprint 2+'ta yeni
 migration eklerken bu tekrar olursa aynı şekilde temizlenmeli; kalıcı çözüm
 `dotnet tool update -g dotnet-ef` ile global tool'u güncellemek olabilir
 (bu oturumda yapılmadı — proje dosyalarını etkileyen bir değişiklik değil).
+
+---
+
+## Sprint 2 kararları ve bulguları
+
+### Token storage: localStorage + single-flight refresh — DECIDED
+
+Access+refresh token `localStorage`'da, access token ayrıca modül-seviyesi
+bir singleton'da (senkron okuma için). Cookie/BFF yok. 401 alındığında
+tek-uçuşlu (single-flight) bir refresh mekanizması aynı anda birden fazla
+refresh çağrısının backend'in "reuse edilmiş refresh token → tüm tokenları
+iptal et" davranışını tetiklemesini önlüyor (bkz. `AuthService.RefreshAsync`).
+Cross-tab senkronizasyon yok (her tab kendi modül state'ine sahip) — bilinen
+sınırlama, Sprint 7'de gözden geçirilebilir.
+
+### Backend pagination/filter/sort + `/summary` endpoint — DECIDED
+
+`GET /api/applications` artık `page`/`pageSize`/`search`/`status`/`sortBy`/
+`sortDirection` query param'ları alıyor, `PagedResult<T>` dönüyor. Yeni
+`GET /api/applications/summary` endpoint'i dashboard sayaçları için ayrı
+bir aggregation sorgusu çalıştırıyor (liste artık sayfalı olduğu için
+client-side toplam hesaplanamıyor).
+
+### Dashboard durum-bucket eşlemesi — DECIDED
+
+Applied+Screening → Aktif; Interview+TechnicalInterview+FinalInterview →
+Aktif + Mülakatlar; Offer → Bekleyen + Teklifler; Accepted/Withdrawn →
+sadece Toplam'da (ayrı tile yok, spec §294-304 listelemiyor); Rejected ve
+Ghosted ayrı tile'lar (Ghosted, Rejected'dan kasıtlı olarak ayrı tutuluyor —
+ürünün ghosting-detection değer önerisinin merkezinde farklı bir sinyal).
+
+### CORS — DECIDED
+
+Config-driven (`Cors:AllowedOrigins`), kod içinde hardcoded origin yok,
+sadece `appsettings.Development.json`'da `http://localhost:3000`.
+`AllowCredentials()` kullanılmıyor — Bearer token modeli cookie
+gerektirmiyor, YAGNI.
+
+### TypeScript versiyonu — bilgi amaçlı
+
+`create-next-app@16.3.2`'nin kendi template'i `"typescript": "^5"` pin'liyor
+(5.9.3 kuruldu), TS7 (yeni Go-tabanlı derleyici, bu oturumda `npm view`
+ile `latest` olduğu doğrulandı) DEĞİL — plandaki "6.0.3'e pinle" önlemi
+gereksiz çıktı, template zaten güvenli bir 5.x sürümünü kullanıyor.
+
+### Gerçek bug'lar: enum JSON serialization + LINQ query — düzeltildi
+
+1. Enum'lar varsayılan olarak sayı olarak serialize/deserialize ediliyordu
+   — `ConfigureHttpJsonOptions` ile `JsonStringEnumConverter` eklendi
+   (`Program.cs`).
+2. `ApplicationService.GetAllAsync` — `.Join()` sonrası `.OrderByDescending`
+   projection'dan SONRA yapılıyordu, EF Core SQL'e çeviremiyordu; sıralama
+   join'den hemen sonra, projection'dan ÖNCE taşındı.
+
+### Test ortamı bulgusu: port tutarlılığı — bilgi amaçlı
+
+Bu oturumda backend'i uzun süre `--urls http://localhost:5299` ile (README/
+`launchSettings.json`'ın resmi portu 5151 yerine) çalıştırmışım; frontend'in
+`.env.local`'ı 5151'i bekliyordu, bu da ilk tarayıcı testinde sessiz bir
+"Kayıt oluşturulamadı" hatasına yol açtı (bağlantı reddedildi, CORS hatası
+değil). Backend'i `--launch-profile http` ile (resmi 5151 portu) yeniden
+başlatarak çözüldü. Ders: yerel geliştirmede her zaman `launchSettings.json`
+profilini kullan, ad-hoc `--urls` override'larından kaçın.
+
+### Tarayıcı ortamı bulgusu: eski service worker — bilgi amaçlı
+
+Bu makinenin Chrome profilinde, port 3000'de daha önce çalışmış tamamen
+alakasız bir projeden ("Aethermoor Chronicles") kalma bir service worker +
+cache vardı; `localhost:3000`'e ilk navigasyonda AfterApply yerine o eski
+uygulamayı cache'ten servis etti. `navigator.serviceWorker.getRegistrations()`
++ `caches.delete()` ile temizlendi. Proje koduyla ilgisi yok, paylaşılan
+tarayıcı profilinin geçmişinden kaynaklanan bir ortam sorunu.
+
+### CSS bug: dark-mode arkaplanı Tailwind class'ını eziyordu — düzeltildi
+
+`create-next-app` scaffold'unun `globals.css`'i `body { background: var(--background) }`
+kuralı içeriyordu, `--background` `prefers-color-scheme: dark` altında
+`#0a0a0a` oluyordu — bu, aynı `body` elementindeki `bg-gray-50` Tailwind
+class'ını eziyordu (OS dark mode'daysa sayfa siyah görünüyordu). Kullanılmayan
+scaffold CSS'i temizlendi, `min-h-full` → `min-h-screen` yapıldı (viewport
+kapsamını percentage-height zincirine değil doğrudan garanti eder).
 
 ---
 

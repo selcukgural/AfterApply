@@ -4,7 +4,9 @@ namespace AfterApply.Application.Applications;
 
 public interface IApplicationService
 {
-    Task<IReadOnlyCollection<ApplicationSummaryResponse>> GetAllAsync(Guid userId, CancellationToken cancellationToken);
+    Task<PagedResult<ApplicationSummaryResponse>> GetAllAsync(Guid userId, GetApplicationsQuery query, CancellationToken cancellationToken);
+
+    Task<ApplicationSummaryCountsResponse> GetSummaryCountsAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<ApplicationDetailResponse?> GetByIdAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken);
 

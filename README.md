@@ -4,10 +4,12 @@ Job Application Tracker + Personal Analytics. See `afterapply-intelligence-platf
 for the product/technical spec, `DEVELOPMENT_PLAN.md` for the sprint roadmap,
 and `DECISIONS.md` for architecture/technical decisions.
 
-**Status: Sprint 1 (Identity + Core Domain).** Registration/login/refresh/
-logout, Company/Job/Application/ApplicationEvent/ApplicationStatusHistory,
-Application CRUD + status transitions + timeline. No UI, no analytics, no
-import pipelines yet — see `DEVELOPMENT_PLAN.md` for what's next.
+**Status: Sprint 2 (Web UI MVP).** Backend: auth, Application CRUD/status/
+timeline, paginated+filterable application list, dashboard summary counts,
+CORS. Frontend (`web/`, Next.js): login/register, dashboard, application
+list/detail/create/edit, status changes, timeline. No analytics charts, no
+import pipelines, no reminders yet — see `DEVELOPMENT_PLAN.md` for what's
+next.
 
 ## Architecture
 
@@ -54,7 +56,10 @@ NetArchTest (`tests/AfterApply.UnitTests/Architecture`).
    (adjust ports if you hit a conflict per the warning above)
 5. Apply migrations: `dotnet ef database update --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api`
 6. `dotnet build AfterApply.slnx`
-7. `ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/AfterApply.Api`
+7. `dotnet run --project src/AfterApply.Api --launch-profile http` (always
+   use the `http` launch profile — it's the source of truth for the dev
+   port, `5151`; an ad-hoc `--urls` override will silently break the
+   frontend's `.env.local`, which points at `5151`)
 8. `curl -i http://localhost:5151/health` → expect `200 Healthy`
 
 ### Trying the API
@@ -72,6 +77,23 @@ curl -X POST http://localhost:5151/api/applications -H "Authorization: Bearer <a
 See `/api/auth/*`, `/api/users/me`, `/api/applications/*` in
 `src/AfterApply.Api/Endpoints` for the full surface, or browse
 `/openapi/v1.json` (Development only).
+
+## Frontend (`web/`)
+
+Next.js (App Router, TypeScript, Tailwind CSS 4). Requires the backend
+running on `http://localhost:5151` (see above) with
+`Cors:AllowedOrigins` including `http://localhost:3000` (already the
+`appsettings.Development.json` default).
+
+```bash
+cd web
+npm install                        # one-time
+cp .env.local.example .env.local   # one-time — points at http://localhost:5151
+npm run dev
+```
+
+Open `http://localhost:3000`. `npm run build` / `npm run lint` for a
+production build / lint check.
 
 ## Container environment (podman compose / docker compose)
 

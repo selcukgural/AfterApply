@@ -28,3 +28,26 @@ public sealed record CreateEventRequest(
     DateTimeOffset? OccurredAt,
     Source? Source,
     string? Metadata);
+
+public enum ApplicationListSortBy
+{
+    AppliedAt,
+    CompanyName,
+    JobTitle,
+    Status,
+    UpdatedAt
+}
+
+public enum SortDirection
+{
+    Ascending,
+    Descending
+}
+
+public sealed record GetApplicationsQuery(
+    int Page = 1,
+    int PageSize = 20,
+    string? Search = null,
+    ApplicationStatus? Status = null,
+    ApplicationListSortBy SortBy = ApplicationListSortBy.AppliedAt,
+    SortDirection SortDirection = SortDirection.Descending);

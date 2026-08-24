@@ -11,8 +11,13 @@ public static class ApplicationEndpoints
     {
         var group = app.MapGroup("/api/applications").WithTags("Applications").RequireAuthorization();
 
-        group.MapGet("/", async (ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
-            Results.Ok(await service.GetAllAsync(user.GetUserId(), cancellationToken)));
+        group.MapGet("/", async ([AsParameters] GetApplicationsQuery query, ClaimsPrincipal user,
+                IApplicationService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetAllAsync(user.GetUserId(), query, cancellationToken)))
+            .WithValidation<GetApplicationsQuery>();
+
+        group.MapGet("/summary", async (ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetSummaryCountsAsync(user.GetUserId(), cancellationToken)));
 
         group.MapGet("/{id:guid}", async (Guid id, ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
         {

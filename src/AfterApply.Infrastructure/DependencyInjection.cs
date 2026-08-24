@@ -17,12 +17,27 @@ namespace AfterApply.Infrastructure;
 
 public static class DependencyInjection
 {
+    public const string CorsPolicyName = "Frontend";
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddPersistence(configuration);
         services.AddIdentityAndJwt(configuration);
         services.AddApplicationServices();
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
+        services.AddCorsPolicy(configuration);
+
+        return services;
+    }
+
+    private static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
+    {
+        var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+        services.AddCors(options => options.AddPolicy(CorsPolicyName, policy => policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()));
 
         return services;
     }

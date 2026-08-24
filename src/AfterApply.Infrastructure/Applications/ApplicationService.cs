@@ -1,5 +1,6 @@
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -9,14 +10,72 @@ namespace AfterApply.Infrastructure.Applications;
 
 internal sealed class ApplicationService(AppDbContext dbContext, ICompanyResolver companyResolver) : IApplicationService
 {
-    public async Task<IReadOnlyCollection<ApplicationSummaryResponse>> GetAllAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<PagedResult<ApplicationSummaryResponse>> GetAllAsync(Guid userId, GetApplicationsQuery query, CancellationToken cancellationToken)
     {
-        return await dbContext.Applications
+        var joined = dbContext.Applications
             .Where(a => a.UserId == userId)
-            .OrderByDescending(a => a.AppliedAt)
-            .Join(dbContext.Companies, a => a.CompanyId, c => c.Id,
-                (a, c) => new ApplicationSummaryResponse(a.Id, c.Name, a.JobTitle, a.Status, a.AppliedAt, a.UpdatedAt))
+            .Join(dbContext.Companies, a => a.CompanyId, c => c.Id, (a, c) => new { a, c.Name });
+
+        if (query.Status is not null)
+        {
+            joined = joined.Where(x => x.a.Status == query.Status);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var pattern = $"%{query.Search.Trim()}%";
+            joined = joined.Where(x => EF.Functions.ILike(x.Name, pattern) || EF.Functions.ILike(x.a.JobTitle, pattern));
+        }
+
+        joined = (query.SortBy, query.SortDirection) switch
+        {
+            (ApplicationListSortBy.CompanyName, SortDirection.Ascending) => joined.OrderBy(x => x.Name),
+            (ApplicationListSortBy.CompanyName, SortDirection.Descending) => joined.OrderByDescending(x => x.Name),
+            (ApplicationListSortBy.JobTitle, SortDirection.Ascending) => joined.OrderBy(x => x.a.JobTitle),
+            (ApplicationListSortBy.JobTitle, SortDirection.Descending) => joined.OrderByDescending(x => x.a.JobTitle),
+            (ApplicationListSortBy.Status, SortDirection.Ascending) => joined.OrderBy(x => x.a.Status),
+            (ApplicationListSortBy.Status, SortDirection.Descending) => joined.OrderByDescending(x => x.a.Status),
+            (ApplicationListSortBy.UpdatedAt, SortDirection.Ascending) => joined.OrderBy(x => x.a.UpdatedAt),
+            (ApplicationListSortBy.UpdatedAt, SortDirection.Descending) => joined.OrderByDescending(x => x.a.UpdatedAt),
+            (_, SortDirection.Ascending) => joined.OrderBy(x => x.a.AppliedAt),
+            _ => joined.OrderByDescending(x => x.a.AppliedAt)
+        };
+
+        var totalCount = await joined.CountAsync(cancellationToken);
+        var page = Math.Max(1, query.Page);
+        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+
+        var items = await joined
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new ApplicationSummaryResponse(x.a.Id, x.Name, x.a.JobTitle, x.a.Status, x.a.AppliedAt, x.a.UpdatedAt))
             .ToListAsync(cancellationToken);
+
+        return new PagedResult<ApplicationSummaryResponse>(items, totalCount, page, pageSize);
+    }
+
+    public async Task<ApplicationSummaryCountsResponse> GetSummaryCountsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var counts = await dbContext.Applications
+            .Where(a => a.UserId == userId)
+            .GroupBy(a => a.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Status, x => x.Count, cancellationToken);
+
+        int Get(ApplicationStatus status) => counts.GetValueOrDefault(status);
+
+        var active = Get(ApplicationStatus.Applied) + Get(ApplicationStatus.Screening)
+            + Get(ApplicationStatus.Interview) + Get(ApplicationStatus.TechnicalInterview) + Get(ApplicationStatus.FinalInterview);
+        var interviews = Get(ApplicationStatus.Interview) + Get(ApplicationStatus.TechnicalInterview) + Get(ApplicationStatus.FinalInterview);
+
+        return new ApplicationSummaryCountsResponse(
+            Total: counts.Values.Sum(),
+            Active: active,
+            Waiting: Get(ApplicationStatus.Offer),
+            Interviews: interviews,
+            Offers: Get(ApplicationStatus.Offer),
+            Rejected: Get(ApplicationStatus.Rejected),
+            Ghosted: Get(ApplicationStatus.Ghosted));
     }
 
     public async Task<ApplicationDetailResponse?> GetByIdAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken)
