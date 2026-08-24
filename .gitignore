@@ -1,0 +1,22 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+
+# macOS
+.DS_Store
+
+# Environment / local secrets
+.env
+
+# EF Core (once migrations exist, Sprint 1+)
+*.db
+*.db-shm
+*.db-wal
+
+# Rider
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/shelf/

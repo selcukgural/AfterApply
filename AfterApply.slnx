@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AfterApply.Api/AfterApply.Api.csproj" />
+    <Project Path="src/AfterApply.Application/AfterApply.Application.csproj" />
+    <Project Path="src/AfterApply.Domain/AfterApply.Domain.csproj" />
+    <Project Path="src/AfterApply.Infrastructure/AfterApply.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AfterApply.IntegrationTests/AfterApply.IntegrationTests.csproj" />
+    <Project Path="tests/AfterApply.UnitTests/AfterApply.UnitTests.csproj" />
+  </Folder>
+</Solution>
