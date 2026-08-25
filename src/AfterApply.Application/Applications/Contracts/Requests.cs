@@ -21,7 +21,7 @@ public sealed record UpdateApplicationRequest(
     DateTimeOffset AppliedAt,
     string? Notes);
 
-public sealed record ChangeStatusRequest(ApplicationStatus NewStatus, string? Note, DateTimeOffset? ChangedAt);
+public sealed record ChangeStatusRequest(ApplicationStatus NewStatus, string? Note, DateTimeOffset? ChangedAt, Source? Source = null);
 
 public sealed record CreateEventRequest(
     ApplicationEventType Type,

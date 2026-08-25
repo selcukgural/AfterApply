@@ -16,11 +16,6 @@ internal sealed class ProductMetricsService(AppDbContext dbContext, ILogger<Prod
         ApplicationStatus.FinalInterview, ApplicationStatus.Offer, ApplicationStatus.Rejected, ApplicationStatus.Accepted
     ];
 
-    private static readonly HashSet<ApplicationStatus> OutcomeStatuses =
-    [
-        ApplicationStatus.Accepted, ApplicationStatus.Rejected, ApplicationStatus.Withdrawn, ApplicationStatus.Ghosted
-    ];
-
     public async Task<ProductMetricsSnapshot> ComputeSnapshotAsync(CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
@@ -74,7 +69,7 @@ internal sealed class ProductMetricsService(AppDbContext dbContext, ILogger<Prod
 
         var uniqueCompanies = applications.Select(a => a.CompanyId).Distinct().Count();
         var uniqueJobs = applications.Where(a => a.JobId is not null).Select(a => a.JobId).Distinct().Count();
-        var applicationsWithOutcome = applications.Count(a => OutcomeStatuses.Contains(a.Status));
+        var applicationsWithOutcome = applications.Count(a => TerminalApplicationStatuses.Values.Contains(a.Status));
         var applicationsWithResponseTime = statusHistory
             .Where(h => RespondedStatuses.Contains(h.ToStatus))
             .Select(h => h.ApplicationId)

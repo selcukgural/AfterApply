@@ -1,12 +1,14 @@
 using AfterApply.Application.Analytics;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
+using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
+using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
 using AfterApply.Infrastructure.Metrics;
@@ -16,6 +18,7 @@ using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -37,8 +40,11 @@ public static class DependencyInjection
         services.AddIdentityAndJwt(configuration);
         services.AddApplicationServices();
         services.AddBackgroundJobs(configuration);
+        services.AddDataProtection().PersistKeysToDbContext<AppDbContext>();
         services.Configure<ImportOptions>(configuration.GetSection("Imports"));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
+        services.Configure<GoogleOAuthOptions>(configuration.GetSection("GoogleOAuth"));
+        services.Configure<EmailIntegrationOptions>(configuration.GetSection("EmailIntegrations"));
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
 
@@ -142,6 +148,8 @@ public static class DependencyInjection
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
+        services.AddScoped<IGmailClient, GmailClient>();
+        services.AddScoped<IEmailIntegrationService, EmailIntegrationService>();
 
         return services;
     }

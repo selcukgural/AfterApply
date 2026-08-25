@@ -23,6 +23,9 @@
     <PackageReference Include="Hangfire.Core" />
     <PackageReference Include="Hangfire.AspNetCore" />
     <PackageReference Include="Hangfire.PostgreSql" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
+    <PackageReference Include="Google.Apis.Gmail.v1" />
   </ItemGroup>
 
 </Project>

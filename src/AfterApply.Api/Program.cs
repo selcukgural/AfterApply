@@ -1,9 +1,11 @@
 using System.Text.Json.Serialization;
 using AfterApply.Api;
 using AfterApply.Api.Endpoints;
+using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
+using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Notifications;
 using Hangfire;
 using Microsoft.Extensions.Options;
@@ -45,6 +47,7 @@ app.MapApplicationEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapImportEndpoints();
 app.MapReminderEndpoints();
+app.MapEmailIntegrationEndpoints();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -60,6 +63,12 @@ using (var scope = app.Services.CreateScope())
         "product-metrics-snapshot",
         service => service.ComputeSnapshotAsync(CancellationToken.None),
         Cron.Daily());
+
+    var emailOptions = scope.ServiceProvider.GetRequiredService<IOptions<EmailIntegrationOptions>>().Value;
+    recurringJobManager.AddOrUpdate<IEmailIntegrationService>(
+        "gmail-sync",
+        service => service.SyncAllConnectionsAsync(CancellationToken.None),
+        emailOptions.SyncCronExpression);
 }
 
 app.Run();

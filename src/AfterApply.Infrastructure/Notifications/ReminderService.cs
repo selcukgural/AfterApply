@@ -10,11 +10,6 @@ namespace AfterApply.Infrastructure.Notifications;
 
 internal sealed class ReminderService(AppDbContext dbContext, IOptions<NotificationOptions> options) : IReminderService
 {
-    private static readonly HashSet<ApplicationStatus> TerminalStatuses =
-    [
-        ApplicationStatus.Withdrawn, ApplicationStatus.Ghosted, ApplicationStatus.Rejected, ApplicationStatus.Accepted
-    ];
-
     // Same set as AnalyticsService.RespondedStatuses — "responded" is defined once,
     // reused here rather than redefined (DECISIONS.md).
     private static readonly HashSet<ApplicationStatus> RespondedStatuses =
@@ -58,7 +53,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         var now = DateTimeOffset.UtcNow;
 
         var applications = await dbContext.Applications
-            .Where(a => !TerminalStatuses.Contains(a.Status))
+            .Where(a => !TerminalApplicationStatuses.Values.Contains(a.Status))
             .Select(a => new { a.Id, a.UserId, a.AppliedAt })
             .ToListAsync(cancellationToken);
 

@@ -135,7 +135,7 @@ internal sealed class ApplicationService(AppDbContext dbContext, ICompanyResolve
             return null;
         }
 
-        application.ChangeStatus(request.NewStatus, request.ChangedAt ?? DateTimeOffset.UtcNow, Source.Manual, request.Note);
+        application.ChangeStatus(request.NewStatus, request.ChangedAt ?? DateTimeOffset.UtcNow, request.Source ?? Source.Manual, request.Note);
 
         // application.Events/StatusHistory were never Included (FindOwnedAsync
         // loads the bare row), so EF has no prior tracking entry to confuse the new
