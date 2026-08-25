@@ -133,6 +133,27 @@ project's containers — check for conflicts on your machine and adjust
 3. `curl -i http://localhost:8080/health`
 4. `podman compose down` (add `-v` to also drop the postgres volume)
 
+`docker-compose.yml` (dev) only runs Postgres/Redis/API — it does **not**
+build a frontend container. To use the UI against this containerized
+backend, run the frontend natively and point it at port 8080:
+```bash
+cd web
+npm install
+echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8080" > .env.local
+npm run dev
+```
+(You still need `Cors:AllowedOrigins` in the API to include
+`http://localhost:3000` — already the `appsettings.Development.json`
+default.) For a fully containerized run (API **and** frontend, no native
+`npm`/`dotnet` needed), use the prod-like overlay instead — see
+`docker-compose.prod.yml` and `DEPLOYMENT.md`:
+```bash
+cp .env.prod.example .env.prod   # fill in real secrets, see DEPLOYMENT.md
+podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up --build
+# API:      http://localhost:8080
+# Frontend: http://localhost:3000
+```
+
 ## Running tests
 
 - Fast, no container runtime needed: `dotnet test tests/AfterApply.UnitTests`
@@ -145,7 +166,17 @@ project's containers — check for conflicts on your machine and adjust
   If container startup hangs or fails under rootless Podman (Ryuk, the
   resource-reaper sidecar, is known to be flaky there), try
   `export TESTCONTAINERS_RYUK_DISABLED=true` — note this means stopped test
-  containers may occasionally need manual `podman rm` cleanup.
+  containers may occasionally need manual cleanup:
+  ```bash
+  podman ps -a --format "{{.Names}} {{.Status}}"          # inspect what's left
+  podman ps -a -q --filter "ancestor=docker.io/library/postgres:17-alpine" | xargs -r podman rm -f
+  ```
+  A `System.InvalidOperationException: Sequence contains no elements` /
+  `HttpRequestException: Connection failed` error from a test's
+  `InitializeAsync`/`DisposeAsync` is this same podman-socket flakiness, not
+  a code bug — clean up leftover containers (above) and re-run. If it keeps
+  happening, re-running with test-collection parallelism turned off isolates
+  it further: `dotnet test tests/AfterApply.IntegrationTests -- xunit.parallelizeTestCollections=false`.
 - Everything: `dotnet test AfterApply.slnx`
 
 > **Workflow note (Claude Code sessions):** Podman-backed integration test
@@ -157,6 +188,38 @@ project's containers — check for conflicts on your machine and adjust
 > continuously; the full integration suite (`tests/AfterApply.IntegrationTests`)
 > is deferred and run once after a batch of changes is otherwise complete,
 > not after each individual file edit.
+
+## Manual smoke testing (browser)
+
+With the backend and frontend both running (either the native or container
+path above), a walkthrough of the main flows:
+
+1. **Register**: `http://localhost:3000/register` — create an account,
+   accept the consent checkbox (required to submit).
+2. **Login**: `/login` with the same credentials.
+3. **Dashboard**: `/` — stat tiles, analytics rates, response-time card,
+   status-distribution chart (populates as applications are added).
+4. **Applications**: `/applications` — create one (`/applications/new`),
+   open its detail page, change its status, check the timeline updates.
+5. **Import**: from `/applications`, try a CSV upload (`POST
+   /api/imports/csv`, any file with Company/Title/Applied At columns) or a
+   LinkedIn Data Export ZIP (`POST /api/imports/linkedin`) — check the
+   import summary and that re-uploading the same file reports 0 new
+   applications (idempotency).
+6. **Privacy page**: `/privacy` — static page, linked from the register
+   consent checkbox.
+7. **Settings**: `/settings` (requires login) — account data export
+   (download), account deletion (asks for password), and the "E-posta
+   Entegrasyonu" (Gmail) card.
+8. **Gmail integration** (needs real `GoogleOAuth` credentials — see
+   below; with placeholders, "Gmail Bağla" should show a clear
+   validation error instead of crashing): connect an account, wait for
+   (or trigger) a sync, then check `/settings/email-suggestions` for
+   pending suggestions and try Confirm/Dismiss.
+
+For API-only smoke testing without the frontend, see the `curl` examples
+under "Trying the API" above, plus `GET /health` and (Development only)
+`/openapi/v1.json`.
 
 ## Configuration
 

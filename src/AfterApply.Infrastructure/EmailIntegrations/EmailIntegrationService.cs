@@ -26,7 +26,6 @@ internal sealed class EmailIntegrationService(
     IDataProtectionProvider dataProtectionProvider,
     IApplicationService applicationService,
     IOptions<GoogleOAuthOptions> googleOptions,
-    IOptions<EmailIntegrationOptions> emailOptions,
     IOptions<JwtOptions> jwtOptions) : IEmailIntegrationService
 {
     private const string StatePurpose = "gmail-oauth-state";
