@@ -12,5 +12,6 @@ public sealed class CreateFromExtensionRequestValidator : AbstractValidator<Crea
         RuleFor(x => x.JobUrl).NotEmpty().MaximumLength(2000);
         RuleFor(x => x.Location).MaximumLength(200);
         RuleFor(x => x.Description).MaximumLength(10_000);
+        RuleFor(x => x.DescriptionHtml).MaximumLength(20_000);
     }
 }

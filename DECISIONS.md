@@ -1065,6 +1065,58 @@ ilanlar" linkleriyle karışmasın diye). Konum (location) alanı için böyle b
 noktası yok — başlığın `<p>`'sinden DOM-sibling-yürüyüşüyle en az güvenilir şekilde tahmin ediliyor;
 bu üç alanın en az kritik olanı, boş kalırsa kullanıcı iki saniyede elle yazar.
 
+### Sprint 8/9 köprüsü: AI Eşleştirme paneli, extension'ın yakaladığı `Job.Description`'ı önceden dolduruyor — DECIDED
+
+Kullanıcı sordu: extension zaten iş ilanı açıklamasını scrape edip `Job.Description` olarak
+saklıyorsa (yukarıki href-tabanlı scraper), AI Eşleştirme (Sprint 8) neden hâlâ elle yapıştırma
+istiyor? Haklı bulundu — bağlandı: `ApplicationDetailResponse`'a `JobDescription` (nullable, sadece
+`Application.JobId` set'liyse `Jobs` tablosundan okunuyor) eklendi; frontend `JobMatchPanel`'in
+textarea'sı artık `initialJobDescription` prop'uyla önceden dolduruluyor (hâlâ tamamen editable —
+kullanıcı LLM'e göndermeden önce düzeltebilir). Manuel oluşturulan application'larda `JobId` hiç set
+edilmediği için (Sprint 8 kararı, `ApplicationService.CreateAsync`) bu grup için davranış
+değişmedi — textarea eskisi gibi boş başlıyor.
+
+### Bulgu: açıklama "…more"dan önce kesiliyordu — düzeltildi (gerçek bir ilanda manuel testte bulundu)
+
+LinkedIn bu sayfada tam açıklama metnini DOM'a baştan yazmıyor — `data-testid="expandable-text-box"`
+span'i "…more" butonuna tıklanana kadar sadece görünen (kesik) metni içeriyor, geri kalanı React
+tarafından tıklama sonrası render ediliyor. `scrapeLinkedInJob` artık `async`, önce sayfadaki tüm
+`[data-testid="expandable-text-button"]` butonlarına (hem "About the job" hem "About the company"
+için ayrı ayrı var) tıklayıp React'e render için ~150ms veriyor, sonra metni okuyor. Extension
+tarafındaki `description.slice()` sınırı da (5000 → 10.000) backend'in
+`CreateFromExtensionRequestValidator`'ıyla hizalandı.
+
+### Sprint 8/9 köprüsü #2: formatlı ("tıpkı ilandaki gibi") İlan Açıklaması gösterimi — DECIDED
+
+Kullanıcı iki şey istedi: (1) açıklama "…more"dan önce kesiliyordu (yukarıda düzeltildi), (2)
+adayın açıklamayı bold/başlık/madde-işaretiyle, tıpkı orijinal ilandaki gibi görebilmesi. `design`
+skill'i ile 3 yerleşim seçeneği mockup'landı (tam-genişlik açılır kart / Detaylar kartına entegre /
+modal); kullanıcı **A**'yı (grid'in altında, tam-genişlik, varsayılan kapalı+"Tamamını Gör") seçti.
+
+- **Veri modeli:** `Job.Description` (düz metin, AI Eşleştirme'nin LLM prompt'u için — formatlama
+  yükü yok) yanına, sadece `p/br/strong/b/em/i/ul/ol/li/h1-h6` içeren, attribute'suz bir
+  `Job.DescriptionHtml` eklendi. `IJobResolver.ResolveOrCreateAsync`'e trailing optional
+  `descriptionHtml` parametresi eklendi (Sprint 9'daki `description`/`publishedAt` eklerinin aynı
+  deseni). `ApplicationDetailResponse`'a `JobDescriptionHtml` eklendi.
+- **Extension:** `popup.js`'e `sanitizeDescriptionHtml()` — DOM'u yürüyüp izin verilen tag'lerin
+  dışındakileri (class, style, `data-*`, `svg`/`button`/`figure`/`img`, `aria-hidden="true"` alt
+  ağaçlar) düşürüyor, unwrap ediyor (içeriği koruyup sarmalayan tag'i atıyor).
+- **Güvenlik — gerçek sınır extension'da değil, render'da:** extension'ın allow-list'i sadece
+  "iyi niyetli ön filtre" — `POST /api/applications/from-extension` PAT ile doğrudan da çağrılabilir,
+  yani `DescriptionHtml` teorik olarak elle hazırlanmış kötü niyetli bir payload da olabilir. Bu
+  yüzden backend hiçbir ek doğrulama/sanitizasyon yapmadan (sadece `MaximumLength`) olduğu gibi
+  saklıyor, ve **asıl güvenlik sınırı frontend'de**: `JobDescriptionCard`, `dangerouslySetInnerHTML`'e
+  basmadan hemen önce `DOMPurify.sanitize()` ile (aynı allow-list) tekrar sanitize ediyor — depolanan
+  içerik, hangi taraf ürettiğine bakılmaksızın "untrusted" kabul ediliyor.
+- **Bulgu: `DOMPurify.sanitize` Next.js SSR'da çalışmıyor** — `window`'a ihtiyaç duyuyor, sunucuda
+  `undefined`. Node'da doğrudan test edildi: import hata vermiyor ama dönen obje `sanitize`
+  metodunu taşımıyor (`typeof DOMPurify === 'function'`, `.sanitize` yok) — SSR render'ında
+  çağrılırsa "DOMPurify.sanitize is not a function" ile patlıyor. Çözüm: sanitizasyon
+  `useEffect`'e taşındı (sadece client'ta, hydration sonrası çalışıyor), `safeHtml` `null` iken
+  component `null` render ediyor — hem SSR crash'ini hem hydration mismatch'i önlüyor
+  (`npm run build` ile doğrulandı).
+- **Yeni bağımlılık:** `dompurify` (frontend, MIT lisans, kendi TS tiplerini taşıyor).
+
 ### Kapsam dışı: Chrome Web Store yayını — DECIDED (plan zaten böyle diyordu)
 
 `extension/` klasörü "load unpacked" ile kullanılabilir durumda; mağaza yayını (ikon seti, store

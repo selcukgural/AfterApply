@@ -19,7 +19,11 @@ public sealed record CreateFromExtensionRequest(
     string JobUrl,
     string? Location,
     string? Description,
-    DateTimeOffset? PublishedAt);
+    DateTimeOffset? PublishedAt,
+    // Allow-listed HTML captured by the extension for formatted display (spec §11 follow-up) —
+    // untrusted content regardless of the extension's own sanitization; re-sanitized again with
+    // DOMPurify before ever rendering (see web's JobDescriptionCard).
+    string? DescriptionHtml = null);
 
 public sealed record UpdateApplicationRequest(
     string JobTitle,

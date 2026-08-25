@@ -53,7 +53,7 @@ function extractLinkedInJobId(url) {
 // Every field this returns is still shown as an editable input in the popup before submitting —
 // scraping failure or a wrong guess degrades to "user fills it in by hand", never a silent wrong
 // submission on its own.
-function scrapeLinkedInJob(jobId) {
+async function scrapeLinkedInJob(jobId) {
   function textOf(el) {
     return el?.textContent?.trim() || null;
   }
@@ -76,13 +76,61 @@ function scrapeLinkedInJob(jobId) {
     location = textOf(metaParagraph.querySelector("span"));
   }
 
-  const description = textOf(document.querySelector('[data-testid="expandable-text-box"]'));
+  // LinkedIn doesn't render the full description text into the DOM up front on this layout —
+  // only the truncated, visible portion is there until the "…more" button is clicked, at which
+  // point React renders the rest. Click every such button (there's one for "About the job" and
+  // a separate one for "About the company") and give React a beat to re-render before reading
+  // textContent — found via manual testing (a real ilan came back truncated at "…more").
+  document.querySelectorAll('[data-testid="expandable-text-button"]').forEach((button) => button.click());
+  await new Promise((resolve) => setTimeout(resolve, 150));
+
+  const descriptionBox = document.querySelector('[data-testid="expandable-text-box"]');
+  const description = textOf(descriptionBox);
+
+  // Allow-listed HTML snapshot for a formatted display (bold/headers/bullet lists, same as the
+  // original listing) — separate from the plain-text `description` above, which stays untouched
+  // for the AI Job Matching prompt. This is a best-effort capture-time filter, NOT a security
+  // boundary on its own: the backend stores it as-is and the frontend re-sanitizes with DOMPurify
+  // before ever rendering it (see DECISIONS.md — untrusted content is untrusted regardless of
+  // which side captured it).
+  function sanitizeDescriptionHtml(root) {
+    const ALLOWED_TAGS = new Set(["P", "BR", "STRONG", "B", "EM", "I", "UL", "OL", "LI", "H1", "H2", "H3", "H4", "H5", "H6"]);
+    const SKIP_TAGS = new Set(["SVG", "BUTTON", "FIGURE", "IMG", "STYLE", "SCRIPT"]);
+
+    function escapeText(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function walk(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return escapeText(node.textContent);
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return "";
+      }
+      const tag = node.tagName;
+      if (SKIP_TAGS.has(tag) || node.getAttribute("aria-hidden") === "true") {
+        return "";
+      }
+      const inner = Array.from(node.childNodes).map(walk).join("");
+      if (tag === "BR") {
+        return "<br>";
+      }
+      return ALLOWED_TAGS.has(tag) ? `<${tag.toLowerCase()}>${inner}</${tag.toLowerCase()}>` : inner;
+    }
+
+    return walk(root).trim();
+  }
+
+  const descriptionHtml = descriptionBox ? sanitizeDescriptionHtml(descriptionBox) : null;
 
   return {
     title: title || "",
     company: company || "",
     location: location || "",
-    description: description ? description.slice(0, 5000) : null,
+    // Matches CreateFromExtensionRequestValidator's MaximumLength(10_000/20_000) on the backend.
+    description: description ? description.slice(0, 10_000) : null,
+    descriptionHtml: descriptionHtml ? descriptionHtml.slice(0, 20_000) : null,
   };
 }
 
@@ -127,7 +175,7 @@ async function main() {
     });
     scraped = result;
   } catch (error) {
-    scraped = { title: "", company: "", location: "", description: null };
+    scraped = { title: "", company: "", location: "", description: null, descriptionHtml: null };
     // Surfaced inline (not just console.error) so a manual tester doesn't need DevTools open to
     // see why fields came back empty — found necessary in Sprint 9 manual testing, where the
     // silently-swallowed error made an actual scrape failure look identical to "nothing found".
@@ -180,6 +228,7 @@ async function main() {
           jobUrl,
           location: location || null,
           description: scraped.description,
+          descriptionHtml: scraped.descriptionHtml,
           publishedAt: null,
         }),
       });

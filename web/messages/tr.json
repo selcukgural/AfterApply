@@ -146,6 +146,12 @@
         "profileRequiredError": "Önce profilinizden CV'nizi girmelisiniz.",
         "setCvLink": "CV'nizi girin",
         "genericError": "Eşleştirme hesaplanamadı."
+      },
+      "jobDescription": {
+        "title": "İlan Açıklaması",
+        "source": "LinkedIn'den alındı",
+        "expand": "Tamamını Gör",
+        "collapse": "Daralt"
       }
     },
     "statusChange": {

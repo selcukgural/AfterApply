@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusChangeSelect } from "@/components/applications/StatusChangeSelect";
 import { Timeline } from "@/components/applications/Timeline";
 import { JobMatchPanel } from "@/components/applications/JobMatchPanel";
+import { JobDescriptionCard } from "@/components/applications/JobDescriptionCard";
 import { Button } from "@/components/ui/Button";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -124,9 +125,11 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("timeline")}</h2>
             <Timeline events={timeline ?? []} />
           </div>
-          <JobMatchPanel applicationId={id} />
+          <JobMatchPanel applicationId={id} initialJobDescription={application.jobDescription} />
         </div>
       </div>
+
+      {application.jobDescriptionHtml && <JobDescriptionCard descriptionHtml={application.jobDescriptionHtml} />}
     </div>
   );
 }

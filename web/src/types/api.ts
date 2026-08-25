@@ -86,6 +86,8 @@ export interface ApplicationDetailResponse {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  jobDescription: string | null;
+  jobDescriptionHtml: string | null;
 }
 
 export interface ApplicationEventResponse {

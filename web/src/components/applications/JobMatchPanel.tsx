@@ -12,6 +12,10 @@ import { Button } from "@/components/ui/Button";
 
 interface JobMatchPanelProps {
   applicationId: string;
+  // Pre-fills the job description when it was already captured at creation time (currently only
+  // the browser extension's "I Applied" flow does this — Sprint 9) so the user doesn't have to
+  // paste it in by hand before matching. Still fully editable either way.
+  initialJobDescription?: string | null;
 }
 
 const RECOMMENDATION_STYLES: Record<JobMatchRecommendation, string> = {
@@ -20,10 +24,10 @@ const RECOMMENDATION_STYLES: Record<JobMatchRecommendation, string> = {
   Skip: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
 };
 
-export function JobMatchPanel({ applicationId }: JobMatchPanelProps) {
+export function JobMatchPanel({ applicationId, initialJobDescription }: JobMatchPanelProps) {
   const t = useTranslations("applications.detail.match");
   const queryClient = useQueryClient();
-  const [jobDescription, setJobDescription] = useState("");
+  const [jobDescription, setJobDescription] = useState(initialJobDescription ?? "");
   const [error, setError] = useState<string | null>(null);
 
   const { data: match } = useQuery({

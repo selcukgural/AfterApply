@@ -120,7 +120,7 @@ internal sealed class ApplicationService(AppDbContext dbContext, ICompanyResolve
         // (Job.Source = data provenance, Application.Source = entry-creation channel).
         var externalId = LinkedInJobIdExtractor.Extract(normalizedUrl);
         var jobId = await jobResolver.ResolveOrCreateAsync(companyId, request.JobTitle, Source.LinkedIn, normalizedUrl,
-            externalId, request.Location, cancellationToken, request.Description, request.PublishedAt);
+            externalId, request.Location, cancellationToken, request.Description, request.PublishedAt, request.DescriptionHtml);
 
         // The extension doesn't scrape employment type (spec §11's field list omits it) — same
         // known limitation as generic CSV import (DECISIONS.md Sprint 4), defaults to FullTime.
@@ -232,9 +232,17 @@ internal sealed class ApplicationService(AppDbContext dbContext, ICompanyResolve
             .Select(c => c.Name)
             .FirstAsync(cancellationToken);
 
+        var job = application.JobId is null
+            ? null
+            : await dbContext.Jobs
+                .Where(j => j.Id == application.JobId)
+                .Select(j => new { j.Description, j.DescriptionHtml })
+                .FirstOrDefaultAsync(cancellationToken);
+
         return new ApplicationDetailResponse(
             application.Id, application.CompanyId, companyName, application.JobTitle, application.JobUrl,
             application.Location, application.EmploymentType, application.AppliedAt, application.Status,
-            application.Source, application.Notes, application.CreatedAt, application.UpdatedAt);
+            application.Source, application.Notes, application.CreatedAt, application.UpdatedAt,
+            job?.Description, job?.DescriptionHtml);
     }
 }

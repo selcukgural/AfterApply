@@ -11,6 +11,7 @@ public sealed class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.ToTable("Jobs");
         builder.HasKey(j => j.Id);
 
+        builder.Property(j => j.DescriptionHtml).HasColumnType("text");
         builder.Property(j => j.Title).IsRequired().HasMaxLength(300);
         builder.Property(j => j.NormalizedTitle).IsRequired().HasMaxLength(300);
         builder.Property(j => j.Url).HasMaxLength(2000);

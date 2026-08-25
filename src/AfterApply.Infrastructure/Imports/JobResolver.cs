@@ -10,7 +10,7 @@ internal sealed class JobResolver(AppDbContext dbContext) : IJobResolver
 {
     public async Task<Guid> ResolveOrCreateAsync(Guid companyId, string title, Source source, string? url,
         string? externalId, string? location, CancellationToken cancellationToken,
-        string? description = null, DateTimeOffset? publishedAt = null)
+        string? description = null, DateTimeOffset? publishedAt = null, string? descriptionHtml = null)
     {
         if (externalId is not null)
         {
@@ -26,7 +26,8 @@ internal sealed class JobResolver(AppDbContext dbContext) : IJobResolver
         }
 
         var job = Job.Create(companyId, title, source, DateTimeOffset.UtcNow,
-            description: description, url: url, externalId: externalId, location: location, publishedAt: publishedAt);
+            description: description, url: url, externalId: externalId, location: location, publishedAt: publishedAt,
+            descriptionHtml: descriptionHtml);
         dbContext.Jobs.Add(job);
         await dbContext.SaveChangesAsync(cancellationToken);
 

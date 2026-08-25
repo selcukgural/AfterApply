@@ -146,6 +146,12 @@
         "profileRequiredError": "Set your CV in your profile first.",
         "setCvLink": "Set your CV",
         "genericError": "Could not compute the match."
+      },
+      "jobDescription": {
+        "title": "Job Description",
+        "source": "From LinkedIn",
+        "expand": "Show more",
+        "collapse": "Collapse"
       }
     },
     "statusChange": {
