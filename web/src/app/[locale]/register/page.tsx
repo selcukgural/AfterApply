@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { registerSchema } from "@/lib/validation/registerSchema";
+import { createRegisterSchema } from "@/lib/validation/registerSchema";
 import { ApiError } from "@/lib/api/httpClient";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
@@ -16,6 +16,8 @@ type FieldErrors = Partial<Record<"email" | "password" | "firstName" | "lastName
 export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
+  const t = useTranslations("auth.register");
+  const tValidation = useTranslations("validation");
   const [values, setValues] = useState({
     email: "",
     password: "",
@@ -34,7 +36,7 @@ export default function RegisterPage() {
     event.preventDefault();
     setFormError(null);
 
-    const result = registerSchema.safeParse(values);
+    const result = createRegisterSchema(tValidation).safeParse(values);
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
       setErrors({
@@ -53,7 +55,7 @@ export default function RegisterPage() {
       await register(result.data);
       router.push("/");
     } catch (error) {
-      setFormError(error instanceof ApiError ? error.message : "Kayıt oluşturulamadı.");
+      setFormError(error instanceof ApiError ? error.message : t("genericError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -62,20 +64,20 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">Kayıt Ol</h1>
+        <h1 className="mb-6 text-xl font-semibold text-gray-900">{t("title")}</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
-            <FormField label="Ad" htmlFor="firstName" error={errors.firstName}>
+            <FormField label={t("firstName")} htmlFor="firstName" error={errors.firstName}>
               <Input id="firstName" value={values.firstName} onChange={update("firstName")} />
             </FormField>
-            <FormField label="Soyad" htmlFor="lastName" error={errors.lastName}>
+            <FormField label={t("lastName")} htmlFor="lastName" error={errors.lastName}>
               <Input id="lastName" value={values.lastName} onChange={update("lastName")} />
             </FormField>
           </div>
-          <FormField label="E-posta" htmlFor="email" error={errors.email}>
+          <FormField label={t("email")} htmlFor="email" error={errors.email}>
             <Input id="email" type="email" value={values.email} onChange={update("email")} autoComplete="email" />
           </FormField>
-          <FormField label="Şifre" htmlFor="password" error={errors.password}>
+          <FormField label={t("password")} htmlFor="password" error={errors.password}>
             <Input
               id="password"
               type="password"
@@ -92,21 +94,21 @@ export default function RegisterPage() {
             label={
               <>
                 <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
-                  Gizlilik politikasını
+                  {t("consentLink")}
                 </Link>{" "}
-                okudum ve kabul ediyorum.
+                {t("consentSuffix")}
               </>
             }
           />
           {formError && <p className="text-sm text-red-600">{formError}</p>}
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Kayıt oluşturuluyor..." : "Kayıt Ol"}
+            {isSubmitting ? t("submitting") : t("submit")}
           </Button>
         </form>
         <p className="mt-4 text-sm text-gray-600">
-          Zaten hesabın var mı?{" "}
+          {t("haveAccount")}{" "}
           <Link href="/login" className="text-blue-600 hover:underline">
-            Giriş yap
+            {t("loginLink")}
           </Link>
         </p>
       </div>

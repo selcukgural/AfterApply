@@ -36,6 +36,7 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddLocalization();
         services.AddPersistence(configuration);
         services.AddIdentityAndJwt(configuration);
         services.AddApplicationServices();
@@ -108,7 +109,8 @@ public static class DependencyInjection
         services.AddIdentityCore<ApplicationUser>(options => { options.User.RequireUniqueEmail = true; })
             .AddSignInManager<SignInManager<ApplicationUser>>()
             .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddErrorDescriber<LocalizedIdentityErrorDescriber>();
 
         services.AddAuthentication(options =>
             {

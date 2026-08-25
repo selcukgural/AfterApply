@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Imports;
 using AfterApply.Application.Imports.Contracts;
+using AfterApply.Application.Localization;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Imports;
@@ -11,13 +12,15 @@ using AfterApply.Domain.Jobs;
 using AfterApply.Infrastructure.Persistence;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using DomainApplication = AfterApply.Domain.Applications.Application;
 
 namespace AfterApply.Infrastructure.Imports;
 
 internal sealed partial class ImportService(
-    AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver, IOptions<ImportOptions> options)
+    AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver, IOptions<ImportOptions> options,
+    IStringLocalizer<SharedStrings> localizer)
     : IImportService
 {
     public async Task<ImportSummaryResponse> ImportCsvAsync(Guid userId, Stream csvStream, string fileName, long fileLength,
@@ -27,17 +30,17 @@ internal sealed partial class ImportService(
 
         if (!fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
         {
-            throw new CsvImportValidationException(["Sadece .csv dosyaları desteklenir."]);
+            throw new CsvImportValidationException([localizer["IMPORT_ONLY_CSV_SUPPORTED"]]);
         }
 
         if (fileLength <= 0)
         {
-            throw new CsvImportValidationException(["Dosya boş."]);
+            throw new CsvImportValidationException([localizer["IMPORT_FILE_EMPTY"]]);
         }
 
         if (fileLength > opts.MaxFileSizeBytes)
         {
-            throw new CsvImportValidationException([$"Dosya boyutu {opts.MaxFileSizeBytes} byte sınırını aşıyor."]);
+            throw new CsvImportValidationException([localizer["IMPORT_FILE_TOO_LARGE", opts.MaxFileSizeBytes]]);
         }
 
         var batch = ImportBatch.Create(userId, Source.CsvImport, fileName, DateTimeOffset.UtcNow);
@@ -63,38 +66,38 @@ internal sealed partial class ImportService(
 
         if (!fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
         {
-            throw new CsvImportValidationException(["Sadece .zip dosyaları desteklenir."]);
+            throw new CsvImportValidationException([localizer["IMPORT_ONLY_ZIP_SUPPORTED"]]);
         }
 
         if (fileLength <= 0)
         {
-            throw new CsvImportValidationException(["Dosya boş."]);
+            throw new CsvImportValidationException([localizer["IMPORT_FILE_EMPTY"]]);
         }
 
         if (fileLength > opts.MaxZipSizeBytes)
         {
-            throw new CsvImportValidationException([$"ZIP boyutu {opts.MaxZipSizeBytes} byte sınırını aşıyor."]);
+            throw new CsvImportValidationException([localizer["IMPORT_ZIP_TOO_LARGE", opts.MaxZipSizeBytes]]);
         }
 
         using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
         if (archive.Entries.Count > opts.MaxZipEntryCount)
         {
-            throw new CsvImportValidationException([$"ZIP içindeki dosya sayısı {opts.MaxZipEntryCount} sınırını aşıyor."]);
+            throw new CsvImportValidationException([localizer["IMPORT_ZIP_TOO_MANY_ENTRIES", opts.MaxZipEntryCount]]);
         }
 
         var matchedEntries = archive.Entries.Where(e => JobApplicationsFileRegex().IsMatch(e.Name)).ToList();
 
         if (matchedEntries.Count == 0)
         {
-            throw new CsvImportValidationException(["ZIP içinde 'Job Applications*.csv' dosyası bulunamadı."]);
+            throw new CsvImportValidationException([localizer["IMPORT_ZIP_NO_MATCHING_FILES"]]);
         }
 
         foreach (var entry in matchedEntries)
         {
             if (entry.Length > opts.MaxFileSizeBytes)
             {
-                throw new CsvImportValidationException([$"'{entry.FullName}' dosyası {opts.MaxFileSizeBytes} byte sınırını aşıyor."]);
+                throw new CsvImportValidationException([localizer["IMPORT_ZIP_ENTRY_TOO_LARGE", entry.FullName, opts.MaxFileSizeBytes]]);
             }
         }
 
@@ -116,7 +119,7 @@ internal sealed partial class ImportService(
             }
             catch (StreamLengthExceededException)
             {
-                throw new CsvImportValidationException([$"'{entry.FullName}' dosyası açılırken boyut sınırı aşıldı."]);
+                throw new CsvImportValidationException([localizer["IMPORT_ZIP_ENTRY_STREAM_EXCEEDED", entry.FullName]]);
             }
         }
 
@@ -143,14 +146,14 @@ internal sealed partial class ImportService(
 
         if (!await csv.ReadAsync() || !csv.ReadHeader())
         {
-            throw new CsvImportValidationException(["CSV dosyasında başlık satırı bulunamadı."]);
+            throw new CsvImportValidationException([localizer["IMPORT_CSV_HEADER_NOT_FOUND"]]);
         }
 
         var headers = csv.HeaderRecord ?? [];
-        var (mapping, mappingErrors) = CsvColumnMapper.Map(headers, columnMappingOverride);
+        var (mapping, mappingErrorCodes) = CsvColumnMapper.Map(headers, columnMappingOverride);
         if (mapping is null)
         {
-            throw new CsvImportValidationException(mappingErrors);
+            throw new CsvImportValidationException(mappingErrorCodes.Select(code => (string)localizer[code]).ToList());
         }
 
         while (await csv.ReadAsync())
@@ -159,7 +162,7 @@ internal sealed partial class ImportService(
 
             if (counts.Total > opts.MaxRowCount)
             {
-                throw new CsvImportValidationException([$"Satır sayısı {opts.MaxRowCount} sınırını aşıyor."]);
+                throw new CsvImportValidationException([localizer["IMPORT_ROW_COUNT_EXCEEDED", opts.MaxRowCount]]);
             }
 
             var rawRow = headers.ToDictionary(h => h, h => csv.GetField(h));
@@ -190,7 +193,7 @@ internal sealed partial class ImportService(
         var (parsed, error) = ImportRowParser.Parse(rawRow, mapping);
         if (parsed is null)
         {
-            batch.AddRowError(rowNumber, rawRowText, error!);
+            batch.AddRowError(rowNumber, rawRowText, localizer[error!.Code, error.Args]);
             dbContext.ImportRowErrors.Add(batch.RowErrors.Last());
             return RowOutcome.Invalid;
         }

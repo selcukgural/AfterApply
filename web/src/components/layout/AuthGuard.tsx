@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const t = useTranslations("common");
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -17,7 +19,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">
-        Yükleniyor...
+        {t("loading")}
       </div>
     );
   }

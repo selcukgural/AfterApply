@@ -57,7 +57,7 @@ public class ApplicationTests
     {
         var application = CreateApplication();
 
-        Should.Throw<InvalidOperationException>(() =>
+        Should.Throw<ApplicationAlreadyInStatusException>(() =>
             application.ChangeStatus(ApplicationStatus.Applied, Now.AddDays(1), Source.Manual, null));
     }
 
@@ -78,7 +78,7 @@ public class ApplicationTests
     {
         var application = CreateApplication();
 
-        Should.Throw<InvalidOperationException>(() =>
+        Should.Throw<StatusChangedEventNotAllowedException>(() =>
             application.AddEvent(ApplicationEventType.StatusChanged, Now.AddDays(1), Source.Manual, null));
     }
 

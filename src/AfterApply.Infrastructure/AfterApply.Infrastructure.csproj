@@ -26,6 +26,7 @@
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     <PackageReference Include="Google.Apis.Gmail.v1" />
+    <PackageReference Include="Microsoft.Extensions.Localization" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { ApplicationStatus } from "@/types/api";
-import { APPLICATION_STATUS_LABELS } from "@/lib/constants/applicationStatus";
 
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
   Applied: "bg-gray-100 text-gray-700",
@@ -15,9 +17,10 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
 };
 
 export function StatusBadge({ status }: { status: ApplicationStatus }) {
+  const t = useTranslations("status");
   return (
     <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[status]}`}>
-      {APPLICATION_STATUS_LABELS[status]}
+      {t(status)}
     </span>
   );
 }

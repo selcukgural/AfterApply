@@ -11,6 +11,9 @@ public sealed record ParsedImportRow(
     string? JobUrl,
     string? Location);
 
+/// <summary>Translatable row-validation failure — <see cref="Code"/> is a SharedStrings resx key.</summary>
+public sealed record ImportRowError(string Code, params string[] Args);
+
 /// <summary>
 /// Validates and parses one raw CSV row (already located via <see cref="ColumnMapping"/>) into a
 /// <see cref="ParsedImportRow"/>, or returns a human-readable error. Pure function — no I/O.
@@ -52,24 +55,24 @@ public static class ImportRowParser
         ["kayboldu"] = ApplicationStatus.Ghosted
     };
 
-    public static (ParsedImportRow? Row, string? Error) Parse(IReadOnlyDictionary<string, string?> rawRow, ColumnMapping mapping)
+    public static (ParsedImportRow? Row, ImportRowError? Error) Parse(IReadOnlyDictionary<string, string?> rawRow, ColumnMapping mapping)
     {
         var companyName = GetValue(rawRow, mapping.CompanyNameHeader);
         if (string.IsNullOrWhiteSpace(companyName))
         {
-            return (null, "CompanyName boş olamaz.");
+            return (null, new ImportRowError("IMPORT_ROW_COMPANY_EMPTY"));
         }
 
         var jobTitle = GetValue(rawRow, mapping.JobTitleHeader);
         if (string.IsNullOrWhiteSpace(jobTitle))
         {
-            return (null, "JobTitle boş olamaz.");
+            return (null, new ImportRowError("IMPORT_ROW_TITLE_EMPTY"));
         }
 
         var appliedAtRaw = GetValue(rawRow, mapping.AppliedAtHeader);
         if (!TryParseDate(appliedAtRaw, out var appliedAt))
         {
-            return (null, $"AppliedAt tarihi ayrıştırılamadı: '{appliedAtRaw}'.");
+            return (null, new ImportRowError("IMPORT_ROW_APPLIED_AT_UNPARSABLE", appliedAtRaw ?? string.Empty));
         }
 
         var status = ApplicationStatus.Applied;
@@ -78,7 +81,7 @@ public static class ImportRowParser
             var statusRaw = GetValue(rawRow, mapping.StatusHeader);
             if (!string.IsNullOrWhiteSpace(statusRaw) && !TryParseStatus(statusRaw, out status))
             {
-                return (null, $"Status tanınamadı: '{statusRaw}'.");
+                return (null, new ImportRowError("IMPORT_ROW_STATUS_UNKNOWN", statusRaw));
             }
         }
 

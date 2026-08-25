@@ -1,5 +1,6 @@
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.Common;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Domain.Applications;
@@ -38,7 +39,7 @@ internal sealed class EmailIntegrationService(
         var opts = googleOptions.Value;
         if (!opts.IsConfigured)
         {
-            throw new InvalidOperationException(
+            throw new CodedException("EMAIL_INTEGRATION_OAUTH_NOT_CONFIGURED",
                 "Google OAuth is not configured. See README.md 'Gmail Integration Setup'.");
         }
 

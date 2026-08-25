@@ -1,8 +1,11 @@
 using System.Security.Claims;
 using AfterApply.Api.Extensions;
+using AfterApply.Application.Common;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.EmailIntegrations.Contracts;
+using AfterApply.Application.Localization;
 using AfterApply.Infrastructure.EmailIntegrations;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 
 namespace AfterApply.Api.Endpoints;
@@ -17,16 +20,17 @@ public static class EmailIntegrationEndpoints
                 Results.Ok(await service.GetConnectionStatusAsync(user.GetUserId(), cancellationToken)))
             .RequireAuthorization();
 
-        group.MapGet("/gmail/connect", async (ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
+        group.MapGet("/gmail/connect", async (ClaimsPrincipal user, IEmailIntegrationService service,
+                IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
             {
                 try
                 {
                     var authorizationUrl = await service.BuildAuthorizationUrlAsync(user.GetUserId(), cancellationToken);
                     return Results.Ok(new { authorizationUrl });
                 }
-                catch (InvalidOperationException ex)
+                catch (CodedException ex)
                 {
-                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["gmail"] = [ex.Message] });
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["gmail"] = [localizer[ex.ErrorCode]] });
                 }
             })
             .RequireAuthorization();
@@ -60,7 +64,8 @@ public static class EmailIntegrationEndpoints
                 Results.Ok(await service.GetPendingSuggestionsAsync(user.GetUserId(), cancellationToken)))
             .RequireAuthorization();
 
-        group.MapPost("/suggestions/{id:guid}/confirm", async (Guid id, ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
+        group.MapPost("/suggestions/{id:guid}/confirm", async (Guid id, ClaimsPrincipal user, IEmailIntegrationService service,
+                IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
             {
                 var result = await service.ConfirmSuggestionAsync(user.GetUserId(), id, cancellationToken);
                 return result switch
@@ -68,7 +73,7 @@ public static class EmailIntegrationEndpoints
                     ConfirmSuggestionResult.Confirmed => Results.NoContent(),
                     ConfirmSuggestionResult.NoStatusToConfirm => Results.ValidationProblem(new Dictionary<string, string[]>
                     {
-                        ["suggestionId"] = ["Bu öneri için onaylanacak bir statü değişikliği yok."]
+                        ["suggestionId"] = [localizer["EMAIL_INTEGRATION_NO_STATUS_TO_CONFIRM"]]
                     }),
                     _ => Results.NotFound()
                 };

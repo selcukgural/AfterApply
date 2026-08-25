@@ -11,7 +11,7 @@ doğrulanabilir") until that decision is made.
 1. `cp .env.prod.example .env.prod` and fill in real values (see below —
    do not reuse the dev `.env`'s placeholder secrets).
 2. ```bash
-   docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up --build
+   podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up --build
    ```
    (or `podman compose ...` — see README's Podman notes for
    `DOCKER_HOST`/Ryuk caveats, which don't apply here since this is a

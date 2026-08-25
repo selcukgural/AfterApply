@@ -1,7 +1,9 @@
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Application.Localization;
 using AfterApply.Infrastructure;
+using Microsoft.Extensions.Localization;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -23,23 +25,23 @@ public static class AuthEndpoints
             .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy);
 
         group.MapPost("/login", async (LoginRequest request, IAuthService authService,
-                HttpContext httpContext, CancellationToken cancellationToken) =>
+                IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
                 var result = await authService.LoginAsync(request, GetIpAddress(httpContext), cancellationToken);
                 return result.Succeeded
                     ? Results.Ok(result.Response)
-                    : Results.Problem(detail: string.Join(" ", result.Errors), statusCode: StatusCodes.Status401Unauthorized);
+                    : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
             })
             .WithValidation<LoginRequest>()
             .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy);
 
         group.MapPost("/refresh", async (RefreshRequest request, IAuthService authService,
-                HttpContext httpContext, CancellationToken cancellationToken) =>
+                IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
                 var result = await authService.RefreshAsync(request.RefreshToken, GetIpAddress(httpContext), cancellationToken);
                 return result.Succeeded
                     ? Results.Ok(result.Response)
-                    : Results.Problem(detail: string.Join(" ", result.Errors), statusCode: StatusCodes.Status401Unauthorized);
+                    : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
             })
             .WithValidation<RefreshRequest>()
             .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy);
@@ -59,4 +61,10 @@ public static class AuthEndpoints
 
     private static Dictionary<string, string[]> ToErrorDictionary(IReadOnlyCollection<string> errors) =>
         new() { ["error"] = errors.ToArray() };
+
+    // Login/refresh failures carry a bare error code (AUTH_INVALID_CREDENTIALS, AUTH_INVALID_REFRESH_TOKEN) —
+    // unlike register's IdentityError.Description (already localized+formatted by
+    // LocalizedIdentityErrorDescriber), these need translating here at the API boundary.
+    private static string TranslateErrors(IReadOnlyCollection<string> errorCodes, IStringLocalizer<SharedStrings> localizer) =>
+        string.Join(" ", errorCodes.Select(code => (string)localizer[code]));
 }

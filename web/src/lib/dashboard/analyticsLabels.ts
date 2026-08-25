@@ -5,13 +5,12 @@ export interface AnalyticsRateTile {
     AnalyticsRatesResponse,
     "responseRate" | "interviewRate" | "offerRate" | "rejectionRate" | "ghostingRate"
   >;
-  label: string;
 }
 
 export const ANALYTICS_RATE_TILES: AnalyticsRateTile[] = [
-  { key: "responseRate", label: "Yanıt Oranı" },
-  { key: "interviewRate", label: "Mülakat Oranı" },
-  { key: "offerRate", label: "Teklif Oranı" },
-  { key: "rejectionRate", label: "Red Oranı" },
-  { key: "ghostingRate", label: "Kayboldu Oranı" },
+  { key: "responseRate" },
+  { key: "interviewRate" },
+  { key: "offerRate" },
+  { key: "rejectionRate" },
+  { key: "ghostingRate" },
 ];

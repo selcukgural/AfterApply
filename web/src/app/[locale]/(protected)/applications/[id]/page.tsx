@@ -1,19 +1,22 @@
 "use client";
 
 import { use } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { applicationsApi } from "@/lib/api/applications";
 import type { ApplicationStatus } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusChangeSelect } from "@/components/applications/StatusChangeSelect";
 import { Timeline } from "@/components/applications/Timeline";
-import { EMPLOYMENT_TYPE_LABELS } from "@/lib/constants/employmentType";
 import { Button } from "@/components/ui/Button";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const t = useTranslations("applications.detail");
+  const tCommon = useTranslations("common");
+  const tEmploymentType = useTranslations("employmentType");
+  const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -44,7 +47,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   });
 
   if (isLoading || !application) {
-    return <p className="text-sm text-gray-500">Yükleniyor...</p>;
+    return <p className="text-sm text-gray-500">{tCommon("loading")}</p>;
   }
 
   return (
@@ -56,17 +59,17 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         </div>
         <div className="flex gap-2">
           <Link href={`/applications/${id}/edit`}>
-            <Button variant="secondary">Düzenle</Button>
+            <Button variant="secondary">{t("edit")}</Button>
           </Link>
           <Button
             variant="danger"
             onClick={() => {
-              if (confirm("Bu başvuruyu silmek istediğinize emin misiniz?")) {
+              if (confirm(t("deleteConfirm"))) {
                 deleteMutation.mutate();
               }
             }}
           >
-            Sil
+            {t("delete")}
           </Button>
         </div>
       </div>
@@ -78,23 +81,23 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           </div>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt className="text-gray-500">Konum</dt>
-              <dd className="text-gray-900">{application.location ?? "—"}</dd>
+              <dt className="text-gray-500">{t("location")}</dt>
+              <dd className="text-gray-900">{application.location ?? t("emptyValue")}</dd>
             </div>
             <div>
-              <dt className="text-gray-500">Çalışma Şekli</dt>
-              <dd className="text-gray-900">{EMPLOYMENT_TYPE_LABELS[application.employmentType]}</dd>
+              <dt className="text-gray-500">{t("employmentType")}</dt>
+              <dd className="text-gray-900">{tEmploymentType(application.employmentType)}</dd>
             </div>
             <div>
-              <dt className="text-gray-500">Başvuru Tarihi</dt>
-              <dd className="text-gray-900">{new Date(application.appliedAt).toLocaleDateString("tr-TR")}</dd>
+              <dt className="text-gray-500">{t("appliedAt")}</dt>
+              <dd className="text-gray-900">{new Date(application.appliedAt).toLocaleDateString(locale)}</dd>
             </div>
             {application.jobUrl && (
               <div>
-                <dt className="text-gray-500">İlan</dt>
+                <dt className="text-gray-500">{t("jobUrl")}</dt>
                 <dd>
                   <a href={application.jobUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                    Bağlantıyı Aç
+                    {t("openLink")}
                   </a>
                 </dd>
               </div>
@@ -102,7 +105,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           </dl>
           {application.notes && (
             <div>
-              <p className="text-gray-500 text-sm">Notlar</p>
+              <p className="text-gray-500 text-sm">{t("notes")}</p>
               <p className="whitespace-pre-wrap text-sm text-gray-900">{application.notes}</p>
             </div>
           )}
@@ -116,7 +119,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-semibold text-gray-900">Zaman Çizelgesi</h2>
+          <h2 className="mb-3 text-sm font-semibold text-gray-900">{t("timeline")}</h2>
           <Timeline events={timeline ?? []} />
         </div>
       </div>

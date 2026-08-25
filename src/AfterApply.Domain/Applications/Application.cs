@@ -82,7 +82,7 @@ public sealed class Application : AuditableEntity
     {
         if (newStatus == Status)
         {
-            throw new InvalidOperationException("Application is already in this status.");
+            throw new ApplicationAlreadyInStatusException();
         }
 
         var fromStatus = Status;
@@ -98,9 +98,15 @@ public sealed class Application : AuditableEntity
     {
         if (type is ApplicationEventType.StatusChanged)
         {
-            throw new InvalidOperationException("StatusChanged events can only be created via ChangeStatus.");
+            throw new StatusChangedEventNotAllowedException();
         }
 
         _events.Add(ApplicationEvent.Create(Id, type, occurredAt, source, metadata));
     }
 }
+
+public sealed class ApplicationAlreadyInStatusException()
+    : DomainException("APPLICATION_ALREADY_IN_STATUS", "Application is already in this status.");
+
+public sealed class StatusChangedEventNotAllowedException()
+    : DomainException("STATUS_CHANGED_EVENT_INVALID", "StatusChanged events can only be created via ChangeStatus.");

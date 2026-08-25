@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="APPLICATION_ALREADY_IN_STATUS" xml:space="preserve">
+    <value>Başvuru zaten bu durumda.</value>
+  </data>
+  <data name="STATUS_CHANGED_EVENT_INVALID" xml:space="preserve">
+    <value>Durum değişikliği olayları yalnızca durum değiştirme uç noktası üzerinden oluşturulabilir.</value>
+  </data>
+
+  <data name="AUTH_INVALID_CREDENTIALS" xml:space="preserve">
+    <value>E-posta veya şifre hatalı.</value>
+  </data>
+  <data name="AUTH_INVALID_REFRESH_TOKEN" xml:space="preserve">
+    <value>Geçersiz oturum yenileme jetonu.</value>
+  </data>
+
+  <data name="DefaultError" xml:space="preserve">
+    <value>Bilinmeyen bir hata oluştu.</value>
+  </data>
+  <data name="ConcurrencyFailure" xml:space="preserve">
+    <value>Eşzamanlılık hatası: kayıt başka bir işlem tarafından değiştirilmiş.</value>
+  </data>
+  <data name="PasswordMismatch" xml:space="preserve">
+    <value>Şifre hatalı.</value>
+  </data>
+  <data name="InvalidToken" xml:space="preserve">
+    <value>Geçersiz jeton.</value>
+  </data>
+  <data name="LoginAlreadyAssociated" xml:space="preserve">
+    <value>Bu girişle ilişkili bir kullanıcı zaten var.</value>
+  </data>
+  <data name="InvalidUserName" xml:space="preserve">
+    <value>'{0}' kullanıcı adı geçersiz, yalnızca harf veya rakam içerebilir.</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>'{0}' e-posta adresi geçersiz.</value>
+  </data>
+  <data name="DuplicateUserName" xml:space="preserve">
+    <value>'{0}' kullanıcı adı zaten kullanılıyor.</value>
+  </data>
+  <data name="DuplicateEmail" xml:space="preserve">
+    <value>'{0}' e-posta adresi zaten kullanılıyor.</value>
+  </data>
+  <data name="InvalidRoleName" xml:space="preserve">
+    <value>'{0}' rol adı geçersiz.</value>
+  </data>
+  <data name="DuplicateRoleName" xml:space="preserve">
+    <value>'{0}' rol adı zaten kullanılıyor.</value>
+  </data>
+  <data name="UserAlreadyHasPassword" xml:space="preserve">
+    <value>Kullanıcının zaten bir şifresi var.</value>
+  </data>
+  <data name="UserLockoutNotEnabled" xml:space="preserve">
+    <value>Bu kullanıcı için hesap kilitleme etkin değil.</value>
+  </data>
+  <data name="UserAlreadyInRole" xml:space="preserve">
+    <value>Kullanıcı zaten '{0}' rolünde.</value>
+  </data>
+  <data name="UserNotInRole" xml:space="preserve">
+    <value>Kullanıcı '{0}' rolünde değil.</value>
+  </data>
+  <data name="PasswordTooShort" xml:space="preserve">
+    <value>Şifre en az {0} karakter olmalı.</value>
+  </data>
+  <data name="PasswordRequiresUniqueChars" xml:space="preserve">
+    <value>Şifre en az {0} farklı karakter içermeli.</value>
+  </data>
+  <data name="PasswordRequiresNonAlphanumeric" xml:space="preserve">
+    <value>Şifre en az bir alfanümerik olmayan karakter içermeli.</value>
+  </data>
+  <data name="PasswordRequiresDigit" xml:space="preserve">
+    <value>Şifre en az bir rakam içermeli ('0'-'9').</value>
+  </data>
+  <data name="PasswordRequiresLower" xml:space="preserve">
+    <value>Şifre en az bir küçük harf içermeli ('a'-'z').</value>
+  </data>
+  <data name="PasswordRequiresUpper" xml:space="preserve">
+    <value>Şifre en az bir büyük harf içermeli ('A'-'Z').</value>
+  </data>
+  <data name="RecoveryCodeRedemptionFailed" xml:space="preserve">
+    <value>Kurtarma kodu kullanımı başarısız oldu.</value>
+  </data>
+
+  <data name="VALIDATION_CONSENT_REQUIRED" xml:space="preserve">
+    <value>Gizlilik politikasını kabul etmelisiniz.</value>
+  </data>
+  <data name="VALIDATION_APPLIED_AT_FUTURE" xml:space="preserve">
+    <value>Başvuru tarihi gelecekte olamaz.</value>
+  </data>
+  <data name="VALIDATION_STATUS_CHANGED_EVENT_NOT_ALLOWED" xml:space="preserve">
+    <value>Durum değişikliği olayları yalnızca durum değiştirme uç noktası üzerinden oluşturulabilir.</value>
+  </data>
+
+  <data name="IMPORT_ONLY_CSV_SUPPORTED" xml:space="preserve">
+    <value>Sadece .csv dosyaları desteklenir.</value>
+  </data>
+  <data name="IMPORT_FILE_EMPTY" xml:space="preserve">
+    <value>Dosya boş.</value>
+  </data>
+  <data name="IMPORT_FILE_TOO_LARGE" xml:space="preserve">
+    <value>Dosya boyutu {0} byte sınırını aşıyor.</value>
+  </data>
+  <data name="IMPORT_ONLY_ZIP_SUPPORTED" xml:space="preserve">
+    <value>Sadece .zip dosyaları desteklenir.</value>
+  </data>
+  <data name="IMPORT_ZIP_TOO_LARGE" xml:space="preserve">
+    <value>ZIP boyutu {0} byte sınırını aşıyor.</value>
+  </data>
+  <data name="IMPORT_ZIP_TOO_MANY_ENTRIES" xml:space="preserve">
+    <value>ZIP içindeki dosya sayısı {0} sınırını aşıyor.</value>
+  </data>
+  <data name="IMPORT_ZIP_NO_MATCHING_FILES" xml:space="preserve">
+    <value>ZIP içinde 'Job Applications*.csv' dosyası bulunamadı.</value>
+  </data>
+  <data name="IMPORT_ZIP_ENTRY_TOO_LARGE" xml:space="preserve">
+    <value>'{0}' dosyası {1} byte sınırını aşıyor.</value>
+  </data>
+  <data name="IMPORT_ZIP_ENTRY_STREAM_EXCEEDED" xml:space="preserve">
+    <value>'{0}' dosyası açılırken boyut sınırı aşıldı.</value>
+  </data>
+  <data name="IMPORT_ROW_COUNT_EXCEEDED" xml:space="preserve">
+    <value>Satır sayısı {0} sınırını aşıyor.</value>
+  </data>
+  <data name="IMPORT_CSV_HEADER_NOT_FOUND" xml:space="preserve">
+    <value>CSV dosyasında başlık satırı bulunamadı.</value>
+  </data>
+  <data name="IMPORT_COMPANY_COLUMN_NOT_FOUND" xml:space="preserve">
+    <value>CompanyName sütunu bulunamadı (beklenen başlıklar: Company, Company Name, Şirket).</value>
+  </data>
+  <data name="IMPORT_TITLE_COLUMN_NOT_FOUND" xml:space="preserve">
+    <value>JobTitle sütunu bulunamadı (beklenen başlıklar: Title, Position, Pozisyon).</value>
+  </data>
+  <data name="IMPORT_APPLIED_AT_COLUMN_NOT_FOUND" xml:space="preserve">
+    <value>AppliedAt sütunu bulunamadı (beklenen başlıklar: Applied At, Date, Tarih).</value>
+  </data>
+  <data name="IMPORT_ROW_COMPANY_EMPTY" xml:space="preserve">
+    <value>CompanyName boş olamaz.</value>
+  </data>
+  <data name="IMPORT_ROW_TITLE_EMPTY" xml:space="preserve">
+    <value>JobTitle boş olamaz.</value>
+  </data>
+  <data name="IMPORT_ROW_APPLIED_AT_UNPARSABLE" xml:space="preserve">
+    <value>AppliedAt tarihi ayrıştırılamadı: '{0}'.</value>
+  </data>
+  <data name="IMPORT_ROW_STATUS_UNKNOWN" xml:space="preserve">
+    <value>Status tanınamadı: '{0}'.</value>
+  </data>
+  <data name="IMPORT_COLUMN_MAPPING_INVALID_JSON" xml:space="preserve">
+    <value>columnMapping geçerli bir JSON nesnesi olmalı, örn. {"CompanyName":"Firma"}.</value>
+  </data>
+
+  <data name="EMAIL_INTEGRATION_OAUTH_NOT_CONFIGURED" xml:space="preserve">
+    <value>Google OAuth yapılandırılmamış. Bkz. README.md 'Gmail Integration Setup'.</value>
+  </data>
+  <data name="EMAIL_INTEGRATION_NO_STATUS_TO_CONFIRM" xml:space="preserve">
+    <value>Bu öneri için onaylanacak bir statü değişikliği yok.</value>
+  </data>
+
+  <data name="GENERIC_ERROR" xml:space="preserve">
+    <value>Beklenmeyen bir hata oluştu.</value>
+  </data>
+</root>

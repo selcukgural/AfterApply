@@ -8,15 +8,14 @@ import type { ApplicationSummaryCountsResponse } from "@/types/api";
 
 export interface DashboardTile {
   key: keyof ApplicationSummaryCountsResponse;
-  label: string;
 }
 
 export const DASHBOARD_TILES: DashboardTile[] = [
-  { key: "total", label: "Toplam Başvuru" },
-  { key: "active", label: "Aktif" },
-  { key: "waiting", label: "Bekleyen" },
-  { key: "interviews", label: "Mülakatlar" },
-  { key: "offers", label: "Teklifler" },
-  { key: "rejected", label: "Reddedilen" },
-  { key: "ghosted", label: "Kayboldu" },
+  { key: "total" },
+  { key: "active" },
+  { key: "waiting" },
+  { key: "interviews" },
+  { key: "offers" },
+  { key: "rejected" },
+  { key: "ghosted" },
 ];

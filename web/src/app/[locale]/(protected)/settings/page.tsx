@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 import { emailIntegrationsApi } from "@/lib/api/emailIntegrations";
@@ -13,6 +14,8 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
 export default function SettingsPage() {
+  const t = useTranslations("settings");
+  const tCommon = useTranslations("common");
   const { deleteAccount } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,10 +28,10 @@ export default function SettingsPage() {
   // Read once from the URL synchronously during the initial render (not via an effect —
   // setState-in-effect causes an avoidable extra render pass).
   const [emailActionError, setEmailActionError] = useState<string | null>(() =>
-    searchParams.get("emailIntegration") === "error" ? "Gmail bağlantısı başarısız oldu. Lütfen tekrar deneyin." : null,
+    searchParams.get("emailIntegration") === "error" ? t("email.errorNotice") : null,
   );
   const [emailNotice] = useState<string | null>(() =>
-    searchParams.get("emailIntegration") === "success" ? "Gmail hesabınız bağlandı." : null,
+    searchParams.get("emailIntegration") === "success" ? t("email.successNotice") : null,
   );
 
   const [password, setPassword] = useState("");
@@ -57,7 +60,7 @@ export default function SettingsPage() {
       const { authorizationUrl } = await emailIntegrationsApi.getAuthorizationUrl();
       window.location.href = authorizationUrl;
     } catch (error) {
-      setEmailActionError(error instanceof ApiError ? error.message : "Gmail bağlantısı başlatılamadı.");
+      setEmailActionError(error instanceof ApiError ? error.message : t("email.connectError"));
     }
   };
 
@@ -67,7 +70,7 @@ export default function SettingsPage() {
       await emailIntegrationsApi.disconnect();
       setEmailStatus((prev) => (prev ? { ...prev, connected: false, providerAccountEmail: null } : prev));
     } catch (error) {
-      setEmailActionError(error instanceof ApiError ? error.message : "Bağlantı kaldırılamadı.");
+      setEmailActionError(error instanceof ApiError ? error.message : t("email.disconnectError"));
     }
   };
 
@@ -77,7 +80,7 @@ export default function SettingsPage() {
     try {
       await authApi.exportData();
     } catch (error) {
-      setExportError(error instanceof ApiError ? error.message : "Veriler dışa aktarılamadı.");
+      setExportError(error instanceof ApiError ? error.message : t("export.error"));
     } finally {
       setIsExporting(false);
     }
@@ -87,8 +90,8 @@ export default function SettingsPage() {
     event.preventDefault();
     setDeleteError(null);
 
-    if (confirmationText !== "SİL") {
-      setDeleteError('Onaylamak için kutuya "SİL" yazın.');
+    if (confirmationText !== t("delete.confirmWord")) {
+      setDeleteError(t("delete.confirmMismatch"));
       return;
     }
 
@@ -97,70 +100,60 @@ export default function SettingsPage() {
       await deleteAccount(password);
       router.replace("/login");
     } catch (error) {
-      setDeleteError(error instanceof ApiError ? error.message : "Hesap silinemedi.");
+      setDeleteError(error instanceof ApiError ? error.message : t("delete.genericError"));
       setIsDeleting(false);
     }
   };
 
   return (
     <div className="flex max-w-lg flex-col gap-8">
-      <h1 className="text-xl font-semibold text-gray-900">Hesap Ayarları</h1>
+      <h1 className="text-xl font-semibold text-gray-900">{t("title")}</h1>
 
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-base font-semibold text-gray-900">Verilerimi Dışa Aktar</h2>
-        <p className="mb-4 text-sm text-gray-600">
-          Hesabınıza ait tüm başvuru, import ve hatırlatma verilerini JSON dosyası olarak indirin.
-        </p>
+        <h2 className="mb-2 text-base font-semibold text-gray-900">{t("export.title")}</h2>
+        <p className="mb-4 text-sm text-gray-600">{t("export.description")}</p>
         {exportError && <p className="mb-3 text-sm text-red-600">{exportError}</p>}
         <Button variant="secondary" onClick={handleExport} disabled={isExporting}>
-          {isExporting ? "Hazırlanıyor..." : "Verilerimi İndir"}
+          {isExporting ? t("export.preparing") : t("export.download")}
         </Button>
       </section>
 
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-base font-semibold text-gray-900">E-posta Entegrasyonu</h2>
-        <p className="mb-4 text-sm text-gray-600">
-          Gmail hesabınızı bağlayın; işe alım e-postalarından (mülakat daveti, ret vb.) otomatik statü
-          önerileri alın. Sadece okuma izni istenir, e-posta gönderilmez.
-        </p>
+        <h2 className="mb-2 text-base font-semibold text-gray-900">{t("email.title")}</h2>
+        <p className="mb-4 text-sm text-gray-600">{t("email.description")}</p>
         {emailNotice && <p className="mb-3 text-sm text-green-700">{emailNotice}</p>}
         {emailActionError && <p className="mb-3 text-sm text-red-600">{emailActionError}</p>}
         {emailStatusLoading ? (
-          <p className="text-sm text-gray-500">Yükleniyor...</p>
+          <p className="text-sm text-gray-500">{tCommon("loading")}</p>
         ) : emailStatus?.connected ? (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-gray-700">
-              Bağlı hesap: <span className="font-medium">{emailStatus.providerAccountEmail}</span>
+              {t("email.connectedAccount")} <span className="font-medium">{emailStatus.providerAccountEmail}</span>
             </p>
             {emailStatus.needsReattention && (
-              <p className="text-sm text-amber-600">
-                Son senkronizasyon başarısız oldu, Gmail bağlantısını yeniden kurmanız gerekebilir.
-              </p>
+              <p className="text-sm text-amber-600">{t("email.needsReattention")}</p>
             )}
             <div className="flex items-center gap-4">
               <Link href="/settings/email-suggestions" className="text-sm text-blue-600 hover:underline">
-                Bekleyen önerileri gör
+                {t("email.viewSuggestions")}
               </Link>
               <Button variant="secondary" onClick={handleDisconnectGmail}>
-                Bağlantıyı Kaldır
+                {t("email.disconnect")}
               </Button>
             </div>
           </div>
         ) : (
           <Button variant="secondary" onClick={handleConnectGmail}>
-            Gmail Bağla
+            {t("email.connect")}
           </Button>
         )}
       </section>
 
       <section className="rounded-lg border border-red-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-base font-semibold text-gray-900">Hesabımı Sil</h2>
-        <p className="mb-4 text-sm text-gray-600">
-          Bu işlem geri alınamaz. Hesabınız ve tüm başvuru, import ve hatırlatma verileriniz kalıcı olarak
-          silinir.
-        </p>
+        <h2 className="mb-2 text-base font-semibold text-gray-900">{t("delete.title")}</h2>
+        <p className="mb-4 text-sm text-gray-600">{t("delete.description")}</p>
         <form onSubmit={handleDelete} className="flex flex-col gap-4">
-          <FormField label="Şifreniz" htmlFor="delete-password">
+          <FormField label={t("delete.passwordLabel")} htmlFor="delete-password">
             <Input
               id="delete-password"
               type="password"
@@ -169,7 +162,7 @@ export default function SettingsPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </FormField>
-          <FormField label='Onaylamak için "SİL" yazın' htmlFor="delete-confirmation">
+          <FormField label={t("delete.confirmLabel")} htmlFor="delete-confirmation">
             <Input
               id="delete-confirmation"
               value={confirmationText}
@@ -178,7 +171,7 @@ export default function SettingsPage() {
           </FormField>
           {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
           <Button type="submit" variant="danger" disabled={isDeleting}>
-            {isDeleting ? "Siliniyor..." : "Hesabımı Kalıcı Olarak Sil"}
+            {isDeleting ? t("delete.deleting") : t("delete.submit")}
           </Button>
         </form>
       </section>

@@ -33,7 +33,7 @@ public static class CsvColumnMapper
 
     private static readonly string[] LocationAliases = ["location", "konum", "lokasyon", "şehir", "sehir", "city"];
 
-    public static (ColumnMapping? Mapping, IReadOnlyList<string> Errors) Map(
+    public static (ColumnMapping? Mapping, IReadOnlyList<string> ErrorCodes) Map(
         IReadOnlyList<string> headers, IReadOnlyDictionary<string, string>? overrideMapping)
     {
         var companyHeader = Resolve(headers, overrideMapping, "CompanyName", CompanyNameAliases);
@@ -43,24 +43,24 @@ public static class CsvColumnMapper
         var jobUrlHeader = Resolve(headers, overrideMapping, "JobUrl", JobUrlAliases);
         var locationHeader = Resolve(headers, overrideMapping, "Location", LocationAliases);
 
-        var errors = new List<string>();
+        var errorCodes = new List<string>();
         if (companyHeader is null)
         {
-            errors.Add("CompanyName sütunu bulunamadı (beklenen başlıklar: Company, Company Name, Şirket).");
+            errorCodes.Add("IMPORT_COMPANY_COLUMN_NOT_FOUND");
         }
 
         if (titleHeader is null)
         {
-            errors.Add("JobTitle sütunu bulunamadı (beklenen başlıklar: Title, Position, Pozisyon).");
+            errorCodes.Add("IMPORT_TITLE_COLUMN_NOT_FOUND");
         }
 
         if (appliedAtHeader is null)
         {
-            errors.Add("AppliedAt sütunu bulunamadı (beklenen başlıklar: Applied At, Date, Tarih).");
+            errorCodes.Add("IMPORT_APPLIED_AT_COLUMN_NOT_FOUND");
         }
 
-        return errors.Count > 0
-            ? (null, errors)
+        return errorCodes.Count > 0
+            ? (null, errorCodes)
             : (new ColumnMapping(companyHeader!, titleHeader!, appliedAtHeader!, statusHeader, jobUrlHeader, locationHeader), []);
     }
 

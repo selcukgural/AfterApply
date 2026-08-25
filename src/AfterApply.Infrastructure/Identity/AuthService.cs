@@ -31,6 +31,10 @@ internal sealed class AuthService(
         var result = await userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {
+            // Descriptions are already localized here: LocalizedIdentityErrorDescriber (registered via
+            // .AddErrorDescriber<LocalizedIdentityErrorDescriber>()) formats them using the request's
+            // current culture, args included — unlike AUTH_INVALID_CREDENTIALS/AUTH_INVALID_REFRESH_TOKEN
+            // below, which are bare codes translated later at the API boundary (no args to carry).
             return AuthResult.Failure(result.Errors.Select(e => e.Description).ToArray());
         }
 
@@ -42,13 +46,13 @@ internal sealed class AuthService(
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
         {
-            return AuthResult.Failure("Invalid email or password.");
+            return AuthResult.Failure("AUTH_INVALID_CREDENTIALS");
         }
 
         var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
         if (!result.Succeeded)
         {
-            return AuthResult.Failure("Invalid email or password.");
+            return AuthResult.Failure("AUTH_INVALID_CREDENTIALS");
         }
 
         return AuthResult.Success(await IssueTokensAsync(user, ipAddress, cancellationToken));
@@ -61,19 +65,19 @@ internal sealed class AuthService(
 
         if (stored is null)
         {
-            return AuthResult.Failure("Invalid refresh token.");
+            return AuthResult.Failure("AUTH_INVALID_REFRESH_TOKEN");
         }
 
         if (!stored.IsActive)
         {
             await RevokeAllActiveTokensAsync(stored.UserId, cancellationToken);
-            return AuthResult.Failure("Invalid refresh token.");
+            return AuthResult.Failure("AUTH_INVALID_REFRESH_TOKEN");
         }
 
         var user = await userManager.FindByIdAsync(stored.UserId.ToString());
         if (user is null)
         {
-            return AuthResult.Failure("Invalid refresh token.");
+            return AuthResult.Failure("AUTH_INVALID_REFRESH_TOKEN");
         }
 
         var now = DateTimeOffset.UtcNow;

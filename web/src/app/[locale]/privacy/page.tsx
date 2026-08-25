@@ -1,0 +1,58 @@
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+
+export default async function PrivacyPage() {
+  const t = await getTranslations("privacy");
+
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-12">
+      <h1 className="mb-2 text-2xl font-semibold text-gray-900">{t("title")}</h1>
+      <p className="mb-8 text-sm text-gray-500">{t("lastUpdated")}</p>
+
+      <div className="flex flex-col gap-8 text-sm leading-6 text-gray-700">
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("dataCollection.title")}</h2>
+          <p>{t("dataCollection.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("dataCollection.item1")}</li>
+            <li>{t("dataCollection.item2")}</li>
+            <li>{t("dataCollection.item3")}</li>
+          </ul>
+          <p className="mt-2">{t("dataCollection.outro")}</p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("retention.title")}</h2>
+          <p>{t("retention.body")}</p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("rights.title")}</h2>
+          <p>
+            {t("rights.before")}{" "}
+            <Link href="/settings" className="text-blue-600 hover:underline">
+              {t("rights.link")}
+            </Link>{" "}
+            {t("rights.after")}
+          </p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("notApplicable.title")}</h2>
+          <p>{t("notApplicable.body")}</p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("contact.title")}</h2>
+          <p>
+            {t("contact.before")}{" "}
+            <a href="mailto:privacy@afterapply.app" className="text-blue-600 hover:underline">
+              privacy@afterapply.app
+            </a>
+            {t("contact.after")}
+          </p>
+        </section>
+      </div>
+    </div>
+  );
+}

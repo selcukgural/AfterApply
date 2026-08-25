@@ -1,11 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { applicationsApi } from "@/lib/api/applications";
 import { ApplicationForm, type ApplicationFormValues } from "@/components/applications/ApplicationForm";
 
 export default function NewApplicationPage() {
+  const t = useTranslations("applications");
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -27,8 +29,8 @@ export default function NewApplicationPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">Yeni Başvuru</h1>
-      <ApplicationForm mode="create" onSubmit={handleSubmit} submitLabel="Oluştur" />
+      <h1 className="mb-6 text-xl font-semibold text-gray-900">{t("new.title")}</h1>
+      <ApplicationForm mode="create" onSubmit={handleSubmit} submitLabel={t("form.createSubmit")} />
     </div>
   );
 }

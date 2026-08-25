@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="APPLICATION_ALREADY_IN_STATUS" xml:space="preserve">
+    <value>The application is already in this status.</value>
+  </data>
+  <data name="STATUS_CHANGED_EVENT_INVALID" xml:space="preserve">
+    <value>Status-change events can only be created via the status-change endpoint.</value>
+  </data>
+
+  <data name="AUTH_INVALID_CREDENTIALS" xml:space="preserve">
+    <value>Invalid email or password.</value>
+  </data>
+  <data name="AUTH_INVALID_REFRESH_TOKEN" xml:space="preserve">
+    <value>Invalid refresh token.</value>
+  </data>
+
+  <data name="DefaultError" xml:space="preserve">
+    <value>An unknown failure has occurred.</value>
+  </data>
+  <data name="ConcurrencyFailure" xml:space="preserve">
+    <value>Optimistic concurrency failure, object has been modified.</value>
+  </data>
+  <data name="PasswordMismatch" xml:space="preserve">
+    <value>Incorrect password.</value>
+  </data>
+  <data name="InvalidToken" xml:space="preserve">
+    <value>Invalid token.</value>
+  </data>
+  <data name="LoginAlreadyAssociated" xml:space="preserve">
+    <value>A user with this login already exists.</value>
+  </data>
+  <data name="InvalidUserName" xml:space="preserve">
+    <value>User name '{0}' is invalid, can only contain letters or digits.</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>Email '{0}' is invalid.</value>
+  </data>
+  <data name="DuplicateUserName" xml:space="preserve">
+    <value>User name '{0}' is already taken.</value>
+  </data>
+  <data name="DuplicateEmail" xml:space="preserve">
+    <value>Email '{0}' is already taken.</value>
+  </data>
+  <data name="InvalidRoleName" xml:space="preserve">
+    <value>Role name '{0}' is invalid.</value>
+  </data>
+  <data name="DuplicateRoleName" xml:space="preserve">
+    <value>Role name '{0}' is already taken.</value>
+  </data>
+  <data name="UserAlreadyHasPassword" xml:space="preserve">
+    <value>User already has a password set.</value>
+  </data>
+  <data name="UserLockoutNotEnabled" xml:space="preserve">
+    <value>Lockout is not enabled for this user.</value>
+  </data>
+  <data name="UserAlreadyInRole" xml:space="preserve">
+    <value>User already in role '{0}'.</value>
+  </data>
+  <data name="UserNotInRole" xml:space="preserve">
+    <value>User is not in role '{0}'.</value>
+  </data>
+  <data name="PasswordTooShort" xml:space="preserve">
+    <value>Passwords must be at least {0} characters.</value>
+  </data>
+  <data name="PasswordRequiresUniqueChars" xml:space="preserve">
+    <value>Passwords must use at least {0} different characters.</value>
+  </data>
+  <data name="PasswordRequiresNonAlphanumeric" xml:space="preserve">
+    <value>Passwords must have at least one non alphanumeric character.</value>
+  </data>
+  <data name="PasswordRequiresDigit" xml:space="preserve">
+    <value>Passwords must have at least one digit ('0'-'9').</value>
+  </data>
+  <data name="PasswordRequiresLower" xml:space="preserve">
+    <value>Passwords must have at least one lowercase ('a'-'z').</value>
+  </data>
+  <data name="PasswordRequiresUpper" xml:space="preserve">
+    <value>Passwords must have at least one uppercase ('A'-'Z').</value>
+  </data>
+  <data name="RecoveryCodeRedemptionFailed" xml:space="preserve">
+    <value>Recovery code redemption failed.</value>
+  </data>
+
+  <data name="VALIDATION_CONSENT_REQUIRED" xml:space="preserve">
+    <value>You must accept the privacy policy.</value>
+  </data>
+  <data name="VALIDATION_APPLIED_AT_FUTURE" xml:space="preserve">
+    <value>AppliedAt cannot be in the future.</value>
+  </data>
+  <data name="VALIDATION_STATUS_CHANGED_EVENT_NOT_ALLOWED" xml:space="preserve">
+    <value>StatusChanged events can only be created via the status-change endpoint.</value>
+  </data>
+
+  <data name="IMPORT_ONLY_CSV_SUPPORTED" xml:space="preserve">
+    <value>Only .csv files are supported.</value>
+  </data>
+  <data name="IMPORT_FILE_EMPTY" xml:space="preserve">
+    <value>The file is empty.</value>
+  </data>
+  <data name="IMPORT_FILE_TOO_LARGE" xml:space="preserve">
+    <value>The file exceeds the {0} byte size limit.</value>
+  </data>
+  <data name="IMPORT_ONLY_ZIP_SUPPORTED" xml:space="preserve">
+    <value>Only .zip files are supported.</value>
+  </data>
+  <data name="IMPORT_ZIP_TOO_LARGE" xml:space="preserve">
+    <value>The ZIP exceeds the {0} byte size limit.</value>
+  </data>
+  <data name="IMPORT_ZIP_TOO_MANY_ENTRIES" xml:space="preserve">
+    <value>The ZIP contains more than the {0} file limit.</value>
+  </data>
+  <data name="IMPORT_ZIP_NO_MATCHING_FILES" xml:space="preserve">
+    <value>No 'Job Applications*.csv' file was found in the ZIP.</value>
+  </data>
+  <data name="IMPORT_ZIP_ENTRY_TOO_LARGE" xml:space="preserve">
+    <value>'{0}' exceeds the {1} byte size limit.</value>
+  </data>
+  <data name="IMPORT_ZIP_ENTRY_STREAM_EXCEEDED" xml:space="preserve">
+    <value>The size limit was exceeded while reading '{0}'.</value>
+  </data>
+  <data name="IMPORT_ROW_COUNT_EXCEEDED" xml:space="preserve">
+    <value>The row count exceeds the {0} limit.</value>
+  </data>
+  <data name="IMPORT_CSV_HEADER_NOT_FOUND" xml:space="preserve">
+    <value>No header row was found in the CSV file.</value>
+  </data>
+  <data name="IMPORT_COMPANY_COLUMN_NOT_FOUND" xml:space="preserve">
+    <value>Could not find a CompanyName column (expected headers: Company, Company Name, Şirket).</value>
+  </data>
+  <data name="IMPORT_TITLE_COLUMN_NOT_FOUND" xml:space="preserve">
+    <value>Could not find a JobTitle column (expected headers: Title, Position, Pozisyon).</value>
+  </data>
+  <data name="IMPORT_APPLIED_AT_COLUMN_NOT_FOUND" xml:space="preserve">
+    <value>Could not find an AppliedAt column (expected headers: Applied At, Date, Tarih).</value>
+  </data>
+  <data name="IMPORT_ROW_COMPANY_EMPTY" xml:space="preserve">
+    <value>CompanyName cannot be empty.</value>
+  </data>
+  <data name="IMPORT_ROW_TITLE_EMPTY" xml:space="preserve">
+    <value>JobTitle cannot be empty.</value>
+  </data>
+  <data name="IMPORT_ROW_APPLIED_AT_UNPARSABLE" xml:space="preserve">
+    <value>Could not parse the AppliedAt date: '{0}'.</value>
+  </data>
+  <data name="IMPORT_ROW_STATUS_UNKNOWN" xml:space="preserve">
+    <value>Unrecognized status: '{0}'.</value>
+  </data>
+  <data name="IMPORT_COLUMN_MAPPING_INVALID_JSON" xml:space="preserve">
+    <value>columnMapping must be a valid JSON object, e.g. {"CompanyName":"Company"}.</value>
+  </data>
+
+  <data name="EMAIL_INTEGRATION_OAUTH_NOT_CONFIGURED" xml:space="preserve">
+    <value>Google OAuth is not configured. See README.md 'Gmail Integration Setup'.</value>
+  </data>
+  <data name="EMAIL_INTEGRATION_NO_STATUS_TO_CONFIRM" xml:space="preserve">
+    <value>This suggestion has no status change to confirm.</value>
+  </data>
+
+  <data name="GENERIC_ERROR" xml:space="preserve">
+    <value>An unexpected error occurred.</value>
+  </data>
+</root>

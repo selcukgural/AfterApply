@@ -1,13 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
 export function NavBar() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const t = useTranslations("nav");
 
   const handleLogout = async () => {
     await logout();
@@ -23,10 +25,10 @@ export function NavBar() {
           </Link>
           <nav className="flex gap-4 text-sm text-gray-600">
             <Link href="/" className="hover:text-gray-900">
-              Panel
+              {t("dashboard")}
             </Link>
             <Link href="/applications" className="hover:text-gray-900">
-              Başvurular
+              {t("applications")}
             </Link>
           </nav>
         </div>
@@ -37,11 +39,12 @@ export function NavBar() {
             </span>
           )}
           <Link href="/settings" className="hover:text-gray-900">
-            Hesap Ayarları
+            {t("accountSettings")}
           </Link>
           <Button variant="secondary" onClick={handleLogout}>
-            Çıkış Yap
+            {t("logout")}
           </Button>
+          <LanguageSwitcher />
         </div>
       </div>
     </header>

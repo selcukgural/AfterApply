@@ -1,18 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { ApplicationListSortBy, ApplicationStatus, SortDirection } from "@/types/api";
-import { APPLICATION_STATUSES, APPLICATION_STATUS_LABELS } from "@/lib/constants/applicationStatus";
+import { APPLICATION_STATUSES } from "@/lib/constants/applicationStatus";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-
-const SORT_OPTIONS: { value: ApplicationListSortBy; label: string }[] = [
-  { value: "AppliedAt", label: "Başvuru Tarihi" },
-  { value: "UpdatedAt", label: "Son Güncelleme" },
-  { value: "CompanyName", label: "Şirket" },
-  { value: "JobTitle", label: "Pozisyon" },
-  { value: "Status", label: "Durum" },
-];
 
 interface ApplicationFiltersProps {
   search: string;
@@ -35,6 +28,16 @@ export function ApplicationFilters({
   onSortByChange,
   onSortDirectionChange,
 }: ApplicationFiltersProps) {
+  const t = useTranslations("applications.filters");
+  const tStatus = useTranslations("status");
+  const SORT_OPTIONS: { value: ApplicationListSortBy; label: string }[] = [
+    { value: "AppliedAt", label: t("sortAppliedAt") },
+    { value: "UpdatedAt", label: t("sortUpdatedAt") },
+    { value: "CompanyName", label: t("sortCompany") },
+    { value: "JobTitle", label: t("sortTitle") },
+    { value: "Status", label: t("sortStatus") },
+  ];
+
   const [searchInput, setSearchInput] = useState(search);
   // Adjust state during render (React-documented pattern, not an effect) to
   // reset the local input when the URL's search param changes externally
@@ -59,7 +62,7 @@ export function ApplicationFilters({
     <div className="flex flex-wrap items-end gap-3">
       <div className="min-w-48 flex-1">
         <Input
-          placeholder="Şirket veya pozisyon ara..."
+          placeholder={t("searchPlaceholder")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />
@@ -69,10 +72,10 @@ export function ApplicationFilters({
         onChange={(e) => onStatusChange(e.target.value as ApplicationStatus | "")}
         className="w-auto"
       >
-        <option value="">Tüm Durumlar</option>
+        <option value="">{t("allStatuses")}</option>
         {APPLICATION_STATUSES.map((s) => (
           <option key={s} value={s}>
-            {APPLICATION_STATUS_LABELS[s]}
+            {tStatus(s)}
           </option>
         ))}
       </Select>
@@ -92,8 +95,8 @@ export function ApplicationFilters({
         onChange={(e) => onSortDirectionChange(e.target.value as SortDirection)}
         className="w-auto"
       >
-        <option value="Descending">Azalan</option>
-        <option value="Ascending">Artan</option>
+        <option value="Descending">{t("descending")}</option>
+        <option value="Ascending">{t("ascending")}</option>
       </Select>
     </div>
   );

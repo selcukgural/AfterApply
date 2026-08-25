@@ -2,8 +2,10 @@ using System.Security.Claims;
 using System.Text.Json;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Imports;
+using AfterApply.Application.Localization;
 using AfterApply.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -14,7 +16,8 @@ public static class ImportEndpoints
         var group = app.MapGroup("/api/imports").WithTags("Imports").RequireAuthorization();
 
         group.MapPost("/csv", async ([FromForm] IFormFile file, [FromForm] string? columnMapping,
-            ClaimsPrincipal user, IImportService service, CancellationToken cancellationToken) =>
+            ClaimsPrincipal user, IImportService service, IStringLocalizer<SharedStrings> localizer,
+            CancellationToken cancellationToken) =>
         {
             Dictionary<string, string>? mapping;
             try
@@ -27,7 +30,7 @@ public static class ImportEndpoints
             {
                 return Results.ValidationProblem(new Dictionary<string, string[]>
                 {
-                    ["columnMapping"] = ["columnMapping geçerli bir JSON nesnesi olmalı, örn. {\"CompanyName\":\"Firma\"}."]
+                    ["columnMapping"] = [localizer["IMPORT_COLUMN_MAPPING_INVALID_JSON"]]
                 });
             }
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { analyticsApi } from "@/lib/api/analytics";
 import { applicationsApi } from "@/lib/api/applications";
 import { ANALYTICS_RATE_TILES } from "@/lib/dashboard/analyticsLabels";
@@ -12,6 +13,9 @@ import { StatusDistributionChart } from "@/components/dashboard/StatusDistributi
 import { Button } from "@/components/ui/Button";
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
+
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: ["applications", "summary"],
     queryFn: applicationsApi.getSummary,
@@ -25,34 +29,34 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Panel</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t("title")}</h1>
         <Link href="/applications/new">
-          <Button>Yeni Başvuru</Button>
+          <Button>{t("newApplication")}</Button>
         </Link>
       </div>
 
       {summaryLoading || !summary ? (
-        <p className="text-sm text-gray-500">Yükleniyor...</p>
+        <p className="text-sm text-gray-500">{tCommon("loading")}</p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {DASHBOARD_TILES.map((tile) => (
-            <StatTile key={tile.key} label={tile.label} value={summary[tile.key]} />
+            <StatTile key={tile.key} label={t(`tiles.${tile.key}`)} value={summary[tile.key]} />
           ))}
         </div>
       )}
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-gray-900">Kişisel Analitik</h2>
+        <h2 className="text-lg font-semibold text-gray-900">{t("personalAnalytics")}</h2>
 
         {overviewLoading || !overview ? (
-          <p className="text-sm text-gray-500">Yükleniyor...</p>
+          <p className="text-sm text-gray-500">{tCommon("loading")}</p>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               {ANALYTICS_RATE_TILES.map((tile) => (
                 <StatTile
                   key={tile.key}
-                  label={tile.label}
+                  label={t(`rates.${tile.key}`)}
                   value={Math.round(overview.rates[tile.key])}
                   suffix="%"
                 />

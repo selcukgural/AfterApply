@@ -1,18 +1,20 @@
 "use client";
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { APPLICATION_STATUS_LABELS } from "@/lib/constants/applicationStatus";
+import { useTranslations } from "next-intl";
 import type { StatusDistributionItem } from "@/types/api";
 
 export function StatusDistributionChart({ data }: { data: StatusDistributionItem[] }) {
+  const t = useTranslations("dashboard.statusDistribution");
+  const tStatus = useTranslations("status");
   const chartData = data.map((item) => ({
-    status: APPLICATION_STATUS_LABELS[item.status],
+    status: tStatus(item.status),
     count: item.count,
   }));
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="mb-3 text-sm font-medium text-gray-700">Durum Dağılımı</p>
+      <p className="mb-3 text-sm font-medium text-gray-700">{t("title")}</p>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 32 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />

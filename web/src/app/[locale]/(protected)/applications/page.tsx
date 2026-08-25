@@ -2,8 +2,9 @@
 
 import { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import type { ApplicationListSortBy, ApplicationStatus, SortDirection } from "@/types/api";
 import { applicationsApi } from "@/lib/api/applications";
 import { ApplicationFilters } from "@/components/applications/ApplicationFilters";
@@ -14,6 +15,8 @@ import { Button } from "@/components/ui/Button";
 const PAGE_SIZE = 20;
 
 export default function ApplicationsListPage() {
+  const t = useTranslations("applications.list");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -58,9 +61,9 @@ export default function ApplicationsListPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Başvurular</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{t("title")}</h1>
         <Link href="/applications/new">
-          <Button>Yeni Başvuru</Button>
+          <Button>{t("newApplication")}</Button>
         </Link>
       </div>
 
@@ -76,7 +79,7 @@ export default function ApplicationsListPage() {
       />
 
       {isLoading || !data ? (
-        <p className="text-sm text-gray-500">Yükleniyor...</p>
+        <p className="text-sm text-gray-500">{tCommon("loading")}</p>
       ) : (
         <>
           <ApplicationTable items={data.items} />

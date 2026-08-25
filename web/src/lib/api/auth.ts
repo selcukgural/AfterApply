@@ -1,5 +1,5 @@
 import type { AuthResponse, UserProfileResponse } from "@/types/api";
-import { API_BASE_URL, ApiError, apiFetch } from "./httpClient";
+import { API_BASE_URL, apiFetch } from "./httpClient";
 import { authStore } from "./authStore";
 
 export interface RegisterRequest {
@@ -66,7 +66,11 @@ export const authApi = {
     });
 
     if (!response.ok) {
-      throw new ApiError(response.status, "Veriler dışa aktarılamadı.");
+      // Not an ApiError on purpose: this endpoint returns a raw file body, not
+      // a JSON ProblemDetails, so there's no backend-localized message to
+      // surface — callers should show their own translated fallback instead
+      // of this technical message.
+      throw new Error(`Export failed with status ${response.status}`);
     }
 
     const blob = await response.blob();

@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.Text.Json.Serialization;
 using AfterApply.Api;
 using AfterApply.Api.Endpoints;
+using AfterApply.Api.ExceptionHandling;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
@@ -8,6 +10,7 @@ using AfterApply.Infrastructure;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Notifications;
 using Hangfire;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -24,6 +27,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApiRateLimiting();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 
 var app = builder.Build();
 
@@ -35,6 +40,16 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors(DependencyInjection.CorsPolicyName);
+
+var supportedCultures = new[] { new CultureInfo("tr"), new CultureInfo("en") };
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("tr"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+});
+
+app.UseExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();

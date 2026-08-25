@@ -1,0 +1,281 @@
+{
+  "metadata": {
+    "title": "AfterApply",
+    "description": "İş başvurularını tek yerde takip et."
+  },
+  "common": {
+    "loading": "Yükleniyor..."
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "applications": "Başvurular",
+    "accountSettings": "Hesap Ayarları",
+    "logout": "Çıkış Yap"
+  },
+  "auth": {
+    "login": {
+      "title": "Giriş Yap",
+      "email": "E-posta",
+      "password": "Şifre",
+      "submit": "Giriş Yap",
+      "submitting": "Giriş yapılıyor...",
+      "noAccount": "Hesabın yok mu?",
+      "registerLink": "Kayıt ol",
+      "genericError": "Giriş yapılamadı."
+    },
+    "register": {
+      "title": "Kayıt Ol",
+      "firstName": "Ad",
+      "lastName": "Soyad",
+      "email": "E-posta",
+      "password": "Şifre",
+      "consentLink": "Gizlilik politikasını",
+      "consentSuffix": "okudum ve kabul ediyorum.",
+      "submit": "Kayıt Ol",
+      "submitting": "Kayıt oluşturuluyor...",
+      "haveAccount": "Zaten hesabın var mı?",
+      "loginLink": "Giriş yap",
+      "genericError": "Kayıt oluşturulamadı."
+    }
+  },
+  "dashboard": {
+    "title": "Panel",
+    "newApplication": "Yeni Başvuru",
+    "personalAnalytics": "Kişisel Analitik",
+    "tiles": {
+      "total": "Toplam Başvuru",
+      "active": "Aktif",
+      "waiting": "Bekleyen",
+      "interviews": "Mülakatlar",
+      "offers": "Teklifler",
+      "rejected": "Reddedilen",
+      "ghosted": "Kayboldu"
+    },
+    "rates": {
+      "responseRate": "Yanıt Oranı",
+      "interviewRate": "Mülakat Oranı",
+      "offerRate": "Teklif Oranı",
+      "rejectionRate": "Red Oranı",
+      "ghostingRate": "Kayboldu Oranı"
+    },
+    "responseTime": {
+      "title": "Yanıt Süresi",
+      "average": "Ortalama",
+      "median": "Medyan",
+      "days": "gün",
+      "empty": "Henüz yanıt alınan bir başvuru yok."
+    },
+    "statusDistribution": {
+      "title": "Durum Dağılımı"
+    }
+  },
+  "applications": {
+    "list": {
+      "title": "Başvurular",
+      "newApplication": "Yeni Başvuru"
+    },
+    "filters": {
+      "searchPlaceholder": "Şirket veya pozisyon ara...",
+      "allStatuses": "Tüm Durumlar",
+      "sortAppliedAt": "Başvuru Tarihi",
+      "sortUpdatedAt": "Son Güncelleme",
+      "sortCompany": "Şirket",
+      "sortTitle": "Pozisyon",
+      "sortStatus": "Durum",
+      "descending": "Azalan",
+      "ascending": "Artan"
+    },
+    "table": {
+      "empty": "Kayıtlı başvuru bulunamadı.",
+      "company": "Şirket",
+      "position": "Pozisyon",
+      "status": "Durum",
+      "appliedAt": "Başvuru Tarihi"
+    },
+    "pagination": {
+      "pageInfo": "Sayfa {page} / {totalPages} ({totalCount} başvuru)",
+      "previous": "Önceki",
+      "next": "Sonraki"
+    },
+    "form": {
+      "companyName": "Şirket Adı",
+      "jobTitle": "Pozisyon",
+      "jobUrl": "İlan URL'si",
+      "location": "Konum",
+      "employmentType": "Çalışma Şekli",
+      "appliedAt": "Başvuru Tarihi",
+      "source": "Kaynak",
+      "notes": "Notlar",
+      "saving": "Kaydediliyor...",
+      "saveError": "Kaydedilemedi. Lütfen tekrar deneyin.",
+      "createSubmit": "Oluştur",
+      "editSubmit": "Kaydet"
+    },
+    "new": {
+      "title": "Yeni Başvuru"
+    },
+    "edit": {
+      "title": "Başvuruyu Düzenle"
+    },
+    "detail": {
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "deleteConfirm": "Bu başvuruyu silmek istediğinize emin misiniz?",
+      "location": "Konum",
+      "employmentType": "Çalışma Şekli",
+      "appliedAt": "Başvuru Tarihi",
+      "jobUrl": "İlan",
+      "openLink": "Bağlantıyı Aç",
+      "notes": "Notlar",
+      "timeline": "Zaman Çizelgesi",
+      "emptyValue": "—"
+    },
+    "statusChange": {
+      "changeStatus": "Durumu Değiştir",
+      "notePlaceholder": "Not (opsiyonel)",
+      "confirm": "Onayla",
+      "cancel": "Vazgeç",
+      "saving": "Kaydediliyor..."
+    },
+    "timeline": {
+      "empty": "Henüz bir etkinlik yok."
+    }
+  },
+  "settings": {
+    "title": "Hesap Ayarları",
+    "export": {
+      "title": "Verilerimi Dışa Aktar",
+      "description": "Hesabınıza ait tüm başvuru, import ve hatırlatma verilerini JSON dosyası olarak indirin.",
+      "download": "Verilerimi İndir",
+      "preparing": "Hazırlanıyor...",
+      "error": "Veriler dışa aktarılamadı."
+    },
+    "email": {
+      "title": "E-posta Entegrasyonu",
+      "description": "Gmail hesabınızı bağlayın; işe alım e-postalarından (mülakat daveti, ret vb.) otomatik statü önerileri alın. Sadece okuma izni istenir, e-posta gönderilmez.",
+      "connectedAccount": "Bağlı hesap:",
+      "needsReattention": "Son senkronizasyon başarısız oldu, Gmail bağlantısını yeniden kurmanız gerekebilir.",
+      "viewSuggestions": "Bekleyen önerileri gör",
+      "disconnect": "Bağlantıyı Kaldır",
+      "connect": "Gmail Bağla",
+      "connectError": "Gmail bağlantısı başlatılamadı.",
+      "disconnectError": "Bağlantı kaldırılamadı.",
+      "successNotice": "Gmail hesabınız bağlandı.",
+      "errorNotice": "Gmail bağlantısı başarısız oldu. Lütfen tekrar deneyin."
+    },
+    "delete": {
+      "title": "Hesabımı Sil",
+      "description": "Bu işlem geri alınamaz. Hesabınız ve tüm başvuru, import ve hatırlatma verileriniz kalıcı olarak silinir.",
+      "passwordLabel": "Şifreniz",
+      "confirmLabel": "Onaylamak için \"SİL\" yazın",
+      "confirmWord": "SİL",
+      "confirmMismatch": "Onaylamak için kutuya \"SİL\" yazın.",
+      "submit": "Hesabımı Kalıcı Olarak Sil",
+      "deleting": "Siliniyor...",
+      "genericError": "Hesap silinemedi."
+    }
+  },
+  "emailSuggestions": {
+    "back": "← Hesap Ayarları",
+    "title": "Gmail Önerileri",
+    "empty": "Bekleyen öneri yok.",
+    "stillPending": "Hâlâ bekleniyor",
+    "confirm": "Onayla",
+    "dismiss": "Yoksay",
+    "confidence": "Güven",
+    "loadError": "Öneriler yüklenemedi.",
+    "confirmError": "Onaylanamadı.",
+    "dismissError": "Reddedilemedi."
+  },
+  "privacy": {
+    "title": "Gizlilik Politikası",
+    "lastUpdated": "Son güncelleme: 2026",
+    "dataCollection": {
+      "title": "Hangi veriyi topluyoruz ve neden",
+      "intro": "AfterApply, iş başvurularınızı takip etmenize yardımcı olan kişisel bir araçtır. Hizmeti sağlayabilmek için şu verileri işleriz:",
+      "item1": "Hesap bilgileri: ad, soyad, e-posta adresi, şifre (hash'lenmiş olarak saklanır).",
+      "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar.",
+      "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
+      "outro": "Bu veriler yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır."
+    },
+    "retention": {
+      "title": "Saklama süresi",
+      "body": "Verileriniz hesabınızı silene kadar saklanır. Otomatik bir süre sonunda silinme uygulanmamaktadır."
+    },
+    "rights": {
+      "title": "Haklarınız",
+      "before": "Verilerinizin bir kopyasını istediğiniz zaman dışa aktarabilir veya hesabınızı kalıcı olarak silebilirsiniz. Bu işlemleri",
+      "link": "Hesap Ayarları",
+      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm başvuru, import ve hatırlatma verilerini kalıcı olarak kaldırır."
+    },
+    "notApplicable": {
+      "title": "Şu an geçerli olmayanlar",
+      "body": "AfterApply henüz herkese açık/şirket bazlı analitik özellikleri sunmamaktadır. Bu nedenle anonimleştirme/minimum örneklem kontrolleri şu an için uygulanabilir değildir — bu özellikler eklendiğinde bu politika güncellenecektir."
+    },
+    "contact": {
+      "title": "İletişim",
+      "before": "Sorularınız için",
+      "after": " adresinden bize ulaşabilirsiniz."
+    }
+  },
+  "status": {
+    "Applied": "Başvuruldu",
+    "Screening": "Ön Değerlendirme",
+    "Interview": "Mülakat",
+    "TechnicalInterview": "Teknik Mülakat",
+    "FinalInterview": "Son Mülakat",
+    "Offer": "Teklif",
+    "Accepted": "Kabul Edildi",
+    "Rejected": "Reddedildi",
+    "Withdrawn": "Geri Çekildi",
+    "Ghosted": "Kayboldu"
+  },
+  "employmentType": {
+    "FullTime": "Tam Zamanlı",
+    "PartTime": "Yarı Zamanlı",
+    "Contract": "Sözleşmeli",
+    "Internship": "Staj",
+    "Freelance": "Serbest Çalışma",
+    "Temporary": "Geçici"
+  },
+  "eventType": {
+    "ApplicationCreated": "Başvuru Oluşturuldu",
+    "ApplicationSubmitted": "Başvuru Gönderildi",
+    "RecruiterContacted": "İşe Alım Uzmanı İletişime Geçti",
+    "ScreeningStarted": "Ön Değerlendirme Başladı",
+    "InterviewScheduled": "Mülakat Planlandı",
+    "InterviewCompleted": "Mülakat Tamamlandı",
+    "OfferReceived": "Teklif Alındı",
+    "FollowUpSent": "Takip Mesajı Gönderildi",
+    "StatusChanged": "Durum Değişti"
+  },
+  "source": {
+    "Manual": "Elle Girildi",
+    "LinkedIn": "LinkedIn",
+    "LinkedInImport": "LinkedIn İçe Aktarma",
+    "CsvImport": "CSV İçe Aktarma",
+    "CompanyWebsite": "Şirket Web Sitesi",
+    "Referral": "Referans",
+    "BrowserExtension": "Tarayıcı Eklentisi",
+    "Email": "E-posta",
+    "System": "Sistem",
+    "Other": "Diğer"
+  },
+  "validation": {
+    "emailRequired": "E-posta gerekli",
+    "emailInvalid": "Geçerli bir e-posta girin",
+    "passwordRequired": "Şifre gerekli",
+    "passwordMinLength": "Şifre en az 8 karakter olmalı",
+    "firstNameRequired": "Ad gerekli",
+    "lastNameRequired": "Soyad gerekli",
+    "consentRequired": "Gizlilik politikasını kabul etmelisiniz",
+    "jobTitleRequired": "Pozisyon adı gerekli",
+    "employmentTypeRequired": "Çalışma şekli gerekli",
+    "appliedAtRequired": "Başvuru tarihi gerekli",
+    "companyNameRequired": "Şirket adı gerekli"
+  },
+  "errors": {
+    "generic": "İstek başarısız oldu.",
+    "sessionExpired": "Oturum süresi doldu, tekrar giriş yapın."
+  }
+}

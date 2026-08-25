@@ -1,0 +1,281 @@
+{
+  "metadata": {
+    "title": "AfterApply",
+    "description": "Track your job applications in one place."
+  },
+  "common": {
+    "loading": "Loading..."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "applications": "Applications",
+    "accountSettings": "Account Settings",
+    "logout": "Log Out"
+  },
+  "auth": {
+    "login": {
+      "title": "Log In",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Log In",
+      "submitting": "Logging in...",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Sign up",
+      "genericError": "Could not log in."
+    },
+    "register": {
+      "title": "Sign Up",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "password": "Password",
+      "consentLink": "the privacy policy",
+      "consentSuffix": "and agree to it.",
+      "submit": "Sign Up",
+      "submitting": "Creating account...",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Log in",
+      "genericError": "Could not create account."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "newApplication": "New Application",
+    "personalAnalytics": "Personal Analytics",
+    "tiles": {
+      "total": "Total Applications",
+      "active": "Active",
+      "waiting": "Waiting",
+      "interviews": "Interviews",
+      "offers": "Offers",
+      "rejected": "Rejected",
+      "ghosted": "Ghosted"
+    },
+    "rates": {
+      "responseRate": "Response Rate",
+      "interviewRate": "Interview Rate",
+      "offerRate": "Offer Rate",
+      "rejectionRate": "Rejection Rate",
+      "ghostingRate": "Ghosting Rate"
+    },
+    "responseTime": {
+      "title": "Response Time",
+      "average": "Average",
+      "median": "Median",
+      "days": "days",
+      "empty": "No responded applications yet."
+    },
+    "statusDistribution": {
+      "title": "Status Distribution"
+    }
+  },
+  "applications": {
+    "list": {
+      "title": "Applications",
+      "newApplication": "New Application"
+    },
+    "filters": {
+      "searchPlaceholder": "Search company or position...",
+      "allStatuses": "All Statuses",
+      "sortAppliedAt": "Applied Date",
+      "sortUpdatedAt": "Last Updated",
+      "sortCompany": "Company",
+      "sortTitle": "Position",
+      "sortStatus": "Status",
+      "descending": "Descending",
+      "ascending": "Ascending"
+    },
+    "table": {
+      "empty": "No applications found.",
+      "company": "Company",
+      "position": "Position",
+      "status": "Status",
+      "appliedAt": "Applied Date"
+    },
+    "pagination": {
+      "pageInfo": "Page {page} / {totalPages} ({totalCount} applications)",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "form": {
+      "companyName": "Company Name",
+      "jobTitle": "Position",
+      "jobUrl": "Job URL",
+      "location": "Location",
+      "employmentType": "Employment Type",
+      "appliedAt": "Applied Date",
+      "source": "Source",
+      "notes": "Notes",
+      "saving": "Saving...",
+      "saveError": "Could not save. Please try again.",
+      "createSubmit": "Create",
+      "editSubmit": "Save"
+    },
+    "new": {
+      "title": "New Application"
+    },
+    "edit": {
+      "title": "Edit Application"
+    },
+    "detail": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this application?",
+      "location": "Location",
+      "employmentType": "Employment Type",
+      "appliedAt": "Applied Date",
+      "jobUrl": "Listing",
+      "openLink": "Open Link",
+      "notes": "Notes",
+      "timeline": "Timeline",
+      "emptyValue": "—"
+    },
+    "statusChange": {
+      "changeStatus": "Change Status",
+      "notePlaceholder": "Note (optional)",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "saving": "Saving..."
+    },
+    "timeline": {
+      "empty": "No events yet."
+    }
+  },
+  "settings": {
+    "title": "Account Settings",
+    "export": {
+      "title": "Export My Data",
+      "description": "Download all your application, import, and reminder data as a JSON file.",
+      "download": "Download My Data",
+      "preparing": "Preparing...",
+      "error": "Could not export data."
+    },
+    "email": {
+      "title": "Email Integration",
+      "description": "Connect your Gmail account to get automatic status suggestions from hiring-related emails (interview invites, rejections, etc). Read-only access is requested, no emails are sent.",
+      "connectedAccount": "Connected account:",
+      "needsReattention": "The last sync failed, you may need to reconnect your Gmail account.",
+      "viewSuggestions": "View pending suggestions",
+      "disconnect": "Disconnect",
+      "connect": "Connect Gmail",
+      "connectError": "Could not start the Gmail connection.",
+      "disconnectError": "Could not disconnect.",
+      "successNotice": "Your Gmail account is connected.",
+      "errorNotice": "Gmail connection failed. Please try again."
+    },
+    "delete": {
+      "title": "Delete My Account",
+      "description": "This action cannot be undone. Your account and all your application, import, and reminder data will be permanently deleted.",
+      "passwordLabel": "Your Password",
+      "confirmLabel": "Type \"DELETE\" to confirm",
+      "confirmWord": "DELETE",
+      "confirmMismatch": "Type \"DELETE\" in the box to confirm.",
+      "submit": "Permanently Delete My Account",
+      "deleting": "Deleting...",
+      "genericError": "Could not delete account."
+    }
+  },
+  "emailSuggestions": {
+    "back": "← Account Settings",
+    "title": "Gmail Suggestions",
+    "empty": "No pending suggestions.",
+    "stillPending": "Still pending",
+    "confirm": "Confirm",
+    "dismiss": "Dismiss",
+    "confidence": "Confidence",
+    "loadError": "Could not load suggestions.",
+    "confirmError": "Could not confirm.",
+    "dismissError": "Could not dismiss."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: 2026",
+    "dataCollection": {
+      "title": "What data we collect and why",
+      "intro": "AfterApply is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
+      "item1": "Account information: first name, last name, email address, password (stored hashed).",
+      "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
+      "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
+      "outro": "This data is used solely to provide you with application tracking and personal analytics features."
+    },
+    "retention": {
+      "title": "Retention period",
+      "body": "Your data is kept until you delete your account. No automatic time-based deletion is applied."
+    },
+    "rights": {
+      "title": "Your rights",
+      "before": "You can export a copy of your data or permanently delete your account at any time. You can do this from the",
+      "link": "Account Settings",
+      "after": "page. Deleting your account permanently removes all application, import, and reminder data tied to your account."
+    },
+    "notApplicable": {
+      "title": "Not currently applicable",
+      "body": "AfterApply does not yet offer public/company-wide analytics features. As a result, anonymization/minimum-sample-size controls are not currently applicable — this policy will be updated when these features are added."
+    },
+    "contact": {
+      "title": "Contact",
+      "before": "For questions, you can reach us at",
+      "after": "."
+    }
+  },
+  "status": {
+    "Applied": "Applied",
+    "Screening": "Screening",
+    "Interview": "Interview",
+    "TechnicalInterview": "Technical Interview",
+    "FinalInterview": "Final Interview",
+    "Offer": "Offer",
+    "Accepted": "Accepted",
+    "Rejected": "Rejected",
+    "Withdrawn": "Withdrawn",
+    "Ghosted": "Ghosted"
+  },
+  "employmentType": {
+    "FullTime": "Full-Time",
+    "PartTime": "Part-Time",
+    "Contract": "Contract",
+    "Internship": "Internship",
+    "Freelance": "Freelance",
+    "Temporary": "Temporary"
+  },
+  "eventType": {
+    "ApplicationCreated": "Application Created",
+    "ApplicationSubmitted": "Application Submitted",
+    "RecruiterContacted": "Recruiter Contacted",
+    "ScreeningStarted": "Screening Started",
+    "InterviewScheduled": "Interview Scheduled",
+    "InterviewCompleted": "Interview Completed",
+    "OfferReceived": "Offer Received",
+    "FollowUpSent": "Follow-Up Sent",
+    "StatusChanged": "Status Changed"
+  },
+  "source": {
+    "Manual": "Entered Manually",
+    "LinkedIn": "LinkedIn",
+    "LinkedInImport": "LinkedIn Import",
+    "CsvImport": "CSV Import",
+    "CompanyWebsite": "Company Website",
+    "Referral": "Referral",
+    "BrowserExtension": "Browser Extension",
+    "Email": "Email",
+    "System": "System",
+    "Other": "Other"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Enter a valid email",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "firstNameRequired": "First name is required",
+    "lastNameRequired": "Last name is required",
+    "consentRequired": "You must accept the privacy policy",
+    "jobTitleRequired": "Position is required",
+    "employmentTypeRequired": "Employment type is required",
+    "appliedAtRequired": "Applied date is required",
+    "companyNameRequired": "Company name is required"
+  },
+  "errors": {
+    "generic": "The request failed.",
+    "sessionExpired": "Your session expired, please log in again."
+  }
+}
