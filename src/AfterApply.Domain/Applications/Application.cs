@@ -39,12 +39,13 @@ public sealed class Application : AuditableEntity
 
     public static Application Create(Guid userId, Guid companyId, string jobTitle, string? jobUrl,
         string? location, EmploymentType employmentType, DateTimeOffset appliedAt, Source source,
-        string? notes, DateTimeOffset now)
+        string? notes, DateTimeOffset now, Guid? jobId = null)
     {
         var application = new Application
         {
             UserId = userId,
             CompanyId = companyId,
+            JobId = jobId,
             JobTitle = jobTitle,
             JobUrl = jobUrl,
             Location = location,

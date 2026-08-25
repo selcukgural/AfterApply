@@ -8,6 +8,8 @@ public sealed class ImportBatch : AuditableEntity
 
     public Guid UserId { get; private set; }
 
+    public Source Source { get; private set; }
+
     public string FileName { get; private set; } = string.Empty;
 
     public int TotalRecords { get; private set; }
@@ -26,11 +28,12 @@ public sealed class ImportBatch : AuditableEntity
     {
     }
 
-    public static ImportBatch Create(Guid userId, string fileName, DateTimeOffset now)
+    public static ImportBatch Create(Guid userId, Source source, string fileName, DateTimeOffset now)
     {
         return new ImportBatch
         {
             UserId = userId,
+            Source = source,
             FileName = fileName,
             CreatedAt = now,
             UpdatedAt = now,

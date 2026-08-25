@@ -42,6 +42,21 @@ public static class ImportEndpoints
             }
         }).DisableAntiforgery();
 
+        group.MapPost("/linkedin", async ([FromForm] IFormFile file, ClaimsPrincipal user,
+            IImportService service, CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                await using var stream = file.OpenReadStream();
+                var summary = await service.ImportLinkedInZipAsync(user.GetUserId(), stream, file.FileName, file.Length, cancellationToken);
+                return Results.Ok(summary);
+            }
+            catch (CsvImportValidationException ex)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]> { ["file"] = ex.Errors.ToArray() });
+            }
+        }).DisableAntiforgery();
+
         group.MapGet("/{id:guid}", async (Guid id, ClaimsPrincipal user, IImportService service, CancellationToken cancellationToken) =>
         {
             var summary = await service.GetByIdAsync(user.GetUserId(), id, cancellationToken);

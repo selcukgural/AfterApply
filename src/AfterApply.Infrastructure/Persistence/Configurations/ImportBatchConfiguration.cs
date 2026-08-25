@@ -11,6 +11,7 @@ public sealed class ImportBatchConfiguration : IEntityTypeConfiguration<ImportBa
         builder.ToTable("ImportBatches");
         builder.HasKey(b => b.Id);
 
+        builder.Property(b => b.Source).HasConversion<string>().HasMaxLength(50);
         builder.Property(b => b.FileName).IsRequired().HasMaxLength(500);
 
         builder.HasIndex(b => b.UserId);

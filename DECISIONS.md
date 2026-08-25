@@ -397,6 +397,87 @@ yüzünden) bu sprintte de oluştu; aynı şekilde temizlendi
 
 ---
 
+## Sprint 5 kararları ve bulguları
+
+### ZIP işleme: `System.IO.Compression.ZipArchive` — DECIDED
+
+BCL'in kendi API'si, yeni NuGet paketi gerekmiyor. Sadece adı
+`Job Applications(_N)?.csv` desenine uyan entry'lerin stream'i açılıyor;
+eşleşmeyen entry'ler (tam LinkedIn export'unda `Messages.csv`,
+`Connections.csv` vb. onlarca dosya) sadece metadata seviyesinde enumerate
+ediliyor, decompress edilmiyor. Dosya sistemine extract edilmediği (stream
+doğrudan `CsvReader`'a veriliyor) için "zip slip" (path traversal) bu
+tasarımda uygulanabilir değil — ayrı bir kontrol eklenmedi.
+
+### Baseline ZIP limitleri, Sprint 7'nin tam hardening'inin yerine değil öncesinde — DECIDED
+
+`Imports:MaxZipSizeBytes` (varsayılan 50 MB), `Imports:MaxZipEntryCount`
+(varsayılan 500); eşleşen her CSV entry'si için `entry.Length` (uncompressed,
+metadata'dan, stream açmadan) mevcut `Imports:MaxFileSizeBytes`'a karşı
+kontrol ediliyor. `Imports:MaxRowCount` artık ZIP'teki tüm eşleşen
+dosyaların toplamına uygulanıyor. Kapsamlı rate limiting / zip-bomb
+testleri hâlâ Sprint 7 kapsamında (DEVELOPMENT_PLAN.md).
+
+### `Source.LinkedInImport` kullanıldı (spec'in `Source = LinkedIn` örneği değil) — DECIDED
+
+Enum'da (`Domain/Common/Source.cs`) hem `LinkedIn` hem `LinkedInImport`
+var; `LinkedIn` muhtemelen Phase 12 browser extension için ayrılmış. Bu
+sprint'in Data Export import pipeline'ı `LinkedInImport`'u kullanıyor —
+kodun kendi sözlüğüyle spec'in gevşek örnek metninden daha tutarlı.
+
+### `Job` global resolution — `IJobResolver`/`JobResolver` — DECIDED
+
+`ICompanyResolver`/`CompanyResolver` paterni (`Applications/CompanyResolver.cs`)
+tekrarlandı: `(Source, ExternalId)` ile find-or-create. Bunu DB seviyesinde
+zaten destekleyen bir unique index Sprint 1'den beri mevcuttu ama hiç
+kullanılmamıştı — `JobConfiguration.cs`:
+`HasIndex(j => new { j.Source, j.ExternalId }).IsUnique().HasFilter(...)`.
+`Company` gibi `Job` da kullanıcılar arası paylaşılan referans veri olarak
+resolve ediliyor (aynı LinkedIn ilanını farklı kullanıcılar import ederse
+aynı `Job` satırına işaret eder); dedup KONTROLÜ yine kullanıcıya özel
+kalıyor. `ExternalId` çıkarılamayan satırlarda Job yine de (dedup'suz)
+oluşturuluyor — Application seviyesindeki JobUrl/Company+Title+AppliedAt
+tier'ları zaten güvenlik ağı.
+
+### LinkedIn Job ID URL'den çıkarılıyor, ayrı bir sütun değil — DECIDED
+
+`LinkedInJobIdExtractor` (saf fonksiyon), `.../jobs/view/<id>` deseninden
+regex ile sayısal ID çıkarıyor. Spec §7'nin örneği
+(`Source = LinkedIn, ExternalId = 4449445627`) ve §8'in "LinkedIn Job ID
+extraction" adım isimlendirmesi bunun bir CSV sütunu değil, URL'den türetilen
+bir değer olduğunu gösteriyor.
+
+### Dedup tier'ları — tier-0 eklendi, `ImportService` satır-işleme mantığı reuse edildi — DECIDED
+
+Spec §8 sırası artık tam uygulanıyor: (0) `Source+ExternalId` (yalnızca
+LinkedIn path'inde — CSV path'i hiçbir zaman `externalId` üretmediği için
+bu tier CSV import'ta her zaman no-op, Sprint 4 davranışı değişmedi), (1)
+`JobUrl` tam eşleşmesi, (2) Company+JobTitle+AppliedAt. `ImportCsvAsync`
+ve yeni `ImportLinkedInZipAsync`, satır-başına parse/dedup/create mantığını
+ortak `ProcessRowAsync`/`ProcessCsvAsync` private helper'larından reuse
+ediyor (`ImportService.cs`) — Sprint 4'ün mevcut testleri (regresyon
+kontrolü) değişmeden geçti.
+
+### Tek `ImportBatch` / ZIP, `ImportBatch.Source` eklendi — DECIDED
+
+Spec'in örnek çıktısı (`Total records: 1136, New: 1020, ...`) tek bir özet;
+ZIP içindeki birden fazla `Job Applications_N.csv` toplanarak tek
+`ImportBatch`'e yazılıyor. `ImportBatch`'e küçük, geriye uyumlu bir
+`Source` alanı eklendi (yeni migration `AddImportBatchSource`) — `GET
+/api/imports/{id}` artık CSV/LinkedIn ayrımını dönüyor.
+
+### `Application.Create`'e opsiyonel `jobId` parametresi eklendi — DECIDED
+
+`Application.JobId` Sprint 1'den beri vardı ama hiçbir kod yolu set
+etmiyordu. Yeni bir "AssignJob" mutasyon metodu yerine, `Create` factory
+metoduna trailing optional `Guid? jobId = null` parametresi eklendi (mevcut
+tüm positional call site'lar — `ApplicationService.CreateAsync`, Sprint 4
+CSV import path'i, `ApplicationTests.cs` — değişmeden derlendi) — aggregate
+tek bir factory çağrısıyla tam kurulmuş oluyor, ayrı bir setter'ın
+invariant riski taşımıyor.
+
+---
+
 ## Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

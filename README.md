@@ -4,18 +4,21 @@ Job Application Tracker + Personal Analytics. See `afterapply-intelligence-platf
 for the product/technical spec, `DEVELOPMENT_PLAN.md` for the sprint roadmap,
 and `DECISIONS.md` for architecture/technical decisions.
 
-**Status: Sprint 4 (Generic CSV Import).** Backend: auth, Application CRUD/
-status/timeline, paginated+filterable application list, dashboard summary
-counts, `GET /api/analytics/overview` (response/interview/offer/rejection/
-ghosting rates, average/median response time, status distribution), CORS,
-`POST /api/imports/csv` (generic CSV upload with auto-detected/overridable
-column mapping, validation + per-row error report, dedup/idempotent import
-summary) and `GET /api/imports/{id}`. Frontend (`web/`, Next.js):
+**Status: Sprint 5 (LinkedIn Data Export Import).** Backend: auth,
+Application CRUD/status/timeline, paginated+filterable application list,
+dashboard summary counts, `GET /api/analytics/overview` (response/interview/
+offer/rejection/ghosting rates, average/median response time, status
+distribution), CORS, `POST /api/imports/csv` (generic CSV upload with
+auto-detected/overridable column mapping, validation + per-row error
+report, dedup/idempotent import summary), `POST /api/imports/linkedin`
+(LinkedIn Data Export ZIP upload — discovers `Job Applications*.csv` files,
+dedups by LinkedIn job id / URL / company+title+date, aggregates into one
+import summary) and `GET /api/imports/{id}`. Frontend (`web/`, Next.js):
 login/register, dashboard (stat tiles + analytics rates + response-time
 card + status-distribution chart), application list/detail/create/edit,
-status changes, timeline — no import UI yet (Sprint 4 is backend-only per
-`DEVELOPMENT_PLAN.md`). No LinkedIn import, no reminders yet — see
-`DEVELOPMENT_PLAN.md` for what's next.
+status changes, timeline — no import UI yet (Sprint 4/5 are backend-only
+per `DEVELOPMENT_PLAN.md`). No reminders yet — see `DEVELOPMENT_PLAN.md`
+for what's next.
 
 ## Architecture
 
@@ -87,6 +90,14 @@ curl -X POST http://localhost:5151/api/imports/csv -H "Authorization: Bearer <ac
 # → { "id": "...", "totalRecords": N, "newApplications": N, "duplicateRecords": N,
 #     "invalidRecords": N, "errors": [{ "rowNumber": ..., "errorMessage": ... }] }
 # Re-uploading the same file is idempotent (0 newApplications on the second run).
+
+# LinkedIn Data Export import — upload the whole "Get a copy of your data"
+# export ZIP; only Jobs/Job Applications*.csv entries are read (others are
+# skipped without decompressing). Dedups by LinkedIn job id (extracted from
+# the job URL) first, then job URL, then company+title+applied date. See
+# DECISIONS.md "Sprint 5".
+curl -X POST http://localhost:5151/api/imports/linkedin -H "Authorization: Bearer <accessToken>" \
+  -F "file=@linkedin_export.zip;type=application/zip"
 ```
 
 See `/api/auth/*`, `/api/users/me`, `/api/applications/*`, `/api/imports/*`

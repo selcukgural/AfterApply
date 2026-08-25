@@ -128,6 +128,7 @@ public static class DependencyInjection
         services.AddScoped<ICompanyResolver, CompanyResolver>();
         services.AddScoped<IApplicationService, ApplicationService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
+        services.AddScoped<IJobResolver, JobResolver>();
         services.AddScoped<IImportService, ImportService>();
 
         return services;
