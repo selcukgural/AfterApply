@@ -205,6 +205,25 @@ export interface CandidateProfileResponse {
 
 export type JobMatchRecommendation = "Apply" | "Consider" | "Skip";
 
+export interface PersonalAccessTokenResponse {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+export interface CreatedPersonalAccessTokenResponse {
+  id: string;
+  name: string;
+  token: string;
+  createdAt: string;
+}
+
+export interface ExtensionApplicationResponse {
+  application: ApplicationDetailResponse;
+  wasDuplicate: boolean;
+}
+
 export interface JobMatchResponse {
   applicationId: string;
   score: number;

@@ -191,6 +191,25 @@
       "loadError": "Could not load your CV.",
       "saveError": "Could not save your CV."
     },
+    "extension": {
+      "title": "Browser Extension",
+      "description": "Generate an access token to create applications with \"I Applied\" on LinkedIn job pages, then paste it into the extension's settings. This token grants full access to your account — only give it to your own browser extension.",
+      "nameLabel": "Token name",
+      "namePlaceholder": "e.g. Chrome Extension",
+      "generate": "Generate Token",
+      "generating": "Generating...",
+      "generateError": "Could not generate the token.",
+      "newTokenWarning": "This token is shown only once. Copy it now and paste it into the extension's settings.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "noTokens": "No tokens generated yet.",
+      "createdAt": "Created",
+      "lastUsedAt": "Last used",
+      "neverUsed": "Never used",
+      "revoke": "Revoke",
+      "revokeConfirm": "Are you sure you want to revoke this token? The extension will stop working with it.",
+      "revokeError": "Could not revoke the token."
+    },
     "delete": {
       "title": "Delete My Account",
       "description": "This action cannot be undone. Your account and all your application, import, and reminder data will be permanently deleted.",

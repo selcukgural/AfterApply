@@ -191,6 +191,25 @@
       "loadError": "CV yüklenemedi.",
       "saveError": "CV kaydedilemedi."
     },
+    "extension": {
+      "title": "Tarayıcı Eklentisi",
+      "description": "LinkedIn ilan sayfalarında \"I Applied\" ile başvuru oluşturmak için bir erişim anahtarı üretin ve eklentinin ayarlarına yapıştırın. Bu anahtar hesabınıza tam erişim sağlar — sadece kendi tarayıcı eklentinize verin.",
+      "nameLabel": "Anahtar adı",
+      "namePlaceholder": "örn. Chrome Eklentisi",
+      "generate": "Anahtar Üret",
+      "generating": "Üretiliyor...",
+      "generateError": "Anahtar üretilemedi.",
+      "newTokenWarning": "Bu anahtar yalnızca bir kez gösterilir. Şimdi kopyalayıp eklentinin ayarlarına yapıştırın.",
+      "copy": "Kopyala",
+      "copied": "Kopyalandı",
+      "noTokens": "Henüz üretilmiş bir anahtar yok.",
+      "createdAt": "Oluşturulma",
+      "lastUsedAt": "Son kullanım",
+      "neverUsed": "Hiç kullanılmadı",
+      "revoke": "İptal Et",
+      "revokeConfirm": "Bu anahtarı iptal etmek istediğinize emin misiniz? Eklenti bu anahtarla artık çalışmayacak.",
+      "revokeError": "Anahtar iptal edilemedi."
+    },
     "delete": {
       "title": "Hesabımı Sil",
       "description": "Bu işlem geri alınamaz. Hesabınız ve tüm başvuru, import ve hatırlatma verileriniz kalıcı olarak silinir.",

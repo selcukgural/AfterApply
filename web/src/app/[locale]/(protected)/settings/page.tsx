@@ -8,8 +8,9 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 import { emailIntegrationsApi } from "@/lib/api/emailIntegrations";
 import { matchingApi } from "@/lib/api/matching";
+import { personalAccessTokensApi } from "@/lib/api/personalAccessTokens";
 import { ApiError } from "@/lib/api/httpClient";
-import type { EmailConnectionStatusResponse } from "@/types/api";
+import type { CreatedPersonalAccessTokenResponse, EmailConnectionStatusResponse, PersonalAccessTokenResponse } from "@/types/api";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -41,6 +42,14 @@ export default function SettingsPage() {
   const [cvSaving, setCvSaving] = useState(false);
   const [cvNotice, setCvNotice] = useState<string | null>(null);
   const [cvError, setCvError] = useState<string | null>(null);
+
+  const [tokens, setTokens] = useState<PersonalAccessTokenResponse[]>([]);
+  const [tokensLoading, setTokensLoading] = useState(true);
+  const [newTokenName, setNewTokenName] = useState("");
+  const [creatingToken, setCreatingToken] = useState(false);
+  const [tokenError, setTokenError] = useState<string | null>(null);
+  const [justCreatedToken, setJustCreatedToken] = useState<CreatedPersonalAccessTokenResponse | null>(null);
+  const [tokenCopied, setTokenCopied] = useState(false);
 
   const [password, setPassword] = useState("");
   const [confirmationText, setConfirmationText] = useState("");
@@ -81,6 +90,49 @@ export default function SettingsPage() {
       setCvError(error instanceof ApiError ? error.message : t("cv.saveError"));
     } finally {
       setCvSaving(false);
+    }
+  };
+
+  const loadTokens = () => {
+    personalAccessTokensApi
+      .list()
+      .then(setTokens)
+      .catch(() => setTokens([]))
+      .finally(() => setTokensLoading(false));
+  };
+
+  useEffect(loadTokens, []);
+
+  const handleCreateToken = async () => {
+    setTokenError(null);
+    setCreatingToken(true);
+    try {
+      const created = await personalAccessTokensApi.create(newTokenName.trim() || "Browser Extension");
+      setJustCreatedToken(created);
+      setTokenCopied(false);
+      setNewTokenName("");
+      loadTokens();
+    } catch (error) {
+      setTokenError(error instanceof ApiError ? error.message : t("extension.generateError"));
+    } finally {
+      setCreatingToken(false);
+    }
+  };
+
+  const handleCopyToken = async () => {
+    if (!justCreatedToken) return;
+    await navigator.clipboard.writeText(justCreatedToken.token);
+    setTokenCopied(true);
+  };
+
+  const handleRevokeToken = async (id: string) => {
+    if (!confirm(t("extension.revokeConfirm"))) return;
+    setTokenError(null);
+    try {
+      await personalAccessTokensApi.revoke(id);
+      setTokens((prev) => prev.filter((token) => token.id !== id));
+    } catch (error) {
+      setTokenError(error instanceof ApiError ? error.message : t("extension.revokeError"));
     }
   };
 
@@ -200,6 +252,71 @@ export default function SettingsPage() {
               </Button>
             </div>
           </div>
+        )}
+      </section>
+
+      <section className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("extension.title")}</h2>
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("extension.description")}</p>
+
+        {tokenError && <p className="mb-3 text-sm text-red-600 dark:text-red-400">{tokenError}</p>}
+
+        {justCreatedToken && (
+          <div className="mb-4 flex flex-col gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3">
+            <p className="text-sm text-amber-800 dark:text-amber-300">{t("extension.newTokenWarning")}</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 overflow-x-auto rounded bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100">
+                {justCreatedToken.token}
+              </code>
+              <Button variant="secondary" onClick={handleCopyToken}>
+                {tokenCopied ? t("extension.copied") : t("extension.copy")}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-4 flex items-end gap-2">
+          <div className="flex-1">
+            <FormField label={t("extension.nameLabel")} htmlFor="pat-name">
+              <Input
+                id="pat-name"
+                placeholder={t("extension.namePlaceholder")}
+                value={newTokenName}
+                onChange={(e) => setNewTokenName(e.target.value)}
+              />
+            </FormField>
+          </div>
+          <Button variant="secondary" onClick={handleCreateToken} disabled={creatingToken}>
+            {creatingToken ? t("extension.generating") : t("extension.generate")}
+          </Button>
+        </div>
+
+        {tokensLoading ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
+        ) : tokens.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t("extension.noTokens")}</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {tokens.map((token) => (
+              <li
+                key={token.id}
+                className="flex items-center justify-between rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm"
+              >
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{token.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t("extension.createdAt")} {new Date(token.createdAt).toLocaleDateString()} ·{" "}
+                    {token.lastUsedAt
+                      ? `${t("extension.lastUsedAt")} ${new Date(token.lastUsedAt).toLocaleDateString()}`
+                      : t("extension.neverUsed")}
+                  </p>
+                </div>
+                <Button variant="danger" onClick={() => handleRevokeToken(token.id)}>
+                  {t("extension.revoke")}
+                </Button>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 

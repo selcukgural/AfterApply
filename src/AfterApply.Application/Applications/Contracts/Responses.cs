@@ -26,6 +26,8 @@ public sealed record ApplicationDetailResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
+public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);
+
 public sealed record ApplicationEventResponse(
     Guid Id,
     ApplicationEventType Type,

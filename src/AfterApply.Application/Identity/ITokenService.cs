@@ -7,4 +7,8 @@ public interface ITokenService
     string GenerateRefreshToken();
 
     string HashRefreshToken(string refreshToken);
+
+    string GeneratePersonalAccessToken();
+
+    string HashPersonalAccessToken(string token);
 }

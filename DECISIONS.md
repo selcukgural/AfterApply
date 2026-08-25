@@ -939,6 +939,139 @@ koşulmadı, birim testler (93/93 yeşil) koşuldu.
 
 ---
 
+## Sprint 9 kararları ve bulguları (Browser Extension)
+
+### PAT (Personal Access Token) tasarımı — DECIDED
+
+Sprint 8 planında "OPEN" bırakılan üç soru (üretim/iptal/scope) netleşti:
+
+- **Scope: v1 unscoped** — bir PAT, sahibi kullanıcı için JWT session'ıyla aynı erişime sahip
+  (hesap silme dahil). Gerekçe: endpoint-bazlı bir izin-listesi/deny-listesi (hangi endpoint'ler
+  PAT kabul eder) hem büyük bir yüzey alanı hem de unutulan bir endpoint'in sessizce açık kalması
+  riski taşıyordu; kullanıcı kendi ürettiği, kendi eklentisine yapıştırdığı bir kimlik bilgisi
+  için (GitHub'ın klasik PAT'leri gibi) v1'de unscoped kabul edilebilir bir tercih. İnce-taneli
+  scope, gerçek bir ihtiyaç ortaya çıkarsa post-launch hardening'e bırakıldı.
+- **Üretim/iptal:** `PersonalAccessToken` (yeni, `Infrastructure/Identity/` — Domain değil,
+  `RefreshToken` ile aynı gerekçe: kimlik/auth mekaniği, domain davranışı değil). Ham değer
+  sadece üretim anında dönüyor (`aa_pat_` prefix'li, `RandomNumberGenerator` + Base64Url), DB'de
+  sadece SHA-256 hash'i tutuluyor (`RefreshToken.HashRefreshToken` ile aynı algoritma, ortak
+  `JwtTokenService.Hash` private helper'ına çıkarıldı). `RefreshTokens` gibi `ApplicationUser`'a
+  gerçek bir cascade FK — hesap silindiğinde ayrı bir temizleme adımına gerek yok.
+
+### Kimlik doğrulama: policy-scheme forwarding, yeni endpoint/route değişikliği yok — DECIDED
+
+Web app'in JWT'si ve extension'ın PAT'ı ikisi de aynı `Authorization: Bearer <value>` header'ında
+geliyor. Yeni bir "SmartBearer" policy scheme (`AddPolicyScheme`) default scheme yapıldı;
+`ForwardDefaultSelector` token'ın `aa_pat_` prefix'i taşıyıp taşımadığına bakarak ya `JwtBearer`
+ya da yeni `PersonalAccessToken` scheme'ine (custom `AuthenticationHandler<AuthenticationSchemeOptions>`)
+yönlendiriyor. Sonuç: mevcut hiçbir `RequireAuthorization()` çağrısı değişmedi — PAT, unscoped
+karar gereği zaten her yerde JWT ile aynı muameleyi görüyor. Üretilen `ClaimsPrincipal` sadece
+`sub` claim'i taşıyor — kod tabanında `ClaimsPrincipal`'dan okunan tek claim bu
+(`ClaimsPrincipalExtensions.GetUserId`, `RateLimiting`'in partition key'i), doğrulandı (grep).
+
+### `Source.LinkedIn` vs `Source.BrowserExtension` ayrımı — DECIDED (Sprint 5'in bıraktığı notun karşılığı)
+
+Sprint 5 notu "`Source.LinkedIn` muhtemelen Phase 12 browser extension için ayrılmış" demişti.
+Netleşen kullanım: **`Job.Source = LinkedIn`** (ilan verisinin nereden geldiği), **`Application.Source
+= BrowserExtension`** (bu application satırının hangi kanaldan oluşturulduğu) — `Job`/`Application`
+`Source` alanlarının zaten farklı anlamlar taşıdığı (veri kökeni vs. giriş kanalı) mevcut kullanım
+örüntüsüyle (CompanyWebsite/Referral/Email gibi Application-only değerler) tutarlı.
+
+### Yeni endpoint: `POST /api/applications/from-extension`, mevcut manuel `CreateAsync`'ten ayrı — DECIDED
+
+Mevcut `POST /api/applications` (manuel giriş) hiç dedup yapmıyor — bilinçli olarak, çünkü
+kullanıcının tek seferlik, kasıtlı bir eylemi. Extension'ın "I Applied" butonu ise aynı sayfada
+yanlışlıkla iki kez tıklanabilir; bu yüzden ayrı bir `IApplicationService.CreateFromExtensionAsync`
+eklendi: `JobUrl` tam eşleşmesiyle (kullanıcının mevcut application'larına karşı) dedup yapıyor —
+eşleşme varsa yeni satır açmadan mevcut application'ı `WasDuplicate: true` ile döndürüyor. `IJobResolver`
+(Sprint 5) reuse edildi; imzasına `description`/`publishedAt` için trailing optional parametreler
+eklendi (mevcut `ImportService` call site'ı `cancellationToken`'dan sonra yeni parametreler
+geldiği için değişmeden derlendi).
+
+### Extension scrape'lemediği alan: `EmploymentType` — bilinen sınırlama (Sprint 4 CSV import ile aynı)
+
+Spec §11'in extension'dan beklediği alan listesi (company/title/URL/job id/location/description/
+published date) `EmploymentType` içermiyor — `CreateFromExtensionAsync` varsayılan olarak
+`EmploymentType.FullTime` kullanıyor, CSV import'un Sprint 4'te belgelenen aynı sınırlaması.
+
+### Extension: popup + editable alanlar, DOM'a buton enjekte etmek yerine — DECIDED
+
+Spec'in "Kullanıcı: I Applied dediğinde" ifadesi LinkedIn'in canlı sayfasına bir buton enjekte
+etmeyi çağrıştırıyordu, ama LinkedIn'in obfuscated/sık değişen class adlarına karşı bu kırılgan ve
+bakımı pahalı olurdu. Bunun yerine: kullanıcı toolbar ikonuna tıklar, popup açılır, sayfadan
+best-effort scrape edilen company/title/location **editable input** olarak gösterilir, "I Applied"
+popup içindeki bir buton. Aynı UX sözleşmesini (tek tık → onay) LinkedIn'in DOM'una dokunmadan
+sağlıyor; scrape başarısız olursa kullanıcı alanları elle doldurur, hiçbir zaman sessizce yanlış
+veri göndermiyor.
+
+### Scraping selector'ları bu oturumda gerçek LinkedIn sayfasına karşı doğrulanmadı — bilgi amaçlı
+
+`popup.js`'teki `scrapeLinkedInJob()` selector'ları best-effort yazıldı (canlı bir üçüncü taraf
+siteyi otomatize/scrape etmek bu oturumun kapsamı dışında tutuldu); `<title>`-tabanlı bir fallback
+var ama LinkedIn markup değiştirirse selector'ların güncellenmesi gerekebilir. Tüm alanlar
+submit'ten önce editable olduğu için bu bir doğruluk riski değil, sadece bir UX-sürtünmesi riski —
+bkz. `extension/README.md`.
+
+### Bulgu: `host_permissions` backend origin'ini içermiyordu — düzeltildi (manuel testte bulundu)
+
+İlk sürümde `manifest.json`'ın `host_permissions`'ı sadece `https://www.linkedin.com/*` içeriyordu.
+MV3'te bir extension sayfasının (popup/options, `chrome-extension://` origin'i) `fetch()` çağrısı
+CORS'tan ancak hedef origin `host_permissions`'ta **açıkça** listeliyse muaf tutuluyor — backend
+(`http://localhost:5151`) listede olmadığı için `popup.js`'in "I Applied" isteği sessizce CORS'a
+takılıyordu (kullanıcının gerçek LinkedIn sayfasında yaptığı manuel testte fark edildi: extension
+tıklandı ama panelde hiçbir başvuru oluşmadı). Düzeltme: `host_permissions`'a `http://localhost/*`
+eklendi — Chrome'un match pattern söz dizimi port içermiyor, yani bu tüm localhost portlarını
+(5151 dahil) kapsıyor. **Bilinen sınırlama:** gerçek bir prod API origin'i devreye girdiğinde bu
+listeye ayrıca eklenmesi (ya da `optional_host_permissions` + runtime `chrome.permissions.request`
+akışına geçilmesi) gerekecek — options sayfasındaki "API base URL" alanı halihazırda serbest metin,
+ama manifest statik olduğu için origin'i otomatik kapsamıyor.
+
+### Bulgu: `/jobs/view/<id>` yalnızca tek bir giriş noktasıydı — düzeltildi (manuel testte bulundu)
+
+İlk sürümde popup, aktif tab'ın URL'inin `https://www.linkedin.com/jobs/view/<id>` kalıbına
+uyup uymadığını kontrol ediyordu. Kullanıcının gerçek LinkedIn kullanımında (arama sonuçları
+üzerinden bir ilana tıklamak) URL hiç `/jobs/view/`'a geçmiyor — LinkedIn ilanı bir yan panelde
+`/jobs/search-results/?currentJobId=<id>&...` gibi bir URL'de açıyor (SPA route, sayfa URL'i
+değişmiyor). Bu, `/jobs/view/`'a hiç navigate etmeyen kullanıcılar için extension'ı komple
+işlevsiz bırakan bir bug'dı. Düzeltme: `extractLinkedInJobId` artık hem `/jobs/view/(\d+)` path'ini
+hem de `currentJobId` query param'ını (search-results/collections sayfaları) tanıyor; her iki
+durumda da backend'e her zaman kanonik `https://www.linkedin.com/jobs/view/<id>/` URL'i
+gönderiliyor (backend'in `LinkedInJobIdExtractor`'ı bu şekli bekliyor, ve JobUrl-dedup'ın hangi
+LinkedIn sayfa şeklinden geldiğine bakmaksızın kararlı kalması için).
+
+### Bulgu: generic `h1` fallback yanlış başlığı sessizce döndürüyordu — düzeltildi (manuel testte bulundu)
+
+Yukarıdaki search-results/split-view sayfasında yapılan manuel testte: `company`/`location` doğru
+scrape edildi (`"Extia"`/`"Lisbon"`) ama `title` alanı ilanın gerçek başlığından ("Staff Backend
+Software Engineer") farklı, küçük harfli ve kesik bir değer ("Staff backend software eng")
+döndürdü. Sebep: title selector zincirinin son adımı generic `"h1"` idi — spesifik top-card
+selector'ları bu sayfa düzeninde eşleşmeyince, sayfadaki BAŞKA bir `h1`'i (muhtemelen
+erişilebilirlik amaçlı bir sayfa başlığı) sessizce yakaladı. Bu, kodun kendi tasarım ilkesiyle
+("scrape başarısız olursa boş kalır, asla sessizce yanlış veri göndermez") çelişiyordu. Düzeltme:
+generic `"h1"` fallback'i tamamen kaldırıldı — artık ya spesifik selector eşleşir, ya `<title>`
+regex fallback'i devreye girer, ya da alan boş kalıp kullanıcı elle doldurur.
+
+### Scraper tamamen href-tabanlı stratejiye geçirildi — DECIDED (manuel testte, gerçek DOM'a bakılarak)
+
+Yukarıdaki `h1` düzeltmesi de kullanıcının canlı sayfadan paylaştığı gerçek HTML'e bakılınca
+yetersiz çıktı: bu sayfadaki **tüm** class'lar (`_59162b76 d68df9b8 ...` gibi) hash'lenmiş/atomic
+— hiçbiri kararlı değil. Kullanıcının paylaştığı gerçek DOM'da (hem arama sonucu kartı hem detay
+paneli) tutarlı olan şey: ilan başlığı her zaman `<a href=".../jobs/view/<id>/...">Başlık</a>`
+içinde, şirket adı her zaman `<a href=".../company/<slug>/...">Şirket</a>` içinde — bunlar
+LinkedIn'in routing/SEO için taşımak zorunda olduğu `href` değerleri, CSS değil. `scrapeLinkedInJob`
+artık `jobId`'yi (URL'den zaten çıkarılmış) `chrome.scripting.executeScript`'in `args`'ı ile alıyor
+ve `a[href*="/jobs/view/${jobId}"]` ile hedef ilanı kesin eşleştiriyor (sayfadaki alakasız "benzer
+ilanlar" linkleriyle karışmasın diye). Konum (location) alanı için böyle bir semantik referans
+noktası yok — başlığın `<p>`'sinden DOM-sibling-yürüyüşüyle en az güvenilir şekilde tahmin ediliyor;
+bu üç alanın en az kritik olanı, boş kalırsa kullanıcı iki saniyede elle yazar.
+
+### Kapsam dışı: Chrome Web Store yayını — DECIDED (plan zaten böyle diyordu)
+
+`extension/` klasörü "load unpacked" ile kullanılabilir durumda; mağaza yayını (ikon seti, store
+listing, review süreci) ayrı, sonraki bir adım.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

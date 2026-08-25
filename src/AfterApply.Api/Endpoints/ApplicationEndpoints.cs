@@ -33,6 +33,16 @@ public static class ApplicationEndpoints
             })
             .WithValidation<CreateApplicationRequest>();
 
+        group.MapPost("/from-extension", async (CreateFromExtensionRequest request, ClaimsPrincipal user,
+                IApplicationService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.CreateFromExtensionAsync(user.GetUserId(), request, cancellationToken);
+                return result.WasDuplicate
+                    ? Results.Ok(result)
+                    : Results.Created($"/api/applications/{result.Application.Id}", result);
+            })
+            .WithValidation<CreateFromExtensionRequest>();
+
         group.MapPut("/{id:guid}", async (Guid id, UpdateApplicationRequest request, ClaimsPrincipal user,
                 IApplicationService service, CancellationToken cancellationToken) =>
             {

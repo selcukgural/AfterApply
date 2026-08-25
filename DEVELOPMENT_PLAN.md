@@ -184,6 +184,19 @@ için "Match Score" hesaplatabilir, spec §12'deki formatta sonucu görür.
 
 ## Sprint 9 — Browser Extension (spec Phase 12)
 
+> **Durum (2026-08-25): tamamlandı, gerçek LinkedIn sayfasında manuel
+> olarak uçtan uca doğrulandı.** Kullanıcı backend+frontend'i lokal
+> çalıştırıp eklentiyi yükledi, gerçek bir LinkedIn ilanında "I Applied"
+> ile başvuru oluşturdu — PAT auth (SmartBearer scheme forwarding), CORS
+> (`host_permissions`), URL kalıbı (`/jobs/view/` + `currentJobId`), ve
+> scraping (href-tabanlı title/company/location) canlı ortamda çalıştığı
+> doğrulandı (bkz. DECISIONS.md "Sprint 9 kararları ve bulguları" — üç
+> gerçek bug bu doğrulama sırasında bulunup düzeltildi). Bekleyen: podman
+> entegrasyon testlerinin (`PersonalAccessTokenTests.cs`,
+> `ExtensionApplicationTests.cs`) koşulması (workflow kararı gereği bu
+> oturumda koşulmadı) ve Chrome Web Store yayını (kapsam dışı, plan
+> zaten böyle diyordu).
+
 - Chrome/Edge extension scaffold (Manifest V3)
 - LinkedIn job sayfasından scraping: company/title/URL/LinkedIn job
   id/location/description/published date

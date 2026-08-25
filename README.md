@@ -299,3 +299,12 @@ No automated test calls the real OpenAI API (see `DECISIONS.md` — the
 persist/cache logic is tested against a fake `IJobMatchingProvider`
 instead); once a real key is in place, set a CV in `/settings` and compute
 a match from an application's detail page as a manual smoke test.
+
+## Browser Extension Setup
+
+Sprint 9 ships a Manifest V3 Chrome/Edge extension (`extension/`) that turns a LinkedIn job
+posting page into a tracked AfterApply application with one click — see
+`afterapply-intelligence-platform-plan.md` §11 and `DECISIONS.md`'s Sprint 9 entry for the design.
+It authenticates with a Personal Access Token generated from `/settings` → Browser Extension,
+not the web app's JWT session. Full setup/load-unpacked instructions and known limitations
+(LinkedIn scraping selectors are best-effort) are in `extension/README.md`.

@@ -1,5 +1,6 @@
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.Imports;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Infrastructure.Persistence;
@@ -8,7 +9,7 @@ using DomainApplication = AfterApply.Domain.Applications.Application;
 
 namespace AfterApply.Infrastructure.Applications;
 
-internal sealed class ApplicationService(AppDbContext dbContext, ICompanyResolver companyResolver) : IApplicationService
+internal sealed class ApplicationService(AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver) : IApplicationService
 {
     public async Task<PagedResult<ApplicationSummaryResponse>> GetAllAsync(Guid userId, GetApplicationsQuery query, CancellationToken cancellationToken)
     {
@@ -97,6 +98,41 @@ internal sealed class ApplicationService(AppDbContext dbContext, ICompanyResolve
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
+    }
+
+    public async Task<ExtensionApplicationResponse> CreateFromExtensionAsync(Guid userId, CreateFromExtensionRequest request, CancellationToken cancellationToken)
+    {
+        var normalizedUrl = request.JobUrl.Trim();
+
+        var existing = await dbContext.Applications
+            .FirstOrDefaultAsync(a => a.UserId == userId && a.JobUrl == normalizedUrl, cancellationToken);
+
+        if (existing is not null)
+        {
+            return new ExtensionApplicationResponse(await ToDetailAsync(existing, cancellationToken), WasDuplicate: true);
+        }
+
+        var companyId = await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken);
+
+        // The job posting was scraped from a LinkedIn page (Source.LinkedIn — reserved for this
+        // exact use since Sprint 5, see DECISIONS.md); Source.BrowserExtension instead tags how
+        // this Application row itself was created, consistent with how Source is used elsewhere
+        // (Job.Source = data provenance, Application.Source = entry-creation channel).
+        var externalId = LinkedInJobIdExtractor.Extract(normalizedUrl);
+        var jobId = await jobResolver.ResolveOrCreateAsync(companyId, request.JobTitle, Source.LinkedIn, normalizedUrl,
+            externalId, request.Location, cancellationToken, request.Description, request.PublishedAt);
+
+        // The extension doesn't scrape employment type (spec §11's field list omits it) — same
+        // known limitation as generic CSV import (DECISIONS.md Sprint 4), defaults to FullTime.
+        var application = DomainApplication.Create(
+            userId, companyId, request.JobTitle, normalizedUrl, request.Location,
+            EmploymentType.FullTime, DateTimeOffset.UtcNow, Source.BrowserExtension,
+            notes: null, DateTimeOffset.UtcNow, jobId);
+
+        dbContext.Applications.Add(application);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return new ExtensionApplicationResponse(await ToDetailAsync(application, cancellationToken), WasDuplicate: false);
     }
 
     public async Task<ApplicationDetailResponse?> UpdateAsync(Guid userId, Guid applicationId, UpdateApplicationRequest request, CancellationToken cancellationToken)

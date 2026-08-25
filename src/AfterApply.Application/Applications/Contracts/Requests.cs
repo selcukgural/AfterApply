@@ -13,6 +13,14 @@ public sealed record CreateApplicationRequest(
     Source? Source,
     string? Notes);
 
+public sealed record CreateFromExtensionRequest(
+    string CompanyName,
+    string JobTitle,
+    string JobUrl,
+    string? Location,
+    string? Description,
+    DateTimeOffset? PublishedAt);
+
 public sealed record UpdateApplicationRequest(
     string JobTitle,
     string? JobUrl,

@@ -48,7 +48,26 @@ internal sealed class JwtTokenService(IOptions<JwtOptions> options) : ITokenServ
 
     public string HashRefreshToken(string refreshToken)
     {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
+        return Hash(refreshToken);
+    }
+
+    public string GeneratePersonalAccessToken()
+    {
+        // Base64Url (not plain Base64) so the token is safe to paste as-is into the extension's
+        // options page or an Authorization header without accidental '+'/'/' encoding surprises.
+        var random = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+            .TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        return PersonalAccessTokenDefaults.TokenPrefix + random;
+    }
+
+    public string HashPersonalAccessToken(string token)
+    {
+        return Hash(token);
+    }
+
+    private static string Hash(string value)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
         return Convert.ToHexString(bytes);
     }
 }

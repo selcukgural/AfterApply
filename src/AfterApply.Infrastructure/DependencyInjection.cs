@@ -19,6 +19,7 @@ using AfterApply.Infrastructure.Persistence;
 using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -116,10 +117,27 @@ public static class DependencyInjection
             .AddDefaultTokenProviders()
             .AddErrorDescriber<LocalizedIdentityErrorDescriber>();
 
+        // Both the web app's JWT access token and the browser extension's PAT (Sprint 9) arrive
+        // as a plain `Authorization: Bearer <value>` header — this policy scheme is the default
+        // and forwards to whichever real scheme matches, purely by inspecting the token's shape
+        // (PersonalAccessTokenDefaults.TokenPrefix), so every existing RequireAuthorization()
+        // call site keeps working unchanged for both credential types.
+        const string smartBearerScheme = "SmartBearer";
+
         services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = smartBearerScheme;
+                options.DefaultChallengeScheme = smartBearerScheme;
+            })
+            .AddPolicyScheme(smartBearerScheme, smartBearerScheme, policyOptions =>
+            {
+                policyOptions.ForwardDefaultSelector = context =>
+                {
+                    var authorizationHeader = context.Request.Headers.Authorization.ToString();
+                    return authorizationHeader.Contains(PersonalAccessTokenDefaults.TokenPrefix, StringComparison.Ordinal)
+                        ? PersonalAccessTokenDefaults.AuthenticationScheme
+                        : JwtBearerDefaults.AuthenticationScheme;
+                };
             })
             .AddJwtBearer(options =>
             {
@@ -135,12 +153,15 @@ public static class DependencyInjection
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
-            });
+            })
+            .AddScheme<AuthenticationSchemeOptions, PersonalAccessTokenAuthenticationHandler>(
+                PersonalAccessTokenDefaults.AuthenticationScheme, _ => { });
 
         services.AddAuthorization();
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IPersonalAccessTokenService, PersonalAccessTokenService>();
 
         return services;
     }
