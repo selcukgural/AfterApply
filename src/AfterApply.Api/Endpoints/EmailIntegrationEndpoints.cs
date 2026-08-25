@@ -19,8 +19,15 @@ public static class EmailIntegrationEndpoints
 
         group.MapGet("/gmail/connect", async (ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
             {
-                var authorizationUrl = await service.BuildAuthorizationUrlAsync(user.GetUserId(), cancellationToken);
-                return Results.Ok(new { authorizationUrl });
+                try
+                {
+                    var authorizationUrl = await service.BuildAuthorizationUrlAsync(user.GetUserId(), cancellationToken);
+                    return Results.Ok(new { authorizationUrl });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { ["gmail"] = [ex.Message] });
+                }
             })
             .RequireAuthorization();
 

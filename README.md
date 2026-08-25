@@ -148,6 +148,16 @@ project's containers — check for conflicts on your machine and adjust
   containers may occasionally need manual `podman rm` cleanup.
 - Everything: `dotnet test AfterApply.slnx`
 
+> **Workflow note (Claude Code sessions):** Podman-backed integration test
+> runs in this environment are slow and intermittently flaky (Testcontainers
+> ↔ podman socket connectivity hiccups, unrelated to the code under test —
+> see DECISIONS.md's Sprint 6/7 notes), and re-running them after every small
+> change burns a lot of time. During active development, only the unit
+> tests (`tests/AfterApply.UnitTests`, no container runtime needed) are run
+> continuously; the full integration suite (`tests/AfterApply.IntegrationTests`)
+> is deferred and run once after a batch of changes is otherwise complete,
+> not after each individual file edit.
+
 ## Configuration
 
 The app reads `ConnectionStrings:Postgres` and `ConnectionStrings:Redis` from
@@ -157,3 +167,48 @@ In the container environment, they're supplied as `ConnectionStrings__Postgres`
 / `ConnectionStrings__Redis` environment variables in `docker-compose.yml`.
 If unset, the API fails fast on startup with an explanatory error instead of
 silently connecting to the wrong database.
+
+`GoogleOAuth:ClientId`/`ClientSecret`/`RedirectUri` (Gmail integration, see
+below) are **not** fail-fast — the app runs fine with the placeholder values
+in `appsettings.json`; only the `/api/email-integrations/gmail/connect`
+endpoint returns a clear error until real credentials are supplied.
+
+## Gmail Integration Setup
+
+Phase 9 (post-MVP) lets a user connect their Gmail account (read-only) so
+AfterApply can suggest status updates from hiring-related emails — see
+`afterapply-intelligence-platform-plan.md` §10 and `DECISIONS.md`'s Phase 9
+entry for the design. The code ships with obvious placeholder OAuth
+credentials (`GoogleOAuth:ClientId`/`ClientSecret` in `appsettings.json`) —
+the feature is structurally complete but inert until you supply real ones
+from your own Google Cloud project:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create or
+   select a project, then enable the **Gmail API** under APIs & Services.
+2. Configure the **OAuth consent screen**: User type **External** is fine for
+   personal/private-beta use. Keep the publishing status as **Testing** —
+   this avoids Google's manual verification review, which sensitive scopes
+   like `gmail.readonly` would otherwise require for a "Production" app.
+   Testing mode is capped at a small, fixed list of test users, so add your
+   own Google account (and anyone else who'll use this instance) explicitly
+   under "Test users" on the consent screen.
+3. Add the required scope on the consent screen's scopes list:
+   `https://www.googleapis.com/auth/gmail.readonly`.
+4. Create an **OAuth 2.0 Client ID** (application type: **Web application**).
+   Add your `GoogleOAuth:RedirectUri` value (default:
+   `http://localhost:5151/api/email-integrations/gmail/callback`) as an
+   **Authorized redirect URI** — it must match byte-for-byte.
+5. Set the real values locally via user-secrets (never commit real
+   credentials into `appsettings.json`):
+   ```bash
+   dotnet user-secrets set "GoogleOAuth:ClientId" "<your client id>" --project src/AfterApply.Api
+   dotnet user-secrets set "GoogleOAuth:ClientSecret" "<your client secret>" --project src/AfterApply.Api
+   ```
+   For the container/prod profile, use the `GOOGLE_OAUTH_CLIENT_ID`/
+   `GOOGLE_OAUTH_CLIENT_SECRET`/`GOOGLE_OAUTH_REDIRECT_URI` variables in
+   `.env.prod` (see `DEPLOYMENT.md`).
+
+No automated test exercises the real Gmail API (see `DECISIONS.md` — the
+sync/classification/matching logic is tested against a fake `IGmailClient`
+instead); once real credentials are in place, connect a Gmail account from
+`/settings` in the frontend as a manual smoke test.

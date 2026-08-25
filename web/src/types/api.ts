@@ -176,3 +176,22 @@ export interface ApplicationListQuery {
   sortBy?: ApplicationListSortBy;
   sortDirection?: SortDirection;
 }
+
+export interface EmailConnectionStatusResponse {
+  connected: boolean;
+  providerAccountEmail: string | null;
+  lastSyncedAt: string | null;
+  needsReattention: boolean;
+}
+
+export interface EmailSuggestionResponse {
+  id: string;
+  applicationId: string;
+  companyName: string;
+  jobTitle: string;
+  suggestedStatus: ApplicationStatus | null;
+  confidenceScore: number;
+  subject: string;
+  snippet: string;
+  emailReceivedAt: string;
+}

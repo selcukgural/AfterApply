@@ -673,6 +673,143 @@ değil.
 
 ---
 
+## Phase 9 kararları ve bulguları (Email Integration — Gmail)
+
+### Sadece Gmail, tek provider — DECIDED
+
+DECISIONS.md'de "Email integration provider priority → Sprint 9 (post-MVP)"
+olarak açık bırakılmıştı. Kullanıcıyla netleştirildi: ilk versiyon **sadece
+Gmail** (OAuth read-only, `gmail.readonly` scope). Outlook aynı pattern'i
+izleyerek (yeni bir `EmailProvider` üyesi + `IGmailClient`'a benzer bir port)
+sonra eklenebilir — `EmailConnection.Provider` bilinçli olarak enum (tek üye
+olsa bile), bu genişlemeyi saf-additive yapmak için.
+
+### Sınıflandırma: kural/anahtar-kelime bazlı, LLM yok — DECIDED
+
+`EmailClassifier` (`src/AfterApply.Application/EmailIntegrations/`), spec
+§10'un kendi örneklerinden türetilen data-driven bir `(phrases, targetStatus,
+label, weight)` kural listesi kullanıyor — yeni bir AI/LLM sağlayıcı
+bağımlılığı, maliyeti veya email içeriğini dışarı gönderme sorunu yok.
+Çakışan eşleşmelerde (örn. hem "unfortunately" hem "interview" geçiyorsa)
+**Rejection kazanır** — yanlışlıkla "hâlâ mülakattasın" önermek, temkinli
+olmaktan daha kötü.
+
+### Email içeriği persist edilmiyor (§31.14) — büyük bir çözüm
+
+`EmailSuggestion` entity'sinde `Subject`/`Snippet`/`Body` alanı **yok** —
+sadece sınıflandırma sonucu (`SuggestedStatus`, `ConfidenceScore`,
+`MatchedRule`) ve linkage (`ApplicationId`, `ProviderMessageId`) persist
+ediliyor. Kullanıcı onay ekranı (`GET /api/email-integrations/suggestions`),
+subject/snippet'i her seferinde Gmail'den `ProviderMessageId` ile **canlı**
+çekiyor — hiçbir zaman `DbSet`'e yazılmıyor. Bu, spec'in orijinal §20 şema
+taslağındaki `EmailMessages` tablosunun (ki içerik saklamayı ima ediyordu)
+ve rule §31.14'ün ("email içeriğini gereksiz yere persistent saklama")
+arasındaki gerilimi çözüyor.
+
+### Sync: tarih-penceresi polling, Gmail `historyId` değil — DECIDED
+
+Gmail'in incremental `historyId` senkronizasyonu 7 gün sonra expire oluyor;
+kaçırılan bir job run'ı (bu aşamada uptime garantisi yok) zaten tam-resync
+fallback'i gerektiriyor — yani `historyId` asıl karmaşıklığı ortadan
+kaldırmıyor, sadece optimize ediyor, karşılığında ekstra state ve hata
+yüzeyi ekliyor. Basit `after:<unix-seconds>` Gmail arama sorgusu (ilk
+sync'te 30 günlük geriye dönük pencere) v1 için yeterli ve orantılı.
+Hangfire job'ı saatte bir çalışıyor (`EmailIntegrations:SyncCronExpression`).
+
+### Eşleşmeyen email'ler gösterilmiyor — DECIDED
+
+Kullanıcı kararı: `EmailApplicationMatcher.Match(...)` `null` dönerse (ne
+sender domain `Company.Website` ile eşleşiyor ne de şirket adı sender/subject
+içinde geçiyor) **hiçbir `EmailSuggestion` oluşturulmuyor** — daha sessiz,
+yüksek-hassasiyetli bir v1, Reminder'lardaki "tahmin etme, öner"
+temkinliliğiyle tutarlı.
+
+### Disconnect: satır silinmiyor, sadece senkronizasyon duruyor — DECIDED
+
+Plan agent'ının orijinal önerisi (disconnect → `EmailConnection` satırını
+sil → cascade ile `EmailSuggestion`'lar da silinsin) kullanıcı tarafından
+**reddedildi**. Gerçek davranış: `Disconnect(now)` sadece `DisconnectedAt`
+set ediyor ve `EncryptedRefreshToken`'ı temizliyor; satır ve mevcut
+`EmailSuggestion`'lar kalıyor. Sync job `DisconnectedAt == null` olan
+bağlantıları filtreliyor. Yeniden bağlanma aynı satırı `DisconnectedAt =
+null` ile upsert ediyor (yeni bir satır oluşturmuyor, `(UserId, Provider)`
+unique index'i zaten bunu garanti ediyor).
+
+### OAuth state: stateless, JWT signing key reuse — DECIDED
+
+Uygulama stateless bir JWT-API + ayrı bir SPA (server-side session yok).
+Google'ın callback'i (`GET /gmail/callback`) düz bir browser navigation,
+Authorization header taşımıyor. Çözüm: `/gmail/connect`, `userId`'yi imzalı,
+kısa ömürlü (10 dk) bir `state`'e gömüyor (`sub`, `jti`, `purpose:
+"gmail-oauth-state"` claim'i, mevcut `Jwt:SigningKey` ile HMAC-imzalı —
+`JwtTokenService.CreateAccessToken`'daki `JsonWebTokenHandler` kalıbı reuse
+edildi). Callback, `state`'in imzasını/expiry'sini/`purpose` claim'ini
+doğruluyor — normal bir access token asla state olarak replay edilemiyor
+(entegrasyon testiyle doğrulandı).
+
+### Token saklama: `IDataProtector`, `RefreshToken.HashRefreshToken` değil — DECIDED
+
+AfterApply'ın kendi refresh token'ları tek-yönlü SHA-256 hash'leniyor (sadece
+karşılaştırma gerekiyor). Gmail'in OAuth refresh token'ı **tekrar okunabilir**
+olmalı (Gmail API çağrısı için) — bu yüzden `Microsoft.AspNetCore.DataProtection`
+(`IDataProtector.Protect`/`Unprotect`) kullanıldı. Key ring, container
+restart'larında hayatta kalması için `PersistKeysToDbContext<AppDbContext>()`
+ile Postgres'te tutuluyor (`DataProtectionKeys` tablosu, `AddEmailIntegrations`
+migration'ında).
+
+### `ChangeStatusRequest`'e `Source?` eklendi — DECIDED
+
+Email'den onaylanan bir statü değişikliğinin `Source.Email` ile kaydedilmesi
+gerekiyordu ama `ApplicationService.ChangeStatusAsync` her zaman
+`Source.Manual` kullanıyordu (`ChangeStatusRequest`'te `Source` alanı yoktu).
+Yeni bir domain mutation metodu eklemek yerine (ki `ChangeStatusAsync`'in
+belgeli bir EF Core DetectChanges workaround'ı var, ikinci bir call site'ta
+yanlış tekrarlanma riski taşırdı), `ChangeStatusRequest`'e sona eklenen
+opsiyonel bir `Source? Source = null` parametresi eklendi (mevcut 3-arglı
+çağrıları bozmuyor), `ApplicationService.ChangeStatusAsync`
+`request.Source ?? Source.Manual` kullanacak şekilde güncellendi.
+
+### Ortak `TerminalApplicationStatuses` — DECIDED
+
+`ReminderService` ve `ProductMetricsService`'te birbirinin birebir aynısı
+olan iki private `HashSet<ApplicationStatus>` (Withdrawn/Ghosted/
+Rejected/Accepted) vardı — `EmailApplicationMatcher`'ın candidate
+filtrelemesi de aynı kümeye ihtiyaç duyunca, `src/AfterApply.Domain/
+Applications/TerminalApplicationStatuses.cs`'e tek bir yere taşındı. **Bulgu:**
+İlk denemede `IReadOnlySet<ApplicationStatus>` olarak tanımlandı — EF Core'un
+query translator'ı bunun üzerinde `.Contains()` çağrısını SQL'e çeviremedi
+(`ReminderService`'in entegrasyon testleri patladı). Çözüm: somut
+`HashSet<ApplicationStatus>` tipi (interface değil) — EF Core'un `Contains()`
+→ SQL `IN`/`ANY` çevirisi sadece belirli somut collection tiplerini tanıyor.
+
+### Bulgu: Minimal API endpoint'inde yakalanmayan exception → çıplak 500
+
+`GET /gmail/connect`'in ilk versiyonu, `BuildAuthorizationUrlAsync`'in
+OAuth yapılandırılmamışken fırlattığı `InvalidOperationException`'ı
+yakalamıyordu — tarayıcıda çıplak bir 500 (Development'ta exception page)
+olarak ortaya çıktı, frontend'in `apiFetch`'i bunu generic bir "istek
+başarısız oldu" mesajına çeviriyordu. Canlı tarayıcı smoke testinde
+yakalandı. Çözüm: endpoint'te `try/catch (InvalidOperationException)` →
+mevcut `Results.ValidationProblem(...)` kalıbıyla 400 dönülüyor. Yeni bir
+endpoint eklerken, servis katmanının fırlatabileceği beklenen exception'ların
+(config eksikliği gibi) endpoint'te yakalanıp düzgün bir HTTP yanıtına
+çevrildiğinden emin olunmalı — aksi halde unhandled exception middleware'i
+devreye giriyor.
+
+### Bulgu: Podman/Testcontainers entegrasyon test koşuları — workflow değişikliği
+
+Bu fazın implementasyonu sırasında podman-backed entegrasyon testleri
+tekrar tekrar "Sequence contains no elements" / test-host-crash tarzı
+bağlantı hatalarıyla kesintiye uğradı (Sprint 6/7'de de görülmüş, kodla
+ilgisiz bir ortam sorunu). Kullanıcı bunun üzerine workflow'u değiştirdi:
+geliştirme sırasında sadece unit testler (`tests/AfterApply.UnitTests`,
+container gerektirmiyor) çalıştırılıyor; `tests/AfterApply.IntegrationTests`
+(podman/Testcontainers) artık her küçük değişiklikten sonra değil, bir
+çalışma batch'i tamamlandıktan sonra bir kez koşuluyor. Detay için
+`README.md`'deki "Workflow note" kutusuna bakın.
+
+---
+
 ## Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
