@@ -51,6 +51,7 @@ export interface UserProfileResponse {
   lastName: string;
   createdAt: string;
   consentAcceptedAt: string;
+  preferredLanguage: string;
 }
 
 export interface AuthResponse {

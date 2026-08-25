@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
-import type { UserProfileResponse } from "@/types/api";
+import type { AuthResponse, UserProfileResponse } from "@/types/api";
 import { authApi, type LoginRequest, type RegisterRequest } from "@/lib/api/auth";
 import { authStore } from "@/lib/api/authStore";
 
@@ -9,8 +9,11 @@ interface AuthContextValue {
   user: UserProfileResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (request: LoginRequest) => Promise<void>;
-  register: (request: RegisterRequest) => Promise<void>;
+  // Return the full auth response (not void) so callers can read
+  // `user.preferredLanguage` right after login/register and redirect to the
+  // account's saved language — see login/register pages.
+  login: (request: LoginRequest) => Promise<AuthResponse>;
+  register: (request: RegisterRequest) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
 }
@@ -49,11 +52,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (request: LoginRequest) => {
     const auth = await authApi.login(request);
     authStore.setAuth(auth);
+    return auth;
   }, []);
 
   const register = useCallback(async (request: RegisterRequest) => {
     const auth = await authApi.register(request);
     authStore.setAuth(auth);
+    return auth;
   }, []);
 
   const logout = useCallback(async () => {

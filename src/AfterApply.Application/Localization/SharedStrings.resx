@@ -26,6 +26,9 @@
   <data name="AUTH_INVALID_REFRESH_TOKEN" xml:space="preserve">
     <value>Invalid refresh token.</value>
   </data>
+  <data name="AUTH_WRONG_PASSWORD" xml:space="preserve">
+    <value>Incorrect password.</value>
+  </data>
 
   <data name="DefaultError" xml:space="preserve">
     <value>An unknown failure has occurred.</value>
@@ -96,6 +99,9 @@
 
   <data name="VALIDATION_CONSENT_REQUIRED" xml:space="preserve">
     <value>You must accept the privacy policy.</value>
+  </data>
+  <data name="VALIDATION_UNSUPPORTED_LANGUAGE" xml:space="preserve">
+    <value>Unsupported language. Use "tr" or "en".</value>
   </data>
   <data name="VALIDATION_APPLIED_AT_FUTURE" xml:space="preserve">
     <value>AppliedAt cannot be in the future.</value>

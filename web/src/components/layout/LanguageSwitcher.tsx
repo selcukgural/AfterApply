@@ -3,11 +3,25 @@
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { authApi } from "@/lib/api/auth";
 
 export function LanguageSwitcher() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const handleSwitch = (code: (typeof routing.locales)[number]) => {
+    router.replace(pathname, { locale: code });
+    if (isAuthenticated) {
+      // Persists the choice to the account so it's applied on the next
+      // login from any device/browser, not just remembered via this
+      // browser's NEXT_LOCALE cookie. Fire-and-forget: a transient failure
+      // here shouldn't block the (already-completed) navigation.
+      void authApi.updateLanguage(code);
+    }
+  };
 
   return (
     <div className="flex items-center gap-1 text-sm text-gray-600">
@@ -15,7 +29,7 @@ export function LanguageSwitcher() {
         <button
           key={code}
           type="button"
-          onClick={() => router.replace(pathname, { locale: code })}
+          onClick={() => handleSwitch(code)}
           disabled={code === locale}
           className={
             code === locale

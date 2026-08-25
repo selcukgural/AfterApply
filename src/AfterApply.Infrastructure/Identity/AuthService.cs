@@ -1,3 +1,4 @@
+using System.Globalization;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Infrastructure.Persistence;
@@ -25,7 +26,12 @@ internal sealed class AuthService(
             FirstName = request.FirstName,
             LastName = request.LastName,
             CreatedAt = DateTimeOffset.UtcNow,
-            ConsentAcceptedAt = DateTimeOffset.UtcNow
+            ConsentAcceptedAt = DateTimeOffset.UtcNow,
+            // Whatever locale RequestLocalization resolved from this request's Accept-Language
+            // (i.e. whichever UI language the visitor was on when they registered) becomes the
+            // account's initial preference, so it's already correct before they ever touch the
+            // language switcher.
+            PreferredLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
         };
 
         var result = await userManager.CreateAsync(user, request.Password);
@@ -124,6 +130,20 @@ internal sealed class AuthService(
 
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
+        await userManager.UpdateAsync(user);
+
+        return ToProfile(user);
+    }
+
+    public async Task<UserProfileResponse?> UpdateLanguageAsync(Guid userId, string language, CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return null;
+        }
+
+        user.PreferredLanguage = language;
         await userManager.UpdateAsync(user);
 
         return ToProfile(user);
@@ -247,5 +267,5 @@ internal sealed class AuthService(
     }
 
     private static UserProfileResponse ToProfile(ApplicationUser user) =>
-        new(user.Id, user.Email!, user.FirstName, user.LastName, user.CreatedAt, user.ConsentAcceptedAt);
+        new(user.Id, user.Email!, user.FirstName, user.LastName, user.CreatedAt, user.ConsentAcceptedAt, user.PreferredLanguage);
 }

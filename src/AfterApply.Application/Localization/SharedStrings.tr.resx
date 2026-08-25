@@ -26,6 +26,9 @@
   <data name="AUTH_INVALID_REFRESH_TOKEN" xml:space="preserve">
     <value>Geçersiz oturum yenileme jetonu.</value>
   </data>
+  <data name="AUTH_WRONG_PASSWORD" xml:space="preserve">
+    <value>Şifre hatalı.</value>
+  </data>
 
   <data name="DefaultError" xml:space="preserve">
     <value>Bilinmeyen bir hata oluştu.</value>
@@ -96,6 +99,9 @@
 
   <data name="VALIDATION_CONSENT_REQUIRED" xml:space="preserve">
     <value>Gizlilik politikasını kabul etmelisiniz.</value>
+  </data>
+  <data name="VALIDATION_UNSUPPORTED_LANGUAGE" xml:space="preserve">
+    <value>Desteklenmeyen dil. "tr" veya "en" kullanın.</value>
   </data>
   <data name="VALIDATION_APPLIED_AT_FUTURE" xml:space="preserve">
     <value>Başvuru tarihi gelecekte olamaz.</value>

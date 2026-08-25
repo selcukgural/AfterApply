@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { createRegisterSchema } from "@/lib/validation/registerSchema";
 import { ApiError } from "@/lib/api/httpClient";
@@ -16,6 +17,7 @@ type FieldErrors = Partial<Record<"email" | "password" | "firstName" | "lastName
 export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("auth.register");
   const tValidation = useTranslations("validation");
   const [values, setValues] = useState({
@@ -52,8 +54,17 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      await register(result.data);
-      router.push("/");
+      const auth = await register(result.data);
+      // Same post-login redirect rule as the login page — kept for
+      // consistency even though a fresh registration's preferredLanguage
+      // should already match the current locale (see AuthService.RegisterAsync).
+      const preferredLanguage = auth.user.preferredLanguage;
+      const supportedLocales: readonly string[] = routing.locales;
+      if (supportedLocales.includes(preferredLanguage) && preferredLanguage !== locale) {
+        router.push("/", { locale: preferredLanguage as (typeof routing.locales)[number] });
+      } else {
+        router.push("/");
+      }
     } catch (error) {
       setFormError(error instanceof ApiError ? error.message : t("genericError"));
     } finally {
@@ -62,7 +73,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h1 className="mb-6 text-xl font-semibold text-gray-900">{t("title")}</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

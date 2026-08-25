@@ -51,6 +51,12 @@ export const authApi = {
       body: JSON.stringify(request),
     }),
 
+  updateLanguage: (language: string) =>
+    apiFetch<UserProfileResponse>("/api/users/me/language", {
+      method: "PUT",
+      body: JSON.stringify({ language }),
+    }),
+
   deleteAccount: (request: DeleteAccountRequest) =>
     apiFetch<void>("/api/users/me", {
       method: "DELETE",

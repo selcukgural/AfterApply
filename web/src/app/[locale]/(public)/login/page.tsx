@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { createLoginSchema } from "@/lib/validation/loginSchema";
 import { ApiError } from "@/lib/api/httpClient";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("auth.login");
   const tValidation = useTranslations("validation");
   const [email, setEmail] = useState("");
@@ -35,8 +37,17 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     try {
-      await login(result.data);
-      router.push("/");
+      const auth = await login(result.data);
+      // Applies the account's saved language preference right after login,
+      // regardless of which device/browser the user is signing in from —
+      // until they explicitly switch again via the language switcher.
+      const preferredLanguage = auth.user.preferredLanguage;
+      const supportedLocales: readonly string[] = routing.locales;
+      if (supportedLocales.includes(preferredLanguage) && preferredLanguage !== locale) {
+        router.push("/", { locale: preferredLanguage as (typeof routing.locales)[number] });
+      } else {
+        router.push("/");
+      }
     } catch (error) {
       setFormError(error instanceof ApiError ? error.message : t("genericError"));
     } finally {
@@ -45,7 +56,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h1 className="mb-6 text-xl font-semibold text-gray-900">{t("title")}</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

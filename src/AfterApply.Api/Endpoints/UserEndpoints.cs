@@ -3,7 +3,9 @@ using System.Text.Json;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Application.Localization;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 
 namespace AfterApply.Api.Endpoints;
@@ -28,13 +30,21 @@ public static class UserEndpoints
             })
             .WithValidation<UpdateProfileRequest>();
 
-        group.MapDelete("/me", async ([Microsoft.AspNetCore.Mvc.FromBody] DeleteAccountRequest request, ClaimsPrincipal user,
+        group.MapPut("/me/language", async (UpdateLanguageRequest request, ClaimsPrincipal user,
                 IAuthService authService, CancellationToken cancellationToken) =>
+            {
+                var profile = await authService.UpdateLanguageAsync(user.GetUserId(), request.Language, cancellationToken);
+                return profile is not null ? Results.Ok(profile) : Results.NotFound();
+            })
+            .WithValidation<UpdateLanguageRequest>();
+
+        group.MapDelete("/me", async ([Microsoft.AspNetCore.Mvc.FromBody] DeleteAccountRequest request, ClaimsPrincipal user,
+                IAuthService authService, IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
             {
                 var deleted = await authService.DeleteAccountAsync(user.GetUserId(), request.Password, cancellationToken);
                 return deleted
                     ? Results.NoContent()
-                    : Results.ValidationProblem(new Dictionary<string, string[]> { ["password"] = ["Şifre hatalı."] });
+                    : Results.ValidationProblem(new Dictionary<string, string[]> { ["password"] = [localizer["AUTH_WRONG_PASSWORD"]] });
             })
             .WithValidation<DeleteAccountRequest>();
 
