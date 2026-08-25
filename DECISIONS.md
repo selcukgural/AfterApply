@@ -566,6 +566,113 @@ gelmeli.
 
 ---
 
+## Sprint 7 kararları ve bulguları
+
+### Hesap silme: uygulama-seviyesi orkestrasyon, DB FK yok — DECIDED
+
+`Applications`/`ImportBatches`/`Reminders`'ın `UserId`'si DB'de gerçek bir
+FK değil (sadece indexed kolon) — sadece `RefreshTokens` gerçek bir
+`Cascade` FK'ye sahip. Bu yüzden hesap silme üç adımlı, açık bir
+orkestrasyon: `Applications` (→ cascade Events/StatusHistory/Reminders) →
+`ImportBatches` (→ cascade ImportRowErrors) → `UserManager.DeleteAsync`
+(→ cascade RefreshTokens), tek transaction içinde. Toplu silme için
+(tekil `ApplicationService.DeleteAsync`'teki `Remove`+`SaveChanges`
+kalıbından farklı olarak) `ExecuteDeleteAsync` kullanıldı — DB-seviyesi
+`ON DELETE CASCADE` zaten Postgres tarafından garanti edildiği için EF
+tracking'e gerek yok. `Companies`/`Jobs`'a hiç dokunulmuyor (paylaşımlı/
+global, `UserId` yok) — entegrasyon testinde iki kullanıcının aynı
+şirkete referans verdiği senaryo, silme sonrası şirketin sağlam kaldığı
+doğrulanarak kapsandı.
+
+### Consent backend'de kalıcı — DECIDED
+
+`ApplicationUser.ConsentAcceptedAt`, kayıt anında set edilir. Salt
+frontend checkbox'ı ispatlanabilir bir kontrol sayılmadığı için (bkz.
+plan onayı) sunucu tarafında saklanıyor.
+
+### Rate limiting: iki policy, fixed-window — DECIDED
+
+`auth-strict` (IP bazlı, 5/dk, `register`/`login`/`refresh` — henüz
+authenticated olmayan çağrılar için IP tek seçenek) ve `upload` (user
+bazlı, 10/5dk, import endpoint'leri). Kayıt yeri **`AfterApply.Api`**
+projesinde (`RateLimiting.cs`), Infrastructure'da değil —
+`Microsoft.AspNetCore.RateLimiting` shared framework'ün bir parçası,
+sadece `Microsoft.NET.Sdk.Web` projelerine (Api) otomatik geliyor; plain
+class library olan Infrastructure bunu görmüyor (build hatası: `AddRateLimiter`
+bulunamadı). Bu, mevcut "tüm DI kaydı Infrastructure'da" kuralına tek
+istisna — sebep mimari (framework reference), tercih değil.
+
+### Zip-bomb hardening: `LimitedStream` byte-cap, compression-ratio kontrolü eklenmedi — DECIDED
+
+Sprint 5, `entry.Length`'i (deklare edilen, açılmadan önce) kontrol
+ediyordu ama `entry.Open()` sonrası okuma sırasında gerçek bir byte
+sınırı yoktu. Yeni `LimitedStream` (`Infrastructure/Imports/`), `entry.Open()`'ı
+sarmalayıp kümülatif okunan byte `MaxFileSizeBytes`'ı aşınca
+`StreamLengthExceededException` fırlatıyor (yakalanıp
+`CsvImportValidationException`'a çevriliyor). Ayrı bir
+compression-ratio kontrolü **eklenmedi** — byte-cap zaten worst-case
+decompressed output'u doğrudan sınırlıyor, ratio kontrolü bunun için
+sadece bir proxy olurdu (zip-slip'in zaten burada belgeli olduğu gibi,
+bilinçli bir non-control).
+
+### Product metrics: günlük Hangfire job + Serilog log, dashboard yok — DECIDED
+
+`ProductMetricsService.ComputeSnapshotAsync` mevcut timestamp'lerden
+(yeni event-tracking yok) activation/engagement/retention/data-network-effect
+metriklerini hesaplayıp tek bir structured `LogInformation` çağrısıyla
+loglar. Sprint 6'nın `IRecurringJobManager` kaydı kalıbı aynen izlendi.
+Persist edilen bir snapshot tablosu ya da endpoint/dashboard bilinçli
+olarak eklenmedi (private beta henüz sıfır kullanıcıyla başlıyor,
+YAGNI).
+
+### Docker prod profili: reverse proxy/TLS bilinçli olarak kapsam dışı — DECIDED
+
+`docker-compose.prod.yml`, gerçek bir cloud/domain hedefi olmadan
+spekülatif bir reverse-proxy/TLS katmanı kurmuyor — `DEPLOYMENT.md`'de
+"cloud seçildiğinde gerekli" olarak not düşülüyor. Detaylar için
+`DEPLOYMENT.md`.
+
+### Bulgu: Minimal API, `DELETE` gövdesini `[FromBody]` olmadan inference etmiyor
+
+`DELETE /api/users/me` ilk denemede body parametresini (`DeleteAccountRequest request`)
+diğer tüm endpoint'lerdeki gibi (POST/PUT'ta olduğu gibi) inference'a
+bırakmıştı — runtime'da `InvalidOperationException: Body was inferred
+but the method does not allow inferred body parameters` ile patladı
+(entegrasyon testlerinde yakalandı). ASP.NET Core, `DELETE`/`GET`/`HEAD`
+gibi body taşımayan metotlarda **bilinçli olarak** body inference'ı
+engelliyor — güvenlik varsayılanı. Çözüm: parametreyi açıkça
+`[Microsoft.AspNetCore.Mvc.FromBody]` ile işaretlemek (kısayol
+`using Microsoft.AspNetCore.Mvc;` eklemek `JsonOptions` adı
+`Microsoft.AspNetCore.Http.Json.JsonOptions` ile çakıştığı için tam
+nitelikli isim kullanıldı). Yeni bir `DELETE`/`GET` body-taşıyan
+endpoint eklenirken bu kalıp izlenmeli.
+
+### Bulgu: `AddRateLimiter`'ın varsayılan reddetme kodu 429 değil 503
+
+`services.AddRateLimiter(...)` hiçbir ek ayar yapılmadan reddedilen
+istekleri **503 Service Unavailable** ile döndürüyor — rate limiting
+için RFC 6585'in konvansiyonel kodu olan 429'u değil. Entegrasyon
+testinde yakalandı (429 bekleniyordu, 503 geldi). Çözüm:
+`options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;`
+açıkça set etmek. Yeni bir rate-limit policy eklerken bu ayarın zaten
+`RateLimiting.cs`'te global olarak yapıldığını unutmayın (policy başına
+tekrar ayarlamaya gerek yok).
+
+### Bulgu: Docker Compose override dosyalarında liste alanları concatenate edilir, replace edilmez
+
+`docker-compose.prod.yml`'de `postgres`/`redis`'in host portlarını
+kaldırmak için ilk denemede `ports: []` yazıldı — ama Compose'un
+varsayılan merge davranışı liste alanlarını (concatenate), boş bir
+override listesini var olan listeye **eklemek** olarak yorumluyor, yani
+`ports: []` hiçbir şeyi kaldırmıyor (doğrulandı: `podman compose ...
+config` çıktısında eski `published: "5434"` hâlâ görünüyordu). Çözüm:
+Compose Specification'ın `!override` YAML tag'i — `ports: !override []`
+gerçekten temizliyor. Yeni bir override dosyasında bir listeyi
+temizlemek/değiştirmek gerekirse bu tag kullanılmalı, salt `[]` yeterli
+değil.
+
+---
+
 ## Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

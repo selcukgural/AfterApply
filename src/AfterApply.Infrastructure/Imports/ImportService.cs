@@ -106,10 +106,18 @@ internal sealed partial class ImportService(
 
         foreach (var entry in matchedEntries)
         {
-            await using var entryStream = entry.Open();
+            await using var entryStream = new LimitedStream(entry.Open(), opts.MaxFileSizeBytes);
             using var reader = new StreamReader(entryStream);
-            await ProcessCsvAsync(userId, batch, ctx, reader, Source.LinkedInImport, resolveJob: true,
-                columnMappingOverride: null, counts, opts, cancellationToken);
+
+            try
+            {
+                await ProcessCsvAsync(userId, batch, ctx, reader, Source.LinkedInImport, resolveJob: true,
+                    columnMappingOverride: null, counts, opts, cancellationToken);
+            }
+            catch (StreamLengthExceededException)
+            {
+                throw new CsvImportValidationException([$"'{entry.FullName}' dosyası açılırken boyut sınırı aşıldı."]);
+            }
         }
 
         batch.Complete(counts.Total, counts.New, counts.Duplicate, counts.Invalid, DateTimeOffset.UtcNow);

@@ -1,0 +1,38 @@
+# "Prod-like" overlay over docker-compose.yml — NOT a real cloud deployment.
+# Cloud provider selection is still open (DECISIONS.md); this profile is the
+# locally-verifiable stand-in for the Sprint 7 DoD ("prod-benzeri ortam").
+# Usage: docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up --build
+#
+# What changes vs. the dev file:
+#   - Postgres/Redis no longer publish host ports (dev exposes them for local
+#     psql/redis-cli access; nothing outside the compose network needs them).
+#   - The API keeps its host port — the browser calls it directly (no reverse
+#     proxy in this sprint, see DEPLOYMENT.md).
+#   - A `web` service (Next.js, web/Dockerfile) is added.
+#   - All secrets come from `.env.prod` (git-ignored) instead of dev defaults.
+
+services:
+  postgres:
+    # Compose merges list fields by concatenation, not replacement, by
+    # default — !override is required to actually clear the dev file's
+    # published port instead of appending an empty no-op list to it.
+    ports: !override []
+
+  redis:
+    ports: !override []
+
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Cors__AllowedOrigins__0: "${WEB_ORIGIN:?Set WEB_ORIGIN in .env.prod}"
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "${API_ORIGIN:?Set API_ORIGIN in .env.prod}"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api

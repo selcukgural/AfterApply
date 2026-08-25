@@ -50,6 +50,7 @@ export interface UserProfileResponse {
   firstName: string;
   lastName: string;
   createdAt: string;
+  consentAcceptedAt: string;
 }
 
 export interface AuthResponse {

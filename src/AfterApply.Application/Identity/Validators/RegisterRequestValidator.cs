@@ -11,5 +11,6 @@ public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest
         RuleFor(x => x.Password).NotEmpty();
         RuleFor(x => x.FirstName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.ConsentAccepted).Must(x => x).WithMessage("Gizlilik politikasını kabul etmelisiniz.");
     }
 }

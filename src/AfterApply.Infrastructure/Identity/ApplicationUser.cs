@@ -14,4 +14,6 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     public string LastName { get; set; } = string.Empty;
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset ConsentAcceptedAt { get; set; }
 }

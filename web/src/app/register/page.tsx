@@ -9,13 +9,20 @@ import { ApiError } from "@/lib/api/httpClient";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 
-type FieldErrors = Partial<Record<"email" | "password" | "firstName" | "lastName", string>>;
+type FieldErrors = Partial<Record<"email" | "password" | "firstName" | "lastName" | "consentAccepted", string>>;
 
 export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
-  const [values, setValues] = useState({ email: "", password: "", firstName: "", lastName: "" });
+  const [values, setValues] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    consentAccepted: false,
+  });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +42,7 @@ export default function RegisterPage() {
         password: fieldErrors.password?.[0],
         firstName: fieldErrors.firstName?.[0],
         lastName: fieldErrors.lastName?.[0],
+        consentAccepted: fieldErrors.consentAccepted?.[0],
       });
       return;
     }
@@ -76,6 +84,20 @@ export default function RegisterPage() {
               autoComplete="new-password"
             />
           </FormField>
+          <Checkbox
+            id="consentAccepted"
+            checked={values.consentAccepted}
+            onChange={(e) => setValues((prev) => ({ ...prev, consentAccepted: e.target.checked }))}
+            error={errors.consentAccepted}
+            label={
+              <>
+                <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
+                  Gizlilik politikasını
+                </Link>{" "}
+                okudum ve kabul ediyorum.
+              </>
+            }
+          />
           {formError && <p className="text-sm text-red-600">{formError}</p>}
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Kayıt oluşturuluyor..." : "Kayıt Ol"}

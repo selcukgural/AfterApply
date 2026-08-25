@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Imports;
+using AfterApply.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AfterApply.Api.Endpoints;
@@ -40,7 +41,7 @@ public static class ImportEndpoints
             {
                 return Results.ValidationProblem(new Dictionary<string, string[]> { ["file"] = ex.Errors.ToArray() });
             }
-        }).DisableAntiforgery();
+        }).DisableAntiforgery().RequireRateLimiting(DependencyInjection.UploadRateLimitPolicy);
 
         group.MapPost("/linkedin", async ([FromForm] IFormFile file, ClaimsPrincipal user,
             IImportService service, CancellationToken cancellationToken) =>
@@ -55,7 +56,7 @@ public static class ImportEndpoints
             {
                 return Results.ValidationProblem(new Dictionary<string, string[]> { ["file"] = ex.Errors.ToArray() });
             }
-        }).DisableAntiforgery();
+        }).DisableAntiforgery().RequireRateLimiting(DependencyInjection.UploadRateLimitPolicy);
 
         group.MapGet("/{id:guid}", async (Guid id, ClaimsPrincipal user, IImportService service, CancellationToken cancellationToken) =>
         {

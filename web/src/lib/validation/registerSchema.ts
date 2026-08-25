@@ -5,6 +5,7 @@ export const registerSchema = z.object({
   password: z.string().min(8, "Şifre en az 8 karakter olmalı"),
   firstName: z.string().min(1, "Ad gerekli").max(100),
   lastName: z.string().min(1, "Soyad gerekli").max(100),
+  consentAccepted: z.literal(true, { message: "Gizlilik politikasını kabul etmelisiniz" }),
 });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;

@@ -63,7 +63,7 @@ public class ReminderTests : IAsyncLifetime
     {
         var client = _factory!.CreateClient();
         var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Reminders", "Test"), JsonOptions);
+            new RegisterRequest(email, "P@ssw0rd123!", "Reminders", "Test", true), JsonOptions);
         registerResponse.EnsureSuccessStatusCode();
         var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);

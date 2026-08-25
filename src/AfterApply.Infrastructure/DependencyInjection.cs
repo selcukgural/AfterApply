@@ -3,11 +3,13 @@ using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
+using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
+using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using FluentValidation;
@@ -26,6 +28,8 @@ namespace AfterApply.Infrastructure;
 public static class DependencyInjection
 {
     public const string CorsPolicyName = "Frontend";
+    public const string AuthRateLimitPolicy = "auth-strict";
+    public const string UploadRateLimitPolicy = "upload";
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
@@ -137,6 +141,7 @@ public static class DependencyInjection
         services.AddScoped<IJobResolver, JobResolver>();
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<IReminderService, ReminderService>();
+        services.AddScoped<IProductMetricsService, ProductMetricsService>();
 
         return services;
     }

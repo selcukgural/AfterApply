@@ -36,6 +36,9 @@ export function NavBar() {
               {user.firstName} {user.lastName}
             </span>
           )}
+          <Link href="/settings" className="hover:text-gray-900">
+            Hesap Ayarları
+          </Link>
           <Button variant="secondary" onClick={handleLogout}>
             Çıkış Yap
           </Button>

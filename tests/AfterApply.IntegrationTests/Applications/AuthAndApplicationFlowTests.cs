@@ -58,7 +58,7 @@ public class AuthAndApplicationFlowTests : IAsyncLifetime
         var client = _factory!.CreateClient();
 
         var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("flow.test@example.com", "P@ssw0rd123!", "Flow", "Test"), JsonOptions);
+            new RegisterRequest("flow.test@example.com", "P@ssw0rd123!", "Flow", "Test", true), JsonOptions);
         registerResponse.EnsureSuccessStatusCode();
         var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
         auth.ShouldNotBeNull();
@@ -92,7 +92,7 @@ public class AuthAndApplicationFlowTests : IAsyncLifetime
         var client = _factory!.CreateClient();
 
         await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("wrongpw.test@example.com", "P@ssw0rd123!", "Wrong", "Pw"), JsonOptions);
+            new RegisterRequest("wrongpw.test@example.com", "P@ssw0rd123!", "Wrong", "Pw", true), JsonOptions);
 
         var loginResponse = await client.PostAsJsonAsync("/api/auth/login",
             new LoginRequest("wrongpw.test@example.com", "NotTheRightPassword!"), JsonOptions);

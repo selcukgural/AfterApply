@@ -1,6 +1,7 @@
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Infrastructure;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -18,7 +19,8 @@ public static class AuthEndpoints
                     ? Results.Created("/api/users/me", result.Response)
                     : Results.ValidationProblem(ToErrorDictionary(result.Errors));
             })
-            .WithValidation<RegisterRequest>();
+            .WithValidation<RegisterRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy);
 
         group.MapPost("/login", async (LoginRequest request, IAuthService authService,
                 HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -28,7 +30,8 @@ public static class AuthEndpoints
                     ? Results.Ok(result.Response)
                     : Results.Problem(detail: string.Join(" ", result.Errors), statusCode: StatusCodes.Status401Unauthorized);
             })
-            .WithValidation<LoginRequest>();
+            .WithValidation<LoginRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy);
 
         group.MapPost("/refresh", async (RefreshRequest request, IAuthService authService,
                 HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -38,7 +41,8 @@ public static class AuthEndpoints
                     ? Results.Ok(result.Response)
                     : Results.Problem(detail: string.Join(" ", result.Errors), statusCode: StatusCodes.Status401Unauthorized);
             })
-            .WithValidation<RefreshRequest>();
+            .WithValidation<RefreshRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy);
 
         group.MapPost("/logout", async (LogoutRequest request, IAuthService authService, CancellationToken cancellationToken) =>
             {

@@ -1,6 +1,6 @@
 namespace AfterApply.Application.Identity.Contracts;
 
-public sealed record RegisterRequest(string Email, string Password, string FirstName, string LastName);
+public sealed record RegisterRequest(string Email, string Password, string FirstName, string LastName, bool ConsentAccepted);
 
 public sealed record LoginRequest(string Email, string Password);
 

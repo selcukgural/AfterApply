@@ -45,7 +45,7 @@ public class AnalyticsOverviewTests : IAsyncLifetime
 
         _client = _factory.CreateClient();
         var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("analytics.test@example.com", "P@ssw0rd123!", "Analytics", "Test"), JsonOptions);
+            new RegisterRequest("analytics.test@example.com", "P@ssw0rd123!", "Analytics", "Test", true), JsonOptions);
         registerResponse.EnsureSuccessStatusCode();
         var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);

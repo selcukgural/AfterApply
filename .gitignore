@@ -9,6 +9,7 @@ riderModule.iml
 
 # Environment / local secrets
 .env
+.env.prod
 
 # EF Core (once migrations exist, Sprint 1+)
 *.db
