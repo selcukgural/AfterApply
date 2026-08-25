@@ -7,10 +7,12 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 import { emailIntegrationsApi } from "@/lib/api/emailIntegrations";
+import { matchingApi } from "@/lib/api/matching";
 import { ApiError } from "@/lib/api/httpClient";
 import type { EmailConnectionStatusResponse } from "@/types/api";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 
 export default function SettingsPage() {
@@ -34,6 +36,12 @@ export default function SettingsPage() {
     searchParams.get("emailIntegration") === "success" ? t("email.successNotice") : null,
   );
 
+  const [cvText, setCvText] = useState("");
+  const [cvLoading, setCvLoading] = useState(true);
+  const [cvSaving, setCvSaving] = useState(false);
+  const [cvNotice, setCvNotice] = useState<string | null>(null);
+  const [cvError, setCvError] = useState<string | null>(null);
+
   const [password, setPassword] = useState("");
   const [confirmationText, setConfirmationText] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -53,6 +61,28 @@ export default function SettingsPage() {
       .catch(() => setEmailStatus(null))
       .finally(() => setEmailStatusLoading(false));
   }, []);
+
+  useEffect(() => {
+    matchingApi
+      .getProfile()
+      .then((profile) => setCvText(profile.cvText))
+      .catch(() => setCvText(""))
+      .finally(() => setCvLoading(false));
+  }, []);
+
+  const handleSaveCv = async () => {
+    setCvError(null);
+    setCvNotice(null);
+    setCvSaving(true);
+    try {
+      await matchingApi.updateProfile(cvText);
+      setCvNotice(t("cv.saved"));
+    } catch (error) {
+      setCvError(error instanceof ApiError ? error.message : t("cv.saveError"));
+    } finally {
+      setCvSaving(false);
+    }
+  };
 
   const handleConnectGmail = async () => {
     setEmailActionError(null);
@@ -146,6 +176,30 @@ export default function SettingsPage() {
           <Button variant="secondary" onClick={handleConnectGmail}>
             {t("email.connect")}
           </Button>
+        )}
+      </section>
+
+      <section className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("cv.title")}</h2>
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("cv.description")}</p>
+        {cvLoading ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {cvNotice && <p className="text-sm text-green-700 dark:text-green-400">{cvNotice}</p>}
+            {cvError && <p className="text-sm text-red-600 dark:text-red-400">{cvError}</p>}
+            <Textarea
+              rows={10}
+              value={cvText}
+              placeholder={t("cv.placeholder")}
+              onChange={(e) => setCvText(e.target.value)}
+            />
+            <div>
+              <Button variant="secondary" onClick={handleSaveCv} disabled={cvSaving}>
+                {cvSaving ? t("cv.saving") : t("cv.save")}
+              </Button>
+            </div>
+          </div>
         )}
       </section>
 

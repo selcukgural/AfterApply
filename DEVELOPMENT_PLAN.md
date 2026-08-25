@@ -128,20 +128,142 @@ prod-benzeri bir ortamda doğrulanabilir durumda.
 
 ---
 
-## MVP sonrası (spec §22 Phase 9-13) — sıralama önerisi
+## Sprint 8+ — Yeniden planlama (2026-08-25): ilk yayın MVP değil, tam ürün
 
-Spec'teki sıralamayı koruyoruz, ancak Phase 10 (Company Intelligence) için
-**veri hacmi gate'i** var (§17, §15): yeterli anonim veri birikmeden bu
-fazın açılmaması gerekir.
+> Kullanıcı kararı: uygulama bir süre daha yayına alınmayacak (başka işler
+> nedeniyle), bu yüzden ilk canlı sürüm artık kademeli bir MVP değil,
+> aşağı yukarı bitmiş bir ürün olacak. Bu, spec §22 Phase 9-13'ün "MVP
+> çıksın → gerçek kullanıcı gelsin → sonra ekle" sıralama mantığını
+> değiştiriyor: zaman baskısı yok, yayın öncesi daha fazla faz bitirilebilir.
+>
+> **Değişmeyen bir kısıt var:** Phase 10 (Company Intelligence) ve §14
+> (Candidate Experience Score), doğaları gereği **başka kullanıcıların**
+> agregat verisine muhtaç (§15 confidence threshold'ları — <20 başvuru
+> "Hidden"). Hiç kullanıcı olmadan bu iki faz gerçek anlamda "bitmiş"
+> olamaz. Kullanıcıyla netleştirildi: bu fazların **altyapısı** (aggregation
+> pipeline, confidence hesaplama, testler) şimdi kurulur, ama **aktivasyonu**
+> (public/aggregate görünüm) gerçek veri eşiği geçilene kadar bir
+> feature-flag ile kapalı tutulur. Monetization (§18) ise hâlâ ertelendi —
+> spec'in "önce PMF doğrulanmalı" gerekçesi kabul edildi, ilk yayın ücretsiz.
 
-1. Phase 9 — Email Integration (Gmail/Outlook, read-only, kullanıcı onaylı)
-2. Phase 10 — Company Intelligence (**gate:** aggregate edilebilir minimum
-   veri hacmi + confidence threshold'ları netleşmeden başlamaz)
-3. Phase 11 — AI (CV/job matching, follow-up generation)
-4. Phase 12 — Browser Extension
-5. Phase 13 — B2B (employer dashboard, candidate experience score)
+Phase 9 (Email Integration — sadece Gmail) zaten tamamlandı (bkz.
+DECISIONS.md). Kalan fazlar şu sırayla planlanıyor:
 
-Bu sıralama, kullanıcı değeri (retention'ı artıran Email Integration) ile
-network value (veri hacmi gerektiren Company Intelligence) arasındaki
-bağımlılığı önceliklendiriyor: önce retention/veri girişini artır, sonra
-üzerine intelligence katmanını kur.
+---
+
+## Sprint 8 — AI Job Matching (spec Phase 11)
+
+> **Durum (2026-08-25): backend + frontend implementasyonu tamamlandı**
+> (unit testler yeşil — bkz. DECISIONS.md "Sprint 8 kararları ve bulguları").
+> Bekleyen: gerçek `OpenAI:ApiKey` ile manuel smoke test, ve podman
+> entegrasyon testlerinin (`MatchingTests.cs`) çalıştırılması (workflow
+> kararı gereği bu oturumda koşulmadı).
+
+> Diğer data-gated fazlardan farklı olarak bu faz **tek kullanıcının kendi**
+> CV'si + job description'ına dayanıyor, başka kullanıcı verisine bağımlı
+> değil — dolayısıyla yayın öncesi tam olarak bitirilebilir.
+
+- Yeni bir profil/CV modülü: kullanıcı CV/skill bilgisini girer (format —
+  düz metin mi, dosya upload+parse mı — sprint başında DECISIONS.md'de
+  netleştirilecek, OPEN)
+- AI provider seçimi — OPEN, sprint başında karara bağlanmalı
+  (`claude-api` skill'i model/fiyat karşılaştırması için kullanılabilir)
+- Job description girdisi: mevcut `Job.Description` (LinkedIn import'ta
+  dolu olabiliyor) veya kullanıcının elle yapıştırdığı metin
+- Matching endpoint: CV + job description → AI provider → Score/Strong
+  Match/Missing/Recommendation (spec §12 örnek format)
+- Sonuç persist mi ediliyor yoksa her seferinde yeniden mi hesaplanıyor →
+  OPEN
+- LLM çağrısı ücretli — rate limiting (mevcut `upload` policy paterni
+  reuse edilebilir) + maliyet kontrolü
+
+**DoD:** Kullanıcı profilini bir kez girer, herhangi bir application/job
+için "Match Score" hesaplatabilir, spec §12'deki formatta sonucu görür.
+
+---
+
+## Sprint 9 — Browser Extension (spec Phase 12)
+
+- Chrome/Edge extension scaffold (Manifest V3)
+- LinkedIn job sayfasından scraping: company/title/URL/LinkedIn job
+  id/location/description/published date
+- Kimlik doğrulama: extension web session'ından bağımsız çalışmalı →
+  yeni bir Personal Access Token (PAT) mekanizması gerekiyor (mevcut
+  access/refresh JWT modeli extension için uygun değil — kısa ömürlü ve
+  web `localStorage`'a bağlı). PAT tasarımı (üretim/iptal/scope) — OPEN
+- "I Applied" butonu → mevcut `POST /api/applications` (Source=LinkedIn,
+  ExternalId=job id) — Sprint 5'in `JobResolver`/dedup pipeline'ı reuse
+  edilir, yeni bir import yolu icat edilmez
+- Chrome Web Store'a yayınlama, gerçek launch'a bağlı ayrı bir adım — bu
+  sprint sadece extension'ın kendisini teslim eder
+
+**DoD:** Kullanıcı bir LinkedIn ilan sayfasında "I Applied" tıkladığında,
+dashboard'da doğru company/job/status=Applied ile yeni bir application
+görünür.
+
+---
+
+## Sprint 10 — Company Intelligence altyapısı (spec Phase 10 + §15), UI'da kapalı
+
+- Yeni `CompanyIntelligence` modülü: şirket bazlı aggregation (Applications,
+  Response Rate, Ghosting Rate, Avg/Median Response Time, Interview Rate,
+  Offer Rate) — tüm kullanıcılar üzerinden, anonim/aggregate
+- §15 confidence bucket hesaplama (Hidden/Very Low/Low/Medium/High, spec'in
+  başlangıç hipotezi: <20/20-49/50-199/200-999/1000+)
+- `CompanyIntelligence:Enabled` config flag, appsettings-driven, varsayılan
+  `false` (Sprint 4/7'deki config-driven limit paterni tekrarlanıyor,
+  hard-code yok)
+- Aggregation mantığı, flag kapalıyken de entegrasyon testleriyle
+  (sentetik veri) doğrulanır; flag'in kendisi sadece endpoint/UI'ı
+  gerçek trafiğe kapatır
+- §16 fairness dili (veri-odaklı, tarafsız metin şablonları) bu sprintte
+  uygulanır
+
+**DoD:** Aggregation pipeline sentetik veriyle test edilip confidence
+bucket'ların doğru hesaplandığı doğrulanır; flag kapalıyken hiçbir uç
+noktadan company-level veri sızmaz.
+
+---
+
+## Sprint 11 — Candidate Experience Score altyapısı (spec §14), UI'da kapalı
+
+- Composite score: Responsiveness / Response Time / Closure Rate /
+  Interview Experience / Process Transparency alt metrikleri, Sprint 10'un
+  aggregate'lerinden türetilir
+- Ağırlıklandırma formülü — spec somut bir formül vermiyor, sprint
+  başında netleştirilecek (OPEN)
+- Aynı `CompanyIntelligence:Enabled` flag'i altında (ayrı bir flag
+  gereksiz — aynı aktivasyon koşuluna, gerçek veri hacmine bağlı)
+
+**DoD:** Sprint 10'daki gibi sentetik veriyle doğrulanan, flag kapalıyken
+gizli bir skor hesaplama pipeline'ı.
+
+---
+
+## Sprint 12 — B2B Employer Dashboard iskeleti (spec Phase 13)
+
+> En düşük öncelik. Bu faz gerçek, ödeme yapan işveren müşterisine muhtaç
+> — bu bir mühendislik teslimi değil, sales/go-to-market fonksiyonu.
+> Şirket doğrulama/sahiplik modeli iş modeli kararı gerektirdiği için bu
+> sprint **kullanıcı onayı olmadan başlatılmamalı**.
+
+- Employer hesap tipi + şirket sahiplik/doğrulama akışı — OPEN
+- Şirketlerin kendi Candidate Experience verisini görebileceği salt-okunur
+  dashboard (Sprint 10/11 aggregate'lerini reuse eder)
+- Kapsamı ve zamanlaması Sprint 8-11 tamamlandıktan sonra yeniden
+  değerlendirilecek
+
+---
+
+## Sprint 13 — Launch Hazırlığı v2
+
+- Cloud provider kararı finalize (DECISIONS.md §5, Sprint 7'den beri
+  OPEN — artık gerçek launch yaklaştığı için ertelenemez)
+- Prod secrets/observability (error tracking servisi — OPEN)
+- Son privacy/legal review (ToS, KVKK/GDPR self-review — hukuki onay
+  gerektirir, bu doküman hukuki tavsiye değildir)
+- Domain/branding finalize
+- Sprint 8-12'nin tüm entegrasyon testleri + uçtan uca manuel smoke test
+
+**DoD:** Prod-benzeri ortamda spec §4.4 MVP kriteri + Sprint 8-12'nin
+DoD'leri uçtan uca doğrulanabilir durumda; yayına hazır.

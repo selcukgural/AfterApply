@@ -178,6 +178,16 @@
     <value>This suggestion has no status change to confirm.</value>
   </data>
 
+  <data name="MATCHING_PROVIDER_NOT_CONFIGURED" xml:space="preserve">
+    <value>OpenAI is not configured. Set OpenAI:ApiKey.</value>
+  </data>
+  <data name="MATCHING_PROVIDER_ERROR" xml:space="preserve">
+    <value>The AI match request failed. Please try again.</value>
+  </data>
+  <data name="MATCHING_PROFILE_REQUIRED" xml:space="preserve">
+    <value>Set your CV in your profile before computing a job match.</value>
+  </data>
+
   <data name="GENERIC_ERROR" xml:space="preserve">
     <value>An unexpected error occurred.</value>
   </data>

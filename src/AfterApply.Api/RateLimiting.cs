@@ -49,6 +49,18 @@ public static class RateLimiting
                     QueueLimit = 0
                 });
             });
+
+            // User-based, tighter than upload: each request is a paid OpenAI call.
+            options.AddPolicy(DependencyInjection.MatchingRateLimitPolicy, httpContext =>
+            {
+                var partitionKey = httpContext.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? "anonymous";
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(5),
+                    QueueLimit = 0
+                });
+            });
         });
 
         return services;

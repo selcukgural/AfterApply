@@ -128,7 +128,25 @@
       "openLink": "Open Link",
       "notes": "Notes",
       "timeline": "Timeline",
-      "emptyValue": "—"
+      "emptyValue": "—",
+      "match": {
+        "title": "AI Match",
+        "jobDescriptionLabel": "Job Description",
+        "jobDescriptionPlaceholder": "Paste the job description here...",
+        "compute": "Match",
+        "recompute": "Recompute",
+        "computing": "Computing...",
+        "score": "Score",
+        "strongMatches": "Strong Matches",
+        "missing": "Missing",
+        "recommendation": "Recommendation",
+        "recommendationApply": "Apply",
+        "recommendationConsider": "Consider",
+        "recommendationSkip": "Skip",
+        "profileRequiredError": "Set your CV in your profile first.",
+        "setCvLink": "Set your CV",
+        "genericError": "Could not compute the match."
+      }
     },
     "statusChange": {
       "changeStatus": "Change Status",
@@ -162,6 +180,16 @@
       "disconnectError": "Could not disconnect.",
       "successNotice": "Your Gmail account is connected.",
       "errorNotice": "Gmail connection failed. Please try again."
+    },
+    "cv": {
+      "title": "CV / Profile",
+      "description": "Paste your CV/skills so AI Match can score it against a job description. Only you can see this.",
+      "placeholder": "Paste your CV or a summary of your skills/experience...",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved.",
+      "loadError": "Could not load your CV.",
+      "saveError": "Could not save your CV."
     },
     "delete": {
       "title": "Delete My Account",

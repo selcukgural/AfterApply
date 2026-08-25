@@ -128,7 +128,25 @@
       "openLink": "Bağlantıyı Aç",
       "notes": "Notlar",
       "timeline": "Zaman Çizelgesi",
-      "emptyValue": "—"
+      "emptyValue": "—",
+      "match": {
+        "title": "AI Eşleştirme",
+        "jobDescriptionLabel": "İş İlanı Açıklaması",
+        "jobDescriptionPlaceholder": "İş ilanının açıklamasını buraya yapıştırın...",
+        "compute": "Eşleştir",
+        "recompute": "Yeniden Hesapla",
+        "computing": "Hesaplanıyor...",
+        "score": "Puan",
+        "strongMatches": "Güçlü Eşleşmeler",
+        "missing": "Eksikler",
+        "recommendation": "Öneri",
+        "recommendationApply": "Başvur",
+        "recommendationConsider": "Değerlendir",
+        "recommendationSkip": "Geç",
+        "profileRequiredError": "Önce profilinizden CV'nizi girmelisiniz.",
+        "setCvLink": "CV'nizi girin",
+        "genericError": "Eşleştirme hesaplanamadı."
+      }
     },
     "statusChange": {
       "changeStatus": "Durumu Değiştir",
@@ -162,6 +180,16 @@
       "disconnectError": "Bağlantı kaldırılamadı.",
       "successNotice": "Gmail hesabınız bağlandı.",
       "errorNotice": "Gmail bağlantısı başarısız oldu. Lütfen tekrar deneyin."
+    },
+    "cv": {
+      "title": "CV / Profil",
+      "description": "AI Eşleştirme özelliğinin bir iş ilanına karşı puanlayabilmesi için CV/beceri bilgilerinizi buraya yapıştırın. Sadece siz görürsünüz.",
+      "placeholder": "CV'nizi veya beceri/deneyim özetinizi buraya yapıştırın...",
+      "save": "Kaydet",
+      "saving": "Kaydediliyor...",
+      "saved": "Kaydedildi.",
+      "loadError": "CV yüklenemedi.",
+      "saveError": "CV kaydedilemedi."
     },
     "delete": {
       "title": "Hesabımı Sil",

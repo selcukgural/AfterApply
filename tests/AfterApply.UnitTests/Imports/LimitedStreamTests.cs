@@ -52,6 +52,6 @@ public class LimitedStreamTests
         var buffer = new byte[8];
         _ = await stream.ReadAsync(buffer);
 
-        await Should.ThrowAsync<StreamLengthExceededException>(async () => await stream.ReadAsync(buffer));
+        await Should.ThrowAsync<StreamLengthExceededException>(async () => { _ = await stream.ReadAsync(buffer); });
     }
 }

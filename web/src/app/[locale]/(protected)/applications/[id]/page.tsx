@@ -9,6 +9,7 @@ import type { ApplicationStatus } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusChangeSelect } from "@/components/applications/StatusChangeSelect";
 import { Timeline } from "@/components/applications/Timeline";
+import { JobMatchPanel } from "@/components/applications/JobMatchPanel";
 import { Button } from "@/components/ui/Button";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -118,9 +119,12 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           />
         </div>
 
-        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-          <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("timeline")}</h2>
-          <Timeline events={timeline ?? []} />
+        <div className="flex flex-col gap-6">
+          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+            <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("timeline")}</h2>
+            <Timeline events={timeline ?? []} />
+          </div>
+          <JobMatchPanel applicationId={id} />
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ using AfterApply.Application.Applications.Validators;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
+using AfterApply.Application.Matching;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure.Analytics;
@@ -11,6 +12,7 @@ using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
+using AfterApply.Infrastructure.Matching;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
@@ -33,6 +35,7 @@ public static class DependencyInjection
     public const string CorsPolicyName = "Frontend";
     public const string AuthRateLimitPolicy = "auth-strict";
     public const string UploadRateLimitPolicy = "upload";
+    public const string MatchingRateLimitPolicy = "matching";
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
@@ -46,6 +49,7 @@ public static class DependencyInjection
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<GoogleOAuthOptions>(configuration.GetSection("GoogleOAuth"));
         services.Configure<EmailIntegrationOptions>(configuration.GetSection("EmailIntegrations"));
+        services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
 
@@ -152,6 +156,8 @@ public static class DependencyInjection
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
         services.AddScoped<IGmailClient, GmailClient>();
         services.AddScoped<IEmailIntegrationService, EmailIntegrationService>();
+        services.AddScoped<IJobMatchingProvider, OpenAiJobMatchingProvider>();
+        services.AddScoped<IJobMatchingService, JobMatchingService>();
 
         return services;
     }

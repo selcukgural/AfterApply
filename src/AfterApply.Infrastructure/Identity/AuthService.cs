@@ -180,14 +180,16 @@ internal sealed class AuthService(
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         // Applications cascade to ApplicationEvents/ApplicationStatusHistories/Reminders/
-        // EmailSuggestions (FK'd to Application, not User); ImportBatches cascade to
+        // EmailSuggestions/JobMatches (FK'd to Application, not User); ImportBatches cascade to
         // ImportRowErrors. Companies/Jobs are shared/global (no UserId) and are never
         // touched. UserManager.DeleteAsync cascades RefreshTokens and EmailConnections
         // (FK'd directly to Users) — any EmailSuggestions are already gone by then via the
         // Application-cascade above, so no separate EmailConnections/EmailSuggestions
-        // deletion step is needed here.
+        // deletion step is needed here. CandidateProfiles is keyed by a plain UserId (no FK,
+        // same as Applications/ImportBatches) so it needs its own explicit delete.
         await dbContext.Applications.Where(a => a.UserId == userId).ExecuteDeleteAsync(cancellationToken);
         await dbContext.ImportBatches.Where(b => b.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        await dbContext.CandidateProfiles.Where(p => p.UserId == userId).ExecuteDeleteAsync(cancellationToken);
 
         var deleteResult = await userManager.DeleteAsync(user);
         if (!deleteResult.Succeeded)

@@ -275,3 +275,27 @@ No automated test exercises the real Gmail API (see `DECISIONS.md` — the
 sync/classification/matching logic is tested against a fake `IGmailClient`
 instead); once real credentials are in place, connect a Gmail account from
 `/settings` in the frontend as a manual smoke test.
+
+## AI Job Matching Setup
+
+Sprint 8 lets a user paste their CV in `/settings` and get an AI-scored
+match (Score/Strong Matches/Missing/Recommendation) against a job
+description pasted on an application's detail page — see
+`afterapply-intelligence-platform-plan.md` §12 and `DECISIONS.md`'s Sprint 8
+entry for the design. The code ships with an obvious placeholder API key
+(`OpenAI:ApiKey` in `appsettings.json`) — the feature is structurally
+complete but inert until you supply a real one:
+
+1. Create an API key at [platform.openai.com](https://platform.openai.com/api-keys).
+2. Set it locally via user-secrets (never commit a real key into
+   `appsettings.json`):
+   ```bash
+   dotnet user-secrets set "OpenAI:ApiKey" "<your api key>" --project src/AfterApply.Api
+   ```
+   For the container/prod profile, use an `OPENAI_API_KEY` environment
+   variable (see `DEPLOYMENT.md`).
+
+No automated test calls the real OpenAI API (see `DECISIONS.md` — the
+persist/cache logic is tested against a fake `IJobMatchingProvider`
+instead); once a real key is in place, set a CV in `/settings` and compute
+a match from an application's detail page as a manual smoke test.

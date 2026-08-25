@@ -810,7 +810,136 @@ container gerektirmiyor) çalıştırılıyor; `tests/AfterApply.IntegrationTest
 
 ---
 
-## Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
+### Sprint 8+ yeniden planlama (2026-08-25) — kararlar ve yeni açık kararlar
+
+### Yayın stratejisi değişti — DECIDED
+
+Uygulama bir süre yayına alınmayacak; ilk canlı sürüm artık kademeli bir
+MVP değil, tam ürün olarak planlanıyor. Detaylı gerekçe ve yeni sprint
+sırası: `DEVELOPMENT_PLAN.md` → "Sprint 8+ — Yeniden planlama".
+
+### Data-gated fazlar (Company Intelligence, Candidate Experience Score) — DECIDED
+
+Altyapı (aggregation pipeline, confidence hesaplama, testler) yayın
+öncesi kurulur; aktivasyon (public/aggregate görünüm) gerçek veri eşiği
+geçilene kadar `CompanyIntelligence:Enabled` feature-flag'iyle kapalı
+kalır. Gerekçe: bu iki faz başka kullanıcıların agregat verisine muhtaç
+(§15), hiç kullanıcı olmadan gerçek anlamda "bitmiş" olamazlar — sentetik
+veriyle test edilip kod tamamlanabilir, ama gerçek trafiğe kapalı
+başlarlar.
+
+### Monetization ertelendi — DECIDED
+
+Spec'in "önce PMF doğrulanmalı" gerekçesi (§18) kabul edildi; ilk yayın
+tüm özellikler açık ve ücretsiz. Free/Pro tier + ödeme entegrasyonu
+Sprint 8-13 kapsamına alınmadı.
+
+### Sprint 8 (AI Job Matching) — kararlar (2026-08-25)
+
+- **CV/profil girdi formatı — DECIDED:** düz metin. Kullanıcı CV/skill
+  bilgisini bir text area'ya yapıştırır/yazar; PDF/DOCX parsing
+  bağımlılığı eklenmiyor (YAGNI — encoding/multi-column parsing riski
+  bu aşamada gereksiz).
+- **AI provider — DECIDED:** OpenAI API. Spec §35'te "Phase 11
+  (post-MVP)" olarak açık bırakılmıştı; kullanıcı OpenAI'ı seçti.
+  Model/fiyat/SDK detayları implementasyon sırasında netleştirilecek.
+- **Match sonucu persistence — DECIDED:** persist edilir. Aynı CV +
+  aynı job için tekrar istek gelirse cache'ten döner (LLM çağrısı
+  ücretli); CV veya job description değişirse yeniden hesaplanır.
+
+### Sprint 9 (Browser Extension) — yeni OPEN karar
+
+- **Extension kimlik doğrulama (PAT tasarımı):** mevcut access/refresh JWT
+  modeli (Sprint 2 kararı — `localStorage` + single-flight refresh) kısa
+  ömürlü ve web session'ına bağlı, extension için uygun değil. Yeni bir
+  Personal Access Token mekanizması (üretim/iptal/scope) gerekiyor —
+  tasarım sprint başında netleştirilecek.
+
+### Sprint 11 (Candidate Experience Score) — yeni OPEN karar
+
+- **Ağırlıklandırma formülü:** spec §14 alt metrikleri (Responsiveness,
+  Response Time, Closure Rate, Interview Experience, Process
+  Transparency) listeliyor ama somut bir ağırlıklandırma/formül vermiyor
+  — sprint başında netleştirilecek.
+
+### Sprint 12 (B2B) — yeni OPEN karar
+
+- **Employer hesap tipi + şirket sahiplik/doğrulama akışı:** iş modeli
+  kararı gerektiriyor, bu sprint kullanıcı onayı olmadan başlatılmayacak.
+
+### Sprint 13 (Launch Hazırlığı v2) — hâlâ açık
+
+- **Cloud provider** (bkz. yukarı §5) — Sprint 7'den beri OPEN, artık
+  ertelenemez.
+- **Error tracking / observability servisi** — yeni OPEN karar.
+
+---
+
+## Sprint 8 kararları ve bulguları (AI Job Matching)
+
+### Yeni `Matching` modülü — DECIDED
+
+`CandidateProfile` (bir kullanıcı = bir satır, `UserId` üzerinde unique index —
+`Reminders`/`Applications` paterni gibi düz `Guid UserId`, Domain User'ı
+modellemez) ve `JobMatch` (bir application = bir satır, `ApplicationId`
+üzerinde unique index, recompute geçmişi tutmadan üzerine yazar). `JobMatch`
+`Application`'a gerçek bir cascade FK ile bağlı; hesap silme akışında ayrıca
+dokunulmasına gerek yok. `CandidateProfile` ise (Applications/ImportBatches
+gibi) gerçek bir FK taşımıyor — `AuthService.DeleteAccountAsync`'e ayrı bir
+`CandidateProfiles` temizleme adımı eklendi.
+
+### AI provider entegrasyonu: resmi `OpenAI` NuGet paketi (2.13.0), structured output — DECIDED
+
+Serbest metin yanıtı ayrıştırmak yerine `ChatResponseFormat.CreateJsonSchemaFormat`
+(strict JSON schema) kullanıldı — modelin yanıtı doğrudan
+`JobMatchProviderResult`'a map eden bir JSON nesnesi. **Bulgu:** schema'daki
+alan adları (`score`, `strongMatches`, ...) camelCase, C# record'ları
+PascalCase — `System.Text.Json`'ın varsayılan `PropertyNameCaseInsensitive`
+`false` olduğu için deserialize sessizce hep null/default dönüyordu; düzeltme
+`JsonSerializerOptions { PropertyNameCaseInsensitive = true }` eklemek oldu.
+
+### `IJobMatchingProvider` portu Application katmanında, gerçek implementasyon Infrastructure'da — DECIDED
+
+`IGmailClient` paterni tekrarlandı — `JobMatchingService` birim testlerde
+gerçek OpenAI çağrısı yapmadan bir fake provider ile test edilebiliyor
+(entegrasyon testinde `FakeJobMatchingProvider`, Phase 9'daki
+`FakeGmailClient` gibi).
+
+### Cache/recompute kararı `JobMatch.MatchesInputs`'ta domain seviyesinde — DECIDED
+
+`JobMatchingService.ComputeMatchAsync`, mevcut satırın `CvTextSnapshot`/
+`JobDescription`'ı istekle birebir aynıysa provider'ı hiç çağırmadan mevcut
+satırı döner (DECISIONS.md Sprint 8 kararı: "persist et, değişmeden yeniden
+hesaplama"). Herhangi biri değiştiyse `Recompute` ile satır üzerine yazılır.
+
+### `IReadOnlyList<string>` sütunları: `jsonb` + `HasConversion` + `ValueComparer` — DECIDED
+
+`StrongMatches`/`Missing` için codebase'de ilk kez bir liste sütunu
+persist edilmesi gerekti. EF Core, `HasConversion` ile dönüştürülen
+non-primitive tipler için change tracking amaçlı bir `ValueComparer`
+istiyor (yoksa "may not work as expected" uyarısı) — `JobMatchConfiguration`'a
+elle eklendi.
+
+### Yeni `matching` rate-limit policy — DECIDED
+
+`upload` policy'sinden (10/5dk) daha sıkı: 5/5dk, kullanıcı bazlı. Gerekçe:
+her `POST /api/matching/applications/{id}` (cache miss durumunda) ücretli
+bir OpenAI çağrısı tetikliyor.
+
+### Manuel doğrulama bekliyor — bilgi amaçlı
+
+`OpenAiJobMatchingProvider` (Phase 9'daki `GmailClient` gibi) gerçek bir
+OpenAI API key'i olmadan bu oturumda manuel/tarayıcı testi yapılmadı —
+`OpenAI:ApiKey` appsettings'te placeholder. `JobMatchingService` ve
+endpoint'ler `FakeJobMatchingProvider` ile entegrasyon testinde
+(`tests/AfterApply.IntegrationTests/Matching/MatchingTests.cs`) kapsandı;
+gerçek API key sağlandığında ayrıca bir manuel smoke test önerilir. Bu
+entegrasyon testleri de (podman workflow kararı gereği) bu oturumda
+koşulmadı, birim testler (93/93 yeşil) koşuldu.
+
+---
+
+# Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
   karışık — muhtemelen yazım sırasında sıralama değişmiş.

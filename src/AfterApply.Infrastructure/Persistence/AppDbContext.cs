@@ -3,6 +3,7 @@ using AfterApply.Domain.Companies;
 using AfterApply.Domain.EmailIntegrations;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
+using AfterApply.Domain.Matching;
 using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -38,6 +39,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<EmailSuggestion> EmailSuggestions => Set<EmailSuggestion>();
 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
+    public DbSet<CandidateProfile> CandidateProfiles => Set<CandidateProfile>();
+
+    public DbSet<JobMatch> JobMatches => Set<JobMatch>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

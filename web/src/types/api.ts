@@ -197,3 +197,19 @@ export interface EmailSuggestionResponse {
   snippet: string;
   emailReceivedAt: string;
 }
+
+export interface CandidateProfileResponse {
+  cvText: string;
+  updatedAt: string;
+}
+
+export type JobMatchRecommendation = "Apply" | "Consider" | "Skip";
+
+export interface JobMatchResponse {
+  applicationId: string;
+  score: number;
+  strongMatches: string[];
+  missing: string[];
+  recommendation: JobMatchRecommendation;
+  computedAt: string;
+}

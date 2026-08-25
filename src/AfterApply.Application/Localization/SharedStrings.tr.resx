@@ -178,6 +178,16 @@
     <value>Bu öneri için onaylanacak bir statü değişikliği yok.</value>
   </data>
 
+  <data name="MATCHING_PROVIDER_NOT_CONFIGURED" xml:space="preserve">
+    <value>OpenAI yapılandırılmamış. OpenAI:ApiKey ayarlayın.</value>
+  </data>
+  <data name="MATCHING_PROVIDER_ERROR" xml:space="preserve">
+    <value>AI eşleştirme isteği başarısız oldu. Lütfen tekrar deneyin.</value>
+  </data>
+  <data name="MATCHING_PROFILE_REQUIRED" xml:space="preserve">
+    <value>Eşleştirme hesaplamadan önce profilinizden CV'nizi girin.</value>
+  </data>
+
   <data name="GENERIC_ERROR" xml:space="preserve">
     <value>Beklenmeyen bir hata oluştu.</value>
   </data>

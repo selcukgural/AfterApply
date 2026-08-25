@@ -63,6 +63,7 @@ app.MapAnalyticsEndpoints();
 app.MapImportEndpoints();
 app.MapReminderEndpoints();
 app.MapEmailIntegrationEndpoints();
+app.MapMatchingEndpoints();
 
 using (var scope = app.Services.CreateScope())
 {
