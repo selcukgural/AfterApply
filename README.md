@@ -32,9 +32,9 @@ Api          ──►  Infrastructure, Application, Domain
 ```
 
 Modules (Applications, Companies, Jobs, Identity, Imports, Analytics,
-Notifications) live as namespaces/folders inside each layer, not as separate
-projects — see `DECISIONS.md` #1. Layer dependency direction is enforced by
-NetArchTest (`tests/AfterApply.UnitTests/Architecture`).
+Notifications, CompanyIntelligence) live as namespaces/folders inside each
+layer, not as separate projects — see `DECISIONS.md` #1. Layer dependency
+direction is enforced by NetArchTest (`tests/AfterApply.UnitTests/Architecture`).
 
 ## Prerequisites
 
@@ -235,6 +235,13 @@ silently connecting to the wrong database.
 below) are **not** fail-fast — the app runs fine with the placeholder values
 in `appsettings.json`; only the `/api/email-integrations/gmail/connect`
 endpoint returns a clear error until real credentials are supplied.
+
+`CompanyIntelligence:Enabled` defaults to `false` — the aggregation pipeline
+(cross-user company-level Response/Ghosting/Interview/Offer Rate, gated by a
+sample-size confidence bucket) is implemented and integration-tested, but
+kept switched off until enough real usage exists to make it meaningful; see
+`DECISIONS.md`'s Sprint 10 entry. While disabled, every
+`/api/company-intelligence/*` endpoint returns `404` for all callers.
 
 ## Gmail Integration Setup
 

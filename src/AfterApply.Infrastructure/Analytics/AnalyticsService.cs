@@ -8,22 +8,6 @@ namespace AfterApply.Infrastructure.Analytics;
 
 internal sealed class AnalyticsService(AppDbContext dbContext) : IAnalyticsService
 {
-    private static readonly HashSet<ApplicationStatus> RespondedStatuses =
-    [
-        ApplicationStatus.Screening, ApplicationStatus.Interview, ApplicationStatus.TechnicalInterview,
-        ApplicationStatus.FinalInterview, ApplicationStatus.Offer, ApplicationStatus.Rejected, ApplicationStatus.Accepted
-    ];
-
-    private static readonly HashSet<ApplicationStatus> InterviewStatuses =
-    [
-        ApplicationStatus.Interview, ApplicationStatus.TechnicalInterview, ApplicationStatus.FinalInterview
-    ];
-
-    private static readonly HashSet<ApplicationStatus> OfferStatuses =
-    [
-        ApplicationStatus.Offer, ApplicationStatus.Accepted
-    ];
-
     public async Task<AnalyticsOverviewResponse> GetOverviewAsync(Guid userId, CancellationToken cancellationToken)
     {
         var applications = await dbContext.Applications
@@ -51,7 +35,7 @@ internal sealed class AnalyticsService(AppDbContext dbContext) : IAnalyticsServi
         foreach (var group in historyRows.GroupBy(x => x.ApplicationId))
         {
             var firstResponse = group
-                .Where(x => RespondedStatuses.Contains(x.ToStatus))
+                .Where(x => ApplicationStatusClassification.RespondedStatuses.Contains(x.ToStatus))
                 .OrderBy(x => x.ChangedAt)
                 .FirstOrDefault();
 
@@ -61,12 +45,12 @@ internal sealed class AnalyticsService(AppDbContext dbContext) : IAnalyticsServi
                 responseTimeDays.Add((firstResponse.ChangedAt - firstResponse.AppliedAt).TotalDays);
             }
 
-            if (group.Any(x => InterviewStatuses.Contains(x.ToStatus)))
+            if (group.Any(x => ApplicationStatusClassification.InterviewStatuses.Contains(x.ToStatus)))
             {
                 interviewCount++;
             }
 
-            if (group.Any(x => OfferStatuses.Contains(x.ToStatus)))
+            if (group.Any(x => ApplicationStatusClassification.OfferStatuses.Contains(x.ToStatus)))
             {
                 offerCount++;
             }

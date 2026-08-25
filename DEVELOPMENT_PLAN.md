@@ -218,6 +218,12 @@ görünür.
 
 ## Sprint 10 — Company Intelligence altyapısı (spec Phase 10 + §15), UI'da kapalı
 
+> **Durum (2026-08-26): backend implementasyonu tamamlandı** (unit testler
+> yeşil; podman entegrasyon testi `CompanyIntelligenceTests.cs` yazıldı,
+> Sprint 8/9'un bekleyen suite'iyle birlikte batch sonunda koşulacak —
+> workflow kararı gereği bu oturumda koşulmadı). UI yok (plan zaten böyle
+> diyordu — Sprint 10 sadece altyapı).
+
 - Yeni `CompanyIntelligence` modülü: şirket bazlı aggregation (Applications,
   Response Rate, Ghosting Rate, Avg/Median Response Time, Interview Rate,
   Offer Rate) — tüm kullanıcılar üzerinden, anonim/aggregate

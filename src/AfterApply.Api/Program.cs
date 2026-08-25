@@ -65,6 +65,7 @@ app.MapReminderEndpoints();
 app.MapEmailIntegrationEndpoints();
 app.MapMatchingEndpoints();
 app.MapPersonalAccessTokenEndpoints();
+app.MapCompanyIntelligenceEndpoints();
 
 using (var scope = app.Services.CreateScope())
 {

@@ -1124,6 +1124,69 @@ listing, review süreci) ayrı, sonraki bir adım.
 
 ---
 
+## Sprint 10 kararları ve bulguları (Company Intelligence altyapısı)
+
+### Yeni tablo/migration yok — mevcut verilerden on-read hesaplanıyor — DECIDED
+
+Sprint 3'ün per-user Analytics'i (`AnalyticsService`) ile aynı yaklaşım: `CompanyIntelligenceService`
+`Applications`/`ApplicationStatusHistory`/`Companies` tablolarından, sadece `UserId` filtresi
+olmadan, her istek anında bellekte agregasyon yapıyor — kalıcı bir aggregate tablo/materialized
+view yok. **Bilinçli tradeoff:** gerçek kullanıcı hacminde bu bir performans sorunu olursa,
+önbelleklenmiş/periyodik yenilenen bir aggregate tablo sonraki bir sprint'in kapsamı olur; şu an
+için (aktif kullanıcı yokken) erken optimizasyon olurdu.
+
+### `ApplicationStatusClassification` `AnalyticsService`'ten Domain'e taşındı — DECIDED
+
+`AnalyticsService` içinde private tutulan üç `HashSet<ApplicationStatus>` (`RespondedStatuses`,
+`InterviewStatuses`, `OfferStatuses`) `Domain/Applications/ApplicationStatusClassification.cs`'e
+taşındı — `TerminalApplicationStatuses.cs`'teki concrete-`HashSet<T>` deseni (EF Core'un
+`.Contains()`'i SQL `IN`'e çevirebilmesi için) aynen korunarak. `AnalyticsService` artık bu paylaşılan
+tanımları kullanıyor; "responded"/"interview"/"offer" nedir sorusunun tek bir yerde, iki modül
+(Analytics + CompanyIntelligence) arasında tutarlı kalması amaçlanıyor.
+
+### `AnalyticsCalculations` taşınmadı, olduğu yerden reuse edildi — DECIDED
+
+`CalculateRate`/`Average`/`Median` zaten tamamen saf (kullanıcıya özgü hiçbir varsayım yok) —
+`CompanyIntelligenceService` bunları `AfterApply.Application.Analytics` namespace'inden doğrudan
+çağırıyor. Bunu `Application/Common` gibi yeni bir klasöre taşımak bu sprint için gereksiz bir
+diff ve repo'da henüz olmayan bir "Common" klasör konvansiyonu icat etmek olurdu.
+
+### Confidence eşikleri config-driven — DECIDED
+
+Spec §15: "Bu eşikler ileride gerçek data ile değiştirilebilir" — bu yüzden `<20/20-49/50-199/
+200-999/1000+` eşikleri `CompanyIntelligenceOptions` (`HiddenBelow/VeryLowBelow/LowBelow/
+MediumBelow`) üzerinden appsettings'ten okunuyor, `Notifications`/`Imports`'taki "hard-code yok"
+paterni tekrarlanıyor. Saf `CompanyIntelligenceCalculations.ClassifyConfidence` fonksiyonu bu dört
+eşiği parametre olarak alıyor (kendi içinde `IOptions<T>` çözmüyor) — unit testte varsayılan
+olmayan eşiklerle çağrılarak hiçbir sayının hard-code edilmediği doğrulanıyor.
+
+### Hidden bucket'ta `Metrics: null` — bilinçli tasarım, eksiklik değil — DECIDED
+
+Spec §16: "Yeterli sample size olmadan public company analytics gösterilmemelidir." Confidence
+`Hidden` olduğunda API `TotalApplications` dahil hiçbir metrik döndürmüyor — düşük bir sayının
+(örn. "1 başvuru") kendisinin dahi başvuranı deanonimize edebileceği düşünüldü.
+`CompanyIntelligenceService` bu durumda `ApplicationStatusHistory` join/gruplama sorgusunu hiç
+çalıştırmadan erken dönüyor (defense in depth — yanıt olarak dönmeyecek veri belleğe de alınmıyor).
+
+### `CompanyIntelligence:Enabled` flag — DECIDED
+
+Repo'daki ilk boolean feature flag. Kapalıyken (`false`, varsayılan) endpoint her çağıran için
+404 dönüyor — company var/yok ayrımı da flag kapalıyken 404 arkasına gizleniyor, yani flag'in
+kendisi de "sızdırmıyor" (403 değil, boş-ama-200 gövde değil). Agregasyon mantığının doğruluğu,
+flag kapalıyken de entegrasyon testinde `ICompanyIntelligenceService`'e doğrudan DI üzerinden
+erişilerek (HTTP'yi bypass ederek) doğrulanıyor — spec'in "flag kapalıyken de aggregation mantığı
+test edilsin" gereksinimi böyle karşılandı. Sprint 11 (Candidate Experience Score) aynı flag'i
+reuse edecek — ayrı bir flag'e gerek görülmedi, ikisi de aynı aktivasyon koşuluna (gerçek veri
+hacmi) bağlı.
+
+### Route: `/api/company-intelligence/{companyId}` — DECIDED
+
+Repo'da henüz bir `/api/companies` kaynak route'u yok; mevcut modüllerin hepsi düz `/api/<module>`
+kalıbını kullanıyor (`/api/analytics`, `/api/matching` vb.) — versiyonlama yok, bu sprint de aynı
+kalıbı tekrarlıyor.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

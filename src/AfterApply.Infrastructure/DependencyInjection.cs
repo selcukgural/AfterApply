@@ -1,6 +1,7 @@
 using AfterApply.Application.Analytics;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
+using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
@@ -9,6 +10,7 @@ using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
+using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
@@ -51,6 +53,7 @@ public static class DependencyInjection
         services.Configure<GoogleOAuthOptions>(configuration.GetSection("GoogleOAuth"));
         services.Configure<EmailIntegrationOptions>(configuration.GetSection("EmailIntegrations"));
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
+        services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
 
@@ -179,6 +182,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailIntegrationService, EmailIntegrationService>();
         services.AddScoped<IJobMatchingProvider, OpenAiJobMatchingProvider>();
         services.AddScoped<IJobMatchingService, JobMatchingService>();
+        services.AddScoped<ICompanyIntelligenceService, CompanyIntelligenceService>();
 
         return services;
     }
