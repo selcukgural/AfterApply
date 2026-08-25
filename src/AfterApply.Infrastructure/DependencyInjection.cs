@@ -3,12 +3,16 @@ using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
+using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
+using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using FluentValidation;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +32,9 @@ public static class DependencyInjection
         services.AddPersistence(configuration);
         services.AddIdentityAndJwt(configuration);
         services.AddApplicationServices();
+        services.AddBackgroundJobs(configuration);
         services.Configure<ImportOptions>(configuration.GetSection("Imports"));
+        services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
 
@@ -130,6 +136,24 @@ public static class DependencyInjection
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IJobResolver, JobResolver>();
         services.AddScoped<IImportService, ImportService>();
+        services.AddScoped<IReminderService, ReminderService>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddBackgroundJobs(this IServiceCollection services, IConfiguration configuration)
+    {
+        var postgresConnectionString = configuration.GetConnectionString("Postgres")
+            ?? throw new InvalidOperationException(
+                "ConnectionStrings:Postgres is not configured. For local dev run " +
+                "'dotnet user-secrets set ConnectionStrings:Postgres \"...\" --project src/AfterApply.Api', " +
+                "or set ConnectionStrings__Postgres when running via docker-compose.");
+
+        services.AddHangfire(config => config
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(postgresConnectionString)));
+        services.AddHangfireServer();
 
         return services;
     }

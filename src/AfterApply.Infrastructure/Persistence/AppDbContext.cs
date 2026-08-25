@@ -2,6 +2,7 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
+using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<ImportBatch> ImportBatches => Set<ImportBatch>();
 
     public DbSet<ImportRowError> ImportRowErrors => Set<ImportRowError>();
+
+    public DbSet<Reminder> Reminders => Set<Reminder>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

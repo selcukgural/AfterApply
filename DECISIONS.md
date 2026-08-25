@@ -478,6 +478,94 @@ invariant riski taşımıyor.
 
 ---
 
+## Sprint 6 kararları ve bulguları
+
+### Yeni `Notifications` modülü ve kalıcı `Reminder` entity — DECIDED
+
+Follow-up/ghosting önerileri salt on-demand hesaplama yerine kalıcı
+`Reminder` entity (`src/AfterApply.Domain/Notifications/`) olarak
+tutuluyor. Gerekçe: (1) Sprint 6'nın teslim kalemi Hangfire'a gerçek,
+retry'lanabilir bir iş vermek — salt okunur bir hesaplama bunu
+sağlamazdı; (2) DoD'deki "öneri düşer" ifadesi dismiss edilebilir bir
+durum ima ediyor. Idempotency `(ApplicationId, Type, ReferenceAt)` unique
+index'i ile sağlanıyor — `ReferenceAt` sadece gerçek bir statü
+değişikliğinde ilerlediği için ayrı bir "N gün sorma" cooldown mantığı
+gerekmedi.
+
+### Staleness referans tarihi: `AppliedAt`'a düşen, seed-satırı hariç tutan hesap — DECIDED
+
+`Application.Create`, `FromStatus == null` olan bir seed
+`ApplicationStatusHistory` satırı ekliyor (bkz. Sprint 1). Bu satır
+staleness hesabından hariç tutuluyor — yoksa geçmişe dönük (CSV/LinkedIn
+import) bir başvuru yapay olarak taze görünürdü.
+`ReminderCalculations.GetReferenceAt` = en son gerçek statü geçişinin
+`ChangedAt`'ı, yoksa `AppliedAt`.
+
+### Ürün kararları (kullanıcı ile netleştirildi, plan onayı sırasında)
+
+- FollowUp herhangi bir terminal-olmayan durgun başvuruya uygulanır
+  (sadece yanıtsızlarla sınırlı değil — örn. mülakat sonrası yanıt
+  bekleyen bir başvuru da "takip et" önerisi alabilir).
+- Bir başvuru hem FollowUp hem PossiblyGhosted koşulunu sağlarsa, sadece
+  PossiblyGhosted gösterilir (daha güçlü sinyal önceliklidir).
+- Dismiss, `ApplicationEventType.FollowUpSent`'i otomatik eklemez — bu
+  event hâlâ tamamen kullanılmamış durumda, mevcut genel
+  `POST /api/applications/{id}/events` ile ayrıca tetiklenebilir.
+- `FollowUpThresholdDays` varsayılanı 7, `GhostingThresholdDays`
+  varsayılanı 30 (spec'te zaten sabit).
+
+### Cross-user query — bilinçli, izole bir istisna — DECIDED
+
+`IReminderService.ScanAndGenerateRemindersAsync`'in `userId` parametresi
+yok — Hangfire recurring job'ı tarafından çağrılıyor, `ClaimsPrincipal`
+context'i yok. Bu, kod tabanındaki **tek** cross-user (tüm kullanıcılar
+için tarama yapan) servis metodu; her diğer servis
+`ClaimsPrincipal.GetUserId()` ile tek-kullanıcı scope'lu kalmaya devam
+ediyor. Yeni bir servis eklerken bu istisnayı emsal olarak kullanmayın —
+yalnızca background job'lar için geçerli.
+
+### Hangfire şeması EF Core migration'larından ayrı — DECIDED
+
+`Hangfire.PostgreSql`, `hangfire`-prefixli kendi şemasını runtime'da
+otomatik oluşturuyor. `AppDbContext`'e eklenmedi, `AddReminders`
+migration'ı yalnızca `Reminders` tablosunu içeriyor. Bu bilinçli bir
+ayrım — ileride "eksik migration" sanılmasın diye not düşülüyor.
+
+### Hangfire dashboard (`/hangfire`) bu sprintte eklenmedi — DECIDED
+
+`ApplicationUser`/Identity'de rol kavramı yok (`AddIdentityCore`,
+rolsüz). Dashboard'u açmak ya auth'suz bir ops yüzeyi ya da orantısız
+yeni auth işi demek olurdu. `AddHangfire`/`AddHangfireServer()` tek
+başına tüm retry/scheduling davranışını sağlıyor; dashboard +
+`IDashboardAuthorizationFilter` Sprint 7'ye (Hardening) bırakıldı.
+
+### Bulgu: statik `RecurringJob` facade'i `JobStorage.Current` olmadan çalışmıyor
+
+`Program.cs`'te ilk denemede `RecurringJob.AddOrUpdate<T>(...)` (statik
+facade) kullanıldı — entegrasyon testlerinde
+`InvalidOperationException: Current JobStorage instance has not been
+initialized yet` ile patladı. Sebep: modern `services.AddHangfire(...)`
+DI kaydı, storage'ı yalnızca DI container'a bağlıyor, legacy statik
+`JobStorage.Current`'ı set etmiyor (Hangfire'ın kendi hata mesajı da bunu
+öneriyor). Çözüm: `app.Services`'ten `IRecurringJobManager` resolve edip
+onun `AddOrUpdate<T>` extension'ını kullanmak (`Program.cs`). Yeni bir
+recurring job eklerken bu kalıp izlenmeli, statik `RecurringJob`/`BackgroundJob`
+facade'leri değil.
+
+### Bulgu: EF Core, DTO record'a projekte edilmiş sorguda `OrderBy` çeviremiyor
+
+`ReminderService.GetActiveRemindersAsync`'te ilk denemede `.Join(...)`
+zincirinin son adımı doğrudan `new ReminderResponse(...)` oluşturuyordu,
+ardından `.OrderByDescending(r => r.CreatedAt)` bu projeksiyonun
+üzerine ekleniyordu — EF Core bunu SQL'e çeviremedi (`could not be
+translated`, runtime'da 500). Düzeltme: `OrderByDescending`'i join'lenmiş
+anonim tip üzerinde (projeksiyondan **önce**) çalıştırıp DTO'ya son bir
+`.Select(...)` ile projekte etmek. Genel kural: bir `IQueryable` sıralama
+gerekiyorsa, sıralama her zaman DTO constructor projeksiyonundan önce
+gelmeli.
+
+---
+
 ## Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

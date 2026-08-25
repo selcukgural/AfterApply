@@ -1,6 +1,10 @@
 using System.Text.Json.Serialization;
 using AfterApply.Api.Endpoints;
+using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
+using AfterApply.Infrastructure.Notifications;
+using Hangfire;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +40,18 @@ app.MapUserEndpoints();
 app.MapApplicationEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapImportEndpoints();
+app.MapReminderEndpoints();
+
+using (var scope = app.Services.CreateScope())
+{
+    var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    var notificationOptions = scope.ServiceProvider.GetRequiredService<IOptions<NotificationOptions>>().Value;
+
+    recurringJobManager.AddOrUpdate<IReminderService>(
+        "reminder-scan",
+        service => service.ScanAndGenerateRemindersAsync(CancellationToken.None),
+        notificationOptions.ScanCronExpression);
+}
 
 app.Run();
 
