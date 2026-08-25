@@ -8,6 +8,7 @@ import "../globals.css";
 import { routing } from "@/i18n/routing";
 import { QueryProvider } from "@/lib/api/QueryProvider";
 import { AuthProvider } from "@/lib/auth/AuthContext";
+import { getServerTheme } from "@/lib/theme/getServerTheme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,13 +38,14 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
     notFound();
   }
   setRequestLocale(locale);
+  const theme = await getServerTheme();
 
   return (
     <html
       lang={locale}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
     >
-      <body className="min-h-screen flex flex-col bg-gray-50">
+      <body className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
         <NextIntlClientProvider>
           <QueryProvider>
             <AuthProvider>{children}</AuthProvider>

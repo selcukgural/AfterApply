@@ -37,7 +37,7 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-gray-200 bg-gray-50 p-3">
+    <div className="flex flex-col gap-2 rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-3">
       <Select value={selected} onChange={(e) => setSelected(e.target.value as ApplicationStatus)}>
         {otherStatuses.map((status) => (
           <option key={status} value={status}>

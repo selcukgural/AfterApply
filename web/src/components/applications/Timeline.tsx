@@ -24,16 +24,16 @@ export function Timeline({ events }: { events: ApplicationEventResponse[] }) {
   }
 
   if (events.length === 0) {
-    return <p className="text-sm text-gray-500">{t("empty")}</p>;
+    return <p className="text-sm text-gray-500 dark:text-gray-400">{t("empty")}</p>;
   }
 
   return (
     <ol className="flex flex-col gap-3">
       {events.map((event) => (
-        <li key={event.id} className="flex items-start gap-3 border-l-2 border-gray-200 pl-3">
+        <li key={event.id} className="flex items-start gap-3 border-l-2 border-gray-200 dark:border-gray-800 pl-3">
           <div>
-            <p className="text-sm font-medium text-gray-900">{describeEvent(event)}</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{describeEvent(event)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {new Date(event.occurredAt).toLocaleString(locale)}
             </p>
           </div>

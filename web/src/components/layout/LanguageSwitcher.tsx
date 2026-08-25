@@ -24,7 +24,7 @@ export function LanguageSwitcher() {
   };
 
   return (
-    <div className="flex items-center gap-1 text-sm text-gray-600">
+    <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
       {routing.locales.map((code) => (
         <button
           key={code}
@@ -33,8 +33,8 @@ export function LanguageSwitcher() {
           disabled={code === locale}
           className={
             code === locale
-              ? "font-semibold text-gray-900"
-              : "text-gray-500 hover:text-gray-900"
+              ? "font-semibold text-gray-900 dark:text-gray-100"
+              : "text-gray-500 hover:text-gray-900 dark:text-gray-500 dark:hover:text-gray-100"
           }
         >
           {code.toUpperCase()}

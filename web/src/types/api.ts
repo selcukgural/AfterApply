@@ -52,6 +52,7 @@ export interface UserProfileResponse {
   createdAt: string;
   consentAcceptedAt: string;
   preferredLanguage: string;
+  preferredTheme: string;
 }
 
 export interface AuthResponse {

@@ -38,6 +38,14 @@ public static class UserEndpoints
             })
             .WithValidation<UpdateLanguageRequest>();
 
+        group.MapPut("/me/theme", async (UpdateThemeRequest request, ClaimsPrincipal user,
+                IAuthService authService, CancellationToken cancellationToken) =>
+            {
+                var profile = await authService.UpdateThemeAsync(user.GetUserId(), request.Theme, cancellationToken);
+                return profile is not null ? Results.Ok(profile) : Results.NotFound();
+            })
+            .WithValidation<UpdateThemeRequest>();
+
         group.MapDelete("/me", async ([Microsoft.AspNetCore.Mvc.FromBody] DeleteAccountRequest request, ClaimsPrincipal user,
                 IAuthService authService, IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
             {

@@ -277,5 +277,9 @@
   "errors": {
     "generic": "İstek başarısız oldu.",
     "sessionExpired": "Oturum süresi doldu, tekrar giriş yapın."
+  },
+  "theme": {
+    "light": "Açık",
+    "dark": "Koyu"
   }
 }

@@ -107,34 +107,34 @@ export default function SettingsPage() {
 
   return (
     <div className="flex max-w-lg flex-col gap-8">
-      <h1 className="text-xl font-semibold text-gray-900">{t("title")}</h1>
+      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
 
-      <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-base font-semibold text-gray-900">{t("export.title")}</h2>
-        <p className="mb-4 text-sm text-gray-600">{t("export.description")}</p>
-        {exportError && <p className="mb-3 text-sm text-red-600">{exportError}</p>}
+      <section className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("export.title")}</h2>
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("export.description")}</p>
+        {exportError && <p className="mb-3 text-sm text-red-600 dark:text-red-400">{exportError}</p>}
         <Button variant="secondary" onClick={handleExport} disabled={isExporting}>
           {isExporting ? t("export.preparing") : t("export.download")}
         </Button>
       </section>
 
-      <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-base font-semibold text-gray-900">{t("email.title")}</h2>
-        <p className="mb-4 text-sm text-gray-600">{t("email.description")}</p>
-        {emailNotice && <p className="mb-3 text-sm text-green-700">{emailNotice}</p>}
-        {emailActionError && <p className="mb-3 text-sm text-red-600">{emailActionError}</p>}
+      <section className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("email.title")}</h2>
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("email.description")}</p>
+        {emailNotice && <p className="mb-3 text-sm text-green-700 dark:text-green-400">{emailNotice}</p>}
+        {emailActionError && <p className="mb-3 text-sm text-red-600 dark:text-red-400">{emailActionError}</p>}
         {emailStatusLoading ? (
-          <p className="text-sm text-gray-500">{tCommon("loading")}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
         ) : emailStatus?.connected ? (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               {t("email.connectedAccount")} <span className="font-medium">{emailStatus.providerAccountEmail}</span>
             </p>
             {emailStatus.needsReattention && (
-              <p className="text-sm text-amber-600">{t("email.needsReattention")}</p>
+              <p className="text-sm text-amber-600 dark:text-amber-400">{t("email.needsReattention")}</p>
             )}
             <div className="flex items-center gap-4">
-              <Link href="/settings/email-suggestions" className="text-sm text-blue-600 hover:underline">
+              <Link href="/settings/email-suggestions" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
                 {t("email.viewSuggestions")}
               </Link>
               <Button variant="secondary" onClick={handleDisconnectGmail}>
@@ -149,9 +149,9 @@ export default function SettingsPage() {
         )}
       </section>
 
-      <section className="rounded-lg border border-red-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-base font-semibold text-gray-900">{t("delete.title")}</h2>
-        <p className="mb-4 text-sm text-gray-600">{t("delete.description")}</p>
+      <section className="rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("delete.title")}</h2>
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("delete.description")}</p>
         <form onSubmit={handleDelete} className="flex flex-col gap-4">
           <FormField label={t("delete.passwordLabel")} htmlFor="delete-password">
             <Input
@@ -169,7 +169,7 @@ export default function SettingsPage() {
               onChange={(e) => setConfirmationText(e.target.value)}
             />
           </FormField>
-          {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
+          {deleteError && <p className="text-sm text-red-600 dark:text-red-400">{deleteError}</p>}
           <Button type="submit" variant="danger" disabled={isDeleting}>
             {isDeleting ? t("delete.deleting") : t("delete.submit")}
           </Button>

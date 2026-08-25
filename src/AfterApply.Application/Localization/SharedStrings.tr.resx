@@ -103,6 +103,9 @@
   <data name="VALIDATION_UNSUPPORTED_LANGUAGE" xml:space="preserve">
     <value>Desteklenmeyen dil. "tr" veya "en" kullanın.</value>
   </data>
+  <data name="VALIDATION_UNSUPPORTED_THEME" xml:space="preserve">
+    <value>Desteklenmeyen tema. "light" veya "dark" kullanın.</value>
+  </data>
   <data name="VALIDATION_APPLIED_AT_FUTURE" xml:space="preserve">
     <value>Başvuru tarihi gelecekte olamaz.</value>
   </data>

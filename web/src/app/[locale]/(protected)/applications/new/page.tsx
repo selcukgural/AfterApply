@@ -29,7 +29,7 @@ export default function NewApplicationPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">{t("new.title")}</h1>
+      <h1 className="mb-6 text-xl font-semibold text-gray-900 dark:text-gray-100">{t("new.title")}</h1>
       <ApplicationForm mode="create" onSubmit={handleSubmit} submitLabel={t("form.createSubmit")} />
     </div>
   );

@@ -54,28 +54,28 @@ export default function EmailSuggestionsPage() {
   return (
     <div className="flex max-w-2xl flex-col gap-6">
       <div>
-        <Link href="/settings" className="text-sm text-blue-600 hover:underline">
+        <Link href="/settings" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
           {t("back")}
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-gray-900">{t("title")}</h1>
+        <h1 className="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {suggestions === null ? (
-        <p className="text-sm text-gray-500">{tCommon("loading")}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
       ) : suggestions.length === 0 ? (
-        <p className="text-sm text-gray-500">{t("empty")}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t("empty")}</p>
       ) : (
         <ul className="flex flex-col gap-4">
           {suggestions.map((s) => (
-            <li key={s.id} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <li key={s.id} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
                     {s.companyName} — {s.jobTitle}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(s.emailReceivedAt).toLocaleString(locale)} · {t("confidence")}:{" "}
                     {Math.round(s.confidenceScore * 100)}%
                   </p>
@@ -83,13 +83,13 @@ export default function EmailSuggestionsPage() {
                 {s.suggestedStatus ? (
                   <StatusBadge status={s.suggestedStatus} />
                 ) : (
-                  <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                  <span className="inline-block rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-400">
                     {t("stillPending")}
                   </span>
                 )}
               </div>
-              <p className="mb-1 text-sm font-medium text-gray-800">{s.subject}</p>
-              <p className="mb-3 text-sm text-gray-600">{s.snippet}</p>
+              <p className="mb-1 text-sm font-medium text-gray-800 dark:text-gray-200">{s.subject}</p>
+              <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">{s.snippet}</p>
               <div className="flex gap-3">
                 {s.suggestedStatus && (
                   <Button onClick={() => handleConfirm(s.id)} disabled={pendingActionId === s.id}>

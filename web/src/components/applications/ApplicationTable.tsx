@@ -10,13 +10,13 @@ export function ApplicationTable({ items }: { items: ApplicationSummaryResponse[
   const locale = useLocale();
 
   if (items.length === 0) {
-    return <p className="py-8 text-center text-sm text-gray-500">{t("empty")}</p>;
+    return <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">{t("empty")}</p>;
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500">
+        <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-400">
           <tr>
             <th className="px-4 py-3">{t("company")}</th>
             <th className="px-4 py-3">{t("position")}</th>
@@ -26,17 +26,23 @@ export function ApplicationTable({ items }: { items: ApplicationSummaryResponse[
         </thead>
         <tbody>
           {items.map((item) => (
-            <tr key={item.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+            <tr
+              key={item.id}
+              className="border-b border-gray-100 last:border-0 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800"
+            >
               <td className="px-4 py-3">
-                <Link href={`/applications/${item.id}`} className="font-medium text-blue-600 hover:underline">
+                <Link
+                  href={`/applications/${item.id}`}
+                  className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                >
                   {item.companyName}
                 </Link>
               </td>
-              <td className="px-4 py-3 text-gray-700">{item.jobTitle}</td>
+              <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{item.jobTitle}</td>
               <td className="px-4 py-3">
                 <StatusBadge status={item.status} />
               </td>
-              <td className="px-4 py-3 text-gray-500">
+              <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                 {new Date(item.appliedAt).toLocaleDateString(locale)}
               </td>
             </tr>

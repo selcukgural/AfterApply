@@ -34,12 +34,12 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
   };
 
   if (isLoading || !application) {
-    return <p className="text-sm text-gray-500">{tCommon("loading")}</p>;
+    return <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>;
   }
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">{t("edit.title")}</h1>
+      <h1 className="mb-6 text-xl font-semibold text-gray-900 dark:text-gray-100">{t("edit.title")}</h1>
       <ApplicationForm mode="edit" initial={application} onSubmit={handleSubmit} submitLabel={t("form.editSubmit")} />
     </div>
   );

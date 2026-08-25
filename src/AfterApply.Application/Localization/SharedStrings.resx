@@ -103,6 +103,9 @@
   <data name="VALIDATION_UNSUPPORTED_LANGUAGE" xml:space="preserve">
     <value>Unsupported language. Use "tr" or "en".</value>
   </data>
+  <data name="VALIDATION_UNSUPPORTED_THEME" xml:space="preserve">
+    <value>Unsupported theme. Use "light" or "dark".</value>
+  </data>
   <data name="VALIDATION_APPLIED_AT_FUTURE" xml:space="preserve">
     <value>AppliedAt cannot be in the future.</value>
   </data>

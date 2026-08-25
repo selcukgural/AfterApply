@@ -19,7 +19,7 @@ export function Pagination({ page, pageSize, totalCount, onPageChange }: Paginat
   }
 
   return (
-    <div className="flex items-center justify-between text-sm text-gray-600">
+    <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
       <span>{t("pageInfo", { page, totalPages, totalCount })}</span>
       <div className="flex gap-2">
         <Button variant="secondary" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>

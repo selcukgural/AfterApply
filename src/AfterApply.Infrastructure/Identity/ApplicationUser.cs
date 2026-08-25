@@ -21,4 +21,9 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     /// regardless of which device/browser they sign in from. Kept in sync with the frontend's
     /// current UI locale whenever the user switches languages while authenticated.</summary>
     public string PreferredLanguage { get; set; } = "tr";
+
+    /// <summary>"light"/"dark" applied to this user's session right after login, regardless of
+    /// which device/browser they sign in from. Kept in sync with the frontend's current theme
+    /// whenever the user switches themes while authenticated.</summary>
+    public string PreferredTheme { get; set; } = "light";
 }

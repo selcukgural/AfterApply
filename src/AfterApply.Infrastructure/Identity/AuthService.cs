@@ -149,6 +149,20 @@ internal sealed class AuthService(
         return ToProfile(user);
     }
 
+    public async Task<UserProfileResponse?> UpdateThemeAsync(Guid userId, string theme, CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return null;
+        }
+
+        user.PreferredTheme = theme;
+        await userManager.UpdateAsync(user);
+
+        return ToProfile(user);
+    }
+
     public async Task<bool> DeleteAccountAsync(Guid userId, string password, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByIdAsync(userId.ToString());
@@ -267,5 +281,5 @@ internal sealed class AuthService(
     }
 
     private static UserProfileResponse ToProfile(ApplicationUser user) =>
-        new(user.Id, user.Email!, user.FirstName, user.LastName, user.CreatedAt, user.ConsentAcceptedAt, user.PreferredLanguage);
+        new(user.Id, user.Email!, user.FirstName, user.LastName, user.CreatedAt, user.ConsentAcceptedAt, user.PreferredLanguage, user.PreferredTheme);
 }

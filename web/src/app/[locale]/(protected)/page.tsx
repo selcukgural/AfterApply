@@ -29,14 +29,14 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">{t("title")}</h1>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
         <Link href="/applications/new">
           <Button>{t("newApplication")}</Button>
         </Link>
       </div>
 
       {summaryLoading || !summary ? (
-        <p className="text-sm text-gray-500">{tCommon("loading")}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {DASHBOARD_TILES.map((tile) => (
@@ -46,10 +46,10 @@ export default function DashboardPage() {
       )}
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-gray-900">{t("personalAnalytics")}</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("personalAnalytics")}</h2>
 
         {overviewLoading || !overview ? (
-          <p className="text-sm text-gray-500">{tCommon("loading")}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">

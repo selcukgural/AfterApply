@@ -47,15 +47,15 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   });
 
   if (isLoading || !application) {
-    return <p className="text-sm text-gray-500">{tCommon("loading")}</p>;
+    return <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>;
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{application.jobTitle}</h1>
-          <p className="text-sm text-gray-600">{application.companyName}</p>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{application.jobTitle}</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{application.companyName}</p>
         </div>
         <div className="flex gap-2">
           <Link href={`/applications/${id}/edit`}>
@@ -75,28 +75,28 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4">
+        <div className="md:col-span-2 flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <div className="flex items-center gap-2">
             <StatusBadge status={application.status} />
           </div>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt className="text-gray-500">{t("location")}</dt>
-              <dd className="text-gray-900">{application.location ?? t("emptyValue")}</dd>
+              <dt className="text-gray-500 dark:text-gray-400">{t("location")}</dt>
+              <dd className="text-gray-900 dark:text-gray-100">{application.location ?? t("emptyValue")}</dd>
             </div>
             <div>
-              <dt className="text-gray-500">{t("employmentType")}</dt>
-              <dd className="text-gray-900">{tEmploymentType(application.employmentType)}</dd>
+              <dt className="text-gray-500 dark:text-gray-400">{t("employmentType")}</dt>
+              <dd className="text-gray-900 dark:text-gray-100">{tEmploymentType(application.employmentType)}</dd>
             </div>
             <div>
-              <dt className="text-gray-500">{t("appliedAt")}</dt>
-              <dd className="text-gray-900">{new Date(application.appliedAt).toLocaleDateString(locale)}</dd>
+              <dt className="text-gray-500 dark:text-gray-400">{t("appliedAt")}</dt>
+              <dd className="text-gray-900 dark:text-gray-100">{new Date(application.appliedAt).toLocaleDateString(locale)}</dd>
             </div>
             {application.jobUrl && (
               <div>
-                <dt className="text-gray-500">{t("jobUrl")}</dt>
+                <dt className="text-gray-500 dark:text-gray-400">{t("jobUrl")}</dt>
                 <dd>
-                  <a href={application.jobUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                  <a href={application.jobUrl} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
                     {t("openLink")}
                   </a>
                 </dd>
@@ -105,8 +105,8 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           </dl>
           {application.notes && (
             <div>
-              <p className="text-gray-500 text-sm">{t("notes")}</p>
-              <p className="whitespace-pre-wrap text-sm text-gray-900">{application.notes}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">{t("notes")}</p>
+              <p className="whitespace-pre-wrap text-sm text-gray-900 dark:text-gray-100">{application.notes}</p>
             </div>
           )}
           <StatusChangeSelect
@@ -118,8 +118,8 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           />
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-semibold text-gray-900">{t("timeline")}</h2>
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+          <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("timeline")}</h2>
           <Timeline events={timeline ?? []} />
         </div>
       </div>

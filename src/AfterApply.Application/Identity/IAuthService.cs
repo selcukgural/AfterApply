@@ -18,6 +18,8 @@ public interface IAuthService
 
     Task<UserProfileResponse?> UpdateLanguageAsync(Guid userId, string language, CancellationToken cancellationToken);
 
+    Task<UserProfileResponse?> UpdateThemeAsync(Guid userId, string theme, CancellationToken cancellationToken);
+
     /// <summary>Returns false when the supplied password does not match the account (the account owner is
     /// already established via the authenticated userId, so false unambiguously means "wrong password").</summary>
     Task<bool> DeleteAccountAsync(Guid userId, string password, CancellationToken cancellationToken);

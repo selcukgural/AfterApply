@@ -6,12 +6,12 @@ export default async function PrivacyPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <h1 className="mb-2 text-2xl font-semibold text-gray-900">{t("title")}</h1>
-      <p className="mb-8 text-sm text-gray-500">{t("lastUpdated")}</p>
+      <h1 className="mb-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+      <p className="mb-8 text-sm text-gray-500 dark:text-gray-400">{t("lastUpdated")}</p>
 
-      <div className="flex flex-col gap-8 text-sm leading-6 text-gray-700">
+      <div className="flex flex-col gap-8 text-sm leading-6 text-gray-700 dark:text-gray-300">
         <section>
-          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("dataCollection.title")}</h2>
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("dataCollection.title")}</h2>
           <p>{t("dataCollection.intro")}</p>
           <ul className="mt-2 list-disc pl-5">
             <li>{t("dataCollection.item1")}</li>
@@ -22,15 +22,15 @@ export default async function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("retention.title")}</h2>
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("retention.title")}</h2>
           <p>{t("retention.body")}</p>
         </section>
 
         <section>
-          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("rights.title")}</h2>
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("rights.title")}</h2>
           <p>
             {t("rights.before")}{" "}
-            <Link href="/settings" className="text-blue-600 hover:underline">
+            <Link href="/settings" className="text-blue-600 hover:underline dark:text-blue-400">
               {t("rights.link")}
             </Link>{" "}
             {t("rights.after")}
@@ -38,15 +38,15 @@ export default async function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("notApplicable.title")}</h2>
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("notApplicable.title")}</h2>
           <p>{t("notApplicable.body")}</p>
         </section>
 
         <section>
-          <h2 className="mb-2 text-base font-semibold text-gray-900">{t("contact.title")}</h2>
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("contact.title")}</h2>
           <p>
             {t("contact.before")}{" "}
-            <a href="mailto:privacy@afterapply.app" className="text-blue-600 hover:underline">
+            <a href="mailto:privacy@afterapply.app" className="text-blue-600 hover:underline dark:text-blue-400">
               privacy@afterapply.app
             </a>
             {t("contact.after")}

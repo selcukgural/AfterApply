@@ -5,6 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { authApi } from "@/lib/api/auth";
+import { getStoredThemeCookie } from "@/lib/theme/theme";
 import { createRegisterSchema } from "@/lib/validation/registerSchema";
 import { ApiError } from "@/lib/api/httpClient";
 import { FormField } from "@/components/ui/FormField";
@@ -55,6 +57,15 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     try {
       const auth = await register(result.data);
+      // A brand-new account always starts with the server default theme
+      // ("light" — there's no Accept-Language-like header for OS theme
+      // preference). If this visitor had already switched to Dark on this
+      // browser before registering, push that choice up to the new account
+      // instead of letting it snap back to Light right after signup.
+      const localTheme = getStoredThemeCookie();
+      if (localTheme && localTheme !== auth.user.preferredTheme) {
+        void authApi.updateTheme(localTheme);
+      }
       // Same post-login redirect rule as the login page — kept for
       // consistency even though a fresh registration's preferredLanguage
       // should already match the current locale (see AuthService.RegisterAsync).
@@ -74,8 +85,8 @@ export default function RegisterPage() {
 
   return (
     <div className="flex flex-1 items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900">{t("title")}</h1>
+      <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <h1 className="mb-6 text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <FormField label={t("firstName")} htmlFor="firstName" error={errors.firstName}>
@@ -104,21 +115,21 @@ export default function RegisterPage() {
             error={errors.consentAccepted}
             label={
               <>
-                <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">
+                <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
                   {t("consentLink")}
                 </Link>{" "}
                 {t("consentSuffix")}
               </>
             }
           />
-          {formError && <p className="text-sm text-red-600">{formError}</p>}
+          {formError && <p className="text-sm text-red-600 dark:text-red-400">{formError}</p>}
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? t("submitting") : t("submit")}
           </Button>
         </form>
-        <p className="mt-4 text-sm text-gray-600">
+        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
           {t("haveAccount")}{" "}
-          <Link href="/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className="text-blue-600 hover:underline dark:text-blue-400">
             {t("loginLink")}
           </Link>
         </p>

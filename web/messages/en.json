@@ -277,5 +277,9 @@
   "errors": {
     "generic": "The request failed.",
     "sessionExpired": "Your session expired, please log in again."
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark"
   }
 }

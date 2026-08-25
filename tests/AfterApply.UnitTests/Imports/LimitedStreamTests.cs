@@ -36,8 +36,11 @@ public class LimitedStreamTests
         await using var stream = new LimitedStream(new MemoryStream(data), maxBytes: 10);
 
         var buffer = new byte[11];
-
-        await Should.ThrowAsync<StreamLengthExceededException>(async () => await stream.ReadAsync(buffer));
+        
+        await Should.ThrowAsync<StreamLengthExceededException>(async () =>
+        {
+            _ = await stream.ReadAsync(buffer);
+        });
     }
 
     [Fact]
@@ -47,7 +50,7 @@ public class LimitedStreamTests
         await using var stream = new LimitedStream(new MemoryStream(data), maxBytes: 10);
 
         var buffer = new byte[8];
-        await stream.ReadAsync(buffer);
+        _ = await stream.ReadAsync(buffer);
 
         await Should.ThrowAsync<StreamLengthExceededException>(async () => await stream.ReadAsync(buffer));
     }

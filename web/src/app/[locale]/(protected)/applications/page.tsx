@@ -61,7 +61,7 @@ export default function ApplicationsListPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">{t("title")}</h1>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
         <Link href="/applications/new">
           <Button>{t("newApplication")}</Button>
         </Link>
@@ -79,7 +79,7 @@ export default function ApplicationsListPage() {
       />
 
       {isLoading || !data ? (
-        <p className="text-sm text-gray-500">{tCommon("loading")}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
       ) : (
         <>
           <ApplicationTable items={data.items} />
