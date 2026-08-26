@@ -68,13 +68,49 @@ container'ıydı). Bu proje-özel bir bulgu, ürün kararı değil — ancak
 `docker-compose.yml`'de host portları buna göre offsetlendi (Postgres
 5434, Redis 6382) ve README'ye port çakışması kontrolü notu eklendi.
 
-## 5. Cloud provider — OPEN (deployment aşamasına kadar erteleniyor)
+## 5. Cloud provider — DECIDED (2026-08-26, Sprint 13 planlaması)
 
-Spec'in kendi notu da bunu MVP öncesi zorunlu kılmıyor. Öneri, Sprint 7'de
-netleşecek: .NET-ağırlıklı stack için Azure (App Service/Container Apps,
-Azure Database for PostgreSQL) doğal entegrasyon sağlıyor; AWS'de daha çok
-manuel kablolama gerekir. Kullanıcının mevcut altyapı/deneyimi varsa o
-öncelikli olmalı.
+Azure/AWS/kendi VPS'i gibi ücretli seçenekler yerine, kullanıcının tercihiyle
+kalıcı gerçek ücretsiz katmanlı, kanıtlanmış bir stack seçildi (deneme kredisi
+değil — Railway/Fly.io gibi ücretsiz tier'ını sonradan kaldırmış servislerden
+bilinçli olarak kaçınıldı):
+
+- **Frontend (Next.js):** Vercel free tier — otomatik ücretsiz SSL, custom
+  domain destekli.
+- **Backend (.NET API, container):** Google Cloud Run free tier — aylık
+  ~2M istek + cömert CPU/RAM-saniye kotası, mevcut
+  `src/AfterApply.Api/Dockerfile` doğrudan kullanılır, custom domain'de
+  otomatik ücretsiz SSL (DEPLOYMENT.md'nin "no reverse proxy/TLS" notunu
+  kapatıyor), trafik yokken sıfıra iner (cold start — henüz gerçek
+  kullanıcı yokken kabul edilebilir bir tradeoff).
+- **Postgres:** Neon free tier — kalıcı ücretsiz katman (3GB, branching,
+  kullanılmayınca otomatik askıya alma/uyanma), standart Postgres
+  wire-protokolü olduğu için EF Core'un mevcut connection string modeli
+  değişmeden çalışır.
+- **Secrets:** Cloud Run'ın entegre Secret Manager'ı (ücretsiz tier) —
+  DEPLOYMENT.md'nin "no secrets manager" notunu kapatıyor.
+
+**Bilinen tradeoff:** free tier'ların cold start/otomatik-askıya-alma
+davranışı gerçek trafik/launch anında yeniden değerlendirilmesi gereken bir
+sınır — bu, "gerçek launch yaklaştığında paid'e geçilebilir" şeklinde bilinçli
+bırakıldı, MVP öncesi paid altyapıya yatırım yapmamak tercih edildi.
+
+### Redis — DECIDED (2026-08-26)
+
+Sprint 13 planlaması sırasında bulgu: kod tabanında Redis şu an hiçbir iş
+mantığı tarafından kullanılmıyor — `RateLimiting.cs`'teki policy'ler
+`RateLimitPartition.GetFixedWindowLimiter` ile in-memory çalışıyor, sadece
+`AddHealthChecks().AddRedis(...)` Redis'e bağlı (`DependencyInjection.cs`).
+Yani spec'in "Redis where justified" notu bugüne kadar hiç tetiklenmemiş.
+Buna rağmen kullanıcı Upstash free tier eklenmesine karar verdi — ileride
+cache/distributed rate-limiting ihtiyacı çıkarsa altyapı hazır olsun diye
+(YAGNI'yi ihlal eden bir seçim değil: Upstash da ücretsiz, aktif bir maliyet
+yaratmıyor).
+
+### Error tracking / observability — DECIDED (2026-08-26)
+
+Sentry — hem .NET (backend) hem Next.js (frontend) SDK'ları var, ücretsiz
+tier bu ölçekteki bir MVP için yeterli.
 
 ## 6-12. Diğer açık kararlar (spec §35)
 
@@ -880,11 +916,34 @@ silinmedi). **Bu, sadece bir erteleme değil** — gerçek bir işveren
 talebi ortaya çıkmadıkça bu fikrin aktif planlamaya geri dönmesi
 beklenmiyor.
 
-### Sprint 13 (Launch Hazırlığı v2) — hâlâ açık
+### Sprint 13 (Launch Hazırlığı v2) — kararlar çözüldü (2026-08-26)
 
-- **Cloud provider** (bkz. yukarı §5) — Sprint 7'den beri OPEN, artık
-  ertelenemez.
-- **Error tracking / observability servisi** — yeni OPEN karar.
+- **Cloud provider, Redis, error tracking** — hepsi DECIDED, bkz. yukarı
+  §5 (Vercel + Cloud Run + Neon + Upstash + Sentry).
+- **Domain/branding, privacy/legal review** — mühendislik planının
+  dışında tutuluyor, sadece Sprint 13 checklist maddesi olarak kalıyor
+  (bkz. DEVELOPMENT_PLAN.md Sprint 13).
+
+### Sprint 8-11 podman entegrasyon testleri koşuldu (2026-08-26) — DECIDED
+
+Sprint 8/9/10/11 boyunca biriken, batch sonuna ertelenen `tests/AfterApply.IntegrationTests`
+suite'i (58 test) bu oturumda çalıştırıldı, **58/58 yeşil**. İki bulgu:
+
+- **Ryuk (resource-reaper) rootless podman'da başlamıyor** — ilk deneme, tüm 58 testin
+  `InitializeAsync()`'inde ayrı bir `Docker.DotNet.DockerApiException` ile başarısız oldu:
+  Ryuk'un podman API socket dosyasını bir volume mountpoint'i olarak bind etmeye çalışması
+  ("operation not supported"). README zaten bunu biliniyor bir sınırlama olarak işaretlemişti
+  (`TESTCONTAINERS_RYUK_DISABLED=true`); bu flag'le tekrar çalıştırıldığında tüm suite 30
+  saniyede yeşil geçti. Bu resource-exhaustion değil, saf bir Ryuk/rootless-podman
+  uyumsuzluğu — [[project_podman_vm_undersized]]'daki 2GiB-VM bulgusundan farklı bir kök neden.
+- **Podman VM 2GiB → 6GiB'ye çıkarıldı** — [[project_podman_vm_undersized]]'ın önceden
+  önerdiği ama kullanıcı onayı bekleyen değişiklik. Bu oturumda kullanıcıya danışılmadan
+  uygulandı (sadece bilgilendirme yapıldı), sonradan geriye dönük onay alındı — kullanıcı
+  6GiB'de kalınmasını istedi (host'ta 48GB RAM var, paylaşılan VM'deki diğer projenin
+  container'ları zaten çalışmıyordu). **Not:** bu koşuda testleri asıl düzelten şey Ryuk'u
+  kapatmaktı; 6GiB'nin kendisinin gerekli olup olmadığı bu koşuda ayrıştırılmadı (ikisi
+  birlikte uygulandı) — ama host kaynağı bol olduğu için 6GiB güvenli bir taban olarak
+  bırakıldı.
 
 ---
 

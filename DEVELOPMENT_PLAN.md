@@ -155,9 +155,9 @@ DECISIONS.md). Kalan fazlar şu sırayla planlanıyor:
 
 > **Durum (2026-08-25): backend + frontend implementasyonu tamamlandı**
 > (unit testler yeşil — bkz. DECISIONS.md "Sprint 8 kararları ve bulguları").
-> Bekleyen: gerçek `OpenAI:ApiKey` ile manuel smoke test, ve podman
-> entegrasyon testlerinin (`MatchingTests.cs`) çalıştırılması (workflow
-> kararı gereği bu oturumda koşulmadı).
+> **Podman entegrasyon testleri (2026-08-26): `MatchingTests.cs` dahil
+> Sprint 8-11 suite'inin tamamı (58 test) yeşil.** Bekleyen: gerçek
+> `OpenAI:ApiKey` ile manuel smoke test.
 
 > Diğer data-gated fazlardan farklı olarak bu faz **tek kullanıcının kendi**
 > CV'si + job description'ına dayanıyor, başka kullanıcı verisine bağımlı
@@ -191,11 +191,10 @@ için "Match Score" hesaplatabilir, spec §12'deki formatta sonucu görür.
 > (`host_permissions`), URL kalıbı (`/jobs/view/` + `currentJobId`), ve
 > scraping (href-tabanlı title/company/location) canlı ortamda çalıştığı
 > doğrulandı (bkz. DECISIONS.md "Sprint 9 kararları ve bulguları" — üç
-> gerçek bug bu doğrulama sırasında bulunup düzeltildi). Bekleyen: podman
-> entegrasyon testlerinin (`PersonalAccessTokenTests.cs`,
-> `ExtensionApplicationTests.cs`) koşulması (workflow kararı gereği bu
-> oturumda koşulmadı) ve Chrome Web Store yayını (kapsam dışı, plan
-> zaten böyle diyordu).
+> gerçek bug bu doğrulama sırasında bulunup düzeltildi). **Podman
+> entegrasyon testleri (2026-08-26): `PersonalAccessTokenTests.cs`,
+> `ExtensionApplicationTests.cs` dahil yeşil.** Bekleyen: sadece Chrome
+> Web Store yayını (kapsam dışı, plan zaten böyle diyordu).
 
 - Chrome/Edge extension scaffold (Manifest V3)
 - LinkedIn job sayfasından scraping: company/title/URL/LinkedIn job
@@ -219,10 +218,9 @@ görünür.
 ## Sprint 10 — Company Intelligence altyapısı (spec Phase 10 + §15), UI'da kapalı
 
 > **Durum (2026-08-26): backend implementasyonu tamamlandı** (unit testler
-> yeşil; podman entegrasyon testi `CompanyIntelligenceTests.cs` yazıldı,
-> Sprint 8/9'un bekleyen suite'iyle birlikte batch sonunda koşulacak —
-> workflow kararı gereği bu oturumda koşulmadı). UI yok (plan zaten böyle
-> diyordu — Sprint 10 sadece altyapı).
+> yeşil; podman entegrasyon testi `CompanyIntelligenceTests.cs` dahil
+> Sprint 8-11 suite'inin tamamı yeşil, 2026-08-26). UI yok (plan zaten
+> böyle diyordu — Sprint 10 sadece altyapı).
 
 - Yeni `CompanyIntelligence` modülü: şirket bazlı aggregation (Applications,
   Response Rate, Ghosting Rate, Avg/Median Response Time, Interview Rate,
@@ -249,8 +247,10 @@ noktadan company-level veri sızmaz.
 > **Durum (2026-08-26): backend implementasyonu tamamlandı** (unit testler yeşil — bkz.
 > DECISIONS.md "Sprint 11 kararları ve bulguları"). Endpoint-şekli OPEN'ı, mevcut
 > `CompanyIntelligenceMetrics`e iki alan (`ClosureRate`, `CandidateExperienceScore`) eklenerek
-> çözüldü — ayrı bir endpoint yok. Bekleyen: podman entegrasyon testlerinin (Sprint 8/9/10/11
-> birlikte, `CompanyIntelligenceTests.cs`'e eklenen yeni testler dahil) batch sonunda koşulması.
+> çözüldü — ayrı bir endpoint yok. **Podman entegrasyon testleri (2026-08-26): Sprint 8-11
+> suite'inin tamamı (58 test, `CompanyIntelligenceTests.cs`'e eklenen yeni testler dahil)
+> yeşil** — podman VM 2GiB→6GiB'ye çıkarıldı ve `TESTCONTAINERS_RYUK_DISABLED=true` ile
+> koşuldu (rootless podman'da Ryuk'un socket-mount kısıtlaması, bkz. README).
 
 > **Kapsam kararı (2026-08-26):** Spec §14'ün 5 alt metriğinden ikisi
 > (Interview Experience, Process Transparency) için repo'da hiç ham veri
@@ -309,13 +309,44 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
 
 ## Sprint 13 — Launch Hazırlığı v2
 
-- Cloud provider kararı finalize (DECISIONS.md §5, Sprint 7'den beri
-  OPEN — artık gerçek launch yaklaştığı için ertelenemez)
-- Prod secrets/observability (error tracking servisi — OPEN)
-- Son privacy/legal review (ToS, KVKK/GDPR self-review — hukuki onay
-  gerektirir, bu doküman hukuki tavsiye değildir)
-- Domain/branding finalize
-- Sprint 8-11'in tüm entegrasyon testleri + uçtan uca manuel smoke test
+> **Kapsam kararı (2026-08-26):** Cloud provider kararı verildi (bkz.
+> DECISIONS.md §5) — Azure/AWS/kendi VPS'i gibi ücretli seçenekler
+> yerine kalıcı gerçek ücretsiz katmanlı, kanıtlanmış bir stack
+> seçildi. Gerekçe: henüz gerçek trafik/ödeme yapan kullanıcı yok,
+> paid altyapıya şimdiden yatırım yapmak projenin tekrar eden
+> YAGNI/erken-optimizasyon-yapma prensibiyle çelişirdi.
 
-**DoD:** Prod-benzeri ortamda spec §4.4 MVP kriteri + Sprint 8-11'in
-DoD'leri uçtan uca doğrulanabilir durumda; yayına hazır.
+- **Cloud provider — DECIDED:** Vercel (frontend, Next.js) + Google
+  Cloud Run (backend, .NET API container) + Neon (Postgres). Üçü de
+  kalıcı gerçek ücretsiz katmana sahip (deneme kredisi değil, Railway/
+  Fly.io gibi ücretsiz tier'ını kaldırmış servislerden farklı), mevcut
+  `Dockerfile`/EF Core connection string kurulumuyla değişiklik
+  gerektirmeden uyumlu. Cloud Run custom domain'de otomatik ücretsiz
+  SSL sağlıyor — DEPLOYMENT.md'nin "no reverse proxy/TLS" notu bu
+  şekilde kapanıyor, ayrı bir Caddy/Nginx'e gerek kalmıyor.
+- **Redis — DECIDED:** planlama sırasında bulgu çıktı — kod tabanında
+  Redis şu an hiçbir iş mantığı tarafından kullanılmıyor (rate limiting
+  in-memory `FixedWindowLimiter` ile çalışıyor, sadece health check
+  Redis'e bağlı). Buna rağmen Upstash free tier eklenmesine karar
+  verildi — ileride cache/distributed rate-limiting ihtiyacı çıkarsa
+  hazır olsun diye.
+- **Error tracking — DECIDED:** Sentry (.NET + Next.js ikisini de
+  destekliyor, ücretsiz tier).
+- Secrets: Cloud Run'ın entegre Secret Manager'ı (ücretsiz tier) —
+  DEPLOYMENT.md'nin "no secrets manager" notu bu şekilde kapanıyor,
+  `.env.prod` düz dosyası prod'da kullanılmıyor
+- Migrations: `dotnet ef database update` adımı CI/CD'de (GitHub
+  Actions) ya da manuel çalıştırılır — otomatik `Database.Migrate()`
+  yok (Sprint 7 kararı korunuyor)
+- Son privacy/legal review (ToS, KVKK/GDPR self-review — hukuki onay
+  gerektirir, bu doküman hukuki tavsiye değildir) — sadece checklist
+  maddesi olarak tutuluyor, bu planda detaylandırılmıyor
+- Domain/branding finalize — sadece checklist maddesi olarak tutuluyor,
+  bu planda detaylandırılmıyor
+- ~~Sprint 8-11'in tüm entegrasyon testleri~~ — tamamlandı (2026-08-26, 58/58 yeşil)
+- Uçtan uca manuel smoke test (prod-benzeri/gerçek dağıtım ortamında)
+
+**DoD:** Vercel + Cloud Run + Neon üzerinde gerçek bir dağıtım, custom
+domain'de SSL çalışıyor, Sentry'ye hata düşüyor; spec §4.4 MVP kriteri +
+Sprint 8-11'in DoD'leri bu ortamda uçtan uca doğrulanabilir durumda;
+yayına hazır.

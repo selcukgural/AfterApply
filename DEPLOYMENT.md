@@ -1,10 +1,12 @@
 # Deployment
 
 Sprint 7 scope: a locally-verifiable "prod-like" Docker Compose profile,
-**not** a real cloud deployment. Cloud provider selection is still open
-(see `DECISIONS.md`, "5. Cloud provider — OPEN") — this document is the
-stand-in the Sprint 7 DoD requires ("prod-benzeri bir ortamda
-doğrulanabilir") until that decision is made.
+**not** a real cloud deployment. Cloud provider is now decided (see
+`DECISIONS.md`, "5. Cloud provider — DECIDED": Vercel + Google Cloud
+Run + Neon + Upstash) but not yet wired up — that's Sprint 13 work.
+This document remains the stand-in the Sprint 7 DoD requires
+("prod-benzeri bir ortamda doğrulanabilir") until Sprint 13 replaces it
+with real deployment instructions.
 
 ## Running the prod profile locally
 
@@ -65,12 +67,12 @@ This profile deliberately stops short of being cloud-ready:
 - **No managed Postgres/Redis.** This profile runs both in containers
   with a local volume — a real deployment should point
   `ConnectionStrings__Postgres`/`ConnectionStrings__Redis` at managed
-  instances (Azure Database for PostgreSQL / AWS RDS, Azure Cache for
-  Redis / AWS ElastiCache, or equivalent) instead.
+  instances (Neon / Upstash, per the Sprint 13 decision) instead.
 - **No secrets manager.** `.env.prod` is a plain file; a real deployment
   should use the target cloud's secrets manager instead.
-- **Cloud provider itself is unchosen** — Azure vs. AWS is still an open
-  decision (`DECISIONS.md`). Whichever is picked, the container images
-  built here (`src/AfterApply.Api/Dockerfile`, `web/Dockerfile`) are the
-  deployable artifacts either way — no further image changes should be
-  needed, only the hosting/networking/secrets layer around them.
+- **Cloud provider decided, not yet wired up** — Vercel (`web`) + Google
+  Cloud Run (`api`) + Neon (Postgres) + Upstash (Redis), see
+  `DECISIONS.md` §5. The container images built here
+  (`src/AfterApply.Api/Dockerfile`, `web/Dockerfile`) are the deployable
+  artifacts either way — no further image changes should be needed,
+  only the hosting/networking/secrets layer around them (Sprint 13).
