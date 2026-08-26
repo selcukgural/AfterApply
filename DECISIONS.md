@@ -862,10 +862,23 @@ Sprint 8-13 kapsamına alınmadı.
   Transparency) listeliyor ama somut bir ağırlıklandırma/formül vermiyor
   — sprint başında netleştirilecek.
 
-### Sprint 12 (B2B) — yeni OPEN karar
+### Sprint 12 (B2B) — plandan çıkarıldı (2026-08-26) — DECIDED
 
-- **Employer hesap tipi + şirket sahiplik/doğrulama akışı:** iş modeli
-  kararı gerektiriyor, bu sprint kullanıcı onayı olmadan başlatılmayacak.
+Önceki oturumda bu sprint için detaylı bir teknik plan (yeni
+`EmployerVerificationRequest` entity, manuel admin onayı akışı,
+config-driven admin allowlist, `EmployerDashboard:Enabled` flag'i
+arkasında salt-okunur dashboard) hazırlanmış ve DEVELOPMENT_PLAN.md'ye
+yazılmıştı. Kullanıcı bunu gözden geçirip **tamamen roadmap'ten
+çıkarılmasını** istedi: gerçek bir işveren talebi/sinyali yokken şirket
+hesabı + doğrulama modeli tasarlamak bu noktada gereksiz uzak-gelecek
+tahmini olarak değerlendirildi (spec'in kendisi de bunu "en düşük
+öncelik, sales/go-to-market fonksiyonu" olarak işaretlemişti). Ürün
+önceliği B2C (iş arayan) tarafında kalmaya devam ediyor.
+DEVELOPMENT_PLAN.md'deki Sprint 12 başlığı bu kararla birlikte
+"kaldırıldı" notuyla korunuyor (numaralandırma kayması yaratmamak için
+silinmedi). **Bu, sadece bir erteleme değil** — gerçek bir işveren
+talebi ortaya çıkmadıkça bu fikrin aktif planlamaya geri dönmesi
+beklenmiyor.
 
 ### Sprint 13 (Launch Hazırlığı v2) — hâlâ açık
 

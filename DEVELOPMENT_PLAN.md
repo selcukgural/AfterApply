@@ -296,18 +296,14 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
 
 ---
 
-## Sprint 12 — B2B Employer Dashboard iskeleti (spec Phase 13)
+## Sprint 12 — kaldırıldı (eski: B2B Employer Dashboard iskeleti, spec Phase 13)
 
-> En düşük öncelik. Bu faz gerçek, ödeme yapan işveren müşterisine muhtaç
-> — bu bir mühendislik teslimi değil, sales/go-to-market fonksiyonu.
-> Şirket doğrulama/sahiplik modeli iş modeli kararı gerektirdiği için bu
-> sprint **kullanıcı onayı olmadan başlatılmamalı**.
-
-- Employer hesap tipi + şirket sahiplik/doğrulama akışı — OPEN
-- Şirketlerin kendi Candidate Experience verisini görebileceği salt-okunur
-  dashboard (Sprint 10/11 aggregate'lerini reuse eder)
-- Kapsamı ve zamanlaması Sprint 8-11 tamamlandıktan sonra yeniden
-  değerlendirilecek
+> **Karar (2026-08-26):** Roadmap'ten tamamen çıkarıldı — bkz. DECISIONS.md
+> "Sprint 12 (B2B) — plandan çıkarıldı". Gerekçe: hiçbir gerçek işveren
+> talebi/sinyali yokken şirket hesabı/doğrulama modeli tasarlamak bu
+> aşamada spekülatif bulundu. Ürün önceliği B2C (iş arayan) tarafında
+> kalıyor; bu fikir gerçek bir işveren talebi ortaya çıkarsa yeniden ele
+> alınabilir — o zamana kadar aktif planlamanın bir parçası değil.
 
 ---
 
@@ -319,7 +315,7 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
 - Son privacy/legal review (ToS, KVKK/GDPR self-review — hukuki onay
   gerektirir, bu doküman hukuki tavsiye değildir)
 - Domain/branding finalize
-- Sprint 8-12'nin tüm entegrasyon testleri + uçtan uca manuel smoke test
+- Sprint 8-11'in tüm entegrasyon testleri + uçtan uca manuel smoke test
 
-**DoD:** Prod-benzeri ortamda spec §4.4 MVP kriteri + Sprint 8-12'nin
+**DoD:** Prod-benzeri ortamda spec §4.4 MVP kriteri + Sprint 8-11'in
 DoD'leri uçtan uca doğrulanabilir durumda; yayına hazır.
