@@ -1,11 +1,21 @@
 {
   "manifest_version": 3,
-  "name": "AfterApply — LinkedIn Import",
+  "name": "e-kariyerim — LinkedIn Import",
   "version": "0.1.0",
-  "description": "Track a LinkedIn job application in AfterApply with one click.",
+  "description": "Track a LinkedIn job application in e-kariyerim with one click.",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "AfterApply"
+    "default_title": "e-kariyerim",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "options_page": "options.html",
   "permissions": ["storage", "activeTab", "scripting"],

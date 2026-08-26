@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { buttonClassName } from "@/components/ui/Button";
+import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import type { Theme } from "@/lib/theme/theme";
@@ -23,8 +24,8 @@ export function LandingNavbar({ initialTheme }: { initialTheme: Theme }) {
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-950/80">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          AfterApply
+        <Link href="/">
+          <Logo />
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm text-gray-600 md:flex dark:text-gray-400">

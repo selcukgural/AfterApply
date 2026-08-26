@@ -15,18 +15,24 @@ import { PrivacySection } from "@/components/landing/PrivacySection";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
+  const { locale } = await params;
   const t = await getTranslations("landing.hero");
   return {
     title: t("title"),
     description: t("subtitle"),
+    alternates: {
+      canonical: `/${locale}`,
+      languages: { tr: "/tr", en: "/en" },
+    },
     openGraph: {
       title: t("title"),
       description: t("subtitle"),
       type: "website",
+      url: `/${locale}`,
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: t("title"),
       description: t("subtitle"),
     },

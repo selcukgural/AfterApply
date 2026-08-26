@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "AfterApply",
+    "title": "e-kariyerim",
     "description": "Track your job applications in one place."
   },
   "landing": {
@@ -48,7 +48,7 @@
       "question": "What happened to this one again?"
     },
     "afterApply": {
-      "eyebrow": "Why AfterApply exists",
+      "eyebrow": "Why e-kariyerim exists",
       "title": "The real story starts after you apply.",
       "happyApplied": "Applied",
       "happyScreening": "Screening",
@@ -60,11 +60,11 @@
       "silentApplied": "Applied",
       "silentWaiting": "Waiting",
       "silentQuestion": "What happened?",
-      "note": "Not every application follows the same path — AfterApply makes it visible what stage you're at, and how long you've been waiting."
+      "note": "Not every application follows the same path — e-kariyerim makes it visible what stage you're at, and how long you've been waiting."
     },
     "features": {
       "eyebrow": "What can you do?",
-      "title": "What AfterApply does",
+      "title": "What e-kariyerim does",
       "trackingTitle": "Every application, in one place",
       "trackingBody": "Track company, position, date, source, and status on a single screen.",
       "timelineTitle": "Know how long you've been waiting",
@@ -77,7 +77,7 @@
     "linkedinImport": {
       "eyebrow": "Import",
       "title": "Applied to hundreds of jobs? Don't enter them one by one.",
-      "subtitle": "Upload your LinkedIn application history. AfterApply organizes your applications, cleans up duplicates, and takes you straight to your dashboard.",
+      "subtitle": "Upload your LinkedIn application history. e-kariyerim organizes your applications, cleans up duplicates, and takes you straight to your dashboard.",
       "stepUpload": "Upload LinkedIn Export",
       "stepAnalyzing": "Analyzing",
       "stepDedup": "Removing duplicates",
@@ -400,7 +400,7 @@
     "lastUpdated": "Last updated: 2026",
     "dataCollection": {
       "title": "What data we collect and why",
-      "intro": "AfterApply is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
+      "intro": "e-kariyerim is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
       "item1": "Account information: first name, last name, email address, password (stored hashed).",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
@@ -418,7 +418,7 @@
     },
     "notApplicable": {
       "title": "Not currently applicable",
-      "body": "AfterApply does not yet offer public/company-wide analytics features. As a result, anonymization/minimum-sample-size controls are not currently applicable — this policy will be updated when these features are added."
+      "body": "e-kariyerim does not yet offer public/company-wide analytics features. As a result, anonymization/minimum-sample-size controls are not currently applicable — this policy will be updated when these features are added."
     },
     "contact": {
       "title": "Contact",

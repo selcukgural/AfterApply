@@ -7,5 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/dashboard", "/applications", "/settings"],
     },
+    sitemap: "https://ekariyerim.com/sitemap.xml",
   };
 }

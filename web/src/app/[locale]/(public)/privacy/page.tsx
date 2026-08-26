@@ -46,8 +46,8 @@ export default async function PrivacyPage() {
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("contact.title")}</h2>
           <p>
             {t("contact.before")}{" "}
-            <a href="mailto:privacy@afterapply.app" className="text-blue-600 hover:underline dark:text-blue-400">
-              privacy@afterapply.app
+            <a href="mailto:privacy@ekariyerim.com" className="text-blue-600 hover:underline dark:text-blue-400">
+              privacy@ekariyerim.com
             </a>
             {t("contact.after")}
           </p>

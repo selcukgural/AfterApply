@@ -1545,13 +1545,56 @@ gerçek API çağrısı yapmadan, sabit örnek veriyle doğrudan reuse edildi (s
 landing-page visual, manuel yeniden yaratmaya tercih edilir"). Her mock görselin yanında "Örnek
 veri" / "Sample data" rozeti var (spec §38: mock ile gerçek veri ayrımı net olmalı).
 
-### `sitemap.ts` eklenmedi, `robots.ts` eklendi — OPEN
+### `sitemap.ts` eklendi, domain netleşti — DECIDED (Sprint 14'te OPEN bırakılmıştı)
 
-Spec §30 canonical URL + sitemap istiyor ama `web/` içinde (env dosyaları dahil) yapılandırılmış
-bir production domain yok — `extension/manifest.json`'daki `api.ekariyerim.com` API'nin domaini,
-web app'in kendi public domaini değil ve varsayılmadı. `robots.ts` (domain gerektirmeyen `rules`
-alanıyla) eklendi; `sitemap.ts` ve `generateMetadata`'daki `metadataBase`/canonical, gerçek public
-domain netleşince eklenmeli.
+Public domain **https://ekariyerim.com** olarak teyit edildi (Sprint 15). `web/src/app/sitemap.ts`
+(`/`, `/login`, `/register`, `/privacy` × `tr`/`en`), `[locale]/layout.tsx`'te `metadataBase`, ve
+landing `page.tsx`'te `alternates.canonical`/`languages` eklendi; `robots.ts`'e `sitemap:` alanı
+eklendi.
+
+---
+
+## Sprint 15 kararları ve bulguları (ekariyerim rebrand + logo)
+
+### Rebrand kapsamı: sadece kullanıcıya görünen metinler — DECIDED
+
+Domain `https://ekariyerim.com` netleşince marka adı "AfterApply"dan "e-kariyerim"e çevrildi —
+ama yalnızca UI metinlerinde (web app: navbar/footer/sayfa başlıkları/gizlilik metni/e-posta,
+tarayıcı eklentisi: manifest/popup/options metinleri). `.NET` proje/namespace isimleri
+(`AfterApply.Api` vb.), `.slnx`, GitHub repo adı ve `extension/manifest.json`'daki Cloud Run
+host_permission URL'si kasıtlı olarak değiştirilmedi — bu, `DECISIONS.md` #0'da zaten verilmiş
+"iç kod ismi `AfterApply.*` kalır" kararıyla tutarlı; kullanıcı bu kapsamı onayladı.
+
+### Görünen marka adı "e-kariyerim" (tireli), domain/e-posta "ekariyerim" (tiresiz) — DECIDED
+
+Kullanıcı tireyi tercih etti: Türkçede "e-devlet/e-fatura/e-ticaret" kalıbıyla örtüşüyor, "e-"
+(elektronik/online) ön ekini anında okutuyor. Domain (`ekariyerim.com`) ve e-posta
+(`privacy@ekariyerim.com`) tiresiz kaldı — marka adı ile domain adının farklı olması yaygın bir
+pratik, teknik bir kısıt değil. `web/src/app/[locale]/(public)/privacy/page.tsx`'teki mailto ve
+`extension/manifest.json`'daki `api.ekariyerim.com` host_permission'ı bu yüzden dokunulmadı.
+
+### Logo: AI görsel üretme aracı yok, `design` skill ile vektör mark tasarlandı — DECIDED
+
+Kullanıcı başta "üretilmiş görsel logo (PNG/AI görsel)" istedi; bu ortamda fotoğrafik/illustratif
+görsel üreten bir araç olmadığı belirtildi ve alternatif olarak `design` skill'iyle vektör bir
+logo işareti tasarlanması teklif edildi, kullanıcı onayladı. Üç konsept (konuşma balonu+onay,
+zarf+rozet, belge+rozet) bir Claude Design canvas'ında sunuldu; kullanıcı Konsept A'yı (konuşma
+balonu içinde onay işareti — "başvurdun, gerçek bir cevap aldın") seçti.
+
+### Tek SVG kaynağından PNG üretimi: `rsvg-convert` — DECIDED
+
+Bu makinede `rsvg-convert` (Homebrew) kurulu bulundu, yeni bir proje bağımlılığı eklenmedi.
+`web/src/app/icon.svg` (şeffaf arka plan, tarayıcı favicon'u — Next.js dosya konvansiyonu) ve
+`web/src/app/apple-icon.png` + `extension/icons/icon{16,48,128}.png` (beyaz yuvarlak-köşe arka
+planlı "badge" varyantı, opak arka plan gerektiren bağlamlar için) aynı ikon path'lerinden
+türetildi. Eski jenerik `web/src/app/favicon.ico` silindi — `icon.svg` onun yerini alıyor.
+
+### `Logo` bileşeni `currentColor` ile tema-uyumlu — DECIDED
+
+`web/src/components/layout/Logo.tsx` ikon `stroke="currentColor"` + sarmalayıcı `text-blue-600
+dark:text-blue-400` kullanıyor — ayrı açık/koyu SVG dosyası gerekmiyor. `(public)/layout.tsx`,
+`LandingNavbar.tsx`, `LandingFooter.tsx`, `NavBar.tsx`'teki düz metin "AfterApply" wordmark'ları
+bu bileşenle değiştirildi.
 
 ---
 

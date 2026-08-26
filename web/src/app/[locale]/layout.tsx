@@ -27,6 +27,7 @@ export function generateStaticParams() {
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("metadata");
   return {
+    metadataBase: new URL("https://ekariyerim.com"),
     title: t("title"),
     description: t("description"),
   };

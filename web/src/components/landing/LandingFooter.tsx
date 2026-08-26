@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { Logo } from "@/components/layout/Logo";
 
 export async function LandingFooter() {
   const t = await getTranslations("landing.footer");
@@ -10,7 +11,7 @@ export async function LandingFooter() {
     <footer className="border-t border-gray-200 py-12 dark:border-gray-800">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 sm:flex-row sm:justify-between">
         <div className="flex flex-col gap-2">
-          <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">AfterApply</span>
+          <Logo />
           <p className="text-sm text-gray-500 dark:text-gray-400">{t("tagline")}</p>
         </div>
 
@@ -38,7 +39,7 @@ export async function LandingFooter() {
       </div>
 
       <p className="mx-auto mt-8 max-w-6xl px-4 text-xs text-gray-400 dark:text-gray-600">
-        © {year} AfterApply. {t("rights")}
+        © {year} e-kariyerim. {t("rights")}
       </p>
     </footer>
   );

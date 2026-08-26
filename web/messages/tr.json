@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "AfterApply",
+    "title": "e-kariyerim",
     "description": "İş başvurularını tek yerde takip et."
   },
   "landing": {
@@ -48,7 +48,7 @@
       "question": "Bu başvuru ne olmuştu?"
     },
     "afterApply": {
-      "eyebrow": "AfterApply neden var",
+      "eyebrow": "e-kariyerim neden var",
       "title": "Asıl hikâye başvurduktan sonra başlar.",
       "happyApplied": "Başvuruldu",
       "happyScreening": "Ön Değerlendirme",
@@ -60,11 +60,11 @@
       "silentApplied": "Başvuruldu",
       "silentWaiting": "Bekleniyor",
       "silentQuestion": "Ne oldu?",
-      "note": "Her başvuru aynı süreci izlemez — AfterApply, hangi aşamada olduğunu ve ne kadar süredir beklediğini görünür kılar."
+      "note": "Her başvuru aynı süreci izlemez — e-kariyerim, hangi aşamada olduğunu ve ne kadar süredir beklediğini görünür kılar."
     },
     "features": {
       "eyebrow": "Neler yapabilirsin?",
-      "title": "AfterApply ne yapar?",
+      "title": "e-kariyerim ne yapar?",
       "trackingTitle": "Tüm başvuruların tek yerde",
       "trackingBody": "Şirket, pozisyon, tarih, kaynak ve başvuru durumunu tek ekranda takip et.",
       "timelineTitle": "Ne kadar beklediğini bil",
@@ -77,7 +77,7 @@
     "linkedinImport": {
       "eyebrow": "İçe aktarma",
       "title": "Yüzlerce başvuru mu yaptın? Tek tek girme.",
-      "subtitle": "LinkedIn başvuru geçmişini yükle. AfterApply başvurularını düzenlesin, tekrarları temizlesin ve seni doğrudan panele taşısın.",
+      "subtitle": "LinkedIn başvuru geçmişini yükle. e-kariyerim başvurularını düzenlesin, tekrarları temizlesin ve seni doğrudan panele taşısın.",
       "stepUpload": "LinkedIn Export'u Yükle",
       "stepAnalyzing": "Analiz ediliyor",
       "stepDedup": "Tekrarlar temizleniyor",
@@ -400,7 +400,7 @@
     "lastUpdated": "Son güncelleme: 2026",
     "dataCollection": {
       "title": "Hangi veriyi topluyoruz ve neden",
-      "intro": "AfterApply, iş başvurularınızı takip etmenize yardımcı olan kişisel bir araçtır. Hizmeti sağlayabilmek için şu verileri işleriz:",
+      "intro": "e-kariyerim, iş başvurularınızı takip etmenize yardımcı olan kişisel bir araçtır. Hizmeti sağlayabilmek için şu verileri işleriz:",
       "item1": "Hesap bilgileri: ad, soyad, e-posta adresi, şifre (hash'lenmiş olarak saklanır).",
       "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar.",
       "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
@@ -418,7 +418,7 @@
     },
     "notApplicable": {
       "title": "Şu an geçerli olmayanlar",
-      "body": "AfterApply henüz herkese açık/şirket bazlı analitik özellikleri sunmamaktadır. Bu nedenle anonimleştirme/minimum örneklem kontrolleri şu an için uygulanabilir değildir — bu özellikler eklendiğinde bu politika güncellenecektir."
+      "body": "e-kariyerim henüz herkese açık/şirket bazlı analitik özellikleri sunmamaktadır. Bu nedenle anonimleştirme/minimum örneklem kontrolleri şu an için uygulanabilir değildir — bu özellikler eklendiğinde bu politika güncellenecektir."
     },
     "contact": {
       "title": "İletişim",

@@ -172,7 +172,7 @@ async function main() {
   const jobUrl = `https://www.linkedin.com/jobs/view/${jobId}/`;
 
   if (!settings.token) {
-    renderMessage("Set up your AfterApply access token first.", "Open Settings", () => chrome.runtime.openOptionsPage());
+    renderMessage("Set up your e-kariyerim access token first.", "Open Settings", () => chrome.runtime.openOptionsPage());
     return;
   }
 
@@ -251,11 +251,11 @@ async function main() {
       const result = await response.json();
       statusEl.textContent = result.wasDuplicate
         ? "Already tracked — opened your existing application."
-        : "Added to AfterApply.";
+        : "Added to e-kariyerim.";
       statusEl.className = "status success";
       statusEl.hidden = false;
     } catch {
-      statusEl.textContent = "Could not reach AfterApply. Check your Settings (API base URL/token).";
+      statusEl.textContent = "Could not reach e-kariyerim. Check your Settings (API base URL/token).";
       statusEl.className = "status error";
       statusEl.hidden = false;
       submitButton.disabled = false;

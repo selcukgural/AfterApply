@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
+import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import type { Theme } from "@/lib/theme/theme";
@@ -22,8 +23,8 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
     <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            AfterApply
+          <Link href="/dashboard">
+            <Logo />
           </Link>
           <nav className="flex gap-4 text-sm text-gray-600 dark:text-gray-400">
             <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-gray-100">
