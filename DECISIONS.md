@@ -1307,7 +1307,31 @@ ilanlar" linkleriyle karışmasın diye). Konum (location) alanı için böyle b
 noktası yok — başlığın `<p>`'sinden DOM-sibling-yürüyüşüyle en az güvenilir şekilde tahmin ediliyor;
 bu üç alanın en az kritik olanı, boş kalırsa kullanıcı iki saniyede elle yazar.
 
-### Sprint 8/9 köprüsü: AI Eşleştirme paneli, extension'ın yakaladığı `Job.Description`'ı önceden dolduruyor — DECIDED
+### Sprint 13 gerçek deploy'unda bulunan iki extension bug'ı — DÜZELTİLDİ (2026-08-26)
+
+Extension, `ekariyerim` prod ortamına karşı ilk kez gerçek bir kullanıcı tarafından test edildi;
+iki gerçek bug bulundu:
+
+- **`manifest.json`'ın `host_permissions`'ı prod API origin'ini içermiyordu.** Sprint 9'un kendi
+  notu bunu zaten öngörmüştü ("gerçek bir prod API origin'i devreye girdiğinde bu listeye ayrıca
+  eklenmesi gerekecek") ama unutulmuştu — `["https://www.linkedin.com/*", "http://localhost/*"]`
+  listesinde `https://afterapply-api-*.run.app` yoktu, Manifest V3 bu yüzden extension'ın fetch
+  çağrısını sessizce engelliyordu (hata sayfanın değil, extension'ın kendi console'unda görünüyor
+  — kullanıcı ilk başta hatayı hiç göremedi). Düzeltme: hem güncel Cloud Run URL'i hem gelecekteki
+  `https://api.ekariyerim.com/*` listeye eklendi (domain SSL'i hazır olunca extension'ı tekrar
+  güncellemeye gerek kalmasın diye).
+- **Location scraping, sabit hop-sayılı DOM-yürüyüşü yüzünden bu spesifik sayfada hep boş
+  dönüyordu — DÜZELTİLDİ.** Gerçek bir LinkedIn arama sonucu sayfasında (claude-in-chrome ile
+  canlı DOM incelenerek) doğrulandı: aynı `/jobs/search-results/` sayfasında bile, promosyonlu bir
+  ilan (`Turknet`) ile promosyonsuz bir ilan (`Figensoft`) arasında konum satırının başlığın
+  `<p>`'sine göre derinliği **farklıydı** (2 seviye vs. 3 seviye yukarı) — Sprint 9'un sabit
+  "`.parentElement.parentElement.nextElementSibling.nextElementSibling`" yürüyüşü ikisinde de
+  yanlış elemente düşüyordu (boş bir div ya da "Apply/Saved" butonları). Yeni yaklaşım: başlığın
+  `<p>`'sinden yukarı doğru (en fazla 6 seviye) her ata seviyesinde, o atanın **doğrudan alt
+  elemanları** arasında başlık paragrafı olmayan ve `·` (LinkedIn'in metadata ayracı) içeren bir
+  `<p>` arıyor — bulunca `·`'den önceki kısmı (konum) alıyor. Hop-sayısından bağımsız olduğu için
+  her iki ilan tipinde de doğrulandı. Konum hâlâ en az kritik alan (boş kalırsa elle girilir),
+  bu bir hard-fail değil.
 
 Kullanıcı sordu: extension zaten iş ilanı açıklamasını scrape edip `Job.Description` olarak
 saklıyorsa (yukarıki href-tabanlı scraper), AI Eşleştirme (Sprint 8) neden hâlâ elle yapıştırma

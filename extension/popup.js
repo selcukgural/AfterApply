@@ -64,16 +64,27 @@ async function scrapeLinkedInJob(jobId) {
   const companyLink = document.querySelector('a[href*="/company/"]');
   const company = textOf(companyLink);
 
-  // The location text is the first <span> in the metadata line that immediately follows the
-  // title's paragraph (e.g. "Lisboa, Lisbon, Portugal · Reposted 1 week ago · ..."), two levels
-  // up from the title link's own wrapping <p> — structure captured from a live page in
-  // DECISIONS.md Sprint 9. The least load-bearing of the three fields: if this traversal doesn't
-  // match on some other page layout, the user just types the location in by hand.
+  // The location is the first segment (before the "·" separator) of a metadata line like
+  // "Istanbul, Türkiye · Reposted 5 days ago · Over 100 people clicked apply", rendered as a
+  // <p> sibling of the title's own wrapping element. Found via live-page inspection (Sprint 13,
+  // DECISIONS.md): a *fixed* hop count from the title link doesn't work because LinkedIn nests
+  // this differently depending on job card variant (promoted vs. not) — 2 levels up from the
+  // title's <p> for one, 3 for the other, observed on the same search-results page back to back.
+  // Instead: walk up from the title's <p>, and at each ancestor level look for a direct-child
+  // <p> that isn't the title's own paragraph and contains "·" — level-count-independent, matches
+  // both variants tested. Still the least load-bearing of the three fields: if no page layout
+  // matches, the user just types the location in by hand.
   let location = null;
-  const titleParagraphWrapper = titleLink?.closest("p")?.parentElement?.parentElement;
-  const metaParagraph = titleParagraphWrapper?.nextElementSibling?.nextElementSibling;
-  if (metaParagraph?.tagName === "P") {
-    location = textOf(metaParagraph.querySelector("span"));
+  const titleParagraph = titleLink?.closest("p") ?? null;
+  let ancestor = titleParagraph?.parentElement ?? null;
+  for (let i = 0; i < 6 && ancestor && !location; i++) {
+    const metaParagraph = Array.from(ancestor.children).find(
+      (el) => el.tagName === "P" && el !== titleParagraph && el.textContent.includes("·"),
+    );
+    if (metaParagraph) {
+      location = textOf(metaParagraph)?.split("·")[0]?.trim() || null;
+    }
+    ancestor = ancestor.parentElement;
   }
 
   // LinkedIn doesn't render the full description text into the DOM up front on this layout —
