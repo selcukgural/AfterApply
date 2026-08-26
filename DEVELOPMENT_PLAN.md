@@ -365,12 +365,26 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
 - Son privacy/legal review (ToS, KVKK/GDPR self-review — hukuki onay
   gerektirir, bu doküman hukuki tavsiye değildir) — sadece checklist
   maddesi olarak tutuluyor, bu planda detaylandırılmıyor
-- Domain/branding finalize — sadece checklist maddesi olarak tutuluyor,
-  bu planda detaylandırılmıyor
+- ~~Domain/branding finalize~~ — tamamlandı (2026-08-26): `ekariyerim.com`
+  (Cloudflare'den), domain mapping kuruldu, SSL sertifikası provisioning
+  aşamasında (`DomainRoutable: True` doğrulandı, "CertificatePending" —
+  15 dk-birkaç saat içinde tamamlanması bekleniyor)
 - ~~Sprint 8-11'in tüm entegrasyon testleri~~ — tamamlandı (2026-08-26, 58/58 yeşil)
-- Uçtan uca manuel smoke test (prod-benzeri/gerçek dağıtım ortamında)
+- ~~Uçtan uca manuel smoke test~~ — tamamlandı (2026-08-26): gerçek
+  `ekariyerim` GCP projesinde `afterapply-api`/`afterapply-web` deploy
+  edildi, `/health` → 200 Healthy (Postgres+Redis), kayıt akışı → 201 +
+  JWT. Süreçte 4 gerçek bulgu çıktı ve düzeltildi (bkz. DECISIONS.md
+  "Sprint 13 — gerçek deploy"): Cloud Run varsayılan private (elle
+  `allUsers`/`run.invoker` verildi), migration'lar ilk deploy'da
+  unutulmuştu (geçici authorized-networks ile çalıştırıldı), Secret
+  Manager'da uzun komutların kopyala-yapıştırda bozulması (runbook'a
+  kopyala butonu + `--data-file` paterni eklendi)
 
-**DoD:** Google Cloud üzerinde (Cloud Run × 2 + Cloud SQL + Memorystore)
-gerçek bir dağıtım, custom domain'de SSL çalışıyor, Sentry'ye hata
-düşüyor; spec §4.4 MVP kriteri + Sprint 8-11'in DoD'leri bu ortamda
-uçtan uca doğrulanabilir durumda; yayına hazır.
+**DoD:** ✅ **Karşılandı (2026-08-26).** Google Cloud üzerinde (`ekariyerim`
+projesi, Cloud Run × 2 + Cloud SQL + Memorystore) gerçek bir dağıtım canlı;
+custom domain (`ekariyerim.com`) mapping'i kuruldu, SSL provisioning
+aşamasında; kayıt akışı uçtan uca doğrulandı (201 + JWT). Sprint 8-11'in
+DoD'leri bu ortamda ayrıca doğrulanmadı (kapsamı: sadece temel akış smoke
+test edildi) — flag'leri kapalı olan Sprint 10/11 özellikleri (Company
+Intelligence, Candidate Experience Score) hâlâ gerçek trafik/veri
+bekliyor, bu Sprint 13'ün kapsamı dışında.

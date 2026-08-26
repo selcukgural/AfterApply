@@ -1054,6 +1054,67 @@ hazırlandı — hiçbir gerçek bulut hesabı bu oturumda oluşturulmadı.
   Manager'a konuluyor; gerçek değerler sadece o entegrasyon kurulunca
   girilecek.
 
+### Sprint 13 — gerçek deploy (2026-08-26): `ekariyerim` projesi, bulgular ve düzeltmeler
+
+Yukarıdaki kod/CI hazırlığı, kullanıcıyla birlikte gerçek bir GCP projesinde
+(`ekariyerim`, region `europe-west1`) uçtan uca uygulandı. Backend
+(`afterapply-api`), frontend (`afterapply-web`), Cloud SQL, Memorystore hepsi
+ayağa kalktı; `https://ekariyerim.com` (Cloudflare'den alınmış) domain
+mapping'i kuruldu. Bu süreçte planın öngörmediği 4 gerçek sorun bulundu:
+
+1. **Cloud Run varsayılan olarak private — `deploy.yml` bunu hiç
+   ayarlamıyordu — bulgu + DECIDED (elle, CI'a gömülmeden).** İlk deploy'dan
+   sonra `/health`'e istek atınca 403 (Google'ın "Forbidden" sayfası)
+   döndü — imaj/secret/kod sorunu değil, servisin `allUsers` için
+   `roles/run.invoker` izni hiç yoktu. `google-github-actions/deploy-cloudrun`
+   dokümantasyonu bunu doğruluyor: yeni servisler varsayılan private, ve
+   Google'ın kendi önerisi CI/CD'nin bu ayarı yönetmemesi ("a Cloud Run
+   product recommendation is that CI/CD systems not set or change settings
+   for allowing unauthenticated invocations") — bu yüzden `deploy.yml`'e
+   `--allow-unauthenticated` eklenmedi, bunun yerine bir kerelik elle:
+   `gcloud run services add-iam-policy-binding <servis> --member=allUsers
+   --role=roles/run.invoker` (hem `afterapply-api` hem `afterapply-web`
+   için). DEPLOYMENT.md'ye "6. Servisleri herkese açın (tek seferlik)"
+   adımı olarak eklendi.
+2. **Migration'lar planın bir parçasıydı ama unutulması kolay bir
+   adımdı — bulgu.** İlk deploy sonrası kayıt olma denemesi 500 döndü
+   (Postgres şemasız — `AspNetUsers` tablosu yok). DEPLOYMENT.md'nin
+   "Migrations" adımı zaten vardı ama akışta "deploy bitti, artık
+   çalışıyor" hissi migration adımının atlanmasına yol açtı — DoD'ye
+   "kayıt ol → 201 dönüyor" gibi somut bir uçtan-uca kontrol eklenmesi
+   gerektiği görüldü.
+3. **Migration bağlantı yöntemi: Cloud SQL Auth Proxy değil, geçici
+   authorized-networks — DECIDED (gerçekte kullanılan, dokümantasyon
+   güncellendi).** DEPLOYMENT.md'nin önerdiği Cloud SQL Auth Proxy yöntemi
+   yerel `gcloud` kurulumu/ADC gerektiriyordu (bu makinede yoktu). Bunun
+   yerine: kullanıcının güncel public IP'si `gcloud sql instances patch
+   --authorized-networks=<ip>/32` ile geçici izinli hale getirildi, Cloud
+   SQL'in kendi public IP'sine `SSL Mode=Require` ile doğrudan bağlanıldı,
+   migration sonrası `--clear-authorized-networks` ile erişim kapatıldı.
+   Daha az yeni araç kurulumu gerektirdiği için DEPLOYMENT.md'nin birincil
+   yöntemi bu oldu, proxy alternatif olarak kaldı.
+4. **Secret Manager'da uzun tek-satırlık `printf | gcloud secrets create`
+   komutları, kopyala-yapıştır sırasında bozulabiliyor — bulgu +
+   DECIDED.** `afterapply-sentry-dsn` secret'ı "kap" olarak oluştu ama 0
+   version'la kaldı (`gcloud secrets versions list` ile doğrulandı) —
+   kullanıcının kopyalama akışı (chat'ten seçip harici bir editöre, oradan
+   Cloud Shell'e) uzun satırları görünmez şekilde bozuyordu. İki kalıcı
+   düzeltme: (a) runbook artifact'ine her kod bloğu için gerçek bir
+   "Kopyala" butonu eklendi (`navigator.clipboard.writeText`, tarayıcının
+   görsel satır sarmalamasından etkilenmeyen tam metni kopyalıyor,
+   `document.execCommand` fallback'i var), (b) Secret Manager adımındaki
+   komutlar `printf | gcloud secrets create` yerine `cat <<EOF > /tmp/dosya`
+   + `--data-file=/tmp/dosya` paternine geçirildi — hem daha kısa satırlar
+   hem `cat /tmp/dosya` ile içeriği yazmadan önce/sonra doğrulama imkanı.
+   Bozulan tek secret, Secret Manager Console'un kendi "+ NEW VERSION" form
+   alanından (hiç terminal kullanmadan) düzeltildi — bu, personalize
+   edilmesi gereken tekil değerler için artık önerilen yol.
+
+**Sonuç (2026-08-26):** `https://afterapply-api-*.run.app/health` → 200
+Healthy (Postgres+Redis), kayıt akışı → 201 + JWT, `https://ekariyerim.com`
+domain mapping'i kuruldu (SSL provisioning bekleniyor, `DomainRoutable: True`
+doğrulandı). Sprint 13 DoD'si fiilen karşılandı.
+
 ---
 
 ## Sprint 8 kararları ve bulguları (AI Job Matching)

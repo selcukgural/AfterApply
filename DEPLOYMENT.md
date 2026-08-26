@@ -79,16 +79,15 @@ This profile deliberately stops short of being cloud-ready:
 
 ## Sprint 13: real cloud deployment (all on Google Cloud)
 
-> **Caveat:** the `gcloud`/IAM commands below were not run against a real
-> GCP project in this session (no `gcloud` CLI installed locally) — they
-> follow Google's currently-documented patterns for Workload Identity
-> Federation, Cloud Run ↔ Cloud SQL, Cloud Run ↔ Memorystore, and Secret
-> Manager (re-verified against Google's docs when this section was
-> rewritten for the all-GCP architecture), but treat them as a
-> well-founded starting point, not a verified transcript. Cross-check
-> against `gcloud <command> --help` if something errors — a couple of
-> specific spots are flagged below where the exact flag value wasn't
-> independently confirmed.
+> **Verified (2026-08-26):** this section was run end-to-end against a
+> real project (`ekariyerim`, `europe-west1`) — API + web live on Cloud
+> Run, Cloud SQL + Memorystore connected, custom domain mapped, a real
+> user registration round-tripped (201 + JWT). Steps 5-7 below (make
+> public, migrate, verify) were added *because* the first attempt skipped
+> them and produced a 403 and then a 500 — see DECISIONS.md "Sprint 13 —
+> gerçek deploy" for the full list of what broke and why. `db-f1-micro` +
+> `--edition=ENTERPRISE` and `redis --size=1` (step 2) were both accepted
+> as-is, no fallback needed.
 
 > **Cost note (see `DECISIONS.md` §5):** Cloud Run stays free forever.
 > Cloud SQL and Memorystore do **not** — they're free only for the
@@ -230,6 +229,10 @@ In GitHub → repo Settings → Secrets and variables → Actions, add:
 - `GCP_SERVICE_ACCOUNT` — `afterapply-deployer@${PROJECT_ID}.iam.gserviceaccount.com`
 - `SENTRY_DSN_WEB` — the frontend Sentry DSN (not sensitive, it's meant
   to ship in the browser bundle, but stored as a secret for consistency)
+- `GCP_API_URL` — the `afterapply-api` Cloud Run service's URL. Doesn't
+  exist yet at this point (that's exactly why step 4's bootstrap dance
+  below is two runs, not one) — added after the first successful
+  `deploy-backend` run.
 - Optional, only if you want readable stack traces in Sentry:
   `SENTRY_ORG`, `SENTRY_PROJECT_WEB`, `SENTRY_AUTH_TOKEN`
 
@@ -266,23 +269,64 @@ gcloud run services update afterapply-api --region="$REGION" \
 This is only a one-time bootstrap cost — every deploy after this, both
 jobs already have what they need.
 
-Once both services are up, map custom domains for free automatic SSL if
-you have a domain (optional, separate checklist item — DEVELOPMENT_PLAN.md
-Sprint 13):
+### 5. Make the services public
+
+**Do this before testing anything** — new Cloud Run services are private
+by default (require an authenticated caller), and `deploy.yml`
+deliberately does *not* set `--allow-unauthenticated` (Google's own
+recommendation is that CI/CD shouldn't manage this setting — see
+DECISIONS.md "Sprint 13 — gerçek deploy"). Without this step every
+request, including `/health`, returns a Google-generated 403, which is
+easy to misdiagnose as an application bug:
 
 ```bash
-gcloud run domain-mappings create --service=afterapply-api \
-  --domain=api.yourdomain.com --region="$REGION"
-gcloud run domain-mappings create --service=afterapply-web \
-  --domain=yourdomain.com --region="$REGION"
+gcloud run services add-iam-policy-binding afterapply-api --region="$REGION" \
+  --member=allUsers --role=roles/run.invoker
+gcloud run services add-iam-policy-binding afterapply-web --region="$REGION" \
+  --member=allUsers --role=roles/run.invoker
 ```
 
-### 5. Migrations
+### 6. Run migrations — do this before testing registration/login
+
+The database schema does not exist yet at this point (Cloud SQL gives you
+an empty `afterapply` database, no tables) — skipping this step is the
+most common way to get a working-looking deploy that 500s on the first
+real request (found exactly this way during the 2026-08-26 deploy, see
+DECISIONS.md). `Program.cs` never calls `Database.Migrate()` automatically
+(Sprint 7 decision, still true) — this is always a separate, explicit step.
 
 Cloud SQL isn't reachable by Unix socket from a local machine the way
-Cloud Run reaches it. Two options — the **Cloud SQL Auth Proxy** is
-recommended (no instance configuration change, closer to what CI would
-do too):
+Cloud Run reaches it. **Recommended path — temporary authorized network**
+(no new local tooling beyond `gcloud`/`dotnet ef`, which you already have):
+
+```bash
+# Your current public IPv4 (any "what's my IP" method works):
+MY_IP="$(curl -s -4 https://ifconfig.me)"
+gcloud sql instances patch afterapply-db --authorized-networks="${MY_IP}/32"
+SQL_PUBLIC_IP="$(gcloud sql instances describe afterapply-db --format='value(ipAddresses[0].ipAddress)')"
+echo "$SQL_PUBLIC_IP"
+```
+
+Then, **on your own machine, in your own terminal** (not pasted to an AI
+assistant — it contains `DB_PASSWORD`):
+
+```bash
+dotnet ef database update \
+  --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api \
+  --connection "Host=<SQL_PUBLIC_IP>;Port=5432;Database=afterapply;Username=afterapply;Password=<DB_PASSWORD from step 2>;SSL Mode=Require;Trust Server Certificate=true"
+```
+
+Afterward, close the temporary public access again (Cloud Run itself
+never used it — it connects over the private Unix-socket connector from
+step 4's `--add-cloudsql-instances` flag):
+
+```bash
+gcloud sql instances patch afterapply-db --clear-authorized-networks
+```
+
+**Alternative — Cloud SQL Auth Proxy**, if you'd rather not open any
+public access even temporarily (requires installing the proxy binary and
+having `gcloud` authenticated locally):
 
 ```bash
 # Install once: https://cloud.google.com/sql/docs/postgres/sql-proxy#install
@@ -292,12 +336,60 @@ dotnet ef database update \
   --connection "Host=127.0.0.1;Port=5432;Database=afterapply;Username=afterapply;Password=<DB_PASSWORD from step 2>"
 ```
 
-(Alternative, no proxy: temporarily
-`gcloud sql instances patch afterapply-db --authorized-networks=<your-public-ip>/32`,
-connect directly, then remove the authorized network again — more moving
-parts, not recommended as the default path.)
+### 7. Verify it actually works
 
-### 6. Switching CI from manual to automatic
+Don't stop at "the deploy went green" — confirm a real request round-trips
+through the app to Postgres and back:
+
+```bash
+curl -s https://<afterapply-api-URL>/health
+# expect: "Healthy"
+
+curl -s -X POST https://<afterapply-api-URL>/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"smoke-test@example.com","password":"Test1234!","firstName":"Smoke","lastName":"Test","consentAccepted":true}' \
+  -w "\nHTTP %{http_code}\n"
+# expect: HTTP 201 with an accessToken in the body
+```
+
+### 8. Custom domain (optional)
+
+Map custom domains for free automatic SSL if you have one (checklist item,
+DEVELOPMENT_PLAN.md Sprint 13). Note the command group is `beta`:
+
+```bash
+# Verify domain ownership first (skip only if the domain was bought
+# through Google Domains) — opens a Search Console verification flow:
+gcloud domains verify yourdomain.com
+
+gcloud beta run domain-mappings create --service afterapply-web \
+  --domain yourdomain.com --region="$REGION"
+gcloud beta run domain-mappings create --service afterapply-api \
+  --domain api.yourdomain.com --region="$REGION"
+
+# Each command prints the DNS records (A/AAAA for the apex domain,
+# CNAME for the subdomain) to add at your registrar/DNS provider.
+gcloud beta run domain-mappings describe --domain yourdomain.com \
+  --region="$REGION" --format='value(status.conditions)'
+```
+
+**If your DNS is on Cloudflare** (or any other proxying DNS/CDN): add
+the records with the proxy **off** ("DNS only" / grey cloud in
+Cloudflare's UI, not the default orange "Proxied"). A proxied record
+breaks Google's certificate issuance — this isn't a Cloud Run
+peculiarity, it's inherent to layering one TLS-terminating proxy in
+front of another. Certificate provisioning then takes anywhere from
+~15 minutes to a few hours (`status.conditions` above shows
+`CertificatePending` until it's ready, and `DomainRoutable: True` once
+DNS itself resolves correctly, which is a useful signal that the DNS
+side is right even before the certificate is issued).
+
+Once the domain is live, update `NEXT_PUBLIC_API_BASE_URL`
+(`GCP_API_URL` secret) and `Cors__AllowedOrigins__0`
+(`afterapply-web-origin` secret) from the raw `*.run.app` URLs to the
+custom domain, then redeploy both services.
+
+### 9. Switching CI from manual to automatic
 
 Once the above is verified working end-to-end once, uncomment the
 `push: branches: [main]` trigger in `deploy.yml` (currently commented
