@@ -95,17 +95,57 @@ davranışı gerçek trafik/launch anında yeniden değerlendirilmesi gereken bi
 sınır — bu, "gerçek launch yaklaştığında paid'e geçilebilir" şeklinde bilinçli
 bırakıldı, MVP öncesi paid altyapıya yatırım yapmamak tercih edildi.
 
-### Redis — DECIDED (2026-08-26)
+### Güncelleme (2026-08-26): Postgres + Redis + web de Google Cloud'a taşındı — DECIDED
+
+Kullanıcı Google Cloud'da 90 günlük/$300 kredili bir ücretsiz deneme hesabı
+açtı ve tüm parçaların (Postgres, Redis, API, web) tek sağlayıcıda
+(Google Cloud) çalışmasını istedi — dört ayrı sağlayıcıya (Neon/Upstash/
+Vercel/Cloud Run) bölünmüş yukarıdaki plan yerine:
+
+- **Web (Next.js):** Vercel yerine **ikinci bir Cloud Run servisi**
+  (`web/Dockerfile`, bu sprint içinde zaten build-arg'lara göre
+  düzeltilmişti — değişiklik gerekmiyor).
+- **Postgres:** Neon yerine **Cloud SQL for PostgreSQL**. Cloud Run'ın
+  entegre Cloud SQL bağlantısı kullanılıyor (ayrı bir proxy sidecar
+  gerekmiyor) — Unix socket üzerinden `Host=/cloudsql/PROJECT:REGION:
+  INSTANCE` (Npgsql, `SSL Mode=Disable` — bağlantı zaten proxy tarafından
+  şifreleniyor, bu bir güvenlik geriletmesi değil). Runtime servis
+  hesabına `roles/cloudsql.client` gerekiyor.
+- **Redis:** Upstash yerine **Memorystore for Redis** (Basic tier).
+  Memorystore'un public IP'si yok — Google'ın güncel önerisi **Direct
+  VPC Egress** (`--network=default --subnet=default`), eski Serverless
+  VPC Access connector'a göre daha az kurulum gerektiriyor; projenin
+  varsayılan VPC/subnet'i (zaten /20+) Memorystore'un /29+ asgari
+  gereksinimini karşılıyor, ayrı bir VPC kurmaya gerek yok. Peering
+  Basic/Standard tier'da otomatik ("direct peering mode").
+
+**Maliyet trade-off'u — kullanıcıya açıkça belirtildi, sessizce
+yutulmadı:** Cloud Run'ın aksine (kalıcı gerçek ücretsiz katman),
+**Cloud SQL ve Memorystore'un hiçbiri her-zaman-ücretsiz bir katmana
+sahip değil** — ikisi de sadece 90 günlük/$300 deneme kredisiyle ücretsiz.
+Güncel GCP fiyatlandırmasına göre: Cloud SQL'in en küçük kullanılabilir
+instance'ı (`db-f1-micro`, Enterprise edition) ≈ $8-10/ay + depolama,
+yani deneme bitince ~$10-15/ay; Memorystore Basic tier'ın en küçük
+gerçekçi boyutu (1 GiB) ≈ $35-40/ay — üstelik bu, kod tabanında şu an
+health check dışında hiçbir yerde kullanılmayan bir Redis instance'ı
+için. Kullanıcı bu bilgiyle birlikte GCP'de konsolide etme kararını
+onayladı; 90 gün dolmadan önce küçültme/silme ya da Neon/Upstash'e geri
+dönme seçenekleri açık bırakıldı, şimdi karara bağlanmadı.
+
+### Redis — DECIDED (2026-08-26, yukarıdaki güncellemeyle Upstash → Memorystore)
 
 Sprint 13 planlaması sırasında bulgu: kod tabanında Redis şu an hiçbir iş
 mantığı tarafından kullanılmıyor — `RateLimiting.cs`'teki policy'ler
 `RateLimitPartition.GetFixedWindowLimiter` ile in-memory çalışıyor, sadece
 `AddHealthChecks().AddRedis(...)` Redis'e bağlı (`DependencyInjection.cs`).
 Yani spec'in "Redis where justified" notu bugüne kadar hiç tetiklenmemiş.
-Buna rağmen kullanıcı Upstash free tier eklenmesine karar verdi — ileride
-cache/distributed rate-limiting ihtiyacı çıkarsa altyapı hazır olsun diye
-(YAGNI'yi ihlal eden bir seçim değil: Upstash da ücretsiz, aktif bir maliyet
-yaratmıyor).
+Buna rağmen kullanıcı bir Redis servisi eklenmesine karar verdi — ileride
+cache/distributed rate-limiting ihtiyacı çıkarsa altyapı hazır olsun diye.
+**Servis seçimi güncellendi:** ilk kararda Upstash (kalıcı ücretsiz)
+seçilmişti; yukarıdaki "Postgres + Redis + web de Google Cloud'a taşındı"
+güncellemesiyle Memorystore'a geçildi — bu artık ücretsiz değil (~$35-40/ay,
+sadece deneme kredisiyle geçici olarak ücretsiz), YAGNI açısından bilinçli
+kabul edilen bir maliyet, gizlenmiyor.
 
 ### Error tracking / observability — DECIDED (2026-08-26)
 

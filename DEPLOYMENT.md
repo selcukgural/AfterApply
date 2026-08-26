@@ -2,11 +2,11 @@
 
 Sprint 7 scope: a locally-verifiable "prod-like" Docker Compose profile,
 **not** a real cloud deployment. Cloud provider is now decided (see
-`DECISIONS.md`, "5. Cloud provider — DECIDED": Vercel + Google Cloud
-Run + Neon + Upstash) but not yet wired up — that's Sprint 13 work.
-This document remains the stand-in the Sprint 7 DoD requires
-("prod-benzeri bir ortamda doğrulanabilir") until Sprint 13 replaces it
-with real deployment instructions.
+`DECISIONS.md`, "5. Cloud provider — DECIDED": everything on Google
+Cloud — Cloud Run × 2, Cloud SQL, Memorystore) but not yet wired up —
+that's Sprint 13 work. This document remains the stand-in the Sprint 7
+DoD requires ("prod-benzeri bir ortamda doğrulanabilir") until Sprint 13
+replaces it with real deployment instructions.
 
 ## Running the prod profile locally
 
@@ -67,60 +67,63 @@ This profile deliberately stops short of being cloud-ready:
 - **No managed Postgres/Redis.** This profile runs both in containers
   with a local volume — a real deployment should point
   `ConnectionStrings__Postgres`/`ConnectionStrings__Redis` at managed
-  instances (Neon / Upstash, per the Sprint 13 decision) instead.
+  instances (Cloud SQL / Memorystore, per the Sprint 13 decision) instead.
 - **No secrets manager.** `.env.prod` is a plain file; a real deployment
   should use the target cloud's secrets manager instead.
-- **Cloud provider decided, not yet wired up** — Vercel (`web`) + Google
-  Cloud Run (`api`) + Neon (Postgres) + Upstash (Redis), see
-  `DECISIONS.md` §5. The container images built here
+- **Cloud provider decided, not yet wired up** — everything on Google
+  Cloud: Cloud Run × 2 (`api` + `web`), Cloud SQL (Postgres), Memorystore
+  (Redis), see `DECISIONS.md` §5. The container images built here
   (`src/AfterApply.Api/Dockerfile`, `web/Dockerfile`) are the deployable
   artifacts either way — no further image changes should be needed,
   only the hosting/networking/secrets layer around them (Sprint 13).
 
-## Sprint 13: real cloud deployment (Vercel + Cloud Run + Neon + Upstash)
+## Sprint 13: real cloud deployment (all on Google Cloud)
 
 > **Caveat:** the `gcloud`/IAM commands below were not run against a real
-> GCP project in this session (no account exists yet, no `gcloud` CLI
-> installed locally) — they follow Google's documented patterns for
-> Workload Identity Federation + Cloud Run + Secret Manager, but treat
-> them as a well-founded starting point, not a verified transcript.
-> Cross-check against `gcloud <command> --help` if something errors.
+> GCP project in this session (no `gcloud` CLI installed locally) — they
+> follow Google's currently-documented patterns for Workload Identity
+> Federation, Cloud Run ↔ Cloud SQL, Cloud Run ↔ Memorystore, and Secret
+> Manager (re-verified against Google's docs when this section was
+> rewritten for the all-GCP architecture), but treat them as a
+> well-founded starting point, not a verified transcript. Cross-check
+> against `gcloud <command> --help` if something errors — a couple of
+> specific spots are flagged below where the exact flag value wasn't
+> independently confirmed.
 
-### 1. Create the free-tier accounts
+> **Cost note (see `DECISIONS.md` §5):** Cloud Run stays free forever.
+> Cloud SQL and Memorystore do **not** — they're free only for the
+> 90-day/$300 GCP trial. Budget roughly $10-15/mo (Cloud SQL) + $35-40/mo
+> (Memorystore) once that trial ends, unless you downsize/delete before
+> then.
 
-- **Neon** (neon.tech) — new project, note the pooled connection string
-  (`postgresql://user:pass@host/db?sslmode=require`). This becomes
-  `ConnectionStrings__Postgres` — EF Core/Npgsql accept Neon's
-  connection string format directly (add `Ssl Mode=Require;Trust Server
-  Certificate=true` if Npgsql needs it explicit).
-- **Upstash** (upstash.com) — new Redis database, note the Redis
-  connection string (`rediss://default:pass@host:port`, TLS). This
-  becomes `ConnectionStrings__Redis`.
-- **Google Cloud** (console.cloud.google.com) — new project, note the
-  **Project ID** and **Project Number**. Enable billing (Cloud Run's
-  free tier still requires a billing account attached, even though
-  usage within the free quota isn't charged).
-- **Vercel** (vercel.com) — sign up, connect your GitHub account (no
-  project yet, done in step 4).
-- **Sentry** (sentry.io) — new organization, two projects: one .NET
-  (backend), one Next.js (frontend). Note each DSN, plus the org slug
-  and an auth token (Settings → Auth Tokens, `project:releases` scope)
-  if you want source-map upload from CI/Vercel.
+### 1. Accounts
+
+Just **Google Cloud** (console.cloud.google.com) and **Sentry**
+(sentry.io, unchanged from before — error tracking wasn't folded into
+GCP). No Neon, Upstash, or Vercel accounts needed anymore.
+
+- **Google Cloud**: new project, note the **Project ID** and **Project
+  Number**. Enable billing (required even for trial-credit usage).
+- **Sentry**: new organization, two projects — one .NET (backend), one
+  Next.js (frontend). Note each DSN, plus the org slug and (optionally,
+  for readable stack traces) an auth token (Settings → Auth Tokens,
+  `project:releases` scope).
 
 ### 2. One-time GCP setup
 
 ```bash
 PROJECT_ID="<your-project-id>"
 PROJECT_NUMBER="<your-project-number>"
-REGION="us-central1"          # pick a Cloud Run free-tier-eligible region
+REGION="us-central1"          # pick one region, used for every resource below
 GH_OWNER="<your-github-username-or-org>"
 GH_REPO="AfterApply"
 
 gcloud config set project "$PROJECT_ID"
 gcloud services enable run.googleapis.com artifactregistry.googleapis.com \
-  iamcredentials.googleapis.com secretmanager.googleapis.com
+  iamcredentials.googleapis.com secretmanager.googleapis.com \
+  sqladmin.googleapis.com redis.googleapis.com
 
-# Artifact Registry — where built API images are pushed
+# Artifact Registry — where built API/web images are pushed
 gcloud artifacts repositories create afterapply \
   --repository-format=docker --location="$REGION"
 
@@ -150,25 +153,59 @@ gcloud iam service-accounts add-iam-policy-binding \
   "afterapply-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/attribute.repository/${GH_OWNER}/${GH_REPO}"
+
+# --- Cloud SQL for PostgreSQL ---
+# db-f1-micro is the cheapest shared-core tier; if gcloud rejects
+# --edition=ENTERPRISE for it, try db-g1-small instead (unverified which
+# is currently offered — check `gcloud sql tiers list`).
+gcloud sql instances create afterapply-db \
+  --database-version=POSTGRES_16 --tier=db-f1-micro --region="$REGION" \
+  --storage-size=10 --storage-auto-increase --edition=ENTERPRISE
+gcloud sql databases create afterapply --instance=afterapply-db
+DB_PASSWORD="$(openssl rand -base64 24)"
+gcloud sql users create afterapply --instance=afterapply-db --password="$DB_PASSWORD"
+echo "DB_PASSWORD=$DB_PASSWORD"   # you'll need this once, for the secret below — don't lose it
+
+# --- Memorystore for Redis ---
+# --size is in GiB; 1 is the intended minimum but the exact floor wasn't
+# independently confirmed (Google's own quickstart example uses 2) — if
+# gcloud rejects 1, use 2. --network=default uses the project's existing
+# default VPC (already large enough) — no custom VPC was created.
+gcloud redis instances create afterapply-redis \
+  --size=1 --region="$REGION" --tier=basic --network=default
+
+# The runtime service account (the one Cloud Run services actually run
+# as, not the deployer above) needs to read Postgres over the Cloud SQL
+# connector:
+RUNTIME_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${RUNTIME_SA}" --role="roles/cloudsql.client"
 ```
 
-### 3. Secret Manager — one secret per env var the API needs
+### 3. Secret Manager
 
 ```bash
-printf '%s' "Host=<neon-host>;Port=5432;Database=<db>;Username=<user>;Password=<pass>;Ssl Mode=Require;Trust Server Certificate=true" \
+# Cloud SQL — Unix socket path, not a host:port. Npgsql/PostgreSQL
+# appends the .s.PGSQL.5432 suffix itself; SSL Mode=Disable is correct
+# here (not a downgrade) — the socket connection is already encrypted by
+# Cloud Run's built-in Cloud SQL connector.
+printf '%s' "Host=/cloudsql/${PROJECT_ID}:${REGION}:afterapply-db;Database=afterapply;Username=afterapply;Password=${DB_PASSWORD};SSL Mode=Disable" \
   | gcloud secrets create afterapply-postgres-connection --data-file=-
-printf '%s' "<upstash-redis-connection-string>" | gcloud secrets create afterapply-redis-connection --data-file=-
+
+# Memorystore — private IP, no TLS needed (already inside the private VPC).
+REDIS_IP="$(gcloud redis instances describe afterapply-redis --region="$REGION" --format='value(host)')"
+printf '%s' "${REDIS_IP}:6379" | gcloud secrets create afterapply-redis-connection --data-file=-
+
 openssl rand -base64 48 | gcloud secrets create afterapply-jwt-signing-key --data-file=-
 printf '%s' "<backend-sentry-dsn>" | gcloud secrets create afterapply-sentry-dsn --data-file=-
-printf '%s' "<openai-api-key>" | gcloud secrets create afterapply-openai-api-key --data-file=-
+printf '%s' "<openai-api-key-veya-REPLACE_WITH_OPENAI_API_KEY>" | gcloud secrets create afterapply-openai-api-key --data-file=-
 printf '%s' "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID" | gcloud secrets create afterapply-google-oauth-client-id --data-file=-
 printf '%s' "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET" | gcloud secrets create afterapply-google-oauth-client-secret --data-file=-
-printf '%s' "https://<cloud-run-url>/api/email-integrations/gmail/callback" | gcloud secrets create afterapply-google-oauth-redirect-uri --data-file=-
-printf '%s' "https://<vercel-domain>" | gcloud secrets create afterapply-web-origin --data-file=-
+printf '%s' "https://REPLACE-ONCE-DEPLOYED/api/email-integrations/gmail/callback" | gcloud secrets create afterapply-google-oauth-redirect-uri --data-file=-
+# Placeholder — the real web Cloud Run URL isn't known until step 4's
+# deploy-web run; step 4 shows how to update this in place afterward.
+printf '%s' "https://REPLACE-ONCE-DEPLOYED" | gcloud secrets create afterapply-web-origin --data-file=-
 
-# Cloud Run's runtime service account (the default compute SA, unless you
-# assign a custom one) needs read access to each secret:
-RUNTIME_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 for s in afterapply-postgres-connection afterapply-redis-connection \
          afterapply-jwt-signing-key afterapply-sentry-dsn afterapply-openai-api-key \
          afterapply-google-oauth-client-id afterapply-google-oauth-client-secret \
@@ -191,45 +228,77 @@ In GitHub → repo Settings → Secrets and variables → Actions, add:
 - `GCP_WORKLOAD_IDENTITY_PROVIDER` — full resource name:
   `projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/providers/github-provider`
 - `GCP_SERVICE_ACCOUNT` — `afterapply-deployer@${PROJECT_ID}.iam.gserviceaccount.com`
+- `SENTRY_DSN_WEB` — the frontend Sentry DSN (not sensitive, it's meant
+  to ship in the browser bundle, but stored as a secret for consistency)
+- Optional, only if you want readable stack traces in Sentry:
+  `SENTRY_ORG`, `SENTRY_PROJECT_WEB`, `SENTRY_AUTH_TOKEN`
 
-Then run the deploy workflow once manually (`.github/workflows/deploy-backend.yml`
-is `workflow_dispatch`-only on purpose, see the file's own comment):
+`.github/workflows/deploy.yml` has two independent jobs,
+`deploy-backend` and `deploy-web` (both `workflow_dispatch`-only on
+purpose — see the file's own comment). Run them **in this order**, since
+`deploy-web`'s build needs `deploy-backend`'s URL baked in, and closing
+the CORS loop needs `deploy-web`'s URL in turn:
+
+GitHub Actions doesn't support running a single job out of a
+`workflow_dispatch`-triggered workflow — running `deploy.yml` as-is
+triggers both jobs together, but `deploy-web` will fail the first time
+(`GCP_API_URL` doesn't exist yet). That's fine, it's a one-time
+bootstrap wrinkle:
 
 ```bash
-gh workflow run deploy-backend.yml
+# 1. First run: comment out the `deploy-web:` job in deploy.yml (or just
+#    let it fail — deploy-backend still succeeds independently), then:
+gh workflow run deploy.yml
+gcloud run services describe afterapply-api --region="$REGION" --format='value(status.url)'
+# → add this URL as the GCP_API_URL GitHub secret; restore deploy-web if you commented it out.
+
+# 2. Second run: now both jobs succeed. Note the web URL:
+gh workflow run deploy.yml
+gcloud run services describe afterapply-web --region="$REGION" --format='value(status.url)'
+
+# 3. Close the CORS loop with the real web URL, then redeploy the API.
+printf '%s' "https://<the-web-url-from-step-2>" \
+  | gcloud secrets versions add afterapply-web-origin --data-file=-
+gcloud run services update afterapply-api --region="$REGION" \
+  --update-secrets=Cors__AllowedOrigins__0=afterapply-web-origin:latest
 ```
 
-Apply migrations against Neon (same command as the local prod profile,
-step 3 above, just pointed at the Neon connection string instead of
-`localhost:5434`). Once the Cloud Run service URL is known, map a custom
-domain for free automatic SSL:
+This is only a one-time bootstrap cost — every deploy after this, both
+jobs already have what they need.
+
+Once both services are up, map custom domains for free automatic SSL if
+you have a domain (optional, separate checklist item — DEVELOPMENT_PLAN.md
+Sprint 13):
 
 ```bash
 gcloud run domain-mappings create --service=afterapply-api \
   --domain=api.yourdomain.com --region="$REGION"
+gcloud run domain-mappings create --service=afterapply-web \
+  --domain=yourdomain.com --region="$REGION"
 ```
 
-### 5. Vercel (frontend)
+### 5. Migrations
 
-1. Vercel dashboard → New Project → import the GitHub repo → set **Root
-   Directory** to `web` (Vercel auto-detects Next.js, no Dockerfile
-   needed — `web/Dockerfile` stays relevant only for the local
-   docker-compose profile above, not the real Vercel deploy).
-2. Project → Settings → Environment Variables:
-   `NEXT_PUBLIC_API_BASE_URL` = the Cloud Run service URL (or
-   `https://api.yourdomain.com` once step 4's domain mapping is live),
-   `NEXT_PUBLIC_SENTRY_DSN` = the frontend Sentry DSN, and optionally
-   `SENTRY_ORG`/`SENTRY_PROJECT`/`SENTRY_AUTH_TOKEN` for readable
-   (unminified) stack traces in Sentry.
-3. Vercel deploys automatically on every push to `main` (its own GitHub
-   integration — no custom GitHub Actions workflow needed for the
-   frontend) and provides a free custom-domain SSL certificate.
-4. Once the Vercel domain is final, update the
-   `afterapply-web-origin` secret (step 3) to match, and redeploy the
-   backend so CORS allows it.
+Cloud SQL isn't reachable by Unix socket from a local machine the way
+Cloud Run reaches it. Two options — the **Cloud SQL Auth Proxy** is
+recommended (no instance configuration change, closer to what CI would
+do too):
+
+```bash
+# Install once: https://cloud.google.com/sql/docs/postgres/sql-proxy#install
+cloud-sql-proxy "${PROJECT_ID}:${REGION}:afterapply-db" &
+dotnet ef database update \
+  --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api \
+  --connection "Host=127.0.0.1;Port=5432;Database=afterapply;Username=afterapply;Password=<DB_PASSWORD from step 2>"
+```
+
+(Alternative, no proxy: temporarily
+`gcloud sql instances patch afterapply-db --authorized-networks=<your-public-ip>/32`,
+connect directly, then remove the authorized network again — more moving
+parts, not recommended as the default path.)
 
 ### 6. Switching CI from manual to automatic
 
 Once the above is verified working end-to-end once, uncomment the
-`push: branches: [main]` trigger in `deploy-backend.yml` (currently
-commented out on purpose) to deploy automatically going forward.
+`push: branches: [main]` trigger in `deploy.yml` (currently commented
+out on purpose) to deploy automatically going forward.

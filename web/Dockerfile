@@ -13,6 +13,23 @@ ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+# Source-map upload only (readable stack traces in the Sentry UI) — all
+# three optional, `withSentryConfig` (next.config.ts) already no-ops the
+# upload step (not the build) when SENTRY_AUTH_TOKEN is empty. Unlike the
+# two ARGs above, SENTRY_AUTH_TOKEN is a real credential: it stays out of
+# the final pushed image (this `build` stage's layers aren't copied into
+# the `runtime` stage below, and `docker build` without `--target` only
+# tags/pushes the last stage) but IS visible in this build stage's local
+# layer cache on whichever machine runs the build (e.g. a GitHub Actions
+# runner, discarded when the job ends) — accepted for now since source
+# maps are optional; harden with a BuildKit `RUN --mount=type=secret`
+# instead of ARG if that residual exposure ever matters.
+ARG SENTRY_ORG
+ENV SENTRY_ORG=${SENTRY_ORG}
+ARG SENTRY_PROJECT
+ENV SENTRY_PROJECT=${SENTRY_PROJECT}
+ARG SENTRY_AUTH_TOKEN
+ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
 RUN npm run build
 
 FROM node:22-alpine AS runtime

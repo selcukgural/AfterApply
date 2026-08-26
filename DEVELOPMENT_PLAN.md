@@ -316,20 +316,29 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
 > paid altyapıya şimdiden yatırım yapmak projenin tekrar eden
 > YAGNI/erken-optimizasyon-yapma prensibiyle çelişirdi.
 
-- **Cloud provider — DECIDED:** Vercel (frontend, Next.js) + Google
-  Cloud Run (backend, .NET API container) + Neon (Postgres). Üçü de
-  kalıcı gerçek ücretsiz katmana sahip (deneme kredisi değil, Railway/
-  Fly.io gibi ücretsiz tier'ını kaldırmış servislerden farklı), mevcut
-  `Dockerfile`/EF Core connection string kurulumuyla değişiklik
-  gerektirmeden uyumlu. Cloud Run custom domain'de otomatik ücretsiz
-  SSL sağlıyor — DEPLOYMENT.md'nin "no reverse proxy/TLS" notu bu
-  şekilde kapanıyor, ayrı bir Caddy/Nginx'e gerek kalmıyor.
+> **Güncelleme (2026-08-26):** Kullanıcı Google Cloud'da 90 günlük/$300
+> kredili bir deneme hesabı açtı ve tüm parçaların (Postgres, Redis, API,
+> web) tek sağlayıcıda toplanmasını istedi — Neon/Upstash/Vercel'in
+> yerini Cloud SQL/Memorystore/ikinci bir Cloud Run servisi aldı (bkz.
+> DECISIONS.md §5 "Postgres + Redis + web de Google Cloud'a taşındı").
+> **Önemli:** Cloud Run'ın aksine Cloud SQL/Memorystore'un kalıcı bir
+> ücretsiz katmanı yok — sadece 90 gün/$300 kredi boyunca ücretsiz,
+> sonrasında ~$45-55/ay gerçek bir maliyet oluşacak (detay DECISIONS.md).
+
+- **Cloud provider — DECIDED, kod hazır:** Google Cloud tek sağlayıcı —
+  Cloud Run × 2 (backend .NET API + frontend Next.js, ikisi de mevcut
+  `Dockerfile`'ları kullanıyor), Cloud SQL for PostgreSQL, Memorystore
+  for Redis (Basic tier, Direct VPC Egress). Cloud Run custom domain'de
+  otomatik ücretsiz SSL sağlıyor — DEPLOYMENT.md'nin "no reverse
+  proxy/TLS" notu bu şekilde kapanıyor, ayrı bir Caddy/Nginx'e gerek
+  kalmıyor.
 - **Redis — DECIDED:** planlama sırasında bulgu çıktı — kod tabanında
   Redis şu an hiçbir iş mantığı tarafından kullanılmıyor (rate limiting
   in-memory `FixedWindowLimiter` ile çalışıyor, sadece health check
-  Redis'e bağlı). Buna rağmen Upstash free tier eklenmesine karar
-  verildi — ileride cache/distributed rate-limiting ihtiyacı çıkarsa
-  hazır olsun diye.
+  Redis'e bağlı). Buna rağmen Memorystore eklenmesine karar verildi —
+  ileride cache/distributed rate-limiting ihtiyacı çıkarsa hazır olsun
+  diye; bunun (Upstash'in aksine) artık gerçek bir aylık maliyeti var,
+  bilinçli kabul edildi.
 - **Error tracking — DECIDED, kod hazır (2026-08-26):** Sentry (.NET +
   Next.js ikisini de destekliyor, ücretsiz tier). `Sentry.AspNetCore`
   6.9.0 (backend, config-driven `Sentry:Dsn`, boşsa SDK kendini
@@ -344,13 +353,15 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
 - Migrations: `dotnet ef database update` adımı CI/CD'de (GitHub
   Actions) ya da manuel çalıştırılır — otomatik `Database.Migrate()`
   yok (Sprint 7 kararı korunuyor)
-- CI/CD: `.github/workflows/deploy-backend.yml` eklendi (Cloud Run'a
-  deploy, Workload Identity Federation ile — statik JSON key yok),
-  bilinçli olarak `workflow_dispatch`-only (GCP hesabı/secret'ları henüz
-  yok, `push: main` tetikleyicisi yorumda bekliyor — DEPLOYMENT.md
-  "Sprint 13: real cloud deployment" bölümünde hesap kurulumundan ilk
-  deploy'a kadar tüm adımlar var). Vercel için ayrı bir workflow YOK —
-  Vercel'in kendi GitHub entegrasyonu push'ta otomatik deploy ediyor.
+- CI/CD: `.github/workflows/deploy.yml` (eski `deploy-backend.yml`'in
+  yerini aldı) — iki job, `deploy-backend` ve `deploy-web`, ikisi de
+  Cloud Run'a Workload Identity Federation ile deploy ediyor (statik
+  JSON key yok). `deploy-backend`'in `flags:`'ine
+  `--add-cloudsql-instances=...`/`--network=default`/`--subnet=default`
+  eklendi (Cloud SQL + Memorystore bağlantısı için). Bilinçli olarak
+  `workflow_dispatch`-only (GCP kaynakları henüz yok, `push: main`
+  yorumda bekliyor — DEPLOYMENT.md "Sprint 13: real cloud deployment"
+  bölümünde hesap kurulumundan ilk deploy'a kadar tüm adımlar var).
 - Son privacy/legal review (ToS, KVKK/GDPR self-review — hukuki onay
   gerektirir, bu doküman hukuki tavsiye değildir) — sadece checklist
   maddesi olarak tutuluyor, bu planda detaylandırılmıyor
@@ -359,7 +370,7 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
 - ~~Sprint 8-11'in tüm entegrasyon testleri~~ — tamamlandı (2026-08-26, 58/58 yeşil)
 - Uçtan uca manuel smoke test (prod-benzeri/gerçek dağıtım ortamında)
 
-**DoD:** Vercel + Cloud Run + Neon üzerinde gerçek bir dağıtım, custom
-domain'de SSL çalışıyor, Sentry'ye hata düşüyor; spec §4.4 MVP kriteri +
-Sprint 8-11'in DoD'leri bu ortamda uçtan uca doğrulanabilir durumda;
-yayına hazır.
+**DoD:** Google Cloud üzerinde (Cloud Run × 2 + Cloud SQL + Memorystore)
+gerçek bir dağıtım, custom domain'de SSL çalışıyor, Sentry'ye hata
+düşüyor; spec §4.4 MVP kriteri + Sprint 8-11'in DoD'leri bu ortamda
+uçtan uca doğrulanabilir durumda; yayına hazır.

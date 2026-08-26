@@ -1,0 +1,129 @@
+name: Deploy (Cloud Run)
+
+# Sprint 13 (DECISIONS.md "5. Cloud provider"): manual trigger only, on
+# purpose — the GCP project/Artifact Registry/Cloud Run services/Cloud
+# SQL/Memorystore/Secret Manager secrets referenced below don't exist
+# yet. Flip to `push: main` once the one-time setup in DEPLOYMENT.md is
+# done; until then this workflow simply isn't runnable (workflow_dispatch
+# will fail loudly on missing secrets/resources, which is fine — it
+# won't block CI on every commit).
+on:
+  workflow_dispatch: {}
+  # push:
+  #   branches: [main]
+
+permissions:
+  id-token: write # Workload Identity Federation — no long-lived JSON key stored in secrets
+  contents: read
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.GCP_REGION }}
+  AR_REPOSITORY: afterapply
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Build and push image
+        run: |
+          IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/afterapply-api:${GITHUB_SHA}"
+          docker build -f src/AfterApply.Api/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      # Values on the right of `=` in `secrets:` are Secret Manager secret
+      # names (not the secret values themselves) — see DEPLOYMENT.md for
+      # how to create them. Empty-string-disables-safely secrets (Sentry,
+      # OpenAI, GoogleOAuth) still go through Secret Manager for
+      # consistency, not because they're sensitive when empty.
+      #
+      # `flags` wires up the two GCP-specific connections (DECISIONS.md
+      # "Postgres + Redis + web de Google Cloud'a taşındı"):
+      #  - `--add-cloudsql-instances` is Cloud Run's built-in Cloud SQL
+      #    connector (no proxy sidecar) — Npgsql then connects over the
+      #    Unix socket it mounts at /cloudsql/<instance-connection-name>.
+      #  - `--network`/`--subnet` enable Direct VPC Egress so Cloud Run
+      #    can reach Memorystore's private IP (Memorystore has no public
+      #    IP at all). Both reference the project's default VPC/subnet —
+      #    no custom VPC was created for this.
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: afterapply-api
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.IMAGE }}
+          flags: >-
+            --add-cloudsql-instances=${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:afterapply-db
+            --network=default
+            --subnet=default
+          env_vars: |-
+            ASPNETCORE_ENVIRONMENT=Production
+            ASPNETCORE_URLS=http://+:8080
+          secrets: |-
+            ConnectionStrings__Postgres=afterapply-postgres-connection:latest
+            ConnectionStrings__Redis=afterapply-redis-connection:latest
+            Jwt__SigningKey=afterapply-jwt-signing-key:latest
+            Sentry__Dsn=afterapply-sentry-dsn:latest
+            OpenAI__ApiKey=afterapply-openai-api-key:latest
+            GoogleOAuth__ClientId=afterapply-google-oauth-client-id:latest
+            GoogleOAuth__ClientSecret=afterapply-google-oauth-client-secret:latest
+            GoogleOAuth__RedirectUri=afterapply-google-oauth-redirect-uri:latest
+            Cors__AllowedOrigins__0=afterapply-web-origin:latest
+
+  deploy-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      # NEXT_PUBLIC_API_BASE_URL is the api Cloud Run service's URL — set
+      # once as a repo secret after that service's first deploy (Cloud Run
+      # URLs are stable for the life of the service, so this doesn't need
+      # to be rediscovered on every run). See DEPLOYMENT.md step 4/5.
+      - name: Build and push image
+        run: |
+          IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/afterapply-web:${GITHUB_SHA}"
+          docker build -f web/Dockerfile \
+            --build-arg NEXT_PUBLIC_API_BASE_URL="${{ secrets.GCP_API_URL }}" \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ secrets.SENTRY_DSN_WEB }}" \
+            --build-arg SENTRY_ORG="${{ secrets.SENTRY_ORG }}" \
+            --build-arg SENTRY_PROJECT="${{ secrets.SENTRY_PROJECT_WEB }}" \
+            --build-arg SENTRY_AUTH_TOKEN="${{ secrets.SENTRY_AUTH_TOKEN }}" \
+            -t "$IMAGE" ./web
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      # No --add-cloudsql-instances/--network/--subnet here — the web
+      # service only talks to the api service over HTTPS
+      # (NEXT_PUBLIC_API_BASE_URL, baked in above), never directly to
+      # Postgres or Redis.
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: afterapply-web
+          region: ${{ env.GCP_REGION }}
+          image: ${{ env.IMAGE }}
