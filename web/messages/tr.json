@@ -3,6 +3,161 @@
     "title": "AfterApply",
     "description": "İş başvurularını tek yerde takip et."
   },
+  "landing": {
+    "common": {
+      "sampleData": "Örnek veri"
+    },
+    "navbar": {
+      "howItWorks": "Nasıl çalışır",
+      "features": "Özellikler",
+      "mission": "Misyonumuz",
+      "signIn": "Giriş Yap",
+      "getStarted": "Ücretsiz Başla",
+      "goToDashboard": "Panele Git"
+    },
+    "hero": {
+      "eyebrow": "İş başvuru takibi",
+      "title": "Başvurdun. Peki sonra ne oldu?",
+      "subtitle": "İş başvurularını tek yerde takip et. Sürecin hangi aşamada olduğunu, ne kadar süredir beklediğini ve hangi başvuruların geri dönüş aldığını kolayca gör.",
+      "ctaPrimary": "Ücretsiz Başla",
+      "ctaSecondary": "Nasıl çalışıyor?"
+    },
+    "heroPreview": {
+      "title": "Başvuruların",
+      "applications": "Başvuru",
+      "row1Company": "ABC Teknoloji",
+      "row1Status": "Mülakat",
+      "row1Meta": "4 gün önce",
+      "row2Company": "XYZ Bank",
+      "row2Status": "Bekliyor",
+      "row2Meta": "12 gündür",
+      "row3Company": "Acme Yazılım",
+      "row3Status": "Muhtemelen Kayboldu",
+      "row3Meta": "31 gündür"
+    },
+    "problem": {
+      "eyebrow": "Tanıdık geliyor mu?",
+      "title": "İş başvurusu yapmak kolay. Takip etmek değil.",
+      "body1": "Birkaç ilana başvurursun. Sonra birkaç tane daha. Birkaç hafta sonra onlarca başvuru olur.",
+      "body2": "Hangi şirkete ne zaman başvurduğunu, kimden cevap geldiğini, hangi süreçte olduğunu ve hangilerinin sessizce kaybolduğunu hatırlamak zorlaşır.",
+      "sourceLinkedin": "LinkedIn",
+      "sourceJobSites": "Kariyer siteleri",
+      "sourceCompanyPages": "Şirket kariyer sayfaları",
+      "sourceOther": "Diğer kaynaklar",
+      "outcome": "Onlarca başvuru. Farklı durumlar. Farklı tarihler.",
+      "question": "Bu başvuru ne olmuştu?"
+    },
+    "afterApply": {
+      "eyebrow": "AfterApply neden var",
+      "title": "Asıl hikâye başvurduktan sonra başlar.",
+      "happyApplied": "Başvuruldu",
+      "happyScreening": "Ön Değerlendirme",
+      "happyInterview": "Mülakat",
+      "happyTechnical": "Teknik Mülakat",
+      "happyFinal": "Son Mülakat",
+      "happyOffer": "Teklif",
+      "happyOutcome": "Sonuç",
+      "silentApplied": "Başvuruldu",
+      "silentWaiting": "Bekleniyor",
+      "silentQuestion": "Ne oldu?",
+      "note": "Her başvuru aynı süreci izlemez — AfterApply, hangi aşamada olduğunu ve ne kadar süredir beklediğini görünür kılar."
+    },
+    "features": {
+      "eyebrow": "Neler yapabilirsin?",
+      "title": "AfterApply ne yapar?",
+      "trackingTitle": "Tüm başvuruların tek yerde",
+      "trackingBody": "Şirket, pozisyon, tarih, kaynak ve başvuru durumunu tek ekranda takip et.",
+      "timelineTitle": "Ne kadar beklediğini bil",
+      "timelineBody": "Başvurunun üzerinden ne kadar zaman geçtiğini gör. Takip zamanı geldiğinde hatırlatıcı al.",
+      "analyticsTitle": "İş arama sürecini ölç",
+      "analyticsBody": "Yanıt oranı, mülakat oranı, teklif oranı ve yanıt süreleri gibi metriklerle kendi sürecini gör.",
+      "noResponseTitle": "Cevapsız kalanları unutma",
+      "noResponseBody": "Uzun süre herhangi bir gelişme olmayan başvuruları fark et ve takip edilmesi gerekenleri kolayca bul."
+    },
+    "linkedinImport": {
+      "eyebrow": "İçe aktarma",
+      "title": "Yüzlerce başvuru mu yaptın? Tek tek girme.",
+      "subtitle": "LinkedIn başvuru geçmişini yükle. AfterApply başvurularını düzenlesin, tekrarları temizlesin ve seni doğrudan panele taşısın.",
+      "stepUpload": "LinkedIn Export'u Yükle",
+      "stepAnalyzing": "Analiz ediliyor",
+      "stepDedup": "Tekrarlar temizleniyor",
+      "stepComplete": "İçe aktarma tamamlandı",
+      "resultLabel": "Örnek sonuç",
+      "totalRecords": "Toplam kayıt",
+      "newApplications": "Yeni başvuru",
+      "duplicates": "Tekrar",
+      "invalid": "Geçersiz kayıt"
+    },
+    "analytics": {
+      "eyebrow": "Kişisel analitik",
+      "title": "Başvurularından neler öğrenebilirsin?",
+      "subtitle": "Yanıt oranını, mülakat oranını ve yanıt sürelerini kişisel analitik panelinde gör."
+    },
+    "vision": {
+      "eyebrow": "Vizyon",
+      "title": "Daha büyük bir şey inşa ediyoruz.",
+      "body1": "Bugün kendi başvurularını takip ediyorsun.",
+      "body2": "Yarın, anonim ve toplu adaylık verileriyle işe alım süreçlerinin nasıl işlediğini daha iyi anlayabiliriz.",
+      "stepYours": "Senin Başvuruların",
+      "stepAggregate": "Anonim & Toplu Veri",
+      "stepOutcomes": "Başvuru Sonuçları",
+      "stepInsights": "İşe Alım İçgörüleri",
+      "stepTransparency": "Daha Şeffaf İşe Alım",
+      "disclaimer": "Bu henüz mevcut olmayan, uzun vadeli bir vizyon. Hayata geçtiğinde şirketleri hedef almadan, yeterli örneklem büyüklüğü şartıyla ve tamamen anonim/toplu veriyle çalışacak."
+    },
+    "mission": {
+      "eyebrow": "Misyonumuz",
+      "statement": "Bir ilana başvuran insanın da zamanı değerlidir.",
+      "narrative1": "CV hazırladı. Şirketi araştırdı. Başvuru yaptı.",
+      "narrative2": "Belki teknik bir test çözdü. Belki bir mülakata girdi.",
+      "narrative3": "Sonra bekledi. Bir gün. Bir hafta. İki hafta.",
+      "narrative4": "Ve hiçbir şey.",
+      "closing": "Biz bunun normalleşmesini istemiyoruz.",
+      "closingNote": "Olumsuz cevap bile cevapsızlıktan daha değerlidir.",
+      "philosophy1": "İnsanların zamanı değerlidir.",
+      "philosophy2": "Adayların cevap almaya hakkı vardır.",
+      "philosophy3": "Olumsuz cevap, cevapsızlıktan daha değerlidir.",
+      "philosophy4": "Şeffaflık hem adaylara hem şirketlere fayda sağlar.",
+      "philosophy5": "Veri, kişileri suçlamak için değil, sistemi iyileştirmek için kullanılmalıdır."
+    },
+    "roadmap": {
+      "title": "Bugün ve yarın",
+      "today": "Bugün",
+      "future": "Gelecek",
+      "todayTracking": "Başvuru takibi",
+      "todayAnalytics": "Kişisel analitik",
+      "todayImport": "CSV / LinkedIn içe aktarma",
+      "todayReminders": "Hatırlatıcılar",
+      "todayMatch": "Yapay zeka ile ilan uyumu",
+      "todayEmail": "Gmail entegrasyonu",
+      "todayExtension": "Tarayıcı eklentisi",
+      "futureInsights": "Anonim, toplu işe alım içgörüleri"
+    },
+    "privacy": {
+      "eyebrow": "Güven",
+      "title": "Verilerin senindir.",
+      "privateTitle": "Varsayılan olarak gizli",
+      "privateBody": "Başvuruların yalnızca senin hesabında tutulur.",
+      "anonymousTitle": "Anonim analitik",
+      "anonymousBody": "Gelecekteki toplu içgörüler yalnızca anonim ve toplu veriden oluşturulacak.",
+      "deleteTitle": "İstediğin zaman sil",
+      "deleteBody": "Hesabını ve verilerini istediğin an silebilirsin.",
+      "link": "Gizlilik politikasını incele"
+    },
+    "finalCta": {
+      "title": "Başvurularını kaybetme. Ne olduğunu bil.",
+      "body": "İş arama sürecini daha düzenli, ölçülebilir ve şeffaf hale getir.",
+      "button": "Ücretsiz Başla",
+      "secondary": "Nasıl çalışıyor?"
+    },
+    "footer": {
+      "tagline": "İş arama sürecin, artık anlaşılır.",
+      "product": "Ürün",
+      "resources": "Kaynaklar",
+      "privacy": "Gizlilik Politikası",
+      "rights": "Tüm hakları saklıdır."
+    }
+  },
   "common": {
     "loading": "Yükleniyor..."
   },

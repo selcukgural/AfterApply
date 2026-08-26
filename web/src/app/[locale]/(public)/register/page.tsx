@@ -72,9 +72,9 @@ export default function RegisterPage() {
       const preferredLanguage = auth.user.preferredLanguage;
       const supportedLocales: readonly string[] = routing.locales;
       if (supportedLocales.includes(preferredLanguage) && preferredLanguage !== locale) {
-        router.push("/", { locale: preferredLanguage as (typeof routing.locales)[number] });
+        router.push("/dashboard", { locale: preferredLanguage as (typeof routing.locales)[number] });
       } else {
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (error) {
       setFormError(error instanceof ApiError ? error.message : t("genericError"));

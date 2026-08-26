@@ -1498,6 +1498,63 @@ Unit testte 3x ağırlık verilerek hiçbir eşit-bölme varsayımının hard-co
 
 ---
 
+## Sprint 14 kararları ve bulguları (Public landing page)
+
+Kaynak: kullanıcının eklediği `LANDING_PAGE_SPEC.md` (43 bölüm). O dosya §41 gereği
+implementasyondan önce repo assessment + component plan + design plan + phased plan + open
+decisions çıktısı isteniyor — bu bölüm o çıktının kalıcı kaydı.
+
+### `/` artık dashboard değil, public landing page — DECIDED
+
+`(protected)/page.tsx` (dashboard) `/` route'unu tutuyordu; public bir landing sayfası aynı
+route'u paylaşamaz. Dashboard `(protected)/dashboard/page.tsx`'e taşındı. `NavBar` (uygulama
+içi), login/register sonrası yönlendirme ve `(public)/layout.tsx`'teki logo linki `/dashboard`'a
+güncellendi.
+
+### Landing page `(public)` route group'unun dışında, kendi route'u — DECIDED
+
+`(public)/layout.tsx` login/register/privacy için minimal bir header (logo + dil/tema) render
+ediyor, `max-w-5xl` `<main>` içinde. Landing page'in spec §6'daki kendi navbar'ı (logo, anchor nav,
+Sign in, Get started, mobil hamburger) var — bu yüzden `(public)` grubuna değil, `web/src/app/
+[locale]/page.tsx` olarak grupların dışına, kendi tam genişlikli layout'uyla eklendi.
+
+### Roadmap iki katmanlı (TODAY/FUTURE), spec'in önerdiği üç katmanlı (TODAY/NEXT/FUTURE) değil — DECIDED
+
+Spec §37 "AI matching, Gmail entegrasyonu, browser extension MVP'de yok, future" varsayıyor —
+ama repo'da üçü de gerçek: `Application.Matching` + settings.cv (AI match), `Application.
+EmailIntegrations` + `/settings/email-suggestions` (Gmail), `extension/` klasöründeki gerçek MV3
+eklentisi + settings.extension token akışı (browser extension). Spec'in kendi §37 kuralı zaten
+"repo implement ettiğini gösteriyorsa future değil" diyor, o yüzden bu üçü roadmap'te "Bugün"
+altında, "Gelecek" boş bırakılmadı — sadece "Anonim, toplu işe alım içgörüleri" (bkz. aşağıki
+madde) orada kaldı.
+
+### "Daha büyük bir şey inşa ediyoruz" (Vision) bölümü gerçekten future olarak bırakıldı — DECIDED
+
+`CompanyIntelligence` modülü (`CandidateExperienceScore`, `ClosureRate`,
+`/api/company-intelligence/{id}`) sunucu tarafında var ama feature-flag ile kapalı, auth
+gerektiriyor, tek şirket bazlı (anonim/toplu endpoint yok) ve frontend'de hiç kullanılmıyor
+(`grep companyIntelligence web/src` boş döndü). Spec'in bu bölümü "henüz yok, vizyon" olarak
+sunma talimatı burada doğru — landing page'de açık bir "bu henüz mevcut değil" notu ile
+(`landing.vision.disclaimer`) verildi, mevcut bir özellikmiş gibi sunulmadı.
+
+### Mock görsellerde gerçek dashboard bileşenleri reuse edildi — DECIDED
+
+`StatTile`, `ResponseTimeCard`, `StatusDistributionChart` (`web/src/components/dashboard/`) saf
+prop-driven bileşenler, içeride fetch yok — bu yüzden landing page'in hero/analytics mock'larında
+gerçek API çağrısı yapmadan, sabit örnek veriyle doğrudan reuse edildi (spec §34: "reusable
+landing-page visual, manuel yeniden yaratmaya tercih edilir"). Her mock görselin yanında "Örnek
+veri" / "Sample data" rozeti var (spec §38: mock ile gerçek veri ayrımı net olmalı).
+
+### `sitemap.ts` eklenmedi, `robots.ts` eklendi — OPEN
+
+Spec §30 canonical URL + sitemap istiyor ama `web/` içinde (env dosyaları dahil) yapılandırılmış
+bir production domain yok — `extension/manifest.json`'daki `api.ekariyerim.com` API'nin domaini,
+web app'in kendi public domaini değil ve varsayılmadı. `robots.ts` (domain gerektirmeyen `rules`
+alanıyla) eklendi; `sitemap.ts` ve `generateMetadata`'daki `metadataBase`/canonical, gerçek public
+domain netleşince eklenmeli.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

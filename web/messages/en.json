@@ -3,6 +3,161 @@
     "title": "AfterApply",
     "description": "Track your job applications in one place."
   },
+  "landing": {
+    "common": {
+      "sampleData": "Sample data"
+    },
+    "navbar": {
+      "howItWorks": "How it works",
+      "features": "Features",
+      "mission": "Our mission",
+      "signIn": "Log In",
+      "getStarted": "Get Started Free",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "hero": {
+      "eyebrow": "Job application tracking",
+      "title": "You applied. So what happened next?",
+      "subtitle": "Track your job applications in one place. See what stage each one is at, how long you've been waiting, and which applications got a response.",
+      "ctaPrimary": "Get Started Free",
+      "ctaSecondary": "See how it works"
+    },
+    "heroPreview": {
+      "title": "Your applications",
+      "applications": "Applications",
+      "row1Company": "ABC Technology",
+      "row1Status": "Interview",
+      "row1Meta": "4 days ago",
+      "row2Company": "XYZ Bank",
+      "row2Status": "Waiting",
+      "row2Meta": "12 days",
+      "row3Company": "Acme Software",
+      "row3Status": "Possibly Ghosted",
+      "row3Meta": "31 days"
+    },
+    "problem": {
+      "eyebrow": "Sound familiar?",
+      "title": "Applying is easy. Keeping track isn't.",
+      "body1": "You apply to a few listings. Then a few more. A few weeks later, it's dozens of applications.",
+      "body2": "It gets hard to remember which company you applied to, when, who responded, what stage you're at, and which ones quietly disappeared.",
+      "sourceLinkedin": "LinkedIn",
+      "sourceJobSites": "Job boards",
+      "sourceCompanyPages": "Company career pages",
+      "sourceOther": "Other sources",
+      "outcome": "Dozens of applications. Different statuses. Different dates.",
+      "question": "What happened to this one again?"
+    },
+    "afterApply": {
+      "eyebrow": "Why AfterApply exists",
+      "title": "The real story starts after you apply.",
+      "happyApplied": "Applied",
+      "happyScreening": "Screening",
+      "happyInterview": "Interview",
+      "happyTechnical": "Technical Interview",
+      "happyFinal": "Final Interview",
+      "happyOffer": "Offer",
+      "happyOutcome": "Outcome",
+      "silentApplied": "Applied",
+      "silentWaiting": "Waiting",
+      "silentQuestion": "What happened?",
+      "note": "Not every application follows the same path — AfterApply makes it visible what stage you're at, and how long you've been waiting."
+    },
+    "features": {
+      "eyebrow": "What can you do?",
+      "title": "What AfterApply does",
+      "trackingTitle": "Every application, in one place",
+      "trackingBody": "Track company, position, date, source, and status on a single screen.",
+      "timelineTitle": "Know how long you've been waiting",
+      "timelineBody": "See how much time has passed since you applied. Get a reminder when it's time to follow up.",
+      "analyticsTitle": "Measure your job search",
+      "analyticsBody": "See your own process through metrics like response rate, interview rate, offer rate, and response time.",
+      "noResponseTitle": "Never forget the ones left hanging",
+      "noResponseBody": "Spot applications with no movement in a long time, and easily find the ones that need a follow-up."
+    },
+    "linkedinImport": {
+      "eyebrow": "Import",
+      "title": "Applied to hundreds of jobs? Don't enter them one by one.",
+      "subtitle": "Upload your LinkedIn application history. AfterApply organizes your applications, cleans up duplicates, and takes you straight to your dashboard.",
+      "stepUpload": "Upload LinkedIn Export",
+      "stepAnalyzing": "Analyzing",
+      "stepDedup": "Removing duplicates",
+      "stepComplete": "Import complete",
+      "resultLabel": "Sample result",
+      "totalRecords": "Total records",
+      "newApplications": "New applications",
+      "duplicates": "Duplicates",
+      "invalid": "Invalid records"
+    },
+    "analytics": {
+      "eyebrow": "Personal analytics",
+      "title": "What can you learn from your applications?",
+      "subtitle": "See your response rate, interview rate, and response times in your personal analytics dashboard."
+    },
+    "vision": {
+      "eyebrow": "Vision",
+      "title": "We're building something bigger.",
+      "body1": "Today, you're tracking your own applications.",
+      "body2": "Tomorrow, anonymous and aggregate candidate data could help everyone understand how hiring processes actually work.",
+      "stepYours": "Your Applications",
+      "stepAggregate": "Anonymous & Aggregate Data",
+      "stepOutcomes": "Application Outcomes",
+      "stepInsights": "Hiring Insights",
+      "stepTransparency": "More Transparent Hiring",
+      "disclaimer": "This is a long-term vision that doesn't exist yet. When it does, it will work without targeting individual companies, with a minimum sample size, and on fully anonymous/aggregate data."
+    },
+    "mission": {
+      "eyebrow": "Our mission",
+      "statement": "A candidate's time is valuable too.",
+      "narrative1": "They prepared a CV. Researched the company. Applied.",
+      "narrative2": "Maybe solved a technical test. Maybe sat through an interview.",
+      "narrative3": "Then waited. A day. A week. Two weeks.",
+      "narrative4": "And nothing.",
+      "closing": "We don't want that to be normal.",
+      "closingNote": "Even a no is worth more than silence.",
+      "philosophy1": "People's time is valuable.",
+      "philosophy2": "Candidates have a right to a response.",
+      "philosophy3": "A rejection is worth more than silence.",
+      "philosophy4": "Transparency benefits candidates and companies alike.",
+      "philosophy5": "Data should be used to improve the system, not to blame people."
+    },
+    "roadmap": {
+      "title": "Today and tomorrow",
+      "today": "Today",
+      "future": "Future",
+      "todayTracking": "Application tracking",
+      "todayAnalytics": "Personal analytics",
+      "todayImport": "CSV / LinkedIn import",
+      "todayReminders": "Reminders",
+      "todayMatch": "AI job-fit matching",
+      "todayEmail": "Gmail integration",
+      "todayExtension": "Browser extension",
+      "futureInsights": "Anonymous, aggregate hiring insights"
+    },
+    "privacy": {
+      "eyebrow": "Trust",
+      "title": "Your data is yours.",
+      "privateTitle": "Private by default",
+      "privateBody": "Your applications are kept only in your account.",
+      "anonymousTitle": "Anonymous analytics",
+      "anonymousBody": "Future aggregate insights will be built only from anonymous, aggregate data.",
+      "deleteTitle": "Delete anytime",
+      "deleteBody": "You can delete your account and your data whenever you want.",
+      "link": "Read the privacy policy"
+    },
+    "finalCta": {
+      "title": "Don't lose track of your applications. Know what happened.",
+      "body": "Make your job search more organized, measurable, and transparent.",
+      "button": "Get Started Free",
+      "secondary": "See how it works"
+    },
+    "footer": {
+      "tagline": "Your job search, understood.",
+      "product": "Product",
+      "resources": "Resources",
+      "privacy": "Privacy Policy",
+      "rights": "All rights reserved."
+    }
+  },
   "common": {
     "loading": "Loading..."
   },

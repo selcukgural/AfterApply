@@ -9,15 +9,17 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   danger: "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-300",
 };
 
+// Exported so non-<button> elements that need to look like a Button (e.g. a
+// next-intl <Link> used as a CTA) can share the same visual style instead of
+// nesting an actual <button> inside an <a>, which is invalid HTML.
+export function buttonClassName(variant: Variant = "primary", className = ""): string {
+  return `rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${VARIANT_CLASSES[variant]} ${className}`;
+}
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
 }
 
 export function Button({ variant = "primary", className = "", ...props }: ButtonProps) {
-  return (
-    <button
-      className={`rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${VARIANT_CLASSES[variant]} ${className}`}
-      {...props}
-    />
-  );
+  return <button className={buttonClassName(variant, className)} {...props} />;
 }

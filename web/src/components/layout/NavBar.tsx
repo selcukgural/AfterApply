@@ -22,11 +22,11 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
     <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
-          <Link href="/" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <Link href="/dashboard" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             AfterApply
           </Link>
           <nav className="flex gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <Link href="/" className="hover:text-gray-900 dark:hover:text-gray-100">
+            <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-gray-100">
               {t("dashboard")}
             </Link>
             <Link href="/applications" className="hover:text-gray-900 dark:hover:text-gray-100">
