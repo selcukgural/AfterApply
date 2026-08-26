@@ -945,6 +945,75 @@ suite'i (58 test) bu oturumda çalıştırıldı, **58/58 yeşil**. İki bulgu:
   birlikte uygulandı) — ama host kaynağı bol olduğu için 6GiB güvenli bir taban olarak
   bırakıldı.
 
+### Sprint 13 kararları ve bulguları (deployment kod/CI hazırlığı, 2026-08-26)
+
+Kullanıcı hesap oluşturmayı (Vercel/GCP/Neon/Upstash/Sentry) kendi başına
+paralelde yürütmeyi tercih etti; bu oturumda sadece kod/CI tarafı
+hazırlandı — hiçbir gerçek bulut hesabı bu oturumda oluşturulmadı.
+
+- **Sentry, `Sentry:Dsn`/`NEXT_PUBLIC_SENTRY_DSN` boşsa sessizce devre
+  dışı — DECIDED.** OpenAI/GoogleOAuth'un `REPLACE_WITH_...` + `StartsWith`
+  kontrolü paterni burada kasıtlı olarak *kullanılmadı* — Sentry SDK'sının
+  kendisi zaten boş bir Dsn'i "devre dışı" olarak yorumluyor (event
+  göndermiyor, hata fırlatmıyor); sahte-ama-dolu bir string tam tersine her
+  istekte başarısız bir gönderim denemesine yol açardı. Bu yüzden
+  `appsettings.json`'da `Sentry:Dsn` boş string (`""`), placeholder değil.
+- **Backend: `Sentry.AspNetCore` 6.9.0, `Program.cs`'te `builder.WebHost.
+  UseSentry(...)` en başta — DECIDED.** Serilog'dan önce çağrılıyor (Sentry
+  .NET SDK'sının kendi önerisi: başlangıç hatalarını da yakalayabilmesi
+  için mümkün olduğunca erken). `Sentry.Serilog` (log-event forwarding)
+  bilinçli olarak eklenmedi — `UseSentry` zaten yakalanmamış exception'ları
+  middleware üzerinden yakalıyor, MVP için yeterli; iki paralel mekanizma
+  (middleware + log sink) bu aşamada gereksiz karmaşıklık olurdu.
+- **Frontend: `@sentry/nextjs` 10.71.0, Next.js 16 App Router'ın güncel
+  dosya kuralıyla — DECIDED.** `web/AGENTS.md`'nin uyarısı ciddiye alındı
+  (bu Next.js sürümü training-data'dan farklı olabilir) —
+  `node_modules/next/dist/docs/`'taki güncel `instrumentation.md`/
+  `instrumentation-client.md` doğrudan okunup ona göre yazıldı:
+  `sentry.client.config.ts` DEĞİL, `src/instrumentation-client.ts` (Next
+  15.3+'ta değişen konvansiyon) + `src/instrumentation.ts`'te `register()`/
+  `onRequestError` + `Sentry.captureRequestError`. `next.config.ts`
+  `withSentryConfig` ile sarıldı; `org`/`project`/`authToken` env
+  değişkenlerinden okunuyor, hiçbiri yokken build'in kırılmadığı
+  (getsentry/sentry-javascript'te doğrulanmış davranış: source map upload
+  sessizce atlanıyor, sadece bir notice basılıyor) doğrulandı —
+  `npm run build` gerçekten hatasız tamamlandı.
+- **`disableLogger` next.config seçeneği eklenmedi — DECIDED.** İlk
+  denemede eklenmişti, build "deprecated, Turbopack'te desteklenmiyor"
+  uyarısı verdi (proje sadece Turbopack kullanıyor) — kaldırıldı.
+  `onRouterTransitionStart = Sentry.captureRouterTransitionStart` ise
+  build'in "ACTION REQUIRED" uyarısı üzerine eklendi, ikinci build'de her
+  iki uyarı da temiz çıktı.
+- **Bulgu: `NEXT_PUBLIC_API_BASE_URL` prod profilinde hiç işlemiyordu —
+  düzeltildi.** `docker-compose.prod.yml`, bu değişkeni `web` servisine
+  `environment:` (container **runtime**'ı) olarak veriyordu, ama Next.js
+  `NEXT_PUBLIC_*` değişkenlerini `next build` **anında** (image build
+  stage'i) client bundle'a gömüyor — `web/Dockerfile` bu değişkeni hiç bir
+  build `ARG` olarak tanımlamıyordu, yani tarayıcı tarafı kod her zaman
+  `undefined` görüyordu. Sprint 13'ün kendi `NEXT_PUBLIC_SENTRY_DSN`'ini
+  eklerken fark edildi (aynı mekanizma). Düzeltme: `web/Dockerfile`'a iki
+  `ARG`/`ENV` çifti eklendi, `docker-compose.prod.yml`'de `web.environment`
+  yerine `web.build.args` kullanılıyor artık. `podman build` ile hem
+  `api` hem `web` image'ları bu değişiklikle yeniden doğrulandı.
+- **CI/CD: Cloud Run deploy'u Workload Identity Federation ile, statik
+  JSON key yok — DECIDED.** `google-github-actions/auth@v3` +
+  `deploy-cloudrun@v3`; GitHub Secrets'ta sadece proje id/region/WIF
+  provider/service account adı tutuluyor, uzun ömürlü bir credential
+  tutulmuyor. `.github/workflows/deploy-backend.yml` bilinçli olarak
+  `workflow_dispatch`-only (gerçek GCP kaynakları henüz yok, `push: main`
+  her commit'te kırmızı X üretirdi) — `push` tetikleyicisi dosyada yorumlu
+  halde duruyor, DEPLOYMENT.md'nin son adımı bunu ne zaman açacağını
+  anlatıyor.
+- **Vercel için ayrı bir GitHub Actions workflow'u YOK — DECIDED.**
+  Vercel'in kendi Git entegrasyonu (dashboard'dan repo bağlama) push'ta
+  otomatik build+deploy yapıyor — bunu tekrar eden bir custom workflow
+  yazmak gereksiz karmaşıklık olurdu (YAGNI).
+- **Secret Manager'a taşınan değerler, backend'in mevcut `REPLACE_WITH_...`
+  placeholder'larını da içeriyor (Gmail OAuth) — DECIDED.** Boşken zararsız
+  olsalar da tutarlılık için (hepsi aynı mekanizmadan okunsun) Secret
+  Manager'a konuluyor; gerçek değerler sadece o entegrasyon kurulunca
+  girilecek.
+
 ---
 
 ## Sprint 8 kararları ve bulguları (AI Job Matching)

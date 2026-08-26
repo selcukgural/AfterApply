@@ -34,13 +34,24 @@ services:
       GoogleOAuth__RedirectUri: "${GOOGLE_OAUTH_REDIRECT_URI:-http://localhost:8080/api/email-integrations/gmail/callback}"
       EmailIntegrations__FrontendBaseUrl: "${FRONTEND_BASE_URL:-http://localhost:3000}"
       OpenAI__ApiKey: "${OPENAI_API_KEY:-REPLACE_WITH_OPENAI_API_KEY}"
+      # Empty disables the SDK (see .env.prod.example) — not a REPLACE_WITH_
+      # placeholder, an actually-fake Dsn would make Sentry try (and fail)
+      # to send an event on every request instead of silently no-op'ing.
+      Sentry__Dsn: "${SENTRY_DSN:-}"
 
   web:
     build:
       context: ./web
       dockerfile: Dockerfile
-    environment:
-      NEXT_PUBLIC_API_BASE_URL: "${API_ORIGIN:?Set API_ORIGIN in .env.prod}"
+      # NEXT_PUBLIC_* vars are inlined into the client bundle at `next build`
+      # time, not read at container runtime — must be build args, not
+      # `environment:`. (Bulgu/finding, Sprint 13: the previous version of
+      # this file passed NEXT_PUBLIC_API_BASE_URL as `environment:`, which
+      # `web/Dockerfile` never declared as a build ARG, so it silently
+      # baked in as `undefined` for the browser bundle — fixed here.)
+      args:
+        NEXT_PUBLIC_API_BASE_URL: "${API_ORIGIN:?Set API_ORIGIN in .env.prod}"
+        NEXT_PUBLIC_SENTRY_DSN: "${NEXT_PUBLIC_SENTRY_DSN:-}"
     ports:
       - "3000:3000"
     depends_on:

@@ -16,6 +16,15 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Config-driven, same "stays inert until real values are set" pattern as
+// OpenAI/GoogleOAuth: an empty Dsn makes the Sentry SDK disable itself (no
+// events sent), it does not throw. See DECISIONS.md "Sprint 13".
+builder.WebHost.UseSentry(options =>
+{
+    options.Dsn = builder.Configuration["Sentry:Dsn"];
+    options.Environment = builder.Environment.EnvironmentName;
+});
+
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)

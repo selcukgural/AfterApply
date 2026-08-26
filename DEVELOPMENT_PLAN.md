@@ -330,14 +330,27 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
   Redis'e bağlı). Buna rağmen Upstash free tier eklenmesine karar
   verildi — ileride cache/distributed rate-limiting ihtiyacı çıkarsa
   hazır olsun diye.
-- **Error tracking — DECIDED:** Sentry (.NET + Next.js ikisini de
-  destekliyor, ücretsiz tier).
+- **Error tracking — DECIDED, kod hazır (2026-08-26):** Sentry (.NET +
+  Next.js ikisini de destekliyor, ücretsiz tier). `Sentry.AspNetCore`
+  6.9.0 (backend, config-driven `Sentry:Dsn`, boşsa SDK kendini
+  devre dışı bırakıyor) ve `@sentry/nextjs` 10.71.0 (frontend,
+  `instrumentation.ts`/`instrumentation-client.ts`/`sentry.server.config.ts`/
+  `sentry.edge.config.ts`) eklendi, her ikisi de `dotnet build` +
+  `npm run build`'da doğrulandı. Detaylar: DECISIONS.md "Sprint 13
+  kararları ve bulguları".
 - Secrets: Cloud Run'ın entegre Secret Manager'ı (ücretsiz tier) —
   DEPLOYMENT.md'nin "no secrets manager" notu bu şekilde kapanıyor,
   `.env.prod` düz dosyası prod'da kullanılmıyor
 - Migrations: `dotnet ef database update` adımı CI/CD'de (GitHub
   Actions) ya da manuel çalıştırılır — otomatik `Database.Migrate()`
   yok (Sprint 7 kararı korunuyor)
+- CI/CD: `.github/workflows/deploy-backend.yml` eklendi (Cloud Run'a
+  deploy, Workload Identity Federation ile — statik JSON key yok),
+  bilinçli olarak `workflow_dispatch`-only (GCP hesabı/secret'ları henüz
+  yok, `push: main` tetikleyicisi yorumda bekliyor — DEPLOYMENT.md
+  "Sprint 13: real cloud deployment" bölümünde hesap kurulumundan ilk
+  deploy'a kadar tüm adımlar var). Vercel için ayrı bir workflow YOK —
+  Vercel'in kendi GitHub entegrasyonu push'ta otomatik deploy ediyor.
 - Son privacy/legal review (ToS, KVKK/GDPR self-review — hukuki onay
   gerektirir, bu doküman hukuki tavsiye değildir) — sadece checklist
   maddesi olarak tutuluyor, bu planda detaylandırılmıyor
