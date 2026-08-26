@@ -9,7 +9,14 @@ public sealed record CompanyIntelligenceMetrics(
     double InterviewRate,
     double OfferRate,
     double? AverageResponseTimeDays,
-    double? MedianResponseTimeDays);
+    double? MedianResponseTimeDays,
+    // % of applications where the company itself gave an explicit outcome (Rejected/Accepted) —
+    // see CompanyGivenClosureStatuses. Ghosted and Withdrawn don't count; spec §14 Closure Rate.
+    double ClosureRate,
+    // Composite of Responsiveness (=ResponseRate) / Response Time / ClosureRate — spec §14.
+    // Interview Experience and Process Transparency are not included: no raw data exists yet
+    // for either (see DEVELOPMENT_PLAN.md Sprint 11).
+    double CandidateExperienceScore);
 
 public sealed record CompanyIntelligenceResponse(
     Guid CompanyId,

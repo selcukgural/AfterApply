@@ -83,15 +83,28 @@ internal sealed class CompanyIntelligenceService(AppDbContext dbContext, IOption
         }
 
         var ghostedCount = applications.Count(a => a.Status == ApplicationStatus.Ghosted);
+        var closureCount = applications.Count(a => CompanyGivenClosureStatuses.Values.Contains(a.Status));
+
+        var responseRate = AnalyticsCalculations.CalculateRate(respondedCount, total);
+        var averageResponseTimeDays = AnalyticsCalculations.Average(responseTimeDays);
+        var closureRate = AnalyticsCalculations.CalculateRate(closureCount, total);
+
+        var responseTimeScore = CompanyIntelligenceCalculations.CalculateResponseTimeScore(
+            averageResponseTimeDays, opts.ResponseTimeCapDays);
+        var candidateExperienceScore = CompanyIntelligenceCalculations.CalculateCandidateExperienceScore(
+            responseRate, responseTimeScore, closureRate,
+            opts.ResponsivenessWeight, opts.ResponseTimeWeight, opts.ClosureRateWeight);
 
         var metrics = new CompanyIntelligenceMetrics(
             TotalApplications: total,
-            ResponseRate: AnalyticsCalculations.CalculateRate(respondedCount, total),
+            ResponseRate: responseRate,
             GhostingRate: AnalyticsCalculations.CalculateRate(ghostedCount, total),
             InterviewRate: AnalyticsCalculations.CalculateRate(interviewCount, total),
             OfferRate: AnalyticsCalculations.CalculateRate(offerCount, total),
-            AverageResponseTimeDays: AnalyticsCalculations.Average(responseTimeDays),
-            MedianResponseTimeDays: AnalyticsCalculations.Median(responseTimeDays));
+            AverageResponseTimeDays: averageResponseTimeDays,
+            MedianResponseTimeDays: AnalyticsCalculations.Median(responseTimeDays),
+            ClosureRate: closureRate,
+            CandidateExperienceScore: candidateExperienceScore);
 
         return new CompanyIntelligenceResponse(company.Id, company.Name, confidence, metrics);
     }

@@ -166,6 +166,38 @@ public class CompanyIntelligenceTests : IAsyncLifetime
         result.Metrics.GhostingRate.ShouldBe(0.0);
         result.Metrics.AverageResponseTimeDays.ShouldBe(4.0);
         result.Metrics.MedianResponseTimeDays.ShouldBe(4.0);
+        result.Metrics.ClosureRate.ShouldBe(50.0); // 1 Rejected out of 2 (Interview isn't a closure)
+        // responsiveness=100, responseTimeScore=(1 - 4/30)*100=86.7, closureRate=50 → mean=78.9
+        result.Metrics.CandidateExperienceScore.ShouldBe(78.9);
+    }
+
+    [Fact]
+    public async Task Ghosted_And_Withdrawn_Applications_Do_Not_Count_Toward_Closure_Rate()
+    {
+        var appliedAt = DateTimeOffset.UtcNow.AddDays(-40);
+
+        // Rejected is the only company-given outcome among the three; Ghosted has no company
+        // action at all and Withdrawn is the candidate's own decision — neither should inflate
+        // Closure Rate the way TerminalApplicationStatuses (a different, broader concept) would.
+        var (appRejected, companyId) = await CreateApplicationAsync(_client, "Closure Rate Co", appliedAt);
+        await ChangeStatusAsync(_client, appRejected, ApplicationStatus.Rejected, appliedAt.AddDays(2));
+
+        var (appGhosted, companyId2) = await CreateApplicationAsync(_client, "Closure Rate Co", appliedAt);
+        await ChangeStatusAsync(_client, appGhosted, ApplicationStatus.Ghosted, appliedAt.AddDays(35));
+        companyId2.ShouldBe(companyId);
+
+        var (appWithdrawn, companyId3) = await CreateApplicationAsync(_client, "Closure Rate Co", appliedAt);
+        await ChangeStatusAsync(_client, appWithdrawn, ApplicationStatus.Withdrawn, appliedAt.AddDays(1));
+        companyId3.ShouldBe(companyId);
+
+        using var scope = _defaultFactory!.Services.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<ICompanyIntelligenceService>();
+        var result = await service.GetByCompanyIdAsync(companyId, CancellationToken.None);
+
+        result.ShouldNotBeNull();
+        result!.Metrics.ShouldNotBeNull();
+        result.Metrics!.TotalApplications.ShouldBe(3);
+        result.Metrics.ClosureRate.ShouldBe(33.3); // only the Rejected one counts, not Ghosted/Withdrawn
     }
 
     [Fact]

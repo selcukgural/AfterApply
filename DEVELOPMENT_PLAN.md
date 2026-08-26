@@ -246,16 +246,53 @@ noktadan company-level veri sızmaz.
 
 ## Sprint 11 — Candidate Experience Score altyapısı (spec §14), UI'da kapalı
 
-- Composite score: Responsiveness / Response Time / Closure Rate /
-  Interview Experience / Process Transparency alt metrikleri, Sprint 10'un
-  aggregate'lerinden türetilir
-- Ağırlıklandırma formülü — spec somut bir formül vermiyor, sprint
-  başında netleştirilecek (OPEN)
+> **Durum (2026-08-26): backend implementasyonu tamamlandı** (unit testler yeşil — bkz.
+> DECISIONS.md "Sprint 11 kararları ve bulguları"). Endpoint-şekli OPEN'ı, mevcut
+> `CompanyIntelligenceMetrics`e iki alan (`ClosureRate`, `CandidateExperienceScore`) eklenerek
+> çözüldü — ayrı bir endpoint yok. Bekleyen: podman entegrasyon testlerinin (Sprint 8/9/10/11
+> birlikte, `CompanyIntelligenceTests.cs`'e eklenen yeni testler dahil) batch sonunda koşulması.
+
+> **Kapsam kararı (2026-08-26):** Spec §14'ün 5 alt metriğinden ikisi
+> (Interview Experience, Process Transparency) için repo'da hiç ham veri
+> yok — `ApplicationStatus`/`ApplicationStatusHistory` sadece durum
+> geçişi + zaman damgası tutuyor, aday geri bildirimi veya red gerekçesi
+> gibi bir alan yok. Spec'in kendisi de "İlk MVP'de score algoritması
+> yapılmamalı, önce ham veri toplanmalı" diyor. Kullanıcıyla netleştirildi:
+> bu sprint sadece veri kaynağı olan **3 alt metrikle** sınırlı;
+> Interview Experience ve Process Transparency, ilgili ham veri toplanana
+> kadar kapsam dışı kalıyor (ne zaman ele alınacağı ayrı bir karar).
+
+- Composite score, sadece şu 3 alt metrikten (0-100 skalada):
+  - **Responsiveness** → Sprint 10'un `ResponseRate`'i doğrudan reuse
+    edilir
+  - **Response Time** → `AverageResponseTimeDays`'ten normalize edilir
+    (config-driven bir `ResponseTimeCapDays` eşiğine göre; cap'i aşan/aşkın
+    süre = 0 puan). Hiç yanıt yoksa (`AverageResponseTimeDays == null`)
+    bu alt metrik "veri yok" sayılır ve composite, kalan alt metriklerin
+    ağırlıkları yeniden normalize edilerek hesaplanır — 0 puan
+    *varsayılmaz* (0 puan "yanıt geldi ama çok geç" ile "hiç yanıt yok"
+    ayrımını kaybeder)
+  - **Closure Rate** → **Sprint 10'daki `TerminalApplicationStatuses`
+    reuse edilmeyecek** (Ghosted'ı "kapanmış" sayıyor, oysa CES'in
+    cezalandırması gereken tam olarak bu). CES'e özel yeni bir
+    sınıflandırma: sadece şirketin açıkça bir sonuç bildirdiği durumlar
+    (Rejected, Accepted) "closure" sayılır; Ghosted (şirket kapanış
+    vermedi) ve Withdrawn (adayın kendi kararı, şirket sinyali değil)
+    hariç tutulur
+- Ağırlıklandırma: config-driven (Sprint 4/7/10'daki "hard-code yok"
+  paterni), varsayılan eşit ağırlık (1/3 - 1/3 - 1/3); veri eksikse
+  yukarıdaki gibi mevcut alt metrikler arasında yeniden normalize edilir
 - Aynı `CompanyIntelligence:Enabled` flag'i altında (ayrı bir flag
-  gereksiz — aynı aktivasyon koşuluna, gerçek veri hacmine bağlı)
+  gereksiz — aynı aktivasyon koşuluna, gerçek veri hacmine bağlı), aynı
+  confidence bucket (Sprint 10'un eşikleri) kullanılır
+- Response route/response şekli (mevcut `/api/company-intelligence/
+  {companyId}` yanıtına yeni bir alan mı, ayrı bir endpoint mi) —
+  implementasyon başında DECISIONS.md'de netleştirilecek (OPEN, düşük
+  riskli bir detay)
 
 **DoD:** Sprint 10'daki gibi sentetik veriyle doğrulanan, flag kapalıyken
-gizli bir skor hesaplama pipeline'ı.
+gizli bir skor hesaplama pipeline'ı; Ghosted/Withdrawn içeren senaryolarda
+Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanır.
 
 ---
 

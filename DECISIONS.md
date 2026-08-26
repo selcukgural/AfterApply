@@ -1187,6 +1187,51 @@ kalıbı tekrarlıyor.
 
 ---
 
+## Sprint 11 kararları ve bulguları (Candidate Experience Score altyapısı)
+
+### Yeni endpoint yok, mevcut `CompanyIntelligenceMetrics`e iki alan eklendi — DECIDED
+
+DEVELOPMENT_PLAN.md'de OPEN bırakılan tek nokta buydu. Ayrı bir endpoint (aynı confidence
+bucket'ı, aynı flag'i, aynı `applications`/`historyRows` sorgularını tekrar çekmesi gerekirdi)
+yerine `CompanyIntelligenceService.GetByCompanyIdAsync` içinde zaten hesaplanmış verilerden
+`ClosureRate` ve `CandidateExperienceScore` türetilip mevcut `CompanyIntelligenceMetrics` record'una
+eklendi. Hidden bucket'ta `Metrics: null` davranışı (Sprint 10) otomatik olarak iki yeni alanı da
+kapsıyor — ayrı bir gizlilik kontrolü gerekmedi.
+
+### Closure Rate, `TerminalApplicationStatuses`'ı reuse etmiyor — DECIDED
+
+Yeni `Domain/Applications/CompanyGivenClosureStatuses.cs` (`{Rejected, Accepted}`) eklendi.
+`TerminalApplicationStatuses` (`{Withdrawn, Ghosted, Rejected, Accepted}`) farklı bir amaca hizmet
+ediyor — "bu başvuruyu bir daha izlemeye gerek yok" (reminder taraması için). Onu Closure Rate için
+reuse etmek Ghosted'ı "kapanmış" sayardı; oysa CES'in tam olarak cezalandırması gereken şey bu.
+Withdrawn de hariç tutuldu çünkü adayın kendi kararı, şirketin candidate experience'ı hakkında bir
+sinyal değil. `Ghosted_And_Withdrawn_Applications_Do_Not_Count_Toward_Closure_Rate` entegrasyon
+testi bu ayrımı üç durumu (Rejected/Ghosted/Withdrawn) aynı şirkette karıştırarak doğruluyor.
+
+### Response Time sub-score: linear decay + config-driven cap, veri yoksa `null` (0 değil) — DECIDED
+
+`CompanyIntelligenceCalculations.CalculateResponseTimeScore(avgDays, capDays)` = `100 * clamp(1 -
+avgDays/capDays, 0, 1)`. `ResponseTimeCapDays` (varsayılan 30) `CompanyIntelligenceOptions`'a
+eklendi — `NotificationOptions.GhostingThresholdDays`'in (aynı varsayılan değer, 30) kasıtlı olarak
+reuse edilmediği bir alan: ikisi farklı anlamlara sahip (biri "muhtemelen ghost edildi" uyarısı,
+diğeri skor eğrisinin sıfırlandığı eşik), aynı sayı olması tesadüf. Hiç yanıt yoksa (`avgDays ==
+null`) fonksiyon `null` döner, `0` değil — `CalculateCandidateExperienceScore` bunu ağırlıklı
+ortalamadan tamamen çıkarıp kalan iki alt metriğin ağırlıklarına göre yeniden normalize ediyor.
+Bunun neden önemli olduğu: "hiç yanıt yok" ile "yanıt geldi ama cap'i aştı" (`0` puan) farklı
+iddialar — ilkini `0` olarak puanlamak "en kötü ihtimalde bile en azından cap içinde yanıt verdi"
+gibi yanlış bir sinyal verirdi.
+
+### Ağırlıklar: config-driven, varsayılan eşit (1/1/1) — DECIDED
+
+Spec §14 somut bir formül vermiyor. `ResponsivenessWeight`/`ResponseTimeWeight`/`ClosureRateWeight`
+(hepsi varsayılan `1.0`) `CompanyIntelligenceOptions`'a eklendi — Sprint 4/7/10'daki "hard-code yok"
+paterni. Ağırlıkların toplamının 1'e eşit olması şart değil; `CalculateCandidateExperienceScore`
+kullanılan ağırlıkların toplamına bölerek normalize ediyor, bu yüzden kesirli varsayılanlar (0.333…)
+yerine tam sayı `1.0`'lar tercih edildi — okunabilirlik için, matematiksel bir fark yaratmıyor.
+Unit testte 3x ağırlık verilerek hiçbir eşit-bölme varsayımının hard-code edilmediği doğrulandı.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
