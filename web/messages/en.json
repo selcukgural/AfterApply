@@ -254,6 +254,8 @@
     },
     "form": {
       "companyName": "Company Name",
+      "companyNameSearching": "Searching...",
+      "companyNameNoMatches": "No matching companies",
       "jobTitle": "Position",
       "jobUrl": "Job URL",
       "location": "Location",

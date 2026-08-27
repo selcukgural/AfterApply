@@ -10,6 +10,8 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { Combobox } from "@/components/ui/Combobox";
+import { companiesApi } from "@/lib/api/companies";
 
 export interface ApplicationFormValues {
   companyName: string;
@@ -84,7 +86,16 @@ export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: Applic
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {mode === "create" && (
         <FormField label={t("companyName")} htmlFor="companyName" error={errors.companyName}>
-          <Input id="companyName" value={values.companyName} onChange={update("companyName")} />
+          <Combobox
+            id="companyName"
+            value={values.companyName}
+            onChange={(companyName) => setValues((prev) => ({ ...prev, companyName }))}
+            onSearch={async (query) =>
+              (await companiesApi.search(query)).map((company) => ({ id: company.id, label: company.name }))
+            }
+            loadingText={t("companyNameSearching")}
+            emptyText={t("companyNameNoMatches")}
+          />
         </FormField>
       )}
       <FormField label={t("jobTitle")} htmlFor="jobTitle" error={errors.jobTitle}>

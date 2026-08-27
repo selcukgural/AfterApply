@@ -254,6 +254,8 @@
     },
     "form": {
       "companyName": "Şirket Adı",
+      "companyNameSearching": "Aranıyor...",
+      "companyNameNoMatches": "Eşleşen şirket bulunamadı",
       "jobTitle": "Pozisyon",
       "jobUrl": "İlan URL'si",
       "location": "Konum",

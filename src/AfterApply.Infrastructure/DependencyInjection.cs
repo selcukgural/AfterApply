@@ -1,6 +1,7 @@
 using AfterApply.Application.Analytics;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
+using AfterApply.Application.Companies;
 using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
@@ -10,6 +11,7 @@ using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
+using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
@@ -54,6 +56,7 @@ public static class DependencyInjection
         services.Configure<EmailIntegrationOptions>(configuration.GetSection("EmailIntegrations"));
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
+        services.Configure<CompanySearchOptions>(configuration.GetSection("Companies"));
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
 
@@ -172,6 +175,7 @@ public static class DependencyInjection
     private static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddScoped<ICompanyResolver, CompanyResolver>();
+        services.AddScoped<ICompanySearchService, CompanySearchService>();
         services.AddScoped<IApplicationService, ApplicationService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IJobResolver, JobResolver>();

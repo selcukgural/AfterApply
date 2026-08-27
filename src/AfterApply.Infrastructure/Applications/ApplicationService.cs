@@ -1,5 +1,6 @@
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.Companies;
 using AfterApply.Application.Imports;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
@@ -9,7 +10,8 @@ using DomainApplication = AfterApply.Domain.Applications.Application;
 
 namespace AfterApply.Infrastructure.Applications;
 
-internal sealed class ApplicationService(AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver) : IApplicationService
+internal sealed class ApplicationService(
+    AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver, ICompanySearchService companySearchService) : IApplicationService
 {
     public async Task<PagedResult<ApplicationSummaryResponse>> GetAllAsync(Guid userId, GetApplicationsQuery query, CancellationToken cancellationToken)
     {
@@ -112,7 +114,14 @@ internal sealed class ApplicationService(AppDbContext dbContext, ICompanyResolve
             return new ExtensionApplicationResponse(await ToDetailAsync(existing, cancellationToken), WasDuplicate: true);
         }
 
-        var companyId = await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken);
+        // Scraped names are often near-duplicates of an existing Company (typos, "Corp" vs
+        // "Corporation") rather than a genuinely new one — a high-confidence trigram match is
+        // silently attached to first, falling back to the unchanged exact-match-or-create
+        // resolver only when no such match exists. Manual entry (CreateAsync) is unaffected: it
+        // still calls ResolveOrCreateAsync directly, since the autocomplete UI already steers
+        // users to type an existing company's exact name when one applies.
+        var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
+            ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken);
 
         // The job posting was scraped from a LinkedIn page (Source.LinkedIn — reserved for this
         // exact use since Sprint 5, see DECISIONS.md); Source.BrowserExtension instead tags how

@@ -160,6 +160,79 @@ function renderMessage(text, linkText, onLinkClick) {
   }
 }
 
+// Minimal click-to-select typeahead against /api/companies/search — deliberately no keyboard
+// navigation (not a "smart" system by design, see DECISIONS.md), just enough to steer users
+// toward an existing Company instead of typing a near-duplicate variant.
+function setUpCompanyAutocomplete(settings) {
+  const input = document.getElementById("companyName");
+  const list = document.getElementById("companySuggestions");
+  let debounceHandle = null;
+  let requestId = 0;
+
+  function hideSuggestions() {
+    list.hidden = true;
+    list.innerHTML = "";
+  }
+
+  async function search(query) {
+    const currentRequestId = ++requestId;
+    let results = [];
+    try {
+      const response = await fetch(`${settings.apiBaseUrl}/api/companies/search?q=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${settings.token}` },
+      });
+      if (response.ok) {
+        results = await response.json();
+      }
+    } catch {
+      // Autocomplete is a convenience — a network hiccup here just means no suggestions,
+      // never blocks typing/submitting the form by hand.
+      results = [];
+    }
+
+    if (currentRequestId !== requestId) {
+      return; // A newer keystroke already superseded this request.
+    }
+
+    if (results.length === 0) {
+      hideSuggestions();
+      return;
+    }
+
+    list.innerHTML = results
+      .map((company) => `<li><button type="button" data-name="${escapeHtml(company.name)}">${escapeHtml(company.name)}</button></li>`)
+      .join("");
+    list.hidden = false;
+  }
+
+  input.addEventListener("input", () => {
+    if (debounceHandle) {
+      clearTimeout(debounceHandle);
+    }
+    const query = input.value.trim();
+    if (query.length < 2) {
+      hideSuggestions();
+      return;
+    }
+    debounceHandle = setTimeout(() => search(query), 250);
+  });
+
+  list.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-name]");
+    if (!button) {
+      return;
+    }
+    input.value = button.dataset.name;
+    hideSuggestions();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (event.target !== input && !list.contains(event.target)) {
+      hideSuggestions();
+    }
+  });
+}
+
 async function main() {
   const settings = await getSettings();
 
@@ -196,7 +269,10 @@ async function main() {
   render(`
     ${scrapeError ? `<p class="status error">Auto-fill failed: ${escapeHtml(scrapeError)}</p>` : ""}
     <label for="companyName">Company</label>
-    <input id="companyName" type="text" value="${escapeHtml(scraped.company)}" />
+    <div class="combobox">
+      <input id="companyName" type="text" autocomplete="off" value="${escapeHtml(scraped.company)}" />
+      <ul id="companySuggestions" class="suggestions" hidden></ul>
+    </div>
 
     <label for="jobTitle">Job title</label>
     <input id="jobTitle" type="text" value="${escapeHtml(scraped.title)}" />
@@ -207,6 +283,8 @@ async function main() {
     <button id="submit">I Applied</button>
     <p id="status" class="status" hidden></p>
   `);
+
+  setUpCompanyAutocomplete(settings);
 
   document.getElementById("submit").addEventListener("click", async () => {
     const submitButton = document.getElementById("submit");

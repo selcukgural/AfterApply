@@ -234,3 +234,9 @@ export interface JobMatchResponse {
   recommendation: JobMatchRecommendation;
   computedAt: string;
 }
+
+export interface CompanySearchResult {
+  id: string;
+  name: string;
+  website: string | null;
+}

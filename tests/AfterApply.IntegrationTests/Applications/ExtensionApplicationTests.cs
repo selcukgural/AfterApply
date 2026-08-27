@@ -102,4 +102,45 @@ public class ExtensionApplicationTests : IAsyncLifetime
         var list = await listResponse.Content.ReadFromJsonAsync<PagedResult<ApplicationSummaryResponse>>(JsonOptions);
         list!.TotalCount.ShouldBe(1);
     }
+
+    [Fact]
+    public async Task Create_With_High_Confidence_Fuzzy_Match_Attaches_To_Existing_Company()
+    {
+        // Seeded manually (not via extension) so the two applications don't collide on JobUrl
+        // dedup — this test is specifically about company resolution, not the JobUrl dedup path
+        // already covered above.
+        var seedResponse = await _client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
+            "Nova Yazilim", "Backend Engineer", null, null, EmploymentType.FullTime, DateTimeOffset.UtcNow, null, null),
+            JsonOptions);
+        seedResponse.EnsureSuccessStatusCode();
+        var seeded = await seedResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        // A single-character typo of the seeded name — a near-duplicate, not a genuinely new
+        // company — clears the default 0.75 trigram similarity threshold.
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Nova Yazlim", "Frontend Engineer",
+                "https://www.linkedin.com/jobs/view/1111111111/", null, null, null), JsonOptions);
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        result!.Application.CompanyId.ShouldBe(seeded!.CompanyId);
+    }
+
+    [Fact]
+    public async Task Create_With_Low_Confidence_Match_Creates_New_Company()
+    {
+        var seedResponse = await _client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
+            "Zeta Robotics", "Backend Engineer", null, null, EmploymentType.FullTime, DateTimeOffset.UtcNow, null, null),
+            JsonOptions);
+        seedResponse.EnsureSuccessStatusCode();
+        var seeded = await seedResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Delta Analytics", "Frontend Engineer",
+                "https://www.linkedin.com/jobs/view/2222222222/", null, null, null), JsonOptions);
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        result!.Application.CompanyId.ShouldNotBe(seeded!.CompanyId);
+    }
 }
