@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "e-kariyerim — LinkedIn Import",
-  "version": "0.1.0",
-  "description": "Track a LinkedIn job application in e-kariyerim with one click.",
+  "name": "e-kariyerim — Job Import",
+  "version": "0.2.0",
+  "description": "Track a LinkedIn or kariyer.net job application in e-kariyerim with one click.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "e-kariyerim",
@@ -21,6 +21,7 @@
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": [
     "https://www.linkedin.com/*",
+    "https://www.kariyer.net/*",
     "http://localhost/*",
     "https://afterapply-api-188370748893.europe-west1.run.app/*",
     "https://api.ekariyerim.com/*"

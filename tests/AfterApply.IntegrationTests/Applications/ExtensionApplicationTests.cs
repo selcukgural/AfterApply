@@ -81,6 +81,28 @@ public class ExtensionApplicationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Create_From_KariyerNet_Url_Sets_KariyerNet_Job_Source()
+    {
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Dolusoft", "Yazılım Destek Uzmanı",
+                "https://www.kariyer.net/is-ilani/dolusoft-yazilim-teknolojileri-limited-sirketi-yazilim-destek-uzmani-4539310",
+                "Ankara", "Uzaktan teknik destek.", DateTimeOffset.UtcNow.AddDays(-1)),
+            JsonOptions);
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+        result!.WasDuplicate.ShouldBeFalse();
+        result.Application.Source.ShouldBe(Source.BrowserExtension);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var application = await db.Applications.SingleAsync(a => a.Id == result.Application.Id);
+        var job = await db.Jobs.SingleAsync(j => j.Id == application.JobId);
+        job.Source.ShouldBe(Source.KariyerNet);
+        job.ExternalId.ShouldBe("4539310");
+    }
+
+    [Fact]
     public async Task Create_With_Same_JobUrl_Twice_Returns_Existing_Application_As_Duplicate()
     {
         var request = new CreateFromExtensionRequest("Acme Corp", "Backend Engineer",

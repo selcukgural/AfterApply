@@ -21,6 +21,7 @@ export type EmploymentType =
 export type Source =
   | "Manual"
   | "LinkedIn"
+  | "KariyerNet"
   | "LinkedInImport"
   | "CsvImport"
   | "CompanyWebsite"

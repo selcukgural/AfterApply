@@ -123,12 +123,12 @@ internal sealed class ApplicationService(
         var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
             ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken);
 
-        // The job posting was scraped from a LinkedIn page (Source.LinkedIn — reserved for this
-        // exact use since Sprint 5, see DECISIONS.md); Source.BrowserExtension instead tags how
-        // this Application row itself was created, consistent with how Source is used elsewhere
-        // (Job.Source = data provenance, Application.Source = entry-creation channel).
-        var externalId = LinkedInJobIdExtractor.Extract(normalizedUrl);
-        var jobId = await jobResolver.ResolveOrCreateAsync(companyId, request.JobTitle, Source.LinkedIn, normalizedUrl,
+        // The job posting's own site (LinkedIn, kariyer.net, ...) tags Job.Source — data
+        // provenance — while Source.BrowserExtension always tags how this Application row itself
+        // was created, consistent with how Source is used elsewhere (Job.Source = data
+        // provenance, Application.Source = entry-creation channel).
+        var (jobSource, externalId) = JobPostingSourceResolver.Resolve(normalizedUrl);
+        var jobId = await jobResolver.ResolveOrCreateAsync(companyId, request.JobTitle, jobSource, normalizedUrl,
             externalId, request.Location, cancellationToken, request.Description, request.PublishedAt, request.DescriptionHtml);
 
         // The extension doesn't scrape employment type (spec §11's field list omits it) — same

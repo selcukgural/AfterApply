@@ -4,6 +4,7 @@ public enum Source
 {
     Manual,
     LinkedIn,
+    KariyerNet,
     LinkedInImport,
     CsvImport,
     CompanyWebsite,

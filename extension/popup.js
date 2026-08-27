@@ -36,6 +36,46 @@ function extractLinkedInJobId(url) {
   return null;
 }
 
+// kariyer.net always renders a job at its own /is-ilani/<slug>-<id> URL (no LinkedIn-style side
+// panel to account for) and appends the numeric ilan id as the slug's trailing -<digits> segment
+// — mirrors KariyerNetJobIdExtractor.cs on the backend, which this must stay in sync with since
+// both derive the same Job.ExternalId independently.
+function extractKariyerNetJobId(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+
+  if (parsed.hostname !== "www.kariyer.net") {
+    return null;
+  }
+
+  const match = parsed.pathname.match(/\/is-ilani\/[^/]*-(\d+)\/?$/);
+  return match ? match[1] : null;
+}
+
+// Picks the current tab's job site (if any) and the canonical URL to submit/dedupe against.
+// LinkedIn has a stable id-only canonical form (/jobs/view/<id>/); kariyer.net's slug is part of
+// how the posting resolves, so its canonical form is the tab's own path with tracking query
+// params/hash stripped, matching that page's own <link rel="canonical"> (verified by manual
+// inspection against a live posting).
+function detectJob(url) {
+  const linkedInJobId = extractLinkedInJobId(url);
+  if (linkedInJobId) {
+    return { site: "linkedin", jobId: linkedInJobId, jobUrl: `https://www.linkedin.com/jobs/view/${linkedInJobId}/` };
+  }
+
+  const kariyerNetJobId = extractKariyerNetJobId(url);
+  if (kariyerNetJobId) {
+    const parsed = new URL(url);
+    return { site: "kariyer", jobId: kariyerNetJobId, jobUrl: `${parsed.origin}${parsed.pathname.replace(/\/$/, "")}` };
+  }
+
+  return null;
+}
+
 // Injected into the LinkedIn tab via chrome.scripting.executeScript — must be fully
 // self-contained (no references to anything outside this function body; jobId is passed in via
 // executeScript's `args`, not a closure reference).
@@ -145,6 +185,74 @@ async function scrapeLinkedInJob(jobId) {
   };
 }
 
+// Injected into the kariyer.net tab via chrome.scripting.executeScript — must be fully
+// self-contained, same constraint as scrapeLinkedInJob above (hence the duplicated sanitizer
+// rather than a shared helper).
+//
+// Unlike LinkedIn, kariyer.net renders every field directly into the DOM up front (no
+// truncated-until-clicked description, confirmed via manual inspection of a live posting), so
+// there's no "…more" button to click before reading text. Selectors found via manual inspection
+// of https://www.kariyer.net/is-ilani/... (2026-08-28): the title and company are the two
+// `.vue-clamp` divs inside the page's single <h1> (title carries an extra `.job-title` class),
+// location is `.company-location`'s text, and the full posting body lives in
+// `.job-detail-container-description`. As with LinkedIn, every field is still shown as an
+// editable input before submitting, so a selector that stops matching after a future kariyer.net
+// redesign degrades to "user fills it in by hand," never a wrong silent submission.
+async function scrapeKariyerNetJob() {
+  function textOf(el) {
+    return el?.textContent?.trim() || null;
+  }
+
+  const title = textOf(document.querySelector("h1 div.vue-clamp.job-title"));
+  const company = textOf(document.querySelector("h1 div.vue-clamp:not(.job-title)"));
+  const location = textOf(document.querySelector(".company-location"));
+
+  // Same allow-listed HTML snapshot as LinkedIn's scraper — see sanitizeDescriptionHtml above for
+  // the untrusted-content rationale (this is a capture-time best effort only; the backend and
+  // frontend both re-sanitize before ever rendering it).
+  function sanitizeDescriptionHtml(root) {
+    const ALLOWED_TAGS = new Set(["P", "BR", "STRONG", "B", "EM", "I", "UL", "OL", "LI", "H1", "H2", "H3", "H4", "H5", "H6"]);
+    const SKIP_TAGS = new Set(["SVG", "BUTTON", "FIGURE", "IMG", "STYLE", "SCRIPT"]);
+
+    function escapeText(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function walk(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return escapeText(node.textContent);
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return "";
+      }
+      const tag = node.tagName;
+      if (SKIP_TAGS.has(tag) || node.getAttribute("aria-hidden") === "true") {
+        return "";
+      }
+      const inner = Array.from(node.childNodes).map(walk).join("");
+      if (tag === "BR") {
+        return "<br>";
+      }
+      return ALLOWED_TAGS.has(tag) ? `<${tag.toLowerCase()}>${inner}</${tag.toLowerCase()}>` : inner;
+    }
+
+    return walk(root).trim();
+  }
+
+  const descriptionBox = document.querySelector(".job-detail-container-description");
+  const description = textOf(descriptionBox);
+  const descriptionHtml = descriptionBox ? sanitizeDescriptionHtml(descriptionBox) : null;
+
+  return {
+    title: title || "",
+    company: company || "",
+    location: location || "",
+    // Matches CreateFromExtensionRequestValidator's MaximumLength(10_000/20_000) on the backend.
+    description: description ? description.slice(0, 10_000) : null,
+    descriptionHtml: descriptionHtml ? descriptionHtml.slice(0, 20_000) : null,
+  };
+}
+
 function render(html) {
   content.innerHTML = html;
 }
@@ -237,12 +345,14 @@ async function main() {
   const settings = await getSettings();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const jobId = tab?.url ? extractLinkedInJobId(tab.url) : null;
-  if (!jobId) {
-    renderMessage("Open a LinkedIn job posting (a /jobs/view/ page, or a job selected in search results) to track it here.");
+  const job = tab?.url ? detectJob(tab.url) : null;
+  if (!job) {
+    renderMessage(
+      "Open a LinkedIn job posting (a /jobs/view/ page, or a job selected in search results) or a kariyer.net job posting (an /is-ilani/ page) to track it here.",
+    );
     return;
   }
-  const jobUrl = `https://www.linkedin.com/jobs/view/${jobId}/`;
+  const jobUrl = job.jobUrl;
 
   if (!settings.token) {
     renderMessage("Set up your e-kariyerim access token first.", "Open Settings", () => chrome.runtime.openOptionsPage());
@@ -254,8 +364,8 @@ async function main() {
   try {
     const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: scrapeLinkedInJob,
-      args: [jobId],
+      func: job.site === "linkedin" ? scrapeLinkedInJob : scrapeKariyerNetJob,
+      args: job.site === "linkedin" ? [job.jobId] : [],
     });
     scraped = result;
   } catch (error) {

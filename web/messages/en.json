@@ -356,7 +356,7 @@
     },
     "extension": {
       "title": "Browser Extension",
-      "description": "Generate an access token to create applications with \"I Applied\" on LinkedIn job pages, then paste it into the extension's settings. This token grants full access to your account — only give it to your own browser extension.",
+      "description": "Generate an access token to create applications with \"I Applied\" on LinkedIn or kariyer.net job pages, then paste it into the extension's settings. This token grants full access to your account — only give it to your own browser extension.",
       "nameLabel": "Token name",
       "namePlaceholder": "e.g. Chrome Extension",
       "generate": "Generate Token",
@@ -462,6 +462,7 @@
   "source": {
     "Manual": "Entered Manually",
     "LinkedIn": "LinkedIn",
+    "KariyerNet": "kariyer.net",
     "LinkedInImport": "LinkedIn Import",
     "CsvImport": "CSV Import",
     "CompanyWebsite": "Company Website",

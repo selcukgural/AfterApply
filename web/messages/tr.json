@@ -356,7 +356,7 @@
     },
     "extension": {
       "title": "Tarayıcı Eklentisi",
-      "description": "LinkedIn ilan sayfalarında \"I Applied\" ile başvuru oluşturmak için bir erişim anahtarı üretin ve eklentinin ayarlarına yapıştırın. Bu anahtar hesabınıza tam erişim sağlar — sadece kendi tarayıcı eklentinize verin.",
+      "description": "LinkedIn veya kariyer.net ilan sayfalarında \"I Applied\" ile başvuru oluşturmak için bir erişim anahtarı üretin ve eklentinin ayarlarına yapıştırın. Bu anahtar hesabınıza tam erişim sağlar — sadece kendi tarayıcı eklentinize verin.",
       "nameLabel": "Anahtar adı",
       "namePlaceholder": "örn. Chrome Eklentisi",
       "generate": "Anahtar Üret",
@@ -462,6 +462,7 @@
   "source": {
     "Manual": "Elle Girildi",
     "LinkedIn": "LinkedIn",
+    "KariyerNet": "kariyer.net",
     "LinkedInImport": "LinkedIn İçe Aktarma",
     "CsvImport": "CSV İçe Aktarma",
     "CompanyWebsite": "Şirket Web Sitesi",
