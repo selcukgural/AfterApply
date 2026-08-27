@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+#
+# Builds a self-contained EF Core migration bundle (`efbundle`) and packages
+# it as a minimal runtime image. Run as a Cloud Run Job before the API
+# service is updated, so a new deploy's schema changes land before the new
+# code that depends on them gets traffic. Deliberately separate from
+# src/AfterApply.Api/Dockerfile — Program.cs still never calls
+# Database.Migrate() on startup (see DEPLOYMENT.md "Migrations"); this image
+# is the explicit, out-of-band migration step, just automated instead of
+# run by hand.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY Directory.Build.props Directory.Packages.props ./
+COPY src/ src/
+RUN dotnet restore src/AfterApply.Api/AfterApply.Api.csproj
+
+RUN dotnet tool install --global dotnet-ef --version 10.0.11
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# `migrations bundle` only reads the compiled model/migrations via
+# AppDbContextFactory — it never opens a connection — so this placeholder
+# just satisfies the factory's "is ConnectionStrings:Postgres configured"
+# check. The real connection string is supplied at container *run* time
+# via the same env var, injected from Secret Manager by Cloud Run.
+ENV ConnectionStrings__Postgres="Host=build;Database=build;Username=build;Password=build"
+RUN dotnet ef migrations bundle \
+      --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api \
+      --self-contained -r linux-x64 --configuration Release \
+      -o /app/efbundle
+
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/efbundle ./efbundle
+# Shell form: efbundle takes the connection string as a --connection flag,
+# not an env var, so it has to be interpolated at container start.
+ENTRYPOINT ["/bin/sh", "-c", "exec ./efbundle --connection \"$ConnectionStrings__Postgres\" --verbose"]

@@ -55,6 +55,12 @@ profile or in dev — migrations are always an explicit, separate step
 container restart. This is a deliberate choice, not an oversight — see
 step 3 above for how to run it against this profile's Postgres.
 
+For the real cloud deployment (Sprint 13+), this "explicit step" is
+automated as part of `deploy.yml` rather than run by hand — see "Automatic
+migrations in CI" under Sprint 13 below. The invariant above still holds:
+nothing calls `Database.Migrate()` on container boot; the automation just
+moved the explicit step from a human's terminal into the deploy pipeline.
+
 ## What's still missing for a real cloud deployment
 
 This profile deliberately stops short of being cloud-ready:
@@ -287,6 +293,18 @@ gcloud run services add-iam-policy-binding afterapply-web --region="$REGION" \
 ```
 
 ### 6. Run migrations — do this before testing registration/login
+
+> **As of 2026-08-27, this step is automatic** — `deploy.yml`'s
+> `deploy-backend` job builds `src/AfterApply.Api/Dockerfile.migrate` into
+> an `afterapply-migrate` Cloud Run Job and runs it (`gcloud run jobs
+> execute --wait`) before updating the `afterapply-api` service, on every
+> deploy. It reads `ConnectionStrings__Postgres` from the same
+> `afterapply-postgres-connection` Secret Manager secret the api service
+> uses, via its own runtime identity — the DB password never touches CI
+> logs, GitHub secrets, or a local machine. See DECISIONS.md "Deploy
+> pipeline'ına otomatik migration adımı" for why. The manual path below is
+> kept for the very first bootstrap (before `afterapply-migrate` exists)
+> and for troubleshooting.
 
 The database schema does not exist yet at this point (Cloud SQL gives you
 an empty `afterapply` database, no tables) — skipping this step is the

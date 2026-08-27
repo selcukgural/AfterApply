@@ -1598,6 +1598,42 @@ bu bileşenle değiştirildi.
 
 ---
 
+## Deploy pipeline'ına otomatik migration adımı (2026-08-27)
+
+### Migration'lar artık deploy.yml'de otomatik, ayrı bir Cloud Run Job üzerinden — DECIDED
+
+Sprint 13'te bilinçli olarak "migration'lar hep elle, `dotnet ef database update`" kararı
+verilmişti (DEPLOYMENT.md "Migrations"). `AddCompanyNameTrigramIndex` migration'ının prod'a elle
+uygulanması sırasında kullanıcı bunun her deploy'da otomatikleşmesini istedi — ama DB parolasının
+bir AI asistanına (veya GitHub Actions loglarına) hiç geçmemesi şartıyla.
+
+Seçilen yaklaşım: `dotnet ef migrations bundle` ile self-contained bir `efbundle` executable
+üretilip (`src/AfterApply.Api/Dockerfile.migrate`) `afterapply-migrate` adında ayrı bir **Cloud
+Run Job** olarak deploy ediliyor. `deploy.yml`'in `deploy-backend` job'ı, `afterapply-api`
+servisini güncellemeden **önce** bu job'ı build edip `gcloud run jobs execute --wait` ile
+çalıştırıyor — job kendi runtime service account'u üzerinden `afterapply-postgres-connection`
+secret'ını doğrudan Secret Manager'dan okuyor (API servisinin zaten yaptığı gibi), yani parola
+CI/CD pipeline'ına hiç girmiyor. `dotnet ef database update` idempotent olduğu için (sadece
+`__EFMigrationsHistory`de eksik olan migration'ları uygular) her deploy'da çalıştırmak güvenli —
+uygulanacak bir şey yoksa no-op.
+
+Reddedilen alternatif: CI runner'ında Cloud SQL Auth Proxy başlatıp `dotnet ef` çalıştırmak —
+daha az altyapı değişikliği gerektiriyordu ama DB parolasının GitHub Actions secret'ı olarak
+saklanıp CI runner'ının belleğinden geçmesini gerektiriyordu; kullanıcı Cloud Run Job'ı tercih
+etti çünkü parola hiç GCP dışına çıkmıyor.
+
+Program.cs'in container başlangıcında otomatik `Database.Migrate()` çağırmama kararına
+dokunulmadı — migration hâlâ ayrı, explicit bir adım, sadece artık elle değil deploy pipeline'ı
+tarafından tetikleniyor.
+
+Yan not: `AppDbContextFactory`'e `.AddEnvironmentVariables()` eklendi — `migrations bundle`
+komutu CI/Docker build'inde user-secrets olmadan çalışabilsin diye (bundle gerçek bir DB'ye
+bağlanmıyor, sadece modeli okumak için `ConnectionStrings:Postgres`'in "configured" olmasını
+istiyor; build sırasında placeholder bir değer veriliyor, gerçek değer job çalışırken Secret
+Manager'dan geliyor).
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

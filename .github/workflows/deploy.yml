@@ -45,6 +45,36 @@ jobs:
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
+      # Applies any pending EF Core migrations before the api service below
+      # gets the new image, so new code never sees an old schema. Runs as a
+      # Cloud Run Job (not a GitHub Actions step) specifically so the DB
+      # password never leaves GCP — the job reads
+      # ConnectionStrings__Postgres from Secret Manager itself via its own
+      # runtime identity, the same way the api service already does below.
+      # `dotnet ef database update` (what the bundle runs) is idempotent —
+      # it only applies migrations missing from __EFMigrationsHistory, so
+      # running it on every deploy is a no-op when nothing changed. See
+      # src/AfterApply.Api/Dockerfile.migrate and DEPLOYMENT.md
+      # "Migrations".
+      - name: Build and push migration image
+        run: |
+          MIGRATE_IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/afterapply-migrate:${GITHUB_SHA}"
+          docker build -f src/AfterApply.Api/Dockerfile.migrate -t "$MIGRATE_IMAGE" .
+          docker push "$MIGRATE_IMAGE"
+          echo "MIGRATE_IMAGE=$MIGRATE_IMAGE" >> "$GITHUB_ENV"
+
+      - name: Run pending migrations
+        run: |
+          gcloud run jobs deploy afterapply-migrate \
+            --image="${MIGRATE_IMAGE}" \
+            --region="${GCP_REGION}" \
+            --set-cloudsql-instances="${GCP_PROJECT_ID}:${GCP_REGION}:afterapply-db" \
+            --set-secrets="ConnectionStrings__Postgres=afterapply-postgres-connection:latest" \
+            --max-retries=0 \
+            --task-timeout=600 \
+            --quiet
+          gcloud run jobs execute afterapply-migrate --region="${GCP_REGION}" --wait
+
       # Values on the right of `=` in `secrets:` are Secret Manager secret
       # names (not the secret values themselves) — see DEPLOYMENT.md for
       # how to create them. Empty-string-disables-safely secrets (Sentry,
