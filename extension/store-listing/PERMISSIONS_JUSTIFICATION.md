@@ -41,7 +41,7 @@ only) so the popup can detect a job opened via the search-results side panel.
 ```
 
 **host_permissions — the e-kariyerim API origins (https://api.ekariyerim.com/*, the Cloud Run
-origin, http://localhost/* for local development)**
+origin)**
 ```
 The extension submits the tracked application (title, company, location, job URL, and the scraped
 description) to the user's own e-kariyerim account at this origin, authenticated with their
