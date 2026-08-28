@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Testcontainers.PostgreSql;
+using Testcontainers.Redis;
 
 namespace AfterApply.IntegrationTests.Imports;
 
@@ -38,17 +39,18 @@ public class LinkedInImportTests : IAsyncLifetime
     };
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+    private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine").Build();
     private WebApplicationFactory<Program>? _factory;
     private HttpClient _client = null!;
 
     public async Task InitializeAsync()
     {
-        await _postgres.StartAsync();
+        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
-            builder.UseSetting("ConnectionStrings:Redis", "localhost:6379");
+            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
         });
 
@@ -72,6 +74,7 @@ public class LinkedInImportTests : IAsyncLifetime
         }
 
         await _postgres.DisposeAsync();
+        await _redis.DisposeAsync();
     }
 
     private static byte[] BuildZip(params (string EntryName, string Content)[] entries)

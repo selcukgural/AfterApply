@@ -92,6 +92,11 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(postgresConnectionString));
 
+        // L2 cache backend (Redis) + HybridCache, which layers an in-process L1 (IMemoryCache)
+        // in front of it automatically once an IDistributedCache is registered.
+        services.AddStackExchangeRedisCache(o => o.Configuration = redisConnectionString);
+        services.AddHybridCache();
+
         services.AddHealthChecks()
             .AddNpgSql(postgresConnectionString, name: "postgres")
             .AddRedis(redisConnectionString, name: "redis");

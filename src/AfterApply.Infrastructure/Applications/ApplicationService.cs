@@ -6,13 +6,22 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using DomainApplication = AfterApply.Domain.Applications.Application;
 
 namespace AfterApply.Infrastructure.Applications;
 
 internal sealed class ApplicationService(
-    AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver, ICompanySearchService companySearchService) : IApplicationService
+    AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver,
+    ICompanySearchService companySearchService, HybridCache cache) : IApplicationService
 {
+    private static readonly HybridCacheEntryOptions SummaryCountsCacheOptions = new()
+    {
+        Expiration = TimeSpan.FromSeconds(20),
+        LocalCacheExpiration = TimeSpan.FromSeconds(20)
+    };
+
+    private static string SummaryCountsCacheKey(Guid userId) => $"applications:summary:{userId}";
     public async Task<PagedResult<ApplicationSummaryResponse>> GetAllAsync(Guid userId, GetApplicationsQuery query, CancellationToken cancellationToken)
     {
         var joined = dbContext.Applications
@@ -57,28 +66,36 @@ internal sealed class ApplicationService(
         return new PagedResult<ApplicationSummaryResponse>(items, totalCount, page, pageSize);
     }
 
-    public async Task<ApplicationSummaryCountsResponse> GetSummaryCountsAsync(Guid userId, CancellationToken cancellationToken)
+    public Task<ApplicationSummaryCountsResponse> GetSummaryCountsAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var counts = await dbContext.Applications
-            .Where(a => a.UserId == userId)
-            .GroupBy(a => a.Status)
-            .Select(g => new { Status = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Status, x => x.Count, cancellationToken);
+        return cache.GetOrCreateAsync(
+            SummaryCountsCacheKey(userId),
+            userId,
+            async (uid, ct) =>
+            {
+                var counts = await dbContext.Applications
+                    .Where(a => a.UserId == uid)
+                    .GroupBy(a => a.Status)
+                    .Select(g => new { Status = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.Status, x => x.Count, ct);
 
-        int Get(ApplicationStatus status) => counts.GetValueOrDefault(status);
+                int Get(ApplicationStatus status) => counts.GetValueOrDefault(status);
 
-        var active = Get(ApplicationStatus.Applied) + Get(ApplicationStatus.Screening)
-            + Get(ApplicationStatus.Interview) + Get(ApplicationStatus.TechnicalInterview) + Get(ApplicationStatus.FinalInterview);
-        var interviews = Get(ApplicationStatus.Interview) + Get(ApplicationStatus.TechnicalInterview) + Get(ApplicationStatus.FinalInterview);
+                var active = Get(ApplicationStatus.Applied) + Get(ApplicationStatus.Screening)
+                    + Get(ApplicationStatus.Interview) + Get(ApplicationStatus.TechnicalInterview) + Get(ApplicationStatus.FinalInterview);
+                var interviews = Get(ApplicationStatus.Interview) + Get(ApplicationStatus.TechnicalInterview) + Get(ApplicationStatus.FinalInterview);
 
-        return new ApplicationSummaryCountsResponse(
-            Total: counts.Values.Sum(),
-            Active: active,
-            Waiting: Get(ApplicationStatus.Offer),
-            Interviews: interviews,
-            Offers: Get(ApplicationStatus.Offer),
-            Rejected: Get(ApplicationStatus.Rejected),
-            Ghosted: Get(ApplicationStatus.Ghosted));
+                return new ApplicationSummaryCountsResponse(
+                    Total: counts.Values.Sum(),
+                    Active: active,
+                    Waiting: Get(ApplicationStatus.Offer),
+                    Interviews: interviews,
+                    Offers: Get(ApplicationStatus.Offer),
+                    Rejected: Get(ApplicationStatus.Rejected),
+                    Ghosted: Get(ApplicationStatus.Ghosted));
+            },
+            SummaryCountsCacheOptions,
+            cancellationToken: cancellationToken).AsTask();
     }
 
     public async Task<ApplicationDetailResponse?> GetByIdAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken)
@@ -98,6 +115,7 @@ internal sealed class ApplicationService(
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
     }
@@ -140,6 +158,7 @@ internal sealed class ApplicationService(
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
 
         return new ExtensionApplicationResponse(await ToDetailAsync(application, cancellationToken), WasDuplicate: false);
     }
@@ -169,6 +188,7 @@ internal sealed class ApplicationService(
 
         dbContext.Applications.Remove(application);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
         return true;
     }
 
@@ -192,6 +212,7 @@ internal sealed class ApplicationService(
         dbContext.ApplicationEvents.Add(application.Events.Last());
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
     }

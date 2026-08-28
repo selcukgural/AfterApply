@@ -15,6 +15,7 @@ using Google.Apis.Auth.OAuth2.Requests;
 using Google.Apis.Gmail.v1;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -27,9 +28,18 @@ internal sealed class EmailIntegrationService(
     IDataProtectionProvider dataProtectionProvider,
     IApplicationService applicationService,
     IOptions<GoogleOAuthOptions> googleOptions,
-    IOptions<JwtOptions> jwtOptions) : IEmailIntegrationService
+    IOptions<JwtOptions> jwtOptions,
+    HybridCache cache) : IEmailIntegrationService
 {
     private const string StatePurpose = "gmail-oauth-state";
+
+    private static readonly HybridCacheEntryOptions ConnectionStatusCacheOptions = new()
+    {
+        Expiration = TimeSpan.FromSeconds(20),
+        LocalCacheExpiration = TimeSpan.FromSeconds(20)
+    };
+
+    private static string ConnectionStatusCacheKey(Guid userId) => $"email:connection-status:{userId}";
 
     private readonly IDataProtector _protector =
         dataProtectionProvider.CreateProtector("AfterApply.EmailIntegrations.RefreshToken");
@@ -97,28 +107,37 @@ internal sealed class EmailIntegrationService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveAsync(ConnectionStatusCacheKey(userId.Value), cancellationToken);
 
         return new EmailConnectionCallbackResult(true, null);
     }
 
-    public async Task<EmailConnectionStatusResponse> GetConnectionStatusAsync(Guid userId, CancellationToken cancellationToken)
+    public Task<EmailConnectionStatusResponse> GetConnectionStatusAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var connection = await dbContext.EmailConnections
-            .Where(c => c.UserId == userId && c.Provider == EmailProvider.Gmail)
-            .Select(c => new { c.DisconnectedAt, c.ProviderAccountEmail, c.LastSyncedAt, c.LastSyncError })
-            .FirstOrDefaultAsync(cancellationToken);
+        return cache.GetOrCreateAsync(
+            ConnectionStatusCacheKey(userId),
+            userId,
+            async (uid, ct) =>
+            {
+                var connection = await dbContext.EmailConnections
+                    .Where(c => c.UserId == uid && c.Provider == EmailProvider.Gmail)
+                    .Select(c => new { c.DisconnectedAt, c.ProviderAccountEmail, c.LastSyncedAt, c.LastSyncError })
+                    .FirstOrDefaultAsync(ct);
 
-        if (connection is null)
-        {
-            return new EmailConnectionStatusResponse(false, null, null, false);
-        }
+                if (connection is null)
+                {
+                    return new EmailConnectionStatusResponse(false, null, null, false);
+                }
 
-        var connected = connection.DisconnectedAt is null;
-        return new EmailConnectionStatusResponse(
-            connected,
-            connected ? connection.ProviderAccountEmail : null,
-            connection.LastSyncedAt,
-            NeedsReattention: connected && connection.LastSyncError is not null);
+                var connected = connection.DisconnectedAt is null;
+                return new EmailConnectionStatusResponse(
+                    connected,
+                    connected ? connection.ProviderAccountEmail : null,
+                    connection.LastSyncedAt,
+                    NeedsReattention: connected && connection.LastSyncError is not null);
+            },
+            ConnectionStatusCacheOptions,
+            cancellationToken: cancellationToken).AsTask();
     }
 
     public async Task<bool> DisconnectAsync(Guid userId, CancellationToken cancellationToken)
@@ -145,11 +164,15 @@ internal sealed class EmailIntegrationService(
 
         connection.Disconnect(DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveAsync(ConnectionStatusCacheKey(userId), cancellationToken);
         return true;
     }
 
     public async Task<IReadOnlyList<EmailSuggestionResponse>> GetPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken)
     {
+        // AsNoTracking matters here (unlike most other read paths in this codebase): the final
+        // projection below carries the whole EmailSuggestion entity (`s`) through, not just scalar
+        // fields, so EF would otherwise snapshot every row for change tracking it never uses.
         var rows = await dbContext.EmailSuggestions
             .Where(s => s.UserId == userId && s.Status == EmailSuggestionStatus.Pending)
             .Join(dbContext.Applications, s => s.ApplicationId, a => a.Id, (s, a) => new { s, a.JobTitle, a.CompanyId })
@@ -157,6 +180,7 @@ internal sealed class EmailIntegrationService(
             .Join(dbContext.EmailConnections, x => x.s.EmailConnectionId, ec => ec.Id,
                 (x, ec) => new { x.s, x.JobTitle, x.CompanyName, ec.EncryptedRefreshToken })
             .OrderByDescending(x => x.s.EmailReceivedAt)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
 
         var responses = new List<EmailSuggestionResponse>(rows.Count);

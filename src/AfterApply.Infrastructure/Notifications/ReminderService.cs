@@ -4,11 +4,12 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.Notifications;
 
-internal sealed class ReminderService(AppDbContext dbContext, IOptions<NotificationOptions> options) : IReminderService
+internal sealed class ReminderService(AppDbContext dbContext, IOptions<NotificationOptions> options, HybridCache cache) : IReminderService
 {
     // Same set as AnalyticsService.RespondedStatuses — "responded" is defined once,
     // reused here rather than redefined (DECISIONS.md).
@@ -18,18 +19,31 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         ApplicationStatus.FinalInterview, ApplicationStatus.Offer, ApplicationStatus.Rejected, ApplicationStatus.Accepted
     ];
 
-    public async Task<IReadOnlyList<ReminderResponse>> GetActiveRemindersAsync(Guid userId, CancellationToken cancellationToken)
+    private static readonly HybridCacheEntryOptions ActiveRemindersCacheOptions = new()
     {
-        return await dbContext.Reminders
-            .Where(r => r.UserId == userId && r.DismissedAt == null)
-            .Join(dbContext.Applications, r => r.ApplicationId, a => a.Id,
-                (r, a) => new { r, a.CompanyId, a.JobTitle })
-            .Join(dbContext.Companies, x => x.CompanyId, c => c.Id,
-                (x, c) => new { x.r, x.JobTitle, CompanyName = c.Name })
-            .OrderByDescending(x => x.r.CreatedAt)
-            .Select(x => new ReminderResponse(
-                x.r.Id, x.r.ApplicationId, x.CompanyName, x.JobTitle, x.r.Type, x.r.DaysElapsedAtCreation, x.r.CreatedAt))
-            .ToListAsync(cancellationToken);
+        Expiration = TimeSpan.FromSeconds(20),
+        LocalCacheExpiration = TimeSpan.FromSeconds(20)
+    };
+
+    private static string ActiveRemindersCacheKey(Guid userId) => $"reminders:active:{userId}";
+
+    public Task<IReadOnlyList<ReminderResponse>> GetActiveRemindersAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return cache.GetOrCreateAsync(
+            ActiveRemindersCacheKey(userId),
+            userId,
+            async (uid, ct) => (IReadOnlyList<ReminderResponse>)await dbContext.Reminders
+                .Where(r => r.UserId == uid && r.DismissedAt == null)
+                .Join(dbContext.Applications, r => r.ApplicationId, a => a.Id,
+                    (r, a) => new { r, a.CompanyId, a.JobTitle })
+                .Join(dbContext.Companies, x => x.CompanyId, c => c.Id,
+                    (x, c) => new { x.r, x.JobTitle, CompanyName = c.Name })
+                .OrderByDescending(x => x.r.CreatedAt)
+                .Select(x => new ReminderResponse(
+                    x.r.Id, x.r.ApplicationId, x.CompanyName, x.JobTitle, x.r.Type, x.r.DaysElapsedAtCreation, x.r.CreatedAt))
+                .ToListAsync(ct),
+            ActiveRemindersCacheOptions,
+            cancellationToken: cancellationToken).AsTask();
     }
 
     public async Task<bool> DismissAsync(Guid userId, Guid reminderId, CancellationToken cancellationToken)
@@ -44,6 +58,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
         reminder.Dismiss(DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveAsync(ActiveRemindersCacheKey(userId), cancellationToken);
 
         return true;
     }

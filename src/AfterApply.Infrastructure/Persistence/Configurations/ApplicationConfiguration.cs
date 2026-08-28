@@ -23,6 +23,7 @@ public sealed class ApplicationConfiguration : IEntityTypeConfiguration<DomainAp
         builder.Property(a => a.Source).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(a => a.UserId);
+        builder.HasIndex(a => new { a.UserId, a.Status });
 
         builder.HasOne<Company>()
             .WithMany()

@@ -20,6 +20,7 @@ public sealed class EmailSuggestionConfiguration : IEntityTypeConfiguration<Emai
         builder.Property(s => s.Status).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(s => s.UserId);
+        builder.HasIndex(s => new { s.UserId, s.Status });
         builder.HasIndex(s => new { s.EmailConnectionId, s.ProviderMessageId }).IsUnique();
 
         builder.HasOne<EmailConnection>()
