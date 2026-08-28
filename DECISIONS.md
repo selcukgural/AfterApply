@@ -1634,6 +1634,40 @@ Manager'dan geliyor).
 
 ---
 
+## AI Job Matching (Sprint 8) — kullanıcıdan gizlendi (2026-08-29)
+
+**Karar:** `Matching:Enabled` config flag'i eklendi (varsayılan `false`,
+`CompanyIntelligence:Enabled` paterninin birebir tekrarı). `/api/matching/*`
+altındaki 4 endpoint (`MatchingEndpoints.cs`) artık flag kapalıyken
+grup-seviyesi bir `AddEndpointFilter` ile her çağrıda `404 NotFound`
+dönüyor — flag'in varlığı dışarıdan ayırt edilemiyor (CompanyIntelligence
+DoD'siyle aynı prensip). Frontend'de iki giriş noktası tamamen kaldırıldı
+(render edilmiyor, ilgili state/effect/handler'larla birlikte silindi):
+`settings/page.tsx`'teki CV metni bölümü ve `applications/[id]/page.tsx`'teki
+`JobMatchPanel`. Kod silinmedi (`JobMatchPanel.tsx`, `lib/api/matching.ts`,
+`CandidateProfile`/`JobMatch` domain kodu duruyor), sadece erişilemez.
+
+**Gerekçe:** `PRIVACY_CHECKLIST.md`'nin "Avukata götürülecek envanter ve
+eksikler" bölümünde en kritik madde olarak işaretlendi — bu faz kullanıcının
+CV metnini ham hâlde OpenAI'a (ABD, yurt dışı) gönderiyor, ama ne granüler
+bir açık rıza ne de yurt dışı aktarım disclosure'ı var. Kullanıcının bir
+avukatı yok; gerçek kullanıcı hacmi düşükken bu riski taşımak yerine özelliği
+kullanıcıdan tamamen gizlemek tercih edildi. Yeniden açılması, gerekli
+KVKK metinleri (Aydınlatma Metni + açık rıza + yurt dışı aktarım
+disclosure'ı) hazırlanana kadar ertelendi — bkz. DEVELOPMENT_PLAN.md
+Sprint 8 notu.
+
+**Not:** CompanyIntelligence'ın aksine burada frontend'de UI hiç
+"flag'e göre koşullu render" olarak yazılmadı — doğrudan kod render
+ağacından çıkarıldı. Sebep: mevcut kod tabanında backend flag'ini frontend'e
+taşıyan bir mekanizma hiç yoktu (CompanyIntelligence de zaten hiç UI'a sahip
+değildi, bu yüzden örnek teşkil etmiyordu); böyle bir mekanizma kurmak bu
+tek-seferlik gizleme işi için orantısız olurdu (YAGNI) — flag geri
+açıldığında bu iki JSX bloğu + state'i geri eklemek, DECISIONS.md'nin bu
+notuyla birlikte yeterli.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.Configure<EmailIntegrationOptions>(configuration.GetSection("EmailIntegrations"));
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
+        services.Configure<MatchingOptions>(configuration.GetSection("Matching"));
         services.Configure<CompanySearchOptions>(configuration.GetSection("Companies"));
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);

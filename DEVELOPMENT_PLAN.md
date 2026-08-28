@@ -159,6 +159,18 @@ DECISIONS.md). Kalan fazlar şu sırayla planlanıyor:
 > Sprint 8-11 suite'inin tamamı (58 test) yeşil.** Bekleyen: gerçek
 > `OpenAI:ApiKey` ile manuel smoke test.
 
+> **Kullanıcıdan gizlendi (2026-08-29):** Bu faz, kullanıcının CV metnini
+> OpenAI'a (ABD, yurt dışı) gönderiyor — bu, `PRIVACY_CHECKLIST.md`'nin
+> "Avukata götürülecek envanter ve eksikler" bölümünde işaretlenen en
+> kritik KVKK açığı (granüler rıza + yurt dışı aktarım disclosure'ı
+> yok, kullanıcının bir avukatı yok). Bu yüzden Sprint 10/11'deki
+> `CompanyIntelligence:Enabled` paterni tekrarlanarak backend/frontend
+> tüm uç noktalar bir config flag ile kullanıcıdan tamamen gizlendi —
+> kod silinmedi, sadece erişilemez hâle getirildi. Yeniden açılması,
+> gerekli Aydınlatma Metni/Açık Rıza/yurt dışı aktarım disclosure'ı
+> hazır olduktan sonraya ertelendi (ne zaman ele alınacağı ayrı bir
+> karar — bkz. DECISIONS.md).
+
 > Diğer data-gated fazlardan farklı olarak bu faz **tek kullanıcının kendi**
 > CV'si + job description'ına dayanıyor, başka kullanıcı verisine bağımlı
 > değil — dolayısıyla yayın öncesi tam olarak bitirilebilir.
