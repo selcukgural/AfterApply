@@ -1,6 +1,8 @@
 import { getSettings } from "./storage.js";
+import { setUpThemeToggle } from "./theme.js";
 
 const content = document.getElementById("content");
+const SITE_LABELS = { linkedin: "LinkedIn", kariyer: "kariyer.net" };
 
 // LinkedIn only puts a job on its own /jobs/view/<id> URL when you open it in a dedicated
 // tab/page. The far more common path — browsing /jobs/search-results/ (or /jobs/search/,
@@ -342,6 +344,7 @@ function setUpCompanyAutocomplete(settings) {
 }
 
 async function main() {
+  setUpThemeToggle("themeToggle");
   const settings = await getSettings();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -377,6 +380,7 @@ async function main() {
   }
 
   render(`
+    <span class="site-badge">${escapeHtml(SITE_LABELS[job.site])}</span>
     ${scrapeError ? `<p class="status error">Auto-fill failed: ${escapeHtml(scrapeError)}</p>` : ""}
     <label for="companyName">Company</label>
     <div class="combobox">

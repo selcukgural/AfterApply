@@ -17,3 +17,18 @@ export async function getSettings() {
 export async function saveSettings(settings) {
   await chrome.storage.local.set({ [STORAGE_KEY]: settings });
 }
+
+// Separate key from afterapply_settings on purpose: theme is a display preference (mirrors the
+// web app's own "theme" cookie, see web/src/lib/theme/theme.ts), not an API credential, so it's
+// kept out of the object that carries the access token. Value is "light" | "dark", or absent —
+// absent means "follow the OS prefers-color-scheme", same fallback popup.css implements in CSS.
+const THEME_KEY = "afterapply_theme";
+
+export async function getTheme() {
+  const result = await chrome.storage.local.get(THEME_KEY);
+  return result[THEME_KEY] ?? null;
+}
+
+export async function saveTheme(theme) {
+  await chrome.storage.local.set({ [THEME_KEY]: theme });
+}

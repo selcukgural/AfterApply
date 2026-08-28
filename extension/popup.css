@@ -1,29 +1,234 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  width: 340px;
-  padding: 12px 14px;
-  color: #111827;
+/* Design tokens mirror the e-kariyerim web app's Tailwind palette (gray scale + blue-600
+   accent, see web/src/components/ui/Button.tsx and Input.tsx) so the extension reads as part
+   of the same product rather than a generic browser-extension popup.
+
+   Theme resolution: [data-theme] on <html> is set explicitly by popup.js/options.js (persisted
+   per-install via storage.js, mirroring the site's own light/dark toggle) and falls back to the
+   OS preference before the user has chosen. Tokens are therefore defined three times on purpose:
+   the light values on :root, the dark overrides under prefers-color-scheme (for the no-choice-yet
+   case), and the same dark overrides again under [data-theme="dark"] so an explicit choice always
+   wins regardless of OS setting. */
+
+:root {
+  color-scheme: light dark;
+
+  --bg: #f9fafb;
+  --surface: #ffffff;
+  --surface-hover: #f3f4f6;
+  --border: #d1d5db;
+  --border-subtle: #e5e7eb;
+
+  --text: #111827;
+  --text-subtle: #374151;
+  --text-muted: #6b7280;
+  --text-placeholder: #9ca3af;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-contrast: #ffffff;
+  --accent-subtle-bg: #eff6ff;
+  --accent-subtle-text: #1e3a8a;
+
+  --success: #15803d;
+  --success-bg: #f0fdf4;
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+
+  --disabled-bg: #9ca3af;
+  --secondary-bg: #f3f4f6;
+  --secondary-bg-hover: #e5e7eb;
+
+  --shadow: 0 8px 20px rgba(17, 24, 39, 0.08);
+  --focus-ring: rgba(37, 99, 235, 0.35);
 }
 
-h1 {
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #030712;
+    --surface: #111827;
+    --surface-hover: #1f2937;
+    --border: #374151;
+    --border-subtle: #1f2937;
+
+    --text: #f3f4f6;
+    --text-subtle: #d1d5db;
+    --text-muted: #9ca3af;
+    --text-placeholder: #6b7280;
+
+    --accent: #2563eb;
+    --accent-hover: #3b82f6;
+    --accent-contrast: #ffffff;
+    --accent-subtle-bg: rgba(30, 58, 138, 0.4);
+    --accent-subtle-text: #dbeafe;
+
+    --success: #4ade80;
+    --success-bg: rgba(21, 128, 61, 0.18);
+    --error: #f87171;
+    --error-bg: rgba(220, 38, 38, 0.18);
+
+    --disabled-bg: #4b5563;
+    --secondary-bg: #1f2937;
+    --secondary-bg-hover: #374151;
+
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --focus-ring: rgba(59, 130, 246, 0.45);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #030712;
+  --surface: #111827;
+  --surface-hover: #1f2937;
+  --border: #374151;
+  --border-subtle: #1f2937;
+
+  --text: #f3f4f6;
+  --text-subtle: #d1d5db;
+  --text-muted: #9ca3af;
+  --text-placeholder: #6b7280;
+
+  --accent: #2563eb;
+  --accent-hover: #3b82f6;
+  --accent-contrast: #ffffff;
+  --accent-subtle-bg: rgba(30, 58, 138, 0.4);
+  --accent-subtle-text: #dbeafe;
+
+  --success: #4ade80;
+  --success-bg: rgba(21, 128, 61, 0.18);
+  --error: #f87171;
+  --error-bg: rgba(220, 38, 38, 0.18);
+
+  --disabled-bg: #4b5563;
+  --secondary-bg: #1f2937;
+  --secondary-bg-hover: #374151;
+
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --focus-ring: rgba(59, 130, 246, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  width: 360px;
+  margin: 0;
+  padding: 0;
+  color: var(--text);
+  background: var(--bg);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.app-header .logo {
+  width: 22px;
+  height: 22px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.app-header h1 {
+  flex: 1;
   font-size: 14px;
-  margin: 0 0 10px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.theme-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+
+main#content {
+  padding: 14px;
+}
+
+.site-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: var(--accent-subtle-bg);
+  color: var(--accent-subtle-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.site-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
 }
 
 label {
   display: block;
   font-size: 12px;
   font-weight: 600;
-  margin: 10px 0 4px;
+  color: var(--text-subtle);
+  margin: 12px 0 4px;
 }
 
-input, textarea {
+label:first-of-type {
+  margin-top: 0;
+}
+
+input,
+textarea {
   width: 100%;
   box-sizing: border-box;
-  padding: 6px 8px;
+  padding: 7px 10px;
   font-size: 13px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-placeholder);
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 textarea {
@@ -31,45 +236,75 @@ textarea {
 }
 
 button {
-  margin-top: 12px;
+  font-family: inherit;
+}
+
+button#submit,
+button.primary {
+  display: block;
+  margin-top: 14px;
   width: 100%;
-  padding: 8px 10px;
+  padding: 9px 10px;
   font-size: 13px;
   font-weight: 600;
   border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: white;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-contrast);
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+button#submit:hover:not(:disabled),
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
 }
 
 button:disabled {
-  background: #9ca3af;
+  background: var(--disabled-bg);
   cursor: not-allowed;
 }
 
 button.secondary {
-  background: transparent;
-  color: #2563eb;
-  border: 1px solid #2563eb;
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--secondary-bg);
+  color: var(--text);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button.secondary:hover {
+  background: var(--secondary-bg-hover);
 }
 
 .muted {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .status {
   margin-top: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
   font-size: 12px;
+  font-weight: 500;
 }
 
 .status.success {
-  color: #15803d;
+  color: var(--success);
+  background: var(--success-bg);
 }
 
 .status.error {
-  color: #dc2626;
+  color: var(--error);
+  background: var(--error-bg);
 }
 
 .combobox {
@@ -79,35 +314,59 @@ button.secondary {
 .suggestions {
   position: absolute;
   z-index: 10;
-  top: 100%;
+  top: calc(100% + 4px);
   left: 0;
   right: 0;
   max-height: 160px;
   overflow-y: auto;
-  margin: 2px 0 0;
-  padding: 4px 0;
+  margin: 0;
+  padding: 4px;
   list-style: none;
-  background: white;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
 }
 
 .suggestions li button {
   display: block;
   width: 100%;
   margin: 0;
-  padding: 6px 10px;
+  padding: 6px 8px;
   font-size: 13px;
   font-weight: 400;
   text-align: left;
-  color: #111827;
+  color: var(--text);
   background: transparent;
   border: none;
-  border-radius: 0;
+  border-radius: 6px;
   cursor: pointer;
 }
 
 .suggestions li button:hover {
-  background: #f3f4f6;
+  background: var(--accent-subtle-bg);
+  color: var(--accent-subtle-text);
+}
+
+.app-footer {
+  padding: 8px 14px 12px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-placeholder);
+}
+
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--surface-hover) 25%, var(--border-subtle) 37%, var(--surface-hover) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
 }

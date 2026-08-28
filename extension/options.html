@@ -9,19 +9,29 @@
   </style>
 </head>
 <body>
-  <h1>e-kariyerim Settings</h1>
-  <p class="muted">
-    Generate an access token from e-kariyerim → Settings → Browser Extension, then paste it below.
-  </p>
+  <header class="app-header">
+    <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 5.5h16a1 1 0 011 1v9a1 1 0 01-1 1H9.5l-4 3.5v-3.5H4a1 1 0 01-1-1v-9a1 1 0 011-1z"/>
+      <path d="M8 10.5l2.4 2.4L16.5 7.5"/>
+    </svg>
+    <h1>e-kariyerim Settings</h1>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme"></button>
+  </header>
 
-  <label for="apiBaseUrl">API base URL</label>
-  <input id="apiBaseUrl" type="text" placeholder="http://localhost:5151" />
+  <main id="content">
+    <p class="muted">
+      Generate an access token from e-kariyerim → Settings → Browser Extension, then paste it below.
+    </p>
 
-  <label for="token">Access token</label>
-  <input id="token" type="password" placeholder="aa_pat_..." />
+    <label for="apiBaseUrl">API base URL</label>
+    <input id="apiBaseUrl" type="text" placeholder="http://localhost:5151" />
 
-  <button id="save">Save</button>
-  <p id="status" class="status" hidden></p>
+    <label for="token">Access token</label>
+    <input id="token" type="password" placeholder="aa_pat_..." />
+
+    <button id="save" class="primary">Save</button>
+    <p id="status" class="status" hidden></p>
+  </main>
 
   <script type="module" src="options.js"></script>
 </body>

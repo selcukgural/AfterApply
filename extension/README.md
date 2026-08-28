@@ -52,10 +52,26 @@ extension page's `fetch()` is only exempt from CORS for origins explicitly liste
 unlisted origin gets blocked the same as an ordinary web page's cross-origin fetch would be (found
 via manual testing — see DECISIONS.md Sprint 9).
 
+## Theming
+
+`popup.css` defines light/dark tokens mirroring the web app's own Tailwind palette
+(`web/src/components/ui/Button.tsx`, `Input.tsx`) so the extension reads as part of the same
+product. `theme.js` (shared by `popup.js` and `options.js`) applies the OS's `prefers-color-scheme`
+by default and persists an explicit toggle choice via `storage.js`'s `getTheme`/`saveTheme` — a
+per-install preference, like the API settings, with no account sync (an extension install has no
+session to sync to).
+
+## Publishing to the Chrome Web Store
+
+See `store-listing/` for the listing copy, privacy policy draft, permission justifications, ready
+screenshots, and a step-by-step `PUBLISHING_CHECKLIST.md`. This wasn't done as part of the sprint
+that built it (DEVELOPMENT_PLAN.md Sprint 9 explicitly scoped it out as a separate, later step) —
+`store-listing/` prepares everything needed, but actually submitting still requires publishing the
+privacy policy at a real URL and someone with access to the Developer Dashboard to click through
+the checklist.
+
 ## Not in this sprint
 
-- Publishing to the Chrome Web Store (DEVELOPMENT_PLAN.md Sprint 9 explicitly scopes this out —
-  a separate, later step once the extension has been used and iterated on).
 - Employment type is not scraped (LinkedIn's job header doesn't expose it directly) — created
   applications default to `FullTime`, the same known limitation as generic CSV import
   (DECISIONS.md Sprint 4).

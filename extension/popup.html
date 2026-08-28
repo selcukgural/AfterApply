@@ -6,10 +6,19 @@
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <h1>e-kariyerim</h1>
-  <div id="content">
-    <p class="muted">Loading…</p>
-  </div>
+  <header class="app-header">
+    <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 5.5h16a1 1 0 011 1v9a1 1 0 01-1 1H9.5l-4 3.5v-3.5H4a1 1 0 01-1-1v-9a1 1 0 011-1z"/>
+      <path d="M8 10.5l2.4 2.4L16.5 7.5"/>
+    </svg>
+    <h1>e-kariyerim</h1>
+    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme"></button>
+  </header>
+
+  <main id="content">
+    <div class="skeleton" style="height: 14px; width: 60%; margin-bottom: 8px;"></div>
+    <div class="skeleton" style="height: 32px;"></div>
+  </main>
 
   <script type="module" src="popup.js"></script>
 </body>

@@ -1,10 +1,12 @@
 import { getSettings, saveSettings } from "./storage.js";
+import { setUpThemeToggle } from "./theme.js";
 
 const apiBaseUrlInput = document.getElementById("apiBaseUrl");
 const tokenInput = document.getElementById("token");
 const statusEl = document.getElementById("status");
 
 async function init() {
+  setUpThemeToggle("themeToggle");
   const settings = await getSettings();
   apiBaseUrlInput.value = settings.apiBaseUrl;
   tokenInput.value = settings.token;

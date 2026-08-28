@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>scene</title>
+<link rel="stylesheet" href="../../popup.css" />
+<style>
+  :root {
+    --canvas-bg-1: #eff6ff;
+    --canvas-bg-2: #f9fafb;
+    --text: #111827;
+    --muted: #6b7280;
+    --brand-accent: #2563eb;
+  }
+  html[data-theme="dark"] {
+    --canvas-bg-1: #0b1220;
+    --canvas-bg-2: #030712;
+    --text: #f3f4f6;
+    --muted: #9ca3af;
+    --brand-accent: #3b82f6;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    background: var(--canvas-bg-2);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #canvas {
+    width: 1280px;
+    height: 800px;
+    flex-shrink: 0;
+    transform: scale(0.6);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 700px at 50% 0%, var(--canvas-bg-1), var(--canvas-bg-2));
+    position: relative;
+    overflow: hidden;
+  }
+  .brand {
+    position: absolute;
+    top: 48px;
+    left: 56px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand svg { width: 28px; height: 28px; color: var(--brand-accent); }
+  .brand span { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+
+  .headline {
+    position: absolute;
+    top: 150px;
+    left: 0;
+    right: 0;
+    text-align: center;
+  }
+  .headline h1 {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 14px;
+    letter-spacing: -0.02em;
+  }
+  .headline p {
+    font-size: 17px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .options-window {
+    position: absolute;
+    top: 280px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 460px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const theme = params.get("theme") || "light";
+    document.documentElement.dataset.theme = theme;
+  </script>
+
+  <div id="canvas">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 5.5h16a1 1 0 011 1v9a1 1 0 01-1 1H9.5l-4 3.5v-3.5H4a1 1 0 01-1-1v-9a1 1 0 011-1z"/>
+        <path d="M8 10.5l2.4 2.4L16.5 7.5"/>
+      </svg>
+      <span>e-kariyerim</span>
+    </div>
+
+    <div class="headline">
+      <h1>Kurulum 30 saniye sürer</h1>
+      <p>Erişim anahtarını bir kez yapıştır, LinkedIn ve kariyer.net'te tek tıkla başvuru kaydetmeye başla.</p>
+    </div>
+
+    <div class="options-window">
+      <header class="app-header">
+        <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 5.5h16a1 1 0 011 1v9a1 1 0 01-1 1H9.5l-4 3.5v-3.5H4a1 1 0 01-1-1v-9a1 1 0 011-1z"/>
+          <path d="M8 10.5l2.4 2.4L16.5 7.5"/>
+        </svg>
+        <h1>e-kariyerim Settings</h1>
+        <button class="theme-toggle" type="button" aria-hidden="true" tabindex="-1"></button>
+      </header>
+      <main id="content">
+        <p class="muted">
+          Generate an access token from e-kariyerim → Settings → Browser Extension, then paste it below.
+        </p>
+        <label>API base URL</label>
+        <input type="text" value="https://api.ekariyerim.com" readonly />
+        <label>Access token</label>
+        <input type="password" value="aa_pat_demo_token_value" readonly />
+        <button class="primary">Save</button>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const SUN_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`;
+    const MOON_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
+    document.querySelector(".theme-toggle").innerHTML = theme === "dark" ? SUN_ICON : MOON_ICON;
+  </script>
+</body>
+</html>
