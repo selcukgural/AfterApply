@@ -45,6 +45,10 @@ public class MatchingTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
             builder.UseSetting("ConnectionStrings:Redis", "localhost:6379");
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // Flag defaults to false in appsettings.json (hidden pending KVKK consent work, see
+            // MatchingEndpoints) — flipped on here since this class exercises the feature itself,
+            // same pattern as CompanyIntelligenceTests' _enabledFactory.
+            builder.UseSetting("Matching:Enabled", "true");
 
             builder.ConfigureServices(services =>
             {
