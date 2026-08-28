@@ -1,5 +1,9 @@
 bin/
 obj/
+# Rider on macOS occasionally creates a literal "bin\Debug" folder (backslash as part of the
+# name, not a path separator) as a build-host cache — bin/ above doesn't match it since the name
+# isn't exactly "bin".
+bin\\Debug/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
