@@ -16,6 +16,16 @@ public static class EmailIntegrationEndpoints
     {
         var group = app.MapGroup("/api/email-integrations").WithTags("EmailIntegrations");
 
+        // Flag off → 404 for every caller, same pattern as MatchingEndpoints/CompanyIntelligenceEndpoints.
+        // gmail.readonly grants read access to the user's entire inbox (app-level filtering only,
+        // not scope-level) with no CASA security assessment / OAuth restricted-scope verification
+        // done yet — hidden until that process completes. See PRIVACY_CHECKLIST.md item 4/7.
+        group.AddEndpointFilter(async (context, next) =>
+        {
+            var options = context.HttpContext.RequestServices.GetRequiredService<IOptions<EmailIntegrationOptions>>();
+            return options.Value.Enabled ? await next(context) : Results.NotFound();
+        });
+
         group.MapGet("/gmail/status", async (ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.GetConnectionStatusAsync(user.GetUserId(), cancellationToken)))
             .RequireAuthorization();

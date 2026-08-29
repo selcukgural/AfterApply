@@ -41,6 +41,12 @@ public class EmailIntegrationTests : IAsyncLifetime
     private WebApplicationFactory<Program>? _factory;
     private HttpClient _client = null!;
 
+    // Same connection strings, "EmailIntegrations:Enabled" left at its real appsettings.json
+    // default (false) — used to assert every endpoint 404s while the flag is off, same
+    // two-factory pattern as CompanyIntelligenceTests/MatchingTests.
+    private WebApplicationFactory<Program>? _disabledFactory;
+    private HttpClient _disabledClient = null!;
+
     public async Task InitializeAsync()
     {
         await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
@@ -52,6 +58,7 @@ public class EmailIntegrationTests : IAsyncLifetime
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("GoogleOAuth:ClientId", "test-client-id");
             builder.UseSetting("GoogleOAuth:ClientSecret", "test-client-secret");
+            builder.UseSetting("EmailIntegrations:Enabled", "true");
 
             builder.ConfigureServices(services =>
             {
@@ -69,6 +76,25 @@ public class EmailIntegrationTests : IAsyncLifetime
         registerResponse.EnsureSuccessStatusCode();
         var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
+
+        _disabledFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton<IGmailClient>(_fakeGmailClient);
+            });
+        });
+
+        _disabledClient = _disabledFactory.CreateClient();
+        var disabledRegisterResponse = await _disabledClient.PostAsJsonAsync("/api/auth/register",
+            new RegisterRequest("email-integration.disabled@example.com", "P@ssw0rd123!", "Email", "Test", true), JsonOptions);
+        disabledRegisterResponse.EnsureSuccessStatusCode();
+        var disabledAuth = await disabledRegisterResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        _disabledClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", disabledAuth!.AccessToken);
     }
 
     public async Task DisposeAsync()
@@ -78,8 +104,46 @@ public class EmailIntegrationTests : IAsyncLifetime
             await _factory.DisposeAsync();
         }
 
+        if (_disabledFactory is not null)
+        {
+            await _disabledFactory.DisposeAsync();
+        }
+
         await _postgres.DisposeAsync();
         await _redis.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Connect_Returns_NotFound_When_Flag_Disabled()
+    {
+        var response = await _disabledClient.GetAsync("/api/email-integrations/gmail/connect");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Status_Returns_NotFound_When_Flag_Disabled()
+    {
+        var response = await _disabledClient.GetAsync("/api/email-integrations/gmail/status");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Suggestions_Returns_NotFound_When_Flag_Disabled()
+    {
+        var response = await _disabledClient.GetAsync("/api/email-integrations/suggestions");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Callback_Returns_NotFound_When_Flag_Disabled()
+    {
+        var noRedirectClient = _disabledFactory!.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var response = await noRedirectClient.GetAsync("/api/email-integrations/gmail/callback?code=abc&state=whatever");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     private async Task<Guid> CreateApplicationAsync(string companyName)

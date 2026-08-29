@@ -1668,6 +1668,41 @@ notuyla birlikte yeterli.
 
 ---
 
+## Gmail Integration (Phase 9) — kullanıcıdan gizlendi (2026-08-29)
+
+**Karar:** `EmailIntegrations:Enabled` config flag'i eklendi (varsayılan
+`false`, `Matching:Enabled`/`CompanyIntelligence:Enabled` paterninin birebir
+tekrarı). `/api/email-integrations/*` altındaki tüm route'lar (6 route,
+`/gmail/callback` dahil — o route anonymous ama aynı `MapGroup` altında
+olduğu için filtre onu da kapsıyor) `EmailIntegrationEndpoints.cs`'teki
+grup-seviyesi bir `AddEndpointFilter` ile flag kapalıyken her çağrıda `404
+NotFound` dönüyor. Ayrıca `Program.cs`'teki `gmail-sync` Hangfire recurring
+job'ı da flag kapalıyken artık hiç register edilmiyor — mevcut
+(disconnect edilmemiş) bağlantılar olsa bile arka planda Gmail API'ye
+sync çağrısı yapılmıyor. Frontend'de `settings/page.tsx`'teki Gmail kartı
+(bağlan/bağlantıyı kes/öneri listesine link) ve ilgili
+state/effect/handler'lar tamamen render ağacından çıkarıldı — Matching'in
+aynı YAGNI kararının tekrarı, `emailIntegrationsApi` client'ı ve
+`settings/email-suggestions/page.tsx` route'u kod olarak duruyor, sadece
+erişilemez hâle geldi.
+
+**Gerekçe:** Uygulama canlıya alındıktan sonra Gmail entegrasyonunun gerçek
+kullanıcılara açılabilmesi için OAuth consent screen'in "In production"a
+geçmesi gerektiği, bunun da `gmail.readonly`'nin restricted-scope olması
+sebebiyle Google'ın CASA güvenlik değerlendirmesini (üçüncü-taraf assessor,
+~$15.000-$75.000, 4-12+ hafta) gerektirdiği ortaya çıktı — bkz.
+`PRIVACY_CHECKLIST.md` madde 7. Bu yatırım kararı henüz verilmedi (ayrıca
+konuşulacak); o karara kadar özelliği "Testing" modunda yarı-açık/yanlışlıkla
+erişilebilir bırakmak yerine (100 test user sınırı + "doğrulanmamış uygulama"
+uyarısı zaten genel kullanıcıya uygun değildi) tamamen gizlemek tercih
+edildi. Testler güncellendi: mevcut `EmailIntegrationTests.cs`
+`EmailIntegrations:Enabled=true` ile flag'i açık tutuyor (fonksiyonel
+testler bozulmadı), ayrıca CompanyIntelligence'ın iki-factory desenini
+tekrarlayan 4 yeni test flag kapalıyken `/connect`, `/status`,
+`/suggestions`, `/callback`'in 404 döndüğünü doğruluyor.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

@@ -24,7 +24,7 @@ vb.) eklendiğinde bu liste güncellenmeli.
 |---|---|
 | Public analytics anonimleştirme / minimum örneklem | Public/şirket-görünür analytics (Phase 10+) flag ile kapalı (`CompanyIntelligence:Enabled=false`); `IAnalyticsService` bugün sadece kullanıcının kendi verisini kendisine döndürüyor, hiçbir agregasyon başkasına gösterilmiyor. |
 
-> **Not (2026-08-29):** Bu listede daha önce "Email permission boundaries — MVP kapsamında değil" satırı vardı. **Artık doğru değil** — Gmail entegrasyonu (Sprint 9, `gmail.readonly` scope) tamamlanıp canlıya alındı. Bkz. aşağıdaki envanterin 4. maddesi; bu artık N/A değil, avukata görülmesi gereken açık bir kalem.
+> **Not (2026-08-29):** Bu listede daha önce "Email permission boundaries — MVP kapsamında değil" satırı vardı. **Artık doğru değil** — Gmail entegrasyonu (Sprint 9, `gmail.readonly` scope) kod olarak tamamlandı. Bkz. aşağıdaki envanterin 4. maddesi; bu artık N/A değil, avukata görülmesi gereken açık bir kalem. **Güncelleme (aynı gün):** madde 7'deki CASA/verification maliyeti ($15k-$75k, 4-12+ hafta) netleşince, o karar verilene kadar `EmailIntegrations:Enabled=false` flag'iyle kullanıcıdan tamamen gizlendi (`Matching:Enabled` ile aynı desen) — bkz. `DECISIONS.md` "Gmail Integration (Phase 9) — kullanıcıdan gizlendi (2026-08-29)".
 
 ## Kabul edilen risk / backlog
 

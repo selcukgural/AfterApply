@@ -93,10 +93,13 @@ using (var scope = app.Services.CreateScope())
         Cron.Daily());
 
     var emailOptions = scope.ServiceProvider.GetRequiredService<IOptions<EmailIntegrationOptions>>().Value;
-    recurringJobManager.AddOrUpdate<IEmailIntegrationService>(
-        "gmail-sync",
-        service => service.SyncAllConnectionsAsync(CancellationToken.None),
-        emailOptions.SyncCronExpression);
+    if (emailOptions.Enabled)
+    {
+        recurringJobManager.AddOrUpdate<IEmailIntegrationService>(
+            "gmail-sync",
+            service => service.SyncAllConnectionsAsync(CancellationToken.None),
+            emailOptions.SyncCronExpression);
+    }
 }
 
 app.Run();
