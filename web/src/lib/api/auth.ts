@@ -87,7 +87,7 @@ export const authApi = {
 
     const blob = await response.blob();
     const contentDisposition = response.headers.get("Content-Disposition");
-    const filename = contentDisposition?.match(/filename="?([^"]+)"?/)?.[1] ?? "afterapply-export.json";
+    const filename = contentDisposition?.match(/filename="?([^"]+)"?/)?.[1] ?? "e-kariyerim-data-export.json";
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

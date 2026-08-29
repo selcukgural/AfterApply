@@ -78,7 +78,7 @@ public static class UserEndpoints
         {
             var export = await authService.ExportAccountDataAsync(user.GetUserId(), cancellationToken);
             var bytes = JsonSerializer.SerializeToUtf8Bytes(export, jsonOptions.Value.SerializerOptions);
-            return Results.File(bytes, "application/json", $"afterapply-export-{DateTimeOffset.UtcNow:yyyy-MM-dd}.json");
+            return Results.File(bytes, "application/json", $"e-kariyerim-data-export-{DateTimeOffset.UtcNow:yyyy-MM-dd}.json");
         })
             .WithSummary("Download all of the current user's data as a JSON file")
             .WithDescription("KVKK/GDPR data-portability export — applications, tracked jobs, import batches, and reminders.")
