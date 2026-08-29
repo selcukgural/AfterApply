@@ -248,15 +248,25 @@ export interface ImportRowErrorResponse {
   errorMessage: string;
 }
 
+export type ImportBatchStatus = "Pending" | "Processing" | "Completed" | "Failed";
+
+export interface ImportAcceptedResponse {
+  id: string;
+}
+
 export interface ImportSummaryResponse {
   id: string;
   source: Source;
   fileName: string;
+  status: ImportBatchStatus;
+  processedRows: number;
+  totalRows: number | null;
   totalRecords: number;
   newApplications: number;
   duplicateRecords: number;
   invalidRecords: number;
-  completedAt: string;
+  completedAt: string | null;
+  errorMessage: string | null;
   errors: ImportRowErrorResponse[];
 }
 

@@ -188,6 +188,23 @@ public static class DependencyInjection
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    // SignalR's browser client can't set an Authorization header on the
+                    // WebSocket handshake, so it sends the token as ?access_token=... instead
+                    // (its accessTokenFactory default). Only honor that for the hub path.
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             })
             .AddScheme<AuthenticationSchemeOptions, PersonalAccessTokenAuthenticationHandler>(
                 PersonalAccessTokenDefaults.AuthenticationScheme, _ => { });

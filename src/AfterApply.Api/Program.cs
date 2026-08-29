@@ -3,7 +3,9 @@ using System.Text.Json.Serialization;
 using AfterApply.Api;
 using AfterApply.Api.Endpoints;
 using AfterApply.Api.ExceptionHandling;
+using AfterApply.Api.Imports;
 using AfterApply.Application.EmailIntegrations;
+using AfterApply.Application.Imports;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
@@ -38,6 +40,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApiRateLimiting();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IImportProgressNotifier, SignalRImportProgressNotifier>();
 
 var app = builder.Build();
 
@@ -77,6 +81,7 @@ app.MapMatchingEndpoints();
 app.MapPersonalAccessTokenEndpoints();
 app.MapCompanyIntelligenceEndpoints();
 app.MapCompanyEndpoints();
+app.MapHub<ImportProgressHub>("/hubs/import-progress");
 
 if (!DependencyInjection.IsOpenApiDocumentGeneration)
 {

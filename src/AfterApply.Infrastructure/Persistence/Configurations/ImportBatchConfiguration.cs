@@ -13,6 +13,8 @@ public sealed class ImportBatchConfiguration : IEntityTypeConfiguration<ImportBa
 
         builder.Property(b => b.Source).HasConversion<string>().HasMaxLength(50);
         builder.Property(b => b.FileName).IsRequired().HasMaxLength(500);
+        builder.Property(b => b.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(b => b.ErrorMessage).HasMaxLength(2000);
 
         builder.HasIndex(b => b.UserId);
 

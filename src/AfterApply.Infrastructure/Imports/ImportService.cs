@@ -20,10 +20,14 @@ namespace AfterApply.Infrastructure.Imports;
 
 internal sealed partial class ImportService(
     AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver, IOptions<ImportOptions> options,
-    IStringLocalizer<SharedStrings> localizer)
+    IStringLocalizer<SharedStrings> localizer, IImportProgressNotifier progressNotifier)
     : IImportService
 {
-    public async Task<ImportSummaryResponse> ImportCsvAsync(Guid userId, Stream csvStream, string fileName, long fileLength,
+    // How often (in rows) processing pushes a progress update. Small enough to feel live on a
+    // 5000-row import, large enough not to hammer the DB/SignalR with a save+push every row.
+    private const int ProgressReportInterval = 25;
+
+    public async Task<StagedImport> StageCsvImportAsync(Guid userId, Stream csvStream, string fileName, long fileLength,
         IReadOnlyDictionary<string, string>? columnMapping, CancellationToken cancellationToken)
     {
         var opts = options.Value;
@@ -43,23 +47,65 @@ internal sealed partial class ImportService(
             throw new CsvImportValidationException([localizer["IMPORT_FILE_TOO_LARGE", opts.MaxFileSizeBytes]]);
         }
 
+        var stagedPath = await StageFileAsync(csvStream, ".csv", cancellationToken);
+
         var batch = ImportBatch.Create(userId, Source.CsvImport, fileName, DateTimeOffset.UtcNow);
         dbContext.ImportBatches.Add(batch);
-
-        var ctx = await BuildDedupContextAsync(userId, cancellationToken);
-        var counts = new RowCounts();
-
-        using var reader = new StreamReader(csvStream);
-        await ProcessCsvAsync(userId, batch, ctx, reader, Source.CsvImport, resolveJob: false,
-            columnMapping, counts, opts, cancellationToken);
-
-        batch.Complete(counts.Total, counts.New, counts.Duplicate, counts.Invalid, DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return ToSummary(batch);
+        return new StagedImport(batch.Id, stagedPath);
     }
 
-    public async Task<ImportSummaryResponse> ImportLinkedInZipAsync(Guid userId, Stream zipStream, string fileName,
+    public async Task ProcessCsvImportAsync(Guid batchId, string stagedFilePath,
+        IReadOnlyDictionary<string, string>? columnMapping, CancellationToken cancellationToken)
+    {
+        var batch = await dbContext.ImportBatches.Include(b => b.RowErrors)
+            .FirstOrDefaultAsync(b => b.Id == batchId, cancellationToken);
+
+        if (batch is null)
+        {
+            TryDeleteFile(stagedFilePath);
+            return;
+        }
+
+        try
+        {
+            var opts = options.Value;
+            var totalRows = await CountDataRowsAsync(stagedFilePath, cancellationToken);
+
+            batch.StartProcessing(totalRows, DateTimeOffset.UtcNow);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await progressNotifier.NotifyProgressAsync(ToSummary(batch), cancellationToken);
+
+            var ctx = await BuildDedupContextAsync(batch.UserId, cancellationToken);
+            var counts = new RowCounts();
+
+            using (var reader = new StreamReader(stagedFilePath))
+            {
+                await ProcessCsvAsync(batch.UserId, batch, ctx, reader, Source.CsvImport, resolveJob: false,
+                    columnMapping, counts, opts, cancellationToken,
+                    onProgress: processed => ReportProgressAsync(batch, processed, cancellationToken));
+            }
+
+            batch.Complete(counts.Total, counts.New, counts.Duplicate, counts.Invalid, DateTimeOffset.UtcNow);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await progressNotifier.NotifyCompletedAsync(ToSummary(batch), cancellationToken);
+        }
+        catch (CsvImportValidationException ex)
+        {
+            await FailBatchAsync(batch, string.Join(" ", ex.Errors), cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await FailBatchAsync(batch, ex.Message, cancellationToken);
+        }
+        finally
+        {
+            TryDeleteFile(stagedFilePath);
+        }
+    }
+
+    public async Task<StagedImport> StageLinkedInZipImportAsync(Guid userId, Stream zipStream, string fileName,
         long fileLength, CancellationToken cancellationToken)
     {
         var opts = options.Value;
@@ -79,54 +125,110 @@ internal sealed partial class ImportService(
             throw new CsvImportValidationException([localizer["IMPORT_ZIP_TOO_LARGE", opts.MaxZipSizeBytes]]);
         }
 
-        using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
+        var stagedPath = await StageFileAsync(zipStream, ".zip", cancellationToken);
 
-        if (archive.Entries.Count > opts.MaxZipEntryCount)
+        try
         {
-            throw new CsvImportValidationException([localizer["IMPORT_ZIP_TOO_MANY_ENTRIES", opts.MaxZipEntryCount]]);
-        }
-
-        var matchedEntries = archive.Entries.Where(e => JobApplicationsFileRegex().IsMatch(e.Name)).ToList();
-
-        if (matchedEntries.Count == 0)
-        {
-            throw new CsvImportValidationException([localizer["IMPORT_ZIP_NO_MATCHING_FILES"]]);
-        }
-
-        foreach (var entry in matchedEntries)
-        {
-            if (entry.Length > opts.MaxFileSizeBytes)
+            using (var archive = ZipFile.OpenRead(stagedPath))
             {
-                throw new CsvImportValidationException([localizer["IMPORT_ZIP_ENTRY_TOO_LARGE", entry.FullName, opts.MaxFileSizeBytes]]);
+                if (archive.Entries.Count > opts.MaxZipEntryCount)
+                {
+                    throw new CsvImportValidationException([localizer["IMPORT_ZIP_TOO_MANY_ENTRIES", opts.MaxZipEntryCount]]);
+                }
+
+                var matchedEntries = archive.Entries.Where(e => JobApplicationsFileRegex().IsMatch(e.Name)).ToList();
+
+                if (matchedEntries.Count == 0)
+                {
+                    throw new CsvImportValidationException([localizer["IMPORT_ZIP_NO_MATCHING_FILES"]]);
+                }
+
+                foreach (var entry in matchedEntries)
+                {
+                    if (entry.Length > opts.MaxFileSizeBytes)
+                    {
+                        throw new CsvImportValidationException(
+                            [localizer["IMPORT_ZIP_ENTRY_TOO_LARGE", entry.FullName, opts.MaxFileSizeBytes]]);
+                    }
+                }
             }
+
+            var batch = ImportBatch.Create(userId, Source.LinkedInImport, fileName, DateTimeOffset.UtcNow);
+            dbContext.ImportBatches.Add(batch);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return new StagedImport(batch.Id, stagedPath);
         }
-
-        var batch = ImportBatch.Create(userId, Source.LinkedInImport, fileName, DateTimeOffset.UtcNow);
-        dbContext.ImportBatches.Add(batch);
-
-        var ctx = await BuildDedupContextAsync(userId, cancellationToken);
-        var counts = new RowCounts();
-
-        foreach (var entry in matchedEntries)
+        catch
         {
-            await using var entryStream = new LimitedStream(entry.Open(), opts.MaxFileSizeBytes);
-            using var reader = new StreamReader(entryStream);
+            TryDeleteFile(stagedPath);
+            throw;
+        }
+    }
 
-            try
-            {
-                await ProcessCsvAsync(userId, batch, ctx, reader, Source.LinkedInImport, resolveJob: true,
-                    columnMappingOverride: null, counts, opts, cancellationToken);
-            }
-            catch (StreamLengthExceededException)
-            {
-                throw new CsvImportValidationException([localizer["IMPORT_ZIP_ENTRY_STREAM_EXCEEDED", entry.FullName]]);
-            }
+    public async Task ProcessLinkedInZipAsync(Guid batchId, string stagedFilePath, CancellationToken cancellationToken)
+    {
+        var batch = await dbContext.ImportBatches.Include(b => b.RowErrors)
+            .FirstOrDefaultAsync(b => b.Id == batchId, cancellationToken);
+
+        if (batch is null)
+        {
+            TryDeleteFile(stagedFilePath);
+            return;
         }
 
-        batch.Complete(counts.Total, counts.New, counts.Duplicate, counts.Invalid, DateTimeOffset.UtcNow);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            var opts = options.Value;
+            using var archive = ZipFile.OpenRead(stagedFilePath);
+            var matchedEntries = archive.Entries.Where(e => JobApplicationsFileRegex().IsMatch(e.Name)).ToList();
 
-        return ToSummary(batch);
+            var totalRows = 0;
+            foreach (var entry in matchedEntries)
+            {
+                totalRows += await CountZipEntryDataRowsAsync(entry, cancellationToken);
+            }
+
+            batch.StartProcessing(totalRows, DateTimeOffset.UtcNow);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await progressNotifier.NotifyProgressAsync(ToSummary(batch), cancellationToken);
+
+            var ctx = await BuildDedupContextAsync(batch.UserId, cancellationToken);
+            var counts = new RowCounts();
+
+            foreach (var entry in matchedEntries)
+            {
+                await using var entryStream = new LimitedStream(entry.Open(), opts.MaxFileSizeBytes);
+                using var reader = new StreamReader(entryStream);
+
+                try
+                {
+                    await ProcessCsvAsync(batch.UserId, batch, ctx, reader, Source.LinkedInImport, resolveJob: true,
+                        columnMappingOverride: null, counts, opts, cancellationToken,
+                        onProgress: processed => ReportProgressAsync(batch, processed, cancellationToken));
+                }
+                catch (StreamLengthExceededException)
+                {
+                    throw new CsvImportValidationException([localizer["IMPORT_ZIP_ENTRY_STREAM_EXCEEDED", entry.FullName]]);
+                }
+            }
+
+            batch.Complete(counts.Total, counts.New, counts.Duplicate, counts.Invalid, DateTimeOffset.UtcNow);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await progressNotifier.NotifyCompletedAsync(ToSummary(batch), cancellationToken);
+        }
+        catch (CsvImportValidationException ex)
+        {
+            await FailBatchAsync(batch, string.Join(" ", ex.Errors), cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await FailBatchAsync(batch, ex.Message, cancellationToken);
+        }
+        finally
+        {
+            TryDeleteFile(stagedFilePath);
+        }
     }
 
     public async Task<ImportSummaryResponse?> GetByIdAsync(Guid userId, Guid importId, CancellationToken cancellationToken)
@@ -138,9 +240,76 @@ internal sealed partial class ImportService(
         return batch is null ? null : ToSummary(batch);
     }
 
+    private async Task FailBatchAsync(ImportBatch batch, string errorMessage, CancellationToken cancellationToken)
+    {
+        batch.Fail(errorMessage, DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await progressNotifier.NotifyFailedAsync(ToSummary(batch), cancellationToken);
+    }
+
+    private async Task ReportProgressAsync(ImportBatch batch, int processedRows, CancellationToken cancellationToken)
+    {
+        batch.UpdateProgress(processedRows, DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await progressNotifier.NotifyProgressAsync(ToSummary(batch), cancellationToken);
+    }
+
+    private static async Task<string> StageFileAsync(Stream sourceStream, string extension, CancellationToken cancellationToken)
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "afterapply-imports");
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, $"{Guid.NewGuid():N}{extension}");
+
+        await using var fileStream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        await sourceStream.CopyToAsync(fileStream, cancellationToken);
+
+        return path;
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+
+    private static async Task<int> CountDataRowsAsync(string filePath, CancellationToken cancellationToken)
+    {
+        using var reader = new StreamReader(filePath);
+        return await CountDataRowsAsync(reader, cancellationToken);
+    }
+
+    private static async Task<int> CountZipEntryDataRowsAsync(ZipArchiveEntry entry, CancellationToken cancellationToken)
+    {
+        await using var stream = entry.Open();
+        using var reader = new StreamReader(stream);
+        return await CountDataRowsAsync(reader, cancellationToken);
+    }
+
+    // Counts newline-delimited rows minus the header line. This is a fast approximation for the
+    // progress bar's denominator (a quoted multi-line CSV field would undercount slightly) — the
+    // authoritative row count/outcome still comes from CsvHelper during actual processing.
+    private static async Task<int> CountDataRowsAsync(TextReader reader, CancellationToken cancellationToken)
+    {
+        var count = -1;
+        while (await reader.ReadLineAsync(cancellationToken) is not null)
+        {
+            count++;
+        }
+
+        return Math.Max(count, 0);
+    }
+
     private async Task ProcessCsvAsync(Guid userId, ImportBatch batch, DedupContext ctx, TextReader reader,
         Source source, bool resolveJob, IReadOnlyDictionary<string, string>? columnMappingOverride,
-        RowCounts counts, ImportOptions opts, CancellationToken cancellationToken)
+        RowCounts counts, ImportOptions opts, CancellationToken cancellationToken, Func<int, Task>? onProgress = null)
     {
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
@@ -183,6 +352,16 @@ internal sealed partial class ImportService(
                     counts.New++;
                     break;
             }
+
+            if (onProgress is not null && counts.Total % ProgressReportInterval == 0)
+            {
+                await onProgress(counts.Total);
+            }
+        }
+
+        if (onProgress is not null && counts.Total % ProgressReportInterval != 0)
+        {
+            await onProgress(counts.Total);
         }
     }
 
@@ -283,8 +462,9 @@ internal sealed partial class ImportService(
     private static ImportSummaryResponse ToSummary(ImportBatch batch)
     {
         return new ImportSummaryResponse(
-            batch.Id, batch.Source, batch.FileName, batch.TotalRecords, batch.NewApplications, batch.DuplicateRecords,
-            batch.InvalidRecords, batch.CompletedAt,
+            batch.Id, batch.Source, batch.FileName, batch.Status, batch.ProcessedRows, batch.TotalRows,
+            batch.TotalRecords, batch.NewApplications, batch.DuplicateRecords, batch.InvalidRecords,
+            batch.CompletedAt, batch.ErrorMessage,
             batch.RowErrors.Select(e => new ImportRowErrorResponse(e.RowNumber, e.RawRow, e.ErrorMessage)).ToList());
     }
 

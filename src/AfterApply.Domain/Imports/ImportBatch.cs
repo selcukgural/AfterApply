@@ -12,6 +12,14 @@ public sealed class ImportBatch : AuditableEntity
 
     public string FileName { get; private set; } = string.Empty;
 
+    public ImportBatchStatus Status { get; private set; } = ImportBatchStatus.Pending;
+
+    public int ProcessedRows { get; private set; }
+
+    public int? TotalRows { get; private set; }
+
+    public string? ErrorMessage { get; private set; }
+
     public int TotalRecords { get; private set; }
 
     public int NewApplications { get; private set; }
@@ -20,7 +28,7 @@ public sealed class ImportBatch : AuditableEntity
 
     public int InvalidRecords { get; private set; }
 
-    public DateTimeOffset CompletedAt { get; private set; }
+    public DateTimeOffset? CompletedAt { get; private set; }
 
     public IReadOnlyCollection<ImportRowError> RowErrors => _rowErrors;
 
@@ -35,9 +43,9 @@ public sealed class ImportBatch : AuditableEntity
             UserId = userId,
             Source = source,
             FileName = fileName,
+            Status = ImportBatchStatus.Pending,
             CreatedAt = now,
-            UpdatedAt = now,
-            CompletedAt = now
+            UpdatedAt = now
         };
     }
 
@@ -46,12 +54,35 @@ public sealed class ImportBatch : AuditableEntity
         _rowErrors.Add(ImportRowError.Create(Id, rowNumber, rawRow, errorMessage));
     }
 
+    public void StartProcessing(int? totalRows, DateTimeOffset now)
+    {
+        Status = ImportBatchStatus.Processing;
+        TotalRows = totalRows;
+        Touch(now);
+    }
+
+    public void UpdateProgress(int processedRows, DateTimeOffset now)
+    {
+        ProcessedRows = processedRows;
+        Touch(now);
+    }
+
     public void Complete(int totalRecords, int newApplications, int duplicateRecords, int invalidRecords, DateTimeOffset completedAt)
     {
         TotalRecords = totalRecords;
         NewApplications = newApplications;
         DuplicateRecords = duplicateRecords;
         InvalidRecords = invalidRecords;
+        ProcessedRows = totalRecords;
+        Status = ImportBatchStatus.Completed;
+        CompletedAt = completedAt;
         Touch(completedAt);
+    }
+
+    public void Fail(string errorMessage, DateTimeOffset now)
+    {
+        Status = ImportBatchStatus.Failed;
+        ErrorMessage = errorMessage;
+        Touch(now);
     }
 }

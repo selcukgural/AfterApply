@@ -27,7 +27,7 @@ public sealed record ImportBatchExportItem(
     string FileName,
     int TotalRecords,
     int NewApplications,
-    DateTimeOffset CompletedAt);
+    DateTimeOffset? CompletedAt);
 
 public sealed record ReminderExportItem(
     Guid Id,
