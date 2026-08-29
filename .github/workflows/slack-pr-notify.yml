@@ -1,16 +1,21 @@
 name: Slack PR notifications (backend)
 
-# Two independent notifications, both scoped to backend-affecting PRs only (a PR that
-# touches only web/ or extension/ never posts to either channel):
+# Three independent notifications, all scoped to backend-affecting changes only (a PR or
+# push that touches only web/ or extension/ never posts to any channel):
 #   - #pr-backend: fires when a non-draft PR is opened/reopened/marked ready for review,
 #     asking for a review.
 #   - #pr-backend-merged: fires when a PR is merged into main.
+#   - #pr-backend-merged (again): fires when someone pushes to main directly, bypassing a
+#     PR entirely. Skipped if the pushed commit turns out to belong to a merged PR (squash
+#     merges land as a push too), so PR merges never post twice.
 # Uses a static Slack bot token (SLACK_BOT_TOKEN, xoxb-...) via chat.postMessage — no
 # webhook, no token rotation/refresh to manage.
 
 on:
   pull_request:
     types: [opened, reopened, ready_for_review, closed]
+  push:
+    branches: [main]
 
 jobs:
   changes:
@@ -90,3 +95,46 @@ jobs:
                 elements:
                   - type: mrkdwn
                     text: "Merge eden: *${{ github.event.pull_request.merged_by.login }}*  •  Commit: <${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.merge_commit_sha }}|${{ github.event.pull_request.merge_commit_sha }}>"
+
+  notify-direct-push:
+    needs: changes
+    if: |
+      github.event_name == 'push' &&
+      needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check whether this commit belongs to a merged PR
+        id: pr-check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+            });
+            const fromMergedPr = data.some((pr) => pr.merged_at);
+            core.setOutput('from-merged-pr', fromMergedPr);
+
+      - name: Post to #pr-backend-merged
+        if: steps.pr-check.outputs.from-merged-pr == 'false'
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: "pr-backend-merged"
+            text: "Backend değişikliği main'e doğrudan push edildi: ${{ github.event.head_commit.message }}"
+            blocks:
+              - type: header
+                text:
+                  type: plain_text
+                  text: "⚠️ main'e doğrudan push"
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*<${{ github.event.head_commit.url }}|${{ github.event.head_commit.message }}>*"
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: "Push eden: *${{ github.event.pusher.name }}*  •  Commit: `${{ github.sha }}`"
