@@ -85,7 +85,7 @@ function annotateCollection(collection) {
         "pm.test('Body is JSON when present', function () {",
         '    if (pm.response.text().length === 0) { return; }',
         "    pm.response.to.have.header('Content-Type');",
-        "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+        "    pm.expect(pm.response.headers.get('Content-Type')).to.match(/json/);",
         '});',
       ],
     },
