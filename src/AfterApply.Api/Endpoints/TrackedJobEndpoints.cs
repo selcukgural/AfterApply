@@ -8,6 +8,7 @@ namespace AfterApply.Api.Endpoints;
 
 public static class TrackedJobEndpoints
 {
+
     public static IEndpointRouteBuilder MapTrackedJobEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/tracked-jobs").WithTags("TrackedJobs").RequireAuthorization()
