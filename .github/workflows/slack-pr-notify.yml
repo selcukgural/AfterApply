@@ -120,6 +120,13 @@ jobs:
             const fromMergedPr = data.some((pr) => pr.merged_at);
             core.setOutput('from-merged-pr', fromMergedPr);
 
+      - name: Extract commit subject
+        id: subject
+        if: steps.pr-check.outputs.from-merged-pr == 'false'
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: echo "text=$(head -n1 <<< "$COMMIT_MESSAGE")" >> "$GITHUB_OUTPUT"
+
       - name: Post to #pr-backend-merged
         if: steps.pr-check.outputs.from-merged-pr == 'false'
         uses: slackapi/slack-github-action@v2.0.0
@@ -128,7 +135,7 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel: "pr-backend-merged"
-            text: "Backend değişikliği main'e doğrudan push edildi: ${{ github.event.head_commit.message }}"
+            text: "Backend değişikliği main'e doğrudan push edildi: ${{ steps.subject.outputs.text }}"
             blocks:
               - type: header
                 text:
@@ -137,7 +144,7 @@ jobs:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "*<${{ github.event.head_commit.url }}|${{ github.event.head_commit.message }}>*"
+                  text: "*<${{ github.event.head_commit.url }}|${{ steps.subject.outputs.text }}>*"
               - type: context
                 elements:
                   - type: mrkdwn
