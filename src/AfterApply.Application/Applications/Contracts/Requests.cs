@@ -23,7 +23,14 @@ public sealed record CreateFromExtensionRequest(
     // Allow-listed HTML captured by the extension for formatted display (spec §11 follow-up) —
     // untrusted content regardless of the extension's own sanitization; re-sanitized again with
     // DOMPurify before ever rendering (see web's JobDescriptionCard).
-    string? DescriptionHtml = null);
+    string? DescriptionHtml = null,
+    // The LinkedIn company page URL, read from the company anchor's href while scraping the job
+    // posting (never derived from CompanyName server-side). Feeds CompanyResolver's LinkedInUrl
+    // backfill and, via CompanyEnrichmentService, background enrichment of
+    // Website/Industry/Country. Validated against an https://(www.)linkedin.com allow-list
+    // (CreateFromExtensionRequestValidator) since it's later fetched server-side — never trust it
+    // as safe just because it round-tripped through the client.
+    string? CompanyLinkedInUrl = null);
 
 public sealed record UpdateApplicationRequest(
     string JobTitle,

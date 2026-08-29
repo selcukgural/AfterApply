@@ -1,6 +1,6 @@
-# AfterApply
+# e-kariyerim
 
-Job Application Tracker + Personal Analytics. See `afterapply-intelligence-platform-plan.md`
+Job Application Tracker + Personal Analytics. See `ekariyerim-intelligence-platform-plan.md`
 for the product/technical spec, `DEVELOPMENT_PLAN.md` for the sprint roadmap,
 and `DECISIONS.md` for architecture/technical decisions.
 
@@ -246,8 +246,8 @@ kept switched off until enough real usage exists to make it meaningful; see
 ## Gmail Integration Setup
 
 Phase 9 (post-MVP) lets a user connect their Gmail account (read-only) so
-AfterApply can suggest status updates from hiring-related emails — see
-`afterapply-intelligence-platform-plan.md` §10 and `DECISIONS.md`'s Phase 9
+e-kariyerim can suggest status updates from hiring-related emails — see
+`ekariyerim-intelligence-platform-plan.md` §10 and `DECISIONS.md`'s Phase 9
 entry for the design. The code ships with obvious placeholder OAuth
 credentials (`GoogleOAuth:ClientId`/`ClientSecret` in `appsettings.json`) —
 the feature is structurally complete but inert until you supply real ones
@@ -288,7 +288,7 @@ instead); once real credentials are in place, connect a Gmail account from
 Sprint 8 lets a user paste their CV in `/settings` and get an AI-scored
 match (Score/Strong Matches/Missing/Recommendation) against a job
 description pasted on an application's detail page — see
-`afterapply-intelligence-platform-plan.md` §12 and `DECISIONS.md`'s Sprint 8
+`ekariyerim-intelligence-platform-plan.md` §12 and `DECISIONS.md`'s Sprint 8
 entry for the design. The code ships with an obvious placeholder API key
 (`OpenAI:ApiKey` in `appsettings.json`) — the feature is structurally
 complete but inert until you supply a real one:
@@ -310,8 +310,8 @@ a match from an application's detail page as a manual smoke test.
 ## Browser Extension Setup
 
 Sprint 9 ships a Manifest V3 Chrome/Edge extension (`extension/`) that turns a LinkedIn job
-posting page into a tracked AfterApply application with one click — see
-`afterapply-intelligence-platform-plan.md` §11 and `DECISIONS.md`'s Sprint 9 entry for the design.
+posting page into a tracked e-kariyerim application with one click — see
+`ekariyerim-intelligence-platform-plan.md` §11 and `DECISIONS.md`'s Sprint 9 entry for the design.
 It authenticates with a Personal Access Token generated from `/settings` → Browser Extension,
 not the web app's JWT session. Full setup/load-unpacked instructions and known limitations
 (LinkedIn scraping selectors are best-effort) are in `extension/README.md`.

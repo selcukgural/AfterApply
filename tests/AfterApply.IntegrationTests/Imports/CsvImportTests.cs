@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Imports.Contracts;
+using AfterApply.Domain.Imports;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -77,15 +78,48 @@ public class CsvImportTests : IAsyncLifetime
         return content;
     }
 
+    // Processing runs out-of-request via a Hangfire job (see ImportEndpoints.cs) — the POST only
+    // ever returns 202 + the batch id now. Every test that needs the final summary polls this
+    // endpoint until the batch leaves Pending/Processing, same as a real client would (or
+    // /hubs/import-progress, which isn't exercised here).
+    private async Task<ImportSummaryResponse> PollUntilTerminalAsync(Guid batchId)
+    {
+        // 60s, not a tighter number: under concurrent test-class load (each with its own
+        // in-process Hangfire server competing for CPU) a trivial import can legitimately take
+        // much longer than it would in isolation — a too-tight timeout here doesn't just fail the
+        // assertion, it risks the fixture disposing its containers out from under a Hangfire job
+        // that's still actually running, which was observed to crash the whole test host.
+        var deadline = DateTime.UtcNow.AddSeconds(60);
+        while (DateTime.UtcNow < deadline)
+        {
+            var response = await _client.GetAsync($"/api/imports/{batchId}");
+            response.EnsureSuccessStatusCode();
+            var summary = await response.Content.ReadFromJsonAsync<ImportSummaryResponse>(JsonOptions);
+            summary.ShouldNotBeNull();
+
+            if (summary!.Status is ImportBatchStatus.Completed or ImportBatchStatus.Failed)
+            {
+                return summary;
+            }
+
+            await Task.Delay(200);
+        }
+
+        throw new TimeoutException($"Import batch {batchId} did not reach a terminal status within 60s.");
+    }
+
     [Fact]
     public async Task ImportCsv_First_Upload_Creates_New_Applications_And_Reports_Invalid_Row()
     {
         var response = await _client.PostAsync("/api/imports/csv", BuildCsvUpload(SampleCsv));
-        response.EnsureSuccessStatusCode();
-        var summary = await response.Content.ReadFromJsonAsync<ImportSummaryResponse>(JsonOptions);
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.Accepted);
+        var accepted = await response.Content.ReadFromJsonAsync<ImportAcceptedResponse>(JsonOptions);
+        accepted.ShouldNotBeNull();
 
-        summary.ShouldNotBeNull();
-        summary!.TotalRecords.ShouldBe(3);
+        var summary = await PollUntilTerminalAsync(accepted!.Id);
+
+        summary.Status.ShouldBe(ImportBatchStatus.Completed);
+        summary.TotalRecords.ShouldBe(3);
         summary.NewApplications.ShouldBe(2);
         summary.DuplicateRecords.ShouldBe(0);
         summary.InvalidRecords.ShouldBe(1);
@@ -106,25 +140,33 @@ public class CsvImportTests : IAsyncLifetime
     public async Task ImportCsv_Reuploading_Same_File_Is_Idempotent()
     {
         var first = await _client.PostAsync("/api/imports/csv", BuildCsvUpload(SampleCsv));
-        first.EnsureSuccessStatusCode();
+        first.StatusCode.ShouldBe(System.Net.HttpStatusCode.Accepted);
+        var firstAccepted = await first.Content.ReadFromJsonAsync<ImportAcceptedResponse>(JsonOptions);
+        await PollUntilTerminalAsync(firstAccepted!.Id);
 
         var second = await _client.PostAsync("/api/imports/csv", BuildCsvUpload(SampleCsv));
-        second.EnsureSuccessStatusCode();
-        var summary = await second.Content.ReadFromJsonAsync<ImportSummaryResponse>(JsonOptions);
+        second.StatusCode.ShouldBe(System.Net.HttpStatusCode.Accepted);
+        var secondAccepted = await second.Content.ReadFromJsonAsync<ImportAcceptedResponse>(JsonOptions);
+        var summary = await PollUntilTerminalAsync(secondAccepted!.Id);
 
-        summary.ShouldNotBeNull();
-        summary!.TotalRecords.ShouldBe(3);
+        summary.Status.ShouldBe(ImportBatchStatus.Completed);
+        summary.TotalRecords.ShouldBe(3);
         summary.NewApplications.ShouldBe(0);
         summary.DuplicateRecords.ShouldBe(2);
         summary.InvalidRecords.ShouldBe(1);
     }
 
     [Fact]
-    public async Task ImportCsv_Missing_Required_Column_Returns_ValidationProblem()
+    public async Task ImportCsv_Missing_Required_Column_Batch_Fails()
     {
         var response = await _client.PostAsync("/api/imports/csv", BuildCsvUpload("Notes,Random\nfoo,bar\n"));
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.Accepted);
+        var accepted = await response.Content.ReadFromJsonAsync<ImportAcceptedResponse>(JsonOptions);
 
-        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.BadRequest);
+        var summary = await PollUntilTerminalAsync(accepted!.Id);
+
+        summary.Status.ShouldBe(ImportBatchStatus.Failed);
+        summary.ErrorMessage.ShouldNotBeNullOrWhiteSpace();
     }
 
     [Fact]

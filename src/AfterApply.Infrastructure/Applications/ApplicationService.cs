@@ -5,6 +5,7 @@ using AfterApply.Application.Imports;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Infrastructure.Persistence;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using DomainApplication = AfterApply.Domain.Applications.Application;
@@ -13,7 +14,7 @@ namespace AfterApply.Infrastructure.Applications;
 
 internal sealed class ApplicationService(
     AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver,
-    ICompanySearchService companySearchService, HybridCache cache) : IApplicationService
+    ICompanySearchService companySearchService, HybridCache cache, IBackgroundJobClient jobClient) : IApplicationService
 {
     private static readonly HybridCacheEntryOptions SummaryCountsCacheOptions = new()
     {
@@ -139,7 +140,18 @@ internal sealed class ApplicationService(
         // still calls ResolveOrCreateAsync directly, since the autocomplete UI already steers
         // users to type an existing company's exact name when one applies.
         var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
-            ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken);
+            ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken, request.CompanyLinkedInUrl);
+
+        // Only worth queuing when this submission actually carries a LinkedIn URL — a company
+        // matched via the trigram/high-confidence path above, or one never scraped from LinkedIn
+        // at all (kariyer.net), has nothing new for CompanyEnrichmentService to fetch from. Safe
+        // to enqueue immediately: by this point the Company row is already committed, either from
+        // an earlier request or by CompanyResolver's own SaveChangesAsync just above — the
+        // enqueued job only touches Company, never this method's own not-yet-saved Application.
+        if (request.CompanyLinkedInUrl is not null)
+        {
+            jobClient.Enqueue<ICompanyEnrichmentService>(s => s.EnrichAsync(companyId, CancellationToken.None));
+        }
 
         // The job posting's own site (LinkedIn, kariyer.net, ...) tags Job.Source — data
         // provenance — while Source.BrowserExtension always tags how this Application row itself

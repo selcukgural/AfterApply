@@ -24,4 +24,15 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Every test class here creates its own dedicated Postgres+Redis Testcontainers pair and
+         has no [Collection] attribute, so xUnit's default (parallelizeTestCollections=true,
+         maxParallelThreads=Environment.ProcessorCount) lets all ~16 of them boot containers at
+         once — enough concurrent container startups to stall the shared podman VM for minutes.
+         Capping the thread count bounds how many container pairs start simultaneously. -->
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -226,6 +226,8 @@ public static class DependencyInjection
         services.AddScoped<ITrackedJobService, TrackedJobService>();
         services.AddHttpClient<IJobLinkPreviewService, JobLinkPreviewService>(client => client.Timeout = TimeSpan.FromSeconds(5))
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        services.AddHttpClient<ICompanyEnrichmentService, CompanyEnrichmentService>(client => client.Timeout = TimeSpan.FromSeconds(5))
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IJobResolver, JobResolver>();
         services.AddScoped<IImportService, ImportService>();
@@ -259,7 +261,15 @@ public static class DependencyInjection
         // generation, which never runs any job and exits right after the doc is written.
         if (!IsOpenApiDocumentGeneration)
         {
-            services.AddHangfireServer();
+            // Default ShutdownTimeout (15s) was observed to be too tight for a
+            // WebApplicationFactory-hosted integration test under concurrent load: Hangfire's
+            // watchdog/heartbeat/dispatcher components still need to wind down gracefully even
+            // when no job is actually running, and under CPU contention from many concurrent test
+            // hosts that alone can exceed 15s — surfacing as a TaskCanceledException out of
+            // WaitForShutdownAsync during the test fixture's DisposeAsync. A more generous timeout
+            // is harmless in production (a slow, graceful shutdown a few seconds longer than usual
+            // costs nothing) and makes tests reliably wait it out instead of failing on teardown.
+            services.AddHangfireServer(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
         }
 
         return services;

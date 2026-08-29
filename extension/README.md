@@ -1,27 +1,27 @@
-# AfterApply Browser Extension (Sprint 9, kariyer.net support added later)
+# e-kariyerim Browser Extension (Sprint 9, kariyer.net support added later)
 
 A Manifest V3 Chrome/Edge extension that turns a LinkedIn or kariyer.net job posting page into a
-tracked AfterApply application with one click ("I Applied") — see
-`afterapply-intelligence-platform-plan.md` §11 and `DECISIONS.md`'s Sprint 9 entry for the
+tracked e-kariyerim application with one click ("I Applied") — see
+`ekariyerim-intelligence-platform-plan.md` §11 and `DECISIONS.md`'s Sprint 9 entry for the
 original (LinkedIn-only) design.
 
 ## Setup
 
-1. **Generate an access token.** In the AfterApply web app, go to Settings → Browser Extension,
+1. **Generate an access token.** In the e-kariyerim web app, go to Settings → Browser Extension,
    click "Generate Token", and copy the value shown (`aa_pat_...`) — it's shown only once. This
    token grants full access to your account, same as being logged in; only paste it into your own
    extension install.
 2. **Load the extension unpacked.**
    - Chrome/Edge: open `chrome://extensions` (or `edge://extensions`), enable **Developer mode**,
      click **Load unpacked**, and select this `extension/` folder.
-3. **Configure it.** Click the AfterApply icon in the toolbar → if no token is set yet, click
+3. **Configure it.** Click the e-kariyerim icon in the toolbar → if no token is set yet, click
    "Open Settings" (or right-click the icon → Options). Set the **API base URL** (default
    `http://localhost:5151` for local dev) and paste the **access token**, then Save.
 
 ## Using it
 
 Navigate to a LinkedIn job posting page (`linkedin.com/jobs/view/<id>/...`) or a kariyer.net job
-posting page (`kariyer.net/is-ilani/<slug>-<id>`) and click the AfterApply toolbar icon. The popup
+posting page (`kariyer.net/is-ilani/<slug>-<id>`) and click the e-kariyerim toolbar icon. The popup
 best-effort scrapes the company, title, and location from the page — **all fields are editable
 before you submit**, so an imperfect scrape never becomes a wrong submission. Click **I Applied**
 to create the application. Clicking it again on the same job page is safe — the backend dedupes by

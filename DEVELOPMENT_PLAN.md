@@ -1,6 +1,6 @@
-# AfterApply — Development Plan
+# e-kariyerim — Development Plan
 
-Kaynak: `afterapply-intelligence-platform-plan.md` (product/technical spec).
+Kaynak: `ekariyerim-intelligence-platform-plan.md` (product/technical spec).
 Bu doküman, spec'teki Phase (§22) ve Sprint (§23-27) tanımlarını uygulanabilir,
 sıralı bir yol haritasına dönüştürür. Spec'te tanımlanmayan iki boşluk
 (CSV Import ve Hardening/Launch sprintleri) burada eklendi — bkz. DECISIONS.md.

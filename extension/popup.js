@@ -58,6 +58,24 @@ function extractKariyerNetJobId(url) {
   return match ? match[1] : null;
 }
 
+// LinkedIn's company anchor href carries the canonical /company/<slug>/ path but is sometimes
+// suffixed with tracking query params/a fragment depending on which page layout rendered it —
+// stripped here so the URL we store (and CompanyEnrichmentService later re-fetches server-side)
+// is stable and matches what a plain HTTP GET of the company page actually resolves.
+function canonicalizeLinkedInCompanyUrl(href) {
+  if (!href) {
+    return null;
+  }
+  let parsed;
+  try {
+    parsed = new URL(href);
+  } catch {
+    return null;
+  }
+  const match = parsed.pathname.match(/^\/company\/([^/]+)/);
+  return match ? `https://www.linkedin.com/company/${match[1]}/` : null;
+}
+
 // Picks the current tab's job site (if any) and the canonical URL to submit/dedupe against.
 // LinkedIn has a stable id-only canonical form (/jobs/view/<id>/); kariyer.net's slug is part of
 // how the posting resolves, so its canonical form is the tab's own path with tracking query
@@ -105,6 +123,10 @@ async function scrapeLinkedInJob(jobId) {
 
   const companyLink = document.querySelector('a[href*="/company/"]');
   const company = textOf(companyLink);
+  // Raw href, uncanonicalized — this function runs injected into the page (must stay fully
+  // self-contained, see the comment block above), so tracking-param stripping happens back in
+  // popup.js's own scope once the result comes back (canonicalizeLinkedInCompanyUrl).
+  const companyLinkedInUrl = companyLink?.href || null;
 
   // The location is the first segment (before the "·" separator) of a metadata line like
   // "Istanbul, Türkiye · Reposted 5 days ago · Over 100 people clicked apply", rendered as a
@@ -184,6 +206,7 @@ async function scrapeLinkedInJob(jobId) {
     // Matches CreateFromExtensionRequestValidator's MaximumLength(10_000/20_000) on the backend.
     description: description ? description.slice(0, 10_000) : null,
     descriptionHtml: descriptionHtml ? descriptionHtml.slice(0, 20_000) : null,
+    companyLinkedInUrl,
   };
 }
 
@@ -252,6 +275,8 @@ async function scrapeKariyerNetJob() {
     // Matches CreateFromExtensionRequestValidator's MaximumLength(10_000/20_000) on the backend.
     description: description ? description.slice(0, 10_000) : null,
     descriptionHtml: descriptionHtml ? descriptionHtml.slice(0, 20_000) : null,
+    // kariyer.net postings never link to a LinkedIn company page.
+    companyLinkedInUrl: null,
   };
 }
 
@@ -372,12 +397,16 @@ async function main() {
     });
     scraped = result;
   } catch (error) {
-    scraped = { title: "", company: "", location: "", description: null, descriptionHtml: null };
+    scraped = { title: "", company: "", location: "", description: null, descriptionHtml: null, companyLinkedInUrl: null };
     // Surfaced inline (not just console.error) so a manual tester doesn't need DevTools open to
     // see why fields came back empty — found necessary in Sprint 9 manual testing, where the
     // silently-swallowed error made an actual scrape failure look identical to "nothing found".
     scrapeError = error?.message || String(error);
   }
+
+  // The scraper (injected via executeScript, self-contained) returns a raw href — tracking
+  // params/fragment stripping happens here, back in the extension's own scope.
+  scraped.companyLinkedInUrl = canonicalizeLinkedInCompanyUrl(scraped.companyLinkedInUrl);
 
   render(`
     <span class="site-badge">${escapeHtml(SITE_LABELS[job.site])}</span>
@@ -433,6 +462,7 @@ async function main() {
           description: scraped.description,
           descriptionHtml: scraped.descriptionHtml,
           publishedAt: null,
+          companyLinkedInUrl: scraped.companyLinkedInUrl,
         }),
       });
 

@@ -1,6 +1,6 @@
 {
-  "id": "afterapply-ci",
-  "name": "AfterApply - CI (docker-compose)",
+  "id": "ekariyerim-ci",
+  "name": "e-kariyerim - CI (docker-compose)",
   "values": [
     { "key": "baseUrl", "value": "http://localhost:8080", "type": "default", "enabled": true },
     { "key": "accessToken", "value": "", "type": "secret", "enabled": true },

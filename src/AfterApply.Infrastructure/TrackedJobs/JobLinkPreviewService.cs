@@ -46,7 +46,7 @@ internal sealed class JobLinkPreviewService(HttpClient httpClient, ILogger<JobLi
             for (var hop = 0; hop < MaxRedirectHops; hop++)
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, currentUri);
-                request.Headers.UserAgent.ParseAdd("AfterApplyLinkPreview/1.0 (+https://afterapply.app)");
+                request.Headers.UserAgent.ParseAdd("EKariyerimLinkPreview/1.0 (+https://ekariyerim.com)");
 
                 using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 var location = response.Headers.Location;

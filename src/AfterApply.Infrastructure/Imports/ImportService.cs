@@ -256,7 +256,7 @@ internal sealed partial class ImportService(
 
     private static async Task<string> StageFileAsync(Stream sourceStream, string extension, CancellationToken cancellationToken)
     {
-        var dir = Path.Combine(Path.GetTempPath(), "afterapply-imports");
+        var dir = Path.Combine(Path.GetTempPath(), "ekariyerim-imports");
         Directory.CreateDirectory(dir);
         var path = Path.Combine(dir, $"{Guid.NewGuid():N}{extension}");
 

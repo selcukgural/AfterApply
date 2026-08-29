@@ -1,7 +1,7 @@
 # Product & Technical Decisions
 
 Spec kuralı §31.18 gereği: belirsiz kararlar varsayım yapılmadan burada
-önerilir ve kullanıcı onayına bırakılır. Bu dosya `afterapply-intelligence-platform-plan.md`
+önerilir ve kullanıcı onayına bırakılır. Bu dosya `ekariyerim-intelligence-platform-plan.md`
 §35'teki "Hâlâ Açık" listesini takip eder.
 
 Durum etiketleri: `DECIDED` (spec'te zaten karara bağlanmış),
@@ -1700,6 +1700,87 @@ edildi. Testler güncellendi: mevcut `EmailIntegrationTests.cs`
 testler bozulmadı), ayrıca CompanyIntelligence'ın iki-factory desenini
 tekrarlayan 4 yeni test flag kapalıyken `/connect`, `/status`,
 `/suggestions`, `/callback`'in 404 döndüğünü doğruluyor.
+
+---
+
+## e-kariyerim rebrand'inin backend/dış-servis genişletmesi (2026-08-29)
+
+**Karar:** Sprint 15'teki "sadece kullanıcıya görünen metinler" kapsamı (bkz. §Sprint 15 —
+"Rebrand kapsamı: sadece kullanıcıya görünen metinler") o zaman web app + extension UI metinlerini
+kapsamıştı; backend'in dış servislere (LinkedIn, kariyer.net) giden User-Agent header'ı gibi
+kod-içi ama dış-görünür stringler gözden kaçmıştı. Bugün ek olarak değiştirildi:
+`JobLinkPreviewService.cs`/`CompanyEnrichmentService.cs`'teki User-Agent
+(`"AfterApplyLinkPreview/1.0 (+https://afterapply.app)"` → `"EKariyerimLinkPreview/1.0
+(+https://ekariyerim.com)"`), `ImportService.cs`'teki temp-dizin öneki, `postman/`'daki koleksiyon/
+environment display-name'leri, kök dizin dokümanlarının (`README.md`, `DEVELOPMENT_PLAN.md`,
+`extension/README.md`) başlık/prose kısımları, ve spec dosyasının adı
+(`afterapply-intelligence-platform-plan.md` → `ekariyerim-intelligence-platform-plan.md`, git mv).
+
+Sprint 15'in #0 kararıyla tutarlı olarak **değiştirilmedi**: `.NET` proje/namespace isimleri
+(`AfterApply.Api` vb.), `.slnx`, GitHub repo adı, `.github/workflows/*.yml` ve
+`docker-compose.yml`/`.env*.example`'daki gerçek GCP/Cloud Run/Cloud SQL/Postgres kaynak adları
+(`afterapply-api`, `afterapply-db`, `afterapply-*` secret'ları vb. — bunlar gerçek deploy edilmiş
+altyapıyı işaret ediyor, yeniden adlandırmak ayrı bir altyapı migrasyonu gerektirir),
+`extension/manifest.json`'daki eski Cloud Run host_permission'ı, ve `extension/storage.js`'teki
+`chrome.storage` anahtar stringleri (`afterapply_settings`/`afterapply_theme` — dahili, kullanıcıya
+hiç görünmeyen anahtarlar; değiştirmek zaten kurulu extension'ın token/tema ayarını sıfırlanmış
+gibi gösterirdi). Kullanıcı bu kapsamı (ve spec dosyasının yeniden adlandırılmasını) onayladı.
+
+---
+
+## Testcontainers orphan sızıntısı: manuel "kontrol et" adımı yerine otomatik temizlik (2026-08-29)
+
+**Karar:** `tests/AfterApply.IntegrationTests/TestContainerCleanup.cs` eklendi — test assembly'si
+yüklenir yüklenmez (`[ModuleInitializer]`, herhangi bir fixture/container oluşmadan önce)
+`TESTCONTAINERS_RYUK_DISABLED=true` iken `org.testcontainers=true` etiketli tüm container'ları
+`podman rm -f` ile temizliyor. Gerçek Docker/CI'da (Ryuk çalışırken) no-op.
+
+**Gerekçe:** Ryuk bu makinede rootless podman altında hiç çalışamıyor (§Podman VM undersized
+notunda 2026-08-26'da tespit edilmişti — socket'i bind-mount edemiyor). O zamanki çözüm "her
+koşumdan önce `podman ps -a`'ya bak, sızıntı varsa temizle" idi — ama bu manuel adım hiçbir
+oturumda tutarlı hatırlanmadı; 2026-08-29'da 5 kesintiye uğramış koşumdan kalma 79 container
+(bazıları 7+ saattir açık) birikmiş, tek başına normalde ~36sn süren bir koşumu 35+ dakikaya
+çıkarmıştı (podman VM'i kaynak açlığından). Simüle edilmiş bir kesintiyle (koşum ortasında
+`kill -9`, 28 container sızdırıldı) doğrulandı: bir sonraki koşum bu 28'i otomatik temizledi,
+container sayısı koşum sonunda 0'a döndü, süre ~39sn'de sabit kaldı. Bonus: bu sızıntının yan
+etkisi olan aralıklı "proxy already running" (podman port-forward çakışması) hatası da bu düzeltmeyle
+birlikte bir daha gözlenmedi.
+
+**Not:** Bu düzeltme tek geliştiricili yerel makineyi varsayıyor — iki `dotnet test` çağrısının tam
+aynı anda yarışması teorik olarak birbirinin yeni başlattığı container'ı silebilir; kabul edilebilir
+bir tradeoff, paylaşılan bir CI runner'ında (gerçek Docker, Ryuk çalışır) zaten no-op olduğu için
+sorun teşkil etmiyor.
+
+---
+
+## Integration test suite: seri çalıştırma + Hangfire shutdown timeout (2026-08-29)
+
+**Karar:** İki ek düzeltme daha yapıldı. (1) `tests/AfterApply.IntegrationTests/xunit.runner.json`
+eklendi (`maxParallelThreads: 1`) — hiçbir test sınıfının `[Collection]` attribute'u yok, bu yüzden
+xUnit'in varsayılanı ~16 sınıfın hepsinin Postgres+Redis container'ını aynı anda ayağa kaldırmasına
+izin veriyordu (gözlemlendi: 24 container aynı anda başlatıldı, 6+ dakika hiç ilerleme yok) —
+sızıntıdan bağımsız, ayrı bir yavaşlık/instabilite kaynağı. (2)
+`AddHangfireServer()`'ın varsayılan 15sn `ShutdownTimeout`'u yük altında yetersizdi — hiçbir job
+çalışmıyorken bile Hangfire'ın kendi watchdog/heartbeat thread'lerinin kapanması için
+`WaitForShutdownAsync` timeout atıp `TaskCanceledException` fırlatıyordu (test teardown'ında,
+`DisposeAsync` içinde) — 30sn'ye çıkarıldı (`DependencyInjection.cs`, `AddBackgroundJobs`).
+
+**Gerekçe:** Sızıntı/volume düzeltmesinden sonra bile tam suite koşumu ara sıra "Test host process
+crashed" ile çöküyordu (rastgele bir test sayısında, 14-37 arası). Bellek (RSS <500MB, host 48GB),
+podman VM sağlığı (uptime/load normal, hiç restart olmadı) ve disk/volume elendi. Yukarıdaki iki
+düzeltmeyle birlikte tam suite artık tekrar tekrar 74/74 tamamlanıyor (~2.5-3dk, seri).
+
+**Çözülmemiş kalan:** Nadiren (post-fix iki temiz koşumda hiç, önceki denemelerde sıkça) test host
+yine de rastgele bir noktada çökebiliyor — yönetilen bir exception/stack trace olmadan, gerçek bir
+process ölümü. `~/Library/Logs/DiagnosticReports`'ta `dotnet`/`testhost` için hiç crash raporu yok;
+`log show` çökme anlarında sıradan XPC/security-exception gürültüsü dışında bir şey göstermiyor.
+Native crash dump aracı olmadan kök nedeni bulunamadı — Testcontainers/Docker.DotNet'in rootless
+podman socket'i üzerindeki etkileşiminde nadir bir native-seviye kararsızlık gibi görünüyor.
+**Bilinçli olarak yapılmadı:** 16 sınıfın her birinin kendi container çiftini tek, paylaşılan bir
+`ICollectionFixture`'a indirmek (container lifecycle sayısını ~16x azaltır, muhtemel gerçek çözüm)
+— çünkü `CompanyIntelligenceTests` kullanıcılar-arası agregasyonu test etmek için temiz,
+tek-kiracılı bir DB'ye ihtiyaç duyuyor; 16 sınıfı tek DB'de paylaştırmak mekanik bir
+find-replace değil, her sınıfın izolasyon varsayımlarının tek tek gözden geçirilmesini gerektirir.
 
 ---
 
