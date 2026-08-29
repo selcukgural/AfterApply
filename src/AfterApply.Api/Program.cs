@@ -78,8 +78,9 @@ app.MapPersonalAccessTokenEndpoints();
 app.MapCompanyIntelligenceEndpoints();
 app.MapCompanyEndpoints();
 
-using (var scope = app.Services.CreateScope())
+if (!DependencyInjection.IsOpenApiDocumentGeneration)
 {
+    using var scope = app.Services.CreateScope();
     var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
     var notificationOptions = scope.ServiceProvider.GetRequiredService<IOptions<NotificationOptions>>().Value;
 

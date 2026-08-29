@@ -22,7 +22,12 @@ public static class AuthEndpoints
                     : Results.ValidationProblem(ToErrorDictionary(result.Errors));
             })
             .WithValidation<RegisterRequest>()
-            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy);
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Register a new account")
+            .WithDescription("Creates the account and returns an access/refresh token pair, same shape as Login. " +
+                              "A taken email or unmet consent requirement comes back as a 400 validation problem, not a 409.")
+            .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("/login", async (LoginRequest request, IAuthService authService,
                 IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -33,7 +38,11 @@ public static class AuthEndpoints
                     : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
             })
             .WithValidation<LoginRequest>()
-            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy);
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Log in with email and password")
+            .Produces<AuthResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("/refresh", async (RefreshRequest request, IAuthService authService,
                 IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -44,7 +53,12 @@ public static class AuthEndpoints
                     : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
             })
             .WithValidation<RefreshRequest>()
-            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy);
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Exchange a refresh token for a new access/refresh token pair")
+            .WithDescription("Rotates the refresh token — the one submitted here stops working, use the new one from the response.")
+            .Produces<AuthResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("/logout", async (LogoutRequest request, IAuthService authService, CancellationToken cancellationToken) =>
             {
@@ -52,7 +66,11 @@ public static class AuthEndpoints
                 return Results.NoContent();
             })
             .WithValidation<LogoutRequest>()
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithSummary("Revoke a refresh token")
+            .WithDescription("Always returns 204, even if the token was already revoked or unknown — logout is idempotent by design.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         return app;
     }
