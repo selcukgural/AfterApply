@@ -73,6 +73,10 @@ jobs:
       - name: Run Postman collection against the live API
         run: newman run postman/collection.json -e postman/environments/ci.json --bail
 
+      - name: Show API logs on failure
+        if: failure()
+        run: docker compose logs api
+
       - name: Stop API stack
         if: always()
         run: docker compose down -v
