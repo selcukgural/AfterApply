@@ -2,6 +2,11 @@
 
   <PropertyGroup>
     <UserSecretsId>5a305068-58fc-4c7f-8363-441e0b8b71e1</UserSecretsId>
+    <!-- Build-time OpenAPI generation (postman/scripts/generate-collection.js consumes
+         this file). See Program.cs's isDocumentGeneration guard for why this doesn't
+         need a live Postgres connection. -->
+    <OpenApiDocumentsDirectory>$(MSBuildThisFileDirectory)../../postman/openapi</OpenApiDocumentsDirectory>
+    <OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +18,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Sentry.AspNetCore" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />

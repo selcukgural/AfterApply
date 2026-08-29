@@ -22,7 +22,14 @@ env:
   AR_REPOSITORY: afterapply
 
 jobs:
+  # Re-verifies the API against its own Postman collection right before deploying — a second,
+  # independent gate from ci.yml's own call to the same reusable workflow, since this workflow
+  # can be dispatched against any commit/branch, not just one CI already passed on.
+  contract-check:
+    uses: ./.github/workflows/api-contract.yml
+
   deploy-backend:
+    needs: contract-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -115,6 +122,7 @@ jobs:
             Cors__AllowedOrigins__0=afterapply-web-origin:latest
 
   deploy-web:
+    needs: contract-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

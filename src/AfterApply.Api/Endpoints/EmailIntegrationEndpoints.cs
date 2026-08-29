@@ -14,7 +14,10 @@ public static class EmailIntegrationEndpoints
 {
     public static IEndpointRouteBuilder MapEmailIntegrationEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/email-integrations").WithTags("EmailIntegrations");
+        var group = app.MapGroup("/api/email-integrations").WithTags("EmailIntegrations")
+            .WithDescription("Hidden behind EmailIntegrations:Enabled — every endpoint in this group 404s for every " +
+                             "caller while the flag is off. See PRIVACY_CHECKLIST.md item 4/7.")
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         // Flag off → 404 for every caller, same pattern as MatchingEndpoints/CompanyIntelligenceEndpoints.
         // gmail.readonly grants read access to the user's entire inbox (app-level filtering only,
@@ -28,7 +31,10 @@ public static class EmailIntegrationEndpoints
 
         group.MapGet("/gmail/status", async (ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.GetConnectionStatusAsync(user.GetUserId(), cancellationToken)))
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithSummary("Get the current user's Gmail connection status")
+            .Produces<EmailConnectionStatusResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/gmail/connect", async (ClaimsPrincipal user, IEmailIntegrationService service,
                 IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
@@ -43,7 +49,13 @@ public static class EmailIntegrationEndpoints
                     return Results.ValidationProblem(new Dictionary<string, string[]> { ["gmail"] = [localizer[ex.ErrorCode]] });
                 }
             })
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithSummary("Start the Gmail OAuth connection flow")
+            .WithDescription("Returns a Google consent-screen URL for the client to redirect the user to; the flow " +
+                             "completes at the callback endpoint below.")
+            .Produces(StatusCodes.Status200OK)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         // Anonymous at the ASP.NET Core auth-middleware level — Google's redirect carries no JWT.
         // Authenticated instead via the signed `state` parameter (see HandleCallbackAsync).
@@ -61,18 +73,28 @@ public static class EmailIntegrationEndpoints
             return result.Succeeded
                 ? Results.Redirect($"{baseUrl}/settings?emailIntegration=success")
                 : Results.Redirect($"{baseUrl}/settings?emailIntegration=error&reason={result.ErrorReason}");
-        });
+        })
+            .WithSummary("Google OAuth redirect target — not called directly by clients")
+            .WithDescription("Anonymous: authenticated via the signed `state` parameter Google echoes back, not a JWT. " +
+                             "Always redirects to the frontend's /settings page, success or failure.")
+            .Produces(StatusCodes.Status302Found);
 
         group.MapPost("/gmail/disconnect", async (ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
             {
                 var disconnected = await service.DisconnectAsync(user.GetUserId(), cancellationToken);
                 return disconnected ? Results.NoContent() : Results.NotFound();
             })
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithSummary("Disconnect the current user's Gmail account")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/suggestions", async (ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.GetPendingSuggestionsAsync(user.GetUserId(), cancellationToken)))
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithSummary("List pending status suggestions detected from the user's Gmail")
+            .Produces<IReadOnlyList<EmailSuggestionResponse>>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/suggestions/{id:guid}/confirm", async (Guid id, ClaimsPrincipal user, IEmailIntegrationService service,
                 IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
@@ -88,14 +110,23 @@ public static class EmailIntegrationEndpoints
                     _ => Results.NotFound()
                 };
             })
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithSummary("Apply a suggested status change to its application")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/suggestions/{id:guid}/dismiss", async (Guid id, ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
             {
                 var dismissed = await service.DismissSuggestionAsync(user.GetUserId(), id, cancellationToken);
                 return dismissed ? Results.NoContent() : Results.NotFound();
             })
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithSummary("Dismiss a pending suggestion without applying it")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         return app;
     }

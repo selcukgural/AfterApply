@@ -1,3 +1,4 @@
+using System.Reflection;
 using AfterApply.Application.Analytics;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
@@ -44,6 +45,15 @@ public static class DependencyInjection
     public const string UploadRateLimitPolicy = "upload";
     public const string MatchingRateLimitPolicy = "matching";
 
+    // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
+    // input) runs this entrypoint via a mock server that never serves real traffic, so it
+    // never needs a working Postgres/Redis/JWT signing key — but AddInfrastructure's
+    // fail-fast config checks below would otherwise block every `dotnet build`, everywhere,
+    // the moment those env vars aren't set. Detected the same way Program.cs would, so
+    // both stay in sync without one depending on the other's flag.
+    public static readonly bool IsOpenApiDocumentGeneration =
+        Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddLocalization();
@@ -51,7 +61,15 @@ public static class DependencyInjection
         services.AddIdentityAndJwt(configuration);
         services.AddApplicationServices();
         services.AddBackgroundJobs(configuration);
-        services.AddDataProtection().PersistKeysToDbContext<AppDbContext>();
+
+        // Persisting keys to the DB needs a working connection to read the existing key ring
+        // at startup, which the placeholder connection string above can't provide — skip it
+        // during OpenAPI generation and let DataProtection fall back to its ephemeral default.
+        if (!IsOpenApiDocumentGeneration)
+        {
+            services.AddDataProtection().PersistKeysToDbContext<AppDbContext>();
+        }
+
         services.Configure<ImportOptions>(configuration.GetSection("Imports"));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<GoogleOAuthOptions>(configuration.GetSection("GoogleOAuth"));
@@ -81,12 +99,14 @@ public static class DependencyInjection
     private static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         var postgresConnectionString = configuration.GetConnectionString("Postgres")
+            ?? (IsOpenApiDocumentGeneration ? "Host=localhost;Database=openapi-gen;Username=openapi-gen;Password=openapi-gen" : null)
             ?? throw new InvalidOperationException(
                 "ConnectionStrings:Postgres is not configured. For local dev run " +
                 "'dotnet user-secrets set ConnectionStrings:Postgres \"...\" --project src/AfterApply.Api', " +
                 "or set ConnectionStrings__Postgres when running via docker-compose.");
 
         var redisConnectionString = configuration.GetConnectionString("Redis")
+            ?? (IsOpenApiDocumentGeneration ? "localhost:6379" : null)
             ?? throw new InvalidOperationException(
                 "ConnectionStrings:Redis is not configured. For local dev run " +
                 "'dotnet user-secrets set ConnectionStrings:Redis \"...\" --project src/AfterApply.Api', " +
@@ -109,6 +129,7 @@ public static class DependencyInjection
     private static IServiceCollection AddIdentityAndJwt(this IServiceCollection services, IConfiguration configuration)
     {
         var signingKey = configuration["Jwt:SigningKey"]
+            ?? (IsOpenApiDocumentGeneration ? Convert.ToBase64String("openapi-generation-placeholder-key-32-bytes!!"u8.ToArray()) : null)
             ?? throw new InvalidOperationException(
                 "Jwt:SigningKey is not configured. For local dev run " +
                 "'dotnet user-secrets set Jwt:SigningKey \"<base64>\" --project src/AfterApply.Api', " +
@@ -205,6 +226,7 @@ public static class DependencyInjection
     private static IServiceCollection AddBackgroundJobs(this IServiceCollection services, IConfiguration configuration)
     {
         var postgresConnectionString = configuration.GetConnectionString("Postgres")
+            ?? (IsOpenApiDocumentGeneration ? "Host=localhost;Database=openapi-gen;Username=openapi-gen;Password=openapi-gen" : null)
             ?? throw new InvalidOperationException(
                 "ConnectionStrings:Postgres is not configured. For local dev run " +
                 "'dotnet user-secrets set ConnectionStrings:Postgres \"...\" --project src/AfterApply.Api', " +
@@ -214,7 +236,14 @@ public static class DependencyInjection
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
             .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(postgresConnectionString)));
-        services.AddHangfireServer();
+
+        // The server is a background worker that immediately polls storage on start — pointless
+        // (and, against the placeholder connection string above, noisy) during OpenAPI
+        // generation, which never runs any job and exits right after the doc is written.
+        if (!IsOpenApiDocumentGeneration)
+        {
+            services.AddHangfireServer();
+        }
 
         return services;
     }

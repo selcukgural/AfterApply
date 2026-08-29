@@ -1,0 +1,11 @@
+{
+  "id": "afterapply-ci",
+  "name": "AfterApply - CI (docker-compose)",
+  "values": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "default", "enabled": true },
+    { "key": "accessToken", "value": "", "type": "secret", "enabled": true },
+    { "key": "refreshToken", "value": "", "type": "secret", "enabled": true },
+    { "key": "personalAccessToken", "value": "", "type": "secret", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment"
+}

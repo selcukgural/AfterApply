@@ -27,6 +27,15 @@ jobs:
       # per test class.
       - run: dotnet test AfterApply.slnx --no-build --configuration Release
 
+  api-contract:
+    uses: ./.github/workflows/api-contract.yml
+    # Only on main, and only once the job above is green, does the collection reach the
+    # shared Postman workspace — see api-contract.yml's own "publish" step.
+    with:
+      publish: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+    secrets:
+      POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

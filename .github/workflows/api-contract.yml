@@ -1,0 +1,91 @@
+name: API contract check
+
+# Reusable: called from both ci.yml (on every push/PR) and deploy.yml (as a pre-deploy gate,
+# in case someone dispatches a deploy from a commit CI never ran against). Keeping the logic
+# in one place means the two callers can't drift out of sync with each other.
+on:
+  workflow_call:
+    inputs:
+      publish:
+        description: Push the regenerated collection to Postman Cloud after a green run
+        type: boolean
+        default: false
+    secrets:
+      POSTMAN_API_KEY:
+        required: false
+
+jobs:
+  contract-check:
+    runs-on: ubuntu-latest
+    env:
+      # Never used outside this job's throwaway containers — docker-compose.yml requires
+      # both to be set, but no real secret needs to back them here.
+      POSTGRES_PASSWORD: ci-only-not-a-real-secret
+      JWT_SIGNING_KEY: Y2ktb25seS1wbGFjZWhvbGRlci1zaWduaW5nLWtleS1ub3QtcmVhbA==
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: postman/package-lock.json
+
+      # Emits postman/openapi/openapi.json as a side effect — see AfterApply.Api.csproj's
+      # OpenApiDocumentsDirectory and DependencyInjection.IsOpenApiDocumentGeneration.
+      - run: dotnet build src/AfterApply.Api/AfterApply.Api.csproj --configuration Release
+
+      - working-directory: postman
+        run: npm ci
+
+      # postman/collection.json is gitignored — a build artifact regenerated fresh from
+      # openapi.json on every run, never a hand-maintained file that can go stale.
+      - working-directory: postman
+        run: npm run generate
+
+      - name: Start API stack
+        run: docker compose up -d --build
+
+      # Program.cs deliberately never calls Database.Migrate() on startup (see
+      # DEPLOYMENT.md "Migrations") — docker-compose.yml's postgres container is
+      # always schema-less until this runs, in CI same as in a fresh local dev setup.
+      - name: Apply EF Core migrations
+        env:
+          ConnectionStrings__Postgres: "Host=localhost;Port=5434;Database=afterapply;Username=afterapply;Password=${{ env.POSTGRES_PASSWORD }}"
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.0.11
+          dotnet ef database update --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api
+
+      - name: Wait for API to become healthy
+        run: |
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:8080/health && exit 0
+            sleep 2
+          done
+          echo "::error::API never became healthy" && exit 1
+
+      - run: npm install -g newman
+
+      - name: Run Postman collection against the live API
+        run: newman run postman/collection.json -e postman/environments/ci.json --bail
+
+      - name: Show API logs on failure
+        if: failure()
+        run: docker compose logs api
+
+      - name: Stop API stack
+        if: always()
+        run: docker compose down -v
+
+      # Only after everything above is green — a broken collection or a failing contract
+      # test never reaches the shared team workspace.
+      - name: Publish collection to Postman Cloud
+        if: inputs.publish
+        working-directory: postman
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+        run: npm run publish
