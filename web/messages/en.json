@@ -251,8 +251,10 @@
     },
     "pagination": {
       "pageInfo": "Page {page} / {totalPages} ({totalCount} applications)",
+      "first": "First",
       "previous": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "last": "Last"
     },
     "form": {
       "companyName": "Company Name",

@@ -58,7 +58,7 @@ public enum SortDirection
 
 public sealed record GetApplicationsQuery(
     int Page = 1,
-    int PageSize = 20,
+    int PageSize = 10,
     string? Search = null,
     ApplicationStatus? Status = null,
     ApplicationListSortBy SortBy = ApplicationListSortBy.AppliedAt,

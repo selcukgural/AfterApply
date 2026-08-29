@@ -12,7 +12,7 @@ import { ApplicationTable } from "@/components/applications/ApplicationTable";
 import { Pagination } from "@/components/applications/Pagination";
 import { Button } from "@/components/ui/Button";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 export default function ApplicationsListPage() {
   const t = useTranslations("applications.list");

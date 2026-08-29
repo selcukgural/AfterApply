@@ -251,8 +251,10 @@
     },
     "pagination": {
       "pageInfo": "Sayfa {page} / {totalPages} ({totalCount} başvuru)",
+      "first": "İlk",
       "previous": "Önceki",
-      "next": "Sonraki"
+      "next": "Sonraki",
+      "last": "Son"
     },
     "form": {
       "companyName": "Şirket Adı",
