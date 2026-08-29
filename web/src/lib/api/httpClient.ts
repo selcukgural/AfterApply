@@ -43,7 +43,9 @@ function isNoAuthEndpoint(path: string): boolean {
 
 async function performFetch(path: string, options: RequestInit): Promise<Response> {
   const headers = new Headers(options.headers);
-  if (!headers.has("Content-Type") && options.body) {
+  // FormData bodies (file uploads) must NOT get an explicit Content-Type — the
+  // browser sets multipart/form-data with the correct boundary itself.
+  if (!headers.has("Content-Type") && options.body && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
   headers.set("Accept-Language", getCurrentLocale());

@@ -33,6 +33,12 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
             <Link href="/applications" className="hover:text-gray-900 dark:hover:text-gray-100">
               {t("applications")}
             </Link>
+            <Link href="/tracked-jobs" className="hover:text-gray-900 dark:hover:text-gray-100">
+              {t("trackedJobs")}
+            </Link>
+            <Link href="/import" className="hover:text-gray-900 dark:hover:text-gray-100">
+              {t("import")}
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">

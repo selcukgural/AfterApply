@@ -165,7 +165,9 @@
     "dashboard": "Dashboard",
     "applications": "Applications",
     "accountSettings": "Account Settings",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "trackedJobs": "Tracked Jobs",
+    "import": "Import"
   },
   "auth": {
     "login": {
@@ -492,5 +494,46 @@
   "theme": {
     "light": "Light",
     "dark": "Dark"
+  },
+  "trackedJobs": {
+    "title": "Tracked Jobs",
+    "form": {
+      "companyName": "Company",
+      "jobTitle": "Job Title",
+      "jobUrl": "Job URL",
+      "location": "Location",
+      "notes": "Notes",
+      "submit": "Track Job",
+      "saving": "Saving...",
+      "saveError": "Could not save, please try again."
+    },
+    "list": {
+      "empty": "You haven't tracked any jobs yet.",
+      "markApplied": "Mark as Applied",
+      "remove": "Stop Tracking",
+      "employmentType": "Employment Type",
+      "appliedAt": "Applied Date",
+      "notes": "Notes",
+      "confirmConvert": "Convert to Application",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "addedAt": "Added: {date}"
+    }
+  },
+  "imports": {
+    "title": "Import from LinkedIn",
+    "linkedin": {
+      "title": "Upload LinkedIn Data Export",
+      "description": "Upload the data export ZIP you downloaded from your LinkedIn account settings — jobs you applied to will be added automatically.",
+      "uploading": "Uploading {fileName}...",
+      "uploadError": "Upload failed, please try again.",
+      "resultTitle": "Import Complete",
+      "newApplications": "New Applications",
+      "duplicateRecords": "Duplicates",
+      "invalidRecords": "Invalid Rows",
+      "rowErrors": "Row Errors",
+      "rowErrorLine": "Row {rowNumber}: {message}",
+      "uploadAnother": "Upload Another File"
+    }
   }
 }

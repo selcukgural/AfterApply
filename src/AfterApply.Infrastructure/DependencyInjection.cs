@@ -9,6 +9,7 @@ using AfterApply.Application.Imports;
 using AfterApply.Application.Matching;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
+using AfterApply.Application.TrackedJobs;
 using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Companies;
@@ -20,6 +21,7 @@ using AfterApply.Infrastructure.Matching;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
+using AfterApply.Infrastructure.TrackedJobs;
 using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -183,6 +185,9 @@ public static class DependencyInjection
         services.AddScoped<ICompanyResolver, CompanyResolver>();
         services.AddScoped<ICompanySearchService, CompanySearchService>();
         services.AddScoped<IApplicationService, ApplicationService>();
+        services.AddScoped<ITrackedJobService, TrackedJobService>();
+        services.AddHttpClient<IJobLinkPreviewService, JobLinkPreviewService>(client => client.Timeout = TimeSpan.FromSeconds(5))
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IJobResolver, JobResolver>();
         services.AddScoped<IImportService, ImportService>();

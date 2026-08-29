@@ -5,6 +5,7 @@ using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
 using AfterApply.Domain.Matching;
 using AfterApply.Domain.Notifications;
+using AfterApply.Domain.TrackedJobs;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -45,6 +46,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<CandidateProfile> CandidateProfiles => Set<CandidateProfile>();
 
     public DbSet<JobMatch> JobMatches => Set<JobMatch>();
+
+    public DbSet<TrackedJob> TrackedJobs => Set<TrackedJob>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -68,6 +68,7 @@ app.MapHealthChecks("/health");
 app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapApplicationEndpoints();
+app.MapTrackedJobEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapImportEndpoints();
 app.MapReminderEndpoints();

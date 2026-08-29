@@ -165,7 +165,9 @@
     "dashboard": "Panel",
     "applications": "Başvurular",
     "accountSettings": "Hesap Ayarları",
-    "logout": "Çıkış Yap"
+    "logout": "Çıkış Yap",
+    "trackedJobs": "Takip Listem",
+    "import": "İçe Aktar"
   },
   "auth": {
     "login": {
@@ -492,5 +494,46 @@
   "theme": {
     "light": "Açık",
     "dark": "Koyu"
+  },
+  "trackedJobs": {
+    "title": "Takip Listem",
+    "form": {
+      "companyName": "Şirket",
+      "jobTitle": "Pozisyon",
+      "jobUrl": "İlan Linki",
+      "location": "Lokasyon",
+      "notes": "Not",
+      "submit": "Takibe Al",
+      "saving": "Kaydediliyor...",
+      "saveError": "Kaydedilemedi, tekrar deneyin."
+    },
+    "list": {
+      "empty": "Henüz takip ettiğiniz bir ilan yok.",
+      "markApplied": "Başvurdum",
+      "remove": "Takibi Bırak",
+      "employmentType": "Çalışma Şekli",
+      "appliedAt": "Başvuru Tarihi",
+      "notes": "Not",
+      "confirmConvert": "Başvuruya Dönüştür",
+      "cancel": "Vazgeç",
+      "saving": "Kaydediliyor...",
+      "addedAt": "Eklendi: {date}"
+    }
+  },
+  "imports": {
+    "title": "LinkedIn'den İçe Aktar",
+    "linkedin": {
+      "title": "LinkedIn Veri Export'u Yükle",
+      "description": "LinkedIn hesap ayarlarından indirdiğiniz veri export ZIP dosyasını yükleyin, başvurduğunuz ilanlar otomatik olarak eklensin.",
+      "uploading": "{fileName} yükleniyor...",
+      "uploadError": "Yükleme başarısız oldu, tekrar deneyin.",
+      "resultTitle": "İçe Aktarma Tamamlandı",
+      "newApplications": "Yeni Başvuru",
+      "duplicateRecords": "Tekrarlanan",
+      "invalidRecords": "Hatalı Satır",
+      "rowErrors": "Satır Hataları",
+      "rowErrorLine": "Satır {rowNumber}: {message}",
+      "uploadAnother": "Başka Dosya Yükle"
+    }
   }
 }

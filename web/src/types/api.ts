@@ -241,3 +241,46 @@ export interface CompanySearchResult {
   name: string;
   website: string | null;
 }
+
+export interface ImportRowErrorResponse {
+  rowNumber: number;
+  rawRow: string;
+  errorMessage: string;
+}
+
+export interface ImportSummaryResponse {
+  id: string;
+  source: Source;
+  fileName: string;
+  totalRecords: number;
+  newApplications: number;
+  duplicateRecords: number;
+  invalidRecords: number;
+  completedAt: string;
+  errors: ImportRowErrorResponse[];
+}
+
+export interface TrackedJobResponse {
+  id: string;
+  companyId: string;
+  companyName: string;
+  jobTitle: string;
+  jobUrl: string | null;
+  location: string | null;
+  notes: string | null;
+  addedAt: string;
+}
+
+export interface CreateTrackedJobRequest {
+  companyName: string;
+  jobTitle: string;
+  jobUrl: string | null;
+  location: string | null;
+  notes: string | null;
+}
+
+export interface ConvertTrackedJobRequest {
+  employmentType: EmploymentType;
+  appliedAt: string;
+  notes: string | null;
+}
