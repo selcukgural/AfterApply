@@ -23,6 +23,10 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
     steps:
+      # Only needed for the push trigger: paths-filter diffs against the GitHub API on
+      # pull_request events, but needs real git history checked out to diff a push.
+      - uses: actions/checkout@v4
+        if: github.event_name == 'push'
       - uses: dorny/paths-filter@v3
         id: filter
         with:
