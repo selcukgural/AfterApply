@@ -18,9 +18,11 @@ you edit `collection.json` directly, the next generation run overwrites your cha
    real stack via `docker compose` and runs the freshly generated collection against it with
    Newman (`newman run collection.json -e environments/ci.json --bail`). A missing endpoint, a
    wrong parameter, or a response that doesn't match what's documented fails the build.
-4. Only if that passes, and only on `main`, the job publishes the collection to Postman Cloud
-   (`npm run publish`) — so the shared team workspace only ever reflects a commit that's already
-   been verified against a live API.
+4. Only if that passes, and only on `main`, the job publishes the collection *and* the Local/
+   Production environments to Postman Cloud (`npm run publish` / `publish:environments`) — so the
+   shared team workspace only ever reflects a commit that's already been verified against a live
+   API. `environments/ci.json` is CI-only and never published; it's meaningless outside the
+   docker-compose stack it points at.
 
 ## Local usage
 
@@ -33,12 +35,18 @@ Import `collection.json` plus `environments/local.json` into Postman (desktop or
 "AfterApply - Local" environment, and run the Auth folder's Login (or Register) request first —
 its test script populates `accessToken` for every other request in the collection automatically.
 
+If instead you're using the copy already synced to Postman Cloud (see below), just pick "AfterApply
+- Local" or "AfterApply - Production" from Postman's environment selector — `baseUrl` is already
+filled in for both; no import needed.
+
 ## Publishing to Postman Cloud manually
 
 ```bash
-POSTMAN_API_KEY=<your key> npm run publish
+POSTMAN_API_KEY=<your key> npm run publish               # collection
+POSTMAN_API_KEY=<your key> npm run publish:environments   # Local + Production environments
 ```
 
-Looks up a collection named "AfterApply API" in your default workspace (or `POSTMAN_WORKSPACE_ID`
-if set) and updates it in place, creating it on first run. This is what CI does automatically on
-every push to `main`.
+Both look up their target by name in your default workspace (or `POSTMAN_WORKSPACE_ID` if set) and
+update it in place, creating it on first run. This is what CI does automatically on every push to
+`main`. Production's `baseUrl` is the API's actual Cloud Run URL — update
+`environments/production.json` (and re-publish) if that ever changes.

@@ -89,3 +89,13 @@ jobs:
         env:
           POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
         run: npm run publish
+
+      # Environments rarely change (new one added, or Production's baseUrl updated after a
+      # redeploy) — publishing on every green main run is cheap and keeps them from silently
+      # drifting out of sync the way the collection itself used to.
+      - name: Publish environments to Postman Cloud
+        if: inputs.publish
+        working-directory: postman
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+        run: npm run publish:environments

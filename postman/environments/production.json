@@ -1,0 +1,11 @@
+{
+  "id": "afterapply-production",
+  "name": "AfterApply - Production",
+  "values": [
+    { "key": "baseUrl", "value": "https://afterapply-api-188370748893.europe-west1.run.app", "type": "default", "enabled": true },
+    { "key": "accessToken", "value": "", "type": "secret", "enabled": true },
+    { "key": "refreshToken", "value": "", "type": "secret", "enabled": true },
+    { "key": "personalAccessToken", "value": "", "type": "secret", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment"
+}
