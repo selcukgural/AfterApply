@@ -1,8 +1,8 @@
-import type { EmailSuggestionResponse } from "@/types/api";
+import type { EmailSuggestionResponse, InboundAddressResponse } from "@/types/api";
 import { apiFetch } from "./httpClient";
 
 export const emailForwardingApi = {
-  getAddress: () => apiFetch<{ address: string }>("/api/email-forwarding/address"),
+  getAddress: () => apiFetch<InboundAddressResponse>("/api/email-forwarding/address"),
 
   getPendingSuggestions: () =>
     apiFetch<EmailSuggestionResponse[]>("/api/email-forwarding/suggestions"),
@@ -12,4 +12,7 @@ export const emailForwardingApi = {
 
   dismissSuggestion: (id: string) =>
     apiFetch<void>(`/api/email-forwarding/suggestions/${id}/dismiss`, { method: "POST" }),
+
+  dismissGmailConfirmation: () =>
+    apiFetch<void>("/api/email-forwarding/gmail-confirmation/dismiss", { method: "POST" }),
 };

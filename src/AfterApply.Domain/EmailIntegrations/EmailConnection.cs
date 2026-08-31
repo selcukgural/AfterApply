@@ -17,6 +17,18 @@ public sealed class EmailConnection : AuditableEntity
 
     public DateTimeOffset ConnectedAt { get; private set; }
 
+    /// <summary>Gmail requires confirming a forwarding address via a code/link it emails to that
+    /// address before forwarding activates. These three are singleton, 1:1 pending-state fields
+    /// (not a history table — a user has at most one outstanding confirmation at a time, and this
+    /// connection is already unique per (UserId, Provider)); set by
+    /// EmailForwardingService.ProcessInboundEmailAsync when it detects Gmail's own confirmation
+    /// email, cleared once the user dismisses it having completed the confirmation in Gmail.</summary>
+    public string? GmailConfirmationCode { get; private set; }
+
+    public string? GmailConfirmationLink { get; private set; }
+
+    public DateTimeOffset? GmailConfirmationReceivedAt { get; private set; }
+
     private EmailConnection()
     {
     }
@@ -35,5 +47,21 @@ public sealed class EmailConnection : AuditableEntity
             CreatedAt = now,
             UpdatedAt = now
         };
+    }
+
+    /// <summary>Overwrites any prior pending confirmation — Gmail resends a fresh code/link if the
+    /// user retries adding the forwarding address, and only the latest one is ever actionable.</summary>
+    public void SetGmailConfirmation(string? code, string? link, DateTimeOffset receivedAt)
+    {
+        GmailConfirmationCode = code;
+        GmailConfirmationLink = link;
+        GmailConfirmationReceivedAt = receivedAt;
+    }
+
+    public void ClearGmailConfirmation()
+    {
+        GmailConfirmationCode = null;
+        GmailConfirmationLink = null;
+        GmailConfirmationReceivedAt = null;
     }
 }

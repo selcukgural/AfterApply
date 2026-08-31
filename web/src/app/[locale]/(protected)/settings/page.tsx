@@ -35,6 +35,11 @@ export default function SettingsPage() {
   const [forwardingError, setForwardingError] = useState<string | null>(null);
   const [addressCopied, setAddressCopied] = useState(false);
 
+  const [gmailConfirmationCode, setGmailConfirmationCode] = useState<string | null>(null);
+  const [gmailConfirmationLink, setGmailConfirmationLink] = useState<string | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [dismissingConfirmation, setDismissingConfirmation] = useState(false);
+
   const [password, setPassword] = useState("");
   const [confirmationText, setConfirmationText] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -53,7 +58,11 @@ export default function SettingsPage() {
   useEffect(() => {
     emailForwardingApi
       .getAddress()
-      .then(({ address }) => setForwardingAddress(address))
+      .then(({ address, gmailConfirmationCode, gmailConfirmationLink }) => {
+        setForwardingAddress(address);
+        setGmailConfirmationCode(gmailConfirmationCode);
+        setGmailConfirmationLink(gmailConfirmationLink);
+      })
       .catch((error) => {
         // 404 means EmailForwarding:Enabled is off in this environment — hide the card rather
         // than show an error.
@@ -68,6 +77,23 @@ export default function SettingsPage() {
     if (!forwardingAddress) return;
     await navigator.clipboard.writeText(forwardingAddress);
     setAddressCopied(true);
+  };
+
+  const handleCopyCode = async () => {
+    if (!gmailConfirmationCode) return;
+    await navigator.clipboard.writeText(gmailConfirmationCode);
+    setCodeCopied(true);
+  };
+
+  const handleDismissGmailConfirmation = async () => {
+    setDismissingConfirmation(true);
+    try {
+      await emailForwardingApi.dismissGmailConfirmation();
+      setGmailConfirmationCode(null);
+      setGmailConfirmationLink(null);
+    } finally {
+      setDismissingConfirmation(false);
+    }
   };
 
   const handleCreateToken = async () => {
@@ -233,6 +259,46 @@ export default function SettingsPage() {
                     {addressCopied ? t("emailForwarding.copied") : t("emailForwarding.copy")}
                   </Button>
                 </div>
+
+                {gmailConfirmationCode && (
+                  <div className="mb-4 rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950 p-4">
+                    <p className="mb-1 text-sm font-medium text-blue-900 dark:text-blue-100">
+                      {t("emailForwarding.gmailConfirmation.title")}
+                    </p>
+                    <p className="mb-3 text-sm text-blue-800 dark:text-blue-200">
+                      {t("emailForwarding.gmailConfirmation.help")}
+                    </p>
+                    <div className="mb-3 flex items-center gap-2">
+                      <code className="flex-1 overflow-x-auto rounded bg-white dark:bg-gray-900 px-2 py-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {gmailConfirmationCode}
+                      </code>
+                      <Button variant="secondary" onClick={handleCopyCode}>
+                        {codeCopied ? t("emailForwarding.copied") : t("emailForwarding.copy")}
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      {gmailConfirmationLink && (
+                        <a
+                          href={gmailConfirmationLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {t("emailForwarding.gmailConfirmation.openLink")}
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleDismissGmailConfirmation}
+                        disabled={dismissingConfirmation}
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+                      >
+                        {t("emailForwarding.gmailConfirmation.dismiss")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <Link href="/settings/email-suggestions" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
                   {t("emailForwarding.viewSuggestions")}
                 </Link>

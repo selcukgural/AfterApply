@@ -52,6 +52,21 @@ extension page's `fetch()` is only exempt from CORS for origins explicitly liste
 unlisted origin gets blocked the same as an ordinary web page's cross-origin fetch would be (found
 via manual testing — see DECISIONS.md Sprint 9).
 
+## Email forwarding setup guide
+
+`email-forwarding.html`/`.js` (opened from Settings → "Set up Email Forwarding," in its own
+browser tab) is a bilingual (Turkish/English, `i18n.js`) step-by-step guide for forwarding
+status-update emails to the user's personal e-kariyerim address, so they turn into suggestions at
+`/settings/email-suggestions` instead of manual updates. It fetches the address (and any pending
+Gmail forwarding-confirmation code — see `EmailForwardingService.ProcessInboundEmailAsync`'s Gmail
+confirmation-email detection on the backend) from `GET /api/email-forwarding/address` using the
+same stored token as the popup, and shows a "how it works" flow diagram plus mockup "device
+frames" of the relevant Gmail settings screens (`.gmail-mock` classes in `popup.css`) — stylized
+recreations, not real screenshots, since no live Gmail account is automated for this guide (see
+`store-listing/screenshots/README.md`'s "Static mockup screenshots" note). No new manifest
+permissions: it only calls the already-permitted `api.ekariyerim.com` origin and links out to
+Gmail's own settings pages via plain navigation.
+
 ## Theming
 
 `popup.css` defines light/dark tokens mirroring the web app's own Tailwind palette
@@ -75,3 +90,6 @@ the checklist.
 - Employment type is not scraped (LinkedIn's job header doesn't expose it directly) — created
   applications default to `FullTime`, the same known limitation as generic CSV import
   (DECISIONS.md Sprint 4).
+- The email-forwarding guide only covers Gmail — no Outlook/other-provider walkthrough
+  (`EmailProvider` stays `Forwarding`-only on the backend regardless of which mail provider the
+  user actually forwards from, but the guide's own step-by-step screens are Gmail-specific).

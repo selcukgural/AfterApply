@@ -343,7 +343,13 @@
       "copy": "Copy",
       "copied": "Copied",
       "loadError": "Could not load your forwarding address.",
-      "viewSuggestions": "View pending suggestions"
+      "viewSuggestions": "View pending suggestions",
+      "gmailConfirmation": {
+        "title": "Gmail sent a confirmation code",
+        "help": "Paste this code into the confirmation box Gmail showed when you added this address, or open the confirmation link directly.",
+        "openLink": "Open confirmation link",
+        "dismiss": "I've confirmed it — dismiss"
+      }
     },
     "cv": {
       "title": "CV / Profile",

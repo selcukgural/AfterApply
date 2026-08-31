@@ -116,6 +116,7 @@ jobs:
             Jwt__SigningKey=afterapply-jwt-signing-key:latest
             Sentry__Dsn=afterapply-sentry-dsn:latest
             OpenAI__ApiKey=afterapply-openai-api-key:latest
+            EmailForwarding__WebhookSecret=afterapply-email-forwarding-webhook-secret:latest
             Cors__AllowedOrigins__0=afterapply-web-origin:latest
 
   deploy-web:

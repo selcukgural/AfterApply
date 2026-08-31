@@ -343,7 +343,13 @@
       "copy": "Kopyala",
       "copied": "Kopyalandı",
       "loadError": "Yönlendirme adresiniz yüklenemedi.",
-      "viewSuggestions": "Bekleyen önerileri görüntüle"
+      "viewSuggestions": "Bekleyen önerileri görüntüle",
+      "gmailConfirmation": {
+        "title": "Gmail bir onay kodu gönderdi",
+        "help": "Bu kodu, bu adresi eklerken Gmail'in gösterdiği onay kutusuna yapıştırın, ya da onay bağlantısını doğrudan açın.",
+        "openLink": "Onay bağlantısını aç",
+        "dismiss": "Onayladım — kapat"
+      }
     },
     "cv": {
       "title": "CV / Profil",

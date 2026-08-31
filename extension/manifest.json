@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "e-kariyerim — Job Import",
-  "version": "0.3.2",
-  "description": "Track a LinkedIn or kariyer.net job application in e-kariyerim with one click.",
+  "version": "0.4.0",
+  "description": "Get your job applications into e-kariyerim — one click from LinkedIn/kariyer.net, or by forwarding emails.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "e-kariyerim",

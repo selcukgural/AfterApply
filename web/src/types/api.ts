@@ -200,6 +200,14 @@ export interface EmailSuggestionResponse {
   description: string | null;
 }
 
+export interface InboundAddressResponse {
+  address: string;
+  // Non-null only while Gmail's own forwarding-confirmation email is pending acknowledgement.
+  gmailConfirmationCode: string | null;
+  gmailConfirmationLink: string | null;
+  gmailConfirmationReceivedAt: string | null;
+}
+
 export interface CandidateProfileResponse {
   cvText: string;
   updatedAt: string;

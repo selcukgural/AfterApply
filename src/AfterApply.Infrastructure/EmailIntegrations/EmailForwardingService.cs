@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.EmailIntegrations;
@@ -26,16 +27,31 @@ internal sealed class EmailForwardingService(
     private const string TokenChars = "abcdefghijklmnopqrstuvwxyz0123456789";
     private const int TokenLength = 12;
 
-    public async Task<string> GetOrCreateInboundAddressAsync(Guid userId, CancellationToken cancellationToken)
+    // Gmail's real sender/subject for its own forwarding-confirmation email — narrow allowlist
+    // (both must match) so this can never misfire on a real recruiter email. The subject prefix is
+    // the one detail not verified against a live test email; confirm/tighten it the first time a
+    // real one arrives (see DECISIONS.md / plan notes).
+    // TODO: verify against a real Gmail confirmation email before relying on this in production.
+    private const string GmailConfirmationSenderEmail = "forwarding-noreply@google.com";
+    private const string GmailConfirmationSubjectPrefix = "Gmail Forwarding Confirmation";
+
+    private static readonly Regex GmailConfirmationCodeRegex = new(@"\b(\d{6,8})\b", RegexOptions.Compiled);
+    private static readonly Regex GmailConfirmationLinkRegex = new(@"https?://\S*google\.com\S*", RegexOptions.Compiled);
+
+    public async Task<InboundAddressResponse> GetOrCreateInboundAddressAsync(Guid userId, CancellationToken cancellationToken)
     {
         var existing = await dbContext.EmailConnections
             .Where(c => c.UserId == userId && c.Provider == EmailProvider.Forwarding)
-            .Select(c => c.ProviderAccountEmail)
+            .Select(c => new
+            {
+                c.ProviderAccountEmail, c.GmailConfirmationCode, c.GmailConfirmationLink, c.GmailConfirmationReceivedAt
+            })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (existing is not null)
         {
-            return existing;
+            return new InboundAddressResponse(existing.ProviderAccountEmail, existing.GmailConfirmationCode,
+                existing.GmailConfirmationLink, existing.GmailConfirmationReceivedAt);
         }
 
         var domain = options.Value.Domain;
@@ -46,7 +62,8 @@ internal sealed class EmailForwardingService(
         dbContext.EmailConnections.Add(EmailConnection.CreateForwarding(userId, token, address, now));
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return address;
+        return new InboundAddressResponse(address, GmailConfirmationCode: null, GmailConfirmationLink: null,
+            GmailConfirmationReceivedAt: null);
     }
 
     public async Task ProcessInboundEmailAsync(InboundEmailRequest request, CancellationToken cancellationToken)
@@ -60,6 +77,16 @@ internal sealed class EmailForwardingService(
         if (connection is null)
         {
             logger.LogWarning("Inbound email received for an unrecognized forwarding address.");
+            return;
+        }
+
+        if (IsGmailForwardingConfirmation(request.FromEmail, request.Subject))
+        {
+            connection.SetGmailConfirmation(
+                ExtractGmailConfirmationCode(request.Snippet),
+                ExtractGmailConfirmationLink(request.Snippet),
+                request.ReceivedAt);
+            await dbContext.SaveChangesAsync(cancellationToken);
             return;
         }
 
@@ -216,6 +243,21 @@ internal sealed class EmailForwardingService(
         return true;
     }
 
+    public async Task<bool> DismissGmailConfirmationAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var connection = await dbContext.EmailConnections
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.Provider == EmailProvider.Forwarding, cancellationToken);
+
+        if (connection is null || connection.GmailConfirmationCode is null && connection.GmailConfirmationLink is null)
+        {
+            return false;
+        }
+
+        connection.ClearGmailConfirmation();
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     private async Task<EmailClassificationResult> ClassifyAsync(string subject, string snippet, CancellationToken cancellationToken)
     {
         var classification = RuleBasedEmailClassifier.Classify(subject, snippet);
@@ -235,6 +277,22 @@ internal sealed class EmailForwardingService(
             .Select(r => new ApplicationMatchCandidate(
                 r.Id, CompanyNameNormalizer.Normalize(r.Name), ExtractDomainFromWebsite(r.Website)))
             .ToList();
+    }
+
+    private static bool IsGmailForwardingConfirmation(string fromEmail, string subject) =>
+        string.Equals(fromEmail.Trim(), GmailConfirmationSenderEmail, StringComparison.OrdinalIgnoreCase) &&
+        subject.TrimStart().StartsWith(GmailConfirmationSubjectPrefix, StringComparison.OrdinalIgnoreCase);
+
+    private static string? ExtractGmailConfirmationCode(string snippet)
+    {
+        var match = GmailConfirmationCodeRegex.Match(snippet);
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    private static string? ExtractGmailConfirmationLink(string snippet)
+    {
+        var match = GmailConfirmationLinkRegex.Match(snippet);
+        return match.Success ? match.Value : null;
     }
 
     private static string? ExtractLocalPart(string address)

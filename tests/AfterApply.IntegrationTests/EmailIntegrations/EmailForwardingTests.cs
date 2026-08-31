@@ -79,6 +79,10 @@ public class EmailForwardingTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
             builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // Explicit, not just relying on appsettings.json's own default — this test must exercise
+            // "flag off" regardless of what the app ships as its default (EmailForwarding:Enabled is
+            // now true there, since the feature is live).
+            builder.UseSetting("EmailForwarding:Enabled", "false");
         });
 
         _disabledClient = _disabledFactory.CreateClient();
@@ -238,9 +242,12 @@ public class EmailForwardingTests : IAsyncLifetime
     public async Task ConfirmSuggestion_For_Existing_Application_Changes_Status_With_Source_Email()
     {
         var address = await GetOwnAddressAsync();
+        // Display name carries the company name as a literal prefix — EmailApplicationMatcher's
+        // fallback path is substring-containment (normalizedDisplayName.Contains(companyName)), and
+        // this company has no website domain for the matcher's primary domain-match path.
         var applicationId = await CreateApplicationAsync("Acme Confirm Test");
 
-        var inboundResponse = await SendInboundAsync(address, "recruiter@acme-confirm-test.com", "Acme Confirm Recruiting",
+        var inboundResponse = await SendInboundAsync(address, "recruiter@acme-confirm-test.com", "Acme Confirm Test Recruiting",
             "Interview invitation", "We'd like to invite you to an interview.");
         inboundResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
@@ -269,9 +276,11 @@ public class EmailForwardingTests : IAsyncLifetime
     public async Task DismissSuggestion_Does_Not_Change_Application_Status()
     {
         var address = await GetOwnAddressAsync();
+        // Same fix as ConfirmSuggestion_For_Existing_Application_Changes_Status_With_Source_Email
+        // above — display name must carry the company name as a literal prefix.
         var applicationId = await CreateApplicationAsync("Acme Dismiss Test");
 
-        var inboundResponse = await SendInboundAsync(address, "recruiter@acme-dismiss-test.com", "Acme Dismiss Recruiting",
+        var inboundResponse = await SendInboundAsync(address, "recruiter@acme-dismiss-test.com", "Acme Dismiss Test Recruiting",
             "Interview invitation", "We'd like to invite you to an interview.");
         inboundResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
@@ -403,6 +412,87 @@ public class EmailForwardingTests : IAsyncLifetime
         var application = await db.Applications.SingleAsync(a => a.JobTitle == "QA Engineer");
         application.Source.ShouldBe(Source.Email);
         application.Status.ShouldBe(ApplicationStatus.Applied);
+    }
+
+    [Fact]
+    public async Task Inbound_GmailForwardingConfirmation_Is_Stored_On_Connection_Not_As_Suggestion()
+    {
+        var address = await GetOwnAddressAsync();
+
+        var response = await SendInboundAsync(address, "forwarding-noreply@google.com", "Gmail Team",
+            $"Gmail Forwarding Confirmation - Receive Mail from {address}",
+            "Confirmation code: 482913. Or click here to confirm: https://mail-settings.google.com/mail/vf-abc123");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var addressResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/address", JsonOptions);
+        addressResponse.GetProperty("gmailConfirmationCode").GetString().ShouldBe("482913");
+        addressResponse.GetProperty("gmailConfirmationLink").GetString().ShouldStartWith("https://mail-settings.google.com");
+        addressResponse.GetProperty("gmailConfirmationReceivedAt").ValueKind.ShouldNotBe(JsonValueKind.Null);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Inbound_GmailForwardingConfirmation_Resend_Overwrites_Previous_Values()
+    {
+        var address = await GetOwnAddressAsync();
+
+        await SendInboundAsync(address, "forwarding-noreply@google.com", "Gmail Team",
+            $"Gmail Forwarding Confirmation - Receive Mail from {address}",
+            "Confirmation code: 111111. Or click here to confirm: https://mail-settings.google.com/mail/vf-first");
+        var resend = await SendInboundAsync(address, "forwarding-noreply@google.com", "Gmail Team",
+            $"Gmail Forwarding Confirmation - Receive Mail from {address}",
+            "Confirmation code: 222222. Or click here to confirm: https://mail-settings.google.com/mail/vf-second");
+        resend.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var addressResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/address", JsonOptions);
+        addressResponse.GetProperty("gmailConfirmationCode").GetString().ShouldBe("222222");
+        addressResponse.GetProperty("gmailConfirmationLink").GetString().ShouldEndWith("vf-second");
+    }
+
+    [Fact]
+    public async Task DismissGmailConfirmation_Clears_Fields_And_404s_When_Nothing_Pending()
+    {
+        var address = await GetOwnAddressAsync();
+        await SendInboundAsync(address, "forwarding-noreply@google.com", "Gmail Team",
+            $"Gmail Forwarding Confirmation - Receive Mail from {address}",
+            "Confirmation code: 333333. Or click here to confirm: https://mail-settings.google.com/mail/vf-third");
+
+        var dismissResponse = await _client.PostAsync("/api/email-forwarding/gmail-confirmation/dismiss", null);
+        dismissResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var addressResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/address", JsonOptions);
+        addressResponse.GetProperty("gmailConfirmationCode").ValueKind.ShouldBe(JsonValueKind.Null);
+        addressResponse.GetProperty("gmailConfirmationLink").ValueKind.ShouldBe(JsonValueKind.Null);
+
+        var secondDismiss = await _client.PostAsync("/api/email-forwarding/gmail-confirmation/dismiss", null);
+        secondDismiss.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Inbound_From_UnrelatedGoogleSender_Is_Not_Treated_As_Confirmation()
+    {
+        var address = await GetOwnAddressAsync();
+        // Display name carries the company name as a literal prefix (matches
+        // EmailApplicationMatcher's substring-containment fallback — same convention as
+        // Inbound_With_Matching_Rule_Creates_Suggestion_With_Persisted_Content above), since this
+        // company has no website domain for the matcher's primary domain-match path.
+        await CreateApplicationAsync("Acme Google Sender Test");
+
+        // Same @google.com domain as the real confirmation sender, but neither the exact address
+        // nor the subject prefix match — must fall through to normal classification, not be
+        // swallowed by the confirmation-detection allowlist.
+        var response = await SendInboundAsync(address, "recruiter@google.com", "Acme Google Sender Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        suggestionsResponse.EnumerateArray().Count().ShouldBe(1);
+
+        var addressResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/address", JsonOptions);
+        addressResponse.GetProperty("gmailConfirmationCode").ValueKind.ShouldBe(JsonValueKind.Null);
     }
 
     private async Task<HttpResponseMessage> SendInboundAsync(string toAddress, string from, string fromName, string subject, string snippet)

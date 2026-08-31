@@ -2,13 +2,17 @@
 
 - `popup-light.png` / `popup-dark.png` — the popup auto-filling a LinkedIn job, light and dark.
 - `options-light.png` — the Settings page.
+- `forwarding-light.png` / `forwarding-dark.png` — the email-forwarding setup guide's hero + "how
+  it works" flow diagram + address card, light and dark.
 
-All three are 1280×800 PNGs (the Chrome Web Store's required screenshot size) generated from the
+All five are 1280×800 PNGs (the Chrome Web Store's required screenshot size) generated from the
 `scene-*.html` files in this folder, which are marketing compositions, not the shipped extension
 pages — they reuse `../../popup.css`'s real classes directly (`.app-header`, `.site-badge`,
-labels/inputs/buttons, `.theme-toggle`) with static sample data, so they can't visually drift from
-the real popup, but they render outside a real browser-extension context. Neither this folder nor
-`store-listing/` is part of the packaged extension (see `PUBLISHING_CHECKLIST.md`'s zip command).
+labels/inputs/buttons, `.theme-toggle`, and (for `scene-forwarding.html`) `.hero`/`.flow-diagram`/
+`.flow-step`/`.address-card`/`.code-chip-row`) with static sample data, so they can't visually
+drift from the real pages, but they render outside a real browser-extension context. Neither this
+folder nor `store-listing/` is part of the packaged extension (see `PUBLISHING_CHECKLIST.md`'s zip
+command).
 
 ## Regenerating them
 

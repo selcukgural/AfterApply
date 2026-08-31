@@ -14,14 +14,14 @@ Matches `manifest.json`'s `name` field; the Web Store requires these to be ident
 
 ## Summary (short description, max 132 characters)
 
-**EN** (98 chars)
+**EN** (130 chars)
 ```
-Track LinkedIn and kariyer.net job applications in e-kariyerim with one click. No copy-pasting.
+Get your job applications into e-kariyerim — one click from LinkedIn/kariyer.net, or by forwarding status emails. No copy-pasting.
 ```
 
-**TR** (108 chars)
+**TR** (122 chars)
 ```
-LinkedIn ve kariyer.net'teki iş ilanlarını tek tıkla e-kariyerim'e ekleyin. Kopyala-yapıştır yok.
+Başvurularınızı e-kariyerim'e aktarın — LinkedIn/kariyer.net'te tek tıkla, ya da mail yönlendirerek. Kopyala-yapıştır yok.
 ```
 
 ## Detailed description
@@ -44,19 +44,34 @@ HOW IT WORKS
 Clicking it again on the same posting is safe: e-kariyerim recognizes the job by its URL and opens
 your existing application instead of creating a duplicate.
 
+EMAIL FORWARDING (NEW)
+Not every status update happens on a job site — most arrive by email. The extension now includes
+a full, step-by-step setup guide for forwarding those emails (interview invites, rejections,
+status updates) to your own personal e-kariyerim address, so they show up as suggestions you
+approve instead of updates you have to make by hand.
+
+Open it from the extension's Settings page ("Set up Email Forwarding"). It walks you through
+adding your address as a forwarding destination in Gmail's own settings and creating a filter for
+the senders you choose — with a visual diagram of the whole flow, mockups of each Gmail screen,
+and your Gmail confirmation code shown right there the moment it arrives, so you never have to
+guess what's happening or hunt through another inbox to find it. Nothing is automated on Gmail's
+side: you set up and control the forwarding filter yourself, entirely inside your own account.
+
 REQUIREMENTS
 You need an e-kariyerim account (ekariyerim.com) and a personal access token, generated from
 Settings → Browser Extension inside the app. The extension does nothing until you paste that token
 into its Settings page.
 
 PRIVACY
-The extension only reads the page when you click its icon, only on linkedin.com and kariyer.net,
+The extension only reads a job page when you click its icon, only on linkedin.com and kariyer.net,
 and only sends the fields you see in the popup — to your own e-kariyerim account, using your own
-token. Nothing is sent to any third party, and nothing is used for advertising. See the full
-privacy policy linked on this listing.
+token. The email-forwarding guide only reads your own forwarding address and confirmation code
+from your e-kariyerim account (same token) and links out to Gmail's own settings pages — it never
+signs in to, or reads, your email account itself. Nothing is sent to any third party, and nothing
+is used for advertising. See the full privacy policy linked on this listing.
 
 This is an independent tool and is not affiliated with, endorsed by, or sponsored by LinkedIn
-Corporation or kariyer.net.
+Corporation, kariyer.net, or Google.
 ```
 
 **TR**
@@ -77,19 +92,35 @@ NASIL ÇALIŞIR
 Aynı ilanda tekrar tıklamak güvenlidir: e-kariyerim ilanı URL'sinden tanır ve yinelenen bir kayıt
 oluşturmak yerine mevcut başvurunuzu açar.
 
+MAIL YÖNLENDİRME (YENİ)
+Her statü güncellemesi bir iş sitesinde olmuyor — çoğu mail ile geliyor. Eklenti artık bu mailleri
+(mülakat daveti, ret, statü güncellemesi) kişisel e-kariyerim adresinize yönlendirmeniz için tam,
+adım adım bir kurulum rehberi içeriyor — böylece elle güncellemeniz gereken bir şey yerine,
+onayınızı bekleyen bir öneri olarak karşınıza çıkıyorlar.
+
+Eklentinin Ayarlar sayfasından açın ("Mail Yönlendirme Kur"). Adresinizi Gmail'in kendi
+ayarlarında bir yönlendirme adresi olarak eklemekten, seçtiğiniz gönderenler için bir filtre
+oluşturmaya kadar sizi adım adım yönlendirir — tüm akışın görsel bir diyagramı, her Gmail ekranının
+örnek görünümü ve Gmail'in onay kodu geldiği an burada gösterilmesiyle; ne olduğunu tahmin etmenize
+ya da kodu bulmak için başka bir kutuya bakmanıza gerek kalmaz. Gmail tarafında hiçbir şey otomatik
+yapılmaz: yönlendirme filtresini tamamen kendi hesabınızda, siz kurar ve kontrol edersiniz.
+
 GEREKSİNİMLER
 Bir e-kariyerim hesabına (ekariyerim.com) ve uygulama içindeki Ayarlar → Tarayıcı Eklentisi
 bölümünden oluşturacağınız bir erişim anahtarına ihtiyacınız var. Bu anahtarı eklentinin Ayarlar
 sayfasına yapıştırana kadar eklenti hiçbir şey yapmaz.
 
 GİZLİLİK
-Eklenti sayfayı yalnızca simgesine tıkladığınızda, yalnızca linkedin.com ve kariyer.net üzerinde
-okur ve yalnızca açılan pencerede gördüğünüz alanları — kendi erişim anahtarınızla, yalnızca kendi
-e-kariyerim hesabınıza gönderir. Hiçbir veri üçüncü taraflarla paylaşılmaz veya reklam amacıyla
-kullanılmaz. Ayrıntılar için bu listede bağlantısı verilen gizlilik politikasına bakın.
+Eklenti bir ilan sayfasını yalnızca simgesine tıkladığınızda, yalnızca linkedin.com ve kariyer.net
+üzerinde okur ve yalnızca açılan pencerede gördüğünüz alanları — kendi erişim anahtarınızla,
+yalnızca kendi e-kariyerim hesabınıza gönderir. Mail yönlendirme rehberi yalnızca kendi
+e-kariyerim hesabınızdaki (aynı anahtarla) yönlendirme adresinizi ve onay kodunuzu okur, Gmail'in
+kendi ayarlar sayfalarına bağlantı verir — mail hesabınıza asla giriş yapmaz veya mailinizi
+okumaz. Hiçbir veri üçüncü taraflarla paylaşılmaz veya reklam amacıyla kullanılmaz. Ayrıntılar
+için bu listede bağlantısı verilen gizlilik politikasına bakın.
 
-Bu bağımsız bir araçtır; LinkedIn Corporation veya kariyer.net ile bağlantılı, onlar tarafından
-onaylanmış veya desteklenmiş değildir.
+Bu bağımsız bir araçtır; LinkedIn Corporation, kariyer.net veya Google ile bağlantılı, onlar
+tarafından onaylanmış veya desteklenmiş değildir.
 ```
 
 ## Category
@@ -107,10 +138,12 @@ upload needed unless you want a distinct store-only icon).
 
 ## Screenshots
 
-`screenshots/popup-light.png`, `screenshots/popup-dark.png`, `screenshots/options-light.png` —
-1280×800 PNG, ready to upload as-is. Chrome Web Store requires at least one and allows up to five;
-these three cover the two things this listing needs to show (auto-fill in both themes, and the
-one-time settings setup). See `screenshots/README.md` if you want to regenerate or add more.
+`screenshots/popup-light.png`, `screenshots/popup-dark.png`, `screenshots/options-light.png`,
+`screenshots/forwarding-light.png`, `screenshots/forwarding-dark.png` — 1280×800 PNG, ready to
+upload as-is. Chrome Web Store requires at least one and allows up to five; these five cover the
+three things this listing needs to show (auto-fill in both themes, the one-time settings setup,
+and the email-forwarding guide). See `screenshots/README.md` if you want to regenerate or add
+more.
 
 ## Support / website links
 

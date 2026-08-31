@@ -27,11 +27,23 @@ public static class EmailForwardingEndpoints
         });
 
         group.MapGet("/address", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
-                Results.Ok(new { address = await service.GetOrCreateInboundAddressAsync(user.GetUserId(), cancellationToken) }))
+                Results.Ok(await service.GetOrCreateInboundAddressAsync(user.GetUserId(), cancellationToken)))
             .RequireAuthorization()
-            .WithSummary("Get (creating on first call) the current user's personal forwarding address")
-            .Produces(StatusCodes.Status200OK)
+            .WithSummary("Get (creating on first call) the current user's personal forwarding address, " +
+                "plus any pending Gmail forwarding-confirmation code/link")
+            .Produces<InboundAddressResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/gmail-confirmation/dismiss", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
+            {
+                var dismissed = await service.DismissGmailConfirmationAsync(user.GetUserId(), cancellationToken);
+                return dismissed ? Results.NoContent() : Results.NotFound();
+            })
+            .RequireAuthorization()
+            .WithSummary("Clear a pending Gmail forwarding-confirmation code once the user has confirmed it in Gmail")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         // Called by the Cloudflare Email Worker, not by clients — anonymous at the ASP.NET Core
         // auth-middleware level (the Worker holds no user JWT), authenticated instead by the

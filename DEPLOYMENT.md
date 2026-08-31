@@ -204,13 +204,16 @@ printf '%s' "${REDIS_IP}:6379" | gcloud secrets create afterapply-redis-connecti
 openssl rand -base64 48 | gcloud secrets create afterapply-jwt-signing-key --data-file=-
 printf '%s' "<backend-sentry-dsn>" | gcloud secrets create afterapply-sentry-dsn --data-file=-
 printf '%s' "<openai-api-key-veya-REPLACE_WITH_OPENAI_API_KEY>" | gcloud secrets create afterapply-openai-api-key --data-file=-
+# Shared with the Cloudflare Email Worker (`wrangler secret put INBOUND_WEBHOOK_SECRET`,
+# see email-worker/README.md) — both sides must hold the exact same value.
+openssl rand -base64 32 | gcloud secrets create afterapply-email-forwarding-webhook-secret --data-file=-
 # Placeholder — the real web Cloud Run URL isn't known until step 4's
 # deploy-web run; step 4 shows how to update this in place afterward.
 printf '%s' "https://REPLACE-ONCE-DEPLOYED" | gcloud secrets create afterapply-web-origin --data-file=-
 
 for s in afterapply-postgres-connection afterapply-redis-connection \
          afterapply-jwt-signing-key afterapply-sentry-dsn afterapply-openai-api-key \
-         afterapply-web-origin; do
+         afterapply-email-forwarding-webhook-secret afterapply-web-origin; do
   gcloud secrets add-iam-policy-binding "$s" \
     --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"
 done

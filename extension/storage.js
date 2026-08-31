@@ -32,3 +32,18 @@ export async function getTheme() {
 export async function saveTheme(theme) {
   await chrome.storage.local.set({ [THEME_KEY]: theme });
 }
+
+// Same shape/rationale as THEME_KEY above, for the email-forwarding guide page only (the rest of
+// the extension's UI — popup/options — stays English-only, a separate pre-existing choice). Value
+// is "tr" | "en", or absent — absent means "follow navigator.language", same fallback pattern as
+// theme's OS prefers-color-scheme.
+const LANGUAGE_KEY = "afterapply_language";
+
+export async function getLanguage() {
+  const result = await chrome.storage.local.get(LANGUAGE_KEY);
+  return result[LANGUAGE_KEY] ?? null;
+}
+
+export async function saveLanguage(language) {
+  await chrome.storage.local.set({ [LANGUAGE_KEY]: language });
+}
