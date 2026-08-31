@@ -170,6 +170,27 @@ body {
   height: 15px;
 }
 
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lang-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
 main#content {
   padding: 14px;
 }
@@ -385,27 +406,6 @@ button.secondary:hover {
 
 .guide-header .spacer {
   flex: 1;
-}
-
-.lang-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.lang-toggle:hover {
-  background: var(--surface-hover);
-  color: var(--text);
 }
 
 .back-link {

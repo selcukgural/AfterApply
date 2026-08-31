@@ -1,8 +1,25 @@
 import { getSettings } from "./storage.js";
 import { setUpThemeToggle } from "./theme.js";
+import { t, setUpLanguageToggle } from "./i18n.js";
 
 const content = document.getElementById("content");
 const SITE_LABELS = { linkedin: "LinkedIn", kariyer: "kariyer.net" };
+
+// screen: "noJob" | "noToken" | "form" (unset while the initial async detection/scrape is still
+// in flight — the header's skeleton placeholder stays visible until one of these lands).
+// statusKey/statusType track the form's status paragraph so a language toggle mid-flow re-renders
+// it in the new language too, without touching anything else (see render() below).
+const state = {
+  lang: "en",
+  screen: null,
+  job: null,
+  jobUrl: null,
+  settings: null,
+  scraped: null,
+  scrapeError: null,
+  statusKey: null,
+  statusType: null,
+};
 
 // LinkedIn only puts a job on its own /jobs/view/<id> URL when you open it in a dedicated
 // tab/page. The far more common path — browsing /jobs/search-results/ (or /jobs/search/,
@@ -280,12 +297,12 @@ async function scrapeKariyerNetJob() {
   };
 }
 
-function render(html) {
+function setContent(html) {
   content.innerHTML = html;
 }
 
 function renderMessage(text, linkText, onLinkClick) {
-  render(`<p class="muted">${text}</p>`);
+  setContent(`<p class="muted">${text}</p>`);
   if (linkText) {
     const button = document.createElement("button");
     button.className = "secondary";
@@ -368,23 +385,157 @@ function setUpCompanyAutocomplete(settings) {
   });
 }
 
+function renderStatus() {
+  const statusEl = document.getElementById("status");
+  if (!statusEl || !state.statusKey) {
+    return;
+  }
+  statusEl.textContent = t(state.lang, state.statusKey);
+  statusEl.className = `status ${state.statusType}`;
+  statusEl.hidden = false;
+}
+
+function setStatus(key, type) {
+  state.statusKey = key;
+  state.statusType = type;
+  renderStatus();
+}
+
+// Re-labels the already-built form in place — never touches input values or rebuilds the DOM, so
+// a language toggle mid-edit can't wipe what the user has typed (the scrape is often imperfect;
+// editing is expected). Only buildForm() (called once, right after a successful scrape) creates
+// the form markup itself.
+function relabelForm() {
+  const lang = state.lang;
+  const setText = (id, key) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = t(lang, key);
+    }
+  };
+
+  setText("companyLabelEl", "popup.companyLabel");
+  setText("jobTitleLabelEl", "popup.jobTitleLabel");
+  setText("locationLabelEl", "popup.locationLabel");
+  setText("submit", "popup.applyButton");
+
+  const errorEl = document.getElementById("scrapeError");
+  if (errorEl) {
+    errorEl.textContent = `${t(lang, "popup.autoFillFailed")}${state.scrapeError}`;
+  }
+
+  renderStatus();
+}
+
+function render() {
+  const lang = state.lang;
+  document.title = t(lang, "popup.pageTitle");
+
+  if (state.screen === "form") {
+    relabelForm();
+  } else if (state.screen === "noJob") {
+    renderMessage(t(lang, "popup.noJob"));
+  } else if (state.screen === "noToken") {
+    renderMessage(t(lang, "popup.noToken"), t(lang, "popup.openSettings"), () => chrome.runtime.openOptionsPage());
+  }
+}
+
+function buildForm() {
+  const lang = state.lang;
+  const { job, scraped, settings } = state;
+
+  setContent(`
+    <span class="site-badge">${escapeHtml(SITE_LABELS[job.site])}</span>
+    ${state.scrapeError ? `<p id="scrapeError" class="status error">${escapeHtml(t(lang, "popup.autoFillFailed"))}${escapeHtml(state.scrapeError)}</p>` : ""}
+    <label id="companyLabelEl" for="companyName">${escapeHtml(t(lang, "popup.companyLabel"))}</label>
+    <div class="combobox">
+      <input id="companyName" type="text" autocomplete="off" value="${escapeHtml(scraped.company)}" />
+      <ul id="companySuggestions" class="suggestions" hidden></ul>
+    </div>
+
+    <label id="jobTitleLabelEl" for="jobTitle">${escapeHtml(t(lang, "popup.jobTitleLabel"))}</label>
+    <input id="jobTitle" type="text" value="${escapeHtml(scraped.title)}" />
+
+    <label id="locationLabelEl" for="location">${escapeHtml(t(lang, "popup.locationLabel"))}</label>
+    <input id="location" type="text" value="${escapeHtml(scraped.location)}" />
+
+    <button id="submit">${escapeHtml(t(lang, "popup.applyButton"))}</button>
+    <p id="status" class="status" hidden></p>
+  `);
+
+  setUpCompanyAutocomplete(settings);
+
+  document.getElementById("submit").addEventListener("click", async () => {
+    const submitButton = document.getElementById("submit");
+    submitButton.disabled = true;
+    state.statusKey = null;
+    document.getElementById("status").hidden = true;
+
+    const companyName = document.getElementById("companyName").value.trim();
+    const jobTitle = document.getElementById("jobTitle").value.trim();
+    const location = document.getElementById("location").value.trim();
+
+    if (!companyName || !jobTitle) {
+      setStatus("popup.requiredFields", "error");
+      submitButton.disabled = false;
+      return;
+    }
+
+    try {
+      const response = await fetch(`${settings.apiBaseUrl}/api/applications/from-extension`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${settings.token}`,
+        },
+        body: JSON.stringify({
+          companyName,
+          jobTitle,
+          jobUrl: state.jobUrl,
+          location: location || null,
+          description: scraped.description,
+          descriptionHtml: scraped.descriptionHtml,
+          publishedAt: null,
+          companyLinkedInUrl: scraped.companyLinkedInUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed (${response.status})`);
+      }
+
+      const result = await response.json();
+      setStatus(result.wasDuplicate ? "popup.alreadyTracked" : "popup.added", "success");
+    } catch {
+      setStatus("popup.networkError", "error");
+      submitButton.disabled = false;
+    }
+  });
+}
+
 async function main() {
   setUpThemeToggle("themeToggle");
   document.getElementById("openOptionsBtn")?.addEventListener("click", () => chrome.runtime.openOptionsPage());
-  const settings = await getSettings();
+  await setUpLanguageToggle("langToggle", (lang) => {
+    state.lang = lang;
+    render();
+  });
+
+  state.settings = await getSettings();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const job = tab?.url ? detectJob(tab.url) : null;
   if (!job) {
-    renderMessage(
-      "Open a LinkedIn job posting (a /jobs/view/ page, or a job selected in search results) or a kariyer.net job posting (an /is-ilani/ page) to track it here.",
-    );
+    state.screen = "noJob";
+    render();
     return;
   }
-  const jobUrl = job.jobUrl;
+  state.job = job;
+  state.jobUrl = job.jobUrl;
 
-  if (!settings.token) {
-    renderMessage("Set up your e-kariyerim access token first.", "Open Settings", () => chrome.runtime.openOptionsPage());
+  if (!state.settings.token) {
+    state.screen = "noToken";
+    render();
     return;
   }
 
@@ -409,81 +560,10 @@ async function main() {
   // params/fragment stripping happens here, back in the extension's own scope.
   scraped.companyLinkedInUrl = canonicalizeLinkedInCompanyUrl(scraped.companyLinkedInUrl);
 
-  render(`
-    <span class="site-badge">${escapeHtml(SITE_LABELS[job.site])}</span>
-    ${scrapeError ? `<p class="status error">Auto-fill failed: ${escapeHtml(scrapeError)}</p>` : ""}
-    <label for="companyName">Company</label>
-    <div class="combobox">
-      <input id="companyName" type="text" autocomplete="off" value="${escapeHtml(scraped.company)}" />
-      <ul id="companySuggestions" class="suggestions" hidden></ul>
-    </div>
-
-    <label for="jobTitle">Job title</label>
-    <input id="jobTitle" type="text" value="${escapeHtml(scraped.title)}" />
-
-    <label for="location">Location</label>
-    <input id="location" type="text" value="${escapeHtml(scraped.location)}" />
-
-    <button id="submit">I Applied</button>
-    <p id="status" class="status" hidden></p>
-  `);
-
-  setUpCompanyAutocomplete(settings);
-
-  document.getElementById("submit").addEventListener("click", async () => {
-    const submitButton = document.getElementById("submit");
-    const statusEl = document.getElementById("status");
-    submitButton.disabled = true;
-    statusEl.hidden = true;
-
-    const companyName = document.getElementById("companyName").value.trim();
-    const jobTitle = document.getElementById("jobTitle").value.trim();
-    const location = document.getElementById("location").value.trim();
-
-    if (!companyName || !jobTitle) {
-      statusEl.textContent = "Company and job title are required.";
-      statusEl.className = "status error";
-      statusEl.hidden = false;
-      submitButton.disabled = false;
-      return;
-    }
-
-    try {
-      const response = await fetch(`${settings.apiBaseUrl}/api/applications/from-extension`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${settings.token}`,
-        },
-        body: JSON.stringify({
-          companyName,
-          jobTitle,
-          jobUrl,
-          location: location || null,
-          description: scraped.description,
-          descriptionHtml: scraped.descriptionHtml,
-          publishedAt: null,
-          companyLinkedInUrl: scraped.companyLinkedInUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Request failed (${response.status})`);
-      }
-
-      const result = await response.json();
-      statusEl.textContent = result.wasDuplicate
-        ? "Already tracked — opened your existing application."
-        : "Added to e-kariyerim.";
-      statusEl.className = "status success";
-      statusEl.hidden = false;
-    } catch {
-      statusEl.textContent = "Could not reach e-kariyerim. Check your Settings (API base URL/token).";
-      statusEl.className = "status error";
-      statusEl.hidden = false;
-      submitButton.disabled = false;
-    }
-  });
+  state.scraped = scraped;
+  state.scrapeError = scrapeError;
+  state.screen = "form";
+  buildForm();
 }
 
 function escapeHtml(value) {

@@ -1,7 +1,7 @@
-// Minimal bilingual string table + language toggle for email-forwarding.html only. The rest of
-// the extension (popup.js/options.js) stays English-only — a separate, pre-existing choice, not
-// touched here. Mirrors theme.js's exact shape: getLanguage/saveLanguage in storage.js, falling
-// back to the browser's own language before any explicit choice.
+// Bilingual string table + language toggle, shared across every extension page
+// (email-forwarding.html, popup.html, options.html). Mirrors theme.js's exact shape:
+// getLanguage/saveLanguage in storage.js, falling back to the browser's own language before any
+// explicit choice.
 import { getLanguage, saveLanguage } from "./storage.js";
 
 const STRINGS = {
@@ -73,6 +73,33 @@ const STRINGS = {
       a3: "The subject line and roughly the first part of the body text of forwarded emails, tied to your account — used only to suggest application status updates.",
     },
     language: "Language",
+    popup: {
+      pageTitle: "e-kariyerim",
+      noJob: "Open a LinkedIn job posting (a /jobs/view/ page, or a job selected in search results) or a kariyer.net job posting (an /is-ilani/ page) to track it here.",
+      noToken: "Set up your e-kariyerim access token first.",
+      openSettings: "Open Settings",
+      autoFillFailed: "Auto-fill failed: ",
+      companyLabel: "Company",
+      jobTitleLabel: "Job title",
+      locationLabel: "Location",
+      applyButton: "I Applied",
+      requiredFields: "Company and job title are required.",
+      alreadyTracked: "Already tracked — opened your existing application.",
+      added: "Added to e-kariyerim.",
+      networkError: "Could not reach e-kariyerim. Check your Settings (API base URL/token).",
+    },
+    options: {
+      pageTitle: "e-kariyerim — Settings",
+      heading: "e-kariyerim Settings",
+      tokenHelp: "Generate an access token from e-kariyerim → Settings → Browser Extension, then paste it below.",
+      apiBaseUrlLabel: "API base URL",
+      tokenLabel: "Access token",
+      save: "Save",
+      saved: "Saved.",
+      forwardingLabel: "Email Forwarding",
+      forwardingHelp: "Get automatic status suggestions from your inbox — a full, step-by-step guide (with screenshots) to setting up Gmail forwarding.",
+      setUpForwarding: "Set up Email Forwarding",
+    },
   },
   tr: {
     pageTitle: "e-kariyerim — Mail Yönlendirme Kurulumu",
@@ -142,6 +169,33 @@ const STRINGS = {
       a3: "Yönlendirilen maillerin konu satırı ve gövde metninin yaklaşık ilk kısmı, hesabınıza bağlı olarak — sadece başvuru statü güncellemesi önermek için kullanılır.",
     },
     language: "Dil",
+    popup: {
+      pageTitle: "e-kariyerim",
+      noJob: "Buradan takip etmek için bir LinkedIn ilanı (bir /jobs/view/ sayfası ya da arama sonuçlarında seçili bir ilan) veya bir kariyer.net ilanı (bir /is-ilani/ sayfası) açın.",
+      noToken: "Önce e-kariyerim erişim anahtarınızı kurun.",
+      openSettings: "Ayarları Aç",
+      autoFillFailed: "Otomatik doldurma başarısız: ",
+      companyLabel: "Şirket",
+      jobTitleLabel: "Pozisyon",
+      locationLabel: "Konum",
+      applyButton: "Başvurdum",
+      requiredFields: "Şirket ve pozisyon alanları zorunludur.",
+      alreadyTracked: "Zaten takip ediliyor — mevcut başvurunuz açıldı.",
+      added: "e-kariyerim'e eklendi.",
+      networkError: "e-kariyerim'e ulaşılamadı. Ayarlarınızı (API adresi/anahtar) kontrol edin.",
+    },
+    options: {
+      pageTitle: "e-kariyerim — Ayarlar",
+      heading: "e-kariyerim Ayarları",
+      tokenHelp: "e-kariyerim → Ayarlar → Tarayıcı Eklentisi üzerinden bir erişim anahtarı oluşturun, ardından aşağıya yapıştırın.",
+      apiBaseUrlLabel: "API adresi",
+      tokenLabel: "Erişim anahtarı",
+      save: "Kaydet",
+      saved: "Kaydedildi.",
+      forwardingLabel: "Mail Yönlendirme",
+      forwardingHelp: "Gelen kutunuzdan otomatik statü önerileri alın — Gmail yönlendirmesini kurmak için ekran görüntülü, adım adım bir rehber.",
+      setUpForwarding: "Mail Yönlendirmeyi Kur",
+    },
   },
 };
 
