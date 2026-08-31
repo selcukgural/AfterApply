@@ -23,25 +23,28 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
 
   return (
     <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-6">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-y-2 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <Link href="/dashboard">
             <Logo />
           </Link>
-          <nav className="flex gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <Link href="/dashboard" className="hover:text-gray-900 dark:hover:text-gray-100">
+          <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <Link href="/dashboard" className="whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100">
               {t("dashboard")}
             </Link>
-            <Link href="/applications" className="hover:text-gray-900 dark:hover:text-gray-100">
+            <Link href="/applications" className="whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100">
               {t("applications")}
             </Link>
-            <Link href="/tracked-jobs" className="hover:text-gray-900 dark:hover:text-gray-100">
+            <Link href="/tracked-jobs" className="whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100">
               {t("trackedJobs")}
             </Link>
-            <Link href="/import" className="hover:text-gray-900 dark:hover:text-gray-100">
+            <Link href="/import" className="whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100">
               {t("import")}
             </Link>
-            <Link href="/suggestions" className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-gray-100">
+            <Link
+              href="/suggestions"
+              className="flex items-center gap-1.5 whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100"
+            >
               {t("suggestions")}
               {!!suggestionCount && (
                 <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-xs font-semibold leading-none text-white">
@@ -51,13 +54,13 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
             </Link>
           </nav>
         </div>
-        <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
           {user && (
-            <span>
+            <span className="whitespace-nowrap">
               {user.firstName} {user.lastName}
             </span>
           )}
-          <Link href="/settings" className="hover:text-gray-900 dark:hover:text-gray-100">
+          <Link href="/settings" className="whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100">
             {t("accountSettings")}
           </Link>
           <Button variant="secondary" onClick={handleLogout}>
