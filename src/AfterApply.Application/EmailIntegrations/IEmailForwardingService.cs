@@ -1,10 +1,10 @@
+using AfterApply.Application.EmailIntegrations.Contracts;
+
 namespace AfterApply.Application.EmailIntegrations;
 
-/// <summary>Sibling ingestion path to IEmailIntegrationService's Gmail-OAuth sync — this one is fed
-/// by a Cloudflare Email Worker relaying mail the user forwards themselves via their own mail
-/// provider's filter, not by polling an OAuth-connected inbox. Produces the same EmailSuggestion
-/// rows via the same EmailApplicationMatcher/RuleBasedEmailClassifier/IEmailClassificationProvider
-/// pipeline EmailIntegrationService already uses.</summary>
+/// <summary>Fed by a Cloudflare Email Worker relaying mail the user forwards themselves via their
+/// own mail provider's filter — the only ingestion path this app has (the earlier Gmail-OAuth path
+/// was removed, see project memory / DECISIONS.md).</summary>
 public interface IEmailForwardingService
 {
     /// <summary>Returns the user's personal forwarding address, creating their Forwarding
@@ -14,6 +14,12 @@ public interface IEmailForwardingService
     /// <summary>Processes one forwarded email. No-ops (logs, doesn't throw) when the address's token
     /// isn't recognized — an unknown/stale address is not the caller's fault to react to.</summary>
     Task ProcessInboundEmailAsync(InboundEmailRequest request, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<EmailSuggestionResponse>> GetPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken);
+
+    Task<ConfirmSuggestionResult> ConfirmSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);
+
+    Task<bool> DismissSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);
 }
 
 public sealed record InboundEmailRequest(

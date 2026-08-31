@@ -1,7 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
+using AfterApply.Application.Applications;
+using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.EmailIntegrations;
+using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Domain.Applications;
+using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.EmailIntegrations;
 using AfterApply.Infrastructure.Persistence;
@@ -15,6 +19,7 @@ internal sealed class EmailForwardingService(
     AppDbContext dbContext,
     IEmailClassificationProvider emailClassificationProvider,
     IEmailJobExtractionProvider emailJobExtractionProvider,
+    IApplicationService applicationService,
     IOptions<EmailForwardingOptions> options,
     ILogger<EmailForwardingService> logger) : IEmailForwardingService
 {
@@ -113,6 +118,102 @@ internal sealed class EmailForwardingService(
             extraction.CompanyName, extraction.JobTitle, extraction.Location, extraction.Description));
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<EmailSuggestionResponse>> GetPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var rows = await dbContext.EmailSuggestions
+            .Where(s => s.UserId == userId && s.Status == EmailSuggestionStatus.Pending && s.ApplicationId != null)
+            .Join(dbContext.Applications, s => s.ApplicationId, a => a.Id, (s, a) => new { s, a.JobTitle, a.CompanyId })
+            .Join(dbContext.Companies, x => x.CompanyId, c => c.Id, (x, c) => new { x.s, x.JobTitle, CompanyName = c.Name })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var responses = rows.Select(row => new EmailSuggestionResponse(
+            row.s.Id, row.s.ApplicationId, row.CompanyName, row.JobTitle,
+            row.s.SuggestedStatus, row.s.ConfidenceScore, row.s.Subject ?? "", row.s.Snippet ?? "", row.s.EmailReceivedAt))
+            .ToList();
+
+        // "New job" suggestions (ApplicationId is null) always come from this Forwarding path, so
+        // Subject/Snippet/Extracted* are always already persisted.
+        var newJobRows = await dbContext.EmailSuggestions
+            .Where(s => s.UserId == userId && s.Status == EmailSuggestionStatus.Pending && s.ApplicationId == null)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        responses.AddRange(newJobRows.Select(s => new EmailSuggestionResponse(
+            s.Id, ApplicationId: null, s.ExtractedCompanyName ?? "", s.ExtractedJobTitle ?? "",
+            s.SuggestedStatus, s.ConfidenceScore, s.Subject ?? "", s.Snippet ?? "", s.EmailReceivedAt,
+            IsNewApplicationSuggestion: true, s.ExtractedLocation, s.ExtractedDescription)));
+
+        return responses.OrderByDescending(r => r.EmailReceivedAt).ToList();
+    }
+
+    public async Task<ConfirmSuggestionResult> ConfirmSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken)
+    {
+        var suggestion = await dbContext.EmailSuggestions
+            .FirstOrDefaultAsync(s => s.Id == suggestionId && s.UserId == userId, cancellationToken);
+
+        if (suggestion is null || suggestion.Status != EmailSuggestionStatus.Pending)
+        {
+            return ConfirmSuggestionResult.NotFound;
+        }
+
+        if (suggestion.ApplicationId is null)
+        {
+            // "New job" suggestion: the Application (and its Company, via CreateAsync's own
+            // ICompanyResolver call) doesn't exist yet — confirming creates it now, tagged
+            // Source.Email so the user can see it was registered from a forwarded email.
+            var created = await applicationService.CreateAsync(userId, new CreateApplicationRequest(
+                suggestion.ExtractedCompanyName!, suggestion.ExtractedJobTitle!, JobUrl: null,
+                suggestion.ExtractedLocation, EmploymentType.FullTime, suggestion.EmailReceivedAt,
+                Source.Email, suggestion.ExtractedDescription), cancellationToken);
+
+            if (suggestion.SuggestedStatus is not null && suggestion.SuggestedStatus != ApplicationStatus.Applied)
+            {
+                await applicationService.ChangeStatusAsync(userId, created.Id,
+                    new ChangeStatusRequest(suggestion.SuggestedStatus.Value, "E-postadan içe aktarıldı",
+                        suggestion.EmailReceivedAt, Source.Email),
+                    cancellationToken);
+            }
+
+            suggestion.Confirm(DateTimeOffset.UtcNow);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return ConfirmSuggestionResult.Confirmed;
+        }
+
+        if (suggestion.SuggestedStatus is null)
+        {
+            return ConfirmSuggestionResult.NoStatusToConfirm;
+        }
+
+        var changed = await applicationService.ChangeStatusAsync(userId, suggestion.ApplicationId.Value,
+            new ChangeStatusRequest(suggestion.SuggestedStatus.Value, "E-postadan onaylandı", suggestion.EmailReceivedAt, Source.Email),
+            cancellationToken);
+
+        if (changed is null)
+        {
+            return ConfirmSuggestionResult.NotFound;
+        }
+
+        suggestion.Confirm(DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ConfirmSuggestionResult.Confirmed;
+    }
+
+    public async Task<bool> DismissSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken)
+    {
+        var suggestion = await dbContext.EmailSuggestions
+            .FirstOrDefaultAsync(s => s.Id == suggestionId && s.UserId == userId, cancellationToken);
+
+        if (suggestion is null || suggestion.Status != EmailSuggestionStatus.Pending)
+        {
+            return false;
+        }
+
+        suggestion.Dismiss(DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     private async Task<EmailClassificationResult> ClassifyAsync(string subject, string snippet, CancellationToken cancellationToken)

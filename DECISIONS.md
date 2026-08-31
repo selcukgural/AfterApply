@@ -1818,6 +1818,45 @@ genelde email'in ilk 300 karakterinden sonra geliyor) — `EmailSuggestionConfig
 
 ---
 
+## Gmail OAuth entegrasyonu koddan tamamen kaldırıldı (2026-08-31)
+
+**Karar:** 2026-08-29'da `EmailIntegrations:Enabled=false` flag'iyle kullanıcıdan gizlenen Gmail
+OAuth entegrasyonu (Phase 9 — bkz. "Gmail Integration (Phase 9) — kullanıcıdan gizlendi") artık
+flag'in arkasında kod olarak da durmuyor, tamamen silindi. Ne bugün ne yakın/orta vadede bu
+yatırımın (CASA güvenlik değerlendirmesi, ~$15k-$75k, 4-12+ hafta) yapılması planlanmıyor —
+bürokratik ve maddi maliyet kabul edilmedi. Kaldırılanlar:
+
+- Backend: `EmailIntegrationEndpoints.cs`, `IEmailIntegrationService`/`EmailIntegrationService`,
+  `IGmailClient`/`GmailClient`/`GmailModels.cs`, `GoogleOAuthOptions`, `EmailIntegrationOptions`,
+  `"gmail-sync"` Hangfire job'ı, `Google.Apis.Gmail.v1` paket referansı, `GoogleOAuth`/
+  `EmailIntegrations` appsettings/env/docker-compose/CI (`deploy.yml`) girdileri.
+- `EmailConnection` entity'sinden Gmail-only alanlar (`EncryptedRefreshToken`, `GrantedScopes`,
+  `DisconnectedAt`, `LastSyncedAt`, `LastSyncError`, `LastSyncErrorAt`) ve metodlar (`Reconnect`,
+  `Disconnect`, `UpdateAfterSync`, `RecordSyncFailure`) — hepsi doğrulandı: tek çağıranları silinen
+  `EmailIntegrationService`'ti. `EmailProvider` enum'ında artık sadece `Forwarding` var.
+- `RemoveGmailIntegration` migration'ı bu kolonları drop ediyor ve (uygulama hiç canlıya
+  alınmadığı için gerçek kullanıcı riski olmadan) `Provider='Gmail'` satırlarını siliyor.
+- Frontend: `emailIntegrations.ts` silindi; Gmail'e özel `settings.email.*` i18n anahtarları
+  kaldırıldı; landing page roadmap'indeki "Gmail integration" maddesi gerçekte var olan
+  "Email forwarding integration"'ı yansıtacak şekilde güncellendi.
+- `PRIVACY_CHECKLIST.md`, `README.md` ("Gmail Integration Setup" bölümü), `DEPLOYMENT.md` da
+  buna göre güncellendi.
+
+**Korunanlar — cerrahi ayıklama gerekti:** Gmail ile aynı `EmailConnection`/`EmailSuggestion`
+tablolarını ve kısmen aynı servis katmanını paylaşan Forwarding path'ine (Cloudflare Email
+Routing, "gerçek yön" — bkz. proje hafızası "Gmail OAuth abandoned, Cloudflare forwarding
+chosen") dokunulmadı. `IEmailIntegrationService.GetPendingSuggestionsAsync`/
+`ConfirmSuggestionAsync`/`DismissSuggestionAsync` — provider-agnostic oldukları ve
+`EmailForwardingEndpoints`'in `/suggestions` route'ları tarafından da çağrıldıkları için —
+`IEmailForwardingService`/`EmailForwardingService`'e taşındı (Gmail live-refetch dalı ise atıldı:
+Forwarding zaten Subject/Snippet'i her zaman persist ediyor). Bu arada bağımsız bir bug bulundu:
+`web/.../settings/email-suggestions/page.tsx` hâlâ `/api/email-integrations/suggestions`'ı
+çağırıyordu — ama bu route zaten daha önce `EmailForwardingEndpoints`'e (`/api/email-forwarding/
+suggestions`) taşınmıştı, yani sayfa flag'den bağımsız olarak zaten 404 alıyordu; bu kaldırma
+işiyle birlikte düzeltildi.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

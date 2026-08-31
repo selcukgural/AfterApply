@@ -1,8 +1,6 @@
 namespace AfterApply.Infrastructure.EmailIntegrations;
 
-/// <summary>Config for the Cloudflare inbound-forwarding pipeline. Deliberately decoupled from
-/// EmailIntegrationOptions.Enabled (Gmail OAuth) — the two ship independently; Gmail OAuth stays off
-/// regardless of this flag.</summary>
+/// <summary>Config for the Cloudflare inbound-forwarding pipeline.</summary>
 public sealed class EmailForwardingOptions
 {
     public bool Enabled { get; init; } = false;
@@ -13,6 +11,6 @@ public sealed class EmailForwardingOptions
 
     /// <summary>Shared secret the Cloudflare Worker sends in the X-Webhook-Secret header. Null/empty
     /// means the inbound endpoint is not configured — same "inert until set" pattern as
-    /// GoogleOAuthOptions/OpenAiOptions.</summary>
+    /// OpenAiOptions.</summary>
     public string? WebhookSecret { get; init; }
 }

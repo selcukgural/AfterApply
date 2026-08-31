@@ -64,17 +64,14 @@ public static class EmailForwardingEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
-        // Moved from EmailIntegrationEndpoints — provider-agnostic (query EmailSuggestions by
-        // UserId, not by provider), now gated by EmailForwarding:Enabled instead of
-        // EmailIntegrations:Enabled since this is the ingestion path that's actually shipping.
-        group.MapGet("/suggestions", async (ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
+        group.MapGet("/suggestions", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.GetPendingSuggestionsAsync(user.GetUserId(), cancellationToken)))
             .RequireAuthorization()
             .WithSummary("List pending status suggestions detected from the user's forwarded email")
             .Produces<IReadOnlyList<EmailSuggestionResponse>>()
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
-        group.MapPost("/suggestions/{id:guid}/confirm", async (Guid id, ClaimsPrincipal user, IEmailIntegrationService service,
+        group.MapPost("/suggestions/{id:guid}/confirm", async (Guid id, ClaimsPrincipal user, IEmailForwardingService service,
                 IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
             {
                 var result = await service.ConfirmSuggestionAsync(user.GetUserId(), id, cancellationToken);
@@ -95,7 +92,7 @@ public static class EmailForwardingEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapPost("/suggestions/{id:guid}/dismiss", async (Guid id, ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
+        group.MapPost("/suggestions/{id:guid}/dismiss", async (Guid id, ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
             {
                 var dismissed = await service.DismissSuggestionAsync(user.GetUserId(), id, cancellationToken);
                 return dismissed ? Results.NoContent() : Results.NotFound();

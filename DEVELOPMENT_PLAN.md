@@ -146,8 +146,11 @@ prod-benzeri bir ortamda doğrulanabilir durumda.
 > feature-flag ile kapalı tutulur. Monetization (§18) ise hâlâ ertelendi —
 > spec'in "önce PMF doğrulanmalı" gerekçesi kabul edildi, ilk yayın ücretsiz.
 
-Phase 9 (Email Integration — sadece Gmail) zaten tamamlandı (bkz.
-DECISIONS.md). Kalan fazlar şu sırayla planlanıyor:
+Phase 9 (Email Integration — sadece Gmail) tamamlanmıştı, ama CASA
+maliyeti/bürokrasisi yüzünden kullanıcıdan gizlendikten sonra 2026-08-31'de
+koddan tamamen kaldırıldı; yerine Cloudflare Email Routing tabanlı Forwarding
+yönü kaldı (bkz. `DECISIONS.md`'nin ilgili girdileri). Kalan fazlar şu
+sırayla planlanıyor:
 
 ---
 

@@ -6,7 +6,7 @@ backend's `POST /api/email-forwarding/inbound` endpoint. Not part of the .NET so
 independently via Wrangler.
 
 Manual, documented deploy — not CI-automated (matches this project's bootstrap-stage approach to
-other one-off infra, e.g. the README "Gmail Integration Setup" section).
+other one-off infra).
 
 ## One-time setup
 

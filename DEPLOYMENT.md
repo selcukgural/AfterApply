@@ -204,26 +204,17 @@ printf '%s' "${REDIS_IP}:6379" | gcloud secrets create afterapply-redis-connecti
 openssl rand -base64 48 | gcloud secrets create afterapply-jwt-signing-key --data-file=-
 printf '%s' "<backend-sentry-dsn>" | gcloud secrets create afterapply-sentry-dsn --data-file=-
 printf '%s' "<openai-api-key-veya-REPLACE_WITH_OPENAI_API_KEY>" | gcloud secrets create afterapply-openai-api-key --data-file=-
-printf '%s' "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_ID" | gcloud secrets create afterapply-google-oauth-client-id --data-file=-
-printf '%s' "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET" | gcloud secrets create afterapply-google-oauth-client-secret --data-file=-
-printf '%s' "https://REPLACE-ONCE-DEPLOYED/api/email-integrations/gmail/callback" | gcloud secrets create afterapply-google-oauth-redirect-uri --data-file=-
 # Placeholder — the real web Cloud Run URL isn't known until step 4's
 # deploy-web run; step 4 shows how to update this in place afterward.
 printf '%s' "https://REPLACE-ONCE-DEPLOYED" | gcloud secrets create afterapply-web-origin --data-file=-
 
 for s in afterapply-postgres-connection afterapply-redis-connection \
          afterapply-jwt-signing-key afterapply-sentry-dsn afterapply-openai-api-key \
-         afterapply-google-oauth-client-id afterapply-google-oauth-client-secret \
-         afterapply-google-oauth-redirect-uri afterapply-web-origin; do
+         afterapply-web-origin; do
   gcloud secrets add-iam-policy-binding "$s" \
     --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"
 done
 ```
-
-Placeholders left as `REPLACE_WITH_...` (Gmail OAuth) are fine — matches
-the existing "stays inert until configured" pattern (README "Gmail
-Integration Setup"); fill them in only when you actually set up that
-Google Cloud OAuth client.
 
 ### 4. GitHub repo secrets and first deploy
 

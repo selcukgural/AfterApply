@@ -22,9 +22,9 @@ using Testcontainers.Redis;
 
 namespace AfterApply.IntegrationTests.EmailIntegrations;
 
-// Sibling suite to EmailIntegrationTests (Gmail OAuth) — covers the Cloudflare-forwarding ingestion
-// path: GET /api/email-forwarding/address, POST /api/email-forwarding/inbound (Worker-authenticated,
-// not user-authenticated), and that the moved suggestion-review routes are reachable under this flag.
+// Covers the Cloudflare-forwarding ingestion path: GET /api/email-forwarding/address,
+// POST /api/email-forwarding/inbound (Worker-authenticated, not user-authenticated), and the
+// provider-agnostic suggestion-review routes (GET/confirm/dismiss suggestions).
 public class EmailForwardingTests : IAsyncLifetime
 {
     private const string WebhookSecret = "test-webhook-secret";
@@ -232,6 +232,61 @@ public class EmailForwardingTests : IAsyncLifetime
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailSuggestions.CountAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ConfirmSuggestion_For_Existing_Application_Changes_Status_With_Source_Email()
+    {
+        var address = await GetOwnAddressAsync();
+        var applicationId = await CreateApplicationAsync("Acme Confirm Test");
+
+        var inboundResponse = await SendInboundAsync(address, "recruiter@acme-confirm-test.com", "Acme Confirm Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.");
+        inboundResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestionsResponse.EnumerateArray().Single().GetProperty("id").GetGuid();
+
+        var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
+        confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var detailResponse = await _client.GetAsync($"/api/applications/{applicationId}");
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = await detailResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+        detail!.Status.ShouldBe(ApplicationStatus.Interview);
+
+        var timelineResponse = await _client.GetAsync($"/api/applications/{applicationId}/timeline");
+        var timeline = await timelineResponse.Content.ReadFromJsonAsync<List<ApplicationEventResponse>>(JsonOptions);
+        timeline!.ShouldContain(e => e.Type == ApplicationEventType.StatusChanged && e.Source == Source.Email);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await db.EmailSuggestions.SingleAsync();
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.Confirmed);
+    }
+
+    [Fact]
+    public async Task DismissSuggestion_Does_Not_Change_Application_Status()
+    {
+        var address = await GetOwnAddressAsync();
+        var applicationId = await CreateApplicationAsync("Acme Dismiss Test");
+
+        var inboundResponse = await SendInboundAsync(address, "recruiter@acme-dismiss-test.com", "Acme Dismiss Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.");
+        inboundResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestionsResponse.EnumerateArray().Single().GetProperty("id").GetGuid();
+
+        var dismissResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/dismiss", null);
+        dismissResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var detailResponse = await _client.GetAsync($"/api/applications/{applicationId}");
+        var detail = await detailResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+        detail!.Status.ShouldBe(ApplicationStatus.Applied);
+
+        var pendingResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        pendingResponse.EnumerateArray().ShouldBeEmpty();
     }
 
     [Fact]

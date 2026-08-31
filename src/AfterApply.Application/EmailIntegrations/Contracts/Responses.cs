@@ -2,12 +2,6 @@ using AfterApply.Domain.Applications;
 
 namespace AfterApply.Application.EmailIntegrations.Contracts;
 
-public sealed record EmailConnectionStatusResponse(
-    bool Connected,
-    string? ProviderAccountEmail,
-    DateTimeOffset? LastSyncedAt,
-    bool NeedsReattention);
-
 public sealed record EmailSuggestionResponse(
     Guid Id,
     Guid? ApplicationId,
@@ -24,8 +18,6 @@ public sealed record EmailSuggestionResponse(
     bool IsNewApplicationSuggestion = false,
     string? Location = null,
     string? Description = null);
-
-public sealed record EmailConnectionCallbackResult(bool Succeeded, string? ErrorReason);
 
 public enum ConfirmSuggestionResult
 {

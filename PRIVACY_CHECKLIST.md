@@ -25,6 +25,13 @@ vb.) eklendiğinde bu liste güncellenmeli.
 | Public analytics anonimleştirme / minimum örneklem | Public/şirket-görünür analytics (Phase 10+) flag ile kapalı (`CompanyIntelligence:Enabled=false`); `IAnalyticsService` bugün sadece kullanıcının kendi verisini kendisine döndürüyor, hiçbir agregasyon başkasına gösterilmiyor. |
 
 > **Not (2026-08-29):** Bu listede daha önce "Email permission boundaries — MVP kapsamında değil" satırı vardı. **Artık doğru değil** — Gmail entegrasyonu (Sprint 9, `gmail.readonly` scope) kod olarak tamamlandı. Bkz. aşağıdaki envanterin 4. maddesi; bu artık N/A değil, avukata görülmesi gereken açık bir kalem. **Güncelleme (aynı gün):** madde 7'deki CASA/verification maliyeti ($15k-$75k, 4-12+ hafta) netleşince, o karar verilene kadar `EmailIntegrations:Enabled=false` flag'iyle kullanıcıdan tamamen gizlendi (`Matching:Enabled` ile aynı desen) — bkz. `DECISIONS.md` "Gmail Integration (Phase 9) — kullanıcıdan gizlendi (2026-08-29)".
+>
+> **Güncelleme (2026-08-31):** Yukarıdaki iki notta anlatılan Gmail OAuth entegrasyonu artık sadece
+> gizli değil, **koddan tamamen kaldırıldı** — bürokratik (CASA) ve maddi maliyet nedeniyle bu
+> yatırımın ne yakın ne orta vadede yapılmayacağı netleşti. Aşağıdaki envanterdeki "Gmail bağlantısı"
+> satırı ve "Eksik" listesindeki madde 2/7 artık **N/A**; kalan tek email-tabanlı özellik, kullanıcının
+> kendi filtresiyle yönlendirdiği maili işleyen Forwarding path'i (OAuth yok, `gmail.readonly` gibi bir
+> scope yok — bkz. `DECISIONS.md`'nin ilgili girdisi).
 
 ## Kabul edilen risk / backlog
 
@@ -49,7 +56,7 @@ Nihai onay/metin yazımı bu dosyanın kapsamı dışında.
 | Hesap (email, şifre hash'i, `ConsentAcceptedAt`) | Cloud SQL (Postgres, `europe-west1`) | Hayır |
 | Başvuru verisi (Company/Job/Application/Event/StatusHistory) | Cloud SQL, `europe-west1` | Hayır |
 | CV / profil metni (`CandidateProfile.CvText`, `JobMatch.CvTextSnapshot`) | Cloud SQL, düz metin (şifrelenmemiş) | **Evet — OpenAI API'ye** (match hesaplama için CV + job description gönderiliyor, ABD merkezli, yurt dışı aktarım) |
-| Gmail bağlantısı | OAuth token (encrypted) DB'de; `gmail.readonly` scope — **kullanıcının tüm gelen kutusunu okuma izni**, sadece "application-related" filtrelemesi kod tarafında yapılıyor, Google API seviyesinde kısıtlı değil | Google'a (OAuth flow) — veri Google'da zaten var, biz sadece okuyoruz |
+| ~~Gmail bağlantısı~~ (2026-08-31'de koddan kaldırıldı, bkz. not yukarıda) | ~~OAuth token (encrypted) DB'de; `gmail.readonly` scope~~ | N/A |
 | Email eşleştirme sonucu (`EmailSuggestion`) | Cloud SQL — sadece `messageId`/`threadId`/`senderDomain`/`matchedRule`/`confidenceScore` persist ediliyor, **e-posta konusu/içeriği (Subject/Snippet) DB'ye yazılmıyor**, sadece eşleştirme anında bellekte kullanılıp atılıyor | Hayır (iyi durumda — data minimization) |
 | Personal Access Token (extension) | Sadece hash (`TokenHash`) DB'de, düz metin token bir daha gösterilmiyor | Hayır |
 | Extension'ın scrape ettiği veri (LinkedIn/kariyer.net job title/company/location/description/URL) | Cloud SQL (Application/Job/Company) | Hayır |
@@ -64,7 +71,7 @@ Nihai onay/metin yazımı bu dosyanın kapsamı dışında.
 4. **ToS / Kullanım Şartları** — hiç yok.
 5. **VERBİS kaydı** — muafiyet kapsamına girip girmediğimiz (ölçek/ana faaliyet kriterleri) teyit edilmemiş.
 6. **Çerez Politikası** — yok. `NEXT_LOCALE` ve theme cookie'leri fonksiyonel/zorunlu görünüyor ama yine de disclosure gerekir.
-7. **Gmail API "restricted scope" platform uyumu** — `gmail.readonly`, Google'ın kendi CASA güvenlik değerlendirmesi + OAuth consent screen doğrulamasını gerektirebilir (100 kullanıcıyı aşınca zorunlu hâle geliyor). Bu KVKK değil ama gerçek bir platform-compliance riski — ayrı takip edilmeli.
+7. ~~**Gmail API "restricted scope" platform uyumu**~~ — **N/A (2026-08-31):** Gmail OAuth entegrasyonu koddan tamamen kaldırıldı, `gmail.readonly` scope'u artık kullanılmıyor.
 8. **Özel nitelikli veri riski** — CV serbest metin olarak alınıyor, hiç filtrelenmiyor; kullanıcı istemeden sağlık/din/sendika üyeliği gibi özel nitelikli veri girebilir. Avukata bu riskin nasıl yönetileceği (ek uyarı metni, vb.) sorulmalı.
 9. **Consent versioning** — zaten yukarıda backlog'da not düşülmüş, hâlâ açık.
 

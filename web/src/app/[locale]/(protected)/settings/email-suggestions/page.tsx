@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { emailIntegrationsApi } from "@/lib/api/emailIntegrations";
+import { emailForwardingApi } from "@/lib/api/emailForwarding";
 import { ApiError } from "@/lib/api/httpClient";
 import type { EmailSuggestionResponse } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
@@ -18,7 +18,7 @@ export default function EmailSuggestionsPage() {
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
 
   useEffect(() => {
-    emailIntegrationsApi
+    emailForwardingApi
       .getPendingSuggestions()
       .then(setSuggestions)
       .catch((err) => setError(err instanceof ApiError ? err.message : t("loadError")));
@@ -29,7 +29,7 @@ export default function EmailSuggestionsPage() {
     setPendingActionId(id);
     setError(null);
     try {
-      await emailIntegrationsApi.confirmSuggestion(id);
+      await emailForwardingApi.confirmSuggestion(id);
       setSuggestions((prev) => prev?.filter((s) => s.id !== id) ?? prev);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("confirmError"));
@@ -42,7 +42,7 @@ export default function EmailSuggestionsPage() {
     setPendingActionId(id);
     setError(null);
     try {
-      await emailIntegrationsApi.dismissSuggestion(id);
+      await emailForwardingApi.dismissSuggestion(id);
       setSuggestions((prev) => prev?.filter((s) => s.id !== id) ?? prev);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("dismissError"));

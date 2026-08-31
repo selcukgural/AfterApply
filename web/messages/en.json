@@ -129,7 +129,7 @@
       "todayImport": "CSV / LinkedIn import",
       "todayReminders": "Reminders",
       "todayMatch": "AI job-fit matching",
-      "todayEmail": "Gmail integration",
+      "todayEmail": "Email forwarding integration",
       "todayExtension": "Browser extension",
       "futureInsights": "Anonymous, aggregate hiring insights"
     },
@@ -336,19 +336,6 @@
       "preparing": "Preparing...",
       "error": "Could not export data."
     },
-    "email": {
-      "title": "Email Integration",
-      "description": "Connect your Gmail account to get automatic status suggestions from hiring-related emails (interview invites, rejections, etc). Read-only access is requested, no emails are sent.",
-      "connectedAccount": "Connected account:",
-      "needsReattention": "The last sync failed, you may need to reconnect your Gmail account.",
-      "viewSuggestions": "View pending suggestions",
-      "disconnect": "Disconnect",
-      "connect": "Connect Gmail",
-      "connectError": "Could not start the Gmail connection.",
-      "disconnectError": "Could not disconnect.",
-      "successNotice": "Your Gmail account is connected.",
-      "errorNotice": "Gmail connection failed. Please try again."
-    },
     "emailForwarding": {
       "title": "Mail Forwarding",
       "description": "Forward status-update emails to your personal address below to get automatic status suggestions — set up a filter in your own mail provider (Gmail, Outlook, ...) for the senders you want. No account access is granted to us.",
@@ -401,7 +388,7 @@
   },
   "emailSuggestions": {
     "back": "← Account Settings",
-    "title": "Gmail Suggestions",
+    "title": "Email Suggestions",
     "empty": "No pending suggestions.",
     "stillPending": "Still pending",
     "confirm": "Confirm",

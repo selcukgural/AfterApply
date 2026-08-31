@@ -56,7 +56,7 @@ export default function SettingsPage() {
       .then(({ address }) => setForwardingAddress(address))
       .catch((error) => {
         // 404 means EmailForwarding:Enabled is off in this environment — hide the card rather
-        // than show an error, same treatment as the (currently unreachable) Gmail card.
+        // than show an error.
         if (!(error instanceof ApiError && error.status === 404)) {
           setForwardingError(t("emailForwarding.loadError"));
         }

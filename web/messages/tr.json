@@ -129,7 +129,7 @@
       "todayImport": "CSV / LinkedIn içe aktarma",
       "todayReminders": "Hatırlatıcılar",
       "todayMatch": "Yapay zeka ile ilan uyumu",
-      "todayEmail": "Gmail entegrasyonu",
+      "todayEmail": "E-posta yönlendirme entegrasyonu",
       "todayExtension": "Tarayıcı eklentisi",
       "futureInsights": "Anonim, toplu işe alım içgörüleri"
     },
@@ -336,19 +336,6 @@
       "preparing": "Hazırlanıyor...",
       "error": "Veriler dışa aktarılamadı."
     },
-    "email": {
-      "title": "E-posta Entegrasyonu",
-      "description": "Gmail hesabınızı bağlayın; işe alım e-postalarından (mülakat daveti, ret vb.) otomatik statü önerileri alın. Sadece okuma izni istenir, e-posta gönderilmez.",
-      "connectedAccount": "Bağlı hesap:",
-      "needsReattention": "Son senkronizasyon başarısız oldu, Gmail bağlantısını yeniden kurmanız gerekebilir.",
-      "viewSuggestions": "Bekleyen önerileri gör",
-      "disconnect": "Bağlantıyı Kaldır",
-      "connect": "Gmail Bağla",
-      "connectError": "Gmail bağlantısı başlatılamadı.",
-      "disconnectError": "Bağlantı kaldırılamadı.",
-      "successNotice": "Gmail hesabınız bağlandı.",
-      "errorNotice": "Gmail bağlantısı başarısız oldu. Lütfen tekrar deneyin."
-    },
     "emailForwarding": {
       "title": "Mail Yönlendirme",
       "description": "Otomatik statü önerileri almak için başvuru maillerinizi aşağıdaki kişisel adresinize yönlendirin — kendi mail sağlayıcınızda (Gmail, Outlook, ...) istediğiniz gönderenler için bir filtre kurun. Hesabınıza hiçbir erişim verilmez.",
@@ -401,7 +388,7 @@
   },
   "emailSuggestions": {
     "back": "← Hesap Ayarları",
-    "title": "Gmail Önerileri",
+    "title": "E-posta Önerileri",
     "empty": "Bekleyen öneri yok.",
     "stillPending": "Hâlâ bekleniyor",
     "confirm": "Onayla",

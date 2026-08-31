@@ -4,12 +4,10 @@ using AfterApply.Api;
 using AfterApply.Api.Endpoints;
 using AfterApply.Api.ExceptionHandling;
 using AfterApply.Api.Imports;
-using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Imports;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
-using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Notifications;
 using Hangfire;
 using Microsoft.AspNetCore.Localization;
@@ -76,7 +74,6 @@ app.MapTrackedJobEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapImportEndpoints();
 app.MapReminderEndpoints();
-app.MapEmailIntegrationEndpoints();
 app.MapEmailForwardingEndpoints();
 app.MapMatchingEndpoints();
 app.MapPersonalAccessTokenEndpoints();
@@ -99,15 +96,6 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "product-metrics-snapshot",
         service => service.ComputeSnapshotAsync(CancellationToken.None),
         Cron.Daily());
-
-    var emailOptions = scope.ServiceProvider.GetRequiredService<IOptions<EmailIntegrationOptions>>().Value;
-    if (emailOptions.Enabled)
-    {
-        recurringJobManager.AddOrUpdate<IEmailIntegrationService>(
-            "gmail-sync",
-            service => service.SyncAllConnectionsAsync(CancellationToken.None),
-            emailOptions.SyncCronExpression);
-    }
 }
 
 app.Run();

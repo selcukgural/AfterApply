@@ -73,8 +73,6 @@ public static class DependencyInjection
 
         services.Configure<ImportOptions>(configuration.GetSection("Imports"));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
-        services.Configure<GoogleOAuthOptions>(configuration.GetSection("GoogleOAuth"));
-        services.Configure<EmailIntegrationOptions>(configuration.GetSection("EmailIntegrations"));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
@@ -235,8 +233,6 @@ public static class DependencyInjection
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
-        services.AddScoped<IGmailClient, GmailClient>();
-        services.AddScoped<IEmailIntegrationService, EmailIntegrationService>();
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();
         services.AddScoped<IEmailJobExtractionProvider, OpenAiEmailJobExtractionProvider>();
         services.AddScoped<IEmailForwardingService, EmailForwardingService>();

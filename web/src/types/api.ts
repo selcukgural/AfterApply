@@ -182,13 +182,6 @@ export interface ApplicationListQuery {
   sortDirection?: SortDirection;
 }
 
-export interface EmailConnectionStatusResponse {
-  connected: boolean;
-  providerAccountEmail: string | null;
-  lastSyncedAt: string | null;
-  needsReattention: boolean;
-}
-
 export interface EmailSuggestionResponse {
   id: string;
   applicationId: string | null;

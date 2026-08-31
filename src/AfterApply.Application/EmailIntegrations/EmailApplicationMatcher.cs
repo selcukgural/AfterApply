@@ -11,9 +11,8 @@ public sealed record ApplicationMatchCandidate(Guid ApplicationId, string Normal
 public static class EmailApplicationMatcher
 {
     /// <summary>recipientEmail/ownAccountEmail let a message the user sent themselves (e.g. "I accept
-    /// the offer" replies — Gmail's default search scope includes Sent, see GmailClient) still match:
-    /// when senderEmail is the user's own account, the recipient's domain is checked instead of the
-    /// sender's, since the sender is never the company in that case.</summary>
+    /// the offer" replies) still match: when senderEmail is the user's own account, the recipient's
+    /// domain is checked instead of the sender's, since the sender is never the company in that case.</summary>
     public static Guid? Match(string senderEmail, string senderDisplayName, string recipientEmail,
         string ownAccountEmail, string subject, IReadOnlyList<ApplicationMatchCandidate> candidates)
     {

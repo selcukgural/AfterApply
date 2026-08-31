@@ -85,8 +85,8 @@ jobs:
       # Values on the right of `=` in `secrets:` are Secret Manager secret
       # names (not the secret values themselves) — see DEPLOYMENT.md for
       # how to create them. Empty-string-disables-safely secrets (Sentry,
-      # OpenAI, GoogleOAuth) still go through Secret Manager for
-      # consistency, not because they're sensitive when empty.
+      # OpenAI) still go through Secret Manager for consistency, not
+      # because they're sensitive when empty.
       #
       # `flags` wires up the two GCP-specific connections (DECISIONS.md
       # "Postgres + Redis + web de Google Cloud'a taşındı"):
@@ -116,9 +116,6 @@ jobs:
             Jwt__SigningKey=afterapply-jwt-signing-key:latest
             Sentry__Dsn=afterapply-sentry-dsn:latest
             OpenAI__ApiKey=afterapply-openai-api-key:latest
-            GoogleOAuth__ClientId=afterapply-google-oauth-client-id:latest
-            GoogleOAuth__ClientSecret=afterapply-google-oauth-client-secret:latest
-            GoogleOAuth__RedirectUri=afterapply-google-oauth-redirect-uri:latest
             Cors__AllowedOrigins__0=afterapply-web-origin:latest
 
   deploy-web:

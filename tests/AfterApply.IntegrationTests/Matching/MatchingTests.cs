@@ -22,8 +22,8 @@ using Testcontainers.Redis;
 namespace AfterApply.IntegrationTests.Matching;
 
 // No real OpenAI API key is used here — a FakeJobMatchingProvider is registered in place of the
-// real OpenAiJobMatchingProvider (same approach as EmailIntegrationTests/FakeGmailClient for
-// Phase 9). Covers the profile CRUD, the cache/recompute decision in JobMatchingService, and
+// real OpenAiJobMatchingProvider (same approach as EmailForwardingTests/FakeEmailClassificationProvider).
+// Covers the profile CRUD, the cache/recompute decision in JobMatchingService, and
 // ownership/validation error paths.
 public class MatchingTests : IAsyncLifetime
 {

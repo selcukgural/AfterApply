@@ -209,13 +209,8 @@ path above), a walkthrough of the main flows:
 6. **Privacy page**: `/privacy` — static page, linked from the register
    consent checkbox.
 7. **Settings**: `/settings` (requires login) — account data export
-   (download), account deletion (asks for password), and the "E-posta
-   Entegrasyonu" (Gmail) card.
-8. **Gmail integration** (needs real `GoogleOAuth` credentials — see
-   below; with placeholders, "Gmail Bağla" should show a clear
-   validation error instead of crashing): connect an account, wait for
-   (or trigger) a sync, then check `/settings/email-suggestions` for
-   pending suggestions and try Confirm/Dismiss.
+   (download), account deletion (asks for password), and the "Mail
+   Forwarding" card (behind `EmailForwarding:Enabled`, off by default).
 
 For API-only smoke testing without the frontend, see the `curl` examples
 under "Trying the API" above, plus `GET /health` and (Development only)
@@ -231,57 +226,12 @@ In the container environment, they're supplied as `ConnectionStrings__Postgres`
 If unset, the API fails fast on startup with an explanatory error instead of
 silently connecting to the wrong database.
 
-`GoogleOAuth:ClientId`/`ClientSecret`/`RedirectUri` (Gmail integration, see
-below) are **not** fail-fast — the app runs fine with the placeholder values
-in `appsettings.json`; only the `/api/email-integrations/gmail/connect`
-endpoint returns a clear error until real credentials are supplied.
-
 `CompanyIntelligence:Enabled` defaults to `false` — the aggregation pipeline
 (cross-user company-level Response/Ghosting/Interview/Offer Rate, gated by a
 sample-size confidence bucket) is implemented and integration-tested, but
 kept switched off until enough real usage exists to make it meaningful; see
 `DECISIONS.md`'s Sprint 10 entry. While disabled, every
 `/api/company-intelligence/*` endpoint returns `404` for all callers.
-
-## Gmail Integration Setup
-
-Phase 9 (post-MVP) lets a user connect their Gmail account (read-only) so
-e-kariyerim can suggest status updates from hiring-related emails — see
-`ekariyerim-intelligence-platform-plan.md` §10 and `DECISIONS.md`'s Phase 9
-entry for the design. The code ships with obvious placeholder OAuth
-credentials (`GoogleOAuth:ClientId`/`ClientSecret` in `appsettings.json`) —
-the feature is structurally complete but inert until you supply real ones
-from your own Google Cloud project:
-
-1. In [Google Cloud Console](https://console.cloud.google.com/), create or
-   select a project, then enable the **Gmail API** under APIs & Services.
-2. Configure the **OAuth consent screen**: User type **External** is fine for
-   personal/private-beta use. Keep the publishing status as **Testing** —
-   this avoids Google's manual verification review, which sensitive scopes
-   like `gmail.readonly` would otherwise require for a "Production" app.
-   Testing mode is capped at a small, fixed list of test users, so add your
-   own Google account (and anyone else who'll use this instance) explicitly
-   under "Test users" on the consent screen.
-3. Add the required scope on the consent screen's scopes list:
-   `https://www.googleapis.com/auth/gmail.readonly`.
-4. Create an **OAuth 2.0 Client ID** (application type: **Web application**).
-   Add your `GoogleOAuth:RedirectUri` value (default:
-   `http://localhost:5151/api/email-integrations/gmail/callback`) as an
-   **Authorized redirect URI** — it must match byte-for-byte.
-5. Set the real values locally via user-secrets (never commit real
-   credentials into `appsettings.json`):
-   ```bash
-   dotnet user-secrets set "GoogleOAuth:ClientId" "<your client id>" --project src/AfterApply.Api
-   dotnet user-secrets set "GoogleOAuth:ClientSecret" "<your client secret>" --project src/AfterApply.Api
-   ```
-   For the container/prod profile, use the `GOOGLE_OAUTH_CLIENT_ID`/
-   `GOOGLE_OAUTH_CLIENT_SECRET`/`GOOGLE_OAUTH_REDIRECT_URI` variables in
-   `.env.prod` (see `DEPLOYMENT.md`).
-
-No automated test exercises the real Gmail API (see `DECISIONS.md` — the
-sync/classification/matching logic is tested against a fake `IGmailClient`
-instead); once real credentials are in place, connect a Gmail account from
-`/settings` in the frontend as a manual smoke test.
 
 ## AI Job Matching Setup
 
