@@ -373,10 +373,12 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
   Cloud Run'a Workload Identity Federation ile deploy ediyor (statik
   JSON key yok). `deploy-backend`'in `flags:`'ine
   `--add-cloudsql-instances=...`/`--network=default`/`--subnet=default`
-  eklendi (Cloud SQL + Memorystore bağlantısı için). Bilinçli olarak
-  `workflow_dispatch`-only (GCP kaynakları henüz yok, `push: main`
-  yorumda bekliyor — DEPLOYMENT.md "Sprint 13: real cloud deployment"
-  bölümünde hesap kurulumundan ilk deploy'a kadar tüm adımlar var).
+  eklendi (Cloud SQL + Memorystore bağlantısı için). `push: main`'de
+  otomatik ama seçici deploy oluyor (2026-09-01) — `dorny/paths-filter`
+  ile hangi taraf değiştiyse sadece o job çalışıyor; `workflow_dispatch`
+  ise `target` input'uyla (`backend`/`web`/`both`) manuel/zorunlu
+  redeploy için duruyor. DEPLOYMENT.md "Sprint 13: real cloud deployment"
+  bölümünde hesap kurulumundan ilk deploy'a kadar tüm adımlar var.
 - Son privacy/legal review (ToS, KVKK/GDPR self-review — hukuki onay
   gerektirir, bu doküman hukuki tavsiye değildir) — sadece checklist
   maddesi olarak tutuluyor, bu planda detaylandırılmıyor

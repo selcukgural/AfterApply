@@ -236,27 +236,23 @@ In GitHub → repo Settings → Secrets and variables → Actions, add:
 - Optional, only if you want readable stack traces in Sentry:
   `SENTRY_ORG`, `SENTRY_PROJECT_WEB`, `SENTRY_AUTH_TOKEN`
 
-`.github/workflows/deploy.yml` has two independent jobs,
-`deploy-backend` and `deploy-web` (both `workflow_dispatch`-only on
-purpose — see the file's own comment). Run them **in this order**, since
-`deploy-web`'s build needs `deploy-backend`'s URL baked in, and closing
-the CORS loop needs `deploy-web`'s URL in turn:
-
-GitHub Actions doesn't support running a single job out of a
-`workflow_dispatch`-triggered workflow — running `deploy.yml` as-is
-triggers both jobs together, but `deploy-web` will fail the first time
-(`GCP_API_URL` doesn't exist yet). That's fine, it's a one-time
-bootstrap wrinkle:
+`.github/workflows/deploy.yml` has two independent jobs, `deploy-backend`
+and `deploy-web`, each deployable on its own via the `target` input
+(`backend` / `web` / `both`) on a manual `workflow_dispatch`, or
+automatically on a push to `main` that touches only that side's paths (see
+the file's own comment for the path-filter details). For the very first
+deploy, run them **in this order**, since `deploy-web`'s build needs
+`deploy-backend`'s URL baked in, and closing the CORS loop needs
+`deploy-web`'s URL in turn:
 
 ```bash
-# 1. First run: comment out the `deploy-web:` job in deploy.yml (or just
-#    let it fail — deploy-backend still succeeds independently), then:
-gh workflow run deploy.yml
+# 1. First run: deploy-backend only.
+gh workflow run deploy.yml -f target=backend
 gcloud run services describe afterapply-api --region="$REGION" --format='value(status.url)'
-# → add this URL as the GCP_API_URL GitHub secret; restore deploy-web if you commented it out.
+# → add this URL as the GCP_API_URL GitHub secret.
 
-# 2. Second run: now both jobs succeed. Note the web URL:
-gh workflow run deploy.yml
+# 2. Second run: deploy-web only. Note the web URL:
+gh workflow run deploy.yml -f target=web
 gcloud run services describe afterapply-web --region="$REGION" --format='value(status.url)'
 
 # 3. Close the CORS loop with the real web URL, then redeploy the API.
@@ -267,7 +263,8 @@ gcloud run services update afterapply-api --region="$REGION" \
 ```
 
 This is only a one-time bootstrap cost — every deploy after this, both
-jobs already have what they need.
+jobs already have what they need, and pushes to `main` deploy each side
+independently based on what actually changed.
 
 ### 5. Make the services public
 
@@ -411,8 +408,14 @@ Once the domain is live, update `NEXT_PUBLIC_API_BASE_URL`
 (`afterapply-web-origin` secret) from the raw `*.run.app` URLs to the
 custom domain, then redeploy both services.
 
-### 9. Switching CI from manual to automatic
+### 9. Automatic deploys, and forcing a manual one
 
-Once the above is verified working end-to-end once, uncomment the
-`push: branches: [main]` trigger in `deploy.yml` (currently commented
-out on purpose) to deploy automatically going forward.
+`deploy.yml` runs on every push to `main` and deploys only the side(s)
+whose paths changed (a `src/**` change deploys just the API, a `web/**`
+change deploys just the frontend, a change touching both deploys both) —
+see DECISIONS.md 2026-09-01 for why. To force a redeploy with no code
+change (e.g. after rotating a secret), dispatch it manually:
+
+```bash
+gh workflow run deploy.yml -f target=backend  # or web, or both
+```

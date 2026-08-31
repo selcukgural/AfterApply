@@ -2003,6 +2003,37 @@ deploy'u gerektirmesin.
   `EmailIntelligenceOptions`'a bağlı (mevcut `RuleBasedEmailClassifierTests` konvansiyonuyla
   tutarlı, dosya-yolu kırılganlığından kaçınmak için appsettings.json'u diskten okumak yerine).
 
+## Deploy pipeline: backend ve web artık bağımsız deploy edilebiliyor (2026-09-01)
+
+**Sorun (kullanıcı bulgusu):** `deploy.yml`'in tek `workflow_dispatch: {}` tetikleyicisi hem
+`deploy-backend` hem `deploy-web` job'ını birlikte çalıştırıyordu — GitHub Actions
+workflow_dispatch'ten tek bir job çalıştırmayı desteklemiyor. Gerçekte değişikliklerin büyük
+çoğunluğu sadece bir tarafta oluyor (ya backend ya web), bu yüzden her dispatch'te değişmeyen
+tarafın da gereksiz yere image build edip yeniden deploy olması zaman kaybıydı ve ilgisiz bir
+image'ın prod'a gitmesi anlamına geliyordu.
+
+**Karar:** Sprint 13'ün "workflow_dispatch-only, bilinçli" kararı (bkz. yukarıdaki "Sprint 13
+kararları ve bulguları") artık geçerli değil — o karar GCP kaynaklarının henüz var olmamasına
+dayanıyordu, ama gerçek deploy (Sprint 13 — gerçek deploy, 2026-08-26) o günden beri uçtan uca
+doğrulanmış durumda. Bu kararı iki değişiklikle değiştiriyoruz:
+
+1. **`push: branches: [main]` artık açık** (DEPLOYMENT.md "9. Switching CI from manual to
+   automatic"'in öngördüğü adım) — ama koşulsuz değil: yeni bir `plan` job'ı
+   `dorny/paths-filter@v3` ile (repo'da zaten `slack-pr-notify.yml`'in kullandığı desenin aynısı)
+   hangi tarafın path'lerinin değiştiğine bakıyor, `contract-check`/`deploy-backend`/`deploy-web`
+   sadece ilgili taraf değiştiyse çalışıyor.
+2. **`workflow_dispatch` artık bir `target` input'u alıyor** (`both`/`backend`/`web`, varsayılan
+   `both`) — kod değişikliği olmadan (ör. secret rotation sonrası) tek bir tarafı veya ikisini
+   birden zorla redeploy etmek için.
+
+`deploy-web`'in `deploy-backend`'e `needs` bağımlılığı hâlâ yok (daha önce de yoktu) — `GCP_API_URL`
+statik bir secret olduğu için iki job zaten bağımsız, sıralama sadece ilk bootstrap deploy'unda
+önemli (DEPLOYMENT.md "4. GitHub repo secrets and first deploy").
+
+**Değişmeyenler:** `contract-check`'in kendisi (Postman koleksiyonu, migration adımı, image
+build mantığı) hiçbiri değişmedi — sadece hangi job'ların çalışıp çalışmayacağı artık `plan`
+job'unun çıktısına bağlı.
+
 ---
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)

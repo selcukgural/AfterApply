@@ -1,16 +1,24 @@
 name: Deploy (Cloud Run)
 
-# Sprint 13 (DECISIONS.md "5. Cloud provider"): manual trigger only, on
-# purpose — the GCP project/Artifact Registry/Cloud Run services/Cloud
-# SQL/Memorystore/Secret Manager secrets referenced below don't exist
-# yet. Flip to `push: main` once the one-time setup in DEPLOYMENT.md is
-# done; until then this workflow simply isn't runnable (workflow_dispatch
-# will fail loudly on missing secrets/resources, which is fine — it
-# won't block CI on every commit).
+# A push to main auto-deploys only the side(s) whose paths actually changed
+# (see the `plan` job's paths-filter, same filters as
+# slack-pr-notify.yml's `backend` list plus a `web` one) — most changes only
+# touch one side, so redeploying the other unconditionally was wasted build
+# time. `workflow_dispatch` still exists for manual/forced redeploys (e.g.
+# after a secret rotation with no code change) via the `target` input.
+# DECISIONS.md 2026-09-01 has the full rationale; supersedes Sprint 13's
+# "workflow_dispatch-only on purpose" decision now that the GCP infra is
+# live and verified end-to-end.
 on:
-  workflow_dispatch: {}
-  # push:
-  #   branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which side(s) to deploy
+        type: choice
+        options: [both, backend, web]
+        default: both
 
 permissions:
   id-token: write # Workload Identity Federation — no long-lived JSON key stored in secrets
@@ -22,14 +30,58 @@ env:
   AR_REPOSITORY: afterapply
 
 jobs:
+  # Decides which side(s) should deploy: on a push, diff the paths that changed; on a manual
+  # dispatch, the `target` input states intent directly, no diffing needed.
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.decide.outputs.backend }}
+      web: ${{ steps.decide.outputs.web }}
+    steps:
+      - uses: actions/checkout@v5
+        if: github.event_name == 'push'
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            backend:
+              - 'src/**'
+              - 'tests/**'
+              - 'AfterApply.slnx'
+              - 'Directory.Build.props'
+              - 'Directory.Packages.props'
+              - 'global.json'
+            web:
+              - 'web/**'
+
+      - id: decide
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            [ "$TARGET" = "backend" ] || [ "$TARGET" = "both" ] && backend=true || backend=false
+            [ "$TARGET" = "web" ] || [ "$TARGET" = "both" ] && web=true || web=false
+          else
+            backend="${{ steps.filter.outputs.backend }}"
+            web="${{ steps.filter.outputs.web }}"
+          fi
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
+
   # Re-verifies the API against its own Postman collection right before deploying — a second,
   # independent gate from ci.yml's own call to the same reusable workflow, since this workflow
-  # can be dispatched against any commit/branch, not just one CI already passed on.
+  # can be dispatched against any commit/branch, not just one CI already passed on. Skipped
+  # entirely when neither side is deploying (e.g. a docs-only push to main).
   contract-check:
+    needs: plan
+    if: needs.plan.outputs.backend == 'true' || needs.plan.outputs.web == 'true'
     uses: ./.github/workflows/api-contract.yml
 
   deploy-backend:
-    needs: contract-check
+    needs: [plan, contract-check]
+    if: needs.plan.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -120,7 +172,8 @@ jobs:
             Cors__AllowedOrigins__0=afterapply-web-origin:latest
 
   deploy-web:
-    needs: contract-check
+    needs: [plan, contract-check]
+    if: needs.plan.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
