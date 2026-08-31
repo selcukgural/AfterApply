@@ -7,6 +7,7 @@ using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Application.Localization;
 using AfterApply.Infrastructure;
 using AfterApply.Infrastructure.EmailIntegrations;
+using Hangfire;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 
@@ -48,12 +49,18 @@ public static class EmailForwardingEndpoints
         // Called by the Cloudflare Email Worker, not by clients — anonymous at the ASP.NET Core
         // auth-middleware level (the Worker holds no user JWT), authenticated instead by the
         // X-Webhook-Secret header checked in the filter below. Rate-limited per inbound token
-        // (see RateLimiting.cs) since each request can trigger a paid LLM classification call.
-        group.MapPost("/inbound", async (InboundEmailWebhookRequest request, IEmailForwardingService service, CancellationToken cancellationToken) =>
+        // (see RateLimiting.cs) since each accepted request enqueues a job that can trigger a paid
+        // LLM classification call.
+        //
+        // Enqueued via Hangfire rather than awaited inline: the actual work (classification/
+        // extraction) can call OpenAI, and the Worker's own fetch() has no retry of its own (see
+        // email-worker/src/index.js) — Hangfire's automatic-retry gives that resilience for free,
+        // and the Worker no longer has to wait out an LLM round-trip to get its 204.
+        group.MapPost("/inbound", (InboundEmailWebhookRequest request, IBackgroundJobClient jobClient) =>
             {
-                await service.ProcessInboundEmailAsync(new InboundEmailRequest(
+                jobClient.Enqueue<IEmailForwardingService>(s => s.ProcessInboundEmailAsync(new InboundEmailRequest(
                     request.To, request.From, request.FromName ?? request.From, request.Subject ?? "",
-                    request.Snippet ?? "", request.ReceivedAt ?? DateTimeOffset.UtcNow), cancellationToken);
+                    request.Snippet ?? "", request.ReceivedAt ?? DateTimeOffset.UtcNow), CancellationToken.None));
                 return Results.NoContent();
             })
             .AddEndpointFilter(async (context, next) =>

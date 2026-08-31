@@ -186,6 +186,7 @@ public class EmailForwardingTests : IAsyncLifetime
         var response = await unauthenticatedClient.SendAsync(request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await WaitForHangfireIdleAsync();
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -215,6 +216,7 @@ public class EmailForwardingTests : IAsyncLifetime
         var unauthenticatedClient = _factory!.CreateClient();
         var response = await unauthenticatedClient.SendAsync(request);
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await WaitForHangfireIdleAsync();
 
         var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
         var suggestions = suggestionsResponse.EnumerateArray().ToList();
@@ -236,6 +238,7 @@ public class EmailForwardingTests : IAsyncLifetime
             Headers = { { "X-Webhook-Secret", WebhookSecret } }
         });
         replay.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await WaitForHangfireIdleAsync();
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -612,7 +615,40 @@ public class EmailForwardingTests : IAsyncLifetime
         request.Headers.Add("X-Webhook-Secret", WebhookSecret);
 
         var unauthenticatedClient = _factory!.CreateClient();
-        return await unauthenticatedClient.SendAsync(request);
+        var response = await unauthenticatedClient.SendAsync(request);
+        await WaitForHangfireIdleAsync();
+        return response;
+    }
+
+    // Processing runs out-of-request via a Hangfire job now (see EmailForwardingEndpoints.cs) —
+    // the POST only ever enqueues and returns 204 immediately. Every assertion that depends on
+    // classification/extraction side effects (including a "this must NOT have happened" assertion,
+    // where there's nothing else to poll for) must wait for that job to actually finish first.
+    // Queried straight from Hangfire's own Postgres tables (same _postgres container AppDbContext
+    // uses) rather than resolved JobStorage/IMonitoringApi from DI: this test class spins up a
+    // second factory (_disabledFactory) whose own AddHangfire call sets the same process-wide
+    // JobStorage.Current static, so resolving JobStorage from _factory's container isn't guaranteed
+    // to actually be _factory's own storage.
+    private async Task WaitForHangfireIdleAsync()
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < deadline)
+        {
+            using var scope = _factory!.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var pending = await db.Database
+                .SqlQueryRaw<int>("SELECT COUNT(*)::int AS \"Value\" FROM hangfire.job WHERE statename IN ('Enqueued', 'Processing')")
+                .SingleAsync();
+
+            if (pending == 0)
+            {
+                return;
+            }
+
+            await Task.Delay(50);
+        }
+
+        throw new TimeoutException("Hangfire did not finish processing the enqueued inbound-email job within 30s.");
     }
 
     private async Task<string> GetOwnAddressAsync()
