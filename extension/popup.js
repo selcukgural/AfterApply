@@ -370,6 +370,7 @@ function setUpCompanyAutocomplete(settings) {
 
 async function main() {
   setUpThemeToggle("themeToggle");
+  document.getElementById("openOptionsBtn")?.addEventListener("click", () => chrome.runtime.openOptionsPage());
   const settings = await getSettings();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
