@@ -55,6 +55,10 @@ public class EmailForwardingTests : IAsyncLifetime
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("EmailForwarding:Enabled", "true");
             builder.UseSetting("EmailForwarding:WebhookSecret", WebhookSecret);
+            // Explicit, not relying on appsettings.json's own curated list — this suite's
+            // "known job board domain" tests must stay deterministic regardless of what that list
+            // contains in production.
+            builder.UseSetting("JobBoardDomains:Domains:0", "linkedin.com");
 
             builder.ConfigureServices(services =>
             {
@@ -415,6 +419,22 @@ public class EmailForwardingTests : IAsyncLifetime
 
         var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
         suggestionsResponse.EnumerateArray().Count().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Inbound_SubdomainOfKnownJobBoardDomain_Unmatched_NonRuleText_Still_Calls_Llm()
+    {
+        var address = await GetOwnAddressAsync();
+        // "linkedin.com" is the configured JobBoardDomains:Domains entry (see InitializeAsync) —
+        // a job-board vendor subdomain must still match via IJobBoardDomainMatcher's suffix check.
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.9, "Llm:Interview");
+        _fakeExtractionProvider.Result = new EmailJobExtractionResult("New Co Via LinkedIn", "Engineer", null, null);
+
+        var response = await SendInboundAsync(address, "jobs-noreply@notifications.linkedin.com", "LinkedIn",
+            "Your application status changed", "There's an update on your recent application.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeClassificationProvider.CallCount.ShouldBe(1);
     }
 
     [Fact]

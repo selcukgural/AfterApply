@@ -74,6 +74,7 @@ public static class DependencyInjection
         services.Configure<ImportOptions>(configuration.GetSection("Imports"));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
+        services.Configure<JobBoardDomainsOptions>(configuration.GetSection("JobBoardDomains"));
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
         services.Configure<MatchingOptions>(configuration.GetSection("Matching"));
@@ -236,6 +237,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();
         services.AddScoped<IEmailJobExtractionProvider, OpenAiEmailJobExtractionProvider>();
         services.AddScoped<IEmailForwardingService, EmailForwardingService>();
+        services.AddSingleton<IJobBoardDomainMatcher, JobBoardDomainMatcher>();
         services.AddScoped<IJobMatchingProvider, OpenAiJobMatchingProvider>();
         services.AddScoped<IJobMatchingService, JobMatchingService>();
         services.AddScoped<ICompanyIntelligenceService, CompanyIntelligenceService>();

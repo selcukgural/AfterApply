@@ -21,6 +21,7 @@ internal sealed partial class EmailForwardingService(
     IEmailClassificationProvider emailClassificationProvider,
     IEmailJobExtractionProvider emailJobExtractionProvider,
     IApplicationService applicationService,
+    IJobBoardDomainMatcher jobBoardDomainMatcher,
     IOptions<EmailForwardingOptions> options,
     ILogger<EmailForwardingService> logger) : IEmailForwardingService
 {
@@ -114,7 +115,7 @@ internal sealed partial class EmailForwardingService(
         // filter — see DECISIONS.md), an unmatched sender on an unrecognized domain isn't worth an
         // LLM call: the free rule-based pass below still runs on it regardless, so a genuinely new
         // company using recognizable phrasing (interview/rejection/still-waiting) is still caught.
-        var isKnownSender = applicationId is not null || JobBoardDomains.IsKnown(senderDomain);
+        var isKnownSender = applicationId is not null || jobBoardDomainMatcher.IsKnown(senderDomain);
 
         var classification = await ClassifyAsync(request.Subject, request.Snippet, isKnownSender, cancellationToken);
         if (classification.SuggestedStatus is null && classification.MatchedRule != "StillWaiting")
