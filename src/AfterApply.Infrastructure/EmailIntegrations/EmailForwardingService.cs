@@ -28,12 +28,13 @@ internal sealed class EmailForwardingService(
     private const int TokenLength = 12;
 
     // Gmail's real sender/subject for its own forwarding-confirmation email — narrow allowlist
-    // (both must match) so this can never misfire on a real recruiter email. The subject prefix is
-    // the one detail not verified against a live test email; confirm/tighten it the first time a
-    // real one arrives (see DECISIONS.md / plan notes).
-    // TODO: verify against a real Gmail confirmation email before relying on this in production.
+    // (both must match) so this can never misfire on a real recruiter email. Verified against a
+    // live confirmation email (2026-08-31): From is exactly forwarding-noreply@google.com; Subject
+    // is literally "(Gmail Forwarding Confirmation - Receive Mail from <address>" — Gmail's own
+    // subject starts with an unmatched "(" (confirmed via base64-dumped wrangler tail output, not a
+    // logging/encoding artifact), so this checks Contains rather than StartsWith.
     private const string GmailConfirmationSenderEmail = "forwarding-noreply@google.com";
-    private const string GmailConfirmationSubjectPrefix = "Gmail Forwarding Confirmation";
+    private const string GmailConfirmationSubjectMarker = "Gmail Forwarding Confirmation";
 
     private static readonly Regex GmailConfirmationCodeRegex = new(@"\b(\d{6,8})\b", RegexOptions.Compiled);
     private static readonly Regex GmailConfirmationLinkRegex = new(@"https?://\S*google\.com\S*", RegexOptions.Compiled);
@@ -281,7 +282,7 @@ internal sealed class EmailForwardingService(
 
     private static bool IsGmailForwardingConfirmation(string fromEmail, string subject) =>
         string.Equals(fromEmail.Trim(), GmailConfirmationSenderEmail, StringComparison.OrdinalIgnoreCase) &&
-        subject.TrimStart().StartsWith(GmailConfirmationSubjectPrefix, StringComparison.OrdinalIgnoreCase);
+        subject.Contains(GmailConfirmationSubjectMarker, StringComparison.OrdinalIgnoreCase);
 
     private static string? ExtractGmailConfirmationCode(string snippet)
     {

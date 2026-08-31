@@ -32,11 +32,6 @@ export default {
       receivedAt,
     };
 
-    // TEMPORARY — verifying EmailForwardingService's Gmail forwarding-confirmation detection
-    // (GmailConfirmationSenderEmail/GmailConfirmationSubjectPrefix) against a real confirmation
-    // email. Remove this line once confirmed (see wrangler tail output).
-    console.log("VERIFY_GMAIL_CONFIRMATION", JSON.stringify({ from: message.from, subject }));
-
     let response;
     try {
       response = await fetch(env.INBOUND_WEBHOOK_URL, {

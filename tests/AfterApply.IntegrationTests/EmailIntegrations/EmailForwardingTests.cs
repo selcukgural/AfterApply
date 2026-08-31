@@ -420,7 +420,7 @@ public class EmailForwardingTests : IAsyncLifetime
         var address = await GetOwnAddressAsync();
 
         var response = await SendInboundAsync(address, "forwarding-noreply@google.com", "Gmail Team",
-            $"Gmail Forwarding Confirmation - Receive Mail from {address}",
+            $"(Gmail Forwarding Confirmation - Receive Mail from {address}",
             "Confirmation code: 482913. Or click here to confirm: https://mail-settings.google.com/mail/vf-abc123");
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
@@ -440,10 +440,10 @@ public class EmailForwardingTests : IAsyncLifetime
         var address = await GetOwnAddressAsync();
 
         await SendInboundAsync(address, "forwarding-noreply@google.com", "Gmail Team",
-            $"Gmail Forwarding Confirmation - Receive Mail from {address}",
+            $"(Gmail Forwarding Confirmation - Receive Mail from {address}",
             "Confirmation code: 111111. Or click here to confirm: https://mail-settings.google.com/mail/vf-first");
         var resend = await SendInboundAsync(address, "forwarding-noreply@google.com", "Gmail Team",
-            $"Gmail Forwarding Confirmation - Receive Mail from {address}",
+            $"(Gmail Forwarding Confirmation - Receive Mail from {address}",
             "Confirmation code: 222222. Or click here to confirm: https://mail-settings.google.com/mail/vf-second");
         resend.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
@@ -457,7 +457,7 @@ public class EmailForwardingTests : IAsyncLifetime
     {
         var address = await GetOwnAddressAsync();
         await SendInboundAsync(address, "forwarding-noreply@google.com", "Gmail Team",
-            $"Gmail Forwarding Confirmation - Receive Mail from {address}",
+            $"(Gmail Forwarding Confirmation - Receive Mail from {address}",
             "Confirmation code: 333333. Or click here to confirm: https://mail-settings.google.com/mail/vf-third");
 
         var dismissResponse = await _client.PostAsync("/api/email-forwarding/gmail-confirmation/dismiss", null);
