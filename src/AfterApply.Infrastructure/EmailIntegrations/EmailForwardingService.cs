@@ -16,7 +16,7 @@ using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.EmailIntegrations;
 
-internal sealed class EmailForwardingService(
+internal sealed partial class EmailForwardingService(
     AppDbContext dbContext,
     IEmailClassificationProvider emailClassificationProvider,
     IEmailJobExtractionProvider emailJobExtractionProvider,
@@ -35,9 +35,9 @@ internal sealed class EmailForwardingService(
     // logging/encoding artifact), so this checks Contains rather than StartsWith.
     private const string GmailConfirmationSenderEmail = "forwarding-noreply@google.com";
     private const string GmailConfirmationSubjectMarker = "Gmail Forwarding Confirmation";
-
-    private static readonly Regex GmailConfirmationCodeRegex = new(@"\b(\d{6,8})\b", RegexOptions.Compiled);
-    private static readonly Regex GmailConfirmationLinkRegex = new(@"https?://\S*google\.com\S*", RegexOptions.Compiled);
+    
+    private static readonly Regex GmailConfirmationCodeRegex = GmailConfirmationCode_Regex();
+    private static readonly Regex GmailConfirmationLinkRegex = GmailConfirmationLink_Regex();
 
     public async Task<InboundAddressResponse> GetOrCreateInboundAddressAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -337,4 +337,9 @@ internal sealed class EmailForwardingService(
             ? email[(atIndex + 1)..].Trim().ToLowerInvariant()
             : null;
     }
+
+    [GeneratedRegex(@"\b(\d{6,8})\b", RegexOptions.Compiled)]
+    private static partial Regex GmailConfirmationCode_Regex();
+    [GeneratedRegex(@"https?://\S*google\.com\S*", RegexOptions.Compiled)]
+    private static partial Regex GmailConfirmationLink_Regex();
 }

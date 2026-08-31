@@ -1857,6 +1857,46 @@ işiyle birlikte düzeltildi.
 
 ---
 
+## Email forwarding kullanıcıya açıldı: eklenti rehberi + Gmail onay akışı (2026-08-31)
+
+`EmailForwarding:Enabled` `true` yapıldı — özellik artık production'da canlı. Bununla birlikte
+eklentiye iki dilli (TR/EN) adım adım bir kurulum rehberi eklendi (`extension/email-forwarding.html`/
+`.js`), backend'e Gmail'in kendi yönlendirme-onay mailini tanıyıp kullanıcıya geri gösteren bir akış
+eklendi (`EmailConnection.GmailConfirmationCode`/`Link`, `GET /api/email-forwarding/address`,
+`POST .../gmail-confirmation/dismiss`), ve store listing (LISTING.md, ekran görüntüleri) güncellendi.
+
+**Gerçek trafikle iki bulgu — ikisi de düzeltildi, uçtan uca doğrulandı:**
+
+1. **Subject eşleşmesi `StartsWith` değil `Contains` olmalıydı.** Gmail'in gerçek onay mailinin
+   `From`'u tahmin edildiği gibi tam olarak `forwarding-noreply@google.com`, ama `Subject`'i
+   `"(Gmail Forwarding Confirmation - Receive Mail from <adres>"` şeklinde — başında eşleşmeyen bir
+   `(` karakteriyle geliyor (bir loglama/encoding artifact'ı değil, `wrangler tail`'de base64 dump
+   ile doğrulandı). `subject.TrimStart().StartsWith(...)` bu yüzden hiçbir zaman eşleşmiyordu,
+   gerçek onay mailleri sessizce normal sınıflandırmadan geçip düşüyordu.
+   `EmailForwardingService.IsGmailForwardingConfirmation`, `subject.Contains(...)`'e çevrildi.
+
+2. **Cloudflare tarafında routing yanlış yapılandırılmıştı — kod değil, altyapı sorunu.**
+   `application.ekariyerim.com` zone'unun catch-all kuralı **disabled** (action: drop) durumdaydı —
+   yani `test@...` dışındaki hiçbir adrese (gerçek kullanıcı token'ları dahil) gelen mail worker'a
+   hiç ulaşmıyordu. Ayrıca var olan tek spesifik kural (`test@application.ekariyerim.com`) gerçek
+   `ekariyerim-email-worker`'a değil, bu repoda hiç bulunmayan, önceki bir POC'tan kalma
+   `application-inbound-poc` adlı ayrı bir worker'a yönlendiriyordu (kodu incelendi: sadece
+   header'ları loglayıp maili doğrudan kullanıcının kendi Gmail'ine forward ediyor — production
+   sistemle hiçbir ilgisi yok). Cloudflare dashboard'dan catch-all → `ekariyerim-email-worker`
+   olarak düzeltildi, gölgeleyen eski spesifik kural silindi. Bu, README.md'nin "one-time setup"
+   olarak belgelediği adımın hiç tam yapılmamış/güncellenmemiş olduğunu gösteriyor — ileride yeni
+   bir domain/worker eklenirse Cloudflare dashboard'daki routing rules tablosu koddan bağımsız
+   olarak ayrıca doğrulanmalı.
+
+Doğrulama yöntemi: `email-worker/src/index.js`'e geçici bir `console.log` eklenip
+(`wrangler deploy`), gerçek bir Gmail hesabından "Add a forwarding address" tetiklenip
+`wrangler tail` ile ham `From`/`Subject` yakalandı (ilk denemede base64 encode edilerek, terminal/
+JSON formatlamadan kaynaklanabilecek belirsizliği tamamen ortadan kaldırmak için). Düzeltme sonrası
+gerçek bir onay maili ile tam uçtan uca doğrulandı: web Ayarlar sayfasındaki "Mail Yönlendirme"
+kartında onay kodu/linki doğru göründü, linke tıklanarak Gmail'de forwarding onaylandı.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
