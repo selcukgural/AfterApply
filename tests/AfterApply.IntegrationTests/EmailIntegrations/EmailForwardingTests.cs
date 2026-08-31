@@ -361,6 +361,94 @@ public class EmailForwardingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inbound_Unknown_Domain_Unmatched_RuleBased_Signal_Creates_Suggestion_Without_Calling_Llm()
+    {
+        var address = await GetOwnAddressAsync();
+        // No CreateApplicationAsync call, and acme-unknown-test.com is neither an existing
+        // application's company domain nor on JobBoardDomains — "Interview invitation" is still a
+        // RuleBasedEmailClassifier hit, so the LLM classifier must never be reached.
+        _fakeExtractionProvider.Result = new EmailJobExtractionResult("Acme Unknown", "Engineer", null, null);
+
+        var response = await SendInboundAsync(address, "recruiter@acme-unknown-test.com", "Acme Unknown Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeClassificationProvider.CallCount.ShouldBe(0);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        suggestionsResponse.EnumerateArray().Count().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Inbound_Unknown_Domain_Unmatched_NonRuleText_Never_Calls_Llm()
+    {
+        var address = await GetOwnAddressAsync();
+        // Unrecognized domain, no application match, and text that doesn't hit
+        // RuleBasedEmailClassifier's phrase table — the LLM classifier must be skipped entirely,
+        // not just its result ignored, since avoiding this call is the actual cost/privacy point
+        // of the allow-list (see DECISIONS.md / plan for the domain allow-list feature).
+        var response = await SendInboundAsync(address, "someone@random-personal-test.com", "Someone",
+            "Weekend plans", "Are we still on for Saturday?");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeClassificationProvider.CallCount.ShouldBe(0);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Inbound_KnownJobBoardDomain_Unmatched_NonRuleText_Still_Calls_Llm()
+    {
+        var address = await GetOwnAddressAsync();
+        // linkedin.com is on the static JobBoardDomains list — even with no application match and
+        // text outside the rule table, the LLM classifier should still be given a chance.
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.9, "Llm:Interview");
+        _fakeExtractionProvider.Result = new EmailJobExtractionResult("New Co Via LinkedIn", "Engineer", null, null);
+
+        var response = await SendInboundAsync(address, "jobs-noreply@linkedin.com", "LinkedIn",
+            "Your application status changed", "There's an update on your recent application.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeClassificationProvider.CallCount.ShouldBe(1);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        suggestionsResponse.EnumerateArray().Count().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Inbound_MatchedApplicationDomain_NonRuleText_Still_Calls_Llm()
+    {
+        var address = await GetOwnAddressAsync();
+        var applicationId = await CreateApplicationAsync("Website Match Co");
+
+        using (var scope = _factory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
+            var company = await db.Companies.SingleAsync(c => c.Id == application.CompanyId);
+            company.EnrichFrom("https://website-match-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.9, "Llm:Interview");
+
+        // Display name deliberately does NOT carry the company name, so only the domain match
+        // (against the just-enriched Company.Website) can find this application — proves the
+        // allow-list's per-user half stays in sync with enrichment automatically, no extra plumbing.
+        var response = await SendInboundAsync(address, "hr@website-match-test.com", "Recruiting Team",
+            "Update on your recent application", "There's news about your application.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeClassificationProvider.CallCount.ShouldBe(1);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestion = suggestionsResponse.EnumerateArray().Single();
+        suggestion.GetProperty("applicationId").GetGuid().ShouldBe(applicationId);
+    }
+
+    [Fact]
     public async Task ConfirmSuggestion_For_NewJob_Suggestion_Creates_Application_Tagged_SourceEmail()
     {
         var address = await GetOwnAddressAsync();

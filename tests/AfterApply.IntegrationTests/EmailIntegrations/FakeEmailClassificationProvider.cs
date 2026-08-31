@@ -10,6 +10,11 @@ public sealed class FakeEmailClassificationProvider : IEmailClassificationProvid
 {
     public EmailClassificationResult Result { get; set; } = new(null, 0, "Llm:NoSignal");
 
-    public Task<EmailClassificationResult> ClassifyAsync(string subject, string snippet, CancellationToken cancellationToken) =>
-        Task.FromResult(Result);
+    public int CallCount { get; private set; }
+
+    public Task<EmailClassificationResult> ClassifyAsync(string subject, string snippet, CancellationToken cancellationToken)
+    {
+        CallCount++;
+        return Task.FromResult(Result);
+    }
 }

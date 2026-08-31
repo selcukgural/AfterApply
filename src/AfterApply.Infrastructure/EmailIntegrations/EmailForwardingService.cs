@@ -108,13 +108,20 @@ internal sealed partial class EmailForwardingService(
             request.FromEmail, request.FromDisplayName, recipientEmail: "", ownAccountEmail: "",
             request.Subject, candidates);
 
-        var classification = await ClassifyAsync(request.Subject, request.Snippet, cancellationToken);
+        var senderDomain = ExtractDomain(request.FromEmail);
+
+        // Now that forwarding is all-or-nothing (the user's whole inbox, not a per-sender Gmail
+        // filter — see DECISIONS.md), an unmatched sender on an unrecognized domain isn't worth an
+        // LLM call: the free rule-based pass below still runs on it regardless, so a genuinely new
+        // company using recognizable phrasing (interview/rejection/still-waiting) is still caught.
+        var isKnownSender = applicationId is not null || JobBoardDomains.IsKnown(senderDomain);
+
+        var classification = await ClassifyAsync(request.Subject, request.Snippet, isKnownSender, cancellationToken);
         if (classification.SuggestedStatus is null && classification.MatchedRule != "StillWaiting")
         {
             return; // nothing about the email is classifiable — matched or not, there's no signal to act on
         }
 
-        var senderDomain = ExtractDomain(request.FromEmail);
         var now = DateTimeOffset.UtcNow;
 
         if (applicationId is not null)
@@ -259,12 +266,21 @@ internal sealed partial class EmailForwardingService(
         return true;
     }
 
-    private async Task<EmailClassificationResult> ClassifyAsync(string subject, string snippet, CancellationToken cancellationToken)
+    private async Task<EmailClassificationResult> ClassifyAsync(string subject, string snippet, bool isKnownSender, CancellationToken cancellationToken)
     {
         var classification = RuleBasedEmailClassifier.Classify(subject, snippet);
-        return classification.MatchedRule == "NoMatch"
-            ? await emailClassificationProvider.ClassifyAsync(subject, snippet, cancellationToken)
-            : classification;
+        if (classification.MatchedRule != "NoMatch")
+        {
+            return classification;
+        }
+
+        if (!isKnownSender)
+        {
+            logger.LogDebug("Skipping LLM classification: sender is not a known job board and doesn't match an existing application.");
+            return classification;
+        }
+
+        return await emailClassificationProvider.ClassifyAsync(subject, snippet, cancellationToken);
     }
 
     private async Task<IReadOnlyList<ApplicationMatchCandidate>> BuildCandidatesAsync(Guid userId, CancellationToken cancellationToken)
