@@ -1784,6 +1784,40 @@ find-replace değil, her sınıfın izolasyon varsayımlarının tek tek gözden
 
 ---
 
+## E-postadan yeni ilan/başvuru oluşturma (2026-08-31)
+
+`EmailForwardingService.ProcessInboundEmailAsync`, eşleşmeyen bir email için artık her zaman
+sessizce dönmüyor — kullanıcıyla netleştirilen 3 karar:
+
+1. **Öneri kuyruğu, doğrudan yazma değil.** `EmailSuggestion.ApplicationId` `Guid?` oldu; `null`
+   olan satırlar "yeni ilan önerisi" (yeni `CreateForNewJob` factory'si), non-null olanlar
+   bugünkü "mevcut başvurunun statüsünü güncelle" önerisi. `ConfirmSuggestionAsync` onaya kadar
+   hiçbir Company/Application yazmıyor — DECISIONS.md'nin "Eşleşmeyen email'ler gösterilmiyor"
+   (Phase 9) temkinliliğiyle tutarlı, sadece artık tamamen sessiz kalmak yerine kullanıcıya
+   gösterip onay istiyor.
+2. **Sadece durum sinyali taşıyan email'ler tetikler.** `EmailApplicationMatcher.Match` `null`
+   dönse bile, `RuleBasedEmailClassifier`/`IEmailClassificationProvider` bir sinyal (statü veya
+   "StillWaiting") bulamazsa hâlâ hiçbir şey oluşturulmuyor — yeni `IEmailJobExtractionProvider`
+   (ayrı bir LLM çağrısı, `OpenAiEmailClassificationProvider`'ın ikizi) sadece sinyal varsa
+   devreye giriyor.
+3. **Şirket adı veya pozisyon başlığı güvenle çıkarılamazsa öneri yok.** Extraction provider
+   `confident: false` veya boş `companyName`/`jobTitle` durumunda `null` döner, çağıran taraf
+   sessizce atlar — yarım/hatalı veriyle kayıt açılmıyor.
+
+Bu, yalnızca Forwarding path'i değiştiriyor — Gmail OAuth path'i (`EmailIntegrationService`,
+terk edilmiş yön, bkz. proje hafızası) hiç dokunulmadı, ama ikisinin paylaştığı
+`GetPendingSuggestionsAsync`/`ConfirmSuggestionAsync`/`/settings/email-suggestions` altyapısı her
+iki tip suggestion'ı da işleyecek şekilde güncellendi. Onaylanan bir yeni-ilan önerisi
+`IApplicationService.CreateAsync` ile (ek bir method gerekmeden, mevcut `Source.Email` enum
+üyesiyle) oluşturuluyor — `Application.Source == Email` zaten var olan ama hiç UI'da
+render edilmeyen bir alandı, kullanıcı görsün diye başvuru detay sayfasına bir badge eklendi.
+
+`email-worker/src/index.js`'in `SNIPPET_MAX_LENGTH`'i 300'den 2000'e çıkarıldı (lokasyon/açıklama
+genelde email'in ilk 300 karakterinden sonra geliyor) — `EmailSuggestionConfiguration`'ın
+`Snippet` sütun uzunluğuyla senkron tutulmalı.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

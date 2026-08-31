@@ -1,6 +1,11 @@
 import PostalMime from "postal-mime";
 
-const SNIPPET_MAX_LENGTH = 300;
+// Long enough to carry a job's location/description, not just enough for the interview/reject
+// keyword phrases RuleBasedEmailClassifier looks for near the top of an email — the "new job"
+// extraction flow (EmailForwardingService, unmatched-but-signal-bearing email) reads this same
+// snippet to pull company/title/location/description out of an email for a job that isn't
+// registered yet. Must stay in sync with EmailSuggestionConfiguration's Snippet column length.
+const SNIPPET_MAX_LENGTH = 2000;
 
 export default {
   async email(message, env, ctx) {

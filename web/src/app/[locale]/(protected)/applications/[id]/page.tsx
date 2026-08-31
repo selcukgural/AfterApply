@@ -57,6 +57,11 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         <div>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{application.jobTitle}</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">{application.companyName}</p>
+          {application.source === "Email" && (
+            <span className="mt-1 inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+              {t("createdFromEmail")}
+            </span>
+          )}
         </div>
         <div className="flex gap-2">
           <Link href={`/applications/${id}/edit`}>

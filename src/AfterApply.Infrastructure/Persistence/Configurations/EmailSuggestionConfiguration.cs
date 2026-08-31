@@ -18,7 +18,11 @@ public sealed class EmailSuggestionConfiguration : IEntityTypeConfiguration<Emai
         builder.Property(s => s.MatchedRule).IsRequired().HasMaxLength(100);
         builder.Property(s => s.SenderDomain).HasMaxLength(256);
         builder.Property(s => s.Subject).HasMaxLength(500);
-        builder.Property(s => s.Snippet).HasMaxLength(1000);
+        builder.Property(s => s.Snippet).HasMaxLength(2000);
+        builder.Property(s => s.ExtractedCompanyName).HasMaxLength(300);
+        builder.Property(s => s.ExtractedJobTitle).HasMaxLength(300);
+        builder.Property(s => s.ExtractedLocation).HasMaxLength(300);
+        builder.Property(s => s.ExtractedDescription).HasColumnType("text");
         builder.Property(s => s.Status).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(s => s.UserId);
@@ -33,6 +37,7 @@ public sealed class EmailSuggestionConfiguration : IEntityTypeConfiguration<Emai
         builder.HasOne<DomainApplication>()
             .WithMany()
             .HasForeignKey(s => s.ApplicationId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

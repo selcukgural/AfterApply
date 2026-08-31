@@ -191,7 +191,7 @@ export interface EmailConnectionStatusResponse {
 
 export interface EmailSuggestionResponse {
   id: string;
-  applicationId: string;
+  applicationId: string | null;
   companyName: string;
   jobTitle: string;
   suggestedStatus: ApplicationStatus | null;
@@ -199,6 +199,12 @@ export interface EmailSuggestionResponse {
   subject: string;
   snippet: string;
   emailReceivedAt: string;
+  // True when applicationId is null: this email matched no existing Application — companyName/
+  // jobTitle/location/description were extracted from the email itself, and confirming this
+  // suggestion creates the Company/Application from them.
+  isNewApplicationSuggestion: boolean;
+  location: string | null;
+  description: string | null;
 }
 
 export interface CandidateProfileResponse {

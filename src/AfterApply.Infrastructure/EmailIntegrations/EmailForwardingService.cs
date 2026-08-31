@@ -14,6 +14,7 @@ namespace AfterApply.Infrastructure.EmailIntegrations;
 internal sealed class EmailForwardingService(
     AppDbContext dbContext,
     IEmailClassificationProvider emailClassificationProvider,
+    IEmailJobExtractionProvider emailJobExtractionProvider,
     IOptions<EmailForwardingOptions> options,
     ILogger<EmailForwardingService> logger) : IEmailForwardingService
 {
@@ -74,32 +75,52 @@ internal sealed class EmailForwardingService(
             request.FromEmail, request.FromDisplayName, recipientEmail: "", ownAccountEmail: "",
             request.Subject, candidates);
 
-        if (applicationId is null)
-        {
-            return; // unmatched emails are not surfaced (product decision, same as the Gmail path)
-        }
-
-        var classification = RuleBasedEmailClassifier.Classify(request.Subject, request.Snippet);
-        if (classification.MatchedRule == "NoMatch")
-        {
-            classification = await emailClassificationProvider.ClassifyAsync(request.Subject, request.Snippet, cancellationToken);
-        }
-
+        var classification = await ClassifyAsync(request.Subject, request.Snippet, cancellationToken);
         if (classification.SuggestedStatus is null && classification.MatchedRule != "StillWaiting")
         {
-            return; // matched an application, but nothing about the email is classifiable
+            return; // nothing about the email is classifiable — matched or not, there's no signal to act on
         }
 
         var senderDomain = ExtractDomain(request.FromEmail);
         var now = DateTimeOffset.UtcNow;
 
-        dbContext.EmailSuggestions.Add(EmailSuggestion.Create(
-            connection.UserId, connection.Id, applicationId.Value,
-            providerMessageId, providerThreadId: null,
+        if (applicationId is not null)
+        {
+            dbContext.EmailSuggestions.Add(EmailSuggestion.Create(
+                connection.UserId, connection.Id, applicationId.Value,
+                providerMessageId, providerThreadId: null,
+                classification.SuggestedStatus, classification.ConfidenceScore, classification.MatchedRule,
+                senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet));
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        // Unmatched: the job isn't registered in the app yet. Only worth extracting company/job-title
+        // detail (an extra LLM call) now that we know the email carries a real status signal — a
+        // signal-less unmatched email (newsletter, unrelated mail) was already returned above, same
+        // as before this "new job" flow existed (DECISIONS.md "Eşleşmeyen email'ler gösterilmiyor").
+        var extraction = await emailJobExtractionProvider.ExtractAsync(request.Subject, request.Snippet, cancellationToken);
+        if (extraction is null)
+        {
+            return; // couldn't confidently read a company name + job title — stay silent, don't guess
+        }
+
+        dbContext.EmailSuggestions.Add(EmailSuggestion.CreateForNewJob(
+            connection.UserId, connection.Id, providerMessageId,
             classification.SuggestedStatus, classification.ConfidenceScore, classification.MatchedRule,
-            senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet));
+            senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet,
+            extraction.CompanyName, extraction.JobTitle, extraction.Location, extraction.Description));
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<EmailClassificationResult> ClassifyAsync(string subject, string snippet, CancellationToken cancellationToken)
+    {
+        var classification = RuleBasedEmailClassifier.Classify(subject, snippet);
+        return classification.MatchedRule == "NoMatch"
+            ? await emailClassificationProvider.ClassifyAsync(subject, snippet, cancellationToken)
+            : classification;
     }
 
     private async Task<IReadOnlyList<ApplicationMatchCandidate>> BuildCandidatesAsync(Guid userId, CancellationToken cancellationToken)

@@ -88,8 +88,18 @@ export default function EmailSuggestionsPage() {
                   </span>
                 )}
               </div>
+              {s.isNewApplicationSuggestion && (
+                <span className="mb-2 inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                  {t("newJobBadge")}
+                </span>
+              )}
+              {s.location && (
+                <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+                  {t("location")}: {s.location}
+                </p>
+              )}
               <p className="mb-1 text-sm font-medium text-gray-800 dark:text-gray-200">{s.subject}</p>
-              <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">{s.snippet}</p>
+              <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">{s.description ?? s.snippet}</p>
               <div className="flex gap-3">
                 {s.suggestedStatus && (
                   <Button onClick={() => handleConfirm(s.id)} disabled={pendingActionId === s.id}>

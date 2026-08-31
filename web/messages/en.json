@@ -290,6 +290,7 @@
       "notes": "Notes",
       "timeline": "Timeline",
       "emptyValue": "—",
+      "createdFromEmail": "Auto-created from a forwarded email",
       "match": {
         "title": "AI Match",
         "jobDescriptionLabel": "Job Description",
@@ -408,7 +409,9 @@
     "confidence": "Confidence",
     "loadError": "Could not load suggestions.",
     "confirmError": "Could not confirm.",
-    "dismissError": "Could not dismiss."
+    "dismissError": "Could not dismiss.",
+    "newJobBadge": "Not registered yet — new application from email",
+    "location": "Location"
   },
   "privacy": {
     "title": "Privacy Policy",

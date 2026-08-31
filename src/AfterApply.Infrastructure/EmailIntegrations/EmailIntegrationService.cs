@@ -178,12 +178,11 @@ internal sealed class EmailIntegrationService(
         // projection below carries the whole EmailSuggestion entity (`s`) through, not just scalar
         // fields, so EF would otherwise snapshot every row for change tracking it never uses.
         var rows = await dbContext.EmailSuggestions
-            .Where(s => s.UserId == userId && s.Status == EmailSuggestionStatus.Pending)
+            .Where(s => s.UserId == userId && s.Status == EmailSuggestionStatus.Pending && s.ApplicationId != null)
             .Join(dbContext.Applications, s => s.ApplicationId, a => a.Id, (s, a) => new { s, a.JobTitle, a.CompanyId })
             .Join(dbContext.Companies, x => x.CompanyId, c => c.Id, (x, c) => new { x.s, x.JobTitle, CompanyName = c.Name })
             .Join(dbContext.EmailConnections, x => x.s.EmailConnectionId, ec => ec.Id,
                 (x, ec) => new { x.s, x.JobTitle, x.CompanyName, ec.EncryptedRefreshToken })
-            .OrderByDescending(x => x.s.EmailReceivedAt)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
@@ -211,7 +210,19 @@ internal sealed class EmailIntegrationService(
                 row.s.SuggestedStatus, row.s.ConfidenceScore, subject, snippet, row.s.EmailReceivedAt));
         }
 
-        return responses;
+        // "New job" suggestions (ApplicationId is null) only ever come from the Forwarding path, so
+        // Subject/Snippet/Extracted* are always already persisted — no Gmail refetch branch needed.
+        var newJobRows = await dbContext.EmailSuggestions
+            .Where(s => s.UserId == userId && s.Status == EmailSuggestionStatus.Pending && s.ApplicationId == null)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        responses.AddRange(newJobRows.Select(s => new EmailSuggestionResponse(
+            s.Id, ApplicationId: null, s.ExtractedCompanyName ?? "", s.ExtractedJobTitle ?? "",
+            s.SuggestedStatus, s.ConfidenceScore, s.Subject ?? "", s.Snippet ?? "", s.EmailReceivedAt,
+            IsNewApplicationSuggestion: true, s.ExtractedLocation, s.ExtractedDescription)));
+
+        return responses.OrderByDescending(r => r.EmailReceivedAt).ToList();
     }
 
     public async Task<ConfirmSuggestionResult> ConfirmSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken)
@@ -224,12 +235,35 @@ internal sealed class EmailIntegrationService(
             return ConfirmSuggestionResult.NotFound;
         }
 
+        if (suggestion.ApplicationId is null)
+        {
+            // "New job" suggestion: the Application (and its Company, via CreateAsync's own
+            // ICompanyResolver call) doesn't exist yet — confirming creates it now, tagged
+            // Source.Email so the user can see it was registered from a forwarded email.
+            var created = await applicationService.CreateAsync(userId, new CreateApplicationRequest(
+                suggestion.ExtractedCompanyName!, suggestion.ExtractedJobTitle!, JobUrl: null,
+                suggestion.ExtractedLocation, EmploymentType.FullTime, suggestion.EmailReceivedAt,
+                Source.Email, suggestion.ExtractedDescription), cancellationToken);
+
+            if (suggestion.SuggestedStatus is not null && suggestion.SuggestedStatus != ApplicationStatus.Applied)
+            {
+                await applicationService.ChangeStatusAsync(userId, created.Id,
+                    new ChangeStatusRequest(suggestion.SuggestedStatus.Value, "E-postadan içe aktarıldı",
+                        suggestion.EmailReceivedAt, Source.Email),
+                    cancellationToken);
+            }
+
+            suggestion.Confirm(DateTimeOffset.UtcNow);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return ConfirmSuggestionResult.Confirmed;
+        }
+
         if (suggestion.SuggestedStatus is null)
         {
             return ConfirmSuggestionResult.NoStatusToConfirm;
         }
 
-        var changed = await applicationService.ChangeStatusAsync(userId, suggestion.ApplicationId,
+        var changed = await applicationService.ChangeStatusAsync(userId, suggestion.ApplicationId.Value,
             new ChangeStatusRequest(suggestion.SuggestedStatus.Value, "Gmail'den onaylandı", suggestion.EmailReceivedAt, Source.Email),
             cancellationToken);
 

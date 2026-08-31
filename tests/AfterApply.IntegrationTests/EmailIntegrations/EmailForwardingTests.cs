@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Applications;
@@ -35,6 +36,8 @@ public class EmailForwardingTests : IAsyncLifetime
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
     private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine").Build();
+    private readonly FakeEmailClassificationProvider _fakeClassificationProvider = new();
+    private readonly FakeEmailJobExtractionProvider _fakeExtractionProvider = new();
     private WebApplicationFactory<Program>? _factory;
     private HttpClient _client = null!;
 
@@ -52,6 +55,12 @@ public class EmailForwardingTests : IAsyncLifetime
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("EmailForwarding:Enabled", "true");
             builder.UseSetting("EmailForwarding:WebhookSecret", WebhookSecret);
+
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton<IEmailClassificationProvider>(_fakeClassificationProvider);
+                services.AddSingleton<IEmailJobExtractionProvider>(_fakeExtractionProvider);
+            });
         });
 
         using var scope = _factory.Services.CreateScope();
@@ -223,6 +232,134 @@ public class EmailForwardingTests : IAsyncLifetime
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailSuggestions.CountAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Inbound_Unmatched_Without_Signal_Skips_Extraction_Entirely()
+    {
+        var address = await GetOwnAddressAsync();
+        // No existing Application for this sender's company, and text that matches none of
+        // RuleBasedEmailClassifier's phrases — falls through to the (faked) LLM classifier, which
+        // returns NoSignal by default. Extraction must never even be attempted in that case.
+        _fakeClassificationProvider.Result = new EmailClassificationResult(null, 0, "Llm:NoSignal");
+
+        var response = await SendInboundAsync(address, "unrelated@newsletter-test.com", "Newsletter Co",
+            "Weekly Newsletter", "Check out our latest blog posts.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeExtractionProvider.CallCount.ShouldBe(0);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Inbound_Unmatched_With_Signal_But_Extraction_Not_Confident_Is_NoOp()
+    {
+        var address = await GetOwnAddressAsync();
+        // No CreateApplicationAsync call — this sender matches no existing Application. Interview
+        // phrasing is a RuleBasedEmailClassifier hit, so classification never touches the fake LLM.
+        _fakeExtractionProvider.Result = null;
+
+        var response = await SendInboundAsync(address, "recruiter@unregistered-test.com", "Unregistered Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeExtractionProvider.CallCount.ShouldBe(1);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Inbound_Unmatched_With_Signal_And_Confident_Extraction_Creates_NewJob_Suggestion()
+    {
+        var address = await GetOwnAddressAsync();
+        _fakeExtractionProvider.Result = new EmailJobExtractionResult(
+            "Unregistered Test", "Backend Engineer", "Istanbul", "Build and maintain backend services.");
+
+        var response = await SendInboundAsync(address, "recruiter@unregistered-test.com", "Unregistered Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestions = suggestionsResponse.EnumerateArray().ToList();
+
+        var suggestion = suggestions.ShouldHaveSingleItem();
+        suggestion.GetProperty("applicationId").ValueKind.ShouldBe(JsonValueKind.Null);
+        suggestion.GetProperty("isNewApplicationSuggestion").GetBoolean().ShouldBeTrue();
+        suggestion.GetProperty("companyName").GetString().ShouldBe("Unregistered Test");
+        suggestion.GetProperty("jobTitle").GetString().ShouldBe("Backend Engineer");
+        suggestion.GetProperty("location").GetString().ShouldBe("Istanbul");
+        suggestion.GetProperty("suggestedStatus").GetString().ShouldBe(nameof(ApplicationStatus.Interview));
+    }
+
+    [Fact]
+    public async Task ConfirmSuggestion_For_NewJob_Suggestion_Creates_Application_Tagged_SourceEmail()
+    {
+        var address = await GetOwnAddressAsync();
+        _fakeExtractionProvider.Result = new EmailJobExtractionResult(
+            "New Co", "Senior Developer", "Remote", "A great new role.");
+
+        var inboundResponse = await SendInboundAsync(address, "recruiter@new-co-test.com", "New Co Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.");
+        inboundResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestionsResponse.EnumerateArray().Single().GetProperty("id").GetGuid();
+
+        var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
+        confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var application = await db.Applications.SingleAsync(a => a.JobTitle == "Senior Developer");
+        application.Source.ShouldBe(Source.Email);
+        application.Status.ShouldBe(ApplicationStatus.Interview);
+        application.Location.ShouldBe("Remote");
+        application.Notes.ShouldBe("A great new role.");
+
+        var company = await db.Companies.SingleAsync(c => c.Id == application.CompanyId);
+        company.Name.ShouldBe("New Co");
+    }
+
+    [Fact]
+    public async Task ConfirmSuggestion_For_NewJob_Suggestion_With_StillWaiting_Signal_Creates_Application_At_Applied_Status()
+    {
+        var address = await GetOwnAddressAsync();
+        _fakeExtractionProvider.Result = new EmailJobExtractionResult("Still Waiting Co", "QA Engineer", null, null);
+
+        // "still under review" is RuleBasedEmailClassifier's StillWaiting phrase — SuggestedStatus
+        // stays null, MatchedRule is "StillWaiting", which is still treated as a signal.
+        var inboundResponse = await SendInboundAsync(address, "recruiter@still-waiting-test.com", "Still Waiting Recruiting",
+            "Application update", "Your application is still under review.");
+        inboundResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestionsResponse.EnumerateArray().Single().GetProperty("id").GetGuid();
+
+        var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
+        confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var application = await db.Applications.SingleAsync(a => a.JobTitle == "QA Engineer");
+        application.Source.ShouldBe(Source.Email);
+        application.Status.ShouldBe(ApplicationStatus.Applied);
+    }
+
+    private async Task<HttpResponseMessage> SendInboundAsync(string toAddress, string from, string fromName, string subject, string snippet)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/email-forwarding/inbound")
+        {
+            Content = JsonContent.Create(new { to = toAddress, from, fromName, subject, snippet }, options: JsonOptions)
+        };
+        request.Headers.Add("X-Webhook-Secret", WebhookSecret);
+
+        var unauthenticatedClient = _factory!.CreateClient();
+        return await unauthenticatedClient.SendAsync(request);
     }
 
     private async Task<string> GetOwnAddressAsync()

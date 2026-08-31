@@ -238,6 +238,7 @@ public static class DependencyInjection
         services.AddScoped<IGmailClient, GmailClient>();
         services.AddScoped<IEmailIntegrationService, EmailIntegrationService>();
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();
+        services.AddScoped<IEmailJobExtractionProvider, OpenAiEmailJobExtractionProvider>();
         services.AddScoped<IEmailForwardingService, EmailForwardingService>();
         services.AddScoped<IJobMatchingProvider, OpenAiJobMatchingProvider>();
         services.AddScoped<IJobMatchingService, JobMatchingService>();

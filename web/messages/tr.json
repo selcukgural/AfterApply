@@ -290,6 +290,7 @@
       "notes": "Notlar",
       "timeline": "Zaman Çizelgesi",
       "emptyValue": "—",
+      "createdFromEmail": "E-postadan otomatik oluşturuldu",
       "match": {
         "title": "AI Eşleştirme",
         "jobDescriptionLabel": "İş İlanı Açıklaması",
@@ -408,7 +409,9 @@
     "confidence": "Güven",
     "loadError": "Öneriler yüklenemedi.",
     "confirmError": "Onaylanamadı.",
-    "dismissError": "Reddedilemedi."
+    "dismissError": "Reddedilemedi.",
+    "newJobBadge": "Henüz kayıtlı değil — e-postadan yeni başvuru",
+    "location": "Konum"
   },
   "privacy": {
     "title": "Gizlilik Politikası",
