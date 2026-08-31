@@ -368,6 +368,52 @@ public class EmailForwardingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inbound_Unmatched_ApplicationReceived_Acknowledgement_Creates_NewJob_Suggestion_Without_Calling_Llm()
+    {
+        var address = await GetOwnAddressAsync();
+        // Real-world case (2026-08-31): applying directly on a company's own career site produces
+        // no existing Application and no known-job-board domain — a plain "thanks for applying"
+        // ATS acknowledgement used to be silently dropped here. RuleBasedEmailClassifier's
+        // ApplicationReceived rule must catch it without ever reaching the (faked) LLM classifier.
+        _fakeExtractionProvider.Result = new EmailJobExtractionResult("Abacus Medicine Group", "Senior Engineer", null, null);
+
+        var response = await SendInboundAsync(address, "victor@teamtailor-mail.com", "Abacus Medicine Group",
+            "We have received your application!",
+            "Dear Selçuk Thank you so much for your application! At Abacus Medicine Group, our employees are our biggest asset.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeClassificationProvider.CallCount.ShouldBe(0);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestion = suggestionsResponse.EnumerateArray().ShouldHaveSingleItem();
+        suggestion.GetProperty("isNewApplicationSuggestion").GetBoolean().ShouldBeTrue();
+        suggestion.GetProperty("companyName").GetString().ShouldBe("Abacus Medicine Group");
+        suggestion.GetProperty("suggestedStatus").ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public async Task Inbound_Matched_ApplicationReceived_Acknowledgement_Is_NoOp()
+    {
+        var address = await GetOwnAddressAsync();
+        // Display name carries the company name as a literal prefix — same
+        // EmailApplicationMatcher fallback convention used elsewhere in this file.
+        await CreateApplicationAsync("Acme Ack Test");
+
+        var response = await SendInboundAsync(address, "no-reply@acme-ack-test.com", "Acme Ack Test Recruiting",
+            "We have received your application!", "Thank you so much for your application!");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        // Nothing to extract for a matched application either way, but this pins down that the
+        // acknowledgement is treated as no signal at all here, not as a pointless "confirm Applied"
+        // suggestion for an application that's already sitting at Applied.
+        _fakeExtractionProvider.CallCount.ShouldBe(0);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task Inbound_Unknown_Domain_Unmatched_RuleBased_Signal_Creates_Suggestion_Without_Calling_Llm()
     {
         var address = await GetOwnAddressAsync();

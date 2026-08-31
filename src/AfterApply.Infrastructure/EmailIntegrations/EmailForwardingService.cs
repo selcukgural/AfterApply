@@ -118,7 +118,16 @@ internal sealed partial class EmailForwardingService(
         var isKnownSender = applicationId is not null || jobBoardDomainMatcher.IsKnown(senderDomain);
 
         var classification = await ClassifyAsync(request.Subject, request.Snippet, isKnownSender, cancellationToken);
-        if (classification.SuggestedStatus is null && classification.MatchedRule != "StillWaiting")
+
+        // ApplicationReceived only counts as a signal for an *unmatched* sender — a "we got your
+        // application" acknowledgement about an application we already have on file is content-free
+        // (the app is already sitting at Applied), so it shouldn't produce a "confirm Applied"
+        // suggestion nobody asked for. See RuleBasedEmailClassifier's own comment on this rule.
+        var hasSignal = classification.SuggestedStatus is not null
+            || classification.MatchedRule == "StillWaiting"
+            || (classification.MatchedRule == "ApplicationReceived" && applicationId is null);
+
+        if (!hasSignal)
         {
             return; // nothing about the email is classifiable — matched or not, there's no signal to act on
         }
