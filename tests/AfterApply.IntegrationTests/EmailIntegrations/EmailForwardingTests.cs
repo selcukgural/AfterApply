@@ -487,6 +487,48 @@ public class EmailForwardingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inbound_Unknown_Domain_Unmatched_Paraphrased_Interview_Text_Still_Calls_Llm()
+    {
+        var address = await GetOwnAddressAsync();
+        // Neither an existing Application match nor a known job-board/ATS domain, and the phrasing
+        // deliberately avoids RuleBasedEmailClassifier's narrow curated phrases ("invite you to an
+        // interview", etc.) — this is exactly the false-negative gap RecruitmentSignalAnalyzer closes:
+        // a recruiter-ish sender local-part plus enough broader interview vocabulary to clear
+        // EmailIntelligence:LlmThreshold.
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.8, "Llm:Interview");
+        _fakeExtractionProvider.Result = new EmailJobExtractionResult("New Small Co", "Engineer", null, null);
+
+        var response = await SendInboundAsync(address, "talent@new-small-co-test.com", "New Small Co Talent Team",
+            "Next steps for your interview process",
+            "We'd love to invite you for a technical interview and a phone screen with our team next week.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeClassificationProvider.CallCount.ShouldBe(1);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        suggestionsResponse.EnumerateArray().Count().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Inbound_Unknown_Domain_Unmatched_Newsletter_Text_Never_Calls_Llm()
+    {
+        var address = await GetOwnAddressAsync();
+        // Same unknown-domain/unmatched shape as the paraphrased-interview case above, but the text
+        // is squarely negative-signal (newsletter/job-alert) — the analyzer must keep the score below
+        // LlmThreshold so this still never reaches the (faked) LLM classifier, same as before the
+        // hard isKnownSender gate was removed.
+        var response = await SendInboundAsync(address, "updates@some-jobboard-test.com", "Some Job Board",
+            "10 jobs you may be interested in", "Here are jobs matching your profile this week. Unsubscribe anytime.");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeClassificationProvider.CallCount.ShouldBe(0);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task Inbound_MatchedApplicationDomain_NonRuleText_Still_Calls_Llm()
     {
         var address = await GetOwnAddressAsync();

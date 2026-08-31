@@ -7,6 +7,12 @@ import PostalMime from "postal-mime";
 // registered yet. Must stay in sync with EmailSuggestionConfiguration's Snippet column length.
 const SNIPPET_MAX_LENGTH = 2000;
 
+// Recruitment-signal evidence for the backend's RecruitmentSignalAnalyzer (known ATS/calendar
+// link domains) — capped so a marketing-heavy HTML email with dozens of tracking links doesn't
+// blow up the payload.
+const MAX_LINK_DOMAINS = 20;
+const HREF_REGEX = /<a\b[^>]*href\s*=\s*["']?([^\s"'>]+)/gi;
+
 export default {
   async email(message, env, ctx) {
     const token = extractLocalPart(message.to);
@@ -22,6 +28,7 @@ export default {
     const subject = parsed.subject ?? "";
     const snippet = (parsed.text ?? "").trim().slice(0, SNIPPET_MAX_LENGTH);
     const receivedAt = parseDateHeader(message.headers.get("date"));
+    const linkDomains = extractLinkDomains(parsed.html);
 
     const payload = {
       to: message.to,
@@ -30,6 +37,7 @@ export default {
       subject,
       snippet,
       receivedAt,
+      linkDomains,
     };
 
     let response;
@@ -55,6 +63,37 @@ export default {
     }
   },
 };
+
+// Hostnames only, never full URLs — a query string can carry per-recipient tracking tokens (PII),
+// and RecruitmentSignalAnalyzer only ever needs to know *which service* a link points at (greenhouse,
+// calendly, ...), not the link itself.
+function extractLinkDomains(html) {
+  if (!html) {
+    return [];
+  }
+
+  const domains = new Set();
+  for (const match of html.matchAll(HREF_REGEX)) {
+    let hostname;
+    try {
+      hostname = new URL(match[1]).hostname.toLowerCase();
+    } catch {
+      // Not a parseable absolute URL (relative href, etc.) — not a link-domain signal.
+      continue;
+    }
+
+    // mailto:/cid:/tel: etc. parse successfully but have no hostname — not a link-domain signal.
+    if (hostname) {
+      domains.add(hostname);
+    }
+
+    if (domains.size >= MAX_LINK_DOMAINS) {
+      break;
+    }
+  }
+
+  return [...domains];
+}
 
 function extractLocalPart(address) {
   const at = address.indexOf("@");

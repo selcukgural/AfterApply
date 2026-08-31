@@ -30,6 +30,10 @@ public interface IEmailForwardingService
     Task<bool> DismissGmailConfirmationAsync(Guid userId, CancellationToken cancellationToken);
 }
 
+/// <summary>LinkDomains are the deduped lowercased hostnames of any links in the email's HTML body
+/// (e.g. "greenhouse.io", "calendly.com") — never full URLs, since a query string can carry
+/// tracking/PII. Extracted by the Cloudflare Worker (email-worker/src/index.js), fed into
+/// RecruitmentSignalAnalyzer.</summary>
 public sealed record InboundEmailRequest(
     string ToAddress, string FromEmail, string FromDisplayName, string Subject, string Snippet,
-    DateTimeOffset ReceivedAt);
+    DateTimeOffset ReceivedAt, IReadOnlyList<string> LinkDomains);

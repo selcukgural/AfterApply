@@ -1921,6 +1921,90 @@ olmadığı bir makinede kullanılacak alternatif olarak dokümanda kaldı.
 
 ---
 
+## Pre-LLM email intelligence: `isKnownSender` hard gate → recruitment evidence (2026-09-01)
+
+**Bağlam:** `~/Desktop/e-kariyerim-pre-llm-email-intelligence-plan.md` (kullanıcının kendi notu)
+`EmailForwardingService`'in LLM'e gitmeden önceki filtreleme katmanını iyileştirmeyi öneriyordu.
+Kullanıcı bunu birebir uygulamak yerine mevcut koda göre gözden geçirilmesini istedi — önleyici bir
+iyileştirme olduğu netleştirildi (üretimde gözlemlenmiş somut bir kayıp yok).
+
+**Bulgu — problem çerçevesi kaynak dokümanda göründüğünden daha dar:** `RuleBasedEmailClassifier`
+zaten koşulsuz çalışıyor ve curated bir EN/DE/TR ifadesi eşleştiğinde `isKnownSender`'dan bağımsız
+sonuç üretiyor (`Inbound_Unknown_Domain_Unmatched_RuleBased_Signal_Creates_Suggestion_Without_Calling_Llm`
+testiyle doğrulanmıştı). Asıl boşluk: parafraze edilmiş metinler ve `RuleBasedEmailClassifier`'ın
+hiç kuralı olmayan kategoriler (Assessment, Offer, recruiter-sender sezgileri).
+
+**Karar:** Yeni bir `RecruitmentSignalAnalyzer` (Application layer, `RuleBasedEmailClassifier`/
+`EmailApplicationMatcher` ile aynı saf/statik desen) eklendi. `EmailForwardingService.ClassifyAsync`,
+`RuleBasedEmailClassifier` "NoMatch" döndüğünde artık tek bir `isKnownSender` bool'una değil,
+`EmailIntelligence:LlmThreshold` (varsayılan 50) skoruna bakıyor — `isKnownSender` hâlâ hesaplanıyor
+ama artık sadece log satırında görünen bir sinyal, hard gate değil.
+
+**Kaynak plandan sapmalar (ve gerekçeleri):**
+- Low/Llm/High üç threshold'un v1'de davranışsal farkı yok (hepsi config'te duruyor, sadece
+  `LlmThreshold` routing kararını veriyor; Low/High sadece log bucket etiketi).
+- `EmailApplicationMatcher.Match`'in `Guid?` dönüşü zenginleştirilmedi (MatchType/Confidence) —
+  planın kendi "breaking change yapma" kuralıyla çelişiyordu; `applicationId is not null` zaten
+  yeterli bir "matched application" sinyali.
+- `JobBoardDomainsOptions` tek bir birleşik ATS/job-board listesi olarak kaldı — ayrı ayrı
+  ağırlıklandırmak (`KnownATS` vs `KnownJobBoard`) mevcut portu ve testlerini değiştirmeyi
+  gerektirirdi, buna gerek yoktu (`KnownJobBoardOrAts` tek sinyal).
+- Analyzer'ın phrase tabloları `RuleBasedEmailClassifier`'ınkiyle **bilinçli olarak paylaşılmadı** —
+  analyzer sadece `RuleBasedEmailClassifier` "NoMatch" dönünce çalıştığı için, aynı dar/kesin ifade
+  listesini yeniden kullanmak neredeyse hiç sinyal üretmezdi; analyzer'ın listesi kasıtlı olarak
+  daha geniş/recall-odaklı.
+- `newsletter@`/`marketing@`/`sales@`/`support@`/`billing@` sender local-part'ları negatif değil
+  **nötr** ağırlıklandırıldı — body-seviyesi Newsletter/Marketing ifade sinyalleriyle çifte
+  cezalandırmayı önlemek için.
+- `EmailIntelligenceOptions`/`EmailIntelligenceWeights` Infrastructure değil **Application**
+  layer'da yaşıyor (`JobBoardDomainsOptions`'ın aksine) — saf `RecruitmentSignalAnalyzer`'a
+  parametre olarak geçtiği için; Infrastructure zaten Application'a bağımlı, tersi olmamalı.
+- Golden-dataset JSON fixture klasörü eklenmedi — repodaki hiçbir test JSON fixture yüklemiyor,
+  yeni testler mevcut `[Theory]/[InlineData]` konvansiyonunu izliyor.
+
+**Link-domain sinyali için Worker güncellendi (kullanıcı tercihi):** `email-worker/src/index.js`,
+`postal-mime`'ın HTML gövdesinden (`parsed.html`) `<a href>` hostname'lerini çıkarıp (asla tam URL —
+query string PII taşıyabilir), deduplike edip en fazla 20 tanesini `linkDomains` alanıyla backend'e
+gönderiyor. `InboundEmailRequest`/`InboundEmailWebhookRequest` buna göre genişletildi.
+
+**Değişmeyenler:** `RuleBasedEmailClassifier`, `EmailApplicationMatcher`, `JobBoardDomainMatcher`,
+`hasSignal` mantığı, matched→extraction bypass, unmatched→extraction, `EmailSuggestion` şeması,
+OpenAI provider'ları — hiçbiri değişmedi. Observability v1 için tek bir structured Serilog log
+satırı (`score`, `bucket`, `categories`, `isKnownSender`) — yeni metrics altyapısı veya şema
+değişikliği yok.
+
+### Ek karar: phrase listeleri de config'e taşındı, eksik config'te uygulama başlamıyor — DECIDED
+
+İlk uygulamada `EmailIntelligencePhrases`'in phrase/domain listeleri (Interview/Assessment/Offer/
+Newsletter/... ve `AtsLinkDomains`/`CalendarLinkDomains`) C# tarafında hardcoded default değerlerle
+yazılmıştı (sadece `Weights`/threshold'lar appsettings'ten okunuyordu). Kullanıcı bunu **kesinlikle
+istemedi**: her sayı/kelime listesi appsettings.json'dan gelmeli ki bir değer değişikliği kod
+deploy'u gerektirmesin.
+
+**Karar:**
+- `EmailIntelligenceWeights`/`EmailIntelligencePhrases`/`EmailIntelligenceOptions`'taki **her**
+  property C# `required` ile işaretlendi, hiçbirinde default değer yok — appsettings.json'un
+  `EmailIntelligence` bölümü artık tek kaynak.
+- `required`'ın configuration binder tarafından **enforce edilmediği** doğrulandı (küçük bir
+  deneyle: eksik bir `required` property sessizce `null`/`0`'a bağlanıyor, exception fırlamıyor) —
+  bu yüzden yeni bir `EmailIntelligenceConfigurationValidator` (`IValidateOptions<EmailIntelligenceOptions>`,
+  Infrastructure) eklendi. Bağlanmış (bound) objeye değil, **ham `IConfiguration`'a** bakıyor (bir
+  int property config'te yoksa 0'a bağlanır, bu da "bilinçli 0" ile "eksik" arasında ayrım
+  yapmayı imkânsız kılar — ham config'e bakmak bu belirsizliği ortadan kaldırıyor).
+  `EmailIntelligenceOptions`'ın kendi property ağacını reflection ile geziyor, yeni bir
+  weight/phrase eklenirse validator'ı güncellemeye gerek kalmıyor.
+- `DependencyInjection.cs`'de bu bölüm için `services.Configure<T>(...)` yerine
+  `services.AddOptions<T>().Bind(...).ValidateOnStart()` kullanılıyor — `ValidateOnStart()`'ın
+  gerçekten `Host.StartAsync()` sırasında `OptionsValidationException` fırlatıp uygulamayı
+  başlatmadığı küçük bir deneyle doğrulandı.
+- Testler: validator'ın kendisi için 4 unit test (tam config → başarı, eksik weight/boş phrase
+  listesi/tamamen boş section → her eksik key'i içeren tek bir hata mesajı). Analyzer'ın kendi
+  testleri artık appsettings.json'a değil, test dosyasındaki tam-belirtilmiş literal bir
+  `EmailIntelligenceOptions`'a bağlı (mevcut `RuleBasedEmailClassifierTests` konvansiyonuyla
+  tutarlı, dosya-yolu kırılganlığından kaçınmak için appsettings.json'u diskten okumak yerine).
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

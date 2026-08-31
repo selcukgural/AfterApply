@@ -60,7 +60,8 @@ public static class EmailForwardingEndpoints
             {
                 jobClient.Enqueue<IEmailForwardingService>(s => s.ProcessInboundEmailAsync(new InboundEmailRequest(
                     request.To, request.From, request.FromName ?? request.From, request.Subject ?? "",
-                    request.Snippet ?? "", request.ReceivedAt ?? DateTimeOffset.UtcNow), CancellationToken.None));
+                    request.Snippet ?? "", request.ReceivedAt ?? DateTimeOffset.UtcNow,
+                    request.LinkDomains ?? Array.Empty<string>()), CancellationToken.None));
                 return Results.NoContent();
             })
             .AddEndpointFilter(async (context, next) =>
@@ -129,6 +130,8 @@ public static class EmailForwardingEndpoints
 /// <summary>Shape the Cloudflare Worker POSTs. `To` (the full forwarding address) is how the user is
 /// identified — the X-Inbound-Token header carries the same token separately, only so the rate
 /// limiter can partition per-sender without parsing the body (rate limiting runs before model
-/// binding).</summary>
+/// binding). LinkDomains are hostnames only (see InboundEmailRequest) — the Worker never sends full
+/// URLs.</summary>
 public sealed record InboundEmailWebhookRequest(
-    string To, string From, string? FromName, string? Subject, string? Snippet, DateTimeOffset? ReceivedAt);
+    string To, string From, string? FromName, string? Subject, string? Snippet, DateTimeOffset? ReceivedAt,
+    string[]? LinkDomains);

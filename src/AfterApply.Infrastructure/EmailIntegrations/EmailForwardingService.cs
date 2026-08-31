@@ -23,6 +23,7 @@ internal sealed partial class EmailForwardingService(
     IApplicationService applicationService,
     IJobBoardDomainMatcher jobBoardDomainMatcher,
     IOptions<EmailForwardingOptions> options,
+    IOptions<EmailIntelligenceOptions> intelligenceOptions,
     ILogger<EmailForwardingService> logger) : IEmailForwardingService
 {
     private const string TokenChars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -111,13 +112,13 @@ internal sealed partial class EmailForwardingService(
 
         var senderDomain = ExtractDomain(request.FromEmail);
 
-        // Now that forwarding is all-or-nothing (the user's whole inbox, not a per-sender Gmail
-        // filter — see DECISIONS.md), an unmatched sender on an unrecognized domain isn't worth an
-        // LLM call: the free rule-based pass below still runs on it regardless, so a genuinely new
-        // company using recognizable phrasing (interview/rejection/still-waiting) is still caught.
+        // isKnownSender no longer hard-gates the LLM call (see RecruitmentSignalAnalyzer) — kept
+        // here purely so the routing log line below can show it alongside the new score-based
+        // decision.
         var isKnownSender = applicationId is not null || jobBoardDomainMatcher.IsKnown(senderDomain);
 
-        var classification = await ClassifyAsync(request.Subject, request.Snippet, isKnownSender, cancellationToken);
+        var classification = await ClassifyAsync(request.FromEmail, request.Subject, request.Snippet,
+            senderDomain, applicationId is not null, request.LinkDomains, isKnownSender, cancellationToken);
 
         // ApplicationReceived only counts as a signal for an *unmatched* sender — a "we got your
         // application" acknowledgement about an application we already have on file is content-free
@@ -190,8 +191,8 @@ internal sealed partial class EmailForwardingService(
             s.Id, ApplicationId: null, s.ExtractedCompanyName ?? "", s.ExtractedJobTitle ?? "",
             s.SuggestedStatus, s.ConfidenceScore, s.Subject ?? "", s.Snippet ?? "", s.EmailReceivedAt,
             IsNewApplicationSuggestion: true, s.ExtractedLocation, s.ExtractedDescription)));
-
-        return responses.OrderByDescending(r => r.EmailReceivedAt).ToList();
+        
+        return [.. responses.OrderByDescending(r => r.EmailReceivedAt)];
     }
 
     public async Task<ConfirmSuggestionResult> ConfirmSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken)
@@ -276,7 +277,9 @@ internal sealed partial class EmailForwardingService(
         return true;
     }
 
-    private async Task<EmailClassificationResult> ClassifyAsync(string subject, string snippet, bool isKnownSender, CancellationToken cancellationToken)
+    private async Task<EmailClassificationResult> ClassifyAsync(string senderEmail, string subject, string snippet,
+        string? senderDomain, bool hasApplicationMatch, IReadOnlyList<string> linkDomains, bool isKnownSender,
+        CancellationToken cancellationToken)
     {
         var classification = RuleBasedEmailClassifier.Classify(subject, snippet);
         if (classification.MatchedRule != "NoMatch")
@@ -284,9 +287,25 @@ internal sealed partial class EmailForwardingService(
             return classification;
         }
 
-        if (!isKnownSender)
+        var intelligence = intelligenceOptions.Value;
+        var analysis = RecruitmentSignalAnalyzer.Analyze(senderEmail, subject, snippet, senderDomain,
+            jobBoardDomainMatcher.IsKnown(senderDomain), hasApplicationMatch, linkDomains, intelligence);
+
+        var bucket = analysis.Score switch
         {
-            logger.LogDebug("Skipping LLM classification: sender is not a known job board and doesn't match an existing application.");
+            var s when s < intelligence.LowThreshold => "ClearlyIrrelevant",
+            var s when s < intelligence.LlmThreshold => "Weak",
+            var s when s < intelligence.HighConfidenceThreshold => "Possible",
+            _ => "Strong"
+        };
+
+        logger.LogInformation(
+            "Email intelligence routing: score={Score} bucket={Bucket} categories={Categories} isKnownSender={IsKnownSender}",
+            analysis.Score, bucket, string.Join(",", analysis.Signals.Select(s => s.Category)), isKnownSender);
+
+        if (analysis.Score < intelligence.LlmThreshold)
+        {
+            logger.LogDebug("Skipping LLM classification: recruitment signal score is below the LLM threshold.");
             return classification;
         }
 

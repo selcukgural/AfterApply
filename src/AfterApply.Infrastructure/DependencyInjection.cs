@@ -75,6 +75,14 @@ public static class DependencyInjection
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
         services.Configure<JobBoardDomainsOptions>(configuration.GetSection("JobBoardDomains"));
+
+        // AddOptions().Bind().ValidateOnStart() (not the bare Configure<T> other sections above use)
+        // so EmailIntelligenceConfigurationValidator actually runs during host startup and fails fast
+        // on a missing weight/phrase — see EmailIntelligenceOptions' own doc comment for why.
+        services.AddSingleton<IValidateOptions<EmailIntelligenceOptions>, EmailIntelligenceConfigurationValidator>();
+        services.AddOptions<EmailIntelligenceOptions>()
+            .Bind(configuration.GetSection("EmailIntelligence"))
+            .ValidateOnStart();
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
         services.Configure<MatchingOptions>(configuration.GetSection("Matching"));
