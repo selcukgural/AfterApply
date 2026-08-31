@@ -26,9 +26,15 @@ function escapeHtml(value) {
   return div.innerHTML;
 }
 
+// Escapes first, then turns **...** into <strong> — safe to run on any string (a no-op when it
+// has no ** markers) and only ever operates on our own static i18n strings, never user input.
+function emphasize(value) {
+  return escapeHtml(value).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
+
 const ICONS = {
   inbox: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 3h6l2-3h4"/><path d="M5 6h14l2 6v7a1 1 0 01-1 1H4a1 1 0 01-1-1v-7z"/></svg>`,
-  filter: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 8v5l-4 2v-7z"/></svg>`,
+  forward: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7l5 5-5 5"/><path d="M4 7l5 5-5 5"/><path d="M18 12H9"/></svg>`,
   at: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 12v1.5a2.5 2.5 0 005 0V12a9 9 0 10-4 7.5"/></svg>`,
   eye: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`,
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
@@ -37,7 +43,7 @@ const ICONS = {
 function flowDiagram(lang) {
   const steps = [
     [ICONS.inbox, t(lang, "flow.step1")],
-    [ICONS.filter, t(lang, "flow.step2")],
+    [ICONS.forward, t(lang, "flow.step2")],
     [ICONS.at, t(lang, "flow.step3")],
     [ICONS.eye, t(lang, "flow.step4")],
     [ICONS.check, t(lang, "flow.step5")],
@@ -62,10 +68,22 @@ function gmailMockGear(lang) {
     </div>`;
 }
 
+// Both this panel and gmailMockForwardAll below represent the same Gmail settings tab (the guide
+// sends the user back to it in step 4) — sharing this tab strip makes that visually obvious.
+function gmailTabStrip(lang) {
+  const tabs = lang === "tr"
+    ? ["Genel", "Hesaplar", "Filtreler", "Yönlendirme ve POP/IMAP"]
+    : ["General", "Accounts", "Filters", "Forwarding and POP/IMAP"];
+  return `<div class="gmail-mock-tabs">${tabs
+    .map((tab, i) => `<span class="gmail-mock-tab${i === tabs.length - 1 ? " active" : ""}">${tab}</span>`)
+    .join("")}</div>`;
+}
+
 function gmailMockForwarding(lang, address) {
   return `
     <div class="gmail-mock">
-      <div class="gmail-mock-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;${lang === "tr" ? "Yönlendirme ve POP/IMAP" : "Forwarding and POP/IMAP"}</div>
+      <div class="gmail-mock-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;mail.google.com/settings</div>
+      ${gmailTabStrip(lang)}
       <div class="gmail-mock-body">
         <div class="gmail-mock-row">
           <span class="gmail-mock-input">${escapeHtml(address ?? "your-address@application.ekariyerim.com")}</span>
@@ -88,13 +106,26 @@ function gmailMockConfirm(lang, code) {
     </div>`;
 }
 
-function gmailMockFilter(lang, address) {
+function gmailMockForwardAll(lang, address) {
   return `
     <div class="gmail-mock">
-      <div class="gmail-mock-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;${lang === "tr" ? "Yeni filtre oluştur" : "Create a new filter"}</div>
+      <div class="gmail-mock-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;mail.google.com/settings</div>
+      ${gmailTabStrip(lang)}
       <div class="gmail-mock-body">
-        <div class="gmail-mock-row"><span>☑ ${lang === "tr" ? "Şuraya yönlendir:" : "Forward it to:"}</span><span class="gmail-mock-input">${escapeHtml(address ?? "your-address@application.ekariyerim.com")}</span></div>
-        <div class="gmail-mock-row"><span></span><span class="gmail-mock-btn">${lang === "tr" ? "Filtre Oluştur" : "Create filter"}</span></div>
+        <label class="gmail-mock-radio">
+          <span class="gmail-mock-radio-dot"></span>
+          ${lang === "tr" ? "Yönlendirmeyi devre dışı bırak" : "Disable forwarding"}
+        </label>
+        <label class="gmail-mock-radio checked">
+          <span class="gmail-mock-radio-dot"></span>
+          <span>
+            ${lang === "tr" ? "Gelen postanın bir kopyasını şuraya yönlendir:" : "Forward a copy of incoming mail to:"}
+            <span class="gmail-mock-input">${escapeHtml(address ?? "your-address@application.ekariyerim.com")}</span>
+          </span>
+        </label>
+        <div class="gmail-mock-row gmail-mock-row-plain">
+          <span class="gmail-mock-btn">${lang === "tr" ? "Değişiklikleri Kaydet" : "Save Changes"}</span>
+        </div>
       </div>
     </div>`;
 }
@@ -157,10 +188,10 @@ function render() {
       <div class="trust-box">
         <p>${escapeHtml(t(lang, "hero.trustTitle"))}</p>
         <ul>
-          <li>${escapeHtml(t(lang, "hero.trust1"))}</li>
-          <li>${escapeHtml(t(lang, "hero.trust2"))}</li>
-          <li>${escapeHtml(t(lang, "hero.trust3"))}</li>
-          <li>${escapeHtml(t(lang, "hero.trust4"))}</li>
+          <li>${emphasize(t(lang, "hero.trust1"))}</li>
+          <li>${emphasize(t(lang, "hero.trust2"))}</li>
+          <li>${emphasize(t(lang, "hero.trust3"))}</li>
+          <li>${emphasize(t(lang, "hero.trust4"))}</li>
         </ul>
       </div>
     </section>
@@ -210,7 +241,7 @@ function render() {
         <div class="step-body">
           <h3>${escapeHtml(t(lang, "steps.step4.title"))}</h3>
           <p>${escapeHtml(t(lang, "steps.step4.body"))}</p>
-          ${gmailMockFilter(lang, address)}
+          ${gmailMockForwardAll(lang, address)}
         </div>
       </div>
 
@@ -228,11 +259,11 @@ function render() {
       <h2 style="font-size:14px;font-weight:700;margin:0 0 4px;">${escapeHtml(t(lang, "faq.title"))}</h2>
       <dl class="faq">
         <dt>${escapeHtml(t(lang, "faq.q1"))}</dt>
-        <dd>${escapeHtml(t(lang, "faq.a1"))}</dd>
+        <dd>${emphasize(t(lang, "faq.a1"))}</dd>
         <dt>${escapeHtml(t(lang, "faq.q2"))}</dt>
-        <dd>${escapeHtml(t(lang, "faq.a2"))}</dd>
+        <dd>${emphasize(t(lang, "faq.a2"))}</dd>
         <dt>${escapeHtml(t(lang, "faq.q3"))}</dt>
-        <dd>${escapeHtml(t(lang, "faq.a3"))}</dd>
+        <dd>${emphasize(t(lang, "faq.a3"))}</dd>
       </dl>
     </section>
   `;

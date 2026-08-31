@@ -30,9 +30,17 @@ The email-forwarding setup guide, opened from the extension's Settings page, rea
 e-kariyerim forwarding address and any pending Gmail forwarding-confirmation code from your own
 e-kariyerim account (using the same personal access token). It never signs in to, connects to, or
 reads your email account in any way — the actual forwarding is something you set up entirely
-yourself, in your own Gmail settings, using a filter only you control. The guide's links to
-Gmail's own settings pages are ordinary outbound links that open in your browser; the extension
-does not read or modify anything on those pages.
+yourself, in your own Gmail settings, using Gmail's own built-in forwarding feature. The guide's
+links to Gmail's own settings pages are ordinary outbound links that open in your browser; the
+extension does not read or modify anything on those pages.
+
+Once you turn on forwarding in Gmail, every incoming email is relayed to your personal
+e-kariyerim address automatically — Gmail's built-in forwarding is all-or-nothing, it cannot be
+scoped by sender. To keep that from meaning "e-kariyerim sees your whole inbox," our backend
+automatically discards, without storing, any forwarded email that isn't from a well-known job
+site/ATS platform or a company you've already added to e-kariyerim; only the subject line and a
+short snippet of a recognized status-update email are stored, and only to show you a suggestion
+you can approve or dismiss.
 
 ## What data the extension stores
 
@@ -67,8 +75,8 @@ tracking services, and it does not sell or share your data with third parties.
 - Uninstalling the extension deletes everything `chrome.storage.local` held for it (the token,
   API address, theme, and language preference) from your device.
 - Setting up (or not setting up) email forwarding is entirely your choice, done in your own Gmail
-  settings — you can stop it anytime by deleting the filter and/or forwarding address there,
-  independent of this extension.
+  settings — you can stop it anytime by turning off forwarding there, independent of this
+  extension.
 - Data already saved to your e-kariyerim account (past applications) is governed by e-kariyerim's
   own privacy policy at ekariyerim.com, not this document — this page covers only the extension
   itself.
