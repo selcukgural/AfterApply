@@ -4,18 +4,17 @@
 
 - [ ] **Publish the privacy policy.** Put `PRIVACY_POLICY.md`'s content on a real page (e.g.
       `ekariyerim.com/privacy`) — the Dashboard rejects a submission with a token-storing extension
-      and no privacy policy URL.
-- [ ] **Decide the production host permissions.** `manifest.json` currently lists
-      `http://localhost/*` in `host_permissions` for local dev. Leaving it in doesn't block review,
-      but consider whether you want end users' installs pointed at localhost by default — the
-      `DEFAULT_API_BASE_URL` in `storage.js` is also `http://localhost:5151`. If the public listing
-      should default to the production API, update that constant and the options page placeholder
-      before packaging (see "Known limitation" note in `extension/README.md`).
+      and no privacy policy URL. **The one manual step actually blocking submission right now** —
+      everything else on this checklist is either already done or is a Dashboard action.
+- [x] **Production host permissions/API URL** — done. `manifest.json`'s `host_permissions` no
+      longer lists `http://localhost/*`, and `DEFAULT_API_BASE_URL` in `storage.js` is
+      `https://api.ekariyerim.com`.
 - [ ] **One-time $5 developer registration fee**, if you haven't published anything from this
       Google account before: https://chrome.google.com/webstore/devconsole (Chrome asks for this on
       first use of the Dashboard).
-- [ ] **Bump `manifest.json`'s `"version"`** for every subsequent upload — the Dashboard rejects a
-      re-upload with a version already used.
+- [x] **`manifest.json`'s `"version"`** is `0.4.0` — ahead of what's actually live (`0.3.2`), so this
+      upload doesn't need a bump. Bump it for every subsequent upload after this one — the Dashboard
+      rejects a re-upload with a version already used.
 
 ## Package the extension
 

@@ -45,17 +45,23 @@ Clicking it again on the same posting is safe: e-kariyerim recognizes the job by
 your existing application instead of creating a duplicate.
 
 EMAIL FORWARDING (NEW)
-Not every status update happens on a job site — most arrive by email. The extension now includes
-a full, step-by-step setup guide for forwarding those emails (interview invites, rejections,
-status updates) to your own personal e-kariyerim address, so they show up as suggestions you
-approve instead of updates you have to make by hand.
+Not every status update happens on a job site — most arrive by email. The extension includes a
+full, step-by-step setup guide for forwarding those emails (interview invites, rejections, status
+updates) to your own personal e-kariyerim address, so they show up as suggestions you approve
+instead of updates you have to make by hand.
 
-Open it from the extension's Settings page ("Set up Email Forwarding"). It walks you through
-adding your address as a forwarding destination in Gmail's own settings and creating a filter for
-the senders you choose — with a visual diagram of the whole flow, mockups of each Gmail screen,
-and your Gmail confirmation code shown right there the moment it arrives, so you never have to
-guess what's happening or hunt through another inbox to find it. Nothing is automated on Gmail's
-side: you set up and control the forwarding filter yourself, entirely inside your own account.
+Open it from the extension's Settings page ("Set up Email Forwarding") — one click away from the
+main popup too, via the gear icon. It walks you through adding your address as a forwarding
+destination in Gmail's own settings, then turning on Gmail's native "forward a copy of incoming
+mail" — a one-time step, so a new job application never needs new setup. Everything forwarded is
+relayed to us automatically after that, but we only ever turn an email into something you see when
+it's from a known job platform or a company you've already tracked in e-kariyerim — everything
+else is discarded immediately, never stored, never shown to anyone. Nothing is automated on
+Gmail's side: you turn forwarding on (and can turn it off again) entirely inside your own account.
+
+LANGUAGE
+The whole extension — the job-tracking popup, Settings, and the email-forwarding guide — works in
+Turkish or English. Switch anytime with the language toggle in any page's header.
 
 REQUIREMENTS
 You need an e-kariyerim account (ekariyerim.com) and a personal access token, generated from
@@ -93,17 +99,24 @@ Aynı ilanda tekrar tıklamak güvenlidir: e-kariyerim ilanı URL'sinden tanır 
 oluşturmak yerine mevcut başvurunuzu açar.
 
 MAIL YÖNLENDİRME (YENİ)
-Her statü güncellemesi bir iş sitesinde olmuyor — çoğu mail ile geliyor. Eklenti artık bu mailleri
+Her statü güncellemesi bir iş sitesinde olmuyor — çoğu mail ile geliyor. Eklenti bu mailleri
 (mülakat daveti, ret, statü güncellemesi) kişisel e-kariyerim adresinize yönlendirmeniz için tam,
 adım adım bir kurulum rehberi içeriyor — böylece elle güncellemeniz gereken bir şey yerine,
 onayınızı bekleyen bir öneri olarak karşınıza çıkıyorlar.
 
-Eklentinin Ayarlar sayfasından açın ("Mail Yönlendirme Kur"). Adresinizi Gmail'in kendi
-ayarlarında bir yönlendirme adresi olarak eklemekten, seçtiğiniz gönderenler için bir filtre
-oluşturmaya kadar sizi adım adım yönlendirir — tüm akışın görsel bir diyagramı, her Gmail ekranının
-örnek görünümü ve Gmail'in onay kodu geldiği an burada gösterilmesiyle; ne olduğunu tahmin etmenize
-ya da kodu bulmak için başka bir kutuya bakmanıza gerek kalmaz. Gmail tarafında hiçbir şey otomatik
-yapılmaz: yönlendirme filtresini tamamen kendi hesabınızda, siz kurar ve kontrol edersiniz.
+Eklentinin Ayarlar sayfasından açın ("Mail Yönlendirme Kur") — ana penceredeki dişli simgesiyle de
+bir tık uzakta. Adresinizi Gmail'in kendi ayarlarında bir yönlendirme adresi olarak eklemekten,
+Gmail'in kendi "gelen postanın bir kopyasını yönlendir" özelliğini açmaya kadar sizi adım adım
+yönlendirir — tek seferlik bir işlem, yeni bir başvuruda tekrar kurulum gerekmez. Bundan sonra
+gelen her e-posta otomatik olarak bize iletilir, ancak bir maili yalnızca bilinen bir ilan
+sitesinden/ATS'den ya da e-kariyerim'e zaten eklediğiniz bir şirketten geldiğinde bir şeye
+dönüştürürüz — geri kalanı anında elenir, asla saklanmaz, kimseye gösterilmez. Gmail tarafında
+hiçbir şey otomatik yapılmaz: yönlendirmeyi tamamen kendi hesabınızda siz açar (ve istediğinizde
+kapatırsınız).
+
+DİL
+Eklentinin tamamı — başvuru takip penceresi, Ayarlar ve mail yönlendirme rehberi — Türkçe veya
+İngilizce çalışır. Herhangi bir sayfanın başlığındaki dil butonuyla istediğiniz zaman değiştirin.
 
 GEREKSİNİMLER
 Bir e-kariyerim hesabına (ekariyerim.com) ve uygulama içindeki Ayarlar → Tarayıcı Eklentisi

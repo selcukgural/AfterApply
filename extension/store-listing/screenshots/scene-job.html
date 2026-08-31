@@ -239,7 +239,11 @@
             <path d="M8 10.5l2.4 2.4L16.5 7.5"/>
           </svg>
           <h1>e-kariyerim</h1>
-          <button class="theme-toggle" type="button" aria-hidden="true" tabindex="-1"></button>
+          <button class="theme-toggle" type="button" aria-hidden="true" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          </button>
+          <button class="lang-toggle" type="button" aria-hidden="true" tabindex="-1">TR</button>
+          <button id="sceneThemeToggle" class="theme-toggle" type="button" aria-hidden="true" tabindex="-1"></button>
         </header>
         <main id="content">
           <span class="site-badge">LinkedIn</span>
@@ -260,7 +264,7 @@
     // Matches theme.js's sun/moon icon so the mockup's toggle button isn't blank.
     const SUN_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`;
     const MOON_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
-    document.querySelector(".theme-toggle").innerHTML = theme === "dark" ? SUN_ICON : MOON_ICON;
+    document.getElementById("sceneThemeToggle").innerHTML = theme === "dark" ? SUN_ICON : MOON_ICON;
   </script>
 </body>
 </html>
