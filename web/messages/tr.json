@@ -348,6 +348,15 @@
       "successNotice": "Gmail hesabınız bağlandı.",
       "errorNotice": "Gmail bağlantısı başarısız oldu. Lütfen tekrar deneyin."
     },
+    "emailForwarding": {
+      "title": "Mail Yönlendirme",
+      "description": "Otomatik statü önerileri almak için başvuru maillerinizi aşağıdaki kişisel adresinize yönlendirin — kendi mail sağlayıcınızda (Gmail, Outlook, ...) istediğiniz gönderenler için bir filtre kurun. Hesabınıza hiçbir erişim verilmez.",
+      "addressLabel": "Kişisel adresiniz:",
+      "copy": "Kopyala",
+      "copied": "Kopyalandı",
+      "loadError": "Yönlendirme adresiniz yüklenemedi.",
+      "viewSuggestions": "Bekleyen önerileri görüntüle"
+    },
     "cv": {
       "title": "CV / Profil",
       "description": "AI Eşleştirme özelliğinin bir iş ilanına karşı puanlayabilmesi için CV/beceri bilgilerinizi buraya yapıştırın. Sadece siz görürsünüz.",

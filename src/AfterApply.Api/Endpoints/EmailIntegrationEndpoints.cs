@@ -89,44 +89,10 @@ public static class EmailIntegrationEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
-        group.MapGet("/suggestions", async (ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
-                Results.Ok(await service.GetPendingSuggestionsAsync(user.GetUserId(), cancellationToken)))
-            .RequireAuthorization()
-            .WithSummary("List pending status suggestions detected from the user's Gmail")
-            .Produces<IReadOnlyList<EmailSuggestionResponse>>()
-            .ProducesProblem(StatusCodes.Status401Unauthorized);
-
-        group.MapPost("/suggestions/{id:guid}/confirm", async (Guid id, ClaimsPrincipal user, IEmailIntegrationService service,
-                IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
-            {
-                var result = await service.ConfirmSuggestionAsync(user.GetUserId(), id, cancellationToken);
-                return result switch
-                {
-                    ConfirmSuggestionResult.Confirmed => Results.NoContent(),
-                    ConfirmSuggestionResult.NoStatusToConfirm => Results.ValidationProblem(new Dictionary<string, string[]>
-                    {
-                        ["suggestionId"] = [localizer["EMAIL_INTEGRATION_NO_STATUS_TO_CONFIRM"]]
-                    }),
-                    _ => Results.NotFound()
-                };
-            })
-            .RequireAuthorization()
-            .WithSummary("Apply a suggested status change to its application")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status404NotFound);
-
-        group.MapPost("/suggestions/{id:guid}/dismiss", async (Guid id, ClaimsPrincipal user, IEmailIntegrationService service, CancellationToken cancellationToken) =>
-            {
-                var dismissed = await service.DismissSuggestionAsync(user.GetUserId(), id, cancellationToken);
-                return dismissed ? Results.NoContent() : Results.NotFound();
-            })
-            .RequireAuthorization()
-            .WithSummary("Dismiss a pending suggestion without applying it")
-            .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+        // GET /suggestions, POST /suggestions/{id}/confirm, POST /suggestions/{id}/dismiss moved to
+        // EmailForwardingEndpoints — they're provider-agnostic (query EmailSuggestions by UserId, not
+        // by provider) and now gated by EmailForwarding:Enabled instead, since that's the path that's
+        // actually shipping; this group stays Gmail-OAuth-specific and stays off.
 
         return app;
     }

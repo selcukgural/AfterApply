@@ -59,6 +59,10 @@ public class EmailIntegrationTests : IAsyncLifetime
             builder.UseSetting("GoogleOAuth:ClientId", "test-client-id");
             builder.UseSetting("GoogleOAuth:ClientSecret", "test-client-secret");
             builder.UseSetting("EmailIntegrations:Enabled", "true");
+            // Suggestion review routes (GET/confirm/dismiss) now live under the EmailForwarding
+            // flag (see EmailForwardingEndpoints.cs) — needed here too since Gmail-sync-created
+            // suggestions are read back through those same shared routes.
+            builder.UseSetting("EmailForwarding:Enabled", "true");
 
             builder.ConfigureServices(services =>
             {
@@ -129,13 +133,9 @@ public class EmailIntegrationTests : IAsyncLifetime
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [Fact]
-    public async Task Suggestions_Returns_NotFound_When_Flag_Disabled()
-    {
-        var response = await _disabledClient.GetAsync("/api/email-integrations/suggestions");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-    }
+    // Suggestions_Returns_NotFound_When_Flag_Disabled moved to EmailForwardingTests — the
+    // GET/confirm/dismiss suggestion routes now live under /api/email-forwarding, gated by
+    // EmailForwarding:Enabled instead of EmailIntegrations:Enabled (see EmailForwardingEndpoints.cs).
 
     [Fact]
     public async Task Callback_Returns_NotFound_When_Flag_Disabled()
@@ -232,7 +232,7 @@ public class EmailIntegrationTests : IAsyncLifetime
         var applicationId = await CreateApplicationAsync("Acme Corp");
 
         _fakeGmailClient.Messages.Add(new GmailMessageSummary(
-            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting",
+            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting", "user@example.com",
             "Interview invitation", "We'd like to invite you to an interview.", DateTimeOffset.UtcNow.AddHours(-1)));
 
         using var scope = _factory!.Services.CreateScope();
@@ -261,7 +261,7 @@ public class EmailIntegrationTests : IAsyncLifetime
         var applicationId = await CreateApplicationAsync("Acme Corp");
 
         _fakeGmailClient.Messages.Add(new GmailMessageSummary(
-            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting",
+            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting", "user@example.com",
             "Interview invitation", "We'd like to invite you to an interview.", DateTimeOffset.UtcNow.AddHours(-1)));
         _fakeGmailClient.MessageDetails["msg-1"] = new GmailMessageDetail("msg-1", "Live Subject", "Live Snippet");
 
@@ -271,7 +271,7 @@ public class EmailIntegrationTests : IAsyncLifetime
             await service.SyncAllConnectionsAsync(CancellationToken.None);
         }
 
-        var response = await _client.GetAsync("/api/email-integrations/suggestions");
+        var response = await _client.GetAsync("/api/email-forwarding/suggestions");
         response.EnsureSuccessStatusCode();
         var suggestions = await response.Content.ReadFromJsonAsync<List<EmailSuggestionResponse>>(JsonOptions);
 
@@ -291,7 +291,7 @@ public class EmailIntegrationTests : IAsyncLifetime
         var applicationId = await CreateApplicationAsync("Acme Corp");
 
         _fakeGmailClient.Messages.Add(new GmailMessageSummary(
-            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting",
+            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting", "user@example.com",
             "Interview invitation", "We'd like to invite you to an interview.", DateTimeOffset.UtcNow.AddHours(-1)));
 
         Guid suggestionId;
@@ -303,7 +303,7 @@ public class EmailIntegrationTests : IAsyncLifetime
             suggestionId = (await db.EmailSuggestions.SingleAsync()).Id;
         }
 
-        var confirmResponse = await _client.PostAsync($"/api/email-integrations/suggestions/{suggestionId}/confirm", null);
+        var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
         confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var detailResponse = await _client.GetAsync($"/api/applications/{applicationId}");
@@ -331,7 +331,7 @@ public class EmailIntegrationTests : IAsyncLifetime
         var applicationId = await CreateApplicationAsync("Acme Corp");
 
         _fakeGmailClient.Messages.Add(new GmailMessageSummary(
-            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting",
+            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting", "user@example.com",
             "Interview invitation", "We'd like to invite you to an interview.", DateTimeOffset.UtcNow.AddHours(-1)));
 
         Guid suggestionId;
@@ -343,14 +343,14 @@ public class EmailIntegrationTests : IAsyncLifetime
             suggestionId = (await db.EmailSuggestions.SingleAsync()).Id;
         }
 
-        var dismissResponse = await _client.PostAsync($"/api/email-integrations/suggestions/{suggestionId}/dismiss", null);
+        var dismissResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/dismiss", null);
         dismissResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var detailResponse = await _client.GetAsync($"/api/applications/{applicationId}");
         var detail = await detailResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
         detail!.Status.ShouldBe(ApplicationStatus.Applied);
 
-        var pendingResponse = await _client.GetAsync("/api/email-integrations/suggestions");
+        var pendingResponse = await _client.GetAsync("/api/email-forwarding/suggestions");
         var pending = await pendingResponse.Content.ReadFromJsonAsync<List<EmailSuggestionResponse>>(JsonOptions);
         pending.ShouldBeEmpty();
     }
@@ -364,7 +364,7 @@ public class EmailIntegrationTests : IAsyncLifetime
 
         var applicationId = await CreateApplicationAsync("Acme Corp");
         _fakeGmailClient.Messages.Add(new GmailMessageSummary(
-            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting",
+            "msg-1", "thread-1", "recruiter@acme.com", "Acme Corp Recruiting", "user@example.com",
             "Interview invitation", "We'd like to invite you to an interview.", DateTimeOffset.UtcNow.AddHours(-1)));
 
         using (var scope = _factory!.Services.CreateScope())
@@ -389,7 +389,7 @@ public class EmailIntegrationTests : IAsyncLifetime
 
         // A subsequent sync must not touch the disconnected connection.
         _fakeGmailClient.Messages.Add(new GmailMessageSummary(
-            "msg-2", "thread-2", "recruiter@acme.com", "Acme Corp Recruiting",
+            "msg-2", "thread-2", "recruiter@acme.com", "Acme Corp Recruiting", "user@example.com",
             "Update", "Unfortunately we have decided to move forward with other candidates.", DateTimeOffset.UtcNow));
 
         using (var scope = _factory!.Services.CreateScope())

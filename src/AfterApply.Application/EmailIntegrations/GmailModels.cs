@@ -9,6 +9,7 @@ public sealed record GmailMessageSummary(
     string? ThreadId,
     string SenderEmail,
     string SenderDisplayName,
+    string RecipientEmail,
     string Subject,
     string Snippet,
     DateTimeOffset ReceivedAt);

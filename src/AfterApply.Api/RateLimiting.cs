@@ -61,6 +61,21 @@ public static class RateLimiting
                     QueueLimit = 0
                 });
             });
+
+            // Per-inbound-token, not per-IP — the Cloudflare Worker's egress IP is shared
+            // infrastructure, not per-user. Guards against a flood (misbehaving sender, retry storm)
+            // turning into unbounded LLM-classification cost; each request past the cap is dropped,
+            // not queued, so a burst degrades gracefully rather than backing up.
+            options.AddPolicy(DependencyInjection.InboundEmailRateLimitPolicy, httpContext =>
+            {
+                var partitionKey = httpContext.Request.Headers["X-Inbound-Token"].FirstOrDefault() ?? "unknown";
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 30,
+                    Window = TimeSpan.FromMinutes(5),
+                    QueueLimit = 0
+                });
+            });
         });
 
         return services;

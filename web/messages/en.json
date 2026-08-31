@@ -348,6 +348,15 @@
       "successNotice": "Your Gmail account is connected.",
       "errorNotice": "Gmail connection failed. Please try again."
     },
+    "emailForwarding": {
+      "title": "Mail Forwarding",
+      "description": "Forward status-update emails to your personal address below to get automatic status suggestions — set up a filter in your own mail provider (Gmail, Outlook, ...) for the senders you want. No account access is granted to us.",
+      "addressLabel": "Your personal address:",
+      "copy": "Copy",
+      "copied": "Copied",
+      "loadError": "Could not load your forwarding address.",
+      "viewSuggestions": "View pending suggestions"
+    },
     "cv": {
       "title": "CV / Profile",
       "description": "Paste your CV/skills so AI Match can score it against a job description. Only you can see this.",

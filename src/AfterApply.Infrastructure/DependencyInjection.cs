@@ -44,6 +44,7 @@ public static class DependencyInjection
     public const string AuthRateLimitPolicy = "auth-strict";
     public const string UploadRateLimitPolicy = "upload";
     public const string MatchingRateLimitPolicy = "matching";
+    public const string InboundEmailRateLimitPolicy = "inbound-email";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -74,6 +75,7 @@ public static class DependencyInjection
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<GoogleOAuthOptions>(configuration.GetSection("GoogleOAuth"));
         services.Configure<EmailIntegrationOptions>(configuration.GetSection("EmailIntegrations"));
+        services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
         services.Configure<MatchingOptions>(configuration.GetSection("Matching"));
@@ -235,6 +237,8 @@ public static class DependencyInjection
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
         services.AddScoped<IGmailClient, GmailClient>();
         services.AddScoped<IEmailIntegrationService, EmailIntegrationService>();
+        services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();
+        services.AddScoped<IEmailForwardingService, EmailForwardingService>();
         services.AddScoped<IJobMatchingProvider, OpenAiJobMatchingProvider>();
         services.AddScoped<IJobMatchingService, JobMatchingService>();
         services.AddScoped<ICompanyIntelligenceService, CompanyIntelligenceService>();

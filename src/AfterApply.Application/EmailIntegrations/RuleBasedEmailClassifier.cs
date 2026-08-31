@@ -5,7 +5,10 @@ namespace AfterApply.Application.EmailIntegrations;
 
 public sealed record EmailClassificationResult(ApplicationStatus? SuggestedStatus, double ConfidenceScore, string MatchedRule);
 
-public static class EmailClassifier
+/// <summary>Zero-cost, zero-latency fast path for the most obvious, lowest-risk phrasings — tried
+/// before falling back to the LLM-based IEmailClassificationProvider. Deliberately small: broader
+/// coverage now comes from the LLM, not from growing this table (see DECISIONS.md).</summary>
+public static class RuleBasedEmailClassifier
 {
     private sealed record ClassificationRule(string[] Phrases, ApplicationStatus? TargetStatus, string RuleLabel, double Weight);
 

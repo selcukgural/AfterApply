@@ -27,6 +27,7 @@ riderModule.iml
 # Postman Cloud; see postman/README.md.
 /postman/collection.json
 node_modules/
+.wrangler/
 
 # Rider
 .idea/**/workspace.xml

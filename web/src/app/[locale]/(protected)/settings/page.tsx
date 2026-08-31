@@ -2,10 +2,11 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 import { personalAccessTokensApi } from "@/lib/api/personalAccessTokens";
+import { emailForwardingApi } from "@/lib/api/emailForwarding";
 import { ApiError } from "@/lib/api/httpClient";
 import type { CreatedPersonalAccessTokenResponse, PersonalAccessTokenResponse } from "@/types/api";
 import { FormField } from "@/components/ui/FormField";
@@ -29,6 +30,11 @@ export default function SettingsPage() {
   const [justCreatedToken, setJustCreatedToken] = useState<CreatedPersonalAccessTokenResponse | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
 
+  const [forwardingAddress, setForwardingAddress] = useState<string | null>(null);
+  const [forwardingLoading, setForwardingLoading] = useState(true);
+  const [forwardingError, setForwardingError] = useState<string | null>(null);
+  const [addressCopied, setAddressCopied] = useState(false);
+
   const [password, setPassword] = useState("");
   const [confirmationText, setConfirmationText] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -43,6 +49,26 @@ export default function SettingsPage() {
   };
 
   useEffect(loadTokens, []);
+
+  useEffect(() => {
+    emailForwardingApi
+      .getAddress()
+      .then(({ address }) => setForwardingAddress(address))
+      .catch((error) => {
+        // 404 means EmailForwarding:Enabled is off in this environment — hide the card rather
+        // than show an error, same treatment as the (currently unreachable) Gmail card.
+        if (!(error instanceof ApiError && error.status === 404)) {
+          setForwardingError(t("emailForwarding.loadError"));
+        }
+      })
+      .finally(() => setForwardingLoading(false));
+  }, [t]);
+
+  const handleCopyAddress = async () => {
+    if (!forwardingAddress) return;
+    await navigator.clipboard.writeText(forwardingAddress);
+    setAddressCopied(true);
+  };
 
   const handleCreateToken = async () => {
     setTokenError(null);
@@ -185,6 +211,36 @@ export default function SettingsPage() {
           </ul>
         )}
       </section>
+
+      {(forwardingLoading || forwardingAddress || forwardingError) && (
+        <section className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("emailForwarding.title")}</h2>
+          <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("emailForwarding.description")}</p>
+
+          {forwardingLoading ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
+          ) : forwardingError ? (
+            <p className="text-sm text-red-600 dark:text-red-400">{forwardingError}</p>
+          ) : (
+            forwardingAddress && (
+              <>
+                <p className="mb-1 text-sm text-gray-600 dark:text-gray-400">{t("emailForwarding.addressLabel")}</p>
+                <div className="mb-4 flex items-center gap-2">
+                  <code className="flex-1 overflow-x-auto rounded bg-gray-50 dark:bg-gray-800 px-2 py-1 text-xs text-gray-900 dark:text-gray-100">
+                    {forwardingAddress}
+                  </code>
+                  <Button variant="secondary" onClick={handleCopyAddress}>
+                    {addressCopied ? t("emailForwarding.copied") : t("emailForwarding.copy")}
+                  </Button>
+                </div>
+                <Link href="/settings/email-suggestions" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                  {t("emailForwarding.viewSuggestions")}
+                </Link>
+              </>
+            )
+          )}
+        </section>
+      )}
 
       <section className="rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-900 p-6 shadow-sm">
         <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("delete.title")}</h2>

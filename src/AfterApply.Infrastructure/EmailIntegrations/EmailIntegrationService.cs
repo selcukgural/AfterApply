@@ -16,6 +16,7 @@ using Google.Apis.Gmail.v1;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -25,10 +26,13 @@ namespace AfterApply.Infrastructure.EmailIntegrations;
 internal sealed class EmailIntegrationService(
     AppDbContext dbContext,
     IGmailClient gmailClient,
+    IEmailClassificationProvider emailClassificationProvider,
     IDataProtectionProvider dataProtectionProvider,
     IApplicationService applicationService,
     IOptions<GoogleOAuthOptions> googleOptions,
     IOptions<JwtOptions> jwtOptions,
+    IOptions<EmailIntegrationOptions> emailIntegrationOptions,
+    ILogger<EmailIntegrationService> logger,
     HybridCache cache) : IEmailIntegrationService
 {
     private const string StatePurpose = "gmail-oauth-state";
@@ -187,9 +191,11 @@ internal sealed class EmailIntegrationService(
 
         foreach (var row in rows)
         {
-            var (subject, snippet) = ("", "");
+            var (subject, snippet) = (row.s.Subject ?? "", row.s.Snippet ?? "");
 
-            if (row.EncryptedRefreshToken is not null)
+            // Forwarding-path suggestions persist Subject/Snippet directly (no ongoing Gmail access
+            // to refetch from); Gmail-path ones leave them null and fall back to a live refetch.
+            if (row.s.Subject is null && row.EncryptedRefreshToken is not null)
             {
                 var token = new UserCredentialToken(_protector.Unprotect(row.EncryptedRefreshToken));
                 var detail = await gmailClient.GetMessageDetailAsync(token, row.s.ProviderMessageId, cancellationToken);
@@ -302,7 +308,12 @@ internal sealed class EmailIntegrationService(
             .ToListAsync(cancellationToken);
         var existingSet = existingMessageIds.ToHashSet();
 
-        var newMessages = messages.Where(m => !existingSet.Contains(m.MessageId)).ToList();
+        // Oldest-first: when the LLM-call cap below is hit, the sync watermark advances only up to
+        // the last message actually processed, so the remainder is retried in order next run.
+        var newMessages = messages
+            .Where(m => !existingSet.Contains(m.MessageId))
+            .OrderBy(m => m.ReceivedAt)
+            .ToList();
 
         if (newMessages.Count == 0)
         {
@@ -312,20 +323,56 @@ internal sealed class EmailIntegrationService(
 
         var candidates = await BuildCandidatesAsync(connection.UserId, cancellationToken);
         var newSuggestions = new List<EmailSuggestion>();
+        var maxLlmCalls = emailIntegrationOptions.Value.MaxLlmClassificationsPerSyncRun;
 
-        foreach (var message in newMessages)
+        var unmatchedCount = 0;
+        var ruleMatchedCount = 0;
+        var llmCalledCount = 0;
+        var noSignalCount = 0;
+        var statusCounts = new Dictionary<string, int>();
+        DateTimeOffset? lastProcessedReceivedAt = null;
+        var cappedSkippedCount = 0;
+
+        for (var i = 0; i < newMessages.Count; i++)
         {
+            var message = newMessages[i];
+
             var applicationId = EmailApplicationMatcher.Match(
-                message.SenderEmail, message.SenderDisplayName, message.Subject, candidates);
+                message.SenderEmail, message.SenderDisplayName, message.RecipientEmail,
+                connection.ProviderAccountEmail, message.Subject, candidates);
 
             if (applicationId is null)
             {
-                continue; // unmatched emails are not surfaced (product decision)
+                unmatchedCount++;
+                lastProcessedReceivedAt = message.ReceivedAt;
+                continue; // unmatched emails are not surfaced (product decision); doesn't touch the LLM cap
             }
 
-            var classification = EmailClassifier.Classify(message.Subject, message.Snippet);
+            var classification = RuleBasedEmailClassifier.Classify(message.Subject, message.Snippet);
+
             if (classification.MatchedRule == "NoMatch")
             {
+                if (llmCalledCount >= maxLlmCalls)
+                {
+                    cappedSkippedCount = newMessages.Count - i;
+                    break; // leave the rest for the next sync run — do not advance the watermark past this point
+                }
+
+                classification = await emailClassificationProvider.ClassifyAsync(message.Subject, message.Snippet, cancellationToken);
+                llmCalledCount++;
+            }
+            else
+            {
+                ruleMatchedCount++;
+            }
+
+            lastProcessedReceivedAt = message.ReceivedAt;
+            var statusKey = classification.SuggestedStatus?.ToString() ?? "NoSignal";
+            statusCounts[statusKey] = statusCounts.GetValueOrDefault(statusKey) + 1;
+
+            if (classification.SuggestedStatus is null && classification.MatchedRule != "StillWaiting")
+            {
+                noSignalCount++;
                 continue; // matched an application, but nothing about the email is classifiable
             }
 
@@ -341,7 +388,25 @@ internal sealed class EmailIntegrationService(
             dbContext.EmailSuggestions.AddRange(newSuggestions);
         }
 
-        connection.UpdateAfterSync(scanStartedAt);
+        if (cappedSkippedCount > 0)
+        {
+            logger.LogWarning(
+                "Email classification cap hit: ConnectionId={ConnectionId} MaxLlmClassificationsPerSyncRun={Cap} SkippedThisRun={Skipped}",
+                connection.Id, maxLlmCalls, cappedSkippedCount);
+            connection.UpdateAfterSync(lastProcessedReceivedAt ?? since);
+        }
+        else
+        {
+            connection.UpdateAfterSync(scanStartedAt);
+        }
+
+        // Counts and status labels only — never subject/snippet/body content (see DECISIONS.md
+        // "Email içeriği persist edilmiyor").
+        logger.LogInformation(
+            "Email classification sync: ConnectionId={ConnectionId} Unmatched={Unmatched} RuleMatched={RuleMatched} " +
+            "LlmCalled={LlmCalled} NoSignal={NoSignal} SuggestionsCreated={SuggestionsCreated} StatusBreakdown={@StatusBreakdown}",
+            connection.Id, unmatchedCount, ruleMatchedCount, llmCalledCount, noSignalCount, newSuggestions.Count, statusCounts);
+
         return newSuggestions.Count;
     }
 

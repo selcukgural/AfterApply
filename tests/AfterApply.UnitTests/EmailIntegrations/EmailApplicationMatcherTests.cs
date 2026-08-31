@@ -16,7 +16,7 @@ public class EmailApplicationMatcherTests
         };
 
         var result = EmailApplicationMatcher.Match(
-            "recruiter@acme.com", "Jane at Acme", "Your application", candidates);
+            "recruiter@acme.com", "Jane at Acme", "me@example.com", "me@example.com", "Your application", candidates);
 
         result.ShouldBe(applicationId);
     }
@@ -31,7 +31,8 @@ public class EmailApplicationMatcherTests
         };
 
         var result = EmailApplicationMatcher.Match(
-            "noreply@greenhouse.io", "Acme Corp Recruiting", "Update on your application", candidates);
+            "noreply@greenhouse.io", "Acme Corp Recruiting", "me@example.com", "me@example.com",
+            "Update on your application", candidates);
 
         result.ShouldBe(applicationId);
     }
@@ -46,7 +47,8 @@ public class EmailApplicationMatcherTests
         };
 
         var result = EmailApplicationMatcher.Match(
-            "noreply@greenhouse.io", "Greenhouse", "Your application to Acme Corp", candidates);
+            "noreply@greenhouse.io", "Greenhouse", "me@example.com", "me@example.com",
+            "Your application to Acme Corp", candidates);
 
         result.ShouldBe(applicationId);
     }
@@ -63,7 +65,8 @@ public class EmailApplicationMatcherTests
         // Sent via a third-party ATS domain, not acme.com — primary signal doesn't match,
         // fallback name match against the subject should still find it.
         var result = EmailApplicationMatcher.Match(
-            "noreply@greenhouse.io", "Greenhouse", "Your application to Acme Corp", candidates);
+            "noreply@greenhouse.io", "Greenhouse", "me@example.com", "me@example.com",
+            "Your application to Acme Corp", candidates);
 
         result.ShouldBe(applicationId);
     }
@@ -77,7 +80,43 @@ public class EmailApplicationMatcherTests
         };
 
         var result = EmailApplicationMatcher.Match(
-            "noreply@other.com", "Other Company", "Newsletter", candidates);
+            "noreply@other.com", "Other Company", "me@example.com", "me@example.com", "Newsletter", candidates);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Match_Uses_Recipient_Domain_When_Sender_Is_The_User_Themselves()
+    {
+        var applicationId = Guid.NewGuid();
+        var candidates = new[]
+        {
+            new ApplicationMatchCandidate(applicationId, CompanyNameNormalizer.Normalize("Acme Corp"), "acme.com")
+        };
+
+        // The user replying to their own recruiter, e.g. "I accept the offer" — sender is the
+        // user's own account, so the recipient (the recruiter) is what should be matched.
+        var result = EmailApplicationMatcher.Match(
+            "me@example.com", "Selçuk Güral", "recruiter@acme.com", "me@example.com",
+            "Re: Offer letter", candidates);
+
+        result.ShouldBe(applicationId);
+    }
+
+    [Fact]
+    public void Match_Self_Sent_Returns_Null_When_Recipient_Domain_Does_Not_Match_And_Display_Name_Is_Not_Used()
+    {
+        var applicationId = Guid.NewGuid();
+        var candidates = new[]
+        {
+            new ApplicationMatchCandidate(applicationId, CompanyNameNormalizer.Normalize("Acme Corp"), "acme.com")
+        };
+
+        // Self-sent, recipient domain doesn't match, and the subject doesn't mention the company —
+        // the sender display name (the user's own name) must NOT be used as a fallback signal here.
+        var result = EmailApplicationMatcher.Match(
+            "me@example.com", "Selçuk Güral", "someone@unrelated.com", "me@example.com",
+            "Re: dinner plans", candidates);
 
         result.ShouldBeNull();
     }

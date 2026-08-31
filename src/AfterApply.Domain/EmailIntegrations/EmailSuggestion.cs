@@ -23,6 +23,13 @@ public sealed class EmailSuggestion : Entity
 
     public string? SenderDomain { get; private set; }
 
+    /// <summary>Only set by the Forwarding ingestion path — the Gmail OAuth path never persists
+    /// content (see DECISIONS.md "Email içeriği persist edilmiyor"), it re-fetches live from Gmail
+    /// at read time instead, since forwarded mail has no such refetch capability to fall back on.</summary>
+    public string? Subject { get; private set; }
+
+    public string? Snippet { get; private set; }
+
     public DateTimeOffset EmailReceivedAt { get; private set; }
 
     public EmailSuggestionStatus Status { get; private set; }
@@ -38,7 +45,7 @@ public sealed class EmailSuggestion : Entity
     public static EmailSuggestion Create(Guid userId, Guid emailConnectionId, Guid applicationId,
         string providerMessageId, string? providerThreadId, ApplicationStatus? suggestedStatus,
         double confidenceScore, string matchedRule, string? senderDomain, DateTimeOffset emailReceivedAt,
-        DateTimeOffset now)
+        DateTimeOffset now, string? subject = null, string? snippet = null)
     {
         return new EmailSuggestion
         {
@@ -51,6 +58,8 @@ public sealed class EmailSuggestion : Entity
             ConfidenceScore = confidenceScore,
             MatchedRule = matchedRule,
             SenderDomain = senderDomain,
+            Subject = subject,
+            Snippet = snippet,
             EmailReceivedAt = emailReceivedAt,
             Status = EmailSuggestionStatus.Pending,
             CreatedAt = now

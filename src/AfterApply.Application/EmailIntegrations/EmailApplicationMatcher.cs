@@ -10,16 +10,22 @@ public sealed record ApplicationMatchCandidate(Guid ApplicationId, string Normal
 
 public static class EmailApplicationMatcher
 {
-    public static Guid? Match(string senderEmail, string senderDisplayName, string subject,
-        IReadOnlyList<ApplicationMatchCandidate> candidates)
+    /// <summary>recipientEmail/ownAccountEmail let a message the user sent themselves (e.g. "I accept
+    /// the offer" replies — Gmail's default search scope includes Sent, see GmailClient) still match:
+    /// when senderEmail is the user's own account, the recipient's domain is checked instead of the
+    /// sender's, since the sender is never the company in that case.</summary>
+    public static Guid? Match(string senderEmail, string senderDisplayName, string recipientEmail,
+        string ownAccountEmail, string subject, IReadOnlyList<ApplicationMatchCandidate> candidates)
     {
-        var senderDomain = ExtractDomain(senderEmail);
+        var isSelfSent = string.Equals(senderEmail, ownAccountEmail, StringComparison.OrdinalIgnoreCase);
+        var domainToCheck = isSelfSent ? recipientEmail : senderEmail;
+        var domain = ExtractDomain(domainToCheck);
 
-        if (senderDomain is not null)
+        if (domain is not null)
         {
             var domainMatch = candidates.FirstOrDefault(c =>
                 c.CompanyWebsiteDomain is not null &&
-                string.Equals(c.CompanyWebsiteDomain, senderDomain, StringComparison.OrdinalIgnoreCase));
+                string.Equals(c.CompanyWebsiteDomain, domain, StringComparison.OrdinalIgnoreCase));
 
             if (domainMatch is not null)
             {
@@ -27,7 +33,9 @@ public static class EmailApplicationMatcher
             }
         }
 
-        var normalizedDisplayName = CompanyNameNormalizer.Normalize(senderDisplayName);
+        // Self-sent messages have no meaningful "sender display name" (it's the user's own name),
+        // so only the subject is useful for the name-fallback in that case.
+        var normalizedDisplayName = isSelfSent ? "" : CompanyNameNormalizer.Normalize(senderDisplayName);
         var normalizedSubject = CompanyNameNormalizer.Normalize(subject);
 
         var nameMatch = candidates.FirstOrDefault(c =>

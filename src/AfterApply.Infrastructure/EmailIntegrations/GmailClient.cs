@@ -50,11 +50,12 @@ internal sealed class GmailClient(IOptions<GoogleOAuthOptions> options) : IGmail
                 continue;
             }
 
-            var (message, subject, from) = detail.Value;
+            var (message, subject, from, to) = detail.Value;
             var (senderEmail, senderDisplayName) = ParseFromHeader(from);
+            var (recipientEmail, _) = ParseFromHeader(to);
 
             summaries.Add(new GmailMessageSummary(
-                message.Id, message.ThreadId, senderEmail, senderDisplayName, subject, message.Snippet ?? "",
+                message.Id, message.ThreadId, senderEmail, senderDisplayName, recipientEmail, subject, message.Snippet ?? "",
                 message.InternalDate is { } ms ? DateTimeOffset.FromUnixTimeMilliseconds(ms) : DateTimeOffset.UtcNow));
         }
 
@@ -67,6 +68,31 @@ internal sealed class GmailClient(IOptions<GoogleOAuthOptions> options) : IGmail
 
         var detail = await GetMetadataAsync(service, messageId, cancellationToken);
         return detail is null ? null : new GmailMessageDetail(detail.Value.Message.Id, detail.Value.Subject, detail.Value.Message.Snippet ?? "");
+    }
+
+    private static async Task<(Google.Apis.Gmail.v1.Data.Message Message, string Subject, string From, string To)?> GetMetadataAsync(
+        GmailService service, string messageId, CancellationToken cancellationToken)
+    {
+        var getRequest = service.Users.Messages.Get("me", messageId);
+        getRequest.Format = UsersResource.MessagesResource.GetRequest.FormatEnum.Metadata;
+        getRequest.MetadataHeaders = new Repeatable<string>(["Subject", "From", "To"]);
+
+        Google.Apis.Gmail.v1.Data.Message message;
+        try
+        {
+            message = await getRequest.ExecuteAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+
+        var headers = message.Payload?.Headers ?? [];
+        var subject = headers.FirstOrDefault(h => h.Name == "Subject")?.Value ?? "";
+        var from = headers.FirstOrDefault(h => h.Name == "From")?.Value ?? "";
+        var to = headers.FirstOrDefault(h => h.Name == "To")?.Value ?? "";
+
+        return (message, subject, from, to);
     }
 
     public async Task<GoogleTokenResponse> ExchangeCodeAsync(string code, string redirectUri, CancellationToken cancellationToken)
@@ -87,30 +113,6 @@ internal sealed class GmailClient(IOptions<GoogleOAuthOptions> options) : IGmail
             $"https://oauth2.googleapis.com/revoke?token={Uri.EscapeDataString(refreshToken)}",
             content: null, cancellationToken);
         response.EnsureSuccessStatusCode();
-    }
-
-    private static async Task<(Google.Apis.Gmail.v1.Data.Message Message, string Subject, string From)?> GetMetadataAsync(
-        GmailService service, string messageId, CancellationToken cancellationToken)
-    {
-        var getRequest = service.Users.Messages.Get("me", messageId);
-        getRequest.Format = UsersResource.MessagesResource.GetRequest.FormatEnum.Metadata;
-        getRequest.MetadataHeaders = new Repeatable<string>(["Subject", "From"]);
-
-        Google.Apis.Gmail.v1.Data.Message message;
-        try
-        {
-            message = await getRequest.ExecuteAsync(cancellationToken);
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-
-        var headers = message.Payload?.Headers ?? [];
-        var subject = headers.FirstOrDefault(h => h.Name == "Subject")?.Value ?? "";
-        var from = headers.FirstOrDefault(h => h.Name == "From")?.Value ?? "";
-
-        return (message, subject, from);
     }
 
     private GoogleAuthorizationCodeFlow CreateFlow()
