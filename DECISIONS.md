@@ -1897,6 +1897,30 @@ kartında onay kodu/linki doğru göründü, linke tıklanarak Gmail'de forwardi
 
 ---
 
+## Production DB'ye yerelden bağlanma: Cloud SQL Auth Proxy artık önerilen yöntem, authorized-networks değil (2026-08-31)
+
+### Önerilen yöntem tersine çevrildi — DECIDED (Sprint 15'teki "authorized-networks, gerçekte kullanılan" kararının yerini alıyor)
+
+Daha önce (bkz. yukarıdaki "Migration bağlantı yöntemi" kararı) authorized-networks yöntemi,
+Cloud SQL Auth Proxy'nin bu makinede kurulu olmaması nedeniyle birincil yöntem olarak seçilmişti.
+Artık `cloud-sql-proxy` binary'si Homebrew ile kurulu ve `gcloud auth application-default` zaten
+yapılandırılmış durumda — bu önceki gerekçeyi geçersiz kılıyor.
+
+**Bulgu:** authorized-networks yöntemi tek seferlik migration için tasarlanmıştı
+(`--authorized-networks` ile aç, iş bitince `--clear-authorized-networks` ile kapat). Ama DataGrid
+gibi bir GUI istemciyle *tekrarlanan* bağlantılar için bu akış her seferinde IP açıp kapatmayı
+gerektiriyor — kullanıcı bunu atladığı için (whitelist migration sonrası temizlenmiş, kullanıcının
+ISP IP'si de değişmiş olabilir) DataGrid bağlantısı sessizce kesildi, sebebi ilk bakışta belirsizdi.
+
+**Karar:** DEPLOYMENT.md'nin "Recommended path" olarak işaretlediği yöntem Cloud SQL Auth Proxy'ye
+çevrildi (`cloud-sql-proxy --port 5433 <connection-name>`, yerel 5432 çoğunlukla dev Postgres
+tarafından kullanıldığı için 5433 kullanılıyor). Proxy arka planda bırakıldığında hem `dotnet ef`
+migration'ları hem DataGrid gibi GUI istemcileri aynı `127.0.0.1:5433` üzerinden bağlanabiliyor,
+public IP açılmıyor, kapatmayı unutma riski yok. authorized-networks, proxy binary'sinin kurulu
+olmadığı bir makinede kullanılacak alternatif olarak dokümanda kaldı.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

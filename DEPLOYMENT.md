@@ -308,8 +308,30 @@ DECISIONS.md). `Program.cs` never calls `Database.Migrate()` automatically
 (Sprint 7 decision, still true) — this is always a separate, explicit step.
 
 Cloud SQL isn't reachable by Unix socket from a local machine the way
-Cloud Run reaches it. **Recommended path — temporary authorized network**
-(no new local tooling beyond `gcloud`/`dotnet ef`, which you already have):
+Cloud Run reaches it. **Recommended path — Cloud SQL Auth Proxy**
+(no public IP exposure, no IP whitelist to remember to close afterward;
+requires the proxy binary and `gcloud` authenticated locally with
+Application Default Credentials — `gcloud auth application-default login`
+once if `gcloud auth application-default print-access-token` fails):
+
+```bash
+# Install once: https://cloud.google.com/sql/docs/postgres/sql-proxy#install
+# Port 5432 is often already taken by a local dev Postgres — use 5433.
+cloud-sql-proxy --port 5433 "${PROJECT_ID}:${REGION}:afterapply-db" &
+dotnet ef database update \
+  --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api \
+  --connection "Host=127.0.0.1;Port=5433;Database=afterapply;Username=afterapply;Password=<DB_PASSWORD from step 2>"
+```
+
+This same proxy — left running in the background — is also the way to
+point a GUI client (DataGrid, etc.) at production: connect it to
+`127.0.0.1:5433` (no SSL needed, the proxy tunnel is already encrypted).
+Kill the `cloud-sql-proxy` process when you're done; it doesn't need to
+stay up between sessions.
+
+**Alternative — temporary authorized network**, if you can't install the
+proxy binary on this machine (opens the instance to a single public IP
+until you close it again — remember step 3 below):
 
 ```bash
 # Your current public IPv4 (any "what's my IP" method works):
@@ -334,18 +356,6 @@ step 4's `--add-cloudsql-instances` flag):
 
 ```bash
 gcloud sql instances patch afterapply-db --clear-authorized-networks
-```
-
-**Alternative — Cloud SQL Auth Proxy**, if you'd rather not open any
-public access even temporarily (requires installing the proxy binary and
-having `gcloud` authenticated locally):
-
-```bash
-# Install once: https://cloud.google.com/sql/docs/postgres/sql-proxy#install
-cloud-sql-proxy "${PROJECT_ID}:${REGION}:afterapply-db" &
-dotnet ef database update \
-  --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api \
-  --connection "Host=127.0.0.1;Port=5432;Database=afterapply;Username=afterapply;Password=<DB_PASSWORD from step 2>"
 ```
 
 ### 7. Verify it actually works
