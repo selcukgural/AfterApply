@@ -200,6 +200,10 @@ export interface EmailSuggestionResponse {
   description: string | null;
 }
 
+export interface SuggestionCountResponse {
+  count: number;
+}
+
 export interface InboundAddressResponse {
   address: string;
   // Non-null only while Gmail's own forwarding-confirmation email is pending acknowledgement.

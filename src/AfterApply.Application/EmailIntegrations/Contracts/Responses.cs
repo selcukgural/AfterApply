@@ -19,6 +19,8 @@ public sealed record EmailSuggestionResponse(
     string? Location = null,
     string? Description = null);
 
+public sealed record SuggestionCountResponse(int Count);
+
 public sealed record InboundAddressResponse(
     string Address,
     // Non-null only while Gmail's own forwarding-confirmation email is pending acknowledgement —

@@ -21,6 +21,10 @@ public interface IEmailForwardingService
 
     Task<IReadOnlyList<EmailSuggestionResponse>> GetPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>Cheap count-only variant of <see cref="GetPendingSuggestionsAsync"/> for UI badges —
+    /// skips the Applications/Companies joins, backed by the same (UserId, Status) index.</summary>
+    Task<int> GetPendingSuggestionCountAsync(Guid userId, CancellationToken cancellationToken);
+
     Task<ConfirmSuggestionResult> ConfirmSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);
 
     Task<bool> DismissSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);

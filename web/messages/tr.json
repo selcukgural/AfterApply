@@ -167,7 +167,8 @@
     "accountSettings": "Hesap Ayarları",
     "logout": "Çıkış Yap",
     "trackedJobs": "Takip Listem",
-    "import": "İçe Aktar"
+    "import": "İçe Aktar",
+    "suggestions": "E-posta Önerileri"
   },
   "auth": {
     "login": {
@@ -343,7 +344,6 @@
       "copy": "Kopyala",
       "copied": "Kopyalandı",
       "loadError": "Yönlendirme adresiniz yüklenemedi.",
-      "viewSuggestions": "Bekleyen önerileri görüntüle",
       "gmailConfirmation": {
         "title": "Gmail bir onay kodu gönderdi",
         "help": "Bu kodu, bu adresi eklerken Gmail'in gösterdiği onay kutusuna yapıştırın, ya da onay bağlantısını doğrudan açın.",
@@ -393,7 +393,6 @@
     }
   },
   "emailSuggestions": {
-    "back": "← Hesap Ayarları",
     "title": "E-posta Önerileri",
     "empty": "Bekleyen öneri yok.",
     "stillPending": "Hâlâ bekleniyor",

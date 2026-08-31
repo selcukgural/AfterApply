@@ -130,6 +130,45 @@ public class EmailForwardingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task SuggestionCount_Returns_NotFound_When_Flag_Disabled()
+    {
+        var response = await _disabledClient.GetAsync("/api/email-forwarding/suggestions/count");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task SuggestionCount_Reflects_Pending_Suggestions_And_Drops_After_Confirm()
+    {
+        var address = await GetOwnAddressAsync();
+        await CreateApplicationAsync("Acme Count Test");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/email-forwarding/inbound")
+        {
+            Content = JsonContent.Create(new
+            {
+                to = address, from = "recruiter@acme-count-test.com", fromName = "Acme Count Test Recruiting",
+                subject = "Interview invitation", snippet = "We'd like to invite you to an interview."
+            }, options: JsonOptions)
+        };
+        request.Headers.Add("X-Webhook-Secret", WebhookSecret);
+
+        var unauthenticatedClient = _factory!.CreateClient();
+        (await unauthenticatedClient.SendAsync(request)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await WaitForHangfireIdleAsync();
+
+        var countAfterInbound = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions/count", JsonOptions);
+        countAfterInbound.GetProperty("count").GetInt32().ShouldBe(1);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestionsResponse.EnumerateArray().Single().GetProperty("id").GetString();
+        (await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var countAfterConfirm = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions/count", JsonOptions);
+        countAfterConfirm.GetProperty("count").GetInt32().ShouldBe(0);
+    }
+
+    [Fact]
     public async Task GetAddress_Creates_Connection_And_Is_Idempotent()
     {
         var first = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/address", JsonOptions);

@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { emailForwardingApi } from "@/lib/api/emailForwarding";
 import { ApiError } from "@/lib/api/httpClient";
 import type { EmailSuggestionResponse } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { Button } from "@/components/ui/Button";
+import { suggestionCountQueryKey } from "@/hooks/useSuggestionCount";
 
 export default function EmailSuggestionsPage() {
   const t = useTranslations("emailSuggestions");
   const tCommon = useTranslations("common");
   const locale = useLocale();
+  const queryClient = useQueryClient();
   const [suggestions, setSuggestions] = useState<EmailSuggestionResponse[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
@@ -31,6 +33,7 @@ export default function EmailSuggestionsPage() {
     try {
       await emailForwardingApi.confirmSuggestion(id);
       setSuggestions((prev) => prev?.filter((s) => s.id !== id) ?? prev);
+      await queryClient.invalidateQueries({ queryKey: suggestionCountQueryKey });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("confirmError"));
     } finally {
@@ -44,6 +47,7 @@ export default function EmailSuggestionsPage() {
     try {
       await emailForwardingApi.dismissSuggestion(id);
       setSuggestions((prev) => prev?.filter((s) => s.id !== id) ?? prev);
+      await queryClient.invalidateQueries({ queryKey: suggestionCountQueryKey });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : t("dismissError"));
     } finally {
@@ -53,12 +57,7 @@ export default function EmailSuggestionsPage() {
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
-      <div>
-        <Link href="/settings" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-          {t("back")}
-        </Link>
-        <h1 className="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
-      </div>
+      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 

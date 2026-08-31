@@ -166,6 +166,10 @@ internal sealed partial class EmailForwardingService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public Task<int> GetPendingSuggestionCountAsync(Guid userId, CancellationToken cancellationToken) =>
+        dbContext.EmailSuggestions
+            .CountAsync(s => s.UserId == userId && s.Status == EmailSuggestionStatus.Pending, cancellationToken);
+
     public async Task<IReadOnlyList<EmailSuggestionResponse>> GetPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken)
     {
         var rows = await dbContext.EmailSuggestions

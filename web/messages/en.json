@@ -167,7 +167,8 @@
     "accountSettings": "Account Settings",
     "logout": "Log Out",
     "trackedJobs": "Tracked Jobs",
-    "import": "Import"
+    "import": "Import",
+    "suggestions": "Email Suggestions"
   },
   "auth": {
     "login": {
@@ -343,7 +344,6 @@
       "copy": "Copy",
       "copied": "Copied",
       "loadError": "Could not load your forwarding address.",
-      "viewSuggestions": "View pending suggestions",
       "gmailConfirmation": {
         "title": "Gmail sent a confirmation code",
         "help": "Paste this code into the confirmation box Gmail showed when you added this address, or open the confirmation link directly.",
@@ -393,7 +393,6 @@
     }
   },
   "emailSuggestions": {
-    "back": "← Account Settings",
     "title": "Email Suggestions",
     "empty": "No pending suggestions.",
     "stillPending": "Still pending",

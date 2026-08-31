@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { useSuggestionCount } from "@/hooks/useSuggestionCount";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
@@ -13,6 +14,7 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
   const { user, logout } = useAuth();
   const router = useRouter();
   const t = useTranslations("nav");
+  const { data: suggestionCount } = useSuggestionCount();
 
   const handleLogout = async () => {
     await logout();
@@ -38,6 +40,14 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
             </Link>
             <Link href="/import" className="hover:text-gray-900 dark:hover:text-gray-100">
               {t("import")}
+            </Link>
+            <Link href="/suggestions" className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-gray-100">
+              {t("suggestions")}
+              {!!suggestionCount && (
+                <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-xs font-semibold leading-none text-white">
+                  {suggestionCount}
+                </span>
+              )}
             </Link>
           </nav>
         </div>

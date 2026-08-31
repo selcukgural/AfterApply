@@ -84,6 +84,13 @@ public static class EmailForwardingEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
+        group.MapGet("/suggestions/count", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
+                Results.Ok(new SuggestionCountResponse(await service.GetPendingSuggestionCountAsync(user.GetUserId(), cancellationToken))))
+            .RequireAuthorization()
+            .WithSummary("Count of pending status suggestions — cheap poll target for a nav badge")
+            .Produces<SuggestionCountResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
         group.MapGet("/suggestions", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.GetPendingSuggestionsAsync(user.GetUserId(), cancellationToken)))
             .RequireAuthorization()

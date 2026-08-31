@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 import { personalAccessTokensApi } from "@/lib/api/personalAccessTokens";
@@ -298,10 +298,6 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 )}
-
-                <Link href="/settings/email-suggestions" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                  {t("emailForwarding.viewSuggestions")}
-                </Link>
               </>
             )
           )}
