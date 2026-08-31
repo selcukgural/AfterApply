@@ -101,7 +101,12 @@ export default function EmailSuggestionsPage() {
               <p className="mb-1 text-sm font-medium text-gray-800 dark:text-gray-200">{s.subject}</p>
               <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">{s.description ?? s.snippet}</p>
               <div className="flex gap-3">
-                {s.suggestedStatus && (
+                {/* A new-job suggestion is always confirmable even with a null suggestedStatus (e.g.
+                    the ApplicationReceived rule) — it still creates the Application, just at the
+                    default Applied status. Only an *existing*-application suggestion with no
+                    suggestedStatus (e.g. a StillWaiting match) has nothing to confirm — the backend
+                    itself rejects that combination with NoStatusToConfirm. */}
+                {(s.suggestedStatus || s.isNewApplicationSuggestion) && (
                   <Button onClick={() => handleConfirm(s.id)} disabled={pendingActionId === s.id}>
                     {t("confirm")}
                   </Button>
