@@ -188,6 +188,10 @@
     <value>Set your CV in your profile before computing a job match.</value>
   </data>
 
+  <data name="PERSONAL_ACCESS_TOKEN_LIMIT_REACHED" xml:space="preserve">
+    <value>You can have at most 10 active personal access tokens. Delete an existing one before creating a new one.</value>
+  </data>
+
   <data name="GENERIC_ERROR" xml:space="preserve">
     <value>An unexpected error occurred.</value>
   </data>

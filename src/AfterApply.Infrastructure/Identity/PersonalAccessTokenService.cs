@@ -1,3 +1,4 @@
+using AfterApply.Application.Common;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Infrastructure.Persistence;
@@ -8,6 +9,8 @@ namespace AfterApply.Infrastructure.Identity;
 
 internal sealed class PersonalAccessTokenService(AppDbContext dbContext, ITokenService tokenService, HybridCache cache) : IPersonalAccessTokenService
 {
+    private const int MaxActiveTokens = 10;
+
     private static readonly HybridCacheEntryOptions ValidationCacheOptions = new()
     {
         Expiration = TimeSpan.FromSeconds(60),
@@ -18,6 +21,14 @@ internal sealed class PersonalAccessTokenService(AppDbContext dbContext, ITokenS
 
     public async Task<CreatedPersonalAccessTokenResponse> CreateAsync(Guid userId, CreatePersonalAccessTokenRequest request, CancellationToken cancellationToken)
     {
+        var activeCount = await dbContext.PersonalAccessTokens
+            .CountAsync(t => t.UserId == userId && t.RevokedAt == null, cancellationToken);
+        if (activeCount >= MaxActiveTokens)
+        {
+            throw new CodedException("PERSONAL_ACCESS_TOKEN_LIMIT_REACHED",
+                "You can have at most 10 active personal access tokens.");
+        }
+
         var now = DateTimeOffset.UtcNow;
         var rawToken = tokenService.GeneratePersonalAccessToken();
         var tokenHash = tokenService.HashPersonalAccessToken(rawToken);

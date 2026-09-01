@@ -369,6 +369,7 @@
       "generate": "Anahtar Üret",
       "generating": "Üretiliyor...",
       "generateError": "Anahtar üretilemedi.",
+      "limitReached": "En fazla 10 aktif anahtar oluşturabilirsiniz. Yeni bir anahtar oluşturmadan önce mevcuttan birini silmelisiniz.",
       "newTokenWarning": "Bu anahtar yalnızca bir kez gösterilir. Şimdi kopyalayıp eklentinin ayarlarına yapıştırın.",
       "copy": "Kopyala",
       "copied": "Kopyalandı",

@@ -114,4 +114,44 @@ public class PersonalAccessTokenTests : IAsyncLifetime
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
+
+    [Fact]
+    public async Task Create_Fails_After_10_Active_Tokens()
+    {
+        for (var i = 0; i < 10; i++)
+        {
+            var response = await _client.PostAsJsonAsync("/api/personal-access-tokens",
+                new CreatePersonalAccessTokenRequest($"Token {i}"), JsonOptions);
+            response.EnsureSuccessStatusCode();
+        }
+
+        var eleventhResponse = await _client.PostAsJsonAsync("/api/personal-access-tokens",
+            new CreatePersonalAccessTokenRequest("Token 11"), JsonOptions);
+        eleventhResponse.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        var problem = await eleventhResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        var detail = problem!.RootElement.GetProperty("detail").GetString();
+        detail.ShouldNotBeNull();
+        detail.ShouldContain("10");
+    }
+
+    [Fact]
+    public async Task Revoking_A_Token_Frees_A_Slot_At_The_Limit()
+    {
+        var created = new List<CreatedPersonalAccessTokenResponse>();
+        for (var i = 0; i < 10; i++)
+        {
+            var response = await _client.PostAsJsonAsync("/api/personal-access-tokens",
+                new CreatePersonalAccessTokenRequest($"Token {i}"), JsonOptions);
+            response.EnsureSuccessStatusCode();
+            created.Add((await response.Content.ReadFromJsonAsync<CreatedPersonalAccessTokenResponse>(JsonOptions))!);
+        }
+
+        var revokeResponse = await _client.DeleteAsync($"/api/personal-access-tokens/{created[0].Id}");
+        revokeResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var afterRevokeResponse = await _client.PostAsJsonAsync("/api/personal-access-tokens",
+            new CreatePersonalAccessTokenRequest("Token 11"), JsonOptions);
+        afterRevokeResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
 }

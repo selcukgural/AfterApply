@@ -369,6 +369,7 @@
       "generate": "Generate Token",
       "generating": "Generating...",
       "generateError": "Could not generate the token.",
+      "limitReached": "You've reached the limit of 10 active tokens. Delete one before creating a new one.",
       "newTokenWarning": "This token is shown only once. Copy it now and paste it into the extension's settings.",
       "copy": "Copy",
       "copied": "Copied",

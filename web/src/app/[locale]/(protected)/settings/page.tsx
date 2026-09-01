@@ -13,6 +13,8 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
+const MAX_ACTIVE_TOKENS = 10;
+
 export default function SettingsPage() {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
@@ -179,6 +181,10 @@ export default function SettingsPage() {
 
         {tokenError && <p className="mb-3 text-sm text-red-600 dark:text-red-400">{tokenError}</p>}
 
+        {tokens.length >= MAX_ACTIVE_TOKENS && (
+          <p className="mb-3 text-sm text-amber-700 dark:text-amber-400">{t("extension.limitReached")}</p>
+        )}
+
         {justCreatedToken && (
           <div className="mb-4 flex flex-col gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3">
             <p className="text-sm text-amber-800 dark:text-amber-300">{t("extension.newTokenWarning")}</p>
@@ -204,7 +210,7 @@ export default function SettingsPage() {
               />
             </FormField>
           </div>
-          <Button variant="secondary" onClick={handleCreateToken} disabled={creatingToken}>
+          <Button variant="secondary" onClick={handleCreateToken} disabled={creatingToken || tokens.length >= MAX_ACTIVE_TOKENS}>
             {creatingToken ? t("extension.generating") : t("extension.generate")}
           </Button>
         </div>
