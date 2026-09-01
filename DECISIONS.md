@@ -2073,6 +2073,36 @@ kapsıyorsa hepsinin detaylarının Slack'te görünmesini istedi.
   secret eklenmedi. Bot'un `#deployments` kanalına manuel davet edilmesi gerekiyor (workflow
   bunu otomatik yapamaz).
 
+## CI'da integration testler artık paralel: xunit.runner.json'daki DOP=1 sadece yerel podman'a özeldi (2026-09-01)
+
+**Sorun (kullanıcı bulgusu):** `ci.yml`'in `backend` job'ı `dotnet test` adımında 5-6 dakika
+takılıyormuş gibi görünüyordu (kullanıcı canlı izlerken "iş yapıyormuş gibi bekletiyor" diye
+şüphelendi). İncelemede: gerçekten donmuyor, her CI koşumunda tutarlı şekilde 4-6 dakika sürüyor —
+"Integration test suite: seri çalıştırma..." (2026-08-29) kararıyla eklenen
+`tests/AfterApply.IntegrationTests/xunit.runner.json`'daki `maxParallelThreads: 1` yüzünden ~16
+Testcontainers-tabanlı test sınıfı tek tek, seri çalışıyor.
+
+**Kök neden ayrımı:** O `maxParallelThreads: 1` kararı **yerel geliştirme makinesinin paylaşımlı,
+resource-constrained rootless-podman VM'i** için alınmıştı (24 container aynı anda başlayınca VM'i
+6+ dakika kilitlemişti) — ama aynı `xunit.runner.json` dosyası hem yerel hem CI'da okunuyor, ve CI
+(`ubuntu-latest`) paylaşımlı podman VM değil, kendi özel 4 vCPU'lu gerçek Docker daemon'ına sahip
+izole bir runner. Yerel VM'i korumak için konan kısıtlama CI'da hiç geçerli olmayan bir sebeple
+süreyi 4-16x uzatıyordu.
+
+**Karar:** `xunit.runner.json`'ın kendisine dokunulmadı (yerel davranış DOP=1 olarak aynı kalıyor)
+— bunun yerine `ci.yml`'in `dotnet test` komutuna VSTest'in `-- xunit.<key>=<value>` passthrough'u
+ile `xunit.maxParallelThreads=4` eklendi (README.md'nin zaten ters yönde belgelediği aynı mekanizma:
+`-- xunit.parallelizeTestCollections=false`). 4, `ubuntu-latest`'in standart 4 vCPU'suna denk
+geliyor. Bu güvenli kabul edildi çünkü her test sınıfı zaten kendi rastgele portlu
+Postgres/Redis container çiftini ve kendi `WebApplicationFactory`'sini alıyor — DOP=1'in sebebi
+doğruluk/izolasyon değil, salt yerel VM'in kaynak açlığıydı; CI'da o kaynak kısıtı yok.
+
+**Bilinçli olarak yapılmadı:** 16 sınıfı tek paylaşımlı `ICollectionFixture`'a indirmek (asıl büyük
+kazanç, ~16x container lifecycle azaltımı) — yukarıdaki "Integration test suite" kararında zaten
+her sınıfın izolasyon varsayımının (ör. `CompanyIntelligenceTests`'in temiz tek-kiracılı DB
+ihtiyacı) tek tek incelenmesini gerektirdiği için bilinçli ertelenmişti; bu oturumda da aynı
+gerekçeyle kapsam dışı bırakıldı.
+
 ---
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)

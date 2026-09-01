@@ -25,7 +25,16 @@ jobs:
       # mechanism (a long-lived, health-check-gated container for the whole
       # job) and would be redundant/conflicting with what Testcontainers does
       # per test class.
-      - run: dotnet test AfterApply.slnx --no-build --configuration Release
+      #
+      # tests/AfterApply.IntegrationTests/xunit.runner.json caps maxParallelThreads at 1 — that
+      # was written for local dev's shared, resource-constrained rootless-podman VM (DECISIONS.md
+      # "Integration test suite: seri çalıştırma..." 2026-08-29: 24 containers starting at once
+      # stalled it for 6+ minutes), not for this runner. ubuntu-latest is a dedicated 4-vCPU VM
+      # with a real Docker daemon and none of that contention, so it can run several of the ~16
+      # Testcontainers-backed classes at once. Overridden here via VSTest's `-- xunit.<key>=<value>`
+      # passthrough (the same mechanism README.md already documents for the opposite direction)
+      # instead of editing xunit.runner.json itself, so local dev's serial default is untouched.
+      - run: dotnet test AfterApply.slnx --no-build --configuration Release -- xunit.maxParallelThreads=4
 
   api-contract:
     uses: ./.github/workflows/api-contract.yml
