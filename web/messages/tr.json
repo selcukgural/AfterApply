@@ -362,7 +362,11 @@
       "saving": "Kaydediliyor...",
       "saved": "Kaydedildi.",
       "loadError": "CV yüklenemedi.",
-      "saveError": "CV kaydedilemedi."
+      "saveError": "CV kaydedilemedi.",
+      "sensitiveDataWarning": "Lütfen CV'nize sağlık durumu, dini inanç veya sendika üyeliği gibi özel nitelikli kişisel veri eklemeyin.",
+      "consentPrefix": "CV metnimin, eşleştirme puanı hesaplanması amacıyla",
+      "consentLink": "OpenAI'a (ABD merkezli)",
+      "consentSuffix": " gönderilmesini kabul ediyorum."
     },
     "extension": {
       "title": "Tarayıcı Eklentisi",
@@ -418,7 +422,17 @@
       "item1": "Hesap bilgileri: ad, soyad, e-posta adresi, şifre (hash'lenmiş olarak saklanır).",
       "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar.",
       "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
+      "item4": "CV/profil metniniz — yalnızca AI Eşleştirme özelliğini kullanmayı seçer ve Ayarlar'daki onay kutusunu işaretlerseniz.",
       "outro": "Bu veriler yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır."
+    },
+    "crossBorderTransfer": {
+      "title": "Yurt dışına veri aktarımı",
+      "intro": "AI Eşleştirme özelliğini kullanmayı seçerseniz, Ayarlar sayfasına yapıştırdığınız CV/profil metni bir uyum puanı hesaplanması amacıyla yurt dışına aktarılır. Bu, özelliği hiç kullanmazsanız gerçekleşmez.",
+      "recipient": "Alıcı: OpenAI, L.L.C. (Amerika Birleşik Devletleri) — API sağlayıcımız.",
+      "purpose": "Amaç: girdiğiniz iş ilanı açıklamasına karşı CV'nizin uyumunu puanlamak; sonuç sadece size gösterilir.",
+      "legalBasis": "Hukuki sebep: yalnızca Ayarlar sayfasında, genel kayıt onayından bağımsız, ayrı ve spesifik bir onay kutusunu her kaydettiğinizde yeniden işaretlediğinizde gerçekleşir.",
+      "withdraw": "Geri çekme: CV metninizi Ayarlar'dan silmeniz veya hesabınızı silmeniz, bu aktarımı tamamen durdurur.",
+      "sensitiveDataNote": "CV'nize sağlık durumu, dini inanç veya sendika üyeliği gibi özel nitelikli kişisel veri eklememenizi öneririz."
     },
     "retention": {
       "title": "Saklama süresi",

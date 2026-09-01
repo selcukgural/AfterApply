@@ -174,6 +174,15 @@ sırayla planlanıyor:
 > hazır olduktan sonraya ertelendi (ne zaman ele alınacağı ayrı bir
 > karar — bkz. DECISIONS.md).
 
+> **Yeniden açıldı (2026-09-01):** `PRIVACY_CHECKLIST.md`'nin #2 (granüler
+> açık rıza) ve #3 (yurt dışı aktarım disclosure'ı) maddeleri bu özelliğe
+> özgü olarak kapatıldı — `/privacy` sayfasına OpenAI'ı isimlendiren yeni
+> bir "Yurt dışına veri aktarımı" bölümü, ve Ayarlar'daki CV kaydetme
+> formuna genel kayıt onayından bağımsız, her kaydette yeniden işaretlenen
+> bir onay kutusu eklendi (bkz. DECISIONS.md). `Matching:Enabled` `true`'ya
+> çekildi. **Bu tam bir hukuki inceleme değil** — KVKK m.10 tam formatı,
+> VERBİS muafiyet teyidi, Çerez Politikası ve ToS hâlâ açık kalemler.
+
 > Diğer data-gated fazlardan farklı olarak bu faz **tek kullanıcının kendi**
 > CV'si + job description'ına dayanıyor, başka kullanıcı verisine bağımlı
 > değil — dolayısıyla yayın öncesi tam olarak bitirilebilir.

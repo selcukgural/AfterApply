@@ -362,7 +362,11 @@
       "saving": "Saving...",
       "saved": "Saved.",
       "loadError": "Could not load your CV.",
-      "saveError": "Could not save your CV."
+      "saveError": "Could not save your CV.",
+      "sensitiveDataWarning": "Please avoid including special-category personal data — such as health, religious belief, or union membership — in your CV.",
+      "consentPrefix": "I consent to my CV text being sent to",
+      "consentLink": "OpenAI (United States)",
+      "consentSuffix": " to compute a match score."
     },
     "extension": {
       "title": "Browser Extension",
@@ -418,7 +422,17 @@
       "item1": "Account information: first name, last name, email address, password (stored hashed).",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
+      "item4": "Your CV/profile text — only if you choose to use AI Job Matching and check the consent box in Settings.",
       "outro": "This data is used solely to provide you with application tracking and personal analytics features."
+    },
+    "crossBorderTransfer": {
+      "title": "Cross-border data transfer",
+      "intro": "If you choose to use AI Job Matching, the CV/profile text you paste in Settings is transferred abroad to compute a match score. This does not happen unless you use the feature.",
+      "recipient": "Recipient: OpenAI, L.L.C. (United States) — our API provider.",
+      "purpose": "Purpose: to score your CV against a job description you provide; the result is shown only to you.",
+      "legalBasis": "Legal basis: this only happens when you check a separate, specific consent box in Settings — independent of the general signup consent — which you re-affirm every time you save.",
+      "withdraw": "Withdrawal: clearing your CV text in Settings, or deleting your account, stops this transfer entirely.",
+      "sensitiveDataNote": "We recommend not including special-category personal data — such as health, religious belief, or union membership — in your CV."
     },
     "retention": {
       "title": "Retention period",

@@ -4,10 +4,10 @@ import { apiFetch } from "./httpClient";
 export const matchingApi = {
   getProfile: () => apiFetch<CandidateProfileResponse>("/api/matching/profile"),
 
-  updateProfile: (cvText: string) =>
+  updateProfile: (cvText: string, openAiConsentAccepted: boolean) =>
     apiFetch<CandidateProfileResponse>("/api/matching/profile", {
       method: "PUT",
-      body: JSON.stringify({ cvText }),
+      body: JSON.stringify({ cvText, openAiConsentAccepted }),
     }),
 
   getMatch: (applicationId: string) =>

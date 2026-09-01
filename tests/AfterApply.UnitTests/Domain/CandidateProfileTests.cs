@@ -18,6 +18,7 @@ public class CandidateProfileTests
         profile.CvText.ShouldBe("C# / .NET / PostgreSQL");
         profile.CreatedAt.ShouldBe(Now);
         profile.UpdatedAt.ShouldBe(Now);
+        profile.OpenAiConsentAcceptedAt.ShouldBe(Now);
     }
 
     [Fact]
@@ -31,5 +32,6 @@ public class CandidateProfileTests
         profile.CvText.ShouldBe("New CV text");
         profile.CreatedAt.ShouldBe(Now);
         profile.UpdatedAt.ShouldBe(later);
+        profile.OpenAiConsentAcceptedAt.ShouldBe(later);
     }
 }

@@ -17,8 +17,21 @@ export default async function PrivacyPage() {
             <li>{t("dataCollection.item1")}</li>
             <li>{t("dataCollection.item2")}</li>
             <li>{t("dataCollection.item3")}</li>
+            <li>{t("dataCollection.item4")}</li>
           </ul>
           <p className="mt-2">{t("dataCollection.outro")}</p>
+        </section>
+
+        <section id="cross-border-transfer">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("crossBorderTransfer.title")}</h2>
+          <p>{t("crossBorderTransfer.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("crossBorderTransfer.recipient")}</li>
+            <li>{t("crossBorderTransfer.purpose")}</li>
+            <li>{t("crossBorderTransfer.legalBasis")}</li>
+            <li>{t("crossBorderTransfer.withdraw")}</li>
+          </ul>
+          <p className="mt-2">{t("crossBorderTransfer.sensitiveDataNote")}</p>
         </section>
 
         <section>

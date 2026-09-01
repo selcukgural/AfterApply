@@ -98,13 +98,22 @@ public class MatchingTests : IAsyncLifetime
         getBeforeResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
         var putResponse = await _client.PutAsJsonAsync("/api/matching/profile",
-            new UpdateCandidateProfileRequest("C# / .NET / PostgreSQL"), JsonOptions);
+            new UpdateCandidateProfileRequest("C# / .NET / PostgreSQL", true), JsonOptions);
         putResponse.EnsureSuccessStatusCode();
 
         var getResponse = await _client.GetAsync("/api/matching/profile");
         getResponse.EnsureSuccessStatusCode();
         var profile = await getResponse.Content.ReadFromJsonAsync<CandidateProfileResponse>(JsonOptions);
         profile!.CvText.ShouldBe("C# / .NET / PostgreSQL");
+    }
+
+    [Fact]
+    public async Task UpdateProfile_Without_OpenAiConsent_Returns_ValidationProblem()
+    {
+        var response = await _client.PutAsJsonAsync("/api/matching/profile",
+            new UpdateCandidateProfileRequest("C# / .NET / PostgreSQL", false), JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -122,7 +131,7 @@ public class MatchingTests : IAsyncLifetime
     public async Task ComputeMatch_For_Foreign_Or_Unknown_Application_Returns_NotFound()
     {
         await _client.PutAsJsonAsync("/api/matching/profile",
-            new UpdateCandidateProfileRequest("C# / .NET"), JsonOptions);
+            new UpdateCandidateProfileRequest("C# / .NET", true), JsonOptions);
 
         var response = await _client.PostAsJsonAsync($"/api/matching/applications/{Guid.CreateVersion7()}",
             new ComputeJobMatchRequest("We need a C# backend engineer."), JsonOptions);
@@ -134,7 +143,7 @@ public class MatchingTests : IAsyncLifetime
     public async Task ComputeMatch_Persists_Result_And_Serves_Cache_On_Repeat_Request()
     {
         await _client.PutAsJsonAsync("/api/matching/profile",
-            new UpdateCandidateProfileRequest("C# / .NET / PostgreSQL"), JsonOptions);
+            new UpdateCandidateProfileRequest("C# / .NET / PostgreSQL", true), JsonOptions);
         var applicationId = await CreateApplicationAsync();
         var jobDescription = "We need a C# backend engineer with React experience.";
 
@@ -161,7 +170,7 @@ public class MatchingTests : IAsyncLifetime
     public async Task ComputeMatch_Recomputes_When_JobDescription_Changes()
     {
         await _client.PutAsJsonAsync("/api/matching/profile",
-            new UpdateCandidateProfileRequest("C# / .NET / PostgreSQL"), JsonOptions);
+            new UpdateCandidateProfileRequest("C# / .NET / PostgreSQL", true), JsonOptions);
         var applicationId = await CreateApplicationAsync();
 
         await _client.PostAsJsonAsync($"/api/matching/applications/{applicationId}",

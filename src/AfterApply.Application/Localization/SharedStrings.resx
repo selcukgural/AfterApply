@@ -100,6 +100,9 @@
   <data name="VALIDATION_CONSENT_REQUIRED" xml:space="preserve">
     <value>You must accept the privacy policy.</value>
   </data>
+  <data name="VALIDATION_MATCHING_CONSENT_REQUIRED" xml:space="preserve">
+    <value>You must consent to sending your CV to OpenAI.</value>
+  </data>
   <data name="VALIDATION_UNSUPPORTED_LANGUAGE" xml:space="preserve">
     <value>Unsupported language. Use "tr" or "en".</value>
   </data>

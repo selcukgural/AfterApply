@@ -17,6 +17,8 @@ vb.) eklendiğinde bu liste güncellenmeli.
 | Rate limiting / abuse resistance | `src/AfterApply.Api/RateLimiting.cs` — auth endpoint'leri (IP bazlı) ve upload endpoint'leri (kullanıcı bazlı) korumalı. |
 | Upload boyut/zip-bomb koruması | `ImportOptions` (dosya/ZIP boyutu, satır sayısı, entry sayısı limitleri) + `LimitedStream` (decompression sırasında byte-cap). |
 | Data deletion cascade doğruluğu | Şirket/iş ilanı verisi paylaşımlı olduğu için hesap silmede asla silinmiyor — entegrasyon testiyle doğrulandı (`AccountManagementTests.DeleteAccount_Cascades_...`). |
+| Granüler açık rıza (CV → OpenAI) | (2026-09-01) Ayarlar'daki CV kaydetme formunda genel kayıt onayından bağımsız, ayrı bir onay kutusu — `UpdateCandidateProfileRequestValidator` backend'de zorunlu kılıyor, `CandidateProfile.OpenAiConsentAcceptedAt` her kayıtta zaman damgalanıyor. Önceki rızaya bakılmaksızın checkbox her ziyarette işaretsiz başlıyor (pre-ticked consent değil). |
+| Yurt dışı aktarım disclosure'ı (CV → OpenAI) | (2026-09-01) `/privacy#cross-border-transfer` — OpenAI, L.L.C. (ABD) isimle anılıyor; amaç, hukuki sebep, geri çekme yöntemi ve özel nitelikli veri uyarısı ayrı bir bölümde. |
 
 ## Henüz uygulanamaz (özellik yok) — N/A
 
@@ -66,14 +68,14 @@ Nihai onay/metin yazımı bu dosyanın kapsamı dışında.
 ### Eksik / avukata sorulması gereken kalemler
 
 1. **Aydınlatma Metni (KVKK m.10 formatı)** — `/privacy` sayfası var ama informal; m.10'un istediği spesifik başlıklar (veri sorumlusu kimliği, işlenen veri kategorileri, işleme amaçları, aktarılan alıcı grupları, toplama yöntemi/hukuki sebebi, m.11 hakları) format olarak karşılanmıyor.
-2. **Granüler açık rıza yok** — kayıtta tek genel checkbox. CV'nin OpenAI'a gönderilmesi ve Gmail okuma izni için ayrı, spesifik rıza/bilgilendirme adımı yok (ikisi de şu an "genel privacy policy'yi kabul ettin" şemsiyesi altında).
-3. **Yurt dışı aktarım disclosure'ı yok** — OpenAI ve Sentry hiçbir yerde isim olarak geçmiyor; KVKK'nın 2024 değişikliğiyle gelen yurt dışı aktarım rejimi (açık rıza veya yeterlilik kararı/SCC) hangisine dayanacağımız netleşmemiş.
+2. ~~**Granüler açık rıza yok**~~ — **Kısmen çözüldü (2026-09-01):** CV'nin OpenAI'a gönderilmesi için artık kayıttan bağımsız, spesifik bir onay kutusu var (bkz. "Yapıldı" bölümü). Gmail okuma izni kısmı zaten N/A (Gmail entegrasyonu koddan tamamen kaldırıldı, bkz. yukarıdaki not).
+3. **Yurt dışı aktarım disclosure'ı** — CV/OpenAI kısmı **çözüldü (2026-09-01)**, bkz. "Yapıldı" bölümü. **Sentry hâlâ isimlendirilmedi** — KVKK'nın 2024 değişikliğiyle gelen yurt dışı aktarım rejimi (açık rıza veya yeterlilik kararı/SCC) hangisine dayanacağımız Sentry için hâlâ netleşmedi.
 4. **ToS / Kullanım Şartları** — hiç yok.
 5. **VERBİS kaydı** — muafiyet kapsamına girip girmediğimiz (ölçek/ana faaliyet kriterleri) teyit edilmemiş.
 6. **Çerez Politikası** — yok. `NEXT_LOCALE` ve theme cookie'leri fonksiyonel/zorunlu görünüyor ama yine de disclosure gerekir.
 7. ~~**Gmail API "restricted scope" platform uyumu**~~ — **N/A (2026-08-31):** Gmail OAuth entegrasyonu koddan tamamen kaldırıldı, `gmail.readonly` scope'u artık kullanılmıyor.
-8. **Özel nitelikli veri riski** — CV serbest metin olarak alınıyor, hiç filtrelenmiyor; kullanıcı istemeden sağlık/din/sendika üyeliği gibi özel nitelikli veri girebilir. Avukata bu riskin nasıl yönetileceği (ek uyarı metni, vb.) sorulmalı.
-9. **Consent versioning** — zaten yukarıda backlog'da not düşülmüş, hâlâ açık.
+8. **Özel nitelikli veri riski** — CV serbest metin olarak alınıyor, hiç filtrelenmiyor; kullanıcı istemeden sağlık/din/sendika üyeliği gibi özel nitelikli veri girebilir. **Hafif mitigasyon eklendi (2026-09-01):** CV textarea'sının altında ve `/privacy#cross-border-transfer`'de bir uyarı metni var, ama bu bir filtre/engelleme değil — teknik bir çözüm değil, sadece kullanıcı bilgilendirmesi. Avukata bu riskin nasıl yönetileceği (ek uyarı metni yeterli mi, teknik filtreleme gerekir mi) hâlâ sorulmalı.
+9. **Consent versioning** — zaten yukarıda backlog'da not düşülmüş, hâlâ açık. CV/OpenAI rızası bu sorunu kendi kapsamında hafifletiyor (`OpenAiConsentAcceptedAt` her CV kaydında yeniden damgalanıyor, yani metin değiştikçe rıza da tazeleniyor) ama genel `ConsentAcceptedAt` (kayıt onayı) için versioning hâlâ yok.
 
 ### Olumlu / avukatın işini kolaylaştıran noktalar
 

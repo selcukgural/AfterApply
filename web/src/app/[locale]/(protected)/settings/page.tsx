@@ -2,15 +2,18 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
+import { matchingApi } from "@/lib/api/matching";
 import { personalAccessTokensApi } from "@/lib/api/personalAccessTokens";
 import { emailForwardingApi } from "@/lib/api/emailForwarding";
 import { ApiError } from "@/lib/api/httpClient";
 import type { CreatedPersonalAccessTokenResponse, PersonalAccessTokenResponse } from "@/types/api";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
 
 const MAX_ACTIVE_TOKENS = 10;
@@ -23,6 +26,17 @@ export default function SettingsPage() {
 
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  const [cvText, setCvText] = useState("");
+  const [cvLoading, setCvLoading] = useState(true);
+  const [cvSaving, setCvSaving] = useState(false);
+  const [cvNotice, setCvNotice] = useState<string | null>(null);
+  const [cvError, setCvError] = useState<string | null>(null);
+  // Always starts unchecked, regardless of whether consent was already given on a previous
+  // save (CandidateProfileResponse deliberately doesn't expose OpenAiConsentAcceptedAt) — a
+  // pre-ticked box wouldn't be valid explicit consent, so re-affirming on every visit is
+  // intentional, not a bug.
+  const [openAiConsentAccepted, setOpenAiConsentAccepted] = useState(false);
 
   const [tokens, setTokens] = useState<PersonalAccessTokenResponse[]>([]);
   const [tokensLoading, setTokensLoading] = useState(true);
@@ -46,6 +60,29 @@ export default function SettingsPage() {
   const [confirmationText, setConfirmationText] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    matchingApi
+      .getProfile()
+      .then((profile) => setCvText(profile.cvText))
+      .catch(() => setCvText(""))
+      .finally(() => setCvLoading(false));
+  }, []);
+
+  const handleSaveCv = async () => {
+    setCvError(null);
+    setCvNotice(null);
+    setCvSaving(true);
+    try {
+      await matchingApi.updateProfile(cvText, openAiConsentAccepted);
+      setCvNotice(t("cv.saved"));
+      setOpenAiConsentAccepted(false);
+    } catch (error) {
+      setCvError(error instanceof ApiError ? error.message : t("cv.saveError"));
+    } finally {
+      setCvSaving(false);
+    }
+  };
 
   const loadTokens = () => {
     personalAccessTokensApi
@@ -173,6 +210,49 @@ export default function SettingsPage() {
         <Button variant="secondary" onClick={handleExport} disabled={isExporting}>
           {isExporting ? t("export.preparing") : t("export.download")}
         </Button>
+      </section>
+
+      <section className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("cv.title")}</h2>
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("cv.description")}</p>
+        {cvLoading ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {cvNotice && <p className="text-sm text-green-700 dark:text-green-400">{cvNotice}</p>}
+            {cvError && <p className="text-sm text-red-600 dark:text-red-400">{cvError}</p>}
+            <Textarea
+              rows={10}
+              value={cvText}
+              placeholder={t("cv.placeholder")}
+              onChange={(e) => setCvText(e.target.value)}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t("cv.sensitiveDataWarning")}</p>
+            <Checkbox
+              id="openAiConsentAccepted"
+              checked={openAiConsentAccepted}
+              onChange={(e) => setOpenAiConsentAccepted(e.target.checked)}
+              label={
+                <>
+                  {t("cv.consentPrefix")}{" "}
+                  <Link
+                    href="/privacy#cross-border-transfer"
+                    target="_blank"
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {t("cv.consentLink")}
+                  </Link>
+                  {t("cv.consentSuffix")}
+                </>
+              }
+            />
+            <div>
+              <Button variant="secondary" onClick={handleSaveCv} disabled={cvSaving || !cvText.trim() || !openAiConsentAccepted}>
+                {cvSaving ? t("cv.saving") : t("cv.save")}
+              </Button>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">

@@ -2126,6 +2126,61 @@ override kalmadı.
 
 ---
 
+## AI Job Matching (Sprint 8) yeniden açıldı — granüler rıza + yurt dışı aktarım disclosure'ı (2026-09-01)
+
+**Bağlam:** Özellik 2026-08-29'da `PRIVACY_CHECKLIST.md`'nin en kritik KVKK açığı gerekçesiyle
+kullanıcıdan gizlenmişti (bkz. yukarıdaki "AI Job Matching (Sprint 8) — kullanıcıdan gizlendi"):
+CV metni OpenAI'a (ABD) ham hâlde gidiyordu, ama ne granüler bir rıza ne de yurt dışı aktarım
+disclosure'ı vardı. Kullanıcı bu iki eksiği kapatıp özelliği production'da açmamı istedi.
+
+**Karar — kapsam bilinçli olarak dar tutuldu:** Bu, tam bir KVKK uyum çalışması değil;
+`PRIVACY_CHECKLIST.md`'nin "Avukata götürülecek envanter ve eksikler" listesindeki sadece #2
+(granüler rıza) ve #3'ün CV/OpenAI kısmı (yurt dışı aktarım disclosure'ı) kapatıldı. m.10 tam
+format, VERBİS muafiyet teyidi, Çerez Politikası, ToS ve Sentry'nin disclosure'ı hâlâ açık —
+bunlar için hâlâ bir KVKK avukatına danışılması gerekiyor.
+
+**Uygulama:**
+- `CandidateProfile`'a nullable `OpenAiConsentAcceptedAt` eklendi (migration
+  `20260901101910_AddOpenAiConsentAcceptedAtToCandidateProfile`) — `Create`/`UpdateCv` her CV
+  kaydında bunu `now` ile damgalıyor. Ayrı bir consent parametresi almalarına gerek yok: bu
+  metodlar sadece `UpdateCandidateProfileRequestValidator`'ın `OpenAiConsentAccepted == true`
+  zaten doğruladığı bir request'ten çağrılabiliyor — yani "buraya ulaşıldıysa rıza verilmiştir".
+- `UpdateCandidateProfileRequest`e `OpenAiConsentAccepted: bool` eklendi;
+  `RegisterRequestValidator`'daki `ConsentAccepted` kuralıyla birebir aynı desende
+  (`Must(x => x)`) zorunlu kılınıyor. Yeni resx key: `VALIDATION_MATCHING_CONSENT_REQUIRED`
+  (TR/EN).
+- `CandidateProfileResponse`'a rıza timestamp'i **eklenmedi** (YAGNI) — frontend checkbox'ı
+  önceki rızaya bakmaksızın her ziyarette işaretsiz başlıyor. Bilinçli tercih: pre-ticked bir
+  consent checkbox'ı geçerli açık rıza sayılmaz, bu yüzden her CV kaydında yeniden
+  işaretletiliyor (register sayfasındaki genel onaydan farklı olarak, bu onay CV metniyle
+  birlikte yenileniyor — `PRIVACY_CHECKLIST.md`'nin #9 "consent versioning" kaygısını bu
+  özelliğin kendi kapsamında hafifletiyor).
+- Frontend: Ayarlar'daki CV bölümü ve başvuru detayındaki `JobMatchPanel` (2026-08-29'da
+  `3bbc775` ile render'dan çıkarılmış, kod silinmemişti) aynen geri eklendi — restore, o
+  commit'in diff'inin ters çevrilmesiyle birebir örtüşüyor. Yeni eklenen: register sayfasındaki
+  `Checkbox` bileşeninin birebir aynısıyla, `/privacy#cross-border-transfer`'e link veren bir
+  onay kutusu; Save butonu CV boşsa veya kutu işaretli değilse disabled; textarea'nın altında
+  özel nitelikli veri girmeme uyarısı (checklist #8'in teknik olmayan, hafif bir mitigasyonu).
+- `/privacy` sayfasına yeni bir "Yurt dışına veri aktarımı" bölümü (`id="cross-border-transfer"`)
+  eklendi: OpenAI, L.L.C. (ABD) isimle anılıyor; amaç, hukuki sebep (spesifik onay kutusu),
+  geri çekme yöntemi (CV'yi silmek/hesabı silmek) ve özel nitelikli veri uyarısı ayrı ayrı
+  maddelendi. `dataCollection` listesine CV/profil metnini kapsayan bir `item4` eklendi.
+- `Matching:Enabled` `appsettings.json`'da `true`'ya çekildi — `EmailForwarding:Enabled`'ın
+  2026-08-31'de açıldığı yöntemle birebir aynı mekanizma: `appsettings.Production.json` yok,
+  `deploy.yml`/`docker-compose.prod.yml` bu flag'i env var ile override etmiyor, committed
+  değer image'a gömülüyor. Yeni migration, mevcut `afterapply-migrate` Cloud Run Job'ı ile
+  otomatik uygulanıyor, ekstra bir deploy adımı gerekmedi.
+
+**Doğrulama:** `dotnet test tests/AfterApply.UnitTests` (182/182), `MatchingTests` dahil
+podman-backed `dotnet test tests/AfterApply.IntegrationTests --filter Matching` (9/9, yeni
+"consent olmadan 400" testi dahil), `npm run build`/`npm run lint` (web). Production'da
+`afterapply-openai-api-key` Secret Manager secret'ının gerçek bir anahtar taşıdığı repo'dan
+doğrulanamıyor (2 versiyon var, en yenisi 2026-08-31 — muhtemelen gerçek, ama içerik
+görülemiyor) — deploy sonrası tek seferlik manuel bir smoke test (Ayarlar'da CV kaydet →
+bir başvuruda "Eşleştir" çalıştır) gerekiyor.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
