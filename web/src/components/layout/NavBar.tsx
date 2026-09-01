@@ -60,6 +60,9 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
               {user.firstName} {user.lastName}
             </span>
           )}
+          <Link href="/help" className="whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100">
+            {t("help")}
+          </Link>
           <Link href="/settings" className="whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100">
             {t("accountSettings")}
           </Link>

@@ -31,6 +31,9 @@ export async function LandingFooter() {
 
           <div className="flex flex-col gap-2 text-sm">
             <span className="font-medium text-gray-700 dark:text-gray-300">{t("resources")}</span>
+            <Link href="/help" className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+              {t("help")}
+            </Link>
             <Link href="/privacy" className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
               {t("privacy")}
             </Link>

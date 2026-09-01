@@ -13,7 +13,8 @@
       "mission": "Our mission",
       "signIn": "Log In",
       "getStarted": "Get Started Free",
-      "goToDashboard": "Go to Dashboard"
+      "goToDashboard": "Go to Dashboard",
+      "help": "Help"
     },
     "hero": {
       "eyebrow": "Job application tracking",
@@ -155,7 +156,8 @@
       "product": "Product",
       "resources": "Resources",
       "privacy": "Privacy Policy",
-      "rights": "All rights reserved."
+      "rights": "All rights reserved.",
+      "help": "Help Center"
     }
   },
   "common": {
@@ -168,7 +170,8 @@
     "logout": "Log Out",
     "trackedJobs": "Tracked Jobs",
     "import": "Import",
-    "suggestions": "Suggestions"
+    "suggestions": "Suggestions",
+    "help": "Help"
   },
   "auth": {
     "login": {
@@ -544,6 +547,472 @@
       "rowErrors": "Row Errors",
       "rowErrorLine": "Row {rowNumber}: {message}",
       "uploadAnother": "Upload Another File"
+    }
+  },
+  "help": {
+    "sidebar": {
+      "overview": "Overview",
+      "gettingStarted": "Sign Up & Log In",
+      "dashboard": "Dashboard",
+      "trackedJobs": "Tracked Jobs",
+      "applications": "Applications",
+      "suggestions": "Suggestions",
+      "import": "Import",
+      "settings": "Settings",
+      "chromeExtension": "Chrome Extension",
+      "faq": "FAQ"
+    },
+    "common": {
+      "step": "Step",
+      "warning": "Warning",
+      "note": "Note",
+      "backToHelp": "Back to Help Center",
+      "relatedTopics": "Related topics"
+    },
+    "overview": {
+      "eyebrow": "Help Center",
+      "title": "How e-kariyerim works",
+      "intro": "e-kariyerim brings your whole job-application process into one place: note down jobs you're interested in without losing track of them, follow the ones you've applied to and their status, get automatic status suggestions from your own emails, and see the whole process summarized on your dashboard. This page walks through everything from creating your account to logging an application with one click from the Chrome extension.",
+      "flow": {
+        "title": "The end-to-end flow",
+        "step1": {
+          "title": "Create your account",
+          "body": "Sign up with your email and password in a few seconds."
+        },
+        "step2": {
+          "title": "Track jobs you're interested in",
+          "body": "Add jobs you haven't applied to yet, but don't want to lose, to Tracked Jobs."
+        },
+        "step3": {
+          "title": "Apply and log it",
+          "body": "Enter it by hand, import your LinkedIn history, or add it with one click from the Chrome extension."
+        },
+        "step4": {
+          "title": "Keep the status current",
+          "body": "Change the status yourself, or forward your application emails to get automatic suggestions."
+        },
+        "step5": {
+          "title": "See your progress on the dashboard",
+          "body": "Track your response rate, average response time, and status breakdown at a glance."
+        }
+      },
+      "topics": {
+        "gettingStarted": {
+          "title": "Sign Up & Log In",
+          "description": "Creating an account, logging in, and theme/language preferences."
+        },
+        "dashboard": {
+          "title": "Dashboard",
+          "description": "Stats, response rates, and the status distribution chart."
+        },
+        "trackedJobs": {
+          "title": "Tracked Jobs",
+          "description": "Note jobs you haven't applied to yet, then convert them once you do."
+        },
+        "applications": {
+          "title": "Applications",
+          "description": "Creating, editing, deleting, and tracking the status of applications."
+        },
+        "suggestions": {
+          "title": "Suggestions",
+          "description": "Automatic status suggestions from forwarded emails."
+        },
+        "import": {
+          "title": "Import",
+          "description": "Bring in your LinkedIn data export in bulk."
+        },
+        "settings": {
+          "title": "Settings",
+          "description": "Data export, extension token, email forwarding, deleting your account."
+        },
+        "chromeExtension": {
+          "title": "Chrome Extension",
+          "description": "One-click \"I Applied\" on LinkedIn and kariyer.net."
+        },
+        "faq": {
+          "title": "FAQ",
+          "description": "Common questions and known limitations."
+        }
+      }
+    },
+    "gettingStarted": {
+      "eyebrow": "Getting Started",
+      "title": "Signing Up and Logging In",
+      "intro": "Getting started with e-kariyerim only takes a few details — no credit card, no waiting on a confirmation email.",
+      "register": {
+        "title": "Sign up",
+        "step1": {
+          "title": "Enter your first and last name",
+          "body": "Used to identify you throughout the app (e.g. the name shown on the dashboard and in the NavBar)."
+        },
+        "step2": {
+          "title": "Choose an email and password",
+          "body": "These become your login credentials; the email also identifies the account you'll forward application emails to."
+        },
+        "step3": {
+          "title": "Accept the Privacy Policy",
+          "body": "The account can't be created without checking the consent box under the sign-up form."
+        },
+        "step4": {
+          "title": "Submit",
+          "body": "You're taken straight to the Dashboard — no email verification to wait for."
+        }
+      },
+      "login": {
+        "title": "Log in",
+        "body": "Log in with the email and password you registered with. On login, your last saved theme (light/dark) and language preference are applied automatically."
+      },
+      "calloutTheme": {
+        "title": "Your dark-mode preference carries over at sign-up",
+        "body": "If you switched to dark mode in your browser before signing up, your new account opens in dark mode too — new accounts otherwise start in light mode."
+      }
+    },
+    "dashboard": {
+      "eyebrow": "Dashboard",
+      "title": "What's on the Dashboard?",
+      "intro": "The Dashboard you land on after logging in summarizes your whole application process on one screen. The \"New Application\" button in the top right lets you add a new application directly.",
+      "tiles": {
+        "title": "Stat tiles",
+        "body": "Tiles showing raw numbers, like your total application count and breakdown by status."
+      },
+      "analytics": {
+        "title": "Personal Analytics",
+        "body": "Tiles showing percentages like response rate and interview rate — how many of your applications get a reply."
+      },
+      "responseTime": {
+        "title": "Response Time",
+        "body": "The average and median number of days from applying to first response. If there isn't enough data yet, an empty state is shown instead."
+      },
+      "statusChart": {
+        "title": "Status Distribution Chart",
+        "body": "A bar chart of how many applications are in each status (Applied, Interview, Offer, Rejected, ...) — so you can see where things tend to stall."
+      }
+    },
+    "trackedJobs": {
+      "eyebrow": "Tracked Jobs",
+      "title": "Note jobs you haven't applied to yet",
+      "intro": "Tracked Jobs is a lightweight watchlist for jobs you're interested in but haven't applied to yet. Unlike an Application, it has no status, timeline, or employment type — just company, title, location, job URL, and your notes.",
+      "add": {
+        "title": "Track a job",
+        "step1": {
+          "title": "Open \"Tracked Jobs\"",
+          "body": "Available from the top navigation."
+        },
+        "step2": {
+          "title": "Enter the company name and job title",
+          "body": "Optionally add the location, job URL, and your own notes."
+        },
+        "step3": {
+          "title": "Save it",
+          "body": "The job appears in your list with the date it was added."
+        }
+      },
+      "convert": {
+        "title": "Once you apply: \"Mark as Applied\"",
+        "step1": {
+          "title": "Click \"Mark as Applied\" next to the job",
+          "body": "This opens a small inline form."
+        },
+        "step2": {
+          "title": "Enter the employment type and applied date",
+          "body": "You can add extra notes too."
+        },
+        "step3": {
+          "title": "Confirm",
+          "body": "The job is removed from your tracked list and created as a real Application — you're taken straight to its detail page."
+        }
+      },
+      "remove": {
+        "title": "Remove a job",
+        "body": "If you're no longer interested, \"Remove\" deletes it from the list permanently."
+      },
+      "calloutNoEdit": {
+        "title": "There's no direct edit",
+        "body": "There's currently no way to edit a tracked job's details. If something's wrong, remove it and re-add it; if you've already applied, converting it with \"Mark as Applied\" and then editing the resulting Application is the way to fix the details."
+      }
+    },
+    "applications": {
+      "eyebrow": "Applications",
+      "title": "Create, track, edit, and delete your applications",
+      "intro": "Applications are the heart of e-kariyerim: each one has its own status, timeline, and (if available) job description.",
+      "create": {
+        "title": "Create a new application",
+        "step1": {
+          "title": "Click \"New Application\" from the Dashboard or Applications page"
+        },
+        "step2": {
+          "title": "Start typing the company name",
+          "body": "Companies you've added before are suggested as autocomplete; for a new company, just type it as-is."
+        },
+        "step3": {
+          "title": "Enter the job title, job URL, location, and employment type",
+          "body": "The applied date defaults to today, but you can change it."
+        },
+        "step4": {
+          "title": "Optionally add a source and notes, then save",
+          "body": "The source field can only be chosen when creating — it can't be changed later."
+        }
+      },
+      "list": {
+        "title": "List, search, filter",
+        "body": "The Applications list is paginated (10 per page) and supports searching by company/title, filtering by status, and sorting by date/company/title/status — all your filters are reflected in the URL, so you can share or bookmark a view."
+      },
+      "detail": {
+        "title": "Application detail",
+        "body": "Opening an application shows its status badge, location, employment type, applied date, job URL (if any) and notes, an event Timeline, and (if available) the job description. Applications created automatically via email forwarding show a \"Created from Email\" badge."
+      },
+      "edit": {
+        "title": "Editing",
+        "body": "\"Edit\" on the detail page lets you update the job title, job URL, location, employment type, applied date, and notes. The company name and source can't be changed after creation."
+      },
+      "delete": {
+        "title": "Deleting",
+        "body": "Clicking \"Delete\" on the detail page opens a confirmation dialog — nothing is deleted until you confirm.",
+        "calloutConfirm": {
+          "title": "Deletion can't be undone",
+          "body": "Deleting an application permanently removes its entire history, including its timeline."
+        }
+      },
+      "statusChange": {
+        "title": "Changing status",
+        "step1": {
+          "title": "Click \"Change Status\" on the detail page"
+        },
+        "step2": {
+          "title": "Pick the new status from the list",
+          "body": "Your current status doesn't appear in the list — only the statuses you can move to."
+        },
+        "step3": {
+          "title": "Optionally add a note and confirm",
+          "body": "The change is recorded on the timeline as \"Old Status → New Status\", along with your note."
+        }
+      },
+      "statuses": {
+        "title": "What do the statuses mean?",
+        "body": "An application can be in one of these statuses: Applied, Screening, Interview, TechnicalInterview, FinalInterview, Offer, Accepted, Rejected, Withdrawn, Ghosted."
+      },
+      "timeline": {
+        "title": "Timeline",
+        "body": "Below every application is a chronological list of everything that happened to it: creation, submission, recruiter contact, screening, interview scheduled/completed, offer received, follow-up sent, and every status change. It's a quick way to remember an application's history at a glance."
+      }
+    },
+    "suggestions": {
+      "eyebrow": "Suggestions",
+      "title": "Automatic status suggestions from your emails",
+      "intro": "Once you forward your application emails to e-kariyerim (see Settings → Email Forwarding), the system reads them and offers status suggestions — so you don't have to process every update by hand.",
+      "how": {
+        "title": "How a suggestion appears",
+        "body": "Once a forwarded email is processed, a card appears on the Suggestions page with the company, job title, received date, a confidence percentage, and a suggested status (if any). A suggestion that doesn't match a known application yet is marked with a \"New Job\" badge; if no clear status could be inferred, the card shows \"Still Pending\" instead."
+      },
+      "actions": {
+        "title": "Confirm or dismiss a suggestion",
+        "step1": {
+          "title": "Review the card",
+          "body": "Check the subject line and email snippet to make sure the suggestion is about the right application."
+        },
+        "step2": {
+          "title": "\"Confirm\" to apply it, or \"Dismiss\" to skip it",
+          "body": "Confirm creates a new application (if it's new) or moves an existing one to the suggested status. Dismiss closes the suggestion without changing anything."
+        }
+      },
+      "calloutConfidence": {
+        "title": "Check the confidence percentage",
+        "body": "When confidence is low, read the email snippet first — automatic extraction isn't always exact, so you have the final say."
+      }
+    },
+    "import": {
+      "eyebrow": "Import",
+      "title": "Bring in your LinkedIn history in bulk",
+      "intro": "Right now the only import method is LinkedIn's own data export file (a .zip). There's no separate CSV uploader.",
+      "steps": {
+        "title": "Step-by-step import",
+        "step1": {
+          "title": "Request your data export from LinkedIn",
+          "body": "From your LinkedIn account settings, use \"Get a copy of your data\" to download your export; LinkedIn can take a while to prepare it."
+        },
+        "step2": {
+          "title": "Open the Import page in e-kariyerim",
+          "body": "Go to \"Import\" from the top navigation."
+        },
+        "step3": {
+          "title": "Select and upload the .zip file you downloaded",
+          "body": "As soon as it uploads, the status switches to \"processing\"."
+        },
+        "step4": {
+          "title": "Watch the progress live",
+          "body": "You'll see a progress bar with the number of rows processed so far; no need to leave the page."
+        },
+        "step5": {
+          "title": "Review the summary",
+          "body": "When it finishes, you'll see how many new applications were added, how many were already there (duplicates), and how many rows couldn't be processed (invalid); any failing rows are listed individually."
+        }
+      },
+      "calloutCsv": {
+        "title": "Only LinkedIn import is available",
+        "body": "There's currently no interface for uploading a hand-prepared CSV file. Applications created through import default to \"FullTime\" employment type, since LinkedIn's data doesn't specify one — edit the application afterwards if you need to change it."
+      }
+    },
+    "settings": {
+      "eyebrow": "Settings",
+      "title": "Account Settings",
+      "intro": "From Settings you can export your data, generate an access token for the Chrome extension, manage your email forwarding, and delete your account. Theme and language are changed from the switchers in the top navigation, not from Settings.",
+      "export": {
+        "title": "Export My Data",
+        "body": "Download all of your application, import, and reminder data as a single JSON file."
+      },
+      "extension": {
+        "title": "Access token for the Chrome Extension",
+        "step1": {
+          "title": "Open the \"Browser Extension\" section",
+          "body": "Found on the Settings page."
+        },
+        "step2": {
+          "title": "Name the token and click \"Generate Token\"",
+          "body": "For example, \"Chrome Extension\" or the name of the computer you're using."
+        },
+        "step3": {
+          "title": "Copy the token right away",
+          "body": "The value starting with aa_pat_ is shown only once — if you navigate away, you won't see it again."
+        },
+        "step4": {
+          "title": "Paste it into the extension's settings",
+          "body": "See the Chrome Extension section. You can have at most 10 active tokens at a time; revoke one you no longer use with \"Revoke\" when you need room for a new one."
+        },
+        "calloutToken": {
+          "title": "This token grants full access to your account",
+          "body": "An access token gives full account access, exactly as if you'd logged in with your email and password. Only paste it into your own browser extension install, never share it — if you suspect it's been exposed, revoke it immediately."
+        }
+      },
+      "emailForwarding": {
+        "title": "Email Forwarding",
+        "body": "Settings shows you a personal forwarding address. Set up a filter with your own email provider (Gmail, Outlook, ...) to forward application-related senders to this address, and e-kariyerim will automatically extract status suggestions from those emails. Forwarding email here grants no access to your account.",
+        "calloutGmailOnlyGuide": {
+          "title": "The step-by-step setup guide currently covers Gmail only",
+          "body": "The Chrome extension's \"Set up Email Forwarding\" guide walks through Gmail's screens specifically. If you use a different provider, you can set up the same kind of forwarding filter using your own provider's settings — the idea is the same."
+        }
+      },
+      "delete": {
+        "title": "Delete My Account",
+        "body": "Enter your password and type \"DELETE\" into the box to permanently delete your account and all of your data.",
+        "calloutIrreversible": {
+          "title": "This can't be undone",
+          "body": "Once your account is deleted, all of your application, import, and reminder data is permanently gone — there's no way to reverse it."
+        }
+      }
+    },
+    "chromeExtension": {
+      "eyebrow": "Chrome Extension",
+      "title": "One-click application logging on LinkedIn and kariyer.net",
+      "intro": "The e-kariyerim Chrome extension turns a LinkedIn or kariyer.net job posting into a tracked application with one click — just press \"I Applied\".",
+      "install": {
+        "title": "Installation",
+        "storeIntro": "The e-kariyerim extension is live on the Chrome Web Store — one-click install, no developer mode needed.",
+        "storeCta": "Open in Chrome Web Store",
+        "step1": {
+          "title": "Generate an access token in Settings",
+          "body": "See the \"Access token for the Chrome Extension\" steps in the Settings section."
+        },
+        "step2": {
+          "title": "Add the extension to Chrome from the link above",
+          "body": "Click \"Add to Chrome\" on the Chrome Web Store page. The extension icon appears in your toolbar."
+        }
+      },
+      "installManual": {
+        "title": "Alternative: unpacked install (developer/testing only)",
+        "intro": "If you can't use the Store version — for example, you're testing an unreleased development build — you can also load the extension manually:",
+        "step1": {
+          "title": "Open chrome://extensions",
+          "body": "Just type it into the address bar and press Enter."
+        },
+        "step2": {
+          "title": "Turn on \"Developer mode\"",
+          "body": "Found in the top right of the page."
+        },
+        "step3": {
+          "title": "Click \"Load unpacked\" and select the extension folder",
+          "body": "The extension icon appears in your toolbar."
+        }
+      },
+      "configure": {
+        "title": "Configuration",
+        "step1": {
+          "title": "Click the e-kariyerim icon in the toolbar"
+        },
+        "step2": {
+          "title": "Click \"Open Settings\" if no token is set yet",
+          "body": "You can also right-click the icon and choose \"Options\"."
+        },
+        "step3": {
+          "title": "Enter the API base URL and your access token, then save",
+          "body": "Make sure the API URL is correct if you're pointing it at a real deployment."
+        }
+      },
+      "use": {
+        "title": "Using it",
+        "step1": {
+          "title": "Open a LinkedIn or kariyer.net job posting page"
+        },
+        "step2": {
+          "title": "Click the extension icon",
+          "body": "It tries to auto-fill the company, title, and location from the page."
+        },
+        "step3": {
+          "title": "Check the fields and correct anything that's off",
+          "body": "Auto-fill isn't always perfect — every field is editable before you submit."
+        },
+        "step4": {
+          "title": "Click \"I Applied\"",
+          "body": "Your application is saved to e-kariyerim."
+        }
+      },
+      "calloutScraping": {
+        "title": "Auto-fill is best-effort",
+        "body": "LinkedIn and kariyer.net occasionally change their page layout, which can leave some fields empty. That shows up as a blank field for you to fill in by hand, rather than submitting wrong data."
+      },
+      "calloutDedupe": {
+        "title": "Clicking the same job again is safe",
+        "body": "If you click \"I Applied\" again on the same job posting, it won't create a duplicate — the system finds your existing application by the job's URL and returns that instead."
+      },
+      "emailForwardingGuide": {
+        "title": "Email forwarding guide",
+        "body": "The \"Set up Email Forwarding\" link in the extension's Settings opens a step-by-step guide (currently Gmail-specific) for forwarding your application emails to e-kariyerim."
+      }
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Frequently asked questions",
+      "q1": {
+        "question": "What happens if someone gets hold of my Chrome extension token?",
+        "answer": "That token grants full access to your account. If you suspect it's been exposed, go to Settings → Browser Extension and \"Revoke\" it immediately, then generate a new one."
+      },
+      "q2": {
+        "question": "Can I get my data back after deleting my account?",
+        "answer": "No. Account deletion can't be undone; all of your application, import, and reminder data is permanently deleted."
+      },
+      "q3": {
+        "question": "What if the Chrome extension reads a job's details wrong?",
+        "answer": "Nothing gets submitted automatically — every field is editable before you click \"I Applied\", the popup just gives you a starting point."
+      },
+      "q4": {
+        "question": "Does email forwarding only work with Gmail?",
+        "answer": "The forwarding address itself works with any email provider (Gmail, Outlook, ...). But the extension's step-by-step setup guide currently only walks through Gmail's screens — you can set up the same kind of forwarding filter yourself with another provider."
+      },
+      "q5": {
+        "question": "Can I import a file other than my LinkedIn export (e.g. Excel/CSV)?",
+        "answer": "Not currently — the only import path is LinkedIn's own data export .zip file."
+      },
+      "q6": {
+        "question": "Can I edit a job I'm tracking?",
+        "answer": "There's no direct edit for Tracked Jobs; if the details are wrong, remove it and re-add it, or if you've already applied, convert it with \"Mark as Applied\" and update the details on the Application edit page."
+      },
+      "q7": {
+        "question": "How many Chrome extension tokens can I have?",
+        "answer": "Up to 10 active tokens at once. You'll need to revoke one you're not using before generating a new one."
+      },
+      "q8": {
+        "question": "Why does employment type always show \"Full-Time\" on imported or extension-added applications?",
+        "answer": "Neither LinkedIn's export nor the job pages the extension reads specify an employment type, so it defaults to \"FullTime\" — edit the application afterwards if you need the correct type."
+      }
     }
   }
 }

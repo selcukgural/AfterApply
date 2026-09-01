@@ -13,7 +13,8 @@
       "mission": "Misyonumuz",
       "signIn": "Giriş Yap",
       "getStarted": "Ücretsiz Başla",
-      "goToDashboard": "Panele Git"
+      "goToDashboard": "Panele Git",
+      "help": "Yardım"
     },
     "hero": {
       "eyebrow": "İş başvuru takibi",
@@ -155,7 +156,8 @@
       "product": "Ürün",
       "resources": "Kaynaklar",
       "privacy": "Gizlilik Politikası",
-      "rights": "Tüm hakları saklıdır."
+      "rights": "Tüm hakları saklıdır.",
+      "help": "Yardım Merkezi"
     }
   },
   "common": {
@@ -168,7 +170,8 @@
     "logout": "Çıkış Yap",
     "trackedJobs": "Takip Listem",
     "import": "İçe Aktar",
-    "suggestions": "Öneriler"
+    "suggestions": "Öneriler",
+    "help": "Yardım"
   },
   "auth": {
     "login": {
@@ -544,6 +547,472 @@
       "rowErrors": "Satır Hataları",
       "rowErrorLine": "Satır {rowNumber}: {message}",
       "uploadAnother": "Başka Dosya Yükle"
+    }
+  },
+  "help": {
+    "sidebar": {
+      "overview": "Genel Bakış",
+      "gettingStarted": "Kayıt ve Giriş",
+      "dashboard": "Panel",
+      "trackedJobs": "Takip Edilen İlanlar",
+      "applications": "Başvurular",
+      "suggestions": "Öneriler",
+      "import": "İçe Aktarma",
+      "settings": "Ayarlar",
+      "chromeExtension": "Chrome Eklentisi",
+      "faq": "Sık Sorulan Sorular"
+    },
+    "common": {
+      "step": "Adım",
+      "warning": "Uyarı",
+      "note": "Not",
+      "backToHelp": "Yardım Merkezi'ne dön",
+      "relatedTopics": "İlgili konular"
+    },
+    "overview": {
+      "eyebrow": "Yardım Merkezi",
+      "title": "e-kariyerim nasıl çalışır?",
+      "intro": "e-kariyerim, iş başvuru sürecini tek bir yerde toplayan bir takip aracıdır: ilgilendiğiniz ilanları kaybetmeden not edin, başvurduklarınızı ve durumlarını izleyin, e-postalarınızdan otomatik durum önerileri alın ve tüm sürecin özetini panelde görün. Bu sayfa, hesabınızı oluşturmaktan Chrome eklentisiyle tek tıkla başvuru kaydetmeye kadar her adımı gösterir.",
+      "flow": {
+        "title": "Uçtan uca akış",
+        "step1": {
+          "title": "Hesabınızı oluşturun",
+          "body": "E-posta ve şifrenizle birkaç saniyede kayıt olun."
+        },
+        "step2": {
+          "title": "İlgilendiğiniz ilanları takibe alın",
+          "body": "Henüz başvurmadığınız ama gözünüzde olan ilanları \"Takip Edilen İlanlar\"a ekleyin."
+        },
+        "step3": {
+          "title": "Başvurun ve kaydedin",
+          "body": "Elle girin, LinkedIn verinizi içe aktarın ya da Chrome eklentisiyle tek tıkla ekleyin."
+        },
+        "step4": {
+          "title": "Durumu güncel tutun",
+          "body": "Durumu elle değiştirin ya da başvuru e-postalarınızı yönlendirerek otomatik öneriler alın."
+        },
+        "step5": {
+          "title": "İlerlemenizi panelde görün",
+          "body": "Yanıt oranınızı, ortalama yanıt sürenizi ve durum dağılımınızı tek bakışta izleyin."
+        }
+      },
+      "topics": {
+        "gettingStarted": {
+          "title": "Kayıt ve Giriş",
+          "description": "Hesap oluşturma, giriş yapma ve tema/dil tercihleri."
+        },
+        "dashboard": {
+          "title": "Panel",
+          "description": "İstatistikler, yanıt oranları ve durum dağılımı grafiği."
+        },
+        "trackedJobs": {
+          "title": "Takip Edilen İlanlar",
+          "description": "Henüz başvurmadığınız ilanları not edin, başvurunca dönüştürün."
+        },
+        "applications": {
+          "title": "Başvurular",
+          "description": "Başvuru oluşturma, düzenleme, silme ve durum takibi."
+        },
+        "suggestions": {
+          "title": "Öneriler",
+          "description": "Yönlendirilen e-postalardan otomatik durum önerileri."
+        },
+        "import": {
+          "title": "İçe Aktarma",
+          "description": "LinkedIn veri dışa aktarımınızı toplu olarak içeri alın."
+        },
+        "settings": {
+          "title": "Ayarlar",
+          "description": "Veri dışa aktarma, eklenti anahtarı, mail yönlendirme, hesap silme."
+        },
+        "chromeExtension": {
+          "title": "Chrome Eklentisi",
+          "description": "LinkedIn ve kariyer.net'te tek tıkla \"I Applied\"."
+        },
+        "faq": {
+          "title": "Sık Sorulan Sorular",
+          "description": "Merak edilenler ve bilinen sınırlamalar."
+        }
+      }
+    },
+    "gettingStarted": {
+      "eyebrow": "Başlarken",
+      "title": "Kayıt Olma ve Giriş Yapma",
+      "intro": "e-kariyerim'i kullanmaya başlamak için yapmanız gereken tek şey birkaç bilgiyle kayıt olmak — kredi kartı ya da onay e-postası beklemek yok.",
+      "register": {
+        "title": "Kayıt olun",
+        "step1": {
+          "title": "Ad ve soyadınızı girin",
+          "body": "Uygulama genelinde sizi tanımlamak için kullanılır (ör. panelde ve NavBar'da görünen isim)."
+        },
+        "step2": {
+          "title": "E-posta ve şifre belirleyin",
+          "body": "Giriş bilgileriniz bunlar olacak; e-posta aynı zamanda başvuru e-postalarınızı yönlendireceğiniz hesabı da tanımlar."
+        },
+        "step3": {
+          "title": "Gizlilik Politikası'nı onaylayın",
+          "body": "Kayıt formunun altındaki onay kutusunu işaretlemeden hesap oluşturulamaz."
+        },
+        "step4": {
+          "title": "Kaydı tamamlayın",
+          "body": "Gönderdiğinizde doğrudan Panel'e yönlendirilirsiniz — e-posta doğrulaması beklemenize gerek yoktur."
+        }
+      },
+      "login": {
+        "title": "Giriş yapın",
+        "body": "Kayıt olduğunuz e-posta ve şifreyle giriş yapın. Giriş yaptığınızda, hesabınıza en son kaydettiğiniz tema (açık/koyu) ve dil tercihi otomatik olarak uygulanır."
+      },
+      "calloutTheme": {
+        "title": "Koyu tema tercihiniz kayıt sırasında korunur",
+        "body": "Kayıt olmadan önce tarayıcınızda koyu temayı seçtiyseniz, yeni hesabınız da koyu temayla açılır — normalde yeni hesaplar açık temayla başlar."
+      }
+    },
+    "dashboard": {
+      "eyebrow": "Panel",
+      "title": "Panelde neler var?",
+      "intro": "Giriş yaptığınızda karşınıza çıkan Panel, tüm başvuru sürecinizin özetini tek ekranda toplar. Sağ üstteki \"Yeni Başvuru\" butonuyla doğrudan yeni bir başvuru ekleyebilirsiniz.",
+      "tiles": {
+        "title": "Özet kutucukları",
+        "body": "Toplam başvuru sayınız ve durumlara göre dağılımınız gibi ham sayıları gösteren kutucuklar."
+      },
+      "analytics": {
+        "title": "Kişisel Analitik",
+        "body": "Yanıt oranı ve mülakat oranı gibi yüzdesel oranları gösteren kutucuklar — kaç başvurudan kaçına geri dönüş aldığınızı görürsünüz."
+      },
+      "responseTime": {
+        "title": "Yanıt Süresi",
+        "body": "Başvurudan ilk yanıta kadar geçen ortalama ve medyan gün sayısı. Henüz yeterli veri yoksa, bunun yerine bir boş durum mesajı gösterilir."
+      },
+      "statusChart": {
+        "title": "Durum Dağılımı Grafiği",
+        "body": "Başvurularınızın hangi durumda (Başvuruldu, Mülakat, Teklif, Reddedildi, ...) olduğunu gösteren bir çubuk grafik — sürecinizin neresinde tıkandığınızı görmenizi sağlar."
+      }
+    },
+    "trackedJobs": {
+      "eyebrow": "Takip Edilen İlanlar",
+      "title": "Henüz başvurmadığınız ilanları not edin",
+      "intro": "Takip Edilen İlanlar, henüz başvurmadığınız ama kaybetmek istemediğiniz ilanlar için hafif bir bekleme listesidir. Bir Başvuru'nun aksine; durumu, zaman çizelgesi ya da istihdam türü yoktur — sadece şirket, pozisyon, konum, ilan linki ve notlarınızı tutar.",
+      "add": {
+        "title": "Bir ilanı takibe alın",
+        "step1": {
+          "title": "\"Takip Edilen İlanlar\" sayfasını açın",
+          "body": "Üst menüden erişebilirsiniz."
+        },
+        "step2": {
+          "title": "Şirket adı ve pozisyonu girin",
+          "body": "İsterseniz konum, ilan linki ve kendi notlarınızı da ekleyin."
+        },
+        "step3": {
+          "title": "Kaydedin",
+          "body": "İlan, eklenme tarihiyle birlikte listenizde görünür."
+        }
+      },
+      "convert": {
+        "title": "Başvurduğunuzda: \"Mark as Applied\"",
+        "step1": {
+          "title": "İlanın yanındaki \"Mark as Applied\" butonuna tıklayın",
+          "body": "Bu, satırın içinde açılan küçük bir forma dönüşür."
+        },
+        "step2": {
+          "title": "İstihdam türünü ve başvuru tarihini girin",
+          "body": "İsterseniz ek notlar da yazabilirsiniz."
+        },
+        "step3": {
+          "title": "Onaylayın",
+          "body": "İlan, takip listesinden kalkar ve gerçek bir Başvuru olarak oluşturulur; doğrudan yeni başvurunun detay sayfasına yönlendirilirsiniz."
+        }
+      },
+      "remove": {
+        "title": "Bir ilanı kaldırın",
+        "body": "Artık ilgilenmediğiniz bir ilanı \"Remove\" ile listeden kalıcı olarak silebilirsiniz."
+      },
+      "calloutNoEdit": {
+        "title": "Doğrudan düzenleme yok",
+        "body": "Takip edilen bir ilanın bilgilerini değiştirmenin bir yolu şu an yok. Bilgi hatalıysa ilanı kaldırıp yeniden ekleyin; başvurduysanız zaten \"Mark as Applied\" ile dönüştürüp bilgileri orada (Başvuru Düzenle sayfasında) güncelleyebilirsiniz."
+      }
+    },
+    "applications": {
+      "eyebrow": "Başvurular",
+      "title": "Başvurularınızı oluşturun, izleyin, düzenleyin ve silin",
+      "intro": "Başvurular, e-kariyerim'in kalbidir: her başvurunun kendi durumu, zaman çizelgesi ve (varsa) iş tanımı vardır.",
+      "create": {
+        "title": "Yeni başvuru oluşturun",
+        "step1": {
+          "title": "Panel ya da Başvurular sayfasından \"Yeni Başvuru\"ya tıklayın"
+        },
+        "step2": {
+          "title": "Şirket adını yazmaya başlayın",
+          "body": "Daha önce eklediğiniz şirketler otomatik tamamlama olarak önerilir; yeni bir şirketse olduğu gibi yazmanız yeterli."
+        },
+        "step3": {
+          "title": "Pozisyon, ilan linki, konum ve istihdam türünü girin",
+          "body": "Başvuru tarihi varsayılan olarak bugün gelir, isterseniz değiştirebilirsiniz."
+        },
+        "step4": {
+          "title": "İsteğe bağlı olarak kaynağı ve notlarınızı ekleyin, kaydedin",
+          "body": "Kaynak alanı yalnızca oluştururken seçilebilir, sonradan değiştirilemez."
+        }
+      },
+      "list": {
+        "title": "Listeleme, arama, filtreleme",
+        "body": "Başvurular listesi sayfalanır (sayfa başına 10 kayıt) ve şirket/pozisyona göre arama, duruma göre filtreleme, tarih/şirket/pozisyon/duruma göre sıralama sunar — tüm filtreleriniz adres çubuğuna yansır, yani bir görünümü paylaşabilir ya da yer imine ekleyebilirsiniz."
+      },
+      "detail": {
+        "title": "Başvuru detayı",
+        "body": "Bir başvuruyu açtığınızda; durum rozetini, konumu, istihdam türünü, başvuru tarihini, varsa ilan linkini ve notlarınızı, bir olay Zaman Çizelgesi'ni ve (varsa) iş tanımını görürsünüz. E-posta yönlendirmeyle otomatik oluşan başvurularda \"Created from Email\" rozeti belirir."
+      },
+      "edit": {
+        "title": "Düzenleme",
+        "body": "Detay sayfasındaki \"Edit\" ile pozisyon, ilan linki, konum, istihdam türü, başvuru tarihi ve notları güncelleyebilirsiniz. Şirket adı ve kaynak, oluşturulduktan sonra değiştirilemez."
+      },
+      "delete": {
+        "title": "Silme",
+        "body": "Detay sayfasındaki \"Delete\" butonuna tıkladığınızda bir onay penceresi çıkar; onaylamadan hiçbir şey silinmez.",
+        "calloutConfirm": {
+          "title": "Silme geri alınamaz",
+          "body": "Bir başvuruyu sildiğinizde, o başvuruya ait zaman çizelgesi de dahil tüm geçmiş kalıcı olarak kaybolur."
+        }
+      },
+      "statusChange": {
+        "title": "Durum değiştirme",
+        "step1": {
+          "title": "Detay sayfasında \"Change Status\"a tıklayın"
+        },
+        "step2": {
+          "title": "Listeden yeni durumu seçin",
+          "body": "Mevcut durumunuz listede görünmez, sadece geçebileceğiniz diğer durumlar sıralanır."
+        },
+        "step3": {
+          "title": "İsteğe bağlı bir not ekleyip onaylayın",
+          "body": "Değişiklik, notunuzla birlikte zaman çizelgesine \"Eski Durum → Yeni Durum\" olarak işlenir."
+        }
+      },
+      "statuses": {
+        "title": "Durumlar ne anlama gelir?",
+        "body": "Bir başvuru şu durumlardan birinde olabilir: Applied (Başvuruldu), Screening (Ön Eleme), Interview (Mülakat), TechnicalInterview (Teknik Mülakat), FinalInterview (Son Mülakat), Offer (Teklif), Accepted (Kabul Edildi), Rejected (Reddedildi), Withdrawn (Vazgeçildi), Ghosted (Yanıt Alınamadı)."
+      },
+      "timeline": {
+        "title": "Zaman Çizelgesi",
+        "body": "Her başvurunun altında, o başvuruyla ilgili tüm olayların kronolojik listesi bulunur: oluşturulma, gönderilme, işe alımcı teması, ön eleme, mülakat planlanması/tamamlanması, teklif alınması, takip e-postası gönderilmesi ve her durum değişikliği. Bu, bir başvurunun geçmişini tek bakışta hatırlamanızı sağlar."
+      }
+    },
+    "suggestions": {
+      "eyebrow": "Öneriler",
+      "title": "E-postalarınızdan otomatik durum önerileri",
+      "intro": "Başvuru e-postalarınızı e-kariyerim'e yönlendirdiğinizde (bkz. Ayarlar → Mail Yönlendirme), sistem bu e-postaları okuyup size durum önerileri sunar — böylece her güncellemeyi elle işlemek zorunda kalmazsınız.",
+      "how": {
+        "title": "Bir öneri nasıl oluşur?",
+        "body": "Yönlendirilen bir e-posta işlendiğinde, Öneriler sayfasında şirket, pozisyon, alınma tarihi, bir güven yüzdesi ve önerilen durum (varsa) ile bir kart belirir. Öneri henüz bilinen bir başvuruyla eşleşmiyorsa \"New Job\" rozetiyle işaretlenir; net bir durum çıkarılamadıysa kart \"Still Pending\" olarak görünür."
+      },
+      "actions": {
+        "title": "Bir öneriyi onaylayın ya da reddedin",
+        "step1": {
+          "title": "Kartı inceleyin",
+          "body": "Konu satırı ve e-posta özetiyle önerinin doğru başvuruya ait olup olmadığını kontrol edin."
+        },
+        "step2": {
+          "title": "\"Confirm\" ile uygulayın ya da \"Dismiss\" ile geçin",
+          "body": "Confirm; yeni bir başvuruysa oluşturur, mevcut bir başvuruysa önerilen duruma geçirir. Dismiss, öneriyi hiçbir şey değiştirmeden kapatır."
+        }
+      },
+      "calloutConfidence": {
+        "title": "Güven yüzdesine göz atın",
+        "body": "Güven oranı düşükse önce e-postanın özetini okuyun — otomatik çıkarım her zaman kesin olmayabilir, siz son sözü söylersiniz."
+      }
+    },
+    "import": {
+      "eyebrow": "İçe Aktarma",
+      "title": "LinkedIn geçmişinizi toplu olarak aktarın",
+      "intro": "Şu anda tek içe aktarma yöntemi LinkedIn'in kendi veri dışa aktarım dosyasıdır (bir .zip). Ayrı bir CSV yükleyici arayüzü yoktur.",
+      "steps": {
+        "title": "Adım adım içe aktarma",
+        "step1": {
+          "title": "LinkedIn'den veri dışa aktarımınızı isteyin",
+          "body": "LinkedIn hesap ayarlarınızdan \"Get a copy of your data\" ile verinizi indirin; LinkedIn bu dosyayı hazırlaması için biraz zaman alabilir."
+        },
+        "step2": {
+          "title": "e-kariyerim'de İçe Aktarma sayfasını açın",
+          "body": "Üst menüden \"Import\"a gidin."
+        },
+        "step3": {
+          "title": "İndirdiğiniz .zip dosyasını seçin ve yükleyin",
+          "body": "Yükleme başlar başlamaz durum \"processing\"e geçer."
+        },
+        "step4": {
+          "title": "İlerlemeyi canlı izleyin",
+          "body": "İşlenen satır sayısını gösteren bir ilerleme çubuğu görürsünüz; sayfadan ayrılmanıza gerek yoktur."
+        },
+        "step5": {
+          "title": "Özeti inceleyin",
+          "body": "İşlem bitince kaç yeni başvuru eklendiği, kaç kaydın zaten var olduğu (duplicate) ve kaç satırın işlenemediği (invalid) gösterilir; hatalı satırlar varsa tek tek listelenir."
+        }
+      },
+      "calloutCsv": {
+        "title": "Sadece LinkedIn içe aktarımı var",
+        "body": "Elle hazırlanmış bir CSV dosyası yükleyebileceğiniz bir arayüz şu anda yok. İçe aktarılan başvurularda istihdam türü LinkedIn verisinde belirtilmediği için varsayılan olarak \"FullTime\" (Tam Zamanlı) atanır — gerekirse başvuruyu düzenleyerek değiştirebilirsiniz."
+      }
+    },
+    "settings": {
+      "eyebrow": "Ayarlar",
+      "title": "Hesap Ayarları",
+      "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, Chrome eklentisi için erişim anahtarı üretebilir, mail yönlendirmenizi yönetebilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
+      "export": {
+        "title": "Verilerimi Dışa Aktar",
+        "body": "Tüm başvuru, içe aktarma ve hatırlatma verilerinizi tek bir JSON dosyası olarak indirin."
+      },
+      "extension": {
+        "title": "Chrome Eklentisi için erişim anahtarı",
+        "step1": {
+          "title": "\"Tarayıcı Eklentisi\" bölümünü açın",
+          "body": "Ayarlar sayfasında bulunur."
+        },
+        "step2": {
+          "title": "Anahtara bir ad verin ve \"Anahtar Üret\"e tıklayın",
+          "body": "Örneğin \"Chrome Eklentisi\" ya da kullandığınız bilgisayarın adı."
+        },
+        "step3": {
+          "title": "Anahtarı hemen kopyalayın",
+          "body": "aa_pat_ ile başlayan bu değer yalnızca bir kez gösterilir — sayfadan ayrılırsanız bir daha göremezsiniz."
+        },
+        "step4": {
+          "title": "Eklentinin ayarlarına yapıştırın",
+          "body": "Bkz. Chrome Eklentisi bölümü. Artık en fazla 10 anahtar aktif olabilir; gerektiğinde kullanmadığınız bir anahtarı \"İptal Et\" ile kapatabilirsiniz."
+        },
+        "calloutToken": {
+          "title": "Bu anahtar hesabınıza tam erişim verir",
+          "body": "Bir erişim anahtarı, tıpkı e-postanız ve şifrenizle giriş yapmış gibi hesabınıza tam erişim sağlar. Sadece kendi tarayıcı eklentinize yapıştırın, kimseyle paylaşmayın; şüpheleniyorsanız \"İptal Et\" ile anında geçersiz kılabilirsiniz."
+        }
+      },
+      "emailForwarding": {
+        "title": "Mail Yönlendirme",
+        "body": "Ayarlar'da size özel bir yönlendirme adresi gösterilir. Kendi mail sağlayıcınızda (Gmail, Outlook, ...) başvurularınızla ilgili gönderenler için bu adrese yönlendiren bir filtre kurarsanız, e-kariyerim bu e-postalardan otomatik durum önerileri çıkarır. Bu adrese e-posta yönlendirmek, hesabınıza hiçbir erişim vermez.",
+        "calloutGmailOnlyGuide": {
+          "title": "Adım adım kurulum rehberi şu an sadece Gmail için",
+          "body": "Chrome eklentisinin \"Set up Email Forwarding\" rehberi ekran ekran sadece Gmail'i gösterir. Başka bir sağlayıcı kullanıyorsanız, kendi sağlayıcınızın filtre/yönlendirme ayarlarından yukarıdaki adrese yönlendirme kurabilirsiniz — mantık aynıdır."
+        }
+      },
+      "delete": {
+        "title": "Hesabımı Sil",
+        "body": "Şifrenizi girip kutuya \"SİL\" yazarak hesabınızı ve tüm verilerinizi kalıcı olarak silebilirsiniz.",
+        "calloutIrreversible": {
+          "title": "Geri alınamaz",
+          "body": "Hesabınız silindiğinde tüm başvuru, içe aktarma ve hatırlatma verileriniz kalıcı olarak kaybolur; bu işlemin geri dönüşü yoktur."
+        }
+      }
+    },
+    "chromeExtension": {
+      "eyebrow": "Chrome Eklentisi",
+      "title": "LinkedIn ve kariyer.net'te tek tıkla başvuru kaydedin",
+      "intro": "e-kariyerim Chrome eklentisi, bir LinkedIn ya da kariyer.net ilan sayfasını tek tıkla takip edilen bir başvuruya dönüştürür — \"I Applied\" butonuna basmanız yeterli.",
+      "install": {
+        "title": "Kurulum",
+        "storeIntro": "e-kariyerim eklentisi Chrome Web Mağazası'nda yayında — kurulum tek tıkla, geliştirici modu falan gerekmiyor.",
+        "storeCta": "Chrome Web Mağazası'nda Aç",
+        "step1": {
+          "title": "Ayarlar'dan bir erişim anahtarı üretin",
+          "body": "Bkz. Ayarlar bölümündeki \"Chrome Eklentisi için erişim anahtarı\" adımları."
+        },
+        "step2": {
+          "title": "Yukarıdaki bağlantıdan eklentiyi Chrome'a ekleyin",
+          "body": "Chrome Web Mağazası sayfasında \"Chrome'a Ekle\"ye tıklayın. Eklenti simgesi araç çubuğunuzda görünür."
+        }
+      },
+      "installManual": {
+        "title": "Alternatif: Paketlenmemiş kurulum (geliştirici/test amaçlı)",
+        "intro": "Mağaza sürümünü kullanamıyorsanız — örneğin henüz yayınlanmamış bir geliştirme sürümünü test ediyorsanız — eklentiyi elle de yükleyebilirsiniz:",
+        "step1": {
+          "title": "chrome://extensions adresini açın",
+          "body": "Adres çubuğuna yazıp Enter'a basmanız yeterli."
+        },
+        "step2": {
+          "title": "\"Geliştirici modu\"nu açın",
+          "body": "Sayfanın sağ üstünde bulunur."
+        },
+        "step3": {
+          "title": "\"Paketlenmemiş öğe yükle\"ye tıklayıp extension klasörünü seçin",
+          "body": "Eklenti araç çubuğunuzda görünür."
+        }
+      },
+      "configure": {
+        "title": "Yapılandırma",
+        "step1": {
+          "title": "Araç çubuğundaki e-kariyerim simgesine tıklayın"
+        },
+        "step2": {
+          "title": "Henüz anahtar girilmediyse \"Ayarları Aç\"a tıklayın",
+          "body": "Simgeye sağ tıklayıp \"Options\" ile de ulaşabilirsiniz."
+        },
+        "step3": {
+          "title": "API adresini ve erişim anahtarınızı girip kaydedin",
+          "body": "Gerçek bir dağıtıma bağlanıyorsanız API adresinin doğru olduğundan emin olun."
+        }
+      },
+      "use": {
+        "title": "Kullanım",
+        "step1": {
+          "title": "Bir LinkedIn ya da kariyer.net ilan sayfasını açın"
+        },
+        "step2": {
+          "title": "Eklenti simgesine tıklayın",
+          "body": "Şirket, pozisyon ve konum alanları sayfadan otomatik olarak doldurulmaya çalışılır."
+        },
+        "step3": {
+          "title": "Alanları kontrol edin, gerekirse düzeltin",
+          "body": "Otomatik doldurma her zaman kusursuz olmayabilir — göndermeden önce tüm alanlar düzenlenebilir."
+        },
+        "step4": {
+          "title": "\"I Applied\"a tıklayın",
+          "body": "Başvurunuz e-kariyerim'e kaydedilir."
+        }
+      },
+      "calloutScraping": {
+        "title": "Otomatik doldurma en iyi çabayla çalışır",
+        "body": "LinkedIn ve kariyer.net zaman zaman sayfa yapılarını değiştirir; bu durumda bazı alanlar boş gelebilir. Bu, yanlış veri göndermek yerine sizin elle doldurmanız gereken boş bir alan olarak kendini gösterir."
+      },
+      "calloutDedupe": {
+        "title": "Aynı ilana tekrar tıklamak güvenlidir",
+        "body": "Aynı ilan sayfasında \"I Applied\"a bir daha tıklarsanız, tekrar bir kayıt oluşturulmaz — sistem ilan linkine göre mevcut başvurunuzu bulur ve onu döndürür."
+      },
+      "emailForwardingGuide": {
+        "title": "Mail yönlendirme rehberi",
+        "body": "Eklentinin Ayarlar'ındaki \"Set up Email Forwarding\" bağlantısı, başvuru e-postalarınızı e-kariyerim'e yönlendirmeniz için adım adım (şu an için Gmail'e özel) bir rehber açar."
+      }
+    },
+    "faq": {
+      "eyebrow": "Sık Sorulan Sorular",
+      "title": "Merak edilenler",
+      "q1": {
+        "question": "Chrome eklentisi anahtarımı biri ele geçirirse ne olur?",
+        "answer": "O anahtarla hesabınıza tam erişim sağlanabilir. Şüpheleniyorsanız Ayarlar → Tarayıcı Eklentisi'nden anahtarı hemen \"İptal Et\" ile geçersiz kılın ve yeni bir anahtar üretin."
+      },
+      "q2": {
+        "question": "Hesabımı sildiğimde verilerimi geri alabilir miyim?",
+        "answer": "Hayır. Hesap silme işlemi geri alınamaz; tüm başvuru, içe aktarma ve hatırlatma verileriniz kalıcı olarak silinir."
+      },
+      "q3": {
+        "question": "Chrome eklentisi bir ilanın bilgilerini yanlış okursa ne olur?",
+        "answer": "Hiçbir şey otomatik olarak yanlış gönderilmez — \"I Applied\"a tıklamadan önce tüm alanlar düzenlenebilir, popup sadece bir başlangıç noktası sunar."
+      },
+      "q4": {
+        "question": "Mail yönlendirme sadece Gmail için mi çalışır?",
+        "answer": "Yönlendirme adresinin kendisi herhangi bir mail sağlayıcıdan (Gmail, Outlook, ...) kullanılabilir. Ancak eklentinin ekran ekran gösteren kurulum rehberi şu an sadece Gmail'i kapsıyor; başka bir sağlayıcıda aynı mantıkla kendiniz bir yönlendirme filtresi kurabilirsiniz."
+      },
+      "q5": {
+        "question": "LinkedIn geçmişimi dışında bir dosyayı (ör. Excel/CSV) içe aktarabilir miyim?",
+        "answer": "Şu an için hayır — tek içe aktarma yolu LinkedIn'in kendi veri dışa aktarım .zip dosyasıdır."
+      },
+      "q6": {
+        "question": "Takip ettiğim bir ilanı düzenleyebilir miyim?",
+        "answer": "Takip Edilen İlanlar için doğrudan bir düzenleme yok; bilgisi hatalıysa kaldırıp yeniden ekleyin, başvurduysanız \"Mark as Applied\" ile dönüştürüp bilgileri Başvuru Düzenle sayfasında güncelleyin."
+      },
+      "q7": {
+        "question": "Kaç tane Chrome eklentisi anahtarı oluşturabilirim?",
+        "answer": "Aynı anda en fazla 10 aktif anahtar bulunabilir. Yeni bir anahtar üretmeden önce kullanmadığınız birini iptal etmeniz gerekir."
+      },
+      "q8": {
+        "question": "İçe aktarılan ya da eklentiyle eklenen başvurularda istihdam türü neden hep \"Tam Zamanlı\" görünüyor?",
+        "answer": "LinkedIn verisi ve eklentinin taradığı ilan sayfaları istihdam türünü açıkça belirtmediği için varsayılan olarak \"FullTime\" atanır; gerekirse başvuruyu düzenleyerek doğru türü seçebilirsiniz."
+      }
     }
   }
 }

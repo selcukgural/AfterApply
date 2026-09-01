@@ -37,6 +37,9 @@ export function LandingNavbar({ initialTheme }: { initialTheme: Theme }) {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <Link href="/help" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+            {t("help")}
+          </Link>
           <LanguageSwitcher />
           <ThemeSwitcher initialTheme={initialTheme} />
           {isAuthenticated ? (
@@ -86,6 +89,9 @@ export function LandingNavbar({ initialTheme }: { initialTheme: Theme }) {
                 {t(link.key)}
               </a>
             ))}
+            <Link href="/help" onClick={() => setMenuOpen(false)} className="hover:text-gray-900 dark:hover:text-gray-100">
+              {t("help")}
+            </Link>
           </nav>
           <div className="mt-4 flex items-center gap-3">
             <LanguageSwitcher />
