@@ -45,7 +45,7 @@ jobs:
               sleep 3
             done ) &
           WATCHER_PID=$!
-          dotnet test AfterApply.slnx --no-build --configuration Release -- xUnit.MaxParallelThreads=4
+          dotnet test AfterApply.slnx --no-build --configuration Release -- xUnit.MaxParallelThreads=2
           kill "$WATCHER_PID"
 
   api-contract:
