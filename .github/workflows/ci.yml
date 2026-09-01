@@ -34,7 +34,17 @@ jobs:
       # Testcontainers-backed classes at once. Overridden here via VSTest's `-- xunit.<key>=<value>`
       # passthrough (the same mechanism README.md already documents for the opposite direction)
       # instead of editing xunit.runner.json itself, so local dev's serial default is untouched.
-      - run: dotnet test AfterApply.slnx --no-build --configuration Release -- xunit.maxParallelThreads=4
+      # TEMP diagnostic (to be removed): logs how many Testcontainers-labelled containers are
+      # running every 3s while the suite runs, to confirm whether maxParallelThreads=4 actually
+      # runs test classes concurrently or is being silently ignored.
+      - run: |
+          ( while true; do
+              echo "[watch $(date +%T)] containers=$(docker ps -q --filter label=org.testcontainers=true | wc -l)"
+              sleep 3
+            done ) &
+          WATCHER_PID=$!
+          dotnet test AfterApply.slnx --no-build --configuration Release -- xunit.maxParallelThreads=4
+          kill "$WATCHER_PID"
 
   api-contract:
     uses: ./.github/workflows/api-contract.yml
