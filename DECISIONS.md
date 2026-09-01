@@ -2073,7 +2073,7 @@ kapsıyorsa hepsinin detaylarının Slack'te görünmesini istedi.
   secret eklenmedi. Bot'un `#deployments` kanalına manuel davet edilmesi gerekiyor (workflow
   bunu otomatik yapamaz).
 
-## CI'da integration testler artık paralel: xunit.runner.json'daki DOP=1 sadece yerel podman'a özeldi (2026-09-01)
+## CI'da integration testleri paralelleştirme denemesi: geri alındı, DOP=1'de kalındı (2026-09-01)
 
 **Sorun (kullanıcı bulgusu):** `ci.yml`'in `backend` job'ı `dotnet test` adımında 5-6 dakika
 takılıyormuş gibi görünüyordu (kullanıcı canlı izlerken "iş yapıyormuş gibi bekletiyor" diye
@@ -2087,21 +2087,42 @@ resource-constrained rootless-podman VM'i** için alınmıştı (24 container ay
 6+ dakika kilitlemişti) — ama aynı `xunit.runner.json` dosyası hem yerel hem CI'da okunuyor, ve CI
 (`ubuntu-latest`) paylaşımlı podman VM değil, kendi özel 4 vCPU'lu gerçek Docker daemon'ına sahip
 izole bir runner. Yerel VM'i korumak için konan kısıtlama CI'da hiç geçerli olmayan bir sebeple
-süreyi 4-16x uzatıyordu.
+süreyi 4-16x uzatıyordu — bu teşhis hâlâ doğru, aşağıdaki geri alma sebebi bu değil.
 
-**Karar:** `xunit.runner.json`'ın kendisine dokunulmadı (yerel davranış DOP=1 olarak aynı kalıyor)
-— bunun yerine `ci.yml`'in `dotnet test` komutuna VSTest'in `-- xunit.<key>=<value>` passthrough'u
-ile `xunit.maxParallelThreads=4` eklendi (README.md'nin zaten ters yönde belgelediği aynı mekanizma:
-`-- xunit.parallelizeTestCollections=false`). 4, `ubuntu-latest`'in standart 4 vCPU'suna denk
-geliyor. Bu güvenli kabul edildi çünkü her test sınıfı zaten kendi rastgele portlu
-Postgres/Redis container çiftini ve kendi `WebApplicationFactory`'sini alıyor — DOP=1'in sebebi
-doğruluk/izolasyon değil, salt yerel VM'in kaynak açlığıydı; CI'da o kaynak kısıtı yok.
+**Denendi:** `xunit.runner.json`'ın kendisine dokunulmadan, `ci.yml`'in `dotnet test` komutuna
+VSTest'in RunSettings command-line switch'i eklendi. İlk denemede yanlış casing yüzünden
+(`xunit.maxParallelThreads` — küçük harf) hiçbir etkisi olmadığı görüldü (bir teşhis watcher'ı
+`docker ps`'i 3sn'de bir loglayarak doğruladı: koşum boyunca hep 1 sınıfın container çifti + Ryuk).
+xunit'in resmi RunSettings dokümanı (https://xunit.net/docs/runsettings) doğru formu netleştirdi:
+`dotnet test -- xUnit.<Key>=<value>` — PascalCase, çünkü bu switch'ler XML element adına
+çevriliyor ve XML büyük/küçük harfe duyarlı. **`README.md`'deki mevcut
+`-- xunit.parallelizeTestCollections=false` ipucu da muhtemelen aynı sebeple hiç çalışmıyor —
+düzeltilmedi, ayrı bir not.** Doğru casing (`xUnit.MaxParallelThreads=4`) ile watcher gerçekten
+aynı anda 9 container'a kadar (4 sınıf × 2 + Ryuk) çıktığını doğruladı, süre 5m50s'den 3m36s'e
+düştü.
 
-**Bilinçli olarak yapılmadı:** 16 sınıfı tek paylaşımlı `ICollectionFixture`'a indirmek (asıl büyük
-kazanç, ~16x container lifecycle azaltımı) — yukarıdaki "Integration test suite" kararında zaten
-her sınıfın izolasyon varsayımının (ör. `CompanyIntelligenceTests`'in temiz tek-kiracılı DB
-ihtiyacı) tek tek incelenmesini gerektirdiği için bilinçli ertelenmişti; bu oturumda da aynı
-gerekçeyle kapsam dışı bırakıldı.
+**Geri alındı — kullanıcı talimatı:** DOP=4'te ve ardından daha ölçülü DOP=2'de, art arda 3
+koşumun 3'ünde de (farklı testler: önce `LinkedInImportTests`, sonra iki kez
+`EmailForwardingTests`) integration testlerden biri fail oldu — hepsi aynı kök nedene bağlı: bir
+Hangfire background job'ı (import işleme, email-suggestion onayı), o sınıfın kendi
+`WebApplicationFactory`'siyle aynı anda çalışan başka sınıfların gerçek CPU rekabeti altında,
+testin bekleme penceresi içinde bitmiyor — serial (DOP=1) hiç maruz bırakmadığı bir yük profili.
+`LinkedInImportTests.PollUntilTerminalAsync`'in kendi yorumu bile bunu önceden öngörmüştü ("under
+concurrent test-class load... a trivial import can legitimately take much longer") ama gerçek
+paralel çalıştırma ilk kez bu oturumda denendi ve 60s'lik tolerans yetmedi. Kullanıcı "parallel'i 1
+yapıp bir şey bozmadığımızdan emin olalım" dedi — `ci.yml` orijinal tek satırlık
+`dotnet test AfterApply.slnx --no-build --configuration Release` haline geri döndürüldü, hiçbir
+override kalmadı.
+
+**Bilinçli olarak yapılmadı / ileride ele alınabilir:**
+- 16 sınıfı tek paylaşımlı `ICollectionFixture`'a indirmek (asıl büyük kazanç, ~16x container
+  lifecycle azaltımı) — yukarıdaki "Integration test suite" kararında zaten her sınıfın izolasyon
+  varsayımının tek tek incelenmesini gerektirdiği için ertelenmişti; bu oturumda da aynı gerekçeyle
+  kapsam dışı.
+- Paralelliği tekrar açmak isteyen bir sonraki oturum önce `LinkedInImportTests`/
+  `EmailForwardingTests` gibi Hangfire-bekleyen testlerin timeout/polling toleransını gerçek
+  paralel yükü karşılayacak şekilde sertleştirmeli (ör. deadline'ı büyütmek veya
+  retry/backoff'u genişletmek) — DOP tek başına güvenli değil, bu testler sertleşmeden.
 
 ---
 

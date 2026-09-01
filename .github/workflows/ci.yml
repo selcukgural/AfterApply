@@ -26,27 +26,15 @@ jobs:
       # job) and would be redundant/conflicting with what Testcontainers does
       # per test class.
       #
-      # tests/AfterApply.IntegrationTests/xunit.runner.json caps maxParallelThreads at 1 — that
-      # was written for local dev's shared, resource-constrained rootless-podman VM (DECISIONS.md
-      # "Integration test suite: seri çalıştırma..." 2026-08-29: 24 containers starting at once
-      # stalled it for 6+ minutes), not for this runner. ubuntu-latest is a dedicated 4-vCPU VM
-      # with a real Docker daemon and none of that contention, so it can run several of the ~16
-      # Testcontainers-backed classes at once. Overridden here via VSTest's RunSettings command-line
-      # switches (xunit.net's "Config with RunSettings" doc — https://xunit.net/docs/runsettings —
-      # note the PascalCase `xUnit.<Key>=<value>` form: these are transparently translated into
-      # XML element names, which are case-sensitive, so lowercase `xunit.maxParallelThreads` is
-      # silently ignored). Doesn't touch xunit.runner.json itself, so local dev's serial default
-      # is untouched.
-      # TEMP diagnostic (to be removed): logs how many Testcontainers-labelled containers are
-      # running every 3s while the suite runs, to confirm the override actually takes effect.
-      - run: |
-          ( while true; do
-              echo "[watch $(date +%T)] containers=$(docker ps -q --filter label=org.testcontainers=true | wc -l)"
-              sleep 3
-            done ) &
-          WATCHER_PID=$!
-          dotnet test AfterApply.slnx --no-build --configuration Release -- xUnit.MaxParallelThreads=2
-          kill "$WATCHER_PID"
+      # Tried running this in parallel on CI (tests/AfterApply.IntegrationTests/xunit.runner.json's
+      # maxParallelThreads=1 was written for local dev's shared podman VM, not this dedicated
+      # runner — see DECISIONS.md "CI'da integration testler artık paralel..." 2026-09-01, later
+      # reverted by the same entry) — reverted: at both DOP=4 and DOP=2 it reproducibly failed a
+      # different test each run (LinkedInImportTests, then EmailForwardingTests twice), all the
+      # same root cause — a Hangfire background job not finishing inside a test's polling deadline
+      # under real concurrent CPU load, something serial execution (DOP=1) never exercises. Back to
+      # serial, matching xunit.runner.json, until that class of test is hardened.
+      - run: dotnet test AfterApply.slnx --no-build --configuration Release
 
   api-contract:
     uses: ./.github/workflows/api-contract.yml
