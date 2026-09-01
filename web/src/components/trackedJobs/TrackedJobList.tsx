@@ -62,12 +62,17 @@ export function TrackedJobList({ items, onDelete, onConvert }: TrackedJobListPro
       {items.map((item) => (
         <li key={item.id} className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="font-medium text-gray-900 dark:text-gray-100">{item.companyName}</p>
               <p className="text-sm text-gray-700 dark:text-gray-300">{item.jobTitle}</p>
               {item.location && <p className="text-sm text-gray-500 dark:text-gray-400">{item.location}</p>}
               {item.jobUrl && (
-                <a href={item.jobUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+                <a
+                  href={item.jobUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block truncate text-sm text-blue-600 hover:underline dark:text-blue-400"
+                >
                   {item.jobUrl}
                 </a>
               )}
