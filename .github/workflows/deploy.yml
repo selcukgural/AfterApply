@@ -83,8 +83,18 @@ jobs:
     needs: [plan, contract-check]
     if: needs.plan.outputs.backend == 'true'
     runs-on: ubuntu-latest
+    # contents: write (job-level, overrides the workflow's contents: read) is only for moving
+    # the deploy/api-latest tag below — the actual deploy steps still just need id-token: write.
+    permissions:
+      id-token: write
+      contents: write
+    outputs:
+      commits: ${{ steps.deploy-commits.outputs.commits }}
+      count: ${{ steps.deploy-commits.outputs.count }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # full history — needed to diff against the deploy/api-latest tag below
 
       - id: auth
         uses: google-github-actions/auth@v3
@@ -171,12 +181,49 @@ jobs:
             EmailForwarding__WebhookSecret=afterapply-email-forwarding-webhook-secret:latest
             Cors__AllowedOrigins__0=afterapply-web-origin:latest
 
+      # High-water-mark tag for the notify-deploy job below: moves deploy/api-latest to the
+      # commit that was just deployed, so the *next* backend deploy can compute exactly which
+      # commits shipped by diffing against it (git log deploy/api-latest..HEAD) — this survives
+      # any number of intervening pushes that didn't touch backend paths and so never deployed,
+      # unlike just looking at this push's own commit list. First-ever run (tag doesn't exist
+      # yet) falls back to reporting just the current commit.
+      - name: Compute deployed commit range
+        id: deploy-commits
+        run: |
+          git fetch origin 'refs/tags/deploy/api-latest:refs/tags/deploy/api-latest' 2>/dev/null || true
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+          if git rev-parse -q --verify refs/tags/deploy/api-latest >/dev/null; then
+            RANGE=(deploy/api-latest..HEAD)
+          else
+            RANGE=(-1 HEAD)
+          fi
+          COMMITS=$(git log "${RANGE[@]}" --pretty=format:"• <${REPO_URL}/commit/%H|\`%h\`> %s — %an")
+          {
+            echo "commits<<COMMITS_EOF"
+            echo "$COMMITS"
+            echo "COMMITS_EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "count=$(printf '%s\n' "$COMMITS" | sed '/^$/d' | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Move deploy/api-latest tag
+        run: |
+          git tag -f deploy/api-latest HEAD
+          git push origin refs/tags/deploy/api-latest --force
+
   deploy-web:
     needs: [plan, contract-check]
     if: needs.plan.outputs.web == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    outputs:
+      commits: ${{ steps.deploy-commits.outputs.commits }}
+      count: ${{ steps.deploy-commits.outputs.count }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # full history — needed to diff against the deploy/web-latest tag below
 
       - id: auth
         uses: google-github-actions/auth@v3
@@ -216,3 +263,82 @@ jobs:
           service: afterapply-web
           region: ${{ env.GCP_REGION }}
           image: ${{ env.IMAGE }}
+
+      # Same high-water-mark pattern as deploy-backend's own step above, just against
+      # deploy/web-latest — see that step's comment for the full rationale.
+      - name: Compute deployed commit range
+        id: deploy-commits
+        run: |
+          git fetch origin 'refs/tags/deploy/web-latest:refs/tags/deploy/web-latest' 2>/dev/null || true
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+          if git rev-parse -q --verify refs/tags/deploy/web-latest >/dev/null; then
+            RANGE=(deploy/web-latest..HEAD)
+          else
+            RANGE=(-1 HEAD)
+          fi
+          COMMITS=$(git log "${RANGE[@]}" --pretty=format:"• <${REPO_URL}/commit/%H|\`%h\`> %s — %an")
+          {
+            echo "commits<<COMMITS_EOF"
+            echo "$COMMITS"
+            echo "COMMITS_EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "count=$(printf '%s\n' "$COMMITS" | sed '/^$/d' | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Move deploy/web-latest tag
+        run: |
+          git tag -f deploy/web-latest HEAD
+          git push origin refs/tags/deploy/web-latest --force
+
+  # Combines whatever deploy-backend/deploy-web actually did into a single Slack message so
+  # backend and web deploys (which run independently — see the plan job's comment) never post
+  # twice for a workflow that only touched one side. Runs even if one of the two was skipped or
+  # failed (always()), but only posts if at least one side both succeeded AND shipped new
+  # commits — a workflow_dispatch redeploy of an already-deployed SHA (e.g. after a secret
+  # rotation) has count == '0' and is silently skipped, so it doesn't spam #deployments.
+  notify-deploy:
+    needs: [deploy-backend, deploy-web]
+    if: |
+      always() &&
+      (needs.deploy-backend.result == 'success' || needs.deploy-web.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Slack message
+        id: build
+        env:
+          BACKEND_DEPLOYED: ${{ needs.deploy-backend.result == 'success' && needs.deploy-backend.outputs.count != '0' }}
+          BACKEND_COMMITS: ${{ needs.deploy-backend.outputs.commits }}
+          WEB_DEPLOYED: ${{ needs.deploy-web.result == 'success' && needs.deploy-web.outputs.count != '0' }}
+          WEB_COMMITS: ${{ needs.deploy-web.outputs.commits }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const backendDeployed = process.env.BACKEND_DEPLOYED === 'true';
+            const webDeployed = process.env.WEB_DEPLOYED === 'true';
+            if (!backendDeployed && !webDeployed) {
+              core.info('No new commits on either side — skipping Slack post.');
+              core.setOutput('shouldPost', 'false');
+              return;
+            }
+            const blocks = [
+              { type: 'header', text: { type: 'plain_text', text: '🚀 e-kariyerim deploy edildi' } },
+            ];
+            if (backendDeployed) {
+              blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `*Backend (afterapply-api)*\n${process.env.BACKEND_COMMITS}` } });
+            }
+            if (webDeployed) {
+              blocks.push({ type: 'section', text: { type: 'mrkdwn', text: `*Web (afterapply-web)*\n${process.env.WEB_COMMITS}` } });
+            }
+            core.setOutput('shouldPost', 'true');
+            core.setOutput('payload', JSON.stringify({
+              channel: 'deployments',
+              text: 'e-kariyerim deploy edildi',
+              blocks,
+            }));
+
+      - name: Post to #deployments
+        if: steps.build.outputs.shouldPost == 'true'
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: ${{ steps.build.outputs.payload }}

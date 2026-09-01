@@ -2034,6 +2034,45 @@ statik bir secret olduğu için iki job zaten bağımsız, sıralama sadece ilk 
 build mantığı) hiçbiri değişmedi — sadece hangi job'ların çalışıp çalışmayacağı artık `plan`
 job'unun çıktısına bağlı.
 
+## Deploy sonrası Slack bildirimi: #deployments kanalına commit detayları (2026-09-01)
+
+**Sorun (kullanıcı isteği):** Bir deploy prod'a çıktığında diğer geliştiriciler release'de ne
+olduğunu görmüyordu — `slack-pr-notify.yml` sadece PR/merge event'lerini bildiriyor, gerçek
+deploy anını değil. Kullanıcı özellikle: deploy tek bir push'tan fazlasını (birden fazla commit)
+kapsıyorsa hepsinin detaylarının Slack'te görünmesini istedi.
+
+**Karar (üç açık soru, kullanıcıya soruldu ve karara bağlandı):**
+1. **Kanal:** yeni `#deployments` kanalı (mevcut `#pr-backend-merged`'a karıştırılmadı — o PR
+   merge event'lerine özel kalıyor).
+2. **Mesaj granülerliği:** backend ve web bağımsız deploy olsa da (yukarıdaki karar) tek bir
+   birleşik mesaj — `notify-deploy` job'ı `deploy-backend`/`deploy-web`'e `needs` ile bağlı,
+   `always()` ile ikisinin sonucunu da bekliyor, hangisi gerçekten deploy olduysa sadece onun
+   bölümünü mesaja ekliyor.
+3. **Commit aralığı:** son push'un kendi commit listesi değil, **son başarılı deploy'dan bu
+   yana** olan tüm commit'ler — `deploy-backend`/`deploy-web` job'ları her başarılı deploy
+   sonunda `deploy/api-latest`/`deploy/web-latest` adında bir git tag'i deploy edilen SHA'ya
+   force-taşıyor (yüksek-su-işareti deseni); bir sonraki deploy bu tag ile `HEAD` arasındaki
+   `git log` farkını alıp Slack mesajına yazıyor. Bu, backend path'i değişmeden geçen ara
+   push'ları da (deploy tetiklenmediği için) doğru şekilde bir sonraki backend deploy'una dahil
+   ediyor — sadece bu push'un commit'lerine bakmak bunları kaçırırdı.
+
+**Uygulama detayları:**
+- `deploy-backend`/`deploy-web` job'larına job-seviyesinde `permissions: {id-token: write,
+  contents: write}` eklendi (workflow-seviyesindeki `contents: read`'i override ediyor) — sadece
+  tag push'u için, deploy adımlarının kendisi hâlâ sadece `id-token: write` kullanıyor.
+  `actions/checkout`'a `fetch-depth: 0` eklendi (tag'e karşı diff almak için tam history gerekli).
+- Tag hiç yoksa (ilk deploy) `git log -1 HEAD` ile sadece o anki commit raporlanıyor.
+- `notify-deploy`, `needs.*.outputs.count`'a bakıp yeni commit yoksa (ör. secret rotation
+  sonrası aynı SHA'nın `workflow_dispatch` ile yeniden deploy'u) Slack'e hiç post atmıyor —
+  gürültü olmasın diye.
+- Slack payload'ı `actions/github-script` içinde JSON olarak inşa edilip
+  `slackapi/slack-github-action`'a doğrudan JSON string olarak veriliyor (YAML içine multiline
+  commit listesi gömmenin escaping sorunlarından kaçınmak için) — repodaki diğer workflow'ların
+  kullandığı aynı Slack action'ı.
+- `SLACK_BOT_TOKEN` secret'ı yeniden kullanıldı (`slack-pr-notify.yml`'deki gibi), yeni bir
+  secret eklenmedi. Bot'un `#deployments` kanalına manuel davet edilmesi gerekiyor (workflow
+  bunu otomatik yapamaz).
+
 ---
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
