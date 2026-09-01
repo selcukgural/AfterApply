@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useTranslations } from "next-intl";
 import type { StatusDistributionItem } from "@/types/api";
 
@@ -31,7 +31,9 @@ export function StatusDistributionChart({ data }: { data: StatusDistributionItem
             contentStyle={{ backgroundColor: "var(--chart-tooltip-bg)", color: "var(--chart-tooltip-text)", border: "none" }}
             labelStyle={{ color: "var(--chart-tooltip-text)" }}
           />
-          <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} minPointSize={3}>
+            <LabelList dataKey="count" position="top" style={{ fontSize: 11, fill: "var(--chart-tick)" }} />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>
