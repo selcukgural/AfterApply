@@ -13,7 +13,7 @@ public class EmailIntelligenceConfigurationValidatorTests
     // bind to 0, indistinguishable from a deliberately configured 0). A minimal placeholder is enough.
     private static readonly EmailIntelligenceOptions IgnoredBoundOptions = new()
     {
-        LowThreshold = 0, LlmThreshold = 0, HighConfidenceThreshold = 0,
+        LowThreshold = 0, LlmThreshold = 0, HighConfidenceThreshold = 0, LocalPrefilterThreshold = 0,
         Weights = new()
         {
             MatchedApplication = 0, ApplicationPhrase = 0, InterviewPhrase = 0, AssessmentPhrase = 0, OfferPhrase = 0,
@@ -110,6 +110,7 @@ public class EmailIntelligenceConfigurationValidatorTests
             "LowThreshold": 20,
             "LlmThreshold": 50,
             "HighConfidenceThreshold": 70,
+            "LocalPrefilterThreshold": 12,
             "Weights": {
               "MatchedApplication": 35, "ApplicationPhrase": 30, "InterviewPhrase": 35, "AssessmentPhrase": 30,
               "OfferPhrase": 35, "RecruiterSignal": 10, "KnownJobBoardOrAts": 20, "CalendarLink": 15,

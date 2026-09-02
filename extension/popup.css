@@ -248,6 +248,24 @@ textarea::placeholder {
   color: var(--text-placeholder);
 }
 
+/* Overrides the generic input{} block above (width:100%/padding/border), which is meant for text
+   inputs — a checkbox needs to stay its native small size, sitting next to its own label text. */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  border-radius: 4px;
+}
+
 input:focus,
 textarea:focus {
   border-color: var(--accent);

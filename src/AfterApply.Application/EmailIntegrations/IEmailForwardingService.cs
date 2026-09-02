@@ -19,6 +19,13 @@ public interface IEmailForwardingService
     /// classification.</summary>
     Task ProcessInboundEmailAsync(InboundEmailRequest request, CancellationToken cancellationToken);
 
+    /// <summary>Processes one signal the Gmail content script extracted client-side from a thread
+    /// the user opened and scored as plausibly job-related — never the raw email, never anything
+    /// about mail the user didn't open. Lazily creates the user's Extension-provider EmailConnection
+    /// on first call, then shares the same classify/match/auto-apply/persist pipeline
+    /// ProcessInboundEmailAsync uses.</summary>
+    Task ProcessExtensionSignalAsync(Guid userId, ExtensionEmailSignalRequest request, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<EmailSuggestionResponse>> GetPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>Cheap count-only variant of <see cref="GetPendingSuggestionsAsync"/> for UI badges —
@@ -53,3 +60,11 @@ public interface IEmailForwardingService
 public sealed record InboundEmailRequest(
     string ToAddress, string FromEmail, string FromDisplayName, string Subject, string Snippet,
     DateTimeOffset ReceivedAt, IReadOnlyList<string> LinkDomains);
+
+/// <summary>Shape the Gmail content script POSTs — sender/subject/snippet it read directly from the
+/// opened thread's DOM (subject/body capped client-side before this is ever built), never the raw
+/// email. GmailMessageId is Gmail's own id for the thread (from location.hash), the idempotency
+/// key's raw material — no ToAddress, since auth already resolves the user.</summary>
+public sealed record ExtensionEmailSignalRequest(
+    string SenderEmail, string SenderDisplayName, string Subject, string Snippet,
+    DateTimeOffset ReceivedAt, IReadOnlyList<string> LinkDomains, string GmailMessageId);

@@ -49,6 +49,23 @@ public sealed class EmailConnection : AuditableEntity
         };
     }
 
+    /// <summary>Lazily created on the first client-side-extracted signal a user's Gmail content
+    /// script submits — see EmailProvider.Extension. No InboundToken (nothing is ever addressed to
+    /// this connection the way a forwarding address is) and no real ProviderAccountEmail (there's no
+    /// single "connected account" concept here, just a row for EmailSuggestion.EmailConnectionId and
+    /// the idempotency check to key off).</summary>
+    public static EmailConnection CreateExtension(Guid userId, DateTimeOffset now)
+    {
+        return new EmailConnection
+        {
+            UserId = userId,
+            Provider = EmailProvider.Extension,
+            ConnectedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+    }
+
     /// <summary>Overwrites any prior pending confirmation — Gmail resends a fresh code/link if the
     /// user retries adding the forwarding address, and only the latest one is ever actionable.</summary>
     public void SetGmailConfirmation(string? code, string? link, DateTimeOffset receivedAt)

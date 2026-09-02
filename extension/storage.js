@@ -46,3 +46,19 @@ export async function getLanguage() {
 export async function saveLanguage(language) {
   await chrome.storage.local.set({ [LANGUAGE_KEY]: language });
 }
+
+// Off by default — the Gmail content script (gmail-scan.js) checks this before reading anything
+// from the page, full stop. Kept as its own flat key rather than folding into afterapply_settings
+// so options.js can gate/reset it independently of the token. Note: gmail-scan.js/
+// local-filter-config.js can't `import` this helper (Chrome MV3 content scripts have no ES-module
+// support), so they read the same key directly via chrome.storage.local — see their own comment.
+const GMAIL_SCAN_ENABLED_KEY = "afterapply_gmail_scan_enabled";
+
+export async function getGmailScanEnabled() {
+  const result = await chrome.storage.local.get(GMAIL_SCAN_ENABLED_KEY);
+  return result[GMAIL_SCAN_ENABLED_KEY] ?? false;
+}
+
+export async function setGmailScanEnabled(enabled) {
+  await chrome.storage.local.set({ [GMAIL_SCAN_ENABLED_KEY]: enabled });
+}

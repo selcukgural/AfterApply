@@ -45,6 +45,7 @@ public static class DependencyInjection
     public const string AuthRateLimitPolicy = "auth-strict";
     public const string UploadRateLimitPolicy = "upload";
     public const string InboundEmailRateLimitPolicy = "inbound-email";
+    public const string ExtensionSignalRateLimitPolicy = "extension-signal";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -254,6 +255,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailJobExtractionProvider, OpenAiEmailJobExtractionProvider>();
         services.AddScoped<IEmailRejectionReasonExtractionProvider, OpenAiEmailRejectionReasonExtractionProvider>();
         services.AddScoped<IEmailForwardingService, EmailForwardingService>();
+        services.AddScoped<ILocalFilterConfigService, LocalFilterConfigService>();
         services.AddSingleton<IJobBoardDomainMatcher, JobBoardDomainMatcher>();
         services.AddScoped<ICompanyIntelligenceService, CompanyIntelligenceService>();
 

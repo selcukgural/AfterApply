@@ -64,6 +64,21 @@ public static class RateLimiting
                     QueueLimit = 0
                 });
             });
+
+            // User-based, same idiom as UploadRateLimitPolicy — this is authenticated (unlike
+            // /inbound). A backstop against a buggy/looping Gmail content script, not the primary
+            // control: the extension's own client-side dedup of already-submitted thread ids is what
+            // normally keeps volume low, since a user only opens so many emails per session.
+            options.AddPolicy(DependencyInjection.ExtensionSignalRateLimitPolicy, httpContext =>
+            {
+                var partitionKey = httpContext.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? "anonymous";
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 60,
+                    Window = TimeSpan.FromMinutes(5),
+                    QueueLimit = 0
+                });
+            });
         });
 
         return services;

@@ -22,7 +22,15 @@
   "host_permissions": [
     "https://www.linkedin.com/*",
     "https://www.kariyer.net/*",
+    "https://mail.google.com/*",
     "https://afterapply-api-188370748893.europe-west1.run.app/*",
     "https://api.ekariyerim.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["local-filter-config.js", "gmail-scan.js"],
+      "run_at": "document_idle"
+    }
   ]
 }

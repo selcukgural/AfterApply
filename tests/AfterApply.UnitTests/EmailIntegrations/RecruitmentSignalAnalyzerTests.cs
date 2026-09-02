@@ -68,6 +68,7 @@ public class RecruitmentSignalAnalyzerTests
         LowThreshold = 20,
         LlmThreshold = 50,
         HighConfidenceThreshold = 70,
+        LocalPrefilterThreshold = 12,
         Weights = Weights,
         Phrases = Phrases
     };

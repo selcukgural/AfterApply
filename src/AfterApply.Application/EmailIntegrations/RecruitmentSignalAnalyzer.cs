@@ -88,6 +88,16 @@ public sealed class EmailIntelligenceOptions
     public required int LowThreshold { get; init; }
     public required int LlmThreshold { get; init; }
     public required int HighConfidenceThreshold { get; init; }
+
+    /// <summary>Threshold the Gmail content script's JS-mirrored scorer (extension/gmail-scan.js)
+    /// compares its own score against before submitting a signal to POST /extension-signal. Set
+    /// below LowThreshold on purpose: the JS scorer is a deliberately simplified mirror of this
+    /// analyzer (no MatchedApplication/CompanyNameInSubject cross-reference), so it should err
+    /// toward over-sending — a false positive here only costs one extra backend call, a false
+    /// negative silently drops a real signal. Ships as a conservative placeholder, not calibrated
+    /// against real outcomes yet — same spirit as EmailAutoApprovalOptions.ConfidenceThreshold.</summary>
+    public required int LocalPrefilterThreshold { get; init; }
+
     public required EmailIntelligenceWeights Weights { get; init; }
     public required EmailIntelligencePhrases Phrases { get; init; }
 }

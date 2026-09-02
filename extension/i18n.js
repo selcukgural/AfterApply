@@ -99,6 +99,9 @@ const STRINGS = {
       forwardingLabel: "Email Forwarding",
       forwardingHelp: "Get automatic status suggestions from your inbox — a full, step-by-step guide (with screenshots) to setting up Gmail forwarding.",
       setUpForwarding: "Set up Email Forwarding",
+      gmailScanLabel: "Gmail Scanning (beta)",
+      gmailScanHelp: "When you open an email in Gmail, this extension reads it in your browser only and, if it looks job-related, sends just the extracted subject/snippet — never the raw email — as a status suggestion. Off by default. Only threads you actually open are read; nothing else in your inbox is touched.",
+      gmailScanToggle: "Scan opened Gmail emails",
     },
   },
   tr: {
@@ -195,6 +198,9 @@ const STRINGS = {
       forwardingLabel: "Mail Yönlendirme",
       forwardingHelp: "Gelen kutunuzdan otomatik statü önerileri alın — Gmail yönlendirmesini kurmak için ekran görüntülü, adım adım bir rehber.",
       setUpForwarding: "Mail Yönlendirmeyi Kur",
+      gmailScanLabel: "Gmail Taraması (beta)",
+      gmailScanHelp: "Gmail'de bir mail açtığınızda, eklenti onu yalnızca tarayıcınızda okur; iş maili gibi görünüyorsa yalnızca çıkarılan konu/özeti — ham maili değil — bir statü önerisi olarak gönderir. Varsayılan olarak kapalıdır. Yalnızca fiilen açtığınız mailler okunur, gelen kutunuzdaki başka hiçbir şeye dokunulmaz.",
+      gmailScanToggle: "Açtığım Gmail maillerini tara",
     },
   },
 };

@@ -995,8 +995,14 @@ public class EmailForwardingTests : IAsyncLifetime
         _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.99, "Llm:Interview");
         _fakeExtractionProvider.Result = new EmailJobExtractionResult("Auto Apply New Job Co", "Engineer", null, null);
 
+        // Snippet is deliberately worded to hit Application + Recruiter + Interview
+        // RecruitmentSignalAnalyzer categories (score ~80, well clear of EmailIntelligence:
+        // LlmThreshold=50) without matching any RuleBasedEmailClassifier phrase — this must reach the
+        // LLM fake above for the test to actually exercise "MatchedRule=Llm:... + high confidence
+        // still doesn't auto-apply an unmatched suggestion", not just "no signal was found at all".
         await ProcessInboundDirectlyAsync(_autoApplyFactory!, address, "hr@auto-apply-newjob-test.com",
-            "Recruiting Team", "Update on your recent application", "There's news about your application.");
+            "Recruiting Team", "Update on your recent application",
+            "There's news about your application. Our talent acquisition team wanted to share an update on the interview scheduled for your role.");
 
         using var scope = _autoApplyFactory!.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -1061,6 +1067,84 @@ public class EmailForwardingTests : IAsyncLifetime
         countAfterRead.GetProperty("unreadCount").GetInt32().ShouldBe(0);
     }
 
+    [Fact]
+    public async Task ExtensionSignal_Requires_Auth()
+    {
+        var unauthenticatedClient = _factory!.CreateClient();
+        var response = await unauthenticatedClient.PostAsJsonAsync("/api/email-forwarding/extension-signal", new
+        {
+            senderEmail = "recruiter@ext-auth-test.com", senderDisplayName = "Ext Auth Test Recruiting",
+            subject = "Interview invitation", snippet = "We'd like to invite you to an interview.",
+            receivedAt = DateTimeOffset.UtcNow, linkDomains = Array.Empty<string>(), gmailMessageId = "thread-auth-1"
+        }, JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task ExtensionSignal_Lazily_Creates_Extension_Connection_And_Suggestion()
+    {
+        var applicationId = await CreateApplicationAsync("Ext Signal Test");
+
+        await SendExtensionSignalAsync("recruiter@ext-signal-test.com", "Ext Signal Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.", "thread-ext-1");
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestion = suggestionsResponse.EnumerateArray().Single();
+        suggestion.GetProperty("applicationId").GetGuid().ShouldBe(applicationId);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailConnections.CountAsync(c => c.Provider == EmailProvider.Extension)).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ExtensionSignal_Is_Idempotent_On_Repeated_GmailMessageId()
+    {
+        await CreateApplicationAsync("Ext Idempotent Test");
+
+        await SendExtensionSignalAsync("recruiter@ext-idempotent-test.com", "Ext Idempotent Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.", "thread-ext-dup");
+        await SendExtensionSignalAsync("recruiter@ext-idempotent-test.com", "Ext Idempotent Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.", "thread-ext-dup");
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailSuggestions.CountAsync(s => s.Subject == "Interview invitation")).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ExtensionSignal_Auto_Applies_Like_Forwarding_Path_When_Confidence_Qualifies()
+    {
+        var applicationId = await CreateApplicationAsync("Ext AutoApply Test", _autoApplyClient);
+        Guid userId;
+        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
+            userId = application.UserId;
+            var company = await db.Companies.SingleAsync(c => c.Id == application.CompanyId);
+            company.EnrichFrom("https://ext-autoapply-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
+
+        // Direct in-process call, not SendExtensionSignalAsync's HTTP+Hangfire path — same reason
+        // ProcessInboundDirectlyAsync exists (see its own comment): Hangfire storage is shared across
+        // this class's three factories, so an enqueued job isn't guaranteed to be processed by
+        // _autoApplyFactory's own background server/config, and this test's whole point is that
+        // config's auto-apply behavior.
+        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, userId, "hr@ext-autoapply-test.com", "Ext AutoApply Recruiting",
+            "Update on your recent application", "There's news about your application.", "thread-ext-autoapply");
+
+        using var verifyScope = _autoApplyFactory!.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await verifyDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.AutoApplied);
+        suggestion.MatchType.ShouldBe(EmailApplicationMatchType.DomainMatch);
+    }
+
     // Calls IEmailForwardingService.ProcessInboundEmailAsync directly within a given factory's own
     // DI scope, instead of POSTing to /inbound and waiting on Hangfire. _factory/_disabledFactory/
     // _autoApplyFactory all share the same Postgres-backed Hangfire storage (see
@@ -1079,6 +1163,18 @@ public class EmailForwardingTests : IAsyncLifetime
             CancellationToken.None);
     }
 
+    // Same determinism reasoning as ProcessInboundDirectlyAsync above, for the extension-signal path.
+    private static async Task ProcessExtensionSignalDirectlyAsync(WebApplicationFactory<Program> factory,
+        Guid userId, string senderEmail, string senderDisplayName, string subject, string snippet, string gmailMessageId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IEmailForwardingService>();
+        await service.ProcessExtensionSignalAsync(userId,
+            new ExtensionEmailSignalRequest(senderEmail, senderDisplayName, subject, snippet, DateTimeOffset.UtcNow,
+                Array.Empty<string>(), gmailMessageId),
+            CancellationToken.None);
+    }
+
     private async Task<HttpResponseMessage> SendInboundAsync(string toAddress, string from, string fromName, string subject, string snippet,
         WebApplicationFactory<Program>? factory = null)
     {
@@ -1092,6 +1188,23 @@ public class EmailForwardingTests : IAsyncLifetime
 
         var unauthenticatedClient = factory!.CreateClient();
         var response = await unauthenticatedClient.SendAsync(request);
+        await WaitForHangfireIdleAsync(factory);
+        return response;
+    }
+
+    // Also processed out-of-request via Hangfire (see /extension-signal's own comment) — same
+    // wait-for-idle requirement as SendInboundAsync above, for the same reason.
+    private async Task<HttpResponseMessage> SendExtensionSignalAsync(string senderEmail, string senderDisplayName,
+        string subject, string snippet, string gmailMessageId, HttpClient? client = null, WebApplicationFactory<Program>? factory = null)
+    {
+        client ??= _client;
+        factory ??= _factory;
+
+        var response = await client.PostAsJsonAsync("/api/email-forwarding/extension-signal", new
+        {
+            senderEmail, senderDisplayName, subject, snippet,
+            receivedAt = DateTimeOffset.UtcNow, linkDomains = Array.Empty<string>(), gmailMessageId
+        }, JsonOptions);
         await WaitForHangfireIdleAsync(factory);
         return response;
     }

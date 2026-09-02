@@ -27,6 +27,28 @@ public static class EmailForwardingEndpoints
             return options.Value.Enabled ? await next(context) : Results.NotFound();
         });
 
+        // Anonymous on purpose: the payload (weights/phrases/known-domain list) carries no PII and
+        // the algorithm shape it drives (RecruitmentSignalAnalyzer) is already visible in this repo —
+        // anonymous lets the Gmail content script prefetch config before a PAT is even configured.
+        // ETag-revalidated so a backend-only appsettings.json edit + redeploy propagates to running
+        // extensions within one conditional-GET cycle instead of a blind client-side cache TTL.
+        group.MapGet("/local-filter-config", async (HttpContext httpContext, ILocalFilterConfigService service, CancellationToken cancellationToken) =>
+            {
+                var (config, etag) = await service.GetAsync(cancellationToken);
+                if (httpContext.Request.Headers.IfNoneMatch.FirstOrDefault() == etag)
+                {
+                    return Results.StatusCode(StatusCodes.Status304NotModified);
+                }
+
+                httpContext.Response.Headers.ETag = etag;
+                httpContext.Response.Headers.CacheControl = "no-cache"; // always revalidate, never trust a blind browser TTL
+                return Results.Ok(config);
+            })
+            .AllowAnonymous()
+            .WithSummary("Local pre-filter scoring config for the extension's Gmail content script — weights/phrases/domains/threshold, ETag-revalidated")
+            .Produces<LocalFilterConfigResponse>()
+            .Produces(StatusCodes.Status304NotModified);
+
         group.MapGet("/address", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.GetOrCreateInboundAddressAsync(user.GetUserId(), cancellationToken)))
             .RequireAuthorization()
@@ -80,6 +102,25 @@ public static class EmailForwardingEndpoints
             })
             .RequireRateLimiting(DependencyInjection.InboundEmailRateLimitPolicy)
             .WithSummary("Receive a forwarded email from the Cloudflare Email Worker — not for direct client use")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
+
+        // Called by the Gmail content script (extension/gmail-scan.js) for a thread it read
+        // client-side and scored as plausibly job-related — never the raw email. Enqueued via
+        // Hangfire for the same reasons /inbound is: classification can call OpenAI, and this keeps
+        // the content script's fetch() fast rather than blocking on an LLM round-trip. Rate-limited
+        // per user as a backstop against a buggy/looping content script — the extension's own
+        // client-side dedup (already-submitted Gmail thread ids) is what normally keeps volume low.
+        group.MapPost("/extension-signal", (ExtensionEmailSignalRequest request, ClaimsPrincipal user, IBackgroundJobClient jobClient) =>
+            {
+                var userId = user.GetUserId();
+                jobClient.Enqueue<IEmailForwardingService>(s => s.ProcessExtensionSignalAsync(userId, request, CancellationToken.None));
+                return Results.NoContent();
+            })
+            .RequireAuthorization()
+            .RequireRateLimiting(DependencyInjection.ExtensionSignalRateLimitPolicy)
+            .WithSummary("Receive a recruitment-signal-scored email extracted client-side by the Gmail content script — not the raw email")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status429TooManyRequests);

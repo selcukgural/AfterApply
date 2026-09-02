@@ -36,6 +36,17 @@
       setting up Gmail forwarding.
     </p>
     <button id="openEmailForwarding" class="secondary" type="button">Set up Email Forwarding</button>
+
+    <label id="gmailScanLabel">Gmail Scanning (beta)</label>
+    <p id="gmailScanHelp" class="muted">
+      When you open an email in Gmail, this extension reads it in your browser only and, if it looks
+      job-related, sends just the extracted subject/snippet — never the raw email — as a status
+      suggestion. Off by default. Only threads you actually open are read.
+    </p>
+    <label class="checkbox-row">
+      <input id="gmailScanEnabled" type="checkbox" />
+      <span id="gmailScanToggle">Scan opened Gmail emails</span>
+    </label>
   </main>
 
   <script type="module" src="options.js"></script>

@@ -95,7 +95,44 @@ internal sealed partial class EmailForwardingService(
             return;
         }
 
-        var providerMessageId = ComputeIdempotencyKey(request);
+        await ProcessSignalAsync(connection, request.FromEmail, request.FromDisplayName, request.Subject,
+            request.Snippet, request.ReceivedAt, request.LinkDomains, ComputeIdempotencyKey(request), cancellationToken);
+    }
+
+    public async Task ProcessExtensionSignalAsync(Guid userId, ExtensionEmailSignalRequest request, CancellationToken cancellationToken)
+    {
+        var connection = await GetOrCreateExtensionConnectionAsync(userId, cancellationToken);
+
+        await ProcessSignalAsync(connection, request.SenderEmail, request.SenderDisplayName, request.Subject,
+            request.Snippet, request.ReceivedAt, request.LinkDomains, ComputeIdempotencyKey(request.GmailMessageId),
+            cancellationToken);
+    }
+
+    private async Task<EmailConnection> GetOrCreateExtensionConnectionAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var existing = await dbContext.EmailConnections
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.Provider == EmailProvider.Extension, cancellationToken);
+
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        var connection = EmailConnection.CreateExtension(userId, DateTimeOffset.UtcNow);
+        dbContext.EmailConnections.Add(connection);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return connection;
+    }
+
+    // Shared by both intake paths (Cloudflare-forwarded mail and the Gmail content script's
+    // client-side-extracted signal) once each has resolved its own EmailConnection — everything from
+    // here on (idempotency, matching, classification, auto-apply, persistence) is intake-shape
+    // agnostic, which is the entire point of this split.
+    private async Task ProcessSignalAsync(
+        EmailConnection connection, string fromEmail, string fromDisplayName, string subject, string snippet,
+        DateTimeOffset receivedAt, IReadOnlyList<string> linkDomains, string providerMessageId,
+        CancellationToken cancellationToken)
+    {
         var alreadyProcessed = await dbContext.EmailSuggestions
             .AnyAsync(s => s.EmailConnectionId == connection.Id && s.ProviderMessageId == providerMessageId, cancellationToken);
 
@@ -106,22 +143,22 @@ internal sealed partial class EmailForwardingService(
 
         var candidates = await BuildCandidatesAsync(connection.UserId, cancellationToken);
 
-        // Forwarded mail's original sender is the company; there's no "self-sent" concept here since
-        // the forwarding hop (the user's own filter) already happened before this ever reached us.
+        // The original sender is the company; there's no "self-sent" concept here since the
+        // forwarding hop (or the user opening the thread themselves) already happened before this
+        // ever reached us.
         var matchResult = EmailApplicationMatcher.Match(
-            request.FromEmail, request.FromDisplayName, recipientEmail: "", ownAccountEmail: "",
-            request.Subject, candidates);
+            fromEmail, fromDisplayName, recipientEmail: "", ownAccountEmail: "", subject, candidates);
         var applicationId = matchResult?.ApplicationId;
 
-        var senderDomain = ExtractDomain(request.FromEmail);
+        var senderDomain = ExtractDomain(fromEmail);
 
         // isKnownSender no longer hard-gates the LLM call (see RecruitmentSignalAnalyzer) — kept
         // here purely so the routing log line below can show it alongside the new score-based
         // decision.
         var isKnownSender = applicationId is not null || jobBoardDomainMatcher.IsKnown(senderDomain);
 
-        var classification = await ClassifyAsync(request.FromEmail, request.Subject, request.Snippet,
-            senderDomain, applicationId is not null, request.LinkDomains, isKnownSender, cancellationToken);
+        var classification = await ClassifyAsync(fromEmail, subject, snippet,
+            senderDomain, applicationId is not null, linkDomains, isKnownSender, cancellationToken);
 
         // ApplicationReceived only counts as a signal for an *unmatched* sender — a "we got your
         // application" acknowledgement about an application we already have on file is content-free
@@ -141,7 +178,7 @@ internal sealed partial class EmailForwardingService(
         // Only worth an extra LLM call when the email actually signals a rejection — see
         // IEmailRejectionReasonExtractionProvider (always returns a result, NotStated included).
         var rejectionReason = classification.SuggestedStatus == ApplicationStatus.Rejected
-            ? await emailRejectionReasonExtractionProvider.ExtractAsync(request.Subject, request.Snippet, cancellationToken)
+            ? await emailRejectionReasonExtractionProvider.ExtractAsync(subject, snippet, cancellationToken)
             : null;
 
         if (applicationId is not null)
@@ -150,7 +187,7 @@ internal sealed partial class EmailForwardingService(
                 connection.UserId, connection.Id, applicationId.Value,
                 providerMessageId, providerThreadId: null,
                 classification.SuggestedStatus, classification.ConfidenceScore, classification.MatchedRule,
-                matchResult!.MatchType, senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet,
+                matchResult!.MatchType, senderDomain, receivedAt, now, subject, snippet,
                 rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence);
 
             dbContext.EmailSuggestions.Add(suggestion);
@@ -168,7 +205,7 @@ internal sealed partial class EmailForwardingService(
         // detail (an extra LLM call) now that we know the email carries a real status signal — a
         // signal-less unmatched email (newsletter, unrelated mail) was already returned above, same
         // as before this "new job" flow existed (DECISIONS.md "Eşleşmeyen email'ler gösterilmiyor").
-        var extraction = await emailJobExtractionProvider.ExtractAsync(request.Subject, request.Snippet, cancellationToken);
+        var extraction = await emailJobExtractionProvider.ExtractAsync(subject, snippet, cancellationToken);
         if (extraction is null)
         {
             return; // couldn't confidently read a company name + job title — stay silent, don't guess
@@ -177,7 +214,7 @@ internal sealed partial class EmailForwardingService(
         dbContext.EmailSuggestions.Add(EmailSuggestion.CreateForNewJob(
             connection.UserId, connection.Id, providerMessageId,
             classification.SuggestedStatus, classification.ConfidenceScore, classification.MatchedRule,
-            senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet,
+            senderDomain, receivedAt, now, subject, snippet,
             extraction.CompanyName, extraction.JobTitle, extraction.Location, extraction.Description,
             rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence));
 
@@ -482,6 +519,11 @@ internal sealed partial class EmailForwardingService(
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
         return Convert.ToHexString(hash);
     }
+
+    // Gmail's own message id is already opaque/short and carries no PII — hashed anyway purely for
+    // a consistent ProviderMessageId shape across both intake paths (fixed-length hex either way).
+    private static string ComputeIdempotencyKey(string gmailMessageId) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(gmailMessageId)));
 
     private static string? ExtractDomainFromWebsite(string? website)
     {
