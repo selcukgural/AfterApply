@@ -4,5 +4,6 @@ public enum EmailSuggestionStatus
 {
     Pending,
     Confirmed,
-    Dismissed
+    Dismissed,
+    AutoApplied
 }

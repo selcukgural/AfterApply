@@ -26,6 +26,28 @@ public sealed record EmailSuggestionResponse(
 
 public sealed record SuggestionCountResponse(int Count);
 
+/// <summary>A resolved (AutoApplied or Confirmed) email-derived state-change event, for the
+/// Notifications screen — deliberately generic field names (Status/WasAutoApplied/IsRead) rather
+/// than EmailSuggestion-specific naming, so a future iteration could merge in another notification
+/// source (e.g. the existing Reminder module) without a DTO rewrite.</summary>
+public sealed record EmailNotificationResponse(
+    Guid Id,
+    Guid? ApplicationId,
+    string CompanyName,
+    string JobTitle,
+    ApplicationStatus? Status,
+    bool WasAutoApplied,
+    // True when this event was originally a "new job" suggestion (ApplicationId started null) —
+    // confirming it created the Application, rather than changing an existing one's status.
+    bool IsNewApplicationSuggestion,
+    EmailApplicationMatchType? MatchType,
+    double ConfidenceScore,
+    bool IsRead,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? ResolvedAt);
+
+public sealed record NotificationCountResponse(int UnreadCount);
+
 public sealed record InboundAddressResponse(
     string Address,
     // Non-null only while Gmail's own forwarding-confirmation email is pending acknowledgement —

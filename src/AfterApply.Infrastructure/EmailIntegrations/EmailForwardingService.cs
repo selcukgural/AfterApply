@@ -25,6 +25,7 @@ internal sealed partial class EmailForwardingService(
     IJobBoardDomainMatcher jobBoardDomainMatcher,
     IOptions<EmailForwardingOptions> options,
     IOptions<EmailIntelligenceOptions> intelligenceOptions,
+    IOptions<EmailAutoApprovalOptions> autoApprovalOptions,
     ILogger<EmailForwardingService> logger) : IEmailForwardingService
 {
     private const string TokenChars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -107,9 +108,10 @@ internal sealed partial class EmailForwardingService(
 
         // Forwarded mail's original sender is the company; there's no "self-sent" concept here since
         // the forwarding hop (the user's own filter) already happened before this ever reached us.
-        var applicationId = EmailApplicationMatcher.Match(
+        var matchResult = EmailApplicationMatcher.Match(
             request.FromEmail, request.FromDisplayName, recipientEmail: "", ownAccountEmail: "",
             request.Subject, candidates);
+        var applicationId = matchResult?.ApplicationId;
 
         var senderDomain = ExtractDomain(request.FromEmail);
 
@@ -144,12 +146,19 @@ internal sealed partial class EmailForwardingService(
 
         if (applicationId is not null)
         {
-            dbContext.EmailSuggestions.Add(EmailSuggestion.Create(
+            var suggestion = EmailSuggestion.Create(
                 connection.UserId, connection.Id, applicationId.Value,
                 providerMessageId, providerThreadId: null,
                 classification.SuggestedStatus, classification.ConfidenceScore, classification.MatchedRule,
-                senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet,
-                rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence));
+                matchResult!.MatchType, senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet,
+                rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence);
+
+            dbContext.EmailSuggestions.Add(suggestion);
+
+            if (suggestion.SuggestedStatus is not null)
+            {
+                await TryAutoApplyAsync(connection.UserId, suggestion, cancellationToken);
+            }
 
             await dbContext.SaveChangesAsync(cancellationToken);
             return;
@@ -249,10 +258,7 @@ internal sealed partial class EmailForwardingService(
             return ConfirmSuggestionResult.NoStatusToConfirm;
         }
 
-        var changed = await applicationService.ChangeStatusAsync(userId, suggestion.ApplicationId.Value,
-            new ChangeStatusRequest(suggestion.SuggestedStatus.Value,
-                AppendRejectionReason("E-postadan onaylandı", suggestion), suggestion.EmailReceivedAt, Source.Email),
-            cancellationToken);
+        var changed = await ApplyStatusChangeAsync(userId, suggestion, "E-postadan onaylandı", cancellationToken);
 
         if (changed is null)
         {
@@ -262,6 +268,52 @@ internal sealed partial class EmailForwardingService(
         suggestion.Confirm(DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
         return ConfirmSuggestionResult.Confirmed;
+    }
+
+    /// <summary>Shared by the manual-confirm and auto-apply paths — the only place that actually
+    /// mutates an existing Application's status from a matched suggestion. Caller must already have
+    /// checked SuggestedStatus is not null.</summary>
+    private Task<ApplicationDetailResponse?> ApplyStatusChangeAsync(
+        Guid userId, EmailSuggestion suggestion, string noteLabel, CancellationToken cancellationToken) =>
+        applicationService.ChangeStatusAsync(userId, suggestion.ApplicationId!.Value,
+            new ChangeStatusRequest(suggestion.SuggestedStatus!.Value,
+                AppendRejectionReason(noteLabel, suggestion), suggestion.EmailReceivedAt, Source.Email),
+            cancellationToken);
+
+    /// <summary>Applies a matched suggestion's status change immediately, without waiting for user
+    /// confirmation, when it qualifies for auto-apply — see EmailAutoApprovalOptions. Never called for
+    /// "new job" suggestions (MatchType is null there, which already fails the qualifying check).</summary>
+    private async Task TryAutoApplyAsync(Guid userId, EmailSuggestion suggestion, CancellationToken cancellationToken)
+    {
+        var qualifies =
+            suggestion.MatchType == EmailApplicationMatchType.DomainMatch &&
+            suggestion.MatchedRule.StartsWith("Llm:", StringComparison.Ordinal) &&
+            suggestion.ConfidenceScore >= autoApprovalOptions.Value.ConfidenceThreshold;
+
+        if (!qualifies)
+        {
+            return;
+        }
+
+        if (!autoApprovalOptions.Value.Enabled)
+        {
+            if (autoApprovalOptions.Value.ShadowModeEnabled)
+            {
+                logger.LogInformation(
+                    "Auto-apply shadow mode: would auto-apply suggestion for application {ApplicationId} " +
+                    "to status {Status} (confidence={Confidence}, matchType={MatchType}, rule={MatchedRule})",
+                    suggestion.ApplicationId, suggestion.SuggestedStatus, suggestion.ConfidenceScore,
+                    suggestion.MatchType, suggestion.MatchedRule);
+            }
+
+            return;
+        }
+
+        var changed = await ApplyStatusChangeAsync(userId, suggestion, "E-postadan otomatik uygulandı", cancellationToken);
+        if (changed is not null)
+        {
+            suggestion.AutoApply(DateTimeOffset.UtcNow);
+        }
     }
 
     public async Task<bool> DismissSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken)
@@ -292,6 +344,66 @@ internal sealed partial class EmailForwardingService(
         connection.ClearGmailConfirmation();
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    public async Task<IReadOnlyList<EmailNotificationResponse>> GetNotificationsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var resolvedStatuses = new[] { EmailSuggestionStatus.AutoApplied, EmailSuggestionStatus.Confirmed };
+
+        var rows = await dbContext.EmailSuggestions
+            .Where(s => s.UserId == userId && resolvedStatuses.Contains(s.Status) && s.ApplicationId != null)
+            .Join(dbContext.Applications, s => s.ApplicationId, a => a.Id, (s, a) => new { s, a.JobTitle, a.CompanyId })
+            .Join(dbContext.Companies, x => x.CompanyId, c => c.Id, (x, c) => new { x.s, x.JobTitle, CompanyName = c.Name })
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var responses = rows.Select(row => new EmailNotificationResponse(
+            row.s.Id, row.s.ApplicationId, row.CompanyName, row.JobTitle,
+            row.s.SuggestedStatus, row.s.Status == EmailSuggestionStatus.AutoApplied,
+            IsNewApplicationSuggestion: false, row.s.MatchType, row.s.ConfidenceScore, row.s.IsRead,
+            row.s.CreatedAt, row.s.ResolvedAt))
+            .ToList();
+
+        // "New job" suggestions never get ApplicationId back-filled on Confirm (see EmailSuggestion.
+        // ApplicationId doc comment — it's a permanent discriminator of the suggestion's original
+        // kind), so CompanyName/JobTitle come from the Extracted* fields, not a join.
+        var newJobRows = await dbContext.EmailSuggestions
+            .Where(s => s.UserId == userId && resolvedStatuses.Contains(s.Status) && s.ApplicationId == null)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        responses.AddRange(newJobRows.Select(s => new EmailNotificationResponse(
+            s.Id, ApplicationId: null, s.ExtractedCompanyName ?? "", s.ExtractedJobTitle ?? "",
+            s.SuggestedStatus, s.Status == EmailSuggestionStatus.AutoApplied,
+            IsNewApplicationSuggestion: true, s.MatchType, s.ConfidenceScore, s.IsRead,
+            s.CreatedAt, s.ResolvedAt)));
+
+        return [.. responses.OrderByDescending(r => r.CreatedAt)];
+    }
+
+    public Task<int> GetUnreadNotificationCountAsync(Guid userId, CancellationToken cancellationToken) =>
+        dbContext.EmailSuggestions.CountAsync(
+            s => s.UserId == userId && s.Status == EmailSuggestionStatus.AutoApplied && !s.IsRead,
+            cancellationToken);
+
+    public async Task MarkNotificationsReadAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var unread = await dbContext.EmailSuggestions
+            .Where(s => s.UserId == userId && s.Status == EmailSuggestionStatus.AutoApplied && !s.IsRead)
+            .ToListAsync(cancellationToken);
+
+        if (unread.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var suggestion in unread)
+        {
+            suggestion.MarkRead(now);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<EmailClassificationResult> ClassifyAsync(string senderEmail, string subject, string snippet,

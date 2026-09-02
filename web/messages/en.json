@@ -170,6 +170,7 @@
     "trackedJobs": "Tracked Jobs",
     "import": "Import",
     "suggestions": "Suggestions",
+    "notifications": "Notifications",
     "help": "Help"
   },
   "auth": {
@@ -409,6 +410,19 @@
       "PositionCancelledOrFilled": "Position cancelled or filled",
       "CultureOrTeamFit": "Culture / team fit",
       "Other": "Other"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet.",
+    "loadError": "Could not load notifications.",
+    "autoApplied": "Applied automatically",
+    "confirmed": "Confirmed",
+    "newJobBadge": "New application created from email",
+    "confidence": "Confidence",
+    "matchType": {
+      "DomainMatch": "Company domain matched",
+      "NameFallbackMatch": "Company name matched"
     }
   },
   "privacy": {

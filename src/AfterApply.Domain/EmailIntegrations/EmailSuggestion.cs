@@ -25,6 +25,10 @@ public sealed class EmailSuggestion : Entity
 
     public string MatchedRule { get; private set; } = string.Empty;
 
+    /// <summary>How ApplicationId was matched — null for a "new job" suggestion, where no match
+    /// was attempted. Only DomainMatch is strong enough to gate auto-apply.</summary>
+    public EmailApplicationMatchType? MatchType { get; private set; }
+
     public string? SenderDomain { get; private set; }
 
     public string? Subject { get; private set; }
@@ -60,13 +64,18 @@ public sealed class EmailSuggestion : Entity
 
     public DateTimeOffset? ResolvedAt { get; private set; }
 
+    public bool IsRead { get; private set; }
+
+    public DateTimeOffset? ReadAtUtc { get; private set; }
+
     private EmailSuggestion()
     {
     }
 
     public static EmailSuggestion Create(Guid userId, Guid emailConnectionId, Guid applicationId,
         string providerMessageId, string? providerThreadId, ApplicationStatus? suggestedStatus,
-        double confidenceScore, string matchedRule, string? senderDomain, DateTimeOffset emailReceivedAt,
+        double confidenceScore, string matchedRule, EmailApplicationMatchType matchType,
+        string? senderDomain, DateTimeOffset emailReceivedAt,
         DateTimeOffset now, string? subject = null, string? snippet = null,
         RejectionReasonCategory? rejectionReasonCategory = null, string? rejectionReasonDetail = null,
         double? rejectionReasonConfidence = null)
@@ -81,6 +90,7 @@ public sealed class EmailSuggestion : Entity
             SuggestedStatus = suggestedStatus,
             ConfidenceScore = confidenceScore,
             MatchedRule = matchedRule,
+            MatchType = matchType,
             SenderDomain = senderDomain,
             Subject = subject,
             Snippet = snippet,
@@ -89,7 +99,8 @@ public sealed class EmailSuggestion : Entity
             RejectionReasonConfidence = rejectionReasonConfidence,
             EmailReceivedAt = emailReceivedAt,
             Status = EmailSuggestionStatus.Pending,
-            CreatedAt = now
+            CreatedAt = now,
+            IsRead = false
         };
     }
 
@@ -127,7 +138,8 @@ public sealed class EmailSuggestion : Entity
             RejectionReasonConfidence = rejectionReasonConfidence,
             EmailReceivedAt = emailReceivedAt,
             Status = EmailSuggestionStatus.Pending,
-            CreatedAt = now
+            CreatedAt = now,
+            IsRead = false
         };
     }
 
@@ -141,5 +153,19 @@ public sealed class EmailSuggestion : Entity
     {
         Status = EmailSuggestionStatus.Dismissed;
         ResolvedAt = now;
+    }
+
+    /// <summary>Applied without user confirmation — see EmailForwardingService.TryAutoApplyAsync.
+    /// Only reachable for a matched (ApplicationId non-null) suggestion with MatchType == DomainMatch.</summary>
+    public void AutoApply(DateTimeOffset now)
+    {
+        Status = EmailSuggestionStatus.AutoApplied;
+        ResolvedAt = now;
+    }
+
+    public void MarkRead(DateTimeOffset now)
+    {
+        IsRead = true;
+        ReadAtUtc = now;
     }
 }

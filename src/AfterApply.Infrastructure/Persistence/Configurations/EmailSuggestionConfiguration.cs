@@ -16,6 +16,7 @@ public sealed class EmailSuggestionConfiguration : IEntityTypeConfiguration<Emai
         builder.Property(s => s.ProviderThreadId).HasMaxLength(256);
         builder.Property(s => s.SuggestedStatus).HasConversion<string>().HasMaxLength(50);
         builder.Property(s => s.MatchedRule).IsRequired().HasMaxLength(100);
+        builder.Property(s => s.MatchType).HasConversion<string>().HasMaxLength(50);
         builder.Property(s => s.SenderDomain).HasMaxLength(256);
         builder.Property(s => s.Subject).HasMaxLength(500);
         builder.Property(s => s.Snippet).HasMaxLength(2000);

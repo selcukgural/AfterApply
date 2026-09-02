@@ -170,6 +170,7 @@
     "trackedJobs": "Takip Listem",
     "import": "İçe Aktar",
     "suggestions": "Öneriler",
+    "notifications": "Bildirimler",
     "help": "Yardım"
   },
   "auth": {
@@ -409,6 +410,19 @@
       "PositionCancelledOrFilled": "Pozisyon iptal/dolu",
       "CultureOrTeamFit": "Takım/kültür uyumu",
       "Other": "Diğer"
+    }
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "empty": "Henüz bildirim yok.",
+    "loadError": "Bildirimler yüklenemedi.",
+    "autoApplied": "Otomatik uygulandı",
+    "confirmed": "Onaylandı",
+    "newJobBadge": "E-postadan yeni başvuru oluşturuldu",
+    "confidence": "Güven",
+    "matchType": {
+      "DomainMatch": "Şirket domaini eşleşti",
+      "NameFallbackMatch": "Şirket adı eşleşti"
     }
   },
   "privacy": {

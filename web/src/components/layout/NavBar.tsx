@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
+import { useNotificationCount } from "@/hooks/useNotificationCount";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
@@ -24,6 +25,7 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
   const router = useRouter();
   const t = useTranslations("nav");
   const { data: suggestionCount } = useSuggestionCount();
+  const { data: notificationCount } = useNotificationCount();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -49,6 +51,21 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
     </Link>
   );
 
+  const notificationsLink = (onNavigate?: () => void) => (
+    <Link
+      href="/notifications"
+      onClick={onNavigate}
+      className="flex items-center gap-1.5 whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100"
+    >
+      {t("notifications")}
+      {!!notificationCount && (
+        <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-xs font-semibold leading-none text-white">
+          {notificationCount}
+        </span>
+      )}
+    </Link>
+  );
+
   return (
     <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
@@ -63,6 +80,7 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
               </Link>
             ))}
             {suggestionsLink()}
+            {notificationsLink()}
           </nav>
         </div>
 
@@ -104,6 +122,7 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
               </Link>
             ))}
             {suggestionsLink(() => setMenuOpen(false))}
+            {notificationsLink(() => setMenuOpen(false))}
           </nav>
 
           <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">

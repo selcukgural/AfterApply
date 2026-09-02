@@ -1,5 +1,6 @@
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Domain.Companies;
+using AfterApply.Domain.EmailIntegrations;
 using Shouldly;
 
 namespace AfterApply.UnitTests.EmailIntegrations;
@@ -18,7 +19,7 @@ public class EmailApplicationMatcherTests
         var result = EmailApplicationMatcher.Match(
             "recruiter@acme.com", "Jane at Acme", "me@example.com", "me@example.com", "Your application", candidates);
 
-        result.ShouldBe(applicationId);
+        result.ShouldBe(new EmailApplicationMatchResult(applicationId, EmailApplicationMatchType.DomainMatch));
     }
 
     [Fact]
@@ -34,7 +35,7 @@ public class EmailApplicationMatcherTests
             "noreply@greenhouse.io", "Acme Corp Recruiting", "me@example.com", "me@example.com",
             "Update on your application", candidates);
 
-        result.ShouldBe(applicationId);
+        result.ShouldBe(new EmailApplicationMatchResult(applicationId, EmailApplicationMatchType.NameFallbackMatch));
     }
 
     [Fact]
@@ -50,7 +51,7 @@ public class EmailApplicationMatcherTests
             "noreply@greenhouse.io", "Greenhouse", "me@example.com", "me@example.com",
             "Your application to Acme Corp", candidates);
 
-        result.ShouldBe(applicationId);
+        result.ShouldBe(new EmailApplicationMatchResult(applicationId, EmailApplicationMatchType.NameFallbackMatch));
     }
 
     [Fact]
@@ -68,7 +69,7 @@ public class EmailApplicationMatcherTests
             "noreply@greenhouse.io", "Greenhouse", "me@example.com", "me@example.com",
             "Your application to Acme Corp", candidates);
 
-        result.ShouldBe(applicationId);
+        result.ShouldBe(new EmailApplicationMatchResult(applicationId, EmailApplicationMatchType.NameFallbackMatch));
     }
 
     [Fact]
@@ -100,7 +101,7 @@ public class EmailApplicationMatcherTests
             "me@example.com", "Selçuk Güral", "recruiter@acme.com", "me@example.com",
             "Re: Offer letter", candidates);
 
-        result.ShouldBe(applicationId);
+        result.ShouldBe(new EmailApplicationMatchResult(applicationId, EmailApplicationMatchType.DomainMatch));
     }
 
     [Fact]

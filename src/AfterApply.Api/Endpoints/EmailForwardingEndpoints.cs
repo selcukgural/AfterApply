@@ -130,6 +130,30 @@ public static class EmailForwardingEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapGet("/notifications", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetNotificationsAsync(user.GetUserId(), cancellationToken)))
+            .RequireAuthorization()
+            .WithSummary("List auto-applied and user-confirmed email-derived status changes, newest first")
+            .Produces<IReadOnlyList<EmailNotificationResponse>>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/notifications/count", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
+                Results.Ok(new NotificationCountResponse(await service.GetUnreadNotificationCountAsync(user.GetUserId(), cancellationToken))))
+            .RequireAuthorization()
+            .WithSummary("Unread auto-applied notification count — cheap poll target for a nav badge")
+            .Produces<NotificationCountResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/notifications/read", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
+            {
+                await service.MarkNotificationsReadAsync(user.GetUserId(), cancellationToken);
+                return Results.NoContent();
+            })
+            .RequireAuthorization()
+            .WithSummary("Mark all currently-unread notifications as read (fired once when the notifications page loads)")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
         return app;
     }
 }

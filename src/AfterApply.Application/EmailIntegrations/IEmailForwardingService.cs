@@ -32,6 +32,18 @@ public interface IEmailForwardingService
     /// <summary>Clears a pending Gmail confirmation once the user has completed it in Gmail's own
     /// UI. Returns false when there was nothing pending.</summary>
     Task<bool> DismissGmailConfirmationAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>AutoApplied and Confirmed suggestions, newest first — the Notifications screen's
+    /// event log.</summary>
+    Task<IReadOnlyList<EmailNotificationResponse>> GetNotificationsAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Cheap count-only variant for the nav badge — only AutoApplied &amp; unread counts,
+    /// since a Confirmed suggestion is something the user already knowingly did themselves.</summary>
+    Task<int> GetUnreadNotificationCountAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Marks every currently-unread notification for the user as read — fired once when the
+    /// notifications page loads, not per-row.</summary>
+    Task MarkNotificationsReadAsync(Guid userId, CancellationToken cancellationToken);
 }
 
 /// <summary>LinkDomains are the deduped lowercased hostnames of any links in the email's HTML body

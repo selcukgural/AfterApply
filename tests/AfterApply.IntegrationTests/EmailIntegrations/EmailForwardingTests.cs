@@ -45,6 +45,12 @@ public class EmailForwardingTests : IAsyncLifetime
     private WebApplicationFactory<Program>? _disabledFactory;
     private HttpClient _disabledClient = null!;
 
+    // EmailAutoApproval:Enabled=true, ShadowModeEnabled=false — a separate factory (same Postgres/
+    // Redis containers) so the default suite (_factory) can stay in the shipped shadow-mode-first
+    // default without every test having to override it.
+    private WebApplicationFactory<Program>? _autoApplyFactory;
+    private HttpClient _autoApplyClient = null!;
+
     public async Task InitializeAsync()
     {
         await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
@@ -97,6 +103,33 @@ public class EmailForwardingTests : IAsyncLifetime
         disabledRegisterResponse.EnsureSuccessStatusCode();
         var disabledAuth = await disabledRegisterResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
         _disabledClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", disabledAuth!.AccessToken);
+
+        _autoApplyFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            builder.UseSetting("EmailForwarding:Enabled", "true");
+            builder.UseSetting("EmailForwarding:WebhookSecret", WebhookSecret);
+            builder.UseSetting("JobBoardDomains:Domains:0", "linkedin.com");
+            builder.UseSetting("EmailAutoApproval:Enabled", "true");
+            builder.UseSetting("EmailAutoApproval:ShadowModeEnabled", "false");
+            builder.UseSetting("EmailAutoApproval:ConfidenceThreshold", "0.9");
+
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton<IEmailClassificationProvider>(_fakeClassificationProvider);
+                services.AddSingleton<IEmailJobExtractionProvider>(_fakeExtractionProvider);
+                services.AddSingleton<IEmailRejectionReasonExtractionProvider>(_fakeRejectionReasonProvider);
+            });
+        });
+
+        _autoApplyClient = _autoApplyFactory.CreateClient();
+        var autoApplyRegisterResponse = await _autoApplyClient.PostAsJsonAsync("/api/auth/register",
+            new RegisterRequest("email-forwarding.autoapply@example.com", "P@ssw0rd123!", "Forward", "Test", true), JsonOptions);
+        autoApplyRegisterResponse.EnsureSuccessStatusCode();
+        var autoApplyAuth = await autoApplyRegisterResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        _autoApplyClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", autoApplyAuth!.AccessToken);
     }
 
     public async Task DisposeAsync()
@@ -109,6 +142,11 @@ public class EmailForwardingTests : IAsyncLifetime
         if (_disabledFactory is not null)
         {
             await _disabledFactory.DisposeAsync();
+        }
+
+        if (_autoApplyFactory is not null)
+        {
+            await _autoApplyFactory.DisposeAsync();
         }
 
         await _postgres.DisposeAsync();
@@ -799,17 +837,262 @@ public class EmailForwardingTests : IAsyncLifetime
         addressResponse.GetProperty("gmailConfirmationCode").ValueKind.ShouldBe(JsonValueKind.Null);
     }
 
-    private async Task<HttpResponseMessage> SendInboundAsync(string toAddress, string from, string fromName, string subject, string snippet)
+    [Fact]
+    public async Task Inbound_DomainMatch_Llm_HighConfidence_With_AutoApproval_Enabled_AutoApplies()
     {
+        var address = await GetOwnAddressAsync(_autoApplyClient);
+        var applicationId = await CreateApplicationAsync("Auto Apply Domain Co", _autoApplyClient);
+
+        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == applicationId);
+            var company = await db.Companies.SingleAsync(c => c.Id == applicationForEnrichment.CompanyId);
+            company.EnrichFrom("https://auto-apply-domain-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
+
+        // Called directly against this factory's own DI scope rather than through the HTTP inbound
+        // endpoint + Hangfire: _factory/_disabledFactory/_autoApplyFactory all point at the same
+        // Postgres-backed Hangfire storage (see WaitForHangfireIdleAsync's own comment), so a job
+        // enqueued via one factory's client isn't guaranteed to be picked up by that same factory's
+        // background server — it can be processed under a different factory's EmailAutoApproval
+        // config. A direct call removes that nondeterminism for tests where which factory's config
+        // actually governs the decision is the entire point.
+        await ProcessInboundDirectlyAsync(_autoApplyFactory!, address, "hr@auto-apply-domain-test.com",
+            "Recruiting Team", "Update on your recent application", "There's news about your application.");
+
+        using var assertScope = _autoApplyFactory!.Services.CreateScope();
+        var assertDb = assertScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await assertDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.AutoApplied);
+        suggestion.ResolvedAt.ShouldNotBeNull();
+
+        var application = await assertDb.Applications.SingleAsync(a => a.Id == applicationId);
+        application.Status.ShouldBe(ApplicationStatus.Interview);
+    }
+
+    [Fact]
+    public async Task Inbound_RuleBased_Classification_Never_AutoApplies_Even_When_Enabled()
+    {
+        var address = await GetOwnAddressAsync(_autoApplyClient);
+        var applicationId = await CreateApplicationAsync("Auto Apply Rule Co", _autoApplyClient);
+
+        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == applicationId);
+            var company = await db.Companies.SingleAsync(c => c.Id == applicationForEnrichment.CompanyId);
+            company.EnrichFrom("https://auto-apply-rule-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        // Deliberately no _fakeClassificationProvider.Result set — "Interview invitation" matches
+        // RuleBasedEmailClassifier directly, so the LLM is never even called. Rule-based confidence
+        // is a hand-tuned weight, never a calibrated probability, so it must never qualify for
+        // auto-apply regardless of EmailAutoApproval:Enabled.
+        await ProcessInboundDirectlyAsync(_autoApplyFactory!, address, "hr@auto-apply-rule-test.com",
+            "Recruiting Team", "Interview invitation", "We'd like to invite you to an interview.");
+
+        _fakeClassificationProvider.CallCount.ShouldBe(0);
+
+        using var assertScope = _autoApplyFactory!.Services.CreateScope();
+        var assertDb = assertScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await assertDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
+
+        var application = await assertDb.Applications.SingleAsync(a => a.Id == applicationId);
+        application.Status.ShouldBe(ApplicationStatus.Applied);
+    }
+
+    [Fact]
+    public async Task Inbound_NameFallbackMatch_Never_AutoApplies_Even_When_Enabled()
+    {
+        var address = await GetOwnAddressAsync(_autoApplyClient);
+        // No website enrichment — only the display-name/subject substring fallback can find this,
+        // which is exactly the weak match type auto-apply must never trust.
+        var applicationId = await CreateApplicationAsync("Auto Apply Fallback Co", _autoApplyClient);
+
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
+
+        await ProcessInboundDirectlyAsync(_autoApplyFactory!, address, "hr@some-ats-test.com",
+            "Auto Apply Fallback Co Recruiting", "Update on your recent application", "There's news about your application.");
+
+        using var scope = _autoApplyFactory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await db.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
+        suggestion.MatchType.ShouldBe(EmailApplicationMatchType.NameFallbackMatch);
+    }
+
+    [Fact]
+    public async Task Inbound_ConfidenceBelowThreshold_Never_AutoApplies_Even_When_Enabled()
+    {
+        var address = await GetOwnAddressAsync(_autoApplyClient);
+        var applicationId = await CreateApplicationAsync("Auto Apply LowConf Co", _autoApplyClient);
+
+        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
+            var company = await db.Companies.SingleAsync(c => c.Id == application.CompanyId);
+            company.EnrichFrom("https://auto-apply-lowconf-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        // Below the factory's configured EmailAutoApproval:ConfidenceThreshold of 0.9.
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.6, "Llm:Interview");
+
+        await ProcessInboundDirectlyAsync(_autoApplyFactory!, address, "hr@auto-apply-lowconf-test.com",
+            "Recruiting Team", "Update on your recent application", "There's news about your application.");
+
+        using var assertScope = _autoApplyFactory!.Services.CreateScope();
+        var assertDb = assertScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await assertDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
+    }
+
+    [Fact]
+    public async Task Inbound_DomainMatch_Llm_HighConfidence_In_ShadowMode_Stays_Pending()
+    {
+        // Default _factory ships with the app's default EmailAutoApproval settings
+        // (Enabled=false, ShadowModeEnabled=true) — qualifying suggestions must only be logged,
+        // never actually applied.
+        var address = await GetOwnAddressAsync();
+        var applicationId = await CreateApplicationAsync("Shadow Mode Co");
+
+        using (var scope = _factory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == applicationId);
+            var company = await db.Companies.SingleAsync(c => c.Id == applicationForEnrichment.CompanyId);
+            company.EnrichFrom("https://shadow-mode-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
+
+        await ProcessInboundDirectlyAsync(_factory!, address, "hr@shadow-mode-test.com",
+            "Recruiting Team", "Update on your recent application", "There's news about your application.");
+
+        using var assertScope = _factory!.Services.CreateScope();
+        var assertDb = assertScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await assertDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
+
+        var application = await assertDb.Applications.SingleAsync(a => a.Id == applicationId);
+        application.Status.ShouldBe(ApplicationStatus.Applied);
+    }
+
+    [Fact]
+    public async Task Inbound_NewJob_Suggestion_Never_AutoApplies_Even_When_Enabled()
+    {
+        var address = await GetOwnAddressAsync(_autoApplyClient);
+        // No CreateApplicationAsync — unmatched sender, so MatchType stays null on the resulting
+        // suggestion, which already fails the auto-apply qualifying check on its own.
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.99, "Llm:Interview");
+        _fakeExtractionProvider.Result = new EmailJobExtractionResult("Auto Apply New Job Co", "Engineer", null, null);
+
+        await ProcessInboundDirectlyAsync(_autoApplyFactory!, address, "hr@auto-apply-newjob-test.com",
+            "Recruiting Team", "Update on your recent application", "There's news about your application.");
+
+        using var scope = _autoApplyFactory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await db.EmailSuggestions.SingleAsync(s => s.ApplicationId == null);
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
+        suggestion.MatchType.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Notifications_Endpoint_Lists_AutoApplied_And_Confirmed_Reflects_Unread_Count_And_MarkRead()
+    {
+        // One qualifying suggestion — auto-applied.
+        var autoAppliedAppId = await CreateApplicationAsync("Notifications Auto Co", _autoApplyClient);
+        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == autoAppliedAppId);
+            var company = await db.Companies.SingleAsync(c => c.Id == applicationForEnrichment.CompanyId);
+            company.EnrichFrom("https://notifications-auto-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
+        var autoAddress = await GetOwnAddressAsync(_autoApplyClient);
+        await ProcessInboundDirectlyAsync(_autoApplyFactory!, autoAddress, "hr@notifications-auto-test.com",
+            "Recruiting Team", "Update on your recent application", "There's news about your application.");
+
+        // A second suggestion that stays Pending (rule-based, never auto-applies), then gets
+        // manually confirmed by the user.
+        var confirmedAppId = await CreateApplicationAsync("Notifications Confirmed Co", _autoApplyClient);
+        await ProcessInboundDirectlyAsync(_autoApplyFactory!, autoAddress, "recruiter@notifications-confirmed-test.com",
+            "Notifications Confirmed Co Recruiting", "Interview invitation", "We'd like to invite you to an interview.");
+
+        var pendingSuggestions = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var pendingId = pendingSuggestions.EnumerateArray()
+            .Single(s => s.GetProperty("applicationId").GetGuid() == confirmedAppId).GetProperty("id").GetString();
+        (await _autoApplyClient.PostAsync($"/api/email-forwarding/suggestions/{pendingId}/confirm", null))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        // A third suggestion that gets dismissed — must never show up as a notification.
+        var dismissedAppId = await CreateApplicationAsync("Notifications Dismissed Co", _autoApplyClient);
+        await ProcessInboundDirectlyAsync(_autoApplyFactory!, autoAddress, "recruiter@notifications-dismissed-test.com",
+            "Notifications Dismissed Co Recruiting", "Interview invitation", "We'd like to invite you to an interview.");
+        var pendingSuggestions2 = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var dismissedId = pendingSuggestions2.EnumerateArray()
+            .Single(s => s.GetProperty("applicationId").GetGuid() == dismissedAppId).GetProperty("id").GetString();
+        (await _autoApplyClient.PostAsync($"/api/email-forwarding/suggestions/{dismissedId}/dismiss", null))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var notifications = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications", JsonOptions);
+        var notificationList = notifications.EnumerateArray().ToList();
+        notificationList.Count.ShouldBe(2);
+        notificationList.ShouldContain(n => n.GetProperty("applicationId").GetGuid() == autoAppliedAppId && n.GetProperty("wasAutoApplied").GetBoolean());
+        notificationList.ShouldContain(n => n.GetProperty("applicationId").GetGuid() == confirmedAppId && !n.GetProperty("wasAutoApplied").GetBoolean());
+
+        var countBeforeRead = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications/count", JsonOptions);
+        countBeforeRead.GetProperty("unreadCount").GetInt32().ShouldBe(1);
+
+        (await _autoApplyClient.PostAsync("/api/email-forwarding/notifications/read", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var countAfterRead = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications/count", JsonOptions);
+        countAfterRead.GetProperty("unreadCount").GetInt32().ShouldBe(0);
+    }
+
+    // Calls IEmailForwardingService.ProcessInboundEmailAsync directly within a given factory's own
+    // DI scope, instead of POSTing to /inbound and waiting on Hangfire. _factory/_disabledFactory/
+    // _autoApplyFactory all share the same Postgres-backed Hangfire storage (see
+    // WaitForHangfireIdleAsync's own comment about JobStorage.Current being a shared static), so a
+    // job enqueued via one factory's client is not guaranteed to be processed by that same factory's
+    // background server. Tests where the whole point is "which factory's config governs this
+    // decision" need that determinism; SendInboundAsync stays fine for tests that only care about
+    // the HTTP contract or where the outcome doesn't depend on which factory's config wins.
+    private static async Task ProcessInboundDirectlyAsync(WebApplicationFactory<Program> factory,
+        string toAddress, string from, string fromName, string subject, string snippet)
+    {
+        using var scope = factory.Services.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IEmailForwardingService>();
+        await service.ProcessInboundEmailAsync(
+            new InboundEmailRequest(toAddress, from, fromName, subject, snippet, DateTimeOffset.UtcNow, Array.Empty<string>()),
+            CancellationToken.None);
+    }
+
+    private async Task<HttpResponseMessage> SendInboundAsync(string toAddress, string from, string fromName, string subject, string snippet,
+        WebApplicationFactory<Program>? factory = null)
+    {
+        factory ??= _factory;
+
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/email-forwarding/inbound")
         {
             Content = JsonContent.Create(new { to = toAddress, from, fromName, subject, snippet }, options: JsonOptions)
         };
         request.Headers.Add("X-Webhook-Secret", WebhookSecret);
 
-        var unauthenticatedClient = _factory!.CreateClient();
+        var unauthenticatedClient = factory!.CreateClient();
         var response = await unauthenticatedClient.SendAsync(request);
-        await WaitForHangfireIdleAsync();
+        await WaitForHangfireIdleAsync(factory);
         return response;
     }
 
@@ -822,12 +1105,14 @@ public class EmailForwardingTests : IAsyncLifetime
     // second factory (_disabledFactory) whose own AddHangfire call sets the same process-wide
     // JobStorage.Current static, so resolving JobStorage from _factory's container isn't guaranteed
     // to actually be _factory's own storage.
-    private async Task WaitForHangfireIdleAsync()
+    private async Task WaitForHangfireIdleAsync(WebApplicationFactory<Program>? factory = null)
     {
+        factory ??= _factory;
+
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (DateTime.UtcNow < deadline)
         {
-            using var scope = _factory!.Services.CreateScope();
+            using var scope = factory!.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var pending = await db.Database
                 .SqlQueryRaw<int>("SELECT COUNT(*)::int AS \"Value\" FROM hangfire.job WHERE statename IN ('Enqueued', 'Processing')")
@@ -844,15 +1129,17 @@ public class EmailForwardingTests : IAsyncLifetime
         throw new TimeoutException("Hangfire did not finish processing the enqueued inbound-email job within 30s.");
     }
 
-    private async Task<string> GetOwnAddressAsync()
+    private async Task<string> GetOwnAddressAsync(HttpClient? client = null)
     {
-        var response = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/address", JsonOptions);
+        client ??= _client;
+        var response = await client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/address", JsonOptions);
         return response.GetProperty("address").GetString()!;
     }
 
-    private async Task<Guid> CreateApplicationAsync(string companyName)
+    private async Task<Guid> CreateApplicationAsync(string companyName, HttpClient? client = null)
     {
-        var response = await _client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
+        client ??= _client;
+        var response = await client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
             companyName, "Engineer", null, null, EmploymentType.FullTime,
             DateTimeOffset.UtcNow.AddDays(-5), null, null), JsonOptions);
         response.EnsureSuccessStatusCode();

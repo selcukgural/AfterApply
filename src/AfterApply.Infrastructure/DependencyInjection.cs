@@ -74,6 +74,7 @@ public static class DependencyInjection
         services.Configure<ImportOptions>(configuration.GetSection("Imports"));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
+        services.Configure<EmailAutoApprovalOptions>(configuration.GetSection("EmailAutoApproval"));
         services.Configure<JobBoardDomainsOptions>(configuration.GetSection("JobBoardDomains"));
         services.Configure<AppOptions>(configuration.GetSection("App"));
         services.Configure<ResendOptions>(configuration.GetSection("Resend"));

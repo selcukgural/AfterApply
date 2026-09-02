@@ -1,4 +1,5 @@
 using AfterApply.Domain.Companies;
+using AfterApply.Domain.EmailIntegrations;
 
 namespace AfterApply.Application.EmailIntegrations;
 
@@ -8,12 +9,17 @@ namespace AfterApply.Application.EmailIntegrations;
 /// Infrastructure caller, not this pure matcher, since they're derived from persisted data.</summary>
 public sealed record ApplicationMatchCandidate(Guid ApplicationId, string NormalizedCompanyName, string? CompanyWebsiteDomain);
 
+/// <summary>MatchType records which heuristic fired — DomainMatch is a strong signal (registered
+/// company domain), NameFallbackMatch is weak (substring match, either direction). Consumers that
+/// need to trust a match beyond "matched or not" (e.g. auto-apply gating) should require DomainMatch.</summary>
+public sealed record EmailApplicationMatchResult(Guid ApplicationId, EmailApplicationMatchType MatchType);
+
 public static class EmailApplicationMatcher
 {
     /// <summary>recipientEmail/ownAccountEmail let a message the user sent themselves (e.g. "I accept
     /// the offer" replies) still match: when senderEmail is the user's own account, the recipient's
     /// domain is checked instead of the sender's, since the sender is never the company in that case.</summary>
-    public static Guid? Match(string senderEmail, string senderDisplayName, string recipientEmail,
+    public static EmailApplicationMatchResult? Match(string senderEmail, string senderDisplayName, string recipientEmail,
         string ownAccountEmail, string subject, IReadOnlyList<ApplicationMatchCandidate> candidates)
     {
         var isSelfSent = string.Equals(senderEmail, ownAccountEmail, StringComparison.OrdinalIgnoreCase);
@@ -28,7 +34,7 @@ public static class EmailApplicationMatcher
 
             if (domainMatch is not null)
             {
-                return domainMatch.ApplicationId;
+                return new EmailApplicationMatchResult(domainMatch.ApplicationId, EmailApplicationMatchType.DomainMatch);
             }
         }
 
@@ -42,7 +48,9 @@ public static class EmailApplicationMatcher
             (normalizedDisplayName.Contains(c.NormalizedCompanyName, StringComparison.Ordinal) ||
              normalizedSubject.Contains(c.NormalizedCompanyName, StringComparison.Ordinal)));
 
-        return nameMatch?.ApplicationId;
+        return nameMatch is not null
+            ? new EmailApplicationMatchResult(nameMatch.ApplicationId, EmailApplicationMatchType.NameFallbackMatch)
+            : null;
     }
 
     private static string? ExtractDomain(string email)

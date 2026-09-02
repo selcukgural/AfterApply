@@ -218,6 +218,29 @@ export interface SuggestionCountResponse {
   count: number;
 }
 
+export type EmailApplicationMatchType = "DomainMatch" | "NameFallbackMatch";
+
+export interface EmailNotificationResponse {
+  id: string;
+  applicationId: string | null;
+  companyName: string;
+  jobTitle: string;
+  status: ApplicationStatus | null;
+  wasAutoApplied: boolean;
+  // True when this event started as a "new job" suggestion — confirming it created the
+  // Application, rather than changing an existing one's status.
+  isNewApplicationSuggestion: boolean;
+  matchType: EmailApplicationMatchType | null;
+  confidenceScore: number;
+  isRead: boolean;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface NotificationCountResponse {
+  unreadCount: number;
+}
+
 export interface InboundAddressResponse {
   address: string;
   // Non-null only while Gmail's own forwarding-confirmation email is pending acknowledgement.
