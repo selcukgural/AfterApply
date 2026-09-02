@@ -22,6 +22,15 @@ public class RuleBasedEmailClassifierTests
     [Theory]
     [InlineData("Application update", "Unfortunately, we have decided to move forward with other candidates.")]
     [InlineData("Başvuru Sonucu", "Maalesef başvurunuz olumsuz sonuçlanmıştır.")]
+    // Real example (2026-09-02, Mercell/Teamtailor): "regret to inform" + "proceed with other
+    // candidates" is a common rejection phrasing that doesn't contain either of the two phrases
+    // above word-for-word — it was silently dropped (NoMatch) until these phrases were added.
+    [InlineData("Your application to Mercell",
+        "I regret to inform you that we have decided to proceed with other candidates for the time being.")]
+    // Real example (2026-09-02, Hoppinger, from a Jobs-label mailbox audit): Dutch rejection —
+    // "helaas" ("unfortunately") wasn't covered even though EN/DE/TR equivalents already were.
+    [InlineData("Een update over je sollicitatie",
+        "Bedankt voor je sollicitatie voor de functie van .Net Developer. Helaas moeten we je laten weten dat je niet door bent naar de volgende ronde.")]
     public void Classify_Rejection_Phrases_Suggest_Rejected(string subject, string snippet)
     {
         var result = RuleBasedEmailClassifier.Classify(subject, snippet);
@@ -48,6 +57,13 @@ public class RuleBasedEmailClassifierTests
     [InlineData("Ihre Bewerbung als Senior Engineer / Your application as Senior Engineer",
         "Guten Tag Selçuk Güral, wir freuen uns über Dein Interesse an einer Tätigkeit bei uns und bedanken uns für Deine Bewerbung.")]
     [InlineData("Başvurunuz Alındı", "Başvurunuz için teşekkür ederiz, en kısa sürede değerlendireceğiz.")]
+    // Real examples (2026-09-02, Jobs-label mailbox audit): a Turkish ATS ("...pozisyonu için
+    // başvurunuzu aldık" — active voice, distinct from the passive "başvurunuz alındı" already
+    // covered above) and a Dutch ATS acknowledgement (Lely/Thinkwise both used this exact wording).
+    [InlineData("Padran - Senior / Lead .NET Developer Pozisyonu İçin Başvurunuz",
+        "Senior / Lead .NET Developer pozisyonu için başvurunuzu aldık. Şu anda bu pozisyon için başvuruları değerlendiriyoruz.")]
+    [InlineData("Bevestiging van je sollicitatie bij Lely",
+        "Beste Selçuk, We hebben je sollicitatie ontvangen voor de functie Software Architect. Bedankt voor jouw interesse in een mogelijke carrière bij Lely.")]
     public void Classify_ApplicationReceived_Phrases_Return_Null_Status_With_NonZero_Confidence(string subject, string snippet)
     {
         var result = RuleBasedEmailClassifier.Classify(subject, snippet);
