@@ -2302,6 +2302,39 @@ regresyonları erken yakalamak için.
 
 ---
 
+## Email-forwarding webhook güvenilirliği: Worker'da bounded retry eklendi, Queue/alarm ertelendi (2026-09-02)
+
+**Bağlam:** Cloudflare Email Routing dashboard'da son 7 günde 18 "Delivery failed" görüldü.
+İnceleme sonucu bunların `email-worker`'ın hiç var olmadığı tarihlere (28-29 Ağustos; worker'ın ilk
+commit'i `9a400ef`, 31 Ağustos) ait olduğu, dolayısıyla mevcut koddan kaynaklanmadığı anlaşıldı —
+muhtemelen erken routing rule/destination address kurulum denemeleri. Daha önemlisi: mevcut worker
+kodu (`email-worker/src/index.js`) webhook `fetch` hatalarını (network hatası veya non-2xx yanıt)
+hiçbir zaman throw etmiyor, sadece `console.error` ile yutuyor — yani Cloudflare'ın "Delivery failed"
+metriği backend API'deki gerçek kesintileri hiç yakalamıyor ve alarm kaynağı olarak kullanılamaz.
+
+**Karar:** `email-worker/src/index.js`'e webhook çağrısı için bounded retry eklendi (3 deneme,
+300ms tabanlı artan gecikme — `WEBHOOK_MAX_ATTEMPTS`/`WEBHOOK_RETRY_BASE_DELAY_MS`). Hâlâ throw
+edilmiyor: `email()` handler'ından exception fırlatmak, Cloudflare'ın mesajı orijinal gönderene
+(bir recruiter/ATS) bounce olarak geri döndürmesine yol açabilir — bu, sessizce mesajı kaybetmekten
+daha kötü bir dış-görünür sonuç olurdu.
+
+**Ertelenen alternatifler (sorun büyürse tekrar değerlendirilecek):**
+- **Cloudflare Queue + dead-letter queue:** retry'lar tükendiğinde payload'u loglamak yerine bir
+  Queue'ya yazıp ayrı bir consumer'la Cloudflare-yönetimli backoff/DLQ ile tekrar denemek — gerçek
+  durable recovery sağlar (email kaybolmaz), ama yeni binding/consumer + Workers Paid plan kontrolü
+  gerektiriyor.
+- **Ayrı alarm (ör. Slack webhook):** retry'lar tükendiğinde worker'dan tek satır bir bildirim POST'u
+  atmak. Cloudflare'ın kendi native delivery-failure bildirimi **yok** — community'de uzun süredir
+  istenen ama hâlâ shippenmemiş bir özellik olduğu teyit edildi, o yüzden dashboard'a dayanan bir
+  alarm mümkün değil, kendi alarm mekanizmamız gerekir.
+- Kullanıcı bilinçli olarak şimdilik bu ikisini ertelemeyi tercih etti; inline retry'ın yeterli
+  olduğu değerlendirildi. Uzun vadede tekrar sorun yaşanırsa bu not başlangıç noktası olsun.
+
+**Doğrulama:** `node --check email-worker/src/index.js` hatasız. `email-worker`'da otomatik test
+altyapısı yok (repo'da hiç test dosyası yok, `package.json`'da test script'i tanımlı değil).
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

@@ -13,6 +13,14 @@ const SNIPPET_MAX_LENGTH = 2000;
 const MAX_LINK_DOMAINS = 20;
 const HREF_REGEX = /<a\b[^>]*href\s*=\s*["']?([^\s"'>]+)/gi;
 
+// Bounded retry for transient network/5xx blips against the inbound webhook. Kept small since an
+// Email Worker's execution budget is limited — this is not a durable retry buffer, just enough to
+// ride out a brief hiccup. Deliberately never throws out of email(): an uncaught exception here
+// can make Cloudflare bounce the message back to the original sender (a recruiter/ATS), which is
+// worse than silently dropping it.
+const WEBHOOK_MAX_ATTEMPTS = 3;
+const WEBHOOK_RETRY_BASE_DELAY_MS = 300;
+
 export default {
   async email(message, env, ctx) {
     const token = extractLocalPart(message.to);
@@ -40,29 +48,43 @@ export default {
       linkDomains,
     };
 
-    let response;
-    try {
-      response = await fetch(env.INBOUND_WEBHOOK_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Webhook-Secret": env.INBOUND_WEBHOOK_SECRET,
-          "X-Inbound-Token": token ?? "",
-        },
-        body: JSON.stringify(payload),
-      });
-    } catch (err) {
-      // No custom retry loop — Cloudflare's own Worker exception handling/retry behavior is the
-      // defense here, not hand-rolled backoff.
-      console.error("Inbound webhook request failed", err);
-      return;
+    let lastError;
+    for (let attempt = 1; attempt <= WEBHOOK_MAX_ATTEMPTS; attempt++) {
+      try {
+        const response = await fetch(env.INBOUND_WEBHOOK_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Webhook-Secret": env.INBOUND_WEBHOOK_SECRET,
+            "X-Inbound-Token": token ?? "",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          return;
+        }
+
+        lastError = new Error(`Inbound webhook rejected: ${response.status} ${await response.text()}`);
+      } catch (err) {
+        lastError = err;
+      }
+
+      if (attempt < WEBHOOK_MAX_ATTEMPTS) {
+        await sleep(WEBHOOK_RETRY_BASE_DELAY_MS * attempt);
+      }
     }
 
-    if (!response.ok) {
-      console.error(`Inbound webhook rejected: ${response.status} ${await response.text()}`);
-    }
+    // Retries exhausted — API is unreachable or persistently rejecting. No durable buffer
+    // (e.g. a Cloudflare Queue) backs this yet, so the email is dropped here; only visible
+    // via this log line, not via the Email Routing "Delivery failed" metric.
+    console.error(`Inbound webhook delivery failed after ${WEBHOOK_MAX_ATTEMPTS} attempts`, lastError);
   },
 };
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 // Hostnames only, never full URLs — a query string can carry per-recipient tracking tokens (PII),
 // and RecruitmentSignalAnalyzer only ever needs to know *which service* a link points at (greenhouse,
