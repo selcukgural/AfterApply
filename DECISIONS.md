@@ -2269,6 +2269,39 @@ bölümü buna göre düzeltildi.
 
 ---
 
+## E-posta öneri akışı gerçek tarayıcıda uçtan uca doğrulandı (2026-09-02)
+
+**Bağlam:** Kullanıcı iki şeyden emin olmak istedi: (1) daha önce hiç başvurusu olmayan bir şirket
+dönüş yaptığında adaya gerçekten bir öneri sunuluyor mu, (2) mevcut bir başvuruya statü güncellemesi
+(red/mülakat/vb.) geldiğinde bu, e-kariyerim'deki başvurunun durumuna gerçekten yansıyor mu. Kod
+okuması yeterli görülmedi — Cloudflare Worker'ın kullandığı gerçek `/api/email-forwarding/inbound`
+webhook'u yerel ortamda simüle bir e-postayla tetiklenip Chrome'da uçtan uca test edildi.
+
+**Doğrulanan akış:** simüle inbound e-posta → Hangfire arka plan işi → `RuleBasedEmailClassifier`/
+`RecruitmentSignalAnalyzer` sınıflandırması → (eşleşmeyen gönderen için) gerçek OpenAI çağrısıyla
+şirket/pozisyon çıkarımı → `EmailSuggestion` kaydı → `/suggestions` sayfasında görünüm → "Onayla"
+tıklaması → (yeni şirket için) gerçek `Application`/`Company` oluşumu, (mevcut başvuru için) gerçek
+`ApplicationStatusHistory`/`ApplicationEvent` kaydıyla durum değişikliği. Her iki senaryo da
+başvuru listesinde ve zaman çizelgesinde beklenen sonucu verdi — placebo değil, gerçek DB yazımı.
+
+**Tespit edilen bir tuzak (kod hatası değil, test yazarken dikkat edilmesi gereken bir nokta):**
+`RuleBasedEmailClassifier`'daki kalıplar Türkçe karakterlere birebir duyarlı (ör. "mülakata davet")
+— ASCII'ye indirgenmiş bir metin ("mulakata davet") kuralı sessizce kaçırıyor, `RecruitmentSignalAnalyzer`
+skoru 0 çıkabiliyor ve hiçbir hata vermeden öneri hiç oluşmuyor.
+
+**Kalıcı test altyapısı bilinçli olarak yerinde bırakıldı:** yerel API+web+Postgres+Redis yığını ve
+adanmış bir test kullanıcısı/başvuruları, bu akışı hızlıca yeniden test edebilmek için ayakta ve
+dokunulmadan tutuluyor — kimlik bilgileri burada değil, proje hafızasında tutuluyor.
+
+**Bundan sonraki geliştirmeler için not:** `EmailForwardingService`, `RuleBasedEmailClassifier`,
+`RecruitmentSignalAnalyzer`, `EmailApplicationMatcher`, `EmailSuggestion` entity'si veya
+`/api/email-forwarding/*` / `/suggestions` sayfasına dokunan her değişiklikten sonra, sadece unit
+testlere güvenmek yerine bu iki akış (yeni şirket → öneri → onay → yeni başvuru; eşleşen başvuru →
+öneri → onay → durum güncellemesi) yukarıdaki test altyapısıyla tarayıcıda yeniden doğrulanmalı —
+regresyonları erken yakalamak için.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
