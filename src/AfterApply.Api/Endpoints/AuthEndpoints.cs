@@ -60,6 +60,40 @@ public static class AuthEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status429TooManyRequests);
 
+        group.MapPost("/forgot-password", async (ForgotPasswordRequest request, IAuthService authService,
+                HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                // Always the same response, whether or not the email is registered — see
+                // IAuthService.ForgotPasswordAsync's doc comment. The client shows one static,
+                // pre-translated message regardless of this body's content.
+                await authService.ForgotPasswordAsync(request, GetIpAddress(httpContext), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithValidation<ForgotPasswordRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Request a password reset email")
+            .WithDescription("Always returns 204, regardless of whether the email is registered, to avoid " +
+                              "leaking account existence.")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        group.MapPost("/reset-password", async (ResetPasswordRequest request, IAuthService authService,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await authService.ResetPasswordAsync(request, cancellationToken);
+                return result.Succeeded
+                    ? Results.NoContent()
+                    : Results.ValidationProblem(ToErrorDictionary(result.Errors));
+            })
+            .WithValidation<ResetPasswordRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Reset a password using the token from the forgot-password email")
+            .WithDescription("On success, every refresh token for the account is revoked — the caller must log " +
+                              "in again with the new password.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
+            .Produces(StatusCodes.Status429TooManyRequests);
+
         group.MapPost("/logout", async (LogoutRequest request, IAuthService authService, CancellationToken cancellationToken) =>
             {
                 await authService.LogoutAsync(request.RefreshToken, cancellationToken);

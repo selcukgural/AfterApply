@@ -7,6 +7,7 @@ using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
+using AfterApply.Application.Mailing;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Application.TrackedJobs;
@@ -17,6 +18,7 @@ using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
+using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.OpenAi;
 using AfterApply.Infrastructure.Notifications;
@@ -73,6 +75,9 @@ public static class DependencyInjection
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
         services.Configure<JobBoardDomainsOptions>(configuration.GetSection("JobBoardDomains"));
+        services.Configure<AppOptions>(configuration.GetSection("App"));
+        services.Configure<ResendOptions>(configuration.GetSection("Resend"));
+        services.AddHttpClient<IEmailSender, ResendEmailSender>(client => client.BaseAddress = new Uri("https://api.resend.com/"));
 
         // AddOptions().Bind().ValidateOnStart() (not the bare Configure<T> other sections above use)
         // so EmailIntelligenceConfigurationValidator actually runs during host startup and fails fast
@@ -157,6 +162,11 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
             .AddErrorDescriber<LocalizedIdentityErrorDescriber>();
+
+        // Default token lifespan is 1 day — too long for a password-reset link. Shared by every
+        // "Default"-purpose token provider (there's no separate email-confirmation flow today to
+        // conflict with).
+        services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromMinutes(30));
 
         // Both the web app's JWT access token and the browser extension's PAT (Sprint 9) arrive
         // as a plain `Authorization: Bearer <value>` header — this policy scheme is the default

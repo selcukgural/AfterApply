@@ -12,6 +12,12 @@ public interface IAuthService
 
     Task LogoutAsync(string refreshToken, CancellationToken cancellationToken);
 
+    /// <summary>Always completes successfully regardless of whether the email is registered —
+    /// callers must not branch on this to avoid leaking account existence.</summary>
+    Task ForgotPasswordAsync(ForgotPasswordRequest request, string? ipAddress, CancellationToken cancellationToken);
+
+    Task<PasswordResetResult> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken);
+
     Task<UserProfileResponse?> GetProfileAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<UserProfileResponse?> UpdateProfileAsync(Guid userId, UpdateProfileRequest request, CancellationToken cancellationToken);

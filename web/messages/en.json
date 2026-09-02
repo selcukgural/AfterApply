@@ -181,7 +181,27 @@
       "submitting": "Logging in...",
       "noAccount": "Don't have an account?",
       "registerLink": "Sign up",
+      "forgotPasswordLink": "Forgot password?",
       "genericError": "Could not log in."
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "description": "Enter your account's email address and we'll send you a password reset link.",
+      "email": "Email",
+      "submit": "Send reset link",
+      "submitting": "Sending...",
+      "submittedMessage": "If that email is registered, we've sent a password reset link. Check your inbox (and spam folder).",
+      "backToLogin": "Back to login"
+    },
+    "resetPassword": {
+      "title": "Set a New Password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Update password",
+      "submitting": "Updating...",
+      "genericError": "Could not reset the password.",
+      "invalidLink": "This link is invalid. Please request a new password reset link.",
+      "requestNewLink": "Request a new link"
     },
     "register": {
       "title": "Sign Up",
@@ -470,6 +490,7 @@
     "emailInvalid": "Enter a valid email",
     "passwordRequired": "Password is required",
     "passwordMinLength": "Password must be at least 8 characters",
+    "passwordsDoNotMatch": "Passwords do not match",
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",
     "consentRequired": "You must accept the privacy policy",

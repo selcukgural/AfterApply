@@ -1,9 +1,14 @@
 using System.Globalization;
+using System.Text;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Application.Mailing;
 using AfterApply.Infrastructure.Persistence;
+using Hangfire;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.Identity;
@@ -13,9 +18,14 @@ internal sealed class AuthService(
     SignInManager<ApplicationUser> signInManager,
     ITokenService tokenService,
     AppDbContext dbContext,
-    IOptions<JwtOptions> jwtOptions) : IAuthService
+    IOptions<JwtOptions> jwtOptions,
+    IOptions<AppOptions> appOptions,
+    IBackgroundJobClient jobClient,
+    IdentityErrorDescriber errorDescriber,
+    ILogger<AuthService> logger) : IAuthService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
+    private readonly AppOptions _appOptions = appOptions.Value;
 
     public async Task<AuthResult> RegisterAsync(RegisterRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
@@ -112,6 +122,72 @@ internal sealed class AuthService(
             stored.Revoke(DateTimeOffset.UtcNow);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    public async Task ForgotPasswordAsync(ForgotPasswordRequest request, string? ipAddress, CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email);
+        if (user is null)
+        {
+            // Deliberately no-op — never reveal whether this email is registered. The endpoint
+            // returns the same generic response either way.
+            return;
+        }
+
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+        var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        var resetLink = $"{_appOptions.WebBaseUrl}/{locale}/reset-password" +
+                         $"?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(encodedToken)}";
+
+        // Enqueued, not awaited: keeps this response's timing identical to the "no such user"
+        // branch above regardless of how long Resend takes, and gets Hangfire's automatic retry
+        // (10 attempts, backoff) for free on a transient send failure — see ResendEmailSender.
+        var email = user.Email!;
+        jobClient.Enqueue<IEmailSender>(s => s.SendPasswordResetEmailAsync(email, resetLink, locale, CancellationToken.None));
+        logger.LogInformation("Password reset requested for user {UserId} from {Ip}", user.Id, ipAddress);
+    }
+
+    public async Task<PasswordResetResult> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email);
+        if (user is null)
+        {
+            // Same wording Identity itself would return for a genuinely invalid/expired token
+            // (reuses the registered IdentityErrorDescriber, localized) — an attacker probing
+            // arbitrary emails can't distinguish "no such account" from "bad token".
+            return PasswordResetResult.Failure(errorDescriber.InvalidToken().Description);
+        }
+
+        string token;
+        try
+        {
+            token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token));
+        }
+        catch (FormatException)
+        {
+            return PasswordResetResult.Failure(errorDescriber.InvalidToken().Description);
+        }
+
+        var result = await userManager.ResetPasswordAsync(user, token, request.NewPassword);
+        if (!result.Succeeded)
+        {
+            // Errors here are already localized IdentityError.Description values (either the same
+            // InvalidToken text as above for an expired/tampered token, or a specific password-policy
+            // message) — safe to surface as-is, same as RegisterAsync below.
+            return PasswordResetResult.Failure(result.Errors.Select(e => e.Description).ToArray());
+        }
+
+        // Force logout everywhere: a password reset is exactly the moment a stolen session should
+        // stop working, on every device, not just the one completing the reset.
+        await RevokeAllActiveTokensAsync(user.Id, cancellationToken);
+
+        var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        var email = user.Email!;
+        jobClient.Enqueue<IEmailSender>(s => s.SendPasswordChangedEmailAsync(email, locale, CancellationToken.None));
+        logger.LogInformation("Password reset completed for user {UserId}", user.Id);
+
+        return PasswordResetResult.Success();
     }
 
     public async Task<UserProfileResponse?> GetProfileAsync(Guid userId, CancellationToken cancellationToken)

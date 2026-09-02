@@ -24,6 +24,16 @@ export interface DeleteAccountRequest {
   password: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  token: string;
+  newPassword: string;
+}
+
 export const authApi = {
   register: (request: RegisterRequest) =>
     apiFetch<AuthResponse>("/api/auth/register", {
@@ -66,6 +76,20 @@ export const authApi = {
   deleteAccount: (request: DeleteAccountRequest) =>
     apiFetch<void>("/api/users/me", {
       method: "DELETE",
+      body: JSON.stringify(request),
+    }),
+
+  // Always resolves on a 2xx (204) — the backend returns the same response whether or not the
+  // email is registered, so there's nothing meaningful to branch on here either.
+  forgotPassword: (request: ForgotPasswordRequest) =>
+    apiFetch<void>("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  resetPassword: (request: ResetPasswordRequest) =>
+    apiFetch<void>("/api/auth/reset-password", {
+      method: "POST",
       body: JSON.stringify(request),
     }),
 

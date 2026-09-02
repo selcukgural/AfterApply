@@ -83,6 +83,12 @@ export default function LoginPage() {
               autoComplete="current-password"
             />
           </FormField>
+          <Link
+            href="/forgot-password"
+            className="-mt-2 self-end text-sm text-blue-600 hover:underline dark:text-blue-400"
+          >
+            {t("forgotPasswordLink")}
+          </Link>
           {formError && <p className="text-sm text-red-600 dark:text-red-400">{formError}</p>}
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? t("submitting") : t("submit")}

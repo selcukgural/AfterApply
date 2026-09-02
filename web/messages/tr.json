@@ -181,7 +181,27 @@
       "submitting": "Giriş yapılıyor...",
       "noAccount": "Hesabın yok mu?",
       "registerLink": "Kayıt ol",
+      "forgotPasswordLink": "Şifremi unuttum",
       "genericError": "Giriş yapılamadı."
+    },
+    "forgotPassword": {
+      "title": "Şifremi Unuttum",
+      "description": "Hesabınızın e-posta adresini girin, şifre sıfırlama bağlantısı gönderelim.",
+      "email": "E-posta",
+      "submit": "Sıfırlama bağlantısı gönder",
+      "submitting": "Gönderiliyor...",
+      "submittedMessage": "Bu e-posta adresi kayıtlıysa, şifre sıfırlama bağlantısını içeren bir e-posta gönderdik. Gelen kutunuzu (ve spam klasörünü) kontrol edin.",
+      "backToLogin": "Giriş sayfasına dön"
+    },
+    "resetPassword": {
+      "title": "Yeni Şifre Belirle",
+      "newPassword": "Yeni şifre",
+      "confirmPassword": "Yeni şifre (tekrar)",
+      "submit": "Şifreyi güncelle",
+      "submitting": "Güncelleniyor...",
+      "genericError": "Şifre sıfırlanamadı.",
+      "invalidLink": "Bu bağlantı geçersiz. Lütfen yeni bir şifre sıfırlama bağlantısı isteyin.",
+      "requestNewLink": "Yeni bağlantı iste"
     },
     "register": {
       "title": "Kayıt Ol",
@@ -470,6 +490,7 @@
     "emailInvalid": "Geçerli bir e-posta girin",
     "passwordRequired": "Şifre gerekli",
     "passwordMinLength": "Şifre en az 8 karakter olmalı",
+    "passwordsDoNotMatch": "Şifreler eşleşmiyor",
     "firstNameRequired": "Ad gerekli",
     "lastNameRequired": "Soyad gerekli",
     "consentRequired": "Gizlilik politikasını kabul etmelisiniz",
