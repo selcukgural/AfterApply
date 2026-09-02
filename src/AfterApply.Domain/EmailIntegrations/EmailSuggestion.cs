@@ -42,6 +42,16 @@ public sealed class EmailSuggestion : Entity
 
     public string? ExtractedDescription { get; private set; }
 
+    /// <summary>Only set when SuggestedStatus is Rejected — see
+    /// IEmailRejectionReasonExtractionProvider. NotStated (not null) is the expected majority
+    /// outcome, not an edge case; these three stay null together when the extraction step didn't
+    /// run at all (e.g. status isn't Rejected).</summary>
+    public RejectionReasonCategory? RejectionReasonCategory { get; private set; }
+
+    public string? RejectionReasonDetail { get; private set; }
+
+    public double? RejectionReasonConfidence { get; private set; }
+
     public DateTimeOffset EmailReceivedAt { get; private set; }
 
     public EmailSuggestionStatus Status { get; private set; }
@@ -57,7 +67,9 @@ public sealed class EmailSuggestion : Entity
     public static EmailSuggestion Create(Guid userId, Guid emailConnectionId, Guid applicationId,
         string providerMessageId, string? providerThreadId, ApplicationStatus? suggestedStatus,
         double confidenceScore, string matchedRule, string? senderDomain, DateTimeOffset emailReceivedAt,
-        DateTimeOffset now, string? subject = null, string? snippet = null)
+        DateTimeOffset now, string? subject = null, string? snippet = null,
+        RejectionReasonCategory? rejectionReasonCategory = null, string? rejectionReasonDetail = null,
+        double? rejectionReasonConfidence = null)
     {
         return new EmailSuggestion
         {
@@ -72,6 +84,9 @@ public sealed class EmailSuggestion : Entity
             SenderDomain = senderDomain,
             Subject = subject,
             Snippet = snippet,
+            RejectionReasonCategory = rejectionReasonCategory,
+            RejectionReasonDetail = rejectionReasonDetail,
+            RejectionReasonConfidence = rejectionReasonConfidence,
             EmailReceivedAt = emailReceivedAt,
             Status = EmailSuggestionStatus.Pending,
             CreatedAt = now
@@ -86,7 +101,9 @@ public sealed class EmailSuggestion : Entity
         string providerMessageId, ApplicationStatus? suggestedStatus, double confidenceScore,
         string matchedRule, string? senderDomain, DateTimeOffset emailReceivedAt, DateTimeOffset now,
         string? subject, string? snippet, string extractedCompanyName, string extractedJobTitle,
-        string? extractedLocation, string? extractedDescription)
+        string? extractedLocation, string? extractedDescription,
+        RejectionReasonCategory? rejectionReasonCategory = null, string? rejectionReasonDetail = null,
+        double? rejectionReasonConfidence = null)
     {
         return new EmailSuggestion
         {
@@ -105,6 +122,9 @@ public sealed class EmailSuggestion : Entity
             ExtractedJobTitle = extractedJobTitle,
             ExtractedLocation = extractedLocation,
             ExtractedDescription = extractedDescription,
+            RejectionReasonCategory = rejectionReasonCategory,
+            RejectionReasonDetail = rejectionReasonDetail,
+            RejectionReasonConfidence = rejectionReasonConfidence,
             EmailReceivedAt = emailReceivedAt,
             Status = EmailSuggestionStatus.Pending,
             CreatedAt = now

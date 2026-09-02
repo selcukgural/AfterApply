@@ -197,7 +197,22 @@ export interface EmailSuggestionResponse {
   isNewApplicationSuggestion: boolean;
   location: string | null;
   description: string | null;
+  // Only set when suggestedStatus is Rejected. "NotStated" (not null) is the expected majority
+  // value — most rejection emails don't state a reason at all.
+  rejectionReasonCategory: RejectionReasonCategory | null;
+  rejectionReasonDetail: string | null;
 }
+
+export type RejectionReasonCategory =
+  | "NotStated"
+  | "LanguageRequirement"
+  | "LocationOrRelocation"
+  | "ExperienceLevelMismatch"
+  | "SalaryExpectationMismatch"
+  | "SkillOrTechStackGap"
+  | "PositionCancelledOrFilled"
+  | "CultureOrTeamFit"
+  | "Other";
 
 export interface SuggestionCountResponse {
   count: number;

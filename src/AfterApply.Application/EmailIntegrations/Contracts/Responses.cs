@@ -1,4 +1,5 @@
 using AfterApply.Domain.Applications;
+using AfterApply.Domain.EmailIntegrations;
 
 namespace AfterApply.Application.EmailIntegrations.Contracts;
 
@@ -17,7 +18,11 @@ public sealed record EmailSuggestionResponse(
     // an already-persisted Application/Company — confirming this suggestion creates them.
     bool IsNewApplicationSuggestion = false,
     string? Location = null,
-    string? Description = null);
+    string? Description = null,
+    // Only set when SuggestedStatus is Rejected — see IEmailRejectionReasonExtractionProvider.
+    // NotStated (not null) is the expected majority value, not an edge case.
+    RejectionReasonCategory? RejectionReasonCategory = null,
+    string? RejectionReasonDetail = null);
 
 public sealed record SuggestionCountResponse(int Count);
 

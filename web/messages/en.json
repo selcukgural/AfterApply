@@ -398,7 +398,18 @@
     "confirmError": "Could not confirm.",
     "dismissError": "Could not dismiss.",
     "newJobBadge": "Not registered yet — new application from email",
-    "location": "Location"
+    "location": "Location",
+    "rejectionReason": "Stated rejection reason",
+    "rejectionReasonCategory": {
+      "LanguageRequirement": "Language requirement",
+      "LocationOrRelocation": "Location / relocation",
+      "ExperienceLevelMismatch": "Experience level mismatch",
+      "SalaryExpectationMismatch": "Salary expectation mismatch",
+      "SkillOrTechStackGap": "Skill / tech stack gap",
+      "PositionCancelledOrFilled": "Position cancelled or filled",
+      "CultureOrTeamFit": "Culture / team fit",
+      "Other": "Other"
+    }
   },
   "privacy": {
     "title": "Privacy Policy",

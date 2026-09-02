@@ -38,6 +38,7 @@ public class EmailForwardingTests : IAsyncLifetime
     private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine").Build();
     private readonly FakeEmailClassificationProvider _fakeClassificationProvider = new();
     private readonly FakeEmailJobExtractionProvider _fakeExtractionProvider = new();
+    private readonly FakeEmailRejectionReasonExtractionProvider _fakeRejectionReasonProvider = new();
     private WebApplicationFactory<Program>? _factory;
     private HttpClient _client = null!;
 
@@ -64,6 +65,7 @@ public class EmailForwardingTests : IAsyncLifetime
             {
                 services.AddSingleton<IEmailClassificationProvider>(_fakeClassificationProvider);
                 services.AddSingleton<IEmailJobExtractionProvider>(_fakeExtractionProvider);
+                services.AddSingleton<IEmailRejectionReasonExtractionProvider>(_fakeRejectionReasonProvider);
             });
         });
 
@@ -316,6 +318,70 @@ public class EmailForwardingTests : IAsyncLifetime
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await db.EmailSuggestions.SingleAsync();
         suggestion.Status.ShouldBe(EmailSuggestionStatus.Confirmed);
+    }
+
+    [Fact]
+    public async Task Inbound_Rejection_Runs_Rejection_Reason_Extraction_And_Persists_Category()
+    {
+        var address = await GetOwnAddressAsync();
+        await CreateApplicationAsync("Acme Reason Test");
+        _fakeRejectionReasonProvider.Result = new EmailRejectionReasonExtractionResult(
+            RejectionReasonCategory.LanguageRequirement, "This role requires Dutch at C1 level", 0.9);
+
+        // "unfortunately" is one of RuleBasedEmailClassifier's own Rejection phrases, so this never
+        // needs the classification LLM — only the (fake) rejection-reason provider is exercised here.
+        var inboundResponse = await SendInboundAsync(address, "recruiter@acme-reason-test.com", "Acme Reason Test Recruiting",
+            "Application update", "Unfortunately, we have decided not to move forward with your application.");
+        inboundResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeRejectionReasonProvider.CallCount.ShouldBe(1);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestion = suggestionsResponse.EnumerateArray().Single();
+        suggestion.GetProperty("suggestedStatus").GetString().ShouldBe(nameof(ApplicationStatus.Rejected));
+        suggestion.GetProperty("rejectionReasonCategory").GetString().ShouldBe(nameof(RejectionReasonCategory.LanguageRequirement));
+        suggestion.GetProperty("rejectionReasonDetail").GetString().ShouldBe("This role requires Dutch at C1 level");
+    }
+
+    [Fact]
+    public async Task Inbound_NonRejection_Skips_Rejection_Reason_Extraction()
+    {
+        var address = await GetOwnAddressAsync();
+        await CreateApplicationAsync("Acme No Reason Test");
+
+        var inboundResponse = await SendInboundAsync(address, "recruiter@acme-no-reason-test.com", "Acme No Reason Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.");
+        inboundResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        _fakeRejectionReasonProvider.CallCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ConfirmSuggestion_For_Rejected_With_Stated_Reason_Appends_Reason_To_StatusHistory_Note()
+    {
+        var address = await GetOwnAddressAsync();
+        var applicationId = await CreateApplicationAsync("Acme Confirm Reason Test");
+        _fakeRejectionReasonProvider.Result = new EmailRejectionReasonExtractionResult(
+            RejectionReasonCategory.SalaryExpectationMismatch, "Compensation expectations exceed the budgeted range", 0.85);
+
+        var inboundResponse = await SendInboundAsync(address, "recruiter@acme-confirm-reason-test.com",
+            "Acme Confirm Reason Test Recruiting", "Application update",
+            "Unfortunately, we have decided not to move forward with your application.");
+        inboundResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestionsResponse.EnumerateArray().Single().GetProperty("id").GetGuid();
+
+        var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
+        confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var history = await db.ApplicationStatusHistories
+            .Where(h => h.ApplicationId == applicationId && h.ToStatus == ApplicationStatus.Rejected)
+            .SingleAsync();
+        history.Note.ShouldNotBeNull();
+        history.Note.ShouldContain("Compensation expectations exceed the budgeted range");
     }
 
     [Fact]

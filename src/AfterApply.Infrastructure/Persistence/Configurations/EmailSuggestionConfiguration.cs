@@ -23,6 +23,8 @@ public sealed class EmailSuggestionConfiguration : IEntityTypeConfiguration<Emai
         builder.Property(s => s.ExtractedJobTitle).HasMaxLength(300);
         builder.Property(s => s.ExtractedLocation).HasMaxLength(300);
         builder.Property(s => s.ExtractedDescription).HasColumnType("text");
+        builder.Property(s => s.RejectionReasonCategory).HasConversion<string>().HasMaxLength(50);
+        builder.Property(s => s.RejectionReasonDetail).HasMaxLength(500);
         builder.Property(s => s.Status).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(s => s.UserId);

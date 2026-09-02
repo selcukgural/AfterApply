@@ -251,6 +251,7 @@ public static class DependencyInjection
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();
         services.AddScoped<IEmailJobExtractionProvider, OpenAiEmailJobExtractionProvider>();
+        services.AddScoped<IEmailRejectionReasonExtractionProvider, OpenAiEmailRejectionReasonExtractionProvider>();
         services.AddScoped<IEmailForwardingService, EmailForwardingService>();
         services.AddSingleton<IJobBoardDomainMatcher, JobBoardDomainMatcher>();
         services.AddScoped<ICompanyIntelligenceService, CompanyIntelligenceService>();

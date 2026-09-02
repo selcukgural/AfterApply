@@ -398,7 +398,18 @@
     "confirmError": "Onaylanamadı.",
     "dismissError": "Reddedilemedi.",
     "newJobBadge": "Henüz kayıtlı değil — e-postadan yeni başvuru",
-    "location": "Konum"
+    "location": "Konum",
+    "rejectionReason": "Belirtilen ret sebebi",
+    "rejectionReasonCategory": {
+      "LanguageRequirement": "Dil yetkinliği",
+      "LocationOrRelocation": "Lokasyon / relocation",
+      "ExperienceLevelMismatch": "Deneyim seviyesi uyumsuzluğu",
+      "SalaryExpectationMismatch": "Maaş beklentisi uyumsuzluğu",
+      "SkillOrTechStackGap": "Teknik yetkinlik eksikliği",
+      "PositionCancelledOrFilled": "Pozisyon iptal/dolu",
+      "CultureOrTeamFit": "Takım/kültür uyumu",
+      "Other": "Diğer"
+    }
   },
   "privacy": {
     "title": "Gizlilik Politikası",

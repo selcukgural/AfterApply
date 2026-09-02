@@ -97,6 +97,12 @@ export default function EmailSuggestionsPage() {
                   {t("location")}: {s.location}
                 </p>
               )}
+              {s.rejectionReasonCategory && s.rejectionReasonCategory !== "NotStated" && (
+                <p className="mb-2 text-xs text-red-700 dark:text-red-400">
+                  {t("rejectionReason")}: {t(`rejectionReasonCategory.${s.rejectionReasonCategory}`)}
+                  {s.rejectionReasonDetail && ` — “${s.rejectionReasonDetail}”`}
+                </p>
+              )}
               <p className="mb-1 text-sm font-medium text-gray-800 dark:text-gray-200">{s.subject}</p>
               <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">{s.description ?? s.snippet}</p>
               <div className="flex gap-3">

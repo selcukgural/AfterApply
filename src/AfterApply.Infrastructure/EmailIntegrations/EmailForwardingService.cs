@@ -20,6 +20,7 @@ internal sealed partial class EmailForwardingService(
     AppDbContext dbContext,
     IEmailClassificationProvider emailClassificationProvider,
     IEmailJobExtractionProvider emailJobExtractionProvider,
+    IEmailRejectionReasonExtractionProvider emailRejectionReasonExtractionProvider,
     IApplicationService applicationService,
     IJobBoardDomainMatcher jobBoardDomainMatcher,
     IOptions<EmailForwardingOptions> options,
@@ -135,13 +136,20 @@ internal sealed partial class EmailForwardingService(
 
         var now = DateTimeOffset.UtcNow;
 
+        // Only worth an extra LLM call when the email actually signals a rejection — see
+        // IEmailRejectionReasonExtractionProvider (always returns a result, NotStated included).
+        var rejectionReason = classification.SuggestedStatus == ApplicationStatus.Rejected
+            ? await emailRejectionReasonExtractionProvider.ExtractAsync(request.Subject, request.Snippet, cancellationToken)
+            : null;
+
         if (applicationId is not null)
         {
             dbContext.EmailSuggestions.Add(EmailSuggestion.Create(
                 connection.UserId, connection.Id, applicationId.Value,
                 providerMessageId, providerThreadId: null,
                 classification.SuggestedStatus, classification.ConfidenceScore, classification.MatchedRule,
-                senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet));
+                senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet,
+                rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence));
 
             await dbContext.SaveChangesAsync(cancellationToken);
             return;
@@ -161,7 +169,8 @@ internal sealed partial class EmailForwardingService(
             connection.UserId, connection.Id, providerMessageId,
             classification.SuggestedStatus, classification.ConfidenceScore, classification.MatchedRule,
             senderDomain, request.ReceivedAt, now, request.Subject, request.Snippet,
-            extraction.CompanyName, extraction.JobTitle, extraction.Location, extraction.Description));
+            extraction.CompanyName, extraction.JobTitle, extraction.Location, extraction.Description,
+            rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence));
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -181,7 +190,8 @@ internal sealed partial class EmailForwardingService(
 
         var responses = rows.Select(row => new EmailSuggestionResponse(
             row.s.Id, row.s.ApplicationId, row.CompanyName, row.JobTitle,
-            row.s.SuggestedStatus, row.s.ConfidenceScore, row.s.Subject ?? "", row.s.Snippet ?? "", row.s.EmailReceivedAt))
+            row.s.SuggestedStatus, row.s.ConfidenceScore, row.s.Subject ?? "", row.s.Snippet ?? "", row.s.EmailReceivedAt,
+            RejectionReasonCategory: row.s.RejectionReasonCategory, RejectionReasonDetail: row.s.RejectionReasonDetail))
             .ToList();
 
         // "New job" suggestions (ApplicationId is null) always come from this Forwarding path, so
@@ -194,7 +204,8 @@ internal sealed partial class EmailForwardingService(
         responses.AddRange(newJobRows.Select(s => new EmailSuggestionResponse(
             s.Id, ApplicationId: null, s.ExtractedCompanyName ?? "", s.ExtractedJobTitle ?? "",
             s.SuggestedStatus, s.ConfidenceScore, s.Subject ?? "", s.Snippet ?? "", s.EmailReceivedAt,
-            IsNewApplicationSuggestion: true, s.ExtractedLocation, s.ExtractedDescription)));
+            IsNewApplicationSuggestion: true, s.ExtractedLocation, s.ExtractedDescription,
+            RejectionReasonCategory: s.RejectionReasonCategory, RejectionReasonDetail: s.RejectionReasonDetail)));
         
         return [.. responses.OrderByDescending(r => r.EmailReceivedAt)];
     }
@@ -222,7 +233,8 @@ internal sealed partial class EmailForwardingService(
             if (suggestion.SuggestedStatus is not null && suggestion.SuggestedStatus != ApplicationStatus.Applied)
             {
                 await applicationService.ChangeStatusAsync(userId, created.Id,
-                    new ChangeStatusRequest(suggestion.SuggestedStatus.Value, "E-postadan içe aktarıldı",
+                    new ChangeStatusRequest(suggestion.SuggestedStatus.Value,
+                        AppendRejectionReason("E-postadan içe aktarıldı", suggestion),
                         suggestion.EmailReceivedAt, Source.Email),
                     cancellationToken);
             }
@@ -238,7 +250,8 @@ internal sealed partial class EmailForwardingService(
         }
 
         var changed = await applicationService.ChangeStatusAsync(userId, suggestion.ApplicationId.Value,
-            new ChangeStatusRequest(suggestion.SuggestedStatus.Value, "E-postadan onaylandı", suggestion.EmailReceivedAt, Source.Email),
+            new ChangeStatusRequest(suggestion.SuggestedStatus.Value,
+                AppendRejectionReason("E-postadan onaylandı", suggestion), suggestion.EmailReceivedAt, Source.Email),
             cancellationToken);
 
         if (changed is null)
@@ -378,6 +391,34 @@ internal sealed partial class EmailForwardingService(
 
         return uri.Host.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? uri.Host[4..] : uri.Host;
     }
+
+    // NotStated is the expected majority result (see IEmailRejectionReasonExtractionProvider) and
+    // carries no detail worth persisting into the status-change note — only append when a real
+    // reason was found.
+    private static string AppendRejectionReason(string baseNote, EmailSuggestion suggestion)
+    {
+        if (suggestion.RejectionReasonCategory is null or RejectionReasonCategory.NotStated)
+        {
+            return baseNote;
+        }
+
+        var label = RejectionReasonLabel(suggestion.RejectionReasonCategory.Value);
+        return suggestion.RejectionReasonDetail is null
+            ? $"{baseNote} — Ret sebebi: {label}"
+            : $"{baseNote} — Ret sebebi: {label} ({suggestion.RejectionReasonDetail})";
+    }
+
+    private static string RejectionReasonLabel(RejectionReasonCategory category) => category switch
+    {
+        RejectionReasonCategory.LanguageRequirement => "dil yetkinliği",
+        RejectionReasonCategory.LocationOrRelocation => "lokasyon/relocation",
+        RejectionReasonCategory.ExperienceLevelMismatch => "deneyim seviyesi",
+        RejectionReasonCategory.SalaryExpectationMismatch => "maaş beklentisi",
+        RejectionReasonCategory.SkillOrTechStackGap => "teknik yetkinlik eksikliği",
+        RejectionReasonCategory.PositionCancelledOrFilled => "pozisyon iptal/doldu",
+        RejectionReasonCategory.CultureOrTeamFit => "takım/kültür uyumu",
+        _ => "diğer"
+    };
 
     private static string? ExtractDomain(string email)
     {
