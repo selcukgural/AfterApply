@@ -1,6 +1,13 @@
 import type { AuthResponse } from "@/types/api";
 import { routing } from "@/i18n/routing";
 import { authStore } from "./authStore";
+import enMessages from "../../../messages/en.json";
+import trMessages from "../../../messages/tr.json";
+
+const FALLBACK_MESSAGES: Record<string, { generic: string; sessionExpired: string }> = {
+  en: enMessages.errors,
+  tr: trMessages.errors,
+};
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5151";
 
@@ -45,6 +52,36 @@ function getCurrentLocale(): string {
 
 function isNoAuthEndpoint(path: string): boolean {
   return NO_AUTH_ENDPOINTS.some((endpoint) => path.startsWith(endpoint));
+}
+
+// Last-resort fallback only — this module sits below the React tree (no
+// useTranslations access), so it can't rely on next-intl's provider. Callers
+// should prefer the backend's already-localized detail/errors/title (see
+// apiFetch below) and only hit this for a raw network-failure / no-JSON-body
+// scenario.
+function getFallbackMessage(key: "generic" | "sessionExpired"): string {
+  const locale = getCurrentLocale();
+  return (FALLBACK_MESSAGES[locale] ?? FALLBACK_MESSAGES[routing.defaultLocale]!)[key];
+}
+
+// ASP.NET's Results.ValidationProblem(...) (used by FluentValidation filters
+// and the import endpoints) returns HttpValidationProblemDetails: an
+// `errors: { [field]: string[] }` map with each message already localized
+// server-side via SharedStrings, but no top-level `detail` and a hardcoded
+// English `title` ("One or more validation errors occurred."). Surface the
+// field messages instead of falling through to that generic English title.
+function extractValidationErrorsMessage(body: unknown): string | undefined {
+  if (!body || typeof body !== "object" || !("errors" in body)) {
+    return undefined;
+  }
+  const errors = (body as { errors: unknown }).errors;
+  if (!errors || typeof errors !== "object") {
+    return undefined;
+  }
+  const messages = Object.values(errors as Record<string, unknown>).flatMap((value) =>
+    Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [],
+  );
+  return messages.length > 0 ? messages.join(" ") : undefined;
 }
 
 async function performFetch(path: string, options: RequestInit): Promise<Response> {
@@ -112,12 +149,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = `/${getCurrentLocale()}/login`;
       }
-      // Last-resort fallback only — this fires when apiFetch is called
-      // outside of a component tree (no useTranslations available here).
-      // Callers should prefer the backend's already-localized
-      // detail/title (see below) and only fall back to this in a raw
-      // network-failure / no-JSON-body scenario.
-      throw new ApiError(401, "Session expired, please log in again.");
+      throw new ApiError(401, getFallbackMessage("sessionExpired"));
     }
   }
 
@@ -125,8 +157,9 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     const body = await response.json().catch(() => undefined);
     const message =
       (body && typeof body === "object" && "detail" in body && String(body.detail)) ||
+      extractValidationErrorsMessage(body) ||
       (body && typeof body === "object" && "title" in body && String(body.title)) ||
-      "The request failed.";
+      getFallbackMessage("generic");
     throw new ApiError(response.status, message, body);
   }
 
