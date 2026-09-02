@@ -434,16 +434,16 @@
       "item1": "Hesap bilgileri: ad, soyad, e-posta adresi, şifre (hash'lenmiş olarak saklanır).",
       "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar.",
       "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
-      "item4": "Mail Yönlendirme'yi kurarsanız, yönlendirdiğiniz statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
+      "item4": "Mail Yönlendirme'yi kurarsanız ya da tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Gmail Taraması'nda bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır."
     },
     "crossBorderTransfer": {
       "title": "Yurt dışına veri aktarımı",
-      "intro": "Mail Yönlendirme'yi kurarsanız, yönlendirdiğiniz her statü güncellemesi e-postasının konu satırı ve kısa bir özeti, başvurunuz için ne anlama geldiğini tespit etmek amacıyla yurt dışına gönderilir.",
+      "intro": "Mail Yönlendirme'yi kurarsanız ya da Gmail Taraması'nı açarsanız, tespit edilen her statü güncellemesi e-postasının konu satırı ve kısa bir özeti, başvurunuz için ne anlama geldiğini tespit etmek amacıyla yurt dışına gönderilir.",
       "recipient": "Alıcı: OpenAI, L.L.C. (Amerika Birleşik Devletleri) — API sağlayıcımız.",
       "purpose": "Amaç: e-postanın başvuru durumu sinyalini sınıflandırmak, ve henüz takip edilmeyen bir iş için şirket adı/pozisyon bilgisini okumak; bu yalnızca daha basit, yerel kural tabanlı bir kontrol e-postayı zaten tanımadığında çalışır.",
-      "legalBasis": "Hukuki sebep: bu yalnızca Ayarlar'da kendi kurduğunuz, statü güncellemelerini kişisel e-kariyerim adresinize yönlendirmeyi seçtiğiniz e-postalar için gerçekleşir; bu özelliği kullanmadığınız sürece hiçbir şey gönderilmez.",
-      "withdraw": "Geri çekme: kişisel e-kariyerim adresinize mail yönlendirmeyi durdurun (kendi mail sağlayıcınızdaki filtreyi kaldırın) veya hesabınızı silin, bu tamamen durur.",
+      "legalBasis": "Hukuki sebep: bu yalnızca Ayarlar'da kendi kurduğunuz Mail Yönlendirme için, ya da tarayıcı eklentisinde kendi açtığınız Gmail Taraması özelliği için gerçekleşir; bu özelliklerden hiçbirini kullanmadığınız sürece hiçbir şey gönderilmez.",
+      "withdraw": "Geri çekme: Mail Yönlendirme için kişisel e-kariyerim adresinize yönlendirmeyi durdurun (kendi mail sağlayıcınızdaki filtreyi kaldırın); Gmail Taraması için tarayıcı eklentisinin Ayarlar sayfasından özelliği kapatın. Ya da hesabınızı silin, bu tamamen durur.",
       "sensitiveDataNote": "Konu satırı ve özet ayrıca hesabınızda da saklanır (bir öneriyi incelerken sizin görebileceğiniz şekilde) — e-postanın tam içeriği asla."
     },
     "retention": {

@@ -434,16 +434,16 @@
       "item1": "Account information: first name, last name, email address, password (stored hashed).",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
-      "item4": "If you set up Mail Forwarding, the subject line and a short snippet of forwarded status-update emails — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. See \"Cross-border data transfer\" below.",
+      "item4": "If you set up Mail Forwarding, or turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. With Gmail Scanning, this content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "This data is used solely to provide you with application tracking and personal analytics features."
     },
     "crossBorderTransfer": {
       "title": "Cross-border data transfer",
-      "intro": "If you set up Mail Forwarding, the subject line and a short snippet of each forwarded status-update email is sent abroad to detect what it means for your application.",
+      "intro": "If you set up Mail Forwarding, or turn on Gmail Scanning, the subject line and a short snippet of each detected status-update email is sent abroad to determine what it means for your application.",
       "recipient": "Recipient: OpenAI, L.L.C. (United States) — our API provider.",
       "purpose": "Purpose: to classify the email's application-status signal, and — for a job not yet tracked — to read off a company name and job title; this only runs when a simpler, local rule-based check doesn't already recognize the email.",
-      "legalBasis": "Legal basis: this only happens for emails you choose to forward to your personal e-kariyerim address, which you set up yourself in Settings; nothing is sent unless you use this feature.",
-      "withdraw": "Withdrawal: stop forwarding mail to your personal e-kariyerim address (remove the filter in your own mail provider), or delete your account, to stop this entirely.",
+      "legalBasis": "Legal basis: this only happens for Mail Forwarding you set up yourself in Settings, or for Gmail Scanning you turn on yourself in the browser extension; nothing is sent unless you use one of these features.",
+      "withdraw": "Withdrawal: for Mail Forwarding, stop forwarding mail to your personal e-kariyerim address (remove the filter in your own mail provider); for Gmail Scanning, turn it off in the browser extension's Settings page. Or delete your account, to stop this entirely.",
       "sensitiveDataNote": "The subject and snippet are also stored on your account (visible to you when reviewing a suggestion) — never the full email body."
     },
     "retention": {
