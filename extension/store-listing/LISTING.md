@@ -59,6 +59,15 @@ it's from a known job platform or a company you've already tracked in e-kariyeri
 else is discarded immediately, never stored, never shown to anyone. Nothing is automated on
 Gmail's side: you turn forwarding on (and can turn it off again) entirely inside your own account.
 
+GMAIL SCANNING (BETA, OPT-IN)
+An alternative to email forwarding, for anyone who'd rather not relay their whole inbox anywhere.
+Turn it on in Settings and, from then on, whenever you open an email in Gmail yourself, the
+extension reads that one message in your own browser and checks — locally, on your device —
+whether it looks like a job-application update. Only if it does, a small extracted summary
+(sender, subject, and a short snippet — never the full email, never anything about messages you
+didn't open) is sent to your e-kariyerim account as a suggestion. Off by default; nothing is read
+or sent unless you turn it on in Settings.
+
 LANGUAGE
 The whole extension — the job-tracking popup, Settings, and the email-forwarding guide — works in
 Turkish or English. Switch anytime with the language toggle in any page's header.
@@ -73,8 +82,11 @@ The extension only reads a job page when you click its icon, only on linkedin.co
 and only sends the fields you see in the popup — to your own e-kariyerim account, using your own
 token. The email-forwarding guide only reads your own forwarding address and confirmation code
 from your e-kariyerim account (same token) and links out to Gmail's own settings pages — it never
-signs in to, or reads, your email account itself. Nothing is sent to any third party, and nothing
-is used for advertising. See the full privacy policy linked on this listing.
+signs in to, or reads, your email account itself. Gmail Scanning, described above, is off by
+default and reads only a message you've personally opened, only after you enable it in Settings;
+the relevance check runs on your device, and only a short extracted summary of a message that
+looks job-related is ever sent, never the raw email. Nothing is sent to any third party, and
+nothing is used for advertising. See the full privacy policy linked on this listing.
 
 This is an independent tool and is not affiliated with, endorsed by, or sponsored by LinkedIn
 Corporation, kariyer.net, or Google.
@@ -114,6 +126,15 @@ dönüştürürüz — geri kalanı anında elenir, asla saklanmaz, kimseye gös
 hiçbir şey otomatik yapılmaz: yönlendirmeyi tamamen kendi hesabınızda siz açar (ve istediğinizde
 kapatırsınız).
 
+GMAIL TARAMASI (BETA, OPTIONAL)
+Tüm gelen kutunuzu hiçbir yere yönlendirmek istemeyenler için mail yönlendirmeye bir alternatif.
+Ayarlar'dan açtıktan sonra, Gmail'de kendiniz bir mail açtığınızda eklenti o tek maili kendi
+tarayıcınızda okur ve — cihazınızda, yerel olarak — bir iş başvurusu güncellemesine benzeyip
+benzemediğine bakar. Yalnızca benziyorsa, küçük bir özet (gönderen, konu ve kısa bir alıntı —
+asla mailin tamamı, asla açmadığınız mailler hakkında hiçbir şey) e-kariyerim hesabınıza bir öneri
+olarak gönderilir. Varsayılan olarak kapalıdır; Ayarlar'dan açmadığınız sürece hiçbir şey okunmaz
+veya gönderilmez.
+
 DİL
 Eklentinin tamamı — başvuru takip penceresi, Ayarlar ve mail yönlendirme rehberi — Türkçe veya
 İngilizce çalışır. Herhangi bir sayfanın başlığındaki dil butonuyla istediğiniz zaman değiştirin.
@@ -129,8 +150,11 @@ Eklenti bir ilan sayfasını yalnızca simgesine tıkladığınızda, yalnızca 
 yalnızca kendi e-kariyerim hesabınıza gönderir. Mail yönlendirme rehberi yalnızca kendi
 e-kariyerim hesabınızdaki (aynı anahtarla) yönlendirme adresinizi ve onay kodunuzu okur, Gmail'in
 kendi ayarlar sayfalarına bağlantı verir — mail hesabınıza asla giriş yapmaz veya mailinizi
-okumaz. Hiçbir veri üçüncü taraflarla paylaşılmaz veya reklam amacıyla kullanılmaz. Ayrıntılar
-için bu listede bağlantısı verilen gizlilik politikasına bakın.
+okumaz. Yukarıda anlatılan Gmail Taraması varsayılan olarak kapalıdır ve yalnızca Ayarlar'dan
+etkinleştirdikten sonra, yalnızca kendinizin açtığı bir maili okur; ilgililik kontrolü cihazınızda
+çalışır ve yalnızca iş başvurusuyla ilgili göründüğünde kısa bir özet gönderilir, ham mail asla
+gönderilmez. Hiçbir veri üçüncü taraflarla paylaşılmaz veya reklam amacıyla kullanılmaz.
+Ayrıntılar için bu listede bağlantısı verilen gizlilik politikasına bakın.
 
 Bu bağımsız bir araçtır; LinkedIn Corporation, kariyer.net veya Google ile bağlantılı, onlar
 tarafından onaylanmış veya desteklenmiş değildir.
@@ -156,7 +180,10 @@ upload needed unless you want a distinct store-only icon).
 upload as-is. Chrome Web Store requires at least one and allows up to five; these five cover the
 three things this listing needs to show (auto-fill in both themes, the one-time settings setup,
 and the email-forwarding guide). See `screenshots/README.md` if you want to regenerate or add
-more.
+more. **`options-light.png` is now stale** — the Settings page gained a new "Gmail Scanning"
+checkbox/label section below the email-forwarding button — regenerate it before upload if you want
+the screenshot to match the live page (not blocking, since the old version is still an accurate
+screenshot of the token/forwarding parts of that page, just incomplete).
 
 ## Support / website links
 

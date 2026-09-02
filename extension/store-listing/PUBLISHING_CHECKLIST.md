@@ -2,19 +2,32 @@
 
 ## Before you start
 
-- [ ] **Publish the privacy policy.** Put `PRIVACY_POLICY.md`'s content on a real page (e.g.
-      `ekariyerim.com/privacy`) — the Dashboard rejects a submission with a token-storing extension
-      and no privacy policy URL. **The one manual step actually blocking submission right now** —
-      everything else on this checklist is either already done or is a Dashboard action.
+- [ ] **Publish (or re-publish) the privacy policy.** Put `PRIVACY_POLICY.md`'s content on a real
+      page (e.g. `ekariyerim.com/privacy`) — the Dashboard rejects a submission with a
+      token-storing extension and no privacy policy URL. **If this page was already published
+      before the Gmail Scanning feature was added, its content is now stale** — the file gained a
+      new "Gmail Scanning" section and updated "what's stored/sent"/"your controls" wording;
+      re-publish the current file's content before submitting this version. This is the one manual
+      step actually blocking submission right now — everything else on this checklist is either
+      already done or is a Dashboard action.
 - [x] **Production host permissions/API URL** — done. `manifest.json`'s `host_permissions` no
       longer lists `http://localhost/*`, and `DEFAULT_API_BASE_URL` in `storage.js` is
       `https://api.ekariyerim.com`.
 - [ ] **One-time $5 developer registration fee**, if you haven't published anything from this
       Google account before: https://chrome.google.com/webstore/devconsole (Chrome asks for this on
       first use of the Dashboard).
-- [x] **`manifest.json`'s `"version"`** is `0.4.0` — ahead of what's actually live (`0.3.2`), so this
-      upload doesn't need a bump. Bump it for every subsequent upload after this one — the Dashboard
-      rejects a re-upload with a version already used.
+- [x] **`manifest.json`'s `"version"`** is `0.5.0`, bumped from `0.4.0` for the Gmail Scanning
+      feature (new `https://mail.google.com/*` host permission + a declared `content_scripts`
+      entry — see `PERMISSIONS_JUSTIFICATION.md`'s new section on it). Bump it again for every
+      subsequent upload — the Dashboard rejects a re-upload with a version already used.
+- [ ] **Re-check the Privacy practices tab, not just the listing text.** This version added a new
+      `host_permissions` entry and the extension's first declarative `content_scripts` entry
+      (previously everything was click-triggered `scripting.executeScript`) — re-paste the updated
+      single-purpose description, the new `https://mail.google.com/*` justification, and the
+      updated data-usage table (a new "Personal communications: Yes, opt-in only" row) from
+      `PERMISSIONS_JUSTIFICATION.md`. A permission whose justification doesn't match its actual use
+      is one of the most common rejection reasons — see "After submitting" below — and this is the
+      biggest permission change since the extension was first drafted for submission.
 
 ## Package the extension
 

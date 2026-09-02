@@ -67,6 +67,33 @@ recreations, not real screenshots, since no live Gmail account is automated for 
 permissions: it only calls the already-permitted `api.ekariyerim.com` origin and links out to
 Gmail's own settings pages via plain navigation.
 
+## Gmail Scanning (opt-in alternative to email forwarding)
+
+`gmail-scan.js` is a declared `content_scripts` entry (matching `https://mail.google.com/*`,
+loaded alongside `local-filter-config.js`) — the extension's only script that isn't click-triggered
+`scripting.executeScript`, needed because Gmail is a single-page app with no full reload between
+the inbox and an opened thread. Off by default: it checks the `afterapply_gmail_scan_enabled`
+flag (`storage.js`'s `getGmailScanEnabled`/`setGmailScanEnabled`, a checkbox on the Options page)
+before reading anything, and no-ops entirely while it's off.
+
+Once enabled, it reads only the currently-open/expanded thread (`span[email]` for the sender,
+`h2.hP` for the subject, `div.a3s` for the body, capped at 2000 chars — verified live against real
+Gmail threads, see the plan this shipped under), scores it locally with `afterApplyScoreSignal` (a
+JS mirror of the backend's `RecruitmentSignalAnalyzer.Analyze` shape — weighted phrase-category
+hits, capped, plus known-domain/link-domain bonuses), and only for a thread scoring above the
+fetched threshold does it POST the extracted signal (never the raw email) to
+`POST /api/email-forwarding/extension-signal`. `local-filter-config.js` fetches and caches the
+scoring vocabulary from `GET /api/email-forwarding/local-filter-config` (ETag-revalidated, so
+tuning weights/phrases/domains only needs an `appsettings.json` edit + backend redeploy, never a
+new extension release) with a small bundled fallback for first-run/offline. Both files are plain
+scripts, not ES modules — Chrome MV3 content scripts have no `import`/`export` support, so they
+duplicate the small bit of `chrome.storage.local` logic they need rather than importing
+`storage.js`.
+
+Feeds the same backend pipeline the forwarding path does (classify → match →
+confidence-gated auto-apply → suggestion) — see `EmailForwardingService.ProcessExtensionSignalAsync`.
+`EmailProvider` now has two members, `Forwarding` and `Extension`, one per intake path.
+
 ## Theming
 
 `popup.css` defines light/dark tokens mirroring the web app's own Tailwind palette
@@ -90,6 +117,7 @@ the checklist.
 - Employment type is not scraped (LinkedIn's job header doesn't expose it directly) — created
   applications default to `FullTime`, the same known limitation as generic CSV import
   (DECISIONS.md Sprint 4).
-- The email-forwarding guide only covers Gmail — no Outlook/other-provider walkthrough
-  (`EmailProvider` stays `Forwarding`-only on the backend regardless of which mail provider the
-  user actually forwards from, but the guide's own step-by-step screens are Gmail-specific).
+- The email-forwarding guide only covers Gmail — no Outlook/other-provider walkthrough (the
+  backend's `EmailProvider.Forwarding` value is provider-agnostic, but the guide's own step-by-step
+  screens are Gmail-specific). Gmail Scanning (see above) is also Gmail-only, by construction — it
+  reads Gmail's own DOM.

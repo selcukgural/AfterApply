@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "e-kariyerim — Job Import",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Get your job applications into e-kariyerim — one click from LinkedIn/kariyer.net, or by forwarding emails.",
   "action": {
     "default_popup": "popup.html",
