@@ -10,5 +10,10 @@
   },
   "dependencies": {
     "openapi-to-postmanv2": "6.3.3"
+  },
+  "overrides": {
+    "js-yaml": "4.3.1",
+    "uuid": "11.1.1",
+    "yaml": "1.10.3"
   }
 }

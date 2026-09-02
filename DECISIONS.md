@@ -2335,6 +2335,48 @@ altyapısı yok (repo'da hiç test dosyası yok, `package.json`'da test script'i
 
 ---
 
+## GitHub Dependabot açıkları giderildi: wrangler 4'e geçiş + postman override'ları, faker kalıntı riski kabul edildi (2026-09-02)
+
+**Bağlam:** GitHub'a push sonrası 14 açık Dependabot uyarısı görüldü (3 high, 9 moderate, 2 low).
+Hepsi iki bağımsız dev-tooling zincirinden geliyordu, runtime/uygulama koduna hiç girmiyordu:
+`email-worker/package-lock.json` (11 uyarı — `wrangler@3.x`'in transitive bağımlılıkları: `sharp`,
+`ws`, `undici`, `esbuild`) ve `postman/package-lock.json` (3 uyarı — `openapi-to-postmanv2@6.3.3`
+üzerinden gelen `js-yaml`, `uuid`, `yaml`).
+
+**Karar — email-worker:** `wrangler` `^3.90.0` → `^4.128.0`'a yükseltildi. `wrangler deploy --dry-run`
+ile config uyumluluğu doğrulandıktan sonra gerçek deploy yapıldı (Version ID `50fa8541-...`).
+Sonuç: 0 açık kaldı.
+
+**Karar — postman:** `openapi-to-postmanv2` zaten npm'deki en güncel sürümde (`6.3.3`) sabitliydi,
+daha yeni bir sürüm yok — üst paketi yükseltmek mümkün değildi. **Bir ara adımda yanlışlıkla
+`4.18.0`'a düşürüldü** (Dependabot alert'inin "patched" alanını üst pakete ait sanıp kopyalamıştım),
+bu da açık sayısını 3'ten 8'e çıkardı; hemen fark edilip `git checkout` ile committed lockfile'a geri
+dönüldü. Doğru çözüm: `package.json`'a nested transitive bağımlılıkları zorlayan bir `overrides`
+bloğu eklendi (`js-yaml: 4.3.1`, `uuid: 11.1.1`, `yaml: 1.10.3`) — üst paket sürümü değişmeden. Bu
+üçü test edildi: `npm run generate` sorunsuz çalıştı, üretilen `collection.json` git'teki mevcut
+haliyle birebir aynı çıktı (deterministic, diff yok).
+
+**Kabul edilen kalıntı risk — `@faker-js/faker` (high, `postman-collection`'ın transitive bağımlılığı):**
+`postman-collection@5.3.1`, `@faker-js/faker`'ı tam `5.5.3`'e sabitlemiş ve kendi kodu
+(`superstring/dynamic-variables.js`) o sürümün eski API'sini (`faker.address.city` vb.) doğrudan
+çağırıyor. Advisory'nin patched sürümü (`10.5.0`+) bu API'yi hiç içermiyor — `address` namespace'i
+faker v8'de `location`'a yeniden adlandırılmış. `overrides` ile faker'ı zorlamak denendi,
+`npm run generate` şu hatayla anında çöktü: `TypeError: Cannot read properties of undefined
+(reading 'city')`. Yani upstream `postman-collection` bu CVE'yi (arbitrary code execution via
+`helpers.fake`) breaking bir major sürüm atlamadan düzeltemiyor durumda. **Kabul gerekçesi:** bu
+araç sadece CI'da, kendi güvendiğimiz OpenAPI dokümanımızı işliyor — dışarıdan/kullanıcıdan gelen
+girdiyi hiç işlemiyor, pratik sömürülebilirlik yok. Üst akış (`postman-collection`/`openapi-to-postmanv2`)
+faker'ı günceller veya `patch-package` gibi bir hack'e gerek duyulursa bu not başlangıç noktası olsun.
+
+**Sonuç:** 14 açıktan (email-worker 11 + postman 3) email-worker'daki tamamı ve postman'daki
+js-yaml/uuid/yaml giderildi; sadece postman'daki faker (1 high) yukarıdaki gerekçeyle bilinçli
+olarak açık bırakıldı.
+
+**Doğrulama:** her iki dizinde `npm audit` (email-worker: 0 açık; postman: sadece faker, 3 alt-advisory
+tek pakette). `postman`'da `npm run generate` başarıyla çalıştı, çıktı git'teki mevcutla birebir aynı.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
