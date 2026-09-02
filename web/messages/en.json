@@ -129,7 +129,6 @@
       "todayAnalytics": "Personal analytics",
       "todayImport": "CSV / LinkedIn import",
       "todayReminders": "Reminders",
-      "todayMatch": "AI job-fit matching",
       "todayEmail": "Email forwarding integration",
       "todayExtension": "Browser extension",
       "futureInsights": "Anonymous, aggregate hiring insights"
@@ -295,24 +294,6 @@
       "timeline": "Timeline",
       "emptyValue": "—",
       "createdFromEmail": "Auto-created from a forwarded email",
-      "match": {
-        "title": "AI Match",
-        "jobDescriptionLabel": "Job Description",
-        "jobDescriptionPlaceholder": "Paste the job description here...",
-        "compute": "Match",
-        "recompute": "Recompute",
-        "computing": "Computing...",
-        "score": "Score",
-        "strongMatches": "Strong Matches",
-        "missing": "Missing",
-        "recommendation": "Recommendation",
-        "recommendationApply": "Apply",
-        "recommendationConsider": "Consider",
-        "recommendationSkip": "Skip",
-        "profileRequiredError": "Set your CV in your profile first.",
-        "setCvLink": "Set your CV",
-        "genericError": "Could not compute the match."
-      },
       "jobDescription": {
         "title": "Job Description",
         "source": "From LinkedIn",
@@ -353,20 +334,6 @@
         "openLink": "Open confirmation link",
         "dismiss": "I've confirmed it — dismiss"
       }
-    },
-    "cv": {
-      "title": "CV / Profile",
-      "description": "Paste your CV/skills so AI Match can score it against a job description. Only you can see this.",
-      "placeholder": "Paste your CV or a summary of your skills/experience...",
-      "save": "Save",
-      "saving": "Saving...",
-      "saved": "Saved.",
-      "loadError": "Could not load your CV.",
-      "saveError": "Could not save your CV.",
-      "sensitiveDataWarning": "Please avoid including special-category personal data — such as health, religious belief, or union membership — in your CV.",
-      "consentPrefix": "I consent to my CV text being sent to",
-      "consentLink": "OpenAI (United States)",
-      "consentSuffix": " to compute a match score."
     },
     "extension": {
       "title": "Browser Extension",
@@ -422,17 +389,17 @@
       "item1": "Account information: first name, last name, email address, password (stored hashed).",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
-      "item4": "Your CV/profile text — only if you choose to use AI Job Matching and check the consent box in Settings.",
+      "item4": "If you set up Mail Forwarding, the subject line and a short snippet of forwarded status-update emails — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. See \"Cross-border data transfer\" below.",
       "outro": "This data is used solely to provide you with application tracking and personal analytics features."
     },
     "crossBorderTransfer": {
       "title": "Cross-border data transfer",
-      "intro": "If you choose to use AI Job Matching, the CV/profile text you paste in Settings is transferred abroad to compute a match score. This does not happen unless you use the feature.",
+      "intro": "If you set up Mail Forwarding, the subject line and a short snippet of each forwarded status-update email is sent abroad to detect what it means for your application.",
       "recipient": "Recipient: OpenAI, L.L.C. (United States) — our API provider.",
-      "purpose": "Purpose: to score your CV against a job description you provide; the result is shown only to you.",
-      "legalBasis": "Legal basis: this only happens when you check a separate, specific consent box in Settings — independent of the general signup consent — which you re-affirm every time you save.",
-      "withdraw": "Withdrawal: clearing your CV text in Settings, or deleting your account, stops this transfer entirely.",
-      "sensitiveDataNote": "We recommend not including special-category personal data — such as health, religious belief, or union membership — in your CV."
+      "purpose": "Purpose: to classify the email's application-status signal, and — for a job not yet tracked — to read off a company name and job title; this only runs when a simpler, local rule-based check doesn't already recognize the email.",
+      "legalBasis": "Legal basis: this only happens for emails you choose to forward to your personal e-kariyerim address, which you set up yourself in Settings; nothing is sent unless you use this feature.",
+      "withdraw": "Withdrawal: stop forwarding mail to your personal e-kariyerim address (remove the filter in your own mail provider), or delete your account, to stop this entirely.",
+      "sensitiveDataNote": "The subject and snippet are also stored on your account (visible to you when reviewing a suggestion) — never the full email body."
     },
     "retention": {
       "title": "Retention period",

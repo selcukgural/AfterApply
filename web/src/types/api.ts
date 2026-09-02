@@ -87,7 +87,6 @@ export interface ApplicationDetailResponse {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
-  jobDescription: string | null;
   jobDescriptionHtml: string | null;
 }
 
@@ -212,13 +211,6 @@ export interface InboundAddressResponse {
   gmailConfirmationReceivedAt: string | null;
 }
 
-export interface CandidateProfileResponse {
-  cvText: string;
-  updatedAt: string;
-}
-
-export type JobMatchRecommendation = "Apply" | "Consider" | "Skip";
-
 export interface PersonalAccessTokenResponse {
   id: string;
   name: string;
@@ -236,15 +228,6 @@ export interface CreatedPersonalAccessTokenResponse {
 export interface ExtensionApplicationResponse {
   application: ApplicationDetailResponse;
   wasDuplicate: boolean;
-}
-
-export interface JobMatchResponse {
-  applicationId: string;
-  score: number;
-  strongMatches: string[];
-  missing: string[];
-  recommendation: JobMatchRecommendation;
-  computedAt: string;
 }
 
 export interface CompanySearchResult {

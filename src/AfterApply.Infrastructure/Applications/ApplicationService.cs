@@ -274,17 +274,17 @@ internal sealed class ApplicationService(
             .Select(c => c.Name)
             .FirstAsync(cancellationToken);
 
-        var job = application.JobId is null
+        var jobDescriptionHtml = application.JobId is null
             ? null
             : await dbContext.Jobs
                 .Where(j => j.Id == application.JobId)
-                .Select(j => new { j.Description, j.DescriptionHtml })
+                .Select(j => j.DescriptionHtml)
                 .FirstOrDefaultAsync(cancellationToken);
 
         return new ApplicationDetailResponse(
             application.Id, application.CompanyId, companyName, application.JobTitle, application.JobUrl,
             application.Location, application.EmploymentType, application.AppliedAt, application.Status,
             application.Source, application.Notes, application.CreatedAt, application.UpdatedAt,
-            job?.Description, job?.DescriptionHtml);
+            jobDescriptionHtml);
     }
 }

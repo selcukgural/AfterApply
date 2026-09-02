@@ -17,14 +17,16 @@ vb.) eklendiğinde bu liste güncellenmeli.
 | Rate limiting / abuse resistance | `src/AfterApply.Api/RateLimiting.cs` — auth endpoint'leri (IP bazlı) ve upload endpoint'leri (kullanıcı bazlı) korumalı. |
 | Upload boyut/zip-bomb koruması | `ImportOptions` (dosya/ZIP boyutu, satır sayısı, entry sayısı limitleri) + `LimitedStream` (decompression sırasında byte-cap). |
 | Data deletion cascade doğruluğu | Şirket/iş ilanı verisi paylaşımlı olduğu için hesap silmede asla silinmiyor — entegrasyon testiyle doğrulandı (`AccountManagementTests.DeleteAccount_Cascades_...`). |
-| Granüler açık rıza (CV → OpenAI) | (2026-09-01) Ayarlar'daki CV kaydetme formunda genel kayıt onayından bağımsız, ayrı bir onay kutusu — `UpdateCandidateProfileRequestValidator` backend'de zorunlu kılıyor, `CandidateProfile.OpenAiConsentAcceptedAt` her kayıtta zaman damgalanıyor. Önceki rızaya bakılmaksızın checkbox her ziyarette işaretsiz başlıyor (pre-ticked consent değil). |
-| Yurt dışı aktarım disclosure'ı (CV → OpenAI) | (2026-09-01) `/privacy#cross-border-transfer` — OpenAI, L.L.C. (ABD) isimle anılıyor; amaç, hukuki sebep, geri çekme yöntemi ve özel nitelikli veri uyarısı ayrı bir bölümde. |
+| ~~Granüler açık rıza (CV → OpenAI)~~ | ~~(2026-09-01)~~ **N/A (2026-09-02):** AI Job Matching özelliği (CV → OpenAI) ürün kapsamından tamamen kaldırıldı, bkz. `DECISIONS.md`. Bu madde artık uygulanamaz — özellik yok. |
+| ~~Yurt dışı aktarım disclosure'ı (CV → OpenAI)~~ | ~~(2026-09-01)~~ **N/A (2026-09-02):** Aynı kaldırma ile `/privacy#cross-border-transfer` bölümü de kaldırıldı. |
+| Yurt dışı aktarım disclosure'ı (Email → OpenAI) | (2026-09-02) `/privacy#cross-border-transfer` yeniden eklendi, bu kez `EmailIntegrations` özelliğine özgü: Mail Forwarding'i kuran kullanıcıların yönlendirdiği e-postaların Subject/Snippet'inin OpenAI'a (ABD) gönderildiği isimle anılıyor; amaç, hukuki sebep (sadece kullanıcının kurduğu forwarding), geri çekme yöntemi ve "tam e-posta içeriği değil, sadece subject/snippet" notu ayrı ayrı maddelendi. `dataCollection`'a bunu kapsayan bir `item4` eklendi. **Granüler bir onay kutusu eklenmedi** — bu, ayrı ele alınması gereken bir ürün kararı (bkz. Eksik #2). |
 
 ## Henüz uygulanamaz (özellik yok) — N/A
 
 | Madde | Neden |
 |---|---|
 | Public analytics anonimleştirme / minimum örneklem | Public/şirket-görünür analytics (Phase 10+) flag ile kapalı (`CompanyIntelligence:Enabled=false`); `IAnalyticsService` bugün sadece kullanıcının kendi verisini kendisine döndürüyor, hiçbir agregasyon başkasına gösterilmiyor. |
+| Granüler açık rıza / yurt dışı aktarım disclosure'ı (CV → OpenAI) | AI Job Matching özelliği 2026-09-02'de ürün kapsamından tamamen kaldırıldı — CV metni artık hiçbir yere (OpenAI dahil) gönderilmiyor, bu iki madde bir daha geçerli olana kadar N/A. |
 
 > **Not (2026-08-29):** Bu listede daha önce "Email permission boundaries — MVP kapsamında değil" satırı vardı. **Artık doğru değil** — Gmail entegrasyonu (Sprint 9, `gmail.readonly` scope) kod olarak tamamlandı. Bkz. aşağıdaki envanterin 4. maddesi; bu artık N/A değil, avukata görülmesi gereken açık bir kalem. **Güncelleme (aynı gün):** madde 7'deki CASA/verification maliyeti ($15k-$75k, 4-12+ hafta) netleşince, o karar verilene kadar `EmailIntegrations:Enabled=false` flag'iyle kullanıcıdan tamamen gizlendi (`Matching:Enabled` ile aynı desen) — bkz. `DECISIONS.md` "Gmail Integration (Phase 9) — kullanıcıdan gizlendi (2026-08-29)".
 >
@@ -57,9 +59,9 @@ Nihai onay/metin yazımı bu dosyanın kapsamı dışında.
 |---|---|---|
 | Hesap (email, şifre hash'i, `ConsentAcceptedAt`) | Cloud SQL (Postgres, `europe-west1`) | Hayır |
 | Başvuru verisi (Company/Job/Application/Event/StatusHistory) | Cloud SQL, `europe-west1` | Hayır |
-| CV / profil metni (`CandidateProfile.CvText`, `JobMatch.CvTextSnapshot`) | Cloud SQL, düz metin (şifrelenmemiş) | **Evet — OpenAI API'ye** (match hesaplama için CV + job description gönderiliyor, ABD merkezli, yurt dışı aktarım) |
+| ~~CV / profil metni (`CandidateProfile.CvText`, `JobMatch.CvTextSnapshot`)~~ (2026-09-02'de koddan kaldırıldı, bkz. `DECISIONS.md`) | ~~Cloud SQL, düz metin (şifrelenmemiş)~~ | N/A |
 | ~~Gmail bağlantısı~~ (2026-08-31'de koddan kaldırıldı, bkz. not yukarıda) | ~~OAuth token (encrypted) DB'de; `gmail.readonly` scope~~ | N/A |
-| Email eşleştirme sonucu (`EmailSuggestion`) | Cloud SQL — sadece `messageId`/`threadId`/`senderDomain`/`matchedRule`/`confidenceScore` persist ediliyor, **e-posta konusu/içeriği (Subject/Snippet) DB'ye yazılmıyor**, sadece eşleştirme anında bellekte kullanılıp atılıyor | Hayır (iyi durumda — data minimization) |
+| Email eşleştirme sonucu (`EmailSuggestion`) | Cloud SQL — `messageId`/`threadId`/`senderDomain`/`matchedRule`/`confidenceScore` **ve `Subject`/`Snippet` (max 500/2000 karakter) persist ediliyor** (`EmailSuggestionConfiguration`) — kullanıcının öneriyi incelerken görebilmesi için bilinçli bir tasarım, ama **düzeltme (2026-09-02): bu satırda daha önce "Subject/Snippet DB'ye yazılmıyor, sadece bellekte kullanılıp atılıyor" yazıyordu — bu yanlıştı**, kod böyle çalışmıyor. Sadece e-postanın tam gövdesi (body) hiç tutulmuyor. | **Evet — OpenAI API'ye** (sınıflandırma/extraction anında Subject/Snippet gönderiliyor, `OpenAiEmailClassificationProvider`/`OpenAiEmailJobExtractionProvider`, ABD merkezli, yurt dışı aktarım) — **artık disclosure edildi (2026-09-02)**, bkz. `/privacy#cross-border-transfer` |
 | Personal Access Token (extension) | Sadece hash (`TokenHash`) DB'de, düz metin token bir daha gösterilmiyor | Hayır |
 | Extension'ın scrape ettiği veri (LinkedIn/kariyer.net job title/company/location/description/URL) | Cloud SQL (Application/Job/Company) | Hayır |
 | Hata/performans telemetrisi | Sentry (backend `Sentry.AspNetCore`, frontend `@sentry/nextjs`) — konfigürasyon varsayılan (`sendDefaultPii` açıkça ayarlanmamış), hangi alanların gittiği doğrulanmadı | **Evet — Sentry'ye** (SaaS, muhtemelen ABD/AB veri merkezi seçimine bağlı, hesap ayarları kontrol edilmeli) |
@@ -68,18 +70,18 @@ Nihai onay/metin yazımı bu dosyanın kapsamı dışında.
 ### Eksik / avukata sorulması gereken kalemler
 
 1. **Aydınlatma Metni (KVKK m.10 formatı)** — `/privacy` sayfası var ama informal; m.10'un istediği spesifik başlıklar (veri sorumlusu kimliği, işlenen veri kategorileri, işleme amaçları, aktarılan alıcı grupları, toplama yöntemi/hukuki sebebi, m.11 hakları) format olarak karşılanmıyor.
-2. ~~**Granüler açık rıza yok**~~ — **Kısmen çözüldü (2026-09-01):** CV'nin OpenAI'a gönderilmesi için artık kayıttan bağımsız, spesifik bir onay kutusu var (bkz. "Yapıldı" bölümü). Gmail okuma izni kısmı zaten N/A (Gmail entegrasyonu koddan tamamen kaldırıldı, bkz. yukarıdaki not).
-3. **Yurt dışı aktarım disclosure'ı** — CV/OpenAI kısmı **çözüldü (2026-09-01)**, bkz. "Yapıldı" bölümü. **Sentry hâlâ isimlendirilmedi** — KVKK'nın 2024 değişikliğiyle gelen yurt dışı aktarım rejimi (açık rıza veya yeterlilik kararı/SCC) hangisine dayanacağımız Sentry için hâlâ netleşmedi.
+2. **Granüler açık rıza yok** — CV/OpenAI için 2026-09-01'de eklenen spesifik onay kutusu, özelliğin kendisiyle birlikte 2026-09-02'de kaldırıldı (bkz. `DECISIONS.md`) — bu madde tekrar açık. Gmail okuma izni kısmı zaten N/A (Gmail entegrasyonu koddan tamamen kaldırıldı, bkz. yukarıdaki not). **Hâlâ açık:** `EmailIntegrations`'ın OpenAI'a gönderdiği email subject/snippet için ayrı bir granüler rıza yok — kullanıcı sadece genel kayıt onayıyla (`ConsentAcceptedAt`) ve Mail Forwarding'i kendi isteğiyle kurarak bu özelliği kullanmış oluyor, CV/OpenAI'daki gibi spesifik bir onay kutusu yok. Bu bilinçli bir ürün kararı değil, sadece henüz eklenmedi — avukata danışılmalı (CV/OpenAI'daki gibi ayrı bir onay kutusu mu gerekiyor, yoksa disclosure + genel onay yeterli mi).
+3. ~~**Yurt dışı aktarım disclosure'ı**~~ — CV/OpenAI kısmı için eklenen `/privacy#cross-border-transfer` bölümü, özellikle birlikte kaldırılmıştı. **Çözüldü (2026-09-02):** aynı bölüm bu kez `EmailIntegrations`'a özgü olarak yeniden eklendi — Subject/Snippet'in OpenAI'a (ABD) gönderildiği artık isimle disclosure ediliyor, bkz. "Yapıldı" bölümü. Sentry hâlâ isimlendirilmedi — KVKK'nın 2024 değişikliğiyle gelen yurt dışı aktarım rejimi (açık rıza veya yeterlilik kararı/SCC) hangisine dayanacağımız Sentry için hâlâ netleşmedi.
 4. **ToS / Kullanım Şartları** — hiç yok.
 5. **VERBİS kaydı** — muafiyet kapsamına girip girmediğimiz (ölçek/ana faaliyet kriterleri) teyit edilmemiş.
 6. **Çerez Politikası** — yok. `NEXT_LOCALE` ve theme cookie'leri fonksiyonel/zorunlu görünüyor ama yine de disclosure gerekir.
 7. ~~**Gmail API "restricted scope" platform uyumu**~~ — **N/A (2026-08-31):** Gmail OAuth entegrasyonu koddan tamamen kaldırıldı, `gmail.readonly` scope'u artık kullanılmıyor.
-8. **Özel nitelikli veri riski** — CV serbest metin olarak alınıyor, hiç filtrelenmiyor; kullanıcı istemeden sağlık/din/sendika üyeliği gibi özel nitelikli veri girebilir. **Hafif mitigasyon eklendi (2026-09-01):** CV textarea'sının altında ve `/privacy#cross-border-transfer`'de bir uyarı metni var, ama bu bir filtre/engelleme değil — teknik bir çözüm değil, sadece kullanıcı bilgilendirmesi. Avukata bu riskin nasıl yönetileceği (ek uyarı metni yeterli mi, teknik filtreleme gerekir mi) hâlâ sorulmalı.
-9. **Consent versioning** — zaten yukarıda backlog'da not düşülmüş, hâlâ açık. CV/OpenAI rızası bu sorunu kendi kapsamında hafifletiyor (`OpenAiConsentAcceptedAt` her CV kaydında yeniden damgalanıyor, yani metin değiştikçe rıza da tazeleniyor) ama genel `ConsentAcceptedAt` (kayıt onayı) için versioning hâlâ yok.
+8. ~~**Özel nitelikli veri riski (CV serbest metni)**~~ — **N/A (2026-09-02):** CV'yi serbest metin olarak alan özellik (AI Job Matching) tamamen kaldırıldı, bu risk artık yok.
+9. **Consent versioning** — zaten yukarıda backlog'da not düşülmüş, hâlâ açık. (CV/OpenAI rızası kendi kapsamında bunu hafifletiyordu, ama o özellik 2026-09-02'de kaldırıldığı için bu kısmi mitigasyon da artık yok.) Genel `ConsentAcceptedAt` (kayıt onayı) için versioning hâlâ yok.
 
 ### Olumlu / avukatın işini kolaylaştıran noktalar
 
-- E-posta içeriği (subject/snippet) hiç persist edilmiyor — sadece metadata tutuluyor.
+- E-postanın tam gövdesi (body) hiç persist edilmiyor — sadece subject/snippet ve metadata tutuluyor (bkz. yukarıdaki düzeltme notu).
 - PAT'lar hash'li saklanıyor, düz metin yok.
 - Hesap silme + veri export zaten uçtan uca çalışıyor ve test edilmiş.
 - Tüm altyapı AB bölgesinde (`europe-west1`).

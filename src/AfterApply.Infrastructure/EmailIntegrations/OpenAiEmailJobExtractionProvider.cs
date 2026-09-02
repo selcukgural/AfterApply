@@ -2,17 +2,17 @@ using System.ClientModel;
 using System.Text.Json;
 using AfterApply.Application.Common;
 using AfterApply.Application.EmailIntegrations;
-using AfterApply.Infrastructure.Matching;
+using AfterApply.Infrastructure.OpenAi;
 using Microsoft.Extensions.Options;
 using OpenAI.Chat;
 
 namespace AfterApply.Infrastructure.EmailIntegrations;
 
 /// <summary>Real OpenAI implementation of IEmailJobExtractionProvider. Reuses OpenAiOptions (same
-/// API key/model as OpenAiEmailClassificationProvider/OpenAiJobMatchingProvider) and the same
-/// structured-JSON-output pattern. Deliberately separate from classification (single-responsibility
-/// port, same split as RuleBasedEmailClassifier vs EmailApplicationMatcher) even though both are
-/// only ever called back-to-back for the same email in EmailForwardingService.</summary>
+/// API key/model as OpenAiEmailClassificationProvider) and the same structured-JSON-output pattern.
+/// Deliberately separate from classification (single-responsibility port, same split as
+/// RuleBasedEmailClassifier vs EmailApplicationMatcher) even though both are only ever called
+/// back-to-back for the same email in EmailForwardingService.</summary>
 internal sealed class OpenAiEmailJobExtractionProvider(IOptions<OpenAiOptions> options) : IEmailJobExtractionProvider
 {
     private const string SystemPrompt =

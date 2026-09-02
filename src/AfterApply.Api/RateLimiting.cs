@@ -50,18 +50,6 @@ public static class RateLimiting
                 });
             });
 
-            // User-based, tighter than upload: each request is a paid OpenAI call.
-            options.AddPolicy(DependencyInjection.MatchingRateLimitPolicy, httpContext =>
-            {
-                var partitionKey = httpContext.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? "anonymous";
-                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = 5,
-                    Window = TimeSpan.FromMinutes(5),
-                    QueueLimit = 0
-                });
-            });
-
             // Per-inbound-token, not per-IP — the Cloudflare Worker's egress IP is shared
             // infrastructure, not per-user. Guards against a flood (misbehaving sender, retry storm)
             // turning into unbounded LLM-classification cost; each request past the cap is dropped,

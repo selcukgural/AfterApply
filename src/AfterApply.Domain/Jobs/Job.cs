@@ -14,10 +14,11 @@ public sealed class Job : AuditableEntity
 
     /// <summary>A minimal, allow-listed HTML snapshot of Description (only p/br/strong/b/em/i/
     /// ul/ol/li/h1-h6, no attributes) captured by the browser extension for a formatted read-only
-    /// display (spec §11 follow-up). Independent of Description, which stays plain text for the
-    /// AI Job Matching prompt (Sprint 8) — no formatting overhead there. Untrusted content:
-    /// callers must re-sanitize before ever rendering it (see web's DOMPurify usage), the
-    /// extension's own allow-list is not a substitute for that at render time.</summary>
+    /// display (spec §11 follow-up). Independent of Description, which stays plain text (used as
+    /// the JobDescriptionCard fallback, and by the email job-extraction provider, which never
+    /// produces HTML). Untrusted content: callers must re-sanitize before ever rendering it (see
+    /// web's DOMPurify usage), the extension's own allow-list is not a substitute for that at
+    /// render time.</summary>
     public string? DescriptionHtml { get; private set; }
 
     public string? Url { get; private set; }

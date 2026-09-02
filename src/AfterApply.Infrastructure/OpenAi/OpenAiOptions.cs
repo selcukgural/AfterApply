@@ -1,4 +1,4 @@
-namespace AfterApply.Infrastructure.Matching;
+namespace AfterApply.Infrastructure.OpenAi;
 
 public sealed class OpenAiOptions
 {

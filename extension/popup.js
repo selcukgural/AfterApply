@@ -180,11 +180,10 @@ async function scrapeLinkedInJob(jobId) {
   const description = textOf(descriptionBox);
 
   // Allow-listed HTML snapshot for a formatted display (bold/headers/bullet lists, same as the
-  // original listing) — separate from the plain-text `description` above, which stays untouched
-  // for the AI Job Matching prompt. This is a best-effort capture-time filter, NOT a security
-  // boundary on its own: the backend stores it as-is and the frontend re-sanitizes with DOMPurify
-  // before ever rendering it (see DECISIONS.md — untrusted content is untrusted regardless of
-  // which side captured it).
+  // original listing) — separate from the plain-text `description` above. This is a best-effort
+  // capture-time filter, NOT a security boundary on its own: the backend stores it as-is and the
+  // frontend re-sanitizes with DOMPurify before ever rendering it (see DECISIONS.md — untrusted
+  // content is untrusted regardless of which side captured it).
   function sanitizeDescriptionHtml(root) {
     const ALLOWED_TAGS = new Set(["P", "BR", "STRONG", "B", "EM", "I", "UL", "OL", "LI", "H1", "H2", "H3", "H4", "H5", "H6"]);
     const SKIP_TAGS = new Set(["SVG", "BUTTON", "FIGURE", "IMG", "STYLE", "SCRIPT"]);

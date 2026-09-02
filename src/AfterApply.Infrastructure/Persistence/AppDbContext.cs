@@ -3,7 +3,6 @@ using AfterApply.Domain.Companies;
 using AfterApply.Domain.EmailIntegrations;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
-using AfterApply.Domain.Matching;
 using AfterApply.Domain.Notifications;
 using AfterApply.Domain.TrackedJobs;
 using AfterApply.Infrastructure.Identity;
@@ -42,10 +41,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<EmailSuggestion> EmailSuggestions => Set<EmailSuggestion>();
 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
-
-    public DbSet<CandidateProfile> CandidateProfiles => Set<CandidateProfile>();
-
-    public DbSet<JobMatch> JobMatches => Set<JobMatch>();
 
     public DbSet<TrackedJob> TrackedJobs => Set<TrackedJob>();
 

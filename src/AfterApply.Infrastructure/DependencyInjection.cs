@@ -7,7 +7,6 @@ using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
-using AfterApply.Application.Matching;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Application.TrackedJobs;
@@ -18,8 +17,8 @@ using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
-using AfterApply.Infrastructure.Matching;
 using AfterApply.Infrastructure.Metrics;
+using AfterApply.Infrastructure.OpenAi;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using AfterApply.Infrastructure.TrackedJobs;
@@ -43,7 +42,6 @@ public static class DependencyInjection
     public const string CorsPolicyName = "Frontend";
     public const string AuthRateLimitPolicy = "auth-strict";
     public const string UploadRateLimitPolicy = "upload";
-    public const string MatchingRateLimitPolicy = "matching";
     public const string InboundEmailRateLimitPolicy = "inbound-email";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
@@ -85,7 +83,6 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
-        services.Configure<MatchingOptions>(configuration.GetSection("Matching"));
         services.Configure<CompanySearchOptions>(configuration.GetSection("Companies"));
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
@@ -246,8 +243,6 @@ public static class DependencyInjection
         services.AddScoped<IEmailJobExtractionProvider, OpenAiEmailJobExtractionProvider>();
         services.AddScoped<IEmailForwardingService, EmailForwardingService>();
         services.AddSingleton<IJobBoardDomainMatcher, JobBoardDomainMatcher>();
-        services.AddScoped<IJobMatchingProvider, OpenAiJobMatchingProvider>();
-        services.AddScoped<IJobMatchingService, JobMatchingService>();
         services.AddScoped<ICompanyIntelligenceService, CompanyIntelligenceService>();
 
         return services;

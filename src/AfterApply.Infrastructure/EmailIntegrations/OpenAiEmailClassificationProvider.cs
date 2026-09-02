@@ -3,14 +3,13 @@ using System.Text.Json;
 using AfterApply.Application.Common;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Domain.Applications;
-using AfterApply.Infrastructure.Matching;
+using AfterApply.Infrastructure.OpenAi;
 using Microsoft.Extensions.Options;
 using OpenAI.Chat;
 
 namespace AfterApply.Infrastructure.EmailIntegrations;
 
-/// <summary>Real OpenAI implementation of IEmailClassificationProvider. Reuses OpenAiOptions (the
-/// same API key/model as OpenAiJobMatchingProvider — no separate Email-specific key) and the same
+/// <summary>Real OpenAI implementation of IEmailClassificationProvider. Uses the same
 /// structured-JSON-output pattern, so the model's response maps directly onto EmailClassificationResult
 /// without free-form text parsing. Deliberately constrained to a closed status enum + "NoSignal" so
 /// the model can't invent a status the domain doesn't have.</summary>

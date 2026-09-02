@@ -129,7 +129,6 @@
       "todayAnalytics": "Kişisel analitik",
       "todayImport": "CSV / LinkedIn içe aktarma",
       "todayReminders": "Hatırlatıcılar",
-      "todayMatch": "Yapay zeka ile ilan uyumu",
       "todayEmail": "E-posta yönlendirme entegrasyonu",
       "todayExtension": "Tarayıcı eklentisi",
       "futureInsights": "Anonim, toplu işe alım içgörüleri"
@@ -295,24 +294,6 @@
       "timeline": "Zaman Çizelgesi",
       "emptyValue": "—",
       "createdFromEmail": "E-postadan otomatik oluşturuldu",
-      "match": {
-        "title": "AI Eşleştirme",
-        "jobDescriptionLabel": "İş İlanı Açıklaması",
-        "jobDescriptionPlaceholder": "İş ilanının açıklamasını buraya yapıştırın...",
-        "compute": "Eşleştir",
-        "recompute": "Yeniden Hesapla",
-        "computing": "Hesaplanıyor...",
-        "score": "Puan",
-        "strongMatches": "Güçlü Eşleşmeler",
-        "missing": "Eksikler",
-        "recommendation": "Öneri",
-        "recommendationApply": "Başvur",
-        "recommendationConsider": "Değerlendir",
-        "recommendationSkip": "Geç",
-        "profileRequiredError": "Önce profilinizden CV'nizi girmelisiniz.",
-        "setCvLink": "CV'nizi girin",
-        "genericError": "Eşleştirme hesaplanamadı."
-      },
       "jobDescription": {
         "title": "İlan Açıklaması",
         "source": "LinkedIn'den alındı",
@@ -353,20 +334,6 @@
         "openLink": "Onay bağlantısını aç",
         "dismiss": "Onayladım — kapat"
       }
-    },
-    "cv": {
-      "title": "CV / Profil",
-      "description": "AI Eşleştirme özelliğinin bir iş ilanına karşı puanlayabilmesi için CV/beceri bilgilerinizi buraya yapıştırın. Sadece siz görürsünüz.",
-      "placeholder": "CV'nizi veya beceri/deneyim özetinizi buraya yapıştırın...",
-      "save": "Kaydet",
-      "saving": "Kaydediliyor...",
-      "saved": "Kaydedildi.",
-      "loadError": "CV yüklenemedi.",
-      "saveError": "CV kaydedilemedi.",
-      "sensitiveDataWarning": "Lütfen CV'nize sağlık durumu, dini inanç veya sendika üyeliği gibi özel nitelikli kişisel veri eklemeyin.",
-      "consentPrefix": "CV metnimin, eşleştirme puanı hesaplanması amacıyla",
-      "consentLink": "OpenAI'a (ABD merkezli)",
-      "consentSuffix": " gönderilmesini kabul ediyorum."
     },
     "extension": {
       "title": "Tarayıcı Eklentisi",
@@ -422,17 +389,17 @@
       "item1": "Hesap bilgileri: ad, soyad, e-posta adresi, şifre (hash'lenmiş olarak saklanır).",
       "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar.",
       "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
-      "item4": "CV/profil metniniz — yalnızca AI Eşleştirme özelliğini kullanmayı seçer ve Ayarlar'daki onay kutusunu işaretlerseniz.",
+      "item4": "Mail Yönlendirme'yi kurarsanız, yönlendirdiğiniz statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır."
     },
     "crossBorderTransfer": {
       "title": "Yurt dışına veri aktarımı",
-      "intro": "AI Eşleştirme özelliğini kullanmayı seçerseniz, Ayarlar sayfasına yapıştırdığınız CV/profil metni bir uyum puanı hesaplanması amacıyla yurt dışına aktarılır. Bu, özelliği hiç kullanmazsanız gerçekleşmez.",
+      "intro": "Mail Yönlendirme'yi kurarsanız, yönlendirdiğiniz her statü güncellemesi e-postasının konu satırı ve kısa bir özeti, başvurunuz için ne anlama geldiğini tespit etmek amacıyla yurt dışına gönderilir.",
       "recipient": "Alıcı: OpenAI, L.L.C. (Amerika Birleşik Devletleri) — API sağlayıcımız.",
-      "purpose": "Amaç: girdiğiniz iş ilanı açıklamasına karşı CV'nizin uyumunu puanlamak; sonuç sadece size gösterilir.",
-      "legalBasis": "Hukuki sebep: yalnızca Ayarlar sayfasında, genel kayıt onayından bağımsız, ayrı ve spesifik bir onay kutusunu her kaydettiğinizde yeniden işaretlediğinizde gerçekleşir.",
-      "withdraw": "Geri çekme: CV metninizi Ayarlar'dan silmeniz veya hesabınızı silmeniz, bu aktarımı tamamen durdurur.",
-      "sensitiveDataNote": "CV'nize sağlık durumu, dini inanç veya sendika üyeliği gibi özel nitelikli kişisel veri eklememenizi öneririz."
+      "purpose": "Amaç: e-postanın başvuru durumu sinyalini sınıflandırmak, ve henüz takip edilmeyen bir iş için şirket adı/pozisyon bilgisini okumak; bu yalnızca daha basit, yerel kural tabanlı bir kontrol e-postayı zaten tanımadığında çalışır.",
+      "legalBasis": "Hukuki sebep: bu yalnızca Ayarlar'da kendi kurduğunuz, statü güncellemelerini kişisel e-kariyerim adresinize yönlendirmeyi seçtiğiniz e-postalar için gerçekleşir; bu özelliği kullanmadığınız sürece hiçbir şey gönderilmez.",
+      "withdraw": "Geri çekme: kişisel e-kariyerim adresinize mail yönlendirmeyi durdurun (kendi mail sağlayıcınızdaki filtreyi kaldırın) veya hesabınızı silin, bu tamamen durur.",
+      "sensitiveDataNote": "Konu satırı ve özet ayrıca hesabınızda da saklanır (bir öneriyi incelerken sizin görebileceğiniz şekilde) — e-postanın tam içeriği asla."
     },
     "retention": {
       "title": "Saklama süresi",

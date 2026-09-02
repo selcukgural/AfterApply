@@ -657,6 +657,11 @@ dediğinde application oluşturulmalıdır.
 
 # 12. AI Job Matching
 
+> **Ürün kapsamından tamamen kaldırıldı (2026-09-02).** Bu bölümde tarif edilen özellik
+> (Sprint 8'de inşa edilmiş, sonra kullanıcı kararıyla koddan kaldırılmıştır) artık ürün
+> planında yok — bkz. `DECISIONS.md`'nin ilgili girdisi ve `DEVELOPMENT_PLAN.md`'nin Sprint 8
+> bölümü. Aşağıki metin sadece tarihsel referans olarak korunuyor.
+
 Kullanıcının CV/profile bilgileri ile job description karşılaştırılır.
 
 Örnek:

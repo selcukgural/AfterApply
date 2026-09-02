@@ -75,7 +75,6 @@ app.MapAnalyticsEndpoints();
 app.MapImportEndpoints();
 app.MapReminderEndpoints();
 app.MapEmailForwardingEndpoints();
-app.MapMatchingEndpoints();
 app.MapPersonalAccessTokenEndpoints();
 app.MapCompanyIntelligenceEndpoints();
 app.MapCompanyEndpoints();

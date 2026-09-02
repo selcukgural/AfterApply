@@ -2181,6 +2181,94 @@ bir başvuruda "Eşleştir" çalıştır) gerekiyor.
 
 ---
 
+## AI Job Matching (Sprint 8) ürün kapsamından tamamen kaldırıldı (2026-09-02)
+
+**Bağlam:** Özellik 2026-09-01'de granüler rıza + yurt dışı aktarım disclosure'ı eklenerek
+yeniden açılmıştı (bkz. yukarıdaki "AI Job Matching (Sprint 8) yeniden açıldı"). Kullanıcı bu
+kez özelliği geçici olarak gizlemek değil, ürün kapsamından kalıcı olarak çıkarmak istedi — CV
+metnini OpenAI'a göndererek puanlama yapan akış tamamen kaldırıldı. **OpenAI entegrasyonunun
+kendisi kaldırılmadı**: gelen e-postaları sınıflandırıp başvuru durumuna eşleyen ayrı
+`EmailIntegrations` özelliği (`OpenAiEmailClassificationProvider`/`OpenAiEmailJobExtractionProvider`)
+aynen duruyor ve OpenAI'ı kullanmaya devam ediyor — iki özellik sadece aynı `OpenAiOptions`
+(API key/model) config'ini paylaşıyordu, birbirine bağımlı değildi.
+
+**Uygulama:**
+- Backend: `AfterApply.Domain/Application/Infrastructure/Matching` klasörlerinin tamamı
+  (`CandidateProfile`, `JobMatch`, `IJobMatchingProvider`, `IJobMatchingService`,
+  `OpenAiJobMatchingProvider`, `JobMatchingService`, `MatchingOptions`), `MatchingEndpoints`,
+  `MatchingRateLimitPolicy`, ilgili EF Core configuration'lar, `AppDbContext`'teki iki `DbSet`,
+  `AuthService.DeleteAccountAsync`'teki `CandidateProfiles` temizleme adımı, `Matching`
+  appsettings bölümü ve `VALIDATION_MATCHING_CONSENT_REQUIRED` resx anahtarı silindi.
+  `Matching` klasöründe yaşayan ama email classifier'ın da kullandığı `OpenAiOptions`,
+  `AfterApply.Infrastructure.OpenAi` namespace'ine taşınarak korundu (email özelliği bu sınıfı
+  hâlâ `IOptions<OpenAiOptions>` ile inject ediyor).
+- DB: geçmiş migration'lara dokunulmadı (`AddJobMatching`,
+  `AddOpenAiConsentAcceptedAtToCandidateProfile` olduğu gibi duruyor) — yeni bir
+  `RemoveJobMatching` migration'ı `CandidateProfiles`/`JobMatches` tablolarını drop ediyor.
+- Frontend: `JobMatchPanel.tsx`, `lib/api/matching.ts`, Ayarlar'daki "CV / Profile" bölümü
+  (state, handler, JSX), `types/api.ts`'teki `CandidateProfileResponse`/`JobMatchResponse`/
+  `JobMatchRecommendation` silindi. `/privacy` sayfasındaki "Yurt dışına veri aktarımı"
+  bölümü (OpenAI'a özel, sadece CV eşleştirme amaçlı disclosure) ve `dataCollection.item4`
+  kaldırıldı — kalan disclosure metninde artık CV/OpenAI'dan bahsedilmiyor. Landing page
+  roadmap'indeki `todayMatch` ("AI job-fit matching") bullet'ı da kaldırıldı.
+- `postman/openapi/openapi.json` ve `postman/collection.json` `dotnet build` + `npm run
+  generate` ile yeniden üretildi (elle düzenlenmiyorlar, bkz. `generate-collection.js` başlığı).
+- `DEVELOPMENT_PLAN.md`'nin Sprint 8 bölümüne ve `PRIVACY_CHECKLIST.md`'ye (CV/OpenAI'a özgü
+  "Yapıldı" satırları N/A'ya geri alındı, envanter tablosundaki CV satırı ve "Eksik" listesinin
+  #2/#3/#8 CV kısımları tekrar açık işaretlendi) kaldırıldığını belirten notlar eklendi —
+  geçmiş kararlar silinmedi, sadece güncel durum eklendi.
+
+**Kapsam dışı / bilinçli olarak dokunulmadı:** `EmailIntegrations` modülü, paylaşılan
+`OpenAiOptions`/API key, `postman/collection.json`'daki email-classifier ile ilgili kayıtlar.
+
+**Doğrulama:** `dotnet build` (Api + Infrastructure + iki test projesi) hatasız; `npx tsc
+--noEmit`, `npx eslint`, `npm run build` (web) hatasız.
+
+---
+
+## AI Job Matching kaldırmasının artçıları: extension taraması + email/OpenAI disclosure'ı (2026-09-02)
+
+**Bağlam:** Yukarıdaki kaldırma sonrası kullanıcı iki şey istedi: (1) browser extension'da özelliğin
+bir kalıntısı kalmadığından emin olmak, (2) bir önceki turda `PRIVACY_CHECKLIST.md` güncellenirken
+fark edilen bir eksiği ("email sınıflandırmasının OpenAI'a gönderdiği subject/snippet hiç
+disclosure edilmemiş") şimdi ele almak.
+
+**Extension taraması:** Kod tabanında gerçek bir kalıntı yoktu — sadece iki yorum "AI Job Matching"e
+referans veriyordu: `extension/popup.js` (job description'ın plain-text tutulma gerekçesi) ve
+`src/AfterApply.Domain/Jobs/Job.cs`/`Responses.cs` (aynı gerekçe, backend tarafında). Bu ikisi
+düzeltildi. Daha önemlisi: bu tarama sırasında `ApplicationDetailResponse.JobDescription` (plain
+text) alanının artık **hiçbir tüketicisi kalmadığı** ortaya çıktı — tek kullanım yeri, kaldırılan
+`JobMatchPanel`'in textarea'sını pre-fill etmekti (`initialJobDescription` prop'u). Bu alan
+backend (`ApplicationService.ToDetailAsync`, `Responses.cs`) ve frontend (`types/api.ts`) tarafında
+temizlendi; `Job.Description` domain alanının kendisine dokunulmadı (extension capture'ı ve email
+job-extraction provider'ı hâlâ dolduruyor, `DescriptionHtml`'in sibling'i olarak genel amaçlı bir
+alan) — sadece artık kullanılmayan API-response projeksiyonu kaldırıldı.
+
+**Email/OpenAI disclosure'ı:** `/privacy` sayfasına, kaldırılan CV/OpenAI bölümüyle aynı yapıda
+ama `EmailIntegrations`'a özgü içerikle yeni bir "Yurt dışına veri aktarımı" bölümü eklendi (aynı
+`id="cross-border-transfer"` anchor'ı yeniden kullanıldı) — OpenAI, L.L.C. (ABD) isimle anılıyor;
+kapsam sadece forward edilen statü e-postalarının Subject + kısa bir Snippet'i (tam e-posta gövdesi
+asla), ve sadece yerel kural tabanlı sınıflandırıcı ("RuleBasedEmailClassifier") bir eşleşme
+bulamadığında tetiklendiği açıkça belirtildi. `dataCollection`'a bunu kapsayan bir `item4` eklendi.
+**Bilinçli olarak eklenmedi:** CV/OpenAI'daki gibi ayrı bir granüler onay kutusu — bu, Mail
+Forwarding kurulum akışına yeni bir consent adımı eklemeyi gerektiren ayrı bir ürün kararı, sadece
+disclosure istenmişti (bkz. `PRIVACY_CHECKLIST.md` Eksik #2, hâlâ açık).
+
+**Ayrıca düzeltildi — checklist'teki gerçek bir hata:** `PRIVACY_CHECKLIST.md`'nin envanter
+tablosu, `EmailSuggestion.Subject`/`Snippet`'in "DB'ye yazılmadığını, sadece bellekte kullanılıp
+atıldığını" iddia ediyordu. Kod böyle çalışmıyor — `EmailSuggestionConfiguration`
+(`HasMaxLength(500)`/`HasMaxLength(2000)`) bu iki alanı açıkça map'liyor ve `EmailForwardingService`
+her iki `EmailSuggestion.Create`/`CreateForNewJob` çağrısına `request.Subject`/`request.Snippet`'i
+geçiriyor — kullanıcının bir öneriyi incelerken görebilmesi için bilinçli bir tasarım. Sadece
+e-postanın **tam gövdesi (body)** hiç persist edilmiyor; checklist'in "veri minimizasyonu" iddiası
+o kısım için doğruydu, ama subject/snippet için yanlıştı. Envanter tablosu ve "Olumlu noktalar"
+bölümü buna göre düzeltildi.
+
+**Doğrulama:** `dotnet build` (Api + Infrastructure) hatasız; `npx tsc --noEmit`, `npx eslint`,
+`npm run build` (web) hatasız.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

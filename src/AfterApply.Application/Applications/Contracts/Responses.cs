@@ -25,15 +25,9 @@ public sealed record ApplicationDetailResponse(
     string? Notes,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    // Only set when this Application is linked to a Job with a captured description (currently
-    // only the browser extension's "I Applied" flow populates Job.Description — Sprint 9). Lets
-    // the AI Job Matching panel (Sprint 8) pre-fill instead of requiring the user to paste the
-    // job description by hand when it was already captured at creation time.
-    string? JobDescription = null,
-    // Allow-listed HTML for a formatted, read-only display of the same description — untrusted
-    // content, the frontend re-sanitizes with DOMPurify before ever rendering it (see
-    // JobDescriptionCard). Null whenever JobDescription is (no linked Job, or a Job predating
-    // this field).
+    // Allow-listed HTML for a formatted, read-only display of the linked Job's description —
+    // untrusted content, the frontend re-sanitizes with DOMPurify before ever rendering it (see
+    // JobDescriptionCard). Null when there's no linked Job, or the Job predates this field.
     string? JobDescriptionHtml = null);
 
 public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);

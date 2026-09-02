@@ -100,9 +100,6 @@
   <data name="VALIDATION_CONSENT_REQUIRED" xml:space="preserve">
     <value>Gizlilik politikasını kabul etmelisiniz.</value>
   </data>
-  <data name="VALIDATION_MATCHING_CONSENT_REQUIRED" xml:space="preserve">
-    <value>CV'nizin OpenAI'a gönderilmesine rıza göstermelisiniz.</value>
-  </data>
   <data name="VALIDATION_UNSUPPORTED_LANGUAGE" xml:space="preserve">
     <value>Desteklenmeyen dil. "tr" veya "en" kullanın.</value>
   </data>

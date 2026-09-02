@@ -187,6 +187,21 @@ sırayla planlanıyor:
 > CV'si + job description'ına dayanıyor, başka kullanıcı verisine bağımlı
 > değil — dolayısıyla yayın öncesi tam olarak bitirilebilir.
 
+> **Kaldırıldı (2026-09-02):** Bu faz — backend (`Matching` modülü:
+> `CandidateProfile`/`JobMatch` entity'leri, `IJobMatchingProvider`/
+> `OpenAiJobMatchingProvider`, `MatchingEndpoints`, `Matching:Enabled`
+> flag'i), frontend (`JobMatchPanel`, Ayarlar'daki "CV / Profile" bölümü)
+> ve `/privacy` sayfasındaki OpenAI'a özel "Yurt dışına veri aktarımı"
+> disclosure'ı dahil — koddan tamamen kaldırıldı; DB tabloları yeni bir
+> `RemoveJobMatching` migration'ıyla drop edildi. Ürün kararı: kullanıcının
+> CV'sini OpenAI'a göndererek puanlama yapan bu özellik ürün kapsamından
+> tamamen çıkarıldı. **OpenAI entegrasyonu koddan kaldırılmadı** — gelen
+> e-postaları sınıflandırmak için kullanılan ayrı `EmailIntegrations`
+> özelliği (`OpenAiEmailClassificationProvider`/
+> `OpenAiEmailJobExtractionProvider`, paylaşılan `OpenAiOptions`, artık
+> `AfterApply.Infrastructure.OpenAi` altında) olduğu gibi duruyor. Bkz.
+> DECISIONS.md'nin ilgili girdisi.
+
 - Yeni bir profil/CV modülü: kullanıcı CV/skill bilgisini girer (format —
   düz metin mi, dosya upload+parse mı — sprint başında DECISIONS.md'de
   netleştirilecek, OPEN)

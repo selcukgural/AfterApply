@@ -11,6 +11,6 @@ public sealed class EmailForwardingOptions
 
     /// <summary>Shared secret the Cloudflare Worker sends in the X-Webhook-Secret header. Null/empty
     /// means the inbound endpoint is not configured — same "inert until set" pattern as
-    /// OpenAiOptions.</summary>
+    /// AfterApply.Infrastructure.OpenAi.OpenAiOptions.</summary>
     public string? WebhookSecret { get; init; }
 }
