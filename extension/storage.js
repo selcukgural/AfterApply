@@ -33,9 +33,9 @@ export async function saveTheme(theme) {
   await chrome.storage.local.set({ [THEME_KEY]: theme });
 }
 
-// Same shape/rationale as THEME_KEY above, shared across every extension page (popup, options,
-// the email-forwarding guide). Value is "tr" | "en", or absent — absent means "follow
-// navigator.language", same fallback pattern as theme's OS prefers-color-scheme.
+// Same shape/rationale as THEME_KEY above, shared across every extension page (popup, options).
+// Value is "tr" | "en", or absent — absent means "follow navigator.language", same fallback
+// pattern as theme's OS prefers-color-scheme.
 const LANGUAGE_KEY = "afterapply_language";
 
 export async function getLanguage() {
