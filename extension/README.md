@@ -52,22 +52,7 @@ extension page's `fetch()` is only exempt from CORS for origins explicitly liste
 unlisted origin gets blocked the same as an ordinary web page's cross-origin fetch would be (found
 via manual testing — see DECISIONS.md Sprint 9).
 
-## Email forwarding setup guide
-
-`email-forwarding.html`/`.js` (opened from Settings → "Set up Email Forwarding," in its own
-browser tab) is a bilingual (Turkish/English, `i18n.js`) step-by-step guide for forwarding
-status-update emails to the user's personal e-kariyerim address, so they turn into suggestions at
-`/settings/email-suggestions` instead of manual updates. It fetches the address (and any pending
-Gmail forwarding-confirmation code — see `EmailForwardingService.ProcessInboundEmailAsync`'s Gmail
-confirmation-email detection on the backend) from `GET /api/email-forwarding/address` using the
-same stored token as the popup, and shows a "how it works" flow diagram plus mockup "device
-frames" of the relevant Gmail settings screens (`.gmail-mock` classes in `popup.css`) — stylized
-recreations, not real screenshots, since no live Gmail account is automated for this guide (see
-`store-listing/screenshots/README.md`'s "Static mockup screenshots" note). No new manifest
-permissions: it only calls the already-permitted `api.ekariyerim.com` origin and links out to
-Gmail's own settings pages via plain navigation.
-
-## Gmail Scanning (opt-in alternative to email forwarding)
+## Gmail Scanning
 
 `gmail-scan.js` is a declared `content_scripts` entry (matching `https://mail.google.com/*`,
 loaded alongside `local-filter-config.js`) — the extension's only script that isn't click-triggered
@@ -90,9 +75,13 @@ scripts, not ES modules — Chrome MV3 content scripts have no `import`/`export`
 duplicate the small bit of `chrome.storage.local` logic they need rather than importing
 `storage.js`.
 
-Feeds the same backend pipeline the forwarding path does (classify → match →
-confidence-gated auto-apply → suggestion) — see `EmailForwardingService.ProcessExtensionSignalAsync`.
-`EmailProvider` now has two members, `Forwarding` and `Extension`, one per intake path.
+This is now the extension's only email-signal intake path — see
+`EmailForwardingService.ProcessExtensionSignalAsync` (backend route namespace stays
+`/api/email-forwarding` for compatibility with already-installed extension versions; it no longer
+means "forwarding"). The earlier forward-all-inbox-to-us design (`EmailProvider.Forwarding`, a
+step-by-step Gmail-forwarding guide page, and the Cloudflare Email Worker relaying it) was removed
+entirely — see DECISIONS.md — after live testing showed it and Gmail-filter-based alternatives
+couldn't stay both bounded and complete. `EmailProvider` now has a single member, `Extension`.
 
 ## Theming
 
@@ -117,7 +106,5 @@ the checklist.
 - Employment type is not scraped (LinkedIn's job header doesn't expose it directly) — created
   applications default to `FullTime`, the same known limitation as generic CSV import
   (DECISIONS.md Sprint 4).
-- The email-forwarding guide only covers Gmail — no Outlook/other-provider walkthrough (the
-  backend's `EmailProvider.Forwarding` value is provider-agnostic, but the guide's own step-by-step
-  screens are Gmail-specific). Gmail Scanning (see above) is also Gmail-only, by construction — it
-  reads Gmail's own DOM.
+- Gmail Scanning (see above) is Gmail-only, by construction — it reads Gmail's own DOM. No
+  Outlook/other-provider equivalent exists.

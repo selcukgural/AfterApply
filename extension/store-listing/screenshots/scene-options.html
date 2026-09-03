@@ -74,7 +74,7 @@
 
   .options-window {
     position: absolute;
-    top: 280px;
+    top: 250px;
     left: 50%;
     transform: translateX(-50%);
     width: 460px;
@@ -125,6 +125,17 @@
         <label>Access token</label>
         <input type="password" value="aa_pat_demo_token_value" readonly />
         <button class="primary">Save</button>
+
+        <label>Gmail Scanning (beta)</label>
+        <p class="muted">
+          When you open an email in Gmail, this extension reads it in your browser only and, if it
+          looks job-related, sends just the extracted subject/snippet — never the raw email — as a
+          status suggestion. Off by default. Only threads you actually open are read.
+        </p>
+        <label class="checkbox-row">
+          <input type="checkbox" checked readonly tabindex="-1" />
+          <span>Scan opened Gmail emails</span>
+        </label>
       </main>
     </div>
   </div>

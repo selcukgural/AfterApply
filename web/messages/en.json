@@ -129,7 +129,7 @@
       "todayAnalytics": "Personal analytics",
       "todayImport": "CSV / LinkedIn import",
       "todayReminders": "Reminders",
-      "todayEmail": "Email forwarding integration",
+      "todayEmail": "Gmail scanning integration",
       "todayExtension": "Browser extension",
       "futureInsights": "Anonymous, aggregate hiring insights"
     },
@@ -314,7 +314,7 @@
       "notes": "Notes",
       "timeline": "Timeline",
       "emptyValue": "—",
-      "createdFromEmail": "Auto-created from a forwarded email",
+      "createdFromEmail": "Auto-created from email",
       "jobDescription": {
         "title": "Job Description",
         "source": "From LinkedIn",
@@ -341,20 +341,6 @@
       "download": "Download My Data",
       "preparing": "Preparing...",
       "error": "Could not export data."
-    },
-    "emailForwarding": {
-      "title": "Mail Forwarding",
-      "description": "Forward status-update emails to your personal address below to get automatic status suggestions — set up a filter in your own mail provider (Gmail, Outlook, ...) for the senders you want. No account access is granted to us.",
-      "addressLabel": "Your personal address:",
-      "copy": "Copy",
-      "copied": "Copied",
-      "loadError": "Could not load your forwarding address.",
-      "gmailConfirmation": {
-        "title": "Gmail sent a confirmation code",
-        "help": "Paste this code into the confirmation box Gmail showed when you added this address, or open the confirmation link directly.",
-        "openLink": "Open confirmation link",
-        "dismiss": "I've confirmed it — dismiss"
-      }
     },
     "extension": {
       "title": "Browser Extension",
@@ -434,16 +420,16 @@
       "item1": "Account information: first name, last name, email address, password (stored hashed).",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
-      "item4": "If you set up Mail Forwarding, or turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. With Gmail Scanning, this content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
+      "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "This data is used solely to provide you with application tracking and personal analytics features."
     },
     "crossBorderTransfer": {
       "title": "Cross-border data transfer",
-      "intro": "If you set up Mail Forwarding, or turn on Gmail Scanning, the subject line and a short snippet of each detected status-update email is sent abroad to determine what it means for your application.",
+      "intro": "If you turn on Gmail Scanning, the subject line and a short snippet of each detected status-update email is sent abroad to determine what it means for your application.",
       "recipient": "Recipient: OpenAI, L.L.C. (United States) — our API provider.",
       "purpose": "Purpose: to classify the email's application-status signal, and — for a job not yet tracked — to read off a company name and job title; this only runs when a simpler, local rule-based check doesn't already recognize the email.",
-      "legalBasis": "Legal basis: this only happens for Mail Forwarding you set up yourself in Settings, or for Gmail Scanning you turn on yourself in the browser extension; nothing is sent unless you use one of these features.",
-      "withdraw": "Withdrawal: for Mail Forwarding, stop forwarding mail to your personal e-kariyerim address (remove the filter in your own mail provider); for Gmail Scanning, turn it off in the browser extension's Settings page. Or delete your account, to stop this entirely.",
+      "legalBasis": "Legal basis: this only happens for Gmail Scanning you turn on yourself in the browser extension; nothing is sent unless you use this feature.",
+      "withdraw": "Withdrawal: turn off Gmail Scanning in the browser extension's Settings page. Or delete your account, to stop this entirely.",
       "sensitiveDataNote": "The subject and snippet are also stored on your account (visible to you when reviewing a suggestion) — never the full email body."
     },
     "retention": {
@@ -616,7 +602,7 @@
         },
         "step4": {
           "title": "Keep the status current",
-          "body": "Change the status yourself, or forward your application emails to get automatic suggestions."
+          "body": "Change the status yourself, or turn on Gmail Scanning in the browser extension to get automatic suggestions."
         },
         "step5": {
           "title": "See your progress on the dashboard",
@@ -642,7 +628,7 @@
         },
         "suggestions": {
           "title": "Suggestions",
-          "description": "Automatic status suggestions from forwarded emails."
+          "description": "Automatic status suggestions from Gmail Scanning."
         },
         "import": {
           "title": "Import",
@@ -650,7 +636,7 @@
         },
         "settings": {
           "title": "Settings",
-          "description": "Data export, extension token, email forwarding, deleting your account."
+          "description": "Data export, extension token, deleting your account."
         },
         "chromeExtension": {
           "title": "Chrome Extension",
@@ -674,7 +660,7 @@
         },
         "step2": {
           "title": "Choose an email and password",
-          "body": "These become your login credentials; the email also identifies the account you'll forward application emails to."
+          "body": "These become your login credentials."
         },
         "step3": {
           "title": "Accept the Privacy Policy",
@@ -786,7 +772,7 @@
       },
       "detail": {
         "title": "Application detail",
-        "body": "Opening an application shows its status badge, location, employment type, applied date, job URL (if any) and notes, an event Timeline, and (if available) the job description. Applications created automatically via email forwarding show a \"Created from Email\" badge."
+        "body": "Opening an application shows its status badge, location, employment type, applied date, job URL (if any) and notes, an event Timeline, and (if available) the job description. Applications created automatically via Gmail Scanning show a \"Created from Email\" badge."
       },
       "edit": {
         "title": "Editing",
@@ -826,10 +812,10 @@
     "suggestions": {
       "eyebrow": "Suggestions",
       "title": "Automatic status suggestions from your emails",
-      "intro": "Once you forward your application emails to e-kariyerim (see Settings → Email Forwarding), the system reads them and offers status suggestions — so you don't have to process every update by hand.",
+      "intro": "Once you turn on Gmail Scanning in the browser extension (see the Chrome Extension page), the system reads status-update emails you open and offers status suggestions — so you don't have to process every update by hand.",
       "how": {
         "title": "How a suggestion appears",
-        "body": "Once a forwarded email is processed, a card appears on the Suggestions page with the company, job title, received date, a confidence percentage, and a suggested status (if any). A suggestion that doesn't match a known application yet is marked with a \"New Job\" badge; if no clear status could be inferred, the card shows \"Still Pending\" instead."
+        "body": "Once a scanned email is processed, a card appears on the Suggestions page with the company, job title, received date, a confidence percentage, and a suggested status (if any). A suggestion that doesn't match a known application yet is marked with a \"New Job\" badge; if no clear status could be inferred, the card shows \"Still Pending\" instead."
       },
       "actions": {
         "title": "Confirm or dismiss a suggestion",
@@ -882,7 +868,7 @@
     "settings": {
       "eyebrow": "Settings",
       "title": "Account Settings",
-      "intro": "From Settings you can export your data, generate an access token for the Chrome extension, manage your email forwarding, and delete your account. Theme and language are changed from the switchers in the top navigation, not from Settings.",
+      "intro": "From Settings you can export your data, generate an access token for the Chrome extension, and delete your account. Theme and language are changed from the switchers in the top navigation, not from Settings.",
       "export": {
         "title": "Export My Data",
         "body": "Download all of your application, import, and reminder data as a single JSON file."
@@ -908,14 +894,6 @@
         "calloutToken": {
           "title": "This token grants full access to your account",
           "body": "An access token gives full account access, exactly as if you'd logged in with your email and password. Only paste it into your own browser extension install, never share it — if you suspect it's been exposed, revoke it immediately."
-        }
-      },
-      "emailForwarding": {
-        "title": "Email Forwarding",
-        "body": "Settings shows you a personal forwarding address. Set up a filter with your own email provider (Gmail, Outlook, ...) to forward application-related senders to this address, and e-kariyerim will automatically extract status suggestions from those emails. Forwarding email here grants no access to your account.",
-        "calloutGmailOnlyGuide": {
-          "title": "The step-by-step setup guide currently covers Gmail only",
-          "body": "The Chrome extension's \"Set up Email Forwarding\" guide walks through Gmail's screens specifically. If you use a different provider, you can set up the same kind of forwarding filter using your own provider's settings — the idea is the same."
         }
       },
       "delete": {
@@ -999,10 +977,6 @@
       "calloutDedupe": {
         "title": "Clicking the same job again is safe",
         "body": "If you click \"I Applied\" again on the same job posting, it won't create a duplicate — the system finds your existing application by the job's URL and returns that instead."
-      },
-      "emailForwardingGuide": {
-        "title": "Email forwarding guide",
-        "body": "The \"Set up Email Forwarding\" link in the extension's Settings opens a step-by-step guide (currently Gmail-specific) for forwarding your application emails to e-kariyerim."
       }
     },
     "faq": {
@@ -1021,8 +995,8 @@
         "answer": "Nothing gets submitted automatically — every field is editable before you click \"I Applied\", the popup just gives you a starting point."
       },
       "q4": {
-        "question": "Does email forwarding only work with Gmail?",
-        "answer": "The forwarding address itself works with any email provider (Gmail, Outlook, ...). But the extension's step-by-step setup guide currently only walks through Gmail's screens — you can set up the same kind of forwarding filter yourself with another provider."
+        "question": "Does Gmail Scanning read my whole inbox?",
+        "answer": "No. It's off by default, and once turned on it only reads an email you personally open in Gmail — never your inbox list, never a message you didn't open. The check runs on your device; only a short summary of an email that looks job-application-related is ever sent to e-kariyerim."
       },
       "q5": {
         "question": "Can I import a file other than my LinkedIn export (e.g. Excel/CSV)?",

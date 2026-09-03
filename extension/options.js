@@ -5,7 +5,6 @@ import { t, setUpLanguageToggle } from "./i18n.js";
 const apiBaseUrlInput = document.getElementById("apiBaseUrl");
 const tokenInput = document.getElementById("token");
 const statusEl = document.getElementById("status");
-const openEmailForwardingButton = document.getElementById("openEmailForwarding");
 const gmailScanEnabledInput = document.getElementById("gmailScanEnabled");
 
 let currentLang = "en";
@@ -20,9 +19,6 @@ function applyLanguage(lang) {
   document.getElementById("apiBaseUrlLabel").textContent = t(lang, "options.apiBaseUrlLabel");
   document.getElementById("tokenLabel").textContent = t(lang, "options.tokenLabel");
   document.getElementById("save").textContent = t(lang, "options.save");
-  document.getElementById("forwardingLabel").textContent = t(lang, "options.forwardingLabel");
-  document.getElementById("forwardingHelp").textContent = t(lang, "options.forwardingHelp");
-  openEmailForwardingButton.textContent = t(lang, "options.setUpForwarding");
   document.getElementById("gmailScanLabel").textContent = t(lang, "options.gmailScanLabel");
   document.getElementById("gmailScanHelp").textContent = t(lang, "options.gmailScanHelp");
   document.getElementById("gmailScanToggle").textContent = t(lang, "options.gmailScanToggle");
@@ -40,13 +36,8 @@ async function init() {
   apiBaseUrlInput.value = settings.apiBaseUrl;
   tokenInput.value = settings.token;
 
-  // The guide reads the token itself once opened — gating the button just avoids sending someone
-  // straight to a "set up your token first" dead end.
-  openEmailForwardingButton.disabled = !settings.token;
-
-  // Same gating reason as the forwarding button — scanning without a token has nowhere to send a
-  // signal. gmail-scan.js independently re-checks the token itself before ever submitting, this is
-  // just UI-level guidance.
+  // Scanning without a token has nowhere to send a signal. gmail-scan.js independently re-checks
+  // the token itself before ever submitting, this is just UI-level guidance.
   gmailScanEnabledInput.checked = await getGmailScanEnabled();
   gmailScanEnabledInput.disabled = !settings.token;
 }
@@ -57,7 +48,6 @@ document.getElementById("save").addEventListener("click", async () => {
     apiBaseUrl: apiBaseUrlInput.value.trim().replace(/\/+$/, ""),
     token,
   });
-  openEmailForwardingButton.disabled = !token;
   gmailScanEnabledInput.disabled = !token;
   statusEl.dataset.i18nKey = "options.saved";
   statusEl.textContent = t(currentLang, "options.saved");
@@ -66,10 +56,6 @@ document.getElementById("save").addEventListener("click", async () => {
     statusEl.hidden = true;
     delete statusEl.dataset.i18nKey;
   }, 2000);
-});
-
-openEmailForwardingButton.addEventListener("click", () => {
-  window.open(chrome.runtime.getURL("email-forwarding.html"), "_blank");
 });
 
 gmailScanEnabledInput.addEventListener("change", async () => {

@@ -8,12 +8,11 @@ the field has a character limit) — copy them as text since the field doesn't a
 
 ```
 This extension helps a signed-in e-kariyerim user get their job applications into their own
-e-kariyerim account: with one click while viewing a LinkedIn or kariyer.net job posting; by
-walking them through forwarding relevant emails (interview invites, rejections, status updates)
-to a personal e-kariyerim address; or, if they opt in, by locally checking an email they open in
-Gmail and sending only a short extracted summary when it looks job-related. All three are the same
-single purpose — getting the user's own application activity into their own account — via three
-entry points, the last two both alternative ways to capture status updates that arrive by email.
+e-kariyerim account: with one click while viewing a LinkedIn or kariyer.net job posting; or, if
+they opt in, by locally checking an email they open in Gmail and sending only a short extracted
+summary when it looks job-related. Both are the same single purpose — getting the user's own
+application activity into their own account — via two entry points, the second capturing status
+updates that arrive by email.
 ```
 
 ## Permission justifications
@@ -68,14 +67,11 @@ origin)**
 The extension submits the tracked application (title, company, location, job URL, and the scraped
 description) to the user's own e-kariyerim account at this origin, authenticated with their
 personal access token, and looks up existing company names for the autocomplete field. The same
-origin is also used by the email-forwarding setup guide to fetch and display the user's personal
-forwarding address and any pending Gmail confirmation code, and — only when Gmail Scanning is
-turned on — by gmail-scan.js to submit an extracted email summary for a message that scored as
-job-related, and by local-filter-config.js to fetch the (non-personal) keyword/domain table that
-scoring uses, so it can be tuned without a new extension release. All of it is still just the
-user's own account, same token. No other network destination is contacted; the guide's links to
-Gmail's own settings pages are plain outbound navigation, not a network request this extension
-makes, so they need no host_permissions entry.
+origin is also used — only when Gmail Scanning is turned on — by gmail-scan.js to submit an
+extracted email summary for a message that scored as job-related, and by local-filter-config.js to
+fetch the (non-personal) keyword/domain table that scoring uses, so it can be tuned without a new
+extension release. All of it is still just the user's own account, same token. No other network
+destination is contacted.
 ```
 
 ## Data usage disclosure (the form's checkbox section)

@@ -129,7 +129,7 @@
       "todayAnalytics": "Kişisel analitik",
       "todayImport": "CSV / LinkedIn içe aktarma",
       "todayReminders": "Hatırlatıcılar",
-      "todayEmail": "E-posta yönlendirme entegrasyonu",
+      "todayEmail": "Gmail taraması entegrasyonu",
       "todayExtension": "Tarayıcı eklentisi",
       "futureInsights": "Anonim, toplu işe alım içgörüleri"
     },
@@ -342,20 +342,6 @@
       "preparing": "Hazırlanıyor...",
       "error": "Veriler dışa aktarılamadı."
     },
-    "emailForwarding": {
-      "title": "Mail Yönlendirme",
-      "description": "Otomatik statü önerileri almak için başvuru maillerinizi aşağıdaki kişisel adresinize yönlendirin — kendi mail sağlayıcınızda (Gmail, Outlook, ...) istediğiniz gönderenler için bir filtre kurun. Hesabınıza hiçbir erişim verilmez.",
-      "addressLabel": "Kişisel adresiniz:",
-      "copy": "Kopyala",
-      "copied": "Kopyalandı",
-      "loadError": "Yönlendirme adresiniz yüklenemedi.",
-      "gmailConfirmation": {
-        "title": "Gmail bir onay kodu gönderdi",
-        "help": "Bu kodu, bu adresi eklerken Gmail'in gösterdiği onay kutusuna yapıştırın, ya da onay bağlantısını doğrudan açın.",
-        "openLink": "Onay bağlantısını aç",
-        "dismiss": "Onayladım — kapat"
-      }
-    },
     "extension": {
       "title": "Tarayıcı Eklentisi",
       "description": "LinkedIn veya kariyer.net ilan sayfalarında \"I Applied\" ile başvuru oluşturmak için bir erişim anahtarı üretin ve eklentinin ayarlarına yapıştırın. Bu anahtar hesabınıza tam erişim sağlar — sadece kendi tarayıcı eklentinize verin.",
@@ -434,16 +420,16 @@
       "item1": "Hesap bilgileri: ad, soyad, e-posta adresi, şifre (hash'lenmiş olarak saklanır).",
       "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar.",
       "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
-      "item4": "Mail Yönlendirme'yi kurarsanız ya da tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Gmail Taraması'nda bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
+      "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır."
     },
     "crossBorderTransfer": {
       "title": "Yurt dışına veri aktarımı",
-      "intro": "Mail Yönlendirme'yi kurarsanız ya da Gmail Taraması'nı açarsanız, tespit edilen her statü güncellemesi e-postasının konu satırı ve kısa bir özeti, başvurunuz için ne anlama geldiğini tespit etmek amacıyla yurt dışına gönderilir.",
+      "intro": "Gmail Taraması'nı açarsanız, tespit edilen her statü güncellemesi e-postasının konu satırı ve kısa bir özeti, başvurunuz için ne anlama geldiğini tespit etmek amacıyla yurt dışına gönderilir.",
       "recipient": "Alıcı: OpenAI, L.L.C. (Amerika Birleşik Devletleri) — API sağlayıcımız.",
       "purpose": "Amaç: e-postanın başvuru durumu sinyalini sınıflandırmak, ve henüz takip edilmeyen bir iş için şirket adı/pozisyon bilgisini okumak; bu yalnızca daha basit, yerel kural tabanlı bir kontrol e-postayı zaten tanımadığında çalışır.",
-      "legalBasis": "Hukuki sebep: bu yalnızca Ayarlar'da kendi kurduğunuz Mail Yönlendirme için, ya da tarayıcı eklentisinde kendi açtığınız Gmail Taraması özelliği için gerçekleşir; bu özelliklerden hiçbirini kullanmadığınız sürece hiçbir şey gönderilmez.",
-      "withdraw": "Geri çekme: Mail Yönlendirme için kişisel e-kariyerim adresinize yönlendirmeyi durdurun (kendi mail sağlayıcınızdaki filtreyi kaldırın); Gmail Taraması için tarayıcı eklentisinin Ayarlar sayfasından özelliği kapatın. Ya da hesabınızı silin, bu tamamen durur.",
+      "legalBasis": "Hukuki sebep: bu yalnızca tarayıcı eklentisinde kendi açtığınız Gmail Taraması özelliği için gerçekleşir; bu özelliği kullanmadığınız sürece hiçbir şey gönderilmez.",
+      "withdraw": "Geri çekme: Gmail Taraması için tarayıcı eklentisinin Ayarlar sayfasından özelliği kapatın. Ya da hesabınızı silin, bu tamamen durur.",
       "sensitiveDataNote": "Konu satırı ve özet ayrıca hesabınızda da saklanır (bir öneriyi incelerken sizin görebileceğiniz şekilde) — e-postanın tam içeriği asla."
     },
     "retention": {
@@ -616,7 +602,7 @@
         },
         "step4": {
           "title": "Durumu güncel tutun",
-          "body": "Durumu elle değiştirin ya da başvuru e-postalarınızı yönlendirerek otomatik öneriler alın."
+          "body": "Durumu elle değiştirin ya da tarayıcı eklentisinde Gmail Taraması'nı açarak otomatik öneriler alın."
         },
         "step5": {
           "title": "İlerlemenizi panelde görün",
@@ -642,7 +628,7 @@
         },
         "suggestions": {
           "title": "Öneriler",
-          "description": "Yönlendirilen e-postalardan otomatik durum önerileri."
+          "description": "Gmail Taraması'ndan otomatik durum önerileri."
         },
         "import": {
           "title": "İçe Aktarma",
@@ -650,7 +636,7 @@
         },
         "settings": {
           "title": "Ayarlar",
-          "description": "Veri dışa aktarma, eklenti anahtarı, mail yönlendirme, hesap silme."
+          "description": "Veri dışa aktarma, eklenti anahtarı, hesap silme."
         },
         "chromeExtension": {
           "title": "Chrome Eklentisi",
@@ -674,7 +660,7 @@
         },
         "step2": {
           "title": "E-posta ve şifre belirleyin",
-          "body": "Giriş bilgileriniz bunlar olacak; e-posta aynı zamanda başvuru e-postalarınızı yönlendireceğiniz hesabı da tanımlar."
+          "body": "Giriş bilgileriniz bunlar olacak."
         },
         "step3": {
           "title": "Gizlilik Politikası'nı onaylayın",
@@ -786,7 +772,7 @@
       },
       "detail": {
         "title": "Başvuru detayı",
-        "body": "Bir başvuruyu açtığınızda; durum rozetini, konumu, istihdam türünü, başvuru tarihini, varsa ilan linkini ve notlarınızı, bir olay Zaman Çizelgesi'ni ve (varsa) iş tanımını görürsünüz. E-posta yönlendirmeyle otomatik oluşan başvurularda \"Created from Email\" rozeti belirir."
+        "body": "Bir başvuruyu açtığınızda; durum rozetini, konumu, istihdam türünü, başvuru tarihini, varsa ilan linkini ve notlarınızı, bir olay Zaman Çizelgesi'ni ve (varsa) iş tanımını görürsünüz. Gmail Taraması'yla otomatik oluşan başvurularda \"Created from Email\" rozeti belirir."
       },
       "edit": {
         "title": "Düzenleme",
@@ -826,10 +812,10 @@
     "suggestions": {
       "eyebrow": "Öneriler",
       "title": "E-postalarınızdan otomatik durum önerileri",
-      "intro": "Başvuru e-postalarınızı e-kariyerim'e yönlendirdiğinizde (bkz. Ayarlar → Mail Yönlendirme), sistem bu e-postaları okuyup size durum önerileri sunar — böylece her güncellemeyi elle işlemek zorunda kalmazsınız.",
+      "intro": "Tarayıcı eklentisinde Gmail Taraması'nı açtığınızda (bkz. Chrome Eklentisi sayfası), sistem açtığınız statü güncellemesi e-postalarını okuyup size durum önerileri sunar — böylece her güncellemeyi elle işlemek zorunda kalmazsınız.",
       "how": {
         "title": "Bir öneri nasıl oluşur?",
-        "body": "Yönlendirilen bir e-posta işlendiğinde, Öneriler sayfasında şirket, pozisyon, alınma tarihi, bir güven yüzdesi ve önerilen durum (varsa) ile bir kart belirir. Öneri henüz bilinen bir başvuruyla eşleşmiyorsa \"New Job\" rozetiyle işaretlenir; net bir durum çıkarılamadıysa kart \"Still Pending\" olarak görünür."
+        "body": "Taranan bir e-posta işlendiğinde, Öneriler sayfasında şirket, pozisyon, alınma tarihi, bir güven yüzdesi ve önerilen durum (varsa) ile bir kart belirir. Öneri henüz bilinen bir başvuruyla eşleşmiyorsa \"New Job\" rozetiyle işaretlenir; net bir durum çıkarılamadıysa kart \"Still Pending\" olarak görünür."
       },
       "actions": {
         "title": "Bir öneriyi onaylayın ya da reddedin",
@@ -882,7 +868,7 @@
     "settings": {
       "eyebrow": "Ayarlar",
       "title": "Hesap Ayarları",
-      "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, Chrome eklentisi için erişim anahtarı üretebilir, mail yönlendirmenizi yönetebilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
+      "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, Chrome eklentisi için erişim anahtarı üretebilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "export": {
         "title": "Verilerimi Dışa Aktar",
         "body": "Tüm başvuru, içe aktarma ve hatırlatma verilerinizi tek bir JSON dosyası olarak indirin."
@@ -908,14 +894,6 @@
         "calloutToken": {
           "title": "Bu anahtar hesabınıza tam erişim verir",
           "body": "Bir erişim anahtarı, tıpkı e-postanız ve şifrenizle giriş yapmış gibi hesabınıza tam erişim sağlar. Sadece kendi tarayıcı eklentinize yapıştırın, kimseyle paylaşmayın; şüpheleniyorsanız \"İptal Et\" ile anında geçersiz kılabilirsiniz."
-        }
-      },
-      "emailForwarding": {
-        "title": "Mail Yönlendirme",
-        "body": "Ayarlar'da size özel bir yönlendirme adresi gösterilir. Kendi mail sağlayıcınızda (Gmail, Outlook, ...) başvurularınızla ilgili gönderenler için bu adrese yönlendiren bir filtre kurarsanız, e-kariyerim bu e-postalardan otomatik durum önerileri çıkarır. Bu adrese e-posta yönlendirmek, hesabınıza hiçbir erişim vermez.",
-        "calloutGmailOnlyGuide": {
-          "title": "Adım adım kurulum rehberi şu an sadece Gmail için",
-          "body": "Chrome eklentisinin \"Set up Email Forwarding\" rehberi ekran ekran sadece Gmail'i gösterir. Başka bir sağlayıcı kullanıyorsanız, kendi sağlayıcınızın filtre/yönlendirme ayarlarından yukarıdaki adrese yönlendirme kurabilirsiniz — mantık aynıdır."
         }
       },
       "delete": {
@@ -999,10 +977,6 @@
       "calloutDedupe": {
         "title": "Aynı ilana tekrar tıklamak güvenlidir",
         "body": "Aynı ilan sayfasında \"I Applied\"a bir daha tıklarsanız, tekrar bir kayıt oluşturulmaz — sistem ilan linkine göre mevcut başvurunuzu bulur ve onu döndürür."
-      },
-      "emailForwardingGuide": {
-        "title": "Mail yönlendirme rehberi",
-        "body": "Eklentinin Ayarlar'ındaki \"Set up Email Forwarding\" bağlantısı, başvuru e-postalarınızı e-kariyerim'e yönlendirmeniz için adım adım (şu an için Gmail'e özel) bir rehber açar."
       }
     },
     "faq": {
@@ -1021,8 +995,8 @@
         "answer": "Hiçbir şey otomatik olarak yanlış gönderilmez — \"I Applied\"a tıklamadan önce tüm alanlar düzenlenebilir, popup sadece bir başlangıç noktası sunar."
       },
       "q4": {
-        "question": "Mail yönlendirme sadece Gmail için mi çalışır?",
-        "answer": "Yönlendirme adresinin kendisi herhangi bir mail sağlayıcıdan (Gmail, Outlook, ...) kullanılabilir. Ancak eklentinin ekran ekran gösteren kurulum rehberi şu an sadece Gmail'i kapsıyor; başka bir sağlayıcıda aynı mantıkla kendiniz bir yönlendirme filtresi kurabilirsiniz."
+        "question": "Gmail Taraması tüm gelen kutumu mu okuyor?",
+        "answer": "Hayır. Varsayılan olarak kapalıdır ve açıldığında yalnızca Gmail'de kendinizin açtığı bir e-postayı okur — gelen kutusu listesini asla, açmadığınız bir maili asla. Kontrol cihazınızda çalışır; yalnızca iş başvurusuyla ilgili göründüğünde kısa bir özet e-kariyerim'e gönderilir."
       },
       "q5": {
         "question": "LinkedIn geçmişimi dışında bir dosyayı (ör. Excel/CSV) içe aktarabilir miyim?",

@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.EmailIntegrations;
@@ -16,89 +15,17 @@ using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.EmailIntegrations;
 
-internal sealed partial class EmailForwardingService(
+internal sealed class EmailForwardingService(
     AppDbContext dbContext,
     IEmailClassificationProvider emailClassificationProvider,
     IEmailJobExtractionProvider emailJobExtractionProvider,
     IEmailRejectionReasonExtractionProvider emailRejectionReasonExtractionProvider,
     IApplicationService applicationService,
     IJobBoardDomainMatcher jobBoardDomainMatcher,
-    IOptions<EmailForwardingOptions> options,
     IOptions<EmailIntelligenceOptions> intelligenceOptions,
     IOptions<EmailAutoApprovalOptions> autoApprovalOptions,
     ILogger<EmailForwardingService> logger) : IEmailForwardingService
 {
-    private const string TokenChars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    private const int TokenLength = 12;
-
-    // Gmail's real sender/subject for its own forwarding-confirmation email — narrow allowlist
-    // (both must match) so this can never misfire on a real recruiter email. Verified against a
-    // live confirmation email (2026-08-31): From is exactly forwarding-noreply@google.com; Subject
-    // is literally "(Gmail Forwarding Confirmation - Receive Mail from <address>" — Gmail's own
-    // subject starts with an unmatched "(" (confirmed via base64-dumped wrangler tail output, not a
-    // logging/encoding artifact), so this checks Contains rather than StartsWith.
-    private const string GmailConfirmationSenderEmail = "forwarding-noreply@google.com";
-    private const string GmailConfirmationSubjectMarker = "Gmail Forwarding Confirmation";
-    
-    private static readonly Regex GmailConfirmationCodeRegex = GmailConfirmationCode_Regex();
-    private static readonly Regex GmailConfirmationLinkRegex = GmailConfirmationLink_Regex();
-
-    public async Task<InboundAddressResponse> GetOrCreateInboundAddressAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        var existing = await dbContext.EmailConnections
-            .Where(c => c.UserId == userId && c.Provider == EmailProvider.Forwarding)
-            .Select(c => new
-            {
-                c.ProviderAccountEmail, c.GmailConfirmationCode, c.GmailConfirmationLink, c.GmailConfirmationReceivedAt
-            })
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (existing is not null)
-        {
-            return new InboundAddressResponse(existing.ProviderAccountEmail, existing.GmailConfirmationCode,
-                existing.GmailConfirmationLink, existing.GmailConfirmationReceivedAt);
-        }
-
-        var domain = options.Value.Domain;
-        var token = RandomNumberGenerator.GetString(TokenChars, TokenLength);
-        var address = $"{token}@{domain}";
-        var now = DateTimeOffset.UtcNow;
-
-        dbContext.EmailConnections.Add(EmailConnection.CreateForwarding(userId, token, address, now));
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return new InboundAddressResponse(address, GmailConfirmationCode: null, GmailConfirmationLink: null,
-            GmailConfirmationReceivedAt: null);
-    }
-
-    public async Task ProcessInboundEmailAsync(InboundEmailRequest request, CancellationToken cancellationToken)
-    {
-        var token = ExtractLocalPart(request.ToAddress);
-        var connection = token is null
-            ? null
-            : await dbContext.EmailConnections
-                .FirstOrDefaultAsync(c => c.Provider == EmailProvider.Forwarding && c.InboundToken == token, cancellationToken);
-
-        if (connection is null)
-        {
-            logger.LogWarning("Inbound email received for an unrecognized forwarding address.");
-            return;
-        }
-
-        if (IsGmailForwardingConfirmation(request.FromEmail, request.Subject))
-        {
-            connection.SetGmailConfirmation(
-                ExtractGmailConfirmationCode(request.Snippet),
-                ExtractGmailConfirmationLink(request.Snippet),
-                request.ReceivedAt);
-            await dbContext.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
-        await ProcessSignalAsync(connection, request.FromEmail, request.FromDisplayName, request.Subject,
-            request.Snippet, request.ReceivedAt, request.LinkDomains, ComputeIdempotencyKey(request), cancellationToken);
-    }
-
     public async Task ProcessExtensionSignalAsync(Guid userId, ExtensionEmailSignalRequest request, CancellationToken cancellationToken)
     {
         var connection = await GetOrCreateExtensionConnectionAsync(userId, cancellationToken);
@@ -124,10 +51,8 @@ internal sealed partial class EmailForwardingService(
         return connection;
     }
 
-    // Shared by both intake paths (Cloudflare-forwarded mail and the Gmail content script's
-    // client-side-extracted signal) once each has resolved its own EmailConnection — everything from
-    // here on (idempotency, matching, classification, auto-apply, persistence) is intake-shape
-    // agnostic, which is the entire point of this split.
+    // Runs once ProcessExtensionSignalAsync has resolved the user's EmailConnection: idempotency,
+    // matching, classification, auto-apply, and persistence.
     private async Task ProcessSignalAsync(
         EmailConnection connection, string fromEmail, string fromDisplayName, string subject, string snippet,
         DateTimeOffset receivedAt, IReadOnlyList<string> linkDomains, string providerMessageId,
@@ -143,9 +68,8 @@ internal sealed partial class EmailForwardingService(
 
         var candidates = await BuildCandidatesAsync(connection.UserId, cancellationToken);
 
-        // The original sender is the company; there's no "self-sent" concept here since the
-        // forwarding hop (or the user opening the thread themselves) already happened before this
-        // ever reached us.
+        // The original sender is the company; there's no "self-sent" concept here since the user
+        // opening the thread themselves already happened before this ever reached us.
         var matchResult = EmailApplicationMatcher.Match(
             fromEmail, fromDisplayName, recipientEmail: "", ownAccountEmail: "", subject, candidates);
         var applicationId = matchResult?.ApplicationId;
@@ -240,8 +164,8 @@ internal sealed partial class EmailForwardingService(
             RejectionReasonCategory: row.s.RejectionReasonCategory, RejectionReasonDetail: row.s.RejectionReasonDetail))
             .ToList();
 
-        // "New job" suggestions (ApplicationId is null) always come from this Forwarding path, so
-        // Subject/Snippet/Extracted* are always already persisted.
+        // "New job" suggestions (ApplicationId is null) always have Subject/Snippet/Extracted*
+        // already persisted.
         var newJobRows = await dbContext.EmailSuggestions
             .Where(s => s.UserId == userId && s.Status == EmailSuggestionStatus.Pending && s.ApplicationId == null)
             .AsNoTracking()
@@ -270,7 +194,7 @@ internal sealed partial class EmailForwardingService(
         {
             // "New job" suggestion: the Application (and its Company, via CreateAsync's own
             // ICompanyResolver call) doesn't exist yet — confirming creates it now, tagged
-            // Source.Email so the user can see it was registered from a forwarded email.
+            // Source.Email so the user can see it was registered from email.
             var created = await applicationService.CreateAsync(userId, new CreateApplicationRequest(
                 suggestion.ExtractedCompanyName!, suggestion.ExtractedJobTitle!, JobUrl: null,
                 suggestion.ExtractedLocation, EmploymentType.FullTime, suggestion.EmailReceivedAt,
@@ -364,21 +288,6 @@ internal sealed partial class EmailForwardingService(
         }
 
         suggestion.Dismiss(DateTimeOffset.UtcNow);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return true;
-    }
-
-    public async Task<bool> DismissGmailConfirmationAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        var connection = await dbContext.EmailConnections
-            .FirstOrDefaultAsync(c => c.UserId == userId && c.Provider == EmailProvider.Forwarding, cancellationToken);
-
-        if (connection is null || connection.GmailConfirmationCode is null && connection.GmailConfirmationLink is null)
-        {
-            return false;
-        }
-
-        connection.ClearGmailConfirmation();
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -491,37 +400,8 @@ internal sealed partial class EmailForwardingService(
             .ToList();
     }
 
-    private static bool IsGmailForwardingConfirmation(string fromEmail, string subject) =>
-        string.Equals(fromEmail.Trim(), GmailConfirmationSenderEmail, StringComparison.OrdinalIgnoreCase) &&
-        subject.Contains(GmailConfirmationSubjectMarker, StringComparison.OrdinalIgnoreCase);
-
-    private static string? ExtractGmailConfirmationCode(string snippet)
-    {
-        var match = GmailConfirmationCodeRegex.Match(snippet);
-        return match.Success ? match.Groups[1].Value : null;
-    }
-
-    private static string? ExtractGmailConfirmationLink(string snippet)
-    {
-        var match = GmailConfirmationLinkRegex.Match(snippet);
-        return match.Success ? match.Value : null;
-    }
-
-    private static string? ExtractLocalPart(string address)
-    {
-        var atIndex = address.IndexOf('@');
-        return atIndex > 0 ? address[..atIndex].Trim().ToLowerInvariant() : null;
-    }
-
-    private static string ComputeIdempotencyKey(InboundEmailRequest request)
-    {
-        var raw = $"{request.ToAddress}|{request.FromEmail}|{request.Subject}|{request.ReceivedAt:O}";
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
-        return Convert.ToHexString(hash);
-    }
-
     // Gmail's own message id is already opaque/short and carries no PII — hashed anyway purely for
-    // a consistent ProviderMessageId shape across both intake paths (fixed-length hex either way).
+    // a consistent, fixed-length hex ProviderMessageId shape.
     private static string ComputeIdempotencyKey(string gmailMessageId) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(gmailMessageId)));
 
@@ -581,9 +461,4 @@ internal sealed partial class EmailForwardingService(
             ? email[(atIndex + 1)..].Trim().ToLowerInvariant()
             : null;
     }
-
-    [GeneratedRegex(@"\b(\d{6,8})\b", RegexOptions.Compiled)]
-    private static partial Regex GmailConfirmationCode_Regex();
-    [GeneratedRegex(@"https?://\S*google\.com\S*", RegexOptions.Compiled)]
-    private static partial Regex GmailConfirmationLink_Regex();
 }

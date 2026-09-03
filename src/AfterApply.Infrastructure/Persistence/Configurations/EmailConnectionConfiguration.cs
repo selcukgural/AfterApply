@@ -14,12 +14,8 @@ public sealed class EmailConnectionConfiguration : IEntityTypeConfiguration<Emai
 
         builder.Property(c => c.Provider).HasConversion<string>().HasMaxLength(50);
         builder.Property(c => c.ProviderAccountEmail).IsRequired().HasMaxLength(256);
-        builder.Property(c => c.InboundToken).HasMaxLength(32);
-        builder.Property(c => c.GmailConfirmationCode).HasMaxLength(16);
-        builder.Property(c => c.GmailConfirmationLink).HasMaxLength(1000);
 
         builder.HasIndex(c => new { c.UserId, c.Provider }).IsUnique();
-        builder.HasIndex(c => c.InboundToken).IsUnique();
 
         builder.HasOne<ApplicationUser>()
             .WithMany()

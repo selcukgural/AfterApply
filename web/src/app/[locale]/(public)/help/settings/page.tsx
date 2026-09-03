@@ -35,15 +35,6 @@ export default async function SettingsHelpPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("emailForwarding.title")}</h2>
-        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("emailForwarding.body")}</p>
-        <Screenshot src="/help/screenshots/settings-email-forwarding.png" alt={t("emailForwarding.title")} />
-        <Callout variant="info" label={tCommon("note")} title={t("emailForwarding.calloutGmailOnlyGuide.title")}>
-          {t("emailForwarding.calloutGmailOnlyGuide.body")}
-        </Callout>
-      </section>
-
-      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("delete.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("delete.body")}</p>
         <Screenshot src="/help/screenshots/settings-delete-account.png" alt={t("delete.title")} />

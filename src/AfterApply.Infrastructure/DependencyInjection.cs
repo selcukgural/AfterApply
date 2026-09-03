@@ -44,7 +44,6 @@ public static class DependencyInjection
     public const string CorsPolicyName = "Frontend";
     public const string AuthRateLimitPolicy = "auth-strict";
     public const string UploadRateLimitPolicy = "upload";
-    public const string InboundEmailRateLimitPolicy = "inbound-email";
     public const string ExtensionSignalRateLimitPolicy = "extension-signal";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's

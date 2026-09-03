@@ -2377,6 +2377,72 @@ tek pakette). `postman`'da `npm run generate` başarıyla çalıştı, çıktı 
 
 ---
 
+## Email forwarding (forward-all-inbox-to-us) tamamen kaldırıldı, Gmail Taraması tek email-signal akışı oldu (2026-09-03)
+
+**Karar:** Kullanıcı, güncellenmiş eklentide "Mail Yönlendirmeyi Kur" butonunun hâlâ eski "tüm gelen
+kutunu bize yönlendir" akışını açtığını fark etti — Gmail Taraması (extension-signal, e1f765c)
+zaten bu akışı **birincil** yol olarak değiştirmek üzere eklenmişti ama forwarding path o commit'te
+kasıtlı olarak dokunulmadan bırakılmıştı (bkz. e1f765c commit mesajı). Bu sefer kullanıcı forwarding'in
+artık hiç var olmaması gerektiğine karar verdi — kısmi/geriye dönük uyumluluk hack'i değil, tam
+kaldırma. Provider-agnostic paylaşılan altyapı (`/suggestions*`, `/notifications*`,
+`EmailSuggestion`, `ProcessSignalAsync` pipeline'ı) dokunulmadan kaldı; yalnızca forwarding'e özel
+her şey söküldü.
+
+**Kaldırılanlar:**
+
+- **Backend:** `EmailForwardingEndpoints.cs`'ten `GET /address`, `POST /gmail-confirmation/dismiss`,
+  `POST /inbound` route'ları; `EmailForwardingService`'ten `GetOrCreateInboundAddressAsync`,
+  `ProcessInboundEmailAsync`, `DismissGmailConfirmationAsync`, Gmail-onay-maili tespiti (regex'ler
+  dahil); `EmailConnection`'dan `InboundToken`/`GmailConfirmationCode`/`GmailConfirmationLink`/
+  `GmailConfirmationReceivedAt` alanları ve `CreateForwarding`/`SetGmailConfirmation`/
+  `ClearGmailConfirmation` metodları; `EmailProvider.Forwarding` enum üyesi (artık tek üye:
+  `Extension`); `InboundAddressResponse`/`InboundEmailRequest`/`InboundEmailWebhookRequest`
+  contract'ları; `EmailForwardingOptions.Domain`/`WebhookSecret` (yalnızca `Enabled` kaldı — grup
+  genelinde kill switch olarak, `/extension-signal` dahil); `InboundEmailRateLimitPolicy`.
+  `EmailConnections` tablosundan bu kolonları drop eden ve mevcut `Provider='Forwarding'`
+  satırlarını (cascade ile `EmailSuggestions`'ları da) silen yeni bir migration eklendi —
+  `RemoveGmailIntegration` migration'ıyla aynı desen (bkz. yukarıdaki "Gmail OAuth entegrasyonu"
+  kaydı).
+- **Cloudflare Email Worker (`email-worker/`) dizini tamamen silindi** — tek amacı `/inbound`'a
+  relay etmekti, başka hiçbir işlevi yoktu. `DEPLOYMENT.md`'deki secret-oluşturma adımı
+  (`afterapply-email-forwarding-webhook-secret`) ve `deploy.yml`'deki
+  `EmailForwarding__WebhookSecret` env var wiring'i kaldırıldı — GCP'deki secret'ın kendisi bu
+  değişiklikle silinmedi, yalnızca artık hiçbir yerden referans edilmiyor.
+- **Extension:** `email-forwarding.html`/`.js` (adım adım Gmail kurulum rehberi) silindi;
+  `options.html`/`.js`'ten "Mail Yönlendirme" bölümü/butonu kaldırıldı; `i18n.js`'ten `hero`/`flow`/
+  `address`/`steps`/`faq` blokları (TR+EN) ve `options.forwardingLabel`/`forwardingHelp`/
+  `setUpForwarding` anahtarları silindi. Store listing (`LISTING.md`, `PRIVACY_POLICY.md`,
+  `PERMISSIONS_JUSTIFICATION.md`, ekran görüntüsü README'si) Gmail Taraması'nı tek email-signal
+  özelliği olarak anlatacak şekilde yeniden yazıldı; `forwarding-light/dark.png` ve
+  `scene-forwarding.html` silindi (henüz Chrome Web Store'a gönderilmemiş taslak, canlı listing
+  etkilenmedi).
+- **Web app:** Settings sayfasındaki "Mail Forwarding" kartı (adres/onay-kodu UI'ı) ve ona bağlı
+  state/handler'lar kaldırıldı; `emailForwardingApi.getAddress`/`dismissGmailConfirmation` ve
+  `InboundAddressResponse` tipi silindi (provider-agnostic `getPendingSuggestions*`/
+  `confirmSuggestion`/`dismissSuggestion` korundu — hâlâ kullanılıyor). Help sayfalarındaki
+  ("Settings", "Chrome Extension") forwarding'e özel bölümler ve ilgili ekran görüntüleri
+  kaldırıldı; onboarding/FAQ/gizlilik metinleri (`en.json`/`tr.json`) forwarding yerine Gmail
+  Taraması'nı anlatacak şekilde güncellendi.
+- **Testler:** `EmailForwardingTests.cs` (forwarding-mekanik testleri: adres oluşturma, webhook
+  secret doğrulama, bilinmeyen token, Gmail onay akışı — hepsi silindi) `EmailSignalTests.cs`
+  olarak yeniden yazıldı; paylaşılan pipeline'ı (eşleştirme/sınıflandırma/auto-apply/confirm/
+  dismiss/notifications) sınayan testler `/inbound` yerine `/extension-signal` üzerinden
+  çalışacak şekilde dönüştürüldü, kapsam kaybı olmadan.
+
+**Korunanlar:** `/api/email-forwarding` route namespace'i aynı kaldı (zaten kurulu eklenti
+versiyonlarıyla uyumluluk için — artık "forwarding" anlamına gelmiyor, sadece tarihsel isim);
+`EmailForwardingOptions`/`EmailForwardingService`/`EmailForwardingEndpoints` sınıf adları da aynı
+sebeple değiştirilmedi (internal/infra identifier, CLAUDE.md'nin AfterApply/e-kariyerim ayrımıyla
+aynı mantık).
+
+**Doğrulama:** `dotnet build src/AfterApply.Api` hatasız; `postman/collection.json` yeniden
+üretildi (47 request), kaldırılan üç route (`/address`, `/gmail-confirmation/dismiss`, `/inbound`)
+çıktıda yok. Extension/web JSON i18n dosyaları `python3 -c "json.load(...)"` ile doğrulandı.
+Podman/integration test koşusu bu batch'in sonuna bırakıldı (bkz. proje hafızası "Podman test
+cadence").
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

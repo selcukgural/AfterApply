@@ -48,14 +48,6 @@ public sealed record EmailNotificationResponse(
 
 public sealed record NotificationCountResponse(int UnreadCount);
 
-public sealed record InboundAddressResponse(
-    string Address,
-    // Non-null only while Gmail's own forwarding-confirmation email is pending acknowledgement —
-    // see EmailConnection.SetGmailConfirmation.
-    string? GmailConfirmationCode,
-    string? GmailConfirmationLink,
-    DateTimeOffset? GmailConfirmationReceivedAt);
-
 public enum ConfirmSuggestionResult
 {
     NotFound,
