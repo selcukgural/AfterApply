@@ -2375,6 +2375,13 @@ olarak açık bırakıldı.
 **Doğrulama:** her iki dizinde `npm audit` (email-worker: 0 açık; postman: sadece faker, 3 alt-advisory
 tek pakette). `postman`'da `npm run generate` başarıyla çalıştı, çıktı git'teki mevcutla birebir aynı.
 
+> **Düzeltme (2026-09-03):** Yukarıdaki "çıktı git'teki mevcutla birebir aynı" ifadesi yanlış.
+> Ölçüldü: `openapi-to-postmanv2` her koşuda yeni UUID'ler ve rastgele örnek tarihler üretiyor, yani
+> `collection.json` **hiçbir zaman** deterministik değildi — gerçek faker ile arka arkaya iki üretim
+> de birbirinden farklı çıkıyor. Bu yüzden koleksiyonu bayt bayt karşılaştırmak anlamsız; doğru
+> karşılaştırma `id`/`_postman_id` alanlarını ve üretilen tarihleri hariç tutan yapısal bir
+> karşılaştırma. Kabul edilen faker riski de aşağıdaki kayıtla kapatıldı.
+
 ---
 
 ## Email forwarding (forward-all-inbox-to-us) tamamen kaldırıldı, Gmail Taraması tek email-signal akışı oldu (2026-09-03)
@@ -2620,6 +2627,44 @@ test-host çökmesi" olarak duruyordu.
 
 **Sıradaki adım (yapılmadı):** `dotnet test --blame-crash` ile çökene kadar koşup dump almak. CI'a
 faydası olmadığı, yalnızca yerel geliştirme deneyimini etkilediği için şimdilik ertelendi.
+
+---
+
+## Kabul edilen faker riski kapatıldı: paket ağaçtan stub ile çıkarıldı (2026-09-03)
+
+**Bağlam:** Kullanıcı "GitHub'da hiçbir kritik uyarı kalmasın" dedi. Geriye tek açık Dependabot
+uyarısı kalmıştı: `@faker-js/faker` 5.5.3 (high, `helpers.fake` üzerinden arbitrary code execution),
+`postman/package-lock.json` içinde. 2026-09-02'de bilinçli olarak kabul edilmişti (yukarıdaki kayıt).
+
+**Neden yükseltme mümkün değil (yeniden doğrulandı):** `openapi-to-postmanv2@6.3.3` ve
+`postman-collection@5.3.1` ikisi de npm'deki **en güncel** sürüm — bekleyen bir upstream düzeltmesi
+yok. `postman-collection` faker'ı tam `5.5.3`'e sabitliyor ve `lib/superstring/dynamic-variables.js`
+içinden v8'de kaldırılmış API'yi (`faker.address.city` vb.) doğrudan çağırıyor; yamalı sürümü
+(`10.5.0+`) zorlamak `npm run generate`'i `Cannot read properties of undefined (reading 'city')` ile
+çökertiyor. Yani önceki kaydın analizi hâlâ geçerli.
+
+**Karar:** Paketi yükseltmek yerine **ağaçtan çıkarıldı**. `postman/faker-stub/` altında, gerçek
+`dynamic-variables.js`'ten üretilmiş, kullanılan **111 fonksiyonun tamamını** karşılayan bir yerel
+paket duruyor; `package.json`'daki `overrides` ile `"@faker-js/faker": "file:faker-stub"` olarak
+bağlandı.
+
+**Neden güvenli:** faker orada yalnızca `{{$randomCity}}` türü Postman dinamik değişkenlerini
+**istek anında** çözmek için var. Bizim ürettiğimiz koleksiyon bu değişkenlerden hiç içermiyor —
+`scripts/generate-collection.js` OpenAPI şemasından somut örnek değerler basıyor. Yine de modül
+`require` zamanında yükleniyor, bu yüzden bağımlılığı tamamen silmek değil, yerine bir stub koymak
+gerekiyordu. Bir dinamik değişken bir gün kullanılırsa, makul görünen rastgele bir değer yerine
+`stub:namespace.fn` gibi bariz sahte bir değer üretir — kasıtlı olarak görünür, sessiz değil.
+
+**Doğrulama:** `npm ci` temiz kurulumda çalışıyor; `npm audit` → **0 vulnerability**. Gerçek faker
+ile stub'ın ürettiği koleksiyonlar yapısal olarak karşılaştırıldı (47 istek; ad, metod, URL, gövde
+ve header'lar birebir aynı), stub değeri çıktıya hiç sızmıyor (`grep -c "stub:"` → 0). Tek fark
+`occurredAt` alanı, o da bizim kendi kodumuzun `new Date().toISOString()`'i — yukarıdaki düzeltme
+notunda açıklanan, faker'dan bağımsız rastgelelik.
+
+**Bakım notu:** Stub, `postman-collection@5.3.1`'in çağrı yüzeyinden üretildi. O paket yükseltilirse
+`grep -oE "faker\.[a-zA-Z]+\.[a-zA-Z]+" node_modules/postman-collection/lib/superstring/dynamic-variables.js`
+ile yüzey yeniden çıkarılıp stub güncellenmeli — eksik bir fonksiyon `undefined is not a function`
+olarak patlar, sessizce yanlış çıktı üretmez.
 
 ---
 

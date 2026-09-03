@@ -1,0 +1,13 @@
+{
+  "name": "@faker-js/faker",
+  "version": "99.0.0-stub",
+  "description": "Local stand-in for @faker-js/faker; see index.js for why.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./locale/en": "./index.js",
+    "./locale/*": "./index.js"
+  },
+  "license": "MIT",
+  "private": true
+}

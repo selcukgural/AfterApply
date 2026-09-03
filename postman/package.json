@@ -2,7 +2,7 @@
   "name": "ekariyerim-postman",
   "private": true,
   "version": "1.0.0",
-  "description": "Generates postman/collection.json from the API's build-time OpenAPI document and (in CI) publishes it to Postman Cloud. See README.md — nothing under this directory except environments/*.json is hand-edited.",
+  "description": "Generates postman/collection.json from the API's build-time OpenAPI document and (in CI) publishes it to Postman Cloud. See README.md \u2014 nothing under this directory except environments/*.json is hand-edited.",
   "scripts": {
     "generate": "node scripts/generate-collection.js",
     "publish": "node scripts/publish-collection.js",
@@ -14,6 +14,7 @@
   "overrides": {
     "js-yaml": "4.3.1",
     "uuid": "11.1.1",
-    "yaml": "1.10.3"
+    "yaml": "1.10.3",
+    "@faker-js/faker": "file:faker-stub"
   }
 }
