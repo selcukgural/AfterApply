@@ -30,8 +30,12 @@ internal sealed class EmailForwardingService(
     {
         var connection = await GetOrCreateExtensionConnectionAsync(userId, cancellationToken);
 
+        // `?? []` is belt-and-braces: the endpoint's validator rejects a null LinkDomains before this
+        // job is ever enqueued (see ExtensionEmailSignalRequestValidator), so in practice it can't
+        // arrive null here. It stays because this method is also reachable as a Hangfire job
+        // re-executing an argument payload deserialized from storage, which no validator re-runs.
         await ProcessSignalAsync(connection, request.SenderEmail, request.SenderDisplayName, request.Subject,
-            request.Snippet, request.ReceivedAt, request.LinkDomains, ComputeIdempotencyKey(request.GmailMessageId),
+            request.Snippet, request.ReceivedAt, request.LinkDomains ?? [], ComputeIdempotencyKey(request.GmailMessageId),
             cancellationToken);
     }
 

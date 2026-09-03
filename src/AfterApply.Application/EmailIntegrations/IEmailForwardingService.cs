@@ -39,7 +39,16 @@ public interface IEmailForwardingService
 /// <summary>Shape the Gmail content script POSTs — sender/subject/snippet it read directly from the
 /// opened thread's DOM (subject/body capped client-side before this is ever built), never the raw
 /// email. GmailMessageId is Gmail's own id for the thread (from location.hash), the idempotency
-/// key's raw material — no ToAddress, since auth already resolves the user.</summary>
+/// key's raw material — no ToAddress, since auth already resolves the user.
+///
+/// LinkDomains is declared nullable because it genuinely is: nullable reference types are a
+/// compile-time contract with no runtime enforcement, and System.Text.Json writes null into this
+/// property for both <c>"linkDomains": null</c> and an omitted field (measured, not assumed). While
+/// it was declared non-nullable the declaration was simply false, and any null guard written
+/// against it read as redundant to the analyzer — which is how a validator predicate that
+/// dereferenced it got written, turning a malformed body into a 500. The other properties are
+/// left non-nullable and are covered by NotEmpty rules in the validator instead: for a string,
+/// null and "" fail the same rule, so nothing is lost by not spelling out the nullability.</summary>
 public sealed record ExtensionEmailSignalRequest(
     string SenderEmail, string SenderDisplayName, string Subject, string Snippet,
-    DateTimeOffset ReceivedAt, IReadOnlyList<string> LinkDomains, string GmailMessageId);
+    DateTimeOffset ReceivedAt, IReadOnlyList<string>? LinkDomains, string GmailMessageId);

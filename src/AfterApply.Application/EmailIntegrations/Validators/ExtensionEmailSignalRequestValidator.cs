@@ -42,10 +42,18 @@ public sealed class ExtensionEmailSignalRequestValidator : AbstractValidator<Ext
         // AppliedAt rule, for the same clock-skew reason.
         RuleFor(x => x.ReceivedAt).LessThanOrEqualTo(_ => DateTimeOffset.UtcNow.AddDays(1));
 
-        RuleFor(x => x.LinkDomains).NotNull();
-        RuleFor(x => x.LinkDomains.Count).LessThanOrEqualTo(MaxLinkDomains)
-            .When(x => x.LinkDomains.Count != 0);
-        RuleForEach(x => x.LinkDomains).NotEmpty().MaximumLength(MaxLinkDomainLength)
-            .When(x => x.LinkDomains.Count != 0);
+        // Cascade(Stop) rather than a When guard: if NotNull fails, Must is never reached, so the
+        // count is only ever read off a list that exists. A When predicate would have to repeat the
+        // null test, and repeating it against a property the compiler believes is non-nullable is
+        // exactly the trap this rule fell into once already (the predicate dereferenced the list and
+        // turned `"linkDomains": null` into a 500 instead of a 400).
+        RuleFor(x => x.LinkDomains).Cascade(CascadeMode.Stop)
+            .NotNull()
+            .Must(domains => domains!.Count <= MaxLinkDomains)
+            .WithMessage($"'{{PropertyName}}' must not contain more than {MaxLinkDomains} items.");
+
+        // Unguarded on purpose: RuleForEach skips a null collection rather than throwing (verified
+        // against FluentValidation 12), and the NotNull above is what reports that case.
+        RuleForEach(x => x.LinkDomains).NotEmpty().MaximumLength(MaxLinkDomainLength);
     }
 }
