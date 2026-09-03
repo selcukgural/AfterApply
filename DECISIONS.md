@@ -2661,7 +2661,23 @@ ve header'lar birebir aynı), stub değeri çıktıya hiç sızmıyor (`grep -c 
 `occurredAt` alanı, o da bizim kendi kodumuzun `new Date().toISOString()`'i — yukarıdaki düzeltme
 notunda açıklanan, faker'dan bağımsız rastgelelik.
 
-**Bakım notu:** Stub, `postman-collection@5.3.1`'in çağrı yüzeyinden üretildi. O paket yükseltilirse
+**Kurulum mekanizması — neden tarball:** İlk deneme `overrides` içinde `file:faker-stub` (dizin)
+kullandı ve **CI'ı kırdı**. npm, `overrides` içindeki bir `file:` dizin yolunu proje köküne değil
+**override edilen paketin dizinine göre** çözüyor: lockfile'a `node_modules/postman-collection/faker-stub`
+yazılıyor ve o yol hiç var olmadığı için kırık bir symlink oluşuyor. npm 11 (yerel geliştirme
+makinesi) bunu tolere ediyor, **npm 10 (CI'ın Node 22'si) etmiyor** —
+`Cannot find module '@faker-js/faker/locale/en'` ile patlıyor. Bu yüzden stub bir **tarball** olarak
+kuruluyor (`file:faker-js-faker-99.0.0-stub.tgz`): tarball link'lenmek yerine açılıyor, dolayısıyla
+her iki npm sürümünde de aynı şekilde çözülüyor. Node 22/npm 10.9.8 ve Node 26/npm 11.19.0'da
+`npm ci` + `npm run generate` ile ayrı ayrı doğrulandı.
+
+**Ders:** Yerelde çalışması yetmiyor — bu değişiklik yerelde temiz klonda bile geçti, CI'da kırıldı.
+Node/npm sürümüne duyarlı paket çözümleme değişiklikleri, CI'ın kullandığı sürümde
+(`node:22-alpine` container'ı) doğrulanmalı.
+
+**Bakım notu:** Stub, `postman-collection@5.3.1`'in çağrı yüzeyinden üretildi.
+`faker-stub/` altındaki kaynağı düzenlemek tek başına **etkisizdir** — kurulan şey tarball'dır;
+`npm run pack:faker-stub` ile yeniden paketleyip `.tgz`'yi de commit etmek gerekir. O paket yükseltilirse
 `grep -oE "faker\.[a-zA-Z]+\.[a-zA-Z]+" node_modules/postman-collection/lib/superstring/dynamic-variables.js`
 ile yüzey yeniden çıkarılıp stub güncellenmeli — eksik bir fonksiyon `undefined is not a function`
 olarak patlar, sessizce yanlış çıktı üretmez.

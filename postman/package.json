@@ -6,7 +6,8 @@
   "scripts": {
     "generate": "node scripts/generate-collection.js",
     "publish": "node scripts/publish-collection.js",
-    "publish:environments": "node scripts/publish-environments.js"
+    "publish:environments": "node scripts/publish-environments.js",
+    "pack:faker-stub": "npm pack ./faker-stub --pack-destination ."
   },
   "dependencies": {
     "openapi-to-postmanv2": "6.3.3"
@@ -15,6 +16,6 @@
     "js-yaml": "4.3.1",
     "uuid": "11.1.1",
     "yaml": "1.10.3",
-    "@faker-js/faker": "file:faker-stub"
+    "@faker-js/faker": "file:faker-js-faker-99.0.0-stub.tgz"
   }
 }

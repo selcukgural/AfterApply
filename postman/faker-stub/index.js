@@ -17,6 +17,16 @@
 // If a request ever does use a dynamic variable, it will render one of these obviously fake values
 // rather than a plausible-looking random one — which is the intended failure mode: visible, not silent.
 //
+// Installed from faker-js-faker-99.0.0-stub.tgz, not from this directory. npm resolves a `file:`
+// directory in an `overrides` entry relative to the package being overridden rather than the
+// project root, so `file:faker-stub` becomes a symlink to node_modules/postman-collection/faker-stub
+// — a path that does not exist. npm 11 papers over it; npm 10, which is what CI's Node 22 ships,
+// leaves the broken link and fails with "Cannot find module '@faker-js/faker/locale/en'". A tarball
+// is extracted rather than linked, so it resolves identically on both (verified on 22 and 26).
+//
+// EDITING THIS FILE ALONE HAS NO EFFECT: run `npm run pack:faker-stub` and commit the regenerated
+// .tgz alongside it.
+//
 // Generated from the 111 call sites in postman-collection@5.3.1; regenerate if that version changes.
 
 'use strict';
