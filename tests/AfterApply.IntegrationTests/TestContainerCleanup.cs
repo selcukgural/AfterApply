@@ -27,6 +27,26 @@ internal static class TestContainerCleanup
     // same instant could theoretically prune each other's just-started containers, which is an
     // accepted tradeoff here, not a concern on a shared CI runner (which uses real Docker, where
     // Ryuk works and this is a no-op).
+    /// <summary>
+    /// Shrinks Hangfire's background server for every WebApplicationFactory this assembly builds.
+    /// Set as environment variables rather than per-factory UseSetting calls because ASP.NET's
+    /// default configuration reads them automatically — this reaches all ~200 hosts a run creates
+    /// without every one of the 17 test classes having to opt in and remember to keep doing so.
+    ///
+    /// Why it matters: Hangfire's shutdown was the single most destabilising thing in this suite.
+    /// WaitForShutdownAsync timing out during a fixture's DisposeAsync showed up as a failed test,
+    /// a run that hung until something killed it, or "Test host process crashed" partway through —
+    /// three symptoms, one cause. Raising the timeout (see DependencyInjection.AddBackgroundJobs)
+    /// had already been tried and only lengthened the wait. One worker is plenty for tests, which
+    /// only ever need to observe that a job ran, and it leaves far less to wind down.
+    /// </summary>
+    [ModuleInitializer]
+    public static void ConfigureHangfireForTests()
+    {
+        Environment.SetEnvironmentVariable("Hangfire__WorkerCount", "1");
+        Environment.SetEnvironmentVariable("Hangfire__ShutdownTimeoutSeconds", "5");
+    }
+
     [ModuleInitializer]
     public static void PruneOrphanedContainers()
     {

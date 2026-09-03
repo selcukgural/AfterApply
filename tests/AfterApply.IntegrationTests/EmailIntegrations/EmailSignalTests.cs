@@ -17,8 +17,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Testcontainers.PostgreSql;
-using Testcontainers.Redis;
 
 namespace AfterApply.IntegrationTests.EmailIntegrations;
 
@@ -26,15 +24,14 @@ namespace AfterApply.IntegrationTests.EmailIntegrations;
 // /api/email-forwarding/extension-signal, the app's only email-signal intake since the earlier
 // forward-all-inbox-to-us design was removed — see DECISIONS.md) and the provider-agnostic
 // suggestion-review/notification routes it feeds.
-public class EmailSignalTests : IAsyncLifetime
+[Collection(IntegrationTestCollection.Name)]
+public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() }
     };
 
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
-    private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine").Build();
     private readonly FakeEmailClassificationProvider _fakeClassificationProvider = new();
     private readonly FakeEmailJobExtractionProvider _fakeExtractionProvider = new();
     private readonly FakeEmailRejectionReasonExtractionProvider _fakeRejectionReasonProvider = new();
@@ -53,12 +50,14 @@ public class EmailSignalTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
+        // All three factories share one database on purpose — the flag-off and auto-apply
+        // variants are the same app over the same data, only differently configured.
+        var stores = await shared.CreateIsolatedStoresAsync(nameof(EmailSignalTests));
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
-            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
+            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("EmailForwarding:Enabled", "true");
             // Explicit, not relying on appsettings.json's own curated list — this suite's
@@ -74,10 +73,6 @@ public class EmailSignalTests : IAsyncLifetime
             });
         });
 
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
-
         _client = _factory.CreateClient();
         var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest("email-signal.test@example.com", "P@ssw0rd123!", "Signal", "Test", true), JsonOptions);
@@ -87,8 +82,8 @@ public class EmailSignalTests : IAsyncLifetime
 
         _disabledFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
-            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
+            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             // Explicit, not just relying on appsettings.json's own default — this test must exercise
             // "flag off" regardless of what the app ships as its default (EmailForwarding:Enabled is
@@ -105,8 +100,8 @@ public class EmailSignalTests : IAsyncLifetime
 
         _autoApplyFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
-            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
+            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("EmailForwarding:Enabled", "true");
             builder.UseSetting("JobBoardDomains:Domains:0", "linkedin.com");
@@ -147,9 +142,6 @@ public class EmailSignalTests : IAsyncLifetime
         {
             await _autoApplyFactory.DisposeAsync();
         }
-
-        await _postgres.DisposeAsync();
-        await _redis.DisposeAsync();
     }
 
     [Fact]
@@ -956,7 +948,7 @@ public class EmailSignalTests : IAsyncLifetime
         return response;
     }
 
-    // Queried straight from Hangfire's own Postgres tables (same _postgres container AppDbContext
+    // Queried straight from Hangfire's own Postgres tables (same container/database AppDbContext
     // uses) rather than resolved JobStorage/IMonitoringApi from DI: this test class spins up a
     // second factory (_disabledFactory) whose own AddHangfire call sets the same process-wide
     // JobStorage.Current static, so resolving JobStorage from _factory's container isn't guaranteed

@@ -16,20 +16,16 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Testcontainers.PostgreSql;
-using Testcontainers.Redis;
 
 namespace AfterApply.IntegrationTests.CompanyIntelligence;
 
-public class CompanyIntelligenceTests : IAsyncLifetime
+[Collection(IntegrationTestCollection.Name)]
+public class CompanyIntelligenceTests(SharedInfrastructure shared) : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() }
     };
-
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
-    private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine").Build();
 
     // Flag left at its real appsettings.json default (false) — used both to assert every
     // endpoint 404s while the flag is off, and (via direct DI, bypassing HTTP) to prove the
@@ -47,26 +43,22 @@ public class CompanyIntelligenceTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
+        // Both factories deliberately share one database: the tests compare what the same data
+        // looks like through a disabled vs. an enabled CompanyIntelligence flag.
+        var stores = await shared.CreateIsolatedStoresAsync(nameof(CompanyIntelligenceTests));
 
         _defaultFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
-            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
+            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("CompanyIntelligence:HiddenBelow", "2");
         });
 
-        using (var scope = _defaultFactory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await db.Database.MigrateAsync();
-        }
-
         _enabledFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
-            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
+            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("CompanyIntelligence:HiddenBelow", "2");
             builder.UseSetting("CompanyIntelligence:Enabled", "true");
@@ -88,9 +80,6 @@ public class CompanyIntelligenceTests : IAsyncLifetime
         {
             await _enabledFactory.DisposeAsync();
         }
-
-        await _postgres.DisposeAsync();
-        await _redis.DisposeAsync();
     }
 
     private static async Task<HttpClient> CreateAuthenticatedClientAsync(WebApplicationFactory<Program> factory, string email)

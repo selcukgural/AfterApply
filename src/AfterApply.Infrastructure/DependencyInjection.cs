@@ -324,15 +324,33 @@ public static class DependencyInjection
         // generation, which never runs any job and exits right after the doc is written.
         if (!IsOpenApiDocumentGeneration)
         {
-            // Default ShutdownTimeout (15s) was observed to be too tight for a
-            // WebApplicationFactory-hosted integration test under concurrent load: Hangfire's
-            // watchdog/heartbeat/dispatcher components still need to wind down gracefully even
-            // when no job is actually running, and under CPU contention from many concurrent test
-            // hosts that alone can exceed 15s — surfacing as a TaskCanceledException out of
-            // WaitForShutdownAsync during the test fixture's DisposeAsync. A more generous timeout
-            // is harmless in production (a slow, graceful shutdown a few seconds longer than usual
-            // costs nothing) and makes tests reliably wait it out instead of failing on teardown.
-            services.AddHangfireServer(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30));
+            // Both values keep their previous production behaviour when unconfigured; they are
+            // settable so the integration suite can ask for something cheaper.
+            //
+            // ShutdownTimeout was already raised from Hangfire's 15s default to 30s for the tests'
+            // benefit, because WaitForShutdownAsync was timing out during a fixture's DisposeAsync
+            // and failing the test. That treated the symptom and did not work: the suite still
+            // fails there, and depending on timing the same stall shows up as a hung run or an
+            // outright test-host crash instead of a failed test.
+            //
+            // The cause is volume. A test host builds a WebApplicationFactory per test (xunit
+            // constructs the class once per test method) and some classes build three, so a single
+            // run starts and stops on the order of 200 Hangfire servers — each opening
+            // min(ProcessorCount * 5, 20) workers plus watchdogs it then has to wind down. No test
+            // needs twenty workers to observe one job run. WorkerCount is the lever that actually
+            // reduces the work; the timeout only decides how long we wait for it.
+            var shutdownTimeoutSeconds = configuration.GetValue("Hangfire:ShutdownTimeoutSeconds", 30);
+            var workerCount = configuration.GetValue<int?>("Hangfire:WorkerCount");
+
+            services.AddHangfireServer(options =>
+            {
+                options.ShutdownTimeout = TimeSpan.FromSeconds(shutdownTimeoutSeconds);
+
+                if (workerCount is > 0)
+                {
+                    options.WorkerCount = workerCount.Value;
+                }
+            });
         }
 
         return services;

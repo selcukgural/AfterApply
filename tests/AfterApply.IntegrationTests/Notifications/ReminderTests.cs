@@ -16,37 +16,31 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Testcontainers.PostgreSql;
-using Testcontainers.Redis;
 
 namespace AfterApply.IntegrationTests.Notifications;
 
-public class ReminderTests : IAsyncLifetime
+[Collection(IntegrationTestCollection.Name)]
+public class ReminderTests(SharedInfrastructure shared) : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() }
     };
 
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
-    private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine").Build();
     private WebApplicationFactory<Program>? _factory;
     private HttpClient _client = null!;
 
     public async Task InitializeAsync()
     {
-        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
+        var stores = await shared.CreateIsolatedStoresAsync(nameof(ReminderTests));
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
-            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
+            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
         });
 
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
 
         _client = await CreateAuthenticatedClientAsync("reminders.test@example.com");
     }
@@ -58,8 +52,6 @@ public class ReminderTests : IAsyncLifetime
             await _factory.DisposeAsync();
         }
 
-        await _postgres.DisposeAsync();
-        await _redis.DisposeAsync();
     }
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync(string email)

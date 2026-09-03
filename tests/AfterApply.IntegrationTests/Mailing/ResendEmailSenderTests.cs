@@ -12,8 +12,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Testcontainers.PostgreSql;
-using Testcontainers.Redis;
 
 namespace AfterApply.IntegrationTests.Mailing;
 
@@ -21,28 +19,27 @@ namespace AfterApply.IntegrationTests.Mailing;
 /// out entirely) — proves the EmailTemplates table rows are actually read, the right locale is
 /// picked, and "{{ResetLink}}" gets substituted, by capturing the outbound HTTP call instead of the
 /// send itself.</summary>
-public class ResendEmailSenderTests : IAsyncLifetime
+[Collection(IntegrationTestCollection.Name)]
+public class ResendEmailSenderTests(SharedInfrastructure shared) : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() }
     };
 
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
-    private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine").Build();
     private WebApplicationFactory<Program>? _factory;
     private CapturingHttpMessageHandler _handler = null!;
 
     public async Task InitializeAsync()
     {
-        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
+        var stores = await shared.CreateIsolatedStoresAsync(nameof(ResendEmailSenderTests));
 
         _handler = new CapturingHttpMessageHandler();
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
-            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
+            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
             // Non-empty so ResendEmailSender doesn't short-circuit on "not configured" — the real
@@ -63,9 +60,6 @@ public class ResendEmailSenderTests : IAsyncLifetime
             });
         });
 
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
     }
 
     public async Task DisposeAsync()
@@ -75,8 +69,6 @@ public class ResendEmailSenderTests : IAsyncLifetime
             await _factory.DisposeAsync();
         }
 
-        await _postgres.DisposeAsync();
-        await _redis.DisposeAsync();
     }
 
     private async Task<AuthResponse> RegisterAsync(HttpClient client, string email)

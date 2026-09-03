@@ -2540,6 +2540,89 @@ reddi gibi mailsiz bir önlem konabilir.
 
 ---
 
+## Integration test altyapısı: container'lar assembly başına paylaşılıyor (2026-09-03)
+
+**Bağlam:** Kullanıcı testlerin hem yerelde hem CI'da çok uzun sürmesinden ve "pipeline'ın takılıp
+kalmasından" şikayet etti. Ölçüm iki ayrı sorun olduğunu gösterdi ve bunları ayırmak bu kaydın asıl
+amacı.
+
+**Bulgu 1 — maliyet sanılandan çok daha büyüktü.** Her test sınıfı container'larını *instance field*
+olarak tanımlıyordu:
+
+```csharp
+private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+```
+
+xunit her test **metodu** için sınıfın yeni bir örneğini kurar — yani bu field her testte yeniden
+çalışıyordu. İsraf "17 sınıf × 2 container" değil, **~107 test × 2 container** ve **~107 kez tam
+migration zinciri**ydi. İlk teşhiste bunu 17 fixture diye raporlamak yanlıştı; gerçek sayı ancak
+Postgres'te oluşan veritabanları sayılınca ortaya çıktı.
+
+**Karar:** `SharedInfrastructure` (xunit `ICollectionFixture`) assembly başına **tek** Postgres +
+**tek** Redis kaldırıyor, şema **bir kez** bir template veritabanına migrate ediliyor, her test
+`CREATE DATABASE ... TEMPLATE` ile onu klonluyor. İzolasyon aynı kalıyor: her test hâlâ kendine ait,
+boş ama migrate edilmiş bir veritabanı ve kendine ait bir Redis veritabanı alıyor. Paralellik
+**değişmedi** — tüm sınıflar tek collection'da, `maxParallelThreads=1` yerinde; 2026-09-01'de
+denenip geri alınan DOP>1 konusuna hiç girilmedi.
+
+**Sonuç:** 123 container → 2. Koşu tamamlandığında **107/107 test, 91 saniye** (test başına ~2.6s →
+~0.85s). Refactor öncesi tam suite bu makinede zaten baştan sona koşamıyordu.
+
+**Yol boyunca çıkan ve kayda değer tuzaklar** (hepsi ölçülerek bulundu, tahminle değil):
+
+- `postgres` image'ının entrypoint'i komut tire ile başlıyorsa binary'yi kendisi ekler.
+  `WithCommand("postgres", "-c", ...)` container'ı `invalid argument: "postgres"` ile düşürür;
+  yalnızca flag'ler verilmeli.
+- `NpgsqlConnection.ClearAllPools()` **kullanılmamalı**. Her test farklı veritabanına bağlandığı için
+  her test kendi havuzunu bırakır ve bu birikir; ClearAllPools bunu temizler ama süreç genelinde
+  çalışır ve önceki testin Hangfire sunucusu hâlâ kapanıyor olabilir. Arka plan thread'lerinin
+  altından bağlantı çekmek test host'unu komple çökertti. Doğru kaldıraç
+  `ConnectionIdleLifetime=2` + `ConnectionPruningInterval=1`: havuz kendi kendine saniyeler içinde
+  boşalır.
+- `MaxPoolSize` **düşürülmemeli**. 10'a çekmek suite'i kilitledi: bir test 3 WebApplicationFactory
+  çalıştırabiliyor, her biri `min(çekirdek×5, 20)` Hangfire worker'ı açıyor, ~60 thread aynı
+  connection string'in havuzunu paylaşıyor. `EmailSignalTests` tek bir testte 11 dakika %155 CPU'da
+  döndü, Postgres tamamen boştaydı. Sorun havuzun büyüklüğü değil, hiç boşalmamasıydı.
+- Npgsql `ConnectionIdleLifetime`'ın `ConnectionPruningInterval`'dan küçük olmasını reddeder.
+- Redis'in 16 numaralı veritabanı yetmez (caller sayısı test sayısı kadar); 128'e çıkarıldı, index
+  sarmalanıyor ve devralınan veritabanı hand-out sırasında `FLUSHDB` ediliyor.
+
+**Hangfire:** `WorkerCount` ve `ShutdownTimeoutSeconds` config'e bağlandı, **production varsayılanları
+değişmedi**. Test assembly'si bir `ModuleInitializer` ile ortam değişkeni olarak `WorkerCount=1`,
+`ShutdownTimeoutSeconds=5` veriyor (ASP.NET ortam değişkenlerini varsayılan olarak okur, böylece 17
+test dosyasının hiçbirine dokunmadan koşudaki ~200 host'un hepsine ulaşır). Bu, teardown'daki
+`WaitForShutdownAsync` kaynaklı `TaskCanceledException`'ları bitirdi. Not: `ShutdownTimeout`'un
+15s→30s çıkarılması daha önce aynı sorun için denenmişti ve işe yaramamıştı — beklemeyi uzatıyor,
+iş yükünü azaltmıyordu. Asıl kaldıraç worker sayısı.
+
+## Yerel test-host çökmesi: hâlâ teşhis edilmedi, CI'ı etkilemiyor (2026-09-03)
+
+**Durum:** Yerel `dotnet test` koşularının bir kısmı ortada `Test host process crashed` ile kesiliyor.
+4 ardışık koşunun 2'si böyle bitti (47 ve 72. testte); tamamlanan koşular ise her seferinde tam
+olarak 107/107 ve 91 saniye. Yani yavaşlama değil, ani bir olay.
+
+**Kritik ayrım — CI'da bu sorun yok.** Son 15 CI koşusunun **15'i de başarılı**. GitHub'daki tek
+sorun süreydi (7.4 dk, bunun 411s'i `dotnet test`), asılma veya çökme değil. Çökme yalnızca
+macOS + podman ortamında görülüyor ve yeni değil — proje hafızasında zaten "nadir açıklanamayan
+test-host çökmesi" olarak duruyordu.
+
+**Elenen sebepler** (bir dahaki sefere aynı yollar tekrar denenmesin):
+
+- **Bellek değil.** Çökme anında sistem belleğinin %83'ü boş, swap kullanımı sıfır, macOS jetsam
+  kaydı yok.
+- **Yetim süreç değil.** Kesilen koşulardan kalan `testhost` süreçleri CPU yiyip sonraki koşuları
+  yavaşlatıyor (`pkill -f "dotnet test"` yalnızca sarmalayıcıyı öldürür, çocuğu bırakır) — ama
+  hepsi temizlenmiş bir makinede de çökme tekrarlandı.
+- **Hangfire shutdown değil.** Worker sayısı 1'e indirildikten ve teardown hataları tamamen
+  bittikten sonra da çökme devam etti. Bunlar iki ayrı sorun.
+- **Container yükü değil.** 123 container'dan 2'ye inildikten sonra da sürüyor.
+- macOS hiçbir crash raporu üretmiyor, yani sert bir native çökme imzası da yok.
+
+**Sıradaki adım (yapılmadı):** `dotnet test --blame-crash` ile çökene kadar koşup dump almak. CI'a
+faydası olmadığı, yalnızca yerel geliştirme deneyimini etkilediği için şimdilik ertelendi.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

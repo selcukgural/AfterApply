@@ -12,12 +12,11 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using Testcontainers.PostgreSql;
-using Testcontainers.Redis;
 
 namespace AfterApply.IntegrationTests.Identity;
 
-public class PasswordResetTests : IAsyncLifetime
+[Collection(IntegrationTestCollection.Name)]
+public class PasswordResetTests(SharedInfrastructure shared) : IAsyncLifetime
 {
     private const string RegisteredPassword = "P@ssw0rd123!";
 
@@ -26,19 +25,17 @@ public class PasswordResetTests : IAsyncLifetime
         Converters = { new JsonStringEnumConverter() }
     };
 
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
-    private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine").Build();
     private WebApplicationFactory<Program>? _factory;
     private CapturingEmailSender _emailSender = null!;
 
     public async Task InitializeAsync()
     {
-        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
+        var stores = await shared.CreateIsolatedStoresAsync(nameof(PasswordResetTests));
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
-            builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
+            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
+            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
 
@@ -52,9 +49,6 @@ public class PasswordResetTests : IAsyncLifetime
             });
         });
 
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
 
         _emailSender = (CapturingEmailSender)_factory.Services.GetRequiredService<IEmailSender>();
     }
@@ -66,8 +60,6 @@ public class PasswordResetTests : IAsyncLifetime
             await _factory.DisposeAsync();
         }
 
-        await _postgres.DisposeAsync();
-        await _redis.DisposeAsync();
     }
 
     private async Task<AuthResponse> RegisterAsync(string email)
