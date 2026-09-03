@@ -10,8 +10,13 @@ public interface IPersonalAccessTokenService
 
     Task<bool> RevokeAsync(Guid userId, Guid tokenId, CancellationToken cancellationToken);
 
-    /// <summary>Resolves a raw token presented on the wire to its owning UserId, recording usage —
+    /// <summary>Resolves a raw token presented on the wire to its owner and scope, recording usage —
     /// called by PersonalAccessTokenAuthenticationHandler on every PAT-authenticated request.
-    /// Returns null for an unknown, revoked, or malformed token.</summary>
-    Task<Guid?> ValidateAsync(string rawToken, CancellationToken cancellationToken);
+    /// Returns null for an unknown, revoked, expired, or malformed token.</summary>
+    Task<ValidatedPersonalAccessToken?> ValidateAsync(string rawToken, CancellationToken cancellationToken);
 }
+
+/// <summary>What a valid token resolves to. Kept as a record rather than a bare Guid so the scope
+/// travels with the identity and can be turned into a claim — see
+/// PersonalAccessTokenDefaults.ScopeClaimType.</summary>
+public sealed record ValidatedPersonalAccessToken(Guid UserId, PersonalAccessTokenScope Scope);

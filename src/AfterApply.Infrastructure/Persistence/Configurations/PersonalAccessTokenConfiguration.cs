@@ -13,6 +13,7 @@ public sealed class PersonalAccessTokenConfiguration : IEntityTypeConfiguration<
 
         builder.Property(t => t.Name).IsRequired().HasMaxLength(100);
         builder.Property(t => t.TokenHash).IsRequired().HasMaxLength(128);
+        builder.Property(t => t.Scope).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(t => t.TokenHash).IsUnique();
         builder.HasIndex(t => new { t.UserId, t.RevokedAt });

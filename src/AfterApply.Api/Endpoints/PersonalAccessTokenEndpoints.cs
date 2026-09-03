@@ -15,8 +15,9 @@ public static class PersonalAccessTokenEndpoints
         group.MapGet("/", async (ClaimsPrincipal user, IPersonalAccessTokenService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListAsync(user.GetUserId(), cancellationToken)))
             .WithSummary("List the current user's personal access tokens")
-            .WithDescription("Never returns the raw token value — only metadata (name, created/last-used timestamps). " +
-                             "The raw token is shown exactly once, in the Create response below.")
+            .WithDescription("Never returns the raw token value — only metadata (name, scope, created/expires/last-used " +
+                             "timestamps). The raw token is shown exactly once, in the Create response below. " +
+                             "Expired and revoked tokens are omitted.")
             .Produces<IReadOnlyList<PersonalAccessTokenResponse>>();
 
         group.MapPost("/", async (CreatePersonalAccessTokenRequest request, ClaimsPrincipal user,
@@ -24,6 +25,9 @@ public static class PersonalAccessTokenEndpoints
                 Results.Ok(await service.CreateAsync(user.GetUserId(), request, cancellationToken)))
             .WithValidation<CreatePersonalAccessTokenRequest>()
             .WithSummary("Create a personal access token (for the browser extension)")
+            .WithDescription("Expires 90 days after creation. Scope defaults to Extension, which can only reach the " +
+                             "endpoints the browser extension actually calls; pass Full for a token with the same " +
+                             "access as a browser session.")
             .Produces<CreatedPersonalAccessTokenResponse>();
 
         group.MapDelete("/{id:guid}", async (Guid id, ClaimsPrincipal user, IPersonalAccessTokenService service, CancellationToken cancellationToken) =>

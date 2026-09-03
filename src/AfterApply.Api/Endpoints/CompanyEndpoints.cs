@@ -1,6 +1,7 @@
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Companies;
 using AfterApply.Application.Companies.Contracts;
+using AfterApply.Infrastructure.Identity;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -15,6 +16,7 @@ public static class CompanyEndpoints
                 ICompanySearchService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.SearchAsync(query.Q, cancellationToken)))
             .WithValidation<SearchCompaniesQuery>()
+            .AllowExtensionToken()
             .WithSummary("Ranked company-name autocomplete")
             .WithDescription("Below Companies:MinQueryLength characters, returns an empty list rather than a validation error.")
             .Produces<IReadOnlyList<CompanySearchResultResponse>>();

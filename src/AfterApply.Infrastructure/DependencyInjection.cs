@@ -29,6 +29,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,7 @@ public static class DependencyInjection
     public const string AuthRateLimitPolicy = "auth-strict";
     public const string UploadRateLimitPolicy = "upload";
     public const string ExtensionSignalRateLimitPolicy = "extension-signal";
+    public const string LinkPreviewRateLimitPolicy = "link-preview";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -158,7 +160,33 @@ public static class DependencyInjection
 
         services.AddSingleton(Options.Create(jwtOptions));
 
-        services.AddIdentityCore<ApplicationUser>(options => { options.User.RequireUniqueEmail = true; })
+        services.AddIdentityCore<ApplicationUser>(options =>
+            {
+                options.User.RequireUniqueEmail = true;
+
+                // Identity's default is 6 characters, which is below anything ASVS would accept and
+                // was also *below what the client already asked for* (the register/reset forms have
+                // enforced 8 since Sprint 2) — so the server was the weaker of the two checks. 12 is
+                // the ASVS L2 recommendation; the complexity flags below are Identity's defaults,
+                // restated explicitly because they're a security decision, not an incidental one.
+                // Only new/changed passwords are affected: sign-in never re-evaluates the policy, so
+                // existing accounts keep working.
+                options.Password.RequiredLength = 12;
+                options.Password.RequiredUniqueChars = 4;
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+
+                // Also Identity's defaults, restated for the same reason: this is what actually
+                // bounds per-account password guessing, and it's the control the IP-based auth rate
+                // limiter can't provide on its own (an attacker spread across many IPs still hits
+                // this). Lockout applies from the first failure because CreateAsync sets
+                // LockoutEnabled from Lockout.AllowedForNewUsers, which defaults to true.
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Lockout.AllowedForNewUsers = true;
+            })
             .AddSignInManager<SignInManager<ApplicationUser>>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
@@ -183,10 +211,16 @@ public static class DependencyInjection
             })
             .AddPolicyScheme(smartBearerScheme, smartBearerScheme, policyOptions =>
             {
+                // StartsWith, not Contains: a JWT's payload is base64url, which includes '_', and
+                // it encodes attacker-influenced values (the email claim). A crafted address whose
+                // encoding happens to contain "aa_pat_" anywhere in the token would route that
+                // user's perfectly valid JWT to the PAT handler and fail every request they make.
+                // The prefix only means anything at the very front of the credential anyway.
                 policyOptions.ForwardDefaultSelector = context =>
                 {
                     var authorizationHeader = context.Request.Headers.Authorization.ToString();
-                    return authorizationHeader.Contains(PersonalAccessTokenDefaults.TokenPrefix, StringComparison.Ordinal)
+                    return authorizationHeader.StartsWith(
+                        $"Bearer {PersonalAccessTokenDefaults.TokenPrefix}", StringComparison.OrdinalIgnoreCase)
                         ? PersonalAccessTokenDefaults.AuthenticationScheme
                         : JwtBearerDefaults.AuthenticationScheme;
                 };
@@ -226,7 +260,17 @@ public static class DependencyInjection
             .AddScheme<AuthenticationSchemeOptions, PersonalAccessTokenAuthenticationHandler>(
                 PersonalAccessTokenDefaults.AuthenticationScheme, _ => { });
 
-        services.AddAuthorization();
+        // The scope requirement goes on the DEFAULT policy, not on individual endpoints, so that an
+        // endpoint added later is out of an Extension-scoped token's reach until someone explicitly
+        // calls .AllowExtensionToken() on it. See PersonalAccessTokenScopeHandler.
+        services.AddSingleton<IAuthorizationHandler, PersonalAccessTokenScopeHandler>();
+        services.AddAuthorization(options =>
+        {
+            options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .AddRequirements(new PersonalAccessTokenScopeRequirement())
+                .Build();
+        });
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();

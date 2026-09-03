@@ -35,8 +35,12 @@ RUN npm run build
 FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /app/.next/standalone ./
-COPY --from=build /app/.next/static ./.next/static
-COPY --from=build /app/public ./public
+# --chown so the standalone server owns its own tree: Next.js writes into .next/cache at runtime,
+# and a root-owned copy would leave that unwritable once we drop privileges below. The base image
+# ships this "node" user (uid 1000) but, like the .NET one, still defaults to root.
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/public ./public
 EXPOSE 3000
+USER node
 ENTRYPOINT ["node", "server.js"]

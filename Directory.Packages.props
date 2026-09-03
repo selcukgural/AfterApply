@@ -1,6 +1,13 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Lets a PackageVersion below also pin a package nothing references directly. Needed for the
+         Newtonsoft.Json entry: Hangfire.Core asks for >= 11.0.1, and in the API/Infrastructure
+         projects EntityFrameworkCore.Design happened to drag the floor up to a safe 13.x — but
+         Design is a development dependency whose assets don't flow to the test projects, so those
+         resolved the literal 11.0.1, which carries GHSA-5crp-9r3c-p9vr (high). Pinning centrally
+         fixes it everywhere instead of relying on that coincidence holding. -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
@@ -40,5 +47,8 @@
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.11" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.11" />
     <PackageVersion Include="Sentry.AspNetCore" Version="6.9.0" />
+    <!-- Transitive-only (Hangfire.Core, EntityFrameworkCore.Design) — pinned, not referenced.
+         See CentralPackageTransitivePinningEnabled above. -->
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 </Project>

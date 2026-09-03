@@ -178,6 +178,7 @@ export default function SettingsPage() {
                   <p className="font-medium text-gray-900 dark:text-gray-100">{token.name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {t("extension.createdAt")} {new Date(token.createdAt).toLocaleDateString()} ·{" "}
+                    {t("extension.expiresAt")} {new Date(token.expiresAt).toLocaleDateString()} ·{" "}
                     {token.lastUsedAt
                       ? `${t("extension.lastUsedAt")} ${new Date(token.lastUsedAt).toLocaleDateString()}`
                       : t("extension.neverUsed")}

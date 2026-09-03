@@ -241,10 +241,14 @@ export interface NotificationCountResponse {
   unreadCount: number;
 }
 
+export type PersonalAccessTokenScope = "Full" | "Extension";
+
 export interface PersonalAccessTokenResponse {
   id: string;
   name: string;
+  scope: PersonalAccessTokenScope;
   createdAt: string;
+  expiresAt: string;
   lastUsedAt: string | null;
 }
 
@@ -252,7 +256,9 @@ export interface CreatedPersonalAccessTokenResponse {
   id: string;
   name: string;
   token: string;
+  scope: PersonalAccessTokenScope;
   createdAt: string;
+  expiresAt: string;
 }
 
 export interface ExtensionApplicationResponse {

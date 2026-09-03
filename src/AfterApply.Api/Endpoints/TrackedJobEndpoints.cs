@@ -3,6 +3,7 @@ using AfterApply.Api.Extensions;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.TrackedJobs;
 using AfterApply.Application.TrackedJobs.Contracts;
+using AfterApply.Infrastructure;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -58,10 +59,12 @@ public static class TrackedJobEndpoints
                 CancellationToken cancellationToken) =>
                 Results.Ok(await previewService.ResolveAsync(request.JobUrl, cancellationToken)))
             .WithValidation<ResolveTrackedJobLinkRequest>()
+            .RequireRateLimiting(DependencyInjection.LinkPreviewRateLimitPolicy)
             .WithSummary("Preview a job posting URL (mobile app)")
             .WithDescription("Best-effort metadata scrape of a linkedin.com or kariyer.net URL. Always 200 — an " +
                              "unsupported host or a failed fetch just comes back with null fields to fill in manually.")
-            .Produces<TrackedJobLinkPreviewResponse>();
+            .Produces<TrackedJobLinkPreviewResponse>()
+            .Produces(StatusCodes.Status429TooManyRequests);
 
         return app;
     }

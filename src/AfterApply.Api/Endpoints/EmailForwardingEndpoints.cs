@@ -5,6 +5,7 @@ using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Application.Localization;
 using AfterApply.Infrastructure;
 using AfterApply.Infrastructure.EmailIntegrations;
+using AfterApply.Infrastructure.Identity;
 using Hangfire;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
@@ -59,7 +60,9 @@ public static class EmailForwardingEndpoints
                 jobClient.Enqueue<IEmailForwardingService>(s => s.ProcessExtensionSignalAsync(userId, request, CancellationToken.None));
                 return Results.NoContent();
             })
+            .WithValidation<ExtensionEmailSignalRequest>()
             .RequireAuthorization()
+            .AllowExtensionToken()
             .RequireRateLimiting(DependencyInjection.ExtensionSignalRateLimitPolicy)
             .WithSummary("Receive a recruitment-signal-scored email extracted client-side by the Gmail content script — not the raw email")
             .Produces(StatusCodes.Status204NoContent)

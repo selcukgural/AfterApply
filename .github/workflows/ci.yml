@@ -66,3 +66,43 @@ jobs:
       # Also the type-check gate — next.config.ts doesn't set
       # ignoreBuildErrors/ignoreDuringBuilds, so this fails on type errors.
       - run: npm run build
+
+  # Dependency vulnerability gate, added by the 2026-09-03 security pass. Dependabot already opens
+  # PRs for known advisories, but nothing failed a build on one — so a vulnerable transitive could
+  # (and did) sit in the tree unnoticed between Dependabot runs: Hangfire.Core's floor of
+  # Newtonsoft.Json 11.0.1 (GHSA-5crp-9r3c-p9vr, high) was resolving in the test projects until it
+  # was pinned centrally.
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      # `dotnet list package --vulnerable` exits 0 whether or not it finds anything, so the report
+      # has to be inspected rather than the exit code trusted.
+      - name: Audit NuGet packages
+        run: |
+          dotnet restore AfterApply.slnx
+          dotnet list AfterApply.slnx package --vulnerable --include-transitive | tee audit.txt
+          if grep -q "has the following vulnerable packages" audit.txt; then
+            echo "::error::Vulnerable NuGet package(s) found — see the report above."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      # This one does signal through its exit code. Held at high/critical on purpose: npm's
+      # low/moderate advisories are dominated by transitive dev-only findings that would make this
+      # gate noise rather than signal.
+      - name: Audit npm packages
+        working-directory: web
+        run: |
+          npm ci
+          npm audit --audit-level=high

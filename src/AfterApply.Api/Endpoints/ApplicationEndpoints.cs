@@ -2,6 +2,7 @@ using System.Security.Claims;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Infrastructure.Identity;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -53,6 +54,7 @@ public static class ApplicationEndpoints
                     : Results.Created($"/api/applications/{result.Application.Id}", result);
             })
             .WithValidation<CreateFromExtensionRequest>()
+            .AllowExtensionToken()
             .WithSummary("Log an application from the browser extension's \"I Applied\" action")
             .WithDescription("Deduplicates by JobUrl for this user: clicking it again on the same job page returns the " +
                              "existing application (200, WasDuplicate: true) instead of creating a second one (201).")

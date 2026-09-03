@@ -1,5 +1,6 @@
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Localization;
+using AfterApply.Application.Common;
 using FluentValidation;
 using Microsoft.Extensions.Localization;
 
@@ -10,7 +11,7 @@ public sealed class UpdateApplicationRequestValidator : AbstractValidator<Update
     public UpdateApplicationRequestValidator(IStringLocalizer<SharedStrings> localizer)
     {
         RuleFor(x => x.JobTitle).NotEmpty().MaximumLength(300);
-        RuleFor(x => x.JobUrl).MaximumLength(2000);
+        RuleFor(x => x.JobUrl).MaximumLength(2000).MustBeAWebUrl();
         RuleFor(x => x.Location).MaximumLength(200);
         RuleFor(x => x.EmploymentType).IsInEnum();
         RuleFor(x => x.AppliedAt).LessThanOrEqualTo(_ => DateTimeOffset.UtcNow.AddDays(1))

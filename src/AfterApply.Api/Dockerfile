@@ -14,4 +14,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app .
 EXPOSE 8080
+# The base image ships a non-root "app" user but still defaults to root; opting in costs nothing
+# here. Nothing in the container needs root: the only thing this process writes is the staged
+# import file under /tmp (ImportService.StageFileAsync), and 8080 is above the privileged range.
+USER app
 ENTRYPOINT ["dotnet", "AfterApply.Api.dll"]

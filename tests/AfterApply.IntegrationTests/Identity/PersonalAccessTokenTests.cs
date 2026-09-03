@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,11 @@ namespace AfterApply.IntegrationTests.Identity;
 // scheme wiring in DependencyInjection.AddIdentityAndJwt — using the raw PAT value on its own,
 // with NO JWT anywhere in the request, to authenticate against an ordinary RequireAuthorization()
 // endpoint (GET /api/applications). A revoked token must stop working immediately.
+//
+// Since the 2026-09-03 security pass, tokens also carry a scope, so the tests that just need "a
+// working credential" ask for Full explicitly rather than relying on the default — the default is
+// now Extension, which deliberately cannot reach GET /api/applications. The scope boundary itself
+// is covered by its own pair of tests below (allowed endpoint → 200, everything else → 403).
 public class PersonalAccessTokenTests : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -85,12 +91,9 @@ public class PersonalAccessTokenTests : IAsyncLifetime
     [Fact]
     public async Task Raw_Token_Alone_Authenticates_Against_An_Ordinary_Protected_Endpoint()
     {
-        var createResponse = await _client.PostAsJsonAsync("/api/personal-access-tokens",
-            new CreatePersonalAccessTokenRequest("Chrome Extension"), JsonOptions);
-        var created = await createResponse.Content.ReadFromJsonAsync<CreatedPersonalAccessTokenResponse>(JsonOptions);
+        var created = await CreateTokenAsync("Scripting", PersonalAccessTokenScope.Full);
 
-        using var patOnlyClient = _factory!.CreateClient();
-        patOnlyClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", created!.Token);
+        using var patOnlyClient = CreatePatOnlyClient(created.Token);
 
         var response = await patOnlyClient.GetAsync("/api/applications");
 
@@ -100,19 +103,78 @@ public class PersonalAccessTokenTests : IAsyncLifetime
     [Fact]
     public async Task Revoked_Token_No_Longer_Authenticates()
     {
-        var createResponse = await _client.PostAsJsonAsync("/api/personal-access-tokens",
-            new CreatePersonalAccessTokenRequest("Chrome Extension"), JsonOptions);
-        var created = await createResponse.Content.ReadFromJsonAsync<CreatedPersonalAccessTokenResponse>(JsonOptions);
+        var created = await CreateTokenAsync("Scripting", PersonalAccessTokenScope.Full);
 
-        var revokeResponse = await _client.DeleteAsync($"/api/personal-access-tokens/{created!.Id}");
+        var revokeResponse = await _client.DeleteAsync($"/api/personal-access-tokens/{created.Id}");
         revokeResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        using var patOnlyClient = _factory!.CreateClient();
-        patOnlyClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", created.Token);
+        using var patOnlyClient = CreatePatOnlyClient(created.Token);
 
         var response = await patOnlyClient.GetAsync("/api/applications");
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Create_Defaults_To_Extension_Scope_And_A_90_Day_Expiry()
+    {
+        var created = await CreateTokenAsync("Chrome Extension");
+
+        created.Scope.ShouldBe(PersonalAccessTokenScope.Extension);
+        // Not an exact equality check — CreatedAt is stamped server-side, so this only asserts the
+        // window is the intended 90 days rather than the scaffolded default the migration replaced.
+        (created.ExpiresAt - created.CreatedAt).TotalDays.ShouldBe(90, tolerance: 0.01);
+    }
+
+    [Fact]
+    public async Task Extension_Scoped_Token_Reaches_The_Endpoints_The_Extension_Calls()
+    {
+        var created = await CreateTokenAsync("Chrome Extension", PersonalAccessTokenScope.Extension);
+
+        using var patOnlyClient = CreatePatOnlyClient(created.Token);
+
+        var response = await patOnlyClient.GetAsync("/api/companies/search?q=acme");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    // The point of the scope: a token leaked out of chrome.storage.local must not be able to walk
+    // off with the account's whole application history. 403, not 401 — the credential is valid,
+    // it just isn't allowed here.
+    [Theory]
+    [InlineData("/api/applications")]
+    [InlineData("/api/users/me")]
+    [InlineData("/api/users/me/export")]
+    [InlineData("/api/personal-access-tokens")]
+    public async Task Extension_Scoped_Token_Is_Forbidden_Everywhere_Else(string path)
+    {
+        var created = await CreateTokenAsync("Chrome Extension", PersonalAccessTokenScope.Extension);
+
+        using var patOnlyClient = CreatePatOnlyClient(created.Token);
+
+        var response = await patOnlyClient.GetAsync(path);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    private async Task<CreatedPersonalAccessTokenResponse> CreateTokenAsync(
+        string name, PersonalAccessTokenScope? scope = null)
+    {
+        var request = scope is null
+            ? new CreatePersonalAccessTokenRequest(name)
+            : new CreatePersonalAccessTokenRequest(name, scope.Value);
+
+        var response = await _client.PostAsJsonAsync("/api/personal-access-tokens", request, JsonOptions);
+        response.EnsureSuccessStatusCode();
+
+        return (await response.Content.ReadFromJsonAsync<CreatedPersonalAccessTokenResponse>(JsonOptions))!;
+    }
+
+    private HttpClient CreatePatOnlyClient(string rawToken)
+    {
+        var client = _factory!.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", rawToken);
+        return client;
     }
 
     [Fact]

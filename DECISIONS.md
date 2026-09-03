@@ -2443,6 +2443,103 @@ cadence").
 
 ---
 
+## OWASP güvenlik incelemesi ve düzeltme planı (2026-09-03)
+
+**Bağlam:** Uygulamanın tamamı (API, web, extension, deploy/CI zinciri) OWASP Top 10 (2021),
+OWASP API Security Top 10 (2023), OWASP LLM Top 10 ve ASVS L2 referans alınarak tarandı. Sonuç:
+3 yüksek, 6 orta, 8 düşük/sertleştirme bulgusu. Klasik ölümcül sınıflar zaten kapalıydı —
+SQL injection yüzeyi yok (hiç raw SQL yok), IDOR sistematik olarak `userId` scope'uyla kapatılmış
+(SignalR hub'ında grup katılımı dahil), SSRF savunması allow-list + `AllowAutoRedirect=false` +
+her redirect hop'unda yeniden doğrulama ile örnek düzeyde, import pipeline'ında zip bomb/zip slip
+korumaları yerinde, refresh token'lar hash'li + rotasyonlu + reuse detection'lı, secret yönetimi
+WIF + Secret Manager üzerinden. Bulguların ağırlığı "şu an sömürülüyor" değil, "bir XSS/bir bot
+çıktığında hiçbir katman durdurmaz" kategorisinde.
+
+**Uygulananlar:**
+
+1. **Faz 1 — üretimde fiilen bozuk olan.** `UseForwardedHeaders` (Cloud Run TLS'i frontend'de
+   sonlandırıp container'a düz HTTP ile geçiyor; uygulama gerçek istemci IP'sini değil proxy'yi
+   görüyordu → IP'ye göre bölünen auth rate-limit'i **tüm dünya için tek partition**'a düşüyordu,
+   yani dakikada toplam 5 login denemesi; ayrıca `UseHttpsRedirection` sessizce no-op'tu ve
+   `RefreshToken.CreatedByIp` proxy'yi kaydediyordu). `ForwardLimit` varsayılan 1'de bırakıldı —
+   middleware `X-Forwarded-For`'u sağdan okur ve Cloud Run gerçek IP'yi **sona ekler**, dolayısıyla
+   istemcinin gönderdiği sahte değer asla seçilmez. `/extension-signal` artık
+   `ExtensionEmailSignalRequestValidator`'dan geçiyor (Subject/Snippet cap'leri kasten
+   `EmailSuggestionConfiguration`'daki kolon uzunluklarını yansıtıyor: fazla uzun metin eskiden
+   uçtan geçip Hangfire job'ının içinde `SaveChangesAsync`'te patlıyor, asla başarılı olamayacak bir
+   isteği 10 kez retry ediyordu). Web'e CSP/HSTS/X-Frame-Options/Referrer-Policy/Permissions-Policy,
+   API'ye `default-src 'none'` CSP + `nosniff` + HSTS.
+2. **Faz 2 — kimlik doğrulama sertleştirme.** Parola politikası Identity varsayılanı 6'dan 12'ye
+   (istemci zaten 8 istiyordu — sunucu ikisinin **zayıf** olanıydı); lockout ayarları da açıkça
+   yazıldı. PAT'e `Scope` + `ExpiresAt` (90 gün) eklendi; yeni token'lar varsayılan olarak
+   `Extension` kapsamlı ve yalnızca eklentinin gerçekten çağırdığı üç uca erişiyor
+   (`AllowExtensionToken()` ile işaretli). Zorlama **default authorization policy**'ye takıldı, tek
+   tek uçlara değil — böylece sonradan eklenen bir uç, biri açıkça izin vermedikçe extension
+   token'ının erişemeyeceği yerde kalır. `PersonalAccessTokenService`'in doğrulama cache TTL'i
+   60→15 sn (HybridCache'in L1'inde backplane yok, iptal edilen token diğer instance'larda TTL
+   kadar yaşıyor — gerçek iptal gecikmesi bu).
+3. **Faz 3 — kaynak tüketimi + sertleştirme.** `GlobalLimiter` (kullanıcı/IP başına 300 istek/dk;
+   öncesinde yalnızca 3 named policy vardı, `/api/users/me/export` ve `/api/companies/search` gibi
+   uçlar tamamen sınırsızdı); `/resolve-link` için ayrı ve daha sıkı `link-preview` policy'si (tek
+   dışa HTTP isteği atan uç — global limitte kalsaydı bir hesap dakikada yüzlerce isteği bizim
+   IP'mizden başkasının sunucusuna yöneltebilirdi); 429'lara `Retry-After`. Extension'ın
+   `escapeHtml`'i artık `"` ve `'` de kaçırıyor (attribute breakout; Company satırları **global**
+   olduğu için başka bir kullanıcının oluşturduğu ad herkesin autocomplete'ine düşüyor — MV3 CSP'si
+   inline script'i bloklamasa doğrudan XSS olurdu). `JobUrl` alanlarına `MustBeAWebUrl()`
+   (`javascript:` şeması saklanıp `<a href>` olarak render ediliyordu — React tehlikeli şemaları
+   filtrelemez). PAT scheme selector `Contains` → `StartsWith("Bearer aa_pat_")`. Her iki container
+   non-root.
+4. **Faz 4 — süreç.** CI'ya `dependency-audit` job'ı (`dotnet list package --vulnerable` +
+   `npm audit --audit-level=high`) ve CodeQL workflow'u (C# + JS/TS, `security-extended`; repo public
+   olduğu için ücretsiz). Bu gate'in ilk bulgusu hemen çıktı: Hangfire.Core'un
+   `Newtonsoft.Json >= 11.0.1` tabanı, test projelerinde literal 11.0.1'e çözülüyordu
+   (GHSA-5crp-9r3c-p9vr, high) — API/Infrastructure'da tesadüfen `EntityFrameworkCore.Design` tabanı
+   13.x'e çekiyordu ama Design bir development dependency, asset'leri test projelerine akmıyor.
+   `CentralPackageTransitivePinningEnabled` + merkezi `Newtonsoft.Json 13.0.4` pin'i ile kapatıldı.
+
+**Uygulanmayan bir madde ve nedeni — `AllowedHosts`:** İlk planda `AllowedHosts: "*"` daraltılacaktı
+(L6). İncelendiğinde faydasının bu mimaride sıfır olduğu görüldü: Host header'ının klasik istismarı
+şifre sıfırlama linkini zehirlemektir, ama `AuthService.ForgotPasswordAsync` linki request host'undan
+değil `AppOptions.WebBaseUrl` (config) üzerinden kuruyor; Host'a göre anahtarlanan paylaşımlı bir
+cache de yok. Buna karşılık Cloud Run'ın startup/liveness probe'ları container'a kendi iç
+adresleriyle bağlanıyor ve dar bir allow-list bu probe'ları 400'e düşürüp revision'ı hiç ayağa
+kaldırmayabilir. Gerçek fayda yokken gerçek deploy riski alınmadı.
+
+**Doğrulama:** `dotnet build AfterApply.slnx` uyarısız; 182 unit test geçti; `PersonalAccessTokenTests`
+(yeni kapsam/expiry testleri dahil, 11 test) Testcontainers ile geçti; `npx tsc --noEmit` ve
+`npm run lint` temiz; `next build` başarılı. Kapsam sınırı iki mevcut PAT testinin davranışını
+kasten değiştirdiği için o testler `Full` kapsam isteyecek şekilde güncellendi ve sınırın kendisi
+için ayrı testler eklendi (izinli uçta 200, diğer her yerde 403 — 401 değil: kimlik geçerli,
+yetki yok).
+
+## E-posta doğrulaması bilinçli olarak ertelendi — Resend free plan kotası (2026-09-03)
+
+**Karar:** Yukarıdaki güvenlik incelemesinin **M1** bulgusu (kayıt sırasında e-posta doğrulaması
+yok) bu turda **kasıtlı olarak düzeltilmiyor**. Gelecekte yapılacaklar listesine alındı.
+
+**Gerekçe:** Giden e-posta Resend üzerinden gidiyor ve hesap **free plan'de: günlük 100 e-posta
+hakkı** var. Bu kota şu anda tamamen şifre sıfırlama (`SendPasswordResetEmailAsync`) ve şifre
+değişti bildirimi (`SendPasswordChangedEmailAsync`) için ayrılmış durumda. Kayıt akışına zorunlu
+doğrulama maili eklemek, her yeni kullanıcı için en az bir mail (pratikte "tekrar gönder"lerle
+daha fazlası) demek — mevcut kotayı hızla tüketip **şifre sıfırlama akışını çalışmaz hale
+getirme** riski taşıyor. Doğrulanmamış hesabın riski (hesap squatting, doğrulanmamış adrese mail
+gitmesi) ile şifre sıfırlamanın kota dolduğu için sessizce başarısız olması karşılaştırıldığında,
+ikincisi bugün daha ağır basıyor.
+
+**Şu anki risk kabulü:** Herkes başkasının e-posta adresiyle hesap açabilir; `RequireUniqueEmail
+= true` olduğu için gerçek adres sahibi o e-postayla kayıt olamaz (squatting). Kullanıcı tabanı
+küçükken kabul edilebilir; büyüdükçe kabul edilemez hale gelir.
+
+**Gelecekte yapılacak — tetikleyici koşullar (herhangi biri):** Resend'de ücretli plana geçildiğinde,
+ya da günlük e-posta hacmi kotanın %50'sine yaklaştığında, ya da ilk squatting/kötüye kullanım
+vakası görüldüğünde. Uygulama tarafı hazır: `AddDefaultTokenProviders()` zaten kayıtlı,
+`IEmailSender`/`EmailTemplates` altyapısı ve `DataProtectionTokenProviderOptions.TokenLifespan`
+(30 dk) mevcut — eklenmesi gereken `RequireConfirmedAccount`, bir `EmailConfirmation` template
+satırı ve confirm endpoint'i. Ara çözüm olarak, tam doğrulamadan önce kayıt ucuna disposable-domain
+reddi gibi mailsiz bir önlem konabilir.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

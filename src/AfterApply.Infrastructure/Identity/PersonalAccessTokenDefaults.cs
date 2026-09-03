@@ -9,4 +9,9 @@ public static class PersonalAccessTokenDefaults
     /// DependencyInjection.AddIdentityAndJwt) needs a cheap way to route to the right handler
     /// without trying to JWT-parse every request.</summary>
     public const string TokenPrefix = "aa_pat_";
+
+    /// <summary>Carries the token's PersonalAccessTokenScope on the ClaimsPrincipal so
+    /// PersonalAccessTokenScopeHandler can enforce it. Absent on a JWT session, which is exactly
+    /// how that handler tells the two credential kinds apart.</summary>
+    public const string ScopeClaimType = "pat_scope";
 }

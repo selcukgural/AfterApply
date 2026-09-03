@@ -1,0 +1,56 @@
+name: CodeQL
+
+# Static analysis for the two languages this repo actually ships (C# and the JS/TS across web/ and
+# extension/). Added by the 2026-09-03 security pass, which found the repo had no code scanning of
+# any kind — Dependabot covered dependencies, nothing covered our own code. Free here because the
+# repository is public; on a private repo this would need GitHub Advanced Security.
+#
+# Separate workflow rather than a job in ci.yml: the C# build alone takes a couple of minutes under
+# CodeQL's tracer, and there is no reason to put that in front of every push. It runs on pull
+# requests and on main, plus a weekly schedule so newly published queries reach existing code.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: csharp
+            build-mode: autobuild
+          # JS/TS needs no build step — CodeQL reads the sources directly, which also means the
+          # extension's plain scripts are covered without any bundling.
+          - language: javascript-typescript
+            build-mode: none
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        if: matrix.language == 'csharp'
+        with:
+          dotnet-version: "10.0.x"
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          # security-extended over the default suite: the default is tuned for a low false-positive
+          # rate on very large codebases, and this one is small enough to absorb the extra queries.
+          queries: security-extended
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

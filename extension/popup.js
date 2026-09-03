@@ -565,10 +565,21 @@ async function main() {
   buildForm();
 }
 
+// Every call site puts the result inside a double-quoted HTML attribute (buildForm's value="...",
+// the autocomplete's data-name="..."), so quotes have to be escaped too. The old textContent →
+// innerHTML trick escaped & < > but NOT " — a company name containing a double quote could close
+// the attribute early and inject attributes of its own. That is reachable from another user's data:
+// Company rows are global (CompanySearchService applies no UserId filter), so names anyone creates
+// show up in everyone's autocomplete. MV3's default CSP (script-src 'self') blocks inline handlers,
+// which is why this stayed a UI-integrity bug rather than script execution — not a reason to leave
+// the escaping incomplete.
 function escapeHtml(value) {
-  const div = document.createElement("div");
-  div.textContent = value;
-  return div.innerHTML;
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 main();

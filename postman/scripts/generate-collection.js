@@ -129,11 +129,12 @@ function exampleFromSchema(schema, schemas, depth = 0, fieldNameHint = '') {
       if (schema.format === 'date') return new Date().toISOString().slice(0, 10);
       if (schema.format === 'uuid') return '11111111-1111-1111-1111-111111111111';
       if (schema.format === 'email' || /email/i.test(fieldNameHint)) return 'user@example.com';
-      // Identity's default PasswordOptions (never relaxed in DependencyInjection.cs) requires
-      // upper/lower/digit/non-alphanumeric — a generic "string" placeholder always fails it,
-      // which would make Register/Login always 400 and break the token-capture chain every
-      // downstream authenticated request in this collection relies on.
-      if (/password/i.test(fieldNameHint)) return 'P@ssw0rd123';
+      // PasswordOptions in DependencyInjection.cs requires upper/lower/digit/non-alphanumeric and
+      // (since the 2026-09-03 security pass) at least 12 characters — a generic "string"
+      // placeholder always fails that, which would make Register/Login always 400 and break the
+      // token-capture chain every downstream authenticated request in this collection relies on.
+      // Keep this in sync with options.Password.RequiredLength.
+      if (/password/i.test(fieldNameHint)) return 'P@ssw0rd123!';
       if (/^(job)?url$/i.test(fieldNameHint)) return 'https://example.com';
       return 'string';
     case 'integer':
