@@ -45,10 +45,5 @@ dump.rdb
 # Claude Code per-machine state
 .claude/scheduled_tasks.lock
 
-# graphify per-machine state (semantic extraction cache, resolved interpreter path)
-graphify-out/cache/
-graphify-out/.graphify_python
-graphify-out/.graphify_root
-graphify-out/.graphify_analysis.json
-# graphify pre-overwrite backups (dated folders written by the post-commit hook)
-graphify-out/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
+# graphify knowledge graph: regenerated locally by the git hooks / `graphify update .`, not versioned
+graphify-out/
