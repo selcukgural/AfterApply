@@ -42,3 +42,10 @@ dump.rdb
 /e-kariyerim-extension.zip
 
 .claude/settings.local.json
+# Claude Code per-machine state
+.claude/scheduled_tasks.lock
+
+# graphify per-machine state (semantic extraction cache, resolved interpreter path)
+graphify-out/cache/
+graphify-out/.graphify_python
+graphify-out/.graphify_root
