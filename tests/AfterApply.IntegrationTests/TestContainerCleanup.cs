@@ -83,6 +83,9 @@ internal static class TestContainerCleanup
             return;
         }
 
+        // Synchronous by necessity: this runs from an UnhandledException/ProcessExit handler, which
+        // cannot await — and by then the runtime is already tearing the process down, so a pending
+        // async write would never flush.
         void Write(string kind, object? payload)
         {
             try
@@ -152,6 +155,8 @@ internal static class TestContainerCleanup
                 return;
             }
 
+            // Synchronous by necessity: a [ModuleInitializer] cannot be async, and nothing may run
+            // before it completes.
             var output = list.StandardOutput.ReadToEnd();
             list.WaitForExit(5_000);
 

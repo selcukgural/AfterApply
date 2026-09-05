@@ -80,7 +80,7 @@ internal sealed partial class ImportService(
             var ctx = await BuildDedupContextAsync(batch.UserId, cancellationToken);
             var counts = new RowCounts();
 
-            using (var reader = new StreamReader(stagedFilePath))
+            using (var reader = OpenAsyncCsvReader(stagedFilePath))
             {
                 await ProcessCsvAsync(batch.UserId, batch, ctx, reader, Source.CsvImport, resolveJob: false,
                     columnMapping, counts, opts, cancellationToken,
@@ -129,6 +129,8 @@ internal sealed partial class ImportService(
 
         try
         {
+            // Synchronous by necessity: ZipArchive has no async API — opening the archive and
+            // enumerating entries always blocks. Bounded by the MaxZipSizeBytes check above.
             using (var archive = ZipFile.OpenRead(stagedPath))
             {
                 if (archive.Entries.Count > opts.MaxZipEntryCount)
@@ -180,6 +182,8 @@ internal sealed partial class ImportService(
         try
         {
             var opts = options.Value;
+            // Synchronous by necessity: ZipArchive has no async API (see StageLinkedInZipImportAsync).
+            // Entry contents are still read asynchronously — entry.Open() supports ReadAsync.
             using var archive = ZipFile.OpenRead(stagedFilePath);
             var matchedEntries = archive.Entries.Where(e => JobApplicationsFileRegex().IsMatch(e.Name)).ToList();
 
@@ -260,12 +264,16 @@ internal sealed partial class ImportService(
         Directory.CreateDirectory(dir);
         var path = Path.Combine(dir, $"{Guid.NewGuid():N}{extension}");
 
-        await using var fileStream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        // useAsync: without it the handle is synchronous and CopyToAsync below blocks the calling
+        // thread on every write instead of awaiting real async I/O.
+        await using var fileStream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+            bufferSize: 4096, useAsync: true);
         await sourceStream.CopyToAsync(fileStream, cancellationToken);
 
         return path;
     }
 
+    // Synchronous by necessity: File.Delete has no async overload in .NET.
     private static void TryDeleteFile(string path)
     {
         try
@@ -282,9 +290,15 @@ internal sealed partial class ImportService(
 
     private static async Task<int> CountDataRowsAsync(string filePath, CancellationToken cancellationToken)
     {
-        using var reader = new StreamReader(filePath);
+        using var reader = OpenAsyncCsvReader(filePath);
         return await CountDataRowsAsync(reader, cancellationToken);
     }
+
+    // `new StreamReader(path)` opens the handle in synchronous mode, so the ReadLineAsync /
+    // CsvReader.ReadAsync calls downstream would do blocking I/O on the calling thread. Opening
+    // the FileStream with useAsync keeps the read path genuinely async.
+    private static StreamReader OpenAsyncCsvReader(string path) =>
+        new(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true));
 
     private static async Task<int> CountZipEntryDataRowsAsync(ZipArchiveEntry entry, CancellationToken cancellationToken)
     {

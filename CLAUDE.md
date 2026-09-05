@@ -21,6 +21,29 @@ kararları ve bulguları (ekariyerim rebrand + logo)" and the later "backend/dı
 genişletmesi" follow-up). Don't re-ask the user to reconfirm a scope decision already recorded
 there.
 
+# Async policy
+
+Asenkron bir operasyon varsa **thread bloklanmaz** — her yerde async/await kullanılır. Bu
+standing bir kuraldır, her yeni kod ve dokunduğun her mevcut kod için geçerlidir.
+
+- Yasak (sync-over-async): `.Result`, `.Wait()`, `.GetAwaiter().GetResult()`, `Task.WaitAll`,
+  `Task.Run(...).Result`, senkron bir metodu async iş yapmak için `Task.Run` ile sarmak.
+- Async overload varsa senkron olanı kullanma: EF Core (`ToListAsync`, `FirstOrDefaultAsync`,
+  `SaveChangesAsync`, `AnyAsync`...), `HttpClient` (`ReadAsStringAsync`, `SendAsync`),
+  `Stream`/`File` (`ReadAsync`, `WriteAsync`), Redis, Hangfire job gövdeleri, MediatR/handler'lar.
+- Async zinciri uçtan uca taşı: endpoint/handler → service → repository hepsi `Task`/`ValueTask`
+  döndürür; `CancellationToken` parametre olarak alınıp aşağı geçirilir.
+- `async void` yok (framework event handler'ları dışında). Sadece bir Task döndürüyorsan
+  gereksiz `async/await` yerine Task'i doğrudan döndürmek serbest, ama try/finally veya `using`
+  varsa `await` et.
+- Frontend/extension tarafında da aynı kural: senkron XHR, blocking loop, `await` edilmeyen
+  promise (floating promise) yok — hata yutulur.
+
+**İstisna:** gerçekten async alternatifi olmayan yerler — composition root (`Program.cs` kurulum
+kodu), constructor içi zorunlu ilklendirme, `Dispose` yolları, bazı test yardımcıları. Bu
+durumlarda blokla ama **neden mecbur kalındığını tek satır yorumla belirt**; sessizce `.Result`
+bırakma.
+
 # Testing policy
 
 Every development change must ship with tests when the change is testable that way. Tests are
