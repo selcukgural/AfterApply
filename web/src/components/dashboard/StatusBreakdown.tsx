@@ -57,13 +57,21 @@ export function StatusBreakdown({ data }: { data: StatusDistributionItem[] }) {
         <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
           {rest.map((item) => (
             <li key={item.status} className="flex items-center gap-3">
-              <span className="min-w-0 flex-1 truncate text-sm text-gray-600 dark:text-gray-400">
+              {/* Wraps rather than truncates: the longest Turkish status name
+                  ("Ön Değerlendirme") overruns the label column by a few pixels, and a clipped
+                  status is worse than a two-line one. Grid rows keep both columns aligned. */}
+              <span className="min-w-0 flex-1 text-sm leading-snug text-gray-600 dark:text-gray-400">
                 {tStatus(item.status)}
               </span>
-              <span className="h-1.5 w-14 shrink-0 overflow-hidden rounded-full bg-track">
+              <span className="h-1.5 w-12 shrink-0 overflow-hidden rounded-full bg-track">
+                {/* Same floor as the funnel's rails: on a shared scale a count of 1 beside a
+                    count of 84 rounds to under a pixel and reads as a missing bar. */}
                 <span
                   className={`block h-full rounded-full ${TONE_FILL[STATUS_TONE[item.status]]}`}
-                  style={{ width: `${restMax > 0 ? (100 * item.count) / restMax : 0}%` }}
+                  style={{
+                    width: `${restMax > 0 ? (100 * item.count) / restMax : 0}%`,
+                    minWidth: item.count > 0 ? "0.375rem" : undefined,
+                  }}
                 />
               </span>
               <b className="w-8 shrink-0 text-right text-sm font-semibold text-gray-900 tabular-nums dark:text-gray-100">

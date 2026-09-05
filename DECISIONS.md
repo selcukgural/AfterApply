@@ -3107,11 +3107,19 @@ sorunu bu kez içerik dağıtımıyla çözüldü: `ConversionFunnel`/`OutcomeCa
 iki rakamı `flex-1 content-center` ile dikeyde ortalanıyor. `DashboardSkeleton` ve landing
 sayfasındaki `AnalyticsSection` aynı ızgarayı kullanıyor.
 
-### Yenilenmeyen: yardım ekran görüntüsü
+### Yardım ekran görüntüsü üretilmiş demo veriyle çekildi — DECIDED
 
-`web/public/help/screenshots/dashboard-overview.png` hâlâ eski paneli gösteriyor. Yardım
-metinleri (`help.dashboard.*`) yeni düzene göre yeniden yazıldı ama görsel, kullanıcının kendi
-verisiyle çekilmesi gerektiği için güncellenmedi.
+`web/public/help/screenshots/dashboard-overview.png` yenilendi. Kullanıcının gerçek hesabıyla
+değil, yerel DB'ye geçici olarak seed'lenen bir demo hesapla ("Elif Yılmaz", diğer yardım
+görselleriyle aynı isim) — görsel herkese açık dokümantasyonda duruyor, orada gerçek başvuru
+verisi olmamalı. 127 başvuruluk dağılım her paneli çalışır hâlde gösterecek şekilde seçildi:
+daralan bir huni (127 → 37 → 13 → 3), uzun kuyruklu bir durum listesi, sonuçlanmış başvurular
+ve gerçek bir yanıt süresi örneklemi. Hesap ve verisi çekim sonrası silindi.
+
+Bu tur iki UI hatası daha çıkardı: (1) paylaşılan ölçekte küçük değerler kayboluyordu
+(84'ün yanında 1 → piksel altı) — hunideki gibi 6px taban genişliği verildi; (2) en uzun Türkçe
+durum adı ("Ön Değerlendirme") etiket sütununu birkaç piksel aşıp kırpılıyordu — `truncate`
+kaldırıldı, etiket iki satıra sarıyor.
 
 ---
 
