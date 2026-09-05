@@ -20,3 +20,21 @@ decision log for this project and already has entries covering exactly this spli
 kararları ve bulguları (ekariyerim rebrand + logo)" and the later "backend/dış-servis
 genişletmesi" follow-up). Don't re-ask the user to reconfirm a scope decision already recorded
 there.
+
+# Testing policy
+
+Every development change must ship with tests when the change is testable that way. Tests are
+part of the deliverable, not a follow-up.
+
+- **Unit tests** go in `tests/AfterApply.UnitTests` (no container runtime needed). Add them for
+  new or changed domain logic, services, validators, parsers, classifiers, mappers, etc.
+- **Integration tests** go in `tests/AfterApply.IntegrationTests` (Testcontainers-Postgres via
+  podman). Add them for new or changed API endpoints, EF/persistence behaviour, Hangfire jobs,
+  auth/rate-limit/policy wiring — anything that only proves itself against a real host + DB.
+- **Frontend / extension** changes: add tests where a test harness exists for that area;
+  otherwise state in the summary that no harness exists rather than silently skipping.
+- If a change is genuinely not testable (pure config, docs, infra identifiers), say so
+  explicitly in the summary instead of omitting tests quietly.
+- Run cadence: unit tests continuously during development; run the podman-backed integration
+  suite once at the end of a batch of work, not after every edit (see `README.md`
+  "Running tests").
