@@ -186,9 +186,9 @@ export default function SettingsPage() {
             {tokens.map((token) => (
               <li
                 key={token.id}
-                className="flex items-center justify-between rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm"
+                className="flex items-center justify-between gap-3 rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-gray-900 dark:text-gray-100">{token.name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {t("extension.createdAt")} {new Date(token.createdAt).toLocaleDateString()} ·{" "}
@@ -198,7 +198,11 @@ export default function SettingsPage() {
                       : t("extension.neverUsed")}
                   </p>
                 </div>
-                <Button variant="danger" onClick={() => handleRevokeToken(token.id)}>
+                <Button
+                  variant="danger"
+                  className="shrink-0 whitespace-nowrap"
+                  onClick={() => handleRevokeToken(token.id)}
+                >
                   {t("extension.revoke")}
                 </Button>
               </li>
