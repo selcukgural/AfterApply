@@ -38,6 +38,9 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
             builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
             builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // The suite disables rate limiting for every host (TestContainerCleanup); this class
+            // owns the one test that asserts a 429, so it opts back in.
+            builder.UseSetting("RateLimiting:Enabled", "true");
         });
 
     }

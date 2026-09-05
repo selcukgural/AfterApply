@@ -6,6 +6,111 @@ namespace AfterApply.IntegrationTests;
 
 internal static class TestContainerCleanup
 {
+    /// <summary>
+    /// Shrinks Hangfire's background server for every WebApplicationFactory this assembly builds.
+    /// Set as environment variables rather than per-factory UseSetting calls because ASP.NET's
+    /// default configuration reads them automatically — this reaches all ~200 hosts a run creates
+    /// without every one of the 17 test classes having to opt in and remember to keep doing so.
+    ///
+    /// Why it matters: Hangfire's shutdown was the single most destabilising thing in this suite.
+    /// WaitForShutdownAsync timing out during a fixture's DisposeAsync showed up as a failed test,
+    /// a run that hung until something killed it, or "Test host process crashed" partway through —
+    /// three symptoms, one cause. Raising the timeout (see DependencyInjection.AddBackgroundJobs)
+    /// had already been tried and only lengthened the wait. One worker is plenty for tests, which
+    /// only ever need to observe that a job ran, and it leaves far less to wind down.
+    /// </summary>
+    [ModuleInitializer]
+    public static void ConfigureHangfireForTests()
+    {
+        Environment.SetEnvironmentVariable("Hangfire__WorkerCount", "1");
+
+        // ShutdownTimeoutSeconds is deliberately left at its 30s default. Lowering it to 5 was
+        // tried and is a mistake: the timeout does not reduce the work Hangfire has to do on the
+        // way down, it only decides how long we are willing to wait, so a tight value brings back
+        // the very TaskCanceledException-out-of-DisposeAsync failures it was meant to help with as
+        // soon as the machine is loaded (reproduced immediately under `dotnet test --diag`, whose
+        // overhead stretched one test to four minutes). WorkerCount is the setting that actually
+        // reduces the work.
+    }
+
+    /// <summary>
+    /// Turns the rate-limiting middleware off for every host this assembly builds. Same env-var
+    /// delivery as ConfigureHangfireForTests, for the same reason. The one test that needs a 429,
+    /// AccountManagementTests.Login_Rate_Limit_Rejects_Requests_Beyond_The_Threshold, switches it
+    /// back on for its own factory.
+    ///
+    /// Why: this was the actual cause of the "Test host process crashed" / hung run / Hangfire
+    /// shutdown-timeout trio, found from a heap dump of a hung run. WebApplicationFactory hosts are
+    /// never garbage-collected once disposed (all 102 built so far were alive at test 47), and each
+    /// carried two PartitionedRateLimiters whose 100ms heartbeat timers nothing ever stops — the
+    /// middleware never disposes them. ~2,000 timer callbacks a second by mid-run, each of them
+    /// disposing idle partitions, starved the thread pool and the JIT lock (200+ threads queued on
+    /// one method's compile), which is what a "random" crash or hang partway through looked like
+    /// from the outside. The named policies (auth, upload, ...) date from August and gave each host
+    /// one such limiter; the OWASP hardening commit (755f7cf) added the global per-user/IP limiter,
+    /// a second one whose partitions churn on every request — and that is the day the previously
+    /// rare crash became constant.
+    /// </summary>
+    [ModuleInitializer]
+    public static void ConfigureRateLimitingForTests()
+    {
+        Environment.SetEnvironmentVariable("RateLimiting__Enabled", "false");
+    }
+
+    /// <summary>
+    /// Reports what killed the process when a run ends in "Test host process crashed".
+    ///
+    /// An unhandled exception on a background thread terminates a .NET process outright, and the
+    /// test runner has nothing to print because no test threw — which is the shape of the
+    /// intermittent local crash this suite has. Hangfire runs plenty of such threads and the suite
+    /// builds roughly 200 of its servers per run, so a background thread outliving the storage it
+    /// captured is a plausible source.
+    ///
+    /// Writes to a file rather than stderr: vstest does not surface the test host's own stderr in
+    /// the `dotnet test` output, so a first version of this that used Console.Error produced a
+    /// captured crash with nothing printed at all. AFTERAPPLY_CRASH_LOG names the file; unset means
+    /// the whole thing stays off, so this costs nothing in CI or a normal run.
+    ///
+    /// Diagnostic only: it cannot prevent a crash (the runtime is already tearing the process down
+    /// by the time it fires), it only makes one legible.
+    /// </summary>
+    [ModuleInitializer]
+    public static void ReportBackgroundFailures()
+    {
+        var path = Environment.GetEnvironmentVariable("AFTERAPPLY_CRASH_LOG");
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        void Write(string kind, object? payload)
+        {
+            try
+            {
+                File.AppendAllText(path,
+                    $"=== {kind} pid={Environment.ProcessId} {DateTime.UtcNow:HH:mm:ss.fff} ==={Environment.NewLine}{payload}{Environment.NewLine}");
+            }
+            catch
+            {
+                // Diagnostics must never be the thing that breaks a run.
+            }
+        }
+
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            Write($"UNHANDLED terminating={e.IsTerminating}", e.ExceptionObject);
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            Write("UNOBSERVED", e.Exception);
+            e.SetObserved();
+        };
+
+        // Fires on a clean shutdown. Its absence in the log after a crash is itself evidence: it
+        // means the process died in a way that skips managed shutdown entirely (a native fault,
+        // a stack overflow, or an outside kill), rather than through anything raising an exception.
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => Write("PROCESS-EXIT", "clean");
+    }
+
     // Ryuk (Testcontainers' automatic resource-reaper sidecar) cannot start under this machine's
     // rootless podman setup — it fails trying to bind-mount the podman API socket file ("operation
     // not supported"), so TESTCONTAINERS_RYUK_DISABLED=true is set for every local run (see
@@ -27,26 +132,6 @@ internal static class TestContainerCleanup
     // same instant could theoretically prune each other's just-started containers, which is an
     // accepted tradeoff here, not a concern on a shared CI runner (which uses real Docker, where
     // Ryuk works and this is a no-op).
-    /// <summary>
-    /// Shrinks Hangfire's background server for every WebApplicationFactory this assembly builds.
-    /// Set as environment variables rather than per-factory UseSetting calls because ASP.NET's
-    /// default configuration reads them automatically — this reaches all ~200 hosts a run creates
-    /// without every one of the 17 test classes having to opt in and remember to keep doing so.
-    ///
-    /// Why it matters: Hangfire's shutdown was the single most destabilising thing in this suite.
-    /// WaitForShutdownAsync timing out during a fixture's DisposeAsync showed up as a failed test,
-    /// a run that hung until something killed it, or "Test host process crashed" partway through —
-    /// three symptoms, one cause. Raising the timeout (see DependencyInjection.AddBackgroundJobs)
-    /// had already been tried and only lengthened the wait. One worker is plenty for tests, which
-    /// only ever need to observe that a job ran, and it leaves far less to wind down.
-    /// </summary>
-    [ModuleInitializer]
-    public static void ConfigureHangfireForTests()
-    {
-        Environment.SetEnvironmentVariable("Hangfire__WorkerCount", "1");
-        Environment.SetEnvironmentVariable("Hangfire__ShutdownTimeoutSeconds", "5");
-    }
-
     [ModuleInitializer]
     public static void PruneOrphanedContainers()
     {

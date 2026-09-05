@@ -111,7 +111,20 @@ app.UseExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRateLimiter();
+
+// RateLimiting:Enabled exists for the integration suite and defaults to on; nothing in a deployed
+// configuration sets it. The suite turns it off for every host it builds (see
+// TestContainerCleanup.ConfigureRateLimitingForTests) and back on only in the one test that asserts
+// a 429, because the middleware's own endpoint limiter — the one RateLimitingMiddleware builds
+// around the named policies — cannot be disposed from outside and keeps a 100ms heartbeat alive
+// for as long as the host object lives, which for a test host is the rest of the run.
+//
+// Leaving the middleware out is enough: endpoints keep their RequireRateLimiting metadata, and
+// routing does not check for an unhandled rate-limiting policy the way it does for authorization.
+if (app.Configuration.GetValue("RateLimiting:Enabled", true))
+{
+    app.UseRateLimiter();
+}
 
 app.MapHealthChecks("/health");
 app.MapAuthEndpoints();

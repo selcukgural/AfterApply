@@ -2630,6 +2630,74 @@ faydası olmadığı, yalnızca yerel geliştirme deneyimini etkilediği için �
 
 ---
 
+## Yerel test-host çökmesi: kök neden bulundu — sızan host'lar + hiç durmayan rate-limiter heartbeat'leri (2026-09-03)
+
+Yukarıdaki "hâlâ teşhis edilmedi" kaydını kapatır. Ertelenen adım (`--blame-crash` ile dump almak)
+bir önceki oturumda yapılmış, 6.9 GB'lık dump bu oturumda `dotnet-dump` + `lldb` ile okundu; ayrıca
+asılı kalan bir koşudan `sample`, mini dump ve heap dump alındı.
+
+**Üç belirti, tek kaynak.** "Test host process crashed", koşunun asılı kalması ve Hangfire'ın
+`WaitForShutdownAsync` içinde `TaskCanceledException` ile 30 sn'lik kapanış bütçesini kaçırması
+aynı yükün üç yüzü.
+
+**Kanıt zinciri:**
+
+- Çökme dump'ında hiçbir yönetilen istisna yok. Çöken thread CoreCLR'ın finalizer thread'i:
+  `Thread::CleanupDetachedThreads → Thread::~Thread → CLREventBase::CloseEvent → CloseHandle →
+  CSimpleHandleManager::FreeHandle` → sinyal. Native bir runtime çökmesi (.NET 10.0.5, macOS
+  arm64); süreçte 225 yönetilen thread nesnesi, 181'i ölü. dotnet/runtime'da birebir eşleşen kayıt
+  yok — ama tetikleyici bizim yükümüz.
+- Asılı kalan koşu (47/107'de, %101 CPU, 13 dk): 257 thread; ~200 thread-pool worker'ı
+  `MethodDesc::JitCompileCode → CrstBase::Enter`'da tek bir metodun JIT kilidinde; tiered-compilation
+  thread'i JIT içinde jump-stub kilidinde. Mini dump'ta 101 thread
+  `DefaultPartitionedRateLimiter.Heartbeat → RateLimiter.DisposeAsync` yolundaydı.
+- Heap dump: **o ana kadar üretilen 102 `Microsoft.Extensions.Hosting.Internal.Host`'un tamamı
+  bellekte** (hepsi dispose edilmiş), 102×2 `DefaultPartitionedRateLimiter`, 204 `TimerAwaitable`,
+  255 `System.Threading.Timer`. `gcroot`: `FileSystemWatcher+RunningInstance` (strong handle) →
+  ExecutionContext → AsyncLocal → `HostFactoryResolver+HostingListener` → `DeferredHostBuilder` →
+  WebApplicationFactory → TestServer → middleware zinciri → Host. Yani WebApplicationFactory
+  host'ları toptan sızıyor.
+
+**Mekanizma.** `RateLimitingMiddleware` ne `options.GlobalLimiter`'ı ne de kendi kurduğu endpoint
+limiter'ını dispose eder (aspnetcore release/10.0 kaynağından doğrulandı). Her
+`PartitionedRateLimiter` kurulduğu andan Dispose'a kadar 100 ms'de bir heartbeat çalıştırır ve her
+tikte 10 sn boşta kalmış bölümleri `DisposeAsync` ile kapatır. 2 limiter × sızan N host × 10 Hz →
+47. testte ≈ 2.000 callback/sn, test sayısıyla doğrusal artıyor. Thread pool şişiyor, JIT kilidi
+açlığa düşüyor, Hangfire kapanış bütçesini kaçırıyor, koşu 1,5 dk'dan 7+ dk'ya çıkıyor ve bu yük
+altında runtime'ın kendisi deviriliyor. İsimli policy'ler (auth/upload/...) Ağustos'tan beri her
+host'a bir limiter veriyordu; OWASP sertleştirmesi (755f7cf, 2026-09-03 10:59) her istekte bölüm
+üreten global limiter'ı ekledi — "nadir" çökmenin o gün sürekli hale gelmesinin nedeni bu.
+
+**Neden daha önce bulunamadı:** çökmede yönetilen istisna olmadığı için `UnhandledException`
+kancaları hiçbir şey görmüyordu; macOS crash raporu üretmiyordu; bellek/konteyner/Hangfire
+ayarları ayrı ayrı elendi ama sızan host sayısıyla ölçeklenen bir şey aranmamıştı.
+
+**Uygulanan düzeltme (1. adım):**
+
+1. `RateLimiting.cs`: global limiter `IHostApplicationLifetime.ApplicationStopped`'da dispose
+   ediliyor (limiter options'ta tutulduğu için ServiceProvider onu görmüyor; Stopped seçildi ki
+   graceful shutdown sırasında akan istek dispose edilmiş limiter'a çarpmasın).
+2. `Program.cs`: `RateLimiting:Enabled` (varsayılan true, deploy config'lerinde yok). Kapalıyken
+   `UseRateLimiter` çağrılmıyor; endpoint'lerdeki `RequireRateLimiting` metadata'sı kalıyor —
+   routing, authorization'daki gibi "işlenmemiş rate-limit policy" kontrolü yapmıyor
+   (Microsoft.AspNetCore.Routing.dll'de böyle bir string yok).
+3. `TestContainerCleanup.ConfigureRateLimitingForTests`: assembly yüklenirken
+   `RateLimiting__Enabled=false`; yalnızca `AccountManagementTests` (429 bekleyen tek test) kendi
+   factory'sinde `UseSetting` ile geri açıyor.
+
+**Bilinçli olarak yapılmayanlar:** host sızıntısının kendisi (HostingListener AsyncLocal'ının bir
+FileSystemWatcher'ın ExecutionContext'ine yakalanması) düzeltilmedi — WebApplicationFactory/
+hosting içi bir davranış; timer'lar durduğu sürece sızan host pasif ve zararsız. Test başına değil
+sınıf başına host (host sayısını ~104'ten ~17'ye indirir) ve runtime yaması (10.0.5 → 10.0.11)
+sonraki kaldıraçlar; bu adım yetmezse sırayla denenir.
+
+**Doğrulama:** düzeltme öncesi aynı gün iki koşu: 106/107 (Hangfire kapanış zaman aşımı) 7 dk 20 sn,
+ve 47. testte 13 dk asılı kalıp öldürülen bir koşu. Düzeltme sonrası arka arkaya iki tam koşu:
+107/107 1 dk 25 sn ve 107/107 1 dk 20 sn; çökme yok, kapanış zaman aşımı yok, 429 testi geçiyor,
+koşu sonunda podman'da konteyner kalmıyor.
+
+---
+
 ## Kabul edilen faker riski kapatıldı: paket ağaçtan stub ile çıkarıldı (2026-09-03)
 
 **Bağlam:** Kullanıcı "GitHub'da hiçbir kritik uyarı kalmasın" dedi. Geriye tek açık Dependabot

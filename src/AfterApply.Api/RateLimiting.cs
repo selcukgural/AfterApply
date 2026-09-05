@@ -10,7 +10,9 @@ public static class RateLimiting
 {
     public static IServiceCollection AddApiRateLimiting(this IServiceCollection services)
     {
-        services.AddRateLimiter(options =>
+        services.AddRateLimiter(_ => { });
+
+        services.AddOptions<RateLimiterOptions>().Configure<IHostApplicationLifetime>((options, lifetime) =>
         {
             // ASP.NET Core's default rejection status is 503 — 429 is the conventional
             // status for rate limiting and what clients are expected to handle.
@@ -44,13 +46,29 @@ public static class RateLimiting
             // Partitioned by user where there is one and by IP otherwise, the same split the named
             // policies below use. This runs after UseAuthentication (see Program.cs's pipeline
             // order), so the sub claim is already available here.
-            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+            var globalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = 300,
                     Window = TimeSpan.FromMinutes(1),
                     QueueLimit = 0
                 }));
+            options.GlobalLimiter = globalLimiter;
+
+            // The limiter is ours, so its lifetime is ours too. Nothing else ever disposes it:
+            // RateLimitingMiddleware only reads options.GlobalLimiter, and a PartitionedRateLimiter
+            // runs a 100ms heartbeat timer (idle-partition cleanup, token replenishment) from
+            // construction until Dispose. In production that is one timer per process and nobody
+            // would notice. In the integration suite, which builds a host per test and whose hosts
+            // are never collected once disposed, the leaked heartbeats were the root cause of the
+            // "random" test-host crashes and hangs — see DECISIONS.md, "Yerel test-host çökmesi:
+            // kök neden bulundu".
+            //
+            // ApplicationStopped, not Stopping: a request still draining during graceful shutdown
+            // must not hit a disposed limiter. The hook is on the lifetime rather than on
+            // ServiceProvider disposal because the limiter is held by options, not registered as a
+            // service.
+            lifetime.ApplicationStopped.Register(globalLimiter.Dispose);
 
             // IP-based: auth endpoints are called before the caller is authenticated.
             options.AddPolicy(DependencyInjection.AuthRateLimitPolicy, httpContext =>
