@@ -22,6 +22,10 @@ jobs:
       # both to be set, but no real secret needs to back them here.
       POSTGRES_PASSWORD: ci-only-not-a-real-secret
       JWT_SIGNING_KEY: Y2ktb25seS1wbGFjZWhvbGRlci1zaWduaW5nLWtleS1ub3QtcmVhbA==
+      # The collection hits every /api/auth/* endpoint in a row from one IP (7 of them since Sign in
+      # with Google); the production auth policy is 5/min, so without this the 6th request is a 429
+      # the "Status code is documented" baseline test rightly rejects. See docker-compose.yml.
+      RATE_LIMITING_AUTH_PERMIT_LIMIT: "100"
     steps:
       - uses: actions/checkout@v5
 

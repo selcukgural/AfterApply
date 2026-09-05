@@ -2907,6 +2907,15 @@ ve sonrası) uygulanmamış olduğu görüldü (`EmailSuggestions.IsRead` yok �
 500); `dotnet ef database update` ile uygulandı — API startup'ta otomatik migrate etmiyor, dev DB
 elle güncel tutuluyor.
 
+**Bulgu — ilk push'ta deploy `contract-check`'te düştü:** Postman koleksiyonu OpenAPI'den otomatik
+üretildiği için iki yeni `/api/auth/google*` ucu kendiliğinden eklendi ve koleksiyon artık aynı
+IP'den arka arkaya 7 auth isteği atıyor; auth rate-limit politikası 5/dk olduğundan altıncı istek
+(`forgot-password`) 429 aldı ve baseline "Status code is documented" testi (sabit liste, 429 yok)
+düştü. Çözüm: `docker-compose.yml` `RateLimiting__Auth__PermitLimit`'i
+`RATE_LIMITING_AUTH_PERMIT_LIMIT` (varsayılan 5) üzerinden alıyor, `api-contract.yml` bunu 100'e
+çekiyor — sözleşme kontrolü durum kodlarını doğrular, rate limiter'ı değil (onun testi
+`AccountManagementTests`'te). Auth grubuna bir uç daha eklendiğinde bu tekrar patlamaz.
+
 ---
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
