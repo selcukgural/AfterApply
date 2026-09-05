@@ -1,25 +1,30 @@
 # Graph Report - AfterApply  (2026-09-05)
 
 ## Corpus Check
-- Large corpus: 544 files · ~326,556 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder.
+- cluster-only mode — file stats not available
 
 ## Summary
-- 4088 nodes · 8218 edges · 246 communities (226 shown, 17 thin omitted)
+- 4087 nodes · 8217 edges · 244 communities (225 shown, 16 thin omitted)
 - Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 520 edges (avg confidence: 0.84)
-- Token cost: 1,261,044 input · 0 output
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `e84e4600`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - Reminder Endpoints & Tests
 - Company Resolver & Email Matcher
 - Extension Popup/Options UI
 - Web npm Dependencies
-- User Profile & Auth Service
+- Registration & Auth Contracts
 - Job Posting Source Resolver
 - Next.js Locale Layouts & Landing
 - Google Sign-In Integration Tests
 - Integration Test Infrastructure
 - Dashboard & Timeline UI
-- EF Entity Configurations & Namespaces
+- EF Entity Configurations
 - Settings & Google OAuth Client
 - Help Pages & Analytics Charts
 - Company Enrichment (LinkedIn)
@@ -34,7 +39,7 @@
 - graphify Skill Docs
 - FluentValidation Validators
 - Config & Validator Unit Tests
-- Identity User & Auth Contracts
+- User Profile & Auth Service
 - Extension Email Signal Tests
 - Auditable Entity & Import Batch
 - Help Section Pages
@@ -47,15 +52,15 @@
 - Web tsconfig
 - Email Forwarding Service
 - AppDbContext
-- Resend Email Sender Tests
+- Dependency Injection Setup
 - Extension Manifest
 - Application Endpoints & Responses
 - Application Service
 - Web Auth API Client
-- Email Job Extraction Provider
+- Identity User & Auth Contracts
 - SignalR Import Progress
 - Application Aggregate
-- Coded Exceptions & Rejection Payload
+- Coded Exceptions
 - Email Intelligence Weights
 - OpenGraph Metadata Parser
 - Google ID Token Reader
@@ -99,13 +104,13 @@
 - Import Endpoints
 - Tracked Job Endpoints
 - Google Auth Client
-- Google Signup Token Tests
-- Fake Email Providers (Tests)
+- Domain Exceptions
+- Email Job Extraction Provider
 - Google Auth Request Validators
 - Launch Settings
 - Recruitment Signal Analyzer
 - Personal Access Token Service
-- Email Application Match Types
+- Password Policy Options
 - Company Endpoints & Search Validator
 - Layer Dependency Tests
 - Decisions: Identity & Security
@@ -129,19 +134,19 @@
 - Analytics Overview Tests
 - Validation Endpoint Filter
 - Initial Identity Migration
-- API Dependency Injection
+- Import Progress Hub
 - Decisions: Feature Flags
 - Decisions: Analytics & Jobs
 - Decisions: Architecture
 - Product Plan: Principles & Phases
 - AddImports Migration
 - Personal Access Token Endpoints
-- Password Reset Result & Email Sender
+- Job URL Rules
 - Google Sign-In Result Contracts
 - Recruitment Signal Analyzer Tests
 - Deploy & Slack Workflows
 - Extension Gmail Scan Script
-- Auth Endpoints
+- Email Suggestion Status
 - Account Export Contracts
 - AddReminders Migration
 - AddEmailIntegrations Migration
@@ -180,11 +185,11 @@
 - AddMissingIndexes Migration
 - AddEmailForwarding Migration
 - AddEmailSuggestionRejectionReason Migration
-- Auth & Application Flow Tests
+- Application Response Contracts
 - Application Domain Tests
 - Help Screenshot: Create Application
 - Help Screenshot: Application Detail
-- Tracked Job Form UI
+- Register Page UI
 - Decisions: CI & Testing
 - Decisions: Dependency Security
 - Product Plan: Intelligence & Monetization
@@ -203,7 +208,7 @@
 - Combobox Component
 - Solution & Project Packages
 - Docker Web Service & Env
-- EF Entity Type Configurations
+- Personal Access Token Options
 - Unit Test Packages
 - Employment Type Enum
 - Import Row Parser Tests
@@ -220,7 +225,7 @@
 - Faker Stub Package
 - Postman Environments Publisher
 - Email Intelligence Options
-- JWT Options
+- Fake Email Providers (Tests)
 - Brand Logo Mark
 - Brand Logo Mark (OG)
 - Extension Icon 48
@@ -237,8 +242,6 @@
 - OpenGraph Image
 - Help Layout & Sidebar
 - Extension Local Filter Config
-- Test Host & Hangfire Idle
-- Confirm Suggestion Result
 - Import Row Outcome
 - xunit Runner Config
 - Import Date Parsing Tests
@@ -256,47 +259,47 @@
 ## God Nodes (most connected - your core abstractions)
 1. `AppDbContext` - 87 edges
 2. `AfterApply.Infrastructure.Persistence` - 65 edges
-3. `AfterApply.Domain.Common` - 53 edges
-4. `AfterApply.Infrastructure.Persistence.Migrations` - 53 edges
+3. `AfterApply.Infrastructure.Persistence.Migrations` - 53 edges
+4. `AfterApply.Domain.Common` - 53 edges
 5. `EmailSignalTests` - 51 edges
 6. `ApplicationStatus` - 45 edges
-7. `AfterApply.Domain.Applications` - 44 edges
+7. `EmailSuggestion` - 44 edges
 8. `Application` - 44 edges
-9. `EmailSuggestion` - 44 edges
+9. `AfterApply.Domain.Applications` - 44 edges
 10. `AfterApply.Application.Identity.Contracts` - 42 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Employment type not scraped, defaults to FullTime` --semantically_similar_to--> `POST /api/imports/csv (generic CSV import)`  [INFERRED] [semantically similar]
   extension/README.md → README.md
-- `Testing Policy (unit + integration ship with every change)` --conceptually_related_to--> `Integration tests serial (maxParallelThreads=1) + Hangfire shutdown timeout`  [INFERRED]
-  CLAUDE.md → DECISIONS.md
-- `Sprint 7 — MVP Hardening and Private Beta` --references--> `KVKK / GDPR Self-review Checklist`  [EXTRACTED]
-  DEVELOPMENT_PLAN.md → PRIVACY_CHECKLIST.md
-- `Sprint 9 — Browser Extension` --references--> `Personal Access Token design (unscoped v1, SHA-256 hashed, aa_pat_ prefix)`  [EXTRACTED]
-  DEVELOPMENT_PLAN.md → DECISIONS.md
-- `Sprint 10 — Company Intelligence Infrastructure (UI off)` --references--> `CompanyIntelligence:Enabled flag (404 when off)`  [EXTRACTED]
-  DEVELOPMENT_PLAN.md → DECISIONS.md
+- `Gmail Scanning (gmail-scan.js content script)` --implements--> `Email integration (classification -> status suggestion -> user confirmation)`  [INFERRED]
+  extension/README.md → ekariyerim-intelligence-platform-plan.md
+- `Data usage disclosure table and certifications` --semantically_similar_to--> `Extension Privacy Policy (draft)`  [INFERRED] [semantically similar]
+  extension/store-listing/PERMISSIONS_JUSTIFICATION.md → extension/store-listing/PRIVACY_POLICY.md
+- `POST /api/applications/from-extension dedup by job URL` --implements--> `Duplicate detection priority order`  [INFERRED]
+  extension/README.md → ekariyerim-intelligence-platform-plan.md
+- `Extension Privacy Policy (draft)` --implements--> `Privacy First principle`  [INFERRED]
+  extension/store-listing/PRIVACY_POLICY.md → ekariyerim-intelligence-platform-plan.md
 
 ## Import Cycles
 - None detected.
 
 ## Hyperedges (group relationships)
+- **Chrome Web Store submission package** — extension_store_listing_listing_store_listing_copy, extension_store_listing_permissions_justification_single_purpose, extension_store_listing_privacy_policy_privacy_policy, extension_store_listing_publishing_checklist_publishing_checklist, extension_store_listing_screenshots_readme_screenshot_generation [EXTRACTED 1.00]
+- **Cloud Run Deploy Pipeline Flow** — _github_workflows_deploy_plan_job, _github_workflows_api_contract_contract_check, _github_workflows_deploy_deploy_backend, _github_workflows_deploy_migration_cloud_run_job, _github_workflows_deploy_deploy_web, _github_workflows_deploy_deploy_latest_tags, _github_workflows_deploy_notify_deploy [EXTRACTED 1.00]
 - **Email Signal Intake Evolution (Gmail OAuth → Forwarding → Gmail Scanning)** — decisions_gmail_oauth_removed, decisions_email_forwarding_removed, decisions_gmail_scanning_extension_signal, decisions_email_classifier_rule_based, decisions_recruitment_signal_analyzer, decisions_email_openai_disclosure, privacy_checklist_gmail_scanning, privacy_checklist_cross_border_transfer_disclosure [EXTRACTED 1.00]
 - **Features gated behind 404-on-disabled flags** — decisions_company_intelligence_enabled_flag, decisions_ai_job_matching_removed, decisions_gmail_oauth_removed, decisions_google_sign_in_pkce, decisions_candidate_experience_score [EXTRACTED 1.00]
-- **Cloud Run Deploy Pipeline Flow** — _github_workflows_deploy_plan_job, _github_workflows_api_contract_contract_check, _github_workflows_deploy_deploy_backend, _github_workflows_deploy_migration_cloud_run_job, _github_workflows_deploy_deploy_web, _github_workflows_deploy_deploy_latest_tags, _github_workflows_deploy_notify_deploy [EXTRACTED 1.00]
-- **Chrome Web Store submission package** — extension_store_listing_listing_store_listing_copy, extension_store_listing_permissions_justification_single_purpose, extension_store_listing_privacy_policy_privacy_policy, extension_store_listing_publishing_checklist_publishing_checklist, extension_store_listing_screenshots_readme_screenshot_generation [EXTRACTED 1.00]
-- **Gmail Scanning opt-in email signal flow** — extension_options_gmail_scan_toggle, extension_readme_gmail_scanning, extension_readme_local_signal_scoring, extension_readme_local_filter_config, extension_store_listing_permissions_justification_gmail_host_permission, extension_store_listing_privacy_policy_gmail_scanning_privacy [INFERRED 0.95]
 - **e-kariyerim product principles** — ekariyerim_intelligence_platform_plan_privacy_first, ekariyerim_intelligence_platform_plan_statistical_integrity, ekariyerim_intelligence_platform_plan_candidate_first, ekariyerim_intelligence_platform_plan_automation_first, ekariyerim_intelligence_platform_plan_backend_first [EXTRACTED 1.00]
+- **Gmail Scanning opt-in email signal flow** — extension_options_gmail_scan_toggle, extension_readme_gmail_scanning, extension_readme_local_signal_scoring, extension_readme_local_filter_config, extension_store_listing_permissions_justification_gmail_host_permission, extension_store_listing_privacy_policy_gmail_scanning_privacy [INFERRED 0.95]
 
-## Communities (246 total, 17 thin omitted)
+## Communities (244 total, 16 thin omitted)
 
 ### Community 0 - "Reminder Endpoints & Tests"
 Cohesion: 0.05
 Nodes (44): ReminderEndpoints, IEndpointRouteBuilder, IReadOnlyList, ReminderResponse, DateTimeOffset, Guid, IReminderService, CancellationToken (+36 more)
 
 ### Community 1 - "Company Resolver & Email Matcher"
-Cohesion: 0.06
-Nodes (34): ICompanyResolver, CancellationToken, Guid, Task, ApplicationMatchCandidate, EmailApplicationMatcher, EmailApplicationMatchResult, Guid (+26 more)
+Cohesion: 0.07
+Nodes (30): ApplicationMatchCandidate, EmailApplicationMatcher, EmailApplicationMatchResult, Guid, IReadOnlyList, Company, Country, Industry (+22 more)
 
 ### Community 2 - "Extension Popup/Options UI"
 Cohesion: 0.07
@@ -306,21 +309,21 @@ Nodes (49): detectDefaultLanguage(), setUpLanguageToggle(), render(), STRINGS, t
 Cohesion: 0.04
 Nodes (46): dompurify, eslint, eslint-config-next, @microsoft/signalr, next, next-intl, react, react-dom (+38 more)
 
-### Community 4 - "User Profile & Auth Service"
+### Community 4 - "Registration & Auth Contracts"
 Cohesion: 0.12
-Nodes (23): UserEndpoints, IEndpointRouteBuilder, UpdateLanguageRequest, UpdateProfileRequest, UpdateThemeRequest, UserProfileResponse, DateTimeOffset, Guid (+15 more)
+Nodes (20): AuthEndpoints, Dictionary, HttpContext, IEndpointRouteBuilder, IReadOnlyCollection, IStringLocalizer, UserEndpoints, IEndpointRouteBuilder (+12 more)
 
 ### Community 5 - "Job Posting Source Resolver"
 Cohesion: 0.06
 Nodes (30): JobPostingSourceResolver, ExternalId, Uri, KariyerNetJobIdExtractor, GeneratedRegex, Regex, LinkedInJobIdExtractor, GeneratedRegex (+22 more)
 
 ### Community 6 - "Next.js Locale Layouts & Landing"
-Cohesion: 0.11
-Nodes (28): LocaleLayout(), LandingPage(), ProtectedLayout(), GoogleCallback(), PublicLayout(), LoginPage(), ANCHOR_LINKS, LandingNavbar() (+20 more)
+Cohesion: 0.09
+Nodes (34): LocaleLayout(), LandingPage(), ProtectedLayout(), CompleteSignupForm(), FieldErrors, GoogleCallback(), Phase, PublicLayout() (+26 more)
 
 ### Community 7 - "Google Sign-In Integration Tests"
-Cohesion: 0.12
-Nodes (24): Code, CodeVerifier, ConcurrentDictionary, ConcurrentQueue, RedirectUri, AuthResponse, DateTimeOffset, GoogleSignInRequest (+16 more)
+Cohesion: 0.11
+Nodes (24): Code, CodeVerifier, ConcurrentDictionary, ConcurrentQueue, RedirectUri, AuthResponse, DateTimeOffset, GoogleSignupRequest (+16 more)
 
 ### Community 8 - "Integration Test Infrastructure"
 Cohesion: 0.07
@@ -328,19 +331,19 @@ Nodes (23): AfterApply.IntegrationTests, ICollectionFixture, Memory, ModuleIniti
 
 ### Community 9 - "Dashboard & Timeline UI"
 Cohesion: 0.07
-Nodes (32): ApplicationFormProps, Timeline(), ResponseTimeCard(), analyticsApi, CreateEventRequest, trackedJobsApi, ANALYTICS_RATE_TILES, AnalyticsRateTile (+24 more)
+Nodes (36): ApplicationFormProps, ApplicationTable(), ResponseTimeCard(), StatusDistributionChart(), analyticsApi, CreateEventRequest, trackedJobsApi, ANALYTICS_RATE_TILES (+28 more)
 
-### Community 10 - "EF Entity Configurations & Namespaces"
-Cohesion: 0.08
-Nodes (10): AfterApply.Infrastructure.Persistence.Configurations, AfterApply.Domain.Common, AfterApply.Domain.Mailing, AfterApply.Application.EmailIntegrations.Contracts, AfterApply.Domain.Applications, AfterApply.Application.Applications, AfterApply.Domain.Jobs, AfterApply.Domain.EmailIntegrations (+2 more)
+### Community 10 - "EF Entity Configurations"
+Cohesion: 0.11
+Nodes (5): AfterApply.Domain.TrackedJobs, AfterApply.Infrastructure.Persistence.Configurations, AfterApply.Domain.Notifications, AfterApply.Domain.Imports, EmailSuggestionConfiguration
 
 ### Community 11 - "Settings & Google OAuth Client"
-Cohesion: 0.09
-Nodes (30): RFC-7636, SettingsPage(), CompleteSignupForm(), FieldErrors, Phase, FieldErrors, RegisterPage(), GoogleSignInButton() (+22 more)
+Cohesion: 0.14
+Nodes (18): RFC-7636, SettingsPage(), GoogleSignInButton(), CLIENT_CONFIG_QUERY_KEY, useClientConfig(), configApi, DEFAULT_CLIENT_CONFIG, personalAccessTokensApi (+10 more)
 
 ### Community 12 - "Help Pages & Analytics Charts"
-Cohesion: 0.09
-Nodes (24): ChromeExtensionHelpPage(), StatTile(), StatusDistributionChart(), AfterApplySection(), AnalyticsSection(), MOCK_STATUS_DISTRIBUTION, CtaButtons(), CtaButtonsProps (+16 more)
+Cohesion: 0.11
+Nodes (21): StatTile(), AfterApplySection(), AnalyticsSection(), MOCK_STATUS_DISTRIBUTION, CtaButtons(), CtaButtonsProps, DashboardPreview(), FeaturesSection() (+13 more)
 
 ### Community 13 - "Company Enrichment (LinkedIn)"
 Cohesion: 0.09
@@ -348,19 +351,19 @@ Nodes (19): AfterApply.UnitTests.Companies, ICompanyEnrichmentService, Cancellat
 
 ### Community 14 - "Import/Suggestions Pages & HTTP Client"
 Cohesion: 0.10
-Nodes (26): LinkedInImportUploader(), UploadPhase, isTerminal(), useImportProgress(), notificationCountQueryKey, suggestionCountQueryKey, emailForwardingApi, API_BASE_URL (+18 more)
+Nodes (27): STATUS_COLORS, StatusBadge(), LinkedInImportUploader(), UploadPhase, isTerminal(), useImportProgress(), notificationCountQueryKey, suggestionCountQueryKey (+19 more)
 
 ### Community 15 - "Account Deletion & Reminder Domain"
-Cohesion: 0.09
-Nodes (25): DeleteAccountRequest, Reminder, ApplicationId, CreatedAt, DaysElapsedAtCreation, DismissedAt, ReferenceAt, Type (+17 more)
+Cohesion: 0.10
+Nodes (24): Reminder, ApplicationId, CreatedAt, DaysElapsedAtCreation, DismissedAt, ReferenceAt, Type, UserId (+16 more)
 
 ### Community 16 - "Application Pages & UI Buttons"
-Cohesion: 0.10
-Nodes (25): ForgotPasswordPage(), ApplicationFilters(), ApplicationFiltersProps, ApplicationTable(), JobDescriptionCard(), JobDescriptionCardProps, SANITIZE_CONFIG, Pagination() (+17 more)
+Cohesion: 0.12
+Nodes (19): ApplicationFilters(), ApplicationFiltersProps, JobDescriptionCard(), JobDescriptionCardProps, SANITIZE_CONFIG, Pagination(), PaginationProps, StatusChangeSelect() (+11 more)
 
 ### Community 17 - "EmailSuggestion Domain"
 Cohesion: 0.06
-Nodes (33): EmailSuggestion, ApplicationId, ConfidenceScore, CreatedAt, EmailConnectionId, EmailReceivedAt, ExtractedCompanyName, ExtractedDescription (+25 more)
+Nodes (33): EmailApplicationMatchType, DomainMatch, NameFallbackMatch, EmailSuggestion, ApplicationId, ConfidenceScore, CreatedAt, EmailConnectionId (+25 more)
 
 ### Community 18 - "Import Service & Dedup"
 Cohesion: 0.15
@@ -371,8 +374,8 @@ Cohesion: 0.08
 Nodes (27): CompanySearchResultResponse, Guid, ICompanySearchService, CancellationToken, Guid, IReadOnlyList, Task, CompanySearchOptions (+19 more)
 
 ### Community 20 - "CSV/LinkedIn Import Tests"
-Cohesion: 0.12
-Nodes (19): ImportAcceptedResponse, CsvImportTests, Fact, Guid, HttpClient, JsonSerializerOptions, MultipartFormDataContent, SharedInfrastructure (+11 more)
+Cohesion: 0.11
+Nodes (20): ImportAcceptedResponse, Guid, CsvImportTests, Fact, Guid, HttpClient, JsonSerializerOptions, MultipartFormDataContent (+12 more)
 
 ### Community 21 - "Localized Identity Errors & Exception Handling"
 Cohesion: 0.09
@@ -383,20 +386,20 @@ Cohesion: 0.08
 Nodes (35): graphify Skill Trigger (/graphify), graphify add (URL ingest), --watch Mode (auto-rebuild on file change), graphify MCP Server, Neo4j / FalkorDB Cypher Export, Wiki Export, Confidence Rubric (EXTRACTED/INFERRED/AMBIGUOUS), Extraction Subagent Prompt (+27 more)
 
 ### Community 23 - "FluentValidation Validators"
-Cohesion: 0.08
-Nodes (17): AbstractValidator, AfterApply.Application.Applications.Validators, AfterApply.Application.Identity.Validators, ChangeStatusRequestValidator, CreateEventRequestValidator, CreateFromExtensionRequestValidator, GetApplicationsQueryValidator, UpdateApplicationRequestValidator (+9 more)
+Cohesion: 0.07
+Nodes (20): AbstractValidator, AfterApply.Application.Applications.Validators, AfterApply.Application.Identity.Validators, ChangeStatusRequestValidator, CreateEventRequestValidator, CreateFromExtensionRequestValidator, GetApplicationsQueryValidator, UpdateApplicationRequestValidator (+12 more)
 
 ### Community 24 - "Config & Validator Unit Tests"
-Cohesion: 0.11
-Nodes (10): AfterApply.Api.Extensions, AfterApply.Application.Localization, AfterApply.Application.ClientConfig, AfterApply.Infrastructure.Identity, AfterApply.Infrastructure, AfterApply.IntegrationTests.Configuration, AfterApply.Api.Endpoints, AfterApply.UnitTests.Identity (+2 more)
+Cohesion: 0.13
+Nodes (6): AfterApply.Application.ClientConfig, AfterApply.Infrastructure.Identity, AfterApply.IntegrationTests.Configuration, AfterApply.UnitTests.Identity, AfterApply.Application.Identity, PersonalAccessTokenDefaults
 
-### Community 25 - "Identity User & Auth Contracts"
-Cohesion: 0.09
-Nodes (21): IdentityUser, AuthResult, Errors, Response, Succeeded, LoginRequest, RegisterRequest, IReadOnlyCollection (+13 more)
+### Community 25 - "User Profile & Auth Service"
+Cohesion: 0.11
+Nodes (21): AuthResult, Errors, Response, Succeeded, PasswordResetResult, Errors, Succeeded, IReadOnlyCollection (+13 more)
 
 ### Community 26 - "Extension Email Signal Tests"
-Cohesion: 0.20
-Nodes (8): EmailClassificationResult, EmailSignalTests, Fact, Guid, HttpClient, JsonSerializerOptions, SharedInfrastructure, Task
+Cohesion: 0.23
+Nodes (4): EmailClassificationResult, Fact, Guid, Task
 
 ### Community 27 - "Auditable Entity & Import Batch"
 Cohesion: 0.09
@@ -404,79 +407,79 @@ Nodes (25): AuditableEntity, CreatedAt, UpdatedAt, DateTimeOffset, ImportBatch, 
 
 ### Community 28 - "Help Section Pages"
 Cohesion: 0.13
-Nodes (11): SECTIONS, TOPIC_LINKS, Callout(), ICONS, Variant, VARIANT_CLASSES, GifFigure(), Screenshot() (+3 more)
+Nodes (12): ChromeExtensionHelpPage(), SECTIONS, TOPIC_LINKS, Callout(), ICONS, Variant, VARIANT_CLASSES, GifFigure() (+4 more)
 
 ### Community 29 - "JWT Token Service"
 Cohesion: 0.09
 Nodes (15): SigningCredentials, ITokenService, AccessToken, DateTimeOffset, ExpiresAt, Guid, JwtTokenService, AccessToken (+7 more)
 
 ### Community 30 - "Application Form & Tracked Job List UI"
-Cohesion: 0.12
-Nodes (21): ApplicationForm(), ApplicationFormValues, toDateInputValue(), ConvertValues, todayInputValue(), TrackedJobList(), TrackedJobListProps, Select() (+13 more)
+Cohesion: 0.17
+Nodes (13): ApplicationForm(), ApplicationFormValues, toDateInputValue(), applicationsApi, companiesApi, SOURCES, createApplicationBaseSchema(), CreateApplicationFormValues (+5 more)
 
 ### Community 31 - "Password Reset Tests"
-Cohesion: 0.16
-Nodes (16): ForgotPasswordRequest, RefreshRequest, ResetPasswordRequest, CapturingEmailSender, LastLocale, LastResetLink, PasswordChangedCount, PasswordResetTests (+8 more)
+Cohesion: 0.07
+Nodes (36): DelegatingHandler, HttpRequestMessage, ResendPayload, ForgotPasswordRequest, ResetPasswordRequest, IEmailSender, CancellationToken, Task (+28 more)
 
 ### Community 32 - "Infrastructure Services Namespaces"
-Cohesion: 0.10
-Nodes (14): AfterApply.Infrastructure.Applications, AfterApply.Infrastructure.CompanyIntelligence, AfterApply.Infrastructure.Mailing, AfterApply.Application.Analytics, AfterApply.Application.Metrics, AfterApply.Infrastructure.Metrics, AfterApply.Application.CompanyIntelligence.Contracts, AfterApply.Domain.Companies (+6 more)
+Cohesion: 0.15
+Nodes (7): AfterApply.Infrastructure.CompanyIntelligence, AfterApply.Application.CompanyIntelligence.Contracts, AfterApply.Domain.Companies, AfterApply.UnitTests.Domain, AfterApply.IntegrationTests.CompanyIntelligence, AfterApply.Application.CompanyIntelligence, AfterApply.UnitTests.CompanyIntelligence
 
 ### Community 33 - "Job Domain Entity"
 Cohesion: 0.08
 Nodes (27): Date, DateOnly, RemoteType, Job, ClosedAt, CompanyId, Description, DescriptionHtml (+19 more)
 
 ### Community 34 - "Test Project Namespaces"
-Cohesion: 0.15
-Nodes (12): AfterApply.IntegrationTests.Imports, AfterApply.IntegrationTests.Analytics, AfterApply.IntegrationTests.TrackedJobs, AfterApply.Application.Identity.Contracts, AfterApply.Application.Applications.Contracts, AfterApply.IntegrationTests.Identity, AfterApply.IntegrationTests.Applications, AfterApply.Infrastructure.Persistence (+4 more)
+Cohesion: 0.14
+Nodes (13): AfterApply.IntegrationTests.Imports, AfterApply.IntegrationTests.Analytics, AfterApply.Domain.Common, AfterApply.IntegrationTests.TrackedJobs, AfterApply.Domain.Applications, AfterApply.Application.Identity.Contracts, AfterApply.Application.Applications.Contracts, AfterApply.IntegrationTests.Identity (+5 more)
 
 ### Community 35 - "Web tsconfig"
 Cohesion: 0.07
 Nodes (28): dom, dom.iterable, esnext, **/*.mts, .next/dev/types/**/*.ts, next-env.d.ts, .next/types/**/*.ts, node_modules (+20 more)
 
 ### Community 36 - "Email Forwarding Service"
-Cohesion: 0.20
-Nodes (10): EmailForwardingService, CancellationToken, DateTimeOffset, EmailNotificationResponse, EmailSuggestionResponse, Guid, ILogger, IOptions (+2 more)
+Cohesion: 0.18
+Nodes (11): IJobBoardDomainMatcher, EmailForwardingService, CancellationToken, DateTimeOffset, EmailNotificationResponse, EmailSuggestionResponse, Guid, ILogger (+3 more)
 
 ### Community 37 - "AppDbContext"
 Cohesion: 0.07
 Nodes (25): DataProtectionKey, DbContextOptions, DbSet, IDataProtectionKeyContext, IdentityUserContext, IDesignTimeDbContextFactory, AppDbContext, ApplicationEvents (+17 more)
 
-### Community 38 - "Resend Email Sender Tests"
-Cohesion: 0.12
-Nodes (18): DelegatingHandler, HttpRequestMessage, ResendPayload, CapturingHttpMessageHandler, LastRequestBody, RequestCount, ResendEmailSenderTests, ResendPayload (+10 more)
+### Community 38 - "Dependency Injection Setup"
+Cohesion: 0.16
+Nodes (9): AfterApply.Infrastructure.Applications, AfterApply.Infrastructure.Mailing, AfterApply.Application.Analytics, AfterApply.Application.Applications, AfterApply.Application.Metrics, AfterApply.Infrastructure.Metrics, AfterApply.Application.Mailing, AfterApply.Application.Analytics.Contracts (+1 more)
 
 ### Community 39 - "Extension Manifest"
 Cohesion: 0.07
 Nodes (27): action, default_icon, default_popup, default_title, content_scripts, 128, 16, 48 (+19 more)
 
 ### Community 40 - "Application Endpoints & Responses"
-Cohesion: 0.21
-Nodes (16): ApplicationEndpoints, IEndpointRouteBuilder, IReadOnlyCollection, ApplicationDetailResponse, ApplicationEventResponse, ApplicationSummaryCountsResponse, ApplicationSummaryResponse, DateTimeOffset (+8 more)
+Cohesion: 0.29
+Nodes (9): ApplicationEndpoints, IEndpointRouteBuilder, IReadOnlyCollection, ApplicationSummaryCountsResponse, IApplicationService, CancellationToken, Guid, IReadOnlyCollection (+1 more)
 
 ### Community 41 - "Application Service"
-Cohesion: 0.21
-Nodes (14): ApplicationService, ApplicationDetailResponse, ApplicationEventResponse, ApplicationSummaryCountsResponse, ApplicationSummaryResponse, CancellationToken, ExtensionApplicationResponse, Guid (+6 more)
+Cohesion: 0.16
+Nodes (18): ICompanyResolver, CancellationToken, Guid, Task, ApplicationService, ApplicationDetailResponse, ApplicationEventResponse, ApplicationSummaryCountsResponse (+10 more)
 
 ### Community 42 - "Web Auth API Client"
 Cohesion: 0.15
 Nodes (21): authApi, DeleteAccountRequest, ForgotPasswordRequest, GoogleSignInRequest, GoogleSignupRequest, LoginRequest, RegisterRequest, ResetPasswordRequest (+13 more)
 
-### Community 43 - "Email Job Extraction Provider"
-Cohesion: 0.09
-Nodes (18): EmailJobExtractionPayload, IAnalyticsService, IEmailJobExtractionProvider, CancellationToken, Task, IJobBoardDomainMatcher, AnalyticsService, JobBoardDomainMatcher (+10 more)
+### Community 43 - "Identity User & Auth Contracts"
+Cohesion: 0.15
+Nodes (12): IdentityUser, ApplicationUser, ConsentAcceptedAt, CreatedAt, FirstName, LastName, PreferredLanguage, PreferredTheme (+4 more)
 
 ### Community 44 - "SignalR Import Progress"
-Cohesion: 0.15
-Nodes (17): Hub, IHubContext, ImportProgressHub, Guid, Task, SignalRImportProgressNotifier, CancellationToken, Task (+9 more)
+Cohesion: 0.23
+Nodes (12): IHubContext, SignalRImportProgressNotifier, CancellationToken, Task, ImportRowErrorResponse, ImportSummaryResponse, DateTimeOffset, IReadOnlyCollection (+4 more)
 
 ### Community 45 - "Application Aggregate"
-Cohesion: 0.11
-Nodes (22): Application, AppliedAt, CompanyId, EmploymentType, Events, JobId, JobTitle, JobUrl (+14 more)
+Cohesion: 0.12
+Nodes (20): Application, AppliedAt, CompanyId, EmploymentType, Events, JobId, JobTitle, JobUrl (+12 more)
 
-### Community 46 - "Coded Exceptions & Rejection Payload"
-Cohesion: 0.08
-Nodes (20): EmailRejectionReasonPayload, Exception, CodedException, ErrorCode, MessageArguments, IReadOnlyList, IEmailRejectionReasonExtractionProvider, CancellationToken (+12 more)
+### Community 46 - "Coded Exceptions"
+Cohesion: 0.12
+Nodes (14): EmailClassificationPayload, EmailJobExtractionPayload, EmailRejectionReasonPayload, Exception, CodedException, ErrorCode, MessageArguments, IReadOnlyList (+6 more)
 
 ### Community 47 - "Email Intelligence Weights"
 Cohesion: 0.08
@@ -487,12 +490,12 @@ Cohesion: 0.20
 Nodes (5): OpenGraphMetadataParser, GeneratedRegex, Regex, OpenGraphMetadataParserTests, Fact
 
 ### Community 49 - "Google ID Token Reader"
-Cohesion: 0.21
-Nodes (9): IDictionary, JsonWebToken, GoogleIdTokenReader, DateTimeOffset, GoogleIdTokenReaderTests, DateTimeOffset, Fact, InlineData (+1 more)
+Cohesion: 0.11
+Nodes (15): IDictionary, JsonWebToken, GoogleIdTokenReader, DateTimeOffset, GoogleIdTokenReaderTests, DateTimeOffset, Fact, InlineData (+7 more)
 
 ### Community 50 - "Email Forwarding Endpoints"
-Cohesion: 0.20
-Nodes (15): EmailForwardingEndpoints, IEndpointRouteBuilder, IOptions, IReadOnlyList, EmailNotificationResponse, EmailSuggestionResponse, NotificationCountResponse, SuggestionCountResponse (+7 more)
+Cohesion: 0.16
+Nodes (19): EmailForwardingEndpoints, IEndpointRouteBuilder, IOptions, IReadOnlyList, ConfirmSuggestionResult, Confirmed, NoStatusToConfirm, NotFound (+11 more)
 
 ### Community 51 - "API Rate Limiting"
 Cohesion: 0.09
@@ -511,8 +514,8 @@ Cohesion: 0.11
 Nodes (17): PersonalAccessTokenScope, Extension, Full, PersonalAccessToken, CreatedAt, Id, LastUsedAt, Name (+9 more)
 
 ### Community 55 - "Job URL Rules & Email Namespaces"
-Cohesion: 0.14
-Nodes (8): AfterApply.Application.EmailIntegrations, AfterApply.Infrastructure.OpenAi, AfterApply.Application.Common, AfterApply.Infrastructure.EmailIntegrations, AfterApply.UnitTests.EmailIntegrations, IRuleBuilder, IRuleBuilderOptions, JobUrlRules
+Cohesion: 0.13
+Nodes (8): AfterApply.Application.EmailIntegrations, AfterApply.Infrastructure.OpenAi, AfterApply.Application.EmailIntegrations.Contracts, AfterApply.Application.Common, AfterApply.Domain.EmailIntegrations, AfterApply.Infrastructure.EmailIntegrations, AfterApply.IntegrationTests.EmailIntegrations, AfterApply.UnitTests.EmailIntegrations
 
 ### Community 56 - "Company Intelligence Calculations"
 Cohesion: 0.16
@@ -523,8 +526,8 @@ Cohesion: 0.17
 Nodes (7): AfterApply.UnitTests.Analytics, AnalyticsCalculations, IReadOnlyCollection, AnalyticsCalculationsTests, Fact, InlineData, Theory
 
 ### Community 58 - "Testcontainers Shared Infrastructure"
-Cohesion: 0.15
-Nodes (13): IAsyncLifetime, Postgres, PostgreSqlContainer, Redis, RedisContainer, CompanyAutoAttachThresholdTests, HttpClient, JsonSerializerOptions (+5 more)
+Cohesion: 0.11
+Nodes (18): IAsyncLifetime, Postgres, PostgreSqlContainer, Redis, RedisContainer, AuthAndApplicationFlowTests, JsonSerializerOptions, SharedInfrastructure (+10 more)
 
 ### Community 59 - "Personal Access Token Tests"
 Cohesion: 0.21
@@ -539,8 +542,8 @@ Cohesion: 0.10
 Nodes (17): ApplicationStatus, Accepted, Applied, FinalInterview, Ghosted, Interview, Offer, Rejected (+9 more)
 
 ### Community 62 - "Password Policy UI & Schemas"
-Cohesion: 0.18
-Nodes (15): ResetPasswordPage(), PasswordRequirements(), PasswordRequirementsProps, GoogleSignupFormValues, createPasswordSchema(), evaluatePasswordRules(), PasswordRuleKey, PasswordRuleResult (+7 more)
+Cohesion: 0.17
+Nodes (16): ResetPasswordPage(), PasswordRequirements(), PasswordRequirementsProps, createGoogleSignupSchema(), GoogleSignupFormValues, createPasswordSchema(), evaluatePasswordRules(), PasswordRuleKey (+8 more)
 
 ### Community 63 - "Extension Email Signal Validator Tests"
 Cohesion: 0.21
@@ -551,12 +554,12 @@ Cohesion: 0.12
 Nodes (20): Candidate Experience Score (weighted, config-driven, null-aware), Confidence bucket thresholds config-driven (Hidden/VeryLow/Low/Medium/High), Config-driven limits, no hard-coded numbers, POST /api/applications/from-extension with JobUrl dedup, CsvColumnMapper auto-detect + optional override, CSV parser: CsvHelper, Import Dedup Tiers (Source+ExternalId → JobUrl → Company+Title+AppliedAt), Job.DescriptionHtml with DOMPurify at render time (+12 more)
 
 ### Community 65 - "App Options & DI Setup"
-Cohesion: 0.10
-Nodes (15): CreateApplicationRequestValidator, AppOptions, WebBaseUrl, IValidateOptions, EmailAutoApprovalOptions, ConfidenceThreshold, Enabled, ShadowModeEnabled (+7 more)
+Cohesion: 0.12
+Nodes (12): CreateApplicationRequestValidator, AppOptions, WebBaseUrl, IValidateOptions, EmailAutoApprovalOptions, ConfidenceThreshold, Enabled, ShadowModeEnabled (+4 more)
 
 ### Community 66 - "Reminder Notification Namespaces"
 Cohesion: 0.13
-Nodes (7): AfterApply.Infrastructure.Notifications, AfterApply.Domain.Notifications, AfterApply.UnitTests.Notifications, AfterApply.Application.Notifications, AfterApply.Api.ExceptionHandling, AfterApply.Api, AfterApply.Application.Notifications.Contracts
+Nodes (10): AfterApply.Infrastructure.Notifications, AfterApply.Api.Extensions, AfterApply.Application.Localization, AfterApply.UnitTests.Notifications, AfterApply.Infrastructure, AfterApply.Application.Notifications, AfterApply.Api.ExceptionHandling, AfterApply.Api.Endpoints (+2 more)
 
 ### Community 67 - "Client Config Endpoints"
 Cohesion: 0.21
@@ -575,8 +578,8 @@ Cohesion: 0.24
 Nodes (7): ClassificationRule, ClassificationRule, RuleBasedEmailClassifier, RuleBasedEmailClassifierTests, Fact, InlineData, Theory
 
 ### Community 71 - "Email Classification Provider (OpenAI)"
-Cohesion: 0.11
-Nodes (14): EmailClassificationPayload, IEmailClassificationProvider, CancellationToken, Task, EmailClassificationPayload, OpenAiEmailClassificationProvider, BinaryData, CancellationToken (+6 more)
+Cohesion: 0.07
+Nodes (28): IAnalyticsService, IEmailClassificationProvider, CancellationToken, Task, IEmailRejectionReasonExtractionProvider, CancellationToken, Task, AnalyticsService (+20 more)
 
 ### Community 72 - "Postman package.json"
 Cohesion: 0.11
@@ -615,12 +618,12 @@ Cohesion: 0.16
 Nodes (17): API Contract Check (reusable workflow), Postman Collection Generated from OpenAPI, Publish Collection and Environments to Postman Cloud, CI Auth Rate Limit Override (RATE_LIMITING_AUTH_PERMIT_LIMIT=100), deploy-backend Job (afterapply-api), afterapply-migrate Cloud Run Job, Cloud Run Secret Manager Wiring, Workload Identity Federation Auth (+9 more)
 
 ### Community 81 - "Tracked Job Namespaces & Validators"
-Cohesion: 0.16
-Nodes (8): AfterApply.Domain.TrackedJobs, AfterApply.Infrastructure.TrackedJobs, AfterApply.Application.TrackedJobs, AfterApply.Application.TrackedJobs.Validators, AfterApply.Application.TrackedJobs.Contracts, ConvertTrackedJobRequestValidator, CreateTrackedJobRequestValidator, ResolveTrackedJobLinkRequestValidator
+Cohesion: 0.21
+Nodes (7): AfterApply.Infrastructure.TrackedJobs, AfterApply.Application.TrackedJobs, AfterApply.Application.TrackedJobs.Validators, AfterApply.Application.TrackedJobs.Contracts, ConvertTrackedJobRequestValidator, CreateTrackedJobRequestValidator, ResolveTrackedJobLinkRequestValidator
 
 ### Community 82 - "Import Progress Hub & Column Mapper Tests"
-Cohesion: 0.18
-Nodes (4): AfterApply.Api.Imports, AfterApply.Application.Imports, AfterApply.UnitTests.Imports, AfterApply.Application.Imports.Contracts
+Cohesion: 0.13
+Nodes (6): AfterApply.Api.Imports, AfterApply.Application.Imports, AfterApply.UnitTests.Imports, AfterApply.Domain.Jobs, AfterApply.Infrastructure.Imports, AfterApply.Application.Imports.Contracts
 
 ### Community 83 - "Docker Compose Setup"
 Cohesion: 0.18
@@ -631,12 +634,12 @@ Cohesion: 0.24
 Nodes (10): IConfigurationSection, IValidateOptions, EmailIntelligenceConfigurationValidator, IConfiguration, List, EmailIntelligenceConfigurationValidatorTests, Fact, IConfiguration (+2 more)
 
 ### Community 85 - "Identity Policy Options"
-Cohesion: 0.12
-Nodes (16): LockoutPolicyOptions, PasswordPolicyOptions, IdentityPolicyOptions, Lockout, Password, PasswordResetTokenMinutes, LockoutPolicyOptions, LockoutMinutes (+8 more)
+Cohesion: 0.20
+Nodes (9): LockoutPolicyOptions, PasswordPolicyOptions, IdentityPolicyOptions, Lockout, Password, PasswordResetTokenMinutes, LockoutPolicyOptions, LockoutMinutes (+1 more)
 
 ### Community 86 - "Company Intelligence Endpoints"
-Cohesion: 0.15
-Nodes (13): CompanyIntelligenceEndpoints, IEndpointRouteBuilder, CompanyIntelligenceMetrics, CompanyIntelligenceResponse, Guid, CancellationToken, Guid, Task (+5 more)
+Cohesion: 0.17
+Nodes (11): CompanyIntelligenceEndpoints, IEndpointRouteBuilder, CompanyIntelligenceMetrics, CompanyIntelligenceResponse, Guid, CancellationToken, Guid, Task (+3 more)
 
 ### Community 87 - "Import Endpoints"
 Cohesion: 0.26
@@ -647,20 +650,20 @@ Cohesion: 0.22
 Nodes (11): TrackedJobEndpoints, IEndpointRouteBuilder, IReadOnlyCollection, TrackedJobResponse, DateTimeOffset, Guid, ITrackedJobService, CancellationToken (+3 more)
 
 ### Community 89 - "Google Auth Client"
-Cohesion: 0.12
-Nodes (15): GoogleAuthClient, TokenErrorResponse, TokenResponse, CancellationToken, HttpClient, ILogger, IOptions, Task (+7 more)
+Cohesion: 0.06
+Nodes (30): DataProtectionTokenProviderOptions, IAuthorizationHandler, IdentityOptions, DependencyInjection, AuthenticationSchemeOptions, IConfiguration, IOptions, IServiceCollection (+22 more)
 
-### Community 90 - "Google Signup Token Tests"
-Cohesion: 0.26
-Nodes (6): FakeTimeProvider, GoogleSignupTokenTests, DateTimeOffset, Fact, TimeProvider, TimeSpan
+### Community 90 - "Domain Exceptions"
+Cohesion: 0.25
+Nodes (6): ApplicationAlreadyInStatusException, StatusChangedEventNotAllowedException, DomainException, ErrorCode, IHasErrorCode, ErrorCode
 
-### Community 91 - "Fake Email Providers (Tests)"
-Cohesion: 0.12
-Nodes (11): AfterApply.IntegrationTests.EmailIntegrations, FakeEmailClassificationProvider, CallCount, Result, CancellationToken, Task, FakeEmailJobExtractionProvider, CallCount (+3 more)
+### Community 91 - "Email Job Extraction Provider"
+Cohesion: 0.18
+Nodes (8): IEmailJobExtractionProvider, CancellationToken, Task, FakeEmailJobExtractionProvider, CallCount, Result, CancellationToken, Task
 
 ### Community 92 - "Google Auth Request Validators"
-Cohesion: 0.20
-Nodes (10): IStringLocalizer, LocalizedString, GoogleSignInRequestValidator, GoogleSignupRequestValidator, GoogleAuthRequestValidatorTests, KeyEchoLocalizer, Fact, IEnumerable (+2 more)
+Cohesion: 0.21
+Nodes (11): IStringLocalizer, LocalizedString, GoogleSignInRequest, GoogleSignInRequestValidator, GoogleSignupRequestValidator, GoogleAuthRequestValidatorTests, KeyEchoLocalizer, Fact (+3 more)
 
 ### Community 93 - "Launch Settings"
 Cohesion: 0.13
@@ -671,12 +674,12 @@ Cohesion: 0.27
 Nodes (6): RecruitmentSignal, RecruitmentSignalAnalysis, RecruitmentSignalAnalyzer, IReadOnlyCollection, List, TurkishTextNormalizer
 
 ### Community 95 - "Personal Access Token Service"
-Cohesion: 0.22
+Cohesion: 0.23
 Nodes (10): PersonalAccessTokenService, CancellationToken, CreatedPersonalAccessTokenResponse, Guid, HybridCache, HybridCacheEntryOptions, IOptions, IReadOnlyList (+2 more)
 
-### Community 96 - "Email Application Match Types"
-Cohesion: 0.22
-Nodes (7): EmailApplicationMatchType, DomainMatch, NameFallbackMatch, RejectionReasonCategory, Guid, EmailSuggestionTests, Fact
+### Community 96 - "Password Policy Options"
+Cohesion: 0.29
+Nodes (7): PasswordPolicyOptions, RequireDigit, RequiredLength, RequiredUniqueChars, RequireLowercase, RequireNonAlphanumeric, RequireUppercase
 
 ### Community 97 - "Company Endpoints & Search Validator"
 Cohesion: 0.16
@@ -703,8 +706,8 @@ Cohesion: 0.21
 Nodes (15): Content scripts are plain scripts (no ES modules in MV3), Forward-all-inbox design removed; extension signal is sole email intake, Gmail Scanning (gmail-scan.js content script), host_permissions must list the API origin, local-filter-config.js (ETag-cached scoring vocabulary), afterApplyScoreSignal local scoring (mirror of RecruitmentSignalAnalyzer), Chrome Web Store listing copy (EN/TR), e-kariyerim API origin host permission justification (+7 more)
 
 ### Community 103 - "Email Suggestion Confirm Tests"
-Cohesion: 0.28
-Nodes (4): JsonElement, EmailJobExtractionResult, HttpResponseMessage, List
+Cohesion: 0.17
+Nodes (10): JsonElement, Program, EmailJobExtractionResult, EmailSignalTests, HttpClient, HttpResponseMessage, JsonSerializerOptions, List (+2 more)
 
 ### Community 104 - "Postman Collection Generator"
 Cohesion: 0.22
@@ -744,11 +747,11 @@ Nodes (12): ApplicationEvent, ApplicationId, CreatedAt, Metadata, OccurredAt, So
 
 ### Community 113 - "Email Template Entity"
 Cohesion: 0.15
-Nodes (11): Entity, Id, Guid, EmailTemplate, HtmlBody, Key, Locale, Subject (+3 more)
+Nodes (12): AfterApply.Domain.Mailing, EmailTemplate, HtmlBody, Key, Locale, Subject, EmailTemplateKey, PasswordChanged (+4 more)
 
 ### Community 114 - "Email Connection Entity"
-Cohesion: 0.18
-Nodes (11): EmailConnection, ConnectedAt, Provider, ProviderAccountEmail, UserId, DateTimeOffset, Guid, EmailProvider (+3 more)
+Cohesion: 0.14
+Nodes (12): EmailConnection, ConnectedAt, Provider, ProviderAccountEmail, UserId, DateTimeOffset, Guid, EmailProvider (+4 more)
 
 ### Community 115 - "Tracked Job Entity"
 Cohesion: 0.18
@@ -770,9 +773,9 @@ Nodes (9): AfterApply.Api.Filters, EndpointFilterDelegate, EndpointFilterInvocat
 Cohesion: 0.18
 Nodes (8): AfterApply.Infrastructure.Persistence.Migrations, DateTimeOffset, Guid, MigrationBuilder, InitialIdentityAndCoreDomain, DateTimeOffset, Guid, ModelBuilder
 
-### Community 120 - "API Dependency Injection"
-Cohesion: 0.23
-Nodes (9): DataProtectionTokenProviderOptions, IAuthorizationHandler, IdentityOptions, DependencyInjection, AuthenticationSchemeOptions, IConfiguration, IOptions, IServiceCollection (+1 more)
+### Community 120 - "Import Progress Hub"
+Cohesion: 0.47
+Nodes (4): Hub, ImportProgressHub, Guid, Task
 
 ### Community 121 - "Decisions: Feature Flags"
 Cohesion: 0.24
@@ -795,16 +798,16 @@ Cohesion: 0.17
 Nodes (8): Migration, DateTimeOffset, Guid, MigrationBuilder, AddImports, DateTimeOffset, Guid, ModelBuilder
 
 ### Community 126 - "Personal Access Token Endpoints"
-Cohesion: 0.26
+Cohesion: 0.25
 Nodes (10): PersonalAccessTokenEndpoints, IEndpointRouteBuilder, IReadOnlyList, CreatedPersonalAccessTokenResponse, CreatePersonalAccessTokenRequest, PersonalAccessTokenResponse, DateTimeOffset, Guid (+2 more)
 
-### Community 127 - "Password Reset Result & Email Sender"
-Cohesion: 0.22
-Nodes (6): PasswordResetResult, Errors, Succeeded, IEmailSender, CancellationToken, Task
+### Community 127 - "Job URL Rules"
+Cohesion: 0.33
+Nodes (3): IRuleBuilder, IRuleBuilderOptions, JobUrlRules
 
 ### Community 128 - "Google Sign-In Result Contracts"
-Cohesion: 0.19
-Nodes (8): GoogleSignInResult, Errors, Response, Succeeded, GoogleSignupPrefill, IReadOnlyCollection, CancellationToken, Task
+Cohesion: 0.27
+Nodes (7): GoogleSignInResponse, GoogleSignInResult, Errors, Response, Succeeded, GoogleSignupPrefill, IReadOnlyCollection
 
 ### Community 129 - "Recruitment Signal Analyzer Tests"
 Cohesion: 0.24
@@ -818,13 +821,13 @@ Nodes (12): deploy/api-latest and deploy/web-latest High-water-mark Tags, deploy
 Cohesion: 0.32
 Nodes (11): afterApplyCapped(), afterApplyCountMatches(), afterApplyExtractOpenThread(), afterApplyInit(), afterApplyMarkSubmitted(), afterApplyMatchesAnyDomain(), afterApplyScanCurrentThread(), afterApplyScheduleScan() (+3 more)
 
-### Community 132 - "Auth Endpoints"
-Cohesion: 0.24
-Nodes (8): AuthEndpoints, Dictionary, HttpContext, IEndpointRouteBuilder, IReadOnlyCollection, IStringLocalizer, LogoutRequest, LogoutRequestValidator
+### Community 132 - "Email Suggestion Status"
+Cohesion: 0.33
+Nodes (5): EmailSuggestionStatus, AutoApplied, Confirmed, Dismissed, Pending
 
 ### Community 133 - "Account Export Contracts"
-Cohesion: 0.45
-Nodes (10): AccountExportResponse, ApplicationEventExportItem, ApplicationExportItem, ImportBatchExportItem, ReminderExportItem, StatusHistoryExportItem, DateTimeOffset, Guid (+2 more)
+Cohesion: 0.40
+Nodes (11): AccountExportResponse, ApplicationEventExportItem, ApplicationExportItem, DeleteAccountRequest, ImportBatchExportItem, ReminderExportItem, StatusHistoryExportItem, DateTimeOffset (+3 more)
 
 ### Community 134 - "AddReminders Migration"
 Cohesion: 0.18
@@ -875,12 +878,12 @@ Cohesion: 0.18
 Nodes (10): RejectionReasonCategory, CultureOrTeamFit, ExperienceLevelMismatch, LanguageRequirement, LocationOrRelocation, NotStated, Other, PositionCancelledOrFilled (+2 more)
 
 ### Community 146 - "Import Row Errors"
-Cohesion: 0.22
-Nodes (8): ImportRowError, ErrorMessage, ImportBatchId, RawRow, RowNumber, Guid, ImportRowErrorConfiguration, EntityTypeBuilder
+Cohesion: 0.15
+Nodes (11): Entity, Id, Guid, ImportRowError, ErrorMessage, ImportBatchId, RawRow, RowNumber (+3 more)
 
 ### Community 147 - "Company Intelligence Options"
-Cohesion: 0.18
-Nodes (10): CompanyIntelligenceOptions, ClosureRateWeight, Enabled, HiddenBelow, LowBelow, MediumBelow, ResponseTimeCapDays, ResponseTimeWeight (+2 more)
+Cohesion: 0.15
+Nodes (12): CompanyIntelligenceOptions, ClosureRateWeight, Enabled, HiddenBelow, LowBelow, MediumBelow, ResponseTimeCapDays, ResponseTimeWeight (+4 more)
 
 ### Community 148 - "AddConsentAcceptedAt Migration"
 Cohesion: 0.20
@@ -935,8 +938,8 @@ Cohesion: 0.20
 Nodes (9): Microsoft.AspNetCore.Mvc.Testing, Testcontainers.PostgreSql, Testcontainers.Redis, coverlet.collector, Microsoft.NET.Test.Sdk, Shouldly, xunit, xunit.runner.visualstudio (+1 more)
 
 ### Community 161 - "Application Status History"
-Cohesion: 0.27
-Nodes (8): ApplicationStatusHistory, ApplicationId, Note, ToStatus, DateTimeOffset, Guid, ApplicationStatusHistoryConfiguration, EntityTypeBuilder
+Cohesion: 0.18
+Nodes (11): IEntityTypeConfiguration, ApplicationStatusHistory, ApplicationId, Note, ToStatus, DateTimeOffset, Guid, ApplicationConfiguration (+3 more)
 
 ### Community 162 - "Resend Email Sender"
 Cohesion: 0.42
@@ -974,9 +977,9 @@ Nodes (5): MigrationBuilder, AddEmailForwarding, DateTimeOffset, Guid, ModelBuil
 Cohesion: 0.22
 Nodes (5): MigrationBuilder, AddEmailSuggestionRejectionReason, DateTimeOffset, Guid, ModelBuilder
 
-### Community 171 - "Auth & Application Flow Tests"
-Cohesion: 0.27
-Nodes (7): AuthAndApplicationFlowTests, Fact, JsonSerializerOptions, List, SharedInfrastructure, Task, WebApplicationFactory
+### Community 171 - "Application Response Contracts"
+Cohesion: 0.29
+Nodes (9): ApplicationDetailResponse, ApplicationEventResponse, ApplicationSummaryResponse, DateTimeOffset, EmploymentType, Guid, Source, Fact (+1 more)
 
 ### Community 172 - "Application Domain Tests"
 Cohesion: 0.44
@@ -990,9 +993,9 @@ Nodes (10): Application Create Screenshot (New Application Form), Company Name a
 Cohesion: 0.24
 Nodes (10): Application Detail Page, Application Detail Screenshot, Application Metadata Fields (Location, Work Mode, Applied Date, Posting Link, Notes), Change Status Action (Durumu Değiştir), Destructive Delete Styled Red, Separated From Edit, Edit / Delete Header Actions (Düzenle / Sil), Status Badge (Mülakat / Interview), Status Timeline (Zaman Çizelgesi) (+2 more)
 
-### Community 175 - "Tracked Job Form UI"
-Cohesion: 0.29
-Nodes (6): EMPTY_VALUES, TrackedJobForm(), TrackedJobFormProps, TrackedJobFormValues, CreateTrackedJobFormValues, createTrackedJobSchema()
+### Community 175 - "Register Page UI"
+Cohesion: 0.11
+Nodes (22): ForgotPasswordPage(), FieldErrors, EMPTY_VALUES, TrackedJobForm(), TrackedJobFormProps, TrackedJobFormValues, ConvertValues, todayInputValue() (+14 more)
 
 ### Community 176 - "Decisions: CI & Testing"
 Cohesion: 0.31
@@ -1066,9 +1069,9 @@ Nodes (5): FluentValidation, FluentValidation.DependencyInjectionExtensions, Mic
 Cohesion: 0.25
 Nodes (8): NEXT_PUBLIC_* vars must be build args, not environment, web service (Next.js, web/Dockerfile), Frontend (web/, Next.js App Router, Tailwind 4), http launch profile as source of truth for dev port 5151, Native local Postgres/Redis quick start, Next.js agent rules (read node_modules/next/dist/docs before coding), web/CLAUDE.md includes AGENTS.md, e-kariyerim Web (Next.js frontend scripts)
 
-### Community 194 - "EF Entity Type Configurations"
-Cohesion: 0.25
-Nodes (6): IEntityTypeConfiguration, ApplicationConfiguration, EntityTypeBuilder, EmailTemplateConfiguration, EntityTypeBuilder, Guid
+### Community 194 - "Personal Access Token Options"
+Cohesion: 0.33
+Nodes (5): PersonalAccessTokenOptions, Lifetime, LifetimeDays, MaxActiveTokens, TimeSpan
 
 ### Community 195 - "Unit Test Packages"
 Cohesion: 0.25
@@ -1130,9 +1133,9 @@ Nodes (6): ENVIRONMENTS_DIR, ENVIRONMENTS_TO_PUBLISH, fs, listEnvironments(), ma
 Cohesion: 0.29
 Nodes (7): EmailIntelligenceOptions, HighConfidenceThreshold, LlmThreshold, LocalPrefilterThreshold, LowThreshold, Phrases, Weights
 
-### Community 211 - "JWT Options"
-Cohesion: 0.29
-Nodes (6): JwtOptions, AccessTokenMinutes, Audience, Issuer, RefreshTokenDays, SigningKey
+### Community 211 - "Fake Email Providers (Tests)"
+Cohesion: 0.33
+Nodes (5): FakeEmailClassificationProvider, CallCount, Result, CancellationToken, Task
 
 ### Community 212 - "Brand Logo Mark"
 Cohesion: 0.38
@@ -1182,10 +1185,6 @@ Nodes (4): ResendOptions, ApiKey, FromEmail, FromName
 Cohesion: 0.40
 Nodes (3): alt, contentType, size
 
-### Community 229 - "Confirm Suggestion Result"
-Cohesion: 0.50
-Nodes (4): ConfirmSuggestionResult, Confirmed, NoStatusToConfirm, NotFound
-
 ### Community 230 - "Import Row Outcome"
 Cohesion: 0.50
 Nodes (4): RowOutcome, Duplicate, Invalid, New
@@ -1197,28 +1196,28 @@ Nodes (3): maxParallelThreads, parallelizeTestCollections, $schema
 ## Ambiguous Edges - Review These
 - `New / Duplicate / Error Row Counts` → `Inline Import Result Feedback Rationale`  [AMBIGUOUS]
   web/public/help/gifs/linkedin-import.gif · relation: conceptually_related_to
-- `Login Form Screenshot` → `No Google Sign-In Button Shown (Pre-Google Screenshot)`  [AMBIGUOUS]
+- `No Google Sign-In Button Shown (Pre-Google Screenshot)` → `Login Form Screenshot`  [AMBIGUOUS]
   web/public/help/screenshots/login-form.png · relation: references
 
 ## Knowledge Gaps
-- **725 isolated node(s):** `STRINGS`, `AFTERAPPLY_DEFAULT_LOCAL_FILTER_CONFIG`, `manifest_version`, `name`, `version` (+720 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1380 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **725 isolated node(s):** `PendingGoogleSignIn`, `CtaButtonsProps`, `UploadPhase`, `JobDescriptionCardProps`, `PaginationProps` (+720 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1379 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `New / Duplicate / Error Row Counts` and `Inline Import Result Feedback Rationale`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **What is the exact relationship between `Login Form Screenshot` and `No Google Sign-In Button Shown (Pre-Google Screenshot)`?**
+- **What is the exact relationship between `No Google Sign-In Button Shown (Pre-Google Screenshot)` and `Login Form Screenshot`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-- **Why does `AppDbContext` connect `AppDbContext` to `Reminder Endpoints & Tests`, `Company Resolver & Email Matcher`, `User Profile & Auth Service`, `Google Sign-In Integration Tests`, `EF Entity Configurations & Namespaces`, `Company Enrichment (LinkedIn)`, `Account Deletion & Reminder Domain`, `EmailSuggestion Domain`, `Import Service & Dedup`, `Company Search Service`, `Import Row Errors`, `Identity User & Auth Contracts`, `Extension Email Signal Tests`, `Auditable Entity & Import Batch`, `Application Status History`, `Resend Email Sender`, `Job Domain Entity`, `Email Forwarding Service`, `Application Service`, `Email Job Extraction Provider`, `SignalR Import Progress`, `Application Aggregate`, `Personal Access Token Domain`, `Rejection Reason Extraction Tests`, `Testcontainers Shared Infrastructure`, `App Options & DI Setup`, `Extension Application Tests`, `Postgres Connectivity Tests`, `Refresh Token Domain`, `Company Intelligence Endpoints`, `Personal Access Token Service`, `Test Host & Hangfire Idle`, `Email Suggestion Confirm Tests`, `Product Metrics Service`, `Job Resolver`, `Application Event Entity`, `Email Template Entity`, `Email Connection Entity`, `Tracked Job Entity`, `Tracked Job Service`, `API Dependency Injection`?**
-  _High betweenness centrality (0.130) - this node is a cross-community bridge._
-- **Why does `AfterApply.Infrastructure.Persistence` connect `Test Project Namespaces` to `AddReminders Migration`, `AddEmailIntegrations Migration`, `AddJobMatching Migration`, `AddPersonalAccessTokens Migration`, `EF Entity Configurations & Namespaces`, `AddTrackedJobs Migration`, `RemoveJobMatching Migration`, `Integration Test Infrastructure`, `AddConsentAcceptedAt Migration`, `AddImportBatchProgress Migration`, `AddEmailSuggestionNewJobFields Migration`, `RemoveGmailIntegration Migration`, `Config & Validator Unit Tests`, `AddEmailConnectionGmailConfirmation Migration`, `AddOpenAiConsent Migration`, `AddEmailTemplates Migration`, `AddEmailSuggestionAutoApply Migration`, `RemoveEmailForwarding Migration`, `AddPatScopeAndExpiry Migration`, `Infrastructure Services Namespaces`, `AddImportBatchSource Migration`, `AddPreferredLanguage Migration`, `AppDbContext`, `AddPreferredTheme Migration`, `AddJobDescriptionHtml Migration`, `AddCompanyNameTrigramIndex Migration`, `AddMissingIndexes Migration`, `AddEmailForwarding Migration`, `AddEmailSuggestionRejectionReason Migration`, `Reminder Notification Namespaces`, `Postgres Connectivity Tests`, `DbContext Model Snapshot`, `Tracked Job Namespaces & Validators`, `Import Progress Hub & Column Mapper Tests`, `Company Endpoints & Search Validator`, `Initial Identity Migration`, `AddImports Migration`?**
-  _High betweenness centrality (0.096) - this node is a cross-community bridge._
-- **Why does `AfterApply.Domain.Common` connect `EF Entity Configurations & Namespaces` to `Account Export Contracts`, `Job Posting Source Resolver`, `Auditable Entity & Import Batch`, `CSV Column Mapper`, `Infrastructure Services Namespaces`, `Test Project Namespaces`, `Application Endpoints & Responses`, `Coded Exceptions & Rejection Payload`, `Job URL Rules & Email Namespaces`, `Tracked Job Flow Tests`, `Reminder Notification Namespaces`, `Employment Type Enum`, `Application List Requests`, `Tracked Job Namespaces & Validators`, `Import Progress Hub & Column Mapper Tests`, `Recruitment Signal Analyzer`, `Remote Type Enum`, `Company Endpoints & Search Validator`, `Job Resolver`, `Email Template Entity`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `AppDbContext` connect `AppDbContext` to `Reminder Endpoints & Tests`, `Company Resolver & Email Matcher`, `Google Sign-In Integration Tests`, `EF Entity Configurations`, `Company Enrichment (LinkedIn)`, `Account Deletion & Reminder Domain`, `EmailSuggestion Domain`, `Import Service & Dedup`, `Company Search Service`, `Company Intelligence Options`, `Import Row Errors`, `User Profile & Auth Service`, `Extension Email Signal Tests`, `Auditable Entity & Import Batch`, `Application Status History`, `Resend Email Sender`, `Job Domain Entity`, `Email Forwarding Service`, `Application Service`, `Identity User & Auth Contracts`, `Application Aggregate`, `Personal Access Token Domain`, `Rejection Reason Extraction Tests`, `Testcontainers Shared Infrastructure`, `App Options & DI Setup`, `Email Classification Provider (OpenAI)`, `Extension Application Tests`, `Postgres Connectivity Tests`, `Refresh Token Domain`, `Google Auth Client`, `Personal Access Token Service`, `Email Suggestion Confirm Tests`, `Product Metrics Service`, `Job Resolver`, `Application Event Entity`, `Email Template Entity`, `Email Connection Entity`, `Tracked Job Entity`, `Tracked Job Service`, `Import Progress Hub`?**
+  _High betweenness centrality (0.142) - this node is a cross-community bridge._
+- **Why does `AfterApply.Infrastructure.Persistence` connect `Test Project Namespaces` to `AddReminders Migration`, `AddEmailIntegrations Migration`, `AddJobMatching Migration`, `AddPersonalAccessTokens Migration`, `EF Entity Configurations`, `AddTrackedJobs Migration`, `RemoveJobMatching Migration`, `Integration Test Infrastructure`, `AddConsentAcceptedAt Migration`, `AddImportBatchProgress Migration`, `AddEmailSuggestionNewJobFields Migration`, `RemoveGmailIntegration Migration`, `Config & Validator Unit Tests`, `AddEmailConnectionGmailConfirmation Migration`, `AddOpenAiConsent Migration`, `AddEmailTemplates Migration`, `AddEmailSuggestionAutoApply Migration`, `RemoveEmailForwarding Migration`, `AddPatScopeAndExpiry Migration`, `Infrastructure Services Namespaces`, `AddImportBatchSource Migration`, `AddPreferredLanguage Migration`, `AppDbContext`, `Dependency Injection Setup`, `AddPreferredTheme Migration`, `AddJobDescriptionHtml Migration`, `AddCompanyNameTrigramIndex Migration`, `AddMissingIndexes Migration`, `AddEmailForwarding Migration`, `AddEmailSuggestionRejectionReason Migration`, `Reminder Notification Namespaces`, `Postgres Connectivity Tests`, `DbContext Model Snapshot`, `Tracked Job Namespaces & Validators`, `Import Progress Hub & Column Mapper Tests`, `Company Endpoints & Search Validator`, `Initial Identity Migration`, `AddImports Migration`?**
+  _High betweenness centrality (0.082) - this node is a cross-community bridge._
+- **Why does `ApplicationStatus` connect `Application Status Enum` to `Reminder Endpoints & Tests`, `Application Status History`, `Account Export Contracts`, `Rule-Based Email Classifier`, `Import Date Parsing Tests`, `Analytics Endpoints`, `Application List Requests`, `Application Response Contracts`, `Product Metrics Service`, `Import Row Parser`, `Application Aggregate`, `Coded Exceptions`, `Application List Pagination Tests`, `EmailSuggestion Domain`, `Email Forwarding Endpoints`, `Analytics Overview Tests`, `Company Intelligence Tests`, `Extension Email Signal Tests`?**
+  _High betweenness centrality (0.042) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `AppDbContext` (e.g. with `.AppDbContext_Can_Connect_To_Postgres()` and `.InitializeAsync()`) actually correct?**
   _`AppDbContext` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `STRINGS`, `AFTERAPPLY_DEFAULT_LOCAL_FILTER_CONFIG`, `manifest_version` to the rest of the system?**
+- **What connects `PendingGoogleSignIn`, `CtaButtonsProps`, `UploadPhase` to the rest of the system?**
   _725 weakly-connected nodes found - possible documentation gaps or missing edges._
