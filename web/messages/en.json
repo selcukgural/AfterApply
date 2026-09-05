@@ -406,6 +406,7 @@
       "confirmMismatch": "Type \"DELETE\" in the box to confirm.",
       "submit": "Permanently Delete My Account",
       "deleting": "Deleting...",
+      "finalConfirm": "Final warning: your account and all of your application, import, reminder, and extension data will be permanently deleted. This cannot be undone. Do you want to continue?",
       "genericError": "Could not delete account.",
       "noPasswordHint": "This account was created with Google and has no password. Type the confirmation word below to delete it."
     }
@@ -949,7 +950,7 @@
       },
       "delete": {
         "title": "Delete My Account",
-        "body": "Enter your password and type \"DELETE\" into the box to permanently delete your account and all of your data.",
+        "body": "Enter your password, type \"DELETE\" into the box, and click the button. A second warning tells you that all of your data will be deleted; once you confirm that too, your account and all of your data are permanently deleted.",
         "calloutIrreversible": {
           "title": "This can't be undone",
           "body": "Once your account is deleted, all of your application, import, and reminder data is permanently gone — there's no way to reverse it."

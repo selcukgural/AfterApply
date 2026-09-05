@@ -106,6 +106,10 @@ export default function SettingsPage() {
       return;
     }
 
+    // Second, explicit warning after the typed confirmation: the deletion is irreversible and
+    // wipes every piece of the user's data, so a mis-typed word alone must not be enough.
+    if (!confirm(t("delete.finalConfirm"))) return;
+
     setIsDeleting(true);
     try {
       await deleteAccount(hasPassword ? password : undefined);

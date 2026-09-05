@@ -406,6 +406,7 @@
       "confirmMismatch": "Onaylamak için kutuya \"SİL\" yazın.",
       "submit": "Hesabımı Kalıcı Olarak Sil",
       "deleting": "Siliniyor...",
+      "finalConfirm": "Son uyarı: Hesabınız ve tüm başvuru, import, hatırlatma ve eklenti verileriniz kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
       "genericError": "Hesap silinemedi.",
       "noPasswordHint": "Bu hesap Google ile açıldı ve şifresi yok. Silmek için aşağıya onay kelimesini yazmanız yeterli."
     }
@@ -949,7 +950,7 @@
       },
       "delete": {
         "title": "Hesabımı Sil",
-        "body": "Şifrenizi girip kutuya \"SİL\" yazarak hesabınızı ve tüm verilerinizi kalıcı olarak silebilirsiniz.",
+        "body": "Şifrenizi girip kutuya \"SİL\" yazın ve butona tıklayın. Tüm verilerinizin silineceğini belirten ikinci bir uyarı çıkar; onu da onayladığınızda hesabınız ve tüm verileriniz kalıcı olarak silinir.",
         "calloutIrreversible": {
           "title": "Geri alınamaz",
           "body": "Hesabınız silindiğinde tüm başvuru, içe aktarma ve hatırlatma verileriniz kalıcı olarak kaybolur; bu işlemin geri dönüşü yoktur."
