@@ -19,7 +19,7 @@ public class LinkedInIdTokenReaderTests
     private readonly RSA _otherRsa = RSA.Create(2048);
 
     [Fact]
-    public void Reads_The_Identity_Out_Of_A_Validly_Signed_Token()
+    public async Task Reads_The_Identity_Out_Of_A_Validly_Signed_Token()
     {
         var token = Token(claims: new Dictionary<string, object>
         {
@@ -30,7 +30,7 @@ public class LinkedInIdTokenReaderTests
             ["family_name"] = "Lovelace"
         });
 
-        var identity = LinkedInIdTokenReader.Read(token, Jwks(), ClientId, Now);
+        var identity = (await LinkedInIdTokenReader.ReadAsync(token, Jwks(), ClientId, Now)).Identity;
 
         identity.ShouldNotBeNull();
         identity.Subject.ShouldBe("linkedin-member-1");
@@ -41,11 +41,11 @@ public class LinkedInIdTokenReaderTests
     }
 
     [Fact]
-    public void Reads_A_Token_With_No_Email_At_All()
+    public async Task Reads_A_Token_With_No_Email_At_All()
     {
         var token = Token(claims: new Dictionary<string, object> { ["sub"] = "linkedin-member-2" });
 
-        var identity = LinkedInIdTokenReader.Read(token, Jwks(), ClientId, Now)!;
+        var identity = (await LinkedInIdTokenReader.ReadAsync(token, Jwks(), ClientId, Now)).Identity!;
 
         identity.Email.ShouldBeNull();
         identity.EmailVerified.ShouldBeFalse();
@@ -54,75 +54,77 @@ public class LinkedInIdTokenReaderTests
     }
 
     [Fact]
-    public void Rejects_A_Token_Signed_With_A_Key_Not_In_The_Jwks()
+    public async Task Rejects_A_Token_Signed_With_A_Key_Not_In_The_Jwks()
     {
         var token = Token(signingKey: _otherRsa);
 
-        LinkedInIdTokenReader.Read(token, Jwks(), ClientId, Now).ShouldBeNull();
+        (await LinkedInIdTokenReader.ReadAsync(token, Jwks(), ClientId, Now)).Identity.ShouldBeNull();
     }
 
     [Fact]
-    public void Rejects_A_Tampered_Token()
+    public async Task Rejects_A_Tampered_Token()
     {
         var token = Token();
         var parts = token.Split('.');
         parts[1] = parts[1][..^2] + (parts[1][^2] == 'A' ? "BB" : "AA");
 
-        LinkedInIdTokenReader.Read(string.Join('.', parts), Jwks(), ClientId, Now).ShouldBeNull();
+        (await LinkedInIdTokenReader.ReadAsync(string.Join('.', parts), Jwks(), ClientId, Now)).Identity.ShouldBeNull();
     }
 
     [Fact]
-    public void Accepts_The_Issuer_LinkedIn_Actually_Emits()
+    public async Task Accepts_The_Issuer_LinkedIn_Actually_Emits()
     {
         // The live discovery document and real ID tokens say ".../oauth"; the docs page says the bare
         // host. Both must work — the bare-host-only version rejected every real token on 2026-09-05.
-        LinkedInIdTokenReader.Read(Token(issuer: "https://www.linkedin.com/oauth"), Jwks(), ClientId, Now).ShouldNotBeNull();
-        LinkedInIdTokenReader.Read(Token(issuer: "https://www.linkedin.com"), Jwks(), ClientId, Now).ShouldNotBeNull();
+        (await LinkedInIdTokenReader.ReadAsync(Token(issuer: "https://www.linkedin.com/oauth"), Jwks(), ClientId, Now)).Identity.ShouldNotBeNull();
+        (await LinkedInIdTokenReader.ReadAsync(Token(issuer: "https://www.linkedin.com"), Jwks(), ClientId, Now)).Identity.ShouldNotBeNull();
     }
 
     [Fact]
-    public void Rejects_A_Token_From_Another_Issuer()
+    public async Task Rejects_A_Token_From_Another_Issuer()
     {
-        LinkedInIdTokenReader.Read(Token(issuer: "https://accounts.example.com"), Jwks(), ClientId, Now, out var failure).ShouldBeNull();
+        var (identity, failure) = await LinkedInIdTokenReader.ReadAsync(Token(issuer: "https://accounts.example.com"), Jwks(), ClientId, Now);
+        identity.ShouldBeNull();
         // The reason is surfaced for the server log (IDX10205 = issuer validation failed), never to the client.
         failure.ShouldNotBeNull();
         failure.ShouldContain("IDX10205");
     }
 
     [Fact]
-    public void Rejects_A_Lookalike_Issuer_Under_The_Same_Host()
+    public async Task Rejects_A_Lookalike_Issuer_Under_The_Same_Host()
     {
-        LinkedInIdTokenReader.Read(Token(issuer: "https://www.linkedin.com/oauth/evil"), Jwks(), ClientId, Now).ShouldBeNull();
-        LinkedInIdTokenReader.Read(Token(issuer: "https://www.linkedin.com.evil.example"), Jwks(), ClientId, Now).ShouldBeNull();
+        (await LinkedInIdTokenReader.ReadAsync(Token(issuer: "https://www.linkedin.com/oauth/evil"), Jwks(), ClientId, Now)).Identity.ShouldBeNull();
+        (await LinkedInIdTokenReader.ReadAsync(Token(issuer: "https://www.linkedin.com.evil.example"), Jwks(), ClientId, Now)).Identity.ShouldBeNull();
     }
 
     [Fact]
-    public void Rejects_A_Token_Issued_For_Another_Client()
+    public async Task Rejects_A_Token_Issued_For_Another_Client()
     {
-        LinkedInIdTokenReader.Read(Token(audience: "someone-else"), Jwks(), ClientId, Now).ShouldBeNull();
+        (await LinkedInIdTokenReader.ReadAsync(Token(audience: "someone-else"), Jwks(), ClientId, Now)).Identity.ShouldBeNull();
     }
 
     [Fact]
-    public void Rejects_An_Expired_Token()
+    public async Task Rejects_An_Expired_Token()
     {
         var token = Token(expires: Now.AddMinutes(-1));
 
-        LinkedInIdTokenReader.Read(token, Jwks(), ClientId, Now).ShouldBeNull();
+        (await LinkedInIdTokenReader.ReadAsync(token, Jwks(), ClientId, Now)).Identity.ShouldBeNull();
         // Sanity: the same token is fine when read before it expired.
-        LinkedInIdTokenReader.Read(token, Jwks(), ClientId, Now.AddMinutes(-2)).ShouldNotBeNull();
+        (await LinkedInIdTokenReader.ReadAsync(token, Jwks(), ClientId, Now.AddMinutes(-2))).Identity.ShouldNotBeNull();
     }
 
     [Fact]
-    public void Rejects_A_Token_Without_A_Subject()
+    public async Task Rejects_A_Token_Without_A_Subject()
     {
-        LinkedInIdTokenReader.Read(Token(claims: new Dictionary<string, object> { ["email"] = "x@example.com" }), Jwks(), ClientId, Now)
-            .ShouldBeNull();
+        var token = Token(claims: new Dictionary<string, object> { ["email"] = "x@example.com" });
+
+        (await LinkedInIdTokenReader.ReadAsync(token, Jwks(), ClientId, Now)).Identity.ShouldBeNull();
     }
 
     [Fact]
-    public void Garbage_Is_Rejected_Not_Thrown()
+    public async Task Garbage_Is_Rejected_Not_Thrown()
     {
-        LinkedInIdTokenReader.Read("not-a-jwt", Jwks(), ClientId, Now).ShouldBeNull();
+        (await LinkedInIdTokenReader.ReadAsync("not-a-jwt", Jwks(), ClientId, Now)).Identity.ShouldBeNull();
     }
 
     private JsonWebKeySet Jwks(string kid = "test-kid")

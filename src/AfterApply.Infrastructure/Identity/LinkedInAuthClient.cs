@@ -83,7 +83,7 @@ internal sealed class LinkedInAuthClient(
     private async Task<LinkedInIdentity?> ReadIdentityAsync(string idToken, CancellationToken cancellationToken)
     {
         var jwks = await jwksProvider.GetAsync(cancellationToken);
-        var identity = LinkedInIdTokenReader.Read(idToken, jwks, _options.ClientId!, _timeProvider.GetUtcNow(), out var failure);
+        var (identity, failure) = await LinkedInIdTokenReader.ReadAsync(idToken, jwks, _options.ClientId!, _timeProvider.GetUtcNow());
         if (identity is not null)
         {
             return identity;
@@ -95,7 +95,7 @@ internal sealed class LinkedInAuthClient(
         // in the common case and recovers a real key rotation without a redeploy.
         logger.LogInformation("LinkedIn id_token failed validation with the cached JWKS ({Reason}); refreshing keys and retrying", failure);
         var refreshed = await jwksProvider.RefreshAsync(cancellationToken);
-        identity = LinkedInIdTokenReader.Read(idToken, refreshed, _options.ClientId!, _timeProvider.GetUtcNow(), out failure);
+        (identity, failure) = await LinkedInIdTokenReader.ReadAsync(idToken, refreshed, _options.ClientId!, _timeProvider.GetUtcNow());
         if (identity is null)
         {
             // The library's IDX code names the failing check (issuer/audience/expiry/signature) with

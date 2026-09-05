@@ -112,10 +112,14 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
         return new JsonWebTokenHandler().CreateToken(descriptor);
     }
 
-    public GoogleIdentity? ValidateGoogleSignupToken(string token)
+    // Async all the way down rather than blocking on ValidateTokenAsync: with a signing key handed
+    // straight to it the library completes synchronously today, but that's its implementation
+    // detail, not a promise — awaiting costs nothing and keeps a validator that does real I/O
+    // (a ConfigurationManager, an async key resolver) from ever parking a request thread here.
+    public async Task<GoogleIdentity?> ValidateGoogleSignupTokenAsync(string token)
     {
         var handler = new JsonWebTokenHandler();
-        var result = handler.ValidateTokenAsync(token, new TokenValidationParameters
+        var result = await handler.ValidateTokenAsync(token, new TokenValidationParameters
         {
             ValidIssuer = _options.Issuer,
             ValidAudience = GoogleSignupAudience,
@@ -123,7 +127,7 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
             ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
             ClockSkew = TimeSpan.Zero,
             LifetimeValidator = (_, expires, _, _) => expires is not null && expires > _timeProvider.GetUtcNow().UtcDateTime
-        }).GetAwaiter().GetResult();
+        });
 
         if (!result.IsValid || result.SecurityToken is not JsonWebToken jwt)
         {
@@ -189,11 +193,11 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
         return new JsonWebTokenHandler().CreateToken(descriptor);
     }
 
-    // TODO: WHY WE'RE BLOCKING THREAD?
-    public LinkedInIdentity? ValidateLinkedInSignupToken(string token)
+    // Same reasoning as ValidateGoogleSignupTokenAsync above.
+    public async Task<LinkedInIdentity?> ValidateLinkedInSignupTokenAsync(string token)
     {
         var handler = new JsonWebTokenHandler();
-        var result = handler.ValidateTokenAsync(token, new TokenValidationParameters
+        var result = await handler.ValidateTokenAsync(token, new TokenValidationParameters
         {
             ValidIssuer = _options.Issuer,
             ValidAudience = LinkedInSignupAudience,
@@ -201,7 +205,7 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
             ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
             ClockSkew = TimeSpan.Zero,
             LifetimeValidator = (_, expires, _, _) => expires is not null && expires > _timeProvider.GetUtcNow().UtcDateTime
-        }).GetAwaiter().GetResult();
+        });
 
         if (!result.IsValid || result.SecurityToken is not JsonWebToken jwt)
         {

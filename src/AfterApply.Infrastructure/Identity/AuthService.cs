@@ -167,7 +167,7 @@ internal sealed class AuthService(
 
     public async Task<AuthResult> CompleteGoogleSignupAsync(GoogleSignupRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
-        var identity = tokenService.ValidateGoogleSignupToken(request.SignupToken);
+        var identity = await tokenService.ValidateGoogleSignupTokenAsync(request.SignupToken);
         if (identity is null || !identity.EmailVerified)
         {
             return AuthResult.Failure("AUTH_GOOGLE_SIGNUP_EXPIRED");
@@ -253,7 +253,7 @@ internal sealed class AuthService(
 
     public async Task<AuthResult> CompleteLinkedInSignupAsync(LinkedInSignupRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
-        var identity = tokenService.ValidateLinkedInSignupToken(request.SignupToken);
+        var identity = await tokenService.ValidateLinkedInSignupTokenAsync(request.SignupToken);
         if (identity is null)
         {
             return AuthResult.Failure("AUTH_LINKEDIN_SIGNUP_EXPIRED");

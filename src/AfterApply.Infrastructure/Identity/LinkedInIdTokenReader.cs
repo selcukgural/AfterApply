@@ -25,21 +25,25 @@ public static class LinkedInIdTokenReader
     // come from LinkedIn's JWKS.
     private static readonly string[] AcceptedIssuers = ["https://www.linkedin.com/oauth", "https://www.linkedin.com"];
 
-    public static LinkedInIdentity? Read(string idToken, JsonWebKeySet jwks, string expectedClientId, DateTimeOffset now) =>
-        Read(idToken, jwks, expectedClientId, now, out _);
-
-    /// <summary><paramref name="failure"/> is the validation library's own reason when null is returned
-    /// for a token that failed validation (an IDX error code — e.g. IDX10205 issuer, IDX10214 audience,
-    /// IDX10223 expiry, IDX10503/IDX10517 signature; PII is masked by the library). It is for logs only,
-    /// never for the client.</summary>
-    public static LinkedInIdentity? Read(string idToken, JsonWebKeySet jwks, string expectedClientId, DateTimeOffset now, out string? failure)
+    /// <summary>
+    /// Returns the identity, or null with a <c>Failure</c> describing why the token was rejected: the
+    /// validation library's own reason (an IDX error code — e.g. IDX10205 issuer, IDX10214 audience,
+    /// IDX10223 expiry, IDX10503/IDX10517 signature; PII is masked by the library). The reason is for
+    /// logs only, never for the client.
+    ///
+    /// Async because <see cref="JsonWebTokenHandler.ValidateTokenAsync(string, TokenValidationParameters)"/>
+    /// is: with the keys passed in it happens to complete synchronously today, but that is an
+    /// implementation detail of the library, not a contract — awaiting it costs nothing and can't
+    /// turn into a blocked request thread if a validator that really does I/O is ever configured.
+    /// </summary>
+    public static async Task<(LinkedInIdentity? Identity, string? Failure)> ReadAsync(
+        string idToken, JsonWebKeySet jwks, string expectedClientId, DateTimeOffset now)
     {
-        failure = null;
         var handler = new JsonWebTokenHandler();
         TokenValidationResult result;
         try
         {
-            result = handler.ValidateTokenAsync(idToken, new TokenValidationParameters
+            result = await handler.ValidateTokenAsync(idToken, new TokenValidationParameters
             {
                 ValidIssuers = AcceptedIssuers,
                 ValidAudience = expectedClientId,
@@ -47,34 +51,31 @@ public static class LinkedInIdTokenReader
                 ValidAlgorithms = [SecurityAlgorithms.RsaSha256],
                 ClockSkew = TimeSpan.FromMinutes(2),
                 LifetimeValidator = (_, expires, _, _) => expires is not null && expires > now.UtcDateTime
-            }).GetAwaiter().GetResult();
+            });
         }
         catch (ArgumentException ex)
         {
             // A malformed token string ("not a JWT at all") throws rather than failing validation.
-            failure = ex.Message;
-            return null;
+            return (null, ex.Message);
         }
 
         if (!result.IsValid || result.SecurityToken is not JsonWebToken token)
         {
-            failure = result.Exception?.Message ?? "token validation failed without an exception";
-            return null;
+            return (null, result.Exception?.Message ?? "token validation failed without an exception");
         }
 
         var subject = token.Subject;
         if (string.IsNullOrEmpty(subject))
         {
-            failure = "id_token has no 'sub' claim";
-            return null;
+            return (null, "id_token has no 'sub' claim");
         }
 
-        return new LinkedInIdentity(
+        return (new LinkedInIdentity(
             subject,
             NullIfEmpty(Claim(token, "email")),
             ReadEmailVerified(token),
             NullIfEmpty(Claim(token, "given_name")),
-            NullIfEmpty(Claim(token, "family_name")));
+            NullIfEmpty(Claim(token, "family_name"))), null);
     }
 
     // Read as a string first (same reasoning as GoogleIdTokenReader): OIDC's boolean claim can come

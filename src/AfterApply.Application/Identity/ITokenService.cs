@@ -19,8 +19,9 @@ public interface ITokenService
     string CreateGoogleSignupToken(GoogleIdentity identity);
 
     /// <summary>Null for anything that is not an unexpired token from
-    /// <see cref="CreateGoogleSignupToken"/> — including one of our own access tokens.</summary>
-    GoogleIdentity? ValidateGoogleSignupToken(string token);
+    /// <see cref="CreateGoogleSignupToken"/> — including one of our own access tokens. Async only
+    /// because the JWT library's validation entry point is; creating a token stays synchronous.</summary>
+    Task<GoogleIdentity?> ValidateGoogleSignupTokenAsync(string token);
 
     /// <summary>Same role as <see cref="CreateGoogleSignupToken"/>, for a LinkedIn sign-up. A
     /// separate pair of methods rather than a shared generic one: <see cref="LinkedInIdentity"/>'s
@@ -30,5 +31,5 @@ public interface ITokenService
 
     /// <summary>Null for anything that is not an unexpired token from
     /// <see cref="CreateLinkedInSignupToken"/> — including one of our own access tokens.</summary>
-    LinkedInIdentity? ValidateLinkedInSignupToken(string token);
+    Task<LinkedInIdentity?> ValidateLinkedInSignupTokenAsync(string token);
 }
