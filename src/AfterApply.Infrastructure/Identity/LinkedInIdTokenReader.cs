@@ -16,17 +16,32 @@ namespace AfterApply.Infrastructure.Identity;
 /// </summary>
 public static class LinkedInIdTokenReader
 {
-    private const string Issuer = "https://www.linkedin.com";
+    // LinkedIn's live discovery document (https://www.linkedin.com/oauth/.well-known/openid-configuration)
+    // and the `iss` claim it actually puts in ID tokens say "https://www.linkedin.com/oauth"; the older
+    // "Sign In with LinkedIn using OpenID Connect" docs page reproduces a discovery document with the
+    // bare "https://www.linkedin.com". Seen live on 2026-09-05: every real token failed with the bare
+    // value alone (Keycloak hit the same thing, keycloak/keycloak#28686). Both are LinkedIn, so both
+    // are accepted — an attacker gains nothing from the second spelling, the signature still has to
+    // come from LinkedIn's JWKS.
+    private static readonly string[] AcceptedIssuers = ["https://www.linkedin.com/oauth", "https://www.linkedin.com"];
 
-    public static LinkedInIdentity? Read(string idToken, JsonWebKeySet jwks, string expectedClientId, DateTimeOffset now)
+    public static LinkedInIdentity? Read(string idToken, JsonWebKeySet jwks, string expectedClientId, DateTimeOffset now) =>
+        Read(idToken, jwks, expectedClientId, now, out _);
+
+    /// <summary><paramref name="failure"/> is the validation library's own reason when null is returned
+    /// for a token that failed validation (an IDX error code — e.g. IDX10205 issuer, IDX10214 audience,
+    /// IDX10223 expiry, IDX10503/IDX10517 signature; PII is masked by the library). It is for logs only,
+    /// never for the client.</summary>
+    public static LinkedInIdentity? Read(string idToken, JsonWebKeySet jwks, string expectedClientId, DateTimeOffset now, out string? failure)
     {
+        failure = null;
         var handler = new JsonWebTokenHandler();
         TokenValidationResult result;
         try
         {
             result = handler.ValidateTokenAsync(idToken, new TokenValidationParameters
             {
-                ValidIssuer = Issuer,
+                ValidIssuers = AcceptedIssuers,
                 ValidAudience = expectedClientId,
                 IssuerSigningKeys = jwks.Keys,
                 ValidAlgorithms = [SecurityAlgorithms.RsaSha256],
@@ -34,20 +49,23 @@ public static class LinkedInIdTokenReader
                 LifetimeValidator = (_, expires, _, _) => expires is not null && expires > now.UtcDateTime
             }).GetAwaiter().GetResult();
         }
-        catch (ArgumentException)
+        catch (ArgumentException ex)
         {
             // A malformed token string ("not a JWT at all") throws rather than failing validation.
+            failure = ex.Message;
             return null;
         }
 
         if (!result.IsValid || result.SecurityToken is not JsonWebToken token)
         {
+            failure = result.Exception?.Message ?? "token validation failed without an exception";
             return null;
         }
 
         var subject = token.Subject;
         if (string.IsNullOrEmpty(subject))
         {
+            failure = "id_token has no 'sub' claim";
             return null;
         }
 

@@ -72,9 +72,28 @@ public class LinkedInIdTokenReaderTests
     }
 
     [Fact]
+    public void Accepts_The_Issuer_LinkedIn_Actually_Emits()
+    {
+        // The live discovery document and real ID tokens say ".../oauth"; the docs page says the bare
+        // host. Both must work — the bare-host-only version rejected every real token on 2026-09-05.
+        LinkedInIdTokenReader.Read(Token(issuer: "https://www.linkedin.com/oauth"), Jwks(), ClientId, Now).ShouldNotBeNull();
+        LinkedInIdTokenReader.Read(Token(issuer: "https://www.linkedin.com"), Jwks(), ClientId, Now).ShouldNotBeNull();
+    }
+
+    [Fact]
     public void Rejects_A_Token_From_Another_Issuer()
     {
-        LinkedInIdTokenReader.Read(Token(issuer: "https://accounts.example.com"), Jwks(), ClientId, Now).ShouldBeNull();
+        LinkedInIdTokenReader.Read(Token(issuer: "https://accounts.example.com"), Jwks(), ClientId, Now, out var failure).ShouldBeNull();
+        // The reason is surfaced for the server log (IDX10205 = issuer validation failed), never to the client.
+        failure.ShouldNotBeNull();
+        failure.ShouldContain("IDX10205");
+    }
+
+    [Fact]
+    public void Rejects_A_Lookalike_Issuer_Under_The_Same_Host()
+    {
+        LinkedInIdTokenReader.Read(Token(issuer: "https://www.linkedin.com/oauth/evil"), Jwks(), ClientId, Now).ShouldBeNull();
+        LinkedInIdTokenReader.Read(Token(issuer: "https://www.linkedin.com.evil.example"), Jwks(), ClientId, Now).ShouldBeNull();
     }
 
     [Fact]

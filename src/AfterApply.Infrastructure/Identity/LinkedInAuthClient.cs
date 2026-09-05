@@ -83,7 +83,7 @@ internal sealed class LinkedInAuthClient(
     private async Task<LinkedInIdentity?> ReadIdentityAsync(string idToken, CancellationToken cancellationToken)
     {
         var jwks = await jwksProvider.GetAsync(cancellationToken);
-        var identity = LinkedInIdTokenReader.Read(idToken, jwks, _options.ClientId!, _timeProvider.GetUtcNow());
+        var identity = LinkedInIdTokenReader.Read(idToken, jwks, _options.ClientId!, _timeProvider.GetUtcNow(), out var failure);
         if (identity is not null)
         {
             return identity;
@@ -93,11 +93,15 @@ internal sealed class LinkedInAuthClient(
         // rotated its signing keys since the last fetch) — every other validation failure
         // (issuer/audience/expiry/tampering) would fail identically on a retry, so this costs nothing
         // in the common case and recovers a real key rotation without a redeploy.
+        logger.LogInformation("LinkedIn id_token failed validation with the cached JWKS ({Reason}); refreshing keys and retrying", failure);
         var refreshed = await jwksProvider.RefreshAsync(cancellationToken);
-        identity = LinkedInIdTokenReader.Read(idToken, refreshed, _options.ClientId!, _timeProvider.GetUtcNow());
+        identity = LinkedInIdTokenReader.Read(idToken, refreshed, _options.ClientId!, _timeProvider.GetUtcNow(), out failure);
         if (identity is null)
         {
-            logger.LogWarning("LinkedIn id_token failed validation (signature/issuer/audience/expiry/required claims)");
+            // The library's IDX code names the failing check (issuer/audience/expiry/signature) with
+            // PII masked — exactly what was missing on 2026-09-05, when the bare "failed validation"
+            // line hid an issuer mismatch for an hour.
+            logger.LogWarning("LinkedIn id_token failed validation: {Reason}", failure);
         }
 
         return identity;

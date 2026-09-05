@@ -18,6 +18,10 @@ const NO_AUTH_ENDPOINTS = [
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/google",
+  // Prefix match, so this also covers /api/auth/linkedin/signup. Without it a 401 from the
+  // LinkedIn sign-in (e.g. LinkedIn rejected the code) was read as "session expired" and bounced
+  // the callback page straight back to /login, hiding the real error — seen live 2026-09-05.
+  "/api/auth/linkedin",
   "/api/auth/refresh",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",

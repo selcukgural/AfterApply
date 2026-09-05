@@ -3003,6 +3003,22 @@ audience/expiry/yanlış-anahtar, `LinkedInJwksProviderTests` fake handler ile c
 (`LinkedInSignInTests`: Google senaryolarının tamamı + e-postasız identity'nin 5 senaryosu;
 `ClientConfigTests` `linkedInAuth` varsayılanını pinliyor). Hepsi yeşil.
 
+**Bulgu — ilk canlı denemede her giriş 401, kullanıcı "session expired" görüp login'e düştü (aynı gün):**
+İki ayrı hata üst üste bindi. (1) **Issuer uyuşmazlığı:** implementasyon, Microsoft Learn'deki "Sign In with
+LinkedIn using OpenID Connect" sayfasında (2024 tarihli) kopyalanmış discovery dokümanındaki
+`issuer: https://www.linkedin.com` değerini sabitlemişti; LinkedIn'in **canlı** discovery dokümanı
+(`/oauth/.well-known/openid-configuration`) ve gerçek id_token'ların `iss` claim'i
+`https://www.linkedin.com/oauth`. Cloud Run logları: exchange başarılı → JWKS çekildi → "id_token failed
+validation" (JWKS yenilemesi de boşuna). Keycloak aynı tuzağa düşmüş (keycloak/keycloak#28686). Çözüm:
+`LinkedInIdTokenReader` iki yazımı da `ValidIssuers` ile kabul ediyor (`.../oauth/evil` gibi benzerler
+reddediliyor — test pinliyor); ayrıca doğrulama hatasının **sebebi** artık loglanıyor (`out failure`,
+kütüphanenin IDX kodu, PII maskeli) — önceki tek satırlık "failed validation" logu sebebi bir saat
+gizledi. Ders: sağlayıcı issuer'ını dokümandan değil canlı discovery dokümanından al. (2) **Semptomu
+gizleyen frontend hatası:** `httpClient.ts`'in `NO_AUTH_ENDPOINTS` listesinde `/api/auth/google` vardı,
+`/api/auth/linkedin` yoktu; bu yüzden callback sayfasının aldığı 401 "oturum süresi doldu" sanılıp
+`/login`'e yönlendirildi ve gerçek hata mesajı hiç görünmedi. Listeye eklendi (prefix eşleşmesi
+`/signup`'ı da kapsıyor). Yeni bir auth ucu eklendiğinde bu liste de güncellenmeli.
+
 ---
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
