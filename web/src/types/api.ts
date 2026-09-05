@@ -143,10 +143,17 @@ export interface StatusDistributionItem {
   count: number;
 }
 
+export interface ApplicationsPerWeekItem {
+  /** Monday (UTC) the bucket opens on, as `yyyy-MM-dd`. */
+  weekStart: string;
+  count: number;
+}
+
 export interface AnalyticsOverviewResponse {
   rates: AnalyticsRatesResponse;
   responseTime: ResponseTimeStatsResponse;
   statusDistribution: StatusDistributionItem[];
+  applicationsPerWeek: ApplicationsPerWeekItem[];
 }
 
 export interface CreateApplicationRequest {

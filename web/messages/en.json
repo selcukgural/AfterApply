@@ -280,11 +280,17 @@
   "dashboard": {
     "title": "Dashboard",
     "newApplication": "New Application",
-    "personalAnalytics": "Personal Analytics",
+    "headline": "{responded} of {total} applications got a reply ({rate}). In progress: {interviews, plural, =0 {no interviews} one {1 interview} other {# interviews}}, {offers, plural, =0 {no offers} one {1 offer} other {# offers}} awaiting a decision.",
+    "hero": {
+      "label": "Open applications",
+      "sub": "{share} of your {total} applications are still waiting for a reply.",
+      "trendLabel": "Last {weeks} weeks · applications per week",
+      "trendAria": "Applications per week over the last {weeks} weeks"
+    },
+    "chips": {
+      "rate": "{rate} rate"
+    },
     "tiles": {
-      "total": "Total Applications",
-      "active": "Active",
-      "waiting": "Waiting",
       "interviews": "Interviews",
       "offers": "Offers",
       "rejected": "Rejected",
@@ -297,15 +303,45 @@
       "rejectionRate": "Rejection Rate",
       "ghostingRate": "Ghosting Rate"
     },
+    "funnel": {
+      "title": "Conversion funnel",
+      "hint": "Each rail is the share that came through from the stage above",
+      "applied": "Applied",
+      "responded": "Replied",
+      "interview": "Interview",
+      "offer": "Offer",
+      "bottleneck": "The steepest drop is at <strong>{stage}</strong>: only {rate} of the previous stage gets through."
+    },
     "responseTime": {
-      "title": "Response Time",
-      "average": "Average",
+      "title": "Response time",
       "median": "Median",
+      "average": "Average",
       "days": "days",
+      "sample": "{count} replied applications",
+      "skewed": "The average sits well above the median — a few very late replies are pulling it up.",
       "empty": "No responded applications yet."
     },
-    "statusDistribution": {
-      "title": "Status Distribution"
+    "breakdown": {
+      "title": "Status breakdown",
+      "hint": "Dominant status shown on its own scale",
+      "restLabel": "Remaining {count} records · 0–{max} scale",
+      "empty": "No applications to show."
+    },
+    "outcome": {
+      "title": "Outcome",
+      "resolved": "{count} resolved applications",
+      "won": "Offer / accepted",
+      "lost": "Rejected",
+      "noAnswer": "No answer",
+      "withdrawn": "Withdrawn",
+      "winRate": "Win rate",
+      "empty": "No applications have been resolved yet."
+    },
+    "empty": {
+      "title": "No applications yet",
+      "body": "Every number on this dashboard is derived from your applications. Add your first one, or import a LinkedIn/CSV export — the funnel and the rates start filling in straight away.",
+      "cta": "Add your first application",
+      "importCta": "Import from a file"
     }
   },
   "applications": {
@@ -769,22 +805,26 @@
     "dashboard": {
       "eyebrow": "Dashboard",
       "title": "What's on the Dashboard?",
-      "intro": "The Dashboard you land on after logging in summarizes your whole application process on one screen. The \"New Application\" button in the top right lets you add a new application directly.",
-      "tiles": {
-        "title": "Stat tiles",
-        "body": "Tiles showing raw numbers, like your total application count and breakdown by status."
+      "intro": "The Dashboard you land on after logging in summarizes your whole application process on one screen. The one-line summary under the heading gives you the three numbers that matter most, and the \"New Application\" button in the top right lets you add a new application directly.",
+      "hero": {
+        "title": "Open applications and the weekly trend",
+        "body": "The largest figure on the page is the total still waiting for a reply. The small chart beneath it shows how many applications you sent per week over the last 12 weeks. The four tiles beside it give your interview, offer, rejection and ghosting counts, each with its share of the total."
       },
-      "analytics": {
-        "title": "Personal Analytics",
-        "body": "Tiles showing percentages like response rate and interview rate — how many of your applications get a reply."
+      "funnel": {
+        "title": "Conversion funnel",
+        "body": "Shows how much of each stage made it to the next one along applied → replied → interview → offer. When the raw numbers are far apart (thousands of applications, a handful of interviews), every rail is still drawn at its own full width, so the small stages stay readable. The line underneath names the stage with the steepest drop-off."
       },
       "responseTime": {
-        "title": "Response Time",
-        "body": "The average and median number of days from applying to first response. If there isn't enough data yet, an empty state is shown instead."
+        "title": "Response time",
+        "body": "The median and average number of days from applying to first response, together with how many replied applications they were computed from. If the average sits well above the median, a note says so — a few very late replies pull it up. If nothing has been answered yet, an empty state is shown instead."
       },
-      "statusChart": {
-        "title": "Status Distribution Chart",
-        "body": "A bar chart of how many applications are in each status (Applied, Interview, Offer, Rejected, ...) — so you can see where things tend to stall."
+      "breakdown": {
+        "title": "Status breakdown",
+        "body": "Horizontal bars showing which status your applications are in. If one status is crowded enough to flatten the rest (usually \"Applied\" after a bulk import), it is drawn full-width on its own scale, and the remaining records are listed below it on a scale of their own."
+      },
+      "outcome": {
+        "title": "Outcome",
+        "body": "A breakdown of applications that have finished: offer/accepted, no answer, withdrawn and rejected. The band at the top shows their proportions and the line at the bottom gives your win rate. Applications still in flight are left out of this."
       }
     },
     "trackedJobs": {

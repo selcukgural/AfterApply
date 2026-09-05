@@ -280,12 +280,18 @@
   "dashboard": {
     "title": "Panel",
     "newApplication": "Yeni Başvuru",
-    "personalAnalytics": "Kişisel Analitik",
+    "headline": "{total} başvurudan {responded} tanesi yanıt aldı ({rate}). Şu an {interviews} görüşme sürüyor, {offers} teklif yanıt bekliyor.",
+    "hero": {
+      "label": "Açık başvuru",
+      "sub": "Toplam {total} başvurunun {share} kadarı hâlâ yanıt bekliyor.",
+      "trendLabel": "Son {weeks} hafta · haftalık başvuru",
+      "trendAria": "Son {weeks} haftadaki haftalık başvuru sayısı trendi"
+    },
+    "chips": {
+      "rate": "{rate} oran"
+    },
     "tiles": {
-      "total": "Toplam Başvuru",
-      "active": "Aktif",
-      "waiting": "Bekleyen",
-      "interviews": "Mülakatlar",
+      "interviews": "Görüşmeler",
       "offers": "Teklifler",
       "rejected": "Reddedilen",
       "ghosted": "Kayboldu"
@@ -297,15 +303,45 @@
       "rejectionRate": "Red Oranı",
       "ghostingRate": "Kayboldu Oranı"
     },
+    "funnel": {
+      "title": "Dönüşüm hunisi",
+      "hint": "Her ray, bir önceki aşamadan geçiş oranı",
+      "applied": "Başvuruldu",
+      "responded": "Yanıt geldi",
+      "interview": "Görüşme",
+      "offer": "Teklif",
+      "bottleneck": "En dar boğaz <strong>{stage}</strong> aşamasında: bir önceki aşamanın yalnızca {rate} kadarı buraya geçiyor."
+    },
     "responseTime": {
-      "title": "Yanıt Süresi",
+      "title": "Yanıt süresi",
+      "median": "Ortanca",
       "average": "Ortalama",
-      "median": "Medyan",
       "days": "gün",
+      "sample": "{count} yanıtlı başvuru",
+      "skewed": "Ortalama, ortancanın epey üzerinde — birkaç çok geç yanıt dağılımı yukarı çekiyor.",
       "empty": "Henüz yanıt alınan bir başvuru yok."
     },
-    "statusDistribution": {
-      "title": "Durum Dağılımı"
+    "breakdown": {
+      "title": "Durum dağılımı",
+      "hint": "Baskın durum ayrı ölçekte",
+      "restLabel": "Kalan {count} kayıt · 0–{max} ölçeği",
+      "empty": "Gösterilecek başvuru yok."
+    },
+    "outcome": {
+      "title": "Sonuç",
+      "resolved": "sonuçlanan {count} başvuru",
+      "won": "Teklif / kabul",
+      "lost": "Reddedilen",
+      "noAnswer": "Yanıtsız",
+      "withdrawn": "Geri çekildi",
+      "winRate": "Kazanma oranı",
+      "empty": "Henüz sonuçlanan bir başvuru yok."
+    },
+    "empty": {
+      "title": "Henüz başvurun yok",
+      "body": "Paneldeki her sayı başvurularından hesaplanıyor. İlk başvurunu ekle ya da LinkedIn/CSV dışa aktarımını içe aktar — huni ve oranlar hemen dolmaya başlar.",
+      "cta": "İlk başvurunu ekle",
+      "importCta": "Dosyadan içe aktar"
     }
   },
   "applications": {
@@ -769,22 +805,26 @@
     "dashboard": {
       "eyebrow": "Panel",
       "title": "Panelde neler var?",
-      "intro": "Giriş yaptığınızda karşınıza çıkan Panel, tüm başvuru sürecinizin özetini tek ekranda toplar. Sağ üstteki \"Yeni Başvuru\" butonuyla doğrudan yeni bir başvuru ekleyebilirsiniz.",
-      "tiles": {
-        "title": "Özet kutucukları",
-        "body": "Toplam başvuru sayınız ve durumlara göre dağılımınız gibi ham sayıları gösteren kutucuklar."
+      "intro": "Giriş yaptığınızda karşınıza çıkan Panel, tüm başvuru sürecinizin özetini tek ekranda toplar. Başlığın altındaki tek cümlelik özet en önemli üç sayıyı verir; sağ üstteki \"Yeni Başvuru\" butonuyla doğrudan yeni bir başvuru ekleyebilirsiniz.",
+      "hero": {
+        "title": "Açık başvuru ve haftalık trend",
+        "body": "Panelin en büyük sayısı, hâlâ yanıt beklediğiniz başvuruların toplamıdır. Altındaki mini grafik son 12 haftada haftada kaç başvuru yaptığınızı gösterir. Yanındaki dört küçük kutucuk ise görüşme, teklif, ret ve kaybolan başvuru sayılarını, her birinin toplam içindeki oranıyla birlikte verir."
       },
-      "analytics": {
-        "title": "Kişisel Analitik",
-        "body": "Yanıt oranı ve mülakat oranı gibi yüzdesel oranları gösteren kutucuklar — kaç başvurudan kaçına geri dönüş aldığınızı görürsünüz."
+      "funnel": {
+        "title": "Dönüşüm hunisi",
+        "body": "Başvuruldu → yanıt geldi → görüşme → teklif zincirinde her aşamanın bir öncekinden ne kadarını geçirdiğini gösterir. Ham sayılar birbirinden çok uzak olduğunda (örneğin binlerce başvuru, birkaç görüşme) her çubuk kendi tam genişliğinde çizildiği için küçük aşamalar da okunabilir kalır. Altındaki cümle en dar boğazın hangi aşamada olduğunu söyler."
       },
       "responseTime": {
-        "title": "Yanıt Süresi",
-        "body": "Başvurudan ilk yanıta kadar geçen ortalama ve medyan gün sayısı. Henüz yeterli veri yoksa, bunun yerine bir boş durum mesajı gösterilir."
+        "title": "Yanıt süresi",
+        "body": "Başvurudan ilk yanıta kadar geçen ortanca ve ortalama gün sayısı, kaç yanıtlı başvurudan hesaplandığıyla birlikte. Ortalama ortancanın çok üstündeyse bu bir uyarıyla belirtilir — birkaç çok geç yanıt ortalamayı yukarı çeker. Henüz yanıt alınmadıysa boş durum mesajı gösterilir."
       },
-      "statusChart": {
-        "title": "Durum Dağılımı Grafiği",
-        "body": "Başvurularınızın hangi durumda (Başvuruldu, Mülakat, Teklif, Reddedildi, ...) olduğunu gösteren bir çubuk grafik — sürecinizin neresinde tıkandığınızı görmenizi sağlar."
+      "breakdown": {
+        "title": "Durum dağılımı",
+        "body": "Başvurularınızın hangi durumda olduğunu yatay çubuklarla gösterir. Bir durum diğerlerini ezecek kadar kalabalıksa (çoğunlukla toplu içe aktarma sonrası \"Başvuruldu\") ayrı bir ölçekte, tam genişlikte çizilir; kalan kayıtlar altında kendi ölçeğinde listelenir."
+      },
+      "outcome": {
+        "title": "Sonuç",
+        "body": "Sonuçlanmış başvuruların dökümü: teklif/kabul, yanıtsız, geri çekildi ve reddedilen. Üstteki şerit bunların birbirine oranını, alttaki satır ise kazanma oranınızı verir. Hâlâ süren başvurular bu hesaba girmez."
       }
     },
     "trackedJobs": {

@@ -2,12 +2,62 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Semantic colour tokens, derived from the logo mark's own gradient (blue #1C39B7 through
+ * teal #15AAB7 to green #2FC45F) rather than from Tailwind's stock blue. The runtime values
+ * live on :root/.dark below and are exposed to Tailwind here, so `bg-accent`, `text-good`
+ * etc. follow the theme without a `dark:` twin on every element.
+ *
+ * The data steps were picked with a colour-blindness/contrast validator, not by eye: each set
+ * clears the OKLab CVD separation floor and 3:1 against its own surface. One constraint the
+ * validator surfaced: --good and --crit must never sit as *touching* marks in dark mode
+ * (deutan ΔE 4.8) — put the neutral --muted between them, as OutcomeBar does.
+ */
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-wash: var(--accent-wash);
+  --color-good: var(--good);
+  --color-good-ink: var(--good-ink);
+  --color-good-wash: var(--good-wash);
+  --color-warn: var(--warn);
+  --color-warn-ink: var(--warn-ink);
+  --color-warn-wash: var(--warn-wash);
+  --color-crit: var(--crit);
+  --color-crit-ink: var(--crit-ink);
+  --color-crit-wash: var(--crit-wash);
+  --color-muted: var(--muted);
+  --color-muted-ink: var(--muted-ink);
+  --color-muted-wash: var(--muted-wash);
+  --color-track: var(--track);
 }
 
 :root {
+  --accent: #2a5fd6;
+  --accent-strong: #234fb4;
+  --accent-ink: #2551b8;
+  --accent-wash: #e6edfd;
+  --good: #1baf7a;
+  --good-ink: #0f7a55;
+  --good-wash: #e2f6ee;
+  --warn: #eda100;
+  --warn-ink: #8a5f00;
+  --warn-wash: #fdf0d6;
+  --crit: #e34948;
+  --crit-ink: #b32d2c;
+  --crit-wash: #fce7e6;
+  --muted: #8b93a7;
+  --muted-ink: #5b6377;
+  --muted-wash: #eef1f6;
+  --track: #e8ebf2;
+  /* The card background (bg-white / dark:bg-gray-900), as a value SVG marks can stroke with —
+     see Sparkline's surface ring. */
+  --card-surface: #ffffff;
+
   --chart-grid: #e5e7eb;
   --chart-tick: #374151;
   --chart-tooltip-bg: #ffffff;
@@ -15,8 +65,45 @@
 }
 
 .dark {
+  --accent: #3d7ce0;
+  --accent-strong: #5590ea;
+  --accent-ink: #8ab4f2;
+  --accent-wash: #14243f;
+  --good: #1aa877;
+  --good-ink: #3fc994;
+  --good-wash: #0e2b21;
+  --warn: #c98500;
+  --warn-ink: #dfa63c;
+  --warn-wash: #2c2109;
+  --crit: #e05c5c;
+  --crit-ink: #ef8686;
+  --crit-wash: #301617;
+  --muted: #6e7890;
+  --muted-ink: #98a2b8;
+  --muted-wash: #1a2130;
+  --track: #202839;
+  --card-surface: #111827;
+
   --chart-grid: #374151;
   --chart-tick: #d1d5db;
   --chart-tooltip-bg: #1f2937;
   --chart-tooltip-text: #f3f4f6;
+}
+
+@keyframes aa-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* Content-shaped loading placeholder — see DashboardSkeleton. */
+.aa-skeleton {
+  background-image: linear-gradient(90deg, var(--track) 25%, var(--muted-wash) 50%, var(--track) 75%);
+  background-size: 200% 100%;
+  animation: aa-shimmer 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-skeleton {
+    animation: none;
+  }
 }

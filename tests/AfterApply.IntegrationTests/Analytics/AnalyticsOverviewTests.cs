@@ -130,4 +130,35 @@ public class AnalyticsOverviewTests(SharedInfrastructure shared) : IAsyncLifetim
         overview.StatusDistribution.Single(x => x.Status == ApplicationStatus.Withdrawn).Count.ShouldBe(1);
         overview.StatusDistribution.Single(x => x.Status == ApplicationStatus.Applied).Count.ShouldBe(1);
     }
+
+    [Fact]
+    public async Task GetOverview_Returns_A_Twelve_Week_Application_Trend_Ending_This_Week()
+    {
+        // Two this week, one six weeks back, one well outside the 12-week window.
+        await CreateApplicationAsync("Trend A", DateTimeOffset.UtcNow);
+        await CreateApplicationAsync("Trend B", DateTimeOffset.UtcNow);
+        await CreateApplicationAsync("Trend C", DateTimeOffset.UtcNow.AddDays(-42));
+        await CreateApplicationAsync("Trend Old", DateTimeOffset.UtcNow.AddDays(-400));
+
+        var response = await _client.GetAsync("/api/analytics/overview");
+        response.EnsureSuccessStatusCode();
+        var overview = await response.Content.ReadFromJsonAsync<AnalyticsOverviewResponse>(JsonOptions);
+
+        overview.ShouldNotBeNull();
+        var trend = overview!.ApplicationsPerWeek.ToList();
+
+        trend.Count.ShouldBe(12);
+        trend.ShouldAllBe(x => x.WeekStart.DayOfWeek == DayOfWeek.Monday);
+
+        // Consecutive weeks, no gaps, oldest first.
+        trend.Zip(trend.Skip(1)).ShouldAllBe(pair => pair.Second.WeekStart == pair.First.WeekStart.AddDays(7));
+
+        var thisWeek = DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime);
+        trend[^1].WeekStart.ShouldBe(thisWeek.AddDays(-(((int)thisWeek.DayOfWeek + 6) % 7)));
+        trend[^1].Count.ShouldBe(2);
+        trend[^7].Count.ShouldBe(1);
+
+        // The 400-day-old application is outside the window and must not be counted.
+        trend.Sum(x => x.Count).ShouldBe(3);
+    }
 }

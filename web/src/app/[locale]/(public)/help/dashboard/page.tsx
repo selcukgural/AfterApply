@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Screenshot } from "@/components/help/Screenshot";
 
-const SECTIONS = ["tiles", "analytics", "responseTime", "statusChart"] as const;
+const SECTIONS = ["hero", "funnel", "responseTime", "breakdown", "outcome"] as const;
 
 export default async function DashboardHelpPage() {
   const t = await getTranslations("help.dashboard");
@@ -9,7 +9,7 @@ export default async function DashboardHelpPage() {
   return (
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-3">
-        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{t("eyebrow")}</span>
+        <span className="text-sm font-medium text-accent-ink">{t("eyebrow")}</span>
         <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
         <p className="max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">{t("intro")}</p>
       </div>

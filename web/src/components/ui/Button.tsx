@@ -3,7 +3,9 @@ import { type ButtonHTMLAttributes } from "react";
 type Variant = "primary" | "secondary" | "danger";
 
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300",
+  // The accent token, not Tailwind's stock blue: it is stepped from the logo mark's own gradient
+  // and swaps for dark mode on its own (see globals.css).
+  primary: "bg-accent text-white hover:bg-accent-strong disabled:bg-accent/40",
   secondary:
     "bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:text-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 dark:disabled:text-gray-500",
   danger: "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-300",

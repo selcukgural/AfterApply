@@ -63,6 +63,10 @@ jobs:
 
       - run: npm run lint
 
+      # Vitest over the dashboard's pure logic (funnel maths, distribution scaling, number
+      # formatting). Node environment only — no jsdom, no component rendering.
+      - run: npm test
+
       # Also the type-check gate — next.config.ts doesn't set
       # ignoreBuildErrors/ignoreDuringBuilds, so this fails on type errors.
       - run: npm run build

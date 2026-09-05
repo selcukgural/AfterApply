@@ -62,4 +62,67 @@ public class AnalyticsCalculationsTests
     {
         AnalyticsCalculations.Median([12, 4, 7, 4]).ShouldBe(5.5);
     }
+
+    // 2026-09-05 is a Saturday; its Monday-start week opens on 2026-08-31.
+    private static readonly DateTimeOffset Now = new(2026, 9, 5, 13, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void BuildWeeklyBuckets_With_Zero_Weeks_Returns_Empty()
+    {
+        AnalyticsCalculations.BuildWeeklyBuckets([Now], Now, weeks: 0).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void BuildWeeklyBuckets_Emits_One_Bucket_Per_Week_Ending_With_The_Current_Week()
+    {
+        var buckets = AnalyticsCalculations.BuildWeeklyBuckets([], Now, weeks: 12);
+
+        buckets.Count.ShouldBe(12);
+        buckets[^1].WeekStart.ShouldBe(new DateOnly(2026, 8, 31));
+        buckets[0].WeekStart.ShouldBe(new DateOnly(2026, 6, 15));
+        buckets.ShouldAllBe(b => b.Count == 0);
+    }
+
+    [Fact]
+    public void BuildWeeklyBuckets_Keeps_Empty_Weeks_So_The_Scale_Stays_Constant()
+    {
+        // One application this week, one three weeks back, nothing in between.
+        var buckets = AnalyticsCalculations.BuildWeeklyBuckets(
+            [Now.AddDays(-1), Now.AddDays(-21)], Now, weeks: 4);
+
+        buckets.Select(b => b.Count).ShouldBe([1, 0, 0, 1]);
+    }
+
+    [Fact]
+    public void BuildWeeklyBuckets_Groups_A_Whole_Monday_To_Sunday_Week_Together()
+    {
+        // Monday 2026-08-31 00:00 through Sunday 2026-09-06 23:59 all land in the last bucket.
+        var mondayStart = new DateTimeOffset(2026, 8, 31, 0, 0, 0, TimeSpan.Zero);
+        var sundayEnd = new DateTimeOffset(2026, 9, 6, 23, 59, 0, TimeSpan.Zero);
+
+        var buckets = AnalyticsCalculations.BuildWeeklyBuckets(
+            [mondayStart, Now, sundayEnd], Now, weeks: 2);
+
+        buckets.Select(b => b.Count).ShouldBe([0, 3]);
+    }
+
+    [Fact]
+    public void BuildWeeklyBuckets_Drops_Applications_Outside_The_Window()
+    {
+        // A year old (before the window) and a week into the future (after it).
+        var buckets = AnalyticsCalculations.BuildWeeklyBuckets(
+            [Now.AddDays(-365), Now.AddDays(7), Now], Now, weeks: 4);
+
+        buckets.Sum(b => b.Count).ShouldBe(1);
+    }
+
+    [Fact]
+    public void BuildWeeklyBuckets_Buckets_By_Utc_Not_By_The_Original_Offset()
+    {
+        // Monday 2026-08-31 01:00 at +03:00 is Sunday 2026-08-30 22:00 UTC — the previous week.
+        var buckets = AnalyticsCalculations.BuildWeeklyBuckets(
+            [new DateTimeOffset(2026, 8, 31, 1, 0, 0, TimeSpan.FromHours(3))], Now, weeks: 2);
+
+        buckets.Select(b => b.Count).ShouldBe([1, 0]);
+    }
 }

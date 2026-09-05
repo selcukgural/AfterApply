@@ -3021,6 +3021,100 @@ gizleyen frontend hatası:** `httpClient.ts`'in `NO_AUTH_ENDPOINTS` listesinde `
 
 ---
 
+## Dashboard yeniden tasarımı (2026-09-05)
+
+Kullanıcı panelin "daha etkileyici" olmasını istedi; üç konsept sunuldu (A huni-önce, B bento,
+C sessiz rapor) ve **"A'yı temel al, B'nin hero kartını ve bento ızgarasını devral"** seçildi.
+
+### Asıl sorun estetik değil ölçekti — DECIDED
+
+Kullanıcının gerçek verisi (1.187 başvuru; 1.177'si `Applied`, kalan 10'u tek haneli) mevcut
+paneli okunamaz kılıyordu: recharts sütun grafiğinde bir çubuk 1.177, dokuzu 0–3 idi ve etiketler
+-35° döndürülmüştü. Dolayısıyla yeniden tasarım önce bilgi mimarisi, sonra görsellik olarak ele
+alındı. Üç yapısal karar:
+
+- **Huni, ham sayı yerine aşama-dönüşümü çiziyor** (`ConversionFunnel` + `lib/dashboard/funnel.ts`).
+  Her ray tam genişlik, dolgusu bir önceki aşamadan geçiş oranı — 1.187 ile 1 aynı ekranda okunur.
+  `offerCount` bir aşama atlandığında `interviewCount`'u aşabildiği için dönüşüm %100'ü geçebiliyor;
+  çizilen genişlik clamp'leniyor, gösterilen rakam clamp'lenmiyor. Sub-%1 aşamalara 6px taban
+  genişlik verildi, yoksa çubuk tamamen kaybolup "bozuk" gibi okunuyordu.
+- **Durum dağılımı, baskın kovayı ölçek dışına alıyor** (`splitDistribution`): bir kova kalanların
+  toplamının 5 katından büyükse tam genişlikte ayrı çiziliyor, kalanlar kendi ölçeğinde. Baskın kova
+  yoksa hepsi tek ölçekte. Bu, recharts'ı gereksiz kıldı → bağımlılık kaldırıldı.
+- **`Math.round()` kaldırıldı.** Backend `CalculateRate` zaten 1 ondalıkla yuvarlıyordu; paneldeki
+  `Math.round(...)` gerçek %0,42'yi "%0" yapıyordu. Beş oranın dördü sıfır görünüyordu. Artık
+  `Intl.NumberFormat` ile locale'e uygun (`%0,4` / `0.4%`).
+
+### `Waiting` sayacı düşürüldü — duplikasyondu — DECIDED
+
+`ApplicationService.GetSummaryCountsAsync` içinde `Waiting` ve `Offers` **aynı** ifadeyi döndürüyor
+(`Get(ApplicationStatus.Offer)`), yani panel aynı sayıyı iki farklı etiketle gösteriyordu. Yeni
+düzende yalnızca "Teklifler" var. Backend alanı kaldırılmadı (API sözleşmesi), sadece UI'dan çıktı.
+
+### Renk sistemi logo gradyanından türetildi — DECIDED
+
+`public/brand/logo-mark.png`'in pikselleri okundu: sol alt `#1C39B7` → sağ üst `#2FC45F`, ara ton
+`#15AAB7`. Arayüzde ise yalnızca Tailwind `blue-600` vardı. `globals.css`'e semantik token'lar
+eklendi (`--accent/--good/--warn/--crit/--muted` + wash/ink varyantları, `@theme inline` ile
+`bg-accent` vb. olarak açıldı), açık/koyu değerler `:root`/`.dark` üzerinden kendiliğinden
+takas ediliyor — her elemana `dark:` ikizi yazmaya gerek yok. `Button` primary artık `bg-accent`.
+
+Tonlar göz kararı değil, `dataviz` skill'inin doğrulayıcısıyla seçildi (OKLab CVD ayrışması +
+yüzey kontrastı). **Kalıcı kısıt:** `--good` ile `--crit` koyu temada *bitişik mark* olarak
+kullanılamaz (deutan ΔE 4,8). `OutcomeCard`'ın şeridi bu yüzden yeşil → nötr → nötr → kırmızı
+sırasında; araya nötr koymadan yeşil/kırmızı bitiştirme.
+
+### Haftalık trend için API genişletildi — DECIDED
+
+B'nin hero sparkline'ı zaman serisi istiyordu. Ayrı uç nokta yerine `/api/analytics/overview`
+yanıtına `applicationsPerWeek` eklendi (son 12 Pazartesi-başlangıçlı UTC haftası, boş haftalar
+0 ile dolu — ölçek sabit kalsın diye). `AnalyticsService` zaten materialize ettiği satırları
+yeniden kullanıyor, ek sorgu yok. Frontend `overview.applicationsPerWeek ?? []` ile okuyor:
+rolling deploy sırasında eski bir API örneği sparkline'ı düşürmeli, sayfayı çökertmemeli.
+
+### Frontend test harness'ı eklendi (vitest) — DECIDED
+
+Web tarafında hiç test altyapısı yoktu; huni matematiği, dağılım ölçekleme ve sayı biçimleme saf
+fonksiyonlar olarak `lib/dashboard/`'a çıkarıldığı için vitest eklendi (yalnız `environment: node`,
+jsdom/RTL yok — bileşen render'ı test edilmiyor). `npm test` CI'da `lint` ile `build` arasında.
+
+### Doğrulama
+
+Podman entegrasyon 134→135 (`GetOverview_Returns_A_Twelve_Week_Application_Trend_Ending_This_Week`),
+unit 249→256 (`BuildWeeklyBuckets` senaryoları), frontend 0→22 (vitest). Hepsi yeşil.
+
+Ayrıca **gerçek ölçekte tarayıcıda doğrulandı**: yerel DB'ye kullanıcının ekran görüntüsündeki
+dağılımı birebir taşıyan geçici bir kullanıcı (1.187 başvuru) seed'lendi, panel açık/koyu temada
+ve 420px genişlikte kontrol edildi, sonra kullanıcı ve verisi silindi. Bu turda yakalanan iki
+görsel hata: (1) "Yanıt süresi" kartı komşusuna gerilip yarısı boş kalıyordu → satır grid'lerine
+`items-start`, (2) mobilde küçük kutucuklar tek sütuna düşüp sayfayı uzatıyordu → `grid-cols-2`
+tabandan.
+
+### Tüm pano tek bir iki-kolon ızgarasında — DECIDED
+
+İlk uygulama her satırı içeriğine göre boyutlandırmıştı: kutucuk satırı 4 kolon (%50 ve %75),
+huni satırı `1.45fr 1fr` (%59), dağılım satırı `2fr 1fr` (%67). Kullanıcı aşağı inerken dikey
+boşluğun hizasız olduğunu fark etti — haklıydı, dört farklı bölünme noktası vardı ve hiçbiri
+ortak bir ızgaraya oturmuyordu.
+
+Artık üç satır da `lg:grid-cols-2` + aynı `gap-4`: baştan sona kesintisiz tek bir dikey oluk.
+Dört ikincil kutucuk sağ yarının içinde iç içe bir 2×2; iç boşluk dıştakiyle aynı olduğu için
+iç oluk tam %75 çizgisine oturuyor (matematik olarak 4 kolonluk ızgarayla birebir aynı).
+
+Bunun bedeli, satır yüksekliklerinin paylaşılması. Daha önce `items-start` ile çözülen "boş kart"
+sorunu bu kez içerik dağıtımıyla çözüldü: `ConversionFunnel`/`OutcomeCard`'ın kapanış satırı ve
+`ResponseTimeCard`'ın uyarı notu `mt-auto` ile kartın tabanına oturuyor, `ResponseTimeCard`'ın
+iki rakamı `flex-1 content-center` ile dikeyde ortalanıyor. `DashboardSkeleton` ve landing
+sayfasındaki `AnalyticsSection` aynı ızgarayı kullanıyor.
+
+### Yenilenmeyen: yardım ekran görüntüsü
+
+`web/public/help/screenshots/dashboard-overview.png` hâlâ eski paneli gösteriyor. Yardım
+metinleri (`help.dashboard.*`) yeni düzene göre yeniden yazıldı ama görsel, kullanıcının kendi
+verisiyle çekilmesi gerektiği için güncellenmedi.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

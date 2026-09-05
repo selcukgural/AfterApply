@@ -19,7 +19,11 @@ public sealed record AnalyticsRatesResponse(
 
 public sealed record ResponseTimeStatsResponse(int SampleSize, double? AverageDays, double? MedianDays);
 
+/// <summary><paramref name="WeekStart"/> is the Monday (UTC) the bucket opens on.</summary>
+public sealed record ApplicationsPerWeekItem(DateOnly WeekStart, int Count);
+
 public sealed record AnalyticsOverviewResponse(
     AnalyticsRatesResponse Rates,
     ResponseTimeStatsResponse ResponseTime,
-    IReadOnlyCollection<StatusDistributionItem> StatusDistribution);
+    IReadOnlyCollection<StatusDistributionItem> StatusDistribution,
+    IReadOnlyCollection<ApplicationsPerWeekItem> ApplicationsPerWeek);

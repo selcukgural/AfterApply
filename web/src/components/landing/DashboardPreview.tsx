@@ -1,5 +1,6 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { StatTile } from "@/components/dashboard/StatTile";
+import { formatCount, formatRate } from "@/lib/dashboard/format";
 
 // A static, illustrative mock of the real dashboard — reuses the actual
 // <StatTile> component (pure/props-only, no fetching) so this visual stays
@@ -9,6 +10,7 @@ export async function DashboardPreview() {
   const t = await getTranslations("landing.heroPreview");
   const tCommon = await getTranslations("landing.common");
   const tRates = await getTranslations("dashboard.rates");
+  const locale = await getLocale();
 
   const rows = [
     { company: t("row1Company"), status: t("row1Status"), meta: t("row1Meta"), dot: "bg-blue-500" },
@@ -26,9 +28,9 @@ export async function DashboardPreview() {
       </div>
 
       <div className="mb-4 grid grid-cols-3 gap-2">
-        <StatTile label={t("applications")} value={127} />
-        <StatTile label={tRates("responseRate")} value={63} suffix="%" />
-        <StatTile label={tRates("interviewRate")} value={18} suffix="%" />
+        <StatTile size="sm" tone="accent" label={t("applications")} value={formatCount(127, locale)} />
+        <StatTile size="sm" tone="good" label={tRates("responseRate")} value={formatRate(63, locale)} />
+        <StatTile size="sm" tone="accent" label={tRates("interviewRate")} value={formatRate(18, locale)} />
       </div>
 
       <ul className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">

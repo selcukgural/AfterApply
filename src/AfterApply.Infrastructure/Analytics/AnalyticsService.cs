@@ -8,6 +8,10 @@ namespace AfterApply.Infrastructure.Analytics;
 
 internal sealed class AnalyticsService(AppDbContext dbContext) : IAnalyticsService
 {
+    // How far back the dashboard's application-volume trend reaches. Twelve weeks is the
+    // widest window that still reads as individual bars in the sparkline's width.
+    private const int TrendWeeks = 12;
+
     public async Task<AnalyticsOverviewResponse> GetOverviewAsync(Guid userId, CancellationToken cancellationToken)
     {
         var applications = await dbContext.Applications
@@ -82,6 +86,10 @@ internal sealed class AnalyticsService(AppDbContext dbContext) : IAnalyticsServi
             .Select(s => new StatusDistributionItem(s, statusCounts.GetValueOrDefault(s)))
             .ToList();
 
-        return new AnalyticsOverviewResponse(rates, responseTime, distribution);
+        // Reuses the rows already materialised above — the trend costs no extra round trip.
+        var applicationsPerWeek = AnalyticsCalculations.BuildWeeklyBuckets(
+            applications.Select(a => a.AppliedAt), DateTimeOffset.UtcNow, TrendWeeks);
+
+        return new AnalyticsOverviewResponse(rates, responseTime, distribution, applicationsPerWeek);
     }
 }
