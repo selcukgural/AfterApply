@@ -3121,6 +3121,87 @@ Bu tur iki UI hatası daha çıkardı: (1) paylaşılan ölçekte küçük değe
 durum adı ("Ön Değerlendirme") etiket sütununu birkaç piksel aşıp kırpılıyordu — `truncate`
 kaldırıldı, etiket iki satıra sarıyor.
 
+### Ana sayfa yenilenmedi çünkü yenilenmesi gerekmiyor — DECIDED
+
+Landing sayfasında hiç ekran görüntüsü dosyası yok. `HeroSection` → `DashboardPreview` ve
+`AnalyticsSection` gerçek pano bileşenlerini (`StatTile`, `ConversionFunnel`, `OutcomeCard`,
+`StatusBreakdown`, `ResponseTimeCard`) sabit demo veriyle çalıştırıyor, dolayısıyla pano
+redesign'ı ana sayfayı zaten kendiliğinden güncelledi. Bu yapı korunacak: giriş yapılmadan
+görülen ekranın ürünle uyumsuz kalması bir bakım disiplini sorunu olmaktan çıkıp imkânsız hâle
+geliyor. Görsel yerine bileşen — yeni tanıtım bölümleri de böyle yazılmalı.
+
+### Kalan on bir yardım görseli + üç GIF yeniden çekildi — DECIDED
+
+Hepsi 2026-09-01'deki tek bir çekim seansındandı ve o günden beri en az iki kez yanlış hâle
+gelmişti: (1) logo 2026-09-02'de "ek" gradient markaya döndü, on dört görselin hepsi eski
+konuşma balonunu taşıyordu; (2) navbar'a Bildirimler eklendi ve eski çekimlerde pencere dar
+olduğu için navbar iki satıra sarıyordu. Sayfaya özel olarak da giriş ekranı Google/LinkedIn
+ile giriş ve "şifremi unuttum" bağlantısını, kayıt ekranı şifre tekrarı + şifre politikasını,
+ayarlar ekranı silinen e-posta yönlendirme kartını ve yeni token düzenini, öneriler ekranı ret
+gerekçesi çıkarımını göstermiyordu.
+
+Görseller yine üretilmiş bir demo hesapla çekildi (aynı "Elif Yılmaz", `demo.kariyerim@example.com`),
+bu kez hesap silinmedi: çekim sonrası GIF kayıtlarının eklediği/değiştirdiği her şey geri alınıp
+hesap tam olarak görsellerdeki duruma döndürüldü, böylece bir sonraki tazeleme sıfırdan
+seed'lemek zorunda kalmayacak. Tüm çıktılar 1280 piksel genişliğe normalize edildi.
+
+GIF'ler bu tur kayıt aracının bindirmeleri kapatılarak üretildi. Eskilerinde sol üstte "wait"
+etiketi, altta turuncu ilerleme çubuğu ve sağ altta Claude filigranı vardı — herkese açık ürün
+dokümantasyonunda duracak şeyler değil.
+
+### Eklenti görselleri: pazarlama kompozisyonu ≠ ürün ekranı — DECIDED
+
+`help/screenshots/chrome-extension-{popup,options}.png` aslında hiç ekran görüntüsü değildi;
+mağaza listelemesinin pazarlama kompozisyonları yardım merkezine kopyalanmıştı. Popup olanı
+görünür şekilde bozuktu: sol sütun metni üstüne binen tarayıcı çerçevesi tarafından kırpılıyor,
+sağ kenar panelin ortasından kesiliyordu. Kullanıcıya eklentinin gerçek arayüzü hiç
+gösterilmiyordu.
+
+Artık gerçek `popup.html`/`options.html` yakalanıyor: eklenti klasörünün geçici bir kopyasında
+`chrome.storage`/`tabs`/`scripting`/`runtime` stub'lanıp sayfalar statik sunucudan açılıyor, ve
+çıktı yumuşak bir zemine ortalanmış bir iframe içinde çerçeveleniyor. Markup, CSS ve `popup.js`
+kod yolu gerçek; yalnızca tarayıcı-eklentisi bağlamı taklit ediliyor. Options görseli böylece
+Gmail Taraması bölümünü de gösteriyor — eski mockup'ta hiç yoktu.
+
+Aynı kırpılma mağaza görsellerinde de vardı, çünkü `scene-job.html`'in tarayıcı paneli tuvalin
+dışına taşıyor (`right: -40px; width: 860px`) ve popup o panelin `overflow: hidden` kutusunun
+içinde duruyordu. Panel tuvalin içine alındı, popup `.browser`'ın kardeşi yapıldı.
+
+Ve `scene-*.html`'in README'sindeki "gerçek sınıfları kullandığı için sürüklenemez" iddiası
+yanlış çıktı: sınıflar paylaşılıyordu ama *markup* kopyalanmıştı, logo raster'a dönünce
+`popup.html` `<img>`'a geçti, sahneler kendi satır içi `<svg>`'siyle kaldı ve mağaza görselleri
+eski logoyu göstermeye devam etti. Sahneler artık `../../icons/icon48.png`'i kullanıyor; README bu tuzağı
+da yazıyor.
+
+### Kayıt sayfasında LinkedIn ile kayıt yoktu — DECIDED
+
+Çekim sırasında çıkan ikinci hata. LinkedIn ile giriş eklenirken (`e0aab2a`) giriş sayfası
+`SocialSignIn`'e geçmiş, kayıt sayfası kendi tek `<GoogleSignInButton />`'ıyla kalmıştı. Sonuç:
+LinkedIn ile giriş yapılabiliyor ama kayıt olunamıyordu (ilk girişte hesabı zaten bu akış
+oluşturuyor, ama "önce kayıt olayım" diyen kullanıcı seçeneği hiç görmüyordu), üstelik kayıt
+sayfasında "VEYA" ayracı da yoktu — Google butonu forma yapışık duruyordu.
+
+Kayıt sayfası da `SocialSignIn` render ediyor artık. Sağlayıcı listesini iki sayfanın ayrı ayrı
+saymaması, tam olarak bu sapmanın tekrar etmemesi için; `SocialSignIn`'in yorumu da bunu
+söylüyor. Frontend'de bileşen render testi koşumu bilerek yok (`vitest.config.ts`: node ortamı,
+jsdom/RTL yok), o yüzden bu değişiklik gerçek tarayıcıda doğrulandı ve
+`register-form.png` yeniden çekildi.
+
+### Biten import "başarısız" görünüyordu: SignalR kendi JSON ayarlarını kullanıyor — DECIDED
+
+GIF çekimi gerçek bir hata çıkardı. `ConfigureHttpJsonOptions` yalnızca Minimal API yanıtlarına
+uygulanıyor; SignalR hub payload'ını kendi `PayloadSerializerOptions`'ıyla serileştiriyor. Bu
+yüzden `ImportSummaryResponse.Status` REST'te `"Completed"`, hub push'unda `2` olarak gidiyordu.
+`useImportProgress` string karşılaştırdığı için, son poll'dan sonra gelen push `displayPhase`'i
+`failed` dalına düşürüyor ve sorunsuz tamamlanan bir import ekranda "Yükleme başarısız oldu,
+tekrar deneyin." olarak görünüyordu — `progress.errorMessage` null olduğu için de hiçbir gerekçe
+yazmadan.
+
+`AddSignalR().AddJsonProtocol(...)` ile aynı `JsonStringEnumConverter` hub protokolüne de
+veriliyor. Test, host'un DI'ından `JsonHubProtocol`'ü çözüp gerçek bir `InvocationMessage`
+serileştiriyor ve `"status":"Completed"` bekliyor — düzeltme geri alındığında kırmızıya
+döndüğü doğrulandı.
+
 ---
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)

@@ -8,9 +8,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Imports.Contracts;
+using AfterApply.Domain.Common;
 using AfterApply.Domain.Imports;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -201,5 +203,27 @@ public class LinkedInImportTests(SharedInfrastructure shared) : IAsyncLifetime
         var response = await _client.PostAsync("/api/imports/linkedin", BuildZipUpload(zip));
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    // The import uploader reads progress.status off the hub push and compares it to the strings
+    // "Completed"/"Failed". SignalR serializes hub payloads with its own options, not the ones
+    // ConfigureHttpJsonOptions sets for the REST endpoints — so an enum went out over the socket
+    // as its ordinal while GET /api/imports/{id} returned the name, and the push that landed after
+    // the last poll turned a finished import into "Yükleme başarısız oldu" on screen.
+    [Fact]
+    public void ImportProgressHub_Serializes_Enums_As_Strings()
+    {
+        var protocol = _factory!.Services.GetServices<IHubProtocol>().OfType<JsonHubProtocol>().Single();
+        var summary = new ImportSummaryResponse(
+            Guid.NewGuid(), Source.LinkedInImport, "linkedin_export.zip", ImportBatchStatus.Completed,
+            ProcessedRows: 5, TotalRows: 5, TotalRecords: 5, NewApplications: 5,
+            DuplicateRecords: 0, InvalidRecords: 0, CompletedAt: DateTimeOffset.UtcNow,
+            ErrorMessage: null, Errors: []);
+
+        var payload = protocol.GetMessageBytes(new InvocationMessage("importStatusChanged", [summary]));
+        var json = Encoding.UTF8.GetString(payload.ToArray());
+
+        json.ShouldContain("\"status\":\"Completed\"");
+        json.ShouldContain("\"source\":\"LinkedInImport\"");
     }
 }

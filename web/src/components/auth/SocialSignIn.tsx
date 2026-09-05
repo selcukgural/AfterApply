@@ -5,10 +5,14 @@ import { useClientConfig } from "@/hooks/useClientConfig";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { LinkedInSignInButton } from "./LinkedInSignInButton";
 
-// The "or" divider plus every configured social sign-in button, under the password form on the
-// login page. Renders nothing at all when no provider is configured on this deployment, so the
-// divider never dangles above an empty space. Each button still decides for itself whether to
-// render (same /api/config flags), this only owns the divider.
+// The "or" divider plus every configured social sign-in button, under the password form on both
+// the login and the sign-up page. Renders nothing at all when no provider is configured on this
+// deployment, so the divider never dangles above an empty space. Each button still decides for
+// itself whether to render (same /api/config flags), this only owns the divider.
+//
+// Both pages render this one component rather than listing buttons themselves: when LinkedIn was
+// added, login moved here and sign-up kept its lone <GoogleSignInButton />, so you could sign in
+// with LinkedIn but not sign up with it — and the sign-up page had no divider at all.
 export function SocialSignIn() {
   const { config } = useClientConfig();
   const t = useTranslations("auth.social");

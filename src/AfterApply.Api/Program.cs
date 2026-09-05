@@ -60,7 +60,14 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApiRateLimiting(builder.Configuration);
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
-builder.Services.AddSignalR();
+// ConfigureHttpJsonOptions above only reaches Minimal API responses; SignalR serializes hub
+// payloads with its own options. Without the same converter here, ImportSummaryResponse.Status
+// went out over the hub as the enum's ordinal (2) while GET /api/imports/{id} returned
+// "Completed" — and useImportProgress compares against the string, so the push that arrived after
+// the last poll flipped a finished import to the "failed" branch of the uploader.
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddScoped<IImportProgressNotifier, SignalRImportProgressNotifier>();
 
 var app = builder.Build();

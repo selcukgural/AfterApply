@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { PasswordRequirements } from "@/components/ui/PasswordRequirements";
-import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { SocialSignIn } from "@/components/auth/SocialSignIn";
 
 type FieldErrors = Partial<
   Record<"email" | "password" | "confirmPassword" | "firstName" | "lastName" | "consentAccepted", string>
@@ -165,7 +165,7 @@ export default function RegisterPage() {
             {isSubmitting ? t("submitting") : t("submit")}
           </Button>
         </form>
-        <GoogleSignInButton />
+        <SocialSignIn />
         <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
           {t("haveAccount")}{" "}
           <Link href="/login" className="text-blue-600 hover:underline dark:text-blue-400">

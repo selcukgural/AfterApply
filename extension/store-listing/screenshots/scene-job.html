@@ -66,7 +66,7 @@
     align-items: center;
     gap: 10px;
   }
-  .brand svg { width: 28px; height: 28px; color: var(--brand-accent); }
+  .brand img { width: 28px; height: 28px; }
   .brand span { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
 
   .headline {
@@ -96,8 +96,8 @@
   .browser {
     position: absolute;
     top: 64px;
-    right: -40px;
-    width: 860px;
+    right: 40px;
+    width: 700px;
     height: 660px;
     background: var(--page-bg);
     border: 1px solid var(--page-border);
@@ -140,7 +140,8 @@
     justify-content: center;
     color: var(--brand-accent);
   }
-  .toolbar-icon svg { width: 15px; height: 15px; }
+  .toolbar-icon svg,
+  .toolbar-icon img { width: 15px; height: 15px; }
 
   .page-body { padding: 34px 40px; }
   .job-title { height: 26px; width: 60%; background: var(--line-strong); border-radius: 6px; margin-bottom: 14px; }
@@ -153,8 +154,8 @@
 
   .popup-anchor {
     position: absolute;
-    top: 56px;
-    right: 30px;
+    top: 118px;
+    right: 38px;
     width: 360px;
   }
   .pointer {
@@ -191,10 +192,7 @@
 
   <div id="canvas">
   <div class="brand">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 5.5h16a1 1 0 011 1v9a1 1 0 01-1 1H9.5l-4 3.5v-3.5H4a1 1 0 01-1-1v-9a1 1 0 011-1z"/>
-      <path d="M8 10.5l2.4 2.4L16.5 7.5"/>
-    </svg>
+    <img src="../../icons/icon48.png" alt="" />
     <span>e-kariyerim</span>
   </div>
 
@@ -213,10 +211,7 @@
       <div class="dots"><span></span><span></span><span></span></div>
       <div class="address">🔒 www.linkedin.com/jobs/view/4123456789</div>
       <div class="toolbar-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 5.5h16a1 1 0 011 1v9a1 1 0 01-1 1H9.5l-4 3.5v-3.5H4a1 1 0 01-1-1v-9a1 1 0 011-1z"/>
-          <path d="M8 10.5l2.4 2.4L16.5 7.5"/>
-        </svg>
+        <img src="../../icons/icon48.png" alt="" />
       </div>
     </div>
     <div class="page-body">
@@ -230,32 +225,30 @@
       <div class="job-line w1"></div>
     </div>
 
-    <div class="popup-anchor">
-      <div class="pointer"></div>
-      <div class="popup-window">
-        <header class="app-header">
-          <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 5.5h16a1 1 0 011 1v9a1 1 0 01-1 1H9.5l-4 3.5v-3.5H4a1 1 0 01-1-1v-9a1 1 0 011-1z"/>
-            <path d="M8 10.5l2.4 2.4L16.5 7.5"/>
-          </svg>
-          <h1>e-kariyerim</h1>
-          <button class="theme-toggle" type="button" aria-hidden="true" tabindex="-1">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-          </button>
-          <button class="lang-toggle" type="button" aria-hidden="true" tabindex="-1">TR</button>
-          <button id="sceneThemeToggle" class="theme-toggle" type="button" aria-hidden="true" tabindex="-1"></button>
-        </header>
-        <main id="content">
-          <span class="site-badge">LinkedIn</span>
-          <label>Company</label>
-          <input type="text" value="Acme Yazılım" readonly />
-          <label>Job title</label>
-          <input type="text" value="Senior Backend Engineer" readonly />
-          <label>Location</label>
-          <input type="text" value="İstanbul, Türkiye" readonly />
-          <button class="primary">I Applied</button>
-        </main>
-      </div>
+  </div>
+
+  <div class="popup-anchor">
+    <div class="pointer"></div>
+    <div class="popup-window">
+      <header class="app-header">
+        <img class="logo" src="../../icons/icon48.png" alt="" width="22" height="22" />
+        <h1>e-kariyerim</h1>
+        <button class="theme-toggle" type="button" aria-hidden="true" tabindex="-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+        <button class="lang-toggle" type="button" aria-hidden="true" tabindex="-1">TR</button>
+        <button id="sceneThemeToggle" class="theme-toggle" type="button" aria-hidden="true" tabindex="-1"></button>
+      </header>
+      <main id="content">
+        <span class="site-badge">LinkedIn</span>
+        <label>Company</label>
+        <input type="text" value="Acme Yazılım" readonly />
+        <label>Job title</label>
+        <input type="text" value="Senior Backend Engineer" readonly />
+        <label>Location</label>
+        <input type="text" value="İstanbul, Türkiye" readonly />
+        <button class="primary">I Applied</button>
+      </main>
     </div>
   </div>
   </div>
