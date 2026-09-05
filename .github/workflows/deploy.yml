@@ -30,8 +30,15 @@ env:
   AR_REPOSITORY: afterapply
 
 jobs:
-  # Decides which side(s) should deploy: on a push, diff the paths that changed; on a manual
-  # dispatch, the `target` input states intent directly, no diffing needed.
+  # Decides which side(s) should deploy. On a manual dispatch the `target` input states intent
+  # directly. On a push, each side is diffed against ITS OWN LAST SUCCESSFUL DEPLOY — the
+  # deploy/api-latest and deploy/web-latest tags the deploy jobs move at the end — not against
+  # this push's own commit range. The difference matters exactly when a deploy fails: with the
+  # push range, a follow-up push that only fixes CI/compose files sees "nothing changed" and
+  # skips, leaving the earlier, never-deployed backend/web changes stranded (happened 2026-09-05
+  # with the Sign in with Google rollout). Diffing against the tag makes every push ask "is there
+  # anything since what is actually live?", which is the question a deploy gate should ask.
+  # A missing tag (first-ever run) means deploy.
   plan:
     runs-on: ubuntu-latest
     outputs:
@@ -40,21 +47,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         if: github.event_name == 'push'
-
-      - uses: dorny/paths-filter@v3
-        id: filter
-        if: github.event_name == 'push'
         with:
-          filters: |
-            backend:
-              - 'src/**'
-              - 'tests/**'
-              - 'AfterApply.slnx'
-              - 'Directory.Build.props'
-              - 'Directory.Packages.props'
-              - 'global.json'
-            web:
-              - 'web/**'
+          fetch-depth: 0 # full history — the tag can be many commits behind HEAD
 
       - id: decide
         env:
@@ -64,9 +58,29 @@ jobs:
             [ "$TARGET" = "backend" ] || [ "$TARGET" = "both" ] && backend=true || backend=false
             [ "$TARGET" = "web" ] || [ "$TARGET" = "both" ] && web=true || web=false
           else
-            backend="${{ steps.filter.outputs.backend }}"
-            web="${{ steps.filter.outputs.web }}"
+            # changed_since <tag> <path>... — true when any of the paths differs between the last
+            # successful deploy (the tag) and HEAD, or when the tag does not exist yet.
+            changed_since() {
+              local tag="$1"; shift
+              if ! git fetch origin "refs/tags/${tag}:refs/tags/${tag}" 2>/dev/null; then
+                echo "::notice::${tag} not found — treating as never deployed" >&2
+                echo true; return
+              fi
+              local changed
+              changed=$(git diff --name-only "refs/tags/${tag}" HEAD -- "$@")
+              if [ -n "$changed" ]; then
+                printf '%s\n' "Changed since ${tag}:" "$changed" >&2
+                echo true
+              else
+                echo false
+              fi
+            }
+            backend=$(changed_since deploy/api-latest \
+              src tests AfterApply.slnx Directory.Build.props Directory.Packages.props global.json)
+            web=$(changed_since deploy/web-latest web)
           fi
+          echo "backend=$backend"
+          echo "web=$web"
           echo "backend=$backend" >> "$GITHUB_OUTPUT"
           echo "web=$web" >> "$GITHUB_OUTPUT"
 

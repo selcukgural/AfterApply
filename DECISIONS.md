@@ -2916,6 +2916,22 @@ düştü. Çözüm: `docker-compose.yml` `RateLimiting__Auth__PermitLimit`'i
 çekiyor — sözleşme kontrolü durum kodlarını doğrular, rate limiter'ı değil (onun testi
 `AccountManagementTests`'te). Auth grubuna bir uç daha eklendiğinde bu tekrar patlamaz.
 
+**Bulgu — düzeltme push'u deploy'u atladı, plan tabanı değiştirildi:** Yukarıdaki CI düzeltmesi
+sadece `docker-compose.yml`/`api-contract.yml`'e dokunduğu için `plan` işi (dorny/paths-filter,
+push'un kendi commit aralığı) "değişen yok" deyip iki deploy'u da atladı; Google değişiklikleri
+canlıya hiç gitmemişti. Manuel `workflow_dispatch target=both` ile tetiklendi. Kalıcı çözüm
+(kullanıcı önerisi): `plan` artık her tarafı **kendi son başarılı deploy'una** göre diff'liyor —
+`deploy/api-latest` / `deploy/web-latest` tag'leri (notify adımı için zaten mevcuttu) ile `HEAD`
+arasında ilgili yollarda fark varsa deploy, tag yoksa deploy. Düşen bir deploy tag'i taşımadığı
+için sonraki her push eksik kalanı otomatik yakalıyor. `dorny/paths-filter` kaldırıldı.
+
+**Bulgu — Secret Manager izni:** İlk backend deploy'u `Permission denied on secret
+afterapply-google-client-id/-secret for 188370748893-compute@...` ile düştü: client-id secret'ında hiç
+binding yoktu, client-secret ise yanlışlıkla `...@cloudservices.gserviceaccount.com`'a verilmişti
+(elle kopyalanan komutta değişken/shell farkı). İkisi de `gcloud secrets add-iam-policy-binding` ile
+compute SA'ya bağlandı. Yeni secret eklerken DEPLOYMENT.md §3'teki `for` döngüsüne dahil etmek
+yetmiyor — bir sonraki deploy'dan önce `gcloud secrets get-iam-policy <secret>` ile doğrulanmalı.
+
 ---
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
