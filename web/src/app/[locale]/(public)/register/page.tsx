@@ -16,7 +16,9 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { PasswordRequirements } from "@/components/ui/PasswordRequirements";
 
-type FieldErrors = Partial<Record<"email" | "password" | "firstName" | "lastName" | "consentAccepted", string>>;
+type FieldErrors = Partial<
+  Record<"email" | "password" | "confirmPassword" | "firstName" | "lastName" | "consentAccepted", string>
+>;
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -30,6 +32,7 @@ export default function RegisterPage() {
   const [values, setValues] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     firstName: "",
     lastName: "",
     consentAccepted: false,
@@ -38,8 +41,23 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const update = (field: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  // Live "passwords match" feedback. Silent until the user has left the confirm field once
+  // (so they aren't shown red text mid-typing), then re-checked on every keystroke in either
+  // password field. The submit-time Zod check below stays as the final gate.
+  const [confirmTouched, setConfirmTouched] = useState(false);
+  const liveMismatch =
+    confirmTouched && values.confirmPassword !== "" && values.password !== values.confirmPassword;
+  const confirmPasswordError =
+    errors.confirmPassword ?? (liveMismatch ? tValidation("passwordsDoNotMatch") : undefined);
+
+  const update = (field: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setValues((prev) => ({ ...prev, [field]: e.target.value }));
+    // A submit-time mismatch error must not linger once the user starts fixing it —
+    // the live check above takes over from here.
+    if (field === "password" || field === "confirmPassword") {
+      setErrors((prev) => (prev.confirmPassword ? { ...prev, confirmPassword: undefined } : prev));
+    }
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -51,6 +69,7 @@ export default function RegisterPage() {
       setErrors({
         email: fieldErrors.email?.[0],
         password: fieldErrors.password?.[0],
+        confirmPassword: fieldErrors.confirmPassword?.[0],
         firstName: fieldErrors.firstName?.[0],
         lastName: fieldErrors.lastName?.[0],
         consentAccepted: fieldErrors.consentAccepted?.[0],
@@ -61,7 +80,9 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      const auth = await register(result.data);
+      // confirmPassword is a client-side check only — the API never sees it.
+      const { email, password, firstName, lastName, consentAccepted } = result.data;
+      const auth = await register({ email, password, firstName, lastName, consentAccepted });
       // A brand-new account always starts with the server default theme
       // ("light" — there's no Accept-Language-like header for OS theme
       // preference). If this visitor had already switched to Dark on this
@@ -114,6 +135,16 @@ export default function RegisterPage() {
               aria-describedby="password-requirements"
             />
             <PasswordRequirements id="password-requirements" password={values.password} policy={config.passwordPolicy} />
+          </FormField>
+          <FormField label={t("confirmPassword")} htmlFor="confirmPassword" error={confirmPasswordError}>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={values.confirmPassword}
+              onChange={update("confirmPassword")}
+              onBlur={() => setConfirmTouched(true)}
+              autoComplete="new-password"
+            />
           </FormField>
           <Checkbox
             id="consentAccepted"
