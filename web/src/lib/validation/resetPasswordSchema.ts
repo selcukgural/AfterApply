@@ -1,9 +1,11 @@
 import { z } from "zod";
+import type { PasswordPolicy } from "@/types/api";
+import { createPasswordSchema, type ValidationTranslator } from "./passwordPolicy";
 
-export function createResetPasswordSchema(t: (key: string) => string) {
+export function createResetPasswordSchema(t: ValidationTranslator, policy: PasswordPolicy) {
   return z
     .object({
-      newPassword: z.string().min(12, t("passwordMinLength")),
+      newPassword: createPasswordSchema(policy, t),
       confirmPassword: z.string().min(1, t("passwordRequired")),
     })
     .refine((values) => values.newPassword === values.confirmPassword, {

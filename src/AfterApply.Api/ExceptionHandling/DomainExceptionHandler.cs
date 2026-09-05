@@ -1,3 +1,4 @@
+using AfterApply.Application.Common;
 using AfterApply.Application.Localization;
 using AfterApply.Domain.Common;
 using Microsoft.AspNetCore.Diagnostics;
@@ -27,7 +28,9 @@ internal sealed class DomainExceptionHandler(IStringLocalizer<SharedStrings> loc
         {
             Status = StatusCodes.Status400BadRequest,
             Title = "Bad Request",
-            Detail = localizer[codedException.ErrorCode]
+            Detail = exception is CodedException { MessageArguments.Count: > 0 } coded
+                ? localizer[coded.ErrorCode, coded.MessageArguments.ToArray()]
+                : localizer[codedException.ErrorCode]
         }, cancellationToken);
 
         return true;

@@ -16,11 +16,6 @@ namespace AfterApply.Infrastructure.Identity;
 /// </summary>
 public sealed class PersonalAccessToken
 {
-    /// <summary>Long enough not to be an ongoing chore (the extension has no refresh mechanism —
-    /// expiry means the user pastes a new token), short enough that a token leaked from a browser
-    /// profile has a bounded life. Matches the common default for CI/API tokens elsewhere.</summary>
-    public static readonly TimeSpan Lifetime = TimeSpan.FromDays(90);
-
     public Guid Id { get; private set; } = Guid.CreateVersion7();
 
     public Guid UserId { get; private set; }
@@ -45,8 +40,10 @@ public sealed class PersonalAccessToken
     {
     }
 
+    /// <param name="lifetime">Comes from <see cref="PersonalAccessTokenOptions.Lifetime"/> — see there
+    /// for how the default was chosen.</param>
     public static PersonalAccessToken Create(
-        Guid userId, string name, string tokenHash, PersonalAccessTokenScope scope, DateTimeOffset now)
+        Guid userId, string name, string tokenHash, PersonalAccessTokenScope scope, DateTimeOffset now, TimeSpan lifetime)
     {
         return new PersonalAccessToken
         {
@@ -55,7 +52,7 @@ public sealed class PersonalAccessToken
             TokenHash = tokenHash,
             Scope = scope,
             CreatedAt = now,
-            ExpiresAt = now + Lifetime
+            ExpiresAt = now + lifetime
         };
     }
 

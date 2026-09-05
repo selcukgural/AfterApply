@@ -8,11 +8,13 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 import { getStoredThemeCookie } from "@/lib/theme/theme";
 import { createRegisterSchema } from "@/lib/validation/registerSchema";
+import { useClientConfig } from "@/hooks/useClientConfig";
 import { ApiError } from "@/lib/api/httpClient";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { PasswordRequirements } from "@/components/ui/PasswordRequirements";
 
 type FieldErrors = Partial<Record<"email" | "password" | "firstName" | "lastName" | "consentAccepted", string>>;
 
@@ -22,6 +24,9 @@ export default function RegisterPage() {
   const locale = useLocale();
   const t = useTranslations("auth.register");
   const tValidation = useTranslations("validation");
+  // Same rules the server enforces (GET /api/config) — shown up front and validated client-side,
+  // so the user never learns them one rejected submit at a time.
+  const { config } = useClientConfig();
   const [values, setValues] = useState({
     email: "",
     password: "",
@@ -40,7 +45,7 @@ export default function RegisterPage() {
     event.preventDefault();
     setFormError(null);
 
-    const result = createRegisterSchema(tValidation).safeParse(values);
+    const result = createRegisterSchema(tValidation, config.passwordPolicy).safeParse(values);
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
       setErrors({
@@ -106,7 +111,9 @@ export default function RegisterPage() {
               value={values.password}
               onChange={update("password")}
               autoComplete="new-password"
+              aria-describedby="password-requirements"
             />
+            <PasswordRequirements id="password-requirements" password={values.password} policy={config.passwordPolicy} />
           </FormField>
           <Checkbox
             id="consentAccepted"

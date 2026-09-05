@@ -4,13 +4,16 @@ using AfterApply.Application.Identity.Contracts;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.Identity;
 
-internal sealed class PersonalAccessTokenService(AppDbContext dbContext, ITokenService tokenService, HybridCache cache) : IPersonalAccessTokenService
+internal sealed class PersonalAccessTokenService(
+    AppDbContext dbContext,
+    ITokenService tokenService,
+    HybridCache cache,
+    IOptions<PersonalAccessTokenOptions> options) : IPersonalAccessTokenService
 {
-    private const int MaxActiveTokens = 10;
-
     // Was 60s. RevokeAsync evicts this key, but HybridCache's in-process L1 has no backplane here,
     // so a revocation only reaches the instance that served the revoke request — every other Cloud
     // Run instance keeps honoring the token until its own L1 entry lapses. That window is the real
@@ -33,16 +36,17 @@ internal sealed class PersonalAccessTokenService(AppDbContext dbContext, ITokenS
         // lapse could never create an eleventh without hunting down and revoking dead rows.
         var activeCount = await dbContext.PersonalAccessTokens
             .CountAsync(t => t.UserId == userId && t.RevokedAt == null && t.ExpiresAt > now, cancellationToken);
-        if (activeCount >= MaxActiveTokens)
+        var maxActiveTokens = options.Value.MaxActiveTokens;
+        if (activeCount >= maxActiveTokens)
         {
             throw new CodedException("PERSONAL_ACCESS_TOKEN_LIMIT_REACHED",
-                "You can have at most 10 active personal access tokens.");
+                $"You can have at most {maxActiveTokens} active personal access tokens.", maxActiveTokens);
         }
 
         var rawToken = tokenService.GeneratePersonalAccessToken();
         var tokenHash = tokenService.HashPersonalAccessToken(rawToken);
 
-        var token = PersonalAccessToken.Create(userId, request.Name, tokenHash, request.Scope, now);
+        var token = PersonalAccessToken.Create(userId, request.Name, tokenHash, request.Scope, now, options.Value.Lifetime);
         dbContext.PersonalAccessTokens.Add(token);
         await dbContext.SaveChangesAsync(cancellationToken);
 

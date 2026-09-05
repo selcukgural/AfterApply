@@ -324,3 +324,23 @@ export interface ConvertTrackedJobRequest {
   appliedAt: string;
   notes: string | null;
 }
+
+// GET /api/config — server-side limits the UI states up front (all still enforced server-side).
+export interface PasswordPolicy {
+  requiredLength: number;
+  requiredUniqueChars: number;
+  requireDigit: boolean;
+  requireLowercase: boolean;
+  requireUppercase: boolean;
+  requireNonAlphanumeric: boolean;
+}
+
+export interface PersonalAccessTokenLimits {
+  maxActiveTokens: number;
+  lifetimeDays: number;
+}
+
+export interface ClientConfigResponse {
+  passwordPolicy: PasswordPolicy;
+  personalAccessTokens: PersonalAccessTokenLimits;
+}

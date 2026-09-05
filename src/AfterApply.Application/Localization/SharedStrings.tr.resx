@@ -189,7 +189,7 @@
   </data>
 
   <data name="PERSONAL_ACCESS_TOKEN_LIMIT_REACHED" xml:space="preserve">
-    <value>En fazla 10 aktif tarayıcı eklenti anahtarınız olabilir. Yeni bir anahtar oluşturmadan önce mevcut bir anahtarı silmelisiniz.</value>
+    <value>En fazla {0} aktif tarayıcı eklenti anahtarınız olabilir. Yeni bir anahtar oluşturmadan önce mevcut bir anahtarı silmelisiniz.</value>
   </data>
 
   <data name="GENERIC_ERROR" xml:space="preserve">

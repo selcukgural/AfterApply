@@ -6,16 +6,19 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { authApi } from "@/lib/api/auth";
 import { createResetPasswordSchema } from "@/lib/validation/resetPasswordSchema";
+import { useClientConfig } from "@/hooks/useClientConfig";
 import { ApiError } from "@/lib/api/httpClient";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { PasswordRequirements } from "@/components/ui/PasswordRequirements";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("auth.resetPassword");
   const tValidation = useTranslations("validation");
+  const { config } = useClientConfig();
 
   // Both come straight from the link in the password-reset email (see
   // AuthService.ForgotPasswordAsync) — never rendered back to the user, only forwarded as-is.
@@ -34,7 +37,7 @@ export default function ResetPasswordPage() {
     event.preventDefault();
     setFormError(null);
 
-    const result = createResetPasswordSchema(tValidation).safeParse(values);
+    const result = createResetPasswordSchema(tValidation, config.passwordPolicy).safeParse(values);
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
       setErrors({ newPassword: fieldErrors.newPassword?.[0], confirmPassword: fieldErrors.confirmPassword?.[0] });
@@ -83,7 +86,9 @@ export default function ResetPasswordPage() {
               value={values.newPassword}
               onChange={update("newPassword")}
               autoComplete="new-password"
+              aria-describedby="password-requirements"
             />
+            <PasswordRequirements id="password-requirements" password={values.newPassword} policy={config.passwordPolicy} />
           </FormField>
           <FormField label={t("confirmPassword")} htmlFor="confirmPassword" error={errors.confirmPassword}>
             <Input

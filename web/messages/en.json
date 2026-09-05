@@ -217,6 +217,17 @@
       "haveAccount": "Already have an account?",
       "loginLink": "Log in",
       "genericError": "Could not create account."
+    },
+    "passwordRules": {
+      "title": "Your password must contain:",
+      "minLength": "At least {min} characters",
+      "uppercase": "At least one uppercase letter (A-Z)",
+      "lowercase": "At least one lowercase letter (a-z)",
+      "digit": "At least one digit (0-9)",
+      "nonAlphanumeric": "At least one special character (e.g. ! ? _ -)",
+      "uniqueChars": "At least {count} different characters",
+      "met": "(met)",
+      "unmet": "(not met yet)"
     }
   },
   "dashboard": {
@@ -350,8 +361,8 @@
       "generate": "Generate Token",
       "generating": "Generating...",
       "generateError": "Could not generate the token.",
-      "limitReached": "You've reached the limit of 10 active tokens. Delete one before creating a new one.",
-      "newTokenWarning": "This token is shown only once and is valid for 90 days. Copy it now and paste it into the extension's settings.",
+      "limitReached": "You've reached the limit of {max} active tokens. Delete one before creating a new one.",
+      "newTokenWarning": "This token is shown only once and is valid for {days} days. Copy it now and paste it into the extension's settings.",
       "copy": "Copy",
       "copied": "Copied",
       "noTokens": "No tokens generated yet.",
@@ -501,7 +512,12 @@
     "emailRequired": "Email is required",
     "emailInvalid": "Enter a valid email",
     "passwordRequired": "Password is required",
-    "passwordMinLength": "Password must be at least 12 characters",
+    "passwordMinLength": "Password must be at least {min} characters",
+    "passwordUniqueChars": "Password must contain at least {count} different characters",
+    "passwordDigit": "Password must contain at least one digit (0-9)",
+    "passwordLowercase": "Password must contain at least one lowercase letter (a-z)",
+    "passwordUppercase": "Password must contain at least one uppercase letter (A-Z)",
+    "passwordNonAlphanumeric": "Password must contain at least one special character (e.g. ! ? _ -)",
     "passwordsDoNotMatch": "Passwords do not match",
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",

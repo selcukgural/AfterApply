@@ -14,6 +14,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://loca
 // Endpoints that must never get an Authorization header attached and must
 // never themselves trigger a refresh-on-401 retry (that would loop).
 const NO_AUTH_ENDPOINTS = [
+  "/api/config",
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/refresh",

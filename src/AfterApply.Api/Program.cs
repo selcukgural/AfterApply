@@ -57,7 +57,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddApiRateLimiting();
+builder.Services.AddApiRateLimiting(builder.Configuration);
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.Services.AddSignalR();
@@ -121,12 +121,13 @@ app.UseAuthorization();
 //
 // Leaving the middleware out is enough: endpoints keep their RequireRateLimiting metadata, and
 // routing does not check for an unhandled rate-limiting policy the way it does for authorization.
-if (app.Configuration.GetValue("RateLimiting:Enabled", true))
+if (app.Services.GetRequiredService<IOptions<RateLimitingOptions>>().Value.Enabled)
 {
     app.UseRateLimiter();
 }
 
 app.MapHealthChecks("/health");
+app.MapClientConfigEndpoints();
 app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapApplicationEndpoints();

@@ -7,17 +7,20 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 import { personalAccessTokensApi } from "@/lib/api/personalAccessTokens";
 import { ApiError } from "@/lib/api/httpClient";
+import { useClientConfig } from "@/hooks/useClientConfig";
 import type { CreatedPersonalAccessTokenResponse, PersonalAccessTokenResponse } from "@/types/api";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
-const MAX_ACTIVE_TOKENS = 10;
-
 export default function SettingsPage() {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
   const { deleteAccount } = useAuth();
+  // Token limits come from the server (GET /api/config), not a local copy — see settings messages.
+  const {
+    config: { personalAccessTokens: tokenLimits },
+  } = useClientConfig();
   const router = useRouter();
 
   const [isExporting, setIsExporting] = useState(false);
@@ -129,13 +132,17 @@ export default function SettingsPage() {
 
         {tokenError && <p className="mb-3 text-sm text-red-600 dark:text-red-400">{tokenError}</p>}
 
-        {tokens.length >= MAX_ACTIVE_TOKENS && (
-          <p className="mb-3 text-sm text-amber-700 dark:text-amber-400">{t("extension.limitReached")}</p>
+        {tokens.length >= tokenLimits.maxActiveTokens && (
+          <p className="mb-3 text-sm text-amber-700 dark:text-amber-400">
+            {t("extension.limitReached", { max: tokenLimits.maxActiveTokens })}
+          </p>
         )}
 
         {justCreatedToken && (
           <div className="mb-4 flex flex-col gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3">
-            <p className="text-sm text-amber-800 dark:text-amber-300">{t("extension.newTokenWarning")}</p>
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              {t("extension.newTokenWarning", { days: tokenLimits.lifetimeDays })}
+            </p>
             <div className="flex items-center gap-2">
               <code className="flex-1 overflow-x-auto rounded bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100">
                 {justCreatedToken.token}
@@ -158,7 +165,7 @@ export default function SettingsPage() {
               />
             </FormField>
           </div>
-          <Button variant="secondary" onClick={handleCreateToken} disabled={creatingToken || tokens.length >= MAX_ACTIVE_TOKENS}>
+          <Button variant="secondary" onClick={handleCreateToken} disabled={creatingToken || tokens.length >= tokenLimits.maxActiveTokens}>
             {creatingToken ? t("extension.generating") : t("extension.generate")}
           </Button>
         </div>

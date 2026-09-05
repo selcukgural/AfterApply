@@ -217,6 +217,17 @@
       "haveAccount": "Zaten hesabın var mı?",
       "loginLink": "Giriş yap",
       "genericError": "Kayıt oluşturulamadı."
+    },
+    "passwordRules": {
+      "title": "Şifreniz şunları içermeli:",
+      "minLength": "En az {min} karakter",
+      "uppercase": "En az bir büyük harf (A-Z)",
+      "lowercase": "En az bir küçük harf (a-z)",
+      "digit": "En az bir rakam (0-9)",
+      "nonAlphanumeric": "En az bir özel karakter (örn. ! ? _ -)",
+      "uniqueChars": "En az {count} farklı karakter",
+      "met": "(sağlandı)",
+      "unmet": "(henüz sağlanmadı)"
     }
   },
   "dashboard": {
@@ -350,8 +361,8 @@
       "generate": "Anahtar Üret",
       "generating": "Üretiliyor...",
       "generateError": "Anahtar üretilemedi.",
-      "limitReached": "En fazla 10 aktif anahtar oluşturabilirsiniz. Yeni bir anahtar oluşturmadan önce mevcuttan birini silmelisiniz.",
-      "newTokenWarning": "Bu anahtar yalnızca bir kez gösterilir ve 90 gün geçerlidir. Şimdi kopyalayıp eklentinin ayarlarına yapıştırın.",
+      "limitReached": "En fazla {max} aktif anahtar oluşturabilirsiniz. Yeni bir anahtar oluşturmadan önce mevcuttan birini silmelisiniz.",
+      "newTokenWarning": "Bu anahtar yalnızca bir kez gösterilir ve {days} gün geçerlidir. Şimdi kopyalayıp eklentinin ayarlarına yapıştırın.",
       "copy": "Kopyala",
       "copied": "Kopyalandı",
       "noTokens": "Henüz üretilmiş bir anahtar yok.",
@@ -501,7 +512,12 @@
     "emailRequired": "E-posta gerekli",
     "emailInvalid": "Geçerli bir e-posta girin",
     "passwordRequired": "Şifre gerekli",
-    "passwordMinLength": "Şifre en az 12 karakter olmalı",
+    "passwordMinLength": "Şifre en az {min} karakter olmalı",
+    "passwordUniqueChars": "Şifre en az {count} farklı karakter içermeli",
+    "passwordDigit": "Şifre en az bir rakam (0-9) içermeli",
+    "passwordLowercase": "Şifre en az bir küçük harf (a-z) içermeli",
+    "passwordUppercase": "Şifre en az bir büyük harf (A-Z) içermeli",
+    "passwordNonAlphanumeric": "Şifre en az bir özel karakter (örn. ! ? _ -) içermeli",
     "passwordsDoNotMatch": "Şifreler eşleşmiyor",
     "firstNameRequired": "Ad gerekli",
     "lastNameRequired": "Soyad gerekli",

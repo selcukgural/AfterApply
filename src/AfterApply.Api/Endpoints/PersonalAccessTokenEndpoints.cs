@@ -25,7 +25,7 @@ public static class PersonalAccessTokenEndpoints
                 Results.Ok(await service.CreateAsync(user.GetUserId(), request, cancellationToken)))
             .WithValidation<CreatePersonalAccessTokenRequest>()
             .WithSummary("Create a personal access token (for the browser extension)")
-            .WithDescription("Expires 90 days after creation. Scope defaults to Extension, which can only reach the " +
+            .WithDescription("Expires after the configured lifetime (PersonalAccessTokens:LifetimeDays, published by GET /api/config). Scope defaults to Extension, which can only reach the " +
                              "endpoints the browser extension actually calls; pass Full for a token with the same " +
                              "access as a browser session.")
             .Produces<CreatedPersonalAccessTokenResponse>();

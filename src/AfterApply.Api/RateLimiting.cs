@@ -2,18 +2,26 @@ using System.Globalization;
 using System.Threading.RateLimiting;
 using AfterApply.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace AfterApply.Api;
 
 public static class RateLimiting
 {
-    public static IServiceCollection AddApiRateLimiting(this IServiceCollection services)
+    public static IServiceCollection AddApiRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddRateLimiter(_ => { });
 
-        services.AddOptions<RateLimiterOptions>().Configure<IHostApplicationLifetime>((options, lifetime) =>
+        services.Configure<RateLimitingOptions>(configuration.GetSection(RateLimitingOptions.SectionName));
+
+        services.AddOptions<RateLimiterOptions>().Configure<IHostApplicationLifetime, IOptions<RateLimitingOptions>>((options, lifetime, limits) =>
         {
+            // Sizes come from the "RateLimiting" section (RateLimitingOptions holds the defaults) so
+            // a bucket can be retuned without a redeploy; the comments on each policy below explain
+            // the sizing, not the numbers.
+            var sizes = limits.Value;
+
             // ASP.NET Core's default rejection status is 503 — 429 is the conventional
             // status for rate limiting and what clients are expected to handle.
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -49,8 +57,8 @@ public static class RateLimiting
             var globalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 300,
-                    Window = TimeSpan.FromMinutes(1),
+                    PermitLimit = sizes.Global.PermitLimit,
+                    Window = sizes.Global.Window,
                     QueueLimit = 0
                 }));
             options.GlobalLimiter = globalLimiter;
@@ -76,8 +84,8 @@ public static class RateLimiting
                 var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
                 return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 5,
-                    Window = TimeSpan.FromMinutes(1),
+                    PermitLimit = sizes.Auth.PermitLimit,
+                    Window = sizes.Auth.Window,
                     QueueLimit = 0
                 });
             });
@@ -87,8 +95,8 @@ public static class RateLimiting
             options.AddPolicy(DependencyInjection.UploadRateLimitPolicy, httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 10,
-                    Window = TimeSpan.FromMinutes(5),
+                    PermitLimit = sizes.Upload.PermitLimit,
+                    Window = sizes.Upload.Window,
                     QueueLimit = 0
                 }));
 
@@ -99,21 +107,21 @@ public static class RateLimiting
             options.AddPolicy(DependencyInjection.ExtensionSignalRateLimitPolicy, httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 60,
-                    Window = TimeSpan.FromMinutes(5),
+                    PermitLimit = sizes.ExtensionSignal.PermitLimit,
+                    Window = sizes.ExtensionSignal.Window,
                     QueueLimit = 0
                 }));
 
             // Tighter than the global limit because this endpoint is the only one that makes an
             // outbound request to a third party (JobLinkPreviewService fetches the pasted URL from
-            // linkedin.com/kariyer.net). Left at the global 300/min it would let one account point
+            // linkedin.com/kariyer.net). Left at the global limit it would let one account point
             // a few hundred requests a minute at someone else's servers over our IP — the kind of
             // amplification that gets an egress address blocked. A human pastes one link at a time.
             options.AddPolicy(DependencyInjection.LinkPreviewRateLimitPolicy, httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 20,
-                    Window = TimeSpan.FromMinutes(5),
+                    PermitLimit = sizes.LinkPreview.PermitLimit,
+                    Window = sizes.LinkPreview.Window,
                     QueueLimit = 0
                 }));
         });

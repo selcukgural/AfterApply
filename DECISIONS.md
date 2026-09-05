@@ -2752,6 +2752,66 @@ olarak patlar, sessizce yanlış çıktı üretmez.
 
 ---
 
+## Hesap güvenliği ve limit değerleri koddan appsettings'e taşındı; şifre kuralları FE'de önceden gösteriliyor (2026-09-05)
+
+**Bağlam:** Kullanıcı `options.Password.RequiredLength = 12` gibi hardcoded politika değerlerinin
+her değişiklikte yeniden publish gerektirdiğini işaret etti; ayrıca kayıt olurken kullanıcının
+kuralları tek tek reddedilen denemelerle öğrenmek zorunda kalmaması gerektiğini istedi. Tarama
+aynı örüntüdeki başka yerleri de buldu: hesap kilitleme (5 deneme / 15 dk), şifre sıfırlama link
+süresi (30 dk), eklenti anahtarı limiti (**10 aktif / 90 gün** — BE'de `const`, FE'de ayrı bir
+`MAX_ACTIVE_TOKENS = 10`, resx'te ve tr/en mesajlarda da "10" ve "90" olarak elle yazılmış, yani
+aynı sayı dört yerde kopyalanmış) ve rate-limit kova boyutları.
+
+**Karar — konfigürasyon:**
+- `Identity` bölümü → `IdentityPolicyOptions` (Password.*, Lockout.*, PasswordResetTokenMinutes).
+  `IdentityOptions` ikinci bir `IConfigureOptions` ile bu bölümden dolduruluyor; kod tarafındaki
+  varsayılanlar eski hardcoded değerlerin aynısı, dolayısıyla bölüm eksik olsa bile Identity'nin
+  zayıf 6 karakter varsayılanına **düşülmüyor**.
+- `PersonalAccessTokens` bölümü → `PersonalAccessTokenOptions` (MaxActiveTokens, LifetimeDays).
+- `RateLimiting` bölümü → `RateLimitingOptions` (zaten var olan `Enabled` + beş kovanın
+  PermitLimit/WindowSeconds değerleri).
+- `CodedException` artık biçim argümanı taşıyor; `DomainExceptionHandler` bunları resx metnine
+  (`{0}`) yerleştiriyor. Böylece "En fazla 10 anahtar" metni limiti konfigürasyondan alıyor.
+
+**Karar — istemciye yayın:** Anonim `GET /api/config` şifre politikasını ve anahtar limitlerini
+döndürüyor. Şifre kuralları `IdentityPolicyOptions`'tan değil, doğrudan `IOptions<IdentityOptions>`'tan
+okunuyor — `PasswordValidator`'ın gerçekten uyguladığı nesne bu, dolayısıyla FE'nin gösterdiğiyle
+sunucunun reddettiği tanım gereği aynı. Auth rate-limit politikasına **bilinçli olarak alınmadı**:
+o kova IP başına 5/dk ve formun kendi kurallarını çekmesi kullanıcının 5 kayıt denemesinden birini
+yerdi. `Cache-Control: public, max-age=300`.
+
+**Karar — FE:** `useClientConfig()` (React Query, 5 dk stale) + `DEFAULT_CLIENT_CONFIG` (appsettings
+varsayılanlarının aynası; istek gelmeden/başarısız olursa form yine çalışır, sunucu zaten yeniden
+doğrular). `createPasswordSchema(policy, t)` zod şemasını politikadan üretir; kayıt ve şifre
+sıfırlama formlarında `PasswordRequirements` bileşeni tüm kuralları **yazmaya başlamadan önce**
+listeler ve yazarken canlı işaretler. Karakter sınıfları Identity'nin `PasswordValidator`'ı gibi
+**ASCII** (a-z / A-Z / 0-9, gerisi "özel karakter") — "ş" özel karakter sayılır, küçük harf
+sayılmaz; tuhaf ama sunucuyla birebir uyum bu dosyanın tek amacı, etiketlerde "(a-z)" / "(A-Z)"
+bu yüzden yazılı. Ayarlar sayfası anahtar limitini ve süresini `{max}` / `{days}` ile sunucudan
+alıyor; `MAX_ACTIVE_TOKENS` sabiti silindi.
+
+**Kapsam dışı bırakılanlar (bilinçli):** Cache süreleri, HTTP timeout'ları, redirect hop sayıları,
+eklenti sinyal validator sabitleri — bunlar kullanıcıya uyarı üretmeyen iç protokol/performans
+sabitleri, "değişince publish gerektirir" sınıfına girse de ürün kararı değil. Yardım/SSS
+sayfalarındaki düzyazı ("en fazla 10 anahtar", "90 gün") server component'lerde statik metin olarak
+kaldı; limit değişirse bu iki metin elle güncellenmeli. Şifre sıfırlama e-postasındaki "30 dakika"
+cümlesi DB'deki `EmailTemplates` satırında — zaten deploy'suz düzenlenebilir, `PasswordResetTokenMinutes`
+değişirse onunla birlikte güncellenmeli.
+
+**Deploy notu:** `appsettings.json` imajın içinde; dosyayı değiştirmek yine deploy ister. Deploy'suz
+değişiklik yolu Cloud Run ortam değişkeni: `Identity__Password__RequiredLength=14`,
+`PersonalAccessTokens__MaxActiveTokens=5`, `RateLimiting__Auth__PermitLimit=10` vb.
+(`gcloud run services update afterapply-api --update-env-vars ...`).
+
+**Doğrulama:** `ClientConfigTests` (3 test): varsayılanlar eski değerler; `UseSetting` ile
+RequiredLength=20 / RequireNonAlphanumeric=false / MaxActiveTokens=3 / LifetimeDays=7 override'ı hem
+`/api/config`'te yayınlanıyor hem kayıt ve anahtar oluşturmada uygulanıyor, hata metninde `{0}`
+sızmıyor. İlgili identity suite'i ile birlikte 26/26, unit 192/192. Tarayıcıda
+`/tr/register`: "Deneme123" yazılırken liste canlı güncellendi (uzunluk ve özel karakter eksik,
+diğer dördü sağlandı).
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

@@ -74,6 +74,8 @@ public static class DependencyInjection
         }
 
         services.Configure<ImportOptions>(configuration.GetSection("Imports"));
+        services.Configure<IdentityPolicyOptions>(configuration.GetSection(IdentityPolicyOptions.SectionName));
+        services.Configure<PersonalAccessTokenOptions>(configuration.GetSection(PersonalAccessTokenOptions.SectionName));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
         services.Configure<EmailAutoApprovalOptions>(configuration.GetSection("EmailAutoApproval"));
@@ -160,42 +162,48 @@ public static class DependencyInjection
 
         services.AddSingleton(Options.Create(jwtOptions));
 
-        services.AddIdentityCore<ApplicationUser>(options =>
-            {
-                options.User.RequireUniqueEmail = true;
-
-                // Identity's default is 6 characters, which is below anything ASVS would accept and
-                // was also *below what the client already asked for* (the register/reset forms have
-                // enforced 8 since Sprint 2) — so the server was the weaker of the two checks. 12 is
-                // the ASVS L2 recommendation; the complexity flags below are Identity's defaults,
-                // restated explicitly because they're a security decision, not an incidental one.
-                // Only new/changed passwords are affected: sign-in never re-evaluates the policy, so
-                // existing accounts keep working.
-                options.Password.RequiredLength = 12;
-                options.Password.RequiredUniqueChars = 4;
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = true;
-                options.Password.RequireNonAlphanumeric = true;
-
-                // Also Identity's defaults, restated for the same reason: this is what actually
-                // bounds per-account password guessing, and it's the control the IP-based auth rate
-                // limiter can't provide on its own (an attacker spread across many IPs still hits
-                // this). Lockout applies from the first failure because CreateAsync sets
-                // LockoutEnabled from Lockout.AllowedForNewUsers, which defaults to true.
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-                options.Lockout.AllowedForNewUsers = true;
-            })
+        services.AddIdentityCore<ApplicationUser>(options => options.User.RequireUniqueEmail = true)
             .AddSignInManager<SignInManager<ApplicationUser>>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
             .AddErrorDescriber<LocalizedIdentityErrorDescriber>();
 
+        // The password/lockout policy comes from the "Identity" configuration section (see
+        // IdentityPolicyOptions for the defaults and their rationale) so that tightening it is a
+        // config change, not a redeploy. Registered as a second IConfigureOptions<IdentityOptions>
+        // rather than inside the AddIdentityCore lambda because it needs the bound options, and it
+        // runs after Identity's own defaults so it always wins. GET /api/config republishes the
+        // resulting IdentityOptions.Password — the exact object PasswordValidator enforces — so the
+        // web app and the server can never disagree about the rules.
+        //
+        // Only new/changed passwords are affected: sign-in never re-evaluates the policy, so
+        // existing accounts keep working after a change.
+        //
+        // Lockout is what actually bounds per-account password guessing — the control the IP-based
+        // auth rate limiter can't provide on its own (an attacker spread across many IPs still hits
+        // this). It applies from the first failure because CreateAsync sets LockoutEnabled from
+        // Lockout.AllowedForNewUsers.
+        services.AddOptions<IdentityOptions>().Configure<IOptions<IdentityPolicyOptions>>((options, policy) =>
+        {
+            var password = policy.Value.Password;
+            options.Password.RequiredLength = password.RequiredLength;
+            options.Password.RequiredUniqueChars = password.RequiredUniqueChars;
+            options.Password.RequireDigit = password.RequireDigit;
+            options.Password.RequireLowercase = password.RequireLowercase;
+            options.Password.RequireUppercase = password.RequireUppercase;
+            options.Password.RequireNonAlphanumeric = password.RequireNonAlphanumeric;
+
+            var lockout = policy.Value.Lockout;
+            options.Lockout.MaxFailedAccessAttempts = lockout.MaxFailedAccessAttempts;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(lockout.LockoutMinutes);
+            options.Lockout.AllowedForNewUsers = true;
+        });
+
         // Default token lifespan is 1 day — too long for a password-reset link. Shared by every
         // "Default"-purpose token provider (there's no separate email-confirmation flow today to
         // conflict with).
-        services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromMinutes(30));
+        services.AddOptions<DataProtectionTokenProviderOptions>().Configure<IOptions<IdentityPolicyOptions>>(
+            (options, policy) => options.TokenLifespan = TimeSpan.FromMinutes(policy.Value.PasswordResetTokenMinutes));
 
         // Both the web app's JWT access token and the browser extension's PAT (Sprint 9) arrive
         // as a plain `Authorization: Bearer <value>` header — this policy scheme is the default
