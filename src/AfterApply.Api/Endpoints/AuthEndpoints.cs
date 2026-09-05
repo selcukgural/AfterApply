@@ -3,7 +3,9 @@ using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Localization;
 using AfterApply.Infrastructure;
+using AfterApply.Infrastructure.Identity;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -42,6 +44,67 @@ public static class AuthEndpoints
             .WithSummary("Log in with email and password")
             .Produces<AuthResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        // Both Google routes answer 404 while GoogleAuth:ClientId/ClientSecret are unset — the same
+        // "feature not deployed here" shape CompanyIntelligence uses — so a stale client can't reach
+        // a half-configured flow. GET /api/config tells the web app the same thing up front.
+        group.MapPost("/google", async (GoogleSignInRequest request, IAuthService authService,
+                IOptions<GoogleAuthOptions> googleAuth, IStringLocalizer<SharedStrings> localizer,
+                HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                if (!googleAuth.Value.IsConfigured)
+                {
+                    return Results.NotFound();
+                }
+
+                var result = await authService.GoogleSignInAsync(request, GetIpAddress(httpContext), cancellationToken);
+                return result.Succeeded
+                    ? Results.Ok(result.Response)
+                    : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
+            })
+            .WithValidation<GoogleSignInRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Sign in with Google (authorization code + PKCE)")
+            .WithDescription("Exchanges the authorization code Google redirected back with. Returns either `auth` " +
+                              "(the same access/refresh token pair as Login — the Google account was already linked, or " +
+                              "its verified email matched an existing account and was linked now) or `pendingSignup` " +
+                              "(no account yet: show the complete-your-sign-up form and POST /google/signup). " +
+                              "404 when Sign in with Google is not configured on this deployment.")
+            .Produces<GoogleSignInResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        group.MapPost("/google/signup", async (GoogleSignupRequest request, IAuthService authService,
+                IOptions<GoogleAuthOptions> googleAuth, IStringLocalizer<SharedStrings> localizer,
+                HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                if (!googleAuth.Value.IsConfigured)
+                {
+                    return Results.NotFound();
+                }
+
+                var result = await authService.CompleteGoogleSignupAsync(request, GetIpAddress(httpContext), cancellationToken);
+                if (result.Succeeded)
+                {
+                    return Results.Created("/api/users/me", result.Response);
+                }
+
+                // Either the one bare code (expired/tampered signup token) or Identity's already
+                // localized descriptions — same split RegisterAsync/LoginAsync document.
+                var errors = result.Errors.Select(e => e == "AUTH_GOOGLE_SIGNUP_EXPIRED" ? (string)localizer[e] : e).ToArray();
+                return Results.ValidationProblem(new Dictionary<string, string[]> { ["error"] = errors });
+            })
+            .WithValidation<GoogleSignupRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Create the account for a new Google sign-in")
+            .WithDescription("Second step after /google returned `pendingSignup`: creates the account under the Google " +
+                              "identity carried by `signupToken` (valid 10 minutes) with the names and privacy consent the " +
+                              "user confirmed, and returns the token pair like Register. An expired or tampered signup token " +
+                              "is a 400 validation problem. 404 when Sign in with Google is not configured.")
+            .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("/refresh", async (RefreshRequest request, IAuthService authService,

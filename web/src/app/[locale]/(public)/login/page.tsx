@@ -3,14 +3,15 @@
 import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { routing } from "@/i18n/routing";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { postAuthLocale } from "@/lib/auth/postAuthRedirect";
 import { applyTheme, type Theme } from "@/lib/theme/theme";
 import { createLoginSchema } from "@/lib/validation/loginSchema";
 import { ApiError } from "@/lib/api/httpClient";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -43,13 +44,10 @@ export default function LoginPage() {
       // preference below — the account's saved value wins on login,
       // regardless of which device/browser the user is signing in from.
       applyTheme(auth.user.preferredTheme as Theme);
-      // Applies the account's saved language preference right after login,
-      // regardless of which device/browser the user is signing in from —
-      // until they explicitly switch again via the language switcher.
-      const preferredLanguage = auth.user.preferredLanguage;
-      const supportedLocales: readonly string[] = routing.locales;
-      if (supportedLocales.includes(preferredLanguage) && preferredLanguage !== locale) {
-        router.push("/dashboard", { locale: preferredLanguage as (typeof routing.locales)[number] });
+      // Applies the account's saved language preference right after login — see postAuthLocale.
+      const nextLocale = postAuthLocale(auth, locale);
+      if (nextLocale) {
+        router.push("/dashboard", { locale: nextLocale });
       } else {
         router.push("/dashboard");
       }
@@ -94,6 +92,7 @@ export default function LoginPage() {
             {isSubmitting ? t("submitting") : t("submit")}
           </Button>
         </form>
+        <GoogleSignInButton />
         <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
           {t("noAccount")}{" "}
           <Link href="/register" className="text-blue-600 hover:underline dark:text-blue-400">

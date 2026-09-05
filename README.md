@@ -209,8 +209,15 @@ path above), a walkthrough of the main flows:
 6. **Privacy page**: `/privacy` — static page, linked from the register
    consent checkbox.
 7. **Settings**: `/settings` (requires login) — account data export
-   (download), account deletion (asks for password), and the "Mail
+   (download), account deletion (asks for password — not for an account
+   created with Google, which has none), and the "Mail
    Forwarding" card (behind `EmailForwarding:Enabled`, off by default).
+8. **Sign in with Google** (only once `GoogleAuth:ClientId`/`ClientSecret`
+   are set, see "Google Sign-In Setup" below): the "Continue with Google"
+   button on `/login` and `/register` — a Google account new to the app
+   lands on a "complete your sign-up" step (name + privacy consent) before
+   the account exists; one whose verified email matches an existing account
+   is linked to it and signed straight in.
 
 For API-only smoke testing without the frontend, see the `curl` examples
 under "Trying the API" above, plus `GET /health` and (Development only)
@@ -256,6 +263,35 @@ No automated test calls the real OpenAI API (see `DECISIONS.md` — the
 persist/cache logic is tested against a fake `IJobMatchingProvider`
 instead); once a real key is in place, set a CV in `/settings` and compute
 a match from an application's detail page as a manual smoke test.
+
+## Google Sign-In Setup
+
+"Continue with Google" on the login/register pages is an authorization-code + PKCE flow driven by
+a plain redirect to `accounts.google.com` (no Google script on the page, so the web app's CSP is
+untouched). The API exchanges the code server-side (`GoogleAuthClient`) and only reads the ID token —
+scopes are `openid email profile`, nothing that needs Google's app verification. Like OpenAI/Resend,
+the feature is **inert until configured**: with `GoogleAuth:ClientId`/`ClientSecret` unset,
+`GET /api/config` reports it disabled, the button is not rendered and `/api/auth/google*` answer 404.
+
+1. In Google Cloud Console → APIs & Services → Credentials → Create credentials → **OAuth client ID**,
+   type **Web application**. Authorized redirect URIs must contain, for every environment the client
+   serves (exact match, one per locale):
+   - `http://localhost:3000/tr/auth/google/callback` and `http://localhost:3000/en/auth/google/callback`
+   - `<WEB_ORIGIN>/tr/auth/google/callback` and `<WEB_ORIGIN>/en/auth/google/callback` for prod
+   The OAuth consent screen needs only the non-sensitive `openid`/`email`/`profile` scopes; publish it
+   ("In production") before real users can sign in, otherwise only the test users listed there can.
+2. Set the two values locally via user-secrets:
+   ```bash
+   dotnet user-secrets set "GoogleAuth:ClientId" "<client id>.apps.googleusercontent.com" --project src/AfterApply.Api
+   dotnet user-secrets set "GoogleAuth:ClientSecret" "<client secret>" --project src/AfterApply.Api
+   ```
+   For the container/prod profile use `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (see
+   `.env.prod.example` and `DEPLOYMENT.md`).
+
+`App:WebBaseUrl` must be the origin the redirect URI is under — the API refuses a redirect URI on any
+other origin before ever calling Google. No automated test calls Google; `GoogleSignInTests` runs the
+whole flow against a fake `IGoogleAuthClient`, and `GoogleIdTokenReaderTests`/`GoogleSignupTokenTests`
+pin the token checks.
 
 ## Browser Extension Setup
 

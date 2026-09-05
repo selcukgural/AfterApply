@@ -229,6 +229,28 @@
       "uniqueChars": "En az {count} farklı karakter",
       "met": "(sağlandı)",
       "unmet": "(henüz sağlanmadı)"
+    },
+    "google": {
+      "continueWith": "Google ile devam et",
+      "or": "veya",
+      "callback": {
+        "title": "Google ile giriş",
+        "working": "Google hesabınız doğrulanıyor...",
+        "cancelled": "Google girişi iptal edildi.",
+        "invalidState": "Giriş oturumu doğrulanamadı. Lütfen tekrar deneyin.",
+        "genericError": "Google ile giriş yapılamadı.",
+        "backToLogin": "Giriş sayfasına dön"
+      },
+      "completeSignup": {
+        "title": "Kaydı Tamamla",
+        "description": "Google hesabınızla e-kariyerim'de yeni bir hesap oluşturulacak. Bilgilerinizi kontrol edip gizlilik politikasını onaylayın.",
+        "email": "E-posta",
+        "firstName": "Ad",
+        "lastName": "Soyad",
+        "submit": "Hesabı Oluştur",
+        "submitting": "Hesap oluşturuluyor...",
+        "genericError": "Hesap oluşturulamadı."
+      }
     }
   },
   "dashboard": {
@@ -384,7 +406,8 @@
       "confirmMismatch": "Onaylamak için kutuya \"SİL\" yazın.",
       "submit": "Hesabımı Kalıcı Olarak Sil",
       "deleting": "Siliniyor...",
-      "genericError": "Hesap silinemedi."
+      "genericError": "Hesap silinemedi.",
+      "noPasswordHint": "Bu hesap Google ile açıldı ve şifresi yok. Silmek için aşağıya onay kelimesini yazmanız yeterli."
     }
   },
   "emailSuggestions": {

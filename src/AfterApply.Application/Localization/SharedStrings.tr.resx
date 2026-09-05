@@ -26,6 +26,15 @@
   <data name="AUTH_INVALID_REFRESH_TOKEN" xml:space="preserve">
     <value>Geçersiz oturum yenileme jetonu.</value>
   </data>
+  <data name="AUTH_GOOGLE_FAILED" xml:space="preserve">
+    <value>Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.</value>
+  </data>
+  <data name="AUTH_GOOGLE_EMAIL_NOT_VERIFIED" xml:space="preserve">
+    <value>Google hesabınızın e-posta adresi doğrulanmamış; bu adresle giriş yapılamaz.</value>
+  </data>
+  <data name="AUTH_GOOGLE_SIGNUP_EXPIRED" xml:space="preserve">
+    <value>Google kayıt oturumunuzun süresi doldu. Lütfen Google ile tekrar giriş yapın.</value>
+  </data>
   <data name="AUTH_WRONG_PASSWORD" xml:space="preserve">
     <value>Şifre hatalı.</value>
   </data>

@@ -1,4 +1,4 @@
-import type { AuthResponse, UserProfileResponse } from "@/types/api";
+import type { AuthResponse, GoogleSignInResponse, UserProfileResponse } from "@/types/api";
 import { API_BASE_URL, apiFetch } from "./httpClient";
 import { authStore } from "./authStore";
 
@@ -21,7 +21,23 @@ export interface UpdateProfileRequest {
 }
 
 export interface DeleteAccountRequest {
-  password: string;
+  // Omitted for an account without a password (user.hasPassword === false).
+  password?: string;
+}
+
+// What the Google callback page posts once accounts.google.com redirected back (see
+// lib/auth/googleOAuth.ts for where code/codeVerifier/redirectUri come from).
+export interface GoogleSignInRequest {
+  code: string;
+  codeVerifier: string;
+  redirectUri: string;
+}
+
+export interface GoogleSignupRequest {
+  signupToken: string;
+  firstName: string;
+  lastName: string;
+  consentAccepted: boolean;
 }
 
 export interface ForgotPasswordRequest {
@@ -43,6 +59,18 @@ export const authApi = {
 
   login: (request: LoginRequest) =>
     apiFetch<AuthResponse>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  googleSignIn: (request: GoogleSignInRequest) =>
+    apiFetch<GoogleSignInResponse>("/api/auth/google", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  googleSignup: (request: GoogleSignupRequest) =>
+    apiFetch<AuthResponse>("/api/auth/google/signup", {
       method: "POST",
       body: JSON.stringify(request),
     }),

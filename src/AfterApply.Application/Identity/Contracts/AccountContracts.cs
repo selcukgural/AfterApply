@@ -4,7 +4,10 @@ using AfterApply.Domain.Notifications;
 
 namespace AfterApply.Application.Identity.Contracts;
 
-public sealed record DeleteAccountRequest(string Password);
+/// <summary>Password is required to match only for accounts that have one. An account created
+/// through Google sign-in has no password hash, so the client omits it (see
+/// IAuthService.DeleteAccountAsync).</summary>
+public sealed record DeleteAccountRequest(string? Password);
 
 public sealed record ApplicationEventExportItem(ApplicationEventType Type, DateTimeOffset OccurredAt, Source Source, string? Metadata);
 

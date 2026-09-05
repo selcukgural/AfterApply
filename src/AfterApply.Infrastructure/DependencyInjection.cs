@@ -284,6 +284,11 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IPersonalAccessTokenService, PersonalAccessTokenService>();
 
+        // Sign in with Google. Inert (button hidden, endpoints 404) until GoogleAuth:ClientId and
+        // GoogleAuth:ClientSecret are both set — see GoogleAuthOptions.
+        services.Configure<GoogleAuthOptions>(configuration.GetSection(GoogleAuthOptions.SectionName));
+        services.AddHttpClient<IGoogleAuthClient, GoogleAuthClient>(client => client.Timeout = TimeSpan.FromSeconds(10));
+
         return services;
     }
 

@@ -37,6 +37,11 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
             builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // The test host runs as Development and therefore loads the developer's user-secrets,
+            // where a real GoogleAuth client id/secret may well be set (it is on the machine this
+            // was written on). Clear them so "not configured" means exactly that, everywhere.
+            builder.UseSetting("GoogleAuth:ClientId", "");
+            builder.UseSetting("GoogleAuth:ClientSecret", "");
         });
 
         _overriddenFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -73,10 +78,15 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Headers.CacheControl!.Public.ShouldBeTrue();
+        // Public cache + CORS must vary on Origin, or an address-bar visit poisons the cache for
+        // the web app's cross-origin fetch — see ClientConfigEndpoints.
+        response.Headers.Vary.ShouldContain("Origin");
         var config = await response.Content.ReadFromJsonAsync<ClientConfigResponse>(JsonOptions);
         config.ShouldNotBeNull();
         config.PasswordPolicy.ShouldBe(new PasswordPolicyResponse(12, 4, true, true, true, true));
         config.PersonalAccessTokens.ShouldBe(new PersonalAccessTokenLimitsResponse(10, 90));
+        // No GoogleAuth section set: the feature is reported off and no client id leaks out.
+        config.GoogleAuth.ShouldBe(new GoogleAuthConfigResponse(false, null));
     }
 
     [Fact]

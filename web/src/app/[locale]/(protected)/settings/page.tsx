@@ -16,7 +16,10 @@ import { Button } from "@/components/ui/Button";
 export default function SettingsPage() {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
-  const { deleteAccount } = useAuth();
+  const { user, deleteAccount } = useAuth();
+  // An account created with Sign in with Google has no password to re-enter; the server skips
+  // the check for those (see IAuthService.DeleteAccountAsync), so the field is hidden too.
+  const hasPassword = user?.hasPassword ?? true;
   // Token limits come from the server (GET /api/config), not a local copy — see settings messages.
   const {
     config: { personalAccessTokens: tokenLimits },
@@ -105,7 +108,7 @@ export default function SettingsPage() {
 
     setIsDeleting(true);
     try {
-      await deleteAccount(password);
+      await deleteAccount(hasPassword ? password : undefined);
       router.replace("/login");
     } catch (error) {
       setDeleteError(error instanceof ApiError ? error.message : t("delete.genericError"));
@@ -204,15 +207,19 @@ export default function SettingsPage() {
         <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("delete.title")}</h2>
         <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("delete.description")}</p>
         <form onSubmit={handleDelete} className="flex flex-col gap-4">
-          <FormField label={t("delete.passwordLabel")} htmlFor="delete-password">
-            <Input
-              id="delete-password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </FormField>
+          {hasPassword ? (
+            <FormField label={t("delete.passwordLabel")} htmlFor="delete-password">
+              <Input
+                id="delete-password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </FormField>
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t("delete.noPasswordHint")}</p>
+          )}
           <FormField label={t("delete.confirmLabel")} htmlFor="delete-confirmation">
             <Input
               id="delete-confirmation"

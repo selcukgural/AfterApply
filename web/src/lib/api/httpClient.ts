@@ -17,6 +17,7 @@ const NO_AUTH_ENDPOINTS = [
   "/api/config",
   "/api/auth/login",
   "/api/auth/register",
+  "/api/auth/google",
   "/api/auth/refresh",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",

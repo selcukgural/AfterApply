@@ -229,6 +229,28 @@
       "uniqueChars": "At least {count} different characters",
       "met": "(met)",
       "unmet": "(not met yet)"
+    },
+    "google": {
+      "continueWith": "Continue with Google",
+      "or": "or",
+      "callback": {
+        "title": "Signing in with Google",
+        "working": "Verifying your Google account...",
+        "cancelled": "Google sign-in was cancelled.",
+        "invalidState": "The sign-in session could not be verified. Please try again.",
+        "genericError": "Could not sign in with Google.",
+        "backToLogin": "Back to login"
+      },
+      "completeSignup": {
+        "title": "Complete Your Sign-Up",
+        "description": "A new e-kariyerim account will be created for your Google account. Check your details and accept the privacy policy.",
+        "email": "Email",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "submit": "Create Account",
+        "submitting": "Creating account...",
+        "genericError": "Could not create account."
+      }
     }
   },
   "dashboard": {
@@ -384,7 +406,8 @@
       "confirmMismatch": "Type \"DELETE\" in the box to confirm.",
       "submit": "Permanently Delete My Account",
       "deleting": "Deleting...",
-      "genericError": "Could not delete account."
+      "genericError": "Could not delete account.",
+      "noPasswordHint": "This account was created with Google and has no password. Type the confirmation word below to delete it."
     }
   },
   "emailSuggestions": {

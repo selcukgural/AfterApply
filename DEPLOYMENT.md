@@ -207,6 +207,13 @@ printf '%s' "<openai-api-key-veya-REPLACE_WITH_OPENAI_API_KEY>" | gcloud secrets
 # Forgot-password email (Resend, resend.com) — sending domain mail.ekariyerim.com must be
 # verified in the Resend dashboard first (SPF/DKIM records added to Cloudflare DNS).
 printf '%s' "<resend-api-key-veya-REPLACE_WITH_RESEND_API_KEY>" | gcloud secrets create afterapply-resend-api-key --data-file=-
+# Sign in with Google — an OAuth 2.0 client (type "Web application") from this project's
+# APIs & Services -> Credentials, with <web-origin>/tr/auth/google/callback and /en/... as
+# authorized redirect URIs (see README.md "Google Sign-In Setup"). Both secrets must EXIST for
+# deploy.yml's --set-secrets to succeed; leave the values empty and the feature simply stays
+# off (button hidden, /api/auth/google* answer 404) until real values are added.
+printf '%s' "<google-oauth-client-id-veya-bos>" | gcloud secrets create afterapply-google-client-id --data-file=-
+printf '%s' "<google-oauth-client-secret-veya-bos>" | gcloud secrets create afterapply-google-client-secret --data-file=-
 # Placeholder — the real web Cloud Run URL isn't known until step 4's
 # deploy-web run; step 4 shows how to update this in place afterward. Also used as
 # App:WebBaseUrl (see deploy.yml) — same value, used to build links in outbound email.
@@ -215,6 +222,7 @@ printf '%s' "https://REPLACE-ONCE-DEPLOYED" | gcloud secrets create afterapply-w
 for s in afterapply-postgres-connection afterapply-redis-connection \
          afterapply-jwt-signing-key afterapply-sentry-dsn afterapply-openai-api-key \
          afterapply-resend-api-key \
+         afterapply-google-client-id afterapply-google-client-secret \
          afterapply-web-origin; do
   gcloud secrets add-iam-policy-binding "$s" \
     --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"

@@ -17,6 +17,7 @@ internal sealed class AuthService(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
     ITokenService tokenService,
+    IGoogleAuthClient googleAuthClient,
     AppDbContext dbContext,
     IOptions<JwtOptions> jwtOptions,
     IOptions<AppOptions> appOptions,
@@ -123,6 +124,152 @@ internal sealed class AuthService(
             await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
+
+    public async Task<GoogleSignInResult> GoogleSignInAsync(GoogleSignInRequest request, string? ipAddress, CancellationToken cancellationToken)
+    {
+        // Google itself refuses a redirect_uri that isn't registered on the OAuth client, so this
+        // is belt-and-braces: it keeps a caller from making us exchange a code that was minted for
+        // some other site's callback, and it fails before the round-trip rather than after.
+        if (!IsOurWebOrigin(request.RedirectUri))
+        {
+            logger.LogWarning("Google sign-in rejected: redirect URI {RedirectUri} is not under App:WebBaseUrl", request.RedirectUri);
+            return GoogleSignInResult.Failure("AUTH_GOOGLE_FAILED");
+        }
+
+        var identity = await googleAuthClient.ExchangeCodeAsync(request.Code, request.CodeVerifier, request.RedirectUri, cancellationToken);
+        if (identity is null)
+        {
+            return GoogleSignInResult.Failure("AUTH_GOOGLE_FAILED");
+        }
+
+        // The email is what links a Google identity to an existing account (and what a new account
+        // is created under), so an address Google hasn't verified must not get either — it would let
+        // anyone claim a Workspace/legacy Google account under someone else's address.
+        if (!identity.EmailVerified)
+        {
+            return GoogleSignInResult.Failure("AUTH_GOOGLE_EMAIL_NOT_VERIFIED");
+        }
+
+        var user = await FindOrLinkGoogleUserAsync(identity);
+        if (user is not null)
+        {
+            return GoogleSignInResult.SignedIn(await IssueTokensAsync(user, ipAddress, cancellationToken));
+        }
+
+        // New to us: no account yet. The privacy-policy consent a password sign-up collects on its
+        // form has to be collected here too, and the code is already spent, so hand the client a
+        // signed carrier for the verified identity to bring back with the consent.
+        var signupToken = tokenService.CreateGoogleSignupToken(identity);
+        return GoogleSignInResult.SignupRequired(new GoogleSignupPrefill(
+            signupToken, identity.Email, identity.GivenName ?? string.Empty, identity.FamilyName ?? string.Empty));
+    }
+
+    public async Task<AuthResult> CompleteGoogleSignupAsync(GoogleSignupRequest request, string? ipAddress, CancellationToken cancellationToken)
+    {
+        var identity = tokenService.ValidateGoogleSignupToken(request.SignupToken);
+        if (identity is null || !identity.EmailVerified)
+        {
+            return AuthResult.Failure("AUTH_GOOGLE_SIGNUP_EXPIRED");
+        }
+
+        // Replay or a race with another tab: the account exists now, so behave like a sign-in.
+        var existing = await FindOrLinkGoogleUserAsync(identity);
+        if (existing is not null)
+        {
+            return AuthResult.Success(await IssueTokensAsync(existing, ipAddress, cancellationToken));
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = identity.Email,
+            Email = identity.Email,
+            // Google vouched for the address — the one thing a password sign-up can't say yet
+            // (see DECISIONS.md "E-posta doğrulaması bilinçli olarak ertelendi").
+            EmailConfirmed = true,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ConsentAcceptedAt = DateTimeOffset.UtcNow,
+            PreferredLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
+        };
+
+        // UserManager shares AppDbContext, so one transaction covers both the user row and its
+        // login row — an account must never exist without the Google link that created it, or the
+        // next Google sign-in would take the by-email path and "link" it a second time.
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        var created = await userManager.CreateAsync(user);
+        if (!created.Succeeded)
+        {
+            return AuthResult.Failure(created.Errors.Select(e => e.Description).ToArray());
+        }
+
+        var linked = await userManager.AddLoginAsync(user, GoogleLogin(identity));
+        if (!linked.Succeeded)
+        {
+            return AuthResult.Failure(linked.Errors.Select(e => e.Description).ToArray());
+        }
+
+        var response = await IssueTokensAsync(user, ipAddress, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        logger.LogInformation("User {UserId} registered via Google sign-in", user.Id);
+        return AuthResult.Success(response);
+    }
+
+    /// <summary>The account for a Google identity, if there is one: by the stored Google subject first,
+    /// then by verified email — in which case the Google login is attached to that account on the way
+    /// out, so the next sign-in hits the first branch. Null means "no account yet".</summary>
+    private async Task<ApplicationUser?> FindOrLinkGoogleUserAsync(GoogleIdentity identity)
+    {
+        var user = await userManager.FindByLoginAsync(GoogleAuthOptions.LoginProvider, identity.Subject);
+        if (user is not null)
+        {
+            return user;
+        }
+
+        user = await userManager.FindByEmailAsync(identity.Email);
+        if (user is null)
+        {
+            return null;
+        }
+
+        // Auto-link on a verified email (DECISIONS.md, 2026-09-05). Password sign-ups never verified
+        // their address; Google just did, so record that too.
+        var linked = await userManager.AddLoginAsync(user, GoogleLogin(identity));
+        if (!linked.Succeeded)
+        {
+            // Only LoginAlreadyAssociated can fail here, which means a concurrent request linked it
+            // first — the account is the same either way.
+            logger.LogWarning("Linking Google login to user {UserId} failed: {Errors}", user.Id,
+                string.Join(", ", linked.Errors.Select(e => e.Code)));
+            return user;
+        }
+
+        if (!user.EmailConfirmed)
+        {
+            user.EmailConfirmed = true;
+            await userManager.UpdateAsync(user);
+        }
+
+        logger.LogInformation("Linked Google login to existing user {UserId} by verified email", user.Id);
+        return user;
+    }
+
+    private bool IsOurWebOrigin(string redirectUri)
+    {
+        if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var candidate)
+            || !Uri.TryCreate(_appOptions.WebBaseUrl, UriKind.Absolute, out var webBase))
+        {
+            return false;
+        }
+
+        return Uri.Compare(candidate, webBase, UriComponents.SchemeAndServer, UriFormat.Unescaped,
+            StringComparison.OrdinalIgnoreCase) == 0;
+    }
+
+    private static UserLoginInfo GoogleLogin(GoogleIdentity identity) =>
+        new(GoogleAuthOptions.LoginProvider, identity.Subject, GoogleAuthOptions.LoginProvider);
 
     public async Task ForgotPasswordAsync(ForgotPasswordRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
@@ -239,7 +386,7 @@ internal sealed class AuthService(
         return ToProfile(user);
     }
 
-    public async Task<bool> DeleteAccountAsync(Guid userId, string password, CancellationToken cancellationToken)
+    public async Task<bool> DeleteAccountAsync(Guid userId, string? password, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByIdAsync(userId.ToString());
         if (user is null)
@@ -247,10 +394,15 @@ internal sealed class AuthService(
             return false;
         }
 
-        var checkResult = await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
-        if (!checkResult.Succeeded)
+        // A Google-only account has no password to re-enter (DECISIONS.md, 2026-09-05). For every
+        // other account the re-check stays: a missing password is simply a wrong one.
+        if (await userManager.HasPasswordAsync(user))
         {
-            return false;
+            var checkResult = await signInManager.CheckPasswordSignInAsync(user, password ?? string.Empty, lockoutOnFailure: true);
+            if (!checkResult.Succeeded)
+            {
+                return false;
+            }
         }
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -357,5 +509,6 @@ internal sealed class AuthService(
     }
 
     private static UserProfileResponse ToProfile(ApplicationUser user) =>
-        new(user.Id, user.Email!, user.FirstName, user.LastName, user.CreatedAt, user.ConsentAcceptedAt, user.PreferredLanguage, user.PreferredTheme);
+        new(user.Id, user.Email!, user.FirstName, user.LastName, user.CreatedAt, user.ConsentAcceptedAt,
+            user.PreferredLanguage, user.PreferredTheme, HasPassword: user.PasswordHash is not null);
 }

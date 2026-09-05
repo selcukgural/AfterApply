@@ -17,6 +17,7 @@ public static class ClientConfigEndpoints
         app.MapGet("/api/config", (
                 IOptions<IdentityOptions> identityOptions,
                 IOptions<PersonalAccessTokenOptions> personalAccessTokenOptions,
+                IOptions<GoogleAuthOptions> googleAuthOptions,
                 HttpContext httpContext) =>
             {
                 // Read from IdentityOptions rather than IdentityPolicyOptions: the former is the object
@@ -24,6 +25,7 @@ public static class ClientConfigEndpoints
                 // submitted password will be checked against.
                 var password = identityOptions.Value.Password;
                 var tokens = personalAccessTokenOptions.Value;
+                var google = googleAuthOptions.Value;
 
                 // The values change only with a deploy or a config rollout, so let browsers and the
                 // CDN hold them for a few minutes instead of re-fetching on every form mount.
@@ -32,6 +34,12 @@ public static class ClientConfigEndpoints
                     Public = true,
                     MaxAge = TimeSpan.FromMinutes(5)
                 };
+                // A public, cacheable response that is also CORS-served must vary on Origin: without
+                // this, a copy fetched with no Origin (typing the URL into the address bar to check
+                // it — a routine developer move) is stored without Access-Control-Allow-Origin, and
+                // for the next five minutes the web app's cross-origin fetch is answered from that
+                // copy and fails CORS. Seen live on 2026-09-05: the Google button silently vanished.
+                httpContext.Response.Headers.Vary = HeaderNames.Origin;
 
                 return Results.Ok(new ClientConfigResponse(
                     new PasswordPolicyResponse(
@@ -41,12 +49,14 @@ public static class ClientConfigEndpoints
                         password.RequireLowercase,
                         password.RequireUppercase,
                         password.RequireNonAlphanumeric),
-                    new PersonalAccessTokenLimitsResponse(tokens.MaxActiveTokens, tokens.LifetimeDays)));
+                    new PersonalAccessTokenLimitsResponse(tokens.MaxActiveTokens, tokens.LifetimeDays),
+                    new GoogleAuthConfigResponse(google.IsConfigured, google.IsConfigured ? google.ClientId : null)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")
             .WithDescription("The server-side limits a client should show the user up front: the password policy " +
-                              "(what register and reset-password enforce) and the personal-access-token limits. " +
+                              "(what register and reset-password enforce), the personal-access-token limits, and whether " +
+                              "Sign in with Google is available (plus its public client id). " +
                               "Anonymous; nothing here is secret. All of it is still enforced server-side.")
             .Produces<ClientConfigResponse>();
 

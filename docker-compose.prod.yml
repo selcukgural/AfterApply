@@ -28,6 +28,9 @@ services:
       App__WebBaseUrl: "${WEB_ORIGIN:?Set WEB_ORIGIN in .env.prod}"
       OpenAI__ApiKey: "${OPENAI_API_KEY:-REPLACE_WITH_OPENAI_API_KEY}"
       Resend__ApiKey: "${RESEND_API_KEY:-REPLACE_WITH_RESEND_API_KEY}"
+      # Both empty disables Sign in with Google (button hidden, endpoints 404) — see .env.prod.example.
+      GoogleAuth__ClientId: "${GOOGLE_CLIENT_ID:-}"
+      GoogleAuth__ClientSecret: "${GOOGLE_CLIENT_SECRET:-}"
       # Empty disables the SDK (see .env.prod.example) — not a REPLACE_WITH_
       # placeholder, an actually-fake Dsn would make Sentry try (and fail)
       # to send an event on every request instead of silently no-op'ing.

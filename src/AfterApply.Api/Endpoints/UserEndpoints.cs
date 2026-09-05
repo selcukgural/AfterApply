@@ -67,10 +67,11 @@ public static class UserEndpoints
                     ? Results.NoContent()
                     : Results.ValidationProblem(new Dictionary<string, string[]> { ["password"] = [localizer["AUTH_WRONG_PASSWORD"]] });
             })
-            .WithValidation<DeleteAccountRequest>()
+            .ProducesValidationProblem()
             .WithSummary("Permanently delete the current user's account")
             .WithDescription("Requires re-entering the current password in the body. A wrong password comes back as a 400 " +
-                             "validation problem on the \"password\" field, not a 401.")
+                             "validation problem on the \"password\" field, not a 401. An account that has no password " +
+                             "(created with Sign in with Google, see `hasPassword` on the profile) is deleted without one.")
             .Produces(StatusCodes.Status204NoContent);
 
         group.MapGet("/me/export", async (ClaimsPrincipal user, IAuthService authService,

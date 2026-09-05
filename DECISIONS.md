@@ -2812,6 +2812,103 @@ diğer dördü sağlandı).
 
 ---
 
+## Google ile giriş/kayıt eklendi — authorization code + PKCE, sunucu tarafı exchange (2026-09-05)
+
+**Bağlam:** Kullanıcı, e-posta/şifre kaydının yanında Google hesabıyla giriş/kayıt istedi. Daha
+önce koddan tamamen kaldırılan Gmail entegrasyonu (2026-08-31) ile karıştırılmamalı: o `gmail.readonly`
+gibi *restricted* bir scope istiyordu ve Google'ın CASA değerlendirmesine takılmıştı; bu iş yalnızca
+kimlik (`openid email profile`) istiyor — hassas olmayan scope'lar, app verification/CASA gerekmiyor,
+consent screen "In production"a alınınca herkes giriş yapabiliyor.
+
+**Karar — akış (redirect + PKCE, Google JS yok):** Frontend (`web/src/lib/auth/googleOAuth.ts`) PKCE
+verifier + state üretip `sessionStorage`'a yazıyor ve tarayıcıyı `accounts.google.com`'a düz bir
+navigation ile gönderiyor; Google `/{locale}/auth/google/callback`'e `code`+`state` ile dönüyor; sayfa
+`state`'i sessionStorage'dakiyle eşleştirip `POST /api/auth/google` (code, codeVerifier, redirectUri)
+çağırıyor; sunucu (`GoogleAuthClient`) Google'ın token ucunda client secret ile exchange yapıp yalnızca
+ID token'ı okuyor. Google Identity Services (One Tap / GIS butonu) **bilinçli olarak seçilmedi**:
+üçüncü-taraf script + iframe için `script-src`/`frame-src`/`connect-src` CSP gevşetmesi gerekecekti
+(OWASP turunda sıkılaştırılan politika), oysa redirect akışı CSP'ye hiç dokunmuyor. Login-CSRF
+savunması PKCE'nin kendisinden geliyor: saldırgan kurbanın adres çubuğuna kendi `code+state`'ini
+koyabilir ama eşleşen verifier'ı kurbanın sessionStorage'ına koyamaz.
+
+**Karar — ID token imza doğrulaması yapılmıyor (bilinçli):** Token doğrudan Google'ın token ucundan,
+TLS üzerinden, sunucu-sunucu çağrısıyla geliyor; OIDC Core §3.1.3.7 adım 6 tam bu durumda imza
+doğrulamasını atlamaya izin veriyor. `GoogleIdTokenReader` iss (iki yazım), aud (bizim client id),
+exp ve zorunlu claim'leri kontrol ediyor. Tarayıcıdan gelen bir ID token (GIS) asla bu okuyucudan
+geçirilmemeli — o yol JWKS doğrulaması ister; sınıf yorumunda not düşüldü. `Google.Apis.Auth` paketi
+bu yüzden eklenmedi.
+
+**Karar — hesap eşleme (kullanıcıya soruldu, onaylandı):** Önce `AspNetUserLogins` (provider=Google,
+key=`sub`), yoksa **doğrulanmış e-posta** ile mevcut hesaba **otomatik bağlanıyor** (`AddLoginAsync`,
+`EmailConfirmed=true`). `email_verified=false` reddediliyor (`AUTH_GOOGLE_EMAIL_NOT_VERIFIED`) — aksi
+hâlde bir Workspace/legacy hesabı başkasının adresini sahiplenebilirdi. Risk kabulü: "E-posta
+doğrulaması bilinçli olarak ertelendi" (2026-09-03) kararındaki squatting riskiyle aynı sınıf —
+şifreyle önceden açılmış doğrulanmamış bir hesaba Google girişi bağlanabilir. Ayarlar'da
+bağla/bağlantıyı-kes bölümü **yok** (YAGNI; auto-link ana senaryoyu kapatıyor).
+
+**Karar — onay ara adımı (kullanıcıya soruldu, onaylandı):** Google kimliği bize yabancıysa hesap
+**oluşturulmuyor**; `/api/auth/google` `pendingSignup` (email, ad, soyad + `signupToken`) döndürüyor,
+callback sayfası "Kaydı Tamamla" formunu (ad/soyad düzenlenebilir, gizlilik onayı zorunlu) gösteriyor,
+`POST /api/auth/google/signup` hesabı açıyor. Authorization code tek kullanımlık ve o anda harcanmış
+olduğu için ikinci istekte kimliği kanıtlayan şey `signupToken`: `Jwt:SigningKey` ile imzalı, 10 dk,
+**ayrı audience** (`AfterApply.GoogleSignup`) + `purpose` claim'i — aynı anahtarla imzalı olsa da
+access token olarak kabul edilmiyor ve access token signup token olarak geçmiyor (unit testle
+pinlendi). Replay/yarış: hesap bu arada oluşmuşsa ikinci çağrı yeni hesap açmak yerine giriş yapıyor
+(`FindOrLinkGoogleUserAsync` ortak yolu; kullanıcı + login satırı tek transaction'da).
+
+**Karar — şifresiz hesap (kullanıcıya soruldu, onaylandı):** Google ile açılan hesabın `PasswordHash`'i
+null. `UserProfileResponse.HasPassword` eklendi; Ayarlar → Hesabı Sil, şifre alanını gizliyor ve
+`DeleteAccountRequest.Password` artık opsiyonel — sunucu `HasPasswordAsync` false ise şifre kontrolünü
+atlıyor, true ise eskisi gibi zorunlu (bearer token bu hesabın sunabileceği tek sahiplik kanıtı).
+`DeleteAccountRequestValidator` silindi. Şifreyle giriş denemesi böyle bir hesapta genel
+`AUTH_INVALID_CREDENTIALS` veriyor (hesap varlığı sızdırılmıyor); "şifremi unuttum" akışı doğal olarak
+"şifre belirle" işlevi görüyor.
+
+**Karar — konfigürasyon ve "inert until set":** `GoogleAuth:ClientId`/`ClientSecret` (user-secrets /
+`GoogleAuth__*` env / Secret Manager `afterapply-google-client-id` + `afterapply-google-client-secret`).
+İkisi de doluyken `GoogleAuthOptions.IsConfigured`; değilse `GET /api/config` `googleAuth.enabled=false`
+döndürüyor, buton hiç render edilmiyor, iki endpoint 404 (CompanyIntelligence kalıbı). Client id
+public olduğu için `/api/config` üzerinden tarayıcıya veriliyor. **Deploy notu:** `deploy.yml` iki
+secret'ı `--set-secrets` ile bağlıyor; Secret Manager'da **var olmalılar** (boş değer olabilir), yoksa
+bir sonraki API deploy'u secret bulunamadı diye düşer — `DEPLOYMENT.md` §3'e eklendi. Redirect URI'ler
+`localePrefix: "always"` yüzünden locale başına bir tane (`/tr/...`, `/en/...`); sunucu
+`redirectUri`'nin origin'inin `App:WebBaseUrl` ile aynı olmasını Google'a gitmeden önce doğruluyor.
+
+**Doğrulama:** Unit 220/220 (yeni: `GoogleIdTokenReaderTests` 12, `GoogleSignupTokenTests` 7,
+`GoogleAuthRequestValidatorTests` 5). Integration: `GoogleSignInTests` (11 test: config yayını, 404,
+yeni hesap → onay → oluşturma → ikinci girişte doğrudan auth, replay, e-posta ile bağlama + şifre
+girişi korunuyor, doğrulanmamış e-posta, tanınmayan kod, yabancı origin Google'a gitmeden ret,
+tampered/access token signup token olarak ret, şifresiz silme vs şifreli silme, şifresiz hesaba
+şifre girişi) + `ClientConfigTests`'e `googleAuth` varsayılanı. `tsc --noEmit`, `eslint`, `next build`
+temiz. Tam podman suite'i 121/121 (~1,8 dk; ilk denemede `-v q` ile başlatılan koşu 13 dk %100 CPU'da
+takıldı, aynı koşu `verbosity=normal` ile temiz geçti — README'deki podman/Testcontainers
+flakiness sınıfı, kodla ilgisi bulunamadı). Frontend için test harness yok (package.json'da test
+runner bulunmuyor). **Tarayıcı E2E (aynı gün, gerçek Google hesabı, yerel API+web):** login
+sayfasındaki buton → Google hesap seçici → geri dönüşte hesap yokken "Kaydı Tamamla" (ad/soyad
+Google'dan dolu; onaysız gönderim istemci tarafında reddedildi; onayla → `/tr/dashboard`), DB'de
+`PasswordHash=null`, `EmailConfirmed=true`, `AspNetUserLogins` satırı; Ayarlar → Hesabı Sil şifre
+alanı gizli, sadece "SİL" ile silindi → `/tr/login`. Ardından aynı e-postayla API'den şifreli hesap
+açılıp Google ile girildi → ara adım yok, doğrudan mevcut hesaba giriş, `EmailConfirmed` false→true,
+login satırı eklendi, şifre korundu (API logu: "Linked Google login to existing user ... by verified
+email"). Google tarafında consent ekranı çıkmadı (test hesabı, hassas olmayan scope). Test hesapları
+temizlendi. Not: dev'de görülen `1 Issue` overlay'i Sentry/eval CSP uyarısı, bu işten bağımsız.
+
+**Bulgu — "buton görünmüyor" (aynı gün, kullanıcının manuel testinde):** `/api/config` yanıtı
+`Cache-Control: public, max-age=300` taşıyor ama `Vary: Origin` taşımıyordu. Adres çubuğundan
+`http://localhost:5151/api/config` açılınca (geliştiricinin doğal refleksi) Chrome yanıtı
+`Access-Control-Allow-Origin` başlıksız olarak önbelleğe alıyor; sonraki 5 dakika boyunca web
+uygulamasının cross-origin fetch'i bu kopyadan cevaplanıp CORS'ta düşüyor ("Failed to fetch",
+ağ panelinde 503 görünümlü), `useClientConfig` varsayılana (`googleAuth.enabled=false`) dönüyor ve
+Google butonu sessizce kayboluyor. API logunda iz yok çünkü istek sunucuya hiç ulaşmıyor. Çözüm:
+`ClientConfigEndpoints` artık `Vary: Origin` yazıyor (`ClientConfigTests` pinliyor);
+`GoogleSignInButton` da `config.googleAuth?.enabled` ile eski/eksik bir önbellek gövdesine karşı
+dayanıklı. Ayrıca aynı oturumda dev DB'de üç migration'ın (`AddEmailSuggestionAutoApplyAndReadState`
+ve sonrası) uygulanmamış olduğu görüldü (`EmailSuggestions.IsRead` yok → dashboard'daki öneri sayacı
+500); `dotnet ef database update` ile uygulandı — API startup'ta otomatik migrate etmiyor, dev DB
+elle güncel tutuluyor.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

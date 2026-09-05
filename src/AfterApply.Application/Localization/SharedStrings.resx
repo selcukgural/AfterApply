@@ -26,6 +26,15 @@
   <data name="AUTH_INVALID_REFRESH_TOKEN" xml:space="preserve">
     <value>Invalid refresh token.</value>
   </data>
+  <data name="AUTH_GOOGLE_FAILED" xml:space="preserve">
+    <value>Google sign-in could not be completed. Please try again.</value>
+  </data>
+  <data name="AUTH_GOOGLE_EMAIL_NOT_VERIFIED" xml:space="preserve">
+    <value>The email address of your Google account is not verified, so it cannot be used to sign in.</value>
+  </data>
+  <data name="AUTH_GOOGLE_SIGNUP_EXPIRED" xml:space="preserve">
+    <value>Your Google sign-up session has expired. Please sign in with Google again.</value>
+  </data>
   <data name="AUTH_WRONG_PASSWORD" xml:space="preserve">
     <value>Incorrect password.</value>
   </data>

@@ -7,9 +7,18 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AfterApply.Infrastructure.Identity;
 
-internal sealed class JwtTokenService(IOptions<JwtOptions> options) : ITokenService
+public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? timeProvider = null) : ITokenService
 {
+    // A different audience from the access token is what keeps the two from ever being confused:
+    // JwtBearer rejects a signup token on aud alone, and ValidateGoogleSignupToken rejects an
+    // access token the same way — regardless of both being signed with the same key.
+    private const string GoogleSignupAudience = "AfterApply.GoogleSignup";
+    private const string PurposeClaim = "purpose";
+    private const string GoogleSignupPurpose = "google-signup";
+    private static readonly TimeSpan GoogleSignupTokenLifetime = TimeSpan.FromMinutes(10);
+
     private readonly JwtOptions _options = options.Value;
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
     public (string AccessToken, DateTimeOffset ExpiresAt) CreateAccessToken(Guid userId, string email)
     {
@@ -64,6 +73,81 @@ internal sealed class JwtTokenService(IOptions<JwtOptions> options) : ITokenServ
     {
         return Hash(token);
     }
+
+    public string CreateGoogleSignupToken(GoogleIdentity identity)
+    {
+        var now = _timeProvider.GetUtcNow();
+        var claims = new Dictionary<string, object>
+        {
+            [JwtRegisteredClaimNames.Sub] = identity.Subject,
+            [JwtRegisteredClaimNames.Email] = identity.Email,
+            [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString("N"),
+            [PurposeClaim] = GoogleSignupPurpose,
+            ["email_verified"] = identity.EmailVerified
+        };
+        if (identity.GivenName is not null)
+        {
+            claims[JwtRegisteredClaimNames.GivenName] = identity.GivenName;
+        }
+
+        if (identity.FamilyName is not null)
+        {
+            claims[JwtRegisteredClaimNames.FamilyName] = identity.FamilyName;
+        }
+
+        var descriptor = new SecurityTokenDescriptor
+        {
+            Issuer = _options.Issuer,
+            Audience = GoogleSignupAudience,
+            IssuedAt = now.UtcDateTime,
+            NotBefore = now.UtcDateTime,
+            Expires = now.Add(GoogleSignupTokenLifetime).UtcDateTime,
+            SigningCredentials = SigningCredentials(),
+            Claims = claims
+        };
+
+        return new JsonWebTokenHandler().CreateToken(descriptor);
+    }
+
+    public GoogleIdentity? ValidateGoogleSignupToken(string token)
+    {
+        var handler = new JsonWebTokenHandler();
+        var result = handler.ValidateTokenAsync(token, new TokenValidationParameters
+        {
+            ValidIssuer = _options.Issuer,
+            ValidAudience = GoogleSignupAudience,
+            IssuerSigningKey = SigningKey(),
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            ClockSkew = TimeSpan.Zero,
+            LifetimeValidator = (_, expires, _, _) => expires is not null && expires > _timeProvider.GetUtcNow().UtcDateTime
+        }).GetAwaiter().GetResult();
+
+        if (!result.IsValid || result.SecurityToken is not JsonWebToken jwt)
+        {
+            return null;
+        }
+
+        if (!jwt.TryGetPayloadValue<string>(PurposeClaim, out var purpose) || purpose != GoogleSignupPurpose)
+        {
+            return null;
+        }
+
+        var email = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.Email, out var e) ? e : null;
+        if (string.IsNullOrEmpty(jwt.Subject) || string.IsNullOrEmpty(email))
+        {
+            return null;
+        }
+
+        var emailVerified = jwt.TryGetPayloadValue<bool>("email_verified", out var verified) && verified;
+        var givenName = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.GivenName, out var g) ? g : null;
+        var familyName = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.FamilyName, out var f) ? f : null;
+
+        return new GoogleIdentity(jwt.Subject, email, emailVerified, givenName, familyName);
+    }
+
+    private SymmetricSecurityKey SigningKey() => new(Convert.FromBase64String(_options.SigningKey));
+
+    private SigningCredentials SigningCredentials() => new(SigningKey(), SecurityAlgorithms.HmacSha256);
 
     private static string Hash(string value)
     {

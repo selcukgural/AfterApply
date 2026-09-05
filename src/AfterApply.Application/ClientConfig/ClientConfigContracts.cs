@@ -7,7 +7,8 @@ namespace AfterApply.Application.ClientConfig;
 /// </summary>
 public sealed record ClientConfigResponse(
     PasswordPolicyResponse PasswordPolicy,
-    PersonalAccessTokenLimitsResponse PersonalAccessTokens);
+    PersonalAccessTokenLimitsResponse PersonalAccessTokens,
+    GoogleAuthConfigResponse GoogleAuth);
 
 /// <summary>Mirrors ASP.NET Identity's <c>PasswordOptions</c>, which is what the server actually
 /// validates against — the response is built from that object, not from a copy of the config.</summary>
@@ -22,3 +23,9 @@ public sealed record PasswordPolicyResponse(
 public sealed record PersonalAccessTokenLimitsResponse(
     int MaxActiveTokens,
     int LifetimeDays);
+
+/// <summary>Whether "Sign in with Google" is available and, if so, the public OAuth client id the
+/// browser needs to start the redirect to accounts.google.com. <paramref name="ClientId"/> is null
+/// whenever <paramref name="Enabled"/> is false. A client id is public by design (it is visible in
+/// the redirect URL); the client secret never leaves the server.</summary>
+public sealed record GoogleAuthConfigResponse(bool Enabled, string? ClientId);

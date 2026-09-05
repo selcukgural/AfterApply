@@ -1,8 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
-import type { AuthResponse, UserProfileResponse } from "@/types/api";
-import { authApi, type LoginRequest, type RegisterRequest } from "@/lib/api/auth";
+import type { AuthResponse, GoogleSignInResponse, UserProfileResponse } from "@/types/api";
+import {
+  authApi,
+  type GoogleSignInRequest,
+  type GoogleSignupRequest,
+  type LoginRequest,
+  type RegisterRequest,
+} from "@/lib/api/auth";
 import { authStore } from "@/lib/api/authStore";
 
 interface AuthContextValue {
@@ -14,8 +20,13 @@ interface AuthContextValue {
   // account's saved language — see login/register pages.
   login: (request: LoginRequest) => Promise<AuthResponse>;
   register: (request: RegisterRequest) => Promise<AuthResponse>;
+  // Stores the session only when the response carries one; a `pendingSignup` result leaves the
+  // store untouched until completeGoogleSignup creates the account.
+  signInWithGoogle: (request: GoogleSignInRequest) => Promise<GoogleSignInResponse>;
+  completeGoogleSignup: (request: GoogleSignupRequest) => Promise<AuthResponse>;
   logout: () => Promise<void>;
-  deleteAccount: (password: string) => Promise<void>;
+  // password is omitted for an account that has none (user.hasPassword === false).
+  deleteAccount: (password?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -61,6 +72,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return auth;
   }, []);
 
+  const signInWithGoogle = useCallback(async (request: GoogleSignInRequest) => {
+    const result = await authApi.googleSignIn(request);
+    if (result.auth) {
+      authStore.setAuth(result.auth);
+    }
+    return result;
+  }, []);
+
+  const completeGoogleSignup = useCallback(async (request: GoogleSignupRequest) => {
+    const auth = await authApi.googleSignup(request);
+    authStore.setAuth(auth);
+    return auth;
+  }, []);
+
   const logout = useCallback(async () => {
     const refreshToken = authStore.getRefreshToken();
     try {
@@ -72,14 +97,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const deleteAccount = useCallback(async (password: string) => {
-    await authApi.deleteAccount({ password });
+  const deleteAccount = useCallback(async (password?: string) => {
+    await authApi.deleteAccount(password === undefined ? {} : { password });
     authStore.clear();
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: user !== null, isLoading, login, register, logout, deleteAccount }}
+      value={{
+        user,
+        isAuthenticated: user !== null,
+        isLoading,
+        login,
+        register,
+        signInWithGoogle,
+        completeGoogleSignup,
+        logout,
+        deleteAccount,
+      }}
     >
       {children}
     </AuthContext.Provider>

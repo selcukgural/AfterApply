@@ -54,6 +54,9 @@ export interface UserProfileResponse {
   consentAcceptedAt: string;
   preferredLanguage: string;
   preferredTheme: string;
+  // false for an account created with Sign in with Google that never set a password — the
+  // settings page skips the "re-enter your password" step on deletion for those.
+  hasPassword: boolean;
 }
 
 export interface AuthResponse {
@@ -340,7 +343,28 @@ export interface PersonalAccessTokenLimits {
   lifetimeDays: number;
 }
 
+export interface GoogleAuthConfig {
+  enabled: boolean;
+  // Public OAuth client id (it is visible in the redirect to accounts.google.com anyway);
+  // null whenever enabled is false.
+  clientId: string | null;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
+  googleAuth: GoogleAuthConfig;
+}
+
+// POST /api/auth/google: exactly one of the two is set.
+export interface GoogleSignupPrefill {
+  signupToken: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface GoogleSignInResponse {
+  auth: AuthResponse | null;
+  pendingSignup: GoogleSignupPrefill | null;
 }

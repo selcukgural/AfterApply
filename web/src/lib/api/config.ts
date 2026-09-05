@@ -18,6 +18,12 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
     maxActiveTokens: 10,
     lifetimeDays: 90,
   },
+  // Off until the server says otherwise: the Google button must never render against a
+  // deployment that has no client configured (its endpoints answer 404 there).
+  googleAuth: {
+    enabled: false,
+    clientId: null,
+  },
 };
 
 export const configApi = {

@@ -38,6 +38,8 @@ services:
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-afterapply};Username=${POSTGRES_USER:-afterapply};Password=${POSTGRES_PASSWORD}"
       ConnectionStrings__Redis: "redis:6379"
       Jwt__SigningKey: "${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}"
+      GoogleAuth__ClientId: "${GOOGLE_CLIENT_ID:-}"
+      GoogleAuth__ClientSecret: "${GOOGLE_CLIENT_SECRET:-}"
     ports:
       - "8080:8080"
     depends_on:
