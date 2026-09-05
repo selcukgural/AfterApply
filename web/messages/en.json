@@ -453,11 +453,21 @@
     "dataCollection": {
       "title": "What data we collect and why",
       "intro": "e-kariyerim is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
-      "item1": "Account information: first name, last name, email address, password (stored hashed).",
+      "item1": "Account details: first name, last name, email address and password (stored hashed). If you sign in with Google, your Google account identifier is stored instead of a password (see below).",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "This data is used solely to provide you with application tracking and personal analytics features."
+    },
+    "googleSignIn": {
+      "title": "Sign in with Google",
+      "intro": "Sign in with Google is an optional login method, an alternative to registering with email and password. When you use it, we receive only the following from Google:",
+      "item1": "Your Google account's permanent identifier (so we can recognise your account even if your email address changes).",
+      "item2": "Your email address, as verified by Google.",
+      "item3": "The first and last name on your Google profile (pre-filled in the sign-up form; you can change them before saving).",
+      "noAccess": "We do not access, and never request permission for, your Gmail, contacts, Drive or any other data in your Google account. We do not store the access tokens Google issues us; they are discarded as soon as sign-in completes.",
+      "linking": "If the verified email address of your Google account already belongs to an e-kariyerim account created with a password, the Google sign-in is linked to that account and signs you into it; your password keeps working.",
+      "revoke": "You can remove the permission on Google's side at any time under Google Account → Security → Third-party apps. Deleting your e-kariyerim account also removes the link to Google."
     },
     "crossBorderTransfer": {
       "title": "Cross-border data transfer",

@@ -22,6 +22,19 @@ export default async function PrivacyPage() {
           <p className="mt-2">{t("dataCollection.outro")}</p>
         </section>
 
+        <section id="google-sign-in">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("googleSignIn.title")}</h2>
+          <p>{t("googleSignIn.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("googleSignIn.item1")}</li>
+            <li>{t("googleSignIn.item2")}</li>
+            <li>{t("googleSignIn.item3")}</li>
+          </ul>
+          <p className="mt-2">{t("googleSignIn.noAccess")}</p>
+          <p className="mt-2">{t("googleSignIn.linking")}</p>
+          <p className="mt-2">{t("googleSignIn.revoke")}</p>
+        </section>
+
         <section id="cross-border-transfer">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("crossBorderTransfer.title")}</h2>
           <p>{t("crossBorderTransfer.intro")}</p>

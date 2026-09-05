@@ -453,11 +453,21 @@
     "dataCollection": {
       "title": "Hangi veriyi topluyoruz ve neden",
       "intro": "e-kariyerim, iş başvurularınızı takip etmenize yardımcı olan kişisel bir araçtır. Hizmeti sağlayabilmek için şu verileri işleriz:",
-      "item1": "Hesap bilgileri: ad, soyad, e-posta adresi, şifre (hash'lenmiş olarak saklanır).",
+      "item1": "Hesap bilgileri: ad, soyad, e-posta adresi ve şifre (hash'lenmiş olarak saklanır). Google ile giriş yapıyorsanız şifre yerine Google hesap kimliğiniz saklanır (aşağıya bakın).",
       "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar.",
       "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
       "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır."
+    },
+    "googleSignIn": {
+      "title": "Google ile giriş",
+      "intro": "Google ile giriş isteğe bağlı bir giriş yöntemidir; e-posta ve şifreyle kayıt olmaya alternatiftir. Kullandığınızda Google'dan yalnızca şunları alırız:",
+      "item1": "Google hesabınızın sabit kimlik numarası (hesabınızı e-posta adresiniz değişse bile tanıyabilmek için).",
+      "item2": "Google tarafından doğrulanmış e-posta adresiniz.",
+      "item3": "Google profilinizdeki ad ve soyad (kayıt formunda önceden doldurulur, kaydetmeden önce değiştirebilirsiniz).",
+      "noAccess": "Gmail'inize, kişilerinize, Drive'ınıza veya Google hesabınızdaki başka hiçbir veriye erişmeyiz ve bunun için izin istemeyiz. Google'ın bize verdiği erişim jetonlarını saklamayız; giriş tamamlandığı anda atılır.",
+      "linking": "Google hesabınızın doğrulanmış e-posta adresi, e-kariyerim'de zaten şifreyle açılmış bir hesaba aitse, Google girişi o hesaba bağlanır ve aynı hesaba girersiniz; şifreniz geçerliliğini korur.",
+      "revoke": "Google tarafındaki izni istediğiniz zaman Google Hesabınız → Güvenlik → Üçüncü taraf uygulamalar bölümünden kaldırabilirsiniz. e-kariyerim hesabınızı silmek Google ile ilişkilendirmeyi de siler."
     },
     "crossBorderTransfer": {
       "title": "Yurt dışına veri aktarımı",
