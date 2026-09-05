@@ -289,6 +289,17 @@ public static class DependencyInjection
         services.Configure<GoogleAuthOptions>(configuration.GetSection(GoogleAuthOptions.SectionName));
         services.AddHttpClient<IGoogleAuthClient, GoogleAuthClient>(client => client.Timeout = TimeSpan.FromSeconds(10));
 
+        // Sign in with LinkedIn. Inert (button hidden, endpoints 404) until LinkedInAuth:ClientId and
+        // LinkedInAuth:ClientSecret are both set — see LinkedInAuthOptions. Unlike Google, the ID
+        // token's signature is fully verified against LinkedIn's published JWKS (LinkedInJwksProvider
+        // is a singleton so its 24h cache actually persists across requests, on its own named
+        // HttpClient rather than the typed one below).
+        services.Configure<LinkedInAuthOptions>(configuration.GetSection(LinkedInAuthOptions.SectionName));
+        services.AddHttpClient("LinkedInJwks", client => client.Timeout = TimeSpan.FromSeconds(10));
+        services.AddSingleton(sp =>
+            new LinkedInJwksProvider(sp.GetRequiredService<IHttpClientFactory>().CreateClient("LinkedInJwks")));
+        services.AddHttpClient<ILinkedInAuthClient, LinkedInAuthClient>(client => client.Timeout = TimeSpan.FromSeconds(10));
+
         return services;
     }
 

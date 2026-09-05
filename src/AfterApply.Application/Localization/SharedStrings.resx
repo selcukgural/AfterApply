@@ -35,6 +35,15 @@
   <data name="AUTH_GOOGLE_SIGNUP_EXPIRED" xml:space="preserve">
     <value>Your Google sign-up session has expired. Please sign in with Google again.</value>
   </data>
+  <data name="AUTH_LINKEDIN_FAILED" xml:space="preserve">
+    <value>LinkedIn sign-in could not be completed. Please try again.</value>
+  </data>
+  <data name="AUTH_LINKEDIN_EMAIL_REQUIRED" xml:space="preserve">
+    <value>We could not get an email address from your LinkedIn account — this isn't an error on our end. An email address is required to complete your sign-up.</value>
+  </data>
+  <data name="AUTH_LINKEDIN_SIGNUP_EXPIRED" xml:space="preserve">
+    <value>Your LinkedIn sign-up session has expired. Please sign in with LinkedIn again.</value>
+  </data>
   <data name="AUTH_WRONG_PASSWORD" xml:space="preserve">
     <value>Incorrect password.</value>
   </data>

@@ -13,9 +13,12 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
     // JwtBearer rejects a signup token on aud alone, and ValidateGoogleSignupToken rejects an
     // access token the same way — regardless of both being signed with the same key.
     private const string GoogleSignupAudience = "AfterApply.GoogleSignup";
+    private const string LinkedInSignupAudience = "AfterApply.LinkedInSignup";
     private const string PurposeClaim = "purpose";
     private const string GoogleSignupPurpose = "google-signup";
+    private const string LinkedInSignupPurpose = "linkedin-signup";
     private static readonly TimeSpan GoogleSignupTokenLifetime = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan LinkedInSignupTokenLifetime = TimeSpan.FromMinutes(10);
 
     private readonly JwtOptions _options = options.Value;
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
@@ -143,6 +146,86 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
         var familyName = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.FamilyName, out var f) ? f : null;
 
         return new GoogleIdentity(jwt.Subject, email, emailVerified, givenName, familyName);
+    }
+
+    public string CreateLinkedInSignupToken(LinkedInIdentity identity)
+    {
+        var now = _timeProvider.GetUtcNow();
+        var claims = new Dictionary<string, object>
+        {
+            [JwtRegisteredClaimNames.Sub] = identity.Subject,
+            [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString("N"),
+            [PurposeClaim] = LinkedInSignupPurpose,
+            ["email_verified"] = identity.EmailVerified
+        };
+        // Omitted entirely (not written as null/empty) when LinkedIn gave no email — the reader
+        // below distinguishes "claim absent" from "claim present but empty" the same way.
+        if (identity.Email is not null)
+        {
+            claims[JwtRegisteredClaimNames.Email] = identity.Email;
+        }
+
+        if (identity.GivenName is not null)
+        {
+            claims[JwtRegisteredClaimNames.GivenName] = identity.GivenName;
+        }
+
+        if (identity.FamilyName is not null)
+        {
+            claims[JwtRegisteredClaimNames.FamilyName] = identity.FamilyName;
+        }
+
+        var descriptor = new SecurityTokenDescriptor
+        {
+            Issuer = _options.Issuer,
+            Audience = LinkedInSignupAudience,
+            IssuedAt = now.UtcDateTime,
+            NotBefore = now.UtcDateTime,
+            Expires = now.Add(LinkedInSignupTokenLifetime).UtcDateTime,
+            SigningCredentials = SigningCredentials(),
+            Claims = claims
+        };
+
+        return new JsonWebTokenHandler().CreateToken(descriptor);
+    }
+
+    // TODO: WHY WE'RE BLOCKING THREAD?
+    public LinkedInIdentity? ValidateLinkedInSignupToken(string token)
+    {
+        var handler = new JsonWebTokenHandler();
+        var result = handler.ValidateTokenAsync(token, new TokenValidationParameters
+        {
+            ValidIssuer = _options.Issuer,
+            ValidAudience = LinkedInSignupAudience,
+            IssuerSigningKey = SigningKey(),
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            ClockSkew = TimeSpan.Zero,
+            LifetimeValidator = (_, expires, _, _) => expires is not null && expires > _timeProvider.GetUtcNow().UtcDateTime
+        }).GetAwaiter().GetResult();
+
+        if (!result.IsValid || result.SecurityToken is not JsonWebToken jwt)
+        {
+            return null;
+        }
+
+        if (!jwt.TryGetPayloadValue<string>(PurposeClaim, out var purpose) || purpose != LinkedInSignupPurpose)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrEmpty(jwt.Subject))
+        {
+            return null;
+        }
+
+        // Unlike ValidateGoogleSignupToken, a missing email here is not itself a rejection reason —
+        // LinkedIn legitimately sends no email for some accounts, and the sign-up flow handles that.
+        var email = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.Email, out var e) ? e : null;
+        var emailVerified = jwt.TryGetPayloadValue<bool>("email_verified", out var verified) && verified;
+        var givenName = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.GivenName, out var g) ? g : null;
+        var familyName = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.FamilyName, out var f) ? f : null;
+
+        return new LinkedInIdentity(jwt.Subject, email, emailVerified, givenName, familyName);
     }
 
     private SymmetricSecurityKey SigningKey() => new(Convert.FromBase64String(_options.SigningKey));

@@ -18,6 +18,7 @@ internal sealed class AuthService(
     SignInManager<ApplicationUser> signInManager,
     ITokenService tokenService,
     IGoogleAuthClient googleAuthClient,
+    ILinkedInAuthClient linkedInAuthClient,
     AppDbContext dbContext,
     IOptions<JwtOptions> jwtOptions,
     IOptions<AppOptions> appOptions,
@@ -150,7 +151,7 @@ internal sealed class AuthService(
             return GoogleSignInResult.Failure("AUTH_GOOGLE_EMAIL_NOT_VERIFIED");
         }
 
-        var user = await FindOrLinkGoogleUserAsync(identity);
+        var user = await FindOrLinkExternalUserAsync(GoogleAuthOptions.LoginProvider, identity.Subject, identity.Email);
         if (user is not null)
         {
             return GoogleSignInResult.SignedIn(await IssueTokensAsync(user, ipAddress, cancellationToken));
@@ -173,7 +174,7 @@ internal sealed class AuthService(
         }
 
         // Replay or a race with another tab: the account exists now, so behave like a sign-in.
-        var existing = await FindOrLinkGoogleUserAsync(identity);
+        var existing = await FindOrLinkExternalUserAsync(GoogleAuthOptions.LoginProvider, identity.Subject, identity.Email);
         if (existing is not null)
         {
             return AuthResult.Success(await IssueTokensAsync(existing, ipAddress, cancellationToken));
@@ -204,7 +205,7 @@ internal sealed class AuthService(
             return AuthResult.Failure(created.Errors.Select(e => e.Description).ToArray());
         }
 
-        var linked = await userManager.AddLoginAsync(user, GoogleLogin(identity));
+        var linked = await userManager.AddLoginAsync(user, new UserLoginInfo(GoogleAuthOptions.LoginProvider, identity.Subject, GoogleAuthOptions.LoginProvider));
         if (!linked.Succeeded)
         {
             return AuthResult.Failure(linked.Errors.Select(e => e.Description).ToArray());
@@ -217,31 +218,153 @@ internal sealed class AuthService(
         return AuthResult.Success(response);
     }
 
-    /// <summary>The account for a Google identity, if there is one: by the stored Google subject first,
-    /// then by verified email — in which case the Google login is attached to that account on the way
-    /// out, so the next sign-in hits the first branch. Null means "no account yet".</summary>
-    private async Task<ApplicationUser?> FindOrLinkGoogleUserAsync(GoogleIdentity identity)
+    public async Task<LinkedInSignInResult> LinkedInSignInAsync(LinkedInSignInRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
-        var user = await userManager.FindByLoginAsync(GoogleAuthOptions.LoginProvider, identity.Subject);
+        // Same belt-and-braces reasoning as GoogleSignInAsync: LinkedIn itself refuses a
+        // redirect_uri that isn't registered on the app, this just fails before the round-trip.
+        if (!IsOurWebOrigin(request.RedirectUri))
+        {
+            logger.LogWarning("LinkedIn sign-in rejected: redirect URI {RedirectUri} is not under App:WebBaseUrl", request.RedirectUri);
+            return LinkedInSignInResult.Failure("AUTH_LINKEDIN_FAILED");
+        }
+
+        var identity = await linkedInAuthClient.ExchangeCodeAsync(request.Code, request.RedirectUri, cancellationToken);
+        if (identity is null)
+        {
+            return LinkedInSignInResult.Failure("AUTH_LINKEDIN_FAILED");
+        }
+
+        // LinkedIn's OpenID Connect response makes email/email_verified genuinely optional, and an
+        // identity with email_verified=false is treated exactly like one with no email at all —
+        // never used to match an existing account, only ever a fresh, explicit, manual entry on the
+        // sign-up form (see CompleteLinkedInSignupAsync).
+        var verifiedEmail = UsableEmail(identity);
+
+        var user = await FindOrLinkExternalUserAsync(LinkedInAuthOptions.LoginProvider, identity.Subject, verifiedEmail);
+        if (user is not null)
+        {
+            return LinkedInSignInResult.SignedIn(await IssueTokensAsync(user, ipAddress, cancellationToken));
+        }
+
+        var signupToken = tokenService.CreateLinkedInSignupToken(identity);
+        return LinkedInSignInResult.SignupRequired(new LinkedInSignupPrefill(
+            signupToken, verifiedEmail, identity.GivenName ?? string.Empty, identity.FamilyName ?? string.Empty));
+    }
+
+    public async Task<AuthResult> CompleteLinkedInSignupAsync(LinkedInSignupRequest request, string? ipAddress, CancellationToken cancellationToken)
+    {
+        var identity = tokenService.ValidateLinkedInSignupToken(request.SignupToken);
+        if (identity is null)
+        {
+            return AuthResult.Failure("AUTH_LINKEDIN_SIGNUP_EXPIRED");
+        }
+
+        var verifiedEmail = UsableEmail(identity);
+
+        // Replay or a race with another tab: the account exists now, so behave like a sign-in.
+        var existing = await FindOrLinkExternalUserAsync(LinkedInAuthOptions.LoginProvider, identity.Subject, verifiedEmail);
+        if (existing is not null)
+        {
+            return AuthResult.Success(await IssueTokensAsync(existing, ipAddress, cancellationToken));
+        }
+
+        string email;
+        bool emailConfirmed;
+        if (verifiedEmail is not null)
+        {
+            // LinkedIn vouched for this address — same as Google, whatever the client posts in
+            // request.Email is ignored the moment the token already carries a verified one.
+            email = verifiedEmail;
+            emailConfirmed = true;
+        }
+        else
+        {
+            // LinkedIn gave us nothing to work with here — not our failure, but the account still
+            // needs an email, so the form must have collected one (LinkedInSignupRequestValidator
+            // only checks its format; whether it's required at all is this identity's business).
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return AuthResult.Failure("AUTH_LINKEDIN_EMAIL_REQUIRED");
+            }
+
+            // LinkedIn didn't vouch for it and neither do we — no different from a password sign-up,
+            // which never verifies its email either (DECISIONS.md "E-posta doğrulaması bilinçli
+            // olarak ertelendi"). A duplicate lands on the ordinary DuplicateEmail IdentityError from
+            // CreateAsync below — this identity is never matched to an existing account by email, so
+            // it can't be used to take one over.
+            email = request.Email;
+            emailConfirmed = false;
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = emailConfirmed,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ConsentAcceptedAt = DateTimeOffset.UtcNow,
+            PreferredLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
+        };
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        var created = await userManager.CreateAsync(user);
+        if (!created.Succeeded)
+        {
+            return AuthResult.Failure(created.Errors.Select(e => e.Description).ToArray());
+        }
+
+        var linked = await userManager.AddLoginAsync(user, new UserLoginInfo(LinkedInAuthOptions.LoginProvider, identity.Subject, LinkedInAuthOptions.LoginProvider));
+        if (!linked.Succeeded)
+        {
+            return AuthResult.Failure(linked.Errors.Select(e => e.Description).ToArray());
+        }
+
+        var response = await IssueTokensAsync(user, ipAddress, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        logger.LogInformation("User {UserId} registered via LinkedIn sign-in", user.Id);
+        return AuthResult.Success(response);
+    }
+
+    private static string? UsableEmail(LinkedInIdentity identity) =>
+        identity.EmailVerified && !string.IsNullOrEmpty(identity.Email) ? identity.Email : null;
+
+    /// <summary>The account for an external identity, if there is one: by the stored login (provider +
+    /// subject) first, then — only when <paramref name="verifiedEmail"/> is non-null — by that email,
+    /// in which case the login is attached to that account on the way out, so the next sign-in hits
+    /// the first branch. A null <paramref name="verifiedEmail"/> skips the email lookup entirely:
+    /// matching by an address the provider never verified would let anyone claim an existing account
+    /// just by typing it in. Null means "no account yet".</summary>
+    private async Task<ApplicationUser?> FindOrLinkExternalUserAsync(string provider, string subject, string? verifiedEmail)
+    {
+        var user = await userManager.FindByLoginAsync(provider, subject);
         if (user is not null)
         {
             return user;
         }
 
-        user = await userManager.FindByEmailAsync(identity.Email);
+        if (verifiedEmail is null)
+        {
+            return null;
+        }
+
+        user = await userManager.FindByEmailAsync(verifiedEmail);
         if (user is null)
         {
             return null;
         }
 
         // Auto-link on a verified email (DECISIONS.md, 2026-09-05). Password sign-ups never verified
-        // their address; Google just did, so record that too.
-        var linked = await userManager.AddLoginAsync(user, GoogleLogin(identity));
+        // their address; the provider just did, so record that too.
+        var linked = await userManager.AddLoginAsync(user, new UserLoginInfo(provider, subject, provider));
         if (!linked.Succeeded)
         {
             // Only LoginAlreadyAssociated can fail here, which means a concurrent request linked it
             // first — the account is the same either way.
-            logger.LogWarning("Linking Google login to user {UserId} failed: {Errors}", user.Id,
+            logger.LogWarning("Linking {Provider} login to user {UserId} failed: {Errors}", provider, user.Id,
                 string.Join(", ", linked.Errors.Select(e => e.Code)));
             return user;
         }
@@ -252,7 +375,7 @@ internal sealed class AuthService(
             await userManager.UpdateAsync(user);
         }
 
-        logger.LogInformation("Linked Google login to existing user {UserId} by verified email", user.Id);
+        logger.LogInformation("Linked {Provider} login to existing user {UserId} by verified email", provider, user.Id);
         return user;
     }
 

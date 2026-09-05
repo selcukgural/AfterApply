@@ -18,6 +18,7 @@ public static class ClientConfigEndpoints
                 IOptions<IdentityOptions> identityOptions,
                 IOptions<PersonalAccessTokenOptions> personalAccessTokenOptions,
                 IOptions<GoogleAuthOptions> googleAuthOptions,
+                IOptions<LinkedInAuthOptions> linkedInAuthOptions,
                 HttpContext httpContext) =>
             {
                 // Read from IdentityOptions rather than IdentityPolicyOptions: the former is the object
@@ -26,6 +27,7 @@ public static class ClientConfigEndpoints
                 var password = identityOptions.Value.Password;
                 var tokens = personalAccessTokenOptions.Value;
                 var google = googleAuthOptions.Value;
+                var linkedIn = linkedInAuthOptions.Value;
 
                 // The values change only with a deploy or a config rollout, so let browsers and the
                 // CDN hold them for a few minutes instead of re-fetching on every form mount.
@@ -50,13 +52,14 @@ public static class ClientConfigEndpoints
                         password.RequireUppercase,
                         password.RequireNonAlphanumeric),
                     new PersonalAccessTokenLimitsResponse(tokens.MaxActiveTokens, tokens.LifetimeDays),
-                    new GoogleAuthConfigResponse(google.IsConfigured, google.IsConfigured ? google.ClientId : null)));
+                    new GoogleAuthConfigResponse(google.IsConfigured, google.IsConfigured ? google.ClientId : null),
+                    new LinkedInAuthConfigResponse(linkedIn.IsConfigured, linkedIn.IsConfigured ? linkedIn.ClientId : null)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")
             .WithDescription("The server-side limits a client should show the user up front: the password policy " +
                               "(what register and reset-password enforce), the personal-access-token limits, and whether " +
-                              "Sign in with Google is available (plus its public client id). " +
+                              "Sign in with Google/LinkedIn are available (plus their public client ids). " +
                               "Anonymous; nothing here is secret. All of it is still enforced server-side.")
             .Produces<ClientConfigResponse>();
 

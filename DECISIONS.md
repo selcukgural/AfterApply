@@ -2932,6 +2932,77 @@ binding yoktu, client-secret ise yanlışlıkla `...@cloudservices.gserviceaccou
 compute SA'ya bağlandı. Yeni secret eklerken DEPLOYMENT.md §3'teki `for` döngüsüne dahil etmek
 yetmiyor — bir sonraki deploy'dan önce `gcloud secrets get-iam-policy <secret>` ile doğrulanmalı.
 
+## LinkedIn ile giriş/kayıt eklendi — OpenID Connect, JWKS ile tam imza doğrulaması (2026-09-05)
+
+Google girişinin (üstteki kayıt) birebir ikizi olarak "LinkedIn ile devam et" eklendi: LinkedIn'in
+self-serve **"Sign In with LinkedIn using OpenID Connect"** ürünü (onay/review beklemiyor; sadece
+bir LinkedIn Page'e bağlı bir Developer App gerekiyor), düz redirect ile
+`https://www.linkedin.com/oauth/v2/authorization` (`scope=openid profile email`), sunucu tarafında
+`LinkedInAuthClient` ile `oauth/v2/accessToken` exchange'i, yalnızca `id_token` okunuyor — access
+token saklanmıyor, LinkedIn API'sine gidilmiyor. Aynı "inert until set" sözleşmesi
+(`LinkedInAuthOptions.IsConfigured`, `/api/config.linkedInAuth`, `/api/auth/linkedin*` → 404),
+aynı `signupToken` ara adımı (ayrı audience `AfterApply.LinkedInSignup`, 10 dk), aynı
+`App:WebBaseUrl` origin kontrolü, aynı şifresiz-hesap davranışı. Bu entegrasyon extension'ın
+LinkedIn ilan sayfası server-fetch'inden tamamen bağımsız, resmi ve ToS-uyumlu bir OAuth ürünü.
+
+**Karar — imza doğrulaması Google'dan farklı, JWKS ile TAM:** Kullanıcıya soruldu ("en güvenli
+yöntem o ise onu uygulayalım"). `LinkedInIdTokenReader.Read(idToken, jwks, clientId, now)`
+`JsonWebTokenHandler` ile RS256 imzayı LinkedIn'in `oauth/openid/jwks`'inden gelen anahtarlara
+karşı doğruluyor (issuer `https://www.linkedin.com`, audience = client id, expiry). JWKS
+`LinkedInJwksProvider` singleton'ında 24 saat cache'leniyor; doğrulama düşerse bir kez zorla
+yenilenip tekrar denenir (anahtar rotasyonu redeploy gerektirmez). Google'daki "TLS kanalına güven,
+imzayı atla" kararı ona özel kalıyor — ikisi bilinçli olarak farklı.
+
+**Karar — PKCE yok:** LinkedIn'in authorization/token endpoint parametre tabloları
+`code_challenge`/`code_verifier` içermiyor; confidential client + client_secret yeterli.
+`LinkedInSignInRequest(Code, RedirectUri)` — Google'daki `CodeVerifier` alanı yok; tarayıcı tarafı
+(`linkedinOAuth.ts`) sadece `state` üretiyor (login-CSRF savunması aynı).
+
+**Karar — e-posta opsiyonel, eksikse manuel ve zorunlu:** LinkedIn OIDC yanıtında `email`/
+`email_verified` resmî olarak opsiyonel ("may not be included in all responses"). Kullanıcı kararı:
+gelmezse "bu bizden kaynaklanan bir sorun değil, kayıt için e-posta şart" denip signup formunda
+zorunlu bir e-posta alanı gösterilecek. Uygulama: `LinkedInIdentity.Email` nullable;
+`email_verified=false` olan bir adres de "yok" sayılıyor (`UsableEmail`). Kullanılabilir e-posta
+varsa Google ile aynı yol (doğrulanmış e-posta ile mevcut hesaba otomatik bağlama, `EmailConfirmed=
+true`). Yoksa: sadece `AspNetUserLogins` subject'iyle aranıyor, **e-posta ile eşleme hiç
+denenmiyor** (elle yazılan bir adresle başkasının hesabını ele geçirme kapısı kapalı —
+`An_Emailless_Identity_Cannot_Take_Over_An_Existing_Account_By_Typing_Its_Email` pinliyor);
+`LinkedInSignupPrefill.Email=null` frontend'e "alanı düzenlenebilir+zorunlu göster" sinyali;
+`CompleteLinkedInSignupAsync` token'da e-posta varsa client'ın gönderdiğini yok sayıyor, yoksa
+`request.Email` zorunlu (`AUTH_LINKEDIN_EMAIL_REQUIRED`), hesap `EmailConfirmed=false` açılıyor —
+parola kaydıyla aynı, yeni bir e-posta doğrulama akışı eklenmedi ("E-posta doğrulaması bilinçli
+olarak ertelendi" kararıyla tutarlı). Dolu bir adres `CreateAsync`'in standart `DuplicateEmail`
+hatasına düşüyor.
+
+**Karar — hesap eşleme genelleştirildi:** `FindOrLinkGoogleUserAsync` →
+`FindOrLinkExternalUserAsync(provider, subject, verifiedEmail?)`; Google ve LinkedIn aynı helper'ı
+kullanıyor, `verifiedEmail=null` iken e-posta dalı atlanıyor. User şemasında değişiklik yok.
+Signup-token metodları (`CreateLinkedInSignupToken`/`ValidateLinkedInSignupToken`) Google'ınkilerle
+paralel ama ayrı — identity şekilleri farklı (nullable e-posta), ortak generic'e zorlanmadı (YAGNI).
+
+**Frontend:** `SocialSignIn` bileşeni "veya" ayracını tek yerde tutup `GoogleSignInButton` +
+`LinkedInSignInButton`'ı render ediyor (hiçbiri açık değilse hiçbir şey çizmiyor; `auth.google.or`
+→ `auth.social.or`). `/auth/linkedin/callback` sayfası Google'ınkinin eşi, `prefill.email===null`
+iken uyarı kutusu + zorunlu e-posta alanı. Gizlilik sayfasına "LinkedIn ile giriş" bölümü eklendi
+(elle girilen e-postanın doğrulanmadığı ve hesap bağlamada kullanılmadığı açıkça yazıyor);
+`dataCollection.item1` ve `noPasswordHint` metinleri "Google veya LinkedIn" oldu. Frontend'de test
+harness yok (Google'da da yoktu) — manuel tarayıcı testi gerekiyor.
+
+**Operasyonel farklar / sınırlar:** LinkedIn redirect URI'de **HTTPS zorunlu, `localhost` kabul
+etmiyor** → gerçek LinkedIn ile uçtan uca test sadece deploy edilmiş ortamda (veya tunnel ile)
+yapılabilir; yerelde akış `FakeLinkedInAuthClient` üzerinden entegrasyon testleriyle doğrulanıyor.
+Kayıtlı redirect URL'ler: `https://ekariyerim.com/tr/auth/linkedin/callback` ve `/en/...`. Secret
+Manager: `afterapply-linkedin-client-id` / `afterapply-linkedin-client-secret` (deploy.yml
+`--set-secrets`'a eklendi) — deploy'dan önce oluşturulmalı ve compute SA'ya binding verilmeli
+(üstteki "Secret Manager izni" bulgusu). App "Verify" rozeti opsiyonel; kullanıcı Page super
+admin'i olduğu için kurulumla birlikte yapılacak.
+
+**Testler:** unit 220→248 (`LinkedInIdTokenReaderTests` gerçek RSA anahtar çiftiyle imza/issuer/
+audience/expiry/yanlış-anahtar, `LinkedInJwksProviderTests` fake handler ile cache/yenileme,
+`LinkedInSignupTokenTests`, `LinkedInAuthRequestValidatorTests`), podman entegrasyon 121→134
+(`LinkedInSignInTests`: Google senaryolarının tamamı + e-postasız identity'nin 5 senaryosu;
+`ClientConfigTests` `linkedInAuth` varsayılanını pinliyor). Hepsi yeşil.
+
 ---
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)

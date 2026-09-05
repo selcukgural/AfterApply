@@ -1,4 +1,4 @@
-import type { AuthResponse, GoogleSignInResponse, UserProfileResponse } from "@/types/api";
+import type { AuthResponse, GoogleSignInResponse, LinkedInSignInResponse, UserProfileResponse } from "@/types/api";
 import { API_BASE_URL, apiFetch } from "./httpClient";
 import { authStore } from "./authStore";
 
@@ -40,6 +40,23 @@ export interface GoogleSignupRequest {
   consentAccepted: boolean;
 }
 
+// What the LinkedIn callback page posts once linkedin.com redirected back (see
+// lib/auth/linkedinOAuth.ts). No PKCE verifier — LinkedIn's flow doesn't use one.
+export interface LinkedInSignInRequest {
+  code: string;
+  redirectUri: string;
+}
+
+export interface LinkedInSignupRequest {
+  signupToken: string;
+  firstName: string;
+  lastName: string;
+  // Only sent when the prefill carried no email (LinkedIn provided none); the API ignores it
+  // otherwise and uses the verified address from the signup token.
+  email?: string;
+  consentAccepted: boolean;
+}
+
 export interface ForgotPasswordRequest {
   email: string;
 }
@@ -71,6 +88,18 @@ export const authApi = {
 
   googleSignup: (request: GoogleSignupRequest) =>
     apiFetch<AuthResponse>("/api/auth/google/signup", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  linkedInSignIn: (request: LinkedInSignInRequest) =>
+    apiFetch<LinkedInSignInResponse>("/api/auth/linkedin", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  linkedInSignup: (request: LinkedInSignupRequest) =>
+    apiFetch<AuthResponse>("/api/auth/linkedin/signup", {
       method: "POST",
       body: JSON.stringify(request),
     }),

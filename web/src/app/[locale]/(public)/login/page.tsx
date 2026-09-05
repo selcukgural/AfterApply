@@ -11,7 +11,7 @@ import { ApiError } from "@/lib/api/httpClient";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { SocialSignIn } from "@/components/auth/SocialSignIn";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -92,7 +92,7 @@ export default function LoginPage() {
             {isSubmitting ? t("submitting") : t("submit")}
           </Button>
         </form>
-        <GoogleSignInButton />
+        <SocialSignIn />
         <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
           {t("noAccount")}{" "}
           <Link href="/register" className="text-blue-600 hover:underline dark:text-blue-400">

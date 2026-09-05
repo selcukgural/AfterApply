@@ -350,10 +350,18 @@ export interface GoogleAuthConfig {
   clientId: string | null;
 }
 
+export interface LinkedInAuthConfig {
+  enabled: boolean;
+  // Public OAuth client id (it is visible in the redirect to linkedin.com anyway); null whenever
+  // enabled is false.
+  clientId: string | null;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
   googleAuth: GoogleAuthConfig;
+  linkedInAuth: LinkedInAuthConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -367,4 +375,19 @@ export interface GoogleSignupPrefill {
 export interface GoogleSignInResponse {
   auth: AuthResponse | null;
   pendingSignup: GoogleSignupPrefill | null;
+}
+
+// POST /api/auth/linkedin: exactly one of the two is set. `email` is LinkedIn's verified address
+// (shown read-only), or null when LinkedIn provided none — LinkedIn's OpenID Connect response makes
+// it optional — in which case the complete-your-sign-up form must collect and require one.
+export interface LinkedInSignupPrefill {
+  signupToken: string;
+  email: string | null;
+  firstName: string;
+  lastName: string;
+}
+
+export interface LinkedInSignInResponse {
+  auth: AuthResponse | null;
+  pendingSignup: LinkedInSignupPrefill | null;
 }

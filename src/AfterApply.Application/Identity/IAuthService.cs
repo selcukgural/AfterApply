@@ -23,6 +23,20 @@ public interface IAuthService
     /// was replayed, or a second tab won the race), the user is signed into it instead.</summary>
     Task<AuthResult> CompleteGoogleSignupAsync(GoogleSignupRequest request, string? ipAddress, CancellationToken cancellationToken);
 
+    /// <summary>Completes the browser's LinkedIn OpenID Connect authorization-code flow. Signs the
+    /// user straight in when the LinkedIn account is already linked, or when its verified email
+    /// matches an existing account (linked on the spot); otherwise returns a signup prefill — no
+    /// account is created here. Unlike <see cref="GoogleSignInAsync"/>, LinkedIn may supply no email
+    /// at all, in which case the prefill's email is null and the sign-up step must collect one.</summary>
+    Task<LinkedInSignInResult> LinkedInSignInAsync(LinkedInSignInRequest request, string? ipAddress, CancellationToken cancellationToken);
+
+    /// <summary>Creates the account for a LinkedIn identity carried by a signup token from
+    /// <see cref="LinkedInSignInAsync"/>. Idempotent like <see cref="CompleteGoogleSignupAsync"/>.
+    /// When the identity itself carried no verified email, <paramref name="request"/>'s <c>Email</c>
+    /// is required and used (unconfirmed); otherwise the token's own verified email is used and the
+    /// request's is ignored.</summary>
+    Task<AuthResult> CompleteLinkedInSignupAsync(LinkedInSignupRequest request, string? ipAddress, CancellationToken cancellationToken);
+
     /// <summary>Always completes successfully regardless of whether the email is registered —
     /// callers must not branch on this to avoid leaking account existence.</summary>
     Task ForgotPasswordAsync(ForgotPasswordRequest request, string? ipAddress, CancellationToken cancellationToken);

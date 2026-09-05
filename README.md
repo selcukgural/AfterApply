@@ -293,6 +293,37 @@ other origin before ever calling Google. No automated test calls Google; `Google
 whole flow against a fake `IGoogleAuthClient`, and `GoogleIdTokenReaderTests`/`GoogleSignupTokenTests`
 pin the token checks.
 
+## LinkedIn Sign-In Setup
+
+"Continue with LinkedIn" works the same way as Google's — an authorization-code flow driven by a
+plain redirect to `linkedin.com`, exchanged server-side (`LinkedInAuthClient`), inert until
+configured. Two differences from Google, both deliberate: no PKCE (LinkedIn's OAuth implementation
+doesn't call for a `code_verifier` from a confidential, client-secret-holding client), and the ID
+token's signature IS fully verified against LinkedIn's published JWKS (`LinkedInJwksProvider`/
+`LinkedInIdTokenReader`) rather than trusted on the TLS channel alone — LinkedIn's OpenID Connect
+response also makes `email`/`email_verified` optional, unlike Google's, so a LinkedIn sign-up can
+require the user to type an email by hand when LinkedIn didn't supply one.
+
+1. In the [LinkedIn Developer Portal](https://www.linkedin.com/developers/apps/new), create an app
+   tied to a LinkedIn Page you administer, then add the **"Sign In with LinkedIn using OpenID
+   Connect"** product under the Products tab — self-serve, no review wait. Under Auth → OAuth 2.0
+   settings, add every redirect URL the client serves (exact match, one per locale):
+   - `<WEB_ORIGIN>/tr/auth/linkedin/callback` and `<WEB_ORIGIN>/en/auth/linkedin/callback`
+   LinkedIn requires these to be `https://` — unlike Google, it does not accept a plain
+   `http://localhost` redirect, so local testing needs a tunnel (e.g. ngrok) or a staging domain.
+2. Set the two values locally via user-secrets:
+   ```bash
+   dotnet user-secrets set "LinkedInAuth:ClientId" "<client id>" --project src/AfterApply.Api
+   dotnet user-secrets set "LinkedInAuth:ClientSecret" "<client secret>" --project src/AfterApply.Api
+   ```
+   For the container/prod profile use `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` (see
+   `.env.prod.example` and `DEPLOYMENT.md`).
+
+Same `App:WebBaseUrl` origin check as Google. No automated test calls LinkedIn; `LinkedInSignInTests`
+runs the whole flow against a fake `ILinkedInAuthClient`, and
+`LinkedInIdTokenReaderTests`/`LinkedInJwksProviderTests`/`LinkedInSignupTokenTests` pin the signature
+and token checks.
+
 ## Browser Extension Setup
 
 Sprint 9 ships a Manifest V3 Chrome/Edge extension (`extension/`) that turns a LinkedIn job

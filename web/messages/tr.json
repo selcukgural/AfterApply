@@ -230,9 +230,11 @@
       "met": "(sağlandı)",
       "unmet": "(henüz sağlanmadı)"
     },
+    "social": {
+      "or": "veya"
+    },
     "google": {
       "continueWith": "Google ile devam et",
-      "or": "veya",
       "callback": {
         "title": "Google ile giriş",
         "working": "Google hesabınız doğrulanıyor...",
@@ -244,6 +246,28 @@
       "completeSignup": {
         "title": "Kaydı Tamamla",
         "description": "Google hesabınızla e-kariyerim'de yeni bir hesap oluşturulacak. Bilgilerinizi kontrol edip gizlilik politikasını onaylayın.",
+        "email": "E-posta",
+        "firstName": "Ad",
+        "lastName": "Soyad",
+        "submit": "Hesabı Oluştur",
+        "submitting": "Hesap oluşturuluyor...",
+        "genericError": "Hesap oluşturulamadı."
+      }
+    },
+    "linkedin": {
+      "continueWith": "LinkedIn ile devam et",
+      "callback": {
+        "title": "LinkedIn ile giriş",
+        "working": "LinkedIn hesabınız doğrulanıyor...",
+        "cancelled": "LinkedIn girişi iptal edildi.",
+        "invalidState": "Giriş oturumu doğrulanamadı. Lütfen tekrar deneyin.",
+        "genericError": "LinkedIn ile giriş yapılamadı.",
+        "backToLogin": "Giriş sayfasına dön"
+      },
+      "completeSignup": {
+        "title": "Kaydı Tamamla",
+        "description": "LinkedIn hesabınızla e-kariyerim'de yeni bir hesap oluşturulacak. Bilgilerinizi kontrol edip gizlilik politikasını onaylayın.",
+        "emailMissing": "LinkedIn hesabınızdan e-posta bilgisi alınamadı — bu bizden kaynaklanan bir sorun değil, LinkedIn e-posta adresinizi paylaşmadı. Hesabınız için bir e-posta adresi gerekli; lütfen kullanmak istediğiniz adresi girin.",
         "email": "E-posta",
         "firstName": "Ad",
         "lastName": "Soyad",
@@ -408,7 +432,7 @@
       "deleting": "Siliniyor...",
       "finalConfirm": "Son uyarı: Hesabınız ve tüm başvuru, import, hatırlatma ve eklenti verileriniz kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
       "genericError": "Hesap silinemedi.",
-      "noPasswordHint": "Bu hesap Google ile açıldı ve şifresi yok. Silmek için aşağıya onay kelimesini yazmanız yeterli."
+      "noPasswordHint": "Bu hesap Google veya LinkedIn ile açıldı ve şifresi yok. Silmek için aşağıya onay kelimesini yazmanız yeterli."
     }
   },
   "emailSuggestions": {
@@ -454,7 +478,7 @@
     "dataCollection": {
       "title": "Hangi veriyi topluyoruz ve neden",
       "intro": "e-kariyerim, iş başvurularınızı takip etmenize yardımcı olan kişisel bir araçtır. Hizmeti sağlayabilmek için şu verileri işleriz:",
-      "item1": "Hesap bilgileri: ad, soyad, e-posta adresi ve şifre (hash'lenmiş olarak saklanır). Google ile giriş yapıyorsanız şifre yerine Google hesap kimliğiniz saklanır (aşağıya bakın).",
+      "item1": "Hesap bilgileri: ad, soyad, e-posta adresi ve şifre (hash'lenmiş olarak saklanır). Google veya LinkedIn ile giriş yapıyorsanız şifre yerine o hesabın kimliği saklanır (aşağıya bakın).",
       "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar.",
       "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
       "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
@@ -469,6 +493,16 @@
       "noAccess": "Gmail'inize, kişilerinize, Drive'ınıza veya Google hesabınızdaki başka hiçbir veriye erişmeyiz ve bunun için izin istemeyiz. Google'ın bize verdiği erişim jetonlarını saklamayız; giriş tamamlandığı anda atılır.",
       "linking": "Google hesabınızın doğrulanmış e-posta adresi, e-kariyerim'de zaten şifreyle açılmış bir hesaba aitse, Google girişi o hesaba bağlanır ve aynı hesaba girersiniz; şifreniz geçerliliğini korur.",
       "revoke": "Google tarafındaki izni istediğiniz zaman Google Hesabınız → Güvenlik → Üçüncü taraf uygulamalar bölümünden kaldırabilirsiniz. e-kariyerim hesabınızı silmek Google ile ilişkilendirmeyi de siler."
+    },
+    "linkedInSignIn": {
+      "title": "LinkedIn ile giriş",
+      "intro": "LinkedIn ile giriş isteğe bağlı bir giriş yöntemidir; e-posta ve şifreyle kayıt olmaya alternatiftir. Kullandığınızda LinkedIn'den yalnızca şunları alırız:",
+      "item1": "LinkedIn hesabınızın sabit kimlik numarası (hesabınızı e-posta adresiniz değişse bile tanıyabilmek için).",
+      "item2": "LinkedIn tarafından doğrulanmış e-posta adresiniz — LinkedIn paylaşırsa. LinkedIn bunu her zaman paylaşmaz; bu durumda kaydı tamamlarken sizden bir e-posta adresi girmenizi isteriz ve bu adres tarafımızca doğrulanmaz.",
+      "item3": "LinkedIn profilinizdeki ad ve soyad (kayıt formunda önceden doldurulur, kaydetmeden önce değiştirebilirsiniz).",
+      "noAccess": "Bağlantılarınıza, mesajlarınıza, paylaşımlarınıza veya LinkedIn hesabınızdaki başka hiçbir veriye erişmeyiz ve bunun için izin istemeyiz. LinkedIn'in bize verdiği erişim jetonlarını saklamayız; giriş tamamlandığı anda atılır.",
+      "linking": "LinkedIn tarafından doğrulanmış e-posta adresiniz, e-kariyerim'de zaten şifreyle açılmış bir hesaba aitse, LinkedIn girişi o hesaba bağlanır ve aynı hesaba girersiniz; şifreniz geçerliliğini korur. Kendi girdiğiniz bir e-posta adresi hiçbir zaman mevcut bir hesaba bağlanmak için kullanılmaz.",
+      "revoke": "LinkedIn tarafındaki izni istediğiniz zaman Ayarlar ve Gizlilik → Veri gizliliği → Diğer uygulamalar → İzin verilen hizmetler bölümünden kaldırabilirsiniz. e-kariyerim hesabınızı silmek LinkedIn ile ilişkilendirmeyi de siler."
     },
     "crossBorderTransfer": {
       "title": "Yurt dışına veri aktarımı",

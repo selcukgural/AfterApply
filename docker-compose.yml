@@ -40,6 +40,8 @@ services:
       Jwt__SigningKey: "${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}"
       GoogleAuth__ClientId: "${GOOGLE_CLIENT_ID:-}"
       GoogleAuth__ClientSecret: "${GOOGLE_CLIENT_SECRET:-}"
+      LinkedInAuth__ClientId: "${LINKEDIN_CLIENT_ID:-}"
+      LinkedInAuth__ClientSecret: "${LINKEDIN_CLIENT_SECRET:-}"
       # Default is the real policy (5/min per IP). The API contract check in CI raises it — its
       # Postman collection fires every /api/auth/* request back to back from one IP, and the 6th
       # would otherwise be a 429 that has nothing to do with the contract being checked.

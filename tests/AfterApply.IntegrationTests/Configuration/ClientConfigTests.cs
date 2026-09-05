@@ -42,6 +42,8 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
             // was written on). Clear them so "not configured" means exactly that, everywhere.
             builder.UseSetting("GoogleAuth:ClientId", "");
             builder.UseSetting("GoogleAuth:ClientSecret", "");
+            builder.UseSetting("LinkedInAuth:ClientId", "");
+            builder.UseSetting("LinkedInAuth:ClientSecret", "");
         });
 
         _overriddenFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -87,6 +89,7 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
         config.PersonalAccessTokens.ShouldBe(new PersonalAccessTokenLimitsResponse(10, 90));
         // No GoogleAuth section set: the feature is reported off and no client id leaks out.
         config.GoogleAuth.ShouldBe(new GoogleAuthConfigResponse(false, null));
+        config.LinkedInAuth.ShouldBe(new LinkedInAuthConfigResponse(false, null));
     }
 
     [Fact]

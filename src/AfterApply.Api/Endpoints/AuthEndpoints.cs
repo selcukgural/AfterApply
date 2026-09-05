@@ -107,6 +107,67 @@ public static class AuthEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status429TooManyRequests);
 
+        // Same 404-while-unconfigured shape as the Google routes above — see LinkedInAuthOptions.
+        group.MapPost("/linkedin", async (LinkedInSignInRequest request, IAuthService authService,
+                IOptions<LinkedInAuthOptions> linkedInAuth, IStringLocalizer<SharedStrings> localizer,
+                HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                if (!linkedInAuth.Value.IsConfigured)
+                {
+                    return Results.NotFound();
+                }
+
+                var result = await authService.LinkedInSignInAsync(request, GetIpAddress(httpContext), cancellationToken);
+                return result.Succeeded
+                    ? Results.Ok(result.Response)
+                    : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
+            })
+            .WithValidation<LinkedInSignInRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Sign in with LinkedIn (OpenID Connect authorization code)")
+            .WithDescription("Exchanges the authorization code LinkedIn redirected back with. Returns either `auth` " +
+                              "(the same access/refresh token pair as Login) or `pendingSignup` (no account yet: show " +
+                              "the complete-your-sign-up form and POST /linkedin/signup). `pendingSignup.email` is null " +
+                              "when LinkedIn's response carried no verified email, in which case the form must collect " +
+                              "and require one. 404 when Sign in with LinkedIn is not configured on this deployment.")
+            .Produces<LinkedInSignInResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        group.MapPost("/linkedin/signup", async (LinkedInSignupRequest request, IAuthService authService,
+                IOptions<LinkedInAuthOptions> linkedInAuth, IStringLocalizer<SharedStrings> localizer,
+                HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                if (!linkedInAuth.Value.IsConfigured)
+                {
+                    return Results.NotFound();
+                }
+
+                var result = await authService.CompleteLinkedInSignupAsync(request, GetIpAddress(httpContext), cancellationToken);
+                if (result.Succeeded)
+                {
+                    return Results.Created("/api/users/me", result.Response);
+                }
+
+                // The two bare codes (expired/tampered signup token, or a required-but-missing
+                // email) or Identity's already localized descriptions — same split as Google's.
+                var errors = result.Errors.Select(e =>
+                    e is "AUTH_LINKEDIN_SIGNUP_EXPIRED" or "AUTH_LINKEDIN_EMAIL_REQUIRED" ? (string)localizer[e] : e).ToArray();
+                return Results.ValidationProblem(new Dictionary<string, string[]> { ["error"] = errors });
+            })
+            .WithValidation<LinkedInSignupRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Create the account for a new LinkedIn sign-in")
+            .WithDescription("Second step after /linkedin returned `pendingSignup`: creates the account under the " +
+                              "LinkedIn identity carried by `signupToken` (valid 10 minutes). `email` is required only " +
+                              "when the prefill's email was null — otherwise it is ignored and the token's own verified " +
+                              "email is used. An expired/tampered signup token or a missing required email is a 400 " +
+                              "validation problem. 404 when Sign in with LinkedIn is not configured.")
+            .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
         group.MapPost("/refresh", async (RefreshRequest request, IAuthService authService,
                 IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
             {

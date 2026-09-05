@@ -35,6 +35,15 @@
   <data name="AUTH_GOOGLE_SIGNUP_EXPIRED" xml:space="preserve">
     <value>Google kayıt oturumunuzun süresi doldu. Lütfen Google ile tekrar giriş yapın.</value>
   </data>
+  <data name="AUTH_LINKEDIN_FAILED" xml:space="preserve">
+    <value>LinkedIn ile giriş tamamlanamadı. Lütfen tekrar deneyin.</value>
+  </data>
+  <data name="AUTH_LINKEDIN_EMAIL_REQUIRED" xml:space="preserve">
+    <value>LinkedIn hesabınızdan e-posta bilgisi alınamadı, bu bizden kaynaklanan bir sorun değil. Kaydı tamamlamak için bir e-posta adresi girmeniz gerekiyor.</value>
+  </data>
+  <data name="AUTH_LINKEDIN_SIGNUP_EXPIRED" xml:space="preserve">
+    <value>LinkedIn kayıt oturumunuzun süresi doldu. Lütfen LinkedIn ile tekrar giriş yapın.</value>
+  </data>
   <data name="AUTH_WRONG_PASSWORD" xml:space="preserve">
     <value>Şifre hatalı.</value>
   </data>

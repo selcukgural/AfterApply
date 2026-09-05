@@ -230,9 +230,11 @@
       "met": "(met)",
       "unmet": "(not met yet)"
     },
+    "social": {
+      "or": "or"
+    },
     "google": {
       "continueWith": "Continue with Google",
-      "or": "or",
       "callback": {
         "title": "Signing in with Google",
         "working": "Verifying your Google account...",
@@ -244,6 +246,28 @@
       "completeSignup": {
         "title": "Complete Your Sign-Up",
         "description": "A new e-kariyerim account will be created for your Google account. Check your details and accept the privacy policy.",
+        "email": "Email",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "submit": "Create Account",
+        "submitting": "Creating account...",
+        "genericError": "Could not create account."
+      }
+    },
+    "linkedin": {
+      "continueWith": "Continue with LinkedIn",
+      "callback": {
+        "title": "Signing in with LinkedIn",
+        "working": "Verifying your LinkedIn account...",
+        "cancelled": "LinkedIn sign-in was cancelled.",
+        "invalidState": "The sign-in session could not be verified. Please try again.",
+        "genericError": "Could not sign in with LinkedIn.",
+        "backToLogin": "Back to login"
+      },
+      "completeSignup": {
+        "title": "Complete Your Sign-Up",
+        "description": "A new e-kariyerim account will be created for your LinkedIn account. Check your details and accept the privacy policy.",
+        "emailMissing": "We could not get an email address from your LinkedIn account — this isn't an error on our end, LinkedIn simply did not share one. An email address is required for your account, so please enter the one you'd like to use.",
         "email": "Email",
         "firstName": "First name",
         "lastName": "Last name",
@@ -408,7 +432,7 @@
       "deleting": "Deleting...",
       "finalConfirm": "Final warning: your account and all of your application, import, reminder, and extension data will be permanently deleted. This cannot be undone. Do you want to continue?",
       "genericError": "Could not delete account.",
-      "noPasswordHint": "This account was created with Google and has no password. Type the confirmation word below to delete it."
+      "noPasswordHint": "This account was created with Google or LinkedIn and has no password. Type the confirmation word below to delete it."
     }
   },
   "emailSuggestions": {
@@ -454,7 +478,7 @@
     "dataCollection": {
       "title": "What data we collect and why",
       "intro": "e-kariyerim is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
-      "item1": "Account details: first name, last name, email address and password (stored hashed). If you sign in with Google, your Google account identifier is stored instead of a password (see below).",
+      "item1": "Account details: first name, last name, email address and password (stored hashed). If you sign in with Google or LinkedIn, that account's identifier is stored instead of a password (see below).",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
@@ -469,6 +493,16 @@
       "noAccess": "We do not access, and never request permission for, your Gmail, contacts, Drive or any other data in your Google account. We do not store the access tokens Google issues us; they are discarded as soon as sign-in completes.",
       "linking": "If the verified email address of your Google account already belongs to an e-kariyerim account created with a password, the Google sign-in is linked to that account and signs you into it; your password keeps working.",
       "revoke": "You can remove the permission on Google's side at any time under Google Account → Security → Third-party apps. Deleting your e-kariyerim account also removes the link to Google."
+    },
+    "linkedInSignIn": {
+      "title": "Sign in with LinkedIn",
+      "intro": "Sign in with LinkedIn is an optional login method, an alternative to registering with email and password. When you use it, we receive only the following from LinkedIn:",
+      "item1": "Your LinkedIn account's permanent identifier (so we can recognise your account even if your email address changes).",
+      "item2": "Your email address, as verified by LinkedIn — if LinkedIn shares it. LinkedIn does not always do so; in that case we ask you to enter an email address yourself when you complete your sign-up, and that address is not verified by us.",
+      "item3": "The first and last name on your LinkedIn profile (pre-filled in the sign-up form; you can change them before saving).",
+      "noAccess": "We do not access, and never request permission for, your connections, messages, posts or any other data in your LinkedIn account. We do not store the access tokens LinkedIn issues us; they are discarded as soon as sign-in completes.",
+      "linking": "If the email address verified by LinkedIn already belongs to an e-kariyerim account created with a password, the LinkedIn sign-in is linked to that account and signs you into it; your password keeps working. An email address you typed in yourself is never used to link to an existing account.",
+      "revoke": "You can remove the permission on LinkedIn's side at any time under Settings & Privacy → Data privacy → Other applications → Permitted services. Deleting your e-kariyerim account also removes the link to LinkedIn."
     },
     "crossBorderTransfer": {
       "title": "Cross-border data transfer",

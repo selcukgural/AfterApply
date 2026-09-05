@@ -7,6 +7,7 @@ import { beginGoogleSignIn } from "@/lib/auth/googleOAuth";
 
 // Renders nothing until GET /api/config says Sign in with Google is configured on this
 // deployment — the endpoints behind it answer 404 otherwise, so a button would be a dead end.
+// The "or" divider above the social buttons lives in SocialSignIn, not here.
 export function GoogleSignInButton() {
   const { config } = useClientConfig();
   const locale = useLocale();
@@ -32,22 +33,15 @@ export function GoogleSignInButton() {
   };
 
   return (
-    <div className="mt-4 flex flex-col gap-4">
-      <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
-        <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
-        {t("or")}
-        <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
-      </div>
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={isRedirecting}
-        className="flex items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
-      >
-        <GoogleLogo />
-        {t("continueWith")}
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isRedirecting}
+      className="flex items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+    >
+      <GoogleLogo />
+      {t("continueWith")}
+    </button>
   );
 }
 

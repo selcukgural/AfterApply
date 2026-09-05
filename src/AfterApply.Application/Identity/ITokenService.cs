@@ -21,4 +21,14 @@ public interface ITokenService
     /// <summary>Null for anything that is not an unexpired token from
     /// <see cref="CreateGoogleSignupToken"/> — including one of our own access tokens.</summary>
     GoogleIdentity? ValidateGoogleSignupToken(string token);
+
+    /// <summary>Same role as <see cref="CreateGoogleSignupToken"/>, for a LinkedIn sign-up. A
+    /// separate pair of methods rather than a shared generic one: <see cref="LinkedInIdentity"/>'s
+    /// email is nullable (LinkedIn's OpenID Connect response makes it optional) where
+    /// <see cref="GoogleIdentity"/>'s is not, so the two claim sets aren't quite interchangeable.</summary>
+    string CreateLinkedInSignupToken(LinkedInIdentity identity);
+
+    /// <summary>Null for anything that is not an unexpired token from
+    /// <see cref="CreateLinkedInSignupToken"/> — including one of our own access tokens.</summary>
+    LinkedInIdentity? ValidateLinkedInSignupToken(string token);
 }

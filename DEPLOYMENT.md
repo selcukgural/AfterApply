@@ -214,6 +214,12 @@ printf '%s' "<resend-api-key-veya-REPLACE_WITH_RESEND_API_KEY>" | gcloud secrets
 # off (button hidden, /api/auth/google* answer 404) until real values are added.
 printf '%s' "<google-oauth-client-id-veya-bos>" | gcloud secrets create afterapply-google-client-id --data-file=-
 printf '%s' "<google-oauth-client-secret-veya-bos>" | gcloud secrets create afterapply-google-client-secret --data-file=-
+# Sign in with LinkedIn — a LinkedIn Developer app (tied to the e-kariyerim LinkedIn Page, with the
+# "Sign In with LinkedIn using OpenID Connect" product enabled), with <web-origin>/tr/auth/linkedin/callback
+# and /en/... as authorized redirect URLs (HTTPS only; see README.md "LinkedIn Sign-In Setup"). Same
+# contract as Google: both secrets must EXIST for --set-secrets, empty values keep the feature off.
+printf '%s' "<linkedin-client-id-veya-bos>" | gcloud secrets create afterapply-linkedin-client-id --data-file=-
+printf '%s' "<linkedin-client-secret-veya-bos>" | gcloud secrets create afterapply-linkedin-client-secret --data-file=-
 # Placeholder — the real web Cloud Run URL isn't known until step 4's
 # deploy-web run; step 4 shows how to update this in place afterward. Also used as
 # App:WebBaseUrl (see deploy.yml) — same value, used to build links in outbound email.
@@ -223,6 +229,7 @@ for s in afterapply-postgres-connection afterapply-redis-connection \
          afterapply-jwt-signing-key afterapply-sentry-dsn afterapply-openai-api-key \
          afterapply-resend-api-key \
          afterapply-google-client-id afterapply-google-client-secret \
+         afterapply-linkedin-client-id afterapply-linkedin-client-secret \
          afterapply-web-origin; do
   gcloud secrets add-iam-policy-binding "$s" \
     --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"

@@ -1,11 +1,13 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
-import type { AuthResponse, GoogleSignInResponse, UserProfileResponse } from "@/types/api";
+import type { AuthResponse, GoogleSignInResponse, LinkedInSignInResponse, UserProfileResponse } from "@/types/api";
 import {
   authApi,
   type GoogleSignInRequest,
   type GoogleSignupRequest,
+  type LinkedInSignInRequest,
+  type LinkedInSignupRequest,
   type LoginRequest,
   type RegisterRequest,
 } from "@/lib/api/auth";
@@ -24,6 +26,9 @@ interface AuthContextValue {
   // store untouched until completeGoogleSignup creates the account.
   signInWithGoogle: (request: GoogleSignInRequest) => Promise<GoogleSignInResponse>;
   completeGoogleSignup: (request: GoogleSignupRequest) => Promise<AuthResponse>;
+  // Same contract as the Google pair above, for Sign in with LinkedIn.
+  signInWithLinkedIn: (request: LinkedInSignInRequest) => Promise<LinkedInSignInResponse>;
+  completeLinkedInSignup: (request: LinkedInSignupRequest) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   // password is omitted for an account that has none (user.hasPassword === false).
   deleteAccount: (password?: string) => Promise<void>;
@@ -86,6 +91,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return auth;
   }, []);
 
+  const signInWithLinkedIn = useCallback(async (request: LinkedInSignInRequest) => {
+    const result = await authApi.linkedInSignIn(request);
+    if (result.auth) {
+      authStore.setAuth(result.auth);
+    }
+    return result;
+  }, []);
+
+  const completeLinkedInSignup = useCallback(async (request: LinkedInSignupRequest) => {
+    const auth = await authApi.linkedInSignup(request);
+    authStore.setAuth(auth);
+    return auth;
+  }, []);
+
   const logout = useCallback(async () => {
     const refreshToken = authStore.getRefreshToken();
     try {
@@ -112,6 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         signInWithGoogle,
         completeGoogleSignup,
+        signInWithLinkedIn,
+        completeLinkedInSignup,
         logout,
         deleteAccount,
       }}
