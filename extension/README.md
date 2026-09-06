@@ -18,6 +18,14 @@ original (LinkedIn-only) design.
    "Open Settings" (or right-click the icon → Options). Set the **API base URL** (default
    `http://localhost:5151` for local dev) and paste the **access token**, then Save.
 
+> **Testing against a local API needs one temporary manifest edit.** `host_permissions` ships
+> without `http://localhost/*` on purpose — a published extension asking to read and change data on
+> localhost is a permission users shouldn't have to grant for a feature they'll never use. Without
+> it, MV3 subjects the popup's `fetch` to CORS, the API only allows `http://localhost:3000`, and
+> every submit fails with the generic "could not reach e-kariyerim". So while testing locally, add
+> `"http://localhost/*"` to `host_permissions`, reload the extension — **and take it back out
+> before committing.**
+
 ## Using it
 
 Navigate to a LinkedIn job posting page (`linkedin.com/jobs/view/<id>/...`) or a kariyer.net job

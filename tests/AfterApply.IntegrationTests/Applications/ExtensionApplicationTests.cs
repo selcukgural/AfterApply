@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
@@ -177,6 +178,63 @@ public class ExtensionApplicationTests(SharedInfrastructure shared) : IAsyncLife
         detail!.CompanyWebsite.ShouldBe("https://enrichedlabs.example");
         detail.CompanyLinkedInUrl.ShouldBe("https://www.linkedin.com/company/enriched-labs/");
         detail.CompanyName.ShouldBe("Enriched Labs");
+    }
+
+    // Extension updates are not something we can force: a user can stay on an old build
+    // indefinitely (Chrome Web Store review alone can take days), so every field the newer builds
+    // added has to be optional on the wire, not just in the C# signature. This posts the exact JSON
+    // body extension 0.5.0 sends — captured from that build's popup.js, not paraphrased — so the
+    // day someone makes one of these fields required, this test says so instead of a user's popup
+    // silently failing.
+    [Fact]
+    public async Task A_Body_From_Extension_0_5_0_Still_Creates_An_Application()
+    {
+        const string legacyBody = """
+            {
+              "companyName": "Legacy Ext Corp",
+              "jobTitle": "Backend Engineer",
+              "jobUrl": "https://www.linkedin.com/jobs/view/4400000001/",
+              "location": "Istanbul",
+              "description": "We build things.",
+              "descriptionHtml": "<p>We build things.</p>",
+              "publishedAt": null,
+              "companyLinkedInUrl": "https://www.linkedin.com/company/legacy-ext-corp/"
+            }
+            """;
+
+        var response = await _client.PostAsync("/api/applications/from-extension",
+            new StringContent(legacyBody, Encoding.UTF8, "application/json"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+        result!.Application.CompanyName.ShouldBe("Legacy Ext Corp");
+        result.Application.Source.ShouldBe(Source.BrowserExtension);
+        // Everything the newer builds added simply stays empty.
+        result.Application.HrName.ShouldBeNull();
+        result.Application.HrEmail.ShouldBeNull();
+        result.Application.HrLinkedInUrl.ShouldBeNull();
+    }
+
+    // The other direction: a newer extension can reach a backend that has not been redeployed yet.
+    // Unknown properties must be ignored rather than rejected, or the rollout order would become
+    // load-bearing.
+    [Fact]
+    public async Task A_Body_Carrying_Fields_This_Backend_Does_Not_Know_Is_Still_Accepted()
+    {
+        const string futureBody = """
+            {
+              "companyName": "Future Ext Corp",
+              "jobTitle": "Backend Engineer",
+              "jobUrl": "https://www.linkedin.com/jobs/view/4400000002/",
+              "somethingAddedLater": "whatever",
+              "hrPhoneNumber": "+90 555 000 0000"
+            }
+            """;
+
+        var response = await _client.PostAsync("/api/applications/from-extension",
+            new StringContent(futureBody, Encoding.UTF8, "application/json"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
     // The extension only ever sends this when LinkedIn's hiring-team card was actually present —

@@ -3363,6 +3363,42 @@ bekler. Değişiklik yapılırken açık PR yoktu.
 
 ---
 
+## Backend, eklenti sürümünden bağımsız çalışmak zorunda — `/from-extension` sözleşmesi geriye dönük kırılamaz (2026-09-06)
+
+**Karar (DECIDED):** Tarayıcı eklentisinin güncellenmesini zorunlu kılamayız, dolayısıyla backend
+**yayında olan her eklenti sürümüyle** çalışmaya devam etmek zorundadır. Bu, `/from-extension`
+istek sözleşmesini kalıcı olarak additive-only yapar.
+
+**Neden:** Kullanıcının eklentiyi güncelleme yükümlülüğü yok; üstelik olsa bile Chrome Web Store
+incelemesi günler sürebiliyor. Yani "yeni alan ekledik, eklentiyi güncelleyin" diyebileceğimiz bir
+dünya yok — eski build'ler sahada kalmaya devam eder. Bir alanı zorunlu yapmak, yeniden
+adlandırmak veya kaldırmak, o build'leri kullanan herkesin "Başvurdum" akışını sessizce kırar:
+popup yalnızca `response.ok` bakıyor, kullanıcı sadece genel bir hata mesajı görür.
+
+**Kurallar:**
+
+- `CreateFromExtensionRequest`'e eklenen her alan **wire üzerinde opsiyonel** olmak zorunda —
+  yalnızca C# imzasında `= null` olması yetmez, validator'da da zorunlu hâle getirilmemeli.
+- Alan silme/yeniden adlandırma yasak. Bir alan artık kullanılmıyorsa kabul edilmeye devam edip
+  yok sayılır.
+- Ters yön de korunur: yeni eklenti, henüz deploy edilmemiş bir backend'e tanımadığı alanları
+  gönderebilir. `UnmappedMemberHandling.Disallow` **açılmamalı** (bugün açık değil), aksi hâlde
+  deploy sırası load-bearing hâle gelir.
+
+**Nasıl korunuyor:** İki regresyon testi (`ExtensionApplicationTests`):
+`A_Body_From_Extension_0_5_0_Still_Creates_An_Application` — 0.5.0'ın `popup.js`'inden birebir
+alınan ham JSON gövdesini POST eder (parafraz değil, literal); ve
+`A_Body_Carrying_Fields_This_Backend_Does_Not_Know_Is_Still_Accepted` — bilinmeyen alanların 400
+üretmediğini doğrular. Biri kırılırsa, sahadaki bir kullanıcının popup'ı sessizce bozulmadan önce
+test söyler.
+
+**Yan karar:** Popup ve Ayarlar sayfalarının altına kurulu sürümü gösteren küçük bir satır eklendi
+(`extension/version.js`, manifest'ten okunur). Sebebi doğrudan yukarıdaki karar: sahada birden çok
+eklenti sürümü aynı anda yaşadığı için, bir davranış raporu geldiğinde ilk sorulacak şey "hangi
+build kurulu" oluyordu ve cevabı `chrome://extensions`'a gitmeden alınamıyordu.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

@@ -1,6 +1,7 @@
 import { getSettings, saveSettings, getGmailScanEnabled, setGmailScanEnabled } from "./storage.js";
 import { setUpThemeToggle } from "./theme.js";
 import { t, setUpLanguageToggle } from "./i18n.js";
+import { renderVersion } from "./version.js";
 
 const apiBaseUrlInput = document.getElementById("apiBaseUrl");
 const tokenInput = document.getElementById("token");
@@ -22,6 +23,7 @@ function applyLanguage(lang) {
   document.getElementById("gmailScanLabel").textContent = t(lang, "options.gmailScanLabel");
   document.getElementById("gmailScanHelp").textContent = t(lang, "options.gmailScanHelp");
   document.getElementById("gmailScanToggle").textContent = t(lang, "options.gmailScanToggle");
+  renderVersion(lang);
 
   if (statusEl.dataset.i18nKey) {
     statusEl.textContent = t(lang, statusEl.dataset.i18nKey);

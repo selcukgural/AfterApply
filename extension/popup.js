@@ -1,6 +1,7 @@
 import { getSettings } from "./storage.js";
 import { setUpThemeToggle } from "./theme.js";
 import { t, setUpLanguageToggle } from "./i18n.js";
+import { renderVersion } from "./version.js";
 
 const content = document.getElementById("content");
 const SITE_LABELS = { linkedin: "LinkedIn", kariyer: "kariyer.net" };
@@ -204,19 +205,78 @@ async function scrapeLinkedInJob(jobId) {
   // The job poster ("hirer"), when LinkedIn renders one — it is opt-in, so most postings have no
   // such card at all (2 of 3 live postings checked on 2026-09-06 had none).
   //
-  // Scoped to .hirer-card__hirer-information rather than "the first /in/ link on the page", and
-  // that distinction is the whole point: a job page also carries Premium's "People you can reach
-  // out to" block, which links school alumni and 3rd-degree connections who have nothing to do
-  // with the posting. Verified live on 2026-09-06 across three postings — the alumni-only one
-  // exposed two /in/ anchors and this selector correctly matched none of them, while the posting
-  // with a real hiring team resolved to the right person. Recording a random alum as "the HR
-  // contact" would be a stranger's personal data written down for no reason.
+  // Never "the first /in/ link on the page", and that distinction is the whole point: a job page
+  // also carries a "People you can reach out to" block linking school alumni and 3rd-degree
+  // connections who have nothing to do with the posting. Verified live on 2026-09-06 — one posting
+  // exposed two /in/ anchors that were all the same unrelated alum. Recording a stranger as "the
+  // HR contact" would be a third party's personal data written down for no reason.
   //
-  // The class is LinkedIn's own semantic naming (siblings include hirer-card__job-poster), not one
-  // of the hashed atomic classes this file warns about elsewhere, and it carries no locale in it —
-  // which the section heading ("Meet the hiring team") does.
-  const hirerInfo = document.querySelector(".hirer-card__hirer-information");
-  const hirerLink = hirerInfo?.querySelector('a[href*="/in/"]');
+  // LinkedIn is mid-migration and serves two different job layouts, so both are handled:
+  //
+  //  - Classic (/jobs/search/): semantic BEM classes. .hirer-card__hirer-information isolates the
+  //    poster on its own, carries no locale, and siblings like hirer-card__job-poster confirm it.
+  //
+  //  - The newer server-driven layout (/jobs/search-results/, the one LinkedIn is moving to —
+  //    it announces "we're gradually retiring classic job search"): every class is hashed and
+  //    meaningless, and there is no hirer-specific attribute. The only stable hook is the SDUI
+  //    component name on the surrounding block. That block is *not* specific enough on its own —
+  //    it holds the alumni list and the hiring team together, under one "people who can help"
+  //    umbrella — so the hiring-team sub-block still has to be picked out by its own heading,
+  //    which is the one locale-dependent thing in here. An unrecognised heading yields nothing
+  //    rather than a guess, which is the safe direction: the field stays empty and the user fills
+  //    it in, exactly as when no hiring team exists at all.
+  // Both strings read off live pages (the Turkish one confirmed on a Turkish-locale account,
+  // 2026-09-06). Compared through normalizeHeading below rather than directly, because a plain
+  // toLowerCase() comparison silently never matches the Turkish heading: "İ".toLowerCase() is
+  // "i" + U+0307 (a combining dot), not "i", and "I".toLowerCase() is "i" while the Turkish
+  // lowercase is "ı". Folding both sides the same way sidesteps the whole dotted/dotless mess.
+  // (Unlike the backend's email-phrase matching, where folding the *input* would destroy the
+  // signal being matched, here both sides are fixed strings we control the comparison of.)
+  const HIRING_TEAM_HEADINGS = ["Meet the hiring team", "İşe alım ekibiyle tanışın"];
+
+  function normalizeHeading(text) {
+    return (text || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i");
+  }
+
+  const normalizedHeadings = HIRING_TEAM_HEADINGS.map(normalizeHeading);
+
+  function findHirerAnchor() {
+    const classic = document.querySelector('.hirer-card__hirer-information a[href*="/in/"]');
+    if (classic) {
+      return classic;
+    }
+
+    const peopleBlock = document.querySelector('[data-sdui-component*="peopleWhoCanHelp"]');
+    if (!peopleBlock) {
+      return null;
+    }
+
+    const heading = [...peopleBlock.querySelectorAll("*")].find(
+      (el) => el.children.length === 0 && normalizedHeadings.includes(normalizeHeading(el.textContent)),
+    );
+    if (!heading) {
+      return null;
+    }
+
+    // Walk up from the heading to the sub-block it introduces: the first ancestor that both starts
+    // with that heading and holds a profile link. Reaching the umbrella block means the hiring team
+    // has no profile of its own and whatever links are in there belong to the alumni list, so it
+    // stops there and returns nothing.
+    const headingText = normalizeHeading(heading.textContent);
+    let block = heading.parentElement;
+    while (block && block !== peopleBlock) {
+      const startsWithHeading = normalizeHeading(block.innerText).startsWith(headingText);
+      const anchor = block.querySelector('a[href*="/in/"]');
+      if (startsWithHeading && anchor) {
+        return anchor;
+      }
+      block = block.parentElement;
+    }
+
+    return null;
+  }
+
+  const hirerLink = findHirerAnchor();
   // Raw href; canonicalized back in popup.js's own scope, same as the company URL above.
   const hrLinkedInUrl = hirerLink?.href || null;
   // innerText, not textContent: the anchor also wraps a "<name> is verified" badge on its own
@@ -533,6 +593,9 @@ function relabelForm() {
 function render() {
   const lang = state.lang;
   document.title = t(lang, "popup.pageTitle");
+  // Outside the screen branches below: the footer is there on every screen, including "no job
+  // here" and "no token yet", which are exactly the moments someone checks their version.
+  renderVersion(lang);
 
   if (state.screen === "form") {
     relabelForm();
