@@ -5,6 +5,7 @@ name: Tests
 # `push: main` event, so nothing made a deploy wait for the tests — a red main push deployed
 # anyway. Keeping the jobs here means the PR gate and the deploy gate cannot drift apart, and
 # main pushes run them once rather than once per workflow. See DECISIONS.md.
+# (temporary line — opened only to watch the renamed required checks report on a PR)
 on:
   workflow_call:
 
