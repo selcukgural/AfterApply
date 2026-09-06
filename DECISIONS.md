@@ -3399,6 +3399,60 @@ build kurulu" oluyordu ve cevabı `chrome://extensions`'a gitmeden alınamıyord
 
 ---
 
+## Eklenti gizlilik politikası kendi sayfasında; eklenti değişiklikleri release olarak ele alınır (2026-09-06)
+
+**Karar (DECIDED):** Tarayıcı eklentisinin gizlilik politikası, web uygulamasında **kendi
+route'unda** yayınlanır — `/extension-privacy`
+(`web/src/app/[locale]/(public)/extension-privacy/page.tsx` + `web/messages/*.json` içindeki
+`extensionPrivacy` bloğu, TR/EN). `extension/store-listing/PRIVACY_POLICY.md` bu sayfanın **kaynak
+metni** olarak kalır; ikisi birlikte düzenlenir.
+
+**Neden ayrı sayfa (mevcut `/privacy`'ye bölüm eklemek yerine):** `/privacy` hesap düzeyindeki
+politika — giriş sağlayıcıları, saklama, KVKK hakları, yurt dışı aktarım. Chrome Web Store
+incelemecisinin Privacy practices sekmesine girilen URL'i açtığında **yalnızca eklentiyi anlatan**
+bir belgeye düşmesi gerekiyor; anchor'lı bir bölüm bunu gömer. İki sayfa birbirine link veriyor:
+`/privacy` içine "Tarayıcı eklentisi" bölümü, `/extension-privacy` içine "Hesabınıza kaydedilen
+veriler" bölümü eklendi. `sitemap.ts`'in `PUBLIC_PATHS`'ine de eklendi.
+
+**Bu arada düzeltilen yanlış bilgi:** `extension/README.md` "publishing bu sprint'te yapılmadı"
+diyordu ve bu **eskimişti** — item 2026-09-01 civarında `0.4.0` ile yayına alınmış
+(`fa2daff`, yardım merkezine "now that the extension is published" diyerek store linkini ekliyor;
+`DECISIONS.md`'nin 2026-09-03 kaydı da "canlı listing etkilenmedi" diyor). `0.5.0` ve `0.6.0`
+yüklenmedi. Yani **sahadaki kullanıcıların kurulu sürümünde Gmail Taraması, `mail.google.com` host
+izni, content script ve İK kontağı yok.** Dashboard'daki mevcut gizlilik politikası URL'i de
+`0.4.0` için girilmişti, dolayısıyla bir sonraki yüklemede değişmek zorunda. README ve
+`PUBLISHING_CHECKLIST.md` bu gerçeğe göre düzeltildi; kesin yayında olan sürüm yalnızca Dashboard'dan
+teyit edilebilir, repo sadece commit edileni gösterir.
+
+**Standing kural — bir `extension/` değişikliği bir release'tir.** `CLAUDE.md`'ye "Chrome extension
+release policy" olarak yazıldı: manifest version bump → `store-listing/` altında geçersizleşen
+dokümanları güncelle (`PERMISSIONS_JUSTIFICATION.md`'nin data-usage tablosu Dashboard'a birebir
+giriyor; `PRIVACY_POLICY.md` değişiyorsa yayındaki `/extension-privacy` sayfası da) → bayatlayan
+ekran görüntülerini **commit'ten önce** yeniden çek → store `.zip`'ini üret.
+
+**Ekran görüntüleri neden kolayca bayatlıyor:** iki ayrı set var ve ikisi de eklenti UI'ı
+değiştiğinde eskiyor — `extension/store-listing/screenshots/*.png` (Web Store görselleri,
+`scene-*.html` kompozisyonlarından; bu dosyalar popup.css'in gerçek sınıflarını kullanıyor ama
+**markup'ı kopya**, yani yeni bir alan kendiliğinden görünmüyor) ve
+`web/public/help/screenshots/chrome-extension-{popup,options}.png` (yardım merkezi, gerçek
+sayfalardan `chrome.*` stub'lanmış geçici bir kopya üzerinden). `0.6.0` bunu somut olarak yaşadı:
+`43b12a9` görüntüleri 2026-09-06 00:29'da çekti, İK alanları (`f152e65`, 14:40) ve sürüm satırı
+(`b72821c`, 15:17) sonra geldi. Tarifler `screenshots/README.md`'de.
+
+**Zip komutuna eklenen iki şey:** `rm -f` — `zip` mevcut arşivin üstüne yazmaz, ekler, yani eski
+build'in dosyaları sessizce pakete biner; ve `-x "README.md"` — `extension/README.md` iç
+dokümantasyon (sprint geçmişi, local dev talimatları, `DECISIONS.md`/plan referansları) ve item'ı
+açan herkese yayınlanıyordu.
+
+**Güvenlik tarafı:** `CLAUDE.md`'ye "Security baseline (OWASP)" bölümü eklendi — her değişiklik,
+FE/BE farketmeksizin OWASP kritiklerine uyacak; güvenlik/gizlilik "done" tanımının parçası, sonraki
+bir hardening turuna bırakılmaz. Bunun bu turdaki somut karşılığı: `PERMISSIONS_JUSTIFICATION.md`'nin
+data-usage tablosu "Personally identifiable information: **No**" diyordu, oysa `0.6.0` ilanı
+paylaşan kişinin adını ve profil adresini okuyup gönderiyor — `Yes`'e çevrildi. Dashboard'a yanlış
+beyan vermek, Chrome'un en sık ret gerekçelerinden biri.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

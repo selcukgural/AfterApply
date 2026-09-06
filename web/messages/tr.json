@@ -561,6 +561,12 @@
       "withdraw": "Geri çekme: Gmail Taraması için tarayıcı eklentisinin Ayarlar sayfasından özelliği kapatın. Ya da hesabınızı silin, bu tamamen durur.",
       "sensitiveDataNote": "Konu satırı ve özet ayrıca hesabınızda da saklanır (bir öneriyi incelerken sizin görebileceğiniz şekilde) — e-postanın tam içeriği asla."
     },
+    "browserExtension": {
+      "title": "Tarayıcı eklentisi",
+      "before": "Tarayıcı eklentisinin kendi cihazınızda neyi okuduğu, neyi sakladığı ve ne gönderdiği ayrı bir belgede anlatılır:",
+      "link": "Tarayıcı Eklentisi Gizlilik Politikası",
+      "after": " Eklentiyi kurmadıysanız bu bölüm sizin için geçerli değildir."
+    },
     "retention": {
       "title": "Saklama süresi",
       "body": "Verileriniz hesabınızı silene kadar saklanır. Otomatik bir süre sonunda silinme uygulanmamaktadır."
@@ -578,6 +584,67 @@
     "contact": {
       "title": "İletişim",
       "before": "Sorularınız için",
+      "after": " adresinden bize ulaşabilirsiniz."
+    }
+  },
+  "extensionPrivacy": {
+    "title": "Tarayıcı Eklentisi Gizlilik Politikası",
+    "lastUpdated": "Son güncelleme: 6 Eylül 2026",
+    "scope": {
+      "title": "Bu politika neyi kapsar",
+      "body": "Bu sayfa yalnızca e-kariyerim Tarayıcı Eklentisi'ni (\"eklenti\") anlatır. Eklenti, e-kariyerim web uygulamasının (ekariyerim.com) bir tamamlayıcısıdır: giriş yapmış bir kullanıcının LinkedIn veya kariyer.net'te görüntülediği bir ilanı kendi hesabına başvuru olarak kaydetmesini sağlar ve isteğe bağlı bir \"Gmail Taraması\" özelliği sunar — bu özellik, Gmail'de kendi açtığınız bir maili kendi cihazınızda kontrol eder ve yalnızca iş başvurusuyla ilgili göründüğünde kısa bir özet gönderir. Hesabınıza kaydedilmiş veriler (geçmiş başvurularınız) bu belgenin değil, e-kariyerim'in kendi gizlilik politikasının kapsamındadır."
+    },
+    "access": {
+      "title": "Eklenti neye, ne zaman erişir",
+      "intro": "Eklenti, siz araç çubuğundaki simgesine tıklayana kadar hiçbir şey yapmaz. Tıkladığınızda ve yalnızca açık sekme desteklenen bir LinkedIn veya kariyer.net ilanıysa şunları okur:",
+      "item1": "O sayfada görünen ilan başlığı, şirket adı ve konum.",
+      "item2": "O sayfada görünen ilan açıklaması ve açıklamanın biçimlendirilmiş (kalın/başlık/liste) bir kopyası.",
+      "item3": "Sayfanın adresi — ilanı tanımlamak ve yinelenen kaydı önlemek için.",
+      "item4": "İlanı paylaşan işe alım sorumlusunu (\"hiring team\") herkese açık şekilde gösteren bir LinkedIn ilanında: o kişinin adı ve herkese açık profil adresi, başvurunun iletişim kişisi olarak önerilir — kime ulaşacağınızı bilmeniz için. İlanların çoğu böyle bir kart göstermez (bu, ilanı paylaşan kişinin kendi tercihidir); göstermediğinde hiçbir alan doldurulmaz.",
+      "outro": "Her alan, herhangi bir şey gönderilmeden önce eklentinin açılan penceresinde size düzenlenebilir olarak gösterilir — iletişim kişisi dahil; kaydetmeden önce değiştirebilir veya tamamen silebilirsiniz."
+    },
+    "gmail": {
+      "title": "Gmail Taraması (isteğe bağlı, beta)",
+      "intro": "Gmail Taraması, statü güncellemesi mailerini (mülakat daveti, ret, durum bildirimi) gelen kutunuzu hiçbir yere aktarmadan önerilere dönüştürür. Varsayılan olarak kapalıdır. Cihaz bazında, eklentinin Ayarlar sayfasından kendiniz açarsınız.",
+      "whileOff": "Kapalıyken hiçbir şey değişmez: eklenti mail.google.com üzerinde hiçbir şey okumaz.",
+      "whenOn": "Açtıktan sonra, Gmail'de bir maili kendiniz her açtığınızda eklenti yalnızca o tek mesajı — gönderen adresi, konu satırı ve gövde metni (en fazla 2000 karakter) — doğrudan sayfadan, kendi tarayıcınızda okur. Gelen kutusu listenizi hiçbir zaman okumaz ve açmadığınız bir mesajı hiçbir zaman okumaz.",
+      "localScoring": "Bu metin tamamen sizin cihazınızda puanlanır: iş başvurusuyla ilgili küçük bir anahtar kelime tablosuna ve bilinen iş sitesi/ATS alan adlarına karşı. Tablo e-kariyerim'den indirilir ve yerelde saklanır; içinde hiçbir kişisel veri yoktur, yalnızca genel kelimeler ve alan adları vardır.",
+      "whatIsSent": "Eklenti yalnızca bu cihaz üzerindeki puan mailin gerçekten iş başvurusuyla ilgili olduğunu gösterirse bir şey gönderir: gönderen adresi, konu satırı ve aynı sınırlı özet — asla mailin tamamı ve asla ilgili çıkmayan bir mesaja dair hiçbir şey — kendi e-kariyerim hesabınıza, gözden geçireceğiniz bir öneriye dönüşmek üzere. İlgisiz puan alan bir mail (ki maillerin çoğu böyledir — kişisel mesajlar, faturalar, bültenler) hiçbir yere gönderilmez ve puanlama biter bitmez silinir.",
+      "dedupe": "Eklenti ayrıca cihazınızda, daha önce gönderdiği mail konuşmalarının küçük bir listesini tutar; böylece aynı maili tekrar açmanız yinelenen bir gönderime yol açmaz. Bu liste ve yukarıdaki anahtar kelime tablosu, tabloyu indiren salt-okunur istek dışında cihazınızdan hiç çıkmaz."
+    },
+    "stored": {
+      "title": "Eklenti neyi saklar",
+      "intro": "Eklenti aşağıdakileri cihazınızda, tarayıcının kendi chrome.storage.local alanında saklar (asla Chrome Sync'te, asla üçüncü taraf bir sunucuda):",
+      "item1": "Kullandığınız e-kariyerim API adresi (bir ayar, kişisel veri değil).",
+      "item2": "e-kariyerim Ayarlar sayfasından kendiniz oluşturup yapıştırdığınız kişisel erişim anahtarınız. Bu anahtar, eklentinin isteklerini sizin adınıza doğrular.",
+      "item3": "Eklentinin kendi penceresi için açık/koyu tema tercihiniz.",
+      "item4": "Eklentinin sayfaları için dil tercihiniz (Türkçe/İngilizce).",
+      "item5": "Gmail Taraması'nı açıp açmadığınız (siz açıkça etkinleştirmedikçe kapalı), puanlamada kullanılan (kişisel olmayan) anahtar kelime/alan adı tablosunun yerel bir kopyası ve aynı mailin iki kez gönderilmemesi için daha önce gönderilmiş mail konuşma kimliklerinin kısa bir listesi.",
+      "outro": "Bu veriler, aşağıdaki \"Eklenti neyi, kime gönderir\" bölümünde anlatılanlar dışında cihazınızdan hiç çıkmaz."
+    },
+    "sent": {
+      "title": "Eklenti neyi, kime gönderir",
+      "body": "\"Başvurdum\"a tıkladığınızda eklenti, açılan pencerede gördüğünüz ilan başlığını, şirketi, konumu, ilan adresini, açıklamayı ve iletişim bilgilerini kişisel erişim anahtarınızla doğrulanmış olarak e-kariyerim API'sine gönderir; böylece kendi e-kariyerim hesabınıza kaydedilir. Şirket adı tamamlama özelliği de benzer şekilde, yazdığınız metinle e-kariyerim API'sini sorgular.",
+      "hrNote": "Bu şekilde kaydedilen bir iletişim kişisi, o başvuru için kime ulaşacağınıza dair kendi notunuzdur: yalnızca siz görürsünüz, başka kullanıcılara hiçbir zaman gösterilmez, hiçbir analitiğe dahil edilmez, e-kariyerim sizin adınıza o kişiye hiçbir zaman mail atmaz veya mesaj göndermez, ve başvuruyla ya da hesabınızla birlikte silinir.",
+      "gmailNote": "Gmail Taraması'nı açtıysanız, açtığınız ve iş başvurusuyla ilgili puan alan bir mailin göndereni, konusu ve sınırlı bir özeti kendi e-kariyerim hesabınıza gönderilir (yukarıdaki Gmail Taraması bölümüne bakın) — bu yalnızca sizin açtığınız mailer için, yalnızca ayarı etkinleştirdikten sonra ve yalnızca cihaz üzerindeki puan uygun olduğunda gerçekleşir.",
+      "noOther": "Eklenti başka hiçbir hedefe veri göndermez. Analitik, reklam veya takip hizmetleri kullanmaz; verilerinizi üçüncü taraflarla paylaşmaz veya satmaz."
+    },
+    "controls": {
+      "title": "Kontroller sizde",
+      "item1": "İlan kaydetme penceresi yalnızca siz simgesine tıkladığınızda çalışır — LinkedIn/kariyer.net üzerinde arka planda çalışan bir tarama veya yoklama yoktur.",
+      "item2": "Gmail Taraması varsayılan olarak kapalıdır ve Ayarlar'dan açana kadar hiçbir şey yapmaz; açtıktan sonra da yalnızca Gmail'de kendiniz bir maili açtığınızda o maili okur — gelen kutunuzu arka planda taramaz ve başka hiçbir sitede hiçbir şey yapmaz. Ayarlar'dan istediğiniz zaman, aynı anda etkili olacak şekilde kapatabilirsiniz.",
+      "item3": "Erişim anahtarınızı istediğiniz zaman eklentinin Ayarlar sayfasından kaldırabilir veya e-kariyerim'in Ayarlar → Tarayıcı Eklentisi sayfasından iptal edebilirsiniz; iptal anahtarı anında geçersiz kılar.",
+      "item4": "Eklentiyi kaldırmak, chrome.storage.local'in eklenti için tuttuğu her şeyi (anahtar, API adresi, tema, dil tercihi, Gmail Taraması ayarı ve yerel önbellekleri) cihazınızdan siler."
+    },
+    "appPolicy": {
+      "title": "Hesabınıza kaydedilen veriler",
+      "before": "Eklentinin gönderdiği her şey kendi e-kariyerim hesabınıza gider. Bu verilerin nasıl saklandığı, ne kadar süreyle tutulduğu ve hangi haklara sahip olduğunuz",
+      "link": "e-kariyerim Gizlilik Politikası",
+      "after": " sayfasında anlatılır — bu belge yalnızca eklentinin kendisini kapsar."
+    },
+    "contact": {
+      "title": "İletişim",
+      "before": "Eklentiyle ilgili sorularınız için",
       "after": " adresinden bize ulaşabilirsiniz."
     }
   },
