@@ -41,7 +41,10 @@ public sealed record ApplicationDetailResponse(
     // same posting, and deleted with the application.
     string? HrName = null,
     string? HrEmail = null,
-    string? HrLinkedInUrl = null);
+    string? HrLinkedInUrl = null,
+    // Null exactly when HrEmail is null — the UI labels an auto-filled address rather than passing
+    // a guess off as something the user typed.
+    HrEmailSource? HrEmailSource = null);
 
 public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);
 

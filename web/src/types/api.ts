@@ -96,7 +96,10 @@ export interface ApplicationDetailResponse {
   hrName: string | null;
   hrEmail: string | null;
   hrLinkedInUrl: string | null;
+  hrEmailSource: HrEmailSource | null;
 }
+
+export type HrEmailSource = "Manual" | "IncomingEmail";
 
 export type StatusChangeOrigin =
   | "Manual"

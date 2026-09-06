@@ -180,6 +180,11 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             {application.hrName && !application.hrLinkedInUrl && (
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t("hrNamed", { name: application.hrName })}</p>
             )}
+            {application.hrEmailSource === "IncomingEmail" && (
+              // The user never typed this one, so say where it came from rather than letting it
+              // read as something they entered.
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t("hrEmailFromIncomingEmail")}</p>
+            )}
           </div>
         )}
 

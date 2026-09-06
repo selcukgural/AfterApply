@@ -421,7 +421,8 @@
       "companyLinkedIn": "Company LinkedIn page",
       "hrEmail": "HR email address",
       "hrLinkedIn": "HR LinkedIn profile",
-      "hrNamed": "HR contact: {name}"
+      "hrNamed": "HR contact: {name}",
+      "hrEmailFromIncomingEmail": "This address came from the sender of an email matched to this application. Edit it if it is wrong."
     },
     "statusChange": {
       "changeStatus": "Change Status",
@@ -529,7 +530,7 @@
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "This data is used solely to provide you with application tracking and personal analytics features.",
-      "item5": "An HR contact you optionally record for an application or a job you track: name, email address and LinkedIn profile URL. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link."
+      "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link."
     },
     "googleSignIn": {
       "title": "Sign in with Google",

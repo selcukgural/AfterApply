@@ -40,6 +40,10 @@ public sealed class Application : AuditableEntity
 
     public string? HrLinkedInUrl { get; private set; }
 
+    /// <summary>Null exactly when HrEmail is null. See HrEmailSource for why the distinction is
+    /// surfaced rather than kept internal.</summary>
+    public HrEmailSource? HrEmailSource { get; private set; }
+
     public IReadOnlyCollection<ApplicationEvent> Events => _events;
 
     public IReadOnlyCollection<ApplicationStatusHistory> StatusHistory => _statusHistory;
@@ -67,6 +71,7 @@ public sealed class Application : AuditableEntity
             Notes = notes,
             HrName = hrName,
             HrEmail = hrEmail,
+            HrEmailSource = hrEmail is null ? null : Applications.HrEmailSource.Manual,
             HrLinkedInUrl = hrLinkedInUrl,
             Status = ApplicationStatus.Applied,
             CreatedAt = now,
@@ -102,7 +107,29 @@ public sealed class Application : AuditableEntity
         // matched email) must go through their own fill-if-missing path instead of this one.
         HrName = hrName;
         HrEmail = hrEmail;
+        // Anything arriving through the edit form is the user's own assertion, including a value
+        // they left alone after it was auto-filled — once they have saved the form with it, it is
+        // theirs. Clearing the address clears the provenance with it.
+        HrEmailSource = hrEmail is null ? null : Applications.HrEmailSource.Manual;
         HrLinkedInUrl = hrLinkedInUrl;
+        Touch(now);
+    }
+
+    /// <summary>
+    /// Fills the HR email from the sender of an email that was matched to this application, and
+    /// only when there is nothing there yet — the user's own entry always wins over a guess, no
+    /// matter how confident. Deliberately separate from UpdateDetails, which assigns straight
+    /// through because clearing a field is the point of an edit form.
+    /// </summary>
+    public void SetHrEmailFromIncomingEmail(string email, DateTimeOffset now)
+    {
+        if (HrEmail is not null)
+        {
+            return;
+        }
+
+        HrEmail = email;
+        HrEmailSource = Applications.HrEmailSource.IncomingEmail;
         Touch(now);
     }
 

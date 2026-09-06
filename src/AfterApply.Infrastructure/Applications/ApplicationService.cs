@@ -178,6 +178,18 @@ internal sealed class ApplicationService(
         return new ExtensionApplicationResponse(await ToDetailAsync(application, cancellationToken), WasDuplicate: false);
     }
 
+    public async Task AttachHrEmailFromIncomingEmailAsync(Guid userId, Guid applicationId, string email, CancellationToken cancellationToken)
+    {
+        var application = await FindOwnedAsync(userId, applicationId, cancellationToken);
+        if (application is null)
+        {
+            return;
+        }
+
+        application.SetHrEmailFromIncomingEmail(email, DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<ApplicationDetailResponse?> UpdateAsync(Guid userId, Guid applicationId, UpdateApplicationRequest request, CancellationToken cancellationToken)
     {
         var application = await FindOwnedAsync(userId, applicationId, cancellationToken);
@@ -337,6 +349,6 @@ internal sealed class ApplicationService(
             application.JobTitle, application.JobUrl, application.Location, application.EmploymentType,
             application.AppliedAt, application.Status, application.Source, application.Notes,
             application.CreatedAt, application.UpdatedAt, jobDescriptionHtml,
-            application.HrName, application.HrEmail, application.HrLinkedInUrl);
+            application.HrName, application.HrEmail, application.HrLinkedInUrl, application.HrEmailSource);
     }
 }
