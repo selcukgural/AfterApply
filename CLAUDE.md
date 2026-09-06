@@ -21,6 +21,16 @@ kararları ve bulguları (ekariyerim rebrand + logo)" and the later "backend/dı
 genişletmesi" follow-up). Don't re-ask the user to reconfirm a scope decision already recorded
 there.
 
+# Language of git artefacts
+
+**Commit messages and pull request titles/descriptions are written in English**, always — even
+when the conversation that produced the change was in Turkish. They are read by contributors,
+by GitHub's own UI and by tooling, and the rest of the history is already English; a Turkish
+one in the middle is the odd one out.
+
+This covers git artefacts only. It does not change the language of anything else: `DECISIONS.md`
+stays Turkish, and user-facing strings keep shipping in both `tr` and `en` as they do today.
+
 # Async policy
 
 Asenkron bir operasyon varsa **thread bloklanmaz** — her yerde async/await kullanılır. Bu
