@@ -42,12 +42,11 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(GoogleSignInTests));
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(GoogleSignInTests));
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
             builder.UseSetting("GoogleAuth:ClientId", ClientId);
@@ -59,8 +58,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
         // the two secrets.
         _unconfiguredFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             // The test host runs as Development and therefore loads the developer's user-secrets,
             // where a real GoogleAuth client id/secret may well be set (it is on the machine this

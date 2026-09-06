@@ -28,9 +28,9 @@ replaces it with real deployment instructions.
 
 ## What changes vs. the dev `docker-compose.yml`
 
-- `postgres`/`redis` no longer publish host ports — the dev file exposes
-  them for local `psql`/`redis-cli` access; nothing outside the Compose
-  network needs them in this profile.
+- `postgres` no longer publishes a host port — the dev file exposes it
+  for local `psql` access; nothing outside the Compose network needs it
+  in this profile.
 - `api` keeps its host port — the browser calls it directly, since there
   is no reverse proxy in front of it yet (see below).
 - A `web` service is added (`web/Dockerfile`, Next.js standalone build).
@@ -90,15 +90,16 @@ This profile deliberately stops short of being cloud-ready:
   real domain. Not built here — there's no domain/cloud target yet to
   configure it against, and building one speculatively would be
   unverifiable dead weight per this project's YAGNI rule (spec §31.20).
-- **No managed Postgres/Redis.** This profile runs both in containers
-  with a local volume — a real deployment should point
-  `ConnectionStrings__Postgres`/`ConnectionStrings__Redis` at managed
-  instances (Cloud SQL / Memorystore, per the Sprint 13 decision) instead.
+- **No managed Postgres.** This profile runs it in a container with a
+  local volume — a real deployment should point
+  `ConnectionStrings__Postgres` at a managed instance (Cloud SQL, per the
+  Sprint 13 decision) instead.
 - **No secrets manager.** `.env.prod` is a plain file; a real deployment
   should use the target cloud's secrets manager instead.
 - **Cloud provider decided, not yet wired up** — everything on Google
-  Cloud: Cloud Run × 2 (`api` + `web`), Cloud SQL (Postgres), Memorystore
-  (Redis), see `DECISIONS.md` §5. The container images built here
+  Cloud: Cloud Run × 2 (`api` + `web`) and Cloud SQL (Postgres), see
+  `DECISIONS.md` §5. (Memorystore was part of this until 2026-09-06; see
+  "Redis kaldırıldı".) The container images built here
   (`src/AfterApply.Api/Dockerfile`, `web/Dockerfile`) are the deployable
   artifacts either way — no further image changes should be needed,
   only the hosting/networking/secrets layer around them (Sprint 13).
@@ -107,19 +108,23 @@ This profile deliberately stops short of being cloud-ready:
 
 > **Verified (2026-08-26):** this section was run end-to-end against a
 > real project (`ekariyerim`, `europe-west1`) — API + web live on Cloud
-> Run, Cloud SQL + Memorystore connected, custom domain mapped, a real
+> Run, Cloud SQL connected, custom domain mapped, a real
 > user registration round-tripped (201 + JWT). Steps 5-7 below (make
 > public, migrate, verify) were added *because* the first attempt skipped
 > them and produced a 403 and then a 500 — see DECISIONS.md "Sprint 13 —
 > gerçek deploy" for the full list of what broke and why. `db-f1-micro` +
-> `--edition=ENTERPRISE` and `redis --size=1` (step 2) were both accepted
-> as-is, no fallback needed.
+> `--edition=ENTERPRISE` (step 2) was accepted as-is, no fallback needed.
+>
+> **Updated 2026-09-06:** the Memorystore/Redis instance this section used
+> to create was deleted and its steps removed — see `DECISIONS.md` "Redis
+> kaldırıldı". An environment built before that date also needs the
+> teardown at the end of this section.
 
 > **Cost note (see `DECISIONS.md` §5):** Cloud Run stays free forever.
-> Cloud SQL and Memorystore do **not** — they're free only for the
-> 90-day/$300 GCP trial. Budget roughly $10-15/mo (Cloud SQL) + $35-40/mo
-> (Memorystore) once that trial ends, unless you downsize/delete before
-> then.
+> Cloud SQL does **not** — it's free only for the 90-day/$300 GCP trial.
+> Budget roughly $10-15/mo once that trial ends. Memorystore used to add
+> another $35-40/mo on top of that; it was deleted on 2026-09-06 and is
+> no longer part of this stack.
 
 ### 1. Accounts
 
@@ -146,7 +151,7 @@ GH_REPO="AfterApply"
 gcloud config set project "$PROJECT_ID"
 gcloud services enable run.googleapis.com artifactregistry.googleapis.com \
   iamcredentials.googleapis.com secretmanager.googleapis.com \
-  sqladmin.googleapis.com redis.googleapis.com
+  sqladmin.googleapis.com
 
 # Artifact Registry — where built API/web images are pushed
 gcloud artifacts repositories create afterapply \
@@ -191,14 +196,6 @@ DB_PASSWORD="$(openssl rand -base64 24)"
 gcloud sql users create afterapply --instance=afterapply-db --password="$DB_PASSWORD"
 echo "DB_PASSWORD=$DB_PASSWORD"   # you'll need this once, for the secret below — don't lose it
 
-# --- Memorystore for Redis ---
-# --size is in GiB; 1 is the intended minimum but the exact floor wasn't
-# independently confirmed (Google's own quickstart example uses 2) — if
-# gcloud rejects 1, use 2. --network=default uses the project's existing
-# default VPC (already large enough) — no custom VPC was created.
-gcloud redis instances create afterapply-redis \
-  --size=1 --region="$REGION" --tier=basic --network=default
-
 # The runtime service account (the one Cloud Run services actually run
 # as, not the deployer above) needs to read Postgres over the Cloud SQL
 # connector:
@@ -216,10 +213,6 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 # Cloud Run's built-in Cloud SQL connector.
 printf '%s' "Host=/cloudsql/${PROJECT_ID}:${REGION}:afterapply-db;Database=afterapply;Username=afterapply;Password=${DB_PASSWORD};SSL Mode=Disable" \
   | gcloud secrets create afterapply-postgres-connection --data-file=-
-
-# Memorystore — private IP, no TLS needed (already inside the private VPC).
-REDIS_IP="$(gcloud redis instances describe afterapply-redis --region="$REGION" --format='value(host)')"
-printf '%s' "${REDIS_IP}:6379" | gcloud secrets create afterapply-redis-connection --data-file=-
 
 openssl rand -base64 48 | gcloud secrets create afterapply-jwt-signing-key --data-file=-
 printf '%s' "<backend-sentry-dsn>" | gcloud secrets create afterapply-sentry-dsn --data-file=-
@@ -245,7 +238,7 @@ printf '%s' "<linkedin-client-secret-veya-bos>" | gcloud secrets create afterapp
 # App:WebBaseUrl (see deploy.yml) — same value, used to build links in outbound email.
 printf '%s' "https://REPLACE-ONCE-DEPLOYED" | gcloud secrets create afterapply-web-origin --data-file=-
 
-for s in afterapply-postgres-connection afterapply-redis-connection \
+for s in afterapply-postgres-connection \
          afterapply-jwt-signing-key afterapply-sentry-dsn afterapply-openai-api-key \
          afterapply-resend-api-key \
          afterapply-google-client-id afterapply-google-client-secret \
@@ -455,4 +448,32 @@ change (e.g. after rotating a secret), dispatch it manually:
 
 ```bash
 gh workflow run deploy.yml -f target=backend  # or web, or both
+```
+
+### 10. Teardown: removing the Memorystore instance (done 2026-09-06)
+
+Kept here because it is the exact order an environment built before
+2026-09-06 has to follow, and because getting it wrong takes the API
+down rather than just costing money. The API refuses to start when
+`ConnectionStrings:Redis` is required but missing, so the code that
+stopped requiring it must be **live** before anything is deleted.
+
+```bash
+# 1. Deploy the Redis-free API first, and confirm it is actually serving.
+gh workflow run deploy.yml -f target=backend
+API_URL="$(gcloud run services describe afterapply-api --region="$REGION" --format='value(status.url)')"
+curl -fsS "${API_URL}/health"                        # expect: Healthy
+
+# 2. Detach Direct VPC Egress. It existed only to reach Memorystore's
+#    private IP — Cloud SQL goes over the /cloudsql Unix socket, not the
+#    VPC. Removing --network/--subnet from deploy.yml does NOT do this on
+#    its own: gcloud only changes what it is told to change.
+gcloud run services update afterapply-api --region="$REGION" --clear-network
+
+# 3. Delete the instance. This is what stops the billing.
+gcloud redis instances delete afterapply-redis --region="$REGION"
+
+# 4. Clean up what pointed at it.
+gcloud secrets delete afterapply-redis-connection
+gcloud services disable redis.googleapis.com
 ```

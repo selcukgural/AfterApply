@@ -41,8 +41,8 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     private WebApplicationFactory<Program>? _disabledFactory;
     private HttpClient _disabledClient = null!;
 
-    // EmailAutoApproval:Enabled=true, ShadowModeEnabled=false — a separate factory (same Postgres/
-    // Redis containers) so the default suite (_factory) can stay in the shipped shadow-mode-first
+    // EmailAutoApproval:Enabled=true, ShadowModeEnabled=false — a separate factory (same Postgres
+    // database) so the default suite (_factory) can stay in the shipped shadow-mode-first
     // default without every test having to override it.
     private WebApplicationFactory<Program>? _autoApplyFactory;
     private HttpClient _autoApplyClient = null!;
@@ -52,12 +52,11 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         // All three factories share one database on purpose — the flag-off and auto-apply
         // variants are the same app over the same data, only differently configured.
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(EmailSignalTests));
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(EmailSignalTests));
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("EmailForwarding:Enabled", "true");
             // Explicit, not relying on appsettings.json's own curated list — this suite's
@@ -82,8 +81,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _disabledFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             // Explicit, not just relying on appsettings.json's own default — this test must exercise
             // "flag off" regardless of what the app ships as its default (EmailForwarding:Enabled is
@@ -100,8 +98,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _autoApplyFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("EmailForwarding:Enabled", "true");
             builder.UseSetting("JobBoardDomains:Domains:0", "linkedin.com");

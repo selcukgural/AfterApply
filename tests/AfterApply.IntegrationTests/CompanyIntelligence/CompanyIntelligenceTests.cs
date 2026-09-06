@@ -45,20 +45,18 @@ public class CompanyIntelligenceTests(SharedInfrastructure shared) : IAsyncLifet
     {
         // Both factories deliberately share one database: the tests compare what the same data
         // looks like through a disabled vs. an enabled CompanyIntelligence flag.
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(CompanyIntelligenceTests));
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CompanyIntelligenceTests));
 
         _defaultFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("CompanyIntelligence:HiddenBelow", "2");
         });
 
         _enabledFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("CompanyIntelligence:HiddenBelow", "2");
             builder.UseSetting("CompanyIntelligence:Enabled", "true");

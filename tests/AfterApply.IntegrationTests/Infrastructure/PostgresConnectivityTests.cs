@@ -14,10 +14,10 @@ public class PostgresConnectivityTests(SharedInfrastructure shared)
     [Fact]
     public async Task AppDbContext_Can_Connect_To_Postgres()
     {
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(PostgresConnectivityTests));
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(PostgresConnectivityTests));
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(stores.Postgres)
+            .UseNpgsql(postgres)
             .Options;
 
         await using var db = new AppDbContext(options);

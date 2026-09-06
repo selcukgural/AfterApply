@@ -32,14 +32,13 @@ public class ResendEmailSenderTests(SharedInfrastructure shared) : IAsyncLifetim
 
     public async Task InitializeAsync()
     {
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(ResendEmailSenderTests));
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(ResendEmailSenderTests));
 
         _handler = new CapturingHttpMessageHandler();
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
             // Non-empty so ResendEmailSender doesn't short-circuit on "not configured" — the real

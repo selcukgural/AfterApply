@@ -50,7 +50,7 @@ public static class DependencyInjection
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
-    // never needs a working Postgres/Redis/JWT signing key — but AddInfrastructure's
+    // never needs a working Postgres/JWT signing key — but AddInfrastructure's
     // fail-fast config checks below would otherwise block every `dotnet build`, everywhere,
     // the moment those env vars aren't set. Detected the same way Program.cs would, so
     // both stay in sync without one depending on the other's flag.
@@ -121,23 +121,35 @@ public static class DependencyInjection
                 "'dotnet user-secrets set ConnectionStrings:Postgres \"...\" --project src/AfterApply.Api', " +
                 "or set ConnectionStrings__Postgres when running via docker-compose.");
 
-        var redisConnectionString = configuration.GetConnectionString("Redis")
-            ?? (IsOpenApiDocumentGeneration ? "localhost:6379" : null)
-            ?? throw new InvalidOperationException(
-                "ConnectionStrings:Redis is not configured. For local dev run " +
-                "'dotnet user-secrets set ConnectionStrings:Redis \"...\" --project src/AfterApply.Api', " +
-                "or set ConnectionStrings__Redis when running via docker-compose.");
-
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(postgresConnectionString));
 
-        // L2 cache backend (Redis) + HybridCache, which layers an in-process L1 (IMemoryCache)
-        // in front of it automatically once an IDistributedCache is registered.
-        services.AddStackExchangeRedisCache(o => o.Configuration = redisConnectionString);
-        services.AddHybridCache();
+        // HybridCache with no IDistributedCache registered: it runs L1-only, in-process. The
+        // Redis L2 that used to sit behind this was removed (DECISIONS.md 2026-09-06) because it
+        // bought nothing — every HybridCacheEntryOptions in this codebase sets
+        // LocalCacheExpiration equal to Expiration, so L1 is the sole authority for the whole TTL
+        // and there is no backplane wiring L2 invalidation back to other instances. An eviction on
+        // one instance never reached another instance's L1 with Redis either, and once an L1 entry
+        // does lapse the fallback is the DB in both designs. See PersonalAccessTokenService, whose
+        // revocation-latency comment describes the same property from the token side.
+        //
+        // L1-only makes bounding it the whole safety story, so both limits below are deliberate,
+        // not defaults-by-omission:
+        //  - SizeLimit: MemoryCache does no size-based eviction at all while SizeLimit is null, and
+        //    HybridCache's key space includes company-search:{query}, whose cardinality is
+        //    user-supplied and therefore unbounded. HybridCache stamps each L1 entry's Size with
+        //    its payload byte count, so this cap is what actually gets enforced. The unit is those
+        //    bytes: 16 MiB is far above the working set at this scale and far below the container's
+        //    memory, so it only ever engages on an abusive burst.
+        //  - MaximumPayloadBytes: caps one entry, so a single large payload cannot evict the rest.
+        services.AddMemoryCache(options => options.SizeLimit = 16 * 1024 * 1024);
+        services.AddHybridCache(options =>
+        {
+            options.MaximumPayloadBytes = 1024 * 1024;
+            options.MaximumKeyLength = 512;
+        });
 
         services.AddHealthChecks()
-            .AddNpgSql(postgresConnectionString, name: "postgres")
-            .AddRedis(redisConnectionString, name: "redis");
+            .AddNpgSql(postgresConnectionString, name: "postgres");
 
         return services;
     }

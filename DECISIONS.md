@@ -3453,6 +3453,65 @@ beyan vermek, Chrome'un en sık ret gerekçelerinden biri.
 
 ---
 
+## Redis kaldırıldı, cache in-memory'ye indi — DECIDED (2026-09-06)
+
+**Karar:** Memorystore for Redis (Basic, 1 GiB) silindi; `HybridCache` artık L2'siz, yalnızca
+in-process L1 ile çalışıyor. Gerekçe kullanıcıdan geldi: kullanıcı sayısı çok az, GCP faturası
+buna değmiyor.
+
+**Bulgu — Redis zaten dağıtık cache görevi yapmıyordu.** Kaldırmadan önce kod tabanındaki altı
+`HybridCache` tüketicisinin hepsi tarandı (`PersonalAccessTokenService` 15sn,
+`ApplicationService` özet sayıları 20sn, `ReminderService` 20sn, `CompanySearchService` 30sn,
+`CompanyResolver` 10dk). Hepsinde `LocalCacheExpiration == Expiration`, yani L1 TTL'in tamamı
+boyunca tek otorite; ve hiçbir yerde backplane yok. Sonuç olarak:
+
+- Bir instance `RemoveAsync` çağırdığında L2 temizleniyordu ama **diğer instance'ların L1'i aynen
+  devam ediyordu** — invalidation zaten instance sınırını hiç geçmiyordu. Bunu koddaki mevcut yorum
+  da bağımsız olarak söylüyor (`PersonalAccessTokenService.cs`, iptal gecikmesi yorumu).
+- L1 süresi dolduğunda L2'de zaten silinmiş bir key vardı, yani DB'ye gidiliyordu. L2'siz de DB'ye
+  gidiliyor. **Davranış birebir aynı.**
+
+Yani bu bir trade-off değil, karşılıksız bir maliyetin kaldırılması. §5'teki 2026-08-26 kaydı zaten
+"kod tabanında health check dışında hiçbir yerde kullanılmayan bir Redis instance'ı" diyordu ve
+"ileride cache/distributed rate-limiting ihtiyacı çıkarsa hazır olsun" gerekçesiyle alınmıştı; o
+ihtiyaç doğmadı, YAGNI kuralının kendi örneğine dönüştü.
+
+**Etkilenmeyenler — kontrol edildi, hiçbiri Redis'e bağlı değildi:** Hangfire (`Hangfire.PostgreSql`),
+DataProtection anahtarları (`PersistKeysToDbContext`, yani JWT/refresh/şifre-sıfırlama token'ları),
+rate limiting (`RateLimiting.cs`, zaten in-memory fixed-window ve zaten per-instance), session (yok,
+JWT stateless).
+
+**Beraberinde yapılan sertleştirme — L1 artık tek savunma hattı olduğu için.** `MemoryCache`,
+`SizeLimit` null iken boyuta göre hiç tahliye yapmaz; key uzayında ise `company-search:{query}` var
+ve kardinalitesi kullanıcı girdisinden geliyor. Bu, Redis'li halde de mevcut bir açıktı, ama şimdi
+tek hat olduğu için aynı değişiklikte kapatıldı: `SizeLimit` 16 MiB (HybridCache her L1 girdisinin
+`Size`'ını payload byte sayısıyla damgalıyor, dolayısıyla sınır gerçekten uygulanıyor),
+`MaximumPayloadBytes` 1 MiB, `MaximumKeyLength` 512.
+
+**Deploy sırası önemliydi ve dokümante edildi.** DI, `ConnectionStrings:Redis` yoksa exception
+atıyordu — secret'ı veya instance'ı koddan önce silmek API'yi hiç ayağa kaldırmazdı. Sıra:
+kodu deploy et → `/health` doğrula → `--clear-network` → instance'ı sil → secret'ı sil. Adımlar
+`DEPLOYMENT.md` §10'da duruyor, çünkü 2026-09-06 öncesi kurulmuş bir ortamın izlemesi gereken sıra
+bu.
+
+**Direct VPC Egress de kalktı.** `deploy.yml`'deki `--network`/`--subnet` yalnızca Memorystore'un
+private IP'sine ulaşmak içindi; Cloud SQL `/cloudsql` Unix socket'i üzerinden bağlanıyor, VPC'ye
+ihtiyacı yok. **Bulgu:** flag'i yaml'dan silmek yayındaki servisin ayarını kaldırmıyor — gcloud
+sadece kendisine söyleneni değiştirir; `gcloud run services update afterapply-api --clear-network`
+elle bir kez çalıştırıldı.
+
+**Test tarafı:** entegrasyon test altyapısındaki `redis:7-alpine` container'ı ve 128 numaralı-DB
+dağıtım mekanizması tamamen silindi (`CreateIsolatedStoresAsync` → `CreateIsolatedDatabaseAsync`,
+21 test dosyası). Cache izolasyonu artık hand-out gerektirmiyor: L1-only olduğu için cache her
+`WebApplicationFactory`'nin kendi `IMemoryCache`'i ve host'la birlikte ölüyor — paylaşılan Redis'in
+numaralı DB'lerle ancak yaklaşabildiği per-test sınırı. Yan fayda: podman VM'inde test başına bir
+container daha az.
+
+**Tasarruf:** ~$35-40/ay. Cloud SQL aynen duruyor.
+
+---
+
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

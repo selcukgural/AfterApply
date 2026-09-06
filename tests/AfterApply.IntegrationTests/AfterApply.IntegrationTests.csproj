@@ -12,7 +12,6 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Testcontainers.Redis" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Shouldly" />
@@ -25,11 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Every test class here creates its own dedicated Postgres+Redis Testcontainers pair and
+    <!-- Every test class here creates its own dedicated Postgres Testcontainers instance and
          has no [Collection] attribute, so xUnit's default (parallelizeTestCollections=true,
          maxParallelThreads=Environment.ProcessorCount) lets all ~16 of them boot containers at
          once — enough concurrent container startups to stall the shared podman VM for minutes.
-         Capping the thread count bounds how many container pairs start simultaneously. -->
+         Capping the thread count bounds how many containers start simultaneously. -->
     <None Update="xunit.runner.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

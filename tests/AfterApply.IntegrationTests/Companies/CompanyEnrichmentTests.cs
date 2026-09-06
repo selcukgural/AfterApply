@@ -67,7 +67,7 @@ public class CompanyEnrichmentTests(SharedInfrastructure shared) : IAsyncLifetim
 
     public async Task InitializeAsync()
     {
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(CompanyEnrichmentTests));
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CompanyEnrichmentTests));
 
         _handler = new StubHttpMessageHandler(new Dictionary<string, string>
         {
@@ -77,8 +77,7 @@ public class CompanyEnrichmentTests(SharedInfrastructure shared) : IAsyncLifetim
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
 
             // The typed client's name is the interface's short name, so re-registering it here
