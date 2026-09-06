@@ -335,7 +335,10 @@ button.secondary:hover {
    quiet: it is a support aid, not something to read on every use. */
 .version-line {
   margin-top: 12px;
-  padding-top: 8px;
+  /* Horizontal inset matches main#content's padding: the footer is a sibling of <main>, not a
+     child, so it inherits none of it — without this the right-aligned text sits flush against the
+     popup's edge while every field above it is inset. */
+  padding: 8px 14px 12px;
   border-top: 1px solid var(--border);
   font-size: 11px;
   color: var(--text-muted);

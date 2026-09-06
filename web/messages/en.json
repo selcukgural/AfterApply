@@ -561,6 +561,12 @@
       "withdraw": "Withdrawal: turn off Gmail Scanning in the browser extension's Settings page. Or delete your account, to stop this entirely.",
       "sensitiveDataNote": "The subject and snippet are also stored on your account (visible to you when reviewing a suggestion) — never the full email body."
     },
+    "browserExtension": {
+      "title": "Browser extension",
+      "before": "What the browser extension reads on your own device, what it stores, and what it sends is described in a separate document:",
+      "link": "Browser Extension Privacy Policy",
+      "after": " If you haven't installed the extension, that document doesn't apply to you."
+    },
     "retention": {
       "title": "Retention period",
       "body": "Your data is kept until you delete your account. No automatic time-based deletion is applied."
@@ -578,6 +584,67 @@
     "contact": {
       "title": "Contact",
       "before": "For questions, you can reach us at",
+      "after": "."
+    }
+  },
+  "extensionPrivacy": {
+    "title": "Browser Extension Privacy Policy",
+    "lastUpdated": "Last updated: 6 September 2026",
+    "scope": {
+      "title": "What this policy covers",
+      "body": "This page describes the e-kariyerim Browser Extension (\"the extension\") only. The extension is a companion to the e-kariyerim web application (ekariyerim.com): it lets a signed-in user save a job posting they are viewing on LinkedIn or kariyer.net as a tracked application in their own account, and offers an opt-in \"Gmail Scanning\" feature that checks an email you open in Gmail on your own device and only sends a short summary when it looks job-related. Data already saved to your account (your past applications) is governed by e-kariyerim's own privacy policy, not this document."
+    },
+    "access": {
+      "title": "What the extension accesses, and when",
+      "intro": "The extension does nothing until you click its toolbar icon. When you do, and only if the active tab is a supported LinkedIn or kariyer.net job posting, it reads:",
+      "item1": "The job title, company name, and location visible on that page.",
+      "item2": "The job description text and a formatted (bold/headings/lists) snapshot of it, visible on that page.",
+      "item3": "The page's URL, to identify the job and detect duplicates.",
+      "item4": "On a LinkedIn posting that publicly shows a hiring-team card: the name and public profile URL of the person who posted the job, offered as the contact for that application — so you know who to follow up with. Most postings don't show one (it is the poster's own choice), and nothing is filled in when they don't.",
+      "outro": "Every field is shown to you, editable, in the extension's popup before anything is sent anywhere — including the contact, which you can change or clear before saving."
+    },
+    "gmail": {
+      "title": "Gmail Scanning (opt-in, beta)",
+      "intro": "Gmail Scanning turns status-update emails (interview invites, rejections, status updates) into suggestions without ever relaying your inbox anywhere. It is off by default. You turn it on yourself, per device, from the extension's Settings page.",
+      "whileOff": "While off, nothing changes: the extension reads nothing on mail.google.com.",
+      "whenOn": "Once turned on, whenever you personally open an email in Gmail, the extension reads that one message — sender address, subject line, and body text (capped at 2000 characters) — directly from the page, in your own browser. It never reads your inbox list, and never reads a message you haven't opened.",
+      "localScoring": "That text is scored entirely on your device, against a small table of job-application-related keywords and known job-site/ATS domains, downloaded from e-kariyerim and cached locally. This table contains no personal data, only generic vocabulary and domain names.",
+      "whatIsSent": "Only if that on-device score suggests the email is genuinely job-application-related does the extension send anything: the sender address, subject line, and the same capped snippet — never the full email body, and never anything about a message that didn't score as relevant — to your own e-kariyerim account, to be turned into a suggestion you can review. An email that scores as unrelated (which is most email — personal messages, receipts, newsletters, and so on) is never sent anywhere and is discarded the moment scoring finishes.",
+      "dedupe": "The extension also keeps a small local list (on your device) of email threads it has already submitted, so re-opening the same email doesn't send a duplicate. This list, and the keyword table above, never leave your device except as the read-only fetch that downloads the table."
+    },
+    "stored": {
+      "title": "What the extension stores",
+      "intro": "The extension stores the following locally on your device, using the browser's own chrome.storage.local (never Chrome Sync, never a third-party server):",
+      "item1": "The e-kariyerim API address you're using (a setting, not personal data).",
+      "item2": "Your e-kariyerim personal access token, which you generate yourself from e-kariyerim's Settings page and paste in. This token authenticates the extension's requests as you.",
+      "item3": "Your light/dark theme preference for the extension's own popup.",
+      "item4": "Your language choice (Turkish/English) for the extension's pages.",
+      "item5": "Whether you've turned on Gmail Scanning (off unless you explicitly enable it), a cached copy of the (non-personal) keyword/domain table it scores against, and a short list of email thread IDs already submitted, so the same email isn't sent twice.",
+      "outro": "This data never leaves your device except as described in \"What the extension sends, and to whom\" below."
+    },
+    "sent": {
+      "title": "What the extension sends, and to whom",
+      "body": "When you click \"I Applied,\" the extension sends the job title, company, location, job URL, description and contact details shown in the popup to the e-kariyerim API, authenticated with your personal access token, so it can be saved to your own e-kariyerim account. Company-name autocomplete similarly queries the e-kariyerim API with the text you've typed.",
+      "hrNote": "A contact saved this way is your own note of who to approach about that application: only you can see it, it is never shown to other users or included in any analytics, e-kariyerim never emails or messages that person on your behalf, and it is deleted along with the application or your account.",
+      "gmailNote": "If you've turned on Gmail Scanning, an opened email that scores as job-related sends its sender, subject, and a capped snippet to your own e-kariyerim account (see the Gmail Scanning section above) — this only happens for emails you open, only after you enable the setting, and only when the on-device score qualifies.",
+      "noOther": "The extension sends data to no other destination. It does not use analytics, advertising, or tracking services, and it does not sell or share your data with third parties."
+    },
+    "controls": {
+      "title": "Your controls",
+      "item1": "The job-tracking popup only acts when you click its icon — there is no background scraping or polling on LinkedIn/kariyer.net.",
+      "item2": "Gmail Scanning is off by default and does nothing until you turn it on in Settings; once on, it only reads an email when you personally open it in Gmail — it does not scan your inbox in the background, and does nothing at all on any other site. Turn it off anytime in Settings, with the same immediate effect.",
+      "item3": "You can remove your access token at any time from the extension's Settings page, or revoke it from e-kariyerim's Settings → Browser Extension page, which immediately invalidates it.",
+      "item4": "Uninstalling the extension deletes everything chrome.storage.local held for it (the token, API address, theme, language preference, Gmail Scanning setting, and its local caches) from your device."
+    },
+    "appPolicy": {
+      "title": "Data saved to your account",
+      "before": "Everything the extension sends goes to your own e-kariyerim account. How that data is stored, how long it is kept, and what rights you have over it are described in the",
+      "link": "e-kariyerim Privacy Policy",
+      "after": " — this document covers only the extension itself."
+    },
+    "contact": {
+      "title": "Contact",
+      "before": "Questions about the extension can be sent to",
       "after": "."
     }
   },
