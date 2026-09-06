@@ -1,6 +1,7 @@
 import { getSettings } from "./storage.js";
 import { setUpThemeToggle } from "./theme.js";
 import { t, setUpLanguageToggle } from "./i18n.js";
+import { renderVersion } from "./version.js";
 
 const content = document.getElementById("content");
 const SITE_LABELS = { linkedin: "LinkedIn", kariyer: "kariyer.net" };
@@ -93,6 +94,66 @@ function canonicalizeLinkedInCompanyUrl(href) {
   return match ? `https://www.linkedin.com/company/${match[1]}/` : null;
 }
 
+// kariyer.net's company anchor on a job page points at /firma-profil/<slug>-<id> — the site's own
+// counterpart to LinkedIn's /company/<slug>/, and (unlike LinkedIn) the only page that publishes
+// the company's own website. Same canonicalization reasoning as the LinkedIn one above: strip
+// query params/fragment so what we store matches what a plain server-side GET later resolves.
+function canonicalizeKariyerNetCompanyUrl(href) {
+  if (!href) {
+    return null;
+  }
+  let parsed;
+  try {
+    parsed = new URL(href);
+  } catch {
+    return null;
+  }
+  const match = parsed.pathname.match(/^\/firma-profil\/([^/]+)/);
+  return match ? `https://www.kariyer.net/firma-profil/${match[1]}` : null;
+}
+
+// LinkedIn's hiring-team card links the poster's profile at /in/<slug>. Canonicalized the same way
+// as the company URL: the stored value is validated server-side against an https://linkedin.com
+// /in/... allow-list, and the slug stays percent-encoded because LinkedIn's own slugs contain
+// non-ASCII characters (e.g. /in/çiğdem-çağ-kara-b8194077).
+function canonicalizeLinkedInProfileUrl(href) {
+  if (!href) {
+    return null;
+  }
+  let parsed;
+  try {
+    parsed = new URL(href);
+  } catch {
+    return null;
+  }
+  const match = parsed.pathname.match(/^\/in\/([^/]+)/);
+  return match ? `https://www.linkedin.com/in/${match[1]}/` : null;
+}
+
+// Mailboxes nobody reads — mirrors HrEmailCandidate.AutomatedMarkers on the backend, which is the
+// real gate; this copy only avoids showing the user a prefilled address that the server would
+// refuse to treat as a contact anyway.
+function looksAutomated(email) {
+  const localPart = email.split("@")[0].replace(/[.\-_]/g, "");
+  return ["noreply", "donotreply", "nepasrepondre", "mailerdaemon", "postmaster", "bounce", "autoreply", "automated", "notification"]
+    .some((marker) => localPart.includes(marker));
+}
+
+// An address spelled out in the posting body. Measured 2026-09-06: essentially never present (0 of
+// 35 kariyer.net postings, and LinkedIn's guest pages showed none either) — both sites want the
+// application to go through their own funnel. Kept because the occasional employer does write
+// "send your CV to ...", and it costs nothing when there is nothing to find. Deliberately requires
+// exactly one distinct candidate: a posting quoting several addresses gives us no way to tell
+// which one is the recruiter, and guessing would put a stranger's address on the record.
+function extractContactEmail(text) {
+  if (!text) {
+    return null;
+  }
+  const matches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+  const candidates = [...new Set(matches.map((m) => m.toLowerCase()))].filter((m) => !looksAutomated(m));
+  return candidates.length === 1 ? candidates[0] : null;
+}
+
 // Picks the current tab's job site (if any) and the canonical URL to submit/dedupe against.
 // LinkedIn has a stable id-only canonical form (/jobs/view/<id>/); kariyer.net's slug is part of
 // how the posting resolves, so its canonical form is the tab's own path with tracking query
@@ -140,6 +201,87 @@ async function scrapeLinkedInJob(jobId) {
 
   const companyLink = document.querySelector('a[href*="/company/"]');
   const company = textOf(companyLink);
+
+  // The job poster ("hirer"), when LinkedIn renders one — it is opt-in, so most postings have no
+  // such card at all (2 of 3 live postings checked on 2026-09-06 had none).
+  //
+  // Never "the first /in/ link on the page", and that distinction is the whole point: a job page
+  // also carries a "People you can reach out to" block linking school alumni and 3rd-degree
+  // connections who have nothing to do with the posting. Verified live on 2026-09-06 — one posting
+  // exposed two /in/ anchors that were all the same unrelated alum. Recording a stranger as "the
+  // HR contact" would be a third party's personal data written down for no reason.
+  //
+  // LinkedIn is mid-migration and serves two different job layouts, so both are handled:
+  //
+  //  - Classic (/jobs/search/): semantic BEM classes. .hirer-card__hirer-information isolates the
+  //    poster on its own, carries no locale, and siblings like hirer-card__job-poster confirm it.
+  //
+  //  - The newer server-driven layout (/jobs/search-results/, the one LinkedIn is moving to —
+  //    it announces "we're gradually retiring classic job search"): every class is hashed and
+  //    meaningless, and there is no hirer-specific attribute. The only stable hook is the SDUI
+  //    component name on the surrounding block. That block is *not* specific enough on its own —
+  //    it holds the alumni list and the hiring team together, under one "people who can help"
+  //    umbrella — so the hiring-team sub-block still has to be picked out by its own heading,
+  //    which is the one locale-dependent thing in here. An unrecognised heading yields nothing
+  //    rather than a guess, which is the safe direction: the field stays empty and the user fills
+  //    it in, exactly as when no hiring team exists at all.
+  // Both strings read off live pages (the Turkish one confirmed on a Turkish-locale account,
+  // 2026-09-06). Compared through normalizeHeading below rather than directly, because a plain
+  // toLowerCase() comparison silently never matches the Turkish heading: "İ".toLowerCase() is
+  // "i" + U+0307 (a combining dot), not "i", and "I".toLowerCase() is "i" while the Turkish
+  // lowercase is "ı". Folding both sides the same way sidesteps the whole dotted/dotless mess.
+  // (Unlike the backend's email-phrase matching, where folding the *input* would destroy the
+  // signal being matched, here both sides are fixed strings we control the comparison of.)
+  const HIRING_TEAM_HEADINGS = ["Meet the hiring team", "İşe alım ekibiyle tanışın"];
+
+  function normalizeHeading(text) {
+    return (text || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i");
+  }
+
+  const normalizedHeadings = HIRING_TEAM_HEADINGS.map(normalizeHeading);
+
+  function findHirerAnchor() {
+    const classic = document.querySelector('.hirer-card__hirer-information a[href*="/in/"]');
+    if (classic) {
+      return classic;
+    }
+
+    const peopleBlock = document.querySelector('[data-sdui-component*="peopleWhoCanHelp"]');
+    if (!peopleBlock) {
+      return null;
+    }
+
+    const heading = [...peopleBlock.querySelectorAll("*")].find(
+      (el) => el.children.length === 0 && normalizedHeadings.includes(normalizeHeading(el.textContent)),
+    );
+    if (!heading) {
+      return null;
+    }
+
+    // Walk up from the heading to the sub-block it introduces: the first ancestor that both starts
+    // with that heading and holds a profile link. Reaching the umbrella block means the hiring team
+    // has no profile of its own and whatever links are in there belong to the alumni list, so it
+    // stops there and returns nothing.
+    const headingText = normalizeHeading(heading.textContent);
+    let block = heading.parentElement;
+    while (block && block !== peopleBlock) {
+      const startsWithHeading = normalizeHeading(block.innerText).startsWith(headingText);
+      const anchor = block.querySelector('a[href*="/in/"]');
+      if (startsWithHeading && anchor) {
+        return anchor;
+      }
+      block = block.parentElement;
+    }
+
+    return null;
+  }
+
+  const hirerLink = findHirerAnchor();
+  // Raw href; canonicalized back in popup.js's own scope, same as the company URL above.
+  const hrLinkedInUrl = hirerLink?.href || null;
+  // innerText, not textContent: the anchor also wraps a "<name> is verified" badge on its own
+  // line, and only the first line is the name.
+  const hrName = hirerLink?.innerText?.trim().split("\n")[0].trim() || null;
   // Raw href, uncanonicalized — this function runs injected into the page (must stay fully
   // self-contained, see the comment block above), so tracking-param stripping happens back in
   // popup.js's own scope once the result comes back (canonicalizeLinkedInCompanyUrl).
@@ -223,6 +365,11 @@ async function scrapeLinkedInJob(jobId) {
     description: description ? description.slice(0, 10_000) : null,
     descriptionHtml: descriptionHtml ? descriptionHtml.slice(0, 20_000) : null,
     companyLinkedInUrl,
+    // LinkedIn postings never link to kariyer.net; returned so both scrapers share one shape.
+    companyKariyerNetUrl: null,
+    hrName,
+    hrLinkedInUrl,
+    hrEmail: null,
   };
 }
 
@@ -247,6 +394,14 @@ async function scrapeKariyerNetJob() {
   const title = textOf(document.querySelector("h1 div.vue-clamp.job-title"));
   const company = textOf(document.querySelector("h1 div.vue-clamp:not(.job-title)"));
   const location = textOf(document.querySelector(".company-location"));
+
+  // The company name inside the <h1> is itself a link to the company's kariyer.net profile page.
+  // `data-test` attributes are kariyer.net's own test hooks — far more stable than the hashed
+  // classes around them, and this one was present on all 35 live postings sampled 2026-09-06.
+  // Raw href; canonicalized back in popup.js's own scope (this function is injected and must stay
+  // self-contained), same as the LinkedIn scraper's company URL.
+  const companyLink = document.querySelector('h1 a[data-test="company-name"]');
+  const companyKariyerNetUrl = companyLink?.href || null;
 
   // Same allow-listed HTML snapshot as LinkedIn's scraper — see sanitizeDescriptionHtml above for
   // the untrusted-content rationale (this is a capture-time best effort only; the backend and
@@ -293,6 +448,12 @@ async function scrapeKariyerNetJob() {
     descriptionHtml: descriptionHtml ? descriptionHtml.slice(0, 20_000) : null,
     // kariyer.net postings never link to a LinkedIn company page.
     companyLinkedInUrl: null,
+    companyKariyerNetUrl,
+    // kariyer.net has no counterpart to LinkedIn's hiring-team card — it publishes no contact for
+    // the posting at all, which is why these stay null here and the form leaves them editable.
+    hrName: null,
+    hrLinkedInUrl: null,
+    hrEmail: null,
   };
 }
 
@@ -416,6 +577,9 @@ function relabelForm() {
   setText("companyLabelEl", "popup.companyLabel");
   setText("jobTitleLabelEl", "popup.jobTitleLabel");
   setText("locationLabelEl", "popup.locationLabel");
+  setText("hrNameLabelEl", "popup.hrNameLabel");
+  setText("hrEmailLabelEl", "popup.hrEmailLabel");
+  setText("hrLinkedInLabelEl", "popup.hrLinkedInLabel");
   setText("submit", "popup.applyButton");
 
   const errorEl = document.getElementById("scrapeError");
@@ -429,6 +593,9 @@ function relabelForm() {
 function render() {
   const lang = state.lang;
   document.title = t(lang, "popup.pageTitle");
+  // Outside the screen branches below: the footer is there on every screen, including "no job
+  // here" and "no token yet", which are exactly the moments someone checks their version.
+  renderVersion(lang);
 
   if (state.screen === "form") {
     relabelForm();
@@ -458,6 +625,15 @@ function buildForm() {
     <label id="locationLabelEl" for="location">${escapeHtml(t(lang, "popup.locationLabel"))}</label>
     <input id="location" type="text" value="${escapeHtml(scraped.location)}" />
 
+    <label id="hrNameLabelEl" for="hrName">${escapeHtml(t(lang, "popup.hrNameLabel"))}</label>
+    <input id="hrName" type="text" value="${escapeHtml(scraped.hrName ?? "")}" />
+
+    <label id="hrEmailLabelEl" for="hrEmail">${escapeHtml(t(lang, "popup.hrEmailLabel"))}</label>
+    <input id="hrEmail" type="email" value="${escapeHtml(scraped.hrEmail ?? "")}" />
+
+    <label id="hrLinkedInLabelEl" for="hrLinkedInUrl">${escapeHtml(t(lang, "popup.hrLinkedInLabel"))}</label>
+    <input id="hrLinkedInUrl" type="text" value="${escapeHtml(scraped.hrLinkedInUrl ?? "")}" />
+
     <button id="submit">${escapeHtml(t(lang, "popup.applyButton"))}</button>
     <p id="status" class="status" hidden></p>
   `);
@@ -473,6 +649,9 @@ function buildForm() {
     const companyName = document.getElementById("companyName").value.trim();
     const jobTitle = document.getElementById("jobTitle").value.trim();
     const location = document.getElementById("location").value.trim();
+    const hrName = document.getElementById("hrName").value.trim();
+    const hrEmail = document.getElementById("hrEmail").value.trim();
+    const hrLinkedInUrl = document.getElementById("hrLinkedInUrl").value.trim();
 
     if (!companyName || !jobTitle) {
       setStatus("popup.requiredFields", "error");
@@ -496,6 +675,10 @@ function buildForm() {
           descriptionHtml: scraped.descriptionHtml,
           publishedAt: null,
           companyLinkedInUrl: scraped.companyLinkedInUrl,
+          companyKariyerNetUrl: scraped.companyKariyerNetUrl,
+          hrName: hrName || null,
+          hrEmail: hrEmail || null,
+          hrLinkedInUrl: hrLinkedInUrl || null,
         }),
       });
 
@@ -548,16 +731,25 @@ async function main() {
     });
     scraped = result;
   } catch (error) {
-    scraped = { title: "", company: "", location: "", description: null, descriptionHtml: null, companyLinkedInUrl: null };
+    scraped = {
+      title: "", company: "", location: "", description: null, descriptionHtml: null,
+      companyLinkedInUrl: null, companyKariyerNetUrl: null,
+      hrName: null, hrEmail: null, hrLinkedInUrl: null,
+    };
     // Surfaced inline (not just console.error) so a manual tester doesn't need DevTools open to
     // see why fields came back empty — found necessary in Sprint 9 manual testing, where the
     // silently-swallowed error made an actual scrape failure look identical to "nothing found".
     scrapeError = error?.message || String(error);
   }
 
-  // The scraper (injected via executeScript, self-contained) returns a raw href — tracking
+  // The scrapers (injected via executeScript, self-contained) return raw hrefs — tracking
   // params/fragment stripping happens here, back in the extension's own scope.
   scraped.companyLinkedInUrl = canonicalizeLinkedInCompanyUrl(scraped.companyLinkedInUrl);
+  scraped.companyKariyerNetUrl = canonicalizeKariyerNetCompanyUrl(scraped.companyKariyerNetUrl);
+  scraped.hrLinkedInUrl = canonicalizeLinkedInProfileUrl(scraped.hrLinkedInUrl);
+  // The description is only available back here as a plain string, so the body scan runs in the
+  // extension's own scope rather than inside either injected scraper.
+  scraped.hrEmail = scraped.hrEmail ?? extractContactEmail(scraped.description);
 
   state.scraped = scraped;
   state.scrapeError = scrapeError;

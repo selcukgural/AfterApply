@@ -254,6 +254,89 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Confirming_A_Suggestion_Records_The_Sender_As_The_Hr_Contact()
+    {
+        var applicationId = await CreateApplicationAsync("Acme HrFill Test");
+
+        await SendExtensionSignalAsync("ayse.yilmaz@acme-hrfill-test.com", "Acme HrFill Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.", "thread-hrfill");
+
+        var suggestions = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestions.EnumerateArray().Single().GetProperty("id").GetGuid();
+        await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
+
+        var detail = await _client.GetFromJsonAsync<ApplicationDetailResponse>($"/api/applications/{applicationId}", JsonOptions);
+        detail!.HrEmail.ShouldBe("ayse.yilmaz@acme-hrfill-test.com");
+        // Labelled, not passed off as something the user typed.
+        detail.HrEmailSource.ShouldBe(HrEmailSource.IncomingEmail);
+    }
+
+    [Fact]
+    public async Task A_No_Reply_Sender_Is_Never_Stored_Or_Offered_As_A_Contact()
+    {
+        var applicationId = await CreateApplicationAsync("Acme NoReply Test");
+
+        await SendExtensionSignalAsync("no-reply@acme-noreply-test.com", "Acme NoReply Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.", "thread-noreply");
+
+        var suggestions = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestions.EnumerateArray().Single().GetProperty("id").GetGuid();
+        await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
+
+        var detail = await _client.GetFromJsonAsync<ApplicationDetailResponse>($"/api/applications/{applicationId}", JsonOptions);
+        detail!.HrEmail.ShouldBeNull();
+
+        // The address is not merely withheld from the application — it is never written down at
+        // all, so the pipeline keeps reducing robot senders to a bare domain.
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await db.EmailSuggestions.SingleAsync(x => x.Id == suggestionId);
+        suggestion.SenderEmail.ShouldBeNull();
+        suggestion.SenderDomain.ShouldBe("acme-noreply-test.com");
+    }
+
+    [Fact]
+    public async Task Dismissing_A_Suggestion_Leaves_The_Hr_Contact_Alone()
+    {
+        // Dismissal is exactly the case where the match may be about the wrong job, so nothing is
+        // written to the application.
+        var applicationId = await CreateApplicationAsync("Acme HrDismiss Test");
+
+        await SendExtensionSignalAsync("ayse@acme-hrdismiss-test.com", "Acme HrDismiss Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.", "thread-hrdismiss");
+
+        var suggestions = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestions.EnumerateArray().Single().GetProperty("id").GetGuid();
+        await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/dismiss", null);
+
+        var detail = await _client.GetFromJsonAsync<ApplicationDetailResponse>($"/api/applications/{applicationId}", JsonOptions);
+        detail!.HrEmail.ShouldBeNull();
+        detail.HrEmailSource.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task A_Contact_The_User_Typed_Survives_A_Confirmed_Suggestion()
+    {
+        var applicationId = await CreateApplicationAsync("Acme HrKeep Test");
+        var detailBefore = await _client.GetFromJsonAsync<ApplicationDetailResponse>($"/api/applications/{applicationId}", JsonOptions);
+        var updateResponse = await _client.PutAsJsonAsync($"/api/applications/{applicationId}", new UpdateApplicationRequest(
+            detailBefore!.JobTitle, null, null, EmploymentType.FullTime, detailBefore.AppliedAt, null,
+            HrName: null, HrEmail: "mine@acme-hrkeep-test.com", HrLinkedInUrl: null), JsonOptions);
+        updateResponse.EnsureSuccessStatusCode();
+
+        await SendExtensionSignalAsync("someone.else@acme-hrkeep-test.com", "Acme HrKeep Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.", "thread-hrkeep");
+
+        var suggestions = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestions.EnumerateArray().Single().GetProperty("id").GetGuid();
+        await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
+
+        var detail = await _client.GetFromJsonAsync<ApplicationDetailResponse>($"/api/applications/{applicationId}", JsonOptions);
+        detail!.HrEmail.ShouldBe("mine@acme-hrkeep-test.com");
+        detail.HrEmailSource.ShouldBe(HrEmailSource.Manual);
+    }
+
+    [Fact]
     public async Task ExtensionSignal_Rejection_Runs_Rejection_Reason_Extraction_And_Persists_Category()
     {
         await CreateApplicationAsync("Acme Reason Test");

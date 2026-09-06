@@ -9,32 +9,43 @@ namespace AfterApply.Infrastructure.Companies;
 /// <summary>
 /// Background enrichment, queued via Hangfire right after a Company row is resolved from the
 /// browser extension's "create application" flow (see ApplicationService.CreateFromExtensionAsync
-/// and CompanyResolver's backfill path): once a Company has a LinkedInUrl, fetch that LinkedIn
-/// company page — plain HTTP, honest bot User-Agent, same technique already validated for job
-/// postings in JobLinkPreviewService — and fill in Website/Industry/Country from its public
-/// "About" overview.
+/// and CompanyResolver's backfill path): once a Company has a profile URL, fetch that company page
+/// — plain HTTP, honest bot User-Agent, same technique already validated for job postings in
+/// JobLinkPreviewService — and fill in whatever of Website/Industry/Country it publishes.
 ///
-/// Best-effort only: no LinkedInUrl yet, already fully enriched, a disallowed/redirected host, a
-/// network error, or LinkedIn markup that no longer matches the parser all just leave the fields
-/// as they were — same graceful-degradation philosophy as the rest of the extension-import
-/// pipeline (a failed enrichment never blocks or fails the application that triggered it, since it
-/// always runs after that row is already saved).
+/// Two sources, tried in that order:
 ///
-/// Company.LinkedInUrl is client-supplied (from the extension's DOM scrape) and stored, so it is
-/// re-validated against the linkedin.com allow-list here — never trusted as already-safe just
-/// because it made it into the database (defense in depth, same as JobLinkPreviewService's own
-/// re-check of every redirect hop).
+/// <list type="bullet">
+/// <item>LinkedIn's public "About" overview, which carries all three fields.</item>
+/// <item>kariyer.net's /firma-profil/ page, which carries the website (on roughly 44% of profiles,
+/// measured 2026-09-06) and the sector, but no country. It runs only for whatever LinkedIn did not
+/// fill — usually everything, since a company first seen in a kariyer.net posting has no LinkedIn
+/// URL at all, which is exactly the gap it exists to close.</item>
+/// </list>
+///
+/// Best-effort only: no profile URL yet, already fully enriched, a disallowed/redirected host, a
+/// network error, or markup that no longer matches the parser all just leave the fields as they
+/// were — same graceful-degradation philosophy as the rest of the extension-import pipeline (a
+/// failed enrichment never blocks or fails the application that triggered it, since it always runs
+/// after that row is already saved).
+///
+/// Both stored URLs are client-supplied (from the extension's DOM scrape), so each is re-validated
+/// against its own host allow-list here — never trusted as already-safe just because it made it
+/// into the database (defense in depth, same as JobLinkPreviewService's own re-check of every
+/// redirect hop).
 /// </summary>
 internal sealed class CompanyEnrichmentService(
     HttpClient httpClient, AppDbContext dbContext, ILogger<CompanyEnrichmentService> logger) : ICompanyEnrichmentService
 {
     private const int MaxRedirectHops = 5;
     private const int MaxBodyChars = 200_000;
+    private const string LinkedInHost = "linkedin.com";
+    private const string KariyerNetHost = "kariyer.net";
 
     public async Task EnrichAsync(Guid companyId, CancellationToken cancellationToken)
     {
         var company = await dbContext.Companies.FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
-        if (company?.LinkedInUrl is null)
+        if (company is null)
         {
             return;
         }
@@ -44,30 +55,43 @@ internal sealed class CompanyEnrichmentService(
             return;
         }
 
-        if (!Uri.TryCreate(company.LinkedInUrl, UriKind.Absolute, out var uri) || !IsAllowed(uri))
+        if (TryParseAllowed(company.LinkedInUrl, LinkedInHost, out var linkedInUri))
         {
-            return;
+            var html = await FetchAsync(linkedInUri, companyId, cancellationToken);
+            if (html is not null)
+            {
+                company.EnrichFrom(
+                    LinkedInCompanyProfileParser.ExtractWebsite(html),
+                    LinkedInCompanyProfileParser.ExtractIndustry(html),
+                    LinkedInCompanyProfileParser.ExtractCountryCode(html),
+                    DateTimeOffset.UtcNow);
+            }
         }
 
-        var html = await FetchAsync(uri, companyId, cancellationToken);
-        if (html is null)
+        // Only worth a second request when LinkedIn left something kariyer.net can actually
+        // supply. It publishes no country at all, so asking for one back is not a reason to fetch.
+        if ((company.Website is null || company.Industry is null)
+            && TryParseAllowed(company.KariyerNetUrl, KariyerNetHost, out var kariyerNetUri))
         {
-            return;
+            var html = await FetchAsync(kariyerNetUri, companyId, cancellationToken);
+            if (html is not null)
+            {
+                company.EnrichFrom(
+                    KariyerNetCompanyProfileParser.ExtractWebsite(html),
+                    KariyerNetCompanyProfileParser.ExtractSector(html),
+                    country: null,
+                    DateTimeOffset.UtcNow);
+            }
         }
 
-        var website = LinkedInCompanyProfileParser.ExtractWebsite(html);
-        var industry = LinkedInCompanyProfileParser.ExtractIndustry(html);
-        var country = LinkedInCompanyProfileParser.ExtractCountryCode(html);
-
-        company.EnrichFrom(website, industry, country, DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task<string?> FetchAsync(Uri uri, Guid companyId, CancellationToken cancellationToken)
+    private async Task<string?> FetchAsync(AllowedUri allowed, Guid companyId, CancellationToken cancellationToken)
     {
         try
         {
-            var currentUri = uri;
+            var currentUri = allowed.Uri;
             for (var hop = 0; hop < MaxRedirectHops; hop++)
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, currentUri);
@@ -79,7 +103,7 @@ internal sealed class CompanyEnrichmentService(
                 if (IsRedirect(response.StatusCode) && location is not null)
                 {
                     var nextUri = location.IsAbsoluteUri ? location : new Uri(currentUri, location);
-                    if (!IsAllowed(nextUri))
+                    if (!IsAllowed(nextUri, allowed.Host))
                     {
                         return null;
                     }
@@ -118,8 +142,25 @@ internal sealed class CompanyEnrichmentService(
         status is HttpStatusCode.Moved or HttpStatusCode.Found or HttpStatusCode.SeeOther
             or HttpStatusCode.TemporaryRedirect or HttpStatusCode.PermanentRedirect;
 
-    private static bool IsAllowed(Uri uri) =>
+    // A stored URL only ever gets fetched against the one host it is supposed to belong to, so a
+    // LinkedIn URL that somehow ended up in KariyerNetUrl (or anything else) is refused rather
+    // than followed.
+    private static bool TryParseAllowed(string? url, string host, out AllowedUri allowed)
+    {
+        allowed = default;
+        if (url is null || !Uri.TryCreate(url, UriKind.Absolute, out var uri) || !IsAllowed(uri, host))
+        {
+            return false;
+        }
+
+        allowed = new AllowedUri(uri, host);
+        return true;
+    }
+
+    private static bool IsAllowed(Uri uri, string host) =>
         uri.Scheme == Uri.UriSchemeHttps
-        && (uri.Host.Equals("linkedin.com", StringComparison.OrdinalIgnoreCase)
-            || uri.Host.EndsWith(".linkedin.com", StringComparison.OrdinalIgnoreCase));
+        && (uri.Host.Equals(host, StringComparison.OrdinalIgnoreCase)
+            || uri.Host.EndsWith("." + host, StringComparison.OrdinalIgnoreCase));
+
+    private readonly record struct AllowedUri(Uri Uri, string Host);
 }

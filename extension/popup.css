@@ -330,6 +330,18 @@ button.secondary:hover {
   line-height: 1.5;
 }
 
+/* Which build is installed — the first thing worth knowing when the popup misbehaves, since a
+   user is never obliged to update and the Web Store can take days to approve one. Kept visually
+   quiet: it is a support aid, not something to read on every use. */
+.version-line {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
 .status {
   margin-top: 10px;
   padding: 7px 10px;

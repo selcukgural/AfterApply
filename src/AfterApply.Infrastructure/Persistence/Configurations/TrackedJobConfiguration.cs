@@ -16,6 +16,9 @@ public sealed class TrackedJobConfiguration : IEntityTypeConfiguration<TrackedJo
         builder.Property(t => t.JobUrl).HasMaxLength(2000);
         builder.Property(t => t.Location).HasMaxLength(200);
         builder.Property(t => t.Notes).HasColumnType("text");
+        builder.Property(t => t.HrName).HasMaxLength(200);
+        builder.Property(t => t.HrEmail).HasMaxLength(320);
+        builder.Property(t => t.HrLinkedInUrl).HasMaxLength(500);
 
         builder.HasIndex(t => t.UserId);
 

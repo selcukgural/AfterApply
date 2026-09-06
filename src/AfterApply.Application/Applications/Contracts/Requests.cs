@@ -11,7 +11,13 @@ public sealed record CreateApplicationRequest(
     EmploymentType EmploymentType,
     DateTimeOffset AppliedAt,
     Source? Source,
-    string? Notes);
+    string? Notes,
+    // The recruiter/hiring contact, typed by the user. Neither job site publishes an HR email
+    // (measured 2026-09-06: 0 of 35 kariyer.net postings carried one, and LinkedIn never shows the
+    // poster's address), so manual entry is the primary way this ever gets filled.
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null);
 
 public sealed record CreateFromExtensionRequest(
     string CompanyName,
@@ -30,7 +36,22 @@ public sealed record CreateFromExtensionRequest(
     // Website/Industry/Country. Validated against an https://(www.)linkedin.com allow-list
     // (CreateFromExtensionRequestValidator) since it's later fetched server-side — never trust it
     // as safe just because it round-tripped through the client.
-    string? CompanyLinkedInUrl = null);
+    string? CompanyLinkedInUrl = null,
+    // kariyer.net's counterpart, read from the job posting's own company anchor
+    // (a[data-test="company-name"]). Feeds the same CompanyResolver backfill and the same
+    // background enrichment, and is allow-listed the same way — it is fetched server-side too.
+    // A LinkedIn posting never carries one and a kariyer.net posting never carries the LinkedIn
+    // one, so at most one of the pair is ever set on a given submission.
+    string? CompanyKariyerNetUrl = null,
+    // The job poster from LinkedIn's hiring-team card, when the posting has one (it is opt-in, so
+    // most do not) — scoped to that card specifically, never to any profile link on the page, since
+    // a job page also lists unrelated alumni and network suggestions. HrEmail is only ever an
+    // address spelled out in the posting body, which in practice almost never happens; both sites
+    // route applications through their own funnel. Every one of these is shown as an editable field
+    // in the popup before submitting, so a wrong guess is the user's to correct, not a silent write.
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null);
 
 public sealed record UpdateApplicationRequest(
     string JobTitle,
@@ -38,7 +59,12 @@ public sealed record UpdateApplicationRequest(
     string? Location,
     EmploymentType EmploymentType,
     DateTimeOffset AppliedAt,
-    string? Notes);
+    string? Notes,
+    // Sent on every save, so omitting one clears it — this is the edit form, and a user emptying
+    // the field means they want it gone.
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null);
 
 // Note is the user's own text and nothing else, and there is deliberately no Source/Origin
 // here: provenance is decided by the code path that handles the change, never by the caller.

@@ -1,6 +1,8 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
@@ -141,6 +143,157 @@ public class ExtensionApplicationTests(SharedInfrastructure shared) : IAsyncLife
         var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
 
         result!.Application.CompanyId.ShouldBe(seeded!.CompanyId);
+    }
+
+    // Company.Website/LinkedInUrl are filled by CompanyEnrichmentService in the background, well
+    // after the application row exists — so the detail response has to read them from the Company
+    // at response time. If they were ever snapshotted onto the Application at creation, this test
+    // would see nulls.
+    [Fact]
+    public async Task Detail_Surfaces_Company_Links_Filled_In_After_The_Application_Was_Created()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Enriched Labs", "Platform Engineer",
+                "https://www.linkedin.com/jobs/view/3333333333/", "Remote", null, null),
+            JsonOptions);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        // Nothing has enriched this company yet.
+        created!.Application.CompanyWebsite.ShouldBeNull();
+
+        using (var scope = _factory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var company = await db.Companies.SingleAsync(c => c.Id == created.Application.CompanyId);
+            company.EnrichFrom("https://enrichedlabs.example", "Software Development", "TR", DateTimeOffset.UtcNow);
+            company.SetProfileLinksIfMissing("https://www.linkedin.com/company/enriched-labs/", kariyerNetUrl: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        var detailResponse = await _client.GetAsync($"/api/applications/{created.Application.Id}");
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = await detailResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        detail!.CompanyWebsite.ShouldBe("https://enrichedlabs.example");
+        detail.CompanyLinkedInUrl.ShouldBe("https://www.linkedin.com/company/enriched-labs/");
+        detail.CompanyName.ShouldBe("Enriched Labs");
+    }
+
+    // Extension updates are not something we can force: a user can stay on an old build
+    // indefinitely (Chrome Web Store review alone can take days), so every field the newer builds
+    // added has to be optional on the wire, not just in the C# signature. This posts the exact JSON
+    // body extension 0.5.0 sends — captured from that build's popup.js, not paraphrased — so the
+    // day someone makes one of these fields required, this test says so instead of a user's popup
+    // silently failing.
+    [Fact]
+    public async Task A_Body_From_Extension_0_5_0_Still_Creates_An_Application()
+    {
+        const string legacyBody = """
+            {
+              "companyName": "Legacy Ext Corp",
+              "jobTitle": "Backend Engineer",
+              "jobUrl": "https://www.linkedin.com/jobs/view/4400000001/",
+              "location": "Istanbul",
+              "description": "We build things.",
+              "descriptionHtml": "<p>We build things.</p>",
+              "publishedAt": null,
+              "companyLinkedInUrl": "https://www.linkedin.com/company/legacy-ext-corp/"
+            }
+            """;
+
+        var response = await _client.PostAsync("/api/applications/from-extension",
+            new StringContent(legacyBody, Encoding.UTF8, "application/json"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+        result!.Application.CompanyName.ShouldBe("Legacy Ext Corp");
+        result.Application.Source.ShouldBe(Source.BrowserExtension);
+        // Everything the newer builds added simply stays empty.
+        result.Application.HrName.ShouldBeNull();
+        result.Application.HrEmail.ShouldBeNull();
+        result.Application.HrLinkedInUrl.ShouldBeNull();
+    }
+
+    // The other direction: a newer extension can reach a backend that has not been redeployed yet.
+    // Unknown properties must be ignored rather than rejected, or the rollout order would become
+    // load-bearing.
+    [Fact]
+    public async Task A_Body_Carrying_Fields_This_Backend_Does_Not_Know_Is_Still_Accepted()
+    {
+        const string futureBody = """
+            {
+              "companyName": "Future Ext Corp",
+              "jobTitle": "Backend Engineer",
+              "jobUrl": "https://www.linkedin.com/jobs/view/4400000002/",
+              "somethingAddedLater": "whatever",
+              "hrPhoneNumber": "+90 555 000 0000"
+            }
+            """;
+
+        var response = await _client.PostAsync("/api/applications/from-extension",
+            new StringContent(futureBody, Encoding.UTF8, "application/json"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    // The extension only ever sends this when LinkedIn's hiring-team card was actually present —
+    // most postings have none, and kariyer.net never does.
+    [Fact]
+    public async Task Extension_Submission_Carries_The_Job_Posters_Profile_Onto_The_Application()
+    {
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Hirer Corp", "Senior Developer",
+                "https://www.linkedin.com/jobs/view/4442825208/", "Istanbul", null, null, null, null, null,
+                HrName: "Çiğdem Ç.", HrEmail: null,
+                HrLinkedInUrl: "https://www.linkedin.com/in/cigdem-kara-b8194077/"),
+            JsonOptions);
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        result!.Application.HrName.ShouldBe("Çiğdem Ç.");
+        result.Application.HrLinkedInUrl.ShouldBe("https://www.linkedin.com/in/cigdem-kara-b8194077/");
+        result.Application.HrEmail.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Extension_Submission_With_A_Company_Page_As_The_Hr_Profile_Is_Rejected()
+    {
+        // Guards the selector's whole point: the hiring-team card is a person, and a company page
+        // (or an unrelated profile scraped from elsewhere on the job page) must not pass as one.
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Wrong Hirer Corp", "Senior Developer",
+                "https://www.linkedin.com/jobs/view/4442825209/", null, null, null, null, null, null,
+                HrLinkedInUrl: "https://www.linkedin.com/company/turkcell/"),
+            JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Hr_Contact_Round_Trips_Through_Create_Update_And_Detail()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
+            "Contact Corp", "Backend Engineer", null, null, EmploymentType.FullTime, DateTimeOffset.UtcNow, null, null,
+            HrName: "Zeynep A.", HrEmail: "talent@contactcorp.example",
+            HrLinkedInUrl: "https://www.linkedin.com/in/zeynep-a"), JsonOptions);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+        created!.HrEmail.ShouldBe("talent@contactcorp.example");
+
+        // Clearing is a real edit, not a no-op: UpdateDetails assigns straight through so a user
+        // who empties the field gets rid of a stale contact.
+        var updateResponse = await _client.PutAsJsonAsync($"/api/applications/{created.Id}", new UpdateApplicationRequest(
+            created.JobTitle, null, null, EmploymentType.FullTime, created.AppliedAt, null,
+            HrName: "Mehmet B.", HrEmail: null, HrLinkedInUrl: null), JsonOptions);
+        updateResponse.EnsureSuccessStatusCode();
+
+        var detailResponse = await _client.GetAsync($"/api/applications/{created.Id}");
+        var detail = await detailResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        detail!.HrName.ShouldBe("Mehmet B.");
+        detail.HrEmail.ShouldBeNull();
+        detail.HrLinkedInUrl.ShouldBeNull();
     }
 
     [Fact]

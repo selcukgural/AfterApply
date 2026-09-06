@@ -12,6 +12,11 @@ public sealed class Company : AuditableEntity
 
     public string? LinkedInUrl { get; private set; }
 
+    /// <summary>The company's kariyer.net profile page (kariyer.net/firma-profil/...), read off
+    /// the job posting's own company link. kariyer.net's counterpart to LinkedInUrl, and the only
+    /// enrichment source we have for a company that has never appeared in a LinkedIn posting.</summary>
+    public string? KariyerNetUrl { get; private set; }
+
     public string? Industry { get; private set; }
 
     public string? Country { get; private set; }
@@ -21,7 +26,8 @@ public sealed class Company : AuditableEntity
     }
 
     public static Company Create(string name, DateTimeOffset now, string? website = null,
-        string? linkedInUrl = null, string? industry = null, string? country = null)
+        string? linkedInUrl = null, string? industry = null, string? country = null,
+        string? kariyerNetUrl = null)
     {
         return new Company
         {
@@ -29,6 +35,7 @@ public sealed class Company : AuditableEntity
             NormalizedName = CompanyNameNormalizer.Normalize(name),
             Website = website,
             LinkedInUrl = linkedInUrl,
+            KariyerNetUrl = kariyerNetUrl,
             Industry = industry,
             Country = country,
             CreatedAt = now,
@@ -37,17 +44,29 @@ public sealed class Company : AuditableEntity
     }
 
     // Backfill only — a company resolved by exact-name match may predate the extension carrying
-    // a LinkedIn URL at all. Never overwrites an existing value: whatever is already stored (set
-    // manually, or by an earlier import) wins over a later guess.
-    public void SetLinkedInUrlIfMissing(string linkedInUrl, DateTimeOffset now)
+    // either profile URL at all. Never overwrites an existing value: whatever is already stored
+    // (set manually, or by an earlier import) wins over a later guess. The two are independent: a
+    // company can pick up a kariyer.net profile long after it got its LinkedIn one, or vice versa.
+    public void SetProfileLinksIfMissing(string? linkedInUrl, string? kariyerNetUrl, DateTimeOffset now)
     {
-        if (LinkedInUrl is not null)
+        var changed = false;
+
+        if (LinkedInUrl is null && linkedInUrl is not null)
         {
-            return;
+            LinkedInUrl = linkedInUrl;
+            changed = true;
         }
 
-        LinkedInUrl = linkedInUrl;
-        Touch(now);
+        if (KariyerNetUrl is null && kariyerNetUrl is not null)
+        {
+            KariyerNetUrl = kariyerNetUrl;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            Touch(now);
+        }
     }
 
     // Fills in only the fields still missing — CompanyEnrichmentService's best-effort fetch of the

@@ -22,6 +22,14 @@ public interface IApplicationService
     /// </summary>
     Task<ExtensionApplicationResponse> CreateFromExtensionAsync(Guid userId, CreateFromExtensionRequest request, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Records the HR email read off an email that was matched to this application, and only when
+    /// the application has none — the user's own entry always wins. Deliberately not reachable
+    /// through UpdateApplicationRequest: provenance is decided by the code path that writes the
+    /// value, never by a caller claiming it, the same rule ChangeStatusRequest already follows.
+    /// </summary>
+    Task AttachHrEmailFromIncomingEmailAsync(Guid userId, Guid applicationId, string email, CancellationToken cancellationToken);
+
     Task<ApplicationDetailResponse?> UpdateAsync(Guid userId, Guid applicationId, UpdateApplicationRequest request, CancellationToken cancellationToken);
 
     Task<bool> DeleteAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken);

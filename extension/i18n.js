@@ -6,6 +6,7 @@ import { getLanguage, saveLanguage } from "./storage.js";
 const STRINGS = {
   en: {
     language: "Language",
+    versionLabel: "Version {version}",
     popup: {
       pageTitle: "e-kariyerim",
       noJob: "Open a LinkedIn job posting (a /jobs/view/ page, or a job selected in search results) or a kariyer.net job posting (an /is-ilani/ page) to track it here.",
@@ -15,6 +16,9 @@ const STRINGS = {
       companyLabel: "Company",
       jobTitleLabel: "Job title",
       locationLabel: "Location",
+      hrNameLabel: "HR contact (optional)",
+      hrEmailLabel: "HR email (optional)",
+      hrLinkedInLabel: "HR LinkedIn (optional)",
       applyButton: "I Applied",
       requiredFields: "Company and job title are required.",
       alreadyTracked: "Already tracked — opened your existing application.",
@@ -36,6 +40,7 @@ const STRINGS = {
   },
   tr: {
     language: "Dil",
+    versionLabel: "Sürüm {version}",
     popup: {
       pageTitle: "e-kariyerim",
       noJob: "Buradan takip etmek için bir LinkedIn ilanı (bir /jobs/view/ sayfası ya da arama sonuçlarında seçili bir ilan) veya bir kariyer.net ilanı (bir /is-ilani/ sayfası) açın.",
@@ -45,6 +50,9 @@ const STRINGS = {
       companyLabel: "Şirket",
       jobTitleLabel: "Pozisyon",
       locationLabel: "Konum",
+      hrNameLabel: "İK kontağı (isteğe bağlı)",
+      hrEmailLabel: "İK e-posta (isteğe bağlı)",
+      hrLinkedInLabel: "İK LinkedIn (isteğe bağlı)",
       applyButton: "Başvurdum",
       requiredFields: "Şirket ve pozisyon alanları zorunludur.",
       alreadyTracked: "Zaten takip ediliyor — mevcut başvurunuz açıldı.",

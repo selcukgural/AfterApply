@@ -6,8 +6,9 @@ import { createTrackedJobSchema } from "@/lib/validation/trackedJobSchema";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { EMPTY_HR_CONTACT, HrContactFields, type HrContactValues } from "@/components/ui/HrContactFields";
 
-export interface TrackedJobFormValues {
+export interface TrackedJobFormValues extends HrContactValues {
   companyName: string;
   jobTitle: string;
   jobUrl: string;
@@ -21,6 +22,7 @@ const EMPTY_VALUES: TrackedJobFormValues = {
   jobUrl: "",
   location: "",
   notes: "",
+  ...EMPTY_HR_CONTACT,
 };
 
 interface TrackedJobFormProps {
@@ -81,6 +83,12 @@ export function TrackedJobForm({ onSubmit }: TrackedJobFormProps) {
       <FormField label={t("notes")} htmlFor="tj-notes" error={errors.notes}>
         <Input id="tj-notes" value={values.notes} onChange={update("notes")} />
       </FormField>
+      <HrContactFields
+        idPrefix="tj"
+        values={values}
+        errors={errors}
+        onChange={(field, value) => setValues((prev) => ({ ...prev, [field]: value }))}
+      />
       {formError && <p className="text-sm text-red-600 dark:text-red-400">{formError}</p>}
       <Button type="submit" disabled={isSubmitting} className="self-start">
         {isSubmitting ? t("saving") : t("submit")}

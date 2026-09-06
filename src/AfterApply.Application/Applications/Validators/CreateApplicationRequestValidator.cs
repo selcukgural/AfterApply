@@ -19,5 +19,7 @@ public sealed class CreateApplicationRequestValidator : AbstractValidator<Create
             .WithMessage(_ => localizer["VALIDATION_APPLIED_AT_FUTURE"]);
         RuleFor(x => x.Source).IsInEnum().When(x => x.Source.HasValue);
         RuleFor(x => x.Notes).MaximumLength(4000);
+
+        this.ApplyHrContactRules(x => x.HrName, x => x.HrEmail, x => x.HrLinkedInUrl);
     }
 }

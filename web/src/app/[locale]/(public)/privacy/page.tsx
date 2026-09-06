@@ -18,6 +18,7 @@ export default async function PrivacyPage() {
             <li>{t("dataCollection.item2")}</li>
             <li>{t("dataCollection.item3")}</li>
             <li>{t("dataCollection.item4")}</li>
+            <li>{t("dataCollection.item5")}</li>
           </ul>
           <p className="mt-2">{t("dataCollection.outro")}</p>
         </section>

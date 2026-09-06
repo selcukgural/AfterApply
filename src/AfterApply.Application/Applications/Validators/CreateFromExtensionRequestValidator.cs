@@ -20,15 +20,26 @@ public sealed class CreateFromExtensionRequestValidator : AbstractValidator<Crea
         // (e.g. pointing the background fetch at an internal address).
         RuleFor(x => x.CompanyLinkedInUrl)
             .MaximumLength(500)
-            .Must(BeAnAllowedLinkedInUrl)
+            .Must(url => BeAnAllowedProfileUrl(url, "linkedin.com"))
             .WithMessage("CompanyLinkedInUrl must be an https://www.linkedin.com/company/... URL.")
             .When(x => x.CompanyLinkedInUrl is not null);
+
+        // Same reasoning as CompanyLinkedInUrl above: stored, then fetched server-side by
+        // CompanyEnrichmentService, so it is pinned to kariyer.net rather than left as any URL a
+        // client felt like sending.
+        RuleFor(x => x.CompanyKariyerNetUrl)
+            .MaximumLength(500)
+            .Must(url => BeAnAllowedProfileUrl(url, "kariyer.net"))
+            .WithMessage("CompanyKariyerNetUrl must be an https://www.kariyer.net/firma-profil/... URL.")
+            .When(x => x.CompanyKariyerNetUrl is not null);
+
+        this.ApplyHrContactRules(x => x.HrName, x => x.HrEmail, x => x.HrLinkedInUrl);
     }
 
-    private static bool BeAnAllowedLinkedInUrl(string? url) =>
+    private static bool BeAnAllowedProfileUrl(string? url, string domain) =>
         url is not null
         && Uri.TryCreate(url, UriKind.Absolute, out var uri)
         && uri.Scheme == Uri.UriSchemeHttps
-        && (uri.Host.Equals("linkedin.com", StringComparison.OrdinalIgnoreCase)
-            || uri.Host.EndsWith(".linkedin.com", StringComparison.OrdinalIgnoreCase));
+        && (uri.Host.Equals(domain, StringComparison.OrdinalIgnoreCase)
+            || uri.Host.EndsWith("." + domain, StringComparison.OrdinalIgnoreCase));
 }

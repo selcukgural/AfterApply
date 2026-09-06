@@ -112,7 +112,8 @@ internal sealed class ApplicationService(
         var application = DomainApplication.Create(
             userId, companyId, request.JobTitle, request.JobUrl, request.Location,
             request.EmploymentType, request.AppliedAt, request.Source ?? Source.Manual,
-            request.Notes, DateTimeOffset.UtcNow);
+            request.Notes, DateTimeOffset.UtcNow, jobId: null,
+            request.HrName, request.HrEmail, request.HrLinkedInUrl);
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -139,16 +140,18 @@ internal sealed class ApplicationService(
         // resolver only when no such match exists. Manual entry (CreateAsync) is unaffected: it
         // still calls ResolveOrCreateAsync directly, since the autocomplete UI already steers
         // users to type an existing company's exact name when one applies.
-        var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
-            ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken, request.CompanyLinkedInUrl);
+        var profileLinks = new CompanyProfileLinks(request.CompanyLinkedInUrl, request.CompanyKariyerNetUrl);
 
-        // Only worth queuing when this submission actually carries a LinkedIn URL — a company
-        // matched via the trigram/high-confidence path above, or one never scraped from LinkedIn
-        // at all (kariyer.net), has nothing new for CompanyEnrichmentService to fetch from. Safe
-        // to enqueue immediately: by this point the Company row is already committed, either from
-        // an earlier request or by CompanyResolver's own SaveChangesAsync just above — the
-        // enqueued job only touches Company, never this method's own not-yet-saved Application.
-        if (request.CompanyLinkedInUrl is not null)
+        var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
+            ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken, profileLinks);
+
+        // Only worth queuing when this submission actually carries a profile URL — a company
+        // matched via the trigram/high-confidence path above, or one whose posting linked to
+        // neither profile, has nothing new for CompanyEnrichmentService to fetch from. Safe to
+        // enqueue immediately: by this point the Company row is already committed, either from an
+        // earlier request or by CompanyResolver's own SaveChangesAsync just above — the enqueued
+        // job only touches Company, never this method's own not-yet-saved Application.
+        if (profileLinks.HasAny)
         {
             jobClient.Enqueue<ICompanyEnrichmentService>(s => s.EnrichAsync(companyId, CancellationToken.None));
         }
@@ -166,13 +169,26 @@ internal sealed class ApplicationService(
         var application = DomainApplication.Create(
             userId, companyId, request.JobTitle, normalizedUrl, request.Location,
             EmploymentType.FullTime, DateTimeOffset.UtcNow, Source.BrowserExtension,
-            notes: null, DateTimeOffset.UtcNow, jobId);
+            notes: null, DateTimeOffset.UtcNow, jobId,
+            request.HrName, request.HrEmail, request.HrLinkedInUrl);
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
 
         return new ExtensionApplicationResponse(await ToDetailAsync(application, cancellationToken), WasDuplicate: false);
+    }
+
+    public async Task AttachHrEmailFromIncomingEmailAsync(Guid userId, Guid applicationId, string email, CancellationToken cancellationToken)
+    {
+        var application = await FindOwnedAsync(userId, applicationId, cancellationToken);
+        if (application is null)
+        {
+            return;
+        }
+
+        application.SetHrEmailFromIncomingEmail(email, DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<ApplicationDetailResponse?> UpdateAsync(Guid userId, Guid applicationId, UpdateApplicationRequest request, CancellationToken cancellationToken)
@@ -184,7 +200,8 @@ internal sealed class ApplicationService(
         }
 
         application.UpdateDetails(request.JobTitle, request.JobUrl, request.Location,
-            request.EmploymentType, request.AppliedAt, request.Notes, DateTimeOffset.UtcNow);
+            request.EmploymentType, request.AppliedAt, request.Notes, DateTimeOffset.UtcNow,
+            request.HrName, request.HrEmail, request.HrLinkedInUrl);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
@@ -313,9 +330,12 @@ internal sealed class ApplicationService(
 
     private async Task<ApplicationDetailResponse> ToDetailAsync(DomainApplication application, CancellationToken cancellationToken)
     {
-        var companyName = await dbContext.Companies
+        // One projection for all three company fields — Website/LinkedInUrl are read here rather
+        // than copied onto the Application because CompanyEnrichmentService fills them in the
+        // background, after this row already exists.
+        var company = await dbContext.Companies
             .Where(c => c.Id == application.CompanyId)
-            .Select(c => c.Name)
+            .Select(c => new { c.Name, c.Website, c.LinkedInUrl })
             .FirstAsync(cancellationToken);
 
         var jobDescriptionHtml = application.JobId is null
@@ -326,9 +346,10 @@ internal sealed class ApplicationService(
                 .FirstOrDefaultAsync(cancellationToken);
 
         return new ApplicationDetailResponse(
-            application.Id, application.CompanyId, companyName, application.JobTitle, application.JobUrl,
-            application.Location, application.EmploymentType, application.AppliedAt, application.Status,
-            application.Source, application.Notes, application.CreatedAt, application.UpdatedAt,
-            jobDescriptionHtml);
+            application.Id, application.CompanyId, company.Name, company.Website, company.LinkedInUrl,
+            application.JobTitle, application.JobUrl, application.Location, application.EmploymentType,
+            application.AppliedAt, application.Status, application.Source, application.Notes,
+            application.CreatedAt, application.UpdatedAt, jobDescriptionHtml,
+            application.HrName, application.HrEmail, application.HrLinkedInUrl, application.HrEmailSource);
     }
 }

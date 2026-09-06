@@ -31,6 +31,13 @@ public sealed class EmailSuggestion : Entity
 
     public string? SenderDomain { get; private set; }
 
+    /// <summary>The sender's full address, and only when it passed HrEmailCandidate — i.e. when it
+    /// is a mailbox a person could usefully write back to. Everything else (no-reply, bounce
+    /// mailboxes, ATS relays) is reduced to SenderDomain above and the address is never stored.
+    /// Exists so confirming a suggestion can offer the address as the application's HR contact
+    /// without re-reading the original email, which we do not keep.</summary>
+    public string? SenderEmail { get; private set; }
+
     public string? Subject { get; private set; }
 
     public string? Snippet { get; private set; }
@@ -78,7 +85,7 @@ public sealed class EmailSuggestion : Entity
         string? senderDomain, DateTimeOffset emailReceivedAt,
         DateTimeOffset now, string? subject = null, string? snippet = null,
         RejectionReasonCategory? rejectionReasonCategory = null, string? rejectionReasonDetail = null,
-        double? rejectionReasonConfidence = null)
+        double? rejectionReasonConfidence = null, string? senderEmail = null)
     {
         return new EmailSuggestion
         {
@@ -92,6 +99,7 @@ public sealed class EmailSuggestion : Entity
             MatchedRule = matchedRule,
             MatchType = matchType,
             SenderDomain = senderDomain,
+            SenderEmail = senderEmail,
             Subject = subject,
             Snippet = snippet,
             RejectionReasonCategory = rejectionReasonCategory,
@@ -114,7 +122,7 @@ public sealed class EmailSuggestion : Entity
         string? subject, string? snippet, string extractedCompanyName, string extractedJobTitle,
         string? extractedLocation, string? extractedDescription,
         RejectionReasonCategory? rejectionReasonCategory = null, string? rejectionReasonDetail = null,
-        double? rejectionReasonConfidence = null)
+        double? rejectionReasonConfidence = null, string? senderEmail = null)
     {
         return new EmailSuggestion
         {
@@ -127,6 +135,7 @@ public sealed class EmailSuggestion : Entity
             ConfidenceScore = confidenceScore,
             MatchedRule = matchedRule,
             SenderDomain = senderDomain,
+            SenderEmail = senderEmail,
             Subject = subject,
             Snippet = snippet,
             ExtractedCompanyName = extractedCompanyName,

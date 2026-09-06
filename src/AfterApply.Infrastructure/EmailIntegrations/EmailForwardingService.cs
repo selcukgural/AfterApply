@@ -85,6 +85,11 @@ internal sealed class EmailForwardingService(
         // decision.
         var isKnownSender = applicationId is not null || jobBoardDomainMatcher.IsKnown(senderDomain);
 
+        // Kept only when it is a mailbox someone could actually write back to — see
+        // HrEmailCandidate. Anything else stays reduced to senderDomain above and the full address
+        // is never written down.
+        var hrEmailCandidate = HrEmailCandidate.From(fromEmail, jobBoardDomainMatcher.IsKnown(senderDomain));
+
         var classification = await ClassifyAsync(fromEmail, subject, snippet,
             senderDomain, applicationId is not null, linkDomains, isKnownSender, cancellationToken);
 
@@ -116,7 +121,8 @@ internal sealed class EmailForwardingService(
                 providerMessageId, providerThreadId: null,
                 classification.SuggestedStatus, classification.ConfidenceScore, classification.MatchedRule,
                 matchResult!.MatchType, senderDomain, receivedAt, now, subject, snippet,
-                rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence);
+                rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence,
+                hrEmailCandidate);
 
             dbContext.EmailSuggestions.Add(suggestion);
 
@@ -144,7 +150,8 @@ internal sealed class EmailForwardingService(
             classification.SuggestedStatus, classification.ConfidenceScore, classification.MatchedRule,
             senderDomain, receivedAt, now, subject, snippet,
             extraction.CompanyName, extraction.JobTitle, extraction.Location, extraction.Description,
-            rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence));
+            rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence,
+            hrEmailCandidate));
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -212,6 +219,8 @@ internal sealed class EmailForwardingService(
                     cancellationToken);
             }
 
+            await AttachHrEmailAsync(userId, created.Id, suggestion, cancellationToken);
+
             suggestion.Confirm(DateTimeOffset.UtcNow);
             await dbContext.SaveChangesAsync(cancellationToken);
             return ConfirmSuggestionResult.Confirmed;
@@ -229,10 +238,25 @@ internal sealed class EmailForwardingService(
             return ConfirmSuggestionResult.NotFound;
         }
 
+        await AttachHrEmailAsync(userId, suggestion.ApplicationId!.Value, suggestion, cancellationToken);
+
         suggestion.Confirm(DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
         return ConfirmSuggestionResult.Confirmed;
     }
+
+    /// <summary>
+    /// Offers the sender's address as the application's HR contact, on the two paths where the
+    /// email has actually been accepted as being about this application: the user confirming it,
+    /// and auto-apply (which only runs on a DomainMatch). A dismissed suggestion writes nothing —
+    /// the user rejecting it is exactly the case where the address might belong to the wrong job.
+    /// Fills only when the application has no address yet; see
+    /// Application.SetHrEmailFromIncomingEmail.
+    /// </summary>
+    private Task AttachHrEmailAsync(Guid userId, Guid applicationId, EmailSuggestion suggestion, CancellationToken cancellationToken) =>
+        suggestion.SenderEmail is null
+            ? Task.CompletedTask
+            : applicationService.AttachHrEmailFromIncomingEmailAsync(userId, applicationId, suggestion.SenderEmail, cancellationToken);
 
     /// <summary>Shared by the manual-confirm and auto-apply paths — the only place that actually
     /// mutates an existing Application's status from a matched suggestion. Caller must already have
@@ -284,6 +308,7 @@ internal sealed class EmailForwardingService(
         var changed = await ApplyStatusChangeAsync(userId, suggestion, StatusChangeOrigin.EmailAutoApplied, cancellationToken);
         if (changed is not null)
         {
+            await AttachHrEmailAsync(userId, suggestion.ApplicationId!.Value, suggestion, cancellationToken);
             suggestion.AutoApply(DateTimeOffset.UtcNow);
         }
     }

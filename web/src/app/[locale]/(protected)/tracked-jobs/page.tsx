@@ -26,6 +26,9 @@ export default function TrackedJobsPage() {
       jobUrl: values.jobUrl || null,
       location: values.location || null,
       notes: values.notes || null,
+      hrName: values.hrName || null,
+      hrEmail: values.hrEmail || null,
+      hrLinkedInUrl: values.hrLinkedInUrl || null,
     });
     await queryClient.invalidateQueries({ queryKey: ["trackedJobs"] });
   };

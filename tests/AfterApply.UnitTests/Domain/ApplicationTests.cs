@@ -23,6 +23,57 @@ public class ApplicationTests
         now: Now);
 
     [Fact]
+    public void SetHrEmailFromIncomingEmail_Fills_An_Empty_Contact_And_Records_Where_It_Came_From()
+    {
+        var application = CreateApplication();
+
+        application.SetHrEmailFromIncomingEmail("ayse.yilmaz@company.com", Now.AddDays(1));
+
+        application.HrEmail.ShouldBe("ayse.yilmaz@company.com");
+        application.HrEmailSource.ShouldBe(HrEmailSource.IncomingEmail);
+        application.UpdatedAt.ShouldBe(Now.AddDays(1));
+    }
+
+    [Fact]
+    public void SetHrEmailFromIncomingEmail_Never_Overwrites_What_The_User_Typed()
+    {
+        // A guess read off a sender must not quietly replace an address the user asserted, however
+        // strong the match that produced it.
+        var application = CreateApplication();
+        application.UpdateDetails("Senior Backend Engineer", null, null, EmploymentType.FullTime, Now, null, Now,
+            hrEmail: "mine@company.com");
+
+        application.SetHrEmailFromIncomingEmail("sender@company.com", Now.AddDays(1));
+
+        application.HrEmail.ShouldBe("mine@company.com");
+        application.HrEmailSource.ShouldBe(HrEmailSource.Manual);
+    }
+
+    [Fact]
+    public void Saving_The_Edit_Form_Makes_An_Auto_Filled_Address_The_Users_Own()
+    {
+        var application = CreateApplication();
+        application.SetHrEmailFromIncomingEmail("sender@company.com", Now);
+
+        application.UpdateDetails("Senior Backend Engineer", null, null, EmploymentType.FullTime, Now, null, Now,
+            hrEmail: "sender@company.com");
+
+        application.HrEmailSource.ShouldBe(HrEmailSource.Manual);
+    }
+
+    [Fact]
+    public void Clearing_The_Hr_Email_Clears_Its_Provenance_Too()
+    {
+        var application = CreateApplication();
+        application.SetHrEmailFromIncomingEmail("sender@company.com", Now);
+
+        application.UpdateDetails("Senior Backend Engineer", null, null, EmploymentType.FullTime, Now, null, Now);
+
+        application.HrEmail.ShouldBeNull();
+        application.HrEmailSource.ShouldBeNull();
+    }
+
+    [Fact]
     public void Create_Sets_Status_To_Applied_And_Seeds_History_And_Timeline()
     {
         var application = CreateApplication();

@@ -18,6 +18,11 @@ public sealed class ApplicationConfiguration : IEntityTypeConfiguration<DomainAp
         builder.Property(a => a.JobUrl).HasMaxLength(2000);
         builder.Property(a => a.Location).HasMaxLength(200);
         builder.Property(a => a.Notes).HasColumnType("text");
+        builder.Property(a => a.HrName).HasMaxLength(200);
+        // 320 is the RFC-maximum length of an email address (64 local + @ + 255 domain).
+        builder.Property(a => a.HrEmail).HasMaxLength(320);
+        builder.Property(a => a.HrLinkedInUrl).HasMaxLength(500);
+        builder.Property(a => a.HrEmailSource).HasConversion<string>().HasMaxLength(50);
         builder.Property(a => a.EmploymentType).HasConversion<string>().HasMaxLength(50);
         builder.Property(a => a.Status).HasConversion<string>().HasMaxLength(50);
         builder.Property(a => a.Source).HasConversion<string>().HasMaxLength(50);

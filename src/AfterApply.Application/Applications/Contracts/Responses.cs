@@ -16,6 +16,13 @@ public sealed record ApplicationDetailResponse(
     Guid Id,
     Guid CompanyId,
     string CompanyName,
+    // The company's own site and LinkedIn page, so the detail view can link straight out to them.
+    // Read from the Company row at response time rather than snapshotted onto the Application:
+    // CompanyEnrichmentService fills Website in the background *after* the application row already
+    // exists, so anything captured at creation time would stay null forever. Both are null until
+    // some path has actually resolved them (a kariyer.net-only company has neither today).
+    string? CompanyWebsite,
+    string? CompanyLinkedInUrl,
     string JobTitle,
     string? JobUrl,
     string? Location,
@@ -29,7 +36,15 @@ public sealed record ApplicationDetailResponse(
     // Allow-listed HTML for a formatted, read-only display of the linked Job's description —
     // untrusted content, the frontend re-sanitizes with DOMPurify before ever rendering it (see
     // JobDescriptionCard). Null when there's no linked Job, or the Job predates this field.
-    string? JobDescriptionHtml = null);
+    string? JobDescriptionHtml = null,
+    // This user's own copy of the HR contact — never shared with other users who applied to the
+    // same posting, and deleted with the application.
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null,
+    // Null exactly when HrEmail is null — the UI labels an auto-filled address rather than passing
+    // a guess off as something the user typed.
+    HrEmailSource? HrEmailSource = null);
 
 public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);
 

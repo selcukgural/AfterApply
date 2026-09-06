@@ -91,6 +91,90 @@ public class TrackedJobFlowTests(SharedInfrastructure shared) : IAsyncLifetime
         afterDelete!.ShouldNotContain(t => t.Id == created.Id);
     }
 
+    // Same read-at-response-time contract as the application detail: whatever enrichment has
+    // learned about the company by the time the list is fetched shows up on the card, including
+    // for rows saved long before.
+    [Fact]
+    public async Task List_And_Convert_Surface_The_Company_Links()
+    {
+        var client = await AuthenticatedClientAsync("tracked.companylinks@example.com");
+
+        var createResponse = await client.PostAsJsonAsync("/api/tracked-jobs",
+            new CreateTrackedJobRequest("Linked Co", "Data Engineer", "https://example.com/jobs/3", null, null),
+            JsonOptions);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<TrackedJobResponse>(JsonOptions);
+        created!.CompanyWebsite.ShouldBeNull();
+
+        using (var scope = _factory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var company = await db.Companies.SingleAsync(c => c.Id == created.CompanyId);
+            company.EnrichFrom("https://linkedco.example", null, null, DateTimeOffset.UtcNow);
+            company.SetProfileLinksIfMissing("https://www.linkedin.com/company/linked-co/", kariyerNetUrl: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        var listResponse = await client.GetAsync("/api/tracked-jobs");
+        var list = await listResponse.Content.ReadFromJsonAsync<List<TrackedJobResponse>>(JsonOptions);
+        var listed = list!.Single(t => t.Id == created.Id);
+        listed.CompanyWebsite.ShouldBe("https://linkedco.example");
+        listed.CompanyLinkedInUrl.ShouldBe("https://www.linkedin.com/company/linked-co/");
+
+        // The links belong to the company, so converting to an application keeps them.
+        var convertResponse = await client.PostAsJsonAsync($"/api/tracked-jobs/{created.Id}/convert",
+            new ConvertTrackedJobRequest(EmploymentType.FullTime, DateTimeOffset.UtcNow, null), JsonOptions);
+        convertResponse.EnsureSuccessStatusCode();
+        var application = await convertResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+        application!.CompanyWebsite.ShouldBe("https://linkedco.example");
+        application.CompanyLinkedInUrl.ShouldBe("https://www.linkedin.com/company/linked-co/");
+    }
+
+    // The HR contact is per-user data attached to the job the user is chasing, so it has to survive
+    // the tracked-job -> application handover rather than making them retype it at the exact moment
+    // they apply.
+    [Fact]
+    public async Task Hr_Contact_Survives_Conversion_Into_An_Application()
+    {
+        var client = await AuthenticatedClientAsync("tracked.hrcontact@example.com");
+
+        var createResponse = await client.PostAsJsonAsync("/api/tracked-jobs",
+            new CreateTrackedJobRequest("Contact Co", "Data Engineer", null, null, null,
+                HrName: "Zeynep A.", HrEmail: "talent@contactco.example",
+                HrLinkedInUrl: "https://www.linkedin.com/in/zeynep-a"),
+            JsonOptions);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<TrackedJobResponse>(JsonOptions);
+        created!.HrName.ShouldBe("Zeynep A.");
+        created.HrEmail.ShouldBe("talent@contactco.example");
+
+        var listResponse = await client.GetAsync("/api/tracked-jobs");
+        var list = await listResponse.Content.ReadFromJsonAsync<List<TrackedJobResponse>>(JsonOptions);
+        list!.Single(t => t.Id == created.Id).HrLinkedInUrl.ShouldBe("https://www.linkedin.com/in/zeynep-a");
+
+        var convertResponse = await client.PostAsJsonAsync($"/api/tracked-jobs/{created.Id}/convert",
+            new ConvertTrackedJobRequest(EmploymentType.FullTime, DateTimeOffset.UtcNow, null), JsonOptions);
+        convertResponse.EnsureSuccessStatusCode();
+        var application = await convertResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        application!.HrName.ShouldBe("Zeynep A.");
+        application.HrEmail.ShouldBe("talent@contactco.example");
+        application.HrLinkedInUrl.ShouldBe("https://www.linkedin.com/in/zeynep-a");
+    }
+
+    [Fact]
+    public async Task TrackedJob_With_An_Invalid_Hr_LinkedIn_Url_Is_Rejected()
+    {
+        var client = await AuthenticatedClientAsync("tracked.hrinvalid@example.com");
+
+        var response = await client.PostAsJsonAsync("/api/tracked-jobs",
+            new CreateTrackedJobRequest("Bad Contact Co", "Data Engineer", null, null, null,
+                HrLinkedInUrl: "https://www.linkedin.com/company/bad-contact-co/"),
+            JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
     [Fact]
     public async Task Convert_TrackedJob_Creates_Application_And_Removes_TrackedJob()
     {
