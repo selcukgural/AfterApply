@@ -3329,6 +3329,38 @@ olduğu şey bu. Default'lar EF modeline **bildirilmedi** (yalnızca ham SQL), b
 zaman değeri açıkça yazmaya devam ediyor ve default sadece eski image'ın yazdıklarında devreye
 girebiliyor.
 
+### CI artık deploy'un kapısı: test job'ları reusable `tests.yml`'a taşındı — DECIDED
+
+Yukarıdaki deploy sırası bulgusuyla birlikte çıkan ikinci yapısal sorun: `CI` ve `Deploy` aynı
+`push: main` olayına bağlı **iki bağımsız workflow**'du, dolayısıyla CI hiçbir şeyi kapıya
+koymuyordu — Deploy onunla aynı saniyede başlıyor ve sonucuna hiç bakmıyordu. Testi kıran bir
+push yine deploy oluyordu. Branch protection'daki required check'ler yalnızca PR akışını korur;
+doğrudan main'e push eden bir akışta (bu projenin akışı) hiçbir kapı yok.
+
+Üç yol değerlendirildi. **(A) `workflow_run` tetikleyicisi** elendi: `github.sha` artık
+`workflow_run.head_sha` olur ve `plan`, image tag'leri, `deploy-commits`, tag taşıma adımlarının
+hepsi elden geçmeli — sessiz hata yüzeyi geniş. **(B) test job'larını reusable yapıp Deploy'un da
+çağırması** çalışırdı ama testler push başına iki kez koşardı. **(C) seçildi:** `ci.yml` yalnızca
+`pull_request`'e indi, `deploy.yml` aynı reusable workflow'ları kendi kapısı olarak çağırıyor.
+Tekrar yok, kapı doğru yerde, ve `api-contract`'ın push başına iki kez koşması da bitti.
+
+Yeni graf: `plan → (tests ∥ contract-check) → deploy-backend → deploy-web → notify-deploy`.
+
+`dependency-audit` de `tests.yml`'a taşındı, yani yeni yayınlanan bir güvenlik açığı artık
+yalnızca merge'ü değil **deploy'u da** bloklar. Kapının var oluş amacı bu, ama olay anında gelen
+alakasız bir advisory'nin hotfix'i bloklayabileceği bilinerek yapıldı; `tests.yml`'daki yorum bunu
+söylüyor.
+
+Postman yayınlama `ci.yml`'dan `deploy.yml`'ın `contract-check` çağrısına taşındı — paylaşılan
+workspace yalnızca gerçekten deploy edilen koleksiyonu almalı. `workflow_dispatch` daha eski bir
+commit'i hedefleyebildiği için yayınlama `github.event_name == 'push'` ile sınırlandı; aksi halde
+manuel bir redeploy workspace'i sessizce geriye alırdı.
+
+**Bu değişiklik repo ayarını da gerektiriyor:** required status check isimleri
+`backend` / `frontend` → `tests / backend` / `tests / frontend` / `tests / dependency-audit`
+olarak değişti. Ayar güncellenmezse hiçbir PR merge edilemez — hiç raporlanmayacak check'leri
+bekler. Değişiklik yapılırken açık PR yoktu.
+
 ---
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)

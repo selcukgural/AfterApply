@@ -84,17 +84,35 @@ jobs:
           echo "backend=$backend" >> "$GITHUB_OUTPUT"
           echo "web=$web" >> "$GITHUB_OUTPUT"
 
-  # Re-verifies the API against its own Postman collection right before deploying — a second,
-  # independent gate from ci.yml's own call to the same reusable workflow, since this workflow
-  # can be dispatched against any commit/branch, not just one CI already passed on. Skipped
-  # entirely when neither side is deploying (e.g. a docs-only push to main).
+  # The full test suite, as the deploy gate. CI used to run this in a separate workflow on the same
+  # push event, which meant it gated nothing: Deploy started alongside it and never looked at the
+  # result, so a push that broke a test still deployed. ci.yml now only runs on pull requests and
+  # calls the same reusable workflow, so the PR gate and the deploy gate cannot drift apart.
+  # Skipped, like contract-check, when neither side is deploying (a docs-only push to main).
+  tests:
+    needs: plan
+    if: needs.plan.outputs.backend == 'true' || needs.plan.outputs.web == 'true'
+    uses: ./.github/workflows/tests.yml
+
+  # Re-verifies the API against its own Postman collection right before deploying — a gate on the
+  # running service rather than on the code, and one that also covers a workflow_dispatch against a
+  # commit no pull request ever checked. Runs alongside `tests` rather than after it; both have to
+  # pass before anything deploys.
+  #
+  # This is also where the collection reaches the shared Postman workspace, guarded to real pushes:
+  # a workflow_dispatch redeploy can target an older commit, and republishing that commit's
+  # collection would quietly roll the workspace backwards.
   contract-check:
     needs: plan
     if: needs.plan.outputs.backend == 'true' || needs.plan.outputs.web == 'true'
     uses: ./.github/workflows/api-contract.yml
+    with:
+      publish: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    secrets:
+      POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
 
   deploy-backend:
-    needs: [plan, contract-check]
+    needs: [plan, tests, contract-check]
     if: needs.plan.outputs.backend == 'true'
     runs-on: ubuntu-latest
     # contents: write (job-level, overrides the workflow's contents: read) is only for moving
@@ -240,10 +258,11 @@ jobs:
   # a plain `needs:` would skip this job whenever deploy-backend is skipped. 'skipped' is a pass
   # here (backend had nothing to deploy); 'failure' and 'cancelled' are not.
   deploy-web:
-    needs: [plan, contract-check, deploy-backend]
+    needs: [plan, tests, contract-check, deploy-backend]
     if: |
       always() &&
       needs.plan.outputs.web == 'true' &&
+      needs.tests.result == 'success' &&
       needs.contract-check.result == 'success' &&
       (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
     runs-on: ubuntu-latest
