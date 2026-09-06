@@ -93,6 +93,9 @@ export interface ApplicationDetailResponse {
   createdAt: string;
   updatedAt: string;
   jobDescriptionHtml: string | null;
+  hrName: string | null;
+  hrEmail: string | null;
+  hrLinkedInUrl: string | null;
 }
 
 export type StatusChangeOrigin =
@@ -190,6 +193,9 @@ export interface CreateApplicationRequest {
   appliedAt: string;
   source: Source | null;
   notes: string | null;
+  hrName: string | null;
+  hrEmail: string | null;
+  hrLinkedInUrl: string | null;
 }
 
 export interface UpdateApplicationRequest {
@@ -199,6 +205,9 @@ export interface UpdateApplicationRequest {
   employmentType: EmploymentType;
   appliedAt: string;
   notes: string | null;
+  hrName: string | null;
+  hrEmail: string | null;
+  hrLinkedInUrl: string | null;
 }
 
 export interface ChangeStatusRequest {
@@ -346,6 +355,9 @@ export interface TrackedJobResponse {
   location: string | null;
   notes: string | null;
   addedAt: string;
+  hrName: string | null;
+  hrEmail: string | null;
+  hrLinkedInUrl: string | null;
 }
 
 export interface CreateTrackedJobRequest {
@@ -354,6 +366,9 @@ export interface CreateTrackedJobRequest {
   jobUrl: string | null;
   location: string | null;
   notes: string | null;
+  hrName: string | null;
+  hrEmail: string | null;
+  hrLinkedInUrl: string | null;
 }
 
 export interface ConvertTrackedJobRequest {

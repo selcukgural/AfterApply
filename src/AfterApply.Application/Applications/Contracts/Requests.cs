@@ -11,7 +11,13 @@ public sealed record CreateApplicationRequest(
     EmploymentType EmploymentType,
     DateTimeOffset AppliedAt,
     Source? Source,
-    string? Notes);
+    string? Notes,
+    // The recruiter/hiring contact, typed by the user. Neither job site publishes an HR email
+    // (measured 2026-09-06: 0 of 35 kariyer.net postings carried one, and LinkedIn never shows the
+    // poster's address), so manual entry is the primary way this ever gets filled.
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null);
 
 public sealed record CreateFromExtensionRequest(
     string CompanyName,
@@ -44,7 +50,12 @@ public sealed record UpdateApplicationRequest(
     string? Location,
     EmploymentType EmploymentType,
     DateTimeOffset AppliedAt,
-    string? Notes);
+    string? Notes,
+    // Sent on every save, so omitting one clears it — this is the edit form, and a user emptying
+    // the field means they want it gone.
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null);
 
 // Note is the user's own text and nothing else, and there is deliberately no Source/Origin
 // here: provenance is decided by the code path that handles the change, never by the caller.

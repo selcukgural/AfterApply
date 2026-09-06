@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hrContactSchemaFields } from "@/lib/validation/hrContactSchema";
 
 export function createTrackedJobSchema(t: (key: string) => string) {
   return z.object({
@@ -7,6 +8,7 @@ export function createTrackedJobSchema(t: (key: string) => string) {
     jobUrl: z.string().max(2000).optional(),
     location: z.string().max(200).optional(),
     notes: z.string().max(4000).optional(),
+    ...hrContactSchemaFields(t),
   });
 }
 

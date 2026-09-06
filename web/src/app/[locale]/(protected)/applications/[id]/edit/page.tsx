@@ -27,6 +27,9 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
       employmentType: values.employmentType,
       appliedAt: new Date(values.appliedAt).toISOString(),
       notes: values.notes || null,
+      hrName: values.hrName || null,
+      hrEmail: values.hrEmail || null,
+      hrLinkedInUrl: values.hrLinkedInUrl || null,
     });
 
     await queryClient.invalidateQueries({ queryKey: ["applications"] });

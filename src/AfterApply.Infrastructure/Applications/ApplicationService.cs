@@ -112,7 +112,8 @@ internal sealed class ApplicationService(
         var application = DomainApplication.Create(
             userId, companyId, request.JobTitle, request.JobUrl, request.Location,
             request.EmploymentType, request.AppliedAt, request.Source ?? Source.Manual,
-            request.Notes, DateTimeOffset.UtcNow);
+            request.Notes, DateTimeOffset.UtcNow, jobId: null,
+            request.HrName, request.HrEmail, request.HrLinkedInUrl);
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -186,7 +187,8 @@ internal sealed class ApplicationService(
         }
 
         application.UpdateDetails(request.JobTitle, request.JobUrl, request.Location,
-            request.EmploymentType, request.AppliedAt, request.Notes, DateTimeOffset.UtcNow);
+            request.EmploymentType, request.AppliedAt, request.Notes, DateTimeOffset.UtcNow,
+            request.HrName, request.HrEmail, request.HrLinkedInUrl);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
@@ -334,6 +336,7 @@ internal sealed class ApplicationService(
             application.Id, application.CompanyId, company.Name, company.Website, company.LinkedInUrl,
             application.JobTitle, application.JobUrl, application.Location, application.EmploymentType,
             application.AppliedAt, application.Status, application.Source, application.Notes,
-            application.CreatedAt, application.UpdatedAt, jobDescriptionHtml);
+            application.CreatedAt, application.UpdatedAt, jobDescriptionHtml,
+            application.HrName, application.HrEmail, application.HrLinkedInUrl);
     }
 }

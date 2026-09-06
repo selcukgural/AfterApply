@@ -6,7 +6,7 @@ import type { EmploymentType, TrackedJobResponse } from "@/types/api";
 import { EMPLOYMENT_TYPES } from "@/lib/constants/employmentType";
 import { Button } from "@/components/ui/Button";
 import { ExternalLinkPill } from "@/components/ui/ExternalLinkPill";
-import { externalUrlLabel, safeExternalUrl } from "@/lib/url/externalLink";
+import { externalUrlLabel, safeExternalUrl, safeMailtoUrl } from "@/lib/url/externalLink";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
@@ -78,7 +78,10 @@ export function TrackedJobList({ items, onDelete, onConvert }: TrackedJobListPro
                   {item.jobUrl}
                 </a>
               )}
-              {(safeExternalUrl(item.companyWebsite) || safeExternalUrl(item.companyLinkedInUrl)) && (
+              {(safeExternalUrl(item.companyWebsite) ||
+                safeExternalUrl(item.companyLinkedInUrl) ||
+                safeExternalUrl(item.hrLinkedInUrl) ||
+                safeMailtoUrl(item.hrEmail)) && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   <ExternalLinkPill
                     href={item.companyWebsite}
@@ -91,6 +94,19 @@ export function TrackedJobList({ items, onDelete, onConvert }: TrackedJobListPro
                     label={t("companyLinkedIn")}
                     icon="linkedin"
                     title={t("companyLinkedIn")}
+                  />
+                  <ExternalLinkPill
+                    href={item.hrLinkedInUrl}
+                    label={item.hrName || t("hrLinkedIn")}
+                    icon="linkedin"
+                    title={t("hrLinkedIn")}
+                  />
+                  <ExternalLinkPill
+                    href={item.hrEmail}
+                    label={item.hrEmail ?? ""}
+                    icon="mail"
+                    kind="email"
+                    title={t("hrEmail")}
                   />
                 </div>
               )}

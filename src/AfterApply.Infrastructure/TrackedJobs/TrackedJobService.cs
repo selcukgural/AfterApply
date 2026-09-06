@@ -24,7 +24,8 @@ internal sealed class TrackedJobService(
             .OrderByDescending(x => x.t.AddedAt)
             .Select(x => new TrackedJobResponse(
                 x.t.Id, x.t.CompanyId, x.c.Name, x.c.Website, x.c.LinkedInUrl,
-                x.t.JobTitle, x.t.JobUrl, x.t.Location, x.t.Notes, x.t.AddedAt))
+                x.t.JobTitle, x.t.JobUrl, x.t.Location, x.t.Notes, x.t.AddedAt,
+                x.t.HrName, x.t.HrEmail, x.t.HrLinkedInUrl))
             .ToListAsync(cancellationToken);
     }
 
@@ -33,7 +34,8 @@ internal sealed class TrackedJobService(
         var companyId = await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
-        var trackedJob = TrackedJob.Create(userId, companyId, request.JobTitle, request.JobUrl, request.Location, request.Notes, now);
+        var trackedJob = TrackedJob.Create(userId, companyId, request.JobTitle, request.JobUrl,
+            request.Location, request.Notes, now, request.HrName, request.HrEmail, request.HrLinkedInUrl);
 
         dbContext.TrackedJobs.Add(trackedJob);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -46,7 +48,8 @@ internal sealed class TrackedJobService(
 
         return new TrackedJobResponse(
             trackedJob.Id, trackedJob.CompanyId, company.Name, company.Website, company.LinkedInUrl,
-            trackedJob.JobTitle, trackedJob.JobUrl, trackedJob.Location, trackedJob.Notes, trackedJob.AddedAt);
+            trackedJob.JobTitle, trackedJob.JobUrl, trackedJob.Location, trackedJob.Notes, trackedJob.AddedAt,
+            trackedJob.HrName, trackedJob.HrEmail, trackedJob.HrLinkedInUrl);
     }
 
     public async Task<bool> DeleteAsync(Guid userId, Guid trackedJobId, CancellationToken cancellationToken)
@@ -72,9 +75,12 @@ internal sealed class TrackedJobService(
         }
 
         var now = DateTimeOffset.UtcNow;
+        // The HR contact travels with the job: a user who tracked a posting and recorded who to
+        // talk to should not have to retype it the moment they actually apply.
         var application = DomainApplication.Create(
             userId, trackedJob.CompanyId, trackedJob.JobTitle, trackedJob.JobUrl, trackedJob.Location,
-            request.EmploymentType, request.AppliedAt, Source.Manual, request.Notes ?? trackedJob.Notes, now);
+            request.EmploymentType, request.AppliedAt, Source.Manual, request.Notes ?? trackedJob.Notes, now,
+            jobId: null, trackedJob.HrName, trackedJob.HrEmail, trackedJob.HrLinkedInUrl);
 
         dbContext.Applications.Add(application);
         dbContext.TrackedJobs.Remove(trackedJob);
@@ -87,7 +93,8 @@ internal sealed class TrackedJobService(
             application.Id, application.CompanyId, company.Name, company.Website, company.LinkedInUrl,
             application.JobTitle, application.JobUrl, application.Location, application.EmploymentType,
             application.AppliedAt, application.Status, application.Source, application.Notes,
-            application.CreatedAt, application.UpdatedAt);
+            application.CreatedAt, application.UpdatedAt, JobDescriptionHtml: null,
+            application.HrName, application.HrEmail, application.HrLinkedInUrl);
     }
 
     private Task<TrackedJob?> FindOwnedAsync(Guid userId, Guid trackedJobId, CancellationToken cancellationToken)

@@ -21,6 +21,9 @@ export default function NewApplicationPage() {
       appliedAt: new Date(values.appliedAt).toISOString(),
       source: values.source,
       notes: values.notes || null,
+      hrName: values.hrName || null,
+      hrEmail: values.hrEmail || null,
+      hrLinkedInUrl: values.hrLinkedInUrl || null,
     });
 
     await queryClient.invalidateQueries({ queryKey: ["applications"] });

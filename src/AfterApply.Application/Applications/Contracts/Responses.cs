@@ -36,7 +36,12 @@ public sealed record ApplicationDetailResponse(
     // Allow-listed HTML for a formatted, read-only display of the linked Job's description —
     // untrusted content, the frontend re-sanitizes with DOMPurify before ever rendering it (see
     // JobDescriptionCard). Null when there's no linked Job, or the Job predates this field.
-    string? JobDescriptionHtml = null);
+    string? JobDescriptionHtml = null,
+    // This user's own copy of the HR contact — never shared with other users who applied to the
+    // same posting, and deleted with the application.
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null);
 
 public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);
 

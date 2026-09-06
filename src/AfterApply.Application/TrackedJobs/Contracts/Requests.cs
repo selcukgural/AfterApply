@@ -7,7 +7,12 @@ public sealed record CreateTrackedJobRequest(
     string JobTitle,
     string? JobUrl,
     string? Location,
-    string? Notes);
+    string? Notes,
+    // Rarely known this early — a job is usually tracked before there is any contact at all — but
+    // carried across to the Application on conversion when it is.
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null);
 
 public sealed record ConvertTrackedJobRequest(
     EmploymentType EmploymentType,

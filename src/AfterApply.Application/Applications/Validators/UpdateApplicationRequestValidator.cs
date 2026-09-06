@@ -17,5 +17,7 @@ public sealed class UpdateApplicationRequestValidator : AbstractValidator<Update
         RuleFor(x => x.AppliedAt).LessThanOrEqualTo(_ => DateTimeOffset.UtcNow.AddDays(1))
             .WithMessage(_ => localizer["VALIDATION_APPLIED_AT_FUTURE"]);
         RuleFor(x => x.Notes).MaximumLength(4000);
+
+        this.ApplyHrContactRules(x => x.HrName, x => x.HrEmail, x => x.HrLinkedInUrl);
     }
 }

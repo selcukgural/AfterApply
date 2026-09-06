@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hrContactSchemaFields } from "@/lib/validation/hrContactSchema";
 
 function createApplicationBaseSchema(t: (key: string) => string) {
   return z.object({
@@ -8,6 +9,7 @@ function createApplicationBaseSchema(t: (key: string) => string) {
     employmentType: z.string().min(1, t("employmentTypeRequired")),
     appliedAt: z.string().min(1, t("appliedAtRequired")),
     notes: z.string().max(4000).optional(),
+    ...hrContactSchemaFields(t),
   });
 }
 

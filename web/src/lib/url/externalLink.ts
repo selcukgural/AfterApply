@@ -36,3 +36,46 @@ export function externalUrlLabel(url: string): string {
     return url;
   }
 }
+
+/**
+ * A LinkedIn *profile* URL, which is what the HR-contact field means — the UI labels it that way
+ * and renders it behind a LinkedIn mark, so an arbitrary link would be a mark that lies about
+ * where it goes. Mirrors HrContactRules.BeALinkedInProfileUrl on the backend; both exist because
+ * either side alone would let the other's callers through.
+ */
+export function isLinkedInProfileUrl(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  return (
+    parsed.protocol === "https:" &&
+    (host === "linkedin.com" || host.endsWith(".linkedin.com")) &&
+    parsed.pathname.toLowerCase().startsWith("/in/")
+  );
+}
+
+/**
+ * A "mail this person" href. Same reasoning as safeExternalUrl: the address is user-entered and
+ * ends up in an anchor, so anything that is not a plain single address is dropped rather than
+ * interpolated — a value containing a newline or a second address could otherwise smuggle extra
+ * mailto parameters (a bcc, a body) into the link.
+ */
+export function safeMailtoUrl(email: string | null | undefined): string | null {
+  if (!email) {
+    return null;
+  }
+
+  // Deliberately stricter than "is this a valid address": the characters excluded here are the
+  // ones that would change the meaning of the href rather than the address — whitespace and
+  // separators (a second recipient), and "?" / "&" / "#" (mailto headers such as bcc or body).
+  // Percent-encoding the result instead would turn the "@" into %40, which strict mail clients
+  // are within their rights to reject, so the address is kept literal and the input narrowed.
+  const trimmed = email.trim();
+  const address = /^[^\s@,;:<>()[\]\\?&#%"']+@[^\s@,;:<>()[\]\\?&#%"']+\.[^\s@,;:<>()[\]\\?&#%"']+$/;
+  return address.test(trimmed) ? `mailto:${trimmed}` : null;
+}

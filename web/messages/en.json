@@ -418,7 +418,10 @@
       "createdAt": "Added On",
       "contact": "Contact",
       "companyWebsite": "Company website",
-      "companyLinkedIn": "Company LinkedIn page"
+      "companyLinkedIn": "Company LinkedIn page",
+      "hrEmail": "HR email address",
+      "hrLinkedIn": "HR LinkedIn profile",
+      "hrNamed": "HR contact: {name}"
     },
     "statusChange": {
       "changeStatus": "Change Status",
@@ -525,7 +528,8 @@
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
-      "outro": "This data is used solely to provide you with application tracking and personal analytics features."
+      "outro": "This data is used solely to provide you with application tracking and personal analytics features.",
+      "item5": "An HR contact you optionally record for an application or a job you track: name, email address and LinkedIn profile URL. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link."
     },
     "googleSignIn": {
       "title": "Sign in with Google",
@@ -634,7 +638,9 @@
     "jobTitleRequired": "Position is required",
     "employmentTypeRequired": "Employment type is required",
     "appliedAtRequired": "Applied date is required",
-    "companyNameRequired": "Company name is required"
+    "companyNameRequired": "Company name is required",
+    "hrEmailInvalid": "Enter a valid email address.",
+    "hrLinkedInInvalid": "Enter a profile URL starting with https://www.linkedin.com/in/"
   },
   "errors": {
     "generic": "The request failed.",
@@ -668,7 +674,9 @@
       "saving": "Saving...",
       "addedAt": "Added: {date}",
       "companyWebsite": "Company website",
-      "companyLinkedIn": "Company LinkedIn page"
+      "companyLinkedIn": "Company LinkedIn page",
+      "hrEmail": "HR email address",
+      "hrLinkedIn": "HR LinkedIn profile"
     }
   },
   "imports": {
@@ -1147,5 +1155,12 @@
         "answer": "Neither LinkedIn's export nor the job pages the extension reads specify an employment type, so it defaults to \"FullTime\" — edit the application afterwards if you need the correct type."
       }
     }
+  },
+  "hrContact": {
+    "legend": "HR contact",
+    "hint": "Job sites don't publish these, so add a contact here yourself if you know one. All optional.",
+    "name": "Name",
+    "email": "Email",
+    "linkedIn": "LinkedIn profile"
   }
 }

@@ -179,6 +179,32 @@ public class ExtensionApplicationTests(SharedInfrastructure shared) : IAsyncLife
     }
 
     [Fact]
+    public async Task Hr_Contact_Round_Trips_Through_Create_Update_And_Detail()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
+            "Contact Corp", "Backend Engineer", null, null, EmploymentType.FullTime, DateTimeOffset.UtcNow, null, null,
+            HrName: "Zeynep A.", HrEmail: "talent@contactcorp.example",
+            HrLinkedInUrl: "https://www.linkedin.com/in/zeynep-a"), JsonOptions);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+        created!.HrEmail.ShouldBe("talent@contactcorp.example");
+
+        // Clearing is a real edit, not a no-op: UpdateDetails assigns straight through so a user
+        // who empties the field gets rid of a stale contact.
+        var updateResponse = await _client.PutAsJsonAsync($"/api/applications/{created.Id}", new UpdateApplicationRequest(
+            created.JobTitle, null, null, EmploymentType.FullTime, created.AppliedAt, null,
+            HrName: "Mehmet B.", HrEmail: null, HrLinkedInUrl: null), JsonOptions);
+        updateResponse.EnsureSuccessStatusCode();
+
+        var detailResponse = await _client.GetAsync($"/api/applications/{created.Id}");
+        var detail = await detailResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        detail!.HrName.ShouldBe("Mehmet B.");
+        detail.HrEmail.ShouldBeNull();
+        detail.HrLinkedInUrl.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Create_With_Low_Confidence_Match_Creates_New_Company()
     {
         var seedResponse = await _client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(

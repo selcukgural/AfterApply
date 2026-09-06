@@ -11,7 +11,10 @@ public sealed record TrackedJobResponse(
     string? JobUrl,
     string? Location,
     string? Notes,
-    DateTimeOffset AddedAt);
+    DateTimeOffset AddedAt,
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null);
 
 /// <summary>
 /// Best-effort — either field may be null when nothing could be resolved (unsupported host,

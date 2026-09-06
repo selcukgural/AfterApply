@@ -12,7 +12,7 @@ import { StatusHistoryList } from "@/components/applications/StatusHistoryList";
 import { JobDescriptionCard } from "@/components/applications/JobDescriptionCard";
 import { Button } from "@/components/ui/Button";
 import { ExternalLinkPill } from "@/components/ui/ExternalLinkPill";
-import { externalUrlLabel, safeExternalUrl } from "@/lib/url/externalLink";
+import { externalUrlLabel, safeExternalUrl, safeMailtoUrl } from "@/lib/url/externalLink";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -52,6 +52,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   if (isLoading || !application) {
     return <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>;
   }
+
+  // The card is hidden entirely when there is nothing to link to — an "İletişim" heading over an
+  // empty row says less than no card at all. A bare hrName with no email or profile still counts,
+  // since it is rendered as a line of its own below the pills.
+  const hasContactLinks =
+    safeExternalUrl(application.companyWebsite) !== null ||
+    safeExternalUrl(application.companyLinkedInUrl) !== null ||
+    safeExternalUrl(application.hrLinkedInUrl) !== null ||
+    safeMailtoUrl(application.hrEmail) !== null ||
+    Boolean(application.hrName);
 
   return (
     <div className="flex flex-col gap-6">
@@ -135,7 +145,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           />
         </div>
 
-        {(safeExternalUrl(application.companyWebsite) || safeExternalUrl(application.companyLinkedInUrl)) && (
+        {hasContactLinks && (
           <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
             <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("contact")}</h2>
             <div className="flex flex-wrap gap-2">
@@ -151,7 +161,25 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
                 icon="linkedin"
                 title={t("companyLinkedIn")}
               />
+              <ExternalLinkPill
+                href={application.hrLinkedInUrl}
+                // The contact's name reads far better on the pill than the profile slug, but the
+                // name is optional on its own, so fall back to a generic label.
+                label={application.hrName || t("hrLinkedIn")}
+                icon="linkedin"
+                title={t("hrLinkedIn")}
+              />
+              <ExternalLinkPill
+                href={application.hrEmail}
+                label={application.hrEmail ?? ""}
+                icon="mail"
+                kind="email"
+                title={t("hrEmail")}
+              />
             </div>
+            {application.hrName && !application.hrLinkedInUrl && (
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t("hrNamed", { name: application.hrName })}</p>
+            )}
           </div>
         )}
 
