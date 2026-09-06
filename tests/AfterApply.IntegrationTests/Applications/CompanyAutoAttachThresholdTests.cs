@@ -32,12 +32,11 @@ public class CompanyAutoAttachThresholdTests(SharedInfrastructure shared) : IAsy
 
     public async Task InitializeAsync()
     {
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(CompanyAutoAttachThresholdTests));
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CompanyAutoAttachThresholdTests));
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             // A near-1.0 threshold means even a one-character typo (the same fixture used by
             // ExtensionApplicationTests' default-threshold test) no longer clears it.

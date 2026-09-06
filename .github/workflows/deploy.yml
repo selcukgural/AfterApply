@@ -182,15 +182,21 @@ jobs:
       # OpenAI) still go through Secret Manager for consistency, not
       # because they're sensitive when empty.
       #
-      # `flags` wires up the two GCP-specific connections (DECISIONS.md
+      # `flags` wires up the one GCP-specific connection (DECISIONS.md
       # "Postgres + Redis + web de Google Cloud'a taşındı"):
       #  - `--add-cloudsql-instances` is Cloud Run's built-in Cloud SQL
       #    connector (no proxy sidecar) — Npgsql then connects over the
       #    Unix socket it mounts at /cloudsql/<instance-connection-name>.
-      #  - `--network`/`--subnet` enable Direct VPC Egress so Cloud Run
-      #    can reach Memorystore's private IP (Memorystore has no public
-      #    IP at all). Both reference the project's default VPC/subnet —
-      #    no custom VPC was created for this.
+      #
+      # `--network`/`--subnet` (Direct VPC Egress) used to sit here too,
+      # purely so Cloud Run could reach Memorystore's private IP. Redis
+      # was removed in 2026-09-06 (DECISIONS.md) and Cloud SQL reaches
+      # the instance over that Unix socket, not the VPC, so nothing here
+      # needs VPC egress any more. Dropping the flags from this file does
+      # NOT clear the setting on the deployed service — gcloud only
+      # changes what it is told to change — so the live revision was
+      # detached once, by hand, with `gcloud run services update
+      # afterapply-api --clear-network`.
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v3
         with:
@@ -199,14 +205,11 @@ jobs:
           image: ${{ env.IMAGE }}
           flags: >-
             --add-cloudsql-instances=${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:afterapply-db
-            --network=default
-            --subnet=default
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080
           secrets: |-
             ConnectionStrings__Postgres=afterapply-postgres-connection:latest
-            ConnectionStrings__Redis=afterapply-redis-connection:latest
             Jwt__SigningKey=afterapply-jwt-signing-key:latest
             Sentry__Dsn=afterapply-sentry-dsn:latest
             OpenAI__ApiKey=afterapply-openai-api-key:latest
@@ -305,10 +308,9 @@ jobs:
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
-      # No --add-cloudsql-instances/--network/--subnet here — the web
-      # service only talks to the api service over HTTPS
-      # (NEXT_PUBLIC_API_BASE_URL, baked in above), never directly to
-      # Postgres or Redis.
+      # No --add-cloudsql-instances here — the web service only talks to
+      # the api service over HTTPS (NEXT_PUBLIC_API_BASE_URL, baked in
+      # above), never directly to Postgres.
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v3
         with:

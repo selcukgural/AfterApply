@@ -17,7 +17,7 @@ ve README güncel olmalı (spec §31.6, §31.17).
 
 - Solution structure (bkz. DECISIONS.md — layer-first mi module-first mi)
 - Clean Architecture katmanları + dependency-direction testleri (NetArchTest)
-- Docker Compose dev environment (API + PostgreSQL + Redis)
+- Docker Compose dev environment (API + PostgreSQL)
 - EF Core + PostgreSQL bağlantısı (henüz entity yok)
 - Configuration (appsettings + secrets, hard-code yok — spec §31.9)
 - Health checks (`/health`)
@@ -377,7 +377,11 @@ Closure Rate'in beklenen şekilde düştüğü/etkilenmediği testle kanıtlanı
   Redis'e bağlı). Buna rağmen Memorystore eklenmesine karar verildi —
   ileride cache/distributed rate-limiting ihtiyacı çıkarsa hazır olsun
   diye; bunun (Upstash'in aksine) artık gerçek bir aylık maliyeti var,
-  bilinçli kabul edildi.
+  bilinçli kabul edildi. **Geri alındı (2026-09-06):** o ihtiyaç hiç
+  doğmadı ve eklenen `HybridCache` katmanı L2'yi fiilen hiç kullanmıyordu
+  (her girdide `LocalCacheExpiration == Expiration`, backplane yok), bu
+  yüzden Memorystore silinip cache in-process'e indirildi — bkz.
+  DECISIONS.md "Redis kaldırıldı, cache in-memory'ye indi".
 - **Error tracking — DECIDED, kod hazır (2026-08-26):** Sentry (.NET +
   Next.js ikisini de destekliyor, ücretsiz tier). `Sentry.AspNetCore`
   6.9.0 (backend, config-driven `Sentry:Dsn`, boşsa SDK kendini

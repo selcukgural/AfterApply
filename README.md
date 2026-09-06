@@ -40,29 +40,24 @@ direction is enforced by NetArchTest (`tests/AfterApply.UnitTests/Architecture`)
 
 - .NET SDK `10.0.105`+ (see `global.json`) — check with `dotnet --version`
 - PostgreSQL (native, or via container)
-- Redis (native, or via container)
 - For the container path: Podman (or Docker) + `docker-compose` on PATH.
   This repo was verified against Podman — no Docker Desktop required.
 
-## Quick start — native local Postgres/Redis (recommended for day-to-day dev)
+## Quick start — native local Postgres (recommended for day-to-day dev)
 
 > ⚠️ **Port conflicts:** if you run other local projects with their own
-> Postgres/Redis containers, the default ports (5432/6379) may already be
-> taken by something else. Check with `lsof -nP -iTCP:5432 -sTCP:LISTEN` /
-> `-iTCP:6379` before assuming a port is free, and adjust the connection
-> strings below accordingly.
+> Postgres containers, the default port (5432) may already be taken by
+> something else. Check with `lsof -nP -iTCP:5432 -sTCP:LISTEN` before
+> assuming it is free, and adjust the connection string below accordingly.
 
-1. Start Postgres (e.g. `brew services start postgresql@17`) and make sure a
-   Redis instance is reachable (e.g. `redis-server --port 6379 --daemonize yes`,
-   or a different port if 6379 is already in use on your machine).
+1. Start Postgres (e.g. `brew services start postgresql@17`).
 2. `createdb afterapply_dev`
 3. `dotnet user-secrets init --project src/AfterApply.Api` (one-time)
 4. ```bash
    dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=afterapply_dev;Username=$(whoami)" --project src/AfterApply.Api
-   dotnet user-secrets set "ConnectionStrings:Redis" "localhost:6379" --project src/AfterApply.Api
    dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -base64 48)" --project src/AfterApply.Api
    ```
-   (adjust ports if you hit a conflict per the warning above)
+   (adjust the port if you hit a conflict per the warning above)
 5. Apply migrations: `dotnet ef database update --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api`
 6. `dotnet build AfterApply.slnx`
 7. `dotnet run --project src/AfterApply.Api --launch-profile http` (always
@@ -123,17 +118,17 @@ production build / lint check.
 
 ## Container environment (podman compose / docker compose)
 
-Uses offset host ports (**5434** for Postgres, **6382** for Redis) to reduce
-the odds of colliding with a native Postgres/Redis or another local
-project's containers — check for conflicts on your machine and adjust
-`docker-compose.yml` if needed.
+Uses an offset host port (**5434** for Postgres) to reduce the odds of
+colliding with a native Postgres or another local project's containers —
+check for conflicts on your machine and adjust `docker-compose.yml` if
+needed.
 
 1. `cp .env.example .env` and fill in `POSTGRES_PASSWORD`
 2. `podman compose up --build` (or `docker compose up --build`)
 3. `curl -i http://localhost:8080/health`
 4. `podman compose down` (add `-v` to also drop the postgres volume)
 
-`docker-compose.yml` (dev) only runs Postgres/Redis/API — it does **not**
+`docker-compose.yml` (dev) only runs Postgres/API — it does **not**
 build a frontend container. To use the UI against this containerized
 backend, run the frontend natively and point it at port 8080:
 ```bash
@@ -225,13 +220,17 @@ under "Trying the API" above, plus `GET /health` and (Development only)
 
 ## Configuration
 
-The app reads `ConnectionStrings:Postgres` and `ConnectionStrings:Redis` from
-the standard ASP.NET Core configuration chain — no connection string is
-hard-coded anywhere. Locally, set them via `dotnet user-secrets` (see above).
-In the container environment, they're supplied as `ConnectionStrings__Postgres`
-/ `ConnectionStrings__Redis` environment variables in `docker-compose.yml`.
-If unset, the API fails fast on startup with an explanatory error instead of
-silently connecting to the wrong database.
+The app reads `ConnectionStrings:Postgres` from the standard ASP.NET Core
+configuration chain — no connection string is hard-coded anywhere. Locally,
+set it via `dotnet user-secrets` (see above). In the container environment,
+it's supplied as the `ConnectionStrings__Postgres` environment variable in
+`docker-compose.yml`. If unset, the API fails fast on startup with an
+explanatory error instead of silently connecting to the wrong database.
+
+Caching is in-process only (`HybridCache` with no distributed backend). The
+Redis/Memorystore L2 that used to sit behind it was removed — see
+`DECISIONS.md` "Redis kaldırıldı" for why it never changed an outcome. There is
+no cache connection string to configure, and nothing to run locally for it.
 
 `CompanyIntelligence:Enabled` defaults to `false` — the aggregation pipeline
 (cross-user company-level Response/Ghosting/Interview/Offer Rate, gated by a

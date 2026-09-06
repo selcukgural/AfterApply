@@ -30,12 +30,11 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(ClientConfigTests));
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(ClientConfigTests));
 
         _defaultFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             // The test host runs as Development and therefore loads the developer's user-secrets,
             // where a real GoogleAuth client id/secret may well be set (it is on the machine this
@@ -48,8 +47,7 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _overriddenFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("Identity:Password:RequiredLength", "20");
             builder.UseSetting("Identity:Password:RequireNonAlphanumeric", "false");

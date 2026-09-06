@@ -30,7 +30,7 @@ standing bir kuraldır, her yeni kod ve dokunduğun her mevcut kod için geçerl
   `Task.Run(...).Result`, senkron bir metodu async iş yapmak için `Task.Run` ile sarmak.
 - Async overload varsa senkron olanı kullanma: EF Core (`ToListAsync`, `FirstOrDefaultAsync`,
   `SaveChangesAsync`, `AnyAsync`...), `HttpClient` (`ReadAsStringAsync`, `SendAsync`),
-  `Stream`/`File` (`ReadAsync`, `WriteAsync`), Redis, Hangfire job gövdeleri, MediatR/handler'lar.
+  `Stream`/`File` (`ReadAsync`, `WriteAsync`), Hangfire job gövdeleri, MediatR/handler'lar.
 - Async zinciri uçtan uca taşı: endpoint/handler → service → repository hepsi `Task`/`ValueTask`
   döndürür; `CancellationToken` parametre olarak alınıp aşağı geçirilir.
 - `async void` yok (framework event handler'ları dışında). Sadece bir Task döndürüyorsan

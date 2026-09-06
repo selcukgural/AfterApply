@@ -33,12 +33,11 @@ public class ExtensionApplicationTests(SharedInfrastructure shared) : IAsyncLife
 
     public async Task InitializeAsync()
     {
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(ExtensionApplicationTests));
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(ExtensionApplicationTests));
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", stores.Postgres);
-            builder.UseSetting("ConnectionStrings:Redis", stores.Redis);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
         });
 

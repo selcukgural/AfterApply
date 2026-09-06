@@ -8,7 +8,7 @@ you edit `collection.json` directly, the next generation run overwrites your cha
 
 1. `dotnet build src/AfterApply.Api` emits `postman/openapi/openapi.json` as a build side effect
    (see `AfterApply.Api.csproj`'s `OpenApiDocumentsDirectory` and
-   `DependencyInjection.IsOpenApiDocumentGeneration`). No live Postgres/Redis needed for this step
+   `DependencyInjection.IsOpenApiDocumentGeneration`). No live Postgres needed for this step
    — it runs your Program.cs's route registration through a mock server, not a real one.
 2. `npm run generate` (this directory) converts that OpenAPI document into `collection.json` and
    layers in what OpenAPI alone doesn't carry: collection-level bearer auth wired to

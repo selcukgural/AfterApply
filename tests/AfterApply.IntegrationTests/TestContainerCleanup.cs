@@ -118,7 +118,7 @@ internal static class TestContainerCleanup
     // rootless podman setup — it fails trying to bind-mount the podman API socket file ("operation
     // not supported"), so TESTCONTAINERS_RYUK_DISABLED=true is set for every local run (see
     // README.md / DECISIONS.md). Without Ryuk, nothing else ever removes a test class's
-    // Postgres/Redis containers if a run crashes or gets killed mid-test (Ctrl+C, an agent timing
+    // Postgres containers if a run crashes or gets killed mid-test (Ctrl+C, an agent timing
     // out, a forced kill) — they pile up silently across sessions. Observed 2026-08-29: five
     // interrupted runs left 79 orphaned containers running (some for 7+ hours), which starved the
     // podman VM badly enough that a clean run went from under a minute to 35+ minutes. Manually

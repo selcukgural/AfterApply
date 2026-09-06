@@ -4,8 +4,8 @@
 # Usage: docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up --build
 #
 # What changes vs. the dev file:
-#   - Postgres/Redis no longer publish host ports (dev exposes them for local
-#     psql/redis-cli access; nothing outside the compose network needs them).
+#   - Postgres no longer publishes a host port (dev exposes it for local
+#     psql access; nothing outside the compose network needs it).
 #   - The API keeps its host port — the browser calls it directly (no reverse
 #     proxy in this sprint, see DEPLOYMENT.md).
 #   - A `web` service (Next.js, web/Dockerfile) is added.
@@ -16,9 +16,6 @@ services:
     # Compose merges list fields by concatenation, not replacement, by
     # default — !override is required to actually clear the dev file's
     # published port instead of appending an empty no-op list to it.
-    ports: !override []
-
-  redis:
     ports: !override []
 
   api:
