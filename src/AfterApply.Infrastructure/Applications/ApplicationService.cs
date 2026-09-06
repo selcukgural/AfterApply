@@ -139,16 +139,18 @@ internal sealed class ApplicationService(
         // resolver only when no such match exists. Manual entry (CreateAsync) is unaffected: it
         // still calls ResolveOrCreateAsync directly, since the autocomplete UI already steers
         // users to type an existing company's exact name when one applies.
-        var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
-            ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken, request.CompanyLinkedInUrl);
+        var profileLinks = new CompanyProfileLinks(request.CompanyLinkedInUrl, request.CompanyKariyerNetUrl);
 
-        // Only worth queuing when this submission actually carries a LinkedIn URL — a company
-        // matched via the trigram/high-confidence path above, or one never scraped from LinkedIn
-        // at all (kariyer.net), has nothing new for CompanyEnrichmentService to fetch from. Safe
-        // to enqueue immediately: by this point the Company row is already committed, either from
-        // an earlier request or by CompanyResolver's own SaveChangesAsync just above — the
-        // enqueued job only touches Company, never this method's own not-yet-saved Application.
-        if (request.CompanyLinkedInUrl is not null)
+        var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
+            ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken, profileLinks);
+
+        // Only worth queuing when this submission actually carries a profile URL — a company
+        // matched via the trigram/high-confidence path above, or one whose posting linked to
+        // neither profile, has nothing new for CompanyEnrichmentService to fetch from. Safe to
+        // enqueue immediately: by this point the Company row is already committed, either from an
+        // earlier request or by CompanyResolver's own SaveChangesAsync just above — the enqueued
+        // job only touches Company, never this method's own not-yet-saved Application.
+        if (profileLinks.HasAny)
         {
             jobClient.Enqueue<ICompanyEnrichmentService>(s => s.EnrichAsync(companyId, CancellationToken.None));
         }

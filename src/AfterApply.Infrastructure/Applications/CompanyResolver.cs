@@ -14,7 +14,8 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache)
         LocalCacheExpiration = TimeSpan.FromMinutes(10)
     };
 
-    public async Task<Guid> ResolveOrCreateAsync(string companyName, CancellationToken cancellationToken, string? linkedInUrl = null)
+    public async Task<Guid> ResolveOrCreateAsync(string companyName, CancellationToken cancellationToken,
+        CompanyProfileLinks? profileLinks = null)
     {
         var normalizedName = CompanyNameNormalizer.Normalize(companyName);
         var cacheKey = LookupCacheKey(normalizedName);
@@ -32,15 +33,16 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache)
 
         if (existingId is not null)
         {
-            if (linkedInUrl is not null)
+            if (profileLinks?.HasAny == true)
             {
-                await BackfillLinkedInUrlAsync(existingId.Value, linkedInUrl, cancellationToken);
+                await BackfillProfileLinksAsync(existingId.Value, profileLinks, cancellationToken);
             }
 
             return existingId.Value;
         }
 
-        var company = Company.Create(companyName, DateTimeOffset.UtcNow, linkedInUrl: linkedInUrl);
+        var company = Company.Create(companyName, DateTimeOffset.UtcNow,
+            linkedInUrl: profileLinks?.LinkedInUrl, kariyerNetUrl: profileLinks?.KariyerNetUrl);
         dbContext.Companies.Add(company);
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -53,18 +55,18 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache)
         return company.Id;
     }
 
-    // A near-duplicate/exact-name match may predate the extension ever capturing a LinkedIn URL —
-    // this is the only path (besides Company.Create itself) that ever writes LinkedInUrl, so it's
+    // A near-duplicate/exact-name match may predate the extension ever capturing a profile URL —
+    // this is the only path (besides Company.Create itself) that ever writes them, so it's
     // deliberately a narrow, separate write rather than folded into the cached lookup above.
-    private async Task BackfillLinkedInUrlAsync(Guid companyId, string linkedInUrl, CancellationToken cancellationToken)
+    private async Task BackfillProfileLinksAsync(Guid companyId, CompanyProfileLinks profileLinks, CancellationToken cancellationToken)
     {
         var company = await dbContext.Companies.FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
-        if (company is null || company.LinkedInUrl is not null)
+        if (company is null)
         {
             return;
         }
 
-        company.SetLinkedInUrlIfMissing(linkedInUrl, DateTimeOffset.UtcNow);
+        company.SetProfileLinksIfMissing(profileLinks.LinkedInUrl, profileLinks.KariyerNetUrl, DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

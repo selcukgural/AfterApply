@@ -165,7 +165,7 @@ public class ExtensionApplicationTests(SharedInfrastructure shared) : IAsyncLife
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var company = await db.Companies.SingleAsync(c => c.Id == created.Application.CompanyId);
             company.EnrichFrom("https://enrichedlabs.example", "Software Development", "TR", DateTimeOffset.UtcNow);
-            company.SetLinkedInUrlIfMissing("https://www.linkedin.com/company/enriched-labs/", DateTimeOffset.UtcNow);
+            company.SetProfileLinksIfMissing("https://www.linkedin.com/company/enriched-labs/", kariyerNetUrl: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 

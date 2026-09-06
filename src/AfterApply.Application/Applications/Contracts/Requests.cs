@@ -30,7 +30,13 @@ public sealed record CreateFromExtensionRequest(
     // Website/Industry/Country. Validated against an https://(www.)linkedin.com allow-list
     // (CreateFromExtensionRequestValidator) since it's later fetched server-side — never trust it
     // as safe just because it round-tripped through the client.
-    string? CompanyLinkedInUrl = null);
+    string? CompanyLinkedInUrl = null,
+    // kariyer.net's counterpart, read from the job posting's own company anchor
+    // (a[data-test="company-name"]). Feeds the same CompanyResolver backfill and the same
+    // background enrichment, and is allow-listed the same way — it is fetched server-side too.
+    // A LinkedIn posting never carries one and a kariyer.net posting never carries the LinkedIn
+    // one, so at most one of the pair is ever set on a given submission.
+    string? CompanyKariyerNetUrl = null);
 
 public sealed record UpdateApplicationRequest(
     string JobTitle,

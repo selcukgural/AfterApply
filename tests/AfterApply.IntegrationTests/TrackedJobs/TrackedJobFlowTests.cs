@@ -111,7 +111,7 @@ public class TrackedJobFlowTests(SharedInfrastructure shared) : IAsyncLifetime
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var company = await db.Companies.SingleAsync(c => c.Id == created.CompanyId);
             company.EnrichFrom("https://linkedco.example", null, null, DateTimeOffset.UtcNow);
-            company.SetLinkedInUrlIfMissing("https://www.linkedin.com/company/linked-co/", DateTimeOffset.UtcNow);
+            company.SetProfileLinksIfMissing("https://www.linkedin.com/company/linked-co/", kariyerNetUrl: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 

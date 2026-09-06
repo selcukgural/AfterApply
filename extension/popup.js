@@ -93,6 +93,24 @@ function canonicalizeLinkedInCompanyUrl(href) {
   return match ? `https://www.linkedin.com/company/${match[1]}/` : null;
 }
 
+// kariyer.net's company anchor on a job page points at /firma-profil/<slug>-<id> — the site's own
+// counterpart to LinkedIn's /company/<slug>/, and (unlike LinkedIn) the only page that publishes
+// the company's own website. Same canonicalization reasoning as the LinkedIn one above: strip
+// query params/fragment so what we store matches what a plain server-side GET later resolves.
+function canonicalizeKariyerNetCompanyUrl(href) {
+  if (!href) {
+    return null;
+  }
+  let parsed;
+  try {
+    parsed = new URL(href);
+  } catch {
+    return null;
+  }
+  const match = parsed.pathname.match(/^\/firma-profil\/([^/]+)/);
+  return match ? `https://www.kariyer.net/firma-profil/${match[1]}` : null;
+}
+
 // Picks the current tab's job site (if any) and the canonical URL to submit/dedupe against.
 // LinkedIn has a stable id-only canonical form (/jobs/view/<id>/); kariyer.net's slug is part of
 // how the posting resolves, so its canonical form is the tab's own path with tracking query
@@ -223,6 +241,8 @@ async function scrapeLinkedInJob(jobId) {
     description: description ? description.slice(0, 10_000) : null,
     descriptionHtml: descriptionHtml ? descriptionHtml.slice(0, 20_000) : null,
     companyLinkedInUrl,
+    // LinkedIn postings never link to kariyer.net; returned so both scrapers share one shape.
+    companyKariyerNetUrl: null,
   };
 }
 
@@ -247,6 +267,14 @@ async function scrapeKariyerNetJob() {
   const title = textOf(document.querySelector("h1 div.vue-clamp.job-title"));
   const company = textOf(document.querySelector("h1 div.vue-clamp:not(.job-title)"));
   const location = textOf(document.querySelector(".company-location"));
+
+  // The company name inside the <h1> is itself a link to the company's kariyer.net profile page.
+  // `data-test` attributes are kariyer.net's own test hooks — far more stable than the hashed
+  // classes around them, and this one was present on all 35 live postings sampled 2026-09-06.
+  // Raw href; canonicalized back in popup.js's own scope (this function is injected and must stay
+  // self-contained), same as the LinkedIn scraper's company URL.
+  const companyLink = document.querySelector('h1 a[data-test="company-name"]');
+  const companyKariyerNetUrl = companyLink?.href || null;
 
   // Same allow-listed HTML snapshot as LinkedIn's scraper — see sanitizeDescriptionHtml above for
   // the untrusted-content rationale (this is a capture-time best effort only; the backend and
@@ -293,6 +321,7 @@ async function scrapeKariyerNetJob() {
     descriptionHtml: descriptionHtml ? descriptionHtml.slice(0, 20_000) : null,
     // kariyer.net postings never link to a LinkedIn company page.
     companyLinkedInUrl: null,
+    companyKariyerNetUrl,
   };
 }
 
@@ -496,6 +525,7 @@ function buildForm() {
           descriptionHtml: scraped.descriptionHtml,
           publishedAt: null,
           companyLinkedInUrl: scraped.companyLinkedInUrl,
+          companyKariyerNetUrl: scraped.companyKariyerNetUrl,
         }),
       });
 
@@ -548,16 +578,20 @@ async function main() {
     });
     scraped = result;
   } catch (error) {
-    scraped = { title: "", company: "", location: "", description: null, descriptionHtml: null, companyLinkedInUrl: null };
+    scraped = {
+      title: "", company: "", location: "", description: null, descriptionHtml: null,
+      companyLinkedInUrl: null, companyKariyerNetUrl: null,
+    };
     // Surfaced inline (not just console.error) so a manual tester doesn't need DevTools open to
     // see why fields came back empty — found necessary in Sprint 9 manual testing, where the
     // silently-swallowed error made an actual scrape failure look identical to "nothing found".
     scrapeError = error?.message || String(error);
   }
 
-  // The scraper (injected via executeScript, self-contained) returns a raw href — tracking
+  // The scrapers (injected via executeScript, self-contained) return raw hrefs — tracking
   // params/fragment stripping happens here, back in the extension's own scope.
   scraped.companyLinkedInUrl = canonicalizeLinkedInCompanyUrl(scraped.companyLinkedInUrl);
+  scraped.companyKariyerNetUrl = canonicalizeKariyerNetCompanyUrl(scraped.companyKariyerNetUrl);
 
   state.scraped = scraped;
   state.scrapeError = scrapeError;
