@@ -749,14 +749,70 @@
   },
   "imports": {
     "title": "Import from LinkedIn",
+    "subtitle": "Upload LinkedIn's own data archive to bring your past applications over in bulk. It takes three steps, and beyond waiting for the archive there is nothing for you to do.",
+    "stepper": {
+      "request": "Request data",
+      "download": "Download",
+      "upload": "Upload"
+    },
+    "helpLink": "Stuck? Read the detailed walkthrough",
+    "guide": {
+      "request": {
+        "title": "Ask LinkedIn for a copy of your data",
+        "body": "On LinkedIn, open Settings & Privacy → Data privacy → Get a copy of your data. The button below takes you straight there.",
+        "tipTitle": "Don't request the full archive — pick \"Jobs\" only",
+        "tipBody": "The first option (\"Download larger data archive\") takes 24 hours to prepare. Choose the second option instead and tick only the \"Jobs\" box: that archive usually lands in your inbox within 10 minutes, and it already holds the one file we need for your application history.",
+        "cta": "Open LinkedIn's data request page"
+      },
+      "download": {
+        "title": "Download the .zip from the link LinkedIn emails you",
+        "body": "LinkedIn emails you once the archive is ready. Follow the link and save the file to your computer.",
+        "warningTitle": "Don't unzip it — upload the archive as-is",
+        "warningBody": "Upload the .zip exactly as you downloaded it. If you open the archive and upload the \"Job Applications.csv\" inside it on its own, it will be rejected."
+      },
+      "upload": {
+        "title": "Upload the archive here"
+      }
+    },
+    "diagram": {
+      "a11y": "A schematic of LinkedIn's data request screen: the second of two options (\"pick specific files\") is selected, and in the file list below it only the \"Jobs\" box is ticked.",
+      "caption": "A schematic of the LinkedIn screen; the real one may look different.",
+      "heading": "Get a copy of your data",
+      "fullOption": "Larger data archive",
+      "fullEta": "24 hours",
+      "pickOption": "Pick specific files",
+      "pickEta": "~10 minutes",
+      "jobs": "Jobs",
+      "otherOption1": "Connections",
+      "otherOption2": "Messages",
+      "cta": "Request archive",
+      "pointer": "tick this one"
+    },
     "linkedin": {
-      "title": "Upload LinkedIn Data Export",
-      "description": "Upload the data export ZIP you downloaded from your LinkedIn account settings — jobs you applied to will be added automatically.",
+      "description": "Drop the .zip you downloaded below and the jobs you applied to will be added to your applications automatically.",
+      "dropzone": {
+        "idle": "Drag the zip file here",
+        "dragging": "Drop the file here",
+        "browse": "or click to choose one",
+        "hint": "Only the .zip LinkedIn gives you"
+      },
+      "selectedFile": "Selected file: {fileName} ({size})",
       "uploading": "Uploading {fileName}...",
       "processing": "Importing {fileName}...",
       "processingRows": "{processed} / {total} rows processed",
       "processingRowsUnknownTotal": "{processed} rows processed",
       "uploadError": "Upload failed, please try again.",
+      "problem": {
+        "unzipped": "That's a .csv file. Don't unzip the archive — upload the .zip you downloaded from LinkedIn itself.",
+        "notZip": "Only .zip files can be uploaded. Pick the archive you downloaded from LinkedIn.",
+        "empty": "This file looks empty. Make sure the download finished and try again."
+      },
+      "troubleshoot": {
+        "title": "Upload didn't work? Common reasons",
+        "unzipped": "You may have unzipped the archive and uploaded the CSV inside it — upload the .zip itself.",
+        "missingJobs": "You may not have ticked the \"Jobs\" box when requesting the archive, in which case the zip contains no \"Job Applications.csv\". Request a new archive from LinkedIn.",
+        "noApplications": "If you have never applied to a job through LinkedIn, that file is never created — and there is nothing to import."
+      },
       "resultTitle": "Import Complete",
       "newApplications": "New Applications",
       "duplicateRecords": "Duplicates",
@@ -1044,29 +1100,37 @@
     "import": {
       "eyebrow": "Import",
       "title": "Bring in your LinkedIn history in bulk",
-      "intro": "Right now the only import method is LinkedIn's own data export file (a .zip). There's no separate CSV uploader.",
+      "intro": "Right now the only import method is LinkedIn's own data export file (a .zip). There's no separate CSV uploader. Most of the work happens on LinkedIn's side; the steps below walk you through it end to end.",
       "steps": {
         "title": "Step-by-step import",
         "step1": {
-          "title": "Request your data export from LinkedIn",
-          "body": "From your LinkedIn account settings, use \"Get a copy of your data\" to download your export; LinkedIn can take a while to prepare it."
+          "title": "Request your data export from LinkedIn — pick \"Jobs\" only",
+          "body": "On LinkedIn, open Settings & Privacy → Data privacy → Get a copy of your data. \"Download larger data archive\" takes 24 hours to prepare; choose the second option instead and tick only the \"Jobs\" box, and the archive usually arrives by email within 10 minutes. The \"Job Applications.csv\" we need for your application history is already in that selection."
         },
         "step2": {
-          "title": "Open the Import page in e-kariyerim",
-          "body": "Go to \"Import\" from the top navigation."
+          "title": "Download the .zip from the link LinkedIn emails you",
+          "body": "LinkedIn emails you once the archive is ready. Save the file to your computer and don't unzip it — the .zip itself is what you upload."
         },
         "step3": {
-          "title": "Select and upload the .zip file you downloaded",
-          "body": "As soon as it uploads, the status switches to \"processing\"."
+          "title": "Open the Import page in e-kariyerim",
+          "body": "Go to \"Import\" from the top navigation. The page walks you through the same steps visually."
         },
         "step4": {
+          "title": "Drag the .zip into the upload area",
+          "body": "Drop the file onto the upload area, or click it to pick the file. As soon as it uploads, the status switches to \"processing\"."
+        },
+        "step5": {
           "title": "Watch the progress live",
           "body": "You'll see a progress bar with the number of rows processed so far; no need to leave the page."
         },
-        "step5": {
+        "step6": {
           "title": "Review the summary",
           "body": "When it finishes, you'll see how many new applications were added, how many were already there (duplicates), and how many rows couldn't be processed (invalid); any failing rows are listed individually."
         }
+      },
+      "calloutUnzip": {
+        "title": "Don't unzip the archive",
+        "body": "The most common mistake is opening the zip and uploading the \"Job Applications.csv\" inside it on its own — that is rejected. And if you didn't tick the \"Jobs\" box when requesting the archive, that file isn't in the zip at all; in that case you'll need to request a fresh archive from LinkedIn."
       },
       "calloutCsv": {
         "title": "Only LinkedIn import is available",
