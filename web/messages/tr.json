@@ -749,14 +749,70 @@
   },
   "imports": {
     "title": "LinkedIn'den İçe Aktar",
+    "subtitle": "LinkedIn'in kendi veri arşivini yükleyerek geçmiş başvurularını topluca aktarabilirsin. Üç adım sürüyor ve arşivin hazırlanmasını beklemek dışında yapman gereken bir şey yok.",
+    "stepper": {
+      "request": "Veriyi iste",
+      "download": "İndir",
+      "upload": "Yükle"
+    },
+    "helpLink": "Takıldın mı? Ayrıntılı anlatıma göz at",
+    "guide": {
+      "request": {
+        "title": "LinkedIn'den veri kopyanı iste",
+        "body": "LinkedIn'de Ayarlar ve Gizlilik → Veri gizliliği → Verinin bir kopyasını al ekranını açman gerekiyor. Aşağıdaki buton seni doğrudan oraya götürür.",
+        "tipTitle": "Tüm arşivi isteme — sadece \"Jobs\"u seç",
+        "tipBody": "İlk seçeneğin (\"Download larger data archive\") hazırlanması 24 saat sürüyor. Bunun yerine ikinci seçeneği işaretleyip yalnızca \"Jobs\" kutusunu seçersen arşiv genellikle 10 dakika içinde e-postana düşer — başvuru geçmişin için ihtiyacımız olan tek dosya zaten orada.",
+        "cta": "LinkedIn veri talebi sayfasını aç"
+      },
+      "download": {
+        "title": "E-postayla gelen bağlantıdan .zip dosyasını indir",
+        "body": "Arşiv hazır olduğunda LinkedIn sana bir e-posta gönderiyor. Bağlantıya tıklayıp dosyayı bilgisayarına indir.",
+        "warningTitle": "Zip dosyasını açma, olduğu gibi yükle",
+        "warningBody": "İndirdiğin .zip dosyasını olduğu gibi yüklemen gerekiyor. Zip'i açıp içinden çıkan \"Job Applications.csv\" dosyasını tek başına yüklersen kabul edilmiyor."
+      },
+      "upload": {
+        "title": "Arşivi buraya yükle"
+      }
+    },
+    "diagram": {
+      "a11y": "LinkedIn'in veri talebi ekranının şematik gösterimi: iki seçenekten ikincisi (\"Belirli dosyaları seç\") işaretli ve altındaki dosya listesinde yalnızca \"Jobs\" kutusu seçili.",
+      "caption": "LinkedIn'deki ekranın şematik gösterimi; gerçek ekranın görünümü farklı olabilir.",
+      "heading": "Verinin bir kopyasını al",
+      "fullOption": "Tüm veri arşivi",
+      "fullEta": "24 saat",
+      "pickOption": "Belirli dosyaları seç",
+      "pickEta": "~10 dakika",
+      "jobs": "Jobs",
+      "otherOption1": "Connections",
+      "otherOption2": "Messages",
+      "cta": "Arşivi talep et",
+      "pointer": "bunu işaretle"
+    },
     "linkedin": {
-      "title": "LinkedIn Veri Export'u Yükle",
-      "description": "LinkedIn hesap ayarlarından indirdiğiniz veri export ZIP dosyasını yükleyin, başvurduğunuz ilanlar otomatik olarak eklensin.",
+      "description": "İndirdiğin .zip dosyasını aşağıya bırak; başvurduğun ilanlar başvurularına otomatik olarak eklensin.",
+      "dropzone": {
+        "idle": "Zip dosyasını buraya sürükle",
+        "dragging": "Dosyayı buraya bırak",
+        "browse": "veya seçmek için tıkla",
+        "hint": "Yalnızca LinkedIn'in verdiği .zip dosyası"
+      },
+      "selectedFile": "Seçilen dosya: {fileName} ({size})",
       "uploading": "{fileName} yükleniyor...",
       "processing": "{fileName} içe aktarılıyor...",
       "processingRows": "{processed} / {total} satır işlendi",
       "processingRowsUnknownTotal": "{processed} satır işlendi",
       "uploadError": "Yükleme başarısız oldu, tekrar deneyin.",
+      "problem": {
+        "unzipped": "Bu bir .csv dosyası. Zip'i açmadan, LinkedIn'den indirdiğin .zip dosyasının kendisini yükle.",
+        "notZip": "Sadece .zip dosyası yükleyebilirsin. LinkedIn'den indirdiğin arşivi seç.",
+        "empty": "Bu dosya boş görünüyor. İndirmenin tamamlandığından emin olup tekrar dene."
+      },
+      "troubleshoot": {
+        "title": "Yükleme çalışmadı mı? Sık karşılaşılan nedenler",
+        "unzipped": "Zip'i açıp içindeki CSV'yi yüklemiş olabilirsin — .zip dosyasının kendisini yüklemen gerekiyor.",
+        "missingJobs": "Arşivi isterken \"Jobs\" kutusunu işaretlememiş olabilirsin; o zaman zip'in içinde \"Job Applications.csv\" bulunmaz. LinkedIn'den yeni bir arşiv talep et.",
+        "noApplications": "LinkedIn üzerinden hiç ilana başvurmadıysan arşivde bu dosya hiç oluşmaz; bu durumda içe aktarılacak bir kayıt da yok."
+      },
       "resultTitle": "İçe Aktarma Tamamlandı",
       "newApplications": "Yeni Başvuru",
       "duplicateRecords": "Tekrarlanan",
@@ -1044,29 +1100,37 @@
     "import": {
       "eyebrow": "İçe Aktarma",
       "title": "LinkedIn geçmişinizi toplu olarak aktarın",
-      "intro": "Şu anda tek içe aktarma yöntemi LinkedIn'in kendi veri dışa aktarım dosyasıdır (bir .zip). Ayrı bir CSV yükleyici arayüzü yoktur.",
+      "intro": "Şu anda tek içe aktarma yöntemi LinkedIn'in kendi veri dışa aktarım dosyasıdır (bir .zip). Ayrı bir CSV yükleyici arayüzü yoktur. İşin büyük kısmı LinkedIn tarafında geçer; aşağıdaki adımlar sizi baştan sona götürür.",
       "steps": {
         "title": "Adım adım içe aktarma",
         "step1": {
-          "title": "LinkedIn'den veri dışa aktarımınızı isteyin",
-          "body": "LinkedIn hesap ayarlarınızdan \"Get a copy of your data\" ile verinizi indirin; LinkedIn bu dosyayı hazırlaması için biraz zaman alabilir."
+          "title": "LinkedIn'den veri dışa aktarımınızı isteyin — sadece \"Jobs\"u seçin",
+          "body": "LinkedIn'de Ayarlar ve Gizlilik → Veri gizliliği → Verinin bir kopyasını al ekranını açın. \"Download larger data archive\" seçeneğinin hazırlanması 24 saat sürer; bunun yerine ikinci seçeneği işaretleyip yalnızca \"Jobs\" kutusunu seçerseniz arşiv genellikle 10 dakika içinde e-postanıza gelir. Başvuru geçmişiniz için ihtiyacımız olan \"Job Applications.csv\" dosyası zaten o seçimin içindedir."
         },
         "step2": {
-          "title": "e-kariyerim'de İçe Aktarma sayfasını açın",
-          "body": "Üst menüden \"Import\"a gidin."
+          "title": "E-postayla gelen bağlantıdan .zip dosyasını indirin",
+          "body": "Arşiv hazır olduğunda LinkedIn size bir e-posta gönderir. Bağlantıdaki dosyayı bilgisayarınıza indirin ve zip'i açmayın — yükleyeceğiniz şey .zip dosyasının kendisidir."
         },
         "step3": {
-          "title": "İndirdiğiniz .zip dosyasını seçin ve yükleyin",
-          "body": "Yükleme başlar başlamaz durum \"processing\"e geçer."
+          "title": "e-kariyerim'de İçe Aktarma sayfasını açın",
+          "body": "Üst menüden \"İçe Aktar\"a gidin. Sayfa aynı adımları görsel olarak da anlatır."
         },
         "step4": {
+          "title": ".zip dosyasını yükleme alanına sürükleyin",
+          "body": "Dosyayı yükleme alanına sürükleyip bırakabilir veya alana tıklayıp seçebilirsiniz. Yükleme başlar başlamaz durum \"processing\"e geçer."
+        },
+        "step5": {
           "title": "İlerlemeyi canlı izleyin",
           "body": "İşlenen satır sayısını gösteren bir ilerleme çubuğu görürsünüz; sayfadan ayrılmanıza gerek yoktur."
         },
-        "step5": {
+        "step6": {
           "title": "Özeti inceleyin",
           "body": "İşlem bitince kaç yeni başvuru eklendiği, kaç kaydın zaten var olduğu (duplicate) ve kaç satırın işlenemediği (invalid) gösterilir; hatalı satırlar varsa tek tek listelenir."
         }
+      },
+      "calloutUnzip": {
+        "title": "Zip dosyasını açmayın",
+        "body": "En sık karşılaşılan hata, zip'in açılıp içindeki \"Job Applications.csv\" dosyasının tek başına yüklenmesidir — bu kabul edilmez. Ayrıca arşivi isterken \"Jobs\" kutusunu işaretlemediyseniz zip'in içinde bu dosya hiç bulunmaz; o durumda LinkedIn'den yeni bir arşiv talep etmeniz gerekir."
       },
       "calloutCsv": {
         "title": "Sadece LinkedIn içe aktarımı var",

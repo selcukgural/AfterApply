@@ -2,14 +2,20 @@ import { getTranslations } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { GifFigure } from "@/components/help/GifFigure";
 import { Callout } from "@/components/help/Callout";
+import { LinkedInArchiveDiagram } from "@/components/imports/LinkedInArchiveDiagram";
+import { archiveDiagramLabels } from "@/components/imports/archiveDiagramLabels";
 
 export default async function ImportHelpPage() {
   const t = await getTranslations("help.import");
   const tCommon = await getTranslations("help.common");
+  const tDiagram = await getTranslations("imports.diagram");
 
-  const steps = ["step1", "step2", "step3", "step4", "step5"].map((key) => ({
+  const steps = ["step1", "step2", "step3", "step4", "step5", "step6"].map((key) => ({
     title: t(`steps.${key}.title`),
     body: t(`steps.${key}.body`),
+    // The archive-request screen is the only step that happens outside our UI, so it is the only
+    // one a screenshot of our app cannot show — the sketch goes here, where the choice is made.
+    visual: key === "step1" ? <LinkedInArchiveDiagram labels={archiveDiagramLabels(tDiagram)} /> : undefined,
   }));
 
   return (
@@ -25,6 +31,10 @@ export default async function ImportHelpPage() {
         <StepList steps={steps} />
         <GifFigure src="/help/gifs/linkedin-import.gif" alt={t("steps.title")} />
       </section>
+
+      <Callout variant="warning" label={tCommon("warning")} title={t("calloutUnzip.title")}>
+        {t("calloutUnzip.body")}
+      </Callout>
 
       <Callout variant="warning" label={tCommon("warning")} title={t("calloutCsv.title")}>
         {t("calloutCsv.body")}

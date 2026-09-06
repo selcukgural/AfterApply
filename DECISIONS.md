@@ -3609,6 +3609,49 @@ geçtiğini teyit et.
 
 ---
 
+## İçe aktarma yönergesi Yardım'dan İçe Aktarma sayfasının içine taşındı (2026-09-06)
+
+İçe Aktarma sayfası tek cümlelik bir açıklama ve çıplak bir `<input type="file">`ten ibaretti;
+anlatım yalnızca `/help/import`'ta duruyordu. Akışın zor kısmı bizim uygulamamızda değil
+LinkedIn'de geçiyor ve dosya seçicisinin başındaki kullanıcı ayrı bir public sayfaya gitmiyor.
+Yardım'ı büyütmek yerine yönerge işin yapıldığı yere alındı — sayfa üç numaralı adıma bölündü
+(veriyi iste → indir → yükle), sürükle-bırak alanı ve LinkedIn'in veri talebi sayfasına doğrudan
+bir bağlantı eklendi. `/help/import` da aynı bilgiyle hizalandı; ikisi ayrışırsa kullanıcı iki
+farklı hikâye okur.
+
+**Kullanıcıyı fiilen tıkayan iki bilgi UI'a yazıldı.** (1) LinkedIn'in "Get a copy of your data"
+ekranında tüm arşiv 24 saat sürüyor, ikinci seçenekte yalnızca "Jobs" işaretlenirse ~10 dakikada
+geliyor — `Job Applications*.csv` zaten o seçimin içinde. Bunu bilmeyen bir gün bekliyordu. (2)
+Zip açılmadan yüklenmeli; `ImportService.StageLinkedInZipImportAsync` `.zip` dışını reddediyor,
+ama en doğal refleks zip'i açıp CSV'yi yüklemek. Bu ikisi artık hem sayfada hem Yardım'da yazılı,
+ve `.csv` seçimi backend'e hiç gitmeden tarayıcıda kendi mesajıyla karşılanıyor
+(`lib/imports/linkedInExportFile.ts`). Sunucu tarafı doğrulama olduğu yerde duruyor — istemci
+kontrolü sınır değil, sadece daha hızlı ve daha isabetli bir cevap.
+
+**LinkedIn ekranı ekran görüntüsüyle değil çizimle anlatılıyor.** `LinkedInArchiveDiagram`
+LinkedIn'in ekranını temsil eden şematik bir HTML/CSS çizim: LinkedIn markası taşımıyor, onların
+bir sonraki redesign'ında bayatlamıyor, etiketleri next-intl'den geçiyor (resme gömülü metin
+çevrilemez), ve kullanıcının kendi hesabından PII sızma riski yok. Alternatif olan gerçek ekran
+görüntüsü bu dördünü de kaybediyordu.
+
+**Yardım GIF'i yeniden çekildi.** `web/public/help/gifs/linkedin-import.gif` eski arayüzü
+gösteriyordu; yeni akıştan 6 kare ile yeniden üretildi (üst görünüm → şematik çizim → bırakma
+alanı → sürükleme durumu → ilerleme çubuğu → özet). 1280×832, 96 renk, 491 KB — eski dosya
+1280×900'dü; bu makinede tarayıcı çubukları düşünce görünür alan 831 px'de tıkandığı için
+yükseklik 68 px kısaldı, yardım sayfası GIF'i `w-full` render ettiği için görünürde fark yok.
+`gif_creator` kareleri yalnızca gerçek eylemlerden (tıklama/kaydırma) yakalıyor ve kareyi boyama
+tamamlanmadan alabiliyor; bu yüzden kareler tek tek ekran görüntüsü olarak alınıp `ffmpeg` ile
+birleştirildi. İlerleme çubuğunun `duration-300` geçişi sayacın gerisinde kaldığı için o kare
+alınırken geçişler geçici olarak kapatıldı — kaydedilen arayüzde animasyon duruyor.
+
+**Test:** `lib/imports/linkedInExportFile.test.ts` (8 test) — dosya adı/boyut kontrolü ve
+locale'e duyarlı boyut biçimlendirmesi. React bileşen testi yazılmadı: `web`'de jsdom/testing-library
+yok, vitest yalnızca `src/lib` altındaki saf mantığı koşuyor. Bunun yerine sürükle-bırak → yükleme →
+canlı ilerleme → özet akışı gerçek tarayıcıda uçtan uca doğrulandı (2 yeni başvuru), fixture
+kullanıcısında oluşan kayıtlar sonrasında geri silindi. Backend'e dokunulmadı.
+
+---
+
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
