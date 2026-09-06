@@ -16,6 +16,13 @@ public sealed record ApplicationDetailResponse(
     Guid Id,
     Guid CompanyId,
     string CompanyName,
+    // The company's own site and LinkedIn page, so the detail view can link straight out to them.
+    // Read from the Company row at response time rather than snapshotted onto the Application:
+    // CompanyEnrichmentService fills Website in the background *after* the application row already
+    // exists, so anything captured at creation time would stay null forever. Both are null until
+    // some path has actually resolved them (a kariyer.net-only company has neither today).
+    string? CompanyWebsite,
+    string? CompanyLinkedInUrl,
     string JobTitle,
     string? JobUrl,
     string? Location,

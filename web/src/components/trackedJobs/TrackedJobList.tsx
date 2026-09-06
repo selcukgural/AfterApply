@@ -5,6 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import type { EmploymentType, TrackedJobResponse } from "@/types/api";
 import { EMPLOYMENT_TYPES } from "@/lib/constants/employmentType";
 import { Button } from "@/components/ui/Button";
+import { ExternalLinkPill } from "@/components/ui/ExternalLinkPill";
+import { externalUrlLabel, safeExternalUrl } from "@/lib/url/externalLink";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
@@ -66,15 +68,31 @@ export function TrackedJobList({ items, onDelete, onConvert }: TrackedJobListPro
               <p className="font-medium text-gray-900 dark:text-gray-100">{item.companyName}</p>
               <p className="text-sm text-gray-700 dark:text-gray-300">{item.jobTitle}</p>
               {item.location && <p className="text-sm text-gray-500 dark:text-gray-400">{item.location}</p>}
-              {item.jobUrl && (
+              {safeExternalUrl(item.jobUrl) && (
                 <a
-                  href={item.jobUrl}
+                  href={safeExternalUrl(item.jobUrl)!}
                   target="_blank"
                   rel="noreferrer"
                   className="block truncate text-sm text-blue-600 hover:underline dark:text-blue-400"
                 >
                   {item.jobUrl}
                 </a>
+              )}
+              {(safeExternalUrl(item.companyWebsite) || safeExternalUrl(item.companyLinkedInUrl)) && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <ExternalLinkPill
+                    href={item.companyWebsite}
+                    label={externalUrlLabel(item.companyWebsite ?? "")}
+                    icon="globe"
+                    title={t("companyWebsite")}
+                  />
+                  <ExternalLinkPill
+                    href={item.companyLinkedInUrl}
+                    label={t("companyLinkedIn")}
+                    icon="linkedin"
+                    title={t("companyLinkedIn")}
+                  />
+                </div>
               )}
               {item.notes && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.notes}</p>}
               <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">

@@ -20,10 +20,11 @@ internal sealed class TrackedJobService(
     {
         return await dbContext.TrackedJobs
             .Where(t => t.UserId == userId)
-            .Join(dbContext.Companies, t => t.CompanyId, c => c.Id, (t, c) => new { t, c.Name })
+            .Join(dbContext.Companies, t => t.CompanyId, c => c.Id, (t, c) => new { t, c })
             .OrderByDescending(x => x.t.AddedAt)
             .Select(x => new TrackedJobResponse(
-                x.t.Id, x.t.CompanyId, x.Name, x.t.JobTitle, x.t.JobUrl, x.t.Location, x.t.Notes, x.t.AddedAt))
+                x.t.Id, x.t.CompanyId, x.c.Name, x.c.Website, x.c.LinkedInUrl,
+                x.t.JobTitle, x.t.JobUrl, x.t.Location, x.t.Notes, x.t.AddedAt))
             .ToListAsync(cancellationToken);
     }
 
@@ -37,9 +38,15 @@ internal sealed class TrackedJobService(
         dbContext.TrackedJobs.Add(trackedJob);
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        // Read back the resolved row rather than echoing request.CompanyName: the resolver matches
+        // on the normalized name, so a request for "acme corp" can attach to an existing "Acme
+        // Corp" — and the response should say which company it actually landed on, with whatever
+        // links that company already has.
+        var company = await ReadCompanyAsync(companyId, cancellationToken);
+
         return new TrackedJobResponse(
-            trackedJob.Id, trackedJob.CompanyId, request.CompanyName, trackedJob.JobTitle,
-            trackedJob.JobUrl, trackedJob.Location, trackedJob.Notes, trackedJob.AddedAt);
+            trackedJob.Id, trackedJob.CompanyId, company.Name, company.Website, company.LinkedInUrl,
+            trackedJob.JobTitle, trackedJob.JobUrl, trackedJob.Location, trackedJob.Notes, trackedJob.AddedAt);
     }
 
     public async Task<bool> DeleteAsync(Guid userId, Guid trackedJobId, CancellationToken cancellationToken)
@@ -74,19 +81,27 @@ internal sealed class TrackedJobService(
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveAsync(ApplicationsSummaryCacheKey(userId), cancellationToken);
 
-        var companyName = await dbContext.Companies
-            .Where(c => c.Id == application.CompanyId)
-            .Select(c => c.Name)
-            .FirstAsync(cancellationToken);
+        var company = await ReadCompanyAsync(application.CompanyId, cancellationToken);
 
         return new ApplicationDetailResponse(
-            application.Id, application.CompanyId, companyName, application.JobTitle, application.JobUrl,
-            application.Location, application.EmploymentType, application.AppliedAt, application.Status,
-            application.Source, application.Notes, application.CreatedAt, application.UpdatedAt);
+            application.Id, application.CompanyId, company.Name, company.Website, company.LinkedInUrl,
+            application.JobTitle, application.JobUrl, application.Location, application.EmploymentType,
+            application.AppliedAt, application.Status, application.Source, application.Notes,
+            application.CreatedAt, application.UpdatedAt);
     }
 
     private Task<TrackedJob?> FindOwnedAsync(Guid userId, Guid trackedJobId, CancellationToken cancellationToken)
     {
         return dbContext.TrackedJobs.FirstOrDefaultAsync(t => t.Id == trackedJobId && t.UserId == userId, cancellationToken);
     }
+
+    private Task<CompanyLinks> ReadCompanyAsync(Guid companyId, CancellationToken cancellationToken)
+    {
+        return dbContext.Companies
+            .Where(c => c.Id == companyId)
+            .Select(c => new CompanyLinks(c.Name, c.Website, c.LinkedInUrl))
+            .FirstAsync(cancellationToken);
+    }
+
+    private sealed record CompanyLinks(string Name, string? Website, string? LinkedInUrl);
 }

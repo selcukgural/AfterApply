@@ -313,9 +313,12 @@ internal sealed class ApplicationService(
 
     private async Task<ApplicationDetailResponse> ToDetailAsync(DomainApplication application, CancellationToken cancellationToken)
     {
-        var companyName = await dbContext.Companies
+        // One projection for all three company fields — Website/LinkedInUrl are read here rather
+        // than copied onto the Application because CompanyEnrichmentService fills them in the
+        // background, after this row already exists.
+        var company = await dbContext.Companies
             .Where(c => c.Id == application.CompanyId)
-            .Select(c => c.Name)
+            .Select(c => new { c.Name, c.Website, c.LinkedInUrl })
             .FirstAsync(cancellationToken);
 
         var jobDescriptionHtml = application.JobId is null
@@ -326,9 +329,9 @@ internal sealed class ApplicationService(
                 .FirstOrDefaultAsync(cancellationToken);
 
         return new ApplicationDetailResponse(
-            application.Id, application.CompanyId, companyName, application.JobTitle, application.JobUrl,
-            application.Location, application.EmploymentType, application.AppliedAt, application.Status,
-            application.Source, application.Notes, application.CreatedAt, application.UpdatedAt,
-            jobDescriptionHtml);
+            application.Id, application.CompanyId, company.Name, company.Website, company.LinkedInUrl,
+            application.JobTitle, application.JobUrl, application.Location, application.EmploymentType,
+            application.AppliedAt, application.Status, application.Source, application.Notes,
+            application.CreatedAt, application.UpdatedAt, jobDescriptionHtml);
     }
 }

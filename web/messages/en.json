@@ -415,7 +415,10 @@
         "collapse": "Collapse"
       },
       "statusHistory": "Status History",
-      "createdAt": "Added On"
+      "createdAt": "Added On",
+      "contact": "Contact",
+      "companyWebsite": "Company website",
+      "companyLinkedIn": "Company LinkedIn page"
     },
     "statusChange": {
       "changeStatus": "Change Status",
@@ -663,7 +666,9 @@
       "confirmConvert": "Convert to Application",
       "cancel": "Cancel",
       "saving": "Saving...",
-      "addedAt": "Added: {date}"
+      "addedAt": "Added: {date}",
+      "companyWebsite": "Company website",
+      "companyLinkedIn": "Company LinkedIn page"
     }
   },
   "imports": {

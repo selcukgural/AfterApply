@@ -91,6 +91,45 @@ public class TrackedJobFlowTests(SharedInfrastructure shared) : IAsyncLifetime
         afterDelete!.ShouldNotContain(t => t.Id == created.Id);
     }
 
+    // Same read-at-response-time contract as the application detail: whatever enrichment has
+    // learned about the company by the time the list is fetched shows up on the card, including
+    // for rows saved long before.
+    [Fact]
+    public async Task List_And_Convert_Surface_The_Company_Links()
+    {
+        var client = await AuthenticatedClientAsync("tracked.companylinks@example.com");
+
+        var createResponse = await client.PostAsJsonAsync("/api/tracked-jobs",
+            new CreateTrackedJobRequest("Linked Co", "Data Engineer", "https://example.com/jobs/3", null, null),
+            JsonOptions);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<TrackedJobResponse>(JsonOptions);
+        created!.CompanyWebsite.ShouldBeNull();
+
+        using (var scope = _factory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var company = await db.Companies.SingleAsync(c => c.Id == created.CompanyId);
+            company.EnrichFrom("https://linkedco.example", null, null, DateTimeOffset.UtcNow);
+            company.SetLinkedInUrlIfMissing("https://www.linkedin.com/company/linked-co/", DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        var listResponse = await client.GetAsync("/api/tracked-jobs");
+        var list = await listResponse.Content.ReadFromJsonAsync<List<TrackedJobResponse>>(JsonOptions);
+        var listed = list!.Single(t => t.Id == created.Id);
+        listed.CompanyWebsite.ShouldBe("https://linkedco.example");
+        listed.CompanyLinkedInUrl.ShouldBe("https://www.linkedin.com/company/linked-co/");
+
+        // The links belong to the company, so converting to an application keeps them.
+        var convertResponse = await client.PostAsJsonAsync($"/api/tracked-jobs/{created.Id}/convert",
+            new ConvertTrackedJobRequest(EmploymentType.FullTime, DateTimeOffset.UtcNow, null), JsonOptions);
+        convertResponse.EnsureSuccessStatusCode();
+        var application = await convertResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+        application!.CompanyWebsite.ShouldBe("https://linkedco.example");
+        application.CompanyLinkedInUrl.ShouldBe("https://www.linkedin.com/company/linked-co/");
+    }
+
     [Fact]
     public async Task Convert_TrackedJob_Creates_Application_And_Removes_TrackedJob()
     {

@@ -11,6 +11,8 @@ import { StatusChangeSelect } from "@/components/applications/StatusChangeSelect
 import { StatusHistoryList } from "@/components/applications/StatusHistoryList";
 import { JobDescriptionCard } from "@/components/applications/JobDescriptionCard";
 import { Button } from "@/components/ui/Button";
+import { ExternalLinkPill } from "@/components/ui/ExternalLinkPill";
+import { externalUrlLabel, safeExternalUrl } from "@/lib/url/externalLink";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -102,11 +104,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               <dt className="text-gray-500 dark:text-gray-400">{t("createdAt")}</dt>
               <dd className="text-gray-900 dark:text-gray-100">{new Date(application.createdAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}</dd>
             </div>
-            {application.jobUrl && (
+            {safeExternalUrl(application.jobUrl) && (
               <div>
                 <dt className="text-gray-500 dark:text-gray-400">{t("jobUrl")}</dt>
                 <dd>
-                  <a href={application.jobUrl} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
+                  <a
+                    href={safeExternalUrl(application.jobUrl)!}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
                     {t("openLink")}
                   </a>
                 </dd>
@@ -127,6 +134,26 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             }}
           />
         </div>
+
+        {(safeExternalUrl(application.companyWebsite) || safeExternalUrl(application.companyLinkedInUrl)) && (
+          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+            <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("contact")}</h2>
+            <div className="flex flex-wrap gap-2">
+              <ExternalLinkPill
+                href={application.companyWebsite}
+                label={externalUrlLabel(application.companyWebsite ?? "")}
+                icon="globe"
+                title={t("companyWebsite")}
+              />
+              <ExternalLinkPill
+                href={application.companyLinkedInUrl}
+                label={t("companyLinkedIn")}
+                icon="linkedin"
+                title={t("companyLinkedIn")}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("statusHistory")}</h2>

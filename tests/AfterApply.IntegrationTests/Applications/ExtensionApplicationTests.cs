@@ -143,6 +143,41 @@ public class ExtensionApplicationTests(SharedInfrastructure shared) : IAsyncLife
         result!.Application.CompanyId.ShouldBe(seeded!.CompanyId);
     }
 
+    // Company.Website/LinkedInUrl are filled by CompanyEnrichmentService in the background, well
+    // after the application row exists — so the detail response has to read them from the Company
+    // at response time. If they were ever snapshotted onto the Application at creation, this test
+    // would see nulls.
+    [Fact]
+    public async Task Detail_Surfaces_Company_Links_Filled_In_After_The_Application_Was_Created()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Enriched Labs", "Platform Engineer",
+                "https://www.linkedin.com/jobs/view/3333333333/", "Remote", null, null),
+            JsonOptions);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        // Nothing has enriched this company yet.
+        created!.Application.CompanyWebsite.ShouldBeNull();
+
+        using (var scope = _factory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var company = await db.Companies.SingleAsync(c => c.Id == created.Application.CompanyId);
+            company.EnrichFrom("https://enrichedlabs.example", "Software Development", "TR", DateTimeOffset.UtcNow);
+            company.SetLinkedInUrlIfMissing("https://www.linkedin.com/company/enriched-labs/", DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        var detailResponse = await _client.GetAsync($"/api/applications/{created.Application.Id}");
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = await detailResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        detail!.CompanyWebsite.ShouldBe("https://enrichedlabs.example");
+        detail.CompanyLinkedInUrl.ShouldBe("https://www.linkedin.com/company/enriched-labs/");
+        detail.CompanyName.ShouldBe("Enriched Labs");
+    }
+
     [Fact]
     public async Task Create_With_Low_Confidence_Match_Creates_New_Company()
     {

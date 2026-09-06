@@ -415,7 +415,10 @@
         "collapse": "Daralt"
       },
       "statusHistory": "Durum Geçmişi",
-      "createdAt": "Sisteme Eklendi"
+      "createdAt": "Sisteme Eklendi",
+      "contact": "İletişim",
+      "companyWebsite": "Şirket web sitesi",
+      "companyLinkedIn": "Şirket LinkedIn sayfası"
     },
     "statusChange": {
       "changeStatus": "Durumu Değiştir",
@@ -663,7 +666,9 @@
       "confirmConvert": "Başvuruya Dönüştür",
       "cancel": "Vazgeç",
       "saving": "Kaydediliyor...",
-      "addedAt": "Eklendi: {date}"
+      "addedAt": "Eklendi: {date}",
+      "companyWebsite": "Şirket web sitesi",
+      "companyLinkedIn": "Şirket LinkedIn sayfası"
     }
   },
   "imports": {

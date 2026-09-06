@@ -4,6 +4,9 @@ public sealed record TrackedJobResponse(
     Guid Id,
     Guid CompanyId,
     string CompanyName,
+    // Same read-time resolution as ApplicationDetailResponse's pair — see the comment there.
+    string? CompanyWebsite,
+    string? CompanyLinkedInUrl,
     string JobTitle,
     string? JobUrl,
     string? Location,

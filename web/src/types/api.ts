@@ -80,6 +80,8 @@ export interface ApplicationDetailResponse {
   id: string;
   companyId: string;
   companyName: string;
+  companyWebsite: string | null;
+  companyLinkedInUrl: string | null;
   jobTitle: string;
   jobUrl: string | null;
   location: string | null;
@@ -337,6 +339,8 @@ export interface TrackedJobResponse {
   id: string;
   companyId: string;
   companyName: string;
+  companyWebsite: string | null;
+  companyLinkedInUrl: string | null;
   jobTitle: string;
   jobUrl: string | null;
   location: string | null;
