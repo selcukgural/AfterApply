@@ -32,6 +32,8 @@ public sealed class CreateFromExtensionRequestValidator : AbstractValidator<Crea
             .Must(url => BeAnAllowedProfileUrl(url, "kariyer.net"))
             .WithMessage("CompanyKariyerNetUrl must be an https://www.kariyer.net/firma-profil/... URL.")
             .When(x => x.CompanyKariyerNetUrl is not null);
+
+        this.ApplyHrContactRules(x => x.HrName, x => x.HrEmail, x => x.HrLinkedInUrl);
     }
 
     private static bool BeAnAllowedProfileUrl(string? url, string domain) =>

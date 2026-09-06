@@ -22,8 +22,17 @@ original (LinkedIn-only) design.
 
 Navigate to a LinkedIn job posting page (`linkedin.com/jobs/view/<id>/...`) or a kariyer.net job
 posting page (`kariyer.net/is-ilani/<slug>-<id>`) and click the e-kariyerim toolbar icon. The popup
-best-effort scrapes the company, title, and location from the page — **all fields are editable
-before you submit**, so an imperfect scrape never becomes a wrong submission. Click **I Applied**
+best-effort scrapes the company, title, and location from the page — and, on a LinkedIn posting
+that shows a hiring team, the job poster's name and profile URL — **all fields are editable before
+you submit**, so an imperfect scrape never becomes a wrong submission.
+
+The hiring-team scrape is scoped to `.hirer-card__hirer-information`, deliberately *not* to "the
+first `/in/` link on the page": a LinkedIn job page also renders Premium's "People you can reach
+out to" block, which lists school alumni and 3rd-degree connections who have nothing to do with the
+posting. Verified live on 2026-09-06 across three postings — the alumni-only one exposed two
+profile links and this selector matched none of them, while the posting with a real hiring team
+resolved to the right person. Most postings have no such card at all (it is poster opt-in), and
+kariyer.net has no counterpart, so an empty HR field is the normal case. Click **I Applied**
 to create the application. Clicking it again on the same job page is safe — the backend dedupes by
 job URL and returns your existing application instead of a duplicate
 (`POST /api/applications/from-extension`, see `ApplicationService.CreateFromExtensionAsync`). The

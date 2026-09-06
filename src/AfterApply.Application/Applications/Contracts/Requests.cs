@@ -42,7 +42,16 @@ public sealed record CreateFromExtensionRequest(
     // background enrichment, and is allow-listed the same way — it is fetched server-side too.
     // A LinkedIn posting never carries one and a kariyer.net posting never carries the LinkedIn
     // one, so at most one of the pair is ever set on a given submission.
-    string? CompanyKariyerNetUrl = null);
+    string? CompanyKariyerNetUrl = null,
+    // The job poster from LinkedIn's hiring-team card, when the posting has one (it is opt-in, so
+    // most do not) — scoped to that card specifically, never to any profile link on the page, since
+    // a job page also lists unrelated alumni and network suggestions. HrEmail is only ever an
+    // address spelled out in the posting body, which in practice almost never happens; both sites
+    // route applications through their own funnel. Every one of these is shown as an editable field
+    // in the popup before submitting, so a wrong guess is the user's to correct, not a silent write.
+    string? HrName = null,
+    string? HrEmail = null,
+    string? HrLinkedInUrl = null);
 
 public sealed record UpdateApplicationRequest(
     string JobTitle,

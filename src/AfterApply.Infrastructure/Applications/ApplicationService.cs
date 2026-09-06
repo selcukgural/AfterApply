@@ -169,7 +169,8 @@ internal sealed class ApplicationService(
         var application = DomainApplication.Create(
             userId, companyId, request.JobTitle, normalizedUrl, request.Location,
             EmploymentType.FullTime, DateTimeOffset.UtcNow, Source.BrowserExtension,
-            notes: null, DateTimeOffset.UtcNow, jobId);
+            notes: null, DateTimeOffset.UtcNow, jobId,
+            request.HrName, request.HrEmail, request.HrLinkedInUrl);
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);

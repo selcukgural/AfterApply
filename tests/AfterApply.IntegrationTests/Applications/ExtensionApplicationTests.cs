@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
@@ -176,6 +177,39 @@ public class ExtensionApplicationTests(SharedInfrastructure shared) : IAsyncLife
         detail!.CompanyWebsite.ShouldBe("https://enrichedlabs.example");
         detail.CompanyLinkedInUrl.ShouldBe("https://www.linkedin.com/company/enriched-labs/");
         detail.CompanyName.ShouldBe("Enriched Labs");
+    }
+
+    // The extension only ever sends this when LinkedIn's hiring-team card was actually present —
+    // most postings have none, and kariyer.net never does.
+    [Fact]
+    public async Task Extension_Submission_Carries_The_Job_Posters_Profile_Onto_The_Application()
+    {
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Hirer Corp", "Senior Developer",
+                "https://www.linkedin.com/jobs/view/4442825208/", "Istanbul", null, null, null, null, null,
+                HrName: "Çiğdem Ç.", HrEmail: null,
+                HrLinkedInUrl: "https://www.linkedin.com/in/cigdem-kara-b8194077/"),
+            JsonOptions);
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        result!.Application.HrName.ShouldBe("Çiğdem Ç.");
+        result.Application.HrLinkedInUrl.ShouldBe("https://www.linkedin.com/in/cigdem-kara-b8194077/");
+        result.Application.HrEmail.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Extension_Submission_With_A_Company_Page_As_The_Hr_Profile_Is_Rejected()
+    {
+        // Guards the selector's whole point: the hiring-team card is a person, and a company page
+        // (or an unrelated profile scraped from elsewhere on the job page) must not pass as one.
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Wrong Hirer Corp", "Senior Developer",
+                "https://www.linkedin.com/jobs/view/4442825209/", null, null, null, null, null, null,
+                HrLinkedInUrl: "https://www.linkedin.com/company/turkcell/"),
+            JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]

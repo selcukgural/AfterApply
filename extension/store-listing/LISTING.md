@@ -114,7 +114,9 @@ sayfasına yapıştırana kadar eklenti hiçbir şey yapmaz.
 GİZLİLİK
 Eklenti bir ilan sayfasını yalnızca simgesine tıkladığınızda, yalnızca linkedin.com ve kariyer.net
 üzerinde okur ve yalnızca açılan pencerede gördüğünüz alanları — kendi erişim anahtarınızla,
-yalnızca kendi e-kariyerim hesabınıza gönderir. Yukarıda anlatılan Gmail Taraması varsayılan olarak
+yalnızca kendi e-kariyerim hesabınıza gönderir. Bir LinkedIn ilanı işe alım sorumlusunu ("hiring
+team") gösteriyorsa, o kişinin adı ve profil adresi de bu alanlar arasında görünür; göndermeden
+önce düzenleyebilir veya tamamen silebilirsiniz, ve bu bilgi yalnızca sizin hesabınızda kalır. Yukarıda anlatılan Gmail Taraması varsayılan olarak
 kapalıdır ve yalnızca Ayarlar'dan etkinleştirdikten sonra, yalnızca kendinizin açtığı bir maili
 okur; ilgililik kontrolü cihazınızda çalışır ve yalnızca iş başvurusuyla ilgili göründüğünde kısa
 bir özet gönderilir, ham mail asla gönderilmez. Hiçbir veri üçüncü taraflarla paylaşılmaz veya
