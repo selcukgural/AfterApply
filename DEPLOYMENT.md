@@ -458,22 +458,48 @@ down rather than just costing money. The API refuses to start when
 `ConnectionStrings:Redis` is required but missing, so the code that
 stopped requiring it must be **live** before anything is deleted.
 
+Two of these steps exist only because **removing something from
+`deploy.yml` does not remove it from the deployed service** — gcloud, and
+the `deploy-cloudrun` action's `secrets:` input, only change what they are
+told to change. This bit us for real on 2026-09-06: the secret reference
+survived the deploy, the secret was deleted underneath it, and the API kept
+serving on a warm instance while every future cold start was already broken
+(`secretKeyRef` resolves at container start, not at deploy). `/health` was
+green the whole time it was broken, so do not treat it as proof on its own —
+check the serving revision's env.
+
 ```bash
 # 1. Deploy the Redis-free API first, and confirm it is actually serving.
 gh workflow run deploy.yml -f target=backend
 API_URL="$(gcloud run services describe afterapply-api --region="$REGION" --format='value(status.url)')"
 curl -fsS "${API_URL}/health"                        # expect: Healthy
 
-# 2. Detach Direct VPC Egress. It existed only to reach Memorystore's
+# 2. Detach the secret from the service. The deploy above does NOT do this:
+#    the action merges its `secrets:` list into what the service already has,
+#    so dropping the line only stops it being re-asserted. Skipping this and
+#    going straight to step 4 leaves the service mounting a secret that is
+#    about to stop existing — the failure lands on the next cold start, long
+#    after the deploy that looked fine.
+gcloud run services update afterapply-api --region="$REGION" \
+  --remove-secrets=ConnectionStrings__Redis
+
+# 3. Detach Direct VPC Egress. It existed only to reach Memorystore's
 #    private IP — Cloud SQL goes over the /cloudsql Unix socket, not the
-#    VPC. Removing --network/--subnet from deploy.yml does NOT do this on
-#    its own: gcloud only changes what it is told to change.
+#    VPC. Same merge-not-replace story as step 2.
 gcloud run services update afterapply-api --region="$REGION" --clear-network
 
-# 3. Delete the instance. This is what stops the billing.
+# 4. Confirm the revision now serving traffic carries neither, BEFORE
+#    deleting anything. This is the check that would have caught the
+#    2026-09-06 near-miss.
+REV="$(gcloud run services describe afterapply-api --region="$REGION" \
+  --format='value(status.traffic[0].revisionName)')"
+gcloud run revisions describe "$REV" --region="$REGION" \
+  --format='yaml(spec.containers[0].env)' | grep -i redis   # expect: no match
+
+# 5. Delete the instance. This is what stops the billing.
 gcloud redis instances delete afterapply-redis --region="$REGION"
 
-# 4. Clean up what pointed at it.
+# 6. Clean up what pointed at it.
 gcloud secrets delete afterapply-redis-connection
 gcloud services disable redis.googleapis.com
 ```

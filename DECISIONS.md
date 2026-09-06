@@ -3494,6 +3494,19 @@ kodu deploy et → `/health` doğrula → `--clear-network` → instance'ı sil 
 `DEPLOYMENT.md` §10'da duruyor, çünkü 2026-09-06 öncesi kurulmuş bir ortamın izlemesi gereken sıra
 bu.
 
+**Bulgu — Cloud Run secret referansı deploy.yml'dan silmekle kalkmıyor, ve bu neredeyse
+production'ı düşürüyordu.** `deploy-cloudrun` action'ının `secrets:` girdisi servisin mevcut
+listesine **merge** ediyor, replace etmiyor. Satırı workflow'dan silmek yalnızca "bir daha
+yazılmasın" demek; yayındaki servis `ConnectionStrings__Redis`'i `afterapply-redis-connection`
+secret'ından mount etmeye devam etti. Secret altından silinince ortaya sinsi bir durum çıktı:
+Cloud Run `secretKeyRef`'i **container başlangıcında** çözdüğü için o an sıcak olan instance
+çalışmaya devam etti ve `/health` yeşil kaldı — ama servis `minScale` ayarlı olmadığından sıfıra
+iniyor, yani **ilk soğuk başlangıçta container hiç ayağa kalkmayacaktı.** `gcloud run services
+update afterapply-api --remove-secrets=ConnectionStrings__Redis` ile düzeltildi (revizyon 53).
+Ders iki tane: (1) bir secret'ı kaldırmak iki parçalı bir değişiklik — workflow *ve* servis;
+(2) bu sınıf arızada `/health` tek başına kanıt değil, trafiği taşıyan revizyonun env'ine bakmak
+gerek. `DEPLOYMENT.md` §10 artık bu sırayı ve doğrulama adımını içeriyor.
+
 **Direct VPC Egress de kalktı.** `deploy.yml`'deki `--network`/`--subnet` yalnızca Memorystore'un
 private IP'sine ulaşmak içindi; Cloud SQL `/cloudsql` Unix socket'i üzerinden bağlanıyor, VPC'ye
 ihtiyacı yok. **Bulgu:** flag'i yaml'dan silmek yayındaki servisin ayarını kaldırmıyor — gcloud
