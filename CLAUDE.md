@@ -62,6 +62,56 @@ part of the deliverable, not a follow-up.
   suite once at the end of a batch of work, not after every edit (see `README.md`
   "Running tests").
 
+# Security baseline (OWASP)
+
+Every change — backend, web frontend, Chrome extension alike — must stay as close to OWASP's
+critical items as the change allows. Application security and user privacy are part of "done",
+not a later hardening pass: the product holds job-application history, HR contact details and
+scanned email content, which is personal, sensitive and impossible to un-leak.
+
+On each change, check the categories it actually touches:
+
+- **Broken access control:** every endpoint scoped to the calling user's id; no IDOR — never trust
+  a route/body id without an ownership check. Extension-token routes stay as narrow as they need.
+- **Injection / XSS:** parameterised EF queries only; never `innerHTML` with server data or
+  page-scraped content — LinkedIn/kariyer.net/Gmail text is untrusted input.
+- **Auth & session:** no secrets or tokens in logs, URLs or client-visible payloads. The one
+  intentional exception is the public OAuth client ids on `/api/config` — settled, don't re-raise.
+- **Sensitive data exposure:** don't widen an API response "because it's handy"; return the
+  minimum the caller needs; keep PII out of error text and telemetry.
+- **SSRF:** company-enrichment and job-page fetches take URLs from user data — validate
+  scheme/host before fetching.
+- **Config:** security headers, CORS, rate limits and validation stay on; never relax them to make
+  a test or a local run easier.
+
+Flag anything you can't fix inside the change's scope rather than leaving it silent.
+
+# Chrome extension release policy
+
+A change under `extension/` is a release, not just a code edit. In the same change:
+
+1. **Bump `"version"` in `extension/manifest.json`.** The Web Store rejects a re-upload of a
+   version already used, and the popup/Settings footer renders this number (`version.js`), so it
+   is what a bug report will quote back at you. The item is already live, so every upload is an
+   update — see `extension/store-listing/PUBLISHING_CHECKLIST.md` for the state of the listing.
+2. **Update the publish material the change invalidates**, under `extension/store-listing/`:
+   `PERMISSIONS_JUSTIFICATION.md` when `permissions`/`host_permissions`/`content_scripts` or the
+   data the extension sends changes (its data-usage table is what the Dashboard's Privacy
+   practices tab gets), `PRIVACY_POLICY.md` when what is stored or sent changes — **and with it
+   the published page it is the source for, `/extension-privacy` in the web app; the two must
+   never drift** — `LISTING.md` for user-facing copy (both TR and EN), and `PUBLISHING_CHECKLIST.md`
+   when the state of the listing moves.
+3. **Reshoot the screenshots the change stales, before committing.** Extension UI changes reach
+   two sets of public images: `extension/store-listing/screenshots/*.png` (Web Store assets, built
+   from the `scene-*.html` compositions, which carry *copied* markup and so never update
+   themselves) and `web/public/help/screenshots/chrome-extension-{popup,options}.png` (help
+   centre, shot from the real pages). Recipes for both are in `screenshots/README.md`.
+4. **Build the store package:**
+   `rm -f e-kariyerim-extension.zip && cd extension && zip -r ../e-kariyerim-extension.zip . -x "store-listing/*" -x "README.md" -x "*.DS_Store"`
+
+Also standing: the backend must keep working with **every shipped extension build** —
+`/from-extension` is additive-only. See `DECISIONS.md` 2026-09-06.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.

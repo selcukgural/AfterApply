@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 
 const BASE_URL = "https://ekariyerim.com";
-const PUBLIC_PATHS = ["", "/login", "/register", "/privacy"];
+const PUBLIC_PATHS = ["", "/login", "/register", "/privacy", "/extension-privacy"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return routing.locales.flatMap((locale) =>

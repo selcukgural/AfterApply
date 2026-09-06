@@ -65,7 +65,9 @@ into its Settings page.
 PRIVACY
 The extension only reads a job page when you click its icon, only on linkedin.com and kariyer.net,
 and only sends the fields you see in the popup — to your own e-kariyerim account, using your own
-token. Gmail Scanning, described above, is off by default and reads only a message you've
+token. If a LinkedIn posting shows its hiring team, that person's name and profile address appear
+among those fields too; you can edit or clear them before submitting, and they stay on your own
+account as your note of who to contact. Gmail Scanning, described above, is off by default and reads only a message you've
 personally opened, only after you enable it in Settings; the relevance check runs on your device,
 and only a short extracted summary of a message that looks job-related is ever sent, never the raw
 email. Nothing is sent to any third party, and nothing is used for advertising. See the full
@@ -116,7 +118,8 @@ Eklenti bir ilan sayfasını yalnızca simgesine tıkladığınızda, yalnızca 
 üzerinde okur ve yalnızca açılan pencerede gördüğünüz alanları — kendi erişim anahtarınızla,
 yalnızca kendi e-kariyerim hesabınıza gönderir. Bir LinkedIn ilanı işe alım sorumlusunu ("hiring
 team") gösteriyorsa, o kişinin adı ve profil adresi de bu alanlar arasında görünür; göndermeden
-önce düzenleyebilir veya tamamen silebilirsiniz, ve bu bilgi yalnızca sizin hesabınızda kalır. Yukarıda anlatılan Gmail Taraması varsayılan olarak
+önce düzenleyebilir veya tamamen silebilirsiniz; bu bilgi yalnızca sizin hesabınızda kalır.
+Yukarıda anlatılan Gmail Taraması varsayılan olarak
 kapalıdır ve yalnızca Ayarlar'dan etkinleştirdikten sonra, yalnızca kendinizin açtığı bir maili
 okur; ilgililik kontrolü cihazınızda çalışır ve yalnızca iş başvurusuyla ilgili göründüğünde kısa
 bir özet gönderilir, ham mail asla gönderilmez. Hiçbir veri üçüncü taraflarla paylaşılmaz veya
@@ -145,9 +148,9 @@ upload needed unless you want a distinct store-only icon).
 `screenshots/popup-light.png`, `screenshots/popup-dark.png`, `screenshots/options-light.png` —
 1280×800 PNG, ready to upload as-is. Chrome Web Store requires at least one and allows up to five;
 these three cover what this listing needs to show (auto-fill in both themes, the one-time settings
-setup including Gmail Scanning). Regenerated 2026-09-03 from the current `scene-*.html` files
-(`options-light.png` now includes the Gmail Scanning section). See `screenshots/README.md` if you
-want to regenerate again or add more.
+setup including Gmail Scanning). Regenerated 2026-09-06 from the current `scene-*.html` files for
+`0.6.0` — the popup shots now include the three HR-contact fields, and both pages show the
+installed-version footer. See `screenshots/README.md` if you want to regenerate again or add more.
 
 ## Support / website links
 

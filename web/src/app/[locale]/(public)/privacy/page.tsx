@@ -61,6 +61,17 @@ export default async function PrivacyPage() {
           <p className="mt-2">{t("crossBorderTransfer.sensitiveDataNote")}</p>
         </section>
 
+        <section id="browser-extension">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("browserExtension.title")}</h2>
+          <p>
+            {t("browserExtension.before")}{" "}
+            <Link href="/extension-privacy" className="text-blue-600 hover:underline dark:text-blue-400">
+              {t("browserExtension.link")}
+            </Link>
+            {t("browserExtension.after")}
+          </p>
+        </section>
+
         <section>
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("retention.title")}</h2>
           <p>{t("retention.body")}</p>

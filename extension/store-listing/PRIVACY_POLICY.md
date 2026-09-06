@@ -1,10 +1,15 @@
 # e-kariyerim Browser Extension — Privacy Policy
 
-_Draft — publish this content at a real, publicly reachable URL (e.g. `ekariyerim.com/privacy` or
-a dedicated `ekariyerim.com/extension-privacy` page) before submitting to the Chrome Web Store, and
-enter that URL under Store listing → Privacy practices. Update the "Last updated" line when you do._
+_This document is the **source** for the published page. Its live copy is the web app's
+`/extension-privacy` route — `web/src/app/[locale]/(public)/extension-privacy/page.tsx` plus the
+`extensionPrivacy` block in `web/messages/tr.json` / `en.json` — served at
+`https://ekariyerim.com/tr/extension-privacy` (and `/en/…`), which is the URL that goes in the
+Dashboard's Store listing → Privacy practices → Privacy policy field. **Edit both together:** a
+change here that never reaches that page is a policy that doesn't exist as far as Chrome Web Store
+review is concerned, and vice versa. The published page is bilingual; this file is the English
+text._
 
-**Last updated:** _fill in on publish_
+**Last updated:** 6 September 2026
 
 ## What this extension is
 
@@ -23,8 +28,13 @@ tab is a supported LinkedIn or kariyer.net job posting, it reads:
 - The job description text and a formatted (bold/headings/lists) snapshot of it, visible on that
   page.
 - The page's URL, to identify the job and detect duplicates.
+- On a LinkedIn posting that publicly shows a hiring-team card: the name and public profile URL of
+  the person who posted the job, offered as the contact for that application — so you know who to
+  follow up with. Most postings don't show one (it is the poster's own choice), and nothing is
+  filled in when they don't.
 
-Every field is shown to you, editable, in the extension's popup before anything is sent anywhere.
+Every field is shown to you, editable, in the extension's popup before anything is sent anywhere —
+including the contact, which you can change or clear before saving.
 
 ### Gmail Scanning (opt-in, beta)
 
@@ -70,9 +80,12 @@ This data never leaves your device except as described in "What data the extensi
 
 ## What data the extension sends, and to whom
 
-When you click "I Applied," the extension sends the job title, company, location, job URL, and
-description shown in the popup to the e-kariyerim API, authenticated with your personal access
-token, so it can be saved to **your own e-kariyerim account**. Company-name autocomplete similarly
+When you click "I Applied," the extension sends the job title, company, location, job URL,
+description and contact details shown in the popup to the e-kariyerim API, authenticated with your
+personal access token, so it can be saved to **your own e-kariyerim account**. A contact saved this
+way is your own note of who to approach about that application: only you can see it, it is never
+shown to other users or included in any analytics, e-kariyerim never emails or messages that person
+on your behalf, and it is deleted along with the application or your account. Company-name autocomplete similarly
 queries the e-kariyerim API with the text you've typed. If
 you've turned on Gmail Scanning, an opened email that scores as job-related sends its sender,
 subject, and a capped snippet to your own e-kariyerim account (see the Gmail Scanning section

@@ -33,8 +33,11 @@ determine whether it's a supported LinkedIn or kariyer.net job posting.
 **scripting**
 ```
 Used only after the user clicks the extension's toolbar icon on a supported job posting, to run a
-one-time script in that tab that reads the job title, company, and location already visible on the
-page, so the user doesn't have to retype them into the popup. Nothing runs until that click.
+one-time script in that tab that reads what is already visible on the page — the job title,
+company, location and description, and, on a LinkedIn posting that shows a hiring-team card, the
+name and profile URL of the person who posted the job — so the user doesn't have to retype them
+into the popup. Everything read is shown in the popup and can be edited or cleared before it is
+sent. Nothing runs until that click.
 ```
 
 **host_permissions — https://www.linkedin.com/*, https://www.kariyer.net/***
@@ -64,9 +67,11 @@ that doesn't look job-related, or any email while the setting is off, never leav
 **host_permissions — the e-kariyerim API origins (https://api.ekariyerim.com/*, the Cloud Run
 origin)**
 ```
-The extension submits the tracked application (title, company, location, job URL, and the scraped
-description) to the user's own e-kariyerim account at this origin, authenticated with their
-personal access token, and looks up existing company names for the autocomplete field. The same
+The extension submits the tracked application (title, company, location, job URL, the scraped
+description, and — when the posting showed one and the user left it in the popup — the job poster's
+name and LinkedIn profile URL as the application's contact) to the user's own e-kariyerim account
+at this origin, authenticated with their personal access token, and looks up existing company names
+for the autocomplete field. The same
 origin is also used — only when Gmail Scanning is turned on — by gmail-scan.js to submit an
 extracted email summary for a message that scored as job-related, and by local-filter-config.js to
 fetch the (non-personal) keyword/domain table that scoring uses, so it can be tuned without a new
@@ -81,7 +86,7 @@ Chrome's form asks what data the item handles and how. Based on what `popup.js` 
 
 | Data type | Collected? | Notes |
 |---|---|---|
-| Personally identifiable information | No | The extension does not collect the user's name, address, or similar. |
+| Personally identifiable information | Yes | Not about the user: the extension does not collect their name, address, or similar. But on a LinkedIn posting that publicly shows a hiring-team card, the popup reads the job poster's name and public profile URL and offers them as the application's contact — visible and editable in the popup before anything is sent, stored only on the user's own account as their own note of who to contact, never shown to anyone else and never used to contact that person. |
 | Authentication information | Yes | The user's own e-kariyerim personal access token, entered by the user, stored locally, used only to authenticate the extension's own requests to their account. |
 | Website content | Yes | Job title, company name, location, and job description text scraped from the LinkedIn/kariyer.net page the user opened, sent to the user's own e-kariyerim account. |
 | Personal communications | Yes, opt-in only | Only if the user turns on Gmail Scanning in Settings (off by default): the sender, subject, and body text of an email the user personally opens in Gmail are read in the browser to score local relevance; only a short extracted summary (sender, subject, capped snippet — never the full email) is sent, and only for a message that scores as job-application-related, to the user's own e-kariyerim account. No other message is read or sent. |

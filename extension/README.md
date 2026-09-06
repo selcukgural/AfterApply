@@ -111,12 +111,17 @@ session to sync to).
 
 ## Publishing to the Chrome Web Store
 
-See `store-listing/` for the listing copy, privacy policy draft, permission justifications, ready
-screenshots, and a step-by-step `PUBLISHING_CHECKLIST.md`. This wasn't done as part of the sprint
-that built it (DEVELOPMENT_PLAN.md Sprint 9 explicitly scoped it out as a separate, later step) —
-`store-listing/` prepares everything needed, but actually submitting still requires publishing the
-privacy policy at a real URL and someone with access to the Developer Dashboard to click through
-the checklist.
+The item is live:
+<https://chromewebstore.google.com/detail/e-kariyerim-%E2%80%94-job-import/lemdkeljacdgbbcmefpbggphnhhciimi>.
+It went up around 2026-09-01 carrying `0.4.0`; **`0.5.0` and `0.6.0` have not been uploaded**, so
+what users install today has no Gmail Scanning and no HR-contact capture.
+
+`store-listing/` holds the listing copy, the privacy policy source, permission justifications, the
+1280×800 screenshots, and `PUBLISHING_CHECKLIST.md` — start there for an upload. The privacy policy
+is published from the web app at `/extension-privacy`
+(`web/src/app/[locale]/(public)/extension-privacy/page.tsx` + the `extensionPrivacy` block in
+`web/messages/*.json`); `store-listing/PRIVACY_POLICY.md` is its source text and the two must be
+edited together.
 
 ## Not in this sprint
 
