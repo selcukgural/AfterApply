@@ -178,7 +178,13 @@ jobs:
 
       # Values on the right of `=` in `secrets:` are Secret Manager secret
       # names (not the secret values themselves) — see DEPLOYMENT.md for
-      # how to create them. Empty-string-disables-safely secrets (Sentry,
+      # how to create them. NOTE: this list is MERGED into whatever the
+      # service already mounts, not swapped for it, so deleting a line
+      # here only stops it being re-asserted — the deployed service keeps
+      # the old reference until `gcloud run services update
+      # --remove-secrets=<NAME>` detaches it. Removing a secret is
+      # therefore a two-part change; DEPLOYMENT.md §10 is the worked
+      # example, from the 2026-09-06 Redis removal that got this wrong. Empty-string-disables-safely secrets (Sentry,
       # OpenAI) still go through Secret Manager for consistency, not
       # because they're sensitive when empty.
       #
