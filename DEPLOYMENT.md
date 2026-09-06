@@ -61,6 +61,26 @@ migrations in CI" under Sprint 13 below. The invariant above still holds:
 nothing calls `Database.Migrate()` on container boot; the automation just
 moved the explicit step from a human's terminal into the deploy pipeline.
 
+### Migrations must stay readable by the code that is still running
+
+The migration job finishes before the new API revision takes traffic, so for a
+minute or two the **old** image is serving against the **new** schema — and a
+Cloud Run rollback puts it back there indefinitely. A migration therefore has to
+leave the schema usable by the previous release, not only by the one shipping
+with it.
+
+The trap is a new `NOT NULL` column. EF Core writes an explicit column list, so
+the old model's `INSERT` simply omits the column and relies on the database
+default. `AddColumn` creates that default for you — dropping it in the same
+migration turns every insert from the old image into a not-null violation:
+
+    ERROR: null value in column "Origin" violates not-null constraint
+
+Keep the default in the migration that adds the column, and drop it in a later
+one once the release that always supplies the value is live (expand, then
+contract). The same rule rules out renaming or dropping a column still read by
+the running release.
+
 ## What's still missing for a real cloud deployment
 
 This profile deliberately stops short of being cloud-ready:

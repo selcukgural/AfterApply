@@ -229,9 +229,23 @@ jobs:
           git tag -f deploy/api-latest HEAD
           git push origin refs/tags/deploy/api-latest --force
 
+  # Waits for deploy-backend rather than running alongside it. The two used to start together,
+  # which meant the new web image could go live against the old API: on 2026-09-06 deploy-web
+  # finished at 08:20:14 while deploy-backend was still building, so the frontend was calling an
+  # endpoint the running API did not have yet. Every API change here is additive, so the safe
+  # order is always schema -> API -> web, and a failed backend must stop the web deploy rather
+  # than ship a frontend that expects it.
+  #
+  # The `always()` + explicit result checks are what let this still deploy web on a web-only push:
+  # a plain `needs:` would skip this job whenever deploy-backend is skipped. 'skipped' is a pass
+  # here (backend had nothing to deploy); 'failure' and 'cancelled' are not.
   deploy-web:
-    needs: [plan, contract-check]
-    if: needs.plan.outputs.web == 'true'
+    needs: [plan, contract-check, deploy-backend]
+    if: |
+      always() &&
+      needs.plan.outputs.web == 'true' &&
+      needs.contract-check.result == 'success' &&
+      (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       id-token: write

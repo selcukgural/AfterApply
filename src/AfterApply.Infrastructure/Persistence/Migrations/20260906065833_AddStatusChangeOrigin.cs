@@ -115,9 +115,15 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                 END $$;
                 """);
 
-            // The empty-string defaults exist only so the NOT NULL columns could be added to a
-            // populated table. Every writer supplies both values, and the model declares no default
-            // — drop them so the database matches.
+            // MISTAKE — kept as it ran, corrected by RestoreStatusHistoryColumnDefaults.
+            //
+            // The reasoning below was "every writer supplies both values and the model declares no
+            // default, so drop them to make the database match the model". That ignores which code
+            // is actually running: the migration job finishes before the new API revision takes
+            // traffic, and a rollback puts the old image back for good. That release's EF model has
+            // no Origin/Source, so its INSERT omits both columns and needs a default — without one
+            // it fails with a not-null violation. See DEPLOYMENT.md "Migrations must stay readable
+            // by the code that is still running".
             migrationBuilder.Sql("""
                 ALTER TABLE "ApplicationStatusHistories" ALTER COLUMN "Origin" DROP DEFAULT;
                 ALTER TABLE "ApplicationStatusHistories" ALTER COLUMN "Source" DROP DEFAULT;

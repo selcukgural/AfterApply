@@ -3295,6 +3295,42 @@ kullanıcıya görünür hale geldiği için fark edildi.
 
 ---
 
+### Deploy sırası: web artık backend'i bekliyor, ve migration'lar geriye uyumlu kalmalı — DECIDED
+
+Sprint 16'nın durum-geçmişi deploy'unda (`eaeb64d`) iki pipeline hatası ölçülerek görüldü.
+
+**1. `deploy-web` ile `deploy-backend` paralel koşuyordu.** İkisi de yalnızca
+`needs: [plan, contract-check]` diyordu, birbirlerini beklemiyorlardı. Gerçek zamanlar:
+`deploy-web` 08:20:14'te bitti, `deploy-backend` 08:22:46'ya kadar sürdü — **2,5 dakika boyunca
+yeni frontend eski API'ye konuştu** ve `GET /applications/{id}/status-history` 404 döndüğü için
+Durum Geçmişi bölümü boş durumda göründü. Bu projedeki her API değişikliği eklemeli olduğundan
+doğru sıra her zaman şema → API → web; ayrıca backend fail ederse onu bekleyen frontend'in hiç
+çıkmaması gerekir. `deploy-web` artık `needs: [plan, contract-check, deploy-backend]`. `always()` +
+açık `result` kontrolleri şunun için: düz `needs` kullanılsaydı, backend'in deploy edecek bir şeyi
+olmadığı (web-only) push'larda `deploy-backend` skipped olacağı için web de skip edilirdi.
+`skipped` geçerli sayılıyor, `failure`/`cancelled` sayılmıyor.
+
+**2. Migration, hâlâ çalışan kodu kırdı.** `AddStatusChangeOrigin`, NOT NULL kolonları eklemek için
+`AddColumn`'un ürettiği boş-string default'ları "model ile veritabanı eşleşsin" diye düşürüyordu.
+Bu, hangi kodun koştuğunu göz ardı ediyor: migration job'ı yeni revizyon trafiği almadan **önce**
+biter, ve Cloud Run rollback'i eski image'ı kalıcı olarak geri getirir. O sürümün EF modelinde
+`Origin`/`Source` yok, dolayısıyla `INSERT`'ü bu kolonları atlayıp default'a güveniyor — default
+olmayınca not-null violation. Dev veritabanında eski kodun ürettiği INSERT birebir çalıştırılarak
+doğrulandı (önce hata, `RestoreStatusHistoryColumnDefaults` sonrası `Manual`/`Manual` ile geçiyor).
+
+Kural `DEPLOYMENT.md`'ye yazıldı: yeni NOT NULL kolonun default'unu **onu ekleyen migration'da
+düşürme**; değeri her zaman yazan sürüm canlıya çıktıktan sonraki bir migration'da düşür (expand,
+sonra contract). `AddStatusChangeOrigin`'in SQL'i çalıştığı haliyle bırakıldı — uygulanmış bir
+migration'ın SQL'i değiştirilmez; yalnızca yanlış yönlendiren yorumu, hatayı ve düzeltmesini
+gösterecek şekilde güncellendi.
+
+Default olarak `Manual` seçildi: provenance kavramı olmayan bir sürümden gelen yazının gerçekten
+olduğu şey bu. Default'lar EF modeline **bildirilmedi** (yalnızca ham SQL), böylece güncel kod her
+zaman değeri açıkça yazmaya devam ediyor ve default sadece eski image'ın yazdıklarında devreye
+girebiliyor.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde
