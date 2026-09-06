@@ -1,4 +1,5 @@
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Domain.Applications;
 
 namespace AfterApply.Application.Applications;
 
@@ -25,7 +26,18 @@ public interface IApplicationService
 
     Task<bool> DeleteAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken);
 
+    /// <summary>The user-initiated path, behind POST /applications/{id}/status. Always records
+    /// StatusChangeOrigin.Manual — a caller cannot claim a different provenance.</summary>
     Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId, ChangeStatusRequest request, CancellationToken cancellationToken);
+
+    /// <summary>The internal path for changes the system applies on the user's behalf — email
+    /// suggestions and imports — where the caller knows the real origin and passes it explicitly.
+    /// Not reachable from the HTTP surface.</summary>
+    Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId, ApplicationStatus newStatus,
+        DateTimeOffset changedAt, StatusChangeContext context, CancellationToken cancellationToken);
+
+    /// <summary>Newest first. Null when the application is not the user's.</summary>
+    Task<IReadOnlyCollection<ApplicationStatusHistoryResponse>?> GetStatusHistoryAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<ApplicationEventResponse>?> GetTimelineAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken);
 

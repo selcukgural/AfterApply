@@ -406,7 +406,6 @@
       "jobUrl": "İlan",
       "openLink": "Bağlantıyı Aç",
       "notes": "Notlar",
-      "timeline": "Zaman Çizelgesi",
       "emptyValue": "—",
       "createdFromEmail": "E-postadan otomatik oluşturuldu",
       "jobDescription": {
@@ -414,7 +413,9 @@
         "source": "LinkedIn'den alındı",
         "expand": "Tamamını Gör",
         "collapse": "Daralt"
-      }
+      },
+      "statusHistory": "Durum Geçmişi",
+      "createdAt": "Sisteme Eklendi"
     },
     "statusChange": {
       "changeStatus": "Durumu Değiştir",
@@ -423,8 +424,11 @@
       "cancel": "Vazgeç",
       "saving": "Kaydediliyor..."
     },
-    "timeline": {
-      "empty": "Henüz bir etkinlik yok."
+    "statusHistory": {
+      "empty": "Henüz bir durum değişikliği yok.",
+      "rejectionReason": "Ret sebebi:",
+      "showEmail": "E-postayı gör",
+      "hideEmail": "E-postayı gizle"
     }
   },
   "settings": {
@@ -589,17 +593,6 @@
     "Freelance": "Serbest Çalışma",
     "Temporary": "Geçici"
   },
-  "eventType": {
-    "ApplicationCreated": "Başvuru Oluşturuldu",
-    "ApplicationSubmitted": "Başvuru Gönderildi",
-    "RecruiterContacted": "İşe Alım Uzmanı İletişime Geçti",
-    "ScreeningStarted": "Ön Değerlendirme Başladı",
-    "InterviewScheduled": "Mülakat Planlandı",
-    "InterviewCompleted": "Mülakat Tamamlandı",
-    "OfferReceived": "Teklif Alındı",
-    "FollowUpSent": "Takip Mesajı Gönderildi",
-    "StatusChanged": "Durum Değişti"
-  },
   "source": {
     "Manual": "Elle Girildi",
     "LinkedIn": "LinkedIn",
@@ -612,6 +605,14 @@
     "Email": "E-posta",
     "System": "Sistem",
     "Other": "Diğer"
+  },
+  "statusChangeOrigin": {
+    "Manual": "elle değiştirildi",
+    "EmailSuggestionConfirmed": "e-postadan onaylandı",
+    "EmailAutoApplied": "e-postadan otomatik uygulandı",
+    "Import": "içe aktarımdan geldi",
+    "Extension": "tarayıcı eklentisinden",
+    "System": "sistem tarafından"
   },
   "validation": {
     "emailRequired": "E-posta gerekli",
@@ -898,7 +899,7 @@
       },
       "detail": {
         "title": "Başvuru detayı",
-        "body": "Bir başvuruyu açtığınızda; durum rozetini, konumu, istihdam türünü, başvuru tarihini, varsa ilan linkini ve notlarınızı, bir olay Zaman Çizelgesi'ni ve (varsa) iş tanımını görürsünüz. Gmail Taraması'yla otomatik oluşan başvurularda \"Created from Email\" rozeti belirir."
+        "body": "Bir başvuruyu açtığınızda durum rozeti, konum, çalışma şekli, başvuru tarihi, sisteme eklenme zamanı, varsa ilan bağlantısı ve notlarınız görünür; altında Durum Geçmişi ve varsa ilan açıklaması yer alır. Gmail Taraması ile otomatik oluşturulan başvurularda \"E-postadan otomatik oluşturuldu\" etiketi bulunur."
       },
       "edit": {
         "title": "Düzenleme",
@@ -923,16 +924,16 @@
         },
         "step3": {
           "title": "İsteğe bağlı bir not ekleyip onaylayın",
-          "body": "Değişiklik, notunuzla birlikte zaman çizelgesine \"Eski Durum → Yeni Durum\" olarak işlenir."
+          "body": "Değişiklik, notunuzla birlikte \"Durum Geçmişi\" bölümüne \"Eski Durum → Yeni Durum\" olarak işlenir. Yazdığınız not orada satırın altında görünür."
         }
       },
       "statuses": {
         "title": "Durumlar ne anlama gelir?",
         "body": "Bir başvuru şu durumlardan birinde olabilir: Applied (Başvuruldu), Screening (Ön Eleme), Interview (Mülakat), TechnicalInterview (Teknik Mülakat), FinalInterview (Son Mülakat), Offer (Teklif), Accepted (Kabul Edildi), Rejected (Reddedildi), Withdrawn (Vazgeçildi), Ghosted (Yanıt Alınamadı)."
       },
-      "timeline": {
-        "title": "Zaman Çizelgesi",
-        "body": "Her başvurunun altında, o başvuruyla ilgili tüm olayların kronolojik listesi bulunur: oluşturulma, gönderilme, işe alımcı teması, ön eleme, mülakat planlanması/tamamlanması, teklif alınması, takip e-postası gönderilmesi ve her durum değişikliği. Bu, bir başvurunun geçmişini tek bakışta hatırlamanızı sağlar."
+      "statusHistory": {
+        "title": "Durum Geçmişi",
+        "body": "Başvuru detayında, o başvurunun her durum değişikliğini en yenisi üstte olacak şekilde listeler: hangi durumdan hangisine geçildiği, ne zaman geçildiği, o sırada yazdığınız not ve — en önemlisi — değişikliğin nasıl yapıldığı. Durumu siz mi değiştirdiniz, bir e-posta önerisini siz mi onayladınız, yoksa sistem yüksek güvenle kendisi mi uyguladı: her satırdaki etiket bunu söyler. E-postadan gelen bir değişiklikte ret sebebi ve kaynak e-postanın konusu da satır içinde açılabilir. Bir başvurunun geçmişini tek bakışta hatırlamanızı sağlayan yer burasıdır."
       }
     },
     "suggestions": {

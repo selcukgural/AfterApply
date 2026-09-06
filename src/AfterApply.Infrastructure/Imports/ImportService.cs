@@ -424,7 +424,8 @@ internal sealed partial class ImportService(
 
         if (parsed.Status != ApplicationStatus.Applied)
         {
-            application.ChangeStatus(parsed.Status, parsed.AppliedAt, source, note: null);
+            application.ChangeStatus(parsed.Status, parsed.AppliedAt,
+                new StatusChangeContext(source, StatusChangeOrigin.Import));
         }
 
         dbContext.Applications.Add(application);

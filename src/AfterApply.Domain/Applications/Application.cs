@@ -58,8 +58,14 @@ public sealed class Application : AuditableEntity
             UpdatedAt = now
         };
 
+        // The seed row is stamped with appliedAt, not now: it records when the application entered
+        // the Applied status, which is the day the user applied, not the day the row was written.
+        // These differ for anything imported (the CSV carries a past date) and for a manual entry
+        // backdated by the user — and the status history is ordered by ChangedAt, so stamping it
+        // "now" would sort the very first row after later transitions.
         application._statusHistory.Add(ApplicationStatusHistory.Create(
-            application.Id, fromStatus: null, ApplicationStatus.Applied, now, note: null));
+            application.Id, fromStatus: null, ApplicationStatus.Applied, appliedAt,
+            new StatusChangeContext(source, OriginFor(source))));
         application._events.Add(ApplicationEvent.Create(
             application.Id, ApplicationEventType.ApplicationCreated, now, source, metadata: null));
 
@@ -78,7 +84,7 @@ public sealed class Application : AuditableEntity
         Touch(now);
     }
 
-    public void ChangeStatus(ApplicationStatus newStatus, DateTimeOffset changedAt, Source source, string? note)
+    public void ChangeStatus(ApplicationStatus newStatus, DateTimeOffset changedAt, StatusChangeContext context)
     {
         if (newStatus == Status)
         {
@@ -89,10 +95,22 @@ public sealed class Application : AuditableEntity
         Status = newStatus;
         Touch(changedAt);
 
-        _statusHistory.Add(ApplicationStatusHistory.Create(Id, fromStatus, newStatus, changedAt, note));
-        _events.Add(ApplicationEvent.Create(Id, ApplicationEventType.StatusChanged, changedAt, source,
+        _statusHistory.Add(ApplicationStatusHistory.Create(Id, fromStatus, newStatus, changedAt, context));
+        _events.Add(ApplicationEvent.Create(Id, ApplicationEventType.StatusChanged, changedAt, context.Source,
             metadata: $$"""{"fromStatus":"{{fromStatus}}","toStatus":"{{newStatus}}"}"""));
     }
+
+    /// <summary>The origin implied by the Source a brand-new application was created with. Only used
+    /// for the seed "→ Applied" history row: Create() has no separate origin argument because the
+    /// caller's Source already says everything there is to say about how the row appeared.</summary>
+    private static StatusChangeOrigin OriginFor(Source source) => source switch
+    {
+        Source.CsvImport or Source.LinkedInImport => StatusChangeOrigin.Import,
+        Source.BrowserExtension => StatusChangeOrigin.Extension,
+        Source.Email => StatusChangeOrigin.EmailSuggestionConfirmed,
+        Source.System => StatusChangeOrigin.System,
+        _ => StatusChangeOrigin.Manual
+    };
 
     public void AddEvent(ApplicationEventType type, DateTimeOffset occurredAt, Source source, string? metadata)
     {

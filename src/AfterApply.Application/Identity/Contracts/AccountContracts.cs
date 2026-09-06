@@ -11,7 +11,7 @@ public sealed record DeleteAccountRequest(string? Password);
 
 public sealed record ApplicationEventExportItem(ApplicationEventType Type, DateTimeOffset OccurredAt, Source Source, string? Metadata);
 
-public sealed record StatusHistoryExportItem(ApplicationStatus? FromStatus, ApplicationStatus ToStatus, DateTimeOffset ChangedAt, string? Note);
+public sealed record StatusHistoryExportItem(ApplicationStatus? FromStatus, ApplicationStatus ToStatus, DateTimeOffset ChangedAt, string? Note, StatusChangeOrigin Origin);
 
 public sealed record ApplicationExportItem(
     Guid Id,

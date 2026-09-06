@@ -3204,6 +3204,97 @@ döndüğü doğrulandı.
 
 ---
 
+### Durum değişikliği izi: `StatusChangeOrigin` + ayrı "Durum Geçmişi" bölümü — DECIDED
+
+İki eksik aynı satırdan besleniyordu. Kullanıcının durum değiştirirken yazdığı not
+`ApplicationStatusHistory.Note`'a yazılıyor ama o tablonun tek okuyucusu GDPR veri dışa
+aktarımıydı — hiçbir ekran göstermiyordu. Değişikliğin kaynağı ise `ApplicationEvent.Source`'ta
+kayıtlı, `/timeline` yanıtıyla tarayıcıya kadar geliyor ve `Timeline.tsx` tarafından kullanılmadan
+atılıyordu.
+
+Üç seçenek değerlendirildi: (A) mevcut sağ kolon zaman çizelgesini zenginleştirmek, (B) ana kolona
+tam genişlikte ayrı bir "Durum Geçmişi" bölümü, (C) geçmiş + olaylar + öneriler ("geri al" ile) tek
+birleşik akış. **B seçildi.** A, notu sayfanın en dar sütununa sıkıştırıyor ve notu ikinci kez olay
+metadata'sına kopyalamayı gerektiriyordu; C ise "geri al" ve önerilerin detaya taşınması gibi ayrı
+ürün kararlarını da beraberinde getiriyordu. B, C'ye giden yolu kapatmıyor — yapılandırılmış
+provenance alanları C'nin de ihtiyaç duyacağı temel.
+
+**`Source` neden yetmedi:** kullanıcının onayladığı öneri de, eşik üstü güvenle otomatik uygulanan
+öneri de `Source.Email` yazıyordu. Aradaki tek fark nota gömülü Türkçe cümleydi ("E-postadan
+onaylandı" / "E-postadan otomatik uygulandı") — yani kullanıcının en çok merak edeceği ayrım
+sorgulanamaz bir alandaydı, üstelik İngilizce arayüzde Türkçe kalıyordu. `StatusChangeOrigin`
+(Manual / EmailSuggestionConfirmed / EmailAutoApplied / Import / Extension / System) bunu
+yapılandırılmış hale getiriyor; `System` bugün hiçbir yol tarafından yazılmıyor ama enum'a sonradan
+değer eklemek migration gerektirdiği için (ghosting tespiti için) baştan kondu.
+
+**Not artık yalnızca kullanıcının metni.** Ret sebebi `RejectionReasonCategory` +
+`RejectionReasonDetail` olarak geçmiş satırına *kopyalanarak* saklanıyor (join değil): geçmiş bir
+anlık görüntü tablosudur, öneri silinse de o gün ne yazdığı değişmemeli. Aynı gerekçeyle
+`EmailSuggestionId` foreign key değil. Buna karşılık e-postanın konusu/özeti okuma anında
+left-join'le çözülüyor — o sadece "kaynağı göster" bağlamı, öneri gidince null olması doğru cevap.
+
+**Provenance artık istemciden alınmıyor.** `ChangeStatusRequest`'teki `Source?` alanı gövdeden
+bağlanıyordu; elle yapılan bir değişiklik `"source":"Email"` gönderilerek e-postadan gelmiş gibi
+kaydedilebilirdi. Alan kaldırıldı (sessizce yok sayılmadı — sessiz yok sayma ileride yanlış
+varsayıma davetiye); HTTP ucu her zaman `Manual` yazıyor, e-posta/import yolları ise
+`IApplicationService`'in `StatusChangeContext` alan iç aşırı yüklemesini kullanıyor.
+
+**Zaman çizelgesi kartı tamamen kaldırıldı.** İlk uygulama yalnızca `StatusChanged` olaylarını
+süzüyordu; kullanıcı ekrana bakınca haklı olarak "bu hâlâ aynı şeyi göstermiyor mu?" diye sordu.
+Veriye bakıldığında: tüm dev veritabanında (48 başvuru) yalnızca iki olay tipi var —
+`ApplicationCreated` 48, `StatusChanged` 26. Kalan yedi tip (`RecruiterContacted`,
+`InterviewScheduled`, `OfferReceived`, ...) sadece `POST /applications/{id}/events` ile
+yazılabiliyor ve o endpoint'i çağıran hiçbir yer yok: `applicationsApi.addEvent` tanımlı ama hiçbir
+bileşen kullanmıyor, eklenti çağırmıyor, arka plan job'ı yok. Yani süzmeden sonra çizelge tek satır
+gösterebiliyordu — "Başvuru Oluşturuldu" — ve o da Durum Geçmişi'nin en alt satırının ("→
+Başvuruldu") aynısıydı. Kart, listenin bir satırını farklı kelimeyle tekrar eden bir kabuğa
+dönüşmüştü.
+
+Kart, `Timeline.tsx`, `withoutStatusChanges` ve `getTimeline` istemci metodu ile `eventType`/
+`applications.timeline` çevirileri silindi; taşıdığı tek benzersiz bilgi ("ne zaman eklendi") detay
+kartına `Sisteme Eklendi` alanı olarak geçti ve sayfa tek kolona indi. **Backend'e dokunulmadı:**
+olay tablosu, `StatusChanged` yazımı, `/timeline` ve `/events` endpoint'leri, veri dışa aktarımı
+duruyor — ileride gerçek bir olay girişi özelliği gelirse arayüz üstüne kurulur.
+
+Bu, değişikliğin yarattığı değil **açığa çıkardığı** bir durum: çizelgenin içeriğinin neredeyse
+tamamı zaten durum değişiklikleriydi.
+
+**Migration geri dolgulu.** Yeni kolonu boş bırakmak, üretimdeki geçmişi kalıcı olarak "bilinmiyor"
+yapardı. Pass 1 eşleşen `StatusChanged` olayından, pass 2 (çekirdek "→ Applied" satırı için)
+`Applications.Source`'tan dolduruyor; e-posta satırlarında onaylı/otomatik ayrımı için eski Türkçe
+not öneki okunuyor — o düz metnin ilk ve son kez işe yaradığı yer. Eski notların kendisi
+**bilerek temizlenmedi** (kullanıcı kararı): geri alınamaz bir veri düzenlemesi, ve eski satırlarda
+bir süre etiket + not tekrarına katlanmak tercih edildi.
+
+**Şunu ekran çekimi değil test yakaladı:** içe aktarılan bir başvuruda çekirdek satır
+`DateTimeOffset.UtcNow`, geçiş satırı ise CSV'deki başvuru tarihiyle damgalanıyordu — `ChangedAt`'e
+göre sıralanan geçmişte "→ Applied" satırı sonraki geçişlerin *altına* düşüyordu. `Create()` artık
+çekirdek satırı `appliedAt` ile damgalıyor (satırın anlamı "bu başvuru şu tarihte Applied oldu",
+"bu satır şu tarihte yazıldı" değil). İkisi eşitlendiğinde sıralama belirsizleşti; ilk düzeltme
+`ThenByDescending(h => h.Id)` idi ve **yanlıştı** — `Guid.CreateVersion7()` yalnızca milisaniye
+düzeyinde sıralı, aynı milisaniye içindeki alt bitler rastgele, dolayısıyla eşit `ChangedAt`
+satırlarını ayıramıyor (test bunu ikinci kez kırmızıya çevirerek yakaladı). Anlamlı anahtar
+`FromStatus`: çekirdek satır `FromStatus == null` olan tek satırdır ve tanımı gereği en eskisidir,
+yani en-yeni-üstte listede en alta düşer. `Id` yalnızca kalanı sorgular arası deterministik tutmak
+için üçüncül anahtar olarak duruyor.
+
+Frontend'de bileşen render koşumu hâlâ yok (`vitest.config.ts`: node ortamı, jsdom/RTL yok), o
+yüzden bileşenin karar mantığı `web/src/lib/applications/statusHistory.ts`'e saf fonksiyonlar
+olarak çıkarıldı ve orada test edildi; yeni bağımlılık eklenmedi. Buna karşılık akış gerçek
+tarayıcıda uçtan uca doğrulandı ([[feedback_test_email_forwarding_on_touch]] gereği): dev DB'ye
+migration uygulandı (73 satırın tamamı dolduruldu, boş `Origin` kalmadı), simüle bir ret e-postası
+sinyali gönderildi, öneri `/suggestions`'tan onaylandı ve detay sayfasında "Mülakat → Reddedildi ·
+e-postadan onaylandı" satırı, `Lokasyon / relocation` ret sebebi ve açılabilir e-posta özeti
+göründü — İngilizce yerelde de doğru çevrilmiş olarak.
+
+Yardım görseli `application-detail.png` yeniden çekildi. Çekim iki kez demo hesabının seed
+verisinde tutarsızlık açığa çıkardı — ikisi de aynı kökten: seed, gösterilmeyen alanları insert
+anına damgalamış. Geçmiş satırlarının `ChangedAt`'i (hepsi 09:03) olayların taşıdığı demo
+tarihleriyle, `Applications.CreatedAt` de `AppliedAt` ile hizalandı. İkisi de yalnızca bu alanlar
+kullanıcıya görünür hale geldiği için fark edildi.
+
+---
+
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 
 - Bölüm numaralandırması §32'den sonra §35, sonra §34, sonra §36 şeklinde

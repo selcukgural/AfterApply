@@ -8,7 +8,7 @@ import { applicationsApi } from "@/lib/api/applications";
 import type { ApplicationStatus } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusChangeSelect } from "@/components/applications/StatusChangeSelect";
-import { Timeline } from "@/components/applications/Timeline";
+import { StatusHistoryList } from "@/components/applications/StatusHistoryList";
 import { JobDescriptionCard } from "@/components/applications/JobDescriptionCard";
 import { Button } from "@/components/ui/Button";
 
@@ -26,9 +26,9 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
     queryFn: () => applicationsApi.getById(id),
   });
 
-  const { data: timeline } = useQuery({
-    queryKey: ["applications", "timeline", id],
-    queryFn: () => applicationsApi.getTimeline(id),
+  const { data: statusHistory } = useQuery({
+    queryKey: ["applications", "statusHistory", id],
+    queryFn: () => applicationsApi.getStatusHistory(id),
   });
 
   const changeStatusMutation = useMutation({
@@ -80,12 +80,12 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <div className="flex items-center gap-2">
             <StatusBadge status={application.status} />
           </div>
-          <dl className="grid grid-cols-2 gap-3 text-sm">
+          <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-gray-500 dark:text-gray-400">{t("location")}</dt>
               <dd className="text-gray-900 dark:text-gray-100">{application.location ?? t("emptyValue")}</dd>
@@ -97,6 +97,10 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             <div>
               <dt className="text-gray-500 dark:text-gray-400">{t("appliedAt")}</dt>
               <dd className="text-gray-900 dark:text-gray-100">{new Date(application.appliedAt).toLocaleDateString(locale)}</dd>
+            </div>
+            <div>
+              <dt className="text-gray-500 dark:text-gray-400">{t("createdAt")}</dt>
+              <dd className="text-gray-900 dark:text-gray-100">{new Date(application.createdAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}</dd>
             </div>
             {application.jobUrl && (
               <div>
@@ -124,11 +128,9 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           />
         </div>
 
-        <div className="flex flex-col gap-6">
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-            <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("timeline")}</h2>
-            <Timeline events={timeline ?? []} />
-          </div>
+        <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+          <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("statusHistory")}</h2>
+          <StatusHistoryList history={statusHistory ?? []} />
         </div>
       </div>
 

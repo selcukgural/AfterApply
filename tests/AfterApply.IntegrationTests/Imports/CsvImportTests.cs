@@ -5,7 +5,10 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Imports.Contracts;
+using AfterApply.Domain.Applications;
+using AfterApply.Domain.Common;
 using AfterApply.Domain.Imports;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -167,5 +170,38 @@ public class CsvImportTests(SharedInfrastructure shared) : IAsyncLifetime
         var response = await _client.PostAsync("/api/imports/csv", BuildCsvUpload(SampleCsv, fileName: "applications.txt"));
 
         response.StatusCode.ShouldBe(System.Net.HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task ImportCsv_Records_Import_Origin_On_Both_History_Rows()
+    {
+        // DataCo's row imports at Interview, so it produces two history rows: the seed "→ Applied"
+        // that Create() writes, and the transition ChangeStatus writes. Neither is a manual change
+        // and the status history has to say so on both.
+        var response = await _client.PostAsync("/api/imports/csv", BuildCsvUpload(SampleCsv));
+        var accepted = await response.Content.ReadFromJsonAsync<ImportAcceptedResponse>(JsonOptions);
+        await PollUntilTerminalAsync(accepted!.Id);
+
+        Guid applicationId;
+        using (var scope = _factory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            applicationId = (await db.Applications.SingleAsync(a => a.JobTitle == "Data Engineer")).Id;
+        }
+
+        // Read through the endpoint, not the DbSet: both rows carry the CSV's applied date, so this
+        // is also the assertion that the newest-first ordering survives that tie.
+        var historyResponse = await _client.GetAsync($"/api/applications/{applicationId}/status-history");
+        historyResponse.EnsureSuccessStatusCode();
+        var history = await historyResponse.Content.ReadFromJsonAsync<List<ApplicationStatusHistoryResponse>>(JsonOptions);
+
+        history!.Count.ShouldBe(2);
+        history.ShouldAllBe(h => h.Origin == StatusChangeOrigin.Import);
+        history.ShouldAllBe(h => h.Source == Source.CsvImport);
+        history.ShouldAllBe(h => h.Note == null);
+        history[0].ToStatus.ShouldBe(ApplicationStatus.Interview);
+        history[1].ToStatus.ShouldBe(ApplicationStatus.Applied);
+        history[1].FromStatus.ShouldBeNull();
+        history[0].ChangedAt.ShouldBe(history[1].ChangedAt);
     }
 }

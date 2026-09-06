@@ -406,7 +406,6 @@
       "jobUrl": "Listing",
       "openLink": "Open Link",
       "notes": "Notes",
-      "timeline": "Timeline",
       "emptyValue": "—",
       "createdFromEmail": "Auto-created from email",
       "jobDescription": {
@@ -414,7 +413,9 @@
         "source": "From LinkedIn",
         "expand": "Show more",
         "collapse": "Collapse"
-      }
+      },
+      "statusHistory": "Status History",
+      "createdAt": "Added On"
     },
     "statusChange": {
       "changeStatus": "Change Status",
@@ -423,8 +424,11 @@
       "cancel": "Cancel",
       "saving": "Saving..."
     },
-    "timeline": {
-      "empty": "No events yet."
+    "statusHistory": {
+      "empty": "No status changes yet.",
+      "rejectionReason": "Rejection reason:",
+      "showEmail": "Show email",
+      "hideEmail": "Hide email"
     }
   },
   "settings": {
@@ -589,17 +593,6 @@
     "Freelance": "Freelance",
     "Temporary": "Temporary"
   },
-  "eventType": {
-    "ApplicationCreated": "Application Created",
-    "ApplicationSubmitted": "Application Submitted",
-    "RecruiterContacted": "Recruiter Contacted",
-    "ScreeningStarted": "Screening Started",
-    "InterviewScheduled": "Interview Scheduled",
-    "InterviewCompleted": "Interview Completed",
-    "OfferReceived": "Offer Received",
-    "FollowUpSent": "Follow-Up Sent",
-    "StatusChanged": "Status Changed"
-  },
   "source": {
     "Manual": "Entered Manually",
     "LinkedIn": "LinkedIn",
@@ -612,6 +605,14 @@
     "Email": "Email",
     "System": "System",
     "Other": "Other"
+  },
+  "statusChangeOrigin": {
+    "Manual": "changed by you",
+    "EmailSuggestionConfirmed": "confirmed from email",
+    "EmailAutoApplied": "auto-applied from email",
+    "Import": "from an import",
+    "Extension": "from the browser extension",
+    "System": "applied by the system"
   },
   "validation": {
     "emailRequired": "Email is required",
@@ -898,7 +899,7 @@
       },
       "detail": {
         "title": "Application detail",
-        "body": "Opening an application shows its status badge, location, employment type, applied date, job URL (if any) and notes, an event Timeline, and (if available) the job description. Applications created automatically via Gmail Scanning show a \"Created from Email\" badge."
+        "body": "Opening an application shows its status badge, location, employment type, applied date, when it was added, the job URL (if any) and your notes, with the Status History and — if available — the job description below. Applications created automatically via Gmail Scanning show a \"Created from Email\" badge."
       },
       "edit": {
         "title": "Editing",
@@ -923,16 +924,16 @@
         },
         "step3": {
           "title": "Optionally add a note and confirm",
-          "body": "The change is recorded on the timeline as \"Old Status → New Status\", along with your note."
+          "body": "The change is recorded in the Status History section as \"Old Status → New Status\", together with your note, which appears under that row."
         }
       },
       "statuses": {
         "title": "What do the statuses mean?",
         "body": "An application can be in one of these statuses: Applied, Screening, Interview, TechnicalInterview, FinalInterview, Offer, Accepted, Rejected, Withdrawn, Ghosted."
       },
-      "timeline": {
-        "title": "Timeline",
-        "body": "Below every application is a chronological list of everything that happened to it: creation, submission, recruiter contact, screening, interview scheduled/completed, offer received, follow-up sent, and every status change. It's a quick way to remember an application's history at a glance."
+      "statusHistory": {
+        "title": "Status History",
+        "body": "On the application detail page, this lists every status change for that application, newest first: which status it moved from and to, when, the note you wrote at the time, and — most importantly — how the change was applied. Whether you changed it yourself, confirmed an email suggestion, or the system applied it on its own with high confidence: the label on each row says so. For a change that came from an email, the rejection reason and the originating email's subject can be expanded inline. This is where you recall an application's whole history at a glance."
       }
     },
     "suggestions": {

@@ -288,7 +288,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ConfirmSuggestion_For_Rejected_With_Stated_Reason_Appends_Reason_To_StatusHistory_Note()
+    public async Task ConfirmSuggestion_For_Rejected_With_Stated_Reason_Snapshots_Reason_Onto_StatusHistory()
     {
         var applicationId = await CreateApplicationAsync("Acme Confirm Reason Test");
         _fakeRejectionReasonProvider.Result = new EmailRejectionReasonExtractionResult(
@@ -310,8 +310,45 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         var history = await db.ApplicationStatusHistories
             .Where(h => h.ApplicationId == applicationId && h.ToStatus == ApplicationStatus.Rejected)
             .SingleAsync();
-        history.Note.ShouldNotBeNull();
-        history.Note.ShouldContain("Compensation expectations exceed the budgeted range");
+        history.Origin.ShouldBe(StatusChangeOrigin.EmailSuggestionConfirmed);
+        history.Source.ShouldBe(Source.Email);
+        history.EmailSuggestionId.ShouldBe(suggestionId);
+        history.RejectionReasonCategory.ShouldBe(RejectionReasonCategory.SalaryExpectationMismatch);
+        history.RejectionReasonDetail.ShouldBe("Compensation expectations exceed the budgeted range");
+
+        // The reason used to be concatenated into the note as a Turkish sentence, which left the
+        // English UI showing Turkish and threw away the category. Note is the user's field again.
+        history.Note.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task ConfirmSuggestion_And_AutoApply_Are_Distinguishable_In_Status_History()
+    {
+        // Both write Source.Email, so Source alone cannot answer "did I approve this?" — Origin is
+        // the field that can. This asserts the confirmed half; AutoApply_Applies_Status_Change_...
+        // below asserts the unattended half.
+        var applicationId = await CreateApplicationAsync("Acme Origin Confirm Test");
+
+        var signalResponse = await SendExtensionSignalAsync("recruiter@acme-origin-confirm-test.com",
+            "Acme Origin Confirm Test Recruiting", "Interview invitation",
+            "We'd like to invite you to an interview.", "thread-origin-confirm");
+        signalResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var suggestionsResponse = await _client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var suggestionId = suggestionsResponse.EnumerateArray().Single().GetProperty("id").GetGuid();
+
+        var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
+        confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var history = await db.ApplicationStatusHistories
+            .Where(h => h.ApplicationId == applicationId && h.ToStatus == ApplicationStatus.Interview)
+            .SingleAsync();
+
+        history.Origin.ShouldBe(StatusChangeOrigin.EmailSuggestionConfirmed);
+        history.Origin.ShouldNotBe(StatusChangeOrigin.EmailAutoApplied);
+        history.EmailSuggestionId.ShouldBe(suggestionId);
     }
 
     [Fact]
@@ -906,6 +943,16 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         var suggestion = await verifyDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
         suggestion.Status.ShouldBe(EmailSuggestionStatus.AutoApplied);
         suggestion.MatchType.ShouldBe(EmailApplicationMatchType.DomainMatch);
+
+        // The unattended half of the Origin distinction: same Source.Email as a confirmed
+        // suggestion, but the user never approved this one and the history has to say so.
+        var history = await verifyDb.ApplicationStatusHistories
+            .Where(h => h.ApplicationId == applicationId && h.ToStatus == ApplicationStatus.Interview)
+            .SingleAsync();
+        history.Origin.ShouldBe(StatusChangeOrigin.EmailAutoApplied);
+        history.Source.ShouldBe(Source.Email);
+        history.EmailSuggestionId.ShouldBe(suggestion.Id);
+        history.Note.ShouldBeNull();
     }
 
     // Calls IEmailForwardingService.ProcessExtensionSignalAsync directly within a given factory's

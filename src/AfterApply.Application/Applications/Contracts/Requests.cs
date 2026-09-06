@@ -40,7 +40,11 @@ public sealed record UpdateApplicationRequest(
     DateTimeOffset AppliedAt,
     string? Notes);
 
-public sealed record ChangeStatusRequest(ApplicationStatus NewStatus, string? Note, DateTimeOffset? ChangedAt, Source? Source = null);
+// Note is the user's own text and nothing else, and there is deliberately no Source/Origin
+// here: provenance is decided by the code path that handles the change, never by the caller.
+// The endpoint always records StatusChangeOrigin.Manual; internal callers (email suggestions,
+// imports) go through IApplicationService's StatusChangeContext overload instead.
+public sealed record ChangeStatusRequest(ApplicationStatus NewStatus, string? Note, DateTimeOffset? ChangedAt);
 
 public sealed record CreateEventRequest(
     ApplicationEventType Type,

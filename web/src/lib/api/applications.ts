@@ -3,6 +3,7 @@ import type {
   ApplicationEventResponse,
   ApplicationListQuery,
   ApplicationSummaryCountsResponse,
+  ApplicationStatusHistoryResponse,
   ApplicationSummaryResponse,
   ChangeStatusRequest,
   CreateApplicationRequest,
@@ -61,7 +62,8 @@ export const applicationsApi = {
       body: JSON.stringify(request),
     }),
 
-  getTimeline: (id: string) => apiFetch<ApplicationEventResponse[]>(`/api/applications/${id}/timeline`),
+  getStatusHistory: (id: string) =>
+    apiFetch<ApplicationStatusHistoryResponse[]>(`/api/applications/${id}/status-history`),
 
   addEvent: (id: string, request: CreateEventRequest) =>
     apiFetch<ApplicationEventResponse>(`/api/applications/${id}/events`, {

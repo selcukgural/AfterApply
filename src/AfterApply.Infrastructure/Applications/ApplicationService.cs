@@ -204,7 +204,17 @@ internal sealed class ApplicationService(
         return true;
     }
 
-    public async Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId, ChangeStatusRequest request, CancellationToken cancellationToken)
+    public Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId, ChangeStatusRequest request, CancellationToken cancellationToken)
+    {
+        // The HTTP surface can only ever produce a manual change. Origin is not taken from the
+        // request body on purpose — a status history that a client can label however it likes is
+        // not a history.
+        return ChangeStatusAsync(userId, applicationId, request.NewStatus,
+            request.ChangedAt ?? DateTimeOffset.UtcNow, StatusChangeContext.Manual(request.Note), cancellationToken);
+    }
+
+    public async Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId,
+        ApplicationStatus newStatus, DateTimeOffset changedAt, StatusChangeContext context, CancellationToken cancellationToken)
     {
         var application = await FindOwnedAsync(userId, applicationId, cancellationToken);
         if (application is null)
@@ -212,7 +222,7 @@ internal sealed class ApplicationService(
             return null;
         }
 
-        application.ChangeStatus(request.NewStatus, request.ChangedAt ?? DateTimeOffset.UtcNow, request.Source ?? Source.Manual, request.Note);
+        application.ChangeStatus(newStatus, changedAt, context);
 
         // application.Events/StatusHistory were never Included (FindOwnedAsync
         // loads the bare row), so EF has no prior tracking entry to confuse the new
@@ -227,6 +237,40 @@ internal sealed class ApplicationService(
         await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<ApplicationStatusHistoryResponse>?> GetStatusHistoryAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken)
+    {
+        var owned = await dbContext.Applications.AnyAsync(a => a.Id == applicationId && a.UserId == userId, cancellationToken);
+        if (!owned)
+        {
+            return null;
+        }
+
+        // Left join rather than a required relationship: EmailSuggestionId is a soft link, and a
+        // history row has to keep reading correctly after its suggestion is gone.
+        return await dbContext.ApplicationStatusHistories
+            .Where(h => h.ApplicationId == applicationId)
+            // Two rows can share a ChangedAt — an import stamps both the seed row and the status it
+            // carries with the CSV's applied date. Id cannot break that tie: Guid v7 is only ordered
+            // down to the millisecond, and within one millisecond its low bits are random. The seed
+            // row is the one with no FromStatus, and it is by definition the earliest, so in a
+            // newest-first list it sorts last among equals. Id is a final key only so the remainder
+            // is stable across queries rather than left to the plan.
+            .OrderByDescending(h => h.ChangedAt)
+            .ThenByDescending(h => h.FromStatus != null)
+            .ThenByDescending(h => h.Id)
+            .Select(h => new ApplicationStatusHistoryResponse(h.Id, h.FromStatus, h.ToStatus, h.ChangedAt,
+                h.Note, h.Origin, h.Source, h.EmailSuggestionId, h.RejectionReasonCategory, h.RejectionReasonDetail,
+                dbContext.EmailSuggestions
+                    .Where(s => s.Id == h.EmailSuggestionId)
+                    .Select(s => s.Subject)
+                    .FirstOrDefault(),
+                dbContext.EmailSuggestions
+                    .Where(s => s.Id == h.EmailSuggestionId)
+                    .Select(s => s.Snippet)
+                    .FirstOrDefault()))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<ApplicationEventResponse>?> GetTimelineAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken)

@@ -207,9 +207,8 @@ internal sealed class EmailForwardingService(
             if (suggestion.SuggestedStatus is not null && suggestion.SuggestedStatus != ApplicationStatus.Applied)
             {
                 await applicationService.ChangeStatusAsync(userId, created.Id,
-                    new ChangeStatusRequest(suggestion.SuggestedStatus.Value,
-                        AppendRejectionReason("E-postadan içe aktarıldı", suggestion),
-                        suggestion.EmailReceivedAt, Source.Email),
+                    suggestion.SuggestedStatus.Value, suggestion.EmailReceivedAt,
+                    ContextFor(suggestion, StatusChangeOrigin.EmailSuggestionConfirmed),
                     cancellationToken);
             }
 
@@ -223,7 +222,7 @@ internal sealed class EmailForwardingService(
             return ConfirmSuggestionResult.NoStatusToConfirm;
         }
 
-        var changed = await ApplyStatusChangeAsync(userId, suggestion, "E-postadan onaylandı", cancellationToken);
+        var changed = await ApplyStatusChangeAsync(userId, suggestion, StatusChangeOrigin.EmailSuggestionConfirmed, cancellationToken);
 
         if (changed is null)
         {
@@ -239,11 +238,19 @@ internal sealed class EmailForwardingService(
     /// mutates an existing Application's status from a matched suggestion. Caller must already have
     /// checked SuggestedStatus is not null.</summary>
     private Task<ApplicationDetailResponse?> ApplyStatusChangeAsync(
-        Guid userId, EmailSuggestion suggestion, string noteLabel, CancellationToken cancellationToken) =>
+        Guid userId, EmailSuggestion suggestion, StatusChangeOrigin origin, CancellationToken cancellationToken) =>
         applicationService.ChangeStatusAsync(userId, suggestion.ApplicationId!.Value,
-            new ChangeStatusRequest(suggestion.SuggestedStatus!.Value,
-                AppendRejectionReason(noteLabel, suggestion), suggestion.EmailReceivedAt, Source.Email),
-            cancellationToken);
+            suggestion.SuggestedStatus!.Value, suggestion.EmailReceivedAt,
+            ContextFor(suggestion, origin), cancellationToken);
+
+    /// <summary>Carries the suggestion's provenance onto the status history row as structured
+    /// fields. The note stays null: what used to be written here as a Turkish sentence ("E-postadan
+    /// onaylandı — Ret sebebi: lokasyon/relocation") is now Origin plus the rejection-reason
+    /// snapshot, so the UI can render it in whichever language the viewer reads — and Note goes back
+    /// to meaning "what the user typed".</summary>
+    private static StatusChangeContext ContextFor(EmailSuggestion suggestion, StatusChangeOrigin origin) =>
+        new(Source.Email, origin, Note: null, suggestion.Id,
+            suggestion.RejectionReasonCategory, suggestion.RejectionReasonDetail);
 
     /// <summary>Applies a matched suggestion's status change immediately, without waiting for user
     /// confirmation, when it qualifies for auto-apply — see EmailAutoApprovalOptions. Never called for
@@ -274,7 +281,7 @@ internal sealed class EmailForwardingService(
             return;
         }
 
-        var changed = await ApplyStatusChangeAsync(userId, suggestion, "E-postadan otomatik uygulandı", cancellationToken);
+        var changed = await ApplyStatusChangeAsync(userId, suggestion, StatusChangeOrigin.EmailAutoApplied, cancellationToken);
         if (changed is not null)
         {
             suggestion.AutoApply(DateTimeOffset.UtcNow);
@@ -429,34 +436,6 @@ internal sealed class EmailForwardingService(
 
         return uri.Host.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? uri.Host[4..] : uri.Host;
     }
-
-    // NotStated is the expected majority result (see IEmailRejectionReasonExtractionProvider) and
-    // carries no detail worth persisting into the status-change note — only append when a real
-    // reason was found.
-    private static string AppendRejectionReason(string baseNote, EmailSuggestion suggestion)
-    {
-        if (suggestion.RejectionReasonCategory is null or RejectionReasonCategory.NotStated)
-        {
-            return baseNote;
-        }
-
-        var label = RejectionReasonLabel(suggestion.RejectionReasonCategory.Value);
-        return suggestion.RejectionReasonDetail is null
-            ? $"{baseNote} — Ret sebebi: {label}"
-            : $"{baseNote} — Ret sebebi: {label} ({suggestion.RejectionReasonDetail})";
-    }
-
-    private static string RejectionReasonLabel(RejectionReasonCategory category) => category switch
-    {
-        RejectionReasonCategory.LanguageRequirement => "dil yetkinliği",
-        RejectionReasonCategory.LocationOrRelocation => "lokasyon/relocation",
-        RejectionReasonCategory.ExperienceLevelMismatch => "deneyim seviyesi",
-        RejectionReasonCategory.SalaryExpectationMismatch => "maaş beklentisi",
-        RejectionReasonCategory.SkillOrTechStackGap => "teknik yetkinlik eksikliği",
-        RejectionReasonCategory.PositionCancelledOrFilled => "pozisyon iptal/doldu",
-        RejectionReasonCategory.CultureOrTeamFit => "takım/kültür uyumu",
-        _ => "diğer"
-    };
 
     private static string? ExtractDomain(string email)
     {

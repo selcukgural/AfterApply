@@ -571,7 +571,7 @@ internal sealed class AuthService(
 
         var history = await dbContext.ApplicationStatusHistories
             .Where(h => applicationIds.Contains(h.ApplicationId))
-            .Select(h => new { h.ApplicationId, h.FromStatus, h.ToStatus, h.ChangedAt, h.Note })
+            .Select(h => new { h.ApplicationId, h.FromStatus, h.ToStatus, h.ChangedAt, h.Note, h.Origin })
             .ToListAsync(cancellationToken);
         var historyByApplication = history.ToLookup(h => h.ApplicationId);
 
@@ -582,7 +582,7 @@ internal sealed class AuthService(
                     .Select(e => new ApplicationEventExportItem(e.Type, e.OccurredAt, e.Source, e.Metadata))
                     .ToList(),
                 historyByApplication[a.Id]
-                    .Select(h => new StatusHistoryExportItem(h.FromStatus, h.ToStatus, h.ChangedAt, h.Note))
+                    .Select(h => new StatusHistoryExportItem(h.FromStatus, h.ToStatus, h.ChangedAt, h.Note, h.Origin))
                     .ToList()))
             .ToList();
 

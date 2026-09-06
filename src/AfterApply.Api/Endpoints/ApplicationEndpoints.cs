@@ -93,6 +93,16 @@ public static class ApplicationEndpoints
             .Produces<ApplicationDetailResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapGet("/{id:guid}/status-history", async (Guid id, ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
+        {
+            var history = await service.GetStatusHistoryAsync(user.GetUserId(), id, cancellationToken);
+            return history is not null ? Results.Ok(history) : Results.NotFound();
+        })
+            .WithSummary("Get an application's status change history")
+            .WithDescription("Every status transition, newest first, with the note the user wrote and how the change was applied.")
+            .Produces<IReadOnlyCollection<ApplicationStatusHistoryResponse>>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         group.MapGet("/{id:guid}/timeline", async (Guid id, ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
         {
             var timeline = await service.GetTimelineAsync(user.GetUserId(), id, cancellationToken);

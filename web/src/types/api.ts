@@ -93,6 +93,29 @@ export interface ApplicationDetailResponse {
   jobDescriptionHtml: string | null;
 }
 
+export type StatusChangeOrigin =
+  | "Manual"
+  | "EmailSuggestionConfirmed"
+  | "EmailAutoApplied"
+  | "Import"
+  | "Extension"
+  | "System";
+
+export interface ApplicationStatusHistoryResponse {
+  id: string;
+  fromStatus: ApplicationStatus | null;
+  toStatus: ApplicationStatus;
+  changedAt: string;
+  note: string | null;
+  origin: StatusChangeOrigin;
+  source: Source;
+  emailSuggestionId: string | null;
+  rejectionReasonCategory: RejectionReasonCategory | null;
+  rejectionReasonDetail: string | null;
+  emailSubject: string | null;
+  emailSnippet: string | null;
+}
+
 export interface ApplicationEventResponse {
   id: string;
   type: ApplicationEventType;
