@@ -3524,6 +3524,91 @@ container daha az.
 
 ---
 
+## Private repo geçişi araştırıldı — şimdilik public kalınıyor (2026-09-06)
+
+**Karar:** repo public kalıyor. Bu madde bir *hazırlık* kaydı: private'a geçiş kullanıcı tarafından
+gündeme getirildi (hesap GitHub Pro, $4/ay), neyin kırılacağı ölçüldü, sonra "şimdilik public devam"
+denildi. Ölçümler burada duruyor ki geçiş gerçekten yapıldığında yeniden araştırma gerekmesin.
+
+**Gerçekten kırılan iki şey var, gerisi etkilenmiyor.** Tek tek doğrulandı: WIF
+`assertion.repository=='owner/repo'` koşuluyla çalışıyor, yani repo *adına* bağlı, görünürlüğe
+değil; imajlar GHCR'de değil Google Artifact Registry'de; kodda/dokümanda/eklenti manifestinde tek
+bir `github.com/selcukgural`, `raw.githubusercontent` veya shields.io badge referansı yok; Pages
+kullanılmıyor, release yok, fork/star/watcher sayısı sıfır; Dependabot alert'leri private repoda da
+ücretsiz; secret scanning zaten kapalıydı, yani kaybedilen bir şey değil.
+
+**1. CodeQL — geçiş gününde kapatılması gerekecek.** Code scanning, Free/Pro planlarında yalnızca
+public repolarda ücretsiz; private için GitHub Team/Enterprise + GitHub Code Security lisansı
+gerekiyor. `codeql.yml`'ın kendi başlık yorumu bunu zaten söylüyordu. Private'da her run tamamlanıp
+`analyze` adımında patlar — yani metered dakika yakıp kırmızı X üretir. Hazır reçete, o gün tek
+satır olarak uygulanacak: `analyze` job'ına
+
+```yaml
+if: github.event.repository.visibility == 'public'
+```
+
+Bu guard yazılıp test edildi (actionlint temiz), sonra public kalma kararıyla geri alındı. Job hiç
+başlamaz — runner açılmaz, dakika yanmaz — ve repo tekrar public olursa tarama kendiliğinden geri
+gelir. `github.event.repository` push/pull_request/schedule'ın üçünde de mevcut (schedule payload'ına
+Eylül 2022'de eklendi); ifade boş kalsa bile job atlanır, yani yanlış yöne düşmesi mümkün değil.
+CodeQL required check *değil* (main'in zorunlu check'leri `tests / backend|frontend|dependency-audit`
+ve `api-contract / contract-check`), dolayısıyla merge veya deploy bloklanmıyor; kaybedilecek şey
+statik analizin kendisi. Geçişten önce o an açık olan code scanning alert'lerine bakılmalı, private'a
+geçince erişilemez oluyorlar (bu araştırma sırasında 1 açık alert vardı).
+
+**2. Actions dakikaları — asıl kısıt bu.** Public repoda GitHub-hosted runner sınırsız ücretsiz;
+private'da Pro ayda 3.000 dakika veriyor. Son 8 günün gerçek verisi ölçüldü (246 run, job
+timestamp'lerinden dakikaya yuvarlanarak):
+
+| | ölçüm |
+|---|---|
+| main'e push (deploy eden) | ~15 dk (plan+tests+contract-check+deploy+notify) |
+| main'e push (docs-only, plan atlıyor) | ~1 dk |
+| CodeQL (push başına) | ~4.7 dk → private'da 0 |
+| Slack PR notify | ~1.5 dk |
+| tempo | 8 günde 53 push-deploy ≈ günde 6.6, bunun ~%75'i gerçekten deploy ediyor |
+
+Bugünkü tempoyla private'a geçiş: CodeQL dahil ~3.150 dk/ay, CodeQL kapalıyken **~2.670 dk/ay** —
+yani 3.000'lik kotanın **%89'u, sıfır pay ile**. Kota bittiğinde ve hesapta geçerli ödeme yöntemi
+yoksa Actions **durur**: PR gate'leri de main'e push'taki otomatik Cloud Run deploy'u da çalışmaz.
+Ödeme yöntemi varsa Linux 2-core dakikası $0.006, yani aşım ucuz — ama sessiz durma riski ucuz değil.
+
+**Ölçümün asıl bulgusu — merge frekansı tek gerçek kaldıraç.** Maliyet neredeyse tamamen "main'e kaç
+kez push edildiği" ile orantılı, çünkü her push tam test paketini + contract-check'i + deploy'u
+tetikliyor. Feature-by-feature yerine birkaç değişikliği biriktirip günde 2-3 kez main'e indirmek,
+aynı işi yaparken faturayı üçte bire düşürüyor:
+
+| günlük deploy eden push | ~dk/gün | ~dk/ay | kotanın |
+|---|---|---|---|
+| 5 (bugünkü tempo) | 89 | 2.670 | %89 |
+| 3 | 51 | 1.530 | %51 |
+| 2 | 35 | 1.035 | %35 |
+
+Ters yönde bir bulgu: PR'lı akış dakika olarak **daha pahalı**, çünkü testler bir kez PR'da (`ci.yml`),
+bir kez de merge'de deploy gate'i olarak koşuyor. Şu anki doğrudan-main akışı push başına en ucuzu.
+Batch'lemenin en verimli şekli: değişiklikleri bir feature branch'te biriktir, tek PR aç, az sayıda
+push'la CI'yi koştur, bir kez merge et.
+
+**Şimdi uygulanan tek kod değişikliği — `ci.yml`'a `concurrency` + `cancel-in-progress`.** Bir PR'a
+arka arkaya push atınca eski run iptal oluyor. Bu, private'a geçilse de geçilmese de doğru: iptal
+edilen run zaten kimsenin bakmayacağı bir cevabı hesaplıyordu (required check'ler head commit'e göre
+değerlendiriliyor). Private'a geçilirse aynı zamanda en büyük tek tasarruf kalemi.
+**`deploy.yml`'a bilerek eklenmedi:** iptal `gcloud run deploy`'un ortasına denk gelebilir. Teknik
+olarak `plan` job'ı deploy'u bu push'un commit aralığına değil `deploy/api-latest`/`deploy/web-latest`
+tag'ine göre diff'lediği için yarım kalan bir deploy bir sonraki push'ta zaten toparlanır — yani
+iptal *tasarım gereği* güvenli; yine de yarım uygulanmış bir revizyon riskine karşı bu kaldıraç
+kullanılmıyor.
+
+**Test:** saf CI konfigürasyonu, test edilebilir bir davranış değişikliği yok — testing policy'nin
+"pure config" istisnası.
+
+**Geçiş günü için checklist:** açık CodeQL alert'lerine bak → `codeql.yml`'a yukarıdaki guard'ı koy →
+GitHub Billing'de ödeme yöntemi/spending limit belirle → repoyu private yap → Settings → Security'de
+Dependency graph + Dependabot alerts'in açık kaldığını doğrula → sonraki main push'ta deploy'un yeşil
+geçtiğini teyit et.
+
+---
+
 
 # Spec dokümanındaki küçük tutarsızlıklar (bilgi amaçlı, aksiyon gerektirmiyor)
 

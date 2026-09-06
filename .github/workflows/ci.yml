@@ -7,6 +7,17 @@ name: CI
 on:
   pull_request:
 
+# One CI run per pull request at a time: pushing a new commit cancels the run still chewing on the
+# commit it superseded. Nothing reads that older result — the required checks are evaluated against
+# the head commit — so it was already waiting on a queue slot for an answer no one would look at.
+# It also happens to be the single biggest saving if this repository ever goes private, where
+# runner minutes stop being free (GitHub Pro: 3,000/month) — see DECISIONS.md 2026-09-06 for the
+# measurements. Deliberately NOT applied to deploy.yml: a cancel there could land in the middle of
+# a `gcloud run deploy`.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     uses: ./.github/workflows/tests.yml
