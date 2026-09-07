@@ -1,5 +1,6 @@
 using AfterApply.Application.Metrics;
 using AfterApply.Domain.Applications;
+using AfterApply.Domain.Metrics;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -94,7 +95,53 @@ internal sealed class ProductMetricsService(AppDbContext dbContext, ILogger<Prod
             snapshot.TotalApplications, snapshot.UniqueCompanies, snapshot.UniqueJobs,
             snapshot.ApplicationsWithOutcome, snapshot.ApplicationsWithResponseTime);
 
+        await StoreAsync(snapshot, cancellationToken);
+
         return snapshot;
+    }
+
+    public async Task<IReadOnlyList<ProductMetricsDayResponse>> GetRecentAsync(int days, CancellationToken cancellationToken)
+    {
+        return await dbContext.ProductMetricsDailySnapshots
+            .AsNoTracking()
+            .OrderByDescending(s => s.SnapshotDate)
+            .Take(days)
+            .Select(s => new ProductMetricsDayResponse(
+                s.SnapshotDate, s.TotalUsers, s.ActivatedUsers, s.ActivationRate, s.WeeklyActiveUsers,
+                s.ApplicationsTrackedLast30Days, s.StatusUpdatesLast30Days,
+                s.D7RetentionRate, s.D30RetentionRate, s.D90RetentionRate,
+                s.TotalApplications, s.UniqueCompanies, s.UniqueJobs,
+                s.ApplicationsWithOutcome, s.ApplicationsWithResponseTime, s.ComputedAt))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// One row per UTC day, overwritten rather than appended. The job is scheduled daily, but a
+    /// redeploy that re-registers recurring jobs or a hand-triggered run would otherwise leave two
+    /// readings for the same day and quietly break every "compared to last week" the table exists
+    /// for. The unique index on SnapshotDate backs this up at the database level.
+    /// </summary>
+    private async Task StoreAsync(ProductMetricsSnapshot snapshot, CancellationToken cancellationToken)
+    {
+        var snapshotDate = DateOnly.FromDateTime(snapshot.ComputedAt.UtcDateTime);
+
+        var row = await dbContext.ProductMetricsDailySnapshots
+            .FirstOrDefaultAsync(s => s.SnapshotDate == snapshotDate, cancellationToken);
+
+        if (row is null)
+        {
+            row = ProductMetricsDailySnapshot.Create(snapshotDate);
+            dbContext.ProductMetricsDailySnapshots.Add(row);
+        }
+
+        row.Record(
+            snapshot.TotalUsers, snapshot.ActivatedUsers, snapshot.ActivationRate, snapshot.WeeklyActiveUsers,
+            snapshot.ApplicationsTrackedLast30Days, snapshot.StatusUpdatesLast30Days,
+            snapshot.D7RetentionRate, snapshot.D30RetentionRate, snapshot.D90RetentionRate,
+            snapshot.TotalApplications, snapshot.UniqueCompanies, snapshot.UniqueJobs,
+            snapshot.ApplicationsWithOutcome, snapshot.ApplicationsWithResponseTime, snapshot.ComputedAt);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private static double Rate(int count, int total) => total == 0 ? 0 : Math.Round(100.0 * count / total, 1);

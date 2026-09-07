@@ -8,6 +8,7 @@ using AfterApply.Application.Imports;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
+using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
 using Hangfire;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -148,6 +149,7 @@ app.MapPersonalAccessTokenEndpoints();
 app.MapCompanyIntelligenceEndpoints();
 app.MapCompanyEndpoints();
 app.MapFeedbackEndpoints();
+app.MapAdminEndpoints();
 app.MapHub<ImportProgressHub>("/hubs/import-progress");
 
 if (!DependencyInjection.IsOpenApiDocumentGeneration)
@@ -155,6 +157,7 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
     using var scope = app.Services.CreateScope();
     var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
     var notificationOptions = scope.ServiceProvider.GetRequiredService<IOptions<NotificationOptions>>().Value;
+    var metricsOptions = scope.ServiceProvider.GetRequiredService<IOptions<ProductMetricsOptions>>().Value;
 
     recurringJobManager.AddOrUpdate<IReminderService>(
         "reminder-scan",
@@ -164,7 +167,7 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
     recurringJobManager.AddOrUpdate<IProductMetricsService>(
         "product-metrics-snapshot",
         service => service.ComputeSnapshotAsync(CancellationToken.None),
-        Cron.Daily());
+        metricsOptions.SnapshotCronExpression);
 }
 
 app.Run();

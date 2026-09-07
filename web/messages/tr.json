@@ -431,7 +431,11 @@
       "hrLinkedIn": "İK LinkedIn profili",
       "hrNamed": "İK kontağı: {name}",
       "hrEmailFromIncomingEmail": "Bu adres, bu başvuruyla eşleşen bir e-postanın göndereninden alındı. Yanlışsa düzenleyip değiştirebilirsin.",
-      "cvDocument": "Kullanılan CV"
+      "cvDocument": "Kullanılan CV",
+      "companyKariyerNet": "kariyer.net",
+      "companyIndustry": "Sektör",
+      "companyCountry": "Ülke",
+      "timeline": "Süreç"
     },
     "statusChange": {
       "changeStatus": "Durumu Değiştir",
@@ -445,6 +449,16 @@
       "rejectionReason": "Ret sebebi:",
       "showEmail": "E-postayı gör",
       "hideEmail": "E-postayı gizle"
+    },
+    "addEvent": {
+      "addEvent": "Olay ekle",
+      "type": "Olay türü",
+      "occurredAt": "Ne zaman oldu",
+      "occurredAtHint": "Tarihi boş bırakırsan şimdiki zaman kaydedilir.",
+      "notePlaceholder": "Kısa bir not (isteğe bağlı)",
+      "confirm": "Kaydet",
+      "cancel": "Vazgeç",
+      "saving": "Kaydediliyor…"
     }
   },
   "settings": {
@@ -1537,5 +1551,43 @@
     "errors": {
       "generic": "Geri bildirim gönderilemedi. Lütfen tekrar dene."
     }
+  },
+  "adminMetrics": {
+    "title": "Ürün metrikleri",
+    "subtitle": "Günlük anlık görüntülerden okunuyor. Toplu sayılar — hiçbir kullanıcıya ait veri içermez.",
+    "loading": "Yükleniyor…",
+    "forbiddenTitle": "Bu sayfaya erişiminiz yok",
+    "forbiddenBody": "Ürün metrikleri yalnızca sunucu tarafındaki yönetici listesinde bulunan hesaplara açıktır.",
+    "emptyTitle": "Henüz anlık görüntü yok",
+    "emptyBody": "Günlük iş ilk kez çalıştığında bu sayfa dolar.",
+    "activationRate": "Aktivasyon oranı",
+    "activatedUsers": "Aktive olan kullanıcı",
+    "weeklyActiveUsers": "Haftalık aktif kullanıcı",
+    "d30Retention": "30. gün tutunma",
+    "totalApplications": "Toplam başvuru",
+    "applicationsTracked30d": "Son 30 günde eklenen",
+    "statusUpdates30d": "Son 30 günde durum değişimi",
+    "uniqueCompanies": "Tekil şirket",
+    "historyTitle": "Son 30 gün",
+    "colDay": "Gün",
+    "colUsers": "Kullanıcı",
+    "colActivation": "Aktivasyon",
+    "colWau": "HAK",
+    "colD7": "7. gün",
+    "colD30": "30. gün",
+    "colD90": "90. gün",
+    "colApplications": "Başvuru",
+    "computedAt": "Son güncelleme: {at}"
+  },
+  "applicationEventType": {
+    "RecruiterContacted": "İşe alım uzmanı iletişime geçti",
+    "ScreeningStarted": "Ön değerlendirme başladı",
+    "InterviewScheduled": "Mülakat planlandı",
+    "InterviewCompleted": "Mülakat tamamlandı",
+    "OfferReceived": "Teklif alındı",
+    "FollowUpSent": "Takip mesajı gönderildi",
+    "ApplicationCreated": "Başvuru oluşturuldu",
+    "ApplicationSubmitted": "Başvuru gönderildi",
+    "StatusChanged": "Durum değişti"
   }
 }

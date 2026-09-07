@@ -127,6 +127,9 @@
   <data name="VALIDATION_APPLIED_AT_FUTURE" xml:space="preserve">
     <value>AppliedAt cannot be in the future.</value>
   </data>
+  <data name="VALIDATION_EVENT_METADATA_MUST_BE_JSON" xml:space="preserve">
+    <value>Event metadata must be valid JSON.</value>
+  </data>
   <data name="VALIDATION_STATUS_CHANGED_EVENT_NOT_ALLOWED" xml:space="preserve">
     <value>StatusChanged events can only be created via the status-change endpoint.</value>
   </data>

@@ -354,12 +354,12 @@ internal sealed class ApplicationService(
 
     private async Task<ApplicationDetailResponse> ToDetailAsync(DomainApplication application, CancellationToken cancellationToken)
     {
-        // One projection for all three company fields — Website/LinkedInUrl are read here rather
-        // than copied onto the Application because CompanyEnrichmentService fills them in the
-        // background, after this row already exists.
+        // One projection for every company field the detail view shows — all of them are read here
+        // rather than copied onto the Application because CompanyEnrichmentService fills Website,
+        // Industry and Country in the background, after this row already exists.
         var company = await dbContext.Companies
             .Where(c => c.Id == application.CompanyId)
-            .Select(c => new { c.Name, c.Website, c.LinkedInUrl })
+            .Select(c => new { c.Name, c.Website, c.LinkedInUrl, c.KariyerNetUrl, c.Industry, c.Country })
             .FirstAsync(cancellationToken);
 
         var jobDescriptionHtml = application.JobId is null
@@ -385,6 +385,7 @@ internal sealed class ApplicationService(
             application.AppliedAt, application.Status, application.Source, application.Notes,
             application.CreatedAt, application.UpdatedAt, jobDescriptionHtml,
             application.HrName, application.HrEmail, application.HrLinkedInUrl, application.HrEmailSource,
-            application.CvDocumentId, cvDocumentFileName);
+            application.CvDocumentId, cvDocumentFileName,
+            company.KariyerNetUrl, company.Industry, company.Country);
     }
 }

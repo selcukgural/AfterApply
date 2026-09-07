@@ -6,6 +6,7 @@ using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
 using AfterApply.Domain.Mailing;
+using AfterApply.Domain.Metrics;
 using AfterApply.Domain.Notifications;
 using AfterApply.Domain.TrackedJobs;
 using AfterApply.Infrastructure.Identity;
@@ -52,6 +53,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<CvDocument> CvDocuments => Set<CvDocument>();
 
     public DbSet<FeedbackEntry> FeedbackEntries => Set<FeedbackEntry>();
+
+    public DbSet<ProductMetricsDailySnapshot> ProductMetricsDailySnapshots => Set<ProductMetricsDailySnapshot>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

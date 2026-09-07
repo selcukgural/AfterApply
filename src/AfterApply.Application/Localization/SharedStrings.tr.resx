@@ -127,6 +127,9 @@
   <data name="VALIDATION_APPLIED_AT_FUTURE" xml:space="preserve">
     <value>Başvuru tarihi gelecekte olamaz.</value>
   </data>
+  <data name="VALIDATION_EVENT_METADATA_MUST_BE_JSON" xml:space="preserve">
+    <value>Olay üst verisi geçerli bir JSON olmalıdır.</value>
+  </data>
   <data name="VALIDATION_STATUS_CHANGED_EVENT_NOT_ALLOWED" xml:space="preserve">
     <value>Durum değişikliği olayları yalnızca durum değiştirme uç noktası üzerinden oluşturulabilir.</value>
   </data>

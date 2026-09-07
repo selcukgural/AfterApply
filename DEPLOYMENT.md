@@ -249,6 +249,30 @@ for s in afterapply-postgres-connection \
 done
 ```
 
+### 3a. Granting admin access
+
+`/api/admin/metrics` and the `/admin/metrics` page are gated on a single column, `Users.IsAdmin`.
+There is deliberately **no secret and no env var** for this: config is read when the process
+starts, so changing it would mean waiting for a new Cloud Run instance or forcing one with a
+redeploy. Read from the database it takes effect on the very next request.
+
+Connect with the Cloud SQL Auth Proxy (see §9) and grant it by hand:
+
+```sql
+-- grant
+UPDATE "Users" SET "IsAdmin" = true  WHERE "Email" = 'you@example.com';
+-- revoke
+UPDATE "Users" SET "IsAdmin" = false WHERE "Email" = 'whoever@example.com';
+-- who has it right now
+SELECT "Email" FROM "Users" WHERE "IsAdmin";
+```
+
+The account has to exist first — sign up in the app, then run the UPDATE. Everyone else gets `403`.
+Nobody is an admin until the first UPDATE runs, which is the right state to deploy in.
+
+Note there is no audit trail of who granted it or when. That is an accepted trade while admin means
+"can read aggregate counts"; revisit it if the surface ever grows past that.
+
 ### 4. GitHub repo secrets and first deploy
 
 In GitHub → repo Settings → Secrets and variables → Actions, add:

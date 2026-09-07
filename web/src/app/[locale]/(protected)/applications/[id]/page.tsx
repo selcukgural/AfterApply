@@ -5,10 +5,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { applicationsApi } from "@/lib/api/applications";
-import type { ApplicationStatus } from "@/types/api";
+import type { ApplicationEventType, ApplicationStatus } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusChangeSelect } from "@/components/applications/StatusChangeSelect";
-import { StatusHistoryList } from "@/components/applications/StatusHistoryList";
+import { ApplicationTimeline } from "@/components/applications/ApplicationTimeline";
+import { AddEventForm } from "@/components/applications/AddEventForm";
+import { writeEventNote } from "@/lib/applications/timeline";
 import { JobDescriptionCard } from "@/components/applications/JobDescriptionCard";
 import { Button } from "@/components/ui/Button";
 import { ExternalLinkPill } from "@/components/ui/ExternalLinkPill";
@@ -31,6 +33,26 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   const { data: statusHistory } = useQuery({
     queryKey: ["applications", "statusHistory", id],
     queryFn: () => applicationsApi.getStatusHistory(id),
+  });
+
+  const { data: events } = useQuery({
+    queryKey: ["applications", "timeline", id],
+    queryFn: () => applicationsApi.getTimeline(id),
+  });
+
+  const addEventMutation = useMutation({
+    mutationFn: (variables: { type: ApplicationEventType; occurredAt: string | null; note: string | null }) =>
+      applicationsApi.addEvent(id, {
+        type: variables.type,
+        occurredAt: variables.occurredAt,
+        // Left to the server, which stamps a manually-added event as Source.Manual.
+        source: null,
+        // jsonb column — a bare string is rejected by Postgres. See writeEventNote.
+        metadata: writeEventNote(variables.note),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
   });
 
   const changeStatusMutation = useMutation({
@@ -59,6 +81,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   const hasContactLinks =
     safeExternalUrl(application.companyWebsite) !== null ||
     safeExternalUrl(application.companyLinkedInUrl) !== null ||
+    safeExternalUrl(application.companyKariyerNetUrl) !== null ||
     safeExternalUrl(application.hrLinkedInUrl) !== null ||
     safeMailtoUrl(application.hrEmail) !== null ||
     Boolean(application.hrName);
@@ -114,6 +137,18 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               <dt className="text-gray-500 dark:text-gray-400">{t("createdAt")}</dt>
               <dd className="text-gray-900 dark:text-gray-100">{new Date(application.createdAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}</dd>
             </div>
+            {application.companyIndustry && (
+              <div className="min-w-0">
+                <dt className="text-gray-500 dark:text-gray-400">{t("companyIndustry")}</dt>
+                <dd className="truncate text-gray-900 dark:text-gray-100">{application.companyIndustry}</dd>
+              </div>
+            )}
+            {application.companyCountry && (
+              <div className="min-w-0">
+                <dt className="text-gray-500 dark:text-gray-400">{t("companyCountry")}</dt>
+                <dd className="truncate text-gray-900 dark:text-gray-100">{application.companyCountry}</dd>
+              </div>
+            )}
             {application.cvDocumentFileName && (
               <div className="min-w-0">
                 <dt className="text-gray-500 dark:text-gray-400">{t("cvDocument")}</dt>
@@ -175,6 +210,12 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
                 title={t("companyLinkedIn")}
               />
               <ExternalLinkPill
+                href={application.companyKariyerNetUrl}
+                label={t("companyKariyerNet")}
+                icon="globe"
+                title={t("companyKariyerNet")}
+              />
+              <ExternalLinkPill
                 href={application.hrLinkedInUrl}
                 // The contact's name reads far better on the pill than the profile slug, but the
                 // name is optional on its own, so fall back to a generic label.
@@ -202,8 +243,18 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         )}
 
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-          <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("statusHistory")}</h2>
-          <StatusHistoryList history={statusHistory ?? []} />
+          <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("timeline")}</h2>
+          {/* Above the list, not beside the heading: collapsed it is one button, expanded it is a
+              three-field form, and only a full-width slot holds both without reflowing the card. */}
+          <div className="mb-4">
+            <AddEventForm
+              isSubmitting={addEventMutation.isPending}
+              onAddEvent={async (type, occurredAt, note) => {
+                await addEventMutation.mutateAsync({ type, occurredAt, note });
+              }}
+            />
+          </div>
+          <ApplicationTimeline history={statusHistory ?? []} events={events ?? []} />
         </div>
       </div>
 
