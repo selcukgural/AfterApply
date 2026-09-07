@@ -23,6 +23,18 @@ export default async function PrivacyPage() {
           <p className="mt-2">{t("dataCollection.outro")}</p>
         </section>
 
+        <section id="cv-storage">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("cvStorage.title")}</h2>
+          <p>{t("cvStorage.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("cvStorage.where")}</li>
+            <li>{t("cvStorage.access")}</li>
+            <li>{t("cvStorage.noTransfer")}</li>
+            <li>{t("cvStorage.deletion")}</li>
+          </ul>
+          <p className="mt-2">{t("cvStorage.sensitiveDataNote")}</p>
+        </section>
+
         <section id="google-sign-in">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("googleSignIn.title")}</h2>
           <p>{t("googleSignIn.intro")}</p>

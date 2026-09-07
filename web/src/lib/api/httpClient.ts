@@ -139,25 +139,35 @@ async function refreshAccessToken(): Promise<AuthResponse> {
   }
 }
 
-export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  let response = await performFetch(path, options);
+// Everything apiFetch does before it decides what the body is: the request, the single
+// refresh-and-retry on a 401, and the forced sign-out when that refresh fails. Split out so a
+// caller that wants bytes rather than JSON (apiFetchBlob, for CV downloads and previews) gets the
+// same session handling instead of a second, subtly different copy of it.
+async function apiFetchResponse(path: string, options: RequestInit): Promise<Response> {
+  const response = await performFetch(path, options);
 
-  if (response.status === 401 && !isNoAuthEndpoint(path)) {
-    try {
-      await refreshAccessToken();
-      response = await performFetch(path, options);
-    } catch {
-      authStore.clear();
-      if (typeof window !== "undefined") {
-        // Hard navigation is intentional here (not a React event handler, no
-        // router available) — it also guarantees all in-memory/query-cache
-        // state is wiped on a forced session expiry, not just the URL.
-        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-        window.location.href = `/${getCurrentLocale()}/login`;
-      }
-      throw new ApiError(401, getFallbackMessage("sessionExpired"));
-    }
+  if (response.status !== 401 || isNoAuthEndpoint(path)) {
+    return response;
   }
+
+  try {
+    await refreshAccessToken();
+    return await performFetch(path, options);
+  } catch {
+    authStore.clear();
+    if (typeof window !== "undefined") {
+      // Hard navigation is intentional here (not a React event handler, no
+      // router available) — it also guarantees all in-memory/query-cache
+      // state is wiped on a forced session expiry, not just the URL.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.href = `/${getCurrentLocale()}/login`;
+    }
+    throw new ApiError(401, getFallbackMessage("sessionExpired"));
+  }
+}
+
+export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await apiFetchResponse(path, options);
 
   if (!response.ok) {
     const body = await response.json().catch(() => undefined);
@@ -174,4 +184,24 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   }
 
   return (await response.json()) as T;
+}
+
+/**
+ * The same request path as apiFetch, but for endpoints whose body is a file rather than JSON.
+ * An error response still carries ProblemDetails, so failures are parsed the way apiFetch parses
+ * them and surface the server's already-localized message.
+ */
+export async function apiFetchBlob(path: string, options: RequestInit = {}): Promise<Blob> {
+  const response = await apiFetchResponse(path, options);
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => undefined);
+    const message =
+      (body && typeof body === "object" && "detail" in body && String(body.detail)) ||
+      extractValidationErrorsMessage(body) ||
+      getFallbackMessage("generic");
+    throw new ApiError(response.status, message, body);
+  }
+
+  return await response.blob();
 }

@@ -1,5 +1,6 @@
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
+using AfterApply.Domain.Documents;
 using AfterApply.Domain.Notifications;
 
 namespace AfterApply.Application.Identity.Contracts;
@@ -40,9 +41,22 @@ public sealed record ReminderExportItem(
     DateTimeOffset CreatedAt,
     DateTimeOffset? DismissedAt);
 
+/// <summary>Metadata only. The CV files themselves are not inlined into the export — they are
+/// already downloadable one by one from the CV page, and base64-ing up to ten documents into a
+/// JSON body would make the export unusable for the thing it is for (reading what is held about
+/// you). This row is what tells the reader which files exist.</summary>
+public sealed record CvDocumentExportItem(
+    Guid Id,
+    string FileName,
+    CvFileFormat Format,
+    long SizeBytes,
+    bool IsDefault,
+    DateTimeOffset UploadedAt);
+
 public sealed record AccountExportResponse(
     UserProfileResponse Profile,
     IReadOnlyList<ApplicationExportItem> Applications,
     IReadOnlyList<ImportBatchExportItem> ImportBatches,
     IReadOnlyList<ReminderExportItem> Reminders,
-    DateTimeOffset ExportedAt);
+    DateTimeOffset ExportedAt,
+    IReadOnlyList<CvDocumentExportItem>? CvDocuments = null);

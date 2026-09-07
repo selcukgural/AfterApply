@@ -259,6 +259,14 @@ In GitHub → repo Settings → Secrets and variables → Actions, add:
 - `GCP_SERVICE_ACCOUNT` — `afterapply-deployer@${PROJECT_ID}.iam.gserviceaccount.com`
 - `SENTRY_DSN_WEB` — the frontend Sentry DSN (not sensitive, it's meant
   to ship in the browser bundle, but stored as a secret for consistency)
+- `GCP_CV_BUCKET` — the CV bucket's name (`afterapply-cvs`; §11 creates
+  it). Not sensitive either, and for the same kind of reason: the bucket
+  is protected by `public_access_prevention=enforced` plus IAM, not by
+  its name being unguessable — stored as a secret to match
+  `GCP_PROJECT_ID`/`GCP_REGION` rather than because it needs to be.
+  Note this is a *GitHub Actions* secret; nothing about the bucket goes
+  into Secret Manager, because there is no credential to put there (see
+  §11).
 - `GCP_API_URL` — the `afterapply-api` Cloud Run service's URL. Doesn't
   exist yet at this point (that's exactly why step 4's bootstrap dance
   below is two runs, not one) — added after the first successful
@@ -503,3 +511,113 @@ gcloud redis instances delete afterapply-redis --region="$REGION"
 gcloud secrets delete afterapply-redis-connection
 gcloud services disable redis.googleapis.com
 ```
+
+### 11. Cloud Storage bucket for CV uploads (Sprint 16 — done 2026-09-07)
+
+Uploaded CVs are the first thing this product stores outside Postgres.
+The bucket is a one-time setup, like Cloud SQL in §2: `deploy.yml` only
+points the service at it (`Storage__Provider` / `Storage__BucketName`),
+it never creates it.
+
+Two settings below are the ones that actually matter, and both are easy
+to leave at a default that is wrong here:
+
+- **`--public-access-prevention=enforced`** with uniform bucket-level
+  access. Nothing about this design ever wants a publicly readable
+  object: every download is proxied through the API, which authenticates
+  the caller and checks that the row belongs to them. Enforced
+  prevention means a later `gsutil iam ch allUsers:objectViewer` typed
+  by mistake is refused outright rather than quietly publishing every
+  CV in the bucket.
+- **`--soft-delete-duration=0`** — this is the one to get right. Cloud
+  Storage enables soft delete on new buckets by default with a 7-day
+  retention window, so a "deleted" object is recoverable for a week. For
+  ordinary data that is a safety net; for personal data a user asked us
+  to erase, it means "delete" did not delete, which is exactly the
+  promise `/privacy` and the help centre make. Turning it off is what
+  makes the deletion real.
+
+```bash
+PROJECT_ID="$(gcloud config get-value project)"
+REGION=europe-west1        # same region as Cloud SQL and both Cloud Run services
+
+# The bucket. Regional, in the EU, so CV files never leave the region the
+# rest of the personal data already lives in (PRIVACY_CHECKLIST.md).
+gcloud storage buckets create "gs://afterapply-cvs" \
+  --project="$PROJECT_ID" \
+  --location="$REGION" \
+  --default-storage-class=STANDARD \
+  --uniform-bucket-level-access \
+  --public-access-prevention
+
+# Deletion has to mean deletion — see above. Verify rather than assume:
+# an empty `softDeletePolicy` in the output is what "off" looks like.
+gcloud storage buckets update "gs://afterapply-cvs" --clear-soft-delete
+gcloud storage buckets describe "gs://afterapply-cvs" \
+  --format='yaml(name,location,softDeletePolicy,iamConfiguration)'
+
+# Object access for the runtime service account only — scoped to this one
+# bucket, not granted project-wide. objectAdmin (not objectCreator or
+# objectViewer) because the API does all three: write on upload, read on
+# download, delete on removal and on account deletion.
+RUNTIME_SA="$(gcloud iam service-accounts list \
+  --filter='email~compute@developer' --format='value(email)')"
+gcloud storage buckets add-iam-policy-binding "gs://afterapply-cvs" \
+  --member="serviceAccount:${RUNTIME_SA}" \
+  --role="roles/storage.objectAdmin"
+```
+
+**Already run, 2026-09-07** against project `ekariyerim`. Verified after the fact:
+`public_access_prevention: enforced`, `uniform_bucket_level_access: true`, an empty
+`soft_delete_policy` (i.e. off), `EUROPE-WEST1`/regional, and the runtime service account
+(`188370748893-compute@developer.gserviceaccount.com`, which is what `afterapply-api` actually
+runs as) holding `roles/storage.objectAdmin` on this bucket alone. A write/read/delete round-trip
+through the JSON API succeeded and an unauthenticated read of the same object answered `401`.
+The commands are kept here because they are the record of how it was built, and what to repeat
+in a second environment.
+
+One property worth knowing rather than rediscovering: a bucket always carries legacy
+project-role bindings (`projectOwner`/`projectEditor` -> `legacyObjectOwner`, `projectViewer` ->
+`legacyObjectReader`), and uniform bucket-level access does not remove them. So anyone with a
+project-level role can read CV objects out of band. That is the project owner and the two service
+accounts today, which is acceptable — but it means bucket IAM is not the whole access story if
+project membership ever widens.
+
+Then deploy the API so the new `Storage__*` env vars reach the service,
+and confirm they are on the revision actually serving traffic — same
+check as §10 step 4, for the same reason (a deploy that "succeeded" is
+not proof the running revision has them):
+
+```bash
+gh workflow run deploy.yml -f target=backend
+REV="$(gcloud run services describe afterapply-api --region="$REGION" \
+  --format='value(status.traffic[0].revisionName)')"
+gcloud run revisions describe "$REV" --region="$REGION" \
+  --format='yaml(spec.containers[0].env)' | grep -i storage   # expect both vars
+```
+
+**No new Secret Manager entry** — this is the part worth being precise
+about, because "bucket" and "secret" sound like they should go together.
+There is no credential to store: on Cloud Run the API authenticates to
+Cloud Storage as its own runtime service account through Application
+Default Credentials (a short-lived token from the metadata server), so
+there is no key file, nothing to rotate, and nothing that could leak.
+Access is granted entirely by the IAM binding above. The bucket's *name*
+does live in a GitHub Actions secret (`GCP_CV_BUCKET`, §4) — but only for
+consistency with `GCP_PROJECT_ID`/`GCP_REGION`; it is an address, not a
+credential, and an unauthenticated read of an object in this bucket
+answers `401` whether or not you know the name.
+
+Had this been built on signed URLs instead, it *would* have needed one of
+the two: either a service-account JSON key in Secret Manager, or
+`roles/iam.serviceAccountTokenCreator` on the runtime account so it could
+sign through the IAM Credentials API. Proxying downloads through the API
+avoids both — see DECISIONS.md 2026-09-07.
+
+**Local development and tests** do not touch any of this. `Storage:Provider`
+defaults to `FileSystem`, which writes under the OS temp directory, and
+`AddDocumentStorage` refuses that provider outright when
+`ASPNETCORE_ENVIRONMENT=Production` — Cloud Run's filesystem is in-memory
+and per-instance, so an upload written there would vanish on the next
+revision and be invisible to every other instance. Failing at startup is
+the only way that mistake surfaces before a user's CV is lost.

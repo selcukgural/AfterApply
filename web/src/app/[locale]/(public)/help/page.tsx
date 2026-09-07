@@ -7,6 +7,7 @@ const TOPIC_LINKS = [
   { href: "/help/dashboard", key: "dashboard" },
   { href: "/help/tracked-jobs", key: "trackedJobs" },
   { href: "/help/applications", key: "applications" },
+  { href: "/help/cv", key: "cv" },
   { href: "/help/suggestions", key: "suggestions" },
   { href: "/help/import", key: "import" },
   { href: "/help/settings", key: "settings" },

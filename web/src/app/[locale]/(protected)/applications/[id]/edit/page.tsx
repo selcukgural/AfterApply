@@ -30,6 +30,7 @@ export default function EditApplicationPage({ params }: { params: Promise<{ id: 
       hrName: values.hrName || null,
       hrEmail: values.hrEmail || null,
       hrLinkedInUrl: values.hrLinkedInUrl || null,
+      cvDocumentId: values.cvDocumentId || null,
     });
 
     await queryClient.invalidateQueries({ queryKey: ["applications"] });

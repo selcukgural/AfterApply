@@ -37,6 +37,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("CvDocumentId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("EmploymentType")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -96,6 +99,8 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("CvDocumentId");
 
                     b.HasIndex("JobId");
 
@@ -244,6 +249,52 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Companies", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Documents.CvDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageObjectName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CvDocuments", (string)null);
                 });
 
             modelBuilder.Entity("AfterApply.Domain.EmailIntegrations.EmailConnection", b =>
@@ -990,6 +1041,11 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("AfterApply.Domain.Documents.CvDocument", null)
+                        .WithMany()
+                        .HasForeignKey("CvDocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("AfterApply.Domain.Jobs.Job", null)
                         .WithMany()

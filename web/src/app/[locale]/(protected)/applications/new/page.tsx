@@ -24,6 +24,7 @@ export default function NewApplicationPage() {
       hrName: values.hrName || null,
       hrEmail: values.hrEmail || null,
       hrLinkedInUrl: values.hrLinkedInUrl || null,
+      cvDocumentId: values.cvDocumentId || null,
     });
 
     await queryClient.invalidateQueries({ queryKey: ["applications"] });

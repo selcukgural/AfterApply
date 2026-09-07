@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using AfterApply.Application.Documents;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Mailing;
@@ -20,6 +21,7 @@ internal sealed class AuthService(
     IGoogleAuthClient googleAuthClient,
     ILinkedInAuthClient linkedInAuthClient,
     AppDbContext dbContext,
+    ICvDocumentService cvDocumentService,
     IOptions<JwtOptions> jwtOptions,
     IOptions<AppOptions> appOptions,
     IBackgroundJobClient jobClient,
@@ -537,7 +539,16 @@ internal sealed class AuthService(
         // (FK'd directly to Users) — any EmailSuggestions are already gone by then via the
         // Application-cascade above, so no separate EmailConnections/EmailSuggestions
         // deletion step is needed here.
+        // Read before the delete: the object names are the only handle on the stored files, and
+        // once the rows are gone nothing else knows where the bytes live.
+        var cvStorageObjectNames = await dbContext.CvDocuments
+            .Where(d => d.UserId == userId)
+            .Select(d => d.StorageObjectName)
+            .ToListAsync(cancellationToken);
+
         await dbContext.Applications.Where(a => a.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        // After Applications, because their CvDocumentId still references these rows until then.
+        await dbContext.CvDocuments.Where(d => d.UserId == userId).ExecuteDeleteAsync(cancellationToken);
         await dbContext.ImportBatches.Where(b => b.UserId == userId).ExecuteDeleteAsync(cancellationToken);
 
         var deleteResult = await userManager.DeleteAsync(user);
@@ -547,6 +558,14 @@ internal sealed class AuthService(
         }
 
         await transaction.CommitAsync(cancellationToken);
+
+        // Object storage is outside the transaction and cannot join it, so the files are removed
+        // after the commit rather than before it. Getting the order the other way round would risk
+        // deleting a user's CVs and then failing to delete the account — files gone, account still
+        // there. This way the worst case is an unreferenced object nothing can reach, which
+        // DeleteStoredObjectsAsync logs; the deletion request itself still succeeded.
+        await cvDocumentService.DeleteStoredObjectsAsync(cvStorageObjectNames, cancellationToken);
+
         return true;
     }
 
@@ -596,7 +615,14 @@ internal sealed class AuthService(
             .Select(r => new ReminderExportItem(r.Id, r.ApplicationId, r.Type, r.ReferenceAt, r.CreatedAt, r.DismissedAt))
             .ToListAsync(cancellationToken);
 
-        return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders, DateTimeOffset.UtcNow);
+        var cvDocuments = await dbContext.CvDocuments
+            .Where(d => d.UserId == userId)
+            .OrderByDescending(d => d.UploadedAt)
+            .Select(d => new CvDocumentExportItem(d.Id, d.FileName, d.Format, d.SizeBytes, d.IsDefault, d.UploadedAt))
+            .ToListAsync(cancellationToken);
+
+        return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
+            DateTimeOffset.UtcNow, cvDocuments);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

@@ -141,6 +141,7 @@ app.MapApplicationEndpoints();
 app.MapTrackedJobEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapImportEndpoints();
+app.MapCvDocumentEndpoints();
 app.MapReminderEndpoints();
 app.MapEmailForwardingEndpoints();
 app.MapPersonalAccessTokenEndpoints();

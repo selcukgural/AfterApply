@@ -1,5 +1,6 @@
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Companies;
+using AfterApply.Domain.Documents;
 using AfterApply.Domain.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -38,6 +39,13 @@ public sealed class ApplicationConfiguration : IEntityTypeConfiguration<DomainAp
         builder.HasOne<Job>()
             .WithMany()
             .HasForeignKey(a => a.JobId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // SetNull, not Cascade: deleting a CV file must not delete the applications that were sent
+        // with it. See Application.CvDocumentId.
+        builder.HasOne<CvDocument>()
+            .WithMany()
+            .HasForeignKey(a => a.CvDocumentId)
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasMany(a => a.Events)

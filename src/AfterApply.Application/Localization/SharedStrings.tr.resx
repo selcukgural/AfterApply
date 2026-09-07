@@ -213,4 +213,19 @@
   <data name="GENERIC_ERROR" xml:space="preserve">
     <value>Beklenmeyen bir hata oluştu.</value>
   </data>
+  <data name="CV_UNSUPPORTED_FILE_TYPE" xml:space="preserve">
+    <value>Sadece .pdf, .doc ve .docx dosyaları desteklenir.</value>
+  </data>
+  <data name="CV_FILE_EMPTY" xml:space="preserve">
+    <value>Dosya boş.</value>
+  </data>
+  <data name="CV_FILE_TOO_LARGE" xml:space="preserve">
+    <value>Dosya boyutu {0} byte sınırını aşıyor.</value>
+  </data>
+  <data name="CV_FILE_CONTENT_MISMATCH" xml:space="preserve">
+    <value>Dosyanın içeriği uzantısıyla uyuşmuyor. Dosyayı adının söylediği biçimde yeniden kaydedip tekrar yükleyin.</value>
+  </data>
+  <data name="CV_DOCUMENT_LIMIT_REACHED" xml:space="preserve">
+    <value>En fazla {0} CV saklayabilirsiniz. Yenisini yüklemek için birini silin.</value>
+  </data>
 </root>

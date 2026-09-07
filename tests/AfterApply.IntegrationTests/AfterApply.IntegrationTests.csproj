@@ -16,6 +16,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Testcontainers.FakeGcsServer" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
   </ItemGroup>
 

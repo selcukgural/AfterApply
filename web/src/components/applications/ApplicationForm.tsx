@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Combobox } from "@/components/ui/Combobox";
 import { HrContactFields, type HrContactValues } from "@/components/ui/HrContactFields";
 import { companiesApi } from "@/lib/api/companies";
+import { CvSelectField } from "@/components/cv/CvSelectField";
 
 export interface ApplicationFormValues extends HrContactValues {
   companyName: string;
@@ -23,6 +24,8 @@ export interface ApplicationFormValues extends HrContactValues {
   appliedAt: string;
   source: Source;
   notes: string;
+  /** The stored CV this application was sent with; "" means none. */
+  cvDocumentId: string;
 }
 
 interface ApplicationFormProps {
@@ -54,6 +57,7 @@ export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: Applic
     hrName: initial?.hrName ?? "",
     hrEmail: initial?.hrEmail ?? "",
     hrLinkedInUrl: initial?.hrLinkedInUrl ?? "",
+    cvDocumentId: initial?.cvDocumentId ?? "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -145,6 +149,12 @@ export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: Applic
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900"
         />
       </FormField>
+      <CvSelectField
+        value={values.cvDocumentId}
+        onChange={(cvDocumentId) => setValues((prev) => ({ ...prev, cvDocumentId }))}
+        // Only on a new application: an edit form must show what was recorded, including "none".
+        autoSelectDefault={mode === "create"}
+      />
       <HrContactFields
         idPrefix="application"
         values={values}
