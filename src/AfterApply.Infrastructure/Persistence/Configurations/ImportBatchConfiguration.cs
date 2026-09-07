@@ -1,4 +1,5 @@
 using AfterApply.Domain.Imports;
+using AfterApply.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -23,5 +24,12 @@ public sealed class ImportBatchConfiguration : IEntityTypeConfiguration<ImportBa
             .HasForeignKey(e => e.ImportBatchId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(b => b.RowErrors).UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        // Cascade from the account — see ApplicationConfiguration for why this is a foreign key
+        // and not a line in DeleteAccountAsync.
+        builder.HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(b => b.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

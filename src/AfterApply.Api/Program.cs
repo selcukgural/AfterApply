@@ -147,6 +147,7 @@ app.MapEmailForwardingEndpoints();
 app.MapPersonalAccessTokenEndpoints();
 app.MapCompanyIntelligenceEndpoints();
 app.MapCompanyEndpoints();
+app.MapFeedbackEndpoints();
 app.MapHub<ImportProgressHub>("/hubs/import-progress");
 
 if (!DependencyInjection.IsOpenApiDocumentGeneration)

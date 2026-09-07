@@ -532,24 +532,25 @@ internal sealed class AuthService(
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        // Applications cascade to ApplicationEvents/ApplicationStatusHistories/Reminders/
-        // EmailSuggestions (FK'd to Application, not User); ImportBatches cascade to
-        // ImportRowErrors. Companies/Jobs are shared/global (no UserId) and are never
-        // touched. UserManager.DeleteAsync cascades RefreshTokens and EmailConnections
-        // (FK'd directly to Users) — any EmailSuggestions are already gone by then via the
-        // Application-cascade above, so no separate EmailConnections/EmailSuggestions
-        // deletion step is needed here.
+        // The single DELETE below is the whole deletion: every table that holds a UserId has an
+        // ON DELETE CASCADE foreign key to Users, so the database removes Applications (and their
+        // Events/StatusHistories), TrackedJobs, CvDocuments, ImportBatches (and their RowErrors),
+        // Reminders, EmailSuggestions, EmailConnections, FeedbackEntries, RefreshTokens and
+        // PersonalAccessTokens itself. Companies and Jobs are shared and carry no UserId, so they
+        // are never touched.
+        //
+        // This used to be a hand-written list of ExecuteDelete calls here, and the list was wrong:
+        // TrackedJobs, Reminders and EmailSuggestions were never in it, so deleting an account left
+        // them behind (fixed 2026-09-07, see the CascadeUserOwnedRowsOnAccountDelete migration).
+        // A promise like "deleting your account deletes your data" should not depend on somebody
+        // remembering to add a line here when they add a table.
+        //
         // Read before the delete: the object names are the only handle on the stored files, and
         // once the rows are gone nothing else knows where the bytes live.
         var cvStorageObjectNames = await dbContext.CvDocuments
             .Where(d => d.UserId == userId)
             .Select(d => d.StorageObjectName)
             .ToListAsync(cancellationToken);
-
-        await dbContext.Applications.Where(a => a.UserId == userId).ExecuteDeleteAsync(cancellationToken);
-        // After Applications, because their CvDocumentId still references these rows until then.
-        await dbContext.CvDocuments.Where(d => d.UserId == userId).ExecuteDeleteAsync(cancellationToken);
-        await dbContext.ImportBatches.Where(b => b.UserId == userId).ExecuteDeleteAsync(cancellationToken);
 
         var deleteResult = await userManager.DeleteAsync(user);
         if (!deleteResult.Succeeded)
@@ -621,8 +622,15 @@ internal sealed class AuthService(
             .Select(d => new CvDocumentExportItem(d.Id, d.FileName, d.Format, d.SizeBytes, d.IsDefault, d.UploadedAt))
             .ToListAsync(cancellationToken);
 
+        var feedback = await dbContext.FeedbackEntries
+            .Where(f => f.UserId == userId)
+            .OrderByDescending(f => f.SubmittedAt)
+            .Select(f => new FeedbackExportItem(f.Id, f.Category, f.Mood, f.Message, f.ReplyEmail,
+                f.Status, f.AdminReply, f.SubmittedAt))
+            .ToListAsync(cancellationToken);
+
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
-            DateTimeOffset.UtcNow, cvDocuments);
+            DateTimeOffset.UtcNow, cvDocuments, feedback);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

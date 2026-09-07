@@ -2,6 +2,7 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.Notifications;
+using AfterApply.Domain.Feedback;
 
 namespace AfterApply.Application.Identity.Contracts;
 
@@ -53,10 +54,24 @@ public sealed record CvDocumentExportItem(
     bool IsDefault,
     DateTimeOffset UploadedAt);
 
+/// <summary>What the user wrote in the in-app feedback panel, and what came back. The reply
+/// address is included because it is theirs; the technical context (page, browser) is not — it is
+/// diagnostic metadata about a message they already have in front of them.</summary>
+public sealed record FeedbackExportItem(
+    Guid Id,
+    FeedbackCategory Category,
+    FeedbackMood? Mood,
+    string Message,
+    string? ReplyEmail,
+    FeedbackStatus Status,
+    string? AdminReply,
+    DateTimeOffset SubmittedAt);
+
 public sealed record AccountExportResponse(
     UserProfileResponse Profile,
     IReadOnlyList<ApplicationExportItem> Applications,
     IReadOnlyList<ImportBatchExportItem> ImportBatches,
     IReadOnlyList<ReminderExportItem> Reminders,
     DateTimeOffset ExportedAt,
-    IReadOnlyList<CvDocumentExportItem>? CvDocuments = null);
+    IReadOnlyList<CvDocumentExportItem>? CvDocuments = null,
+    IReadOnlyList<FeedbackExportItem>? Feedback = null);

@@ -1,4 +1,5 @@
 using AfterApply.Domain.Notifications;
+using AfterApply.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DomainApplication = AfterApply.Domain.Applications.Application;
@@ -16,6 +17,13 @@ public sealed class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
 
         builder.HasIndex(r => r.UserId);
         builder.HasIndex(r => new { r.ApplicationId, r.Type, r.ReferenceAt }).IsUnique();
+
+        // Cascade from the account — see ApplicationConfiguration for why this is a foreign key
+        // and not a line in DeleteAccountAsync.
+        builder.HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne<DomainApplication>()
             .WithMany()

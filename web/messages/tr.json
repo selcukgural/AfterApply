@@ -580,12 +580,13 @@
     },
     "crossBorderTransfer": {
       "title": "Yurt dışına veri aktarımı",
-      "intro": "Gmail Taraması'nı açarsanız, tespit edilen her statü güncellemesi e-postasının konu satırı ve kısa bir özeti, başvurunuz için ne anlama geldiğini tespit etmek amacıyla yurt dışına gönderilir.",
+      "intro": "İki durumda veriniz yurt dışına gönderilir. Birincisi Gmail Taraması: bunu açarsanız, tespit edilen her statü güncellemesi e-postasının konu satırı ve kısa bir özeti, başvurunuz için ne anlama geldiğini tespit etmek amacıyla yurt dışına gönderilir.",
       "recipient": "Alıcı: OpenAI, L.L.C. (Amerika Birleşik Devletleri) — API sağlayıcımız.",
       "purpose": "Amaç: e-postanın başvuru durumu sinyalini sınıflandırmak, ve henüz takip edilmeyen bir iş için şirket adı/pozisyon bilgisini okumak; bu yalnızca daha basit, yerel kural tabanlı bir kontrol e-postayı zaten tanımadığında çalışır.",
       "legalBasis": "Hukuki sebep: bu yalnızca tarayıcı eklentisinde kendi açtığınız Gmail Taraması özelliği için gerçekleşir; bu özelliği kullanmadığınız sürece hiçbir şey gönderilmez.",
       "withdraw": "Geri çekme: Gmail Taraması için tarayıcı eklentisinin Ayarlar sayfasından özelliği kapatın. Ya da hesabınızı silin, bu tamamen durur.",
-      "sensitiveDataNote": "Konu satırı ve özet ayrıca hesabınızda da saklanır (bir öneriyi incelerken sizin görebileceğiniz şekilde) — e-postanın tam içeriği asla."
+      "sensitiveDataNote": "Konu satırı ve özet ayrıca hesabınızda da saklanır (bir öneriyi incelerken sizin görebileceğiniz şekilde) — e-postanın tam içeriği asla.",
+      "feedbackTransfer": "İkincisi geri bildirim: uygulama içinden bir geri bildirim gönderdiğinizde mesajınız ve teknik bağlamı, takibi için GitHub'da herkese kapalı bir depoya kopyalanır. Alıcı: GitHub, Inc. (Microsoft, Amerika Birleşik Devletleri). Adınız, hesap e-posta adresiniz ve yanıt adresiniz gönderilmez. Hukuki sebep: meşru menfaat — bildirilen sorunları takip edip gidermek. Ayrıntı için yukarıdaki \"Gönderdiğiniz geri bildirimler\" bölümüne bakın."
     },
     "browserExtension": {
       "title": "Tarayıcı eklentisi",
@@ -601,7 +602,7 @@
       "title": "Haklarınız",
       "before": "Verilerinizin bir kopyasını istediğiniz zaman dışa aktarabilir veya hesabınızı kalıcı olarak silebilirsiniz. Bu işlemleri",
       "link": "Hesap Ayarları",
-      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm başvuru, import ve hatırlatma verilerini kalıcı olarak kaldırır."
+      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı ve gönderdiğiniz geri bildirimleri — kalıcı olarak kaldırır."
     },
     "notApplicable": {
       "title": "Şu an geçerli olmayanlar",
@@ -621,6 +622,19 @@
       "deletion": "Sildiğiniz bir CV kalıcı olarak silinir — depolama tarafında kurtarma penceresi bilerek kapalı tutulur. Hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir.",
       "sensitiveDataNote": "Bir CV, iş deneyiminizin yanı sıra fotoğraf, doğum tarihi, askerlik durumu veya sağlık bilgisi gibi hassas sayılabilecek veriler içerebilir; bu nedenle yükleme öncesinde ayrıca açık rızanızı alıyoruz. Ne yükleyeceğinize siz karar verirsiniz: bu alanların CV'nizde bulunması hizmetin çalışması için gerekli değildir, ve dilediğiniz zaman dosyayı silebilirsiniz.",
       "consent": "Hukuki sebep açık rızanızdır ve bu rıza her yükleme için ayrı ayrı alınır: dosyayı seçmeden önce onay kutusunu işaretlemeniz gerekir, kutu hiçbir zaman önceden işaretli gelmez ve her yüklemeden sonra yeniden boşalır. Rızanızı dosyayı silerek istediğiniz zaman geri çekebilirsiniz; hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir."
+    },
+    "feedback": {
+      "title": "Gönderdiğiniz geri bildirimler",
+      "intro": "Uygulamanın her sayfasında sağ altta duran geri bildirim düğmesi tamamen isteğe bağlıdır. Bir mesaj gönderdiğinizde:",
+      "what": "Yazdığınız mesaj, seçtiğiniz konu (hata/öneri/soru) ve varsa seçtiğiniz deneyim ifadesi hesabınıza bağlı olarak saklanır.",
+      "context": "Mesajla birlikte teknik bağlam da saklanır: paneli açtığınız sayfanın yolu (örneğin /tr/applications), dil ve tema tercihiniz ve tarayıcı bilginiz. Sayfa adresinin yalnızca yolu alınır — sorgu parametreleri (başvuru kimliği gibi) hem tarayıcınızda hem sunucuda atılır.",
+      "notCollected": "Başvurularınızın, CV'lerinizin ve e-postalarınızın içeriği geri bildirimle birlikte gönderilmez; ekran görüntüsü alınmaz.",
+      "replyEmail": "Yanıt e-posta adresi isteğe bağlıdır ve boş bırakılabilir; yalnızca size dönüş yapmak için kullanılır, pazarlama amacıyla kullanılmaz.",
+      "deletion": "Hesabınızı sildiğinizde geri bildirimleriniz veritabanımızdan silinir. GitHub'daki takip kaydı kimliğinizi hiçbir zaman taşımadığı için silmeden sonra kime ait olduğu tespit edilemez hâle gelir; kaydın kendisini de silmemizi isterseniz bize yazmanız yeterli.",
+      "legalBasis": "Hukuki sebep: meşru menfaat — ürünü kullanıcıların bildirdiği sorunlara göre düzeltmek ve geliştirmek.",
+      "mirror": "Mesajınız ve yukarıdaki teknik bağlam, takibini yapabilmemiz için ayrıca GitHub'da herkese kapalı (private) bir depoda bir takip kaydı olarak açılır. Adınız, hesap e-posta adresiniz ve yanıt adresiniz oraya gönderilmez — yalnızca kaydın kimlik numarası gider, dolayısıyla o kaydı kimin yazdığını görebilmek için bizim veritabanımıza bakmamız gerekir.",
+      "mirrorRecipient": "Alıcı: GitHub, Inc. (Microsoft, Amerika Birleşik Devletleri). Bu bir yurt dışına aktarımdır; aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
+      "storage": "Geri bildirimler kendi veritabanımızda saklanır; kanonik kayıt bizdedir."
     }
   },
   "extensionPrivacy": {
@@ -1481,6 +1495,47 @@
       "link": "açık rıza veriyorum",
       "after": "— dosyam yalnızca bana gösterilir ve hiçbir üçüncü tarafa gönderilmez.",
       "sensitiveWarning": "CV'nizde fotoğraf, doğum tarihi, sağlık veya askerlik durumu gibi hassas bilgiler bulunması zorunlu değildir; ne yükleyeceğine sen karar verirsin. Rızanı, dosyayı silerek istediğin zaman geri çekebilirsin."
+    }
+  },
+  "feedback": {
+    "launcher": "Geri bildirim",
+    "title": "Nasıl gidiyor?",
+    "subtitle": "Bir dakikanı alır, hepsini okuyorum.",
+    "close": "Kapat",
+    "mood": {
+      "label": "Deneyimin (isteğe bağlı)",
+      "Struggling": "Zorlandım",
+      "Okay": "İdare eder",
+      "Good": "İyi gidiyor"
+    },
+    "category": {
+      "label": "Konu",
+      "Bug": "Bir şey bozuk",
+      "Idea": "Öneri",
+      "Question": "Soru"
+    },
+    "message": {
+      "label": "Anlat",
+      "placeholder": "Başvuru listesini şirkete göre gruplayabilsem çok iyi olurdu…"
+    },
+    "replyEmail": {
+      "label": "Yanıt adresi (isteğe bağlı)",
+      "placeholder": "Yanıt istiyorsan e-posta adresini yaz"
+    },
+    "context": "Mesajınla birlikte <path></path> sayfası, dil ve tema tercihin ve tarayıcı bilgin gönderilir. Başvurularının, CV'lerinin ve e-postalarının içeriği gönderilmez.",
+    "submit": "Gönder",
+    "sending": "Gönderiliyor…",
+    "sent": {
+      "title": "Teşekkürler!",
+      "body": "Mesajın bize ulaştı."
+    },
+    "problems": {
+      "messageRequired": "Göndermeden önce birkaç kelime yaz.",
+      "messageTooLong": "Mesaj 1000 karakteri aşamaz.",
+      "replyEmailInvalid": "Bu e-posta adresi geçerli görünmüyor."
+    },
+    "errors": {
+      "generic": "Geri bildirim gönderilemedi. Lütfen tekrar dene."
     }
   }
 }

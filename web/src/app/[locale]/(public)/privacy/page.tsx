@@ -36,6 +36,22 @@ export default async function PrivacyPage() {
           <p className="mt-2">{t("cvStorage.sensitiveDataNote")}</p>
         </section>
 
+        <section id="feedback">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("feedback.title")}</h2>
+          <p>{t("feedback.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("feedback.what")}</li>
+            <li>{t("feedback.context")}</li>
+            <li>{t("feedback.notCollected")}</li>
+            <li>{t("feedback.replyEmail")}</li>
+            <li>{t("feedback.storage")}</li>
+            <li>{t("feedback.mirror")}</li>
+            <li>{t("feedback.mirrorRecipient")}</li>
+            <li>{t("feedback.deletion")}</li>
+          </ul>
+          <p className="mt-2">{t("feedback.legalBasis")}</p>
+        </section>
+
         <section id="google-sign-in">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("googleSignIn.title")}</h2>
           <p>{t("googleSignIn.intro")}</p>
@@ -72,6 +88,7 @@ export default async function PrivacyPage() {
             <li>{t("crossBorderTransfer.withdraw")}</li>
           </ul>
           <p className="mt-2">{t("crossBorderTransfer.sensitiveDataNote")}</p>
+          <p className="mt-2">{t("crossBorderTransfer.feedbackTransfer")}</p>
         </section>
 
         <section id="error-monitoring">

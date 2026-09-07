@@ -3842,6 +3842,191 @@ gereksiz.
 başındaki uyarı burada da geçerli. Metnin son hâli, avukata gidecek listede duruyor.
 
 ---
+
+## Uygulama içi geri bildirim: kendi DB'miz + bayrak arkasında GitHub Issues aynası (2026-09-07)
+
+Soru şuydu: kullanıcı uygulamanın içinden nasıl geri bildirim versin, ve o geri bildirim nereye
+düşsün? Dört depolama ve üç arayüz seçeneği maketleriyle birlikte değerlendirildi.
+
+**Depolama — dördü de ücretsiz katmanda kalıyor, ayrıştıkları yer triyaj ve verinin kimde
+durduğu:**
+
+- *Sadece kendi DB'miz.* Veri bizde, dış bağımlılık yok — ama okumak için SQL, triyaj hiç yok.
+- *DB + GitHub Issues aynası.* **Seçilen.** Kanonik satır bizde; bir Hangfire job'u özel bir
+  repoda `feedback:*` etiketli issue açıyor. Etiket/milestone/pano/mobil bildirim bedavaya
+  geliyor, servis giderse tek satır kaybolmuyor.
+- *Sentry User Feedback.* En hızlısı — `@sentry/nextjs` zaten kurulu, DSN prod'da bağlı. Elendi:
+  ürün geri bildirimi hata akışının içinde kayboluyor, oy/durum/yol haritası yok, ve metin bizde
+  hiç durmuyor.
+- *Hazır pano (Canny/Featurebase/UserJot/Fider).* Oylama ve açık yol haritası kutudan çıkıyor ama
+  ayrı alan adı, ayrı oturum, ayrı gizlilik metni demek; ücretsiz katmanlar da dar (Canny 25
+  kullanıcı / ayda 100 gönderi, Featurebase tek koltuk). Bu kullanıcı sayısında erken.
+
+**Arayüz — yüzen düğme (A) seçildi.** Menüden modal (B) hiçbir görsel gürültü eklemiyor ama
+keşfedilebilirliği o kadar düşük ki geri bildirim gelmiyor. Kendi sayfası (C) durum geri dönüşü
+verebiliyor, ama sayfa bağlamını kaybediyor — kullanıcı nerede takıldığını tarif etmek zorunda
+kalıyor. A'nın asıl kazandırdığı şey estetik değil, veri: panel hangi sayfada açıldığını kendisi
+biliyor.
+
+**C'nin alanları bugün modellendi, ekranı açılmadı.** `Status` ve `AdminReply` sütunları ilk
+günden var; sonradan eklenip geriye doğru doldurulamayacak tek şey geçmişin kendisi. Okuma ucu
+(`GET /api/feedback/mine`) bilerek yazılmadı — çağıranı olmayan bir uç, sadece saldırı yüzeyi.
+
+**Ne toplanıyor, ne toplanmıyor.** Mesaj + konu (zorunlu, GitHub etiketini o belirliyor) + ruh
+hali (isteğe bağlı) + yanıt adresi (isteğe bağlı). Bağlam olarak sayfa *yolu*, dil, tema ve
+tarayıcı bilgisi; sorgu dizesi hem tarayıcıda hem sunucuda kesiliyor (başvuru id'si taşıyabilir).
+Ekran görüntüsü **yok** — o ekranda gerçek İK adı ve gerçek başvuru geçmişi olur, kazara veri
+sızdırmanın en kısa yolu. Uzantı tarafına dokunulmadı, dolayısıyla sürüm/zip/store işi de yok.
+
+**Aynanın redaksiyonu bilinçli:** issue'ya mesaj ve teknik bağlam gidiyor, yanıt adresi ve hesap
+e-postası **gitmiyor** — sadece feedback id gidiyor. Birine cevap yazmak veritabanını açmayı
+gerektiriyor, ki kişisel bir adresin önünde tam olarak istediğimiz sürtünme bu. Mesaj üçüncü
+tarafın Markdown'ıyla render edileceği için fenced blokta taşınıyor ve fence, metindeki en uzun
+backtick dizisinden uzun seçiliyor; aksi hâlde yapıştırılan bir ``` bloğu erken kapatıp
+`@herkes`i canlı mention'a çeviriyor.
+
+**Ayna aynı gün açıldı, ön koşulu önce kapatarak.** Bayrak varsayılan olarak kapalıydı ve
+`/privacy#feedback` "hiçbir üçüncü tarafa gönderilmez" diyordu — bu cümle yalnızca bayrak
+kapalıyken doğru. Sırayla: önce gizlilik metni yazıldı (aşağıya bakın), sonra bayrak açıldı.
+
+**Neden ayrı bir private repo, bu repo değil.** İlk akla gelen `selcukgural/AfterApply`'ın kendi
+issue'larını kullanmaktı; olmaz, çünkü o repo **public**. Bu üründe insanlar "X şirketine
+başvurum reddedildi, İK'dan Y bey şunu yazdı, bana şu adresten dönün" yazar — public bir issue
+bunu dünyaya açar ve geri alınamaz. GitHub'da public repo üzerinde private issue diye bir şey de
+yok. Bu yüzden `selcukgural/ekariyerim-feedback` (private, kod yok, sadece issue) açıldı; token
+yalnızca o repoya `issues:write` yetkili fine-grained bir PAT.
+
+**Gizlilik metni ne diyor:** geri bildirimin kanonik kaydının bizde olduğunu, mesajın ve teknik
+bağlamın takip için private bir GitHub deposuna kopyalandığını, alıcının GitHub, Inc. (Microsoft,
+ABD) olduğunu ve bunun bir yurt dışı aktarımı sayıldığını, ad/hesap e-postası/yanıt adresinin
+**gönderilmediğini** yazıyor. "Yurt dışına veri aktarımı" bölümü de artık tek değil iki aktarımı
+(OpenAI ve GitHub) anlatıyor.
+
+**Hesap silmenin aynadaki karşılığı:** DB satırı silinince GitHub'daki kayıt kimliği hiçbir zaman
+taşımadığı için kime ait olduğu tespit edilemez hâle geliyor — redaksiyon kararının beklenmedik
+ama hoş bir sonucu. Metin bunu olduğu gibi yazıyor ve isteyene kaydın kendisinin de silineceğini
+söylüyor.
+
+**Hesap silme elle süpürüyor.** `FeedbackEntries` düz bir `UserId` tutuyor, FK yok (domain User'ı
+modellemiyor), yani hiçbir şey cascade etmiyor — `DeleteAccountAsync`'e açık bir satır eklendi ve
+bir integration testi bunu tutuyor. Aynı gerekçeyle KVKK/GDPR dışa aktarımına da eklendi:
+kullanıcının yazdığı metin, hakkında tuttuğumuz veridir.
+
+**Yan bulgu, aynı gün düzeltildi — aşağıdaki cascade kaydına bakın:** `TrackedJobs` da düz
+`UserId` tutuyor ve `DeleteAccountAsync`'te yoktu.
+
+**Issue'lar açılırken atanıyor** (`Feedback:GitHub:Assignee`, prod'da `selcukgural`) — yeni bir
+bildirim fark edilmeyi beklemek yerine birinin "Assigned to me" listesine düşüyor. Boş bırakılırsa
+`assignees` alanı **hiç gönderilmiyor**; `null` göndermek GitHub'ın reddettiği bir şey ve varsayılan
+kurulum tam olarak bu yol, o yüzden kendi testi var.
+
+**Testler canlı GitHub'a çıktı — kurulum sırasında, beş gerçek issue açarak.** `WebApplicationFactory`
+gerçek `Program`'ı Development'ta kaldırıyor, dolayısıyla API projesinin **user-secrets**'ını da
+okuyor. Lokal denemek için oraya canlı bir token yazınca, aynayı hiç yapılandırmayan
+`FeedbackFlowTests` bile onu devraldı. Üstelik "aynalanmadığını" doğrulaması gereken test yalancı
+yeşildi: Hangfire işi asenkron, test beklemeden satırı okuyup `null` görüp geçiyordu — yani
+negatifi hiç ölçmüyordu.
+
+Üç katmanlı düzeltildi: (1) `TestContainerCleanup` aynayı **ortam değişkeniyle** her test host'u
+için kapatıyor — ortam değişkeni user-secrets'ın üstünde, yani her sınıfın ayrıca opt-out etmesi
+gerekmiyor; (2) aynayı gerçekten test eden iki sınıf `ConfigureAppConfiguration` ile geri açıyor,
+o kaynak en sona eklendiği için kazanıyor; (3) `FeedbackFlowTests` sahte bir HTTP handler
+kullanıyor ve testi artık 2 saniye bekleyip hem satırı hem de *hiç istek yapılmadığını* doğruluyor.
+Kanıt: canlı token lokalde dururken paket koşuldu, gerçek repodaki issue sayısı 7'den 7'ye —
+değişmedi.
+
+**Ders:** entegrasyon testi bir dış servise çıkabiliyorsa, o servisi kapatan anahtar testin
+kendi yapılandırmasında değil, tüm host'ları kapsayan bir yerde olmalı. Bir de negatif iddia eden
+her testin, iddia ettiği şeyin gerçekleşmesi için gereken süreyi beklemesi gerekiyor.
+
+**Sınırlar:** kullanıcı başına saatte 5 gönderim (`RateLimiting:Feedback`), 1000 karakter, uç
+kimlik doğrulaması zorunlu. Oturum açmamış ziyaretçiye açmak düşünüldü ama v1'de yapılmadı:
+çağıranı olmayan anonim bir yazma ucu, spam mıknatısından başka bir şey değil.
+
+---
+
+## Hesap silme artık elle süpürme değil, veritabanı kısıtı (2026-09-07)
+
+Geri bildirim işinde ortaya çıkan bulgu: `DeleteAccountAsync` içinde tablo tablo yazılmış bir
+`ExecuteDelete` listesi vardı ve liste eksikti. `TrackedJobs`, `Reminders` ve `EmailSuggestions`
+hiç girmemişti; yani silinen bir hesabın takip listesi, hatırlatmaları ve e-posta önerileri
+veritabanında kalıyordu. Hiçbir uçtan erişilemedikleri için görünmüyorlardı ama duruyorlardı —
+`/privacy`'nin "hesabınızı sildiğinizde verileriniz silinir" cümlesiyle çelişiyor.
+
+**Kök neden liste değil, listenin var olması.** Domain `User`'ı modellemiyor (bkz. "Domain does
+not model User"), o yüzden bu tablolar düz bir `Guid UserId` tutuyor ve hiçbir şey cascade
+etmiyordu. Yeni tablo ekleyen kişinin `DeleteAccountAsync`'e satır eklemeyi hatırlaması
+gerekiyordu — hatırlanmadı, üstelik birden fazla kez.
+
+**Çözüm: gölge FK.** `RefreshTokens`, `PersonalAccessTokens` ve `EmailConnections`'ın en baştan
+kullandığı desen zaten buydu:
+
+```
+builder.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId)
+       .OnDelete(DeleteBehavior.Cascade);
+```
+
+Navigation property yok, yani domain hâlâ `ApplicationUser`'ı bilmiyor — "Domain does not model
+User" kararı bozulmuyor. Eksik yedi tabloya (`Applications`, `TrackedJobs`, `CvDocuments`,
+`ImportBatches`, `Reminders`, `EmailSuggestions`, `FeedbackEntries`) aynısı eklendi.
+`DeleteAccountAsync` artık tek bir `userManager.DeleteAsync(user)` — gerisini veritabanı yapıyor.
+
+**Migration önce öksüzleri siliyor.** FK eklemek mevcut satırları doğruluyor, dolayısıyla bugüne
+kadar öksüz kalmış satırlar temizlenmeden kısıt kurulamıyor — temizlenmezse migration deploy'da
+patlar. Silinen satırlar tam olarak var olmaması gerekenler: zaten silinmiş hesaplara ait ve
+hiçbir uçtan erişilemiyorlar.
+
+**Tek istisna Cloud Storage.** Öksüz bir `CvDocuments` satırının dosyası migration'dan silinemez;
+CV yükleme 2026-09-07'de silme yoluyla birlikte geldiği için pratikte öksüz olmaması gerekiyor,
+ama sayı sıfır çıkmazsa bucket'a bakılmalı. Canlı akışta sıra korundu: nesne adları silmeden önce
+okunuyor, dosyalar commit'ten *sonra* siliniyor — tersi, CV'leri silip hesabı silememe riski
+taşıyor.
+
+**Garantiyi bir test tutuyor.** `A_User_Owned_Row_Cannot_Be_Written_Without_A_User` kod yolunu
+değil şemayı doğruluyor: kimseye ait olmayan bir `TrackedJob` yazmaya çalışmak `DbUpdateException`
+almalı. Kod yolunu test etmek eski hatayı tekrar yakalayamazdı — eski kod da "çalışıyordu",
+sadece eksik çalışıyordu.
+
+---
+
+## macOS'ta `BaseOutputPath` ters bölü yüzünden `bin/` hiç dışlanmıyordu (2026-09-07)
+
+Belirti yıllardır ortalıktaydı ama teşhis edilmemişti: `src/AfterApply.Api/bin/Debug/net10.0/`
+altında `bin/Debug/net10.0/bin/Debug/net10.0/...` diye uzayıp giden bir dizin ağacı, ve
+`bin\Debug` adında (ters bölü **adın parçası**) tuhaf klasörler. Sonunda build
+`MSB3021: path is too long` ile patlıyordu — 150 seviye, 1685 dosya.
+
+**Kök neden.** .NET SDK varsayılanı `BaseOutputPath = bin\`. macOS'ta `\` bir yol ayracı değil,
+sıradan bir karakter; SDK bu değerden `DefaultItemExcludes` desenlerini türetince ortaya
+`bin\/**` ve `bin\Debug//**` çıkıyor. Bunlar `bin\` **adlı** bir klasörle eşleşir, `bin/` ile
+değil — yani `bin/` hiçbir zaman dışlanmıyor. Web SDK'nın varsayılan Content kuralı `**/*.json`
+olduğu ve `CopyToOutputDirectory` taşıdığı için build, çıktı dizinindeki kendi
+`appsettings.json`/`runtimeconfig.json`'ını toplayıp bir kat daha derine kopyalıyor. Her build
+ikiye katlıyor. `OutputPath` de aynı sebeple `bin\Debug/net10.0/` olarak çözülüyor; literal
+`bin\Debug` klasörleri oradan geliyor.
+
+**Düzeltme** `Directory.Build.props`'ta tek satır: `<BaseOutputPath>bin/</BaseOutputPath>`.
+Sonrasında desenler `bin//**` oluyor ve doğru çalışıyor. Doğrulama: iki ardışık build sonrası
+nested `bin` 0, literal `bin\Debug` 0, çıktıya sızan `obj` dosyası 0.
+
+**`.gitignore` bunu neden durdurmadı.** İçinde hem `graphify-out/` hem de `bin\\Debug/` satırı
+vardı — yani biri daha önce karşılaşıp git tarafını yamamış. Ama git'in MSBuild'in neyi
+topladığına sözü yok; commit'e girmesini engellemek çoklamayı engellemiyor.
+
+**Yolda öğrenilen, kaydedilmeye değer iki şey:**
+
+- **Çıktı dizinini build'in içinden temizlemek çözüm değil, yeni bir hata.** İlk denemem
+  `BeforeBuild`'de `$(OutDir)bin`'i silen bir target'tı; MSBuild o dosyaları kopyalama listesine
+  çoktan almış olduğu için build `MSB3030: Could not copy ... because it was not found` ile
+  kırıldı. Target artık sadece uyarıyor.
+- **Bu, entegrasyon paketinin takılmalarını da açıklıyor.** İç içe geçmiş çıktı dizini varken
+  paket koşularının bir kısmı 46/64/114. testte asılı kalıyordu; `BaseOutputPath` düzeltildikten
+  sonra 195/195 iki buçuk dakikada geçti. Takılmayı önce "paketin bilinen kararsızlığı", sonra
+  "eklediğim cascade FK'ları" sandım; ikisi de yanlıştı — temiz HEAD'i ayrı bir worktree'de
+  koşturmak (183/183 yeşil) suçun bende olduğunu, `DefaultItemExcludes`'u yazdırmak da tam olarak
+  nerede olduğunu gösterdi.
+
+---
 ---
 
 

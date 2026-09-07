@@ -11,6 +11,7 @@ using AfterApply.Application.Imports;
 using AfterApply.Application.Mailing;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
+using AfterApply.Application.Feedback;
 using AfterApply.Application.TrackedJobs;
 using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
@@ -25,6 +26,7 @@ using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.OpenAi;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
+using AfterApply.Infrastructure.Feedback;
 using AfterApply.Infrastructure.TrackedJobs;
 using FluentValidation;
 using Hangfire;
@@ -50,6 +52,7 @@ public static class DependencyInjection
     public const string UploadRateLimitPolicy = "upload";
     public const string ExtensionSignalRateLimitPolicy = "extension-signal";
     public const string LinkPreviewRateLimitPolicy = "link-preview";
+    public const string FeedbackRateLimitPolicy = "feedback";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -85,6 +88,7 @@ public static class DependencyInjection
         services.Configure<JobBoardDomainsOptions>(configuration.GetSection("JobBoardDomains"));
         services.Configure<AppOptions>(configuration.GetSection("App"));
         services.Configure<ResendOptions>(configuration.GetSection("Resend"));
+        services.Configure<FeedbackGitHubOptions>(configuration.GetSection(FeedbackGitHubOptions.SectionName));
         services.AddHttpClient<IEmailSender, ResendEmailSender>(client => client.BaseAddress = new Uri("https://api.resend.com/"));
 
         // AddOptions().Bind().ValidateOnStart() (not the bare Configure<T> other sections above use)
@@ -402,6 +406,16 @@ public static class DependencyInjection
         services.AddScoped<ILocalFilterConfigService, LocalFilterConfigService>();
         services.AddSingleton<IJobBoardDomainMatcher, JobBoardDomainMatcher>();
         services.AddScoped<ICompanyIntelligenceService, CompanyIntelligenceService>();
+        services.AddScoped<IFeedbackService, FeedbackService>();
+        services.AddHttpClient<IGitHubIssueMirror, GitHubIssueMirror>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.github.com/");
+            client.Timeout = TimeSpan.FromSeconds(10);
+            client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
+            // GitHub rejects requests with no User-Agent; it wants something identifying.
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("e-kariyerim-feedback-mirror");
+        });
 
         return services;
     }

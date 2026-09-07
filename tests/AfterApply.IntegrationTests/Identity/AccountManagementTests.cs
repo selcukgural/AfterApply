@@ -5,11 +5,16 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Application.TrackedJobs.Contracts;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
+using AfterApply.Domain.Companies;
+using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Notifications;
+using AfterApply.Domain.TrackedJobs;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -129,6 +134,15 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
         await userA.PostAsJsonAsync($"/api/applications/{applicationId}/status",
             new ChangeStatusRequest(ApplicationStatus.Screening, "note", null), JsonOptions);
 
+        // TrackedJobs and FeedbackEntries are the tables the old hand-written sweep in
+        // DeleteAccountAsync never covered — they are here because they were the bug.
+        (await userA.PostAsJsonAsync("/api/tracked-jobs",
+            new CreateTrackedJobRequest("Watchlist Co", "Staff Engineer", null, null, null), JsonOptions))
+            .EnsureSuccessStatusCode();
+        (await userA.PostAsJsonAsync("/api/feedback",
+            new SubmitFeedbackRequest(FeedbackCategory.Idea, "Group my applications by company."), JsonOptions))
+            .EnsureSuccessStatusCode();
+
         // Same company name -> resolver reuses the same Company row (Sprint 4/5 dedup) -> proves it survives deletion.
         var userB = await RegisterAsync("userb.delete@example.com");
         var userBApplicationId = await CreateApplicationAsync(userB, "Shared Co");
@@ -162,6 +176,8 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
             (await db.Reminders.AnyAsync(r => r.UserId == userAId)).ShouldBeFalse();
             (await db.ImportBatches.AnyAsync(b => b.UserId == userAId)).ShouldBeFalse();
             (await db.RefreshTokens.AnyAsync(rt => rt.UserId == userAId)).ShouldBeFalse();
+            (await db.TrackedJobs.AnyAsync(t => t.UserId == userAId)).ShouldBeFalse();
+            (await db.FeedbackEntries.AnyAsync(f => f.UserId == userAId)).ShouldBeFalse();
 
             // Shared Company must survive - user B's application still references it.
             var userBApplication = await db.Applications.SingleAsync(a => a.Id == userBApplicationId);
@@ -170,6 +186,28 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
 
         var profileResponse = await userA.GetAsync("/api/users/me");
         profileResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    // The point of the cascade is that "deleting an account deletes its data" stops depending on
+    // anyone remembering to add a line to DeleteAccountAsync. That only holds if the constraint is
+    // really in the schema, so this asserts the schema rather than the code path: a row that
+    // belongs to nobody must be impossible to write in the first place.
+    [Fact]
+    public async Task A_User_Owned_Row_Cannot_Be_Written_Without_A_User()
+    {
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        // Its own Company rather than whatever another test left behind — xUnit makes no promise
+        // about the order tests inside a class run in.
+        var company = Company.Create("Orphan Check Co", DateTimeOffset.UtcNow);
+        db.Companies.Add(company);
+        await db.SaveChangesAsync();
+
+        db.TrackedJobs.Add(TrackedJob.Create(Guid.CreateVersion7(), company.Id, "Orphan Engineer",
+            null, null, null, DateTimeOffset.UtcNow));
+
+        await Should.ThrowAsync<DbUpdateException>(() => db.SaveChangesAsync());
     }
 
     [Fact]

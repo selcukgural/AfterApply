@@ -1,4 +1,5 @@
 using AfterApply.Domain.EmailIntegrations;
+using AfterApply.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DomainApplication = AfterApply.Domain.Applications.Application;
@@ -32,6 +33,13 @@ public sealed class EmailSuggestionConfiguration : IEntityTypeConfiguration<Emai
         builder.HasIndex(s => s.UserId);
         builder.HasIndex(s => new { s.UserId, s.Status });
         builder.HasIndex(s => new { s.EmailConnectionId, s.ProviderMessageId }).IsUnique();
+
+        // Cascade from the account — see ApplicationConfiguration for why this is a foreign key
+        // and not a line in DeleteAccountAsync.
+        builder.HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne<EmailConnection>()
             .WithMany()

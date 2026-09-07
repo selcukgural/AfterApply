@@ -82,7 +82,7 @@ public static class UserEndpoints
             return Results.File(bytes, "application/json", $"e-kariyerim-data-export-{DateTimeOffset.UtcNow:yyyy-MM-dd}.json");
         })
             .WithSummary("Download all of the current user's data as a JSON file")
-            .WithDescription("KVKK/GDPR data-portability export — applications, tracked jobs, import batches, and reminders.")
+            .WithDescription("KVKK/GDPR data-portability export — applications, tracked jobs, import batches, reminders, and feedback the user sent.")
             .Produces<AccountExportResponse>();
 
         return app;
