@@ -18,8 +18,11 @@ public interface ICvDocumentService
     /// too large, or its bytes are not the format its name claims.</exception>
     /// <exception cref="CvDocumentLimitReachedException">The user is already at the per-user
     /// cap.</exception>
+    /// <param name="consentAccepted">The user's explicit consent (KVKK m.6) for this upload, ticked
+    /// on the form. Checked here rather than only in the UI: consent is the lawful basis for
+    /// storing the file, so the boundary that stores it is the boundary that has to verify it.</param>
     Task<CvDocumentResponse> UploadAsync(Guid userId, Stream content, string fileName, long declaredLength,
-        CancellationToken cancellationToken);
+        bool consentAccepted, CancellationToken cancellationToken);
 
     /// <summary>Opens a CV the given user owns, or returns null when there is no such row for
     /// them — a document belonging to someone else is "not found", never "forbidden".</summary>
@@ -39,10 +42,14 @@ public interface ICvDocumentService
 /// <summary>An upload the server refused, carrying already-localized reasons. Mirrors
 /// <c>CsvImportValidationException</c>: the endpoint turns it into a 400 ValidationProblem keyed on
 /// the form field, which is what the web app's error extraction already understands.</summary>
-public sealed class CvUploadValidationException(IReadOnlyList<string> errors)
+/// <param name="field">Which form field the messages belong to, so the client can put the error
+/// next to the control that caused it — the file picker or the consent checkbox.</param>
+public sealed class CvUploadValidationException(IReadOnlyList<string> errors, string field = "file")
     : Exception("CV upload validation failed.")
 {
     public IReadOnlyList<string> Errors { get; } = errors;
+
+    public string Field { get; } = field;
 }
 
 /// <summary>

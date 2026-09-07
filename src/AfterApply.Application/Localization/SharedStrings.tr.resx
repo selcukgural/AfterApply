@@ -228,4 +228,7 @@
   <data name="CV_DOCUMENT_LIMIT_REACHED" xml:space="preserve">
     <value>En fazla {0} CV saklayabilirsiniz. Yenisini yüklemek için birini silin.</value>
   </data>
+  <data name="CV_CONSENT_REQUIRED" xml:space="preserve">
+    <value>CV'nizi saklayabilmemiz için açık rızanız gerekiyor. Onay kutusunu işaretleyip tekrar deneyin.</value>
+  </data>
 </root>

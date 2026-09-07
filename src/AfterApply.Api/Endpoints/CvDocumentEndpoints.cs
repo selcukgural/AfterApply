@@ -22,14 +22,19 @@ public static class CvDocumentEndpoints
                              "keep its own copy of the number.")
             .Produces<CvDocumentListResponse>();
 
-        group.MapPost("/", async ([FromForm] IFormFile file, ClaimsPrincipal user,
-            ICvDocumentService service, CancellationToken cancellationToken) =>
+        // consentAccepted is bool?, not bool, on purpose. A non-nullable bool bound [FromForm]
+        // throws when the field is absent, and that surfaced as a 500 — a malformed request
+        // answered with "something broke on our side", which is both wrong and Sentry noise.
+        // Null means "not given", which the service refuses the same way an explicit false is
+        // refused: a localized 400 pointing at the checkbox.
+        group.MapPost("/", async ([FromForm] IFormFile file, [FromForm] bool? consentAccepted,
+            ClaimsPrincipal user, ICvDocumentService service, CancellationToken cancellationToken) =>
         {
             try
             {
                 await using var stream = file.OpenReadStream();
                 var created = await service.UploadAsync(user.GetUserId(), stream, file.FileName, file.Length,
-                    cancellationToken);
+                    consentAccepted ?? false, cancellationToken);
 
                 return Results.Created($"/api/cv-documents/{created.Id}", created);
             }
@@ -37,15 +42,19 @@ public static class CvDocumentEndpoints
             {
                 return Results.ValidationProblem(new Dictionary<string, string[]>
                 {
-                    ["file"] = exception.Errors.ToArray()
+                    [exception.Field] = exception.Errors.ToArray()
                 });
             }
         }).DisableAntiforgery().RequireRateLimiting(DependencyInjection.UploadRateLimitPolicy)
             .WithSummary("Upload a CV")
-            .WithDescription("multipart/form-data with a single 'file' part. The extension, the size " +
-                             "and the file's own leading bytes are all checked server-side; a file " +
-                             "whose contents are not the format its name claims is refused. " +
-                             "Exceeding the per-user cap answers 400 with CV_DOCUMENT_LIMIT_REACHED.")
+            .WithDescription("multipart/form-data with a 'file' part and a 'consentAccepted' part. " +
+                             "consentAccepted must be true: a CV can carry special-category personal " +
+                             "data (KVKK art. 6), so explicit consent is the lawful basis for storing " +
+                             "it and is recorded per upload — an omitted or false value is refused " +
+                             "before the file is read. The extension, the size and the file's own " +
+                             "leading bytes are all checked server-side too; a file whose contents " +
+                             "are not the format its name claims is refused. Exceeding the per-user " +
+                             "cap answers 400 with CV_DOCUMENT_LIMIT_REACHED.")
             .Produces<CvDocumentResponse>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
             .Produces(StatusCodes.Status429TooManyRequests);

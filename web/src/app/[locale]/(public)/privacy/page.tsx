@@ -31,6 +31,7 @@ export default async function PrivacyPage() {
             <li>{t("cvStorage.access")}</li>
             <li>{t("cvStorage.noTransfer")}</li>
             <li>{t("cvStorage.deletion")}</li>
+            <li>{t("cvStorage.consent")}</li>
           </ul>
           <p className="mt-2">{t("cvStorage.sensitiveDataNote")}</p>
         </section>

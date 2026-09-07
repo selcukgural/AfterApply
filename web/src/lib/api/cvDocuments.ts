@@ -4,9 +4,13 @@ import { apiFetch, apiFetchBlob } from "./httpClient";
 export const cvDocumentsApi = {
   list: () => apiFetch<CvDocumentListResponse>("/api/cv-documents"),
 
-  upload: (file: File) => {
+  /** `consentAccepted` is the user's explicit consent (KVKK art. 6) for this one upload. It is a
+   *  parameter rather than a hardcoded `true` so the call site cannot forget the checkbox exists;
+   *  the server refuses the upload without it either way. */
+  upload: (file: File, consentAccepted: boolean) => {
     const body = new FormData();
     body.append("file", file);
+    body.append("consentAccepted", String(consentAccepted));
 
     // No Content-Type header: the browser has to set multipart/form-data with its own boundary
     // (see performFetch, which skips the JSON default for FormData bodies).

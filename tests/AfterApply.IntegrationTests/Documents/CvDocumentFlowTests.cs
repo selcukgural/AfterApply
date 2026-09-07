@@ -10,7 +10,11 @@ using AfterApply.Application.Documents.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Documents;
+using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.Documents;
@@ -75,14 +79,19 @@ public class CvDocumentFlowTests(SharedInfrastructure shared) : IAsyncLifetime
         return client;
     }
 
-    private static MultipartFormDataContent FileContent(byte[] bytes, string fileName)
+    private static MultipartFormDataContent FileContent(byte[] bytes, string fileName,
+        bool consentAccepted = true)
     {
         var part = new ByteArrayContent(bytes);
         // Deliberately a Content-Type the server must not believe: it decides the stored type from
         // the extension and the file's own bytes, never from what the client declared.
         part.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 
-        return new MultipartFormDataContent { { part, "file", fileName } };
+        return new MultipartFormDataContent
+        {
+            { part, "file", fileName },
+            { new StringContent(consentAccepted.ToString()), "consentAccepted" }
+        };
     }
 
     private static async Task<CvDocumentResponse> UploadAsync(HttpClient client, byte[] bytes, string fileName)
@@ -173,6 +182,74 @@ public class CvDocumentFlowTests(SharedInfrastructure shared) : IAsyncLifetime
 
         // Nothing was written: a refused upload must not leave bytes behind.
         Directory.Exists(_storageRoot).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Upload_Without_Consent_Is_Refused_And_Stores_Nothing()
+    {
+        var client = await AuthenticatedClientAsync("cv.noconsent@example.com");
+
+        using var content = FileContent(PdfBytes, "cv.pdf", consentAccepted: false);
+        var response = await client.PostAsync("/api/cv-documents", content);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        // Scoped to the checkbox, not to the file picker, so the client can put the message where
+        // the user has to act.
+        var problem = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(JsonOptions);
+        problem!.Errors.ShouldContainKey("consentAccepted");
+
+        // Consent is the lawful basis for holding the file, so a refused upload must leave neither
+        // a row nor an object behind.
+        var list = await client.GetFromJsonAsync<CvDocumentListResponse>("/api/cv-documents", JsonOptions);
+        list!.Items.ShouldBeEmpty();
+        Directory.Exists(_storageRoot).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Upload_Without_The_Consent_Field_At_All_Is_Refused()
+    {
+        var client = await AuthenticatedClientAsync("cv.consentmissing@example.com");
+
+        // An older client, or a hand-rolled request, that never learned about the field.
+        var part = new ByteArrayContent(PdfBytes);
+        part.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        using var content = new MultipartFormDataContent { { part, "file", "cv.pdf" } };
+
+        var response = await client.PostAsync("/api/cv-documents", content);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task A_Stored_Cv_Records_When_Consent_Was_Given()
+    {
+        var client = await AuthenticatedClientAsync("cv.consentstamp@example.com");
+
+        var before = DateTimeOffset.UtcNow.AddSeconds(-5);
+        var created = await UploadAsync(client, PdfBytes, "consented.pdf");
+
+        using var scope = _factory!.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var stored = await dbContext.CvDocuments.SingleAsync(d => d.Id == created.Id);
+
+        stored.ConsentAcceptedAt.ShouldNotBeNull();
+        stored.ConsentAcceptedAt!.Value.ShouldBeGreaterThan(before);
+    }
+
+    [Fact]
+    public async Task Upload_Refuses_A_File_Over_The_Size_Cap()
+    {
+        var client = await AuthenticatedClientAsync("cv.toolarge@example.com");
+
+        // Just past the 5 MB cap, and carrying a real PDF header so it is refused for its size
+        // rather than for its contents.
+        var oversized = new byte[5 * 1024 * 1024 + 1];
+        PdfBytes.CopyTo(oversized, 0);
+
+        using var content = FileContent(oversized, "big.pdf");
+        var response = await client.PostAsync("/api/cv-documents", content);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]

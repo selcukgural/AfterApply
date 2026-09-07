@@ -120,7 +120,11 @@ public class CvGoogleCloudStorageTests(SharedInfrastructure shared, FakeGcsFixtu
 
         var part = new ByteArrayContent(PdfBytes);
         part.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-        using var content = new MultipartFormDataContent { { part, "file", "cv.pdf" } };
+        using var content = new MultipartFormDataContent
+        {
+            { part, "file", "cv.pdf" },
+            { new StringContent("true"), "consentAccepted" }
+        };
 
         var uploadResponse = await client.PostAsync("/api/cv-documents", content);
         uploadResponse.EnsureSuccessStatusCode();

@@ -39,10 +39,23 @@ public sealed class CvDocument : AuditableEntity
 
     public DateTimeOffset UploadedAt { get; private set; }
 
+    /// <summary>
+    /// When the user gave explicit consent (KVKK m.6) for this particular upload. Stamped by
+    /// <see cref="Create"/>, which is only reachable once the service has verified the consent
+    /// flag — so a row existing is the record that consent was given for it.
+    ///
+    /// Nullable only for rows written before consent was required (2026-09-07). Backfilling those
+    /// with a timestamp would be inventing a consent that was never given, which is the one thing
+    /// a consent record must never do; null honestly means "we did not ask".
+    /// </summary>
+    public DateTimeOffset? ConsentAcceptedAt { get; private set; }
+
     private CvDocument()
     {
     }
 
+    /// <remarks>Callers must have verified the user's explicit consent before calling this —
+    /// <paramref name="now"/> is recorded as the moment it was given.</remarks>
     public static CvDocument Create(Guid userId, string fileName, CvFileFormat format, long sizeBytes,
         bool isDefault, DateTimeOffset now)
     {
@@ -59,6 +72,7 @@ public sealed class CvDocument : AuditableEntity
             SizeBytes = sizeBytes,
             IsDefault = isDefault,
             UploadedAt = now,
+            ConsentAcceptedAt = now,
             CreatedAt = now,
             UpdatedAt = now
         };

@@ -10,7 +10,7 @@ export type CvFileProblem = "unsupportedType" | "tooLarge";
 
 /** Matches StorageOptions.MaxFileSizeBytes. Duplicated rather than fetched: it is a constant of
  *  the product, and a wrong copy here fails safe (the server still refuses). */
-export const MAX_CV_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+export const MAX_CV_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 const ACCEPTED_EXTENSIONS = [".pdf", ".doc", ".docx"] as const;
 

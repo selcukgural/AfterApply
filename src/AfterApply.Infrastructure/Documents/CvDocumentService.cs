@@ -35,8 +35,15 @@ internal sealed class CvDocumentService(
     }
 
     public async Task<CvDocumentResponse> UploadAsync(Guid userId, Stream content, string fileName,
-        long declaredLength, CancellationToken cancellationToken)
+        long declaredLength, bool consentAccepted, CancellationToken cancellationToken)
     {
+        // First, before anything is read or stored: without consent there is no lawful basis to
+        // hold the file, so there is nothing to validate afterwards.
+        if (!consentAccepted)
+        {
+            throw new CvUploadValidationException([localizer["CV_CONSENT_REQUIRED"]], field: "consentAccepted");
+        }
+
         var maxFileSizeBytes = options.Value.MaxFileSizeBytes;
 
         if (CvFileRules.InspectClaim(fileName, declaredLength, maxFileSizeBytes) is { } problem)

@@ -3739,6 +3739,51 @@ Sonuncusu bilerek tek bir sınıf: suite'in geçmişi konteyner fırtınalarıyl
 çünkü `web`'de jsdom/testing-library yok.
 
 ---
+## CV yüklemede açık rıza, ve dosya sınırı 5 MB'a indirildi (2026-09-07)
+
+Aynı günün ikinci turu. Özellik canlıya alındıktan sonra kullanıcı iki değişiklik istedi:
+yükleme öncesinde açık rıza, ve 10 MB yerine 5 MB sınır.
+
+**Rıza her yükleme için ayrı alınıyor, bir kez değil.** Bu, 2026-09-01'de CV/OpenAI için verilen
+kararın aynısı ve gerekçesi de aynı: önceden işaretli bir onay kutusu geçerli açık rıza sayılmaz.
+Dolayısıyla kutu her ziyarette işaretsiz başlıyor, başarılı bir yüklemeden sonra tekrar boşalıyor,
+ve verildiği an satıra damgalanıyor (`CvDocuments.ConsentAcceptedAt`). Hesap düzeyinde tek bir
+"CV rızası" bayrağı tutulmadı: rıza belirli bir dosyanın saklanmasına veriliyor, hesabın ömrüne
+değil.
+
+**Kutu bir görsel uyarı değil, bir kapı.** İşaretlenmeden dosya seçici de sürükle-bırak alanı da
+kapalı — rıza, kullanıcının dosya seçicisine giderken üstünden atladığı bir şey olmamalı. Sunucu
+da bunu ayrıca zorunlu kılıyor (`CV_CONSENT_REQUIRED`): rıza dosya okunmadan önce kontrol
+ediliyor, çünkü rızasız dosyayı saklamanın hukuki sebebi yok, dolayısıyla doğrulanacak bir şey de
+yok. Rızasız bir istek ne satır ne obje bırakıyor; entegrasyon testi bunu doğruluyor.
+
+**`ConsentAcceptedAt` nullable ve geriye dönük doldurulmadı.** 2026-09-07 öncesinde yüklenmiş
+satırlarda null. Bunlara bir timestamp yazmak, hiç verilmemiş bir rızayı kayıt altına almak
+olurdu — bir rıza kaydının yapmaması gereken tek şey tam olarak budur. Null dürüstçe "sormadık"
+demek.
+
+**Alan `bool` değil `bool?` — bunu bir test yakaladı.** `[FromForm] bool` alanı hiç
+gönderilmediğinde minimal API bağlama sırasında atıyor ve bu 500 olarak dönüyordu: bozuk bir
+isteğe "bizde bir şey patladı" cevabı, hem yanlış hem de Sentry'de gürültü. `bool?` + `?? false`
+ile eksik alan da açıkça `false` gibi ele alınıyor ve onay kutusunu işaret eden yerelleştirilmiş
+bir 400 dönüyor. Eski bir istemcinin (ya da elle kurulmuş bir isteğin) alacağı cevap da bu.
+
+**5 MB, 10 MB değil.** Metin ağırlıklı bir PDF 1 MB'ın altında, görsel ağırlıklı bir tasarım CV'si
+bile nadiren 3 MB'ı geçiyor; 10 MB gereğinden genişti. 5 MB ayrıca CSV içe aktarmanın kendi
+sınırıyla (`ImportOptions.MaxFileSizeBytes`) aynı sayı, yani ürünün "yüklediğin dosya" için tek
+bir rakamı var, iki tane değil. Sayı beş yerde geçiyor (sunucu seçeneği, istemci sabiti, bırakma
+alanı ipucu, hata mesajı, Yardım ve README) ve hepsi birlikte güncellendi; `cvFile.test.ts`'e
+sabiti sabitleyen bir test eklendi, tıpkı `MaxPerUser.ShouldBe(10)` gibi.
+
+**Yardım görseli yeniden çekildi.** `cv-list.png` hem "10 MB" yazıyor hem de onay kutusunu
+göstermiyordu — yani iki ayrı yerden yanlıştı.
+
+**KVKK:** `PRIVACY_CHECKLIST.md` madde 8, avukat yanıtını beklemek yerine en muhafazakâr
+seçenekle kapatıldı. Avukata kalan soru daraldı: her yüklemede yenilenen bu rıza m.6 için yeterli
+mi, yoksa özel nitelikli veri için ayrıştırılmış ayrı bir metin mi gerekiyor? `/privacy#cv-storage`
+hukuki sebebi, rızanın her yüklemede yenilendiğini ve geri çekme yöntemini ayrı ayrı yazıyor.
+
+---
 ---
 
 

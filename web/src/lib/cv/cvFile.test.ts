@@ -30,6 +30,15 @@ describe("inspectCvFile", () => {
   });
 });
 
+describe("MAX_CV_FILE_SIZE_BYTES", () => {
+  it("is 5 MB", () => {
+    // Quoted in the dropzone hint, the too-large message, the help centre and README, and it has
+    // to match StorageOptions.MaxFileSizeBytes on the server. This test is the reminder that all
+    // five move together.
+    expect(MAX_CV_FILE_SIZE_BYTES).toBe(5 * 1024 * 1024);
+  });
+});
+
 describe("CV_FILE_ACCEPT", () => {
   it("lists exactly the extensions the server accepts", () => {
     expect(CV_FILE_ACCEPT).toBe(".pdf,.doc,.docx");
