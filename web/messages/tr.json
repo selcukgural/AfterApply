@@ -601,7 +601,8 @@
       "access": "Dosyaya yalnızca giriş yapmış hâlde siz erişebilirsiniz. Her indirme isteği, dosyanın gerçekten size ait olup olmadığı kontrol edildikten sonra e-kariyerim sunucusu üzerinden aktarılır; paylaşılabilir veya süreli bir bağlantı hiçbir zaman üretilmez. Başka kullanıcılara, işverenlere veya iş ilanı platformlarına gösterilmez.",
       "noTransfer": "CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez — yapay zekâ servisleri dahil. Dosya okunmaz, metne çevrilmez ve analiz edilmez; yalnızca saklanır ve size geri verilir. Bir PDF'in ilk sayfasını CV'lerim sayfasında gördüğünüz önizleme, sunucuda değil kendi tarayıcınızda oluşturulur.",
       "deletion": "Sildiğiniz bir CV kalıcı olarak silinir — depolama tarafında kurtarma penceresi bilerek kapalı tutulur. Hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir.",
-      "sensitiveDataNote": "Bir CV, iş deneyiminizin yanı sıra fotoğraf, doğum tarihi, askerlik durumu veya sağlık bilgisi gibi hassas sayılabilecek veriler içerebilir. Ne yükleyeceğinize siz karar verirsiniz: bu alanların CV'nizde bulunması hizmetin çalışması için gerekli değildir, ve dilediğiniz zaman dosyayı silebilirsiniz."
+      "sensitiveDataNote": "Bir CV, iş deneyiminizin yanı sıra fotoğraf, doğum tarihi, askerlik durumu veya sağlık bilgisi gibi hassas sayılabilecek veriler içerebilir; bu nedenle yükleme öncesinde ayrıca açık rızanızı alıyoruz. Ne yükleyeceğinize siz karar verirsiniz: bu alanların CV'nizde bulunması hizmetin çalışması için gerekli değildir, ve dilediğiniz zaman dosyayı silebilirsiniz.",
+      "consent": "Hukuki sebep açık rızanızdır ve bu rıza her yükleme için ayrı ayrı alınır: dosyayı seçmeden önce onay kutusunu işaretlemeniz gerekir, kutu hiçbir zaman önceden işaretli gelmez ve her yüklemeden sonra yeniden boşalır. Rızanızı dosyayı silerek istediğiniz zaman geri çekebilirsiniz; hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir."
     }
   },
   "extensionPrivacy": {
@@ -1321,7 +1322,7 @@
         },
         "step2": {
           "title": "Dosyayı seçin veya sürükleyin",
-          "body": "CV Yükle düğmesine basın ya da dosyayı listenin altındaki kesikli alana sürükleyin. PDF, DOC ve DOCX kabul edilir; dosya başına sınır 10 MB'dır."
+          "body": "Onay kutusunu işaretleyin, ardından CV Yükle düğmesine basın ya da dosyayı listenin altındaki kesikli alana sürükleyin. PDF, DOC ve DOCX kabul edilir; dosya başına sınır 5 MB'dır."
         },
         "step3": {
           "title": "Kotanızı takip edin",
@@ -1342,7 +1343,7 @@
       },
       "calloutPrivacy": {
         "title": "CV'leriniz nerede saklanıyor?",
-        "body": "Dosyalarınız Avrupa Birliği bölgesindeki (europe-west1) Google Cloud Storage üzerinde, herkese kapalı bir alanda saklanır. Yapay zekâ dahil hiçbir üçüncü tarafa gönderilmez. Hesabınızı sildiğinizde dosyalarınız da silinir."
+        "body": "Dosyalarınız Avrupa Birliği bölgesindeki (Google Cloud, europe-west1) herkese kapalı bir depolama alanında saklanır. Yapay zekâ dahil hiçbir üçüncü tarafa gönderilmez. Bir CV fotoğraf veya sağlık bilgisi gibi hassas veriler taşıyabildiği için her yükleme öncesinde açık rızanızı ayrıca alıyoruz; onay kutusu hiçbir zaman önceden işaretli gelmez. Rızanızı dosyayı silerek geri çekebilirsiniz, ve hesabınızı sildiğinizde dosyalarınız da silinir."
       }
     }
   },
@@ -1370,7 +1371,7 @@
     "deleteConfirmAction": "Kalıcı olarak sil",
     "dropzone": {
       "idle": "Dosyayı buraya sürükle",
-      "hint": "PDF, DOC veya DOCX — en fazla 10 MB"
+      "hint": "PDF, DOC veya DOCX — en fazla 5 MB"
     },
     "preview": {
       "firstPageOnly": "Yalnızca ilk sayfa gösterilir. Tamamı için dosyayı indir.",
@@ -1387,11 +1388,17 @@
     },
     "problem": {
       "unsupportedType": "Sadece .pdf, .doc ve .docx dosyaları yüklenebilir.",
-      "tooLarge": "Dosya 10 MB sınırını aşıyor."
+      "tooLarge": "Dosya 5 MB sınırını aşıyor."
     },
     "uploadError": "CV yüklenemedi. Lütfen tekrar dene.",
     "deleteError": "CV silinemedi. Lütfen tekrar dene.",
     "downloadError": "Dosya indirilemedi. Lütfen tekrar dene.",
-    "defaultError": "Varsayılan CV değiştirilemedi. Lütfen tekrar dene."
+    "defaultError": "Varsayılan CV değiştirilemedi. Lütfen tekrar dene.",
+    "consent": {
+      "before": "CV'mi saklamanız için",
+      "link": "açık rıza veriyorum",
+      "after": "— dosyam yalnızca bana gösterilir ve hiçbir üçüncü tarafa gönderilmez.",
+      "sensitiveWarning": "CV'nizde fotoğraf, doğum tarihi, sağlık veya askerlik durumu gibi hassas bilgiler bulunması zorunlu değildir; ne yükleyeceğine sen karar verirsin. Rızanı, dosyayı silerek istediğin zaman geri çekebilirsin."
+    }
   }
 }

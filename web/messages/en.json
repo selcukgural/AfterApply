@@ -601,7 +601,8 @@
       "access": "Only you, while signed in, can reach the file. Every download is checked against your own account and streamed through the e-kariyerim server; no shareable or time-limited link is ever produced. It is never shown to other users, to employers or to job boards.",
       "noTransfer": "The contents of your CV are never sent to any third party, AI services included. The file is not read, converted to text or analysed; it is only stored and handed back to you. The first-page preview you see on the My CVs page is rendered in your own browser, not on the server.",
       "deletion": "A CV you delete is deleted permanently — the storage-side recovery window is deliberately turned off. Deleting your account deletes all of your CVs with it.",
-      "sensitiveDataNote": "A CV can carry more than your work history — a photo, a date of birth, military-service or health information. What goes into it is your decision: none of those fields are needed for the service to work, and you can delete the file at any time."
+      "sensitiveDataNote": "A CV can carry more than your work history — a photo, a date of birth, or health or military-service information — which is why we ask for your explicit consent before each upload. What goes into it is your decision: none of those fields are needed for the service to work, and you can delete the file at any time.",
+      "consent": "The lawful basis is your explicit consent, and it is taken separately for every upload: you tick the consent box before choosing a file, the box is never pre-ticked, and it clears again after each upload. You can withdraw consent at any time by deleting the file, and deleting your account deletes all of your CVs with it."
     }
   },
   "extensionPrivacy": {
@@ -1321,7 +1322,7 @@
         },
         "step2": {
           "title": "Pick or drop a file",
-          "body": "Press Upload CV, or drag the file onto the dashed area below the list. PDF, DOC and DOCX are accepted, up to 10 MB per file."
+          "body": "Tick the consent box, then press Upload CV or drag the file onto the dashed area below the list. PDF, DOC and DOCX are accepted, up to 5 MB per file."
         },
         "step3": {
           "title": "Watch your quota",
@@ -1342,7 +1343,7 @@
       },
       "calloutPrivacy": {
         "title": "Where are your CVs stored?",
-        "body": "Your files are held in a bucket closed to the public on Google Cloud Storage in the EU region (europe-west1). They are never sent to any third party, AI services included. Deleting your account deletes your files with it."
+        "body": "Your files are held in a bucket closed to the public on Google Cloud in the EU region (europe-west1). They are never sent to any third party, AI services included. Because a CV can carry sensitive data such as a photo or health information, we ask for your explicit consent before each upload; the box is never pre-ticked. You can withdraw consent by deleting the file, and deleting your account deletes your files with it."
       }
     }
   },
@@ -1370,7 +1371,7 @@
     "deleteConfirmAction": "Delete permanently",
     "dropzone": {
       "idle": "Drop a file here",
-      "hint": "PDF, DOC or DOCX — up to 10 MB"
+      "hint": "PDF, DOC or DOCX — up to 5 MB"
     },
     "preview": {
       "firstPageOnly": "Only the first page is shown. Download the file to read all of it.",
@@ -1387,11 +1388,17 @@
     },
     "problem": {
       "unsupportedType": "Only .pdf, .doc and .docx files can be uploaded.",
-      "tooLarge": "The file exceeds the 10 MB limit."
+      "tooLarge": "The file exceeds the 5 MB limit."
     },
     "uploadError": "The CV could not be uploaded. Please try again.",
     "deleteError": "The CV could not be deleted. Please try again.",
     "downloadError": "The file could not be downloaded. Please try again.",
-    "defaultError": "The default CV could not be changed. Please try again."
+    "defaultError": "The default CV could not be changed. Please try again.",
+    "consent": {
+      "before": "I give my",
+      "link": "explicit consent",
+      "after": "to storing my CV — the file is shown only to me and is never sent to any third party.",
+      "sensitiveWarning": "A CV does not have to carry a photo, a date of birth, or health or military-service information; what goes into it is your decision. You can withdraw your consent at any time by deleting the file."
+    }
   }
 }

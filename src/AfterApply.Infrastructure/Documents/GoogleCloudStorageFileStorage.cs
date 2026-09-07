@@ -36,8 +36,8 @@ internal sealed class GoogleCloudStorageFileStorage(StorageClient client, IOptio
         // Streamed rather than downloaded into a buffer: DownloadObjectAsync wants a destination
         // stream, which for a proxied download would mean holding the whole file in memory (or in
         // Cloud Run's in-memory temp directory, which is the same thing) before the first byte
-        // reaches the client. At the 10 MB cap and Cloud Run's default concurrency that is a real
-        // amplification vector, so the response body is piped straight from GCS instead.
+        // reaches the client. At the 5 MB cap and Cloud Run's default concurrency that is still a
+        // real amplification vector, so the response body is piped straight from GCS instead.
         var request = client.Service.Objects.Get(_bucket, objectName);
         request.Alt = ObjectsResource.GetRequest.AltEnum.Media;
 

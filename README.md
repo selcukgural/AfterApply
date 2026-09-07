@@ -241,9 +241,18 @@ kept switched off until enough real usage exists to make it meaningful; see
 
 ## CV storage (`/cv`)
 
-Users can keep up to 10 CV files (PDF/DOC/DOCX, 10 MB each), download them,
+Users can keep up to 10 CV files (PDF/DOC/DOCX, 5 MB each), download them,
 delete them, mark one as the default, and record which CV an application was
 sent with. Files live in object storage; Postgres only holds the metadata.
+
+Uploading requires **explicit consent, taken per upload** — a CV can carry
+special-category personal data (KVKK art. 6). The checkbox is never
+pre-ticked and clears again after each upload, the file picker and drop zone
+stay disabled until it is ticked, and the server refuses an upload without it
+before reading the file (`CV_CONSENT_REQUIRED`). The moment consent was given
+is stored on the row (`CvDocuments.ConsentAcceptedAt`); it is null on rows
+written before 2026-09-07, which is deliberate — backfilling it would record a
+consent nobody gave.
 
 Which storage backend is used comes from the `Storage` configuration section:
 
@@ -252,7 +261,7 @@ Which storage backend is used comes from the `Storage` configuration section:
 | `Storage:Provider` | `FileSystem` | `GoogleCloudStorage` |
 | `Storage:BucketName` | — | `afterapply-cvs` (set by `deploy.yml`) |
 | `Storage:LocalRootPath` | a directory under the OS temp dir | — |
-| `Storage:MaxFileSizeBytes` | `10485760` (10 MB) | same |
+| `Storage:MaxFileSizeBytes` | `5242880` (5 MB) | same |
 
 So a fresh clone needs no configuration at all: uploads land in a temp
 directory. Startup **refuses** `FileSystem` when

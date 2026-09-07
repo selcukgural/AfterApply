@@ -228,4 +228,7 @@
   <data name="CV_DOCUMENT_LIMIT_REACHED" xml:space="preserve">
     <value>You have reached the limit of {0} stored CVs. Delete one to upload another.</value>
   </data>
+  <data name="CV_CONSENT_REQUIRED" xml:space="preserve">
+    <value>To store your CV we need your explicit consent. Tick the consent box and try again.</value>
+  </data>
 </root>

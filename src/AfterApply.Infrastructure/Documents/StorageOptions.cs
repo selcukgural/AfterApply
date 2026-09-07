@@ -31,8 +31,11 @@ public sealed class StorageOptions
     /// the OS temp directory so a fresh clone runs with no configuration at all.</summary>
     public string LocalRootPath { get; init; } = Path.Combine(Path.GetTempPath(), "afterapply-cv-storage");
 
-    /// <summary>Per-file cap. 10 MB is generous for a CV (a text-heavy PDF is well under 1 MB) and
-    /// far below Cloud Run's 32 MiB request limit, so the request never fails at the platform
-    /// boundary with an error the app cannot phrase.</summary>
-    public long MaxFileSizeBytes { get; init; } = 10 * 1024 * 1024;
+    /// <summary>Per-file cap. 5 MB is already generous for a CV — a text-heavy PDF is well under
+    /// 1 MB, and a design-led one with embedded images rarely passes 3 — and it is far below Cloud
+    /// Run's 32 MiB request limit, so the request never fails at the platform boundary with an
+    /// error the app cannot phrase. It also matches the CSV import's own cap
+    /// (<c>ImportOptions.MaxFileSizeBytes</c>), so the product has one number for "a file you
+    /// upload", not two.</summary>
+    public long MaxFileSizeBytes { get; init; } = 5 * 1024 * 1024;
 }

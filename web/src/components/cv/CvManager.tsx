@@ -9,6 +9,8 @@ import { ApiError } from "@/lib/api/httpClient";
 import { formatFileSize } from "@/lib/imports/linkedInExportFile";
 import { CV_FILE_ACCEPT, canPreview, cvFormatLabel, inspectCvFile, type CvFileProblem } from "@/lib/cv/cvFile";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Link } from "@/i18n/navigation";
 import { CvPdfPreview } from "@/components/cv/CvPdfPreview";
 
 const CV_QUERY_KEY = ["cvDocuments"] as const;
@@ -37,7 +39,13 @@ export function CvManager() {
   const [isDragging, setIsDragging] = useState(false);
   const [fileProblem, setFileProblem] = useState<CvFileProblem | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [consentError, setConsentError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // Starts unticked on every visit, and is cleared again after each upload. A pre-ticked box is
+  // not valid explicit consent, and consent here is given per file rather than once per account —
+  // the same rule the CV/OpenAI consent followed before that feature was removed
+  // (DECISIONS.md 2026-09-01).
+  const [consentAccepted, setConsentAccepted] = useState(false);
 
   const { data, isLoading } = useQuery({ queryKey: CV_QUERY_KEY, queryFn: () => cvDocumentsApi.list() });
 
@@ -52,12 +60,28 @@ export function CvManager() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: CV_QUERY_KEY });
 
   const uploadMutation = useMutation({
-    mutationFn: (file: File) => cvDocumentsApi.upload(file),
+    mutationFn: (file: File) => cvDocumentsApi.upload(file, consentAccepted),
     onSuccess: async (created) => {
       setSelectedId(created.id);
+      // Consent covers the file that was just stored, not the next one.
+      setConsentAccepted(false);
       await invalidate();
     },
-    onError: (error) => setErrorMessage(error instanceof ApiError ? error.message : t("uploadError")),
+    onError: (error) => {
+      // The server scopes a refused upload to the field that caused it, so a missing consent lands
+      // next to the checkbox rather than in the page-level error line.
+      const fieldErrors =
+        error instanceof ApiError && error.body && typeof error.body === "object" && "errors" in error.body
+          ? (error.body as { errors: Record<string, string[]> }).errors
+          : undefined;
+
+      if (fieldErrors?.consentAccepted?.[0]) {
+        setConsentError(fieldErrors.consentAccepted[0]);
+        return;
+      }
+
+      setErrorMessage(error instanceof ApiError ? error.message : t("uploadError"));
+    },
   });
 
   const deleteMutation = useMutation({
@@ -92,6 +116,7 @@ export function CvManager() {
 
   const handleFile = (file: File) => {
     setErrorMessage(null);
+    setConsentError(null);
 
     const problem = inspectCvFile(file);
     setFileProblem(problem);
@@ -105,6 +130,9 @@ export function CvManager() {
   };
 
   const isBusy = uploadMutation.isPending || deleteMutation.isPending;
+  // Consent gates the upload controls themselves, so the box cannot be an afterthought clicked
+  // past on the way to a file picker.
+  const canUpload = consentAccepted && !isBusy && !isFull;
 
   return (
     <div className="flex flex-col gap-6">
@@ -127,7 +155,7 @@ export function CvManager() {
             type="file"
             accept={CV_FILE_ACCEPT}
             className="sr-only"
-            disabled={isBusy || isFull}
+            disabled={!canUpload}
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) {
@@ -138,9 +166,30 @@ export function CvManager() {
             }}
           />
 
+          <Checkbox
+            id="cvConsentAccepted"
+            checked={consentAccepted}
+            onChange={(event) => {
+              setConsentAccepted(event.target.checked);
+              setConsentError(null);
+            }}
+            error={consentError ?? undefined}
+            label={
+              <>
+                {t("consent.before")}{" "}
+                <Link href="/privacy#cv-storage" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
+                  {t("consent.link")}
+                </Link>{" "}
+                {t("consent.after")}
+              </>
+            }
+          />
+
+          <p className="text-xs leading-5 text-gray-500 dark:text-gray-400">{t("consent.sensitiveWarning")}</p>
+
           <Button
             onClick={() => fileInputRef.current?.click()}
-            disabled={isBusy || isFull}
+            disabled={!canUpload}
             className="flex items-center justify-center gap-2"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -225,7 +274,7 @@ export function CvManager() {
             onDragEnter={(event) => {
               event.preventDefault();
               dragDepth.current += 1;
-              if (!isBusy && !isFull) {
+              if (canUpload) {
                 setIsDragging(true);
               }
             }}
@@ -241,7 +290,7 @@ export function CvManager() {
               event.preventDefault();
               dragDepth.current = 0;
               setIsDragging(false);
-              if (isBusy || isFull) {
+              if (!canUpload) {
                 return;
               }
               const file = event.dataTransfer.files?.[0];
@@ -254,7 +303,7 @@ export function CvManager() {
               isDragging
                 ? "border-accent bg-accent-wash"
                 : "border-gray-300 bg-gray-50 hover:border-accent dark:border-gray-700 dark:bg-gray-900/60"
-            } ${isBusy || isFull ? "pointer-events-none opacity-60" : ""}`}
+            } ${canUpload ? "" : "pointer-events-none opacity-60"}`}
           >
             <span className="text-sm text-gray-600 dark:text-gray-400">{t("dropzone.idle")}</span>
             <span className="text-xs text-gray-500 dark:text-gray-500">{t("dropzone.hint")}</span>
