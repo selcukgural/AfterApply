@@ -548,11 +548,35 @@ Sıra numarası = ele alınma sırası. Madde numarası (K1-K6) = kalıcı kimli
   `CandidateExperienceScore`, güven aralığı.
 - **Neden ulaşmıyor:** İki ayrı sebep — (a) flag kapalı, (b) `web/src` içinde
   tek bir referansı yok, yani flag açılsa bile gösterecek ekran yok.
-- **Kilidi:** Üç tanesi de bizde değil:
-  1. **Veri hacmi** — `HiddenBelow: 20`. Sıfır kullanıcıyla her şirket "gizli".
-  2. **Hukuki görüş** — KVKK + itibar hukuku. Bu faz avukatla başlar,
-     migration'la değil.
-  3. **Eşik kararı** — 20 çok düşük; isimle anmadan önce en az 50 önerilir.
+- **Kilidi:** Üçünden biri bizdeydi ve kapatıldı; ikisi hâlâ dışarıda:
+  1. ~~**Eşik kararı**~~ — **yapıldı (2026-09-07).** Merdiven 20/50/200/1000'den
+     **50/100/250/1000**'e çıkarıldı. 20 başvuru, tek bir kötü işe alım
+     yöneticisinin her yüzdeyi birkaç puan oynatabildiği bir örneklem; şirket
+     ise isimle anılıyor. Eşiği yükseltmek her zaman daha fazlasını gizler,
+     yani güvenli; düşürmek adalet incelemesi ister — bunu bir unit test
+     koruyor (`The_Shipped_Ladder_Never_Names_A_Company_Below_Fifty_Applications`).
+  2. **Veri hacmi** — dışarıda. Kullanıcı gerekiyor.
+  3. **Hukuki görüş** — dışarıda. KVKK + itibar hukuku; bu faz avukatla
+     başlar, migration'la değil.
+
+**Ayrıca yapıldı (2026-09-07) — dönem penceresi:**
+
+Metrikler tüm zamanların toplamıydı; hiçbir yerde tarih filtresi yoktu. Bu
+sadece sunum eksiği değil, **adalet sorunuydu**: iki yıl önce herkesi yok sayıp
+sonra düzelmiş bir şirket eski sayısını sonsuza kadar taşır, düzelmesinin
+sayıya yansımasının yolu olmaz. Artık `CompanyIntelligence:WindowMonths`
+(varsayılan 12) ile pencereleniyor, `AppliedAt` üzerinden — böylece örneklem
+temiz bir kohort oluyor ("bu dönemde yapılan başvurular"), eski bir başvuruyla
+yeni bir durum değişikliği karışmıyor. Yanıt artık `WindowStart`/`WindowEnd`
+taşıyor; `Hidden` durumunda bile, çünkü "bu dönemde eşiğin altında" ile "hiç
+bu kadar olmadı" farklı iddialar ve yalnızca ilki doğru.
+
+**Yayından önce kapatılması gereken açık madde:** çok yeni başvurular
+yanıtlanmaya vakit bulamadığı için yanıt oranını aşağı, ghosting oranını yukarı
+çekiyor. 12 ayda sapma küçük, 1 ayda olmazdı. Dürüst çözüm, ghosting eşiğinden
+genç başvuruları bu iki paydadan çıkarmak — ama bu sayıların *anlamını*
+değiştirir, dolayısıyla adalet/hukuk incelemesinin parçası, tek başına bir kod
+değişikliği değil. Bkz. `CompanyIntelligenceOptions.WindowMonths` yorumu.
 - **Bu yüzden en sonda.** Kod hazır olması onu ilk sıraya taşımıyor; K1'i
   bugün açmak boş ekran yayınlamak demek.
 

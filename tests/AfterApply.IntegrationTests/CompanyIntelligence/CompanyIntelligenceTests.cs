@@ -223,6 +223,46 @@ public class CompanyIntelligenceTests(SharedInfrastructure shared) : IAsyncLifet
     }
 
     [Fact]
+    public async Task Applications_Older_Than_The_Window_Do_Not_Count()
+    {
+        // An unbounded aggregate gives a company no way to ever improve: whatever it did two years
+        // ago would stay in its number forever. Two applications inside the window, two outside —
+        // only the recent pair may be counted, and the response has to say which period that is.
+        var (_, companyId) = await CreateApplicationAsync(_enabledClient, "Windowed Co", DateTimeOffset.UtcNow.AddDays(-20));
+        await CreateApplicationAsync(_enabledClient, "Windowed Co", DateTimeOffset.UtcNow.AddDays(-60));
+        await CreateApplicationAsync(_enabledClient, "Windowed Co", DateTimeOffset.UtcNow.AddMonths(-18));
+        await CreateApplicationAsync(_enabledClient, "Windowed Co", DateTimeOffset.UtcNow.AddYears(-3));
+
+        var response = await _enabledClient.GetAsync($"/api/company-intelligence/{companyId}");
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<CompanyIntelligenceResponse>(JsonOptions);
+
+        result.ShouldNotBeNull();
+        result!.Metrics.ShouldNotBeNull();
+        result.Metrics!.TotalApplications.ShouldBe(2);
+
+        result.WindowEnd.ShouldBeGreaterThan(result.WindowStart);
+        (result.WindowEnd - result.WindowStart).TotalDays.ShouldBeGreaterThan(300);
+    }
+
+    [Fact]
+    public async Task The_Window_Is_Reported_Even_When_The_Company_Is_Hidden()
+    {
+        // "Fewer than the threshold in this period" and "fewer ever" are different claims, and only
+        // the first one is true — so the period travels with the Hidden answer too.
+        var (_, companyId) = await CreateApplicationAsync(_enabledClient, "Hidden Window Co", DateTimeOffset.UtcNow.AddDays(-3));
+
+        var response = await _enabledClient.GetAsync($"/api/company-intelligence/{companyId}");
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<CompanyIntelligenceResponse>(JsonOptions);
+
+        result.ShouldNotBeNull();
+        result!.Confidence.ShouldBe(ConfidenceBucket.Hidden);
+        result.Metrics.ShouldBeNull();
+        result.WindowEnd.ShouldBeGreaterThan(result.WindowStart);
+    }
+
+    [Fact]
     public async Task Endpoint_Returns_Hidden_With_Null_Metrics_When_Flag_Enabled_And_Below_Threshold()
     {
         var (_, companyId) = await CreateApplicationAsync(_enabledClient, "Hidden Enabled Co", DateTimeOffset.UtcNow.AddDays(-1));

@@ -1,4 +1,5 @@
 using AfterApply.Application.CompanyIntelligence;
+using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Domain.Companies;
 using Shouldly;
 
@@ -8,20 +9,51 @@ public class CompanyIntelligenceCalculationsTests
 {
     [Theory]
     [InlineData(0, ConfidenceBucket.Hidden)]
-    [InlineData(19, ConfidenceBucket.Hidden)]
-    [InlineData(20, ConfidenceBucket.VeryLow)]
-    [InlineData(49, ConfidenceBucket.VeryLow)]
-    [InlineData(50, ConfidenceBucket.Low)]
-    [InlineData(199, ConfidenceBucket.Low)]
-    [InlineData(200, ConfidenceBucket.Medium)]
+    [InlineData(49, ConfidenceBucket.Hidden)]
+    [InlineData(50, ConfidenceBucket.VeryLow)]
+    [InlineData(99, ConfidenceBucket.VeryLow)]
+    [InlineData(100, ConfidenceBucket.Low)]
+    [InlineData(249, ConfidenceBucket.Low)]
+    [InlineData(250, ConfidenceBucket.Medium)]
     [InlineData(999, ConfidenceBucket.Medium)]
     [InlineData(1000, ConfidenceBucket.High)]
     [InlineData(50000, ConfidenceBucket.High)]
     public void ClassifyConfidence_With_Default_Thresholds_Returns_Expected_Bucket(int applicationCount, ConfidenceBucket expected)
     {
+        var defaults = new CompanyIntelligenceOptions();
+
         CompanyIntelligenceCalculations
-            .ClassifyConfidence(applicationCount, hiddenBelow: 20, veryLowBelow: 50, lowBelow: 200, mediumBelow: 1000)
+            .ClassifyConfidence(applicationCount, defaults.HiddenBelow, defaults.VeryLowBelow,
+                defaults.LowBelow, defaults.MediumBelow)
             .ShouldBe(expected);
+    }
+
+    [Fact]
+    public void The_Shipped_Ladder_Never_Names_A_Company_Below_Fifty_Applications()
+    {
+        // Deliberately asserts the shipped numbers, not just the function's behaviour. These are a
+        // fairness decision, not a tuning knob: below this floor a percentage is one bad hiring
+        // manager away from being a different percentage, and the company is named either way.
+        // Raising these is safe and hides more; lowering them needs the fairness review, and this
+        // test is what makes that a conversation rather than a quiet diff.
+        var defaults = new CompanyIntelligenceOptions();
+
+        defaults.HiddenBelow.ShouldBeGreaterThanOrEqualTo(50);
+        defaults.Enabled.ShouldBeFalse();
+        defaults.HiddenBelow.ShouldBeLessThan(defaults.VeryLowBelow);
+        defaults.VeryLowBelow.ShouldBeLessThan(defaults.LowBelow);
+        defaults.LowBelow.ShouldBeLessThan(defaults.MediumBelow);
+    }
+
+    [Fact]
+    public void The_Window_Is_Bounded_So_An_Old_Reputation_Cannot_Be_Permanent()
+    {
+        // An unbounded aggregate gives a company no way to ever improve its number. Twelve months
+        // is the shipped answer; what matters to this test is only that some finite window exists.
+        var defaults = new CompanyIntelligenceOptions();
+
+        defaults.WindowMonths.ShouldBeGreaterThan(0);
+        defaults.WindowMonths.ShouldBeLessThanOrEqualTo(36);
     }
 
     [Theory]
