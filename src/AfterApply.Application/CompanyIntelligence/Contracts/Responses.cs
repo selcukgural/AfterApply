@@ -22,6 +22,13 @@ public sealed record CompanyIntelligenceResponse(
     Guid CompanyId,
     string CompanyName,
     ConfidenceBucket Confidence,
+    // The window every figure below is computed over, as concrete dates rather than "last 12
+    // months" — a reader should never have to know the server's configuration, or guess when the
+    // clock started, to know what a number is a claim about. Present even when Confidence is
+    // Hidden: "fewer than the threshold in this period" and "fewer ever" are different statements,
+    // and only the first one is true.
+    DateTimeOffset WindowStart,
+    DateTimeOffset WindowEnd,
     // Deliberately null when Confidence == Hidden — spec §16 privacy-by-design: a tiny sample
     // could itself deanonymize applicants, so no metric (not even the count) is exposed below
     // the Hidden threshold. See DECISIONS.md "Sprint 10" entry.

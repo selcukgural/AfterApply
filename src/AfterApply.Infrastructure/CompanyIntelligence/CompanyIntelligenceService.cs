@@ -24,14 +24,22 @@ internal sealed class CompanyIntelligenceService(AppDbContext dbContext, IOption
             return null;
         }
 
+        var opts = options.Value;
+
+        // Windowed on AppliedAt, which keeps the sample a clean cohort — "applications submitted in
+        // this period" — rather than mixing an old application with a recent status change. See
+        // CompanyIntelligenceOptions.WindowMonths for why an unbounded aggregate is the unfair one,
+        // and for the recency caveat this does not yet address.
+        var windowEnd = DateTimeOffset.UtcNow;
+        var windowStart = windowEnd.AddMonths(-opts.WindowMonths);
+
         // No UserId filter — unlike AnalyticsService, this aggregates across ALL users.
         var applications = await dbContext.Applications
-            .Where(a => a.CompanyId == companyId)
+            .Where(a => a.CompanyId == companyId && a.AppliedAt >= windowStart && a.AppliedAt <= windowEnd)
             .Select(a => new { a.Id, a.Status, a.AppliedAt })
             .ToListAsync(cancellationToken);
 
         var total = applications.Count;
-        var opts = options.Value;
         var confidence = CompanyIntelligenceCalculations.ClassifyConfidence(
             total, opts.HiddenBelow, opts.VeryLowBelow, opts.LowBelow, opts.MediumBelow);
 
@@ -40,14 +48,16 @@ internal sealed class CompanyIntelligenceService(AppDbContext dbContext, IOption
             // Defense in depth: don't even run the history join/grouping below — no
             // per-application response-time data is pulled into memory for a below-threshold
             // company.
-            return new CompanyIntelligenceResponse(company.Id, company.Name, confidence, Metrics: null);
+            return new CompanyIntelligenceResponse(company.Id, company.Name, confidence,
+                windowStart, windowEnd, Metrics: null);
         }
 
         // ApplicationStatusHistory has no navigation back to Application (ApplicationConfiguration:
         // HasMany(...).WithOne() with no inverse configured), so the join must be explicit rather
         // than h.Application — same as AnalyticsService.
         var historyRows = await dbContext.ApplicationStatusHistories
-            .Join(dbContext.Applications.Where(a => a.CompanyId == companyId),
+            .Join(dbContext.Applications.Where(a =>
+                    a.CompanyId == companyId && a.AppliedAt >= windowStart && a.AppliedAt <= windowEnd),
                 h => h.ApplicationId, a => a.Id,
                 (h, a) => new { h.ApplicationId, h.ToStatus, h.ChangedAt, a.AppliedAt })
             .OrderBy(x => x.ChangedAt)
@@ -106,6 +116,7 @@ internal sealed class CompanyIntelligenceService(AppDbContext dbContext, IOption
             ClosureRate: closureRate,
             CandidateExperienceScore: candidateExperienceScore);
 
-        return new CompanyIntelligenceResponse(company.Id, company.Name, confidence, metrics);
+        return new CompanyIntelligenceResponse(company.Id, company.Name, confidence,
+            windowStart, windowEnd, metrics);
     }
 }
