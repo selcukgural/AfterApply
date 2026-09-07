@@ -115,6 +115,29 @@ public static class EmailForwardingEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPost("/suggestions/{id:guid}/revert", async (Guid id, ClaimsPrincipal user,
+                IEmailForwardingService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.RevertAutoApplyAsync(user.GetUserId(), id, cancellationToken);
+                return result switch
+                {
+                    RevertAutoApplyResult.Reverted => Results.NoContent(),
+                    // 409, not 404: the suggestion is real and is the caller's, the application has
+                    // just moved past it. The caller should re-read, not retry.
+                    RevertAutoApplyResult.StatusMovedOn => Results.Conflict(),
+                    _ => Results.NotFound()
+                };
+            })
+            .RequireAuthorization()
+            .WithSummary("Undo an unattended auto-apply")
+            .WithDescription("Puts the application's status back to what it was before auto-apply set " +
+                             "it. Refuses with 409 when the status has changed since — undoing then " +
+                             "would discard the user's own later change.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         group.MapGet("/notifications", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.GetNotificationsAsync(user.GetUserId(), cancellationToken)))
             .RequireAuthorization()

@@ -23,6 +23,12 @@ public interface IEmailForwardingService
 
     Task<bool> DismissSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);
 
+    /// <summary>Undoes an unattended auto-apply, putting the application's status back where it was.
+    /// The point of the feature is not tidiness: it makes being wrong cheap, which is what lets
+    /// auto-apply ship before its confidence threshold has been proven — and the rate at which this
+    /// is called is the one unbiased measure of whether the threshold is right.</summary>
+    Task<RevertAutoApplyResult> RevertAutoApplyAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);
+
     /// <summary>AutoApplied and Confirmed suggestions, newest first — the Notifications screen's
     /// event log.</summary>
     Task<IReadOnlyList<EmailNotificationResponse>> GetNotificationsAsync(Guid userId, CancellationToken cancellationToken);

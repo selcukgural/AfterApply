@@ -403,6 +403,7 @@ public static class DependencyInjection
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
         services.AddScoped<IAdminAccessService, AdminAccessService>();
+        services.AddScoped<IAutoApprovalCalibrationService, AutoApprovalCalibrationService>();
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();
         services.AddScoped<IEmailJobExtractionProvider, OpenAiEmailJobExtractionProvider>();
         services.AddScoped<IEmailRejectionReasonExtractionProvider, OpenAiEmailRejectionReasonExtractionProvider>();

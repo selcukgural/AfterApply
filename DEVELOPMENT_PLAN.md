@@ -509,12 +509,35 @@ Sıra numarası = ele alınma sırası. Madde numarası (K1-K6) = kalıcı kimli
   `ShadowModeEnabled=true`, `ConfidenceThreshold=0.9`.
 - **Bugünkü davranış:** Nitelikli öneriler "would auto apply" diye yalnızca
   loglanıyor, hiçbir şey değiştirilmiyor. Kullanıcı her öneriyi elle onaylıyor.
-- **Kilidi:** Kısmen dışarıda — açmak için gereken kod değil **kalibrasyon**;
-  repoda güven-aralığına-göre-doğruluk değerlendirmesi yok ve gerçek trafik
-  olmadan üretilemez.
-- **Bu sırada yapılabilecek olan:** Gölge kararları log yerine sorgulanabilir
-  biçimde saklamak. Trafik geldiğinde kalibrasyon verisi hazır olur; sonradan
-  log kazımaya kalkmak yerine.
+- **Kilidi:** Dışarıda — açmak için gereken kod değil **gerçek trafik**.
+- **Düzeltme (2026-09-07):** Burada "gölge kararları sorgulanabilir hale
+  getirelim" yazıyordu; **gereksizmiş.** `EmailSuggestions` tablosu zaten
+  `ConfidenceScore`, `MatchedRule`, `MatchType` ve kullanıcının nihai kararını
+  (`Status`) tutuyor, ve auto-apply'ın nitelikli-olma koşulu tamamen bu
+  kolonların fonksiyonu. Yani doğruluk analizi geriye dönük, istenen her eşik
+  için hesaplanabilir. Gölge log satırı tablodan *daha azını* kaydediyor
+  (`SuggestionId`'yi bile yazmıyor).
+
+**Yapıldı (2026-09-07) — bayrak hâlâ kapalı, ama artık açılabilir hale geldi:**
+
+1. **Tek tıkla geri alma.** `POST /api/email-forwarding/suggestions/{id}/revert`
+   + Bildirimler sayfasında "Geri al". Durumu auto-apply öncesine döndürür;
+   kullanıcı o başvuruyu kendisi ilerletmişse `409` ile reddeder (yoksa
+   kullanıcının kendi değişikliğini sessizce silerdi). Yeni
+   `EmailSuggestionStatus.Reverted` ve `StatusChangeOrigin.EmailAutoApplyReverted`
+   — ikisi de string olarak saklandığı için migration gerekmedi.
+   **Asıl gerekçe kolaylık değil ölçüm:** yanlış olmanın maliyetini "kaydım
+   bozuldu"dan bir tıka indiriyor, ve geri alma oranı aradığımız doğruluk
+   metriğinin ta kendisi.
+2. **Kalibrasyon yüzeyi.** `GET /api/admin/auto-approval-calibration` +
+   `/admin/metrics` sayfasında güven aralığı bazlı tablo.
+   `Reverted / (AutoApplied + Reverted)` okunacak sütun; `Confirmed / (Confirmed
+   + Dismissed)` de gösteriliyor ama **yanıltıcı** — kullanıcıya *gösterilip
+   sorulmuş* önerileri ölçüyor, sorulmadan yapılanları değil. Bu sapma veri
+   biriktikçe küçülmüyor.
+
+- **Bayrağın açılma koşulu:** Yüksek güven aralığında anlamlı sayıda gerçek
+  auto-apply ve düşük geri alma oranı. İkisi de kullanıcı gelmeden oluşmaz.
 
 ### Sıra 5 — K1: Company Intelligence + Candidate Experience Score
 

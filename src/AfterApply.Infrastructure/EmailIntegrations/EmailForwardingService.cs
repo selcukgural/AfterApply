@@ -313,6 +313,65 @@ internal sealed class EmailForwardingService(
         }
     }
 
+    public async Task<RevertAutoApplyResult> RevertAutoApplyAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken)
+    {
+        var suggestion = await dbContext.EmailSuggestions
+            .FirstOrDefaultAsync(s => s.Id == suggestionId && s.UserId == userId, cancellationToken);
+
+        // Only an unattended apply can be taken back. A Confirmed suggestion was the user's own
+        // answer to a question they were asked; undoing that is the ordinary status control's job.
+        if (suggestion is null || suggestion.Status != EmailSuggestionStatus.AutoApplied
+            || suggestion.ApplicationId is not { } applicationId || suggestion.SuggestedStatus is not { } appliedStatus)
+        {
+            return RevertAutoApplyResult.NotFound;
+        }
+
+        // The history row auto-apply wrote is the only record of what the status was before it, so
+        // it is also the only thing that can say what to put back.
+        var appliedRow = await dbContext.ApplicationStatusHistories
+            .Where(h => h.EmailSuggestionId == suggestionId && h.Origin == StatusChangeOrigin.EmailAutoApplied)
+            .OrderByDescending(h => h.ChangedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (appliedRow?.FromStatus is not { } previousStatus)
+        {
+            return RevertAutoApplyResult.NotFound;
+        }
+
+        var currentStatus = await dbContext.Applications
+            .Where(a => a.Id == applicationId && a.UserId == userId)
+            .Select(a => (ApplicationStatus?)a.Status)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (currentStatus is null)
+        {
+            return RevertAutoApplyResult.NotFound;
+        }
+
+        // Refuse rather than clobber. If the user has since moved the application on themselves,
+        // "undo" would quietly throw their own change away.
+        if (currentStatus != appliedStatus)
+        {
+            return RevertAutoApplyResult.StatusMovedOn;
+        }
+
+        var reverted = await applicationService.ChangeStatusAsync(userId, applicationId, previousStatus,
+            DateTimeOffset.UtcNow, ContextFor(suggestion, StatusChangeOrigin.EmailAutoApplyReverted), cancellationToken);
+
+        if (reverted is null)
+        {
+            return RevertAutoApplyResult.NotFound;
+        }
+
+        // The HR address auto-apply may have attached is deliberately left in place: it came from a
+        // real message from that company, it is useful whether or not the status change was right,
+        // and silently removing contact details the user may have since relied on would be its own
+        // small betrayal.
+        suggestion.Revert(DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return RevertAutoApplyResult.Reverted;
+    }
+
     public async Task<bool> DismissSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken)
     {
         var suggestion = await dbContext.EmailSuggestions

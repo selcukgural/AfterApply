@@ -540,7 +540,12 @@
     "matchType": {
       "DomainMatch": "Company domain matched",
       "NameFallbackMatch": "Company name matched"
-    }
+    },
+    "revert": "Undo",
+    "reverting": "Undoing…",
+    "reverted": "Undone",
+    "revertError": "Couldn't undo it. Please try again.",
+    "revertConflict": "This application's status has changed since, so nothing was undone."
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -1577,7 +1582,20 @@
     "colD30": "D30",
     "colD90": "D90",
     "colApplications": "Applications",
-    "computedAt": "Last updated: {at}"
+    "computedAt": "Last updated: {at}",
+    "calibrationTitle": "Auto-approval calibration",
+    "calibrationBody": "Threshold {threshold}, currently {state}. {total} suggestions on this path. The column to read is “Undo rate” — agreement rate measures suggestions the user was shown and asked about, so it flatters auto-apply.",
+    "calibrationOn": "on",
+    "calibrationShadow": "in shadow mode",
+    "calibrationOff": "off",
+    "calibrationEmpty": "No suggestions on this path yet — calibration needs real traffic.",
+    "colBand": "Confidence band",
+    "colTotal": "Total",
+    "colConfirmed": "Confirmed",
+    "colDismissed": "Dismissed",
+    "colReverted": "Undone",
+    "colAgreement": "Agreement",
+    "colRevertRate": "Undo rate"
   },
   "applicationEventType": {
     "RecruiterContacted": "Recruiter got in touch",

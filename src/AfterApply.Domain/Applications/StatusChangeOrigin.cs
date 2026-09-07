@@ -17,6 +17,12 @@ public enum StatusChangeOrigin
     /// (EmailForwardingService.TryAutoApplyAsync).</summary>
     EmailAutoApplied,
 
+    /// <summary>The user undid an unattended auto-apply, putting the status back where it was
+    /// (EmailForwardingService.RevertAutoApplyAsync). Its own origin rather than Manual so the
+    /// history reads honestly — the user did act, but what they did was correct a mistake the
+    /// product made, and that is worth being able to count.</summary>
+    EmailAutoApplyReverted,
+
     /// <summary>Carried in by a CSV or LinkedIn Data Export import.</summary>
     Import,
 

@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Admin;
+using AfterApply.Application.EmailIntegrations;
+using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Application.Metrics;
 
 namespace AfterApply.Api.Endpoints;
@@ -39,6 +41,23 @@ public static class AdminEndpoints
                              "per-user data. Access comes from the Users.IsAdmin column — granted by hand " +
                              "with SQL, see DEPLOYMENT.md §3a; everyone else gets 403.")
             .Produces<IReadOnlyList<ProductMetricsDayResponse>>();
+
+        group.MapGet("/auto-approval-calibration", async (ClaimsPrincipal user, IAdminAccessService adminAccess,
+                IAutoApprovalCalibrationService calibration, CancellationToken cancellationToken) =>
+            {
+                if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
+                {
+                    return Results.Forbid();
+                }
+
+                return Results.Ok(await calibration.ComputeAsync(cancellationToken));
+            })
+            .WithSummary("Auto-approval accuracy by confidence band")
+            .WithDescription("Internal. The evidence for choosing EmailAutoApproval:ConfidenceThreshold, " +
+                             "computed from stored suggestions — retroactive for any threshold, and " +
+                             "aggregate only. Read RevertRate, not AgreementRate: see the contract's " +
+                             "documentation for why the second one flatters the feature.")
+            .Produces<AutoApprovalCalibrationResponse>();
 
         return app;
     }

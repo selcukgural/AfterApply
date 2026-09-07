@@ -540,7 +540,12 @@
     "matchType": {
       "DomainMatch": "Şirket domaini eşleşti",
       "NameFallbackMatch": "Şirket adı eşleşti"
-    }
+    },
+    "revert": "Geri al",
+    "reverting": "Geri alınıyor…",
+    "reverted": "Geri alındı",
+    "revertError": "Geri alınamadı. Lütfen tekrar dene.",
+    "revertConflict": "Bu başvurunun durumu o zamandan beri değişmiş, geri alınmadı."
   },
   "privacy": {
     "title": "Gizlilik Politikası",
@@ -1577,7 +1582,20 @@
     "colD30": "30. gün",
     "colD90": "90. gün",
     "colApplications": "Başvuru",
-    "computedAt": "Son güncelleme: {at}"
+    "computedAt": "Son güncelleme: {at}",
+    "calibrationTitle": "Otomatik onay kalibrasyonu",
+    "calibrationBody": "Eşik {threshold}, durum: {state}. Değerlendirilen {total} öneri. Okunacak sütun “Geri alma” — onay oranı, kullanıcıya gösterilip sorulmuş önerileri ölçtüğü için otomatik onayı olduğundan iyi gösterir.",
+    "calibrationOn": "açık",
+    "calibrationShadow": "gölge modda",
+    "calibrationOff": "kapalı",
+    "calibrationEmpty": "Bu yolda henüz hiç öneri yok — kalibrasyon için gerçek trafik gerekiyor.",
+    "colBand": "Güven aralığı",
+    "colTotal": "Toplam",
+    "colConfirmed": "Onaylandı",
+    "colDismissed": "Reddedildi",
+    "colReverted": "Geri alındı",
+    "colAgreement": "Onay oranı",
+    "colRevertRate": "Geri alma"
   },
   "applicationEventType": {
     "RecruiterContacted": "İşe alım uzmanı iletişime geçti",

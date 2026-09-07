@@ -30,6 +30,12 @@ export default function AdminMetricsPage() {
     retry: (failureCount, err) => !(err instanceof ApiError && err.status === 403) && failureCount < 2,
   });
 
+  const { data: calibration } = useQuery({
+    queryKey: ["admin", "autoApprovalCalibration"],
+    queryFn: adminApi.getAutoApprovalCalibration,
+    retry: (failureCount, err) => !(err instanceof ApiError && err.status === 403) && failureCount < 2,
+  });
+
   const days = data ?? [];
   const latest = days[0];
 
@@ -139,6 +145,76 @@ export default function AdminMetricsPage() {
             </div>
           </Card>
         </>
+      ) : null}
+
+      {calibration ? (
+        <Card className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("calibrationTitle")}</h2>
+            <p className="max-w-[68ch] text-xs text-gray-500 dark:text-gray-400">
+              {t("calibrationBody", {
+                threshold: `${Math.round(calibration.currentThreshold * 100)}%`,
+                state: calibration.autoApplyEnabled
+                  ? t("calibrationOn")
+                  : calibration.shadowModeEnabled
+                    ? t("calibrationShadow")
+                    : t("calibrationOff"),
+                total: formatCount(calibration.qualifyingTotal, locale),
+              })}
+            </p>
+          </div>
+
+          {calibration.qualifyingTotal === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t("calibrationEmpty")}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[42rem] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-left text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
+                    <th className="py-2 pr-4 font-medium">{t("colBand")}</th>
+                    <th className="py-2 pr-4 font-medium">{t("colTotal")}</th>
+                    <th className="py-2 pr-4 font-medium">{t("colConfirmed")}</th>
+                    <th className="py-2 pr-4 font-medium">{t("colDismissed")}</th>
+                    <th className="py-2 pr-4 font-medium">{t("colReverted")}</th>
+                    <th className="py-2 pr-4 font-medium">{t("colAgreement")}</th>
+                    <th className="py-2 font-medium">{t("colRevertRate")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {calibration.buckets.map((bucket) => (
+                    <tr
+                      key={bucket.lowerBound}
+                      className="border-b border-gray-100 last:border-b-0 dark:border-gray-900"
+                    >
+                      <td className="py-2 pr-4 whitespace-nowrap tabular-nums text-gray-900 dark:text-gray-100">
+                        {Math.round(bucket.lowerBound * 100)}–{Math.round(bucket.upperBound * 100)}%
+                      </td>
+                      <td className="py-2 pr-4 tabular-nums text-gray-600 dark:text-gray-400">
+                        {formatCount(bucket.total, locale)}
+                      </td>
+                      <td className="py-2 pr-4 tabular-nums text-gray-600 dark:text-gray-400">
+                        {formatCount(bucket.confirmed, locale)}
+                      </td>
+                      <td className="py-2 pr-4 tabular-nums text-gray-600 dark:text-gray-400">
+                        {formatCount(bucket.dismissed, locale)}
+                      </td>
+                      <td className="py-2 pr-4 tabular-nums text-gray-600 dark:text-gray-400">
+                        {formatCount(bucket.reverted, locale)}
+                      </td>
+                      <td className="py-2 pr-4 tabular-nums text-gray-500 dark:text-gray-500">
+                        {rateOrDash(bucket.agreementRate, locale)}
+                      </td>
+                      {/* The one to read. Emphasised over the column left of it on purpose. */}
+                      <td className="py-2 tabular-nums font-medium text-gray-900 dark:text-gray-100">
+                        {rateOrDash(bucket.revertRate, locale)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
       ) : null}
     </div>
   );

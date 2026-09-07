@@ -10,4 +10,8 @@ export const notificationsApi = {
 
   markAllRead: () =>
     apiFetch<void>("/api/email-forwarding/notifications/read", { method: "POST" }),
+
+  /** Undoes an unattended auto-apply. 409 when the application's status has moved on since. */
+  revertAutoApply: (suggestionId: string) =>
+    apiFetch<void>(`/api/email-forwarding/suggestions/${suggestionId}/revert`, { method: "POST" }),
 };
