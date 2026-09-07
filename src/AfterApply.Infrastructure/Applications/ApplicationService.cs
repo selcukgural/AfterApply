@@ -8,13 +8,15 @@ using AfterApply.Infrastructure.Persistence;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Options;
 using DomainApplication = AfterApply.Domain.Applications.Application;
 
 namespace AfterApply.Infrastructure.Applications;
 
 internal sealed class ApplicationService(
     AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver,
-    ICompanySearchService companySearchService, HybridCache cache, IBackgroundJobClient jobClient) : IApplicationService
+    ICompanySearchService companySearchService, HybridCache cache, IBackgroundJobClient jobClient,
+    IOptions<ApplicationBulkOptions> bulkOptions) : IApplicationService
 {
     private static readonly HybridCacheEntryOptions SummaryCountsCacheOptions = new()
     {
@@ -23,22 +25,42 @@ internal sealed class ApplicationService(
     };
 
     private static string SummaryCountsCacheKey(Guid userId) => $"applications:summary:{userId}";
+    /// <summary>
+    /// The one place that decides which of a user's applications a search term and a status filter
+    /// match. Both the list and every bulk operation go through it, on purpose: a bulk delete
+    /// resolved from "the list's current filter" has to hit exactly the rows the list would have
+    /// shown, and two hand-written copies of this predicate would eventually stop agreeing about
+    /// that.
+    ///
+    /// It returns applications rather than a joined row so callers that only need the rows (the
+    /// bulk paths) get a set-based query with no join at all. The list adds the company join itself
+    /// for the name it displays and sorts on. Company name is matched here with EXISTS rather than
+    /// through that join, which is equivalent — CompanyId is required — and keeps this usable on its
+    /// own.
+    /// </summary>
+    private IQueryable<DomainApplication> FilteredApplications(Guid userId, string? search, ApplicationStatus? status)
+    {
+        var applications = dbContext.Applications.Where(a => a.UserId == userId);
+
+        if (status is not null)
+        {
+            applications = applications.Where(a => a.Status == status);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{search.Trim()}%";
+            applications = applications.Where(a => EF.Functions.ILike(a.JobTitle, pattern)
+                || dbContext.Companies.Any(c => c.Id == a.CompanyId && EF.Functions.ILike(c.Name, pattern)));
+        }
+
+        return applications;
+    }
+
     public async Task<PagedResult<ApplicationSummaryResponse>> GetAllAsync(Guid userId, GetApplicationsQuery query, CancellationToken cancellationToken)
     {
-        var joined = dbContext.Applications
-            .Where(a => a.UserId == userId)
+        var joined = FilteredApplications(userId, query.Search, query.Status)
             .Join(dbContext.Companies, a => a.CompanyId, c => c.Id, (a, c) => new { a, c.Name });
-
-        if (query.Status is not null)
-        {
-            joined = joined.Where(x => x.a.Status == query.Status);
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.Search))
-        {
-            var pattern = $"%{query.Search.Trim()}%";
-            joined = joined.Where(x => EF.Functions.ILike(x.Name, pattern) || EF.Functions.ILike(x.a.JobTitle, pattern));
-        }
 
         joined = (query.SortBy, query.SortDirection) switch
         {
@@ -207,6 +229,170 @@ internal sealed class ApplicationService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
+    }
+
+    /// <summary>
+    /// Narrows to exactly the applications a bulk selection covers, always scoped to the caller.
+    /// An explicit id list is intersected with the user's own rows rather than trusted — an id in a
+    /// request body is a claim, never proof of ownership — so a foreign id simply matches nothing
+    /// instead of leaking whether it exists.
+    /// </summary>
+    private IQueryable<DomainApplication> ResolveSelection(Guid userId, BulkSelection selection)
+    {
+        if (selection.Ids is { Count: > 0 } ids)
+        {
+            return dbContext.Applications.Where(a => a.UserId == userId && ids.Contains(a.Id));
+        }
+
+        var filter = selection.AllMatching ?? new BulkFilterSelection();
+        return FilteredApplications(userId, filter.Search, filter.Status);
+    }
+
+    /// <summary>
+    /// Refuses the operation when the number of matching rows is not what the user was shown. Only
+    /// meaningful for a filter-resolved selection: an explicit id list is already the exact set the
+    /// user ticked, and comparing it against itself would only reject legitimate requests whose rows
+    /// were deleted in another tab.
+    /// </summary>
+    private static async Task GuardExpectedCountAsync(IQueryable<DomainApplication> selected, BulkSelection selection,
+        int? expectedCount, CancellationToken cancellationToken)
+    {
+        if (selection.AllMatching is null || expectedCount is null)
+        {
+            return;
+        }
+
+        var actualCount = await selected.CountAsync(cancellationToken);
+        if (actualCount != expectedCount.Value)
+        {
+            throw new BulkCountMismatchException(expectedCount.Value, actualCount);
+        }
+    }
+
+    public async Task<BulkChangeStatusResponse> BulkChangeStatusAsync(Guid userId, BulkChangeStatusRequest request,
+        CancellationToken cancellationToken)
+    {
+        var selected = ResolveSelection(userId, request.Selection);
+        await GuardExpectedCountAsync(selected, request.Selection, request.ExpectedCount, cancellationToken);
+
+        var maxOperationSize = bulkOptions.Value.MaxOperationSize;
+        // Take one past the ceiling so the overflow is detectable without a second COUNT query.
+        var applications = await selected.Take(maxOperationSize + 1).ToListAsync(cancellationToken);
+        if (applications.Count > maxOperationSize)
+        {
+            throw new BulkOperationTooLargeException(maxOperationSize);
+        }
+
+        // One timestamp for the whole batch: these rows changed in a single act, and stamping each
+        // with its own DateTimeOffset.UtcNow would scatter them across the history for no reason.
+        var changedAt = DateTimeOffset.UtcNow;
+        var context = new StatusChangeContext(Source.Manual, StatusChangeOrigin.BulkEdit, request.Note);
+        var changes = new List<BulkStatusChange>(applications.Count);
+        var skipped = 0;
+
+        foreach (var application in applications)
+        {
+            // Already-in-status is the expected case in a bulk selection, not an error: the user
+            // rubber-banded a range and some of it was already where they are sending it.
+            if (application.Status == request.NewStatus)
+            {
+                skipped++;
+                continue;
+            }
+
+            var fromStatus = application.Status;
+            application.ChangeStatus(request.NewStatus, changedAt, context);
+
+            // Added explicitly rather than left to change tracking, for the reason spelled out in
+            // ChangeStatusAsync: the collections were never Included, so EF has no prior snapshot.
+            dbContext.ApplicationStatusHistories.Add(application.StatusHistory.Last());
+            dbContext.ApplicationEvents.Add(application.Events.Last());
+
+            changes.Add(new BulkStatusChange(application.Id, fromStatus, request.NewStatus));
+        }
+
+        if (changes.Count > 0)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+        }
+
+        return new BulkChangeStatusResponse(changes.Count, skipped, changes);
+    }
+
+    public async Task<UndoBulkStatusResponse> UndoBulkStatusAsync(Guid userId, UndoBulkStatusRequest request,
+        CancellationToken cancellationToken)
+    {
+        var maxOperationSize = bulkOptions.Value.MaxOperationSize;
+        if (request.Entries.Count > maxOperationSize)
+        {
+            throw new BulkOperationTooLargeException(maxOperationSize);
+        }
+
+        var entriesById = request.Entries
+            .GroupBy(e => e.ApplicationId)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        var ids = entriesById.Keys.ToList();
+        var applications = await dbContext.Applications
+            .Where(a => a.UserId == userId && ids.Contains(a.Id))
+            .ToListAsync(cancellationToken);
+
+        var changedAt = DateTimeOffset.UtcNow;
+        var context = new StatusChangeContext(Source.Manual, StatusChangeOrigin.BulkEditReverted);
+        var reverted = 0;
+
+        foreach (var application in applications)
+        {
+            var entry = entriesById[application.Id];
+
+            // Compare-and-set on the status the client last saw. Anything that moved on since — the
+            // user corrected one row by hand, or an email suggestion landed — keeps the newer
+            // decision: an undo puts back what this operation did, and nothing else.
+            if (application.Status != entry.ExpectedStatus || application.Status == entry.RevertTo)
+            {
+                continue;
+            }
+
+            application.ChangeStatus(entry.RevertTo, changedAt, context);
+            dbContext.ApplicationStatusHistories.Add(application.StatusHistory.Last());
+            dbContext.ApplicationEvents.Add(application.Events.Last());
+            reverted++;
+        }
+
+        if (reverted > 0)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+        }
+
+        return new UndoBulkStatusResponse(reverted, request.Entries.Count - reverted);
+    }
+
+    public async Task<BulkDeleteResponse> BulkDeleteAsync(Guid userId, BulkDeleteRequest request,
+        CancellationToken cancellationToken)
+    {
+        var selected = ResolveSelection(userId, request.Selection);
+        await GuardExpectedCountAsync(selected, request.Selection, request.ExpectedCount, cancellationToken);
+
+        // Set-based, and deliberately not capped by MaxOperationSize: no entities are loaded, and
+        // the whole point of "Delete All" is an account whose row count may well exceed that ceiling.
+        // Everything hanging off an application (events, status history, reminders, matched email
+        // suggestions) goes with it through the FKs' ON DELETE CASCADE — see ApplicationConfiguration
+        // and DECISIONS.md 2026-09-07 on why none of it is recoverable afterwards.
+        //
+        // The count guard above and this delete are two statements, so a row created between them
+        // would slip in. That window is a single user racing themselves across two tabs, and closing
+        // it would cost a serializable transaction on every delete; the guard is here for the far
+        // likelier case of a screen that has simply gone stale.
+        var deleted = await selected.ExecuteDeleteAsync(cancellationToken);
+
+        if (deleted > 0)
+        {
+            await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+        }
+
+        return new BulkDeleteResponse(deleted);
     }
 
     public async Task<bool> DeleteAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken)

@@ -369,7 +369,9 @@
       "company": "Şirket",
       "position": "Pozisyon",
       "status": "Durum",
-      "appliedAt": "Başvuru Tarihi"
+      "appliedAt": "Başvuru Tarihi",
+      "selectPage": "Bu sayfadaki tüm başvuruları seç",
+      "selectRow": "{company} — {position} başvurusunu seç"
     },
     "pagination": {
       "pageInfo": "Sayfa {page} / {totalPages} ({totalCount} başvuru)",
@@ -459,6 +461,66 @@
       "confirm": "Kaydet",
       "cancel": "Vazgeç",
       "saving": "Kaydediliyor…"
+    },
+    "bulk": {
+      "selectedCount": "{count} başvuru seçildi",
+      "allMatchingSelected": "Filtreye uyan {count} başvurunun tümü seçildi — diğer sayfalardakiler dahil.",
+      "selectAllMatching": "Filtreye uyan {count} başvurunun tümünü seç",
+      "clearSelection": "Seçimi temizle",
+      "changeStatus": "Durumu Değiştir",
+      "delete": "Sil",
+      "countMismatch": "Bu ekran açıkken liste değişti — filtreye şu an {count} başvuru uyuyor. Hiçbir şey değiştirilmedi; listeyi kontrol edip tekrar deneyin.",
+      "statusDialog": {
+        "title": "{count} başvurunun durumunu değiştir",
+        "description": "Her başvurunun durum geçmişine ayrı bir kayıt düşülür, böylece değişikliğin ne zaman ve nereden geldiğini sonradan görebilirsiniz.",
+        "newStatus": "Yeni durum",
+        "noteLabel": "Not (opsiyonel — {count} kaydın hepsine yazılır)",
+        "notePlaceholder": "Ör. \"Ağustos temizliği\"",
+        "summaryWillChange": "{count} başvuru \"{status}\" olarak güncellenecek.",
+        "summaryAlreadyInStatus": "{count} başvuru zaten bu durumda — atlanacak, geçmişlerine kayıt düşülmeyecek.",
+        "summaryUnknown": "Filtreye uyan {count} başvurunun tümü güncellenecek. Zaten bu durumda olanlar atlanır; kaç tanesinin atlandığını işlem bitince göreceksiniz.",
+        "reversible": "Bu işlem kalıcı bir silme değil: yanlış olursa listedeki \"Geri Al\" ile eski durumlara döndürebilirsiniz.",
+        "confirm": "{count} başvuruyu güncelle",
+        "confirmUnknownCount": "{count} başvuruyu güncelle",
+        "submitting": "Güncelleniyor...",
+        "cancel": "Vazgeç"
+      },
+      "deleteDialog": {
+        "title": "{count} başvuruyu sil",
+        "description": "Bu {count} başvuru kalıcı olarak silinecek. İşlem geri alınamaz ve silinen kayıtlar geri getirilemez.",
+        "descriptionAllMatching": "Filtreye uyan {count} başvurunun tümü — diğer sayfalardakiler dahil — kalıcı olarak silinecek. İşlem geri alınamaz.",
+        "cascadeTitle": "Başvuruyla birlikte silinenler",
+        "cascadeBody": "Durum geçmişi · süreç kayıtları · hatırlatıcılar · eşleştirilmiş e-posta önerileri",
+        "cascadeKept": "Şirket kayıtlarınız ve CV'leriniz silinmez.",
+        "scopeSearch": "Arama",
+        "scopeStatus": "Durum filtresi",
+        "scopeMatches": "Eşleşen kayıt",
+        "scopeNone": "yok",
+        "scopeAllStatuses": "yok — tüm durumlar dahil",
+        "scopeMatchCount": "{count} başvuru",
+        "listTitle": "Silinecek başvurular",
+        "listCount": "{count} kayıt",
+        "listRemaining": "+ {count} başvuru daha",
+        "exportFirst": "Silmeden önce verilerinizin bir kopyasını alabilirsiniz:",
+        "exportLink": "Hesap Ayarları",
+        "acknowledge": "Bu {count} başvurunun kalıcı olarak silineceğini ve geri alınamayacağını anlıyorum.",
+        "typeToConfirm": "Onaylamak için <word>SİL</word> yazın",
+        "confirmWord": "SİL",
+        "confirm": "{count} başvuruyu kalıcı olarak sil",
+        "submitting": "Siliniyor...",
+        "cancel": "Vazgeç"
+      },
+      "result": {
+        "statusChanged": "{count} başvurunun durumu güncellendi.",
+        "statusUndone": "{count} başvuru eski durumuna geri alındı.",
+        "deleted": "{count} başvuru kalıcı olarak silindi.",
+        "skippedAlreadyInStatus": "{count} tanesi zaten bu durumdaydı, atlandı.",
+        "skippedMovedOn": "{count} tanesi bu arada değiştiği için olduğu gibi bırakıldı.",
+        "undo": "Geri Al",
+        "undoing": "Geri alınıyor...",
+        "dismiss": "Kapat"
+      },
+      "pageSelected": "Bu sayfadaki {count} başvuru seçildi."
     }
   },
   "settings": {
@@ -820,7 +882,10 @@
     "EmailAutoApplied": "e-postadan otomatik uygulandı",
     "Import": "içe aktarımdan geldi",
     "Extension": "tarayıcı eklentisinden",
-    "System": "sistem tarafından"
+    "System": "sistem tarafından",
+    "EmailAutoApplyReverted": "e-postadan otomatik uygulanan geri alındı",
+    "BulkEdit": "toplu işlemle değiştirildi",
+    "BulkEditReverted": "toplu işlem geri alındı"
   },
   "validation": {
     "emailRequired": "E-posta gerekli",

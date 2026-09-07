@@ -104,3 +104,43 @@ public sealed record GetApplicationsQuery(
     ApplicationStatus? Status = null,
     ApplicationListSortBy SortBy = ApplicationListSortBy.AppliedAt,
     SortDirection SortDirection = SortDirection.Descending);
+
+/// <summary>
+/// Which applications a bulk operation applies to. Exactly one of the two is set, and the
+/// distinction is not cosmetic: <paramref name="Ids"/> is a set the user could see and count on
+/// screen, while <paramref name="AllMatching"/> is a filter whose result the server resolves —
+/// including rows on pages the user never opened. The second form is what "Delete All" rides on,
+/// and it is why <c>ExpectedCount</c> exists on the requests below.
+/// </summary>
+public sealed record BulkSelection(
+    IReadOnlyList<Guid>? Ids = null,
+    BulkFilterSelection? AllMatching = null);
+
+/// <summary>The list's own filter, repeated back so the server resolves exactly the set the user
+/// was looking at. Deliberately only the two fields that narrow the row set — paging and sorting
+/// cannot change which applications match, so accepting them would only invite them to drift.</summary>
+public sealed record BulkFilterSelection(string? Search = null, ApplicationStatus? Status = null);
+
+/// <param name="ExpectedCount">How many applications the user was told they were acting on.
+/// Required for an <c>AllMatching</c> selection and refused when the count no longer holds, so a
+/// row that appeared between the screen being drawn and the button being pressed cannot be swept
+/// into an operation nobody agreed to. Ignored for an explicit id list, where the set is already
+/// exact.</param>
+public sealed record BulkChangeStatusRequest(
+    BulkSelection Selection,
+    ApplicationStatus NewStatus,
+    string? Note = null,
+    int? ExpectedCount = null);
+
+/// <summary>
+/// Puts back what a bulk status change did. Each entry carries the status the client last saw so
+/// the server can skip anything that moved on since — an undo must never overwrite a decision the
+/// user made after the change it is undoing.
+/// </summary>
+public sealed record UndoBulkStatusRequest(IReadOnlyList<UndoBulkStatusEntry> Entries);
+
+public sealed record UndoBulkStatusEntry(Guid ApplicationId, ApplicationStatus ExpectedStatus, ApplicationStatus RevertTo);
+
+/// <param name="ExpectedCount">As on <see cref="BulkChangeStatusRequest"/> — and it matters more
+/// here, because this deletion is permanent.</param>
+public sealed record BulkDeleteRequest(BulkSelection Selection, int? ExpectedCount = null);

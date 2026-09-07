@@ -2,7 +2,9 @@ using System.Security.Claims;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.Localization;
 using AfterApply.Infrastructure.Identity;
+using Microsoft.Extensions.Localization;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -81,6 +83,63 @@ public static class ApplicationEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // Bulk operations. Routed under /bulk rather than as verbs on the collection so they can
+        // never be confused with the single-application routes above ("bulk" is not a Guid, so the
+        // {id:guid} constraint keeps them apart on its own, but the grouping is for readers).
+        group.MapPost("/bulk/status", async (BulkChangeStatusRequest request, ClaimsPrincipal user,
+                IApplicationService service, IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    return Results.Ok(await service.BulkChangeStatusAsync(user.GetUserId(), request, cancellationToken));
+                }
+                catch (BulkCountMismatchException mismatch)
+                {
+                    return CountMismatchProblem(mismatch, localizer);
+                }
+            })
+            .WithValidation<BulkChangeStatusRequest>()
+            .WithSummary("Change the status of many applications at once")
+            .WithDescription("Applications already in the target status are skipped and reported separately. The " +
+                             "response lists what actually moved, and from where, which is what POST /bulk/status/undo " +
+                             "takes back. Returns 409 when an all-matching selection no longer matches the count the " +
+                             "caller was shown; nothing is changed in that case.")
+            .Produces<BulkChangeStatusResponse>()
+            .Produces<BulkCountMismatch>(StatusCodes.Status409Conflict);
+
+        group.MapPost("/bulk/status/undo", async (UndoBulkStatusRequest request, ClaimsPrincipal user,
+                IApplicationService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.UndoBulkStatusAsync(user.GetUserId(), request, cancellationToken)))
+            .WithValidation<UndoBulkStatusRequest>()
+            .WithSummary("Undo a bulk status change")
+            .WithDescription("Each entry names the status the caller last saw; anything that has moved on since is " +
+                             "left alone and counted as skipped. The undo appends its own history rows rather than " +
+                             "removing the ones it reverses.")
+            .Produces<UndoBulkStatusResponse>();
+
+        group.MapPost("/bulk/delete", async (BulkDeleteRequest request, ClaimsPrincipal user,
+                IApplicationService service, IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    return Results.Ok(await service.BulkDeleteAsync(user.GetUserId(), request, cancellationToken));
+                }
+                catch (BulkCountMismatchException mismatch)
+                {
+                    return CountMismatchProblem(mismatch, localizer);
+                }
+            })
+            // POST rather than DELETE: the selection is a body, and a DELETE with a body is poorly
+            // supported by proxies and client libraries alike.
+            .WithValidation<BulkDeleteRequest>()
+            .WithSummary("Permanently delete many applications at once")
+            .WithDescription("Irreversible. Everything hanging off each application — timeline, status history, " +
+                             "reminders, matched email suggestions — is deleted with it. Returns 409 when an " +
+                             "all-matching selection no longer matches the count the caller was shown; nothing is " +
+                             "deleted in that case.")
+            .Produces<BulkDeleteResponse>()
+            .Produces<BulkCountMismatch>(StatusCodes.Status409Conflict);
+
         group.MapPost("/{id:guid}/status", async (Guid id, ChangeStatusRequest request, ClaimsPrincipal user,
                 IApplicationService service, CancellationToken cancellationToken) =>
             {
@@ -127,4 +186,22 @@ public static class ApplicationEndpoints
 
         return app;
     }
+
+    /// <summary>
+    /// A stale-screen conflict, carried as ProblemDetails so a caller gets the localized sentence
+    /// the rest of the API produces, plus both counts as extensions so a UI can say which way the
+    /// list moved and refresh itself. Handled here rather than in DomainExceptionHandler because
+    /// this is the one coded exception that is not a 400 and that carries data worth reading.
+    /// </summary>
+    private static IResult CountMismatchProblem(BulkCountMismatchException mismatch, IStringLocalizer<SharedStrings> localizer) =>
+        Results.Problem(
+            detail: localizer[mismatch.ErrorCode, mismatch.ActualCount],
+            statusCode: StatusCodes.Status409Conflict,
+            title: "Conflict",
+            extensions: new Dictionary<string, object?>
+            {
+                ["errorCode"] = mismatch.ErrorCode,
+                ["expectedCount"] = mismatch.ExpectedCount,
+                ["actualCount"] = mismatch.ActualCount
+            });
 }

@@ -82,6 +82,7 @@ public static class DependencyInjection
         }
 
         services.Configure<ImportOptions>(configuration.GetSection("Imports"));
+        services.Configure<ApplicationBulkOptions>(configuration.GetSection(ApplicationBulkOptions.SectionName));
         services.Configure<IdentityPolicyOptions>(configuration.GetSection(IdentityPolicyOptions.SectionName));
         services.Configure<PersonalAccessTokenOptions>(configuration.GetSection(PersonalAccessTokenOptions.SectionName));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));

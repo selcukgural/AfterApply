@@ -4027,6 +4027,108 @@ topladığına sözü yok; commit'e girmesini engellemek çoklamayı engellemiyo
   nerede olduğunu gösterdi.
 
 ---
+
+## Başvurularda toplu durum değişikliği ve toplu silme (2026-09-07)
+
+Kullanıcı isteği: listeden çoklu seçimle toplu durum değişikliği ve toplu silme, "Delete All"
+dahil; her ikisinde de ikinci bir onay, silmede kalıcılık bilgisi.
+
+**Soft delete'e gidilmedi — DECIDED.** Kullanıcı "geri alınabilirlik" seçeneğini sordu, önce
+gizlilik politikasıyla çatışıp çatışmadığı incelendi. Üç bulgu: (1) yayındaki
+`privacy.retention` metni ("hesabınızı silene kadar saklanır") soft delete'i lafzen ihlal etmiyor
+ama silinen kaydın bir süre daha durduğunu kullanıcıya **söylemiyor** — açılsaydı TR+EN metin
+değişikliği zorunlu olurdu; (2) 2026-09-07'de CV bucket'ında soft delete **bilerek** kapatılmıştı
+ve gerekçesi aynen burada da geçerli: "kişisel verinin silinmesini isteyen bir kullanıcıya
+'sildik' demek, bir hafta daha kurtarılabilir durumda tutmakla bağdaşmıyor"; (3) başvuru satırı
+`HrName`/`HrEmail`/`HrLinkedInUrl` taşıyor — hukuki dayanağı `PRIVACY_CHECKLIST.md` madde 9'da
+zaten açık duran, **üçüncü bir kişinin** verisi; onun saklama süresini uzatmak en zayıf halka.
+Karar: kalıcı silme, çöp kutusu yok. Yanlış silmeye karşı koruma geri alınabilirlikle değil,
+onayın kendisiyle sağlanıyor.
+
+**Seçim yüzeyi: yüzen seçim çubuğu (A) — DECIDED, B'den dönülerek.** Üç yön çizilip kullanıcıya
+sunuldu: (A) yüzen seçim çubuğu, (B) açıkça girilen seçim modu, (C) tablo başlığının araç çubuğuna
+dönüşmesi. Önce B seçildi; A'nın somut bir çakışması olduğu için: `FeedbackWidget` zaten
+`fixed bottom-4 right-4`'te duruyor.
+
+**Sonra B, çalışan hâli görüldükten sonra geri alındı** ve A uygulandı. Gerekçe kullanıcının:
+"kullanıcının üstteki Seç butonuna basması gerekiyor ancak onu anlaması pek mümkün değil" — yani
+B'nin en baştan bilinen zayıflığı (düşük keşfedilebilirlik) pratikte kabul edilemez çıktı. Özelliği
+fark etmeyen bir kullanıcı için özellik yoktur. İkinci bir kazanç: B'de seçim modundayken filtre
+satırı kayboluyordu, yani filtreleyip seçmek moddan çıkıp girmeyi gerektiriyordu; A'da filtreler hep
+duruyor. Geçişin maliyeti düşük çıktı çünkü işin büyük kısmı (backend, `bulkSelection.ts`, onay
+ekranları, undo) yüzeyden bağımsızdı — ve **net olarak kod azaldı**: bir mod state'i ve bir buton
+silindi.
+
+**Çakışma bileşenler arası bağ kurulmadan, geometriyle çözüldü:** çubuk viewport'ta ortalanmış ve
+yalnızca içeriği kadar geniş, bu da geniş ekranda launcher'ın köşesinden uzak tutuyor; `lg` altında
+`bottom-20`'ye çıkıp launcher'ın *üstünde* duruyor. Seçim varken liste `pb-24` alıyor, yoksa çubuk
+üzerinde işlem yaptığı satırları kapatıyordu. "Filtreye uyan tümünü seç" teklifi, çubukta değil
+tablonun başlığının altındaki şeritte — kapsamı genişletmek satırların yanında, ayrı ve bilinçli bir
+tık olmalı.
+
+**Onay, patlama yarıçapına göre ölçekli.** Durum değişikliği geri alınabilir olduğu için onay
+ekranının kendisi yeterli sayıldı. Seçilenleri silmek onay ekranı + "kalıcı olarak silinecek"
+kutusu istiyor. Filtreye uyan **tümünü** silmek ayrıca kapsam dökümünü (arama, durum filtresi,
+eşleşen kayıt sayısı) gösteriyor ve "SİL" yazdırıyor — Ayarlar'daki hesap silme akışının aynı
+kalıbı. Küçük iş kolay kalsın, büyük iş bilinçli olsun.
+
+**Ekrandaki sayı sunucuya birlikte gidiyor (`ExpectedCount`).** Yalnızca filtreyle çözülen
+seçimler için: kullanıcının gördüğü sayı ile sunucunun bulduğu sayı tutmuyorsa istek 409 ile
+reddediliyor ve **hiçbir şey değişmiyor** (gövdede `expectedCount`/`actualCount`, arayüz hangi
+yöne kaydığını söyleyip listeyi tazeliyor). Açık id listesinde gereksiz — küme zaten tam. Sayım ve
+silme iki ayrı statement olduğu için teorik bir yarış penceresi kalıyor; bunu kapatmak her silmede
+serializable transaction demek olurdu ve senaryo "kullanıcının kendisiyle iki sekmede yarışması".
+Muhafaza edilen asıl vaka bayatlamış ekran.
+
+**Filtre mantığı tek yere alındı.** `ApplicationService.FilteredApplications` artık hem listeyi hem
+her toplu işlemi besliyor: "listenin şu anki filtresine uyan her şeyi sil" ile listenin gösterdiği
+küme aynı olmak zorunda, iki elle yazılmış kopya er ya da geç ayrışırdı. Yolda bir EF tuzağı:
+yardımcıyı önce `IQueryable<ApplicationRow>` (kendi record'um) döndürecek şekilde yazdım ve tüm
+liste sorgusu 500 verdi — EF, `ORDER BY`'da `new ApplicationRow(...).Application.AppliedAt`
+zincirini sadeleştiremiyor (anonim tipi transparent identifier olarak tanıyor, kendi record'umu
+tanımıyor). .NET 10'un yeni `LeftJoin` operatörü bunu çözmezdi; sorun join türü değil projeksiyon
+tipi. Çözüm: yardımcı `IQueryable<Application>` döndürüyor, şirket adı araması `EXISTS` ile
+(CompanyId zorunlu olduğundan inner join'le eşdeğer), join'i yalnızca listenin kendisi ekliyor.
+Yan faydası: toplu silme join'siz, set tabanlı bir `ExecuteDelete` oluyor.
+
+**`MaxOperationSize` (varsayılan 500) bilerek asimetrik.** Durum değişikliği ve geri alma satırları
+belleğe almak zorunda (her biri bir history + bir timeline satırı yazıyor), o yüzden tavana tabi.
+Filtreyle çözülen **silme** tabi değil: hiçbir entity yüklenmiyor ve tavanı uygulamak tam da
+korumaya çalıştığı özelliği — 500'den fazla kaydı olan bir hesapta "Tümünü Sil" — kırardı.
+
+**Geri alma tarihi silmiyor, üstüne yazıyor.** Undo, tersine çevirdiği satırı kaldırmıyor; kendi
+satırını ekliyor. İki yeni origin geldi: `BulkEdit` ve `BulkEditReverted` — `EmailAutoApplyReverted`
+ile aynı gerekçe ("kullanıcı hata düzeltti" ayrı bir olaydır ve sayılabilir olmalı). Undo her
+kayıtta compare-and-set yapıyor: istemcinin en son gördüğü durumla eşleşmeyen satır atlanıyor, yani
+geri alınan değişiklikten **sonra** verilmiş bir karar her zaman kazanıyor.
+
+**Yol üstünde bulunan mevcut hata düzeltildi.** Backend'de `EmailAutoApplyReverted` origin'i vardı
+ama web'in `StatusChangeOrigin` union'ında yoktu: o satırlar `ORIGIN_COLORS[undefined]` ile
+renksiz ve çevirisiz render oluyordu. Üç origin birden (o + iki yenisi) TS union'ına, `OriginChip`
+renklerine ve tr/en sözlüklerine eklendi.
+
+**Üç hata yalnızca tarayıcıda çıktı, testlerde değil.** (1) B'nin araç çubuğunda ilk satır
+seçilince ipucu satırı kayboluyor, çubuk kısalıyor ve **tüm tablo yukarı kayıyordu** — hızlı ikinci
+tıklama yanlış satıra düşüyordu; çubuk tek satır sabit yüksekliğe alındı (A'ya geçişte konu kendi
+kendine kapandı ama ders duruyor: yüksekliği değişen bir kontrol, altındaki tıklama hedeflerini
+oynatır). (2) Durum modalı listenin ilk durumuyla açılıyordu; seçilenler zaten o durumdaysa
+"0 güncellenecek" + ölü buton çıkıyor, kullanıcı hatanın *modalda* olduğunu çıkarmak zorunda
+kalıyordu — `defaultTargetStatus` artık seçimin ortak durumunu atlıyor. (3) Yüzen çubuktaki ikincil
+buton `<Button variant="secondary">` + `className` ile eziliyordu; iki sınıf da aynı specificity'de
+olduğu için kazananı stylesheet sırası belirliyor ve koyu çubukta buton **pasif görünüyordu**.
+Düz bir `<button>`'a çevrildi.
+
+**Entegrasyon paketi iki kez asıldı, ikisinde de lokal API (`dotnet run`) açıktı.** `dotnet test`
+ile `dotnet run` aynı `AfterApply.Api` çıktısını derliyor; %0 CPU'da asılı kalan koşular ancak
+lokal stack kapatılınca temiz geçti. Tarayıcı doğrulaması ile entegrasyon paketini aynı anda
+çalıştırma.
+
+**Uygulamanın ilk gerçek modal'ı.** `components/ui/Modal.tsx` native `<dialog>` üzerine kurulu —
+focus tuzağı, arkadaki sayfanın etkisizleşmesi, Esc ve top layer platformdan geliyor. Önceki
+yıkıcı akışlar `window.confirm` kullanıyor; o ne satır listesi, ne onay kutusu, ne yazarak onay
+gösterebiliyor. Mevcut `window.confirm` çağrıları bu değişiklikte **taşınmadı** — kapsam dışı.
+
+---
 ---
 
 
