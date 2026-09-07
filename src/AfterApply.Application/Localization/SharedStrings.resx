@@ -13,6 +13,12 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
+  <data name="BULK_OPERATION_TOO_LARGE" xml:space="preserve">
+    <value>A single bulk operation can cover at most {0} applications. Narrow the selection and try again.</value>
+  </data>
+  <data name="BULK_COUNT_MISMATCH" xml:space="preserve">
+    <value>The list changed while this was open — it now matches {0} applications. Nothing was changed; refresh and try again.</value>
+  </data>
   <data name="APPLICATION_ALREADY_IN_STATUS" xml:space="preserve">
     <value>The application is already in this status.</value>
   </data>

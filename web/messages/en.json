@@ -369,7 +369,9 @@
       "company": "Company",
       "position": "Position",
       "status": "Status",
-      "appliedAt": "Applied Date"
+      "appliedAt": "Applied Date",
+      "selectPage": "Select every application on this page",
+      "selectRow": "Select {company} — {position}"
     },
     "pagination": {
       "pageInfo": "Page {page} / {totalPages} ({totalCount} applications)",
@@ -459,6 +461,66 @@
       "confirm": "Save",
       "cancel": "Cancel",
       "saving": "Saving…"
+    },
+    "bulk": {
+      "selectedCount": "{count, plural, one {# application selected} other {# applications selected}}",
+      "allMatchingSelected": "All {count} applications matching the filter are selected — including those on other pages.",
+      "selectAllMatching": "Select all {count} applications matching the filter",
+      "clearSelection": "Clear selection",
+      "changeStatus": "Change status",
+      "delete": "Delete",
+      "countMismatch": "The list changed while this was open — {count} applications match the filter now. Nothing was changed; check the list and try again.",
+      "statusDialog": {
+        "title": "{count, plural, one {Change the status of # application} other {Change the status of # applications}}",
+        "description": "Each application gets its own status-history entry, so you can see later when the change happened and where it came from.",
+        "newStatus": "New status",
+        "noteLabel": "Note (optional — written on all {count} of them)",
+        "notePlaceholder": "e.g. \"August cleanup\"",
+        "summaryWillChange": "{count, plural, one {# application will be set to \"{status}\".} other {# applications will be set to \"{status}\".}}",
+        "summaryAlreadyInStatus": "{count, plural, one {# application is already in this status — it will be skipped, with nothing written to its history.} other {# applications are already in this status — they will be skipped, with nothing written to their history.}}",
+        "summaryUnknown": "All {count} applications matching the filter will be updated. Any already in this status are skipped; you will see how many once it runs.",
+        "reversible": "This is not a permanent delete: if it goes wrong, \"Undo\" on the list puts the statuses back.",
+        "confirm": "{count, plural, one {Update # application} other {Update # applications}}",
+        "confirmUnknownCount": "{count, plural, one {Update # application} other {Update # applications}}",
+        "submitting": "Updating...",
+        "cancel": "Cancel"
+      },
+      "deleteDialog": {
+        "title": "{count, plural, one {Delete # application} other {Delete # applications}}",
+        "description": "{count, plural, one {This application will be permanently deleted. It cannot be undone and the record cannot be brought back.} other {These # applications will be permanently deleted. It cannot be undone and the records cannot be brought back.}}",
+        "descriptionAllMatching": "All {count} applications matching the filter — including those on other pages — will be permanently deleted. This cannot be undone.",
+        "cascadeTitle": "Deleted along with each application",
+        "cascadeBody": "Status history · timeline events · reminders · matched email suggestions",
+        "cascadeKept": "Your companies and your CVs are not deleted.",
+        "scopeSearch": "Search",
+        "scopeStatus": "Status filter",
+        "scopeMatches": "Matching records",
+        "scopeNone": "none",
+        "scopeAllStatuses": "none — every status included",
+        "scopeMatchCount": "{count, plural, one {# application} other {# applications}}",
+        "listTitle": "Applications to be deleted",
+        "listCount": "{count, plural, one {# record} other {# records}}",
+        "listRemaining": "+ {count} more",
+        "exportFirst": "You can take a copy of your data first:",
+        "exportLink": "Account Settings",
+        "acknowledge": "{count, plural, one {I understand this application will be permanently deleted and cannot be recovered.} other {I understand these # applications will be permanently deleted and cannot be recovered.}}",
+        "typeToConfirm": "Type <word>DELETE</word> to confirm",
+        "confirmWord": "DELETE",
+        "confirm": "{count, plural, one {Permanently delete # application} other {Permanently delete # applications}}",
+        "submitting": "Deleting...",
+        "cancel": "Cancel"
+      },
+      "result": {
+        "statusChanged": "{count, plural, one {# application updated.} other {# applications updated.}}",
+        "statusUndone": "{count, plural, one {# application put back to its previous status.} other {# applications put back to their previous status.}}",
+        "deleted": "{count, plural, one {# application permanently deleted.} other {# applications permanently deleted.}}",
+        "skippedAlreadyInStatus": "{count} of them were already in this status and were skipped.",
+        "skippedMovedOn": "{count} of them changed in the meantime and were left as they are.",
+        "undo": "Undo",
+        "undoing": "Undoing...",
+        "dismiss": "Dismiss"
+      },
+      "pageSelected": "{count, plural, one {# application on this page is selected.} other {All # applications on this page are selected.}}"
     }
   },
   "settings": {
@@ -820,7 +882,10 @@
     "EmailAutoApplied": "auto-applied from email",
     "Import": "from an import",
     "Extension": "from the browser extension",
-    "System": "applied by the system"
+    "System": "applied by the system",
+    "EmailAutoApplyReverted": "auto-apply from email undone",
+    "BulkEdit": "changed in a bulk action",
+    "BulkEditReverted": "bulk action undone"
   },
   "validation": {
     "emailRequired": "Email is required",

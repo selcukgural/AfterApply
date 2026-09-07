@@ -23,6 +23,18 @@ public enum StatusChangeOrigin
     /// product made, and that is worth being able to count.</summary>
     EmailAutoApplyReverted,
 
+    /// <summary>The user changed it from the applications list, as part of a bulk selection rather
+    /// than one application at a time. Its own origin rather than Manual for the same reason
+    /// EmailAutoApplyReverted has one: a change applied to forty rows at once is a different act
+    /// from a change someone made while looking at a single application, and a user reading the
+    /// history back is entitled to see which of the two it was.</summary>
+    BulkEdit,
+
+    /// <summary>The user undid a bulk status change, putting the status back where it was. The undo
+    /// appends a row rather than removing the one it reverses — the history records what happened,
+    /// including the mistake, and never rewrites itself.</summary>
+    BulkEditReverted,
+
     /// <summary>Carried in by a CSV or LinkedIn Data Export import.</summary>
     Import,
 

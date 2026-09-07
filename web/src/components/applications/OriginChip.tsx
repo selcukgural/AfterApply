@@ -10,6 +10,11 @@ const ORIGIN_COLORS: Record<StatusChangeOrigin, string> = {
   Manual: "border-gray-300 text-gray-600 dark:border-gray-700 dark:text-gray-400",
   EmailSuggestionConfirmed: "border-blue-300 text-blue-700 dark:border-blue-800 dark:text-blue-300",
   EmailAutoApplied: "border-purple-300 text-purple-700 dark:border-purple-800 dark:text-purple-300",
+  // Both "the user took it back" origins share the neutral person tone: what they record is a
+  // person correcting something, not the mechanism that made the mistake.
+  EmailAutoApplyReverted: "border-gray-300 text-gray-600 dark:border-gray-700 dark:text-gray-400",
+  BulkEdit: "border-gray-300 text-gray-600 dark:border-gray-700 dark:text-gray-400",
+  BulkEditReverted: "border-gray-300 text-gray-600 dark:border-gray-700 dark:text-gray-400",
   Import: "border-teal-300 text-teal-700 dark:border-teal-800 dark:text-teal-300",
   Extension: "border-teal-300 text-teal-700 dark:border-teal-800 dark:text-teal-300",
   System: "border-gray-300 text-gray-600 dark:border-gray-700 dark:text-gray-400",

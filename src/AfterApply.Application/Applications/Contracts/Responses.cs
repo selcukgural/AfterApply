@@ -99,3 +99,26 @@ public sealed record ApplicationSummaryCountsResponse(
     int Offers,
     int Rejected,
     int Ghosted);
+
+/// <param name="Updated">How many applications actually moved.</param>
+/// <param name="SkippedAlreadyInStatus">How many were already in the target status and were left
+/// alone. Reported rather than swallowed: "12 seçtim, 10 değişti" needs an explanation on screen,
+/// and silently writing a no-op history row to make the numbers match would be a lie.</param>
+/// <param name="Changes">What moved, and from where — the material an undo is built out of. Only
+/// the rows that actually changed appear here.</param>
+public sealed record BulkChangeStatusResponse(
+    int Updated,
+    int SkippedAlreadyInStatus,
+    IReadOnlyCollection<BulkStatusChange> Changes);
+
+public sealed record BulkStatusChange(Guid ApplicationId, ApplicationStatus FromStatus, ApplicationStatus ToStatus);
+
+/// <param name="Skipped">Entries whose status had moved on since the change being undone, and which
+/// were therefore left where they are.</param>
+public sealed record UndoBulkStatusResponse(int Reverted, int Skipped);
+
+public sealed record BulkDeleteResponse(int Deleted);
+
+/// <summary>Returned (as a 409) when the number of applications matching a bulk operation's filter
+/// is no longer the number the user was shown. Nothing has been changed when this comes back.</summary>
+public sealed record BulkCountMismatch(int ExpectedCount, int ActualCount);

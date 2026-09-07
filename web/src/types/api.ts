@@ -134,6 +134,9 @@ export type StatusChangeOrigin =
   | "Manual"
   | "EmailSuggestionConfirmed"
   | "EmailAutoApplied"
+  | "EmailAutoApplyReverted"
+  | "BulkEdit"
+  | "BulkEditReverted"
   | "Import"
   | "Extension"
   | "System";
@@ -542,4 +545,64 @@ export interface AutoApprovalCalibrationResponse {
   shadowModeEnabled: boolean;
   qualifyingTotal: number;
   buckets: AutoApprovalCalibrationBucket[];
+}
+
+/** Which applications a bulk operation covers. Exactly one of the two is set: an explicit list of
+ *  ids the user ticked, or the list's own filter, whose matches the server resolves — including
+ *  rows on pages the user never opened. */
+export type BulkSelection =
+  | { ids: string[]; allMatching?: undefined }
+  | { ids?: undefined; allMatching: { search: string | null; status: ApplicationStatus | null } };
+
+export interface BulkChangeStatusRequest {
+  selection: BulkSelection;
+  newStatus: ApplicationStatus;
+  note: string | null;
+  /** How many applications the user was told they were acting on. Required for an `allMatching`
+   *  selection — the server refuses with 409 when the count no longer holds. */
+  expectedCount: number | null;
+}
+
+export interface BulkStatusChange {
+  applicationId: string;
+  fromStatus: ApplicationStatus;
+  toStatus: ApplicationStatus;
+}
+
+export interface BulkChangeStatusResponse {
+  updated: number;
+  /** Already in the target status, so left alone. Shown on screen rather than folded into
+   *  `updated`: "12 selected, 10 changed" needs an explanation. */
+  skippedAlreadyInStatus: number;
+  /** What moved and from where — the material the undo is built out of. */
+  changes: BulkStatusChange[];
+}
+
+export interface UndoBulkStatusEntry {
+  applicationId: string;
+  /** The status the client last saw. Anything that has moved on since is left alone. */
+  expectedStatus: ApplicationStatus;
+  revertTo: ApplicationStatus;
+}
+
+export interface UndoBulkStatusResponse {
+  reverted: number;
+  skipped: number;
+}
+
+export interface BulkDeleteRequest {
+  selection: BulkSelection;
+  expectedCount: number | null;
+}
+
+export interface BulkDeleteResponse {
+  deleted: number;
+}
+
+/** The 409 body when an all-matching selection no longer matches the count the user was shown.
+ *  Nothing was changed when this comes back. */
+export interface BulkCountMismatchProblem {
+  errorCode: "BULK_COUNT_MISMATCH";
+  expectedCount: number;
+  actualCount: number;
 }
