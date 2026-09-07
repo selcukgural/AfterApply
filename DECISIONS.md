@@ -3650,6 +3650,95 @@ yok, vitest yalnızca `src/lib` altındaki saf mantığı koşuyor. Bunun yerine
 canlı ilerleme → özet akışı gerçek tarayıcıda uçtan uca doğrulandı (2 yeni başvuru), fixture
 kullanıcısında oluşan kayıtlar sonrasında geri silindi. Backend'e dokunulmadı.
 
+## CV yükleme ve saklama: Cloud Storage, kullanıcı başına 10 dosya (2026-09-07)
+
+**Karar:** Kullanıcılar CV'lerini yükleyebiliyor. Dosyalar Google Cloud Storage'da
+(`afterapply-cvs`, `europe-west1`), kullanıcı başına en fazla 10 tane. Yükleme, listeleme,
+indirme, silme ve "varsayılan CV" işaretleme var; bir başvuru hangi CV ile yapıldığını
+kaydedebiliyor. Bu, ürünün Postgres dışında sakladığı ilk veri.
+
+**İmzalı URL kullanılmadı — indirme API üzerinden proxy'leniyor.** İlk refleks V4 signed URL
+üretmekti; iki nedenle vazgeçildi. (1) Cloud Run'ın runtime servis hesabının private key'i yok,
+dolayısıyla imza IAM Credentials API'nin `signBlob`'una gitmek zorunda: fazladan bir rol ve her
+indirmede fazladan bir ağ turu. (2) Daha önemlisi, üretilen URL dosyanın kendisi için bir bearer
+token hâline geliyor — süresi dolana kadar eline geçen herkes açabiliyor ve iptal edilemiyor.
+Bunun yerine bayt akışı API'den geçiyor: her indirme, diğer tüm uçlarla aynı kimlik doğrulaması
+ve aynı sahiplik kontrolünden geçiyor, bucket internete tamamen kapalı kalabiliyor ve indirme
+her zaman `attachment` olarak veriliyor (asla `inline` — yüklenen bir dosya kendi origin'imizde
+belge olarak yorumlanmasın diye). Bellek maliyeti yok: GCS'ten gelen akış tampona alınmadan
+doğrudan yanıta bağlanıyor, yoksa 10 MB'lık sınır Cloud Run'ın eşzamanlılığıyla çarpılınca
+gerçek bir amplifikasyon vektörü olurdu.
+
+**Önizleme sunucuda değil tarayıcıda üretiliyor.** Seçilen tasarım (aşağıya bakın) dosyanın ilk
+sayfasını gösteriyor. Sunucuda üretmek native bir PDF renderer'ı (ve DOCX için LibreOffice'i)
+Cloud Run imajına sokmak, thumbnail'leri saklayacak bir yer ve onları yenileyecek bir kural
+demekti. `pdf.js` ile ilk sayfa kullanıcının kendi tarayıcısında bir `<canvas>`'a çiziliyor:
+imaj büyümüyor, saklanan ikinci bir kopya oluşmuyor, ve mevcut CSP'ye dokunulmuyor — worker
+bundle'dan, yani kendi origin'imizden yükleniyor. `<iframe>`/`<embed>` ile `blob:` önizleme
+denenmedi, çünkü `default-src 'self'` bunu zaten engelliyor ve engellememesi için CSP'yi
+gevşetmek gerekirdi. DOCX/DOC için tarayıcıda önizleme mümkün değil; orada dosya kartı ve
+"bu tür için önizleme yok" durumu gösteriliyor — eksikliği gizlemek yerine söylemek.
+
+**Kota gerçekten seri hâle getirildi.** "Say, sonra ekle" READ COMMITTED altında atomik değil:
+eşzamanlı iki yükleme dokuzu okuyup ikisi de yazabilir. Bir unique index "en fazla on satır"ı
+ifade edemediği için kullanıcı bazlı `pg_advisory_xact_lock` kullanıldı; aynı kilit "tam olarak
+bir varsayılan" kuralını da tutuyor. Varsayılan için filtreli unique index bilerek kullanılmadı:
+index her statement'ta kontrol edilir ve EF, tek bir `SaveChanges` içinde "eskisini temizle"yi
+"yenisini işaretle"den önce göndereceğine dair söz vermez — meşru bir değiştirme sırf statement
+sırası yüzünden patlayabilirdi.
+
+**Silme gerçekten siliyor.** Cloud Storage yeni bucket'larda soft delete'i 7 günlük pencereyle
+varsayılan olarak açıyor; bu bucket'ta bilerek kapatıldı (`DEPLOYMENT.md` §11). Kişisel verinin
+silinmesini isteyen bir kullanıcıya "sildik" demek, bir hafta daha kurtarılabilir durumda
+tutmakla bağdaşmıyor. Aynı sebeple hesap silme CV objelerini de siliyor — transaction commit
+edildikten *sonra*, best-effort: obje deposu transaction'a katılamaz, ve sıra tersine çevrilirse
+"dosyalar gitti ama hesap silinemedi" ihtimali doğar. Bu sıralamada en kötü ihtimal, hiçbir
+şeyin ulaşamadığı sahipsiz bir obje (loglanıyor).
+
+**Yüklemede içerik doğrulaması var.** Uzantı, tarayıcının bildirdiği Content-Type ve dosya adı —
+üçü de istemciden geliyor ve hiçbiri kanıt değil. Sunucu dosyanın kendi imza baytlarına bakıyor
+(`%PDF-`, `PK\x03\x04`, OLE2), böylece `.pdf` adıyla gelen bir çalıştırılabilir reddediliyor.
+Dosya adı yalnızca gösterim için saklanıyor ve temizleniyor: dizin parçası, kontrol karakterleri
+ve Unicode bidi override'ları (adı "cv exe.pdf" diye okutan klasik hile) atılıyor. Depolama
+anahtarı kullanıcı girdisinden hiç türetilmiyor — `cvs/{userId}/{documentId}.{ext}`, sadece
+bizim ürettiğimiz id'ler.
+
+**Kapsam:** Kullanıcı üç şeyi birden istedi — dosya deposu, "varsayılan CV" ve başvuruya
+bağlama. `Applications.CvDocumentId` nullable ve `ON DELETE SET NULL`: bir CV'yi silmek onunla
+yapılmış başvuruları silmiyor, yalnızca referansı temizliyor — silinen bir dosya kullanıcının
+kendi geçmişinden bir parçayı götürmemeli.
+
+### Tasarım: üç yön çizildi, "liste + önizleme" seçildi — DECIDED
+
+Ekran üç ayrı yön olarak çizilip kullanıcıya sunuldu: (A) uygulamanın mevcut dilini birebir
+sürdüren liste, (B) 10 sınırını ekranın kendisi yapan 5×2 kutu ızgarası, (C) solda dar liste +
+sağda seçili dosyanın önizlemesi. Kullanıcı C'yi seçti. Planlama sırasında C'nin en pahalı yön
+olduğu ("önizleme sunucuda üretilmeli") söylenmişti; yukarıdaki pdf.js kararı o maliyeti
+tamamen ortadan kaldırdı, dolayısıyla seçim maliyetli kalmadı. B'nin bırakılma gerekçesi
+kayıtta duruyor: ilk gün dokuz boş kutu "eksik" hissi veriyor ve 190 px'lik bir kartta uzun
+dosya adları kırpılıyor.
+
+### KVKK: kapanmış bir madde bilerek yeniden açıldı
+
+`PRIVACY_CHECKLIST.md` madde 8 ("Özel nitelikli veri riski — CV serbest metni") 2026-09-02'de
+AI Job Matching kaldırıldığı için "N/A" işaretlenmişti. CV dosya olarak geri geldiğine göre
+madde de geri açıldı; sessizce kapalı bırakmak yanlış olurdu. Aradaki fark kayda geçirildi:
+o özellik CV metnini OpenAI'a (ABD) gönderiyordu, bu özellik CV'yi **hiçbir yere** göndermiyor —
+dosya okunmuyor, metne çevrilmiyor, analiz edilmiyor. Yurt dışı aktarım yok. Avukata sorulacak
+soru netleştirildi: yükleme isteğe bağlı ve aktarım yokken m.6 için ayrı bir açık rıza gerekiyor
+mu? `/privacy#cv-storage` bölümü (tr+en) ne saklandığını, nerede durduğunu, kimseye
+gönderilmediğini ve silmenin kalıcı olduğunu açıkça yazıyor.
+
+**Test:** 47 birim testi (`CvFileRulesTests`, `CvDocumentTests` — imza kontrolü, dosya adı
+temizliği, depolama anahtarı, varsayılan davranışı), 15 entegrasyon testi (`CvDocumentFlowTests` —
+uçtan uca akış, kota, IDOR, `attachment`/`no-store` başlıkları, başvuru bağlantısı, hesap silme,
+export) ve GCS adaptörünün kendisi için fake-gcs-server ile bir tur (`CvGoogleCloudStorageTests`).
+Sonuncusu bilerek tek bir sınıf: suite'in geçmişi konteyner fırtınalarıyla dolu (bkz.
+`SharedInfrastructure`), ve amaç kuralları yeniden test etmek değil, GCS yolunun sessizce
+çürümesini engellemek. Frontend'de 8 vitest (`lib/cv/cvFile.test.ts`); React bileşen testi yok
+çünkü `web`'de jsdom/testing-library yok.
+
+---
 ---
 
 

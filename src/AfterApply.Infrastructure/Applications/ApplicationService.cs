@@ -113,7 +113,8 @@ internal sealed class ApplicationService(
             userId, companyId, request.JobTitle, request.JobUrl, request.Location,
             request.EmploymentType, request.AppliedAt, request.Source ?? Source.Manual,
             request.Notes, DateTimeOffset.UtcNow, jobId: null,
-            request.HrName, request.HrEmail, request.HrLinkedInUrl);
+            request.HrName, request.HrEmail, request.HrLinkedInUrl,
+            await ResolveOwnedCvDocumentIdAsync(userId, request.CvDocumentId, cancellationToken));
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -201,7 +202,8 @@ internal sealed class ApplicationService(
 
         application.UpdateDetails(request.JobTitle, request.JobUrl, request.Location,
             request.EmploymentType, request.AppliedAt, request.Notes, DateTimeOffset.UtcNow,
-            request.HrName, request.HrEmail, request.HrLinkedInUrl);
+            request.HrName, request.HrEmail, request.HrLinkedInUrl,
+            await ResolveOwnedCvDocumentIdAsync(userId, request.CvDocumentId, cancellationToken));
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
@@ -322,6 +324,28 @@ internal sealed class ApplicationService(
         return new ApplicationEventResponse(addedEvent.Id, addedEvent.Type, addedEvent.OccurredAt, addedEvent.Source, addedEvent.Metadata);
     }
 
+    /// <summary>
+    /// Passes a CV id through only when it names one of this user's own CVs, and drops it to null
+    /// otherwise. A body field is not evidence of ownership: without this check, anyone could point
+    /// their application at someone else's CV row and read the file name straight back out of the
+    /// detail response. Silently null rather than an error — the only ways to get here with an id
+    /// the user does not own are a stale form (the CV was deleted between load and save) and an
+    /// attempt, and neither deserves to fail the save of everything else on the form.
+    /// </summary>
+    private async Task<Guid?> ResolveOwnedCvDocumentIdAsync(Guid userId, Guid? cvDocumentId,
+        CancellationToken cancellationToken)
+    {
+        if (cvDocumentId is not { } id)
+        {
+            return null;
+        }
+
+        var owned = await dbContext.CvDocuments
+            .AnyAsync(d => d.Id == id && d.UserId == userId, cancellationToken);
+
+        return owned ? id : null;
+    }
+
     private Task<DomainApplication?> FindOwnedAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken)
     {
         return dbContext.Applications
@@ -345,11 +369,22 @@ internal sealed class ApplicationService(
                 .Select(j => j.DescriptionHtml)
                 .FirstOrDefaultAsync(cancellationToken);
 
+        // Scoped to the owner as well as to the id. The stored id is already ownership-checked on
+        // the way in, but a read that only matched on id would silently start leaking file names
+        // the moment anything else ever wrote this column.
+        var cvDocumentFileName = application.CvDocumentId is null
+            ? null
+            : await dbContext.CvDocuments
+                .Where(d => d.Id == application.CvDocumentId && d.UserId == application.UserId)
+                .Select(d => d.FileName)
+                .FirstOrDefaultAsync(cancellationToken);
+
         return new ApplicationDetailResponse(
             application.Id, application.CompanyId, company.Name, company.Website, company.LinkedInUrl,
             application.JobTitle, application.JobUrl, application.Location, application.EmploymentType,
             application.AppliedAt, application.Status, application.Source, application.Notes,
             application.CreatedAt, application.UpdatedAt, jobDescriptionHtml,
-            application.HrName, application.HrEmail, application.HrLinkedInUrl, application.HrEmailSource);
+            application.HrName, application.HrEmail, application.HrLinkedInUrl, application.HrEmailSource,
+            application.CvDocumentId, cvDocumentFileName);
     }
 }

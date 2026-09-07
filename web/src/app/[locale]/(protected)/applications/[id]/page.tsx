@@ -114,6 +114,19 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               <dt className="text-gray-500 dark:text-gray-400">{t("createdAt")}</dt>
               <dd className="text-gray-900 dark:text-gray-100">{new Date(application.createdAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}</dd>
             </div>
+            {application.cvDocumentFileName && (
+              <div className="min-w-0">
+                <dt className="text-gray-500 dark:text-gray-400">{t("cvDocument")}</dt>
+                <dd className="truncate">
+                  {/* Links to the CV page rather than downloading here: the file name is enough to
+                      answer "which one did I send", and a download button on every application
+                      detail would be a second place to keep the download path correct. */}
+                  <Link href="/cv" className="text-blue-600 hover:underline dark:text-blue-400">
+                    {application.cvDocumentFileName}
+                  </Link>
+                </dd>
+              </div>
+            )}
             {safeExternalUrl(application.jobUrl) && (
               <div>
                 <dt className="text-gray-500 dark:text-gray-400">{t("jobUrl")}</dt>

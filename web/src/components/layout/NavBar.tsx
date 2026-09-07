@@ -17,6 +17,7 @@ const NAV_LINKS = [
   { href: "/dashboard", key: "dashboard" },
   { href: "/applications", key: "applications" },
   { href: "/tracked-jobs", key: "trackedJobs" },
+  { href: "/cv", key: "cv" },
   { href: "/import", key: "import" },
 ] as const;
 

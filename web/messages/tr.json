@@ -160,7 +160,9 @@
     }
   },
   "common": {
-    "loading": "Yükleniyor..."
+    "loading": "Yükleniyor...",
+    "delete": "Sil",
+    "cancel": "Vazgeç"
   },
   "nav": {
     "dashboard": "Panel",
@@ -171,7 +173,8 @@
     "import": "İçe Aktar",
     "suggestions": "Öneriler",
     "notifications": "Bildirimler",
-    "help": "Yardım"
+    "help": "Yardım",
+    "cv": "CV'lerim"
   },
   "auth": {
     "login": {
@@ -388,7 +391,11 @@
       "saving": "Kaydediliyor...",
       "saveError": "Kaydedilemedi. Lütfen tekrar deneyin.",
       "createSubmit": "Oluştur",
-      "editSubmit": "Kaydet"
+      "editSubmit": "Kaydet",
+      "cvDocument": "Kullanılan CV",
+      "cvDocumentNone": "Belirtilmedi",
+      "cvDocumentEmpty": "Henüz kayıtlı CV'n yok.",
+      "cvDocumentEmptyLink": "CV yükle"
     },
     "new": {
       "title": "Yeni Başvuru"
@@ -422,7 +429,8 @@
       "hrEmail": "İK e-posta adresi",
       "hrLinkedIn": "İK LinkedIn profili",
       "hrNamed": "İK kontağı: {name}",
-      "hrEmailFromIncomingEmail": "Bu adres, bu başvuruyla eşleşen bir e-postanın göndereninden alındı. Yanlışsa düzenleyip değiştirebilirsin."
+      "hrEmailFromIncomingEmail": "Bu adres, bu başvuruyla eşleşen bir e-postanın göndereninden alındı. Yanlışsa düzenleyip değiştirebilirsin.",
+      "cvDocument": "Kullanılan CV"
     },
     "statusChange": {
       "changeStatus": "Durumu Değiştir",
@@ -585,6 +593,15 @@
       "title": "İletişim",
       "before": "Sorularınız için",
       "after": " adresinden bize ulaşabilirsiniz."
+    },
+    "cvStorage": {
+      "title": "Yüklediğiniz CV'ler",
+      "intro": "CV yüklemek tamamen isteğe bağlıdır; hizmetin geri kalanı CV olmadan da çalışır. Bir CV yüklediğinizde:",
+      "where": "Dosya, Avrupa Birliği bölgesindeki (Google Cloud, europe-west1) herkese kapalı bir depolama alanında saklanır — hesabınızın ve başvurularınızın verisiyle aynı bölgede. Dosyanın adresi tahmin edilebilir olsa bile dışarıdan erişilemez; depolama alanı internete tamamen kapalıdır.",
+      "access": "Dosyaya yalnızca giriş yapmış hâlde siz erişebilirsiniz. Her indirme isteği, dosyanın gerçekten size ait olup olmadığı kontrol edildikten sonra e-kariyerim sunucusu üzerinden aktarılır; paylaşılabilir veya süreli bir bağlantı hiçbir zaman üretilmez. Başka kullanıcılara, işverenlere veya iş ilanı platformlarına gösterilmez.",
+      "noTransfer": "CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez — yapay zekâ servisleri dahil. Dosya okunmaz, metne çevrilmez ve analiz edilmez; yalnızca saklanır ve size geri verilir. Bir PDF'in ilk sayfasını CV'lerim sayfasında gördüğünüz önizleme, sunucuda değil kendi tarayıcınızda oluşturulur.",
+      "deletion": "Sildiğiniz bir CV kalıcı olarak silinir — depolama tarafında kurtarma penceresi bilerek kapalı tutulur. Hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir.",
+      "sensitiveDataNote": "Bir CV, iş deneyiminizin yanı sıra fotoğraf, doğum tarihi, askerlik durumu veya sağlık bilgisi gibi hassas sayılabilecek veriler içerebilir. Ne yükleyeceğinize siz karar verirsiniz: bu alanların CV'nizde bulunması hizmetin çalışması için gerekli değildir, ve dilediğiniz zaman dosyayı silebilirsiniz."
     }
   },
   "extensionPrivacy": {
@@ -833,7 +850,8 @@
       "import": "İçe Aktarma",
       "settings": "Ayarlar",
       "chromeExtension": "Chrome Eklentisi",
-      "faq": "Sık Sorulan Sorular"
+      "faq": "Sık Sorulan Sorular",
+      "cv": "CV'lerim"
     },
     "common": {
       "step": "Adım",
@@ -905,6 +923,10 @@
         "faq": {
           "title": "Sık Sorulan Sorular",
           "description": "Merak edilenler ve bilinen sınırlamalar."
+        },
+        "cv": {
+          "title": "CV'lerim",
+          "description": "CV dosyalarınızı yükleyin, önizleyin, varsayılanı seçin ve silin."
         }
       }
     },
@@ -1286,6 +1308,42 @@
         "question": "İçe aktarılan ya da eklentiyle eklenen başvurularda istihdam türü neden hep \"Tam Zamanlı\" görünüyor?",
         "answer": "LinkedIn verisi ve eklentinin taradığı ilan sayfaları istihdam türünü açıkça belirtmediği için varsayılan olarak \"FullTime\" atanır; gerekirse başvuruyu düzenleyerek doğru türü seçebilirsiniz."
       }
+    },
+    "cv": {
+      "eyebrow": "CV'lerim",
+      "title": "Başvurduğunuz CV'leri tek yerde tutun",
+      "intro": "CV'lerim, başvurularınızda kullandığınız dosyaları sakladığınız yerdir. En fazla 10 dosya tutabilir, her birini indirebilir veya kalıcı olarak silebilirsiniz. Dosyalarınız yalnızca size görünür.",
+      "upload": {
+        "title": "CV yükleyin",
+        "step1": {
+          "title": "CV'lerim sayfasını açın",
+          "body": "Üst menüden CV'lerim'e girin. Sol tarafta yüklediğiniz dosyaların listesi, sağda seçili dosyanın önizlemesi yer alır."
+        },
+        "step2": {
+          "title": "Dosyayı seçin veya sürükleyin",
+          "body": "CV Yükle düğmesine basın ya da dosyayı listenin altındaki kesikli alana sürükleyin. PDF, DOC ve DOCX kabul edilir; dosya başına sınır 10 MB'dır."
+        },
+        "step3": {
+          "title": "Kotanızı takip edin",
+          "body": "Liste başlığının yanındaki sayaç kaç dosya kullandığınızı gösterir. 10 dosyaya ulaştığınızda yeni yükleme yapabilmek için önce birini silmeniz gerekir."
+        }
+      },
+      "preview": {
+        "title": "Önizleme",
+        "body": "PDF dosyalarının ilk sayfası sağdaki panelde gösterilir; bu görüntü tarayıcınızda oluşturulur, sunucuda bir kopyası tutulmaz. DOC ve DOCX dosyaları için tarayıcıda önizleme mümkün değildir — içeriğini görmek için dosyayı indirin."
+      },
+      "default": {
+        "title": "Varsayılan CV",
+        "body": "Bir dosyayı varsayılan yaptığınızda, yeni bir başvuru kaydederken o CV hazır seçili gelir. İlk yüklediğiniz dosya otomatik olarak varsayılan olur; varsayılanı sildiğinizde sıra en yeni dosyaya geçer. Başvuru formundaki Kullanılan CV alanını her zaman elle değiştirebilirsiniz."
+      },
+      "remove": {
+        "title": "Silme",
+        "body": "Sil düğmesi bir onay ister; onayladığınızda dosya hem listeden hem de depolamadan kalıcı olarak kaldırılır ve geri getirilemez. O CV'yi kullandığınız başvurular silinmez — yalnızca CV bağlantıları temizlenir."
+      },
+      "calloutPrivacy": {
+        "title": "CV'leriniz nerede saklanıyor?",
+        "body": "Dosyalarınız Avrupa Birliği bölgesindeki (europe-west1) Google Cloud Storage üzerinde, herkese kapalı bir alanda saklanır. Yapay zekâ dahil hiçbir üçüncü tarafa gönderilmez. Hesabınızı sildiğinizde dosyalarınız da silinir."
+      }
     }
   },
   "hrContact": {
@@ -1294,5 +1352,46 @@
     "name": "Ad soyad",
     "email": "E-posta",
     "linkedIn": "LinkedIn profili"
+  },
+  "cv": {
+    "title": "CV'lerim",
+    "subtitle": "Başvurularında kullandığın CV'leri burada saklarsın. Dosyaların yalnızca sana görünür; istediğin zaman indirebilir veya kalıcı olarak silebilirsin.",
+    "upload": "CV Yükle",
+    "uploading": "Yükleniyor…",
+    "listHeading": "Dosyalar",
+    "quota": "{used} / {max}",
+    "quotaFull": "{max} dosyalık sınıra ulaştın. Yenisini yüklemek için birini sil.",
+    "empty": "Henüz bir CV yüklemedin. Soldaki alana bir dosya sürükle ya da CV Yükle'ye bas.",
+    "defaultBadge": "Varsayılan",
+    "meta": "{format} · {size} · {date} tarihinde yüklendi",
+    "download": "İndir",
+    "downloading": "İndiriliyor…",
+    "deleteConfirm": "Bu dosya kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+    "deleteConfirmAction": "Kalıcı olarak sil",
+    "dropzone": {
+      "idle": "Dosyayı buraya sürükle",
+      "hint": "PDF, DOC veya DOCX — en fazla 10 MB"
+    },
+    "preview": {
+      "firstPageOnly": "Yalnızca ilk sayfa gösterilir. Tamamı için dosyayı indir.",
+      "firstPageAlt": "CV'nin ilk sayfası",
+      "failed": "Bu dosyanın önizlemesi oluşturulamadı. Dosyanın kendisi bozulmadı — indirerek açabilirsin.",
+      "unsupported": "{format} dosyaları için tarayıcıda önizleme yapılamıyor. İçeriğini görmek için dosyayı indir."
+    },
+    "default": {
+      "title": "Varsayılan CV",
+      "description": "Yeni başvurularda bu dosya hazır seçili gelir.",
+      "usedBy": "{count, plural, =0 {Henüz bir başvuruda kullanılmadı.} other {# başvuruda kullanıldı.}}",
+      "isDefault": "Varsayılan",
+      "makeDefault": "Varsayılan yap"
+    },
+    "problem": {
+      "unsupportedType": "Sadece .pdf, .doc ve .docx dosyaları yüklenebilir.",
+      "tooLarge": "Dosya 10 MB sınırını aşıyor."
+    },
+    "uploadError": "CV yüklenemedi. Lütfen tekrar dene.",
+    "deleteError": "CV silinemedi. Lütfen tekrar dene.",
+    "downloadError": "Dosya indirilemedi. Lütfen tekrar dene.",
+    "defaultError": "Varsayılan CV değiştirilemedi. Lütfen tekrar dene."
   }
 }

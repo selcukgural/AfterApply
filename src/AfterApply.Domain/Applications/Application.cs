@@ -44,6 +44,14 @@ public sealed class Application : AuditableEntity
     /// surfaced rather than kept internal.</summary>
     public HrEmailSource? HrEmailSource { get; private set; }
 
+    /// <summary>Which of the user's stored CVs was sent with this application, when they said.
+    /// Optional and nullable for good: the field did not exist for anything applied to before it
+    /// shipped, and deleting a CV clears the reference (ON DELETE SET NULL) rather than taking the
+    /// application with it — a deleted file must not erase a piece of the user's own history.
+    /// Ownership is checked at the service boundary, since a CV id is a caller-supplied id like
+    /// any other.</summary>
+    public Guid? CvDocumentId { get; private set; }
+
     public IReadOnlyCollection<ApplicationEvent> Events => _events;
 
     public IReadOnlyCollection<ApplicationStatusHistory> StatusHistory => _statusHistory;
@@ -55,7 +63,8 @@ public sealed class Application : AuditableEntity
     public static Application Create(Guid userId, Guid companyId, string jobTitle, string? jobUrl,
         string? location, EmploymentType employmentType, DateTimeOffset appliedAt, Source source,
         string? notes, DateTimeOffset now, Guid? jobId = null,
-        string? hrName = null, string? hrEmail = null, string? hrLinkedInUrl = null)
+        string? hrName = null, string? hrEmail = null, string? hrLinkedInUrl = null,
+        Guid? cvDocumentId = null)
     {
         var application = new Application
         {
@@ -73,6 +82,7 @@ public sealed class Application : AuditableEntity
             HrEmail = hrEmail,
             HrEmailSource = hrEmail is null ? null : Applications.HrEmailSource.Manual,
             HrLinkedInUrl = hrLinkedInUrl,
+            CvDocumentId = cvDocumentId,
             Status = ApplicationStatus.Applied,
             CreatedAt = now,
             UpdatedAt = now
@@ -94,7 +104,8 @@ public sealed class Application : AuditableEntity
 
     public void UpdateDetails(string jobTitle, string? jobUrl, string? location,
         EmploymentType employmentType, DateTimeOffset appliedAt, string? notes, DateTimeOffset now,
-        string? hrName = null, string? hrEmail = null, string? hrLinkedInUrl = null)
+        string? hrName = null, string? hrEmail = null, string? hrLinkedInUrl = null,
+        Guid? cvDocumentId = null)
     {
         JobTitle = jobTitle;
         JobUrl = jobUrl;
@@ -112,6 +123,9 @@ public sealed class Application : AuditableEntity
         // theirs. Clearing the address clears the provenance with it.
         HrEmailSource = hrEmail is null ? null : Applications.HrEmailSource.Manual;
         HrLinkedInUrl = hrLinkedInUrl;
+        // Same straight assignment as the fields above: the edit form is where a user detaches a
+        // CV from an application, so null has to mean "clear it".
+        CvDocumentId = cvDocumentId;
         Touch(now);
     }
 

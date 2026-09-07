@@ -28,6 +28,7 @@
     <PackageReference Include="Microsoft.Extensions.Localization" />
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="OpenAI" />
+    <PackageReference Include="Google.Cloud.Storage.V1" />
   </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ using AfterApply.Application.Analytics;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
 using AfterApply.Application.Companies;
+using AfterApply.Application.Documents;
 using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
@@ -15,6 +16,7 @@ using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.CompanyIntelligence;
+using AfterApply.Infrastructure.Documents;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
@@ -32,6 +34,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using Google.Cloud.Storage.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -94,8 +97,70 @@ public static class DependencyInjection
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
         services.Configure<CompanySearchOptions>(configuration.GetSection("Companies"));
+        services.AddDocumentStorage(configuration);
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Wires up CV file storage. The provider is configuration, not compilation, so the test suite
+    /// and a fresh clone can run against a directory while the deployed service talks to Cloud
+    /// Storage — but Production is not allowed to pick the directory: Cloud Run's filesystem is
+    /// in-memory and per-instance, so an upload written there would vanish on the next revision and
+    /// be invisible to every other instance. Failing at startup is the only way that mistake
+    /// surfaces before a user's CV is silently lost.
+    /// </summary>
+    private static IServiceCollection AddDocumentStorage(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
+
+        var storageOptions = configuration.GetSection(StorageOptions.SectionName).Get<StorageOptions>()
+            ?? new StorageOptions();
+        var isProduction = string.Equals(configuration["ASPNETCORE_ENVIRONMENT"], "Production",
+            StringComparison.OrdinalIgnoreCase);
+
+        if (storageOptions.Provider == FileStorageProvider.GoogleCloudStorage)
+        {
+            if (string.IsNullOrWhiteSpace(storageOptions.BucketName) && !IsOpenApiDocumentGeneration)
+            {
+                throw new InvalidOperationException(
+                    "Storage:BucketName is required when Storage:Provider is GoogleCloudStorage. " +
+                    "Set Storage__BucketName to the CV bucket's name (see DEPLOYMENT.md).");
+            }
+
+            // Singleton: StorageClient is thread-safe and holds a pooled HttpClient, so one per
+            // process is both correct and what avoids a socket per request.
+            services.AddSingleton(_ =>
+            {
+                var builder = new StorageClientBuilder();
+
+                if (!string.IsNullOrWhiteSpace(storageOptions.EmulatorBaseUri))
+                {
+                    builder.BaseUri = storageOptions.EmulatorBaseUri;
+                    builder.UnauthenticatedAccess = true;
+                }
+
+                return builder.Build();
+            });
+
+            services.AddScoped<IFileStorage, GoogleCloudStorageFileStorage>();
+        }
+        else
+        {
+            if (isProduction)
+            {
+                throw new InvalidOperationException(
+                    "Storage:Provider must be GoogleCloudStorage in Production — Cloud Run's " +
+                    "filesystem is in-memory and per-instance, so FileSystem storage would lose " +
+                    "every uploaded CV. See DEPLOYMENT.md.");
+            }
+
+            services.AddScoped<IFileStorage, FileSystemFileStorage>();
+        }
+
+        services.AddScoped<ICvDocumentService, CvDocumentService>();
 
         return services;
     }

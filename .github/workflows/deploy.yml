@@ -28,6 +28,14 @@ env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: ${{ secrets.GCP_REGION }}
   AR_REPOSITORY: afterapply
+  # The bucket holding uploaded CV files. Read from a repo secret for consistency with
+  # GCP_PROJECT_ID/GCP_REGION above, not because the name protects anything — the bucket denies
+  # public access at the bucket level (public_access_prevention=enforced) and only the runtime
+  # service account holds an object role on it, so knowing the name opens nothing. There is no
+  # credential here either: on Cloud Run the API reaches Cloud Storage as its own runtime identity
+  # via Application Default Credentials, so nothing is stored in Secret Manager for it.
+  # See DEPLOYMENT.md §11.
+  CV_BUCKET: ${{ secrets.GCP_CV_BUCKET }}
 
 jobs:
   # Decides which side(s) should deploy. On a manual dispatch the `target` input states intent
@@ -214,6 +222,8 @@ jobs:
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080
+            Storage__Provider=GoogleCloudStorage
+            Storage__BucketName=${{ env.CV_BUCKET }}
           secrets: |-
             ConnectionStrings__Postgres=afterapply-postgres-connection:latest
             Jwt__SigningKey=afterapply-jwt-signing-key:latest

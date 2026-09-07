@@ -44,7 +44,12 @@ public sealed record ApplicationDetailResponse(
     string? HrLinkedInUrl = null,
     // Null exactly when HrEmail is null — the UI labels an auto-filled address rather than passing
     // a guess off as something the user typed.
-    HrEmailSource? HrEmailSource = null);
+    HrEmailSource? HrEmailSource = null,
+    // The CV recorded for this application, if any. The name rides along so the detail view can
+    // show it without a second request; it is null when no CV is attached, and goes back to null on
+    // its own if that CV is later deleted (the FK is ON DELETE SET NULL).
+    Guid? CvDocumentId = null,
+    string? CvDocumentFileName = null);
 
 public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);
 

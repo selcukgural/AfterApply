@@ -97,9 +97,32 @@ export interface ApplicationDetailResponse {
   hrEmail: string | null;
   hrLinkedInUrl: string | null;
   hrEmailSource: HrEmailSource | null;
+  // The CV recorded for this application. Both go back to null on their own if that CV is later
+  // deleted — the server clears the reference rather than deleting the application.
+  cvDocumentId: string | null;
+  cvDocumentFileName: string | null;
 }
 
 export type HrEmailSource = "Manual" | "IncomingEmail";
+
+export type CvFileFormat = "Pdf" | "Doc" | "Docx";
+
+export interface CvDocumentResponse {
+  id: string;
+  fileName: string;
+  format: CvFileFormat;
+  sizeBytes: number;
+  isDefault: boolean;
+  uploadedAt: string;
+  usedByApplicationCount: number;
+}
+
+export interface CvDocumentListResponse {
+  items: CvDocumentResponse[];
+  /** The server's own per-user cap. Read from the response rather than duplicated here, so the
+   *  quota reading and the disabled upload button can never disagree with what the server does. */
+  maxCount: number;
+}
 
 export type StatusChangeOrigin =
   | "Manual"
@@ -199,6 +222,7 @@ export interface CreateApplicationRequest {
   hrName: string | null;
   hrEmail: string | null;
   hrLinkedInUrl: string | null;
+  cvDocumentId: string | null;
 }
 
 export interface UpdateApplicationRequest {
@@ -211,6 +235,7 @@ export interface UpdateApplicationRequest {
   hrName: string | null;
   hrEmail: string | null;
   hrLinkedInUrl: string | null;
+  cvDocumentId: string | null;
 }
 
 export interface ChangeStatusRequest {

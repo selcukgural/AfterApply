@@ -17,7 +17,10 @@ public sealed record CreateApplicationRequest(
     // poster's address), so manual entry is the primary way this ever gets filled.
     string? HrName = null,
     string? HrEmail = null,
-    string? HrLinkedInUrl = null);
+    string? HrLinkedInUrl = null,
+    // Which stored CV was sent with this application. Optional; must be one of the caller's own
+    // CVs, which the service checks — an id from a request body is never proof of ownership.
+    Guid? CvDocumentId = null);
 
 public sealed record CreateFromExtensionRequest(
     string CompanyName,
@@ -64,7 +67,8 @@ public sealed record UpdateApplicationRequest(
     // the field means they want it gone.
     string? HrName = null,
     string? HrEmail = null,
-    string? HrLinkedInUrl = null);
+    string? HrLinkedInUrl = null,
+    Guid? CvDocumentId = null);
 
 // Note is the user's own text and nothing else, and there is deliberately no Source/Origin
 // here: provenance is decided by the code path that handles the change, never by the caller.

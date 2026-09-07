@@ -239,6 +239,34 @@ kept switched off until enough real usage exists to make it meaningful; see
 `DECISIONS.md`'s Sprint 10 entry. While disabled, every
 `/api/company-intelligence/*` endpoint returns `404` for all callers.
 
+## CV storage (`/cv`)
+
+Users can keep up to 10 CV files (PDF/DOC/DOCX, 10 MB each), download them,
+delete them, mark one as the default, and record which CV an application was
+sent with. Files live in object storage; Postgres only holds the metadata.
+
+Which storage backend is used comes from the `Storage` configuration section:
+
+| Setting | Local default | Production |
+|---|---|---|
+| `Storage:Provider` | `FileSystem` | `GoogleCloudStorage` |
+| `Storage:BucketName` | — | `afterapply-cvs` (set by `deploy.yml`) |
+| `Storage:LocalRootPath` | a directory under the OS temp dir | — |
+| `Storage:MaxFileSizeBytes` | `10485760` (10 MB) | same |
+
+So a fresh clone needs no configuration at all: uploads land in a temp
+directory. Startup **refuses** `FileSystem` when
+`ASPNETCORE_ENVIRONMENT=Production`, because Cloud Run's filesystem is
+in-memory and per-instance — an upload written there would vanish on the next
+revision. See `DEPLOYMENT.md` §11 for creating the bucket (and for why its
+soft-delete window is deliberately turned off), and `DECISIONS.md` 2026-09-07
+for why downloads are proxied through the API instead of served from signed
+URLs.
+
+The first-page preview on `/cv` is rendered in the browser with `pdf.js`;
+nothing about a CV is ever read, converted or analysed server-side, and no
+part of it is sent to any third party.
+
 ## AI Job Matching Setup
 
 Sprint 8 lets a user paste their CV in `/settings` and get an AI-scored

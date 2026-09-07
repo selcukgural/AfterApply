@@ -213,4 +213,19 @@
   <data name="GENERIC_ERROR" xml:space="preserve">
     <value>An unexpected error occurred.</value>
   </data>
+  <data name="CV_UNSUPPORTED_FILE_TYPE" xml:space="preserve">
+    <value>Only .pdf, .doc and .docx files are supported.</value>
+  </data>
+  <data name="CV_FILE_EMPTY" xml:space="preserve">
+    <value>The file is empty.</value>
+  </data>
+  <data name="CV_FILE_TOO_LARGE" xml:space="preserve">
+    <value>The file exceeds the {0} byte size limit.</value>
+  </data>
+  <data name="CV_FILE_CONTENT_MISMATCH" xml:space="preserve">
+    <value>The file's contents do not match its extension. Save it again in the format its name says, then upload it.</value>
+  </data>
+  <data name="CV_DOCUMENT_LIMIT_REACHED" xml:space="preserve">
+    <value>You have reached the limit of {0} stored CVs. Delete one to upload another.</value>
+  </data>
 </root>

@@ -160,7 +160,9 @@
     }
   },
   "common": {
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "delete": "Delete",
+    "cancel": "Cancel"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -171,7 +173,8 @@
     "import": "Import",
     "suggestions": "Suggestions",
     "notifications": "Notifications",
-    "help": "Help"
+    "help": "Help",
+    "cv": "My CVs"
   },
   "auth": {
     "login": {
@@ -388,7 +391,11 @@
       "saving": "Saving...",
       "saveError": "Could not save. Please try again.",
       "createSubmit": "Create",
-      "editSubmit": "Save"
+      "editSubmit": "Save",
+      "cvDocument": "CV used",
+      "cvDocumentNone": "Not specified",
+      "cvDocumentEmpty": "You have no stored CVs yet.",
+      "cvDocumentEmptyLink": "Upload a CV"
     },
     "new": {
       "title": "New Application"
@@ -422,7 +429,8 @@
       "hrEmail": "HR email address",
       "hrLinkedIn": "HR LinkedIn profile",
       "hrNamed": "HR contact: {name}",
-      "hrEmailFromIncomingEmail": "This address came from the sender of an email matched to this application. Edit it if it is wrong."
+      "hrEmailFromIncomingEmail": "This address came from the sender of an email matched to this application. Edit it if it is wrong.",
+      "cvDocument": "CV used"
     },
     "statusChange": {
       "changeStatus": "Change Status",
@@ -585,6 +593,15 @@
       "title": "Contact",
       "before": "For questions, you can reach us at",
       "after": "."
+    },
+    "cvStorage": {
+      "title": "CVs you upload",
+      "intro": "Uploading a CV is entirely optional; the rest of the service works without one. When you do upload a CV:",
+      "where": "The file is stored in a bucket closed to the public on Google Cloud in the European Union region (europe-west1) — the same region as your account and application data. Even a guessed address cannot reach it; the bucket is not exposed to the internet at all.",
+      "access": "Only you, while signed in, can reach the file. Every download is checked against your own account and streamed through the e-kariyerim server; no shareable or time-limited link is ever produced. It is never shown to other users, to employers or to job boards.",
+      "noTransfer": "The contents of your CV are never sent to any third party, AI services included. The file is not read, converted to text or analysed; it is only stored and handed back to you. The first-page preview you see on the My CVs page is rendered in your own browser, not on the server.",
+      "deletion": "A CV you delete is deleted permanently — the storage-side recovery window is deliberately turned off. Deleting your account deletes all of your CVs with it.",
+      "sensitiveDataNote": "A CV can carry more than your work history — a photo, a date of birth, military-service or health information. What goes into it is your decision: none of those fields are needed for the service to work, and you can delete the file at any time."
     }
   },
   "extensionPrivacy": {
@@ -833,7 +850,8 @@
       "import": "Import",
       "settings": "Settings",
       "chromeExtension": "Chrome Extension",
-      "faq": "FAQ"
+      "faq": "FAQ",
+      "cv": "My CVs"
     },
     "common": {
       "step": "Step",
@@ -905,6 +923,10 @@
         "faq": {
           "title": "FAQ",
           "description": "Common questions and known limitations."
+        },
+        "cv": {
+          "title": "My CVs",
+          "description": "Upload, preview, set a default and delete your CV files."
         }
       }
     },
@@ -1286,6 +1308,42 @@
         "question": "Why does employment type always show \"Full-Time\" on imported or extension-added applications?",
         "answer": "Neither LinkedIn's export nor the job pages the extension reads specify an employment type, so it defaults to \"FullTime\" — edit the application afterwards if you need the correct type."
       }
+    },
+    "cv": {
+      "eyebrow": "My CVs",
+      "title": "Keep the CVs you apply with in one place",
+      "intro": "My CVs is where you store the files you apply with. You can keep up to 10, download any of them, or delete them permanently. Your files are visible only to you.",
+      "upload": {
+        "title": "Upload a CV",
+        "step1": {
+          "title": "Open the My CVs page",
+          "body": "Go to My CVs in the top menu. Your files are listed on the left, and the selected file is previewed on the right."
+        },
+        "step2": {
+          "title": "Pick or drop a file",
+          "body": "Press Upload CV, or drag the file onto the dashed area below the list. PDF, DOC and DOCX are accepted, up to 10 MB per file."
+        },
+        "step3": {
+          "title": "Watch your quota",
+          "body": "The counter next to the list heading shows how many files you have used. Once you reach 10, delete one before uploading another."
+        }
+      },
+      "preview": {
+        "title": "Preview",
+        "body": "The first page of a PDF is shown in the panel on the right. That image is produced in your own browser — no copy of it is kept on the server. DOC and DOCX files cannot be previewed in a browser; download them to read them."
+      },
+      "default": {
+        "title": "Default CV",
+        "body": "Making a file your default means it arrives pre-selected when you record a new application. The first file you upload becomes the default automatically, and deleting the default passes it to your newest remaining file. You can always change the CV used field on the application form."
+      },
+      "remove": {
+        "title": "Deleting",
+        "body": "Delete asks for a confirmation; once you confirm, the file is removed from the list and from storage permanently and cannot be recovered. Applications you recorded that CV on are not deleted — only their reference to it is cleared."
+      },
+      "calloutPrivacy": {
+        "title": "Where are your CVs stored?",
+        "body": "Your files are held in a bucket closed to the public on Google Cloud Storage in the EU region (europe-west1). They are never sent to any third party, AI services included. Deleting your account deletes your files with it."
+      }
     }
   },
   "hrContact": {
@@ -1294,5 +1352,46 @@
     "name": "Name",
     "email": "Email",
     "linkedIn": "LinkedIn profile"
+  },
+  "cv": {
+    "title": "My CVs",
+    "subtitle": "Keep the CVs you apply with here. Your files are visible only to you; download or permanently delete them whenever you like.",
+    "upload": "Upload CV",
+    "uploading": "Uploading…",
+    "listHeading": "Files",
+    "quota": "{used} / {max}",
+    "quotaFull": "You have reached the {max} file limit. Delete one to upload another.",
+    "empty": "You haven't uploaded a CV yet. Drop a file into the area on the left, or press Upload CV.",
+    "defaultBadge": "Default",
+    "meta": "{format} · {size} · uploaded {date}",
+    "download": "Download",
+    "downloading": "Downloading…",
+    "deleteConfirm": "This file will be deleted permanently. This cannot be undone.",
+    "deleteConfirmAction": "Delete permanently",
+    "dropzone": {
+      "idle": "Drop a file here",
+      "hint": "PDF, DOC or DOCX — up to 10 MB"
+    },
+    "preview": {
+      "firstPageOnly": "Only the first page is shown. Download the file to read all of it.",
+      "firstPageAlt": "First page of the CV",
+      "failed": "This file could not be previewed. The file itself is fine — download it to open it.",
+      "unsupported": "{format} files cannot be previewed in the browser. Download the file to read it."
+    },
+    "default": {
+      "title": "Default CV",
+      "description": "Pre-selected when you record a new application.",
+      "usedBy": "{count, plural, =0 {Not used on any application yet.} one {Used on # application.} other {Used on # applications.}}",
+      "isDefault": "Default",
+      "makeDefault": "Make default"
+    },
+    "problem": {
+      "unsupportedType": "Only .pdf, .doc and .docx files can be uploaded.",
+      "tooLarge": "The file exceeds the 10 MB limit."
+    },
+    "uploadError": "The CV could not be uploaded. Please try again.",
+    "deleteError": "The CV could not be deleted. Please try again.",
+    "downloadError": "The file could not be downloaded. Please try again.",
+    "defaultError": "The default CV could not be changed. Please try again."
   }
 }
