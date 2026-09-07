@@ -54,3 +54,17 @@ public enum ConfirmSuggestionResult
     NoStatusToConfirm,
     Confirmed
 }
+
+/// <summary>Outcome of undoing an unattended auto-apply.</summary>
+public enum RevertAutoApplyResult
+{
+    /// <summary>No such suggestion for this user, or it was never auto-applied.</summary>
+    NotFound,
+
+    /// <summary>The application has moved on since — its status is no longer the one auto-apply
+    /// set. Putting it back would silently undo whatever the user did after, which is a worse
+    /// version of the mistake this endpoint exists to correct.</summary>
+    StatusMovedOn,
+
+    Reverted
+}

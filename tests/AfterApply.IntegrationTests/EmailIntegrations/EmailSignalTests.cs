@@ -1035,6 +1035,124 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         history.Note.ShouldBeNull();
     }
 
+    [Fact]
+    public async Task An_Auto_Applied_Suggestion_Can_Be_Undone()
+    {
+        // The point of undo is not tidiness: it makes being wrong cheap, which is what lets
+        // auto-apply ship before its threshold has been proven — and the rate it is used at is the
+        // only unbiased measure of whether that threshold is right.
+        var (applicationId, suggestionId) = await AutoApplyOnceAsync("Undo Me Co", "undo-me-test.com", "thread-undo-happy");
+
+        var response = await _autoApplyClient.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/revert", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var scope = _autoApplyFactory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
+        application.Status.ShouldBe(ApplicationStatus.Applied);
+
+        var suggestion = await db.EmailSuggestions.SingleAsync(s => s.Id == suggestionId);
+        // Reverted, not Dismissed — see EmailSuggestionStatus. Collapsing the two would destroy the
+        // measurement the calibration endpoint reads.
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.Reverted);
+
+        var revertRow = await db.ApplicationStatusHistories
+            .Where(h => h.ApplicationId == applicationId && h.Origin == StatusChangeOrigin.EmailAutoApplyReverted)
+            .SingleAsync();
+        revertRow.FromStatus.ShouldBe(ApplicationStatus.Interview);
+        revertRow.ToStatus.ShouldBe(ApplicationStatus.Applied);
+    }
+
+    [Fact]
+    public async Task Undo_Refuses_Once_The_User_Has_Moved_The_Application_On()
+    {
+        // Putting the status back here would silently discard the user's own later change, which is
+        // a worse version of the mistake undo exists to correct.
+        var (applicationId, suggestionId) = await AutoApplyOnceAsync("Moved On Co", "moved-on-test.com", "thread-undo-movedon");
+
+        var changeResponse = await _autoApplyClient.PostAsJsonAsync($"/api/applications/{applicationId}/status",
+            new ChangeStatusRequest(ApplicationStatus.Offer, null, null), JsonOptions);
+        changeResponse.EnsureSuccessStatusCode();
+
+        var response = await _autoApplyClient.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/revert", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+
+        using var scope = _autoApplyFactory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.Applications.SingleAsync(a => a.Id == applicationId)).Status.ShouldBe(ApplicationStatus.Offer);
+        (await db.EmailSuggestions.SingleAsync(s => s.Id == suggestionId)).Status.ShouldBe(EmailSuggestionStatus.AutoApplied);
+    }
+
+    [Fact]
+    public async Task Undo_Is_Not_Offered_For_A_Suggestion_The_User_Was_Asked_About()
+    {
+        // A pending suggestion was never applied unattended, so there is nothing to take back —
+        // declining it is Dismiss's job, and undoing a Confirmed one is the status control's.
+        var applicationId = await CreateApplicationAsync("Nothing To Undo Co", _autoApplyClient);
+
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
+        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "hr@some-unmatched-domain.com",
+            "Nothing To Undo Co Recruiting", "Update on your recent application", "News about your application.",
+            "thread-undo-pending");
+
+        Guid suggestionId;
+        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var suggestion = await db.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
+            suggestion.Status.ShouldNotBe(EmailSuggestionStatus.AutoApplied);
+            suggestionId = suggestion.Id;
+        }
+
+        var response = await _autoApplyClient.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/revert", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Undo_Does_Not_Reach_Another_Users_Suggestion()
+    {
+        var (_, suggestionId) = await AutoApplyOnceAsync("Not Yours Co", "not-yours-test.com", "thread-undo-otheruser");
+
+        // _client is a different registered user on a different factory over the same database.
+        var response = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/revert", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    /// <summary>Drives one signal all the way to an auto-applied suggestion, and hands back the ids.
+    /// Same shape as ExtensionSignal_Auto_Applies_When_Confidence_Qualifies, which is the test that
+    /// proves this helper's setup actually auto-applies.</summary>
+    private async Task<(Guid ApplicationId, Guid SuggestionId)> AutoApplyOnceAsync(
+        string companyName, string domain, string threadId)
+    {
+        var applicationId = await CreateApplicationAsync(companyName, _autoApplyClient);
+
+        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
+            var company = await db.Companies.SingleAsync(c => c.Id == application.CompanyId);
+            company.EnrichFrom($"https://{domain}", industry: null, country: null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
+
+        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, $"hr@{domain}",
+            $"{companyName} Recruiting", "Update on your recent application", "There's news about your application.",
+            threadId);
+
+        using var verifyScope = _autoApplyFactory!.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await verifyDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.AutoApplied);
+        return (applicationId, suggestion.Id);
+    }
+
     // Calls IEmailForwardingService.ProcessExtensionSignalAsync directly within a given factory's
     // own DI scope, instead of POSTing to /extension-signal and waiting on Hangfire.
     // _factory/_disabledFactory/_autoApplyFactory all share the same Postgres-backed Hangfire

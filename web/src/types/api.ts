@@ -518,3 +518,28 @@ export interface ProductMetricsDayResponse {
   applicationsWithResponseTime: number;
   computedAt: string;
 }
+
+/** One confidence band's evidence about whether auto-apply can be trusted there. */
+export interface AutoApprovalCalibrationBucket {
+  lowerBound: number;
+  upperBound: number;
+  total: number;
+  confirmed: number;
+  dismissed: number;
+  autoApplied: number;
+  reverted: number;
+  pending: number;
+  /** Agreement with a suggestion the user was *shown*. Flatters auto-apply — see revertRate. */
+  agreementRate: number | null;
+  /** Share of unattended applies the user took back. The number that actually settles the
+   *  threshold; null until auto-apply has acted in this band. */
+  revertRate: number | null;
+}
+
+export interface AutoApprovalCalibrationResponse {
+  currentThreshold: number;
+  autoApplyEnabled: boolean;
+  shadowModeEnabled: boolean;
+  qualifyingTotal: number;
+  buckets: AutoApprovalCalibrationBucket[];
+}

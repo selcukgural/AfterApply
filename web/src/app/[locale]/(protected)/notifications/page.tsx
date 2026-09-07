@@ -16,6 +16,25 @@ export default function NotificationsPage() {
   const queryClient = useQueryClient();
   const [notifications, setNotifications] = useState<EmailNotificationResponse[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [revertingId, setRevertingId] = useState<string | null>(null);
+  const [revertedIds, setRevertedIds] = useState<string[]>([]);
+
+  // Undoing removes the row's reason to offer the button again, but the notification itself stays:
+  // "this was applied, then you took it back" is still the honest history of what happened.
+  const handleRevert = async (suggestionId: string) => {
+    setRevertingId(suggestionId);
+    setError(null);
+    try {
+      await notificationsApi.revertAutoApply(suggestionId);
+      setRevertedIds((ids) => [...ids, suggestionId]);
+    } catch (err) {
+      // 409 is not a failure the user caused — it means they already moved the application on
+      // themselves, and saying so is more useful than a generic error.
+      setError(err instanceof ApiError && err.status === 409 ? t("revertConflict") : t("revertError"));
+    } finally {
+      setRevertingId(null);
+    }
+  };
 
   useEffect(() => {
     notificationsApi
@@ -73,10 +92,24 @@ export default function NotificationsPage() {
                 )}
               </div>
               {n.wasAutoApplied && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {t("confidence")}: {Math.round(n.confidenceScore * 100)}%
-                  {n.matchType && ` · ${t(`matchType.${n.matchType}`)}`}
-                </p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t("confidence")}: {Math.round(n.confidenceScore * 100)}%
+                    {n.matchType && ` · ${t(`matchType.${n.matchType}`)}`}
+                  </p>
+                  {revertedIds.includes(n.id) ? (
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{t("reverted")}</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleRevert(n.id)}
+                      disabled={revertingId === n.id}
+                      className="rounded text-xs font-medium text-blue-600 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 dark:text-blue-400"
+                    >
+                      {revertingId === n.id ? t("reverting") : t("revert")}
+                    </button>
+                  )}
+                </div>
               )}
             </li>
           ))}

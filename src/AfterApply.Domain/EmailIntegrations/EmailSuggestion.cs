@@ -172,6 +172,14 @@ public sealed class EmailSuggestion : Entity
         ResolvedAt = now;
     }
 
+    /// <summary>Undoes an auto-apply. Only reachable from AutoApplied — a suggestion the user was
+    /// asked about and answered has nothing to take back.</summary>
+    public void Revert(DateTimeOffset now)
+    {
+        Status = EmailSuggestionStatus.Reverted;
+        ResolvedAt = now;
+    }
+
     public void MarkRead(DateTimeOffset now)
     {
         IsRead = true;
