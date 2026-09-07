@@ -433,3 +433,120 @@ DoD'leri bu ortamda ayrıca doğrulanmadı (kapsamı: sadece temel akış smoke
 test edildi) — flag'leri kapalı olan Sprint 10/11 özellikleri (Company
 Intelligence, Candidate Experience Score) hâlâ gerçek trafik/veri
 bekliyor, bu Sprint 13'ün kapsamı dışında.
+
+---
+
+## Kullanıcıya kapalı / ulaşmayan özellikler — envanter ve açma sırası (2026-09-07)
+
+> **Bağlam:** Ürün canlı ama gerçek kullanıcı yok. Bu envanter, "yazılmış,
+> çalışır durumda, ama kullanıcıya ulaşmayan" her şeyi tek yerde topluyor ve
+> hangi sırayla ele alınacağını kaydediyor. Sıralama ilkesi: **kilidi bizde
+> olan iş önce.** Bir maddenin kilidi veri hacmi, hukuki görüş veya dış onaysa,
+> kod hazır olsa bile sıraya sonra girer — 15 sprinttir yapılan hata tam olarak
+> kilidi bizde olmayan işi kodla açmaya çalışmaktı.
+
+Sıra numarası = ele alınma sırası. Madde numarası (K1-K6) = kalıcı kimlik.
+
+### Sıra 1 — K5: Ürün metriklerini görünür kılmak ✅ (2026-09-07)
+
+- **Ne var:** `ProductMetricsService` her gün aktivasyon oranı, WAU, D7/D30/D90
+  tutunma, 30 günlük başvuru ve durum-değişimi sayısını hesaplıyor
+  (`Program.cs`, `product-metrics-snapshot` recurring job, `Cron.Daily()`).
+- **Neden ulaşmıyor:** Çıktı tek bir `LogInformation` satırı. Endpoint yok,
+  sayfa yok, uyarı yok.
+- **Kilidi:** Bizde. Dış bağımlılık yok.
+- **Neden ilk:** Diğer beş maddenin hiçbirine bu sayılar olmadan dürüst karar
+  verilemez. Ölçmeden açılan her flag tahmin olur.
+
+### Sıra 2 — K3: Başvuruya elle olay ekleme ✅ (2026-09-07)
+
+- **Ne var:** `POST /api/applications/{id}/events` canlı ve testli;
+  `applicationsApi.addEvent` (`web/src/lib/api/applications.ts:68`) yazılmış.
+  Olay tipleri: `RecruiterContacted`, `ScreeningStarted`, `InterviewScheduled`,
+  `InterviewCompleted`, `OfferReceived`, `FollowUpSent`, `StatusChanged`.
+- **Neden ulaşmıyor:** `addEvent`'i çağıran hiçbir bileşen yok ve `GET .../timeline`'ın
+  client metodu bile yazılmamış. Kullanıcı elle kayıt düşemiyor.
+  (Düzeltme 2026-09-07: `ApplicationEvents` tablosu **boş değil** — `Application.Create`
+  bir `ApplicationCreated`, `ChangeStatus` da her geçişte bir `StatusChanged` olayı yazıyor.
+  Yani sistem olayları zaten birikiyor; eksik olan yalnızca kullanıcının kendi ekleyebildiği
+  olaylar. Birleşik zaman çizelgesi bu iki sistem tipini eliyor, yoksa her durum değişimi
+  listede iki kez görünür.)
+- **Kilidi:** Bizde — eksik olan tek şey UI.
+- **Ek fayda:** Sprint 11'de "ham veri yok" diye kapsam dışı bırakılan CES alt
+  metrikleri (Interview Experience, Process Transparency) tam olarak bu olay
+  kayıtlarını istiyordu. K1'in eksik yarısını bu madde üretmeye başlıyor.
+
+### Sıra 3 — K4: Şirket zenginleştirme verisini yüzeye çıkarmak ✅ (2026-09-07)
+
+- **Ne var:** Hangfire job'ı LinkedIn şirket sayfasından `Website`, `Industry`,
+  `Country` çekiyor; `KariyerNetUrl` de saklanıyor (`Company.EnrichFrom`).
+- **Neden ulaşmıyor:** API sözleşmesine yalnızca `companyWebsite` ve
+  `companyLinkedInUrl` çıkıyor. `Industry`, `Country`, `KariyerNetUrl` hiçbir
+  yanıtta yok.
+- **Kilidi:** Bizde.
+- **Neden K1'den önce:** `Industry`/`Country`, şirket adı vermeyen sektör/ülke
+  bazlı toplu raporun kırılım eksenleri. K1'in aksine örneklem eşiği istemez,
+  yani bugünkü veriyle bile anlamlı çıktı üretir.
+
+> **Paket tamamlandı (2026-09-07).** K5+K3+K4 tek bir hazırlık paketi olarak yapıldı:
+> `ProductMetricsDailySnapshots` tablosu + gün başına tek satıra upsert eden, config'ten okunan
+> (`Metrics:SnapshotCronExpression`, varsayılan 30 dakikada bir) Hangfire işi; `Users.IsAdmin`
+> kolonuyla korunan
+> `GET /api/admin/metrics` ve `/admin/metrics` sayfası (yetki config'te değil veritabanında:
+> config süreç açılışında okunuyor, dolayısıyla admin ekleme/çıkarma redeploy isterdi — kolondan
+> okuyunca bir sonraki istekte geçerli oluyor, bkz. DEPLOYMENT.md §3a); başvuru detayında durum geçmişi ile
+> elle eklenen olayları birleştiren tek "Süreç" listesi ve "Olay ekle" formu; şirketin
+> `Industry`/`Country`/`KariyerNetUrl` alanlarının detay yanıtına ve ekrana taşınması.
+> Yol boyunca iki gerçek bulgu çıktı: (1) `ApplicationEvents` boş değilmiş — sistem
+> `ApplicationCreated`/`StatusChanged` yazıyor, birleşik liste bunları eliyor; (2) `Metadata`
+> **jsonb** kolonu, düz metin not 500'e düşüyordu — not artık `{"note":"..."}` olarak gidiyor ve
+> `CreateEventRequestValidator` geçersiz JSON'ı 400'le reddediyor.
+
+### Sıra 4 — K2: E-posta önerilerinin otomatik onaylanması (bugün gölge modda)
+
+- **Ne var:** `EmailForwardingService.TryAutoApplyAsync` +
+  `EmailAutoApprovalOptions`. Ayarlar: `Enabled=false`,
+  `ShadowModeEnabled=true`, `ConfidenceThreshold=0.9`.
+- **Bugünkü davranış:** Nitelikli öneriler "would auto apply" diye yalnızca
+  loglanıyor, hiçbir şey değiştirilmiyor. Kullanıcı her öneriyi elle onaylıyor.
+- **Kilidi:** Kısmen dışarıda — açmak için gereken kod değil **kalibrasyon**;
+  repoda güven-aralığına-göre-doğruluk değerlendirmesi yok ve gerçek trafik
+  olmadan üretilemez.
+- **Bu sırada yapılabilecek olan:** Gölge kararları log yerine sorgulanabilir
+  biçimde saklamak. Trafik geldiğinde kalibrasyon verisi hazır olur; sonradan
+  log kazımaya kalkmak yerine.
+
+### Sıra 5 — K1: Company Intelligence + Candidate Experience Score
+
+- **Ne var:** `appsettings.json` → `CompanyIntelligence:Enabled=false`.
+  `GET /api/company-intelligence/{companyId}` flag kapalıyken 404.
+  Hazır hesaplama: şirket bazlı yanıt oranı, ghosting oranı, ortalama/medyan
+  yanıt süresi, mülakat/teklif oranı, `ClosureRate`, bileşik
+  `CandidateExperienceScore`, güven aralığı.
+- **Neden ulaşmıyor:** İki ayrı sebep — (a) flag kapalı, (b) `web/src` içinde
+  tek bir referansı yok, yani flag açılsa bile gösterecek ekran yok.
+- **Kilidi:** Üç tanesi de bizde değil:
+  1. **Veri hacmi** — `HiddenBelow: 20`. Sıfır kullanıcıyla her şirket "gizli".
+  2. **Hukuki görüş** — KVKK + itibar hukuku. Bu faz avukatla başlar,
+     migration'la değil.
+  3. **Eşik kararı** — 20 çok düşük; isimle anmadan önce en az 50 önerilir.
+- **Bu yüzden en sonda.** Kod hazır olması onu ilk sıraya taşımıyor; K1'i
+  bugün açmak boş ekran yayınlamak demek.
+
+### Sıra 6 (paralel, küçük) — K6: Geri bildirimin GitHub Issues aynası
+
+- **Ne var:** `Feedback:GitHub:Enabled=false`. Geri bildirim DB'ye yazılıyor,
+  GitHub'a aynalanmıyor.
+- **Kilidi:** Gizlilik sayfası metni güncellenmeden açılmayacağı 2026-09-07
+  kararında yazılı (bkz. DECISIONS.md "Uygulama içi geri bildirim").
+- **Not:** İç akış meselesi, kullanıcı özelliği değil. Sırayı bloklamaz,
+  gizlilik metni güncellendiği gün açılabilir.
+
+### Bu envanterde **olmayanlar** (yanlış hatırlanmasın diye)
+
+- **Gmail taraması, red gerekçesi çıkarımı, HR kontağı yakalama** — üçü de
+  canlı. Chrome eklentisi `0.6.0` Web Store'da yayında.
+  (`extension/store-listing/PUBLISHING_CHECKLIST.md` bu konuda güncel değil;
+  hâlâ `0.4.0`'ın yayında olduğunu yazıyor.)
+- **Gmail OAuth entegrasyonu** — gizli değil, 2026-08-31'de koddan tamamen
+  silindi (CASA değerlendirmesinin maliyeti kabul edilmedi).

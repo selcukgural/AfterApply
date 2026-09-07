@@ -1,6 +1,7 @@
 import type {
   ApplicationDetailResponse,
   ApplicationEventResponse,
+  ApplicationEventType,
   ApplicationListQuery,
   ApplicationSummaryCountsResponse,
   ApplicationStatusHistoryResponse,
@@ -13,8 +14,11 @@ import type {
 import { apiFetch } from "./httpClient";
 
 export interface CreateEventRequest {
-  type: string;
+  type: ApplicationEventType;
+  /** Null means "now" — the server stamps it. */
   occurredAt: string | null;
+  /** Left null by the web app: the server already defaults a manually-added event to Source.Manual,
+   *  and letting the client assert its own source would make that claim unverifiable. */
   source: string | null;
   metadata: string | null;
 }
@@ -64,6 +68,10 @@ export const applicationsApi = {
 
   getStatusHistory: (id: string) =>
     apiFetch<ApplicationStatusHistoryResponse[]>(`/api/applications/${id}/status-history`),
+
+  /** Manually-added events only — status changes live in getStatusHistory. The detail view merges
+   *  the two (see lib/applications/timeline.ts). Newest first. */
+  getTimeline: (id: string) => apiFetch<ApplicationEventResponse[]>(`/api/applications/${id}/timeline`),
 
   addEvent: (id: string, request: CreateEventRequest) =>
     apiFetch<ApplicationEventResponse>(`/api/applications/${id}/events`, {

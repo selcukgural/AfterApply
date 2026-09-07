@@ -1,4 +1,5 @@
 using System.Reflection;
+using AfterApply.Application.Admin;
 using AfterApply.Application.Analytics;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
@@ -13,6 +14,7 @@ using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Application.Feedback;
 using AfterApply.Application.TrackedJobs;
+using AfterApply.Infrastructure.Admin;
 using AfterApply.Infrastructure.Analytics;
 using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Companies;
@@ -83,6 +85,7 @@ public static class DependencyInjection
         services.Configure<IdentityPolicyOptions>(configuration.GetSection(IdentityPolicyOptions.SectionName));
         services.Configure<PersonalAccessTokenOptions>(configuration.GetSection(PersonalAccessTokenOptions.SectionName));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
+        services.Configure<ProductMetricsOptions>(configuration.GetSection(ProductMetricsOptions.SectionName));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
         services.Configure<EmailAutoApprovalOptions>(configuration.GetSection("EmailAutoApproval"));
         services.Configure<JobBoardDomainsOptions>(configuration.GetSection("JobBoardDomains"));
@@ -399,6 +402,7 @@ public static class DependencyInjection
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
+        services.AddScoped<IAdminAccessService, AdminAccessService>();
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();
         services.AddScoped<IEmailJobExtractionProvider, OpenAiEmailJobExtractionProvider>();
         services.AddScoped<IEmailRejectionReasonExtractionProvider, OpenAiEmailRejectionReasonExtractionProvider>();

@@ -431,7 +431,11 @@
       "hrLinkedIn": "HR LinkedIn profile",
       "hrNamed": "HR contact: {name}",
       "hrEmailFromIncomingEmail": "This address came from the sender of an email matched to this application. Edit it if it is wrong.",
-      "cvDocument": "CV used"
+      "cvDocument": "CV used",
+      "companyKariyerNet": "kariyer.net",
+      "companyIndustry": "Industry",
+      "companyCountry": "Country",
+      "timeline": "Timeline"
     },
     "statusChange": {
       "changeStatus": "Change Status",
@@ -445,6 +449,16 @@
       "rejectionReason": "Rejection reason:",
       "showEmail": "Show email",
       "hideEmail": "Hide email"
+    },
+    "addEvent": {
+      "addEvent": "Add event",
+      "type": "Event type",
+      "occurredAt": "When it happened",
+      "occurredAtHint": "Leave the date empty to record it as happening now.",
+      "notePlaceholder": "A short note (optional)",
+      "confirm": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving…"
     }
   },
   "settings": {
@@ -1537,5 +1551,43 @@
     "errors": {
       "generic": "Couldn't send your feedback. Please try again."
     }
+  },
+  "adminMetrics": {
+    "title": "Product metrics",
+    "subtitle": "Read from the daily snapshots. Aggregate counts — no per-user data.",
+    "loading": "Loading…",
+    "forbiddenTitle": "You don't have access to this page",
+    "forbiddenBody": "Product metrics are limited to accounts on the server-side admin allowlist.",
+    "emptyTitle": "No snapshots yet",
+    "emptyBody": "This page fills in once the daily job has run for the first time.",
+    "activationRate": "Activation rate",
+    "activatedUsers": "Activated users",
+    "weeklyActiveUsers": "Weekly active users",
+    "d30Retention": "D30 retention",
+    "totalApplications": "Total applications",
+    "applicationsTracked30d": "Tracked in last 30 days",
+    "statusUpdates30d": "Status updates in last 30 days",
+    "uniqueCompanies": "Unique companies",
+    "historyTitle": "Last 30 days",
+    "colDay": "Day",
+    "colUsers": "Users",
+    "colActivation": "Activation",
+    "colWau": "WAU",
+    "colD7": "D7",
+    "colD30": "D30",
+    "colD90": "D90",
+    "colApplications": "Applications",
+    "computedAt": "Last updated: {at}"
+  },
+  "applicationEventType": {
+    "RecruiterContacted": "Recruiter got in touch",
+    "ScreeningStarted": "Screening started",
+    "InterviewScheduled": "Interview scheduled",
+    "InterviewCompleted": "Interview completed",
+    "OfferReceived": "Offer received",
+    "FollowUpSent": "Follow-up sent",
+    "ApplicationCreated": "Application created",
+    "ApplicationSubmitted": "Application submitted",
+    "StatusChanged": "Status changed"
   }
 }

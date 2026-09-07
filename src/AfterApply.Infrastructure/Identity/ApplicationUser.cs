@@ -17,6 +17,25 @@ public sealed class ApplicationUser : IdentityUser<Guid>
 
     public DateTimeOffset ConsentAcceptedAt { get; set; }
 
+    /// <summary>
+    /// Whether this account may read the internal admin surfaces (today: product metrics).
+    ///
+    /// A column rather than a config allowlist, and that is a deployment decision. Config —
+    /// appsettings, an env var, a Secret Manager secret — is read when the process starts, so
+    /// changing who is an admin means waiting for a new Cloud Run instance or forcing one with a
+    /// redeploy. Read from here it takes effect on the next request, because the check already
+    /// queries this table anyway.
+    ///
+    /// Granted and revoked by hand with SQL against the database, the same way FeedbackEntry.Status
+    /// is: there is no admin UI, and a mutator nothing calls would be dead code. The consequence
+    /// worth knowing is that there is no record of who granted it or when — acceptable while this
+    /// means "can read aggregate counts", and the thing to revisit if it ever means more.
+    ///
+    /// Note this is deliberately NOT keyed on the email address: an allowlist of addresses hands
+    /// access to whoever registers an address someone else abandoned.
+    /// </summary>
+    public bool IsAdmin { get; set; }
+
     /// <summary>ISO 639-1 code ("tr"/"en") applied to this user's session right after login,
     /// regardless of which device/browser they sign in from. Kept in sync with the frontend's
     /// current UI locale whenever the user switches languages while authenticated.</summary>

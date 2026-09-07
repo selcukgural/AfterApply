@@ -49,7 +49,15 @@ public sealed record ApplicationDetailResponse(
     // show it without a second request; it is null when no CV is attached, and goes back to null on
     // its own if that CV is later deleted (the FK is ON DELETE SET NULL).
     Guid? CvDocumentId = null,
-    string? CvDocumentFileName = null);
+    string? CvDocumentFileName = null,
+    // The rest of what we know about the company, from the same Company row as CompanyWebsite
+    // above. Industry and Country are filled in the background by CompanyEnrichmentService from
+    // the company's LinkedIn page; KariyerNetUrl comes from the extension when the application was
+    // captured there. All three were being collected and stored but reached no response at all
+    // until 2026-09-07 — see DEVELOPMENT_PLAN.md, K4. Null until something has resolved them.
+    string? CompanyKariyerNetUrl = null,
+    string? CompanyIndustry = null,
+    string? CompanyCountry = null);
 
 public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);
 

@@ -147,6 +147,33 @@ public class CompanyEnrichmentTests(SharedInfrastructure shared) : IAsyncLifetim
     }
 
     [Fact]
+    public async Task Enriched_Company_Fields_Reach_The_Application_Detail_Response()
+    {
+        // Everything above asserts against the Company row directly. This one closes the loop the
+        // enrichment exists for: until 2026-09-07 Industry, Country and KariyerNetUrl were written
+        // and then reached no response at all, so the work was invisible (DEVELOPMENT_PLAN.md, K4).
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Detail Fields Co", "Backend Engineer",
+                "https://www.linkedin.com/jobs/view/6666666666/", "Istanbul", null, null, null,
+                CompanyLinkedInUrl: "https://www.linkedin.com/company/acme-software/"),
+            JsonOptions);
+        response.EnsureSuccessStatusCode();
+        var created = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        await PollUntilEnrichedAsync(created!.Application.CompanyId);
+
+        var detailResponse = await _client.GetAsync($"/api/applications/{created.Application.Id}");
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = await detailResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+
+        detail.ShouldNotBeNull();
+        detail!.CompanyIndustry.ShouldBe("Software Development");
+        detail.CompanyCountry.ShouldBe("TR");
+        detail.CompanyWebsite.ShouldBe("https://acme.example/");
+        detail.CompanyLinkedInUrl.ShouldBe("https://www.linkedin.com/company/acme-software/");
+    }
+
+    [Fact]
     public async Task A_Posting_With_No_Profile_Link_Fetches_Nothing_At_All()
     {
         var response = await _client.PostAsJsonAsync("/api/applications/from-extension",

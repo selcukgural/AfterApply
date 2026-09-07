@@ -1,13 +1,13 @@
 # Publishing to the Chrome Web Store — checklist
 
-**The item is already live; this is an update.** `0.4.0` was published to the Chrome Web Store
-around 2026-09-01 (commit `fa2daff` added the install link to the help centre "now that the
-extension is published"), at
+**The item is already live; this is an update.** `0.6.0` is the version currently published to
+the Chrome Web Store (confirmed with the maintainer 2026-09-07), at
 <https://chromewebstore.google.com/detail/e-kariyerim-%E2%80%94-job-import/lemdkeljacdgbbcmefpbggphnhhciimi>.
-Neither `0.5.0` nor `0.6.0` has been uploaded, so the live listing still describes a build with
-**no Gmail Scanning, no `mail.google.com` host permission, no content script and no HR contact** —
-which is why the Privacy practices work below is not optional paperwork. Confirm the currently
-published version in the Dashboard before uploading; the repo can only show what was committed.
+Gmail Scanning, the `mail.google.com` host permission, the content script and HR contact
+capture are therefore all live to real users. `0.4.0` was the first publish, around 2026-09-01
+(commit `fa2daff` added the install link to the help centre "now that the extension is
+published"). Always confirm the currently published version in the Dashboard before uploading;
+the repo can only show what was committed, not what was shipped.
 Current package version: **0.6.0**.
 
 ## Before you start

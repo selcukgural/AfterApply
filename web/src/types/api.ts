@@ -101,6 +101,12 @@ export interface ApplicationDetailResponse {
   // deleted — the server clears the reference rather than deleting the application.
   cvDocumentId: string | null;
   cvDocumentFileName: string | null;
+  // The rest of what is known about the company. Industry and Country are filled in the background
+  // from the company's LinkedIn page; kariyer.net comes from the extension. Any of them can stay
+  // null indefinitely — render nothing rather than a placeholder.
+  companyKariyerNetUrl: string | null;
+  companyIndustry: string | null;
+  companyCountry: string | null;
 }
 
 export type HrEmailSource = "Manual" | "IncomingEmail";
@@ -488,4 +494,27 @@ export interface SubmitFeedbackRequest {
 export interface FeedbackResponse {
   id: string;
   submittedAt: string;
+}
+
+/** One stored day of internal product metrics. Aggregate counts across the whole product — never
+ *  per-user data. Only readable by accounts flagged Users.IsAdmin server-side. */
+export interface ProductMetricsDayResponse {
+  /** The UTC day these numbers describe, as `YYYY-MM-DD`. */
+  snapshotDate: string;
+  totalUsers: number;
+  activatedUsers: number;
+  activationRate: number;
+  weeklyActiveUsers: number;
+  applicationsTrackedLast30Days: number;
+  statusUpdatesLast30Days: number;
+  /** Null when no cohort is old enough yet — not zero. */
+  d7RetentionRate: number | null;
+  d30RetentionRate: number | null;
+  d90RetentionRate: number | null;
+  totalApplications: number;
+  uniqueCompanies: number;
+  uniqueJobs: number;
+  applicationsWithOutcome: number;
+  applicationsWithResponseTime: number;
+  computedAt: string;
 }
