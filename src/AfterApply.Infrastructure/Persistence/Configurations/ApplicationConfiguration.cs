@@ -2,6 +2,7 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.Jobs;
+using AfterApply.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DomainApplication = AfterApply.Domain.Applications.Application;
@@ -30,6 +31,20 @@ public sealed class ApplicationConfiguration : IEntityTypeConfiguration<DomainAp
 
         builder.HasIndex(a => a.UserId);
         builder.HasIndex(a => new { a.UserId, a.Status });
+
+        // Cascade from the account. Nothing else deletes these rows: the domain holds a plain Guid
+        // UserId (DECISIONS.md, "Domain does not model User"), so before this FK existed the only
+        // thing standing between a deleted account and its leftover data was a hand-written list of
+        // ExecuteDelete calls in DeleteAccountAsync — and that list had already drifted, silently
+        // orphaning every TrackedJob, Reminder and EmailSuggestion the user ever had.
+        //
+        // The FK is a shadow one: no navigation property, so the domain still knows nothing about
+        // ApplicationUser. Same shape RefreshTokens, PersonalAccessTokens and EmailConnections have
+        // used all along — this only extends it to the tables that were missed.
+        builder.HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne<Company>()
             .WithMany()

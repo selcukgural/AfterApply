@@ -3,5 +3,65 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!--
+      Forward slash, deliberately. The SDK's own default is "bin\", and on macOS that backslash is
+      an ordinary character in a name rather than a separator — so the exclude patterns the SDK
+      derives from it come out as "bin\/**" and "obj\/**", which match a directory literally named
+      "bin\" and therefore never exclude bin/ at all.
+
+      Two visible consequences, both of which this repo had: the Web SDK's default Content glob
+      (**/*.json, copied to the output directory) picked up the output directory's own
+      appsettings.json and runtimeconfig.json and copied them into bin/Debug/net10.0/bin/Debug/net10.0/,
+      one level deeper on every single build until the path outgrew the filesystem limit; and
+      OutputPath resolved to "bin\Debug/net10.0/", which is where the stray directories literally
+      named "bin\Debug" came from (.gitignore has a line for those — it hid the symptom, since git
+      has no say in what MSBuild globs).
+    -->
+    <BaseOutputPath>bin/</BaseOutputPath>
   </PropertyGroup>
+
+  <!--
+    Keeps the knowledge-graph cache out of the build. The failure this prevents has bitten this
+    repo more than once, and is invisible until it is enormous:
+
+      1. graphify writes its cache to <path>/graphify-out/ for whatever path it is pointed at.
+         Point it at a project directory — `graphify update src/AfterApply.Api`, `graphify watch`,
+         or a /graphify scoped to a subfolder — and thousands of .json files land in that project.
+      2. The Web SDK's default Content glob is **/*.json with CopyToOutputDirectory, so the whole
+         cache is copied into bin/Debug/net10.0/graphify-out/.
+      3. That copy is still there on the next build, is picked up again, and lands one level
+         deeper: bin/Debug/net10.0/bin/Debug/net10.0/... Every build doubles it, silently.
+      4. It only surfaces once the path exceeds the filesystem limit, as "MSB3021: ... path is too
+         long" — which prints a 4,000-character path and no hint that a graph cache is the cause.
+         It reached 150 levels and 1,685 files before anyone noticed (2026-09-07).
+
+    .gitignore already lists graphify-out/ and the literal "bin\Debug" folder graphify's Roslyn
+    build host leaves behind. That keeps the mess out of commits, but git has no say in what
+    MSBuild globs, which is why those entries never stopped the recursion.
+  -->
+  <PropertyGroup>
+    <!-- Stops it starting: the cache is excluded from every default item glob (Compile, Content,
+         EmbeddedResource, None). Both forms matter — the first for a cache at a project root, the
+         second for one further down, including a copy already sitting in an output directory. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);graphify-out/**;**/graphify-out/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <!--
+    Detect-only, deliberately. An earlier version of this deleted $(OutDir)graphify-out and
+    $(OutDir)bin in BeforeBuild, which broke the build it was meant to protect: MSBuild had already
+    resolved those files into its copy list, so pulling the directory out from under it failed the
+    build with "MSB3030: Could not copy ... because it was not found". Cleaning an output directory
+    from inside the build that is writing it is not a safe thing to do. The exclusion above is what
+    actually prevents the recursion; this only makes an existing mess legible, and says how to
+    clear it.
+
+    $(OutDir)bin is the recursion's own signature — nothing legitimate writes a bin folder inside an
+    output directory.
+  -->
+  <Target Name="WarnAboutGraphifyCacheInOutput" BeforeTargets="BeforeBuild" Condition="'$(OutDir)' != ''">
+    <Warning Condition="Exists('$(OutDir)graphify-out') Or Exists('$(OutDir)bin')"
+             Text="A graphify cache has been copied into $(OutDir) and is nesting one level deeper on every build. Run 'dotnet clean' (or delete $(MSBuildProjectDirectory)/bin and obj), remove $(MSBuildProjectDirectory)/graphify-out, and run graphify from the repository root instead." />
+  </Target>
+
 </Project>

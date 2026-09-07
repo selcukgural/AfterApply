@@ -26,6 +26,12 @@ public sealed class RateLimitingOptions
 
     public FixedWindowPolicy LinkPreview { get; init; } = new() { PermitLimit = 20, WindowSeconds = 300 };
 
+    /// <summary>Per user. An hour-long window because this is a human writing prose, not a
+    /// screen making requests — five sends an hour is generous for that and still caps what a
+    /// scripted account can push into the feedback table (and, when the mirror is on, into a
+    /// GitHub repository).</summary>
+    public FixedWindowPolicy Feedback { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
+
     public sealed class FixedWindowPolicy
     {
         public int PermitLimit { get; init; }

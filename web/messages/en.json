@@ -580,12 +580,13 @@
     },
     "crossBorderTransfer": {
       "title": "Cross-border data transfer",
-      "intro": "If you turn on Gmail Scanning, the subject line and a short snippet of each detected status-update email is sent abroad to determine what it means for your application.",
+      "intro": "Your data goes abroad in two cases. The first is Gmail Scanning: if you turn it on, the subject line and a short summary of each detected status-update email are sent abroad to work out what it means for your application.",
       "recipient": "Recipient: OpenAI, L.L.C. (United States) — our API provider.",
       "purpose": "Purpose: to classify the email's application-status signal, and — for a job not yet tracked — to read off a company name and job title; this only runs when a simpler, local rule-based check doesn't already recognize the email.",
       "legalBasis": "Legal basis: this only happens for Gmail Scanning you turn on yourself in the browser extension; nothing is sent unless you use this feature.",
       "withdraw": "Withdrawal: turn off Gmail Scanning in the browser extension's Settings page. Or delete your account, to stop this entirely.",
-      "sensitiveDataNote": "The subject and snippet are also stored on your account (visible to you when reviewing a suggestion) — never the full email body."
+      "sensitiveDataNote": "The subject and snippet are also stored on your account (visible to you when reviewing a suggestion) — never the full email body.",
+      "feedbackTransfer": "The second is feedback: when you send feedback from inside the app, your message and its technical context are copied to a private repository on GitHub so it can be tracked. Recipient: GitHub, Inc. (Microsoft, United States). Your name, your account email address and your reply address are not sent. Lawful basis: legitimate interest — tracking and fixing what users report. See the \"Feedback you send\" section above for the detail."
     },
     "browserExtension": {
       "title": "Browser extension",
@@ -601,7 +602,7 @@
       "title": "Your rights",
       "before": "You can export a copy of your data or permanently delete your account at any time. You can do this from the",
       "link": "Account Settings",
-      "after": "page. Deleting your account permanently removes all application, import, and reminder data tied to your account."
+      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders and the feedback you sent."
     },
     "notApplicable": {
       "title": "Not currently applicable",
@@ -621,6 +622,19 @@
       "deletion": "A CV you delete is deleted permanently — the storage-side recovery window is deliberately turned off. Deleting your account deletes all of your CVs with it.",
       "sensitiveDataNote": "A CV can carry more than your work history — a photo, a date of birth, or health or military-service information — which is why we ask for your explicit consent before each upload. What goes into it is your decision: none of those fields are needed for the service to work, and you can delete the file at any time.",
       "consent": "The lawful basis is your explicit consent, and it is taken separately for every upload: you tick the consent box before choosing a file, the box is never pre-ticked, and it clears again after each upload. You can withdraw consent at any time by deleting the file, and deleting your account deletes all of your CVs with it."
+    },
+    "feedback": {
+      "title": "Feedback you send",
+      "intro": "The feedback button in the bottom-right corner of every page is entirely optional. When you send a message:",
+      "what": "Your message, the topic you picked (bug/idea/question) and, if you chose one, how you said it was going are stored against your account.",
+      "context": "Technical context is stored with it: the path of the page you opened the panel from (for example /en/applications), your language and theme, and your browser details. Only the path of the address is taken — query parameters (an application id, say) are dropped both in your browser and on the server.",
+      "notCollected": "The contents of your applications, CVs and emails are not sent with feedback, and no screenshot is taken.",
+      "replyEmail": "The reply address is optional and can be left blank; it is used only to get back to you, never for marketing.",
+      "deletion": "Deleting your account deletes your feedback from our database. The tracking record on GitHub never carried your identity, so after that deletion it can no longer be traced back to you; if you would like that record removed as well, just write to us.",
+      "legalBasis": "Lawful basis: legitimate interest — fixing and improving the product against what users report.",
+      "mirror": "Your message and the technical context above are also opened as a tracking record in a private repository on GitHub, so we can follow it through. Your name, your account email address and your reply address are not sent there — only the record's id goes, so seeing who wrote it means looking it up in our own database.",
+      "mirrorRecipient": "Recipient: GitHub, Inc. (Microsoft, United States). This is a transfer abroad; see the \"Transfers abroad\" section below.",
+      "storage": "Feedback is stored in our own database; the canonical record is ours."
     }
   },
   "extensionPrivacy": {
@@ -1481,6 +1495,47 @@
       "link": "explicit consent",
       "after": "to storing my CV — the file is shown only to me and is never sent to any third party.",
       "sensitiveWarning": "A CV does not have to carry a photo, a date of birth, or health or military-service information; what goes into it is your decision. You can withdraw your consent at any time by deleting the file."
+    }
+  },
+  "feedback": {
+    "launcher": "Feedback",
+    "title": "How is it going?",
+    "subtitle": "Takes a minute, and I read every one.",
+    "close": "Close",
+    "mood": {
+      "label": "Your experience (optional)",
+      "Struggling": "Struggling",
+      "Okay": "It's okay",
+      "Good": "Going well"
+    },
+    "category": {
+      "label": "Topic",
+      "Bug": "Something is broken",
+      "Idea": "Idea",
+      "Question": "Question"
+    },
+    "message": {
+      "label": "Tell us",
+      "placeholder": "It would help a lot if I could group my applications by company…"
+    },
+    "replyEmail": {
+      "label": "Reply address (optional)",
+      "placeholder": "Add your email if you want an answer"
+    },
+    "context": "Sent along with your message: the <path></path> page, your language and theme, and your browser details. The contents of your applications, CVs and emails are not sent.",
+    "submit": "Send",
+    "sending": "Sending…",
+    "sent": {
+      "title": "Thank you!",
+      "body": "Your message reached us."
+    },
+    "problems": {
+      "messageRequired": "Write a few words before sending.",
+      "messageTooLong": "The message cannot exceed 1000 characters.",
+      "replyEmailInvalid": "That email address doesn't look valid."
+    },
+    "errors": {
+      "generic": "Couldn't send your feedback. Please try again."
     }
   }
 }

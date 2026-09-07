@@ -219,11 +219,20 @@ jobs:
           image: ${{ env.IMAGE }}
           flags: >-
             --add-cloudsql-instances=${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:afterapply-db
+          # env_vars is a literal block: every line is passed through as KEY=VALUE, so notes go
+          # here rather than inside it. On Feedback__GitHub: in-app feedback is stored in our own
+          # database either way, and this mirrors each entry into an issue for triage. The
+          # repository MUST stay private — the issue body carries whatever a user typed into the
+          # panel — and /privacy#feedback has to keep naming GitHub as a recipient for as long as
+          # Enabled is true.
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080
             Storage__Provider=GoogleCloudStorage
             Storage__BucketName=${{ env.CV_BUCKET }}
+            Feedback__GitHub__Enabled=true
+            Feedback__GitHub__Repository=selcukgural/ekariyerim-feedback
+            Feedback__GitHub__Assignee=selcukgural
           secrets: |-
             ConnectionStrings__Postgres=afterapply-postgres-connection:latest
             Jwt__SigningKey=afterapply-jwt-signing-key:latest
@@ -236,6 +245,7 @@ jobs:
             LinkedInAuth__ClientSecret=afterapply-linkedin-client-secret:latest
             Cors__AllowedOrigins__0=afterapply-web-origin:latest
             App__WebBaseUrl=afterapply-web-origin:latest
+            Feedback__GitHub__Token=afterapply-feedback-github-token:latest
 
       # High-water-mark tag for the notify-deploy job below: moves deploy/api-latest to the
       # commit that was just deployed, so the *next* backend deploy can compute exactly which

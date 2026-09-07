@@ -124,6 +124,17 @@ public static class RateLimiting
                     Window = sizes.LinkPreview.Window,
                     QueueLimit = 0
                 }));
+
+            // User-based. Free-text that a human writes and, when the GitHub mirror is on, that
+            // leaves our infrastructure — so it is bounded far tighter than the global backstop,
+            // which would happily let one account file three hundred issues a minute.
+            options.AddPolicy(DependencyInjection.FeedbackRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.Feedback.PermitLimit,
+                    Window = sizes.Feedback.Window,
+                    QueueLimit = 0
+                }));
         });
 
         return services;

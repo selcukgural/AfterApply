@@ -468,3 +468,24 @@ export interface LinkedInSignInResponse {
   auth: AuthResponse | null;
   pendingSignup: LinkedInSignupPrefill | null;
 }
+
+export type FeedbackCategory = "Bug" | "Idea" | "Question";
+export type FeedbackMood = "Struggling" | "Okay" | "Good";
+
+export interface SubmitFeedbackRequest {
+  category: FeedbackCategory;
+  message: string;
+  mood?: FeedbackMood | null;
+  replyEmail?: string | null;
+  /** The in-app path the panel was opened from — path only, never the query string. Disclosed to
+   *  the user in the panel before they send. */
+  pagePath?: string | null;
+  locale?: string | null;
+  theme?: string | null;
+}
+
+/** Just the receipt: the panel only needs to know the message landed. */
+export interface FeedbackResponse {
+  id: string;
+  submittedAt: string;
+}

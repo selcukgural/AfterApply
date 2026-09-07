@@ -58,6 +58,31 @@ internal static class TestContainerCleanup
     }
 
     /// <summary>
+    /// Forces the feedback → GitHub Issues mirror off for every host this assembly builds.
+    ///
+    /// This is a containment measure, not a convenience. WebApplicationFactory boots the real
+    /// Program in the Development environment, which means it also loads the API project's
+    /// <b>user secrets</b> — so a developer who has configured a live Feedback:GitHub token for
+    /// local testing hands that token to every test host, including the classes that configure
+    /// nothing and believe the mirror is off. That is not hypothetical: a filtered run on
+    /// 2026-09-07 opened five real issues in the live feedback repository before anyone noticed,
+    /// and the test whose whole job was to assert "nothing was mirrored" stayed green because it
+    /// checked the row before the background job had run.
+    ///
+    /// An environment variable is the right lever because it sits above user secrets in the
+    /// configuration order, so it wins without every test class having to remember to opt out. The
+    /// two classes that do exercise the mirror override it through ConfigureAppConfiguration, whose
+    /// source is added last and therefore beats this.
+    /// </summary>
+    [ModuleInitializer]
+    public static void DisableFeedbackMirrorForTests()
+    {
+        Environment.SetEnvironmentVariable("Feedback__GitHub__Enabled", "false");
+        Environment.SetEnvironmentVariable("Feedback__GitHub__Token", string.Empty);
+        Environment.SetEnvironmentVariable("Feedback__GitHub__Repository", string.Empty);
+    }
+
+    /// <summary>
     /// Reports what killed the process when a run ends in "Test host process crashed".
     ///
     /// An unhandled exception on a background thread terminates a .NET process outright, and the

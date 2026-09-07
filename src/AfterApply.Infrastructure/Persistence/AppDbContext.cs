@@ -2,6 +2,7 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.EmailIntegrations;
+using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
 using AfterApply.Domain.Mailing;
@@ -49,6 +50,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
 
     public DbSet<CvDocument> CvDocuments => Set<CvDocument>();
+
+    public DbSet<FeedbackEntry> FeedbackEntries => Set<FeedbackEntry>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

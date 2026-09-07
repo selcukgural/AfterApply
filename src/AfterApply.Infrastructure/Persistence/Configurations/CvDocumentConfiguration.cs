@@ -1,4 +1,5 @@
 using AfterApply.Domain.Documents;
+using AfterApply.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -24,5 +25,12 @@ public sealed class CvDocumentConfiguration : IEntityTypeConfiguration<CvDocumen
         // does not promise to send "clear the old default" before "set the new one" within a single
         // SaveChanges, so a legitimate swap could fail on statement order alone.
         builder.HasIndex(d => d.UserId);
+
+        // Cascade from the account — see ApplicationConfiguration for why this is a foreign key
+        // and not a line in DeleteAccountAsync.
+        builder.HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
