@@ -74,6 +74,31 @@ export default async function PrivacyPage() {
           <p className="mt-2">{t("crossBorderTransfer.sensitiveDataNote")}</p>
         </section>
 
+        <section id="error-monitoring">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("errorMonitoring.title")}</h2>
+          <p>{t("errorMonitoring.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("errorMonitoring.item1")}</li>
+            <li>{t("errorMonitoring.item2")}</li>
+            <li>{t("errorMonitoring.item3")}</li>
+          </ul>
+          <p className="mt-2">{t("errorMonitoring.recipient")}</p>
+          <p className="mt-2">{t("errorMonitoring.legalBasis")}</p>
+          <p className="mt-2">{t("errorMonitoring.limits")}</p>
+          <p className="mt-2">{t("errorMonitoring.retention")}</p>
+        </section>
+
+        <section id="cookies">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("cookiesSection.title")}</h2>
+          <p>
+            {t("cookiesSection.before")}{" "}
+            <Link href="/cookies" className="text-blue-600 hover:underline dark:text-blue-400">
+              {t("cookiesSection.link")}
+            </Link>
+            {t("cookiesSection.after")}
+          </p>
+        </section>
+
         <section id="browser-extension">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("browserExtension.title")}</h2>
           <p>

@@ -202,7 +202,12 @@ path above), a walkthrough of the main flows:
    import summary and that re-uploading the same file reports 0 new
    applications (idempotency).
 6. **Privacy page**: `/privacy` — static page, linked from the register
-   consent checkbox.
+   consent checkbox. `/cookies` is its companion: the cookie disclosure
+   KVKK asks for. There is deliberately no consent banner — every cookie
+   the app sets is strictly necessary or functional, so there is nothing
+   optional to consent to (see `DECISIONS.md`, 2026-09-07). If you add an
+   analytics or advertising cookie, `browserStorage.test.ts` fails until
+   both the policy and a consent flow catch up.
 7. **Settings**: `/settings` (requires login) — account data export
    (download), account deletion (asks for password — not for an account
    created with Google, which has none), and the "Mail

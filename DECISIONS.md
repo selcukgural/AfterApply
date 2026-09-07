@@ -3784,6 +3784,64 @@ mi, yoksa özel nitelikli veri için ayrıştırılmış ayrı bir metin mi gere
 hukuki sebebi, rızanın her yüklemede yenilendiğini ve geri çekme yöntemini ayrı ayrı yazıyor.
 
 ---
+
+## Çerez onay banner'ı yok, Çerez Politikası var (2026-09-07)
+
+Soru şuydu: KVKK için çerez onay penceresi göstermek zorunda mıyız? Cevap hayır — ama
+`PRIVACY_CHECKLIST.md` madde 6'nın zaten söylediği gibi, bir Çerez Politikası'na mecburuz ve o
+yoktu. Bu iş banner'ı değil, eksik olanı yaptı.
+
+**Önce envanter, sonra karar.** Karar tamamen "cihaza ne bırakıyoruz"a bağlı olduğu için önce
+canlı siteden ampirik olarak çıkarıldı; iki noktada kaynak okuması yanıltıcıydı ve düzeltildi:
+
+- `NEXT_LOCALE` **ilk ziyarette, kullanıcı hiçbir şeye dokunmadan, sunucu tarafından**
+  yazılıyor (`Set-Cookie`, `Path=/`, `SameSite=lax`, `Max-Age` yok → oturum çerezi). Kaynağı
+  `web/src/proxy.ts` — Next.js 16 `middleware.ts`'i `proxy.ts` olarak yeniden adlandırdığı için
+  dosya adına bakan bir arama bunu bulamıyor. next-intl'in kendi `syncCookie`'si yazıyor.
+- Sentry canlıda **açık** ve DSN'i `ingest.de.sentry.io` — yani organizasyon AB (Almanya)
+  bölgesinde. Üretimdeki CSP `connect-src`'inde göründüğü için bu curl ile doğrulanabiliyor.
+
+Kalan her şey zaten biliniyordu: `theme` çerezi (1 yıl, yalnızca tema düğmesine basılınca ya da
+girişte hesaptaki tercih uygulanırken), localStorage'daki oturum jetonları, sessionStorage'daki
+OAuth state/PKCE değerleri. Üçüncü taraf çerez, analitik, reklam, gömülü içerik ve runtime'da
+dışarıdan yüklenen font **yok** — fontlar `next/font/google` ile derlemede gömülüyor.
+
+**Karar: banner göstermiyoruz.** KVKK'nın Çerez Rehberi zorunlu ve işlevsel çerezler için açık
+rıza aramıyor (m.5/2 hukuki sebepleri), aradığı şey aydınlatma. GDPR/ePrivacy m.5(3)'ün "strictly
+necessary" istisnası da oturum jetonlarını ve OAuth state'ini açıkça kapsıyor. Elimizde
+kullanıcının onayına bırakılabilecek **isteğe bağlı tek bir çerez bile yok**; böyle bir durumda
+banner göstermek, seçenek sunmayan bir onay ekranı dayatmak olurdu — uyum değil, uyum tiyatrosu.
+
+**Bunun yerine `/cookies` yayınlandı** (tr + en, `/extension-privacy` ile aynı desende ayrı bir
+sayfa, `LandingFooter`'dan ve `/privacy#cookies`'ten link, `sitemap.ts`'e eklendi). İki çerezi
+tablo olarak, localStorage/sessionStorage anahtarlarını isimleriyle, "hiçbiri yok" listesini ve
+silme yöntemini yazıyor. Ayrıca "bu değişirse ne yaparız" sözü veriyor: isteğe bağlı bir çerez
+eklenirse önce bu sayfa güncellenir ve varsayılanı kapalı, kategorileri ayrı seçilebilir bir onay
+ekranı devreye alınır.
+
+**Sentry disclosure'ı da aynı turda kapatıldı** (`PRIVACY_CHECKLIST.md` madde 3'ün açık kalan
+yarısı): `/privacy#error-monitoring` ne gönderildiğini (hata + yığın izi, sayfa adresi,
+tarayıcı/OS, IP), alıcıyı, AB bölgesini, hukuki sebebi (meşru menfaat) ve sınırları yazıyor.
+
+**"Banner gerekmiyor" iddiasını bir test tutuyor** — `web/src/lib/privacy/browserStorage.test.ts`.
+Bu sayfanın en büyük riski, doğru yayınlanıp sonra sessizce yanlışa dönmesi: bir `<Script
+src="googletagmanager...">` ya da yeni bir çerez, yayınlanmış metni her ziyaretçiye karşı yalan
+haline getirir ve bunu hiçbir tip sistemi yakalamaz. Test, çerez/storage yazan dosyaların ve
+`aa_*` anahtarlarının kümesini sabitliyor, bilinen izleyici paketlerini/isimlerini tarıyor ve
+Sentry'nin session replay + tracing ayarlarının kapalı kaldığını doğruluyor. Envanter değişirse
+CI patlıyor; değiştiren kişi ya politikayı güncelliyor ya da onay akışını açıyor. Testin gerçekten
+yakaladığı, geçici olarak çerez yazan bir dosya eklenip doğrulandı.
+
+**Bilerek yapılmayan:** banner'ın kendisi, rıza saklama/versiyonlama, kategori bazlı script
+yükleme. Tetikleyici geldiğinde yapılacak; tetikleyiciler: analitik (GA/GTM/Plausible/PostHog),
+reklam veya pikseller, A/B testi, Sentry'de session replay ya da tracing'in açılması, gömülü
+YouTube/Google Haritalar, runtime'da üçüncü taraf font. Bunlardan biri olmadan banner eklemek
+gereksiz.
+
+**Not:** Bu bir mühendislik değerlendirmesi, hukuki görüş değil — `PRIVACY_CHECKLIST.md`'nin
+başındaki uyarı burada da geçerli. Metnin son hâli, avukata gidecek listede duruyor.
+
+---
 ---
 
 

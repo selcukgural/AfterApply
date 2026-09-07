@@ -156,7 +156,8 @@
       "resources": "Kaynaklar",
       "privacy": "Gizlilik Politikası",
       "rights": "Tüm hakları saklıdır.",
-      "help": "Yardım Merkezi"
+      "help": "Yardım Merkezi",
+      "cookies": "Çerez Politikası"
     }
   },
   "common": {
@@ -530,6 +531,23 @@
   "privacy": {
     "title": "Gizlilik Politikası",
     "lastUpdated": "Son güncelleme: 2026",
+    "cookiesSection": {
+      "title": "Çerezler",
+      "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
+      "link": "Çerez Politikası",
+      "after": " sayfasında tek tek yazılı."
+    },
+    "errorMonitoring": {
+      "title": "Hata izleme",
+      "intro": "Uygulama çöktüğünde ya da beklenmedik bir hata verdiğinde sorunu teşhis edebilmek için hata izleme servisi Sentry'yi kullanıyoruz; bu hem web sitesi hem de API tarafı için geçerli. Bir hata oluştuğunda Sentry'ye şunlar gider:",
+      "item1": "Hatanın kendisi: mesajı ve teknik yığın izi (stack trace).",
+      "item2": "Hatanın oluştuğu sayfanın adresi, tarayıcı ve işletim sistemi bilgisi.",
+      "item3": "Bağlantınızın IP adresi.",
+      "recipient": "Alıcı: Sentry (Functional Software, Inc.). Kayıtlar Sentry'nin Avrupa Birliği (Almanya) bölgesindeki altyapısında işleniyor.",
+      "legalBasis": "Hukuki sebep: meşru menfaat — hizmetin güvenliğini ve sürekliliğini sağlamak, arızayı tespit edip gidermek.",
+      "limits": "Oturum kaydı (session replay) ve performans izleme (tracing) özelliklerini bilerek kapalı tuttuk: ekranınız kaydedilmiyor, gezinme davranışınız izlenmiyor, form içerikleriniz gönderilmiyor. Başvuru verileriniz, CV'niz ve e-posta içerikleri hata kayıtlarına dahil edilmiyor.",
+      "retention": "Hata kayıtları Sentry'nin saklama süresi dolduğunda silinir; ürünün kendi veritabanına yazılmazlar."
+    },
     "dataCollection": {
       "title": "Hangi veriyi topluyoruz ve neden",
       "intro": "e-kariyerim, iş başvurularınızı takip etmenize yardımcı olan kişisel bir araçtır. Hizmeti sağlayabilmek için şu verileri işleriz:",
@@ -664,6 +682,70 @@
       "title": "İletişim",
       "before": "Eklentiyle ilgili sorularınız için",
       "after": " adresinden bize ulaşabilirsiniz."
+    }
+  },
+  "cookies": {
+    "title": "Çerez Politikası",
+    "lastUpdated": "Son güncelleme: 7 Eylül 2026",
+    "intro": {
+      "title": "Kısaca",
+      "body": "e-kariyerim yalnızca hizmetin çalışması için gereken iki çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok.",
+      "legalNote": "KVKK kapsamında zorunlu ve işlevsel çerezler için açık rıza aranmaz; aranan şey aydınlatmadır. Bu sayfa o aydınlatmadır."
+    },
+    "table": {
+      "title": "Kullandığımız çerezler",
+      "name": "Ad",
+      "purpose": "Amacı",
+      "type": "Tür",
+      "duration": "Süre",
+      "localePurpose": "Sayfanın hangi dilde açılacağını hatırlar (Türkçe/İngilizce). Adres çubuğundaki dile göre sunucumuz tarafından yazılır ve dili değiştirdiğinizde güncellenir.",
+      "localeType": "Zorunlu — birinci taraf",
+      "localeDuration": "Oturum: tarayıcıyı kapattığınızda silinir",
+      "themePurpose": "Açık/koyu tema tercihinizi hatırlar. Yalnızca tema düğmesine bastığınızda, ya da giriş yaptığınızda hesabınızdaki tercih uygulanırken yazılır.",
+      "themeType": "İşlevsel — birinci taraf",
+      "themeDuration": "1 yıl",
+      "note": "İkisi de yalnızca bir tercihi saklar: içlerinde sizi tanımlayan bir kimlik, kullanıcı numarası veya izleme kodu yoktur ve hiçbir üçüncü tarafa gönderilmezler."
+    },
+    "storage": {
+      "title": "Tarayıcı deposu (localStorage ve sessionStorage)",
+      "intro": "Bunlar çerez değil, ama aynı mantıkla cihazınızda veri sakladıkları için şeffaflık adına burada da sayıyoruz:",
+      "item1": "Oturum jetonları — aa_access_token, aa_refresh_token, bunların geçerlilik süreleri ve aa_user (adınız, e-posta adresiniz ve arayüz tercihleriniz). Giriş yaptıktan sonra oturumunuzun açık kalmasını sağlar; localStorage'da tutulur ve çıkış yaptığınızda silinir.",
+      "item2": "Giriş güvenliği anahtarları — aa_google_oauth ve aa_linkedin_oauth. Google veya LinkedIn ile giriş sırasında araya girme (CSRF) saldırısını engelleyen tek kullanımlık değerlerdir; sessionStorage'da tutulur ve giriş tamamlanır tamamlanmaz silinir.",
+      "outro": "İkisi de hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz."
+    },
+    "noThirdParty": {
+      "title": "Üçüncü taraf ve izleme",
+      "intro": "Sitede aşağıdakilerin hiçbiri yok:",
+      "item1": "Google Analytics, Meta Pixel, Hotjar veya benzeri bir analitik/izleme aracı.",
+      "item2": "Reklam çerezi, yeniden hedefleme (retargeting) veya profilleme.",
+      "item3": "Gömülü üçüncü taraf içerik (YouTube, Google Haritalar vb.) — hiç kullanılmıyor, dolayısıyla arkasından gelen çerez de yok.",
+      "item4": "Dışarıdan yüklenen yazı tipi veya betik: fontlar derleme sırasında kendi sunucumuza gömülüyor, tarayıcınız Google Fonts'a istek atmıyor.",
+      "outro": "Sitenin güvenlik politikası (Content-Security-Policy) tarayıcıya yalnızca kendi sunucumuza, kendi API'mize ve hata izleme servisine bağlanma izni veriyor; bu liste sessizce uzayamaz."
+    },
+    "errorMonitoring": {
+      "title": "Hata izleme",
+      "before": "Uygulama beklenmedik bir hata verdiğinde bunu teşhis edebilmek için Sentry kullanıyoruz. Sentry çerez yazmaz ve tarayıcınızda veri saklamaz, ama hata anında bir kayıt oluşturur. Ne gönderildiği, nereye gittiği ve hangi hukuki sebebe dayandığı",
+      "link": "Gizlilik Politikası'nın hata izleme bölümünde",
+      "after": " ayrıntılı olarak yazılı. Oturum kaydı (session replay) ve performans izleme kapalı; gezinme davranışınız izlenmiyor."
+    },
+    "control": {
+      "title": "Çerezleri nasıl silersiniz",
+      "body": "Tarayıcınızın ayarlarından bu sitenin çerezlerini ve site verisini istediğiniz zaman silebilir, çerezleri tümüyle de engelleyebilirsiniz. Sonucu şu olur: dil ve tema tercihiniz varsayılana döner; oturum jetonlarını da silerseniz oturumunuz kapanır ve yeniden giriş yapmanız gerekir. Site bunun dışında çalışmaya devam eder.",
+      "accountNote": "Hesabınızdaki verinin silinmesi ayrı bir konu — bunu Ayarlar sayfasından hesabınızı silerek yapabilirsiniz."
+    },
+    "changes": {
+      "title": "Bu politika değişirse",
+      "body": "İleride analitik, reklam veya benzeri isteğe bağlı bir çerez eklersek, bunu eklemeden önce bu sayfayı günceller ve kategorileri ayrı ayrı seçebileceğiniz, varsayılanı kapalı olan bir onay ekranı devreye alırız. Onayınız alınmadan böyle bir çerez yazılmaz."
+    },
+    "policyLink": {
+      "before": "Hesabınıza ait verilerin tamamı için",
+      "link": "Gizlilik Politikası",
+      "after": " sayfasına bakabilirsiniz."
+    },
+    "contact": {
+      "title": "İletişim",
+      "before": "Çerezlerle ilgili sorularınız için",
+      "after": " adresine yazabilirsiniz."
     }
   },
   "status": {

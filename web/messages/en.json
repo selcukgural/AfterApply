@@ -156,7 +156,8 @@
       "resources": "Resources",
       "privacy": "Privacy Policy",
       "rights": "All rights reserved.",
-      "help": "Help Center"
+      "help": "Help Center",
+      "cookies": "Cookie Policy"
     }
   },
   "common": {
@@ -530,6 +531,23 @@
   "privacy": {
     "title": "Privacy Policy",
     "lastUpdated": "Last updated: 2026",
+    "cookiesSection": {
+      "title": "Cookies",
+      "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
+      "link": "Cookie Policy",
+      "after": "."
+    },
+    "errorMonitoring": {
+      "title": "Error monitoring",
+      "intro": "We use the error monitoring service Sentry so that we can diagnose crashes and unexpected errors, on both the website and the API. When an error occurs, the following goes to Sentry:",
+      "item1": "The error itself: its message and the technical stack trace.",
+      "item2": "The address of the page the error happened on, plus browser and operating system details.",
+      "item3": "The IP address of your connection.",
+      "recipient": "Recipient: Sentry (Functional Software, Inc.). The records are processed on Sentry's European Union (Germany) infrastructure.",
+      "legalBasis": "Legal basis: legitimate interest — keeping the service secure and available, and finding and fixing faults.",
+      "limits": "We deliberately keep session replay and performance tracing switched off: your screen is not recorded, your browsing behaviour is not tracked, and your form contents are not sent. Your application data, your CV and email contents are never included in an error record.",
+      "retention": "Error records are deleted when Sentry's retention period expires; they are never written to the product's own database."
+    },
     "dataCollection": {
       "title": "What data we collect and why",
       "intro": "e-kariyerim is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
@@ -663,6 +681,70 @@
     "contact": {
       "title": "Contact",
       "before": "Questions about the extension can be sent to",
+      "after": "."
+    }
+  },
+  "cookies": {
+    "title": "Cookie Policy",
+    "lastUpdated": "Last updated: 7 September 2026",
+    "intro": {
+      "title": "In short",
+      "body": "e-kariyerim uses exactly two cookies, both needed for the service to work. We use no advertising cookies, no tracking pixels, no analytics tool such as Google Analytics, and no third-party cookies at all. That is why you never see a cookie consent banner here: there is no optional cookie to leave to your choice.",
+      "legalNote": "Under Turkish data protection law (KVKK), strictly necessary and functional cookies do not require explicit consent — what they require is disclosure. This page is that disclosure."
+    },
+    "table": {
+      "title": "The cookies we use",
+      "name": "Name",
+      "purpose": "Purpose",
+      "type": "Type",
+      "duration": "Duration",
+      "localePurpose": "Remembers which language a page opens in (Turkish/English). Our server writes it to match the language in the address bar, and updates it when you switch languages.",
+      "localeType": "Strictly necessary — first party",
+      "localeDuration": "Session: deleted when you close the browser",
+      "themePurpose": "Remembers your light/dark theme preference. Written only when you press the theme button, or when you sign in and the preference stored on your account is applied.",
+      "themeType": "Functional — first party",
+      "themeDuration": "1 year",
+      "note": "Both store nothing but a preference: neither contains an identifier, a user number or a tracking code, and neither is sent to any third party."
+    },
+    "storage": {
+      "title": "Browser storage (localStorage and sessionStorage)",
+      "intro": "These are not cookies, but they store data on your device in the same way, so we list them here too:",
+      "item1": "Session tokens — aa_access_token, aa_refresh_token, their expiry times, and aa_user (your name, email address and interface preferences). They keep you signed in; they live in localStorage and are deleted when you sign out.",
+      "item2": "Sign-in security keys — aa_google_oauth and aa_linkedin_oauth. These are single-use values that block a CSRF attack during a Google or LinkedIn sign-in; they live in sessionStorage and are deleted the moment the sign-in completes.",
+      "outro": "Both are required for the service to work — without them you cannot sign in."
+    },
+    "noThirdParty": {
+      "title": "Third parties and tracking",
+      "intro": "None of the following exist on this site:",
+      "item1": "Google Analytics, Meta Pixel, Hotjar or any comparable analytics/tracking tool.",
+      "item2": "Advertising cookies, retargeting or profiling.",
+      "item3": "Embedded third-party content (YouTube, Google Maps and the like) — we use none, so no cookies arrive behind them either.",
+      "item4": "Externally loaded fonts or scripts: fonts are bundled into our own server at build time, so your browser never calls Google Fonts.",
+      "outro": "The site's Content-Security-Policy only lets your browser connect to our own server, our own API and the error monitoring service; that list cannot grow quietly."
+    },
+    "errorMonitoring": {
+      "title": "Error monitoring",
+      "before": "We use Sentry so that we can diagnose unexpected errors. Sentry writes no cookie and stores nothing in your browser, but it does create a record when an error occurs. What is sent, where it goes and which legal basis it rests on is set out in detail in",
+      "link": "the error monitoring section of the Privacy Policy",
+      "after": ". Session replay and performance tracing are switched off; your browsing behaviour is not tracked."
+    },
+    "control": {
+      "title": "How to remove cookies",
+      "body": "You can delete this site's cookies and site data from your browser's settings at any time, and you can block cookies entirely. The effect: your language and theme preferences fall back to the defaults, and if you also delete the session tokens you are signed out and have to sign in again. Nothing else about the site stops working.",
+      "accountNote": "Deleting the data held in your account is a separate matter — you can do that by deleting your account from the Settings page."
+    },
+    "changes": {
+      "title": "If this policy changes",
+      "body": "If we ever add an optional cookie for analytics, advertising or anything similar, we will update this page before adding it and turn on a consent screen where each category can be chosen separately and everything defaults to off. No such cookie will be written without your consent."
+    },
+    "policyLink": {
+      "before": "For everything else we hold about your account, see the",
+      "link": "Privacy Policy",
+      "after": "."
+    },
+    "contact": {
+      "title": "Contact",
+      "before": "For questions about cookies, write to",
       "after": "."
     }
   },
