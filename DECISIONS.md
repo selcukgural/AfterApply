@@ -4674,3 +4674,90 @@ eski başvuruları göstermemesi üzerine rehber yazısı ve Şikayetvar kaydı 
 "Kaçından cevap geldi? Kaçı hiç dönmedi?" bugün dürüst olan en güçlü hâli.
 
 Testler: web 216 (200'den), unit 453, integration 256 — hepsi geçiyor.
+
+---
+
+## Girişsiz kıyas aracı: eşik, kapsam ve neden CAPTCHA yok (2026-09-08)
+
+`/benchmark` yayına hazır: dört zorunlu soru, kayıt yok, e-posta yok. Ürünün bir yabancıya
+cevaplayamadığı tek soruyu cevaplıyor — *geri dönüş oranım normal mi?* — ve V0-V5 planındaki tezin
+testi bu sayfa (bkz. `DEVELOPMENT_PLAN.md`, "Durdurma koşulu").
+
+### Eşik 30, ve üç kapsam
+
+Bir alanın medyanı **30 cevaba ulaşmadan** gösterilmiyor. Sayı K1'in şirket merdiveninden
+(`HiddenBelow = 50`) bilinçli olarak düşük: o merdiven **adı geçen** bir işverenin yanına basılan
+rakamı koruyor, burada kimsenin adı geçmiyor, dolayısıyla bar istatistik meselesi — üçüncü bir
+tarafa adalet meselesi değil. Yön asimetrisi aynen devralındı: **yükseltmek her zaman daha fazlasını
+gizler, yani güvenli; düşürmek "ne yayınlanabilir" kararıdır.**
+
+Aynı eşik ikinci bir işe yarıyor. Alan eşiği geçemediyse **tüm alanların ortak medyanı** gösteriliyor
+— ama *öyle olduğu açıkça etiketlenerek*. `BenchmarkComparisonScope` bu yüzden var:
+
+- `Sector` — alan kendi başına eşiği geçti. Sayfanın asıl işi.
+- `Overall` — alan kısa kaldı, genel havuz yeterli. Başlık "X alanında henüz N cevap var", sayının
+  etiketi "Tüm alanlar geneli", altında "M cevaba göre · alanına özel değil".
+- `None` — ikisi de yetersiz. Kıyas yok, sadece kendi oranın ve eşiğe ne kaldığı.
+
+Fallback ekip kararıyla eklendi (öncesinde yalnızca `Sector`/`None` vardı). Gerekçe: sektör
+iddiasının barını düşürmeden, sayfanın ilk haftalardaki tek cevabının "henüz değil" olmasını
+engellemek. **Genel medyanın alan medyanı gibi okunması bu özelliğin yapabileceği en yanıltıcı şey
+olurdu**, o yüzden kapsam sayının yanında seyahat ediyor ve arayüzde üç ayrı cümle var.
+
+### Ortalama değil medyan — bu bir incelik değil, savunma
+
+Cevaplar anonim (aşağıya bakın), dolayısıyla aynı kişi birden fazla kez cevaplayabilir ve kasten uç
+değer gönderilebilir. Medyan bunlardan neredeyse etkilenmiyor, ortalama fazlasıyla etkileniyor. Bir
+unit test bunu ölçüyor: 30 dürüst cevaba 3 tane %100 eklendiğinde medyan hiç oynamıyor, ortalama
+yedi puan kayıyor.
+
+### `UserId` yok — plandan kasıtlı sapma
+
+Plan "kayıtlı kullanıcıda opsiyonel `UserId`" diyordu. Konulmadı. İki sebep: kullanıcıya bağlı tablo
+olurdu (cascade-from-Users kuralı, DECISIONS.md 2026-09-07) ve **beyan verisine kimlik iliştirirdi** —
+karşılığında kimsenin istemediği bir mükerrer-engelleme ve "anket cevabın vs gerçek verin" ekranı
+için. Bedeli (aynı kişi iki kez cevaplayabilir) sayfanın metodoloji notunda açıkça yazıyor.
+
+Tabloda `UserId`, IP, user-agent, çerez, serbest metin yok. Bir integration testi entity'nin
+kolonlarını okuyup bunu doğruluyor, çünkü sayfada verilen söz tam olarak bu.
+
+### CAPTCHA eklenemez — V0'ı şekillendiren kısıtın aynısı
+
+reCAPTCHA, hCaptcha ve Turnstile üçü de üçüncü taraf script. CSP yalnızca kendi origin, kendi API ve
+Sentry'ye izin veriyor; Çerez Politikası "üçüncü taraf izleme aracı yok" diyor. Yani bot koruması
+**honeypot alanı + IP bazlı saatlik 5 istek + sınır kontrolleri** ile sınırlı. Yeterli değil, ve
+yeterli olmadığı için medyan seçildi.
+
+### Sektör ekseni `Company.Industry` olamadı
+
+Plan "K4'ün açtığı `Industry` alanıyla hizalı sabit liste" diyordu. `Company.Industry` **LinkedIn
+şirket sayfasından kazınan serbest metin** — 200 karakter, nullable, kontrolsüz ("IT Services and IT
+Consulting", "Yazılım Geliştirme"...). Eksen olarak kullanılamaz. 13 kalemlik bir enum yazıldı;
+ürün verisiyle havuzlama gündeme gelirse gereken şey o metinden bu enum'a bir eşleme.
+
+**Liste neden 13 ve neden sorulmadı:** eşikle aynı asimetri. Sonradan **birleştirmek kolay**
+(Finans+Sigorta'yı tek kovaya indirmek), **ayırmak imkânsız** ("Diğer" seçmiş yüz kişinin ne
+olduğunu geri getiremezsin). Granüler başlamak tek güvenli yön.
+
+### Rota yerelleştirilmedi
+
+`/tr/benchmark` ve `/en/benchmark`, rehber yazılarının aksine ortak bir segment. next-intl'e
+`pathnames` eklemek tek bir sayfa için uygulamadaki **her `Link`'in href tipini** değiştirirdi.
+Arama terimleri title, description ve H1'de taşınıyor — asıl işi zaten orada yapıyorlar.
+
+### Tarayıcıya bakmasak kaçacak iki hata
+
+1. **`%60'i` Türkçede yanlış.** Kesme işareti eki sayının *okunuşuna* uyar: altmış→`'ı`, sıfır→`'ı`,
+   otuz→`'u`, yetmiş→`'i`. Değişken bir sayı için doğrusunu üretmek sayı-okuma mantığı ister; cümle
+   ek gerektirmeyen kalıba çevrildi ("Senden daha düşük orana sahip cevaplar: %60"). İngilizce
+   etkilenmiyor.
+2. **Büyük oranın altındaki "27 / 90 başvuru" satırı `NaN / NaN` render ediyordu** — metin yazılmış
+   ama yanıt o iki sayıyı taşımıyordu. Sonuca eklendi; sonuç artık formun state'ine ihtiyaç duymadan
+   kendini render ediyor.
+
+Testler: unit 465, web 225, integration 271 — hepsi geçiyor. Yeni drift bekçisi `options.test.ts`
+form seçeneklerini C# enum'larıyla iki yönlü ve iki dilin sözlüğüyle karşılaştırıyor.
+
+**Yan not:** V0'da yazılan allowlist bekçisi bir gün sonra işini gördü — `/benchmark`
+`SiteTrafficNormalizer`'a eklenmediği için `routes.test.ts` düştü ve sayfanın ziyaretleri hiç
+sayılmayacaktı.

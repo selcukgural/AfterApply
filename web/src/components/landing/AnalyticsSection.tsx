@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { AnalyticsRatesResponse, ApplicationStatus } from "@/types/api";
 import { formatRate } from "@/lib/dashboard/format";
 import type { Tone } from "@/lib/dashboard/statusGroups";
@@ -66,6 +67,16 @@ export async function AnalyticsSection() {
           </div>
           <h2 className="text-3xl font-semibold text-gray-900 sm:text-4xl dark:text-gray-100">{t("title")}</h2>
           <p className="mx-auto max-w-2xl text-base text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
+          {/* The numbers above are sample data. This is the one place on the landing page where a
+              visitor can get a real number about themselves without an account, so the link belongs
+              here rather than buried in the footer — the section makes the claim, the link tests
+              it. */}
+          <Link
+            href="/benchmark"
+            className="mx-auto text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+          >
+            {t("benchmarkLink")} →
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">

@@ -11,6 +11,7 @@ using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
 using AfterApply.Application.Mailing;
 using AfterApply.Application.Metrics;
+using AfterApply.Application.Benchmark;
 using AfterApply.Application.SiteTraffic;
 using AfterApply.Application.Notifications;
 using AfterApply.Application.Feedback;
@@ -26,6 +27,7 @@ using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
+using AfterApply.Infrastructure.Benchmark;
 using AfterApply.Infrastructure.SiteTraffic;
 using AfterApply.Infrastructure.OpenAi;
 using AfterApply.Infrastructure.Notifications;
@@ -58,6 +60,7 @@ public static class DependencyInjection
     public const string LinkPreviewRateLimitPolicy = "link-preview";
     public const string FeedbackRateLimitPolicy = "feedback";
     public const string SiteTrafficRateLimitPolicy = "site-traffic";
+    public const string BenchmarkRateLimitPolicy = "benchmark";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -90,6 +93,7 @@ public static class DependencyInjection
         services.Configure<PersonalAccessTokenOptions>(configuration.GetSection(PersonalAccessTokenOptions.SectionName));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<ProductMetricsOptions>(configuration.GetSection(ProductMetricsOptions.SectionName));
+        services.Configure<BenchmarkOptions>(configuration.GetSection(BenchmarkOptions.SectionName));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
         services.Configure<EmailAutoApprovalOptions>(configuration.GetSection("EmailAutoApproval"));
         services.Configure<JobBoardDomainsOptions>(configuration.GetSection("JobBoardDomains"));
@@ -407,6 +411,7 @@ public static class DependencyInjection
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
         services.AddScoped<ISiteTrafficService, SiteTrafficService>();
+        services.AddScoped<IBenchmarkService, BenchmarkService>();
         services.AddScoped<IAdminAccessService, AdminAccessService>();
         services.AddScoped<IAutoApprovalCalibrationService, AutoApprovalCalibrationService>();
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();

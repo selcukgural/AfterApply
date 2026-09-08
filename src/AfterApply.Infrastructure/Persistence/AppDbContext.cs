@@ -1,4 +1,5 @@
 using AfterApply.Domain.Applications;
+using AfterApply.Domain.Benchmark;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.EmailIntegrations;
@@ -58,6 +59,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<ProductMetricsDailySnapshot> ProductMetricsDailySnapshots => Set<ProductMetricsDailySnapshot>();
 
     public DbSet<SiteTrafficDailyCounter> SiteTrafficDailyCounters => Set<SiteTrafficDailyCounter>();
+
+    public DbSet<BenchmarkSubmission> BenchmarkSubmissions => Set<BenchmarkSubmission>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

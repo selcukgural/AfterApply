@@ -23,6 +23,9 @@ const NO_AUTH_ENDPOINTS = [
   // the callback page straight back to /login, hiding the real error — seen live 2026-09-05.
   "/api/auth/linkedin",
   "/api/auth/refresh",
+  // The public benchmark is answerable without an account and its answers are anonymous by
+  // design — attaching a signed-in visitor's token would make one of them attributable.
+  "/api/benchmark",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
 ];

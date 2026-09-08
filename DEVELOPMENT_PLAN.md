@@ -734,7 +734,7 @@ kullanıcı beklemek zorunda değil — sorarak da üretilebilir. Sıra
 > ikisinin buluştuğu yer — sonuçla açılıyor, terimi hâlâ içeriyor. `routes.test.ts` terimi
 > sabitliyor ki ileriki bir metin turu sessizce silmesin.
 
-### Sıra 3 — V2: Girişsiz kıyas aracı ("Geri dönüş oranın normal mi?")
+### Sıra 3 — V2: Girişsiz kıyas aracı ("Geri dönüş oranın normal mi?") ✅ (2026-09-08)
 
 - **Yapılacak:** `(public)` altında kayıt istemeyen sayfa. Kullanıcı üç dört sayı
   girer (başvuru, dönüş, sektör, opsiyonel şehir/kıdem), kendi oranını ve
@@ -748,6 +748,52 @@ kullanıcı beklemek zorunda değil — sorarak da üretilebilir. Sıra
   Hız sınırı + bot koruması zorunlu; PII toplanmaz, serbest metin alınmaz.
 - **Kilidi:** Bizde.
 - **Bu madde aynı zamanda tezin testi** — bkz. "Durdurma koşulu".
+
+> **Yapıldı (2026-09-08).** `/tr/benchmark` ve `/en/benchmark`: dört zorunlu soru (başvuru sayısı,
+> dönüş sayısı, dönem, alan) + iki isteğe bağlı (kıdem, konum), kayıt istemeden.
+> `BenchmarkSubmissions` tablosu, `POST /api/benchmark/submissions` ve `GET /api/benchmark/summary`
+> — ikisi de anonim, IP bazlı saatlik 5 istek sınırı. Footer'a ve landing'in Analytics bölümüne
+> link kondu (öncesinde sayfaya hiçbir yerden ulaşılamıyordu).
+>
+> **Kıyasın üç kapsamı var** (`BenchmarkComparisonScope`), ve aradaki fark sayfanın dürüstlüğünün
+> tamamı: `Sector` (alan eşiği geçti), `Overall` (alan geçmedi ama genel havuz geçti — medyan
+> **açıkça "tüm alanlar geneli" diye etiketlenir**, alan iddiası olarak sunulmaz), `None` (ikisi de
+> yetersiz). Genel havuz fallback'i ekip kararıyla eklendi: sektör iddiasının barı yine 30'da
+> kaldı, ama sayfanın ilk haftalardaki tek cevabı "henüz değil" olmaktan çıktı.
+>
+> Beş karar kasıtlı:
+>
+> 1. **`UserId` yok** — plan "kayıtlı kullanıcıda opsiyonel" diyordu. Kullanıcıya bağlı tablo olurdu
+>    (cascade kuralı) ve kimsenin istemediği bir özellik için beyan verisine kimlik iliştirirdi.
+>    Bedeli — aynı kişi iki kez cevaplayabilir — metodoloji notunda yazılı; savunması **ortalama
+>    yerine medyan**, ki birkaç uç/tekrar cevabı neredeyse hiç oynatmıyor (unit test bunu ölçüyor).
+> 2. **Sektör ekseni sabit bir enum, `Company.Industry` değil.** O kolon LinkedIn'den kazınan
+>    serbest metin (200 karakter, nullable, kontrolsüz). Ürün verisiyle havuzlanacaksa gereken şey
+>    o metinden bu enum'a bir eşleme; yok, ve anket tek kaynak olduğu sürece gerekmiyor.
+> 3. **Karşılaştırma hücresi yalnızca sektör, dönem değil.** Oran bir orandır, dönemler arası
+>    havuzlanmaya sayıdan çok daha dayanıklı; iki eksene birden bölmek her hücreyi uzun süre eşiğin
+>    altında bırakırdı. Dönem yine saklanıyor ve uyarısı metodoloji notunda: kısa dönem düşük
+>    görünür, çünkü yakın başvurular cevaplanmaya vakit bulamamıştır.
+> 4. **Rota yerelleştirilmedi** (`/benchmark` iki dilde de). next-intl'e `pathnames` eklemek tek bir
+>    sayfa için tüm uygulamanın `Link` href tiplerini değiştirirdi; arama terimleri title,
+>    description ve H1'de taşınıyor.
+> 5. **CAPTCHA yok, olamaz.** reCAPTCHA/hCaptcha/Turnstile üçü de üçüncü taraf script — CSP
+>    yasaklıyor, Çerez Politikası "yok" diyor. Yerine honeypot alanı + hız sınırı + sınır
+>    kontrolleri. V0'ı şekillendiren kısıtın aynısı.
+>
+> **Testler:** unit 462 → 465, web 216 → 225, integration 256 → 271. Yeni drift bekçisi
+> `options.test.ts`: form seçenekleri C# enum'larıyla **iki yönlü** eşleşmeli ve her seçeneğin iki
+> dilde etiketi olmalı — biri eksikse kullanıcı 400 alır ya da ham anahtar görür, ve ikisi de o
+> seçenek seçilene kadar görünmez.
+>
+> **Tarayıcıda üç kapsam da doğrulandı** ve iki hata yalnızca bakınca çıktı: (a) `%60'i` Türkçede
+> yanlış — kesme eki sayının okunuşuna uyar (altmış→`'ı`, sıfır→`'ı`, otuz→`'u`), değişken bir sayı
+> için doğrusunu üretmek sayı-okuma mantığı ister; cümle eki gerektirmeyen kalıba çevrildi.
+> (b) Büyük oranın altındaki "27 / 90 başvuru" satırı yazılmıştı ama yanıt o iki sayıyı
+> taşımıyordu; sonuca eklendi.
+>
+> **V0'ın drift bekçisi bir gün sonra işini gördü:** yeni sayfa `SiteTrafficNormalizer`'ın
+> allowlist'inde olmadığı için `routes.test.ts` düştü — ziyaretleri hiç sayılmayacaktı.
 
 ### Sıra 4 — V3: Eklenti eşleştirmesi — altı adım, bir tık olmalı
 

@@ -82,6 +82,10 @@
       "helpCv": {
         "title": "CV'lerim",
         "description": "Başvururken kullandığınız CV dosyalarını yükleme, önizleme, varsayılan yapma ve silme."
+      },
+      "benchmark": {
+        "title": "Geri Dönüş Oranı Kıyaslama",
+        "description": "Kaç başvuru yaptın, kaçından dönüş aldın? Kendi geri dönüş oranını gör ve alanındaki medyanla kıyasla. Kayıt gerekmiyor."
       }
     }
   },
@@ -179,7 +183,8 @@
     "analytics": {
       "eyebrow": "Senin gerçek oranların",
       "title": "Kaçından cevap geldi? Kaçı hiç dönmedi?",
-      "subtitle": "Yanıt oranı, mülakat oranı, ghosting oranı ve ilk dönüşün kaç gün sürdüğü — tahmin değil, kendi verinden."
+      "subtitle": "Yanıt oranı, mülakat oranı, ghosting oranı ve ilk dönüşün kaç gün sürdüğü — tahmin değil, kendi verinden.",
+      "benchmarkLink": "Kaydolmadan kendi oranını hesapla"
     },
     "vision": {
       "eyebrow": "Vizyon",
@@ -246,7 +251,8 @@
       "rights": "Tüm hakları saklıdır.",
       "guide": "Rehber",
       "help": "Yardım Merkezi",
-      "cookies": "Çerez Politikası"
+      "cookies": "Çerez Politikası",
+      "benchmark": "Geri dönüş oranı kıyaslama"
     }
   },
   "common": {
@@ -1887,5 +1893,98 @@
     "ApplicationCreated": "Başvuru oluşturuldu",
     "ApplicationSubmitted": "Başvuru gönderildi",
     "StatusChanged": "Durum değişti"
+  },
+  "benchmark": {
+    "title": "Geri dönüş oranın normal mi?",
+    "subtitle": "Dört soru. Kayıt yok, e-posta yok. Cevabını ver, kendi oranını ve alanındaki medyanı gör.",
+    "participation": "{count} kişi cevapladı.",
+    "participationEmpty": "Henüz kimse cevaplamadı. İlk sen ol.",
+    "form": {
+      "applicationsLabel": "Kaç başvuru yaptın?",
+      "applicationsHint": "Seçtiğin dönemde gönderdiğin toplam başvuru sayısı.",
+      "repliesLabel": "Kaçından dönüş aldın?",
+      "repliesHint": "Ret de sayılır. Ölçülen şey işi alıp almadığın değil — başvurunun bir insan tarafından görülüp görülmediği.",
+      "periodLabel": "Bu sayılar hangi dönemi kapsıyor?",
+      "sectorLabel": "Hangi alanda iş arıyorsun?",
+      "seniorityLabel": "Kıdem",
+      "locationLabel": "Konum",
+      "optional": "isteğe bağlı",
+      "choose": "Seçin",
+      "submit": "Oranımı göster",
+      "submitting": "Hesaplanıyor...",
+      "again": "Başka bir cevap gir"
+    },
+    "sectors": {
+      "SoftwareAndIt": "Yazılım / Bilişim",
+      "FinanceAndInsurance": "Finans / Bankacılık / Sigorta",
+      "EcommerceAndRetail": "E-ticaret / Perakende",
+      "ManufacturingAndIndustry": "Üretim / Sanayi",
+      "Telecom": "Telekomünikasyon",
+      "HealthAndPharma": "Sağlık / İlaç",
+      "Education": "Eğitim",
+      "ConsultingAndProfessionalServices": "Danışmanlık / Profesyonel hizmetler",
+      "MediaAndMarketing": "Medya / Reklam / Pazarlama",
+      "LogisticsAndTransport": "Lojistik / Ulaştırma",
+      "ConstructionAndRealEstate": "İnşaat / Gayrimenkul",
+      "PublicAndNonProfit": "Kamu / STK",
+      "Other": "Diğer"
+    },
+    "periods": {
+      "LastThreeMonths": "Son 3 ay",
+      "LastSixMonths": "Son 6 ay",
+      "LastTwelveMonths": "Son 12 ay",
+      "Longer": "Daha uzun bir dönem"
+    },
+    "seniorities": {
+      "StudentOrIntern": "Öğrenci / Stajyer",
+      "Junior": "Junior",
+      "Mid": "Orta seviye",
+      "Senior": "Senior",
+      "LeadOrAbove": "Lead / Yönetici"
+    },
+    "locations": {
+      "Istanbul": "İstanbul",
+      "Ankara": "Ankara",
+      "Izmir": "İzmir",
+      "TurkeyOther": "Türkiye — diğer",
+      "Abroad": "Yurt dışı",
+      "Remote": "Uzaktan"
+    },
+    "result": {
+      "yourRateLabel": "Senin geri dönüş oranın",
+      "yourRateDetail": "{replies} / {applications} başvuru",
+      "comparedTitle": "{sector} alanında {sampleSize} cevap var",
+      "median": "Medyan geri dönüş oranı",
+      "shareBelow": "Senden daha düşük orana sahip cevaplar: %{share}",
+      "aboveMedian": "Senin oranın medyanın üzerinde.",
+      "belowMedian": "Senin oranın medyanın altında.",
+      "atMedian": "Senin oranın tam medyanda.",
+      "withheldTitle": "Kıyas için henüz erken",
+      "withheldBody": "{sector} alanında şu ana kadar {sampleSize} cevap var; bir medyan göstermek için {minimum} gerekiyor. Eşiğin altında medyan yayınlamak, birkaç kişinin cevabını “sektör normali” diye sunmak olurdu.",
+      "withheldRemaining": "Cevabın kaydedildi. Eşiğe {remaining} cevap kaldı.",
+      "saved": "Cevabın bu sayıya dahil edildi.",
+      "overallTitle": "{sector} alanında henüz {sampleSize} cevap var — medyan için {minimum} gerekiyor.",
+      "overallMedianLabel": "Tüm alanlar geneli",
+      "overallNote": "{count} cevaba göre · alanına özel değil"
+    },
+    "method": {
+      "title": "Bu sayı nereden geliyor?",
+      "source": "Tamamı bu formu dolduran insanların kendi beyanı. Ürünün topladığı başvuru verisiyle karıştırılmıyor — biri beyan, diğeri ölçüm; ikisini tek ortalamada toplamak sayıyı bozardı.",
+      "median": "Ortalama değil medyan kullanıyoruz. Cevaplar anonim olduğu için aynı kişi birden fazla kez cevaplayabilir ve kasten uç değer gönderilebilir; medyan bunlardan neredeyse etkilenmez, ortalama fazlasıyla etkilenir.",
+      "recency": "Kısa dönem seçen cevaplar düşük görünme eğilimindedir: yakın zamanda yapılan başvurular henüz cevaplanmaya vakit bulamamış olabilir.",
+      "privacy": "Hiçbir kimlik saklanmıyor — e-posta, IP adresi, çerez yok. Alanlar sabit listelerden seçiliyor, serbest metin alınmıyor.",
+      "threshold": "Bir alanın medyanı, o alanda en az {minimum} cevap olmadan gösterilmiyor."
+    },
+    "cta": {
+      "title": "Bunu her ay tahmin etmek zorunda kalma.",
+      "body": "Başvurularını e-kariyerim'e aktar; geri dönüş oranın, medyan yanıt süren ve hangi başvurunun sessizleştiği kendiliğinden çıksın.",
+      "button": "Ücretsiz Başla"
+    },
+    "errors": {
+      "repliesExceed": "Dönüş sayısı başvuru sayısından büyük olamaz.",
+      "required": "Bu alan gerekli.",
+      "tooMany": "Çok fazla deneme yaptınız. Bir süre sonra tekrar deneyin.",
+      "generic": "Cevabın kaydedilemedi. Lütfen tekrar deneyin."
+    }
   }
 }
