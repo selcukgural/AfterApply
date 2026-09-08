@@ -4341,9 +4341,19 @@ yolu yok (React aksi hâlde tırnakları kaçırır ve JSON parse edilmez). `ser
 ve `&` karakterlerini kaçırıyor: bugün node'lara giren her şey kendi çeviri metnimiz, ama bir gün
 oraya bir şirket adı ya da ilan başlığı girerse `</script>` ile eleman erken kapatılabilirdi.
 
-**Ölçüm tarafı hâlâ eksik ve kod ile çözülemez:** Google Search Console doğrulaması yapılmamış,
-sitemap hiç gönderilmemiş, `site:ekariyerim.com` sonuç döndürmüyor — site muhtemelen henüz dizine
-girmemiş. Bing Webmaster Tools da yok. İkisi de ücretsiz ve kullanıcının yapması gereken adımlar.
+**Ölçüm tarafı hâlâ eksik ve kod ile çözülemez:** sitemap hiç gönderilmemiş,
+`site:ekariyerim.com` sonuç döndürmüyor — site muhtemelen henüz dizine girmemiş. Bing Webmaster
+Tools da yok.
+
+**Düzeltme (aynı gün, deploy sonrası):** "Search Console doğrulaması yapılmamış" dendi, yanlıştı.
+Root'ta zaten `google-site-verification=oPwgQ...` TXT kaydı duruyor ve Search Console'da
+`ekariyerim.com` mülkü mevcut — Sprint 13'te Cloud Run custom domain mapping'i kurulurken
+`gcloud domains verify` (DEPLOYMENT.md §"Custom domain") kullanıcıyı Search Console doğrulama
+akışından geçirmiş. Yani doğrulama iki hafta önce, farkında olmadan yapılmış.
+
+**Bu TXT kaydı silinmemeli:** `ekariyerim.com` ve `api.ekariyerim.com` domain mapping'lerinin
+sahiplik kontrolü ona bağlı. Search Console yeni bir doğrulama jetonu isterse mevcut kaydın
+üzerine yazılmaz, ek bir TXT satırı olarak eklenir.
 
 Testler: `web/src/lib/seo/routes.test.ts` (12) ve `jsonLd.test.ts` (7) — locale ön eki, x-default,
 lastmod'un yokluğu, sitemap ile robots'un çelişmemesi, `</script>` kaçışı. Eklentiye dokunulmadı.
@@ -4474,7 +4484,15 @@ Ayrıca başlık/açıklama uzunlukları sınırlandı (başlık ≤ 60, açıkl
 önce mevcut değerler ölçüldü, **160'ı aşan beş açıklama kısaltıldı**, sonra kural kondu.
 
 Doğrulama: 16 sayfa + sayfalardaki 28 iç bağlantı tek tek çekildi, hepsi 200. Sitemap 44 → 50 URL,
-toplam test 183 → 190.
+toplam test 183 → 190. PR #21 merge edildikten sonra aynı doğrulama **production'da** tekrarlandı:
+16 rehber sayfası + 28 bağlantı + iki `.xlsx` (doğru MIME tipiyle) hepsi 200, robots.txt'te 18
+locale ön ekli disallow, sitemap 50 URL ve `<lastmod>` yok.
+
+**Açık kalan, ayrı bir iş:** `www.ekariyerim.com` Cloud Run'da ikinci bir domain mapping olarak
+sitenin tamamını servis ediyor — aynı içerik iki host'ta. Canonical apex'i gösterdiği için Google
+büyük olasılıkla birleştirir, ama temizi apex'e 301. Cloudflare redirect rule ile çözülemez:
+`www` kaydı proxy'siz (doğrudan `ghs.googlehosted.com`), yani Cloudflare araya giremiyor. Çözüm
+`src/proxy.ts`'te host kontrolü olmalı.
 
 **Uyarı — tekrar tuzağa düşülmesin:** `next build` sonrası eski `standalone/server.js` süreci
 hayatta kalırsa yeni sunucu porta bağlanamıyor ve **eski build cevap veriyor**. Bu doğrulama
