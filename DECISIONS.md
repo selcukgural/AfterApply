@@ -4488,11 +4488,40 @@ toplam test 183 → 190. PR #21 merge edildikten sonra aynı doğrulama **produc
 16 rehber sayfası + 28 bağlantı + iki `.xlsx` (doğru MIME tipiyle) hepsi 200, robots.txt'te 18
 locale ön ekli disallow, sitemap 50 URL ve `<lastmod>` yok.
 
-**Açık kalan, ayrı bir iş:** `www.ekariyerim.com` Cloud Run'da ikinci bir domain mapping olarak
-sitenin tamamını servis ediyor — aynı içerik iki host'ta. Canonical apex'i gösterdiği için Google
-büyük olasılıkla birleştirir, ama temizi apex'e 301. Cloudflare redirect rule ile çözülemez:
-`www` kaydı proxy'siz (doğrudan `ghs.googlehosted.com`), yani Cloudflare araya giremiyor. Çözüm
-`src/proxy.ts`'te host kontrolü olmalı.
+### `www` apex'e 301'lendi (2026-09-08, aynı gün)
+
+`www.ekariyerim.com` Cloud Run'da ikinci bir domain mapping olarak sitenin **tamamını** servis
+ediyordu — aynı içerik iki host'ta. Canonical apex'i gösteriyordu, yani Google eninde sonunda
+birleştirirdi, ama duplikasyon fiilen erişilebilir kalıyordu: sitemap yalnızca apex URL'leri
+listelediği hâlde www host'undan gönderilip taranabildi (Search Console'a iki kez sitemap
+gönderilmesine yol açtı), ve www'ye düşen ziyaretçi orada kalıyordu.
+
+**Cloudflare'den çözülemiyor.** `www` kaydı bilinçli olarak proxy'siz — Cloud Run'ın TLS'i
+sonlandırabilmesi için doğrudan `ghs.googlehosted.com`'a CNAME. Yani Cloudflare istek yolunda
+değil, redirect rule'ları bu isteği hiç görmüyor. Çözüm uygulama katmanında olmak zorundaydı.
+
+`src/lib/http/canonicalHost.ts` (saf mantık, test edilebilir) + `src/proxy.ts` (ince bağlantı).
+Üç detay kasıtlı:
+
+- **Host header'ından okunuyor**, parse edilmiş istek URL'inden değil: Cloud Run frontend'inin
+  arkasında URL dahili bir host taşıyabiliyor, header ise ziyaretçinin gerçekten yazdığı şey.
+- **301, 307 değil.** Bu sitenin adreslemesiyle ilgili kalıcı bir olgu; geçici yönlendirme iki
+  host'u da dizinde bırakırdı — düzeltilmek istenen şey tam olarak bu.
+- **Matcher genişletilmedi, iki dosya adıyla eklendi:** `/sitemap.xml` ve `/robots.txt`. İlk
+  desendeki "nokta içereni dışla" kuralını gevşetmek proxy'yi her görselin ve fontun önüne
+  koyardı, karşılığında hiçbir şey kazandırmadan. Bu iki dosya `isFileRequest` ile locale
+  middleware'ine uğramadan geçiyor — uğrasaydı `/sitemap.xml` `/tr/sitemap.xml`'e yeniden
+  yazılırdı ve Google, `robots.txt`'in duyurduğu URL'den 404 alırdı.
+
+Doğrulama, üretim build'i üzerinde Host header'ı değiştirilerek: www için 6 yolun altısı da 301
+(query string korunuyor, sitemap ve robots dahil), apex için altısı da 200 (statik dosyalar ve
+`.xlsx` dahil), sitemap hâlâ 50 URL. Testler: `canonicalHost.test.ts` (10) — apex'in asla
+yönlendirilmemesi (döngü olurdu), `wwwx.`/`notwww.` gibi substring'lerin eşleşmemesi, Host
+header'ının büyük harfli veya portlu gelebilmesi, header'ın hiç olmaması. Toplam 190 → 200.
+
+**Zamanlama:** Search Console'da mülkün henüz veri toplamamış olduğu gün yapıldı. Google www
+sayfalarını indeksledikten sonra 301 koymak da işe yarar ama "indekslenmiş URL'leri taşıma"
+sürecine döner ve haftalar alır; boş sayfayken yapmak bunu tamamen atlatıyor.
 
 **Uyarı — tekrar tuzağa düşülmesin:** `next build` sonrası eski `standalone/server.js` süreci
 hayatta kalırsa yeni sunucu porta bağlanamıyor ve **eski build cevap veriyor**. Bu doğrulama
