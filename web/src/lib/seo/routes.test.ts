@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import en from "../../../messages/en.json";
+import tr from "../../../messages/tr.json";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
 import { routing } from "@/i18n/routing";
@@ -200,5 +202,22 @@ describe("visit counter allowlist", () => {
   it("counts no OAuth callback, where the URL carries an authorization code", () => {
     expect(isCountable("/auth/google/callback")).toBe(false);
     expect(isCountable("/auth/linkedin/callback")).toBe(false);
+  });
+});
+
+// The landing page deliberately says two different things in two places: the <title> carries the
+// term people type into a search engine, the page's own copy carries the promise. The 2026-09-08
+// rewrite changed the second and kept the first, and that is exactly the pairing a later copy pass
+// would collapse by "cleaning up" the title — undoing the SEO work of the day before, silently,
+// because nothing renders a title where a reviewer would notice it missing.
+describe("landing page title", () => {
+  it("still carries the term people actually search for", () => {
+    expect(tr.metadata.pages.home.title.toLocaleLowerCase("tr")).toContain("başvuru takip");
+    expect(en.metadata.pages.home.title.toLowerCase()).toContain("application tracker");
+  });
+
+  it("keeps that term in the description too, alongside the promise", () => {
+    expect(tr.metadata.pages.home.description.toLocaleLowerCase("tr")).toContain("başvuru takib");
+    expect(en.metadata.pages.home.description.toLowerCase()).toContain("application tracking");
   });
 });

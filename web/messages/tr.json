@@ -1,11 +1,11 @@
 {
   "metadata": {
     "title": "e-kariyerim",
-    "description": "İş başvurularını tek yerde takip et.",
+    "description": "Başvurularının kaçı cevaplandı, kaçı sessizce kayboldu — kendi sayılarını gör.",
     "pages": {
       "home": {
         "title": "İş Başvuru Takip Uygulaması",
-        "description": "İş başvurularını tek yerden takip et: hangi aşamada, ne kadardır bekliyor, hangisi geri dönüş aldı. LinkedIn geçmişini içe aktar, tek tıkla yeni başvuru kaydet."
+        "description": "Başvurularının kaçı cevaplandı, kaçı sessizce kayboldu, ilk dönüş kaç gün sürüyor. İş başvuru takibi: LinkedIn geçmişini içe aktar ya da tek tıkla kaydet."
       },
       "guide": {
         "title": "Rehber",
@@ -13,11 +13,11 @@
       },
       "login": {
         "title": "Giriş Yap",
-        "description": "Başvurularınızın hangi aşamada olduğunu görmek için e-kariyerim'e giriş yapın."
+        "description": "Başvurularınızın kaçının cevaplandığını, kaçının beklediğini görmek için e-kariyerim'e giriş yapın."
       },
       "register": {
         "title": "Kayıt Ol",
-        "description": "Ücretsiz bir e-kariyerim hesabı oluşturun, başvurularınızı tek yerden takip edin."
+        "description": "Ücretsiz bir e-kariyerim hesabı oluşturun, başvurularınızın kaçının cevaplandığını görün."
       },
       "forgotPassword": {
         "title": "Şifremi Unuttum",
@@ -99,9 +99,9 @@
       "help": "Yardım"
     },
     "hero": {
-      "eyebrow": "İş başvuru takibi",
+      "eyebrow": "Kaç başvuru, kaç cevap",
       "title": "Başvurdun. Peki sonra ne oldu?",
-      "subtitle": "İş başvurularını tek yerde takip et. Sürecin hangi aşamada olduğunu, ne kadar süredir beklediğini ve hangi başvuruların geri dönüş aldığını kolayca gör.",
+      "subtitle": "Başvurularının kaçı cevaplandı, kaçı sessizce kayboldu, ilk dönüş ortalama kaç gün sürdü. LinkedIn geçmişini içe aktar ya da eklentiyi kur — toplamayı e-kariyerim yapsın.",
       "ctaPrimary": "Ücretsiz Başla",
       "ctaSecondary": "Nasıl çalışıyor?"
     },
@@ -120,14 +120,14 @@
     },
     "problem": {
       "eyebrow": "Tanıdık geliyor mu?",
-      "title": "İş başvurusu yapmak kolay. Takip etmek değil.",
+      "title": "Başvuru geçmişin dört ayrı yere dağılmış. Dördü de unutuyor.",
       "body1": "Birkaç ilana başvurursun. Sonra birkaç tane daha. Birkaç hafta sonra onlarca başvuru olur.",
-      "body2": "Hangi şirkete ne zaman başvurduğunu, kimden cevap geldiğini, hangi süreçte olduğunu ve hangilerinin sessizce kaybolduğunu hatırlamak zorlaşır.",
+      "body2": "LinkedIn eski başvurularını bir yere kadar gösterir, kariyer.net'inki zamanla kaybolur, şirketlerin kariyer sayfaları hiç kayıt tutmaz, gelen kutusu da sen aramadıkça bir şey söylemez.",
       "sourceLinkedin": "LinkedIn",
       "sourceJobSites": "Kariyer siteleri",
       "sourceCompanyPages": "Şirket kariyer sayfaları",
       "sourceOther": "Diğer kaynaklar",
-      "outcome": "Onlarca başvuru. Farklı durumlar. Farklı tarihler.",
+      "outcome": "Onlarca başvuru. Dört ayrı yer. Ortada tek bir toplam yok.",
       "question": "Bu başvuru ne olmuştu?"
     },
     "afterApply": {
@@ -143,7 +143,7 @@
       "silentApplied": "Başvuruldu",
       "silentWaiting": "Bekleniyor",
       "silentQuestion": "Ne oldu?",
-      "note": "Her başvuru aynı süreci izlemez — e-kariyerim, hangi aşamada olduğunu ve ne kadar süredir beklediğini görünür kılar."
+      "note": "Her başvuru aynı süreci izlemez — ve çoğu hiç bitmez. e-kariyerim sessizliği de bir sonuç olarak sayar: hangisi ne kadardır beklemede, hangisi artık dönmeyecek."
     },
     "features": {
       "eyebrow": "Neler yapabilirsin?",
@@ -177,9 +177,9 @@
       "invalid": "Geçersiz kayıt"
     },
     "analytics": {
-      "eyebrow": "Kişisel analitik",
-      "title": "Başvurularından neler öğrenebilirsin?",
-      "subtitle": "Yanıt oranını, mülakat oranını ve yanıt sürelerini kişisel analitik panelinde gör."
+      "eyebrow": "Senin gerçek oranların",
+      "title": "Kaçından cevap geldi? Kaçı hiç dönmedi?",
+      "subtitle": "Yanıt oranı, mülakat oranı, ghosting oranı ve ilk dönüşün kaç gün sürdüğü — tahmin değil, kendi verinden."
     },
     "vision": {
       "eyebrow": "Vizyon",
@@ -233,8 +233,8 @@
       "link": "Gizlilik politikasını incele"
     },
     "finalCta": {
-      "title": "Başvurularını kaybetme. Ne olduğunu bil.",
-      "body": "İş arama sürecini daha düzenli, ölçülebilir ve şeffaf hale getir.",
+      "title": "Kaç başvuru yaptığını ve kaçının cevaplandığını bil.",
+      "body": "Ücretsiz. LinkedIn geçmişini içe aktarınca ilk sayıların birkaç dakikada çıkar.",
       "button": "Ücretsiz Başla",
       "secondary": "Nasıl çalışıyor?"
     },

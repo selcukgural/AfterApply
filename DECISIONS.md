@@ -4622,3 +4622,55 @@ Unit 453, web 214, integration 256 — hepsi geçiyor. İkisi drift bekçisi:
   çağırabilecek dosyaları sabitliyor (korumalı bir sayfaya takılamaz), sayacın `apiFetch`
   kullanmadığını kontrol ediyor, ve iki gizlilik metninde de "Ziyaret sayacı" bölümünün
   bulunduğunu doğruluyor.
+
+---
+
+## Vaadi değiştirmek: V1 ve V0 aynı sürümde (2026-09-08)
+
+Landing sayfası "İş başvuru takibi" diyordu — yani angaryayı satıyordu. Yeni vaat, ürünün zaten
+verdiği şey: *başvurularının kaçı cevaplandı, kaçı sessizce kayboldu, ilk dönüş kaç gün sürdü.*
+Kod değişmedi, cümle değişti. Gerekçe: `DEVELOPMENT_PLAN.md` "Vaat, ölçüm ve erişim — V0-V5" ve
+https://claude.ai/code/artifact/89ac552a-03eb-41f3-b601-9697bbdbf76b
+
+**Kabul edilen bedel: "öncesi" ölçümü yok.** Doğru sıra V0'ı çıkarıp birkaç gün veri toplamak,
+sonra V1'i çıkarmaktı. Deploy süresi nedeniyle ikisi birlikte çıkıyor. Sonuç: ilk trafik sayıları
+yalnızca **yeni** metnin sayılarıdır; eski metinle kıyaslanamaz ve ileride öyle okunmamalıdır.
+Karar bilinçli, kayıt bunun için.
+
+### Değişmeyen üç şey, sebepleriyle
+
+- **`hero.title`** — "Başvurdun. Peki sonra ne oldu?" zaten yeni vaadin kendisiydi. Angaryayı satan
+  eyebrow ve alt başlıktı.
+- **`<title>`** — "İş Başvuru Takip Uygulaması" / "Job Application Tracker" bir gün önce SEO için
+  özellikle konmuştu (bkz. `[locale]/page.tsx`'teki yorum). Başlık birinin **arattığı** şeyi
+  karşılar, hero ise "neden umursayayım"ı; kimse "başvurularımın kaçı cevaplandı" diye aramıyor,
+  kategoriyi arıyor. İkisinin buluştuğu yer açıklama: sonuçla açılıyor, terimi hâlâ içeriyor.
+  `routes.test.ts` terimi sabitliyor — bir metin turunun "başlığı da temizleyelim" deyip önceki
+  günün işini sessizce geri almasını engelliyor.
+- **`features` bölümü** — özellik listesi olarak dürüst ve doğru; vaat değişikliği listeyi
+  geçersiz kılmıyor, yalnızca sayfadaki yerini değiştiriyor.
+
+### Bilgi mimarisi de vaadin parçası
+
+Sayfa hero → problem → neden → **özellik listesi** → içe aktarma → sayılar şeklindeydi: ürünün
+asıl olduğu şey altıncı bölümdeydi, ilk kez gelen birinin okuduğu yerin çok altında. Yeni sıra
+neden'in hemen ardına sayıları, onun ardına "kendini nasıl dolduruyor"u koyuyor; özellik listesi
+en sona. `#how-it-works` ve `#features` id'leri yerinde kaldı.
+
+**Sıralama bir kusur açtı:** `AnalyticsSection` beyaz ve `border-t`'siz idi, çünkü eskiden gri
+`LinkedInImportSection`'ı takip ediyordu — sayfanın deseni bölümleri ya arka plan değişimiyle ya
+çizgiyle ayırıyor, hiçbir zaman hiçbir şeyle değil. Yeni yerinde beyaz `AfterApplySection`'ın
+altına düşünce iki bölüm birleşiyordu. `border-t` eklendi, tarayıcıda doğrulandı. Metni
+değiştirip sayfaya bakmasaydık bu fark edilmezdi.
+
+### Problem bölümü artık parçalanmayı adlandırıyor
+
+"İş başvurusu yapmak kolay. Takip etmek değil." → **"Başvuru geçmişin dört ayrı yere dağılmış.
+Dördü de unutuyor."** Bölümdeki dört kaynak görseli (LinkedIn / kariyer siteleri / şirket kariyer
+sayfaları / diğer) zaten oradaydı; metin onu söylemiyordu. Gövde uydurma değil: kariyer.net'in
+eski başvuruları göstermemesi üzerine rehber yazısı ve Şikayetvar kaydı zaten var.
+
+`analytics.title` bilerek "piyasa nasıl" demiyor — o soruyu henüz cevaplayamıyoruz (V2/K1).
+"Kaçından cevap geldi? Kaçı hiç dönmedi?" bugün dürüst olan en güçlü hâli.
+
+Testler: web 216 (200'den), unit 453, integration 256 — hepsi geçiyor.

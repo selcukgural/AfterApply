@@ -23,6 +23,14 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
  * carries neither the product name nor the thing people search for, so a search for "e-kariyerim"
  * had nothing to match and a search for "iş başvuru takip" had no signal at all. The title now says
  * what the product is, and the OG image still shows the hero line when the link is shared.
+ *
+ * That split survived the 2026-09-08 promise rewrite on purpose. The page's own copy stopped
+ * selling "track your applications in one place" and now leads with what you get out of it — but
+ * the <title> still carries "İş Başvuru Takip Uygulaması" / "Job Application Tracker", because a
+ * title answers a query someone typed and the hero answers "why should I care". Nobody searches
+ * for "how many of my applications got a reply"; they search for the category. The description is
+ * where the two meet: it opens with the outcome and still contains the term. A test in
+ * routes.test.ts pins the term so a future copy pass cannot quietly delete it.
  */
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
@@ -44,9 +52,19 @@ export default async function LandingPage() {
         <HeroSection />
         <ProblemSection />
         <AfterApplySection />
-        <FeaturesSection />
-        <LinkedInImportSection />
+        {/*
+          Order carries the promise (2026-09-08). The page used to run
+          hero → problem → why → *feature list* → import → numbers, which put the thing the product
+          is actually for six sections down, well below anywhere a first-time visitor reads. The
+          numbers now come straight after the "why", and the import right behind them, because the
+          two together are the whole pitch: here is what you get, and here is how it fills itself
+          without you typing anything. The feature list is what you read *after* you want it.
+          #how-it-works still resolves to AfterApplySection and #features to FeaturesSection, so the
+          navbar and the hero's secondary CTA are unaffected.
+        */}
         <AnalyticsSection />
+        <LinkedInImportSection />
+        <FeaturesSection />
         <VisionSection />
         <MissionSection />
         <RoadmapSection />

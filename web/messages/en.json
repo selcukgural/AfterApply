@@ -1,11 +1,11 @@
 {
   "metadata": {
     "title": "e-kariyerim",
-    "description": "Track your job applications in one place.",
+    "description": "How many of your applications got a reply, and how many went quiet — see your own numbers.",
     "pages": {
       "home": {
         "title": "Job Application Tracker",
-        "description": "Track your job applications in one place: what stage each one is at, how long it has been waiting, which ones got a reply. Import your LinkedIn history in one go."
+        "description": "How many of your applications got a reply, how many went quiet, how long a first response takes. Job application tracking: import your LinkedIn history, or log one with a click."
       },
       "guide": {
         "title": "Guide",
@@ -13,11 +13,11 @@
       },
       "login": {
         "title": "Log In",
-        "description": "Log in to e-kariyerim to see where each of your job applications stands."
+        "description": "Log in to e-kariyerim to see how many of your applications got a reply, and how many are still waiting."
       },
       "register": {
         "title": "Sign Up",
-        "description": "Create a free e-kariyerim account and track your job applications in one place."
+        "description": "Create a free e-kariyerim account and see how many of your applications ever got a reply."
       },
       "forgotPassword": {
         "title": "Forgot Your Password",
@@ -99,9 +99,9 @@
       "help": "Help"
     },
     "hero": {
-      "eyebrow": "Job application tracking",
+      "eyebrow": "How many sent, how many replied",
       "title": "You applied. So what happened next?",
-      "subtitle": "Track your job applications in one place. See what stage each one is at, how long you've been waiting, and which applications got a response.",
+      "subtitle": "How many of your applications got a reply, how many went quiet, and how long a first response actually took. Import your LinkedIn history or install the extension — let e-kariyerim do the collecting.",
       "ctaPrimary": "Get Started Free",
       "ctaSecondary": "See how it works"
     },
@@ -120,14 +120,14 @@
     },
     "problem": {
       "eyebrow": "Sound familiar?",
-      "title": "Applying is easy. Keeping track isn't.",
+      "title": "Your application history is spread across four places. All four forget.",
       "body1": "You apply to a few listings. Then a few more. A few weeks later, it's dozens of applications.",
-      "body2": "It gets hard to remember which company you applied to, when, who responded, what stage you're at, and which ones quietly disappeared.",
+      "body2": "LinkedIn shows your old applications only so far back, kariyer.net's disappear over time, company career pages keep no record at all, and your inbox says nothing unless you go searching.",
       "sourceLinkedin": "LinkedIn",
       "sourceJobSites": "Job boards",
       "sourceCompanyPages": "Company career pages",
       "sourceOther": "Other sources",
-      "outcome": "Dozens of applications. Different statuses. Different dates.",
+      "outcome": "Dozens of applications. Four separate places. No single total anywhere.",
       "question": "What happened to this one again?"
     },
     "afterApply": {
@@ -143,7 +143,7 @@
       "silentApplied": "Applied",
       "silentWaiting": "Waiting",
       "silentQuestion": "What happened?",
-      "note": "Not every application follows the same path — e-kariyerim makes it visible what stage you're at, and how long you've been waiting."
+      "note": "Not every application follows the same path — and most never end at all. e-kariyerim counts silence as an outcome too: which one has been waiting how long, and which one is not coming back."
     },
     "features": {
       "eyebrow": "What can you do?",
@@ -177,9 +177,9 @@
       "invalid": "Invalid records"
     },
     "analytics": {
-      "eyebrow": "Personal analytics",
-      "title": "What can you learn from your applications?",
-      "subtitle": "See your response rate, interview rate, and response times in your personal analytics dashboard."
+      "eyebrow": "Your actual numbers",
+      "title": "How many replied? How many never did?",
+      "subtitle": "Response rate, interview rate, ghosting rate, and how long a first reply takes — not a guess, your own data."
     },
     "vision": {
       "eyebrow": "Vision",
@@ -233,8 +233,8 @@
       "link": "Read the privacy policy"
     },
     "finalCta": {
-      "title": "Don't lose track of your applications. Know what happened.",
-      "body": "Make your job search more organized, measurable, and transparent.",
+      "title": "Know how many you sent — and how many ever came back.",
+      "body": "Free. Import your LinkedIn history and your first numbers are there in minutes.",
       "button": "Get Started Free",
       "secondary": "See how it works"
     },

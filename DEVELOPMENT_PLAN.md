@@ -691,13 +691,48 @@ kullanıcı beklemek zorunda değil — sorarak da üretilebilir. Sıra
 > `evil.example/'); DROP TABLE...` referrer'ında host geçerli olduğu için **saklanıyor**; atılan şey
 > payload'ı taşıyan *yol*. Test artık bunu ölçüyor.
 
-### Sıra 2 — V1: Vaadi değiştir
+### Sıra 2 — V1: Vaadi değiştir ✅ (2026-09-08)
 
 - **Yapılacak:** `web/messages/{tr,en}.json` içinde `landing.hero.*`,
   `landing.problem.*`, `landing.afterApply.*`; meta/OG etiketleri; yardım
   metinleriyle tutarlılık.
 - **Kilidi:** Bizde.
 - **Kural:** V0'dan sonra. A/B değil — trafik bunu taşımaz — öncesi/sonrası ölçüm.
+
+> **Yapıldı (2026-09-08), V0 ile aynı sürümde.** Deploy süresi nedeniyle ikisi birlikte çıkıyor;
+> **bunun bedeli "öncesi" ölçümünün kaybı.** İlk trafik sayıları yalnızca yeni metnin sayılarıdır
+> — eski metinle kıyaslanamaz, ve ileride öyle okunmamalı.
+>
+> Değişen 15 dize (tr+en): `landing.hero.eyebrow`/`subtitle`, `landing.problem.title`/`body2`/
+> `outcome`, `landing.afterApply.note`, `landing.analytics.*`, `landing.finalCta.title`/`body`,
+> `metadata.description` ve `metadata.pages.{home,register,login}.description`.
+>
+> - **`hero.title` değişmedi.** "Başvurdun. Peki sonra ne oldu?" zaten yeni vaadin ta kendisiydi;
+>   angaryayı satan eyebrow ("İş başvuru takibi") ve alt başlıktı ("tek yerde takip et").
+> - **Yeni alt başlık pasif toplamayı öne çıkarıyor** ("içe aktar ya da eklentiyi kur — toplamayı
+>   e-kariyerim yapsın"), çünkü Excel'e karşı gerçek fark arayüz değil, yazmak zorunda olmamak.
+> - **Problem bölümü artık parçalanmayı adlandırıyor:** "Başvuru geçmişin dört ayrı yere dağılmış.
+>   Dördü de unutuyor." Bölümdeki dört kaynak görseli zaten oradaydı, metin onu söylemiyordu.
+>   Gövde metni uydurma değil — kariyer.net'in eski başvuruları göstermemesi üzerine rehber
+>   yazısı zaten var.
+> - **`analytics.title` "piyasa nasıl" demiyor,** çünkü henüz cevaplayamıyoruz (o V2/K1). "Kaçından
+>   cevap geldi? Kaçı hiç dönmedi?" bugün dürüst olan en güçlü hâli.
+>
+> **Bilgi mimarisi:** `AnalyticsSection` ve `LinkedInImportSection` özellik listesinin **üstüne**
+> alındı. Sayfa hero → problem → neden → *özellik listesi* → içe aktarma → sayılar şeklindeydi;
+> yani ürünün asıl olduğu şey altıncı bölümdeydi. Yeni sıra: neden'in hemen ardından sayılar, onun
+> ardından "kendini nasıl dolduruyor", özellik listesi en sonda. `#how-it-works` (AfterApply) ve
+> `#features` (Features) id'leri yerinde kaldı, navbar ve hero'nun ikincil CTA'sı etkilenmedi.
+>
+> **Sıralama bir kusur açtı ve kapatıldı:** `AnalyticsSection` beyaz ve `border-t`'siz idi, çünkü
+> eskiden gri `LinkedInImportSection`'ı takip ediyordu; yeni yerinde beyaz `AfterApplySection`'ın
+> altına düşünce iki bölüm ayırıcısız birleşiyordu. `border-t` eklendi. Tarayıcıda doğrulandı.
+>
+> **`<title>` bilerek değişmedi.** "İş Başvuru Takip Uygulaması" / "Job Application Tracker" bir
+> gün önce SEO için özellikle konmuştu: başlık birinin arattığı şeyi karşılar, hero ise "neden
+> umursayayım"ı. Kimse "başvurularımın kaçı cevaplandı" diye aramıyor, kategoriyi arıyor. Açıklama
+> ikisinin buluştuğu yer — sonuçla açılıyor, terimi hâlâ içeriyor. `routes.test.ts` terimi
+> sabitliyor ki ileriki bir metin turu sessizce silmesin.
 
 ### Sıra 3 — V2: Girişsiz kıyas aracı ("Geri dönüş oranın normal mi?")
 
