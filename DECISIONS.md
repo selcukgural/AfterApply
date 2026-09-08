@@ -4541,3 +4541,84 @@ sırasında üç kez yanlış sonuca yol açtı (tablo düzeltmesi "uygulanmamı
 - §30 sıralaması GDPR'ı KVKK'dan önce listeliyor; Türkiye-first
   pozisyonlamayla tutarlı olması için KVKK önce değerlendirilebilir (hukuki
   görüş gerektirir, bu doküman hukuki tavsiye değildir).
+
+---
+
+## Ziyaret sayacı: birinci taraf, çerezsiz, kimliksiz (2026-09-08)
+
+Sitenin hiçbir web analitiği yoktu — `web/package.json`'da Sentry dışında hiçbir şey. K5 kayıtlı
+kullanıcıyı ölçüyordu (aktivasyon, WAU, D7/D30/D90) ama **ziyaretçi → kayıt hunisi tamamen
+görünmezdi**, yani "kullanıcıyı nasıl çekeriz" sorusunun her cevabı tahmindi. V0 bunu kapatıyor
+(bkz. `DEVELOPMENT_PLAN.md`, "Vaat, ölçüm ve erişim — V0-V5").
+
+**Üçüncü taraf araç değerlendirildi ve elendi — sebebi teknik değil, yayınlanmış bir taahhüt.**
+Çerez Politikası canlı ve *"Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik
+aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız"* diyor. Aynı sayfa, ileride analitik
+eklenirse **önce sayfanın güncelleneceğini ve varsayılanı kapalı bir onay ekranı konulacağını**
+taahhüt ediyor. GA4/Plausible/PostHog üçünü birden getirirdi: taahhüt ihlali, consent banner
+maliyeti, ve tam da gizlilik üzerine kurulu konumlandırmaya hasar. CSP de zaten yalnızca kendi
+origin, kendi API ve Sentry'ye izin veriyor.
+
+Seçilen şey: **kendi API'mize giden, çerez yazmayan, hiçbir kimlik tutmayan sayaç.** Saklanan satır
+`(gün, olay, sayfa, dil, referans eden host) → sayı`. Ziyaretçi numarası, oturum numarası, IP ve
+user-agent **yok**.
+
+**Bunun bedeli bilinçli olarak kabul edildi:** huni artık **iki bağımsız toplamın oranı**
+("40 ana sayfa görüntüleme, 1 kayıt"), izlenen bir yolculuk değil. Aynı kişinin iki ziyareti ile iki
+kişinin birer ziyareti aynı sayıdır. Bu trafikte sorulan tek soruyu — gelen var mı, devam eden var mı
+— cevaplamaya yetiyor, ve sormadan toplanabilecek olanın dürüst sınırı. Kesinlik istenseydi bir
+ziyaretçi kimliği gerekirdi; o da tam olarak yapmayacağımızı söylediğimiz şey.
+
+Çerez yazılmadığı ve kimlik tutulmadığı için yukarıdaki onay ekranı taahhüdü **tetiklenmiyor** — o
+taahhüt isteğe bağlı çerezler için. Yine de hem Çerez hem Gizlilik sayfasına "Ziyaret sayacı"
+bölümü eklendi (tr+en), ikisinin de "son güncelleme" tarihi 8 Eylül'e çekildi. Tarayıcıda
+"Do Not Track" açıksa hiçbir sayım yapılmıyor: teknik olarak gerekmiyor, ama "sizi izlemiyoruz"
+diyen ürün ince yazıyı tartışan taraf olmamalı.
+
+### Üç kural nerede duruyor
+
+1. **Query string her şeyden önce kesiliyor** — hem tarayıcıda (`buildSiteTrafficPayload`) hem
+   sunucuda (`SiteTrafficNormalizer`). Reset token'ı, OAuth code'u ve arama terimi orada yaşıyor;
+   parse edilmiyor, kesiliyor.
+2. **Yol allowlist'ten geçiyor, "temizlenmiyor".** Bilinen genel sayfa değilse — giriş yapılmış her
+   sayfa dahil — rapor düşürülüyor. Böylece bir başvuru id'si tabloya *ulaşamıyor*, ve satır sayısı
+   sayfa sayısıyla sınırlı kalıyor. OAuth callback yolları listede yok ve olmamalı.
+3. **Referrer host'a indirgeniyor.** Arama motorunun sorguyu, forumun başlık metnini koyduğu yer
+   referrer'ın yolu; o yol hiç yola çıkmıyor.
+
+Reddedilen rapor hata değil: endpoint her hâlükârda 204 dönüyor. Ayırt edilebilir bir cevap,
+allowlist'in haritasını çağırana verirdi.
+
+### İki uygulama detayı
+
+- **Yazma tek bir `ON CONFLICT` upsert'ü**, oku-değiştir-yaz değil. Aynı saniyede aynı sayfayı açan
+  herkes aynı satırda çakışıyor — bu tablonun istisnası değil normali; okuyup artırmak ya sayım
+  kaybederdi ya unique index'e çarpıp retry döngüsü isterdi.
+- **Sayaç `apiFetch`'ten geçmiyor.** `apiFetch` giriş yapmış ziyaretçinin Authorization başlığını
+  iliştirir ve 401'de yeniler; ikisi de bir sayfa görüntülemesini bir hesaba bağlardı. Bare `fetch`,
+  `credentials: "omit"`. Bunu bir test sabitliyor.
+
+### SQL enjeksiyonu — soruldu, iki katman var, ve test bir varsayımı düzeltti
+
+`RecordAsync` `ExecuteSqlInterpolatedAsync` kullanıyor; bu metodun `string` overload'ı **yok**,
+dolayısıyla önceden birleştirilmiş metin geçirmek derlenmiyor — delikler `DbParameter`'a çevriliyor.
+İkinci katman: değerlerin hepsi zaten allowlist'ten geçmiş (yol sabit liste ya da kebab-case slug,
+dil `tr`/`en`, host sınırlı karakter kümesi, olay bir enum'ın `ToString()`'i), yani tırnak taşıyan
+bir değer SQL'e ulaşamıyor.
+
+Bunu doğrulayan integration testi bir varsayımı düzeltti: `https://evil.example/'); DROP TABLE
+"Users"; --` referrer'ında **host geçerli olduğu için saklanıyor** (`evil.example`); atılan şey
+payload'ı taşıyan *yol*. İlk yazılan iddia "host boş kalır" idi ve yanlıştı. Test artık gerçek
+davranışı ölçüyor.
+
+### Test durumu
+
+Unit 453, web 214, integration 256 — hepsi geçiyor. İkisi drift bekçisi:
+
+- `routes.test.ts` C# allowlist'ini **kaynaktan okuyup** her genel sayfanın sayılabildiğini ve
+  hiçbir korumalı sayfanın sayılamadığını doğruluyor. Kapattığı sessiz hata: yeni bir sayfa eklenip
+  listeye yazılmazsa hiçbir yerde görünmez ve kimse fark etmez.
+- `browserStorage.test.ts` — zaten çerez politikasının bekçisiydi — artık `trackSiteTraffic`'i
+  çağırabilecek dosyaları sabitliyor (korumalı bir sayfaya takılamaz), sayacın `apiFetch`
+  kullanmadığını kontrol ediyor, ve iki gizlilik metninde de "Ziyaret sayacı" bölümünün
+  bulunduğunu doğruluyor.

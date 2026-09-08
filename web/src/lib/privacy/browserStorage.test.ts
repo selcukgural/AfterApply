@@ -136,3 +136,55 @@ describe("no tracking", () => {
     }
   });
 });
+
+// The visit counter (V0) is first-party and cookieless, which is why it does not trip any of the
+// checks above — and exactly why it needs its own. Nothing in the type system stops someone
+// mounting the reporter on a signed-in page, routing it through apiFetch (which would attach the
+// visitor's Authorization header), or adding a field to the payload. Each of those would quietly
+// turn "we count visits" into "we track people", against a published page that says otherwise.
+describe("visit counter", () => {
+  const TRACKER = "lib/analytics/siteTraffic.ts";
+
+  // Every file allowed to report a visit. All three are public-side; the reporter component is
+  // mounted in the (public) layout, which is what keeps signed-in pages out structurally rather
+  // than by a second copy of the API's route allowlist.
+  const CALLERS = [
+    "app/[locale]/(public)/register/page.tsx",
+    "components/analytics/SiteTrafficReporter.tsx",
+    "components/landing/CtaButtons.tsx",
+  ];
+
+  it("is reported from public pages only", () => {
+    const callers = filesMatching(/trackSiteTraffic\(/).filter((file) => file !== TRACKER);
+
+    expect(callers).toEqual([...CALLERS].sort());
+    for (const caller of callers) {
+      expect(caller, `${caller} is a signed-in page and must not report visits`).not.toContain("(protected)");
+    }
+  });
+
+  it("never sends the visitor's credentials", () => {
+    const tracker = sources.find((file) => file.relativePath === TRACKER);
+    expect(tracker, "the visit counter moved; this guard needs its new path").toBeDefined();
+
+    // apiFetch attaches the access token and refreshes it on 401 — either would tie a page view
+    // to an account. The counter must use a bare fetch that omits credentials. Matched as a call
+    // and as an import rather than as a word, because the file explains in prose why it does not
+    // use apiFetch, and that explanation is worth keeping.
+    expect(tracker!.content).not.toMatch(/\bapiFetch\s*[(<]/);
+    expect(tracker!.content).not.toMatch(/import\s*\{[^}]*\bapiFetch\b/);
+    expect(tracker!.content).toContain('credentials: "omit"');
+  });
+
+  it("describes itself on the cookie policy and the privacy policy, in both languages", () => {
+    for (const [locale, catalogue] of Object.entries({ tr, en })) {
+      expect(catalogue.cookies, `the ${locale} cookie policy does not mention the visit counter`)
+        .toHaveProperty("visitCounter");
+      expect(catalogue.privacy, `the ${locale} privacy policy does not mention the visit counter`)
+        .toHaveProperty("visitCounter");
+    }
+
+    const cookiePage = readFileSync(path.join(SRC, "app/[locale]/(public)/cookies/page.tsx"), "utf8");
+    expect(cookiePage, "the section exists in the catalogue but nothing renders it").toContain("visitCounter.title");
+  });
+});

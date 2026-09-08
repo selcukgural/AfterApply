@@ -597,3 +597,169 @@ değişikliği değil. Bkz. `CompanyIntelligenceOptions.WindowMonths` yorumu.
   hâlâ `0.4.0`'ın yayında olduğunu yazıyor.)
 - **Gmail OAuth entegrasyonu** — gizli değil, 2026-08-31'de koddan tamamen
   silindi (CASA değerlendirmesinin maliyeti kabul edilmedi).
+
+---
+
+## Vaat, ölçüm ve erişim — V0-V5 (2026-09-08)
+
+> **Bağlam:** K1-K6 envanteri "yazılmış ama kullanıcıya ulaşmayan"ı topluyordu.
+> Bu bölüm bir sonraki soruyu ele alıyor: **kullanıcı neden hiç gelmiyor.**
+> Çıkış noktası iki rakip iş modelinin (twiser.com, lattice.com) incelenmesi ve
+> ardından yapılan kod denetimi. Gerekçenin tamamı ve kaynak alıntıları
+> "Vaadi Değiştirmek" notunda:
+> https://claude.ai/code/artifact/89ac552a-03eb-41f3-b601-9697bbdbf76b
+
+**Sıralama ilkesi K1-K6'dan devralınıyor** — kilidi bizde olan iş önce — ve
+üstüne bir kural ekleniyor: **ölçemeden değiştirme.** Numara = yapılma sırası,
+V = kalıcı kimlik.
+
+### Kabul edilen teşhis
+
+Takip **ürün değil, veri toplama mekanizması.** Kimse "başvuru takip aracı"
+istemiyor; iş istiyor. Bunu iki bağımsız kaynak destekliyor: (a) aynı pazardaki
+Huntr ve Teal saf takipten CV/otomatik doldurmaya göç etti — bir pazarda herkes
+aynı yöne gidiyorsa o göç bir bilgi taşır; (b) bizim `landing.hero.eyebrow`
+değerimiz bugün hâlâ "İş başvuru takibi", yani angaryayı satıyoruz.
+
+Değişmesi gereken kod değil, cümle: *"Başvurularını tek yerde takip et"* →
+*"Başvuruların nereye gidiyor?"*. Yeni vaat bugün zaten dürüst — `AnalyticsService`
+yanıt oranını, ghosting oranını ve medyan yanıt süresini hesaplıyor.
+
+**Cold-start düzeltmesi:** Lattice'in yıllık sektör raporu ürün telemetrisi değil,
+**1.002 kişilik bir anket** (2 Nisan - 5 Haziran 2025). Yani toplu şeffaflık verisi
+kullanıcı beklemek zorunda değil — sorarak da üretilebilir. Sıra
+"kullanıcı → veri" değil, **"sayı → kullanıcı"**.
+
+### Sıra 1 — V0: Birinci taraf, çerezsiz ölçüm ✅ (2026-09-08)
+
+- **Ne yok:** `web/package.json` içinde Sentry dışında hiçbir analitik yok. K5
+  kayıtlı kullanıcıyı ölçüyor (aktivasyon, WAU, D7/D30/D90) ama **ziyaretçi →
+  kayıt hunisi tamamen görünmez.**
+- **Neden üçüncü taraf araç takılamaz — bu madde sıradan bir iş değil:**
+  Çerez Politikası yayında ve *"Google Analytics benzeri bir analitik aracı ya da
+  herhangi bir üçüncü taraf çerezi kullanmayız"* diyor; devamında analitik
+  eklenirse **önce sayfanın güncelleneceği ve varsayılanı kapalı bir onay
+  ekranının devreye alınacağı** taahhüt ediliyor. Üstelik CSP yalnızca kendi
+  origin'imize, kendi API'mize ve Sentry'ye izin veriyor. GA4/Plausible/PostHog =
+  taahhüt ihlali + onay ekranı maliyeti + konumlandırma hasarı.
+- **Yapılacak:** Kendi API'mize giden, kimlik saklamayan, çerezsiz olay sayacı —
+  yol, dil, referans eden alan adı, gün. Kişi tanımlayıcısı ve IP saklanmaz.
+  Çerez yazmadığı ve kimlik tutmadığı için onay ekranı gerekmez, ama şeffaflık
+  için Çerez + Gizlilik sayfalarına bölüm eklenir.
+- **Ölçülecek asıl şey:** `landing → kayıt → ilk başvuru`. İkinci yarıyı K5
+  zaten biliyor.
+- **Kilidi:** Bizde.
+- **Neden ilk:** V1-V5'in hiçbirinin sonucu bu olmadan okunamaz.
+
+> **Yapıldı (2026-09-08).** `SiteTrafficDailyCounters` tablosu (gün, olay, sayfa, dil, referans
+> eden host → sayı); `POST /api/site-traffic/events` anonim + IP bazlı hız sınırlı (120/5dk);
+> `GET /api/admin/site-traffic` ve `/admin/metrics` sayfasında özet + en çok görüntülenen sayfalar
+> + nereden gelindiği; `(public)` layout'una takılan `SiteTrafficReporter`; Çerez ve Gizlilik
+> sayfalarına "Ziyaret sayacı" bölümü (tr+en, ikisinin de tarihi 8 Eylül'e çekildi).
+>
+> Dört tasarım kararı kasıtlı:
+>
+> 1. **Ziyaretçi kimliği yok — hiç.** Çerez, oturum, IP, user-agent saklanmıyor; aynı kişinin iki
+>    ziyareti ile iki kişinin birer ziyareti aynı sayı. Bunun bedeli huninin **iki bağımsız toplamın
+>    oranı** olması ("40 ana sayfa, 1 kayıt"), izlenen bir yolculuk olmaması. Bu trafikte sorulan
+>    tek soruyu ("gelen var mı, devam eden var mı") cevaplamaya yetiyor ve sormadan toplanabilecek
+>    olanın dürüst sınırı.
+> 2. **Yol allowlist'ten geçiyor, temizlenmiyor.** `SiteTrafficNormalizer` query string'i her şeyden
+>    önce kesiyor (reset token'ı, OAuth code'u, arama terimi orada), sonra sabit bir genel sayfa
+>    listesine bakıyor. Giriş yapılmış hiçbir sayfa — dolayısıyla hiçbir kayıt id'si — tabloya
+>    ulaşamıyor, ve satır sayısı sayfa sayısıyla sınırlı kalıyor. OAuth callback yolları listede
+>    **yok ve olmayacak.**
+> 3. **Referrer host'a indirgeniyor**, tarayıcıdan çıkmadan önce (`buildSiteTrafficPayload`) ve bir
+>    kez daha sunucuda. Arama terimi hiç yola çıkmıyor.
+> 4. **Yazma tek bir `ON CONFLICT` upsert'ü**, oku-değiştir-yaz değil: aynı saniyede aynı sayfaya
+>    giren herkes aynı satırda çakışıyor — bu tablonun istisnası değil normali.
+>
+> **Neden üçüncü taraf araç takılmadı:** Çerez Politikası yayında ve *"Google Analytics benzeri bir
+> analitik aracı ... kullanmayız"* diyor; devamında analitik eklenirse önce sayfanın güncelleneceği
+> ve **varsayılanı kapalı bir onay ekranı** konulacağı taahhüt ediliyor. O taahhüt isteğe bağlı
+> **çerezler** için; çerez yazmayan, kimlik tutmayan birinci taraf sayaç onu tetiklemiyor — ama yine
+> de iki sayfaya da anlatıldı. CSP zaten yalnızca kendi origin + kendi API + Sentry'ye izin veriyor.
+>
+> **Testler (unit 453'e, web 214'e, integration 256'ya çıktı).** İki tanesi drift bekçisi:
+> `routes.test.ts` C# allowlist'ini kaynaktan okuyup **her genel sayfanın sayılabildiğini ve hiçbir
+> korumalı sayfanın sayılamadığını** doğruluyor (sayfa eklenip listeye yazılmazsa sessizce
+> ölçülmeden kalırdı); `browserStorage.test.ts` — zaten çerez politikasının bekçisi — artık
+> `trackSiteTraffic`'i çağırabilecek dosyaları da sabitliyor ve sayacın `apiFetch` kullanmadığını
+> (kullansa ziyaretçinin token'ını iliştirirdi) kontrol ediyor.
+>
+> **Bulunan gerçek:** SQL enjeksiyonu sorusu üzerine yazılan test bir varsayımı düzeltti —
+> `evil.example/'); DROP TABLE...` referrer'ında host geçerli olduğu için **saklanıyor**; atılan şey
+> payload'ı taşıyan *yol*. Test artık bunu ölçüyor.
+
+### Sıra 2 — V1: Vaadi değiştir
+
+- **Yapılacak:** `web/messages/{tr,en}.json` içinde `landing.hero.*`,
+  `landing.problem.*`, `landing.afterApply.*`; meta/OG etiketleri; yardım
+  metinleriyle tutarlılık.
+- **Kilidi:** Bizde.
+- **Kural:** V0'dan sonra. A/B değil — trafik bunu taşımaz — öncesi/sonrası ölçüm.
+
+### Sıra 3 — V2: Girişsiz kıyas aracı ("Geri dönüş oranın normal mi?")
+
+- **Yapılacak:** `(public)` altında kayıt istemeyen sayfa. Kullanıcı üç dört sayı
+  girer (başvuru, dönüş, sektör, opsiyonel şehir/kıdem), kendi oranını ve
+  *n kişiden biri* olduğunu görür.
+- **Dürüstlük kuralı K1'den devralınıyor:** örneklem eşiğin altındayken **kıyas
+  gösterilmez**, yalnızca kendi sayın ve n. K1'deki merdivenin (50/100/250/1000)
+  mantığı aynen geçerli.
+- **Sektör ekseni serbest metin değil**, K4'ün yüzeye çıkardığı `Industry`
+  alanıyla hizalı sabit liste — yoksa veri kıyaslanamaz hale gelir.
+- **Güvenlik:** Yeni tablo kimliksiz (kayıtlı kullanıcıda `UserId` opsiyonel).
+  Hız sınırı + bot koruması zorunlu; PII toplanmaz, serbest metin alınmaz.
+- **Kilidi:** Bizde.
+- **Bu madde aynı zamanda tezin testi** — bkz. "Durdurma koşulu".
+
+### Sıra 4 — V3: Eklenti eşleştirmesi — altı adım, bir tık olmalı
+
+- **Bugünkü durum (denetimde çıktı):** Eklentinin çalışması için kullanıcı
+  kayıt ol → Ayarlar → anahtar üret → kopyala → eklenti seçenekleri → yapıştır
+  adımlarını geçmek zorunda. Anahtar bir kez gösteriliyor ve yapıştırma anında
+  ekranda *"Bu anahtar hesabınıza tam erişim sağlar"* yazıyor.
+- **Üstelik sessizce ölüyor:** `PersonalAccessTokens.LifetimeDays = 90`. 90 gün
+  sonra eklenti çalışmayı bırakıyor, kullanıcı hiçbir şey yapmamış olsa bile.
+- **Yani "eklenti-önce huni" bir sıralama değişikliği değil.** Ürünün en düşük
+  efor eşiğine sahip parçasının önünde ürünün en yüksek eşiği duruyor.
+- **Yapılacak:** Web'den başlatılan eşleştirme (tek kullanımlık kısa kod ya da
+  `externally_connectable`), süre dolmadan uyarı, dolduğunda popup'ta net hata.
+- **Kilidi:** Bizde, ama eklenti sürümü + Web Store yeniden yüklemesi gerektiriyor
+  (CLAUDE.md "Chrome extension release policy": manifest sürümü, izin gerekçesi,
+  gizlilik metni, ekran görüntüleri, zip).
+- **Değişmez kısıt:** `/from-extension` yalnızca eklemeye açık — yayındaki her
+  eklenti sürümü çalışmaya devam etmeli (DECISIONS.md 2026-09-06).
+
+### Sıra 5 — V4: Haftalık ritim (K3'ün üstüne)
+
+- **Ne var:** K3 durum geçmişi + elle eklenen olayları tek "Süreç" listesinde
+  birleştirdi. Ama **pasif** — başvuru detayının içinde duruyor, oraya gitmeyi
+  seçen görüyor.
+- **Yapılacak:** Çıkarım katmanı — bu hafta ne kıpırdadı, ne sessizleşti, neye
+  takip zamanı geldi. **Kişinin kendi ortalamasına göre**, toplu veri beklemeden:
+  "senin ilk dönüşün normalde 9 gün, bu 21 gündür sessiz" n=1'de çalışır.
+- **Yüzey:** Önce panoda bir blok. E-posta özeti ayrı bir altyapı ve izin konusu,
+  sonraya.
+- **Kilidi:** Kodu bizde ama tutundurma işi — gelen kimse yokken ölçülemez.
+  Bu yüzden V0-V3'ten sonra.
+
+### Sıra 6 (paralel, kod değil) — V5: Dağıtım
+
+- Kitlenin zaten olduğu yer: Ekşi, r/CodingTR, TR yazılım toplulukları, LinkedIn.
+  Ayrıca **hâlâ kullanılmayan bir kanal:** Chrome Web Store'un kendi araması.
+- **Buraya ürün linkiyle gidilmez, sayıyla gidilir.** Paylaşılan şey link değil
+  rakam olmalı.
+- **Kilidi:** V2'nin ürettiği ilk sayı. Sayı yoksa paylaşılacak şey de yok.
+
+### Durdurma koşulu (tezin çürütülmesi)
+
+V2 yayınlanır ve V5'teki kanallara sayıyla gidilir. **Birkaç yüz kişi kendi
+sayısını girmiyorsa ve kimse paylaşmıyorsa tez yanlıştır** — insanlar gerçekten
+sadece işi umursuyordur, şeffaflık bizim ilgimizdi. Maliyeti bir sprint değil
+birkaç gün, ve çıktısı "haklıydım/haksızdım" değil rakam.
+
+Aynı test **K1'in kaderini de belirliyor:** kimse sektör sayısını umursamıyorsa
+şirket bazlı sayıyı hiç umursamaz, ve o hukuki görüş masrafına hiç girilmemiş
+olur. K1'in kalan iki kilidi (veri hacmi, hukuk) zaten bizde değil.

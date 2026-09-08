@@ -32,6 +32,13 @@ public sealed class RateLimitingOptions
     /// GitHub repository).</summary>
     public FixedWindowPolicy Feedback { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
 
+    /// <summary>Per IP, and anonymous by nature — the public site's visit counter. Sized for a
+    /// person browsing, not for a beacon per interaction: a real session opens a handful of pages,
+    /// so 120 in five minutes is far above normal use while still bounding what a script can push
+    /// into the counter table. Nothing here is user data, so an over-count is a cosmetic problem
+    /// rather than a leak; the limit exists to keep the table honest, not to protect anything.</summary>
+    public FixedWindowPolicy SiteTraffic { get; init; } = new() { PermitLimit = 120, WindowSeconds = 300 };
+
     public sealed class FixedWindowPolicy
     {
         public int PermitLimit { get; init; }

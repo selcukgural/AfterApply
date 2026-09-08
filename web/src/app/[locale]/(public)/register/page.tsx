@@ -10,6 +10,7 @@ import { getStoredThemeCookie } from "@/lib/theme/theme";
 import { createRegisterSchema } from "@/lib/validation/registerSchema";
 import { useClientConfig } from "@/hooks/useClientConfig";
 import { ApiError } from "@/lib/api/httpClient";
+import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -79,11 +80,17 @@ export default function RegisterPage() {
     }
     setErrors({});
 
+    // Counted after client-side validation passes, so this measures "a filled-in form was sent",
+    // not "someone typed something". Paired with register_completed below, the gap between the two
+    // separates "nobody tries" from "people try and the server turns them away".
+    trackSiteTraffic("register_started");
+
     setIsSubmitting(true);
     try {
       // confirmPassword is a client-side check only — the API never sees it.
       const { email, password, firstName, lastName, consentAccepted } = result.data;
       const auth = await register({ email, password, firstName, lastName, consentAccepted });
+      trackSiteTraffic("register_completed");
       // A brand-new account always starts with the server default theme
       // ("light" — there's no Accept-Language-like header for OS theme
       // preference). If this visitor had already switched to Dark on this

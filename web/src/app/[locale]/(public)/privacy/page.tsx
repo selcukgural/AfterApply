@@ -112,6 +112,20 @@ export default async function PrivacyPage() {
           <p className="mt-2">{t("errorMonitoring.retention")}</p>
         </section>
 
+        <section id="visit-counter">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("visitCounter.title")}</h2>
+          <p>{t("visitCounter.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("visitCounter.item1")}</li>
+            <li>{t("visitCounter.item2")}</li>
+            <li>{t("visitCounter.item3")}</li>
+          </ul>
+          <p className="mt-2">{t("visitCounter.recipient")}</p>
+          <p className="mt-2">{t("visitCounter.legalBasis")}</p>
+          <p className="mt-2">{t("visitCounter.limits")}</p>
+          <p className="mt-2">{t("visitCounter.retention")}</p>
+        </section>
+
         <section id="cookies">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("cookiesSection.title")}</h2>
           <p>

@@ -11,6 +11,7 @@ using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
 using AfterApply.Application.Mailing;
 using AfterApply.Application.Metrics;
+using AfterApply.Application.SiteTraffic;
 using AfterApply.Application.Notifications;
 using AfterApply.Application.Feedback;
 using AfterApply.Application.TrackedJobs;
@@ -25,6 +26,7 @@ using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
+using AfterApply.Infrastructure.SiteTraffic;
 using AfterApply.Infrastructure.OpenAi;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
@@ -55,6 +57,7 @@ public static class DependencyInjection
     public const string ExtensionSignalRateLimitPolicy = "extension-signal";
     public const string LinkPreviewRateLimitPolicy = "link-preview";
     public const string FeedbackRateLimitPolicy = "feedback";
+    public const string SiteTrafficRateLimitPolicy = "site-traffic";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -403,6 +406,7 @@ public static class DependencyInjection
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
+        services.AddScoped<ISiteTrafficService, SiteTrafficService>();
         services.AddScoped<IAdminAccessService, AdminAccessService>();
         services.AddScoped<IAutoApprovalCalibrationService, AutoApprovalCalibrationService>();
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();

@@ -8,6 +8,7 @@ using AfterApply.Domain.Jobs;
 using AfterApply.Domain.Mailing;
 using AfterApply.Domain.Metrics;
 using AfterApply.Domain.Notifications;
+using AfterApply.Domain.SiteTraffic;
 using AfterApply.Domain.TrackedJobs;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -55,6 +56,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<FeedbackEntry> FeedbackEntries => Set<FeedbackEntry>();
 
     public DbSet<ProductMetricsDailySnapshot> ProductMetricsDailySnapshots => Set<ProductMetricsDailySnapshot>();
+
+    public DbSet<SiteTrafficDailyCounter> SiteTrafficDailyCounters => Set<SiteTrafficDailyCounter>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -149,6 +149,7 @@ app.MapPersonalAccessTokenEndpoints();
 app.MapCompanyIntelligenceEndpoints();
 app.MapCompanyEndpoints();
 app.MapFeedbackEndpoints();
+app.MapSiteTrafficEndpoints();
 app.MapAdminEndpoints();
 app.MapHub<ImportProgressHub>("/hubs/import-progress");
 

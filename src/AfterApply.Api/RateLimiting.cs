@@ -128,6 +128,21 @@ public static class RateLimiting
             // User-based. Free-text that a human writes and, when the GitHub mirror is on, that
             // leaves our infrastructure — so it is bounded far tighter than the global backstop,
             // which would happily let one account file three hundred issues a minute.
+            // IP-based: this endpoint is anonymous, so there is no user to partition by — and
+            // deliberately so. PartitionKey would fall back to the IP anyway for a signed-out
+            // visitor, but calling it here would silently start partitioning signed-in visitors by
+            // their user id, which is the one thing this feature must not do with traffic data.
+            options.AddPolicy(DependencyInjection.SiteTrafficRateLimitPolicy, httpContext =>
+            {
+                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.SiteTraffic.PermitLimit,
+                    Window = sizes.SiteTraffic.Window,
+                    QueueLimit = 0
+                });
+            });
+
             options.AddPolicy(DependencyInjection.FeedbackRateLimitPolicy, httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
                 {

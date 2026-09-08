@@ -719,7 +719,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 7 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 8 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -736,6 +736,17 @@
       "legalBasis": "Hukuki sebep: meşru menfaat — hizmetin güvenliğini ve sürekliliğini sağlamak, arızayı tespit edip gidermek.",
       "limits": "Oturum kaydı (session replay) ve performans izleme (tracing) özelliklerini bilerek kapalı tuttuk: ekranınız kaydedilmiyor, gezinme davranışınız izlenmiyor, form içerikleriniz gönderilmiyor. Başvuru verileriniz, CV'niz ve e-posta içerikleri hata kayıtlarına dahil edilmiyor.",
       "retention": "Hata kayıtları Sentry'nin saklama süresi dolduğunda silinir; ürünün kendi veritabanına yazılmazlar."
+    },
+    "visitCounter": {
+      "title": "Ziyaret sayacı",
+      "intro": "Herkese açık sayfaların kaç kez açıldığını kendi sunucumuzda sayıyoruz. Bir ziyarette yalnızca şunlar kaydedilir:",
+      "item1": "Açılan herkese açık sayfanın adresi (soru işaretinden sonrası hariç) ve sayfanın dili.",
+      "item2": "Bizi hangi siteden bulduğunuz — yalnızca alan adı.",
+      "item3": "Günlük bir sayaç — bu üçlünün o gün kaç kez görüldüğü.",
+      "recipient": "Alıcı: yok. Veri kendi sunucumuzda kalır; hiçbir analitik hizmetine ya da başka bir üçüncü tarafa gönderilmez.",
+      "legalBasis": "Kaydedilen hiçbir satır bir kişiyle ilişkilendirilemez — ziyaretçi numarası, oturum numarası, IP adresi ve tarayıcı bilgisi saklanmaz — dolayısıyla ortada kişisel veri yoktur. Aksi değerlendirilirse dayanak meşru menfaattir (KVKK m. 5/2-f, GDPR m. 6/1-f): hizmetin kullanılıp kullanılmadığını ölçmek.",
+      "limits": "Çerez kullanılmaz, tarayıcınıza hiçbir şey yazılmaz, profilleme ve reklam hedeflemesi yapılmaz. Tarayıcınızda “Do Not Track” açıksa hiçbir sayım yapılmaz. Ayrıntılar için Çerez Politikası'ndaki “Ziyaret sayacı” bölümüne bakabilirsiniz.",
+      "retention": "Saklama: satırlar toplu sayılardan ibaret ve kişisel veri içermediği için süresiz saklanır."
     },
     "dataCollection": {
       "title": "Hangi veriyi topluyoruz ve neden",
@@ -889,7 +900,7 @@
   },
   "cookies": {
     "title": "Çerez Politikası",
-    "lastUpdated": "Son güncelleme: 7 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 8 Eylül 2026",
     "intro": {
       "title": "Kısaca",
       "body": "e-kariyerim yalnızca hizmetin çalışması için gereken iki çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok.",
@@ -915,6 +926,17 @@
       "item1": "Oturum jetonları — aa_access_token, aa_refresh_token, bunların geçerlilik süreleri ve aa_user (adınız, e-posta adresiniz ve arayüz tercihleriniz). Giriş yaptıktan sonra oturumunuzun açık kalmasını sağlar; localStorage'da tutulur ve çıkış yaptığınızda silinir.",
       "item2": "Giriş güvenliği anahtarları — aa_google_oauth ve aa_linkedin_oauth. Google veya LinkedIn ile giriş sırasında araya girme (CSRF) saldırısını engelleyen tek kullanımlık değerlerdir; sessionStorage'da tutulur ve giriş tamamlanır tamamlanmaz silinir.",
       "outro": "İkisi de hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz."
+    },
+    "visitCounter": {
+      "title": "Ziyaret sayacı",
+      "intro": "Sitenin herkese açık sayfalarına kaç kez girildiğini kendi sunucumuzda sayıyoruz. Bunun için çerez kullanılmıyor, tarayıcınıza hiçbir şey yazılmıyor ve hiçbir üçüncü tarafa hiçbir şey gönderilmiyor. Bir ziyarette yalnızca şu üç şey bir sayaca eklenir:",
+      "item1": "Açılan sayfanın adresi — yalnızca herkese açık sayfalar. Adresin soru işaretinden sonraki kısmı (arama terimi, parola sıfırlama bağlantısındaki anahtar gibi) daha tarayıcınızdan çıkmadan kesilir.",
+      "item2": "Sayfanın dili — Türkçe ya da İngilizce.",
+      "item3": "Bizi hangi siteden bulduğunuz — yalnızca alan adı (örneğin “google.com”), o sitedeki adres veya arattığınız kelime değil.",
+      "note": "Bu satırların hiçbirinde sizi tanımlayan bir şey yoktur: ziyaretçi numarası, oturum numarası, IP adresi ve tarayıcı bilgisi saklanmaz. Bu yüzden aynı kişinin iki ziyareti ile iki ayrı kişinin birer ziyareti bizim için aynı sayıdır; bir satır ne bir hesaba ne de başka bir satıra bağlanabilir. Giriş yapmış olsanız bile bu istek hesabınızın kimlik bilgisini taşımaz.",
+      "noCookie": "Çerez yazılmadığı için aşağıdaki “Bu politika değişirse” bölümünde söz verilen onay ekranı burada devreye girmez — o söz isteğe bağlı çerezler içindir. Yine de bu bölümü, ne saydığımızı okuyabilesiniz diye yazıyoruz.",
+      "dnt": "Tarayıcınızda “Do Not Track” (izlenmek istemiyorum) ayarı açıksa hiçbir sayım yapılmaz.",
+      "why": "Neden sayıyoruz: siteye kimsenin gelip gelmediğini, hangi yazının işe yaradığını ve kayıt olmayı deneyenlerin takılıp takılmadığını başka türlü göremiyoruz. Sayaç satırları toplu olduğu ve kişisel veri içermediği için süresiz saklanır."
     },
     "noThirdParty": {
       "title": "Üçüncü taraf ve izleme",
@@ -1838,7 +1860,22 @@
     "colDismissed": "Reddedildi",
     "colReverted": "Geri alındı",
     "colAgreement": "Onay oranı",
-    "colRevertRate": "Geri alma"
+    "colRevertRate": "Geri alma",
+    "trafficTitle": "Genel sayfa trafiği",
+    "trafficSubtitle": "Son 30 gün. Çerezsiz, kimliksiz sayaç: ziyaretçi takip edilmiyor, bu yüzden aşağıdakiler bağımsız toplamların oranı — izlenen bir yolculuk değil.",
+    "trafficEmpty": "Henüz sayılmış bir ziyaret yok.",
+    "trafficPageViews": "Sayfa görüntüleme",
+    "trafficLandingViews": "Ana sayfa",
+    "trafficCtaClicks": "“Ücretsiz Başla” tıklaması",
+    "trafficRegisterStarted": "Kayıt formu gönderildi",
+    "trafficRegisterCompleted": "Kayıt tamamlandı",
+    "trafficLandingToRegister": "Ana sayfa → kayıt",
+    "trafficTopPages": "En çok görüntülenen sayfalar",
+    "trafficTopReferrers": "Nereden geliniyor",
+    "trafficColPage": "Sayfa",
+    "trafficColViews": "Görüntüleme",
+    "trafficColSource": "Kaynak",
+    "trafficDirect": "Doğrudan / bilinmiyor"
   },
   "applicationEventType": {
     "RecruiterContacted": "İşe alım uzmanı iletişime geçti",

@@ -4,6 +4,8 @@ using AfterApply.Application.Admin;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Application.Metrics;
+using AfterApply.Application.SiteTraffic;
+using AfterApply.Application.SiteTraffic.Contracts;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -41,6 +43,24 @@ public static class AdminEndpoints
                              "per-user data. Access comes from the Users.IsAdmin column — granted by hand " +
                              "with SQL, see DEPLOYMENT.md §3a; everyone else gets 403.")
             .Produces<IReadOnlyList<ProductMetricsDayResponse>>();
+
+        group.MapGet("/site-traffic", async (int? days, ClaimsPrincipal user, IAdminAccessService adminAccess,
+                ISiteTrafficService siteTraffic, CancellationToken cancellationToken) =>
+            {
+                if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
+                {
+                    return Results.Forbid();
+                }
+
+                var window = Math.Clamp(days ?? DefaultDays, 1, MaxDays);
+                return Results.Ok(await siteTraffic.GetRecentAsync(window, cancellationToken));
+            })
+            .WithSummary("Read public-site visit counts, newest day first")
+            .WithDescription("Internal. The other half of the funnel: /api/admin/metrics knows what " +
+                             "registered users do, this knows whether anyone arrives at all. Counts " +
+                             "only — no visitor is identified, so these rows cannot be joined to a " +
+                             "user or to each other.")
+            .Produces<IReadOnlyList<SiteTrafficCounterResponse>>();
 
         group.MapGet("/auto-approval-calibration", async (ClaimsPrincipal user, IAdminAccessService adminAccess,
                 IAutoApprovalCalibrationService calibration, CancellationToken cancellationToken) =>
