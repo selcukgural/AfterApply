@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
 import { Callout } from "@/components/help/Callout";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/help/getting-started">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/help/getting-started", "helpGettingStarted");
+}
 
 export default async function GettingStartedPage() {
   const t = await getTranslations("help.gettingStarted");

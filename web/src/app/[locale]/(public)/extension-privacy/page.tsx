@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
@@ -6,6 +8,11 @@ import { Link } from "@/i18n/navigation";
 // own page rather than as a section of /privacy so a Web Store reviewer lands on a document that
 // is about nothing else — /privacy is the account-level policy (sign-in providers, retention,
 // KVKK rights) and would bury the extension's disclosures. The two link to each other.
+export async function generateMetadata({ params }: PageProps<"/[locale]/extension-privacy">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/extension-privacy", "extensionPrivacy");
+}
+
 export default async function ExtensionPrivacyPage() {
   const t = await getTranslations("extensionPrivacy");
 

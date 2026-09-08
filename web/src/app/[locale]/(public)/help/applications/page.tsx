@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
 import { GifFigure } from "@/components/help/GifFigure";
 import { Callout } from "@/components/help/Callout";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/help/applications">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/help/applications", "helpApplications");
+}
 
 export default async function ApplicationsHelpPage() {
   const t = await getTranslations("help.applications");
@@ -15,6 +22,10 @@ export default async function ApplicationsHelpPage() {
   const statusSteps = ["step1", "step2", "step3"].map((key) => ({
     title: t(`statusChange.${key}.title`),
     body: t.has(`statusChange.${key}.body`) ? t(`statusChange.${key}.body`) : undefined,
+  }));
+  const bulkSteps = ["step1", "step2", "step3"].map((key) => ({
+    title: t(`bulk.${key}.title`),
+    body: t.has(`bulk.${key}.body`) ? t(`bulk.${key}.body`) : undefined,
   }));
 
   return (
@@ -40,12 +51,30 @@ export default async function ApplicationsHelpPage() {
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("companyView.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("companyView.body")}</p>
+        <Screenshot src="/help/screenshots/applications-company-view.png" alt={t("companyView.title")} />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("bulk.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("bulk.body")}</p>
+        <Screenshot src="/help/screenshots/applications-bulk.png" alt={t("bulk.title")} />
+        <StepList steps={bulkSteps} />
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("bulk.undo.title")}</h3>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("bulk.undo.body")}</p>
+        <Callout variant="danger" label={tCommon("warning")} title={t("bulk.calloutDelete.title")}>
+          {t("bulk.calloutDelete.body")}
+        </Callout>
       </section>
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("detail.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("detail.body")}</p>
         <Screenshot src="/help/screenshots/application-detail.png" alt={t("detail.title")} />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("contact.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("contact.body")}</p>
       </section>
 
       <section className="flex flex-col gap-2">
@@ -73,8 +102,12 @@ export default async function ApplicationsHelpPage() {
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("statusHistory.title")}</h2>
-        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("statusHistory.body")}</p>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("timeline.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("timeline.body")}</p>
+        <h3 className="mt-2 text-base font-semibold text-gray-900 dark:text-gray-100">
+          {t("timeline.addEvent.title")}
+        </h3>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("timeline.addEvent.body")}</p>
       </section>
 
     </div>

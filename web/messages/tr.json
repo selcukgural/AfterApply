@@ -1,7 +1,81 @@
 {
   "metadata": {
     "title": "e-kariyerim",
-    "description": "İş başvurularını tek yerde takip et."
+    "description": "İş başvurularını tek yerde takip et.",
+    "pages": {
+      "login": {
+        "title": "Giriş Yap",
+        "description": "Başvurularınızın hangi aşamada olduğunu görmek için e-kariyerim'e giriş yapın."
+      },
+      "register": {
+        "title": "Kayıt Ol",
+        "description": "Ücretsiz bir e-kariyerim hesabı oluşturun, başvurularınızı tek yerden takip edin."
+      },
+      "forgotPassword": {
+        "title": "Şifremi Unuttum",
+        "description": "e-kariyerim hesabınız için şifre sıfırlama bağlantısı isteyin."
+      },
+      "resetPassword": {
+        "title": "Şifre Sıfırlama",
+        "description": "e-kariyerim hesabınız için yeni bir şifre belirleyin."
+      },
+      "privacy": {
+        "title": "Gizlilik Politikası",
+        "description": "e-kariyerim'in hangi veriyi neden topladığı, nerede sakladığı ve nasıl sileceğiniz — CV'ler, Gmail Taraması ve geri bildirim dahil."
+      },
+      "cookies": {
+        "title": "Çerez Politikası",
+        "description": "e-kariyerim'in kullandığı iki çerez, ne işe yaradıkları, ne kadar kaldıkları — ve neden onay bandı olmadığı."
+      },
+      "extensionPrivacy": {
+        "title": "Tarayıcı Eklentisi Gizlilik Politikası",
+        "description": "e-kariyerim tarayıcı eklentisinin ne okuduğu, ne sakladığı ve ne gönderdiği — ve açtığınızda Gmail Taraması'nın ne yaptığı."
+      },
+      "help": {
+        "title": "Yardım Merkezi",
+        "description": "e-kariyerim uçtan uca nasıl çalışır: takip edilen ilanlar, başvurular, içe aktarma, Chrome eklentisi ve Gmail Taraması."
+      },
+      "helpGettingStarted": {
+        "title": "Kayıt Olma ve Giriş Yapma",
+        "description": "Hesap oluşturma, giriş yapma ve tema/dil tercihlerinizin nasıl taşındığı."
+      },
+      "helpDashboard": {
+        "title": "Pano",
+        "description": "Açık başvurular, haftalık eğilim, dönüşüm hunisi, yanıt süreleri ve sonuç dağılımı — paneli paneline."
+      },
+      "helpTrackedJobs": {
+        "title": "Takip Edilen İlanlar",
+        "description": "Henüz başvurmadığınız ilanları not edin, başvurduğunuzda tek adımda başvuruya çevirin."
+      },
+      "helpApplications": {
+        "title": "Başvurular",
+        "description": "Başvuru oluşturma, listeleme, şirkete göre gruplama, toplu işlemler, süreç akışı ve düzenleme/silme."
+      },
+      "helpSuggestions": {
+        "title": "E-posta Önerileri",
+        "description": "Gmail Taraması bir durum e-postasını nasıl onaylayacağınız ya da yok sayacağınız bir öneriye çeviriyor."
+      },
+      "helpImport": {
+        "title": "LinkedIn'den İçe Aktarma",
+        "description": "LinkedIn veri arşivinizi isteme ve tüm başvuru geçmişinizi tek seferde içeri alma."
+      },
+      "helpSettings": {
+        "title": "Hesap Ayarları",
+        "description": "Verinizi dışa aktarma, eklenti erişim jetonu oluşturma ve hesabınızı silme."
+      },
+      "helpChromeExtension": {
+        "title": "Chrome Eklentisi",
+        "description": "e-kariyerim eklentisini kurma, jetonunuzu yapıştırma ve tek tıkla başvuru kaydetme."
+      },
+      "helpFaq": {
+        "title": "Sıkça Sorulan Sorular",
+        "description": "Jetonlar, toplu işlemler, CV gizliliği, içe aktarma ve Gmail Taraması hakkında kısa yanıtlar."
+      },
+      "helpCv": {
+        "title": "CV'lerim",
+        "description": "Başvururken kullandığınız CV dosyalarını yükleme, önizleme, varsayılan yapma ve silme."
+      }
+    }
   },
   "landing": {
     "common": {
@@ -67,13 +141,18 @@
       "eyebrow": "Neler yapabilirsin?",
       "title": "e-kariyerim ne yapar?",
       "trackingTitle": "Tüm başvuruların tek yerde",
-      "trackingBody": "Şirket, pozisyon, tarih, kaynak ve başvuru durumunu tek ekranda takip et.",
+      "trackingBody": "Şirket, pozisyon, tarih, kaynak ve durumu tek ekranda takip edin — ya da şirket görünümüne geçip aynı işverene gönderdiğiniz her şeyi bir arada görün.",
       "timelineTitle": "Ne kadar beklediğini bil",
       "timelineBody": "Başvurunun üzerinden ne kadar zaman geçtiğini gör. Takip zamanı geldiğinde hatırlatıcı al.",
       "analyticsTitle": "İş arama sürecini ölç",
       "analyticsBody": "Yanıt oranı, mülakat oranı, teklif oranı ve yanıt süreleri gibi metriklerle kendi sürecini gör.",
       "noResponseTitle": "Cevapsız kalanları unutma",
-      "noResponseBody": "Uzun süre herhangi bir gelişme olmayan başvuruları fark et ve takip edilmesi gerekenleri kolayca bul."
+      "noResponseBody": "Uzun süre herhangi bir gelişme olmayan başvuruları fark et ve takip edilmesi gerekenleri kolayca bul.",
+      "extensionTitle": "Başvurunuzu ilan sayfasından çıkmadan kaydedin",
+      "extensionBody": "Chrome eklentisi, LinkedIn veya kariyer.net'teki bir ilanı tek tıkla takip edilen bir başvuruya çevirir. Gmail Taraması'nı açarsanız orada açtığınız yanıtlar durum önerisine dönüşür.",
+      "extensionCta": "Chrome eklentisini edinin",
+      "cvTitle": "Hangi CV ile başvurduğunuzu bilin",
+      "cvBody": "Başvururken kullandığınız CV dosyalarını tek yerde tutun ve her başvuruda hangisinin gittiğini kaydedin — altı hafta sonra gelen bir telefon tahminle başlamasın."
     },
     "linkedinImport": {
       "eyebrow": "İçe aktarma",
@@ -129,6 +208,7 @@
       "todayAnalytics": "Kişisel analitik",
       "todayImport": "CSV / LinkedIn içe aktarma",
       "todayReminders": "Hatırlatıcılar",
+      "todayCv": "CV saklama",
       "todayEmail": "Gmail taraması entegrasyonu",
       "todayExtension": "Tarayıcı eklentisi",
       "futureInsights": "Anonim, toplu işe alım içgörüleri"
@@ -630,7 +710,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 2026",
+    "lastUpdated": "Son güncelleme: 7 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -1248,8 +1328,8 @@
           "body": "Başvuru tarihi varsayılan olarak bugün gelir, isterseniz değiştirebilirsiniz."
         },
         "step4": {
-          "title": "İsteğe bağlı olarak kaynağı ve notlarınızı ekleyin, kaydedin",
-          "body": "Kaynak alanı yalnızca oluştururken seçilebilir, sonradan değiştirilemez."
+          "title": "İsterseniz kaynak, CV ve not ekleyip kaydedin",
+          "body": "Kaynak alanı yalnızca oluştururken seçilebilir, sonradan değiştirilemez. CV'lerim sayfasında dosyanız varsa hangisiyle başvurduğunuzu kaydedebilirsiniz; varsayılan CV'niz seçili gelir."
         }
       },
       "list": {
@@ -1258,15 +1338,19 @@
       },
       "detail": {
         "title": "Başvuru detayı",
-        "body": "Bir başvuruyu açtığınızda durum rozeti, konum, çalışma şekli, başvuru tarihi, sisteme eklenme zamanı, varsa ilan bağlantısı ve notlarınız görünür; altında Durum Geçmişi ve varsa ilan açıklaması yer alır. Gmail Taraması ile otomatik oluşturulan başvurularda \"E-postadan otomatik oluşturuldu\" etiketi bulunur."
+        "body": "Bir başvuruyu açtığınızda durum rozeti, konum, çalışma şekli, başvuru tarihi, sisteme eklenme zamanı, varsa ilan bağlantısı, kaydettiğiniz CV ve notlarınız görünür; altında Süreç akışı ve varsa ilan açıklaması yer alır. Gmail Taraması ile otomatik oluşturulan başvurularda \"E-postadan otomatik oluşturuldu\" etiketi bulunur."
+      },
+      "contact": {
+        "title": "İK iletişim bilgisi ve şirket bağlantıları",
+        "body": "\"İletişim\" başlığı altında bir başvuru, takip için ulaşacağınız kişiyi tutabilir: ad, e-posta adresi ve LinkedIn profili. Bunları kendiniz yazabilirsiniz; LinkedIn ilanı işe alım ekibi kartını gösterdiğinde eklenti de doldurur, bir e-posta önerisini onayladığınızda gönderenin adresi aynı şekilde eklenir. Yanında şirketin kendi web sitesi, LinkedIn ve kariyer.net sayfaları ile — çıkarabildiğimizde — sektörü ve ülkesi yer alır. Bunların hepsini yalnızca siz görürsünüz; e-kariyerim sizin adınıza o kişiye asla yazmaz."
       },
       "edit": {
         "title": "Düzenleme",
-        "body": "Detay sayfasındaki \"Edit\" ile pozisyon, ilan linki, konum, istihdam türü, başvuru tarihi ve notları güncelleyebilirsiniz. Şirket adı ve kaynak, oluşturulduktan sonra değiştirilemez."
+        "body": "Detay sayfasındaki \"Düzenle\" ile pozisyon, ilan linki, konum, istihdam türü, başvuru tarihi ve notları güncelleyebilirsiniz. Şirket adı ve kaynak, oluşturulduktan sonra değiştirilemez."
       },
       "delete": {
         "title": "Silme",
-        "body": "Detay sayfasındaki \"Delete\" butonuna tıkladığınızda bir onay penceresi çıkar; onaylamadan hiçbir şey silinmez.",
+        "body": "Detay sayfasındaki \"Sil\" düğmesine tıkladığınızda bir onay penceresi çıkar; onaylamadan hiçbir şey silinmez. Birden fazlasını birden temizlemek için listede seçin (bkz. \"Birden çok başvuruyu tek seferde işleme\").",
         "calloutConfirm": {
           "title": "Silme geri alınamaz",
           "body": "Bir başvuruyu sildiğinizde, o başvuruya ait zaman çizelgesi de dahil tüm geçmiş kalıcı olarak kaybolur."
@@ -1290,13 +1374,41 @@
         "title": "Durumlar ne anlama gelir?",
         "body": "Bir başvuru şu durumlardan birinde olabilir: Applied (Başvuruldu), Screening (Ön Eleme), Interview (Mülakat), TechnicalInterview (Teknik Mülakat), FinalInterview (Son Mülakat), Offer (Teklif), Accepted (Kabul Edildi), Rejected (Reddedildi), Withdrawn (Vazgeçildi), Ghosted (Yanıt Alınamadı)."
       },
-      "statusHistory": {
-        "title": "Durum Geçmişi",
-        "body": "Başvuru detayında, o başvurunun her durum değişikliğini en yenisi üstte olacak şekilde listeler: hangi durumdan hangisine geçildiği, ne zaman geçildiği, o sırada yazdığınız not ve — en önemlisi — değişikliğin nasıl yapıldığı. Durumu siz mi değiştirdiniz, bir e-posta önerisini siz mi onayladınız, yoksa sistem yüksek güvenle kendisi mi uyguladı: her satırdaki etiket bunu söyler. E-postadan gelen bir değişiklikte ret sebebi ve kaynak e-postanın konusu da satır içinde açılabilir. Bir başvurunun geçmişini tek bakışta hatırlamanızı sağlayan yer burasıdır."
+      "timeline": {
+        "title": "Süreç",
+        "body": "Detay sayfası, bir başvuruya olan her şeyi en yenisi üstte olacak şekilde tek bir akışta toplar: her durum değişikliği ve kendi eklediğiniz her olay. Bir durum satırı hangi durumdan hangisine geçildiğini, ne zaman geçildiğini, o sırada yazdığınız notu ve — en önemlisi — değişikliğin nasıl yapıldığını söyler: durumu siz mi değiştirdiniz, bir e-posta önerisini mi onayladınız, toplu bir işlemin parçası mıydı, yoksa bir toplu işlemi geri mi aldınız. E-postadan gelen bir değişiklikte ret sebebi ve kaynak e-postanın konusu satır içinde açılabilir.",
+        "addEvent": {
+          "title": "Kendiniz olay ekleme",
+          "body": "Hatırlamaya değer her şey bir durum değişikliği değildir. \"Olay ekle\" ile işe alım uzmanının iletişime geçmesi, ön değerlendirmenin başlaması, bir mülakatın planlanması ya da tamamlanması, teklif gelmesi veya gönderdiğiniz bir takip mesajı — olduğu tarih ve kısa bir notla — kaydedilir. Tarihi boş bırakırsanız şimdiki zaman yazılır. Olay, başvurunun durumunu değiştirmeden aynı akışa katılır."
+        }
       },
       "companyView": {
         "title": "Şirkete göre gruplama",
         "body": "Listenin üstündeki Liste / Şirket anahtarı, aynı başvuruları şirketlerine göre toplar. Şirket görünümünde sayfa başına 10 başvuru değil 10 şirket gelir — yani bir şirketin başvuruları hiçbir zaman iki sayfaya bölünmez. Her şirket başlığı kaç başvurunuz olduğunu, bunların hangi durumlarda dağıldığını ve o şirkette en son ne zaman bir hareket olduğunu gösterir; başlığa tıklayarak grubu katlayabilir, başlıktaki kutuyla o şirketin başvurularının tümünü birden seçebilirsiniz. Arama ve durum filtresi iki görünümde de aynı şekilde çalışır ve seçtiğiniz görünüm adres çubuğuna yansır. Bir şirkette 20'den fazla başvurunuz varsa grubun altındaki bağlantı sizi o şirkete daraltılmış düz listeye götürür."
+      },
+      "bulk": {
+        "title": "Birden çok başvuruyu tek seferde işleme",
+        "body": "Herhangi bir satırdaki kutuyu işaretlediğinizde ekranın altında bir işlem çubuğu belirir; seçime uygulayabileceğiniz iki şey vardır: hepsinin durumunu değiştirmek ya da hepsini silmek. Tablo başlığındaki kutu o sayfanın tamamını seçer, seçim sayısının yanındaki bağlantı ise sayfanın ötesine geçer — önünüzdeki on satırı değil, aramanın ve filtrelerin eşleştiği bütün başvuruları.",
+        "step1": {
+          "title": "Satırları seçin",
+          "body": "Tek tek, sayfa sayfa ya da filtreye uyanların tümü. Şirket görünümünde bir grup başlığındaki kutu, o şirketin listelenen başvurularını seçer."
+        },
+        "step2": {
+          "title": "Çubuktan bir işlem seçin",
+          "body": "\"Durumu Değiştir\" seçili tüm başvuruları tek bir duruma taşır ve bir not iliştirebilir. \"Sil\" onları kaldırır."
+        },
+        "step3": {
+          "title": "Onaylayın",
+          "body": "Durum değişikliği bir kez sorar ve kaç satırın gerçekten hareket edeceğini yazar — zaten o durumda olanlar ayrıca sayılır ve onlara dokunulmaz. Silme daha fazlasını ister: bir onay kutusu, \"eşleşen tümü\" için ayrıca kapsamın açıkça yazılması ve onay kelimesinin elle yazılması."
+        },
+        "undo": {
+          "title": "Toplu durum değişikliğini geri alma",
+          "body": "Durum değişikliğinden sonra listede \"Geri Al\" düğmesi taşıyan bir şerit kalır. Her başvuruyu bulunduğu yere geri koyar — o sırada kendi elinizle ilerlettikleriniz hariç; sonradan verdiğiniz karar kazanır. Geri alma, ters çevirdiği değişikliği silmek yerine her başvurunun süreç akışına yeni bir satır olarak eklenir: hata kayıtta kalır."
+        },
+        "calloutDelete": {
+          "title": "Toplu silme geri alınamaz",
+          "body": "Geri dönüşüm kutusu yoktur. Silinen başvurular, süreç geçmişleri ve onlara iliştirilmiş İK iletişim bilgileri kalıcı olarak gider; CV dosyalarının kendisi CV'lerim sayfasında kalır. Emin değilseniz önce Ayarlar'dan verinizi dışa aktarın."
+        }
       }
     },
     "suggestions": {
@@ -1511,6 +1623,22 @@
       "q8": {
         "question": "İçe aktarılan ya da eklentiyle eklenen başvurularda istihdam türü neden hep \"Tam Zamanlı\" görünüyor?",
         "answer": "LinkedIn verisi ve eklentinin taradığı ilan sayfaları istihdam türünü açıkça belirtmediği için varsayılan olarak \"FullTime\" atanır; gerekirse başvuruyu düzenleyerek doğru türü seçebilirsiniz."
+      },
+      "q9": {
+        "question": "Birden çok başvurunun durumunu değiştirebilir ya da hepsini silebilir miyim?",
+        "answer": "Evet. Başvurular listesinde satırları işaretleyin — ya da \"filtreye uyanların tümünü seç\" bağlantısıyla o filtrenin eşleştiği her başvuruya ulaşın — alttaki işlem çubuğu durum değişikliği ya da silme sunar."
+      },
+      "q10": {
+        "question": "Yanlış başvuruları toplu değiştirdim, geri alabilir miyim?",
+        "answer": "Toplu durum değişikliği, işlemden sonra listede kalan şeritten geri alınabilir; o sırada kendi elinizle ilerlettiğiniz başvurular olduğu yerde bırakılır. Toplu silme geri alınamaz — onay kutusunu, filtreye uyan her şeyi kapsadığında da onay kelimesini elle yazmanızı istemesinin sebebi budur."
+      },
+      "q11": {
+        "question": "CV'm işverenlere gösteriliyor mu?",
+        "answer": "Hayır. CV'lerim sayfasındaki dosyaları yalnızca siz görürsünüz; üçüncü taraflara ya da herhangi bir yapay zekâ servisine gönderilmez, okunmaz ve analiz edilmez — bir başvuruda hangi CV'nin gittiğini kaydetmek yalnızca kendinize aldığınız bir nottur."
+      },
+      "q12": {
+        "question": "Aynı şirkette birden fazla başvurum var, hepsini bir arada görebilir miyim?",
+        "answer": "Başvurular listesinin üstündeki Görünüm anahtarını \"Liste\"den \"Şirket\"e alın. Böylece sayfa satır değil şirket tutar; bir şirketin başvuruları hiçbir zaman iki sayfaya bölünmez."
       }
     },
     "cv": {
@@ -1650,7 +1778,7 @@
     "subtitle": "Günlük anlık görüntülerden okunuyor. Toplu sayılar — hiçbir kullanıcıya ait veri içermez.",
     "loading": "Yükleniyor…",
     "forbiddenTitle": "Bu sayfaya erişiminiz yok",
-    "forbiddenBody": "Ürün metrikleri yalnızca sunucu tarafındaki yönetici listesinde bulunan hesaplara açıktır.",
+    "forbiddenBody": "Ürün metrikleri yalnızca sunucuda yönetici olarak işaretlenmiş hesaplara açıktır.",
     "emptyTitle": "Henüz anlık görüntü yok",
     "emptyBody": "Günlük iş ilk kez çalıştığında bu sayfa dolar.",
     "activationRate": "Aktivasyon oranı",

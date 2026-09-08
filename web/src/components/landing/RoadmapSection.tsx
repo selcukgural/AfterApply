@@ -9,7 +9,7 @@ export async function RoadmapSection() {
     t("todayAnalytics"),
     t("todayImport"),
     t("todayReminders"),
-    t("todayMatch"),
+    t("todayCv"),
     t("todayEmail"),
     t("todayExtension"),
   ];

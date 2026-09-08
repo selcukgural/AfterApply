@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { TopicCard } from "@/components/help/TopicCard";
@@ -14,6 +16,11 @@ const TOPIC_LINKS = [
   { href: "/help/chrome-extension", key: "chromeExtension" },
   { href: "/help/faq", key: "faq" },
 ] as const;
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/help">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/help", "help");
+}
 
 export default async function HelpOverviewPage() {
   const t = await getTranslations("help.overview");

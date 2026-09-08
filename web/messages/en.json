@@ -1,7 +1,81 @@
 {
   "metadata": {
     "title": "e-kariyerim",
-    "description": "Track your job applications in one place."
+    "description": "Track your job applications in one place.",
+    "pages": {
+      "login": {
+        "title": "Log In",
+        "description": "Log in to e-kariyerim to see where each of your job applications stands."
+      },
+      "register": {
+        "title": "Sign Up",
+        "description": "Create a free e-kariyerim account and track your job applications in one place."
+      },
+      "forgotPassword": {
+        "title": "Forgot Your Password",
+        "description": "Request a password reset link for your e-kariyerim account."
+      },
+      "resetPassword": {
+        "title": "Reset Your Password",
+        "description": "Choose a new password for your e-kariyerim account."
+      },
+      "privacy": {
+        "title": "Privacy Policy",
+        "description": "What e-kariyerim collects, why, where it is stored and how to delete it — CVs, Gmail Scanning and feedback included."
+      },
+      "cookies": {
+        "title": "Cookie Policy",
+        "description": "The two cookies e-kariyerim uses, what they do, how long they last — and why there is no consent banner."
+      },
+      "extensionPrivacy": {
+        "title": "Browser Extension Privacy Policy",
+        "description": "What the e-kariyerim browser extension reads, stores and sends — and what Gmail Scanning does once you turn it on."
+      },
+      "help": {
+        "title": "Help Center",
+        "description": "How e-kariyerim works end to end: tracked jobs, applications, import, the Chrome extension and Gmail Scanning."
+      },
+      "helpGettingStarted": {
+        "title": "Signing Up and Logging In",
+        "description": "Creating an account, logging in, and how your theme and language preferences carry over."
+      },
+      "helpDashboard": {
+        "title": "The Dashboard",
+        "description": "Open applications, the weekly trend, the conversion funnel, response times and the outcome breakdown, panel by panel."
+      },
+      "helpTrackedJobs": {
+        "title": "Tracked Jobs",
+        "description": "Note jobs you haven't applied to yet, then turn them into an application in one step once you do."
+      },
+      "helpApplications": {
+        "title": "Applications",
+        "description": "Creating, listing, grouping by company, bulk actions, the timeline, and editing or deleting an application."
+      },
+      "helpSuggestions": {
+        "title": "Email Suggestions",
+        "description": "How Gmail Scanning turns a status-update email into a suggestion you confirm or dismiss."
+      },
+      "helpImport": {
+        "title": "LinkedIn Import",
+        "description": "Requesting your LinkedIn data export and bringing your whole application history in at once."
+      },
+      "helpSettings": {
+        "title": "Account Settings",
+        "description": "Exporting your data, generating an extension access token, and deleting your account."
+      },
+      "helpChromeExtension": {
+        "title": "Chrome Extension",
+        "description": "Installing the e-kariyerim extension, pasting your token, and logging an application with one click."
+      },
+      "helpFaq": {
+        "title": "Frequently Asked Questions",
+        "description": "Short answers on tokens, bulk actions, CV privacy, imports and Gmail Scanning."
+      },
+      "helpCv": {
+        "title": "My CVs",
+        "description": "Uploading, previewing, setting a default and deleting the CV files you apply with."
+      }
+    }
   },
   "landing": {
     "common": {
@@ -67,13 +141,18 @@
       "eyebrow": "What can you do?",
       "title": "What e-kariyerim does",
       "trackingTitle": "Every application, in one place",
-      "trackingBody": "Track company, position, date, source, and status on a single screen.",
+      "trackingBody": "Track company, position, date, source, and status on a single screen — or switch to the company view and see everything you sent to one employer together.",
       "timelineTitle": "Know how long you've been waiting",
       "timelineBody": "See how much time has passed since you applied. Get a reminder when it's time to follow up.",
       "analyticsTitle": "Measure your job search",
       "analyticsBody": "See your own process through metrics like response rate, interview rate, offer rate, and response time.",
       "noResponseTitle": "Never forget the ones left hanging",
-      "noResponseBody": "Spot applications with no movement in a long time, and easily find the ones that need a follow-up."
+      "noResponseBody": "Spot applications with no movement in a long time, and easily find the ones that need a follow-up.",
+      "extensionTitle": "Log an application without leaving the job page",
+      "extensionBody": "The Chrome extension turns a LinkedIn or kariyer.net posting into a tracked application with one click. Turn on Gmail Scanning and the replies you open there become status suggestions.",
+      "extensionCta": "Get the Chrome extension",
+      "cvTitle": "Know which CV you sent",
+      "cvBody": "Keep the CV files you apply with in one place, and record on each application which one went out — so a call six weeks later doesn't start with guesswork."
     },
     "linkedinImport": {
       "eyebrow": "Import",
@@ -129,6 +208,7 @@
       "todayAnalytics": "Personal analytics",
       "todayImport": "CSV / LinkedIn import",
       "todayReminders": "Reminders",
+      "todayCv": "CV storage",
       "todayEmail": "Gmail scanning integration",
       "todayExtension": "Browser extension",
       "futureInsights": "Anonymous, aggregate hiring insights"
@@ -630,7 +710,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 2026",
+    "lastUpdated": "Last updated: 7 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -1248,8 +1328,8 @@
           "body": "The applied date defaults to today, but you can change it."
         },
         "step4": {
-          "title": "Optionally add a source and notes, then save",
-          "body": "The source field can only be chosen when creating — it can't be changed later."
+          "title": "Optionally add a source, a CV and notes, then save",
+          "body": "The source field can only be chosen when creating — it can't be changed later. If you have files on the My CVs page you can record which one you applied with; your default CV arrives already selected."
         }
       },
       "list": {
@@ -1258,7 +1338,11 @@
       },
       "detail": {
         "title": "Application detail",
-        "body": "Opening an application shows its status badge, location, employment type, applied date, when it was added, the job URL (if any) and your notes, with the Status History and — if available — the job description below. Applications created automatically via Gmail Scanning show a \"Created from Email\" badge."
+        "body": "Opening an application shows its status badge, location, employment type, applied date, when it was added, the job URL (if any), the CV you recorded it with and your notes, with the Timeline and — if available — the job description below. Applications created automatically via Gmail Scanning show a \"Created from Email\" badge."
+      },
+      "contact": {
+        "title": "HR contact and company links",
+        "body": "Under \"Contact\", an application can hold the person to follow up with — name, email address and LinkedIn profile. You can type them in yourself; the extension fills them in from the hiring-team card when a LinkedIn posting shows one, and confirming an email suggestion adds the sender's address the same way. Beside it the company's own website, LinkedIn and kariyer.net pages appear, along with its industry and country once they can be worked out. All of it is yours alone to see — e-kariyerim never writes to that person on your behalf."
       },
       "edit": {
         "title": "Editing",
@@ -1266,7 +1350,7 @@
       },
       "delete": {
         "title": "Deleting",
-        "body": "Clicking \"Delete\" on the detail page opens a confirmation dialog — nothing is deleted until you confirm.",
+        "body": "Clicking \"Delete\" on the detail page opens a confirmation dialog — nothing is deleted until you confirm. To clear out several at once, select them on the list instead (see \"Acting on many applications at once\").",
         "calloutConfirm": {
           "title": "Deletion can't be undone",
           "body": "Deleting an application permanently removes its entire history, including its timeline."
@@ -1290,13 +1374,41 @@
         "title": "What do the statuses mean?",
         "body": "An application can be in one of these statuses: Applied, Screening, Interview, TechnicalInterview, FinalInterview, Offer, Accepted, Rejected, Withdrawn, Ghosted."
       },
-      "statusHistory": {
-        "title": "Status History",
-        "body": "On the application detail page, this lists every status change for that application, newest first: which status it moved from and to, when, the note you wrote at the time, and — most importantly — how the change was applied. Whether you changed it yourself, confirmed an email suggestion, or the system applied it on its own with high confidence: the label on each row says so. For a change that came from an email, the rejection reason and the originating email's subject can be expanded inline. This is where you recall an application's whole history at a glance."
+      "timeline": {
+        "title": "Timeline",
+        "body": "The detail page gathers everything that happened to an application into one chronological list, newest first: every status change and every event you added yourself. A status row says which status it moved from and to, when, the note you wrote at the time, and — most importantly — how the change was applied: whether you changed it yourself, confirmed an email suggestion, changed it as part of a bulk action, or undid one. For a change that came from an email, the rejection reason and the originating email's subject can be expanded inline.",
+        "addEvent": {
+          "title": "Adding an event yourself",
+          "body": "Not everything worth remembering is a status change. \"Add event\" records things like a recruiter getting in touch, a screening starting, an interview being scheduled or completed, an offer arriving, or a follow-up you sent — with the date it happened and a short note. Leave the date empty and it is recorded as now. The event joins the same timeline without moving the application's status."
+        }
       },
       "companyView": {
         "title": "Grouping by company",
         "body": "The List / Company switch above the list collects the same applications under the company you sent them to. In the company view a page holds 10 companies rather than 10 applications — so a company's applications are never split across two pages. Each company header shows how many applications you have there, how they are spread across statuses, and when something last moved; click the header to fold a group away, or use its checkbox to select all of that company's applications at once. Search and the status filter work the same way in both views, and the view you pick is reflected in the URL. If you have more than 20 applications at one company, the link under the group takes you to the flat list narrowed to it."
+      },
+      "bulk": {
+        "title": "Acting on many applications at once",
+        "body": "Tick the box on any row and an action bar appears at the bottom of the screen with two things you can do to the selection: change the status of all of it, or delete all of it. The box in the table header takes the whole page, and next to the count there is a link that reaches past it — every application the current search and filters match, not just the ten in front of you.",
+        "step1": {
+          "title": "Select the rows",
+          "body": "Row by row, a whole page at a time, or everything matching the filter. In the company view, the box on a group header takes that company's listed applications."
+        },
+        "step2": {
+          "title": "Pick an action from the bar",
+          "body": "\"Change status\" moves every selected application to one status and can carry a note. \"Delete\" removes them."
+        },
+        "step3": {
+          "title": "Confirm",
+          "body": "A status change asks once and tells you how many rows will actually move — applications already in that status are counted separately and left alone. Deleting asks for more: a tick to acknowledge it, and for \"all matching\" also the scope spelled out and the word typed in."
+        },
+        "undo": {
+          "title": "Undoing a bulk status change",
+          "body": "After a status change, a strip stays on the list with an \"Undo\" button. It puts each application back where it was — except any you have moved on yourself since, which are left alone, because a decision you made later should win. The undo is added to each application's timeline rather than erasing the change it reverses: the mistake stays on the record."
+        },
+        "calloutDelete": {
+          "title": "A bulk delete cannot be undone",
+          "body": "There is no recycle bin. Deleted applications, their timelines and the HR contacts attached to them are gone for good; the CV files themselves stay on the My CVs page. If you are not sure, export your data from Settings first."
+        }
       }
     },
     "suggestions": {
@@ -1511,6 +1623,22 @@
       "q8": {
         "question": "Why does employment type always show \"Full-Time\" on imported or extension-added applications?",
         "answer": "Neither LinkedIn's export nor the job pages the extension reads specify an employment type, so it defaults to \"FullTime\" — edit the application afterwards if you need the correct type."
+      },
+      "q9": {
+        "question": "Can I change or delete many applications at once?",
+        "answer": "Yes. Tick the rows on the Applications list — or use the \"select all matching\" link to reach every application the current filter matches — and the action bar at the bottom offers a status change or a delete."
+      },
+      "q10": {
+        "question": "I bulk-changed the wrong applications. Can I undo it?",
+        "answer": "A bulk status change can be undone from the strip that stays on the list afterwards; applications you have moved on yourself since are left where they are. A bulk delete cannot be undone — which is why it asks for a tick, and for the word typed in when it covers everything matching a filter."
+      },
+      "q11": {
+        "question": "Is my CV shown to employers?",
+        "answer": "No. Files on the My CVs page are visible only to you, are never sent to a third party or to any AI service, and are not read or analysed — recording which CV an application went out with is a note to yourself."
+      },
+      "q12": {
+        "question": "I have several applications at the same company. Can I see them together?",
+        "answer": "Switch the View toggle above the Applications list from \"List\" to \"Company\". A page then holds companies rather than rows, so one company's applications are never split across two pages."
       }
     },
     "cv": {
@@ -1650,7 +1778,7 @@
     "subtitle": "Read from the daily snapshots. Aggregate counts — no per-user data.",
     "loading": "Loading…",
     "forbiddenTitle": "You don't have access to this page",
-    "forbiddenBody": "Product metrics are limited to accounts on the server-side admin allowlist.",
+    "forbiddenBody": "Product metrics are limited to accounts flagged as an administrator on the server.",
     "emptyTitle": "No snapshots yet",
     "emptyBody": "This page fills in once the daily job has run for the first time.",
     "activationRate": "Activation rate",
