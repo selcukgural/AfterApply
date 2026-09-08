@@ -1,9 +1,22 @@
 import path from "node:path";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import createMDX from "@next/mdx";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+// The guide articles are .mdx files under src/content, imported by the guide routes rather than
+// routed to directly — so `pageExtensions` stays untouched and no stray markdown file under app/
+// can become a page.
+//
+// **The articles are plain CommonMark: no GFM.** remark-gfm was tried and does not take effect on
+// this toolchain — under `next build` (Turbopack) the .mdx still compiles, but nothing passed as
+// `options.remarkPlugins` reaches the pipeline, with or without TURBOPACK set and in either plugin
+// order. It fails silently, which is the dangerous part: a pipe table renders as literal pipes and
+// nothing warns you. So when writing an article, no tables, no strikethrough, no task lists — use a
+// list instead. `src/mdx-components.tsx` still styles `table`/`th`/`td` for the day this is fixed.
+const withMDX = createMDX({});
 
 // Both are baked in at build time (see web/Dockerfile) — the browser has to be allowed to reach
 // whichever origins they point at, so the policy below is derived from them rather than
@@ -88,7 +101,7 @@ const nextConfig: NextConfig = {
 // behavior, not a guess), so error reporting itself (instrumentation-client.ts /
 // sentry.server.config.ts / sentry.edge.config.ts) works even without it —
 // only readable (unminified) stack traces in the Sentry UI wait on this.
-export default withSentryConfig(withNextIntl(nextConfig), {
+export default withSentryConfig(withNextIntl(withMDX(nextConfig)), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,

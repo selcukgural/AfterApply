@@ -4295,6 +4295,194 @@ aranan sorulara cevap veren tek parçası, dizine verilmemiş hâlde duruyordu.
 
 Eklentiye dokunulmadı; sürüm yükseltme, mağaza materyali ya da paket üretimi gerekmedi.
 
+## SEO: teknik düzeltmeler ve yapısal veri (2026-09-08)
+
+Sprint 15'te sitemap/robots/canonical/hreflang kurulmuştu; bu tur o kurulumun **çalışmayan ya da
+zarar veren** parçalarını düzeltiyor. Hiçbiri yeni özellik değil, hepsi mevcut sayfaların
+Google'a nasıl göründüğüyle ilgili.
+
+**Landing `<title>`'ı hero cümlesi olmaktan çıktı.** Canlıda `<title>Başvurdun. Peki sonra ne
+oldu?</title>` yazıyordu: ne ürün adı ne de birinin arattığı ifade geçiyordu — "e-kariyerim"
+aramasının eşleşecek bir şeyi, "iş başvuru takip" aramasının hiçbir sinyali yoktu. Artık landing
+de diğer genel sayfalar gibi `pageMetadata` kullanıyor (`metadata.pages.home`), başlık
+"İş Başvuru Takip Uygulaması · e-kariyerim". Hero cümlesi `<h1>` olarak **yerinde kaldı** ve
+paylaşımda görünen OG görselini üretmeye devam ediyor — pazarlama metni olarak iyiydi, başlık
+etiketi olarak kötüydü, ikisini ayırmak yeterliydi.
+
+**`robots.txt`'teki disallow kuralları hiçbir URL'yle eşleşmiyordu.** `Disallow: /dashboard`
+yazıyordu ama `routing.localePrefix` "always" — var olan tek adres `/tr/dashboard`. Kural atıl
+duruyordu. Artık `disallowedPaths(routing.locales, PROTECTED_PATHS)` iki dilin dokuz korumalı
+alanını da üretiyor (liste `/dashboard`, `/applications` ve `/settings`'ten dokuza çıktı; giriş
+gerektiren her alan kapsandı). Sızıntı riski yoktu — sayfalar zaten login'e yönlendiriyor — ama
+tarama bütçesini harcamalarının anlamı da yoktu.
+
+**`sitemap.ts`'ten `lastModified` kaldırıldı.** `new Date()` idi: route istek başına
+render edildiği için 34 URL'in tamamı her taramada değişmiş görünüyordu. Google böyle bir lastmod
+sinyalini kısa sürede tamamen yok sayar. Gerçek bir değişiklik tarihi verecek durumda değiliz;
+alanı hiç yazmamak "kendi tarama geçmişini kullan" demek ve dürüst olanı bu. Yan etki: route artık
+statik olarak prerender ediliyor.
+
+**`x-default` hreflang eklendi.** İki dil bildiriliyordu ama ziyaretçinin dili ikisinden de değilse
+hangisine düşüleceği söylenmiyordu. `routing.defaultLocale` (tr) — `/` kökünün zaten yönlendirdiği
+yer. Sitemap de artık her girdide `xhtml:link` alternatiflerini taşıyor.
+
+**Yapısal veri (JSON-LD) ilk kez eklendi.** Landing'de `Organization` + `WebApplication`
+(`@graph` içinde, `@id` ile birbirine bağlı; ücretsiz olduğu `offers.price: "0"` ile açıkça
+belirtiliyor), on bir yardım sayfasında `BreadcrumbList`. **`FAQPage` bilerek eklenmedi:** Google
+2023'ten beri FAQ rich result'ı fiilen yalnızca resmi/sağlık sitelerine veriyor, `/help/faq`'teki
+on iki soruyu işaretlemek karşılıksız emek olurdu.
+
+Yardım konularının listesi (`HELP_TOPICS`) `HelpSidebar`'dan `lib/seo/routes.ts`'e taşındı;
+kenar çubuğu, sitemap ve breadcrumb artık aynı diziden besleniyor — üçünün ayrışması sessizce
+eksik bir sitemap girdisi ya da yanlış bir breadcrumb üretirdi.
+
+`JsonLd` bileşeni `dangerouslySetInnerHTML` kullanıyor; JSON-LD gövdesi yazmanın React'te başka
+yolu yok (React aksi hâlde tırnakları kaçırır ve JSON parse edilmez). `serializeJsonLd` `<`, `>`
+ve `&` karakterlerini kaçırıyor: bugün node'lara giren her şey kendi çeviri metnimiz, ama bir gün
+oraya bir şirket adı ya da ilan başlığı girerse `</script>` ile eleman erken kapatılabilirdi.
+
+**Ölçüm tarafı hâlâ eksik ve kod ile çözülemez:** Google Search Console doğrulaması yapılmamış,
+sitemap hiç gönderilmemiş, `site:ekariyerim.com` sonuç döndürmüyor — site muhtemelen henüz dizine
+girmemiş. Bing Webmaster Tools da yok. İkisi de ücretsiz ve kullanıcının yapması gereken adımlar.
+
+Testler: `web/src/lib/seo/routes.test.ts` (12) ve `jsonLd.test.ts` (7) — locale ön eki, x-default,
+lastmod'un yokluğu, sitemap ile robots'un çelişmemesi, `</script>` kaçışı. Eklentiye dokunulmadı.
+
+---
+
+## Rehber bölümü: ilk SEO içeriği (2026-09-08)
+
+Aynı gün yapılan teknik SEO düzeltmelerinin devamı. Oradaki tespit şuydu: teknik altyapı iyi, eksik
+olan **aranan bir şeye cevap veren içerik**. Bu tur o içeriğin ilk dört yazısını ve altyapısını
+getiriyor.
+
+### Konu seçimi neden bu dört yazı
+
+Dört hedef sorgu için canlı SERP'e bakıldı ve önceki turdaki "TR long-tail rakipsiz" iddiası
+**yanlış çıktı**, düzeltildi:
+
+- `linkedin başvuru geçmişi nasıl görülür` → ilk sonuçların neredeyse tamamı **linkedin.com/help**.
+  Head sorguda LinkedIn yenilmez. Kazanılabilir olan, LinkedIn'in kendi yardımının anlatmadığı şey:
+  listeyi **dışa aktarmak** (veri arşivi).
+- `iş başvuru takip excel şablonu` → excelyardim, someka, pikbest, excelsablonu; otorite şablon
+  siteleri. Ama hiçbiri iş arayan odaklı değil, çoğu İK tarafı. Fark yaratmanın tek yolu gerçekten
+  daha iyi bir dosya vermek.
+- `iş başvurusundan sonra ne kadar beklenir` → eleman.net/yenibiriş/secretcv dolu, ama **hiçbirinde
+  ölçüm yok**; hepsi "2-4 hafta" diyen tahmin yazıları.
+- `red maili / başvurunuz olumsuz sonuçlandı` → sonuçların yarısı İK tarafı ("nasıl yazılır"),
+  yarısı kredi/vize. **Aday tarafı gerçekten boş.**
+
+Buradan çıkan kural: **genel kariyer tavsiyesi yazılmayacak.** Otorite ve içerik ekibi olan yerel
+kariyer sitelerine karşı kaybedilir. Sadece başkasının yazamayacağı üç tip içerik yazılır — ürün
+gerçeği (LinkedIn export, eklenti, Gmail Taraması), gerçek bir araç (şablon), ve ileride kendi
+verimiz. Üçüncüsü bugün sıfır kullanıcı yüzünden bekliyor; iskeleti kuruldu.
+
+### Yapısal kararlar
+
+**`/help` değil, ayrı bir `/guide`.** Yardım merkezi *ürünü kullananlar* için, rehber *ürünü henüz
+bilmeyenler* için. İkisini aynı kenar çubuğuna koymak ikisini de bozardı.
+
+**Yol segmenti İngilizce (`/guide`), slug ise dile özel.** Mevcut düzenle tutarlı — `/help`,
+`/privacy`, `/cookies` da iki dilde aynı İngilizce segmenti kullanıyor. Anahtar kelime zaten
+slug'da: `/tr/guide/is-basvuru-takip-excel-sablonu` ↔ `/en/guide/job-application-tracker-spreadsheet`.
+next-intl'in `pathnames` özelliği kullanılmadı: `pathnames` tanımlandığı anda `Link` tipleri o
+listeyle sınırlanıyor ve uygulamadaki her mevcut `<Link href="/help">` tip hatası veriyor — bir
+segment için ödenmeyecek bir bedel.
+
+Bu, `alternateLanguages`'i **dile göre değişen yol** kavramıyla tanıştırdı (`LocalisedPath`):
+Türkçe yazının `en` hreflang'i, İngilizce **slug**'ı göstermek zorunda. Sitemap ve
+`generateMetadata` aynı yerden besleniyor, `routes.test.ts` bunu ayrıca doğruluyor.
+
+**Metadata registry'de, düzyazı .mdx'te.** Slug, tarih ve başlık yönlendirme/metadata verisi;
+sitemap ve `generateMetadata` bunları öğrenmek için MDX derlemek zorunda kalmamalı. `.mdx` dosyaları
+sadece düzyazı taşıyor — yazması da böylesi rahat. `messages/*.json` de kullanılmadı: o katalog
+anahtar anahtarına iki dilde karşılaştırılan **arayüz metinleri** için.
+
+**`content.ts`'teki loader'lar tek tek yazıldı**, `import(\`…/${key}.${locale}.mdx\`)` şablonuyla
+değil: her yol bundler'ın gördüğü bir literal olsun ki karşılığı olmayan bir anahtar **build'de**
+patlasın, kimsenin bakmadığı dilde 404 üretmesin. `articles.test.ts` iki listeyi aynı kümede tutuyor.
+
+### remark-gfm bu araç zincirinde çalışmıyor — SESSİZCE
+
+Yazılarda tablo kullanılmak istendi, `remark-gfm` eklendi ve **hiçbir etkisi olmadı**. `next build`
+(Turbopack) `.mdx`'i derlemeye devam ediyor ama `options.remarkPlugins` olarak verilen hiçbir şey
+pipeline'a ulaşmıyor. Denenenler: dokümandaki string biçimi (`["remark-gfm"]`), `TURBOPACK=1` ile
+build, ve `withMDX`'in eklenti zincirinde en dışa alınması. Üçü de sonuçsuz. `@next/mdx`'in
+`mdx-js-loader.js`'i string eklentiyi doğru şekilde çözüyor, yani sorun orada değil; Turbopack'in
+MDX'i kendi yolundan derleyip options'ı yok saydığı görünüyor.
+
+**Tehlikeli olan sessiz olması:** pipe tablosu hata vermiyor, canlı sayfada bir paragraf dolusu
+düz `|` karakteri olarak render oluyor. Bu yüzden bağımlılık geri alındı, iki tablo listeye
+çevrildi ve `articles.test.ts`'e MDX kaynaklarını tarayan bir koruma testi kondu — ileride biri
+tablo yazarsa test düşer. `next.config.ts`'teki yorum durumu anlatıyor;
+`src/mdx-components.tsx` `table`/`th`/`td` stillerini bu düzelirse diye tutuyor.
+
+### Excel şablonu gerçek bir dosya, ve ürüne bağlı
+
+`web/public/guide/*.xlsx`, `web/scripts/build_guide_spreadsheet.py` ile üretiliyor (elle düzenlenen
+binary yerine script: kolon değişikliği diff olarak görünür). İki şey kasıtlı:
+
+- **Başlıklar `CsvColumnMapper`'ın zaten tanıdığı adlar** (Şirket/Pozisyon/Başvuru Tarihi/Durum/
+  Konum/İlan Linki ve İngilizce karşılıkları). Tabloyu aşan biri CSV olarak kaydedip **hiç kolon
+  eşlemeden** içeri aktarabiliyor.
+- **Durum açılır listesi `ImportRowParser.StatusAliases`'in kabul ettiği değerleri** veriyor.
+  Buradan bir tutarsızlık çıktı: uygulamanın arayüzü `Screening` için **"Ön Değerlendirme"** yazıyor
+  ama importer'ın tanıdığı alias **"Ön Eleme"**. Şablon alias'ı kullanıyor; asıl drift ayrıca ele
+  alınmalı (bu turda dokunulmadı).
+
+Özet sekmesindeki "geri dönüş oranı" **reddedilenleri de sayıyor** — ölçülen şey "kabul edildim mi"
+değil, "başvurum bir insan tarafından görüldü mü". Yazıda da böyle açıklanıyor.
+
+### Doğrulama
+
+Üretim build'i ayağa kaldırılıp 10 sayfa + 2 xlsx tek tek çekildi: hepsi 200, sayfalardaki **her iç
+bağlantı** 200 (yazılar arası çapraz linkler dahil, `/tr/...` ↔ `/en/...` doğru locale'e çözülüyor),
+her yazıda `BreadcrumbList` + `Article` JSON-LD, üçer hreflang (tr/en/x-default) ve karşı dilin
+**farklı slug'ı**. Sitemap 34'ten 44 URL'e çıktı. Testler: `articles.test.ts` (14) +
+`routes.test.ts` 12'den 18'e; toplam 183.
+
+### Üç yazı daha (aynı gün, ikinci parti)
+
+Yine SERP'e bakılarak seçildi, ve **kendi önceki önerimden biri elendi**: `ATS uyumlu CV` düşünülmüştü
+ama eleman.net, cvmaker, wehire, hollaminds, hr-collab, abprojeyonetimi hepsi aynı dokuz maddelik
+listeyi yazmış — ayırt edici hiçbir şeyimiz olamaz ve zaten "genel kariyer tavsiyesi yazma" kuralına
+aykırı. Yerine geçen üçü:
+
+- **`kariyer-net-application-history`** — sorgunun ilk sonuçlarında kariyer.net'in kendi yardımı,
+  **Şikayetvar** ("eski başvurularımı göstermiyor") ve Ekşi var. Şikayet siteleri sıralanıyorsa
+  cevaplanmamış gerçek bir dert var demektir. Yazı iki çözüm veriyor: başvuru anında kaydetmek, ve
+  **KVKK m.11 veri talebi** (m.13'teki 30 günlük cevap yükümlülüğüyle). İkincisi iş arayan
+  perspektifinden hiçbir yerde yazılmamış; hukuki tavsiye olmadığı açıkça belirtiliyor.
+- **`reapplying-to-the-same-company`** — rekabet ince, ve ürüne doğrudan bağlanıyor (şirkete göre
+  gruplama, mükerrer başvuru tespiti).
+- **`how-many-applications`** — TR sonuçları **gerçekten boş**; çıkan her şey İngilizce
+  (Indeed, standout-cv, interviewguys) ve birbiriyle çelişiyor (32-200 aralığı). Yazı uydurma bir
+  Türkiye rakamı vermiyor, **böyle bir rakamın bilinmediğini açıkça söylüyor** ve tek anlamlı ölçünün
+  kişinin kendi geri dönüş oranı olduğunu anlatıyor.
+
+`related` grafiği yeniden bağlandı; 7 yazının hepsi birbirinden erişilebilir.
+
+**Yeni testler (`articles.test.ts` 14 → 21).** Bu partide asıl risk düzyazı içindeki bağlantılar:
+bir slug yazım hatası build'i geçer, sayfa render olur, sadece tıklayan okur fark eder. Eklenen
+kontroller MDX kaynaklarını tarıyor — her `/guide/...` bağlantısı **aynı dildeki** gerçek bir yazıya
+çözülüyor mu, her `/help/...` bağlantısı `HELP_TOPICS`'te var mı, indirilen her dosya `public/`'te
+duruyor mu, her yazı en az bir başka yazıya link veriyor mu (küme kopmasın), ve gövde gerçek düzyazı
+mı (placeholder kalmamış). Bağlantı testi kasıtlı bir bozma ile doğrulandı: slug bozulduğunda test
+düşüyor.
+
+Ayrıca başlık/açıklama uzunlukları sınırlandı (başlık ≤ 60, açıklama 110-160). Sınır uydurulmadı:
+önce mevcut değerler ölçüldü, **160'ı aşan beş açıklama kısaltıldı**, sonra kural kondu.
+
+Doğrulama: 16 sayfa + sayfalardaki 28 iç bağlantı tek tek çekildi, hepsi 200. Sitemap 44 → 50 URL,
+toplam test 183 → 190.
+
+**Uyarı — tekrar tuzağa düşülmesin:** `next build` sonrası eski `standalone/server.js` süreci
+hayatta kalırsa yeni sunucu porta bağlanamıyor ve **eski build cevap veriyor**. Bu doğrulama
+sırasında üç kez yanlış sonuca yol açtı (tablo düzeltmesi "uygulanmamış" göründü). Doğrulamadan
+önce `pkill` + `lsof -ti:PORT` ile portun boş olduğu teyit edilmeli.
+
+---
+
 ---
 ---
 

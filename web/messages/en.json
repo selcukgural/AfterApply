@@ -3,6 +3,14 @@
     "title": "e-kariyerim",
     "description": "Track your job applications in one place.",
     "pages": {
+      "home": {
+        "title": "Job Application Tracker",
+        "description": "Track your job applications in one place: what stage each one is at, how long it has been waiting, which ones got a reply. Import your LinkedIn history in one go."
+      },
+      "guide": {
+        "title": "Guide",
+        "description": "The job hunt from the applicant's side: exporting your LinkedIn history, tracking applications, reply times and rejection emails."
+      },
       "login": {
         "title": "Log In",
         "description": "Log in to e-kariyerim to see where each of your job applications stands."
@@ -236,6 +244,7 @@
       "resources": "Resources",
       "privacy": "Privacy Policy",
       "rights": "All rights reserved.",
+      "guide": "Guide",
       "help": "Help Center",
       "cookies": "Cookie Policy"
     }
@@ -1675,6 +1684,24 @@
       "calloutPrivacy": {
         "title": "Where are your CVs stored?",
         "body": "Your files are held in a bucket closed to the public on Google Cloud in the EU region (europe-west1). They are never sent to any third party, AI services included. Because a CV can carry sensitive data such as a photo or health information, we ask for your explicit consent before each upload; the box is never pre-ticked. You can withdraw consent by deleting the file, and deleting your account deletes your files with it."
+      }
+    }
+  },
+  "guide": {
+    "index": {
+      "eyebrow": "Guide",
+      "title": "The job hunt, from the applicant's side",
+      "intro": "The questions nobody answers properly: how to get your LinkedIn application history out, how long to leave an application open, what a rejection email actually says. Answers first, product second.",
+      "helpLink": "Already using e-kariyerim? Step-by-step walkthroughs live in the <link>Help Center</link>."
+    },
+    "article": {
+      "publishedOn": "Published {date}",
+      "updatedOn": "Updated {date}",
+      "related": "Related reading",
+      "cta": {
+        "title": "You don't have to track this by hand",
+        "body": "e-kariyerim keeps your applications in one place, counts how long each one has been waiting, and updates the status itself when a reply arrives. Free.",
+        "button": "Get started free"
       }
     }
   },

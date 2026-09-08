@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getServerTheme } from "@/lib/theme/getServerTheme";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { jsonLdGraph, organizationJsonLd, webApplicationJsonLd } from "@/lib/seo/jsonLd";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
@@ -15,35 +18,27 @@ import { PrivacySection } from "@/components/landing/PrivacySection";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 
+/**
+ * The hero line ("Başvurdun. Peki sonra ne oldu?") stays the <h1>, but it made a poor <title>: it
+ * carries neither the product name nor the thing people search for, so a search for "e-kariyerim"
+ * had nothing to match and a search for "iş başvuru takip" had no signal at all. The title now says
+ * what the product is, and the OG image still shows the hero line when the link is shared.
+ */
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations("landing.hero");
-  return {
-    title: t("title"),
-    description: t("subtitle"),
-    alternates: {
-      canonical: `/${locale}`,
-      languages: { tr: "/tr", en: "/en" },
-    },
-    openGraph: {
-      title: t("title"),
-      description: t("subtitle"),
-      type: "website",
-      url: `/${locale}`,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: t("title"),
-      description: t("subtitle"),
-    },
-  };
+  return pageMetadata(locale, "", "home");
 }
 
 export default async function LandingPage() {
   const theme = await getServerTheme();
+  const locale = await getLocale();
+  const t = await getTranslations("metadata.pages");
 
   return (
     <div className="flex min-h-screen flex-col">
+      <JsonLd
+        data={jsonLdGraph(organizationJsonLd(), webApplicationJsonLd(locale, t("home.description")))}
+      />
       <LandingNavbar initialTheme={theme} />
       <main className="flex-1">
         <HeroSection />

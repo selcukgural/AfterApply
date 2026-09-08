@@ -1,0 +1,71 @@
+LinkedIn başvurduğun ilanları sana gösterir. Ama o listeyi **dışarı çıkarmanın** bir düğmesi yoktur: kopyalayamazsın, filtreleyemezsin, "geçen ay kaç başvuru yaptım" diye soramazsın. Ekranda görünen şey bir kayıt değil, bir görüntüdür.
+
+Oysa o veri sende. LinkedIn'in kendi veri arşivi talebiyle, bugüne kadar yaptığın tüm Easy Apply başvurularını tek bir CSV dosyası olarak indirebilirsin. Bu yazı o dosyayı nasıl alacağını, içinde ne çıktığını ve nelerin **çıkmadığını** anlatıyor.
+
+## Önce ekrandaki liste: nerede ve neden yetmiyor
+
+Başvurduğun ilanlar şurada duruyor:
+
+- **Masaüstü:** üst menüden İş İlanları → sol taraftan "İş İlanlarım" → **Başvurulanlar**
+- **Mobil:** İş İlanları sekmesi → arama çubuğunun altından "İş ilanlarım" → **Başvurulanlar**
+
+Bu liste üç noktada tıkanır:
+
+1. **Sadece Easy Apply.** Bir ilana "Şirket sitesinden başvur" diyerek gittiysen LinkedIn bunu bir başvuru olarak saymaz. Çoğu insanın başvurularının azımsanmayacak bir kısmı bu yüzden hiçbir yerde görünmez.
+2. **Sonuç yok.** Liste sadece "başvurdun" der. Kimin döndüğünü, kimin reddettiğini, hangisinin altı haftadır sessiz olduğunu göstermez.
+3. **Kalıcı değil.** İlan yayından kalktığında ya da hesabında bir şeyler değiştiğinde satırlar eksilebilir. "LinkedIn başvurularım kayboldu" diye arayan çok insan var ve genellikle olan budur.
+
+Arşiv talebi bu üçünden ilk ikisini çözmez ama üçüncüsünü kalıcı olarak çözer: elindeki dosya senin, LinkedIn'in ne yaptığından bağımsız.
+
+## Veri arşivini talep etme
+
+LinkedIn'in resmî yolu, ve ücretsiz:
+
+1. Sağ üstteki profil fotoğrafın → **Ayarlar ve Gizlilik**
+2. Sol menüden **Veri Gizliliği**
+3. "LinkedIn verilerinizi nasıl kullanıyor" başlığı altından **Verilerinizin bir kopyasını alın**
+4. Burada iki seçenek var. **"Veri arşivinizi indirin"** (büyük, her şeyi içeren paket) ya da belirli veri kategorilerini tek tek seçmek.
+5. Talebi gönder, şifreni doğrula.
+
+**Ne kadar bekleyeceğin hangisini seçtiğine bağlı.** LinkedIn'in kendi ifadesiyle: belirli bir veri türü seçersen e-posta **dakikalar içinde**, büyük arşivi seçersen **24 saat içinde** geliyor. Gelen e-postadaki indirme bağlantısı **72 saat** geçerli — kaçırırsan talebi baştan yapman gerekir, o yüzden e-postayı gördüğün gün indir.
+
+> Pratik tavsiye: iş başvuruları büyük arşivin içinde geliyor. "Dakikalar içinde" gelen küçük paketle uğraşıp sonra tekrar talep açmak yerine, en baştan büyük arşivi iste ve ertesi güne bırak.
+
+## Arşivin içinde ne çıkıyor
+
+Gelen dosya bir **.zip**. İçini açtığında onlarca CSV görürsün — bağlantıların, mesajların, beğenilerin, reklam tercihlerin. Aradığın dosya **Jobs** klasöründeki `Job Applications.csv`. Başvuru sayın fazlaysa LinkedIn bunu `Job Applications_1.csv`, `Job Applications_2.csv` diye parçalara bölebilir; hepsi aynı veriyi taşır, hepsini almalısın.
+
+Dosyada satır başına bir başvuru var ve tipik olarak şunlar bulunur:
+
+- başvurduğun **şirket**
+- **pozisyon** adı
+- **başvuru tarihi**
+- ilanın **bağlantısı**
+- başvuruda kullandığın **CV dosyasının adı**
+- varsa ilana özel **eleme sorularına verdiğin cevaplar**
+
+LinkedIn bu kolonların adlarını zaman zaman değiştirir, o yüzden dosyayı bir araca vereceksen kolon adına birebir bağımlı olmayan bir araç seç.
+
+**Dosyada olmayan şey ise en önemlisi: sonuç.** Hangi başvurunun reddedildiği, hangisinin mülakata döndüğü, hangisinin hiç cevap almadığı bu dosyada yok — çünkü LinkedIn de bilmiyor. O bilgi senin e-posta kutunda.
+
+## Dosyayı aldın, şimdi ne yapacaksın
+
+Üç seçeneğin var, artan sırayla:
+
+**Excel'de aç ve öylece bırak.** En azından bir yedeğin olur. Kolon başlıklarını Türkçeleştirip birkaç kolon eklersen (durum, son hareket tarihi) elle takip edilebilir bir tabloya dönüşür — [hazır bir şablonu buradan indirebilirsin](/guide/is-basvuru-takip-excel-sablonu).
+
+**Kendin bir tablo kur.** Bekleme sürelerini formülle hesaplarsın, hangi başvurunun kaç gündür sessiz olduğunu görürsün. Otuz-kırk başvuruya kadar gayet iyi çalışır.
+
+**Bir takip aracına aktar.** e-kariyerim bu .zip'i olduğu gibi kabul eder: içindeki `Job Applications` dosyalarını kendisi bulur, kolonları Türkçe ya da İngilizce başlıklardan tanır, aynı ilana iki kez başvurmuşsan tekrarları eler. Adım adım anlatımı [Yardım Merkezi'ndeki içe aktarma sayfasında](/help/import).
+
+## Sık karşılaşılan üç sorun
+
+**"Zip'i açtım, CSV'yi yükledim, olmadı."** Çoğu araç arşivin tamamını ister, tek bir CSV'yi değil — çünkü dosya birden fazla parçaya bölünmüş olabilir. `.zip`'i olduğu gibi ver.
+
+**"Jobs klasörü yok."** Küçük paketi seçmişsindir. İş başvuruları büyük arşivde geliyor; talebi "veri arşivinizi indirin" seçeneğiyle tekrarla.
+
+**"Başvurularımın yarısı eksik."** Muhtemelen eksik değil: şirketin kendi sitesinden yaptığın başvurular LinkedIn'de hiç kayıtlı değil. Bu dosya senin başvuru geçmişinin tamamı değil, **LinkedIn üzerinden yaptığın** başvuruların tamamı. Farkı kapatmanın tek yolu, başvururken kaydetmek.
+
+## Peki kariyer.net ve diğerleri?
+
+kariyer.net'te başvurularını "Başvurularım" ekranında görürsün ve orada da toplu bir dışa aktarma yoktur. Aynı şey çoğu yerel iş sitesi için geçerli. Yani birden fazla platformdan başvuruyorsan, LinkedIn arşivi geçmişini kurtarır ama **bundan sonrasını** tek bir yerde toplamak istiyorsan başvuru anında kaydetmen gerekir — sonradan derlemek mümkün değil.
