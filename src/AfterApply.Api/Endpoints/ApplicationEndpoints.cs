@@ -23,6 +23,17 @@ public static class ApplicationEndpoints
             .WithDescription("Paged, filterable by status/company/date range — see GetApplicationsQuery's query parameters.")
             .Produces<PagedResult<ApplicationSummaryResponse>>();
 
+        group.MapGet("/grouped", async ([AsParameters] GetGroupedApplicationsQuery query, ClaimsPrincipal user,
+                IApplicationService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetGroupedByCompanyAsync(user.GetUserId(), query, cancellationToken)))
+            .WithValidation<GetGroupedApplicationsQuery>()
+            .WithSummary("List the current user's applications grouped by company")
+            .WithDescription("Same row filter as the flat list, but the paged unit is the company: PageSize counts companies. "
+                + "Each group carries at most 20 applications and flags HasMore when the company holds more; the rest are "
+                + "reachable through GET /api/applications?companyId=. TotalApplicationCount is the matching application count "
+                + "across every page, which is what a bulk \"all matching\" selection acts on.")
+            .Produces<GroupedApplicationsResponse>();
+
         group.MapGet("/summary", async (ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.GetSummaryCountsAsync(user.GetUserId(), cancellationToken)))
             .WithSummary("Get application counts by status")

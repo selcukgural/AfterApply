@@ -97,12 +97,40 @@ public enum SortDirection
     Descending
 }
 
+/// <summary>How the company view orders the groups it shows. Deliberately not
+/// <see cref="ApplicationListSortBy"/>: half of that enum (job title, status, applied date) names a
+/// property of a single application, which a company holding several of them does not have.</summary>
+public enum CompanyGroupSortBy
+{
+    /// <summary>The most recent UpdatedAt across the company's matching applications.</summary>
+    LastActivity,
+    ApplicationCount,
+    CompanyName
+}
+
 public sealed record GetApplicationsQuery(
     int Page = 1,
     int PageSize = 10,
     string? Search = null,
     ApplicationStatus? Status = null,
+    // Narrows the list to one company. Added for the company view's "show all N at this company"
+    // link, and free for every bulk operation too: FilteredApplications is the single place that
+    // resolves a filter into rows, so a filter-shaped bulk selection inherits it.
+    Guid? CompanyId = null,
     ApplicationListSortBy SortBy = ApplicationListSortBy.AppliedAt,
+    SortDirection SortDirection = SortDirection.Descending);
+
+/// <summary>
+/// The company view's query. Same row filter as <see cref="GetApplicationsQuery"/> — the two views
+/// must agree about which applications exist — but the unit of paging is the company, so
+/// <c>PageSize</c> counts companies, not applications.
+/// </summary>
+public sealed record GetGroupedApplicationsQuery(
+    int Page = 1,
+    int PageSize = 10,
+    string? Search = null,
+    ApplicationStatus? Status = null,
+    CompanyGroupSortBy SortBy = CompanyGroupSortBy.LastActivity,
     SortDirection SortDirection = SortDirection.Descending);
 
 /// <summary>
@@ -117,9 +145,14 @@ public sealed record BulkSelection(
     BulkFilterSelection? AllMatching = null);
 
 /// <summary>The list's own filter, repeated back so the server resolves exactly the set the user
-/// was looking at. Deliberately only the two fields that narrow the row set — paging and sorting
-/// cannot change which applications match, so accepting them would only invite them to drift.</summary>
-public sealed record BulkFilterSelection(string? Search = null, ApplicationStatus? Status = null);
+/// was looking at. Deliberately only the fields that narrow the row set — paging and sorting cannot
+/// change which applications match, so accepting them would only invite them to drift.</summary>
+/// <param name="CompanyId">Set when the list the user was looking at was narrowed to one company —
+/// the company view's "show the remaining N at this company" link does exactly that. Without it,
+/// "select all matching" on that screen would resolve to every company's rows instead of the one on
+/// screen, which is the widest possible way to get a destructive operation wrong.</param>
+public sealed record BulkFilterSelection(string? Search = null, ApplicationStatus? Status = null,
+    Guid? CompanyId = null);
 
 /// <param name="ExpectedCount">How many applications the user was told they were acting on.
 /// Required for an <c>AllMatching</c> selection and refused when the count no longer holds, so a

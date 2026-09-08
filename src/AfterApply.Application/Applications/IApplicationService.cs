@@ -7,6 +7,15 @@ public interface IApplicationService
 {
     Task<PagedResult<ApplicationSummaryResponse>> GetAllAsync(Guid userId, GetApplicationsQuery query, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The same applications <see cref="GetAllAsync"/> would return for the same filter, collected
+    /// under the company they were sent to. Pages over companies rather than applications, so that a
+    /// company's applications can never be split across two pages — which is the whole point of the
+    /// view. Each group carries at most a fixed number of rows; see
+    /// <see cref="Contracts.CompanyGroupResponse.HasMore"/>.
+    /// </summary>
+    Task<GroupedApplicationsResponse> GetGroupedByCompanyAsync(Guid userId, GetGroupedApplicationsQuery query, CancellationToken cancellationToken);
+
     Task<ApplicationSummaryCountsResponse> GetSummaryCountsAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<ApplicationDetailResponse?> GetByIdAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken);

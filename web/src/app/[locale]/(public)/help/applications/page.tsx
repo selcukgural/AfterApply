@@ -38,6 +38,11 @@ export default async function ApplicationsHelpPage() {
       </section>
 
       <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("companyView.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("companyView.body")}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("detail.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("detail.body")}</p>
         <Screenshot src="/help/screenshots/application-detail.png" alt={t("detail.title")} />

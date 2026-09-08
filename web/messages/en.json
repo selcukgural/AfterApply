@@ -362,7 +362,9 @@
       "sortTitle": "Position",
       "sortStatus": "Status",
       "descending": "Descending",
-      "ascending": "Ascending"
+      "ascending": "Ascending",
+      "sortLastActivity": "Last Activity",
+      "sortApplicationCount": "Application Count"
     },
     "table": {
       "empty": "No applications found.",
@@ -378,7 +380,8 @@
       "first": "First",
       "previous": "Previous",
       "next": "Next",
-      "last": "Last"
+      "last": "Last",
+      "pageInfoCompanies": "Page {page} / {totalPages} ({totalCount} companies)"
     },
     "form": {
       "companyName": "Company Name",
@@ -494,6 +497,7 @@
         "cascadeKept": "Your companies and your CVs are not deleted.",
         "scopeSearch": "Search",
         "scopeStatus": "Status filter",
+        "scopeCompany": "Company",
         "scopeMatches": "Matching records",
         "scopeNone": "none",
         "scopeAllStatuses": "none — every status included",
@@ -521,6 +525,21 @@
         "dismiss": "Dismiss"
       },
       "pageSelected": "{count, plural, one {# application on this page is selected.} other {All # applications on this page are selected.}}"
+    },
+    "view": {
+      "label": "View",
+      "flat": "List",
+      "company": "Company"
+    },
+    "groups": {
+      "distribution": "Status breakdown",
+      "lastActivity": "Last activity",
+      "applicationCount": "{count, plural, one {# application} other {# applications}}",
+      "selectGroup": "Select the applications at {company}",
+      "showRemaining": "{count, plural, one {Show # more application at {company}} other {Show # more applications at {company}}}",
+      "filteredByCompany": "Company: {company}",
+      "thisCompany": "the selected company",
+      "clearCompanyFilter": "Clear the company filter"
     }
   },
   "settings": {
@@ -1274,6 +1293,10 @@
       "statusHistory": {
         "title": "Status History",
         "body": "On the application detail page, this lists every status change for that application, newest first: which status it moved from and to, when, the note you wrote at the time, and — most importantly — how the change was applied. Whether you changed it yourself, confirmed an email suggestion, or the system applied it on its own with high confidence: the label on each row says so. For a change that came from an email, the rejection reason and the originating email's subject can be expanded inline. This is where you recall an application's whole history at a glance."
+      },
+      "companyView": {
+        "title": "Grouping by company",
+        "body": "The List / Company switch above the list collects the same applications under the company you sent them to. In the company view a page holds 10 companies rather than 10 applications — so a company's applications are never split across two pages. Each company header shows how many applications you have there, how they are spread across statuses, and when something last moved; click the header to fold a group away, or use its checkbox to select all of that company's applications at once. Search and the status filter work the same way in both views, and the view you pick is reflected in the URL. If you have more than 20 applications at one company, the link under the group takes you to the flat list narrowed to it."
       }
     },
     "suggestions": {

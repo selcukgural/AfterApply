@@ -13,6 +13,9 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
+  <data name="REQUEST_MALFORMED" xml:space="preserve">
+    <value>The request could not be read. Check the address and try again.</value>
+  </data>
   <data name="BULK_OPERATION_TOO_LARGE" xml:space="preserve">
     <value>A single bulk operation can cover at most {0} applications. Narrow the selection and try again.</value>
   </data>

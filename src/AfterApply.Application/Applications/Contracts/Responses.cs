@@ -6,11 +6,44 @@ namespace AfterApply.Application.Applications.Contracts;
 
 public sealed record ApplicationSummaryResponse(
     Guid Id,
+    Guid CompanyId,
     string CompanyName,
     string JobTitle,
     ApplicationStatus Status,
     DateTimeOffset AppliedAt,
     DateTimeOffset UpdatedAt);
+
+/// <summary>One bar of a company group's status distribution. Only statuses the company actually
+/// holds appear — a zero-count entry would draw an empty segment the user has to decode.</summary>
+public sealed record CompanyGroupStatusCount(ApplicationStatus Status, int Count);
+
+/// <summary>
+/// One company and the applications the current filter matches at it.
+/// </summary>
+/// <param name="ApplicationCount">Every matching application at this company, which is not
+/// necessarily <c>Applications.Count</c> — see <paramref name="HasMore"/>.</param>
+/// <param name="HasMore">True when the company holds more matching applications than the response
+/// carries. The rows are capped so that one company with a long history cannot decide the size of
+/// everybody's page; the view links the rest out to the flat list filtered to this company.</param>
+public sealed record CompanyGroupResponse(
+    Guid CompanyId,
+    string CompanyName,
+    int ApplicationCount,
+    DateTimeOffset LastActivityAt,
+    IReadOnlyCollection<CompanyGroupStatusCount> StatusCounts,
+    IReadOnlyCollection<ApplicationSummaryResponse> Applications,
+    bool HasMore);
+
+/// <param name="TotalCount">Matching companies — the paged unit, and what the pager counts.</param>
+/// <param name="TotalApplicationCount">Matching applications across every page. Carried separately
+/// because "select all N matching" is an operation on applications: counting companies there would
+/// promise the user one number and hand the server another.</param>
+public sealed record GroupedApplicationsResponse(
+    IReadOnlyCollection<CompanyGroupResponse> Items,
+    int TotalCount,
+    int Page,
+    int PageSize,
+    int TotalApplicationCount);
 
 public sealed record ApplicationDetailResponse(
     Guid Id,

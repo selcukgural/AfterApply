@@ -158,6 +158,13 @@ podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod
   export DOCKER_HOST="unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')"
   dotnet test tests/AfterApply.IntegrationTests
   ```
+  On this machine the suite is **far** faster with collection parallelism off —
+  242 tests in ~3 minutes, against a parallel run that reached ~90 of the test
+  classes in 45 and had to be killed. Every test class stands up its own host
+  and database, so running many at once thrashes rather than overlaps:
+  ```bash
+  dotnet test tests/AfterApply.IntegrationTests -- xunit.parallelizeTestCollections=false
+  ```
   If container startup hangs or fails under rootless Podman (Ryuk, the
   resource-reaper sidecar, is known to be flaky there), try
   `export TESTCONTAINERS_RYUK_DISABLED=true` — note this means stopped test

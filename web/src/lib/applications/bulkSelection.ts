@@ -1,6 +1,7 @@
 import type {
   ApplicationStatus,
   ApplicationSummaryResponse,
+  CompanyGroupResponse,
   BulkSelection,
   BulkStatusChange,
   UndoBulkStatusEntry,
@@ -95,17 +96,24 @@ export function selectAllMatching(totalCount: number): SelectionState {
   return { kind: "allMatching", countWhenSelected: totalCount };
 }
 
+/** Every field that decides which rows the list is showing — and nothing that decides only their
+ *  order or which page they are on. */
+export interface ListFilter {
+  search: string;
+  status: ApplicationStatus | "";
+  /** Set when the list is narrowed to one company. */
+  companyId: string | "";
+}
+
 /** The wire form. `allMatching` repeats the filter the list is showing, so the server resolves the
  *  same rows the user was looking at rather than a filter the client re-derived. */
-export function toBulkSelection(
-  selection: SelectionState,
-  filter: { search: string; status: ApplicationStatus | "" },
-): BulkSelection {
+export function toBulkSelection(selection: SelectionState, filter: ListFilter): BulkSelection {
   if (selection.kind === "allMatching") {
     return {
       allMatching: {
         search: filter.search === "" ? null : filter.search,
         status: filter.status === "" ? null : filter.status,
+        companyId: filter.companyId === "" ? null : filter.companyId,
       },
     };
   }
@@ -174,4 +182,62 @@ export function defaultTargetStatus(
   const allShareIt = shared !== null && selected.every((item) => item.status === shared);
 
   return (allShareIt ? statuses.find((status) => status !== shared) : undefined) ?? statuses[0]!;
+}
+
+/**
+ * The applications one company group puts on the page, in draw order.
+ *
+ * A group whose company holds more than the response carries (`hasMore`) contributes only the rows
+ * that came back. That is the honest set: a checkbox can only mean rows the user can see and count,
+ * and the group header says how many the company really holds, so the two never claim to be the
+ * same number. The rest are reached through the group's own link into the flat list.
+ */
+export function groupIds(group: CompanyGroupResponse): string[] {
+  return group.applications.map((application) => application.id);
+}
+
+/** Every visible row on a page of groups, flattened — what the page-level helpers above take. */
+export function groupedPageIds(groups: readonly CompanyGroupResponse[]): string[] {
+  return groups.flatMap(groupIds);
+}
+
+export function isGroupSelected(selection: SelectionState, group: CompanyGroupResponse): boolean {
+  const ids = groupIds(group);
+  if (ids.length === 0) {
+    return false;
+  }
+  return selection.kind === "allMatching" || ids.every((id) => selection.ids.includes(id));
+}
+
+export function isGroupPartiallySelected(selection: SelectionState, group: CompanyGroupResponse): boolean {
+  if (selection.kind === "allMatching") {
+    return false;
+  }
+  const ids = groupIds(group);
+  return ids.some((id) => selection.ids.includes(id)) && !ids.every((id) => selection.ids.includes(id));
+}
+
+/**
+ * The group header's checkbox: this company's visible rows, all or none, leaving every other
+ * group's selection alone. Unticking a group while "all matching" is on drops back to an explicit
+ * page selection for the same reason `toggleRow` does — silently narrowing 247 rows to "this page
+ * minus one company" is not what the click looks like it does.
+ */
+export function toggleGroup(
+  selection: SelectionState,
+  group: CompanyGroupResponse,
+  pageIds: readonly string[],
+): SelectionState {
+  const ids = groupIds(group);
+
+  if (selection.kind === "allMatching") {
+    return { kind: "page", ids: pageIds.filter((pageId) => !ids.includes(pageId)) };
+  }
+
+  if (isGroupSelected(selection, group)) {
+    return { kind: "page", ids: selection.ids.filter((id) => !ids.includes(id)) };
+  }
+
+  const missing = ids.filter((id) => !selection.ids.includes(id));
+  return { kind: "page", ids: [...selection.ids, ...missing] };
 }
