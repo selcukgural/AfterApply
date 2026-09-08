@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { adminApi } from "@/lib/api/admin";
+import type { SiteTrafficCounterResponse } from "@/types/api";
 import { ApiError } from "@/lib/api/httpClient";
 import { formatCount, formatRate } from "@/lib/dashboard/format";
 import { Card } from "@/components/dashboard/Card";
@@ -17,6 +18,48 @@ function formatDay(isoDate: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" }).format(
     new Date(`${isoDate}T00:00:00Z`),
   );
+}
+
+/**
+ * Folds the raw counter rows into the handful of numbers worth looking at.
+ *
+ * Note what "landingToRegister" is and is not: completed registrations divided by landing-page
+ * views, both counted independently over the same 30 days. Nobody was followed from one to the
+ * other — there is no visitor id to follow — so it is a ratio of two totals, not a conversion rate,
+ * and a visitor who lands in October and registers in November lands in both numbers anyway. At
+ * this traffic it answers the only question being asked: does anybody arrive, and does anybody
+ * continue.
+ */
+function summariseTraffic(rows: SiteTrafficCounterResponse[] | undefined) {
+  if (!rows || rows.length === 0) {
+    return null;
+  }
+
+  const totalFor = (event: string) =>
+    rows.filter((r) => r.event === event).reduce((sum, r) => sum + r.count, 0);
+
+  const pageViews = rows.filter((r) => r.event === "PageView");
+  const landingViews = pageViews.filter((r) => r.path === "/").reduce((sum, r) => sum + r.count, 0);
+  const registerCompleted = totalFor("RegisterCompleted");
+
+  const byKey = (source: SiteTrafficCounterResponse[], key: (r: SiteTrafficCounterResponse) => string) => {
+    const totals = new Map<string, number>();
+    for (const row of source) {
+      totals.set(key(row), (totals.get(key(row)) ?? 0) + row.count);
+    }
+    return [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+  };
+
+  return {
+    pageViews: totalFor("PageView"),
+    landingViews,
+    ctaClicks: totalFor("CtaGetStarted"),
+    registerStarted: totalFor("RegisterStarted"),
+    registerCompleted,
+    landingToRegister: landingViews === 0 ? null : registerCompleted / landingViews,
+    topPages: byKey(pageViews, (r) => r.path),
+    topReferrers: byKey(pageViews, (r) => r.referrerHost),
+  };
 }
 
 export default function AdminMetricsPage() {
@@ -36,8 +79,15 @@ export default function AdminMetricsPage() {
     retry: (failureCount, err) => !(err instanceof ApiError && err.status === 403) && failureCount < 2,
   });
 
+  const { data: traffic } = useQuery({
+    queryKey: ["admin", "siteTraffic"],
+    queryFn: () => adminApi.getSiteTraffic(30),
+    retry: (failureCount, err) => !(err instanceof ApiError && err.status === 403) && failureCount < 2,
+  });
+
   const days = data ?? [];
   const latest = days[0];
+  const trafficSummary = summariseTraffic(traffic);
 
   if (error instanceof ApiError && error.status === 403) {
     return (
@@ -216,6 +266,85 @@ export default function AdminMetricsPage() {
           )}
         </Card>
       ) : null}
+
+      <Card className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("trafficTitle")}</h2>
+          <p className="max-w-[68ch] text-xs text-gray-500 dark:text-gray-400">{t("trafficSubtitle")}</p>
+        </div>
+
+        {!trafficSummary ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t("trafficEmpty")}</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              <StatTile label={t("trafficPageViews")} value={formatCount(trafficSummary.pageViews, locale)} />
+              <StatTile label={t("trafficLandingViews")} value={formatCount(trafficSummary.landingViews, locale)} />
+              <StatTile label={t("trafficCtaClicks")} value={formatCount(trafficSummary.ctaClicks, locale)} />
+              <StatTile
+                label={t("trafficRegisterStarted")}
+                value={formatCount(trafficSummary.registerStarted, locale)}
+              />
+              <StatTile
+                label={t("trafficRegisterCompleted")}
+                value={formatCount(trafficSummary.registerCompleted, locale)}
+              />
+              <StatTile
+                label={t("trafficLandingToRegister")}
+                value={rateOrDash(trafficSummary.landingToRegister, locale)}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-xs font-medium text-gray-600 dark:text-gray-400">{t("trafficTopPages")}</h3>
+                <table className="w-full text-left text-sm">
+                  <thead className="text-xs text-gray-500 dark:text-gray-400">
+                    <tr className="border-b border-gray-200 dark:border-gray-800">
+                      <th className="py-2 pr-4 font-medium">{t("trafficColPage")}</th>
+                      <th className="py-2 font-medium">{t("trafficColViews")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trafficSummary.topPages.map(([path, count]) => (
+                      <tr key={path} className="border-b border-gray-100 last:border-b-0 dark:border-gray-900">
+                        <td className="py-2 pr-4 text-gray-900 dark:text-gray-100">{path}</td>
+                        <td className="py-2 tabular-nums text-gray-600 dark:text-gray-400">
+                          {formatCount(count, locale)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <h3 className="text-xs font-medium text-gray-600 dark:text-gray-400">{t("trafficTopReferrers")}</h3>
+                <table className="w-full text-left text-sm">
+                  <thead className="text-xs text-gray-500 dark:text-gray-400">
+                    <tr className="border-b border-gray-200 dark:border-gray-800">
+                      <th className="py-2 pr-4 font-medium">{t("trafficColSource")}</th>
+                      <th className="py-2 font-medium">{t("trafficColViews")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trafficSummary.topReferrers.map(([host, count]) => (
+                      <tr key={host || "direct"} className="border-b border-gray-100 last:border-b-0 dark:border-gray-900">
+                        {/* An empty host is a visit with no referrer — typed, bookmarked, or the
+                            referrer was suppressed. Rendering it blank would read as a bug. */}
+                        <td className="py-2 pr-4 text-gray-900 dark:text-gray-100">{host || t("trafficDirect")}</td>
+                        <td className="py-2 tabular-nums text-gray-600 dark:text-gray-400">
+                          {formatCount(count, locale)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </Card>
     </div>
   );
 }

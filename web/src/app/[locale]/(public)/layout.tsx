@@ -3,12 +3,14 @@ import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { getServerTheme } from "@/lib/theme/getServerTheme";
+import { SiteTrafficReporter } from "@/components/analytics/SiteTrafficReporter";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const theme = await getServerTheme();
 
   return (
     <>
+      <SiteTrafficReporter />
       <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link href="/">

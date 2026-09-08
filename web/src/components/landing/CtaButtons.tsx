@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { buttonClassName } from "@/components/ui/Button";
+import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 
 interface CtaButtonsProps {
   primaryLabel: string;
@@ -29,7 +30,11 @@ export function CtaButtons({ primaryLabel, secondaryLabel, secondaryHref, dashbo
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
-      <Link href="/register" className={buttonClassName("primary", "px-6 py-3 text-base")}>
+      <Link
+        href="/register"
+        className={buttonClassName("primary", "px-6 py-3 text-base")}
+        onClick={() => trackSiteTraffic("cta_get_started")}
+      >
         {primaryLabel}
       </Link>
       <a href={secondaryHref} className={buttonClassName("secondary", "px-6 py-3 text-base")}>

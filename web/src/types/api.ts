@@ -568,6 +568,22 @@ export interface ProductMetricsDayResponse {
   computedAt: string;
 }
 
+/** One day's count of one (event, page, language, referring host) combination on the public site.
+ *  Aggregate only: there is no visitor id behind these rows, so two visits by one person and one
+ *  visit by two people are the same number, and a row can never be joined back to an account. */
+export interface SiteTrafficCounterResponse {
+  /** The UTC day counted, as `YYYY-MM-DD`. */
+  day: string;
+  /** `PageView`, `CtaGetStarted`, `RegisterStarted` or `RegisterCompleted`. */
+  event: string;
+  /** Public path with the language prefix removed, e.g. `/guide/how-many-applications`. */
+  path: string;
+  locale: string;
+  /** Referring host, or an empty string when the visit had no referrer. */
+  referrerHost: string;
+  count: number;
+}
+
 /** One confidence band's evidence about whether auto-apply can be trusted there. */
 export interface AutoApprovalCalibrationBucket {
   lowerBound: number;

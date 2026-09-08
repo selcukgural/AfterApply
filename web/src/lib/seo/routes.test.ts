@@ -1,4 +1,9 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import en from "../../../messages/en.json";
+import tr from "../../../messages/tr.json";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
 import { routing } from "@/i18n/routing";
@@ -142,5 +147,77 @@ describe("help topics", () => {
     for (const topic of HELP_TOPICS) {
       expect(PUBLIC_PATHS).toContain(topic.href);
     }
+  });
+});
+
+// The visit counter's allowlist lives in the API (SiteTrafficNormalizer) because that is where it
+// has to be enforced — a client-side copy would be advisory. But it is a hand-written list of this
+// app's routes, so it drifts the moment a page is added here and not there, and the failure is
+// silent in the worst way: the new page simply never appears in any number, and nobody notices
+// until they wonder why the guide looks unread. This is the tripwire for that.
+const REPO_ROOT = fileURLToPath(new URL("../../../..", import.meta.url));
+const NORMALIZER = readFileSync(
+  path.join(REPO_ROOT, "src/AfterApply.Application/SiteTraffic/SiteTrafficNormalizer.cs"),
+  "utf8",
+);
+
+/** Pulls the quoted strings out of one `X = new(...) { ... }` initialiser in the C# source. */
+function csharpStringSet(field: string): string[] {
+  const block = new RegExp(`${field}\\s*=[\\s\\S]*?\\{([\\s\\S]*?)\\}`).exec(NORMALIZER);
+  expect(block, `${field} not found in SiteTrafficNormalizer.cs`).not.toBeNull();
+  return [...block![1].matchAll(/"([^"]*)"/g)].map((match) => match[1]);
+}
+
+const EXACT_PATHS = csharpStringSet("ExactPaths");
+const SLUG_SECTIONS = csharpStringSet("SlugSections");
+const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+/** The same decision the API makes, mirrored here so the two lists can be compared. */
+function isCountable(routePath: string): boolean {
+  const candidate = routePath === "" ? "/" : routePath;
+  if (EXACT_PATHS.includes(candidate)) return true;
+
+  const segments = candidate.split("/").filter(Boolean);
+  return segments.length === 2 && SLUG_SECTIONS.includes(`/${segments[0]}`) && SLUG.test(segments[1]);
+}
+
+describe("visit counter allowlist", () => {
+  it("covers every page the sitemap publishes, in both locales", () => {
+    const uncovered = PUBLIC_PATHS.flatMap((route) =>
+      routing.locales.map((locale) => pathFor(route, locale)).filter((resolved) => !isCountable(resolved)),
+    );
+
+    expect(uncovered, "these pages exist but the API would never count a visit to them").toEqual([]);
+  });
+
+  it("counts no signed-in page", () => {
+    // The privacy half. A signed-in path carries record ids, so one slipping into the allowlist
+    // would put "someone opened application <id>" into a table that is meant to hold no such thing.
+    for (const route of PROTECTED_PATHS) {
+      expect(isCountable(route), `${route} must never be countable`).toBe(false);
+      expect(isCountable(`${route}/0192e5c1-6f3a-7c2b-9a11-4f0d2e8b5a77`)).toBe(false);
+    }
+  });
+
+  it("counts no OAuth callback, where the URL carries an authorization code", () => {
+    expect(isCountable("/auth/google/callback")).toBe(false);
+    expect(isCountable("/auth/linkedin/callback")).toBe(false);
+  });
+});
+
+// The landing page deliberately says two different things in two places: the <title> carries the
+// term people type into a search engine, the page's own copy carries the promise. The 2026-09-08
+// rewrite changed the second and kept the first, and that is exactly the pairing a later copy pass
+// would collapse by "cleaning up" the title — undoing the SEO work of the day before, silently,
+// because nothing renders a title where a reviewer would notice it missing.
+describe("landing page title", () => {
+  it("still carries the term people actually search for", () => {
+    expect(tr.metadata.pages.home.title.toLocaleLowerCase("tr")).toContain("başvuru takip");
+    expect(en.metadata.pages.home.title.toLowerCase()).toContain("application tracker");
+  });
+
+  it("keeps that term in the description too, alongside the promise", () => {
+    expect(tr.metadata.pages.home.description.toLocaleLowerCase("tr")).toContain("başvuru takib");
+    expect(en.metadata.pages.home.description.toLowerCase()).toContain("application tracking");
   });
 });

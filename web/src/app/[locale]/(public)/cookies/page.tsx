@@ -86,6 +86,20 @@ export default async function CookiesPage() {
           <p className="mt-2">{t("storage.outro")}</p>
         </section>
 
+        <section id="visit-counter">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("visitCounter.title")}</h2>
+          <p>{t("visitCounter.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("visitCounter.item1")}</li>
+            <li>{t("visitCounter.item2")}</li>
+            <li>{t("visitCounter.item3")}</li>
+          </ul>
+          <p className="mt-2">{t("visitCounter.note")}</p>
+          <p className="mt-2">{t("visitCounter.noCookie")}</p>
+          <p className="mt-2">{t("visitCounter.dnt")}</p>
+          <p className="mt-2">{t("visitCounter.why")}</p>
+        </section>
+
         <section id="no-third-party">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("noThirdParty.title")}</h2>
           <p>{t("noThirdParty.intro")}</p>

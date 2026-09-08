@@ -1,11 +1,11 @@
 {
   "metadata": {
     "title": "e-kariyerim",
-    "description": "Track your job applications in one place.",
+    "description": "How many of your applications got a reply, and how many went quiet — see your own numbers.",
     "pages": {
       "home": {
         "title": "Job Application Tracker",
-        "description": "Track your job applications in one place: what stage each one is at, how long it has been waiting, which ones got a reply. Import your LinkedIn history in one go."
+        "description": "How many of your applications got a reply, how many went quiet, how long a first response takes. Job application tracking: import your LinkedIn history, or log one with a click."
       },
       "guide": {
         "title": "Guide",
@@ -13,11 +13,11 @@
       },
       "login": {
         "title": "Log In",
-        "description": "Log in to e-kariyerim to see where each of your job applications stands."
+        "description": "Log in to e-kariyerim to see how many of your applications got a reply, and how many are still waiting."
       },
       "register": {
         "title": "Sign Up",
-        "description": "Create a free e-kariyerim account and track your job applications in one place."
+        "description": "Create a free e-kariyerim account and see how many of your applications ever got a reply."
       },
       "forgotPassword": {
         "title": "Forgot Your Password",
@@ -99,9 +99,9 @@
       "help": "Help"
     },
     "hero": {
-      "eyebrow": "Job application tracking",
+      "eyebrow": "How many sent, how many replied",
       "title": "You applied. So what happened next?",
-      "subtitle": "Track your job applications in one place. See what stage each one is at, how long you've been waiting, and which applications got a response.",
+      "subtitle": "How many of your applications got a reply, how many went quiet, and how long a first response actually took. Import your LinkedIn history or install the extension — let e-kariyerim do the collecting.",
       "ctaPrimary": "Get Started Free",
       "ctaSecondary": "See how it works"
     },
@@ -120,14 +120,14 @@
     },
     "problem": {
       "eyebrow": "Sound familiar?",
-      "title": "Applying is easy. Keeping track isn't.",
+      "title": "Your application history is spread across four places. All four forget.",
       "body1": "You apply to a few listings. Then a few more. A few weeks later, it's dozens of applications.",
-      "body2": "It gets hard to remember which company you applied to, when, who responded, what stage you're at, and which ones quietly disappeared.",
+      "body2": "LinkedIn shows your old applications only so far back, kariyer.net's disappear over time, company career pages keep no record at all, and your inbox says nothing unless you go searching.",
       "sourceLinkedin": "LinkedIn",
       "sourceJobSites": "Job boards",
       "sourceCompanyPages": "Company career pages",
       "sourceOther": "Other sources",
-      "outcome": "Dozens of applications. Different statuses. Different dates.",
+      "outcome": "Dozens of applications. Four separate places. No single total anywhere.",
       "question": "What happened to this one again?"
     },
     "afterApply": {
@@ -143,7 +143,7 @@
       "silentApplied": "Applied",
       "silentWaiting": "Waiting",
       "silentQuestion": "What happened?",
-      "note": "Not every application follows the same path — e-kariyerim makes it visible what stage you're at, and how long you've been waiting."
+      "note": "Not every application follows the same path — and most never end at all. e-kariyerim counts silence as an outcome too: which one has been waiting how long, and which one is not coming back."
     },
     "features": {
       "eyebrow": "What can you do?",
@@ -177,9 +177,9 @@
       "invalid": "Invalid records"
     },
     "analytics": {
-      "eyebrow": "Personal analytics",
-      "title": "What can you learn from your applications?",
-      "subtitle": "See your response rate, interview rate, and response times in your personal analytics dashboard."
+      "eyebrow": "Your actual numbers",
+      "title": "How many replied? How many never did?",
+      "subtitle": "Response rate, interview rate, ghosting rate, and how long a first reply takes — not a guess, your own data."
     },
     "vision": {
       "eyebrow": "Vision",
@@ -233,8 +233,8 @@
       "link": "Read the privacy policy"
     },
     "finalCta": {
-      "title": "Don't lose track of your applications. Know what happened.",
-      "body": "Make your job search more organized, measurable, and transparent.",
+      "title": "Know how many you sent — and how many ever came back.",
+      "body": "Free. Import your LinkedIn history and your first numbers are there in minutes.",
       "button": "Get Started Free",
       "secondary": "See how it works"
     },
@@ -719,7 +719,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 7 September 2026",
+    "lastUpdated": "Last updated: 8 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -736,6 +736,17 @@
       "legalBasis": "Legal basis: legitimate interest — keeping the service secure and available, and finding and fixing faults.",
       "limits": "We deliberately keep session replay and performance tracing switched off: your screen is not recorded, your browsing behaviour is not tracked, and your form contents are not sent. Your application data, your CV and email contents are never included in an error record.",
       "retention": "Error records are deleted when Sentry's retention period expires; they are never written to the product's own database."
+    },
+    "visitCounter": {
+      "title": "Visit counter",
+      "intro": "We count how often public pages are opened, on our own server. A visit records only:",
+      "item1": "The address of the public page opened (everything after the question mark excluded) and the page's language.",
+      "item2": "Which site you found us from — the domain only.",
+      "item3": "A daily counter — how many times that combination was seen that day.",
+      "recipient": "Recipient: none. The data stays on our own server; it is sent to no analytics service and to no other third party.",
+      "legalBasis": "No stored row can be linked to a person — no visitor id, no session id, no IP address, no browser details — so there is no personal data here. Should it be assessed otherwise, the basis is legitimate interest (KVKK art. 5/2-f, GDPR art. 6/1-f): measuring whether the service is used at all.",
+      "limits": "No cookie is used, nothing is written to your browser, and there is no profiling or ad targeting. If your browser has “Do Not Track” switched on, nothing is counted. See “Visit counter” in the Cookie Policy for the details.",
+      "retention": "Retention: the rows are aggregate counts holding no personal data, so they are kept indefinitely."
     },
     "dataCollection": {
       "title": "What data we collect and why",
@@ -889,7 +900,7 @@
   },
   "cookies": {
     "title": "Cookie Policy",
-    "lastUpdated": "Last updated: 7 September 2026",
+    "lastUpdated": "Last updated: 8 September 2026",
     "intro": {
       "title": "In short",
       "body": "e-kariyerim uses exactly two cookies, both needed for the service to work. We use no advertising cookies, no tracking pixels, no analytics tool such as Google Analytics, and no third-party cookies at all. That is why you never see a cookie consent banner here: there is no optional cookie to leave to your choice.",
@@ -915,6 +926,17 @@
       "item1": "Session tokens — aa_access_token, aa_refresh_token, their expiry times, and aa_user (your name, email address and interface preferences). They keep you signed in; they live in localStorage and are deleted when you sign out.",
       "item2": "Sign-in security keys — aa_google_oauth and aa_linkedin_oauth. These are single-use values that block a CSRF attack during a Google or LinkedIn sign-in; they live in sessionStorage and are deleted the moment the sign-in completes.",
       "outro": "Both are required for the service to work — without them you cannot sign in."
+    },
+    "visitCounter": {
+      "title": "Visit counter",
+      "intro": "We count how often the site's public pages are opened, on our own server. No cookie is used, nothing is written to your browser, and nothing is sent to any third party. A visit adds only these three things to a counter:",
+      "item1": "The address of the page opened — public pages only. Everything after the question mark (a search term, the key in a password-reset link) is cut off before it leaves your browser.",
+      "item2": "The page's language — Turkish or English.",
+      "item3": "Which site you found us from — the domain only (“google.com”, say), never the address on that site or the words you searched for.",
+      "note": "None of this identifies you: no visitor id, no session id, no IP address and no browser details are stored. Two visits by the same person and one visit each by two people are therefore the same number to us, and a row can be linked neither to an account nor to another row. Even when you are signed in, this request carries none of your account's credentials.",
+      "noCookie": "Because no cookie is written, the consent screen promised in “If this policy changes” below is not triggered here — that promise covers optional cookies. We are describing the counter anyway, so you can read what it holds.",
+      "dnt": "If your browser has “Do Not Track” switched on, nothing is counted at all.",
+      "why": "Why we count: there is no other way for us to see whether anyone arrives, which article is useful, or whether people who try to sign up get stuck. Counter rows are aggregate and hold no personal data, so they are kept indefinitely."
     },
     "noThirdParty": {
       "title": "Third parties and tracking",
@@ -1838,7 +1860,22 @@
     "colDismissed": "Dismissed",
     "colReverted": "Undone",
     "colAgreement": "Agreement",
-    "colRevertRate": "Undo rate"
+    "colRevertRate": "Undo rate",
+    "trafficTitle": "Public site traffic",
+    "trafficSubtitle": "Last 30 days. Cookieless, identifier-free counting: nobody is followed, so the figures below are ratios of independent totals rather than a tracked journey.",
+    "trafficEmpty": "No visits counted yet.",
+    "trafficPageViews": "Page views",
+    "trafficLandingViews": "Landing page",
+    "trafficCtaClicks": "“Get started” clicks",
+    "trafficRegisterStarted": "Sign-up form sent",
+    "trafficRegisterCompleted": "Sign-ups completed",
+    "trafficLandingToRegister": "Landing → sign-up",
+    "trafficTopPages": "Most viewed pages",
+    "trafficTopReferrers": "Where visitors come from",
+    "trafficColPage": "Page",
+    "trafficColViews": "Views",
+    "trafficColSource": "Source",
+    "trafficDirect": "Direct / unknown"
   },
   "applicationEventType": {
     "RecruiterContacted": "Recruiter got in touch",

@@ -51,7 +51,11 @@ export async function AnalyticsSection() {
   ];
 
   return (
-    <section className="py-20">
+    // border-t because of what now sits above it. The page separates sections either by a change
+    // of background or by a rule, never by nothing: this one is white-on-white against
+    // AfterApplySection since the 2026-09-08 reorder, where it used to follow the grey
+    // LinkedInImportSection and needed no rule at all.
+    <section className="border-t border-gray-200 py-20 dark:border-gray-800">
       <ScrollReveal className="mx-auto flex max-w-5xl flex-col gap-10 px-4">
         <div className="flex flex-col gap-3 text-center">
           <div className="flex items-center justify-center gap-2">
