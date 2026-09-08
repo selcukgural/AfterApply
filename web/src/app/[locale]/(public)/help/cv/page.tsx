@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
 import { Callout } from "@/components/help/Callout";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/help/cv">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/help/cv", "helpCv");
+}
 
 export default async function CvHelpPage() {
   const t = await getTranslations("help.cv");

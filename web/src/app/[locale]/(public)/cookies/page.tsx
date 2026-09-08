@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
@@ -10,6 +12,11 @@ import { Link } from "@/i18n/navigation";
 // The two rows below are the whole inventory: `NEXT_LOCALE`, written server-side by next-intl's
 // proxy (web/src/proxy.ts), and `theme`, written by web/src/lib/theme/theme.ts. Anything that
 // widens that list has to update this page too — browserStorage.test.ts fails otherwise.
+export async function generateMetadata({ params }: PageProps<"/[locale]/cookies">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/cookies", "cookies");
+}
+
 export default async function CookiesPage() {
   const t = await getTranslations("cookies");
 

@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { GifFigure } from "@/components/help/GifFigure";
 import { Callout } from "@/components/help/Callout";
 import { LinkedInArchiveDiagram } from "@/components/imports/LinkedInArchiveDiagram";
 import { archiveDiagramLabels } from "@/components/imports/archiveDiagramLabels";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/help/import">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/help/import", "helpImport");
+}
 
 export default async function ImportHelpPage() {
   const t = await getTranslations("help.import");

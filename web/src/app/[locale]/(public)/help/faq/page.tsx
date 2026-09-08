@@ -1,6 +1,26 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 
-const QUESTION_KEYS = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"] as const;
+const QUESTION_KEYS = [
+  "q1",
+  "q2",
+  "q3",
+  "q4",
+  "q5",
+  "q6",
+  "q7",
+  "q8",
+  "q9",
+  "q10",
+  "q11",
+  "q12",
+] as const;
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/help/faq">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/help/faq", "helpFaq");
+}
 
 export default async function FaqHelpPage() {
   const t = await getTranslations("help.faq");

@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
 import { GifFigure } from "@/components/help/GifFigure";
 import { Callout } from "@/components/help/Callout";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/help/tracked-jobs">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/help/tracked-jobs", "helpTrackedJobs");
+}
 
 export default async function TrackedJobsHelpPage() {
   const t = await getTranslations("help.trackedJobs");

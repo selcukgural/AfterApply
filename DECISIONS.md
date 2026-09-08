@@ -4223,6 +4223,79 @@ geri yazdığı için o metin geçirilmiyor; yerine yerelleştirilmiş `REQUEST_
 
 
 ---
+
+## Genel sayfaların son üç günün özelliklerine yetiştirilmesi (2026-09-08)
+
+Kullanıcı isteği: "son üç günde yaptığımız değişiklikleri inceleyip web sitesi tarafında bir şey
+değişmesi gerekiyor mu?" Denetim `0676421`…`1f710a9` arasındaki dokuz PR'ı taradı: uygulama
+tarafı her PR'da güncellenmişti, ama **tanıtım sayfası, yardım merkezi ve SEO yüzeyi** geride
+kalmıştı. Ürünün kendisinde bir eksik bulunmadı; bulunanların hepsi kamuya açık yüzeyde.
+
+**Landing sayfasında kırık bir çeviri anahtarı iki aydır canlıdaydı.** `RoadmapSection` hâlâ
+`t("todayMatch")` çağırıyordu; anahtarı `c0bd385` ("Remove AI CV/Job Matching feature") her iki
+katalogdan silmişti. next-intl eksik anahtarda anahtarın **kendisini basar**, dolayısıyla ana
+sayfanın "Bugün" sütununda `landing.roadmap.todayMatch` yazan bir madde duruyordu. Var olan
+`messages.test.ts` bunu yakalayamaz, çünkü yaptığı iş tr↔en **eşitliği**; anahtar iki taraftan da
+silindiğinde iki katalog hâlâ eşittir. Bu yüzden kaynağı tarayan ikinci bir kontrol eklendi
+(`lib/i18n/messageUsage.ts`): dosya başına `useTranslations("ns")` bağlamaları çıkarılıyor, o
+değişkenle yapılan **string-literal** `t(...)` çağrıları çözülüyor ve katalogda karşılığı olmayan
+varsa test düşüyor. Kasıtlı olarak bir ayrıştırıcı değil, metin taraması: yalnızca bu kod tabanının
+tek çağrı biçimini anlaması yeterli. Üç kural taşıyor — `t.has(...)` hariç (o zaten "olmayabilir"
+sondası, yardım merkezindeki isteğe bağlı adım gövdelerinin hepsi onu kullanıyor), template
+literal hariç (dinamik anahtar çözülemez), ve tarama öncesi yorumlar temizleniyor (yoksa tarayıcının
+kendi doküman yorumundaki örnek çağrılar hata üretiyor). Doğrulandı: anahtar geri konduğunda test
+tam o satırı gösteriyor.
+
+**Yardım merkezi dört özelliği hiç anlatmıyordu.** Toplu işlemler (#18), süreç akışı + elle olay
+ekleme (#15), başvuruya CV iliştirme (#11) ve İK kontağı + şirket bağlantıları (`f55aa00`).
+`statusHistory` bölümü `timeline`'a dönüştürüldü — arayüzdeki başlık artık "Süreç"/"Timeline",
+yardım hâlâ "Durum Geçmişi" diyordu; bir kullanıcının ekranda arayıp bulamayacağı bir isim.
+Türkçe metindeki İngilizce düğme adları da düzeltildi ("Delete"/"Edit" → "Sil"/"Düzenle"): buton
+zaten yerelleştirilmiş, yardım metni İngilizce adı yazıyordu.
+
+**Otomatik onay geri alma (#16) bilerek yazılmadı.** Özelliğin bayrağı kapalı; kimsenin
+göremeyeceği bir akışı yardım merkezine koymak, ürünü olduğundan farklı gösterir.
+
+**Üç ekran görüntüsü bayatlamıştı, iki yenisi eklendi.** `applications-list` (Liste/Şirket
+anahtarı, seçim kutuları ve tek satıra inen araç çubuğu yoktu), `application-create` (CV alanı ve
+İK kontağı bölümü yoktu), `application-detail` ("Durum Geçmişi" başlığı, CV satırı ve İletişim
+kartı yoktu). Yeni: `applications-company-view` ve `applications-bulk` — ikisi de yazıyla
+anlatılması ekranla anlatılmasından çok daha pahalı olan şeyler.
+
+**Chrome MCP penceresi bu makinede yeniden boyutlandırılamadı** (658 px viewport'ta takılı, resize
+başarı dönüyor ama pencere değişmiyor), oysa yayınlanan görseller 1280 px. Çekim bu yüzden CDP
+üzerinden yapıldı: `--headless=new` ile ayrı bir profil, `Emulation.setDeviceMetricsOverride` ile
+tam 1280×900 ve dsf 2, `Page.captureScreenshot` + `captureBeyondViewport`, sonra `sips` ile 1280'e
+indirme. Oturum, uygulamanın kendi `/api/auth/login` çağrısı yapılıp jetonlar `tokenStorage`'ın
+anahtarlarına yazılarak açılıyor — form doldurmaya göre hem kısa hem kırılgan değil. Betik
+`scratchpad`'de kaldı, repoya girmedi.
+
+**Demo hesabına iki alan eklendi.** `demo.kariyerim@example.com` üzerindeki Hepsiburada/Product
+Manager başvurusuna açıkça kurgusal bir İK kontağı (`Deniz Aksoy`, `@example.com`) ve daha nötr
+bir CV (`Elif-Yilmaz-CV-EN.pdf`) verildi; İletişim kartı yoksa onu anlatan yardım bölümünün
+yanındaki görsel o bölümü göstermiyor olurdu. Hesabın "yayınlanan görsellerdeki durumu koruyor"
+kaydı bu iki alan kadar güncellendi.
+
+**Landing özellik kartları 4'ten 6'ya çıktı** (uzantı + CV), ve **Chrome Web Store bağlantısı ilk
+kez ana sayfaya kondu**. Uzantı yayında ama mağaza linki yalnızca yardım merkezinin içinde bir
+sayfada duruyordu — giriş yapmamış bir ziyaretçi için üç tık ötede. URL artık tek bir sabitte
+(`lib/constants/chromeWebStore.ts`); iki yüzey arasında ayrışması ziyaretçilerin yarısını 404'e
+gönderirdi.
+
+**Her genel sayfa kendi `<title>`/description'ını aldı.** Öncesinde gizlilik, çerez ve on bir
+yardım sayfasının hepsi kök layout'un metadata'sını miras alıyordu — bir arama motoru için ayırt
+edilemez on üç sayfa. `lib/seo/pageMetadata.ts` başlığı, açıklamayı, canonical'ı ve iki hreflang'ı
+tek yerden üretiyor. İstemci bileşeni olan sayfalar (`login`, `register`, şifre akışları)
+`generateMetadata` **dışa aktaramaz**, o yüzden yanlarına birer `layout.tsx` kondu. Şifre sıfırlama
+ve OAuth callback'leri `noindex`: tek kullanımlık, isteğe özel sayfalar; arama sonucuna girmeleri
+ölü bir bağlantı üretir.
+
+**Yardım merkezi sitemap'e girdi.** On bir sayfa (× iki dil) listelenmiyordu — sitenin gerçekten
+aranan sorulara cevap veren tek parçası, dizine verilmemiş hâlde duruyordu.
+
+Eklentiye dokunulmadı; sürüm yükseltme, mağaza materyali ya da paket üretimi gerekmedi.
+
+---
 ---
 
 

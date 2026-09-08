@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { Screenshot } from "@/components/help/Screenshot";
 
 const SECTIONS = ["hero", "funnel", "responseTime", "breakdown", "outcome"] as const;
+
+export async function generateMetadata({ params }: PageProps<"/[locale]/help/dashboard">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/help/dashboard", "helpDashboard");
+}
 
 export default async function DashboardHelpPage() {
   const t = await getTranslations("help.dashboard");

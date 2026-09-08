@@ -1,11 +1,16 @@
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { getTranslations } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
 import { Callout } from "@/components/help/Callout";
 import { buttonClassName } from "@/components/ui/Button";
+import { CHROME_WEB_STORE_URL } from "@/lib/constants/chromeWebStore";
 
-const CHROME_WEB_STORE_URL =
-  "https://chromewebstore.google.com/detail/e-kariyerim-%E2%80%94-job-import/lemdkeljacdgbbcmefpbggphnhhciimi";
+export async function generateMetadata({ params }: PageProps<"/[locale]/help/chrome-extension">): Promise<Metadata> {
+  const { locale } = await params;
+  return pageMetadata(locale, "/help/chrome-extension", "helpChromeExtension");
+}
 
 export default async function ChromeExtensionHelpPage() {
   const t = await getTranslations("help.chromeExtension");
