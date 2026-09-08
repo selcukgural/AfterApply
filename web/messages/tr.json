@@ -3,6 +3,14 @@
     "title": "e-kariyerim",
     "description": "İş başvurularını tek yerde takip et.",
     "pages": {
+      "home": {
+        "title": "İş Başvuru Takip Uygulaması",
+        "description": "İş başvurularını tek yerden takip et: hangi aşamada, ne kadardır bekliyor, hangisi geri dönüş aldı. LinkedIn geçmişini içe aktar, tek tıkla yeni başvuru kaydet."
+      },
+      "guide": {
+        "title": "Rehber",
+        "description": "İş başvurusu sürecinin arka planı: LinkedIn geçmişini dışa aktarma, başvuru takibi, dönüş süreleri ve red mailleri — iş arayanın tarafından anlatılmış."
+      },
       "login": {
         "title": "Giriş Yap",
         "description": "Başvurularınızın hangi aşamada olduğunu görmek için e-kariyerim'e giriş yapın."
@@ -236,6 +244,7 @@
       "resources": "Kaynaklar",
       "privacy": "Gizlilik Politikası",
       "rights": "Tüm hakları saklıdır.",
+      "guide": "Rehber",
       "help": "Yardım Merkezi",
       "cookies": "Çerez Politikası"
     }
@@ -1675,6 +1684,24 @@
       "calloutPrivacy": {
         "title": "CV'leriniz nerede saklanıyor?",
         "body": "Dosyalarınız Avrupa Birliği bölgesindeki (Google Cloud, europe-west1) herkese kapalı bir depolama alanında saklanır. Yapay zekâ dahil hiçbir üçüncü tarafa gönderilmez. Bir CV fotoğraf veya sağlık bilgisi gibi hassas veriler taşıyabildiği için her yükleme öncesinde açık rızanızı ayrıca alıyoruz; onay kutusu hiçbir zaman önceden işaretli gelmez. Rızanızı dosyayı silerek geri çekebilirsiniz, ve hesabınızı sildiğinizde dosyalarınız da silinir."
+      }
+    }
+  },
+  "guide": {
+    "index": {
+      "eyebrow": "Rehber",
+      "title": "İş başvurusu sürecinin arka planı",
+      "intro": "Kimsenin doğru dürüst cevaplamadığı sorular: LinkedIn başvuru geçmişini nasıl dışarı çıkarırsın, bir başvuruyu ne kadar bekletirsin, red maili gerçekte ne söyler. Ürün reklamı değil, gerçekten işine yarayacak cevaplar.",
+      "helpLink": "e-kariyerim'i zaten kullanıyorsan, özelliklerin adım adım anlatımı <link>Yardım Merkezi</link>'nde."
+    },
+    "article": {
+      "publishedOn": "{date} tarihinde yayımlandı",
+      "updatedOn": "{date} tarihinde güncellendi",
+      "related": "İlgili yazılar",
+      "cta": {
+        "title": "Bunu elle takip etmek zorunda değilsin",
+        "body": "e-kariyerim başvurularını tek yerde tutuyor, her birinin ne kadardır beklediğini sayıyor ve dönüş geldiğinde durumu kendisi güncelliyor. Ücretsiz.",
+        "button": "Ücretsiz başla"
       }
     }
   },

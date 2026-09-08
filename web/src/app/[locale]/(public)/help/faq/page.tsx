@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
+import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
 import { getTranslations } from "next-intl/server";
 
 const QUESTION_KEYS = [
@@ -27,6 +28,7 @@ export default async function FaqHelpPage() {
 
   return (
     <div className="flex flex-col gap-10">
+      <HelpBreadcrumbJsonLd path="/help/faq" />
       <div className="flex flex-col gap-3">
         <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{t("eyebrow")}</span>
         <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>

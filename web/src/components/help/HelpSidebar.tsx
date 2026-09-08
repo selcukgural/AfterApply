@@ -3,20 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-
-const TOPICS = [
-  { href: "/help", key: "overview" },
-  { href: "/help/getting-started", key: "gettingStarted" },
-  { href: "/help/dashboard", key: "dashboard" },
-  { href: "/help/tracked-jobs", key: "trackedJobs" },
-  { href: "/help/applications", key: "applications" },
-  { href: "/help/cv", key: "cv" },
-  { href: "/help/suggestions", key: "suggestions" },
-  { href: "/help/import", key: "import" },
-  { href: "/help/settings", key: "settings" },
-  { href: "/help/chrome-extension", key: "chromeExtension" },
-  { href: "/help/faq", key: "faq" },
-] as const;
+// Shared with the sitemap and the breadcrumb structured data, so the three cannot drift apart.
+import { HELP_TOPICS as TOPICS } from "@/lib/seo/routes";
 
 export function HelpSidebar() {
   const t = useTranslations("help.sidebar");

@@ -1,0 +1,71 @@
+LinkedIn will show you the jobs you have applied to. What it will not give you is a way to **get that list out**: you cannot copy it, filter it, or ask it how many applications you sent last month. What you see on screen is a view, not a record.
+
+The data is yours, though. Through LinkedIn's own data archive request you can download every Easy Apply application you have ever sent as a single CSV file. This piece covers how to get that file, what is inside it, and — more importantly — what is not.
+
+## First, the on-screen list and where it runs out
+
+Your applications live here:
+
+- **Desktop:** Jobs in the top nav → "My Jobs" in the left rail → **Applied**
+- **Mobile:** the Jobs tab → "My Jobs" under the search bar → **Applied**
+
+That list stops being useful at three points:
+
+1. **Easy Apply only.** If you followed an "Apply on company website" link, LinkedIn does not count it as an application at all. For most people a substantial share of their applications is invisible for exactly this reason.
+2. **No outcomes.** The list only says you applied. It will not tell you who replied, who rejected you, or which application has been silent for six weeks.
+3. **It is not permanent.** Rows can disappear when a posting is taken down or something changes on your account. Plenty of people search for "my LinkedIn applications are gone" and this is usually what happened.
+
+The archive request does not fix the first two, but it fixes the third for good: the file is yours, independent of anything LinkedIn does next.
+
+## Requesting your data archive
+
+This is LinkedIn's official route, and it is free:
+
+1. Your profile photo, top right → **Settings & Privacy**
+2. **Data Privacy** in the left rail
+3. Under "How LinkedIn uses your data", click **Get a copy of your data**
+4. You get two choices here: **"Download larger data archive"** (everything), or picking specific data categories one by one.
+5. Submit the request and confirm your password.
+
+**How long you wait depends on which you picked.** In LinkedIn's own words: choose a specific data type and the email arrives **within minutes**; choose the larger archive and it arrives **within 24 hours**. The download link in that email is valid for **72 hours** — miss it and you have to start over, so download it the day you see it.
+
+> Practical note: job applications come in the larger archive. Rather than fetching the quick package first and then filing a second request, ask for the larger archive up front and come back tomorrow.
+
+## What is actually in the archive
+
+What arrives is a **.zip**. Open it and you will find dozens of CSVs — connections, messages, reactions, ad preferences. The one you want is `Job Applications.csv` in the **Jobs** folder. If you have applied a lot, LinkedIn may split it into `Job Applications_1.csv`, `Job Applications_2.csv` and so on; they all carry the same kind of data and you want all of them.
+
+One row per application, typically carrying:
+
+- the **company** you applied to
+- the **job title**
+- the **application date**
+- a **link** to the posting
+- the **name of the CV file** you applied with
+- your answers to any **screening questions**
+
+LinkedIn changes these column names from time to time, so if you are going to feed the file to a tool, pick one that does not depend on an exact header spelling.
+
+**What is missing is the important part: the outcome.** Which application was rejected, which turned into an interview, which never got a reply — none of that is in the file, because LinkedIn does not know either. That information is in your inbox.
+
+## You have the file. Now what?
+
+Three options, in ascending order of effort:
+
+**Open it in Excel and leave it there.** At minimum you have a backup. Add a couple of columns — status, date of last activity — and it becomes something you can maintain by hand; [there is a ready-made template here](/guide/job-application-tracker-spreadsheet).
+
+**Build a proper sheet.** Calculate waiting times with a formula, see which applications have been silent for how long. This works perfectly well up to thirty or forty applications.
+
+**Import it into a tracker.** e-kariyerim takes the .zip as it comes: it finds the `Job Applications` files inside, recognises the columns from either English or Turkish headers, and drops duplicates if you applied to the same posting twice. Step-by-step walkthrough in the [import page of the Help Center](/help/import).
+
+## Three things that commonly go wrong
+
+**"I unzipped it, uploaded the CSV, and nothing happened."** Most tools want the whole archive rather than a single CSV, precisely because the file may have been split into parts. Hand over the `.zip` as it is.
+
+**"There is no Jobs folder."** You picked the small package. Job applications come in the larger archive; repeat the request with "Download larger data archive".
+
+**"Half my applications are missing."** They probably are not missing: applications you made on a company's own site were never recorded by LinkedIn in the first place. This file is not your complete application history — it is the complete history of the applications you made **through LinkedIn**. The only way to close that gap is to record applications as you send them.
+
+## What about other job boards?
+
+Most local job boards work the same way: you can see your applications on screen, and there is no bulk export. So if you apply through more than one platform, the LinkedIn archive rescues your history — but if you want **everything from here on** in one place, you have to capture applications at the moment you send them. There is no way to reconstruct them later.
