@@ -4341,9 +4341,19 @@ yolu yok (React aksi hâlde tırnakları kaçırır ve JSON parse edilmez). `ser
 ve `&` karakterlerini kaçırıyor: bugün node'lara giren her şey kendi çeviri metnimiz, ama bir gün
 oraya bir şirket adı ya da ilan başlığı girerse `</script>` ile eleman erken kapatılabilirdi.
 
-**Ölçüm tarafı hâlâ eksik ve kod ile çözülemez:** Google Search Console doğrulaması yapılmamış,
-sitemap hiç gönderilmemiş, `site:ekariyerim.com` sonuç döndürmüyor — site muhtemelen henüz dizine
-girmemiş. Bing Webmaster Tools da yok. İkisi de ücretsiz ve kullanıcının yapması gereken adımlar.
+**Ölçüm tarafı hâlâ eksik ve kod ile çözülemez:** sitemap hiç gönderilmemiş,
+`site:ekariyerim.com` sonuç döndürmüyor — site muhtemelen henüz dizine girmemiş. Bing Webmaster
+Tools da yok.
+
+**Düzeltme (aynı gün, deploy sonrası):** "Search Console doğrulaması yapılmamış" dendi, yanlıştı.
+Root'ta zaten `google-site-verification=oPwgQ...` TXT kaydı duruyor ve Search Console'da
+`ekariyerim.com` mülkü mevcut — Sprint 13'te Cloud Run custom domain mapping'i kurulurken
+`gcloud domains verify` (DEPLOYMENT.md §"Custom domain") kullanıcıyı Search Console doğrulama
+akışından geçirmiş. Yani doğrulama iki hafta önce, farkında olmadan yapılmış.
+
+**Bu TXT kaydı silinmemeli:** `ekariyerim.com` ve `api.ekariyerim.com` domain mapping'lerinin
+sahiplik kontrolü ona bağlı. Search Console yeni bir doğrulama jetonu isterse mevcut kaydın
+üzerine yazılmaz, ek bir TXT satırı olarak eklenir.
 
 Testler: `web/src/lib/seo/routes.test.ts` (12) ve `jsonLd.test.ts` (7) — locale ön eki, x-default,
 lastmod'un yokluğu, sitemap ile robots'un çelişmemesi, `</script>` kaçışı. Eklentiye dokunulmadı.
@@ -4474,7 +4484,44 @@ Ayrıca başlık/açıklama uzunlukları sınırlandı (başlık ≤ 60, açıkl
 önce mevcut değerler ölçüldü, **160'ı aşan beş açıklama kısaltıldı**, sonra kural kondu.
 
 Doğrulama: 16 sayfa + sayfalardaki 28 iç bağlantı tek tek çekildi, hepsi 200. Sitemap 44 → 50 URL,
-toplam test 183 → 190.
+toplam test 183 → 190. PR #21 merge edildikten sonra aynı doğrulama **production'da** tekrarlandı:
+16 rehber sayfası + 28 bağlantı + iki `.xlsx` (doğru MIME tipiyle) hepsi 200, robots.txt'te 18
+locale ön ekli disallow, sitemap 50 URL ve `<lastmod>` yok.
+
+### `www` apex'e 301'lendi (2026-09-08, aynı gün)
+
+`www.ekariyerim.com` Cloud Run'da ikinci bir domain mapping olarak sitenin **tamamını** servis
+ediyordu — aynı içerik iki host'ta. Canonical apex'i gösteriyordu, yani Google eninde sonunda
+birleştirirdi, ama duplikasyon fiilen erişilebilir kalıyordu: sitemap yalnızca apex URL'leri
+listelediği hâlde www host'undan gönderilip taranabildi (Search Console'a iki kez sitemap
+gönderilmesine yol açtı), ve www'ye düşen ziyaretçi orada kalıyordu.
+
+**Cloudflare'den çözülemiyor.** `www` kaydı bilinçli olarak proxy'siz — Cloud Run'ın TLS'i
+sonlandırabilmesi için doğrudan `ghs.googlehosted.com`'a CNAME. Yani Cloudflare istek yolunda
+değil, redirect rule'ları bu isteği hiç görmüyor. Çözüm uygulama katmanında olmak zorundaydı.
+
+`src/lib/http/canonicalHost.ts` (saf mantık, test edilebilir) + `src/proxy.ts` (ince bağlantı).
+Üç detay kasıtlı:
+
+- **Host header'ından okunuyor**, parse edilmiş istek URL'inden değil: Cloud Run frontend'inin
+  arkasında URL dahili bir host taşıyabiliyor, header ise ziyaretçinin gerçekten yazdığı şey.
+- **301, 307 değil.** Bu sitenin adreslemesiyle ilgili kalıcı bir olgu; geçici yönlendirme iki
+  host'u da dizinde bırakırdı — düzeltilmek istenen şey tam olarak bu.
+- **Matcher genişletilmedi, iki dosya adıyla eklendi:** `/sitemap.xml` ve `/robots.txt`. İlk
+  desendeki "nokta içereni dışla" kuralını gevşetmek proxy'yi her görselin ve fontun önüne
+  koyardı, karşılığında hiçbir şey kazandırmadan. Bu iki dosya `isFileRequest` ile locale
+  middleware'ine uğramadan geçiyor — uğrasaydı `/sitemap.xml` `/tr/sitemap.xml`'e yeniden
+  yazılırdı ve Google, `robots.txt`'in duyurduğu URL'den 404 alırdı.
+
+Doğrulama, üretim build'i üzerinde Host header'ı değiştirilerek: www için 6 yolun altısı da 301
+(query string korunuyor, sitemap ve robots dahil), apex için altısı da 200 (statik dosyalar ve
+`.xlsx` dahil), sitemap hâlâ 50 URL. Testler: `canonicalHost.test.ts` (10) — apex'in asla
+yönlendirilmemesi (döngü olurdu), `wwwx.`/`notwww.` gibi substring'lerin eşleşmemesi, Host
+header'ının büyük harfli veya portlu gelebilmesi, header'ın hiç olmaması. Toplam 190 → 200.
+
+**Zamanlama:** Search Console'da mülkün henüz veri toplamamış olduğu gün yapıldı. Google www
+sayfalarını indeksledikten sonra 301 koymak da işe yarar ama "indekslenmiş URL'leri taşıma"
+sürecine döner ve haftalar alır; boş sayfayken yapmak bunu tamamen atlatıyor.
 
 **Uyarı — tekrar tuzağa düşülmesin:** `next build` sonrası eski `standalone/server.js` süreci
 hayatta kalırsa yeni sunucu porta bağlanamıyor ve **eski build cevap veriyor**. Bu doğrulama
