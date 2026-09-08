@@ -82,6 +82,10 @@
       "helpCv": {
         "title": "My CVs",
         "description": "Uploading, previewing, setting a default and deleting the CV files you apply with."
+      },
+      "benchmark": {
+        "title": "Reply Rate Benchmark",
+        "description": "How many applications did you send, and how many came back? See your own reply rate against the median in your field. No sign-up needed."
       }
     }
   },
@@ -179,7 +183,8 @@
     "analytics": {
       "eyebrow": "Your actual numbers",
       "title": "How many replied? How many never did?",
-      "subtitle": "Response rate, interview rate, ghosting rate, and how long a first reply takes — not a guess, your own data."
+      "subtitle": "Response rate, interview rate, ghosting rate, and how long a first reply takes — not a guess, your own data.",
+      "benchmarkLink": "Work out your own rate without signing up"
     },
     "vision": {
       "eyebrow": "Vision",
@@ -246,7 +251,8 @@
       "rights": "All rights reserved.",
       "guide": "Guide",
       "help": "Help Center",
-      "cookies": "Cookie Policy"
+      "cookies": "Cookie Policy",
+      "benchmark": "Reply rate benchmark"
     }
   },
   "common": {
@@ -1887,5 +1893,98 @@
     "ApplicationCreated": "Application created",
     "ApplicationSubmitted": "Application submitted",
     "StatusChanged": "Status changed"
+  },
+  "benchmark": {
+    "title": "Is your reply rate normal?",
+    "subtitle": "Four questions. No sign-up, no email. Answer them and see your own rate against the median in your field.",
+    "participation": "{count} people have answered.",
+    "participationEmpty": "Nobody has answered yet. Be the first.",
+    "form": {
+      "applicationsLabel": "How many applications did you send?",
+      "applicationsHint": "The total you sent in the period you pick below.",
+      "repliesLabel": "How many ever came back?",
+      "repliesHint": "Rejections count. What is being measured is not whether you got the job — it is whether a person ever looked at your application.",
+      "periodLabel": "What period do these numbers cover?",
+      "sectorLabel": "What field are you applying in?",
+      "seniorityLabel": "Seniority",
+      "locationLabel": "Location",
+      "optional": "optional",
+      "choose": "Choose",
+      "submit": "Show my rate",
+      "submitting": "Working it out...",
+      "again": "Enter another answer"
+    },
+    "sectors": {
+      "SoftwareAndIt": "Software / IT",
+      "FinanceAndInsurance": "Finance / Banking / Insurance",
+      "EcommerceAndRetail": "E-commerce / Retail",
+      "ManufacturingAndIndustry": "Manufacturing / Industry",
+      "Telecom": "Telecommunications",
+      "HealthAndPharma": "Health / Pharma",
+      "Education": "Education",
+      "ConsultingAndProfessionalServices": "Consulting / Professional services",
+      "MediaAndMarketing": "Media / Advertising / Marketing",
+      "LogisticsAndTransport": "Logistics / Transport",
+      "ConstructionAndRealEstate": "Construction / Real estate",
+      "PublicAndNonProfit": "Public sector / Non-profit",
+      "Other": "Other"
+    },
+    "periods": {
+      "LastThreeMonths": "Last 3 months",
+      "LastSixMonths": "Last 6 months",
+      "LastTwelveMonths": "Last 12 months",
+      "Longer": "A longer period"
+    },
+    "seniorities": {
+      "StudentOrIntern": "Student / Intern",
+      "Junior": "Junior",
+      "Mid": "Mid-level",
+      "Senior": "Senior",
+      "LeadOrAbove": "Lead / Manager"
+    },
+    "locations": {
+      "Istanbul": "Istanbul",
+      "Ankara": "Ankara",
+      "Izmir": "Izmir",
+      "TurkeyOther": "Türkiye — elsewhere",
+      "Abroad": "Abroad",
+      "Remote": "Remote"
+    },
+    "result": {
+      "yourRateLabel": "Your reply rate",
+      "yourRateDetail": "{replies} of {applications} applications",
+      "comparedTitle": "{sampleSize} answers in {sector}",
+      "median": "Median reply rate",
+      "shareBelow": "{share}% of the answers report a lower rate than yours.",
+      "aboveMedian": "Your rate is above the median.",
+      "belowMedian": "Your rate is below the median.",
+      "atMedian": "Your rate is exactly the median.",
+      "withheldTitle": "Too early to compare",
+      "withheldBody": "{sector} has {sampleSize} answers so far; showing a median needs {minimum}. Publishing one below that would be presenting a handful of people's answers as “normal for the sector”.",
+      "withheldRemaining": "Your answer is saved. {remaining} more to go before the median appears.",
+      "saved": "Your answer is counted in this figure.",
+      "overallTitle": "{sector} has only {sampleSize} answers so far — a median needs {minimum}.",
+      "overallMedianLabel": "Across all fields",
+      "overallNote": "based on {count} answers · not specific to your field"
+    },
+    "method": {
+      "title": "Where does this number come from?",
+      "source": "Entirely from what people filling in this form report about themselves. It is not mixed with the application data the product collects — one is self-reported, the other measured, and pooling them into one average would corrupt the figure.",
+      "median": "We use the median, not the mean. Answers are anonymous, so one person can answer more than once and an extreme value can be sent deliberately; a median barely moves under either, a mean is at their mercy.",
+      "recency": "Answers covering a short period tend to read low: applications sent recently may not have had time to be answered yet.",
+      "privacy": "No identifier is stored — no email, no IP address, no cookie. Every field is picked from a fixed list; no free text is collected.",
+      "threshold": "A field's median is not shown until it holds at least {minimum} answers."
+    },
+    "cta": {
+      "title": "Stop having to guess this every month.",
+      "body": "Bring your applications into e-kariyerim and let your reply rate, your median response time, and which application has gone quiet fall out on their own.",
+      "button": "Get Started Free"
+    },
+    "errors": {
+      "repliesExceed": "Replies cannot be more than applications.",
+      "required": "This field is required.",
+      "tooMany": "Too many attempts. Please try again later.",
+      "generic": "Your answer could not be saved. Please try again."
+    }
   }
 }

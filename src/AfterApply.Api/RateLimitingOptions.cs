@@ -39,6 +39,13 @@ public sealed class RateLimitingOptions
     /// rather than a leak; the limit exists to keep the table honest, not to protect anything.</summary>
     public FixedWindowPolicy SiteTraffic { get; init; } = new() { PermitLimit = 120, WindowSeconds = 300 };
 
+    /// <summary>Per IP, anonymous — the public benchmark form. An hour-long window because a
+    /// person answers this once and a correction is the only honest second attempt; five leaves
+    /// room for that while bounding what one source can push into a median. It is the main defence
+    /// available: the usual one, a CAPTCHA, is a third-party script the CSP forbids and the Cookie
+    /// Policy denies the site carries.</summary>
+    public FixedWindowPolicy Benchmark { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
+
     public sealed class FixedWindowPolicy
     {
         public int PermitLimit { get; init; }

@@ -69,6 +69,7 @@ public static class SiteTrafficNormalizer
         "/reset-password",
         "/guide",
         "/help",
+        "/benchmark",
         "/privacy",
         "/cookies",
         "/extension-privacy"

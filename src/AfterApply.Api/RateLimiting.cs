@@ -125,6 +125,20 @@ public static class RateLimiting
                     QueueLimit = 0
                 }));
 
+            // IP-based and anonymous, same idiom as the site-traffic policy above. PartitionKey
+            // is not used here for the same reason: it would start partitioning a signed-in
+            // visitor by their user id, and a benchmark answer is not supposed to be attributable.
+            options.AddPolicy(DependencyInjection.BenchmarkRateLimitPolicy, httpContext =>
+            {
+                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.Benchmark.PermitLimit,
+                    Window = sizes.Benchmark.Window,
+                    QueueLimit = 0
+                });
+            });
+
             // User-based. Free-text that a human writes and, when the GitHub mirror is on, that
             // leaves our infrastructure — so it is bounded far tighter than the global backstop,
             // which would happily let one account file three hundred issues a minute.

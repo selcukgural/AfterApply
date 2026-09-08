@@ -568,6 +568,76 @@ export interface ProductMetricsDayResponse {
   computedAt: string;
 }
 
+/** The field someone is applying in, as offered by the public benchmark form. A fixed list, not
+ *  `Company.Industry` — that column holds uncontrolled free text scraped from LinkedIn. */
+export type BenchmarkSector =
+  | "SoftwareAndIt"
+  | "FinanceAndInsurance"
+  | "EcommerceAndRetail"
+  | "ManufacturingAndIndustry"
+  | "Telecom"
+  | "HealthAndPharma"
+  | "Education"
+  | "ConsultingAndProfessionalServices"
+  | "MediaAndMarketing"
+  | "LogisticsAndTransport"
+  | "ConstructionAndRealEstate"
+  | "PublicAndNonProfit"
+  | "Other";
+
+export type BenchmarkPeriod = "LastThreeMonths" | "LastSixMonths" | "LastTwelveMonths" | "Longer";
+
+export type BenchmarkSeniority = "StudentOrIntern" | "Junior" | "Mid" | "Senior" | "LeadOrAbove";
+
+export type BenchmarkLocation = "Istanbul" | "Ankara" | "Izmir" | "TurkeyOther" | "Abroad" | "Remote";
+
+export interface SubmitBenchmarkRequest {
+  applicationCount: number;
+  replyCount: number;
+  sector: BenchmarkSector;
+  period: BenchmarkPeriod;
+  seniority?: BenchmarkSeniority | null;
+  location?: BenchmarkLocation | null;
+  locale: string;
+  /** Honeypot — always sent empty. See the API contract for why a CAPTCHA is not an option here. */
+  website: string;
+}
+
+/** Which pool the median shown was drawn from. `Overall` is the fallback for a sector that has not
+ *  reached the threshold yet, and the page must label it as not being about the reader's field. */
+export type BenchmarkComparisonScope = "None" | "Overall" | "Sector";
+
+/** What one person is told back. `medianRate` and `shareBelowYou` are null only when neither the
+ *  sector nor the whole pool has enough answers — the normal opening state, not an error. */
+export interface BenchmarkResultResponse {
+  sector: BenchmarkSector;
+  /** The two counts the rate came from, echoed back so the result renders without the form state. */
+  applicationCount: number;
+  replyCount: number;
+  yourRate: number;
+  /** The answerer's own sector, whatever the scope — it is what says how far off a sector median is. */
+  sampleSize: number;
+  totalSubmissions: number;
+  /** The bar a pool has to clear. Present so a withheld comparison can say how far off it is. */
+  minimumSampleSize: number;
+  scope: BenchmarkComparisonScope;
+  /** How many answers are behind the median shown, or null when there is none. */
+  comparedAgainstCount: number | null;
+  medianRate: number | null;
+  shareBelowYou: number | null;
+}
+
+export interface BenchmarkSectorCount {
+  sector: BenchmarkSector;
+  count: number;
+}
+
+export interface BenchmarkSummaryResponse {
+  totalSubmissions: number;
+  minimumSampleSize: number;
+  bySector: BenchmarkSectorCount[];
+}
+
 /** One day's count of one (event, page, language, referring host) combination on the public site.
  *  Aggregate only: there is no visitor id behind these rows, so two visits by one person and one
  *  visit by two people are the same number, and a row can never be joined back to an account. */

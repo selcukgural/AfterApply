@@ -39,6 +39,7 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "",
   "/login",
   "/register",
+  "/benchmark",
   "/privacy",
   "/extension-privacy",
   "/cookies",
