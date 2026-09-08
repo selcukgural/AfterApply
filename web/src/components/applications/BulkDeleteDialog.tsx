@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import type { ApplicationStatus, ApplicationSummaryResponse } from "@/types/api";
-import type { SelectionState } from "@/lib/applications/bulkSelection";
+import type { ApplicationSummaryResponse } from "@/types/api";
+import type { ListFilter, SelectionState } from "@/lib/applications/bulkSelection";
 import { selectedItems, selectionCount } from "@/lib/applications/bulkSelection";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/Button";
@@ -20,7 +20,11 @@ interface BulkDeleteDialogProps {
   selection: SelectionState;
   items: readonly ApplicationSummaryResponse[];
   /** The live filter, spelled out for an all-matching delete so "all" has a visible definition. */
-  filter: { search: string; status: ApplicationStatus | "" };
+  filter: ListFilter;
+  /** The company the list is narrowed to, when it is narrowed to one. Named rather than shown as an
+   *  id: the scope summary is the only thing standing between the user and a permanent delete, and
+   *  a GUID tells them nothing about what it covers. */
+  filterCompanyName?: string;
   isSubmitting: boolean;
   error: string | null;
   onConfirm: () => void;
@@ -40,6 +44,7 @@ export function BulkDeleteDialog({
   selection,
   items,
   filter,
+  filterCompanyName,
   isSubmitting,
   error,
   onConfirm,
@@ -112,6 +117,12 @@ export function BulkDeleteDialog({
                 {filter.status ? tStatus(filter.status) : t("scopeAllStatuses")}
               </dd>
             </div>
+            {filter.companyId && (
+              <div className="flex gap-3 px-3 py-2">
+                <dt className="w-32 shrink-0 text-gray-500 dark:text-gray-400">{t("scopeCompany")}</dt>
+                <dd className="text-gray-900 dark:text-gray-100">{filterCompanyName ?? t("scopeNone")}</dd>
+              </div>
+            )}
             <div className="flex gap-3 px-3 py-2">
               <dt className="w-32 shrink-0 text-gray-500 dark:text-gray-400">{t("scopeMatches")}</dt>
               <dd className="font-semibold text-crit-ink">{t("scopeMatchCount", { count })}</dd>

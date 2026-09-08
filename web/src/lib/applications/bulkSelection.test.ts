@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ApplicationStatus, ApplicationSummaryResponse } from "@/types/api";
+import type { ApplicationStatus, ApplicationSummaryResponse, CompanyGroupResponse } from "@/types/api";
 import {
   EMPTY_SELECTION,
   type SelectionState,
@@ -7,6 +7,10 @@ import {
   countAlreadyInStatus,
   defaultTargetStatus,
   expectedCountFor,
+  groupIds,
+  groupedPageIds,
+  isGroupPartiallySelected,
+  isGroupSelected,
   isPagePartiallySelected,
   isRowSelected,
   isSelectionEmpty,
@@ -17,6 +21,7 @@ import {
   toBulkSelection,
   toUndoEntries,
   toggleAllOnPage,
+  toggleGroup,
   toggleRow,
 } from "./bulkSelection";
 
@@ -29,6 +34,7 @@ function pageSelection(...ids: string[]): SelectionState {
 function item(id: string, status: ApplicationStatus): ApplicationSummaryResponse {
   return {
     id,
+    companyId: `company-${id}`,
     companyName: `Company ${id}`,
     jobTitle: `Role ${id}`,
     status,
@@ -127,19 +133,33 @@ describe("canOfferAllMatching", () => {
 
 describe("toBulkSelection", () => {
   it("sends the ids for an explicit selection", () => {
-    expect(toBulkSelection(pageSelection("a", "b"), { search: "", status: "" })).toEqual({ ids: ["a", "b"] });
+    expect(toBulkSelection(pageSelection("a", "b"), { search: "", status: "", companyId: "" })).toEqual({
+      ids: ["a", "b"],
+    });
   });
 
   it("sends the list's live filter for an all-matching selection", () => {
-    expect(toBulkSelection(selectAllMatching(9), { search: "acme", status: "Rejected" })).toEqual({
-      allMatching: { search: "acme", status: "Rejected" },
+    expect(
+      toBulkSelection(selectAllMatching(9), { search: "acme", status: "Rejected", companyId: "" }),
+    ).toEqual({
+      allMatching: { search: "acme", status: "Rejected", companyId: null },
     });
   });
 
   it("sends nulls rather than empty strings for an unset filter", () => {
     // "" would be a search for the empty string on the wire; the server treats null as "no filter".
-    expect(toBulkSelection(selectAllMatching(9), { search: "", status: "" })).toEqual({
-      allMatching: { search: null, status: null },
+    expect(toBulkSelection(selectAllMatching(9), { search: "", status: "", companyId: "" })).toEqual({
+      allMatching: { search: null, status: null, companyId: null },
+    });
+  });
+
+  it("carries the company the list is narrowed to", () => {
+    // Without this the server would resolve "all matching" against every company, which is the
+    // widest possible way to get a destructive operation wrong.
+    expect(
+      toBulkSelection(selectAllMatching(40), { search: "", status: "", companyId: "trendyol" }),
+    ).toEqual({
+      allMatching: { search: null, status: null, companyId: "trendyol" },
     });
   });
 });
@@ -213,5 +233,68 @@ describe("defaultTargetStatus", () => {
 
   it("falls back to the first status for an all-matching selection, whose rows are unknowable", () => {
     expect(defaultTargetStatus(selectAllMatching(247), [item("a", "Applied")], STATUSES)).toBe("Applied");
+  });
+});
+
+function group(companyId: string, ids: string[], extra?: Partial<CompanyGroupResponse>): CompanyGroupResponse {
+  return {
+    companyId,
+    companyName: `Company ${companyId}`,
+    applicationCount: ids.length,
+    lastActivityAt: "2026-09-01T00:00:00Z",
+    statusCounts: [{ status: "Applied", count: ids.length }],
+    applications: ids.map((id) => ({ ...item(id, "Applied"), companyId })),
+    hasMore: false,
+    ...extra,
+  };
+}
+
+describe("company groups", () => {
+  const trendyol = group("trendyol", ["a", "b"]);
+  const getir = group("getir", ["c"]);
+  const groups = [trendyol, getir];
+
+  it("flattens a page of groups into the ids the page-level helpers take", () => {
+    expect(groupedPageIds(groups)).toEqual(["a", "b", "c"]);
+  });
+
+  it("counts a group as selected only when every one of its visible rows is", () => {
+    expect(isGroupSelected(pageSelection("a"), trendyol)).toBe(false);
+    expect(isGroupSelected(pageSelection("a", "b"), trendyol)).toBe(true);
+    expect(isGroupPartiallySelected(pageSelection("a"), trendyol)).toBe(true);
+    expect(isGroupPartiallySelected(pageSelection("a", "b"), trendyol)).toBe(false);
+  });
+
+  it("covers every group while all-matching is on, with nothing left indeterminate", () => {
+    expect(isGroupSelected(selectAllMatching(247), trendyol)).toBe(true);
+    expect(isGroupPartiallySelected(selectAllMatching(247), trendyol)).toBe(false);
+  });
+
+  it("selects and clears a group without touching the others", () => {
+    const withTrendyol = toggleGroup(pageSelection("c"), trendyol, PAGE);
+    expect(withTrendyol).toEqual(pageSelection("c", "a", "b"));
+    expect(toggleGroup(withTrendyol, trendyol, PAGE)).toEqual(pageSelection("c"));
+  });
+
+  it("completes a half-ticked group rather than clearing it", () => {
+    expect(toggleGroup(pageSelection("a"), trendyol, PAGE)).toEqual(pageSelection("a", "b"));
+  });
+
+  it("drops out of all-matching into this page minus the group", () => {
+    // Same rule as toggleRow: quietly narrowing 247 rows to "this page minus one company" is not
+    // what the click looks like it does.
+    expect(toggleGroup(selectAllMatching(247), trendyol, PAGE)).toEqual(pageSelection("c"));
+  });
+
+  it("only ever covers the rows the response carried", () => {
+    // A company with more applications than the page shows still answers for the visible ones —
+    // a checkbox cannot mean rows nobody can see or count.
+    const capped = group("big", ["a", "b"], { applicationCount: 40, hasMore: true });
+    expect(groupIds(capped)).toEqual(["a", "b"]);
+    expect(isGroupSelected(pageSelection("a", "b"), capped)).toBe(true);
+  });
+
+  it("treats an empty group as unselected rather than vacuously selected", () => {
+    expect(isGroupSelected(pageSelection("a"), group("empty", []))).toBe(false);
   });
 });

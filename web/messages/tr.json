@@ -362,7 +362,9 @@
       "sortTitle": "Pozisyon",
       "sortStatus": "Durum",
       "descending": "Azalan",
-      "ascending": "Artan"
+      "ascending": "Artan",
+      "sortLastActivity": "Son Hareket",
+      "sortApplicationCount": "Başvuru Sayısı"
     },
     "table": {
       "empty": "Kayıtlı başvuru bulunamadı.",
@@ -378,7 +380,8 @@
       "first": "İlk",
       "previous": "Önceki",
       "next": "Sonraki",
-      "last": "Son"
+      "last": "Son",
+      "pageInfoCompanies": "Sayfa {page} / {totalPages} ({totalCount} şirket)"
     },
     "form": {
       "companyName": "Şirket Adı",
@@ -494,6 +497,7 @@
         "cascadeKept": "Şirket kayıtlarınız ve CV'leriniz silinmez.",
         "scopeSearch": "Arama",
         "scopeStatus": "Durum filtresi",
+        "scopeCompany": "Şirket",
         "scopeMatches": "Eşleşen kayıt",
         "scopeNone": "yok",
         "scopeAllStatuses": "yok — tüm durumlar dahil",
@@ -521,6 +525,21 @@
         "dismiss": "Kapat"
       },
       "pageSelected": "Bu sayfadaki {count} başvuru seçildi."
+    },
+    "view": {
+      "label": "Görünüm",
+      "flat": "Liste",
+      "company": "Şirket"
+    },
+    "groups": {
+      "distribution": "Durum dağılımı",
+      "lastActivity": "Son hareket",
+      "applicationCount": "{count} başvuru",
+      "selectGroup": "{company} şirketindeki başvuruları seç",
+      "showRemaining": "{company} şirketindeki {count} başvuruyu daha göster",
+      "filteredByCompany": "Şirket: {company}",
+      "thisCompany": "seçili şirket",
+      "clearCompanyFilter": "Şirket filtresini kaldır"
     }
   },
   "settings": {
@@ -1274,6 +1293,10 @@
       "statusHistory": {
         "title": "Durum Geçmişi",
         "body": "Başvuru detayında, o başvurunun her durum değişikliğini en yenisi üstte olacak şekilde listeler: hangi durumdan hangisine geçildiği, ne zaman geçildiği, o sırada yazdığınız not ve — en önemlisi — değişikliğin nasıl yapıldığı. Durumu siz mi değiştirdiniz, bir e-posta önerisini siz mi onayladınız, yoksa sistem yüksek güvenle kendisi mi uyguladı: her satırdaki etiket bunu söyler. E-postadan gelen bir değişiklikte ret sebebi ve kaynak e-postanın konusu da satır içinde açılabilir. Bir başvurunun geçmişini tek bakışta hatırlamanızı sağlayan yer burasıdır."
+      },
+      "companyView": {
+        "title": "Şirkete göre gruplama",
+        "body": "Listenin üstündeki Liste / Şirket anahtarı, aynı başvuruları şirketlerine göre toplar. Şirket görünümünde sayfa başına 10 başvuru değil 10 şirket gelir — yani bir şirketin başvuruları hiçbir zaman iki sayfaya bölünmez. Her şirket başlığı kaç başvurunuz olduğunu, bunların hangi durumlarda dağıldığını ve o şirkette en son ne zaman bir hareket olduğunu gösterir; başlığa tıklayarak grubu katlayabilir, başlıktaki kutuyla o şirketin başvurularının tümünü birden seçebilirsiniz. Arama ve durum filtresi iki görünümde de aynı şekilde çalışır ve seçtiğiniz görünüm adres çubuğuna yansır. Bir şirkette 20'den fazla başvurunuz varsa grubun altındaki bağlantı sizi o şirkete daraltılmış düz listeye götürür."
       }
     },
     "suggestions": {

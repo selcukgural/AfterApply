@@ -38,13 +38,19 @@ internal sealed class ApplicationService(
     /// through that join, which is equivalent — CompanyId is required — and keeps this usable on its
     /// own.
     /// </summary>
-    private IQueryable<DomainApplication> FilteredApplications(Guid userId, string? search, ApplicationStatus? status)
+    private IQueryable<DomainApplication> FilteredApplications(Guid userId, string? search, ApplicationStatus? status,
+        Guid? companyId = null)
     {
         var applications = dbContext.Applications.Where(a => a.UserId == userId);
 
         if (status is not null)
         {
             applications = applications.Where(a => a.Status == status);
+        }
+
+        if (companyId is not null)
+        {
+            applications = applications.Where(a => a.CompanyId == companyId);
         }
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -59,7 +65,7 @@ internal sealed class ApplicationService(
 
     public async Task<PagedResult<ApplicationSummaryResponse>> GetAllAsync(Guid userId, GetApplicationsQuery query, CancellationToken cancellationToken)
     {
-        var joined = FilteredApplications(userId, query.Search, query.Status)
+        var joined = FilteredApplications(userId, query.Search, query.Status, query.CompanyId)
             .Join(dbContext.Companies, a => a.CompanyId, c => c.Id, (a, c) => new { a, c.Name });
 
         joined = (query.SortBy, query.SortDirection) switch
@@ -83,10 +89,105 @@ internal sealed class ApplicationService(
         var items = await joined
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => new ApplicationSummaryResponse(x.a.Id, x.Name, x.a.JobTitle, x.a.Status, x.a.AppliedAt, x.a.UpdatedAt))
+            .Select(x => new ApplicationSummaryResponse(x.a.Id, x.a.CompanyId, x.Name, x.a.JobTitle, x.a.Status, x.a.AppliedAt, x.a.UpdatedAt))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ApplicationSummaryResponse>(items, totalCount, page, pageSize);
+    }
+
+    /// <summary>
+    /// How many applications a single company group carries in the response. A cap has to exist
+    /// somewhere: without one, a user with 300 applications at one employer would decide the size of
+    /// that page for everyone reading it. Anything past the cap is reachable through the flat list
+    /// filtered to the company, which is paged.
+    /// </summary>
+    private const int MaxApplicationsPerGroup = 20;
+
+    public async Task<GroupedApplicationsResponse> GetGroupedByCompanyAsync(Guid userId, GetGroupedApplicationsQuery query,
+        CancellationToken cancellationToken)
+    {
+        var filtered = FilteredApplications(userId, query.Search, query.Status);
+
+        // Projected to an anonymous type rather than a record of my own, and ordered on its members
+        // before any further projection: EF recognises the anonymous type as a transparent identifier
+        // and can see through it in ORDER BY, but not a named record (DECISIONS.md 2026-09-08).
+        var groups = filtered
+            .Join(dbContext.Companies, a => a.CompanyId, c => c.Id, (a, c) => new { a, c.Name })
+            .GroupBy(x => new { x.a.CompanyId, x.Name })
+            .Select(g => new
+            {
+                g.Key.CompanyId,
+                g.Key.Name,
+                ApplicationCount = g.Count(),
+                LastActivityAt = g.Max(x => x.a.UpdatedAt)
+            });
+
+        groups = (query.SortBy, query.SortDirection) switch
+        {
+            (CompanyGroupSortBy.CompanyName, SortDirection.Descending) => groups.OrderByDescending(g => g.Name),
+            (CompanyGroupSortBy.CompanyName, _) => groups.OrderBy(g => g.Name),
+            (CompanyGroupSortBy.ApplicationCount, SortDirection.Ascending) => groups.OrderBy(g => g.ApplicationCount).ThenBy(g => g.Name),
+            (CompanyGroupSortBy.ApplicationCount, _) => groups.OrderByDescending(g => g.ApplicationCount).ThenBy(g => g.Name),
+            (_, SortDirection.Ascending) => groups.OrderBy(g => g.LastActivityAt),
+            _ => groups.OrderByDescending(g => g.LastActivityAt)
+        };
+
+        var page = Math.Max(1, query.Page);
+        var pageSize = Math.Clamp(query.PageSize, 1, 50);
+
+        // Companies for the pager, applications for "select all N matching" — the two are different
+        // numbers and the view shows both.
+        var totalCompanyCount = await groups.CountAsync(cancellationToken);
+        var totalApplicationCount = await filtered.CountAsync(cancellationToken);
+
+        var pageGroups = await groups
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        if (pageGroups.Count == 0)
+        {
+            return new GroupedApplicationsResponse([], totalCompanyCount, page, pageSize, totalApplicationCount);
+        }
+
+        var companyIds = pageGroups.Select(g => g.CompanyId).ToList();
+
+        // One query for every row belonging to the companies already on this page — never one query
+        // per group. Postgres has no per-partition LIMIT that EF can express, so the per-group cap
+        // is applied after the rows come back; what that costs is bounded by one user's applications
+        // at ten companies. Because nothing is dropped on the way, the status distribution is
+        // derived from these same rows rather than asked for separately.
+        var rows = await filtered
+            .Where(a => companyIds.Contains(a.CompanyId))
+            .Join(dbContext.Companies, a => a.CompanyId, c => c.Id, (a, c) => new { a, c.Name })
+            .OrderByDescending(x => x.a.AppliedAt)
+            .Select(x => new ApplicationSummaryResponse(x.a.Id, x.a.CompanyId, x.Name, x.a.JobTitle, x.a.Status, x.a.AppliedAt, x.a.UpdatedAt))
+            .ToListAsync(cancellationToken);
+
+        var rowsByCompany = rows.GroupBy(r => r.CompanyId).ToDictionary(g => g.Key, g => g.ToList());
+        // Biggest segment first, so the bar reads left to right in the order it is drawn.
+        var countsByCompany = rowsByCompany.ToDictionary(
+            entry => entry.Key,
+            entry => entry.Value
+                .GroupBy(row => row.Status)
+                .Select(statusGroup => new CompanyGroupStatusCount(statusGroup.Key, statusGroup.Count()))
+                .OrderByDescending(count => count.Count).ThenBy(count => count.Status)
+                .ToList());
+
+        var items = pageGroups.Select(group =>
+        {
+            var companyRows = rowsByCompany.GetValueOrDefault(group.CompanyId, []);
+            return new CompanyGroupResponse(
+                group.CompanyId,
+                group.Name,
+                group.ApplicationCount,
+                group.LastActivityAt,
+                countsByCompany.GetValueOrDefault(group.CompanyId, []),
+                companyRows.Take(MaxApplicationsPerGroup).ToList(),
+                companyRows.Count > MaxApplicationsPerGroup);
+        }).ToList();
+
+        return new GroupedApplicationsResponse(items, totalCompanyCount, page, pageSize, totalApplicationCount);
     }
 
     public Task<ApplicationSummaryCountsResponse> GetSummaryCountsAsync(Guid userId, CancellationToken cancellationToken)
@@ -245,7 +346,7 @@ internal sealed class ApplicationService(
         }
 
         var filter = selection.AllMatching ?? new BulkFilterSelection();
-        return FilteredApplications(userId, filter.Search, filter.Status);
+        return FilteredApplications(userId, filter.Search, filter.Status, filter.CompanyId);
     }
 
     /// <summary>

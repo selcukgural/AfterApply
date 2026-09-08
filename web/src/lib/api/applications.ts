@@ -9,6 +9,8 @@ import type {
   ApplicationEventResponse,
   ApplicationEventType,
   ApplicationListQuery,
+  GroupedApplicationsQuery,
+  GroupedApplicationsResponse,
   ApplicationSummaryCountsResponse,
   ApplicationStatusHistoryResponse,
   ApplicationSummaryResponse,
@@ -29,12 +31,13 @@ export interface CreateEventRequest {
   metadata: string | null;
 }
 
-function buildQueryString(query: ApplicationListQuery): string {
+function buildQueryString(query: ApplicationListQuery | GroupedApplicationsQuery): string {
   const params = new URLSearchParams();
   if (query.page) params.set("page", String(query.page));
   if (query.pageSize) params.set("pageSize", String(query.pageSize));
   if (query.search) params.set("search", query.search);
   if (query.status) params.set("status", query.status);
+  if ("companyId" in query && query.companyId) params.set("companyId", query.companyId);
   if (query.sortBy) params.set("sortBy", query.sortBy);
   if (query.sortDirection) params.set("sortDirection", query.sortDirection);
   const qs = params.toString();
@@ -44,6 +47,11 @@ function buildQueryString(query: ApplicationListQuery): string {
 export const applicationsApi = {
   getAll: (query: ApplicationListQuery) =>
     apiFetch<PagedResult<ApplicationSummaryResponse>>(`/api/applications${buildQueryString(query)}`),
+
+  /** The same applications getAll would return for the same filter, collected under their company.
+   *  Pages over companies, so a company's applications are never split across two pages. */
+  getGrouped: (query: GroupedApplicationsQuery) =>
+    apiFetch<GroupedApplicationsResponse>(`/api/applications/grouped${buildQueryString(query)}`),
 
   getSummary: () => apiFetch<ApplicationSummaryCountsResponse>("/api/applications/summary"),
 

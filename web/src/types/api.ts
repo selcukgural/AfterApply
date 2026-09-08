@@ -44,6 +44,9 @@ export type ApplicationEventType =
 
 export type ApplicationListSortBy = "AppliedAt" | "CompanyName" | "JobTitle" | "Status" | "UpdatedAt";
 export type SortDirection = "Ascending" | "Descending";
+/** The company view orders whole groups, so it cannot reuse ApplicationListSortBy — half of that
+ *  union names a property a company holding several applications does not have. */
+export type CompanyGroupSortBy = "LastActivity" | "ApplicationCount" | "CompanyName";
 
 export interface UserProfileResponse {
   id: string;
@@ -69,6 +72,7 @@ export interface AuthResponse {
 
 export interface ApplicationSummaryResponse {
   id: string;
+  companyId: string;
   companyName: string;
   jobTitle: string;
   status: ApplicationStatus;
@@ -258,8 +262,50 @@ export interface ApplicationListQuery {
   pageSize?: number;
   search?: string;
   status?: ApplicationStatus;
+  companyId?: string;
   sortBy?: ApplicationListSortBy;
   sortDirection?: SortDirection;
+}
+
+export interface GroupedApplicationsQuery {
+  page?: number;
+  /** Counts companies, not applications — the company view pages over groups. */
+  pageSize?: number;
+  search?: string;
+  status?: ApplicationStatus;
+  sortBy?: CompanyGroupSortBy;
+  sortDirection?: SortDirection;
+}
+
+/** Only statuses the company actually holds appear. */
+export interface CompanyGroupStatusCount {
+  status: ApplicationStatus;
+  count: number;
+}
+
+export interface CompanyGroupResponse {
+  companyId: string;
+  companyName: string;
+  /** Every matching application at this company, which is more than `applications.length` when
+   *  `hasMore` is set. */
+  applicationCount: number;
+  lastActivityAt: string;
+  statusCounts: CompanyGroupStatusCount[];
+  applications: ApplicationSummaryResponse[];
+  /** The company holds more matching applications than this response carries; the view links the
+   *  rest out to the flat list filtered to the company. */
+  hasMore: boolean;
+}
+
+export interface GroupedApplicationsResponse {
+  items: CompanyGroupResponse[];
+  /** Matching companies — what the pager counts. */
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  /** Matching applications across every page. What "select all N matching" acts on; counting
+   *  companies there would promise one number and act on another. */
+  totalApplicationCount: number;
 }
 
 export interface EmailSuggestionResponse {
@@ -552,7 +598,16 @@ export interface AutoApprovalCalibrationResponse {
  *  rows on pages the user never opened. */
 export type BulkSelection =
   | { ids: string[]; allMatching?: undefined }
-  | { ids?: undefined; allMatching: { search: string | null; status: ApplicationStatus | null } };
+  | {
+      ids?: undefined;
+      allMatching: {
+        search: string | null;
+        status: ApplicationStatus | null;
+        /** Set when the list was narrowed to one company, so "all matching" means the rows on
+         *  screen and not every company's. */
+        companyId: string | null;
+      };
+    };
 
 export interface BulkChangeStatusRequest {
   selection: BulkSelection;

@@ -13,6 +13,9 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
+  <data name="REQUEST_MALFORMED" xml:space="preserve">
+    <value>İstek okunamadı. Adresi kontrol edip tekrar deneyin.</value>
+  </data>
   <data name="BULK_OPERATION_TOO_LARGE" xml:space="preserve">
     <value>Tek bir toplu işlem en fazla {0} başvuruyu kapsayabilir. Seçimi daraltıp tekrar deneyin.</value>
   </data>

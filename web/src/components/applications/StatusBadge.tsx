@@ -16,6 +16,25 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
   Ghosted: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
 };
 
+/**
+ * The same palette as the badges above, reduced to a fill — for the company view's status
+ * distribution, where a status is a segment of a bar rather than a word. Kept next to STATUS_COLORS
+ * on purpose: a status whose badge is blue and whose bar is green would teach two different codes
+ * for one thing.
+ */
+export const STATUS_BAR_COLORS: Record<ApplicationStatus, string> = {
+  Applied: "bg-gray-300 dark:bg-gray-600",
+  Screening: "bg-blue-300 dark:bg-blue-700",
+  Interview: "bg-blue-400 dark:bg-blue-600",
+  TechnicalInterview: "bg-blue-400 dark:bg-blue-600",
+  FinalInterview: "bg-blue-500 dark:bg-blue-500",
+  Offer: "bg-amber-400 dark:bg-amber-500",
+  Accepted: "bg-green-500 dark:bg-green-500",
+  Rejected: "bg-red-400 dark:bg-red-500",
+  Withdrawn: "bg-gray-200 dark:bg-gray-700",
+  Ghosted: "bg-purple-400 dark:bg-purple-500",
+};
+
 export function StatusBadge({ status }: { status: ApplicationStatus }) {
   const t = useTranslations("status");
   return (

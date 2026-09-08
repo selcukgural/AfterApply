@@ -4129,6 +4129,100 @@ yıkıcı akışlar `window.confirm` kullanıyor; o ne satır listesi, ne onay k
 gösterebiliyor. Mevcut `window.confirm` çağrıları bu değişiklikte **taşınmadı** — kapsam dışı.
 
 ---
+
+## Başvuruları şirkete göre gruplama (2026-09-08)
+
+Kullanıcı isteği: "aynı şirkette birden fazla başvurum var ve listede dağınık duruyorlar."
+Üç seçenek maketlenip sunuldu — (A) listenin içinde bir görünüm anahtarı, (B) ayrı bir
+"Şirketler" sayfası, (C) mevcut tabloda satır içi kümeleme. **A seçildi.**
+
+**Asıl mesele sıralama değil, sayfalamanın birimi.** Listede zaten "Şirket" sıralaması vardı ve
+sorunu çözmüyordu: sayfalama satır bazlı olduğu için bir şirketin 5 başvurusundan 3'ü sayfa 1'de,
+2'si sayfa 2'de kalabiliyor. B ve C'nin ikisi de bunu kısmen bırakıyordu — C sayfa sınırına taşan
+şirketi hâlâ bölüyor, B ise listeyi olduğu gibi bırakıp kullanıcıyı başka bir sekmeye gönderiyor.
+A'da sayfanın birimi **şirket** oluyor (`pageSize` şirket sayıyor), dolayısıyla bir şirketin
+başvuruları tanım gereği hiçbir zaman ikiye bölünemiyor.
+
+**B ertelendi, iptal edilmedi.** Gerekçe veri eksikliği değil — `Industry`/`Country`/`KariyerNetUrl`
+K4 ile (2026-09-07) zaten başvuru detayına çıkmıştı. Gerekçe şu: B, kullanıcının şikâyetini
+(*"listede dağınık duruyorlar"*) listenin kendisinde çözmüyor, ve üçünün en pahalısı — yeni rota,
+yeni menü girişi, iki ekran, iki dilde metin, yardım sayfası. Gruplu sorgu artık yazıldığı için,
+şirketi kendi başına bir nesne olarak göstermek istediğimiz gün B onun üstüne oturan ince bir ekran
+olur; bugün ikisini birden yazmanın karşılığı yok.
+
+**İki sayı, iki anlam.** `GroupedApplicationsResponse` hem `TotalCount` (eşleşen **şirket** —
+pager bunu sayar) hem `TotalApplicationCount` (eşleşen **başvuru**) taşıyor. Gerekçe: "eşleşen
+tümünü seç" bir başvuru operasyonu; orada şirket saymak kullanıcıya bir sayı gösterip sunucuya
+başka bir sayı göndermek olurdu. Aynı nedenle `Pagination` bir `unit` propu aldı — "sayfa 2/4
+(34 başvuru)" derken sayfalar şirket tutuyorsa, kullanıcı bu sayıyı ekranda doğrulayamaz.
+
+**Grup başına satır tavanı 20, ve bunu saklamıyoruz.** Postgres'te EF'in ifade edebileceği bir
+partition-başına LIMIT yok; tavan satırlar geldikten sonra uygulanıyor (maliyeti "bir kullanıcının
+on şirketteki başvuruları" ile sınırlı). Tavanı aşan grup `HasMore` ile işaretleniyor ve kalanı
+`GET /api/applications?companyId=` ile — sayfalanmış düz listede — açılıyor. Grup başlığındaki
+kutu **yalnızca yanıtta gelen satırları** seçiyor: bir onay kutusu ancak kullanıcının görüp
+sayabildiği satırları ifade edebilir, başlık ise şirketin gerçekte kaç başvuru tuttuğunu yazıyor.
+
+**`companyId` toplu seçim filtresine de eklendi — güvenlik gerekçesiyle.** Düz liste bir şirkete
+daraltılabildiği andan itibaren, `BulkFilterSelection` bunu taşımak zorunda: taşımasaydı o ekranda
+"eşleşen tümünü sil" sunucuda **her şirketin** satırlarına çözülürdü. Yıkıcı bir işlemi yanlış
+yapmanın en geniş hâli bu olurdu. `BulkDeleteDialog`'un kapsam özeti de şirketi adıyla gösteriyor
+(GUID değil) — o özet kalıcı silme ile kullanıcı arasındaki tek şey.
+
+**İki görünüm tek `sortBy` parametresini paylaşıyor, o yüzden URL'den okunan her şey doğrulanıyor.**
+Sıralama sözlükleri kesişmiyor (`AppliedAt` vs `LastActivity`); anahtar değiştirildiğinde eski
+değer URL'de kalsaydı gruplu uç nokta 400 dönerdi, yani bir düğmeye basmak hata üretirdi. Eski
+`as ApplicationListSortBy` cast'leri `lib/applications/listView.ts` içindeki doğrulayan
+ayrıştırıcılarla değiştirildi; anahtar değişiminde `sortBy` ve `companyId` düşürülüyor.
+
+**EF tuzağı yine çıktı, yine aynı yerden.** Grup sorgusu anonim tipe projekte edilip **sıralama o
+tip üzerinde** yapılıyor. 2026-09-07'de not edilen davranışın aynısı: EF anonim tipi transparent
+identifier olarak tanıyıp `ORDER BY`'da içinden geçebiliyor, kendi record'umu tanımıyor.
+
+**Görünüm URL'de, açık/kapalı durumu değil.** `?view=company` yeniden yükleme, geri tuşu ve
+paylaşılan bağlantıda korunuyor — filtreler zaten böyle. Varsayılan `flat` bırakıldı (kullanıcı
+kararı): bugünkü `/applications` bağlantısı bugünkü listeyi açmaya devam ediyor. Buna karşılık
+hangi şirketi katladığın URL'ye girmiyor; paylaşılan bir bağlantıya taşınmaya değmez.
+
+**Gruplar açık başlıyor.** Bu ekrana gelme sebebi başvuruları görmek; on tane katlanmış şirket adı
+hiçbirini göstermiyor. Katlama, genel görünüm isteyen kullanıcı için orada duruyor.
+
+Eklentiye dokunulmadı — sürüm yükseltme ya da mağaza paketi gerekmedi.
+
+### Tarayıcıda çıkan dört şey (testlerde çıkmadı)
+
+**1. Büyük bir grup açık başlayınca sayfayı yutuyor.** 24 başvurulu bir şirket, gruplar açık
+başladığı için diğer on şirketi ekranın altına itti — yani görünümün çözmek için var olduğu
+"şirketlerimi göremiyorum" sorununu aynen üretti. Kural inceltildi: gruplar açık başlar, **5'ten
+fazla satırı olan grup katlı başlar** (`COLLAPSE_GROUPS_LARGER_THAN`). O eşiğin ötesinde başlığın
+kendisi (sayı + dağılım + son hareket) satırlardan daha çok şey söylüyor, açmak da tek tık.
+
+**2. Görünüm anahtarı filtre satırının *içine* girmek zorundaydı.** Filtrelerin yanına kardeş bir
+sarmalayıcı olarak koyunca, o sarmalayıcı flex item olup tüm filtre satırını içine çekti ve her
+kontrol ayrı satıra düştü. `ApplicationFilters` artık bir `leading` slotu alıyor.
+
+**3. `Select`'te Button'la aynı specificity çakışması varmış — mevcut hata.** Bileşen `w-full`'ü
+kendi içine sabit yazmış; çağıranın `className="w-auto"`'su aynı specificity'de olduğu için
+kazananı stylesheet sırası belirliyor ve `w-auto` kaybediyordu. Yani liste araç çubuğu bu
+değişiklikten **önce de** alt alta diziliyordu. Paylaşılan bileşene dokunmadan, genişliği sarmalayıcı
+`div`'e verdik: cascade'in bozamayacağı tek yer orası. (2026-09-07'de aynı sınıf hata `Button`
+için kayda geçmişti; bileşenin kendi genişliğini dayatması bu tuzağı üretiyor.)
+
+**Yol üstünde: entegrasyon paketi paralel koşuda tıkanıyor.** Tam paket paralel modda 45 dakikada
+90 test sınıfına ancak geldi ve elle durdurulmak zorunda kaldı; `xunit.parallelizeTestCollections=false`
+ile **242/242, 2 dk 53 sn**. Her test sınıfı kendi host'unu ve veritabanını ayağa kaldırdığı için
+aynı anda çok sınıf koşturmak örtüşmüyor, birbirini boğuyor. README'ye yazıldı.
+
+**4. Okunamayan query string 500 dönüyormuş — mevcut hata, düzeltildi.** `?status=Nonsense` ya da
+eski bir yer iminden gelen bir enum, model binder'da `BadHttpRequestException` fırlatıyor; bu tip
+`IHasErrorCode` taşımadığı için `DomainExceptionHandler` onu geçiyor ve genel işleyici **500**
+üretiyordu — URL'yi düzenleyebilen herkesin alarm üretebildiği bir "sunucu hatası". Yeni uç nokta
+da aynı deliği miras aldığı için burada düzeltildi: handler artık `BadHttpRequestException`'ı
+kendi taşıdığı durum koduyla (400) yanıtlıyor. Framework'ün mesajı parametre adını ve gelen değeri
+geri yazdığı için o metin geçirilmiyor; yerine yerelleştirilmiş `REQUEST_MALFORMED` dönüyor.
+
+
+---
 ---
 
 

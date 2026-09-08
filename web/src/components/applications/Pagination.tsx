@@ -7,10 +7,20 @@ interface PaginationProps {
   page: number;
   pageSize: number;
   totalCount: number;
+  /** What a page is made of. The company view pages over companies, and telling someone they are on
+   *  "page 2 of 4 (34 applications)" while the pages hold companies gives them a number they cannot
+   *  check against what is on screen. */
+  unit?: "applications" | "companies";
   onPageChange: (page: number) => void;
 }
 
-export function Pagination({ page, pageSize, totalCount, onPageChange }: PaginationProps) {
+export function Pagination({
+  page,
+  pageSize,
+  totalCount,
+  unit = "applications",
+  onPageChange,
+}: PaginationProps) {
   const t = useTranslations("applications.pagination");
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
@@ -20,7 +30,9 @@ export function Pagination({ page, pageSize, totalCount, onPageChange }: Paginat
 
   return (
     <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-      <span>{t("pageInfo", { page, totalPages, totalCount })}</span>
+      <span>
+        {t(unit === "companies" ? "pageInfoCompanies" : "pageInfo", { page, totalPages, totalCount })}
+      </span>
       <div className="flex gap-2">
         <Button variant="secondary" disabled={page <= 1} onClick={() => onPageChange(1)}>
           {t("first")}
