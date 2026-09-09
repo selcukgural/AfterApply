@@ -4846,3 +4846,75 @@ hiçbir şey yapmıyordu, ve "Onay sayfasını yeniden aç" düğmesi eşleştir
 Testler: unit 479, web 232, integration 287 — hepsi geçiyor. Akış ayrıca yerel yığında uçtan uca
 doğrulandı (kod → giriş → onay → token teslimi → `companies/search` 200 / `users/me/export` 403).
 Eklenti tarafının test koşumu yok; `extension/` için bir harness bulunmuyor.
+
+---
+
+## Testler dışarıya istek atmaz; Hangfire server'ı test host'unda kapalı (2026-09-09)
+
+**Karar:** Entegrasyon testleri **hiçbir koşulda gerçek bir dış servise istek atmaz** ve test
+host'ları, o testin gerçekten bir job'ın etkisini ölçtüğü durumlar dışında **Hangfire background
+server'ı başlatmaz**. İkisi de artık konvansiyon değil, mekanizma: `NoOutboundHttpStartup` ve
+`Hangfire:ServerEnabled` — ve ikisini de birer guard testi koruyor
+(`NoOutboundHttpTests`, `HangfireServerInTestsTests`).
+
+**Neden dış istek yasağı:**
+
+- Bir koşu `GET https://www.linkedin.com/company/legacy-ext-corp/` isteği yapıyordu; kaynağı
+  `ExtensionApplicationTests` — hiçbir şey stub'lamayan, dış çağrı yaptığını bilmeyen bir sınıf.
+  Şirket zenginleştirme, testin oluşturduğu şirketin LinkedIn/kariyer.net sayfasını çekiyor.
+- `WebApplicationFactory` gerçek `Program`'ı boot ettiği için **API projesinin user-secrets'ını da
+  yükler**: Resend, OpenAI, GitHub, Google/LinkedIn anahtarları her test host'unun elinde. Bunun
+  bedeli teorik değil — 2026-09-07'de bir koşu canlı feedback deposunda beş gerçek issue açtı.
+- Böyle bir çağrı hiçbir şeyi doğrulamaz (dönen şey LinkedIn'in o gün ne verdiğine bağlıdır),
+  suite'in sonucunu başkasının uptime'ına ve rate limit'ine bağlar.
+
+**Nasıl:** `IHostingStartup` (env var `ASPNETCORE_HOSTINGSTARTUPASSEMBLIES`, test assembly'sinin
+module initializer'ından set edilir) her host'a bir `IHttpMessageHandlerBuilderFilter` ekler; filtre
+per-client ayarlardan **sonra** çalışır ve **socket açabilecek** her primary handler'ı
+(`HttpClientHandler`/`SocketsHttpHandler`) bloklayan bir handler'la değiştirir. Sonra çalışması
+zorunlu: enrichment ve job-preview client'ları üretimde kendi `HttpClientHandler`'ını
+`ConfigurePrimaryHttpMessageHandler` ile set ediyor, önce çalışan bir blok eziliyordu. Testin bilerek
+koyduğu stub'lar (başka bir `HttpMessageHandler` tipi oldukları için) korunur. OpenAI SDK'sı kendi
+`HttpClient`'ını kurduğu ve filtreye görünmediği için orada kaldıraç anahtar: test host'larında
+`OpenAI:ApiKey` boşaltılır.
+
+**Neden Hangfire server'ı kapalı:** Suite'in haftalardır süren kararsızlığının tek sebebi buydu ve üç
+farklı yüzle çıkıyordu — `WebApplicationFactory.DisposeAsync` içinden `TaskCanceledException` ile
+düşen test, sadece heartbeat basıp ilerlemeyen donmuş koşu, ve "Test host process crashed".
+Hangfire'ın kendi logu sebebi söylüyor: *"stopped non-gracefully due to ExpirationManager …
+add CancellationToken support for those methods"* — `Hangfire.PostgreSql`'in ExpirationManager'ı
+kapanma token'ını dinlemiyor, dolayısıyla server başlatmış her host kapanırken `ShutdownTimeout`'unun
+tamamını bekleyebiliyor. Bu suite test başına bir host kurduğu için (xunit sınıfı her test metodu için
+yeniden kuruyor) bu bedel koşu başına ~200 kez ödeniyordu. Daha önce denenen iki kaldıraç — 
+`WorkerCount=1` ve timeout'u uzatmak/kısaltmak — yalnızca beklenen işin miktarını ya da süresini
+değiştiriyor, beklemeyi ortadan kaldırmıyor. Server'ı hiç başlatmamak kaldırıyor.
+
+`AddHangfire` ve storage aynen yerinde: `IBackgroundJobClient`/`IRecurringJobManager` üretimdeki gibi
+çalışır, job'lar kuyruğa girer, sadece o host'ta çalıştıran yoktur. Job'ın etkisini ölçen sınıflar
+kendi factory'lerinde `UseSetting("Hangfire:ServerEnabled", "true")` ile geri açar: import,
+enrichment, email-signal, feedback (3 sınıf), password-reset, mailing.
+
+**Üretim etkisi yok:** `Hangfire:ServerEnabled` varsayılanı `true`; Cloud Run ve local `dotnet run`
+davranışı değişmez.
+
+**Üçüncü ve en gizli sebep — Npgsql'in GSS müzakeresi:** Yukarıdaki iki düzeltmeden sonra bile bir
+koşu 286/298'de dondu; veritabanı boş, CPU boş, ilerleme yok. Asılı process'in stack'i sebebi tek
+satırda verdi: `Hangfire.PostgreSql.ExpirationManager.Execute` → `CreateAndOpenConnection` →
+`NpgsqlConnector.SetupEncryption` → `TryNegotiateGssEncryption` → `GSSEncrypt`. Npgsql (10.x) GSS
+şifrelemesini varsayılan olarak müzakere ediyor; bu makinede cevap verecek bir KDC olmadığı için
+çağrı hiç dönmüyor ve önünde bir timeout da yok (connect timeout müzakereden *sonra* başlıyor).
+Loopback üzerindeki container-içi Postgres'in Kerberos'tan kazanacağı bir şey olmadığı için test
+bağlantı dizgilerinde `GssEncryptionMode=Disable` — hem test veritabanları hem de container'ın
+maintenance bağlantısı için. Üretim dokunulmadı; orada bu belirti hiç görülmedi.
+
+**Server'ı açan sınıflarda kalan artık:** o host'lar hâlâ Hangfire kapanışını bekliyor ve
+ExpirationManager yüzünden `DisposeAsync`'ten `TaskCanceledException` atabiliyor — test geçtikten
+sonra, testin doğrulamadığı bir şey yüzünden. Bu dokuz sınıf `TestHostDisposal.DisposeQuietlyAsync`
+kullanıyor: yalnızca **disposal'dan gelen cancellation** yutulur, başka her istisna testi düşürmeye
+devam eder.
+
+**Ölçüm:** Düzeltmeden önce iki koşu 72 ve 96 testte "test host crashed" ile düştü, temiz `main`
+worktree'sinde bir koşu 78/107'de dondu (8 dk ilerleme yok). Düzeltmeden sonra: **295/295 (3 dk 37 sn)**,
+**295/295 (3 dk 35 sn)**, UTC düzeltmesi de dahil edildikten sonra **298/298 (3 dk 43 sn)**; GSS
+düzeltmesinden sonra **298/298 (3 dk 32 sn)** ve arkasından iki koşu daha aynı şekilde yeşil —
+donma, çökme ya da flake yok.

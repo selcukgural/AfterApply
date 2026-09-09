@@ -40,6 +40,9 @@ public class FeedbackFlowTests(SharedInfrastructure shared) : IAsyncLifetime
         {
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // This class asserts what a background job did, so it needs the one thing the suite
+            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
+            builder.UseSetting("Hangfire:ServerEnabled", "true");
 
             // The mirror is off for this class (TestContainerCleanup turns it off for every host),
             // so nothing here should ever call GitHub. The stub is the belt to that braces: if the
@@ -56,7 +59,7 @@ public class FeedbackFlowTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         if (_factory is not null)
         {
-            await _factory.DisposeAsync();
+            await TestHostDisposal.DisposeQuietlyAsync(_factory);
         }
     }
 

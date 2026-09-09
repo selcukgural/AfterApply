@@ -12,6 +12,7 @@ using AfterApply.Domain.Notifications;
 using AfterApply.Domain.SiteTraffic;
 using AfterApply.Domain.TrackedJobs;
 using AfterApply.Infrastructure.Identity;
+using AfterApply.Infrastructure.Persistence.Converters;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -68,5 +69,16 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     {
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+    }
+
+    // Every timestamp in the model goes to Postgres in UTC, in one place rather than per property:
+    // Npgsql rejects any other offset on a timestamptz write, and the offsets arrive from outside —
+    // a hand-written API payload, an imported CSV row, an extension on a machine that is not on UTC.
+    // See UtcDateTimeOffsetConverter for why this normalises rather than rejects. The store type is
+    // unchanged (timestamptz either way), so this needs no migration.
+    protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+    {
+        base.ConfigureConventions(builder);
+        builder.Properties<DateTimeOffset>().HaveConversion<UtcDateTimeOffsetConverter>();
     }
 }
