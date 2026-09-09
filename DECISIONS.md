@@ -4918,3 +4918,38 @@ worktree'sinde bir koşu 78/107'de dondu (8 dk ilerleme yok). Düzeltmeden sonra
 **295/295 (3 dk 35 sn)**, UTC düzeltmesi de dahil edildikten sonra **298/298 (3 dk 43 sn)**; GSS
 düzeltmesinden sonra **298/298 (3 dk 32 sn)** ve arkasından iki koşu daha aynı şekilde yeşil —
 donma, çökme ya da flake yok.
+
+---
+
+## 0.7.0 incelemede bırakıldı; Dashboard gizlilik alanları bir sonraki yüklemeye (2026-09-09)
+
+**Karar:** Chrome Web Store Dashboard'daki iki eksik alan — **gizlilik politikası URL'i** ve
+**Privacy practices** sekmesi — `0.7.0`'ın incelemesi iptal edilmeden düzeltilemiyordu, ve
+edilmedi. İnceleme olduğu gibi bırakıldı; alanlar **bir sonraki yüklemede** doldurulacak (ret
+gelirse aynı gönderime binerek, gelmezse `0.8.0` ile).
+
+**Neden şansı denemek makul:** `0.7.0` `0.6.0`'a **hiçbir yeni izin eklemiyor**. Bağlan akışı
+`chrome.tabs.create` kullanıyor (izin istemez) ve eşleştirme uçları eklentinin zaten eriştiği API
+origin'inde. `permissions` ve `host_permissions` — `mail.google.com` ve manifest'te bildirilen
+content script dahil — hâlihazırda **onaylanıp yayına girmiş** bir sürümle birebir aynı. Veri
+tablosundaki cevaplar da aynı; değişen yalnızca *Authentication information* satırının açıklaması
+(yapıştırılan anahtar → hesabın verdiği token). İncelemenin asıl risk yüzeyi izin/gerekçe
+uyuşmazlığıdır ve bu yükleme onu kıpırdatmıyor. Karşılığında iptal, kesin bir gecikme demekti.
+
+**Ret gelirse maliyeti düşük:** Chrome ret gerekçesini yazılı bildirir; o noktada ürün zaten
+incelemede olmadığı için alanlar serbestçe düzeltilir ve yeniden gönderilir. Yani en kötü senaryo
+"daha yavaş aynı yer", kaybedilen bir şey değil.
+
+**Kontrol sırasında çıkan asıl bulgu — eklentide gizlilik bağlantısı yok:** `options.html`,
+`popup.html` ve eklentinin hiçbir yüzeyi gizlilik politikasına bağlantı vermiyor. Dolayısıyla
+Dashboard listesindeki URL, **yayındaki eklentiyi kullanan birinin politikaya ulaşabileceği tek
+yer** — ve oradaki adres `0.4.0` için girilmiş, yani Gmail Taraması'ndan ve HR kontağından önceki
+metni gösteriyor. Doğru metin (`/extension-privacy`) 2026-09-06'dan beri yayında ama eklentiden
+görünmüyor. Bu, URL düzeltmesini "sırası gelince" olmaktan çıkarıp bir sonraki yüklemenin ilk
+maddesi yapıyor, ve yanına **eklentinin Ayarlar sayfasına bir gizlilik bağlantısı** eklemeyi
+koyuyor. İkincisi kod değişikliği, dolayısıyla zaten sürüm numarası bumplayan bir release olacak.
+
+**Not:** Dashboard alanları tarayıcı otomasyonuyla doldurulamaz. Chrome, eklentilerin Web Store
+alan adlarında çalışmasını Developer Console dahil engelliyor ("The extensions gallery cannot be
+scripted"); `chrome.google.com/webstore` ve `chromewebstore.google.com` ikisinde de denendi. Bu
+adımı bir insan yazmak zorunda.

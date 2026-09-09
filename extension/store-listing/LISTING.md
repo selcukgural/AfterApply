@@ -154,9 +154,13 @@ upload needed unless you want a distinct store-only icon).
 `screenshots/popup-light.png`, `screenshots/popup-dark.png`, `screenshots/options-light.png` —
 1280×800 PNG, ready to upload as-is. Chrome Web Store requires at least one and allows up to five;
 these three cover what this listing needs to show (auto-fill in both themes, the one-time settings
-setup including Gmail Scanning). Regenerated 2026-09-06 from the current `scene-*.html` files for
-`0.6.0` — the popup shots now include the three HR-contact fields, and both pages show the
-installed-version footer. See `screenshots/README.md` if you want to regenerate again or add more.
+setup including Gmail Scanning). `options-light.png` was regenerated for `0.7.0` (2026-09-08): the
+Settings page lost its paste-a-token-here layout and gained the Connect button, the connection
+state line and the "advanced" disclosure. The two popup shots still date from `0.6.0`
+(2026-09-06) and still show what ships — the job form is unchanged; they were the ones that gained
+the three HR-contact fields and the installed-version footer. All three come from the
+`scene-*.html` files, whose markup is *copied* rather than shared, so they never update themselves.
+See `screenshots/README.md` if you want to regenerate again or add more.
 
 ## Support / website links
 
