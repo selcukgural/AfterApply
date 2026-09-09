@@ -4978,9 +4978,14 @@ başvuruyu onay e-postasından oluşturabiliyor. ATS üzerinden yapılan başvur
 düşüyor; eklentiye o siteleri eklemek yeni `host_permissions` + yeni Web Store incelemesi
 karşılığında kapsanan bir yolu ikinci kez kaplamak olurdu. Park edilenler: Outlook/Yandex posta
 taraması (en büyük gerçek boşluk ama en ağır gizlilik talebi — biri isteyene kadar bekliyor),
-Google Calendar API (sensitive scope → doğrulama süreci; `.ics` çıktısı bunu tamamen atlıyor,
-sıradaki iş o), web push/Telegram (var olmayan kullanıcıya bildirim kanalı), Wikidata şirket
+Google Calendar API (sensitive scope → doğrulama süreci; `.ics` çıktısı bunu tamamen
+atlıyor), web push/Telegram (var olmayan kullanıcıya bildirim kanalı), Wikidata şirket
 zenginleştirmesi.
+
+**Düzeltme (2026-09-09, aynı gün).** Bu satırda `.ics` çıktısı "sıradaki iş" diye yazılmıştı;
+öyle olmadı — GitHub girişi canlıya çıktıktan sonra kullanıcı `.ics`'i **yapmama** kararı
+verdi. Yani bu paragraftaki park listesi artık tam: yukarıdakilerin hiçbiri planlanmış iş
+değil, hepsi elenmiş ya da bekleyen seçenek. Sıradaki iş V0-V5 bölümünde kalıyor.
 
 **GitHub seçildi.** Ücretsiz, limitsiz, doğrulama süreci yok, `user:email` ile **doğrulanmış**
 e-posta veriyor — X'in çözemediği her şeyi çözüyor — ve hedef kitleyle birebir örtüşüyor.
@@ -5017,3 +5022,12 @@ kaldıracağı), ve şifresiz hesap metinleri üç sağlayıcıyı da sayıyor.
 aynı sözleşme: **secret'ın var olması yeterli, değeri boş olabilir** — ama yoksa revizyon
 başarısız olur. `DEPLOYMENT.md` §3'teki `gcloud secrets create` satırları eklendi; bir sonraki
 main push'undan önce çalıştırılmalı.
+
+**Düzeltme (2026-09-09, merge sonrası).** Yukarıdaki "var olması yeterli" eksikmiş: secret'ın
+**var olması da yetmiyor**, runtime service account'una `roles/secretmanager.secretAccessor`
+verilmiş olması gerekiyor. Merge'ün tetiklediği deploy tam olarak bu yüzden düştü —
+`Permission denied on secret: .../afterapply-github-client-id/versions/latest for Revision
+service account`. Cloud Run revizyonu oluşturamadığı için prod eski revizyonda kaldı, yani
+kesinti olmadı; belirtisi kırmızı bir deploy ve sessizce bir sürüm geride kalan bir prod.
+`DEPLOYMENT.md` §3'e bu tuzağı adıyla anlatan bir uyarı eklendi: yeni secret eklerken ad hem
+`create` satırlarına hem de `add-iam-policy-binding` döngüsüne girmeli.

@@ -234,9 +234,9 @@ printf '%s' "<google-oauth-client-secret-veya-bos>" | gcloud secrets create afte
 printf '%s' "<linkedin-client-id-veya-bos>" | gcloud secrets create afterapply-linkedin-client-id --data-file=-
 printf '%s' "<linkedin-client-secret-veya-bos>" | gcloud secrets create afterapply-linkedin-client-secret --data-file=-
 # Sign in with GitHub — a GitHub OAuth App (Settings -> Developer settings -> OAuth Apps, NOT a GitHub
-# App), with <web-origin>/tr/auth/github/callback as the Authorization callback URL (see README.md
-# "GitHub Sign-In Setup" for the one-callback-per-app limitation). Same contract as the other two:
-# both secrets must EXIST for --set-secrets, empty values keep the feature off.
+# App), with <web-origin>/tr/auth/github/callback and /en/... as callback URLs (an OAuth App takes up
+# to 10 of them, matched exactly; see README.md "GitHub Sign-In Setup"). Same contract as the other
+# two: both secrets must EXIST for --set-secrets, empty values keep the feature off.
 printf '%s' "<github-client-id-veya-bos>" | gcloud secrets create afterapply-github-client-id --data-file=-
 printf '%s' "<github-client-secret-veya-bos>" | gcloud secrets create afterapply-github-client-secret --data-file=-
 # Placeholder — the real web Cloud Run URL isn't known until step 4's
@@ -255,6 +255,17 @@ for s in afterapply-postgres-connection \
     --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"
 done
 ```
+
+> **Adding a secret later? Both halves, or the next deploy fails.** `gcloud secrets create` alone
+> is not enough — the runtime service account also needs
+> `roles/secretmanager.secretAccessor` on it, which is what the loop above does. Skip the binding
+> and `gcloud run deploy` will not warn: it fails while creating the revision, with
+> `Permission denied on secret: .../versions/latest for Revision service account ...`. Nothing is
+> served from the broken revision, so production keeps running on the previous one — the symptom is
+> a red deploy and a prod that silently stays one version behind. This happened on 2026-09-09 with
+> the two `afterapply-github-*` secrets; the fix is to run the binding for the new names and re-run
+> the failed job (`gh run rerun <id> --failed`). So: add the name to the `create` lines **and** to
+> the loop, in the same edit.
 
 ### 3a. Granting admin access
 
