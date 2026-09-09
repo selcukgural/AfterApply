@@ -638,6 +638,8 @@
       "showRemaining": "{company} şirketindeki {count} başvuruyu daha göster",
       "filteredByCompany": "Şirket: {company}",
       "thisCompany": "seçili şirket",
+      "expandAll": "Tümünü genişlet",
+      "collapseAll": "Tümünü daralt",
       "clearCompanyFilter": "Şirket filtresini kaldır"
     }
   },

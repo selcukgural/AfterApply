@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  areAllExpanded,
   COLLAPSE_GROUPS_LARGER_THAN,
   groupPageKey,
   initiallyCollapsed,
@@ -9,6 +10,7 @@ import {
   parseSortDirection,
   parseStatus,
   parseView,
+  toggleAllCollapsed,
 } from "./listView";
 
 describe("parseView", () => {
@@ -112,5 +114,36 @@ describe("groupPageKey", () => {
   it("changes when the order changes, since the rows are drawn in it", () => {
     expect(groupPageKey([{ companyId: "a" }, { companyId: "b" }]))
       .not.toBe(groupPageKey([{ companyId: "b" }, { companyId: "a" }]));
+  });
+});
+
+describe("toggleAllCollapsed", () => {
+  const page = [{ companyId: "getir" }, { companyId: "trendyol" }, { companyId: "kalabalik" }];
+
+  it("opens every company when one of them is folded", () => {
+    // The one control does whichever of the two is still left to do, so a page that arrived with a
+    // big group folded (the common case) opens on the first click rather than closing the rest.
+    expect(toggleAllCollapsed(page, ["kalabalik"])).toEqual([]);
+  });
+
+  it("closes every company only from fully open", () => {
+    expect(toggleAllCollapsed(page, [])).toEqual(["getir", "trendyol", "kalabalik"]);
+  });
+
+  it("folds only the companies on this page", () => {
+    // A carried-over id would fold a row that is not on screen — and reappear as a folded company
+    // if the user paged back.
+    expect(toggleAllCollapsed([{ companyId: "getir" }], [])).toEqual(["getir"]);
+  });
+
+  it("has nothing to fold on an empty page", () => {
+    expect(toggleAllCollapsed([], [])).toEqual([]);
+  });
+});
+
+describe("areAllExpanded", () => {
+  it("is true only when no company is folded", () => {
+    expect(areAllExpanded([])).toBe(true);
+    expect(areAllExpanded(["kalabalik"])).toBe(false);
   });
 });

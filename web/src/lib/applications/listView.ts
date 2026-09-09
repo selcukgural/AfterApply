@@ -78,6 +78,27 @@ export function initiallyCollapsed(
     .map((group) => group.companyId);
 }
 
+/** Whether every company on the page is unfolded, which is what decides the direction of the
+ *  fold-everything control: there is one button, and it does whichever of the two is left to do. */
+export function areAllExpanded(collapsed: readonly string[]): boolean {
+  return collapsed.length === 0;
+}
+
+/**
+ * The next fold state for "all of them": one closed company anywhere on the page means the click
+ * opens everything, and only from fully-open does it close everything.
+ *
+ * Picking the direction from the current state rather than from the last click is what keeps a
+ * single control honest — after the user has folded a company by hand, the button says the thing
+ * that is still true, instead of remembering an intent that no longer matches the screen.
+ */
+export function toggleAllCollapsed(
+  groups: readonly { companyId: string }[],
+  collapsed: readonly string[],
+): string[] {
+  return areAllExpanded(collapsed) ? groups.map((group) => group.companyId) : [];
+}
+
 /** Identifies the set of groups on screen, so the fold state can be reset when the page moves under
  *  it — a company id carried over from the previous page would fold the wrong row. */
 export function groupPageKey(groups: readonly { companyId: string }[]): string {

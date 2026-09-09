@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { CompanyGroupResponse } from "@/types/api";
-import { groupPageKey, initiallyCollapsed } from "@/lib/applications/listView";
+import { areAllExpanded, groupPageKey, initiallyCollapsed, toggleAllCollapsed } from "@/lib/applications/listView";
 import { SelectionCheckbox } from "@/components/applications/SelectionCheckbox";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusDistribution } from "@/components/applications/StatusDistribution";
@@ -29,7 +29,9 @@ interface GroupSelectionProps {
  * applications, and a page of ten collapsed company names shows none of them — except for a group
  * big enough to fill the page on its own; see COLLAPSE_GROUPS_LARGER_THAN. What the user then folds
  * or unfolds is remembered for as long as the page is up and deliberately not put in the URL: which
- * company you folded away is not worth carrying into a shared link.
+ * company you folded away is not worth carrying into a shared link. The control in the column header
+ * folds or unfolds the whole page at once, for the company with nine applications the user came here
+ * to read and would otherwise open one row at a time.
  */
 export function CompanyGroupTable({
   groups,
@@ -62,6 +64,9 @@ export function CompanyGroupTable({
       current.includes(companyId) ? current.filter((id) => id !== companyId) : [...current, companyId],
     );
 
+  const allExpanded = areAllExpanded(collapsed);
+  const toggleAllLabel = allExpanded ? tGroups("collapseAll") : tGroups("expandAll");
+
   const columnCount = selection ? 4 : 3;
 
   return (
@@ -79,9 +84,48 @@ export function CompanyGroupTable({
                 />
               </th>
             )}
-            <th className="px-4 py-3">{t("company")}</th>
-            <th className="px-4 py-3">{tGroups("distribution")}</th>
-            <th className="px-4 py-3">{tGroups("lastActivity")}</th>
+            <th scope="col" className="px-4 py-3">
+              <span className="flex items-center gap-2">
+                {/* The fold-everything control sits in the header of the column whose rows fold,
+                    beside the header checkbox that already means "everything on this page" — so it
+                    costs the table no row and no width, and reads at the same scope. */}
+                <button
+                  type="button"
+                  onClick={() => setCollapsed((current) => toggleAllCollapsed(groups, current))}
+                  aria-expanded={allExpanded}
+                  aria-label={toggleAllLabel}
+                  title={toggleAllLabel}
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-gray-300 text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-200"
+                >
+                  <svg
+                    aria-hidden
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {allExpanded ? (
+                      <>
+                        <polyline points="7 11 12 6 17 11" />
+                        <polyline points="7 17 12 12 17 17" />
+                      </>
+                    ) : (
+                      <>
+                        <polyline points="7 7 12 12 17 7" />
+                        <polyline points="7 13 12 18 17 13" />
+                      </>
+                    )}
+                  </svg>
+                </button>
+                <span>{t("company")}</span>
+              </span>
+            </th>
+            <th scope="col" className="px-4 py-3">{tGroups("distribution")}</th>
+            <th scope="col" className="px-4 py-3">{tGroups("lastActivity")}</th>
           </tr>
         </thead>
 

@@ -638,6 +638,8 @@
       "showRemaining": "{count, plural, one {Show # more application at {company}} other {Show # more applications at {company}}}",
       "filteredByCompany": "Company: {company}",
       "thisCompany": "the selected company",
+      "expandAll": "Expand all",
+      "collapseAll": "Collapse all",
       "clearCompanyFilter": "Clear the company filter"
     }
   },
