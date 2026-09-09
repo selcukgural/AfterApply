@@ -448,9 +448,10 @@ bekliyor, bu Sprint 13'ün kapsamı dışında.
 Sıra numarası = ele alınma sırası. Madde numarası (K1-K6) = kalıcı kimlik.
 
 **Envanterin durumu (2026-09-09):** K5, K3, K4 ve K6 kapandı. Açık kalan iki madde
-K2 ve K1, ve ikisinin de kilidi bilerek dışarıda — biri gerçek trafik, diğeri veri
-hacmi + hukuki görüş bekliyor. Yani envanterde "kilidi bizde" olan iş kalmadı;
-sıra V0-V5'te.
+K2 ve K1. **K1'in kilidi tamamen dışarıda** (veri hacmi + hukuki görüş); **K2'ninki
+karışık** — ölçülecek veri dışarıda, ama açma eşiği, kullanıcı metni ve kullanıcı
+bazlı ayar bizde (bkz. K2'nin "Açma koşulu" bölümü). Yani bugün kodla açılabilecek
+bir madde yok, ama K2'nin hazırlığı veri beklemiyor; sıranın gövdesi V0-V5'te.
 
 ### Sıra 1 — K5: Ürün metriklerini görünür kılmak ✅ (2026-09-07)
 
