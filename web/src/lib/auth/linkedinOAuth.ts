@@ -15,6 +15,8 @@ const AUTHORIZE_URL = "https://www.linkedin.com/oauth/v2/authorization";
 interface PendingLinkedInSignIn {
   state: string;
   redirectUri: string;
+  /** Same role as the Google flow's field of the same name — see googleOAuth.ts. */
+  returnTo?: string;
 }
 
 function base64Url(bytes: Uint8Array): string {
@@ -35,11 +37,11 @@ export function linkedInCallbackUri(locale: string): string {
 
 /** Stores the state for this attempt and navigates to LinkedIn. Never resolves in practice — the
  * page is gone once the redirect starts. */
-export function beginLinkedInSignIn(clientId: string, locale: string): void {
+export function beginLinkedInSignIn(clientId: string, locale: string, returnTo?: string | null): void {
   const state = randomToken(16);
   const redirectUri = linkedInCallbackUri(locale);
 
-  const pending: PendingLinkedInSignIn = { state, redirectUri };
+  const pending: PendingLinkedInSignIn = { state, redirectUri, ...(returnTo ? { returnTo } : {}) };
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
 
   const params = new URLSearchParams({

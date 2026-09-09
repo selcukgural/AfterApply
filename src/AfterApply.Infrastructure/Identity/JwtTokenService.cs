@@ -77,6 +77,20 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
         return Hash(token);
     }
 
+    public string GenerateExtensionPairingSecret()
+    {
+        // Base64Url, same reasoning as the personal access token above: it travels in a JSON body
+        // the extension writes straight back into a JSON body, and '+'/'/' surviving that round
+        // trip unencoded is one bug nobody needs.
+        return Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+            .TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    }
+
+    public string HashExtensionPairingSecret(string secret)
+    {
+        return Hash(secret);
+    }
+
     public string CreateGoogleSignupToken(GoogleIdentity identity)
     {
         var now = _timeProvider.GetUtcNow();

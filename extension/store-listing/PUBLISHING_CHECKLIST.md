@@ -8,7 +8,7 @@ capture are therefore all live to real users. `0.4.0` was the first publish, aro
 (commit `fa2daff` added the install link to the help centre "now that the extension is
 published"). Always confirm the currently published version in the Dashboard before uploading;
 the repo can only show what was committed, not what was shipped.
-Current package version: **0.6.0**.
+Current package version: **0.7.0**.
 
 ## Before you start
 
@@ -27,10 +27,17 @@ Current package version: **0.6.0**.
 - [ ] **One-time $5 developer registration fee**, if you haven't published anything from this
       Google account before: https://chrome.google.com/webstore/devconsole (Chrome asks for this on
       first use of the Dashboard).
-- [x] **`manifest.json`'s `"version"`** is `0.6.0`. Bump it for every subsequent upload — the
+- [x] **`manifest.json`'s `"version"`** is `0.7.0`. Bump it for every subsequent upload — the
       Dashboard rejects a re-upload with a version already used. The popup and Settings footers
       render this same number (`version.js` reads it off the manifest), so it is also what a bug
       report will quote back at you.
+- [x] **Screenshots reshot for 0.7.0** — done 2026-09-08. The Settings page lost its
+      paste-a-token-here layout and gained the Connect button, the connection state line and the
+      "advanced" disclosure, which stales `options-light.png` and the help centre's
+      `chrome-extension-options.png`; `scene-options.html` was rewritten first, since its markup is
+      copied rather than shared. The web app's own `settings-extension-token.png` was reshot too —
+      that section lost its paste-a-key layout as well. The popup's job form is unchanged, so `popup-light.png` /
+      `popup-dark.png` still show what ships.
 - [x] **Screenshots reshot for 0.6.0** — done 2026-09-06. The previous set predated the popup's
       three HR-contact fields and both pages' installed-version footer, and the `scene-*.html`
       compositions carry copied markup so they didn't pick either up on their own; both were
@@ -42,6 +49,26 @@ Current package version: **0.6.0**.
       permission whose justification doesn't match its actual use is one of the most common
       rejection reasons (see "After submitting"), and this extension asks for a lot: two job sites,
       `https://mail.google.com/*`, and a declared `content_scripts` entry for Gmail Scanning.
+
+## What changed since 0.6.0
+
+- **One-click connection (`0.7.0`).** The extension no longer asks anyone to paste a key. Press
+  Connect in its Settings and it asks the API for a short pairing code, opens
+  `ekariyerim.com/{tr,en}/pair?code=…` in a tab, and collects the token once the user confirms
+  there — signing up on that page if they have no account yet. What this changes for the Dashboard:
+  the **storage** justification and the data-usage table's *Authentication information* row now
+  describe a token the account issues to the extension rather than one the user pastes in, and
+  `LISTING.md` gained a SETUP/KURULUM paragraph in both languages. **No new permissions**:
+  `chrome.tabs.create` needs none, and the pairing endpoints live on the API origin the extension
+  already reaches.
+- **The connection stops dying silently (`0.7.0`).** The token still expires after 90 days, but the
+  extension now stores the expiry with it: the popup and Settings warn in the last two weeks, an
+  expired connection says so instead of showing "could not reach e-kariyerim", and a 401 on submit
+  is reported as an expired connection rather than a network error. `PRIVACY_POLICY.md`'s "what the
+  extension stores" list gained the expiry date, and the published `/extension-privacy` page was
+  updated with it.
+- **Entering a key by hand still works**, under an "advanced" disclosure in both the extension's
+  Settings and the web app's — every already-installed build keeps working untouched.
 
 ## What changed since 0.5.0
 

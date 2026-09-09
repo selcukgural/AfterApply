@@ -6,6 +6,10 @@
   <link rel="stylesheet" href="popup.css" />
   <style>
     body { width: 420px; }
+    details.manual { margin-top: 16px; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px; }
+    details.manual summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-subtle); }
+    details.manual > *:not(summary) { margin-top: 8px; }
+    hr.section-divider { margin: 18px 0 0; border: none; border-top: 1px solid var(--border-subtle); }
   </style>
 </head>
 <body>
@@ -18,17 +22,34 @@
 
   <main id="content">
     <p id="tokenHelp" class="muted">
-      Generate an access token from e-kariyerim → Settings → Browser Extension, then paste it below.
+      Press Connect and confirm on the page that opens. No copying, no pasting.
     </p>
 
-    <label id="apiBaseUrlLabel" for="apiBaseUrl">API base URL</label>
-    <input id="apiBaseUrl" type="text" placeholder="https://api.ekariyerim.com" />
+    <p id="connectionState" class="status" hidden></p>
 
-    <label id="tokenLabel" for="token">Access token</label>
-    <input id="token" type="password" placeholder="aa_pat_..." />
+    <button id="connect" class="primary" type="button">Connect</button>
 
-    <button id="save" class="primary">Save</button>
-    <p id="status" class="status" hidden></p>
+    <p id="pairingCode" class="pairing-code" hidden></p>
+    <p id="pairingStatus" class="status" hidden></p>
+    <button id="openPairingPage" class="secondary" type="button" hidden>Open the confirmation page again</button>
+
+    <!-- Kept, and demoted. Pairing is the path; a key entered by hand is still how you point a
+         build at another API base URL, and it is what every install made before this version is
+         already running on. -->
+    <details class="manual">
+      <summary id="manualTitle">Enter a key by hand (advanced)</summary>
+
+      <label id="apiBaseUrlLabel" for="apiBaseUrl">API base URL</label>
+      <input id="apiBaseUrl" type="text" placeholder="https://api.ekariyerim.com" />
+
+      <label id="tokenLabel" for="token">Access token</label>
+      <input id="token" type="password" placeholder="aa_pat_..." />
+
+      <button id="save" class="primary" type="button">Save</button>
+      <p id="status" class="status" hidden></p>
+    </details>
+
+    <hr class="section-divider" />
 
     <label id="gmailScanLabel">Gmail Scanning (beta)</label>
     <p id="gmailScanHelp" class="muted">

@@ -9,7 +9,7 @@ change here that never reaches that page is a policy that doesn't exist as far a
 review is concerned, and vice versa. The published page is bilingual; this file is the English
 text._
 
-**Last updated:** 6 September 2026
+**Last updated:** 8 September 2026
 
 ## What this extension is
 
@@ -68,8 +68,12 @@ The extension stores the following locally on your device, using the browser's o
 `chrome.storage.local` (never Chrome Sync, never a third-party server):
 
 - The e-kariyerim API address you're using (a setting, not personal data).
-- Your e-kariyerim personal access token, which you generate yourself from e-kariyerim's Settings
-  page and paste in. This token authenticates the extension's requests as you.
+- The access token your e-kariyerim account issued to this extension, and the date it expires (so
+  the extension can tell you before the connection lapses instead of simply stopping). This token
+  authenticates the extension's requests as you, and reaches only the endpoints the extension
+  itself uses — it cannot export your application history or manage your account. You obtain it by
+  pressing "Connect" and confirming a code on your own account page; if you use a custom API
+  address you can still generate one in e-kariyerim's Settings and enter it by hand.
 - Your light/dark theme preference for the extension's own popup.
 - Your language choice (Turkish/English) for the extension's pages.
 - Whether you've turned on Gmail Scanning (off unless you explicitly enable it), a cached copy of
@@ -79,6 +83,12 @@ The extension stores the following locally on your device, using the browser's o
 This data never leaves your device except as described in "What data the extension sends" below.
 
 ## What data the extension sends, and to whom
+
+When you press "Connect," the extension asks the e-kariyerim API for a pairing code and opens the
+confirmation page in a tab; while it waits it asks, every few seconds, whether you have confirmed
+that code. Neither request carries any personal data — the extension has no account and no
+credential at that point. The only thing that comes back is the access token, once, after you
+confirm. If you refuse on that page, or the code runs out of time, nothing is issued at all.
 
 When you click "I Applied," the extension sends the job title, company, location, job URL,
 description and contact details shown in the popup to the e-kariyerim API, authenticated with your
@@ -104,7 +114,10 @@ tracking services, and it does not sell or share your data with third parties.
   background, and does nothing at all on any other site. Turn it off anytime in Settings, with the
   same immediate effect.
 - You can remove your access token at any time from the extension's Settings page, or revoke it
-  from e-kariyerim's Settings → Browser Extension page, which immediately invalidates it.
+  from e-kariyerim's Settings → Browser Extension page, which immediately invalidates it. It also
+  expires on its own after 90 days, whether or not you do anything.
+- A pairing code is only ever an offer: it grants nothing until you confirm it while signed in, and
+  the confirmation page has a "this wasn't me" button for a code you did not produce yourself.
 - Uninstalling the extension deletes everything `chrome.storage.local` held for it (the token, API
   address, theme, language preference, Gmail Scanning setting, and its local caches) from your
   device.

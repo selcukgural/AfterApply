@@ -11,8 +11,31 @@ export async function getSettings() {
   return {
     apiBaseUrl: settings.apiBaseUrl || DEFAULT_API_BASE_URL,
     token: settings.token || "",
+    // ISO 8601, or "" when unknown. Known for every token obtained by pairing (the server hands
+    // the expiry over with it); empty for one pasted in by hand and for every install that
+    // predates pairing — those keep working exactly as before, they just cannot be warned in
+    // advance. Tokens expire after PersonalAccessTokens:LifetimeDays whether or not anyone told
+    // the extension, which is precisely why the connection used to die without explanation.
+    tokenExpiresAt: settings.tokenExpiresAt || "",
   };
 }
+
+/** Days left on the stored token, or null when the expiry is unknown/unparseable. Negative means
+ * it has already lapsed. */
+export function daysUntilExpiry(tokenExpiresAt, now = new Date()) {
+  if (!tokenExpiresAt) {
+    return null;
+  }
+  const expiresAt = new Date(tokenExpiresAt);
+  if (Number.isNaN(expiresAt.getTime())) {
+    return null;
+  }
+  return Math.floor((expiresAt.getTime() - now.getTime()) / 86_400_000);
+}
+
+/** How far ahead the connection starts warning that it is about to lapse. Two weeks is long
+ * enough that a person who opens the popup once a week sees it before it bites. */
+export const EXPIRY_WARNING_DAYS = 14;
 
 export async function saveSettings(settings) {
   await chrome.storage.local.set({ [STORAGE_KEY]: settings });

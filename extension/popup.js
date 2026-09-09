@@ -1,4 +1,4 @@
-import { getSettings } from "./storage.js";
+import { getSettings, daysUntilExpiry, EXPIRY_WARNING_DAYS } from "./storage.js";
 import { setUpThemeToggle } from "./theme.js";
 import { t, setUpLanguageToggle } from "./i18n.js";
 import { renderVersion } from "./version.js";
@@ -6,8 +6,11 @@ import { renderVersion } from "./version.js";
 const content = document.getElementById("content");
 const SITE_LABELS = { linkedin: "LinkedIn", kariyer: "kariyer.net" };
 
-// screen: "noJob" | "noToken" | "form" (unset while the initial async detection/scrape is still
-// in flight — the header's skeleton placeholder stays visible until one of these lands).
+// screen: "noJob" | "noToken" | "tokenExpired" | "form" (unset while the initial async
+// detection/scrape is still in flight — the header's skeleton placeholder stays visible until one
+// of these lands). "tokenExpired" is told apart from "noToken" on purpose: until this version the
+// connection simply stopped working after ninety days and said "could not reach e-kariyerim",
+// which is what a lost network connection says too.
 // statusKey/statusType track the form's status paragraph so a language toggle mid-flow re-renders
 // it in the new language too, without touching anything else (see render() below).
 const state = {
@@ -20,6 +23,8 @@ const state = {
   scrapeError: null,
   statusKey: null,
   statusType: null,
+  // Days left on the connection when it is close to lapsing, null otherwise. See main().
+  expiryWarningDays: null,
 };
 
 // LinkedIn only puts a job on its own /jobs/view/<id> URL when you open it in a dedicated
@@ -461,6 +466,16 @@ function setContent(html) {
   content.innerHTML = html;
 }
 
+/**
+ * Hands the pairing over to the options page, which then starts it on its own (?pair=1). It cannot
+ * run here: a popup is destroyed the moment focus leaves it, and the very next step — opening the
+ * confirmation page in a tab — does exactly that, so a handshake started in the popup would die
+ * before anyone could confirm it.
+ */
+function openPairing() {
+  chrome.tabs.create({ url: chrome.runtime.getURL("options.html?pair=1") });
+}
+
 function renderMessage(text, linkText, onLinkClick) {
   setContent(`<p class="muted">${text}</p>`);
   if (linkText) {
@@ -582,6 +597,11 @@ function relabelForm() {
   setText("hrLinkedInLabelEl", "popup.hrLinkedInLabel");
   setText("submit", "popup.applyButton");
 
+  const expiryEl = document.getElementById("expiryWarning");
+  if (expiryEl) {
+    expiryEl.textContent = t(lang, "popup.expiryWarning").replace("{days}", state.expiryWarningDays);
+  }
+
   const errorEl = document.getElementById("scrapeError");
   if (errorEl) {
     errorEl.textContent = `${t(lang, "popup.autoFillFailed")}${state.scrapeError}`;
@@ -602,7 +622,9 @@ function render() {
   } else if (state.screen === "noJob") {
     renderMessage(t(lang, "popup.noJob"));
   } else if (state.screen === "noToken") {
-    renderMessage(t(lang, "popup.noToken"), t(lang, "popup.openSettings"), () => chrome.runtime.openOptionsPage());
+    renderMessage(t(lang, "popup.noToken"), t(lang, "popup.connect"), openPairing);
+  } else if (state.screen === "tokenExpired") {
+    renderMessage(t(lang, "popup.tokenExpired"), t(lang, "popup.connect"), openPairing);
   }
 }
 
@@ -612,6 +634,7 @@ function buildForm() {
 
   setContent(`
     <span class="site-badge">${escapeHtml(SITE_LABELS[job.site])}</span>
+    ${state.expiryWarningDays === null ? "" : `<p id="expiryWarning" class="status warning">${escapeHtml(t(lang, "popup.expiryWarning").replace("{days}", state.expiryWarningDays))}</p>`}
     ${state.scrapeError ? `<p id="scrapeError" class="status error">${escapeHtml(t(lang, "popup.autoFillFailed"))}${escapeHtml(state.scrapeError)}</p>` : ""}
     <label id="companyLabelEl" for="companyName">${escapeHtml(t(lang, "popup.companyLabel"))}</label>
     <div class="combobox">
@@ -682,6 +705,14 @@ function buildForm() {
         }),
       });
 
+      if (response.status === 401) {
+        // Not a network problem and not a bad payload: the token is gone, revoked or past its
+        // ninety days. Says so, instead of blaming the connection.
+        setStatus("popup.unauthorized", "error");
+        submitButton.disabled = false;
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`Request failed (${response.status})`);
       }
@@ -720,6 +751,16 @@ async function main() {
     render();
     return;
   }
+
+  const daysLeft = daysUntilExpiry(state.settings.tokenExpiresAt);
+  if (daysLeft !== null && daysLeft < 0) {
+    state.screen = "tokenExpired";
+    render();
+    return;
+  }
+  // Shown above the form rather than instead of it: the connection still works today, and
+  // interrupting a job someone is in the middle of saving would be the wrong trade.
+  state.expiryWarningDays = daysLeft !== null && daysLeft <= EXPIRY_WARNING_DAYS ? daysLeft : null;
 
   let scraped;
   let scrapeError = null;

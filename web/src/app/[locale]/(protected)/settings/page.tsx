@@ -135,7 +135,12 @@ export default function SettingsPage() {
 
       <section className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
         <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("extension.title")}</h2>
-        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("extension.description")}</p>
+        <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">{t("extension.description")}</p>
+        <ol className="mb-4 flex list-decimal flex-col gap-1 pl-5 text-sm text-gray-600 dark:text-gray-400">
+          <li>{t("extension.step1")}</li>
+          <li>{t("extension.step2")}</li>
+          <li>{t("extension.step3")}</li>
+        </ol>
 
         {tokenError && <p className="mb-3 text-sm text-red-600 dark:text-red-400">{tokenError}</p>}
 
@@ -161,21 +166,30 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="mb-4 flex items-end gap-2">
-          <div className="flex-1">
-            <FormField label={t("extension.nameLabel")} htmlFor="pat-name">
-              <Input
-                id="pat-name"
-                placeholder={t("extension.namePlaceholder")}
-                value={newTokenName}
-                onChange={(e) => setNewTokenName(e.target.value)}
-              />
-            </FormField>
+        {/* Demoted to a disclosure, not removed. Pairing from the extension is the path now, but a
+            key typed in by hand is still the only way to point a build at a different API base URL
+            — and every extension already installed with a pasted key keeps working. */}
+        <details className="mb-4 rounded-md border border-gray-200 dark:border-gray-800 p-3">
+          <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t("extension.manualTitle")}
+          </summary>
+          <p className="mt-2 mb-3 text-sm text-gray-600 dark:text-gray-400">{t("extension.manualHelp")}</p>
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <FormField label={t("extension.nameLabel")} htmlFor="pat-name">
+                <Input
+                  id="pat-name"
+                  placeholder={t("extension.namePlaceholder")}
+                  value={newTokenName}
+                  onChange={(e) => setNewTokenName(e.target.value)}
+                />
+              </FormField>
+            </div>
+            <Button variant="secondary" onClick={handleCreateToken} disabled={creatingToken || tokens.length >= tokenLimits.maxActiveTokens}>
+              {creatingToken ? t("extension.generating") : t("extension.generate")}
+            </Button>
           </div>
-          <Button variant="secondary" onClick={handleCreateToken} disabled={creatingToken || tokens.length >= tokenLimits.maxActiveTokens}>
-            {creatingToken ? t("extension.generating") : t("extension.generate")}
-          </Button>
-        </div>
+        </details>
 
         {tokensLoading ? (
           <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>

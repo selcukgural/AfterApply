@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { postAuthLocale } from "@/lib/auth/postAuthRedirect";
+import { postAuthDestination, postAuthLocale, returnToFromLocation } from "@/lib/auth/postAuthRedirect";
 import { applyTheme, type Theme } from "@/lib/theme/theme";
 import { createLoginSchema } from "@/lib/validation/loginSchema";
 import { ApiError } from "@/lib/api/httpClient";
@@ -46,10 +46,13 @@ export default function LoginPage() {
       applyTheme(auth.user.preferredTheme as Theme);
       // Applies the account's saved language preference right after login — see postAuthLocale.
       const nextLocale = postAuthLocale(auth, locale);
+      // Normally the dashboard. The exception is someone the browser extension sent here to
+      // confirm a pairing — they came mid-task and are handed back to it. See postAuthDestination.
+      const destination = postAuthDestination(returnToFromLocation());
       if (nextLocale) {
-        router.push("/dashboard", { locale: nextLocale });
+        router.push(destination, { locale: nextLocale });
       } else {
-        router.push("/dashboard");
+        router.push(destination);
       }
     } catch (error) {
       setFormError(error instanceof ApiError ? error.message : t("genericError"));

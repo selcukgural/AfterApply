@@ -7,7 +7,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 import { consumeLinkedInSignIn } from "@/lib/auth/linkedinOAuth";
-import { postAuthLocale } from "@/lib/auth/postAuthRedirect";
+import { postAuthDestination, postAuthLocale } from "@/lib/auth/postAuthRedirect";
 import { applyTheme, getStoredThemeCookie, type Theme } from "@/lib/theme/theme";
 import { createLinkedInSignupSchema } from "@/lib/validation/linkedinSignupSchema";
 import { ApiError } from "@/lib/api/httpClient";
@@ -47,15 +47,18 @@ function LinkedInCallback() {
   // effect must run exactly once — including under React Strict Mode's mount/unmount/mount in
   // development, which a ref (unlike state) survives.
   const started = useRef(false);
+  // Same role as in the Google callback: the page this sign-in has to return to, when there is one.
+  const returnTo = useRef<string | null>(null);
 
   const finishSignIn = (auth: AuthResponse) => {
     // Same post-login handling as the login page: the account's saved theme and language win.
     applyTheme(auth.user.preferredTheme as Theme);
     const nextLocale = postAuthLocale(auth, locale);
+    const destination = postAuthDestination(returnTo.current);
     if (nextLocale) {
-      router.replace("/dashboard", { locale: nextLocale });
+      router.replace(destination, { locale: nextLocale });
     } else {
-      router.replace("/dashboard");
+      router.replace(destination);
     }
   };
 
@@ -75,6 +78,8 @@ function LinkedInCallback() {
       if (!code || !pending) {
         return { kind: "error", message: t("invalidState") };
       }
+
+      returnTo.current = pending.returnTo ?? null;
 
       try {
         const result = await signInWithLinkedIn({ code, redirectUri: pending.redirectUri });

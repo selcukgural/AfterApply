@@ -16,6 +16,11 @@ interface PendingGoogleSignIn {
   state: string;
   codeVerifier: string;
   redirectUri: string;
+  /** Where to land afterwards, when the sign-in started somewhere that has to be returned to —
+   * today only the extension pairing confirmation. Carried inside the object that already exists
+   * for this round trip rather than in a second storage key, and re-checked against the allowlist
+   * in postAuthRedirect on the way out. */
+  returnTo?: string;
 }
 
 function base64Url(bytes: Uint8Array): string {
@@ -41,14 +46,14 @@ export function googleCallbackUri(locale: string): string {
 
 /** Stores the PKCE/state pair for this attempt and navigates to Google. Never resolves in
  * practice — the page is gone once the redirect starts. */
-export async function beginGoogleSignIn(clientId: string, locale: string): Promise<void> {
+export async function beginGoogleSignIn(clientId: string, locale: string, returnTo?: string | null): Promise<void> {
   // 32 random bytes → 43 base64url chars, the RFC 7636 minimum.
   const codeVerifier = randomToken(32);
   const codeChallenge = base64Url(await sha256(codeVerifier));
   const state = randomToken(16);
   const redirectUri = googleCallbackUri(locale);
 
-  const pending: PendingGoogleSignIn = { state, codeVerifier, redirectUri };
+  const pending: PendingGoogleSignIn = { state, codeVerifier, redirectUri, ...(returnTo ? { returnTo } : {}) };
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
 
   const params = new URLSearchParams({

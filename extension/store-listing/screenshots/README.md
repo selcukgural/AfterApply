@@ -18,36 +18,33 @@ showing the old logo. Prefer a shared asset over a copied glyph here.
 
 ## Regenerating them
 
-Last shot 2026-09-06 for `0.6.0` — the popup's three HR-contact fields and both pages'
-installed-version footer.
+Last shot 2026-09-08 for `0.7.0` — `options-light.png` only, for the Connect button and the pairing
+code that replaced the paste-a-token layout. The two popup shots were left alone: the job form
+they show is unchanged by that release.
 
-Each `scene-*.html` renders its own 1280×800 design inside a flex-centered viewport. A capture
-tool that can't set the viewport to exactly 1280×800 (Chrome MCP's `resize_window` is ignored on
-a maximized macOS window, for one) still gets a pixel-exact result if the canvas is pinned to the
-viewport's top-left corner instead of being centered:
+Each `scene-*.html` renders its own 1280×800 design inside a flex-centered viewport, and takes a
+**`?pin=1`** parameter that drops the fit-to-viewport scale-down and pins the canvas to the
+viewport's top-left corner — that used to be a block of CSS pasted into the console on every
+reshoot. With it, headless Chrome alone is enough and no capture tool has to agree about
+coordinates:
 
-1. Serve `extension/` with any static file server — `python3 -m http.server 8802` run from the
-   `extension/` directory — and open
-   `http://localhost:8802/store-listing/screenshots/scene-job.html?theme=light` (also `?theme=dark`,
-   and `scene-options.html?theme=light`).
-2. Pin the canvas and drop its fit-to-viewport scale-down:
+1. Serve `extension/` with any static file server — `python3 -m http.server 8803` run from the
+   `extension/` directory.
+2. Shoot it (macOS has no `timeout`, and Chrome's `--screenshot` does not always exit on its own,
+   so run it in the background, wait for the file, then kill it):
 
-   ```js
-   const st = document.createElement("style");
-   st.textContent = `html,body{display:block!important;align-items:initial!important;
-     justify-content:initial!important;overflow:hidden!important;}
-     #canvas{position:absolute!important;top:0!important;left:0!important;transform:none!important;}`;
-   document.head.appendChild(st);
+   ```bash
+   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu \
+     --hide-scrollbars --force-device-scale-factor=2 --window-size=1280,800 \
+     --virtual-time-budget=4000 --user-data-dir=/tmp/shotprofile --screenshot=raw.png \
+     "http://localhost:8803/store-listing/screenshots/scene-options.html?theme=light&pin=1" &
    ```
 
-   `#canvas.getBoundingClientRect()` should now read exactly `0,0,1280,800`.
-3. Capture the region `0,0 → 1280,800`. Note that a capture tool's coordinate frame may be
-   *smaller* than the CSS viewport (Chrome MCP reported 1528×784 for a 1728×887 viewport, a factor
-   of 0.884), in which case the region has to be given in that frame — 1131×707 for this canvas.
-   Chrome MCP's `zoom` action returns the region at roughly device-pixel resolution (1388×868
-   here), which is larger than 1280×800 and therefore downscales cleanly.
-4. Normalise: `sips -s format png -z 800 1280 raw.png --out popup-light.png`.
-5. Shrink. A `sips` PNG of a 1280×800 UI screenshot lands around 350–450 KB; quantising to a
+   Use a **fresh** `--user-data-dir` (or a cache-busting query param) after editing a scene: Chrome
+   will otherwise serve the previous version from cache and hand you an identical-looking PNG,
+   which is easy to mistake for "my edit did nothing".
+3. Normalise: `sips -s format png -z 800 1280 raw.png --out options-light.png`.
+4. Shrink. A `sips` PNG of a 1280×800 UI screenshot lands around 350–450 KB; quantising to a
    256-colour adaptive palette cuts that to ~100–125 KB with no visible loss, because these are
    flat UI surfaces plus text rather than photographs. It matters most for the two help-centre
    images, which real visitors download:
@@ -82,7 +79,22 @@ the `chrome.*` APIs. Recipe:
    1280-wide, top-left-pinned canvas, sizes the iframe to `contentDocument`'s height once it has
    rendered, and applies a fixed `scale` (1.35 reads well for both pages).
 3. Serve the scratch copy, open `frame.html?src=popup.html&w=360&scale=1.35` (and
-   `?src=options.html&w=420&scale=1.35`), then capture and downscale as in step 3–4 above —
-   these two are 1280 wide with a free height, since the help page renders them `w-full`.
+   `?src=options.html&w=420&scale=1.35`), then capture and downscale as in the steps above —
+   these two are 1280 wide with a free height, since the help page renders them `w-full`. Set
+   `--window-size` to roughly the rendered height (1280×760 fitted the 0.7.0 Settings page), or the
+   shot comes back with a band of empty gradient underneath.
+
+The stub is also the cheapest way to *look at* a page that only runs inside an extension. The
+0.7.0 Settings page shipped its "open the confirmation page again" button visible with no pairing
+in flight, because `popup.css`'s own `button { display: block }` outranks the UA stylesheet's
+`[hidden] { display: none }` — invisible in review, obvious in the screenshot. `popup.css` now
+carries an explicit `[hidden]` rule.
 
 The scratch copy exists so the stub never ships: `chrome-stub.js` must not end up in `extension/`.
+
+A third help image, `web/public/help/screenshots/settings-extension-token.png`, is the *web app's*
+Settings page and goes stale from the same commits — it is shot from the seeded demo account
+against the local stack, driving headless Chrome over CDP (sign in by POSTing `/api/auth/login`
+from the page and writing `tokenStorage`'s localStorage keys, `Emulation.setDeviceMetricsOverride`
+at 1280 wide / dsf 2, `Page.captureScreenshot` with `captureBeyondViewport`, then crop and
+downscale to 1280 wide).

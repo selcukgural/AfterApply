@@ -46,6 +46,18 @@ public sealed class RateLimitingOptions
     /// Policy denies the site carries.</summary>
     public FixedWindowPolicy Benchmark { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
 
+    /// <summary>Per IP, anonymous — starting an extension pairing. Tight, because one person
+    /// connecting one browser needs one of these and a retry or two; what it bounds is a script
+    /// filling the table with codes waiting for someone to confirm one by mistake.</summary>
+    public FixedWindowPolicy ExtensionPairingStart { get; init; } = new() { PermitLimit = 10, WindowSeconds = 300 };
+
+    /// <summary>Per IP, anonymous — the poll behind the same flow, and sized for a machine rather
+    /// than a person: an extension asks every few seconds for as long as the pairing is open, so a
+    /// single honest pairing spends around two hundred of these. It is not a credential check
+    /// (the device secret is 256 bits of randomness), it is a ceiling on the traffic one source can
+    /// aim at the endpoint.</summary>
+    public FixedWindowPolicy ExtensionPairingPoll { get; init; } = new() { PermitLimit = 600, WindowSeconds = 300 };
+
     public sealed class FixedWindowPolicy
     {
         public int PermitLimit { get; init; }

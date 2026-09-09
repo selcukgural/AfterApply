@@ -19,9 +19,11 @@ updates that arrive by email.
 
 **storage**
 ```
-Stores the user's e-kariyerim API base URL, personal access token, and light/dark theme
-preference locally on the device (chrome.storage.local), so they aren't re-entered on every use.
-Never synced, never sent anywhere except as this extension's own Authorization header.
+Stores the user's e-kariyerim API base URL, the access token their account issued to this
+extension (with the date it expires, so the extension can warn before it lapses), and their
+light/dark theme and language preferences locally on the device (chrome.storage.local), so they
+aren't re-entered on every use. Never synced, never sent anywhere except as this extension's own
+Authorization header.
 ```
 
 **activeTab**
@@ -75,7 +77,11 @@ for the autocomplete field. The same
 origin is also used — only when Gmail Scanning is turned on — by gmail-scan.js to submit an
 extracted email summary for a message that scored as job-related, and by local-filter-config.js to
 fetch the (non-personal) keyword/domain table that scoring uses, so it can be tuned without a new
-extension release. All of it is still just the user's own account, same token. No other network
+extension release. The same origin also serves the connection handshake: when the user presses
+Connect, the extension asks this origin for a short pairing code, opens the account's confirmation
+page in a tab, and asks (with a random secret only this extension holds) whether the user has
+confirmed it — no personal data is sent in either request, and the access token is the answer to
+the last one. All of it is still just the user's own account, same token. No other network
 destination is contacted.
 ```
 
@@ -87,7 +93,7 @@ Chrome's form asks what data the item handles and how. Based on what `popup.js` 
 | Data type | Collected? | Notes |
 |---|---|---|
 | Personally identifiable information | Yes | Not about the user: the extension does not collect their name, address, or similar. But on a LinkedIn posting that publicly shows a hiring-team card, the popup reads the job poster's name and public profile URL and offers them as the application's contact — visible and editable in the popup before anything is sent, stored only on the user's own account as their own note of who to contact, never shown to anyone else and never used to contact that person. |
-| Authentication information | Yes | The user's own e-kariyerim personal access token, entered by the user, stored locally, used only to authenticate the extension's own requests to their account. |
+| Authentication information | Yes | The user's own e-kariyerim access token, stored locally, used only to authenticate the extension's own requests to their account. Obtained by the user pressing Connect and confirming a code on their own account page (or, for a custom API address, entered by hand); the extension holds a random secret for the duration of that handshake and nothing else. |
 | Website content | Yes | Job title, company name, location, and job description text scraped from the LinkedIn/kariyer.net page the user opened, sent to the user's own e-kariyerim account. |
 | Personal communications | Yes, opt-in only | Only if the user turns on Gmail Scanning in Settings (off by default): the sender, subject, and body text of an email the user personally opens in Gmail are read in the browser to score local relevance; only a short extracted summary (sender, subject, capped snippet — never the full email) is sent, and only for a message that scores as job-application-related, to the user's own e-kariyerim account. No other message is read or sent. |
 | Location, financial, health | No | — |

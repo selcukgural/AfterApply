@@ -86,6 +86,10 @@
       "benchmark": {
         "title": "Geri Dönüş Oranı Kıyaslama",
         "description": "Kaç başvuru yaptın, kaçından dönüş aldın? Kendi geri dönüş oranını gör ve alanındaki medyanla kıyasla. Kayıt gerekmiyor."
+      },
+      "pair": {
+        "title": "Eklentiyi Bağla",
+        "description": "Tarayıcı eklentini e-kariyerim hesabına tek onayla bağla."
       }
     }
   },
@@ -648,14 +652,14 @@
     },
     "extension": {
       "title": "Tarayıcı Eklentisi",
-      "description": "LinkedIn veya kariyer.net ilan sayfalarında \"I Applied\" ile başvuru oluşturmak için bir erişim anahtarı üretin ve eklentinin ayarlarına yapıştırın. Bu anahtar hesabınıza tam erişim sağlar — sadece kendi tarayıcı eklentinize verin.",
+      "description": "Eklentiyi kur, popup'taki “Bağlan” düğmesine bas ve açılan sayfada onayla — kopyala-yapıştır yok. Verilen anahtar yalnızca eklentinin kullandığı uçlara erişir; başvuru geçmişini dışa aktaramaz, hesabını yönetemez.",
       "nameLabel": "Anahtar adı",
       "namePlaceholder": "örn. Chrome Eklentisi",
       "generate": "Anahtar Üret",
       "generating": "Üretiliyor...",
       "generateError": "Anahtar üretilemedi.",
       "limitReached": "En fazla {max} aktif anahtar oluşturabilirsiniz. Yeni bir anahtar oluşturmadan önce mevcuttan birini silmelisiniz.",
-      "newTokenWarning": "Bu anahtar yalnızca bir kez gösterilir ve {days} gün geçerlidir. Şimdi kopyalayıp eklentinin ayarlarına yapıştırın.",
+      "newTokenWarning": "Bu anahtar yalnızca bir kez gösterilir ve {days} gün geçerlidir. Şimdi kopyalayıp eklentinin ayarlarına yapıştır. Yalnızca kendi tarayıcı eklentine ver.",
       "copy": "Kopyala",
       "copied": "Kopyalandı",
       "noTokens": "Henüz üretilmiş bir anahtar yok.",
@@ -665,7 +669,12 @@
       "neverUsed": "Hiç kullanılmadı",
       "revoke": "İptal Et",
       "revokeConfirm": "Bu anahtarı iptal etmek istediğinize emin misiniz? Eklenti bu anahtarla artık çalışmayacak.",
-      "revokeError": "Anahtar iptal edilemedi."
+      "revokeError": "Anahtar iptal edilemedi.",
+      "step1": "Eklentiyi kur ve simgesine tıkla.",
+      "step2": "“Bağlan” düğmesine bas — bu sekmede bir onay sayfası açılır.",
+      "step3": "Kodun eklentide gördüğünle aynı olduğunu doğrula ve onayla.",
+      "manualTitle": "Anahtarı elle üret (gelişmiş)",
+      "manualHelp": "Yalnızca eklentiyi farklı bir API adresine bağlıyorsan ya da “Bağlan” akışını kullanamayan eski bir sürümdeysen gerekir. Anahtar bir kez gösterilir; eklentinin ayarlarına yapıştırman gerekir."
     },
     "delete": {
       "title": "Hesabımı Sil",
@@ -845,7 +854,7 @@
   },
   "extensionPrivacy": {
     "title": "Tarayıcı Eklentisi Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 6 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 8 Eylül 2026",
     "scope": {
       "title": "Bu politika neyi kapsar",
       "body": "Bu sayfa yalnızca e-kariyerim Tarayıcı Eklentisi'ni (\"eklenti\") anlatır. Eklenti, e-kariyerim web uygulamasının (ekariyerim.com) bir tamamlayıcısıdır: giriş yapmış bir kullanıcının LinkedIn veya kariyer.net'te görüntülediği bir ilanı kendi hesabına başvuru olarak kaydetmesini sağlar ve isteğe bağlı bir \"Gmail Taraması\" özelliği sunar — bu özellik, Gmail'de kendi açtığınız bir maili kendi cihazınızda kontrol eder ve yalnızca iş başvurusuyla ilgili göründüğünde kısa bir özet gönderir. Hesabınıza kaydedilmiş veriler (geçmiş başvurularınız) bu belgenin değil, e-kariyerim'in kendi gizlilik politikasının kapsamındadır."
@@ -872,7 +881,7 @@
       "title": "Eklenti neyi saklar",
       "intro": "Eklenti aşağıdakileri cihazınızda, tarayıcının kendi chrome.storage.local alanında saklar (asla Chrome Sync'te, asla üçüncü taraf bir sunucuda):",
       "item1": "Kullandığınız e-kariyerim API adresi (bir ayar, kişisel veri değil).",
-      "item2": "e-kariyerim Ayarlar sayfasından kendiniz oluşturup yapıştırdığınız kişisel erişim anahtarınız. Bu anahtar, eklentinin isteklerini sizin adınıza doğrular.",
+      "item2": "e-kariyerim hesabınızın bu eklentiye verdiği erişim anahtarı ve son geçerlilik tarihi (bağlantı sessizce kesilmek yerine, süresi dolmadan önce eklenti sizi uyarabilsin diye). Bu anahtar eklentinin isteklerini sizin adınıza doğrular ve yalnızca eklentinin kullandığı uçlara erişir — başvuru geçmişinizi dışa aktaramaz, hesabınızı yönetemez. Anahtarı, \"Bağlan\"a basıp kendi hesap sayfanızda bir kodu onaylayarak alırsınız; farklı bir API adresi kullanıyorsanız e-kariyerim Ayarlar'dan üretip elle de girebilirsiniz.",
       "item3": "Eklentinin kendi penceresi için açık/koyu tema tercihiniz.",
       "item4": "Eklentinin sayfaları için dil tercihiniz (Türkçe/İngilizce).",
       "item5": "Gmail Taraması'nı açıp açmadığınız (siz açıkça etkinleştirmedikçe kapalı), puanlamada kullanılan (kişisel olmayan) anahtar kelime/alan adı tablosunun yerel bir kopyası ve aynı mailin iki kez gönderilmemesi için daha önce gönderilmiş mail konuşma kimliklerinin kısa bir listesi.",
@@ -883,14 +892,16 @@
       "body": "\"Başvurdum\"a tıkladığınızda eklenti, açılan pencerede gördüğünüz ilan başlığını, şirketi, konumu, ilan adresini, açıklamayı ve iletişim bilgilerini kişisel erişim anahtarınızla doğrulanmış olarak e-kariyerim API'sine gönderir; böylece kendi e-kariyerim hesabınıza kaydedilir. Şirket adı tamamlama özelliği de benzer şekilde, yazdığınız metinle e-kariyerim API'sini sorgular.",
       "hrNote": "Bu şekilde kaydedilen bir iletişim kişisi, o başvuru için kime ulaşacağınıza dair kendi notunuzdur: yalnızca siz görürsünüz, başka kullanıcılara hiçbir zaman gösterilmez, hiçbir analitiğe dahil edilmez, e-kariyerim sizin adınıza o kişiye hiçbir zaman mail atmaz veya mesaj göndermez, ve başvuruyla ya da hesabınızla birlikte silinir.",
       "gmailNote": "Gmail Taraması'nı açtıysanız, açtığınız ve iş başvurusuyla ilgili puan alan bir mailin göndereni, konusu ve sınırlı bir özeti kendi e-kariyerim hesabınıza gönderilir (yukarıdaki Gmail Taraması bölümüne bakın) — bu yalnızca sizin açtığınız mailer için, yalnızca ayarı etkinleştirdikten sonra ve yalnızca cihaz üzerindeki puan uygun olduğunda gerçekleşir.",
-      "noOther": "Eklenti başka hiçbir hedefe veri göndermez. Analitik, reklam veya takip hizmetleri kullanmaz; verilerinizi üçüncü taraflarla paylaşmaz veya satmaz."
+      "noOther": "Eklenti başka hiçbir hedefe veri göndermez. Analitik, reklam veya takip hizmetleri kullanmaz; verilerinizi üçüncü taraflarla paylaşmaz veya satmaz.",
+      "pairing": "\"Bağlan\"a bastığınızda eklenti, e-kariyerim API'sinden bir bağlantı kodu ister ve onay sayfasını bir sekmede açar; beklerken birkaç saniyede bir kodun onaylanıp onaylanmadığını sorar. Bu isteklerin hiçbirinde kişisel veri yoktur — o anda eklentinin ne bir hesabı ne de bir kimlik bilgisi vardır. Geri dönen tek şey, siz onayladıktan sonra bir kez gelen erişim anahtarıdır. Sayfada reddederseniz ya da kodun süresi dolarsa hiçbir şey verilmez."
     },
     "controls": {
       "title": "Kontroller sizde",
       "item1": "İlan kaydetme penceresi yalnızca siz simgesine tıkladığınızda çalışır — LinkedIn/kariyer.net üzerinde arka planda çalışan bir tarama veya yoklama yoktur.",
       "item2": "Gmail Taraması varsayılan olarak kapalıdır ve Ayarlar'dan açana kadar hiçbir şey yapmaz; açtıktan sonra da yalnızca Gmail'de kendiniz bir maili açtığınızda o maili okur — gelen kutunuzu arka planda taramaz ve başka hiçbir sitede hiçbir şey yapmaz. Ayarlar'dan istediğiniz zaman, aynı anda etkili olacak şekilde kapatabilirsiniz.",
-      "item3": "Erişim anahtarınızı istediğiniz zaman eklentinin Ayarlar sayfasından kaldırabilir veya e-kariyerim'in Ayarlar → Tarayıcı Eklentisi sayfasından iptal edebilirsiniz; iptal anahtarı anında geçersiz kılar.",
-      "item4": "Eklentiyi kaldırmak, chrome.storage.local'in eklenti için tuttuğu her şeyi (anahtar, API adresi, tema, dil tercihi, Gmail Taraması ayarı ve yerel önbellekleri) cihazınızdan siler."
+      "item3": "Erişim anahtarınızı istediğiniz zaman eklentinin Ayarlar sayfasından kaldırabilir veya e-kariyerim'in Ayarlar → Tarayıcı Eklentisi sayfasından iptal edebilirsiniz; iptal anahtarı anında geçersiz kılar. Anahtar ayrıca siz hiçbir şey yapmasanız da 90 gün sonra kendiliğinden sona erer.",
+      "item4": "Eklentiyi kaldırmak, chrome.storage.local'in eklenti için tuttuğu her şeyi (anahtar, API adresi, tema, dil tercihi, Gmail Taraması ayarı ve yerel önbellekleri) cihazınızdan siler.",
+      "item5": "Bir bağlantı kodu yalnızca bir tekliftir: giriş yapmış hâlde onaylamadıkça hiçbir şey vermez ve onay sayfasında, kendi üretmediğiniz bir kod için \"Bu ben değilim\" düğmesi vardır."
     },
     "appPolicy": {
       "title": "Hesabınıza kaydedilen veriler",
@@ -1515,32 +1526,32 @@
     "settings": {
       "eyebrow": "Ayarlar",
       "title": "Hesap Ayarları",
-      "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, Chrome eklentisi için erişim anahtarı üretebilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
+      "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "export": {
         "title": "Verilerimi Dışa Aktar",
         "body": "Tüm başvuru, içe aktarma ve hatırlatma verilerinizi tek bir JSON dosyası olarak indirin."
       },
       "extension": {
-        "title": "Chrome Eklentisi için erişim anahtarı",
+        "title": "Tarayıcı eklentisi bağlantısı",
         "step1": {
-          "title": "\"Tarayıcı Eklentisi\" bölümünü açın",
-          "body": "Ayarlar sayfasında bulunur."
+          "title": "Eklentiyi kurun ve simgesine tıklayın",
+          "body": "Bkz. Chrome Eklentisi bölümü."
         },
         "step2": {
-          "title": "Anahtara bir ad verin ve \"Anahtar Üret\"e tıklayın",
-          "body": "Örneğin \"Chrome Eklentisi\" ya da kullandığınız bilgisayarın adı."
+          "title": "\"Bağlan\"a basın ve açılan sayfada onaylayın",
+          "body": "Kopyalanacak bir anahtar yok; onayladığınız anda eklenti bağlanır."
         },
         "step3": {
-          "title": "Anahtarı hemen kopyalayın",
-          "body": "aa_pat_ ile başlayan bu değer yalnızca bir kez gösterilir — sayfadan ayrılırsanız bir daha göremezsiniz."
+          "title": "Bağlantıları buradan görün ve iptal edin",
+          "body": "\"Tarayıcı Eklentisi\" bölümü her bağlantının adını, oluşturulma ve bitiş tarihini, son kullanımını gösterir. \"İptal Et\" o bağlantıyı anında geçersiz kılar."
         },
         "step4": {
-          "title": "Eklentinin ayarlarına yapıştırın",
-          "body": "Bkz. Chrome Eklentisi bölümü. Artık en fazla 10 anahtar aktif olabilir; gerektiğinde kullanmadığınız bir anahtarı \"İptal Et\" ile kapatabilirsiniz."
+          "title": "Anahtarı elle girmek isterseniz \"gelişmiş\" bölümü duruyor",
+          "body": "Yalnızca eklentiyi farklı bir API adresine bağlıyorsanız gerekir. Anahtar bir kez gösterilir ve en fazla 10 anahtar aktif olabilir."
         },
         "calloutToken": {
-          "title": "Bu anahtar hesabınıza tam erişim verir",
-          "body": "Bir erişim anahtarı, tıpkı e-postanız ve şifrenizle giriş yapmış gibi hesabınıza tam erişim sağlar. Sadece kendi tarayıcı eklentinize yapıştırın, kimseyle paylaşmayın; şüpheleniyorsanız \"İptal Et\" ile anında geçersiz kılabilirsiniz."
+          "title": "Bağlantı yalnızca eklentinin kullandığı uçlara erişir",
+          "body": "Eklentiye verilen anahtar başvuru ekleyebilir, şirket araması yapabilir ve (siz açtıysanız) e-posta sinyali gönderebilir — başvuru geçmişinizi dışa aktaramaz, hesabınızı yönetemez. Yine de yalnızca kendi tarayıcınıza verin; 90 günde bir kendiliğinden sona erer ve şüphelendiğiniz an \"İptal Et\" ile anında geçersiz kılabilirsiniz."
         }
       },
       "delete": {
@@ -1561,12 +1572,12 @@
         "storeIntro": "e-kariyerim eklentisi Chrome Web Mağazası'nda yayında — kurulum tek tıkla, geliştirici modu falan gerekmiyor.",
         "storeCta": "Chrome Web Mağazası'nda Aç",
         "step1": {
-          "title": "Ayarlar'dan bir erişim anahtarı üretin",
-          "body": "Bkz. Ayarlar bölümündeki \"Chrome Eklentisi için erişim anahtarı\" adımları."
-        },
-        "step2": {
           "title": "Yukarıdaki bağlantıdan eklentiyi Chrome'a ekleyin",
           "body": "Chrome Web Mağazası sayfasında \"Chrome'a Ekle\"ye tıklayın. Eklenti simgesi araç çubuğunuzda görünür."
+        },
+        "step2": {
+          "title": "Eklenti simgesine tıklayıp \"Bağlan\"a basın",
+          "body": "Açılan onay sayfasında giriş yapıp (ya da hesap oluşturup) kodu onaylamanız yeterli — kopyalanacak bir anahtar yok."
         }
       },
       "installManual": {
@@ -1591,12 +1602,12 @@
           "title": "Araç çubuğundaki e-kariyerim simgesine tıklayın"
         },
         "step2": {
-          "title": "Henüz anahtar girilmediyse \"Ayarları Aç\"a tıklayın",
-          "body": "Simgeye sağ tıklayıp \"Options\" ile de ulaşabilirsiniz."
+          "title": "\"Bağlan\"a tıklayın",
+          "body": "Eklenti bir bağlantı kodu üretir ve onay sayfasını yeni bir sekmede açar. Henüz giriş yapmadıysanız orada yapabilirsiniz; kod kaybolmaz."
         },
         "step3": {
-          "title": "API adresini ve erişim anahtarınızı girip kaydedin",
-          "body": "Gerçek bir dağıtıma bağlanıyorsanız API adresinin doğru olduğundan emin olun."
+          "title": "Kodun aynı olduğunu doğrulayıp onaylayın",
+          "body": "Sayfadaki kod eklentide gördüğünüzle aynı olmalı. Onayladığınızda eklenti birkaç saniye içinde bağlanır. Bağlantı 90 gün geçerlidir; süresi dolmadan önce eklenti uyarır, yenilemek için yine \"Bağlan\" yeter. Farklı bir API adresine bağlanıyorsanız anahtarı elle girmeyi Ayarlar'daki \"gelişmiş\" bölümünden sürdürebilirsiniz."
         }
       },
       "use": {
@@ -1986,5 +1997,35 @@
       "tooMany": "Çok fazla deneme yaptınız. Bir süre sonra tekrar deneyin.",
       "generic": "Cevabın kaydedilemedi. Lütfen tekrar deneyin."
     }
+  },
+  "pair": {
+    "title": "Eklentiyi hesabına bağla",
+    "subtitle": "Tarayıcı eklentin bir bağlantı kodu üretti. Kodun eklentide gördüğünle aynı olduğunu doğrula ve onayla.",
+    "loading": "Yükleniyor...",
+    "genericError": "Bir şeyler ters gitti. Lütfen tekrar dene.",
+    "signedOut": {
+      "body": "Bağlantıyı tamamlamak için önce giriş yap ya da hesap oluştur. Buraya geri döneceksin, kod kaybolmayacak.",
+      "register": "Hesap oluştur",
+      "login": "Giriş yap"
+    },
+    "noCode": "Bu sayfaya bir bağlantı kodu ile gelinir. Eklentinin ayarlarındaki “Bağlan” düğmesine basarsan kod buraya kendiliğinden gelir.",
+    "notFound": "Bu kod geçersiz ya da süresi dolmuş. Eklentiden yeniden “Bağlan” demen yeterli.",
+    "confirm": {
+      "prompt": "Eklentide gördüğün kod bu mu?",
+      "grants": "Onaylarsan eklenti; başvuru ekleyebilir, şirket araması yapabilir ve (sen açtıysan) e-posta sinyali gönderebilir. Başvuru geçmişini dışa aktaramaz, hesabını yönetemez.",
+      "revocable": "Bağlantıyı istediğin an Ayarlar → Tarayıcı Eklentisi'nden iptal edebilirsin.",
+      "warning": "Bu kodu sen üretmediysen — biri sana gönderdiyse — onaylama. Onaylamak, o kişinin eklentisini senin hesabına bağlar.",
+      "approve": "Evet, bağla",
+      "deny": "Bu ben değilim"
+    },
+    "approved": {
+      "title": "Onaylandı.",
+      "body": "Eklentiye dönebilirsin — birkaç saniye içinde bağlanacak."
+    },
+    "completed": "Bu bağlantı zaten tamamlandı. Eklentin bağlı.",
+    "denied": "Bu istek reddedildi. Eklentiye hiçbir erişim verilmedi.",
+    "expired": "Bu isteğin süresi doldu. Eklentiden yeniden “Bağlan” demen yeterli.",
+    "tokenLimitReached": "Hesabında izin verilen en fazla sayıda aktif anahtar var. Ayarlar → Tarayıcı Eklentisi'nden birini iptal et; eklenti kendiliğinden bağlanacak.",
+    "settingsLink": "Ayarlar → Tarayıcı Eklentisi"
   }
 }

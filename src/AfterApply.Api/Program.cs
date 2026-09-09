@@ -146,6 +146,7 @@ app.MapCvDocumentEndpoints();
 app.MapReminderEndpoints();
 app.MapEmailForwardingEndpoints();
 app.MapPersonalAccessTokenEndpoints();
+app.MapExtensionPairingEndpoints();
 app.MapCompanyIntelligenceEndpoints();
 app.MapCompanyEndpoints();
 app.MapFeedbackEndpoints();

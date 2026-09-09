@@ -57,10 +57,13 @@ LANGUAGE
 The whole extension — the job-tracking popup and Settings — works in Turkish or English. Switch
 anytime with the language toggle in any page's header.
 
+SETUP
+Press "Connect" in the extension and confirm the code on the page that opens. That is the whole
+setup — nothing to copy, nothing to paste. If you do not have an e-kariyerim account
+(ekariyerim.com) yet, you can create one on that same page without losing your place.
+
 REQUIREMENTS
-You need an e-kariyerim account (ekariyerim.com) and a personal access token, generated from
-Settings → Browser Extension inside the app. The extension does nothing until you paste that token
-into its Settings page.
+An e-kariyerim account. The extension does nothing until it is connected to one.
 
 PRIVACY
 The extension only reads a job page when you click its icon, only on linkedin.com and kariyer.net,
@@ -108,10 +111,13 @@ DİL
 Eklentinin tamamı — başvuru takip penceresi ve Ayarlar — Türkçe veya İngilizce çalışır. Herhangi
 bir sayfanın başlığındaki dil butonuyla istediğiniz zaman değiştirin.
 
+KURULUM
+Eklentideki "Bağlan" düğmesine basın ve açılan sayfada kodu onaylayın. Kurulum bundan ibaret —
+kopyalanacak, yapıştırılacak bir şey yok. Henüz e-kariyerim (ekariyerim.com) hesabınız yoksa aynı
+sayfada, yerinizi kaybetmeden oluşturabilirsiniz.
+
 GEREKSİNİMLER
-Bir e-kariyerim hesabına (ekariyerim.com) ve uygulama içindeki Ayarlar → Tarayıcı Eklentisi
-bölümünden oluşturacağınız bir erişim anahtarına ihtiyacınız var. Bu anahtarı eklentinin Ayarlar
-sayfasına yapıştırana kadar eklenti hiçbir şey yapmaz.
+Bir e-kariyerim hesabı. Eklenti, bir hesaba bağlanana kadar hiçbir şey yapmaz.
 
 GİZLİLİK
 Eklenti bir ilan sayfasını yalnızca simgesine tıkladığınızda, yalnızca linkedin.com ve kariyer.net
@@ -160,7 +166,7 @@ installed-version footer. See `screenshots/README.md` if you want to regenerate 
 
 ## Privacy policy URL
 
-Publish `PRIVACY_POLICY.md`'s content at a real URL before submitting — e.g.
-`https://ekariyerim.com/privacy` — and enter that URL in **Store listing → Privacy practices →
-Privacy policy**. The Dashboard rejects submissions that handle authentication data (this extension
-stores a personal access token) without one.
+`PRIVACY_POLICY.md`'s content is published at `https://ekariyerim.com/tr/extension-privacy` (and
+`/en/…`); enter that URL in **Store listing → Privacy practices → Privacy policy**. The Dashboard
+rejects submissions that handle authentication data (this extension stores an access token) without
+one. Note `ekariyerim.com/privacy` is a different document — the account-level policy.
