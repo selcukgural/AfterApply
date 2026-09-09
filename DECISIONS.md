@@ -5017,3 +5017,12 @@ kaldıracağı), ve şifresiz hesap metinleri üç sağlayıcıyı da sayıyor.
 aynı sözleşme: **secret'ın var olması yeterli, değeri boş olabilir** — ama yoksa revizyon
 başarısız olur. `DEPLOYMENT.md` §3'teki `gcloud secrets create` satırları eklendi; bir sonraki
 main push'undan önce çalıştırılmalı.
+
+**Düzeltme (2026-09-09, merge sonrası).** Yukarıdaki "var olması yeterli" eksikmiş: secret'ın
+**var olması da yetmiyor**, runtime service account'una `roles/secretmanager.secretAccessor`
+verilmiş olması gerekiyor. Merge'ün tetiklediği deploy tam olarak bu yüzden düştü —
+`Permission denied on secret: .../afterapply-github-client-id/versions/latest for Revision
+service account`. Cloud Run revizyonu oluşturamadığı için prod eski revizyonda kaldı, yani
+kesinti olmadı; belirtisi kırmızı bir deploy ve sessizce bir sürüm geride kalan bir prod.
+`DEPLOYMENT.md` §3'e bu tuzağı adıyla anlatan bir uyarı eklendi: yeni secret eklerken ad hem
+`create` satırlarına hem de `add-iam-policy-binding` döngüsüne girmeli.
