@@ -179,6 +179,15 @@ podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod
   a code bug — clean up leftover containers (above) and re-run. If it keeps
   happening, re-running with test-collection parallelism turned off isolates
   it further: `dotnet test tests/AfterApply.IntegrationTests -- xunit.parallelizeTestCollections=false`.
+  **No test talks to the internet.** Every host the integration suite builds has
+  its outbound HTTP blocked and starts no Hangfire background server unless the
+  test asks for one — the two things that made this suite hang, crash and, once,
+  open real GitHub issues. If a new test needs an HTTP response, stub that client
+  with `.ConfigurePrimaryHttpMessageHandler(...)`; if it asserts what a background
+  job did, add `UseSetting("Hangfire:ServerEnabled", "true")` to its own factory.
+  `NoOutboundHttpTests` and `HangfireServerInTestsTests` guard both rules, and
+  DECISIONS.md (2026-09-09) has the reasoning. Current shape on this machine:
+  298 tests, green (~3.5 min on an idle machine, longer under load).
 - Everything: `dotnet test AfterApply.slnx`
 
 > **Workflow note (Claude Code sessions):** Podman-backed integration test

@@ -103,12 +103,20 @@ public sealed class SharedInfrastructure : IAsyncLifetime
     private async Task ExecuteOnAdminDatabaseAsync(string sql)
     {
         // CREATE DATABASE can't run inside a transaction or against the database being copied, so
-        // it goes through the container's own maintenance database on a bare connection.
-        await using var connection = new NpgsqlConnection(_postgres.GetConnectionString());
+        // it goes through the container's own maintenance database on a bare connection — built
+        // through the same helper as the rest so it also skips GSS negotiation (see below).
+        await using var connection = new NpgsqlConnection(AdminConnectionString());
         await connection.OpenAsync();
         await using var command = new NpgsqlCommand(sql, connection);
         await command.ExecuteNonQueryAsync();
     }
+
+    private string AdminConnectionString() =>
+        new NpgsqlConnectionStringBuilder(_postgres.GetConnectionString())
+        {
+            Pooling = false,
+            GssEncryptionMode = GssEncryptionMode.Disable
+        }.ConnectionString;
 
     private string ConnectionStringFor(string database, bool pooling) =>
         new NpgsqlConnectionStringBuilder(_postgres.GetConnectionString())
@@ -125,6 +133,15 @@ public sealed class SharedInfrastructure : IAsyncLifetime
             // ConnectionIdleLifetime below is, because the problem was only ever pools that never
             // drained, never pools that were too large while in use.
             MaxPoolSize = 100,
+            // The last of this suite's hangs, and the least obvious. A run would stop dead with the
+            // database idle and no CPU burning, and a stack of the stuck process put the blame
+            // exactly here: Hangfire.PostgreSql's ExpirationManager opening a connection →
+            // NpgsqlConnector.SetupEncryption → TryNegotiateGssEncryption → GSSEncrypt, waiting
+            // forever. Npgsql negotiates GSS encryption by default and this machine has no KDC to
+            // answer, so the call never returns and the wait has no timeout in front of it (connect
+            // timeouts start after negotiation). A container-local Postgres over loopback has
+            // nothing to gain from Kerberos, so it is turned off here; production is untouched.
+            GssEncryptionMode = GssEncryptionMode.Disable,
             // These two are what reclaim a finished test's pool, and they are the reason
             // CreateIsolatedDatabaseAsync does not call ClearAllPools (see the comment there — doing
             // that crashed the test host). Every test connects to its own database and so builds

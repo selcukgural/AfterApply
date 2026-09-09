@@ -83,6 +83,69 @@ internal static class TestContainerCleanup
     }
 
     /// <summary>
+    /// Starts no Hangfire background server for the hosts that do not need one — which is most of
+    /// them — and is the fix for this suite's oldest and worst failure.
+    ///
+    /// The symptom came in three shapes: a test failing with TaskCanceledException out of
+    /// WebApplicationFactory.DisposeAsync, a run that hung with nothing but server heartbeats in the
+    /// log, and "Test host process crashed" partway through. All three are one cause, and the
+    /// server's own log line names it: "stopped non-gracefully due to ExpirationManager ...
+    /// investigate what prevents from stopping gracefully and add CancellationToken support for
+    /// those methods". Hangfire.PostgreSql's ExpirationManager does not observe the shutdown token,
+    /// so every host that started a server can spend its entire ShutdownTimeout waiting for a
+    /// dispatcher that will not come back — a wait a run pays per host, and this suite builds a host
+    /// per test.
+    ///
+    /// Neither WorkerCount=1 nor a longer or shorter ShutdownTimeout could fix that, because both
+    /// only change how much work is waited on or for how long. Not starting the server removes the
+    /// wait altogether: nothing to poll, nothing to wind down, and a host that boots faster too.
+    ///
+    /// Jobs still enqueue in these hosts (AddHangfire and its storage are untouched, so
+    /// IBackgroundJobClient and IRecurringJobManager work exactly as in production) — they simply
+    /// are not executed. The classes that assert a job's effect rather than an endpoint's response
+    /// switch the server back on for their own factory with
+    /// UseSetting("Hangfire:ServerEnabled", "true"): the import, enrichment, email-signal, feedback,
+    /// password-reset and mailing tests. HangfireServerInTestsTests is the guard for both halves.
+    /// </summary>
+    [ModuleInitializer]
+    public static void DisableHangfireServerForTests()
+    {
+        Environment.SetEnvironmentVariable("Hangfire__ServerEnabled", "false");
+    }
+
+    /// <summary>
+    /// Loads NoOutboundHttpStartup into every host this assembly builds, which is what makes "a
+    /// test never talks to the internet" true rather than a convention.
+    ///
+    /// Same env-var delivery as the settings above, and for the same reason: a run builds a host
+    /// per test across 33 classes, so any rule a class has to opt into is a rule that holds until
+    /// the next class is written. ASPNETCORE_HOSTINGSTARTUPASSEMBLIES is read by the web host
+    /// builder Program already uses, so the startup applies to hosts whose test configures nothing
+    /// at all — the ones that were making the calls.
+    /// </summary>
+    [ModuleInitializer]
+    public static void BlockOutboundHttpForTests()
+    {
+        Environment.SetEnvironmentVariable("ASPNETCORE_HOSTINGSTARTUPASSEMBLIES", "AfterApply.IntegrationTests");
+    }
+
+    /// <summary>
+    /// Leaves the OpenAI providers unconfigured for every host this assembly builds.
+    ///
+    /// The OpenAI SDK builds its own HttpClient, so NoOutboundHttpStartup cannot reach it — and
+    /// this is the one dependency where a leaked call costs money as well as determinism. It is not
+    /// hypothetical either: user secrets on a development machine hold a live key for the email
+    /// classifier evaluation (DECISIONS.md), and WebApplicationFactory loads them. With no key the
+    /// providers throw "OpenAI is not configured" if anything ever reaches them, which is the
+    /// failure a test author should see rather than a real completion and a bill.
+    /// </summary>
+    [ModuleInitializer]
+    public static void DisableOpenAiForTests()
+    {
+        Environment.SetEnvironmentVariable("OpenAI__ApiKey", string.Empty);
+    }
+
+    /// <summary>
     /// Reports what killed the process when a run ends in "Test host process crashed".
     ///
     /// An unhandled exception on a background thread terminates a .NET process outright, and the

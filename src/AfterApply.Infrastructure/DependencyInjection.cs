@@ -456,7 +456,19 @@ public static class DependencyInjection
         // The server is a background worker that immediately polls storage on start — pointless
         // (and, against the placeholder connection string above, noisy) during OpenAPI
         // generation, which never runs any job and exits right after the doc is written.
-        if (!IsOpenApiDocumentGeneration)
+        //
+        // Hangfire:ServerEnabled exists for the same reason one step further out. It defaults to
+        // true, so production and local development are unchanged, and the integration suite turns
+        // it off for every host that does not actually need a job to run: shutting one of these
+        // servers down is what destabilised that suite for weeks (Hangfire.PostgreSql's
+        // ExpirationManager does not observe the shutdown token, so WaitForShutdownAsync burns its
+        // whole budget and then reports "stopped non-gracefully" — surfacing as a
+        // TaskCanceledException out of a fixture's DisposeAsync, a run that hangs, or a crashed test
+        // host). A host that never starts a server has nothing to wind down. See
+        // TestContainerCleanup.DisableHangfireServerForTests.
+        var serverEnabled = configuration.GetValue("Hangfire:ServerEnabled", true);
+
+        if (!IsOpenApiDocumentGeneration && serverEnabled)
         {
             // Both values keep their previous production behaviour when unconfigured; they are
             // settable so the integration suite can ask for something cheaper.

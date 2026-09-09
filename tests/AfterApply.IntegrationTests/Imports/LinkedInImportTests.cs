@@ -51,6 +51,9 @@ public class LinkedInImportTests(SharedInfrastructure shared) : IAsyncLifetime
         {
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // This class asserts what a background job did, so it needs the one thing the suite
+            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
+            builder.UseSetting("Hangfire:ServerEnabled", "true");
         });
 
 
@@ -66,7 +69,7 @@ public class LinkedInImportTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         if (_factory is not null)
         {
-            await _factory.DisposeAsync();
+            await TestHostDisposal.DisposeQuietlyAsync(_factory);
         }
 
     }

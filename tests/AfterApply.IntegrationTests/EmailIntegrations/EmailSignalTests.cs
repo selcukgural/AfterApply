@@ -58,6 +58,9 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         {
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // This class asserts what a background job did, so it needs the one thing the suite
+            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
+            builder.UseSetting("Hangfire:ServerEnabled", "true");
             builder.UseSetting("EmailForwarding:Enabled", "true");
             // Explicit, not relying on appsettings.json's own curated list — this suite's
             // "known job board domain" tests must stay deterministic regardless of what that list
@@ -83,6 +86,9 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         {
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // This class asserts what a background job did, so it needs the one thing the suite
+            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
+            builder.UseSetting("Hangfire:ServerEnabled", "true");
             // Explicit, not just relying on appsettings.json's own default — this test must exercise
             // "flag off" regardless of what the app ships as its default (EmailForwarding:Enabled is
             // now true there, since the feature is live).
@@ -100,6 +106,9 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         {
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // This class asserts what a background job did, so it needs the one thing the suite
+            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
+            builder.UseSetting("Hangfire:ServerEnabled", "true");
             builder.UseSetting("EmailForwarding:Enabled", "true");
             builder.UseSetting("JobBoardDomains:Domains:0", "linkedin.com");
             builder.UseSetting("EmailAutoApproval:Enabled", "true");
@@ -127,17 +136,17 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         if (_factory is not null)
         {
-            await _factory.DisposeAsync();
+            await TestHostDisposal.DisposeQuietlyAsync(_factory);
         }
 
         if (_disabledFactory is not null)
         {
-            await _disabledFactory.DisposeAsync();
+            await TestHostDisposal.DisposeQuietlyAsync(_disabledFactory);
         }
 
         if (_autoApplyFactory is not null)
         {
-            await _autoApplyFactory.DisposeAsync();
+            await TestHostDisposal.DisposeQuietlyAsync(_autoApplyFactory);
         }
     }
 

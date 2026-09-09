@@ -42,6 +42,9 @@ public class FeedbackGitHubMirrorTests(SharedInfrastructure shared) : IAsyncLife
         {
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // This class asserts what a background job did, so it needs the one thing the suite
+            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
+            builder.UseSetting("Hangfire:ServerEnabled", "true");
             // Turning the mirror back on for this class only. TestContainerCleanup forces it off
             // process-wide through environment variables, which sit above user secrets — the
             // whole point being that a developer's live token can never reach a test host. An
@@ -73,7 +76,7 @@ public class FeedbackGitHubMirrorTests(SharedInfrastructure shared) : IAsyncLife
     {
         if (_factory is not null)
         {
-            await _factory.DisposeAsync();
+            await TestHostDisposal.DisposeQuietlyAsync(_factory);
         }
     }
 

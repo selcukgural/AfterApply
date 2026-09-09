@@ -36,6 +36,9 @@ public class PasswordResetTests(SharedInfrastructure shared) : IAsyncLifetime
         {
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // This class asserts what a background job did, so it needs the one thing the suite
+            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
+            builder.UseSetting("Hangfire:ServerEnabled", "true");
             builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
 
             // Never call the real Resend API from tests — capture what would have been sent
@@ -56,7 +59,7 @@ public class PasswordResetTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         if (_factory is not null)
         {
-            await _factory.DisposeAsync();
+            await TestHostDisposal.DisposeQuietlyAsync(_factory);
         }
 
     }

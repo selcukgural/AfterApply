@@ -79,6 +79,9 @@ public class CompanyEnrichmentTests(SharedInfrastructure shared) : IAsyncLifetim
         {
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // This class asserts what a background job did, so it needs the one thing the suite
+            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
+            builder.UseSetting("Hangfire:ServerEnabled", "true");
 
             // The typed client's name is the interface's short name, so re-registering it here
             // appends to the same named options and replaces the primary handler — no need to
@@ -100,7 +103,7 @@ public class CompanyEnrichmentTests(SharedInfrastructure shared) : IAsyncLifetim
     {
         if (_factory is not null)
         {
-            await _factory.DisposeAsync();
+            await TestHostDisposal.DisposeQuietlyAsync(_factory);
         }
     }
 

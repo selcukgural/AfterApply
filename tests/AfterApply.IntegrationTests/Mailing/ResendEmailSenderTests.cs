@@ -40,6 +40,9 @@ public class ResendEmailSenderTests(SharedInfrastructure shared) : IAsyncLifetim
         {
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
+            // This class asserts what a background job did, so it needs the one thing the suite
+            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
+            builder.UseSetting("Hangfire:ServerEnabled", "true");
             builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
             // Non-empty so ResendEmailSender doesn't short-circuit on "not configured" — the real
             // template lookup + HTTP call still happen, just against the captured handler below
@@ -65,7 +68,7 @@ public class ResendEmailSenderTests(SharedInfrastructure shared) : IAsyncLifetim
     {
         if (_factory is not null)
         {
-            await _factory.DisposeAsync();
+            await TestHostDisposal.DisposeQuietlyAsync(_factory);
         }
 
     }
