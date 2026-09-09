@@ -8,7 +8,10 @@ capture are therefore all live to real users. `0.4.0` was the first publish, aro
 (commit `fa2daff` added the install link to the help centre "now that the extension is
 published"). Always confirm the currently published version in the Dashboard before uploading;
 the repo can only show what was committed, not what was shipped.
-Current package version: **0.7.0**.
+Current package version: **0.7.0** — uploaded to the Dashboard on 2026-09-09 and **awaiting
+review**. Until it is approved, `0.6.0` is what users are running: the Connect flow exists in the
+API and at `/pair` but reaches nobody through the store yet, and pasted keys keep working
+regardless (`/from-extension` is unchanged).
 
 ## Before you start
 
