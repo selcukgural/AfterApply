@@ -514,7 +514,8 @@ sıra V0-V5'te.
   `ShadowModeEnabled=true`, `ConfidenceThreshold=0.9`.
 - **Bugünkü davranış:** Nitelikli öneriler "would auto apply" diye yalnızca
   loglanıyor, hiçbir şey değiştirilmiyor. Kullanıcı her öneriyi elle onaylıyor.
-- **Kilidi:** Dışarıda — açmak için gereken kod değil **gerçek trafik**.
+- **Kilidi:** Karışık — ölçülecek **veri** dışarıda, ama açma eşiği, kullanıcı
+  metni ve kullanıcı bazlı ayar bizde. Ayrıntısı aşağıda "Açma koşulu"nda.
 - **Düzeltme (2026-09-07):** Burada "gölge kararları sorgulanabilir hale
   getirelim" yazıyordu; **gereksizmiş.** `EmailSuggestions` tablosu zaten
   `ConfidenceScore`, `MatchedRule`, `MatchType` ve kullanıcının nihai kararını
@@ -541,8 +542,51 @@ sıra V0-V5'te.
    sorulmuş* önerileri ölçüyor, sorulmadan yapılanları değil. Bu sapma veri
    biriktikçe küçülmüyor.
 
-- **Bayrağın açılma koşulu:** Yüksek güven aralığında anlamlı sayıda gerçek
-  auto-apply ve düşük geri alma oranı. İkisi de kullanıcı gelmeden oluşmaz.
+**Açma koşulu — kilidin dört parçası (2026-09-09'da ayrıntılandırıldı).**
+"Kilidi dışarıda" doğru ama eksikti: dördün üçü bizde, yalnızca biri veri bekliyor.
+
+*Nitelikli olma kuralı (bugünkü hâliyle):* bir öneri ancak üç koşulu **birden**
+sağlarsa auto-apply adayı — `MatchType == DomainMatch` (eşleşmesiz "yeni ilan"
+önerileri hiç aday değil), `MatchedRule` `Llm:` ile başlıyor (kural tabanlı skor
+"elle ayarlanmış bir ağırlık, kalibre edilmiş bir olasılık değil" diye bilerek
+dışarıda) ve `ConfidenceScore >= ConfidenceThreshold`. Prod'da OpenAI anahtarı
+bağlı, yani veri akmaya başladığı an bu yol çalışır durumda.
+
+1. **Veri — dışarıda.** Tek gerçek dış bağımlılık.
+   `GET /api/admin/auto-approval-calibration` (`/admin/metrics`) `DomainMatch + Llm:`
+   satırlarını 0.5/0.6/0.7/0.8/0.9/0.95/1.0 bantlarına bölüyor; bantların üst ucu
+   ince, çünkü karar tam olarak "0.9 mu 0.95 mi" sorusu. Bugün o tablo boş.
+2. **Hangi sayının yeterli olduğu — bizde, ve hâlâ yazılmadı.** "Anlamlı sayıda
+   auto-apply ve düşük geri alma oranı" bir eşik değil, bir temenni. Karara
+   bağlanması gerekenler: üst banttaki minimum örneklem (n), kabul edilebilir
+   maksimum geri alma oranı, izleme süresi. **Bu, veri gelmeden yapılmalı** —
+   sonra yapılırsa eşiği sayıya bakarak seçmiş oluruz, ki o ölçüm değil
+   rasyonalizasyondur.
+3. **Hangi sütunun okunacağı — çözülmüş, ama iki aşamalı.** `AgreementRate`
+   (`Confirmed / (Confirmed + Dismissed)`) bayrak kapalıyken elimizdeki **tek**
+   sinyal ve yapısal olarak iyimser: kullanıcıya *gösterilip sorulmuş* önerileri
+   ölçüyor, sorulmadan yapılacakları değil, ve bu sapma veri biriktikçe küçülmüyor.
+   Aradığımız metrik `RevertRate` (`Reverted / (AutoApplied + Reverted)`) ancak
+   bayrak açıldıktan sonra doluyor. Yani K2 tek adımlı değil: agreement'a bakıp
+   **temkinli** aç → revert oranını izle → eşiği oynat ya da geri kapat. Açmak
+   deneyin kendisi, sonucu değil.
+4. **Kullanıcıya söylediğimizle çelişki — bizde, ve K6'nın aynısı.** Bugün her
+   yüzeyde "öneri, siz onaylarsınız" yazıyor: `help.gmailScanning` ("Bir öneriyi
+   onaylayın ya da reddedin"), gizlilik ("gözden geçireceğiniz bir öneriye dönüşmek
+   üzere"), eklenti tanıtım metni ("onaylayacağınız ya da yok sayacağınız bir
+   öneriye çeviriyor"). Bayrak açıldığı an bu cümleler yanlış olur — ürün, başvuru
+   durumunu sormadan değiştiriyor olur. **Sıra K6'daki gibi: önce metin, sonra
+   bayrak.**
+
+**Buna bağlı, daha önce hiç yazılmamış eksik:** `EmailAutoApproval` **global bir
+config bayrağı**, kullanıcı başına tercih yok. Bugün açılırsa Gmail Taraması'nı
+açmış herkes için açılır, kimse istemeden. Ya bir kullanıcı ayarı gerekiyor (kod
+işi, kilidi bizde) ya da metinlerin açıkça "otomatik uygulanır, tek tıkla geri
+alabilirsiniz" demesi.
+
+**Sıra:** eşik rakamlarını yaz → kullanıcı metinlerini (ve gerekirse kullanıcı
+bazlı ayarı) hazırla → trafiği bekle → üst bantta n dolunca temkinli aç → revert
+oranını izle. İlk iki adım bugün yapılabilir; yalnızca son üçü veri bekliyor.
 
 ### Sıra 5 — K1: Company Intelligence + Candidate Experience Score
 
