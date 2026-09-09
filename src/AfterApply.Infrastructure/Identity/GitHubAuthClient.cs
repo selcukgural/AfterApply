@@ -48,7 +48,7 @@ internal sealed class GitHubAuthClient(
             return null;
         }
 
-        var profile = await GetAsync<ProfileResponse>(ProfileEndpoint, accessToken, cancellationToken);
+        var profile = await GetAsync<ProfileResponse>(ProfileEndpoint, "profile", accessToken, cancellationToken);
         if (profile is null || profile.Id <= 0)
         {
             logger.LogWarning("GitHub code exchange succeeded but the profile could not be read");
@@ -60,7 +60,7 @@ internal sealed class GitHubAuthClient(
         // failed sign-in: GitHubProfileReader turns it into "no usable email", and the sign-up form
         // asks for one. GET /user's own `email` field is deliberately not used as a fallback — it
         // carries no verification flag, so it could not be trusted for account matching anyway.
-        var emails = await GetAsync<List<EmailResponse>>(EmailsEndpoint, accessToken, cancellationToken);
+        var emails = await GetAsync<List<EmailResponse>>(EmailsEndpoint, "addresses", accessToken, cancellationToken);
 
         return GitHubProfileReader.Read(
             new GitHubProfile(profile.Id, profile.Login, profile.Name),
@@ -122,7 +122,10 @@ internal sealed class GitHubAuthClient(
         }
     }
 
-    private async Task<T?> GetAsync<T>(string url, string accessToken, CancellationToken cancellationToken)
+    /// <summary><paramref name="operation"/> is what the log line names, not <paramref name="url"/>:
+    /// there are exactly two call sites, so the label already says which one failed, and the URL adds
+    /// nothing a reader of the log could act on.</summary>
+    private async Task<T?> GetAsync<T>(string url, string operation, string accessToken, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -137,9 +140,9 @@ internal sealed class GitHubAuthClient(
             using var response = await httpClient.SendAsync(request, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                // The URL and status only — never the token, and never the body, which for /user is
-                // the caller's own profile.
-                logger.LogWarning("GitHub {Url} returned {Status}", url, (int)response.StatusCode);
+                // Which call and what status — never the token, and never the body, which for the
+                // profile call is the caller's own account data.
+                logger.LogWarning("GitHub {Operation} request returned {Status}", operation, (int)response.StatusCode);
                 return default;
             }
 
@@ -147,7 +150,7 @@ internal sealed class GitHubAuthClient(
         }
         catch (HttpRequestException ex)
         {
-            logger.LogWarning(ex, "GitHub {Url} unreachable", url);
+            logger.LogWarning(ex, "GitHub {Operation} request unreachable", operation);
             return default;
         }
     }

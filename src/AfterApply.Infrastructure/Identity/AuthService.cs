@@ -136,7 +136,7 @@ internal sealed class AuthService(
         // some other site's callback, and it fails before the round-trip rather than after.
         if (!IsOurWebOrigin(request.RedirectUri))
         {
-            logger.LogWarning("Google sign-in rejected: redirect URI {RedirectUri} is not under App:WebBaseUrl", request.RedirectUri);
+            logger.LogWarning("Google sign-in rejected: redirect URI {RedirectUri} is not under App:WebBaseUrl", SafeLogValue.SingleLine(request.RedirectUri));
             return GoogleSignInResult.Failure("AUTH_GOOGLE_FAILED");
         }
 
@@ -227,7 +227,7 @@ internal sealed class AuthService(
         // redirect_uri that isn't registered on the app, this just fails before the round-trip.
         if (!IsOurWebOrigin(request.RedirectUri))
         {
-            logger.LogWarning("LinkedIn sign-in rejected: redirect URI {RedirectUri} is not under App:WebBaseUrl", request.RedirectUri);
+            logger.LogWarning("LinkedIn sign-in rejected: redirect URI {RedirectUri} is not under App:WebBaseUrl", SafeLogValue.SingleLine(request.RedirectUri));
             return LinkedInSignInResult.Failure("AUTH_LINKEDIN_FAILED");
         }
 
@@ -339,7 +339,7 @@ internal sealed class AuthService(
         // round-trip.
         if (!IsOurWebOrigin(request.RedirectUri))
         {
-            logger.LogWarning("GitHub sign-in rejected: redirect URI {RedirectUri} is not under App:WebBaseUrl", request.RedirectUri);
+            logger.LogWarning("GitHub sign-in rejected: redirect URI {RedirectUri} is not under App:WebBaseUrl", SafeLogValue.SingleLine(request.RedirectUri));
             return GitHubSignInResult.Failure("AUTH_GITHUB_FAILED");
         }
 
