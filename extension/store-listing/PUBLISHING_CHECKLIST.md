@@ -15,21 +15,35 @@ regardless (`/from-extension` is unchanged).
 
 ## Before you start
 
-- [ ] **Deploy the extension privacy policy page, then point the Dashboard at it.** The policy
-      now exists as a real bilingual route — `/extension-privacy` in the web app — so this is two
-      steps, not a writing job: merge to `main` (which deploys the web app), confirm
-      <https://ekariyerim.com/tr/extension-privacy> actually loads, then paste that URL into
-      **Store listing → Privacy practices → Privacy policy**. Whatever URL is in that field today
-      was entered for `0.4.0` and predates Gmail Scanning and the HR contact, so it has to change.
-      Note `ekariyerim.com/privacy` is a *different* document — the account-level policy — and the
-      two now link to each other. `PRIVACY_POLICY.md` in this folder is the source text for the
-      page; keep them in step.
+- [x] **The extension privacy policy page is deployed and current** — done. `/extension-privacy`
+      is live in both locales; <https://ekariyerim.com/tr/extension-privacy> was fetched and
+      checked on 2026-09-09 and carries Gmail Scanning, the HR contact and the stored token expiry
+      date, dated "8 Eylül 2026" — the same date as `PRIVACY_POLICY.md` in this folder, which is
+      its source text. The two are in step; keep them that way.
+- [ ] **Point the Dashboard at that URL — first thing on the next upload.** Paste
+      `https://ekariyerim.com/tr/extension-privacy` into **Store listing → Privacy practices →
+      Privacy policy**. Whatever URL is in that field today was entered for `0.4.0` and predates
+      Gmail Scanning and the HR contact. Note `ekariyerim.com/privacy` is a *different* document —
+      the account-level policy — and the two link to each other.
+      **Why it is the first thing and not a tidy-up:** the extension has no privacy link of its
+      own — not in `options.html`, not in `popup.html`, nowhere — so this Dashboard field is the
+      only route a user of the published item has to the policy at all.
+      **Deliberately not done during the `0.7.0` review** (2026-09-09): the Dashboard would not let
+      these fields be edited without cancelling the pending review, and `0.7.0` adds no new
+      permission over the already-approved `0.6.0`, so the trade was a certain delay against a
+      speculative gain. See `DECISIONS.md` 2026-09-09. If `0.7.0` is rejected, do this as part of
+      the re-submit; if it is approved, it goes with `0.8.0`.
+      **This step cannot be automated:** Chrome blocks all extension scripting on the Web Store
+      domains, the Developer Console included ("The extensions gallery cannot be scripted"), so no
+      browser-automation tool can reach these fields. A human has to type them.
+- [ ] **Add a privacy-policy link to the extension itself** (`options.html`, pointing at
+      `https://ekariyerim.com/{tr,en}/extension-privacy`). Found missing 2026-09-09. This is a code
+      change, so it rides on a release that bumps the version anyway.
 - [x] **Production host permissions/API URL** — done. `manifest.json`'s `host_permissions` no
       longer lists `http://localhost/*`, and `DEFAULT_API_BASE_URL` in `storage.js` is
       `https://api.ekariyerim.com`.
-- [ ] **One-time $5 developer registration fee**, if you haven't published anything from this
-      Google account before: https://chrome.google.com/webstore/devconsole (Chrome asks for this on
-      first use of the Dashboard).
+- [x] **One-time $5 developer registration fee** — paid. It was a precondition of the first
+      publish, and this item has been live since `0.4.0`; the box was simply never ticked.
 - [x] **`manifest.json`'s `"version"`** is `0.7.0`. Bump it for every subsequent upload — the
       Dashboard rejects a re-upload with a version already used. The popup and Settings footers
       render this same number (`version.js` reads it off the manifest), so it is also what a bug
