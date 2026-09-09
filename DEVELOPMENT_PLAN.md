@@ -447,6 +447,11 @@ bekliyor, bu Sprint 13'ün kapsamı dışında.
 
 Sıra numarası = ele alınma sırası. Madde numarası (K1-K6) = kalıcı kimlik.
 
+**Envanterin durumu (2026-09-09):** K5, K3, K4 ve K6 kapandı. Açık kalan iki madde
+K2 ve K1, ve ikisinin de kilidi bilerek dışarıda — biri gerçek trafik, diğeri veri
+hacmi + hukuki görüş bekliyor. Yani envanterde "kilidi bizde" olan iş kalmadı;
+sıra V0-V5'te.
+
 ### Sıra 1 — K5: Ürün metriklerini görünür kılmak ✅ (2026-09-07)
 
 - **Ne var:** `ProductMetricsService` her gün aktivasyon oranı, WAU, D7/D30/D90
@@ -580,21 +585,48 @@ değişikliği değil. Bkz. `CompanyIntelligenceOptions.WindowMonths` yorumu.
 - **Bu yüzden en sonda.** Kod hazır olması onu ilk sıraya taşımıyor; K1'i
   bugün açmak boş ekran yayınlamak demek.
 
-### Sıra 6 (paralel, küçük) — K6: Geri bildirimin GitHub Issues aynası
+### Sıra 6 (paralel, küçük) — K6: Geri bildirimin GitHub Issues aynası ✅ (2026-09-07)
 
-- **Ne var:** `Feedback:GitHub:Enabled=false`. Geri bildirim DB'ye yazılıyor,
-  GitHub'a aynalanmıyor.
-- **Kilidi:** Gizlilik sayfası metni güncellenmeden açılmayacağı 2026-09-07
+- **Ne vardı:** `Feedback:GitHub:Enabled=false`. Geri bildirim DB'ye yazılıyor,
+  GitHub'a aynalanmıyordu.
+- **Kilidi (kapatıldı):** Gizlilik sayfası metni güncellenmeden açılmayacağı 2026-09-07
   kararında yazılı (bkz. DECISIONS.md "Uygulama içi geri bildirim").
-- **Not:** İç akış meselesi, kullanıcı özelliği değil. Sırayı bloklamaz,
-  gizlilik metni güncellendiği gün açılabilir.
+- **Not:** İç akış meselesi, kullanıcı özelliği değil. Sırayı bloklamadı,
+  gizlilik metni güncellendiği gün açıldı.
+
+> **Yapıldı (2026-09-07), özelliğin kendisiyle aynı gün — ön koşul önce kapatılarak.**
+> Sıra kasıtlıydı: bayrak varsayılan kapalıyken `/privacy#feedback` "hiçbir üçüncü tarafa
+> gönderilmez" diyordu ve bu cümle yalnızca bayrak kapalıyken doğruydu. Önce gizlilik metni
+> yazıldı (`web/messages/{tr,en}.json` → `privacy.feedback.mirror` / `mirrorRecipient` /
+> `deletion` ve `privacy.transfers.feedbackTransfer`; alıcı GitHub, Inc. (Microsoft, ABD)
+> olarak ve bu bir yurt dışı aktarımı olarak adlandırılıyor, "yurt dışına aktarım" bölümü
+> artık tek değil iki aktarımı anlatıyor), sonra bayrak açıldı.
+>
+> Prod'da açık: `.github/workflows/deploy.yml` → `Feedback__GitHub__Enabled=true`,
+> `Repository=selcukgural/ekariyerim-feedback` (private, kod yok, sadece issue),
+> `Assignee=selcukgural`; token Secret Manager'da (`afterapply-feedback-github-token`).
+> `appsettings.json`'daki `Enabled=false` **lokal varsayılan ve öyle kalıyor** — geliştirme
+> ortamı ve test host'ları kazara dışarı çıkmasın diye; ortam değişkeni onu prod'da eziyor.
+> Bu yüzden repodaki `false` değerine bakıp "ayna kapalı" sonucuna varılmamalı.
+>
+> Aynanın redaksiyonu (mesaj + teknik bağlam gider; ad, hesap e-postası ve yanıt adresi
+> gitmez — yalnızca feedback id gider) `GitHubIssueComposer`'da, bayrağın **iki yönlü** bağı
+> — kapatılırsa gizlilik metninin de geri alınması gerekir — `FeedbackGitHubOptions`
+> yorumunda yazılı.
+>
+> **Açık kalan, ama K6'ya ait olmayan madde:** kullanıcı kendi geri bildiriminin durumunu
+> göremiyor. `Status` ve `AdminReply` kolonları ilk günden var, okuma ucu
+> (`GET /api/feedback/mine`) çağıranı olmadığı için bilerek yazılmadı (2026-09-07 kararı).
+> Bu bir gizli özellik değil, yazılmamış bir özellik — envantere girmez.
 
 ### Bu envanterde **olmayanlar** (yanlış hatırlanmasın diye)
 
 - **Gmail taraması, red gerekçesi çıkarımı, HR kontağı yakalama** — üçü de
-  canlı. Chrome eklentisi `0.6.0` Web Store'da yayında.
-  (`extension/store-listing/PUBLISHING_CHECKLIST.md` bu konuda güncel değil;
-  hâlâ `0.4.0`'ın yayında olduğunu yazıyor.)
+  canlı. Chrome eklentisi `0.6.0` Web Store'da yayında; `0.7.0` 2026-09-09'da
+  yüklendi ve **incelemede** (bkz. V3).
+  (Güncelleme 2026-09-09: `extension/store-listing/PUBLISHING_CHECKLIST.md` artık
+  güncel — "hâlâ `0.4.0` yazıyor" uyarısı geçersiz, o dosya bugün yayının gerçek
+  durumunu tutan tek kaynak.)
 - **Gmail OAuth entegrasyonu** — gizli değil, 2026-08-31'de koddan tamamen
   silindi (CASA değerlendirmesinin maliyeti kabul edilmedi).
 
@@ -846,6 +878,11 @@ kullanıcı beklemek zorunda değil — sorarak da üretilebilir. Sıra
 >
 > Testler: unit 479, web 232, integration 287. Eklenti tarafında harness yok; akış yerel yığında
 > tarayıcıda uçtan uca doğrulandı.
+>
+> **Kullanıcıya ulaşma durumu (2026-09-09): henüz ulaşmadı.** `0.7.0` Dashboard'a yüklendi ve
+> **incelemede**; onaylanana kadar herkes `0.6.0` çalıştırıyor, yani Bağlan akışı kodda var ama
+> kimsenin tarayıcısında yok. V3'ün huni etkisi ancak inceleme geçtikten sonra ölçülebilir —
+> ilk trafik sayıları hâlâ altı adımlı eşleştirmenin sayılarıdır.
 
 ### Sıra 5 — V4: Haftalık ritim (K3'ün üstüne)
 
