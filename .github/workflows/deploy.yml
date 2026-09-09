@@ -243,6 +243,8 @@ jobs:
             GoogleAuth__ClientSecret=afterapply-google-client-secret:latest
             LinkedInAuth__ClientId=afterapply-linkedin-client-id:latest
             LinkedInAuth__ClientSecret=afterapply-linkedin-client-secret:latest
+            GitHubAuth__ClientId=afterapply-github-client-id:latest
+            GitHubAuth__ClientSecret=afterapply-github-client-secret:latest
             Cors__AllowedOrigins__0=afterapply-web-origin:latest
             App__WebBaseUrl=afterapply-web-origin:latest
             Feedback__GitHub__Token=afterapply-feedback-github-token:latest

@@ -168,6 +168,67 @@ public static class AuthEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status429TooManyRequests);
 
+        // Same 404-while-unconfigured shape as the Google/LinkedIn routes above — see GitHubAuthOptions.
+        group.MapPost("/github", async (GitHubSignInRequest request, IAuthService authService,
+                IOptions<GitHubAuthOptions> gitHubAuth, IStringLocalizer<SharedStrings> localizer,
+                HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                if (!gitHubAuth.Value.IsConfigured)
+                {
+                    return Results.NotFound();
+                }
+
+                var result = await authService.GitHubSignInAsync(request, GetIpAddress(httpContext), cancellationToken);
+                return result.Succeeded
+                    ? Results.Ok(result.Response)
+                    : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
+            })
+            .WithValidation<GitHubSignInRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Sign in with GitHub (OAuth authorization code)")
+            .WithDescription("Exchanges the authorization code GitHub redirected back with. Returns either `auth` " +
+                              "(the same access/refresh token pair as Login) or `pendingSignup` (no account yet: show " +
+                              "the complete-your-sign-up form and POST /github/signup). `pendingSignup.email` is null " +
+                              "when GitHub exposed no verified, deliverable address, in which case the form must " +
+                              "collect and require one. 404 when Sign in with GitHub is not configured on this deployment.")
+            .Produces<GitHubSignInResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        group.MapPost("/github/signup", async (GitHubSignupRequest request, IAuthService authService,
+                IOptions<GitHubAuthOptions> gitHubAuth, IStringLocalizer<SharedStrings> localizer,
+                HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                if (!gitHubAuth.Value.IsConfigured)
+                {
+                    return Results.NotFound();
+                }
+
+                var result = await authService.CompleteGitHubSignupAsync(request, GetIpAddress(httpContext), cancellationToken);
+                if (result.Succeeded)
+                {
+                    return Results.Created("/api/users/me", result.Response);
+                }
+
+                // The two bare codes (expired/tampered signup token, or a required-but-missing
+                // email) or Identity's already localized descriptions — same split as LinkedIn's.
+                var errors = result.Errors.Select(e =>
+                    e is "AUTH_GITHUB_SIGNUP_EXPIRED" or "AUTH_GITHUB_EMAIL_REQUIRED" ? (string)localizer[e] : e).ToArray();
+                return Results.ValidationProblem(new Dictionary<string, string[]> { ["error"] = errors });
+            })
+            .WithValidation<GitHubSignupRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Create the account for a new GitHub sign-in")
+            .WithDescription("Second step after /github returned `pendingSignup`: creates the account under the " +
+                              "GitHub identity carried by `signupToken` (valid 10 minutes). `email` is required only " +
+                              "when the prefill's email was null — otherwise it is ignored and the verified address " +
+                              "from the token is used. An expired/tampered signup token or a missing required email " +
+                              "is a 400 validation problem. 404 when Sign in with GitHub is not configured.")
+            .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
         group.MapPost("/refresh", async (RefreshRequest request, IAuthService authService,
                 IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
             {

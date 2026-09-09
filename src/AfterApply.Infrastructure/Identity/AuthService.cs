@@ -20,6 +20,7 @@ internal sealed class AuthService(
     ITokenService tokenService,
     IGoogleAuthClient googleAuthClient,
     ILinkedInAuthClient linkedInAuthClient,
+    IGitHubAuthClient gitHubAuthClient,
     AppDbContext dbContext,
     ICvDocumentService cvDocumentService,
     IOptions<JwtOptions> jwtOptions,
@@ -331,7 +332,117 @@ internal sealed class AuthService(
         return AuthResult.Success(response);
     }
 
+    public async Task<GitHubSignInResult> GitHubSignInAsync(GitHubSignInRequest request, string? ipAddress, CancellationToken cancellationToken)
+    {
+        // Same belt-and-braces reasoning as the other two providers: GitHub itself refuses a
+        // redirect_uri outside the OAuth App's registered callback, this just fails before the
+        // round-trip.
+        if (!IsOurWebOrigin(request.RedirectUri))
+        {
+            logger.LogWarning("GitHub sign-in rejected: redirect URI {RedirectUri} is not under App:WebBaseUrl", request.RedirectUri);
+            return GitHubSignInResult.Failure("AUTH_GITHUB_FAILED");
+        }
+
+        var identity = await gitHubAuthClient.ExchangeCodeAsync(request.Code, request.RedirectUri, cancellationToken);
+        if (identity is null)
+        {
+            return GitHubSignInResult.Failure("AUTH_GITHUB_FAILED");
+        }
+
+        // A GitHub account can keep every address private, expose only the undeliverable
+        // @users.noreply.github.com one, or be granted without the user:email scope at all — all
+        // three arrive here as "no email", handled exactly like LinkedIn's optional one.
+        var verifiedEmail = UsableEmail(identity);
+
+        var user = await FindOrLinkExternalUserAsync(GitHubAuthOptions.LoginProvider, identity.Subject, verifiedEmail);
+        if (user is not null)
+        {
+            return GitHubSignInResult.SignedIn(await IssueTokensAsync(user, ipAddress, cancellationToken));
+        }
+
+        var signupToken = tokenService.CreateGitHubSignupToken(identity);
+        return GitHubSignInResult.SignupRequired(new GitHubSignupPrefill(
+            signupToken, verifiedEmail, identity.GivenName ?? string.Empty, identity.FamilyName ?? string.Empty));
+    }
+
+    public async Task<AuthResult> CompleteGitHubSignupAsync(GitHubSignupRequest request, string? ipAddress, CancellationToken cancellationToken)
+    {
+        var identity = await tokenService.ValidateGitHubSignupTokenAsync(request.SignupToken);
+        if (identity is null)
+        {
+            return AuthResult.Failure("AUTH_GITHUB_SIGNUP_EXPIRED");
+        }
+
+        var verifiedEmail = UsableEmail(identity);
+
+        // Replay or a race with another tab: the account exists now, so behave like a sign-in.
+        var existing = await FindOrLinkExternalUserAsync(GitHubAuthOptions.LoginProvider, identity.Subject, verifiedEmail);
+        if (existing is not null)
+        {
+            return AuthResult.Success(await IssueTokensAsync(existing, ipAddress, cancellationToken));
+        }
+
+        string email;
+        bool emailConfirmed;
+        if (verifiedEmail is not null)
+        {
+            // GitHub vouched for this address — whatever the client posts in request.Email is
+            // ignored the moment the token already carries a verified one.
+            email = verifiedEmail;
+            emailConfirmed = true;
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return AuthResult.Failure("AUTH_GITHUB_EMAIL_REQUIRED");
+            }
+
+            // Same as LinkedIn's manual path: nobody vouched for this address, so it stays
+            // unconfirmed, and a duplicate lands on the ordinary DuplicateEmail IdentityError from
+            // CreateAsync below — this identity is never matched to an existing account by email, so
+            // it cannot be used to take one over.
+            email = request.Email;
+            emailConfirmed = false;
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = emailConfirmed,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ConsentAcceptedAt = DateTimeOffset.UtcNow,
+            PreferredLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
+        };
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        var created = await userManager.CreateAsync(user);
+        if (!created.Succeeded)
+        {
+            return AuthResult.Failure(created.Errors.Select(e => e.Description).ToArray());
+        }
+
+        var linked = await userManager.AddLoginAsync(user, new UserLoginInfo(GitHubAuthOptions.LoginProvider, identity.Subject, GitHubAuthOptions.LoginProvider));
+        if (!linked.Succeeded)
+        {
+            return AuthResult.Failure(linked.Errors.Select(e => e.Description).ToArray());
+        }
+
+        var response = await IssueTokensAsync(user, ipAddress, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        logger.LogInformation("User {UserId} registered via GitHub sign-in", user.Id);
+        return AuthResult.Success(response);
+    }
+
     private static string? UsableEmail(LinkedInIdentity identity) =>
+        identity.EmailVerified && !string.IsNullOrEmpty(identity.Email) ? identity.Email : null;
+
+    private static string? UsableEmail(GitHubIdentity identity) =>
         identity.EmailVerified && !string.IsNullOrEmpty(identity.Email) ? identity.Email : null;
 
     /// <summary>The account for an external identity, if there is one: by the stored login (provider +

@@ -508,11 +508,19 @@ export interface LinkedInAuthConfig {
   clientId: string | null;
 }
 
+export interface GitHubAuthConfig {
+  enabled: boolean;
+  // Public OAuth client id (it is visible in the redirect to github.com); null whenever enabled is
+  // false.
+  clientId: string | null;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
   googleAuth: GoogleAuthConfig;
   linkedInAuth: LinkedInAuthConfig;
+  gitHubAuth: GitHubAuthConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -541,6 +549,23 @@ export interface LinkedInSignupPrefill {
 export interface LinkedInSignInResponse {
   auth: AuthResponse | null;
   pendingSignup: LinkedInSignupPrefill | null;
+}
+
+// POST /api/auth/github: exactly one of the two is set. `email` is a GitHub-verified address (shown
+// read-only), or null when GitHub exposed none we can both verify and deliver to — a private-email
+// account, a noreply-only one, or a grant without the user:email scope — in which case the
+// complete-your-sign-up form must collect and require one. The two names are a best-effort split of
+// GitHub's single free-text profile name and are meant to be corrected.
+export interface GitHubSignupPrefill {
+  signupToken: string;
+  email: string | null;
+  firstName: string;
+  lastName: string;
+}
+
+export interface GitHubSignInResponse {
+  auth: AuthResponse | null;
+  pendingSignup: GitHubSignupPrefill | null;
 }
 
 export type FeedbackCategory = "Bug" | "Idea" | "Question";

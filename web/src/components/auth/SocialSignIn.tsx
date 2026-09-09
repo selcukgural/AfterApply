@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useClientConfig } from "@/hooks/useClientConfig";
+import { GitHubSignInButton } from "./GitHubSignInButton";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { LinkedInSignInButton } from "./LinkedInSignInButton";
 
@@ -17,7 +18,7 @@ export function SocialSignIn() {
   const { config } = useClientConfig();
   const t = useTranslations("auth.social");
 
-  const anyEnabled = Boolean(config.googleAuth?.enabled || config.linkedInAuth?.enabled);
+  const anyEnabled = Boolean(config.googleAuth?.enabled || config.linkedInAuth?.enabled || config.gitHubAuth?.enabled);
   if (!anyEnabled) {
     return null;
   }
@@ -31,6 +32,7 @@ export function SocialSignIn() {
       </div>
       <GoogleSignInButton />
       <LinkedInSignInButton />
+      <GitHubSignInButton />
     </div>
   );
 }

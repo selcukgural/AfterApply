@@ -1,4 +1,10 @@
-import type { AuthResponse, GoogleSignInResponse, LinkedInSignInResponse, UserProfileResponse } from "@/types/api";
+import type {
+  AuthResponse,
+  GitHubSignInResponse,
+  GoogleSignInResponse,
+  LinkedInSignInResponse,
+  UserProfileResponse,
+} from "@/types/api";
 import { API_BASE_URL, apiFetch } from "./httpClient";
 import { authStore } from "./authStore";
 
@@ -57,6 +63,23 @@ export interface LinkedInSignupRequest {
   consentAccepted: boolean;
 }
 
+// What the GitHub callback page posts once github.com redirected back (see lib/auth/githubOAuth.ts).
+// No PKCE verifier — GitHub's OAuth App endpoints don't take one.
+export interface GitHubSignInRequest {
+  code: string;
+  redirectUri: string;
+}
+
+export interface GitHubSignupRequest {
+  signupToken: string;
+  firstName: string;
+  lastName: string;
+  // Only sent when the prefill carried no email (GitHub exposed no verified, deliverable address);
+  // the API ignores it otherwise and uses the verified address from the signup token.
+  email?: string;
+  consentAccepted: boolean;
+}
+
 export interface ForgotPasswordRequest {
   email: string;
 }
@@ -100,6 +123,18 @@ export const authApi = {
 
   linkedInSignup: (request: LinkedInSignupRequest) =>
     apiFetch<AuthResponse>("/api/auth/linkedin/signup", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  githubSignIn: (request: GitHubSignInRequest) =>
+    apiFetch<GitHubSignInResponse>("/api/auth/github", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  githubSignup: (request: GitHubSignupRequest) =>
+    apiFetch<AuthResponse>("/api/auth/github/signup", {
       method: "POST",
       body: JSON.stringify(request),
     }),

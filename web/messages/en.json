@@ -378,6 +378,28 @@
         "submitting": "Creating account...",
         "genericError": "Could not create account."
       }
+    },
+    "github": {
+      "continueWith": "Continue with GitHub",
+      "callback": {
+        "title": "Signing in with GitHub",
+        "working": "Verifying your GitHub account...",
+        "cancelled": "GitHub sign-in was cancelled.",
+        "invalidState": "The sign-in session could not be verified. Please try again.",
+        "genericError": "Could not sign in with GitHub.",
+        "backToLogin": "Back to login"
+      },
+      "completeSignup": {
+        "title": "Complete Your Sign-Up",
+        "description": "A new e-kariyerim account will be created for your GitHub account. Check your details and accept the privacy policy.",
+        "emailMissing": "We could not get a verified email address from your GitHub account — this isn't an error on our end, GitHub simply did not share one (accounts that keep their address private show up this way). An email address is required for your account, so please enter the one you'd like to use.",
+        "email": "Email",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "submit": "Create Account",
+        "submitting": "Creating account...",
+        "genericError": "Could not create account."
+      }
     }
   },
   "dashboard": {
@@ -689,7 +711,7 @@
       "deleting": "Deleting...",
       "finalConfirm": "Final warning: your account and all of your application, import, reminder, and extension data will be permanently deleted. This cannot be undone. Do you want to continue?",
       "genericError": "Could not delete account.",
-      "noPasswordHint": "This account was created with Google or LinkedIn and has no password. Type the confirmation word below to delete it."
+      "noPasswordHint": "This account was created with Google, LinkedIn or GitHub and has no password. Type the confirmation word below to delete it."
     }
   },
   "emailSuggestions": {
@@ -768,7 +790,7 @@
     "dataCollection": {
       "title": "What data we collect and why",
       "intro": "e-kariyerim is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
-      "item1": "Account details: first name, last name, email address and password (stored hashed). If you sign in with Google or LinkedIn, that account's identifier is stored instead of a password (see below).",
+      "item1": "Account details: first name, last name, email address and password (stored hashed). If you sign in with Google, LinkedIn or GitHub, that account's identifier is stored instead of a password (see below).",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
@@ -794,6 +816,16 @@
       "noAccess": "We do not access, and never request permission for, your connections, messages, posts or any other data in your LinkedIn account. We do not store the access tokens LinkedIn issues us; they are discarded as soon as sign-in completes.",
       "linking": "If the email address verified by LinkedIn already belongs to an e-kariyerim account created with a password, the LinkedIn sign-in is linked to that account and signs you into it; your password keeps working. An email address you typed in yourself is never used to link to an existing account.",
       "revoke": "You can remove the permission on LinkedIn's side at any time under Settings & Privacy → Data privacy → Other applications → Permitted services. Deleting your e-kariyerim account also removes the link to LinkedIn."
+    },
+    "gitHubSignIn": {
+      "title": "Sign in with GitHub",
+      "intro": "Sign in with GitHub is an optional login method, an alternative to registering with email and password. When you use it, we receive only the following from GitHub:",
+      "item1": "Your GitHub account's numeric identifier (so we can recognise your account even if you change your username or email address).",
+      "item2": "Your email address, as verified by GitHub — if GitHub shares one. An account that keeps its address private shares none; in that case we ask you to enter an email address yourself when you complete your sign-up, and that address is not verified by us.",
+      "item3": "The display name on your GitHub profile, split into a first and last name (pre-filled in the sign-up form; you can change them before saving).",
+      "noAccess": "We ask GitHub for two permissions only — read your profile and read your email addresses. We do not access, and never request permission for, your repositories (public or private), your code, your issues or anything else in your GitHub account. We do not store the access tokens GitHub issues us; they are discarded as soon as sign-in completes.",
+      "linking": "If the email address verified by GitHub already belongs to an e-kariyerim account created with a password, the GitHub sign-in is linked to that account and signs you into it; your password keeps working. An email address you typed in yourself is never used to link to an existing account.",
+      "revoke": "You can remove the permission on GitHub's side at any time under Settings → Applications → Authorized OAuth Apps. Deleting your e-kariyerim account also removes the link to GitHub."
     },
     "crossBorderTransfer": {
       "title": "Cross-border data transfer",
@@ -943,7 +975,7 @@
       "title": "Browser storage (localStorage and sessionStorage)",
       "intro": "These are not cookies, but they store data on your device in the same way, so we list them here too:",
       "item1": "Session tokens — aa_access_token, aa_refresh_token, their expiry times, and aa_user (your name, email address and interface preferences). They keep you signed in; they live in localStorage and are deleted when you sign out.",
-      "item2": "Sign-in security keys — aa_google_oauth and aa_linkedin_oauth. These are single-use values that block a CSRF attack during a Google or LinkedIn sign-in; they live in sessionStorage and are deleted the moment the sign-in completes.",
+      "item2": "Sign-in security keys — aa_google_oauth, aa_linkedin_oauth and aa_github_oauth. These are single-use values that block a CSRF attack during a Google, LinkedIn or GitHub sign-in; they live in sessionStorage and are deleted the moment the sign-in completes.",
       "outro": "Both are required for the service to work — without them you cannot sign in."
     },
     "visitCounter": {

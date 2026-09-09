@@ -396,6 +396,13 @@ public static class DependencyInjection
             new LinkedInJwksProvider(sp.GetRequiredService<IHttpClientFactory>().CreateClient("LinkedInJwks")));
         services.AddHttpClient<ILinkedInAuthClient, LinkedInAuthClient>(client => client.Timeout = TimeSpan.FromSeconds(10));
 
+        // Sign in with GitHub. Inert (button hidden, endpoints 404) until GitHubAuth:ClientId and
+        // GitHubAuth:ClientSecret are both set — see GitHubAuthOptions. No JWKS provider here
+        // because there is no id_token to verify: GitHub's OAuth Apps issue none, so the identity
+        // is read over TLS from api.github.com (see GitHubAuthClient).
+        services.Configure<GitHubAuthOptions>(configuration.GetSection(GitHubAuthOptions.SectionName));
+        services.AddHttpClient<IGitHubAuthClient, GitHubAuthClient>(client => client.Timeout = TimeSpan.FromSeconds(10));
+
         return services;
     }
 

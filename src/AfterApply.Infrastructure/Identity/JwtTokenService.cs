@@ -14,11 +14,14 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
     // access token the same way — regardless of both being signed with the same key.
     private const string GoogleSignupAudience = "AfterApply.GoogleSignup";
     private const string LinkedInSignupAudience = "AfterApply.LinkedInSignup";
+    private const string GitHubSignupAudience = "AfterApply.GitHubSignup";
     private const string PurposeClaim = "purpose";
     private const string GoogleSignupPurpose = "google-signup";
     private const string LinkedInSignupPurpose = "linkedin-signup";
+    private const string GitHubSignupPurpose = "github-signup";
     private static readonly TimeSpan GoogleSignupTokenLifetime = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan LinkedInSignupTokenLifetime = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan GitHubSignupTokenLifetime = TimeSpan.FromMinutes(10);
 
     private readonly JwtOptions _options = options.Value;
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
@@ -244,6 +247,83 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
         var familyName = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.FamilyName, out var f) ? f : null;
 
         return new LinkedInIdentity(jwt.Subject, email, emailVerified, givenName, familyName);
+    }
+
+    // Same shape as the LinkedIn pair above, down to the optional email — see GitHubProfileReader
+    // for why a GitHub account may legitimately expose none.
+    public string CreateGitHubSignupToken(GitHubIdentity identity)
+    {
+        var now = _timeProvider.GetUtcNow();
+        var claims = new Dictionary<string, object>
+        {
+            [JwtRegisteredClaimNames.Sub] = identity.Subject,
+            [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString("N"),
+            [PurposeClaim] = GitHubSignupPurpose,
+            ["email_verified"] = identity.EmailVerified
+        };
+        if (identity.Email is not null)
+        {
+            claims[JwtRegisteredClaimNames.Email] = identity.Email;
+        }
+
+        if (identity.GivenName is not null)
+        {
+            claims[JwtRegisteredClaimNames.GivenName] = identity.GivenName;
+        }
+
+        if (identity.FamilyName is not null)
+        {
+            claims[JwtRegisteredClaimNames.FamilyName] = identity.FamilyName;
+        }
+
+        var descriptor = new SecurityTokenDescriptor
+        {
+            Issuer = _options.Issuer,
+            Audience = GitHubSignupAudience,
+            IssuedAt = now.UtcDateTime,
+            NotBefore = now.UtcDateTime,
+            Expires = now.Add(GitHubSignupTokenLifetime).UtcDateTime,
+            SigningCredentials = SigningCredentials(),
+            Claims = claims
+        };
+
+        return new JsonWebTokenHandler().CreateToken(descriptor);
+    }
+
+    public async Task<GitHubIdentity?> ValidateGitHubSignupTokenAsync(string token)
+    {
+        var handler = new JsonWebTokenHandler();
+        var result = await handler.ValidateTokenAsync(token, new TokenValidationParameters
+        {
+            ValidIssuer = _options.Issuer,
+            ValidAudience = GitHubSignupAudience,
+            IssuerSigningKey = SigningKey(),
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            ClockSkew = TimeSpan.Zero,
+            LifetimeValidator = (_, expires, _, _) => expires is not null && expires > _timeProvider.GetUtcNow().UtcDateTime
+        });
+
+        if (!result.IsValid || result.SecurityToken is not JsonWebToken jwt)
+        {
+            return null;
+        }
+
+        if (!jwt.TryGetPayloadValue<string>(PurposeClaim, out var purpose) || purpose != GitHubSignupPurpose)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrEmpty(jwt.Subject))
+        {
+            return null;
+        }
+
+        var email = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.Email, out var e) ? e : null;
+        var emailVerified = jwt.TryGetPayloadValue<bool>("email_verified", out var verified) && verified;
+        var givenName = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.GivenName, out var g) ? g : null;
+        var familyName = jwt.TryGetPayloadValue<string>(JwtRegisteredClaimNames.FamilyName, out var f) ? f : null;
+
+        return new GitHubIdentity(jwt.Subject, email, emailVerified, givenName, familyName);
     }
 
     private SymmetricSecurityKey SigningKey() => new(Convert.FromBase64String(_options.SigningKey));

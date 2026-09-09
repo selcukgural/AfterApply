@@ -233,6 +233,12 @@ printf '%s' "<google-oauth-client-secret-veya-bos>" | gcloud secrets create afte
 # contract as Google: both secrets must EXIST for --set-secrets, empty values keep the feature off.
 printf '%s' "<linkedin-client-id-veya-bos>" | gcloud secrets create afterapply-linkedin-client-id --data-file=-
 printf '%s' "<linkedin-client-secret-veya-bos>" | gcloud secrets create afterapply-linkedin-client-secret --data-file=-
+# Sign in with GitHub — a GitHub OAuth App (Settings -> Developer settings -> OAuth Apps, NOT a GitHub
+# App), with <web-origin>/tr/auth/github/callback as the Authorization callback URL (see README.md
+# "GitHub Sign-In Setup" for the one-callback-per-app limitation). Same contract as the other two:
+# both secrets must EXIST for --set-secrets, empty values keep the feature off.
+printf '%s' "<github-client-id-veya-bos>" | gcloud secrets create afterapply-github-client-id --data-file=-
+printf '%s' "<github-client-secret-veya-bos>" | gcloud secrets create afterapply-github-client-secret --data-file=-
 # Placeholder — the real web Cloud Run URL isn't known until step 4's
 # deploy-web run; step 4 shows how to update this in place afterward. Also used as
 # App:WebBaseUrl (see deploy.yml) — same value, used to build links in outbound email.
@@ -243,6 +249,7 @@ for s in afterapply-postgres-connection \
          afterapply-resend-api-key \
          afterapply-google-client-id afterapply-google-client-secret \
          afterapply-linkedin-client-id afterapply-linkedin-client-secret \
+         afterapply-github-client-id afterapply-github-client-secret \
          afterapply-web-origin; do
   gcloud secrets add-iam-policy-binding "$s" \
     --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"

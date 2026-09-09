@@ -53,6 +53,15 @@
   <data name="AUTH_LINKEDIN_SIGNUP_EXPIRED" xml:space="preserve">
     <value>Your LinkedIn sign-up session has expired. Please sign in with LinkedIn again.</value>
   </data>
+  <data name="AUTH_GITHUB_FAILED" xml:space="preserve">
+    <value>GitHub sign-in could not be completed. Please try again.</value>
+  </data>
+  <data name="AUTH_GITHUB_EMAIL_REQUIRED" xml:space="preserve">
+    <value>We could not get a verified email address from your GitHub account — this isn't an error on our end. An email address is required to complete your sign-up.</value>
+  </data>
+  <data name="AUTH_GITHUB_SIGNUP_EXPIRED" xml:space="preserve">
+    <value>Your GitHub sign-up session has expired. Please sign in with GitHub again.</value>
+  </data>
   <data name="AUTH_WRONG_PASSWORD" xml:space="preserve">
     <value>Incorrect password.</value>
   </data>
