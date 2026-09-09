@@ -4761,3 +4761,88 @@ form seçeneklerini C# enum'larıyla iki yönlü ve iki dilin sözlüğüyle kar
 **Yan not:** V0'da yazılan allowlist bekçisi bir gün sonra işini gördü — `/benchmark`
 `SiteTrafficNormalizer`'a eklenmediği için `routes.test.ts` düştü ve sayfanın ziyaretleri hiç
 sayılmayacaktı.
+
+---
+
+## Eklenti eşleştirmesi: altı adım yerine bir tık (V3, 2026-09-08)
+
+**Karar:** Eklenti artık elle yapıştırılan bir anahtar istemiyor. Popup/Ayarlar'daki **Bağlan**,
+API'den kısa bir kod alır, `ekariyerim.com/{tr,en}/pair?code=…` sayfasını bir sekmede açar ve
+kullanıcı orada onayladıktan sonra token'ı kendisi toplar. Yapı, OAuth'un cihaz akışının
+(device authorization) aynısı: `ExtensionPairingRequests` tablosu + üç uç
+(`POST /requests` ve `POST /poll` anonim, `requests/{code}/approve|deny` girişli).
+
+### Neden A seçeneği (kısa kod), B değil (externally_connectable)
+
+İkisi de altı adımı bire indiriyordu. Fark, akışın nereden başladığı: `externally_connectable`
+yalnızca **zaten kaydolmuş** birinin Ayarlar sayfasından başlattığı yönü kurtarıyor. Chrome Web
+Store araması V5'te "hâlâ kullanılmayan kanal" olarak yazılı ve oradan gelen kişinin hesabı yok —
+cihaz akışı o kişiyi de kapsıyor, çünkü onay sayfası girişsiz açılıp kayıt olduktan sonra
+kullanıcıyı kaldığı yere geri getiriyor. Ek olarak B, web koduna eklenti id'sini sabitlemeyi ve bir
+`background` service worker eklemeyi gerektiriyordu; A hiçbir yeni izin istemiyor
+(`chrome.tabs.create` izinsiz çalışır, uçlar zaten erişilen API origin'inde).
+
+### Token onay anında değil, **toplama anında** üretiliyor
+
+Approve yalnızca "kim onayladı"yı yazıyor; personal access token ilk başarılı `poll`'da
+mint ediliyor ve satır aynı işlemde tüketilmiş işaretleniyor. Bunun iki sonucu var: (1) tabloda
+hiçbir zaman **ham bir sır durmuyor** — plan aşamasında düşünülen "onaylanan token'ı 10 dakika
+sakla" tasarımı böylece gereksizleşti; (2) kimsenin toplamadığı bir onay **arkasında kimlik bilgisi
+bırakmıyor**. Yarış durumu için `ExecuteUpdateAsync` ile koşullu bir UPDATE claim'i kullanılıyor:
+ikinci bir sekme aynı anda poll'larsa ikinci token üretilemiyor.
+
+### Cihaz akışının tek gerçek saldırısı ve verilen cevap
+
+Saldırgan kendi eklentisinde bir kod üretip **kurbana gönderir**; kurban onaylarsa saldırganın
+eklentisi kurbanın hesabına bağlanır. Savunma teknik değil, metinsel olmak zorunda: kod büyük
+puntoyla gösteriliyor, ne verildiği tek tek yazılıyor ("başvuru ekleyebilir… geçmişini dışa
+aktaramaz"), ve **"Bu ben değilim"** bir düğme — reddetme, sahibi olmayan bir isteği kapatabilmek
+için sahiplik kontrolü istemiyor, isteyemez de: bekleyen bir istek henüz kimsenin değil.
+Kod uzayı 31^8 (~39,6 bit) + 10 dakika + IP başına 10 başlatma/5dk bunu tahminle bulmayı dışarıda
+bırakıyor.
+
+### Kapsam: eklenti token'ı kendi halefini onaylayamaz
+
+`approve`/`deny` uçları `.AllowExtensionToken()` almıyor, yani `Extension` kapsamlı bir token
+oraya 403 alıyor (entegrasyon testi bunu ölçüyor). Aksi hâlde sızmış bir eklenti anahtarı kendini
+sonsuza dek yenileyebilirdi.
+
+### 90 gün artık sessizce ölmüyor
+
+`PersonalAccessTokens:LifetimeDays = 90` değişmedi — değiştirmek güvenlik kararıydı, kolaylık
+gerekçesiyle geri alınmadı. Değişen şey **haber verilmesi**: eşleştirme token'la birlikte son
+kullanma tarihini de veriyor, eklenti onu saklıyor, son 14 günde uyarıyor, dolduğunda "yeniden
+bağlan" ekranı gösteriyor ve gönderimdeki **401'i ağ hatasından ayırıyor**. Eskiden ikisi de
+"e-kariyerim'e ulaşılamadı" diyordu.
+
+### Elle anahtar yolu kaldı (ve kalmalı)
+
+Hem eklentinin Ayarlar'ında hem web Ayarlar'ında "gelişmiş" bir açılır bölümde duruyor. İki
+nedenle: farklı bir API adresine bağlanmanın (yerel geliştirme, self-host) başka yolu yok, ve
+yayındaki her eklenti sürümü çalışmaya devam etmek zorunda (DECISIONS.md 2026-09-06).
+
+### Girişten sonra dönüş: tek şekilli bir izin listesi
+
+`/pair` sayfasına giriş yapmamış gelen kişi login/register'a `?next=/pair?code=…` ile gidiyor;
+OAuth yolunda `returnTo` mevcut `aa_google_oauth`/`aa_linkedin_oauth` **nesnesinin içinde**
+taşınıyor (yeni bir storage anahtarı = yayınlanmış Çerez Politikası'nın envanterini değiştirmek
+demekti). `postAuthRedirect.sanitizeReturnTo` yalnızca `^/pair(\?code=[A-Za-z0-9-]{1,16})?$`
+kabul ediyor — "her iç yolu kabul eden bir `next`" açık yönlendirmenin klasik yoludur ve kimlik
+bilgisi üreten bir akışın tam ortasında olmasının bedeli en yüksek olduğu yerdir.
+
+### Yanlış olan iki metin düzeltildi
+
+Ayarlar'daki *"Bu anahtar hesabınıza tam erişim sağlar"* ve yardım merkezindeki aynı iddia
+**2026-09-03'ten beri yanlıştı** — kapsam o gün `Extension`'a indirilmişti. Yapıştırma anındaki tek
+cümle, doğru olmayan en ürkütücü cümleydi.
+
+### Ekran görüntüsü bir hatayı yakaladı
+
+`popup.css`'in kendi `button { display: block }` kuralı, UA stil sayfasının
+`[hidden] { display: none }` kuralını yeniyor: `el.hidden = true` bir `<button>` üzerinde sessizce
+hiçbir şey yapmıyordu, ve "Onay sayfasını yeniden aç" düğmesi eşleştirme yokken de görünüyordu.
+İncelemede görünmez, ekran görüntüsünde apaçık. `popup.css`'e açık bir `[hidden]` kuralı eklendi.
+
+Testler: unit 479, web 232, integration 287 — hepsi geçiyor. Akış ayrıca yerel yığında uçtan uca
+doğrulandı (kod → giriş → onay → token teslimi → `companies/search` 200 / `users/me/export` 403).
+Eklenti tarafının test koşumu yok; `extension/` için bir harness bulunmuyor.

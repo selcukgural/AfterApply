@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { postAuthLocale } from "@/lib/auth/postAuthRedirect";
+import { postAuthDestination, postAuthLocale, returnToFromLocation } from "@/lib/auth/postAuthRedirect";
 import { authApi } from "@/lib/api/auth";
 import { getStoredThemeCookie } from "@/lib/theme/theme";
 import { createRegisterSchema } from "@/lib/validation/registerSchema";
@@ -104,10 +104,13 @@ export default function RegisterPage() {
       // consistency even though a fresh registration's preferredLanguage
       // should already match the current locale (see AuthService.RegisterAsync).
       const nextLocale = postAuthLocale(auth, locale);
+      // Same as the login page: a pairing confirmation the extension opened wins over the
+      // dashboard, and nothing else can. See postAuthDestination.
+      const destination = postAuthDestination(returnToFromLocation());
       if (nextLocale) {
-        router.push("/dashboard", { locale: nextLocale });
+        router.push(destination, { locale: nextLocale });
       } else {
-        router.push("/dashboard");
+        router.push(destination);
       }
     } catch (error) {
       setFormError(error instanceof ApiError ? error.message : t("genericError"));

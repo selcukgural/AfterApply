@@ -72,7 +72,12 @@ public static class SiteTrafficNormalizer
         "/benchmark",
         "/privacy",
         "/cookies",
-        "/extension-privacy"
+        "/extension-privacy",
+        // Not in the sitemap and noindex on the page itself — it only means anything while one
+        // pairing request is open. Counted anyway: "how many people got as far as opening this"
+        // is the one number that says whether the extension funnel works, and the code it carries
+        // lives in the query string, which is cut off before this list is consulted.
+        "/pair"
     };
 
     /// <summary>Sections with one page per slug. The slug itself is what the guide section exists to

@@ -388,6 +388,25 @@ export interface CreatedPersonalAccessTokenResponse {
   expiresAt: string;
 }
 
+/** Where a pairing stands, as ExtensionPairingStatus on the server. */
+export type ExtensionPairingStatus =
+  | "Pending"
+  | "Approved"
+  | "Completed"
+  | "Denied"
+  | "Expired"
+  | "TokenLimitReached";
+
+export interface ExtensionPairingReviewResponse {
+  code: string;
+  expiresAt: string;
+  status: ExtensionPairingStatus;
+}
+
+export interface ExtensionPairingReviewStatusResponse {
+  status: ExtensionPairingStatus;
+}
+
 export interface ExtensionApplicationResponse {
   application: ApplicationDetailResponse;
   wasDuplicate: boolean;

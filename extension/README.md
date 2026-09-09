@@ -7,16 +7,22 @@ original (LinkedIn-only) design.
 
 ## Setup
 
-1. **Generate an access token.** In the e-kariyerim web app, go to Settings → Browser Extension,
-   click "Generate Token", and copy the value shown (`aa_pat_...`) — it's shown only once. This
-   token grants full access to your account, same as being logged in; only paste it into your own
-   extension install.
-2. **Load the extension unpacked.**
+1. **Load the extension unpacked.**
    - Chrome/Edge: open `chrome://extensions` (or `edge://extensions`), enable **Developer mode**,
      click **Load unpacked**, and select this `extension/` folder.
-3. **Configure it.** Click the e-kariyerim icon in the toolbar → if no token is set yet, click
-   "Open Settings" (or right-click the icon → Options). Set the **API base URL** (default
-   `http://localhost:5151` for local dev) and paste the **access token**, then Save.
+2. **Connect it.** Click the e-kariyerim icon in the toolbar → **Connect**. The extension asks the
+   API for a short pairing code, opens the web app's `/pair?code=…` page in a tab, and collects the
+   access token once you confirm there. Nothing to copy or paste, and no account needed up front —
+   the confirmation page can register one and come straight back.
+3. **Pointing at a local API.** The pairing endpoints live on whatever **API base URL** is set, so
+   for local dev open Settings, expand *Enter a key by hand (advanced)*, set the base URL (e.g.
+   `http://localhost:5151`) and Save first — Connect then pairs against that API. Entering a token
+   by hand still works there too, which is what the disclosure is for.
+
+The token an approved pairing produces is `Extension`-scoped (only the endpoints this extension
+calls) and expires after `PersonalAccessTokens:LifetimeDays`, 90 by default. The extension stores
+that expiry alongside it and warns in the last two weeks; before 0.7.0 it did not, which is why a
+connection used to stop working one day with no explanation.
 
 > **Testing against a local API needs one temporary manifest edit.** `host_permissions` ships
 > without `http://localhost/*` on purpose — a published extension asking to read and change data on

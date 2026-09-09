@@ -157,6 +157,33 @@ public static class RateLimiting
                 });
             });
 
+            // Both halves of the extension pairing flow are anonymous and therefore IP-partitioned,
+            // like the two policies above. They are split because they answer to different callers:
+            // "start" is a person clicking Connect, "poll" is a timer in a page that stays open for
+            // as long as the pairing does. One bucket sized for the timer would leave the start
+            // endpoint effectively unbounded.
+            options.AddPolicy(DependencyInjection.ExtensionPairingStartRateLimitPolicy, httpContext =>
+            {
+                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.ExtensionPairingStart.PermitLimit,
+                    Window = sizes.ExtensionPairingStart.Window,
+                    QueueLimit = 0
+                });
+            });
+
+            options.AddPolicy(DependencyInjection.ExtensionPairingPollRateLimitPolicy, httpContext =>
+            {
+                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.ExtensionPairingPoll.PermitLimit,
+                    Window = sizes.ExtensionPairingPoll.Window,
+                    QueueLimit = 0
+                });
+            });
+
             options.AddPolicy(DependencyInjection.FeedbackRateLimitPolicy, httpContext =>
                 RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
                 {

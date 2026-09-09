@@ -36,6 +36,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
 
+    public DbSet<ExtensionPairingRequest> ExtensionPairingRequests => Set<ExtensionPairingRequest>();
+
     public DbSet<ImportBatch> ImportBatches => Set<ImportBatch>();
 
     public DbSet<ImportRowError> ImportRowErrors => Set<ImportRowError>();

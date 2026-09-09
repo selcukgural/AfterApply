@@ -86,6 +86,10 @@
       "benchmark": {
         "title": "Reply Rate Benchmark",
         "description": "How many applications did you send, and how many came back? See your own reply rate against the median in your field. No sign-up needed."
+      },
+      "pair": {
+        "title": "Connect the Extension",
+        "description": "Connect your browser extension to your e-kariyerim account with a single confirmation."
       }
     }
   },
@@ -648,14 +652,14 @@
     },
     "extension": {
       "title": "Browser Extension",
-      "description": "Generate an access token to create applications with \"I Applied\" on LinkedIn or kariyer.net job pages, then paste it into the extension's settings. This token grants full access to your account — only give it to your own browser extension.",
+      "description": "Install the extension, press “Connect” in its popup and confirm on the page that opens — no copying and pasting. The key it gets can only reach the endpoints the extension uses; it cannot export your application history or manage your account.",
       "nameLabel": "Token name",
       "namePlaceholder": "e.g. Chrome Extension",
       "generate": "Generate Token",
       "generating": "Generating...",
       "generateError": "Could not generate the token.",
       "limitReached": "You've reached the limit of {max} active tokens. Delete one before creating a new one.",
-      "newTokenWarning": "This token is shown only once and is valid for {days} days. Copy it now and paste it into the extension's settings.",
+      "newTokenWarning": "This key is shown only once and is valid for {days} days. Copy it now and paste it into the extension's settings. Give it only to your own browser extension.",
       "copy": "Copy",
       "copied": "Copied",
       "noTokens": "No tokens generated yet.",
@@ -665,7 +669,12 @@
       "neverUsed": "Never used",
       "revoke": "Revoke",
       "revokeConfirm": "Are you sure you want to revoke this token? The extension will stop working with it.",
-      "revokeError": "Could not revoke the token."
+      "revokeError": "Could not revoke the token.",
+      "step1": "Install the extension and click its icon.",
+      "step2": "Press “Connect” — a confirmation page opens in this browser.",
+      "step3": "Check the code matches the one the extension is showing, then confirm.",
+      "manualTitle": "Generate a key by hand (advanced)",
+      "manualHelp": "Only needed if you are pointing the extension at a different API address, or running an older build without the “Connect” flow. The key is shown once and has to be pasted into the extension's settings."
     },
     "delete": {
       "title": "Delete My Account",
@@ -845,7 +854,7 @@
   },
   "extensionPrivacy": {
     "title": "Browser Extension Privacy Policy",
-    "lastUpdated": "Last updated: 6 September 2026",
+    "lastUpdated": "Last updated: 8 September 2026",
     "scope": {
       "title": "What this policy covers",
       "body": "This page describes the e-kariyerim Browser Extension (\"the extension\") only. The extension is a companion to the e-kariyerim web application (ekariyerim.com): it lets a signed-in user save a job posting they are viewing on LinkedIn or kariyer.net as a tracked application in their own account, and offers an opt-in \"Gmail Scanning\" feature that checks an email you open in Gmail on your own device and only sends a short summary when it looks job-related. Data already saved to your account (your past applications) is governed by e-kariyerim's own privacy policy, not this document."
@@ -872,7 +881,7 @@
       "title": "What the extension stores",
       "intro": "The extension stores the following locally on your device, using the browser's own chrome.storage.local (never Chrome Sync, never a third-party server):",
       "item1": "The e-kariyerim API address you're using (a setting, not personal data).",
-      "item2": "Your e-kariyerim personal access token, which you generate yourself from e-kariyerim's Settings page and paste in. This token authenticates the extension's requests as you.",
+      "item2": "The access token your e-kariyerim account issued to this extension, and the date it expires (so the extension can warn you before the connection lapses instead of simply stopping). It authenticates the extension's requests as you and reaches only the endpoints the extension uses — it cannot export your application history or manage your account. You obtain it by pressing \"Connect\" and confirming a code on your own account page; if you use a custom API address you can still generate one in e-kariyerim's Settings and enter it by hand.",
       "item3": "Your light/dark theme preference for the extension's own popup.",
       "item4": "Your language choice (Turkish/English) for the extension's pages.",
       "item5": "Whether you've turned on Gmail Scanning (off unless you explicitly enable it), a cached copy of the (non-personal) keyword/domain table it scores against, and a short list of email thread IDs already submitted, so the same email isn't sent twice.",
@@ -883,14 +892,16 @@
       "body": "When you click \"I Applied,\" the extension sends the job title, company, location, job URL, description and contact details shown in the popup to the e-kariyerim API, authenticated with your personal access token, so it can be saved to your own e-kariyerim account. Company-name autocomplete similarly queries the e-kariyerim API with the text you've typed.",
       "hrNote": "A contact saved this way is your own note of who to approach about that application: only you can see it, it is never shown to other users or included in any analytics, e-kariyerim never emails or messages that person on your behalf, and it is deleted along with the application or your account.",
       "gmailNote": "If you've turned on Gmail Scanning, an opened email that scores as job-related sends its sender, subject, and a capped snippet to your own e-kariyerim account (see the Gmail Scanning section above) — this only happens for emails you open, only after you enable the setting, and only when the on-device score qualifies.",
-      "noOther": "The extension sends data to no other destination. It does not use analytics, advertising, or tracking services, and it does not sell or share your data with third parties."
+      "noOther": "The extension sends data to no other destination. It does not use analytics, advertising, or tracking services, and it does not sell or share your data with third parties.",
+      "pairing": "When you press \"Connect,\" the extension asks the e-kariyerim API for a pairing code and opens the confirmation page in a tab; while it waits it asks, every few seconds, whether you have confirmed that code. Neither request carries any personal data — the extension has no account and no credential at that point. The only thing that comes back is the access token, once, after you confirm. If you refuse on that page, or the code runs out of time, nothing is issued at all."
     },
     "controls": {
       "title": "Your controls",
       "item1": "The job-tracking popup only acts when you click its icon — there is no background scraping or polling on LinkedIn/kariyer.net.",
       "item2": "Gmail Scanning is off by default and does nothing until you turn it on in Settings; once on, it only reads an email when you personally open it in Gmail — it does not scan your inbox in the background, and does nothing at all on any other site. Turn it off anytime in Settings, with the same immediate effect.",
-      "item3": "You can remove your access token at any time from the extension's Settings page, or revoke it from e-kariyerim's Settings → Browser Extension page, which immediately invalidates it.",
-      "item4": "Uninstalling the extension deletes everything chrome.storage.local held for it (the token, API address, theme, language preference, Gmail Scanning setting, and its local caches) from your device."
+      "item3": "You can remove your access token at any time from the extension's Settings page, or revoke it from e-kariyerim's Settings → Browser Extension page, which invalidates it immediately. It also expires on its own after 90 days, whether or not you do anything.",
+      "item4": "Uninstalling the extension deletes everything chrome.storage.local held for it (the token, API address, theme, language preference, Gmail Scanning setting, and its local caches) from your device.",
+      "item5": "A pairing code is only ever an offer: it grants nothing until you confirm it while signed in, and the confirmation page has a \"this wasn't me\" button for a code you did not produce yourself."
     },
     "appPolicy": {
       "title": "Data saved to your account",
@@ -1515,32 +1526,32 @@
     "settings": {
       "eyebrow": "Settings",
       "title": "Account Settings",
-      "intro": "From Settings you can export your data, generate an access token for the Chrome extension, and delete your account. Theme and language are changed from the switchers in the top navigation, not from Settings.",
+      "intro": "Settings is where you export your data, manage the browser extension's connection and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "export": {
         "title": "Export My Data",
         "body": "Download all of your application, import, and reminder data as a single JSON file."
       },
       "extension": {
-        "title": "Access token for the Chrome Extension",
+        "title": "Browser extension connection",
         "step1": {
-          "title": "Open the \"Browser Extension\" section",
-          "body": "Found on the Settings page."
+          "title": "Install the extension and click its icon",
+          "body": "See the Chrome Extension section."
         },
         "step2": {
-          "title": "Name the token and click \"Generate Token\"",
-          "body": "For example, \"Chrome Extension\" or the name of the computer you're using."
+          "title": "Press \"Connect\" and confirm on the page that opens",
+          "body": "There is no key to copy; the extension connects the moment you confirm."
         },
         "step3": {
-          "title": "Copy the token right away",
-          "body": "The value starting with aa_pat_ is shown only once — if you navigate away, you won't see it again."
+          "title": "See and revoke connections here",
+          "body": "The \"Browser Extension\" section lists each connection's name, when it was created and expires, and when it was last used. \"Revoke\" invalidates it immediately."
         },
         "step4": {
-          "title": "Paste it into the extension's settings",
-          "body": "See the Chrome Extension section. You can have at most 10 active tokens at a time; revoke one you no longer use with \"Revoke\" when you need room for a new one."
+          "title": "Entering a key by hand is still there, under \"advanced\"",
+          "body": "Only needed if you point the extension at a different API address. The key is shown once, and at most 10 can be active."
         },
         "calloutToken": {
-          "title": "This token grants full access to your account",
-          "body": "An access token gives full account access, exactly as if you'd logged in with your email and password. Only paste it into your own browser extension install, never share it — if you suspect it's been exposed, revoke it immediately."
+          "title": "The connection only reaches the endpoints the extension uses",
+          "body": "The key given to the extension can add applications, search companies and — if you turn it on — send email signals. It cannot export your application history or manage your account. Still give it only to your own browser: it expires on its own after 90 days, and \"Revoke\" invalidates it immediately if you ever have doubts."
         }
       },
       "delete": {
@@ -1561,12 +1572,12 @@
         "storeIntro": "The e-kariyerim extension is live on the Chrome Web Store — one-click install, no developer mode needed.",
         "storeCta": "Open in Chrome Web Store",
         "step1": {
-          "title": "Generate an access token in Settings",
-          "body": "See the \"Access token for the Chrome Extension\" steps in the Settings section."
-        },
-        "step2": {
           "title": "Add the extension to Chrome from the link above",
           "body": "Click \"Add to Chrome\" on the Chrome Web Store page. The extension icon appears in your toolbar."
+        },
+        "step2": {
+          "title": "Click the extension icon and press \"Connect\"",
+          "body": "Sign in (or create an account) on the confirmation page that opens and confirm the code — there is no key to copy."
         }
       },
       "installManual": {
@@ -1588,15 +1599,15 @@
       "configure": {
         "title": "Configuration",
         "step1": {
-          "title": "Click the e-kariyerim icon in the toolbar"
+          "title": "Click the e-kariyerim icon in your toolbar"
         },
         "step2": {
-          "title": "Click \"Open Settings\" if no token is set yet",
-          "body": "You can also right-click the icon and choose \"Options\"."
+          "title": "Click \"Connect\"",
+          "body": "The extension produces a pairing code and opens the confirmation page in a new tab. If you are not signed in yet, you can do that there — the code is not lost."
         },
         "step3": {
-          "title": "Enter the API base URL and your access token, then save",
-          "body": "Make sure the API URL is correct if you're pointing it at a real deployment."
+          "title": "Check the code matches, then confirm",
+          "body": "The code on the page must match the one the extension is showing. Once you confirm, the extension connects within a few seconds. The connection is valid for 90 days; the extension warns you before it lapses, and renewing it is the same \"Connect\" button. If you point the extension at a different API address, entering a key by hand is still available under \"advanced\" in its settings."
         }
       },
       "use": {
@@ -1986,5 +1997,35 @@
       "tooMany": "Too many attempts. Please try again later.",
       "generic": "Your answer could not be saved. Please try again."
     }
+  },
+  "pair": {
+    "title": "Connect the extension to your account",
+    "subtitle": "Your browser extension produced a pairing code. Check that it matches the one the extension is showing, then confirm.",
+    "loading": "Loading...",
+    "genericError": "Something went wrong. Please try again.",
+    "signedOut": {
+      "body": "Sign in or create an account to finish connecting. You will come straight back here — the code is not lost.",
+      "register": "Create an account",
+      "login": "Sign in"
+    },
+    "noCode": "You reach this page with a pairing code. Press “Connect” in the extension's settings and the code arrives here on its own.",
+    "notFound": "This code is invalid or has expired. Just press “Connect” in the extension again.",
+    "confirm": {
+      "prompt": "Is this the code the extension is showing?",
+      "grants": "If you confirm, the extension can add applications, search companies and — if you turn it on — send email signals. It cannot export your application history or manage your account.",
+      "revocable": "You can revoke the connection at any time under Settings → Browser Extension.",
+      "warning": "If you did not produce this code yourself — if somebody sent it to you — do not confirm. Confirming connects their extension to your account.",
+      "approve": "Yes, connect",
+      "deny": "This wasn't me"
+    },
+    "approved": {
+      "title": "Confirmed.",
+      "body": "You can go back to the extension — it will connect within a few seconds."
+    },
+    "completed": "This pairing is already finished. Your extension is connected.",
+    "denied": "This request was refused. No access was given to the extension.",
+    "expired": "This request has expired. Just press “Connect” in the extension again.",
+    "tokenLimitReached": "Your account already holds the maximum number of active keys. Revoke one under Settings → Browser Extension and the extension will connect on its own.",
+    "settingsLink": "Settings → Browser Extension"
   }
 }

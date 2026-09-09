@@ -795,7 +795,7 @@ kullanıcı beklemek zorunda değil — sorarak da üretilebilir. Sıra
 > **V0'ın drift bekçisi bir gün sonra işini gördü:** yeni sayfa `SiteTrafficNormalizer`'ın
 > allowlist'inde olmadığı için `routes.test.ts` düştü — ziyaretleri hiç sayılmayacaktı.
 
-### Sıra 4 — V3: Eklenti eşleştirmesi — altı adım, bir tık olmalı
+### Sıra 4 — V3: Eklenti eşleştirmesi — altı adım, bir tık olmalı ✅ (2026-09-08)
 
 - **Bugünkü durum (denetimde çıktı):** Eklentinin çalışması için kullanıcı
   kayıt ol → Ayarlar → anahtar üret → kopyala → eklenti seçenekleri → yapıştır
@@ -812,6 +812,40 @@ kullanıcı beklemek zorunda değil — sorarak da üretilebilir. Sıra
   gizlilik metni, ekran görüntüleri, zip).
 - **Değişmez kısıt:** `/from-extension` yalnızca eklemeye açık — yayındaki her
   eklenti sürümü çalışmaya devam etmeli (DECISIONS.md 2026-09-06).
+
+> **Yapıldı (2026-09-08), eklenti `0.7.0` olarak.** Seçilen yol **kısa kod / cihaz akışı**:
+> `ExtensionPairingRequests` tablosu, `POST /api/extension-pairing/requests` + `/poll` (anonim, IP
+> bazlı 10/5dk ve 600/5dk) ve girişli `requests/{code}/approve|deny`; `/{tr,en}/pair` onay sayfası;
+> eklentide Bağlan düğmesi, kod gösterimi ve poll döngüsü.
+>
+> **Neden `externally_connectable` değil:** o yalnızca "önce kaydolmuş" kişiyi kurtarıyordu. Cihaz
+> akışı Store'dan gelen hesapsız kişiyi de kapsıyor — onay sayfası girişsiz açılıyor, kayıttan sonra
+> kullanıcıyı koduyla birlikte geri getiriyor (`?next=` yalnızca `/pair` şeklini kabul eden bir izin
+> listesinden geçiyor). Yeni izin gerekmedi.
+>
+> Üç karar kasıtlı:
+>
+> 1. **Token onayda değil, toplamada üretiliyor.** Approve yalnızca kimin onayladığını yazar; PAT
+>    ilk `poll`'da mint edilir ve satır aynı işlemde tüketilir. Böylece tabloda hiçbir zaman ham bir
+>    sır durmaz ve kimsenin toplamadığı onay arkasında kimlik bilgisi bırakmaz.
+> 2. **Kod bir kimlik, sır değil.** Onay girişli oturum ister, toplama ise yalnızca eklentinin
+>    tuttuğu 256 bitlik cihaz sırrıyla yapılır. Cihaz akışının tek gerçek saldırısı — "kodu sana biri
+>    gönderirse" — metinle karşılanıyor: kod büyük gösteriliyor, ne verildiği yazılıyor ve
+>    **"Bu ben değilim"** bir düğme.
+> 3. **Eklenti token'ı kendi halefini onaylayamaz** (`approve` `.AllowExtensionToken()` almıyor →
+>    403), yoksa sızmış bir anahtar kendini süresiz yenilerdi.
+>
+> **90 gün kaldı, sessizliği kalktı:** eşleştirme son kullanma tarihini de veriyor, eklenti onu
+> saklıyor, son 14 günde uyarıyor, dolduğunda "yeniden bağlan" diyor ve 401'i ağ hatasından ayırıyor
+> — eskiden ikisi de "e-kariyerim'e ulaşılamadı" idi.
+>
+> **Yan bulgu:** Ayarlar'daki *"Bu anahtar hesabınıza tam erişim sağlar"* cümlesi 2026-09-03'ten beri
+> yanlıştı (kapsam o gün `Extension`'a inmişti); web ve yardım metinleri düzeltildi. Ayrıca ekran
+> görüntüsü çekimi bir hata yakaladı: `popup.css`'in `button { display: block }` kuralı UA
+> stilindeki `[hidden]`'ı yeniyordu, `el.hidden` bir düğmede işe yaramıyordu.
+>
+> Testler: unit 479, web 232, integration 287. Eklenti tarafında harness yok; akış yerel yığında
+> tarayıcıda uçtan uca doğrulandı.
 
 ### Sıra 5 — V4: Haftalık ritim (K3'ün üstüne)
 

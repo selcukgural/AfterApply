@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useClientConfig } from "@/hooks/useClientConfig";
 import { beginGoogleSignIn } from "@/lib/auth/googleOAuth";
+import { returnToFromLocation } from "@/lib/auth/postAuthRedirect";
 
 // Renders nothing until GET /api/config says Sign in with Google is configured on this
 // deployment — the endpoints behind it answer 404 otherwise, so a button would be a dead end.
@@ -24,7 +25,9 @@ export function GoogleSignInButton() {
   const handleClick = async () => {
     setIsRedirecting(true);
     try {
-      await beginGoogleSignIn(clientId, locale);
+      // Carries the pairing return through the redirect to Google and back — the password
+      // form on the same page reads the same parameter.
+      await beginGoogleSignIn(clientId, locale, returnToFromLocation());
     } catch {
       // Only reachable if the browser refused crypto.subtle/sessionStorage (e.g. a non-secure
       // context); the button simply becomes clickable again.

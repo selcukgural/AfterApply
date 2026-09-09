@@ -64,7 +64,10 @@ export default async function ExtensionPrivacyPage() {
 
         <section>
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("sent.title")}</h2>
-          <p>{t("sent.body")}</p>
+          {/* The connection handshake first: it is the first request the extension ever makes, and
+              the one a reader is most likely to be suspicious of. */}
+          <p>{t("sent.pairing")}</p>
+          <p className="mt-2">{t("sent.body")}</p>
           <p className="mt-2">{t("sent.hrNote")}</p>
           <p className="mt-2">{t("sent.gmailNote")}</p>
           <p className="mt-2">{t("sent.noOther")}</p>
@@ -77,6 +80,7 @@ export default async function ExtensionPrivacyPage() {
             <li>{t("controls.item2")}</li>
             <li>{t("controls.item3")}</li>
             <li>{t("controls.item4")}</li>
+            <li>{t("controls.item5")}</li>
           </ul>
         </section>
 

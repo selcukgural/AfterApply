@@ -31,6 +31,8 @@
 
   --success: #15803d;
   --success-bg: #f0fdf4;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
   --error: #dc2626;
   --error-bg: #fef2f2;
 
@@ -63,6 +65,8 @@
 
     --success: #4ade80;
     --success-bg: rgba(21, 128, 61, 0.18);
+    --warning: #fbbf24;
+    --warning-bg: rgba(180, 83, 9, 0.22);
     --error: #f87171;
     --error-bg: rgba(220, 38, 38, 0.18);
 
@@ -95,6 +99,8 @@
 
   --success: #4ade80;
   --success-bg: rgba(21, 128, 61, 0.18);
+  --warning: #fbbf24;
+  --warning-bg: rgba(180, 83, 9, 0.22);
   --error: #f87171;
   --error-bg: rgba(220, 38, 38, 0.18);
 
@@ -108,6 +114,15 @@
 
 * {
   box-sizing: border-box;
+}
+
+/* The UA stylesheet's [hidden]{display:none} loses to this file's own `button{display:block}` and
+   friends — an element-type selector outranks it once it is in an author stylesheet. Without this
+   rule, `el.hidden = true` silently does nothing to a <button>, which is how the options page shipped
+   its "open the confirmation page again" button visible with no pairing in flight (caught in a
+   screenshot, 2026-09-08). */
+[hidden] {
+  display: none !important;
 }
 
 body {
@@ -361,6 +376,29 @@ button.secondary:hover {
 .status.error {
   color: var(--error);
   background: var(--error-bg);
+}
+
+/* The expiry warning and the "waiting for confirmation" step of pairing: neither is a failure,
+   both need to be noticed. */
+.status.warning {
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+
+/* The pairing code, shown large enough to compare against the one on the confirmation page —
+   comparing them is the only thing standing between a user and someone else's pairing request. */
+.pairing-code {
+  margin: 10px 0 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-align: center;
+  color: var(--text);
 }
 
 .combobox {

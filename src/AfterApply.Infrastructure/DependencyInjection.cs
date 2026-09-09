@@ -61,6 +61,8 @@ public static class DependencyInjection
     public const string FeedbackRateLimitPolicy = "feedback";
     public const string SiteTrafficRateLimitPolicy = "site-traffic";
     public const string BenchmarkRateLimitPolicy = "benchmark";
+    public const string ExtensionPairingStartRateLimitPolicy = "extension-pairing-start";
+    public const string ExtensionPairingPollRateLimitPolicy = "extension-pairing-poll";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -91,6 +93,7 @@ public static class DependencyInjection
         services.Configure<ApplicationBulkOptions>(configuration.GetSection(ApplicationBulkOptions.SectionName));
         services.Configure<IdentityPolicyOptions>(configuration.GetSection(IdentityPolicyOptions.SectionName));
         services.Configure<PersonalAccessTokenOptions>(configuration.GetSection(PersonalAccessTokenOptions.SectionName));
+        services.Configure<ExtensionPairingOptions>(configuration.GetSection(ExtensionPairingOptions.SectionName));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<ProductMetricsOptions>(configuration.GetSection(ProductMetricsOptions.SectionName));
         services.Configure<BenchmarkOptions>(configuration.GetSection(BenchmarkOptions.SectionName));
@@ -375,6 +378,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IPersonalAccessTokenService, PersonalAccessTokenService>();
+        services.AddScoped<IExtensionPairingService, ExtensionPairingService>();
 
         // Sign in with Google. Inert (button hidden, endpoints 404) until GoogleAuth:ClientId and
         // GoogleAuth:ClientSecret are both set — see GoogleAuthOptions.

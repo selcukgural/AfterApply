@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useClientConfig } from "@/hooks/useClientConfig";
 import { beginLinkedInSignIn } from "@/lib/auth/linkedinOAuth";
+import { returnToFromLocation } from "@/lib/auth/postAuthRedirect";
 
 // Renders nothing until GET /api/config says Sign in with LinkedIn is configured on this
 // deployment — the endpoints behind it answer 404 otherwise, so a button would be a dead end.
@@ -24,7 +25,8 @@ export function LinkedInSignInButton() {
   const handleClick = () => {
     setIsRedirecting(true);
     try {
-      beginLinkedInSignIn(clientId, locale);
+      // See the Google button: the pairing return survives the redirect.
+      beginLinkedInSignIn(clientId, locale, returnToFromLocation());
     } catch {
       // Only reachable if the browser refused sessionStorage (e.g. storage disabled); the button
       // simply becomes clickable again.
