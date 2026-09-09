@@ -40,4 +40,15 @@ public interface ITokenService
     /// <summary>Null for anything that is not an unexpired token from
     /// <see cref="CreateLinkedInSignupToken"/> — including one of our own access tokens.</summary>
     Task<LinkedInIdentity?> ValidateLinkedInSignupTokenAsync(string token);
+
+    /// <summary>Same role as <see cref="CreateLinkedInSignupToken"/>, for a GitHub sign-up.
+    /// <see cref="GitHubIdentity"/> gets its own pair for the same reason LinkedIn does: its email is
+    /// nullable and the audience must not be interchangeable with another provider's, or a signup
+    /// token minted for one identity could create an account under another.</summary>
+    string CreateGitHubSignupToken(GitHubIdentity identity);
+
+    /// <summary>Null for anything that is not an unexpired token from
+    /// <see cref="CreateGitHubSignupToken"/> — including one of our own access tokens, and including
+    /// a Google or LinkedIn signup token signed with the very same key.</summary>
+    Task<GitHubIdentity?> ValidateGitHubSignupTokenAsync(string token);
 }

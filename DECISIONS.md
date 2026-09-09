@@ -4953,3 +4953,67 @@ koyuyor. İkincisi kod değişikliği, dolayısıyla zaten sürüm numarası bum
 alan adlarında çalışmasını Developer Console dahil engelliyor ("The extensions gallery cannot be
 scripted"); `chrome.google.com/webstore` ve `chromewebstore.google.com` ikisinde de denendi. Bu
 adımı bir insan yazmak zorunda.
+
+---
+
+## Üçüncü giriş sağlayıcısı GitHub oldu; X (Twitter) elendi (2026-09-09)
+
+**Soru neydi.** "X ile de giriş yapabilir miyiz, Google ve LinkedIn'deki gibi ücretsiz?"
+Ardından "başka ücretsiz, kullanıcı getirisi olan entegrasyon var mı?"
+
+**X elendi — teknik değil ticari gerekçeyle.** 6 Şubat 2026'da X API'nin free tier'ı yeni
+geliştiricilere kapandı; Basic ($200/ay) ve Pro ($5.000/ay) yalnızca mevcut abonelerde kaldı,
+yeni herkes pay-per-use kredi modeline düşüyor. Girişin zorunlu çağrısı olan `GET /2/users/me`
+ücretli ("User: Read" $0.010/istek, kendi hesabını okuma $0.001/istek) ve krediler peşin
+yükleniyor. Yani **her giriş denemesi para** ve kredi bittiğinde X ile giren herkes kilitli
+kalır — Google/LinkedIn'de olmayan bir tek-nokta-arıza. Teknik tarafta ayrıca OIDC değil
+(id_token yok, her girişte `/2/users/me`'ye ağ çağrısı) ve PKCE zorunlu. Ürün tarafında da
+karşılığı yok: hedef kitle TR yazılımcı, "X hesabı var ama Google hesabı yok" diyen kullanıcı
+pratikte yok.
+
+**Alternatifler tarandı, biri hariç elendi.** "Daha çok iş sitesi ekleyelim" ilk bakışta
+cazipti ama **gereksiz çıktı**: `extension/local-filter-config.js` zaten greenhouse/lever/
+workday/smartrecruiters/ashby'yi tanıyor ve `EmailSuggestion.CreateForNewJob` var olmayan bir
+başvuruyu onay e-postasından oluşturabiliyor. ATS üzerinden yapılan başvuru zaten sisteme
+düşüyor; eklentiye o siteleri eklemek yeni `host_permissions` + yeni Web Store incelemesi
+karşılığında kapsanan bir yolu ikinci kez kaplamak olurdu. Park edilenler: Outlook/Yandex posta
+taraması (en büyük gerçek boşluk ama en ağır gizlilik talebi — biri isteyene kadar bekliyor),
+Google Calendar API (sensitive scope → doğrulama süreci; `.ics` çıktısı bunu tamamen atlıyor,
+sıradaki iş o), web push/Telegram (var olmayan kullanıcıya bildirim kanalı), Wikidata şirket
+zenginleştirmesi.
+
+**GitHub seçildi.** Ücretsiz, limitsiz, doğrulama süreci yok, `user:email` ile **doğrulanmış**
+e-posta veriyor — X'in çözemediği her şeyi çözüyor — ve hedef kitleyle birebir örtüşüyor.
+Dürüst not: bu madde **kullanıcı getirmez**, bir sürtünmeyi kaldırır. V0-V5'teki teşhis
+(gelmeme sebebi kapsam değil, vaat ve dağıtım) hâlâ geçerli; bu iş onun yerine geçmiyor.
+
+**Uygulama — LinkedIn deseni, üç farkla.**
+
+1. **OIDC yok.** GitHub'ın OAuth App'leri `id_token` üretmiyor; doğrulanacak imza da, çekilecek
+   JWKS de yok. Kimlik `api.github.com`'dan TLS üzerinden iki çağrıyla okunuyor
+   (`GET /user`, `GET /user/emails`) — `GoogleIdTokenReader`'ın "TLS kanalına güven"
+   yaklaşımının aynısı, `LinkedInIdTokenReader`'ın JWKS doğrulaması değil. Access token iki
+   okumadan sonra atılıyor: saklanmıyor, loglanmıyor, istemciye dönmüyor. PKCE de yok
+   (GitHub'ın uçları kabul etmiyor), login-CSRF savunması tek kullanımlık `state`.
+2. **Subject sayısal id, kullanıcı adı değil.** GitHub bir hesabın adını değiştirmeye izin
+   veriyor ve eski adı serbest bırakıyor; harici anahtar olarak login kullanmak, adını
+   değiştiren kullanıcının hesabını o adı kapan kişiye teslim ederdi.
+3. **E-posta seçimi bir karar, kopyalanan bir alan değil** (`GitHubProfileReader.SelectEmail`).
+   Yalnızca GitHub'ın doğruladığı adresler; içlerinden primary olan, yoksa ilk doğrulanmış olan.
+   `@users.noreply.github.com` **eleniyor**: doğrulanmış ve benzersiz, ama teslim edilemez —
+   o adresle açılan hesap şifre sıfırlama e-postasını hiç alamazdı. Hiçbiri kalmazsa
+   LinkedIn için zaten kurulmuş olan "e-postayı elle gir" yolu devreye giriyor. Ayrıca GitHub
+   tek bir serbest metin `name` tutuyor; son boşluktan bölünüyor ve iki alan da düzenlenebilir
+   geliyor.
+
+**Gizlilik metni koda göre değil, kodla birlikte değişti.** `aa_github_oauth` sessionStorage
+anahtarı Çerez Politikası'na eklendi (tripwire `browserStorage.test.ts` zaten bunu yakaladı —
+işini yaptı), `/privacy` sayfasına Google ve LinkedIn'inkiyle aynı yapıda bir "GitHub ile giriş"
+bölümü girdi (hangi izinler isteniyor, depolara erişilmediği, izni GitHub tarafında nasıl
+kaldıracağı), ve şifresiz hesap metinleri üç sağlayıcıyı da sayıyor.
+
+**Dağıtım uyarısı.** `deploy.yml` artık `afterapply-github-client-id` ve
+`afterapply-github-client-secret` secret'larını `--set-secrets` ile istiyor. Diğer ikisiyle
+aynı sözleşme: **secret'ın var olması yeterli, değeri boş olabilir** — ama yoksa revizyon
+başarısız olur. `DEPLOYMENT.md` §3'teki `gcloud secrets create` satırları eklendi; bir sonraki
+main push'undan önce çalıştırılmalı.

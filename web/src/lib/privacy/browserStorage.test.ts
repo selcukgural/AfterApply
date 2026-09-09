@@ -30,13 +30,26 @@ const STORAGE_KEYS = [
   "aa_user",
   "aa_google_oauth",
   "aa_linkedin_oauth",
+  "aa_github_oauth",
 ];
 
 // The subset the policy names verbatim rather than describing as a group ("their expiry times").
-const KEYS_NAMED_IN_POLICY = ["aa_access_token", "aa_refresh_token", "aa_user", "aa_google_oauth", "aa_linkedin_oauth"];
+const KEYS_NAMED_IN_POLICY = [
+  "aa_access_token",
+  "aa_refresh_token",
+  "aa_user",
+  "aa_google_oauth",
+  "aa_linkedin_oauth",
+  "aa_github_oauth",
+];
 
 const COOKIE_WRITERS = ["lib/theme/theme.ts"];
-const STORAGE_WRITERS = ["lib/api/tokenStorage.ts", "lib/auth/googleOAuth.ts", "lib/auth/linkedinOAuth.ts"];
+const STORAGE_WRITERS = [
+  "lib/api/tokenStorage.ts",
+  "lib/auth/githubOAuth.ts",
+  "lib/auth/googleOAuth.ts",
+  "lib/auth/linkedinOAuth.ts",
+];
 
 // Names that only appear in a codebase because something is being measured, tagged or replayed.
 const TRACKERS = [

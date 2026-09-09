@@ -381,6 +381,53 @@ runs the whole flow against a fake `ILinkedInAuthClient`, and
 `LinkedInIdTokenReaderTests`/`LinkedInJwksProviderTests`/`LinkedInSignupTokenTests` pin the signature
 and token checks.
 
+## GitHub Sign-In Setup
+
+"Continue with GitHub" is the third provider and the simplest of the three: a plain OAuth
+authorization-code flow, exchanged server-side (`GitHubAuthClient`), inert until configured. What
+makes it different from the other two is that **there is no OpenID Connect here** — GitHub's OAuth
+Apps issue no `id_token`, so there is no signed assertion to verify and no JWKS to fetch. The
+identity is read over TLS from `api.github.com` with two calls (`GET /user`, `GET /user/emails`) and
+the access token is discarded the moment they return; it is never stored, logged or sent to the
+client. No PKCE either (GitHub's OAuth App endpoints don't take one), so the browser's single-use
+`state` is the login-CSRF defence, exactly as in the LinkedIn flow.
+
+Two consequences worth knowing before you wire it up, both handled by
+`GitHubProfileReader`:
+
+- **The email is optional.** A GitHub account can keep every address private, and an app can be
+  granted without the `user:email` scope. Only a GitHub-*verified*, deliverable address is ever used
+  to match an existing e-kariyerim account; `@users.noreply.github.com` addresses are dropped
+  (verified, but nothing sent to them arrives, so a password reset would silently vanish). When
+  nothing qualifies the user types an email on the sign-up form — the same path LinkedIn already
+  had.
+- **The name is one free-text field**, not a given/family pair, so it is split on the last space and
+  both halves land in editable inputs.
+
+1. Create a **GitHub OAuth App** at
+   [Settings → Developer settings → OAuth Apps](https://github.com/settings/developers) — *not* a
+   GitHub App, which is the installable-on-repositories kind and is not what a login needs. Add
+   every callback URL the client serves (GitHub matches them exactly by default, and an OAuth App
+   accepts more than one):
+   - `<WEB_ORIGIN>/tr/auth/github/callback` and `<WEB_ORIGIN>/en/auth/github/callback`
+
+   Unlike LinkedIn, this one **can** be exercised locally: GitHub follows the OAuth RFC's advice
+   against the name `localhost`, so register the loopback form (`http://127.0.0.1:3000/tr/auth/github/callback`)
+   and open the web app on `http://127.0.0.1:3000` with `App:WebBaseUrl` set to match.
+2. Set the two values locally via user-secrets:
+   ```bash
+   dotnet user-secrets set "GitHubAuth:ClientId" "<client id>" --project src/AfterApply.Api
+   dotnet user-secrets set "GitHubAuth:ClientSecret" "<client secret>" --project src/AfterApply.Api
+   ```
+   For the container/prod profile use `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` (see
+   `.env.example`, `.env.prod.example` and `DEPLOYMENT.md`).
+
+The scopes the web app requests are `read:user user:email` — the profile and the address list,
+nothing that can reach a repository, public or private. Same `App:WebBaseUrl` origin check as the
+other two. No automated test calls GitHub; `GitHubSignInTests` runs the whole flow against a fake
+`IGitHubAuthClient`, and `GitHubProfileReaderTests`/`GitHubSignupTokenTests` pin the email-selection
+and token rules.
+
 ## Browser Extension Setup
 
 Sprint 9 ships a Manifest V3 Chrome/Edge extension (`extension/`) that turns a LinkedIn job

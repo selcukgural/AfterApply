@@ -1,11 +1,19 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
-import type { AuthResponse, GoogleSignInResponse, LinkedInSignInResponse, UserProfileResponse } from "@/types/api";
+import type {
+  AuthResponse,
+  GitHubSignInResponse,
+  GoogleSignInResponse,
+  LinkedInSignInResponse,
+  UserProfileResponse,
+} from "@/types/api";
 import {
   authApi,
   type GoogleSignInRequest,
   type GoogleSignupRequest,
+  type GitHubSignInRequest,
+  type GitHubSignupRequest,
   type LinkedInSignInRequest,
   type LinkedInSignupRequest,
   type LoginRequest,
@@ -29,6 +37,9 @@ interface AuthContextValue {
   // Same contract as the Google pair above, for Sign in with LinkedIn.
   signInWithLinkedIn: (request: LinkedInSignInRequest) => Promise<LinkedInSignInResponse>;
   completeLinkedInSignup: (request: LinkedInSignupRequest) => Promise<AuthResponse>;
+  // Same contract again, for Sign in with GitHub.
+  signInWithGitHub: (request: GitHubSignInRequest) => Promise<GitHubSignInResponse>;
+  completeGitHubSignup: (request: GitHubSignupRequest) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   // password is omitted for an account that has none (user.hasPassword === false).
   deleteAccount: (password?: string) => Promise<void>;
@@ -105,6 +116,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return auth;
   }, []);
 
+  const signInWithGitHub = useCallback(async (request: GitHubSignInRequest) => {
+    const result = await authApi.githubSignIn(request);
+    if (result.auth) {
+      authStore.setAuth(result.auth);
+    }
+    return result;
+  }, []);
+
+  const completeGitHubSignup = useCallback(async (request: GitHubSignupRequest) => {
+    const auth = await authApi.githubSignup(request);
+    authStore.setAuth(auth);
+    return auth;
+  }, []);
+
   const logout = useCallback(async () => {
     const refreshToken = authStore.getRefreshToken();
     try {
@@ -133,6 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         completeGoogleSignup,
         signInWithLinkedIn,
         completeLinkedInSignup,
+        signInWithGitHub,
+        completeGitHubSignup,
         logout,
         deleteAccount,
       }}

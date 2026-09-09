@@ -9,7 +9,8 @@ public sealed record ClientConfigResponse(
     PasswordPolicyResponse PasswordPolicy,
     PersonalAccessTokenLimitsResponse PersonalAccessTokens,
     GoogleAuthConfigResponse GoogleAuth,
-    LinkedInAuthConfigResponse LinkedInAuth);
+    LinkedInAuthConfigResponse LinkedInAuth,
+    GitHubAuthConfigResponse GitHubAuth);
 
 /// <summary>Mirrors ASP.NET Identity's <c>PasswordOptions</c>, which is what the server actually
 /// validates against — the response is built from that object, not from a copy of the config.</summary>
@@ -35,3 +36,8 @@ public sealed record GoogleAuthConfigResponse(bool Enabled, string? ClientId);
 /// browser needs to start the redirect to linkedin.com. Same shape and same rules as
 /// <see cref="GoogleAuthConfigResponse"/>.</summary>
 public sealed record LinkedInAuthConfigResponse(bool Enabled, string? ClientId);
+
+/// <summary>Whether "Sign in with GitHub" is available and, if so, the public OAuth client id the
+/// browser needs to start the redirect to github.com. Same shape and same rules as
+/// <see cref="GoogleAuthConfigResponse"/>.</summary>
+public sealed record GitHubAuthConfigResponse(bool Enabled, string? ClientId);

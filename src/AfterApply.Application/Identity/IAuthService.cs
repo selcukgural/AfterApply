@@ -37,6 +37,20 @@ public interface IAuthService
     /// request's is ignored.</summary>
     Task<AuthResult> CompleteLinkedInSignupAsync(LinkedInSignupRequest request, string? ipAddress, CancellationToken cancellationToken);
 
+    /// <summary>Completes the browser's GitHub authorization-code flow. Signs the user straight in
+    /// when the GitHub account is already linked, or when a verified GitHub email matches an existing
+    /// account (linked on the spot); otherwise returns a signup prefill — no account is created here.
+    /// Like <see cref="LinkedInSignInAsync"/> and unlike Google, GitHub may supply no usable email at
+    /// all, in which case the prefill's email is null and the sign-up step must collect one.</summary>
+    Task<GitHubSignInResult> GitHubSignInAsync(GitHubSignInRequest request, string? ipAddress, CancellationToken cancellationToken);
+
+    /// <summary>Creates the account for a GitHub identity carried by a signup token from
+    /// <see cref="GitHubSignInAsync"/>. Idempotent like <see cref="CompleteGoogleSignupAsync"/>.
+    /// When the identity itself carried no usable verified email, <paramref name="request"/>'s
+    /// <c>Email</c> is required and used (unconfirmed); otherwise the token's own verified email is
+    /// used and the request's is ignored.</summary>
+    Task<AuthResult> CompleteGitHubSignupAsync(GitHubSignupRequest request, string? ipAddress, CancellationToken cancellationToken);
+
     /// <summary>Always completes successfully regardless of whether the email is registered —
     /// callers must not branch on this to avoid leaking account existence.</summary>
     Task ForgotPasswordAsync(ForgotPasswordRequest request, string? ipAddress, CancellationToken cancellationToken);

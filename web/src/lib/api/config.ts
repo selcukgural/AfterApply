@@ -28,6 +28,10 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
     enabled: false,
     clientId: null,
   },
+  gitHubAuth: {
+    enabled: false,
+    clientId: null,
+  },
 };
 
 export const configApi = {
