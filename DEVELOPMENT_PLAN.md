@@ -1065,6 +1065,13 @@ tabanlı, taranmış görsel, Türkçe karakteri bozuk. Integration: anonim endp
 rate limit, honeypot, onay kutusu zorunluluğu, flag kapalıyken 404, B katmanı
 kapalıyken puanın değişmemesi. Web: sonuç bileşeni + puan aritmetiği.
 
+> **Landing'e taşındı (2026-09-10).** V6 ve V2'nin ikisi de landing'de birer metin linkiydi;
+> hero'nun sağ sütunu artık gerçek bir CV bırakma alanı, birincil düğme "CV'mi Tara", kayıt
+> ikincil. Navbar'da (hem landing hem `(public)` başlığında) kalıcı "CV'ni Tara" düğmesi,
+> analiz bölümünde kıyaslama kartı. Bu arada V0'ın **hunisinin tepesi açıldı**: landing sayfası
+> `SiteTrafficReporter`'ı mount etmediği için bugüne kadar hiç ziyaret bildirmemişti. Kararlar:
+> `DECISIONS.md` 2026-09-10 (üçüncü kayıt).
+
 ### Sıra 6 — V4: Haftalık ritim (K3'ün üstüne)
 
 - **Ne var:** K3 durum geçmişi + elle eklenen olayları tek "Süreç" listesinde

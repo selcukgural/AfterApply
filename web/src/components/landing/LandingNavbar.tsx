@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { buttonClassName } from "@/components/ui/Button";
+import { CvScanNavButton } from "@/components/cvScan/CvScanNavButton";
 import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
@@ -42,6 +43,10 @@ export function LandingNavbar({ initialTheme }: { initialTheme: Theme }) {
           </Link>
           <LanguageSwitcher />
           <ThemeSwitcher initialTheme={initialTheme} />
+          {/* Outside the signed-in branch on purpose: the scan is the one thing here that does not
+              care whether you have an account, and a button that disappears once you sign in is not
+              a standing entry point. */}
+          <CvScanNavButton />
           {isAuthenticated ? (
             <Link href="/dashboard" className={buttonClassName("primary")}>
               {t("goToDashboard")}
@@ -98,6 +103,9 @@ export function LandingNavbar({ initialTheme }: { initialTheme: Theme }) {
             <ThemeSwitcher initialTheme={initialTheme} />
           </div>
           <div className="mt-4 flex flex-col gap-2">
+            {/* Above the auth buttons, so the reading order is scan → sign in → register: least
+                asked of the visitor first. */}
+            <CvScanNavButton className="block text-center" onNavigate={() => setMenuOpen(false)} />
             {isAuthenticated ? (
               <Link href="/dashboard" className={buttonClassName("primary", "text-center")} onClick={() => setMenuOpen(false)}>
                 {t("goToDashboard")}

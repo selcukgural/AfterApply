@@ -114,22 +114,17 @@
       "eyebrow": "Kaç başvuru, kaç cevap",
       "title": "Başvurdun. Peki sonra ne oldu?",
       "subtitle": "Başvurularının kaçı cevaplandı, kaçı sessizce kayboldu, ilk dönüş ortalama kaç gün sürdü. LinkedIn geçmişini içe aktar ya da eklentiyi kur — toplamayı e-kariyerim yapsın.",
-      "ctaPrimary": "Ücretsiz Başla",
-      "ctaSecondary": "Nasıl çalışıyor?",
-      "cvScanLink": "Önce hesapsız dene: CV'ni makine nasıl okuyor?"
+      "ctaPrimary": "CV'mi Tara",
+      "ctaSecondary": "Ücretsiz Başla",
+      "ctaHowItWorks": "Nasıl çalışıyor?"
     },
-    "heroPreview": {
-      "title": "Başvuruların",
-      "applications": "Başvuru",
-      "row1Company": "ABC Teknoloji",
-      "row1Status": "Mülakat",
-      "row1Meta": "4 gün önce",
-      "row2Company": "XYZ Bank",
-      "row2Status": "Bekliyor",
-      "row2Meta": "12 gündür",
-      "row3Company": "Acme Yazılım",
-      "row3Status": "Muhtemelen Kayboldu",
-      "row3Meta": "31 gündür"
+    "heroScan": {
+      "title": "CV'ni buraya bırak",
+      "dragHint": "Dosyayı sürükle ya da",
+      "choose": "dosya seç",
+      "formats": "PDF veya DOCX · en fazla 5 MB",
+      "noAccount": "Hesap gerekmiyor; dosya diske yazılmıyor, tarama bitince bellekten siliniyor.",
+      "nextStep": "Sonraki adımda izin kutusunu işaretleyip taramayı sen başlatıyorsun."
     },
     "problem": {
       "eyebrow": "Tanıdık geliyor mu?",
@@ -193,7 +188,11 @@
       "eyebrow": "Senin gerçek oranların",
       "title": "Kaçından cevap geldi? Kaçı hiç dönmedi?",
       "subtitle": "Yanıt oranı, mülakat oranı, ghosting oranı ve ilk dönüşün kaç gün sürdüğü — tahmin değil, kendi verinden.",
-      "benchmarkLink": "Kaydolmadan kendi oranını hesapla"
+      "benchmarkCard": {
+        "title": "Bu sayılar örnek. Seninkiler ne?",
+        "body": "Kaç başvuru yaptın, kaçından dönüş aldın — iki sayı gir, kendi geri dönüş oranını gör ve alanının medyanıyla kıyasla. Hesap gerekmiyor.",
+        "button": "Kıyasla"
+      }
     },
     "vision": {
       "eyebrow": "Vizyon",
@@ -2053,15 +2052,16 @@
   "cvScan": {
     "title": "CV'ni makine nasıl okuyor?",
     "subtitle": "PDF veya Word dosyanı yükle; başvuru sistemlerinin CV'nden ne okuduğunu, nerede takıldığını ve neyi düzeltmen gerektiğini göster. Hesap gerekmiyor, dosya hiçbir yere kaydedilmiyor.",
+    "navCta": "CV'ni Tara",
     "form": {
       "choose": "Dosya seç",
       "dropHint": "PDF veya DOCX · en fazla 5 MB",
       "dragHint": "Dosyayı buraya sürükle ya da",
       "selected": "Seçilen dosya",
       "remove": "Kaldır",
+      "handoffNote": "Bıraktığın dosya burada. Taramayı başlatmak için izin kutusunu işaretle.",
       "consentLabel": "CV'min bu tarama için işlenmesine izin veriyorum.",
-      "consentDetail": "Dosya diske yazılmıyor; tarama biter bitmez bellekten siliniyor. Ayrıntı için {privacy}.",
-      "consentPrivacyLink": "Gizlilik Politikası",
+      "consentDetail": "Dosya diske yazılmıyor; tarama biter bitmez bellekten siliniyor. Ayrıntı için <privacy>Gizlilik Politikası</privacy>.",
       "contentNotesLabel": "Yazım hakkında da not istiyorum (isteğe bağlı).",
       "contentNotesDetail": "Bunu işaretlersen CV'nin metni, notları yazması için bir yapay zekâ modeline gönderilir — Google Cloud Vertex AI, AB bölgesinde, verinin zaten durduğu yerde. Yine hiçbir şey saklanmıyor. Notlar puanı etkilemez; işaretlemezsen puanın birebir aynı çıkar.",
       "submit": "CV'mi tara",

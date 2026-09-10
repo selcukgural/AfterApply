@@ -17,6 +17,7 @@ import { RoadmapSection } from "@/components/landing/RoadmapSection";
 import { PrivacySection } from "@/components/landing/PrivacySection";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { SiteTrafficReporter } from "@/components/analytics/SiteTrafficReporter";
 
 /**
  * The hero line ("Başvurdun. Peki sonra ne oldu?") stays the <h1>, but it made a poor <title>: it
@@ -47,6 +48,11 @@ export default async function LandingPage() {
       <JsonLd
         data={jsonLdGraph(organizationJsonLd(), webApplicationJsonLd(locale, t("home.description")))}
       />
+      {/* Mounted here rather than in [locale]/layout.tsx, which also wraps the signed-in pages.
+          Until 2026-09-10 this page reported nothing at all: the reporter lives in the (public)
+          layout and the landing page is not in that group, so "/" sat in the API's path allowlist
+          with no caller — the funnel had a first step nobody was counting. */}
+      <SiteTrafficReporter />
       <LandingNavbar initialTheme={theme} />
       <main className="flex-1">
         <HeroSection />

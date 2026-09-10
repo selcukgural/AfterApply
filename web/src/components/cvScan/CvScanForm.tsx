@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { cvScanApi } from "@/lib/api/cvScan";
 import { ApiError } from "@/lib/api/httpClient";
 import { CV_SCAN_ACCEPT, inspectScanFile, type CvScanFileProblem } from "@/lib/cvScan/findings";
+import { takeScanFile } from "@/lib/cvScan/pendingScanFile";
 import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -37,13 +38,44 @@ export function CvScanForm() {
   const [consentError, setConsentError] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [website, setWebsite] = useState("");
+  const [handedOver, setHandedOver] = useState(false);
   const [result, setResult] = useState<CvScanResponse | null>(null);
 
   // Set in an effect rather than at construction: the clock is impure, and reading it during
   // render is both a lint error and a lie — the number that matters is when the form reached the
   // visitor's screen.
   useEffect(() => {
-    openedAt.current = Date.now();
+    const pending = takeScanFile();
+
+    // Seeded from when the visitor chose the file, which for a handover was a navigation ago
+    // rather than now. Without this, someone who drops a CV on the landing page, ticks consent and
+    // presses the button inside a second and a half is refused by the server's minimum-form-time
+    // guard — a generic refusal, with no explanation, in the middle of the happy path. It can only
+    // ever make the elapsed time larger, so the bot defence is not weakened by it. The zero check
+    // is for React's development double-invoke, whose second run finds an empty store.
+    if (openedAt.current === 0) {
+      openedAt.current = pending?.pickedAt ?? Date.now();
+    }
+
+    if (!pending) {
+      return;
+    }
+
+    // Checked again here: the hero is a convenience, not an authority, and this form is also
+    // reachable without it.
+    const found = inspectScanFile(pending.file);
+    if (found) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFileProblem(found);
+      return;
+    }
+
+    // Not derivable during render, and deliberately not: the handed-over file lives in a
+    // client-only module, so reading it while rendering would have the server produce an empty
+    // form and the browser a full one — a hydration mismatch. Same client-only bridge as
+    // JobDescriptionCard's sanitiser.
+    setFile(pending.file);
+    setHandedOver(true);
   }, []);
 
   const scan = useMutation({
@@ -99,6 +131,7 @@ export function CvScanForm() {
     // explicit consent for this one. Both boxes, for the same reason.
     setConsentAccepted(false);
     setContentNotesRequested(false);
+    setHandedOver(false);
     openedAt.current = Date.now();
     scan.reset();
   };
@@ -179,6 +212,13 @@ export function CvScanForm() {
 
       {fileProblem ? (
         <p className="text-sm text-red-600 dark:text-red-400">{t(`errors.${fileProblem}`)}</p>
+      ) : null}
+
+      {/* Says out loud what just happened, for someone who dropped a file on another page and
+          arrived here with it already in the box. The sentence that matters is the second half:
+          the scan has not started and will not until they say so. */}
+      {handedOver && file ? (
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("form.handoffNote")}</p>
       ) : null}
 
       {/* Unticked on every visit and after every scan. A pre-ticked box is not valid explicit
