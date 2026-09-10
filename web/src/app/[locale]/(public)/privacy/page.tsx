@@ -43,6 +43,22 @@ export default async function PrivacyPage() {
           <p className="mt-2">{t("cvStorage.sensitiveDataNote")}</p>
         </section>
 
+        {/* Deliberately its own section rather than a paragraph inside cv-storage: one is a file
+            we keep for a signed-in user, the other is a file we never keep at all, and running the
+            two together is exactly the confusion this page exists to prevent. The list below is the
+            same list the scan page itself prints — the two must never drift. */}
+        <section id="cv-scan">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("cvScan.title")}</h2>
+          <p>{t("cvScan.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("cvScan.noStorage")}</li>
+            <li>{t("cvScan.retained")}</li>
+            <li>{t("cvScan.noTransfer")}</li>
+            <li>{t("cvScan.output")}</li>
+            <li>{t("cvScan.consent")}</li>
+          </ul>
+        </section>
+
         <section id="feedback">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("feedback.title")}</h2>
           <p>{t("feedback.intro")}</p>

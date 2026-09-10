@@ -18,6 +18,13 @@
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Testcontainers.FakeGcsServer" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <!-- The CV scan fixtures are real files, generated in-process: a PDF built with PdfPig's
+         own writer and a .docx built with the OpenXml SDK. Checking binary fixtures into the
+         repository would mean nobody can see what a test is asserting without opening a
+         viewer — and a two-column layout is exactly the kind of thing that has to be read
+         as coordinates to be understood. -->
+    <PackageReference Include="PdfPig" />
+    <PackageReference Include="DocumentFormat.OpenXml" />
   </ItemGroup>
 
   <ItemGroup>

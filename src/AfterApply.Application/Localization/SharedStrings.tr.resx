@@ -252,4 +252,25 @@
   <data name="CV_CONSENT_REQUIRED" xml:space="preserve">
     <value>CV'nizi saklayabilmemiz için açık rızanız gerekiyor. Onay kutusunu işaretleyip tekrar deneyin.</value>
   </data>
+  <data name="CV_SCAN_CONSENT_REQUIRED" xml:space="preserve">
+    <value>CV'nizi analiz edebilmemiz için açık rızanız gerekiyor. Onay kutusunu işaretleyip tekrar deneyin.</value>
+  </data>
+  <data name="CV_SCAN_REJECTED" xml:space="preserve">
+    <value>İstek işlenemedi. Sayfayı yenileyip tekrar deneyin.</value>
+  </data>
+  <data name="CV_SCAN_PASSWORD_PROTECTED" xml:space="preserve">
+    <value>Bu dosya parola korumalı, içinden hiçbir şey okunamıyor. Parolasız bir kopyasını kaydedip onu tarayın.</value>
+  </data>
+  <data name="CV_SCAN_UNREADABLE" xml:space="preserve">
+    <value>Bu dosya okunamadı. Yazdığınız programdan yeniden dışa aktarıp tekrar deneyin.</value>
+  </data>
+  <data name="CV_SCAN_TOO_MANY_PAGES" xml:space="preserve">
+    <value>Tarama en fazla {0} sayfa okuyor. Bu uzunlukta bir CV'nin uzunluk sorununu zaten biliyorsunuz; tarama size yeni bir şey söyleyemez.</value>
+  </data>
+  <data name="CV_SCAN_TOO_EXPENSIVE" xml:space="preserve">
+    <value>Bu dosya okunması çok uzun sürüyor. Genelde dosyanın kendisinin bozuk olduğunun işaretidir — yeniden dışa aktarıp tekrar deneyin.</value>
+  </data>
+  <data name="CV_SCAN_LEGACY_DOC" xml:space="preserve">
+    <value>Eski .doc biçimi burada okunamıyor. Word'de açıp PDF veya .docx olarak kaydedin ve onu tarayın.</value>
+  </data>
 </root>

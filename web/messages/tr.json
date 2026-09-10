@@ -87,6 +87,10 @@
         "title": "Geri Dönüş Oranı Kıyaslama",
         "description": "Kaç başvuru yaptın, kaçından dönüş aldın? Kendi geri dönüş oranını gör ve alanındaki medyanla kıyasla. Kayıt gerekmiyor."
       },
+      "cvScan": {
+        "title": "CV Tarama — CV'ni makine nasıl okuyor?",
+        "description": "CV'ni yükle, başvuru sistemlerinin ondan ne okuduğunu gör. Makine okunabilirliği puanı, ham metin ve düzeltme listesi. Kayıt gerekmiyor, dosya saklanmıyor."
+      },
       "pair": {
         "title": "Eklentiyi Bağla",
         "description": "Tarayıcı eklentini e-kariyerim hesabına tek onayla bağla."
@@ -758,7 +762,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 8 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 10 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -871,6 +875,15 @@
       "deletion": "Sildiğiniz bir CV kalıcı olarak silinir — depolama tarafında kurtarma penceresi bilerek kapalı tutulur. Hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir.",
       "sensitiveDataNote": "Bir CV, iş deneyiminizin yanı sıra fotoğraf, doğum tarihi, askerlik durumu veya sağlık bilgisi gibi hassas sayılabilecek veriler içerebilir; bu nedenle yükleme öncesinde ayrıca açık rızanızı alıyoruz. Ne yükleyeceğinize siz karar verirsiniz: bu alanların CV'nizde bulunması hizmetin çalışması için gerekli değildir, ve dilediğiniz zaman dosyayı silebilirsiniz.",
       "consent": "Hukuki sebep açık rızanızdır ve bu rıza her yükleme için ayrı ayrı alınır: dosyayı seçmeden önce onay kutusunu işaretlemeniz gerekir, kutu hiçbir zaman önceden işaretli gelmez ve her yüklemeden sonra yeniden boşalır. Rızanızı dosyayı silerek istediğiniz zaman geri çekebilirsiniz; hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir."
+    },
+    "cvScan": {
+      "title": "CV taraması (giriş yapmadan)",
+      "intro": "Herkese açık CV tarama sayfasında bir PDF veya Word dosyası yükleyip, başvuru sistemlerinin ondan ne okuduğunu görebilirsiniz. Bu, yukarıdaki \"Yüklediğiniz CV'ler\" bölümünden ayrı ve farklı bir işlemdir:",
+      "noStorage": "Dosya hiçbir yere kaydedilmez. Sunucuda diske yazılmaz, depolama alanına konmaz; yalnızca isteğin süresi boyunca bellekte bulunur ve yanıt döndükten sonra ortadan kalkar. CV'nizin metni de saklanmaz.",
+      "retained": "Taramadan geriye üç şey kalır: tarama sınırını uygulamak için IP adresiniz (2 saat sonra silinir), isimsiz bir puan (0-100 arası bir sayı; hangi dosyadan geldiği, kimin olduğu kayıtlı değildir) ve bir tarama sayacı.",
+      "noTransfer": "CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez — yapay zekâ servisleri dahil. Puanı tamamen kendi sunucumuzda çalışan, sabit kurallı kontroller üretir; hiçbir dil modeli devreye girmez.",
+      "output": "Sonuç ekranında gördüğünüz alıntılar ve ham metin, yalnızca sizin isteğinize verilen yanıtın içindedir; kayıt altına alınmaz, kayıtlara (log) yazılmaz.",
+      "consent": "Hukuki sebep açık rızanızdır ve her tarama için ayrıca alınır: onay kutusu hiçbir zaman önceden işaretli gelmez ve her taramadan sonra yeniden boşalır. Saklanan bir dosya olmadığı için geri çekilecek bir saklama da yoktur — taramayı yapmamak yeterlidir."
     },
     "feedback": {
       "title": "Gönderdiğiniz geri bildirimler",
@@ -2030,6 +2043,167 @@
       "required": "Bu alan gerekli.",
       "tooMany": "Çok fazla deneme yaptınız. Bir süre sonra tekrar deneyin.",
       "generic": "Cevabın kaydedilemedi. Lütfen tekrar deneyin."
+    }
+  },
+  "cvScan": {
+    "title": "CV'ni makine nasıl okuyor?",
+    "subtitle": "PDF veya Word dosyanı yükle; başvuru sistemlerinin CV'nden ne okuduğunu, nerede takıldığını ve neyi düzeltmen gerektiğini göster. Hesap gerekmiyor, dosya hiçbir yere kaydedilmiyor.",
+    "form": {
+      "choose": "Dosya seç",
+      "dropHint": "PDF veya DOCX · en fazla 5 MB",
+      "dragHint": "Dosyayı buraya sürükle ya da",
+      "selected": "Seçilen dosya",
+      "remove": "Kaldır",
+      "consentLabel": "CV'min bu tarama için işlenmesine izin veriyorum.",
+      "consentDetail": "Dosya diske yazılmıyor; tarama biter bitmez bellekten siliniyor. Ayrıntı için {privacy}.",
+      "consentPrivacyLink": "Gizlilik Politikası",
+      "submit": "CV'mi tara",
+      "submitting": "Taranıyor…",
+      "again": "Başka bir dosya tara"
+    },
+    "retained": {
+      "title": "Bu taramadan geriye ne kalıyor?",
+      "ip": "IP adresin, 2 saat — sadece tarama limitini uygulamak için, sonra siliniyor.",
+      "score": "Puanın, isimsiz — sonuçtaki dağılımı besliyor; dosya, metin veya kimlik bilgisi yok.",
+      "counter": "Tarama sayacı.",
+      "none": "Dosyanın kendisi ve içindeki metin hiçbirinde yok."
+    },
+    "afterScan": {
+      "title": "Taramadan sonra bunları göreceksin",
+      "score": "0-100 arası bir puan ve puanın dört kategoriye nasıl dağıldığı — toplam, alt toplamların toplamı.",
+      "rawText": "CV'nin makine gözüyle hâli: dosyandan çıkan ham metin, senin gördüğün sırayla değil, ayrıştırıcının gördüğü sırayla.",
+      "fixes": "Düzeltme listesi: her bulgu hangi sayfada, hangi satırda ve kaç puana mal oluyor."
+    },
+    "ats": {
+      "title": "ATS nedir, ne değildir?",
+      "what": "ATS (Applicant Tracking System), işverenin başvuruları topladığı yazılımdır. CV'ni metne çevirir, alanlara ayırır ve işe alımcının arayabileceği hâle getirir.",
+      "myth": "\"ATS'ler CV'lerin %75'ini otomatik eler\" cümlesi doğru değil. Bu rakamın kaynağı 2012 tarihli bir satış broşürü; 2025'te işe alımcıların yaklaşık %92'si otomatik ret kuralı kurmadıklarını söylüyor.",
+      "truth": "Gerçek risk eleme değil, kaybolma: ayrıştırıcı deneyimini okuyamazsa CV'n aramalarda çıkmaz, tarihlerin sıraya girmez, iletişim bilgin boş görünür. Bu taramanın ölçtüğü şey tam olarak bu."
+    },
+    "limits": {
+      "title": "Bu araç ne yapamaz",
+      "noJobMatch": "İlanla eşleştirme yapmaz. Anahtar kelime puanı vermez; \"şu ilana %64 uyuyorsun\" demek ölçemediğimiz bir iddia olurdu.",
+      "noAts": "Belirli bir ATS'i taklit etmez. Workday'in mi Taleo'nun mu kullanıldığını bilemeyiz; ölçtüğümüz şey her ayrıştırıcının ortak sorunu olan okunabilirlik.",
+      "noContent": "İçeriğinin iyi olup olmadığını söylemez. Deneyimini nasıl anlattığın bu puanın dışında."
+    },
+    "result": {
+      "scoreLabel": "Makine okunabilirliği puanın",
+      "outOf": "100 üzerinden",
+      "bands": {
+        "good": "CV'n bir ayrıştırıcı için sorunsuz görünüyor.",
+        "fair": "Okunuyor, ama birkaç yerde bilgi kaybediyorsun.",
+        "poor": "Bir ayrıştırıcı CV'nin önemli bir kısmını okuyamıyor."
+      },
+      "deterministic": "Bu puanı yapay zekâ vermiyor: dört kategorinin alt toplamlarını toplayınca puanı elde ediyorsun, aşağıdaki bulguların puan bedelleri de aynı çıkarma işleminin parçası.",
+      "atsNote": "ATS'ler CV'leri otomatik elemez — bu puan \"elenirsin\" demek değil, \"makine şunları okuyamıyor\" demek.",
+      "categoriesTitle": "Puan nereden geliyor",
+      "categoryScore": "{score}/{weight}",
+      "findingsTitle": "Düzeltme listesi",
+      "findingsSummary": "{count} düzeltme, {points} puan",
+      "findingsNone": "Kontrollerin hiçbiri bir sorun bulmadı.",
+      "cost": "-{points} puan",
+      "costNone": "puan bedeli yok",
+      "why": "Neden önemli",
+      "fix": "Nasıl düzeltilir",
+      "evidence": "CV'nde nerede",
+      "evidencePage": "Sayfa {page}",
+      "evidenceDocument": "Belgede",
+      "previewTitle": "Makine CV'ni böyle okuyor",
+      "previewHint": "Aşağıdaki metin dosyandan çıkarıldı. Sıra bozuksa, ayrıştırıcı da CV'ni bu sırayla okuyor.",
+      "previewTruncated": "Metnin tamamı değil, ilk bölümü gösteriliyor.",
+      "documentTitle": "Dosya",
+      "documentPages": "{count} sayfa",
+      "documentPagesUnknown": "Word dosyalarında sayfa sayısı belli değil",
+      "documentWords": "{count} kelime",
+      "ctaTitle": "Sırada ne var?",
+      "ctaRescan": "CV'ni düzelt, tekrar tara — yine hesapsız.",
+      "ctaBenchmark": "Geri dönüş oranın normal mi? Kıyaslama aracına bak.",
+      "ctaBenchmarkLink": "Kıyaslamaya git",
+      "ctaTrack": "Başvurularını tek yerde takip etmek istersen hesap açabilirsin. Buraya kadar olan hiçbir şey için gerekmiyordu.",
+      "ctaRegister": "Hesap aç"
+    },
+    "categories": {
+      "MachineReadability": "Makine okunabilirliği",
+      "SectionsAndDates": "Bölümler ve tarihler",
+      "Contact": "İletişim",
+      "FormatAndLength": "Biçim ve uzunluk"
+    },
+    "findings": {
+      "NoTextLayer": {
+        "title": "Dosyada okunabilir metin yok",
+        "why": "CV'n taranmış bir görüntü ya da metni çizim olarak taşıyan bir dosya. Ayrıştırıcı içinden tek kelime çıkaramaz; adın bile arama sonuçlarına girmez.",
+        "fix": "CV'yi yazdığın programdan (Word, Google Docs, Canva) doğrudan PDF olarak dışa aktar. Yazdırıp taramak ya da ekran görüntüsü almak metni yok ediyor.",
+        "details": {
+          "noText": "Dosyadan yalnızca {wordCount} kelime çıkarılabildi.",
+          "emptyPages": "{count} sayfada hiç metin yok."
+        }
+      },
+      "BrokenTurkishCharacters": {
+        "title": "Türkçe harfler bozuluyor",
+        "why": "Fontun karakterleri isimlendiremiyor ya da Türkçe harfler düşüyor. \"Yazılım Mühendisi\" arayan bir işe alımcı senin CV'ni bulamaz.",
+        "fix": "PDF'i dışa aktarırken fontları gömen bir yol seç (Word'de \"Fontları dosyaya göm\", Google Docs'ta \"PDF olarak indir\") ya da yaygın bir font kullan.",
+        "details": {
+          "unmapped": "{count} karakter okunamıyor.",
+          "stripped": "Metin Türkçe, ama içinde hiç ı, ş, ğ, ç, ö, ü yok — harfler dışa aktarımda ASCII karşılıklarına dönmüş."
+        }
+      },
+      "MultiColumnOrTableLayout": {
+        "title": "Çok sütunlu ya da tablo tabanlı düzen",
+        "why": "İnsan gözü sütunları ayırır, ayrıştırıcı ayırmaz: satırları soldan sağa okur ve iki sütunu birbirine örer. Deneyimin, tarihlerinden kopar.",
+        "fix": "Tek sütuna geç. Yan sütundaki bilgiyi (yetenekler, iletişim) ana akışa taşı; tabloyu düzen aracı olarak kullanma.",
+        "details": {
+          "columns": "Sayfanın %{position} genişliğinde, hiçbir kelimenin geçmediği dikey bir boşluk var — iki sütunun işareti.",
+          "tables": "Belge {count} tablo içeriyor."
+        }
+      },
+      "SectionsOrDatesUnreadable": {
+        "title": "Bölümler ya da tarihler okunmuyor",
+        "why": "Ayrıştırıcı önce başlıkları arar, sonra tarih aralıklarını. Başlık tanınmazsa deneyimin hiçbir alana yazılmaz; tarih aralığı yoksa kronoloji kurulamaz.",
+        "fix": "Bölümleri alışılmış adlarıyla yaz: Deneyim, Eğitim, Yetenekler. Her iş için \"03/2021 - halen\" gibi açık bir tarih aralığı bırak.",
+        "details": {
+          "missingExperience": "Deneyim başlığı bulunamadı.",
+          "missingEducation": "Eğitim başlığı bulunamadı.",
+          "missingSkills": "Yetenekler başlığı bulunamadı.",
+          "noDateRanges": "Hiç tarih aralığı bulunamadı."
+        }
+      },
+      "ContactUnreadable": {
+        "title": "İletişim bilgisi okunmuyor",
+        "why": "Sisteme giren kayıtta e-posta ya da telefon alanı boş kalır. CV insan tarafından beğenilse bile geri dönecek bir adres yoktur.",
+        "fix": "E-posta ve telefonu CV'nin ilk sayfasında, normal metin olarak yaz. Üstbilgi/altbilgiye, resmin içine ya da bir simgenin arkasına koyma.",
+        "details": {
+          "noEmail": "Okunabilir bir e-posta adresi bulunamadı.",
+          "noPhone": "Okunabilir bir telefon numarası bulunamadı.",
+          "onlyInHeaderFooter": "İletişim bilgisi yalnızca üstbilgi/altbilgide — birçok ayrıştırıcı orayı hiç okumaz."
+        }
+      },
+      "LengthOutOfRange": {
+        "title": "Uzunluk",
+        "why": "Uzun CV'lerde ilgili deneyim aşağıda kalır; çok kısa olanda ayrıştırıcının çıkaracak bilgisi olmaz.",
+        "fix": "İki sayfayı hedefle. Eskiyen işleri tek satıra indir, aynı bilgiyi iki yerde tekrarlama.",
+        "details": {
+          "long": "{pageCount} sayfa.",
+          "longEstimated": "Yaklaşık {pageCount} sayfa (Word dosyalarında sayfa sayısı ancak tahmin edilebilir).",
+          "short": "Dosyadan yalnızca {wordCount} kelime çıktı."
+        }
+      },
+      "InconsistentFormatting": {
+        "title": "Çok fazla yazı tipi",
+        "why": "Her yazı tipi, karakter eşlemesini doğru taşıması gereken ayrı bir font programı. Fazlası hem dağınık görünür hem de harflerin bozulma ihtimalini artırır.",
+        "fix": "Bir, en fazla iki yazı tipiyle kal; vurguyu kalın ve büyüklükle yap.",
+        "details": {
+          "fonts": "{families} farklı yazı tipi, {sizes} farklı punto kullanılmış."
+        }
+      }
+    },
+    "errors": {
+      "fileRequired": "Önce bir dosya seç.",
+      "consentRequired": "Devam etmek için onay kutusunu işaretle.",
+      "unsupportedType": "Yalnızca PDF ve DOCX taranabiliyor.",
+      "legacyDoc": "Eski .doc biçimi okunamıyor. Word'de açıp PDF ya da .docx olarak kaydet.",
+      "tooLarge": "Dosya 5 MB sınırını aşıyor.",
+      "tooMany": "Çok fazla tarama yaptın. Biraz bekleyip tekrar dene.",
+      "generic": "Tarama tamamlanamadı. Biraz sonra tekrar dene."
     }
   },
   "pair": {

@@ -26,6 +26,9 @@ const NO_AUTH_ENDPOINTS = [
   // The public benchmark is answerable without an account and its answers are anonymous by
   // design — attaching a signed-in visitor's token would make one of them attributable.
   "/api/benchmark",
+  // Same reasoning as the benchmark: the CV scan is answerable without an account and the score it
+  // stores is anonymous. A signed-in visitor's token arriving here would tie a scan to a person.
+  "/api/cv-scan",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
 ];

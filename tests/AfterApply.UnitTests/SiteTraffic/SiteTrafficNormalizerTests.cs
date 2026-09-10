@@ -46,6 +46,24 @@ public class SiteTrafficNormalizerTests
         result.Path.ShouldNotContain("secret");
     }
 
+    /// <summary>
+    /// The CV scan's own funnel: the page, then the event that says a scan actually finished. The
+    /// second is what separates "people arrive" from "people get an answer", which is the whole
+    /// measurement the surface is judged on (DEVELOPMENT_PLAN.md, V6).
+    /// </summary>
+    [Fact]
+    public void The_Cv_Scan_Page_And_Its_Completion_Are_Countable()
+    {
+        var view = SiteTrafficNormalizer.Normalize("page_view", "/tr/cv-tarama", null);
+        view.ShouldNotBeNull();
+        view.Path.ShouldBe("/cv-tarama");
+
+        var completed = SiteTrafficNormalizer.Normalize("cv_scan_completed", "/en/cv-tarama", null);
+        completed.ShouldNotBeNull();
+        completed.Event.ShouldBe(SiteTrafficEvent.CvScanCompleted);
+        completed.Locale.ShouldBe("en");
+    }
+
     [Fact]
     public void The_Oauth_Callback_Is_Not_Countable_At_All()
     {
@@ -129,7 +147,8 @@ public class SiteTrafficNormalizerTests
     {
         // A member added to the enum but not to the normaliser's map would be unreportable — dead
         // storage that nothing could ever write.
-        string[] wireNames = ["page_view", "cta_get_started", "register_started", "register_completed"];
+        string[] wireNames =
+            ["page_view", "cta_get_started", "cv_scan_completed", "register_started", "register_completed"];
 
         var reachable = wireNames
             .Select(name => SiteTrafficNormalizer.Normalize(name, "/tr", null)!.Event)

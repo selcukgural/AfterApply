@@ -87,6 +87,10 @@
         "title": "Reply Rate Benchmark",
         "description": "How many applications did you send, and how many came back? See your own reply rate against the median in your field. No sign-up needed."
       },
+      "cvScan": {
+        "title": "CV Scan — how a machine reads your CV",
+        "description": "Upload your CV and see what an applicant tracking system reads from it. A machine-readability score, the raw text and a fix list. No sign-up, nothing stored."
+      },
       "pair": {
         "title": "Connect the Extension",
         "description": "Connect your browser extension to your e-kariyerim account with a single confirmation."
@@ -758,7 +762,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 8 September 2026",
+    "lastUpdated": "Last updated: 10 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -871,6 +875,15 @@
       "deletion": "A CV you delete is deleted permanently — the storage-side recovery window is deliberately turned off. Deleting your account deletes all of your CVs with it.",
       "sensitiveDataNote": "A CV can carry more than your work history — a photo, a date of birth, or health or military-service information — which is why we ask for your explicit consent before each upload. What goes into it is your decision: none of those fields are needed for the service to work, and you can delete the file at any time.",
       "consent": "The lawful basis is your explicit consent, and it is taken separately for every upload: you tick the consent box before choosing a file, the box is never pre-ticked, and it clears again after each upload. You can withdraw consent at any time by deleting the file, and deleting your account deletes all of your CVs with it."
+    },
+    "cvScan": {
+      "title": "CV scan (without signing in)",
+      "intro": "On the public CV scan page you can upload a PDF or Word file and see what an applicant tracking system reads from it. This is separate from, and different to, \"CVs you upload\" above:",
+      "noStorage": "The file is not stored anywhere. It is never written to disk on the server and never placed in storage; it exists in memory for the length of the request and is gone once the response is sent. The text of your CV is not kept either.",
+      "retained": "Three things survive a scan: your IP address, to enforce the scan limit (deleted after 2 hours), an anonymous score (a number from 0 to 100, with no record of which file it came from or whose it was), and a scan counter.",
+      "noTransfer": "The contents of your CV are not sent to any third party — AI services included. The score is produced entirely by fixed-rule checks running on our own server; no language model is involved.",
+      "output": "The excerpts and the raw text you see on the result screen exist only inside the response to your own request; they are not recorded and never written to logs.",
+      "consent": "The legal basis is your explicit consent, taken separately for every scan: the consent box is never pre-ticked and is cleared again after each scan. Since nothing is stored, there is no retention to withdraw — not running the scan is enough."
     },
     "feedback": {
       "title": "Feedback you send",
@@ -2030,6 +2043,167 @@
       "required": "This field is required.",
       "tooMany": "Too many attempts. Please try again later.",
       "generic": "Your answer could not be saved. Please try again."
+    }
+  },
+  "cvScan": {
+    "title": "How does a machine read your CV?",
+    "subtitle": "Upload your PDF or Word file and see what an applicant tracking system reads from it, where it gets stuck, and what to fix. No account, and the file is never stored.",
+    "form": {
+      "choose": "Choose a file",
+      "dropHint": "PDF or DOCX · 5 MB max",
+      "dragHint": "Drop your file here, or",
+      "selected": "Selected file",
+      "remove": "Remove",
+      "consentLabel": "I consent to my CV being processed for this scan.",
+      "consentDetail": "The file is never written to disk; it is dropped from memory as soon as the scan finishes. See the {privacy} for detail.",
+      "consentPrivacyLink": "Privacy Policy",
+      "submit": "Scan my CV",
+      "submitting": "Scanning…",
+      "again": "Scan another file"
+    },
+    "retained": {
+      "title": "What this scan leaves behind",
+      "ip": "Your IP address, for 2 hours — only to enforce the scan limit, then deleted.",
+      "score": "Your score, anonymously — it feeds the distribution shown in results; no file, no text, no identifier.",
+      "counter": "A scan counter.",
+      "none": "The file itself and the text inside it are in none of them."
+    },
+    "afterScan": {
+      "title": "What you get after the scan",
+      "score": "A score out of 100 and how it splits across four categories — the total is the sum of the subtotals.",
+      "rawText": "Your CV as a machine sees it: the raw text pulled out of the file, in the order a parser reads it rather than the order you laid out.",
+      "fixes": "A fix list: which page and which line each finding is on, and how many points it costs."
+    },
+    "ats": {
+      "title": "What an ATS is, and is not",
+      "what": "An ATS (Applicant Tracking System) is the software an employer collects applications in. It turns your CV into text, splits it into fields and makes it searchable by a recruiter.",
+      "myth": "\"ATS software auto-rejects 75% of CVs\" is not true. That figure traces back to a 2012 sales brochure; in a 2025 survey around 92% of recruiters said they set no automatic rejection rules at all.",
+      "truth": "The real risk is not rejection, it is disappearing: if the parser cannot read your experience, your CV never comes back in a search, your dates never sort, your contact field looks empty. That is exactly what this scan measures."
+    },
+    "limits": {
+      "title": "What this tool cannot do",
+      "noJobMatch": "It does not match you against a job ad. No keyword score — \"you are a 64% fit\" would be a claim we cannot measure.",
+      "noAts": "It does not imitate one specific ATS. We cannot know whether Workday or Taleo is behind a posting; what we measure is the readability problem all parsers share.",
+      "noContent": "It does not judge your content. How well you describe your experience sits outside this score."
+    },
+    "result": {
+      "scoreLabel": "Your machine-readability score",
+      "outOf": "out of 100",
+      "bands": {
+        "good": "Your CV looks fine to a parser.",
+        "fair": "It is readable, but you are losing information in a few places.",
+        "poor": "A parser cannot read a significant part of your CV."
+      },
+      "deterministic": "No AI produced this number: add up the four category subtotals and you get the score, and the point costs of the findings below are the other half of the same subtraction.",
+      "atsNote": "ATS software does not auto-reject CVs — this score does not say \"you will be rejected\", it says \"a machine cannot read this\".",
+      "categoriesTitle": "Where the score comes from",
+      "categoryScore": "{score}/{weight}",
+      "findingsTitle": "Fix list",
+      "findingsSummary": "{count} fixes, {points} points",
+      "findingsNone": "None of the checks found a problem.",
+      "cost": "-{points} points",
+      "costNone": "no point cost",
+      "why": "Why it matters",
+      "fix": "How to fix it",
+      "evidence": "Where in your CV",
+      "evidencePage": "Page {page}",
+      "evidenceDocument": "In the document",
+      "previewTitle": "This is how a machine reads your CV",
+      "previewHint": "The text below was pulled out of your file. If the order looks scrambled, that is the order a parser reads it in.",
+      "previewTruncated": "Showing the beginning of the text, not all of it.",
+      "documentTitle": "File",
+      "documentPages": "{count} pages",
+      "documentPagesUnknown": "Word files have no page count of their own",
+      "documentWords": "{count} words",
+      "ctaTitle": "What next?",
+      "ctaRescan": "Fix your CV and scan it again — still no account.",
+      "ctaBenchmark": "Is your reply rate normal? Try the benchmark.",
+      "ctaBenchmarkLink": "Go to the benchmark",
+      "ctaTrack": "If you want your applications tracked in one place, you can open an account. Nothing up to this point needed one.",
+      "ctaRegister": "Create an account"
+    },
+    "categories": {
+      "MachineReadability": "Machine readability",
+      "SectionsAndDates": "Sections and dates",
+      "Contact": "Contact details",
+      "FormatAndLength": "Format and length"
+    },
+    "findings": {
+      "NoTextLayer": {
+        "title": "There is no readable text in the file",
+        "why": "Your CV is a scanned image, or a file that carries its text as drawing. A parser cannot pull a single word out of it — not even your name reaches a search.",
+        "fix": "Export straight to PDF from the program you wrote it in (Word, Google Docs, Canva). Printing and scanning it, or screenshotting it, destroys the text.",
+        "details": {
+          "noText": "Only {wordCount} words could be extracted from the file.",
+          "emptyPages": "{count} pages carry no text at all."
+        }
+      },
+      "BrokenTurkishCharacters": {
+        "title": "Turkish letters are being broken",
+        "why": "The font cannot name its characters, or the Turkish letters are dropped on the way out. A recruiter searching for \"Yazılım Mühendisi\" will not find your CV.",
+        "fix": "Export the PDF in a way that embeds fonts (Word's \"Embed fonts in the file\", Google Docs' \"Download as PDF\"), or use a common typeface.",
+        "details": {
+          "unmapped": "{count} characters cannot be read.",
+          "stripped": "The text is Turkish but contains no ı, ş, ğ, ç, ö or ü at all — the letters were flattened to ASCII on export."
+        }
+      },
+      "MultiColumnOrTableLayout": {
+        "title": "Two-column or table-based layout",
+        "why": "A person's eye separates columns; a parser does not. It reads across the line and braids the two columns together, cutting your experience away from its dates.",
+        "fix": "Move to a single column. Bring the sidebar content (skills, contact details) into the main flow, and stop using tables as a layout tool.",
+        "details": {
+          "columns": "A vertical band at {position}% of the page width that no word crosses — the signature of two columns.",
+          "tables": "The document contains {count} tables."
+        }
+      },
+      "SectionsOrDatesUnreadable": {
+        "title": "Sections or dates cannot be read",
+        "why": "A parser looks for headings first and date ranges second. An unrecognised heading means your experience lands in no field at all; without a range there is no timeline to sort.",
+        "fix": "Name your sections the ordinary way: Experience, Education, Skills. Give every role a plain range like \"03/2021 - present\".",
+        "details": {
+          "missingExperience": "No experience heading found.",
+          "missingEducation": "No education heading found.",
+          "missingSkills": "No skills heading found.",
+          "noDateRanges": "No date range found anywhere."
+        }
+      },
+      "ContactUnreadable": {
+        "title": "Contact details cannot be read",
+        "why": "The record created in the system has an empty e-mail or phone field. Even a CV a person liked has no address to reply to.",
+        "fix": "Put your e-mail and phone number on the first page as ordinary text — not in a header or footer, not inside an image, not behind an icon.",
+        "details": {
+          "noEmail": "No readable e-mail address found.",
+          "noPhone": "No readable phone number found.",
+          "onlyInHeaderFooter": "Contact details are only in the header or footer — many parsers never look there."
+        }
+      },
+      "LengthOutOfRange": {
+        "title": "Length",
+        "why": "In a long CV the relevant experience sits far down the file; in a very short one there is nothing for a parser to extract.",
+        "fix": "Aim for two pages. Cut older roles down to a line, and stop repeating the same information in two places.",
+        "details": {
+          "long": "{pageCount} pages.",
+          "longEstimated": "Around {pageCount} pages (a Word file's page count can only be estimated).",
+          "short": "Only {wordCount} words came out of the file."
+        }
+      },
+      "InconsistentFormatting": {
+        "title": "Too many typefaces",
+        "why": "Every typeface is another font program that has to carry a correct character map. More of them looks noisy and raises the chance of letters breaking.",
+        "fix": "Stay with one typeface, two at most, and carry emphasis with weight and size instead.",
+        "details": {
+          "fonts": "{families} typefaces and {sizes} font sizes are in use."
+        }
+      }
+    },
+    "errors": {
+      "fileRequired": "Choose a file first.",
+      "consentRequired": "Tick the consent box to continue.",
+      "unsupportedType": "Only PDF and DOCX files can be scanned.",
+      "legacyDoc": "The old .doc format cannot be read. Open it in Word and save it as PDF or .docx.",
+      "tooLarge": "The file exceeds the 5 MB limit.",
+      "tooMany": "That is a lot of scans. Wait a little and try again.",
+      "generic": "The scan could not be completed. Try again in a moment."
     }
   },
   "pair": {

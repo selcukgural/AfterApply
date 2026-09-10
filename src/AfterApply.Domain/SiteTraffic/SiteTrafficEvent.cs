@@ -19,6 +19,11 @@ public enum SiteTrafficEvent
     /// <summary>The registration form was submitted.</summary>
     RegisterStarted,
 
+    /// <summary>A CV scan finished and a score was shown. The step the V6 funnel turns on: a page
+    /// view says someone arrived, this says they got the thing the page promised — and the gap
+    /// between the two is where an upload that never completes would hide.</summary>
+    CvScanCompleted,
+
     /// <summary>Registration came back successful. Together with RegisterStarted this separates
     /// "nobody tries" from "people try and the form rejects them" — two very different problems
     /// that a single conversion number hides.</summary>

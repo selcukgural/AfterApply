@@ -929,7 +929,7 @@ kullanıcı beklemek zorunda değil — sorarak da üretilebilir. Sıra
 > kimsenin tarayıcısında yok. V3'ün huni etkisi ancak inceleme geçtikten sonra ölçülebilir —
 > ilk trafik sayıları hâlâ altı adımlı eşleştirmenin sayılarıdır.
 
-### Sıra 5 — V6: Girişsiz CV taraması ("CV'ni makine nasıl okuyor?") (2026-09-09)
+### Sıra 5 — V6: Girişsiz CV taraması ("CV'ni makine nasıl okuyor?") — A katmanı ✅ (2026-09-10)
 
 > **Not:** V4 ve V5'in önüne alındı, numaraları değişmedi. Sıra artık
 > V0 → V1 → V2 → V3 → **V6** → V4 → V5. Gerekçe: V2 (benchmark) bir yabancıdan
@@ -950,6 +950,16 @@ kullanıcı beklemek zorunda değil — sorarak da üretilebilir. Sıra
 "AI Job Matching (Sprint 8) ürün kapsamından tamamen kaldırıldı"). Bu madde onu
 bilerek geri açıyor, ama **aynı akışı değil**: girişli bir iç özellik değil,
 girişsiz bir edinim yüzeyi; ve **saklamasız** — dosya diske hiç yazılmıyor.
+
+> **Durum (2026-09-10):** **A katmanı uçtan uca yayına hazır** — `PdfPig`/`OpenXml` ile metin
+> çıkarma, yedi deterministik kontrol, puanlama, anonim `POST /api/cv-scan` (IP limiti + honeypot
+> + minimum form süresi + `CvScan:Enabled` bayrağı), `/cv-tarama` sayfası (TR+EN) ve sonuç ekranı,
+> `/privacy#cv-scan` + `PRIVACY_CHECKLIST.md`, `cv_scan_completed` ölçüm yolu. Testler: 32 birim
+> (kontroller + puan aritmetiği), 18 web birim, 15 entegrasyon (gerçek PDF/DOCX fixture'ları,
+> bayrak kapalıyken 404, rate limit, geriye ne satır ne dosya kalmadığı). **B katmanı bu partide
+> yok:** `CvScan:LlmEnabled` bayrağı duruyor ama hiçbir yerde okunmuyor — sağlayıcı seçimi ve
+> eval'i ayrı bir iş, ve A tek başına sayfanın vaadini karşılıyor. Kararların tamamı
+> `DECISIONS.md` 2026-09-10.
 
 #### Üç katman
 

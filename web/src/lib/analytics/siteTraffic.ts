@@ -24,6 +24,7 @@ import { API_BASE_URL } from "@/lib/api/httpClient";
 export type SiteTrafficEvent =
   | "page_view"
   | "cta_get_started"
+  | "cv_scan_completed"
   | "register_started"
   | "register_completed";
 

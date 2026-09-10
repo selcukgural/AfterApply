@@ -791,3 +791,62 @@ export interface BulkCountMismatchProblem {
   expectedCount: number;
   actualCount: number;
 }
+
+/** The four things the CV scan's score is made of. Their weights come from the response rather
+ *  than being repeated here, so the page can never disagree with the server about them. */
+export type CvScanCategory = "MachineReadability" | "SectionsAndDates" | "Contact" | "FormatAndLength";
+
+/** Every problem the scan can report. Closed, because the page carries a title, an explanation and
+ *  a fix for each one in both languages — a code with no copy behind it would render as a blank
+ *  accusation. */
+export type CvScanFindingCode =
+  | "NoTextLayer"
+  | "BrokenTurkishCharacters"
+  | "MultiColumnOrTableLayout"
+  | "SectionsOrDatesUnreadable"
+  | "ContactUnreadable"
+  | "LengthOutOfRange"
+  | "InconsistentFormatting";
+
+/** Where the finding can be seen in the reader's own file. At least one of the two is always
+ *  present — a finding that can point at nothing is dropped server-side. */
+export interface CvScanEvidence {
+  page: number | null;
+  quote: string | null;
+}
+
+/** `pointCost` is what the finding actually cost, so a fix list adds up to exactly the points the
+ *  score is missing. `metrics` are the raw numbers behind it, named rather than pre-rendered, so
+ *  the sentence can be written in the reader's language. */
+export interface CvScanFinding {
+  code: CvScanFindingCode;
+  category: CvScanCategory;
+  pointCost: number;
+  evidence: CvScanEvidence[];
+  metrics: Record<string, number>;
+}
+
+export interface CvScanCategoryScore {
+  category: CvScanCategory;
+  weight: number;
+  score: number;
+}
+
+/** `pageCount` is null for .docx, which has no pagination until something renders it. */
+export interface CvScanDocumentSummary {
+  format: CvFileFormat;
+  pageCount: number | null;
+  wordCount: number;
+}
+
+/** One scan. `score` is always the sum of `categories`, and no model contributes to it.
+ *  `extractedTextPreview` is the CV as a machine reads it — the part of this page that does the
+ *  arguing. */
+export interface CvScanResponse {
+  score: number;
+  categories: CvScanCategoryScore[];
+  findings: CvScanFinding[];
+  document: CvScanDocumentSummary;
+  extractedTextPreview: string;
+  extractedTextTruncated: boolean;
+}

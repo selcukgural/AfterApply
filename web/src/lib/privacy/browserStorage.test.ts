@@ -158,12 +158,15 @@ describe("no tracking", () => {
 describe("visit counter", () => {
   const TRACKER = "lib/analytics/siteTraffic.ts";
 
-  // Every file allowed to report a visit. All three are public-side; the reporter component is
+  // Every file allowed to report a visit. All of them are public-side; the reporter component is
   // mounted in the (public) layout, which is what keeps signed-in pages out structurally rather
   // than by a second copy of the API's route allowlist.
   const CALLERS = [
     "app/[locale]/(public)/register/page.tsx",
     "components/analytics/SiteTrafficReporter.tsx",
+    // The CV scan reports one event of its own — that a scan finished. It carries no more than any
+    // other event does (a name and a path), and the file it just read is not part of it.
+    "components/cvScan/CvScanForm.tsx",
     "components/landing/CtaButtons.tsx",
   ];
 
