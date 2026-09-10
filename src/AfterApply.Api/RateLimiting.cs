@@ -139,6 +139,22 @@ public static class RateLimiting
                 });
             });
 
+            // IP-based and anonymous, like the benchmark policy above and for the same reason: the
+            // scan is answerable without an account, and partitioning a signed-in visitor by user
+            // id would attach a CV scan to a person, which is precisely what this surface does not
+            // do. The bucket is the tightest of the anonymous ones because a scan costs a parser
+            // run — see RateLimitingOptions.CvScan.
+            options.AddPolicy(DependencyInjection.CvScanRateLimitPolicy, httpContext =>
+            {
+                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.CvScan.PermitLimit,
+                    Window = sizes.CvScan.Window,
+                    QueueLimit = 0
+                });
+            });
+
             // User-based. Free-text that a human writes and, when the GitHub mirror is on, that
             // leaves our infrastructure — so it is bounded far tighter than the global backstop,
             // which would happily let one account file three hundred issues a minute.

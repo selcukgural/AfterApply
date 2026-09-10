@@ -46,6 +46,15 @@ public sealed class RateLimitingOptions
     /// Policy denies the site carries.</summary>
     public FixedWindowPolicy Benchmark { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
 
+    /// <summary>Per IP, anonymous — the CV scan. The tightest anonymous bucket in the app, and
+    /// deliberately: every call reads a file with a parser, which is the most expensive thing an
+    /// unauthenticated stranger can ask this API to do. Five in two hours covers the honest
+    /// sequence the page is built around — scan, fix the CV, scan again — and leaves room for a
+    /// second file, while putting a script that wants to fingerprint the checks on a very short
+    /// leash. Same defence as the benchmark form's, for the same reason: a CAPTCHA is a
+    /// third-party script the CSP forbids.</summary>
+    public FixedWindowPolicy CvScan { get; init; } = new() { PermitLimit = 5, WindowSeconds = 7200 };
+
     /// <summary>Per IP, anonymous — starting an extension pairing. Tight, because one person
     /// connecting one browser needs one of these and a retry or two; what it bounds is a script
     /// filling the table with codes waiting for someone to confirm one by mistake.</summary>

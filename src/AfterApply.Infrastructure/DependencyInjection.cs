@@ -12,6 +12,8 @@ using AfterApply.Application.Imports;
 using AfterApply.Application.Mailing;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Benchmark;
+using AfterApply.Application.CvScan;
+using AfterApply.Application.CvScan.Contracts;
 using AfterApply.Application.SiteTraffic;
 using AfterApply.Application.Notifications;
 using AfterApply.Application.Feedback;
@@ -28,6 +30,7 @@ using AfterApply.Infrastructure.Imports;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Benchmark;
+using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.SiteTraffic;
 using AfterApply.Infrastructure.OpenAi;
 using AfterApply.Infrastructure.Notifications;
@@ -61,6 +64,7 @@ public static class DependencyInjection
     public const string FeedbackRateLimitPolicy = "feedback";
     public const string SiteTrafficRateLimitPolicy = "site-traffic";
     public const string BenchmarkRateLimitPolicy = "benchmark";
+    public const string CvScanRateLimitPolicy = "cv-scan";
     public const string ExtensionPairingStartRateLimitPolicy = "extension-pairing-start";
     public const string ExtensionPairingPollRateLimitPolicy = "extension-pairing-poll";
 
@@ -97,6 +101,7 @@ public static class DependencyInjection
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<ProductMetricsOptions>(configuration.GetSection(ProductMetricsOptions.SectionName));
         services.Configure<BenchmarkOptions>(configuration.GetSection(BenchmarkOptions.SectionName));
+        services.Configure<CvScanOptions>(configuration.GetSection(CvScanOptions.SectionName));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
         services.Configure<EmailAutoApprovalOptions>(configuration.GetSection("EmailAutoApproval"));
         services.Configure<JobBoardDomainsOptions>(configuration.GetSection("JobBoardDomains"));
@@ -423,6 +428,8 @@ public static class DependencyInjection
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
         services.AddScoped<ISiteTrafficService, SiteTrafficService>();
         services.AddScoped<IBenchmarkService, BenchmarkService>();
+        services.AddScoped<ICvScanService, CvScanService>();
+        services.AddScoped<ICvTextExtractor, CvTextExtractor>();
         services.AddScoped<IAdminAccessService, AdminAccessService>();
         services.AddScoped<IAutoApprovalCalibrationService, AutoApprovalCalibrationService>();
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();

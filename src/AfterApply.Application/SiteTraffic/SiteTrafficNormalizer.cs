@@ -50,6 +50,7 @@ public static class SiteTrafficNormalizer
         {
             ["page_view"] = SiteTrafficEvent.PageView,
             ["cta_get_started"] = SiteTrafficEvent.CtaGetStarted,
+            ["cv_scan_completed"] = SiteTrafficEvent.CvScanCompleted,
             ["register_started"] = SiteTrafficEvent.RegisterStarted,
             ["register_completed"] = SiteTrafficEvent.RegisterCompleted
         };
@@ -70,6 +71,7 @@ public static class SiteTrafficNormalizer
         "/guide",
         "/help",
         "/benchmark",
+        "/cv-tarama",
         "/privacy",
         "/cookies",
         "/extension-privacy",

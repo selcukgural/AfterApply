@@ -152,6 +152,7 @@ app.MapCompanyEndpoints();
 app.MapFeedbackEndpoints();
 app.MapSiteTrafficEndpoints();
 app.MapBenchmarkEndpoints();
+app.MapCvScanEndpoints();
 app.MapAdminEndpoints();
 app.MapHub<ImportProgressHub>("/hubs/import-progress");
 
