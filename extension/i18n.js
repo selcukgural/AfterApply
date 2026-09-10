@@ -7,6 +7,7 @@ const STRINGS = {
   en: {
     language: "Language",
     versionLabel: "Version {version}",
+    privacyLink: "Privacy policy",
     popup: {
       pageTitle: "e-kariyerim",
       noJob: "Open a LinkedIn job posting (a /jobs/view/ page, or a job selected in search results) or a kariyer.net job posting (an /is-ilani/ page) to track it here.",
@@ -62,6 +63,7 @@ const STRINGS = {
   tr: {
     language: "Dil",
     versionLabel: "Sürüm {version}",
+    privacyLink: "Gizlilik politikası",
     popup: {
       pageTitle: "e-kariyerim",
       noJob: "Buradan takip etmek için bir LinkedIn ilanı (bir /jobs/view/ sayfası ya da arama sonuçlarında seçili bir ilan) veya bir kariyer.net ilanı (bir /is-ilani/ sayfası) açın.",

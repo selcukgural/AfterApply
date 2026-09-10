@@ -68,12 +68,19 @@ updates. For LinkedIn, a `<title>`-based fallback (job page titles are typically
 
 ## Known limitation: `host_permissions` must list the API origin
 
-`manifest.json`'s `host_permissions` currently covers `linkedin.com`, `kariyer.net`, and
-`http://localhost/*` (any local port). If you point the extension's Settings → API base URL at a
-non-localhost API (a real deployment), add that origin to `host_permissions` too — a Manifest V3
-extension page's `fetch()` is only exempt from CORS for origins explicitly listed there; an
-unlisted origin gets blocked the same as an ordinary web page's cross-origin fetch would be (found
-via manual testing — see DECISIONS.md Sprint 9).
+`manifest.json`'s `host_permissions` lists `linkedin.com`, `kariyer.net`, `mail.google.com` and the
+two API origins (`api.ekariyerim.com` and the Cloud Run URL). If you point the extension's
+Settings → API base URL at anything else — a local API at `http://localhost:5151`, say — add that
+origin to `host_permissions` too, or every call fails: a Manifest V3 **extension page or service
+worker**'s `fetch()` is exempt from CORS only for origins explicitly listed there, and an unlisted
+origin is blocked exactly like an ordinary web page's cross-origin fetch (found via manual testing
+— see DECISIONS.md Sprint 9). Keep such a local-only entry out of what you upload to the store.
+
+A **content script** is a stricter case still, and the reason `background.js` exists: its `fetch()`
+runs on behalf of the page it was injected into, so it is subject to *that page's* CORS and
+`host_permissions` does not exempt it at all ("Cross-origin requests are always treated as such in
+content scripts, even if the extension has host permissions"). Every API call a content script
+needs therefore goes through the service worker — never straight out of the content script.
 
 ## Gmail Scanning
 
@@ -89,14 +96,18 @@ Once enabled, it reads only the currently-open/expanded thread (`span[email]` fo
 Gmail threads, see the plan this shipped under), scores it locally with `afterApplyScoreSignal` (a
 JS mirror of the backend's `RecruitmentSignalAnalyzer.Analyze` shape — weighted phrase-category
 hits, capped, plus known-domain/link-domain bonuses), and only for a thread scoring above the
-fetched threshold does it POST the extracted signal (never the raw email) to
-`POST /api/email-forwarding/extension-signal`. `local-filter-config.js` fetches and caches the
-scoring vocabulary from `GET /api/email-forwarding/local-filter-config` (ETag-revalidated, so
-tuning weights/phrases/domains only needs an `appsettings.json` edit + backend redeploy, never a
+fetched threshold does it ask `background.js` to POST the extracted signal (never the raw email) to
+`POST /api/email-forwarding/extension-signal`. `local-filter-config.js` caches the scoring
+vocabulary the worker fetches from `GET /api/email-forwarding/local-filter-config` (ETag-revalidated,
+so tuning weights/phrases/domains only needs an `appsettings.json` edit + backend redeploy, never a
 new extension release) with a small bundled fallback for first-run/offline. Both files are plain
-scripts, not ES modules — Chrome MV3 content scripts have no `import`/`export` support, so they
-duplicate the small bit of `chrome.storage.local` logic they need rather than importing
-`storage.js`.
+scripts, not ES modules — Chrome MV3 content scripts have no `import`/`export` support.
+
+Neither of them makes a network request itself, and neither reads the access token: both go through
+`background.js`, which owns the token and answers only a fixed two-route allow-list. That indirection
+is not a style choice — a content script's own `fetch()` to the API is blocked by the page's CORS
+before it leaves the browser (see the `host_permissions` limitation above). Between 0.5.0 and 0.7.0
+it was one, and Gmail Scanning silently produced nothing at all in those builds; fixed in 0.8.0.
 
 This is now the extension's only email-signal intake path — see
 `EmailForwardingService.ProcessExtensionSignalAsync` (backend route namespace stays

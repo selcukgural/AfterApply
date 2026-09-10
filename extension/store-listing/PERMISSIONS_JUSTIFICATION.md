@@ -64,6 +64,21 @@ it locally in the browser against a small keyword/domain table, and only if that
 suggests the email is job-application-related does it send an extracted summary (sender, subject,
 and a capped snippet — never the full email body) to the user's own e-kariyerim account. An email
 that doesn't look job-related, or any email while the setting is off, never leaves the browser.
+The script does not make that request itself and never holds the user's access token: it hands the
+extracted summary to the extension's own background service worker, which is what contacts the
+account. Nothing about the destination or the data changes; it is the same request from a different
+part of the same extension.
+```
+
+**background — the extension's service worker (`background.js`)**
+```
+Makes the requests to the user's own e-kariyerim account on behalf of the Gmail script described
+above, and holds the access token so that script never has to. It has no schedule, no alarm and no
+page: it wakes only to answer a request from that script, contacts a fixed two-address allow-list
+on the user's own account (submit an extracted email summary; fetch the non-personal keyword table
+used for local scoring) and goes back to sleep. It reads nothing from any page and adds no new data
+of any kind. (Chrome's Dashboard does not ask for a justification for `background` itself — this is
+here so the reviewer reading the manifest can see what it is for.)
 ```
 
 **host_permissions — the e-kariyerim API origins (https://api.ekariyerim.com/*, the Cloud Run
@@ -74,10 +89,10 @@ description, and — when the posting showed one and the user left it in the pop
 name and LinkedIn profile URL as the application's contact) to the user's own e-kariyerim account
 at this origin, authenticated with their personal access token, and looks up existing company names
 for the autocomplete field. The same
-origin is also used — only when Gmail Scanning is turned on — by gmail-scan.js to submit an
-extracted email summary for a message that scored as job-related, and by local-filter-config.js to
-fetch the (non-personal) keyword/domain table that scoring uses, so it can be tuned without a new
-extension release. The same origin also serves the connection handshake: when the user presses
+origin is also used — only when Gmail Scanning is turned on — by the extension's background service
+worker, on the Gmail script's behalf, to submit an extracted email summary for a message that scored
+as job-related and to fetch the (non-personal) keyword/domain table that scoring uses, so it can be
+tuned without a new extension release. The same origin also serves the connection handshake: when the user presses
 Connect, the extension asks this origin for a short pairing code, opens the account's confirmation
 page in a tab, and asks (with a random secret only this extension holds) whether the user has
 confirmed it — no personal data is sent in either request, and the access token is the answer to
