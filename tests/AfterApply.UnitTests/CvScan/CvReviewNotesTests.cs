@@ -71,6 +71,25 @@ public class CvReviewNotesTests
         notes.ShouldHaveSingleItem();
     }
 
+    /// <summary>
+    /// One line, one note — even when the two notes are of different kinds. The eval found the
+    /// model doing exactly this: the same bullet came back as both a repeated verb and an
+    /// unquantified claim, which is two ways of telling someone to rewrite one sentence. The first
+    /// one survives, because the model is asked to report the more important problem first.
+    /// </summary>
+    [Fact]
+    public void One_Line_Gets_One_Note_Even_Under_Two_Different_Kinds()
+    {
+        var notes = CvReviewNotes.Sanitize(
+        [
+            Note("Improved performance", "The verb repeats.", CvContentNoteKind.RepeatedVerb),
+            Note("Improved performance", "There is no number in it.", CvContentNoteKind.UnquantifiedAchievement)
+        ], Cv);
+
+        var note = notes.ShouldHaveSingleItem();
+        note.Kind.ShouldBe(CvContentNoteKind.RepeatedVerb);
+    }
+
     /// <summary>A model asked for problems will always find more of them; the page shows a fix
     /// list, not an indictment.</summary>
     [Fact]
