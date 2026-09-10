@@ -312,6 +312,18 @@ function BenchmarkResult({ result, onReset }: { result: BenchmarkResultResponse;
       <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-900/40">
         <p className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("cta.title")}</p>
         <p className="text-sm text-gray-600 dark:text-gray-400">{t("cta.body")}</p>
+
+        {/* The reciprocal of the link the scan's own result already carries. It comes before the
+            account CTA because it asks for less: both pages put the free thing first and the
+            sign-up last, and a reader who just got one number is the likeliest person to want the
+            other. */}
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {t("cta.cvScan")}{" "}
+          <Link href="/cv-tarama" className="text-blue-600 underline underline-offset-2 dark:text-blue-400">
+            {t("cta.cvScanLink")}
+          </Link>
+        </p>
+
         <Link href="/register" className={buttonClassName("primary", "self-start px-5 py-2.5")}>
           {t("cta.button")}
         </Link>
