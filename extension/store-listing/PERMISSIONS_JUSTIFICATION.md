@@ -70,17 +70,6 @@ account. Nothing about the destination or the data changes; it is the same reque
 part of the same extension.
 ```
 
-**background — the extension's service worker (`background.js`)**
-```
-Makes the requests to the user's own e-kariyerim account on behalf of the Gmail script described
-above, and holds the access token so that script never has to. It has no schedule, no alarm and no
-page: it wakes only to answer a request from that script, contacts a fixed two-address allow-list
-on the user's own account (submit an extracted email summary; fetch the non-personal keyword table
-used for local scoring) and goes back to sleep. It reads nothing from any page and adds no new data
-of any kind. (Chrome's Dashboard does not ask for a justification for `background` itself — this is
-here so the reviewer reading the manifest can see what it is for.)
-```
-
 **host_permissions — the e-kariyerim API origins (https://api.ekariyerim.com/*, the Cloud Run
 origin)**
 ```
@@ -99,6 +88,29 @@ confirmed it — no personal data is sent in either request, and the access toke
 the last one. All of it is still just the user's own account, same token. No other network
 destination is contacted.
 ```
+
+## `background` has no field — do not go looking for one
+
+The Dashboard asks for a justification per **permission**: the entries under `permissions` and
+`host_permissions`, and nothing else. `background` is neither — it is a manifest key describing how
+the extension is built, like `options_page` or `icons`, so there is no box to paste anything into
+and none is expected. Every block above corresponds to a real field; this section deliberately
+does not.
+
+It is written down because `background.js` is new in `0.8.0` and someone doing the upload will
+notice it in the manifest and wonder. What it does, for the record: it makes the API calls on the
+Gmail content script's behalf and holds the access token so that script never has to. No schedule,
+no alarm, no page — it wakes to answer a request from that script, calls a fixed two-address
+allow-list on the user's own account (submit an extracted email summary; fetch the non-personal
+keyword table used for local scoring), and goes back to sleep. It reads nothing from any page and
+handles no data the entries above don't already cover.
+
+**The one Dashboard question it does touch is "Are you using remote code?" — and the answer stays
+"No".** The worker fetches the scoring keyword table over the network, which sounds adjacent, but
+remote code means script that is executed: a `<script>` from a remote URL, an eval'd string, a
+module pulled at runtime. That table is JSON data, parsed and compared against text; every line of
+executable code ships inside the package. Answering "Yes" here invites a review process the
+extension does not need.
 
 ## Data usage disclosure (the form's checkbox section)
 

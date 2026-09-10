@@ -8,12 +8,13 @@ capture are therefore all live to real users. `0.4.0` was the first publish, aro
 (commit `fa2daff` added the install link to the help centre "now that the extension is
 published"). Always confirm the currently published version in the Dashboard before uploading;
 the repo can only show what was committed, not what was shipped.
-Current package version: **0.8.0** — built 2026-09-10, **not yet uploaded**. `0.7.0` was uploaded
-on 2026-09-09 and was still awaiting review when `0.8.0` was built; uploading `0.8.0` replaces that
-pending submission rather than queueing behind it, so `0.7.0`'s Connect flow reaches users as part
-of `0.8.0` or not at all. Until one of them is approved, `0.6.0` is what users are running: the
-Connect flow exists in the API and at `/pair` but reaches nobody through the store yet, and pasted
-keys keep working regardless (`/from-extension` is unchanged).
+Current package version: **0.8.0** — uploaded to the Dashboard on 2026-09-10 and **awaiting
+review**. It replaced the `0.7.0` submission that was still pending from 2026-09-09, so `0.7.0`
+never reaches users as its own release: its Connect flow ships as part of `0.8.0`. Until `0.8.0` is
+approved, `0.6.0` is what users are running — the Connect flow exists in the API and at `/pair` but
+reaches nobody through the store yet, and pasted keys keep working regardless (`/from-extension` is
+unchanged). **Gmail Scanning stays dead for everyone on `0.6.0`**, which is every user, until this
+review clears; that is the thing to watch for here, not the Connect flow.
 
 **Why `0.8.0` matters more than a normal bump:** Gmail Scanning has never worked in any published
 build. `gmail-scan.js` posted its signal straight from the content script, where the request
@@ -37,21 +38,17 @@ production API needed no deploy alongside it.
       checked on 2026-09-09 and carries Gmail Scanning, the HR contact and the stored token expiry
       date, dated "8 Eylül 2026" — the same date as `PRIVACY_POLICY.md` in this folder, which is
       its source text. The two are in step; keep them that way.
-- [ ] **Point the Dashboard at that URL — first thing on the next upload.** Paste
-      `https://ekariyerim.com/tr/extension-privacy` into **Store listing → Privacy practices →
-      Privacy policy**. Whatever URL is in that field today was entered for `0.4.0` and predates
-      Gmail Scanning and the HR contact. Note `ekariyerim.com/privacy` is a *different* document —
-      the account-level policy — and the two link to each other.
-      **Why it still matters now that Settings links to the policy:** that link only reaches
-      someone who already installed the item and opened its Settings. This field is what a person
-      reads on the store page while deciding whether to install at all, and it is the only route
-      for anyone who never opens Settings.
-      **Deliberately not done during the `0.7.0` review** (2026-09-09): the Dashboard would not let
-      these fields be edited without cancelling the pending review, and `0.7.0` adds no new
-      permission over the already-approved `0.6.0`, so the trade was a certain delay against a
-      speculative gain. See `DECISIONS.md` 2026-09-09. **This is now the upload to do it on:**
-      `0.8.0` supersedes the pending `0.7.0` submission anyway, so the review being cancelled costs
-      nothing this time. `0.8.0` adds no new permission over the already-approved `0.6.0` either.
+- [x] **Point the Dashboard at that URL** — done 2026-09-10, with the `0.8.0` upload.
+      `https://ekariyerim.com/tr/extension-privacy` now sits in **Store listing → Privacy
+      practices → Privacy policy**, replacing the URL entered for `0.4.0`, which predated Gmail
+      Scanning and the HR contact. Note `ekariyerim.com/privacy` is a *different* document — the
+      account-level policy — and the two link to each other; if this field ever needs re-checking,
+      make sure it is still the `/extension-privacy` one.
+      It waited three releases for a reason worth remembering: the Dashboard would not let these
+      fields be edited without cancelling the pending review, and `0.7.0` added no new permission
+      over the already-approved `0.6.0`, so paying a certain delay for a speculative gain made no
+      sense (see `DECISIONS.md` 2026-09-09). `0.8.0` superseded that pending submission anyway, so
+      the cancellation cost nothing and this was the upload to spend it on.
       **This step cannot be automated:** Chrome blocks all extension scripting on the Web Store
       domains, the Developer Console included ("The extensions gallery cannot be scripted"), so no
       browser-automation tool can reach these fields. A human has to type them.
