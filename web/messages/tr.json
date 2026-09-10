@@ -115,7 +115,8 @@
       "title": "Başvurdun. Peki sonra ne oldu?",
       "subtitle": "Başvurularının kaçı cevaplandı, kaçı sessizce kayboldu, ilk dönüş ortalama kaç gün sürdü. LinkedIn geçmişini içe aktar ya da eklentiyi kur — toplamayı e-kariyerim yapsın.",
       "ctaPrimary": "Ücretsiz Başla",
-      "ctaSecondary": "Nasıl çalışıyor?"
+      "ctaSecondary": "Nasıl çalışıyor?",
+      "cvScanLink": "Önce hesapsız dene: CV'ni makine nasıl okuyor?"
     },
     "heroPreview": {
       "title": "Başvuruların",
@@ -255,6 +256,7 @@
       "tagline": "İş arama sürecin, artık anlaşılır.",
       "product": "Ürün",
       "resources": "Kaynaklar",
+      "cvScan": "CV Tarama",
       "privacy": "Gizlilik Politikası",
       "rights": "Tüm hakları saklıdır.",
       "guide": "Rehber",
@@ -2036,6 +2038,8 @@
     "cta": {
       "title": "Bunu her ay tahmin etmek zorunda kalma.",
       "body": "Başvurularını e-kariyerim'e aktar; geri dönüş oranın, medyan yanıt süren ve hangi başvurunun sessizleştiği kendiliğinden çıksın.",
+      "cvScan": "Ya da hesapsız bir adım daha: CV'ni yükle, başvuru sistemlerinin ondan ne okuduğunu gör.",
+      "cvScanLink": "CV taramasına git",
       "button": "Ücretsiz Başla"
     },
     "errors": {

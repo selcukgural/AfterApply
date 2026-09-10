@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { CtaButtons } from "@/components/landing/CtaButtons";
 import { DashboardPreview } from "@/components/landing/DashboardPreview";
 
@@ -20,6 +21,18 @@ export async function HeroSection() {
           secondaryHref="#how-it-works"
           dashboardLabel={tNav("goToDashboard")}
         />
+
+        {/* Quieter than either button on purpose, and outside CtaButtons so it survives the
+            signed-in branch: the scan is the lowest doorstep the site has — a visitor arrives with
+            a file they already own and gets an answer before being asked for anything. Putting it
+            only in the footer would have left the page reachable in principle and unvisited in
+            practice. */}
+        <Link
+          href="/cv-tarama"
+          className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+        >
+          {t("cvScanLink")} →
+        </Link>
       </div>
 
       <div className="flex justify-center md:w-1/2">

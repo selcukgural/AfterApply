@@ -115,7 +115,8 @@
       "title": "You applied. So what happened next?",
       "subtitle": "How many of your applications got a reply, how many went quiet, and how long a first response actually took. Import your LinkedIn history or install the extension — let e-kariyerim do the collecting.",
       "ctaPrimary": "Get Started Free",
-      "ctaSecondary": "See how it works"
+      "ctaSecondary": "See how it works",
+      "cvScanLink": "Try it without an account: how does a machine read your CV?"
     },
     "heroPreview": {
       "title": "Your applications",
@@ -255,6 +256,7 @@
       "tagline": "Your job search, understood.",
       "product": "Product",
       "resources": "Resources",
+      "cvScan": "CV Scan",
       "privacy": "Privacy Policy",
       "rights": "All rights reserved.",
       "guide": "Guide",
@@ -2036,6 +2038,8 @@
     "cta": {
       "title": "Stop having to guess this every month.",
       "body": "Bring your applications into e-kariyerim and let your reply rate, your median response time, and which application has gone quiet fall out on their own.",
+      "cvScan": "Or take one more step without an account: upload your CV and see what an applicant tracking system reads from it.",
+      "cvScanLink": "Go to the CV scan",
       "button": "Get Started Free"
     },
     "errors": {
