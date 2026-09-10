@@ -87,11 +87,16 @@ production API needed no deploy alongside it.
       updated, then all three reshot at 1280×800. The help centre's
       `web/public/help/screenshots/chrome-extension-{popup,options}.png` were stale for the same
       reason and were reshot too. `screenshots/README.md` documents both recipes.
-- [ ] **Fill in the Privacy practices tab from `PERMISSIONS_JUSTIFICATION.md`** — the
-      single-purpose description, one justification per permission, and the data-usage table. A
-      permission whose justification doesn't match its actual use is one of the most common
-      rejection reasons (see "After submitting"), and this extension asks for a lot: two job sites,
-      `https://mail.google.com/*`, and a declared `content_scripts` entry for Gmail Scanning.
+- [x] **Fill in the Privacy practices tab from `PERMISSIONS_JUSTIFICATION.md`** — done 2026-09-10,
+      with the `0.8.0` upload: the single-purpose description, one justification per permission,
+      and the data-usage table. That closes every item in this section for the first time. It
+      mattered here more than usual because a permission whose justification doesn't match its
+      actual use is one of the most common rejection reasons (see "After submitting"), and this
+      extension asks for a lot: two job sites, `https://mail.google.com/*`, and a declared
+      `content_scripts` entry for Gmail Scanning.
+      **Re-check these on the next release that changes what the extension reads or sends** — the
+      text in `PERMISSIONS_JUSTIFICATION.md` is the source, but the Dashboard holds its own copy
+      and does not update itself when that file does.
 
 ## What changed since 0.6.0
 
