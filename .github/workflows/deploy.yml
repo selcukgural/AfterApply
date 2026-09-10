@@ -225,6 +225,15 @@ jobs:
           # repository MUST stay private — the issue body carries whatever a user typed into the
           # panel — and /privacy#feedback has to keep naming GitHub as a recipient for as long as
           # Enabled is true.
+          #
+          # On CvScan__LlmEnabled: layer B of the CV scan — the model's notes about the writing,
+          # which sit outside the score and can never change it. Declared here rather than set by
+          # hand on the service so it is re-asserted on every deploy and visible in review; the
+          # project id comes from the same secret the rest of this file uses. It went on after the
+          # eval (DECISIONS.md 2026-09-10, second entry): zero fabricated quotes and zero notes on
+          # a well-written CV across three runs. /privacy#cv-scan has to keep naming Vertex AI as a
+          # recipient for as long as this is true, and turning it off is this one line — the score,
+          # the findings and the page all keep working without it.
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080
@@ -233,6 +242,8 @@ jobs:
             Feedback__GitHub__Enabled=true
             Feedback__GitHub__Repository=selcukgural/ekariyerim-feedback
             Feedback__GitHub__Assignee=selcukgural
+            CvScan__LlmEnabled=true
+            CvScan__Review__ProjectId=${{ env.GCP_PROJECT_ID }}
           secrets: |-
             ConnectionStrings__Postgres=afterapply-postgres-connection:latest
             Jwt__SigningKey=afterapply-jwt-signing-key:latest
