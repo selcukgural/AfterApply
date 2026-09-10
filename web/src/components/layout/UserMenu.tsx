@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { ADMIN_NAV_HREF } from "@/lib/auth/adminNav";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import type { Theme } from "@/lib/theme/theme";
@@ -12,13 +13,15 @@ interface UserMenuProps {
   initials: string;
   onLogout: () => void;
   initialTheme: Theme;
+  /** Renders the admin entry. Decided by the caller from the profile — see canSeeAdminNav. */
+  showAdmin: boolean;
 }
 
 // Consolidates the navbar's utility items (help, account settings, language,
 // theme, logout) behind one fixed-width trigger instead of listing them
 // inline, so it can never push the primary nav onto a second line no matter
 // how long a locale's labels get.
-export function UserMenu({ name, initials, onLogout, initialTheme }: UserMenuProps) {
+export function UserMenu({ name, initials, onLogout, initialTheme, showAdmin }: UserMenuProps) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,6 +85,20 @@ export function UserMenu({ name, initials, onLogout, initialTheme }: UserMenuPro
           >
             {t("accountSettings")}
           </Link>
+          {/* Below the two everyone has, and separated from them: it is the same menu the rest of
+              the utility links live in, so an admin reaches the page by clicking rather than by
+              remembering a URL, without the primary nav growing an item that only one account
+              would ever see. */}
+          {showAdmin && (
+            <Link
+              role="menuitem"
+              href={ADMIN_NAV_HREF}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              {t("admin")}
+            </Link>
+          )}
 
           <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
 

@@ -60,6 +60,10 @@ export interface UserProfileResponse {
   // false for an account created with Sign in with Google that never set a password — the
   // settings page skips the "re-enter your password" step on deletion for those.
   hasPassword: boolean;
+  // Whether this account carries Users.IsAdmin server-side. It decides whether the navigation
+  // shows the admin link and nothing else: the /api/admin endpoints check the column themselves on
+  // every request, so editing this in devtools buys a link that answers 403.
+  isAdmin: boolean;
 }
 
 export interface AuthResponse {

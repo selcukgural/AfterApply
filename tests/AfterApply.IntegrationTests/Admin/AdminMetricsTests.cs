@@ -59,15 +59,15 @@ public class AdminMetricsTests(SharedInfrastructure shared) : IAsyncLifetime
         // and no restart. Note this runs *after* the token above was issued: the flag is read from
         // the database on each request, not carried in the JWT, which is what lets a grant land
         // without the user signing in again.
-        await GrantAdminAsync(AdminEmail);
+        await SetAdminAsync(AdminEmail, true);
     }
 
-    private async Task GrantAdminAsync(string email)
+    private async Task SetAdminAsync(string email, bool isAdmin)
     {
         await using var scope = _factory!.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var user = await dbContext.Users.SingleAsync(u => u.Email == email);
-        user.IsAdmin = true;
+        user.IsAdmin = isAdmin;
         await dbContext.SaveChangesAsync();
     }
 
@@ -121,20 +121,44 @@ public class AdminMetricsTests(SharedInfrastructure shared) : IAsyncLifetime
         // without the affected person having to sign in again.
         var email = "revoked.metrics@example.com";
         var client = await CreateAuthenticatedClientAsync(email);
-        await GrantAdminAsync(email);
+        await SetAdminAsync(email, true);
 
         (await client.GetAsync("/api/admin/metrics")).StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        await using (var scope = _factory!.Services.CreateAsyncScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var user = await dbContext.Users.SingleAsync(u => u.Email == email);
-            user.IsAdmin = false;
-            await dbContext.SaveChangesAsync();
-        }
+        await SetAdminAsync(email, false);
 
         // Same client, same unexpired token.
         (await client.GetAsync("/api/admin/metrics")).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task The_Profile_Says_Which_Accounts_Should_See_The_Admin_Link()
+    {
+        // What the navigation renders from: without this the admin pages are reachable by typed URL
+        // only, because the web app has no way to tell an admin from anyone else.
+        var ordinary = await _ordinaryClient.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
+        var admin = await _adminClient.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
+
+        ordinary!.IsAdmin.ShouldBeFalse();
+        admin!.IsAdmin.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task A_Revoked_Admin_Stops_Being_Told_They_Are_One()
+    {
+        // The mirror of the test above it: access is re-read per request, so the flag the profile
+        // reports has to follow a revoke as well, or the menu keeps offering a page that 403s.
+        var email = "revoked.profile@example.com";
+        var client = await CreateAuthenticatedClientAsync(email);
+        await SetAdminAsync(email, true);
+
+        var granted = await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
+        granted!.IsAdmin.ShouldBeTrue();
+
+        await SetAdminAsync(email, false);
+
+        var revoked = await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
+        revoked!.IsAdmin.ShouldBeFalse();
     }
 
     [Fact]
