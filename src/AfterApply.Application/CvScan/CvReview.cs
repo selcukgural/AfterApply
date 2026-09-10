@@ -92,7 +92,13 @@ public static class CvReviewNotes
     public static IReadOnlyList<CvContentNote> Sanitize(IEnumerable<CvContentNote> notes, string sourceText)
     {
         var haystack = Normalize(sourceText);
-        var seen = new HashSet<(CvContentNoteKind, string)>();
+
+        // Keyed by the quote alone, not by (kind, quote): one line of a CV gets one note. The
+        // prompt asks for this and the eval showed it asked in vain — the same bullet came back as
+        // both "repeated verb" and "no number in it", which is two ways of telling someone to
+        // rewrite the same sentence. The model's own ordering decides which one survives, since it
+        // is told to report the more important problem first.
+        var seen = new HashSet<string>();
         var result = new List<CvContentNote>();
 
         foreach (var note in notes)
@@ -114,7 +120,7 @@ public static class CvReviewNotes
                 continue;
             }
 
-            if (!seen.Add((note.Kind, quote.ToLowerInvariant())))
+            if (!seen.Add(quote.ToLowerInvariant()))
             {
                 continue;
             }

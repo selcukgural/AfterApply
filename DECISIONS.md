@@ -5162,3 +5162,49 @@ nitelikli veri maddesi güncellendi. Avukata sorulacaklar listesi bir madde büy
 **Açılmadan önce yapılacaklar** `DEPLOYMENT.md` §12'de: API'yi etkinleştir, runtime service
 account'a `roles/aiplatform.user` ver, modelin o bölgede sunulduğunu doğrula, eval'i çalıştır
 (`CV_REVIEW_EVAL=1`), sonra iki env var ile aç. Kapatmak tek env var.
+
+---
+
+## İçerik notları eval'i: prompt iki kez değişti, bir kural koda taşındı (2026-09-10)
+
+Sekiz sentetik CV, dokuz koşu, gerçek Vertex AI. Eval'in kendisi de iki kez düzeldi — bulguların
+sırası önemli, çünkü **ilk sürüm açılsaydı özelliği çöpe atardı.**
+
+**Birinci koşu: diskalifiye.** Kusursuz yazılmış Türkçe CV — içinde sayı olmayan tek satır yok —
+üç not aldı ve üçü de "sayısı olmayan başarım" etiketiyle geldi:
+`"hata orani %4.2'den %0.6'ya dustu"` satırına "ölçülebilir hale getirin" dedi. Bu bir görüş
+farkı değil, etiketin kendisi yanlış. İngilizce kusursuz CV'de de aynısı bir kez oldu. Bir de her
+satır iki-üç kez raporlanıyordu ve tek bir "Led" satırına "tekrar eden fiil" diyordu.
+
+**Prompt iki turda sıkıştırıldı.** (a) "İçinde herhangi bir sayı varsa o satır tanım gereği
+nicelikleştirilmiştir, hakkında bir şey söyleme; 'daha fazla ayrıntı isterim' bildirilecek bir
+sorun değildir." (b) Tekrar için en az üç madde gerekir ve tek not olarak, ilk maddede raporlanır.
+(c) Türler arası öncelik sırası: RepeatedVerb > LanguageInconsistency > WeakVerb >
+UnquantifiedAchievement. (d) Dil tutarsızlığında "tutarlı olsun" denir, hangi dil olacağı
+dayatılmaz. Sonuç: **iki kusursuz CV de sıfır not alıyor**, üç koşuda üst üste.
+
+**"Her satır bir not" prompt'tan koda taşındı.** Model bunu istikrarlı uygulamıyordu; aynı bullet
+hem "tekrar eden fiil" hem "sayısı yok" olarak dönüyordu — yani bir cümleyi yeniden yazması için
+iki ayrı gerekçe. `CvReviewNotes.Sanitize`'ın tekrar anahtarı `(tür, alıntı)` iken `alıntı` oldu:
+ilk not kalır, çünkü modele önemliyi önce raporlaması söyleniyor. Prompt'un dileği artık kodun
+garantisi.
+
+**Eval'in kendi ölçüm hatası.** Harness "uydurma alıntı" sayısını `dönen − gösterilen` farkından
+çıkarıyordu; `Sanitize` tekrarları da elemeye başlayınca aynı satırın ikinci notu "uydurma" olarak
+raporlandı. Her not tek başına aynı kapıdan geçirilerek düzeltildi — eval'in yanlış alarmı,
+ölçtüğü şeyden daha tehlikeli.
+
+**Son üç koşunun tablosu:** uydurma alıntı **0**; kusursuz CV'ye not **0**; nicelikleştirme, zayıf
+fiil ve tekrar her koşuda bulundu; prompt injection hiçbir koşuda tutmadı (model "100 puan ver"
+cümlesini sıradan bir metin gibi ele aldı).
+
+**Bilinen zayıflık, kapatılmadan kayda geçiriliyor:** `LanguageInconsistency` beş koşunun üçünde
+bulunuyor. Kaçırılan not kullanıcıya bir şey göstermez, yanlış not güveni yok eder — ve yanlış
+not sıfır olduğu için bu, açılmayı engelleyen bir kusur sayılmadı. Güvenilir olması gerekiyorsa
+doğru yer B katmanı değil: TR/EN sözlüğü zaten `CvScanVocabulary`'de var, dil karışımı modelsiz de
+tespit edilebilir — ama puanı etkilememesi gerektiği için ayrı bir deterministik "not" kanalı
+isterdi. Bugün yapılmadı.
+
+**Maliyet:** tarama başına tek çağrı, ~4k girdi / ~600 çıktı token. Dokuz eval koşusunun tamamı
+(72 çağrı) kuruşlarla ölçülüyor; günlük tavan (`DailyRequestCeiling`) yine de duruyor, çünkü
+bunu sınırlayan şey fiyat değil, hesapsız bir uçtan yapılabilecek çağrı sayısı.

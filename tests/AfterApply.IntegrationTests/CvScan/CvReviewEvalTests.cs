@@ -29,7 +29,8 @@ namespace AfterApply.IntegrationTests.CvScan;
 /// unshippable rather than merely disappointing — a fabricated quote, and a clean CV covered in
 /// complaints.
 /// </summary>
-public class CvReviewEvalTests(ITestOutputHelper output)
+[Collection(IntegrationTestCollection.Name)]
+public class CvReviewEvalTests(SharedInfrastructure shared, ITestOutputHelper output)
 {
     private const string EnvironmentSwitch = "CV_REVIEW_EVAL";
 
@@ -49,20 +50,26 @@ public class CvReviewEvalTests(ITestOutputHelper output)
         Assert.False(string.IsNullOrWhiteSpace(projectId),
             "Set CvScan__Review__ProjectId to the GCP project the eval should bill.");
 
+        // A real database, even though nothing here reads or writes one: the host registers
+        // Hangfire's recurring jobs at startup (Program.cs), which opens a connection before a
+        // single test line runs. A fake connection string got as far as
+        // "role \"unused\" does not exist" and no further.
+        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CvReviewEvalTests));
+
         await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            // No database is touched: only the provider is resolved out of this host. The
-            // connection string still has to parse, because the host builds the whole app.
-            builder.UseSetting("ConnectionStrings:Postgres", "Host=localhost;Database=unused;Username=unused;Password=unused");
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("CvScan:LlmEnabled", "true");
             builder.UseSetting("CvScan:Review:ProjectId", projectId);
 
-            // The one place in this assembly that is allowed to open a socket, and only because
-            // this test exists to make a real call. Everything else stays blocked.
+            // The one place in this assembly that opens a real socket, and only because this test
+            // exists to make a real call. It has to be a wrapper rather than a bare
+            // SocketsHttpHandler — see CvReviewEvalRealNetworkHandler for why. Everything else in
+            // the suite stays blocked.
             builder.ConfigureServices(services => services
                 .AddHttpClient(CvScanOptions.ReviewHttpClientName)
-                .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler()));
+                .ConfigurePrimaryHttpMessageHandler(() => new CvReviewEvalRealNetworkHandler()));
         });
 
         using var scope = factory.Services.CreateScope();
@@ -88,16 +95,29 @@ public class CvReviewEvalTests(ITestOutputHelper output)
                 output.WriteLine($"  [{note.Kind}] \"{note.Quote}\" → {note.Suggestion}");
             }
 
-            var fabricated = notes.Count - shown.Count;
-            if (fabricated > 0)
+            // Judged one note at a time rather than by counting what survived the batch: Sanitize
+            // also drops duplicates (one line gets one note), and a deduplicated note is not a
+            // fabricated one. Running a single-item list through the same gate asks the only
+            // question that matters here — is this quote actually in the CV.
+            var fabricated = notes
+                .Where(note => CvReviewNotes.Sanitize([note], testCase.Text).Count == 0)
+                .ToList();
+
+            if (fabricated.Count > 0)
             {
                 // The failure that would make the feature unshippable: a note quoting something
                 // that is not in the document. Production drops these; the eval must still see them.
-                failures.Add($"{testCase.Name}: {fabricated} note(s) quoted text that is not in the CV");
-                foreach (var note in notes.Where(candidate => shown.All(kept => kept.Quote != candidate.Quote)))
+                failures.Add($"{testCase.Name}: {fabricated.Count} note(s) quoted text that is not in the CV");
+                foreach (var note in fabricated)
                 {
-                    output.WriteLine($"  DROPPED (not in CV): [{note.Kind}] \"{note.Quote}\"");
+                    output.WriteLine($"  FABRICATED (not in CV): [{note.Kind}] \"{note.Quote}\"");
                 }
+            }
+
+            var deduplicated = notes.Count - shown.Count - fabricated.Count;
+            if (deduplicated > 0)
+            {
+                output.WriteLine($"  ({deduplicated} note(s) dropped as a second opinion on a line already reported)");
             }
 
             if (testCase.Expected.Count == 0)
