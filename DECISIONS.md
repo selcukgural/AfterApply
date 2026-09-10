@@ -5269,3 +5269,86 @@ veriyordu; sonuç "Ayrıntı için ." idi ve `consentPrivacyLink` anahtarı okun
 canlıya çıkmış; tarayıcıda sayfaya bakarken görüldü, `<privacy>…</privacy>` etiketine çevrildi.
 
 **`PRIVACY_CHECKLIST.md` değişmiyor:** yeni saklama, yeni anahtar, yeni çerez, yeni işleyici yok.
+
+## Gmail Scanning canlıda hiç çalışmamış — content script'ten fetch CORS'a takılıyordu (2026-09-10)
+
+**Bulgu.** "E-posta gelince öneri/status değişikliği gerçekten çalışıyor mu" regresyon testi
+sırasında, akışın backend yarısı (`/extension-signal` → sınıflandırma → öneri → onay → status)
+uçtan uca doğrulandı ve sorunsuz çıktı. Ama zincirin **extension yarısı hiç çalışmıyormuş**:
+`gmail-scan.js` sinyali doğrudan content script'ten POST ediyordu. MV3'te bir content script'in
+`fetch`'i enjekte edildiği sayfanın (burada `mail.google.com`) origin'i adına gidiyor ve o sayfanın
+CORS'una tabi; `host_permissions` bundan **muaf tutmuyor** (Chrome'un kendi dokümanı: "Cross-origin
+requests are always treated as such in content scripts, even if the extension has host
+permissions"). API'nin `Cors:AllowedOrigins` listesinde ise yalnızca web origin'i var — canlıya
+atılan preflight bunu doğruladı: `Origin: https://mail.google.com` için `access-control-allow-origin`
+dönmüyor, `Origin: https://ekariyerim.com` için dönüyor. Yani istek sunucuya hiç ulaşmıyordu ve
+`afterApplyScanCurrentThread`'deki boş `catch` bunu sessizliğe çeviriyordu: ne öneri, ne hata.
+0.5.0–0.7.0 arasındaki her yayınlanmış build için geçerli.
+
+Bu, Sprint 9'da `popup.js` için manuel testte bulunan hatanın (`host_permissions` backend origin'ini
+içermiyordu) kardeşi. Orada çözüm origin'i listeye eklemekti; content script'te bu çözüm **yok**.
+
+**Karar: service worker (B), backend CORS'una `mail.google.com` eklemek (A) değil.** A tek satırlık
+bir config değişikliğiyle hâlihazırda kurulu build'leri de çalıştırırdı ve `AllowCredentials()`
+kapalı + salt-Bearer olduğu için doğrudan bir açık yaratmazdı; yine de `mail.google.com`'da koşan
+herhangi bir şeye (Google'ın kendi sayfası, başka bir eklentinin content script'i) API'ye istek atma
+kapısını açıyor ve mimari borcu kalıcılaştırıyordu. Kullanıcı doğrusunu tercih etti: istekler artık
+`background.js`'ten gidiyor — extension'ın kendi origin'i, `host_permissions` orada geçerli, CORS
+devrede değil. Bedeli: düzeltme kullanıcılara ancak store incelemesinden sonra ulaşır.
+
+**Ne değişti.**
+- Yeni `extension/background.js`: sabit iki rotalı bir allow-list (`local-filter-config`,
+  `extension-signal`) — çağıran taraf path/method/host vermiyor, yalnızca rota adı. Content script
+  ele geçirilebilir bir sayfada koştuğu için worker'ın "ne dersen onu fetch et" olmaması, token'ı
+  saldırganın origin'ine taşıyan açık bir proxy'ye dönüşmemesinin tek güvencesi. Token'ı da artık
+  worker tutuyor; content script token'ı hiç okumuyor.
+- `gmail-scan.js`/`local-filter-config.js`: `fetch` yerine `chrome.runtime.sendMessage`; ikisinde de
+  ağ çağrısı kalmadı.
+- **Yan bulgu, aynı sürümde düzeltildi:** eski kod `response.ok`'a hiç bakmıyor, isteğin ardından
+  thread'i koşulsuz "gönderildi" diye işaretliyordu. Token süresi dolduğunda (401) veya rate limit
+  yendiğinde (429) o e-posta kalıcı olarak yanıyordu: client dedup "gönderdim" diyor, backend'in
+  haberi yok, tekrar açmak da denemiyor. Artık yalnızca kabul edilen sinyal işaretleniyor.
+- `manifest.json`: `background` girdisi + sürüm `0.8.0`.
+
+**Store'a etkisi:** yeni izin yok, gönderilen veri ve alıcısı değişmedi — dolayısıyla
+`PRIVACY_POLICY.md`, ondan türeyen `/extension-privacy` sayfası ve `LISTING.md` değişmiyor, ekran
+görüntüleri bayatlamıyor (kullanıcıya görünen hiçbir şey kımıldamadı).
+`PERMISSIONS_JUSTIFICATION.md`'de `mail.google.com` ve API-origin gerekçeleri "isteği worker atıyor"
+diye güncellendi. `0.8.0`, inceleme bekleyen `0.7.0` gönderimini kuyruğa girmek yerine değiştiriyor;
+bu yüzden Dashboard'daki gizlilik-politikası URL'ini düzeltme adımı da (bkz.
+`PUBLISHING_CHECKLIST.md`) bu yüklemeye bindirilmeli — iptal olacak inceleme zaten iptal oluyor.
+
+**Test durumu:** `extension/` altında otomatik test koşum ortamı yok (web'de vitest var, burada
+yok), o yüzden bu değişiklik birim testiyle değil, gerçek Chrome'da unpacked build ile Gmail
+üzerinde doğrulanmalı — bu, doğrulanana kadar açık bir madde.
+
+### `0.8.0`'a binen ikinci iş: eklentinin kendi gizlilik-politikası linki
+
+`PUBLISHING_CHECKLIST.md`'de 2026-09-09'dan beri park edilmiş bir madde vardı: kurulu eklentinin
+içinde gizlilik politikasına giden **hiçbir link yoktu** — ne `options.html`'de ne `popup.html`'de.
+Politikaya tek yol, Web Store Dashboard'undaki alan (ki o da hâlâ `0.4.0` döneminden kalma bir URL
+gösteriyor). Madde "sürümü zaten bump eden ilk release'e binsin" diye bekletiliyordu; `0.8.0` o
+release, kullanıcı da dahil edilmesini istedi.
+
+Settings footer'ı artık solda politikayı, sağda sürümü taşıyor. Hem metin hem URL dil anahtarını
+takip ediyor (`/tr/extension-privacy`, `/en/extension-privacy` — ikisi de canlı, 200). Flex kuralı
+`popup.css`'e değil `options.html`'in kendi `<style>`'ına yazıldı: popup'ın footer'ında tek eleman
+var, orada `.version-line`'ın sağa yaslaması zaten doğru.
+
+**Popup bilerek dokunulmadı.** Politikayı merak eden kişi Settings'e gidiyor; `popup.html`'i sabit
+tutmak `popup-light.png`/`popup-dark.png` ve help centre'daki `chrome-extension-popup.png`'yi
+geçerli bırakıyor — üç görselin yeniden çekilmesi, tek satırlık bir linkin karşılığı değil.
+
+**Bayatlayan iki görsel yeniden çekildi** (`screenshots/README.md`'deki tarifle): store'un
+`options-light.png`'si (`scene-options.html`'in kopya markup'ı önce güncellendi) ve help centre'ın
+`chrome-extension-options.png`'si (gerçek `options.html`, chrome-stub + frame ile). Stub scratch
+dizininde kaldı, `extension/` altına sızmadı — kontrol edildi.
+
+**Canlı doğrulama (2026-09-10):** `0.8.0` unpacked olarak Chrome'a yüklendi, olağan Connect akışıyla
+prod API'ye bağlandı ve Gmail'de açılan gerçek bir e-posta gerçek bir öneri üretti — özelliğin bunu
+ilk kez yapışı. Sunucuda hiçbir şey değişmedi; düzeltme tamamen eklentide olduğu için prod'a ayrıca
+deploy gerekmedi. Yolda ortaya çıkan iki pratik not: (1) eklentinin API adresi varsayılanı prod ve
+onu değiştiren alan Settings'te **kapalı** bir disclosure'ın içinde — yerel API'ye karşı test etmek
+isteyen bunu açmak zorunda, aksi halde farkında olmadan prod'a test eder; (2) content script sayfa
+yüklenirken enjekte olup tarama bayrağını yalnızca o an okuduğu için, bayrağı açtıktan sonra Gmail
+sekmesini yenilemek şart.

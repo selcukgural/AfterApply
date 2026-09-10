@@ -83,6 +83,8 @@
   details.manual summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-subtle); }
   details.manual > *:not(summary) { margin-top: 8px; }
   hr.section-divider { margin: 18px 0 0; border: none; border-top: 1px solid var(--border-subtle); }
+  footer.version-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  footer.version-line a { color: inherit; text-decoration: underline; }
 
   .options-window {
     position: absolute;
@@ -160,7 +162,10 @@
           <span>Scan opened Gmail emails</span>
         </label>
       </main>
-      <footer class="version-line">Version 0.7.0</footer>
+      <footer class="version-line">
+        <a href="https://ekariyerim.com/en/extension-privacy">Privacy policy</a>
+        <span>Version 0.8.0</span>
+      </footer>
     </div>
   </div>
 

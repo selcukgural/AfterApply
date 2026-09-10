@@ -10,6 +10,11 @@
     details.manual summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-subtle); }
     details.manual > *:not(summary) { margin-top: 8px; }
     hr.section-divider { margin: 18px 0 0; border: none; border-top: 1px solid var(--border-subtle); }
+    /* Scoped here rather than in popup.css: the popup's footer holds the version alone, where
+       .version-line's right-alignment is already right. This page puts the privacy policy on the
+       same line, which needs the two ends pushed apart. */
+    footer.version-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    footer.version-line a { color: inherit; }
   </style>
 </head>
 <body>
@@ -63,7 +68,11 @@
     </label>
   </main>
 
+  <!-- The extension's only route to its own privacy policy. The Web Store Dashboard has a field
+       for it, but nothing in the installed item linked to it before 0.8.0 — so someone who wanted
+       to know what Gmail Scanning does with their mail had to go back to the store listing. -->
   <footer class="version-line">
+    <a id="privacyLink" href="https://ekariyerim.com/en/extension-privacy" target="_blank" rel="noopener noreferrer">Privacy policy</a>
     <span id="versionLabel"></span>
   </footer>
 

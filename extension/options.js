@@ -49,6 +49,14 @@ function applyLanguage(lang) {
   document.getElementById("gmailScanToggle").textContent = t(lang, "options.gmailScanToggle");
   connectButton.textContent = t(lang, pairing ? "options.connecting" : "options.connect");
   openPairingPageButton.textContent = t(lang, "options.openPage");
+
+  // Both the text and the URL follow the toggle: /tr/extension-privacy and /en/extension-privacy
+  // are the same policy in two languages, and sending a Turkish reader to the English one would be
+  // a poor way to answer "what do you do with my mail".
+  const privacyLink = document.getElementById("privacyLink");
+  privacyLink.textContent = t(lang, "privacyLink");
+  privacyLink.href = `https://ekariyerim.com/${lang}/extension-privacy`;
+
   renderVersion(lang);
 
   if (statusEl.dataset.i18nKey) {

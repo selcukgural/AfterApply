@@ -134,11 +134,14 @@ async function afterApplyMarkSubmitted(threadId) {
   await chrome.storage.local.set({ [AFTERAPPLY_SUBMITTED_IDS_KEY]: trimmed });
 }
 
-async function afterApplySubmitSignal(data, settings) {
-  await fetch(`${settings.apiBaseUrl}/api/email-forwarding/extension-signal`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${settings.token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
+// Goes through background.js (see afterApplyCallApi in local-filter-config.js): posting from here
+// would carry the mail.google.com origin into a CORS check the API can't answer, and the browser
+// would drop it before the request ever left. The worker holds the token and attaches it — this
+// script never reads it. Returns the worker's result so the caller can tell an accepted signal from
+// a refused one.
+async function afterApplySubmitSignal(data) {
+  return afterApplyCallApi("extension-signal", {
+    body: {
       senderEmail: data.senderEmail,
       senderDisplayName: data.senderDisplayName,
       subject: data.subject,
@@ -146,7 +149,7 @@ async function afterApplySubmitSignal(data, settings) {
       receivedAt: new Date().toISOString(), // Gmail's own header timestamp isn't reliably DOM-exposed; approximate with scan time
       linkDomains: data.linkDomains,
       gmailMessageId: data.threadId,
-    }),
+    },
   });
 }
 
@@ -167,17 +170,26 @@ async function afterApplyScanCurrentThread() {
       return;
     }
 
-    const settings = await afterApplyGetSettings();
-    if (!settings.token) {
-      return; // scanning is inert without somewhere to send a signal
-    }
+    // The worker refuses ("no-token") before making any request when the extension isn't connected
+    // to an account — scanning stays inert without somewhere to send a signal, and nothing leaves
+    // the extension either way.
+    const result = await afterApplySubmitSignal(data);
 
-    await afterApplySubmitSignal(data, settings);
-    await afterApplyMarkSubmitted(data.threadId);
+    // Only a signal the backend actually accepted counts as submitted. Marking it regardless — what
+    // this used to do, because it never looked at the response — meant a lapsed token (401) or a
+    // rate-limited burst (429) permanently burned the thread: the dedup set said "sent", the backend
+    // had never heard of it, and reopening the email would never retry. Leaving it unmarked lets the
+    // next open try again once the token is renewed.
+    if (result.ok) {
+      await afterApplyMarkSubmitted(data.threadId);
+    }
   } catch {
-    // Best-effort — a transient DOM/storage/network hiccup here just means one thread's signal is
-    // missed, not worth surfacing to Gmail's own console. Not a correctness boundary either way (see
-    // afterApplyMarkSubmitted's comment on the backend idempotency check being the real one).
+    // Best-effort — a DOM/storage hiccup here means one thread's signal is missed, not worth
+    // surfacing in Gmail's own console. Network and backend failures no longer reach this catch at
+    // all: the worker reports them as a result, and the thread stays unmarked so reopening it
+    // retries. (Within one page session the retry needs another thread opened in between —
+    // afterApplyLastScannedThreadId is set before the submit, on purpose, so a MutationObserver
+    // storm can't fire the same scan repeatedly.)
   }
 }
 
@@ -192,10 +204,9 @@ async function afterApplyInit() {
     return; // non-negotiable: no DOM read, no fetch, nothing happens unless explicitly opted in
   }
 
-  const settings = await afterApplyGetSettings();
-  afterApplyConfig = await afterApplyGetLocalFilterConfig(settings.apiBaseUrl);
+  afterApplyConfig = await afterApplyGetLocalFilterConfig();
   setInterval(async () => {
-    afterApplyConfig = await afterApplyGetLocalFilterConfig(settings.apiBaseUrl);
+    afterApplyConfig = await afterApplyGetLocalFilterConfig();
   }, AFTERAPPLY_CONFIG_REFRESH_MS);
 
   // Gmail is a single-page app — no full reload between the inbox and an opened thread, so a

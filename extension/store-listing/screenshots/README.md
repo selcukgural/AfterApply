@@ -18,9 +18,10 @@ showing the old logo. Prefer a shared asset over a copied glyph here.
 
 ## Regenerating them
 
-Last shot 2026-09-08 for `0.7.0` — `options-light.png` only, for the Connect button and the pairing
-code that replaced the paste-a-token layout. The two popup shots were left alone: the job form
-they show is unchanged by that release.
+Last shot 2026-09-10 for `0.8.0` — `options-light.png` only, for the privacy-policy link the
+Settings footer gained (the release's other change, the background service worker, is invisible).
+The two popup shots were left alone again: `popup.html` is untouched by that release, and its
+footer deliberately still holds the version alone.
 
 Each `scene-*.html` renders its own 1280×800 design inside a flex-centered viewport, and takes a
 **`?pin=1`** parameter that drops the fit-to-viewport scale-down and pins the canvas to the
