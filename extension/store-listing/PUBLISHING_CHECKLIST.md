@@ -8,12 +8,13 @@ capture are therefore all live to real users. `0.4.0` was the first publish, aro
 (commit `fa2daff` added the install link to the help centre "now that the extension is
 published"). Always confirm the currently published version in the Dashboard before uploading;
 the repo can only show what was committed, not what was shipped.
-Current package version: **0.8.0** — built 2026-09-10, **not yet uploaded**. `0.7.0` was uploaded
-on 2026-09-09 and was still awaiting review when `0.8.0` was built; uploading `0.8.0` replaces that
-pending submission rather than queueing behind it, so `0.7.0`'s Connect flow reaches users as part
-of `0.8.0` or not at all. Until one of them is approved, `0.6.0` is what users are running: the
-Connect flow exists in the API and at `/pair` but reaches nobody through the store yet, and pasted
-keys keep working regardless (`/from-extension` is unchanged).
+Current package version: **0.8.0** — uploaded to the Dashboard on 2026-09-10 and **awaiting
+review**. It replaced the `0.7.0` submission that was still pending from 2026-09-09, so `0.7.0`
+never reaches users as its own release: its Connect flow ships as part of `0.8.0`. Until `0.8.0` is
+approved, `0.6.0` is what users are running — the Connect flow exists in the API and at `/pair` but
+reaches nobody through the store yet, and pasted keys keep working regardless (`/from-extension` is
+unchanged). **Gmail Scanning stays dead for everyone on `0.6.0`**, which is every user, until this
+review clears; that is the thing to watch for here, not the Connect flow.
 
 **Why `0.8.0` matters more than a normal bump:** Gmail Scanning has never worked in any published
 build. `gmail-scan.js` posted its signal straight from the content script, where the request
