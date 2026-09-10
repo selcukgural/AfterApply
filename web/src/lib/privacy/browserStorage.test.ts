@@ -159,8 +159,9 @@ describe("visit counter", () => {
   const TRACKER = "lib/analytics/siteTraffic.ts";
 
   // Every file allowed to report a visit. All of them are public-side; the reporter component is
-  // mounted in the (public) layout, which is what keeps signed-in pages out structurally rather
-  // than by a second copy of the API's route allowlist.
+  // mounted in the (public) layout and on the landing page — never in [locale]/layout.tsx, which
+  // also wraps the signed-in pages — which is what keeps those out structurally rather than by a
+  // second copy of the API's route allowlist.
   const CALLERS = [
     "app/[locale]/(public)/register/page.tsx",
     "components/analytics/SiteTrafficReporter.tsx",
@@ -168,6 +169,10 @@ describe("visit counter", () => {
     // other event does (a name and a path), and the file it just read is not part of it.
     "components/cvScan/CvScanForm.tsx",
     "components/landing/CtaButtons.tsx",
+    // The hero's own CTA row, which kept the register button's existing event when the hero was
+    // rebuilt around the scan (2026-09-10). Note what is NOT on this list: HeroCvDropzone. Dropping
+    // a CV reports nothing at all — the scan is counted where it happens, on /cv-tarama.
+    "components/landing/HeroCtaButtons.tsx",
   ];
 
   it("is reported from public pages only", () => {

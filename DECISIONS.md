@@ -5208,3 +5208,64 @@ isterdi. Bugün yapılmadı.
 **Maliyet:** tarama başına tek çağrı, ~4k girdi / ~600 çıktı token. Dokuz eval koşusunun tamamı
 (72 çağrı) kuruşlarla ölçülüyor; günlük tavan (`DailyRequestCeiling`) yine de duruyor, çünkü
 bunu sınırlayan şey fiyat değil, hesapsız bir uçtan yapılabilecek çağrı sayısı.
+
+---
+
+## Landing'in birincil eylemi araç oldu; hero'daki dashboard resmi kaldırıldı (2026-09-10)
+
+Girişsiz iki araç (V6 CV taraması, V2 kıyaslama) canlıdaydı ama landing'de ikisi de birer metin
+linkiydi. Sayfanın birincil eylemi hâlâ "Ücretsiz Başla"ydı: **sıfır kullanıcılı bir üründe değer
+görülmeden hesap istemek.** Hero'nun sağ sütunundaki dashboard önizlemesi de aynı şeyi yapıyordu —
+kaydolmadan açılamayan bir ürünün resmi.
+
+**Hero artık bir şey veriyor.** Sağ sütun gerçek bir CV bırakma alanı, birincil düğme "CV'mi Tara",
+kayıt ikincil. Navbar'a çerçeveli kalıcı bir "CV'ni Tara" düğmesi girdi — **iki başlığa birden**,
+çünkü `/guide`, `/help`, `/privacy`, `/benchmark` ve auth sayfaları landing navbar'ını kullanmıyor;
+arama trafiği de tam olarak oraya, rehber yazılarına düşüyor. Kıyaslama, analiz bölümünde metin
+linkinden karta yükseldi (örnek sayıların **altında**, hero ile yarışmasın diye).
+
+**Bırakılan dosya taramaya nasıl gidiyor: tek atımlık bellek içi devir.** `File` URL'den geçmez.
+Hero dosyayı `pendingScanFile.ts`'e bırakır, `/cv-tarama`'ya yönlendirir, form onu seçili dosya
+olarak alır. Üç seçenek değerlendirildi:
+- **Hero'da taramak (elendi):** sonuç ekranı bir sayfa dolusu içerik; ayrıca V6'nın durdurma koşulu
+  `/cv-tarama` sayfa görüntülemesi ÷ `cv_scan_completed` çiftinden okunuyor, hero'da tamamlanan bir
+  tarama paydayı ikiye bölerdi. ATS mitinin düzeltmesi ve saklama listesi de o sayfada.
+- **Dosyayı yutan sahte kutu (elendi):** "dosyanı saklamıyoruz" diyen bir sayfada arayüzün söylediği
+  ilk yalan olurdu.
+- **Diske yazmak (elendi):** `browserStorage.test.ts` yazılan tüm anahtarları sabitliyor ve
+  `/cookies` bu envanteri yayınlıyor. Bir yabancının CV'sini sessionStorage'a koymak o metni yanlış
+  hâle getirirdi. **Yenilemede dosyanın kaybolması doğru davranıştır**, kusur değil.
+
+**Dosya bırakmak rıza değildir.** Onay kutusu işaretsiz gelir, taramayı ziyaretçi başlatır, sunucu
+rızasız isteği yine reddeder. Bırakma alanının altındaki cümle bunu bırakma anında söylüyor
+("Sonraki adımda izin kutusunu işaretleyip taramayı sen başlatıyorsun"), yoksa başka bir sayfaya
+dosyayla birlikte taşınmak, kullanıcı adına karar verilmiş gibi okunurdu.
+
+**Sessiz bir tuzak: `openedAt` tohumlaması.** Sunucu 1500 ms'den hızlı gönderimi bot sayıp
+reddediyor. Devirle gelen biri onayı işaretleyip hemen basınca mutlu yolun ortasında gerekçesiz bir
+ret alırdı; form artık zamanlayıcısını **dosyanın seçildiği ana** (`pickedAt`) göre kuruyor. Bu,
+geçen süreyi yalnızca büyütür — savunma zayıflamıyor.
+
+**`DashboardPreview` taşınmadı, silindi.** `AnalyticsSection` aynı şeyin gerçek dashboard
+bileşenleriyle yapılmış zengin hâlini gösteriyor ve 2026-09-08 sıralamasından beri hero'nun iki
+bölüm altında; iki "örnek veri" rozetli dashboard bir buçuk ekran arayla durmasın. `heroPreview`
+metinleri de gitti (kullanılmayan anahtarı hiçbir test yakalamıyor).
+
+**Landing bugüne kadar hiç ziyaret bildirmemiş.** `SiteTrafficReporter` yalnızca `(public)`
+layout'unda mount ediliyordu, landing o grupta değil — yani `/` yolu `SiteTrafficNormalizer`'ın izin
+listesinde duruyordu ama onu raporlayan kimse yoktu. **V0 hunisinin tepesi boştu.** Tek satırlık bir
+mount ile kapatıldı; `[locale]/layout.tsx`'e değil, bilerek sayfaya — o layout girişli sayfaları da
+sarıyor ve o ayrım, girişli sayfaların neden sayılmadığının yapısal garantisi.
+
+**Yeni trafik olayı eklenmedi.** Ölçülecek iki hipotez mevcut olaylarla okunuyor: `/cv-tarama`
+görüntülemesi artmalı, ve dosyayla gelmek tamamlama oranını yükseltmeli. Yeni bir olay beş dosya ve
+iki yığın (TS union, C# enum, normalizer, testi, caller listesi) + backend deploy demekti. Dört
+hafta sonra görüntüleme ile tamamlama arasındaki fark hâlâ büyükse eklenecek olay `cv_scan_started`
+olmalı — hangi widget'a dokunulduğunu değil, nerede vazgeçildiğini ölçer.
+
+**Yol boyunca bulunan canlı hata:** CV tarama onay satırındaki gizlilik linki hiç render
+edilmiyordu. Metin `{privacy}` (düz ICU argümanı) yazıyordu, kod ise `t.rich` ile etiket işleyicisi
+veriyordu; sonuç "Ayrıntı için ." idi ve `consentPrivacyLink` anahtarı okunmadan duruyordu. V6 ile
+canlıya çıkmış; tarayıcıda sayfaya bakarken görüldü, `<privacy>…</privacy>` etiketine çevrildi.
+
+**`PRIVACY_CHECKLIST.md` değişmiyor:** yeni saklama, yeni anahtar, yeni çerez, yeni işleyici yok.

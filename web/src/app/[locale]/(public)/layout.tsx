@@ -4,6 +4,7 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { getServerTheme } from "@/lib/theme/getServerTheme";
 import { SiteTrafficReporter } from "@/components/analytics/SiteTrafficReporter";
+import { CvScanNavButton } from "@/components/cvScan/CvScanNavButton";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const theme = await getServerTheme();
@@ -17,6 +18,11 @@ export default async function PublicLayout({ children }: { children: React.React
             <Logo />
           </Link>
           <div className="flex items-center gap-3">
+            {/* These pages do not use the landing navbar, and search traffic arrives on the guide
+                articles rather than on the landing page — so without this the one thing a stranger
+                can use without an account is invisible exactly where strangers turn up. It hides
+                itself on /cv-tarama. */}
+            <CvScanNavButton />
             <LanguageSwitcher />
             <ThemeSwitcher initialTheme={theme} />
           </div>

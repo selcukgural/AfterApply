@@ -114,22 +114,17 @@
       "eyebrow": "How many sent, how many replied",
       "title": "You applied. So what happened next?",
       "subtitle": "How many of your applications got a reply, how many went quiet, and how long a first response actually took. Import your LinkedIn history or install the extension — let e-kariyerim do the collecting.",
-      "ctaPrimary": "Get Started Free",
-      "ctaSecondary": "See how it works",
-      "cvScanLink": "Try it without an account: how does a machine read your CV?"
+      "ctaPrimary": "Scan my CV",
+      "ctaSecondary": "Get Started Free",
+      "ctaHowItWorks": "See how it works"
     },
-    "heroPreview": {
-      "title": "Your applications",
-      "applications": "Applications",
-      "row1Company": "ABC Technology",
-      "row1Status": "Interview",
-      "row1Meta": "4 days ago",
-      "row2Company": "XYZ Bank",
-      "row2Status": "Waiting",
-      "row2Meta": "12 days",
-      "row3Company": "Acme Software",
-      "row3Status": "Possibly Ghosted",
-      "row3Meta": "31 days"
+    "heroScan": {
+      "title": "Drop your CV here",
+      "dragHint": "Drag your file, or",
+      "choose": "choose a file",
+      "formats": "PDF or DOCX · 5 MB max",
+      "noAccount": "No account needed; the file is never written to disk and is dropped from memory when the scan ends.",
+      "nextStep": "On the next step you tick the consent box and start the scan yourself."
     },
     "problem": {
       "eyebrow": "Sound familiar?",
@@ -193,7 +188,11 @@
       "eyebrow": "Your actual numbers",
       "title": "How many replied? How many never did?",
       "subtitle": "Response rate, interview rate, ghosting rate, and how long a first reply takes — not a guess, your own data.",
-      "benchmarkLink": "Work out your own rate without signing up"
+      "benchmarkCard": {
+        "title": "Those numbers are samples. What are yours?",
+        "body": "How many applications did you send, and how many ever came back — enter two numbers, see your own reply rate and compare it with the median in your field. No account needed.",
+        "button": "Compare"
+      }
     },
     "vision": {
       "eyebrow": "Vision",
@@ -2053,15 +2052,16 @@
   "cvScan": {
     "title": "How does a machine read your CV?",
     "subtitle": "Upload your PDF or Word file and see what an applicant tracking system reads from it, where it gets stuck, and what to fix. No account, and the file is never stored.",
+    "navCta": "Scan your CV",
     "form": {
       "choose": "Choose a file",
       "dropHint": "PDF or DOCX · 5 MB max",
       "dragHint": "Drop your file here, or",
       "selected": "Selected file",
       "remove": "Remove",
+      "handoffNote": "The file you dropped is here. Tick the consent box to start the scan.",
       "consentLabel": "I consent to my CV being processed for this scan.",
-      "consentDetail": "The file is never written to disk; it is dropped from memory as soon as the scan finishes. See the {privacy} for detail.",
-      "consentPrivacyLink": "Privacy Policy",
+      "consentDetail": "The file is never written to disk; it is dropped from memory as soon as the scan finishes. See the <privacy>Privacy Policy</privacy> for detail.",
       "contentNotesLabel": "Also give me notes on the writing (optional).",
       "contentNotesDetail": "Ticking this sends the text of your CV to an AI model to write the notes — Google Cloud Vertex AI, in the EU region, where the data already sits. Still nothing is stored. The notes do not affect the score; leaving this unticked gives you exactly the same number.",
       "submit": "Scan my CV",
