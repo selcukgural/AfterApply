@@ -778,5 +778,6 @@ internal sealed class AuthService(
 
     private static UserProfileResponse ToProfile(ApplicationUser user) =>
         new(user.Id, user.Email!, user.FirstName, user.LastName, user.CreatedAt, user.ConsentAcceptedAt,
-            user.PreferredLanguage, user.PreferredTheme, HasPassword: user.PasswordHash is not null);
+            user.PreferredLanguage, user.PreferredTheme, HasPassword: user.PasswordHash is not null,
+            IsAdmin: user.IsAdmin);
 }

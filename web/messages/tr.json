@@ -279,7 +279,8 @@
     "suggestions": "Öneriler",
     "notifications": "Bildirimler",
     "help": "Yardım",
-    "cv": "CV'lerim"
+    "cv": "CV'lerim",
+    "admin": "Yönetim"
   },
   "auth": {
     "login": {

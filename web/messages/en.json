@@ -279,7 +279,8 @@
     "suggestions": "Suggestions",
     "notifications": "Notifications",
     "help": "Help",
-    "cv": "My CVs"
+    "cv": "My CVs",
+    "admin": "Admin"
   },
   "auth": {
     "login": {

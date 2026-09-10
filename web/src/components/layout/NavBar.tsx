@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { ADMIN_NAV_HREF, canSeeAdminNav } from "@/lib/auth/adminNav";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
 import { useNotificationCount } from "@/hooks/useNotificationCount";
 import { Button } from "@/components/ui/Button";
@@ -33,6 +34,11 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
     await logout();
     router.replace("/login");
   };
+
+  // The flag rides on the profile, which is re-fetched on every mount (AuthContext validates the
+  // stored session against /api/users/me), so a grant or a revoke reaches the menu on the next page
+  // load rather than at the next sign-in.
+  const showAdmin = canSeeAdminNav(user);
 
   const fullName = user ? `${user.firstName} ${user.lastName}` : "";
   const initials = user ? `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase() : "";
@@ -86,7 +92,15 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
         </div>
 
         <div className="hidden md:block">
-          {user && <UserMenu name={fullName} initials={initials} onLogout={handleLogout} initialTheme={initialTheme} />}
+          {user && (
+            <UserMenu
+              name={fullName}
+              initials={initials}
+              onLogout={handleLogout}
+              initialTheme={initialTheme}
+              showAdmin={showAdmin}
+            />
+          )}
         </div>
 
         <button
@@ -135,6 +149,17 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
               <Link href="/settings" onClick={() => setMenuOpen(false)} className="hover:text-gray-900 dark:hover:text-gray-100">
                 {t("accountSettings")}
               </Link>
+              {/* Same group as on the desktop menu — help, settings, then admin for the accounts
+                  that have it. */}
+              {showAdmin && (
+                <Link
+                  href={ADMIN_NAV_HREF}
+                  onClick={() => setMenuOpen(false)}
+                  className="hover:text-gray-900 dark:hover:text-gray-100"
+                >
+                  {t("admin")}
+                </Link>
+              )}
             </nav>
           </div>
 

@@ -5352,3 +5352,73 @@ onu değiştiren alan Settings'te **kapalı** bir disclosure'ın içinde — yer
 isteyen bunu açmak zorunda, aksi halde farkında olmadan prod'a test eder; (2) content script sayfa
 yüklenirken enjekte olup tarama bayrağını yalnızca o an okuduğu için, bayrağı açtıktan sonra Gmail
 sekmesini yenilemek şart.
+
+---
+
+## Bing Webmaster Tools kuruldu; yeni sayfalar için elle gönderim yok (2026-09-10)
+
+2026-09-08'deki teknik SEO turunda "Bing Webmaster Tools da yok" diye bırakılan eksik kapatıldı.
+Tetikleyen soru şuydu: sonradan eklenen sayfaları (`/cv-tarama`, `/benchmark`, yedi rehber yazısı,
+`/extension-privacy`, `/cookies`, `/help/cv`) arama motorlarına ayrıca bildirmek gerekiyor mu?
+
+**Gerekmiyor, çünkü sitemap elle yazılmıyor.** `lib/seo/routes.ts`'teki `PUBLIC_PATHS` +
+`GUIDE_ARTICLES` listesi hem sitemap'i hem hreflang'leri besliyor; public bir sayfa o listeye
+girdiği anda sitemap'e de giriyor. Canlı doğrulama: sitemap **54 URL**, aynı gün merge edilen
+`/cv-tarama` dahil hepsi içinde, sayfalarda `noindex` yok ve canonical'lar apex'i gösteriyor.
+Search Console tarafında da 54 URL keşfedilmiş görünüyor. Sitemap'te olmayan tek public sayfa
+`/pair` — bilerek (tek kullanımlık pairing kodu, layout'ta `index: false`).
+
+**Bing doğrulaması Google Search Console'dan içe aktarma ile yapıldı.** Diğer üç yol (XML dosyası,
+meta tag, CNAME) sırasıyla deploy, deploy ve yeni bir DNS kaydı isterdi; import hiçbirini
+istemiyor, GSC'deki Administrator rolünü delil olarak kabul ediyor. **Sonucu: depoda ya da DNS'te
+Bing'e ait hiçbir doğrulama izi yok** — `BingSiteAuth.xml` aramak boşuna, doğrulama tamamen
+hesaplar arası bir bağ. Import ekranı "Total Sitemaps found: −" gösterdi; GSC mülkü Domain
+property (`sc-domain:`) tipinde olduğu için import API'si sitemap listesini geri veremiyor, sitemap
+Bing'e elle eklendi ve 54 URL okundu.
+
+**Yeni sayfalar için elle URL gönderimi yapılmıyor** — ne Bing'in "URL Submission"ı ne de
+Search Console'un "Request indexing"i. Bing'in günlük kotası 10 URL civarında ve sıfır trafikli
+yeni bir alan adında tarama sırasını ölçülebilir biçimde değiştirmiyor; asıl sinyal sitemap'in
+okunmuş olması. Google tarafında "Discovered ≠ Indexed" ayrımı hatırda tutulmalı: 54 keşfedilmiş
+olması 54'ünün dizine girdiği anlamına gelmiyor, Pages raporu söyler ve yeni alan adında haftalar
+sürmesi normal.
+
+IndexNow (Bing'in anında bildirim protokolü, deploy'a bağlanabilir) bakıldı ve **alınmadı**:
+ölçülecek bir tarama sorunu yokken otomasyon kurmak, düzeltmesi olmayan bir şeyi düzeltmek olurdu.
+
+Kod değişmedi, dolayısıyla yeni test de yok — bu tur tamamen hesap tarafı bir kurulum.
+
+---
+
+## Admin sayfaları menüden erişilir oldu (2026-09-10)
+
+`/admin/metrics` bugüne kadar yalnızca adresi elle yazarak açılıyordu: erişim kontrolü sunucuda
+düzgün duruyordu (`Users.IsAdmin`, her istekte okunuyor) ama web uygulamasının bir hesabın admin
+olup olmadığını **öğrenebileceği hiçbir yol yoktu**, dolayısıyla gösterilecek bir link de yoktu.
+
+**`UserProfileResponse` artık `IsAdmin` taşıyor.** Bu, çağıranın kendi bayrağı — başkasının değil —
+ve yalnızca bir çizim ipucu: `/api/admin/*` uçlarının hepsi kolonu veritabanından yeniden okuyor
+(`AdminAccessService`), yani bunu devtools'tan `true` yapan kişinin kazandığı tek şey 403 veren bir
+menü satırı. Bayrağı JWT'ye koymak alternatifti ve **koymadık**: token'a girdiği anda yetki iptali
+ancak token süresi dolunca etkili olurdu, oysa şu anki davranış — iptal bir sonraki istekte
+geçerli — bu özelliğin kolon olmasının bütün sebebi.
+
+**Link, birincil navigasyona değil, kullanıcı menüsüne kondu** (Yardım / Hesap Ayarları'nın altına,
+mobilde de aynı grupta). `UserMenu`'nün kendi yorumu bunu zaten söylüyordu: yardımcı bağlantılar
+oraya toplanmış ki uzun yerelleştirmelerde birincil nav ikinci satıra taşmasın. Yalnızca tek bir
+hesabın göreceği bir öğe için o riski almaya değmez; menü de "elle URL yazmak" değil, tıklanabilir
+bir yol — istenen buydu.
+
+`canSeeAdminNav` ayrı bir saf fonksiyon (`lib/auth/adminNav.ts`), çünkü web tarafında bileşen
+render eden bir test koşumu yok (vitest node'da, jsdom yok). Kontrol kasten `=== true`: profil
+`localStorage`'dan geri okunuyor, bu alan yokken kaydedilmiş bir oturumda `isAdmin` hiç
+bulunmuyor — ve elle düzenlenmiş bir JSON'da her şey olabilir. İkisi de "link yok" demeli.
+
+Testler: `adminNav.test.ts` (6) ve iki entegrasyon testi — profil doğru hesaba `true` diyor,
+iptal edilen admin'e bir sonraki `/api/users/me`'de `false` diyor (menü, 403 veren bir sayfayı
+sunmaya devam etmesin). `AdminMetricsTests.GrantAdminAsync`, iki yönü de kuran
+`SetAdminAsync(email, isAdmin)` oldu. Frontend 264 → 270, entegrasyon 334 → 336, birim 567 sabit.
+
+**Yerel doğrulama (gerçek tarayıcı, yerel API + web):** admin olmayan hesapta menüde "Yönetim" yok;
+`IsAdmin` SQL ile açılınca bir sonraki sayfa yüklenişinde çıkıyor ve `/tr/admin/metrics` açılıyor;
+geri alınınca yine kayboluyor. Test kullanıcısının bayrağı doğrulama sonunda `false`'a döndürüldü.
