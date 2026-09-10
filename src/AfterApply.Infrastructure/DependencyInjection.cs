@@ -430,6 +430,13 @@ public static class DependencyInjection
         services.AddScoped<IBenchmarkService, BenchmarkService>();
         services.AddScoped<ICvScanService, CvScanService>();
         services.AddScoped<ICvTextExtractor, CvTextExtractor>();
+        services.AddScoped<ICvReviewProvider, VertexCvReviewProvider>();
+
+        // A named client so the timeout and the handler lifetime belong to this call rather than to
+        // whatever DefaultClient happens to be configured with. No BaseAddress: the host carries
+        // the Vertex region, and building it per request is what keeps that visible at the call
+        // site (see VertexCvReviewProvider).
+        services.AddHttpClient(CvScanOptions.ReviewHttpClientName);
         services.AddScoped<IAdminAccessService, AdminAccessService>();
         services.AddScoped<IAutoApprovalCalibrationService, AutoApprovalCalibrationService>();
         services.AddScoped<IEmailClassificationProvider, OpenAiEmailClassificationProvider>();

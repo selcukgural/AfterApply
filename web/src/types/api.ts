@@ -515,12 +515,20 @@ export interface GitHubAuthConfig {
   clientId: string | null;
 }
 
+/** Whether the CV scan can offer its optional content-notes consent. False means the checkbox is
+ *  not rendered at all — a box for something that cannot happen is a promise the page cannot
+ *  keep. The scan itself does not depend on this. */
+export interface CvScanConfig {
+  contentNotesAvailable: boolean;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
   googleAuth: GoogleAuthConfig;
   linkedInAuth: LinkedInAuthConfig;
   gitHubAuth: GitHubAuthConfig;
+  cvScan: CvScanConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -849,4 +857,28 @@ export interface CvScanResponse {
   document: CvScanDocumentSummary;
   extractedTextPreview: string;
   extractedTextTruncated: boolean;
+  /** Layer B. Never part of `score` — the page badges it as such. */
+  reviewStatus: CvReviewStatus;
+  contentNotes: CvContentNote[];
 }
+
+/** Layer B of the CV scan: what a model said about the writing. A closed set, because the page
+ *  carries copy for each kind in both languages. */
+export type CvContentNoteKind =
+  | "UnquantifiedAchievement"
+  | "WeakVerb"
+  | "RepeatedVerb"
+  | "LanguageInconsistency";
+
+/** `quote` is verbatim from the reader's own CV — the server drops any note whose quote it cannot
+ *  find in the extracted text, so a note always points at a line that really exists. */
+export interface CvContentNote {
+  kind: CvContentNoteKind;
+  quote: string;
+  suggestion: string;
+}
+
+/** Why the notes section looks the way it does. `Disabled` means the feature is off and the page
+ *  says nothing about it; `NotRequested` is the ordinary case of an unticked optional box;
+ *  `Unavailable` is asked-for-but-not-delivered, which never affects the score. */
+export type CvReviewStatus = "Disabled" | "NotRequested" | "Unavailable" | "Ready";

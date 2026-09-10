@@ -883,9 +883,10 @@
       "intro": "On the public CV scan page you can upload a PDF or Word file and see what an applicant tracking system reads from it. This is separate from, and different to, \"CVs you upload\" above:",
       "noStorage": "The file is not stored anywhere. It is never written to disk on the server and never placed in storage; it exists in memory for the length of the request and is gone once the response is sent. The text of your CV is not kept either.",
       "retained": "Three things survive a scan: your IP address, to enforce the scan limit (deleted after 2 hours), an anonymous score (a number from 0 to 100, with no record of which file it came from or whose it was), and a scan counter.",
-      "noTransfer": "The contents of your CV are not sent to any third party — AI services included. The score is produced entirely by fixed-rule checks running on our own server; no language model is involved.",
+      "noTransfer": "All seven checks behind the score run on our own server: the score is never asked of an AI model, so it cannot be inflated by an instruction written inside the CV. Unless you tick the optional box, the contents of your CV are not sent to any third party.",
+      "contentNotes": "If you ask for notes on the writing (the second, optional box): the text of your CV is sent to Google Cloud Vertex AI — in the EU region our infrastructure already runs in, with the same processor; no new country is involved. It goes through paid Vertex, which does not train on the content. The notes do not affect the score, the text is still stored nowhere, and with the box unticked no model is involved at all.",
       "output": "The excerpts and the raw text you see on the result screen exist only inside the response to your own request; they are not recorded and never written to logs.",
-      "consent": "The legal basis is your explicit consent, taken separately for every scan: the consent box is never pre-ticked and is cleared again after each scan. Since nothing is stored, there is no retention to withdraw — not running the scan is enough."
+      "consent": "The legal basis is your explicit consent, taken separately for every scan: the box is never pre-ticked and is cleared again after each scan. The second box, for the content notes, is separate and genuinely optional — the scan works fully without it and your score is identical. Since nothing is stored, there is no retention to withdraw; not running the scan is enough."
     },
     "feedback": {
       "title": "Feedback you send",
@@ -2061,6 +2062,8 @@
       "consentLabel": "I consent to my CV being processed for this scan.",
       "consentDetail": "The file is never written to disk; it is dropped from memory as soon as the scan finishes. See the {privacy} for detail.",
       "consentPrivacyLink": "Privacy Policy",
+      "contentNotesLabel": "Also give me notes on the writing (optional).",
+      "contentNotesDetail": "Ticking this sends the text of your CV to an AI model to write the notes — Google Cloud Vertex AI, in the EU region, where the data already sits. Still nothing is stored. The notes do not affect the score; leaving this unticked gives you exactly the same number.",
       "submit": "Scan my CV",
       "submitting": "Scanning…",
       "again": "Scan another file"
@@ -2131,6 +2134,19 @@
       "SectionsAndDates": "Sections and dates",
       "Contact": "Contact details",
       "FormatAndLength": "Format and length"
+    },
+    "notes": {
+      "title": "Content notes",
+      "badge": "Does not affect the score",
+      "notRequested": "You did not ask for these on this scan. Tick the second box next time if you want them.",
+      "unavailable": "The content notes could not be produced right now. The score and the findings above are unaffected — those come from our own checks.",
+      "none": "The model found nothing worth saying about the writing.",
+      "kinds": {
+        "UnquantifiedAchievement": "Achievement with no number",
+        "WeakVerb": "Weak verb",
+        "RepeatedVerb": "Repeated verb",
+        "LanguageInconsistency": "Language inconsistency"
+      }
     },
     "findings": {
       "NoTextLayer": {

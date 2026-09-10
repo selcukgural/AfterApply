@@ -960,6 +960,14 @@ girişsiz bir edinim yüzeyi; ve **saklamasız** — dosya diske hiç yazılmıy
 > yok:** `CvScan:LlmEnabled` bayrağı duruyor ama hiçbir yerde okunmuyor — sağlayıcı seçimi ve
 > eval'i ayrı bir iş, ve A tek başına sayfanın vaadini karşılıyor. Kararların tamamı
 > `DECISIONS.md` 2026-09-10.
+>
+> **Durum (2026-09-10, ikinci parti): B katmanı yazıldı, bayrak hâlâ kapalı.** Vertex AI (Gemini,
+> AB bölgesine sabit, ADC ile kimlik doğrulama), ayrı ve isteğe bağlı ikinci onay kutusu, modelin
+> çıktısını gösterilmeden doğrulayan `CvReviewNotes.Sanitize` (alıntısı CV'de olmayan not düşer),
+> günlük çağrı tavanı + sağlayıcı arızasında A'ya zarifçe düşme, sekiz sentetik CV'lik eval
+> harness'ı (`CV_REVIEW_EVAL=1`), `/privacy#cv-scan` ve `PRIVACY_CHECKLIST.md` güncellemesi,
+> `DEPLOYMENT.md` §12'de açma adımları. **Açmadan önce:** GCP kurulumu + eval. Sapmalar ve
+> gerekçeleri `DECISIONS.md` 2026-09-10 (ikinci kayıt).
 
 #### Üç katman
 

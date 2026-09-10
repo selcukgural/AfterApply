@@ -29,12 +29,29 @@ public sealed class CvScanResult : Entity
     /// whoever reads it next.</summary>
     public CvFileFormat Format { get; private set; }
 
+    /// <summary>
+    /// Whether the visitor ticked the optional box that sends the text to a model for content
+    /// notes. Two jobs, both of which need a number and neither of which needs a person: it is the
+    /// opt-in rate — the honest measure of whether anyone wants layer B at all — and it is what the
+    /// daily ceiling counts, so a day's spend is bounded by rows rather than by trust in a provider
+    /// dashboard. A request refused *because* the ceiling was already reached still sets it: the
+    /// visitor did ask, and the cap is for the day either way.
+    /// </summary>
+    public bool ContentNotesRequested { get; private set; }
+
     public DateTimeOffset ScannedAt { get; private set; }
 
     private CvScanResult()
     {
     }
 
-    public static CvScanResult Create(int score, CvFileFormat format, DateTimeOffset scannedAt) =>
-        new() { Score = score, Format = format, ScannedAt = scannedAt };
+    public static CvScanResult Create(int score, CvFileFormat format, bool contentNotesRequested,
+        DateTimeOffset scannedAt) =>
+        new()
+        {
+            Score = score,
+            Format = format,
+            ContentNotesRequested = contentNotesRequested,
+            ScannedAt = scannedAt
+        };
 }
