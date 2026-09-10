@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { formatCount } from "@/lib/dashboard/format";
 import { findingDetails, fixList, pointsAtStake, scoreBand } from "@/lib/cvScan/findings";
-import type { CvScanFinding, CvScanResponse } from "@/types/api";
+import type { CvContentNote, CvScanFinding, CvScanResponse } from "@/types/api";
 
 /**
  * The result screen. Its whole job is to be checkable: the headline is the sum of the four
@@ -93,6 +93,12 @@ export function CvScanResult({ result, onReset }: { result: CvScanResponse; onRe
           </ul>
         )}
       </section>
+
+      {/* Layer B, and everything about how it is presented follows from one rule: it is not part of
+          the score. It sits after the fix list rather than among it, carries a badge saying so, and
+          says nothing at all when the feature is off — the reader should never have to work out
+          which half of the page the number came from. */}
+      {result.reviewStatus !== "Disabled" ? <ContentNotesSection result={result} /> : null}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("result.previewTitle")}</h2>
@@ -202,6 +208,52 @@ function FindingCard({ finding }: { finding: CvScanFinding }) {
           {t(`findings.${finding.code}.fix`)}
         </p>
       </div>
+    </li>
+  );
+}
+
+function ContentNotesSection({ result }: { result: CvScanResponse }) {
+  const t = useTranslations("cvScan");
+
+  return (
+    <section className="flex flex-col gap-3 rounded-xl border border-dashed border-gray-300 p-5 dark:border-gray-700">
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("notes.title")}</h2>
+        {/* The badge is not decoration: it is the sentence that keeps a reader from reading these
+            as points they lost. */}
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+          {t("notes.badge")}
+        </span>
+      </div>
+
+      {result.reviewStatus === "NotRequested" ? (
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("notes.notRequested")}</p>
+      ) : result.reviewStatus === "Unavailable" ? (
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("notes.unavailable")}</p>
+      ) : result.contentNotes.length === 0 ? (
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("notes.none")}</p>
+      ) : (
+        <ul className="flex flex-col gap-4">
+          {result.contentNotes.map((note, index) => (
+            <ContentNoteCard key={`${note.kind}-${index}`} note={note} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function ContentNoteCard({ note }: { note: CvContentNote }) {
+  const t = useTranslations("cvScan");
+
+  return (
+    <li className="flex flex-col gap-1">
+      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t(`notes.kinds.${note.kind}`)}</p>
+      {/* Both strings are rendered as text: the quote came out of an uploaded file and the
+          suggestion was written by a model that had just read one. React escaping them is what
+          makes showing either of them safe. */}
+      <p className="font-mono text-xs text-gray-600 dark:text-gray-400">“{note.quote}”</p>
+      <p className="text-sm text-gray-700 dark:text-gray-300">{note.suggestion}</p>
     </li>
   );
 }

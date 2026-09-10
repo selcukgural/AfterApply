@@ -10,7 +10,8 @@ public sealed record ClientConfigResponse(
     PersonalAccessTokenLimitsResponse PersonalAccessTokens,
     GoogleAuthConfigResponse GoogleAuth,
     LinkedInAuthConfigResponse LinkedInAuth,
-    GitHubAuthConfigResponse GitHubAuth);
+    GitHubAuthConfigResponse GitHubAuth,
+    CvScanConfigResponse CvScan);
 
 /// <summary>Mirrors ASP.NET Identity's <c>PasswordOptions</c>, which is what the server actually
 /// validates against — the response is built from that object, not from a copy of the config.</summary>
@@ -41,3 +42,12 @@ public sealed record LinkedInAuthConfigResponse(bool Enabled, string? ClientId);
 /// browser needs to start the redirect to github.com. Same shape and same rules as
 /// <see cref="GoogleAuthConfigResponse"/>.</summary>
 public sealed record GitHubAuthConfigResponse(bool Enabled, string? ClientId);
+
+/// <summary>
+/// What the public CV scan page needs to know before it renders. Only
+/// <paramref name="ContentNotesAvailable"/>: with layer B off the optional consent box is not
+/// offered at all, because a checkbox for something that cannot happen is a promise the page
+/// cannot keep. The scan itself is always available while the route exists — a client that asks
+/// this and gets a 404 from the scan endpoint has learnt the same thing.
+/// </summary>
+public sealed record CvScanConfigResponse(bool ContentNotesAvailable);

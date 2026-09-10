@@ -6,7 +6,9 @@ using AfterApply.Domain.CvScan;
 using AfterApply.Domain.Documents;
 using AfterApply.Infrastructure.Documents;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.CvScan;
@@ -25,9 +27,11 @@ namespace AfterApply.Infrastructure.CvScan;
 internal sealed class CvScanService(
     AppDbContext dbContext,
     ICvTextExtractor extractor,
+    ICvReviewProvider reviewProvider,
     IOptions<CvScanOptions> options,
     IOptions<StorageOptions> storageOptions,
-    IStringLocalizer<SharedStrings> localizer)
+    IStringLocalizer<SharedStrings> localizer,
+    ILogger<CvScanService> logger)
     : ICvScanService
 {
     private const long MinimumFormMilliseconds = 1_500;
@@ -89,10 +93,16 @@ internal sealed class CvScanService(
 
         var score = CvScanScoring.Score(CvScanChecks.Run(extracted));
 
+        // Layer B runs after the score exists and can only ever add to the response. Whatever
+        // happens here — the model refuses, the ceiling is reached, Vertex is down — the number
+        // above is already final.
+        var (reviewStatus, notes) = await ReviewAsync(request, extracted, cancellationToken);
+
         // Anonymous, and the only thing that survives the request. Saved before the response is
         // built so a scan that reached a score is counted as one — the stopping condition in
         // DEVELOPMENT_PLAN.md counts completed scans, and a scan the reader saw is completed.
-        dbContext.CvScanResults.Add(CvScanResult.Create(score.Score, format, DateTimeOffset.UtcNow));
+        dbContext.CvScanResults.Add(CvScanResult.Create(score.Score, format,
+            request.ContentNotesRequested, DateTimeOffset.UtcNow));
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var preview = extracted.Text.Length > options.Value.PreviewCharacters
@@ -103,7 +113,63 @@ internal sealed class CvScanService(
             score.Score, score.Categories, score.Findings,
             new CvScanDocumentSummary(format, extracted.PageCount, extracted.WordCount),
             preview,
-            extracted.TextTruncated || preview.Length < extracted.Text.Length);
+            extracted.TextTruncated || preview.Length < extracted.Text.Length,
+            reviewStatus, notes);
+    }
+
+    /// <summary>
+    /// The content notes, and every reason there might not be any. Four outcomes, none of which is
+    /// an error the caller has to handle: the feature is off, it was not asked for, it could not be
+    /// done, or it worked.
+    ///
+    /// <b>Nothing in here can change the score</b>, which is why it runs after scoring and why its
+    /// failure path is a status rather than an exception.
+    /// </summary>
+    private async Task<(CvReviewStatus Status, IReadOnlyList<CvContentNote> Notes)> ReviewAsync(
+        CvScanRequest request, ExtractedCv extracted, CancellationToken cancellationToken)
+    {
+        if (!options.Value.LlmEnabled)
+        {
+            return (CvReviewStatus.Disabled, []);
+        }
+
+        if (!request.ContentNotesRequested)
+        {
+            return (CvReviewStatus.NotRequested, []);
+        }
+
+        // The day's ceiling, counted from the rows this feature writes rather than from a provider
+        // dashboard nobody is watching. Reaching it degrades layer B and leaves layer A alone,
+        // which is the behaviour DEVELOPMENT_PLAN.md asks for.
+        // Built as an explicit UTC offset. DateTimeOffset.UtcNow.Date returns a DateTime with an
+        // unspecified kind, and letting that convert implicitly would silently mean "midnight in
+        // whatever timezone this process happens to run in" — a three-hour shift on a developer's
+        // machine and a different day's ceiling than the one the row was counted into.
+        var since = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
+        var todaysRequests = await dbContext.CvScanResults
+            .CountAsync(result => result.ContentNotesRequested && result.ScannedAt >= since, cancellationToken);
+
+        if (todaysRequests >= options.Value.Review.DailyRequestCeiling)
+        {
+            logger.LogWarning("CV scan content notes skipped: the daily ceiling of {Ceiling} was reached.",
+                options.Value.Review.DailyRequestCeiling);
+            return (CvReviewStatus.Unavailable, []);
+        }
+
+        try
+        {
+            var notes = await reviewProvider.ReviewAsync(
+                new CvReviewRequest(extracted.Text, request.Locale), cancellationToken);
+
+            return (CvReviewStatus.Ready, CvReviewNotes.Sanitize(notes, extracted.Text));
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // The message only — never the request, which is the caller's CV. A scan that lost its
+            // notes is still a scan that answered the question the page asked.
+            logger.LogWarning("CV scan content notes unavailable: {Reason}", exception.Message);
+            return (CvReviewStatus.Unavailable, []);
+        }
     }
 
     private string MessageFor(CvFileProblem problem, long maxFileSizeBytes) => problem switch

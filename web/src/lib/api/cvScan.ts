@@ -13,11 +13,26 @@ import { apiFetch } from "./httpClient";
  * "this file is password protected", "the old .doc format cannot be read". apiFetch is what surfaces
  * a ValidationProblem's localized `errors`.
  */
+export interface CvScanInput {
+  file: File;
+  consentAccepted: boolean;
+  /** The optional second consent. False is the ordinary case and costs the caller nothing but the
+   *  notes — the score is identical either way. */
+  contentNotesRequested: boolean;
+  /** Which language the model should write its notes in. The deterministic findings are localized
+   *  in the browser from their codes; prose cannot be. */
+  locale: string;
+  website: string;
+  elapsedMs: number;
+}
+
 export const cvScanApi = {
-  scan: (file: File, consentAccepted: boolean, website: string, elapsedMs: number) => {
+  scan: ({ file, consentAccepted, contentNotesRequested, locale, website, elapsedMs }: CvScanInput) => {
     const body = new FormData();
     body.append("file", file);
     body.append("consentAccepted", String(consentAccepted));
+    body.append("contentNotesRequested", String(contentNotesRequested));
+    body.append("locale", locale);
     // Both anti-abuse fields travel with the file rather than being inferred server-side: the
     // honeypot is a field a person never sees, and elapsedMs is how long the form was open.
     body.append("website", website);

@@ -663,3 +663,85 @@ defaults to `FileSystem`, which writes under the OS temp directory, and
 and per-instance, so an upload written there would vanish on the next
 revision and be invisible to every other instance. Failing at startup is
 the only way that mistake surfaces before a user's CV is lost.
+
+### 12. Vertex AI for the CV scan's content notes (V6 layer B — 2026-09-10)
+
+The CV scan's score never involves a model and never will (see
+`DECISIONS.md` 2026-09-10). The *content notes* beside it do: they are
+written by Gemini through Vertex AI. The code ships with the feature
+**off** — `CvScan:LlmEnabled` is `false` and the optional consent box is
+not even rendered — so nothing below is needed to run the product. Do it
+when you want layer B on.
+
+Three properties of this setup are privacy decisions rather than
+engineering ones, and all three are visible in the code:
+
+- **The region is in the URL.** `VertexCvReviewProvider` calls
+  `https://{location}-aiplatform.googleapis.com/...`, with the location
+  coming from `CvScan:Review:Location`. Keep it in the EU — the same
+  region the rest of the personal data already sits in — so no new
+  country appears in `/privacy`. **Never set it to `global`**: that is
+  precisely the guarantee it would drop.
+- **There is no API key.** Authentication is Application Default
+  Credentials, i.e. the Cloud Run runtime service account, so there is
+  nothing to rotate or to leak and access is revoked by removing one IAM
+  binding.
+- **Paid Vertex, not the AI Studio free tier.** The free tier's terms
+  allow the content to be used to improve the product; paid Vertex does
+  not train on it. CV text may not go through the free tier at all.
+
+```bash
+PROJECT_ID="$(gcloud config get-value project)"
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+RUNTIME_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+# 1. Enable the API.
+gcloud services enable aiplatform.googleapis.com --project="$PROJECT_ID"
+
+# 2. Let the runtime service account call models. roles/aiplatform.user is
+#    the smallest role that can run inference; it grants no training, no
+#    tuning and no data access beyond the call itself.
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${RUNTIME_SA}" --role="roles/aiplatform.user"
+
+# 3. Check the model is actually served from the region you pinned. Model
+#    availability is per-region and changes; a model that is not there
+#    answers 404 and layer B degrades to "unavailable" (which is safe, but
+#    means nobody ever sees a note).
+gcloud ai models list --region=europe-west1 --project="$PROJECT_ID" 2>/dev/null | head
+```
+
+Then turn it on for the API service — both settings, because the code
+requires a project id as well as the flag before it will offer the
+consent box at all:
+
+```bash
+gcloud run services update afterapply-api --region=europe-west1 \
+  --update-env-vars=CvScan__LlmEnabled=true,CvScan__Review__ProjectId="$PROJECT_ID"
+```
+
+`CvScan__Review__Location`, `__Model`, `__DailyRequestCeiling`,
+`__MaxInputCharacters` and `__TimeoutSeconds` all have defaults in
+`appsettings.json` and are env-var overridable the same way. The daily
+ceiling is what bounds a day's spend: it is counted from
+`CvScanResults.ContentNotesRequested`, so it holds across instances and
+revisions rather than per process. Reaching it degrades layer B and
+leaves the score alone.
+
+**Before turning it on, run the eval.** It scores a synthetic corpus of
+CVs with known weaknesses against the real API and prints every note:
+
+```bash
+CV_REVIEW_EVAL=1 CvScan__Review__ProjectId="$PROJECT_ID" \
+  dotnet test tests/AfterApply.IntegrationTests --filter FullyQualifiedName~CvReviewEval
+```
+
+It needs local Application Default Credentials
+(`gcloud auth application-default login`) and is the only test in that
+assembly allowed to open a socket — everything else is blocked by
+`NoOutboundHttpStartup`. Without `CV_REVIEW_EVAL=1` it does nothing.
+
+**Turning it off** is one env var (`CvScan__LlmEnabled=false`), takes
+effect on the next revision, and costs nothing but the notes: the score,
+the findings and the page all keep working, because they never depended
+on the model.

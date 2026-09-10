@@ -1,4 +1,5 @@
 using AfterApply.Application.ClientConfig;
+using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -20,6 +21,7 @@ public static class ClientConfigEndpoints
                 IOptions<GoogleAuthOptions> googleAuthOptions,
                 IOptions<LinkedInAuthOptions> linkedInAuthOptions,
                 IOptions<GitHubAuthOptions> gitHubAuthOptions,
+                IOptions<CvScanOptions> cvScanOptions,
                 HttpContext httpContext) =>
             {
                 // Read from IdentityOptions rather than IdentityPolicyOptions: the former is the object
@@ -30,6 +32,7 @@ public static class ClientConfigEndpoints
                 var google = googleAuthOptions.Value;
                 var linkedIn = linkedInAuthOptions.Value;
                 var gitHub = gitHubAuthOptions.Value;
+                var cvScan = cvScanOptions.Value;
 
                 // The values change only with a deploy or a config rollout, so let browsers and the
                 // CDN hold them for a few minutes instead of re-fetching on every form mount.
@@ -56,13 +59,19 @@ public static class ClientConfigEndpoints
                     new PersonalAccessTokenLimitsResponse(tokens.MaxActiveTokens, tokens.LifetimeDays),
                     new GoogleAuthConfigResponse(google.IsConfigured, google.IsConfigured ? google.ClientId : null),
                     new LinkedInAuthConfigResponse(linkedIn.IsConfigured, linkedIn.IsConfigured ? linkedIn.ClientId : null),
-                    new GitHubAuthConfigResponse(gitHub.IsConfigured, gitHub.IsConfigured ? gitHub.ClientId : null)));
+                    new GitHubAuthConfigResponse(gitHub.IsConfigured, gitHub.IsConfigured ? gitHub.ClientId : null),
+                    // Both halves have to be true for the box to be worth offering: the feature
+                    // flag, and a project to call. A flag on with no project configured would
+                    // render a checkbox whose only outcome is "unavailable".
+                    new CvScanConfigResponse(cvScan.Enabled && cvScan.LlmEnabled
+                                             && !string.IsNullOrWhiteSpace(cvScan.Review.ProjectId))));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")
             .WithDescription("The server-side limits a client should show the user up front: the password policy " +
                               "(what register and reset-password enforce), the personal-access-token limits, and whether " +
-                              "Sign in with Google/LinkedIn/GitHub are available (plus their public client ids). " +
+                              "Sign in with Google/LinkedIn/GitHub are available (plus their public client ids), "
+                              + "and whether the CV scan can offer its optional content-notes consent. " +
                               "Anonymous; nothing here is secret. All of it is still enforced server-side.")
             .Produces<ClientConfigResponse>();
 

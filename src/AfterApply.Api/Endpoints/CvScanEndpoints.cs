@@ -28,16 +28,19 @@ public static class CvScanEndpoints
         // non-nullable bool bound [FromForm] throws when the part is absent, which surfaced as a
         // 500 for what is really a malformed request. Null is refused exactly like false.
         group.MapPost("/", async ([FromForm] IFormFile file, [FromForm] bool? consentAccepted,
-            [FromForm] string? website, [FromForm] long? elapsedMs, ICvScanService service,
-            HttpContext httpContext,
+            [FromForm] bool? contentNotesRequested, [FromForm] string? website, [FromForm] long? elapsedMs,
+            [FromForm] string? locale, ICvScanService service, HttpContext httpContext,
             CancellationToken cancellationToken) =>
         {
             try
             {
                 await using var stream = file.OpenReadStream();
                 var result = await service.ScanAsync(
-                    new CvScanRequest(stream, file.FileName, file.Length, consentAccepted ?? false, website,
-                        elapsedMs),
+                    new CvScanRequest(stream, file.FileName, file.Length, consentAccepted ?? false,
+                        // Absent means not given, for the optional consent exactly as for the
+                        // required one: the only way to opt into the content notes is to say so.
+                        contentNotesRequested ?? false, website, elapsedMs,
+                        locale == "tr" ? "tr" : "en"),
                     cancellationToken);
 
                 // The response carries excerpts of the caller's own CV. It is theirs and it is
@@ -62,6 +65,9 @@ public static class CvScanEndpoints
                              "the extracted text so the caller can see what a machine reads. " +
                              "The score is computed by deterministic checks; no model participates in " +
                              "it, which is why a CV that contains instructions cannot argue with it. " +
+                             "'contentNotesRequested' is a separate, optional consent: with it, and only " +
+                             "with it, the extracted text is sent to a model for notes about the writing " +
+                             "— which are returned outside the score and never change it. " +
                              "Nothing is stored: the file is never written to disk and the only row " +
                              "that outlives the request is an anonymous score with no identifier.")
             .Produces<CvScanResponse>()

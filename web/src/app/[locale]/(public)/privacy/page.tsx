@@ -54,6 +54,9 @@ export default async function PrivacyPage() {
             <li>{t("cvScan.noStorage")}</li>
             <li>{t("cvScan.retained")}</li>
             <li>{t("cvScan.noTransfer")}</li>
+            {/* Layer B, and the one bullet above it says "no third party" — so this one has to name
+                the exception in the same list rather than in a footnote somewhere else. */}
+            <li>{t("cvScan.contentNotes")}</li>
             <li>{t("cvScan.output")}</li>
             <li>{t("cvScan.consent")}</li>
           </ul>

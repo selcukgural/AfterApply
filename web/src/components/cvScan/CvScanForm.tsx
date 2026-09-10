@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
 import { cvScanApi } from "@/lib/api/cvScan";
@@ -10,11 +10,14 @@ import { CV_SCAN_ACCEPT, inspectScanFile, type CvScanFileProblem } from "@/lib/c
 import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { useClientConfig } from "@/hooks/useClientConfig";
 import { CvScanResult } from "@/components/cvScan/CvScanResult";
 import type { CvScanResponse } from "@/types/api";
 
 export function CvScanForm() {
   const t = useTranslations("cvScan");
+  const locale = useLocale();
+  const { config } = useClientConfig();
   const fileInputRef = useRef<HTMLInputElement>(null);
   // dragenter/dragleave fire for every child the pointer crosses, so a boolean flickers the
   // highlight off mid-drag. Counting enters against leaves is the fix the CV manager and the
@@ -28,6 +31,9 @@ export function CvScanForm() {
   const [file, setFile] = useState<File | null>(null);
   const [fileProblem, setFileProblem] = useState<CvScanFileProblem | null>(null);
   const [consentAccepted, setConsentAccepted] = useState(false);
+  // The optional second consent, and unticked like the first: this one decides whether the text of
+  // the CV is sent to a model at all. Ticking it changes nothing about the score.
+  const [contentNotesRequested, setContentNotesRequested] = useState(false);
   const [consentError, setConsentError] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [website, setWebsite] = useState("");
@@ -41,7 +47,15 @@ export function CvScanForm() {
   }, []);
 
   const scan = useMutation({
-    mutationFn: () => cvScanApi.scan(file!, consentAccepted, website, Date.now() - openedAt.current),
+    mutationFn: () =>
+      cvScanApi.scan({
+        file: file!,
+        consentAccepted,
+        contentNotesRequested: contentNotesRequested && config.cvScan.contentNotesAvailable,
+        locale,
+        website,
+        elapsedMs: Date.now() - openedAt.current,
+      }),
     onSuccess: (response) => {
       setResult(response);
       // The funnel step the whole surface is measured on: a page view says someone arrived, this
@@ -82,8 +96,9 @@ export function CvScanForm() {
     setFile(null);
     setFileProblem(null);
     // Consent is per scan, never carried over: a box left ticked from the previous file is not
-    // explicit consent for this one.
+    // explicit consent for this one. Both boxes, for the same reason.
     setConsentAccepted(false);
+    setContentNotesRequested(false);
     openedAt.current = Date.now();
     scan.reset();
   };
@@ -191,6 +206,23 @@ export function CvScanForm() {
           </span>
         }
       />
+
+      {/* Offered only where it can actually be honoured — with layer B off, a box promising notes
+          would be a promise the deployment cannot keep. Optional in the real sense: leaving it
+          unticked costs the reader the notes and nothing else, and the score is identical. */}
+      {config.cvScan.contentNotesAvailable ? (
+        <Checkbox
+          id="cv-scan-content-notes"
+          checked={contentNotesRequested}
+          onChange={(event) => setContentNotesRequested(event.target.checked)}
+          label={
+            <span className="flex flex-col gap-1">
+              <span>{t("form.contentNotesLabel")}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{t("form.contentNotesDetail")}</span>
+            </span>
+          }
+        />
+      ) : null}
 
       {/* Honeypot. Hidden from people and from assistive technology, left in the DOM for anything
           that fills every input it finds — the same field the benchmark form carries, for the same

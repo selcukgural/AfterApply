@@ -5106,3 +5106,59 @@ cümlenin sonuç ekranında puanın yanında durması — oradan çıkarılamaz.
 (V2'de bir gün sonra yakalanmıştı). Sayfa görüntüleme → tamamlanan tarama → CTA → kayıt zinciri
 böylece ilk günden ölçülüyor; planın durdurma koşulu (4 hafta içinde ≥300 tamamlanmış tarama ve
 ≥%5 kayıt dönüşümü) bu iki sayıdan okunuyor.
+
+---
+
+## CV taramasının içerik notları: tek sağlayıcı, kapalı bayrak, sentetik eval (V6-B, 2026-09-10)
+
+V6'nın ikinci partisi: puanın **dışında** duran, modelin yazdığı içerik notları. Kod tamam,
+bayrak kapalı (`CvScan:LlmEnabled=false`), GCP tarafı yapılmadan açılmıyor.
+
+**Plandan üç sapma, üçü de gerekçeli.**
+
+1. **Tek sağlayıcı, iki değil.** Plan `ICvReviewProvider` + iki uygulama + eval diyordu; ikinci
+   uygulama (OpenAI) yazılmadı. Gerekçe fiyat değil: OpenAI'ı *karşılaştırmak için bile* denemek,
+   eval sırasında gerçek CV metnini ABD'deki ikinci bir işleyiciye göndermek demek. Arayüz
+   duruyor, yani Vertex'in çıktısı yetmezse ikinci uygulama küçük bir ek iş.
+2. **Tek onay kutusu değil, iki — ama ikincisi "yurt dışı aktarım" kutusu değil.** Plan ikinci
+   kutuyu yurt dışı aktarım rızası olarak tasarlamıştı; Vertex AB bölgesine sabitlenince ortada
+   yeni bir ülke ya da yeni bir işleyici kalmıyor (aynı Google Cloud sözleşmesi, Cloud Run ve
+   Cloud SQL'in bulunduğu `europe-west1`). Kutu bu yüzden **amaç** rızası: "metnim bir modele
+   gitsin". İşaretlenmezse hiçbir çağrı yapılmıyor ve puan birebir aynı çıkıyor.
+3. **Eval sentetik.** Gerçek CV korpusu daha güçlü sinyal verirdi ve bir klasör dolusu gerçek
+   CV'yi test paketinin yanında tutmak demekti — üretimde saklamayı reddettiğimiz verinin ta
+   kendisi. Korpus: her biri bilinen tek bir zaafla yazılmış sekiz CV, ikisi **kusursuz** (yanlış
+   pozitif kontrolü) ve biri prompt injection denemesi.
+
+**Modelin çıktısı gösterilmeden önce doğrulanıyor.** `CvReviewNotes.Sanitize` üç kural işletiyor:
+alıntısı CV metninde bulunamayan not düşüyor (halüsinasyonun üstüne alıntı konmuş hâli),
+uzunluk ve kontrol karakteri temizliği yapılıyor, liste 6 notla sınırlanıyor. Bu, A katmanının
+"kanıtsız bulgu düşer" kuralının, halüsinasyon üretebilen bir kaynağa uygulanmış hâli — ve bir
+birim testi, satır sonu içeren gerçek bir alıntının yanlışlıkla düşürüldüğü bir hatayı yazarken
+yakaladı.
+
+**Puan yine modelin dışında.** Enjeksiyon savunması üç katmanlı ve sıralaması önemli: puanı model
+hiç görmüyor (asıl savunma), her not alıntısıyla doğrulanıyor (ikinci), sistem promptu CV'nin veri
+olduğunu söylüyor (üçüncü ve en zayıfı). Bir entegrasyon testi aynı dosyayı notlu ve notsuz
+tarayıp iki puanın eşit olduğunu doğruluyor.
+
+**Maliyet ve arıza, config'ten.** Günlük çağrı tavanı sağlayıcı panosundan değil
+`CvScanResults.ContentNotesRequested` satırlarından sayılıyor — instance ve revizyon üstü çalışan
+tek yer orası. Tavan dolduğunda ya da sağlayıcı düştüğünde B kapanıyor, A çalışmaya devam ediyor
+ve sayfa "notlar şu an üretilemedi" diyor; puan etkilenmiyor. Sağlayıcı hata **gövdesi** hiçbir
+yere yazılmıyor: Vertex hata cevabı isteğin bir kısmını yankılayabiliyor ve o istek birinin CV'si.
+
+**REST, gRPC değil.** `Google.Cloud.AIPlatform.V1` tek bir istek şekli için Vertex'in tamamının
+üretilmiş yüzeyini taşıyor. Onun yerine tek bir POST + ADC token (`Google.Apis.Auth`). Kazanç
+sadece paket boyutu değil: **bölge artık URL'de** (`{location}-aiplatform.googleapis.com`), yani
+"veri nereye gidiyor" sorusu konsola bakmadan koddan okunuyor.
+
+**Gizlilik metni kodla birlikte değişti.** `/privacy#cv-scan`'deki "içerik hiçbir üçüncü tarafa
+gönderilmez — yapay zekâ dahil" cümlesi B ile yanlış hâle gelirdi; daraltıldı ("puanı üreten yedi
+kontrol bizde çalışır; kutuyu işaretlemedikçe içerik kimseye gitmez") ve istisnayı yazan ayrı bir
+madde eklendi. `PRIVACY_CHECKLIST.md`'de hem "Yapıldı" satırı hem envanter satırı hem de özel
+nitelikli veri maddesi güncellendi. Avukata sorulacaklar listesi bir madde büyüdü.
+
+**Açılmadan önce yapılacaklar** `DEPLOYMENT.md` §12'de: API'yi etkinleştir, runtime service
+account'a `roles/aiplatform.user` ver, modelin o bölgede sunulduğunu doğrula, eval'i çalıştır
+(`CV_REVIEW_EVAL=1`), sonra iki env var ile aç. Kapatmak tek env var.

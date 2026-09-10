@@ -35,6 +35,12 @@
          converter, so nothing an uploaded file contains ever reaches a process boundary. -->
     <PackageVersion Include="PdfPig" Version="0.1.16" />
     <PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
+    <!-- Vertex AI is called over its REST endpoint (see VertexCvReviewProvider), so the only
+         Google package needed is the one that turns Application Default Credentials into a
+         bearer token. Referenced directly rather than leant on transitively through
+         Google.Cloud.Storage.V1: a dependency the code calls into is a dependency the project
+         file should name. -->
+    <PackageVersion Include="Google.Apis.Auth" Version="1.74.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />

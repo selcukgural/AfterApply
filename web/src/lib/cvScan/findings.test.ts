@@ -26,6 +26,9 @@ function response(findings: CvScanFinding[], score: number): CvScanResponse {
     document: { format: "Pdf", pageCount: 3, wordCount: 400 },
     extractedTextPreview: "text",
     extractedTextTruncated: false,
+    // Layer B off: these helpers are about the deterministic half, and the fixture says so.
+    reviewStatus: "Disabled",
+    contentNotes: [],
   };
 }
 

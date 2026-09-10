@@ -13,13 +13,21 @@ namespace AfterApply.Application.CvScan.Contracts;
 /// <param name="ExtractedTextPreview">The CV as the machine reads it — the single most convincing
 /// thing this page can show, because a person who sees their two-column layout arrive as braided
 /// half-sentences needs no further argument.</param>
+/// <param name="ReviewStatus">Why the content notes look the way they do — off, not asked for,
+/// unavailable, or ready. The page renders a different thing for each, and none of them is an
+/// error the reader has to interpret.</param>
+/// <param name="ContentNotes">Layer B: what a model said about the writing. <b>Outside the score
+/// entirely</b> and badged as such on the page; an empty list with
+/// <see cref="CvReviewStatus.Ready"/> means the model found nothing worth saying.</param>
 public sealed record CvScanResponse(
     int Score,
     IReadOnlyList<CvScanCategoryScore> Categories,
     IReadOnlyList<CvScanFinding> Findings,
     CvScanDocumentSummary Document,
     string ExtractedTextPreview,
-    bool ExtractedTextTruncated);
+    bool ExtractedTextTruncated,
+    CvReviewStatus ReviewStatus,
+    IReadOnlyList<CvContentNote> ContentNotes);
 
 /// <param name="PageCount">Null for .docx, which has no pagination of its own; the page then reads
 /// <paramref name="WordCount"/> instead rather than showing an invented number.</param>
@@ -30,6 +38,9 @@ public sealed record CvScanDocumentSummary(CvFileFormat Format, int? PageCount, 
 /// JSON — the file has to be one, and splitting the rest into a JSON part would give the endpoint
 /// two places to look for the same request.
 /// </summary>
+/// <param name="Locale">Which language to write the content notes in. The deterministic findings
+/// are localized in the browser from their codes; the model's prose cannot be, so it has to be
+/// asked for in the right language.</param>
 /// <param name="ConsentAccepted">Required. A CV can carry special-category personal data (KVKK
 /// art. 6) and this endpoint reads it without an account behind it, so explicit consent is checked
 /// at the boundary that does the reading rather than only in the UI.</param>
@@ -38,6 +49,10 @@ public sealed record CvScanDocumentSummary(CvFileFormat Format, int? PageCount, 
 /// determined script can lie about it, and it is here to stop the undetermined ones — the crawler
 /// that posts to every form it finds the instant it finds it. The rate limit is what bounds the
 /// rest.</param>
+/// <param name="ContentNotesRequested">The optional second consent: send the extracted text to the
+/// model for content notes. Separate from <paramref name="ConsentAccepted"/> and separately
+/// refusable — the scan works without it, and a box that has to be ticked for the feature to work
+/// at all is not really optional. Unticked by default, like every consent in this product.</param>
 /// <param name="Website">Honeypot, the same one the public benchmark form uses: a field no human
 /// ever sees, so anything in it came from something filling every input it found. The usual answer
 /// — a CAPTCHA — is a third-party script the CSP forbids and the Cookie Policy denies the site
@@ -47,8 +62,10 @@ public sealed record CvScanRequest(
     string FileName,
     long DeclaredLength,
     bool ConsentAccepted,
+    bool ContentNotesRequested,
     string? Website,
-    long? ElapsedMilliseconds);
+    long? ElapsedMilliseconds,
+    string Locale);
 
 public interface ICvScanService
 {

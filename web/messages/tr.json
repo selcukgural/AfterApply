@@ -883,9 +883,10 @@
       "intro": "Herkese açık CV tarama sayfasında bir PDF veya Word dosyası yükleyip, başvuru sistemlerinin ondan ne okuduğunu görebilirsiniz. Bu, yukarıdaki \"Yüklediğiniz CV'ler\" bölümünden ayrı ve farklı bir işlemdir:",
       "noStorage": "Dosya hiçbir yere kaydedilmez. Sunucuda diske yazılmaz, depolama alanına konmaz; yalnızca isteğin süresi boyunca bellekte bulunur ve yanıt döndükten sonra ortadan kalkar. CV'nizin metni de saklanmaz.",
       "retained": "Taramadan geriye üç şey kalır: tarama sınırını uygulamak için IP adresiniz (2 saat sonra silinir), isimsiz bir puan (0-100 arası bir sayı; hangi dosyadan geldiği, kimin olduğu kayıtlı değildir) ve bir tarama sayacı.",
-      "noTransfer": "CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez — yapay zekâ servisleri dahil. Puanı tamamen kendi sunucumuzda çalışan, sabit kurallı kontroller üretir; hiçbir dil modeli devreye girmez.",
+      "noTransfer": "Puanı üreten yedi kontrolün tamamı bizim sunucumuzda çalışır: puan hiçbir yapay zekâ modeline sorulmaz, dolayısıyla CV'nin içine yazılmış bir talimatla şişirilemez. Kutuyu işaretlemediğiniz sürece CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez.",
+      "contentNotes": "Yazım hakkında da not isterseniz (ikinci, isteğe bağlı kutu): CV'nizin metni Google Cloud Vertex AI'a gönderilir — altyapımızın zaten çalıştığı AB bölgesinde ve aynı işleyicide; yeni bir ülkeye veri çıkmaz. Ücretli Vertex kullanıldığı için metin model eğitiminde kullanılmaz. Notlar puanı etkilemez, metin yine hiçbir yere kaydedilmez ve kutuyu işaretlemezseniz hiçbir model devreye girmez.",
       "output": "Sonuç ekranında gördüğünüz alıntılar ve ham metin, yalnızca sizin isteğinize verilen yanıtın içindedir; kayıt altına alınmaz, kayıtlara (log) yazılmaz.",
-      "consent": "Hukuki sebep açık rızanızdır ve her tarama için ayrıca alınır: onay kutusu hiçbir zaman önceden işaretli gelmez ve her taramadan sonra yeniden boşalır. Saklanan bir dosya olmadığı için geri çekilecek bir saklama da yoktur — taramayı yapmamak yeterlidir."
+      "consent": "Hukuki sebep açık rızanızdır ve her tarama için ayrıca alınır: onay kutusu hiçbir zaman önceden işaretli gelmez ve her taramadan sonra yeniden boşalır. İçerik notları için istenen ikinci kutu ayrı ve isteğe bağlıdır — işaretlemeden de tarama tam olarak çalışır, puanınız birebir aynı çıkar. Saklanan bir dosya olmadığı için geri çekilecek bir saklama da yoktur; taramayı yapmamak yeterlidir."
     },
     "feedback": {
       "title": "Gönderdiğiniz geri bildirimler",
@@ -2061,6 +2062,8 @@
       "consentLabel": "CV'min bu tarama için işlenmesine izin veriyorum.",
       "consentDetail": "Dosya diske yazılmıyor; tarama biter bitmez bellekten siliniyor. Ayrıntı için {privacy}.",
       "consentPrivacyLink": "Gizlilik Politikası",
+      "contentNotesLabel": "Yazım hakkında da not istiyorum (isteğe bağlı).",
+      "contentNotesDetail": "Bunu işaretlersen CV'nin metni, notları yazması için bir yapay zekâ modeline gönderilir — Google Cloud Vertex AI, AB bölgesinde, verinin zaten durduğu yerde. Yine hiçbir şey saklanmıyor. Notlar puanı etkilemez; işaretlemezsen puanın birebir aynı çıkar.",
       "submit": "CV'mi tara",
       "submitting": "Taranıyor…",
       "again": "Başka bir dosya tara"
@@ -2131,6 +2134,19 @@
       "SectionsAndDates": "Bölümler ve tarihler",
       "Contact": "İletişim",
       "FormatAndLength": "Biçim ve uzunluk"
+    },
+    "notes": {
+      "title": "İçerik notları",
+      "badge": "Puanı etkilemez",
+      "notRequested": "Bu taramada istemedin. İstersen bir sonraki taramada ikinci kutuyu işaretleyebilirsin.",
+      "unavailable": "İçerik notları şu anda üretilemedi. Puan ve yukarıdaki bulgular bundan etkilenmiyor — onlar zaten bizim kontrollerimizden geliyor.",
+      "none": "Model, yazımda söylenmeye değer bir şey bulmadı.",
+      "kinds": {
+        "UnquantifiedAchievement": "Sayısı olmayan başarım",
+        "WeakVerb": "Zayıf fiil",
+        "RepeatedVerb": "Tekrar eden fiil",
+        "LanguageInconsistency": "Dil tutarsızlığı"
+      }
     },
     "findings": {
       "NoTextLayer": {

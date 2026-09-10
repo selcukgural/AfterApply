@@ -14,7 +14,9 @@ public sealed class CvScanResultConfiguration : IEntityTypeConfiguration<CvScanR
         builder.Property(result => result.Format).HasConversion<string>().HasMaxLength(16).IsRequired();
 
         // The distribution is read by score and the stopping condition is counted by date; both
-        // are cheap enough on this shape that one index over the pair covers them.
+        // are cheap enough on this shape that one index over the pair covers them. The same index
+        // serves layer B's daily ceiling, which counts today's rows by date and then filters a
+        // boolean — a filter cheap enough not to earn a column in the key.
         builder.HasIndex(result => new { result.ScannedAt, result.Score });
 
         // No foreign key to Users — see CvScanResult's summary. Deliberate, not an omission.
