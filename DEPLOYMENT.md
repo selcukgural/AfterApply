@@ -745,3 +745,37 @@ assembly allowed to open a socket — everything else is blocked by
 effect on the next revision, and costs nothing but the notes: the score,
 the findings and the page all keep working, because they never depended
 on the model.
+
+### 13. Cloud Run scaling vs. Cloud SQL connection slots (2026-09-12)
+
+`db-f1-micro` has `max_connections = 25`; after Postgres's own reserved
+slots the application gets about 20. Every API instance is one Npgsql pool
+**and** one Hangfire server, so the number of connections production can
+open is `instances × pool size`, and that product has to stay under 20.
+The incident that made this a rule: with zero warm instances, the admin
+dashboard's five parallel requests cold-started five instances at once,
+each with a 100-connection pool and ten Hangfire workers, and Postgres
+answered `53300: remaining connection slots are reserved` for minutes
+(DECISIONS.md "Cloud SQL bağlantı slotları tükendi").
+
+The four settings that hold it are all in `.github/workflows/deploy.yml`
+and are re-asserted on every deploy:
+
+| Setting | Value | Role |
+|---|---|---|
+| `--max-instances` | 4 | one side of `4 × 5 = 20 ≤ ~20` |
+| `Postgres__MaxPoolSize` | 5 | the other side — Npgsql `Maximum Pool Size`, shared by EF Core and Hangfire (same string, same pool) |
+| `Hangfire__WorkerCount` | 2 | each worker polls on its own connection; the default is `ProcessorCount × 5` = 10 on Cloud Run |
+| `--min-instances` | 1 | removes the trigger: one warm instance absorbs the burst instead of five cold ones starting together; ≈ $8–10/month idle |
+
+Change them together. If more capacity is ever needed, the DB tier is the
+first thing to move (`db-g1-small` → 50 slots), not the ceiling. A
+setting removed from `deploy.yml` stays on the live service until cleared
+by hand (`gcloud run services update afterapply-api --clear-env-vars` /
+`--min-instances=0`), same as the secrets note in §10.
+
+To read the live numbers, through the proxy from §6:
+```sql
+show max_connections; show reserved_connections;
+select usename, state, count(*) from pg_stat_activity group by 1, 2;
+```
