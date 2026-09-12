@@ -124,10 +124,15 @@ Also standing: the backend must keep working with **every shipped extension buil
 
 ## graphify
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+This project has a knowledge graph at graphify-out/ (god nodes, community structure, cross-file
+relationships). It is an **optional navigation aid, not a gate**: reading the source is always
+the authoritative step, and grep/Read need no graph query first.
 
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- Reach for it on broad questions — "how does A relate to B", "what touches concept X across
+  the codebase" — where a scoped subgraph beats raw grep: `graphify query "<question>"`,
+  `graphify path "<A>" "<B>"`, `graphify explain "<concept>"`. `graphify-out/wiki/index.md`
+  and `GRAPH_REPORT.md` are for architecture-level orientation.
+- Skip it when you already know the file, symbol, or value you need.
+- The graph is rebuilt automatically by the `post-commit` git hook (`graphify hook install`),
+  so it lags uncommitted edits. Do not run `graphify update .` by hand after every change;
+  if a query looks stale, trust the source over the graph.
