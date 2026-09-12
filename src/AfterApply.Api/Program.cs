@@ -7,10 +7,12 @@ using AfterApply.Api.Imports;
 using AfterApply.Api.Middleware;
 using AfterApply.Application.Auditing;
 using AfterApply.Application.Imports;
+using AfterApply.Application.JobSources;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
 using AfterApply.Infrastructure.Auditing;
+using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
 using Hangfire;
@@ -163,6 +165,7 @@ app.MapSiteTrafficEndpoints();
 app.MapBenchmarkEndpoints();
 app.MapCvScanEndpoints();
 app.MapAdminEndpoints();
+app.MapJobSourceEndpoints();
 app.MapHub<ImportProgressHub>("/hubs/import-progress");
 
 if (!DependencyInjection.IsOpenApiDocumentGeneration)
@@ -171,6 +174,7 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
     var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
     var notificationOptions = scope.ServiceProvider.GetRequiredService<IOptions<NotificationOptions>>().Value;
     var metricsOptions = scope.ServiceProvider.GetRequiredService<IOptions<ProductMetricsOptions>>().Value;
+    var jobSourceOptions = scope.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value;
 
     recurringJobManager.AddOrUpdate<IReminderService>(
         "reminder-scan",
@@ -187,6 +191,12 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "request-audit-purge",
         service => service.PurgeAnonymousAsync(CancellationToken.None),
         requestAuditOptions.PurgeCronExpression);
+    // Registered whether or not JobSources:Enabled is on — the sweep checks the flag itself and
+    // returns at once while it is off, so turning the feature on needs no redeploy for the schedule.
+    recurringJobManager.AddOrUpdate<IJobSourceSweepService>(
+        "job-source-sweep",
+        service => service.SweepAsync(CancellationToken.None),
+        jobSourceOptions.Cron);
 }
 
 app.Run();

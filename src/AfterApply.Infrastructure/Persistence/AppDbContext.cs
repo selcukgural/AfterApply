@@ -9,9 +9,11 @@ using AfterApply.Domain.EmailIntegrations;
 using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
+using AfterApply.Domain.JobSources;
 using AfterApply.Domain.Mailing;
 using AfterApply.Domain.Metrics;
 using AfterApply.Domain.Notifications;
+using AfterApply.Domain.Pro;
 using AfterApply.Domain.SiteTraffic;
 using AfterApply.Domain.TrackedJobs;
 using AfterApply.Infrastructure.Identity;
@@ -77,6 +79,23 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<CompanyReviewHelpfulMark> CompanyReviewHelpfulMarks => Set<CompanyReviewHelpfulMark>();
 
     public DbSet<RequestAudit> RequestAudits => Set<RequestAudit>();
+    public DbSet<JobSourcePosting> JobSourcePostings => Set<JobSourcePosting>();
+
+    public DbSet<JobSourceQuery> JobSourceQueries => Set<JobSourceQuery>();
+
+    public DbSet<JobSourceQueryPosting> JobSourceQueryPostings => Set<JobSourceQueryPosting>();
+
+    public DbSet<JobSourceFetch> JobSourceFetches => Set<JobSourceFetch>();
+
+    public DbSet<UserJobSourceProfile> UserJobSourceProfiles => Set<UserJobSourceProfile>();
+
+    public DbSet<UserJobSourceSettings> UserJobSourceSettings => Set<UserJobSourceSettings>();
+
+    public DbSet<UserJobSourceDelivery> UserJobSourceDeliveries => Set<UserJobSourceDelivery>();
+
+    public DbSet<UserJobSourceRun> UserJobSourceRuns => Set<UserJobSourceRun>();
+
+    public DbSet<ProEntitlement> ProEntitlements => Set<ProEntitlement>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

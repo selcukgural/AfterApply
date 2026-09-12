@@ -255,6 +255,10 @@ jobs:
           #
           # Postgres__MaxPoolSize and Hangfire__WorkerCount belong to the scaling arithmetic
           # explained above the `flags` block; change them together with --max-instances.
+          # On JobSources__Enabled: the weekly LinkedIn sweep behind the paid job matching. Declared
+          # off here so the state is asserted on every deploy; flipping it is a reviewed change,
+          # and DEPLOYMENT.md §14 lists what has to be true first (the privacy paragraph, an
+          # entitlement to run for, and a look at /api/admin/job-sources/usage after the first run).
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080
@@ -271,6 +275,7 @@ jobs:
             CvScan__Review__ProjectId=${{ env.GCP_PROJECT_ID }}
             Postgres__MaxPoolSize=5
             Hangfire__WorkerCount=2
+            JobSources__Enabled=false
           secrets: |-
             ConnectionStrings__Postgres=afterapply-postgres-connection:latest
             Jwt__SigningKey=afterapply-jwt-signing-key:latest

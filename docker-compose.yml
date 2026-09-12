@@ -32,6 +32,7 @@ services:
       LinkedInAuth__ClientSecret: "${LINKEDIN_CLIENT_SECRET:-}"
       GitHubAuth__ClientId: "${GITHUB_CLIENT_ID:-}"
       GitHubAuth__ClientSecret: "${GITHUB_CLIENT_SECRET:-}"
+      JobSources__Enabled: "${JobSources__Enabled:-false}"
       # Default is the real policy (5/min per IP). The API contract check in CI raises it — its
       # Postman collection fires every /api/auth/* request back to back from one IP, and the 6th
       # would otherwise be a 429 that has nothing to do with the contract being checked.
