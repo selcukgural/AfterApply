@@ -5422,3 +5422,98 @@ sunmaya devam etmesin). `AdminMetricsTests.GrantAdminAsync`, iki yönü de kuran
 **Yerel doğrulama (gerçek tarayıcı, yerel API + web):** admin olmayan hesapta menüde "Yönetim" yok;
 `IsAdmin` SQL ile açılınca bir sonraki sayfa yüklenişinde çıkıyor ve `/tr/admin/metrics` açılıyor;
 geri alınınca yine kayboluyor. Test kullanıcısının bayrağı doğrulama sonunda `false`'a döndürüldü.
+
+## Pro paket (AI CV + haftalık ilan eşleştirme): maliyet modeli ve ödeme araştırması — plan askıda (2026-09-12)
+
+İlk ücretli paketin kapsamı konuşuldu: (1) mevcut CV'nin AI ile ATS kurallarına göre yeniden
+yapılandırılması, kullanıcının notlarıyla; en fazla 10 CV varyantı (`CvDocument.MaxPerUser = 10`
+zaten var); (2) kullanıcının ülke/şehir/min. skor kriterine göre her Pazartesi 04:00'te
+LinkedIn / kariyer.net / Glassdoor / Indeed kaynaklı ilanların çekilip skorlanması (uyum yüzdesi,
+uyan/uymayan kriterler, istenen yetkinlikler, tam ilan metni, ilana link); (3) "N ilan hazır"
+e-postası; (4) "başvurdum" işareti → mevcut başvuru akışı. Bu turda **kod yazılmadı**; istenen
+şey maliyet hesabıydı: ortalama kullanıcı ayda bize kaça mal olur, hangi fiyatın altında zarar
+ederiz. Kural: küçük kâr yeter, **zarar asla**.
+
+**Modeli belirleyen mevcut kararlar.** CV metni yalnızca Vertex AI Gemini `europe-west1`'e
+gidebilir — OpenAI tabanlı job matching 2026-09-02'de KVKK gerekçesiyle silinmişti (yukarıda);
+o karar yeniden açılmadı, model Gemini fiyatlarıyla kuruldu. Bugün hiçbir LLM çağrısı `usage`
+alanını okumuyor; tek sayaç CV taramasının DB satırına dayalı günlük tavanı. İlan arama/liste
+altyapısı yok (yalnızca tek ilan sayfası fetch'i, linkedin.com + kariyer.net). Resend Free
+(100/gün). Ödeme/abonelik/plan gating hiç yok.
+
+**Birim fiyatlar (12 Eylül 2026, USD / 1M token):** gemini-2.5-flash-lite 0,10 / 0,40;
+gemini-2.5-flash 0,30 / 2,50; 2.5-pro 1,25 / 10; 3.5-flash 1,50 / 9; 3.6–3.8-flash 0,75 / 3,75;
+hepsinde batch −%50. İlan kaynağı olarak JSearch (Google for Jobs üzerinden LinkedIn, Indeed,
+Glassdoor, ZipRecruiter; `country=tr`): PAYG $0,005/istek, sabit yok; Pro $25/10k. Resend Pro
+$20/50k (e-posta başı $0,0004).
+
+**İş yükü varsayımları:** CV 4.000 token (ölçülmüş, 15k karakter tavanı); CV yeniden yazma
+6.400 giriş / 3.000 çıkış, ayda ort. 6 üretim (tavan 20); haftada 8 JSearch isteği → ~60 ilan;
+kaba eleme flash-lite ile 10 ilan/çağrı → 25 ilan; derin skorlama ilan başına 6.200 giriş /
+700 çıkış; güvenlik payı ×1,5.
+
+**Sonuç: ortalama Pro kullanıcı ≈ $1,00/ay** (tavanda ≈ $1,50; haftalık iş batch modda ≈ $0,70).
+Kırılım: derin skorlama $0,39 (**~%60 — asıl kalem**), JSearch $0,17, CV yeniden yazma $0,06,
+eleme $0,03, e-posta $0,002. Yani sezgi doğruydu — e-posta sıfır — ama AI içinde pahalı olan CV
+değil, her hafta 25 ilanı tam CV'ye karşı skorlamak. Model duyarlılığı: 3.6+-flash ≈ $1,80,
+3.5-flash veya 2.5-pro ≈ $3,3–3,4, her yerde flash-lite ≈ $0,35.
+
+**Fiyat.** Net gelir = fiyat / 1,20 (KDV) × (1 − ~%3,5 PSP). KDV dahil $4 → katkı $2,22 (%69
+marj), $6 → $3,83, $8 → $5,43 (%84), $10 → $7,04. **KDV dahil $2,50'nin altına inilmez** — 3.x
+model senaryosunda zarar orada başlıyor. Öneri: aylık ≈ $7–8 eşdeğeri ₺, yıllık ≈ 10 ay fiyatı.
+Sabit maliyet ilk ~140 kullanıcıya kadar sıfır tutulabilir (JSearch PAYG; Resend Free ≤ ~90
+kullanıcı, Pazartesi maillerini güne yayarak). Ücretsiz deneme yerine kapalı deneme ("1 CV + 1
+eşleştirme turu", ≈ $0,25/deneme).
+
+**Zarar etmeme korumaları (teknik plana girecek):** kullanıcı başına AI kullanım defteri tablosu
+(`UserId, Feature, Model, InputTokens, OutputTokens, CostUsd, At`); sert tavanlar (CV 20/ay,
+derin skor 30 ilan/hafta, eleme 100/hafta, JSearch 12 istek/hafta, retry 1, JD 1.500 token);
+`Ai:MonthlyBudgetUsd` kill-switch + GCP bütçe alarmı; yalnızca yeni ilanı skorla (30 gün dedupe,
+aynı unvan+şehir sorgusu kullanıcılar arası 7 gün paylaşılır); CV'si/kriteri olmayan, aboneliği
+bitmiş, 30+ gün pasif kullanıcıyı atla; Vertex batch; elemede tam CV yerine 700 token'lık
+kompakt profil. **Gizli risk:** Cloud Run min-instances=0 → 04:00 Hangfire job'ı kaçabilir;
+Cloud Scheduler → HTTP ($0) öneriliyor, min-instances=1 ise $8–30/ay.
+
+**Ödeme araştırması — Türkiye'de şirket kurmadan sitemizden ödeme alınabilir mi?** Kısa cevap:
+evet, iki yol var; ama "Stripe gibi" olan yalnızca biri.
+
+- *Çalışmayanlar:* Stripe Türkiye'de kayıtlı işletme/kişi kabul etmiyor (Managed Payments satıcı
+  listesinde de yok); PayPal Türkiye'den çekildi; Wise'a Türkiye'ye para alma kapandı; Gumroad
+  Türkiye'ye ödeme yapmıyor; Lemon Squeezy Stripe Managed Payments'a geçiş halinde ve payout'u
+  PayPal/banka — PayPal yok, satıcı listesinde Türkiye yok → güvenilmez.
+- *Paddle (Merchant of Record):* Türkiye desteklenmeyenler listesinde değil; **bireysel / sole
+  trader satıcı kabul ediyor** — şirket doğrulaması istemiyor, yalnızca Sumsub üzerinden kimlik +
+  adres belgesi + liveness. Paddle satıcı olarak KDV'yi kendisi toplayıp ödüyor, abonelik/yenileme/
+  fatura hepsi onda; bize ödeme **SWIFT havale ($15/işlem) veya Payoneer** ile, döviz çevriminde
+  %1,5'e kadar marj. Ücret %5 + $0,50/işlem. TRY ödeme yapmıyor; USD/EUR alırız. Sadece yazılım/
+  SaaS kabul ediyor ve canlı ürünü/sitesi inceleyerek onaylıyor — bu bizim lehimize.
+- *iyzico Link (bireysel):* şirketsiz başvuru mümkün, %4,49'dan başlayan komisyon + 0,25 TL,
+  satıştan 7 gün sonraki ilk Çarşamba ödeme. Ama **yalnızca ödeme linki** — API/abonelik yok;
+  aylık yenileme için her ay elle link göndermek gerekir. Shopier ve PayTR Link de aynı sınıf.
+  API'li sanal POS (iyzico/PayTR/Param) için vergi levhası şart; şahıs şirketi kabul ediyorlar.
+- *Yasal:* düzenli gelir Türkiye'de vergi mükellefiyeti gerektirir; MoR bunu ortadan kaldırmaz,
+  yalnızca POS sözleşmesi ve KDV tahsilatı ihtiyacını kaldırır. Şahıs şirketi: kuruluş
+  ₺3.500–5.500, muhasebeci ₺700–1.000+/ay, **Bağ-Kur ~₺10.000/ay yalnızca başka yerde 4/a
+  SGK'lı değilsen**. 2026'dan itibaren hizmet ihracatı kazanç istisnası %100 (Cumhurbaşkanı
+  Kararı 11257; kazancın Türkiye'ye getirilmesi şartıyla) ve ihracatta KDV %0 — Paddle üzerinden
+  yurt dışı MoR'a satış bu kapsama girip girmediği **mali müşavire sorulacak**. 29 yaş altı için
+  genç girişimci istisnası ayrıca var.
+
+**Fiyat modeline etkisi:** Paddle ile KDV dahil $8'de net ≈ 8/1,20 × 0,95 − 0,50 ≈ $5,83 (iyzico
+senaryosunda $6,43), artı ayda bir SWIFT $15 (Payoneer ile daha az). 10 kullanıcıda $1,5/kullanıcı
+ek yük; katkı hâlâ $4+. **Asıl zarar riski AI değil, şahıs şirketi + muhasebeci + olası Bağ-Kur
+sabit gideri** — ilk ödeyen kullanıcılar gelmeden bunlar açılmamalı.
+
+**Öneri (henüz karar değil):** başlangıç yolu Paddle (şirketsiz, abonelik/API/KDV hazır, USD
+fiyat, TRY gösterimi doğrulanacak); gelir düzenli hale gelince şahıs şirketi + mali müşavir, o
+noktada iyzico API'li POS'a geçiş de mümkün olur. Karar için netleşmesi gerekenler: Paddle'ın
+Türkiye'deki bireysel satıcıyı fiilen onaylayıp onaylamadığı (başvurup görmek), Payoneer'ın
+Türkiye'ye TRY/USD çekim koşulları, mali müşavir görüşü (mükellefiyet zamanlaması, ihracat
+istisnası). **Plan burada askıya alındı; ödeme netleşince teknik planlamaya geçilecek.** İlk
+teknik adım: gerçek bir CV + 10 gerçek ilanla 2.5-flash ve 3.x-flash'ta `usage` ölçüp bu
+sayıları güncellemek.
+
+Kaynaklar: developers.openai.com/api/docs/pricing · ai.google.dev/gemini-api/docs/pricing ·
+openwebninja.com/api/jsearch · resend.com/pricing · paddle.com/help (supported countries,
+identity verification, payout fees) · iyzico.com/destek (link ile ödeme al) ·
+ceaksan.com/en/saas-payment-infrastructure-turkey · mukellef.co (şahıs şirketi maliyetleri).
