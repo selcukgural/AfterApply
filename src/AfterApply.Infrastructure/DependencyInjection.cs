@@ -202,12 +202,7 @@ public static class DependencyInjection
 
     private static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
-        var postgresConnectionString = configuration.GetConnectionString("Postgres")
-            ?? (IsOpenApiDocumentGeneration ? "Host=localhost;Database=openapi-gen;Username=openapi-gen;Password=openapi-gen" : null)
-            ?? throw new InvalidOperationException(
-                "ConnectionStrings:Postgres is not configured. For local dev run " +
-                "'dotnet user-secrets set ConnectionStrings:Postgres \"...\" --project src/AfterApply.Api', " +
-                "or set ConnectionStrings__Postgres when running via docker-compose.");
+        var postgresConnectionString = PostgresConnectionString.Resolve(configuration, IsOpenApiDocumentGeneration);
 
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(postgresConnectionString));
 
@@ -462,13 +457,11 @@ public static class DependencyInjection
 
     private static IServiceCollection AddBackgroundJobs(this IServiceCollection services, IConfiguration configuration)
     {
-        var postgresConnectionString = configuration.GetConnectionString("Postgres")
-            ?? (IsOpenApiDocumentGeneration ? "Host=localhost;Database=openapi-gen;Username=openapi-gen;Password=openapi-gen" : null)
-            ?? throw new InvalidOperationException(
-                "ConnectionStrings:Postgres is not configured. For local dev run " +
-                "'dotnet user-secrets set ConnectionStrings:Postgres \"...\" --project src/AfterApply.Api', " +
-                "or set ConnectionStrings__Postgres when running via docker-compose.");
+        var postgresConnectionString = PostgresConnectionString.Resolve(configuration, IsOpenApiDocumentGeneration);
 
+        // Same resolved string as AddPersistence, deliberately: Npgsql pools per connection string,
+        // so this is what puts Hangfire's connections under the one Postgres:MaxPoolSize cap the
+        // API's DbContext is under, instead of giving it a second pool of its own.
         services.AddHangfire(config => config
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
@@ -491,8 +484,12 @@ public static class DependencyInjection
 
         if (!IsOpenApiDocumentGeneration && serverEnabled)
         {
-            // Both values keep their previous production behaviour when unconfigured; they are
-            // settable so the integration suite can ask for something cheaper.
+            // Both values keep their previous behaviour when unconfigured; they are settable so the
+            // integration suite can ask for something cheaper — and, for WorkerCount, so production
+            // can too: deploy.yml sets Hangfire__WorkerCount=2 because each worker polls the queue
+            // on its own connection and the default of ProcessorCount × 5 (10 on Cloud Run) across
+            // several instances is what was exhausting the db-f1-micro's 25 connection slots
+            // (DECISIONS.md 2026-09-12 "53300 remaining connection slots").
             //
             // ShutdownTimeout was already raised from Hangfire's 15s default to 30s for the tests'
             // benefit, because WaitForShutdownAsync was timing out during a fixture's DisposeAsync

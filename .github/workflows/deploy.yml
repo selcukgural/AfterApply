@@ -211,6 +211,22 @@ jobs:
       # changes what it is told to change — so the live revision was
       # detached once, by hand, with `gcloud run services update
       # afterapply-api --clear-network`.
+      #
+      # `--max-instances` / `--min-instances` and the two Postgres__MaxPoolSize /
+      # Hangfire__WorkerCount env vars below are one decision and have to be read
+      # together (DECISIONS.md 2026-09-12 "53300 remaining connection slots").
+      # The Cloud SQL tier is db-f1-micro: max_connections = 25, of which the
+      # application gets about 20 once Postgres's own reserved slots are taken
+      # out. Every API instance is also a Hangfire server, and Npgsql keeps
+      # pooled connections open for minutes after a burst, so the ceiling is
+      #   max-instances × Postgres__MaxPoolSize  ≤  ~20   (4 × 5 = 20).
+      # Raising either side alone breaks the inequality; the DB tier is the
+      # thing to change first if more is ever needed. `--min-instances=1` is
+      # not part of the arithmetic — it removes the trigger: with zero warm
+      # instances, an admin page's five parallel requests made Cloud Run cold-
+      # start five instances at once, and it was those five Hangfire servers
+      # starting together that exhausted the slots. One warm instance absorbs
+      # that burst on its own; it costs roughly $8–10/month of idle time.
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v3
         with:
@@ -219,6 +235,8 @@ jobs:
           image: ${{ env.IMAGE }}
           flags: >-
             --add-cloudsql-instances=${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:afterapply-db
+            --min-instances=1
+            --max-instances=4
           # env_vars is a literal block: every line is passed through as KEY=VALUE, so notes go
           # here rather than inside it. On Feedback__GitHub: in-app feedback is stored in our own
           # database either way, and this mirrors each entry into an issue for triage. The
@@ -234,6 +252,9 @@ jobs:
           # a well-written CV across three runs. /privacy#cv-scan has to keep naming Vertex AI as a
           # recipient for as long as this is true, and turning it off is this one line — the score,
           # the findings and the page all keep working without it.
+          #
+          # Postgres__MaxPoolSize and Hangfire__WorkerCount belong to the scaling arithmetic
+          # explained above the `flags` block; change them together with --max-instances.
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080
@@ -244,6 +265,8 @@ jobs:
             Feedback__GitHub__Assignee=selcukgural
             CvScan__LlmEnabled=true
             CvScan__Review__ProjectId=${{ env.GCP_PROJECT_ID }}
+            Postgres__MaxPoolSize=5
+            Hangfire__WorkerCount=2
           secrets: |-
             ConnectionStrings__Postgres=afterapply-postgres-connection:latest
             Jwt__SigningKey=afterapply-jwt-signing-key:latest

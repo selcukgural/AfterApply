@@ -5571,3 +5571,64 @@ hedefinin şeritte olduğu, URL/depolama/trafik olayına dokunmadığı, iki dos
 içermediği, demo değerlerin `scene-job.html` ile aynı olduğu, `components/landing/*.tsx`'te
 `<img>`/`next/image`/ekran görüntüsü bulunmadığı, hero parıltısının dekoratif kaldığı. Tasarım
 kanvası: claude.ai/code/artifact/4666412e-242d-4ee7-9366-639d27ab2668 (seçilen A + keşif taslakları).
+
+## Cloud SQL bağlantı slotları tükendi (53300): instance × havuz aritmetiği sabitlendi (2026-09-12)
+
+**Belirti.** Prod loglarında `Npgsql.PostgresException 53300: remaining connection slots are
+reserved for roles with privileges of the "pg_use_reserved_connections" role`; Hangfire heartbeat,
+Worker, RecurringJobScheduler, DelayedJobScheduler, ExpirationManager, CountersAggregator dakikalarca
+Failed'da (log: "Failed state after 00:05:35"), API istekleri 500. Tek seferlik sanılmıştı; loglar
+27 Ağustos'tan beri var olduğunu, 9 Eylül'den itibaren **her admin panel açılışında** tekrarladığını
+gösterdi (12 Eylül'de yedi kez; hepsi beşli `Starting new instance` patlamasıyla eşleşiyor).
+
+**Kök neden (log kesin).** Dört çarpanın birleşimi:
+1. Cloud SQL `db-f1-micro` → `max_connections = 25`; superuser + reserved slotlar düşünce uygulamaya
+   ~20 kalıyor.
+2. Web app admin panelinde beş isteği paralel atıyor (`/admin/metrics`, `/admin/site-traffic`,
+   `/admin/auto-approval-calibration`, iki `count`) + her birinin CORS preflight'ı. Servis
+   `min-instances=0`'da sıfıra inmişse Cloud Run bu paralel istekler için **aynı saniyede beş
+   instance** cold-start ediyor; concurrency=80 soğuk başlangıçta işe yaramıyor.
+3. Her instance bir Hangfire server: `WorkerCount` default `ProcessorCount × 5` = **10**
+   (log: `Worker count: 10`); her worker kuyruğu kendi bağlantısıyla polluyor. 5 × 10 worker +
+   heartbeat + dört dispatcher başlangıçta aynı anda → 50+ eş zamanlı bağlantı.
+4. Npgsql `Maximum Pool Size` default 100, boşta bağlantı 5 dk (`ConnectionIdleLifetime`) havuzda
+   kalıyor → patlama geçtikten sonra da her instance 10–15 açık bağlantıyı elinde tutuyor, DB
+   dakikalarca dolu.
+
+**Karar: `max-instances × pool ≤ kullanılabilir slot` eşitsizliği kodda değil deploy'da, ama
+birlikte okunur şekilde sabitlendi.** Dört ayar da `.github/workflows/deploy.yml`'de, her deploy'da
+yeniden iddia ediliyor:
+- `--max-instances=4` (20'den) ve `Postgres__MaxPoolSize=5` → 4 × 5 = 20. Sıfır kullanıcıyla 20
+  instance zaten anlamsızdı; ayrıca per-instance rate-limit çarpanını da ("Redis kaldırıldı" 2026-09-06:
+  `RateLimiting.cs` in-memory, instance başına) küçültüyor.
+- `Hangfire__WorkerCount=2` (config anahtarı zaten vardı, test suite için; şimdi prod da kullanıyor).
+  Recurring job'lar için fazlasıyla yeter.
+- `--min-instances=1` — aritmetiğin parçası değil, **tetikleyiciyi** kaldırıyor: sıcak bir instance
+  varken beşli cold-start olmaz, admin panel ilk açılış gecikmesi de gider. Bedeli ≈ $8–10/ay idle.
+  Kullanıcı 1–2'yi ve min-instances'ı birlikte seçti.
+
+**Kod.** `Infrastructure/Persistence/PostgresConnectionString` — bağlantı dizesinin tek okunduğu
+yer; `Postgres:MaxPoolSize` verilmişse `Maximum Pool Size` uygulanır (dizedeki değeri **ezer**:
+karar deploy'un, Secret Manager'daki dize değil; `MinPoolSize > MaxPoolSize` olursa Min aşağı
+çekilir, yoksa Npgsql ilk open'da patlar). Verilmemişse dize dokunulmadan döner → dev/test için
+hiçbir şey değişmedi. EF Core, Hangfire ve health check **aynı çözümlenmiş diziyi** kullanır —
+Npgsql dize başına havuz açtığı için tavan ancak böyle instance başına tek tavan olur; Hangfire'a
+ayrı havuz vermek eşitsizliği bozardı.
+
+**Reddedilenler.** `max_connections` flag'ini yükseltmek (614 MB RAM'li f1-micro'da semptomu
+öteler, tavan kavramını getirmez); PgBouncer/managed pooling (bu ölçekte gereksiz katman);
+Hangfire'ı ayrı Cloud Run servisine taşımak (doğru ama şimdilik büyük; instance'lar bire
+inince gereksinim kalmadı). Tier yükseltme (`db-g1-small` → 50 slot) ihtiyaç doğarsa **ilk**
+hamle, tavanı gevşetmek değil.
+
+**Doğrulama.** Unit (`PostgresConnectionStringTests`, 10): tavan uygulanır / dizedekini ezer /
+Min>Max düzeltilir / null'da aynı referans döner / <1 reddedilir / config'den okunur / OpenAPI
+placeholder yalnızca üretimde. Entegrasyon (`PostgresPoolCapTests`, 2, gerçek Postgres + Hangfire
+server açık): tavan DbContext bağlantısına ulaşır, sorgu + `/health` çalışır; Hangfire aynı host'ta
+2 worker'la kendini duyurur. Deploy sonrası bakılacak: admin paneli soğuk açılışta `Starting new
+instance` sayısı (bir tane bekleniyor) ve `53300` aramasının boş dönmesi.
+
+**Not — park halindeki `feat/linkedin-job-source`:** o branch'in DEPLOYMENT.md'si de bir "§13"
+ekliyor (JobSources açma reçetesi) ve DECISIONS'ta bu sorunu "ayrı ele alınacak" diye kaydediyor;
+rebase'de bölüm numarası kaydırılacak ve o not bu kayda işaret edecek. Oradaki
+"`min-instances=0` 04:00 tick'ini kaçırabilir" uyarısı da min-instances=1 ile düşer.
