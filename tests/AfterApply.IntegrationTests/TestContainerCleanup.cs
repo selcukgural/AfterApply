@@ -146,6 +146,21 @@ internal static class TestContainerCleanup
     }
 
     /// <summary>
+    /// Forces the JSearch (RapidAPI) job search off for every host this assembly builds — the
+    /// same containment as DisableFeedbackMirrorForTests, for the same reason: a developer who
+    /// keeps a live RapidAPI key in user secrets for the manual smoke would otherwise hand it to
+    /// every test host, and on the BASIC plan every call that slips out is 0.5% of the month.
+    /// NoOutboundHttpStartup would still stop the socket; this makes the feature 404 before it
+    /// gets that far. The JobSearch test classes switch it back on through ConfigureAppConfiguration.
+    /// </summary>
+    [ModuleInitializer]
+    public static void DisableJobSearchForTests()
+    {
+        Environment.SetEnvironmentVariable("JobSearch__Enabled", "false");
+        Environment.SetEnvironmentVariable("JobSearch__ApiKey", string.Empty);
+    }
+
+    /// <summary>
     /// Reports what killed the process when a run ends in "Test host process crashed".
     ///
     /// An unhandled exception on a background thread terminates a .NET process outright, and the

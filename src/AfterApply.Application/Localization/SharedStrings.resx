@@ -273,4 +273,25 @@
   <data name="CV_SCAN_LEGACY_DOC" xml:space="preserve">
     <value>The old .doc format cannot be read here. Open it in Word and save it as PDF or .docx, then scan that.</value>
   </data>
+  <data name="JOB_SEARCH_NOT_CONFIGURED" xml:space="preserve">
+    <value>Job search is not available right now.</value>
+  </data>
+  <data name="JOB_SEARCH_UPSTREAM_RATE_LIMITED" xml:space="preserve">
+    <value>The job data provider is busy. Try again in a minute.</value>
+  </data>
+  <data name="JOB_SEARCH_UPSTREAM_ERROR" xml:space="preserve">
+    <value>The job data provider could not answer. Try again later.</value>
+  </data>
+  <data name="JOB_SEARCH_UPSTREAM_REJECTED" xml:space="preserve">
+    <value>The search could not be understood. Change the wording and try again.</value>
+  </data>
+  <data name="JOB_SEARCH_QUOTA_EXHAUSTED" xml:space="preserve">
+    <value>This month's job search allowance is used up. It resets on {0}.</value>
+  </data>
+  <data name="JOB_SEARCH_DAILY_LIMIT_REACHED" xml:space="preserve">
+    <value>You have used today's {0} job search credits. Come back tomorrow.</value>
+  </data>
+  <data name="JOB_SEARCH_TOO_MANY_IDS" xml:space="preserve">
+    <value>At most {0} job ids per request.</value>
+  </data>
 </root>

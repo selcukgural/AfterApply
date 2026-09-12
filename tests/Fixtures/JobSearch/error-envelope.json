@@ -1,0 +1,5 @@
+{
+  "status": "ERROR",
+  "request_id": "35dabdcd-b334-4600-afbc-d654b8af91cf",
+  "error": { "message": "Missing query", "code": 400 }
+}

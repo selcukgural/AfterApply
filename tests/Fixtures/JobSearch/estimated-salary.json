@@ -1,0 +1,27 @@
+{
+  "status": "OK",
+  "request_id": "2df144b3-50bf-41eb-8be9-4c258636a204",
+  "parameters": { "job_title": "nodejs developer", "location": "new york", "location_type": "ANY", "years_of_experience": null },
+  "data": [
+    {
+      "location": "New York City, NY",
+      "job_title": "Nodejs Developer",
+      "min_salary": 111524.6,
+      "max_salary": 185193.46,
+      "median_salary": 142629.56,
+      "min_base_salary": 81574.18,
+      "max_base_salary": 129286.01,
+      "median_base_salary": 102695.67,
+      "min_additional_pay": 29950.42,
+      "max_additional_pay": 55907.45,
+      "median_additional_pay": 39933.89,
+      "salary_period": "YEAR",
+      "salary_currency": "USD",
+      "salary_count": 60,
+      "salaries_updated_at": "2024-06-06T23:59:59.000Z",
+      "publisher_name": "Glassdoor",
+      "publisher_link": "https://www.glassdoor.com/Salaries/company-salaries.htm?sc.keyword=Nodejs%20Developer",
+      "confidence": "CONFIDENT"
+    }
+  ]
+}

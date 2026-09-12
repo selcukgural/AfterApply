@@ -1,0 +1,24 @@
+{
+  "status": "OK",
+  "request_id": "6158ba32-2bcd-4261-a76b-0741096cf5e9",
+  "data": [
+    {
+      "location": "United States",
+      "job_title": "Software Developer",
+      "company": "Amazon",
+      "min_salary": 140363.95,
+      "max_salary": 209046.05,
+      "median_salary": 170007.45,
+      "min_base_salary": 111261.07,
+      "max_base_salary": 154720.67,
+      "median_base_salary": 131203.61,
+      "min_additional_pay": 29102.88,
+      "max_additional_pay": 54325.38,
+      "median_additional_pay": 38803.84,
+      "salary_period": "YEAR",
+      "salary_currency": "USD",
+      "confidence": "CONFIDENT",
+      "salary_count": 974
+    }
+  ]
+}

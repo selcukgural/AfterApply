@@ -37,6 +37,10 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
   cvScan: {
     contentNotesAvailable: false,
   },
+  // Off until the server says otherwise: the routes 404 on a deployment without the flag and key.
+  jobSearch: {
+    enabled: false,
+  },
 };
 
 export const configApi = {

@@ -67,6 +67,12 @@ public sealed class RateLimitingOptions
     /// aim at the endpoint.</summary>
     public FixedWindowPolicy ExtensionPairingPoll { get; init; } = new() { PermitLimit = 600, WindowSeconds = 300 };
 
+    /// <summary>Per user — the JSearch-backed job search routes. The credit ceilings bound what
+    /// leaves for the provider; this bucket bounds how fast one client can hammer the cache and
+    /// ledger path in front of them. Thirty in five minutes covers a person paging through
+    /// results and checking a few postings.</summary>
+    public FixedWindowPolicy JobSearch { get; init; } = new() { PermitLimit = 30, WindowSeconds = 300 };
+
     public sealed class FixedWindowPolicy
     {
         public int PermitLimit { get; init; }

@@ -764,7 +764,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 10 September 2026",
+    "lastUpdated": "Last updated: 12 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -835,13 +835,14 @@
     },
     "crossBorderTransfer": {
       "title": "Cross-border data transfer",
-      "intro": "Your data goes abroad in two cases. The first is Gmail Scanning: if you turn it on, the subject line and a short summary of each detected status-update email are sent abroad to work out what it means for your application.",
+      "intro": "Your data goes abroad in three cases. The first is Gmail Scanning: if you turn it on, the subject line and a short summary of each detected status-update email are sent abroad to work out what it means for your application.",
       "recipient": "Recipient: OpenAI, L.L.C. (United States) — our API provider.",
       "purpose": "Purpose: to classify the email's application-status signal, and — for a job not yet tracked — to read off a company name and job title; this only runs when a simpler, local rule-based check doesn't already recognize the email.",
       "legalBasis": "Legal basis: this only happens for Gmail Scanning you turn on yourself in the browser extension; nothing is sent unless you use this feature.",
       "withdraw": "Withdrawal: turn off Gmail Scanning in the browser extension's Settings page. Or delete your account, to stop this entirely.",
       "sensitiveDataNote": "The subject and snippet are also stored on your account (visible to you when reviewing a suggestion) — never the full email body.",
-      "feedbackTransfer": "The second is feedback: when you send feedback from inside the app, your message and its technical context are copied to a private repository on GitHub so it can be tracked. Recipient: GitHub, Inc. (Microsoft, United States). Your name, your account email address and your reply address are not sent. Lawful basis: legitimate interest — tracking and fixing what users report. See the \"Feedback you send\" section above for the detail."
+      "feedbackTransfer": "The second is feedback: when you send feedback from inside the app, your message and its technical context are copied to a private repository on GitHub so it can be tracked. Recipient: GitHub, Inc. (Microsoft, United States). Your name, your account email address and your reply address are not sent. Lawful basis: legitimate interest — tracking and fixing what users report. See the \"Feedback you send\" section above for the detail.",
+      "jobSearchTransfer": "The third is job search: when you search for job postings or salary estimates inside the app, the words you type — a job title, a location, a company name — and the country and language you chose are sent to the data provider to run the search. Recipient: OpenWeb Ninja (JSearch), through the RapidAPI marketplace (United States). Your name, your account email address and your application history are never sent, and nothing you type is written to our server logs. The postings and estimates that come back are kept in our database for a limited time (up to 30 days for salary estimates) and may be served to other users who run the same search; that copy holds no reference to you. Lawful basis: performance of the service you request — nothing is sent unless you run a search."
     },
     "browserExtension": {
       "title": "Browser extension",

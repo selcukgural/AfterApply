@@ -764,7 +764,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 10 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 12 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -835,13 +835,14 @@
     },
     "crossBorderTransfer": {
       "title": "Yurt dışına veri aktarımı",
-      "intro": "İki durumda veriniz yurt dışına gönderilir. Birincisi Gmail Taraması: bunu açarsanız, tespit edilen her statü güncellemesi e-postasının konu satırı ve kısa bir özeti, başvurunuz için ne anlama geldiğini tespit etmek amacıyla yurt dışına gönderilir.",
+      "intro": "Üç durumda veriniz yurt dışına gönderilir. Birincisi Gmail Taraması: bunu açarsanız, tespit edilen her statü güncellemesi e-postasının konu satırı ve kısa bir özeti, başvurunuz için ne anlama geldiğini tespit etmek amacıyla yurt dışına gönderilir.",
       "recipient": "Alıcı: OpenAI, L.L.C. (Amerika Birleşik Devletleri) — API sağlayıcımız.",
       "purpose": "Amaç: e-postanın başvuru durumu sinyalini sınıflandırmak, ve henüz takip edilmeyen bir iş için şirket adı/pozisyon bilgisini okumak; bu yalnızca daha basit, yerel kural tabanlı bir kontrol e-postayı zaten tanımadığında çalışır.",
       "legalBasis": "Hukuki sebep: bu yalnızca tarayıcı eklentisinde kendi açtığınız Gmail Taraması özelliği için gerçekleşir; bu özelliği kullanmadığınız sürece hiçbir şey gönderilmez.",
       "withdraw": "Geri çekme: Gmail Taraması için tarayıcı eklentisinin Ayarlar sayfasından özelliği kapatın. Ya da hesabınızı silin, bu tamamen durur.",
       "sensitiveDataNote": "Konu satırı ve özet ayrıca hesabınızda da saklanır (bir öneriyi incelerken sizin görebileceğiniz şekilde) — e-postanın tam içeriği asla.",
-      "feedbackTransfer": "İkincisi geri bildirim: uygulama içinden bir geri bildirim gönderdiğinizde mesajınız ve teknik bağlamı, takibi için GitHub'da herkese kapalı bir depoya kopyalanır. Alıcı: GitHub, Inc. (Microsoft, Amerika Birleşik Devletleri). Adınız, hesap e-posta adresiniz ve yanıt adresiniz gönderilmez. Hukuki sebep: meşru menfaat — bildirilen sorunları takip edip gidermek. Ayrıntı için yukarıdaki \"Gönderdiğiniz geri bildirimler\" bölümüne bakın."
+      "feedbackTransfer": "İkincisi geri bildirim: uygulama içinden bir geri bildirim gönderdiğinizde mesajınız ve teknik bağlamı, takibi için GitHub'da herkese kapalı bir depoya kopyalanır. Alıcı: GitHub, Inc. (Microsoft, Amerika Birleşik Devletleri). Adınız, hesap e-posta adresiniz ve yanıt adresiniz gönderilmez. Hukuki sebep: meşru menfaat — bildirilen sorunları takip edip gidermek. Ayrıntı için yukarıdaki \"Gönderdiğiniz geri bildirimler\" bölümüne bakın.",
+      "jobSearchTransfer": "Üçüncüsü iş ilanı arama: uygulama içinden iş ilanı veya maaş tahmini aradığınızda yazdığınız kelimeler — iş unvanı, konum, şirket adı — ve seçtiğiniz ülke/dil kodu, aramayı yapmak üzere veri sağlayıcısına gönderilir. Alıcı: OpenWeb Ninja (JSearch), RapidAPI pazaryeri üzerinden (Amerika Birleşik Devletleri). Adınız, hesap e-posta adresiniz ve başvuru geçmişiniz hiçbir zaman gönderilmez; yazdıklarınız sunucu günlüklerimize de yazılmaz. Dönen ilanlar ve tahminler sınırlı bir süre (maaş tahminleri için en fazla 30 gün) veritabanımızda tutulur ve aynı aramayı yapan diğer kullanıcılara da sunulabilir; bu kopyada size dair hiçbir referans yoktur. Hukuki sebep: talep ettiğiniz hizmetin ifası — siz bir arama yapmadıkça hiçbir şey gönderilmez."
     },
     "browserExtension": {
       "title": "Tarayıcı eklentisi",

@@ -1,0 +1,69 @@
+{
+  "status": "OK",
+  "request_id": "5a8e34f1-a27c-49ee-a5b5-45d2b98ee6aa",
+  "parameters": { "job_id": "GrjRvpGsrjwtgFBuAAAAAA==", "country": "us", "language": "en" },
+  "data": [
+    {
+      "job_id": "GrjRvpGsrjwtgFBuAAAAAA==",
+      "job_title": "Senior Front-End Developer",
+      "employer_name": "TEKsystems",
+      "employer_logo": "https://logo.example/tek.png",
+      "employer_website": "http://www.teksystems.com/",
+      "job_publisher": "TEKsystems Careers",
+      "job_employment_type": "Full-time",
+      "job_employment_types": ["FULLTIME"],
+      "job_apply_link": "https://careers.teksystems.com/us/en/job/JP-006039510",
+      "job_apply_is_direct": false,
+      "apply_options": [
+        { "publisher": "TEKsystems Careers", "apply_link": "https://careers.teksystems.com/us/en/job/JP-006039510", "is_direct": false },
+        { "publisher": "Built In Chicago", "apply_link": "https://www.builtinchicago.org/job/9339174", "is_direct": false },
+        { "publisher": "ZipRecruiter", "apply_link": "https://www.ziprecruiter.com/c/One-Design/Job/x", "is_direct": false }
+      ],
+      "job_description": "One North is a digital experience agency. The pay range for this position is $91700.00 - $137500.00/yr.",
+      "job_is_remote": null,
+      "job_posted_at": "7 days ago",
+      "job_posted_at_timestamp": 1779148800,
+      "job_posted_at_datetime_utc": "2026-05-19T00:00:00.000Z",
+      "job_location": "Chicago, IL",
+      "job_city": "Chicago",
+      "job_state": "Illinois",
+      "job_country": "US",
+      "job_latitude": 41.88325,
+      "job_longitude": -87.6323879,
+      "job_benefits": ["dental_coverage", "health_insurance", "paid_time_off"],
+      "job_google_link": "https://www.google.com/search?q=jobs#docid=3",
+      "job_min_salary": 91700,
+      "job_max_salary": 138000,
+      "job_salary_period": "YEAR",
+      "job_highlights": {
+        "Qualifications": ["3 or more years of experience", "Strong proficiency with TypeScript"],
+        "Benefits": ["Medical, dental & vision", "401(k)/Roth"],
+        "Responsibilities": ["Craft beautiful, useful end-user experiences", "Act as the technical lead on front-end projects"]
+      },
+      "job_onet_soc": "15113400",
+      "job_onet_job_zone": "3",
+      "employer_reviews": [
+        { "publisher": "Indeed", "employer_name": "TEKsystems", "score": 3.8, "num_stars": 4, "review_count": 4651, "max_score": 5, "reviews_link": "https://www.indeed.com/cmp/TEKsystems/reviews" },
+        { "publisher": "Glassdoor", "employer_name": "TEKsystems", "score": 3.6, "num_stars": 3.5, "review_count": 9907, "max_score": 5, "reviews_link": "https://www.glassdoor.com/Reviews/TEKsystems-Reviews-E23297.htm" }
+      ],
+      "work_arrangement": "remote",
+      "seniority_level": "senior",
+      "required_experience_years": 3,
+      "education_required": { "level": null, "field": null },
+      "visa_sponsorship": null,
+      "relocation_required": null,
+      "relocation_assistance": null,
+      "contract_duration": null,
+      "start_date": null,
+      "required_technologies": ["HTML", "CSS", "JavaScript", "TypeScript", "React", "Next.js"],
+      "preferred_technologies": [],
+      "methodologies": ["Agile", "Git workflows", "Code review"],
+      "industry": "IT Services & Consulting",
+      "job_function": "frontend",
+      "has_management_responsibilities": true,
+      "ai_ml_involved": true,
+      "benefits_extended": ["Medical insurance", "Dental insurance", "Vision insurance", "401(k)/Roth"],
+      "soft_skills": ["Effective communicator", "Collaboration", "Mentorship"]
+    }
+  ]
+}

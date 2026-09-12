@@ -260,6 +260,13 @@ kept switched off until enough real usage exists to make it meaningful; see
 `DECISIONS.md`'s Sprint 10 entry. While disabled, every
 `/api/company-intelligence/*` endpoint returns `404` for all callers.
 
+`JobSearch:Enabled` also defaults to `false`. The JSearch-backed job search
+(`/api/job-search/*`: search, details by id, salary and company-salary
+estimates, per-user settings and a credit ledger) is implemented and
+integration-tested against a stubbed provider, but the routes answer `404`
+until the flag is on **and** a RapidAPI key is set — see "Job Search (JSearch)
+Setup" below.
+
 ## CV storage (`/cv`)
 
 Users can keep up to 10 CV files (PDF/DOC/DOCX, 5 MB each), download them,
@@ -427,6 +434,57 @@ nothing that can reach a repository, public or private. Same `App:WebBaseUrl` or
 other two. No automated test calls GitHub; `GitHubSignInTests` runs the whole flow against a fake
 `IGitHubAuthClient`, and `GitHubProfileReaderTests`/`GitHubSignupTokenTests` pin the email-selection
 and token rules.
+
+## Job Search (JSearch) Setup
+
+Job search is backed by [JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch)
+(OpenWeb Ninja, on the RapidAPI marketplace): Google for Jobs' aggregate of LinkedIn, Indeed,
+Glassdoor, kariyer.net and the rest. Four provider operations — `search-v2`, `job-details`,
+`estimated-salary`, `company-job-salary` — are wrapped by `JSearchClient` (Infrastructure) and
+exposed under `/api/job-search/*`. Inert until configured, like the sign-in providers: with the
+flag off or the key empty every route, including the admin one, answers `404`, and `/api/config`
+reports `jobSearch.enabled = false`.
+
+The account is on the **BASIC plan: 200 requests a month, hard-limited**, where a search page and a
+details id each cost one. Everything in `JobSearchService` exists to make that budget last:
+
+- **Own tables first.** Every posting a search returns is stored by the provider's `job_id`
+  (`JobSearchJobs`, shared across users, no user reference); a details call serves ids already on
+  file and only goes upstream for the rest. Searches and salary lookups are cached by a hash of
+  the normalised request (`JobSearchCacheEntries`), 24 h / 7 d / 30 d.
+- **A ledger, not a counter.** Every call writes a `JobSearchUsages` row with the credits it cost
+  (zero for a cache hit, charged even when the provider failed). The per-user daily ceiling
+  (`JobSearch:PerUserDailyCredits`, default 10) and the product-wide monthly ceiling
+  (`JobSearch:GlobalMonthlyCredits`, default 180 — headroom under 200) are sums over it, so they
+  survive Cloud Run scaling to zero. `JobSearch:MonthlyResetDay` must be the day the subscription
+  renews, not the 1st.
+- **Türkiye by default, no language by default.** `country` falls back to the user's saved
+  default, then to `tr`. `language` is sent only when the user or their settings name one: JSearch
+  picks the country's primary language otherwise, and a mismatch returns nothing at all — an
+  English-titled posting in İstanbul must not vanish.
+- **Per-user overrides.** A user sets their own defaults (`PUT /api/job-search/settings`); an
+  admin sets a user's limits (`PUT /api/admin/job-search/settings/{userId}`) — the account a
+  ceiling restrains is not the one that can raise it.
+
+Locally:
+
+```bash
+dotnet user-secrets set "JobSearch:ApiKey" "<RapidAPI application key>" --project src/AfterApply.Api
+dotnet user-secrets set "JobSearch:Enabled" "true" --project src/AfterApply.Api
+# ...and remove the flag again when done: the key in user secrets is what the manual smoke
+# needs; the flag is what would let a stray local run spend the month.
+dotnet user-secrets remove "JobSearch:Enabled" --project src/AfterApply.Api
+```
+
+For the container/prod profile use `JOBSEARCH_ENABLED` / `JOBSEARCH_API_KEY` /
+`JOBSEARCH_MONTHLY_RESET_DAY` (see `.env.example`, `.env.prod.example` and `DEPLOYMENT.md`).
+Turning it on in production is also a privacy-policy change — `/privacy` names OpenWeb Ninja and
+RapidAPI as the recipient of the words a user types into a search — and that text ships first.
+
+**No automated test calls RapidAPI.** The integration suite forces the feature off process-wide
+(`TestContainerCleanup.DisableJobSearchForTests`, the same guard the GitHub mirror has) and the
+`JobSearch` test classes switch it back on against `StubJSearchHandler`, which serves the bodies in
+`tests/Fixtures/JobSearch/`. The only real calls are the manual smoke in `DEPLOYMENT.md`.
 
 ## Browser Extension Setup
 

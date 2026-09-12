@@ -526,6 +526,12 @@ export interface CvScanConfig {
   contentNotesAvailable: boolean;
 }
 
+/** Whether the JSearch-backed job search routes exist (flag on and a key configured). The
+ *  per-user limits are not here: they vary by user and come from GET /api/job-search/settings. */
+export interface JobSearchConfig {
+  enabled: boolean;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
@@ -533,6 +539,7 @@ export interface ClientConfigResponse {
   linkedInAuth: LinkedInAuthConfig;
   gitHubAuth: GitHubAuthConfig;
   cvScan: CvScanConfig;
+  jobSearch: JobSearchConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.

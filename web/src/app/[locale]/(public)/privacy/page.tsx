@@ -128,6 +128,7 @@ export default async function PrivacyPage() {
           </ul>
           <p className="mt-2">{t("crossBorderTransfer.sensitiveDataNote")}</p>
           <p className="mt-2">{t("crossBorderTransfer.feedbackTransfer")}</p>
+          <p className="mt-2">{t("crossBorderTransfer.jobSearchTransfer")}</p>
         </section>
 
         <section id="error-monitoring">

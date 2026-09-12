@@ -1,6 +1,7 @@
 using AfterApply.Application.ClientConfig;
 using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.Identity;
+using AfterApply.Infrastructure.JobSearch;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
@@ -22,6 +23,7 @@ public static class ClientConfigEndpoints
                 IOptions<LinkedInAuthOptions> linkedInAuthOptions,
                 IOptions<GitHubAuthOptions> gitHubAuthOptions,
                 IOptions<CvScanOptions> cvScanOptions,
+                IOptions<JobSearchOptions> jobSearchOptions,
                 HttpContext httpContext) =>
             {
                 // Read from IdentityOptions rather than IdentityPolicyOptions: the former is the object
@@ -64,14 +66,18 @@ public static class ClientConfigEndpoints
                     // flag, and a project to call. A flag on with no project configured would
                     // render a checkbox whose only outcome is "unavailable".
                     new CvScanConfigResponse(cvScan.Enabled && cvScan.LlmEnabled
-                                             && !string.IsNullOrWhiteSpace(cvScan.Review.ProjectId))));
+                                             && !string.IsNullOrWhiteSpace(cvScan.Review.ProjectId)),
+                    // Flag and key both, as the routes themselves require: a flag on with no key
+                    // would advertise a search whose every call answers "not available".
+                    new JobSearchConfigResponse(jobSearchOptions.Value.IsConfigured)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")
             .WithDescription("The server-side limits a client should show the user up front: the password policy " +
                               "(what register and reset-password enforce), the personal-access-token limits, and whether " +
                               "Sign in with Google/LinkedIn/GitHub are available (plus their public client ids), "
-                              + "and whether the CV scan can offer its optional content-notes consent. " +
+                              + "and whether the CV scan can offer its optional content-notes consent, " +
+                              "and whether the JSearch-backed job search is available. " +
                               "Anonymous; nothing here is secret. All of it is still enforced server-side.")
             .Produces<ClientConfigResponse>();
 

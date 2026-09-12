@@ -9,6 +9,7 @@ using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
+using AfterApply.Application.JobSearch;
 using AfterApply.Application.Mailing;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Benchmark;
@@ -26,6 +27,7 @@ using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.Documents;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
+using AfterApply.Infrastructure.JobSearch;
 using AfterApply.Infrastructure.Imports;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
@@ -67,6 +69,7 @@ public static class DependencyInjection
     public const string CvScanRateLimitPolicy = "cv-scan";
     public const string ExtensionPairingStartRateLimitPolicy = "extension-pairing-start";
     public const string ExtensionPairingPollRateLimitPolicy = "extension-pairing-poll";
+    public const string JobSearchRateLimitPolicy = "job-search";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -108,6 +111,7 @@ public static class DependencyInjection
         services.Configure<AppOptions>(configuration.GetSection("App"));
         services.Configure<ResendOptions>(configuration.GetSection("Resend"));
         services.Configure<FeedbackGitHubOptions>(configuration.GetSection(FeedbackGitHubOptions.SectionName));
+        services.Configure<JobSearchOptions>(configuration.GetSection(JobSearchOptions.SectionName));
         services.AddHttpClient<IEmailSender, ResendEmailSender>(client => client.BaseAddress = new Uri("https://api.resend.com/"));
 
         // AddOptions().Bind().ValidateOnStart() (not the bare Configure<T> other sections above use)
@@ -456,6 +460,24 @@ public static class DependencyInjection
             // GitHub rejects requests with no User-Agent; it wants something identifying.
             client.DefaultRequestHeaders.UserAgent.ParseAdd("e-kariyerim-feedback-mirror");
         });
+
+        // JSearch (RapidAPI) job search. Inert (routes 404) until JobSearch:Enabled and
+        // JobSearch:ApiKey are both set — see JobSearchOptions. The key goes on each request, not
+        // on the client's defaults (see JSearchClient). RemoveAllLoggers() is load-bearing:
+        // HttpClientFactory's default handler logs "Start processing HTTP request GET {Uri}" at
+        // Information, and this is the one outbound URL that carries what a user typed — a job
+        // title, a city, a company — which is not something Cloud Logging should hold. The
+        // client logs status, request id and remaining quota itself.
+        services.AddHttpClient<IJSearchClient, JSearchClient>((serviceProvider, client) =>
+        {
+            var jobSearch = serviceProvider.GetRequiredService<IOptions<JobSearchOptions>>().Value;
+            client.BaseAddress = new Uri(jobSearch.BaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(jobSearch.TimeoutSeconds);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("e-kariyerim-job-search");
+        }).RemoveAllLoggers();
+        services.AddSingleton<JSearchThrottle>();
+        services.AddScoped<IJobSearchService, JobSearchService>();
+        services.AddScoped<IJobSearchSettingsService, JobSearchSettingsService>();
 
         return services;
     }

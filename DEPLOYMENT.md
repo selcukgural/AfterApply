@@ -745,3 +745,83 @@ assembly allowed to open a socket — everything else is blocked by
 effect on the next revision, and costs nothing but the notes: the score,
 the findings and the page all keep working, because they never depended
 on the model.
+
+### 13. JSearch (RapidAPI) for job search (2026-09-12)
+
+`/api/job-search/*` — search, details by job id, salary and company-salary estimates — is backed
+by JSearch (OpenWeb Ninja) through the RapidAPI marketplace. The code ships with the feature
+**off** (`JobSearch:Enabled` is `false`; every route 404s; `/api/config` reports it disabled), so
+nothing below is needed to run the product. Do it when the RapidAPI key is ready to go live.
+
+Three properties of this setup are decisions, and all three are visible in the code:
+
+- **The month is a ledger, not a counter.** The subscription is BASIC — 200 requests a month,
+  hard-limited, one per search page or details id. `JobSearchUsages` records every call and
+  `JobSearchService` refuses anything that would push the month past
+  `JobSearch:GlobalMonthlyCredits` (180) or a user's day past their daily allowance (10, or the
+  admin's override for that user). Cloud Run scaling to zero cannot lose the count.
+  **`JobSearch:MonthlyResetDay` must be the day of the month the RapidAPI subscription renews**
+  (Console → Billing) — left at 1, the ledger and RapidAPI's own meter drift apart.
+- **What crosses the border is the search text, nothing else.** The provider receives the words a
+  user types (job title, location, company name) plus the country/language code; never the user
+  id, email, name or application history, and its answers are stored without any user reference.
+  `/privacy` (#cross-border-transfer) says exactly this and names OpenWeb Ninja/RapidAPI (United
+  States) — that text is live already, so the flag can flip without a policy change.
+- **Nothing of the user's search reaches the logs.** The typed client is registered with
+  `RemoveAllLoggers()`: HttpClientFactory's default handler would otherwise print the full request
+  URL — and its `query=` — at Information level into Cloud Logging.
+
+```bash
+PROJECT_ID="$(gcloud config get-value project)"
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+RUNTIME_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+# 1. The key: RapidAPI Console -> Applications -> the app subscribed to JSearch -> its key.
+#    Rotate it there first if it has ever been on a screen that was shared or recorded.
+printf '%s' "<rapidapi-application-key>" | gcloud secrets create afterapply-jsearch-api-key --data-file=-
+
+# 2. Both halves, as §3 says — the binding, or the next deploy fails while creating the revision.
+gcloud secrets add-iam-policy-binding afterapply-jsearch-api-key \
+  --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"
+```
+
+3. Then, in `.github/workflows/deploy.yml`, in the same commit:
+   - under `secrets:` add `JobSearch__ApiKey=afterapply-jsearch-api-key:latest`;
+   - under `env_vars:` add `JobSearch__Enabled=true` and
+     `JobSearch__MonthlyResetDay=<renewal day>`.
+
+   Neither line is there yet, deliberately: `--set-secrets` needs the secret to exist, so the
+   deploy would fail on a project that has not run step 1. Add both lines after the secret exists,
+   not before.
+
+4. Smoke it, and keep the budget in mind — every line below that reaches the provider is one of
+   the month's 200. Run locally first with the key in user secrets (README.md "Job Search
+   (JSearch) Setup"); the details call last, once:
+
+   ```bash
+   TOKEN="<access token of a test account>"
+   API="http://localhost:5000"
+   curl -s "$API/api/job-search/settings" -H "authorization: Bearer $TOKEN" | jq '.effective'   # country tr, language null
+   curl -s "$API/api/job-search/jobs?query=backend%20developer%20istanbul" -H "authorization: Bearer $TOKEN" \
+     | jq '.meta, (.jobs|length), [.jobs[].title]'                                              # 1 credit
+   # the same line again: meta.fromCache == true, and /usage does not move
+   curl -s "$API/api/job-search/jobs?query=backend%20developer%20istanbul&language=en" -H "authorization: Bearer $TOKEN" \
+     | jq '(.jobs|length)'                                                                      # 1 credit — compare with the line above
+   curl -s "$API/api/job-search/salary?jobTitle=backend%20developer&location=Istanbul&locationType=City" \
+     -H "authorization: Bearer $TOKEN" | jq '.meta, .estimates[0]'                              # 1 credit
+   curl -s "$API/api/job-search/company-salary?company=Trendyol&jobTitle=software%20engineer" \
+     -H "authorization: Bearer $TOKEN" | jq '.meta, .salaries[0]'                               # 1 credit
+   curl -s "$API/api/job-search/jobs/details?ids=<a jobId from the first call>" \
+     -H "authorization: Bearer $TOKEN" | jq '.jobs[0] | {title, workArrangement, requiredTechnologies}'   # 1 credit
+   curl -s "$API/api/job-search/usage" -H "authorization: Bearer $TOKEN" | jq           # 5 used
+   ```
+
+   Then compare `monthlyCreditsUsed` with the request count on the RapidAPI dashboard: that is
+   the one thing only a real call can prove — whether a multi-page search and a multi-id batch
+   are billed per page/id as documented. Note the answer in `DECISIONS.md`.
+
+5. Watch the first month on `/api/job-search/usage` (any signed-in user sees the product-wide
+   `monthlyCreditsUsed`). Raising a specific user's daily allowance is
+   `PUT /api/admin/job-search/settings/{userId}` with `{"perUserDailyCredits": N}`; raising the
+   month is a config change (`JobSearch__GlobalMonthlyCredits`) that should follow a plan change
+   on RapidAPI, not precede it.

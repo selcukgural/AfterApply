@@ -189,6 +189,18 @@ public static class RateLimiting
                 });
             });
 
+            // User-based, same idiom as LinkPreviewRateLimitPolicy and for the same reason: these
+            // routes reach a third party (JSearch via RapidAPI) over our key. The per-user daily
+            // and global monthly credit ceilings in JobSearchService are what actually bound the
+            // spend; this bucket only keeps one client from spinning on the cheap cache-hit path.
+            options.AddPolicy(DependencyInjection.JobSearchRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.JobSearch.PermitLimit,
+                    Window = sizes.JobSearch.Window,
+                    QueueLimit = 0
+                }));
+
             options.AddPolicy(DependencyInjection.ExtensionPairingPollRateLimitPolicy, httpContext =>
             {
                 var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";

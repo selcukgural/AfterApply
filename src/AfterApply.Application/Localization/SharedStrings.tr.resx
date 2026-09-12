@@ -273,4 +273,25 @@
   <data name="CV_SCAN_LEGACY_DOC" xml:space="preserve">
     <value>Eski .doc biçimi burada okunamıyor. Word'de açıp PDF veya .docx olarak kaydedin ve onu tarayın.</value>
   </data>
+  <data name="JOB_SEARCH_NOT_CONFIGURED" xml:space="preserve">
+    <value>İş arama şu anda kullanılamıyor.</value>
+  </data>
+  <data name="JOB_SEARCH_UPSTREAM_RATE_LIMITED" xml:space="preserve">
+    <value>İlan sağlayıcısı şu anda yoğun. Bir dakika sonra tekrar deneyin.</value>
+  </data>
+  <data name="JOB_SEARCH_UPSTREAM_ERROR" xml:space="preserve">
+    <value>İlan sağlayıcısı yanıt veremedi. Daha sonra tekrar deneyin.</value>
+  </data>
+  <data name="JOB_SEARCH_UPSTREAM_REJECTED" xml:space="preserve">
+    <value>Arama anlaşılamadı. İfadeyi değiştirip tekrar deneyin.</value>
+  </data>
+  <data name="JOB_SEARCH_QUOTA_EXHAUSTED" xml:space="preserve">
+    <value>Bu ayın iş arama hakkı doldu. {0} tarihinde yenilenir.</value>
+  </data>
+  <data name="JOB_SEARCH_DAILY_LIMIT_REACHED" xml:space="preserve">
+    <value>Bugünkü {0} iş arama kredinizi kullandınız. Yarın tekrar deneyin.</value>
+  </data>
+  <data name="JOB_SEARCH_TOO_MANY_IDS" xml:space="preserve">
+    <value>Bir istekte en fazla {0} ilan kimliği.</value>
+  </data>
 </root>

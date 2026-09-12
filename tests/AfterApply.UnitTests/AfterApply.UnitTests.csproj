@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -22,6 +22,12 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Canned JSearch (RapidAPI) bodies, shared by both test projects. Shapes captured from the
+         provider's playground; values are illustrative. -->
+    <EmbeddedResource Include="..\Fixtures\JobSearch\*.json" LogicalName="Fixtures.JobSearch.%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

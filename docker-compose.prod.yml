@@ -34,6 +34,10 @@ services:
       # Same "inert until set" contract again, for Sign in with GitHub.
       GitHubAuth__ClientId: "${GITHUB_CLIENT_ID:-}"
       GitHubAuth__ClientSecret: "${GITHUB_CLIENT_SECRET:-}"
+      # Same "inert until set" contract for the JSearch job search — see .env.prod.example.
+      JobSearch__Enabled: "${JOBSEARCH_ENABLED:-false}"
+      JobSearch__ApiKey: "${JOBSEARCH_API_KEY:-}"
+      JobSearch__MonthlyResetDay: "${JOBSEARCH_MONTHLY_RESET_DAY:-1}"
       # Empty disables the SDK (see .env.prod.example) — not a REPLACE_WITH_
       # placeholder, an actually-fake Dsn would make Sentry try (and fail)
       # to send an event on every request instead of silently no-op'ing.

@@ -5517,3 +5517,152 @@ Kaynaklar: developers.openai.com/api/docs/pricing · ai.google.dev/gemini-api/do
 openwebninja.com/api/jsearch · resend.com/pricing · paddle.com/help (supported countries,
 identity verification, payout fees) · iyzico.com/destek (link ile ödeme al) ·
 ceaksan.com/en/saas-payment-infrastructure-turkey · mukellef.co (şahıs şirketi maliyetleri).
+
+## JSearch (RapidAPI) entegrasyonu: kendi typed istemci, Postgres önbellek + kullanım defteri, kapalı bayrak (2026-09-12)
+
+Yukarıdaki Pro paket girdisinde ilan kaynağı olarak seçilen JSearch'ün (OpenWeb Ninja, RapidAPI
+pazaryeri) **tam backend entegrasyonu** bu turda yapıldı: dört sağlayıcı ucu — `search-v2`,
+`job-details`, `estimated-salary`, `company-job-salary` — ve bunları açan `/api/job-search/*`
+(arama, id ile detay, maaş, şirket maaşı, kullanım, ayarlar) + `/api/admin/job-search/settings/{userId}`.
+Web UI bu turda **yok**; kapsam backend + API + testler. Abonelik **BASIC**: 200 istek/ay hard
+limit, 1000 istek/saat, saniye başı kural yok (5 rps PRO'da başlıyor). Parametre referansı
+(13/4/5/5 parametre, zorunlu/opsiyonel, kabul edilen değerler) playground'dan birebir çıkarıldı
+ve plan dosyasında; kod tarafında `JSearchWireValues` ve validator'lar aynı listeyi taşıyor.
+
+**Kararlar ve gerekçeleri:**
+
+- **Kendi typed `HttpClient`, NuGet kütüphanesi yok.** nuget.org'da JSearch'e özel bir istemci
+  yok (arama 0 sonuç); olsaydı da bakımsız bir üçüncü taraf sarmalayıcı bir tedarik zinciri
+  riski olurdu. `JSearchClient` repo'daki mevcut dış-servis kalıbını (GitHub mirror: key
+  per-request, status-only log, `[JsonPropertyName]` yerine snake_case naming policy) izliyor.
+- **Polly/`Microsoft.Extensions.Http.Resilience` eklenmedi; tek bounded retry elle.** Pro paket
+  girdisindeki "retry 1" kuralı; standart resilience pipeline'ının 3 retry default'u 200/ay'lık
+  bir kotada tam tersine çalışır. Retry yalnızca 5xx, transport hatası ve `remaining > 0` olan
+  429 için; `x-ratelimit-requests-remaining: 0` aylık hard limit demek, saniyelik bekleme
+  açmaz, retry edilmez.
+- **Önbellek ve kota Postgres'te, bellekte değil.** Cloud Run min-instances=0 (bkz. CV scan
+  rate-limit per-instance notu, 2026-09-10) — bellekteki sayaç her yeniden başlatmada sıfırlanır
+  ve 200'lük kotayı korumaz. Dört tablo: `JobSearchJobs` (ilan, sağlayıcının `job_id`'si +
+  ülke ile unique; özet + detay JSON), `JobSearchCacheEntries` (arama/maaş yanıtları, normalize
+  istek hash'i), `JobSearchUsages` (kullanıcı defteri), `JobSearchUserSettings` (kullanıcı
+  override'ları). İlk ikisinde **kullanıcı referansı yok** (`CvScanResult` emsali); son ikisi
+  Users'tan cascade.
+- **`job_id` başına DB, batch yalnızca eksik id'ler için upstream'e.** Search'te dönen her ilan
+  özet olarak upsert edilir; details çağrısı önce satırlara bakar, kredi = DB'de olmayan id
+  sayısı. Başka kullanıcı aynı ilanı kredisiz okur. Detay 7 gün, arama 24 saat, maaş 30 gün.
+- **Saklanan JSON bizim DTO'muz, sağlayıcının wire şekli değil.** Endpoint başına ayrı DTO
+  ailesi (özet 34 alan, detay 49, maaş 18, şirket maaşı 16); okurken doğrudan deserialize,
+  yeniden map yok. `SchemaVersion` kolonu: DTO şekli değişince eski satırlar miss sayılır.
+- **Kredi muhasebesi muhafazakâr.** Başarısız upstream çağrı da kredi olarak yazılır
+  (RapidAPI'nin faturalayıp faturalamadığı görülemez); yalnızca 401/403 sıfır. Tavanlar defterden
+  SUM ile: kullanıcı başı günlük (default 10, admin override edebilir) → global aylık (180; 200'e
+  20 pay, eşzamanlı iki çağrının ikisi de geçebilir — kabul edilmiş yarış) → sağlayıcının son
+  `remaining == 0` sözü. Sıra bilinçli: gününü bitiren kullanıcı ortak ayın durumunu öğrenemez.
+  `JobSearch:MonthlyResetDay` abonelik yenileme günü olmalı, takvim ayı değil.
+- **Türkiye default, dil default'u bilinçli olarak yok.** `country` = istek → kullanıcı ayarı →
+  `tr`. `language` = istek → kullanıcı ayarı → **gönderilmez**; JSearch ülkenin ana dilini seçer,
+  ülke/dil uyuşmazlığı boş liste döndürür, İngilizce başlıklı İstanbul ilanı elenmemeli. Bu kural
+  `JobSearchCountryLanguageTests` (7 senaryo) ve `EffectiveJobSearchSettingsTests` ile pin'li.
+- **Kullanıcı bazlı ayarlar, iki ayrı sahip.** Tercihler (ülke/dil/konum/tarih/uzaktan) kullanıcının
+  kendi ucu; limitler (günlük kredi, sayfa/id tavanı) yalnızca admin ucu — tavanın sınırladığı
+  hesap tavanı yükseltemez. İki istek tipi farklı kolonlara yazar, çapraz yazım imkânsız; tüm
+  alanlar null'a dönünce satır silinir.
+- **`fields` projeksiyonu public API'de yok.** İstemci destekliyor (13/4/5 parametrenin hepsi),
+  servis göndermiyor: projeksiyonlu yanıt DB'de tam yanıtın yerine geçer, sonraki tam istek yeni
+  kredi harcardı. Cursor ve `num_pages` önbellek anahtarının parçası; `num_pages=1`, `date_posted=all`
+  gibi sağlayıcı default'ları URL'ye hiç yazılmıyor.
+- **Hız kapısı (`JSearchThrottle`) var ama kapalı.** `RequestsPerSecond: 0`; PRO'ya geçişte config'le
+  açılan `TokenBucketRateLimiter` — thread-safe FIFO kuyruk kütüphaneden, elle kuyruk yazılmadı.
+  Instance başına; global emniyet defter.
+- **Süresi dolan önbellek satırı temizliği lazy** (cache yazımında `ExecuteDelete`), Hangfire job
+  yok: ayda ≤200 çağrı → satır sayısı küçük; min-instances=0 cron'u zaten güvenilmez kılıyor.
+
+**Keşifte çıkan iki bulgu (kod dışında bilinmeliydi):**
+
+1. **HttpClientFactory varsayılan logger'ı tam URL'yi Information'da yazıyor.** Mevcut typed
+   istemcilerin URL'si sabit olduğundan fark edilmemişti; JSearch URL'si kullanıcının arama
+   metnini taşıyor. Kayıt `.RemoveAllLoggers()` ile; istemci yalnızca status, `request_id` ve
+   kalan kota loglar. Serilog override'ları hâlâ yalnızca AspNetCore/EF — başka bir dış URL'ye
+   kullanıcı verisi konursa aynı şey gerekir.
+2. **`api-contract.yml` her ucu "status code documented" assertion'ından geçiriyor**; bayrak
+   kapalıyken tüm uçlar 404 → grup `.ProducesProblem(404)` deklare ediyor, bayrak filtresi grup
+   seviyesinde (validasyondan önce) çalışıyor.
+
+**Sınırı geçen veri ve gizlilik.** Yalnızca yazılan serbest metin (unvan, konum, şirket adı) +
+ülke/dil kodu; kullanıcı id/e-posta/ad/IP/başvuru geçmişi gitmez, sonuçlar kullanıcı referansı
+olmadan saklanır. `/privacy#cross-border-transfer` "üçüncü durum" olarak güncellendi (tr+en),
+`PRIVACY_CHECKLIST.md` envanterine satır eklendi. Bayrak ile metin birlikte hareket eder
+(`FeedbackGitHubOptions.Enabled` emsali) — metin bayraktan önce yayında.
+
+**Prod'da henüz kapalı.** `JobSearch:Enabled=false`; Secret Manager'da `afterapply-jsearch-api-key`
+henüz yok, `deploy.yml`'e satır bilinçli olarak eklenmedi (`--set-secrets` var olmayan secret'ta
+deploy'u düşürür). Açma reçetesi `DEPLOYMENT.md` §13: secret + IAM binding → deploy.yml'e
+`JobSearch__ApiKey`, `JobSearch__Enabled=true`, `JobSearch__MonthlyResetDay` → ≤6 kredilik manuel
+smoke (dashboard sayacı ile defter karşılaştırması: çok sayfalı arama ve çok id'li batch'in
+sayfa/id başına faturalandığını yalnızca gerçek çağrı kanıtlar; sonuç buraya yazılacak).
+Not: RapidAPI playground sayfası uygulama anahtarını ekranda gösteriyor; araştırma sırasında
+tarayıcıdan okunan sayfa metni o anahtarı içeriyordu — secret'a eklemeden önce Console'dan
+yenilenmesi önerildi.
+
+**Testler.** Unit 658 (JobSearch: URL kurma/parametre başına, zarf + gateway parse, retry,
+throttle, etkin ayar çözümü, cache key, kota pencereleri, mapper 34/49/18/16 alan, payload
+round-trip, CSV, 6 validator). Integration 58 (ülke/dil, ilan tablosu, uçlar, kota, ayarlar,
+bayrak-kapalı, leak guard, hesap silme cascade) — stub sağlayıcı + `tests/Fixtures/JobSearch/*.json`.
+`TestContainerCleanup.DisableJobSearchForTests` GitHub mirror emsaliyle aynı: user-secrets'taki
+gerçek anahtar hiçbir test host'una ulaşmaz. Web: `ClientConfigResponse.jobSearch` (additive)
++ privacy metinleri, `npm test` (270) ve lint yeşil.
+
+**Açık noktalar.** Kodlu hatalar 400 dönüyor, makine-okunur `code` alanı yok (`DomainExceptionHandler`
+yalnız `Detail`) — UI gelince `Extensions["code"]` tek satırlık additive iş. `JobSearchJobs`
+özetleri temizlenmiyor (30 gün dedupe için gerekli), bir yıl sonra bakılır. TR'de `language`
+göndermeden İngilizce başlıklı ilanların gelip gelmediği yalnızca gerçek çağrıyla görülür
+(smoke adımı); gelmiyorsa çözüm kullanıcı ayarında `DefaultLanguage=en`, kod değişmez.
+
+## JSearch canlı smoke bulguları: Google for Jobs Türkiye'de yok; retry/timeout faturalanıyor; id'ler 402 karakter (2026-09-12)
+
+Anahtar user-secrets'a girdi, lokal API `JobSearch__Enabled=true` ile koşuldu, 10 gerçek çağrı yapıldı
+(sağlayıcı sayacı 200 → 188; ikisi playground'daki denemeler). Üç bulgu, üçü de kodu/ürünü değiştirdi:
+
+1. **`country=tr` için JSearch hiçbir zaman ilan döndürmüyor.** "backend developer istanbul"
+   (dil yok), aynı sorgu `language=en`, ve "yazılım geliştirici istanbul" — üçü de 200/boş liste.
+   Aynı anda `developer jobs in chicago&country=us` 10 ilan + cursor döndü, yani parse tarafı
+   doğru. Kök neden tarayıcıda doğrulandı: `google.com/search?...&gl=tr&udm=8` (ya da
+   `ibp=htl;jobs`) parametreyi yok sayıp normal web sonuçlarını gösteriyor, sekme çubuğunda
+   "İş ilanları" yok; `gl=us`'ta ise Jobs sekmesi ve filtreleri (Remote, No degree, Date posted)
+   var. **Google for Jobs Türkiye'de açık değil**; JSearch tam olarak bu yüzeyi kazıdığı için TR
+   ilan araması bu sağlayıcıyla mümkün değil. Pro paket girdisindeki "JSearch, `country=tr`"
+   varsayımı **yanlıştı**. Buna karşılık **`estimated-salary` Türkiye için çalışıyor** (Glassdoor
+   kaynaklı: İstanbul / Backend Developer → 10.000–40.000 TRY/ay taban, medyan 15.000, 172
+   kayıt, VERY_HIGH); `company-job-salary` Trendyol/software engineer boş döndü (lokasyon/unvan
+   varyantı denenmedi). Ürün kararı açık (aşağıda).
+2. **RapidAPI her HTTP denemesini faturalıyor, zaman aşımına uğrayan dahil.** 15 sn timeout'a
+   takılan iki deneme sayaçtan 2 düşürdü. Defter artık `kredi × deneme` yazıyor
+   (`JSearchResult.Attempts` / `JSearchException.Attempts`); varsayılan timeout 15 → 30 sn
+   (playground medyanı ~6 sn, TR sorgusu 5,3 sn'de döndü — uzun bekleme retry'dan ucuz).
+   Doğrulanan model: tek sayfa arama = 1, tek id detay = 1, maaş = 1, her deneme = 1. Çok
+   sayfa / çok id'nin sayfa/id başına faturalandığı **denenmedi** (2–3 kredi; belge öyle diyor).
+3. **v5 `job_id`'leri 402 karakterlik bileşik token** — dokümandaki 24 karakterlik örnekler
+   değil. İlk kolon 200'dü; upsert `DbUpdateException` ile düştü ve "yarış" diye yutuldu, hiçbir
+   ilan saklanmadı. Kolon/validator 1000'e çıkarıldı (`JobSearchJob.MaxJobIdLength`), migration
+   yeniden üretildi (henüz hiçbir ortama gitmemişti), `StoreAsync` yalnızca Postgres 23505'i yarış
+   sayıyor, gerisi `LogError`. Uçtan uca test eklendi (`Real_Length_Provider_Ids_Are_Stored_And_Served`).
+
+Detay ucu doğrulandı: 49 alan (highlights 7/13/9, 3 employer review, insights: hybrid/entry/
+bachelor-CS/required+preferred technologies/methodologies/industry/soft skills) DTO'ya birebir
+geldi, ikinci çağrı DB'den `fromCache` döndü. Önbellek, cursor, maaş gruplaması gerçek veriyle
+tutuyor.
+
+**Açık ürün kararı (kullanıcıya soruldu):** JSearch, TR ilan araması için kaynak olamaz. Seçenekler:
+(a) JSearch'ü olduğu gibi tutup TR'de yalnızca **maaş** uçlarını, ilan aramasını ise TR dışı
+pazarlar (NL/DE — mevcut kullanıcı tabanının bir kısmı Hollanda pazarında) için kullanmak;
+(b) TR ilanları için ayrı kaynak araştırmak (kariyer.net'in resmi API'si yok; RapidAPI'de
+LinkedIn/Indeed tabanlı sağlayıcılar var, hepsi ayrı ücret ve ayrı gizlilik satırı);
+(c) ilan aramasını ürün kapsamından çıkarıp yalnızca maaş verisini kullanmak. Kod hangisi
+seçilirse seçilsin değişmiyor — `DefaultCountry` config ve kullanıcı ayarı.
+
+**Karar (2026-09-12, aynı gün):** entegrasyon **elde tutulur ama kullanılmaz** — kod ve testler
+repoda kalıyor, `JobSearch:Enabled` her ortamda kapalı, Secret Manager'a anahtar konmuyor,
+`deploy.yml`'e satır eklenmiyor, privacy metni "bayrakla birlikte hareket eder" kuralı gereği
+yayında kalabilir (yalnızca bayrak açıkken gerçekleşen bir aktarımı tarif ediyor; açılmadan
+hiçbir şey gönderilmiyor). TR ilan kaynağı sorusu ayrı bir konu olarak açık; seçenekler (a)/(b)/(c)
+yukarıda. Gelecekte açılırsa reçete `DEPLOYMENT.md` §13.

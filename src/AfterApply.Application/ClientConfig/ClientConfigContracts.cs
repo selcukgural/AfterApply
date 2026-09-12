@@ -11,7 +11,8 @@ public sealed record ClientConfigResponse(
     GoogleAuthConfigResponse GoogleAuth,
     LinkedInAuthConfigResponse LinkedInAuth,
     GitHubAuthConfigResponse GitHubAuth,
-    CvScanConfigResponse CvScan);
+    CvScanConfigResponse CvScan,
+    JobSearchConfigResponse JobSearch);
 
 /// <summary>Mirrors ASP.NET Identity's <c>PasswordOptions</c>, which is what the server actually
 /// validates against — the response is built from that object, not from a copy of the config.</summary>
@@ -51,3 +52,8 @@ public sealed record GitHubAuthConfigResponse(bool Enabled, string? ClientId);
 /// this and gets a 404 from the scan endpoint has learnt the same thing.
 /// </summary>
 public sealed record CvScanConfigResponse(bool ContentNotesAvailable);
+
+/// <summary>Whether the JSearch-backed job search routes exist at all (flag on and a key
+/// configured). The per-user limits are not here because they vary by user — a client reads
+/// them from <c>GET /api/job-search/settings</c> and <c>/usage</c> once signed in.</summary>
+public sealed record JobSearchConfigResponse(bool Enabled);

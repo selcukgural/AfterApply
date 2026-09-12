@@ -6,6 +6,7 @@ using AfterApply.Domain.Documents;
 using AfterApply.Domain.EmailIntegrations;
 using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
+using AfterApply.Domain.JobSearch;
 using AfterApply.Domain.Jobs;
 using AfterApply.Domain.Mailing;
 using AfterApply.Domain.Metrics;
@@ -67,6 +68,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BenchmarkSubmission> BenchmarkSubmissions => Set<BenchmarkSubmission>();
 
     public DbSet<CvScanResult> CvScanResults => Set<CvScanResult>();
+
+    public DbSet<JobSearchJob> JobSearchJobs => Set<JobSearchJob>();
+
+    public DbSet<JobSearchCacheEntry> JobSearchCacheEntries => Set<JobSearchCacheEntry>();
+
+    public DbSet<JobSearchUsage> JobSearchUsages => Set<JobSearchUsage>();
+
+    public DbSet<JobSearchUserSettings> JobSearchUserSettings => Set<JobSearchUserSettings>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

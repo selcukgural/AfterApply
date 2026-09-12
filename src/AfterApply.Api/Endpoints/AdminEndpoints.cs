@@ -3,9 +3,13 @@ using AfterApply.Api.Extensions;
 using AfterApply.Application.Admin;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.EmailIntegrations.Contracts;
+using AfterApply.Application.JobSearch;
+using AfterApply.Application.JobSearch.Contracts;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.SiteTraffic;
 using AfterApply.Application.SiteTraffic.Contracts;
+using AfterApply.Infrastructure.JobSearch;
+using Microsoft.Extensions.Options;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -78,6 +82,50 @@ public static class AdminEndpoints
                              "aggregate only. Read RevertRate, not AgreementRate: see the contract's " +
                              "documentation for why the second one flatters the feature.")
             .Produces<AutoApprovalCalibrationResponse>();
+
+        // Per-user job search limits. The daily credit ceiling is what stops one account from
+        // spending the product's shared monthly quota, so the account it restrains cannot be the
+        // one raising it — hence here, behind the admin check, and not on /api/job-search/settings.
+        // 404 while JobSearch:Enabled is off, like the routes it configures.
+        var jobSearch = group.MapGroup("/job-search/settings")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        jobSearch.AddEndpointFilter(async (context, next) =>
+        {
+            var options = context.HttpContext.RequestServices.GetRequiredService<IOptions<JobSearchOptions>>();
+            return options.Value.Enabled ? await next(context) : Results.NotFound();
+        });
+
+        jobSearch.MapGet("/{userId:guid}", async (Guid userId, ClaimsPrincipal user, IAdminAccessService adminAccess,
+                IJobSearchSettingsService settings, CancellationToken cancellationToken) =>
+            {
+                if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
+                {
+                    return Results.Forbid();
+                }
+
+                var result = await settings.GetForUserAsync(userId, cancellationToken);
+                return result is null ? Results.NotFound() : Results.Ok(result);
+            })
+            .WithSummary("Read one user's job search settings (admin)")
+            .Produces<JobSearchSettingsResponse>();
+
+        jobSearch.MapPut("/{userId:guid}", async (Guid userId, UpdateJobSearchLimitsRequest request, ClaimsPrincipal user,
+                IAdminAccessService adminAccess, IJobSearchSettingsService settings, CancellationToken cancellationToken) =>
+            {
+                if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
+                {
+                    return Results.Forbid();
+                }
+
+                var result = await settings.UpdateLimitsAsync(userId, request, cancellationToken);
+                return result is null ? Results.NotFound() : Results.Ok(result);
+            })
+            .WithValidation<UpdateJobSearchLimitsRequest>()
+            .WithSummary("Override one user's job search limits (admin)")
+            .WithDescription("Daily credits, pages per search and ids per details call. Null clears an override " +
+                             "back to the global default. Touches only the limit columns — the user's own " +
+                             "preferences are theirs.")
+            .Produces<JobSearchSettingsResponse>();
 
         return app;
     }
