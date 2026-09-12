@@ -11,8 +11,10 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import type { Theme } from "@/lib/theme/theme";
 
+// In page order, so the menu reads the way the page scrolls.
 const ANCHOR_LINKS = [
   { href: "#how-it-works", key: "howItWorks" },
+  { href: "#extension", key: "extension" },
   { href: "#features", key: "features" },
   { href: "#mission", key: "mission" },
 ] as const;

@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
 import { benchmarkApi } from "@/lib/api/benchmark";
 import { ApiError } from "@/lib/api/httpClient";
-import { formatCount, formatRate } from "@/lib/dashboard/format";
+import { formatCount } from "@/lib/dashboard/format";
 import {
   BENCHMARK_LOCATIONS as LOCATIONS,
   BENCHMARK_PERIODS as PERIODS,
@@ -14,6 +14,7 @@ import {
   BENCHMARK_SENIORITIES as SENIORITIES,
 } from "@/lib/benchmark/options";
 import { Button, buttonClassName } from "@/components/ui/Button";
+import { BenchmarkMedianCard, BenchmarkYourRateCard } from "@/components/benchmark/BenchmarkResultCards";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -216,74 +217,30 @@ function BenchmarkResult({ result, onReset }: { result: BenchmarkResultResponse;
   const locale = useLocale();
 
   const median = result.medianRate;
-  const position =
-    median === null ? null : result.yourRate > median ? "above" : result.yourRate < median ? "below" : "at";
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-        <p className="text-sm text-gray-500 dark:text-gray-400">{t("result.yourRateLabel")}</p>
-        <p className="mt-1 text-5xl font-semibold tracking-tight text-gray-900 tabular-nums dark:text-gray-100">
-          {formatRate(result.yourRate, locale)}
-        </p>
-        {/* The two numbers the percentage came from. A rate with nothing behind it invites the
-            reader to wonder whether they typed what they meant to. */}
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          {t("result.yourRateDetail", {
-            replies: formatCount(result.replyCount, locale),
-            applications: formatCount(result.applicationCount, locale),
-          })}
-        </p>
-      </div>
+      <BenchmarkYourRateCard
+        yourRate={result.yourRate}
+        replyCount={result.replyCount}
+        applicationCount={result.applicationCount}
+      />
 
       {/* Three states, and the difference between the first two is the whole honesty of the page:
           a median drawn from every field must never read as one drawn from the reader's. The scope
-          decides the heading and the label beside the number, not just a footnote. */}
+          decides the heading and the label beside the number, not just a footnote — inside the
+          card. The third state is decided here: nothing at all to compare against yet. */}
       {median !== null && result.scope !== "None" ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            {result.scope === "Sector"
-              ? t("result.comparedTitle", {
-                  sector: t(`sectors.${result.sector}`),
-                  sampleSize: formatCount(result.sampleSize, locale),
-                })
-              : t("result.overallTitle", {
-                  sector: t(`sectors.${result.sector}`),
-                  sampleSize: formatCount(result.sampleSize, locale),
-                  minimum: formatCount(result.minimumSampleSize, locale),
-                })}
-          </p>
-
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {result.scope === "Sector" ? t("result.median") : t("result.overallMedianLabel")}
-            </span>
-            <span className="text-2xl font-semibold text-gray-900 tabular-nums dark:text-gray-100">
-              {formatRate(median, locale)}
-            </span>
-          </div>
-
-          {result.scope === "Overall" && result.comparedAgainstCount !== null ? (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {t("result.overallNote", { count: formatCount(result.comparedAgainstCount, locale) })}
-            </p>
-          ) : null}
-
-          {result.shareBelowYou !== null ? (
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {t("result.shareBelow", { share: formatCount(Math.round(result.shareBelowYou), locale) })}
-            </p>
-          ) : null}
-
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            {position === "above"
-              ? t("result.aboveMedian")
-              : position === "below"
-                ? t("result.belowMedian")
-                : t("result.atMedian")}
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{t("result.saved")}</p>
-        </div>
+        <BenchmarkMedianCard
+          scope={result.scope}
+          sector={result.sector}
+          sampleSize={result.sampleSize}
+          minimumSampleSize={result.minimumSampleSize}
+          comparedAgainstCount={result.comparedAgainstCount}
+          shareBelowYou={result.shareBelowYou}
+          yourRate={result.yourRate}
+          medianRate={median}
+        />
       ) : (
         // Nothing at all to compare against yet — not even the overall pool. Explained rather than
         // shown as an error, with the distance left, because that is the reason to tell someone

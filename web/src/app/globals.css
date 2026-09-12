@@ -107,3 +107,24 @@
     animation: none;
   }
 }
+
+/*
+ * Landing hero backdrop: the logo mark's own gradient (blue #1C39B7 → teal #15AAB7 → green
+ * #2FC45F) as three soft radial pools behind the first screen. Gradients rather than blurred
+ * blobs: no filter pass over a viewport-sized layer, and the falloff is the shape. Static on
+ * purpose — nothing animates, so there is nothing to switch off for prefers-reduced-motion.
+ * Dark mode needs more alpha to read at all against gray-950.
+ */
+.aa-hero-glow {
+  background-image:
+    radial-gradient(42rem 26rem at 10% 15%, rgb(28 57 183 / 0.14), transparent 70%),
+    radial-gradient(38rem 24rem at 58% -5%, rgb(21 170 183 / 0.12), transparent 70%),
+    radial-gradient(36rem 24rem at 92% 65%, rgb(47 196 95 / 0.12), transparent 70%);
+}
+
+.dark .aa-hero-glow {
+  background-image:
+    radial-gradient(42rem 26rem at 10% 15%, rgb(28 57 183 / 0.3), transparent 70%),
+    radial-gradient(38rem 24rem at 58% -5%, rgb(21 170 183 / 0.18), transparent 70%),
+    radial-gradient(36rem 24rem at 92% 65%, rgb(47 196 95 / 0.16), transparent 70%);
+}

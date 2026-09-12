@@ -5517,3 +5517,57 @@ Kaynaklar: developers.openai.com/api/docs/pricing · ai.google.dev/gemini-api/do
 openwebninja.com/api/jsearch · resend.com/pricing · paddle.com/help (supported countries,
 identity verification, payout fees) · iyzico.com/destek (link ile ödeme al) ·
 ceaksan.com/en/saas-payment-infrastructure-turkey · mukellef.co (şahıs şirketi maliyetleri).
+
+## Eklenti ilk ekrana çıktı: etkileşimli araç şeridi; hero'ya marka parıltısı (2026-09-12)
+
+Landing'de girişsiz iki araç (CV tarama, kıyaslama) ve yayınlanmış Chrome eklentisi vardı ama
+eklenti yalnızca özellik listesinde altı karttan biriydi — sayfanın sekizinci bölümünde, navbar'da
+hiç yok. Kanvasta üç yerleşim (A: araç şeridi + kendi bölümü, B: hero'dan sonra tam genişlik koyu
+sahne, C: bento özellik ızgarası) ve üç hero işlenişi sunuldu; **A + marka gradyan ışıması** seçildi
+ve şerit "seçilen kartın özelliği altında belirsin" diye etkileşimli hale getirildi. Değişiklikler:
+
+**Araç şeridi (`ToolsStrip`), hero'nun hemen altında, bir sekme grubu.** Üç kart: CV Tarama
+(`/cv-tarama`, hesapsız), Chrome Eklentisi (mağaza linki, dolu düğme), Kıyaslama (`/benchmark`,
+hesapsız). Seçili kartın tanıtımı ve canlı mock'u altındaki panelde açılır. **Varsayılan eklenti:**
+hero CV taramayı zaten satıyor ve birincil düğmesini taşıyor (2026-09-10); eklentinin ilk bakışı
+burası, tıklama isteyen bir ilk bakış ilk bakış değildir. Kabul edilen gerilim: hero'nun altında
+ikinci bir dolu düğme. Hangi sekmenin açık olduğu yalnızca React state'te — URL'de değil (trafik
+sayacının yol izin listesine durum taşırdı), depolamada değil (çerez politikasına bir anahtar
+eklerdi); yeni trafik olayı da yok, eklenti kurulumu mağaza tarafında sayılır. Markup WAI-ARIA tabs
+deseni: kart gövdesi `role="tab"` düğmesi (ok tuşlarıyla gezinme, roving tabindex), panel
+`role="tabpanel"`, kartın CTA'sı düğmenin **dışında** ayrı bir link (düğme içinde link geçersiz
+HTML ve klavyeden erişilemez).
+
+**Ayrı `ExtensionSection` denendi ve kaldırıldı.** İlk sürümde şeridin yanı sıra sayılar ile içe
+aktarma arasında madde madde bir eklenti bölümü vardı; manuel testte aynı popup'ın sayfada iki kez
+görünmesi fazla bulundu ve bölüm silindi. Eklentinin sayfadaki tek gösterimi şerit; `#extension`
+hedefi (navbar + footer "Eklenti") şeride gider ve o hash ile gelince eklenti sekmesi açılır
+(hash okunur, yazılmaz). Kart sırası da aynı testte değişti: **Eklenti → Kıyaslama → CV Tarama** —
+hero CV taramayı zaten taşıdığı için şeritte sona gitti. Gmail taraması anılmıyor (beta/opt-in);
+mevcut özellik kartı olduğu gibi kaldı.
+
+**Görseller yine bileşen, ekran görüntüsü değil.** Eklenti popup'ı Tailwind ile çizilmiş
+(`BrowserFrame` + `ExtensionPopupMock`), örnek değerler `scene-job.html` ile birebir (mağaza ile
+site aynı ilanı gösterir), etiketler eklentinin gerçek TR/EN sözcükleri ("Başvurdum"/"I Applied").
+CV ve kıyaslama panelleri için gerçek sonuç ekranlarından sunum bileşenleri ayrıldı
+(`CvScanScoreCard`/`CvScanCategoryBars` ← `CvScanResult`, `BenchmarkYourRateCard`/
+`BenchmarkMedianCard` ← `BenchmarkForm`) — gerçek ekran ve mock aynı bileşeni çizer, biri
+değişince öteki de değişir; ATS-düzeltme cümlesi `CvScanResult`'ta kaldı, oradan `children` olarak
+geçiyor. Her mock `role="img"` + tek cümlelik etiket, içi `aria-hidden` (odaklanabilir öğe yok;
+alanlar ve düğme div), "Örnek veri" rozeti (`SampleDataBadge`) resmin **dışında** ki okunsun. CV
+mock'unun sayıları toplanıyor (32+22+15+9 = 78) çünkü taramanın vaadi okuyucunun hesabı
+doğrulayabilmesi.
+
+**Hero parıltısı.** Logo gradyanı (#1C39B7 → #15AAB7 → #2FC45F) üç yumuşak radyal havuz olarak
+`.aa-hero-glow`'da (globals.css); `filter: blur` yok, animasyon yok — azaltılmış hareket için
+yapılacak bir şey yok. Negatif z-index yok (section stacking context yaratmadığı için `-z-10`
+body zemininin arkasına düşerdi); içerik parıltıdan sonra çiziliyor. Bırakma alanı ve CTA'lar
+değişmedi.
+
+`landing.contract.test.ts` sabitler: bölüm sırası (hero → şerit → problem → neden → sayılar →
+import → özellikler), şeridin `"extension"` varsayılanı, kart sırası ve tab rolleri, `#extension`
+hedefinin şeritte olduğu, URL/depolama/trafik olayına dokunmadığı, iki dosyada mağaza linkinin `CHROME_WEB_STORE_URL` + `target=_blank` +
+`noopener noreferrer` olduğu, eklenti mock'unun `role="img"`/`aria-hidden` ve odaklanabilir öğe
+içermediği, demo değerlerin `scene-job.html` ile aynı olduğu, `components/landing/*.tsx`'te
+`<img>`/`next/image`/ekran görüntüsü bulunmadığı, hero parıltısının dekoratif kaldığı. Tasarım
+kanvası: claude.ai/code/artifact/4666412e-242d-4ee7-9366-639d27ab2668 (seçilen A + keşif taslakları).

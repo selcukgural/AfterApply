@@ -6,6 +6,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { jsonLdGraph, organizationJsonLd, webApplicationJsonLd } from "@/lib/seo/jsonLd";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { ToolsStrip } from "@/components/landing/ToolsStrip";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { AfterApplySection } from "@/components/landing/AfterApplySection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
@@ -56,6 +57,10 @@ export default async function LandingPage() {
       <LandingNavbar initialTheme={theme} />
       <main className="flex-1">
         <HeroSection />
+        {/* The three things that work without an account, the extension's tab open first — one
+            screen under the hero, before the page starts explaining itself (2026-09-12). Also the
+            #extension target: this is the extension's whole showing on the page. */}
+        <ToolsStrip />
         <ProblemSection />
         <AfterApplySection />
         {/*

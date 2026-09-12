@@ -108,7 +108,8 @@
       "signIn": "Log In",
       "getStarted": "Get Started Free",
       "goToDashboard": "Go to Dashboard",
-      "help": "Help"
+      "help": "Help",
+      "extension": "Extension"
     },
     "hero": {
       "eyebrow": "How many sent, how many replied",
@@ -125,6 +126,53 @@
       "formats": "PDF or DOCX · 5 MB max",
       "noAccount": "No account needed; the file is never written to disk and is dropped from memory when the scan ends.",
       "nextStep": "On the next step you tick the consent box and start the scan yourself."
+    },
+    "tools": {
+      "title": "Things you can try without an account",
+      "tabsLabel": "Tools",
+      "noAccount": "No account needed",
+      "cvTitle": "CV Scan",
+      "cvBody": "Drop your CV and see what applicant tracking systems read from it, with a machine-readability score.",
+      "cvCta": "Scan my CV",
+      "extensionPill": "LinkedIn + kariyer.net",
+      "extensionTitle": "Chrome Extension",
+      "extensionBody": "One click on LinkedIn or kariyer.net: log the application without leaving the job page.",
+      "extensionCta": "Add to Chrome",
+      "benchmarkTitle": "Reply rate benchmark",
+      "benchmarkBody": "Enter two numbers, see your own reply rate and compare it with the median in your field.",
+      "benchmarkCta": "Compare",
+      "panels": {
+        "extension": {
+          "eyebrow": "Chrome extension · LinkedIn + kariyer.net",
+          "title": "You applied. One click, and it's on record.",
+          "body": "Open the extension on the job page: company, title and location fill themselves in, and you just say \"I Applied\".",
+          "bullet1": "Company, title and location are filled in automatically — edit anything before sending",
+          "bullet2": "The recruiter who posted the job is captured too",
+          "bullet3": "Click the same job twice and your existing application opens — no duplicates",
+          "cta": "Add to Chrome",
+          "help": "How to set it up"
+        },
+        "cv": {
+          "eyebrow": "CV Scan · no account needed",
+          "title": "What does an applicant tracking system read from your CV?",
+          "body": "Drop your CV and see the machine-readability score, where the points come from, and the fix list — right away.",
+          "bullet1": "PDF or DOCX, up to 5 MB",
+          "bullet2": "The file is never written to disk; it is dropped from memory when the scan ends",
+          "bullet3": "Every finding points at a page and a line in your own file",
+          "cta": "Scan my CV",
+          "mockAriaLabel": "Sample: a CV scan result — 78 out of 100, the four category subtotals and one fix card."
+        },
+        "benchmark": {
+          "eyebrow": "Reply rate benchmark · no account needed",
+          "title": "Where is your rate against your field's median?",
+          "body": "Enter how many applications you sent and how many got a reply; see your own rate next to the median in your field.",
+          "bullet1": "Two numbers, a sector, a period — that's all",
+          "bullet2": "The median is shown only when your field has enough answers",
+          "bullet3": "Your numbers are anonymous; no account needed",
+          "cta": "Compare",
+          "mockAriaLabel": "Sample: a benchmark result — your reply rate 23.3% (7/30), the Software / IT median 31%."
+        }
+      }
     },
     "problem": {
       "eyebrow": "Sound familiar?",
@@ -192,6 +240,17 @@
         "title": "Those numbers are samples. What are yours?",
         "body": "How many applications did you send, and how many ever came back — enter two numbers, see your own reply rate and compare it with the median in your field. No account needed.",
         "button": "Compare"
+      }
+    },
+    "extension": {
+      "mock": {
+        "ariaLabel": "Sample: the e-kariyerim extension open over a LinkedIn job posting; company, title, location and HR contact filled in automatically, with an I Applied button below.",
+        "company": "Company",
+        "jobTitle": "Job title",
+        "location": "Location",
+        "contact": "HR contact",
+        "optional": "optional",
+        "submit": "I Applied"
       }
     },
     "vision": {
