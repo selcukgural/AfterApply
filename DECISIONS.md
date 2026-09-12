@@ -5571,3 +5571,100 @@ hedefinin şeritte olduğu, URL/depolama/trafik olayına dokunmadığı, iki dos
 içermediği, demo değerlerin `scene-job.html` ile aynı olduğu, `components/landing/*.tsx`'te
 `<img>`/`next/image`/ekran görüntüsü bulunmadığı, hero parıltısının dekoratif kaldığı. Tasarım
 kanvası: claude.ai/code/artifact/4666412e-242d-4ee7-9366-639d27ab2668 (seçilen A + keşif taslakları).
+
+## LinkedIn ilan kaynağı: JSearch yerine kendi fetch katmanımız; Pro haftalık çekme altyapısı, bayrak kapalı (2026-09-12)
+
+JSearch Türkiye'yi kapsamadığı için (`feat/jsearch-integration` branch'i "elde tutulur ama
+kullanılmaz", yukarıda) TR ilan kaynağı sorusu açıktı. Kullanıcı, LinkedIn'in oturumsuz arama
+URL'sinin sonuç verdiğini gözlemledi; bu turda önce **kaynak olarak kullanılabilir mi** araştırıldı,
+sonra Pro planındaki haftalık çekme altyapısı bunun üstüne kuruldu. Ürün planı değişmedi (Pro
+girdisi, yukarıda): her Pazartesi 04:00 ödemiş kullanıcının kriterine uyan ilanlar çekilir, sonra
+skorlanır, "N ilan hazır" e-postası gider. **Tek fark ilan kaynağı.**
+
+**Araştırma (canlı ölçüm, 12 Eylül).** Oturumsuz, çerezsiz, dürüst bot UA ile:
+- `GET /jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=&location=Türkiye&f_TPR=r604800&start=N`
+  → 200, sayfa başına 10 kart (`urn:li:jobPosting:{id}`, başlık, şirket + şirket URL'si, şehir,
+  `<time datetime>`, ilan URL'si). `f_WT=2` (remote) ve `f_TPR=r{saniye}` kabul ediliyor.
+- `GET /jobs-guest/jobs/api/jobPosting/{id}` → 200, tam açıklama (~5.5k karakter), seniority /
+  istihdam tipi / job function / industries, başvuran sayısı.
+- Sınırlar: sorgu başına **sert tavan 100** (start ≥ 100 boş); tam eşleşme sayısı (".NET Developer"
+  TR 30 gün → 54) aşılınca API "ilgili" ilanlarla **dolduruyor** (start=90'da "IT Analisti", "Vibe
+  Coder Intern") → yalnızca ilk 3–5 sayfa güvenilir. Maaş 100 kartın hiçbirinde yok. ~60 ardışık
+  istekte 429 gelmedi. Cloud Run egress IP'sinden LinkedIn şirket sayfası fetch'leri prod'da
+  çalışıyor (loglar 7–9 Eylül) → datacenter IP engeli şu an yok.
+
+**Politika ve karar.** LinkedIn `robots.txt`: `User-agent: * / Disallow: /`; başlık yorumu
+otomatik erişimi "strictly prohibited" ilan edip `whitelist-crawl@linkedin.com` başvurusuna
+yönlendiriyor; `/jobs-guest/` Googlebot için bile `Disallow`. Mevcut tek-URL fetch'lerimiz (link
+önizleme, şirket zenginleştirme) de aynı sınıfta; fark ölçek ve niyet. **Kullanıcı kararı: düşük
+hacimle ilerle** — dürüst ve ayırt edilebilir UA (`EKariyerimJobSource/1.0`), global günlük istek
+bütçesi (`JobSources:MaxRequestsPerDay=200`), sorgu başına en fazla 5 sayfa, istekler arası 1.5–3 s,
+içerik yeniden yayınlanmaz (kullanıcıya yalnızca kendi kriterine gelenler, LinkedIn'e link), ve
+**429/403/999 ya da authwall/login redirect'inde 24 saat otomatik durma**. Whitelist başvurusu açık
+bir seçenek olarak duruyor. Bu koşullar kalkarsa karar da kalkar.
+
+**Tasarım (ana kararlar).**
+- `main` üzerinde yeni `JobSources` modülü; JSearch branch'i merge edilmedi (RapidAPI kredi/kota
+  etrafında kurulu, 49 alanlık DTO). Fikirleri taşındı: UserId'siz paylaşımlı posting tablosu,
+  defter tabanlı bütçe, admin override'lı kullanıcı limitleri, `RemoveAllLoggers()`, bayrak → 404.
+- Posting'ler ayrı tabloda (`JobSourcePostings`), `Jobs`'ta değil: `Job` → `Company` zorunlu, her
+  ilan için şirket üretmek başvuru tarafını kirletirdi. `(Source, ExternalId)` tekil; açıklama düz
+  metin, HTML asla saklanmıyor.
+- Kriter = 1–3 unvan × 1 konum (+remote); aynı normalize sorgu kullanıcılar arası **7 gün
+  paylaşılır** (`JobSourceQueries.KeyHash`); kullanıcıya bir ilan **bir kez** teslim edilir
+  (`UserJobSourceDeliveries` PK); haftalık tavan varsayılan **50**, kullanıcı bazında admin
+  override (`UserJobSourceSettings`). Sıralama: kaynak rank'ı, unvanlar arası round-robin.
+- **Zaten başvurulan ilan teslim edilmez, sayısı söylenir:** posting'in id'si kullanıcının
+  başvurusuna bağlı `Job.ExternalId` / `Job.Url` / `Application.JobUrl`'den çıkan id kümesiyle
+  eşleşirse düşer; `UserJobSourceRuns` (aday / teslim / başvurulmuş / daha önce gösterilmiş)
+  sayıları tutar, listeleme ucu `run` olarak döner. Çıkarılan ilanın kimliği saklanmaz. Bunun için
+  `LinkedInJobIdExtractor` slug URL'lerini de (`/jobs/view/title-at-company-{id}`) okur oldu —
+  yan etkisi olumlu: slug URL'li başvurular artık `ExternalId` alıyor. `TrackedJob` hariç tutulmuyor.
+- **Ödemiş kullanıcı = `ProEntitlements`** (UserId, ActiveUntil, Source Manual/PayTr): PayTR gelene
+  kadar admin `PUT /api/admin/pro/entitlements/{userId}` ile yazıyor; ödeme entegrasyonu aynı
+  satırı yazacak. Sweep yalnızca aktif entitlement + kriter + CV + son 30 günde giriş (refresh
+  token) olan kullanıcı için çalışır — Pro planındaki "boşa çalışma yok" kuralı.
+- **Admin hiçbir şeyi tetiklemez.** Job Hangfire `job-source-sweep` (`0 4 * * 1`) olarak kendi
+  kendine koşar; elle tetik ucu yok. Aynı hafta ikinci koşu yeni teslim üretmez (idempotent), bu
+  yüzden min-instances=0'da kaçan tick sorun değil. `[DisableConcurrentExecution]` bilerek yok:
+  Hangfire recurring job'ı depoda tek kez planlar, örnek sayısı kaç olursa olsun çakışma olmaz.
+- **Polly (`Microsoft.Extensions.Http.Resilience`, repoda ilk kullanım)** yalnızca bu istemcide,
+  **özel** pipeline: retry en fazla 2 (üstel + jitter), yalnızca ağ hatası / deneme timeout'u /
+  5xx için; **429/403/999 retry edilmez, breaker'ı tetiklemez, `Retry-After`'a uyulmaz** — bunlar
+  "dur" sinyali. Standart handler bilerek kullanılmadı (429'u retry ediyor). Kalıcı 24 saatlik
+  durma DB'deki defterde (`JobSourceFetches`), Cloud Run örnekleri arası ortak. Mevcut link
+  önizleme / şirket zenginleştirme istemcileri değişmedi (kullanıcı tetikli; retry çıkış
+  amplifikasyonu yaratır).
+- Gizlilik: kullanıcının kriteri (unvan, konum) LinkedIn'e URL olarak gidiyor → `/privacy`
+  cross-border üçüncü vaka + `dataCollection.item6` (tr/en) **bayraktan önce** yayında ("bayrakla
+  birlikte hareket eder"). Defterde URL/anahtar kelime yok, HttpClient logger'ları kapalı, log
+  özeti sayılardan ibaret.
+
+**Kapsam dışı (sonraki turlar):** skorlama (Gemini), "N ilan hazır" e-postası, web UI, "başvurdum"
+bağlantısı, PayTR entegrasyonu, kariyer.net kaynağı, Cloud Scheduler tetikleyici. Hepsi
+`UserJobSourceDeliveries` üstüne kurulur.
+
+**Merge kararı (kullanıcı, aynı gün):** bu iş `feat/linkedin-job-source` branch'inde **commit'li ama
+merge edilmemiş** bekler; `main`'e merge **PayTR'den dönüş gelip ödeme netleşince** yapılır, çünkü
+özellik ücretli paketin parçası ve ödeme olmadan açılmayacak. `feat/jsearch-integration` da aynı
+şekilde kendi branch'inde park halinde kalır — iki geliştirme birbirinden bağımsız, ikisi de ödeme
+kararını bekliyor. Merge öncesi yapılacaklar: `main` üzerine rebase (migration sırası; bu branch'in
+migration'ı `20260912175002_AddJobSourcesAndProEntitlement`), unit + entegrasyon suite'ini yeniden
+koşturmak, `/privacy` metninin hâlâ doğru olduğunu teyit etmek. Bayrak merge'den sonra da kapalı
+kalır; açma reçetesi `DEPLOYMENT.md` §13.
+
+**Doğrulama.** Unit: parser'lar (gerçek yanıt şekli, sentetik şirketler), URL builder (escape,
+SSRF), normalizer, ISO hafta, bütçe, validator'lar, istemci + pipeline (503→200 ikinci denemede,
+429/403/999'da tek istek, authwall/dış redirect → Blocked). Entegrasyon (stub LinkedIn, gerçek
+sweep): aynı kriterli iki kullanıcı → tek fetch; entitlement'sız/CV'siz/pasif taranmaz;
+başvurulmuş ilan düşer ve sayılır (ExternalId ile ve yalnızca URL ile); haftalık limit (50 / admin
+5); aynı hafta ikinci koşu boş, sonraki hafta yalnızca yeni ilan; IDOR (başkasının posting'i → 404);
+admin 403; hesap silme cascade (posting kalır); 429 → koşu durur, cooldown, ertesi gün devam;
+5xx retry; günlük bütçe sorgular ve detaylar arası paylaşılır; bayrak kapalı → 404 + sweep no-op;
+`NoOutboundHttpTests` yeni istemciyi kapsıyor.
+
+**Açık üretim sorunu (bu işten bağımsız, ayrı ele alınacak):** 12 Eylül 16:37–16:39 UTC prod
+loglarında `Npgsql.PostgresException 53300: remaining connection slots are reserved for roles
+with privileges of the "pg_use_reserved_connections" role` — Hangfire heartbeat/scheduler'ları
+Failed'a düştü, en az bir API isteği 500 döndü. Cloud SQL bağlantı slotu tükenmesi; örnek sayısı ×
+Npgsql havuzu × Hangfire bağlantıları incelenecek.

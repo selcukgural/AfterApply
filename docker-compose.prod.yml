@@ -34,6 +34,7 @@ services:
       # Same "inert until set" contract again, for Sign in with GitHub.
       GitHubAuth__ClientId: "${GITHUB_CLIENT_ID:-}"
       GitHubAuth__ClientSecret: "${GITHUB_CLIENT_SECRET:-}"
+      JobSources__Enabled: "${JobSources__Enabled:-false}"
       # Empty disables the SDK (see .env.prod.example) — not a REPLACE_WITH_
       # placeholder, an actually-fake Dsn would make Sentry try (and fail)
       # to send an event on every request instead of silently no-op'ing.

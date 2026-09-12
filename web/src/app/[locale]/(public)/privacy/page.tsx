@@ -26,6 +26,7 @@ export default async function PrivacyPage() {
             <li>{t("dataCollection.item3")}</li>
             <li>{t("dataCollection.item4")}</li>
             <li>{t("dataCollection.item5")}</li>
+            <li>{t("dataCollection.item6")}</li>
           </ul>
           <p className="mt-2">{t("dataCollection.outro")}</p>
         </section>
@@ -128,6 +129,7 @@ export default async function PrivacyPage() {
           </ul>
           <p className="mt-2">{t("crossBorderTransfer.sensitiveDataNote")}</p>
           <p className="mt-2">{t("crossBorderTransfer.feedbackTransfer")}</p>
+          <p className="mt-2">{t("crossBorderTransfer.jobSourceTransfer")}</p>
         </section>
 
         <section id="error-monitoring">

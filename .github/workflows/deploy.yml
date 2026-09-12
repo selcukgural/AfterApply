@@ -234,6 +234,11 @@ jobs:
           # a well-written CV across three runs. /privacy#cv-scan has to keep naming Vertex AI as a
           # recipient for as long as this is true, and turning it off is this one line — the score,
           # the findings and the page all keep working without it.
+          #
+          # On JobSources__Enabled: the weekly LinkedIn sweep behind the paid job matching. Declared
+          # off here so the state is asserted on every deploy; flipping it is a reviewed change,
+          # and DEPLOYMENT.md §13 lists what has to be true first (the privacy paragraph, an
+          # entitlement to run for, and a look at /api/admin/job-sources/usage after the first run).
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080
@@ -244,6 +249,7 @@ jobs:
             Feedback__GitHub__Assignee=selcukgural
             CvScan__LlmEnabled=true
             CvScan__Review__ProjectId=${{ env.GCP_PROJECT_ID }}
+            JobSources__Enabled=false
           secrets: |-
             ConnectionStrings__Postgres=afterapply-postgres-connection:latest
             Jwt__SigningKey=afterapply-jwt-signing-key:latest

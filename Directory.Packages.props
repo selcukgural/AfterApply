@@ -24,6 +24,11 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.11" />
+    <!-- Polly v8 through Microsoft's HttpClient integration, for the job-source client only: the
+         one outbound call that runs unattended in a job and so has to decide by itself what to
+         do about a dropped connection (retry, briefly) versus a 429/403 (stop, and do not retry —
+         see LinkedInJobSourceClient). Same version line as Caching.Hybrid. -->
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.9.0" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.11" />

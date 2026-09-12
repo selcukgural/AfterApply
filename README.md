@@ -260,6 +260,24 @@ kept switched off until enough real usage exists to make it meaningful; see
 `DECISIONS.md`'s Sprint 10 entry. While disabled, every
 `/api/company-intelligence/*` endpoint returns `404` for all callers.
 
+`JobSources:Enabled` defaults to `false` — the weekly job-source sweep (the
+fetch half of the paid weekly job matching; on the `feat/linkedin-job-source`
+branch until the payment integration lands, see `DECISIONS.md` 2026-09-12). Every Monday 04:00 UTC a Hangfire
+job takes each paying user's saved criteria (up to three job titles and a
+location), searches LinkedIn's public job listing for them, and hands the user
+up to 50 new postings for the week (`JobSources:DefaultWeeklyPostingsPerUser`,
+per-user override via `PUT /api/admin/job-sources/settings/{userId}`). Two
+users with the same criteria cost one search; a posting the user already
+applied to is left out and counted in the week's run summary. Volume is
+capped in config (`MaxRequestsPerDay`, `MaxPagesPerQuery`, `MinDelayMs`) and
+a 429/403 or a login wall from the source stops the sweep for
+`CircuitCooldownHours`. While disabled, every `/api/job-sources/*` and
+`/api/admin/job-sources/*` route returns `404` and the sweep is a no-op. "Who
+is paying" is `ProEntitlements`, written by hand today
+(`PUT /api/admin/pro/entitlements/{userId}`) and by the payment integration
+later. Why we fetch LinkedIn ourselves, and on what terms, is in
+`DECISIONS.md` 2026-09-12 ("LinkedIn ilan kaynağı").
+
 ## CV storage (`/cv`)
 
 Users can keep up to 10 CV files (PDF/DOC/DOCX, 5 MB each), download them,

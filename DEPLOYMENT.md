@@ -745,3 +745,36 @@ assembly allowed to open a socket — everything else is blocked by
 effect on the next revision, and costs nothing but the notes: the score,
 the findings and the page all keep working, because they never depended
 on the model.
+
+### 13. Weekly job-source sweep (LinkedIn) — shipped off (2026-09-12)
+
+**Branch state:** this lives on `feat/linkedin-job-source`, unmerged, until the PayTR payment
+integration is settled — the feature is part of the paid plan and has no reason to exist on `main`
+before people can pay for it (DECISIONS.md 2026-09-12, "Merge kararı"). Rebase on `main` and re-run
+both test suites before merging.
+
+Nothing to provision: no secret, no bucket, no API key. The sweep fetches LinkedIn's public
+job listing over plain HTTPS from the Cloud Run egress IP (the same path the company enrichment
+already uses). It ships **off** — `JobSources:Enabled=false` in `appsettings.json` — and stays
+off until the paid plan is live.
+
+To turn it on:
+
+1. Confirm the privacy policy is deployed with the job-matching paragraph (`/privacy`,
+   "Cross-border data transfer", third case) — it names LinkedIn as a recipient of the user's
+   criteria, and the flag must never be on without it.
+2. Flip `JobSources__Enabled=false` to `true` in `.github/workflows/deploy.yml`'s `env_vars` block
+   (it is declared there so every deploy re-asserts it) and let the deploy run.
+3. Grant the first users: `PUT /api/admin/pro/entitlements/{userId}` with an `activeUntil`; the
+   sweep only runs for users with an active entitlement, saved criteria, a CV and a sign-in in the
+   last 30 days.
+4. After the first Monday 04:00 UTC run, read `GET /api/admin/job-sources/usage`: `requestsToday`
+   against `maxRequestsPerDay`, and `cooldownUntil` — non-null means LinkedIn answered 429/403 or a
+   login wall and the sweep has stopped itself for 24 h. If that happens on the first run, the
+   Cloud Run IP is being refused and the feature should go back off rather than be retried harder.
+5. Cloud Run at `min-instances=0` can miss the 04:00 tick; Hangfire runs a missed recurring job at
+   the next server start, and the sweep is idempotent within an ISO week, so a late run is fine.
+   A Cloud Scheduler ping at 04:05 is the cheap fix if it matters.
+
+Logs carry counts only — never a title, a location or a URL; the HttpClient's request logging is
+removed for this client for the same reason.
