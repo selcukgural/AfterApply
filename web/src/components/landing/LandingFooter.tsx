@@ -21,6 +21,9 @@ export async function LandingFooter() {
             <a href="#how-it-works" className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
               {tNav("howItWorks")}
             </a>
+            <a href="#extension" className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+              {tNav("extension")}
+            </a>
             <a href="#features" className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
               {tNav("features")}
             </a>

@@ -108,7 +108,8 @@
       "signIn": "Giriş Yap",
       "getStarted": "Ücretsiz Başla",
       "goToDashboard": "Panele Git",
-      "help": "Yardım"
+      "help": "Yardım",
+      "extension": "Eklenti"
     },
     "hero": {
       "eyebrow": "Kaç başvuru, kaç cevap",
@@ -125,6 +126,53 @@
       "formats": "PDF veya DOCX · en fazla 5 MB",
       "noAccount": "Hesap gerekmiyor; dosya diske yazılmıyor, tarama bitince bellekten siliniyor.",
       "nextStep": "Sonraki adımda izin kutusunu işaretleyip taramayı sen başlatıyorsun."
+    },
+    "tools": {
+      "title": "Hesap açmadan deneyebileceklerin",
+      "tabsLabel": "Araçlar",
+      "noAccount": "Hesap gerekmez",
+      "cvTitle": "CV Tarama",
+      "cvBody": "CV'ni bırak, başvuru sistemlerinin ondan ne okuduğunu ve makine okunabilirliği puanını hemen gör.",
+      "cvCta": "CV'mi tara",
+      "extensionPill": "LinkedIn + kariyer.net",
+      "extensionTitle": "Chrome Eklentisi",
+      "extensionBody": "LinkedIn ve kariyer.net'te tek tık: ilan sayfasından çıkmadan başvuruyu kaydet.",
+      "extensionCta": "Chrome'a ekle",
+      "benchmarkTitle": "Geri dönüş oranı kıyaslama",
+      "benchmarkBody": "İki sayı gir, kendi geri dönüş oranını gör ve alanının medyanıyla kıyasla.",
+      "benchmarkCta": "Kıyasla",
+      "panels": {
+        "extension": {
+          "eyebrow": "Chrome eklentisi · LinkedIn + kariyer.net",
+          "title": "Başvurdun. Bir tıkla kayda geçsin.",
+          "body": "İlan sayfasındayken eklentiye bas: şirket, pozisyon ve konum kendiliğinden dolar, sen sadece \"Başvurdum\" dersin.",
+          "bullet1": "Şirket, pozisyon ve konum otomatik dolar — göndermeden önce düzenleyebilirsin",
+          "bullet2": "İlanı paylaşan işe alım sorumlusu da kaydedilir",
+          "bullet3": "Aynı ilana ikinci kez basınca mevcut başvurun açılır, kopya oluşmaz",
+          "cta": "Chrome'a ekle",
+          "help": "Nasıl kurulur?"
+        },
+        "cv": {
+          "eyebrow": "CV Tarama · hesap gerekmez",
+          "title": "Başvuru sistemi CV'nden ne okuyor?",
+          "body": "CV'ni bırak; makine okunabilirliği puanını, puanın nereden geldiğini ve düzeltme listesini hemen gör.",
+          "bullet1": "PDF veya DOCX, en fazla 5 MB",
+          "bullet2": "Dosya diske yazılmıyor, tarama bitince bellekten siliniyor",
+          "bullet3": "Her bulgu kendi dosyandaki sayfaya ve satıra işaret eder",
+          "cta": "CV'mi tara",
+          "mockAriaLabel": "Örnek: bir CV tarama sonucu — 100 üzerinden 78 puan, dört kategorinin alt toplamları ve bir düzeltme kartı."
+        },
+        "benchmark": {
+          "eyebrow": "Geri dönüş oranı kıyaslama · hesap gerekmez",
+          "title": "Oranın alanının medyanına göre nerede?",
+          "body": "Kaç başvuru yaptığını ve kaçına cevap geldiğini gir; kendi oranını ve alanındaki medyanı yan yana gör.",
+          "bullet1": "İki sayı, bir sektör, bir dönem — bu kadar",
+          "bullet2": "Medyan yalnızca senin alanından yeterli cevap varsa gösterilir",
+          "bullet3": "Girdiğin sayılar anonim; hesap gerekmez",
+          "cta": "Kıyasla",
+          "mockAriaLabel": "Örnek: bir kıyaslama sonucu — senin geri dönüş oranın %23,3 (7/30), Yazılım / Bilişim alanının medyanı %31."
+        }
+      }
     },
     "problem": {
       "eyebrow": "Tanıdık geliyor mu?",
@@ -192,6 +240,17 @@
         "title": "Bu sayılar örnek. Seninkiler ne?",
         "body": "Kaç başvuru yaptın, kaçından dönüş aldın — iki sayı gir, kendi geri dönüş oranını gör ve alanının medyanıyla kıyasla. Hesap gerekmiyor.",
         "button": "Kıyasla"
+      }
+    },
+    "extension": {
+      "mock": {
+        "ariaLabel": "Örnek: bir LinkedIn ilanının üzerinde açılmış e-kariyerim eklentisi; şirket, pozisyon, konum ve İK kontağı otomatik dolmuş, altta Başvurdum düğmesi.",
+        "company": "Şirket",
+        "jobTitle": "Pozisyon",
+        "location": "Konum",
+        "contact": "İK kontağı",
+        "optional": "isteğe bağlı",
+        "submit": "Başvurdum"
       }
     },
     "vision": {

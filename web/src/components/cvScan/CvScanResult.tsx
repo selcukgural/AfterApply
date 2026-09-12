@@ -4,7 +4,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { formatCount } from "@/lib/dashboard/format";
-import { findingDetails, fixList, pointsAtStake, scoreBand } from "@/lib/cvScan/findings";
+import { findingDetails, fixList, pointsAtStake } from "@/lib/cvScan/findings";
+import { CvScanCategoryBars, CvScanScoreCard } from "@/components/cvScan/CvScanResultCards";
 import type { CvContentNote, CvScanFinding, CvScanResponse } from "@/types/api";
 
 /**
@@ -14,7 +15,9 @@ import type { CvContentNote, CvScanFinding, CvScanResponse } from "@/types/api";
  *
  * The sentence about ATS software not auto-rejecting CVs sits next to the score rather than in the
  * explainer below the form, and cannot be moved out of here: it is the correction that keeps a low
- * number from reading as "you are being rejected".
+ * number from reading as "you are being rejected". (The score card itself lives in
+ * CvScanResultCards so the landing page can show it with demo figures; the sentence is passed in
+ * from here, and only from here.)
  */
 export function CvScanResult({ result, onReset }: { result: CvScanResponse; onReset: () => void }) {
   const t = useTranslations("cvScan");
@@ -22,54 +25,17 @@ export function CvScanResult({ result, onReset }: { result: CvScanResponse; onRe
 
   const findings = fixList(result);
   const lost = pointsAtStake(result);
-  const band = scoreBand(result.score);
-
-  const bandColor =
-    band === "good"
-      ? "text-emerald-600 dark:text-emerald-400"
-      : band === "fair"
-        ? "text-amber-600 dark:text-amber-400"
-        : "text-red-600 dark:text-red-400";
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-        <p className="text-sm text-gray-500 dark:text-gray-400">{t("result.scoreLabel")}</p>
-        <p className="mt-1 flex items-baseline gap-2">
-          <span className={`text-5xl font-semibold tracking-tight tabular-nums ${bandColor}`}>{result.score}</span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">{t("result.outOf")}</span>
-        </p>
-        <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{t(`result.bands.${band}`)}</p>
-
+      <CvScanScoreCard score={result.score}>
         <p className="mt-4 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
           {t("result.atsNote")}
         </p>
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t("result.deterministic")}</p>
-      </section>
+      </CvScanScoreCard>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("result.categoriesTitle")}</h2>
-        <ul className="flex flex-col gap-3">
-          {result.categories.map((category) => (
-            <li key={category.category} className="flex flex-col gap-1">
-              <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="text-gray-700 dark:text-gray-300">{t(`categories.${category.category}`)}</span>
-                <span className="tabular-nums text-gray-900 dark:text-gray-100">
-                  {t("result.categoryScore", { score: category.score, weight: category.weight })}
-                </span>
-              </div>
-              {/* The bar is the same number again, not a different one: width is the subtotal over
-                  the category's own weight. */}
-              <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-800">
-                <div
-                  className="h-1.5 rounded-full bg-gray-900 dark:bg-gray-100"
-                  style={{ width: `${(category.score / category.weight) * 100}%` }}
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <CvScanCategoryBars categories={result.categories} />
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
