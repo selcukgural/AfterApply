@@ -4,6 +4,7 @@ using AfterApply.Application.Companies;
 using AfterApply.Application.Imports;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
+using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ namespace AfterApply.Infrastructure.Applications;
 internal sealed class ApplicationService(
     AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver,
     ICompanySearchService companySearchService, HybridCache cache, IBackgroundJobClient jobClient,
-    IOptions<ApplicationBulkOptions> bulkOptions) : IApplicationService
+    IOptions<ApplicationBulkOptions> bulkOptions, IOptions<NotificationOptions> notificationOptions) : IApplicationService
 {
     private static readonly HybridCacheEntryOptions SummaryCountsCacheOptions = new()
     {
@@ -416,12 +417,13 @@ internal sealed class ApplicationService(
         {
             await dbContext.SaveChangesAsync(cancellationToken);
             await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+            await RetireRemindersIfTerminalAsync(userId, request.NewStatus, changes.Select(c => c.ApplicationId).ToList(), cancellationToken);
         }
 
         return new BulkChangeStatusResponse(changes.Count, skipped, changes);
     }
 
-    public async Task<UndoBulkStatusResponse> UndoBulkStatusAsync(Guid userId, UndoBulkStatusRequest request,
+    public Task<UndoBulkStatusResponse> UndoBulkStatusAsync(Guid userId, UndoBulkStatusRequest request,
         CancellationToken cancellationToken)
     {
         var maxOperationSize = bulkOptions.Value.MaxOperationSize;
@@ -430,7 +432,13 @@ internal sealed class ApplicationService(
             throw new BulkOperationTooLargeException(maxOperationSize);
         }
 
-        var entriesById = request.Entries
+        return UndoStatusChangesAsync(userId, request.Entries, cancellationToken);
+    }
+
+    private async Task<UndoBulkStatusResponse> UndoStatusChangesAsync(Guid userId, IReadOnlyList<UndoBulkStatusEntry> entries,
+        CancellationToken cancellationToken)
+    {
+        var entriesById = entries
             .GroupBy(e => e.ApplicationId)
             .ToDictionary(g => g.Key, g => g.First());
 
@@ -442,6 +450,7 @@ internal sealed class ApplicationService(
         var changedAt = DateTimeOffset.UtcNow;
         var context = new StatusChangeContext(Source.Manual, StatusChangeOrigin.BulkEditReverted);
         var reverted = 0;
+        var revertedIntoTerminal = new List<Guid>();
 
         foreach (var application in applications)
         {
@@ -459,15 +468,21 @@ internal sealed class ApplicationService(
             dbContext.ApplicationStatusHistories.Add(application.StatusHistory.Last());
             dbContext.ApplicationEvents.Add(application.Events.Last());
             reverted++;
+
+            if (TerminalApplicationStatuses.Values.Contains(entry.RevertTo))
+            {
+                revertedIntoTerminal.Add(application.Id);
+            }
         }
 
         if (reverted > 0)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
             await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+            await RetireRemindersAsync(userId, revertedIntoTerminal, cancellationToken);
         }
 
-        return new UndoBulkStatusResponse(reverted, request.Entries.Count - reverted);
+        return new UndoBulkStatusResponse(reverted, entries.Count - reverted);
     }
 
     public async Task<BulkDeleteResponse> BulkDeleteAsync(Guid userId, BulkDeleteRequest request,
@@ -541,8 +556,128 @@ internal sealed class ApplicationService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+        await RetireRemindersIfTerminalAsync(userId, newStatus, [applicationId], cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
+    }
+
+    /// <summary>
+    /// A reminder is a question about an open application; a terminal status answers it. Closing
+    /// them here, on the status change itself, is what makes "mark as ghosted" on the dashboard
+    /// take the row away at once rather than at the next nightly scan. A plain UPDATE, after the
+    /// status has been committed: the reminders are not part of the application aggregate and
+    /// nothing reads them back inside this request.
+    /// </summary>
+    private Task RetireRemindersIfTerminalAsync(Guid userId, ApplicationStatus newStatus,
+        IReadOnlyCollection<Guid> applicationIds, CancellationToken cancellationToken)
+    {
+        return TerminalApplicationStatuses.Values.Contains(newStatus)
+            ? RetireRemindersAsync(userId, applicationIds, cancellationToken)
+            : Task.CompletedTask;
+    }
+
+    private async Task RetireRemindersAsync(Guid userId, IReadOnlyCollection<Guid> applicationIds,
+        CancellationToken cancellationToken)
+    {
+        if (applicationIds.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        await dbContext.Reminders
+            .Where(r => r.UserId == userId && r.DismissedAt == null && applicationIds.Contains(r.ApplicationId))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.DismissedAt, now), cancellationToken);
+
+        await cache.RemoveAsync(ReminderCacheKeys.Active(userId), cancellationToken);
+    }
+
+    /// <summary>
+    /// The one definition of "stale", shared by the summary, the ghosting act and the tests: still
+    /// Applied, applied before the horizon, and no real status transition (FromStatus != null —
+    /// the seed row does not count, see ReminderCalculations.GetReferenceAt) inside it. Set-based
+    /// so the count is one query and the act loads exactly the rows it will change.
+    /// </summary>
+    private IQueryable<DomainApplication> StaleApplications(Guid userId, DateTimeOffset cutoff)
+    {
+        return dbContext.Applications
+            .Where(a => a.UserId == userId
+                && a.Status == ApplicationStatus.Applied
+                && a.AppliedAt <= cutoff
+                && !dbContext.ApplicationStatusHistories.Any(h =>
+                    h.ApplicationId == a.Id && h.FromStatus != null && h.ChangedAt > cutoff));
+    }
+
+    private DateTimeOffset StaleCutoff(DateTimeOffset now) => now.AddDays(-notificationOptions.Value.StaleThresholdDays);
+
+    public async Task<StaleApplicationsSummaryResponse> GetStaleSummaryAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var thresholdDays = notificationOptions.Value.StaleThresholdDays;
+        var stale = StaleApplications(userId, StaleCutoff(now));
+
+        var count = await stale.CountAsync(cancellationToken);
+        if (count == 0)
+        {
+            return new StaleApplicationsSummaryResponse(0, 0, thresholdDays, Suggest: false);
+        }
+
+        var oldestAppliedAt = await stale.MinAsync(a => a.AppliedAt, cancellationToken);
+
+        var dismissedAt = await dbContext.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.StaleSuggestionDismissedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        // "Not now" covers what the user was looking at when they said it. Rows created since —
+        // a later import — are a new question, so the suggestion comes back for them.
+        var suggest = dismissedAt is null || await stale.AnyAsync(a => a.CreatedAt > dismissedAt, cancellationToken);
+
+        return new StaleApplicationsSummaryResponse(count, (int)(now - oldestAppliedAt).TotalDays, thresholdDays, suggest);
+    }
+
+    public async Task<BulkChangeStatusResponse> GhostStaleApplicationsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        // Deliberately not capped by MaxOperationSize: the set is resolved here from the user's own
+        // rows, so its size is bounded by their account, not by a request body — and the whole
+        // point of the question is an import of a thousand-odd old rows in one answer.
+        var applications = await StaleApplications(userId, StaleCutoff(now)).ToListAsync(cancellationToken);
+
+        var context = new StatusChangeContext(Source.Manual, StatusChangeOrigin.BulkEdit);
+        var changes = new List<BulkStatusChange>(applications.Count);
+
+        foreach (var application in applications)
+        {
+            var fromStatus = application.Status;
+            application.ChangeStatus(ApplicationStatus.Ghosted, now, context);
+            dbContext.ApplicationStatusHistories.Add(application.StatusHistory.Last());
+            dbContext.ApplicationEvents.Add(application.Events.Last());
+            changes.Add(new BulkStatusChange(application.Id, fromStatus, ApplicationStatus.Ghosted));
+        }
+
+        if (changes.Count > 0)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+            await RetireRemindersAsync(userId, changes.Select(c => c.ApplicationId).ToList(), cancellationToken);
+        }
+
+        return new BulkChangeStatusResponse(changes.Count, 0, changes);
+    }
+
+    public Task<UndoBulkStatusResponse> UndoStaleGhostAsync(Guid userId, UndoBulkStatusRequest request, CancellationToken cancellationToken)
+    {
+        return UndoStatusChangesAsync(userId, request.Entries, cancellationToken);
+    }
+
+    public async Task DismissStaleSuggestionAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        await dbContext.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.StaleSuggestionDismissedAt, now), cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<ApplicationStatusHistoryResponse>?> GetStatusHistoryAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken)

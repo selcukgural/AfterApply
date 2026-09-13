@@ -90,4 +90,13 @@ public class ReminderCalculationsTests
         ReminderCalculations.IsPossiblyGhosted(hasResponded: true, daysElapsed: 365, ghostingThresholdDays: 30)
             .ShouldBeFalse();
     }
+
+    [Theory]
+    [InlineData(89, false)]
+    [InlineData(90, true)]
+    [InlineData(3518, true)]
+    public void IsBeyondHorizon_Is_Inclusive_At_The_Threshold(int daysElapsed, bool expected)
+    {
+        ReminderCalculations.IsBeyondHorizon(daysElapsed, staleThresholdDays: 90).ShouldBe(expected);
+    }
 }

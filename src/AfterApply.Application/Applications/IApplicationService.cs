@@ -85,4 +85,31 @@ public interface IApplicationService
     /// <exception cref="Common.CodedException">The count the user was shown no longer holds; nothing
     /// is deleted in that case.</exception>
     Task<BulkDeleteResponse> BulkDeleteAsync(Guid userId, BulkDeleteRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The user's applications that are still Applied past the stale horizon with no real status
+    /// change inside it — see <see cref="StaleApplicationsSummaryResponse"/>.
+    /// </summary>
+    Task<StaleApplicationsSummaryResponse> GetStaleSummaryAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Moves every application <see cref="GetStaleSummaryAsync"/> counts to Ghosted, in one act. The
+    /// set is the server's, never the client's, so it is not subject to the bulk operation ceiling;
+    /// the response is the same shape as a bulk status change and is undone through
+    /// <see cref="UndoStaleGhostAsync"/>.
+    /// </summary>
+    Task<BulkChangeStatusResponse> GhostStaleApplicationsAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Undoes <see cref="GhostStaleApplicationsAsync"/> with the same compare-and-set rules as
+    /// <see cref="UndoBulkStatusAsync"/>, minus the ceiling: the stale batch is bounded by the user's
+    /// own rows, not by anything the client chose.
+    /// </summary>
+    Task<UndoBulkStatusResponse> UndoStaleGhostAsync(Guid userId, UndoBulkStatusRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// "Not now": stops the stale question until a later import brings in applications the user
+    /// has not been asked about.
+    /// </summary>
+    Task DismissStaleSuggestionAsync(Guid userId, CancellationToken cancellationToken);
 }

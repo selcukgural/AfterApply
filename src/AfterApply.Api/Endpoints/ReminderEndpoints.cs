@@ -27,6 +27,17 @@ public static class ReminderEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPost("/{id:guid}/follow-up", async (Guid id, ClaimsPrincipal user, IReminderService service, CancellationToken cancellationToken) =>
+        {
+            var marked = await service.MarkFollowedUpAsync(user.GetUserId(), id, cancellationToken);
+            return marked ? Results.NoContent() : Results.NotFound();
+        })
+            .WithSummary("Answer a reminder with \"I followed up\"")
+            .WithDescription("Records a FollowUpSent event on the application and closes the reminder. 404 when the " +
+                             "reminder is not the caller's or is already closed.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         return app;
     }
 }
