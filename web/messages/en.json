@@ -593,7 +593,19 @@
       "possiblyGhosted": "Possibly ghosted",
       "days": "{count} days without a reply",
       "dismiss": "Dismiss",
-      "error": "The reminder couldn't be dismissed. Try again."
+      "error": "That didn't go through. Try again.",
+      "followedUp": "Followed up",
+      "markGhosted": "Mark as ghosted",
+      "staleNote": "{count, plural, one {# application older than {threshold} days produces no reminders.} other {# applications older than {threshold} days produce no reminders.}}",
+      "staleBulkLink": "Bulk-mark them in Applications"
+    },
+    "stale": {
+      "title": "{count, plural, one {# application is} other {# applications are}} older than {threshold} days with no reply",
+      "body": "Mark them all as ghosted? The oldest is {oldest} days old. Your open count drops and the rates show where you really stand. Reversible.",
+      "confirm": "Yes, mark them ({count})",
+      "confirming": "Marking...",
+      "notNow": "Not now",
+      "error": "Marking didn't go through. Try again."
     }
   },
   "applications": {

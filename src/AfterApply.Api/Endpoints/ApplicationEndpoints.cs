@@ -151,6 +151,41 @@ public static class ApplicationEndpoints
             .Produces<BulkDeleteResponse>()
             .Produces<BulkCountMismatch>(StatusCodes.Status409Conflict);
 
+        // The stale batch: applications still "Applied" past the reminder horizon. Routed under
+        // /stale for the same reason /bulk is — a word, never a Guid, so the single-application routes
+        // below cannot capture it.
+        group.MapGet("/stale", async (ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetStaleSummaryAsync(user.GetUserId(), cancellationToken)))
+            .WithSummary("Summarise the caller's stale applications")
+            .WithDescription("Applications still in Applied past Notifications:StaleThresholdDays with no real status change " +
+                             "inside it. Suggest is false after the caller answered \"not now\", until a later import adds " +
+                             "stale rows they have not been asked about.")
+            .Produces<StaleApplicationsSummaryResponse>();
+
+        group.MapPost("/stale/ghost", async (ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GhostStaleApplicationsAsync(user.GetUserId(), cancellationToken)))
+            .WithSummary("Mark every stale application as ghosted")
+            .WithDescription("The set is resolved server-side from GET /stale's definition, so no selection or count is " +
+                             "taken from the caller and the bulk ceiling does not apply. The response lists what moved, " +
+                             "which is what POST /stale/ghost/undo takes back.")
+            .Produces<BulkChangeStatusResponse>();
+
+        group.MapPost("/stale/ghost/undo", async (UndoBulkStatusRequest request, ClaimsPrincipal user,
+                IApplicationService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.UndoStaleGhostAsync(user.GetUserId(), request, cancellationToken)))
+            .WithValidation<UndoBulkStatusRequest>()
+            .WithSummary("Undo marking the stale applications as ghosted")
+            .WithDescription("Same compare-and-set rules as POST /bulk/status/undo, without its size ceiling.")
+            .Produces<UndoBulkStatusResponse>();
+
+        group.MapPost("/stale/dismiss", async (ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
+            {
+                await service.DismissStaleSuggestionAsync(user.GetUserId(), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithSummary("Answer the stale-applications question with \"not now\"")
+            .Produces(StatusCodes.Status204NoContent);
+
         group.MapPost("/{id:guid}/status", async (Guid id, ChangeStatusRequest request, ClaimsPrincipal user,
                 IApplicationService service, CancellationToken cancellationToken) =>
             {

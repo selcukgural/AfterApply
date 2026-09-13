@@ -46,4 +46,14 @@ public static class ReminderCalculations
     {
         return !hasResponded && daysElapsed >= ghostingThresholdDays;
     }
+
+    /// <summary>
+    /// Past the horizon nothing is a reminder any more — see NotificationOptions.StaleThresholdDays.
+    /// Applies to both types: a follow-up on an interview that went quiet a year ago is as
+    /// unactionable as a "possibly ghosted" on a 2017 import.
+    /// </summary>
+    public static bool IsBeyondHorizon(int daysElapsed, int staleThresholdDays)
+    {
+        return daysElapsed >= staleThresholdDays;
+    }
 }

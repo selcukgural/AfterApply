@@ -1094,6 +1094,16 @@ export interface UserReviewQuota {
   used: number;
 }
 
+/** Mirrors AfterApply.Application.Applications.Contracts.StaleApplicationsSummaryResponse. */
+export interface StaleApplicationsSummaryResponse {
+  count: number;
+  oldestDays: number;
+  thresholdDays: number;
+  /** False once the user answered "not now", until a later import adds stale rows they have not
+   *  been asked about. */
+  suggest: boolean;
+}
+
 // --- Reminders ---------------------------------------------------------------------------------
 
 /** Mirrors AfterApply.Domain.Notifications.ReminderType. */

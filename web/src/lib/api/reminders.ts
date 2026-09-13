@@ -10,4 +10,7 @@ export const remindersApi = {
   list: () => apiFetch<ReminderResponse[]>("/api/reminders"),
 
   dismiss: (id: string) => apiFetch<void>(`/api/reminders/${id}/dismiss`, { method: "POST" }),
+
+  /** "I followed up": records the FollowUpSent event on the application and closes the reminder. */
+  followUp: (id: string) => apiFetch<void>(`/api/reminders/${id}/follow-up`, { method: "POST" }),
 };

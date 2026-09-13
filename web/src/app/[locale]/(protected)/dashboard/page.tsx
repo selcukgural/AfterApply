@@ -12,6 +12,7 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { HeroTile } from "@/components/dashboard/HeroTile";
 import { OutcomeCard } from "@/components/dashboard/OutcomeCard";
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
+import { StaleApplicationsBanner } from "@/components/dashboard/StaleApplicationsBanner";
 import { ResponseTimeCard } from "@/components/dashboard/ResponseTimeCard";
 import { StatTile } from "@/components/dashboard/StatTile";
 import { StatusBreakdown } from "@/components/dashboard/StatusBreakdown";
@@ -65,7 +66,10 @@ export default function DashboardPage() {
         <DashboardEmptyState />
       ) : (
         <div className="flex flex-col gap-4">
-          {/* Above the board, not beside it: a reminder is the one thing here that asks for an action. */}
+          {/* Above the board, not beside it: these are the two things here that ask for an action.
+              The stale question first — one answer covers an entire old import, and it is the
+              reason the reminders card below stays short. */}
+          <StaleApplicationsBanner />
           <RemindersPanel />
           {/*
             Every row is the same two-column split with the same gap, so one uninterrupted vertical

@@ -5805,3 +5805,73 @@ ortam değişkeni.
 hukuk okumasıyla birlikte (K1) ele alınmalı. Web Store panosundaki listing metni elle yenilenecek
 (`PUBLISHING_CHECKLIST.md`'de madde var). Geliştirme ortamındaki "1 issue" rozeti CSP'de `unsafe-eval` olmamasından
 kaynaklanan React dev uyarısı; üretimi etkilemiyor.
+
+---
+
+## Panel hatırlatıcıları: ufuk, yaşam döngüsü ve "eski yığın" için tek soru (2026-09-13)
+
+**Neden:** Panele dün eklenen `RemindersPanel` gerçek veriyle ilk kez görüldü: 2017 tarihli bir
+LinkedIn dışa aktarımından gelen 1.209 başvurunun her biri "Muhtemelen sessize alındı · 3.518 gündür
+yanıt yok" satırı ve tek tek "Yoksay" düğmesi taşıyordu (1.225 hatırlatıcı; bazı başvurular hem
+takip hem sessize-alındı satırı almıştı). Kullanıcı sorusu: "1.209 defa yoksay'a mı basmalı?"
+Kodda dört sorun vardı: (1) hatırlatıcı başvurudan kopuk yaşıyordu — başvuruyu tekil ya da toplu
+terminal duruma taşımak hatırlatıcıyı kapatmıyor, liste sorgusu başvuru durumuna bakmıyordu;
+(2) tarama için "artık anlamsız" bir ufuk yoktu; (3) satır soruyu soruyor ("sessize alındı mı?")
+ama cevabı sunmuyordu, tek düğme Yoksay'dı; (4) panelin tavanı yoktu, 1.225 satır panoyu aşağı
+itiyordu. Tasarım kanvası (üç varyant, C seçildi; A ve B ikinci sayfada):
+https://claude.ai/code/artifact/ad15884a-ebb2-40bc-9afe-49ae01a05782
+
+**Kararlar:**
+- **Ufuk (`Notifications:StaleThresholdDays`, varsayılan 90):** son gerçek durum geçişinden (yoksa
+  başvuru tarihinden) bu yana 90+ gün geçmiş başvuru için tarama **hiçbir tip** hatırlatıcı
+  üretmez; daha önce üretilmiş olanları da aynı taramada kapatır. Her iki tipe uygulanır: bir yıl
+  önce sessizleşen mülakatın "takip" hatırlatıcısı da 2017 içe aktarımının "sessize alındı"sı
+  kadar aksiyonsuz. `ReminderCalculations.IsBeyondHorizon` eşikte dahil (>= 90).
+- **Yaşam döngüsü:** hatırlatıcı açık bir başvuru hakkında sorudur; terminal durum cevaptır.
+  `ApplicationService` tekil/toplu/geri-al yollarında hedef durum terminalse o başvuruların açık
+  hatırlatıcılarını tek `UPDATE` ile kapatır (`RetireRemindersAsync`) ve `reminders:active`
+  önbelleğini düşürür (anahtar artık `ReminderCacheKeys`'te, iki servis paylaşıyor). Liste
+  sorgusu terminal başvuruları ayrıca dışlar — iki mekanizmanın hiçbiri mükemmel olmak zorunda
+  değil. Gece taraması üç nedenle emekliye ayırır: başvuru terminal, ufuk dışına çıkmış, ya da
+  aynı başvuruya "sessize alındı" düşerken eski "takip" satırı duruyor.
+- **Satırda cevap:** FollowUp → "Takip ettim" (`POST /api/reminders/{id}/follow-up`: `FollowUpSent`
+  olayı + kapat; Sprint 6'daki "dismiss `FollowUpSent` eklemez" kararı Yoksay için geçerli kalır),
+  PossiblyGhosted → "Sessize alındı" (mevcut `POST /applications/{id}/status` Ghosted; sunucu
+  hatırlatıcıyı kendisi kapatır). "Yoksay" ikincil düğme olarak kalır. Tavan **konmadı**: liste
+  ufukla sınırlı, içe aktarım artık buraya düşmüyor.
+- **Eski yığın tek soru (varyant C):** `GET /api/applications/stale` — hâlâ Applied, başvuru tarihi
+  ufuktan eski ve ufuk içinde gerçek geçişi olmayan satırlar (`StaleApplications`, tek tanım; sayı,
+  en eski gün, eşik, `Suggest`). Panelde bant: "N başvuru 90 günden eski ve yanıtsız — hepsini
+  sessize alındı sayalım mı?" **Evet** → `POST /stale/ghost`: küme sunucuda çözülür, seçim/sayı
+  istemciden gelmez, **`MaxOperationSize` (500) tavanına tabi değil** (kümenin sınırı kullanıcının
+  kendi satırları); yanıt `BulkChangeStatusResponse`, Başvurular sayfasındaki `BulkResultBanner`
+  ile aynı "Geri Al" şeridi, geri alma `POST /stale/ghost/undo` (aynı compare-and-set, tavansız).
+  **Şimdi değil** → `Users.StaleSuggestionDismissedAt` (migration `AddStaleSuggestionDismissedAt`);
+  bant, bu andan sonra oluşturulmuş (sonraki içe aktarım) eski satır çıkana kadar dönmez.
+  Şimdi-değil sonrası hatırlatıcı kartının altında tek satır: "90 günden eski N başvuru hatırlatıcı
+  üretmez · Başvurular'da toplu işaretle" (`/applications?status=Applied`). Kart boşsa satır da yok;
+  toplu araçlar zaten oradadır.
+- **Geri Al'ın yan etkisi (bilinçli):** geri alma gerçek bir durum geçişidir ve ufuk içinde kaldığı
+  için satırlar artık "eski" sayılmaz — bant o satırlar için geri gelmez, hatırlatıcı saati de
+  (her elle durum değişikliğinde olduğu gibi) geri alma anından yeniden başlar. Tarayıcıda
+  görüldü, test bunu sabitliyor (`Ghost_Is_Not_Subject_To_The_Bulk_Ceiling`). Alternatif —
+  `BulkEditReverted` geçişlerini eskilik tanımından dışlamak — iki tanımı (eskilik ve hatırlatıcı
+  referansı) ayrıştıracağı için reddedildi; kullanıcı vazgeçtiyse Başvurular'daki toplu araçlar
+  oradadır.
+- **Mevcut 1.225 satır:** ayrıca migration yok — ilk gece taraması ufuk dışındakileri kapatır;
+  kullanıcı "Evet" derse aynı anda kapanırlar (`GhostStaleApplicationsAsync` emekliye ayırır).
+- **Reddedilen:** A (tavan + toplu düğme) — 2017 satırları hâlâ üstte, güncel takip görünmez;
+  B (gruplu) — özet satırı "neden 1.222?" sorusunu doğuruyor, C zaten aynı özet satırını "şimdi
+  değil" sonrasına saklıyor. İstemci tarafında 500'lük parçalara bölünmüş undo — tavan sunucu
+  bilgisi, istemciye sızdırılmadı.
+
+**Testler:** birim 623 (`IsBeyondHorizon`, 3 durum); entegrasyon `ReminderTests` +10 (ufuk, üç emeklilik
+nedeni, tekil/toplu terminal geçişi, liste filtresi, follow-up + sahiplik),
+`StaleApplicationsTests` yeni (tanım, tavan üstü 505 satır + geri al, hatırlatıcı emekliliği, sonraki
+karar kazanır, şimdi-değil → sonraki içe aktarım, kullanıcı izolasyonu, tarama üretmez); web 357
+(`REMINDER_ANSWER_KEY`). Web bileşenleri için test düzeneği yok (vitest node ortamı, jsdom yok) —
+bant ve panel yerel yığında tarayıcıyla doğrulandı (TR+EN, koyu tema; browser-test kullanıcısına
+2017 tarihli "Eski İçe Aktarım A-D" ve "Old Import E" fikstürleri eklendi, kaldı): şimdi değil →
+kart altı satır, sonraki eski satır → bant geri, Evet → Geri Al şeridi ve sayaçlar, Geri Al, satırda
+Sessize alındı ve Takip ettim (zaman çizelgesinde `FollowUpSent`). İngilizce "1 applications"
+tekil/çoğul hatası ICU plural ile düzeltildi.

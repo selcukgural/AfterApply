@@ -54,4 +54,12 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     /// which device/browser they sign in from. Kept in sync with the frontend's current theme
     /// whenever the user switches themes while authenticated.</summary>
     public string PreferredTheme { get; set; } = "light";
+
+    /// <summary>
+    /// When the user last answered the dashboard's "mark your stale applications as ghosted?"
+    /// question with "not now". The question stays away until an application created after this
+    /// moment turns out to be stale as well — a later import — so a "no" is honoured without
+    /// becoming permanent. Null: never dismissed.
+    /// </summary>
+    public DateTimeOffset? StaleSuggestionDismissedAt { get; set; }
 }

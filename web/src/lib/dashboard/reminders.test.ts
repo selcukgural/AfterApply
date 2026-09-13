@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ReminderResponse } from "@/types/api";
-import { REMINDER_LABEL_KEY, sortReminders } from "./reminders";
+import { REMINDER_ANSWER_KEY, REMINDER_LABEL_KEY, sortReminders } from "./reminders";
 
 const reminder = (overrides: Partial<ReminderResponse>): ReminderResponse => ({
   id: "r",
@@ -41,5 +41,17 @@ describe("sortReminders", () => {
 describe("REMINDER_LABEL_KEY", () => {
   it("covers every reminder type the API can send", () => {
     expect(Object.keys(REMINDER_LABEL_KEY).sort()).toEqual(["FollowUp", "PossiblyGhosted"]);
+  });
+});
+
+describe("REMINDER_ANSWER_KEY", () => {
+  it("offers the answer each question asks for, never a bare dismiss", () => {
+    // A follow-up reminder is answered by following up; a ghosting one by confirming the ghosting.
+    expect(REMINDER_ANSWER_KEY.FollowUp).toBe("followedUp");
+    expect(REMINDER_ANSWER_KEY.PossiblyGhosted).toBe("markGhosted");
+  });
+
+  it("covers every reminder type the label map covers", () => {
+    expect(Object.keys(REMINDER_ANSWER_KEY).sort()).toEqual(Object.keys(REMINDER_LABEL_KEY).sort());
   });
 });

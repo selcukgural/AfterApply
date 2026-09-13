@@ -4,6 +4,7 @@ import type {
   BulkChangeStatusResponse,
   BulkDeleteRequest,
   BulkDeleteResponse,
+  StaleApplicationsSummaryResponse,
   UndoBulkStatusEntry,
   UndoBulkStatusResponse,
   ApplicationEventResponse,
@@ -108,6 +109,26 @@ export const applicationsApi = {
       method: "POST",
       body: JSON.stringify({ entries }),
     }),
+
+  /** The stale batch: still "Applied" past the reminder horizon with no real status change inside
+   *  it. The dashboard asks about it once, as one question. */
+  getStaleSummary: () => apiFetch<StaleApplicationsSummaryResponse>("/api/applications/stale"),
+
+  /** Marks every application getStaleSummary counts as ghosted. The set is the server's, so no
+   *  selection or count travels with the call and the bulk ceiling does not apply. */
+  ghostStale: () =>
+    apiFetch<BulkChangeStatusResponse>("/api/applications/stale/ghost", { method: "POST" }),
+
+  /** Undo for ghostStale — same compare-and-set as undoBulkStatus, without its size ceiling. */
+  undoStaleGhost: (entries: UndoBulkStatusEntry[]) =>
+    apiFetch<UndoBulkStatusResponse>("/api/applications/stale/ghost/undo", {
+      method: "POST",
+      body: JSON.stringify({ entries }),
+    }),
+
+  /** "Not now": silences the stale question until a later import brings new stale rows. */
+  dismissStaleSuggestion: () =>
+    apiFetch<void>("/api/applications/stale/dismiss", { method: "POST" }),
 
   /** Permanent. Same 409 contract as bulkChangeStatus. */
   bulkDelete: (request: BulkDeleteRequest) =>

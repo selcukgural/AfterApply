@@ -593,7 +593,19 @@
       "possiblyGhosted": "Muhtemelen sessize alındı",
       "days": "{count} gündür yanıt yok",
       "dismiss": "Yoksay",
-      "error": "Hatırlatıcı kapatılamadı. Tekrar dene."
+      "error": "İşlem tamamlanamadı. Tekrar dene.",
+      "followedUp": "Takip ettim",
+      "markGhosted": "Sessize alındı",
+      "staleNote": "{threshold} günden eski {count} başvuru hatırlatıcı üretmez.",
+      "staleBulkLink": "Başvurular'da toplu işaretle"
+    },
+    "stale": {
+      "title": "{count} başvuru {threshold} günden eski ve yanıtsız",
+      "body": "Hepsini \"sessize alındı\" olarak işaretleyelim mi? En eskisi {oldest} gün önce. Açık başvuru sayın düşer, oranlar gerçek durumu gösterir. Geri alınabilir.",
+      "confirm": "Evet, işaretle ({count})",
+      "confirming": "İşaretleniyor...",
+      "notNow": "Şimdi değil",
+      "error": "İşaretleme tamamlanamadı. Tekrar dene."
     }
   },
   "applications": {

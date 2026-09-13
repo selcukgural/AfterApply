@@ -152,6 +152,19 @@ public sealed record UndoBulkStatusResponse(int Reverted, int Skipped);
 
 public sealed record BulkDeleteResponse(int Deleted);
 
+/// <summary>
+/// The applications that have sat in Applied past the stale horizon (NotificationOptions.StaleThresholdDays)
+/// with no real status change inside it — typically an old LinkedIn export. The dashboard offers
+/// them as one question ("mark them all as ghosted?") rather than one reminder each.
+/// </summary>
+/// <param name="Count">How many applications the question covers right now; 0 means nothing to ask.</param>
+/// <param name="OldestDays">Days since the oldest of them was applied to — the number that makes the
+/// question obviously right ("3,518 days").</param>
+/// <param name="ThresholdDays">The horizon, so the UI can say "older than N days" without hard-coding N.</param>
+/// <param name="Suggest">Whether to show the question. False once the user answered "not now", until a
+/// later import brings in stale applications they have not been asked about.</param>
+public sealed record StaleApplicationsSummaryResponse(int Count, int OldestDays, int ThresholdDays, bool Suggest);
+
 /// <summary>Returned (as a 409) when the number of applications matching a bulk operation's filter
 /// is no longer the number the user was shown. Nothing has been changed when this comes back.</summary>
 public sealed record BulkCountMismatch(int ExpectedCount, int ActualCount);
