@@ -172,7 +172,7 @@ public static class ApplicationEndpoints
 
         group.MapPost("/stale/ghost/undo", async (UndoBulkStatusRequest request, ClaimsPrincipal user,
                 IApplicationService service, CancellationToken cancellationToken) =>
-                Results.Ok(await service.UndoStaleGhostAsync(user.GetUserId(), request, cancellationToken)))
+                Results.Ok(await service.UndoGhostAsync(user.GetUserId(), request, cancellationToken)))
             .WithValidation<UndoBulkStatusRequest>()
             .WithSummary("Undo marking the stale applications as ghosted")
             .WithDescription("Same compare-and-set rules as POST /bulk/status/undo, without its size ceiling.")

@@ -1,57 +1,54 @@
 import { describe, expect, it } from "vitest";
-import type { ReminderResponse } from "@/types/api";
-import { REMINDER_ANSWER_KEY, REMINDER_LABEL_KEY, sortReminders } from "./reminders";
-
-const reminder = (overrides: Partial<ReminderResponse>): ReminderResponse => ({
-  id: "r",
-  applicationId: "a",
-  companyName: "Acme",
-  jobTitle: "Engineer",
-  type: "FollowUp",
-  daysElapsed: 10,
-  createdAt: "2026-09-10T00:00:00Z",
-  ...overrides,
-});
-
-describe("sortReminders", () => {
-  it("puts the application that has waited longest first", () => {
-    const sorted = sortReminders([
-      reminder({ id: "fresh", daysElapsed: 7 }),
-      reminder({ id: "stale", daysElapsed: 21, type: "PossiblyGhosted" }),
-      reminder({ id: "mid", daysElapsed: 14 }),
-    ]);
-    expect(sorted.map((r) => r.id)).toEqual(["stale", "mid", "fresh"]);
-  });
-
-  it("breaks ties by creation time, oldest first", () => {
-    const sorted = sortReminders([
-      reminder({ id: "later", createdAt: "2026-09-12T00:00:00Z" }),
-      reminder({ id: "earlier", createdAt: "2026-09-11T00:00:00Z" }),
-    ]);
-    expect(sorted.map((r) => r.id)).toEqual(["earlier", "later"]);
-  });
-
-  it("does not mutate its input", () => {
-    const input = [reminder({ id: "a", daysElapsed: 1 }), reminder({ id: "b", daysElapsed: 2 })];
-    sortReminders(input);
-    expect(input.map((r) => r.id)).toEqual(["a", "b"]);
-  });
-});
+import { EMPTY_SELECTION, selectAllMatching } from "@/lib/applications/bulkSelection";
+import { REMINDER_ANSWER_KEY, REMINDER_LABEL_KEY, clampPage, lastPage, toReminderSelection } from "./reminders";
 
 describe("REMINDER_LABEL_KEY", () => {
-  it("covers every reminder type the API can send", () => {
-    expect(Object.keys(REMINDER_LABEL_KEY).sort()).toEqual(["FollowUp", "PossiblyGhosted"]);
+  it("covers every reminder type", () => {
+    expect(REMINDER_LABEL_KEY.FollowUp).toBe("followUp");
+    expect(REMINDER_LABEL_KEY.PossiblyGhosted).toBe("possiblyGhosted");
   });
 });
 
 describe("REMINDER_ANSWER_KEY", () => {
-  it("offers the answer each question asks for, never a bare dismiss", () => {
-    // A follow-up reminder is answered by following up; a ghosting one by confirming the ghosting.
+  it("gives each reminder type the answer its question asks for", () => {
     expect(REMINDER_ANSWER_KEY.FollowUp).toBe("followedUp");
     expect(REMINDER_ANSWER_KEY.PossiblyGhosted).toBe("markGhosted");
   });
+});
 
-  it("covers every reminder type the label map covers", () => {
-    expect(Object.keys(REMINDER_ANSWER_KEY).sort()).toEqual(Object.keys(REMINDER_LABEL_KEY).sort());
+describe("toReminderSelection", () => {
+  it("sends the ticked ids as they are", () => {
+    expect(toReminderSelection({ kind: "page", ids: ["a", "b"] })).toEqual({ ids: ["a", "b"] });
+  });
+
+  it("sends an empty page selection as an empty id list, never as all", () => {
+    // The caller guards against submitting nothing; if it ever slips through, the server's
+    // validator rejects an empty list — an accidental "all" would not be rejected.
+    expect(toReminderSelection(EMPTY_SELECTION)).toEqual({ ids: [] });
+  });
+
+  it("sends all-matching as the all flag without ids", () => {
+    expect(toReminderSelection(selectAllMatching(1224))).toEqual({ all: true });
+  });
+});
+
+describe("lastPage", () => {
+  it("rounds up and never goes below one", () => {
+    expect(lastPage(0, 5)).toBe(1);
+    expect(lastPage(5, 5)).toBe(1);
+    expect(lastPage(6, 5)).toBe(2);
+    expect(lastPage(1224, 5)).toBe(245);
+  });
+});
+
+describe("clampPage", () => {
+  it("keeps a page that still has rows", () => {
+    expect(clampPage(3, 1224, 5)).toBe(3);
+    expect(clampPage(245, 1224, 5)).toBe(245);
+  });
+
+  it("falls back to the last page once the list has shrunk under the current one", () => {
+    expect(clampPage(245, 1220, 5)).toBe(244);
+    expect(clampPage(2, 0, 5)).toBe(1);
   });
 });

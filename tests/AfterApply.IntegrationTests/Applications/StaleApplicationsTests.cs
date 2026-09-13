@@ -204,7 +204,7 @@ public class StaleApplicationsTests(SharedInfrastructure shared) : IAsyncLifetim
 
         var remindersResponse = await _client.GetAsync("/api/reminders");
         remindersResponse.EnsureSuccessStatusCode();
-        (await remindersResponse.Content.ReadFromJsonAsync<List<ReminderResponse>>(JsonOptions))!.ShouldBeEmpty();
+        (await remindersResponse.Content.ReadFromJsonAsync<PagedResult<ReminderResponse>>(JsonOptions))!.TotalCount.ShouldBe(0);
     }
 
     [Fact]

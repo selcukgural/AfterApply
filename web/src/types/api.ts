@@ -1119,3 +1119,21 @@ export interface ReminderResponse {
   daysElapsed: number;
   createdAt: string;
 }
+
+/** Mirrors AfterApply.Application.Notifications.Contracts.ReminderSelection: the ticked ids, or
+ *  "all" — every active reminder, resolved on the server, which is why `all` travels with an
+ *  `expectedCount` on the request. */
+export type ReminderSelection = { ids: string[] } | { all: true };
+
+/** Mirrors AfterApply.Application.Notifications.Contracts.BulkReminderRequest. */
+export interface BulkReminderRequest {
+  selection: ReminderSelection;
+  /** Required with `all`; the server refuses the request (409, BulkCountMismatchProblem) when its
+   *  count of active reminders no longer matches. */
+  expectedCount?: number | null;
+}
+
+/** Mirrors AfterApply.Application.Notifications.Contracts.BulkReminderResponse. */
+export interface BulkReminderResponse {
+  affected: number;
+}

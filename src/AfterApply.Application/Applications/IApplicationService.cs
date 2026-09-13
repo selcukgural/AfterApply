@@ -96,16 +96,25 @@ public interface IApplicationService
     /// Moves every application <see cref="GetStaleSummaryAsync"/> counts to Ghosted, in one act. The
     /// set is the server's, never the client's, so it is not subject to the bulk operation ceiling;
     /// the response is the same shape as a bulk status change and is undone through
-    /// <see cref="UndoStaleGhostAsync"/>.
+    /// <see cref="UndoGhostAsync"/>.
     /// </summary>
     Task<BulkChangeStatusResponse> GhostStaleApplicationsAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Undoes <see cref="GhostStaleApplicationsAsync"/> with the same compare-and-set rules as
-    /// <see cref="UndoBulkStatusAsync"/>, minus the ceiling: the stale batch is bounded by the user's
-    /// own rows, not by anything the client chose.
+    /// Moves the given applications to Ghosted in one act — the reminders card's bulk "it was
+    /// ghosted" answer. Ids are intersected with the caller's own open rows: a foreign, deleted or
+    /// already terminal id matches nothing. Not subject to the bulk ceiling for the same reason
+    /// <see cref="GhostStaleApplicationsAsync"/> is not: the set is resolved from a server-side
+    /// selection (the user's own reminders), never from a client-supplied filter.
     /// </summary>
-    Task<UndoBulkStatusResponse> UndoStaleGhostAsync(Guid userId, UndoBulkStatusRequest request, CancellationToken cancellationToken);
+    Task<BulkChangeStatusResponse> GhostApplicationsAsync(Guid userId, IReadOnlyCollection<Guid> applicationIds, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Undoes <see cref="GhostStaleApplicationsAsync"/> or <see cref="GhostApplicationsAsync"/> with
+    /// the same compare-and-set rules as <see cref="UndoBulkStatusAsync"/>, minus the ceiling: both
+    /// batches are bounded by the user's own rows, not by anything the client chose.
+    /// </summary>
+    Task<UndoBulkStatusResponse> UndoGhostAsync(Guid userId, UndoBulkStatusRequest request, CancellationToken cancellationToken);
 
     /// <summary>
     /// "Not now": stops the stale question until a later import brings in applications the user

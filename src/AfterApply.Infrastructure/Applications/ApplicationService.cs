@@ -589,7 +589,7 @@ internal sealed class ApplicationService(
             .Where(r => r.UserId == userId && r.DismissedAt == null && applicationIds.Contains(r.ApplicationId))
             .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.DismissedAt, now), cancellationToken);
 
-        await cache.RemoveAsync(ReminderCacheKeys.Active(userId), cancellationToken);
+        await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
     }
 
     /// <summary>
@@ -636,14 +636,37 @@ internal sealed class ApplicationService(
         return new StaleApplicationsSummaryResponse(count, (int)(now - oldestAppliedAt).TotalDays, thresholdDays, suggest);
     }
 
-    public async Task<BulkChangeStatusResponse> GhostStaleApplicationsAsync(Guid userId, CancellationToken cancellationToken)
+    public Task<BulkChangeStatusResponse> GhostStaleApplicationsAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
-
         // Deliberately not capped by MaxOperationSize: the set is resolved here from the user's own
         // rows, so its size is bounded by their account, not by a request body — and the whole
         // point of the question is an import of a thousand-odd old rows in one answer.
-        var applications = await StaleApplications(userId, StaleCutoff(now)).ToListAsync(cancellationToken);
+        return GhostAsync(userId, StaleApplications(userId, StaleCutoff(DateTimeOffset.UtcNow)), cancellationToken);
+    }
+
+    public Task<BulkChangeStatusResponse> GhostApplicationsAsync(Guid userId, IReadOnlyCollection<Guid> applicationIds,
+        CancellationToken cancellationToken)
+    {
+        if (applicationIds.Count == 0)
+        {
+            return Task.FromResult(new BulkChangeStatusResponse(0, 0, []));
+        }
+
+        // Open rows only: the reminders these ids came from are questions about open applications,
+        // and "already terminal" is not a change to report or to offer an undo for.
+        var open = dbContext.Applications.Where(a => a.UserId == userId
+            && applicationIds.Contains(a.Id)
+            && !TerminalApplicationStatuses.Values.Contains(a.Status));
+        return GhostAsync(userId, open, cancellationToken);
+    }
+
+    /// <summary>The one ghosting act behind both server-resolved batches: every row the query
+    /// yields moves to Ghosted with one timestamp, and the reminders it answers close with it.</summary>
+    private async Task<BulkChangeStatusResponse> GhostAsync(Guid userId, IQueryable<DomainApplication> selected,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var applications = await selected.ToListAsync(cancellationToken);
 
         var context = new StatusChangeContext(Source.Manual, StatusChangeOrigin.BulkEdit);
         var changes = new List<BulkStatusChange>(applications.Count);
@@ -667,7 +690,7 @@ internal sealed class ApplicationService(
         return new BulkChangeStatusResponse(changes.Count, 0, changes);
     }
 
-    public Task<UndoBulkStatusResponse> UndoStaleGhostAsync(Guid userId, UndoBulkStatusRequest request, CancellationToken cancellationToken)
+    public Task<UndoBulkStatusResponse> UndoGhostAsync(Guid userId, UndoBulkStatusRequest request, CancellationToken cancellationToken)
     {
         return UndoStatusChangesAsync(userId, request.Entries, cancellationToken);
     }

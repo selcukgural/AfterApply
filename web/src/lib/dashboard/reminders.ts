@@ -1,4 +1,5 @@
-import type { ReminderResponse, ReminderType } from "@/types/api";
+import type { SelectionState } from "@/lib/applications/bulkSelection";
+import type { ReminderSelection, ReminderType } from "@/types/api";
 
 /** Message key under `dashboard.reminders` for each reminder type. */
 export const REMINDER_LABEL_KEY: Record<ReminderType, "followUp" | "possiblyGhosted"> = {
@@ -18,12 +19,24 @@ export const REMINDER_ANSWER_KEY: Record<ReminderType, "followedUp" | "markGhost
 };
 
 /**
- * The order the panel shows reminders in: the application that has waited longest first, and
- * among equals the reminder created first. The API returns them newest-first, which would put the
- * freshest nudge on top and the one that actually needs attention at the bottom.
+ * The wire form of the card's selection. The applications list's selection state fits as it is —
+ * ticked ids on the page, or "everything" with the count that was on screen — and only the
+ * all-form differs: reminders have no filter to repeat back, so "all" is a flag.
  */
-export function sortReminders(reminders: readonly ReminderResponse[]): ReminderResponse[] {
-  return [...reminders].sort(
-    (a, b) => b.daysElapsed - a.daysElapsed || a.createdAt.localeCompare(b.createdAt),
-  );
+export function toReminderSelection(selection: SelectionState): ReminderSelection {
+  return selection.kind === "allMatching" ? { all: true } : { ids: [...selection.ids] };
+}
+
+/** The last page that still has rows; 1 when there are none, so an empty list is still "page 1". */
+export function lastPage(totalCount: number, pageSize: number): number {
+  return Math.max(1, Math.ceil(totalCount / pageSize));
+}
+
+/**
+ * Where to land after the list shrinks under the current page. Answering the only row of page 245
+ * leaves page 245 empty and the total at 1,220 — the card should show page 244, not a blank list
+ * with a pager that says there is nothing here.
+ */
+export function clampPage(page: number, totalCount: number, pageSize: number): number {
+  return Math.min(page, lastPage(totalCount, pageSize));
 }

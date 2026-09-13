@@ -597,7 +597,14 @@
       "followedUp": "Followed up",
       "markGhosted": "Mark as ghosted",
       "staleNote": "{count, plural, one {# application older than {threshold} days produces no reminders.} other {# applications older than {threshold} days produce no reminders.}}",
-      "staleBulkLink": "Bulk-mark them in Applications"
+      "staleBulkLink": "Bulk-mark them in Applications",
+      "selectPage": "Select the reminders on this page",
+      "selectRow": "Select {company} — {title}",
+      "selectedCount": "{count} selected ·",
+      "selectAll": "Select all {count} reminders",
+      "allSelected": "All {count} reminders selected — other pages included ·",
+      "clearSelection": "Clear",
+      "countMismatch": "The list changed while this was open — you now have {count} reminders. Nothing was changed; look again."
     },
     "stale": {
       "title": "{count, plural, one {# application is} other {# applications are}} older than {threshold} days with no reply",
@@ -643,7 +650,8 @@
       "previous": "Previous",
       "next": "Next",
       "last": "Last",
-      "pageInfoCompanies": "Page {page} / {totalPages} ({totalCount} companies)"
+      "pageInfoCompanies": "Page {page} / {totalPages} ({totalCount} companies)",
+      "pageInfoReminders": "Page {page} / {totalPages} ({totalCount} reminders)"
     },
     "form": {
       "companyName": "Company Name",
