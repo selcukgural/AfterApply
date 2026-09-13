@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { CompanyDirectory } from "@/components/companyReviews/CompanyDirectory";
+import { guidePath } from "@/lib/guide/articles";
 import { LandingIcon, type LandingIcon as LandingIconName } from "@/components/landing/landingIcons";
 
 /** What a first-time visitor needs before the search box: what a review holds, and the two promises. */
@@ -25,12 +26,20 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/companie
 export default async function CompaniesPage() {
   const t = await getTranslations("companies.directory");
   const tScoring = await getTranslations("companies.scoring");
+  const tReviews = await getTranslations("companies.reviews");
+  const locale = await getLocale();
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12">
       <header className="flex flex-col gap-3">
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">{t("title")}</h1>
         <p className="max-w-[60ch] text-lg text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {tReviews("readingNote")}{" "}
+          <Link href={guidePath("reading-employee-reviews", locale)} className="font-medium text-accent-ink hover:underline">
+            {tReviews("readingGuide")}
+          </Link>
+        </p>
       </header>
 
       {/* Three cards instead of the one-line "reviews never show who wrote them" that stood here

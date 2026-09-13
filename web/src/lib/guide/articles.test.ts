@@ -1,6 +1,6 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   GUIDE_ARTICLES,
@@ -10,6 +10,7 @@ import {
   articlePaths,
   findArticleByKey,
   findArticleBySlug,
+  guidePath,
   isGuideLocale,
 } from "./articles";
 import { GUIDE_LOADER_KEYS } from "./content";
@@ -101,6 +102,48 @@ describe("guide registry", () => {
         expect(findArticleByKey(key)).toBeDefined();
       }
     }
+  });
+});
+
+describe("guide links from the product", () => {
+  const SRC = fileURLToPath(new URL("../..", import.meta.url));
+
+  function sourceFiles(dir: string): string[] {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) return sourceFiles(full);
+      return /\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name) ? [full] : [];
+    });
+  }
+
+  it("resolves a key to the locale's own slug", () => {
+    expect(guidePath("reading-employee-reviews", "tr")).toBe("/guide/calisan-deneyimlerini-nasil-okumali");
+    expect(guidePath("reading-employee-reviews", "en")).toBe("/guide/how-to-read-employee-reviews");
+  });
+
+  it("falls back to the default locale for one the guide does not have", () => {
+    expect(guidePath("reading-employee-reviews", "de")).toBe(guidePath("reading-employee-reviews", "tr"));
+  });
+
+  it("refuses a key nobody registered", () => {
+    expect(() => guidePath("no-such-article", "tr")).toThrow(/no-such-article/);
+  });
+
+  // guidePath throws at render time for a key that is not in the registry — this finds the same
+  // mistake at test time, before a company page or the review form renders an error instead.
+  it("is only asked for articles that exist, everywhere the product links into the guide", () => {
+    const asked = sourceFiles(SRC).flatMap((file) =>
+      [...readFileSync(file, "utf8").matchAll(/guidePath\(\s*"([^"]+)"/g)].map((match) => `${relative(SRC, file)}: ${match[1]}`),
+    );
+    expect(asked.length).toBeGreaterThan(0);
+    expect(asked.filter((entry) => !findArticleByKey(entry.split(": ")[1]))).toEqual([]);
+  });
+
+  // The review-writing guide is reached from the review form and from a rejected review, both
+  // behind login; the "start for free" box would be asking a signed-in reader to register.
+  it("hides the register box on the guide that only signed-in readers reach", () => {
+    expect(findArticleByKey("writing-a-fair-review")?.hideRegisterCta).toBe(true);
+    expect(findArticleByKey("reading-employee-reviews")?.hideRegisterCta).toBeUndefined();
   });
 });
 

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { StepList } from "@/components/help/StepList";
 import { Callout } from "@/components/help/Callout";
 import { Screenshot } from "@/components/help/Screenshot";
+import { guidePath } from "@/lib/guide/articles";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/help/company-reviews">): Promise<Metadata> {
   const { locale } = await params;
@@ -15,6 +16,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help/com
 export default async function CompanyReviewsHelpPage() {
   const t = await getTranslations("help.companyReviews");
   const tCommon = await getTranslations("help.common");
+  const locale = await getLocale();
 
   const readSteps = ["step1", "step2", "step3"].map((key) => ({ title: t(`read.${key}.title`), body: t(`read.${key}.body`) }));
   const writeSteps = ["step1", "step2", "step3", "step4"].map((key) => ({ title: t(`write.${key}.title`), body: t(`write.${key}.body`) }));
@@ -34,15 +36,23 @@ export default async function CompanyReviewsHelpPage() {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("read.title")}</h2>
         <StepList steps={readSteps} />
         <Screenshot src="/help/screenshots/company-page.png" alt={t("read.title")} />
-        <Link href="/companies/scoring" className="text-sm font-medium text-accent-ink hover:underline">
-          {t("read.scoringLink")}
-        </Link>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <Link href="/companies/scoring" className="text-sm font-medium text-accent-ink hover:underline">
+            {t("read.scoringLink")}
+          </Link>
+          <Link href={guidePath("reading-employee-reviews", locale)} className="text-sm font-medium text-accent-ink hover:underline">
+            {t("read.readingGuideLink")}
+          </Link>
+        </div>
       </section>
 
       <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("write.title")}</h2>
         <StepList steps={writeSteps} />
         <Screenshot src="/help/screenshots/review-form.png" alt={t("write.title")} />
+        <Link href={guidePath("writing-a-fair-review", locale)} className="text-sm font-medium text-accent-ink hover:underline">
+          {t("write.guideLink")}
+        </Link>
       </section>
 
       <Callout variant="info" label={tCommon("note")} title={t("calloutAnonymous.title")}>

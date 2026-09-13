@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { CompanyPublicResponse, CompanyReviewPublic, PagedResult, PublicReviewSort, ReviewReportReason } from "@/types/api";
 import { companiesApi } from "@/lib/api/companies";
 import { companyReviewsApi } from "@/lib/api/companyReviews";
 import { ApiError } from "@/lib/api/httpClient";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { guidePath } from "@/lib/guide/articles";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
 import { ReviewCard } from "@/components/companyReviews/ReviewCard";
@@ -28,6 +29,7 @@ interface CompanyReviewsSectionProps {
  */
 export function CompanyReviewsSection({ company, initialReviews }: CompanyReviewsSectionProps) {
   const t = useTranslations("companies.reviews");
+  const locale = useLocale();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -100,6 +102,15 @@ export function CompanyReviewsSection({ company, initialReviews }: CompanyReview
           </select>
         </div>
       </div>
+
+      {/* One line before the list, for the reader who never opens the help centre: a review is one
+          person's account, and there is a short guide on reading several of them together. */}
+      <p className="text-xs text-gray-600 dark:text-gray-400">
+        {t("readingNote")}{" "}
+        <Link href={guidePath("reading-employee-reviews", locale)} className="font-medium text-accent-ink hover:underline">
+          {t("readingGuide")}
+        </Link>
+      </p>
 
       {ownReview ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent-wash p-4 text-sm">

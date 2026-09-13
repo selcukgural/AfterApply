@@ -1126,7 +1126,7 @@
   },
   "cookies": {
     "title": "Cookie Policy",
-    "lastUpdated": "Last updated: 8 September 2026",
+    "lastUpdated": "Last updated: 13 September 2026",
     "intro": {
       "title": "In short",
       "body": "e-kariyerim uses exactly two cookies, both needed for the service to work. We use no advertising cookies, no tracking pixels, no analytics tool such as Google Analytics, and no third-party cookies at all. That is why you never see a cookie consent banner here: there is no optional cookie to leave to your choice.",
@@ -1151,7 +1151,8 @@
       "intro": "These are not cookies, but they store data on your device in the same way, so we list them here too:",
       "item1": "Session tokens — aa_access_token, aa_refresh_token, their expiry times, and aa_user (your name, email address and interface preferences). They keep you signed in; they live in localStorage and are deleted when you sign out.",
       "item2": "Sign-in security keys — aa_google_oauth, aa_linkedin_oauth and aa_github_oauth. These are single-use values that block a CSRF attack during a Google, LinkedIn or GitHub sign-in; they live in sessionStorage and are deleted the moment the sign-in completes.",
-      "outro": "Both are required for the service to work — without them you cannot sign in."
+      "outro": "The first two are required for the service to work — without them you cannot sign in. The third is only an interface preference.",
+      "item3": "Moderation guide preference — aa_moderation_guide_dismissed. Only on the review moderation page that admin accounts see, it remembers that you closed the guide panel once; it holds nothing but a “1”. It lives in localStorage and is deleted when you reopen the panel."
     },
     "visitCounter": {
       "title": "Visit counter",
@@ -1978,7 +1979,8 @@
           "title": "Know how to read the score",
           "body": "A score appears only once enough reviews are published; until then the page says how many are still needed. Every number carries the count it is based on."
         },
-        "scoringLink": "How is the score calculated? →"
+        "scoringLink": "How is the score calculated? →",
+        "readingGuideLink": "How to read the reviews →"
       },
       "write": {
         "title": "Writing a review",
@@ -1997,7 +1999,8 @@
         "step4": {
           "title": "Submit for review",
           "body": "A submitted review is \"Pending review\" and visible only to you on the My Reviews page. Once a moderator has read it, it is published or comes back with a reason."
-        }
+        },
+        "guideLink": "How to write a fair and useful review →"
       },
       "calloutAnonymous": {
         "title": "Reviews are anonymous",
@@ -2661,7 +2664,9 @@
       "writeReview": "Write a review",
       "signInToWrite": "Sign in to write a review",
       "empty": "No published review yet.",
-      "actionError": "That didn't go through. Please try again."
+      "actionError": "That didn't go through. Please try again.",
+      "readingNote": "Every review is one person's experience, not a verdict on the company.",
+      "readingGuide": "How to read these reviews →"
     },
     "scoring": {
       "title": "How company scores are calculated",
@@ -2751,7 +2756,8 @@
       "noInsults": "No insults, threats or profanity — they get the review sent back, not published.",
       "balanced": "Pros and cons both: a review with only one of them helps nobody.",
       "noAds": "No links, advertising or recruiting.",
-      "moderation": "A moderator reads every review before it goes live. You'll see its status under My Reviews."
+      "moderation": "A moderator reads every review before it goes live. You'll see its status under My Reviews.",
+      "fullGuide": "The full guide, with examples →"
     },
     "report": {
       "title": "Report this review",
@@ -2785,7 +2791,8 @@
       "deleteTitle": "Delete this review?",
       "deleteBody": "The review is removed for good, and its slot in your quota is freed.",
       "cancel": "Cancel",
-      "confirmDelete": "Delete"
+      "confirmDelete": "Delete",
+      "rejectedGuideLink": "What passes and what doesn't: the guide →"
     },
     "write": {
       "title": "Write a review",
@@ -2881,6 +2888,77 @@
           "Removed": "The review comes down with your note. Every other open report on it is closed too."
         }
       }
+    },
+    "guide": {
+      "title": "Moderation guide",
+      "show": "Show",
+      "hide": "Hide",
+      "principle1": "A review being negative about the company is not, by itself, a reason to reject it.",
+      "principle2": "The moderator's job is not to protect the company but to protect the community rules.",
+      "approve": {
+        "title": "Approve — even when harsh or one-sided",
+        "workplace": "Personal opinions about the work environment",
+        "management": "Personal experiences with management",
+        "pay": "Experiences with pay and benefits",
+        "career": "Experiences with career growth",
+        "balance": "Experiences with work/life balance",
+        "opinion": "Positive or negative personal assessments"
+      },
+      "reject": {
+        "title": "Reject — however good the rest of it is",
+        "insults": "Insults and profanity",
+        "threats": "Threats",
+        "personalData": "Personal information (phone, address, e-mail, ID numbers…)",
+        "targeting": "Attacks aimed at specific people",
+        "accusations": "Serious unverified accusations",
+        "confidential": "Confidential / commercial information",
+        "spam": "Spam and advertising",
+        "fake": "Fake or manipulative reviews"
+      },
+      "grey": {
+        "title": "Grey areas",
+        "question": "Most doubts come down to one question: is this something the author lived through, or a claim about someone else?",
+        "columns": {
+          "review": "Review",
+          "verdict": "Verdict",
+          "why": "Why"
+        },
+        "approve": "Approve",
+        "reject": "Reject",
+        "case1": {
+          "review": "“My manager was very rude; when we made a mistake he told us off in front of the team.”",
+          "why": "Personal experience. A role is mentioned, but nobody can be identified."
+        },
+        "case2": {
+          "review": "“Sales manager A. K. shouts at everyone, a total psychopath.”",
+          "why": "A specific person is targeted; initials count as a name. Plus an insult."
+        },
+        "case3": {
+          "review": "“Salaries were a month late twice, nobody explained why.”",
+          "why": "Something that happened to the author. Looking bad for the company is not a reason to reject."
+        },
+        "case4": {
+          "review": "“The company evades tax and issues fake invoices.”",
+          "why": "An accusation of a crime, unverifiable. Send back with a note: “Tell the part you experienced yourself.”"
+        },
+        "case5": {
+          "review": "“Everyone is unhappy, nobody stays longer than a year.”",
+          "why": "A generalisation, but an opinion; exaggeration is not a rule violation. The reader weighs it."
+        },
+        "case6": {
+          "review": "“Great company, I recommend it to everyone!” — five similar ones, same day, same company.",
+          "why": "On its own it's empty but within the rules; arriving in bulk it's manipulation."
+        },
+        "case7": {
+          "review": "“We lost the X Bank project, the contract was worth 2 million.”",
+          "why": "Client and contract details. Doesn't pass even if the rest of the review is fine."
+        }
+      },
+      "sendBack": {
+        "title": "When sending back:",
+        "body": "keep the note to one sentence and name the rule it broke — so the author knows what to change. “Not suitable” is not a note."
+      },
+      "modalLink": "Not sure? Grey-area examples →"
     }
   },
   "siteNav": {

@@ -5932,3 +5932,47 @@ için düzenek yok — yerel yığında tarayıcıyla doğrulandı (TR+EN): 12 h
 kutusu → tik kaldırma → 3'e "Takip ettim", tümünü seç → Sessize alındı (Açık 20→11) → Geri Al
 (20), 2. sayfanın tek satırı → 1. sayfaya iniş. Browser-test kullanıcısına "Sayfa Test 1–12"
 başvuruları eklendi (kaldı; 5'inde açık takip hatırlatıcısı var).
+
+## Çalışan deneyimleri: yazan, okuyan ve moderatör için üç rehber (2026-09-13)
+
+**Neden:** Şirket değerlendirmeleri yayında ama üç tarafın da elinde tek bir ölçü yoktu: yazan
+formun yanındaki altı maddeyi görüyor, okuyan hiçbir şey görmüyor, moderatör ise kuralları
+aklından uyguluyordu. Aynı yorumun bir gün onaylanıp ertesi gün reddedilmesi, ya da okuyucunun
+tek bir olumsuz yorumu şirket hakkında hüküm sanması bu boşluktan çıkar. İstek: üç ayrı, kısa,
+samimi rehber — kod değil içerik. Tasarım kanvası (rehber metinleri + 9 giriş noktası):
+https://claude.ai/code/artifact/83919f83-bfc6-47b2-a969-a2fdc97b60d7
+
+**Kararlar:**
+- **İki rehber `/guide` yazısı, TR+EN:** `writing-a-fair-review` ("Adil ve faydalı bir
+  değerlendirme yazmak" / "Writing a fair and useful review") ve `reading-employee-reviews`
+  ("Çalışan deneyimlerini nasıl okumalı" / "How to read employee reviews"). Diğer rehberlerle aynı
+  altyapı (registry + MDX), dizinde en üstte, sitemap/hreflang otomatik. Gövde MDX'in çizdiği
+  öğelerle sınırlı (h2, liste, alıntı); "Böyle değil / Böyle" çiftleri kalın etiketli paragraf +
+  sert satır sonu. Başlıklar SEO sınırı için cümle-case.
+- **Yazanlar rehberinde kayıt CTA'sı yok:** `GuideArticle.hideRegisterCta` — bu yazıya yalnızca
+  giriş yapmış biri (form yanı, reddedilen değerlendirme) ulaşır; "Ücretsiz başla" kutusu ona
+  anlamsız. Okuyanlar rehberi herkese açık, kutu duruyor.
+- **Moderatör rehberi bir yazı değil, admin sayfasında bileşen:** `ModerationGuide`,
+  `/admin/reviews` sekmelerinin altında; iki ilke ("olumsuzluk tek başına red sebebi değil",
+  "görev şirketi değil kuralları korumak"), onay/red listeleri, 7 satırlık gri alan tablosu, geri
+  gönderme notu kuralı. Metin `adminReviews.guide.*` (TR+EN). Herkese açık değil, `/guide`'da yok.
+- **Panel bir kez açık gelir, kapatınca hatırlanır:** `moderationGuideStore`
+  (`useSyncExternalStore`, authStore deseni), anahtar `aa_moderation_guide_dismissed` = "1" —
+  tek yönlü tercih bayrağı, yalnızca admin sayfasında yazılır. Çerez politikasının tarayıcı deposu
+  envanterine 3. madde olarak eklendi (`browserStorage.test.ts` tel tuzağı bunu zorlar; TR+EN,
+  "Son güncelleme" 13 Eylül 2026). Karar modalında "Emin değil misin? Gri alan örnekleri →" modalı
+  kapatır, paneli açar (kapalıysa) ve tabloya kaydırır; yazılan red gerekçesi sayfa state'i
+  olduğu için kaybolmaz.
+- **Kullanıcı rehberlere nereden ulaşır (9 nokta):** ① yazma + düzenleme sayfası yan paneli
+  ("Örneklerle tam rehber →"), ② şirket sayfası değerlendirme listesinin başı (tek satır + "Bu
+  yorumları nasıl okumalı? →", girişsiz de görünür), ③④ yardım merkezi › Şirket değerlendirmeleri
+  (okuma ve yazma bölümleri), ⑦ `/guide` dizini, ⑧ `/companies` dizini alt başlığı, ⑨
+  Değerlendirmelerim'de reddedilen değerlendirmenin kutusu ("Neyin geçip neyin geçmediği: rehber
+  →"); ayrıca iki yazı birbirine bağlı. Ürün ekranları `guidePath(key, locale)` ile bağlanır —
+  kayıtsız key render'da fırlatır, `articles.test.ts` kaynağı tarayıp önceden yakalar.
+
+**Testler:** web 371 (+14: `moderationGuideStore` bayrak/mağaza/abone/bozuk depo; `guidePath`
+çözümleme, varsayılan dile düşme, kayıtsız key, kaynaktaki her `guidePath("…")` kayıtlı,
+`hideRegisterCta` sözleşmesi; mevcut registry/gövde/SEO kuralları yeni iki yazıya da uygulanır;
+depo envanteri tel tuzağı yeni anahtar ve yazıcıyla güncellendi). Bileşenler için düzenek yok —
+yerel yığında tarayıcıyla doğrulandı.

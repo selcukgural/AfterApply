@@ -98,16 +98,18 @@ export default async function GuideArticlePage({ params }: PageProps<"/[locale]/
         <Body />
       </div>
 
-      <section className="rounded-lg border border-blue-200 bg-blue-50/60 p-6 dark:border-blue-900 dark:bg-blue-950/30">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("cta.title")}</h2>
-        <p className="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{t("cta.body")}</p>
-        <Link
-          href="/register"
-          className="mt-4 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          {t("cta.button")}
-        </Link>
-      </section>
+      {!article.hideRegisterCta && (
+        <section className="rounded-lg border border-blue-200 bg-blue-50/60 p-6 dark:border-blue-900 dark:bg-blue-950/30">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("cta.title")}</h2>
+          <p className="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{t("cta.body")}</p>
+          <Link
+            href="/register"
+            className="mt-4 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            {t("cta.button")}
+          </Link>
+        </section>
+      )}
 
       {related.length > 0 && (
         <section className="flex flex-col gap-3 border-t border-gray-200 pt-8 dark:border-gray-800">

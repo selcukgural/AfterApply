@@ -11,6 +11,8 @@
  * language before the other, and burying prose in them would make both harder to read.
  */
 
+import { routing } from "@/i18n/routing";
+
 export const GUIDE_LOCALES = ["tr", "en"] as const;
 export type GuideLocale = (typeof GUIDE_LOCALES)[number];
 
@@ -30,11 +32,56 @@ export type GuideArticle = {
   copy: Record<GuideLocale, GuideArticleCopy>;
   /** Keys of the articles linked at the foot of this one. */
   related: string[];
+  /**
+   * Leave out the "start for free" box at the foot of the article. For an article whose reader is
+   * already signed in by construction — the review-writing guide is linked from the review form
+   * and from a rejected review, both behind login — the box would be asking them to register.
+   */
+  hideRegisterCta?: true;
 };
 
 export const GUIDE_PATH = "/guide";
 
 export const GUIDE_ARTICLES: GuideArticle[] = [
+  {
+    key: "writing-a-fair-review",
+    published: "2026-09-13",
+    related: ["reading-employee-reviews", "reapplying-to-the-same-company"],
+    hideRegisterCta: true,
+    copy: {
+      tr: {
+        slug: "adil-ve-faydali-bir-degerlendirme-yazmak",
+        title: "Adil ve faydalı bir değerlendirme yazmak",
+        description:
+          "Yazdığını, o şirkete başvurmayı düşünen biri okuyacak. Ona en çok yarayan şey, gerçekten yaşadıklarını sade bir dille anlatman — olumsuz olsa bile.",
+      },
+      en: {
+        slug: "writing-a-fair-review",
+        title: "Writing a fair and useful review",
+        description:
+          "Someone weighing that company will read what you write. What helps them most is what actually happened to you, told plainly — even when it is negative.",
+      },
+    },
+  },
+  {
+    key: "reading-employee-reviews",
+    published: "2026-09-13",
+    related: ["writing-a-fair-review", "reapplying-to-the-same-company"],
+    copy: {
+      tr: {
+        slug: "calisan-deneyimlerini-nasil-okumali",
+        title: "Çalışan deneyimlerini nasıl okumalı",
+        description:
+          "Buradaki yorumlar sana bir şirketin içini gösterir — ama bir pencereden, bir kişinin gözüyle. Doğru okumak biraz dikkat ister.",
+      },
+      en: {
+        slug: "how-to-read-employee-reviews",
+        title: "How to read employee reviews",
+        description:
+          "The reviews here show you the inside of a company — but through one window, with one person's eyes. Reading them well takes a little care.",
+      },
+    },
+  },
   {
     key: "linkedin-application-history",
     published: "2026-09-08",
@@ -189,4 +236,16 @@ export function findArticleByKey(key: string): GuideArticle | undefined {
 
 export function isGuideLocale(locale: string): locale is GuideLocale {
   return (GUIDE_LOCALES as readonly string[]).includes(locale);
+}
+
+/**
+ * The path of an article by key, for the product screens that link into the guide (the review
+ * form's rules panel, a company page's review list, the help centre). A key nobody registered is
+ * a programming error, so it throws rather than rendering a link to nowhere; a locale the guide
+ * does not have falls back to the default one, as every other localised path does.
+ */
+export function guidePath(key: string, locale: string): string {
+  const article = findArticleByKey(key);
+  if (!article) throw new Error(`No guide article "${key}"`);
+  return articlePath(article, isGuideLocale(locale) ? locale : routing.defaultLocale);
 }

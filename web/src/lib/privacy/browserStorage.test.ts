@@ -31,6 +31,7 @@ const STORAGE_KEYS = [
   "aa_google_oauth",
   "aa_linkedin_oauth",
   "aa_github_oauth",
+  "aa_moderation_guide_dismissed",
 ];
 
 // The subset the policy names verbatim rather than describing as a group ("their expiry times").
@@ -41,10 +42,12 @@ const KEYS_NAMED_IN_POLICY = [
   "aa_google_oauth",
   "aa_linkedin_oauth",
   "aa_github_oauth",
+  "aa_moderation_guide_dismissed",
 ];
 
 const COOKIE_WRITERS = ["lib/theme/theme.ts"];
 const STORAGE_WRITERS = [
+  "lib/admin/moderationGuideStore.ts",
   "lib/api/tokenStorage.ts",
   "lib/auth/githubOAuth.ts",
   "lib/auth/googleOAuth.ts",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -16,6 +16,7 @@ import {
   type ModerationListFilters,
 } from "@/lib/companyReviews/moderationListView";
 import { RATING_KEYS } from "@/lib/companyReviews/reviewDraft";
+import { moderationGuideStore } from "@/lib/admin/moderationGuideStore";
 import { Card } from "@/components/dashboard/Card";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
@@ -25,6 +26,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Pagination } from "@/components/applications/Pagination";
 import { AdminTabs } from "@/components/admin/AdminTabs";
+import { MODERATION_GUIDE_GREY_AREAS_ID, ModerationGuide } from "@/components/admin/ModerationGuide";
 import { ReviewStatusBadge } from "@/components/companyReviews/ReviewStatusBadge";
 import { StarRating } from "@/components/companyReviews/StarRating";
 
@@ -44,6 +46,30 @@ export default function AdminReviewsPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [quotaInput, setQuotaInput] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // Open on the first visit, closed once the moderator closes it — remembered across reloads.
+  const guideOpen = useSyncExternalStore(moderationGuideStore.subscribe, moderationGuideStore.isOpen, moderationGuideStore.isOpenOnServer);
+  // Set by the modal's "grey-area examples" link: the panel has to be open (and rendered) before
+  // there is anything to scroll to, so the scroll waits for the commit that opens it.
+  const scrollToGreyAreas = useRef(false);
+  useEffect(() => {
+    if (!guideOpen || !scrollToGreyAreas.current) return;
+    scrollToGreyAreas.current = false;
+    document.getElementById(MODERATION_GUIDE_GREY_AREAS_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [guideOpen]);
+
+  const showGreyAreas = () => {
+    setOpenId(null);
+    if (moderationGuideStore.isOpen()) {
+      // Already rendered, so nothing will re-commit: scroll once the modal is gone.
+      requestAnimationFrame(() =>
+        document.getElementById(MODERATION_GUIDE_GREY_AREAS_ID)?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      );
+      return;
+    }
+    scrollToGreyAreas.current = true;
+    moderationGuideStore.setOpen(true);
+  };
 
   const apply = useCallback(
     (next: ModerationListFilters) => {
@@ -119,6 +145,8 @@ export default function AdminReviewsPage() {
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
       </div>
       <AdminTabs />
+
+      <ModerationGuide open={guideOpen} onToggle={moderationGuideStore.setOpen} />
 
       <div className="grid gap-3 sm:grid-cols-4">
         <FormField label={t("filters.status")} htmlFor="mod-status">
@@ -322,9 +350,16 @@ export default function AdminReviewsPage() {
               )}
 
               {review.status !== "Rejected" && (
-                <FormField label={t("detail.rejectReason")} htmlFor="reject-reason">
-                  <Textarea id="reject-reason" rows={2} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder={t("detail.rejectPlaceholder")} />
-                </FormField>
+                <div className="flex flex-col gap-1">
+                  <FormField label={t("detail.rejectReason")} htmlFor="reject-reason">
+                    <Textarea id="reject-reason" rows={2} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder={t("detail.rejectPlaceholder")} />
+                  </FormField>
+                  {/* Closes the modal: the guide sits behind it. The typed reason survives — it is
+                      page state, cleared only by a successful reject. */}
+                  <button type="button" onClick={showGreyAreas} className="self-start text-xs font-medium text-accent-ink hover:underline">
+                    {t("guide.modalLink")}
+                  </button>
+                </div>
               )}
 
               {actionError && (

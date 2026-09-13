@@ -10,6 +10,7 @@ import { Button, buttonClassName } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { StarRating } from "@/components/companyReviews/StarRating";
 import { ReviewStatusBadge } from "@/components/companyReviews/ReviewStatusBadge";
+import { guidePath } from "@/lib/guide/articles";
 
 export default function MyReviewsPage() {
   const t = useTranslations("companyReviews.mine");
@@ -88,7 +89,12 @@ export default function MyReviewsPage() {
                 <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/30 dark:text-red-200">
                   <span className="font-medium">{t("rejectedTitle")}</span> {review.rejectionReason}
                   <br />
-                  <span className="text-xs">{t("rejectedHint")}</span>
+                  <span className="text-xs">
+                    {t("rejectedHint")}{" "}
+                    <Link href={guidePath("writing-a-fair-review", locale)} className="font-medium underline underline-offset-2">
+                      {t("rejectedGuideLink")}
+                    </Link>
+                  </span>
                 </p>
               )}
               {review.status === "Pending" && <p className="text-xs text-gray-500 dark:text-gray-400">{t("pendingHint")}</p>}

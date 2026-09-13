@@ -1126,7 +1126,7 @@
   },
   "cookies": {
     "title": "Çerez Politikası",
-    "lastUpdated": "Son güncelleme: 8 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 13 Eylül 2026",
     "intro": {
       "title": "Kısaca",
       "body": "e-kariyerim yalnızca hizmetin çalışması için gereken iki çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok.",
@@ -1151,7 +1151,8 @@
       "intro": "Bunlar çerez değil, ama aynı mantıkla cihazınızda veri sakladıkları için şeffaflık adına burada da sayıyoruz:",
       "item1": "Oturum jetonları — aa_access_token, aa_refresh_token, bunların geçerlilik süreleri ve aa_user (adınız, e-posta adresiniz ve arayüz tercihleriniz). Giriş yaptıktan sonra oturumunuzun açık kalmasını sağlar; localStorage'da tutulur ve çıkış yaptığınızda silinir.",
       "item2": "Giriş güvenliği anahtarları — aa_google_oauth, aa_linkedin_oauth ve aa_github_oauth. Google, LinkedIn veya GitHub ile giriş sırasında araya girme (CSRF) saldırısını engelleyen tek kullanımlık değerlerdir; sessionStorage'da tutulur ve giriş tamamlanır tamamlanmaz silinir.",
-      "outro": "İkisi de hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz."
+      "outro": "İlk ikisi hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz. Üçüncüsü yalnızca bir arayüz tercihidir.",
+      "item3": "Moderasyon rehberi tercihi — aa_moderation_guide_dismissed. Yalnızca yönetici hesaplarının gördüğü değerlendirme moderasyonu sayfasında, rehber panelini bir kez kapattığınızı hatırlar; içinde bir “1”den başka bir şey yoktur. localStorage'da tutulur, paneli yeniden açtığınızda silinir."
     },
     "visitCounter": {
       "title": "Ziyaret sayacı",
@@ -1978,7 +1979,8 @@
           "title": "Puanı okumayı bilin",
           "body": "Puan yalnızca yeterli sayıda yayımlanmış değerlendirme olunca görünür; azsa kaç değerlendirme kaldığı yazar. Her sayının yanında dayandığı değerlendirme sayısı vardır."
         },
-        "scoringLink": "Puan nasıl hesaplanıyor? →"
+        "scoringLink": "Puan nasıl hesaplanıyor? →",
+        "readingGuideLink": "Yorumları nasıl okumalı? →"
       },
       "write": {
         "title": "Değerlendirme yazmak",
@@ -1997,7 +1999,8 @@
         "step4": {
           "title": "İncelemeye gönderin",
           "body": "Gönderilen değerlendirme \"İnceleme bekliyor\" durumuna düşer ve Değerlendirmelerim sayfasında yalnızca siz görürsünüz. Bir moderatör okuduktan sonra yayına girer ya da gerekçesiyle geri döner."
-        }
+        },
+        "guideLink": "Adil ve faydalı bir değerlendirme nasıl yazılır? →"
       },
       "calloutAnonymous": {
         "title": "Değerlendirmeler anonimdir",
@@ -2661,7 +2664,9 @@
       "writeReview": "Değerlendirme yaz",
       "signInToWrite": "Değerlendirme yazmak için giriş yap",
       "empty": "Henüz yayımlanmış değerlendirme yok.",
-      "actionError": "İşlem tamamlanamadı. Lütfen tekrar dene."
+      "actionError": "İşlem tamamlanamadı. Lütfen tekrar dene.",
+      "readingNote": "Her yorum bir kişinin deneyimi, şirket hakkında kesin bir hüküm değil.",
+      "readingGuide": "Bu yorumları nasıl okumalı? →"
     },
     "scoring": {
       "title": "Şirket puanı nasıl hesaplanır",
@@ -2751,7 +2756,8 @@
       "noInsults": "Hakaret, tehdit veya küfür yok — bunlar değerlendirmeyi yayımlatmaz, geri gönderir.",
       "balanced": "Hem artı hem eksi: yalnızca birini yazan değerlendirme kimseye yardımcı olmaz.",
       "noAds": "Bağlantı, reklam veya işe alım ilanı yok.",
-      "moderation": "Her değerlendirmeyi yayına girmeden önce bir moderatör okur. Durumunu Değerlendirmelerim'de görürsün."
+      "moderation": "Her değerlendirmeyi yayına girmeden önce bir moderatör okur. Durumunu Değerlendirmelerim'de görürsün.",
+      "fullGuide": "Örneklerle tam rehber →"
     },
     "report": {
       "title": "Bu yorumu bildir",
@@ -2785,7 +2791,8 @@
       "deleteTitle": "Bu değerlendirme silinsin mi?",
       "deleteBody": "Değerlendirme kalıcı olarak silinir ve kotandaki yeri boşalır.",
       "cancel": "Vazgeç",
-      "confirmDelete": "Sil"
+      "confirmDelete": "Sil",
+      "rejectedGuideLink": "Neyin geçip neyin geçmediği: rehber →"
     },
     "write": {
       "title": "Değerlendirme yaz",
@@ -2881,6 +2888,77 @@
           "Removed": "Değerlendirme notunla birlikte kaldırılır. Üzerindeki diğer tüm açık bildirimler de kapanır."
         }
       }
+    },
+    "guide": {
+      "title": "Moderasyon rehberi",
+      "show": "Göster",
+      "hide": "Gizle",
+      "principle1": "Bir yorumun şirket hakkında olumsuz olması, tek başına reddetme sebebi değildir.",
+      "principle2": "Moderatörün görevi şirketi korumak değil, topluluk kurallarını korumaktır.",
+      "approve": {
+        "title": "Onaylanır — sert ya da tek taraflı olsa bile",
+        "workplace": "Çalışma ortamı hakkında kişisel görüşler",
+        "management": "Yönetimle ilgili kişisel deneyimler",
+        "pay": "Maaş ve yan haklarla ilgili deneyimler",
+        "career": "Kariyer gelişimiyle ilgili deneyimler",
+        "balance": "İş/özel hayat dengesiyle ilgili deneyimler",
+        "opinion": "Olumlu ya da olumsuz kişisel değerlendirmeler"
+      },
+      "reject": {
+        "title": "Reddedilir — geri kalanı ne kadar iyi olursa olsun",
+        "insults": "Hakaret ve küfür",
+        "threats": "Tehdit",
+        "personalData": "Kişisel bilgiler (telefon, adres, e-posta, TC…)",
+        "targeting": "Belirli kişileri hedef alan saldırılar",
+        "accusations": "Doğrulanmamış ağır suçlamalar",
+        "confidential": "Gizli / ticari bilgiler",
+        "spam": "Spam ve reklam",
+        "fake": "Sahte ya da manipülatif yorumlar"
+      },
+      "grey": {
+        "title": "Gri alanlar",
+        "question": "Çoğu tereddüt tek soruyla çözülür: bu, yazarın kendi yaşadığı bir şey mi, yoksa başkası hakkında bir iddia mı?",
+        "columns": {
+          "review": "Yorum",
+          "verdict": "Karar",
+          "why": "Neden"
+        },
+        "approve": "Onay",
+        "reject": "Red",
+        "case1": {
+          "review": "“Yöneticim çok kabaydı, hata yapınca ekibin önünde azarlardı.”",
+          "why": "Kişisel deneyim. Rol anılıyor ama kimse teşhis edilemiyor."
+        },
+        "case2": {
+          "review": "“Satış müdürü A. K. herkese bağırıyor, psikopatın teki.”",
+          "why": "Belirli bir kişi hedefte; baş harf de isim sayılır. Üstüne hakaret var."
+        },
+        "case3": {
+          "review": "“Maaşlar iki kez birer ay gecikti, kimse açıklama yapmadı.”",
+          "why": "Yazarın kendi başına gelen bir şey. Şirket için kötü görünmesi red sebebi değil."
+        },
+        "case4": {
+          "review": "“Şirket vergi kaçırıyor, sahte fatura kesiyorlar.”",
+          "why": "Suç isnadı, doğrulanamaz. Notla geri gönder: “Kendi yaşadığın kısmı anlat.”"
+        },
+        "case5": {
+          "review": "“Herkes mutsuz, kimse bir yıldan fazla kalmıyor.”",
+          "why": "Genelleme ama görüş; abartı bir kural ihlali değil. Okuyan kendi tartar."
+        },
+        "case6": {
+          "review": "“Harika şirket, herkese tavsiye ederim!” — aynı gün, aynı şirkete, benzer beş tane.",
+          "why": "Tek başına gelse içeriksiz ama kurala uygun; toplu gelince manipülasyon."
+        },
+        "case7": {
+          "review": "“X Bankası projesini kaybettik, sözleşme 2 milyondu.”",
+          "why": "Müşteri ve sözleşme bilgisi. Yorumun geri kalanı düzgün olsa da geçmez."
+        }
+      },
+      "sendBack": {
+        "title": "Geri gönderirken:",
+        "body": "not tek cümle olsun ve hangi kurala takıldığını söylesin — yazar neyi değiştireceğini bilsin. “Uygun değil” bir not değildir."
+      },
+      "modalLink": "Emin değil misin? Gri alan örnekleri →"
     }
   },
   "siteNav": {

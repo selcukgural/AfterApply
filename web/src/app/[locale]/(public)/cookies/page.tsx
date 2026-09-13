@@ -82,6 +82,7 @@ export default async function CookiesPage() {
           <ul className="mt-2 list-disc pl-5">
             <li>{t("storage.item1")}</li>
             <li>{t("storage.item2")}</li>
+            <li>{t("storage.item3")}</li>
           </ul>
           <p className="mt-2">{t("storage.outro")}</p>
         </section>
