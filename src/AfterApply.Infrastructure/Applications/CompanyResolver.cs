@@ -1,12 +1,13 @@
 using AfterApply.Application.Applications;
 using AfterApply.Domain.Companies;
+using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 
 namespace AfterApply.Infrastructure.Applications;
 
-internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache) : ICompanyResolver
+internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache, CompanySlugAllocator slugAllocator) : ICompanyResolver
 {
     private static readonly HybridCacheEntryOptions LookupCacheOptions = new()
     {
@@ -41,10 +42,7 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache)
             return existingId.Value;
         }
 
-        var company = Company.Create(companyName, DateTimeOffset.UtcNow,
-            linkedInUrl: profileLinks?.LinkedInUrl, kariyerNetUrl: profileLinks?.KariyerNetUrl);
-        dbContext.Companies.Add(company);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var company = await CreateWithSlugAsync(companyName, profileLinks, cancellationToken);
 
         // The lookup above just cached a "not found" (null) result for this key — without
         // overwriting it here, every other row in the same import batch (or any request within
@@ -53,6 +51,31 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache)
         await cache.SetAsync(cacheKey, (Guid?)company.Id, LookupCacheOptions, cancellationToken: cancellationToken);
 
         return company.Id;
+    }
+
+    // The slug is the public page's URL, so it has to be unique; the allocator picks the first
+    // free suffix from what the table holds now, and the one race that survives (two requests
+    // creating the same name at once) is caught on the index and retried once with the next one.
+    private async Task<Company> CreateWithSlugAsync(string companyName, CompanyProfileLinks? profileLinks,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; ; attempt++)
+        {
+            var slug = await slugAllocator.AllocateAsync(companyName, cancellationToken);
+            var company = Company.Create(companyName, DateTimeOffset.UtcNow,
+                linkedInUrl: profileLinks?.LinkedInUrl, kariyerNetUrl: profileLinks?.KariyerNetUrl, slug: slug);
+            dbContext.Companies.Add(company);
+
+            try
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+                return company;
+            }
+            catch (DbUpdateException ex) when (attempt == 0 && CompanySlugAllocator.IsSlugCollision(ex))
+            {
+                dbContext.Entry(company).State = EntityState.Detached;
+            }
+        }
     }
 
     // A near-duplicate/exact-name match may predate the extension ever capturing a profile URL —

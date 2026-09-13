@@ -7,7 +7,9 @@ import { emailForwardingApi } from "@/lib/api/emailForwarding";
 import { ApiError } from "@/lib/api/httpClient";
 import type { EmailSuggestionResponse } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassName } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Link } from "@/i18n/navigation";
 import { suggestionCountQueryKey } from "@/hooks/useSuggestionCount";
 
 export default function EmailSuggestionsPage() {
@@ -64,7 +66,15 @@ export default function EmailSuggestionsPage() {
       {suggestions === null ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
       ) : suggestions.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400">{t("empty")}</p>
+        <EmptyState
+          title={t("empty")}
+          body={t("emptyBody")}
+          actions={
+            <Link href="/help/chrome-extension#gmail" className={buttonClassName("outline")}>
+              {t("emptyCta")}
+            </Link>
+          }
+        />
       ) : (
         <ul className="flex flex-col gap-4">
           {suggestions.map((s) => (

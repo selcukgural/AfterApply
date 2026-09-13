@@ -32,6 +32,13 @@ export const LANDING_ICON_PATHS = {
     />
   ),
   check: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+  companies: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3 21h18M5 21V5.5A1.5 1.5 0 016.5 4h7A1.5 1.5 0 0115 5.5V21M15 10h3.5A1.5 1.5 0 0120 11.5V21M8 8h3M8 11.5h3M8 15h3M18 14h.01M18 17.5h.01"
+    />
+  ),
 } as const;
 
 export type LandingIcon = keyof typeof LANDING_ICON_PATHS;

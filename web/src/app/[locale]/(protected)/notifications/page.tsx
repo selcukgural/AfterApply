@@ -7,6 +7,9 @@ import { notificationsApi } from "@/lib/api/notifications";
 import { ApiError } from "@/lib/api/httpClient";
 import type { EmailNotificationResponse } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
+import { buttonClassName } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Link } from "@/i18n/navigation";
 import { notificationCountQueryKey } from "@/hooks/useNotificationCount";
 
 export default function NotificationsPage() {
@@ -59,7 +62,15 @@ export default function NotificationsPage() {
       {notifications === null ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
       ) : notifications.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400">{t("empty")}</p>
+        <EmptyState
+          title={t("empty")}
+          body={t("emptyBody")}
+          actions={
+            <Link href="/help/chrome-extension#gmail" className={buttonClassName("outline")}>
+              {t("emptyCta")}
+            </Link>
+          }
+        />
       ) : (
         <ul className="flex flex-col gap-4">
           {notifications.map((n) => (

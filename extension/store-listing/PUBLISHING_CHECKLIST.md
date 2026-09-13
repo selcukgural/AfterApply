@@ -100,6 +100,11 @@ production API needed no deploy alongside it.
 
 ## What changed since 0.6.0
 
+- [ ] **Listing copy only, 2026-09-13 (no package change):** `LISTING.md` and `PRIVACY_POLICY.md`
+  dropped the "(beta)" wording from the Gmail Scanning heading in both languages, and the published
+  `/extension-privacy` page changed with them. Re-paste the description into **Store listing** and
+  the privacy policy text is already live at the URL the Dashboard points at — nothing to upload.
+
 - **Gmail Scanning actually reaches the account (`0.8.0`).** It never did before: the content
   script posted its signal itself, which Chrome blocks on CORS grounds from a `mail.google.com`
   page regardless of `host_permissions`, and the failure was swallowed. A new background service

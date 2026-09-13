@@ -1,6 +1,7 @@
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Benchmark;
 using AfterApply.Domain.Companies;
+using AfterApply.Domain.CompanyReviews;
 using AfterApply.Domain.CvScan;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.EmailIntegrations;
@@ -67,6 +68,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BenchmarkSubmission> BenchmarkSubmissions => Set<BenchmarkSubmission>();
 
     public DbSet<CvScanResult> CvScanResults => Set<CvScanResult>();
+
+    public DbSet<CompanyReview> CompanyReviews => Set<CompanyReview>();
+
+    public DbSet<CompanyReviewReport> CompanyReviewReports => Set<CompanyReviewReport>();
+
+    public DbSet<CompanyReviewHelpfulMark> CompanyReviewHelpfulMarks => Set<CompanyReviewHelpfulMark>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

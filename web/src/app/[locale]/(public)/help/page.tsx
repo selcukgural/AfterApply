@@ -4,19 +4,10 @@ import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
 import { getTranslations } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { TopicCard } from "@/components/help/TopicCard";
+// The sidebar's list, minus the overview itself: one list, so a topic added there appears here.
+import { HELP_TOPICS } from "@/lib/seo/routes";
 
-const TOPIC_LINKS = [
-  { href: "/help/getting-started", key: "gettingStarted" },
-  { href: "/help/dashboard", key: "dashboard" },
-  { href: "/help/tracked-jobs", key: "trackedJobs" },
-  { href: "/help/applications", key: "applications" },
-  { href: "/help/cv", key: "cv" },
-  { href: "/help/suggestions", key: "suggestions" },
-  { href: "/help/import", key: "import" },
-  { href: "/help/settings", key: "settings" },
-  { href: "/help/chrome-extension", key: "chromeExtension" },
-  { href: "/help/faq", key: "faq" },
-] as const;
+const TOPIC_LINKS = HELP_TOPICS.filter((topic) => topic.href !== "/help");
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/help">): Promise<Metadata> {
   const { locale } = await params;
@@ -25,6 +16,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help">):
 
 export default async function HelpOverviewPage() {
   const t = await getTranslations("help.overview");
+  const tSidebar = await getTranslations("help.sidebar");
 
   const flowSteps = ["step1", "step2", "step3", "step4", "step5"].map((key) => ({
     title: t(`flow.${key}.title`),
@@ -51,7 +43,7 @@ export default async function HelpOverviewPage() {
             <TopicCard
               key={topic.href}
               href={topic.href}
-              title={t(`topics.${topic.key}.title`)}
+              title={tSidebar(topic.key)}
               description={t(`topics.${topic.key}.description`)}
             />
           ))}

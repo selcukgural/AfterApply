@@ -12,6 +12,10 @@ export async function RoadmapSection() {
     t("todayCv"),
     t("todayEmail"),
     t("todayExtension"),
+    // The account-free tools and the company pages, all live but missing from this list until 2026-09-13.
+    t("todayCvScan"),
+    t("todayBenchmark"),
+    t("todayCompanies"),
   ];
   const futureItems = [t("futureInsights")];
 

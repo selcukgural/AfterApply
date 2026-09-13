@@ -8,6 +8,8 @@ import { areAllExpanded, groupPageKey, initiallyCollapsed, toggleAllCollapsed } 
 import { SelectionCheckbox } from "@/components/applications/SelectionCheckbox";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusDistribution } from "@/components/applications/StatusDistribution";
+import { buttonClassName } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface GroupSelectionProps {
   isRowSelected: (id: string) => boolean;
@@ -56,7 +58,17 @@ export function CompanyGroupTable({
   }
 
   if (groups.length === 0) {
-    return <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">{t("empty")}</p>;
+    return (
+      <EmptyState
+        title={t("empty")}
+        body={t("emptyBody")}
+        actions={
+          <Link href="/applications/new" className={buttonClassName("primary")}>
+            {t("emptyCta")}
+          </Link>
+        }
+      />
+    );
   }
 
   const toggleCollapsed = (companyId: string) =>

@@ -260,6 +260,13 @@ kept switched off until enough real usage exists to make it meaningful; see
 `DECISIONS.md`'s Sprint 10 entry. While disabled, every
 `/api/company-intelligence/*` endpoint returns `404` for all callers.
 
+`CompanyReviews` (company reviews — the public `/companies` pages): `Enabled` (default `true`;
+off → every review endpoint answers 404 and the web app hides the pages, so the feature can ship
+dark), `MaxReviewsPerUser` (10; an admin can override it per account through
+`PUT /api/admin/users/{id}/review-quota`), `MinimumReviewsForScore` (3 — below it a company shows
+no score), `PriorWeight` (5 — the `m` in the Bayesian average, documented on `/companies/scoring`).
+Rate limits: `RateLimiting:CompanyReviewWrite|CompanyReviewReport|CompanyReviewHelpful|CompanyPublicSearch`.
+
 ## CV storage (`/cv`)
 
 Users can keep up to 10 CV files (PDF/DOC/DOCX, 5 MB each), download them,

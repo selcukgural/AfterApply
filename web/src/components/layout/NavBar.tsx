@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ADMIN_NAV_HREF, canSeeAdminNav } from "@/lib/auth/adminNav";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
@@ -12,6 +12,7 @@ import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
 import type { Theme } from "@/lib/theme/theme";
 
 const NAV_LINKS = [
@@ -20,11 +21,21 @@ const NAV_LINKS = [
   { href: "/tracked-jobs", key: "trackedJobs" },
   { href: "/cv", key: "cv" },
   { href: "/import", key: "import" },
+  // Public page, but listed here too: a signed-in person is the one who can write a review.
+  { href: "/companies", key: "companies" },
+] as const;
+
+/** The things that work without an account, kept reachable after you have one. */
+export const TOOL_LINKS = [
+  { href: "/cv-tarama", key: "cvScan" },
+  { href: "/benchmark", key: "benchmark" },
+  { href: "/guide", key: "guide" },
 ] as const;
 
 export function NavBar({ initialTheme }: { initialTheme: Theme }) {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslations("nav");
   const { data: suggestionCount } = useSuggestionCount();
   const { data: notificationCount } = useNotificationCount();
@@ -43,33 +54,38 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
   const fullName = user ? `${user.firstName} ${user.lastName}` : "";
   const initials = user ? `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase() : "";
 
-  const suggestionsLink = (onNavigate?: () => void) => (
+  const active = (href: string) => isActivePath(pathname, href);
+  const desktopLink = (href: string) => navLinkClassName("underline", active(href), "flex items-center gap-1.5 whitespace-nowrap pb-0.5");
+  const mobileLink = (href: string) => navLinkClassName("pill", active(href), "flex items-center gap-1.5 px-3 py-2");
+
+  const badge = (count: number | undefined) =>
+    count ? (
+      <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-xs font-semibold leading-none text-white">
+        {count}
+      </span>
+    ) : null;
+
+  const suggestionsLink = (mobile: boolean) => (
     <Link
       href="/suggestions"
-      onClick={onNavigate}
-      className="flex items-center gap-1.5 whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100"
+      onClick={mobile ? () => setMenuOpen(false) : undefined}
+      aria-current={active("/suggestions") ? "page" : undefined}
+      className={mobile ? mobileLink("/suggestions") : desktopLink("/suggestions")}
     >
       {t("suggestions")}
-      {!!suggestionCount && (
-        <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-xs font-semibold leading-none text-white">
-          {suggestionCount}
-        </span>
-      )}
+      {badge(suggestionCount)}
     </Link>
   );
 
-  const notificationsLink = (onNavigate?: () => void) => (
+  const notificationsLink = (mobile: boolean) => (
     <Link
       href="/notifications"
-      onClick={onNavigate}
-      className="flex items-center gap-1.5 whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100"
+      onClick={mobile ? () => setMenuOpen(false) : undefined}
+      aria-current={active("/notifications") ? "page" : undefined}
+      className={mobile ? mobileLink("/notifications") : desktopLink("/notifications")}
     >
       {t("notifications")}
-      {!!notificationCount && (
-        <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-xs font-semibold leading-none text-white">
-          {notificationCount}
-        </span>
-      )}
+      {badge(notificationCount)}
     </Link>
   );
 
@@ -80,14 +96,19 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
           <Link href="/dashboard">
             <Logo />
           </Link>
-          <nav className="hidden items-center gap-4 text-sm text-gray-600 md:flex dark:text-gray-400">
+          <nav className="hidden items-center gap-4 text-sm md:flex">
             {NAV_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className="whitespace-nowrap hover:text-gray-900 dark:hover:text-gray-100">
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active(link.href) ? "page" : undefined}
+                className={desktopLink(link.href)}
+              >
                 {t(link.key)}
               </Link>
             ))}
-            {suggestionsLink()}
-            {notificationsLink()}
+            {suggestionsLink(false)}
+            {notificationsLink(false)}
           </nav>
         </div>
 
@@ -108,7 +129,7 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
           onClick={() => setMenuOpen((open) => !open)}
           aria-expanded={menuOpen}
           aria-controls="app-mobile-menu"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-label={menuOpen ? t("closeMenu") : t("openMenu")}
           className="flex h-9 w-9 items-center justify-center rounded-md text-gray-700 hover:bg-gray-100 md:hidden dark:text-gray-300 dark:hover:bg-gray-800"
         >
           {menuOpen ? (
@@ -125,41 +146,52 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
 
       {menuOpen && (
         <div id="app-mobile-menu" className="border-t border-gray-200 px-4 py-4 md:hidden dark:border-gray-800">
-          <nav className="flex flex-col gap-3 text-sm text-gray-600 dark:text-gray-400">
+          <nav className="flex flex-col gap-1 text-sm">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="hover:text-gray-900 dark:hover:text-gray-100"
+                aria-current={active(link.href) ? "page" : undefined}
+                className={mobileLink(link.href)}
               >
                 {t(link.key)}
               </Link>
             ))}
-            {suggestionsLink(() => setMenuOpen(false))}
-            {notificationsLink(() => setMenuOpen(false))}
+            {suggestionsLink(true)}
+            {notificationsLink(true)}
           </nav>
 
           <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-            {user && <p className="mb-3 text-sm font-medium text-gray-900 dark:text-gray-100">{fullName}</p>}
-            <nav className="flex flex-col gap-3 text-sm text-gray-600 dark:text-gray-400">
-              <Link href="/help" onClick={() => setMenuOpen(false)} className="hover:text-gray-900 dark:hover:text-gray-100">
+            {user && <p className="mb-3 px-3 text-sm font-medium text-gray-900 dark:text-gray-100">{fullName}</p>}
+            <nav className="flex flex-col gap-1 text-sm">
+              <Link href="/help" onClick={() => setMenuOpen(false)} className={mobileLink("/help")}>
                 {t("help")}
               </Link>
-              <Link href="/settings" onClick={() => setMenuOpen(false)} className="hover:text-gray-900 dark:hover:text-gray-100">
+              <Link href="/settings" onClick={() => setMenuOpen(false)} className={mobileLink("/settings")}>
                 {t("accountSettings")}
+              </Link>
+              <Link href="/my-reviews" onClick={() => setMenuOpen(false)} className={mobileLink("/my-reviews")}>
+                {t("myReviews")}
               </Link>
               {/* Same group as on the desktop menu — help, settings, then admin for the accounts
                   that have it. */}
               {showAdmin && (
-                <Link
-                  href={ADMIN_NAV_HREF}
-                  onClick={() => setMenuOpen(false)}
-                  className="hover:text-gray-900 dark:hover:text-gray-100"
-                >
+                <Link href={ADMIN_NAV_HREF} onClick={() => setMenuOpen(false)} className={mobileLink("/admin")}>
                   {t("admin")}
                 </Link>
               )}
+            </nav>
+          </div>
+
+          <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
+            <p className="mb-1 px-3 text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">{t("tools")}</p>
+            <nav className="flex flex-col gap-1 text-sm">
+              {TOOL_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className={mobileLink(link.href)}>
+                  {t(link.key)}
+                </Link>
+              ))}
             </nav>
           </div>
 

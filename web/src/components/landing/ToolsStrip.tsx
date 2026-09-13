@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { buttonClassName } from "@/components/ui/Button";
 import { BenchmarkResultMock } from "@/components/landing/BenchmarkResultMock";
+import { CompanyReviewsMock } from "@/components/landing/CompanyReviewsMock";
 import { CvScanResultMock } from "@/components/landing/CvScanResultMock";
 import { ExtensionPopupMock } from "@/components/landing/ExtensionPopupMock";
 import { LandingIcon, type LandingIcon as LandingIconName } from "@/components/landing/landingIcons";
@@ -36,12 +37,13 @@ import { CHROME_WEB_STORE_URL } from "@/lib/constants/chromeWebStore";
  * card's call to action is a separate link beside the tab rather than inside it — a link inside
  * a button is invalid HTML and unreachable by keyboard.
  */
-type Tool = "cv" | "extension" | "benchmark";
+type Tool = "cv" | "extension" | "benchmark" | "companies";
 
-// Extension first, scan last (2026-09-12 review): the hero already carries the scan.
-const TOOLS: readonly Tool[] = ["extension", "benchmark", "cv"];
+// Extension first, scan last (2026-09-12 review): the hero already carries the scan. Companies
+// second (2026-09-13): the newest tool, and the only one you browse rather than run.
+const TOOLS: readonly Tool[] = ["extension", "companies", "benchmark", "cv"];
 
-const ICON: Record<Tool, LandingIconName> = { cv: "cv", extension: "extension", benchmark: "analytics" };
+const ICON: Record<Tool, LandingIconName> = { cv: "cv", extension: "extension", benchmark: "analytics", companies: "companies" };
 
 export function ToolsStrip() {
   const t = useTranslations("landing.tools");
@@ -94,6 +96,17 @@ export function ToolsStrip() {
       ),
     },
     {
+      tool: "companies",
+      pill: t("noAccount"),
+      title: t("companiesTitle"),
+      body: t("companiesBody"),
+      cta: (
+        <Link href="/companies" className={buttonClassName("outline", "mt-auto w-fit")}>
+          {t("companiesCta")}
+        </Link>
+      ),
+    },
+    {
       tool: "benchmark",
       pill: t("noAccount"),
       title: t("benchmarkTitle"),
@@ -122,7 +135,7 @@ export function ToolsStrip() {
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4">
         <h2 className="sr-only">{t("title")}</h2>
 
-        <div role="tablist" aria-label={t("tabsLabel")} className="grid gap-4 sm:grid-cols-3">
+        <div role="tablist" aria-label={t("tabsLabel")} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {cards.map((card) => {
             const selected = card.tool === active;
             return (
@@ -182,7 +195,7 @@ export function ToolsStrip() {
           aria-labelledby={tabId(active)}
           className="grid gap-10 rounded-xl border border-gray-200 bg-white p-6 sm:p-10 lg:grid-cols-2 lg:items-center dark:border-gray-800 dark:bg-gray-900"
         >
-          {active === "extension" ? <ExtensionPanel /> : active === "cv" ? <CvPanel /> : <BenchmarkPanel />}
+          {active === "extension" ? <ExtensionPanel /> : active === "companies" ? <CompaniesPanel /> : active === "cv" ? <CvPanel /> : <BenchmarkPanel />}
         </div>
       </div>
     </section>
@@ -268,6 +281,32 @@ function CvPanel() {
         </Link>
       </PanelCopy>
       <CvScanResultMock />
+    </>
+  );
+}
+
+function CompaniesPanel() {
+  const t = useTranslations("landing.tools.panels.companies");
+
+  return (
+    <>
+      <PanelCopy
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        body={t("body")}
+        bullets={[t("bullet1"), t("bullet2"), t("bullet3")]}
+      >
+        <Link href="/companies" className={buttonClassName("primary", "px-6 py-3 text-base")}>
+          {t("cta")}
+        </Link>
+        <Link
+          href="/companies/scoring"
+          className="text-sm text-gray-600 underline underline-offset-2 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+        >
+          {t("scoringLink")}
+        </Link>
+      </PanelCopy>
+      <CompanyReviewsMock />
     </>
   );
 }

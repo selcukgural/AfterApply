@@ -526,6 +526,15 @@ export interface CvScanConfig {
   contentNotesAvailable: boolean;
 }
 
+/** Whether company reviews are switched on, the quota the form counts down from, and the two
+ *  numbers the scoring page prints so its formula quotes the live configuration. */
+export interface CompanyReviewsConfig {
+  enabled: boolean;
+  maxReviewsPerUser: number;
+  minimumReviewsForScore: number;
+  priorWeight: number;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
@@ -533,6 +542,8 @@ export interface ClientConfigResponse {
   linkedInAuth: LinkedInAuthConfig;
   gitHubAuth: GitHubAuthConfig;
   cvScan: CvScanConfig;
+  // Optional: an API deployed before the reviews feature answers without it.
+  companyReviews?: CompanyReviewsConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -886,3 +897,215 @@ export interface CvContentNote {
  *  says nothing about it; `NotRequested` is the ordinary case of an unticked optional box;
  *  `Unavailable` is asked-for-but-not-delivered, which never affects the score. */
 export type CvReviewStatus = "Disabled" | "NotRequested" | "Unavailable" | "Ready";
+
+// ---- Company reviews -------------------------------------------------------------------------
+// Three shapes, mirrored from the API and never mixed: what anyone on the internet sees (no
+// author, month-precision date), what an author sees of their own rows, and what an admin sees.
+
+export type EmploymentStatus = "CurrentEmployee" | "FormerEmployee" | "Intern";
+export type ReviewModerationStatus = "Pending" | "Approved" | "Rejected";
+export type ReviewReportReason =
+  | "Insult"
+  | "Profanity"
+  | "PersonalInformation"
+  | "MisleadingInformation"
+  | "Advertising"
+  | "Spam"
+  | "Other";
+export type ReviewReportStatus = "Open" | "Resolved";
+export type ReviewReportResolution = "Dismissed" | "ChangesRequested" | "Removed";
+export type PublicReviewSort = "Newest" | "MostHelpful";
+
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface CompanyReviewSummary {
+  approvedCount: number;
+  /** Null until `minimumForScore` reviews are published. */
+  score: number | null;
+  minimumForScore: number;
+  priorWeight: number;
+  averageOverall: number | null;
+  averageManagement: number | null;
+  averageWorkEnvironment: number | null;
+  averageSalaryAndBenefits: number | null;
+  averageCareerAndDevelopment: number | null;
+  /** Approved reviews per Overall star, index 0 = 1 star. */
+  distribution: number[];
+}
+
+export interface CompanyPublicResponse {
+  id: string;
+  slug: string;
+  name: string;
+  website: string | null;
+  summary: CompanyReviewSummary;
+}
+
+export interface CompanyPublicListItem {
+  id: string;
+  slug: string;
+  name: string;
+  approvedCount: number;
+  score: number | null;
+}
+
+export interface ReviewRatings {
+  overallRating: number;
+  managementRating: number;
+  workEnvironmentRating: number;
+  salaryAndBenefitsRating: number;
+  careerAndDevelopmentRating: number;
+}
+
+export interface CompanyReviewPublic extends ReviewRatings {
+  id: string;
+  title: string;
+  pros: string;
+  cons: string;
+  employmentStatus: EmploymentStatus;
+  /** yyyy-MM — month precision on purpose. */
+  submittedMonth: string;
+  helpfulCount: number;
+}
+
+export interface ReviewedCompanySlug {
+  slug: string;
+  lastApprovedAt: string;
+}
+
+export interface ResolvedCompany {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+export interface MyCompanyReview extends ReviewRatings {
+  id: string;
+  companyId: string;
+  companySlug: string;
+  companyName: string;
+  employmentStatus: EmploymentStatus;
+  title: string;
+  pros: string;
+  cons: string;
+  status: ReviewModerationStatus;
+  rejectionReason: string | null;
+  submittedAt: string;
+  moderatedAt: string | null;
+}
+
+export interface ReviewQuota {
+  used: number;
+  limit: number;
+}
+
+export interface MyReviewsResponse {
+  items: MyCompanyReview[];
+  quota: ReviewQuota;
+}
+
+export interface CompanyReviewViewerState {
+  ownReview: MyCompanyReview | null;
+  helpfulMarkedReviewIds: string[];
+  quota: ReviewQuota;
+}
+
+export interface HelpfulToggleResponse {
+  marked: boolean;
+  helpfulCount: number;
+}
+
+export interface CompanyReviewRequest extends ReviewRatings {
+  employmentStatus: EmploymentStatus;
+  title: string;
+  pros: string;
+  cons: string;
+}
+
+export interface ReportCompanyReviewRequest {
+  reason: ReviewReportReason;
+  note: string | null;
+}
+
+export interface AdminCompanyReviewListItem {
+  id: string;
+  companyId: string;
+  companyName: string;
+  companySlug: string | null;
+  title: string;
+  overallRating: number;
+  employmentStatus: EmploymentStatus;
+  status: ReviewModerationStatus;
+  submittedAt: string;
+  moderatedAt: string | null;
+  openReportCount: number;
+}
+
+export interface AdminReviewReport {
+  id: string;
+  reviewId: string;
+  reviewTitle: string;
+  companyId: string;
+  companyName: string;
+  reporterUserId: string;
+  reporterEmail: string;
+  reason: ReviewReportReason;
+  note: string | null;
+  status: ReviewReportStatus;
+  resolution: ReviewReportResolution | null;
+  resolutionReason: string | null;
+  reportedAt: string;
+  resolvedAt: string | null;
+}
+
+export interface AdminCompanyReview extends ReviewRatings {
+  id: string;
+  companyId: string;
+  companyName: string;
+  companySlug: string | null;
+  authorUserId: string;
+  authorEmail: string;
+  employmentStatus: EmploymentStatus;
+  title: string;
+  pros: string;
+  cons: string;
+  status: ReviewModerationStatus;
+  rejectionReason: string | null;
+  submittedAt: string;
+  moderatedAt: string | null;
+  helpfulCount: number;
+  reports: AdminReviewReport[];
+}
+
+export interface ModerationCounts {
+  pendingReviews: number;
+  openReports: number;
+}
+
+export interface UserReviewQuota {
+  userId: string;
+  reviewQuotaOverride: number | null;
+  effectiveLimit: number;
+  used: number;
+}
+
+// --- Reminders ---------------------------------------------------------------------------------
+
+/** Mirrors AfterApply.Domain.Notifications.ReminderType. */
+export type ReminderType = "FollowUp" | "PossiblyGhosted";
+
+/** Mirrors AfterApply.Application.Notifications.Contracts.ReminderResponse. */
+export interface ReminderResponse {
+  id: string;
+  applicationId: string;
+  companyName: string;
+  jobTitle: string;
+  type: ReminderType;
+  daysElapsed: number;
+  createdAt: string;
+}

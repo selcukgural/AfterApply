@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/api/httpClient";
 import { formatCount, formatRate } from "@/lib/dashboard/format";
 import { Card } from "@/components/dashboard/Card";
 import { StatTile } from "@/components/dashboard/StatTile";
+import { AdminTabs } from "@/components/admin/AdminTabs";
 
 /** Rates can be null (no cohort old enough yet). "—" is the honest rendering; 0% is not. */
 function rateOrDash(value: number | null, locale: string): string {
@@ -116,6 +117,7 @@ export default function AdminMetricsPage() {
           </p>
         ) : null}
       </div>
+      <AdminTabs />
 
       {isLoading ? <p className="text-sm text-gray-500 dark:text-gray-400">{t("loading")}</p> : null}
 

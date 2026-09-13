@@ -207,6 +207,45 @@ public static class RateLimiting
                     Window = sizes.Feedback.Window,
                     QueueLimit = 0
                 }));
+
+            // User-based, all three: the review routes require auth, and the thing being bounded
+            // is what one account can write onto public pages. Sizing in RateLimitingOptions.
+            options.AddPolicy(DependencyInjection.CompanyReviewWriteRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.CompanyReviewWrite.PermitLimit,
+                    Window = sizes.CompanyReviewWrite.Window,
+                    QueueLimit = 0
+                }));
+
+            options.AddPolicy(DependencyInjection.CompanyReviewReportRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.CompanyReviewReport.PermitLimit,
+                    Window = sizes.CompanyReviewReport.Window,
+                    QueueLimit = 0
+                }));
+
+            options.AddPolicy(DependencyInjection.CompanyReviewHelpfulRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.CompanyReviewHelpful.PermitLimit,
+                    Window = sizes.CompanyReviewHelpful.Window,
+                    QueueLimit = 0
+                }));
+
+            // IP-based and anonymous, like the benchmark policy: the directory is readable without
+            // an account, and a signed-in reader's browsing is not something to key to their id.
+            options.AddPolicy(DependencyInjection.CompanyPublicSearchRateLimitPolicy, httpContext =>
+            {
+                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.CompanyPublicSearch.PermitLimit,
+                    Window = sizes.CompanyPublicSearch.Window,
+                    QueueLimit = 0
+                });
+            });
         });
 
         return services;

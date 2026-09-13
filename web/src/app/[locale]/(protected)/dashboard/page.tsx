@@ -11,6 +11,7 @@ import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState"
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { HeroTile } from "@/components/dashboard/HeroTile";
 import { OutcomeCard } from "@/components/dashboard/OutcomeCard";
+import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
 import { ResponseTimeCard } from "@/components/dashboard/ResponseTimeCard";
 import { StatTile } from "@/components/dashboard/StatTile";
 import { StatusBreakdown } from "@/components/dashboard/StatusBreakdown";
@@ -64,6 +65,8 @@ export default function DashboardPage() {
         <DashboardEmptyState />
       ) : (
         <div className="flex flex-col gap-4">
+          {/* Above the board, not beside it: a reminder is the one thing here that asks for an action. */}
+          <RemindersPanel />
           {/*
             Every row is the same two-column split with the same gap, so one uninterrupted vertical
             gutter runs down the whole board. The earlier version sized each row to its content

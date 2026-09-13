@@ -20,5 +20,10 @@ public sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Property(c => c.Country).HasMaxLength(2);
 
         builder.HasIndex(c => c.NormalizedName).IsUnique();
+
+        // Nullable + unique: Postgres treats NULLs as distinct, so the rollout window in which an
+        // old instance inserts a company without a slug (see Company.Slug) never trips the index.
+        builder.Property(c => c.Slug).HasMaxLength(100);
+        builder.HasIndex(c => c.Slug).IsUnique();
     }
 }

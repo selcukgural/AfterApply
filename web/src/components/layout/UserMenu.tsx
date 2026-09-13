@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ADMIN_NAV_HREF } from "@/lib/auth/adminNav";
+import { TOOL_LINKS } from "@/components/layout/NavBar";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import type { Theme } from "@/lib/theme/theme";
@@ -85,6 +86,14 @@ export function UserMenu({ name, initials, onLogout, initialTheme, showAdmin }: 
           >
             {t("accountSettings")}
           </Link>
+          <Link
+            role="menuitem"
+            href="/my-reviews"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {t("myReviews")}
+          </Link>
           {/* Below the two everyone has, and separated from them: it is the same menu the rest of
               the utility links live in, so an admin reaches the page by clicking rather than by
               remembering a URL, without the primary nav growing an item that only one account
@@ -99,6 +108,23 @@ export function UserMenu({ name, initials, onLogout, initialTheme, showAdmin }: 
               {t("admin")}
             </Link>
           )}
+
+          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+
+          {/* The account-free tools. They are in the landing navbar and footer for strangers;
+              without this group a signed-in person could reach them only by signing out. */}
+          <p className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">{t("tools")}</p>
+          {TOOL_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              role="menuitem"
+              href={link.href}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              {t(link.key)}
+            </Link>
+          ))}
 
           <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
 

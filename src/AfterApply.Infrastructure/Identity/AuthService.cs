@@ -646,7 +646,8 @@ internal sealed class AuthService(
         // The single DELETE below is the whole deletion: every table that holds a UserId has an
         // ON DELETE CASCADE foreign key to Users, so the database removes Applications (and their
         // Events/StatusHistories), TrackedJobs, CvDocuments, ImportBatches (and their RowErrors),
-        // Reminders, EmailSuggestions, EmailConnections, FeedbackEntries, RefreshTokens and
+        // Reminders, EmailSuggestions, EmailConnections, FeedbackEntries, CompanyReviews (and their
+        // reports and helpful marks, as author, reporter or marker), RefreshTokens and
         // PersonalAccessTokens itself. Companies and Jobs are shared and carry no UserId, so they
         // are never touched.
         //
@@ -740,8 +741,31 @@ internal sealed class AuthService(
                 f.Status, f.AdminReply, f.SubmittedAt))
             .ToListAsync(cancellationToken);
 
+        var companyReviews = (await dbContext.CompanyReviews
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.SubmittedAt)
+            .Join(dbContext.Companies, r => r.CompanyId, c => c.Id, (r, c) => new { Review = r, CompanyName = c.Name })
+            .ToListAsync(cancellationToken))
+            .Select(x => new CompanyReviewExportItem(
+                x.Review.Id, x.CompanyName, x.Review.EmploymentStatus, x.Review.Title, x.Review.Pros, x.Review.Cons,
+                x.Review.OverallRating, x.Review.ManagementRating, x.Review.WorkEnvironmentRating,
+                x.Review.SalaryAndBenefitsRating, x.Review.CareerAndDevelopmentRating, x.Review.Status,
+                x.Review.RejectionReason, x.Review.SubmittedAt, x.Review.UpdatedAt))
+            .ToList();
+
+        var reviewReports = await dbContext.CompanyReviewReports
+            .Where(p => p.ReporterUserId == userId)
+            .OrderByDescending(p => p.ReportedAt)
+            .Select(p => new CompanyReviewReportExportItem(p.Id, p.ReviewId, p.Reason, p.Note, p.Status, p.Resolution, p.ReportedAt))
+            .ToListAsync(cancellationToken);
+
+        var helpfulMarks = await dbContext.CompanyReviewHelpfulMarks
+            .Where(m => m.UserId == userId)
+            .Select(m => m.ReviewId)
+            .ToListAsync(cancellationToken);
+
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
-            DateTimeOffset.UtcNow, cvDocuments, feedback);
+            DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

@@ -21,18 +21,27 @@ public sealed class Company : AuditableEntity
 
     public string? Country { get; private set; }
 
+    /// <summary>The segment of the company's public page (<c>/companies/{slug}</c>), from
+    /// <see cref="CompanySlugGenerator"/>. Nullable in the database on purpose: a NOT NULL column
+    /// would fail inserts from the still-running old instances during a Cloud Run rollout. Code
+    /// always sets it on create, the migration backfilled every existing row, and the review
+    /// service assigns one lazily if it ever meets a null — so a null here is a window of minutes,
+    /// not a state the product has to support.</summary>
+    public string? Slug { get; private set; }
+
     private Company()
     {
     }
 
     public static Company Create(string name, DateTimeOffset now, string? website = null,
         string? linkedInUrl = null, string? industry = null, string? country = null,
-        string? kariyerNetUrl = null)
+        string? kariyerNetUrl = null, string? slug = null)
     {
         return new Company
         {
             Name = name,
             NormalizedName = CompanyNameNormalizer.Normalize(name),
+            Slug = slug ?? CompanySlugGenerator.Generate(name),
             Website = website,
             LinkedInUrl = linkedInUrl,
             KariyerNetUrl = kariyerNetUrl,
@@ -41,6 +50,19 @@ public sealed class Company : AuditableEntity
             CreatedAt = now,
             UpdatedAt = now
         };
+    }
+
+    /// <summary>Backfill only: fills a slug the row never got (see <see cref="Slug"/>). Never
+    /// replaces one — a slug is a published URL.</summary>
+    public void AssignSlug(string slug, DateTimeOffset now)
+    {
+        if (Slug is not null)
+        {
+            return;
+        }
+
+        Slug = slug;
+        Touch(now);
     }
 
     // Backfill only — a company resolved by exact-name match may predate the extension carrying

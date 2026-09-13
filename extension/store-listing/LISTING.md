@@ -44,7 +44,7 @@ HOW IT WORKS
 Clicking it again on the same posting is safe: e-kariyerim recognizes the job by its URL and opens
 your existing application instead of creating a duplicate.
 
-GMAIL SCANNING (BETA, OPT-IN)
+GMAIL SCANNING (OPT-IN)
 Not every status update happens on a job site — most arrive by email. Turn Gmail Scanning on in
 Settings and, from then on, whenever you open an email in Gmail yourself, the extension reads that
 one message in your own browser and checks — locally, on your device — whether it looks like a
@@ -98,7 +98,7 @@ NASIL ÇALIŞIR
 Aynı ilanda tekrar tıklamak güvenlidir: e-kariyerim ilanı URL'sinden tanır ve yinelenen bir kayıt
 oluşturmak yerine mevcut başvurunuzu açar.
 
-GMAIL TARAMASI (BETA, OPTIONAL)
+GMAIL TARAMASI (İSTEĞE BAĞLI)
 Her statü güncellemesi bir iş sitesinde olmuyor — çoğu mail ile geliyor. Ayarlar'dan Gmail
 Taraması'nı açtıktan sonra, Gmail'de kendiniz bir mail açtığınızda eklenti o tek maili kendi
 tarayıcınızda okur ve — cihazınızda, yerel olarak — bir iş başvurusu güncellemesine benzeyip

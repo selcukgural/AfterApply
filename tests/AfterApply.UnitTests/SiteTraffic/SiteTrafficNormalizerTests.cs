@@ -189,4 +189,19 @@ public class SiteTrafficNormalizerTests
         result.ShouldNotBeNull();
         result.ReferrerHost.ShouldBe(string.Empty);
     }
+
+    /// <summary>The public company pages: the directory itself, and one page per company slug —
+    /// which slug brings anyone in is the number the feature is measured by, so it is kept, the
+    /// way guide articles are.</summary>
+    [Theory]
+    [InlineData("/tr/companies", "/companies")]
+    [InlineData("/en/companies/turk-telekom", "/companies/turk-telekom")]
+    [InlineData("/tr/companies/scoring", "/companies/scoring")]
+    public void Company_Pages_Are_Counted(string path, string expected)
+    {
+        var result = SiteTrafficNormalizer.Normalize("page_view", path, null);
+
+        result.ShouldNotBeNull();
+        result.Path.ShouldBe(expected);
+    }
 }

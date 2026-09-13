@@ -264,6 +264,10 @@ jobs:
             Feedback__GitHub__Repository=selcukgural/ekariyerim-feedback
             Feedback__GitHub__Assignee=selcukgural
             CvScan__LlmEnabled=true
+            # Company reviews launch open (2026-09-13 decision); the same default lives in appsettings.json,
+            # this line is here so the launch state is visible next to the other flags and can be
+            # flipped without a code change.
+            CompanyReviews__Enabled=true
             CvScan__Review__ProjectId=${{ env.GCP_PROJECT_ID }}
             Postgres__MaxPoolSize=5
             Hangfire__WorkerCount=2

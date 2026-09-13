@@ -22,12 +22,19 @@ export function postAuthLocale(auth: AuthResponse, currentLocale: string): Local
  * This is an allowlist of one shape, not a sanitiser over arbitrary input, and that is the point.
  * A `?next=` parameter that accepts any path is an open redirect waiting to happen — and a
  * credential-shaped flow is precisely where one would be worth exploiting. Anything that is not
- * "/pair", optionally with a pairing code, becomes null and the user lands on the dashboard.
+ * "/pair" (optionally with a pairing code) or "/my-reviews/write" (optionally with a company slug)
+ * becomes null and the user lands on the dashboard.
  */
-const RETURN_TO_PATTERN = /^\/pair(\?code=[A-Za-z0-9-]{1,16})?$/;
+const RETURN_TO_PATTERNS = [
+  /^\/pair(\?code=[A-Za-z0-9-]{1,16})?$/,
+  // The second shape (2026-09-13): someone who clicked "write a review" on a public company page
+  // and had to sign in first. The slug is the company's URL segment — lowercase ascii and hyphens,
+  // the same alphabet CompanySlugGenerator emits — and nothing else may follow it.
+  /^\/my-reviews\/write(\?company=[a-z0-9][a-z0-9-]{0,99})?$/,
+];
 
 export function sanitizeReturnTo(raw: string | null | undefined): string | null {
-  return raw && RETURN_TO_PATTERN.test(raw) ? raw : null;
+  return raw && RETURN_TO_PATTERNS.some((pattern) => pattern.test(raw)) ? raw : null;
 }
 
 /** The `?next=` of the page currently open, if it is one of the shapes above. */
