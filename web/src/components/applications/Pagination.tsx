@@ -3,6 +3,12 @@
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 
+const PAGE_INFO_KEY = {
+  applications: "pageInfo",
+  companies: "pageInfoCompanies",
+  reminders: "pageInfoReminders",
+} as const;
+
 interface PaginationProps {
   page: number;
   pageSize: number;
@@ -10,7 +16,7 @@ interface PaginationProps {
   /** What a page is made of. The company view pages over companies, and telling someone they are on
    *  "page 2 of 4 (34 applications)" while the pages hold companies gives them a number they cannot
    *  check against what is on screen. */
-  unit?: "applications" | "companies";
+  unit?: "applications" | "companies" | "reminders";
   onPageChange: (page: number) => void;
 }
 
@@ -31,7 +37,7 @@ export function Pagination({
   return (
     <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
       <span>
-        {t(unit === "companies" ? "pageInfoCompanies" : "pageInfo", { page, totalPages, totalCount })}
+        {t(PAGE_INFO_KEY[unit], { page, totalPages, totalCount })}
       </span>
       <div className="flex gap-2">
         <Button variant="secondary" disabled={page <= 1} onClick={() => onPageChange(1)}>

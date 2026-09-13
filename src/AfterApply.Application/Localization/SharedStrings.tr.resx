@@ -22,6 +22,9 @@
   <data name="BULK_COUNT_MISMATCH" xml:space="preserve">
     <value>Bu ekran açıkken liste değişti — filtreye şu an {0} başvuru uyuyor. Hiçbir şey değiştirilmedi; listeyi tazeleyip tekrar deneyin.</value>
   </data>
+  <data name="REMINDER_COUNT_MISMATCH" xml:space="preserve">
+    <value>Bu ekran açıkken liste değişti — şu an {0} hatırlatıcın var. Hiçbir şey değiştirilmedi; listeye tekrar bakıp yeniden dene.</value>
+  </data>
   <data name="APPLICATION_ALREADY_IN_STATUS" xml:space="preserve">
     <value>Başvuru zaten bu durumda.</value>
   </data>

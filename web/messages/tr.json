@@ -597,7 +597,14 @@
       "followedUp": "Takip ettim",
       "markGhosted": "Sessize alındı",
       "staleNote": "{threshold} günden eski {count} başvuru hatırlatıcı üretmez.",
-      "staleBulkLink": "Başvurular'da toplu işaretle"
+      "staleBulkLink": "Başvurular'da toplu işaretle",
+      "selectPage": "Bu sayfadaki hatırlatıcıları seç",
+      "selectRow": "{company} — {title} seç",
+      "selectedCount": "{count} seçili ·",
+      "selectAll": "{count} hatırlatıcının tümünü seç",
+      "allSelected": "{count} hatırlatıcının tümü seçildi — diğer sayfalar dahil ·",
+      "clearSelection": "Temizle",
+      "countMismatch": "Bu ekran açıkken liste değişti — şu an {count} hatırlatıcın var. Hiçbir şey değiştirilmedi; listeye tekrar bak."
     },
     "stale": {
       "title": "{count} başvuru {threshold} günden eski ve yanıtsız",
@@ -643,7 +650,8 @@
       "previous": "Önceki",
       "next": "Sonraki",
       "last": "Son",
-      "pageInfoCompanies": "Sayfa {page} / {totalPages} ({totalCount} şirket)"
+      "pageInfoCompanies": "Sayfa {page} / {totalPages} ({totalCount} şirket)",
+      "pageInfoReminders": "Sayfa {page} / {totalPages} ({totalCount} hatırlatıcı)"
     },
     "form": {
       "companyName": "Şirket Adı",

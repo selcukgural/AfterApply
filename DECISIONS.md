@@ -5875,3 +5875,60 @@ bant ve panel yerel yığında tarayıcıyla doğrulandı (TR+EN, koyu tema; bro
 kart altı satır, sonraki eski satır → bant geri, Evet → Geri Al şeridi ve sayaçlar, Geri Al, satırda
 Sessize alındı ve Takip ettim (zaman çizelgesinde `FollowUpSent`). İngilizce "1 applications"
 tekil/çoğul hatası ICU plural ile düzeltildi.
+
+## Hatırlatıcı kartı: 5'lik sayfalar ve sayfa/tümü seçimiyle toplu cevap (2026-09-13)
+
+**Neden:** Sabahki karar "tavan konmadı — liste ufukla sınırlı" idi; öğleden sonra prod'da aynı
+hesap açılınca 1.224 hatırlatıcı yine tek istekte geldi ve tek seferde çizildi (gece taraması henüz
+koşmamıştı; ufuk dışındakileri emekliye ayıracak olan o). Ufuk taramayı sınırlar ama kartı değil:
+zaten var olan satırları kimse silmiyor, ufuk içinde de yoğun bir sezon bir ekrandan fazladır.
+Kullanıcı isteği net: en fazla 5 satır, sayfalama, Başvurular'daki gibi "görünen 5'i ya da
+tamamını" seçip işaretleyebilme. Tasarım kanvası (B seçildi; A ikinci sayfada):
+https://claude.ai/code/artifact/a0cc4bde-a723-4fa7-9890-54a5546c1f55
+
+**Kararlar:**
+- **API sayfalı:** `GET /api/reminders?page=&pageSize=` → `PagedResult<ReminderResponse>`
+  (`GetRemindersQuery`, PageSize varsayılan 5, tavan 50). Sıralama sunucuda: en uzun bekleyen
+  başvuru önce, eşitlikte önce oluşturulan, sonra Id (deterministik sayfa). İstemcideki
+  `sortReminders` kaldırıldı — istemci artık yalnızca bir sayfa görüyor, sıralama tek yerde.
+  Eski düz-liste şekli tutulmadı: tek tüketici web, eklenti hatırlatıcı okumuyor.
+- **Önbellek etiketli:** sayfa başına anahtar (`reminders:active:{user}:p{n}:s{k}`), hepsi tek
+  `reminders:active:{user}` etiketi altında; iki servisin (ReminderService, ApplicationService)
+  düşürme çağrıları `RemoveByTagAsync` oldu, hangi sayfaların var olduğunu bilmek zorunda değiller.
+- **Seçim = Başvurular'ın seçimi:** `bulkSelection.ts`'teki `SelectionState` olduğu gibi
+  kullanıldı (sayfa id'leri / "tümü" + görülen sayı); sayfa değişince seçim düşer. Tel şekli
+  `ReminderSelection { ids } | { all: true }` + `expectedCount` (`all` için zorunlu; sayı
+  tutmazsa 409 `BULK_COUNT_MISMATCH`, cümlesi `REMINDER_COUNT_MISMATCH` — "hatırlatıcı" sayar).
+  Id listesi tavanı 100 (validator sabiti; bir sayfanın üretebileceğinden geniş her şey "tümü"nün işi).
+- **Üç toplu cevap:** `POST /api/reminders/bulk/{dismiss|follow-up|ghost}`. Dismiss tek
+  `ExecuteUpdate`; follow-up başvuru başına **tek** `FollowUpSent` (aynı başvurunun iki
+  hatırlatıcısı iki olay değildir); ghost seçimin arkasındaki **açık** başvuruları
+  `IApplicationService.GhostApplicationsAsync` ile Ghosted yapar — `GhostStaleApplicationsAsync` ile
+  aynı `GhostAsync` gövdesi, `MaxOperationSize` tavanına tabi değil (küme sunucuda kullanıcının
+  kendi satırlarından çözülür). Zaten terminal olan başvuru değişiklik olarak raporlanmaz, geri
+  alma da teklif edilmez. Yanıt `BulkChangeStatusResponse`, geri alma `POST /bulk/ghost/undo`
+  (`UndoStaleGhostAsync` → `UndoGhostAsync` olarak yeniden adlandırıldı: iki tavansız ghost'un
+  ortak geri alması).
+- **Panel (varyant B):** seçim başlayınca kart başlığı işlem çubuğuna dönüşür — solda kutu +
+  "5 seçili · N hatırlatıcının tümünü seç" (sayfa tümü seçili ve ötesi varsa) ya da "tümü seçildi
+  — diğer sayfalar dahil · Temizle" (warn-ink, Başvurular'daki şeritle aynı ton); sağda Sessize
+  alındı / Takip ettim / Yoksay. Yüzen `BulkActionBar` **kullanılmadı**: 5 satırlık kart için ağır
+  ve panelde geri bildirim düğmesiyle köşe paylaşırdı (varyant A, elendi). Ghost sonucu kartın
+  içinde `BulkResultBanner` + Geri Al; şerit seçimi ve boş listeyi de aşar (kapatılana kadar).
+  Sayfalayıcı Başvurular'daki `Pagination` (`unit="reminders"`), yalnızca 5'ten fazla satırda.
+  Son sayfanın son satırı kapanınca `clampPage` ile bir önceki sayfaya iner — render sırasında
+  state düzeltme (react.dev "adjusting state when a prop changes"), effect değil (lint kuralı).
+  `keepPreviousData` ile sayfa geçişinde kart boşa düşmez.
+- **Geri Al'ın yan etkisi** eski yığındakiyle aynı ve bilinçli: geri alınan başvuruların
+  hatırlatıcıları geri gelmez (durum geçişi gerçek, hatırlatıcı saati yeniden başlar).
+
+**Testler:** birim 631 (+8: `BulkReminderRequestValidator`, `GetRemindersQueryValidator`);
+entegrasyon 386 (+12 `ReminderTests`: sayfalama/sıralama/ötesi boş sayfa, pageSize tavanı,
+etiketli önbellek düşmesi, id ile yoksay + yabancı id yok sayılır, tümü + sayı tutuyor, tümü + eski
+sayı 409 üç uçta da, sayısız tümü 400, tek form kuralı, toplu takip başvuru başına tek olay, toplu
+ghost + geri al, terminal başvuru atlanır, "tümü" başka kullanıcıya ulaşmaz; `StaleApplicationsTests`
+sayfalı yanıta uyarlandı); web 359 (`toReminderSelection`, `lastPage`, `clampPage`). Panel bileşeni
+için düzenek yok — yerel yığında tarayıcıyla doğrulandı (TR+EN): 12 hatırlatıcı → 3 sayfa, başlık
+kutusu → tik kaldırma → 3'e "Takip ettim", tümünü seç → Sessize alındı (Açık 20→11) → Geri Al
+(20), 2. sayfanın tek satırı → 1. sayfaya iniş. Browser-test kullanıcısına "Sayfa Test 1–12"
+başvuruları eklendi (kaldı; 5'inde açık takip hatırlatıcısı var).

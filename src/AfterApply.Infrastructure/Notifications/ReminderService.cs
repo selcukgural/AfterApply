@@ -1,3 +1,5 @@
+using AfterApply.Application.Applications;
+using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Notifications;
 using AfterApply.Application.Notifications.Contracts;
 using AfterApply.Domain.Applications;
@@ -10,7 +12,8 @@ using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.Notifications;
 
-internal sealed class ReminderService(AppDbContext dbContext, IOptions<NotificationOptions> options, HybridCache cache) : IReminderService
+internal sealed class ReminderService(AppDbContext dbContext, IOptions<NotificationOptions> options, HybridCache cache,
+    IApplicationService applicationService) : IReminderService
 {
     // Same set as AnalyticsService.RespondedStatuses — "responded" is defined once,
     // reused here rather than redefined (DECISIONS.md).
@@ -26,27 +29,50 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         LocalCacheExpiration = TimeSpan.FromSeconds(20)
     };
 
-    public Task<IReadOnlyList<ReminderResponse>> GetActiveRemindersAsync(Guid userId, CancellationToken cancellationToken)
+    /// <summary>Every reminder the list is allowed to show, before paging: open, the caller's own,
+    /// and about an application that is still open — see the terminal filter below.</summary>
+    private IQueryable<ReminderResponse> ActiveReminders(Guid userId)
+    {
+        return dbContext.Reminders
+            .Where(r => r.UserId == userId && r.DismissedAt == null)
+            .Join(dbContext.Applications, r => r.ApplicationId, a => a.Id,
+                (r, a) => new { r, a.CompanyId, a.JobTitle, a.Status })
+            // A closed application has nothing left to remind about. Status changes retire
+            // reminders as they happen (ApplicationService) and the nightly scan sweeps up the
+            // rest; this filter is the guarantee that neither has to be perfect for the list
+            // to be right.
+            .Where(x => !TerminalApplicationStatuses.Values.Contains(x.Status))
+            .Join(dbContext.Companies, x => x.CompanyId, c => c.Id,
+                (x, c) => new { x.r, x.JobTitle, CompanyName = c.Name })
+            // The application that has waited longest first, and among equals the reminder
+            // created first: the one that actually needs attention is on page one, not the
+            // freshest nudge. Ordered here rather than on the client because the client only
+            // ever sees one page.
+            .OrderByDescending(x => x.r.DaysElapsedAtCreation)
+            .ThenBy(x => x.r.CreatedAt)
+            .ThenBy(x => x.r.Id)
+            .Select(x => new ReminderResponse(
+                x.r.Id, x.r.ApplicationId, x.CompanyName, x.JobTitle, x.r.Type, x.r.DaysElapsedAtCreation, x.r.CreatedAt));
+    }
+
+    public Task<PagedResult<ReminderResponse>> GetActiveRemindersAsync(Guid userId, GetRemindersQuery query,
+        CancellationToken cancellationToken)
     {
         return cache.GetOrCreateAsync(
-            ReminderCacheKeys.Active(userId),
-            userId,
-            async (uid, ct) => (IReadOnlyList<ReminderResponse>)await dbContext.Reminders
-                .Where(r => r.UserId == uid && r.DismissedAt == null)
-                .Join(dbContext.Applications, r => r.ApplicationId, a => a.Id,
-                    (r, a) => new { r, a.CompanyId, a.JobTitle, a.Status })
-                // A closed application has nothing left to remind about. Status changes retire
-                // reminders as they happen (ApplicationService) and the nightly scan sweeps up the
-                // rest; this filter is the guarantee that neither has to be perfect for the list
-                // to be right.
-                .Where(x => !TerminalApplicationStatuses.Values.Contains(x.Status))
-                .Join(dbContext.Companies, x => x.CompanyId, c => c.Id,
-                    (x, c) => new { x.r, x.JobTitle, CompanyName = c.Name })
-                .OrderByDescending(x => x.r.CreatedAt)
-                .Select(x => new ReminderResponse(
-                    x.r.Id, x.r.ApplicationId, x.CompanyName, x.JobTitle, x.r.Type, x.r.DaysElapsedAtCreation, x.r.CreatedAt))
-                .ToListAsync(ct),
+            ReminderCacheKeys.ActivePage(userId, query.Page, query.PageSize),
+            (userId, query),
+            async (state, ct) =>
+            {
+                var active = ActiveReminders(state.userId);
+                var totalCount = await active.CountAsync(ct);
+                var items = await active
+                    .Skip((state.query.Page - 1) * state.query.PageSize)
+                    .Take(state.query.PageSize)
+                    .ToListAsync(ct);
+                return new PagedResult<ReminderResponse>(items, totalCount, state.query.Page, state.query.PageSize);
+            },
             ActiveRemindersCacheOptions,
+            tags: [ReminderCacheKeys.ActiveTag(userId)],
             cancellationToken: cancellationToken).AsTask();
     }
 
@@ -62,7 +88,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
         reminder.Dismiss(DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveAsync(ReminderCacheKeys.Active(userId), cancellationToken);
+        await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
 
         return true;
     }
@@ -96,9 +122,111 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         reminder.Dismiss(now);
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveAsync(ReminderCacheKeys.Active(userId), cancellationToken);
+        await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
 
         return true;
+    }
+
+    /// <summary>
+    /// Narrows to exactly the open reminders a bulk selection covers, always the caller's own. An
+    /// id list is intersected with the user's rows rather than trusted — an id in a request body is
+    /// a claim, never proof — so a foreign id matches nothing instead of leaking that it exists.
+    /// The terminal-application filter is deliberately absent here: a reminder the list would hide
+    /// is still the user's to close, and closing it is the harmless direction.
+    /// </summary>
+    private IQueryable<Reminder> ResolveSelection(Guid userId, ReminderSelection selection)
+    {
+        var open = dbContext.Reminders.Where(r => r.UserId == userId && r.DismissedAt == null);
+        return selection.Ids is { Count: > 0 } ids ? open.Where(r => ids.Contains(r.Id)) : open;
+    }
+
+    /// <summary>
+    /// Refuses the operation when the number of open reminders is not what the user was shown. Only
+    /// meaningful for an "all" selection: an id list is already the exact set the user ticked, and
+    /// comparing it against itself would reject a legitimate request whose rows another tab just
+    /// answered. Compared against what the list shows — open reminders of open applications —
+    /// because that is the number the card printed next to "select all".
+    /// </summary>
+    private async Task GuardExpectedCountAsync(Guid userId, BulkReminderRequest request, CancellationToken cancellationToken)
+    {
+        if (!request.Selection.All || request.ExpectedCount is null)
+        {
+            return;
+        }
+
+        var actualCount = await ActiveReminders(userId).CountAsync(cancellationToken);
+        if (actualCount != request.ExpectedCount.Value)
+        {
+            throw new BulkCountMismatchException(request.ExpectedCount.Value, actualCount);
+        }
+    }
+
+    public async Task<BulkReminderResponse> BulkDismissAsync(Guid userId, BulkReminderRequest request, CancellationToken cancellationToken)
+    {
+        await GuardExpectedCountAsync(userId, request, cancellationToken);
+
+        // Set-based: nothing is loaded, so the size of an "all" selection costs one UPDATE
+        // however many rows it covers.
+        var now = DateTimeOffset.UtcNow;
+        var affected = await ResolveSelection(userId, request.Selection)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.DismissedAt, now), cancellationToken);
+
+        if (affected > 0)
+        {
+            await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
+        }
+
+        return new BulkReminderResponse(affected);
+    }
+
+    public async Task<BulkReminderResponse> BulkMarkFollowedUpAsync(Guid userId, BulkReminderRequest request, CancellationToken cancellationToken)
+    {
+        await GuardExpectedCountAsync(userId, request, cancellationToken);
+
+        var reminders = await ResolveSelection(userId, request.Selection).ToListAsync(cancellationToken);
+        if (reminders.Count == 0)
+        {
+            return new BulkReminderResponse(0);
+        }
+
+        // One FollowUpSent per application, not per reminder: a follow-up is something the user did
+        // once, and two reminders about the same application do not make it two.
+        var applicationIds = reminders.Select(r => r.ApplicationId).Distinct().ToList();
+        var applications = await dbContext.Applications
+            .Where(a => a.UserId == userId && applicationIds.Contains(a.Id))
+            .ToListAsync(cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var application in applications)
+        {
+            application.AddEvent(ApplicationEventType.FollowUpSent, now, Source.Manual, metadata: null);
+            // Added explicitly for the reason MarkFollowedUpAsync gives: Events was never Included.
+            dbContext.ApplicationEvents.Add(application.Events.Last());
+        }
+
+        foreach (var reminder in reminders)
+        {
+            reminder.Dismiss(now);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
+
+        return new BulkReminderResponse(reminders.Count);
+    }
+
+    public async Task<BulkChangeStatusResponse> BulkMarkGhostedAsync(Guid userId, BulkReminderRequest request, CancellationToken cancellationToken)
+    {
+        await GuardExpectedCountAsync(userId, request, cancellationToken);
+
+        var applicationIds = await ResolveSelection(userId, request.Selection)
+            .Select(r => r.ApplicationId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        // The status change is the answer; the application service closes the reminders behind it
+        // (RetireRemindersAsync) exactly as it does for a single "mark as ghosted" on the row.
+        return await applicationService.GhostApplicationsAsync(userId, applicationIds, cancellationToken);
     }
 
     public async Task<int> ScanAndGenerateRemindersAsync(CancellationToken cancellationToken)
