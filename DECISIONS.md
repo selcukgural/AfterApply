@@ -5796,6 +5796,11 @@ yok, CSV yalnızca "yok" diyen yerde, veri listeleri tam; `components/layout/sit
 genişletildi). API değişmedi. Tarayıcıda TR+EN, oturumsuz ve oturumlu, koyu ve açık tema, 390px
 telefon genişliği (menü açık/kapalı, şerit ve açıklama kartları tek sütun) doğrulandı.
 
+**Yayın kararı (2026-09-13):** `CompanyReviews:Enabled` prod'da **açık** çıkıyor — kullanıcı kararı;
+`deploy.yml`'e `CompanyReviews__Enabled=true` açıkça yazıldı ki bayrak diğer bayrakların yanında
+görünsün ve kod değişikliği olmadan kapatılabilsin. Hukuk okuması (K1) hâlâ açık; kapatma yolu bir
+ortam değişkeni.
+
 **Kapsam dışı / açık:** Kullanım Koşulları sayfası yok — artık kullanıcı içeriği yayımlanıyor,
 hukuk okumasıyla birlikte (K1) ele alınmalı. Web Store panosundaki listing metni elle yenilenecek
 (`PUBLISHING_CHECKLIST.md`'de madde var). Geliştirme ortamındaki "1 issue" rozeti CSP'de `unsafe-eval` olmamasından
