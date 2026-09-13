@@ -21,7 +21,7 @@ import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
  */
 export function HeroCtaButtons() {
   const t = useTranslations("landing.hero");
-  const tNav = useTranslations("landing.navbar");
+  const tNav = useTranslations("siteNav");
   const { isAuthenticated } = useAuth();
 
   return (

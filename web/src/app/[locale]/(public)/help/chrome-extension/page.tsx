@@ -81,6 +81,12 @@ export default async function ChromeExtensionHelpPage() {
         <Screenshot src="/help/screenshots/chrome-extension-popup.png" alt={t("use.title")} />
       </section>
 
+      <section id="gmail" className="flex scroll-mt-20 flex-col gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("gmail.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("gmail.body")}</p>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("gmail.next")}</p>
+      </section>
+
       <Callout variant="warning" label={tCommon("warning")} title={t("calloutScraping.title")}>
         {t("calloutScraping.body")}
       </Callout>

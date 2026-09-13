@@ -37,6 +37,14 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
   cvScan: {
     contentNotesAvailable: false,
   },
+  // Off until the server says otherwise: the review pages must never render against a deployment
+  // whose review endpoints answer 404 (the feature can ship dark — CompanyReviews:Enabled).
+  companyReviews: {
+    enabled: false,
+    maxReviewsPerUser: 10,
+    minimumReviewsForScore: 3,
+    priorWeight: 5,
+  },
 };
 
 export const configApi = {

@@ -4,7 +4,8 @@ import { getServerTheme } from "@/lib/theme/getServerTheme";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { jsonLdGraph, organizationJsonLd, webApplicationJsonLd } from "@/lib/seo/jsonLd";
-import { LandingNavbar } from "@/components/landing/LandingNavbar";
+import { LANDING_SITE_LINKS, SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ToolsStrip } from "@/components/landing/ToolsStrip";
 import { ProblemSection } from "@/components/landing/ProblemSection";
@@ -17,7 +18,6 @@ import { MissionSection } from "@/components/landing/MissionSection";
 import { RoadmapSection } from "@/components/landing/RoadmapSection";
 import { PrivacySection } from "@/components/landing/PrivacySection";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
-import { LandingFooter } from "@/components/landing/LandingFooter";
 import { SiteTrafficReporter } from "@/components/analytics/SiteTrafficReporter";
 
 /**
@@ -54,7 +54,7 @@ export default async function LandingPage() {
           layout and the landing page is not in that group, so "/" sat in the API's path allowlist
           with no caller — the funnel had a first step nobody was counting. */}
       <SiteTrafficReporter />
-      <LandingNavbar initialTheme={theme} />
+      <SiteHeader initialTheme={theme} links={LANDING_SITE_LINKS} />
       <main className="flex-1">
         <HeroSection />
         {/* The three things that work without an account, the extension's tab open first — one
@@ -82,7 +82,7 @@ export default async function LandingPage() {
         <PrivacySection />
         <FinalCtaSection />
       </main>
-      <LandingFooter />
+      <SiteFooter />
     </div>
   );
 }

@@ -273,4 +273,40 @@
   <data name="CV_SCAN_LEGACY_DOC" xml:space="preserve">
     <value>The old .doc format cannot be read here. Open it in Word and save it as PDF or .docx, then scan that.</value>
   </data>
+  <data name="COMPANY_REVIEW_QUOTA_REACHED" xml:space="preserve">
+    <value>You have reached your limit of {0} company reviews. Delete one to write another.</value>
+  </data>
+  <data name="COMPANY_REVIEW_ALREADY_EXISTS" xml:space="preserve">
+    <value>You have already reviewed this company. Edit your existing review instead.</value>
+  </data>
+  <data name="COMPANY_REVIEW_NOT_MARKABLE" xml:space="preserve">
+    <value>Only another person's published review can be marked as helpful.</value>
+  </data>
+  <data name="COMPANY_REVIEW_NOT_REPORTABLE" xml:space="preserve">
+    <value>Only another person's published review can be reported.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REPORT_ALREADY_OPEN" xml:space="preserve">
+    <value>You already have an open report on this review.</value>
+  </data>
+  <data name="COMPANY_REVIEW_CONTENT_INVALID" xml:space="preserve">
+    <value>The review needs a title, pros and cons, and every rating between 1 and 5.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REJECTION_REASON_REQUIRED" xml:space="preserve">
+    <value>Rejecting a review requires a reason.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REPORT_NOTE_REQUIRED" xml:space="preserve">
+    <value>A report with the reason "Other" needs a short explanation.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REPORT_ALREADY_RESOLVED" xml:space="preserve">
+    <value>This report has already been resolved.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REPORT_REASON_REQUIRED" xml:space="preserve">
+    <value>Requesting changes or removing a review requires a reason.</value>
+  </data>
+  <data name="VALIDATION_REPORT_NOTE_REQUIRED_FOR_OTHER" xml:space="preserve">
+    <value>Please explain the problem when the reason is "Other".</value>
+  </data>
+  <data name="VALIDATION_RESOLUTION_REASON_REQUIRED" xml:space="preserve">
+    <value>A reason is required unless the report is dismissed.</value>
+  </data>
 </root>

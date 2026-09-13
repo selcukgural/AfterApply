@@ -1,4 +1,5 @@
 using AfterApply.Domain.Applications;
+using AfterApply.Domain.CompanyReviews;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.Notifications;
@@ -67,6 +68,36 @@ public sealed record FeedbackExportItem(
     string? AdminReply,
     DateTimeOffset SubmittedAt);
 
+/// <summary>What the user wrote about an employer, with the moderation outcome. Public readers
+/// never see the author; the author gets the whole row back, because it is theirs.</summary>
+public sealed record CompanyReviewExportItem(
+    Guid Id,
+    string CompanyName,
+    EmploymentStatus EmploymentStatus,
+    string Title,
+    string Pros,
+    string Cons,
+    int OverallRating,
+    int ManagementRating,
+    int WorkEnvironmentRating,
+    int SalaryAndBenefitsRating,
+    int CareerAndDevelopmentRating,
+    ReviewModerationStatus Status,
+    string? RejectionReason,
+    DateTimeOffset SubmittedAt,
+    DateTimeOffset UpdatedAt);
+
+/// <summary>A report the user filed against someone else's review — their statement, so it is
+/// theirs to read back. The reported review's text is not included: it is another person's.</summary>
+public sealed record CompanyReviewReportExportItem(
+    Guid Id,
+    Guid ReviewId,
+    ReviewReportReason Reason,
+    string? Note,
+    ReviewReportStatus Status,
+    ReviewReportResolution? Resolution,
+    DateTimeOffset ReportedAt);
+
 public sealed record AccountExportResponse(
     UserProfileResponse Profile,
     IReadOnlyList<ApplicationExportItem> Applications,
@@ -74,4 +105,7 @@ public sealed record AccountExportResponse(
     IReadOnlyList<ReminderExportItem> Reminders,
     DateTimeOffset ExportedAt,
     IReadOnlyList<CvDocumentExportItem>? CvDocuments = null,
-    IReadOnlyList<FeedbackExportItem>? Feedback = null);
+    IReadOnlyList<FeedbackExportItem>? Feedback = null,
+    IReadOnlyList<CompanyReviewExportItem>? CompanyReviews = null,
+    IReadOnlyList<CompanyReviewReportExportItem>? CompanyReviewReports = null,
+    IReadOnlyList<Guid>? HelpfulMarkedReviewIds = null);

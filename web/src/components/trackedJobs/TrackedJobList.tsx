@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { EmploymentType, TrackedJobResponse } from "@/types/api";
 import { EMPLOYMENT_TYPES } from "@/lib/constants/employmentType";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassName } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Link } from "@/i18n/navigation";
 import { ExternalLinkPill } from "@/components/ui/ExternalLinkPill";
 import { externalUrlLabel, safeExternalUrl, safeMailtoUrl } from "@/lib/url/externalLink";
 import { Input } from "@/components/ui/Input";
@@ -41,7 +43,17 @@ export function TrackedJobList({ items, onDelete, onConvert }: TrackedJobListPro
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (items.length === 0) {
-    return <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">{t("empty")}</p>;
+    return (
+      <EmptyState
+        title={t("empty")}
+        body={t("emptyBody")}
+        actions={
+          <Link href="/help/chrome-extension" className={buttonClassName("outline")}>
+            {t("emptyCta")}
+          </Link>
+        }
+      />
+    );
   }
 
   const startConvert = (id: string) => {

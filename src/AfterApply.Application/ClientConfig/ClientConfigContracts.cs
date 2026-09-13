@@ -11,7 +11,8 @@ public sealed record ClientConfigResponse(
     GoogleAuthConfigResponse GoogleAuth,
     LinkedInAuthConfigResponse LinkedInAuth,
     GitHubAuthConfigResponse GitHubAuth,
-    CvScanConfigResponse CvScan);
+    CvScanConfigResponse CvScan,
+    CompanyReviewsConfigResponse? CompanyReviews = null);
 
 /// <summary>Mirrors ASP.NET Identity's <c>PasswordOptions</c>, which is what the server actually
 /// validates against — the response is built from that object, not from a copy of the config.</summary>
@@ -51,3 +52,8 @@ public sealed record GitHubAuthConfigResponse(bool Enabled, string? ClientId);
 /// this and gets a 404 from the scan endpoint has learnt the same thing.
 /// </summary>
 public sealed record CvScanConfigResponse(bool ContentNotesAvailable);
+
+/// <summary>What the public company pages and the review form need before rendering: whether the
+/// feature is on at all, the quota the form should count down from, and the two numbers the
+/// scoring page prints so its formula quotes the live configuration rather than a copy.</summary>
+public sealed record CompanyReviewsConfigResponse(bool Enabled, int MaxReviewsPerUser, int MinimumReviewsForScore, int PriorWeight);

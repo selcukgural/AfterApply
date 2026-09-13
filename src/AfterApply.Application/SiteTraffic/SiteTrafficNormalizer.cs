@@ -72,6 +72,7 @@ public static class SiteTrafficNormalizer
         "/help",
         "/benchmark",
         "/cv-tarama",
+        "/companies",
         "/privacy",
         "/cookies",
         "/extension-privacy",
@@ -86,7 +87,7 @@ public static class SiteTrafficNormalizer
     /// measure — which article brings anyone in — so it is kept, bounded by
     /// <see cref="SlugPattern"/> rather than by a list the Application layer would have to keep in
     /// step with the MDX files.</summary>
-    private static readonly HashSet<string> SlugSections = new(StringComparer.Ordinal) { "/guide", "/help" };
+    private static readonly HashSet<string> SlugSections = new(StringComparer.Ordinal) { "/guide", "/help", "/companies" };
 
     private static readonly Regex SlugPattern =
         new("^[a-z0-9][a-z0-9-]{0,63}$", RegexOptions.Compiled | RegexOptions.CultureInvariant);

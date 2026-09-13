@@ -29,7 +29,7 @@
       },
       "privacy": {
         "title": "Gizlilik Politikası",
-        "description": "e-kariyerim'in hangi veriyi neden topladığı, nerede sakladığı ve nasıl sileceğiniz — CV'ler, Gmail Taraması ve geri bildirim dahil."
+        "description": "e-kariyerim'in hangi veriyi neden topladığı, nerede sakladığı ve nasıl sileceğiniz — CV'ler, Gmail Taraması, geri bildirim ve şirket değerlendirmeleri dahil."
       },
       "cookies": {
         "title": "Çerez Politikası",
@@ -94,22 +94,36 @@
       "pair": {
         "title": "Eklentiyi Bağla",
         "description": "Tarayıcı eklentini e-kariyerim hesabına tek onayla bağla."
+      },
+      "companies": {
+        "title": "Şirket Değerlendirmeleri",
+        "description": "Orada çalışmış kişilerden anonim, moderasyonlu işveren değerlendirmeleri: yönetim, çalışma ortamı, ücret ve kariyer gelişimi — puanı açık hesaplanır."
+      },
+      "companyScoring": {
+        "title": "Şirket Puanı Nasıl Hesaplanır",
+        "description": "e-kariyerim'deki her şirket puanının arkasındaki formül, değerlendirme eşiği ve bir değerlendirmenin uyması gereken kurallar."
+      },
+      "myReviews": {
+        "title": "Değerlendirmelerim",
+        "description": "Yazdığın şirket değerlendirmeleri, moderasyon durumları ve kalan hakkın."
+      },
+      "helpCompanyReviews": {
+        "title": "Şirket Değerlendirmeleri",
+        "description": "Şirket değerlendirmelerini okuyun, anonim bir değerlendirme yazın; moderasyon, düzenleme ve şikâyet nasıl işler."
+      },
+      "helpCvScan": {
+        "title": "CV Tarama",
+        "description": "Hesap açmadan CV'nizi tarayın: araç neyi ölçer, neyi ölçmez, dosyanıza ne olur."
+      },
+      "helpBenchmark": {
+        "title": "Geri Dönüş Oranı Kıyaslama",
+        "description": "Kendi geri dönüş oranınızı alanınızın medyanıyla kıyaslayın; sayı nereden geliyor, ne zaman gösterilmiyor."
       }
     }
   },
   "landing": {
     "common": {
       "sampleData": "Örnek veri"
-    },
-    "navbar": {
-      "howItWorks": "Nasıl çalışır",
-      "features": "Özellikler",
-      "mission": "Misyonumuz",
-      "signIn": "Giriş Yap",
-      "getStarted": "Ücretsiz Başla",
-      "goToDashboard": "Panele Git",
-      "help": "Yardım",
-      "extension": "Eklenti"
     },
     "hero": {
       "eyebrow": "Kaç başvuru, kaç cevap",
@@ -171,8 +185,30 @@
           "bullet3": "Girdiğin sayılar anonim; hesap gerekmez",
           "cta": "Kıyasla",
           "mockAriaLabel": "Örnek: bir kıyaslama sonucu — senin geri dönüş oranın %23,3 (7/30), Yazılım / Bilişim alanının medyanı %31."
+        },
+        "companies": {
+          "eyebrow": "Şirket değerlendirmeleri · anonim, hesap gerekmez",
+          "title": "Başvurmadan önce içeriyi öğren.",
+          "body": "Bir şirkette çalışmak gerçekte nasıl — yönetim, çalışma ortamı, maaş ve kariyer için ayrı puanlar, artılar ve eksiler. Okumak için hesap gerekmez; yazmak için giriş yeter.",
+          "bullet1": "Yazan görünmez: yalnızca ay ve çalışan ilişkisi (mevcut, eski, stajyer)",
+          "bullet2": "Her değerlendirme yayına girmeden önce bir moderatör tarafından okunur",
+          "bullet3": "Puan formülü açık; üç onaylı değerlendirmenin altında puan gösterilmez",
+          "cta": "Şirketlere göz at",
+          "scoringLink": "Puan nasıl hesaplanıyor?",
+          "mock": {
+            "ariaLabel": "Örnek: bir şirket sayfası — 12 değerlendirmeden 4,1 puan, dört kategori ortalaması ve bir değerlendirme alıntısı.",
+            "title": "Öğrenmeye açık, samimi bir ekip",
+            "month": "Eylül 2026",
+            "prosLabel": "ARTILAR",
+            "pros": "Kod incelemeleri ciddiye alınıyor, uzaktan çalışma esnekliği gerçekten uygulanıyor.",
+            "consLabel": "EKSİLER",
+            "cons": "Maaş artışları piyasanın gerisinde, terfi kriterleri yazılı değil."
+          }
         }
-      }
+      },
+      "companiesTitle": "Şirket değerlendirmeleri",
+      "companiesBody": "Orada çalışmış kişilerden anonim değerlendirmeler; yayından önce bir moderatör okur.",
+      "companiesCta": "Şirketlere göz at"
     },
     "problem": {
       "eyebrow": "Tanıdık geliyor mu?",
@@ -216,7 +252,11 @@
       "extensionBody": "Chrome eklentisi, LinkedIn veya kariyer.net'teki bir ilanı tek tıkla takip edilen bir başvuruya çevirir. Gmail Taraması'nı açarsanız orada açtığınız yanıtlar durum önerisine dönüşür.",
       "extensionCta": "Chrome eklentisini edinin",
       "cvTitle": "Hangi CV ile başvurduğunuzu bilin",
-      "cvBody": "Başvururken kullandığınız CV dosyalarını tek yerde tutun ve her başvuruda hangisinin gittiğini kaydedin — altı hafta sonra gelen bir telefon tahminle başlamasın."
+      "cvBody": "Başvururken kullandığınız CV dosyalarını tek yerde tutun ve her başvuruda hangisinin gittiğini kaydedin — altı hafta sonra gelen bir telefon tahminle başlamasın.",
+      "companiesTitle": "Şirketleri içeriden tanı",
+      "companiesBody": "Orada çalışmış kişilerin anonim değerlendirmeleri ve açık formüllü bir puan — hesap gerekmeden oku, giriş yapınca yaz.",
+      "companiesCta": "Şirketlere göz at",
+      "companiesBadge": "Yeni"
     },
     "linkedinImport": {
       "eyebrow": "İçe aktarma",
@@ -286,12 +326,15 @@
       "future": "Gelecek",
       "todayTracking": "Başvuru takibi",
       "todayAnalytics": "Kişisel analitik",
-      "todayImport": "CSV / LinkedIn içe aktarma",
+      "todayImport": "LinkedIn içe aktarma",
       "todayReminders": "Hatırlatıcılar",
       "todayCv": "CV saklama",
       "todayEmail": "Gmail taraması entegrasyonu",
       "todayExtension": "Tarayıcı eklentisi",
-      "futureInsights": "Anonim, toplu işe alım içgörüleri"
+      "futureInsights": "Anonim, toplu işe alım içgörüleri",
+      "todayCvScan": "CV taraması (hesapsız)",
+      "todayBenchmark": "Geri dönüş kıyası (hesapsız)",
+      "todayCompanies": "Şirket değerlendirmeleri"
     },
     "privacy": {
       "eyebrow": "Güven",
@@ -320,7 +363,8 @@
       "guide": "Rehber",
       "help": "Yardım Merkezi",
       "cookies": "Çerez Politikası",
-      "benchmark": "Geri dönüş oranı kıyaslama"
+      "benchmark": "Geri dönüş oranı kıyaslama",
+      "extensionPrivacy": "Eklenti Gizlilik Politikası"
     }
   },
   "common": {
@@ -339,7 +383,15 @@
     "notifications": "Bildirimler",
     "help": "Yardım",
     "cv": "CV'lerim",
-    "admin": "Yönetim"
+    "admin": "Yönetim",
+    "companies": "Şirketler",
+    "myReviews": "Değerlendirmelerim",
+    "tools": "Ücretsiz araçlar",
+    "cvScan": "CV Tarama",
+    "benchmark": "Kıyas",
+    "guide": "Rehber",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat"
   },
   "auth": {
     "login": {
@@ -529,9 +581,19 @@
     },
     "empty": {
       "title": "Henüz başvurun yok",
-      "body": "Paneldeki her sayı başvurularından hesaplanıyor. İlk başvurunu ekle ya da LinkedIn/CSV dışa aktarımını içe aktar — huni ve oranlar hemen dolmaya başlar.",
+      "body": "Paneldeki her sayı başvurularından hesaplanıyor. İlk başvurunu elle ekle, LinkedIn veri dışa aktarımını içe aktar ya da Chrome eklentisini kurup ilan sayfasından tek tıkla kaydet — huni ve oranlar hemen dolmaya başlar.",
       "cta": "İlk başvurunu ekle",
-      "importCta": "Dosyadan içe aktar"
+      "importCta": "Dosyadan içe aktar",
+      "extensionCta": "Chrome eklentisi"
+    },
+    "reminders": {
+      "title": "Takip zamanı",
+      "count": "{count} hatırlatıcı",
+      "followUp": "Takip mesajı zamanı",
+      "possiblyGhosted": "Muhtemelen sessize alındı",
+      "days": "{count} gündür yanıt yok",
+      "dismiss": "Yoksay",
+      "error": "Hatırlatıcı kapatılamadı. Tekrar dene."
     }
   },
   "applications": {
@@ -559,7 +621,9 @@
       "status": "Durum",
       "appliedAt": "Başvuru Tarihi",
       "selectPage": "Bu sayfadaki tüm başvuruları seç",
-      "selectRow": "{company} — {position} başvurusunu seç"
+      "selectRow": "{company} — {position} başvurusunu seç",
+      "emptyBody": "Elle eklediğin, LinkedIn'den içe aktardığın ya da eklentiyle kaydettiğin her başvuru burada listelenir. Bir filtre açıksa önce onu temizlemeyi dene.",
+      "emptyCta": "Başvuru ekle"
     },
     "pagination": {
       "pageInfo": "Sayfa {page} / {totalPages} ({totalCount} başvuru)",
@@ -734,7 +798,7 @@
     "title": "Hesap Ayarları",
     "export": {
       "title": "Verilerimi Dışa Aktar",
-      "description": "Hesabınıza ait tüm başvuru, import ve hatırlatma verilerini JSON dosyası olarak indirin.",
+      "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri ve şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
       "download": "Verilerimi İndir",
       "preparing": "Hazırlanıyor...",
       "error": "Veriler dışa aktarılamadı."
@@ -767,14 +831,14 @@
     },
     "delete": {
       "title": "Hesabımı Sil",
-      "description": "Bu işlem geri alınamaz. Hesabınız ve tüm başvuru, import ve hatırlatma verileriniz kalıcı olarak silinir.",
+      "description": "Bu işlem geri alınamaz. Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak silinir.",
       "passwordLabel": "Şifreniz",
       "confirmLabel": "Onaylamak için \"SİL\" yazın",
       "confirmWord": "SİL",
       "confirmMismatch": "Onaylamak için kutuya \"SİL\" yazın.",
       "submit": "Hesabımı Kalıcı Olarak Sil",
       "deleting": "Siliniyor...",
-      "finalConfirm": "Son uyarı: Hesabınız ve tüm başvuru, import, hatırlatma ve eklenti verileriniz kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
+      "finalConfirm": "Son uyarı: Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri ve eklenti bağlantılarınız — kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
       "genericError": "Hesap silinemedi.",
       "noPasswordHint": "Bu hesap Google, LinkedIn veya GitHub ile açıldı ve şifresi yok. Silmek için aşağıya onay kelimesini yazmanız yeterli."
     }
@@ -801,7 +865,9 @@
       "PositionCancelledOrFilled": "Pozisyon iptal/dolu",
       "CultureOrTeamFit": "Takım/kültür uyumu",
       "Other": "Diğer"
-    }
+    },
+    "emptyBody": "Öneriler, Chrome eklentisinde Gmail Taraması açıkken gelen kutunda açtığın işe alım e-postalarından üretilir. Taramayı açmadıysan burada bir şey görünmez.",
+    "emptyCta": "Gmail Taraması'nı aç"
   },
   "notifications": {
     "title": "Bildirimler",
@@ -819,11 +885,13 @@
     "reverting": "Geri alınıyor…",
     "reverted": "Geri alındı",
     "revertError": "Geri alınamadı. Lütfen tekrar dene.",
-    "revertConflict": "Bu başvurunun durumu o zamandan beri değişmiş, geri alınmadı."
+    "revertConflict": "Bu başvurunun durumu o zamandan beri değişmiş, geri alınmadı.",
+    "emptyBody": "Bir e-posta önerisini onayladığında ya da bir öneri kendiliğinden uygulandığında burada kaydı kalır. Bunlar için Chrome eklentisinde Gmail Taraması'nın açık olması gerekir.",
+    "emptyCta": "Gmail Taraması'nı aç"
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 10 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 13 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -916,7 +984,7 @@
       "title": "Haklarınız",
       "before": "Verilerinizin bir kopyasını istediğiniz zaman dışa aktarabilir veya hesabınızı kalıcı olarak silebilirsiniz. Bu işlemleri",
       "link": "Hesap Ayarları",
-      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı ve gönderdiğiniz geri bildirimleri — kalıcı olarak kaldırır."
+      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak kaldırır."
     },
     "notApplicable": {
       "title": "Şu an geçerli olmayanlar",
@@ -959,6 +1027,18 @@
       "mirror": "Mesajınız ve yukarıdaki teknik bağlam, takibini yapabilmemiz için ayrıca GitHub'da herkese kapalı (private) bir depoda bir takip kaydı olarak açılır. Adınız, hesap e-posta adresiniz ve yanıt adresiniz oraya gönderilmez — yalnızca kaydın kimlik numarası gider, dolayısıyla o kaydı kimin yazdığını görebilmek için bizim veritabanımıza bakmamız gerekir.",
       "mirrorRecipient": "Alıcı: GitHub, Inc. (Microsoft, Amerika Birleşik Devletleri). Bu bir yurt dışına aktarımdır; aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "storage": "Geri bildirimler kendi veritabanımızda saklanır; kanonik kayıt bizdedir."
+    },
+    "companyReviews": {
+      "title": "Yazdığın şirket değerlendirmeleri",
+      "intro": "Bir şirket hakkında değerlendirme yazmak isteğe bağlıdır ve hesap gerektirir. Yazdığında:",
+      "what": "Değerlendirmen — başlık, artılar ve eksiler metni, şirketle ilişkin (mevcut çalışan, eski çalışan, stajyer) ve beş puan — moderasyon durumu ve moderatörün yazdığı notla birlikte hesabına bağlı olarak saklanır.",
+      "anonymous": "Yayımlanan değerlendirmeler adını, e-postanı veya hesabını asla göstermez; okuyucular metni, puanları, şirketle ilişkini ve yazıldığı ayı görür. Gün değil ay — bilerek: bir tarih, kimin yazdığına dair bir ipucu daha olurdu.",
+      "admin": "Değerlendirmeni yayımlanmadan önce okuyan moderatör arkasındaki hesabı görebilir. Moderasyonu mümkün kılan budur — kimliği bilinmeyen bir yazara kural uygulanamaz — ve kimliğinle değerlendirmenin buluştuğu tek yer burasıdır.",
+      "reports": "Başkasının değerlendirmesini bildirirsen, bildirim (gerekçe, notun, zaman) hesabına bağlı olarak saklanır ve moderatöre gösterilir. Değerlendirmenin yazarı kimin bildirdiğini asla görmez.",
+      "helpful": "Bir değerlendirmeyi faydalı olarak işaretlemek, değerlendirme ve hesap başına tek satır olarak saklanır; böylece geri alınabilir ve iki kez sayılamaz. Kimin neyi işaretlediğini kimse görmez.",
+      "storage": "Değerlendirmeler, bildirimler ve faydalı işaretleri kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
+      "deletion": "Hesabını silmek değerlendirmelerini, bildirimlerini ve faydalı işaretlerini siler. Yazdığın değerlendirmeler şirket sayfalarından ve şirketin puanından kalkar; veri dışa aktarımın da bunları içerir.",
+      "legalBasis": "Hukuki sebep: açık eylemin — yazmayı, bildirmeyi veya işaretlemeyi sen seçersin — ve moderasyon için meşru menfaat: adı geçen bir şirket hakkında yayımlananların adil ve hukuka uygun kalması."
     }
   },
   "extensionPrivacy": {
@@ -978,7 +1058,7 @@
       "outro": "Her alan, herhangi bir şey gönderilmeden önce eklentinin açılan penceresinde size düzenlenebilir olarak gösterilir — iletişim kişisi dahil; kaydetmeden önce değiştirebilir veya tamamen silebilirsiniz."
     },
     "gmail": {
-      "title": "Gmail Taraması (isteğe bağlı, beta)",
+      "title": "Gmail Taraması (isteğe bağlı)",
       "intro": "Gmail Taraması, statü güncellemesi mailerini (mülakat daveti, ret, durum bildirimi) gelen kutunuzu hiçbir yere aktarmadan önerilere dönüştürür. Varsayılan olarak kapalıdır. Cihaz bazında, eklentinin Ayarlar sayfasından kendiniz açarsınız.",
       "whileOff": "Kapalıyken hiçbir şey değişmez: eklenti mail.google.com üzerinde hiçbir şey okumaz.",
       "whenOn": "Açtıktan sonra, Gmail'de bir maili kendiniz her açtığınızda eklenti yalnızca o tek mesajı — gönderen adresi, konu satırı ve gövde metni (en fazla 2000 karakter) — doğrudan sayfadan, kendi tarayıcınızda okur. Gelen kutusu listenizi hiçbir zaman okumaz ve açmadığınız bir mesajı hiçbir zaman okumaz.",
@@ -1162,7 +1242,11 @@
     "appliedAtRequired": "Başvuru tarihi gerekli",
     "companyNameRequired": "Şirket adı gerekli",
     "hrEmailInvalid": "Geçerli bir e-posta adresi gir.",
-    "hrLinkedInInvalid": "https://www.linkedin.com/in/... ile başlayan bir profil adresi gir."
+    "hrLinkedInInvalid": "https://www.linkedin.com/in/... ile başlayan bir profil adresi gir.",
+    "employmentStatusRequired": "Şirketle ilişkini seç",
+    "ratingRequired": "1 ile 5 arasında bir puan ver",
+    "reviewTitleTooShort": "Başlık en az 3 karakter olmalı",
+    "reviewTextTooShort": "En az 20 karakter yaz"
   },
   "errors": {
     "generic": "İstek başarısız oldu.",
@@ -1198,7 +1282,9 @@
       "companyWebsite": "Şirket web sitesi",
       "companyLinkedIn": "Şirket LinkedIn sayfası",
       "hrEmail": "İK e-posta adresi",
-      "hrLinkedIn": "İK LinkedIn profili"
+      "hrLinkedIn": "İK LinkedIn profili",
+      "emptyBody": "Henüz başvurmadığın ama gözünün üstünde olduğu ilanları buraya ekle; başvurunca tek tıkla başvuruya dönüştürürsün. Chrome eklentisi ilan sayfasından doğrudan ekler.",
+      "emptyCta": "Eklentiyi tanı"
     }
   },
   "imports": {
@@ -1281,14 +1367,17 @@
       "overview": "Genel Bakış",
       "gettingStarted": "Kayıt ve Giriş",
       "dashboard": "Panel",
-      "trackedJobs": "Takip Edilen İlanlar",
+      "trackedJobs": "Takip Listem",
       "applications": "Başvurular",
       "suggestions": "Öneriler",
-      "import": "İçe Aktarma",
-      "settings": "Ayarlar",
+      "import": "LinkedIn'den İçe Aktar",
+      "settings": "Hesap Ayarları",
       "chromeExtension": "Chrome Eklentisi",
       "faq": "Sık Sorulan Sorular",
-      "cv": "CV'lerim"
+      "cv": "CV'lerim",
+      "companyReviews": "Şirket Değerlendirmeleri",
+      "cvScan": "CV Tarama",
+      "benchmark": "Geri Dönüş Kıyası"
     },
     "common": {
       "step": "Adım",
@@ -1326,44 +1415,43 @@
       },
       "topics": {
         "gettingStarted": {
-          "title": "Kayıt ve Giriş",
           "description": "Hesap oluşturma, giriş yapma ve tema/dil tercihleri."
         },
         "dashboard": {
-          "title": "Panel",
           "description": "İstatistikler, yanıt oranları ve durum dağılımı grafiği."
         },
         "trackedJobs": {
-          "title": "Takip Edilen İlanlar",
           "description": "Henüz başvurmadığınız ilanları not edin, başvurunca dönüştürün."
         },
         "applications": {
-          "title": "Başvurular",
           "description": "Başvuru oluşturma, düzenleme, silme ve durum takibi."
         },
         "suggestions": {
-          "title": "Öneriler",
           "description": "Gmail Taraması'ndan otomatik durum önerileri."
         },
         "import": {
-          "title": "İçe Aktarma",
           "description": "LinkedIn veri dışa aktarımınızı toplu olarak içeri alın."
         },
         "settings": {
-          "title": "Ayarlar",
           "description": "Veri dışa aktarma, eklenti anahtarı, hesap silme."
         },
         "chromeExtension": {
-          "title": "Chrome Eklentisi",
-          "description": "LinkedIn ve kariyer.net'te tek tıkla \"I Applied\"."
+          "description": "LinkedIn ve kariyer.net'te tek tıkla \"Başvurdum\"."
         },
         "faq": {
-          "title": "Sık Sorulan Sorular",
           "description": "Merak edilenler ve bilinen sınırlamalar."
         },
         "cv": {
-          "title": "CV'lerim",
           "description": "CV dosyalarınızı yükleyin, önizleyin, varsayılanı seçin ve silin."
+        },
+        "companyReviews": {
+          "description": "Anonim çalışan değerlendirmelerini okuyun, kendi değerlendirmenizi yazın."
+        },
+        "cvScan": {
+          "description": "Hesap açmadan CV'nizin makine okunabilirliğini ölçün."
+        },
+        "benchmark": {
+          "description": "Geri dönüş oranınızı alanınızın medyanıyla kıyaslayın, hesap gerekmez."
         }
       }
     },
@@ -1444,9 +1532,9 @@
         }
       },
       "convert": {
-        "title": "Başvurduğunuzda: \"Mark as Applied\"",
+        "title": "Başvurduğunuzda: \"Başvurdum\"",
         "step1": {
-          "title": "İlanın yanındaki \"Mark as Applied\" butonuna tıklayın",
+          "title": "İlanın yanındaki \"Başvurdum\" butonuna tıklayın",
           "body": "Bu, satırın içinde açılan küçük bir forma dönüşür."
         },
         "step2": {
@@ -1464,7 +1552,7 @@
       },
       "calloutNoEdit": {
         "title": "Doğrudan düzenleme yok",
-        "body": "Takip edilen bir ilanın bilgilerini değiştirmenin bir yolu şu an yok. Bilgi hatalıysa ilanı kaldırıp yeniden ekleyin; başvurduysanız zaten \"Mark as Applied\" ile dönüştürüp bilgileri orada (Başvuru Düzenle sayfasında) güncelleyebilirsiniz."
+        "body": "Takip edilen bir ilanın bilgilerini değiştirmenin bir yolu şu an yok. Bilgi hatalıysa ilanı kaldırıp yeniden ekleyin; başvurduysanız zaten \"Başvurdum\" ile dönüştürüp bilgileri orada (Başvuru Düzenle sayfasında) güncelleyebilirsiniz."
       }
     },
     "applications": {
@@ -1574,7 +1662,7 @@
       "intro": "Tarayıcı eklentisinde Gmail Taraması'nı açtığınızda (bkz. Chrome Eklentisi sayfası), sistem açtığınız statü güncellemesi e-postalarını okuyup size durum önerileri sunar — böylece her güncellemeyi elle işlemek zorunda kalmazsınız.",
       "how": {
         "title": "Bir öneri nasıl oluşur?",
-        "body": "Taranan bir e-posta işlendiğinde, Öneriler sayfasında şirket, pozisyon, alınma tarihi, bir güven yüzdesi ve önerilen durum (varsa) ile bir kart belirir. Öneri henüz bilinen bir başvuruyla eşleşmiyorsa \"New Job\" rozetiyle işaretlenir; net bir durum çıkarılamadıysa kart \"Still Pending\" olarak görünür."
+        "body": "Taranan bir e-posta işlendiğinde, Öneriler sayfasında şirket, pozisyon, alınma tarihi, bir güven yüzdesi ve önerilen durum (varsa) ile bir kart belirir. Öneri henüz bilinen bir başvuruyla eşleşmiyorsa \"Henüz kayıtlı değil — e-postadan yeni başvuru\" rozetiyle işaretlenir; net bir durum çıkarılamadıysa kart \"Hâlâ bekleniyor\" olarak görünür."
       },
       "actions": {
         "title": "Bir öneriyi onaylayın ya da reddedin",
@@ -1583,14 +1671,15 @@
           "body": "Konu satırı ve e-posta özetiyle önerinin doğru başvuruya ait olup olmadığını kontrol edin."
         },
         "step2": {
-          "title": "\"Confirm\" ile uygulayın ya da \"Dismiss\" ile geçin",
+          "title": "\"Onayla\" ile uygulayın ya da \"Yoksay\" ile geçin",
           "body": "Confirm; yeni bir başvuruysa oluşturur, mevcut bir başvuruysa önerilen duruma geçirir. Dismiss, öneriyi hiçbir şey değiştirmeden kapatır."
         }
       },
       "calloutConfidence": {
         "title": "Güven yüzdesine göz atın",
         "body": "Güven oranı düşükse önce e-postanın özetini okuyun — otomatik çıkarım her zaman kesin olmayabilir, siz son sözü söylersiniz."
-      }
+      },
+      "gmailLink": "Gmail Taraması nasıl açılır? →"
     },
     "import": {
       "eyebrow": "İçe Aktarma",
@@ -1638,7 +1727,7 @@
       "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "export": {
         "title": "Verilerimi Dışa Aktar",
-        "body": "Tüm başvuru, içe aktarma ve hatırlatma verilerinizi tek bir JSON dosyası olarak indirin."
+        "body": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri ve şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi bu dosyada yer almaz; onları CV'lerim sayfasından indirirsiniz."
       },
       "extension": {
         "title": "Tarayıcı eklentisi bağlantısı",
@@ -1668,14 +1757,14 @@
         "body": "Şifrenizi girip kutuya \"SİL\" yazın ve butona tıklayın. Tüm verilerinizin silineceğini belirten ikinci bir uyarı çıkar; onu da onayladığınızda hesabınız ve tüm verileriniz kalıcı olarak silinir.",
         "calloutIrreversible": {
           "title": "Geri alınamaz",
-          "body": "Hesabınız silindiğinde tüm başvuru, içe aktarma ve hatırlatma verileriniz kalıcı olarak kaybolur; bu işlemin geri dönüşü yoktur."
+          "body": "Hesabınız silindiğinde ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak kaybolur; bu işlemin geri dönüşü yoktur."
         }
       }
     },
     "chromeExtension": {
       "eyebrow": "Chrome Eklentisi",
       "title": "LinkedIn ve kariyer.net'te tek tıkla başvuru kaydedin",
-      "intro": "e-kariyerim Chrome eklentisi, bir LinkedIn ya da kariyer.net ilan sayfasını tek tıkla takip edilen bir başvuruya dönüştürür — \"I Applied\" butonuna basmanız yeterli.",
+      "intro": "e-kariyerim Chrome eklentisi, bir LinkedIn ya da kariyer.net ilan sayfasını tek tıkla takip edilen bir başvuruya dönüştürür — \"Başvurdum\" düğmesine basmanız yeterli.",
       "install": {
         "title": "Kurulum",
         "storeIntro": "e-kariyerim eklentisi Chrome Web Mağazası'nda yayında — kurulum tek tıkla, geliştirici modu falan gerekmiyor.",
@@ -1733,7 +1822,7 @@
           "body": "Otomatik doldurma her zaman kusursuz olmayabilir — göndermeden önce tüm alanlar düzenlenebilir."
         },
         "step4": {
-          "title": "\"I Applied\"a tıklayın",
+          "title": "\"Başvurdum\"a tıklayın",
           "body": "Başvurunuz e-kariyerim'e kaydedilir."
         }
       },
@@ -1743,7 +1832,12 @@
       },
       "calloutDedupe": {
         "title": "Aynı ilana tekrar tıklamak güvenlidir",
-        "body": "Aynı ilan sayfasında \"I Applied\"a bir daha tıklarsanız, tekrar bir kayıt oluşturulmaz — sistem ilan linkine göre mevcut başvurunuzu bulur ve onu döndürür."
+        "body": "Aynı ilan sayfasında \"Başvurdum\"a bir daha tıklarsanız, tekrar bir kayıt oluşturulmaz — sistem ilan linkine göre mevcut başvurunuzu bulur ve onu döndürür."
+      },
+      "gmail": {
+        "title": "Gmail Taraması",
+        "body": "Eklentinin ayarlar sayfasında Gmail Taraması'nı açarsanız, Gmail'de açtığınız e-postalar arasında işe alım yazışması gibi görünenler (mülakat daveti, ret, teklif) tanınır ve yalnızca gönderen, konu, kısa bir özet ve tarih e-kariyerim'e gönderilir — e-postanın tamamı değil. Kapalı gelir; açmadığınız sürece eklenti Gmail'e hiç dokunmaz.",
+        "next": "Tanınan her e-posta Öneriler sayfasında bir kart olur; ne yapacağınıza orada siz karar verirsiniz. Ayrıntılar Öneriler yardım sayfasında."
       }
     },
     "faq": {
@@ -1755,11 +1849,11 @@
       },
       "q2": {
         "question": "Hesabımı sildiğimde verilerimi geri alabilir miyim?",
-        "answer": "Hayır. Hesap silme işlemi geri alınamaz; tüm başvuru, içe aktarma ve hatırlatma verileriniz kalıcı olarak silinir."
+        "answer": "Hayır. Hesap silme işlemi geri alınamaz; başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri kalıcı olarak silinir. Silmeden önce Hesap Ayarları'ndan verinizi dışa aktarabilirsiniz."
       },
       "q3": {
         "question": "Chrome eklentisi bir ilanın bilgilerini yanlış okursa ne olur?",
-        "answer": "Hiçbir şey otomatik olarak yanlış gönderilmez — \"I Applied\"a tıklamadan önce tüm alanlar düzenlenebilir, popup sadece bir başlangıç noktası sunar."
+        "answer": "Hiçbir şey otomatik olarak yanlış gönderilmez — \"Başvurdum\"a tıklamadan önce tüm alanlar düzenlenebilir, popup sadece bir başlangıç noktası sunar."
       },
       "q4": {
         "question": "Gmail Taraması tüm gelen kutumu mu okuyor?",
@@ -1771,7 +1865,7 @@
       },
       "q6": {
         "question": "Takip ettiğim bir ilanı düzenleyebilir miyim?",
-        "answer": "Takip Edilen İlanlar için doğrudan bir düzenleme yok; bilgisi hatalıysa kaldırıp yeniden ekleyin, başvurduysanız \"Mark as Applied\" ile dönüştürüp bilgileri Başvuru Düzenle sayfasında güncelleyin."
+        "answer": "Takip Listem için doğrudan bir düzenleme yok; bilgisi hatalıysa kaldırıp yeniden ekleyin, başvurduysanız \"Başvurdum\" ile dönüştürüp bilgileri Başvuru Düzenle sayfasında güncelleyin."
       },
       "q7": {
         "question": "Kaç tane Chrome eklentisi anahtarı oluşturabilirim?",
@@ -1791,11 +1885,23 @@
       },
       "q11": {
         "question": "CV'm işverenlere gösteriliyor mu?",
-        "answer": "Hayır. CV'lerim sayfasındaki dosyaları yalnızca siz görürsünüz; üçüncü taraflara ya da herhangi bir yapay zekâ servisine gönderilmez, okunmaz ve analiz edilmez — bir başvuruda hangi CV'nin gittiğini kaydetmek yalnızca kendinize aldığınız bir nottur."
+        "answer": "Hayır. CV'lerim sayfasındaki dosyaları yalnızca siz görürsünüz; üçüncü taraflara ya da herhangi bir yapay zekâ servisine gönderilmez, okunmaz ve analiz edilmez — bir başvuruda hangi CV'nin gittiğini kaydetmek yalnızca kendinize aldığınız bir nottur. Hesap gerektirmeyen CV taramasında da dosya kaydedilmez ve puan bizim sunucumuzda hesaplanır; yalnızca isteğe bağlı \"yazım notları\" kutusunu işaretlerseniz CV metni Google Cloud Vertex AI'a gönderilir ve orada da saklanmaz. Ayrıntısı gizlilik politikasının \"CV taraması\" bölümünde."
       },
       "q12": {
         "question": "Aynı şirkette birden fazla başvurum var, hepsini bir arada görebilir miyim?",
         "answer": "Başvurular listesinin üstündeki Görünüm anahtarını \"Liste\"den \"Şirket\"e alın. Böylece sayfa satır değil şirket tutar; bir şirketin başvuruları hiçbir zaman iki sayfaya bölünmez."
+      },
+      "q13": {
+        "question": "Yazdığım şirket değerlendirmesi anonim mi?",
+        "answer": "Evet. Yayımlanan değerlendirmede adınız, e-postanız ya da gün görünmez; yalnızca ay ve şirketle ilişkiniz (mevcut, eski, stajyer). Kimin yazdığını yalnızca moderatörler, yalnızca moderasyon için görür."
+      },
+      "q14": {
+        "question": "Değerlendirmem neden hâlâ görünmüyor?",
+        "answer": "Her değerlendirme yayına girmeden önce bir moderatör tarafından okunur; o zamana kadar yalnızca siz Değerlendirmelerim sayfasında görürsünüz. Yayımlanmadıysa gerekçesi aynı sayfada yazar; nota göre düzenlerseniz yeniden incelenir."
+      },
+      "q15": {
+        "question": "e-kariyerim'de hesap açmadan neler kullanılabilir?",
+        "answer": "Üç şey: CV Tarama (CV'nizin makine okunabilirliği), geri dönüş oranı kıyaslama ve şirket değerlendirmelerini okumak. Başvuru takibi, panel, Chrome eklentisi ve değerlendirme yazmak için ücretsiz bir hesap gerekir."
       }
     },
     "cv": {
@@ -1833,6 +1939,136 @@
         "title": "CV'leriniz nerede saklanıyor?",
         "body": "Dosyalarınız Avrupa Birliği bölgesindeki (Google Cloud, europe-west1) herkese kapalı bir depolama alanında saklanır. Yapay zekâ dahil hiçbir üçüncü tarafa gönderilmez. Bir CV fotoğraf veya sağlık bilgisi gibi hassas veriler taşıyabildiği için her yükleme öncesinde açık rızanızı ayrıca alıyoruz; onay kutusu hiçbir zaman önceden işaretli gelmez. Rızanızı dosyayı silerek geri çekebilirsiniz, ve hesabınızı sildiğinizde dosyalarınız da silinir."
       }
+    },
+    "companyReviews": {
+      "eyebrow": "Şirketler",
+      "title": "Şirket değerlendirmeleri",
+      "intro": "Bir şirkette çalışmak gerçekte nasıl — orada çalışmış kişilerden anonim değerlendirmeler ve açık formüllü bir puan. Okumak için hesap gerekmez; yazmak için giriş yeter.",
+      "read": {
+        "title": "Değerlendirmeleri okumak",
+        "step1": {
+          "title": "Şirketler sayfasını açın",
+          "body": "Üst menüdeki Şirketler bağlantısı en az bir yayımlanmış değerlendirmesi olan şirketleri listeler; arama kutusuyla ada göre bulabilirsiniz."
+        },
+        "step2": {
+          "title": "Şirket sayfasına girin",
+          "body": "Sayfanın üstünde genel puan, dört kategori ortalaması (yönetim, çalışma ortamı, maaş ve yan haklar, kariyer ve gelişim) ve yıldız dağılımı; altında değerlendirmeler yer alır. En yeni ya da en faydalı olana göre sıralayabilirsiniz."
+        },
+        "step3": {
+          "title": "Puanı okumayı bilin",
+          "body": "Puan yalnızca yeterli sayıda yayımlanmış değerlendirme olunca görünür; azsa kaç değerlendirme kaldığı yazar. Her sayının yanında dayandığı değerlendirme sayısı vardır."
+        },
+        "scoringLink": "Puan nasıl hesaplanıyor? →"
+      },
+      "write": {
+        "title": "Değerlendirme yazmak",
+        "step1": {
+          "title": "Giriş yapın",
+          "body": "Değerlendirme yazmak için bir e-kariyerim hesabı gerekir; okumak için gerekmez. Şirket sayfasındaki \"Değerlendirme yaz\" düğmesi sizi önce girişe, sonra forma götürür."
+        },
+        "step2": {
+          "title": "Şirketi seçin",
+          "body": "Formda şirketi listeden seçin. Aradığınız şirket yoksa adını yazarak ekleyebilirsiniz; ekleme, aynı adı diğer kullanıcıların aramasına da düşürür."
+        },
+        "step3": {
+          "title": "Puanları ve metni doldurun",
+          "body": "Şirketle ilişkiniz (mevcut çalışan, eski çalışan, stajyer), beş adet 1-5 puan, bir başlık, artılar ve eksiler. Kişileri adıyla tanımlanır hale getirmeyin; kurallar formun yanında yazar."
+        },
+        "step4": {
+          "title": "İncelemeye gönderin",
+          "body": "Gönderilen değerlendirme \"İnceleme bekliyor\" durumuna düşer ve Değerlendirmelerim sayfasında yalnızca siz görürsünüz. Bir moderatör okuduktan sonra yayına girer ya da gerekçesiyle geri döner."
+        }
+      },
+      "calloutAnonymous": {
+        "title": "Değerlendirmeler anonimdir",
+        "body": "Yayımlanan değerlendirme adınızı, e-postanızı ya da gününü göstermez; yalnızca ay ve çalışan ilişkisi görünür. Kimin yazdığını yalnızca moderatörler görür, o da yalnızca moderasyon için."
+      },
+      "calloutModeration": {
+        "title": "Ön moderasyon ve şirket başına bir değerlendirme",
+        "body": "Her değerlendirme yayına girmeden önce okunur. Bir şirket için yalnızca bir değerlendirme yazabilirsiniz; fikriniz değişirse mevcut olanı düzenlersiniz. Yayımlanmış bir değerlendirmeyi düzenlemek onu yeniden incelemeye alır. Hesap başına toplam değerlendirme sayısının bir üst sınırı vardır ve Değerlendirmelerim sayfasında yazar."
+      },
+      "manage": {
+        "title": "Düzenleme ve silme",
+        "body": "Değerlendirmelerim sayfasında her değerlendirmenizin durumunu (inceleme bekliyor, yayında, yayımlanmadı) ve varsa moderatör notunu görürsünüz. Düzenle ile metni ve puanları değiştirebilir, Sil ile tamamen kaldırabilirsiniz; silinen değerlendirme şirketin puanından da düşer."
+      },
+      "report": {
+        "title": "Kuralları çiğneyen bir değerlendirme gördüyseniz",
+        "body": "Her değerlendirme kartındaki \"Bu yorumu bildir\" bağlantısıyla bir gerekçe seçip kısa bir not bırakın. Bildirimler bir moderatör tarafından incelenir; değerlendirme yayında kalabilir, yazardan değişiklik istenebilir ya da kaldırılabilir. \"Faydalı\" işareti ise sıralamayı besler; ne bildirim ne de faydalı işareti kimliğinizi başkalarına gösterir."
+      }
+    },
+    "cvScan": {
+      "eyebrow": "Hesapsız araçlar",
+      "title": "CV Tarama",
+      "intro": "Başvuru sistemleri (ATS) CV'nizi önce metne çevirir. Bu araç, dosyanızdan bir makinenin ne okuyabildiğini gösterir ve 0-100 arası bir okunabilirlik puanı verir. Hesap gerekmez.",
+      "openTool": "CV Tarama aracını aç →",
+      "how": {
+        "title": "Nasıl kullanılır",
+        "step1": {
+          "title": "Dosyanızı bırakın",
+          "body": "PDF, DOC ya da DOCX; en fazla 5 MB. Dosyayı sürükleyin ya da seçin."
+        },
+        "step2": {
+          "title": "Onay kutusunu işaretleyin",
+          "body": "Her tarama için ayrıca onay istenir; kutu hiçbir zaman önceden işaretli gelmez. İkinci, isteğe bağlı kutu yazım hakkında not ister — işaretlemeden de tarama tam çalışır ve puan aynıdır."
+        },
+        "step3": {
+          "title": "Sonucu okuyun",
+          "body": "Puanın dört kategoriye dağılımı, dosyadan çıkan ham metin (ayrıştırıcının gördüğü sırayla) ve her bulgunun hangi sayfada, hangi satırda, kaç puana mal olduğunu söyleyen düzeltme listesi."
+        }
+      },
+      "measures": {
+        "title": "Ne ölçer",
+        "body": "Dört başlık: makine okunabilirliği, bölümler ve tarihler, iletişim bilgileri, biçim ve uzunluk. Bunlar her ayrıştırıcının ortak sorunlarıdır: metin çıkmıyorsa, tarihler sıraya girmiyorsa ya da iletişim bilgisi boş görünüyorsa CV'niz aramalarda kaybolur."
+      },
+      "limits": {
+        "title": "Ne ölçmez",
+        "body": "İlanla eşleştirme yapmaz ve anahtar kelime puanı vermez; belirli bir ATS'i taklit etmez; deneyiminizi nasıl anlattığınız hakkında bir şey söylemez. \"Şu ilana %64 uyuyorsun\" gibi bir iddia ölçemediğimiz bir şey olurdu."
+      },
+      "calloutPrivacy": {
+        "title": "Dosyanıza ne olur",
+        "body": "Dosya hiçbir yere kaydedilmez; yalnızca isteğin süresi boyunca bellekte durur. Puan bizim sunucumuzda hesaplanır, hiçbir yapay zekâ modeline sorulmaz. Yalnızca isteğe bağlı yazım notları kutusunu işaretlerseniz CV metni Google Cloud Vertex AI'a gönderilir ve orada da saklanmaz. Geriye kalan: IP adresiniz (2 saat, tarama sınırı için), isimsiz bir puan ve bir sayaç. Ayrıntılar gizlilik politikasının \"CV taraması\" bölümünde."
+      },
+      "calloutRateLimit": {
+        "title": "Tarama sınırı",
+        "body": "Aynı bağlantıdan iki saatte en fazla beş tarama yapılabilir. Sınıra takılırsanız biraz bekleyip yeniden deneyin."
+      }
+    },
+    "benchmark": {
+      "eyebrow": "Hesapsız araçlar",
+      "title": "Geri dönüş oranı kıyaslama",
+      "intro": "Kaç başvuru yaptığınızı ve kaçına cevap geldiğini girin; kendi geri dönüş oranınızı ve alanınızdaki medyanı yan yana görün. Kayıt yok, e-posta yok.",
+      "openTool": "Kıyaslama aracını aç →",
+      "how": {
+        "title": "Nasıl kullanılır",
+        "step1": {
+          "title": "İki sayıyı girin",
+          "body": "Seçtiğiniz dönemde yaptığınız başvuru sayısı ve bunların kaçına herhangi bir cevap geldiği (ret dahil)."
+        },
+        "step2": {
+          "title": "Alanınızı ve dönemi seçin",
+          "body": "Sektör sabit bir listeden seçilir; kıdem ve konum isteğe bağlıdır. Serbest metin alınmaz."
+        },
+        "step3": {
+          "title": "Sonucu okuyun",
+          "body": "Kendi oranınız, alanınızın medyanı ve cevaplayanların yüzde kaçının sizin altınızda kaldığı. Cevabınız anonim olarak havuza eklenir ve bir sonraki kişinin medyanını besler."
+        }
+      },
+      "median": {
+        "title": "Medyan, ortalama değil",
+        "body": "Cevaplar anonim olduğu için aynı kişi birden fazla kez cevaplayabilir ya da kasten uç değer gönderebilir; medyan bunlardan neredeyse etkilenmez, ortalama fazlasıyla etkilenir. Sayı yalnızca bu formu dolduranların beyanından gelir; ürünün topladığı başvuru verisiyle karıştırılmaz."
+      },
+      "scope": {
+        "title": "Medyan ne zaman gösterilmez",
+        "body": "Bir alanın medyanı, o alanda yeterli sayıda cevap olmadan gösterilmez; eşik aracın kendi \"Bu sayı nereden geliyor?\" bölümünde yazar. Alanınız eşiğin altındaysa, açıkça \"tüm alanlar geneli\" diye etiketlenmiş genel medyan gösterilir. Kısa dönem seçen cevaplar düşük görünme eğilimindedir: yakın başvurular henüz cevaplanmaya vakit bulamamış olabilir."
+      },
+      "calloutAnonymous": {
+        "title": "Hiçbir kimlik saklanmaz",
+        "body": "E-posta, IP adresi ya da çerez kaydedilmez. Alanlar sabit listelerden seçilir; girdiğiniz iki sayı ve seçimleriniz dışında hiçbir şey saklanmaz."
+      },
+      "calloutSignedIn": {
+        "title": "Hesabınız varsa",
+        "body": "Panel, aynı oranı sizin gerçek başvurularınızdan ölçer: beyan değil, kayıt. İkisini ayrı tutuyoruz; kıyas aracı hesabınıza bir şey yazmaz."
+      }
     }
   },
   "guide": {
@@ -1868,7 +2104,7 @@
     "listHeading": "Dosyalar",
     "quota": "{used} / {max}",
     "quotaFull": "{max} dosyalık sınıra ulaştın. Yenisini yüklemek için birini sil.",
-    "empty": "Henüz bir CV yüklemedin. Soldaki alana bir dosya sürükle ya da CV Yükle'ye bas.",
+    "empty": "Henüz bir CV yüklemedin. Yükleme alanına bir dosya sürükle ya da CV Yükle'ye bas.",
     "defaultBadge": "Varsayılan",
     "meta": "{format} · {size} · {date} tarihinde yüklendi",
     "download": "İndir",
@@ -2315,5 +2551,331 @@
     "expired": "Bu isteğin süresi doldu. Eklentiden yeniden “Bağlan” demen yeterli.",
     "tokenLimitReached": "Hesabında izin verilen en fazla sayıda aktif anahtar var. Ayarlar → Tarayıcı Eklentisi'nden birini iptal et; eklenti kendiliğinden bağlanacak.",
     "settingsLink": "Ayarlar → Tarayıcı Eklentisi"
+  },
+  "employmentStatus": {
+    "CurrentEmployee": "Mevcut çalışan",
+    "FormerEmployee": "Eski çalışan",
+    "Intern": "Stajyer"
+  },
+  "reviewModerationStatus": {
+    "Pending": "İnceleme bekliyor",
+    "Approved": "Yayında",
+    "Rejected": "Yayımlanmadı"
+  },
+  "reviewReportReason": {
+    "Insult": "Hakaret veya taciz",
+    "Profanity": "Küfür",
+    "PersonalInformation": "Kişisel bilgi",
+    "MisleadingInformation": "Yanıltıcı bilgi",
+    "Advertising": "Reklam",
+    "Spam": "Spam",
+    "Other": "Diğer"
+  },
+  "reviewReportResolution": {
+    "Dismissed": "Reddedildi — değerlendirme yayında kalır",
+    "ChangesRequested": "Yazardan değişiklik istendi",
+    "Removed": "Kaldırıldı"
+  },
+  "adminTabs": {
+    "label": "Yönetim bölümleri",
+    "metrics": "Metrikler",
+    "reviews": "Değerlendirmeler",
+    "reports": "Şikayetler"
+  },
+  "companies": {
+    "directory": {
+      "title": "Şirket değerlendirmeleri",
+      "subtitle": "Bir yerde çalışmak gerçekte nasıl — orada çalışmış kişilerden, anonim, yayımlanmadan önce bir moderatör tarafından okunmuş.",
+      "searchPlaceholder": "Şirket ara…",
+      "searchLabel": "Şirket ara",
+      "writeCta": "Değerlendirme yaz",
+      "loading": "Yükleniyor…",
+      "error": "Şirketler yüklenemedi. Lütfen tekrar dene.",
+      "tooMany": "Art arda çok fazla arama — biraz bekleyip tekrar dene.",
+      "empty": "Henüz yayımlanmış değerlendirmesi olan bir şirket yok.",
+      "noMatches": "“{query}” ile eşleşen bir şirket yok.",
+      "beFirst": "İlk yazan sen ol — değerlendirmen bir moderatör okuduktan sonra yayına girer.",
+      "noScore": "Henüz puan yok",
+      "reviewCount": "{count, plural, =1 {1 değerlendirme} other {# değerlendirme}}",
+      "explainer": {
+        "what": {
+          "title": "Ne içerir",
+          "body": "Genel, yönetim, çalışma ortamı, maaş ve kariyer için beş ayrı puan; artılar ve eksiler; çalışan ilişkisi ve ay."
+        },
+        "anonymous": {
+          "title": "Anonim",
+          "body": "Değerlendirmeler kimin yazdığını asla göstermez. Ad, e-posta ya da gün yok — yalnızca ay ve ilişki."
+        },
+        "moderated": {
+          "title": "Moderasyonlu",
+          "body": "Her değerlendirme yayına girmeden önce bir moderatör okur; şirket başına bir değerlendirme."
+        }
+      }
+    },
+    "page": {
+      "metaTitle": "{company} değerlendirmeleri",
+      "metaDescription": "{count, plural, =0 {{company} için henüz yayımlanmış değerlendirme yok — ilk yazan sen ol.} =1 {{company} hakkında 1 anonim çalışan değerlendirmesi ve kontrol edebileceğin bir puan.} other {{company} hakkında # anonim çalışan değerlendirmesi ve kontrol edebileceğin bir puan.}}",
+      "breadcrumbLabel": "Gezinti",
+      "allCompanies": "← Tüm şirketler",
+      "subtitle": "Burada çalışmış kişilerden anonim değerlendirmeler; bir moderatör okuduktan sonra yayımlanır.",
+      "website": "Web sitesi ↗",
+      "disclaimer": "Değerlendirmeler anonim yazarlarının kişisel görüşleridir, e-kariyerim'in beyanı değildir. Her değerlendirme yayına girmeden önce bir moderatör tarafından okunur; kuralları çiğneyen bir değerlendirme görürsen “Bu yorumu bildir” ile haber ver, yeniden bakarız."
+    },
+    "summary": {
+      "scoreLabel": "5 üzerinden {score} puan",
+      "basedOn": "{count, plural, =1 {1 değerlendirmeye göre} other {# değerlendirmeye göre}}",
+      "noScoreYet": "Henüz puan yok",
+      "noReviewsYet": "Puan, yeterli sayıda yayımlanmış değerlendirme olunca görünür.",
+      "untilScore": "{count, plural, =1 {1 yayımlanmış değerlendirme} other {# yayımlanmış değerlendirme}} — puanın görünmesine {remaining, plural, =1 {1 değerlendirme} other {# değerlendirme}} kaldı.",
+      "distributionLabel": "Genel puan dağılımı"
+    },
+    "reviews": {
+      "heading": "{count, plural, =0 {Değerlendirmeler} =1 {1 değerlendirme} other {# değerlendirme}}",
+      "sortLabel": "Sırala",
+      "sortNewest": "En yeni",
+      "sortMostHelpful": "En faydalı",
+      "yourReview": "Senin değerlendirmen",
+      "editYourReview": "Düzenle",
+      "rejectedReason": "Yayımlanmadı: {reason}",
+      "cta": "Burada çalıştın mı? Deneyimini paylaş — anonim olarak.",
+      "writeReview": "Değerlendirme yaz",
+      "signInToWrite": "Değerlendirme yazmak için giriş yap",
+      "empty": "Henüz yayımlanmış değerlendirme yok.",
+      "actionError": "İşlem tamamlanamadı. Lütfen tekrar dene."
+    },
+    "scoring": {
+      "title": "Şirket puanı nasıl hesaplanır",
+      "intro": "Bir şirket sayfasındaki her sayı bu sayfayla doğrulanabilir. Hiçbir şey elle ağırlıklandırılmaz.",
+      "formula": {
+        "title": "Puan",
+        "body": "Bir şirketin puanı, yayımlanmış değerlendirmelerindeki Genel puanların ağırlıklı ortalamasıdır; şirketin yeterli sayıda kendi değerlendirmesi olana kadar site geneli ortalamaya doğru çekilir. Bu, standart “Bayes ortalaması”dır; tek bir 5 yıldızlı değerlendirmenin bir şirketi listenin tepesine taşıyamaması için vardır.",
+        "n": "n — şirketin yayımlanmış değerlendirme sayısı",
+        "avg": "avg — bu değerlendirmelerin ortalama Genel puanı",
+        "siteAvg": "siteAvg — sitedeki tüm yayımlanmış değerlendirmelerin ortalama Genel puanı",
+        "m": "{m} — ön ağırlık: şirket, {m} adet ortalama değerlendirmeyle başlamış gibi ele alınır",
+        "example": "Örnek: site ortalaması 3,5 iken üç 5 yıldızlı değerlendirme (3 × 5 + {m} × 3,5) / (3 + {m}) = 4,1 verir, 5,0 değil. Otuz böyle değerlendirmeyle puan 4,8 olur.",
+        "threshold": "Bir şirketin en az {minimum} yayımlanmış değerlendirmesi olana kadar puan gösterilmez; sayfa onun yerine sayıyı gösterir.",
+        "categories": "Dört kategori ortalaması (yönetim, çalışma ortamı, maaş ve yan haklar, kariyer ve gelişim) yayımlanmış değerlendirmelerin düz ortalamasıdır ve her zaman değerlendirme sayısının yanında gösterilir.",
+        "defaultsNote": "Canlı yapılandırma şu anda okunamadı; yukarıdaki sayılar belgelenmiş varsayılanlardır."
+      },
+      "moderation": {
+        "title": "Ne yayımlanır",
+        "preModeration": "Her değerlendirme yayına girmeden önce bir moderatör tarafından okunur. O zamana kadar yalnızca yazarı görür.",
+        "onePerCompany": "Hesap başına şirket başına bir değerlendirme. Düzenlemek onu yeniden moderasyona gönderir.",
+        "editResets": "Düzenlenen bir değerlendirme yeniden onaylanana kadar sayfadan kalkar.",
+        "reports": "Giriş yapmış herkes yayımlanmış bir değerlendirmeyi bildirebilir. Moderatör ya olduğu gibi bırakır, ya yazardan değişiklik ister ya da kaldırır.",
+        "anonymity": "Okuyucular bir değerlendirmeyi kimin yazdığını asla görmez. Moderatörler arkasındaki hesabı görebilir; moderasyonu mümkün kılan budur."
+      },
+      "guidelines": {
+        "title": "Bir değerlendirme ne içerebilir",
+        "ownExperience": "Kendi deneyimin, kendi sözlerinle.",
+        "noNames": "Çalışma arkadaşı veya yönetici adı yok, kimse hakkında kişisel ayrıntı yok.",
+        "noInsults": "Hakaret, tehdit veya küfür yok.",
+        "noClaims": "Doğrulanamayan iddia yok — duyduğunu değil, gördüğünü anlat.",
+        "noAds": "Reklam, bağlantı veya işe alım ilanı yok."
+      },
+      "linkLabel": "Puan nasıl hesaplanıyor? →"
+    }
+  },
+  "companyReviews": {
+    "ratings": {
+      "overallRating": "Genel",
+      "managementRating": "Yönetim",
+      "workEnvironmentRating": "Çalışma ortamı",
+      "salaryAndBenefitsRating": "Maaş ve yan haklar",
+      "careerAndDevelopmentRating": "Kariyer ve gelişim"
+    },
+    "card": {
+      "overallLabel": "Genel puan 5 üzerinden {value}",
+      "pros": "Artılar",
+      "cons": "Eksiler",
+      "helpful": "{count, plural, =0 {Faydalı} =1 {Faydalı · 1} other {Faydalı · #}}",
+      "report": "Bu yorumu bildir"
+    },
+    "form": {
+      "heading": "{company} değerlendirmen",
+      "anonymityNote": "Adın olmadan yayımlanır. Moderatörler hesabını görebilir; okuyucular göremez.",
+      "employmentStatus": "Şirketle ilişkin",
+      "employmentStatusPlaceholder": "Seç…",
+      "title": "Başlık",
+      "titlePlaceholder": "Tek satırda özetle",
+      "pros": "Artılar",
+      "prosPlaceholder": "Burada çalışmanın gerçekten iyi yanı neydi?",
+      "cons": "Eksiler",
+      "consPlaceholder": "Katılmadan önce bilinmesi gereken ne var?",
+      "moderationNote": "Her değerlendirmeyi yayımlanmadan önce bir moderatör okur. Kişi adı geçen, hakaret içeren, reklam yapan veya doğrulanamayan iddialarda bulunan değerlendirmeler geri gönderilir.",
+      "submitting": "Gönderiliyor…",
+      "starLabel": "{count, plural, =1 {1 yıldız} other {# yıldız}}",
+      "ratingValue": "{value} / 5",
+      "ratingNone": "Puanlanmadı",
+      "problems": {
+        "employmentStatusRequired": "Şirketle ilişkini seç.",
+        "titleRequired": "Bir başlık ekle.",
+        "titleTooShort": "Başlık en az 3 karakter olmalı.",
+        "titleTooLong": "Başlık en fazla 120 karakter olabilir.",
+        "prosRequired": "Artıları yaz.",
+        "prosTooShort": "En az 20 karakter yaz.",
+        "prosTooLong": "En fazla 2000 karakter.",
+        "consRequired": "Eksileri yaz.",
+        "consTooShort": "En az 20 karakter yaz.",
+        "consTooLong": "En fazla 2000 karakter.",
+        "ratingRequired": "1 ile 5 arasında bir puan ver."
+      }
+    },
+    "guidelines": {
+      "title": "Adil bir değerlendirme yazmak",
+      "intro": "En faydalı değerlendirmeler somut, dürüst ve senin hakkında olanlardır.",
+      "ownExperience": "Yalnızca kendi yaşadıklarını anlat.",
+      "specific": "Ne hissettiğini değil, ne olduğunu yaz.",
+      "noNames": "Çalışma arkadaşı veya yönetici adı verme, kimsenin kişisel bilgisini paylaşma.",
+      "noInsults": "Hakaret, tehdit veya küfür yok — bunlar değerlendirmeyi yayımlatmaz, geri gönderir.",
+      "balanced": "Hem artı hem eksi: yalnızca birini yazan değerlendirme kimseye yardımcı olmaz.",
+      "noAds": "Bağlantı, reklam veya işe alım ilanı yok.",
+      "moderation": "Her değerlendirmeyi yayına girmeden önce bir moderatör okur. Durumunu Değerlendirmelerim'de görürsün."
+    },
+    "report": {
+      "title": "Bu yorumu bildir",
+      "intro": "Sorunun ne olduğunu söyle. Bir moderatör değerlendirmeyi yeniden okuyacak.",
+      "reason": "Gerekçe",
+      "note": "Açıklama (isteğe bağlı)",
+      "noteRequired": "Açıklama",
+      "notePlaceholder": "Sorun tam olarak ne?",
+      "cancel": "Vazgeç",
+      "submit": "Bildirimi gönder",
+      "sending": "Gönderiliyor…",
+      "problems": {
+        "noteRequiredForOther": "Lütfen sorunu açıkla.",
+        "noteTooLong": "En fazla 500 karakter."
+      }
+    },
+    "mine": {
+      "title": "Değerlendirmelerim",
+      "subtitle": "Yazdıkların ve her birinin durumu.",
+      "quota": "{limit} haktan {used} kullanıldı",
+      "write": "Değerlendirme yaz",
+      "loading": "Yükleniyor…",
+      "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
+      "empty": "Henüz bir değerlendirme yazmadın.",
+      "browse": "Şirketlere göz at →",
+      "rejectedTitle": "Yayımlanmadı:",
+      "rejectedHint": "Nota göre düzenlersen yeniden incelenir.",
+      "pendingHint": "Moderatör bekleniyor. O zamana kadar yalnızca sen görebilirsin.",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "deleteTitle": "Bu değerlendirme silinsin mi?",
+      "deleteBody": "Değerlendirme kalıcı olarak silinir ve kotandaki yeri boşalır.",
+      "cancel": "Vazgeç",
+      "confirmDelete": "Sil"
+    },
+    "write": {
+      "title": "Değerlendirme yaz",
+      "subtitle": "Okuyucular için anonim; yayımlanmadan önce bir moderatör okur.",
+      "loadingCompany": "Şirket yükleniyor…",
+      "companyNotFound": "Bu şirket sayfası bulunamadı — şirketi aşağıdan seç.",
+      "companyLabel": "Şirket",
+      "companyPlaceholder": "Şirketin adını yazmaya başla",
+      "searching": "Aranıyor…",
+      "noMatches": "Eşleşme yok — yazdığın adı yine de kullanabilirsin.",
+      "companyHint": "Bir öneri seç ya da tam adı yazıp olduğu gibi kullan; yazım farkları aynı şirkete düşer.",
+      "useCompany": "Bu şirketi kullan",
+      "resolving": "Bir saniye…",
+      "reviewing": "Değerlendirilen:",
+      "changeCompany": "değiştir",
+      "submit": "İncelemeye gönder",
+      "error": "İşlem tamamlanamadı. Lütfen tekrar dene."
+    },
+    "edit": {
+      "title": "Değerlendirmeni düzenle",
+      "subtitle": "Kaydetmek onu yeniden moderasyona gönderir; yeniden onaylanana kadar şirket sayfasından kalkar.",
+      "loading": "Yükleniyor…",
+      "notFound": "Bu değerlendirme sana ait değil ya da artık yok.",
+      "backToMine": "Değerlendirmelerime dön",
+      "submit": "Kaydet ve yeniden gönder",
+      "error": "İşlem tamamlanamadı. Lütfen tekrar dene."
+    }
+  },
+  "adminReviews": {
+    "title": "Şirket değerlendirmesi moderasyonu",
+    "subtitle": "Önce bekleyenler, önce en eskiler. Değerlendirmeyi okuyup karar vermek için satıra tıkla.",
+    "forbiddenTitle": "Bu sayfaya erişimin yok",
+    "forbiddenBody": "Moderasyon, sunucuda yönetici olarak işaretlenmiş hesaplarla sınırlıdır.",
+    "loading": "Yükleniyor…",
+    "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
+    "disabled": "Şirket değerlendirmeleri bu kurulumda kapalı (CompanyReviews:Enabled).",
+    "empty": "Bu filtrelerle eşleşen bir şey yok.",
+    "filters": {
+      "status": "Durum",
+      "anyStatus": "Hepsi",
+      "company": "Şirket",
+      "from": "Başlangıç",
+      "to": "Bitiş"
+    },
+    "columns": {
+      "company": "Şirket",
+      "title": "Başlık",
+      "overall": "Genel",
+      "status": "Durum",
+      "submitted": "Gönderilme",
+      "reports": "Açık bildirim"
+    },
+    "detail": {
+      "title": "Değerlendirme",
+      "close": "Kapat",
+      "approve": "Yayımla",
+      "reject": "Reddet",
+      "pros": "Artılar",
+      "cons": "Eksiler",
+      "author": "Yazar (yalnızca yöneticiler görür)",
+      "quotaOverride": "Bu hesabın değerlendirme hakkı",
+      "quotaPlaceholder": "Boş = varsayılan",
+      "setQuota": "Ayarla",
+      "quotaResult": "{limit} haktan {used} kullanıldı.",
+      "reports": "{count, plural, =1 {1 bildirim} other {# bildirim}}",
+      "resolvedAs": "Sonuç: {resolution}",
+      "rejectReason": "Ret gerekçesi (yazar bunu okur)",
+      "rejectPlaceholder": "örn. Bir çalışma arkadaşının adı geçiyor — adı kaldırıp yeniden gönderin."
+    },
+    "reports": {
+      "title": "Bildirilen değerlendirmeler",
+      "subtitle": "Okuyucuların işaretledikleri. Reddetmek değerlendirmeyi yayında bırakır; diğer ikisi yazara notla birlikte kaldırır.",
+      "forbiddenTitle": "Bu sayfaya erişimin yok",
+      "forbiddenBody": "Moderasyon, sunucuda yönetici olarak işaretlenmiş hesaplarla sınırlıdır.",
+      "loading": "Yükleniyor…",
+      "empty": "Burada bildirim yok.",
+      "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
+      "resolve": "Karar ver",
+      "status": {
+        "Open": "Açık",
+        "Resolved": "Sonuçlandı"
+      },
+      "dialog": {
+        "title": "Bu bildirimi karara bağla",
+        "resolution": "Karar",
+        "reason": "Yazara not",
+        "reasonPlaceholder": "Neyin değişmesi gerektiği ya da neden kaldırıldığı.",
+        "cancel": "Vazgeç",
+        "confirm": "Uygula",
+        "explain": {
+          "Dismissed": "Değerlendirme yayında kalır; yalnızca bu bildirim kapanır.",
+          "ChangesRequested": "Değerlendirme yayından kalkar ve yazar notunu görür; düzenleyip yeniden gönderebilir.",
+          "Removed": "Değerlendirme notunla birlikte kaldırılır. Üzerindeki diğer tüm açık bildirimler de kapanır."
+        }
+      }
+    }
+  },
+  "siteNav": {
+    "howItWorks": "Nasıl çalışır",
+    "extension": "Eklenti",
+    "features": "Özellikler",
+    "companies": "Şirketler",
+    "benchmark": "Kıyas",
+    "guide": "Rehber",
+    "help": "Yardım",
+    "mission": "Misyonumuz",
+    "signIn": "Giriş Yap",
+    "getStarted": "Ücretsiz Başla",
+    "goToDashboard": "Panele Git",
+    "openMenu": "Menüyü aç",
+    "closeMenu": "Menüyü kapat"
   }
 }

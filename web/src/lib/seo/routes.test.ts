@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import tr from "../../../messages/tr.json";
 import robots from "@/app/robots";
-import sitemap from "@/app/sitemap";
+import { companySitemapEntries, staticSitemapEntries } from "@/app/sitemap";
 import { routing } from "@/i18n/routing";
 import { GUIDE_ARTICLES, GUIDE_PATH, articlePath } from "@/lib/guide/articles";
 import { HELP_TOPICS, PROTECTED_PATHS, PUBLIC_PATHS, SITE_URL, alternateLanguages, disallowedPaths, pathFor } from "./routes";
@@ -66,7 +66,7 @@ describe("robots", () => {
 });
 
 describe("sitemap", () => {
-  const entries = sitemap();
+  const entries = staticSitemapEntries();
 
   it("lists every public path in every locale", () => {
     expect(entries).toHaveLength(routing.locales.length * PUBLIC_PATHS.length);
@@ -94,8 +94,24 @@ describe("sitemap", () => {
   });
 });
 
+describe("company pages in the sitemap", () => {
+  const entries = companySitemapEntries([{ slug: "turk-telekom-a-s", lastApprovedAt: "2026-09-12T10:00:00Z" }]);
+
+  it("lists each reviewed company under both locales with the approval date as lastModified", () => {
+    expect(entries.map((entry) => entry.url)).toEqual([
+      `${SITE_URL}/tr/companies/turk-telekom-a-s`,
+      `${SITE_URL}/en/companies/turk-telekom-a-s`,
+    ]);
+    expect(entries.every((entry) => entry.lastModified instanceof Date)).toBe(true);
+  });
+
+  it("lists nothing when no company has a published review", () => {
+    expect(companySitemapEntries([])).toEqual([]);
+  });
+});
+
 describe("guide articles in the sitemap", () => {
-  const entries = sitemap();
+  const entries = staticSitemapEntries();
   const urls = entries.map((entry) => entry.url);
 
   it("lists the index and every article under its own locale's slug", () => {

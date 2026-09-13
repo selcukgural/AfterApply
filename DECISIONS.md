@@ -5632,3 +5632,171 @@ instance` sayısı (bir tane bekleniyor) ve `53300` aramasının boş dönmesi.
 ekliyor (JobSources açma reçetesi) ve DECISIONS'ta bu sorunu "ayrı ele alınacak" diye kaydediyor;
 rebase'de bölüm numarası kaydırılacak ve o not bu kayda işaret edecek. Oradaki
 "`min-instances=0` 04:00 tick'ini kaçırabilir" uyarısı da min-instances=1 ile düşer.
+
+## Şirket değerlendirmeleri: ön moderasyon, Bayes puanı, kamuya açık şirket sayfası (2026-09-13)
+
+Kayıtlı kullanıcıların şirketler hakkında anonim değerlendirme yazıp puanlayabildiği, Glassdoor
+benzeri bir yapı eklendi. Glassdoor'un ekran görüntüleri (masaüstü, "company comments") fikir
+verdi, birebir alınmadı: CEO onayı, mülakat anketi, soru-cevap yok — beş puan kategorisi
+(Genel, Yönetim, Çalışma Ortamı, Maaş ve Yan Haklar, Kariyer ve Gelişim), çalışma durumu
+(mevcut/eski çalışan, stajyer) ve üç metin alanı (başlık, artılar, eksiler) var. **Pozisyon adı
+bilerek yok:** "eski çalışan + kıdemli backend + Eylül 2026" üçlüsü küçük bir şirkette kişiyi
+teşhis eder. Aynı gerekçeyle public tarih **ay hassasiyetinde** (`SubmittedMonth`, `yyyy-MM`).
+
+**Şirket sayfası bugüne kadar yoktu.** Şirketler yalnızca başvuru listesinde gruplama ve
+autocomplete olarak vardı. Kararlar (kullanıcıyla bu oturumda):
+
+- **Public `/companies/[slug]`**, giriş gerektirmez. Strateji notunun (2026-09-07) "kamuya açık
+  şeffaflık yüzeyi" fikriyle uyumlu; yazmak/bildirmek/faydalı işaretlemek giriş ister. Bunun için
+  `Companies`'e `Slug` kolonu geldi (`CompanySlugGenerator`: Türkçe harfler katlanır, çakışmada
+  `-2`, `-3`…; `/companies/scoring` gibi statik segmentler `Reserved` listesinde). Migration
+  mevcut satırları SQL ile doldurur; C# ve SQL fold tablosunu aynı girdilere sabitleyen bir unit
+  test var. Kolon **nullable**: NOT NULL olsaydı Cloud Run geçişinde hâlâ koşan eski instance'ın
+  `INSERT`'i düşerdi; kod her zaman yazar, review servisi null görürse tembelce atar.
+- **Ortak tablodaki herhangi bir şirket** değerlendirilebilir; olmayan şirket isimle
+  (`POST /api/companies/resolve`, aynı `ICompanyResolver`) açılır. Bu, "başvurduğum şirketler"
+  kısıtından daha geniş ama "eski işverenim" senaryosunu kapatmıyor.
+- **Puan = Bayes ortalaması:** `(n·avg + m·siteAvg)/(n+m)`, `m = 5`
+  (`CompanyReviews:PriorWeight`), **3 onaylı değerlendirmenin altında puan yok**
+  (`MinimumReviewsForScore`). Kıyas aracının eşik asimetrisi burada da geçerli: eşiği yükseltmek
+  her zaman daha az gösterir, güvenli; düşürmek yayın kararıdır. Formül `/companies/scoring`'de
+  canlı yapılandırmadan okunan sayılarla yayımlanıyor — "kimsenin denetleyemediği sayı, kimsenin
+  güvenmemesi gereken sayıdır."
+- **Kota: config + kullanıcı başına override.** `CompanyReviews:MaxReviewsPerUser=10` ve
+  `Users.ReviewQuotaOverride` (nullable). Tek değer için ayar tablosu açmak yerine `IsAdmin`'in
+  gerekçesi aynen: kolon bir sonraki istekte etkili olur, "spam yapanı 0'a çek" tam da bunu ister.
+  Kota **tüm durumları** sayar (Rejected dahil); silmek yer açar — 5/saat yazma limiti ve
+  `(UserId, CompanyId)` tekilliği bunu sınırlar.
+
+**Moderasyon.** Her şey `Pending` başlar; düzenleme `Pending`'e döndürür ve önceki kararı siler
+(gerekçe artık var olmayan bir metni anlatır). `Rejected` gerekçe taşır, yalnızca yazar görür.
+Bildirim ("Bu yorumu bildir") yedi gerekçe + not (Diğer'de zorunlu); admin `Dismissed` /
+`ChangesRequested` / `Removed` seçer — son ikisi değerlendirmeyi aynı gerekçeyle reddeder ve aynı
+değerlendirmedeki **diğer açık bildirimleri de kapatır**, kuyruk bayatlamasın. Dördüncü bir
+moderasyon durumu yok: "değişiklik iste" ile "kaldır" arasındaki fark yazara giden metin.
+Yazar kimliği **yalnızca admin yanıtlarında**; public kayıtlar `UserId` taşımaz ve bir integration
+testi bunu ham JSON'da (`userId`, `@example.com` yok) doğruluyor. Admin ekranı: `/admin/reviews`
+(durum/şirket/tarih filtresi, URL'de) ve `/admin/reviews/reports`; üç admin sayfası artık ortak bir
+sekme şeridi (`AdminTabs`) ve bekleyen sayısı rozeti taşıyor. Yetki yine `Users.IsAdmin`, her
+istekte.
+
+**Bayrak: `CompanyReviews:Enabled` (varsayılan `true`).** Kapalıyken her review ucu 404
+(`CompanyIntelligence:Enabled` kalıbı, grup filtresiyle) ve `/api/config` bunu bildirir. Sebebi
+hukuki: adı geçen bir şirketin yanında kullanıcı yazısı yayımlamak, K1'i park ettiren sorunun
+(KVKK + itibar hukuku, `DEVELOPMENT_PLAN.md` Sıra 5) **daha güçlü** biçimi. Ön moderasyon,
+bildirim/kaldırma akışı, admin'e görünür yazar, yayımlı kurallar ve eşik mühendislik tarafının
+cevabı; avukat okuması dışarıda. Bayrak, kodun karardan önce yayına çıkabilmesi için var —
+**prod'da açık mı kapalı mı çıkacağı deploy anındaki karar**, burada verilmedi. Sayfa altında
+"görüşler yazarlarına aittir, her biri yayından önce okunur" notu var; JSON-LD `AggregateRating`
+bilerek eklenmedi (aynı hukuki soruyla örtüşüyor).
+
+**Anonim okuma ucunun tasarımı.** `/api/companies/public/*` grubu `RequireAuthorization`
+çağırmıyor; bu, tarayıcının iliştirdiği süresi dolmuş bir token'ın 401 değil **yok sayılması**
+demek — web'in refresh döngüsü public sayfada hiç tetiklenmiyor, `NO_AUTH_ENDPOINTS`'e ekleme
+gerekmedi. Şirket sayfası sitenin **sunucuda veriyle render edilen ilk public sayfası**
+(`publicApi.server.ts`, `revalidate: 60`): değerlendirmeler HTML'de olsun diye. 0 onaylı
+değerlendirmesi olan şirket sayfası `noindex`, sitemap'e girmez; sitemap artık async ve
+`/api/companies/public/slugs`'tan (10 dk önbellek) onaylı şirketleri **gerçek bir
+`lastModified`** ile ekler — API ulaşılamazsa statik listeye düşer.
+
+**EF Core'un çeviremediği iki sorgu, integration testinde çıktı:** constructor projeksiyonundan
+sonra `OrderBy` ve `GroupBy`+`Join`. İkisi de yeniden yazıldı — sıralama projeksiyondan önce,
+anonim satır → bellekte record; gruplama yerine korele alt sorgu. Birim testleri bunu göremezdi.
+
+**Sınırlar/hız:** `company-review-write` 5/saat (yaz/düzenle/sil/resolve — resolve'un yarattığı
+şirket herkesin autocomplete'ine düşer), `company-review-report` 10/saat, `company-review-helpful`
+60/5dk (hepsi kullanıcı bazlı), `company-public-search` 60/dk (IP bazlı, anonim trigram taraması).
+Redis olmadığı için özet önbelleği instance başına 60 sn kayabilir; onay/ret kendi instance'ında
+anında düşürür.
+
+**Hesap silme ve dışa aktarım:** üç yeni tablo da `Users`'a cascade (yazar, bildiren ve
+işaretleyen olarak); KVKK dışa aktarımı değerlendirmeleri, bildirimleri ve faydalı işaret
+id'lerini içeriyor. Gizlilik metnine "Yazdığın şirket değerlendirmeleri" bölümü eklendi.
+
+**Testler:** birim 620, entegrasyon 355, web 303 — hepsi geçiyor. Yeni birim testleri: slug
+üretici (Türkçe katlama, ayrılmış segment, ek), puan formülü, entity geçişleri, validator'lar,
+trafik allowlist'i; yeni entegrasyon testleri (+14): görünürlük, sahiplik, kota/override,
+faydalı/bildirim, admin 401/403, bayrak kapalı, cascade, export; yeni web testleri: taslak
+doğrulama, moderasyon filtre ayrıştırma, puan gösterimi, sitemap, dönüş yolu allowlist'i. Web
+tarafında bileşen render eden harness yok; sayfalar yerel yığında (API 5151 + web 3000, gerçek
+Chrome) uçtan uca doğrulandı: anonim şirket sayfası (0 değerlendirmede `noindex`), giriş →
+yazma → `Pending`, admin onayı, üç onayla puan (4,7), faydalı sayacı, bildirim → "Kaldırıldı" →
+yazarın listesinde gerekçeli ret. Migration yerel dev DB'de 77 şirkete çakışmasız slug yazdı.
+
+**Ertelenen:** landing'deki araç şeridine "Şirketler" kartı; admin için şirket birleştirme/yeniden
+adlandırma (resolve ile açılan yanlış yazımlar); yardım merkezi konusu.
+
+## Şirketler görünür oldu: ortak site başlığı, araç şeridinde 4. kart, içerik denetimi ve hatırlatıcı paneli (2026-09-13)
+
+**Neden:** Şirket değerlendirmeleri bittiğinde oturumsuz bir ziyaretçi özelliğin varlığını hiçbir
+yerden öğrenemiyordu — landing'de (özellik ızgarası, araç şeridi, "Bugün" listesi, navbar, footer)
+tek satır yoktu; `/companies`'e giden tek bağlantı girişli NavBar'daydı ve oraya tıklayan girişli
+kullanıcı uygulama menüsünü kaybediyordu. Aynı turda tüm sayfaların içerik denetimi ve menü
+tutarlılığı istendi. Tasarım kanvası (kullanıcı seçimleri buradan):
+https://claude.ai/code/artifact/362b43c8-8f93-481e-86d6-86a924c86cf1
+
+**Kararlar:**
+- **Tek ortak site başlığı + footer** (`components/layout/SiteHeader.tsx`, `SiteFooter.tsx`):
+  landing ve `(public)` altındaki her sayfa aynı çifti kullanır. Başlık auth-aware — girişsizse
+  Giriş / Ücretsiz Başla, girişliyse "Panele Git". `LandingNavbar`/`LandingFooter` silindi;
+  `landing.navbar.*` → `siteNav.*`. Landing linkleri: Nasıl çalışır · Eklenti · Özellikler ·
+  Şirketler · Yardım ("Misyonumuz" footer'a indi — 768px'te başlık doluydu); public sayfalar:
+  Şirketler · Kıyas · Rehber · Yardım. Anchor'lar `/#extension` biçiminde next-intl `Link` ile —
+  her sayfadan çalışır (`/tr#extension` olarak çözülüyor, doğrulandı). Alternatif —
+  `/companies`'i girişliye uygulama NavBar'ıyla göstermek — reddedildi: aynı URL iki route grubunda
+  yaşayamaz, istemci tarafı başlık takası `/api/users/me` çözülünce zıplar, public sayfada
+  öneri/bildirim sayaçları poll'lanır.
+- **Araç şeridi 4 kart:** Eklenti → Şirketler → Kıyas → CV (eklenti ilk ve açık kalır, 2026-09-12
+  kararı). Şirketler paneli **gerçek `ReviewSummaryPanel`'i** kullanır (`compact` +
+  `showScoringLink={false}` — `role="img"` içinde link olmaz); alıntı kartı `ReviewCard` değil
+  (o her zaman faydalı/bildir düğmesi taşır). Örnek şirket eklenti mock'uyla aynı: Acme Yazılım.
+- **Özellik ızgarası 7 kart:** Şirketler kartı iki sütunu kaplar ("Yeni" rozeti) — 2 sütun + tek
+  yetim yerine. 4 sütun seçeneği kanvasta gösterildi, seçilmedi.
+- **"Bugün" listesi:** "CSV / LinkedIn içe aktarma" → "LinkedIn içe aktarma" (CSV yükleyici yok);
+  CV taraması, kıyas ve şirket değerlendirmeleri eklendi.
+- **Hatırlatıcılar artık gerçek:** `/api/reminders` (günlük Hangfire taraması, FollowUp /
+  PossiblyGhosted) ilk sürümden beri vardı ama web hiç okumuyordu — landing "hatırlatıcı al" diye
+  söz veriyordu. Panele `RemindersPanel` eklendi (en uzun bekleyen önce, "Yoksay"); metni silmek
+  yerine özelliği bitirmek kullanıcı kararı.
+- **Navigasyon tutarlılığı:** NavBar'da aktif sayfa vurgusu (`navLinkClassName`, AdminTabs ve
+  HelpSidebar ile ortak); UserMenu ve mobil menüye "Ücretsiz araçlar" (CV Tarama, Kıyas, Rehber) —
+  girişli kullanıcı bunlara yalnızca çıkış yapınca ulaşabiliyordu; `adminTabs.reports` TR
+  "Bildirimler" → "Şikayetler" (kullanıcı bildirimleriyle çakışıyordu); yardım kenar çubuğu
+  etiketleri ekranların kendi başlıklarıyla eşitlendi; yardım konu listesi tek kaynak (`HELP_TOPICS`);
+  şirketler için tek "puan nasıl hesaplanıyor" ve tek "tüm şirketler" etiketi.
+- **İçerik denetimi düzeltmeleri:** 11 Türkçe yardım/SSS metni İngilizce düğme adı ("I Applied",
+  "Confirm", "Mark as Applied"…) alıntılıyordu — gerçek Türkçe etiketlerle değiştirildi;
+  `faq.q11` saklanan CV ile hesapsız taramayı ayırıyor (tarama puanı sunucuda, metin yalnızca
+  isteğe bağlı yazım notları kutusuyla Vertex AI'a gider); silme/dışa aktarım metinleri artık CV
+  kayıtlarını ve şirket değerlendirmelerini sayıyor (dışa aktarım listesi
+  `ExportAccountDataAsync`'in gerçekten yazdığıyla sınırlı: takip listesi ve e-posta önerileri
+  dışa aktarılmıyor, silmede düşüyor); Gmail Taraması "beta" ibaresi düştü (tek kalan yerdi;
+  `extension/store-listing/{PRIVACY_POLICY,LISTING}.md` de — **Web Store panosundaki metin elle
+  yeniden yapıştırılmalı**, eklenti kodu değişmediği için sürüm bump'ı yok); `help.suggestions`
+  artık `/help/chrome-extension#gmail`'e bağlanıyor ve o sayfada Gmail Taraması bölümü var.
+- **Boş durumlar:** ortak `components/ui/EmptyState.tsx`; başvurular, takip listesi, öneriler,
+  bildirimler başlık + gövde + CTA ("öneri için eklentide Gmail Taraması açık olmalı"); panel boş
+  durumu eklentiyi anıyor; `cv.empty` "soldaki" demiyor.
+- **Yardım merkezi:** üç yeni konu — `/help/company-reviews`, `/help/cv-scan`, `/help/benchmark`
+  — ve SSS q13-q15 (anonimlik, moderasyon süresi, hesapsız neler çalışır). Şirket sayfalarının
+  görüntüleri `public/help/screenshots/{companies-directory,company-page,review-form,cv-scan-result,
+  benchmark-result}.png` (yerel yığından, açık tema, 1280px; kıyas görüntüsü eşik altı "henüz erken"
+  durumunu gösteriyor — dürüst bir örnek, gerçek havuzda da ilk aylarda görülecek olan bu).
+- **`/companies` açıklama şeridi:** "Ne içerir · Anonim · Moderasyonlu" üç kart; puan linki
+  moderasyon kartına taşındı.
+
+**Ölçüm ("ölçemeden değiştirme"):** yeni `trackSiteTraffic` olayı yok; `/companies` görüntülemeleri
+zaten sayılıyor. Yayın günü `/admin/metrics`'ten `/companies` ve `/companies/*`'ın önceki 7 günlük
+görüntülemesi bu girişin altına yazılacak; yerel sayaç anlamlı değil ve prod paneli oturum istediği
+için bu oturumdan okunamadı.
+
+**Testler:** web 355 (yeni: `lib/i18n/copy.test.ts` — metin kuralları: İngilizce etiket yok, "beta"
+yok, CSV yalnızca "yok" diyen yerde, veri listeleri tam; `components/layout/siteChrome.contract.test.ts`;
+`lib/seo/help.contract.test.ts`; `lib/dashboard/reminders.test.ts`; `landing.contract.test.ts`
+genişletildi). API değişmedi. Tarayıcıda TR+EN, oturumsuz ve oturumlu, koyu ve açık tema, 390px
+telefon genişliği (menü açık/kapalı, şerit ve açıklama kartları tek sütun) doğrulandı.
+
+**Kapsam dışı / açık:** Kullanım Koşulları sayfası yok — artık kullanıcı içeriği yayımlanıyor,
+hukuk okumasıyla birlikte (K1) ele alınmalı. Web Store panosundaki listing metni elle yenilenecek
+(`PUBLISHING_CHECKLIST.md`'de madde var). Geliştirme ortamındaki "1 issue" rozeti CSP'de `unsafe-eval` olmamasından
+kaynaklanan React dev uyarısı; üretimi etkilemiyor.

@@ -34,6 +34,17 @@ describe("sanitizeReturnTo", () => {
     }
   });
 
+  it("accepts the review-writing page, with and without a company slug", () => {
+    expect(sanitizeReturnTo("/my-reviews/write")).toBe("/my-reviews/write");
+    expect(sanitizeReturnTo("/my-reviews/write?company=turk-telekom-a-s")).toBe("/my-reviews/write?company=turk-telekom-a-s");
+  });
+
+  it("rejects a review return path that carries anything but a slug", () => {
+    for (const path of ["/my-reviews", "/my-reviews/write?company=", "/my-reviews/write?company=Türk", "/my-reviews/write?company=a&x=1", "/my-reviews/write/extra"]) {
+      expect(sanitizeReturnTo(path), `${path} must not be a destination`).toBeNull();
+    }
+  });
+
   it("rejects a code longer than any code the server issues", () => {
     expect(sanitizeReturnTo(`/pair?code=${"A".repeat(17)}`)).toBeNull();
   });

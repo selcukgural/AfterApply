@@ -36,6 +36,15 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     /// </summary>
     public bool IsAdmin { get; set; }
 
+    /// <summary>
+    /// How many company reviews this account may hold in total, when an admin has set it for
+    /// this account specifically; null means the global <c>CompanyReviews:MaxReviewsPerUser</c>
+    /// applies. A column for the same reason <see cref="IsAdmin"/> is one: it changes on the next
+    /// request, not on the next deploy — which is what "set a spammer to 0" has to mean. Set through
+    /// the admin moderation endpoint (the one admin write this table has).
+    /// </summary>
+    public int? ReviewQuotaOverride { get; set; }
+
     /// <summary>ISO 639-1 code ("tr"/"en") applied to this user's session right after login,
     /// regardless of which device/browser they sign in from. Kept in sync with the frontend's
     /// current UI locale whenever the user switches languages while authenticated.</summary>

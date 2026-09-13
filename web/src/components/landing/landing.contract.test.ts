@@ -50,7 +50,7 @@ describe("the tools strip", () => {
 
   it("opens on the extension, and lists it first", () => {
     expect(source).toContain('useState<Tool>("extension")');
-    expect(source).toContain('["extension", "benchmark", "cv"]');
+    expect(source).toContain('["extension", "companies", "benchmark", "cv"]');
   });
 
   it("is a tab group, not three links", () => {
@@ -74,7 +74,7 @@ describe("the tools strip", () => {
   });
 
   it("carries the sample-data badge on every panel's mock", () => {
-    for (const mock of ["ExtensionPopupMock.tsx", "CvScanResultMock.tsx", "BenchmarkResultMock.tsx"]) {
+    for (const mock of ["ExtensionPopupMock.tsx", "CvScanResultMock.tsx", "BenchmarkResultMock.tsx", "CompanyReviewsMock.tsx"]) {
       expect(readLanding(mock), mock).toContain("<SampleDataBadge");
     }
   });
@@ -118,14 +118,47 @@ describe("the extension mock", () => {
   });
 });
 
+describe("the companies mock", () => {
+  const source = stripComments(readLanding("CompanyReviewsMock.tsx"));
+
+  it("is one picture for assistive technology and holds nothing focusable", () => {
+    expect(source).toContain('role="img"');
+    expect(source).toContain('aria-hidden="true"');
+    expect(source).not.toMatch(/<a\b/);
+    expect(source).not.toMatch(/<button\b/);
+    expect(source).not.toMatch(/<input\b/);
+  });
+
+  /** The aggregate is the company page's own component, so the demo cannot drift from the product;
+   *  its scoring link is switched off because a hidden picture must not contain a link. */
+  it("renders the real summary panel, without its link", () => {
+    expect(source).toContain("<ReviewSummaryPanel");
+    expect(source).toContain("showScoringLink={false}");
+  });
+
+  it("shows the same company as the extension mock", () => {
+    expect(source).toContain("Acme Yazılım");
+  });
+});
+
+describe("the features grid", () => {
+  it("lists the company pages and links to them", () => {
+    const source = stripComments(readLanding("FeaturesSection.tsx"));
+    expect(source).toContain('"/companies"');
+    expect(source).toContain("sm:col-span-2");
+  });
+});
+
 describe("the #extension anchor", () => {
   it("lands on the tools strip, which the navbar and footer point at", () => {
     const strip = stripComments(readLanding("ToolsStrip.tsx"));
     expect(strip).toContain('id="extension"');
     expect(strip).toContain("scroll-mt-20");
     expect(strip).toContain('window.location.hash === "#extension"');
-    expect(readLanding("LandingNavbar.tsx")).toContain('"#extension"');
-    expect(readLanding("LandingFooter.tsx")).toContain('"#extension"');
+    // The header and footer now live in components/layout and point at the strip from every
+    // public page, so the anchor carries a leading slash.
+    expect(read("src/components/layout/SiteHeader.tsx")).toContain('"/#extension"');
+    expect(read("src/components/layout/SiteFooter.tsx")).toContain('"/#extension"');
   });
 });
 

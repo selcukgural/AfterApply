@@ -16,6 +16,9 @@ export const HELP_TOPICS = [
   { href: "/help/import", key: "import" },
   { href: "/help/settings", key: "settings" },
   { href: "/help/chrome-extension", key: "chromeExtension" },
+  { href: "/help/company-reviews", key: "companyReviews" },
+  { href: "/help/cv-scan", key: "cvScan" },
+  { href: "/help/benchmark", key: "benchmark" },
   { href: "/help/faq", key: "faq" },
 ] as const;
 
@@ -41,6 +44,8 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "/register",
   "/benchmark",
   "/cv-tarama",
+  "/companies",
+  "/companies/scoring",
   "/privacy",
   "/extension-privacy",
   "/cookies",
@@ -64,6 +69,7 @@ export const PROTECTED_PATHS = [
   "/import",
   "/notifications",
   "/settings",
+  "/my-reviews",
   "/admin",
 ];
 

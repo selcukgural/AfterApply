@@ -5,6 +5,8 @@ import { Link } from "@/i18n/navigation";
 import type { ApplicationSummaryResponse } from "@/types/api";
 import { SelectionCheckbox } from "@/components/applications/SelectionCheckbox";
 import { StatusBadge } from "@/components/applications/StatusBadge";
+import { buttonClassName } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface SelectionProps {
   isRowSelected: (id: string) => boolean;
@@ -29,7 +31,17 @@ export function ApplicationTable({
   const locale = useLocale();
 
   if (items.length === 0) {
-    return <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">{t("empty")}</p>;
+    return (
+      <EmptyState
+        title={t("empty")}
+        body={t("emptyBody")}
+        actions={
+          <Link href="/applications/new" className={buttonClassName("primary")}>
+            {t("emptyCta")}
+          </Link>
+        }
+      />
+    );
   }
 
   return (

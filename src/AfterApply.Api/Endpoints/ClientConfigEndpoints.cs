@@ -1,4 +1,5 @@
 using AfterApply.Application.ClientConfig;
+using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -22,6 +23,7 @@ public static class ClientConfigEndpoints
                 IOptions<LinkedInAuthOptions> linkedInAuthOptions,
                 IOptions<GitHubAuthOptions> gitHubAuthOptions,
                 IOptions<CvScanOptions> cvScanOptions,
+                IOptions<CompanyReviewOptions> companyReviewOptions,
                 HttpContext httpContext) =>
             {
                 // Read from IdentityOptions rather than IdentityPolicyOptions: the former is the object
@@ -33,6 +35,7 @@ public static class ClientConfigEndpoints
                 var linkedIn = linkedInAuthOptions.Value;
                 var gitHub = gitHubAuthOptions.Value;
                 var cvScan = cvScanOptions.Value;
+                var reviews = companyReviewOptions.Value;
 
                 // The values change only with a deploy or a config rollout, so let browsers and the
                 // CDN hold them for a few minutes instead of re-fetching on every form mount.
@@ -64,7 +67,9 @@ public static class ClientConfigEndpoints
                     // flag, and a project to call. A flag on with no project configured would
                     // render a checkbox whose only outcome is "unavailable".
                     new CvScanConfigResponse(cvScan.Enabled && cvScan.LlmEnabled
-                                             && !string.IsNullOrWhiteSpace(cvScan.Review.ProjectId))));
+                                             && !string.IsNullOrWhiteSpace(cvScan.Review.ProjectId)),
+                    new CompanyReviewsConfigResponse(reviews.Enabled, reviews.MaxReviewsPerUser,
+                        reviews.MinimumReviewsForScore, reviews.PriorWeight)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

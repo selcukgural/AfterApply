@@ -273,4 +273,40 @@
   <data name="CV_SCAN_LEGACY_DOC" xml:space="preserve">
     <value>Eski .doc biçimi burada okunamıyor. Word'de açıp PDF veya .docx olarak kaydedin ve onu tarayın.</value>
   </data>
+  <data name="COMPANY_REVIEW_QUOTA_REACHED" xml:space="preserve">
+    <value>En fazla {0} şirket değerlendirmesi yazabilirsiniz. Yenisi için birini silin.</value>
+  </data>
+  <data name="COMPANY_REVIEW_ALREADY_EXISTS" xml:space="preserve">
+    <value>Bu şirketi zaten değerlendirdiniz. Bunun yerine mevcut değerlendirmenizi düzenleyin.</value>
+  </data>
+  <data name="COMPANY_REVIEW_NOT_MARKABLE" xml:space="preserve">
+    <value>Yalnızca başkasının yayımlanmış değerlendirmesi faydalı olarak işaretlenebilir.</value>
+  </data>
+  <data name="COMPANY_REVIEW_NOT_REPORTABLE" xml:space="preserve">
+    <value>Yalnızca başkasının yayımlanmış değerlendirmesi bildirilebilir.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REPORT_ALREADY_OPEN" xml:space="preserve">
+    <value>Bu değerlendirme için zaten açık bir bildiriminiz var.</value>
+  </data>
+  <data name="COMPANY_REVIEW_CONTENT_INVALID" xml:space="preserve">
+    <value>Değerlendirme için başlık, artılar ve eksiler gerekir; her puan 1 ile 5 arasında olmalıdır.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REJECTION_REASON_REQUIRED" xml:space="preserve">
+    <value>Bir değerlendirmeyi reddetmek için bir gerekçe gerekir.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REPORT_NOTE_REQUIRED" xml:space="preserve">
+    <value>"Diğer" gerekçeli bir bildirim için kısa bir açıklama gerekir.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REPORT_ALREADY_RESOLVED" xml:space="preserve">
+    <value>Bu bildirim zaten sonuçlandırılmış.</value>
+  </data>
+  <data name="COMPANY_REVIEW_REPORT_REASON_REQUIRED" xml:space="preserve">
+    <value>Değişiklik istemek veya bir değerlendirmeyi kaldırmak için gerekçe gerekir.</value>
+  </data>
+  <data name="VALIDATION_REPORT_NOTE_REQUIRED_FOR_OTHER" xml:space="preserve">
+    <value>Gerekçe "Diğer" ise lütfen sorunu açıklayın.</value>
+  </data>
+  <data name="VALIDATION_RESOLUTION_REASON_REQUIRED" xml:space="preserve">
+    <value>Bildirim reddedilmiyorsa bir gerekçe gerekir.</value>
+  </data>
 </root>

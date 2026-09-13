@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
 import { Callout } from "@/components/help/Callout";
@@ -27,6 +28,9 @@ export default async function SuggestionsHelpPage() {
         <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{t("eyebrow")}</span>
         <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
         <p className="max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">{t("intro")}</p>
+        <Link href="/help/chrome-extension#gmail" className="text-sm font-medium text-accent-ink hover:underline">
+          {t("gmailLink")}
+        </Link>
       </div>
 
       <Screenshot src="/help/screenshots/suggestions-list.png" alt={t("title")} />

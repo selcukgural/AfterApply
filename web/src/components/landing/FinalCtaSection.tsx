@@ -4,7 +4,7 @@ import { ScrollReveal } from "@/components/landing/ScrollReveal";
 
 export async function FinalCtaSection() {
   const t = await getTranslations("landing.finalCta");
-  const tNav = await getTranslations("landing.navbar");
+  const tNav = await getTranslations("siteNav");
 
   return (
     <section className="border-t border-gray-200 bg-blue-50 py-20 dark:border-gray-800 dark:bg-blue-950/20">

@@ -36,7 +36,7 @@ tab is a supported LinkedIn or kariyer.net job posting, it reads:
 Every field is shown to you, editable, in the extension's popup before anything is sent anywhere —
 including the contact, which you can change or clear before saving.
 
-### Gmail Scanning (opt-in, beta)
+### Gmail Scanning (opt-in)
 
 Gmail Scanning turns status-update emails (interview invites, rejections, status updates) into
 suggestions without ever relaying your inbox anywhere. **It is off by default.** You turn it on

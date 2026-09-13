@@ -78,6 +78,21 @@ export default async function PrivacyPage() {
           <p className="mt-2">{t("feedback.legalBasis")}</p>
         </section>
 
+        <section id="company-reviews">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("companyReviews.title")}</h2>
+          <p>{t("companyReviews.intro")}</p>
+          <ul className="mt-2 list-disc flex flex-col gap-1 pl-5">
+            <li>{t("companyReviews.what")}</li>
+            <li>{t("companyReviews.anonymous")}</li>
+            <li>{t("companyReviews.admin")}</li>
+            <li>{t("companyReviews.reports")}</li>
+            <li>{t("companyReviews.helpful")}</li>
+            <li>{t("companyReviews.storage")}</li>
+            <li>{t("companyReviews.deletion")}</li>
+          </ul>
+          <p className="mt-2">{t("companyReviews.legalBasis")}</p>
+        </section>
+
         <section id="google-sign-in">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("googleSignIn.title")}</h2>
           <p>{t("googleSignIn.intro")}</p>

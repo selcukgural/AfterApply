@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 // Shared with the sitemap and the breadcrumb structured data, so the three cannot drift apart.
 import { HELP_TOPICS as TOPICS } from "@/lib/seo/routes";
+import { navLinkClassName } from "@/components/layout/navLink";
 
 export function HelpSidebar() {
   const t = useTranslations("help.sidebar");
@@ -20,11 +21,8 @@ export function HelpSidebar() {
             key={topic.href}
             href={topic.href}
             onClick={onNavigate}
-            className={`rounded-md px-3 py-2 transition-colors ${
-              active
-                ? "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
-            }`}
+            aria-current={active ? "page" : undefined}
+            className={navLinkClassName("pill", active, "px-3 py-2")}
           >
             {t(topic.key)}
           </Link>

@@ -29,7 +29,7 @@
       },
       "privacy": {
         "title": "Privacy Policy",
-        "description": "What e-kariyerim collects, why, where it is stored and how to delete it — CVs, Gmail Scanning and feedback included."
+        "description": "What e-kariyerim collects, why, where it is stored and how to delete it — CVs, Gmail Scanning, feedback and company reviews included."
       },
       "cookies": {
         "title": "Cookie Policy",
@@ -94,22 +94,36 @@
       "pair": {
         "title": "Connect the Extension",
         "description": "Connect your browser extension to your e-kariyerim account with a single confirmation."
+      },
+      "companies": {
+        "title": "Company Reviews",
+        "description": "Anonymous, moderated reviews of employers by the people who worked there: management, work environment, pay and career growth, scored openly."
+      },
+      "companyScoring": {
+        "title": "How Company Scores Are Calculated",
+        "description": "The exact formula behind every company score on e-kariyerim, the review threshold, and the rules a review has to meet."
+      },
+      "myReviews": {
+        "title": "My Reviews",
+        "description": "The company reviews you wrote, their moderation status, and your remaining quota."
+      },
+      "helpCompanyReviews": {
+        "title": "Company Reviews",
+        "description": "Read company reviews and write an anonymous one; how moderation, editing and reporting work."
+      },
+      "helpCvScan": {
+        "title": "CV Scan",
+        "description": "Scan your CV without an account: what the tool measures, what it doesn't, and what happens to your file."
+      },
+      "helpBenchmark": {
+        "title": "Reply Rate Benchmark",
+        "description": "Compare your own reply rate with your field's median; where the number comes from and when it is withheld."
       }
     }
   },
   "landing": {
     "common": {
       "sampleData": "Sample data"
-    },
-    "navbar": {
-      "howItWorks": "How it works",
-      "features": "Features",
-      "mission": "Our mission",
-      "signIn": "Log In",
-      "getStarted": "Get Started Free",
-      "goToDashboard": "Go to Dashboard",
-      "help": "Help",
-      "extension": "Extension"
     },
     "hero": {
       "eyebrow": "How many sent, how many replied",
@@ -171,8 +185,30 @@
           "bullet3": "Your numbers are anonymous; no account needed",
           "cta": "Compare",
           "mockAriaLabel": "Sample: a benchmark result — your reply rate 23.3% (7/30), the Software / IT median 31%."
+        },
+        "companies": {
+          "eyebrow": "Company reviews · anonymous, no account needed",
+          "title": "Know what it's like inside before you apply.",
+          "body": "What working at a company is actually like — separate scores for management, work environment, pay and career, plus pros and cons. Reading needs no account; writing only needs a sign-in.",
+          "bullet1": "Authors stay invisible: only the month and the relationship (current, former, intern)",
+          "bullet2": "A moderator reads every review before it is published",
+          "bullet3": "The score formula is public; no score is shown below three approved reviews",
+          "cta": "Browse companies",
+          "scoringLink": "How is the score calculated?",
+          "mock": {
+            "ariaLabel": "Example: a company page — a 4.1 score from 12 reviews, four category averages and one review excerpt.",
+            "title": "A friendly team that likes to learn",
+            "month": "September 2026",
+            "prosLabel": "PROS",
+            "pros": "Code reviews are taken seriously and remote work flexibility is real.",
+            "consLabel": "CONS",
+            "cons": "Raises lag the market and promotion criteria aren't written down."
+          }
         }
-      }
+      },
+      "companiesTitle": "Company reviews",
+      "companiesBody": "Anonymous reviews from people who worked there; a moderator reads each one before it is published.",
+      "companiesCta": "Browse companies"
     },
     "problem": {
       "eyebrow": "Sound familiar?",
@@ -216,7 +252,11 @@
       "extensionBody": "The Chrome extension turns a LinkedIn or kariyer.net posting into a tracked application with one click. Turn on Gmail Scanning and the replies you open there become status suggestions.",
       "extensionCta": "Get the Chrome extension",
       "cvTitle": "Know which CV you sent",
-      "cvBody": "Keep the CV files you apply with in one place, and record on each application which one went out — so a call six weeks later doesn't start with guesswork."
+      "cvBody": "Keep the CV files you apply with in one place, and record on each application which one went out — so a call six weeks later doesn't start with guesswork.",
+      "companiesTitle": "Know companies from the inside",
+      "companiesBody": "Anonymous reviews from people who worked there and a score with a public formula — read without an account, write once signed in.",
+      "companiesCta": "Browse companies",
+      "companiesBadge": "New"
     },
     "linkedinImport": {
       "eyebrow": "Import",
@@ -286,12 +326,15 @@
       "future": "Future",
       "todayTracking": "Application tracking",
       "todayAnalytics": "Personal analytics",
-      "todayImport": "CSV / LinkedIn import",
+      "todayImport": "LinkedIn import",
       "todayReminders": "Reminders",
       "todayCv": "CV storage",
       "todayEmail": "Gmail scanning integration",
       "todayExtension": "Browser extension",
-      "futureInsights": "Anonymous, aggregate hiring insights"
+      "futureInsights": "Anonymous, aggregate hiring insights",
+      "todayCvScan": "CV scan (no account)",
+      "todayBenchmark": "Reply rate benchmark (no account)",
+      "todayCompanies": "Company reviews"
     },
     "privacy": {
       "eyebrow": "Trust",
@@ -320,7 +363,8 @@
       "guide": "Guide",
       "help": "Help Center",
       "cookies": "Cookie Policy",
-      "benchmark": "Reply rate benchmark"
+      "benchmark": "Reply rate benchmark",
+      "extensionPrivacy": "Extension Privacy Policy"
     }
   },
   "common": {
@@ -339,7 +383,15 @@
     "notifications": "Notifications",
     "help": "Help",
     "cv": "My CVs",
-    "admin": "Admin"
+    "admin": "Admin",
+    "companies": "Companies",
+    "myReviews": "My Reviews",
+    "tools": "Free tools",
+    "cvScan": "CV Scan",
+    "benchmark": "Benchmark",
+    "guide": "Guide",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "auth": {
     "login": {
@@ -529,9 +581,19 @@
     },
     "empty": {
       "title": "No applications yet",
-      "body": "Every number on this dashboard is derived from your applications. Add your first one, or import a LinkedIn/CSV export — the funnel and the rates start filling in straight away.",
+      "body": "Every number on this dashboard is derived from your applications. Add your first one by hand, import your LinkedIn data export, or install the Chrome extension and save straight from the job page — the funnel and the rates start filling in straight away.",
       "cta": "Add your first application",
-      "importCta": "Import from a file"
+      "importCta": "Import from a file",
+      "extensionCta": "Chrome extension"
+    },
+    "reminders": {
+      "title": "Time to follow up",
+      "count": "{count} reminders",
+      "followUp": "Follow-up due",
+      "possiblyGhosted": "Possibly ghosted",
+      "days": "{count} days without a reply",
+      "dismiss": "Dismiss",
+      "error": "The reminder couldn't be dismissed. Try again."
     }
   },
   "applications": {
@@ -559,7 +621,9 @@
       "status": "Status",
       "appliedAt": "Applied Date",
       "selectPage": "Select every application on this page",
-      "selectRow": "Select {company} — {position}"
+      "selectRow": "Select {company} — {position}",
+      "emptyBody": "Every application you add by hand, import from LinkedIn or save with the extension is listed here. If a filter is on, try clearing it first.",
+      "emptyCta": "Add an application"
     },
     "pagination": {
       "pageInfo": "Page {page} / {totalPages} ({totalCount} applications)",
@@ -734,7 +798,7 @@
     "title": "Account Settings",
     "export": {
       "title": "Export My Data",
-      "description": "Download all your application, import, and reminder data as a JSON file.",
+      "description": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent and your company reviews (with your reports and helpful marks) as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
       "download": "Download My Data",
       "preparing": "Preparing...",
       "error": "Could not export data."
@@ -767,14 +831,14 @@
     },
     "delete": {
       "title": "Delete My Account",
-      "description": "This action cannot be undone. Your account and all your application, import, and reminder data will be permanently deleted.",
+      "description": "This action cannot be undone. Your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent — will be permanently deleted.",
       "passwordLabel": "Your Password",
       "confirmLabel": "Type \"DELETE\" to confirm",
       "confirmWord": "DELETE",
       "confirmMismatch": "Type \"DELETE\" in the box to confirm.",
       "submit": "Permanently Delete My Account",
       "deleting": "Deleting...",
-      "finalConfirm": "Final warning: your account and all of your application, import, reminder, and extension data will be permanently deleted. This cannot be undone. Do you want to continue?",
+      "finalConfirm": "Final warning: your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent, plus your extension connections — will be permanently deleted. This cannot be undone. Do you want to continue?",
       "genericError": "Could not delete account.",
       "noPasswordHint": "This account was created with Google, LinkedIn or GitHub and has no password. Type the confirmation word below to delete it."
     }
@@ -801,7 +865,9 @@
       "PositionCancelledOrFilled": "Position cancelled or filled",
       "CultureOrTeamFit": "Culture / team fit",
       "Other": "Other"
-    }
+    },
+    "emptyBody": "Suggestions come from the hiring emails you open in your inbox while Gmail Scanning is on in the Chrome extension. If you haven't turned scanning on, nothing shows up here.",
+    "emptyCta": "Turn on Gmail Scanning"
   },
   "notifications": {
     "title": "Notifications",
@@ -819,11 +885,13 @@
     "reverting": "Undoing…",
     "reverted": "Undone",
     "revertError": "Couldn't undo it. Please try again.",
-    "revertConflict": "This application's status has changed since, so nothing was undone."
+    "revertConflict": "This application's status has changed since, so nothing was undone.",
+    "emptyBody": "When you confirm an email suggestion, or one is applied on its own, the record lands here. Both need Gmail Scanning to be on in the Chrome extension.",
+    "emptyCta": "Turn on Gmail Scanning"
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 10 September 2026",
+    "lastUpdated": "Last updated: 13 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -916,7 +984,7 @@
       "title": "Your rights",
       "before": "You can export a copy of your data or permanently delete your account at any time. You can do this from the",
       "link": "Account Settings",
-      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders and the feedback you sent."
+      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent."
     },
     "notApplicable": {
       "title": "Not currently applicable",
@@ -959,6 +1027,18 @@
       "mirror": "Your message and the technical context above are also opened as a tracking record in a private repository on GitHub, so we can follow it through. Your name, your account email address and your reply address are not sent there — only the record's id goes, so seeing who wrote it means looking it up in our own database.",
       "mirrorRecipient": "Recipient: GitHub, Inc. (Microsoft, United States). This is a transfer abroad; see the \"Transfers abroad\" section below.",
       "storage": "Feedback is stored in our own database; the canonical record is ours."
+    },
+    "companyReviews": {
+      "title": "Company reviews you write",
+      "intro": "Writing a review of a company is optional and needs an account. When you do:",
+      "what": "Your review — the title, the pros and cons text, your relationship to the company (current employee, former employee, intern) and the five ratings — is stored against your account, together with its moderation status and any note the moderator wrote.",
+      "anonymous": "Published reviews never show your name, email or account; readers see the text, the ratings, your relationship to the company and the month it was written. The month rather than the day, on purpose: a date is one more clue to who wrote it.",
+      "admin": "The moderator who reads your review before it is published can see the account behind it. That is what makes moderation possible — a rule cannot be applied to an author nobody can identify — and it is the only place your identity meets your review.",
+      "reports": "If you report someone else's review, the report (reason, your note, the time) is stored against your account and shown to the moderator. The review's author never sees who reported it.",
+      "helpful": "Marking a review helpful is stored as one row per review per account, so it can be undone and cannot be counted twice. Nobody sees who marked what.",
+      "storage": "Reviews, reports and helpful marks are stored in our own database and are not sent to any third party.",
+      "deletion": "Deleting your account deletes your reviews, your reports and your helpful marks. Reviews you wrote disappear from the company pages and from the company's score; this is also what your data export contains.",
+      "legalBasis": "Lawful basis: your explicit action — you choose to write, report or mark — and, for moderation, legitimate interest: keeping what is published about a named company fair and lawful."
     }
   },
   "extensionPrivacy": {
@@ -978,7 +1058,7 @@
       "outro": "Every field is shown to you, editable, in the extension's popup before anything is sent anywhere — including the contact, which you can change or clear before saving."
     },
     "gmail": {
-      "title": "Gmail Scanning (opt-in, beta)",
+      "title": "Gmail Scanning (opt-in)",
       "intro": "Gmail Scanning turns status-update emails (interview invites, rejections, status updates) into suggestions without ever relaying your inbox anywhere. It is off by default. You turn it on yourself, per device, from the extension's Settings page.",
       "whileOff": "While off, nothing changes: the extension reads nothing on mail.google.com.",
       "whenOn": "Once turned on, whenever you personally open an email in Gmail, the extension reads that one message — sender address, subject line, and body text (capped at 2000 characters) — directly from the page, in your own browser. It never reads your inbox list, and never reads a message you haven't opened.",
@@ -1162,7 +1242,11 @@
     "appliedAtRequired": "Applied date is required",
     "companyNameRequired": "Company name is required",
     "hrEmailInvalid": "Enter a valid email address.",
-    "hrLinkedInInvalid": "Enter a profile URL starting with https://www.linkedin.com/in/"
+    "hrLinkedInInvalid": "Enter a profile URL starting with https://www.linkedin.com/in/",
+    "employmentStatusRequired": "Choose your relationship to the company",
+    "ratingRequired": "Give a rating from 1 to 5",
+    "reviewTitleTooShort": "The title needs at least 3 characters",
+    "reviewTextTooShort": "Write at least 20 characters"
   },
   "errors": {
     "generic": "The request failed.",
@@ -1198,7 +1282,9 @@
       "companyWebsite": "Company website",
       "companyLinkedIn": "Company LinkedIn page",
       "hrEmail": "HR email address",
-      "hrLinkedIn": "HR LinkedIn profile"
+      "hrLinkedIn": "HR LinkedIn profile",
+      "emptyBody": "Add the postings you haven't applied to yet but want to keep an eye on; once you apply, one click turns them into an application. The Chrome extension adds them straight from the job page.",
+      "emptyCta": "About the extension"
     }
   },
   "imports": {
@@ -1284,11 +1370,14 @@
       "trackedJobs": "Tracked Jobs",
       "applications": "Applications",
       "suggestions": "Suggestions",
-      "import": "Import",
-      "settings": "Settings",
+      "import": "Import from LinkedIn",
+      "settings": "Account Settings",
       "chromeExtension": "Chrome Extension",
       "faq": "FAQ",
-      "cv": "My CVs"
+      "cv": "My CVs",
+      "companyReviews": "Company Reviews",
+      "cvScan": "CV Scan",
+      "benchmark": "Reply Rate Benchmark"
     },
     "common": {
       "step": "Step",
@@ -1326,44 +1415,43 @@
       },
       "topics": {
         "gettingStarted": {
-          "title": "Sign Up & Log In",
           "description": "Creating an account, logging in, and theme/language preferences."
         },
         "dashboard": {
-          "title": "Dashboard",
           "description": "Stats, response rates, and the status distribution chart."
         },
         "trackedJobs": {
-          "title": "Tracked Jobs",
           "description": "Note jobs you haven't applied to yet, then convert them once you do."
         },
         "applications": {
-          "title": "Applications",
           "description": "Creating, editing, deleting, and tracking the status of applications."
         },
         "suggestions": {
-          "title": "Suggestions",
           "description": "Automatic status suggestions from Gmail Scanning."
         },
         "import": {
-          "title": "Import",
           "description": "Bring in your LinkedIn data export in bulk."
         },
         "settings": {
-          "title": "Settings",
           "description": "Data export, extension token, deleting your account."
         },
         "chromeExtension": {
-          "title": "Chrome Extension",
           "description": "One-click \"I Applied\" on LinkedIn and kariyer.net."
         },
         "faq": {
-          "title": "FAQ",
           "description": "Common questions and known limitations."
         },
         "cv": {
-          "title": "My CVs",
           "description": "Upload, preview, set a default and delete your CV files."
+        },
+        "companyReviews": {
+          "description": "Read anonymous employee reviews and write your own."
+        },
+        "cvScan": {
+          "description": "Measure how machine-readable your CV is, no account needed."
+        },
+        "benchmark": {
+          "description": "Compare your reply rate with your field's median, no account needed."
         }
       }
     },
@@ -1574,7 +1662,7 @@
       "intro": "Once you turn on Gmail Scanning in the browser extension (see the Chrome Extension page), the system reads status-update emails you open and offers status suggestions — so you don't have to process every update by hand.",
       "how": {
         "title": "How a suggestion appears",
-        "body": "Once a scanned email is processed, a card appears on the Suggestions page with the company, job title, received date, a confidence percentage, and a suggested status (if any). A suggestion that doesn't match a known application yet is marked with a \"New Job\" badge; if no clear status could be inferred, the card shows \"Still Pending\" instead."
+        "body": "Once a scanned email is processed, a card appears on the Suggestions page with the company, job title, received date, a confidence percentage, and a suggested status (if any). A suggestion that doesn't match a known application yet is marked with a \"Not registered yet — new application from email\" badge; if no clear status could be inferred, the card shows \"Still pending\" instead."
       },
       "actions": {
         "title": "Confirm or dismiss a suggestion",
@@ -1590,7 +1678,8 @@
       "calloutConfidence": {
         "title": "Check the confidence percentage",
         "body": "When confidence is low, read the email snippet first — automatic extraction isn't always exact, so you have the final say."
-      }
+      },
+      "gmailLink": "How do I turn on Gmail Scanning? →"
     },
     "import": {
       "eyebrow": "Import",
@@ -1638,7 +1727,7 @@
       "intro": "Settings is where you export your data, manage the browser extension's connection and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "export": {
         "title": "Export My Data",
-        "body": "Download all of your application, import, and reminder data as a single JSON file."
+        "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent and your company reviews (with your reports and helpful marks) as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
       },
       "extension": {
         "title": "Browser extension connection",
@@ -1668,7 +1757,7 @@
         "body": "Enter your password, type \"DELETE\" into the box, and click the button. A second warning tells you that all of your data will be deleted; once you confirm that too, your account and all of your data are permanently deleted.",
         "calloutIrreversible": {
           "title": "This can't be undone",
-          "body": "Once your account is deleted, all of your application, import, and reminder data is permanently gone — there's no way to reverse it."
+          "body": "Once your account is deleted, everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent — is permanently gone; there's no way to reverse it."
         }
       }
     },
@@ -1744,6 +1833,11 @@
       "calloutDedupe": {
         "title": "Clicking the same job again is safe",
         "body": "If you click \"I Applied\" again on the same job posting, it won't create a duplicate — the system finds your existing application by the job's URL and returns that instead."
+      },
+      "gmail": {
+        "title": "Gmail Scanning",
+        "body": "If you turn on Gmail Scanning on the extension's settings page, emails you open in Gmail that look like hiring correspondence (an interview invitation, a rejection, an offer) are recognised, and only the sender, subject, a short snippet and the date are sent to e-kariyerim — never the whole email. It ships off; until you turn it on, the extension never touches Gmail.",
+        "next": "Every recognised email becomes a card on the Suggestions page, where you decide what to do with it. The details are on the Suggestions help page."
       }
     },
     "faq": {
@@ -1755,7 +1849,7 @@
       },
       "q2": {
         "question": "Can I get my data back after deleting my account?",
-        "answer": "No. Account deletion can't be undone; all of your application, import, and reminder data is permanently deleted."
+        "answer": "No. Account deletion can't be undone; your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent are permanently deleted. You can export your data from Account Settings before deleting."
       },
       "q3": {
         "question": "What if the Chrome extension reads a job's details wrong?",
@@ -1791,11 +1885,23 @@
       },
       "q11": {
         "question": "Is my CV shown to employers?",
-        "answer": "No. Files on the My CVs page are visible only to you, are never sent to a third party or to any AI service, and are not read or analysed — recording which CV an application went out with is a note to yourself."
+        "answer": "No. Files on the My CVs page are visible only to you, are never sent to a third party or to any AI service, and are not read or analysed — recording which CV an application went out with is a note to yourself. The account-free CV scan doesn't store your file either, and the score is computed on our server; only if you tick the optional \"writing notes\" box is the CV text sent to Google Cloud Vertex AI, and it is not kept there. The details are in the \"CV scan\" section of the privacy policy."
       },
       "q12": {
         "question": "I have several applications at the same company. Can I see them together?",
         "answer": "Switch the View toggle above the Applications list from \"List\" to \"Company\". A page then holds companies rather than rows, so one company's applications are never split across two pages."
+      },
+      "q13": {
+        "question": "Is the company review I wrote anonymous?",
+        "answer": "Yes. A published review shows neither your name, your email nor the day; only the month and your relationship with the company (current, former, intern). Only moderators can see who wrote it, and only for moderation."
+      },
+      "q14": {
+        "question": "Why isn't my review visible yet?",
+        "answer": "Every review is read by a moderator before it is published; until then only you see it, on the My Reviews page. If it was not published, the reason is on the same page; edit it according to the note and it is reviewed again."
+      },
+      "q15": {
+        "question": "What can I use on e-kariyerim without an account?",
+        "answer": "Three things: CV Scan (how machine-readable your CV is), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension and writing a review need a free account."
       }
     },
     "cv": {
@@ -1833,6 +1939,136 @@
         "title": "Where are your CVs stored?",
         "body": "Your files are held in a bucket closed to the public on Google Cloud in the EU region (europe-west1). They are never sent to any third party, AI services included. Because a CV can carry sensitive data such as a photo or health information, we ask for your explicit consent before each upload; the box is never pre-ticked. You can withdraw consent by deleting the file, and deleting your account deletes your files with it."
       }
+    },
+    "companyReviews": {
+      "eyebrow": "Companies",
+      "title": "Company reviews",
+      "intro": "What working at a company is actually like — anonymous reviews from people who worked there and a score with a public formula. Reading needs no account; writing only needs a sign-in.",
+      "read": {
+        "title": "Reading reviews",
+        "step1": {
+          "title": "Open the Companies page",
+          "body": "The Companies link in the top menu lists every company with at least one published review; the search box finds one by name."
+        },
+        "step2": {
+          "title": "Open a company page",
+          "body": "At the top: the overall score, four category averages (management, work environment, pay and benefits, career and development) and the star distribution; below them, the reviews. Sort by newest or most helpful."
+        },
+        "step3": {
+          "title": "Know how to read the score",
+          "body": "A score appears only once enough reviews are published; until then the page says how many are still needed. Every number carries the count it is based on."
+        },
+        "scoringLink": "How is the score calculated? →"
+      },
+      "write": {
+        "title": "Writing a review",
+        "step1": {
+          "title": "Sign in",
+          "body": "Writing a review needs an e-kariyerim account; reading does not. The \"Write a review\" button on a company page takes you to sign-in first, then to the form."
+        },
+        "step2": {
+          "title": "Pick the company",
+          "body": "Choose the company from the list in the form. If it is missing, type its name to add it; an added company also shows up in other people's search."
+        },
+        "step3": {
+          "title": "Fill in the scores and the text",
+          "body": "Your relationship with the company (current employee, former employee, intern), five 1-5 scores, a title, pros and cons. Don't make anyone identifiable by name; the rules sit next to the form."
+        },
+        "step4": {
+          "title": "Submit for review",
+          "body": "A submitted review is \"Pending review\" and visible only to you on the My Reviews page. Once a moderator has read it, it is published or comes back with a reason."
+        }
+      },
+      "calloutAnonymous": {
+        "title": "Reviews are anonymous",
+        "body": "A published review shows neither your name, your email nor the day; only the month and your relationship appear. Only moderators can see who wrote it, and only for moderation."
+      },
+      "calloutModeration": {
+        "title": "Pre-moderation and one review per company",
+        "body": "Every review is read before it is published. You can write one review per company; if your view changes, edit the existing one. Editing a published review sends it back for review. There is a cap on the total number of reviews per account, shown on the My Reviews page."
+      },
+      "manage": {
+        "title": "Editing and deleting",
+        "body": "The My Reviews page shows the status of each of your reviews (pending, published, not published) and the moderator's note, if any. Edit changes the text and the scores; Delete removes it entirely, and a deleted review also drops out of the company's score."
+      },
+      "report": {
+        "title": "If you see a review that breaks the rules",
+        "body": "Use the \"Report this review\" link on any review card, pick a reason and leave a short note. Reports are looked at by a moderator; the review may stay up, the author may be asked to change it, or it may be removed. The \"Helpful\" mark feeds the sorting; neither a report nor a helpful mark reveals your identity to anyone else."
+      }
+    },
+    "cvScan": {
+      "eyebrow": "Account-free tools",
+      "title": "CV Scan",
+      "intro": "Applicant tracking systems (ATS) turn your CV into text first. This tool shows what a machine can read from your file and gives a 0-100 readability score. No account needed.",
+      "openTool": "Open the CV Scan tool →",
+      "how": {
+        "title": "How to use it",
+        "step1": {
+          "title": "Drop your file",
+          "body": "PDF, DOC or DOCX, up to 5 MB. Drag the file in or pick it."
+        },
+        "step2": {
+          "title": "Tick the consent box",
+          "body": "Consent is asked for every scan; the box never comes pre-ticked. A second, optional box asks for notes on the writing — the scan works fully and the score is identical without it."
+        },
+        "step3": {
+          "title": "Read the result",
+          "body": "How the score splits across four categories, the raw text extracted from the file (in the order the parser saw it) and a fix list saying which page, which line and how many points each finding costs."
+        }
+      },
+      "measures": {
+        "title": "What it measures",
+        "body": "Four headings: machine readability, sections and dates, contact details, format and length. These are every parser's shared problems: if no text comes out, dates don't line up or the contact block looks empty, your CV goes missing in searches."
+      },
+      "limits": {
+        "title": "What it doesn't",
+        "body": "It doesn't match you to a posting and gives no keyword score; it doesn't imitate any particular ATS; it says nothing about how you describe your experience. A claim like \"you're a 64% match for this job\" would be something we can't measure."
+      },
+      "calloutPrivacy": {
+        "title": "What happens to your file",
+        "body": "The file is never stored; it lives in memory only for the duration of the request. The score is computed on our server and no AI model is asked for it. Only if you tick the optional writing-notes box is the CV text sent to Google Cloud Vertex AI, and it is not kept there either. What remains: your IP address (2 hours, for the scan limit), an anonymous score and a counter. Details are in the \"CV scan\" section of the privacy policy."
+      },
+      "calloutRateLimit": {
+        "title": "Scan limit",
+        "body": "At most five scans per two hours from the same connection. If you hit the limit, wait a little and try again."
+      }
+    },
+    "benchmark": {
+      "eyebrow": "Account-free tools",
+      "title": "Reply rate benchmark",
+      "intro": "Enter how many applications you sent and how many got any reply; see your own reply rate next to your field's median. No sign-up, no email.",
+      "openTool": "Open the benchmark tool →",
+      "how": {
+        "title": "How to use it",
+        "step1": {
+          "title": "Enter the two numbers",
+          "body": "How many applications you sent in the period you pick, and how many of them got any reply (rejections included)."
+        },
+        "step2": {
+          "title": "Pick your field and the period",
+          "body": "The sector comes from a fixed list; seniority and location are optional. No free text is collected."
+        },
+        "step3": {
+          "title": "Read the result",
+          "body": "Your own rate, your field's median and what share of respondents sit below you. Your answer joins the pool anonymously and feeds the next person's median."
+        }
+      },
+      "median": {
+        "title": "Median, not average",
+        "body": "Because answers are anonymous, the same person can answer more than once or send a deliberate outlier; a median barely moves, an average does. The number comes only from what people typed into this form; it is never mixed with the application data the product collects."
+      },
+      "scope": {
+        "title": "When the median is withheld",
+        "body": "A field's median is not shown until that field has enough answers; the threshold is stated in the tool's own \"Where does this number come from?\" section. If your field is below it, the overall median is shown, clearly labelled as such. Answers for short periods tend to look low: recent applications may not have had time to be answered."
+      },
+      "calloutAnonymous": {
+        "title": "No identity is kept",
+        "body": "No email, no IP address, no cookie. Fields come from fixed lists; nothing beyond your two numbers and your choices is stored."
+      },
+      "calloutSignedIn": {
+        "title": "If you have an account",
+        "body": "The dashboard measures the same rate from your real applications: a record, not a statement. We keep the two apart; the benchmark tool writes nothing to your account."
+      }
     }
   },
   "guide": {
@@ -1868,7 +2104,7 @@
     "listHeading": "Files",
     "quota": "{used} / {max}",
     "quotaFull": "You have reached the {max} file limit. Delete one to upload another.",
-    "empty": "You haven't uploaded a CV yet. Drop a file into the area on the left, or press Upload CV.",
+    "empty": "You haven't uploaded a CV yet. Drop a file into the upload area, or press Upload CV.",
     "defaultBadge": "Default",
     "meta": "{format} · {size} · uploaded {date}",
     "download": "Download",
@@ -2315,5 +2551,331 @@
     "expired": "This request has expired. Just press “Connect” in the extension again.",
     "tokenLimitReached": "Your account already holds the maximum number of active keys. Revoke one under Settings → Browser Extension and the extension will connect on its own.",
     "settingsLink": "Settings → Browser Extension"
+  },
+  "employmentStatus": {
+    "CurrentEmployee": "Current employee",
+    "FormerEmployee": "Former employee",
+    "Intern": "Intern"
+  },
+  "reviewModerationStatus": {
+    "Pending": "Awaiting review",
+    "Approved": "Published",
+    "Rejected": "Not published"
+  },
+  "reviewReportReason": {
+    "Insult": "Insult or harassment",
+    "Profanity": "Profanity",
+    "PersonalInformation": "Personal information",
+    "MisleadingInformation": "Misleading information",
+    "Advertising": "Advertising",
+    "Spam": "Spam",
+    "Other": "Other"
+  },
+  "reviewReportResolution": {
+    "Dismissed": "Dismissed — review stays published",
+    "ChangesRequested": "Changes requested from the author",
+    "Removed": "Removed"
+  },
+  "adminTabs": {
+    "label": "Admin sections",
+    "metrics": "Metrics",
+    "reviews": "Reviews",
+    "reports": "Reports"
+  },
+  "companies": {
+    "directory": {
+      "title": "Company reviews",
+      "subtitle": "What it is actually like to work somewhere, from the people who did — anonymous, read by a moderator before it is published.",
+      "searchPlaceholder": "Search a company…",
+      "searchLabel": "Search companies",
+      "writeCta": "Write a review",
+      "loading": "Loading…",
+      "error": "Couldn't load the companies. Please try again.",
+      "tooMany": "Too many searches in a row — wait a moment and try again.",
+      "empty": "No company has a published review yet.",
+      "noMatches": "Nothing matches “{query}”.",
+      "beFirst": "Be the first to write one — your review goes live once a moderator has read it.",
+      "noScore": "No score yet",
+      "reviewCount": "{count, plural, =1 {1 review} other {# reviews}}",
+      "explainer": {
+        "what": {
+          "title": "What a review holds",
+          "body": "Five separate scores — overall, management, work environment, pay and career — plus pros, cons, the relationship and the month."
+        },
+        "anonymous": {
+          "title": "Anonymous",
+          "body": "Reviews never show who wrote them. No name, no email, no day — only the month and the relationship."
+        },
+        "moderated": {
+          "title": "Moderated",
+          "body": "A moderator reads every review before it is published; one review per company."
+        }
+      }
+    },
+    "page": {
+      "metaTitle": "{company} reviews",
+      "metaDescription": "{count, plural, =0 {No published review of {company} yet — be the first.} =1 {1 anonymous employee review of {company}, with a score you can check.} other {# anonymous employee reviews of {company}, with a score you can check.}}",
+      "breadcrumbLabel": "Breadcrumb",
+      "allCompanies": "← All companies",
+      "subtitle": "Anonymous reviews from people who worked here, published after a moderator has read them.",
+      "website": "Website ↗",
+      "disclaimer": "Reviews are the personal opinions of their anonymous authors, not statements by e-kariyerim. Every review is read by a moderator before it appears; if one breaks the rules, use “Report this review” and we will look at it again."
+    },
+    "summary": {
+      "scoreLabel": "Score {score} out of 5",
+      "basedOn": "{count, plural, =1 {based on 1 review} other {based on # reviews}}",
+      "noScoreYet": "No score yet",
+      "noReviewsYet": "The score appears once there are enough published reviews.",
+      "untilScore": "{count, plural, =1 {1 published review} other {# published reviews}} — {remaining, plural, =1 {1 more} other {# more}} until a score is shown.",
+      "distributionLabel": "Overall rating distribution"
+    },
+    "reviews": {
+      "heading": "{count, plural, =0 {Reviews} =1 {1 review} other {# reviews}}",
+      "sortLabel": "Sort",
+      "sortNewest": "Newest",
+      "sortMostHelpful": "Most helpful",
+      "yourReview": "Your review",
+      "editYourReview": "Edit",
+      "rejectedReason": "Not published: {reason}",
+      "cta": "Worked here? Share your experience — anonymously.",
+      "writeReview": "Write a review",
+      "signInToWrite": "Sign in to write a review",
+      "empty": "No published review yet.",
+      "actionError": "That didn't go through. Please try again."
+    },
+    "scoring": {
+      "title": "How company scores are calculated",
+      "intro": "Every number on a company page can be checked against this page. Nothing is weighted by hand.",
+      "formula": {
+        "title": "The score",
+        "body": "A company's score is a weighted average of the Overall ratings in its published reviews, pulled toward the site-wide average until the company has enough reviews of its own. This is the standard “Bayesian average”; it exists so that a single 5-star review cannot put a company at the top of the list.",
+        "n": "n — the number of published reviews of the company",
+        "avg": "avg — the mean Overall rating of those reviews",
+        "siteAvg": "siteAvg — the mean Overall rating across every published review on the site",
+        "m": "{m} — the prior weight: the company is treated as if it started with {m} average reviews",
+        "example": "Example: three 5-star reviews with a site average of 3.5 give (3 × 5 + {m} × 3.5) / (3 + {m}) = 4.1, not 5.0. With thirty such reviews the score is 4.8.",
+        "threshold": "No score is shown until a company has at least {minimum} published reviews; the page shows the count instead.",
+        "categories": "The four category averages (management, work environment, salary & benefits, career & development) are plain means of the published reviews and are always shown next to the number of reviews.",
+        "defaultsNote": "The live configuration could not be read just now; the numbers above are the documented defaults."
+      },
+      "moderation": {
+        "title": "What gets published",
+        "preModeration": "Every review is read by a moderator before it appears. Until then it is visible only to its author.",
+        "onePerCompany": "One review per company per account. Editing it sends it back for moderation.",
+        "editResets": "An edited review disappears from the page until it is approved again.",
+        "reports": "Anyone signed in can report a published review. A moderator then keeps it, asks the author for changes, or removes it.",
+        "anonymity": "Readers never see who wrote a review. Moderators can see the account behind it, which is what makes moderation possible."
+      },
+      "guidelines": {
+        "title": "What a review may contain",
+        "ownExperience": "Your own experience, in your own words.",
+        "noNames": "No names of colleagues or managers, no personal details about anyone.",
+        "noInsults": "No insults, threats or profanity.",
+        "noClaims": "No claims that cannot be verified — describe what you saw, not what you heard.",
+        "noAds": "No advertising, links or recruiting."
+      },
+      "linkLabel": "How the score is calculated →"
+    }
+  },
+  "companyReviews": {
+    "ratings": {
+      "overallRating": "Overall",
+      "managementRating": "Management",
+      "workEnvironmentRating": "Work environment",
+      "salaryAndBenefitsRating": "Salary & benefits",
+      "careerAndDevelopmentRating": "Career & development"
+    },
+    "card": {
+      "overallLabel": "Overall rating {value} out of 5",
+      "pros": "Pros",
+      "cons": "Cons",
+      "helpful": "{count, plural, =0 {Helpful} =1 {Helpful · 1} other {Helpful · #}}",
+      "report": "Report this review"
+    },
+    "form": {
+      "heading": "Your review of {company}",
+      "anonymityNote": "Published without your name. Moderators can see your account; readers cannot.",
+      "employmentStatus": "Your relationship to the company",
+      "employmentStatusPlaceholder": "Choose…",
+      "title": "Title",
+      "titlePlaceholder": "Sum it up in one line",
+      "pros": "Pros",
+      "prosPlaceholder": "What was genuinely good about working here?",
+      "cons": "Cons",
+      "consPlaceholder": "What should someone know before joining?",
+      "moderationNote": "A moderator reads every review before it is published. Reviews that name people, insult, advertise or make claims that cannot be checked are sent back.",
+      "submitting": "Sending…",
+      "starLabel": "{count, plural, =1 {1 star} other {# stars}}",
+      "ratingValue": "{value} / 5",
+      "ratingNone": "Not rated",
+      "problems": {
+        "employmentStatusRequired": "Choose your relationship to the company.",
+        "titleRequired": "Add a title.",
+        "titleTooShort": "The title needs at least 3 characters.",
+        "titleTooLong": "The title can be at most 120 characters.",
+        "prosRequired": "Write the pros.",
+        "prosTooShort": "Write at least 20 characters.",
+        "prosTooLong": "At most 2000 characters.",
+        "consRequired": "Write the cons.",
+        "consTooShort": "Write at least 20 characters.",
+        "consTooLong": "At most 2000 characters.",
+        "ratingRequired": "Give a rating from 1 to 5."
+      }
+    },
+    "guidelines": {
+      "title": "Writing a fair review",
+      "intro": "The most useful reviews are specific, honest and about you.",
+      "ownExperience": "Stick to what you experienced yourself.",
+      "specific": "Say what happened, not just how you feel about it.",
+      "noNames": "Don't name colleagues or managers, and don't share anyone's personal details.",
+      "noInsults": "No insults, threats or profanity — they get the review sent back, not published.",
+      "balanced": "Pros and cons both: a review with only one of them helps nobody.",
+      "noAds": "No links, advertising or recruiting.",
+      "moderation": "A moderator reads every review before it goes live. You'll see its status under My Reviews."
+    },
+    "report": {
+      "title": "Report this review",
+      "intro": "Tell us what is wrong with it. A moderator will read the review again.",
+      "reason": "Reason",
+      "note": "Details (optional)",
+      "noteRequired": "Details",
+      "notePlaceholder": "What exactly is the problem?",
+      "cancel": "Cancel",
+      "submit": "Send report",
+      "sending": "Sending…",
+      "problems": {
+        "noteRequiredForOther": "Please describe the problem.",
+        "noteTooLong": "At most 500 characters."
+      }
+    },
+    "mine": {
+      "title": "My reviews",
+      "subtitle": "What you wrote, and where each review stands.",
+      "quota": "{used} of {limit} reviews used",
+      "write": "Write a review",
+      "loading": "Loading…",
+      "error": "That didn't go through. Please try again.",
+      "empty": "You haven't written a review yet.",
+      "browse": "Browse companies →",
+      "rejectedTitle": "Not published:",
+      "rejectedHint": "Edit it to address the note and it will be reviewed again.",
+      "pendingHint": "Waiting for a moderator. Only you can see it until then.",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete this review?",
+      "deleteBody": "The review is removed for good, and its slot in your quota is freed.",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete"
+    },
+    "write": {
+      "title": "Write a review",
+      "subtitle": "Anonymous to readers, read by a moderator before it is published.",
+      "loadingCompany": "Loading the company…",
+      "companyNotFound": "That company page could not be found — pick the company below.",
+      "companyLabel": "Company",
+      "companyPlaceholder": "Start typing the company's name",
+      "searching": "Searching…",
+      "noMatches": "No match — you can still use the name as typed.",
+      "companyHint": "Pick a suggestion, or type the full name and use it as it is; spelling variants land on the same company.",
+      "useCompany": "Use this company",
+      "resolving": "One moment…",
+      "reviewing": "Reviewing",
+      "changeCompany": "change",
+      "submit": "Submit for review",
+      "error": "That didn't go through. Please try again."
+    },
+    "edit": {
+      "title": "Edit your review",
+      "subtitle": "Saving sends it back for moderation; it leaves the company page until it is approved again.",
+      "loading": "Loading…",
+      "notFound": "That review is not yours or no longer exists.",
+      "backToMine": "Back to my reviews",
+      "submit": "Save and resubmit",
+      "error": "That didn't go through. Please try again."
+    }
+  },
+  "adminReviews": {
+    "title": "Company review moderation",
+    "subtitle": "Pending first, oldest first. Click a row to read the review and decide.",
+    "forbiddenTitle": "You don't have access to this page",
+    "forbiddenBody": "Moderation is limited to accounts flagged as an administrator on the server.",
+    "loading": "Loading…",
+    "error": "That didn't go through. Please try again.",
+    "disabled": "Company reviews are switched off on this deployment (CompanyReviews:Enabled).",
+    "empty": "Nothing matches these filters.",
+    "filters": {
+      "status": "Status",
+      "anyStatus": "Any",
+      "company": "Company",
+      "from": "From",
+      "to": "To"
+    },
+    "columns": {
+      "company": "Company",
+      "title": "Title",
+      "overall": "Overall",
+      "status": "Status",
+      "submitted": "Submitted",
+      "reports": "Open reports"
+    },
+    "detail": {
+      "title": "Review",
+      "close": "Close",
+      "approve": "Publish",
+      "reject": "Reject",
+      "pros": "Pros",
+      "cons": "Cons",
+      "author": "Author (visible to admins only)",
+      "quotaOverride": "Review quota for this account",
+      "quotaPlaceholder": "Blank = default",
+      "setQuota": "Set",
+      "quotaResult": "{used} used of {limit}.",
+      "reports": "{count, plural, =1 {1 report} other {# reports}}",
+      "resolvedAs": "Resolved: {resolution}",
+      "rejectReason": "Reason for rejecting (the author reads this)",
+      "rejectPlaceholder": "e.g. Names a colleague — please remove the name and resubmit."
+    },
+    "reports": {
+      "title": "Reported reviews",
+      "subtitle": "What readers flagged. Dismissing keeps the review up; the other two take it down with a note to the author.",
+      "forbiddenTitle": "You don't have access to this page",
+      "forbiddenBody": "Moderation is limited to accounts flagged as an administrator on the server.",
+      "loading": "Loading…",
+      "empty": "No reports here.",
+      "error": "That didn't go through. Please try again.",
+      "resolve": "Decide",
+      "status": {
+        "Open": "Open",
+        "Resolved": "Resolved"
+      },
+      "dialog": {
+        "title": "Decide this report",
+        "resolution": "Decision",
+        "reason": "Note to the author",
+        "reasonPlaceholder": "What has to change, or why it was removed.",
+        "cancel": "Cancel",
+        "confirm": "Apply",
+        "explain": {
+          "Dismissed": "The review stays published; only this report is closed.",
+          "ChangesRequested": "The review comes down and the author sees your note; they can edit and resubmit.",
+          "Removed": "The review comes down with your note. Every other open report on it is closed too."
+        }
+      }
+    }
+  },
+  "siteNav": {
+    "howItWorks": "How it works",
+    "extension": "Extension",
+    "features": "Features",
+    "companies": "Companies",
+    "benchmark": "Benchmark",
+    "guide": "Guide",
+    "help": "Help",
+    "mission": "Our mission",
+    "signIn": "Log In",
+    "getStarted": "Get Started Free",
+    "goToDashboard": "Go to Dashboard",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   }
 }

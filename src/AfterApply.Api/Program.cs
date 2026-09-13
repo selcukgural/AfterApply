@@ -149,6 +149,8 @@ app.MapPersonalAccessTokenEndpoints();
 app.MapExtensionPairingEndpoints();
 app.MapCompanyIntelligenceEndpoints();
 app.MapCompanyEndpoints();
+app.MapCompanyReviewEndpoints();
+app.MapAdminCompanyReviewEndpoints();
 app.MapFeedbackEndpoints();
 app.MapSiteTrafficEndpoints();
 app.MapBenchmarkEndpoints();

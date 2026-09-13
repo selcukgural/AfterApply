@@ -67,6 +67,26 @@ public sealed class RateLimitingOptions
     /// aim at the endpoint.</summary>
     public FixedWindowPolicy ExtensionPairingPoll { get; init; } = new() { PermitLimit = 600, WindowSeconds = 300 };
 
+    /// <summary>Per user — writing, editing, deleting a review and creating a company to review.
+    /// Prose by a person, like Feedback; five an hour is generous for that and caps what a
+    /// scripted account can push into a table whose rows end up on public pages (and, through
+    /// "resolve", into every user's company autocomplete).</summary>
+    public FixedWindowPolicy CompanyReviewWrite { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
+
+    /// <summary>Per user — reporting reviews. A reader who finds ten problems in an hour is
+    /// either right, in which case the admin queue has plenty, or a campaign, in which case this
+    /// is the ceiling.</summary>
+    public FixedWindowPolicy CompanyReviewReport { get; init; } = new() { PermitLimit = 10, WindowSeconds = 3600 };
+
+    /// <summary>Per user — the helpful toggle. Sized for a person reading a page of reviews and
+    /// clicking, not for a script inflating one review's count.</summary>
+    public FixedWindowPolicy CompanyReviewHelpful { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };
+
+    /// <summary>Per IP, anonymous — the public company directory search: a trigram scan per
+    /// request, from anyone. A person types a name and pages a few times; sixty a minute is
+    /// invisible to that and a ceiling for a scraper.</summary>
+    public FixedWindowPolicy CompanyPublicSearch { get; init; } = new() { PermitLimit = 60, WindowSeconds = 60 };
+
     public sealed class FixedWindowPolicy
     {
         public int PermitLimit { get; init; }

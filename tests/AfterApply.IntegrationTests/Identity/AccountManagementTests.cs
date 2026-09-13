@@ -5,12 +5,14 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.TrackedJobs.Contracts;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
+using AfterApply.Domain.CompanyReviews;
 using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Notifications;
@@ -147,6 +149,15 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
         var userB = await RegisterAsync("userb.delete@example.com");
         var userBApplicationId = await CreateApplicationAsync(userB, "Shared Co");
 
+        // Company reviews in all three roles: A wrote one, A reported B's, A marked B's helpful.
+        var sharedCompanyId = await CompanyIdOfApplicationAsync(applicationId);
+        var reviewByA = await WriteReviewAsync(userA, sharedCompanyId);
+        var reviewByB = await WriteReviewAsync(userB, sharedCompanyId);
+        await ApproveReviewAsync(reviewByB);
+        (await userA.PostAsync($"/api/company-reviews/{reviewByB}/helpful", null)).EnsureSuccessStatusCode();
+        (await userA.PostAsJsonAsync($"/api/company-reviews/{reviewByB}/reports",
+            new ReportCompanyReviewRequest(ReviewReportReason.Spam), JsonOptions)).EnsureSuccessStatusCode();
+
         Guid userAId;
         using (var scope = _factory!.Services.CreateScope())
         {
@@ -178,6 +189,11 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
             (await db.RefreshTokens.AnyAsync(rt => rt.UserId == userAId)).ShouldBeFalse();
             (await db.TrackedJobs.AnyAsync(t => t.UserId == userAId)).ShouldBeFalse();
             (await db.FeedbackEntries.AnyAsync(f => f.UserId == userAId)).ShouldBeFalse();
+            (await db.CompanyReviews.AnyAsync(r => r.Id == reviewByA)).ShouldBeFalse();
+            (await db.CompanyReviewReports.AnyAsync(p => p.ReporterUserId == userAId)).ShouldBeFalse();
+            (await db.CompanyReviewHelpfulMarks.AnyAsync(m => m.UserId == userAId)).ShouldBeFalse();
+            // B's review and the company it is about are untouched.
+            (await db.CompanyReviews.AnyAsync(r => r.Id == reviewByB)).ShouldBeTrue();
 
             // Shared Company must survive - user B's application still references it.
             var userBApplication = await db.Applications.SingleAsync(a => a.Id == userBApplicationId);
@@ -206,6 +222,13 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
 
         db.TrackedJobs.Add(TrackedJob.Create(Guid.CreateVersion7(), company.Id, "Orphan Engineer",
             null, null, null, DateTimeOffset.UtcNow));
+
+        await Should.ThrowAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+
+        db.CompanyReviews.Add(CompanyReview.Create(Guid.CreateVersion7(), company.Id,
+            new ReviewContent(EmploymentStatus.Intern, "Orphan review", "Long enough pros for the check.",
+                "Long enough cons for the check.", 3, 3, 3, 3, 3), DateTimeOffset.UtcNow));
 
         await Should.ThrowAsync<DbUpdateException>(() => db.SaveChangesAsync());
     }
@@ -247,6 +270,57 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
 
         export.ImportBatches.ShouldHaveSingleItem().FileName.ShouldBe("export-seed.csv");
         export.Reminders.ShouldHaveSingleItem().Type.ShouldBe(ReminderType.FollowUp);
+    }
+
+    [Fact]
+    public async Task ExportAccountData_Includes_Company_Reviews_Reports_And_Helpful_Marks()
+    {
+        var author = await RegisterAsync("export.reviews@example.com");
+        var other = await RegisterAsync("export.reviews.other@example.com");
+        var companyId = await CompanyIdOfApplicationAsync(await CreateApplicationAsync(author, "Export Review Co"));
+
+        await WriteReviewAsync(author, companyId);
+        var othersReview = await WriteReviewAsync(other, companyId);
+        await ApproveReviewAsync(othersReview);
+        (await author.PostAsync($"/api/company-reviews/{othersReview}/helpful", null)).EnsureSuccessStatusCode();
+        (await author.PostAsJsonAsync($"/api/company-reviews/{othersReview}/reports",
+            new ReportCompanyReviewRequest(ReviewReportReason.Advertising), JsonOptions)).EnsureSuccessStatusCode();
+
+        var export = await (await author.GetAsync("/api/users/me/export")).Content.ReadFromJsonAsync<AccountExportResponse>(JsonOptions);
+
+        var review = export!.CompanyReviews.ShouldNotBeNull().ShouldHaveSingleItem();
+        review.CompanyName.ShouldBe("Export Review Co");
+        review.Status.ShouldBe(ReviewModerationStatus.Pending);
+        export.CompanyReviewReports.ShouldNotBeNull().ShouldHaveSingleItem().Reason.ShouldBe(ReviewReportReason.Advertising);
+        export.HelpfulMarkedReviewIds.ShouldNotBeNull().ShouldBe([othersReview]);
+    }
+
+    private async Task<Guid> CompanyIdOfApplicationAsync(Guid applicationId)
+    {
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return (await db.Applications.SingleAsync(a => a.Id == applicationId)).CompanyId;
+    }
+
+    private static async Task<Guid> WriteReviewAsync(HttpClient client, Guid companyId)
+    {
+        var response = await client.PostAsJsonAsync($"/api/companies/{companyId}/reviews", new CreateCompanyReviewRequest(
+            EmploymentStatus.FormerEmployee, "Fine place, on balance",
+            "Good people and a sane on-call rotation for a change.",
+            "Promotions depend on who your manager knows upstairs.", 4, 3, 4, 3, 3), JsonOptions);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<MyCompanyReviewResponse>(JsonOptions))!.Id;
+    }
+
+    /// <summary>Approves straight in the database: this class is about the account, not the
+    /// moderation surface, which has its own tests.</summary>
+    private async Task ApproveReviewAsync(Guid reviewId)
+    {
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var review = await db.CompanyReviews.SingleAsync(r => r.Id == reviewId);
+        review.Approve(Guid.CreateVersion7(), DateTimeOffset.UtcNow);
+        await db.SaveChangesAsync();
     }
 
     [Fact]
