@@ -18,7 +18,7 @@ public static class AuthEndpoints
         group.MapPost("/register", async (RegisterRequest request, IAuthService authService,
                 HttpContext httpContext, CancellationToken cancellationToken) =>
             {
-                var result = await authService.RegisterAsync(request, GetIpAddress(httpContext), cancellationToken);
+                var result = await authService.RegisterAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 return result.Succeeded
                     ? Results.Created("/api/users/me", result.Response)
                     : Results.ValidationProblem(ToErrorDictionary(result.Errors));
@@ -34,7 +34,7 @@ public static class AuthEndpoints
         group.MapPost("/login", async (LoginRequest request, IAuthService authService,
                 IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
-                var result = await authService.LoginAsync(request, GetIpAddress(httpContext), cancellationToken);
+                var result = await authService.LoginAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 return result.Succeeded
                     ? Results.Ok(result.Response)
                     : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
@@ -58,7 +58,7 @@ public static class AuthEndpoints
                     return Results.NotFound();
                 }
 
-                var result = await authService.GoogleSignInAsync(request, GetIpAddress(httpContext), cancellationToken);
+                var result = await authService.GoogleSignInAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 return result.Succeeded
                     ? Results.Ok(result.Response)
                     : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
@@ -85,7 +85,7 @@ public static class AuthEndpoints
                     return Results.NotFound();
                 }
 
-                var result = await authService.CompleteGoogleSignupAsync(request, GetIpAddress(httpContext), cancellationToken);
+                var result = await authService.CompleteGoogleSignupAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 if (result.Succeeded)
                 {
                     return Results.Created("/api/users/me", result.Response);
@@ -117,7 +117,7 @@ public static class AuthEndpoints
                     return Results.NotFound();
                 }
 
-                var result = await authService.LinkedInSignInAsync(request, GetIpAddress(httpContext), cancellationToken);
+                var result = await authService.LinkedInSignInAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 return result.Succeeded
                     ? Results.Ok(result.Response)
                     : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
@@ -144,7 +144,7 @@ public static class AuthEndpoints
                     return Results.NotFound();
                 }
 
-                var result = await authService.CompleteLinkedInSignupAsync(request, GetIpAddress(httpContext), cancellationToken);
+                var result = await authService.CompleteLinkedInSignupAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 if (result.Succeeded)
                 {
                     return Results.Created("/api/users/me", result.Response);
@@ -178,7 +178,7 @@ public static class AuthEndpoints
                     return Results.NotFound();
                 }
 
-                var result = await authService.GitHubSignInAsync(request, GetIpAddress(httpContext), cancellationToken);
+                var result = await authService.GitHubSignInAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 return result.Succeeded
                     ? Results.Ok(result.Response)
                     : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
@@ -205,7 +205,7 @@ public static class AuthEndpoints
                     return Results.NotFound();
                 }
 
-                var result = await authService.CompleteGitHubSignupAsync(request, GetIpAddress(httpContext), cancellationToken);
+                var result = await authService.CompleteGitHubSignupAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 if (result.Succeeded)
                 {
                     return Results.Created("/api/users/me", result.Response);
@@ -232,12 +232,16 @@ public static class AuthEndpoints
         group.MapPost("/refresh", async (RefreshRequest request, IAuthService authService,
                 IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
-                var result = await authService.RefreshAsync(request.RefreshToken, GetIpAddress(httpContext), cancellationToken);
+                var result = await authService.RefreshAsync(request.RefreshToken, httpContext.GetClientIpAddress(), cancellationToken);
                 return result.Succeeded
                     ? Results.Ok(result.Response)
                     : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
             })
             .WithValidation<RefreshRequest>()
+            // Not user input: the client rotates the token on its own schedule, and the IP of every
+            // rotation is already on the RefreshTokens row it creates (CreatedByIp), tied to the
+            // account — a request-audit row would say the same thing without the user id.
+            .WithoutRequestAudit()
             .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
             .WithSummary("Exchange a refresh token for a new access/refresh token pair")
             .WithDescription("Rotates the refresh token — the one submitted here stops working, use the new one from the response.")
@@ -251,7 +255,7 @@ public static class AuthEndpoints
                 // Always the same response, whether or not the email is registered — see
                 // IAuthService.ForgotPasswordAsync's doc comment. The client shows one static,
                 // pre-translated message regardless of this body's content.
-                await authService.ForgotPasswordAsync(request, GetIpAddress(httpContext), cancellationToken);
+                await authService.ForgotPasswordAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 return Results.NoContent();
             })
             .WithValidation<ForgotPasswordRequest>()
@@ -293,8 +297,6 @@ public static class AuthEndpoints
 
         return app;
     }
-
-    private static string? GetIpAddress(HttpContext httpContext) => httpContext.Connection.RemoteIpAddress?.ToString();
 
     private static Dictionary<string, string[]> ToErrorDictionary(IReadOnlyCollection<string> errors) =>
         new() { ["error"] = errors.ToArray() };

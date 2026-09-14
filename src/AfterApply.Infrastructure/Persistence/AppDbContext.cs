@@ -1,4 +1,5 @@
 using AfterApply.Domain.Applications;
+using AfterApply.Domain.Auditing;
 using AfterApply.Domain.Benchmark;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.CompanyReviews;
@@ -74,6 +75,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<CompanyReviewReport> CompanyReviewReports => Set<CompanyReviewReport>();
 
     public DbSet<CompanyReviewHelpfulMark> CompanyReviewHelpfulMarks => Set<CompanyReviewHelpfulMark>();
+
+    public DbSet<RequestAudit> RequestAudits => Set<RequestAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

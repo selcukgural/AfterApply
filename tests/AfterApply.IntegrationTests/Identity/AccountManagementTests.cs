@@ -10,6 +10,7 @@ using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.TrackedJobs.Contracts;
 using AfterApply.Domain.Applications;
+using AfterApply.Domain.Auditing;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.CompanyReviews;
@@ -251,6 +252,17 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
                 "Long enough cons for the check.", 3, 3, 3, 3, 3), DateTimeOffset.UtcNow));
 
         await Should.ThrowAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+
+        // The request audit is the one table where "nobody" is a legitimate owner (an anonymous
+        // scan, a failed sign-in): null passes, a made-up user still cannot.
+        db.RequestAudits.Add(RequestAudit.Create(Guid.CreateVersion7(), "POST", "/api/orphan", 200, null, DateTimeOffset.UtcNow));
+
+        await Should.ThrowAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+
+        db.RequestAudits.Add(RequestAudit.Create(null, "POST", "/api/anonymous", 200, null, DateTimeOffset.UtcNow));
+        await db.SaveChangesAsync();
     }
 
     [Fact]

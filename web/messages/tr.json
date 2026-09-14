@@ -936,7 +936,7 @@
       "recipient": "Alıcı: Sentry (Functional Software, Inc.). Kayıtlar Sentry'nin Avrupa Birliği (Almanya) bölgesindeki altyapısında işleniyor.",
       "legalBasis": "Hukuki sebep: meşru menfaat — hizmetin güvenliğini ve sürekliliğini sağlamak, arızayı tespit edip gidermek.",
       "limits": "Oturum kaydı (session replay) ve performans izleme (tracing) özelliklerini bilerek kapalı tuttuk: ekranınız kaydedilmiyor, gezinme davranışınız izlenmiyor, form içerikleriniz gönderilmiyor. Başvuru verileriniz, CV'niz ve e-posta içerikleri hata kayıtlarına dahil edilmiyor.",
-      "retention": "Hata kayıtları Sentry'nin saklama süresi dolduğunda silinir; ürünün kendi veritabanına yazılmazlar."
+      "retention": "Hata kayıtları Sentry'nin saklama süresi dolduğunda silinir; hata kayıtlarının kendisi ürünün veritabanına yazılmaz. (IP adresinizin ürün veritabanında ayrıca tutulduğu tek durum yukarıdaki \"İşlem kayıtları\" maddesidir.)"
     },
     "visitCounter": {
       "title": "Ziyaret sayacı",
@@ -956,8 +956,9 @@
       "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar.",
       "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
       "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
-      "outro": "Bu veriler yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır.",
-      "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür."
+      "outro": "Bu veriler, işlem kayıtları dışında, yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır; işlem kayıtları yalnızca yukarıda sayılan güvenlik ve hukuki amaçlara hizmet eder.",
+      "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür.",
+      "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\")."
     },
     "googleSignIn": {
       "title": "Google ile giriş",
@@ -1007,13 +1008,13 @@
     },
     "retention": {
       "title": "Saklama süresi",
-      "body": "Verileriniz hesabınızı silene kadar saklanır. Otomatik bir süre sonunda silinme uygulanmamaktadır."
+      "body": "Hesabınıza bağlı veriler hesabınızı silene kadar saklanır; onlar için otomatik bir süre sonunda silinme uygulanmamaktadır. Tek istisna, bir hesaba bağlı olmayan işlem kayıtlarıdır (girişsiz CV taraması, benchmark yanıtı, başarısız giriş denemesi): bunlar 12 ay sonra kendiliğinden silinir."
     },
     "rights": {
       "title": "Haklarınız",
       "before": "Verilerinizin bir kopyasını istediğiniz zaman dışa aktarabilir veya hesabınızı kalıcı olarak silebilirsiniz. Bu işlemleri",
       "link": "Hesap Ayarları",
-      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak kaldırır."
+      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, gönderdiğiniz geri bildirimleri ve işlem kayıtlarınızı — kalıcı olarak kaldırır. İşlem kayıtları dışa aktarım dosyasına dahil edilmez; kendi kayıtlarınıza erişmek isterseniz privacy@ekariyerim.com adresine yazmanız yeterlidir."
     },
     "notApplicable": {
       "title": "Şu an geçerli olmayanlar",
@@ -1038,7 +1039,7 @@
       "title": "CV taraması (giriş yapmadan)",
       "intro": "Herkese açık CV tarama sayfasında bir PDF veya Word dosyası yükleyip, başvuru sistemlerinin ondan ne okuduğunu görebilirsiniz. Bu, yukarıdaki \"Yüklediğiniz CV'ler\" bölümünden ayrı ve farklı bir işlemdir:",
       "noStorage": "Dosya hiçbir yere kaydedilmez. Sunucuda diske yazılmaz, depolama alanına konmaz; yalnızca isteğin süresi boyunca bellekte bulunur ve yanıt döndükten sonra ortadan kalkar. CV'nizin metni de saklanmaz.",
-      "retained": "Taramadan geriye üç şey kalır: tarama sınırını uygulamak için IP adresiniz (2 saat sonra silinir), isimsiz bir puan (0-100 arası bir sayı; hangi dosyadan geldiği, kimin olduğu kayıtlı değildir) ve bir tarama sayacı.",
+      "retained": "Taramadan geriye üç şey kalır: IP adresiniz (tarama sınırı için 2 saat bellekte; ayrıca yukarıdaki \"İşlem kayıtları\" maddesinde anlatılan güvenlik kaydı olarak 12 ay — puanla ilişkilendirilmez), isimsiz bir puan (0-100 arası bir sayı; hangi dosyadan geldiği, kimin olduğu kayıtlı değildir) ve bir tarama sayacı.",
       "noTransfer": "Puanı üreten yedi kontrolün tamamı bizim sunucumuzda çalışır: puan hiçbir yapay zekâ modeline sorulmaz, dolayısıyla CV'nin içine yazılmış bir talimatla şişirilemez. Kutuyu işaretlemediğiniz sürece CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez.",
       "contentNotes": "Yazım hakkında da not isterseniz (ikinci, isteğe bağlı kutu): CV'nizin metni Google Cloud Vertex AI'a gönderilir — altyapımızın zaten çalıştığı AB bölgesinde ve aynı işleyicide; yeni bir ülkeye veri çıkmaz. Ücretli Vertex kullanıldığı için metin model eğitiminde kullanılmaz. Notlar puanı etkilemez, metin yine hiçbir yere kaydedilmez ve kutuyu işaretlemezseniz hiçbir model devreye girmez.",
       "output": "Sonuç ekranında gördüğünüz alıntılar ve ham metin, yalnızca sizin isteğinize verilen yanıtın içindedir; kayıt altına alınmaz, kayıtlara (log) yazılmaz.",
@@ -2058,7 +2059,7 @@
       },
       "calloutPrivacy": {
         "title": "Dosyanıza ne olur",
-        "body": "Dosya hiçbir yere kaydedilmez; yalnızca isteğin süresi boyunca bellekte durur. Puan bizim sunucumuzda hesaplanır, hiçbir yapay zekâ modeline sorulmaz. Yalnızca isteğe bağlı yazım notları kutusunu işaretlerseniz CV metni Google Cloud Vertex AI'a gönderilir ve orada da saklanmaz. Geriye kalan: IP adresiniz (2 saat, tarama sınırı için), isimsiz bir puan ve bir sayaç. Ayrıntılar gizlilik politikasının \"CV taraması\" bölümünde."
+        "body": "Dosya hiçbir yere kaydedilmez; yalnızca isteğin süresi boyunca bellekte durur. Puan bizim sunucumuzda hesaplanır, hiçbir yapay zekâ modeline sorulmaz. Yalnızca isteğe bağlı yazım notları kutusunu işaretlerseniz CV metni Google Cloud Vertex AI'a gönderilir ve orada da saklanmaz. Geriye kalan: IP adresiniz (tarama sınırı için 2 saat bellekte; güvenlik kaydı olarak 12 ay, puanla ilişkilendirilmez), isimsiz bir puan ve bir sayaç. Ayrıntılar gizlilik politikasının \"CV taraması\" bölümünde."
       },
       "calloutRateLimit": {
         "title": "Tarama sınırı",
@@ -2095,7 +2096,7 @@
       },
       "calloutAnonymous": {
         "title": "Hiçbir kimlik saklanmaz",
-        "body": "E-posta, IP adresi ya da çerez kaydedilmez. Alanlar sabit listelerden seçilir; girdiğiniz iki sayı ve seçimleriniz dışında hiçbir şey saklanmaz."
+        "body": "E-posta ya da çerez kaydedilmez; yanıtınızın satırında IP adresi yoktur. IP adresiniz yalnızca her gönderimde tutulan ayrı bir güvenlik kaydında 12 ay saklanır ve yanıtınızla ilişkilendirilmez. Alanlar sabit listelerden seçilir; girdiğiniz iki sayı ve seçimleriniz dışında hiçbir şey saklanmaz."
       },
       "calloutSignedIn": {
         "title": "Hesabınız varsa",
@@ -2360,7 +2361,7 @@
       "source": "Tamamı bu formu dolduran insanların kendi beyanı. Ürünün topladığı başvuru verisiyle karıştırılmıyor — biri beyan, diğeri ölçüm; ikisini tek ortalamada toplamak sayıyı bozardı.",
       "median": "Ortalama değil medyan kullanıyoruz. Cevaplar anonim olduğu için aynı kişi birden fazla kez cevaplayabilir ve kasten uç değer gönderilebilir; medyan bunlardan neredeyse etkilenmez, ortalama fazlasıyla etkilenir.",
       "recency": "Kısa dönem seçen cevaplar düşük görünme eğilimindedir: yakın zamanda yapılan başvurular henüz cevaplanmaya vakit bulamamış olabilir.",
-      "privacy": "Hiçbir kimlik saklanmıyor — e-posta, IP adresi, çerez yok. Alanlar sabit listelerden seçiliyor, serbest metin alınmıyor.",
+      "privacy": "Hiçbir kimlik saklanmıyor — e-posta yok, çerez yok, yanıtın satırında IP yok. IP adresin yalnızca ayrı bir güvenlik kaydında 12 ay tutuluyor, yanıtınla ilişkilendirilmiyor. Alanlar sabit listelerden seçiliyor, serbest metin alınmıyor.",
       "threshold": "Bir alanın medyanı, o alanda en az {minimum} cevap olmadan gösterilmiyor."
     },
     "cta": {
@@ -2398,7 +2399,7 @@
     },
     "retained": {
       "title": "Bu taramadan geriye ne kalıyor?",
-      "ip": "IP adresin, 2 saat — sadece tarama limitini uygulamak için, sonra siliniyor.",
+      "ip": "IP adresin: tarama limiti için 2 saat bellekte; ayrıca güvenlik kaydı olarak 12 ay — puanınla ilişkilendirilmiyor.",
       "score": "Puanın, isimsiz — sonuçtaki dağılımı besliyor; dosya, metin veya kimlik bilgisi yok.",
       "counter": "Tarama sayacı.",
       "none": "Dosyanın kendisi ve içindeki metin hiçbirinde yok."

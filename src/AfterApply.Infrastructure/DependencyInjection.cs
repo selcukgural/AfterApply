@@ -1,6 +1,7 @@
 using System.Reflection;
 using AfterApply.Application.Admin;
 using AfterApply.Application.Analytics;
+using AfterApply.Application.Auditing;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Validators;
 using AfterApply.Application.Companies;
@@ -21,6 +22,7 @@ using AfterApply.Application.Feedback;
 using AfterApply.Application.TrackedJobs;
 using AfterApply.Infrastructure.Admin;
 using AfterApply.Infrastructure.Analytics;
+using AfterApply.Infrastructure.Auditing;
 using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.CompanyIntelligence;
@@ -127,6 +129,7 @@ public static class DependencyInjection
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
         services.Configure<CompanySearchOptions>(configuration.GetSection("Companies"));
         services.Configure<CompanyReviewOptions>(configuration.GetSection(CompanyReviewOptions.SectionName));
+        services.Configure<RequestAuditOptions>(configuration.GetSection(RequestAuditOptions.SectionName));
         services.AddDocumentStorage(configuration);
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
@@ -428,6 +431,7 @@ public static class DependencyInjection
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<IReminderService, ReminderService>();
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
+        services.AddScoped<IRequestAuditRetentionService, RequestAuditRetentionService>();
         services.AddScoped<ISiteTrafficService, SiteTrafficService>();
         services.AddScoped<IBenchmarkService, BenchmarkService>();
         services.AddScoped<ICvScanService, CvScanService>();

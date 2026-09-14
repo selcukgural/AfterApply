@@ -68,8 +68,9 @@ public static class CvScanEndpoints
                              "'contentNotesRequested' is a separate, optional consent: with it, and only " +
                              "with it, the extracted text is sent to a model for notes about the writing " +
                              "— which are returned outside the score and never change it. " +
-                             "Nothing is stored: the file is never written to disk and the only row " +
-                             "that outlives the request is an anonymous score with no identifier.")
+                             "The file is never written to disk; what outlives the request is an " +
+                             "anonymous score with no identifier and, separately, the request-audit " +
+                             "row (caller IP, path, time) every write under /api leaves.")
             .Produces<CvScanResponse>()
             .ProducesValidationProblem()
             .Produces(StatusCodes.Status429TooManyRequests);

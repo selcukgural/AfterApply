@@ -28,6 +28,7 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
             <li>{t("dataCollection.item3")}</li>
             <li>{t("dataCollection.item4")}</li>
             <li>{t("dataCollection.item5")}</li>
+            <li>{t("dataCollection.item6")}</li>
           </ul>
           <p className="mt-2">{t("dataCollection.outro")}</p>
         </section>

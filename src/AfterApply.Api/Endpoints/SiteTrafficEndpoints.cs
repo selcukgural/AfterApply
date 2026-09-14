@@ -27,6 +27,10 @@ public static class SiteTrafficEndpoints
                 return Results.NoContent();
             })
             .WithValidation<RecordSiteTrafficEventRequest>()
+            // The one write endpoint the request audit leaves alone: a page view is not the visitor
+            // typing anything, and the Çerez Politikası promises this counter keeps no IP at all.
+            // Decided 2026-09-14, see DECISIONS.md.
+            .WithoutRequestAudit()
             .RequireRateLimiting(DependencyInjection.SiteTrafficRateLimitPolicy)
             .WithTags("SiteTraffic")
             .WithSummary("Count one visit to a public page")

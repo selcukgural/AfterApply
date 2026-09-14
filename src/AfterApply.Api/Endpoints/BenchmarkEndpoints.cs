@@ -25,7 +25,9 @@ public static class BenchmarkEndpoints
             .WithDescription("Stores one anonymous answer — two counts and up to four coarse " +
                              "categories, no identifier and no free text — and returns how it " +
                              "compares. The comparison is withheld until the sector has enough " +
-                             "answers for a median to mean anything.")
+                             "answers for a median to mean anything. As with every write under " +
+                             "/api, the request leaves a separate request-audit row (caller IP, " +
+                             "path, time) that is not linked to the answer.")
             .Produces<BenchmarkResultResponse>()
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status429TooManyRequests);

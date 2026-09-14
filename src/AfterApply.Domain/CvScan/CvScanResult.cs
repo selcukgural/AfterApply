@@ -4,8 +4,10 @@ using AfterApply.Domain.Documents;
 namespace AfterApply.Domain.CvScan;
 
 /// <summary>
-/// One anonymous scan score. This is the entire retention footprint of the CV scan: no file, no
-/// text, no identifier, no IP address — a number, what kind of file produced it, and when.
+/// One anonymous scan score. This row is the CV scan's entire retention footprint on its own
+/// table: no file, no text, no identifier — a number, what kind of file produced it, and when.
+/// (The request itself leaves a RequestAudit row with the caller's IP, as every write under /api
+/// does since 2026-09-14; that row has no link to this one, and the privacy page says so.)
 ///
 /// It exists for two reasons, both of which need aggregates and neither of which needs a person:
 /// the result page tells a reader where their score falls among everyone else's, and the stopping
