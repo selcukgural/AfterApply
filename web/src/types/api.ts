@@ -349,6 +349,13 @@ export interface SuggestionCountResponse {
   count: number;
 }
 
+// Whether the extension's Gmail content script has ever delivered a signal for this account —
+// the server never sees the extension's own Gmail Scanning toggle, so this is the closest it gets
+// to "scanning is on". See GmailScanStatusResponse on the API side.
+export interface GmailScanStatusResponse {
+  hasReceivedSignal: boolean;
+}
+
 export type EmailApplicationMatchType = "DomainMatch" | "NameFallbackMatch";
 
 export interface EmailNotificationResponse {

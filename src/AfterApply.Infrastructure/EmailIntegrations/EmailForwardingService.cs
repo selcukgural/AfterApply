@@ -160,6 +160,10 @@ internal sealed class EmailForwardingService(
         dbContext.EmailSuggestions
             .CountAsync(s => s.UserId == userId && s.Status == EmailSuggestionStatus.Pending, cancellationToken);
 
+    public Task<bool> HasReceivedExtensionSignalAsync(Guid userId, CancellationToken cancellationToken) =>
+        dbContext.EmailConnections
+            .AnyAsync(c => c.UserId == userId && c.Provider == EmailProvider.Extension, cancellationToken);
+
     public async Task<IReadOnlyList<EmailSuggestionResponse>> GetPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken)
     {
         var rows = await dbContext.EmailSuggestions

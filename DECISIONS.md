@@ -6134,3 +6134,29 @@ query string tutulmaz, anonim benchmark + başarısız login `UserId` null, dör
 `EndpointDataSource` üzerinden opt-out allowlist'i, hesap silme kullanıcının satırlarını alır
 anonimleri bırakır, export'ta IP yok, purge sadece eski anonimleri siler.
 `A_User_Owned_Row_Cannot_Be_Written_Without_A_User`'a uydurma `UserId` reddi + null kabulü eklendi.
+
+## "Gmail Taraması'nı aç" uyarısı: sinyal görülen hesaba gösterilmez; moderasyon tablosu koyu temada okunur (2026-09-14)
+
+**Bulgu:** Öneriler ve Bildirimler sayfalarının boş durumu, Gmail Taraması'nı çoktan açmış
+kullanıcıya bile "Gmail Taraması'nı aç" düğmesi gösteriyordu. Sunucu eklentinin toggle'ını hiç
+bilmiyor — `afterapply_gmail_scan_enabled` yalnızca `chrome.storage`'da yaşıyor ve eklenti onu
+hiçbir isteğe koymuyor.
+
+**Karar:** Toggle'ı sunucuya taşımak yerine elimizdeki kanıt kullanıldı: kullanıcının
+`Provider = Extension` `EmailConnection` satırı varsa (ilk sinyalde tembel oluşur) eklenti bu
+hesaba en az bir Gmail sinyali göndermiştir. Yeni `GET /api/email-forwarding/gmail-scan-status`
+→ `{ hasReceivedSignal }`; iki sayfa da `true` görürse CTA'sız "Gmail Taraması bu hesapla
+çalışıyor, sıradaki e-postayı bekliyor" metnini (`emptyBodyScanning`), aksi hâlde (false, yükleniyor,
+hata) eski uyarıyı gösterir — hata durumunda fazladan uyarmak, yeni kullanıcının tek yapması
+gereken adımı gizlemekten iyidir (`resolveGmailEmptyState`).
+
+- **Bilerek kabul edilen sınır:** sinyal gönderdikten sonra taramayı kapatan kullanıcı uyarıyı
+  bir daha görmez. Kesin bilgi istenirse eklentinin toggle'ı sunucuya bildirmesi gerekir; bu bir
+  eklenti sürümü + `PERMISSIONS_JUSTIFICATION`/`PRIVACY_POLICY` (madde: "açık/kapalı bilgisi
+  cihazda kalır") değişikliğidir, bu düzeltmenin boyutuna göre orantısız bulundu.
+- **Moderasyon tablosu:** `Genel` ve `Açık bildirim` hücreleri metin rengi sınıfı taşımadığından
+  tarayıcı varsayılanı siyaha düşüyor, koyu temada okunmuyordu. Hücrelere açık/koyu renk verildi;
+  `moderationTable.contract.test.ts` her `<td>`'nin iki tema için renk taşımasını sabitliyor.
+
+**Testler:** integration — `EmailSignalTests`: flag kapalıyken 404, taze hesapta `false`,
+sinyalden sonra `true`. Web — `emptyState.test.ts` (üç dal), `moderationTable.contract.test.ts`.

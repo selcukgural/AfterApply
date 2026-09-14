@@ -69,6 +69,17 @@ public static class EmailForwardingEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
+        // Read by the Suggestions/Notifications empty states: a user whose extension has already
+        // delivered a Gmail signal gets "waiting for the next hiring email" instead of a "turn on
+        // Gmail Scanning" nudge they have already acted on. Existence of the Extension-provider
+        // EmailConnection is the whole signal — see GmailScanStatusResponse.
+        group.MapGet("/gmail-scan-status", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
+                Results.Ok(new GmailScanStatusResponse(await service.HasReceivedExtensionSignalAsync(user.GetUserId(), cancellationToken))))
+            .RequireAuthorization()
+            .WithSummary("Whether the extension's Gmail Scanning has ever delivered a signal for this account")
+            .Produces<GmailScanStatusResponse>()
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
         group.MapGet("/suggestions/count", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
                 Results.Ok(new SuggestionCountResponse(await service.GetPendingSuggestionCountAsync(user.GetUserId(), cancellationToken))))
             .RequireAuthorization()

@@ -19,6 +19,11 @@ public interface IEmailForwardingService
     /// skips the Applications/Companies joins, backed by the same (UserId, Status) index.</summary>
     Task<int> GetPendingSuggestionCountAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>True once the user's Extension-provider EmailConnection exists, i.e. the Gmail
+    /// content script has delivered at least one signal — see <see cref="GmailScanStatusResponse"/>
+    /// for why that, and not the toggle itself, is what the server can know.</summary>
+    Task<bool> HasReceivedExtensionSignalAsync(Guid userId, CancellationToken cancellationToken);
+
     Task<ConfirmSuggestionResult> ConfirmSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);
 
     Task<bool> DismissSuggestionAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);

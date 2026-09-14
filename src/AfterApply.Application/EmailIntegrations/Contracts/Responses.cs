@@ -26,6 +26,13 @@ public sealed record EmailSuggestionResponse(
 
 public sealed record SuggestionCountResponse(int Count);
 
+/// <summary>Whether the extension's Gmail content script has ever delivered a signal for this
+/// account. The server never learns the extension's own Gmail Scanning toggle (it lives only in
+/// chrome.storage), so "a signal has arrived" is the strongest "scanning is on" evidence there is —
+/// enough for the Suggestions/Notifications empty states to stop nudging a user who already turned
+/// it on, and deliberately not read as "it is on right now".</summary>
+public sealed record GmailScanStatusResponse(bool HasReceivedSignal);
+
 /// <summary>A resolved (AutoApplied or Confirmed) email-derived state-change event, for the
 /// Notifications screen — deliberately generic field names (Status/WasAutoApplied/IsRead) rather
 /// than EmailSuggestion-specific naming, so a future iteration could merge in another notification
