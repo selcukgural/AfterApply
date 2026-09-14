@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -246,9 +246,15 @@ describe("share images", () => {
 
   it("are set for every page that goes through buildMetadata", () => {
     const source = read("src/lib/seo/pageMetadata.ts");
-    expect(source).toContain("ogImagePath(locale, title, kicker)");
+    expect(source).toContain("ogImagePath(locale, cardTitle, kicker)");
     expect(source).toMatch(/openGraph:\s*\{[\s\S]*?images,/);
     expect(source).toMatch(/twitter:\s*\{[\s\S]*?images,/);
+  });
+
+  it("show the hero line on the landing page's card, not its search title", () => {
+    const page = read("src/app/[locale]/page.tsx");
+    expect(page).toContain('shareTitle: tHero("title")');
+    expect(existsSync(path.join(process.cwd(), "src/app/[locale]/opengraph-image.tsx"))).toBe(false);
   });
 
   it("are the image the guide article's JSON-LD names, next to the Organization it references", () => {
