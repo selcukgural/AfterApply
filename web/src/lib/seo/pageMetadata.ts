@@ -23,14 +23,16 @@ export type PageMetadataOptions = {
   article?: { publishedTime: string; modifiedTime?: string };
   /** The small line above the title on the share card ("Rehber", "Şirket değerlendirmeleri"). */
   kicker?: string;
+  /** What the share card says when it should not be the <title> (the landing page's hero line). */
+  shareTitle?: string;
 };
 
-export function buildMetadata({ locale, path, title, description, index, article, kicker }: PageMetadataOptions): Metadata {
+export function buildMetadata({ locale, path, title, description, index, article, kicker, shareTitle }: PageMetadataOptions): Metadata {
   const fullTitle = `${title} · ${SITE_NAME}`;
   const url = `/${locale}${pathFor(path, locale)}`;
-  // Every page gets a card with its own title. The landing page is the one exception — its
-  // file-convention opengraph-image.tsx takes precedence over this, which is what we want there.
-  const images = [{ url: ogImagePath(locale, title, kicker), width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: title }];
+  // Every page gets a card with its own title (or the share title it asks for).
+  const cardTitle = shareTitle ?? title;
+  const images = [{ url: ogImagePath(locale, cardTitle, kicker), width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: cardTitle }];
 
   return {
     title: fullTitle,
@@ -65,7 +67,7 @@ export async function pageMetadata(
   locale: string,
   path: LocalisedPath,
   key: string,
-  options: { index?: boolean; kicker?: string } = {},
+  options: { index?: boolean; kicker?: string; shareTitle?: string } = {},
 ): Promise<Metadata> {
   const t = await getTranslations("metadata.pages");
   return buildMetadata({
@@ -75,6 +77,7 @@ export async function pageMetadata(
     description: t(`${key}.description`),
     index: options.index,
     kicker: options.kicker ?? sectionKicker(pathFor(path, locale), t),
+    shareTitle: options.shareTitle,
   });
 }
 
