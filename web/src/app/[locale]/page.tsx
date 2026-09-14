@@ -37,7 +37,13 @@ import { SiteTrafficReporter } from "@/components/analytics/SiteTrafficReporter"
  */
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
-  return pageMetadata(locale, "", "home");
+  // The share card carries the hero line, not the <title>: "Başvurdun. Peki sonra ne oldu?" is
+  // what makes someone stop on a LinkedIn card, "İş Başvuru Takip Uygulaması" is what a search
+  // engine matches. The two are split on purpose (see the comment above) and the card follows the
+  // hero. This used to be a file-convention opengraph-image.tsx; it is the same /og route as every
+  // other page now, so there is one renderer to keep right.
+  const tHero = await getTranslations("landing.hero");
+  return pageMetadata(locale, "", "home", { shareTitle: tHero("title"), kicker: tHero("eyebrow") });
 }
 
 export default async function LandingPage({ params }: PageProps<"/[locale]">) {
