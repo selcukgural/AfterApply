@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { buildMetadata } from "@/lib/seo/pageMetadata";
@@ -15,18 +15,21 @@ import { CompanyReviewsSection } from "@/components/companyReviews/CompanyReview
  */
 export async function generateMetadata({ params }: PageProps<"/[locale]/companies/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
+  setRequestLocale(locale);
   const company = await fetchCompanyBySlug(slug, locale);
   if (!company) {
     return {};
   }
 
   const t = await getTranslations("companies.page");
+  const tPages = await getTranslations("metadata.pages");
   return buildMetadata({
     locale,
     path: `/companies/${slug}`,
     title: t("metaTitle", { company: company.name }),
     description: t("metaDescription", { company: company.name, count: company.summary.approvedCount }),
     index: company.summary.approvedCount > 0,
+    kicker: tPages("companies.title"),
   });
 }
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { fetchCompanyReviewsConfig } from "@/lib/companies/publicApi.server";
@@ -17,7 +17,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/companie
 const DEFAULT_PRIOR_WEIGHT = 5;
 const DEFAULT_MINIMUM = 3;
 
-export default async function CompanyScoringPage() {
+export default async function CompanyScoringPage({ params }: PageProps<"/[locale]/companies/scoring">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("companies.scoring");
   const tPage = await getTranslations("companies.page");
   const config = await fetchCompanyReviewsConfig();

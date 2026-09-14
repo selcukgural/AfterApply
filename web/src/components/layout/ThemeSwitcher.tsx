@@ -1,30 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
+import { useDocumentTheme } from "@/hooks/useDocumentTheme";
 import { applyTheme, type Theme } from "@/lib/theme/theme";
 
 const THEMES: Theme[] = ["light", "dark"];
 
-interface ThemeSwitcherProps {
-  // Passed from a server component ancestor that already read the `theme`
-  // cookie — next-intl's useLocale() gives LanguageSwitcher this for free,
-  // there's no equivalent for a hand-rolled preference, so it's threaded
-  // through as a prop to keep the initial render consistent with the
-  // cookie-driven class already stamped on <html> during SSR.
-  initialTheme: Theme;
-}
-
-export function ThemeSwitcher({ initialTheme }: ThemeSwitcherProps) {
-  const [theme, setTheme] = useState<Theme>(initialTheme);
+/**
+ * The server renders this with "light" selected while the page itself is already in the right
+ * theme (the boot script in the root layout stamps `<html>` before first paint); on the client the
+ * highlight follows the class on `<html>`. That one render of lag on the highlight is the price of
+ * not reading the cookie on the server, which is what keeps the public pages static.
+ */
+export function ThemeSwitcher() {
+  const theme = useDocumentTheme();
   const { isAuthenticated } = useAuth();
   const t = useTranslations("theme");
 
   const handleSwitch = (next: Theme) => {
     applyTheme(next);
-    setTheme(next);
     if (isAuthenticated) {
       // Persists the choice to the account so it's applied on the next
       // login from any device/browser, not just remembered via this

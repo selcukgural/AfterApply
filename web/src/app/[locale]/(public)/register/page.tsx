@@ -18,9 +18,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { PasswordRequirements } from "@/components/ui/PasswordRequirements";
 import { SocialSignIn } from "@/components/auth/SocialSignIn";
 
-type FieldErrors = Partial<
-  Record<"email" | "password" | "confirmPassword" | "firstName" | "lastName" | "consentAccepted", string>
->;
+type FieldErrors = Partial<Record<"email" | "password" | "confirmPassword" | "consentAccepted", string>>;
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -35,8 +33,6 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    firstName: "",
-    lastName: "",
     consentAccepted: false,
   });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -72,8 +68,6 @@ export default function RegisterPage() {
         email: fieldErrors.email?.[0],
         password: fieldErrors.password?.[0],
         confirmPassword: fieldErrors.confirmPassword?.[0],
-        firstName: fieldErrors.firstName?.[0],
-        lastName: fieldErrors.lastName?.[0],
         consentAccepted: fieldErrors.consentAccepted?.[0],
       });
       return;
@@ -87,9 +81,11 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      // confirmPassword is a client-side check only — the API never sees it.
-      const { email, password, firstName, lastName, consentAccepted } = result.data;
-      const auth = await register({ email, password, firstName, lastName, consentAccepted });
+      // confirmPassword is a client-side check only — the API never sees it. No name: the form
+      // stopped asking for one on 2026-09-14 (Settings can add it later); the API takes the empty
+      // strings and the header falls back to the e-mail until then.
+      const { email, password, consentAccepted } = result.data;
+      const auth = await register({ email, password, firstName: "", lastName: "", consentAccepted });
       trackSiteTraffic("register_completed");
       // A brand-new account always starts with the server default theme
       // ("light" — there's no Accept-Language-like header for OS theme
@@ -122,16 +118,19 @@ export default function RegisterPage() {
   return (
     <div className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h1 className="mb-6 text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        <h1 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        {/* What the account is for, before the form asks for anything — the page used to open on
+            four empty fields and a password rule box. */}
+        <ul className="mb-5 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-400">
+          {(["item1", "item2", "item3"] as const).map((key) => (
+            <li key={key} className="flex gap-2">
+              <span aria-hidden="true" className="text-blue-600 dark:text-blue-400">✓</span>
+              <span>{t(`benefits.${key}`)}</span>
+            </li>
+          ))}
+        </ul>
+        <SocialSignIn />
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label={t("firstName")} htmlFor="firstName" error={errors.firstName}>
-              <Input id="firstName" value={values.firstName} onChange={update("firstName")} />
-            </FormField>
-            <FormField label={t("lastName")} htmlFor="lastName" error={errors.lastName}>
-              <Input id="lastName" value={values.lastName} onChange={update("lastName")} />
-            </FormField>
-          </div>
           <FormField label={t("email")} htmlFor="email" error={errors.email}>
             <Input id="email" type="email" value={values.email} onChange={update("email")} autoComplete="email" />
           </FormField>
@@ -175,7 +174,6 @@ export default function RegisterPage() {
             {isSubmitting ? t("submitting") : t("submit")}
           </Button>
         </form>
-        <SocialSignIn />
         <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
           {t("haveAccount")}{" "}
           <Link href="/login" className="text-blue-600 hover:underline dark:text-blue-400">

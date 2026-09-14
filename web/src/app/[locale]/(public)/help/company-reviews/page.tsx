@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { StepList } from "@/components/help/StepList";
 import { Callout } from "@/components/help/Callout";
@@ -13,10 +13,11 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help/com
   return pageMetadata(locale, "/help/company-reviews", "helpCompanyReviews");
 }
 
-export default async function CompanyReviewsHelpPage() {
+export default async function CompanyReviewsHelpPage({ params }: PageProps<"/[locale]/help/company-reviews">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("help.companyReviews");
   const tCommon = await getTranslations("help.common");
-  const locale = await getLocale();
 
   const readSteps = ["step1", "step2", "step3"].map((key) => ({ title: t(`read.${key}.title`), body: t(`read.${key}.body`) }));
   const writeSteps = ["step1", "step2", "step3", "step4"].map((key) => ({ title: t(`write.${key}.title`), body: t(`write.${key}.body`) }));

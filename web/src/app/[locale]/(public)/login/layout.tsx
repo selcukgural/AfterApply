@@ -1,3 +1,4 @@
+import { setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 
@@ -7,6 +8,8 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]/login"
   return pageMetadata(locale, "/login", "login");
 }
 
-export default function LoginLayout({ children }: LayoutProps<"/[locale]/login">) {
+export default async function LoginLayout({ children, params }: LayoutProps<"/[locale]/login">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   return children;
 }

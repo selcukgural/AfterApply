@@ -27,12 +27,18 @@ describe("the signed-in navbar", () => {
     }
   });
 
-  it("keeps the account-free tools reachable after sign-in", () => {
-    const userMenu = read("components/layout/UserMenu.tsx");
-    expect(userMenu).toContain("TOOL_LINKS");
+  it("keeps the account-free tools reachable after sign-in, in a nav-level group", () => {
+    // 2026-09-14 (option D3): the tools moved out of the avatar menu into their own "Tools"
+    // trigger in the row, so the navbar loses nothing the public header offered when it takes
+    // that header's place for a signed-in visitor.
+    const toolsMenu = read("components/layout/ToolsMenu.tsx");
     for (const href of ['"/cv-tarama"', '"/benchmark"', '"/guide"']) {
-      expect(navBar).toContain(href);
+      expect(toolsMenu).toContain(href);
     }
+    expect(toolsMenu).toContain('aria-haspopup="menu"');
+    expect(navBar).toContain("<ToolsMenu />");
+    expect(navBar).toContain("TOOL_LINKS.map");
+    expect(read("components/layout/UserMenu.tsx")).not.toContain("TOOL_LINKS");
   });
 
   it("labels its menu button from the catalogue, not a hardcoded English string", () => {
@@ -55,9 +61,16 @@ describe("the signed-out chrome", () => {
 
   it("knows whether the visitor is signed in and offers the right door", () => {
     expect(header).toContain("useAuth");
-    for (const href of ['"/dashboard"', '"/login"', '"/register"']) expect(header).toContain(href);
+    for (const href of ['"/login"', '"/register"']) expect(header).toContain(href);
     expect(header).toContain("<CvScanNavButton");
     expect(header).toContain("aria-expanded");
+  });
+
+  it("hands a signed-in visitor the app's own navbar instead of a lone dashboard button", () => {
+    // 2026-09-14, option D3. The "Go to dashboard" door of 2026-09-13 left a signed-in person on
+    // /companies with no app menu and no avatar — it read as having been signed out.
+    expect(header).toMatch(/if \(isAuthenticated\) \{\s*return <NavBar \/>;/);
+    expect(header).not.toContain("goToDashboard");
   });
 
   it("keeps the companies pages and the account-free tools one click away", () => {

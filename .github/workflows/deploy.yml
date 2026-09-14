@@ -377,12 +377,20 @@ jobs:
       # No --add-cloudsql-instances here — the web service only talks to
       # the api service over HTTPS (NEXT_PUBLIC_API_BASE_URL, baked in
       # above), never directly to Postgres.
+      #
+      # `--min-instances=1` (2026-09-14): with zero warm instances every first visit after a
+      # quiet spell paid a Node cold start — the request log for 2026-09-07..14 showed 133 page
+      # requests over 2 s, most of them 3–5 s, on a site whose whole month was ~500 page views.
+      # The public pages now prerender statically, so a warm instance answers them from disk;
+      # one idle instance is the same ~$8–10/month the API already pays for the same reason.
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: afterapply-web
           region: ${{ env.GCP_REGION }}
           image: ${{ env.IMAGE }}
+          flags: >-
+            --min-instances=1
 
       # Same high-water-mark pattern as deploy-backend's own step above, just against
       # deploy/web-latest — see that step's comment for the full rationale.

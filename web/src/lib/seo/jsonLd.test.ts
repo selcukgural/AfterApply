@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { breadcrumbJsonLd, jsonLdGraph, organizationJsonLd, serializeJsonLd, webApplicationJsonLd } from "./jsonLd";
+import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd, serializeJsonLd, webApplicationJsonLd } from "./jsonLd";
 
 describe("serializeJsonLd", () => {
   // A literal "</script>" in a value would close the script element early and let the rest of the
@@ -70,5 +70,31 @@ describe("breadcrumbJsonLd", () => {
         item: "https://ekariyerim.com/tr/help/chrome-extension",
       },
     ]);
+  });
+});
+
+describe("articleJsonLd", () => {
+  const article = articleJsonLd({
+    locale: "tr",
+    path: "/guide/kac-is-basvurusu-yapmak-gerekir",
+    headline: "Kaç iş başvurusu yapmak gerekir?",
+    description: "Dolaşan sayılar neden birbirini tutmuyor.",
+    datePublished: "2026-09-08",
+    image: "https://ekariyerim.com/tr/og?t=Ka%C3%A7",
+  });
+
+  it("carries the share card as its image", () => {
+    expect(article.image).toEqual(["https://ekariyerim.com/tr/og?t=Ka%C3%A7"]);
+  });
+
+  it("points author and publisher at the Organization node the page must also emit", () => {
+    const organizationId = organizationJsonLd()["@id"];
+
+    expect(article.author).toEqual({ "@id": organizationId });
+    expect(article.publisher).toEqual({ "@id": organizationId });
+  });
+
+  it("falls back to the publication date when there is no modification date", () => {
+    expect(article.dateModified).toBe("2026-09-08");
   });
 });

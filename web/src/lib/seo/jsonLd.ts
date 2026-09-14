@@ -63,8 +63,16 @@ export type ArticleJsonLdInput = {
   description: string;
   datePublished: string;
   dateModified?: string;
+  /** Absolute URL of the share card. Google's Article result wants an image; the card is the one
+   *  every article has. */
+  image: string;
 };
 
+/**
+ * `author` and `publisher` point at the Organization node by `@id`, so the page that emits this
+ * must put `organizationJsonLd()` in the same `@graph` — until 2026-09-14 the guide pages did not,
+ * and the reference dangled: only the landing page carried the Organization node.
+ */
 export function articleJsonLd({
   locale,
   path,
@@ -72,6 +80,7 @@ export function articleJsonLd({
   description,
   datePublished,
   dateModified,
+  image,
 }: ArticleJsonLdInput): JsonLdNode {
   const url = `${SITE_URL}/${locale}${path}`;
   return {
@@ -79,6 +88,7 @@ export function articleJsonLd({
     "@id": `${url}#article`,
     headline,
     description,
+    image: [image],
     inLanguage: locale,
     datePublished,
     dateModified: dateModified ?? datePublished,

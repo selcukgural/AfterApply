@@ -10,8 +10,6 @@ export function createRegisterSchema(t: ValidationTranslator, policy: PasswordPo
       // Typed a second time so a typo in the (masked) password field is caught before the
       // account is created with a password the user can't reproduce.
       confirmPassword: z.string().min(1, t("passwordRequired")),
-      firstName: z.string().min(1, t("firstNameRequired")).max(100),
-      lastName: z.string().min(1, t("lastNameRequired")).max(100),
       consentAccepted: z.literal(true, { message: t("consentRequired") }),
     })
     .refine((values) => values.password === values.confirmPassword, {

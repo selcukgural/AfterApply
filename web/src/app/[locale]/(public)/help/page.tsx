@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { TopicCard } from "@/components/help/TopicCard";
 // The sidebar's list, minus the overview itself: one list, so a topic added there appears here.
@@ -14,7 +14,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help">):
   return pageMetadata(locale, "/help", "help");
 }
 
-export default async function HelpOverviewPage() {
+export default async function HelpOverviewPage({ params }: PageProps<"/[locale]/help">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("help.overview");
   const tSidebar = await getTranslations("help.sidebar");
 

@@ -25,21 +25,29 @@ public sealed class IdentityPolicyOptions
     /// "expires in N minutes" sentence in step with this (it's a DB row, editable without a deploy).</summary>
     public int PasswordResetTokenMinutes { get; init; } = 30;
 
+    /// <summary>
+    /// Length over composition, per NIST SP 800-63B §5.1.1.2 (and ASVS 4.0 V2.1, which forbids
+    /// composition rules outright): a 12-character minimum is the whole policy. The four character-
+    /// class rules were on until 2026-09-14; together with the length they made the sign-up form
+    /// the heaviest step of a free product whose landing page converted 0% of visitors, and they buy
+    /// little — a password that is long and not the same character repeated is what resists
+    /// guessing, not one that happens to contain a "!". <c>RequiredUniqueChars</c> stays at 4 so the
+    /// length rule cannot be met with "aaaaaaaaaaaa". Only new/changed passwords are evaluated;
+    /// sign-in never re-checks the policy, so existing accounts are unaffected either way.
+    /// </summary>
     public sealed class PasswordPolicyOptions
     {
-        /// <summary>ASVS L2 recommendation. Only new/changed passwords are evaluated; sign-in never
-        /// re-checks the policy, so raising it doesn't lock existing accounts out.</summary>
         public int RequiredLength { get; init; } = 12;
 
         public int RequiredUniqueChars { get; init; } = 4;
 
-        public bool RequireDigit { get; init; } = true;
+        public bool RequireDigit { get; init; } = false;
 
-        public bool RequireLowercase { get; init; } = true;
+        public bool RequireLowercase { get; init; } = false;
 
-        public bool RequireUppercase { get; init; } = true;
+        public bool RequireUppercase { get; init; } = false;
 
-        public bool RequireNonAlphanumeric { get; init; } = true;
+        public bool RequireNonAlphanumeric { get; init; } = false;
     }
 
     public sealed class LockoutPolicyOptions

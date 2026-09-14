@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 const QUESTION_KEYS = [
   "q1",
@@ -26,7 +26,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help/faq
   return pageMetadata(locale, "/help/faq", "helpFaq");
 }
 
-export default async function FaqHelpPage() {
+export default async function FaqHelpPage({ params }: PageProps<"/[locale]/help/faq">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("help.faq");
 
   return (

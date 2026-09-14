@@ -5976,3 +5976,107 @@ https://claude.ai/code/artifact/83919f83-bfc6-47b2-a969-a2fdc97b60d7
 `hideRegisterCta` sözleşmesi; mevcut registry/gövde/SEO kuralları yeni iki yazıya da uygulanır;
 depo envanteri tel tuzağı yeni anahtar ve yazıcıyla güncellendi). Bileşenler için düzenek yok —
 yerel yığında tarayıcıyla doğrulandı.
+
+## Büyüme denetiminin altı kod maddesi: paylaşım görseli, çeviri ayrımı, statik render, kayıt, 404 (2026-09-14)
+
+**Neden:** 14 Eylül'de sitenin tamamı dışarıdan tarandı (Lighthouse, Cloud Run logu,
+`/admin/metrics`, arama sonuçları). Teşhis: site teknik olarak sağlam, gelen yok — 30 günde 500
+görüntüleme (ekip + bot dahil), Google'dan 5, ana sayfa → kayıt %0. Rapor ve 14 bulgu:
+https://claude.ai/code/artifact/03a16b9a-d2e8-48dc-a49d-33705fde3f7f. Bu kayıt, raporun bir
+haftalık kod işi dediği altı maddenin kararlarını tutar; dağıtım ve içerik işleri kod değil, orada.
+
+**Kararlar:**
+- **Her genel sayfanın `og:image`'ı var.** Bugüne kadar yalnızca ana sayfada vardı
+  (`opengraph-image.tsx` o segmente özel; `buildMetadata` görsel koymuyordu) — tek çalışan kanal
+  LinkedIn'de paylaşılan her rehber/şirket/CV linki görselsiz karttı. Yeni: `GET /{locale}/og?t=&k=`
+  route'u sayfanın başlığını marka kartına çizer (`OgCard`, satori; logo PNG data-URI'si hiç
+  render olmuyordu, kutularla çizildi); `buildMetadata` her sayfaya bunu ve Twitter görselini
+  yazar; yardım ve şirket sayfaları bölüm adını "kicker" olarak taşır. Başlık URL'den geldiği için
+  `sanitizeOgText` kontrol karakterlerini atar ve 110/48 karakterde keser; bilinmeyen locale 404.
+  Rehber yazılarının Article JSON-LD'si artık `image` taşıyor ve `author/publisher`'ın işaret
+  ettiği Organization düğümü aynı grafta (önceden yalnızca ana sayfada vardı — sarkan referans).
+- **Çeviri kataloğu artık layout başına dilimleniyor.** `NextIntlClientProvider` `messages`
+  verilmeyince tüm kataloğu gömüyordu: 41 ad alanı, admin moderasyon metinleri ve gizlilik
+  politikası dahil, her sayfada 190 KB — ana sayfanın 295 KB'lık HTML'inin en büyük parçası,
+  mobil LCP 4,9 sn. `messageScopes.ts`: kök layout ortak chrome'u, ana sayfa kendi bölümlerini
+  (örnek panel kartları, kıyas ve şirket özeti bileşenleri gerçek olduğundan onların dilimleri
+  dahil), `(public)` layout girişsiz sayfaların setini verir; girişli layout tam kataloğu.
+  `pickMessages` noktalı yol alır ("help.sidebar", "cvScan.navCta"). Sonuç: ana sayfa 295 → 177 KB,
+  CV sayfası 83 KB. **Drift bekçisi:** `messageScopes.test.ts` her kapsamın giriş noktalarından
+  import grafını yürüyüp `"use client"` dosyalarının `useTranslations` + `t("…")` anahtarlarını
+  (`findMessageUsages` ile) çözer ve kapsamla karşılaştırır — ilk çalıştırmada üç gerçek eksik
+  yakaladı (başlıktaki CV düğmesi, ana sayfadaki panel kartları, şirket dizinindeki sayfalayıcı).
+- **Genel sayfalar statik prerender ediliyor.** Sebep: kök layout `cookies()` ile tema okuyordu,
+  bu her rotayı dinamik yapıp `cache-control: no-store` bastırıyordu; web servisinin
+  `min-instances`'ı da 0'dı — 7 günde 133 istek ≥2 sn (çoğu 3–5 sn). Tema artık `<head>`'deki
+  tek satırlık inline script'le çerezden okunup ilk boyamadan önce `<html>`'e basılıyor
+  (`THEME_BOOT_SCRIPT`; `suppressHydrationWarning`; Next'in "preventing flash before hydration"
+  rehberinin önerdiği yol). `ThemeSwitcher` `initialTheme` prop'u yerine `useDocumentTheme`
+  (`useSyncExternalStore` + MutationObserver) ile `<html>` sınıfını izler. `setRequestLocale`
+  31 genel sayfa/layout'a eklendi; `useSearchParams` kullanan tek-kullanımlık sayfalar
+  (şifre sıfırlama, eşleştirme, OAuth dönüşleri) layout'larında `<Suspense>` ile sarıldı — yoksa
+  prerender kırılıyor. Build tablosu: `/tr`, `/en` ve tüm genel sayfalar ● (SSG); şirket sayfası ve
+  `/og` ƒ. Build-zamanı API çağrıları (`/companies/scoring`, sitemap) zaten null/[] ile korunuyor
+  ve 60 sn ISR ile tazeleniyor; API'siz Docker build kırılmaz. `deploy.yml`: web'e
+  `--min-instances=1` (~$8–10/ay, API'nin ödediği aynı gerekçe). `ReactDOM.preconnect` ile
+  `api.ekariyerim.com`'a erken bağlantı (Lighthouse: 210 ms).
+- **ScrollReveal sunucudan görünür geliyor.** SSR 11 bölümü `opacity-0` ile gönderiyordu;
+  hidrasyona kadar (mobilde 4,9 sn) hero altı boştu. Yeni: varsayılan görünür; mount'ta yalnızca
+  hâlâ viewport'un altında olan bölüm gizlenip gözlemlenir — kullanıcının göremediği bir şeyi
+  gizlemek tek görünmez an. Reduced-motion ve IntersectionObserver'sız tarayıcıda hiç dokunulmaz.
+- **Kayıt: uzunluk yeter, isim isteğe bağlı, sosyal giriş üstte.** Şifre bileşim kuralları
+  (büyük/küçük/rakam/özel) kapatıldı — NIST SP 800-63B §5.1.1.2 ve ASVS V2.1 bileşim kuralı
+  önermiyor; 12 karakter + 4 farklı karakter kaldı ("aaaaaaaaaaaa" geçmesin). Config-driven
+  (`appsettings.json` + `IdentityPolicyOptions` varsayılanları), web `/api/config`'den okur, form
+  kendini uyarlar. Ad/soyad formdan çıktı; `RegisterRequestValidator` `NotNull().MaximumLength`
+  (kolon NOT NULL, boş dize gider); başlık `displayName` ile e-postanın @ öncesine düşer; Ayarlar
+  isterse ekler. OAuth kayıt sayfaları isim istemeye devam eder (sağlayıcı zaten veriyor).
+  `SocialSignIn` formun üstüne, LinkedIn ilk sıraya; kayıt sayfası "ne kazanırsın" üç maddeyle
+  açılıyor. Gizlilik politikası "Hesap bilgileri" satırı güncellendi (TR+EN, 14 Eylül).
+- **404 sayfası bizim.** `[locale]/[...rest]/page.tsx` bilinmeyen URL'yi `notFound()`'a verir,
+  `[locale]/not-found.tsx` site başlığı + footer + beş kapı (ana sayfa, CV tarama, şirketler,
+  rehber, yardım) ile iki dilde render eder; durum kodu 404 kalır (curl ile doğrulandı).
+
+**Testler:** web 399 (+8 `ogImage`, +3 `articleJsonLd`, +2 paylaşım görseli sözleşmesi, +10
+`messageScopes`, +5 `displayName`); unit 636 (+5 `RegisterRequestValidatorTests`); integration
++5 (`Default_Policy_Judges_A_Password_By_Its_Length_Not_Its_Character_Classes` ×4,
+`Register_Without_A_Name_Creates_The_Account_With_Empty_Names`), `ClientConfigTests` varsayılan
+beklentisi güncellendi. Tarayıcıda (yerel yığın): kayıt sayfası, 404 (TR/EN), tema geçişi ve
+sert navigasyonda kalıcılığı, help sidebar'ın dilimlenmiş katalogla çalışması; konsolda
+hydration/intl hatası yok. `next start` ile ölçüm: `/tr` 177 KB, `cache-control: s-maxage`,
+SSR'da `opacity-0` yok.
+
+**Yapılmayan / bilinçli sınır:** başlık anahtar kelimeleri (bulgu 06), sayaç bot filtresi (13),
+kıyas "6 kişi" gizleme (10), paylaş düğmeleri (03) bu partide değil — rapordaki sıra korunuyor.
+Rapordaki durdurma-koşulu notu geçerli: dağıtım başlamadan ölçülen şey tez değil, trafiğin yokluğu.
+
+## Girişli kullanıcı genel sayfalarda uygulama menüsünü görür; araçlar "Araçlar ▾" grubunda (2026-09-14)
+
+**Neden:** Yerel testte kullanıcı, girişliyken uygulama menüsünden "Şirketler"e tıklayınca
+menünün ve avatarın kaybolup yalnızca "Panele Git" kalmasını "çıkış yapmışım gibi" diye bildirdi.
+Bu, 13 Eylül'de bilinçli verilmiş kararın (ortak site başlığı, girişliye tek düğme) ilk
+kullanıcıda bıraktığı izlenim. Beş seçenek + iki türev kanvasta gösterildi, kullanıcı **D3**'ü
+seçti: https://claude.ai/code/artifact/b8c46cba-67a0-4920-8726-82e794b14945
+
+**Kararlar:**
+- **`SiteHeader` girişliyse `NavBar`'ı render eder.** Landing, `(public)` altındaki her sayfa ve
+  404 dahil. 13 Eylül'de bu seçeneği reddettiren üç bedel bilerek kabul edildi: (a) başlık takası
+  — `authStore.hydrate()` mount sonrası çalıştığı için bir kare; eski "Panele Git" düğmesi de aynı
+  anda beliriyordu, yani zıplama yeni değil; (b) öneri/bildirim sayaçları genel sayfalarda da
+  çekilir — girişli kullanıcı için iki küçük istek; (c) Kıyas/Rehber/CV Tarama satırdan düşer —
+  aşağıdaki grupla telafi edildi. "Aynı URL iki route grubunda" itirazı geçerli değil: route grubu
+  değişmiyor, yalnızca istemci bileşeni ne çizeceğini seçiyor.
+- **`ToolsMenu` ("Araçlar ▾")**: `TOOL_LINKS` (CV Tarama, Kıyas, Rehber) `NavBar`'ın satırında tek
+  açılır başlık; altında "Hesap gerekmez" notu. Bir araç sayfası açıkken tetikleyici bölüm linki
+  gibi altı çizili. `UserMenu`'deki "Ücretsiz araçlar" grubu kaldırıldı (aynı derinlik, artık
+  avatarın değil satırın altında). Mobil menüdeki araç bölümü yerinde.
+- **`NavBar` genişliği `max-w-5xl` → `max-w-6xl`**, logo metni `whitespace-nowrap`: 11 öğeli
+  satır 1024 px'te logoyu iki satıra kırıyordu (tarayıcıda görüldü). Genel başlık zaten 6xl.
+- `siteNav.goToDashboard` başlıktan çıktı (hero ve son CTA'da duruyor); `nav.toolsMenu`,
+  `nav.toolsNote` eklendi (TR+EN).
+
+**Testler:** `siteChrome.contract.test.ts` — araçlar `ToolsMenu`'de ve `NavBar`'da, `UserMenu`'de
+değil; `SiteHeader` girişliyse `<NavBar />` döner ve `goToDashboard` içermez. Web 400, lint ve
+tsc temiz. Tarayıcıda: `/companies` ve `/guide` girişli hâlde uygulama menüsüyle, Araçlar menüsü
+açılıyor/kapanıyor, `/guide`'da tetikleyici aktif. **Yardım merkezi ekran görüntüleri** (uygulama
+başlığını gösterenler) artık bir "Araçlar" öğesi eksik — bu partide yeniden çekilmedi, ayrı iş.

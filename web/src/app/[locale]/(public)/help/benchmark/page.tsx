@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { StepList } from "@/components/help/StepList";
 import { Callout } from "@/components/help/Callout";
@@ -12,7 +12,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help/ben
   return pageMetadata(locale, "/help/benchmark", "helpBenchmark");
 }
 
-export default async function BenchmarkHelpPage() {
+export default async function BenchmarkHelpPage({ params }: PageProps<"/[locale]/help/benchmark">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("help.benchmark");
   const tCommon = await getTranslations("help.common");
 

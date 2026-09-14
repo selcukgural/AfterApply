@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { buildMetadata } from "@/lib/seo/pageMetadata";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph } from "@/lib/seo/jsonLd";
+import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd } from "@/lib/seo/jsonLd";
+import { ogImagePath } from "@/lib/seo/ogImage";
 import {
   GUIDE_ARTICLES,
   GUIDE_PATH,
@@ -15,7 +16,7 @@ import {
   isGuideLocale,
 } from "@/lib/guide/articles";
 import { loadGuideArticle } from "@/lib/guide/content";
-import { SITE_NAME } from "@/lib/seo/routes";
+import { SITE_NAME, SITE_URL } from "@/lib/seo/routes";
 import { formatArticleDate } from "@/lib/guide/formatArticleDate";
 
 export function generateStaticParams({ params }: { params: { locale: string } }) {
@@ -25,11 +26,13 @@ export function generateStaticParams({ params }: { params: { locale: string } })
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/guide/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
+  setRequestLocale(locale);
   if (!isGuideLocale(locale)) return {};
 
   const article = findArticleBySlug(slug, locale);
   if (!article) return {};
 
+  const tSection = await getTranslations("metadata.pages");
   return buildMetadata({
     locale,
     // The slug differs per locale, so the hreflang set has to be built from the article rather
@@ -38,6 +41,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/guide/[s
     title: article.copy[locale].title,
     description: article.copy[locale].description,
     article: { publishedTime: article.published, modifiedTime: article.updated },
+    kicker: tSection("guide.title"),
   });
 }
 
@@ -62,6 +66,7 @@ export default async function GuideArticlePage({ params }: PageProps<"/[locale]/
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 py-12">
       <JsonLd
         data={jsonLdGraph(
+          organizationJsonLd(),
           breadcrumbJsonLd(locale, [
             { name: SITE_NAME, path: "" },
             { name: tSection("guide.title"), path: GUIDE_PATH },
@@ -74,6 +79,7 @@ export default async function GuideArticlePage({ params }: PageProps<"/[locale]/
             description: copy.description,
             datePublished: article.published,
             dateModified: article.updated,
+            image: `${SITE_URL}${ogImagePath(locale, copy.title, tSection("guide.title"))}`,
           }),
         )}
       />

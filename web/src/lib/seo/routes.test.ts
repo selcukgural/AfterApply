@@ -237,3 +237,23 @@ describe("landing page title", () => {
     expect(en.metadata.pages.home.description.toLowerCase()).toContain("application tracking");
   });
 });
+
+describe("share images", () => {
+  // Until 2026-09-14 only the landing page had an og:image. This pins the fix: every page built
+  // through buildMetadata carries a card, and the guide page puts the Organization node the Article
+  // references into the same graph instead of leaving the @id dangling.
+  const read = (relative: string) => readFileSync(path.join(process.cwd(), relative), "utf8");
+
+  it("are set for every page that goes through buildMetadata", () => {
+    const source = read("src/lib/seo/pageMetadata.ts");
+    expect(source).toContain("ogImagePath(locale, title, kicker)");
+    expect(source).toMatch(/openGraph:\s*\{[\s\S]*?images,/);
+    expect(source).toMatch(/twitter:\s*\{[\s\S]*?images,/);
+  });
+
+  it("are the image the guide article's JSON-LD names, next to the Organization it references", () => {
+    const page = read("src/app/[locale]/(public)/guide/[slug]/page.tsx");
+    expect(page).toContain("organizationJsonLd()");
+    expect(page).toMatch(/image: `\$\{SITE_URL\}\$\{ogImagePath\(/);
+  });
+});

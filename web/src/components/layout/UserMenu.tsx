@@ -4,16 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ADMIN_NAV_HREF } from "@/lib/auth/adminNav";
-import { TOOL_LINKS } from "@/components/layout/NavBar";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
-import type { Theme } from "@/lib/theme/theme";
 
 interface UserMenuProps {
   name: string;
   initials: string;
   onLogout: () => void;
-  initialTheme: Theme;
   /** Renders the admin entry. Decided by the caller from the profile — see canSeeAdminNav. */
   showAdmin: boolean;
 }
@@ -22,7 +19,7 @@ interface UserMenuProps {
 // theme, logout) behind one fixed-width trigger instead of listing them
 // inline, so it can never push the primary nav onto a second line no matter
 // how long a locale's labels get.
-export function UserMenu({ name, initials, onLogout, initialTheme, showAdmin }: UserMenuProps) {
+export function UserMenu({ name, initials, onLogout, showAdmin }: UserMenuProps) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -109,28 +106,13 @@ export function UserMenu({ name, initials, onLogout, initialTheme, showAdmin }: 
             </Link>
           )}
 
-          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
-
-          {/* The account-free tools. They are in the landing navbar and footer for strangers;
-              without this group a signed-in person could reach them only by signing out. */}
-          <p className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">{t("tools")}</p>
-          {TOOL_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              role="menuitem"
-              href={link.href}
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              {t(link.key)}
-            </Link>
-          ))}
-
+          {/* The account-free tools used to be a group here (2026-09-13); since 2026-09-14 they
+              are the navbar's own "Tools" menu (ToolsMenu), one level up. */}
           <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
 
           <div className="flex items-center justify-between px-4 py-2">
             <LanguageSwitcher />
-            <ThemeSwitcher initialTheme={initialTheme} />
+            <ThemeSwitcher />
           </div>
 
           <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
