@@ -132,4 +132,10 @@ public sealed class JobFitScoringSettings
     public decimal OutputUsdPerMillionTokens { get; init; } = 2.50m;
 
     public int TimeoutSeconds { get; init; } = 45;
+
+    /// <summary>Gemini "thinking" token budget for the call; 0 turns it off. The score is a
+    /// reading-and-comparing task that a 2.5 Flash answers fine without it, and with it on the
+    /// reasoning eats the output ceiling and the answer comes back empty (2026-09-14 eval).
+    /// Null defers to the model's default.</summary>
+    public int? ThinkingBudget { get; init; } = 0;
 }

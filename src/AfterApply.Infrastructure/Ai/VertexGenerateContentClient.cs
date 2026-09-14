@@ -39,6 +39,10 @@ internal sealed class VertexGenerateContentClient(IHttpClientFactory httpClientF
 
     public async Task<VertexGenerateContentResult> GenerateAsync(VertexGenerateContentCall call, CancellationToken cancellationToken)
     {
+        // The 2.5 "thinking" models spend their reasoning tokens out of maxOutputTokens: with a
+        // small ceiling and thinking left on, the answer comes back empty (finishReason
+        // MAX_TOKENS, 15/15 blank on gemini-2.5-flash in the 2026-09-14 eval). A caller that wants
+        // a short, reproducible JSON answer sets the budget to 0; null leaves the model's default.
         var payload = new
         {
             systemInstruction = new { parts = new[] { new { text = call.SystemPrompt } } },
@@ -48,7 +52,8 @@ internal sealed class VertexGenerateContentClient(IHttpClientFactory httpClientF
                 temperature = call.Temperature,
                 maxOutputTokens = call.MaxOutputTokens,
                 responseMimeType = "application/json",
-                responseSchema = call.ResponseSchema
+                responseSchema = call.ResponseSchema,
+                thinkingConfig = call.ThinkingBudget is { } budget ? new { thinkingBudget = budget } : null
             }
         };
 
@@ -69,11 +74,14 @@ internal sealed class VertexGenerateContentClient(IHttpClientFactory httpClientF
         }
 
         var body = await response.Content.ReadFromJsonAsync<GenerateContentResponse>(ResponseJsonOptions, cancellationToken);
-        var text = body?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
+        var candidate = body?.Candidates?.FirstOrDefault();
+        var text = candidate?.Content?.Parts?.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.Text))?.Text;
         return new VertexGenerateContentResult(
             string.IsNullOrWhiteSpace(text) ? null : text,
             body?.UsageMetadata?.PromptTokenCount ?? 0,
-            body?.UsageMetadata?.CandidatesTokenCount ?? 0);
+            // Thinking tokens are billed as output and are not in candidatesTokenCount.
+            (body?.UsageMetadata?.CandidatesTokenCount ?? 0) + (body?.UsageMetadata?.ThoughtsTokenCount ?? 0),
+            candidate?.FinishReason);
     }
 
     /// <summary>
@@ -99,13 +107,13 @@ internal sealed class VertexGenerateContentClient(IHttpClientFactory httpClientF
 
     private sealed record GenerateContentResponse(List<Candidate>? Candidates, UsageMetadata? UsageMetadata);
 
-    private sealed record Candidate(Content? Content);
+    private sealed record Candidate(Content? Content, string? FinishReason);
 
     private sealed record Content(List<Part>? Parts);
 
     private sealed record Part(string? Text);
 
-    private sealed record UsageMetadata(int? PromptTokenCount, int? CandidatesTokenCount);
+    private sealed record UsageMetadata(int? PromptTokenCount, int? CandidatesTokenCount, int? ThoughtsTokenCount);
 }
 
 public sealed record VertexGenerateContentCall(
@@ -118,11 +126,14 @@ public sealed record VertexGenerateContentCall(
     object ResponseSchema,
     double Temperature,
     int MaxOutputTokens,
-    TimeSpan Timeout);
+    TimeSpan Timeout,
+    // Null: the model's default. 0: thinking off (2.5 Flash / Flash-Lite honour it; 2.5 Pro does not).
+    int? ThinkingBudget = null);
 
-/// <summary>The model's JSON text (null when the answer was empty or filtered) and the token
-/// counts Vertex reported for the call.</summary>
-public sealed record VertexGenerateContentResult(string? Text, int InputTokens, int OutputTokens);
+/// <summary>The model's JSON text (null when the answer was empty or filtered), the token counts
+/// Vertex reported for the call (output includes thinking), and why the model stopped —
+/// "STOP" is the good one; "MAX_TOKENS" with no text means the ceiling ate the answer.</summary>
+public sealed record VertexGenerateContentResult(string? Text, int InputTokens, int OutputTokens, string? FinishReason = null);
 
 public sealed class VertexGenerateContentException(int statusCode) : Exception($"Vertex AI returned {statusCode}.")
 {

@@ -6369,6 +6369,55 @@ uyarlandı. Web: tsc, eslint, vitest 405 → **412**. Tam entegrasyon suite'i a�
 (`ProEntitlements` satırını yazacak; Pro olmayan sayfadaki "Yakında" düğmesi ve fiyat), sonra
 merge. Cloud Scheduler tetikleyicisi gereksiz (min-instances=1, §13).
 
+## Uyum puanı modeli: gemini-2.5-flash kaldı, Flash-Lite elendi; thinking kapalı (2026-09-14, akşam)
+
+**Ölçüm.** Kullanıcının isteğiyle (aynı gün) gerçek CV + gerçek ilanla kıyas yapıldı:
+`JobFitScoringEvalTests` (opt-in, `JOB_FIT_EVAL=1`, `CvReviewEvalTests` kalıbı; korpus ve CV
+repoda değil). CV: kullanıcının TR pazarı CV'si (PDF). Korpus: o gün gerçek istemcilerle çekilmiş
+15 ilan — 10 ".net developer / İstanbul" (5 LinkedIn, 5 kariyer.net), 2 "adjacent" (Java/Node
+full-stack), 3 "off" (satış, muhasebe). İki model, aynı prompt, aynı şema, temperature 0,
+Vertex `europe-west1`, proje `ekariyerim`.
+
+**Bulgu 1 — üretimi düşürecek hata yakalandı:** ilk koşuda **2.5 Flash 15/15 boş cevap** döndü
+(HTTP 200, metin yok). 2.5 Flash bir *thinking* modeli; düşünme token'ları `maxOutputTokens`
+(1024) bütçesinden düşüyor, cevaba yer kalmıyor (`finishReason MAX_TOKENS`). Flash-Lite'ta
+thinking varsayılan kapalı olduğundan 15/15 gelmişti. Düzeltme: `VertexGenerateContentCall`'a
+`ThinkingBudget` eklendi, puanlama `JobSources:Scoring:ThinkingBudget = 0` ile çağırıyor,
+`maxOutputTokens` 2048; `finishReason` ve `thoughtsTokenCount` artık okunuyor (thinking
+token'ları çıktı olarak faturalanır, deftere dahil). CV taramasının çağrısı değişmedi (null →
+model varsayılanı). Bu, kıyas yapılmasaydı ilk Pazartesi "hiçbir ilan puanlanmadı" olarak
+görülecekti.
+
+**Bulgu 2 — kalite (thinking kapalı, ikinci koşu, ikisi de 15/15):**
+
+| etiket (n) | 2.5 Flash | 2.5 Flash-Lite |
+|---|---|---|
+| net (10) | ort 69, aralık 20–95 | ort 83, aralık 75–95 |
+| adjacent (2) | 35, 35 | 30, 75 |
+| off (3) | 0, 0, 0 | 30, 0, 30 |
+| token giriş/çıkış (15 ilan) | 36.119 / 5.086 | 36.119 / 6.058 |
+| medyan gecikme | 2,3 s | 1,7 s |
+| liste fiyatıyla 15 ilan | ≈ $0,024 | ≈ $0,006 |
+
+Flash-Lite'ın yüksek puanları **uydurma eşleşmelerden** geliyor: Dynamics 365 CRM ilanına 75
+verip "matched" listesine "Microsoft Dynamics 365 üzerinde geliştirme"yi yazıyor — kendi
+özeti aynı cümlede tecrübenin olmadığını söylüyor; Node/TypeScript full-stack ilanına 75 verip
+"Node.js ile backend", "PostgreSQL şema tasarımı"nı eşleşmiş sayıyor (CV .NET); satış ve muhasebe
+ilanlarına "MS Office, takım çalışması" diye 30 veriyor. Flash aynı ilanlara 20 / 35 / 0 veriyor
+ve gerekçeleri doğru ("CRM temel gereksinimi eksik", "TypeScript/Node/React odaklı, .NET
+uzmanısınız", "ilgisi yok"). "net" ortalamasının düşük olması Flash'ın kusuru değil: 20 ve 40
+aldığı iki ilan gerçekten CRM ve Oracle/IFS ERP ilanı. Uydurma "uyan kriter" kullanıcıya
+"bu ilana uyuyorsun" demek olduğundan Lite'ın 4× ucuzluğu bu üründe anlamsız.
+
+**Karar.** `JobSources:Scoring:Model = gemini-2.5-flash` **kalır**, thinking kapalı. Maliyet
+gerçek ölçümle: ilan başına ≈ $0,0016 → 50 ilan/hafta ≈ $0,08/hafta ≈ **$0,35/ay/kullanıcı**
+(12 Eylül modelindeki ≈ $1'in altında; giriş ~2.400 token/ilan). Eşik varsayılanı (%60) Flash'ın
+ölçeğine uyuyor: gerçek .NET ilanları 65–95, yakın alan 35, alakasız 0.
+
+**Açık:** Vertex'in model yaşam döngüsü sayfası (JS ile render, buradan okunamadı) yayına
+alırken konsoldan kontrol edilecek — 2.5 Flash'ın emeklilik tarihi; geldiğinde env var'la
+model değişir ve **bu eval yeniden koşulur** (harness hazır, komut test dosyasının başında).
+
 ## Entegrasyon testleri: sınıf başına host, inline iş, sızıntı kapandı — 33 dk'dan 2 dk'ya (2026-09-15, gece)
 
 **Tetikleyici.** Tam paket 410 testte 32 dk 56 s sürüp "Test Run Aborted" ile düştü; ardından tek

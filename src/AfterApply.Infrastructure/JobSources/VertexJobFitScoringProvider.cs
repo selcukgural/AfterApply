@@ -78,8 +78,12 @@ public sealed class VertexJobFitScoringProvider(
                 // Zero: the score is meant to be reproducible — the same CV and posting should
                 // get the same number on a re-run, and the prose is short enough not to suffer.
                 Temperature: 0,
-                MaxOutputTokens: 1024,
-                TimeSpan.FromSeconds(settings.TimeoutSeconds)), cancellationToken);
+                MaxOutputTokens: 2048,
+                TimeSpan.FromSeconds(settings.TimeoutSeconds),
+                // Thinking off: the comparison is a reading task, the answer is a small JSON, and
+                // with it on a 2.5 Flash spends the whole output ceiling thinking and returns
+                // nothing (2026-09-14 eval). Config, because a future model may want it back.
+                ThinkingBudget: settings.ThinkingBudget), cancellationToken);
         }
         catch (VertexGenerateContentException exception)
         {
@@ -88,7 +92,7 @@ public sealed class VertexJobFitScoringProvider(
 
         if (result.Text is null)
         {
-            logger.LogInformation("Vertex AI returned no fit-score payload for a posting");
+            logger.LogWarning("Vertex AI returned no fit-score payload for a posting (finish reason {FinishReason})", result.FinishReason ?? "unknown");
             return null;
         }
 
