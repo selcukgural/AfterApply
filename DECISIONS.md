@@ -6418,6 +6418,40 @@ gerçek ölçümle: ilan başına ≈ $0,0016 → 50 ilan/hafta ≈ $0,08/hafta 
 alırken konsoldan kontrol edilecek — 2.5 Flash'ın emeklilik tarihi; geldiğinde env var'la
 model değişir ve **bu eval yeniden koşulur** (harness hazır, komut test dosyasının başında).
 
+**Ek (aynı gece) — 8 meslek, 36 ilan, Flash vs Pro.** Tek CV'yle karar vermemek için 8 sentetik
+CV yazıldı (frontend, muhasebe, saha satış, İK, makine mühendisi, hemşire, yeni mezun veri
+analisti, dijital pazarlama; TR/EN karışık, kıdem 0–9 yıl) ve 9 meslek için iki siteden 36
+gerçek ilan çekildi. Her CV kendi mesleğinin 4, komşu mesleğin 4 ve alakasız 2 ilanına karşı
+puanlandı; 80 çağrı × 2 model (`gemini-2.5-flash` thinking kapalı, `gemini-2.5-pro` thinking
+1024 — Pro'da kapatılamıyor).
+
+| CV | Flash own / adjacent / off | Pro own / adjacent / off |
+|---|---|---|
+| frontend | 35,75,75,75 / 35,0,25,20 / 0,0 | 30,78,65,65 / 30,30,30,30 / 0,0 |
+| hemşire | 85,45,65,85 / 0,0,0,0 / 0,0 | 95,55,75,95 / 0,0,10,0 / 0,0 |
+| İK | 35,85,85,85 / 0,0,10,20 / 0,0 | 35,80,85,78 / 0,0,29,0 / 0,0 |
+| makine | 30,10,85,75 / 0,20,20,0 / 0,0 | 35,0,78,65 / 29,0,30,10 / 0,0 |
+| muhasebe | 85,85,85,75 / 20,20,20,0 / 0,0 | 75,85,85,65 / 30,30,30,30 / 0,0 |
+| pazarlama | 20,85,92,85 / 20,20,20,20 / 0,0 | 0,75,95,95 / 30,20,10,10 / 0,0 |
+| saha satış | 85,75,75,35 / 20,0,0,0 / 0,0 | 85,75,65,35 / 10,10,29,0 / 0,0 |
+| yeni mezun | 35,20,65,75 / 0,20,0,20 / 0,0 | 55,30,85,65 / 0,30,30,30 / 0,0 |
+
+Okuma: iki model de 80/80 cevap verdi, alakasız ilana ikisi de 0 verdi, "own" içindeki düşük
+puanların hepsi gerekçeli (eğitim hemşiresi sertifikası, tıbbi satış portföyü, MEP/elektrik
+mühendisi vs makine tasarımı, bankacılık iş analisti, Felemenkçe bilen satış uzmanı — arama
+sonucundaki gürültü). Flash'ın "matched" listeleri örnekleme kontrolünde CV'de gerçekten olan
+şeyler (React, REST, Git, Excel, mezuniyet); uydurma yok. Pro daha ayrıntılı gerekçe yazıyor ve
+komşu mesleğe 30 tabanı koyuyor; puanlarda kararı değiştirecek bir fark yok. Bedel: Pro çağrı
+başına ≈ 11 s (Flash ≈ 1,8 s), çıktı token'ı 4× (thinking), liste fiyatıyla ilan başına ≈ $0,013
+(Flash ≈ $0,0012) → 50 ilan/hafta'da ≈ $2,9/ay/kullanıcı, KDV dahil $2,50 taban fiyatta zarar.
+Tekrarlanabilirlik (Flash, aynı korpus iki kez): 15 ilanın 5'inde ±10, hiçbirinde daha fazla —
+kabul edilebilir, eşik civarındaki ilanlar haftalar arasında kayabilir; UI puanı "≈" değil tam
+sayı gösteriyor, bu bilinerek kalıyor.
+
+**Karar (kesinleşti):** `gemini-2.5-flash`, thinking kapalı. Sentetik CV'ler ve korpus
+`tmp`'de, repoda değil; harness (`JobFitScoringEvalTests`, `own/adjacent/off` etiketleri) model
+değişince yeniden koşturulur.
+
 ## Entegrasyon testleri: sınıf başına host, inline iş, sızıntı kapandı — 33 dk'dan 2 dk'ya (2026-09-15, gece)
 
 **Tetikleyici.** Tam paket 410 testte 32 dk 56 s sürüp "Test Run Aborted" ile düştü; ardından tek

@@ -30,9 +30,14 @@ namespace AfterApply.IntegrationTests.JobSources;
 ///   dotnet test tests/AfterApply.IntegrationTests --filter FullyQualifiedName~JobFitScoringEval
 /// </code>
 ///
+/// A model may carry a label after <c>#</c> (<c>gemini-2.5-flash#run2</c>) so the same model can be
+/// run twice for a repeatability check; a model may also carry a thinking budget after <c>@</c>
+/// (<c>gemini-2.5-pro@1024</c>) for the models that cannot turn thinking off.
+///
 /// The postings directory holds one JSON file per posting with the fields the sweep stores
-/// (title, companyName, location, description, seniority, employmentType, plus a free "tag"
-/// such as "net" / "adjacent" / "off" saying what the author expects). Nothing from the corpus
+/// (title, companyName, location, description, seniority, employmentType, plus a "tag": "own"
+/// for the CV's own profession, "adjacent" for a neighbouring one, "off" for an unrelated one —
+/// the sanity assertion at the end compares "off" against "own"). Nothing from the corpus
 /// or the CV is committed: both are personal or third-party text and live outside the repo.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
@@ -78,13 +83,18 @@ public class JobFitScoringEvalTests(SharedInfrastructure shared, ITestOutputHelp
 
         foreach (var model in models)
         {
+            var (modelId, thinkingBudget) = ParseModel(model);
             await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
             {
                 builder.UseSetting("ConnectionStrings:Postgres", postgres);
                 builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
                 builder.UseSetting("JobSources:Enabled", "true");
                 builder.UseSetting("JobSources:Scoring:ProjectId", projectId);
-                builder.UseSetting("JobSources:Scoring:Model", model);
+                builder.UseSetting("JobSources:Scoring:Model", modelId);
+                if (thinkingBudget is { } budget)
+                {
+                    builder.UseSetting("JobSources:Scoring:ThinkingBudget", budget.ToString(CultureInfo.InvariantCulture));
+                }
                 // The one real socket in this assembly, for the same reason as the CV eval.
                 builder.ConfigureServices(services => services
                     .AddHttpClient(JobFitScoringSettings.HttpClientName)
@@ -101,7 +111,7 @@ public class JobFitScoringEvalTests(SharedInfrastructure shared, ITestOutputHelp
 
             var provider = scope.ServiceProvider.GetRequiredService<IJobFitScoringProvider>();
             var settings = scope.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value.Scoring;
-            Assert.Equal(model, provider.Model);
+            Assert.Equal(modelId, provider.Model);
 
             foreach (var posting in postings)
             {
@@ -136,7 +146,7 @@ public class JobFitScoringEvalTests(SharedInfrastructure shared, ITestOutputHelp
         {
             var scored = rows.Where(r => r.Model == model && r.Result is not null).ToList();
             Assert.True(scored.Count >= postings.Count * 0.9, $"{model}: only {scored.Count}/{postings.Count} postings scored");
-            var relevant = scored.Where(r => r.Posting.Tag == "net").Select(r => r.Result!.Score).DefaultIfEmpty().Average();
+            var relevant = scored.Where(r => r.Posting.Tag is "own" or "net").Select(r => r.Result!.Score).DefaultIfEmpty().Average();
             var off = scored.Where(r => r.Posting.Tag == "off").Select(r => r.Result!.Score).DefaultIfEmpty(0).Max();
             Assert.True(off < relevant, $"{model}: an off-field posting ({off}) scored at or above the relevant average ({relevant:F0})");
         }
@@ -190,6 +200,15 @@ public class JobFitScoringEvalTests(SharedInfrastructure shared, ITestOutputHelp
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>"gemini-2.5-pro@1024#run2" → ("gemini-2.5-pro", 1024); the label after # is the
+    /// report column and stays on the caller's string.</summary>
+    private static (string ModelId, int? ThinkingBudget) ParseModel(string spec)
+    {
+        var withoutLabel = spec.Split('#')[0];
+        var parts = withoutLabel.Split('@');
+        return (parts[0], parts.Length > 1 ? int.Parse(parts[1], CultureInfo.InvariantCulture) : null);
     }
 
     private static long Median(IEnumerable<long> values)
