@@ -397,7 +397,8 @@
     "openMenu": "Menüyü aç",
     "closeMenu": "Menüyü kapat",
     "toolsMenu": "Araçlar",
-    "toolsNote": "Hesap gerekmez"
+    "toolsNote": "Hesap gerekmez",
+    "weeklyJobs": "Haftalık İlanlar"
   },
   "auth": {
     "login": {
@@ -961,7 +962,7 @@
       "outro": "Bu veriler, işlem kayıtları dışında, yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır; işlem kayıtları yalnızca yukarıda sayılan güvenlik ve hukuki amaçlara hizmet eder.",
       "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür.",
       "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\").",
-      "item7": "Haftalık ilan eşleştirmeyi (ücretli özellik) kullanırsanız: arama kriteri olarak kaydettiğiniz pozisyon adları (en fazla üç) ve konum. Bunlar hesabınızda saklanır ve haftada bir, bir iş ilanı sitesinde arama olarak kullanılır — aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın. Bulunan ilanlar sizin için sınırlı bir süre tutulur; hangilerine zaten başvurduğunuz kendi başvurularınızdan hesaplanır ve ayrı bir kayıt olarak asla saklanmaz."
+      "item7": "Haftalık ilan eşleştirmeyi (ücretli özellik) kullanırsanız: arama kriteri olarak kaydettiğiniz pozisyon adları (en fazla üç) ve konum. Bunlar hesabınızda saklanır ve haftada bir, LinkedIn ve kariyer.net'te arama olarak kullanılır — aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın. Bulunan ilanlar sizin için sınırlı bir süre tutulur; hangilerine zaten başvurduğunuz kendi başvurularınızdan hesaplanır ve ayrı bir kayıt olarak asla saklanmaz. Ayrıca rıza verirseniz her ilan için hesaplanan uyum puanı, kısa gerekçesi ve uyan/eksik kriter listesi de hesabınızda tutulur — bkz. \"Haftalık ilan eşleştirme\"."
     },
     "googleSignIn": {
       "title": "Google ile giriş",
@@ -1002,7 +1003,7 @@
       "withdraw": "Geri çekme: Gmail Taraması için tarayıcı eklentisinin Ayarlar sayfasından özelliği kapatın. Ya da hesabınızı silin, bu tamamen durur.",
       "sensitiveDataNote": "Konu satırı ve özet ayrıca hesabınızda da saklanır (bir öneriyi incelerken sizin görebileceğiniz şekilde) — e-postanın tam içeriği asla.",
       "feedbackTransfer": "İkincisi geri bildirim: uygulama içinden bir geri bildirim gönderdiğinizde mesajınız ve teknik bağlamı, takibi için GitHub'da herkese kapalı bir depoya kopyalanır. Alıcı: GitHub, Inc. (Microsoft, Amerika Birleşik Devletleri). Adınız, hesap e-posta adresiniz ve yanıt adresiniz gönderilmez. Hukuki sebep: meşru menfaat — bildirilen sorunları takip edip gidermek. Ayrıntı için yukarıdaki \"Gönderdiğiniz geri bildirimler\" bölümüne bakın.",
-      "jobSourceTransfer": "Üçüncüsü haftalık ilan eşleştirme (ücretli özellik): haftada bir, kriter olarak kaydettiğiniz pozisyon adları ve konum LinkedIn'e bir arama sorgusu olarak gönderilir ve listelediği herkese açık iş ilanları çekilir. Alıcı: LinkedIn Ireland Unlimited Company (İrlanda; LinkedIn Corporation, Amerika Birleşik Devletleri). Gönderilen şey aramanın kendisidir — bir pozisyon adı ve bir yer — başka hiçbir şey değil: adınız, hesabınız, CV'niz gönderilmez. Hukuki sebep: bu yalnızca kendi kaydettiğiniz kriterler için ve ücretli planınız aktifken gerçekleşir; kriterleri silin ya da plan sona ersin, durur. Geri çekme: ilan eşleştirme ayarlarından kriterlerinizi kaldırın ya da hesabınızı silin."
+      "jobSourceTransfer": "Üçüncüsü haftalık ilan eşleştirme (ücretli özellik): haftada bir, kriter olarak kaydettiğiniz pozisyon adları ve konum LinkedIn'e bir arama sorgusu olarak gönderilir ve listelediği herkese açık iş ilanları çekilir. Alıcı: LinkedIn Ireland Unlimited Company (İrlanda; LinkedIn Corporation, Amerika Birleşik Devletleri). Aynı arama Türkiye'deki kariyer.net'e (Kariyer.net Elektronik Yayıncılık ve İletişim Hizmetleri A.Ş., İstanbul) de gönderilir; bu bir yurt dışı aktarımı değildir, burada bütünlük için anılmaktadır. Gönderilen şey aramanın kendisidir — bir pozisyon adı ve bir yer — başka hiçbir şey değil: adınız, hesabınız, CV'niz gönderilmez. Hukuki sebep: bu yalnızca kendi kaydettiğiniz kriterler için ve ücretli planınız aktifken gerçekleşir; kriterleri silin ya da plan sona ersin, durur. Geri çekme: ilan eşleştirme ayarlarından kriterlerinizi kaldırın ya da hesabınızı silin."
     },
     "browserExtension": {
       "title": "Tarayıcı eklentisi",
@@ -1034,7 +1035,7 @@
       "intro": "CV yüklemek tamamen isteğe bağlıdır; hizmetin geri kalanı CV olmadan da çalışır. Bir CV yüklediğinizde:",
       "where": "Dosya, Avrupa Birliği bölgesindeki (Google Cloud, europe-west1) herkese kapalı bir depolama alanında saklanır — hesabınızın ve başvurularınızın verisiyle aynı bölgede. Dosyanın adresi tahmin edilebilir olsa bile dışarıdan erişilemez; depolama alanı internete tamamen kapalıdır.",
       "access": "Dosyaya yalnızca giriş yapmış hâlde siz erişebilirsiniz. Her indirme isteği, dosyanın gerçekten size ait olup olmadığı kontrol edildikten sonra e-kariyerim sunucusu üzerinden aktarılır; paylaşılabilir veya süreli bir bağlantı hiçbir zaman üretilmez. Başka kullanıcılara, işverenlere veya iş ilanı platformlarına gösterilmez.",
-      "noTransfer": "CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez — yapay zekâ servisleri dahil. Dosya okunmaz, metne çevrilmez ve analiz edilmez; yalnızca saklanır ve size geri verilir. Bir PDF'in ilk sayfasını CV'lerim sayfasında gördüğünüz önizleme, sunucuda değil kendi tarayıcınızda oluşturulur.",
+      "noTransfer": "CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez — yapay zekâ servisleri dahil. Tek istisna, aşağıdaki \"Haftalık ilan eşleştirme\" bölümünde anlatılan ücretli özelliği kendiniz açıp ayrıca rıza vermenizdir; o durumda yalnızca varsayılan CV'nizin metni, yalnızca puanlama için gönderilir. Dosya okunmaz, metne çevrilmez ve analiz edilmez; yalnızca saklanır ve size geri verilir. Bir PDF'in ilk sayfasını CV'lerim sayfasında gördüğünüz önizleme, sunucuda değil kendi tarayıcınızda oluşturulur.",
       "deletion": "Sildiğiniz bir CV kalıcı olarak silinir — depolama tarafında kurtarma penceresi bilerek kapalı tutulur. Hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir.",
       "sensitiveDataNote": "Bir CV, iş deneyiminizin yanı sıra fotoğraf, doğum tarihi, askerlik durumu veya sağlık bilgisi gibi hassas sayılabilecek veriler içerebilir; bu nedenle yükleme öncesinde ayrıca açık rızanızı alıyoruz. Ne yükleyeceğinize siz karar verirsiniz: bu alanların CV'nizde bulunması hizmetin çalışması için gerekli değildir, ve dilediğiniz zaman dosyayı silebilirsiniz.",
       "consent": "Hukuki sebep açık rızanızdır ve bu rıza her yükleme için ayrı ayrı alınır: dosyayı seçmeden önce onay kutusunu işaretlemeniz gerekir, kutu hiçbir zaman önceden işaretli gelmez ve her yüklemeden sonra yeniden boşalır. Rızanızı dosyayı silerek istediğiniz zaman geri çekebilirsiniz; hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir."
@@ -1048,6 +1049,14 @@
       "contentNotes": "Yazım hakkında da not isterseniz (ikinci, isteğe bağlı kutu): CV'nizin metni Google Cloud Vertex AI'a gönderilir — altyapımızın zaten çalıştığı AB bölgesinde ve aynı işleyicide; yeni bir ülkeye veri çıkmaz. Ücretli Vertex kullanıldığı için metin model eğitiminde kullanılmaz. Notlar puanı etkilemez, metin yine hiçbir yere kaydedilmez ve kutuyu işaretlemezseniz hiçbir model devreye girmez.",
       "output": "Sonuç ekranında gördüğünüz alıntılar ve ham metin, yalnızca sizin isteğinize verilen yanıtın içindedir; kayıt altına alınmaz, kayıtlara (log) yazılmaz.",
       "consent": "Hukuki sebep açık rızanızdır ve her tarama için ayrıca alınır: onay kutusu hiçbir zaman önceden işaretli gelmez ve her taramadan sonra yeniden boşalır. İçerik notları için istenen ikinci kutu ayrı ve isteğe bağlıdır — işaretlemeden de tarama tam olarak çalışır, puanınız birebir aynı çıkar. Saklanan bir dosya olmadığı için geri çekilecek bir saklama da yoktur; taramayı yapmamak yeterlidir."
+    },
+    "jobMatching": {
+      "title": "Haftalık ilan eşleştirme (ücretli özellik)",
+      "intro": "Pro planı ve kaydettiğiniz arama kriterleriyle her Pazartesi LinkedIn ve kariyer.net'te yeni ilanlar aranır (kriterlerin iki siteye gönderilmesi için bkz. \"Yurt dışına veri aktarımı\"). Bulunan ilanların her biri, yalnızca siz ayrıca rıza verirseniz, varsayılan CV'nizle karşılaştırılıp puanlanır:",
+      "what": "Gönderilen: varsayılan CV'nizin metni (dosyanın kendisi değil; ilk 15.000 karakter) ve bir ilanın metni, birlikte. Alıcı: Google Cloud Vertex AI, altyapımızın zaten çalıştığı AB bölgesinde (europe-west1) ve aynı işleyicide — yeni bir ülke ya da yeni bir işleyici söz konusu değildir. Ücretli Vertex kullanıldığı için metin model eğitiminde kullanılmaz ve Google tarafında saklanmaz.",
+      "kept": "Sakladıklarımız: her ilan için 0–100 arası bir uyum puanı, bir-iki cümlelik gerekçe, uyan ve eksik kriter listeleri ve ilanın istediği yetkinlikler — hesabınızda, ilanla birlikte. CV metninin kendisi hiçbir yere yazılmaz: her hafta depodaki dosyanızdan yeniden okunur ve isteğin süresi boyunca bellekte kalır. Ayrıca, çağrının maliyetini takip etmek için hangi özellik için kaç token harcandığı hesabınıza bağlı olarak kaydedilir; bu kayıt metin içermez ve hesabınızı silseniz de (kimliğinizden ayrılarak) kalır.",
+      "consent": "Hukuki sebep açık rızanızdır ve bu rıza kriterleri ilk kaydettiğinizde, hiçbir zaman önceden işaretli gelmeyen bir kutuyla alınır; verildiği an kaydedilir ve kriterler sayfasında görünür. Rıza vermeden kriter kaydedilemez, çünkü özelliğin puanlamasız bir hâli yoktur.",
+      "withdraw": "Geri çekme: kriterlerinizi silin — arama ve puanlama o an durur, o haftaki listeniz ve puanlar silinir, CV'niz bir daha gönderilmez. Hesabınızı silmek de aynı sonucu verir."
     },
     "feedback": {
       "title": "Gönderdiğiniz geri bildirimler",
@@ -1320,6 +1329,89 @@
       "hrLinkedIn": "İK LinkedIn profili",
       "emptyBody": "Henüz başvurmadığın ama gözünün üstünde olduğu ilanları buraya ekle; başvurunca tek tıkla başvuruya dönüştürürsün. Chrome eklentisi ilan sayfasından doğrudan ekler.",
       "emptyCta": "Eklentiyi tanı"
+    }
+  },
+  "weeklyJobs": {
+    "title": "Haftalık ilanlar",
+    "subtitle": "{week}. hafta · {date} · {found} ilan bulundu, {shown, plural, =1 {1 tanesi} other {# tanesi}} gösteriliyor",
+    "noCv": "Puanlama için bir CV gerekiyor; şu an hesabınızda CV yok. İlanlar aranmaya devam eder ama puanlanmaz.",
+    "noCvLink": "CV yükle",
+    "hidden": {
+      "applied": "{count, plural, =1 {1 ilan} other {# ilan}} zaten başvurduğunuz için gösterilmiyor.",
+      "belowMinScore": "{count, plural, =1 {1 ilan} other {# ilan}} %{score}'ın altında kaldığı için gizlendi."
+    },
+    "empty": {
+      "title": "Bu hafta için ilan yok",
+      "beforeRun": "İlk tarama Pazartesi sabahı çalışır; kriterleriniz kaydedildi, bir sonraki taramada burada listelenir.",
+      "afterRun": "Bu haftaki taramada kriterlerinize uyan yeni ilan bulunmadı. Kriterleri genişletmeyi deneyebilirsiniz."
+    },
+    "notFound": {
+      "title": "İlan bulunamadı",
+      "description": "Bu ilan size teslim edilen ilanlar arasında değil ya da artık listede yok."
+    },
+    "list": {
+      "ariaLabel": "Bu haftanın ilanları",
+      "unscored": "Henüz puanlanmadı",
+      "scored": "Puanlandı",
+      "scoreLabel": "Uyum"
+    },
+    "detail": {
+      "fit": "uyum",
+      "unscored": "Henüz puanlanmadı",
+      "matched": "Uyan kriterler",
+      "missing": "Eksik kriterler",
+      "none": "—",
+      "requiredSkills": "İlanın istediği yetkinlikler",
+      "applied": "Başvurdum",
+      "applying": "Kaydediliyor…",
+      "applyError": "Başvuru kaydedilemedi. Lütfen tekrar dene.",
+      "openOnSource": "İlanı {source} üzerinde aç",
+      "description": "İlan metni",
+      "noDescription": "İlan metni henüz alınmadı; bir sonraki taramada tamamlanır."
+    },
+    "strip": {
+      "searching": "Aranan:",
+      "remoteOnly": "Uzaktan",
+      "minScore": "· en az %{score} uyum",
+      "edit": "Düzenle"
+    },
+    "criteria": {
+      "title": "Arama kriterlerim",
+      "intro": "Her Pazartesi sabahı bu kriterlerle LinkedIn ve kariyer.net'te yeni ilanlar aranır ve her biri varsayılan CV'nizle karşılaştırılır.",
+      "titles": "Pozisyon adları",
+      "titlesHint": "(en fazla {max})",
+      "titleAria": "{n}. pozisyon adı",
+      "titlePlaceholder": "Örn. Software Engineer",
+      "titlesHelp": "Her ad her iki sitede ayrı bir arama olarak gider; ilan sitelerinde nasıl yazılıyorsa öyle yazın.",
+      "location": "Konum",
+      "minScore": "En az uyum puanı",
+      "minScoreHelp": "Bunun altında puan alan ilanlar listede gizlenir; istediğiniz zaman değiştirebilirsiniz.",
+      "remoteOnly": "Yalnızca uzaktan çalışma ilanları",
+      "emailDigest": "Her Pazartesi \"N ilan hazır\" e-postası gönder",
+      "consent": "Varsayılan CV'min metninin, ilanlarla karşılaştırılmak üzere Google Cloud Vertex AI'a (AB bölgesi) gönderilmesine açık rıza veriyorum. Metin orada saklanmaz ve model eğitiminde kullanılmaz; puanlar hesabımda tutulur.",
+      "consentGiven": "CV'nizin puanlama için Vertex AI'a gönderilmesine {date} tarihinde rıza verdiniz.",
+      "consentNote": "Kriterleri silerseniz arama ve puanlama durur; CV'niz hiçbir yere gönderilmez.",
+      "consentRequired": "Devam etmek için rıza kutusunu işaretlemeniz gerekiyor.",
+      "privacyLink": "Gizlilik politikası · İlan eşleştirme",
+      "save": "Kaydet",
+      "saving": "Kaydediliyor…",
+      "saveError": "Kriterler kaydedilemedi. Lütfen tekrar dene.",
+      "delete": "Kriterleri sil",
+      "deleteConfirm": "Kriterler silinsin mi? Haftalık arama ve puanlama durur; bu haftaki liste de kaldırılır.",
+      "deleteYes": "Evet, sil",
+      "deleteNo": "Vazgeç"
+    },
+    "gate": {
+      "title": "Her Pazartesi, size uyan ilanlar hazır",
+      "body": "Pozisyon adlarınızı ve şehrinizi kaydedin; her hafta LinkedIn ve kariyer.net'teki yeni ilanlar aranır, her biri CV'nizle karşılaştırılıp puanlanır ve hangi kriterlerin uyup uymadığı yazılır. Zaten başvurduklarınız listeye girmez.",
+      "point1": "Haftada en fazla 50 yeni ilan, uyum puanına göre sıralı",
+      "point2": "Her ilan için uyan ve eksik kriterler, istenen yetkinlikler, tam metin",
+      "point3": "Tek tıkla \"Başvurdum\": ilan başvuru listenize geçer",
+      "privacy": "CV'niz yalnızca siz açık rıza verirseniz ve yalnızca puanlama için Vertex AI'a (AB) gönderilir.",
+      "privacyLink": "Gizlilik politikası",
+      "plan": "Pro plan",
+      "comingSoon": "Yakında",
+      "comingSoonNote": "Ödeme altyapısı hazırlanıyor; açıldığında bu düğme aktif olur."
     }
   },
   "imports": {
@@ -1920,7 +2012,7 @@
       },
       "q11": {
         "question": "CV'm işverenlere gösteriliyor mu?",
-        "answer": "Hayır. CV'lerim sayfasındaki dosyaları yalnızca siz görürsünüz; üçüncü taraflara ya da herhangi bir yapay zekâ servisine gönderilmez, okunmaz ve analiz edilmez — bir başvuruda hangi CV'nin gittiğini kaydetmek yalnızca kendinize aldığınız bir nottur. Hesap gerektirmeyen CV taramasında da dosya kaydedilmez ve puan bizim sunucumuzda hesaplanır; yalnızca isteğe bağlı \"yazım notları\" kutusunu işaretlerseniz CV metni Google Cloud Vertex AI'a gönderilir ve orada da saklanmaz. Ayrıntısı gizlilik politikasının \"CV taraması\" bölümünde."
+        "answer": "Hayır. CV'lerim sayfasındaki dosyaları yalnızca siz görürsünüz; üçüncü taraflara ya da herhangi bir yapay zekâ servisine gönderilmez, okunmaz ve analiz edilmez (tek istisna: ücretli haftalık ilan eşleştirmeyi açıp ayrıca rıza verirseniz, varsayılan CV'nizin metni ilanlarla karşılaştırılmak için Google Cloud Vertex AI'a gönderilir; ayrıntısı gizlilik politikasının \"Haftalık ilan eşleştirme\" bölümünde) — bir başvuruda hangi CV'nin gittiğini kaydetmek yalnızca kendinize aldığınız bir nottur. Hesap gerektirmeyen CV taramasında da dosya kaydedilmez ve puan bizim sunucumuzda hesaplanır; yalnızca isteğe bağlı \"yazım notları\" kutusunu işaretlerseniz CV metni Google Cloud Vertex AI'a gönderilir ve orada da saklanmaz. Ayrıntısı gizlilik politikasının \"CV taraması\" bölümünde."
       },
       "q12": {
         "question": "Aynı şirkette birden fazla başvurum var, hepsini bir arada görebilir miyim?",
@@ -2176,7 +2268,7 @@
     "consent": {
       "before": "CV'mi saklamanız için",
       "link": "açık rıza veriyorum",
-      "after": "— dosyam yalnızca bana gösterilir ve hiçbir üçüncü tarafa gönderilmez.",
+      "after": "— dosyam yalnızca bana gösterilir ve hiçbir üçüncü tarafa gönderilmez (haftalık ilan eşleştirmeyi ayrıca açıp rıza vermediğim sürece).",
       "sensitiveWarning": "CV'nizde fotoğraf, doğum tarihi, sağlık veya askerlik durumu gibi hassas bilgiler bulunması zorunlu değildir; ne yükleyeceğine sen karar verirsin. Rızanı, dosyayı silerek istediğin zaman geri çekebilirsin."
     }
   },

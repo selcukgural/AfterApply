@@ -13,6 +13,8 @@ public sealed class EmailTemplateConfiguration : IEntityTypeConfiguration<EmailT
     private static readonly Guid PasswordResetEnId = new("5a1e0000-0000-4000-8000-000000000002");
     private static readonly Guid PasswordChangedTrId = new("5a1e0000-0000-4000-8000-000000000003");
     private static readonly Guid PasswordChangedEnId = new("5a1e0000-0000-4000-8000-000000000004");
+    private static readonly Guid WeeklyJobsReadyTrId = new("5a1e0000-0000-4000-8000-000000000005");
+    private static readonly Guid WeeklyJobsReadyEnId = new("5a1e0000-0000-4000-8000-000000000006");
 
     public void Configure(EntityTypeBuilder<EmailTemplate> builder)
     {
@@ -93,6 +95,48 @@ public sealed class EmailTemplateConfiguration : IEntityTypeConfiguration<EmailT
                       <h2>Your e-kariyerim password was changed</h2>
                       <p>Your e-kariyerim account's password was just changed, and all sessions on your other devices have been signed out for security.</p>
                       <p style="color:#555;font-size:13px;">If you didn't do this, please contact us immediately.</p>
+                    </div>
+                    """
+            },
+            // The weekly job matching's Monday digest. {{BestTitle}}/{{BestCompany}} are scraped
+            // text and are HTML-encoded by ResendEmailSender before substitution.
+            new
+            {
+                Id = WeeklyJobsReadyTrId,
+                Key = EmailTemplateKey.WeeklyJobsReady,
+                Locale = "tr",
+                Subject = "Bu hafta size uyan {{Count}} ilan hazır",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>Bu hafta {{Count}} ilan hazır</h2>
+                      <p>Kaydettiğiniz kriterlerle bulunan yeni ilanlar CV'nizle karşılaştırıldı ve uyum puanına göre sıralandı.</p>
+                      <p>En yüksek uyum: <strong>{{BestTitle}}</strong> — {{BestCompany}} (%{{BestScore}}).</p>
+                      <p>
+                        <a href="{{Link}}" style="display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;">
+                          İlanları gör
+                        </a>
+                      </p>
+                      <p style="color:#555;font-size:13px;">Bu e-postayı haftalık ilan eşleştirmeyi açtığınız için alıyorsunuz. Kriterler sayfasından kapatabilirsiniz.</p>
+                    </div>
+                    """
+            },
+            new
+            {
+                Id = WeeklyJobsReadyEnId,
+                Key = EmailTemplateKey.WeeklyJobsReady,
+                Locale = "en",
+                Subject = "{{Count}} postings that fit you are ready this week",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>{{Count}} postings are ready this week</h2>
+                      <p>The new postings found with your saved criteria were compared with your CV and ordered by fit.</p>
+                      <p>Best fit: <strong>{{BestTitle}}</strong> — {{BestCompany}} ({{BestScore}}%).</p>
+                      <p>
+                        <a href="{{Link}}" style="display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;">
+                          See the postings
+                        </a>
+                      </p>
+                      <p style="color:#555;font-size:13px;">You receive this because you turned on the weekly job matching. You can switch it off on the criteria page.</p>
                     </div>
                     """
             });

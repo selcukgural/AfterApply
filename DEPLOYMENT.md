@@ -780,35 +780,52 @@ show max_connections; show reserved_connections;
 select usename, state, count(*) from pg_stat_activity group by 1, 2;
 ```
 
-### 14. Weekly job-source sweep (LinkedIn) — shipped off (2026-09-12)
+### 14. Weekly job matching (LinkedIn + kariyer.net, Gemini scoring, digest) — shipped off (2026-09-12, extended 2026-09-14)
 
-**Branch state:** this lives on `feat/linkedin-job-source`, unmerged, until the PayTR payment
-integration is settled — the feature is part of the paid plan and has no reason to exist on `main`
-before people can pay for it (DECISIONS.md 2026-09-12, "Merge kararı"). Rebase on `main` and re-run
-both test suites before merging.
+**Branch state:** this lives on `feat/linkedin-job-source`, unmerged. PayTR is agreed
+(2026-09-14) but not integrated; the branch merges once the payment integration lands
+(DECISIONS.md 2026-09-14). Rebase on `main` and re-run both test suites before merging.
 
-Nothing to provision: no secret, no bucket, no API key. The sweep fetches LinkedIn's public
-job listing over plain HTTPS from the Cloud Run egress IP (the same path the company enrichment
-already uses). It ships **off** — `JobSources:Enabled=false` in `appsettings.json` — and stays
-off until the paid plan is live.
+What the feature does when on: every Monday 04:00 UTC a Hangfire job searches LinkedIn's public
+listing **and** kariyer.net's listing with each paying user's criteria, delivers up to 50 new
+postings per user, fetches their descriptions, scores each one against the user's default CV
+with Gemini on Vertex AI (a 0–100 fit, a short reason, matched/missing criteria), and queues one
+"N postings are ready" e-mail per user. It ships **off** — `JobSources:Enabled=false` — and every
+`/api/job-sources/*` route 404s while it is.
 
-To turn it on:
+To provision, in this order:
 
-1. Confirm the privacy policy is deployed with the job-matching paragraph (`/privacy`,
-   "Cross-border data transfer", third case) — it names LinkedIn as a recipient of the user's
-   criteria, and the flag must never be on without it.
-2. Flip `JobSources__Enabled=false` to `true` in `.github/workflows/deploy.yml`'s `env_vars` block
-   (it is declared there so every deploy re-asserts it) and let the deploy run.
-3. Grant the first users: `PUT /api/admin/pro/entitlements/{userId}` with an `activeUntil`; the
-   sweep only runs for users with an active entitlement, saved criteria, a CV and a sign-in in the
-   last 30 days.
-4. After the first Monday 04:00 UTC run, read `GET /api/admin/job-sources/usage`: `requestsToday`
-   against `maxRequestsPerDay`, and `cooldownUntil` — non-null means LinkedIn answered 429/403 or a
-   login wall and the sweep has stopped itself for 24 h. If that happens on the first run, the
-   Cloud Run IP is being refused and the feature should go back off rather than be retried harder.
-5. Cloud Run at `min-instances=0` can miss the 04:00 tick; Hangfire runs a missed recurring job at
-   the next server start, and the sweep is idempotent within an ISO week, so a late run is fine.
-   A Cloud Scheduler ping at 04:05 is the cheap fix if it matters.
+1. **Vertex AI for the scoring.** The same runtime service account and region as the CV scan's
+   content notes (§12): `aiplatform.googleapis.com` enabled, `roles/aiplatform.user` on the Cloud
+   Run service account, `europe-west1`. Set `JobSources__Scoring__ProjectId=${{ env.GCP_PROJECT_ID }}`
+   in `deploy.yml`'s `env_vars` (it is deliberately its own key, not `CvScan__Review__ProjectId`,
+   so either feature can be turned off alone). With the project id empty the sweep still fetches
+   and delivers; nothing is sent to the model and the list shows unscored postings.
+   Ceilings, all config: `JobSources:Scoring:MaxPerUserPerWeek` (50), `MaxCallsPerDay` (2000),
+   `MonthlyBudgetUsd` (50, computed from the `AiUsageEntries` ledger at the configured list
+   prices) — reached, scoring stops for the rest of the month and the sweep goes on without it.
+   **Before launch, run the model comparison** (2.5 Flash vs Flash-Lite on real postings — task
+   recorded in DECISIONS.md 2026-09-14) and pin `JobSources:Scoring:Model` from its result.
+2. **Resend** is already provisioned (password e-mails); the digest uses the same key and the
+   `WeeklyJobsReady` rows in `EmailTemplates` (seeded tr/en, editable in place).
+3. **Privacy text.** `/privacy` must be live with the "Weekly job matching" section
+   (`#job-matching`) and the cross-border paragraph naming LinkedIn and kariyer.net — the
+   criteria form's consent box links to the section, so the flag must never be on without it.
+4. Flip `JobSources__Enabled=false` to `true` in `deploy.yml` and let the deploy run.
+   `JobSources__KariyerNetEnabled` (default true) turns the second source off on its own.
+5. Grant the first users: `PUT /api/admin/pro/entitlements/{userId}` with an `activeUntil`; the
+   sweep only runs for users with an active entitlement, saved criteria (with the AI-scoring
+   consent), a CV and a sign-in in the last 30 days. The payment integration will write the same row.
+6. After the first Monday run, read `GET /api/admin/job-sources/usage`: per source,
+   `requestsToday` and `cooldownUntil` — non-null means that site answered 429/403 or a login wall
+   and the sweep has stopped itself for that site for 24 h (the other site carries on); under
+   `scoring`, today's calls and the month's estimated spend. If LinkedIn refuses the Cloud Run IP
+   on the first run, the LinkedIn half should go back off rather than be retried harder;
+   kariyer.net's robots.txt allows the listing, so a block there is unexpected and worth a look.
+7. Cloud Run at `min-instances=1` (since §13) takes the 04:00 tick; the sweep is idempotent
+   within an ISO week anyway, so a late or repeated run delivers nothing twice, scores nothing
+   twice and mails nothing twice.
 
-Logs carry counts only — never a title, a location or a URL; the HttpClient's request logging is
-removed for this client for the same reason.
+Logs carry counts only — never a title, a location, a URL, a CV or a posting's text; the
+HttpClients' request logging is removed for both source clients for the same reason, and the
+Vertex error body is never logged (it can echo the request).

@@ -49,6 +49,8 @@ public class JobSourceStopTests(SharedInfrastructure shared) : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("JobSources:Enabled", "true");
+            // LinkedIn alone: these tests are about one source's budget and stop rule.
+            builder.UseSetting("JobSources:KariyerNetEnabled", "false");
             builder.UseSetting("JobSources:MinDelayMs", "0");
             builder.UseSetting("JobSources:RetryBaseDelayMs", "1");
             builder.UseSetting("JobSources:MaxRequestsPerDay", DailyBudget.ToString());
@@ -76,7 +78,7 @@ public class JobSourceStopTests(SharedInfrastructure shared) : IAsyncLifetime
         (await _admin.PutAsJsonAsync($"/api/admin/pro/entitlements/{proId}",
             new GrantProEntitlementRequest(_clock.GetUtcNow().AddMonths(1)), JsonOptions)).EnsureSuccessStatusCode();
         (await _pro.PutAsJsonAsync("/api/job-sources/profile",
-            new UpsertJobSourceProfileRequest([".NET Developer", "Java Developer"], "İstanbul"), JsonOptions)).EnsureSuccessStatusCode();
+            new UpsertJobSourceProfileRequest([".NET Developer", "Java Developer"], "İstanbul", AcceptAiScoring: true), JsonOptions)).EnsureSuccessStatusCode();
     }
 
     public async Task DisposeAsync()

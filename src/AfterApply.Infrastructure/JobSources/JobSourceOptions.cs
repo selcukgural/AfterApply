@@ -63,4 +63,73 @@ public sealed class JobSourceOptions
 
     /// <summary>Whole-call timeout across retries.</summary>
     public int TotalTimeoutSeconds { get; init; } = 30;
+
+    /// <summary>kariyer.net as a second source next to LinkedIn (2026-09-14). Its robots.txt allows the
+    /// listing and the site answers a plain fetch, so the posture is the same honest client with the
+    /// same per-source request ceiling and cooldown; off means only LinkedIn is searched and existing
+    /// kariyer.net queries are left alone.</summary>
+    public bool KariyerNetEnabled { get; init; } = true;
+
+    /// <summary>The fit-scoring model, bound from <c>JobSources:Scoring</c>.</summary>
+    public JobFitScoringSettings Scoring { get; init; } = new();
+}
+
+/// <summary>
+/// The model call behind the fit score, and the ceilings the Pro cost model (DECISIONS.md
+/// 2026-09-12) was built on. Every number bounds money: a posting scored is a call paid for, so
+/// the per-user, per-day and per-month limits are configuration rather than constants.
+/// </summary>
+public sealed class JobFitScoringSettings
+{
+    /// <summary>Name of the named HttpClient the scorer calls Vertex through — the integration
+    /// suite blocks outbound HTTP for every client by name (see NoOutboundHttpStartup).</summary>
+    public const string HttpClientName = "vertex-job-fit";
+
+    /// <summary>Scoring as a whole. Off means the sweep still fetches and delivers, and nothing
+    /// is ever sent to the model; the list shows unscored postings. The GCP project has to be set
+    /// as well for a call to happen (an empty project id is refused, not guessed).</summary>
+    public bool Enabled { get; init; } = true;
+
+    /// <summary>The GCP project the model is called in. Empty means unconfigured, and the scorer
+    /// skips with a warning rather than guessing — a wrong project id would be a silent bill in
+    /// somebody else's account.</summary>
+    public string ProjectId { get; init; } = string.Empty;
+
+    /// <summary>The Vertex region — a privacy decision, not a latency one: pinned to the EU so a
+    /// CV's text is processed where the rest of the product's data already lives, and no new
+    /// country appears in the privacy policy. Never <c>global</c>.</summary>
+    public string Location { get; init; } = "europe-west1";
+
+    /// <summary>The cost model's choice: 2.5 Flash is the cheapest model whose reasoning on a
+    /// CV-versus-posting comparison was judged good enough; Flash-Lite is for the CV scan's
+    /// writing notes, which is a lighter task.</summary>
+    public string Model { get; init; } = "gemini-2.5-flash";
+
+    /// <summary>Characters of the CV the model sees. Fifteen thousand is a long CV in full.</summary>
+    public int MaxCvCharacters { get; init; } = 15_000;
+
+    /// <summary>Characters of the posting description the model sees. The requirements are in the
+    /// first few thousand; a longer description is mostly the company's boilerplate.</summary>
+    public int MaxDescriptionCharacters { get; init; } = 8_000;
+
+    /// <summary>Postings scored per user per week. At the default weekly delivery cap (50) this
+    /// scores everything delivered; lower it to score only the best-ranked part of the list.</summary>
+    public int MaxPerUserPerWeek { get; init; } = 50;
+
+    /// <summary>Calls per UTC day across every user, counted from the usage ledger. The kill-switch
+    /// against a runaway loop rather than a product limit.</summary>
+    public int MaxCallsPerDay { get; init; } = 2_000;
+
+    /// <summary>Spend per calendar month (UTC) at the prices below, computed from the ledger's
+    /// tokens. Reached, the scorer stops for the rest of the month and the sweep still delivers
+    /// unscored postings — "never at a loss" is the rule the whole paid plan rests on.</summary>
+    public decimal MonthlyBudgetUsd { get; init; } = 50m;
+
+    /// <summary>List prices used to turn the ledger's tokens into the number the budget is
+    /// checked against; gemini-2.5-flash on 2026-09-12. Update when the model or the price changes.</summary>
+    public decimal InputUsdPerMillionTokens { get; init; } = 0.30m;
+
+    public decimal OutputUsdPerMillionTokens { get; init; } = 2.50m;
+
+    public int TimeoutSeconds { get; init; } = 45;
 }

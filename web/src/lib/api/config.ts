@@ -39,6 +39,11 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
   },
   // Off until the server says otherwise: the review pages must never render against a deployment
   // whose review endpoints answer 404 (the feature can ship dark — CompanyReviews:Enabled).
+  // Off until the server says otherwise: the weekly-jobs page and its nav link must never render
+  // against a deployment whose /api/job-sources routes answer 404 (JobSources:Enabled).
+  jobSources: {
+    enabled: false,
+  },
   companyReviews: {
     enabled: false,
     maxReviewsPerUser: 10,

@@ -252,23 +252,31 @@ dark), `MaxReviewsPerUser` (10; an admin can override it per account through
 no score), `PriorWeight` (5 — the `m` in the Bayesian average, documented on `/companies/scoring`).
 Rate limits: `RateLimiting:CompanyReviewWrite|CompanyReviewReport|CompanyReviewHelpful|CompanyPublicSearch`.
 
-`JobSources:Enabled` defaults to `false` — the weekly job-source sweep (the
-fetch half of the paid weekly job matching; on the `feat/linkedin-job-source`
-branch until the payment integration lands, see `DECISIONS.md` 2026-09-12). Every Monday 04:00 UTC a Hangfire
-job takes each paying user's saved criteria (up to three job titles and a
-location), searches LinkedIn's public job listing for them, and hands the user
-up to 50 new postings for the week (`JobSources:DefaultWeeklyPostingsPerUser`,
-per-user override via `PUT /api/admin/job-sources/settings/{userId}`). Two
-users with the same criteria cost one search; a posting the user already
-applied to is left out and counted in the week's run summary. Volume is
-capped in config (`MaxRequestsPerDay`, `MaxPagesPerQuery`, `MinDelayMs`) and
-a 429/403 or a login wall from the source stops the sweep for
-`CircuitCooldownHours`. While disabled, every `/api/job-sources/*` and
-`/api/admin/job-sources/*` route returns `404` and the sweep is a no-op. "Who
-is paying" is `ProEntitlements`, written by hand today
-(`PUT /api/admin/pro/entitlements/{userId}`) and by the payment integration
-later. Why we fetch LinkedIn ourselves, and on what terms, is in
-`DECISIONS.md` 2026-09-12 ("LinkedIn ilan kaynağı").
+`JobSources:Enabled` defaults to `false` — the paid weekly job matching (on the
+`feat/linkedin-job-source` branch until the PayTR integration lands, see `DECISIONS.md`
+2026-09-12 and 2026-09-14). Every Monday 04:00 UTC a Hangfire job takes each paying
+user's saved criteria (up to three job titles and a location), searches LinkedIn's
+public job listing and kariyer.net's listing for them (`JobSources:KariyerNetEnabled`,
+default `true`, turns the second source off), and hands the user up to 50 new postings
+for the week (`JobSources:DefaultWeeklyPostingsPerUser`, per-user override via
+`PUT /api/admin/job-sources/settings/{userId}`). Two users with the same criteria cost
+one search per source; a posting the user already applied to is left out and counted
+in the week's run summary. Each delivered posting is then scored against the user's
+default CV with Gemini on Vertex AI (`JobSources:Scoring:*` — `ProjectId` empty means
+no model call at all, `Model` `gemini-2.5-flash`, ceilings `MaxPerUserPerWeek`,
+`MaxCallsPerDay`, `MonthlyBudgetUsd` computed from the `AiUsageEntries` ledger) — only
+for users who gave the separate consent the criteria form asks for — and the postings
+under the user's `MinScore` are hidden when the list is read. One "N postings are
+ready" e-mail per user per week goes out through Resend (`EmailTemplates` key
+`WeeklyJobsReady`; off per user on the profile). Volume against each site is capped in
+config (`MaxRequestsPerDay`, `MaxPagesPerQuery`, `MinDelayMs`) and a 429/403 or a
+login wall from a site stops that site for `CircuitCooldownHours` without touching the
+other. While disabled, every `/api/job-sources/*` and `/api/admin/job-sources/*` route
+returns `404`, the web app shows no nav link, and the sweep is a no-op. "Who is paying"
+is `ProEntitlements`, written by hand today (`PUT /api/admin/pro/entitlements/{userId}`)
+and by the payment integration later. Why we fetch LinkedIn ourselves, and on what
+terms, is in `DECISIONS.md` 2026-09-12 ("LinkedIn ilan kaynağı"); the scoring, the
+digest and kariyer.net are 2026-09-14.
 
 ## CV storage (`/cv`)
 

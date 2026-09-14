@@ -20,6 +20,11 @@ namespace AfterApply.Infrastructure.JobSources;
 /// titles, minus what they already applied to and what they were already shown, up to their
 /// weekly cap; write the counts down so the product can say what was left out.</item>
 /// <item>Fetch the description for the postings that were actually delivered and lack one.</item>
+/// <item>Score the week's deliveries against each consenting user's CV (IJobFitScoringService —
+/// its own ceilings, and it runs whether or not the source stopped us, since it never touches
+/// the source).</item>
+/// <item>Queue the "N postings are ready" e-mail for each user who got something this week
+/// (IJobSourceDigestService — one background job per user, one e-mail per week).</item>
 /// <item>Forget postings nobody has seen in a while and were never delivered.</item>
 /// </list>
 /// Idempotent within a week: a second run delivers nothing new, so a job that fires late (Cloud
@@ -30,7 +35,9 @@ namespace AfterApply.Infrastructure.JobSources;
 /// </summary>
 internal sealed class JobSourceSweepService(
     AppDbContext dbContext,
-    ILinkedInJobSourceClient client,
+    IEnumerable<IJobSourceClient> clients,
+    IJobFitScoringService scoring,
+    IJobSourceDigestService digest,
     IOptions<JobSourceOptions> options,
     ILogger<JobSourceSweepService> logger,
     TimeProvider? timeProvider = null) : IJobSourceSweepService
@@ -47,12 +54,22 @@ internal sealed class JobSourceSweepService(
         }
 
         var now = _timeProvider.GetUtcNow();
-        var budget = await LoadBudgetAsync(now, cancellationToken);
-        if (budget.InCooldown(now))
+        var clientsBySource = clients.Where(c => IsSourceEnabled(c.Source)).ToDictionary(c => c.Source);
+
+        // One budget and one cooldown per source: a LinkedIn 429 says nothing about kariyer.net,
+        // and the day's request ceiling is a per-site promise.
+        var budgets = new Dictionary<Source, BudgetState>();
+        foreach (var source in clientsBySource.Keys)
         {
-            logger.LogWarning("Job source sweep skipped: the source blocked us at {BlockedAt}; cooldown until {CooldownUntil}",
-                budget.LastBlockedAt, budget.CooldownUntil);
-            return;
+            var budget = await LoadBudgetAsync(source, now, cancellationToken);
+            if (budget.InCooldown(now))
+            {
+                logger.LogWarning("Job source sweep: {Source} blocked us at {BlockedAt}; skipped until {CooldownUntil}",
+                    source, budget.LastBlockedAt, budget.CooldownUntil);
+                continue;
+            }
+
+            budgets[source] = budget;
         }
 
         var users = await SelectEligibleUsersAsync(now, cancellationToken);
@@ -67,15 +84,20 @@ internal sealed class JobSourceSweepService(
         var shareWindow = TimeSpan.FromDays(o.QueryShareDays);
 
         var fetched = 0;
-        var stopped = false;
+        var stoppedSources = new HashSet<Source>();
         foreach (var query in queries.Where(q => !q.RanWithin(shareWindow, now)))
         {
-            if (stopped || !budget.CanSpend(_timeProvider.GetUtcNow()))
+            if (stoppedSources.Contains(query.Source) || !budgets.TryGetValue(query.Source, out var budget)
+                || !budget.CanSpend(_timeProvider.GetUtcNow()))
             {
-                break;
+                continue;
             }
 
-            stopped = await RunQueryAsync(query, budget, cancellationToken);
+            if (await RunQueryAsync(clientsBySource[query.Source], query, budget, cancellationToken))
+            {
+                stoppedSources.Add(query.Source);
+            }
+
             fetched++;
         }
 
@@ -86,13 +108,22 @@ internal sealed class JobSourceSweepService(
             delivered += await DeliverAsync(user, weekKey, now, cancellationToken);
         }
 
-        var detailed = stopped ? 0 : await FetchDetailsAsync(weekKey, budget, cancellationToken);
+        var detailed = 0;
+        foreach (var (source, budget) in budgets.Where(b => !stoppedSources.Contains(b.Key)))
+        {
+            detailed += await FetchDetailsAsync(clientsBySource[source], weekKey, budget, cancellationToken);
+        }
+
+        var scored = await scoring.ScoreWeekAsync(weekKey, cancellationToken);
+        var digests = await digest.EnqueueWeekAsync(weekKey, cancellationToken);
         await PruneAsync(now, cancellationToken);
 
         logger.LogInformation(
             "Job source sweep: {Users} users, {Queries} queries fetched, {Delivered} postings delivered, {Detailed} details fetched, " +
-            "{Requests} requests today, stopped by source: {Stopped}",
-            users.Count, fetched, delivered, detailed, budget.RequestsToday, stopped);
+            "{Scored} scored, {Digests} digests queued, requests today: {Requests}, stopped by: {Stopped}",
+            users.Count, fetched, delivered, detailed, scored, digests,
+            string.Join(", ", budgets.Select(b => $"{b.Key}={b.Value.RequestsToday}")),
+            stoppedSources.Count == 0 ? "none" : string.Join(", ", stoppedSources));
     }
 
     // ---- 1. who ------------------------------------------------------------------------------
@@ -124,14 +155,14 @@ internal sealed class JobSourceSweepService(
     // ---- 2. fetch ----------------------------------------------------------------------------
 
     /// <returns>True when the source told us to stop.</returns>
-    private async Task<bool> RunQueryAsync(JobSourceQuery query, BudgetState budget, CancellationToken cancellationToken)
+    private async Task<bool> RunQueryAsync(IJobSourceClient client, JobSourceQuery query, BudgetState budget, CancellationToken cancellationToken)
     {
         var seen = 0;
         var okPages = 0;
         var stopped = false;
         var outcome = "Ok";
 
-        for (var page = 0; page < options.Value.MaxPagesPerQuery; page++)
+        for (var page = 1; page <= options.Value.MaxPagesPerQuery; page++)
         {
             var now = _timeProvider.GetUtcNow();
             if (!budget.CanSpend(now))
@@ -141,8 +172,8 @@ internal sealed class JobSourceSweepService(
             }
 
             await PauseAsync(budget, cancellationToken);
-            var result = await client.SearchAsync(query, page * LinkedInJobSearchUrlBuilder.PageSize, cancellationToken);
-            await RecordFetchAsync(JobSourceFetchKind.Search, result.Outcome, result.StatusCode, result.DurationMs, budget, cancellationToken);
+            var result = await client.SearchAsync(query, page, cancellationToken);
+            await RecordFetchAsync(query.Source, JobSourceFetchKind.Search, result.Outcome, result.StatusCode, result.DurationMs, budget, cancellationToken);
 
             if (!result.IsOk)
             {
@@ -151,12 +182,12 @@ internal sealed class JobSourceSweepService(
                 break;
             }
 
-            var cards = result.Value!;
-            await UpsertCardsAsync(query, cards, page * LinkedInJobSearchUrlBuilder.PageSize, _timeProvider.GetUtcNow(), cancellationToken);
+            var cards = result.Value!.Cards;
+            await UpsertCardsAsync(query, cards, seen, _timeProvider.GetUtcNow(), cancellationToken);
             seen += cards.Count;
             okPages++;
 
-            if (cards.Count < LinkedInJobSearchUrlBuilder.PageSize)
+            if (!result.Value.HasMore)
             {
                 break;
             }
@@ -179,7 +210,7 @@ internal sealed class JobSourceSweepService(
     {
         var ids = cards.Select(c => c.ExternalId).Distinct().ToList();
         var postings = await dbContext.JobSourcePostings
-            .Where(p => p.Source == Source.LinkedIn && ids.Contains(p.ExternalId))
+            .Where(p => p.Source == query.Source && ids.Contains(p.ExternalId))
             .ToDictionaryAsync(p => p.ExternalId, cancellationToken);
         var postingIds = postings.Values.Select(p => p.Id).ToList();
         var links = await dbContext.JobSourceQueryPostings
@@ -191,7 +222,7 @@ internal sealed class JobSourceSweepService(
         {
             if (!postings.TryGetValue(card.ExternalId, out var posting))
             {
-                posting = JobSourcePosting.Create(Source.LinkedIn, card.ExternalId, card.Title, card.CompanyName,
+                posting = JobSourcePosting.Create(query.Source, card.ExternalId, card.Title, card.CompanyName,
                     card.CompanyProfileUrl, card.Location, card.PostedAt, card.Url, now);
                 dbContext.JobSourcePostings.Add(posting);
                 postings[card.ExternalId] = posting;
@@ -227,7 +258,7 @@ internal sealed class JobSourceSweepService(
         var surfaced = await dbContext.JobSourceQueryPostings
             .Where(l => queryIds.Contains(l.QueryId) && l.LastSeenAt >= since)
             .Join(dbContext.JobSourcePostings, l => l.PostingId, p => p.Id,
-                (l, p) => new Candidate(l.QueryId, p.Id, p.ExternalId, l.Rank))
+                (l, p) => new Candidate(l.QueryId, p.Id, p.Source, p.ExternalId, l.Rank))
             .ToListAsync(cancellationToken);
 
         // Round-robin across the user's titles, best rank first within each: a user with three
@@ -235,7 +266,7 @@ internal sealed class JobSourceSweepService(
         var candidates = RoundRobin(queryIds, surfaced);
         var candidateIds = candidates.Select(c => c.PostingId).ToList();
 
-        var applied = await LoadAppliedLinkedInIdsAsync(userId, cancellationToken);
+        var applied = await LoadAppliedIdsAsync(userId, cancellationToken);
         var alreadyDelivered = await dbContext.UserJobSourceDeliveries
             .Where(d => d.UserId == userId && candidateIds.Contains(d.PostingId))
             .Select(d => d.PostingId)
@@ -243,11 +274,11 @@ internal sealed class JobSourceSweepService(
         var deliveredThisWeek = await dbContext.UserJobSourceDeliveries
             .CountAsync(d => d.UserId == userId && d.WeekKey == weekKey, cancellationToken);
 
-        var excludedApplied = candidates.Count(c => applied.Contains(c.ExternalId));
-        var excludedShown = candidates.Count(c => !applied.Contains(c.ExternalId) && alreadyDelivered.Contains(c.PostingId));
+        var excludedApplied = candidates.Count(c => applied.Contains((c.Source, c.ExternalId)));
+        var excludedShown = candidates.Count(c => !applied.Contains((c.Source, c.ExternalId)) && alreadyDelivered.Contains(c.PostingId));
         var room = Math.Max(0, user.WeeklyPostingLimit - deliveredThisWeek);
         var toDeliver = candidates
-            .Where(c => !applied.Contains(c.ExternalId) && !alreadyDelivered.Contains(c.PostingId))
+            .Where(c => !applied.Contains((c.Source, c.ExternalId)) && !alreadyDelivered.Contains(c.PostingId))
             .Take(room)
             .ToList();
 
@@ -290,10 +321,10 @@ internal sealed class JobSourceSweepService(
         return result;
     }
 
-    /// <summary>Every LinkedIn posting id the user has an application for — from the application's
+    /// <summary>Every (source, posting id) the user has an application for — from the application's
     /// own URL, from the shared job's external id, and from the shared job's URL, because which of
     /// the three carries it depends on how the application was created.</summary>
-    private async Task<HashSet<string>> LoadAppliedLinkedInIdsAsync(Guid userId, CancellationToken cancellationToken)
+    private async Task<HashSet<(Source, string)>> LoadAppliedIdsAsync(Guid userId, CancellationToken cancellationToken)
     {
         var applications = await dbContext.Applications
             .Where(a => a.UserId == userId)
@@ -305,16 +336,16 @@ internal sealed class JobSourceSweepService(
             .Select(j => new { j.Source, j.ExternalId, j.Url })
             .ToListAsync(cancellationToken);
 
-        var ids = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var id in applications.Select(a => LinkedInJobIdExtractor.Extract(a.JobUrl)))
+        var ids = new HashSet<(Source, string)>();
+        foreach (var url in applications.Select(a => a.JobUrl).Concat(jobs.Select(j => j.Url)))
         {
-            if (id is not null) ids.Add(id);
+            if (LinkedInJobIdExtractor.Extract(url) is { } linkedIn) ids.Add((Source.LinkedIn, linkedIn));
+            if (KariyerNetJobIdExtractor.Extract(url) is { } kariyer) ids.Add((Source.KariyerNet, kariyer));
         }
 
-        foreach (var job in jobs)
+        foreach (var job in jobs.Where(j => !string.IsNullOrEmpty(j.ExternalId)))
         {
-            if (job.Source == Source.LinkedIn && !string.IsNullOrEmpty(job.ExternalId)) ids.Add(job.ExternalId);
-            if (LinkedInJobIdExtractor.Extract(job.Url) is { } id) ids.Add(id);
+            if (job.Source is Source.LinkedIn or Source.KariyerNet) ids.Add((job.Source, job.ExternalId!));
         }
 
         return ids;
@@ -322,12 +353,12 @@ internal sealed class JobSourceSweepService(
 
     // ---- 4. details --------------------------------------------------------------------------
 
-    private async Task<int> FetchDetailsAsync(int weekKey, BudgetState budget, CancellationToken cancellationToken)
+    private async Task<int> FetchDetailsAsync(IJobSourceClient client, int weekKey, BudgetState budget, CancellationToken cancellationToken)
     {
         // Most-delivered first: a posting three users got is worth the request more than one one user got.
         var pending = await dbContext.UserJobSourceDeliveries
             .Where(d => d.WeekKey == weekKey)
-            .Join(dbContext.JobSourcePostings.Where(p => p.DetailFetchedAt == null), d => d.PostingId, p => p.Id, (d, p) => p)
+            .Join(dbContext.JobSourcePostings.Where(p => p.DetailFetchedAt == null && p.Source == client.Source), d => d.PostingId, p => p.Id, (d, p) => p)
             .GroupBy(p => p.Id)
             .Select(g => new { PostingId = g.Key, Deliveries = g.Count() })
             .OrderByDescending(x => x.Deliveries)
@@ -345,7 +376,7 @@ internal sealed class JobSourceSweepService(
             var posting = await dbContext.JobSourcePostings.SingleAsync(p => p.Id == postingId, cancellationToken);
             await PauseAsync(budget, cancellationToken);
             var result = await client.GetPostingAsync(posting.ExternalId, cancellationToken);
-            await RecordFetchAsync(JobSourceFetchKind.Detail, result.Outcome, result.StatusCode, result.DurationMs, budget, cancellationToken);
+            await RecordFetchAsync(client.Source, JobSourceFetchKind.Detail, result.Outcome, result.StatusCode, result.DurationMs, budget, cancellationToken);
 
             if (result.StopsSweep)
             {
@@ -380,28 +411,35 @@ internal sealed class JobSourceSweepService(
 
     // ---- budget & ledger ---------------------------------------------------------------------
 
-    private async Task<BudgetState> LoadBudgetAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    private bool IsSourceEnabled(Source source) => source switch
+    {
+        Source.LinkedIn => true,
+        Source.KariyerNet => options.Value.KariyerNetEnabled,
+        _ => false
+    };
+
+    private async Task<BudgetState> LoadBudgetAsync(Source source, DateTimeOffset now, CancellationToken cancellationToken)
     {
         var dayStart = new DateTimeOffset(now.UtcDateTime.Date, TimeSpan.Zero);
-        var requestsToday = await dbContext.JobSourceFetches.CountAsync(f => f.At >= dayStart, cancellationToken);
+        var requestsToday = await dbContext.JobSourceFetches.CountAsync(f => f.Source == source && f.At >= dayStart, cancellationToken);
         var lastBlockedAt = await dbContext.JobSourceFetches
-            .Where(f => f.Outcome == JobSourceFetchOutcome.Blocked || f.Outcome == JobSourceFetchOutcome.RateLimited)
+            .Where(f => f.Source == source && (f.Outcome == JobSourceFetchOutcome.Blocked || f.Outcome == JobSourceFetchOutcome.RateLimited))
             .MaxAsync(f => (DateTimeOffset?)f.At, cancellationToken);
         return new BudgetState(requestsToday, lastBlockedAt, options.Value.MaxRequestsPerDay,
             TimeSpan.FromHours(options.Value.CircuitCooldownHours));
     }
 
-    private async Task RecordFetchAsync(JobSourceFetchKind kind, JobSourceFetchOutcome outcome, int? statusCode, int durationMs,
+    private async Task RecordFetchAsync(Source source, JobSourceFetchKind kind, JobSourceFetchOutcome outcome, int? statusCode, int durationMs,
         BudgetState budget, CancellationToken cancellationToken)
     {
         var now = _timeProvider.GetUtcNow();
-        dbContext.JobSourceFetches.Add(JobSourceFetch.Create(Source.LinkedIn, kind, statusCode, outcome, durationMs, now));
+        dbContext.JobSourceFetches.Add(JobSourceFetch.Create(source, kind, statusCode, outcome, durationMs, now));
         await dbContext.SaveChangesAsync(cancellationToken);
         budget.Spent(outcome, now);
         if (outcome is JobSourceFetchOutcome.Blocked or JobSourceFetchOutcome.RateLimited)
         {
-            logger.LogWarning("Job source {Kind} fetch answered {Outcome} ({StatusCode}); the sweep stops until {CooldownUntil}",
-                kind, outcome, statusCode, budget.CooldownUntil);
+            logger.LogWarning("{Source} {Kind} fetch answered {Outcome} ({StatusCode}); that source stops until {CooldownUntil}",
+                source, kind, outcome, statusCode, budget.CooldownUntil);
         }
     }
 
@@ -416,7 +454,7 @@ internal sealed class JobSourceSweepService(
 
     private sealed record EligibleUser(UserJobSourceProfile Profile, int WeeklyPostingLimit);
 
-    private sealed record Candidate(Guid QueryId, Guid PostingId, string ExternalId, int Rank);
+    private sealed record Candidate(Guid QueryId, Guid PostingId, Source Source, string ExternalId, int Rank);
 
     private sealed class BudgetState(int requestsToday, DateTimeOffset? lastBlockedAt, int maxRequestsPerDay, TimeSpan cooldown)
     {

@@ -397,7 +397,8 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "toolsMenu": "Tools",
-    "toolsNote": "No account needed"
+    "toolsNote": "No account needed",
+    "weeklyJobs": "Weekly Jobs"
   },
   "auth": {
     "login": {
@@ -961,7 +962,7 @@
       "outro": "Apart from the request log, this data is used solely to provide you with application tracking and personal analytics features; the request log serves only the security and legal purposes listed above.",
       "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link.",
       "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\").",
-      "item7": "If you use the weekly job matching (a paid feature): the job titles (up to three) and the location you save as your search criteria. They are stored on your account and, once a week, used as a search on a job site — see \"Cross-border data transfer\" below. The postings found are kept for you for a limited time; which ones you already applied to is worked out from your own applications and never stored as a separate record."
+      "item7": "If you use the weekly job matching (a paid feature): the job titles (up to three) and the location you save as your search criteria. They are stored on your account and, once a week, used as a search on LinkedIn and kariyer.net — see \"Cross-border data transfer\" below. The postings found are kept for you for a limited time; which ones you already applied to is worked out from your own applications and never stored as a separate record. If you also give consent, the fit score computed for each posting, its short reasoning and the matched/missing criteria are kept on your account too — see \"Weekly job matching\"."
     },
     "googleSignIn": {
       "title": "Sign in with Google",
@@ -1002,7 +1003,7 @@
       "withdraw": "Withdrawal: turn off Gmail Scanning in the browser extension's Settings page. Or delete your account, to stop this entirely.",
       "sensitiveDataNote": "The subject and snippet are also stored on your account (visible to you when reviewing a suggestion) — never the full email body.",
       "feedbackTransfer": "The second is feedback: when you send feedback from inside the app, your message and its technical context are copied to a private repository on GitHub so it can be tracked. Recipient: GitHub, Inc. (Microsoft, United States). Your name, your account email address and your reply address are not sent. Lawful basis: legitimate interest — tracking and fixing what users report. See the \"Feedback you send\" section above for the detail.",
-      "jobSourceTransfer": "The third is the weekly job matching (a paid feature): once a week, the job titles and the location you saved as criteria are sent as a search query to LinkedIn, and the public job postings it lists are fetched. Recipient: LinkedIn Ireland Unlimited Company (Ireland; LinkedIn Corporation, United States). What is sent is the search itself — a job title and a place — and nothing else: not your name, not your account, not your CV. Lawful basis: this only happens for criteria you saved yourself, while your paid plan is active; delete the criteria or let the plan lapse and it stops. Withdrawal: remove your criteria from the job matching settings, or delete your account."
+      "jobSourceTransfer": "The third is the weekly job matching (a paid feature): once a week, the job titles and the location you saved as criteria are sent as a search query to LinkedIn, and the public job postings it lists are fetched. Recipient: LinkedIn Ireland Unlimited Company (Ireland; LinkedIn Corporation, United States). The same search also goes to kariyer.net in Türkiye (Kariyer.net Elektronik Yayıncılık ve İletişim Hizmetleri A.Ş., Istanbul); that is not a cross-border transfer and is mentioned here for completeness. What is sent is the search itself — a job title and a place — and nothing else: not your name, not your account, not your CV. Lawful basis: this only happens for criteria you saved yourself, while your paid plan is active; delete the criteria or let the plan lapse and it stops. Withdrawal: remove your criteria from the job matching settings, or delete your account."
     },
     "browserExtension": {
       "title": "Browser extension",
@@ -1034,7 +1035,7 @@
       "intro": "Uploading a CV is entirely optional; the rest of the service works without one. When you do upload a CV:",
       "where": "The file is stored in a bucket closed to the public on Google Cloud in the European Union region (europe-west1) — the same region as your account and application data. Even a guessed address cannot reach it; the bucket is not exposed to the internet at all.",
       "access": "Only you, while signed in, can reach the file. Every download is checked against your own account and streamed through the e-kariyerim server; no shareable or time-limited link is ever produced. It is never shown to other users, to employers or to job boards.",
-      "noTransfer": "The contents of your CV are never sent to any third party, AI services included. The file is not read, converted to text or analysed; it is only stored and handed back to you. The first-page preview you see on the My CVs page is rendered in your own browser, not on the server.",
+      "noTransfer": "The contents of your CV are never sent to any third party, AI services included. The one exception is the paid feature described under \"Weekly job matching\" below, which you turn on yourself and consent to separately; then only the text of your default CV is sent, and only for scoring. The file is not read, converted to text or analysed; it is only stored and handed back to you. The first-page preview you see on the My CVs page is rendered in your own browser, not on the server.",
       "deletion": "A CV you delete is deleted permanently — the storage-side recovery window is deliberately turned off. Deleting your account deletes all of your CVs with it.",
       "sensitiveDataNote": "A CV can carry more than your work history — a photo, a date of birth, or health or military-service information — which is why we ask for your explicit consent before each upload. What goes into it is your decision: none of those fields are needed for the service to work, and you can delete the file at any time.",
       "consent": "The lawful basis is your explicit consent, and it is taken separately for every upload: you tick the consent box before choosing a file, the box is never pre-ticked, and it clears again after each upload. You can withdraw consent at any time by deleting the file, and deleting your account deletes all of your CVs with it."
@@ -1048,6 +1049,14 @@
       "contentNotes": "If you ask for notes on the writing (the second, optional box): the text of your CV is sent to Google Cloud Vertex AI — in the EU region our infrastructure already runs in, with the same processor; no new country is involved. It goes through paid Vertex, which does not train on the content. The notes do not affect the score, the text is still stored nowhere, and with the box unticked no model is involved at all.",
       "output": "The excerpts and the raw text you see on the result screen exist only inside the response to your own request; they are not recorded and never written to logs.",
       "consent": "The legal basis is your explicit consent, taken separately for every scan: the box is never pre-ticked and is cleared again after each scan. The second box, for the content notes, is separate and genuinely optional — the scan works fully without it and your score is identical. Since nothing is stored, there is no retention to withdraw; not running the scan is enough."
+    },
+    "jobMatching": {
+      "title": "Weekly job matching (a paid feature)",
+      "intro": "With the Pro plan and the search criteria you saved, new LinkedIn and kariyer.net postings are searched every Monday (for the criteria going to the two sites see \"Cross-border data transfer\"). Each posting found is compared with your default CV and scored — only if you separately consent:",
+      "what": "What is sent: the text of your default CV (not the file; the first 15,000 characters) together with the text of one posting. Recipient: Google Cloud Vertex AI, in the EU region our infrastructure already runs in (europe-west1) and with the same processor — no new country and no new processor is involved. It goes through paid Vertex, which does not train on the content and does not keep it.",
+      "kept": "What we keep: for each posting a 0–100 fit score, a sentence or two of reasoning, the lists of matched and missing criteria and the skills the posting asks for — on your account, next to the posting. The CV text itself is written nowhere: it is read again from your stored file every week and lives in memory for the length of the request. To track the cost of the calls, how many tokens were spent for which feature is also recorded against your account; that record holds no text and survives account deletion (detached from your identity).",
+      "consent": "The lawful basis is your explicit consent, given when you first save your criteria through a box that is never pre-ticked; the moment it was given is recorded and shown on the criteria page. Criteria cannot be saved without it, because there is no version of the feature without scoring.",
+      "withdraw": "Withdrawal: delete your criteria — the search and the scoring stop at once, that week's list and scores are deleted, and your CV is never sent again. Deleting your account has the same effect."
     },
     "feedback": {
       "title": "Feedback you send",
@@ -1320,6 +1329,89 @@
       "hrLinkedIn": "HR LinkedIn profile",
       "emptyBody": "Add the postings you haven't applied to yet but want to keep an eye on; once you apply, one click turns them into an application. The Chrome extension adds them straight from the job page.",
       "emptyCta": "About the extension"
+    }
+  },
+  "weeklyJobs": {
+    "title": "Weekly jobs",
+    "subtitle": "Week {week} · {date} · {found} found, {shown} shown",
+    "noCv": "Scoring needs a CV and your account has none right now. Postings are still searched for, just not scored.",
+    "noCvLink": "Upload a CV",
+    "hidden": {
+      "applied": "{count, plural, =1 {1 posting is} other {# postings are}} hidden because you already applied.",
+      "belowMinScore": "{count, plural, =1 {1 posting is} other {# postings are}} hidden for scoring under {score}%."
+    },
+    "empty": {
+      "title": "No postings for this week",
+      "beforeRun": "The first sweep runs on Monday morning; your criteria are saved and the results will appear here.",
+      "afterRun": "This week's sweep found no new postings matching your criteria. Widening them may help."
+    },
+    "notFound": {
+      "title": "Posting not found",
+      "description": "This posting is not among the ones delivered to you, or it is no longer listed."
+    },
+    "list": {
+      "ariaLabel": "This week's postings",
+      "unscored": "Not scored yet",
+      "scored": "Scored",
+      "scoreLabel": "Fit"
+    },
+    "detail": {
+      "fit": "fit",
+      "unscored": "Not scored yet",
+      "matched": "Matched criteria",
+      "missing": "Missing criteria",
+      "none": "—",
+      "requiredSkills": "Skills the posting asks for",
+      "applied": "I applied",
+      "applying": "Saving…",
+      "applyError": "The application could not be saved. Please try again.",
+      "openOnSource": "Open on {source}",
+      "description": "Posting text",
+      "noDescription": "The posting text has not been fetched yet; the next sweep completes it."
+    },
+    "strip": {
+      "searching": "Searching:",
+      "remoteOnly": "Remote",
+      "minScore": "· at least {score}% fit",
+      "edit": "Edit"
+    },
+    "criteria": {
+      "title": "My search criteria",
+      "intro": "Every Monday morning these criteria are searched on LinkedIn and kariyer.net and each new posting is compared with your default CV.",
+      "titles": "Job titles",
+      "titlesHint": "(up to {max})",
+      "titleAria": "Job title {n}",
+      "titlePlaceholder": "e.g. Software Engineer",
+      "titlesHelp": "Each title is its own search on both sites; write it the way the job sites do.",
+      "location": "Location",
+      "minScore": "Minimum fit score",
+      "minScoreHelp": "Postings scoring below this are hidden from the list; change it whenever you like.",
+      "remoteOnly": "Remote postings only",
+      "emailDigest": "Send the Monday \"N postings are ready\" e-mail",
+      "consent": "I give my explicit consent for the text of my default CV to be sent to Google Cloud Vertex AI (EU region) to be compared with postings. The text is not stored there and is not used for training; the scores are kept in my account.",
+      "consentGiven": "You consented on {date} to your CV being sent to Vertex AI for scoring.",
+      "consentNote": "Deleting the criteria stops the search and the scoring; your CV is then sent nowhere.",
+      "consentRequired": "Tick the consent box to continue.",
+      "privacyLink": "Privacy policy · Job matching",
+      "save": "Save",
+      "saving": "Saving…",
+      "saveError": "The criteria could not be saved. Please try again.",
+      "delete": "Delete criteria",
+      "deleteConfirm": "Delete the criteria? The weekly search and scoring stop, and this week's list is removed.",
+      "deleteYes": "Yes, delete",
+      "deleteNo": "Cancel"
+    },
+    "gate": {
+      "title": "Every Monday, the postings that fit you",
+      "body": "Save your job titles and city; every week the new LinkedIn and kariyer.net postings are searched, each is compared with your CV and scored, and the matched and missing criteria are written out. Postings you already applied to are left out.",
+      "point1": "Up to 50 new postings a week, ordered by fit",
+      "point2": "Matched and missing criteria, required skills and the full text for each",
+      "point3": "One-click \"I applied\": the posting joins your application list",
+      "privacy": "Your CV is sent to Vertex AI (EU) only if you give explicit consent, and only for scoring.",
+      "privacyLink": "Privacy policy",
+      "plan": "Pro plan",
+      "comingSoon": "Coming soon",
+      "comingSoonNote": "Payments are being set up; this button goes live when they are."
     }
   },
   "imports": {
@@ -1920,7 +2012,7 @@
       },
       "q11": {
         "question": "Is my CV shown to employers?",
-        "answer": "No. Files on the My CVs page are visible only to you, are never sent to a third party or to any AI service, and are not read or analysed — recording which CV an application went out with is a note to yourself. The account-free CV scan doesn't store your file either, and the score is computed on our server; only if you tick the optional \"writing notes\" box is the CV text sent to Google Cloud Vertex AI, and it is not kept there. The details are in the \"CV scan\" section of the privacy policy."
+        "answer": "No. Files on the My CVs page are visible only to you, are never sent to a third party or to any AI service, and are not read or analysed (the one exception: if you turn on the paid weekly job matching and give separate consent, the text of your default CV is sent to Google Cloud Vertex AI to be compared with postings; details in the \"Weekly job matching\" section of the privacy policy) — recording which CV an application went out with is a note to yourself. The account-free CV scan doesn't store your file either, and the score is computed on our server; only if you tick the optional \"writing notes\" box is the CV text sent to Google Cloud Vertex AI, and it is not kept there. The details are in the \"CV scan\" section of the privacy policy."
       },
       "q12": {
         "question": "I have several applications at the same company. Can I see them together?",
@@ -2176,7 +2268,7 @@
     "consent": {
       "before": "I give my",
       "link": "explicit consent",
-      "after": "to storing my CV — the file is shown only to me and is never sent to any third party.",
+      "after": "to storing my CV — the file is shown only to me and is never sent to any third party (unless I separately turn on the weekly job matching and consent to that).",
       "sensitiveWarning": "A CV does not have to carry a photo, a date of birth, or health or military-service information; what goes into it is your decision. You can withdraw your consent at any time by deleting the file."
     }
   },

@@ -6256,6 +6256,119 @@ gereken adımı gizlemekten iyidir (`resolveGmailEmptyState`).
 **Testler:** integration — `EmailSignalTests`: flag kapalıyken 404, taze hesapta `false`,
 sinyalden sonra `true`. Web — `emptyState.test.ts` (üç dal), `moderationTable.contract.test.ts`.
 
+## Haftalık ilan eşleştirme tamamlandı: Gemini puanlama, web arayüzü, özet e-postası, kariyer.net; PayTR anlaşıldı, entegrasyon en sona (2026-09-14)
+
+**Bağlam ve karar.** 12 Eylül'de "ödeme netleşene kadar park" denen `feat/linkedin-job-source`
+branch'i için kullanıcı aynı gün şunu söyledi: PayTR ile anlaşıldı, ödeme alınabilir; ama
+entegrasyon henüz yapılmadı — "bu işle ilgili tüm geliştirmeleri yaptıktan sonra en son ona
+göre geçeriz". Karar: branch `main` üzerine rebase edildi ve 12 Eylül'de "kapsam dışı (sonraki
+turlar)" denen parçalar aynı branch'te tamamlandı; **PayTR entegrasyonu bu branch'in son işi**,
+merge ondan sonra. Bayrak (`JobSources:Enabled=false`) merge'den sonra da kapalı kalır; açma
+reçetesi `DEPLOYMENT.md` §14 (yeniden yazıldı).
+
+**Rebase.** 9 commit gerideydi; çakışmalar (Program.cs, DI, DbContext, appsettings, deploy.yml,
+DECISIONS/DEPLOYMENT/README, tr/en mesajlar) hepsinde "iki taraf da eklemişti" biçimindeydi, iki
+taraf tutuldu. Bu branch'in migration'ı `main`'in üç yeni migration'ının (`AddCompanyReviews`,
+`AddStaleSuggestionDismissedAt`, `AddRequestAudits`) *önüne* sıralanacaktı; birebir aynı içerikle
+`20260914175914_AddJobSourcesAndProEntitlement` olarak yeniden üretildi (satır kümesi eskisiyle
+özdeş, sadece damga değişti). Gizlilik metninde `dataCollection.item6` `main`'deki işlem kaydı
+maddesiyle çakıştı → bu özelliğin maddesi `item7` oldu. DEPLOYMENT'taki "§13" → "§14".
+
+**1. Puanlama (Gemini, Vertex AI).** Her teslim edilen ilan, kullanıcının varsayılan CV'siyle
+tek bir model çağrısında karşılaştırılır: 0–100 uyum, bir-iki cümle gerekçe, uyan/eksik kriter
+listeleri, ilanın istediği yetkinlikler. Kararlar:
+- **Sağlayıcı sabit, model config:** KVKK gerekçesiyle 2 Eylül'de OpenAI eşleştirme silinmişti;
+  CV metni yalnızca Vertex AI `europe-west1`'e gider (ADC, anahtar yok) — CV taramasının B
+  katmanıyla aynı hat. `VertexGenerateContentClient` ortak sınıf olarak çıkarıldı, iki özellik de
+  onu kullanıyor (bölge URL'de görünür, hata gövdesi asla loglanmaz — CV içerebilir).
+  Model `JobSources:Scoring:Model = gemini-2.5-flash` (12 Eylül maliyet modeli); kendi
+  `ProjectId`'si var, CV taramasınınkiyle paylaşılmıyor ki biri kapatılınca öbürü etkilenmesin.
+  **Kullanıcının isteği (aynı gün): yayına almadan önce 2.5 Flash vs Flash-Lite kıyası gerçek CV +
+  gerçek ilanlarla ölçülecek** (`CvReviewEvalTests` kalıbı), sonuç buraya yazılıp model ona göre
+  sabitlenecek; Vertex'in model yaşam döngüsü sayfasından emeklilik tarihi de kontrol edilecek.
+- **Rıza ayrı ve zorunlu:** CV yükleme rızası "dosyam hiçbir üçüncü tarafa gönderilmez" diyordu;
+  bu özellik o vaadin tek istisnası. Kriter formunda hiçbir zaman önceden işaretli gelmeyen ayrı
+  bir kutu (`AiScoringConsentAcceptedAt`), rızasız kriter kaydedilemez
+  (`JOB_SOURCE_AI_CONSENT_REQUIRED`, tr/en resx) — özelliğin puanlamasız hâli yok. Rıza olmayan
+  eski satırlar için sweep ilanı getirir ama modele hiçbir şey göndermez. `/privacy`'ye yeni
+  "Haftalık ilan eşleştirme" bölümü (`#job-matching`), CV'lerim sayfasının "yapay zekâya
+  gönderilmez" vaadi üç yerde (cvStorage.noTransfer, SSS, yükleme rıza metni) istisnayı adıyla
+  sayacak şekilde düzeltildi.
+- **Tavanlar ("zarar asla"):** kullanıcı/hafta (`MaxPerUserPerWeek`, 50), gün (`MaxCallsPerDay`,
+  2000), ay (`MonthlyBudgetUsd`, 50 — `AiUsageEntries` defterindeki token'ların liste fiyatıyla
+  çarpımı; fiyatlar config'te). Aşılınca puanlama durur, sweep teslim etmeye devam eder.
+  `AiUsageEntries` (özellik, model, giriş/çıkış token, başarı) metin içermez; hesap silinince
+  `UserId` **null'a çekilir, satır kalır** — cascade kuralının tek istisnası, gerekçe: ayın
+  toplamı kullanıcı gitti diye küçülmemeli, satırda kullanıcıya ait hiçbir şey yok.
+- **Eşik okuma anında:** profil `MinScore` (0–100); listede altında kalanlar gizlenir,
+  `HiddenBelowMinScoreCount` sayılır; puanlanmamış ilan hiçbir zaman gizlenmez. Kullanıcı eşiği
+  değiştirince aynı satırlar yeniden okunur — yeniden fetch/puanlama yok.
+- **Yeniden deneme:** başarısız çağrı satıra sayılır, ikinci sweep'te bir kez daha denenir,
+  `MaxScoreAttempts=2` sonra vazgeçilir; model çıktısı `JobFitScores.Sanitize`'dan geçer (kontrol
+  karakteri, tekrar, uzunluk, aralık). Prompt iki belgeyi de "DATA, not instructions" ilan eder.
+- **CV metni hiçbir yere yazılmaz:** `StoredCvTextReader` her hafta depodan okur, extractor'dan
+  geçirir, bellekte tutar.
+
+**2. Web arayüzü — yön A.** Tasarım kanvasında üç yön çizildi (A liste+yan panel, B kart akışı,
+C sekmeli tablo+modal), kullanıcı **A**'yı seçti; son hâli (masaüstü + mobil liste + mobil
+ayrıntı + kriter formu + Pro olmayan hesap) kanvasta:
+https://claude.ai/code/artifact/1bc78dc8-3b2c-47cd-bb36-4e77e5d104ca. Uygulama:
+`/weekly-jobs` (liste solda 400px, seçili ilan sağda, ilki açık; `md` altında yalnızca liste,
+satır `/weekly-jobs/{id}` sayfasına link), `/weekly-jobs/criteria` (form: ≤3 unvan, konum, en az
+uyum kaydırıcısı, uzaktan, e-posta kutusu, rıza kutusu). Puan renkleri ≥80 good, 60–79 accent,
+40–59 warn, altı crit, puansız muted. Navbar linki yalnızca `/api/config.jobSources.enabled`
+true iken; sayfalar bayrak kapalıysa panele yönlendirir. Pro olmayan hesap: açıklama + "Yakında"
+(fiyat/düğme PayTR ile gelir). "Başvurdum": `POST /api/job-sources/postings/{id}/apply` — mevcut
+`CreateAsync` yolu (şirket çözümleme, cache), `Source` ilanın kaynağı, tarih bugün; aynı URL
+ikinci kez basılınca aynı başvuru döner; sonraki hafta uygulanmış sayılıp listeden düşer.
+Yeni uçlar: `GET /api/job-sources/status` (Pro mu, CV var mı, kriter var mı). Tarayıcıda
+doğrulandı (test kullanıcısı, SQL ile tohumlanmış hafta): form/rıza hatası/kayıt, liste+ayrıntı,
+eşik gizleme metni, mobil ayrıntı, Başvurdum → başvuru sayfası, Pro olmayan hâl, `#job-matching`.
+Kaynak-tarama testi `weeklyJobs.contract.test.ts` (bayrak kapısı, innerHTML yok, rıza kutusu
+önceden işaretsiz, mobil link, iki dilde kopya, vaat istisnası).
+
+**3. "N ilan hazır" e-postası.** Sweep puanlamadan sonra, o hafta teslimatı olan ve
+`EmailDigestEnabled` (varsayılan açık, formda kutu) kullanıcılar için kullanıcı başına bir
+Hangfire job'ı kuyruğa koyar (`IJobSourceDigestService.SendAsync` — sağlayıcı arızası kullanıcı
+başına retry'lanır, sweep'i düşürmez). İçerik sayfanın gösterdiği: eşik üstü ilan sayısı, en
+iyi ilanın adı/şirketi/puanı, `App:WebBaseUrl/{locale}/weekly-jobs` linki. Şablon
+`EmailTemplates.WeeklyJobsReady` (tr/en seed, yerinde düzenlenebilir); kazınmış başlık/şirket
+HTML-encode edilir (test: `<img onerror>` metin olarak gider). Haftada bir: `UserJobSourceRuns.DigestSentAt`.
+Gösterilecek ilan yoksa e-posta gitmez ama hafta damgalanır.
+
+**4. kariyer.net ikinci kaynak.** Canlı ölçüm (14 Eylül, dürüst bot UA):
+`robots.txt` `/is-ilanlari` ve `/is-ilani`'ye izin veriyor (yalnızca `/filtre` yasak) —
+LinkedIn'in tersine **politika sorunu yok**. Liste sunucu tarafında render ediliyor:
+`/is-ilanlari/{şehir-slug}?kw=…` → site 301 ile `?ct=34,82` (şehir id'leri) ekliyor, izlenir;
+sayfa n: `/is-ilanlari/{slug}-{n}?…&cp={n}`; ~50 kart/sayfa; kartlar `data-test` öznitelikli
+(`ad-card-item`, `ad-card-title`, `subtitle`, `location`, `work-model`, göreli tarih "3 gün /
+12 saat / Dün"). Bilinmeyen şehir ülke geneli listeye yönlendiriyor → **boş sayfa sayılır**
+(yanlış yerden 50 ilan değil). Detay `/is-ilani/{id}` → 301 kanonik slug URL'ye;
+`data-test="qualifications-and-job-description"` bloğu, `lastPublishDate`, "Aday Kriterleri"
+(Tecrübe → seniority). Uzaktan filtresi URL'de yok, kartın `work-model`'inden istemci tarafında.
+Tasarım: `IJobSourceClient` (`Source`, sayfa tabanlı `SearchAsync` → `JobSourceSearchPage(Cards,
+HasMore)`), ortak `JobSourceHttpClient` fetch döngüsü (host beyaz listesi, login duvarı, izin
+verilen statüler alt sınıfta), `KariyerNetJobSourceClient` kendi Polly pipeline'ıyla. Sweep
+kaynak farkındalı: **bütçe ve cooldown kaynak başına** (LinkedIn 429'u kariyer.net'i
+durdurmaz; admin usage `sources[]`), profil her unvan için kaynak başına bir paylaşımlı sorgu
+üretir, round-robin kaynak lane'leri arasında da döner, başvurulmuş eleme (kaynak, id)
+çiftiyle (`KariyerNetJobIdExtractor`). `JobSources:KariyerNetEnabled` (varsayılan true) ikinci
+kaynağı tek başına kapatır. Yanıtlarda `source`; UI "İlanı {kaynak} üzerinde aç". Gizlilik:
+kriter kariyer.net'e de gidiyor — yurt dışı aktarımı değil, `jobSourceTransfer`'de bütünlük için
+anıldı. Slug Türkçe harfleri ve birleşik işaretleri (i̇) ASCII'ye katlar.
+
+**Doğrulama.** Unit 707 → **753** (sanitize, teslimat satırı sınırları, maliyet, Vertex
+sağlayıcısı stub'la, kariyer.net builder/parser/istemci gerçek sayfalardan alınmış fixture'la,
+slug). Entegrasyon (podman): JobSources **25/25** (puanlama gerçek PDF → depo → extractor → sahte
+model; eşik; rıza; kullanıcı/gün tavanları; retry+vazgeçme; defter hesaptan sonra; özet
+e-postası bir kez + kapatma; iki kaynak tek fetch; kariyer.net başvuru eleme; kaynak başına
+stop), Resend digest şablonu/encode 4/4, mevcut sweep/stop/flag-off testleri iki kaynağa
+uyarlandı. Web: tsc, eslint, vitest 405 → **412**. Tam entegrasyon suite'i aşağıda.
+
+**Kalan (bu branch'te, sırayla):** (a) model kıyası (yukarıda), (b) **PayTR entegrasyonu**
+(`ProEntitlements` satırını yazacak; Pro olmayan sayfadaki "Yakında" düğmesi ve fiyat), sonra
+merge. Cloud Scheduler tetikleyicisi gereksiz (min-instances=1, §13).
+
 ## Entegrasyon testleri: sınıf başına host, inline iş, sızıntı kapandı — 33 dk'dan 2 dk'ya (2026-09-15, gece)
 
 **Tetikleyici.** Tam paket 410 testte 32 dk 56 s sürüp "Test Run Aborted" ile düştü; ardından tek

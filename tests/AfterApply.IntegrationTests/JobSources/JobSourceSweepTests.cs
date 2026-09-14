@@ -45,6 +45,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
 
     private WebApplicationFactory<Program>? _factory;
     private LinkedInStubHandler _linkedIn = null!;
+    private KariyerNetStubHandler _kariyer = null!;
     private MutableTimeProvider _clock = null!;
     private HttpClient _admin = null!;
     private HttpClient _pro1 = null!;
@@ -58,6 +59,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(JobSourceSweepTests));
         _linkedIn = new LinkedInStubHandler();
+        _kariyer = new KariyerNetStubHandler();
         _clock = new MutableTimeProvider(RunMoment);
 
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -72,6 +74,8 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
                 services.AddSingleton<TimeProvider>(_clock);
                 services.AddHttpClient(nameof(ILinkedInJobSourceClient))
                     .ConfigurePrimaryHttpMessageHandler(() => _linkedIn);
+                services.AddHttpClient(nameof(IKariyerNetJobSourceClient))
+                    .ConfigurePrimaryHttpMessageHandler(() => _kariyer);
             });
         });
 
@@ -104,7 +108,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
         foreach (var client in new[] { _pro1, _pro2, _free })
         {
             (await client.PutAsJsonAsync("/api/job-sources/profile",
-                new UpsertJobSourceProfileRequest([".NET Developer"], "İstanbul"), JsonOptions)).EnsureSuccessStatusCode();
+                new UpsertJobSourceProfileRequest([".NET Developer"], "İstanbul", AcceptAiScoring: true), JsonOptions)).EnsureSuccessStatusCode();
         }
     }
 
@@ -121,27 +125,65 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         await SweepAsync();
 
-        // Two users, one query, two pages (10 + 3 cards): two search requests, not four.
+        // Two users, one title, two sources: LinkedIn's query is two pages (10 + 3 cards) fetched
+        // once for both users; kariyer.net's is one page (4 cards), likewise once.
         _linkedIn.SearchRequests.ShouldBe(2);
-        // Every delivered posting got its description, once — 13 distinct postings.
+        _kariyer.SearchRequests.ShouldBe(1);
+        // Every delivered posting got its description, once — 13 + 4 distinct postings.
         _linkedIn.PostingRequests.ShouldBe(13);
+        _kariyer.PostingRequests.ShouldBe(4);
 
         var pro1 = await ListAsync(_pro1);
         var pro2 = await ListAsync(_pro2);
-        pro1.Items.Count.ShouldBe(13);
-        pro2.Items.Count.ShouldBe(13);
+        pro1.Items.Count.ShouldBe(17);
+        pro2.Items.Count.ShouldBe(17);
         pro1.Run.ShouldNotBeNull();
         pro1.Run.WeekKey.ShouldBe(ThisWeek);
-        pro1.Run.CandidateCount.ShouldBe(13);
-        pro1.Run.DeliveredCount.ShouldBe(13);
+        pro1.Run.CandidateCount.ShouldBe(17);
+        pro1.Run.DeliveredCount.ShouldBe(17);
         pro1.Run.ExcludedAppliedCount.ShouldBe(0);
+        pro1.Items.Count(i => i.Source == Source.LinkedIn).ShouldBe(13);
+        pro1.Items.Count(i => i.Source == Source.KariyerNet).ShouldBe(4);
 
-        // Best rank first, and the detail is there.
+        // Round-robin across the two sources' lanes: the best of each alternates at the top.
         pro1.Items[0].Title.ShouldBe("Software Developer 1");
+        pro1.Items[1].Title.ShouldBe("Kariyer .NET Geliştirici 1");
         pro1.Items[0].Seniority.ShouldBe("Mid-Senior level");
         var detail = await _pro1.GetFromJsonAsync<JobSourcePostingDetailResponse>($"/api/job-sources/postings/{pro1.Items[0].Id}", JsonOptions);
         detail!.Description.ShouldBe("Description of posting 4460000001.\nC#\n.NET");
         detail.Url.ShouldBe("https://www.linkedin.com/jobs/view/4460000001");
+
+        var kariyer = await _pro1.GetFromJsonAsync<JobSourcePostingDetailResponse>($"/api/job-sources/postings/{pro1.Items[1].Id}", JsonOptions);
+        kariyer!.Source.ShouldBe(Source.KariyerNet);
+        kariyer.Url.ShouldBe("https://www.kariyer.net/is-ilani/firma-1-net-gelistirici-4550000001");
+        kariyer.Description.ShouldBe("kariyer.net ilanı 4550000001 açıklaması.\nC#\n.NET");
+        kariyer.Seniority.ShouldBe("En az 3 yıl tecrübeli");
+        kariyer.Location.ShouldBe("İstanbul");
+        kariyer.PostedAt.ShouldBe(DateOnly.FromDateTime(RunMoment.UtcDateTime).AddDays(-1));
+    }
+
+    [Fact]
+    public async Task A_Kariyer_Net_Stop_Leaves_LinkedIn_Running_And_Vice_Versa()
+    {
+        // kariyer.net answers 429 to its first search; LinkedIn is unaffected, and kariyer.net's
+        // own cooldown is what the admin view reports.
+        _kariyer.AnswerNextWith(HttpStatusCode.TooManyRequests);
+        await SweepAsync();
+
+        var pro1 = await ListAsync(_pro1);
+        pro1.Items.Count.ShouldBe(13);
+        pro1.Items.ShouldAllBe(i => i.Source == Source.LinkedIn);
+
+        var usage = await _admin.GetFromJsonAsync<JobSourceUsageResponse>("/api/admin/job-sources/usage", JsonOptions);
+        usage!.Sources.Single(s => s.Source == Source.KariyerNet).CooldownUntil.ShouldNotBeNull();
+        usage.Sources.Single(s => s.Source == Source.LinkedIn).CooldownUntil.ShouldBeNull();
+        usage.Sources.Single(s => s.Source == Source.LinkedIn).RequestsToday.ShouldBe(15);
+        usage.Sources.Single(s => s.Source == Source.KariyerNet).RequestsToday.ShouldBe(1);
+
+        // Next day kariyer.net is tried again and its postings join the week.
+        _clock.Advance(TimeSpan.FromHours(25));
+        await SweepAsync();
+        (await ListAsync(_pro1)).Items.Count.ShouldBe(17);
     }
 
     [Fact]
@@ -194,20 +236,32 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
             await db.SaveChangesAsync();
         }
 
+        // ...and a kariyer.net one, by its canonical URL.
+        await using (var scope = _factory!.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var company = await db.Companies.FirstAsync();
+            db.Applications.Add(DomainApplication.Create(_pro1Id, company.Id, "Kariyer .NET Geliştirici 3",
+                "https://www.kariyer.net/is-ilani/firma-3-net-gelistirici-4550000003", "İstanbul",
+                EmploymentType.FullTime, RunMoment, Source.Manual, null, RunMoment));
+            await db.SaveChangesAsync();
+        }
+
         await SweepAsync();
 
         var pro1 = await ListAsync(_pro1);
-        pro1.Items.Count.ShouldBe(11);
+        pro1.Items.Count.ShouldBe(14);
         pro1.Items.Select(i => i.Url).ShouldNotContain("https://www.linkedin.com/jobs/view/4460000001");
         pro1.Items.Select(i => i.Url).ShouldNotContain("https://www.linkedin.com/jobs/view/4460000003");
-        pro1.Run!.CandidateCount.ShouldBe(13);
-        pro1.Run.DeliveredCount.ShouldBe(11);
-        pro1.Run.ExcludedAppliedCount.ShouldBe(2);
+        pro1.Items.Select(i => i.Url).ShouldNotContain("https://www.kariyer.net/is-ilani/firma-3-net-gelistirici-4550000003");
+        pro1.Run!.CandidateCount.ShouldBe(17);
+        pro1.Run.DeliveredCount.ShouldBe(14);
+        pro1.Run.ExcludedAppliedCount.ShouldBe(3);
         pro1.Run.ExcludedRecentlyShownCount.ShouldBe(0);
 
         // The other user did not apply: the same postings reach them.
         var pro2 = await ListAsync(_pro2);
-        pro2.Items.Count.ShouldBe(13);
+        pro2.Items.Count.ShouldBe(17);
         pro2.Run!.ExcludedAppliedCount.ShouldBe(0);
     }
 
@@ -224,45 +278,48 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
 
         await SweepAsync();
 
-        (await ListAsync(_pro1)).Items.Count.ShouldBe(13);
+        (await ListAsync(_pro1)).Items.Count.ShouldBe(17);
         var pro2 = await ListAsync(_pro2);
         pro2.Items.Count.ShouldBe(5);
         pro2.Run!.DeliveredCount.ShouldBe(5);
-        pro2.Run.CandidateCount.ShouldBe(13);
-        // Only what was delivered gets a description: 13 for pro1 (which covers pro2's 5).
+        pro2.Run.CandidateCount.ShouldBe(17);
+        // Only what was delivered gets a description: pro1's 13 + 4 cover pro2's 5.
         _linkedIn.PostingRequests.ShouldBe(13);
+        _kariyer.PostingRequests.ShouldBe(4);
 
-        // The same week again — a late or repeated job: nothing new, and LinkedIn is not asked again.
+        // The same week again — a late or repeated job: nothing new, and neither site is asked again.
         // (An hour, not days: the clock started at the real "now", which may be a Sunday.)
         _clock.Advance(TimeSpan.FromHours(1));
         await SweepAsync();
 
         _linkedIn.SearchRequests.ShouldBe(2);
+        _kariyer.SearchRequests.ShouldBe(1);
         (await ListAsync(_pro2)).Items.Count.ShouldBe(5);
-        (await ListAsync(_pro1)).Run!.DeliveredCount.ShouldBe(13);
+        (await ListAsync(_pro1)).Run!.DeliveredCount.ShouldBe(17);
     }
 
     [Fact]
     public async Task Next_Week_The_Query_Runs_Again_And_Only_New_Postings_Are_Delivered()
     {
         await SweepAsync();
-        (await ListAsync(_pro1)).Items.Count.ShouldBe(13);
+        (await ListAsync(_pro1)).Items.Count.ShouldBe(17);
 
         _clock.Advance(TimeSpan.FromDays(7));
         _linkedIn.Cards.Insert(0, ("4460000099", "Brand New Posting", "Kuzey Teknoloji", "İstanbul", "2026-09-20"));
         await SweepAsync();
 
         _linkedIn.SearchRequests.ShouldBe(4);
+        _kariyer.SearchRequests.ShouldBe(2);
         var thisWeek = await ListAsync(_pro1);
         thisWeek.Run!.WeekKey.ShouldBe(NextWeek);
         thisWeek.Items.Select(i => i.Title).ShouldBe(["Brand New Posting"]);
-        thisWeek.Run.CandidateCount.ShouldBe(14);
+        thisWeek.Run.CandidateCount.ShouldBe(18);
         thisWeek.Run.DeliveredCount.ShouldBe(1);
-        thisWeek.Run.ExcludedRecentlyShownCount.ShouldBe(13);
+        thisWeek.Run.ExcludedRecentlyShownCount.ShouldBe(17);
 
         // Last week is still readable by its key.
         var lastWeek = await ListAsync(_pro1, ThisWeek);
-        lastWeek.Items.Count.ShouldBe(13);
+        lastWeek.Items.Count.ShouldBe(17);
         lastWeek.Run!.WeekKey.ShouldBe(ThisWeek);
     }
 
@@ -279,6 +336,58 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
         (await _pro2.GetAsync($"/api/job-sources/postings/{notDeliveredToPro2}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await _free.GetAsync($"/api/job-sources/postings/{notDeliveredToPro2}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await _pro1.GetAsync($"/api/job-sources/postings/{notDeliveredToPro2}")).StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task I_Applied_Records_An_Application_Once_And_Only_For_A_Delivered_Posting()
+    {
+        await SweepAsync();
+        var pro1 = await ListAsync(_pro1);
+        var posting = pro1.Items[0];
+
+        var first = await _pro1.PostAsync($"/api/job-sources/postings/{posting.Id}/apply", null);
+        first.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var application = await first.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+        application!.JobTitle.ShouldBe(posting.Title);
+        application.CompanyName.ShouldBe(posting.CompanyName);
+        application.JobUrl.ShouldBe(posting.Url);
+        application.Source.ShouldBe(Source.LinkedIn);
+
+        // Pressed again: the same application, not a second one.
+        var second = await _pro1.PostAsync($"/api/job-sources/postings/{posting.Id}/apply", null);
+        (await second.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions))!.Id.ShouldBe(application.Id);
+
+        // Somebody else's posting id opens nothing, and the free user has no deliveries at all.
+        (await _free.PostAsync($"/api/job-sources/postings/{posting.Id}/apply", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        // Next week's run treats it as applied: left out and counted.
+        _clock.Advance(TimeSpan.FromDays(7));
+        await SweepAsync();
+        var nextWeek = await ListAsync(_pro1);
+        nextWeek.Run!.ExcludedAppliedCount.ShouldBe(1);
+        nextWeek.Items.ShouldNotContain(i => i.Id == posting.Id);
+    }
+
+    [Fact]
+    public async Task Status_Says_Who_Is_Paying_And_Whether_There_Is_A_Cv_And_Criteria()
+    {
+        var pro = await _pro1.GetFromJsonAsync<JobSourceStatusResponse>("/api/job-sources/status", JsonOptions);
+        pro!.IsPro.ShouldBeTrue();
+        pro.ProActiveUntil.ShouldNotBeNull();
+        pro.HasCv.ShouldBeTrue();
+        pro.CvFileName.ShouldBe("cv.pdf");
+        pro.HasProfile.ShouldBeTrue();
+
+        var free = await _free.GetFromJsonAsync<JobSourceStatusResponse>("/api/job-sources/status", JsonOptions);
+        free!.IsPro.ShouldBeFalse();
+        free.ProActiveUntil.ShouldBeNull();
+
+        (await _free.DeleteAsync("/api/job-sources/profile")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await _free.GetFromJsonAsync<JobSourceStatusResponse>("/api/job-sources/status", JsonOptions))!.HasProfile.ShouldBeFalse();
+
+        // The public config says the feature is on, so the web app shows the page at all.
+        var config = await _free.GetFromJsonAsync<System.Text.Json.JsonElement>("/api/config", JsonOptions);
+        config.GetProperty("jobSources").GetProperty("enabled").GetBoolean().ShouldBeTrue();
     }
 
     [Fact]
@@ -300,17 +409,21 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
         profile.Location.ShouldBe("İstanbul");
 
         // Re-saving with the same title kept and a new one in front: order is the user's, the
-        // shared query behind ".NET Developer" is reused, and a duplicate spelling collapses.
+        // shared query behind ".NET Developer" is reused, and a duplicate spelling collapses. The
+        // consent given at creation is not asked for again and stays recorded.
         (await _pro1.PutAsJsonAsync("/api/job-sources/profile",
             new UpsertJobSourceProfileRequest(["Backend Developer", ".NET  Developer", ".net developer"], "İstanbul"), JsonOptions))
             .EnsureSuccessStatusCode();
         profile = await _pro1.GetFromJsonAsync<JobSourceProfileResponse>("/api/job-sources/profile", JsonOptions);
         profile!.Titles.ShouldBe(["Backend Developer", ".NET Developer"]);
+        profile.AiScoringConsentAcceptedAt.ShouldNotBeNull();
 
         await using var scope = _factory!.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        // pro1, pro2 and free all asked for ".NET Developer" / İstanbul: one shared query, plus pro1's new one.
-        (await db.JobSourceQueries.CountAsync()).ShouldBe(2);
+        // pro1, pro2 and free all asked for ".NET Developer" / İstanbul: one shared query per
+        // source, plus pro1's new title on each source.
+        (await db.JobSourceQueries.CountAsync()).ShouldBe(4);
+        (await db.JobSourceQueries.CountAsync(q => q.Source == Source.KariyerNet)).ShouldBe(2);
 
         (await _pro1.DeleteAsync("/api/job-sources/profile")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await _pro1.GetAsync("/api/job-sources/profile")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -332,8 +445,8 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
         (await db.UserJobSourceDeliveries.AnyAsync(d => d.UserId == _pro2Id)).ShouldBeFalse();
         (await db.UserJobSourceRuns.AnyAsync(r => r.UserId == _pro2Id)).ShouldBeFalse();
         (await db.ProEntitlements.AnyAsync(e => e.UserId == _pro2Id)).ShouldBeFalse();
-        (await db.JobSourcePostings.CountAsync()).ShouldBe(13);
-        (await db.UserJobSourceDeliveries.CountAsync(d => d.UserId == _pro1Id)).ShouldBe(13);
+        (await db.JobSourcePostings.CountAsync()).ShouldBe(17);
+        (await db.UserJobSourceDeliveries.CountAsync(d => d.UserId == _pro1Id)).ShouldBe(17);
     }
 
     private async Task SweepAsync()

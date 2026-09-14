@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Application.Mailing;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -135,6 +136,33 @@ public class ResendEmailSenderTests(ApiHost<ResendEmailSenderProfile> host) : IC
         changedPayload.Subject.ShouldBe("e-kariyerim şifreniz değiştirildi");
         changedPayload.Html.ShouldContain("güvenlik amacıyla sonlandırıldı");
         changedPayload.Html.ShouldNotContain("Şifremi sıfırla");
+    }
+
+    [Fact]
+    public async Task WeeklyJobsDigest_Fills_The_Template_And_Encodes_Scraped_Text()
+    {
+        using var scope = _factory!.Services.CreateScope();
+        var sender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
+        var before = _handler.RequestCount;
+
+        // The title is the kind of thing a job site could carry; it must arrive as text.
+        await sender.SendWeeklyJobsReadyEmailAsync("digest@example.com", "tr",
+            new WeeklyJobsDigest(7, "<img src=x onerror=alert(1)> Developer", "Acme & Sons", 92, "https://ekariyerim.com/tr/weekly-jobs"),
+            CancellationToken.None);
+
+        var payload = await WaitForSentEmailAsync(before);
+        payload.Subject.ShouldBe("Bu hafta size uyan 7 ilan hazır");
+        payload.Html.ShouldContain("Bu hafta 7 ilan hazır");
+        payload.Html.ShouldContain("&lt;img src=x onerror=alert(1)&gt; Developer");
+        payload.Html.ShouldNotContain("<img src=x");
+        payload.Html.ShouldContain("Acme &amp; Sons");
+        payload.Html.ShouldContain("(%92)");
+        payload.Html.ShouldContain("href=\"https://ekariyerim.com/tr/weekly-jobs\"");
+        payload.Html.ShouldNotContain("{{");
+
+        await sender.SendWeeklyJobsReadyEmailAsync("digest@example.com", "en",
+            new WeeklyJobsDigest(1, "Backend Developer", "Acme", 80, "https://ekariyerim.com/en/weekly-jobs"), CancellationToken.None);
+        (await WaitForSentEmailAsync(before + 1)).Subject.ShouldBe("1 postings that fit you are ready this week");
     }
 
     private static string ExtractHref(string html) => Regex.Match(html, "href=\"([^\"]+)\"").Groups[1].Value;

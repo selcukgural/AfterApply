@@ -22,6 +22,10 @@ public sealed class UserJobSourceRun
 
     public int ExcludedRecentlyShownCount { get; private set; }
 
+    /// <summary>When the "N postings are ready" e-mail went out for this week; null until it did.
+    /// One per user per week, however many times the sweep runs.</summary>
+    public DateTimeOffset? DigestSentAt { get; private set; }
+
     private UserJobSourceRun()
     {
     }
@@ -38,4 +42,6 @@ public sealed class UserJobSourceRun
         ExcludedAppliedCount = excludedAppliedCount;
         ExcludedRecentlyShownCount = excludedRecentlyShownCount;
     }
+
+    public void MarkDigestSent(DateTimeOffset now) => DigestSentAt = now;
 }

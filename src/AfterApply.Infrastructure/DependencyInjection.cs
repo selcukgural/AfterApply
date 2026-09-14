@@ -37,6 +37,7 @@ using AfterApply.Application.Pro;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Benchmark;
+using AfterApply.Infrastructure.Ai;
 using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.SiteTraffic;
 using AfterApply.Infrastructure.OpenAi;
@@ -66,6 +67,7 @@ namespace AfterApply.Infrastructure;
 public static class DependencyInjection
 {
     public const string LinkedInJobSourceResiliencePipeline = "linkedin-job-source";
+    public const string KariyerNetJobSourceResiliencePipeline = "kariyernet-job-source";
 
     public const string CorsPolicyName = "Frontend";
     public const string AuthRateLimitPolicy = "auth-strict";
@@ -444,6 +446,7 @@ public static class DependencyInjection
         services.AddScoped<IBenchmarkService, BenchmarkService>();
         services.AddScoped<ICvScanService, CvScanService>();
         services.AddScoped<ICvTextExtractor, CvTextExtractor>();
+        services.AddSingleton<IVertexGenerateContentClient, VertexGenerateContentClient>();
         services.AddScoped<ICvReviewProvider, VertexCvReviewProvider>();
         services.AddJobSources();
 
@@ -487,6 +490,13 @@ public static class DependencyInjection
         services.AddScoped<IUserJobSourceDeliveryService, UserJobSourceDeliveryService>();
         services.AddScoped<IJobSourceAdminService, JobSourceAdminService>();
         services.AddScoped<IJobSourceSweepService, JobSourceSweepService>();
+        services.AddScoped<IJobFitScoringService, JobFitScoringService>();
+        services.AddScoped<IJobSourceDigestService, JobSourceDigestService>();
+        services.AddScoped<IJobFitScoringProvider, VertexJobFitScoringProvider>();
+        services.AddScoped<IUserCvTextReader, StoredCvTextReader>();
+        // Same shape as the CV scan's review client: a bare named client, the URL built per call
+        // so the region stays visible at the call site (VertexGenerateContentClient).
+        services.AddHttpClient(JobFitScoringSettings.HttpClientName);
 
         // The search text is in the request URL, so the default request/response logging is
         // removed — a user's job title and city are theirs, not the log's. The pipeline retries
@@ -505,6 +515,20 @@ public static class DependencyInjection
             .AddResilienceHandler(LinkedInJobSourceResiliencePipeline, (pipeline, context) =>
                 JobSourceResilience.Configure(pipeline,
                     context.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value));
+
+        // kariyer.net, the same way: its own client and pipeline, so one site's breaker never
+        // trips for the other. The sweep asks for both through IEnumerable<IJobSourceClient>.
+        services.AddHttpClient<IKariyerNetJobSourceClient, KariyerNetJobSourceClient>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(60);
+            })
+            .RemoveAllLoggers()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddResilienceHandler(KariyerNetJobSourceResiliencePipeline, (pipeline, context) =>
+                JobSourceResilience.Configure(pipeline,
+                    context.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value));
+        services.AddScoped<IJobSourceClient>(sp => sp.GetRequiredService<ILinkedInJobSourceClient>());
+        services.AddScoped<IJobSourceClient>(sp => sp.GetRequiredService<IKariyerNetJobSourceClient>());
 
         return services;
     }

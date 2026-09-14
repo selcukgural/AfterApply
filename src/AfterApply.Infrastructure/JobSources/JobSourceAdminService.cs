@@ -1,5 +1,7 @@
 using AfterApply.Application.JobSources;
 using AfterApply.Application.JobSources.Contracts;
+using AfterApply.Domain.Ai;
+using AfterApply.Domain.Common;
 using AfterApply.Domain.JobSources;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -55,13 +57,44 @@ internal sealed class JobSourceAdminService(AppDbContext dbContext, IOptions<Job
         var lastBlockedAt = await dbContext.JobSourceFetches
             .Where(f => f.Outcome == JobSourceFetchOutcome.Blocked || f.Outcome == JobSourceFetchOutcome.RateLimited)
             .MaxAsync(f => (DateTimeOffset?)f.At, cancellationToken);
+
+        var perSource = new List<JobSourcePerSourceUsageResponse>();
+        foreach (var (source, enabled) in new[] { (Source.LinkedIn, true), (Source.KariyerNet, options.Value.KariyerNetEnabled) })
+        {
+            var sourceRequests = await dbContext.JobSourceFetches.CountAsync(f => f.Source == source && f.At >= dayStart, cancellationToken);
+            var sourceBlockedAt = await dbContext.JobSourceFetches
+                .Where(f => f.Source == source && (f.Outcome == JobSourceFetchOutcome.Blocked || f.Outcome == JobSourceFetchOutcome.RateLimited))
+                .MaxAsync(f => (DateTimeOffset?)f.At, cancellationToken);
+            var sourceCooldown = JobSourceBudget.CooldownUntil(sourceBlockedAt, cooldown);
+            perSource.Add(new JobSourcePerSourceUsageResponse(source, enabled, sourceRequests, sourceBlockedAt,
+                sourceCooldown is { } su && su > now ? su : null));
+        }
+
         var postingCount = await dbContext.JobSourcePostings.CountAsync(cancellationToken);
         var activeQueryCount = await dbContext.UserJobSourceProfiles
             .Where(p => p.Enabled).SelectMany(p => p.Queries).Select(q => q.QueryId).Distinct().CountAsync(cancellationToken);
 
         var cooldownUntil = JobSourceBudget.CooldownUntil(lastBlockedAt, cooldown);
         return new JobSourceUsageResponse(requestsToday, options.Value.MaxRequestsPerDay, lastBlockedAt,
-            cooldownUntil is { } until && until > now ? until : null, postingCount, activeQueryCount);
+            cooldownUntil is { } until && until > now ? until : null, postingCount, activeQueryCount,
+            await GetScoringUsageAsync(now, dayStart, cancellationToken), perSource);
+    }
+
+    private async Task<JobFitScoringUsageResponse> GetScoringUsageAsync(DateTimeOffset now, DateTimeOffset dayStart,
+        CancellationToken cancellationToken)
+    {
+        var scoring = options.Value.Scoring;
+        var monthStart = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero);
+        var callsToday = await dbContext.AiUsageEntries.CountAsync(e => e.Feature == AiFeature.JobFitScoring && e.At >= dayStart, cancellationToken);
+        var month = await dbContext.AiUsageEntries
+            .Where(e => e.Feature == AiFeature.JobFitScoring && e.At >= monthStart)
+            .GroupBy(_ => 1)
+            .Select(g => new { Input = g.Sum(e => (long)e.InputTokens), Output = g.Sum(e => (long)e.OutputTokens) })
+            .FirstOrDefaultAsync(cancellationToken);
+        var input = month?.Input ?? 0;
+        var output = month?.Output ?? 0;
+        return new JobFitScoringUsageResponse(callsToday, scoring.MaxCallsPerDay, input, output,
+            JobFitScoringCost.Estimate(input, output, scoring), scoring.MonthlyBudgetUsd);
     }
 
     private UserJobSourceSettingsResponse ToResponse(Guid userId, int? weeklyPostingLimit) =>

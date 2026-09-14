@@ -15,6 +15,7 @@ public sealed class UpsertJobSourceProfileRequestValidator : AbstractValidator<U
             .WithMessage("Control characters are not allowed.");
         RuleFor(x => x.Location).NotEmpty().Length(2, JobSourceQuery.MaxLocationLength).Must(BePlainText)
             .WithMessage("Control characters are not allowed.");
+        RuleFor(x => x.MinScore).InclusiveBetween(UserJobSourceProfile.MinScoreFloor, UserJobSourceProfile.MinScoreCeiling);
     }
 
     // The words are going into a URL we build; a stray control character is at best noise and at

@@ -12,6 +12,10 @@ public sealed class UserJobSourceProfile : Entity
 {
     public const int MaxTitles = 3;
 
+    public const int MinScoreFloor = 0;
+
+    public const int MinScoreCeiling = 100;
+
     public Guid UserId { get; private set; }
 
     public string Location { get; private set; } = string.Empty;
@@ -19,6 +23,26 @@ public sealed class UserJobSourceProfile : Entity
     public bool RemoteOnly { get; private set; }
 
     public bool Enabled { get; private set; }
+
+    /// <summary>Fit score (0–100) below which a delivered posting is hidden from the user's list.
+    /// Applied when the list is read, not when the sweep delivers, so the user can move it and see
+    /// more or fewer of the same week without anything being re-fetched or re-scored. 0 hides nothing.</summary>
+    public int MinScore { get; private set; }
+
+    /// <summary>
+    /// When the user agreed (KVKK m.6, explicit) to their default CV's text being sent to the
+    /// scoring model — the one thing this feature does that the CV upload consent did not cover
+    /// (the CVs page promises the files are never analysed by an AI service). Stamped by the
+    /// service once the request carried the flag; a profile without it is fetched for but never
+    /// scored, so the promise holds for anyone who has not said yes.
+    /// </summary>
+    public DateTimeOffset? AiScoringConsentAcceptedAt { get; private set; }
+
+    public bool HasAiScoringConsent => AiScoringConsentAcceptedAt is not null;
+
+    /// <summary>The Monday "N postings are ready" e-mail. On by default — it is the feature's
+    /// delivery channel, not marketing — and a checkbox on the criteria form turns it off.</summary>
+    public bool EmailDigestEnabled { get; private set; } = true;
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -32,7 +56,8 @@ public sealed class UserJobSourceProfile : Entity
     {
     }
 
-    public static UserJobSourceProfile Create(Guid userId, string location, bool remoteOnly, bool enabled, DateTimeOffset now)
+    public static UserJobSourceProfile Create(Guid userId, string location, bool remoteOnly, bool enabled, int minScore,
+        bool emailDigestEnabled, DateTimeOffset now)
     {
         return new UserJobSourceProfile
         {
@@ -40,18 +65,26 @@ public sealed class UserJobSourceProfile : Entity
             Location = location,
             RemoteOnly = remoteOnly,
             Enabled = enabled,
+            MinScore = Math.Clamp(minScore, MinScoreFloor, MinScoreCeiling),
+            EmailDigestEnabled = emailDigestEnabled,
             CreatedAt = now,
             UpdatedAt = now
         };
     }
 
-    public void Update(string location, bool remoteOnly, bool enabled, DateTimeOffset now)
+    public void Update(string location, bool remoteOnly, bool enabled, int minScore, bool emailDigestEnabled, DateTimeOffset now)
     {
         Location = location;
         RemoteOnly = remoteOnly;
         Enabled = enabled;
+        MinScore = Math.Clamp(minScore, MinScoreFloor, MinScoreCeiling);
+        EmailDigestEnabled = emailDigestEnabled;
         UpdatedAt = now;
     }
+
+    /// <summary>Records the consent once; re-saving the profile keeps the original moment, because
+    /// that is when it was actually given.</summary>
+    public void AcceptAiScoring(DateTimeOffset now) => AiScoringConsentAcceptedAt ??= now;
 
     /// <summary>The user's titles in the order they gave them.</summary>
     public IEnumerable<UserJobSourceProfileQuery> OrderedQueries => _queries.OrderBy(q => q.Ordinal);

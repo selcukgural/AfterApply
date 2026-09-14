@@ -66,6 +66,20 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
           </ul>
         </section>
 
+        {/* The paid job matching's model call. Sits right after the CV sections because it is the
+            one exception to their "never sent to an AI service" promise, and the consent box on the
+            criteria form links straight here (#job-matching). */}
+        <section id="job-matching">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("jobMatching.title")}</h2>
+          <p>{t("jobMatching.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("jobMatching.what")}</li>
+            <li>{t("jobMatching.kept")}</li>
+            <li>{t("jobMatching.consent")}</li>
+            <li>{t("jobMatching.withdraw")}</li>
+          </ul>
+        </section>
+
         <section id="feedback">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("feedback.title")}</h2>
           <p>{t("feedback.intro")}</p>

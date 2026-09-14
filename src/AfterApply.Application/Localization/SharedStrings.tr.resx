@@ -255,6 +255,9 @@
   <data name="CV_CONSENT_REQUIRED" xml:space="preserve">
     <value>CV'nizi saklayabilmemiz için açık rızanız gerekiyor. Onay kutusunu işaretleyip tekrar deneyin.</value>
   </data>
+  <data name="JOB_SOURCE_AI_CONSENT_REQUIRED" xml:space="preserve">
+    <value>İlanları CV'nizle karşılaştırabilmemiz için açık rızanız gerekiyor. Onay kutusunu işaretleyip tekrar deneyin.</value>
+  </data>
   <data name="CV_SCAN_CONSENT_REQUIRED" xml:space="preserve">
     <value>CV'nizi analiz edebilmemiz için açık rızanız gerekiyor. Onay kutusunu işaretleyip tekrar deneyin.</value>
   </data>

@@ -61,6 +61,12 @@ public sealed class UserJobSourceDeliveryConfiguration : IEntityTypeConfiguratio
         builder.ToTable("UserJobSourceDeliveries");
         builder.HasKey(d => new { d.UserId, d.PostingId });
 
+        builder.Property(d => d.ScoreSummary).HasMaxLength(UserJobSourceDelivery.MaxSummaryLength);
+        // Postgres text[] — short phrases the page lists as chips; no reason to hide them in JSON.
+        builder.Property(d => d.MatchedCriteria).HasColumnType("text[]");
+        builder.Property(d => d.MissingCriteria).HasColumnType("text[]");
+        builder.Property(d => d.RequiredSkills).HasColumnType("text[]");
+
         builder.HasIndex(d => new { d.UserId, d.WeekKey, d.Rank });
         builder.HasIndex(d => new { d.UserId, d.DeliveredAt });
         builder.HasIndex(d => d.PostingId);

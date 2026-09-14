@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Admin;
+using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.JobSources.Contracts;
 using AfterApply.Application.Pro;
@@ -27,6 +28,11 @@ public static class JobSourceEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
         group.AddEndpointFilter(FlagFilter);
+
+        group.MapGet("/status", async (ClaimsPrincipal user, IUserJobSourceDeliveryService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetStatusAsync(user.GetUserId(), cancellationToken)))
+            .WithSummary("Whether the current user is on the paid plan, has a CV and has saved criteria")
+            .Produces<JobSourceStatusResponse>();
 
         group.MapGet("/profile", async (ClaimsPrincipal user, IUserJobSourceProfileService service, CancellationToken cancellationToken) =>
             {
@@ -76,6 +82,18 @@ public static class JobSourceEndpoints
             .WithSummary("One delivered posting with its description")
             .WithDescription("404 unless the posting was delivered to the calling user — a posting id alone opens nothing.")
             .Produces<JobSourcePostingDetailResponse>();
+
+        group.MapPost("/postings/{postingId:guid}/apply", async (Guid postingId, ClaimsPrincipal user, IUserJobSourceDeliveryService service,
+                CancellationToken cancellationToken) =>
+            {
+                var application = await service.MarkAppliedAsync(user.GetUserId(), postingId, cancellationToken);
+                return application is null ? Results.NotFound() : Results.Ok(application);
+            })
+            .WithSummary("\"I applied\": record an application for a delivered posting")
+            .WithDescription("Creates an application dated now through the ordinary flow (company resolved or created, " +
+                             "source LinkedIn); a second call for the same posting returns the existing application. " +
+                             "404 unless the posting was delivered to the calling user.")
+            .Produces<ApplicationDetailResponse>();
 
         MapAdmin(app);
         return app;

@@ -1,6 +1,7 @@
 using AfterApply.Application.ClientConfig;
 using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.CvScan;
+using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -24,6 +25,7 @@ public static class ClientConfigEndpoints
                 IOptions<GitHubAuthOptions> gitHubAuthOptions,
                 IOptions<CvScanOptions> cvScanOptions,
                 IOptions<CompanyReviewOptions> companyReviewOptions,
+                IOptions<JobSourceOptions> jobSourceOptions,
                 HttpContext httpContext) =>
             {
                 // Read from IdentityOptions rather than IdentityPolicyOptions: the former is the object
@@ -69,7 +71,8 @@ public static class ClientConfigEndpoints
                     new CvScanConfigResponse(cvScan.Enabled && cvScan.LlmEnabled
                                              && !string.IsNullOrWhiteSpace(cvScan.Review.ProjectId)),
                     new CompanyReviewsConfigResponse(reviews.Enabled, reviews.MaxReviewsPerUser,
-                        reviews.MinimumReviewsForScore, reviews.PriorWeight)));
+                        reviews.MinimumReviewsForScore, reviews.PriorWeight),
+                    new JobSourcesConfigResponse(jobSourceOptions.Value.Enabled)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

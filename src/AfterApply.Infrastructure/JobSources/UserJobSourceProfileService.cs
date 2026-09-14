@@ -4,6 +4,7 @@ using AfterApply.Domain.Common;
 using AfterApply.Domain.JobSources;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.JobSources;
 
@@ -12,7 +13,8 @@ namespace AfterApply.Infrastructure.JobSources;
 /// row is created on first use and never deleted here — another profile may point at it, and an
 /// orphan costs nothing because the sweep only runs queries an eligible profile references.
 /// </summary>
-internal sealed class UserJobSourceProfileService(AppDbContext dbContext, TimeProvider? timeProvider = null) : IUserJobSourceProfileService
+internal sealed class UserJobSourceProfileService(AppDbContext dbContext, IOptions<JobSourceOptions> options, TimeProvider? timeProvider = null)
+    : IUserJobSourceProfileService
 {
     private const JobSourceTimeWindow DefaultWindow = JobSourceTimeWindow.Week;
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
@@ -37,19 +39,38 @@ internal sealed class UserJobSourceProfileService(AppDbContext dbContext, TimePr
             .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
         if (profile is null)
         {
-            profile = UserJobSourceProfile.Create(userId, location, request.RemoteOnly, request.Enabled, now);
+            // The consent is the price of entry, not an option: the feature is the score, and the
+            // score is the CV going to the model. A create without it is refused as a validation
+            // error rather than silently saving an unscorable profile. Once recorded it stays
+            // recorded, so a later save need not repeat it.
+            if (!request.AcceptAiScoring)
+            {
+                throw new JobSourceAiConsentRequiredException();
+            }
+
+            profile = UserJobSourceProfile.Create(userId, location, request.RemoteOnly, request.Enabled, request.MinScore, request.EmailDigest, now);
             dbContext.UserJobSourceProfiles.Add(profile);
         }
         else
         {
-            profile.Update(location, request.RemoteOnly, request.Enabled, now);
+            profile.Update(location, request.RemoteOnly, request.Enabled, request.MinScore, request.EmailDigest, now);
         }
 
+        if (request.AcceptAiScoring)
+        {
+            profile.AcceptAiScoring(now);
+        }
+
+        // One shared query per (title, source): the sweep runs each source's query on that
+        // source, and the delivery round-robins across all of them.
         var links = new List<(string Title, Guid QueryId)>();
         foreach (var title in titles)
         {
-            var query = await ResolveQueryAsync(title, location, request.RemoteOnly, now, cancellationToken);
-            links.Add((title, query.Id));
+            foreach (var source in EnabledSources)
+            {
+                var query = await ResolveQueryAsync(source, title, location, request.RemoteOnly, now, cancellationToken);
+                links.Add((title, query.Id));
+            }
         }
 
         profile.SetQueries(links);
@@ -70,10 +91,13 @@ internal sealed class UserJobSourceProfileService(AppDbContext dbContext, TimePr
         return true;
     }
 
-    private async Task<JobSourceQuery> ResolveQueryAsync(string title, string location, bool remoteOnly, DateTimeOffset now,
+    private IEnumerable<Source> EnabledSources =>
+        options.Value.KariyerNetEnabled ? [Source.LinkedIn, Source.KariyerNet] : [Source.LinkedIn];
+
+    private async Task<JobSourceQuery> ResolveQueryAsync(Source source, string title, string location, bool remoteOnly, DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        var keyHash = JobSourceQueryNormalizer.KeyHash(Source.LinkedIn, title, location, DefaultWindow, remoteOnly);
+        var keyHash = JobSourceQueryNormalizer.KeyHash(source, title, location, DefaultWindow, remoteOnly);
         var existing = dbContext.JobSourceQueries.Local.FirstOrDefault(q => q.KeyHash == keyHash)
                        ?? await dbContext.JobSourceQueries.SingleOrDefaultAsync(q => q.KeyHash == keyHash, cancellationToken);
         if (existing is not null)
@@ -81,7 +105,7 @@ internal sealed class UserJobSourceProfileService(AppDbContext dbContext, TimePr
             return existing;
         }
 
-        var query = JobSourceQuery.Create(Source.LinkedIn, JobSourceQueryNormalizer.NormalizeText(title),
+        var query = JobSourceQuery.Create(source, JobSourceQueryNormalizer.NormalizeText(title),
             JobSourceQueryNormalizer.NormalizeText(location), DefaultWindow, remoteOnly, keyHash, now);
         dbContext.JobSourceQueries.Add(query);
         return query;
@@ -90,5 +114,6 @@ internal sealed class UserJobSourceProfileService(AppDbContext dbContext, TimePr
     private static string Collapse(string value) => JobSourceQueryNormalizer.CollapseWhitespace(value);
 
     private static JobSourceProfileResponse ToResponse(UserJobSourceProfile profile) =>
-        new(profile.OrderedQueries.Select(q => q.Title).ToList(), profile.Location, profile.RemoteOnly, profile.Enabled, profile.UpdatedAt);
+        new(profile.OrderedQueries.Select(q => q.Title).Distinct().ToList(), profile.Location, profile.RemoteOnly, profile.Enabled,
+            profile.MinScore, profile.AiScoringConsentAcceptedAt, profile.EmailDigestEnabled, profile.UpdatedAt);
 }

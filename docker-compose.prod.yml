@@ -35,6 +35,8 @@ services:
       GitHubAuth__ClientId: "${GITHUB_CLIENT_ID:-}"
       GitHubAuth__ClientSecret: "${GITHUB_CLIENT_SECRET:-}"
       JobSources__Enabled: "${JobSources__Enabled:-false}"
+      JobSources__Scoring__ProjectId: "${JobSources__Scoring__ProjectId:-}"
+      JobSources__KariyerNetEnabled: "${JobSources__KariyerNetEnabled:-true}"
       # Empty disables the SDK (see .env.prod.example) — not a REPLACE_WITH_
       # placeholder, an actually-fake Dsn would make Sentry try (and fail)
       # to send an event on every request instead of silently no-op'ing.

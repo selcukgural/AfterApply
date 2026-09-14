@@ -66,6 +66,10 @@ public class JobSourceFlagOffTests(SharedInfrastructure shared) : IAsyncLifetime
         (await _admin.PutAsJsonAsync("/api/job-sources/profile", new UpsertJobSourceProfileRequest(["Dev"], "İstanbul"), JsonOptions))
             .StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await _admin.GetAsync("/api/job-sources/postings")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await _admin.GetAsync("/api/job-sources/status")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await _admin.PostAsync($"/api/job-sources/postings/{userId}/apply", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await _admin.GetFromJsonAsync<System.Text.Json.JsonElement>("/api/config", JsonOptions))
+            .GetProperty("jobSources").GetProperty("enabled").GetBoolean().ShouldBeFalse();
         (await _admin.GetAsync("/api/admin/job-sources/usage")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await _admin.PutAsJsonAsync($"/api/admin/pro/entitlements/{userId}",
             new GrantProEntitlementRequest(DateTimeOffset.UtcNow.AddMonths(1)), JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.NotFound);

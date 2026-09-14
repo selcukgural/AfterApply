@@ -542,6 +542,12 @@ export interface CompanyReviewsConfig {
   priorWeight: number;
 }
 
+/** Whether the paid weekly job matching is switched on. Off means every /api/job-sources route
+ *  answers 404 and the app shows no trace of it — no nav link, no page. */
+export interface JobSourcesConfig {
+  enabled: boolean;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
@@ -551,6 +557,8 @@ export interface ClientConfigResponse {
   cvScan: CvScanConfig;
   // Optional: an API deployed before the reviews feature answers without it.
   companyReviews?: CompanyReviewsConfig;
+  // Optional for the same reason.
+  jobSources?: JobSourcesConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -1143,4 +1151,80 @@ export interface BulkReminderRequest {
 /** Mirrors AfterApply.Application.Notifications.Contracts.BulkReminderResponse. */
 export interface BulkReminderResponse {
   affected: number;
+}
+
+// ---- Weekly job matching (/api/job-sources) ----------------------------------------------------
+
+export interface JobSourceStatusResponse {
+  isPro: boolean;
+  proActiveUntil: string | null;
+  hasCv: boolean;
+  cvFileName: string | null;
+  hasProfile: boolean;
+}
+
+export interface JobSourceProfileResponse {
+  titles: string[];
+  location: string;
+  remoteOnly: boolean;
+  enabled: boolean;
+  minScore: number;
+  aiScoringConsentAcceptedAt: string | null;
+  emailDigest: boolean;
+  updatedAt: string;
+}
+
+export interface UpsertJobSourceProfileRequest {
+  titles: string[];
+  location: string;
+  remoteOnly: boolean;
+  enabled: boolean;
+  minScore: number;
+  acceptAiScoring: boolean;
+  emailDigest: boolean;
+}
+
+export interface JobSourcePostingSummaryResponse {
+  id: string;
+  // Which site the posting came from: "LinkedIn" or "KariyerNet" (the Source enum's names).
+  source: string;
+  title: string;
+  companyName: string;
+  companyProfileUrl: string | null;
+  location: string | null;
+  postedAt: string | null;
+  url: string;
+  seniority: string | null;
+  employmentType: string | null;
+  deliveredAt: string;
+  weekKey: number;
+  // Null until scored: no description yet, no consent, or the scorer has not reached it.
+  score: number | null;
+  scoreSummary: string | null;
+}
+
+export interface JobSourcePostingDetailResponse extends JobSourcePostingSummaryResponse {
+  description: string | null;
+  jobFunction: string | null;
+  industries: string | null;
+  matchedCriteria: string[];
+  missingCriteria: string[];
+  requiredSkills: string[];
+  scoredAt: string | null;
+}
+
+export interface JobSourceRunResponse {
+  weekKey: number;
+  ranAt: string;
+  candidateCount: number;
+  deliveredCount: number;
+  excludedAppliedCount: number;
+  excludedRecentlyShownCount: number;
+  scoredCount: number;
+  hiddenBelowMinScoreCount: number;
+}
+
+export interface JobSourceDeliveriesResponse {
+  items: JobSourcePostingSummaryResponse[];
+  run: JobSourceRunResponse | null;
 }

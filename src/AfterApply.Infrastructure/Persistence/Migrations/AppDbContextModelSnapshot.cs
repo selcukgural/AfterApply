@@ -22,6 +22,46 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("AfterApply.Domain.Ai.AiUsageEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Feature")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("InputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("OutputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Feature", "At");
+
+                    b.ToTable("AiUsageEntries", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.Applications.Application", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1118,11 +1158,36 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("DeliveredAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.PrimitiveCollection<string[]>("MatchedCriteria")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("MissingCriteria")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<Guid>("QueryId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Rank")
                         .HasColumnType("integer");
+
+                    b.PrimitiveCollection<string[]>("RequiredSkills")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ScoreAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ScoreSummary")
+                        .HasMaxLength(600)
+                        .HasColumnType("character varying(600)");
+
+                    b.Property<DateTimeOffset?>("ScoredAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("WeekKey")
                         .HasColumnType("integer");
@@ -1146,8 +1211,14 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTimeOffset?>("AiScoringConsentAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("EmailDigestEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("Enabled")
                         .HasColumnType("boolean");
@@ -1156,6 +1227,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("MinScore")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("RemoteOnly")
                         .HasColumnType("boolean");
@@ -1210,6 +1284,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("DeliveredCount")
                         .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("DigestSentAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ExcludedAppliedCount")
                         .HasColumnType("integer");
@@ -1385,6 +1462,22 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                             Key = "PasswordChanged",
                             Locale = "en",
                             Subject = "Your e-kariyerim password was changed"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000005"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Bu hafta {{Count}} ilan hazır</h2>\n  <p>Kaydettiğiniz kriterlerle bulunan yeni ilanlar CV'nizle karşılaştırıldı ve uyum puanına göre sıralandı.</p>\n  <p>En yüksek uyum: <strong>{{BestTitle}}</strong> — {{BestCompany}} (%{{BestScore}}).</p>\n  <p>\n    <a href=\"{{Link}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      İlanları gör\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">Bu e-postayı haftalık ilan eşleştirmeyi açtığınız için alıyorsunuz. Kriterler sayfasından kapatabilirsiniz.</p>\n</div>",
+                            Key = "WeeklyJobsReady",
+                            Locale = "tr",
+                            Subject = "Bu hafta size uyan {{Count}} ilan hazır"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000006"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>{{Count}} postings are ready this week</h2>\n  <p>The new postings found with your saved criteria were compared with your CV and ordered by fit.</p>\n  <p>Best fit: <strong>{{BestTitle}}</strong> — {{BestCompany}} ({{BestScore}}%).</p>\n  <p>\n    <a href=\"{{Link}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      See the postings\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">You receive this because you turned on the weekly job matching. You can switch it off on the criteria page.</p>\n</div>",
+                            Key = "WeeklyJobsReady",
+                            Locale = "en",
+                            Subject = "{{Count}} postings that fit you are ready this week"
                         });
                 });
 
@@ -1935,6 +2028,14 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Ai.AiUsageEntry", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("AfterApply.Domain.Applications.Application", b =>

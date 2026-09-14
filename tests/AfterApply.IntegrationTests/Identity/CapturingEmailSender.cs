@@ -1,3 +1,4 @@
+using AfterApply.Application.JobSources;
 using AfterApply.Application.Mailing;
 
 namespace AfterApply.IntegrationTests.Identity;
@@ -18,6 +19,7 @@ public sealed class CapturingEmailSender : IEmailSender
         LastResetLink = null;
         LastLocale = null;
         PasswordChangedCount = 0;
+        lock (Digests) Digests.Clear();
     }
 
     public Task SendPasswordResetEmailAsync(string toEmail, string resetLink, string locale, CancellationToken cancellationToken)
@@ -31,6 +33,18 @@ public sealed class CapturingEmailSender : IEmailSender
     {
         PasswordChangedCount++;
         LastLocale = locale;
+        return Task.CompletedTask;
+    }
+
+    public List<(string ToEmail, string Locale, WeeklyJobsDigest Digest)> Digests { get; } = [];
+
+    public Task SendWeeklyJobsReadyEmailAsync(string toEmail, string locale, WeeklyJobsDigest digest, CancellationToken cancellationToken)
+    {
+        lock (Digests)
+        {
+            Digests.Add((toEmail, locale, digest));
+        }
+
         return Task.CompletedTask;
     }
 }

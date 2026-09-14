@@ -12,7 +12,12 @@ public sealed record ClientConfigResponse(
     LinkedInAuthConfigResponse LinkedInAuth,
     GitHubAuthConfigResponse GitHubAuth,
     CvScanConfigResponse CvScan,
-    CompanyReviewsConfigResponse? CompanyReviews = null);
+    CompanyReviewsConfigResponse? CompanyReviews = null,
+    JobSourcesConfigResponse? JobSources = null);
+
+/// <summary>Whether the paid weekly job matching is switched on at all. Off means every
+/// <c>/api/job-sources/*</c> route 404s and the web app shows no trace of the feature.</summary>
+public sealed record JobSourcesConfigResponse(bool Enabled);
 
 /// <summary>Mirrors ASP.NET Identity's <c>PasswordOptions</c>, which is what the server actually
 /// validates against — the response is built from that object, not from a copy of the config.</summary>

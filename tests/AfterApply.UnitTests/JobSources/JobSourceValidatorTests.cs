@@ -20,6 +20,15 @@ public class JobSourceValidatorTests
     }
 
     [Fact]
+    public void MinScore_Is_On_The_Hundred_Scale()
+    {
+        _profile.Validate(new UpsertJobSourceProfileRequest([".NET Developer"], "İstanbul", MinScore: 0)).IsValid.ShouldBeTrue();
+        _profile.Validate(new UpsertJobSourceProfileRequest([".NET Developer"], "İstanbul", MinScore: 100)).IsValid.ShouldBeTrue();
+        _profile.Validate(new UpsertJobSourceProfileRequest([".NET Developer"], "İstanbul", MinScore: 101)).IsValid.ShouldBeFalse();
+        _profile.Validate(new UpsertJobSourceProfileRequest([".NET Developer"], "İstanbul", MinScore: -1)).IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Control_Characters_Are_Refused()
     {
         _profile.Validate(new UpsertJobSourceProfileRequest([".NET\nDeveloper"], "İstanbul")).IsValid.ShouldBeFalse();

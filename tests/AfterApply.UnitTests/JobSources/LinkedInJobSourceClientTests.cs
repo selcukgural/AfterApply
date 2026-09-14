@@ -25,11 +25,12 @@ public class LinkedInJobSourceClientTests
         var handler = new ScriptedHandler(Ok(LinkedInJobSourceFixtures.ThreeCards));
         var client = Build(handler);
 
-        var result = await client.SearchAsync(Query, 0, CancellationToken.None);
+        var result = await client.SearchAsync(Query, 1, CancellationToken.None);
 
         result.Outcome.ShouldBe(JobSourceFetchOutcome.Ok);
         result.StatusCode.ShouldBe(200);
-        result.Value!.Count.ShouldBe(3);
+        result.Value!.Cards.Count.ShouldBe(3);
+        result.Value.HasMore.ShouldBeFalse();
         handler.Requests.Single().RequestUri!.AbsoluteUri
             .ShouldBe("https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=.net%20developer&location=t%C3%BCrkiye&f_TPR=r604800&start=0");
         handler.Requests.Single().Headers.UserAgent.ToString().ShouldStartWith("EKariyerimJobSource/1.0");
@@ -58,7 +59,7 @@ public class LinkedInJobSourceClientTests
         var handler = new ScriptedHandler(Status((HttpStatusCode)status), Ok("<ul></ul>"));
         var client = Build(handler);
 
-        var result = await client.SearchAsync(Query, 0, CancellationToken.None);
+        var result = await client.SearchAsync(Query, 1, CancellationToken.None);
 
         result.Outcome.ShouldBe(expected);
         result.StatusCode.ShouldBe(status);
@@ -74,7 +75,7 @@ public class LinkedInJobSourceClientTests
         var handler = new ScriptedHandler(Status(HttpStatusCode.ServiceUnavailable), Ok(LinkedInJobSourceFixtures.ThreeCards));
         var client = Build(handler);
 
-        var result = await client.SearchAsync(Query, 0, CancellationToken.None);
+        var result = await client.SearchAsync(Query, 1, CancellationToken.None);
 
         result.IsOk.ShouldBeTrue();
         handler.Requests.Count.ShouldBe(2);
@@ -86,7 +87,7 @@ public class LinkedInJobSourceClientTests
         var handler = new ScriptedHandler(Throw(), Throw(), Throw(), Ok("<ul></ul>"));
         var client = Build(handler);
 
-        var result = await client.SearchAsync(Query, 0, CancellationToken.None);
+        var result = await client.SearchAsync(Query, 1, CancellationToken.None);
 
         result.Outcome.ShouldBe(JobSourceFetchOutcome.Error);
         result.StatusCode.ShouldBeNull();
@@ -100,7 +101,7 @@ public class LinkedInJobSourceClientTests
         var handler = new ScriptedHandler(Redirect("https://www.linkedin.com/authwall?trk=x"), Ok("<ul></ul>"));
         var client = Build(handler);
 
-        var result = await client.SearchAsync(Query, 0, CancellationToken.None);
+        var result = await client.SearchAsync(Query, 1, CancellationToken.None);
 
         result.Outcome.ShouldBe(JobSourceFetchOutcome.Blocked);
         handler.Requests.Count.ShouldBe(1);
@@ -112,7 +113,7 @@ public class LinkedInJobSourceClientTests
         var handler = new ScriptedHandler(Redirect("https://evil.example/collect"), Ok("<ul></ul>"));
         var client = Build(handler);
 
-        var result = await client.SearchAsync(Query, 0, CancellationToken.None);
+        var result = await client.SearchAsync(Query, 1, CancellationToken.None);
 
         result.Outcome.ShouldBe(JobSourceFetchOutcome.Blocked);
         handler.Requests.Count.ShouldBe(1);
@@ -125,7 +126,7 @@ public class LinkedInJobSourceClientTests
             Ok(LinkedInJobSourceFixtures.ThreeCards));
         var client = Build(handler);
 
-        var result = await client.SearchAsync(Query, 0, CancellationToken.None);
+        var result = await client.SearchAsync(Query, 1, CancellationToken.None);
 
         result.IsOk.ShouldBeTrue();
         handler.Requests.Count.ShouldBe(2);

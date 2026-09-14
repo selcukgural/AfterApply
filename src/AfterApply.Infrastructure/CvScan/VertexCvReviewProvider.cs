@@ -1,37 +1,21 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Common;
 using AfterApply.Application.CvScan;
-using Google.Apis.Auth.OAuth2;
+using AfterApply.Infrastructure.Ai;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.CvScan;
 
 /// <summary>
-/// Layer B against Vertex AI (Gemini), over the REST endpoint of one pinned region.
-///
-/// Two things about this class are privacy decisions rather than engineering ones, and both are
-/// visible in the code on purpose:
-/// <list type="bullet">
-/// <item><b>The region is in the URL.</b> The host is
-/// <c>{location}-aiplatform.googleapis.com</c>, so a reader can see where a CV's text goes without
-/// consulting a console. Set to an EU region, which is where the rest of this product's data
-/// already lives — that is what lets the privacy policy say no new country is involved.</item>
-/// <item><b>The caller is us, not a key.</b> Authentication is Application Default Credentials —
-/// the Cloud Run runtime service account — so there is no API key to leak, rotate or accidentally
-/// log, and access is revoked by removing an IAM binding.</item>
-/// </list>
-///
-/// The REST endpoint is called directly rather than through Google.Cloud.AIPlatform.V1: this needs
-/// exactly one request shape, and the gRPC package carries the generated surface of all of Vertex
-/// for it. What is lost is typed request objects; what is kept is a dependency small enough that
-/// the request body above is the whole contract.
+/// Layer B against Vertex AI (Gemini), through the shared <see cref="VertexGenerateContentClient"/>
+/// — the region-in-the-URL and credentials-not-keys decisions are documented there. What is this
+/// class's own is the prompt, the schema, and the rule that an empty or unparseable answer is not
+/// an error.
 /// </summary>
 internal sealed class VertexCvReviewProvider(
-    IHttpClientFactory httpClientFactory,
+    IVertexGenerateContentClient vertex,
     IOptions<CvScanOptions> options,
     ILogger<VertexCvReviewProvider> logger)
     : ICvReviewProvider
@@ -96,55 +80,27 @@ internal sealed class VertexCvReviewProvider(
             ? request.Text[..settings.MaxInputCharacters]
             : request.Text;
 
-        var payload = new
+        VertexGenerateContentResult result;
+        try
         {
-            systemInstruction = new
-            {
-                parts = new[]
-                {
-                    new { text = SystemPrompt.Replace("{LOCALE}", request.Locale == "tr" ? "Turkish" : "English") }
-                }
-            },
-            contents = new[]
-            {
-                new { role = "user", parts = new[] { new { text = $"CV TEXT START\n{text}\nCV TEXT END" } } }
-            },
-            generationConfig = new
-            {
+            result = await vertex.GenerateAsync(new VertexGenerateContentCall(
+                CvScanOptions.ReviewHttpClientName, settings.ProjectId, settings.Location, settings.Model,
+                SystemPrompt.Replace("{LOCALE}", request.Locale == "tr" ? "Turkish" : "English"),
+                $"CV TEXT START\n{text}\nCV TEXT END",
+                ResponseSchema,
                 // Low rather than zero: the suggestions are prose and read like a form letter at
                 // zero, and nothing here is a measurement that reproducibility would protect.
-                temperature = 0.2,
-                maxOutputTokens = 1200,
-                responseMimeType = "application/json",
-                responseSchema = ResponseSchema
-            }
-        };
-
-        var client = httpClientFactory.CreateClient(CvScanOptions.ReviewHttpClientName);
-        client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
-
-        var url = $"https://{settings.Location}-aiplatform.googleapis.com/v1/projects/{settings.ProjectId}" +
-                  $"/locations/{settings.Location}/publishers/google/models/{settings.Model}:generateContent";
-
-        using var message = new HttpRequestMessage(HttpMethod.Post, url);
-        message.Content = JsonContent.Create(payload);
-        message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync(cancellationToken));
-
-        using var response = await client.SendAsync(message, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
+                Temperature: 0.2,
+                MaxOutputTokens: 1200,
+                TimeSpan.FromSeconds(settings.TimeoutSeconds)), cancellationToken);
+        }
+        catch (VertexGenerateContentException exception)
         {
-            // The status and nothing else. A Vertex error body can echo part of the request, and
-            // the request is somebody's CV — it must not reach a log line or Sentry.
-            throw new CodedException("CV_REVIEW_PROVIDER_ERROR",
-                $"Vertex AI returned {(int)response.StatusCode}.");
+            throw new CodedException("CV_REVIEW_PROVIDER_ERROR", exception.Message);
         }
 
-        var body = await response.Content.ReadFromJsonAsync<GenerateContentResponse>(ResponseJsonOptions,
-            cancellationToken);
-
-        var json = body?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
-        if (string.IsNullOrWhiteSpace(json))
+        var json = result.Text;
+        if (json is null)
         {
             // An empty or filtered answer is not an error: the model may have found nothing, or
             // safety filters may have stopped it. Either way the reader gets their score.
@@ -171,27 +127,6 @@ internal sealed class VertexCvReviewProvider(
             .Select(note => new CvContentNote(ParseKind(note.Kind), note.Quote ?? string.Empty,
                 note.Suggestion ?? string.Empty))
             .ToList() ?? [];
-    }
-
-    /// <summary>
-    /// The ambient credential, resolved once per process. Application Default Credentials means a
-    /// file read or a metadata-server call to discover, which is not something to repeat per scan;
-    /// the credential object then caches and refreshes the access token itself, so
-    /// <see cref="GetAccessTokenAsync"/> is a memory read for all but the first call of a token's
-    /// lifetime.
-    /// </summary>
-    private static readonly Lazy<Task<GoogleCredential>> Credential = new(async () =>
-    {
-        var credential = await GoogleCredential.GetApplicationDefaultAsync();
-        return credential.IsCreateScopedRequired
-            ? credential.CreateScoped("https://www.googleapis.com/auth/cloud-platform")
-            : credential;
-    });
-
-    private static async Task<string> GetAccessTokenAsync(CancellationToken cancellationToken)
-    {
-        var credential = await Credential.Value;
-        return await credential.UnderlyingCredential.GetAccessTokenForRequestAsync(cancellationToken: cancellationToken);
     }
 
     /// <summary>An unknown kind becomes the mildest one rather than throwing: the schema constrains
@@ -237,12 +172,4 @@ internal sealed class VertexCvReviewProvider(
     private sealed record NotesPayload([property: JsonPropertyName("notes")] List<NotePayload>? Notes);
 
     private sealed record NotePayload(string? Kind, string? Quote, string? Suggestion);
-
-    private sealed record GenerateContentResponse(List<Candidate>? Candidates);
-
-    private sealed record Candidate(Content? Content);
-
-    private sealed record Content(List<Part>? Parts);
-
-    private sealed record Part(string? Text);
 }

@@ -9,6 +9,7 @@ using AfterApply.Domain.EmailIntegrations;
 using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
+using AfterApply.Domain.Ai;
 using AfterApply.Domain.JobSources;
 using AfterApply.Domain.Mailing;
 using AfterApply.Domain.Metrics;
@@ -96,6 +97,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<UserJobSourceRun> UserJobSourceRuns => Set<UserJobSourceRun>();
 
     public DbSet<ProEntitlement> ProEntitlements => Set<ProEntitlement>();
+
+    public DbSet<AiUsageEntry> AiUsageEntries => Set<AiUsageEntry>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

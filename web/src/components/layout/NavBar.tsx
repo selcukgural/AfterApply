@@ -15,6 +15,7 @@ import { displayName } from "@/lib/auth/displayName";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { TOOL_LINKS, ToolsMenu } from "@/components/layout/ToolsMenu";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
+import { useClientConfig } from "@/hooks/useClientConfig";
 
 const NAV_LINKS = [
   { href: "/dashboard", key: "dashboard" },
@@ -40,7 +41,14 @@ export function NavBar() {
   const t = useTranslations("nav");
   const { data: suggestionCount } = useSuggestionCount();
   const { data: notificationCount } = useNotificationCount();
+  const { config } = useClientConfig();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // The paid weekly job matching ships dark (JobSources:Enabled); its link appears only when the
+  // server says the routes exist, the same rule as the company pages' flag.
+  const navLinks = config.jobSources?.enabled
+    ? [...NAV_LINKS.slice(0, 3), { href: "/weekly-jobs", key: "weeklyJobs" } as const, ...NAV_LINKS.slice(3)]
+    : NAV_LINKS;
 
   const handleLogout = async () => {
     await logout();
@@ -102,7 +110,7 @@ export function NavBar() {
             <Logo />
           </Link>
           <nav className="hidden items-center gap-4 text-sm md:flex">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -152,7 +160,7 @@ export function NavBar() {
       {menuOpen && (
         <div id="app-mobile-menu" className="border-t border-gray-200 px-4 py-4 md:hidden dark:border-gray-800">
           <nav className="flex flex-col gap-1 text-sm">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

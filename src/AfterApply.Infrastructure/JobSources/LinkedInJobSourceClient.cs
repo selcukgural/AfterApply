@@ -1,3 +1,4 @@
+using AfterApply.Domain.Common;
 using System.Diagnostics;
 using System.Net;
 using AfterApply.Application.JobSources;
@@ -21,26 +22,71 @@ namespace AfterApply.Infrastructure.JobSources;
 /// hand (the handler has <c>AllowAutoRedirect=false</c>) and only to <c>*.linkedin.com</c>, and
 /// the body is read up to a cap — a search page is ~30 KB and a posting ~35 KB.
 /// </summary>
-public sealed class LinkedInJobSourceClient(HttpClient httpClient, IOptions<JobSourceOptions> options) : ILinkedInJobSourceClient
+public sealed class LinkedInJobSourceClient(HttpClient httpClient, IOptions<JobSourceOptions> options)
+    : JobSourceHttpClient(httpClient, options), ILinkedInJobSourceClient
 {
-    private const int MaxRedirectHops = 5;
-    private const int MaxBodyChars = 200_000;
     private const string LinkedInHost = "linkedin.com";
     private const HttpStatusCode LinkedInRequestDenied = (HttpStatusCode)999;
 
-    public Task<JobSourceFetchResult<IReadOnlyList<JobSourceCard>>> SearchAsync(JobSourceQuery query, int start, CancellationToken cancellationToken)
+    public Source Source => Source.LinkedIn;
+
+    public Task<JobSourceFetchResult<JobSourceSearchPage>> SearchAsync(JobSourceQuery query, int page, CancellationToken cancellationToken)
     {
-        var uri = LinkedInJobSearchUrlBuilder.Search(query.Keywords, query.Location, query.TimeWindow, query.RemoteOnly, start);
-        return FetchAsync(uri, html => (IReadOnlyList<JobSourceCard>)LinkedInJobSearchCardParser.Parse(html), cancellationToken);
+        var uri = LinkedInJobSearchUrlBuilder.Search(query.Keywords, query.Location, query.TimeWindow, query.RemoteOnly,
+            (page - 1) * LinkedInJobSearchUrlBuilder.PageSize);
+        return FetchAsync(uri, (html, _) =>
+        {
+            var cards = LinkedInJobSearchCardParser.Parse(html);
+            // A full page means there may be another; a short one is the end of the list.
+            return new JobSourceSearchPage(cards, cards.Count >= LinkedInJobSearchUrlBuilder.PageSize);
+        }, cancellationToken);
     }
 
     public Task<JobSourceFetchResult<JobSourceDetail>> GetPostingAsync(string externalId, CancellationToken cancellationToken)
     {
         var uri = LinkedInJobSearchUrlBuilder.Posting(externalId);
-        return FetchAsync(uri, LinkedInJobPostingParser.Parse, cancellationToken);
+        return FetchAsync(uri, (html, _) => LinkedInJobPostingParser.Parse(html), cancellationToken);
     }
 
-    private async Task<JobSourceFetchResult<T>> FetchAsync<T>(Uri uri, Func<string, T> parse, CancellationToken cancellationToken)
+    protected override bool IsAllowedHost(Uri uri) =>
+        uri.Scheme == Uri.UriSchemeHttps
+        && (uri.Host.Equals(LinkedInHost, StringComparison.OrdinalIgnoreCase)
+            || uri.Host.EndsWith("." + LinkedInHost, StringComparison.OrdinalIgnoreCase));
+
+    protected override bool IsWall(Uri uri) =>
+        uri.AbsolutePath.StartsWith("/authwall", StringComparison.OrdinalIgnoreCase)
+        || uri.AbsolutePath.StartsWith("/login", StringComparison.OrdinalIgnoreCase)
+        || uri.AbsolutePath.StartsWith("/uas/login", StringComparison.OrdinalIgnoreCase)
+        || uri.AbsolutePath.StartsWith("/checkpoint", StringComparison.OrdinalIgnoreCase);
+
+    protected override bool IsDenied(HttpStatusCode status) => status is HttpStatusCode.Forbidden or LinkedInRequestDenied;
+}
+
+/// <summary>
+/// The fetch loop every job-source client shares: plain GET with the honest User-Agent, no
+/// cookies, redirects followed by hand (the handler has <c>AllowAutoRedirect=false</c>) and only
+/// onto the source's own hosts, the body read up to a cap, and every response turned into an
+/// outcome — 429 is RateLimited, the source's "go away" statuses and a redirect off-site or
+/// onto a login wall are Blocked, transport trouble is Error. Which hosts, which wall and which
+/// statuses are the subclass's.
+/// </summary>
+public abstract class JobSourceHttpClient(HttpClient httpClient, IOptions<JobSourceOptions> options)
+{
+    private const int MaxRedirectHops = 5;
+
+    /// <summary>How much of a body is read. A LinkedIn fragment is ~30 KB; a kariyer.net listing
+    /// is a whole Vue page whose cards end around 320 KB, followed by a state blob nobody needs.</summary>
+    protected virtual int MaxBodyChars => 200_000;
+
+    protected abstract bool IsAllowedHost(Uri uri);
+
+    protected abstract bool IsWall(Uri uri);
+
+    protected abstract bool IsDenied(HttpStatusCode status);
+
+    /// <param name="parse">Gets the body and the URL it was finally served from, which a site
+    /// that answers an unknown filter with a redirect elsewhere makes worth looking at.</param>
+    protected async Task<JobSourceFetchResult<T>> FetchAsync<T>(Uri uri, Func<string, Uri, T> parse, CancellationToken cancellationToken)
         where T : class
     {
         var stopwatch = Stopwatch.StartNew();
@@ -58,7 +104,7 @@ public sealed class LinkedInJobSourceClient(HttpClient httpClient, IOptions<JobS
                 if (IsRedirect(status) && response.Headers.Location is { } location)
                 {
                     var nextUri = location.IsAbsoluteUri ? location : new Uri(currentUri, location);
-                    if (!IsLinkedIn(nextUri) || IsWall(nextUri))
+                    if (!IsAllowedHost(nextUri) || IsWall(nextUri))
                     {
                         // Off-site, or onto the login wall: both mean "not for you".
                         return Result<T>(JobSourceFetchOutcome.Blocked, status, stopwatch);
@@ -71,15 +117,12 @@ public sealed class LinkedInJobSourceClient(HttpClient httpClient, IOptions<JobS
                 if (response.IsSuccessStatusCode)
                 {
                     var html = await ReadCappedAsync(response, cancellationToken);
-                    return Result(JobSourceFetchOutcome.Ok, status, stopwatch, parse(html));
+                    return Result(JobSourceFetchOutcome.Ok, status, stopwatch, parse(html, currentUri));
                 }
 
-                return Result<T>(status switch
-                {
-                    HttpStatusCode.TooManyRequests => JobSourceFetchOutcome.RateLimited,
-                    HttpStatusCode.Forbidden or LinkedInRequestDenied => JobSourceFetchOutcome.Blocked,
-                    _ => JobSourceFetchOutcome.Error
-                }, status, stopwatch);
+                return Result<T>(status == HttpStatusCode.TooManyRequests ? JobSourceFetchOutcome.RateLimited
+                    : IsDenied(status) ? JobSourceFetchOutcome.Blocked
+                    : JobSourceFetchOutcome.Error, status, stopwatch);
             }
 
             return Result<T>(JobSourceFetchOutcome.Error, null, stopwatch);
@@ -98,7 +141,7 @@ public sealed class LinkedInJobSourceClient(HttpClient httpClient, IOptions<JobS
         T? value = null) where T : class =>
         new(outcome, status is null ? null : (int)status, (int)Math.Min(stopwatch.ElapsedMilliseconds, int.MaxValue), value);
 
-    private static async Task<string> ReadCappedAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<string> ReadCappedAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new StreamReader(stream);
@@ -110,15 +153,4 @@ public sealed class LinkedInJobSourceClient(HttpClient httpClient, IOptions<JobS
     private static bool IsRedirect(HttpStatusCode status) =>
         status is HttpStatusCode.Moved or HttpStatusCode.Found or HttpStatusCode.SeeOther
             or HttpStatusCode.TemporaryRedirect or HttpStatusCode.PermanentRedirect;
-
-    private static bool IsLinkedIn(Uri uri) =>
-        uri.Scheme == Uri.UriSchemeHttps
-        && (uri.Host.Equals(LinkedInHost, StringComparison.OrdinalIgnoreCase)
-            || uri.Host.EndsWith("." + LinkedInHost, StringComparison.OrdinalIgnoreCase));
-
-    private static bool IsWall(Uri uri) =>
-        uri.AbsolutePath.StartsWith("/authwall", StringComparison.OrdinalIgnoreCase)
-        || uri.AbsolutePath.StartsWith("/login", StringComparison.OrdinalIgnoreCase)
-        || uri.AbsolutePath.StartsWith("/uas/login", StringComparison.OrdinalIgnoreCase)
-        || uri.AbsolutePath.StartsWith("/checkpoint", StringComparison.OrdinalIgnoreCase);
 }
