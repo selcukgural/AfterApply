@@ -1,4 +1,4 @@
-import type { EmailSuggestionResponse, SuggestionCountResponse } from "@/types/api";
+import type { EmailSuggestionResponse, GmailScanStatusResponse, SuggestionCountResponse } from "@/types/api";
 import { apiFetch } from "./httpClient";
 
 export const emailForwardingApi = {
@@ -7,6 +7,9 @@ export const emailForwardingApi = {
 
   getPendingSuggestionCount: () =>
     apiFetch<SuggestionCountResponse>("/api/email-forwarding/suggestions/count"),
+
+  getGmailScanStatus: () =>
+    apiFetch<GmailScanStatusResponse>("/api/email-forwarding/gmail-scan-status"),
 
   confirmSuggestion: (id: string) =>
     apiFetch<void>(`/api/email-forwarding/suggestions/${id}/confirm`, { method: "POST" }),

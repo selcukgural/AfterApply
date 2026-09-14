@@ -11,6 +11,8 @@ import { buttonClassName } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Link } from "@/i18n/navigation";
 import { notificationCountQueryKey } from "@/hooks/useNotificationCount";
+import { useGmailScanStatus } from "@/hooks/useGmailScanStatus";
+import { resolveGmailEmptyState } from "@/lib/emailSuggestions/emptyState";
 
 export default function NotificationsPage() {
   const t = useTranslations("notifications");
@@ -21,6 +23,7 @@ export default function NotificationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [revertingId, setRevertingId] = useState<string | null>(null);
   const [revertedIds, setRevertedIds] = useState<string[]>([]);
+  const gmailScanStatus = useGmailScanStatus();
 
   // Undoing removes the row's reason to offer the button again, but the notification itself stays:
   // "this was applied, then you took it back" is still the honest history of what happened.
@@ -62,15 +65,19 @@ export default function NotificationsPage() {
       {notifications === null ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
       ) : notifications.length === 0 ? (
-        <EmptyState
-          title={t("empty")}
-          body={t("emptyBody")}
-          actions={
-            <Link href="/help/chrome-extension#gmail" className={buttonClassName("outline")}>
-              {t("emptyCta")}
-            </Link>
-          }
-        />
+        resolveGmailEmptyState(gmailScanStatus.data) === "waitingForEmail" ? (
+          <EmptyState title={t("empty")} body={t("emptyBodyScanning")} />
+        ) : (
+          <EmptyState
+            title={t("empty")}
+            body={t("emptyBody")}
+            actions={
+              <Link href="/help/chrome-extension#gmail" className={buttonClassName("outline")}>
+                {t("emptyCta")}
+              </Link>
+            }
+          />
+        )
       ) : (
         <ul className="flex flex-col gap-4">
           {notifications.map((n) => (

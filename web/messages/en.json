@@ -896,7 +896,8 @@
       "Other": "Other"
     },
     "emptyBody": "Suggestions come from the hiring emails you open in your inbox while Gmail Scanning is on in the Chrome extension. If you haven't turned scanning on, nothing shows up here.",
-    "emptyCta": "Turn on Gmail Scanning"
+    "emptyCta": "Turn on Gmail Scanning",
+    "emptyBodyScanning": "Gmail Scanning is already talking to this account. When a hiring email you open in your inbox produces a suggestion, it shows up here."
   },
   "notifications": {
     "title": "Notifications",
@@ -916,7 +917,8 @@
     "revertError": "Couldn't undo it. Please try again.",
     "revertConflict": "This application's status has changed since, so nothing was undone.",
     "emptyBody": "When you confirm an email suggestion, or one is applied on its own, the record lands here. Both need Gmail Scanning to be on in the Chrome extension.",
-    "emptyCta": "Turn on Gmail Scanning"
+    "emptyCta": "Turn on Gmail Scanning",
+    "emptyBodyScanning": "Gmail Scanning is already talking to this account. When you confirm a suggestion, or one is applied on its own, the record lands here."
   },
   "privacy": {
     "title": "Privacy Policy",

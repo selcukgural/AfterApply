@@ -210,12 +210,14 @@ export default function AdminReviewsPage() {
                 >
                   <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{item.companyName}</td>
                   <td className="max-w-[16rem] truncate px-4 py-2 text-gray-700 dark:text-gray-300">{item.title}</td>
-                  <td className="px-4 py-2">{item.overallRating}</td>
+                  <td className="px-4 py-2 tabular-nums text-gray-900 dark:text-gray-100">{item.overallRating}</td>
                   <td className="px-4 py-2">
                     <ReviewStatusBadge status={item.status} />
                   </td>
                   <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{formatDate(item.submittedAt)}</td>
-                  <td className="px-4 py-2">{item.openReportCount > 0 ? item.openReportCount : "—"}</td>
+                  <td className="px-4 py-2 tabular-nums text-gray-900 dark:text-gray-100">
+                    {item.openReportCount > 0 ? item.openReportCount : <span className="text-gray-400 dark:text-gray-500">—</span>}
+                  </td>
                 </tr>
               ))}
             </tbody>

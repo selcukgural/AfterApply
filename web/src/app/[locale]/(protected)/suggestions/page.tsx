@@ -11,6 +11,8 @@ import { Button, buttonClassName } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Link } from "@/i18n/navigation";
 import { suggestionCountQueryKey } from "@/hooks/useSuggestionCount";
+import { useGmailScanStatus } from "@/hooks/useGmailScanStatus";
+import { resolveGmailEmptyState } from "@/lib/emailSuggestions/emptyState";
 
 export default function EmailSuggestionsPage() {
   const t = useTranslations("emailSuggestions");
@@ -20,6 +22,7 @@ export default function EmailSuggestionsPage() {
   const [suggestions, setSuggestions] = useState<EmailSuggestionResponse[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const gmailScanStatus = useGmailScanStatus();
 
   useEffect(() => {
     emailForwardingApi
@@ -66,15 +69,19 @@ export default function EmailSuggestionsPage() {
       {suggestions === null ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
       ) : suggestions.length === 0 ? (
-        <EmptyState
-          title={t("empty")}
-          body={t("emptyBody")}
-          actions={
-            <Link href="/help/chrome-extension#gmail" className={buttonClassName("outline")}>
-              {t("emptyCta")}
-            </Link>
-          }
-        />
+        resolveGmailEmptyState(gmailScanStatus.data) === "waitingForEmail" ? (
+          <EmptyState title={t("empty")} body={t("emptyBodyScanning")} />
+        ) : (
+          <EmptyState
+            title={t("empty")}
+            body={t("emptyBody")}
+            actions={
+              <Link href="/help/chrome-extension#gmail" className={buttonClassName("outline")}>
+                {t("emptyCta")}
+              </Link>
+            }
+          />
+        )
       ) : (
         <ul className="flex flex-col gap-4">
           {suggestions.map((s) => (

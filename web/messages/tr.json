@@ -896,7 +896,8 @@
       "Other": "Diğer"
     },
     "emptyBody": "Öneriler, Chrome eklentisinde Gmail Taraması açıkken gelen kutunda açtığın işe alım e-postalarından üretilir. Taramayı açmadıysan burada bir şey görünmez.",
-    "emptyCta": "Gmail Taraması'nı aç"
+    "emptyCta": "Gmail Taraması'nı aç",
+    "emptyBodyScanning": "Gmail Taraması bu hesapla çalışıyor. Gelen kutunda açtığın yeni bir işe alım e-postası öneri ürettiğinde burada görünür."
   },
   "notifications": {
     "title": "Bildirimler",
@@ -916,7 +917,8 @@
     "revertError": "Geri alınamadı. Lütfen tekrar dene.",
     "revertConflict": "Bu başvurunun durumu o zamandan beri değişmiş, geri alınmadı.",
     "emptyBody": "Bir e-posta önerisini onayladığında ya da bir öneri kendiliğinden uygulandığında burada kaydı kalır. Bunlar için Chrome eklentisinde Gmail Taraması'nın açık olması gerekir.",
-    "emptyCta": "Gmail Taraması'nı aç"
+    "emptyCta": "Gmail Taraması'nı aç",
+    "emptyBodyScanning": "Gmail Taraması bu hesapla çalışıyor. Bir öneriyi onayladığında ya da bir öneri kendiliğinden uygulandığında kaydı burada kalır."
   },
   "privacy": {
     "title": "Gizlilik Politikası",

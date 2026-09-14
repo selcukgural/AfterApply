@@ -124,11 +124,11 @@ export default function AdminReportsPage() {
                     {t("resolve")}
                   </Button>
                 ) : (
-                  <span className="text-xs text-gray-500">{tResolutions(report.resolution ?? "Dismissed")}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{tResolutions(report.resolution ?? "Dismissed")}</span>
                 )}
               </div>
               {report.note && <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">{report.note}</p>}
-              {report.resolutionReason && <p className="text-xs text-gray-500">{report.resolutionReason}</p>}
+              {report.resolutionReason && <p className="text-xs text-gray-500 dark:text-gray-400">{report.resolutionReason}</p>}
             </li>
           ))}
         </ul>

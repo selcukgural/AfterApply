@@ -180,6 +180,38 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GmailScanStatus_Returns_NotFound_When_Flag_Disabled()
+    {
+        var response = await _disabledClient.GetAsync("/api/email-forwarding/gmail-scan-status");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GmailScanStatus_Flips_Once_The_Extension_Has_Delivered_A_Signal()
+    {
+        // A user of its own: the fixture's shared users receive signals in other tests, and xunit
+        // does not promise their order, so "no signal yet" can only be asserted on a fresh account.
+        var client = _factory!.CreateClient();
+        var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
+            new RegisterRequest("email-signal.scan-status@example.com", "P@ssw0rd123!", "Signal", "Test", true), JsonOptions);
+        registerResponse.EnsureSuccessStatusCode();
+        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
+
+        var before = await client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/gmail-scan-status", JsonOptions);
+        before.GetProperty("hasReceivedSignal").GetBoolean().ShouldBeFalse();
+
+        // No matching application on purpose: the status is about the extension having talked to
+        // us at all, not about whether that produced a suggestion.
+        await SendExtensionSignalAsync("recruiter@scan-status-test.com", "Scan Status Test Recruiting",
+            "Interview invitation", "We'd like to invite you to an interview.", "thread-scan-status-1", client);
+
+        var after = await client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/gmail-scan-status", JsonOptions);
+        after.GetProperty("hasReceivedSignal").GetBoolean().ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task SuggestionCount_Reflects_Pending_Suggestions_And_Drops_After_Confirm()
     {
         await CreateApplicationAsync("Acme Count Test");
