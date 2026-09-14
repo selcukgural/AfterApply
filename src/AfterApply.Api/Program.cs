@@ -4,10 +4,13 @@ using AfterApply.Api;
 using AfterApply.Api.Endpoints;
 using AfterApply.Api.ExceptionHandling;
 using AfterApply.Api.Imports;
+using AfterApply.Api.Middleware;
+using AfterApply.Application.Auditing;
 using AfterApply.Application.Imports;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
+using AfterApply.Infrastructure.Auditing;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
 using Hangfire;
@@ -134,6 +137,10 @@ if (app.Services.GetRequiredService<IOptions<RateLimitingOptions>>().Value.Enabl
     app.UseRateLimiter();
 }
 
+// After the rate limiter and before any endpoint: every write under /api leaves a row with the
+// caller's IP (RequestAudits). See the middleware for what is and is not recorded.
+app.UseMiddleware<RequestAuditMiddleware>();
+
 app.MapHealthChecks("/health");
 app.MapClientConfigEndpoints();
 app.MapAuthEndpoints();
@@ -174,6 +181,12 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "product-metrics-snapshot",
         service => service.ComputeSnapshotAsync(CancellationToken.None),
         metricsOptions.SnapshotCronExpression);
+
+    var requestAuditOptions = scope.ServiceProvider.GetRequiredService<IOptions<RequestAuditOptions>>().Value;
+    recurringJobManager.AddOrUpdate<IRequestAuditRetentionService>(
+        "request-audit-purge",
+        service => service.PurgeAnonymousAsync(CancellationToken.None),
+        requestAuditOptions.PurgeCronExpression);
 }
 
 app.Run();

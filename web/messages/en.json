@@ -936,7 +936,7 @@
       "recipient": "Recipient: Sentry (Functional Software, Inc.). The records are processed on Sentry's European Union (Germany) infrastructure.",
       "legalBasis": "Legal basis: legitimate interest — keeping the service secure and available, and finding and fixing faults.",
       "limits": "We deliberately keep session replay and performance tracing switched off: your screen is not recorded, your browsing behaviour is not tracked, and your form contents are not sent. Your application data, your CV and email contents are never included in an error record.",
-      "retention": "Error records are deleted when Sentry's retention period expires; they are never written to the product's own database."
+      "retention": "Error records are deleted when Sentry's retention period expires; the error records themselves are never written to the product's own database. (The one place the product's database does keep your IP address is the \"Request log\" item above.)"
     },
     "visitCounter": {
       "title": "Visit counter",
@@ -956,8 +956,9 @@
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
-      "outro": "This data is used solely to provide you with application tracking and personal analytics features.",
-      "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link."
+      "outro": "Apart from the request log, this data is used solely to provide you with application tracking and personal analytics features; the request log serves only the security and legal purposes listed above.",
+      "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link.",
+      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\")."
     },
     "googleSignIn": {
       "title": "Sign in with Google",
@@ -1007,13 +1008,13 @@
     },
     "retention": {
       "title": "Retention period",
-      "body": "Your data is kept until you delete your account. No automatic time-based deletion is applied."
+      "body": "Data tied to your account is kept until you delete your account; no automatic time-based deletion is applied to it. The one exception is request-log entries that belong to no account (an anonymous CV scan, a benchmark answer, a failed sign-in attempt): those are deleted automatically after 12 months."
     },
     "rights": {
       "title": "Your rights",
       "before": "You can export a copy of your data or permanently delete your account at any time. You can do this from the",
       "link": "Account Settings",
-      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent."
+      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
     },
     "notApplicable": {
       "title": "Not currently applicable",
@@ -1038,7 +1039,7 @@
       "title": "CV scan (without signing in)",
       "intro": "On the public CV scan page you can upload a PDF or Word file and see what an applicant tracking system reads from it. This is separate from, and different to, \"CVs you upload\" above:",
       "noStorage": "The file is not stored anywhere. It is never written to disk on the server and never placed in storage; it exists in memory for the length of the request and is gone once the response is sent. The text of your CV is not kept either.",
-      "retained": "Three things survive a scan: your IP address, to enforce the scan limit (deleted after 2 hours), an anonymous score (a number from 0 to 100, with no record of which file it came from or whose it was), and a scan counter.",
+      "retained": "Three things survive a scan: your IP address (in memory for 2 hours to enforce the scan limit; and, as the security record described under \"Request log\" above, for 12 months — never linked to the score), an anonymous score (a number from 0 to 100, with no record of which file it came from or whose it was), and a scan counter.",
       "noTransfer": "All seven checks behind the score run on our own server: the score is never asked of an AI model, so it cannot be inflated by an instruction written inside the CV. Unless you tick the optional box, the contents of your CV are not sent to any third party.",
       "contentNotes": "If you ask for notes on the writing (the second, optional box): the text of your CV is sent to Google Cloud Vertex AI — in the EU region our infrastructure already runs in, with the same processor; no new country is involved. It goes through paid Vertex, which does not train on the content. The notes do not affect the score, the text is still stored nowhere, and with the box unticked no model is involved at all.",
       "output": "The excerpts and the raw text you see on the result screen exist only inside the response to your own request; they are not recorded and never written to logs.",
@@ -2058,7 +2059,7 @@
       },
       "calloutPrivacy": {
         "title": "What happens to your file",
-        "body": "The file is never stored; it lives in memory only for the duration of the request. The score is computed on our server and no AI model is asked for it. Only if you tick the optional writing-notes box is the CV text sent to Google Cloud Vertex AI, and it is not kept there either. What remains: your IP address (2 hours, for the scan limit), an anonymous score and a counter. Details are in the \"CV scan\" section of the privacy policy."
+        "body": "The file is never stored; it lives in memory only for the duration of the request. The score is computed on our server and no AI model is asked for it. Only if you tick the optional writing-notes box is the CV text sent to Google Cloud Vertex AI, and it is not kept there either. What remains: your IP address (in memory for 2 hours for the scan limit; as a security record for 12 months, never linked to the score), an anonymous score and a counter. Details are in the \"CV scan\" section of the privacy policy."
       },
       "calloutRateLimit": {
         "title": "Scan limit",
@@ -2095,7 +2096,7 @@
       },
       "calloutAnonymous": {
         "title": "No identity is kept",
-        "body": "No email, no IP address, no cookie. Fields come from fixed lists; nothing beyond your two numbers and your choices is stored."
+        "body": "No email, no cookie, and no IP address on your answer's row. Your IP address is kept only in a separate security record of each submission, for 12 months, and is never linked to your answer. Fields come from fixed lists; nothing beyond your two numbers and your choices is stored."
       },
       "calloutSignedIn": {
         "title": "If you have an account",
@@ -2360,7 +2361,7 @@
       "source": "Entirely from what people filling in this form report about themselves. It is not mixed with the application data the product collects — one is self-reported, the other measured, and pooling them into one average would corrupt the figure.",
       "median": "We use the median, not the mean. Answers are anonymous, so one person can answer more than once and an extreme value can be sent deliberately; a median barely moves under either, a mean is at their mercy.",
       "recency": "Answers covering a short period tend to read low: applications sent recently may not have had time to be answered yet.",
-      "privacy": "No identifier is stored — no email, no IP address, no cookie. Every field is picked from a fixed list; no free text is collected.",
+      "privacy": "No identifier is stored — no email, no cookie, no IP on your answer's row. Your IP address is kept only in a separate security record for 12 months and is never linked to your answer. Every field is picked from a fixed list; no free text is collected.",
       "threshold": "A field's median is not shown until it holds at least {minimum} answers."
     },
     "cta": {
@@ -2398,7 +2399,7 @@
     },
     "retained": {
       "title": "What this scan leaves behind",
-      "ip": "Your IP address, for 2 hours — only to enforce the scan limit, then deleted.",
+      "ip": "Your IP address: in memory for 2 hours for the scan limit; and as a security record for 12 months — never linked to your score.",
       "score": "Your score, anonymously — it feeds the distribution shown in results; no file, no text, no identifier.",
       "counter": "A scan counter.",
       "none": "The file itself and the text inside it are in none of them."

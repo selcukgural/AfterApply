@@ -96,6 +96,27 @@ On each change, check the categories it actually touches:
 
 Flag anything you can't fix inside the change's scope rather than leaving it silent.
 
+# Request audit (remote IP)
+
+Kullanıcıdan girdi alınan **her** istekte bağlantının uzak IP'si veritabanına yazılır
+(`RequestAudits`), **hiçbir yerde gösterilmez**. Standing kural (DECISIONS.md 2026-09-14): hukuki
+bir talep ya da kötüye kullanım incelemesi için tutulur, başka hiçbir şey için okunmaz.
+
+- **Mekanizma otomatik:** `RequestAuditMiddleware` her POST/PUT/PATCH/DELETE `/api/*` isteğine
+  bir satır bırakır. Yeni bir endpoint yazarken yapılacak bir şey yok — sadece `WithoutRequestAudit()`
+  **çağırma**. Opt-out bir gizlilik beyanıdır: call-site'ta gerekçe yorumu, `DECISIONS.md` satırı ve
+  `RequestAuditTests`'teki allowlist aynı değişiklikte güncellenir; aksi hâlde test kırılır.
+- **Endpoint olmayan girdi yolları** (SignalR hub metodu, e-postayla gelen içerik, ileride bir
+  webhook) middleware'in dışındadır — girdi alıyorsa `RequestAudit` satırını kendisi yazar.
+- **IP asla dışarı çıkmaz:** API yanıtı, `/api/users/me/export`, admin ekranı, log satırı,
+  Sentry/telemetri — hiçbirine. Yeni bir yanıt tipine "kolay olur" diye IP alanı ekleme.
+- **Yeni anonim girdi yüzeyi** açarken gizlilik metnindeki ilgili "IP" cümlesi (`privacy.*`,
+  yardım merkezi, sayfanın kendi listesi) aynı değişiklikte güncellenir — 2026-09-14'te CV tarama
+  ve benchmark için yapıldığı gibi.
+- Hesaba bağlı satırlar hesapla cascade; anonim satırlar `request-audit-purge` ile 12 ay sonra
+  silinir (`RequestAudit:AnonymousRetentionDays`). Süreyi değiştirirsen gizlilik metnindeki "12 ay"
+  da değişir.
+
 # Chrome extension release policy
 
 A change under `extension/` is a release, not just a code edit. In the same change:

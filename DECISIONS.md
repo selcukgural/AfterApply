@@ -6080,3 +6080,57 @@ değil; `SiteHeader` girişliyse `<NavBar />` döner ve `goToDashboard` içermez
 tsc temiz. Tarayıcıda: `/companies` ve `/guide` girişli hâlde uygulama menüsüyle, Araçlar menüsü
 açılıyor/kapanıyor, `/guide`'da tetikleyici aktif. **Yardım merkezi ekran görüntüleri** (uygulama
 başlığını gösterenler) artık bir "Araçlar" öğesi eksik — bu partide yeniden çekilmedi, ayrı iş.
+
+---
+
+## Kullanıcı girdisi alınan her istekte uzak IP kaydı: `RequestAudits` (2026-09-14)
+
+**Neden:** "Şirket değerlendirmesi giren kişinin e-posta ve IP'sini tutuyor muyuz?" sorusunun
+cevabı: e-posta dolaylı olarak evet (`UserId` → `Users.Email`), IP hayır. IP'nin kalıcı tutulduğu
+tek yer `RefreshTokens.CreatedByIp` idi (giriş/kayıt/rotasyon). Kullanıcı kararı: hukuki bir
+talep ya da kötüye kullanım incelemesinde işe yarasın diye **kullanıcıdan girdi alınan her
+istekte** bağlantının IP'si veritabanına yazılsın, **hiçbir yerde gösterilmesin** ve bu bundan
+sonraki her geliştirme için standing kural olsun (`CLAUDE.md` "Request audit").
+
+**Kararlar:**
+- **Tek tablo + otomatik middleware, entity başına sütun değil.** `RequestAudits`
+  (`UserId?`, `Method`, `Path`, `StatusCode`, `IpAddress`, `At`); `RequestAuditMiddleware`
+  rate limiter'dan sonra, endpoint'lerden önce. Her POST/PUT/PATCH/DELETE `/api/*` isteği,
+  handler çalıştıktan sonra ürettiği statüyle (400/401/409 dahil — reddedilen değerlendirme,
+  başarısız giriş de sinyal) bir satır bırakır. Yeni bir endpoint yazan kimsenin hatırlaması
+  gerekmez; kapsam kendiliğinden genişler. Body, query string, user-agent tutulmaz — sadece IP.
+  Yazma hatası isteği düşürmez, IP'siz loglanır.
+- **Kimin yazdığı:** JWT ve PAT'in ortak `sub` claim'i. Girişsiz endpoint'lerde (login, register)
+  `UserId` null — başarılı girişte IP→hesap bağı zaten `RefreshTokens.CreatedByIp`'de.
+- **Silme: hesapla cascade.** `UserId` nullable shadow FK (`ApplicationConfiguration` idiomu);
+  hesap silinince o hesabın satırları gider, gizlilik metnindeki "tüm veri" cümleleri doğru
+  kalır. Hesaba bağlı olmayan satırlar (girişsiz CV tarama, benchmark, başarısız giriş) hiçbir
+  cascade'e ulaşmadığından **12 ay** sonra `request-audit-purge` Hangfire job'ı siler
+  (`RequestAudit:AnonymousRetentionDays`, 5651'in 1–2 yıl bandının içinde). Kullanıcı
+  "hesapla birlikte silinsin"i seçti; anonim satır temizliği bunun zorunlu tamamlayıcısı.
+- **Opt-out yalnızca dört route**, her biri kod içinde gerekçeli, `RequestAuditTests` allowlist'i
+  tam kümeyi sabitliyor:
+  `/api/site-traffic/events` (sayfa görüntüleme girdi değil; Çerez Politikası "IP yok" der —
+  kullanıcı kararı), `/api/extension-pairing/requests` ve `/poll` (girdi yok, poll saniyede bir
+  tekrar eder, eklenti gizlilik politikasının "bu isteklerde kişisel veri yok" cümlesi doğru
+  kalır; approve/deny kapsamda), `/api/auth/refresh` (otomatik rotasyon, IP zaten
+  `RefreshTokens`'ta hesaba bağlı).
+- **Hiçbir yerde gösterilmez:** `/api/users/me/export`'a **girmez** (KVKK m.11 erişim talebi
+  privacy@ekariyerim.com üzerinden, elle); admin yüzeyi yok; log'a IP yazılmaz. Kullanıcı
+  "export'a ekleme" seçeneğini seçti.
+- **Kapsam:** CV taraması ve benchmark **dahil** (gerçek girdi), ziyaret sayacı **hariç**.
+  Bu yüzden 2026-09-10 CV tarama girişindeki "IP yalnızca bellekteki hız sınırlayıcının
+  penceresinde yaşıyor" ve benchmark'ın "IP kaydedilmez" cümleleri **bu girişle geçersiz**;
+  `/privacy#cv-scan`, CV tarama sayfası, yardım merkezi ve benchmark metinleri TR+EN yeniden
+  yazıldı ("2 saat bellekte + güvenlik kaydı olarak 12 ay, puanla/yanıtla ilişkilendirilmez").
+  Gizlilik politikasına "İşlem kayıtları" maddesi, saklama süresine anonim-12-ay istisnası,
+  haklar bölümüne "export'ta yok, talep üzerine" cümlesi eklendi. `RefreshToken.CreatedByIp`
+  böylece ilk kez gizlilik metninde anılmış oldu (önceden açıklanmayan bir boşluktu).
+
+**Testler:** unit — `RequestAudit.Create` (kırpma, boş IP → null), `RequestAuditPolicy` (verb,
+`/api` öneki, endpoint yok, opt-out metadata'sı). Integration — `RequestAuditTests`: girişli
+POST satırı (kullanıcı, 201, `X-Forwarded-For` IP'si), GET satır bırakmaz, 400 kaydedilir ve
+query string tutulmaz, anonim benchmark + başarısız login `UserId` null, dört opt-out satırsız,
+`EndpointDataSource` üzerinden opt-out allowlist'i, hesap silme kullanıcının satırlarını alır
+anonimleri bırakır, export'ta IP yok, purge sadece eski anonimleri siler.
+`A_User_Owned_Row_Cannot_Be_Written_Without_A_User`'a uydurma `UserId` reddi + null kabulü eklendi.

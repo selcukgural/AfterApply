@@ -20,6 +20,11 @@ public static class ExtensionPairingEndpoints
                 CancellationToken cancellationToken) =>
             Results.Ok(await service.StartAsync(request, cancellationToken)))
             .WithValidation<StartExtensionPairingRequest>()
+            // Both anonymous halves stay out of the request audit: neither carries anything a
+            // person typed (the extension mints the device secret itself), /poll repeats every few
+            // seconds for as long as the confirm tab is open, and the extension privacy policy says
+            // these requests hold no personal data. The signed-in approve/deny below are audited.
+            .WithoutRequestAudit()
             .RequireRateLimiting(DependencyInjection.ExtensionPairingStartRateLimitPolicy)
             .WithSummary("Start pairing a browser extension with an account")
             .WithDescription("Returns a short code for the user to confirm, the device secret the " +
@@ -36,6 +41,7 @@ public static class ExtensionPairingEndpoints
                 return result is null ? Results.NotFound() : Results.Ok(result);
             })
             .WithValidation<PollExtensionPairingRequest>()
+            .WithoutRequestAudit()
             .RequireRateLimiting(DependencyInjection.ExtensionPairingPollRateLimitPolicy)
             .WithSummary("Ask whether a pairing has been confirmed yet")
             .WithDescription("Anonymous, authenticated by the device secret from the start call. " +
