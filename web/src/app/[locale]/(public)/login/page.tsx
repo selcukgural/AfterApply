@@ -65,6 +65,7 @@ export default function LoginPage() {
     <div className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <h1 className="mb-6 text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        <SocialSignIn />
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <FormField label={t("email")} htmlFor="email" error={errors.email}>
             <Input
@@ -95,7 +96,6 @@ export default function LoginPage() {
             {isSubmitting ? t("submitting") : t("submit")}
           </Button>
         </form>
-        <SocialSignIn />
         <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
           {t("noAccount")}{" "}
           <Link href="/register" className="text-blue-600 hover:underline dark:text-blue-400">

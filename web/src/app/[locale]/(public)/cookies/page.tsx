@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 // KVKK's cookie guidance asks for disclosure rather than consent when every cookie is strictly
@@ -17,7 +17,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/cookies"
   return pageMetadata(locale, "/cookies", "cookies");
 }
 
-export default async function CookiesPage() {
+export default async function CookiesPage({ params }: PageProps<"/[locale]/cookies">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("cookies");
 
   const rows = [

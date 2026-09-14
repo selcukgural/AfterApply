@@ -101,6 +101,26 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    /// <summary>The sign-up form stopped asking for a name on 2026-09-14; the API has to take the
+    /// empty strings it now sends and hand them back as such, not fail on the NOT NULL column.</summary>
+    [Fact]
+    public async Task Register_Without_A_Name_Creates_The_Account_With_Empty_Names()
+    {
+        var client = _factory!.CreateClient();
+
+        var register = await client.PostAsJsonAsync("/api/auth/register",
+            new RegisterRequest("noname@example.com", "P@ssw0rd123!", "", "", true), JsonOptions);
+        register.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var auth = await register.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        auth!.User.FirstName.ShouldBe("");
+        auth.User.LastName.ShouldBe("");
+
+        client.DefaultRequestHeaders.Authorization = new("Bearer", auth.AccessToken);
+        var profile = await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
+        profile!.FirstName.ShouldBe("");
+        profile.LastName.ShouldBe("");
+    }
+
     [Fact]
     public async Task Register_With_Consent_Persists_ConsentAcceptedAt()
     {

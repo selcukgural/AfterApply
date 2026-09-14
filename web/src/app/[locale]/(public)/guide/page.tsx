@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
@@ -11,6 +11,7 @@ import { formatArticleDate } from "@/lib/guide/formatArticleDate";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/guide">): Promise<Metadata> {
   const { locale } = await params;
+  setRequestLocale(locale);
   return pageMetadata(locale, GUIDE_PATH, "guide");
 }
 

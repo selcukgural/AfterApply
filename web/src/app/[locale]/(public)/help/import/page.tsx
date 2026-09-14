@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { GifFigure } from "@/components/help/GifFigure";
 import { Callout } from "@/components/help/Callout";
@@ -13,7 +13,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help/imp
   return pageMetadata(locale, "/help/import", "helpImport");
 }
 
-export default async function ImportHelpPage() {
+export default async function ImportHelpPage({ params }: PageProps<"/[locale]/help/import">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("help.import");
   const tCommon = await getTranslations("help.common");
   const tDiagram = await getTranslations("imports.diagram");

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { CompanyDirectory } from "@/components/companyReviews/CompanyDirectory";
@@ -23,11 +23,12 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/companie
   return pageMetadata(locale, "/companies", "companies");
 }
 
-export default async function CompaniesPage() {
+export default async function CompaniesPage({ params }: PageProps<"/[locale]/companies">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("companies.directory");
   const tScoring = await getTranslations("companies.scoring");
   const tReviews = await getTranslations("companies.reviews");
-  const locale = await getLocale();
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-12">

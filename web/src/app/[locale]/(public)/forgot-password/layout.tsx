@@ -1,3 +1,4 @@
+import { setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 
@@ -7,6 +8,8 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]/forgot
   return pageMetadata(locale, "/forgot-password", "forgotPassword", { index: false });
 }
 
-export default function ForgotPasswordLayout({ children }: LayoutProps<"/[locale]/forgot-password">) {
+export default async function ForgotPasswordLayout({ children, params }: LayoutProps<"/[locale]/forgot-password">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   return children;
 }

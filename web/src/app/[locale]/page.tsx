@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
-import { getServerTheme } from "@/lib/theme/getServerTheme";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import { LANDING_MESSAGE_SCOPE, pickMessages } from "@/lib/i18n/messageScopes";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { jsonLdGraph, organizationJsonLd, webApplicationJsonLd } from "@/lib/seo/jsonLd";
@@ -39,12 +40,16 @@ export async function generateMetadata({ params }: PageProps<"/[locale]">): Prom
   return pageMetadata(locale, "", "home");
 }
 
-export default async function LandingPage() {
-  const theme = await getServerTheme();
-  const locale = await getLocale();
+export default async function LandingPage({ params }: PageProps<"/[locale]">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("metadata.pages");
+  // The landing sections and the hero's CV dropzone are client components; this is the one page
+  // outside the (public) group, so it provides its own slice of the catalogue (messageScopes.ts).
+  const messages = pickMessages(await getMessages(), LANDING_MESSAGE_SCOPE);
 
   return (
+    <NextIntlClientProvider messages={messages}>
     <div className="flex min-h-screen flex-col">
       <JsonLd
         data={jsonLdGraph(organizationJsonLd(), webApplicationJsonLd(locale, t("home.description")))}
@@ -54,7 +59,7 @@ export default async function LandingPage() {
           layout and the landing page is not in that group, so "/" sat in the API's path allowlist
           with no caller — the funnel had a first step nobody was counting. */}
       <SiteTrafficReporter />
-      <SiteHeader initialTheme={theme} links={LANDING_SITE_LINKS} />
+      <SiteHeader links={LANDING_SITE_LINKS} />
       <main className="flex-1">
         <HeroSection />
         {/* The three things that work without an account, the extension's tab open first — one
@@ -84,5 +89,6 @@ export default async function LandingPage() {
       </main>
       <SiteFooter />
     </div>
+    </NextIntlClientProvider>
   );
 }

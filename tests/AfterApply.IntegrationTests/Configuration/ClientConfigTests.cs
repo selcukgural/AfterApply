@@ -85,7 +85,8 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
         response.Headers.Vary.ShouldContain("Origin");
         var config = await response.Content.ReadFromJsonAsync<ClientConfigResponse>(JsonOptions);
         config.ShouldNotBeNull();
-        config.PasswordPolicy.ShouldBe(new PasswordPolicyResponse(12, 4, true, true, true, true));
+        // Length over composition (NIST SP 800-63B): 12 characters, 4 distinct, no character-class rules.
+        config.PasswordPolicy.ShouldBe(new PasswordPolicyResponse(12, 4, false, false, false, false));
         config.PersonalAccessTokens.ShouldBe(new PersonalAccessTokenLimitsResponse(10, 90));
         // No GoogleAuth section set: the feature is reported off and no client id leaks out.
         config.GoogleAuth.ShouldBe(new GoogleAuthConfigResponse(false, null));
@@ -103,17 +104,37 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
         config.PasswordPolicy.RequireNonAlphanumeric.ShouldBeFalse();
         config.PersonalAccessTokens.ShouldBe(new PersonalAccessTokenLimitsResponse(3, 7));
 
-        // Valid under the default policy (12 chars, every class present), too short under the override.
+        // Valid under the default policy (12 chars), too short under the override.
         var tooShort = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest("policy.short@example.com", "P@ssw0rd123!", "Policy", "Test", true), JsonOptions);
         tooShort.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         var problem = await tooShort.Content.ReadAsStringAsync();
         problem.ShouldContain("20");
 
-        // 20 chars, no special character — rejected by default, accepted with the override.
+        // 20 chars, no special character — accepted with the override.
         var accepted = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest("policy.long@example.com", "LongPassword12345678", "Policy", "Test", true), JsonOptions);
         accepted.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    /// <summary>
+    /// Length over composition (2026-09-14): a twelve-character passphrase with no digit, no
+    /// upper-case letter and no symbol is a valid password. What the default policy still refuses
+    /// is a short one and one made of a few repeated characters.
+    /// </summary>
+    [Theory]
+    [InlineData("correct horse battery", HttpStatusCode.Created)]
+    [InlineData("kelimelerbirarada", HttpStatusCode.Created)]
+    [InlineData("kisa sifre", HttpStatusCode.BadRequest)]
+    [InlineData("aaaaaaaaaaaa", HttpStatusCode.BadRequest)]
+    public async Task Default_Policy_Judges_A_Password_By_Its_Length_Not_Its_Character_Classes(string password, HttpStatusCode expected)
+    {
+        var client = _defaultFactory!.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/auth/register",
+            new RegisterRequest($"policy.{Guid.NewGuid():N}@example.com", password, "Policy", "Test", true), JsonOptions);
+
+        response.StatusCode.ShouldBe(expected);
     }
 
     [Fact]

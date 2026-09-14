@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { BenchmarkForm } from "@/components/benchmark/BenchmarkForm";
 
@@ -22,7 +22,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/benchmar
   return pageMetadata(locale, "/benchmark", "benchmark");
 }
 
-export default async function BenchmarkPage() {
+export default async function BenchmarkPage({ params }: PageProps<"/[locale]/benchmark">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("benchmark");
 
   return (

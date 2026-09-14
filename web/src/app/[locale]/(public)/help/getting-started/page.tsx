@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
 import { Callout } from "@/components/help/Callout";
@@ -11,7 +11,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help/get
   return pageMetadata(locale, "/help/getting-started", "helpGettingStarted");
 }
 
-export default async function GettingStartedPage() {
+export default async function GettingStartedPage({ params }: PageProps<"/[locale]/help/getting-started">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("help.gettingStarted");
   const tCommon = await getTranslations("help.common");
 

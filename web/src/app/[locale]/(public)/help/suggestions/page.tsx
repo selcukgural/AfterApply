@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
@@ -12,7 +12,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help/sug
   return pageMetadata(locale, "/help/suggestions", "helpSuggestions");
 }
 
-export default async function SuggestionsHelpPage() {
+export default async function SuggestionsHelpPage({ params }: PageProps<"/[locale]/help/suggestions">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("help.suggestions");
   const tCommon = await getTranslations("help.common");
 

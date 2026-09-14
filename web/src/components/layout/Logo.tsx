@@ -10,7 +10,7 @@ export function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
       <LogoMark className="h-6 w-6 shrink-0" />
-      <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">e-kariyerim</span>
+      <span className="text-lg font-semibold whitespace-nowrap text-gray-900 dark:text-gray-100">e-kariyerim</span>
     </span>
   );
 }

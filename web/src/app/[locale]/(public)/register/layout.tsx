@@ -1,3 +1,4 @@
+import { setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 
@@ -7,6 +8,8 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]/regist
   return pageMetadata(locale, "/register", "register");
 }
 
-export default function RegisterLayout({ children }: LayoutProps<"/[locale]/register">) {
+export default async function RegisterLayout({ children, params }: LayoutProps<"/[locale]/register">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   return children;
 }

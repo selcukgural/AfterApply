@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
 import { Callout } from "@/components/help/Callout";
@@ -13,7 +13,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help/chr
   return pageMetadata(locale, "/help/chrome-extension", "helpChromeExtension");
 }
 
-export default async function ChromeExtensionHelpPage() {
+export default async function ChromeExtensionHelpPage({ params }: PageProps<"/[locale]/help/chrome-extension">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("help.chromeExtension");
   const tCommon = await getTranslations("help.common");
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { CvScanForm } from "@/components/cvScan/CvScanForm";
 
@@ -24,7 +24,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/cv-taram
   return pageMetadata(locale, "/cv-tarama", "cvScan");
 }
 
-export default async function CvScanPage() {
+export default async function CvScanPage({ params }: PageProps<"/[locale]/cv-tarama">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("cvScan");
 
   return (

@@ -118,6 +118,10 @@
       "helpBenchmark": {
         "title": "Reply Rate Benchmark",
         "description": "Compare your own reply rate with your field's median; where the number comes from and when it is withheld."
+      },
+      "notFound": {
+        "title": "Page not found",
+        "description": "The page you were looking for is not on e-kariyerim."
       }
     }
   },
@@ -391,7 +395,9 @@
     "benchmark": "Benchmark",
     "guide": "Guide",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "toolsMenu": "Tools",
+    "toolsNote": "No account needed"
   },
   "auth": {
     "login": {
@@ -426,8 +432,6 @@
     },
     "register": {
       "title": "Sign Up",
-      "firstName": "First name",
-      "lastName": "Last name",
       "email": "Email",
       "password": "Password",
       "confirmPassword": "Confirm password",
@@ -437,7 +441,12 @@
       "submitting": "Creating account...",
       "haveAccount": "Already have an account?",
       "loginLink": "Log in",
-      "genericError": "Could not create account."
+      "genericError": "Could not create account.",
+      "benefits": {
+        "item1": "See how many of your applications got a reply and how many went quiet — your own numbers",
+        "item2": "Import your LinkedIn history or save applications with one click from the extension; no typing",
+        "item3": "Free. Your data stays in your account alone; delete it whenever you like"
+      }
     },
     "passwordRules": {
       "title": "Your password must contain:",
@@ -911,7 +920,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 13 September 2026",
+    "lastUpdated": "Last updated: 14 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -943,7 +952,7 @@
     "dataCollection": {
       "title": "What data we collect and why",
       "intro": "e-kariyerim is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
-      "item1": "Account details: first name, last name, email address and password (stored hashed). If you sign in with Google, LinkedIn or GitHub, that account's identifier is stored instead of a password (see below).",
+      "item1": "Account details: email address and password (stored hashed); first and last name are optional — the sign-up form does not ask for them, you can add them under Settings. If you sign in with Google, LinkedIn or GitHub, that account's identifier is stored instead of a password (see below).",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
@@ -2975,5 +2984,14 @@
     "goToDashboard": "Go to Dashboard",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
+  },
+  "notFound": {
+    "title": "This page does not exist",
+    "body": "The address may have moved or never existed. One of these might be what you were after.",
+    "home": "Home",
+    "cvScan": "CV Scan",
+    "companies": "Company reviews",
+    "guide": "Guide",
+    "help": "Help Centre"
   }
 }

@@ -11,9 +11,10 @@ import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
+import { displayName } from "@/lib/auth/displayName";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { TOOL_LINKS, ToolsMenu } from "@/components/layout/ToolsMenu";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
-import type { Theme } from "@/lib/theme/theme";
 
 const NAV_LINKS = [
   { href: "/dashboard", key: "dashboard" },
@@ -25,14 +26,14 @@ const NAV_LINKS = [
   { href: "/companies", key: "companies" },
 ] as const;
 
-/** The things that work without an account, kept reachable after you have one. */
-export const TOOL_LINKS = [
-  { href: "/cv-tarama", key: "cvScan" },
-  { href: "/benchmark", key: "benchmark" },
-  { href: "/guide", key: "guide" },
-] as const;
-
-export function NavBar({ initialTheme }: { initialTheme: Theme }) {
+/**
+ * The signed-in app's header. Since 2026-09-14 it is also what a signed-in visitor gets on the
+ * public pages (SiteHeader hands over to it), so /companies, the guide and the help centre no
+ * longer drop the app's menu and avatar — which read as "I have been signed out". The
+ * account-free tools sit in the "Tools" group (ToolsMenu) so that hand-over loses nothing the
+ * public header offered.
+ */
+export function NavBar() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -51,8 +52,9 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
   // load rather than at the next sign-in.
   const showAdmin = canSeeAdminNav(user);
 
-  const fullName = user ? `${user.firstName} ${user.lastName}` : "";
-  const initials = user ? `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase() : "";
+  // An account may have no name at all (sign-up stopped asking on 2026-09-14): the header then
+  // shows the part of the e-mail before the @, and the avatar its first letter.
+  const { name: fullName, initials } = displayName(user);
 
   const active = (href: string) => isActivePath(pathname, href);
   const desktopLink = (href: string) => navLinkClassName("underline", active(href), "flex items-center gap-1.5 whitespace-nowrap pb-0.5");
@@ -91,7 +93,10 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
 
   return (
     <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      {/* max-w-6xl, the public header's width, not the app content's max-w-5xl: with the Tools
+          menu the row is ~1080px of links and the avatar, and at 5xl the logo wrapped onto two
+          lines. A header wider than its page is what the public pages already do. */}
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
           <Link href="/dashboard">
             <Logo />
@@ -109,6 +114,7 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
             ))}
             {suggestionsLink(false)}
             {notificationsLink(false)}
+            <ToolsMenu />
           </nav>
         </div>
 
@@ -118,7 +124,6 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
               name={fullName}
               initials={initials}
               onLogout={handleLogout}
-              initialTheme={initialTheme}
               showAdmin={showAdmin}
             />
           )}
@@ -197,7 +202,7 @@ export function NavBar({ initialTheme }: { initialTheme: Theme }) {
 
           <div className="mt-4 flex items-center gap-3">
             <LanguageSwitcher />
-            <ThemeSwitcher initialTheme={initialTheme} />
+            <ThemeSwitcher />
           </div>
 
           <div className="mt-4">

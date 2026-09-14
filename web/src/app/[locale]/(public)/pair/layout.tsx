@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 
@@ -13,6 +15,10 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]/pair">
   return pageMetadata(locale, "/pair", "pair", { index: false });
 }
 
-export default function PairLayout({ children }: LayoutProps<"/[locale]/pair">) {
-  return children;
+export default async function PairLayout({ children, params }: LayoutProps<"/[locale]/pair">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  // The page reads the URL's query string with useSearchParams(), which needs a Suspense boundary
+  // above it for the static shell to prerender; the page fills in once the browser has the URL.
+  return <Suspense>{children}</Suspense>;
 }

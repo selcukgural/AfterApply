@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 // The Chrome Web Store's Privacy practices tab requires a publicly reachable privacy policy URL,
@@ -13,7 +13,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/extensio
   return pageMetadata(locale, "/extension-privacy", "extensionPrivacy");
 }
 
-export default async function ExtensionPrivacyPage() {
+export default async function ExtensionPrivacyPage({ params }: PageProps<"/[locale]/extension-privacy">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("extensionPrivacy");
 
   return (

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { StepList } from "@/components/help/StepList";
 import { Screenshot } from "@/components/help/Screenshot";
 import { Callout } from "@/components/help/Callout";
@@ -11,7 +11,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/help/cv"
   return pageMetadata(locale, "/help/cv", "helpCv");
 }
 
-export default async function CvHelpPage() {
+export default async function CvHelpPage({ params }: PageProps<"/[locale]/help/cv">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("help.cv");
   const tCommon = await getTranslations("help.common");
 
