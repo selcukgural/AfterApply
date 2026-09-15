@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.JobSources;
@@ -13,6 +11,7 @@ using AfterApply.Domain.Documents;
 using AfterApply.Domain.Jobs;
 using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,26 +26,53 @@ namespace AfterApply.IntegrationTests.JobSources;
 /// the run reads back through the API. The sweep is invoked directly through its service — it
 /// has no endpoint, on purpose — with the clock under test control.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
+/// <summary>Both job sources stubbed, and a clock the tests move. One of each for the class.</summary>
+public sealed class JobSourceSweepProfile : IHostProfile
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    public LinkedInStubHandler LinkedIn { get; } = new();
+    public KariyerNetStubHandler KariyerNet { get; } = new();
+    public MutableTimeProvider Clock { get; } = new(JobSourceSweepTests.RunMoment);
+
+    public void Configure(IWebHostBuilder builder)
     {
-        Converters = { new JsonStringEnumConverter() }
-    };
+        builder.UseSetting("JobSources:Enabled", "true");
+        builder.UseSetting("JobSources:MinDelayMs", "0");
+        builder.UseSetting("JobSources:RetryBaseDelayMs", "1");
+        builder.ConfigureServices(services =>
+        {
+            services.AddSingleton<TimeProvider>(Clock);
+            services.AddHttpClient(nameof(ILinkedInJobSourceClient))
+                .ConfigurePrimaryHttpMessageHandler(() => LinkedIn);
+            services.AddHttpClient(nameof(IKariyerNetJobSourceClient))
+                .ConfigurePrimaryHttpMessageHandler(() => KariyerNet);
+        });
+    }
+
+    public void Reset()
+    {
+        LinkedIn.Reset();
+        KariyerNet.Reset();
+        Clock.Reset();
+    }
+}
+
+[Collection(IntegrationTestCollection.Name)]
+public class JobSourceSweepTests(ApiHost<JobSourceSweepProfile> host) : IClassFixture<ApiHost<JobSourceSweepProfile>>, IAsyncLifetime
+{
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
     // The clock under test starts at the real "now" and only ever moves forward: access tokens
     // carry a not-before stamped from the same TimeProvider, and the JWT middleware checks them
     // against the wall clock — a fake clock in the past or a login after an advance would not
     // authenticate.
-    private static readonly DateTimeOffset RunMoment = DateTimeOffset.UtcNow;
+    internal static readonly DateTimeOffset RunMoment = DateTimeOffset.UtcNow;
     private static readonly int ThisWeek = WeekKey.From(RunMoment);
     private static readonly int NextWeek = WeekKey.From(RunMoment.AddDays(7));
 
-    private WebApplicationFactory<Program>? _factory;
-    private LinkedInStubHandler _linkedIn = null!;
-    private KariyerNetStubHandler _kariyer = null!;
-    private MutableTimeProvider _clock = null!;
+    private WebApplicationFactory<Program> _factory => host;
+    private LinkedInStubHandler _linkedIn => host.Profile.LinkedIn;
+    private KariyerNetStubHandler _kariyer => host.Profile.KariyerNet;
+    private MutableTimeProvider _clock => host.Profile.Clock;
     private HttpClient _admin = null!;
     private HttpClient _pro1 = null!;
     private HttpClient _pro2 = null!;
@@ -57,27 +83,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(JobSourceSweepTests));
-        _linkedIn = new LinkedInStubHandler();
-        _kariyer = new KariyerNetStubHandler();
-        _clock = new MutableTimeProvider(RunMoment);
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("JobSources:Enabled", "true");
-            builder.UseSetting("JobSources:MinDelayMs", "0");
-            builder.UseSetting("JobSources:RetryBaseDelayMs", "1");
-            builder.ConfigureServices(services =>
-            {
-                services.AddSingleton<TimeProvider>(_clock);
-                services.AddHttpClient(nameof(ILinkedInJobSourceClient))
-                    .ConfigurePrimaryHttpMessageHandler(() => _linkedIn);
-                services.AddHttpClient(nameof(IKariyerNetJobSourceClient))
-                    .ConfigurePrimaryHttpMessageHandler(() => _kariyer);
-            });
-        });
+        await host.ResetAsync();
 
         (_admin, _) = await RegisterAsync("admin.jobsources@ekariyerim.com");
         (_pro1, _pro1Id) = await RegisterAsync("pro1.jobsources@example.com");
@@ -112,13 +118,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task A_Shared_Query_Is_Fetched_Once_And_Both_Paying_Users_Get_The_Postings()
@@ -190,7 +190,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
     public async Task Users_Who_Are_Not_Paying_Or_Have_No_Cv_Or_Are_Inactive_Are_Not_Swept()
     {
         // pro2 loses the CV; pro1 has not signed in for a month; free never paid.
-        await using (var scope = _factory!.Services.CreateAsyncScope())
+        await using (var scope = _factory.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             await db.CvDocuments.Where(c => c.UserId == _pro2Id).ExecuteDeleteAsync();
@@ -226,7 +226,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
             JsonOptions)).EnsureSuccessStatusCode();
 
         // ...and a hand-entered one whose only trace of the id is the URL on the application row.
-        await using (var scope = _factory!.Services.CreateAsyncScope())
+        await using (var scope = _factory.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var company = await db.Companies.FirstAsync();
@@ -237,7 +237,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
         }
 
         // ...and a kariyer.net one, by its canonical URL.
-        await using (var scope = _factory!.Services.CreateAsyncScope())
+        await using (var scope = _factory.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var company = await db.Companies.FirstAsync();
@@ -418,7 +418,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
         profile!.Titles.ShouldBe(["Backend Developer", ".NET Developer"]);
         profile.AiScoringConsentAcceptedAt.ShouldNotBeNull();
 
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         // pro1, pro2 and free all asked for ".NET Developer" / İstanbul: one shared query per
         // source, plus pro1's new title on each source.
@@ -439,7 +439,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
             Content = JsonContent.Create(new DeleteAccountRequest("P@ssw0rd123!"), options: JsonOptions)
         })).EnsureSuccessStatusCode();
 
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.UserJobSourceProfiles.AnyAsync(p => p.UserId == _pro2Id)).ShouldBeFalse();
         (await db.UserJobSourceDeliveries.AnyAsync(d => d.UserId == _pro2Id)).ShouldBeFalse();
@@ -451,7 +451,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
 
     private async Task SweepAsync()
     {
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<IJobSourceSweepService>().SweepAsync(CancellationToken.None);
     }
 
@@ -463,7 +463,7 @@ public class JobSourceSweepTests(SharedInfrastructure shared) : IAsyncLifetime
 
     private async Task<(HttpClient Client, Guid UserId)> RegisterAsync(string email)
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var response = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest(email, "P@ssw0rd123!", "Job", "Source", true), JsonOptions);
         response.EnsureSuccessStatusCode();

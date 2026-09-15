@@ -19,7 +19,7 @@ namespace AfterApply.IntegrationTests.Payments;
 /// on a verified success.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class PayTrCallbackTests(SharedInfrastructure shared) : IAsyncLifetime
+public class PayTrCallbackTests(ApiHost<PaymentProfile> host) : IClassFixture<ApiHost<PaymentProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;
     private HttpClient _client = null!;
@@ -27,11 +27,12 @@ public class PayTrCallbackTests(SharedInfrastructure shared) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _host = await PaymentTestHost.CreateAsync(shared, nameof(PayTrCallbackTests));
+        await host.ResetAsync();
+        _host = new PaymentTestHost(host);
         (_client, _userId) = await _host.RegisterAsync("callback@example.com");
     }
 
-    public async Task DisposeAsync() => await _host.DisposeAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<CheckoutResponse> StartAsync(string plan = "monthly", HttpClient? client = null)
     {
@@ -86,9 +87,12 @@ public class PayTrCallbackTests(SharedInfrastructure shared) : IAsyncLifetime
         var plans = await _client.GetFromJsonAsync<PaymentPlansResponse>("/api/payments/plans", PaymentTestHost.JsonOptions);
         plans!.Entitlement.IsActive.ShouldBeTrue();
 
-        // The receipt is a Hangfire job; the server is off in tests, so the job sits in storage
-        // rather than reaching the sender. What we can pin here is that nothing was sent inline.
+        // The receipt goes out as a background job, not inline with the callback — and it does go
+        // out, once, to the buyer, once the job runs.
         _host.Emails.Receipts.ShouldBeEmpty();
+        await _host.RunJobsAsync();
+        var (to, _, _) = _host.Emails.Receipts.ShouldHaveSingleItem();
+        to.ShouldBe("callback@example.com");
     }
 
     [Fact]

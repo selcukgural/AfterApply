@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.JobSources.Contracts;
@@ -14,6 +12,7 @@ using AfterApply.Domain.JobSources;
 using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Persistence;
 using AfterApply.IntegrationTests.CvScan;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +20,94 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.JobSources;
+
+/// <summary>What the class owns beyond the app: the LinkedIn transport, the model, the outbound
+/// mail, and a scratch directory for CV storage. One of each serves the whole class.</summary>
+public sealed class JobFitScoringProfile : IHostProfile
+{
+    public LinkedInStubHandler LinkedIn { get; } = new();
+    public FakeScoringProvider Model { get; } = new();
+    public CapturingEmailSender Email { get; } = new();
+    public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), "afterapply-job-fit-tests", Guid.CreateVersion7().ToString("N"));
+
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("JobSources:Enabled", "true");
+        builder.UseSetting("JobSources:MinDelayMs", "0");
+        builder.UseSetting("JobSources:RetryBaseDelayMs", "1");
+        builder.UseSetting("JobSources:Scoring:ProjectId", "test-project");
+        // LinkedIn alone: the source mix is JobSourceSweepTests' business.
+        builder.UseSetting("JobSources:KariyerNetEnabled", "false");
+        builder.UseSetting("Storage:LocalRootPath", StorageRoot);
+        builder.UseSetting("App:WebBaseUrl", "https://ekariyerim.test");
+
+        builder.ConfigureServices(services =>
+        {
+            services.AddHttpClient(nameof(ILinkedInJobSourceClient)).ConfigurePrimaryHttpMessageHandler(() => LinkedIn);
+            services.RemoveAll<IJobFitScoringProvider>();
+            services.AddSingleton<IJobFitScoringProvider>(Model);
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Email);
+        });
+    }
+
+    public void Reset()
+    {
+        LinkedIn.Reset();
+        Model.Reset();
+        Email.Reset();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        if (Directory.Exists(StorageRoot))
+        {
+            Directory.Delete(StorageRoot, recursive: true);
+        }
+
+        return default;
+    }
+}
+
+/// <summary>Scores by the number in the stub's title ("Software Developer 7" → 65), so the
+/// expected order is known; throws for titles the test marks as failing; records every
+/// request so the test can look at what the model was given.</summary>
+public sealed class FakeScoringProvider : IJobFitScoringProvider
+{
+    public List<JobFitScoringRequest> Requests { get; } = [];
+
+    public HashSet<string> FailingTitles { get; } = [];
+
+    public string Model => "fake-model";
+
+    public void Reset()
+    {
+        lock (Requests)
+        {
+            Requests.Clear();
+        }
+
+        FailingTitles.Clear();
+    }
+
+    public Task<JobFitScoringResult?> ScoreAsync(JobFitScoringRequest request, CancellationToken cancellationToken)
+    {
+        lock (Requests)
+        {
+            Requests.Add(request);
+        }
+
+        if (FailingTitles.Contains(request.Title))
+        {
+            throw new JobFitScoringProviderException("Vertex AI returned 503.");
+        }
+
+        var n = int.Parse(request.Title.Split(' ')[^1]);
+        return Task.FromResult<JobFitScoringResult?>(new JobFitScoringResult(100 - n * 5,
+            request.Locale == "tr" ? $"İlan {n} için özet." : $"Summary for posting {n}.",
+            ["C#", ".NET"], n % 2 == 0 ? ["Kubernetes"] : [], ["C#", ".NET", "Kubernetes"], 1_000, 100));
+    }
+}
 
 /// <summary>
 /// The scoring half of the weekly run, end to end with a stubbed LinkedIn and a fake model: a
@@ -30,139 +117,58 @@ namespace AfterApply.IntegrationTests.JobSources;
 /// CV bytes to the API response is real.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
+public class JobFitScoringTests(ApiHost<JobFitScoringProfile> host) : IClassFixture<ApiHost<JobFitScoringProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
     private static readonly DateTimeOffset RunMoment = DateTimeOffset.UtcNow;
     private static readonly int ThisWeek = WeekKey.From(RunMoment);
 
-    /// <summary>Scores by the number in the stub's title ("Software Developer 7" → 65), so the
-    /// expected order is known; throws for titles the test marks as failing; records every
-    /// request so the test can look at what the model was given.</summary>
-    private sealed class FakeScoringProvider : IJobFitScoringProvider
-    {
-        public List<JobFitScoringRequest> Requests { get; } = [];
-
-        public HashSet<string> FailingTitles { get; } = [];
-
-        public string Model => "fake-model";
-
-        public Task<JobFitScoringResult?> ScoreAsync(JobFitScoringRequest request, CancellationToken cancellationToken)
-        {
-            lock (Requests)
-            {
-                Requests.Add(request);
-            }
-
-            if (FailingTitles.Contains(request.Title))
-            {
-                throw new JobFitScoringProviderException("Vertex AI returned 503.");
-            }
-
-            var n = int.Parse(request.Title.Split(' ')[^1]);
-            return Task.FromResult<JobFitScoringResult?>(new JobFitScoringResult(100 - n * 5,
-                request.Locale == "tr" ? $"İlan {n} için özet." : $"Summary for posting {n}.",
-                ["C#", ".NET"], n % 2 == 0 ? ["Kubernetes"] : [], ["C#", ".NET", "Kubernetes"], 1_000, 100));
-        }
-    }
-
-    private WebApplicationFactory<Program>? _factory;
-    private LinkedInStubHandler _linkedIn = null!;
-    private FakeScoringProvider _model = null!;
-    private CapturingEmailSender _email = null!;
-    private string _storageRoot = string.Empty;
+    // The class's host by default; the two tests that need different settings swap in a
+    // Standalone host over a freshly reset database (see WithSettingsAsync).
+    private WebApplicationFactory<Program> _factory = null!;
+    private WebApplicationFactory<Program>? _standalone;
+    private LinkedInStubHandler _linkedIn => host.Profile.LinkedIn;
+    private FakeScoringProvider _model => host.Profile.Model;
+    private CapturingEmailSender _email => host.Profile.Email;
     private HttpClient _admin = null!;
     private HttpClient _pro = null!;
     private Guid _proId;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(JobFitScoringTests));
-        _linkedIn = new LinkedInStubHandler();
-        _model = new FakeScoringProvider();
-        _email = new CapturingEmailSender();
-        _storageRoot = Path.Combine(Path.GetTempPath(), "afterapply-job-fit-tests", Guid.CreateVersion7().ToString("N"));
-
-        _factory = CreateFactory(postgres);
-
-        (_admin, _) = await RegisterAsync("admin.jobfit@ekariyerim.com");
-        (_pro, _proId) = await RegisterAsync("pro.jobfit@example.com");
-
-        await using (var scope = _factory.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var admin = await db.Users.SingleAsync(u => u.Email == "admin.jobfit@ekariyerim.com");
-            admin.IsAdmin = true;
-            await db.SaveChangesAsync();
-        }
-
-        (await _admin.PutAsJsonAsync($"/api/admin/pro/entitlements/{_proId}",
-            new GrantProEntitlementRequest(RunMoment.AddMonths(1)), JsonOptions)).EnsureSuccessStatusCode();
-
-        // A real CV through the real upload: the scorer reads it back from storage.
-        using var content = new MultipartFormDataContent
-        {
-            { new ByteArrayContent(CvFixtures.ReadablePdf()), "file", "cv.pdf" },
-            { new StringContent("true"), "consentAccepted" }
-        };
-        (await _pro.PostAsync("/api/cv-documents", content)).EnsureSuccessStatusCode();
+        await host.ResetAsync();
+        _factory = host;
+        await ReRegisterAsync();
     }
-
-    private WebApplicationFactory<Program> CreateFactory(string postgres, Action<Dictionary<string, string>>? settings = null)
-    {
-        var values = new Dictionary<string, string>
-        {
-            ["JobSources:Enabled"] = "true",
-            ["JobSources:MinDelayMs"] = "0",
-            ["JobSources:RetryBaseDelayMs"] = "1",
-            ["JobSources:Scoring:ProjectId"] = "test-project",
-            // LinkedIn alone: the source mix is JobSourceSweepTests' business.
-            ["JobSources:KariyerNetEnabled"] = "false",
-            ["Storage:LocalRootPath"] = _storageRoot,
-            // The digest goes out as its own Hangfire job per user (see JobSourceDigestService),
-            // so the server the suite otherwise keeps off has to run here.
-            ["Hangfire:ServerEnabled"] = "true",
-            ["App:WebBaseUrl"] = "https://ekariyerim.test"
-        };
-        settings?.Invoke(values);
-
-        return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGetBytes()));
-            foreach (var (key, value) in values)
-            {
-                builder.UseSetting(key, value);
-            }
-
-            builder.ConfigureServices(services =>
-            {
-                services.AddHttpClient(nameof(ILinkedInJobSourceClient)).ConfigurePrimaryHttpMessageHandler(() => _linkedIn);
-                services.RemoveAll<IJobFitScoringProvider>();
-                services.AddSingleton<IJobFitScoringProvider>(_model);
-                services.RemoveAll<IEmailSender>();
-                services.AddSingleton<IEmailSender>(_email);
-            });
-        });
-    }
-
-    private static byte[] RandomNumberGetBytes() => RandomNumberGenerator.GetBytes(48);
 
     public async Task DisposeAsync()
     {
-        if (_factory is not null)
+        if (_standalone is not null)
         {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
+            await _standalone.DisposeAsync();
+        }
+    }
+
+    /// <summary>A host with different settings over the same, freshly reset database — the two
+    /// users, the entitlement and the CV again on top.</summary>
+    private async Task WithSettingsAsync(params (string Key, string Value)[] settings)
+    {
+        if (_standalone is not null)
+        {
+            await _standalone.DisposeAsync();
         }
 
-        if (Directory.Exists(_storageRoot))
+        await host.ResetAsync();
+        _standalone = host.Standalone(builder =>
         {
-            Directory.Delete(_storageRoot, recursive: true);
-        }
+            foreach (var (key, value) in settings)
+            {
+                builder.UseSetting(key, value);
+            }
+        });
+        _factory = _standalone;
+        await ReRegisterAsync();
     }
 
     [Fact]
@@ -196,7 +202,7 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
 
         // The ledger has one row per call with the tokens the provider reported, and the admin
         // view turns them into today's count and the month's estimated cost at list price.
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var entries = await db.AiUsageEntries.ToListAsync();
         entries.Count.ShouldBe(13);
@@ -232,10 +238,10 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
 
         // A second run in the same week queues nothing new.
         await SweepAsync();
-        await Task.Delay(1500);
+        host.Jobs.Pending.ShouldBeEmpty();
         _email.Digests.Count.ShouldBe(1);
 
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.UserJobSourceRuns.SingleAsync(r => r.UserId == _proId)).DigestSentAt.ShouldNotBeNull();
     }
@@ -249,29 +255,23 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
         (await _pro.GetFromJsonAsync<JobSourceProfileResponse>("/api/job-sources/profile", JsonOptions))!.EmailDigest.ShouldBeFalse();
 
         await SweepAsync();
-        await Task.Delay(1500);
 
+        host.Jobs.Pending.ShouldBeEmpty();
         _email.Digests.ShouldBeEmpty();
         (await ListAsync()).Items.Count.ShouldBe(13);
     }
 
+    // The digest goes out as its own background job per user (see JobSourceDigestService); the
+    // sweep enqueued it, this runs it.
     private async Task<(string ToEmail, string Locale, WeeklyJobsDigest Digest)> WaitForDigestAsync()
     {
-        var deadline = DateTime.UtcNow.AddSeconds(30);
-        while (DateTime.UtcNow < deadline)
+        await host.RunJobsAsync();
+        host.Jobs.Failed.ShouldBeEmpty();
+        lock (_email.Digests)
         {
-            lock (_email.Digests)
-            {
-                if (_email.Digests.Count > 0)
-                {
-                    return _email.Digests[0];
-                }
-            }
-
-            await Task.Delay(200);
+            _email.Digests.ShouldNotBeEmpty("the weekly jobs digest job did not send");
+            return _email.Digests[0];
         }
-
-        throw new TimeoutException("The weekly jobs digest was not sent within 30s.");
     }
 
     [Fact]
@@ -305,7 +305,7 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
 
         // A profile that exists without the stamp (the row predates the rule, say) is swept for
         // but never scored: the CVs page's promise holds for anyone who has not said yes.
-        await using (var scope = _factory!.Services.CreateAsyncScope())
+        await using (var scope = _factory.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var profileService = scope.ServiceProvider.GetRequiredService<IUserJobSourceProfileService>();
@@ -327,10 +327,7 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task The_Per_User_Weekly_Cap_Scores_The_Best_Ranked_First_And_Holds_Across_Runs()
     {
-        await TestHostDisposal.DisposeQuietlyAsync(_factory!);
-        _factory = CreateFactory(await shared.CreateIsolatedDatabaseAsync(nameof(JobFitScoringTests) + "_cap"),
-            s => s["JobSources:Scoring:MaxPerUserPerWeek"] = "4");
-        await ReRegisterAsync();
+        await WithSettingsAsync(("JobSources:Scoring:MaxPerUserPerWeek", "4"));
         await SaveProfileAsync();
 
         await SweepAsync();
@@ -347,23 +344,17 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task The_Daily_Call_Ceiling_Stops_The_Run_And_Scoring_Can_Be_Turned_Off()
     {
-        await TestHostDisposal.DisposeQuietlyAsync(_factory!);
-        _factory = CreateFactory(await shared.CreateIsolatedDatabaseAsync(nameof(JobFitScoringTests) + "_daily"),
-            s => s["JobSources:Scoring:MaxCallsPerDay"] = "5");
-        await ReRegisterAsync();
+        await WithSettingsAsync(("JobSources:Scoring:MaxCallsPerDay", "5"));
         await SaveProfileAsync();
 
         await SweepAsync();
         _model.Requests.Count.ShouldBe(5);
 
-        await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        _factory = CreateFactory(await shared.CreateIsolatedDatabaseAsync(nameof(JobFitScoringTests) + "_off"),
-            s => s["JobSources:Scoring:Enabled"] = "false");
-        await ReRegisterAsync();
+        await WithSettingsAsync(("JobSources:Scoring:Enabled", "false"));
         await SaveProfileAsync();
 
         await SweepAsync();
-        _model.Requests.Count.ShouldBe(5);
+        _model.Requests.ShouldBeEmpty();
         (await ListAsync()).Items.Count.ShouldBe(13);
     }
 
@@ -388,7 +379,7 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
         await SweepAsync();
         _model.Requests.Count.ShouldBe(14);
 
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.AiUsageEntries.CountAsync(e => !e.Succeeded)).ShouldBe(2);
         (await db.UserJobSourceDeliveries.Where(d => d.UserId == _proId && d.Score == null).Select(d => d.ScoreAttempts).SingleAsync())
@@ -406,7 +397,7 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
             Content = JsonContent.Create(new DeleteAccountRequest("P@ssw0rd123!"), options: JsonOptions)
         })).EnsureSuccessStatusCode();
 
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.Users.AnyAsync(u => u.Id == _proId)).ShouldBeFalse();
         (await db.UserJobSourceDeliveries.AnyAsync(d => d.UserId == _proId)).ShouldBeFalse();
@@ -422,21 +413,19 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
 
     private async Task SweepAsync()
     {
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<IJobSourceSweepService>().SweepAsync(CancellationToken.None);
     }
 
     private async Task<JobSourceDeliveriesResponse> ListAsync() =>
         (await _pro.GetFromJsonAsync<JobSourceDeliveriesResponse>($"/api/job-sources/postings?week={ThisWeek}", JsonOptions))!;
 
-    /// <summary>For the tests that need a factory with different settings: a fresh database, the
-    /// same two users, the entitlement and the CV again.</summary>
+    /// <summary>The two users, the entitlement and the CV — on whichever host _factory is.</summary>
     private async Task ReRegisterAsync()
     {
-        _linkedIn = new LinkedInStubHandler();
         (_admin, _) = await RegisterAsync("admin.jobfit@ekariyerim.com");
         (_pro, _proId) = await RegisterAsync("pro.jobfit@example.com");
-        await using (var scope = _factory!.Services.CreateAsyncScope())
+        await using (var scope = _factory.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var admin = await db.Users.SingleAsync(u => u.Email == "admin.jobfit@ekariyerim.com");
@@ -456,7 +445,7 @@ public class JobFitScoringTests(SharedInfrastructure shared) : IAsyncLifetime
 
     private async Task<(HttpClient Client, Guid UserId)> RegisterAsync(string email)
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var response = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest(email, "P@ssw0rd123!", "Job", "Fit", true), JsonOptions);
         response.EnsureSuccessStatusCode();

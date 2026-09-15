@@ -1,13 +1,12 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Mailing;
 using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Persistence;
 using AfterApply.IntegrationTests.Identity;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -17,11 +16,60 @@ namespace AfterApply.IntegrationTests.Payments;
 
 /// <summary>
 /// One configured host for the payment tests: PayTR switched on with test secrets, the PayTR
-/// transport stubbed, e-mail captured, the clock movable. Hangfire's server stays off (jobs are
-/// enqueued, not run) so the tests call the maintenance service directly and assert on what was
-/// queued through the captured sender only where a job would have run inline.
+/// transport stubbed, e-mail captured, the clock movable. Jobs (the receipt, refund and reminder
+/// e-mails) are recorded rather than run, so the tests call <c>RunJobsAsync</c> where a mail is
+/// expected and assert on the captured sender.
 /// </summary>
-internal sealed class PaymentTestHost : IAsyncDisposable
+public class PaymentProfile : IHostProfile
+{
+    /// <summary>The feature switch; <see cref="PayTrFlagOffProfile" /> turns it off.</summary>
+    protected virtual bool Enabled => true;
+
+    public StubPayTrHandler PayTr { get; } = new();
+
+    public MutableTimeProvider Clock { get; } = new(PaymentTestHost.Start);
+
+    public CapturingEmailSender Emails { get; } = new();
+
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["PayTr:Enabled"] = Enabled ? "true" : "false",
+            ["PayTr:MerchantId"] = PaymentTestHost.MerchantId,
+            ["PayTr:MerchantKey"] = PaymentTestHost.MerchantKey,
+            ["PayTr:MerchantSalt"] = PaymentTestHost.MerchantSalt,
+            ["PayTr:TestMode"] = "true",
+            ["PayTr:Plans:Monthly:AmountMinor"] = PaymentTestHost.MonthlyPrice.ToString(),
+            ["PayTr:Plans:Yearly:AmountMinor"] = PaymentTestHost.YearlyPrice.ToString(),
+            ["App:WebBaseUrl"] = "https://www.ekariyerim.com",
+        }));
+        builder.ConfigureServices(services =>
+        {
+            services.AddHttpClient(nameof(IPayTrClient)).ConfigurePrimaryHttpMessageHandler(() => PayTr);
+            services.AddSingleton<TimeProvider>(Clock);
+            services.AddSingleton<IEmailSender>(Emails);
+        });
+    }
+
+    public void Reset()
+    {
+        PayTr.Reset();
+        Clock.Reset();
+        Emails.Reset();
+    }
+}
+
+/// <summary>The same host with the switch off (the secrets stay): nothing of the checkout is
+/// observable, except the notification endpoint, which only needs the secrets.</summary>
+public sealed class PayTrFlagOffProfile : PaymentProfile
+{
+    protected override bool Enabled => false;
+}
+
+/// <summary>The payment tests' view of their class host: the constants the assertions quote, the
+/// stub, the clock, the captured mail, and the helpers that drive PayTR's side of the protocol.</summary>
+internal sealed class PaymentTestHost(ApiHost host)
 {
     public const string MerchantId = "100200";
     public const string MerchantKey = "test-merchant-key";
@@ -32,54 +80,20 @@ internal sealed class PaymentTestHost : IAsyncDisposable
 
     public static readonly DateTimeOffset Start = new(2026, 9, 15, 10, 0, 0, TimeSpan.Zero);
 
-    public static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    public static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    public WebApplicationFactory<Program> Factory { get; }
+    public WebApplicationFactory<Program> Factory => host;
 
-    public StubPayTrHandler PayTr { get; } = new();
+    private PaymentProfile Profile => (PaymentProfile)host.Profile;
 
-    public MutableTimeProvider Clock { get; } = new(Start);
+    public StubPayTrHandler PayTr => Profile.PayTr;
 
-    public CapturingEmailSender Emails => Factory.Services.GetRequiredService<CapturingEmailSender>();
+    public MutableTimeProvider Clock => Profile.Clock;
 
-    private PaymentTestHost(string postgres, Action<IDictionary<string, string?>>? configure)
-    {
-        var settings = new Dictionary<string, string?>
-        {
-            ["PayTr:Enabled"] = "true",
-            ["PayTr:MerchantId"] = MerchantId,
-            ["PayTr:MerchantKey"] = MerchantKey,
-            ["PayTr:MerchantSalt"] = MerchantSalt,
-            ["PayTr:TestMode"] = "true",
-            ["PayTr:Plans:Monthly:AmountMinor"] = MonthlyPrice.ToString(),
-            ["PayTr:Plans:Yearly:AmountMinor"] = YearlyPrice.ToString(),
-            ["App:WebBaseUrl"] = "https://www.ekariyerim.com",
-        };
-        configure?.Invoke(settings);
+    public CapturingEmailSender Emails => Profile.Emails;
 
-        Factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(settings));
-            builder.ConfigureServices(services =>
-            {
-                services.AddHttpClient(nameof(IPayTrClient)).ConfigurePrimaryHttpMessageHandler(() => PayTr);
-                services.AddSingleton<TimeProvider>(Clock);
-                services.AddSingleton<CapturingEmailSender>();
-                services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<CapturingEmailSender>());
-            });
-        });
-    }
-
-    public static async Task<PaymentTestHost> CreateAsync(SharedInfrastructure shared, string name, Action<IDictionary<string, string?>>? configure = null)
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(name);
-        return new PaymentTestHost(postgres, configure);
-    }
+    /// <summary>Performs the e-mail jobs the last request enqueued.</summary>
+    public Task RunJobsAsync() => host.RunJobsAsync();
 
     public async Task<(HttpClient Client, Guid UserId)> RegisterAsync(string email, string locale = "tr", bool admin = false)
     {
@@ -149,6 +163,4 @@ internal sealed class PaymentTestHost : IAsyncDisposable
         await using var scope = Factory.Services.CreateAsyncScope();
         await action(scope.ServiceProvider);
     }
-
-    public async ValueTask DisposeAsync() => await TestHostDisposal.DisposeQuietlyAsync(Factory);
 }

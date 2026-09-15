@@ -8,15 +8,31 @@ namespace AfterApply.IntegrationTests.Payments;
 /// and the signatures, and the real services act on what comes back. Answers are scripted per
 /// path so a test can make get-token succeed and the refund be refused, or the whole host vanish.
 /// </summary>
-internal sealed class StubPayTrHandler : HttpMessageHandler
+public sealed class StubPayTrHandler : HttpMessageHandler
 {
     private readonly List<(string Path, IReadOnlyDictionary<string, string> Form)> _requests = [];
 
-    public Func<IReadOnlyDictionary<string, string>, HttpResponseMessage> TokenResponse { get; set; } =
-        _ => Json("""{"status":"success","token":"stub-iframe-token"}""");
+    public Func<IReadOnlyDictionary<string, string>, HttpResponseMessage> TokenResponse { get; set; } = DefaultTokenResponse;
 
-    public Func<IReadOnlyDictionary<string, string>, HttpResponseMessage> RefundResponse { get; set; } =
-        form => Json($$"""{"status":"success","is_test":1,"merchant_oid":"{{form["merchant_oid"]}}","return_amount":"{{form["return_amount"]}}","reference_no":"{{form["reference_no"]}}"}""");
+    public Func<IReadOnlyDictionary<string, string>, HttpResponseMessage> RefundResponse { get; set; } = DefaultRefundResponse;
+
+    private static HttpResponseMessage DefaultTokenResponse(IReadOnlyDictionary<string, string> _) =>
+        Json("""{"status":"success","token":"stub-iframe-token"}""");
+
+    private static HttpResponseMessage DefaultRefundResponse(IReadOnlyDictionary<string, string> form) =>
+        Json($$"""{"status":"success","is_test":1,"merchant_oid":"{{form["merchant_oid"]}}","return_amount":"{{form["return_amount"]}}","reference_no":"{{form["reference_no"]}}"}""");
+
+    /// <summary>Default answers again and no requests seen — between tests, since one stub
+    /// serves a whole class.</summary>
+    public void Reset()
+    {
+        TokenResponse = DefaultTokenResponse;
+        RefundResponse = DefaultRefundResponse;
+        lock (_requests)
+        {
+            _requests.Clear();
+        }
+    }
 
     public IReadOnlyList<(string Path, IReadOnlyDictionary<string, string> Form)> Requests
     {
@@ -46,17 +62,4 @@ internal sealed class StubPayTrHandler : HttpMessageHandler
 
         return path.EndsWith("get-token", StringComparison.Ordinal) ? TokenResponse(form) : RefundResponse(form);
     }
-}
-
-/// <summary>A clock the test moves by hand, so the expiry job and the reminder job can be run
-/// "later" without waiting.</summary>
-internal sealed class MutableTimeProvider(DateTimeOffset start) : TimeProvider
-{
-    private DateTimeOffset _now = start;
-
-    public override DateTimeOffset GetUtcNow() => _now;
-
-    public void Advance(TimeSpan by) => _now += by;
-
-    public void Set(DateTimeOffset now) => _now = now;
 }

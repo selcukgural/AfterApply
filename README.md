@@ -162,7 +162,7 @@ podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod
   `dotnet test` with `--blame-hang` so a stalled test ends the run in two minutes **with its
   name** rather than hanging it, kills the run outright at fifteen, removes any container the
   run left behind, and prints a per-class timing table so a class that got slow is visible.
-  Current shape on this machine: **405 tests, ~1 min 25 s**, green, run after run.
+  Current shape on this branch: **482 tests, ~1 min 50 s**, green, run after run.
 
   How the suite is built, in one paragraph (details and history in `DECISIONS.md`, 2026-09-15):
   one Postgres container per run, its schema migrated once into a template database; **one

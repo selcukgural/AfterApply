@@ -11,7 +11,7 @@ namespace AfterApply.IntegrationTests.Payments;
 
 /// <summary>Step 1 of the PayTR iFrame flow: the pending order and the token request.</summary>
 [Collection(IntegrationTestCollection.Name)]
-public class PayTrCheckoutTests(SharedInfrastructure shared) : IAsyncLifetime
+public class PayTrCheckoutTests(ApiHost<PaymentProfile> host) : IClassFixture<ApiHost<PaymentProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;
     private HttpClient _client = null!;
@@ -22,11 +22,12 @@ public class PayTrCheckoutTests(SharedInfrastructure shared) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _host = await PaymentTestHost.CreateAsync(shared, nameof(PayTrCheckoutTests));
+        await host.ResetAsync();
+        _host = new PaymentTestHost(host);
         (_client, _userId) = await _host.RegisterAsync("checkout@example.com");
     }
 
-    public async Task DisposeAsync() => await _host.DisposeAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Plans_Lists_Prices_And_The_Callers_Entitlement()
@@ -218,14 +219,17 @@ public class PayTrCheckoutTests(SharedInfrastructure shared) : IAsyncLifetime
 /// <summary>With the switch off (or the secrets missing) nothing of the checkout is observable —
 /// except the notification endpoint, which only needs the secrets.</summary>
 [Collection(IntegrationTestCollection.Name)]
-public class PayTrFlagOffTests(SharedInfrastructure shared) : IAsyncLifetime
+public class PayTrFlagOffTests(ApiHost<PayTrFlagOffProfile> host) : IClassFixture<ApiHost<PayTrFlagOffProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;
 
-    public async Task InitializeAsync() =>
-        _host = await PaymentTestHost.CreateAsync(shared, nameof(PayTrFlagOffTests), settings => settings["PayTr:Enabled"] = "false");
+    public async Task InitializeAsync()
+    {
+        await host.ResetAsync();
+        _host = new PaymentTestHost(host);
+    }
 
-    public async Task DisposeAsync() => await _host.DisposeAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Checkout_Routes_404_And_Config_Says_Disabled_But_The_Callback_Still_Answers()

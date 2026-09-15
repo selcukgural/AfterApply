@@ -16,7 +16,7 @@ namespace AfterApply.IntegrationTests.Payments;
 
 /// <summary>Refunds through our system (never the merchant panel) and the admin's payments panel API.</summary>
 [Collection(IntegrationTestCollection.Name)]
-public class PaymentRefundAndAdminTests(SharedInfrastructure shared) : IAsyncLifetime
+public class PaymentRefundAndAdminTests(ApiHost<PaymentProfile> host) : IClassFixture<ApiHost<PaymentProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;
     private HttpClient _user = null!;
@@ -25,12 +25,13 @@ public class PaymentRefundAndAdminTests(SharedInfrastructure shared) : IAsyncLif
 
     public async Task InitializeAsync()
     {
-        _host = await PaymentTestHost.CreateAsync(shared, nameof(PaymentRefundAndAdminTests));
+        await host.ResetAsync();
+        _host = new PaymentTestHost(host);
         (_user, _userId) = await _host.RegisterAsync("buyer@example.com");
         (_admin, _) = await _host.RegisterAsync("admin.payments@ekariyerim.com", admin: true);
     }
 
-    public async Task DisposeAsync() => await _host.DisposeAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<CheckoutResponse> PayAsync(string plan = "monthly", long? total = null, HttpClient? client = null)
     {
@@ -352,9 +353,9 @@ public class PaymentRefundAndAdminTests(SharedInfrastructure shared) : IAsyncLif
     }
 }
 
-/// <summary>The two Hangfire jobs, called directly with a movable clock.</summary>
+/// <summary>The two recurring jobs, called directly with a movable clock.</summary>
 [Collection(IntegrationTestCollection.Name)]
-public class PaymentMaintenanceTests(SharedInfrastructure shared) : IAsyncLifetime
+public class PaymentMaintenanceTests(ApiHost<PaymentProfile> host) : IClassFixture<ApiHost<PaymentProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;
     private HttpClient _user = null!;
@@ -362,11 +363,12 @@ public class PaymentMaintenanceTests(SharedInfrastructure shared) : IAsyncLifeti
 
     public async Task InitializeAsync()
     {
-        _host = await PaymentTestHost.CreateAsync(shared, nameof(PaymentMaintenanceTests));
+        await host.ResetAsync();
+        _host = new PaymentTestHost(host);
         (_user, _userId) = await _host.RegisterAsync("maintenance@example.com", locale: "en");
     }
 
-    public async Task DisposeAsync() => await _host.DisposeAsync();
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private Task<int> RunAsync(Func<IPaymentMaintenanceService, Task<int>> job)
     {

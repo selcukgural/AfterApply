@@ -9,16 +9,32 @@ namespace AfterApply.IntegrationTests.JobSources;
 /// the transport is replaced — the real client, pipeline, parsers and sweep run. Cards are
 /// synthetic; the markup is the site's.
 /// </summary>
-internal sealed class KariyerNetStubHandler : HttpMessageHandler
+public sealed class KariyerNetStubHandler : HttpMessageHandler
 {
     private readonly List<Uri> _requested = [];
     private readonly Queue<HttpStatusCode> _scriptedStatuses = new();
 
-    public List<(string Id, string Slug, string Title, string Company, string Location, string WorkModel, string Date)> Cards { get; } =
+    public List<(string Id, string Slug, string Title, string Company, string Location, string WorkModel, string Date)> Cards { get; } = DefaultCards();
+
+    private static List<(string Id, string Slug, string Title, string Company, string Location, string WorkModel, string Date)> DefaultCards() =>
         Enumerable.Range(1, 4)
             .Select(i => ($"45500000{i:00}", $"firma-{i}-net-gelistirici", $"Kariyer .NET Geliştirici {i}",
                 i % 2 == 0 ? "Marmara Yazılım" : "Anadolu Bilişim", "İstanbul", i == 2 ? "Uzaktan" : "İş Yerinde", $"{i} gün"))
             .ToList();
+
+    /// <summary>Back to the four default cards, nothing scripted, nothing requested — between
+    /// tests, since one handler serves a whole class.</summary>
+    public void Reset()
+    {
+        lock (_requested)
+        {
+            _requested.Clear();
+        }
+
+        _scriptedStatuses.Clear();
+        Cards.Clear();
+        Cards.AddRange(DefaultCards());
+    }
 
     public IReadOnlyList<Uri> Requested
     {

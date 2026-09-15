@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.JobSources;
@@ -20,21 +19,16 @@ namespace AfterApply.IntegrationTests.JobSources;
 /// without touching the network or the database.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class JobSourceFlagOffTests(SharedInfrastructure shared) : IAsyncLifetime
+public class JobSourceFlagOffTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _admin = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(JobSourceFlagOffTests));
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
+        await host.ResetAsync();
 
         _admin = _factory.CreateClient();
         var response = await _admin.PostAsJsonAsync("/api/auth/register",
@@ -49,13 +43,7 @@ public class JobSourceFlagOffTests(SharedInfrastructure shared) : IAsyncLifetime
         await db.SaveChangesAsync();
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Every_Route_Is_A_404_Even_For_An_Admin()

@@ -9,15 +9,31 @@ namespace AfterApply.IntegrationTests.JobSources;
 /// real sweep all run. A test can script a status for the next N answers (a 429, say) and can
 /// add cards between "weeks".
 /// </summary>
-internal sealed class LinkedInStubHandler : HttpMessageHandler
+public sealed class LinkedInStubHandler : HttpMessageHandler
 {
     private readonly List<Uri> _requested = [];
     private readonly Queue<HttpStatusCode> _scriptedStatuses = new();
 
-    public List<(string Id, string Title, string Company, string Location, string Date)> Cards { get; } =
+    public List<(string Id, string Title, string Company, string Location, string Date)> Cards { get; } = DefaultCards();
+
+    private static List<(string Id, string Title, string Company, string Location, string Date)> DefaultCards() =>
         Enumerable.Range(1, 13)
             .Select(i => ($"44600000{i:00}", $"Software Developer {i}", i % 2 == 0 ? "Kuzey Teknoloji" : "Acme Bankacılık", "İstanbul", "2026-09-10"))
             .ToList();
+
+    /// <summary>Back to the thirteen default cards, nothing scripted, nothing requested — between
+    /// tests, since one handler serves a whole class.</summary>
+    public void Reset()
+    {
+        lock (_requested)
+        {
+            _requested.Clear();
+        }
+
+        _scriptedStatuses.Clear();
+        Cards.Clear();
+        Cards.AddRange(DefaultCards());
+    }
 
     public IReadOnlyList<Uri> Requested
     {
@@ -108,14 +124,4 @@ internal sealed class LinkedInStubHandler : HttpMessageHandler
           <li><h3 class="description__job-criteria-subheader">Industries</h3><span class="description__job-criteria-text">Software</span></li>
         </ul>
         """;
-}
-
-/// <summary>A clock the tests can move, so "next week" is a call rather than a wait.</summary>
-internal sealed class MutableTimeProvider(DateTimeOffset start) : TimeProvider
-{
-    private DateTimeOffset _now = start;
-
-    public override DateTimeOffset GetUtcNow() => _now;
-
-    public void Advance(TimeSpan by) => _now += by;
 }

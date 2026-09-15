@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.JobSources.Contracts;
@@ -11,6 +9,7 @@ using AfterApply.Domain.Documents;
 using AfterApply.Domain.JobSources;
 using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,45 +21,51 @@ namespace AfterApply.IntegrationTests.JobSources;
 /// The two ways the sweep stops itself — the source saying no, and the day's budget running out —
 /// and that both are visible on the admin usage endpoint. The "low volume" promise, as tests.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class JobSourceStopTests(SharedInfrastructure shared) : IAsyncLifetime
+/// <summary>LinkedIn alone (these tests are about one source's budget and stop rule), with a
+/// small daily budget and a clock the tests move.</summary>
+public sealed class JobSourceStopProfile : IHostProfile
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    public LinkedInStubHandler LinkedIn { get; } = new();
+    public MutableTimeProvider Clock { get; } = new(DateTimeOffset.UtcNow);
+
+    public void Configure(IWebHostBuilder builder)
     {
-        Converters = { new JsonStringEnumConverter() }
-    };
+        builder.UseSetting("JobSources:Enabled", "true");
+        builder.UseSetting("JobSources:KariyerNetEnabled", "false");
+        builder.UseSetting("JobSources:MinDelayMs", "0");
+        builder.UseSetting("JobSources:RetryBaseDelayMs", "1");
+        builder.UseSetting("JobSources:MaxRequestsPerDay", JobSourceStopTests.DailyBudget.ToString());
+        builder.ConfigureServices(services =>
+        {
+            services.AddSingleton<TimeProvider>(Clock);
+            services.AddHttpClient(nameof(ILinkedInJobSourceClient))
+                .ConfigurePrimaryHttpMessageHandler(() => LinkedIn);
+        });
+    }
 
-    private const int DailyBudget = 3;
+    public void Reset()
+    {
+        LinkedIn.Reset();
+        Clock.Reset();
+    }
+}
 
-    private WebApplicationFactory<Program>? _factory;
-    private LinkedInStubHandler _linkedIn = null!;
-    private MutableTimeProvider _clock = null!;
+[Collection(IntegrationTestCollection.Name)]
+public class JobSourceStopTests(ApiHost<JobSourceStopProfile> host) : IClassFixture<ApiHost<JobSourceStopProfile>>, IAsyncLifetime
+{
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
+
+    internal const int DailyBudget = 3;
+
+    private WebApplicationFactory<Program> _factory => host;
+    private LinkedInStubHandler _linkedIn => host.Profile.LinkedIn;
+    private MutableTimeProvider _clock => host.Profile.Clock;
     private HttpClient _admin = null!;
     private HttpClient _pro = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(JobSourceStopTests));
-        _linkedIn = new LinkedInStubHandler();
-        _clock = new MutableTimeProvider(DateTimeOffset.UtcNow);
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("JobSources:Enabled", "true");
-            // LinkedIn alone: these tests are about one source's budget and stop rule.
-            builder.UseSetting("JobSources:KariyerNetEnabled", "false");
-            builder.UseSetting("JobSources:MinDelayMs", "0");
-            builder.UseSetting("JobSources:RetryBaseDelayMs", "1");
-            builder.UseSetting("JobSources:MaxRequestsPerDay", DailyBudget.ToString());
-            builder.ConfigureServices(services =>
-            {
-                services.AddSingleton<TimeProvider>(_clock);
-                services.AddHttpClient(nameof(ILinkedInJobSourceClient))
-                    .ConfigurePrimaryHttpMessageHandler(() => _linkedIn);
-            });
-        });
+        await host.ResetAsync();
 
         _admin = await RegisterAsync("admin.stop@ekariyerim.com");
         _pro = await RegisterAsync("pro.stop@example.com");
@@ -81,13 +86,7 @@ public class JobSourceStopTests(SharedInfrastructure shared) : IAsyncLifetime
             new UpsertJobSourceProfileRequest([".NET Developer", "Java Developer"], "İstanbul", AcceptAiScoring: true), JsonOptions)).EnsureSuccessStatusCode();
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task A_429_Stops_The_Whole_Run_And_The_Next_Day_Is_Skipped()
@@ -106,7 +105,7 @@ public class JobSourceStopTests(SharedInfrastructure shared) : IAsyncLifetime
         usage.LastBlockedAt.ShouldNotBeNull();
         usage.CooldownUntil.ShouldBe(usage.LastBlockedAt.Value.AddHours(24));
 
-        await using (var scope = _factory!.Services.CreateAsyncScope())
+        await using (var scope = _factory.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var fetch = await db.JobSourceFetches.SingleAsync();
@@ -137,7 +136,7 @@ public class JobSourceStopTests(SharedInfrastructure shared) : IAsyncLifetime
 
         // The 502 was retried by the pipeline (2 transport calls, 1 ledger row) and the run went on.
         (await ListAsync()).Items.ShouldNotBeEmpty();
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.JobSourceFetches.CountAsync(f => f.Outcome == JobSourceFetchOutcome.Ok)).ShouldBe(DailyBudget);
         (await db.JobSourceFetches.CountAsync()).ShouldBe(DailyBudget);
@@ -171,7 +170,7 @@ public class JobSourceStopTests(SharedInfrastructure shared) : IAsyncLifetime
 
     private async Task SweepAsync()
     {
-        await using var scope = _factory!.Services.CreateAsyncScope();
+        await using var scope = _factory.Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<IJobSourceSweepService>().SweepAsync(CancellationToken.None);
     }
 
@@ -180,7 +179,7 @@ public class JobSourceStopTests(SharedInfrastructure shared) : IAsyncLifetime
 
     private async Task<HttpClient> RegisterAsync(string email)
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var response = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest(email, "P@ssw0rd123!", "Stop", "Test", true), JsonOptions);
         response.EnsureSuccessStatusCode();
