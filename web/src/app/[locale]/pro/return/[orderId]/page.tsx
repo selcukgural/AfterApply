@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useParams, useSearchParams } from "next/navigation";
+import { ProgressRing } from "@/components/pro/ProgressRing";
 
 /**
  * Where PayTR sends the browser after the payment page finishes (`merchant_ok_url` /
@@ -34,9 +35,19 @@ export default function PayTrReturnPage() {
     window.location.replace(target);
   }, [locale, params.orderId, searchParams]);
 
+  // Seen for a moment at most, top-level or inside the frame; the same waiting mark as the
+  // result page, so the hand-over reads as one continuous wait rather than two screens.
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
-      <p className="text-sm text-gray-500 dark:text-gray-400">{t("loading")}</p>
+      <div
+        className="flex w-full max-w-md flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-7 text-center dark:border-gray-800 dark:bg-gray-900"
+        role="status"
+        aria-live="polite"
+      >
+        <ProgressRing size={40} spinning />
+        <p className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("returningFromPayment")}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300">{t("returningFromPaymentNote")}</p>
+      </div>
     </main>
   );
 }
