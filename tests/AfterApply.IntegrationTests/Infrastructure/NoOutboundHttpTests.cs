@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using AfterApply.Infrastructure.OpenAi;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,28 +17,13 @@ namespace AfterApply.IntegrationTests.Infrastructure;
 /// LinkedIn.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class NoOutboundHttpTests(SharedInfrastructure shared) : IAsyncLifetime
+public class NoOutboundHttpTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(NoOutboundHttpTests));
+    public Task InitializeAsync() => host.ResetAsync();
 
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Theory]
     // The clients that fetch on behalf of user data, which is how the calls got out: a company's

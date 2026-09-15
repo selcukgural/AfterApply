@@ -1,12 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Benchmark;
 using AfterApply.Application.Benchmark.Contracts;
 using AfterApply.Domain.Benchmark;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,48 +13,43 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Benchmark;
 
+public sealed class BenchmarkProfile : IHostProfile
+{
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("Benchmark:MinimumSampleSize", BenchmarkTests.Threshold.ToString());
+    }
+}
+
 /// <summary>
 /// The public benchmark, end to end. The threshold is set to three for these tests so the rule that
 /// matters — nothing is compared below it — can be crossed in a few requests rather than thirty.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class BenchmarkTests(SharedInfrastructure shared) : IAsyncLifetime
+public class BenchmarkTests(ApiHost<BenchmarkProfile> host) : IClassFixture<ApiHost<BenchmarkProfile>>, IAsyncLifetime
 {
-    private const int Threshold = 3;
+    internal const int Threshold = 3;
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
 
     public Task InitializeAsync() => InitialiseAsync();
 
     private async Task InitialiseAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(BenchmarkTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("Benchmark:MinimumSampleSize", Threshold.ToString());
-        });
+        await host.ResetAsync();
 
         // Never given an Authorization header: every test is also an assertion that a stranger can
         // answer this, which is the entire point of the page.
         _client = _factory.CreateClient();
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
         _client.Dispose();
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
+        return Task.CompletedTask;
     }
 
     private static SubmitBenchmarkRequest Answer(

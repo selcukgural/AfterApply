@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.TrackedJobs.Contracts;
@@ -18,35 +16,15 @@ using Shouldly;
 namespace AfterApply.IntegrationTests.TrackedJobs;
 
 [Collection(IntegrationTestCollection.Name)]
-public class TrackedJobFlowTests(SharedInfrastructure shared) : IAsyncLifetime
+public class TrackedJobFlowTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(TrackedJobFlowTests));
+    public Task InitializeAsync() => host.ResetAsync();
 
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
-
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<HttpClient> AuthenticatedClientAsync(string email)
     {

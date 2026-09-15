@@ -12,6 +12,12 @@ public sealed class FakeEmailJobExtractionProvider : IEmailJobExtractionProvider
 
     public int CallCount { get; private set; }
 
+    public void Reset()
+    {
+        Result = null;
+        CallCount = 0;
+    }
+
     public Task<EmailJobExtractionResult?> ExtractAsync(string subject, string snippet, CancellationToken cancellationToken)
     {
         CallCount++;

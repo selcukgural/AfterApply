@@ -6160,3 +6160,119 @@ gereken adımı gizlemekten iyidir (`resolveGmailEmptyState`).
 
 **Testler:** integration — `EmailSignalTests`: flag kapalıyken 404, taze hesapta `false`,
 sinyalden sonra `true`. Web — `emptyState.test.ts` (üç dal), `moderationTable.contract.test.ts`.
+
+## Entegrasyon testleri: sınıf başına host, inline iş, sızıntı kapandı — 33 dk'dan 2 dk'ya (2026-09-15, gece)
+
+**Tetikleyici.** Tam paket 410 testte 32 dk 56 s sürüp "Test Run Aborted" ile düştü; ardından tek
+bir test (`PostgresPoolCapTests.Hangfire_Runs_Under_The_Same_Cap…`) 40 dakika asılı kaldı ve elle
+öldürüldü. 3 Eylül'de 107 test 1 dk 20 s idi: test sayısı 4× artmış, süre 25× — büyüme
+**süperlineer**, yani koşu ilerledikçe biriken bir şey vardı. Kullanıcı: "bu kez KESİNLİKLE kalıcı
+çözüm". Önceki her düzeltme (rate-limiter timer'ları, Hangfire shutdown timeout, WorkerCount=1, GSS
+kapatma, pool idle lifetime, sunucu-off varsayılanı, orphan container temizliği) birikenin **bir
+belirtisini** gidermişti; çarpanın kendisine dokunulmamıştı.
+
+**Kök neden — üç katman, dosya referanslı.**
+1. **Test başına host.** Her sınıf `IAsyncLifetime`'da kendi `WebApplicationFactory`'sini
+   kuruyordu; xunit sınıfı her test **metodu** için yeniden kurduğu için 454 testlik koşu **500+ tam
+   API host** boot ediyordu (`EmailSignalTests` testte üç). Her boot: tam DI, Hangfire storage +
+   her klon DB'ye şema kurulumu, 6 recurring-job yazımı, DataProtection anahtarı, 12 HttpClient.
+2. **Host'lar ölmüyordu.** (a) 3 Eylül heap dump'ının gcroot zinciri `FileSystemWatcher → … → Host`
+   idi ve "bilinçli düzeltilmedi": `appsettings*.json` **reloadOnChange izleyicisi** her host'u OS
+   callback'i üzerinden köklüyordu. (b) `WebApplicationFactory.DisposeAsync` =
+   `await _host.StopAsync(); _host.Dispose();` — **try/finally yok**; Hangfire'lı host'ta StopAsync
+   30 s sonra `TaskCanceledException` atınca `Dispose` hiç çağrılmıyor, host worker thread'leri ve
+   Npgsql pool'uyla **canlı** kalıyordu; `TestHostDisposal.DisposeQuietlyAsync` bunu yutup sızıntıyı
+   gizliyordu. Bugünkü testhost 2.4 GB RSS / %145 CPU bunun ta kendisiydi.
+3. **Gerçek Hangfire sunucusu.** 12 sınıf iş etkisini görmek için gerçek sunucu açıyordu
+   (`EmailSignalTests` 45 test × 3 sunucu → ~160 sunuculu host/koşu); her biri kapanışta
+   `ExpirationManager` yüzünden 30 s'ye kadar bekliyor, iş görmek için 200 ms poll / 30–60 s deadline
+   döngüleri (`CsvImportTests.PollUntilTerminalAsync`, `EmailSignalTests.WaitForHangfireIdleAsync` …),
+   negatif iddialar için kör `Task.Delay(2000)`. 33 dakikanın aslan payı buydu.
+4. **Asılan test.** `PostgresPoolCapTests`'in Hangfire testi paketin host başlatan **tek senkron
+   `void` Fact'i** idi: `_factory.Services` → `host.Start()` sync-over-async, xunit'in tek thread'inde
+   (`maxParallelThreads=1`), deadline'sız. Üstüne `MaxPoolSize=3` ile 2 worker + heartbeat/watchdog/
+   scheduler/ExpirationManager/`Servers()` aynı 3'lük pool'a sokuluyordu → pool açlığı, 15 s Npgsql
+   timeout zincirleri. Hiçbir katmanda üst sınır yoktu (`--blame-hang`, watchdog, CI
+   `timeout-minutes`) → 40 dk sessizlik.
+5. Yan bulgu: README'deki `-- xunit.parallelizeTestCollections=false` küçük harf yüzünden no-op'tu
+   (2026-09-01 kaydı zaten söylüyordu); "paralel/seri" farkı sanılan şeyler gürültüydü.
+
+**Karar ve uygulama (tek batch, 56 sınıfın tamamı).**
+- **Sınıf başına host:** `tests/AfterApply.IntegrationTests/ApiHost.cs` — `ApiHost<TProfile> :
+  WebApplicationFactory<Program>` (subclass, `ConfigureWebHost` override; `new
+  WebApplicationFactory().WithWebHostBuilder(...)` deseni dispose edilmeyen bir dış factory
+  bırakıyordu), `IClassFixture` olarak sınıf başına bir kez; ctor'u `SharedInfrastructure`
+  collection fixture'ını alıyor (xunit 2.9.3'te class fixture collection fixture'a bağımlı olabilir;
+  doğrulandı). Sınıf başına **bir** DB klonu + **bir** JWT signing key; `DisposeAsync`'te
+  `DROP DATABASE … WITH (FORCE)`. Test arası izolasyon `host.ResetAsync()`: `public` şemasının tamamı
+  tek `TRUNCATE … CASCADE` (hariç `__EFMigrationsHistory`, `DataProtectionKeys`, `EmailTemplates` —
+  tek `HasData` seed'i; `hangfire` şeması dokunulmaz), sonra **her varyant host'un** `IMemoryCache`'i
+  (`CompanyResolver` ad→id, `PersonalAccessTokenService` token→user, `CompanySearchService` cache'liyor;
+  HybridCache L1 aynı instance), inline iş kuyruğu ve profile fake'leri. `IHostProfile` sınıfın
+  fake/stub/clock'larını sahipleniyor (`Configure`, `Reset`, `InitializeAsync`/`DisposeAsync`);
+  `LocalStorageProfile` scratch dizini, `FakeGcsProfile` fake-gcs container'ını (class fixture başka
+  class fixture alamıyor, o yüzden container profile'ın içinde). **Varyant** (`host.Variant`, aynı DB
+  + kuyruk + key, sınıf başına bir kez): EmailSignal (3), Google/GitHub/LinkedIn sign-in,
+  CompanyIntelligence, ClientConfig. **Standalone** (`host.Standalone`, test içinde `await using`):
+  AccountManagement'ın 429 testi ve CvScan'in 3 özel-config testi (rate-limiter fixed window'ları
+  sıfırlanamaz, paylaşımlı host'ta asla açılmaz), CvScanContentNotes'un test başına provider'ı,
+  JobFitScoring'in cap/ceiling testleri.
+- **Hangfire işleri inline:** `InlineBackgroundJobs.cs` — `InlineBackgroundJobClient :
+  IBackgroundJobClientV2` her ApiHost'ta Hangfire'ın client'ının yerine (`ConfigureTestServices`).
+  `Create` prod serileştirme yolundan round-trip yapıp (`InvocationData.SerializeJob(...).DeserializeJob()`)
+  işi **kuyruğa yazar, çalıştırmaz** (`ApplicationService.cs:281` enqueue'u kendi
+  `SaveChangesAsync`'inden önce). `await host.RunJobsAsync()` kuyruğu boşaltır: her iş **onu enqueue
+  eden host'un** `IServiceScopeFactory`'sinden açılan taze scope'ta (varyant konfigürasyonu iş
+  davranışını değiştiriyor — EmailAutoApproval), `GetRequiredService(job.Type)`,
+  `CancellationToken → None`, `Task` await; zincirler (sweep → digest) aynı çağrıda; fırlatan iş
+  `host.Jobs.Failed`'e. 12 sınıf `POST …; await host.RunJobsAsync(); assert` şekline döndü; tüm
+  `PollUntil*`/`WaitFor*`/`Task.Delay` silindi; negatifler `host.Jobs.Pending.ShouldBeEmpty()`.
+  `PayTrCallbackTests`'in "makbuz gönderilmedi" iddiası (sunucu kapalı olduğu için zayıftı) artık
+  "iş koşunca **tek** makbuz alıcıya gitti"ye güçlendi. Gerçek sunucu **iki** yerde kaldı, bilinçli:
+  `HangfireServerInTestsTests` (kablolama guard'ı, ham factory + gerçek client — `ShouldBeOfType<BackgroundJobClient>`)
+  ve `PostgresPoolCapTests` (`async Task` oldu; `MaxPoolSize` prod ile aynı **5**; `Servers()`
+  20 s sınırlı bekleme — sunucunun announce'u kendi thread'inden geliyor, ilk tam koşuda yarıştı).
+- **Sızıntı kapandı, tripwire'lı:** `TestContainerCleanup.DoNotWatchConfigurationFiles` →
+  `DOTNET_hostBuilder__reloadConfigOnChange=false` (env var; `UseSetting` işe yaramaz, appsettings
+  kaynakları `WebApplication.CreateBuilder` içinde, deferred ayarlardan önce ekleniyor).
+  `HostLifecycleTests.A_Disposed_Host_Is_Collectable`: host kur/dispose → ikinci throwaway host (son
+  host'u Serilog `Log.Logger` ve Hangfire `GlobalConfiguration` köklüyor) → `GC.Collect` →
+  `WeakReference` ölü. **Doğrulandı:** bayrak `true` iken test kırmızı, `false` iken yeşil — sızıntı
+  gerçekten bu izleyiciydi. Aynı sınıf "varsayılan host'ta client inline'dır, sunucu yok" ve
+  "Reset DB'yi ve kuyruğu boşaltır, seed/key ring kalır" guard'larını da taşıyor.
+- **Üst sınır + teşhis:** `scripts/test-integration.sh` tek resmi giriş kapısı — podman socket +
+  Ryuk off, `--blame-hang --blame-hang-timeout 2m --blame-hang-dump-type mini --blame-crash`, 15 dk
+  bash watchdog (macOS'ta `timeout` yok), `trap EXIT` ile `org.testcontainers=true` etiketli
+  container'ları `podman rm -f` (`--blame-hang` kill'inde fixture dispose **çalışmaz**; trap +
+  `PruneOrphanedContainers` gerçek sigorta), `AFTERAPPLY_CRASH_LOG`, TRX'ten **sınıf başına süre
+  tablosu**. `xunit.runner.json`: `diagnosticMessages` + `longRunningTestSeconds: 30`. CI
+  (`tests.yml`): `timeout-minutes: 15` + `--blame-hang 3m`. Kasıtlı asılan testle doğrulandı:
+  koşu 30 s'de (`HANG_TIMEOUT=30s`) **test adıyla** bitti, dump düştü, trap container'ı sildi.
+- Template DB'ye Hangfire şeması bir kez kuruluyor (`SharedInfrastructure.InitializeAsync`'te
+  `new PostgreSqlStorage(...)`), klonlarda `PrepareSchemaIfNecessary` DDL üretmiyor. İki kopya
+  `MutableTimeProvider` tek sınıfa indi; `CapturingEmailSender` kendi dosyasında, `Reset()`'li;
+  stub handler'lara `Reset()/Clear()` eklendi.
+
+**Dal bölünmesi.** İş `feat/linkedin-job-source` üzerinde yapıldı (o daldaki JobSources ve Payments
+sınıfları da aynı desene taşındı); kullanıcı isteğiyle altyapı + main'de var olan 47 sınıf
+`main`'den açılan `test/class-host-inline-jobs` dalına taşındı, JobSources/Payments dönüşümü
+feature dalında rebase sonrası uygulanmak üzere yama olarak ayrıldı. Bu dalda: **405/405, 85 s**.
+
+**Ölçüm (feature dalında, 482 testle).** Önce: 410 test 32 dk 56 s + abort (18:57), 40 dk asılı tek test. Adım 2 (12 Hangfire'lı
+sınıf + guard'lar, 44 sınıf hâlâ test-başına host): 482 test **5 dk 27 s**, 481/482 (tek fail
+PoolCap announce yarışı, düzeltildi). Adım 3 (56 sınıfın tamamı): **482/482, 1 dk 51 s**. Ardışık üç
+koşu ve testhost tepe RSS aşağıda güncellenir. Süre artık test sayısıyla lineer: sınıf boot'u ~0.5–1 s
+× 60 + test başına ~0.1 s.
+
+**Bilinçli yapılmayanlar.** (1) Paralellik (K4): tek collection tek engel; `maxParallelThreads: 2`
+ile 3 koşu ayrı bir ölçüm deneyi, süre hedefi onsuz tutuyor. (2) xunit v3 (native assembly fixture)
+— 56 dosyada `IAsyncLifetime` → `ValueTask` dönüşümü, buradaki hiçbir şeyin ihtiyacı yok.
+(3) `FeedbackGitHubMirrorWithoutAssigneeTests` tek config değeri için ayrı sınıf kaldı (bir host
+boot'u; varyanta çevirmeye değmedi). (4) `PasswordHasherOptions.IterationCount` test-only kaldıracı
+gerekmedi. (5) `RequestAuditTests.SingleRowForPathAsync`'in 2 s'lik sigorta poll'u kaldı — iş değil,
+pipeline sırası; hiç dönmüyor.
+
+**Yeni test yazarken kural.** `IClassFixture<ApiHost<DefaultProfile>>` (ya da kendi `IHostProfile`'ı),
+ilk satır `await host.ResetAsync()`, iş etkisi için `await host.RunJobsAsync()`, kendi
+`WebApplicationFactory`'ni **kurma** — komşularla paylaşılamayan bir konfigürasyon gerçekten gerekiyorsa
+`host.Standalone(...)`. README "Running tests" aynı şeyi söylüyor.

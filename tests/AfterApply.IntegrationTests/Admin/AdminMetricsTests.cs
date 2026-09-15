@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Application.Metrics;
@@ -26,30 +24,21 @@ namespace AfterApply.IntegrationTests.Admin;
 /// line, so nothing could be compared against last week — see DEVELOPMENT_PLAN.md, K5.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class AdminMetricsTests(SharedInfrastructure shared) : IAsyncLifetime
+public class AdminMetricsTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private const string AdminEmail = "admin.metrics@ekariyerim.com";
     private const string OrdinaryEmail = "ordinary.metrics@example.com";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _adminClient = null!;
     private HttpClient _ordinaryClient = null!;
     private HttpClient _anonymousClient = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(AdminMetricsTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
+        await host.ResetAsync();
 
         _adminClient = await CreateAuthenticatedClientAsync(AdminEmail);
         _ordinaryClient = await CreateAuthenticatedClientAsync(OrdinaryEmail);
@@ -71,13 +60,7 @@ public class AdminMetricsTests(SharedInfrastructure shared) : IAsyncLifetime
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync(string email)
     {

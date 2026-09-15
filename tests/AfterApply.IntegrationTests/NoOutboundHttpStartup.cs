@@ -33,7 +33,7 @@ namespace AfterApply.IntegrationTests;
 /// </para>
 /// <para>
 /// Delivered as an <see cref="IHostingStartup" /> rather than per test class on purpose: a run
-/// builds a host per test — around 200 of them across 33 classes — and a rule that each class has
+/// builds a host per class (and more for variants and standalones), and a rule that each class has
 /// to remember to opt into is a rule that lasts until the next class is written. The
 /// <c>ASPNETCORE_HOSTINGSTARTUPASSEMBLIES</c> variable that loads this is set from a module
 /// initializer in TestContainerCleanup, so it applies to every host in the assembly, including the

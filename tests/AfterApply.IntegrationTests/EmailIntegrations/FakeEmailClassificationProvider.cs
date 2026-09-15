@@ -12,6 +12,12 @@ public sealed class FakeEmailClassificationProvider : IEmailClassificationProvid
 
     public int CallCount { get; private set; }
 
+    public void Reset()
+    {
+        Result = new(null, 0, "Llm:NoSignal");
+        CallCount = 0;
+    }
+
     public Task<EmailClassificationResult> ClassifyAsync(string subject, string snippet, CancellationToken cancellationToken)
     {
         CallCount++;

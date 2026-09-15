@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Notifications;
@@ -21,36 +19,21 @@ namespace AfterApply.IntegrationTests.Applications;
 /// and unanswered — mark them all as ghosted?" (DECISIONS.md 2026-09-13, panel reminders).
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class StaleApplicationsTests(SharedInfrastructure shared) : IAsyncLifetime
+public class StaleApplicationsTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(StaleApplicationsTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
+        await host.ResetAsync();
 
         _client = await SignUpAsync("stale.owner@example.com");
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<HttpClient> SignUpAsync(string email)
     {

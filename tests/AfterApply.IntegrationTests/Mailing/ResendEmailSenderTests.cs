@@ -1,11 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.WebUtilities;
@@ -15,63 +14,47 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Mailing;
 
+public sealed class ResendEmailSenderProfile : IHostProfile
+{
+    public CapturingHttpMessageHandler Resend { get; } = new();
+
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
+        // Non-empty so ResendEmailSender doesn't short-circuit on "not configured" — the real
+        // template lookup + HTTP call still happen, just against the captured handler below
+        // instead of the real Resend API.
+        builder.UseSetting("Resend:ApiKey", "test-key");
+
+        builder.ConfigureTestServices(services =>
+        {
+            // AddHttpClient<IEmailSender, ResendEmailSender>() (Program's own registration)
+            // names its client after IEmailSender's short type name — reconfiguring that same
+            // name here overrides just the handler, leaving the real ResendEmailSender (an
+            // internal type, deliberately not exposed to this test project) as the
+            // implementation under test.
+            services.AddHttpClient("IEmailSender").ConfigurePrimaryHttpMessageHandler(() => Resend);
+        });
+    }
+
+    public void Reset() => Resend.Reset();
+}
+
 /// <summary>Exercises the real ResendEmailSender (unlike PasswordResetTests, which swaps IEmailSender
 /// out entirely) — proves the EmailTemplates table rows are actually read, the right locale is
 /// picked, and "{{ResetLink}}" gets substituted, by capturing the outbound HTTP call instead of the
 /// send itself.</summary>
 [Collection(IntegrationTestCollection.Name)]
-public class ResendEmailSenderTests(SharedInfrastructure shared) : IAsyncLifetime
+public class ResendEmailSenderTests(ApiHost<ResendEmailSenderProfile> host) : IClassFixture<ApiHost<ResendEmailSenderProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
-    private CapturingHttpMessageHandler _handler = null!;
+    private WebApplicationFactory<Program> _factory => host;
+    private CapturingHttpMessageHandler _handler => host.Profile.Resend;
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(ResendEmailSenderTests));
+    public Task InitializeAsync() => host.ResetAsync();
 
-        _handler = new CapturingHttpMessageHandler();
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // This class asserts what a background job did, so it needs the one thing the suite
-            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
-            builder.UseSetting("Hangfire:ServerEnabled", "true");
-            builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
-            // Non-empty so ResendEmailSender doesn't short-circuit on "not configured" — the real
-            // template lookup + HTTP call still happen, just against the captured handler below
-            // instead of the real Resend API.
-            builder.UseSetting("Resend:ApiKey", "test-key");
-
-            builder.ConfigureTestServices(services =>
-            {
-                // AddHttpClient<IEmailSender, ResendEmailSender>() (Program's own registration)
-                // names its client after IEmailSender's short type name — reconfiguring that same
-                // name here overrides just the handler, leaving the real ResendEmailSender (an
-                // internal type, deliberately not exposed to this test project) as the
-                // implementation under test.
-                services.AddSingleton(_handler);
-                services.AddHttpClient("IEmailSender")
-                    .ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<CapturingHttpMessageHandler>());
-            });
-        });
-
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<AuthResponse> RegisterAsync(HttpClient client, string email)
     {
@@ -81,24 +64,16 @@ public class ResendEmailSenderTests(SharedInfrastructure shared) : IAsyncLifetim
         return (await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
     }
 
-    // Sending is enqueued via Hangfire, not awaited inline within the request — see
-    // AuthService.ForgotPasswordAsync/ResetPasswordAsync — so this polls the same way
-    // PasswordResetTests does. `sentBefore` distinguishes "a new email arrived" from "the
-    // previous one is still sitting there" when a test triggers two sends in a row.
+    // Sending is enqueued as a background job, not awaited inline within the request — see
+    // AuthService.ForgotPasswordAsync/ResetPasswordAsync — so the job runs here first.
+    // `sentBefore` distinguishes "a new email arrived" from "the previous one is still sitting
+    // there" when a test triggers two sends in a row.
     private async Task<ResendPayload> WaitForSentEmailAsync(int sentBefore = 0)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(30);
-        while (DateTime.UtcNow < deadline)
-        {
-            if (_handler.RequestCount > sentBefore)
-            {
-                return JsonSerializer.Deserialize<ResendPayload>(_handler.LastRequestBody!, JsonOptions)!;
-            }
-
-            await Task.Delay(200);
-        }
-
-        throw new TimeoutException("Resend send was not captured within 30s.");
+        await host.RunJobsAsync();
+        host.Jobs.Failed.ShouldBeEmpty();
+        _handler.RequestCount.ShouldBeGreaterThan(sentBefore, "no Resend send was captured");
+        return JsonSerializer.Deserialize<ResendPayload>(_handler.LastRequestBody!, JsonOptions)!;
     }
 
     [Fact]
@@ -173,11 +148,17 @@ public class ResendEmailSenderTests(SharedInfrastructure shared) : IAsyncLifetim
     private sealed record ResendPayload(string From, string[] To, string Subject, string Html);
 }
 
-internal sealed class CapturingHttpMessageHandler : DelegatingHandler
+public sealed class CapturingHttpMessageHandler : DelegatingHandler
 {
     public string? LastRequestBody { get; private set; }
 
     public int RequestCount { get; private set; }
+
+    public void Reset()
+    {
+        LastRequestBody = null;
+        RequestCount = 0;
+    }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {

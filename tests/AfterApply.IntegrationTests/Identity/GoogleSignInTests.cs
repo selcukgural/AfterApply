@@ -1,13 +1,12 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -23,78 +22,66 @@ namespace AfterApply.IntegrationTests.Identity;
 /// account → linked and signed in; unknown → sign-up step), the consent gate on /google/signup, the
 /// rejections, and what a password-less account means for the rest of the API.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
+/// <summary>The provider's OAuth client, faked, plus the two settings that make the app
+/// consider it configured. One instance serves the whole class.</summary>
+public sealed class GoogleSignInProfile : IHostProfile
 {
-    private const string ClientId = "test-client.apps.googleusercontent.com";
+    public const string ClientId = "test-client.apps.googleusercontent.com";
+
+    public FakeGoogleAuthClient Google { get; } = new();
+
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
+        builder.UseSetting("GoogleAuth:ClientId", ClientId);
+        builder.UseSetting("GoogleAuth:ClientSecret", "test-secret");
+        builder.ConfigureTestServices(services => services.AddSingleton<IGoogleAuthClient>(Google));
+    }
+
+    public void Reset() => Google.Exchanges.Clear();
+}
+
+[Collection(IntegrationTestCollection.Name)]
+public class GoogleSignInTests(ApiHost<GoogleSignInProfile> host) : IClassFixture<ApiHost<GoogleSignInProfile>>, IAsyncLifetime
+{
+    private const string ClientId = GoogleSignInProfile.ClientId;
     private const string RedirectUri = "http://localhost:3000/tr/auth/google/callback";
     private const string CodeVerifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
     private const string Password = "P@ssw0rd123!";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
+
+    private FakeGoogleAuthClient _google => host.Profile.Google;
+    private WebApplicationFactory<Program> _factory => host;
+
+    // Same database, no Google client configured — the shape of a deployment that never set
+    // the two secrets. The test host runs as Development and therefore loads the developer's
+    // user-secrets, where a real client id/secret may well be set (it is on the machine this
+    // was written on); clearing them makes "not configured" mean exactly that, everywhere.
+    private WebApplicationFactory<Program> _unconfiguredFactory => host.Variant("unconfigured", builder =>
     {
-        Converters = { new JsonStringEnumConverter() }
-    };
+        builder.UseSetting("GoogleAuth:ClientId", "");
+        builder.UseSetting("GoogleAuth:ClientSecret", "");
+    });
 
-    private readonly FakeGoogleAuthClient _google = new();
-    private WebApplicationFactory<Program>? _factory;
-    private WebApplicationFactory<Program>? _unconfiguredFactory;
+    public Task InitializeAsync() => host.ResetAsync();
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(GoogleSignInTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
-            builder.UseSetting("GoogleAuth:ClientId", ClientId);
-            builder.UseSetting("GoogleAuth:ClientSecret", "test-secret");
-            builder.ConfigureTestServices(services => services.AddSingleton<IGoogleAuthClient>(_google));
-        });
-
-        // Same database, no Google client configured — the shape of a deployment that never set
-        // the two secrets.
-        _unconfiguredFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // The test host runs as Development and therefore loads the developer's user-secrets,
-            // where a real GoogleAuth client id/secret may well be set (it is on the machine this
-            // was written on). Clear them so "not configured" means exactly that, everywhere.
-            builder.UseSetting("GoogleAuth:ClientId", "");
-            builder.UseSetting("GoogleAuth:ClientSecret", "");
-        });
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-
-        if (_unconfiguredFactory is not null)
-        {
-            await _unconfiguredFactory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Config_Publishes_Availability_And_The_Public_Client_Id()
     {
-        var configured = await _factory!.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
+        var configured = await _factory.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
         configured!.GoogleAuth.ShouldBe(new GoogleAuthConfigResponse(true, ClientId));
 
-        var unconfigured = await _unconfiguredFactory!.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
+        var unconfigured = await _unconfiguredFactory.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
         unconfigured!.GoogleAuth.ShouldBe(new GoogleAuthConfigResponse(false, null));
     }
 
     [Fact]
     public async Task Both_Endpoints_Are_404_When_Not_Configured()
     {
-        var client = _unconfiguredFactory!.CreateClient();
+        var client = _unconfiguredFactory.CreateClient();
 
         var signIn = await client.PostAsJsonAsync("/api/auth/google",
             new GoogleSignInRequest("code", CodeVerifier, RedirectUri), JsonOptions);
@@ -108,7 +95,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_New_Google_Account_Gets_A_Signup_Step_And_Is_Created_Only_With_Consent()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var identity = new GoogleIdentity("g-new-1", "new.google@example.com", true, "Ada", "Lovelace");
 
         var signIn = await SignInAsync(client, identity);
@@ -165,7 +152,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task Replaying_The_Signup_Token_After_The_Account_Exists_Signs_In_Instead_Of_Duplicating()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var identity = new GoogleIdentity("g-replay", "replay@example.com", true, "R", "E");
 
         var pending = (await (await SignInAsync(client, identity)).Content.ReadFromJsonAsync<GoogleSignInResponse>(JsonOptions))!.PendingSignup!;
@@ -185,7 +172,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Verified_Email_Matching_A_Password_Account_Is_Linked_And_Signed_In()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var registered = await RegisterAsync(client, "linked@example.com");
         registered.User.HasPassword.ShouldBeTrue();
 
@@ -210,7 +197,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task An_Unverified_Google_Email_Is_Rejected()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en");
 
         var signIn = await SignInAsync(client, new GoogleIdentity("g-unverified", "unverified@example.com", false, null, null));
@@ -222,7 +209,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Code_Google_Does_Not_Recognise_Is_Rejected()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
 
         var signIn = await client.PostAsJsonAsync("/api/auth/google",
             new GoogleSignInRequest("4/not-issued", CodeVerifier, RedirectUri), JsonOptions);
@@ -233,7 +220,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Redirect_Uri_Outside_Our_Web_Origin_Is_Rejected_Before_Reaching_Google()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var code = _google.IssueCode(new GoogleIdentity("g-redirect", "redirect@example.com", true, null, null));
 
         var signIn = await client.PostAsJsonAsync("/api/auth/google",
@@ -246,7 +233,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Tampered_Or_Foreign_Signup_Token_Is_A_Validation_Problem()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var registered = await RegisterAsync(client, "foreign.token@example.com");
 
         // One of our own access tokens: same signing key, wrong audience/purpose.
@@ -262,7 +249,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Google_Only_Account_Is_Deleted_Without_A_Password_But_A_Password_Account_Still_Needs_One()
     {
-        var googleClient = _factory!.CreateClient();
+        var googleClient = _factory.CreateClient();
         var pending = (await (await SignInAsync(googleClient, new GoogleIdentity("g-delete", "delete.google@example.com", true, "D", "G")))
             .Content.ReadFromJsonAsync<GoogleSignInResponse>(JsonOptions))!.PendingSignup!;
         var signup = await googleClient.PostAsJsonAsync("/api/auth/google/signup",
@@ -283,7 +270,7 @@ public class GoogleSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task Password_Login_For_A_Google_Only_Account_Fails_Like_Any_Wrong_Password()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var pending = (await (await SignInAsync(client, new GoogleIdentity("g-nopass", "nopass@example.com", true, "N", "P")))
             .Content.ReadFromJsonAsync<GoogleSignInResponse>(JsonOptions))!.PendingSignup!;
         (await client.PostAsJsonAsync("/api/auth/google/signup",

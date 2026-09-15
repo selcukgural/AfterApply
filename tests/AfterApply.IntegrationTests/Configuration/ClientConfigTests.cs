@@ -1,10 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Application.Identity.Contracts;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shouldly;
 
@@ -17,64 +16,45 @@ namespace AfterApply.IntegrationTests.Configuration;
 /// published config and the validator that enforces it — the two must never disagree, because the
 /// web app shows the user the former and the server rejects on the latter.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
+/// <summary>The test host runs as Development and therefore loads the developer's user-secrets,
+/// where real OAuth client ids/secrets may well be set (they are on the machine this was written
+/// on). Cleared so "not configured" means exactly that, everywhere.</summary>
+public sealed class ClientConfigProfile : IHostProfile
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    public void Configure(IWebHostBuilder builder)
     {
-        Converters = { new JsonStringEnumConverter() }
-    };
-
-    private WebApplicationFactory<Program>? _defaultFactory;
-    private WebApplicationFactory<Program>? _overriddenFactory;
-
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(ClientConfigTests));
-
-        _defaultFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // The test host runs as Development and therefore loads the developer's user-secrets,
-            // where a real GoogleAuth client id/secret may well be set (it is on the machine this
-            // was written on). Clear them so "not configured" means exactly that, everywhere.
-            builder.UseSetting("GoogleAuth:ClientId", "");
-            builder.UseSetting("GoogleAuth:ClientSecret", "");
-            builder.UseSetting("LinkedInAuth:ClientId", "");
-            builder.UseSetting("LinkedInAuth:ClientSecret", "");
-            builder.UseSetting("GitHubAuth:ClientId", "");
-            builder.UseSetting("GitHubAuth:ClientSecret", "");
-        });
-
-        _overriddenFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("Identity:Password:RequiredLength", "20");
-            builder.UseSetting("Identity:Password:RequireNonAlphanumeric", "false");
-            builder.UseSetting("PersonalAccessTokens:MaxActiveTokens", "3");
-            builder.UseSetting("PersonalAccessTokens:LifetimeDays", "7");
-        });
+        builder.UseSetting("GoogleAuth:ClientId", "");
+        builder.UseSetting("GoogleAuth:ClientSecret", "");
+        builder.UseSetting("LinkedInAuth:ClientId", "");
+        builder.UseSetting("LinkedInAuth:ClientSecret", "");
+        builder.UseSetting("GitHubAuth:ClientId", "");
+        builder.UseSetting("GitHubAuth:ClientSecret", "");
     }
+}
 
-    public async Task DisposeAsync()
+[Collection(IntegrationTestCollection.Name)]
+public class ClientConfigTests(ApiHost<ClientConfigProfile> host) : IClassFixture<ApiHost<ClientConfigProfile>>, IAsyncLifetime
+{
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
+
+    private WebApplicationFactory<Program> _defaultFactory => host;
+
+    private WebApplicationFactory<Program> _overriddenFactory => host.Variant("overridden", builder =>
     {
-        if (_defaultFactory is not null)
-        {
-            await _defaultFactory.DisposeAsync();
-        }
+        builder.UseSetting("Identity:Password:RequiredLength", "20");
+        builder.UseSetting("Identity:Password:RequireNonAlphanumeric", "false");
+        builder.UseSetting("PersonalAccessTokens:MaxActiveTokens", "3");
+        builder.UseSetting("PersonalAccessTokens:LifetimeDays", "7");
+    });
 
-        if (_overriddenFactory is not null)
-        {
-            await _overriddenFactory.DisposeAsync();
-        }
-    }
+    public Task InitializeAsync() => host.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Config_Is_Anonymous_And_Publishes_The_Default_Policy()
     {
-        var client = _defaultFactory!.CreateClient();
+        var client = _defaultFactory.CreateClient();
 
         var response = await client.GetAsync("/api/config");
 
@@ -97,7 +77,7 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task Overridden_Policy_Is_Both_Published_And_Enforced()
     {
-        var client = _overriddenFactory!.CreateClient();
+        var client = _overriddenFactory.CreateClient();
 
         var config = await client.GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
         config!.PasswordPolicy.RequiredLength.ShouldBe(20);
@@ -129,7 +109,7 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
     [InlineData("aaaaaaaaaaaa", HttpStatusCode.BadRequest)]
     public async Task Default_Policy_Judges_A_Password_By_Its_Length_Not_Its_Character_Classes(string password, HttpStatusCode expected)
     {
-        var client = _defaultFactory!.CreateClient();
+        var client = _defaultFactory.CreateClient();
 
         var response = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest($"policy.{Guid.NewGuid():N}@example.com", password, "Policy", "Test", true), JsonOptions);
@@ -140,7 +120,7 @@ public class ClientConfigTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task Overridden_Token_Limit_Is_Enforced_And_Quoted_In_The_Error()
     {
-        var client = _overriddenFactory!.CreateClient();
+        var client = _overriddenFactory.CreateClient();
         var register = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest("policy.tokens@example.com", "LongPassword12345678", "Policy", "Test", true), JsonOptions);
         register.EnsureSuccessStatusCode();

@@ -1,20 +1,30 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.CompanyReviews;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.CompanyReviews;
+
+public sealed class CompanyReviewFlowProfile : IHostProfile
+{
+    public void Configure(IWebHostBuilder builder)
+    {
+        // Small on purpose so the quota test does not have to write ten reviews.
+        builder.UseSetting("CompanyReviews:MaxReviewsPerUser", "3");
+        builder.UseSetting("CompanyReviews:MinimumReviewsForScore", "3");
+        builder.UseSetting("CompanyReviews:PriorWeight", "5");
+    }
+}
 
 /// <summary>
 /// Company reviews end to end: the anonymous read side never sees anything but approved rows,
@@ -23,41 +33,22 @@ namespace AfterApply.IntegrationTests.CompanyReviews;
 /// and its own company names.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class CompanyReviewFlowTests(SharedInfrastructure shared) : IAsyncLifetime
+public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IClassFixture<ApiHost<CompanyReviewFlowProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _admin = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CompanyReviewFlowTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // Small on purpose so the quota test does not have to write ten reviews.
-            builder.UseSetting("CompanyReviews:MaxReviewsPerUser", "3");
-            builder.UseSetting("CompanyReviews:MinimumReviewsForScore", "3");
-            builder.UseSetting("CompanyReviews:PriorWeight", "5");
-        });
+        await host.ResetAsync();
 
         _admin = await RegisterAsync("admin.reviews@ekariyerim.com");
         await SetAdminAsync("admin.reviews@ekariyerim.com", true);
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<HttpClient> RegisterAsync(string email)
     {

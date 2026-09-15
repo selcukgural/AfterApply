@@ -7,7 +7,7 @@ namespace AfterApply.IntegrationTests.Feedback;
 /// is replaced — the real mirror, its repository-slug check, the composer and the write-back all
 /// still run, which is the point of covering this at integration level.
 /// </summary>
-internal sealed class StubGitHubHandler(HttpStatusCode statusCode = HttpStatusCode.Created) : HttpMessageHandler
+public sealed class StubGitHubHandler(HttpStatusCode statusCode = HttpStatusCode.Created) : HttpMessageHandler
 {
     private readonly List<(Uri Uri, string Body, string? Authorization)> _requests = [];
 
@@ -19,6 +19,15 @@ internal sealed class StubGitHubHandler(HttpStatusCode statusCode = HttpStatusCo
             {
                 return [.. _requests];
             }
+        }
+    }
+
+    /// <summary>Forgets the requests seen so far — between tests, the handler serves a whole class.</summary>
+    public void Clear()
+    {
+        lock (_requests)
+        {
+            _requests.Clear();
         }
     }
 

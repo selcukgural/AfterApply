@@ -154,51 +154,36 @@ podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod
 - Fast, no container runtime needed: `dotnet test tests/AfterApply.UnitTests`
 - Integration (needs a container runtime):
   ```bash
-  # If using Podman instead of Docker Desktop, point Testcontainers at the podman socket:
-  export DOCKER_HOST="unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')"
-  dotnet test tests/AfterApply.IntegrationTests
+  scripts/test-integration.sh                                   # the whole suite
+  scripts/test-integration.sh --filter "FullyQualifiedName~Payments"   # one area
   ```
-  On this machine the suite is **far** faster with collection parallelism off —
-  242 tests in ~3 minutes, against a parallel run that reached ~90 of the test
-  classes in 45 and had to be killed. Every test class stands up its own host
-  and database, so running many at once thrashes rather than overlaps:
-  ```bash
-  dotnet test tests/AfterApply.IntegrationTests -- xunit.parallelizeTestCollections=false
-  ```
-  If container startup hangs or fails under rootless Podman (Ryuk, the
-  resource-reaper sidecar, is known to be flaky there), try
-  `export TESTCONTAINERS_RYUK_DISABLED=true` — note this means stopped test
-  containers may occasionally need manual cleanup:
-  ```bash
-  podman ps -a --format "{{.Names}} {{.Status}}"          # inspect what's left
-  podman ps -a -q --filter "ancestor=docker.io/library/postgres:17-alpine" | xargs -r podman rm -f
-  ```
-  A `System.InvalidOperationException: Sequence contains no elements` /
-  `HttpRequestException: Connection failed` error from a test's
-  `InitializeAsync`/`DisposeAsync` is this same podman-socket flakiness, not
-  a code bug — clean up leftover containers (above) and re-run. If it keeps
-  happening, re-running with test-collection parallelism turned off isolates
-  it further: `dotnet test tests/AfterApply.IntegrationTests -- xunit.parallelizeTestCollections=false`.
-  **No test talks to the internet.** Every host the integration suite builds has
-  its outbound HTTP blocked and starts no Hangfire background server unless the
-  test asks for one — the two things that made this suite hang, crash and, once,
-  open real GitHub issues. If a new test needs an HTTP response, stub that client
-  with `.ConfigurePrimaryHttpMessageHandler(...)`; if it asserts what a background
-  job did, add `UseSetting("Hangfire:ServerEnabled", "true")` to its own factory.
-  `NoOutboundHttpTests` and `HangfireServerInTestsTests` guard both rules, and
-  DECISIONS.md (2026-09-09) has the reasoning. Current shape on this machine:
-  298 tests, green (~3.5 min on an idle machine, longer under load).
+  The script is the one supported way to run it locally. It points Testcontainers at the
+  podman socket (and turns Ryuk off, which cannot start under rootless podman), runs
+  `dotnet test` with `--blame-hang` so a stalled test ends the run in two minutes **with its
+  name** rather than hanging it, kills the run outright at fifteen, removes any container the
+  run left behind, and prints a per-class timing table so a class that got slow is visible.
+  Current shape on this machine: **405 tests, ~1 min 25 s**, green, run after run.
+
+  How the suite is built, in one paragraph (details and history in `DECISIONS.md`, 2026-09-15):
+  one Postgres container per run, its schema migrated once into a template database; **one
+  API host and one cloned database per test class** (`ApiHost<TProfile>` as an
+  `IClassFixture`), emptied between tests by `host.ResetAsync()`; **background jobs recorded
+  and run inline** by `await host.RunJobsAsync()` instead of a Hangfire server, so a test that
+  asserts what a job did is deterministic and a negative is `host.Jobs.Pending.ShouldBeEmpty()`;
+  no test talks to the internet (`NoOutboundHttpStartup`). A new test class takes
+  `ApiHost<DefaultProfile>` — or its own `IHostProfile` when it needs settings, stubs or a
+  clock — calls `ResetAsync` first, and never builds a `WebApplicationFactory` of its own
+  unless one test genuinely needs configuration its neighbours cannot share
+  (`host.Standalone(...)`). The two classes that still start a real Hangfire server,
+  `HangfireServerInTestsTests` and `PostgresPoolCapTests`, are the wiring guards and stay that
+  way on purpose; `HostLifecycleTests` guards that a disposed host can be garbage-collected.
 - Everything: `dotnet test AfterApply.slnx`
 
-> **Workflow note (Claude Code sessions):** Podman-backed integration test
-> runs in this environment are slow and intermittently flaky (Testcontainers
-> ↔ podman socket connectivity hiccups, unrelated to the code under test —
-> see DECISIONS.md's Sprint 6/7 notes), and re-running them after every small
-> change burns a lot of time. During active development, only the unit
+> **Workflow note (Claude Code sessions):** during active development, only the unit
 > tests (`tests/AfterApply.UnitTests`, no container runtime needed) are run
-> continuously; the full integration suite (`tests/AfterApply.IntegrationTests`)
-> is deferred and run once after a batch of changes is otherwise complete,
-> not after each individual file edit.
+> continuously; the full integration suite (`scripts/test-integration.sh`, ~2 minutes)
+> is run once after a batch of changes is otherwise complete, not after each
+> individual file edit.
 
 ## Manual smoke testing (browser)
 

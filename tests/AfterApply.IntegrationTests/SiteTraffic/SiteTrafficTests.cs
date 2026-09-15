@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.SiteTraffic.Contracts;
 using AfterApply.Infrastructure.Persistence;
@@ -20,40 +18,28 @@ namespace AfterApply.IntegrationTests.SiteTraffic;
 /// same row instead of a second one — the ON CONFLICT upsert and the unique index agreeing.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class SiteTrafficTests(SharedInfrastructure shared) : IAsyncLifetime
+public class SiteTrafficTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
 
     public Task InitializeAsync() => InitialiseAsync();
 
     private async Task InitialiseAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(SiteTrafficTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
+        await host.ResetAsync();
 
         // No Authorization header is ever set on this client, on purpose: every test below is also
         // an assertion that the counter works for a visitor who has no account.
         _client = _factory.CreateClient();
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
         _client.Dispose();
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
+        return Task.CompletedTask;
     }
 
     private Task<HttpResponseMessage> ReportAsync(string? eventName, string? path, string? referrer = null) =>

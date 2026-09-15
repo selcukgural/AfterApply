@@ -1,13 +1,12 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.CvScan;
 using AfterApply.Application.CvScan.Contracts;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,59 +21,41 @@ namespace AfterApply.IntegrationTests.CvScan;
 /// exists to be usable by someone who has never heard of the product. The other standing assertion
 /// is what is left afterwards — one anonymous row, no file anywhere.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class CvScanTests(SharedInfrastructure shared) : IAsyncLifetime
-{
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+/// <summary>A storage root of its own, and nothing is ever expected to appear in it: the scan
+/// writes no file, and this directory is how that claim is checked rather than asserted.</summary>
+public sealed class CvScanProfile() : LocalStorageProfile("cv-scan-tests");
 
-    private WebApplicationFactory<Program>? _factory;
+[Collection(IntegrationTestCollection.Name)]
+public class CvScanTests(ApiHost<CvScanProfile> host) : IClassFixture<ApiHost<CvScanProfile>>, IAsyncLifetime
+{
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
+
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
-    private string _postgres = string.Empty;
-    private string _storageRoot = string.Empty;
+    private string _storageRoot => host.Profile.StorageRoot;
 
     public async Task InitializeAsync()
     {
-        _postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CvScanTests));
-
-        // A storage root of its own, and nothing is ever expected to appear in it: the scan writes
-        // no file, and this directory is how that claim is checked rather than asserted.
-        _storageRoot = Path.Combine(Path.GetTempPath(), "afterapply-cv-scan-tests", Guid.CreateVersion7().ToString("N"));
-
-        _factory = CreateFactory();
+        await host.ResetAsync();
         _client = _factory.CreateClient();
     }
 
-    private WebApplicationFactory<Program> CreateFactory(Action<IWebHostBuilderAccessor>? configure = null) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("Storage:LocalRootPath", _storageRoot);
-            configure?.Invoke(new IWebHostBuilderAccessor(builder));
-        });
+    /// <summary>A host for one test with extra settings — the three tests that change the scan's
+    /// bounds or its flag, which must not leak into their neighbours.</summary>
+    private WebApplicationFactory<Program> CreateFactory(Action<IWebHostBuilderAccessor> configure) =>
+        host.Standalone(builder => configure(new IWebHostBuilderAccessor(builder)));
 
     /// <summary>Thin wrapper so a caller can add settings without this file taking a dependency on
     /// the hosting builder type in its own signature.</summary>
-    internal sealed class IWebHostBuilderAccessor(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
+    internal sealed class IWebHostBuilderAccessor(IWebHostBuilder builder)
     {
         public void Setting(string key, string value) => builder.UseSetting(key, value);
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
         _client.Dispose();
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-
-        if (Directory.Exists(_storageRoot))
-        {
-            Directory.Delete(_storageRoot, recursive: true);
-        }
+        return Task.CompletedTask;
     }
 
     private static MultipartFormDataContent ScanContent(byte[] bytes, string fileName,
@@ -179,7 +160,7 @@ public class CvScanTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         await ReadAsync(await ScanAsync(CvFixtures.ReadablePdf(), "cv.pdf"));
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var rows = await dbContext.CvScanResults.AsNoTracking().ToListAsync();

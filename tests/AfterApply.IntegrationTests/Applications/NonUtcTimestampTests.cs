@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Applications;
@@ -22,30 +20,21 @@ namespace AfterApply.IntegrationTests.Applications;
 // UtcDateTimeOffsetConverter), so these tests write one through the endpoints that take a timestamp
 // from a caller and check both that the request succeeds and that the instant survived.
 [Collection(IntegrationTestCollection.Name)]
-public class NonUtcTimestampTests(SharedInfrastructure shared) : IAsyncLifetime
+public class NonUtcTimestampTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
     /// <summary>09:00 in Istanbul, which is 06:00Z — the same moment, spelled the other way.</summary>
     private static readonly DateTimeOffset IstanbulMorning = new(2026, 9, 1, 9, 0, 0, TimeSpan.FromHours(3));
 
     private static readonly DateTime ExpectedUtc = new(2026, 9, 1, 6, 0, 0, DateTimeKind.Utc);
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(NonUtcTimestampTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
+        await host.ResetAsync();
 
         _client = _factory.CreateClient();
         var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
@@ -55,13 +44,7 @@ public class NonUtcTimestampTests(SharedInfrastructure shared) : IAsyncLifetime
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Create_Accepts_An_AppliedAt_Carrying_A_Non_Utc_Offset()

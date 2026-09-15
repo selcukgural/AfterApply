@@ -1,8 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Companies.Contracts;
 using AfterApply.Application.Identity.Contracts;
@@ -21,25 +19,16 @@ namespace AfterApply.IntegrationTests.Companies;
 // directly to the DbContext, since Company is shared/global reference data with no dedicated
 // create endpoint of its own.
 [Collection(IntegrationTestCollection.Name)]
-public class CompanySearchEndpointTests(SharedInfrastructure shared) : IAsyncLifetime
+public class CompanySearchEndpointTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CompanySearchEndpointTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
+        await host.ResetAsync();
 
         _client = _factory.CreateClient();
         var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
@@ -58,13 +47,7 @@ public class CompanySearchEndpointTests(SharedInfrastructure shared) : IAsyncLif
         }
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Search_Returns_Ranked_Matches_For_Partial_Prefix()

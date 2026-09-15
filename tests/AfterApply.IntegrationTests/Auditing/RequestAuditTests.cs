@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Api.Middleware;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Auditing;
@@ -29,38 +27,20 @@ namespace AfterApply.IntegrationTests.Auditing;
 /// back to a caller. See DECISIONS.md 2026-09-14.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class RequestAuditTests(SharedInfrastructure shared) : IAsyncLifetime
+public class RequestAuditTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
     // TEST-NET-3, never routable. Under the in-memory test server there is no TCP connection and
     // Connection.RemoteIpAddress is null, so the client says who it is the way Cloud Run's frontend
     // does in production: X-Forwarded-For, which Program.cs's forwarded-headers setup honours.
     private const string ClientIp = "203.0.113.7";
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(RequestAuditTests));
+    public Task InitializeAsync() => host.ResetAsync();
 
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private HttpClient AnonymousClient()
     {

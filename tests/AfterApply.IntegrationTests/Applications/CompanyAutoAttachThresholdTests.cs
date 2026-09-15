@@ -1,12 +1,11 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,33 +15,30 @@ namespace AfterApply.IntegrationTests.Applications;
 
 // Proves Companies:FuzzyMatchThreshold is actually read from configuration, not hard-coded —
 // same pair-classification as CompanyIntelligenceOptions' own "not hard-coded" test convention
-// (DECISIONS.md Sprint 10). Own WebApplicationFactory instance (rather than reusing
+// (DECISIONS.md Sprint 10). Own host profile (rather than reusing
 // ExtensionApplicationTests') specifically so it can override this one setting without affecting
 // the other tests' default-threshold behavior.
-[Collection(IntegrationTestCollection.Name)]
-public class CompanyAutoAttachThresholdTests(SharedInfrastructure shared) : IAsyncLifetime
+public sealed class CompanyAutoAttachThresholdProfile : IHostProfile
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    public void Configure(IWebHostBuilder builder)
     {
-        Converters = { new JsonStringEnumConverter() }
-    };
+        // A near-1.0 threshold means even a one-character typo (the same fixture used by
+        // ExtensionApplicationTests' default-threshold test) no longer clears it.
+        builder.UseSetting("Companies:FuzzyMatchThreshold", "0.99");
+    }
+}
 
-    private WebApplicationFactory<Program>? _factory;
+[Collection(IntegrationTestCollection.Name)]
+public class CompanyAutoAttachThresholdTests(ApiHost<CompanyAutoAttachThresholdProfile> host) : IClassFixture<ApiHost<CompanyAutoAttachThresholdProfile>>, IAsyncLifetime
+{
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
+
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CompanyAutoAttachThresholdTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // A near-1.0 threshold means even a one-character typo (the same fixture used by
-            // ExtensionApplicationTests' default-threshold test) no longer clears it.
-            builder.UseSetting("Companies:FuzzyMatchThreshold", "0.99");
-        });
-
+        await host.ResetAsync();
 
         _client = _factory.CreateClient();
         var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
@@ -52,14 +48,7 @@ public class CompanyAutoAttachThresholdTests(SharedInfrastructure shared) : IAsy
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Raised_Threshold_Prevents_Auto_Attach_For_A_Match_That_Would_Otherwise_Qualify()

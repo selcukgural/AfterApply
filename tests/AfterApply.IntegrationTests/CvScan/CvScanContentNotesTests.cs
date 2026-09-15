@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.CvScan;
 using AfterApply.Application.CvScan.Contracts;
 using AfterApply.Infrastructure.Persistence;
@@ -25,16 +23,11 @@ namespace AfterApply.IntegrationTests.CvScan;
 /// by a test that would have to call a paid API to run.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class CvScanContentNotesTests(SharedInfrastructure shared) : IAsyncLifetime
+public class CvScanContentNotesTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private string _postgres = string.Empty;
-
-    public async Task InitializeAsync() => _postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CvScanContentNotesTests));
+    public Task InitializeAsync() => host.ResetAsync();
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -53,12 +46,12 @@ public class CvScanContentNotesTests(SharedInfrastructure shared) : IAsyncLifeti
         }
     }
 
+    /// <summary>A host per test, over the class's database: each test's provider answers
+    /// differently, and that is the whole subject here, so a shared host has nothing to offer.</summary>
     private WebApplicationFactory<Program> CreateFactory(bool llmEnabled, ICvReviewProvider? provider = null,
         int dailyCeiling = 200) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        host.Standalone(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("CvScan:LlmEnabled", llmEnabled.ToString());
             builder.UseSetting("CvScan:Review:ProjectId", "test-project");
             builder.UseSetting("CvScan:Review:DailyRequestCeiling", dailyCeiling.ToString());

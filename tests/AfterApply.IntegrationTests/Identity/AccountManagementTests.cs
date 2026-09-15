@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Application.Feedback.Contracts;
@@ -28,38 +26,15 @@ using DomainReminder = AfterApply.Domain.Notifications.Reminder;
 namespace AfterApply.IntegrationTests.Identity;
 
 [Collection(IntegrationTestCollection.Name)]
-public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetime
+public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(AccountManagementTests));
+    public Task InitializeAsync() => host.ResetAsync();
 
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // The suite disables rate limiting for every host (TestContainerCleanup); this class
-            // owns the one test that asserts a 429, so it opts back in.
-            builder.UseSetting("RateLimiting:Enabled", "true");
-        });
-
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<HttpClient> RegisterAsync(string email, bool consentAccepted = true)
     {
@@ -358,7 +333,11 @@ public class AccountManagementTests(SharedInfrastructure shared) : IAsyncLifetim
     [Fact]
     public async Task Login_Rate_Limit_Rejects_Requests_Beyond_The_Threshold()
     {
-        var client = _factory!.CreateClient();
+        // The suite disables rate limiting for every host (TestContainerCleanup); this is the one
+        // test that asserts a 429, so it opts back in — on a host of its own, because a limiter's
+        // fixed windows have no reset and would carry six failed logins into the next test.
+        await using var limited = host.Standalone(builder => builder.UseSetting("RateLimiting:Enabled", "true"));
+        var client = limited.CreateClient();
 
         HttpResponseMessage? lastResponse = null;
         for (var i = 0; i < 6; i++)
