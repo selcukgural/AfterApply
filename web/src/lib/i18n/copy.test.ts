@@ -91,6 +91,13 @@ describe("every notice that enumerates account data names all of it", () => {
     expect(enValue(key)).toMatch(/feedback/);
   });
 
+  // Payment records are the one kind of data that is exported but survives deletion (detached,
+  // statutory retention) — both notices have to say so in their own words.
+  it.each(["settings.export.description", "settings.delete.description"])("%s mentions the Pro plan payment records (tr + en)", (key) => {
+    expect(trValue(key)).toMatch(/ödeme kay/);
+    expect(enValue(key)).toMatch(/payment record/);
+  });
+
   it.each(exportNotices)("%s lists company reviews and CV records but not the tracked-jobs list (tr + en)", (key) => {
     expect(trValue(key)).toMatch(/değerlendirme/);
     expect(trValue(key)).toMatch(/CV/);

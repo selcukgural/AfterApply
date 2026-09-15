@@ -2,7 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { OrderHistory } from "@/components/pro/OrderHistory";
+import { canSeeProNav } from "@/lib/payments/proNav";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 import { personalAccessTokensApi } from "@/lib/api/personalAccessTokens";
@@ -21,9 +23,8 @@ export default function SettingsPage() {
   // the check for those (see IAuthService.DeleteAccountAsync), so the field is hidden too.
   const hasPassword = user?.hasPassword ?? true;
   // Token limits come from the server (GET /api/config), not a local copy — see settings messages.
-  const {
-    config: { personalAccessTokens: tokenLimits },
-  } = useClientConfig();
+  const { config } = useClientConfig();
+  const { personalAccessTokens: tokenLimits } = config;
   const router = useRouter();
 
   const [isExporting, setIsExporting] = useState(false);
@@ -224,6 +225,19 @@ export default function SettingsPage() {
           </ul>
         )}
       </section>
+
+      {canSeeProNav(config) && (
+        <section id="billing" className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("billing.title")}</h2>
+          <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("billing.description")}</p>
+          <OrderHistory compact />
+          <p className="mt-3 text-sm">
+            <Link href="/pro" className="text-accent-ink underline-offset-2 hover:underline">
+              {t("billing.manage")}
+            </Link>
+          </p>
+        </section>
+      )}
 
       <section className="rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-900 p-6 shadow-sm">
         <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("delete.title")}</h2>

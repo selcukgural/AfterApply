@@ -8,11 +8,13 @@ using AfterApply.Api.Middleware;
 using AfterApply.Application.Auditing;
 using AfterApply.Application.Imports;
 using AfterApply.Application.JobSources;
+using AfterApply.Application.Payments;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
 using AfterApply.Infrastructure.Auditing;
 using AfterApply.Infrastructure.JobSources;
+using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
 using Hangfire;
@@ -166,6 +168,7 @@ app.MapBenchmarkEndpoints();
 app.MapCvScanEndpoints();
 app.MapAdminEndpoints();
 app.MapJobSourceEndpoints();
+app.MapPaymentEndpoints();
 app.MapHub<ImportProgressHub>("/hubs/import-progress");
 
 if (!DependencyInjection.IsOpenApiDocumentGeneration)
@@ -197,6 +200,19 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "job-source-sweep",
         service => service.SweepAsync(CancellationToken.None),
         jobSourceOptions.Cron);
+
+    // Payments: close pending PayTR orders whose window passed, and remind users whose prepaid
+    // Pro period is about to end. Both are no-ops on an empty table, so they run regardless of
+    // PayTr:Enabled.
+    var payTrOptions = scope.ServiceProvider.GetRequiredService<IOptions<PayTrOptions>>().Value;
+    recurringJobManager.AddOrUpdate<IPaymentMaintenanceService>(
+        "payment-order-expiry",
+        service => service.ExpirePendingOrdersAsync(CancellationToken.None),
+        payTrOptions.OrderExpiryCron);
+    recurringJobManager.AddOrUpdate<IPaymentMaintenanceService>(
+        "pro-expiry-reminder",
+        service => service.SendExpiryRemindersAsync(CancellationToken.None),
+        payTrOptions.ExpiryReminderCron);
 }
 
 app.Run();

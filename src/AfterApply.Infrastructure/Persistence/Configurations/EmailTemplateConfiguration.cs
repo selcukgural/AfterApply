@@ -15,6 +15,14 @@ public sealed class EmailTemplateConfiguration : IEntityTypeConfiguration<EmailT
     private static readonly Guid PasswordChangedEnId = new("5a1e0000-0000-4000-8000-000000000004");
     private static readonly Guid WeeklyJobsReadyTrId = new("5a1e0000-0000-4000-8000-000000000005");
     private static readonly Guid WeeklyJobsReadyEnId = new("5a1e0000-0000-4000-8000-000000000006");
+    private static readonly Guid PaymentReceivedTrId = new("5a1e0000-0000-4000-8000-000000000007");
+    private static readonly Guid PaymentReceivedEnId = new("5a1e0000-0000-4000-8000-000000000008");
+    private static readonly Guid ProExpiringTrId = new("5a1e0000-0000-4000-8000-000000000009");
+    private static readonly Guid ProExpiringEnId = new("5a1e0000-0000-4000-8000-00000000000a");
+    private static readonly Guid RefundCompletedTrId = new("5a1e0000-0000-4000-8000-00000000000b");
+    private static readonly Guid RefundCompletedEnId = new("5a1e0000-0000-4000-8000-00000000000c");
+    private static readonly Guid RefundRejectedTrId = new("5a1e0000-0000-4000-8000-00000000000d");
+    private static readonly Guid RefundRejectedEnId = new("5a1e0000-0000-4000-8000-00000000000e");
 
     public void Configure(EntityTypeBuilder<EmailTemplate> builder)
     {
@@ -137,6 +145,144 @@ public sealed class EmailTemplateConfiguration : IEntityTypeConfiguration<EmailT
                         </a>
                       </p>
                       <p style="color:#555;font-size:13px;">You receive this because you turned on the weekly job matching. You can switch it off on the criteria page.</p>
+                    </div>
+                    """
+            },
+            // Payments. {{Amount}} and {{ActiveUntil}} are formatted by the sender in the user's
+            // locale; {{Note}} is text an admin typed and is HTML-encoded before substitution.
+            new
+            {
+                Id = PaymentReceivedTrId,
+                Key = EmailTemplateKey.PaymentReceived,
+                Locale = "tr",
+                Subject = "Ödemeniz alındı — e-kariyerim Pro aktif",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>Ödemeniz alındı</h2>
+                      <p><strong>{{PlanName}}</strong> için {{Amount}} tutarındaki ödemeniz onaylandı. Pro planınız <strong>{{ActiveUntil}}</strong> tarihine kadar aktif.</p>
+                      <p>Otomatik yenileme yoktur; süre dolmadan birkaç gün önce size hatırlatırız.</p>
+                      <p>
+                        <a href="{{OrdersLink}}" style="display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;">
+                          Ödemelerimi gör
+                        </a>
+                      </p>
+                      <p style="color:#555;font-size:13px;">Kart bilgileriniz e-kariyerim'e hiç ulaşmaz; ödeme PayTR güvenli ödeme sayfasında alınmıştır.</p>
+                    </div>
+                    """
+            },
+            new
+            {
+                Id = PaymentReceivedEnId,
+                Key = EmailTemplateKey.PaymentReceived,
+                Locale = "en",
+                Subject = "Payment received — e-kariyerim Pro is active",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>Payment received</h2>
+                      <p>Your payment of {{Amount}} for <strong>{{PlanName}}</strong> was confirmed. Your Pro plan is active until <strong>{{ActiveUntil}}</strong>.</p>
+                      <p>There is no automatic renewal; we will remind you a few days before it ends.</p>
+                      <p>
+                        <a href="{{OrdersLink}}" style="display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;">
+                          See my payments
+                        </a>
+                      </p>
+                      <p style="color:#555;font-size:13px;">Your card details never reach e-kariyerim; the payment was taken on PayTR's secure payment page.</p>
+                    </div>
+                    """
+            },
+            new
+            {
+                Id = ProExpiringTrId,
+                Key = EmailTemplateKey.ProExpiring,
+                Locale = "tr",
+                Subject = "e-kariyerim Pro süreniz {{ActiveUntil}} tarihinde bitiyor",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>Pro süreniz bitmek üzere</h2>
+                      <p>Pro planınız <strong>{{ActiveUntil}}</strong> tarihinde sona eriyor. Otomatik yenileme yoktur; haftalık ilan eşleştirmenin kesilmemesi için süreyi dilediğiniz zaman uzatabilirsiniz.</p>
+                      <p>
+                        <a href="{{RenewLink}}" style="display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;">
+                          Süreyi uzat
+                        </a>
+                      </p>
+                      <p style="color:#555;font-size:13px;">Uzatmazsanız hiçbir ücret alınmaz; verileriniz ve kriterleriniz hesabınızda kalır.</p>
+                    </div>
+                    """
+            },
+            new
+            {
+                Id = ProExpiringEnId,
+                Key = EmailTemplateKey.ProExpiring,
+                Locale = "en",
+                Subject = "Your e-kariyerim Pro period ends on {{ActiveUntil}}",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>Your Pro period is about to end</h2>
+                      <p>Your Pro plan ends on <strong>{{ActiveUntil}}</strong>. There is no automatic renewal; extend it whenever you like so the weekly job matching keeps running.</p>
+                      <p>
+                        <a href="{{RenewLink}}" style="display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;">
+                          Extend my plan
+                        </a>
+                      </p>
+                      <p style="color:#555;font-size:13px;">If you do not extend, nothing is charged; your data and criteria stay in your account.</p>
+                    </div>
+                    """
+            },
+            new
+            {
+                Id = RefundCompletedTrId,
+                Key = EmailTemplateKey.RefundCompleted,
+                Locale = "tr",
+                Subject = "İadeniz yapıldı — e-kariyerim",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>İadeniz yapıldı</h2>
+                      <p>{{Amount}} tutarındaki iade, ödemeyi yaptığınız karta gönderildi. Bankanıza bağlı olarak hesabınıza yansıması 3–10 iş günü sürebilir.</p>
+                      <p style="color:#555;font-size:13px;">Sorunuz olursa bu e-postayı yanıtlayabilirsiniz.</p>
+                    </div>
+                    """
+            },
+            new
+            {
+                Id = RefundCompletedEnId,
+                Key = EmailTemplateKey.RefundCompleted,
+                Locale = "en",
+                Subject = "Your refund was sent — e-kariyerim",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>Your refund was sent</h2>
+                      <p>A refund of {{Amount}} was sent to the card you paid with. Depending on your bank it can take 3–10 business days to appear.</p>
+                      <p style="color:#555;font-size:13px;">If you have a question, you can reply to this e-mail.</p>
+                    </div>
+                    """
+            },
+            new
+            {
+                Id = RefundRejectedTrId,
+                Key = EmailTemplateKey.RefundRejected,
+                Locale = "tr",
+                Subject = "İade talebiniz hakkında — e-kariyerim",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>İade talebiniz karşılanamadı</h2>
+                      <p>İade talebinizi inceledik; bu ödeme için iade yapamıyoruz. Açıklama:</p>
+                      <blockquote style="margin:0;padding:8px 12px;border-left:3px solid #ccc;color:#333;">{{Note}}</blockquote>
+                      <p style="color:#555;font-size:13px;">Pro planınız süresi dolana kadar aktif kalır. Sorunuz olursa bu e-postayı yanıtlayabilirsiniz.</p>
+                    </div>
+                    """
+            },
+            new
+            {
+                Id = RefundRejectedEnId,
+                Key = EmailTemplateKey.RefundRejected,
+                Locale = "en",
+                Subject = "About your refund request — e-kariyerim",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>We could not refund this payment</h2>
+                      <p>We reviewed your refund request and cannot refund this payment. The reason given:</p>
+                      <blockquote style="margin:0;padding:8px 12px;border-left:3px solid #ccc;color:#333;">{{Note}}</blockquote>
+                      <p style="color:#555;font-size:13px;">Your Pro plan stays active until it ends. If you have a question, you can reply to this e-mail.</p>
                     </div>
                     """
             });

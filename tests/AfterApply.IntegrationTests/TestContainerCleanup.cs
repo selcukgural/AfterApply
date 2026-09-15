@@ -83,6 +83,30 @@ internal static class TestContainerCleanup
     }
 
     /// <summary>
+    /// Keeps a developer's PayTR user-secrets out of every test host. Two reasons: a real merchant
+    /// key must never sign a request from a test (the transport is blocked anyway, but the
+    /// signing happens before it), and <c>PayTr:Enabled=true</c> in user-secrets without the
+    /// merchant values makes the API refuse to start (PayTrOptionsValidator), which would fail
+    /// every test class at once. The payment tests switch it back on through
+    /// ConfigureAppConfiguration with their own test secrets, added last and therefore winning.
+    /// </summary>
+    [ModuleInitializer]
+    public static void DisablePayTrForTests()
+    {
+        // The same reasoning for the job-source flag: a developer who turned it on in
+        // user-secrets for a local browser run must not turn JobSourceFlagOffTests into a
+        // failure. The classes that exercise the feature switch it on with UseSetting.
+        Environment.SetEnvironmentVariable("JobSources__Enabled", "false");
+        Environment.SetEnvironmentVariable("PayTr__Enabled", "false");
+        Environment.SetEnvironmentVariable("PayTr__MerchantId", string.Empty);
+        Environment.SetEnvironmentVariable("PayTr__MerchantKey", string.Empty);
+        Environment.SetEnvironmentVariable("PayTr__MerchantSalt", string.Empty);
+        // A developer's public IP for local PayTR runs must not replace the forwarded address the
+        // checkout tests assert on.
+        Environment.SetEnvironmentVariable("PayTr__DevUserIpOverride", string.Empty);
+    }
+
+    /// <summary>
     /// Starts no Hangfire background server for the hosts that do not need one — which is most of
     /// them — and is the fix for this suite's oldest and worst failure.
     ///

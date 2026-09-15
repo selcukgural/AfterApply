@@ -764,8 +764,21 @@ internal sealed class AuthService(
             .Select(m => m.ReviewId)
             .ToListAsync(cancellationToken);
 
+        var payments = await dbContext.PaymentOrders
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.CreatedAt)
+            .Select(o => new PaymentOrderExportItem(o.Id, o.Plan.ToString(), o.AmountMinor, o.TotalAmountMinor, o.Currency, o.Status.ToString(),
+                o.BillingName, o.BillingAddress, o.BillingPhone, o.TermsVersion, o.TermsAcceptedAt, o.CreatedAt, o.PaidAt, o.FailedReasonCode,
+                o.RefundedAmountMinor, o.RefundRequestedAt, o.RefundReason, o.RefundedAt))
+            .ToListAsync(cancellationToken);
+
+        var proEntitlement = await dbContext.ProEntitlements
+            .Where(e => e.UserId == userId)
+            .Select(e => new ProEntitlementExportItem(e.ActiveUntil, e.Source.ToString(), e.GrantedAt, e.RevokedAt))
+            .SingleOrDefaultAsync(cancellationToken);
+
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
-            DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks);
+            DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks, payments, proEntitlement);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

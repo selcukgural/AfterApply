@@ -261,6 +261,12 @@ jobs:
           # to be true first (Vertex project id for the scoring, the privacy section, an
           # entitlement to run for, and a look at /api/admin/job-sources/usage after the first run).
           # JobSources__Scoring__ProjectId is set alongside the flag when it goes on.
+          # On PayTr__*: the Pro plan's PayTR checkout (DEPLOYMENT.md §15). Enabled=false keeps
+          # every /api/payments route dark; TestMode=true means the first live transactions are
+          # PayTR test payments (no money moves) until the notification round-trip is verified,
+          # then it flips to false. The three merchant values are Secret Manager secrets below.
+          # Prices are kuruş, KDV included; they live here so the sale price is visible next to
+          # the flag and changes with a reviewed deploy, not a database edit.
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080
@@ -278,6 +284,10 @@ jobs:
             Postgres__MaxPoolSize=5
             Hangfire__WorkerCount=2
             JobSources__Enabled=false
+            PayTr__Enabled=false
+            PayTr__TestMode=true
+            PayTr__Plans__Monthly__AmountMinor=29900
+            PayTr__Plans__Yearly__AmountMinor=299000
           secrets: |-
             ConnectionStrings__Postgres=afterapply-postgres-connection:latest
             Jwt__SigningKey=afterapply-jwt-signing-key:latest
@@ -293,6 +303,9 @@ jobs:
             Cors__AllowedOrigins__0=afterapply-web-origin:latest
             App__WebBaseUrl=afterapply-web-origin:latest
             Feedback__GitHub__Token=afterapply-feedback-github-token:latest
+            PayTr__MerchantId=afterapply-paytr-merchant-id:latest
+            PayTr__MerchantKey=afterapply-paytr-merchant-key:latest
+            PayTr__MerchantSalt=afterapply-paytr-merchant-salt:latest
 
       # High-water-mark tag for the notify-deploy job below: moves deploy/api-latest to the
       # commit that was just deployed, so the *next* backend deploy can compute exactly which

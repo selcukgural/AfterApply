@@ -782,9 +782,8 @@ select usename, state, count(*) from pg_stat_activity group by 1, 2;
 
 ### 14. Weekly job matching (LinkedIn + kariyer.net, Gemini scoring, digest) — shipped off (2026-09-12, extended 2026-09-14)
 
-**Branch state:** this lives on `feat/linkedin-job-source`, unmerged. PayTR is agreed
-(2026-09-14) but not integrated; the branch merges once the payment integration lands
-(DECISIONS.md 2026-09-14). Rebase on `main` and re-run both test suites before merging.
+**Branch state:** this lives on `feat/linkedin-job-source`, unmerged. The PayTR integration
+landed on the same branch on 2026-09-15 (§15); the branch merges with both flags off.
 
 What the feature does when on: every Monday 04:00 UTC a Hangfire job searches LinkedIn's public
 listing **and** kariyer.net's listing with each paying user's criteria, delivers up to 50 new
@@ -829,3 +828,77 @@ To provision, in this order:
 Logs carry counts only — never a title, a location, a URL, a CV or a posting's text; the
 HttpClients' request logging is removed for both source clients for the same reason, and the
 Vertex error body is never logged (it can echo the request).
+
+### 15. PayTR iFrame payments for the Pro plan — shipped off (2026-09-15)
+
+The Pro plan is bought through PayTR's iFrame API: the API asks PayTR for a single-use token
+(step 1), the web embeds `https://www.paytr.com/odeme/guvenli/{token}` on `/pro/checkout`, and
+PayTR posts the result to our notification URL (step 2), which is the **only** thing that marks
+an order paid and extends `ProEntitlements`. No card data ever reaches us. Ships **off** —
+`PayTr:Enabled=false` — and every `/api/payments/*` route 404s while it is; the notification
+endpoint only needs the secrets, so a late notification is still applied after the flag goes
+back off. The web shows a price and a "Go Pro" button only when `/api/config` reports both
+`payments.enabled` and `jobSources.enabled`.
+
+**Deploy blocker — do this before the first deploy after merging:** `deploy.yml` now lists
+three new secrets. They must exist in Secret Manager (even empty) with the runtime SA bound,
+or the deploy fails (§3's callout):
+
+```bash
+for s in afterapply-paytr-merchant-id afterapply-paytr-merchant-key afterapply-paytr-merchant-salt; do
+  printf '%s' "" | gcloud secrets create "$s" --data-file=-
+  gcloud secrets add-iam-policy-binding "$s" \
+    --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"
+done
+```
+
+Then, to switch on, in this order:
+
+1. **Merchant values.** Mağaza Paneli › Destek & Kurulum › Entegrasyon Bilgileri (only the
+   main/technical user sees them): `gcloud secrets versions add afterapply-paytr-merchant-id
+   --data-file=-` and the same for `-key` and `-salt`. Locally: `dotnet user-secrets set
+   "PayTr:MerchantId" …` (README "PayTR Setup"). Never in `appsettings.json`.
+2. **Prices.** `PayTr__Plans__Monthly__AmountMinor` / `__Yearly__` in `deploy.yml` `env_vars`,
+   kuruş, KDV included (29900 = ₺299,00). The yearly is meant to be ten monthlies. A zero price
+   fails the API on start while `PayTr__Enabled=true` (`PayTrOptionsValidator`).
+3. **Legal pages.** `/terms-of-sale` and `/refund-policy` exist as drafts (amber "draft" notice,
+   noindex, not in the footer). Replace the `[metin gelecek]` bodies in `web/messages/{tr,en}.json`
+   (`termsOfSale.*`, `refundPolicy.*`), remove `LegalDraftNotice` and the `legalDraft` keys, add
+   both paths to `PUBLIC_PATHS` (routes.ts) and `RESOURCE_LINKS` (SiteFooter). PayTR's merchant
+   review looks for these links on the site; the checkout's consent box links to both.
+4. **Notification URL.** Mağaza Paneli › Destek & Kurulum › Ayarlar › Bildirim URL:
+   `https://<API host>/api/payments/paytr/callback`, protocol **HTTPS**. The API host is the
+   Cloud Run service URL (the value of the `GCP_API_URL` GitHub secret, e.g.
+   `https://afterapply-api-os6kf5xydq-ew.a.run.app`) — the custom domain is on the web app only.
+   If the API ever moves to a custom domain, change the panel entry with it. Without it PayTR
+   has nowhere to post the result: the payment page itself refuses to open ("Bildirim Adresi
+   (URL) bilgisi eksik") and every transaction stays "Devam ediyor" in the panel. Enter it after
+   the first deploy that carries this code, so the URL answers when PayTR checks it.
+5. **Test round-trip in production.** Deploy with `PayTr__Enabled=true`, `PayTr__TestMode=true`
+   and `JobSources__Enabled=true`. Buy a plan with PayTR's test card (4355 0843 5508 4358, 12/30,
+   CVV 000 — pre-filled on the test payment page). Check: the merchant panel shows the
+   transaction as **Başarılı** (if it shows "Devam ediyor", open its "Detay" — it prints the
+   body our endpoint answered), `/admin/payments` shows the order Paid with a TEST flag and an
+   `Applied` notification, the user has an active entitlement, the receipt e-mail arrived.
+   Refund it from `/admin/payments` and confirm the panel shows the refund.
+6. Flip `PayTr__TestMode=false` and redeploy. From then on charges are real.
+
+**Refunds — the standing rule.** Refunds are made only from `/admin/payments` (which calls
+PayTR's refund API and records the outcome on the order). **Never refund from the PayTR merchant
+panel:** the system would not know, Pro would stay on and the monthly totals would be wrong. The
+one exception: if `/admin/payments` reports that PayTR refused a refund with "toplam iade tutarı
+… fazla olamaz" for an order that still shows as paid, PayTR did refund it on an earlier attempt
+whose write on our side failed — check the panel, then "Mark as refunded in PayTR" on the order
+with the panel's reference number.
+
+**Reading the panel.** `/admin/payments`: this month's gross/refunds/net (KDV included, PayTR
+commission not deducted, test payments excluded), the last twelve months, the refund queue, every
+order with the PayTR notifications it received, and an alerts list (bad hashes, unknown orders,
+late successes, amount mismatches) — the first place to look when PayTR's panel and ours
+disagree. Two Hangfire jobs run regardless of the flag: `payment-order-expiry` (every 10 min,
+closes pending orders whose window passed) and `pro-expiry-reminder` (06:00 UTC daily, one
+"your Pro period is ending" e-mail per period, `PayTr:ExpiryReminderDays` before the end).
+
+Logs carry the order id, merchant_oid and PayTR's reason text; never the merchant key, the
+salt or a hash. The notification's caller IP is recorded by `RequestAuditMiddleware` like any
+other write (PayTR's address, no user) and shown nowhere.

@@ -44,6 +44,11 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
   jobSources: {
     enabled: false,
   },
+  // Off until the server says otherwise: a price and a "buy" button must never render against a
+  // deployment whose /api/payments routes answer 404 (PayTr:Enabled + secrets).
+  payments: {
+    enabled: false,
+  },
   companyReviews: {
     enabled: false,
     maxReviewsPerUser: 10,

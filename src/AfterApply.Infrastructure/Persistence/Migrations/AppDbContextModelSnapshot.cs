@@ -1478,6 +1478,70 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                             Key = "WeeklyJobsReady",
                             Locale = "en",
                             Subject = "{{Count}} postings that fit you are ready this week"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000007"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Ödemeniz alındı</h2>\n  <p><strong>{{PlanName}}</strong> için {{Amount}} tutarındaki ödemeniz onaylandı. Pro planınız <strong>{{ActiveUntil}}</strong> tarihine kadar aktif.</p>\n  <p>Otomatik yenileme yoktur; süre dolmadan birkaç gün önce size hatırlatırız.</p>\n  <p>\n    <a href=\"{{OrdersLink}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      Ödemelerimi gör\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">Kart bilgileriniz e-kariyerim'e hiç ulaşmaz; ödeme PayTR güvenli ödeme sayfasında alınmıştır.</p>\n</div>",
+                            Key = "PaymentReceived",
+                            Locale = "tr",
+                            Subject = "Ödemeniz alındı — e-kariyerim Pro aktif"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000008"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Payment received</h2>\n  <p>Your payment of {{Amount}} for <strong>{{PlanName}}</strong> was confirmed. Your Pro plan is active until <strong>{{ActiveUntil}}</strong>.</p>\n  <p>There is no automatic renewal; we will remind you a few days before it ends.</p>\n  <p>\n    <a href=\"{{OrdersLink}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      See my payments\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">Your card details never reach e-kariyerim; the payment was taken on PayTR's secure payment page.</p>\n</div>",
+                            Key = "PaymentReceived",
+                            Locale = "en",
+                            Subject = "Payment received — e-kariyerim Pro is active"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000009"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Pro süreniz bitmek üzere</h2>\n  <p>Pro planınız <strong>{{ActiveUntil}}</strong> tarihinde sona eriyor. Otomatik yenileme yoktur; haftalık ilan eşleştirmenin kesilmemesi için süreyi dilediğiniz zaman uzatabilirsiniz.</p>\n  <p>\n    <a href=\"{{RenewLink}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      Süreyi uzat\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">Uzatmazsanız hiçbir ücret alınmaz; verileriniz ve kriterleriniz hesabınızda kalır.</p>\n</div>",
+                            Key = "ProExpiring",
+                            Locale = "tr",
+                            Subject = "e-kariyerim Pro süreniz {{ActiveUntil}} tarihinde bitiyor"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000a"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Your Pro period is about to end</h2>\n  <p>Your Pro plan ends on <strong>{{ActiveUntil}}</strong>. There is no automatic renewal; extend it whenever you like so the weekly job matching keeps running.</p>\n  <p>\n    <a href=\"{{RenewLink}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      Extend my plan\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">If you do not extend, nothing is charged; your data and criteria stay in your account.</p>\n</div>",
+                            Key = "ProExpiring",
+                            Locale = "en",
+                            Subject = "Your e-kariyerim Pro period ends on {{ActiveUntil}}"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000b"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>İadeniz yapıldı</h2>\n  <p>{{Amount}} tutarındaki iade, ödemeyi yaptığınız karta gönderildi. Bankanıza bağlı olarak hesabınıza yansıması 3–10 iş günü sürebilir.</p>\n  <p style=\"color:#555;font-size:13px;\">Sorunuz olursa bu e-postayı yanıtlayabilirsiniz.</p>\n</div>",
+                            Key = "RefundCompleted",
+                            Locale = "tr",
+                            Subject = "İadeniz yapıldı — e-kariyerim"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000c"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Your refund was sent</h2>\n  <p>A refund of {{Amount}} was sent to the card you paid with. Depending on your bank it can take 3–10 business days to appear.</p>\n  <p style=\"color:#555;font-size:13px;\">If you have a question, you can reply to this e-mail.</p>\n</div>",
+                            Key = "RefundCompleted",
+                            Locale = "en",
+                            Subject = "Your refund was sent — e-kariyerim"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000d"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>İade talebiniz karşılanamadı</h2>\n  <p>İade talebinizi inceledik; bu ödeme için iade yapamıyoruz. Açıklama:</p>\n  <blockquote style=\"margin:0;padding:8px 12px;border-left:3px solid #ccc;color:#333;\">{{Note}}</blockquote>\n  <p style=\"color:#555;font-size:13px;\">Pro planınız süresi dolana kadar aktif kalır. Sorunuz olursa bu e-postayı yanıtlayabilirsiniz.</p>\n</div>",
+                            Key = "RefundRejected",
+                            Locale = "tr",
+                            Subject = "İade talebiniz hakkında — e-kariyerim"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000e"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>We could not refund this payment</h2>\n  <p>We reviewed your refund request and cannot refund this payment. The reason given:</p>\n  <blockquote style=\"margin:0;padding:8px 12px;border-left:3px solid #ccc;color:#333;\">{{Note}}</blockquote>\n  <p style=\"color:#555;font-size:13px;\">Your Pro plan stays active until it ends. If you have a question, you can reply to this e-mail.</p>\n</div>",
+                            Key = "RefundRejected",
+                            Locale = "en",
+                            Subject = "About your refund request — e-kariyerim"
                         });
                 });
 
@@ -1582,6 +1646,233 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.ToTable("Reminders", (string)null);
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.Payments.PaymentNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("FailedReasonCode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FailedReasonMsg")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("HashValid")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MerchantOid")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<long?>("PaymentAmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PaymentType")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("RawForm")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("TestMode")
+                        .HasColumnType("boolean");
+
+                    b.Property<long?>("TotalAmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantOid", "ReceivedAt");
+
+                    b.HasIndex("Outcome", "ReceivedAt");
+
+                    b.ToTable("PaymentNotifications", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Payments.PaymentOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("AmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("AmountMismatch")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("BillingAddress")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("BillingName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("BillingPhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CancelledByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset?>("EntitlementActiveUntilAfter")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("EntitlementActiveUntilBefore")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("FailedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("FailedReasonCode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FailedReasonMsg")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("IframeToken")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("MerchantOid")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PaymentType")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("RefundReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("RefundReferenceNo")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("RefundRejectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RefundRejectionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset?>("RefundRequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("RefundedAmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("RefundedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RefundedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset>("TermsAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TermsVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("TestMode")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("TokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("TotalAmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantOid")
+                        .IsUnique();
+
+                    b.HasIndex("PaidAt");
+
+                    b.HasIndex("Status", "TokenExpiresAt");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("PaymentOrders", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.Pro.ProEntitlement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1589,6 +1880,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("ActiveUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiryReminderSentFor")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("GrantedAt")
@@ -2290,6 +2584,14 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Payments.PaymentOrder", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("AfterApply.Domain.Pro.ProEntitlement", b =>

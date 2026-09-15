@@ -548,6 +548,12 @@ export interface JobSourcesConfig {
   enabled: boolean;
 }
 
+/** Whether the Pro plan can be bought (PayTR switched on and configured). Prices are not here —
+ *  this response is public and cached; they come from GET /api/payments/plans. */
+export interface PaymentsConfig {
+  enabled: boolean;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
@@ -559,6 +565,7 @@ export interface ClientConfigResponse {
   companyReviews?: CompanyReviewsConfig;
   // Optional for the same reason.
   jobSources?: JobSourcesConfig;
+  payments?: PaymentsConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -1227,4 +1234,180 @@ export interface JobSourceRunResponse {
 export interface JobSourceDeliveriesResponse {
   items: JobSourcePostingSummaryResponse[];
   run: JobSourceRunResponse | null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Payments (PayTR iFrame) — /api/payments/* and /api/admin/payments/*
+// ---------------------------------------------------------------------------------------------
+
+export type ProPlan = "Monthly" | "Yearly";
+
+export type PaymentOrderStatus =
+  | "Pending"
+  | "Paid"
+  | "Failed"
+  | "Expired"
+  | "Cancelled"
+  | "RefundRequested"
+  | "Refunded"
+  | "PartiallyRefunded";
+
+export interface PaymentPlanResponse {
+  plan: ProPlan;
+  /** Kuruş, KDV included. */
+  amountMinor: number;
+  months: number;
+}
+
+export interface PaymentEntitlementResponse {
+  isActive: boolean;
+  activeUntil: string | null;
+}
+
+export interface PaymentPlansResponse {
+  currency: string;
+  termsVersion: string;
+  plans: PaymentPlanResponse[];
+  entitlement: PaymentEntitlementResponse;
+}
+
+export interface StartCheckoutRequest {
+  plan: ProPlan;
+  billingName: string;
+  billingAddress: string;
+  billingPhone: string;
+  acceptTerms: boolean;
+}
+
+export interface CheckoutResponse {
+  orderId: string;
+  merchantOid: string;
+  iframeUrl: string;
+  expiresAt: string;
+  plan: ProPlan;
+  amountMinor: number;
+  currency: string;
+}
+
+export interface PaymentOrderResponse {
+  id: string;
+  plan: ProPlan;
+  amountMinor: number;
+  currency: string;
+  status: PaymentOrderStatus;
+  createdAt: string;
+  paidAt: string | null;
+  tokenExpiresAt: string | null;
+  /** PayTR's failed_reason_code; -1 means our own get-token call was refused. */
+  failedReasonCode: number | null;
+  failedReasonMsg: string | null;
+  refundedAmountMinor: number;
+  refundRequestedAt: string | null;
+  entitlementActiveUntil: string | null;
+  canRequestRefund: boolean;
+}
+
+export interface RequestRefundRequest {
+  reason: string;
+}
+
+export interface AdminPaymentOrderResponse {
+  id: string;
+  userId: string | null;
+  email: string;
+  merchantOid: string;
+  plan: ProPlan;
+  amountMinor: number;
+  totalAmountMinor: number | null;
+  currency: string;
+  status: PaymentOrderStatus;
+  billingName: string;
+  billingAddress: string;
+  billingPhone: string;
+  locale: string;
+  termsVersion: string;
+  termsAcceptedAt: string;
+  paymentType: string | null;
+  testMode: boolean;
+  amountMismatch: boolean;
+  failedReasonCode: number | null;
+  failedReasonMsg: string | null;
+  createdAt: string;
+  updatedAt: string;
+  tokenExpiresAt: string | null;
+  paidAt: string | null;
+  failedAt: string | null;
+  cancelledAt: string | null;
+  cancelledByUserId: string | null;
+  entitlementActiveUntilBefore: string | null;
+  entitlementActiveUntilAfter: string | null;
+  refundRequestedAt: string | null;
+  refundReason: string | null;
+  refundedAt: string | null;
+  refundedAmountMinor: number;
+  refundableAmountMinor: number;
+  refundReferenceNo: string | null;
+  refundedByUserId: string | null;
+  refundRejectedAt: string | null;
+  refundRejectionNote: string | null;
+}
+
+export interface PaymentNotificationResponse {
+  id: string;
+  merchantOid: string;
+  orderId: string | null;
+  status: string;
+  totalAmountMinor: number | null;
+  paymentAmountMinor: number | null;
+  paymentType: string | null;
+  failedReasonCode: number | null;
+  failedReasonMsg: string | null;
+  testMode: boolean;
+  hashValid: boolean;
+  outcome: string;
+  receivedAt: string;
+}
+
+export interface AdminPaymentOrderDetailResponse {
+  order: AdminPaymentOrderResponse;
+  notifications: PaymentNotificationResponse[];
+  entitlement: PaymentEntitlementResponse | null;
+}
+
+export interface PaymentsMonthSummary {
+  month: string;
+  paidCount: number;
+  grossMinor: number;
+  refundedMinor: number;
+  refundCount: number;
+  cancelledCount: number;
+  failedCount: number;
+  netMinor: number;
+}
+
+export interface PaymentsSummaryResponse {
+  currency: string;
+  currentMonth: PaymentsMonthSummary;
+  months: PaymentsMonthSummary[];
+  openRefundRequests: number;
+  activeProUsers: number;
+  testOrdersLast30Days: number;
+}
+
+export interface PaymentAlertsResponse {
+  notifications: PaymentNotificationResponse[];
+  amountMismatches: AdminPaymentOrderResponse[];
+}
+
+export interface AdminRefundRequest {
+  amountMinor: number | null;
+}
+
+export interface RejectRefundRequest {
+  note: string;
+}
+
+export interface MarkRefundedRequest {
+  amountMinor: number;
+  referenceNo: string;
 }

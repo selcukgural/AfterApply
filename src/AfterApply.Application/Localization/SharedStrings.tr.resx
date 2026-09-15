@@ -315,4 +315,43 @@
   <data name="VALIDATION_RESOLUTION_REASON_REQUIRED" xml:space="preserve">
     <value>Bildirim reddedilmiyorsa bir gerekçe gerekir.</value>
   </data>
+  <data name="PAYMENT_PROVIDER_UNAVAILABLE" xml:space="preserve">
+    <value>Ödeme sağlayıcısına ulaşılamadı. Herhangi bir ücret alınmadı — lütfen biraz sonra tekrar deneyin.</value>
+  </data>
+  <data name="PAYMENT_EMAIL_UNSUPPORTED" xml:space="preserve">
+    <value>Ödeme sağlayıcısı hesabınızdaki e-posta adresini kabul etmiyor. Lütfen Ayarlar'dan değiştirip tekrar deneyin.</value>
+  </data>
+  <data name="PAYMENT_PLAN_UNKNOWN" xml:space="preserve">
+    <value>Lütfen geçerli bir plan seçin.</value>
+  </data>
+  <data name="PAYMENT_ORDER_INVALID_TRANSITION" xml:space="preserve">
+    <value>Bu sipariş bu işleme izin veren bir durumda değil.</value>
+  </data>
+  <data name="PAYMENT_TERMS_REQUIRED" xml:space="preserve">
+    <value>Devam etmek için Mesafeli Satış Sözleşmesi'ni kabul etmelisiniz.</value>
+  </data>
+  <data name="VALIDATION_BILLING_NAME" xml:space="preserve">
+    <value>Fatura için ad soyad girin (en fazla 60 karakter).</value>
+  </data>
+  <data name="VALIDATION_BILLING_ADDRESS" xml:space="preserve">
+    <value>Fatura için adres girin (en fazla 400 karakter).</value>
+  </data>
+  <data name="VALIDATION_BILLING_PHONE" xml:space="preserve">
+    <value>Geçerli bir telefon numarası girin (en fazla 20 karakter).</value>
+  </data>
+  <data name="PAYMENT_REFUND_ALREADY_REQUESTED" xml:space="preserve">
+    <value>Bu ödeme için zaten bir iade talebi var.</value>
+  </data>
+  <data name="PAYMENT_REFUND_NOT_REFUNDABLE" xml:space="preserve">
+    <value>Yalnızca tamamlanmış bir ödeme iade edilebilir.</value>
+  </data>
+  <data name="PAYMENT_REFUND_EXCEEDS_TOTAL" xml:space="preserve">
+    <value>İade tutarı bu ödemede iade edilebilecek tutardan büyük.</value>
+  </data>
+  <data name="PAYMENT_REFUND_PROVIDER_ERROR" xml:space="preserve">
+    <value>Ödeme sağlayıcısı iadeyi reddetti: {0}</value>
+  </data>
+  <data name="VALIDATION_REFUND_REASON" xml:space="preserve">
+    <value>İade istemenizin nedenini kısaca yazın (en fazla 500 karakter).</value>
+  </data>
 </root>

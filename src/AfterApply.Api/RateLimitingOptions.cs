@@ -32,6 +32,11 @@ public sealed class RateLimitingOptions
     /// GitHub repository).</summary>
     public FixedWindowPolicy Feedback { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
 
+    /// <summary>Per user: starting a PayTR checkout, cancelling one, asking for a refund. Each
+    /// start is an outbound call to PayTR and a row; ten in ten minutes covers a user who keeps
+    /// changing their mind and stops a script from minting tokens.</summary>
+    public FixedWindowPolicy PaymentCheckout { get; init; } = new() { PermitLimit = 10, WindowSeconds = 600 };
+
     /// <summary>Per IP, and anonymous by nature — the public site's visit counter. Sized for a
     /// person browsing, not for a beacon per interaction: a real session opens a handful of pages,
     /// so 120 in five minutes is far above normal use while still bounding what a script can push

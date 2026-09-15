@@ -14,6 +14,7 @@ using AfterApply.Domain.JobSources;
 using AfterApply.Domain.Mailing;
 using AfterApply.Domain.Metrics;
 using AfterApply.Domain.Notifications;
+using AfterApply.Domain.Payments;
 using AfterApply.Domain.Pro;
 using AfterApply.Domain.SiteTraffic;
 using AfterApply.Domain.TrackedJobs;
@@ -99,6 +100,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<ProEntitlement> ProEntitlements => Set<ProEntitlement>();
 
     public DbSet<AiUsageEntry> AiUsageEntries => Set<AiUsageEntry>();
+
+    public DbSet<PaymentOrder> PaymentOrders => Set<PaymentOrder>();
+
+    public DbSet<PaymentNotification> PaymentNotifications => Set<PaymentNotification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

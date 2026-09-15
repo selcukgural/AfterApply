@@ -31,8 +31,10 @@ using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
 using AfterApply.Infrastructure.JobSources;
+using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Pro;
 using AfterApply.Application.JobSources;
+using AfterApply.Application.Payments;
 using AfterApply.Application.Pro;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
@@ -75,6 +77,7 @@ public static class DependencyInjection
     public const string ExtensionSignalRateLimitPolicy = "extension-signal";
     public const string LinkPreviewRateLimitPolicy = "link-preview";
     public const string FeedbackRateLimitPolicy = "feedback";
+    public const string PaymentCheckoutRateLimitPolicy = "payment-checkout";
     public const string CompanyReviewWriteRateLimitPolicy = "company-review-write";
     public const string CompanyReviewReportRateLimitPolicy = "company-review-report";
     public const string CompanyReviewHelpfulRateLimitPolicy = "company-review-helpful";
@@ -140,6 +143,7 @@ public static class DependencyInjection
         services.Configure<CompanyReviewOptions>(configuration.GetSection(CompanyReviewOptions.SectionName));
         services.Configure<RequestAuditOptions>(configuration.GetSection(RequestAuditOptions.SectionName));
         services.Configure<JobSourceOptions>(configuration.GetSection(JobSourceOptions.SectionName));
+        services.AddPayments(configuration);
         services.AddDocumentStorage(configuration);
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
@@ -480,6 +484,28 @@ public static class DependencyInjection
             client.DefaultRequestHeaders.UserAgent.ParseAdd("e-kariyerim-feedback-mirror");
         });
 
+        return services;
+    }
+
+    private static IServiceCollection AddPayments(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Validated on start when enabled: an empty merchant key or a zero price must not reach a
+        // customer's checkout (PayTrOptionsValidator).
+        services.AddSingleton<IValidateOptions<PayTrOptions>, PayTrOptionsValidator>();
+        services.AddOptions<PayTrOptions>().Bind(configuration.GetSection(PayTrOptions.SectionName)).ValidateOnStart();
+        services.AddScoped<IPaymentCheckoutService, PaymentCheckoutService>();
+        services.AddScoped<IPayTrCallbackService, PayTrCallbackService>();
+        services.AddScoped<IPaymentRefundService, PaymentRefundService>();
+        services.AddScoped<IPaymentAdminService, PaymentAdminService>();
+        services.AddScoped<IPaymentMaintenanceService, PaymentMaintenanceService>();
+        // Both PayTR calls are short form POSTs; 15 s is well above their normal answer and short
+        // enough that a stuck call does not hold the user's request for long. No retry handler:
+        // a refund must never be repeated by a machine.
+        services.AddHttpClient<IPayTrClient, PayTrClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://www.paytr.com/");
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
         return services;
     }
 

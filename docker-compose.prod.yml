@@ -37,6 +37,13 @@ services:
       JobSources__Enabled: "${JobSources__Enabled:-false}"
       JobSources__Scoring__ProjectId: "${JobSources__Scoring__ProjectId:-}"
       JobSources__KariyerNetEnabled: "${JobSources__KariyerNetEnabled:-true}"
+      PayTr__Enabled: "${PayTr__Enabled:-false}"
+      PayTr__TestMode: "${PayTr__TestMode:-true}"
+      PayTr__MerchantId: "${PayTr__MerchantId:-}"
+      PayTr__MerchantKey: "${PayTr__MerchantKey:-}"
+      PayTr__MerchantSalt: "${PayTr__MerchantSalt:-}"
+      PayTr__Plans__Monthly__AmountMinor: "${PayTr__Plans__Monthly__AmountMinor:-29900}"
+      PayTr__Plans__Yearly__AmountMinor: "${PayTr__Plans__Yearly__AmountMinor:-299000}"
       # Empty disables the SDK (see .env.prod.example) — not a REPLACE_WITH_
       # placeholder, an actually-fake Dsn would make Sentry try (and fail)
       # to send an event on every request instead of silently no-op'ing.

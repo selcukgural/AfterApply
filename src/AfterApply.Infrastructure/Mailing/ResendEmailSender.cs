@@ -60,6 +60,43 @@ internal sealed class ResendEmailSender(
         await SendAsync(toEmail, subject, html, cancellationToken);
     }
 
+    public async Task SendPaymentReceivedEmailAsync(string toEmail, string locale, PaymentReceipt receipt, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.PaymentReceived, locale, cancellationToken);
+        // Plan name and amounts are ours; encoded anyway so a template edit can never turn a
+        // formatted value into markup.
+        var html = template.HtmlBody
+            .Replace("{{PlanName}}", HtmlEncoder.Default.Encode(receipt.PlanName))
+            .Replace("{{Amount}}", HtmlEncoder.Default.Encode(receipt.AmountText))
+            .Replace("{{ActiveUntil}}", HtmlEncoder.Default.Encode(receipt.ActiveUntilText))
+            .Replace("{{OrdersLink}}", HtmlEncoder.Default.Encode(receipt.OrdersLink));
+        await SendAsync(toEmail, template.Subject, html, cancellationToken);
+    }
+
+    public async Task SendProExpiringEmailAsync(string toEmail, string locale, string activeUntilText, string renewLink, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.ProExpiring, locale, cancellationToken);
+        var html = template.HtmlBody
+            .Replace("{{ActiveUntil}}", HtmlEncoder.Default.Encode(activeUntilText))
+            .Replace("{{RenewLink}}", HtmlEncoder.Default.Encode(renewLink));
+        var subject = template.Subject.Replace("{{ActiveUntil}}", activeUntilText);
+        await SendAsync(toEmail, subject, html, cancellationToken);
+    }
+
+    public async Task SendRefundCompletedEmailAsync(string toEmail, string locale, string amountText, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.RefundCompleted, locale, cancellationToken);
+        await SendAsync(toEmail, template.Subject, template.HtmlBody.Replace("{{Amount}}", HtmlEncoder.Default.Encode(amountText)), cancellationToken);
+    }
+
+    public async Task SendRefundRejectedEmailAsync(string toEmail, string locale, string note, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.RefundRejected, locale, cancellationToken);
+        // Admin-typed text: encoded, and newlines kept readable.
+        var encodedNote = HtmlEncoder.Default.Encode(note).Replace("&#xA;", "<br>").Replace("\n", "<br>");
+        await SendAsync(toEmail, template.Subject, template.HtmlBody.Replace("{{Note}}", encodedNote), cancellationToken);
+    }
+
     private async Task<EmailTemplate> GetTemplateAsync(EmailTemplateKey key, string locale, CancellationToken cancellationToken)
     {
         var template = await dbContext.EmailTemplates.AsNoTracking()

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ADMIN_NAV_HREF } from "@/lib/auth/adminNav";
+import { PRO_NAV_HREF } from "@/lib/payments/proNav";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 
@@ -13,13 +14,15 @@ interface UserMenuProps {
   onLogout: () => void;
   /** Renders the admin entry. Decided by the caller from the profile — see canSeeAdminNav. */
   showAdmin: boolean;
+  /** Renders the Pro plan entry. Decided by the caller from the client config — see canSeeProNav. */
+  showPro: boolean;
 }
 
 // Consolidates the navbar's utility items (help, account settings, language,
 // theme, logout) behind one fixed-width trigger instead of listing them
 // inline, so it can never push the primary nav onto a second line no matter
 // how long a locale's labels get.
-export function UserMenu({ name, initials, onLogout, showAdmin }: UserMenuProps) {
+export function UserMenu({ name, initials, onLogout, showAdmin, showPro }: UserMenuProps) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -91,6 +94,18 @@ export function UserMenu({ name, initials, onLogout, showAdmin }: UserMenuProps)
           >
             {t("myReviews")}
           </Link>
+          {/* The paid plan: prices, the checkout and the payment history. Only while the server
+              says the checkout exists (canSeeProNav). */}
+          {showPro && (
+            <Link
+              role="menuitem"
+              href={PRO_NAV_HREF}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              {t("pro")}
+            </Link>
+          )}
           {/* Below the two everyone has, and separated from them: it is the same menu the rest of
               the utility links live in, so an admin reaches the page by clicking rather than by
               remembering a URL, without the primary nav growing an item that only one account

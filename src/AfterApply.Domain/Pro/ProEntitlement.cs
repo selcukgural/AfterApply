@@ -21,6 +21,11 @@ public sealed class ProEntitlement : Entity
 
     public DateTimeOffset? RevokedAt { get; private set; }
 
+    /// <summary>The <see cref="ActiveUntil"/> the "your Pro period is ending" e-mail was sent for.
+    /// Compared, not cleared: a later extension moves <see cref="ActiveUntil"/> and the new period
+    /// earns its own reminder without anyone touching this.</summary>
+    public DateTimeOffset? ExpiryReminderSentFor { get; private set; }
+
     private ProEntitlement()
     {
     }
@@ -37,6 +42,22 @@ public sealed class ProEntitlement : Entity
     }
 
     public void Revoke(DateTimeOffset now) => RevokedAt = now;
+
+    /// <summary>A refund took back the period one order had added. The end simply moves earlier
+    /// by that much: if it lands in the past the entitlement stops being active, and days from
+    /// earlier periods that were paid for and not refunded are kept.</summary>
+    public void WindBack(TimeSpan by)
+    {
+        if (by > TimeSpan.Zero)
+        {
+            ActiveUntil -= by;
+        }
+    }
+
+    public void MarkExpiryReminderSent() => ExpiryReminderSentFor = ActiveUntil;
+
+    public bool NeedsExpiryReminder(DateTimeOffset now, TimeSpan window) =>
+        IsActive(now) && ActiveUntil <= now + window && ExpiryReminderSentFor != ActiveUntil;
 
     public bool IsActive(DateTimeOffset now) => RevokedAt is null && ActiveUntil > now;
 }

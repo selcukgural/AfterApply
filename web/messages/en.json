@@ -122,6 +122,26 @@
       "notFound": {
         "title": "Page not found",
         "description": "The page you were looking for is not on e-kariyerim."
+      },
+      "pro": {
+        "title": "Pro plan",
+        "description": "e-kariyerim Pro: a monthly or yearly plan for the weekly job matching."
+      },
+      "proCheckout": {
+        "title": "Checkout",
+        "description": "Secure payment for the Pro plan."
+      },
+      "proOrder": {
+        "title": "Payment result",
+        "description": "The status of your Pro plan payment."
+      },
+      "termsOfSale": {
+        "title": "Distance Sales Agreement",
+        "description": "The distance sales agreement and pre-contract information for the e-kariyerim Pro plan."
+      },
+      "refundPolicy": {
+        "title": "Cancellation and Refund Policy",
+        "description": "How cancellation and refunds work for the e-kariyerim Pro plan."
       }
     }
   },
@@ -398,7 +418,8 @@
     "closeMenu": "Close menu",
     "toolsMenu": "Tools",
     "toolsNote": "No account needed",
-    "weeklyJobs": "Weekly Jobs"
+    "weeklyJobs": "Weekly Jobs",
+    "pro": "Pro plan"
   },
   "auth": {
     "login": {
@@ -661,7 +682,8 @@
       "next": "Next",
       "last": "Last",
       "pageInfoCompanies": "Page {page} / {totalPages} ({totalCount} companies)",
-      "pageInfoReminders": "Page {page} / {totalPages} ({totalCount} reminders)"
+      "pageInfoReminders": "Page {page} / {totalPages} ({totalCount} reminders)",
+      "pageInfoOrders": "Page {page} / {totalPages} ({totalCount} orders)"
     },
     "form": {
       "companyName": "Company Name",
@@ -828,7 +850,7 @@
     "title": "Account Settings",
     "export": {
       "title": "Export My Data",
-      "description": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent and your company reviews (with your reports and helpful marks) as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
+      "description": "Download your applications (with their status history), imports, reminders, CV records, the feedback you sent, your company reviews (with your reports and helpful marks) and your Pro plan payment records as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
       "download": "Download My Data",
       "preparing": "Preparing...",
       "error": "Could not export data."
@@ -861,7 +883,7 @@
     },
     "delete": {
       "title": "Delete My Account",
-      "description": "This action cannot be undone. Your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent — will be permanently deleted.",
+      "description": "This cannot be undone. Your account and everything in it — your applications, tracked jobs, CVs, imports, reminders, e-mail suggestions and notifications, company reviews and the feedback you sent — is permanently deleted. Pro plan payment records are kept, detached from your account, for the statutory retention period.",
       "passwordLabel": "Your Password",
       "confirmLabel": "Type \"DELETE\" to confirm",
       "confirmWord": "DELETE",
@@ -871,6 +893,11 @@
       "finalConfirm": "Final warning: your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent, plus your extension connections — will be permanently deleted. This cannot be undone. Do you want to continue?",
       "genericError": "Could not delete account.",
       "noPasswordHint": "This account was created with Google, LinkedIn or GitHub and has no password. Type the confirmation word below to delete it."
+    },
+    "billing": {
+      "title": "Plan and payments",
+      "description": "Your Pro plan payments and refund requests. Your card details are never stored by e-kariyerim; payment is taken on PayTR's secure page.",
+      "manage": "Manage the plan and payment history"
     }
   },
   "emailSuggestions": {
@@ -1082,6 +1109,17 @@
       "storage": "Reviews, reports and helpful marks are stored in our own database and are not sent to any third party.",
       "deletion": "Deleting your account deletes your reviews, your reports and your helpful marks. Reviews you wrote disappear from the company pages and from the company's score; this is also what your data export contains.",
       "legalBasis": "Lawful basis: your explicit action — you choose to write, report or mark — and, for moderation, legitimate interest: keeping what is published about a named company fair and lawful."
+    },
+    "payments": {
+      "title": "Payments (Pro plan)",
+      "intro": "When you buy the Pro plan, the payment is taken on the secure payment page of PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş.",
+      "card": "Your card number, expiry date and security code never reach e-kariyerim; they are entered on PayTR's page and processed there.",
+      "sent": "What we send PayTR: your e-mail address, the name, address and phone number you enter at checkout, the IP address of the connection you start the payment from, the chosen plan and the amount.",
+      "kept": "What we keep: the order record (plan, amount, date, outcome), the name, address and phone number you entered for the invoice, the result PayTR reported and, if any, the failure reason. The IP address of PayTR's server call that reports the result is recorded too and never shown anywhere.",
+      "retention": "Payment and invoicing records are kept for the retention period the tax legislation requires. If you delete your account, these records are detached from it (the link to your identity is removed) but not deleted until that period ends.",
+      "refunds": "Refunds are made only through our own system, via PayTR's refund service, to the card you paid with; your request and its outcome are kept on the order record.",
+      "provider": "PayTR is the data controller for the data it processes itself; its privacy notice is published at paytr.com.",
+      "legalBasis": "Legal basis: performance of the contract (KVKK art. 5/2-c) and compliance with a legal obligation (art. 5/2-ç)."
     }
   },
   "extensionPrivacy": {
@@ -1152,7 +1190,7 @@
     "lastUpdated": "Last updated: 13 September 2026",
     "intro": {
       "title": "In short",
-      "body": "e-kariyerim uses exactly two cookies, both needed for the service to work. We use no advertising cookies, no tracking pixels, no analytics tool such as Google Analytics, and no third-party cookies at all. That is why you never see a cookie consent banner here: there is no optional cookie to leave to your choice.",
+      "body": "e-kariyerim uses only the two cookies the service needs to work. No advertising cookies, tracking pixels, analytics tools like Google Analytics, or any third-party cookies. That is why no cookie banner appears: there is no optional cookie to ask your consent for. The one exception is the Pro plan checkout: the payment form opens on PayTR's own page and PayTR may use its own strictly necessary cookies there; those cookies are not read on any other page of this site.",
       "legalNote": "Under Turkish data protection law (KVKK), strictly necessary and functional cookies do not require explicit consent — what they require is disclosure. This page is that disclosure."
     },
     "table": {
@@ -1411,7 +1449,10 @@
       "privacyLink": "Privacy policy",
       "plan": "Pro plan",
       "comingSoon": "Coming soon",
-      "comingSoonNote": "Payments are being set up; this button goes live when they are."
+      "comingSoonNote": "Payments are being set up; this button goes live when they are.",
+      "perMonth": "/ month",
+      "upgrade": "Go Pro",
+      "upgradeNote": "Monthly or yearly, prepaid. No automatic renewal."
     }
   },
   "imports": {
@@ -2709,7 +2750,8 @@
     "label": "Admin sections",
     "metrics": "Metrics",
     "reviews": "Reviews",
-    "reports": "Reports"
+    "reports": "Reports",
+    "payments": "Payments"
   },
   "companies": {
     "directory": {
@@ -3090,5 +3132,333 @@
     "companies": "Company reviews",
     "guide": "Guide",
     "help": "Help Centre"
+  },
+  "payments": {
+    "plans": {
+      "title": "Pro plan",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "perMonth": "/ month",
+      "perYear": "/ year",
+      "perMonthEquivalent": "{amount} a month",
+      "saves": "{months} months free",
+      "kdvIncluded": "VAT included",
+      "current": "Your Pro plan is active until {date}. Whatever you pay for now is added on top of that date.",
+      "extend": "Extend",
+      "choose": "Choose this plan",
+      "noAutoRenew": "There is no automatic renewal. We remind you by e-mail a few days before the end; if you do not extend, nothing is charged.",
+      "historyTitle": "My payments",
+      "loadError": "The plans could not be loaded. Please reload the page."
+    },
+    "checkout": {
+      "title": "Checkout",
+      "step1": "1. Billing details",
+      "step2": "2. Payment",
+      "billingName": "Full name",
+      "billingAddress": "Address",
+      "billingPhone": "Phone",
+      "billingWhy": "These details are needed for the invoice and are passed to the payment provider, PayTR. Your card details never reach e-kariyerim.",
+      "terms": "I have read and accept the <sale>Distance Sales Agreement and Pre-contract Information</sale>. I consent to the digital service starting immediately and understand that I therefore lose my right of withdrawal (<refund>cancellation and refund policy</refund>).",
+      "termsRequired": "You must accept the agreement to continue.",
+      "pay": "Continue to payment",
+      "starting": "Preparing the payment page…",
+      "back": "Back to plans",
+      "unknownPlan": "The chosen plan was not found. Please pick one again on the plans page.",
+      "providerError": "The payment provider could not be reached. Nothing was charged; please try again in a moment.",
+      "timeLeft": "Time left in the payment window: {minutes}:{seconds}",
+      "cancel": "Cancel",
+      "cancelConfirm": "Give up on this payment?",
+      "cancelYes": "Yes, cancel",
+      "cancelNo": "Keep going",
+      "expired": "The payment window closed; nothing was charged. You can start again.",
+      "restart": "Start again",
+      "frameTitle": "PayTR secure payment page",
+      "frameNote": "The payment is taken on PayTR's secure page; your card details never reach e-kariyerim. You are sent to the result page when it completes."
+    },
+    "result": {
+      "verifyingTitle": "Verifying your payment",
+      "verifyingFailTitle": "The payment does not seem to have completed",
+      "verifying": "Waiting for the bank's answer; this usually takes a few seconds.",
+      "pendingLong": "The bank's confirmation is taking longer than usual. You can keep this page open or close it: we e-mail you once the result is final, and it shows under Settings > Plan and payments.",
+      "pendingGaveUp": "The result has not reached us yet. If your card was charged, the payment will be recognised shortly and we will e-mail you; if it was not, no payment was made. You can follow it under Settings > Plan and payments.",
+      "refresh": "Refresh",
+      "paidTitle": "Payment received",
+      "paidBody": "Your payment of {amount} for {plan} was confirmed. Your Pro plan is active until {date}.",
+      "receiptNote": "Your receipt e-mail arrives within a few minutes. There is no automatic renewal; we remind you a few days before the end.",
+      "goToJobs": "Go to weekly postings",
+      "backToPlans": "Back to plans",
+      "failedTitle": "The payment did not go through",
+      "bankSaid": "The bank's explanation:",
+      "noCharge": "Nothing was charged to your card.",
+      "tryAgain": "Try again",
+      "expiredTitle": "The payment window closed",
+      "cancelledTitle": "The payment was cancelled",
+      "refundedTitle": "This payment was refunded",
+      "notFoundTitle": "Order not found",
+      "notFound": "This link does not point at an order of yours."
+    },
+    "failure": {
+      "bank": "Your bank did not approve the payment.",
+      "1": "Authentication was not completed: no mobile number was entered. Please try again and complete the step.",
+      "2": "Authentication failed: the code sent to your phone was not entered correctly. Please try again.",
+      "3": "The security check did not approve the payment or could not be completed. Please try again or use another card.",
+      "6": "The payment page was closed before completing, or it timed out.",
+      "8": "This card cannot be used for instalments. (The Pro plan is a single charge; try a different card.)",
+      "9": "This card is not authorised for this transaction. Please use another card.",
+      "10": "3-D Secure is required for this payment. Please try again with a card that supports 3-D Secure.",
+      "11": "The payment was not approved after a security check. Please contact us.",
+      "99": "A technical error occurred. Please try again in a moment.",
+      "providerRejected": "The payment page could not be opened (the payment provider refused the request). Nothing was charged; please try again.",
+      "unknown": "The payment did not go through. Please try again or use another card."
+    },
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "failed": "Failed",
+      "expired": "Expired",
+      "cancelled": "Cancelled",
+      "refundRequested": "Refund requested",
+      "refunded": "Refunded",
+      "partiallyRefunded": "Partially refunded"
+    },
+    "history": {
+      "loading": "Loading payments…",
+      "empty": "You have no payments yet.",
+      "refunded": "{amount} refunded",
+      "open": "Open",
+      "requestRefund": "Request a refund",
+      "seeAll": "See all"
+    },
+    "refund": {
+      "title": "Refund request",
+      "body": "Your request is reviewed; if approved, the amount is refunded through PayTR to the card you paid with and your Pro plan is wound back by the period this payment added. You are told the outcome by e-mail.",
+      "policyLink": "Cancellation and refund policy",
+      "reason": "Why you want a refund",
+      "submit": "Send the request",
+      "cancel": "Cancel",
+      "error": "The request could not be sent. Please try again."
+    }
+  },
+  "adminPayments": {
+    "title": "Payments",
+    "panelWarning": "Refunds are made only from this panel. Do not refund by hand in the PayTR merchant panel: this system would not know, Pro would stay on and the monthly totals would be wrong.",
+    "loading": "Loading…",
+    "loadError": "The summary could not be loaded.",
+    "actionError": "The action failed. Please try again.",
+    "plan": {
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "summary": {
+      "thisMonth": "This month",
+      "gross": "Gross",
+      "refunds": "Refunds",
+      "net": "Net",
+      "sales": "{count} sales",
+      "refundCount": "{count} refunds",
+      "cancelled": "Cancelled / expired",
+      "failed": "Failed",
+      "openRequests": "Open refund requests",
+      "activePro": "Active Pro users",
+      "testOrders": "Test payments (30 days)",
+      "feeNote": "Amounts include VAT; PayTR's commission is not deducted. Test-mode payments are left out of the totals. Months follow Türkiye time; a refund counts in the month it was made.",
+      "last12Months": "Last 12 months",
+      "month": "Month",
+      "salesColumn": "Sales"
+    },
+    "queue": {
+      "title": "Refund requests",
+      "empty": "No refund requests waiting.",
+      "requestedAt": "Requested: {date}"
+    },
+    "orders": {
+      "title": "Orders",
+      "status": "Status",
+      "allStatuses": "All",
+      "month": "Month",
+      "search": "E-mail or order no",
+      "searchPlaceholder": "ada@… or merchant_oid",
+      "apply": "Apply",
+      "open": "Open",
+      "empty": "No orders match this filter.",
+      "test": "TEST",
+      "mismatch": "amount differs",
+      "columns": {
+        "date": "Date",
+        "email": "User",
+        "plan": "Plan",
+        "amount": "Amount",
+        "status": "Status",
+        "flags": "Flags"
+      }
+    },
+    "detail": {
+      "title": "Order",
+      "close": "Close",
+      "merchantOid": "Order no (merchant_oid)",
+      "plan": "Plan",
+      "asked": "Amount asked",
+      "charged": "Amount charged",
+      "refunded": "Refunded",
+      "created": "Created",
+      "paidAt": "Paid",
+      "failure": "Failure",
+      "paymentType": "Payment type",
+      "terms": "Agreement",
+      "billing": "Billing details",
+      "entitlement": "Pro status",
+      "entitlementState": "Active: {active, select, yes {yes} other {no}} · ends {date}",
+      "noEntitlement": "This user has no Pro record (the account may be deleted).",
+      "entitlementChange": "This order: {from} → {to}",
+      "refundSection": "Refund",
+      "refundReason": "User's reason",
+      "refundRejection": "Rejection note",
+      "refundReference": "PayTR reference",
+      "timeline": "PayTR notifications",
+      "noNotifications": "No notifications yet.",
+      "badHash": "bad hash",
+      "cancelOrder": "Cancel the order",
+      "cancelBody": "The pending order is closed; nothing is charged if it was not paid. A success notification that arrives later is still applied."
+    },
+    "outcome": {
+      "Applied": "Applied",
+      "Duplicate": "Repeat",
+      "LateApplied": "Applied late",
+      "UnknownOrder": "Unknown order",
+      "BadHash": "Bad hash",
+      "Malformed": "Missing field",
+      "Error": "Error",
+      "RefundRecorded": "Refund record"
+    },
+    "alerts": {
+      "title": "Alerts (last 30 days)",
+      "hint": "If a transaction shows as \"Devam ediyor\" in the PayTR panel, the reason is here: notifications we rejected or could not match, and amount mismatches.",
+      "empty": "No alerts.",
+      "mismatch": "{email}: {expected} asked, {charged} charged"
+    },
+    "refund": {
+      "start": "Refund",
+      "full": "Full refund",
+      "reject": "Reject",
+      "markRefunded": "Mark as refunded in PayTR",
+      "cancel": "Cancel",
+      "refundTitle": "Refund",
+      "refundConfirm": "Send the refund request to PayTR",
+      "refundBody": "The amount is refunded through PayTR to the same card (3–10 business days). At most {max} can still be refunded. A full refund winds the user's Pro period back by what this order added.",
+      "rejectTitle": "Reject the refund request",
+      "rejectConfirm": "Reject and notify the user",
+      "rejectBody": "The note is e-mailed to the user; the order goes back to 'Paid'.",
+      "markRefundedTitle": "Record a refund by hand",
+      "markRefundedConfirm": "Record (no request is sent to PayTR)",
+      "markRefundedBody": "Only when you have verified in the PayTR merchant panel that the refund was already made (e.g. it succeeded but our own record failed). At most {max}.",
+      "cancelTitle": "Cancel the order",
+      "cancelConfirm": "Cancel it",
+      "amount": "Refund amount (₺)",
+      "amountInvalid": "The amount must be above 0 and at most the refundable amount.",
+      "reference": "PayTR reference no",
+      "note": "Rejection note (sent to the user)"
+    }
+  },
+  "legalDraft": {
+    "notice": "This text is a draft; the Pro plan does not go on sale before the final version is published."
+  },
+  "termsOfSale": {
+    "title": "Distance Sales Agreement and Pre-contract Information",
+    "lastUpdated": "Version 2026-09 (draft)",
+    "intro": "This agreement governs the online sale of the e-kariyerim Pro plan (the weekly job matching service) under Türkiye's Consumer Protection Law No. 6502 and the Distance Contracts Regulation.",
+    "seeAlso": "See also:",
+    "refundLink": "Cancellation and refund policy",
+    "privacyLink": "Privacy policy (payments)",
+    "sections": {
+      "parties": {
+        "title": "Parties",
+        "body": "[Seller name, address, tax office/number, e-mail] and the consumer buying the service (the Buyer). The Buyer's details are the name, address and phone entered at checkout and the e-mail address on their account."
+      },
+      "subject": {
+        "title": "Subject",
+        "body": "[Text to come] The rights and obligations of the parties regarding the sale and performance of the Pro plan the Buyer orders electronically on e-kariyerim."
+      },
+      "service": {
+        "title": "The service",
+        "body": "[Text to come] The Pro plan: every week, new postings on LinkedIn and kariyer.net are collected for the Buyer's saved criteria, compared with their CV, scored and announced by e-mail. The monthly plan runs one calendar month, the yearly plan one calendar year; there is no automatic renewal."
+      },
+      "price": {
+        "title": "Price",
+        "body": "[Text to come] The price is the amount shown on the checkout page, VAT included. Price changes do not affect periods already started."
+      },
+      "payment": {
+        "title": "Payment",
+        "body": "[Text to come] Payment is taken as a single charge by credit or debit card through PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş. Card details never reach the Seller."
+      },
+      "delivery": {
+        "title": "Performance",
+        "body": "[Text to come] The service starts as soon as PayTR confirms the payment and is available in the Buyer's account."
+      },
+      "withdrawal": {
+        "title": "Right of withdrawal",
+        "body": "[Text to come] For services performed immediately in an electronic environment, the right of withdrawal cannot be used where the Buyer expressly consents to performance and acknowledges losing the right (Distance Contracts Regulation art. 15/1-ğ). The Buyer gives this consent at checkout."
+      },
+      "refunds": {
+        "title": "Cancellation and refunds",
+        "body": "[Text to come] Refund requests outside the right of withdrawal are handled as described on the Cancellation and Refund Policy page."
+      },
+      "obligations": {
+        "title": "Obligations of the parties",
+        "body": "[Text to come]"
+      },
+      "disputes": {
+        "title": "Disputes",
+        "body": "[Text to come] Consumer Arbitration Committees are competent within the monetary limits announced by the Ministry of Trade, Consumer Courts above them."
+      },
+      "effective": {
+        "title": "Entry into force",
+        "body": "[Text to come] By ticking the box on the checkout page the Buyer declares having read and accepted this agreement and the pre-contract information; the agreement is concluded when the payment is confirmed."
+      }
+    }
+  },
+  "refundPolicy": {
+    "title": "Cancellation and Refund Policy",
+    "lastUpdated": "Version 2026-09 (draft)",
+    "intro": "This page explains how cancellation and refunds work for the e-kariyerim Pro plan.",
+    "seeAlso": "See also:",
+    "termsLink": "Distance Sales Agreement",
+    "sections": {
+      "scope": {
+        "title": "Scope",
+        "body": "[Text to come] These terms apply to the monthly and yearly periods of the Pro plan."
+      },
+      "withdrawal": {
+        "title": "Right of withdrawal",
+        "body": "[Text to come] Because the service starts immediately with the payment and you expressly consent to that at checkout, the statutory right of withdrawal cannot be used."
+      },
+      "cancellation": {
+        "title": "Cancellation",
+        "body": "[Text to come] There is no automatic renewal; nothing is charged at the end of a period. You do not need to do anything to not extend. An order closed before the payment window completes is not charged."
+      },
+      "howToRequest": {
+        "title": "How to request a refund",
+        "body": "With the \"Request a refund\" button next to the payment under Settings > Plan and payments or on the Pro plan page, stating your reason. [Conditions under which a refund is granted — text to come]"
+      },
+      "decision": {
+        "title": "Review",
+        "body": "[Text to come] The request is reviewed within [N] business days; the outcome is sent by e-mail."
+      },
+      "howRefunded": {
+        "title": "How the refund is made",
+        "body": "An approved refund is sent through PayTR to the card you paid with; depending on your bank it appears within 3–10 business days. No refunds to another account or in cash."
+      },
+      "partial": {
+        "title": "Partial refunds",
+        "body": "[Text to come] After a partial refund your Pro plan continues unchanged."
+      },
+      "proAfterRefund": {
+        "title": "Pro after a refund",
+        "body": "A fully refunded payment's period is taken back from your Pro plan; time from other payments is kept."
+      },
+      "contact": {
+        "title": "Contact",
+        "body": "[E-mail address — text to come]"
+      }
+    }
   }
 }

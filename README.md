@@ -339,6 +339,34 @@ persist/cache logic is tested against a fake `IJobMatchingProvider`
 instead); once a real key is in place, set a CV in `/settings` and compute
 a match from an application's detail page as a manual smoke test.
 
+## PayTR Setup (Pro plan payments)
+
+The Pro plan is sold through PayTR's iFrame API (DEPLOYMENT.md §15 for the production recipe).
+Locally the feature is off until three user-secrets are set and the flag is on:
+
+```bash
+dotnet user-secrets set "PayTr:MerchantId" "<merchant id>" --project src/AfterApply.Api
+dotnet user-secrets set "PayTr:MerchantKey" "<merchant key>" --project src/AfterApply.Api
+dotnet user-secrets set "PayTr:MerchantSalt" "<merchant salt>" --project src/AfterApply.Api
+dotnet user-secrets set "PayTr:Enabled" "true" --project src/AfterApply.Api
+# PayTR refuses private addresses as user_ip; on localhost put your public IP here:
+dotnet user-secrets set "PayTr:DevUserIpOverride" "<your public IPv4>" --project src/AfterApply.Api
+```
+
+`PayTr:TestMode` defaults to true, so a local checkout opens PayTR's real payment page in test
+mode (test card 4355 0843 5508 4358, 12/30, CVV 000, pre-filled). PayTR cannot reach localhost
+with the result, so the second half of the flow is driven by hand:
+
+```bash
+scripts/paytr-callback.sh <merchant_oid> success 29900          # → order paid, Pro extended, receipt queued
+scripts/paytr-callback.sh <merchant_oid> failed 29900 6 "left"  # → order failed with PayTR code 6
+PAYTR_BAD_HASH=1 scripts/paytr-callback.sh <merchant_oid> success 29900   # → 400, nothing changes
+```
+
+The script signs the form with the key/salt from user-secrets exactly as PayTR does; the
+`merchant_oid` is the order's id without hyphens (shown on `/admin/payments`). Refunds from
+`/admin/payments` call PayTR's real refund API even locally — fine for a test-mode payment.
+
 ## Google Sign-In Setup
 
 "Continue with Google" on the login/register pages is an authorization-code + PKCE flow driven by

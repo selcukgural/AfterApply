@@ -1,5 +1,6 @@
 using AfterApply.Application.JobSources;
 using AfterApply.Application.Mailing;
+using AfterApply.Application.Payments;
 
 namespace AfterApply.IntegrationTests.Identity;
 
@@ -8,19 +9,23 @@ namespace AfterApply.IntegrationTests.Identity;
 /// <see cref="Reset" /> empties it between tests.</summary>
 public sealed class CapturingEmailSender : IEmailSender
 {
-    public string? LastResetLink { get; private set; }
-
-    public string? LastLocale { get; private set; }
-
-    public int PasswordChangedCount { get; private set; }
-
     public void Reset()
     {
         LastResetLink = null;
         LastLocale = null;
         PasswordChangedCount = 0;
         lock (Digests) Digests.Clear();
+        lock (Receipts) Receipts.Clear();
+        lock (ExpiryReminders) ExpiryReminders.Clear();
+        lock (RefundsCompleted) RefundsCompleted.Clear();
+        lock (RefundsRejected) RefundsRejected.Clear();
     }
+
+    public string? LastResetLink { get; private set; }
+
+    public string? LastLocale { get; private set; }
+
+    public int PasswordChangedCount { get; private set; }
 
     public Task SendPasswordResetEmailAsync(string toEmail, string resetLink, string locale, CancellationToken cancellationToken)
     {
@@ -43,6 +48,54 @@ public sealed class CapturingEmailSender : IEmailSender
         lock (Digests)
         {
             Digests.Add((toEmail, locale, digest));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public List<(string ToEmail, string Locale, PaymentReceipt Receipt)> Receipts { get; } = [];
+
+    public List<(string ToEmail, string Locale, string ActiveUntil, string RenewLink)> ExpiryReminders { get; } = [];
+
+    public List<(string ToEmail, string Locale, string Amount)> RefundsCompleted { get; } = [];
+
+    public List<(string ToEmail, string Locale, string Note)> RefundsRejected { get; } = [];
+
+    public Task SendPaymentReceivedEmailAsync(string toEmail, string locale, PaymentReceipt receipt, CancellationToken cancellationToken)
+    {
+        lock (Receipts)
+        {
+            Receipts.Add((toEmail, locale, receipt));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task SendProExpiringEmailAsync(string toEmail, string locale, string activeUntilText, string renewLink, CancellationToken cancellationToken)
+    {
+        lock (ExpiryReminders)
+        {
+            ExpiryReminders.Add((toEmail, locale, activeUntilText, renewLink));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task SendRefundCompletedEmailAsync(string toEmail, string locale, string amountText, CancellationToken cancellationToken)
+    {
+        lock (RefundsCompleted)
+        {
+            RefundsCompleted.Add((toEmail, locale, amountText));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task SendRefundRejectedEmailAsync(string toEmail, string locale, string note, CancellationToken cancellationToken)
+    {
+        lock (RefundsRejected)
+        {
+            RefundsRejected.Add((toEmail, locale, note));
         }
 
         return Task.CompletedTask;

@@ -76,6 +76,8 @@ public static class SiteTrafficNormalizer
         "/privacy",
         "/cookies",
         "/extension-privacy",
+        "/terms-of-sale",
+        "/refund-policy",
         // Not in the sitemap and noindex on the page itself — it only means anything while one
         // pairing request is open. Counted anyway: "how many people got as far as opening this"
         // is the one number that says whether the extension funnel works, and the code it carries

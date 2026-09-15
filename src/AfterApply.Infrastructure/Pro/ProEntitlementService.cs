@@ -1,5 +1,6 @@
 using AfterApply.Application.JobSources.Contracts;
 using AfterApply.Application.Pro;
+using AfterApply.Domain.Payments;
 using AfterApply.Domain.Pro;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,42 @@ internal sealed class ProEntitlementService(AppDbContext dbContext, TimeProvider
         entitlement.Revoke(_timeProvider.GetUtcNow());
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    public async Task<ProEntitlementExtension> ExtendForPaymentAsync(Guid userId, ProPlan plan, CancellationToken cancellationToken)
+    {
+        var now = _timeProvider.GetUtcNow();
+        var entitlement = await dbContext.ProEntitlements.SingleOrDefaultAsync(e => e.UserId == userId, cancellationToken);
+        // A revoked row does not carry its old end forward: the admin took it away, the new
+        // payment starts a fresh period from now.
+        var currentEnd = entitlement is { RevokedAt: null } ? entitlement.ActiveUntil : (DateTimeOffset?)null;
+        var periodStart = ProPlanPeriod.NextStart(currentEnd, now);
+        var activeUntil = ProPlanPeriod.Extend(periodStart, plan);
+
+        if (entitlement is null)
+        {
+            dbContext.ProEntitlements.Add(ProEntitlement.Grant(userId, activeUntil, ProEntitlementSource.PayTr, now));
+        }
+        else
+        {
+            entitlement.Extend(activeUntil, ProEntitlementSource.PayTr, now);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return new ProEntitlementExtension(periodStart, activeUntil);
+    }
+
+    public async Task<DateTimeOffset?> WindBackAsync(Guid userId, TimeSpan by, CancellationToken cancellationToken)
+    {
+        var entitlement = await dbContext.ProEntitlements.SingleOrDefaultAsync(e => e.UserId == userId, cancellationToken);
+        if (entitlement is null)
+        {
+            return null;
+        }
+
+        entitlement.WindBack(by);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return entitlement.ActiveUntil;
     }
 
     private static ProEntitlementResponse ToResponse(ProEntitlement e, DateTimeOffset now) =>

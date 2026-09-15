@@ -6452,6 +6452,107 @@ sayı gösteriyor, bu bilinerek kalıyor.
 `tmp`'de, repoda değil; harness (`JobFitScoringEvalTests`, `own/adjacent/off` etiketleri) model
 değişince yeniden koşturulur.
 
+## PayTR iFrame ile Pro plan ödemesi: peşin dönem, tek gerçek kaynak bildirim, iade yalnız panelden (2026-09-15)
+
+**Bağlam.** 14 Eylül'de "PayTR ile anlaşıldı, entegrasyon bu dalın son işi" denmişti. PayTR'ın
+iki adımlı iFrame API dokümanı (get-token + Bildirim URL) ve İade API'si üzerinden entegrasyon aynı
+dalda (`feat/linkedin-job-source`, `main` üstüne rebase edildi) yapıldı. Kullanıcı kararları:
+**iFrame** (kart verisi bizim origin'e hiç gelmesin), **aylık + yıllık** plan (yıllık = 10 aylık;
+fiyat config'te kuruş, lansman değeri henüz verilmedi — `29900/299000` yer tutucu), ödeme öncesi
+**ad soyad + adres + telefon** (PayTR zorunlu tutuyor, fatura için gerekli), hukuki sayfalar
+**iskelet** (metin kullanıcıdan gelecek), bitişe 3 gün kala **hatırlatma e-postası**, iade
+**kullanıcı talebi + admin kararı**, tam iadede Pro **hemen** geri alınır, admin için ayrı
+**Ödemeler paneli** (aylık kazanç/iade/iptal, geçmiş aylar, kuyruk, siparişler, uyarılar).
+
+**iFrame'in bedeli ve karşılığı.** iFrame API'de abonelik/otomatik yenileme yok → Pro "peşin
+dönem": `ProEntitlement.ActiveUntil = max(mevcut bitiş, şimdi) + 1 ay/1 yıl`, bitince kullanıcı
+tekrar öder; hatırlatma e-postası (`pro-expiry-reminder`, dönem başına bir kez,
+`ExpiryReminderSentFor` ile) ve "süreyi uzat" akışı bu yüzden ürünün parçası. Taksit kapalı
+(`no_installment=1`): dijital hizmet, sabit tutar. CSP'de `script-src` **genişlemedi** (2026-09-12'de GIS'i
+reddeden gerekçe korunuyor): PayTR'ın iframeResizer betiği kendi origin'imizden servis ediliyor
+(`web/public/vendor/paytr-iframeResizer.min.js`, MIT). `frame-src https://www.paytr.com` ise
+**global** politikada — ilk denemede yalnız `/pro/checkout` rotasına verilmişti, ama checkout'a
+`/pro`'dan client-side navigation ile gelinince belge hâlâ `/pro`'nun CSP'sini taşıyor ve iframe
+tarayıcıda engellendi (canlı tarayıcı testinde görüldü); CSP belgeye aittir, rotaya değil.
+paytr.com'u her sayfada iframe kaynağı olarak tanımak zararsız. `/pro/return/*` için
+`frame-ancestors 'self' paytr.com` ve o rotada `X-Frame-Options` yok — PayTR'ın `merchant_ok_url`'e top window'u mu yoksa iframe'i mi
+yönlendirdiği dokümanda belirsiz, bu sayfa iki hâlde de çalışır (framed ise `window.top`'a çıkar;
+top bizim origin olduğundan izinli). Sonuca üç bağımsız yol var: checkout sayfasının 3 sn'lik
+poll'u, PayTR'ın yönlendirmesi, framed bounce. **Hiçbir sayfa onay vermez;** sipariş yalnızca
+Bildirim URL'ye gelen HMAC'i doğrulanmış POST ile `Paid` olur.
+
+**Model.** `PaymentOrders` (durumlar: Pending → Paid/Failed/Expired/Cancelled; Paid →
+RefundRequested/Refunded/PartiallyRefunded; **Expired/Cancelled/Failed → Paid izinli** — para
+çekildiyse geç bildirim de onaylanır, `LateApplied` olarak işaretlenir), `merchant_oid` = sipariş
+id'nin tiresiz hâli (PayTR alfanumerik ve ≤64 istiyor), `xmin` concurrency token (aynı sipariş için
+eş zamanlı iki bildirim → ikinci `Duplicate`; entegrasyon testi 6 paralel bildirimle tek uzatma
+doğruluyor). `PaymentNotifications` append-only kanıt: her bildirim ve her iade, sonucuyla
+(`Applied/Duplicate/LateApplied/UnknownOrder/BadHash/Malformed/Error/RefundRecorded`), `hash`
+alanı hariç ham form; ana işlem çökse de ayrı scope'ta yazılır. **Mali kayıt hesapla silinmez:**
+`PaymentOrders.UserId` `SetNull` (AiUsageEntries'ten sonra ikinci istisna), fatura alanları yasal
+saklama için satırda kalır; gizlilik metni (`/privacy#payments`) ve silme/export bildirimleri bunu
+söylüyor, export sipariş özetini içeriyor (sağlayıcı iç bilgileri hariç).
+
+**Cevap disiplini (Bildirim URL).** Yalnızca uygulanan ya da zaten uygulanmış bildirimlere `OK`;
+eksik alan/bozuk hash → 400 (hiçbir şey değişmez), **bilinmeyen `merchant_oid` → 404 non-OK**
+(PayTR tekrar dener ve panelde "Devam ediyor" görünür — bir kayıp siparişin görünür kalması
+tercih edildi), iç hata → 500 non-OK. `total_amount ≠ payment_amount` yine onaylanır ama
+`AmountMismatch` ile admin uyarılarına düşer. Callback `PayTr:Enabled`'a değil `IsConfigured`'a
+bakar: bayrak kapatıldıktan sonra gelen bildirim de işlenir. Request audit opt-out **yok**: uç
+`/api/*` altında, middleware PayTR'ın IP'sini kullanıcısız kaydeder, hiçbir yerde gösterilmez.
+
+**İade: yalnızca bizim sistemden.** `/admin/payments` → PayTR İade API (`return_amount` burada
+kuruş değil `"299.00"` metni; `reference_no` = sipariş id → PayTR tarafında da çift iade engeli).
+Sıra: önce PayTR, sonra sipariş + entitlement geri sarma (`ActiveUntil −= (After − Before)`, yalnız
+tam iadede; önceki dönemden kalan korunur) + kanıt satırı tek transaction'da, sonra e-posta.
+PayTR evet dedi ama bizim commit düştüyse ikinci denemede PayTR "tutar aşıldı" der → admin
+paneldeki referansla `mark-refunded`. **PayTR Mağaza Paneli'nden elle iade yasak** (DEPLOYMENT
+§15 kuralı; panelde kalıcı uyarı). Kısmi iade Pro'ya dokunmaz. Kullanıcı iadeyi uygulamadan
+talep eder (sebep metni), ret notu e-posta ile gider.
+
+**Ödemeler paneli tanımları.** Brüt = o ay `PaidAt` olan siparişlerin `total_amount` toplamı (KDV
+dahil, PayTR komisyonu düşülmemiş), iade hangi ayda yapıldıysa o aya, net = brüt − iade, aylar
+Europe/Istanbul takvimi (`MonthlySummary`, UTC ay başına ay eklemenin kayma hatası yakalanıp
+düzeltildi), test modu ödemeleri toplamlara girmez. Hesap saf ve unit testli.
+
+**Yerelleştirme.** PayTR'ın `failed_reason_code` tablosu (0,1,2,3,6,8,9,10,11,99) web'de tr/en'e
+map'lenir; kod 0'da bankanın Türkçe metni düz metin olarak gösterilir; `-1` bizim: get-token
+reddedildi. Backend `PAYMENT_*` resx anahtarları; e-posta şablonları (`PaymentReceived`,
+`ProExpiring`, `RefundCompleted`, `RefundRejected`) DB seed'i tr/en.
+
+**Açık kalanlar (canlıya alma kapısı).** (1) Fiyatlar; (2) Mesafeli Satış Sözleşmesi + İptal/İade
+metinleri — sayfalar taslak uyarısıyla, noindex ve footer dışında; metin gelince `PUBLIC_PATHS` +
+footer'a alınır; (3) Secret Manager'da üç `afterapply-paytr-*` secret (boş da olsa) + IAM — **deploy
+blocker**, `deploy.yml` onları istiyor; (4) PayTR panelinde Bildirim URL (HTTPS); (5) canlıda
+`TestMode=true` ile test kartı tur atıp `TestMode=false`. Reçete DEPLOYMENT §15.
+
+**Yerel tarayıcı doğrulaması (gerçek PayTR, test modu).** Gerçek mağaza bilgileriyle
+`/weekly-jobs` → ProGate fiyat + "Pro'ya geç" → `/pro` → checkout formu (sözleşme kutusu zorunlu
+doğrulaması) → PayTR get-token gerçek token döndü (30 dk sayaç) → PayTR sayfası iframe'de açıldı;
+PayTR "Bildirim Adresi (URL) bilgisi eksik" dedi — panel ayarı henüz yapılmamış, kart formu ondan
+sonra gelir. Bildirim `scripts/paytr-callback.sh` ile simüle edildi: bozuk hash 400 + hiçbir değişiklik,
+geçerli success → checkout sayfası poll'la kendiliğinden sonuç sayfasına geçti ("Ödemeniz alındı …
+15 Ekim 2026"), `/pro/return` top-level → sonuç sayfası, weekly-jobs kapısı kalktı; kod 6 başarısız
+sipariş yerel mesajla; ayarlar'dan iade talebi; admin panelinde özet/kuyruk/siparişler/uyarılar;
+"Tam iade" gerçek İade API'ye gitti ve PayTR `005 merchant_oid ile başarılı ödeme bulunamadı` dedi
+(sipariş değişmedi, kanıt satırı düştü — imza kabul edildi); ret notuyla talep reddedildi, sipariş
+"Ödendi"ye döndü; sipariş detayı zaman çizgisini gösterdi. Kullanıcı panele Bildirim URL'yi
+(canlı API: `https://afterapply-api-…run.app/api/payments/paytr/callback`) girince yerelde kart
+formu da açıldı: test kartı → PayTR'ın 3-D Secure test ekranı → **PayTR `merchant_ok_url`'e üst
+pencereyi yönlendiriyor** (iframe'i değil; belirsizlik kapandı, framed bounce yine yedek olarak
+kalıyor) → `/pro/return` → sonuç sayfası "doğrulanıyor" (bildirim canlı adrese gitti, henüz deploy
+yok → 404) → script ile bildirim → "15 Kasım 2026" (önceki 15 Ekim bitişinin üstüne bir ay).
+
+**Testler.** Unit 70 (imza vektörleri — dokümandaki birleştirme sırası, `return_amount` biçimi;
+sipariş durum makinesi; entitlement geri sarma/hatırlatma; aylık özet ay sınırları; validator;
+options validator). Integration 46 (`StubPayTrHandler`): checkout imzası birebir, resume, PayTR
+reddi/kesintisi tr/en, callback OK/duplicate/6 paralel/bad hash/tamper/malformed/unknown/late/
+mismatch/silinmiş hesap/audit satırı, iade tam/kısmi/ret/PayTR reddi/mark-refunded/başkasının
+siparişi, admin özet (ay sınırı, iade ayı, test hariç)/liste/filtre/detay/uyarılar/iptal, export,
+expiry ve hatırlatma job'ları. Web (vitest) 12: hata kodu haritası, poll takvimi, para biçimi,
+Pro nav, CSP contract (üç politika + bounce). Bileşen render harness'ı yok; sayfalar tarayıcıda
+elle doğrulanır.
+
 ## Entegrasyon testleri: sınıf başına host, inline iş, sızıntı kapandı — 33 dk'dan 2 dk'ya (2026-09-15, gece)
 
 **Tetikleyici.** Tam paket 410 testte 32 dk 56 s sürüp "Test Run Aborted" ile düştü; ardından tek

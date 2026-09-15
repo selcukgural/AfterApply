@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ADMIN_NAV_HREF, canSeeAdminNav } from "@/lib/auth/adminNav";
+import { PRO_NAV_HREF, canSeeProNav } from "@/lib/payments/proNav";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
 import { useNotificationCount } from "@/hooks/useNotificationCount";
 import { Button } from "@/components/ui/Button";
@@ -59,6 +60,7 @@ export function NavBar() {
   // stored session against /api/users/me), so a grant or a revoke reaches the menu on the next page
   // load rather than at the next sign-in.
   const showAdmin = canSeeAdminNav(user);
+  const showPro = canSeeProNav(config);
 
   // An account may have no name at all (sign-up stopped asking on 2026-09-14): the header then
   // shows the part of the e-mail before the @, and the avatar its first letter.
@@ -133,6 +135,7 @@ export function NavBar() {
               initials={initials}
               onLogout={handleLogout}
               showAdmin={showAdmin}
+              showPro={showPro}
             />
           )}
         </div>
@@ -187,6 +190,11 @@ export function NavBar() {
               <Link href="/my-reviews" onClick={() => setMenuOpen(false)} className={mobileLink("/my-reviews")}>
                 {t("myReviews")}
               </Link>
+              {showPro && (
+                <Link href={PRO_NAV_HREF} onClick={() => setMenuOpen(false)} className={mobileLink("/pro")}>
+                  {t("pro")}
+                </Link>
+              )}
               {/* Same group as on the desktop menu — help, settings, then admin for the accounts
                   that have it. */}
               {showAdmin && (

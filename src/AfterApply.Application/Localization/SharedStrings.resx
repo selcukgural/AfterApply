@@ -315,4 +315,43 @@
   <data name="VALIDATION_RESOLUTION_REASON_REQUIRED" xml:space="preserve">
     <value>A reason is required unless the report is dismissed.</value>
   </data>
+  <data name="PAYMENT_PROVIDER_UNAVAILABLE" xml:space="preserve">
+    <value>The payment provider could not be reached. No charge was made — please try again in a moment.</value>
+  </data>
+  <data name="PAYMENT_EMAIL_UNSUPPORTED" xml:space="preserve">
+    <value>The payment provider does not accept the e-mail address on your account. Please change it in Settings and try again.</value>
+  </data>
+  <data name="PAYMENT_PLAN_UNKNOWN" xml:space="preserve">
+    <value>Please choose a valid plan.</value>
+  </data>
+  <data name="PAYMENT_ORDER_INVALID_TRANSITION" xml:space="preserve">
+    <value>This order is not in a state that allows that action.</value>
+  </data>
+  <data name="PAYMENT_TERMS_REQUIRED" xml:space="preserve">
+    <value>You must accept the distance sales agreement to continue.</value>
+  </data>
+  <data name="VALIDATION_BILLING_NAME" xml:space="preserve">
+    <value>Enter the full name for the invoice (up to 60 characters).</value>
+  </data>
+  <data name="VALIDATION_BILLING_ADDRESS" xml:space="preserve">
+    <value>Enter the address for the invoice (up to 400 characters).</value>
+  </data>
+  <data name="VALIDATION_BILLING_PHONE" xml:space="preserve">
+    <value>Enter a valid phone number (up to 20 characters).</value>
+  </data>
+  <data name="PAYMENT_REFUND_ALREADY_REQUESTED" xml:space="preserve">
+    <value>A refund has already been requested for this payment.</value>
+  </data>
+  <data name="PAYMENT_REFUND_NOT_REFUNDABLE" xml:space="preserve">
+    <value>Only a completed payment can be refunded.</value>
+  </data>
+  <data name="PAYMENT_REFUND_EXCEEDS_TOTAL" xml:space="preserve">
+    <value>The refund amount is larger than what can still be refunded on this payment.</value>
+  </data>
+  <data name="PAYMENT_REFUND_PROVIDER_ERROR" xml:space="preserve">
+    <value>The payment provider refused the refund: {0}</value>
+  </data>
+  <data name="VALIDATION_REFUND_REASON" xml:space="preserve">
+    <value>Tell us briefly why you want a refund (up to 500 characters).</value>
+  </data>
 </root>

@@ -80,6 +80,23 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
           </ul>
         </section>
 
+        {/* The Pro plan's payment. Card data never reaches us (PayTR's own page takes it); what
+            we send PayTR and what we keep for invoicing is listed here, and the checkout's
+            consent box links straight here (#payments). */}
+        <section id="payments">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("payments.title")}</h2>
+          <p>{t("payments.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("payments.card")}</li>
+            <li>{t("payments.sent")}</li>
+            <li>{t("payments.kept")}</li>
+            <li>{t("payments.retention")}</li>
+            <li>{t("payments.refunds")}</li>
+            <li>{t("payments.provider")}</li>
+          </ul>
+          <p className="mt-2">{t("payments.legalBasis")}</p>
+        </section>
+
         <section id="feedback">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("feedback.title")}</h2>
           <p>{t("feedback.intro")}</p>

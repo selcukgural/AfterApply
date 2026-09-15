@@ -122,6 +122,26 @@
       "notFound": {
         "title": "Sayfa bulunamadı",
         "description": "Aradığın sayfa e-kariyerim'de yok."
+      },
+      "pro": {
+        "title": "Pro plan",
+        "description": "e-kariyerim Pro: haftalık ilan eşleştirme için aylık veya yıllık plan."
+      },
+      "proCheckout": {
+        "title": "Ödeme",
+        "description": "Pro planı için güvenli ödeme."
+      },
+      "proOrder": {
+        "title": "Ödeme sonucu",
+        "description": "Pro plan ödemenizin durumu."
+      },
+      "termsOfSale": {
+        "title": "Mesafeli Satış Sözleşmesi",
+        "description": "e-kariyerim Pro planının mesafeli satış sözleşmesi ve ön bilgilendirme formu."
+      },
+      "refundPolicy": {
+        "title": "İptal ve İade Koşulları",
+        "description": "e-kariyerim Pro planında iptal ve iade nasıl işler."
       }
     }
   },
@@ -398,7 +418,8 @@
     "closeMenu": "Menüyü kapat",
     "toolsMenu": "Araçlar",
     "toolsNote": "Hesap gerekmez",
-    "weeklyJobs": "Haftalık İlanlar"
+    "weeklyJobs": "Haftalık İlanlar",
+    "pro": "Pro plan"
   },
   "auth": {
     "login": {
@@ -661,7 +682,8 @@
       "next": "Sonraki",
       "last": "Son",
       "pageInfoCompanies": "Sayfa {page} / {totalPages} ({totalCount} şirket)",
-      "pageInfoReminders": "Sayfa {page} / {totalPages} ({totalCount} hatırlatıcı)"
+      "pageInfoReminders": "Sayfa {page} / {totalPages} ({totalCount} hatırlatıcı)",
+      "pageInfoOrders": "Sayfa {page} / {totalPages} ({totalCount} sipariş)"
     },
     "form": {
       "companyName": "Şirket Adı",
@@ -828,7 +850,7 @@
     "title": "Hesap Ayarları",
     "export": {
       "title": "Verilerimi Dışa Aktar",
-      "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri ve şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
+      "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) ve Pro plan ödeme kayıtlarınızı tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
       "download": "Verilerimi İndir",
       "preparing": "Hazırlanıyor...",
       "error": "Veriler dışa aktarılamadı."
@@ -861,7 +883,7 @@
     },
     "delete": {
       "title": "Hesabımı Sil",
-      "description": "Bu işlem geri alınamaz. Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak silinir.",
+      "description": "Bu işlem geri alınamaz. Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak silinir. Pro plan ödeme kayıtları yasal saklama süresi boyunca hesabınızdan ayrılmış olarak tutulur.",
       "passwordLabel": "Şifreniz",
       "confirmLabel": "Onaylamak için \"SİL\" yazın",
       "confirmWord": "SİL",
@@ -871,6 +893,11 @@
       "finalConfirm": "Son uyarı: Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri ve eklenti bağlantılarınız — kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
       "genericError": "Hesap silinemedi.",
       "noPasswordHint": "Bu hesap Google, LinkedIn veya GitHub ile açıldı ve şifresi yok. Silmek için aşağıya onay kelimesini yazmanız yeterli."
+    },
+    "billing": {
+      "title": "Plan ve ödemeler",
+      "description": "Pro plan ödemeleriniz ve iade talepleriniz. Kart bilgileriniz e-kariyerim'de tutulmaz; ödeme PayTR'ın güvenli sayfasında alınır.",
+      "manage": "Planı ve ödeme geçmişini yönet"
     }
   },
   "emailSuggestions": {
@@ -1082,6 +1109,17 @@
       "storage": "Değerlendirmeler, bildirimler ve faydalı işaretleri kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Hesabını silmek değerlendirmelerini, bildirimlerini ve faydalı işaretlerini siler. Yazdığın değerlendirmeler şirket sayfalarından ve şirketin puanından kalkar; veri dışa aktarımın da bunları içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — yazmayı, bildirmeyi veya işaretlemeyi sen seçersin — ve moderasyon için meşru menfaat: adı geçen bir şirket hakkında yayımlananların adil ve hukuka uygun kalması."
+    },
+    "payments": {
+      "title": "Ödemeler (Pro plan)",
+      "intro": "Pro planı satın alırken ödeme, PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş.'nin güvenli ödeme sayfasında alınır.",
+      "card": "Kart numaranız, son kullanma tarihiniz ve güvenlik kodunuz e-kariyerim'e hiçbir zaman ulaşmaz; yalnızca PayTR'ın sayfasında girilir ve orada işlenir.",
+      "sent": "PayTR'a gönderdiğimiz bilgiler: e-posta adresiniz, ödeme sırasında girdiğiniz ad soyad, adres ve telefon, ödemeyi başlattığınız bağlantının IP adresi, seçilen plan ve tutar.",
+      "kept": "Bizde tutulan: sipariş kaydı (plan, tutar, tarih, sonuç), fatura için girdiğiniz ad, adres ve telefon, PayTR'ın bize bildirdiği sonuç ve varsa başarısızlık nedeni. PayTR'ın ödeme sonucunu ilettiği sunucu isteğinin IP'si de kaydedilir; hiçbir yerde gösterilmez.",
+      "retention": "Ödeme ve fatura kayıtları mali mevzuatın gerektirdiği yasal saklama süresi boyunca tutulur. Hesabınızı silerseniz bu kayıtlar hesabınızdan ayrılır (kimliğinizle bağı kaldırılır) ama süre dolana kadar silinmez.",
+      "refunds": "İadeler yalnızca bizim sistemimiz üzerinden, PayTR'ın iade servisiyle ödemeyi yaptığınız karta yapılır; iade talebiniz ve sonucu sipariş kaydında tutulur.",
+      "provider": "PayTR kendi işlediği veriler için veri sorumlusudur; aydınlatma metni paytr.com adresinde yayımlanır.",
+      "legalBasis": "Hukuki dayanak: sözleşmenin kurulması ve ifası (KVKK m. 5/2-c) ve hukuki yükümlülüğün yerine getirilmesi (m. 5/2-ç)."
     }
   },
   "extensionPrivacy": {
@@ -1152,7 +1190,7 @@
     "lastUpdated": "Son güncelleme: 13 Eylül 2026",
     "intro": {
       "title": "Kısaca",
-      "body": "e-kariyerim yalnızca hizmetin çalışması için gereken iki çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok.",
+      "body": "e-kariyerim yalnızca hizmetin çalışması için gereken iki çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok. Tek istisna Pro plan ödeme sayfasıdır: ödeme formu PayTR'ın kendi sayfasında açılır ve PayTR o sayfada kendi zorunlu çerezlerini kullanabilir; bu çerezler sitemizin diğer sayfalarında okunmaz.",
       "legalNote": "KVKK kapsamında zorunlu ve işlevsel çerezler için açık rıza aranmaz; aranan şey aydınlatmadır. Bu sayfa o aydınlatmadır."
     },
     "table": {
@@ -1411,7 +1449,10 @@
       "privacyLink": "Gizlilik politikası",
       "plan": "Pro plan",
       "comingSoon": "Yakında",
-      "comingSoonNote": "Ödeme altyapısı hazırlanıyor; açıldığında bu düğme aktif olur."
+      "comingSoonNote": "Ödeme altyapısı hazırlanıyor; açıldığında bu düğme aktif olur.",
+      "perMonth": "/ ay",
+      "upgrade": "Pro'ya geç",
+      "upgradeNote": "Aylık veya yıllık, peşin. Otomatik yenileme yok."
     }
   },
   "imports": {
@@ -2709,7 +2750,8 @@
     "label": "Yönetim bölümleri",
     "metrics": "Metrikler",
     "reviews": "Değerlendirmeler",
-    "reports": "Şikayetler"
+    "reports": "Şikayetler",
+    "payments": "Ödemeler"
   },
   "companies": {
     "directory": {
@@ -3090,5 +3132,333 @@
     "companies": "Şirket değerlendirmeleri",
     "guide": "Rehber",
     "help": "Yardım Merkezi"
+  },
+  "payments": {
+    "plans": {
+      "title": "Pro plan",
+      "monthly": "Aylık",
+      "yearly": "Yıllık",
+      "perMonth": "/ ay",
+      "perYear": "/ yıl",
+      "perMonthEquivalent": "Aylık {amount} eder",
+      "saves": "{months} ay bedava",
+      "kdvIncluded": "KDV dahil",
+      "current": "Pro planınız aktif; bitiş: {date}. Şimdi ödediğiniz süre bu tarihin üstüne eklenir.",
+      "extend": "Süreyi uzat",
+      "choose": "Bu planı seç",
+      "noAutoRenew": "Otomatik yenileme yoktur. Süre dolmadan birkaç gün önce e-posta ile hatırlatırız; uzatmazsanız hiçbir ücret alınmaz.",
+      "historyTitle": "Ödemelerim",
+      "loadError": "Planlar yüklenemedi. Lütfen sayfayı yenileyin."
+    },
+    "checkout": {
+      "title": "Ödeme",
+      "step1": "1. Fatura bilgileri",
+      "step2": "2. Ödeme",
+      "billingName": "Ad soyad",
+      "billingAddress": "Adres",
+      "billingPhone": "Telefon",
+      "billingWhy": "Bu bilgiler fatura için gereklidir ve ödeme sağlayıcısı PayTR'a iletilir. Kart bilgileriniz e-kariyerim'e hiç ulaşmaz.",
+      "terms": "<sale>Mesafeli Satış Sözleşmesi ve Ön Bilgilendirme Formu</sale>'nu okudum, kabul ediyorum. Dijital hizmetin hemen ifasına onay veriyorum ve bu nedenle cayma hakkımı kaybedeceğimi biliyorum (<refund>iptal ve iade koşulları</refund>).",
+      "termsRequired": "Devam etmek için sözleşmeyi kabul etmelisiniz.",
+      "pay": "Ödemeye geç",
+      "starting": "Ödeme sayfası hazırlanıyor…",
+      "back": "Planlara dön",
+      "unknownPlan": "Seçilen plan bulunamadı. Lütfen planlar sayfasından tekrar seçin.",
+      "providerError": "Ödeme sağlayıcısına ulaşılamadı. Herhangi bir ücret alınmadı; lütfen biraz sonra tekrar deneyin.",
+      "timeLeft": "Ödeme penceresi için kalan süre: {minutes}:{seconds}",
+      "cancel": "Vazgeç",
+      "cancelConfirm": "Ödemeden vazgeçilsin mi?",
+      "cancelYes": "Evet, vazgeç",
+      "cancelNo": "Devam et",
+      "expired": "Ödeme penceresi kapandı; herhangi bir ücret alınmadı. Yeniden başlatabilirsiniz.",
+      "restart": "Yeniden başlat",
+      "frameTitle": "PayTR güvenli ödeme sayfası",
+      "frameNote": "Ödeme PayTR'ın güvenli sayfasında alınır; kart bilgileriniz e-kariyerim'e hiç ulaşmaz. Ödeme tamamlanınca sonuç sayfasına yönlendirilirsiniz."
+    },
+    "result": {
+      "verifyingTitle": "Ödemeniz doğrulanıyor",
+      "verifyingFailTitle": "Ödeme tamamlanamamış görünüyor",
+      "verifying": "Bankadan gelen sonucu bekliyoruz; bu genellikle birkaç saniye sürer.",
+      "pendingLong": "Bankanın onayı beklenenden uzun sürüyor. Sayfayı açık bırakabilir ya da kapatabilirsiniz: sonuç kesinleşince e-posta ile bildiririz ve Ayarlar > Plan ve ödemeler'de görünür.",
+      "pendingGaveUp": "Sonuç henüz bize ulaşmadı. Kartınızdan çekim yapıldıysa ödeme birazdan tanınır ve e-posta ile bildiririz; çekim yoksa ödeme yapılmamıştır. Ayarlar > Plan ve ödemeler'den takip edebilirsiniz.",
+      "refresh": "Yenile",
+      "paidTitle": "Ödemeniz alındı",
+      "paidBody": "{plan} için {amount} ödemeniz onaylandı. Pro planınız {date} tarihine kadar aktif.",
+      "receiptNote": "Makbuz e-postanız birkaç dakika içinde gelir. Otomatik yenileme yoktur; bitişten birkaç gün önce hatırlatırız.",
+      "goToJobs": "Haftalık ilanlara git",
+      "backToPlans": "Planlara dön",
+      "failedTitle": "Ödeme tamamlanamadı",
+      "bankSaid": "Bankanın açıklaması:",
+      "noCharge": "Kartınızdan herhangi bir çekim yapılmadı.",
+      "tryAgain": "Tekrar dene",
+      "expiredTitle": "Ödeme penceresi kapandı",
+      "cancelledTitle": "Ödemeden vazgeçildi",
+      "refundedTitle": "Bu ödeme iade edildi",
+      "notFoundTitle": "Sipariş bulunamadı",
+      "notFound": "Bu bağlantı size ait bir siparişi göstermiyor."
+    },
+    "failure": {
+      "bank": "Bankanız ödemeyi onaylamadı.",
+      "1": "Kimlik doğrulama tamamlanmadı: cep telefonu numarası girilmedi. Lütfen tekrar deneyin ve işlemi tamamlayın.",
+      "2": "Kimlik doğrulama başarısız: telefonunuza gelen şifre doğru girilmedi. Lütfen tekrar deneyin.",
+      "3": "Güvenlik kontrolü sonrası onay verilmedi veya kontrol yapılamadı. Lütfen tekrar deneyin ya da başka bir kart kullanın.",
+      "6": "Ödeme sayfası tamamlanmadan kapatıldı veya süresi doldu.",
+      "8": "Bu karta taksit yapılamıyor. (Pro plan tek çekimdir; farklı bir kart deneyin.)",
+      "9": "Bu kart ile işlem yetkisi bulunmuyor. Lütfen başka bir kart kullanın.",
+      "10": "Bu işlemde 3D Secure kullanılmalı. Lütfen 3D Secure destekleyen bir kartla tekrar deneyin.",
+      "11": "Güvenlik kontrolü nedeniyle işlem onaylanmadı. Lütfen bizimle iletişime geçin.",
+      "99": "Teknik bir hata oluştu. Lütfen biraz sonra tekrar deneyin.",
+      "providerRejected": "Ödeme sayfası açılamadı (ödeme sağlayıcısı isteği kabul etmedi). Herhangi bir ücret alınmadı; lütfen tekrar deneyin.",
+      "unknown": "Ödeme tamamlanamadı. Lütfen tekrar deneyin ya da başka bir kart kullanın."
+    },
+    "status": {
+      "pending": "Bekliyor",
+      "paid": "Ödendi",
+      "failed": "Başarısız",
+      "expired": "Süresi doldu",
+      "cancelled": "Vazgeçildi",
+      "refundRequested": "İade talebi",
+      "refunded": "İade edildi",
+      "partiallyRefunded": "Kısmen iade edildi"
+    },
+    "history": {
+      "loading": "Ödemeler yükleniyor…",
+      "empty": "Henüz bir ödemeniz yok.",
+      "refunded": "{amount} iade edildi",
+      "open": "Aç",
+      "requestRefund": "İade talep et",
+      "seeAll": "Tümünü gör"
+    },
+    "refund": {
+      "title": "İade talebi",
+      "body": "Talebiniz incelenir; onaylanırsa tutar ödeme yaptığınız karta PayTR üzerinden iade edilir ve Pro planınız bu ödemenin eklediği süre kadar geri alınır. Sonuç e-posta ile bildirilir.",
+      "policyLink": "İptal ve iade koşulları",
+      "reason": "İade nedeniniz",
+      "submit": "Talebi gönder",
+      "cancel": "Vazgeç",
+      "error": "Talep gönderilemedi. Lütfen tekrar deneyin."
+    }
+  },
+  "adminPayments": {
+    "title": "Ödemeler",
+    "panelWarning": "İade yalnızca bu panelden yapılır. PayTR Mağaza Paneli'nden elle iade yapmayın: sistem bunu bilmez, Pro açık kalır ve aylık toplamlar yanlış çıkar.",
+    "loading": "Yükleniyor…",
+    "loadError": "Özet yüklenemedi.",
+    "actionError": "İşlem yapılamadı. Lütfen tekrar deneyin.",
+    "plan": {
+      "monthly": "Aylık",
+      "yearly": "Yıllık"
+    },
+    "summary": {
+      "thisMonth": "Bu ay",
+      "gross": "Brüt",
+      "refunds": "İadeler",
+      "net": "Net",
+      "sales": "{count} satış",
+      "refundCount": "{count} iade",
+      "cancelled": "İptal / süresi dolan",
+      "failed": "Başarısız",
+      "openRequests": "Açık iade talebi",
+      "activePro": "Aktif Pro kullanıcı",
+      "testOrders": "Test ödemesi (30 gün)",
+      "feeNote": "Tutarlar KDV dahildir; PayTR komisyonu düşülmemiştir. Test modu ödemeleri toplamlara girmez. Ay sınırları Türkiye saatine göredir; iade yapıldığı aya yazılır.",
+      "last12Months": "Son 12 ay",
+      "month": "Ay",
+      "salesColumn": "Satış"
+    },
+    "queue": {
+      "title": "İade talepleri",
+      "empty": "Bekleyen iade talebi yok.",
+      "requestedAt": "Talep: {date}"
+    },
+    "orders": {
+      "title": "Siparişler",
+      "status": "Durum",
+      "allStatuses": "Tümü",
+      "month": "Ay",
+      "search": "E-posta veya sipariş no",
+      "searchPlaceholder": "ada@… veya merchant_oid",
+      "apply": "Uygula",
+      "open": "Aç",
+      "empty": "Bu filtreyle sipariş yok.",
+      "test": "TEST",
+      "mismatch": "tutar farklı",
+      "columns": {
+        "date": "Tarih",
+        "email": "Kullanıcı",
+        "plan": "Plan",
+        "amount": "Tutar",
+        "status": "Durum",
+        "flags": "İşaretler"
+      }
+    },
+    "detail": {
+      "title": "Sipariş",
+      "close": "Kapat",
+      "merchantOid": "Sipariş no (merchant_oid)",
+      "plan": "Plan",
+      "asked": "İstenen tutar",
+      "charged": "Çekilen tutar",
+      "refunded": "İade edilen",
+      "created": "Oluşturulma",
+      "paidAt": "Ödeme",
+      "failure": "Hata",
+      "paymentType": "Ödeme şekli",
+      "terms": "Sözleşme",
+      "billing": "Fatura bilgileri",
+      "entitlement": "Pro durumu",
+      "entitlementState": "Aktif: {active, select, yes {evet} other {hayır}} · bitiş {date}",
+      "noEntitlement": "Bu kullanıcının Pro kaydı yok (hesap silinmiş olabilir).",
+      "entitlementChange": "Bu sipariş: {from} → {to}",
+      "refundSection": "İade",
+      "refundReason": "Kullanıcının nedeni",
+      "refundRejection": "Ret notu",
+      "refundReference": "PayTR referansı",
+      "timeline": "PayTR bildirimleri",
+      "noNotifications": "Henüz bildirim yok.",
+      "badHash": "hash geçersiz",
+      "cancelOrder": "Siparişi iptal et",
+      "cancelBody": "Bekleyen sipariş kapatılır; ödeme yapılmadıysa hiçbir şey çekilmez. Sonradan başarılı bildirim gelirse yine de işlenir."
+    },
+    "outcome": {
+      "Applied": "Uygulandı",
+      "Duplicate": "Tekrar",
+      "LateApplied": "Geç uygulandı",
+      "UnknownOrder": "Bilinmeyen sipariş",
+      "BadHash": "Geçersiz hash",
+      "Malformed": "Eksik alan",
+      "Error": "Hata",
+      "RefundRecorded": "İade kaydı"
+    },
+    "alerts": {
+      "title": "Uyarılar (son 30 gün)",
+      "hint": "PayTR panelinde \"Devam ediyor\" görünen bir işlem varsa nedeni burada: reddettiğimiz ya da eşleştiremediğimiz bildirimler ve tutar uyuşmazlıkları.",
+      "empty": "Uyarı yok.",
+      "mismatch": "{email}: {expected} istendi, {charged} çekildi"
+    },
+    "refund": {
+      "start": "İade yap",
+      "full": "Tam iade",
+      "reject": "Reddet",
+      "markRefunded": "PayTR'da iade edildi olarak işaretle",
+      "cancel": "Vazgeç",
+      "refundTitle": "İade",
+      "refundConfirm": "PayTR'a iade isteği gönder",
+      "refundBody": "Tutar PayTR üzerinden aynı karta iade edilir (3–10 iş günü). İade edilebilir en fazla {max}. Tam iadede kullanıcının Pro süresi bu siparişin eklediği kadar geri alınır.",
+      "rejectTitle": "İade talebini reddet",
+      "rejectConfirm": "Reddet ve kullanıcıya bildir",
+      "rejectBody": "Not kullanıcıya e-posta ile gönderilir; sipariş 'Ödendi' durumuna döner.",
+      "markRefundedTitle": "İadeyi elle kaydet",
+      "markRefundedConfirm": "Kaydet (PayTR'a istek gönderilmez)",
+      "markRefundedBody": "Yalnızca PayTR'ın iadeyi zaten yaptığını Mağaza Paneli'nden doğruladıysanız kullanın (ör. iade başarılıydı ama bizim kaydımız düşmedi). En fazla {max}.",
+      "cancelTitle": "Siparişi iptal et",
+      "cancelConfirm": "İptal et",
+      "amount": "İade tutarı (₺)",
+      "amountInvalid": "Tutar 0'dan büyük ve iade edilebilir tutardan küçük ya da eşit olmalı.",
+      "reference": "PayTR referans no",
+      "note": "Ret notu (kullanıcıya gider)"
+    }
+  },
+  "legalDraft": {
+    "notice": "Bu metin taslaktır; nihai hâli yayımlanmadan Pro plan satışa açılmaz."
+  },
+  "termsOfSale": {
+    "title": "Mesafeli Satış Sözleşmesi ve Ön Bilgilendirme Formu",
+    "lastUpdated": "Sürüm 2026-09 (taslak)",
+    "intro": "Bu sözleşme, e-kariyerim Pro planının (haftalık ilan eşleştirme hizmeti) internet üzerinden satışına ilişkin olarak 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği uyarınca düzenlenmiştir.",
+    "seeAlso": "Bakınız:",
+    "refundLink": "İptal ve iade koşulları",
+    "privacyLink": "Gizlilik politikası (ödemeler)",
+    "sections": {
+      "parties": {
+        "title": "Taraflar",
+        "body": "[Satıcı unvanı, adresi, vergi dairesi/no, e-posta] ile hizmeti satın alan tüketici (Alıcı). Alıcının bilgileri ödeme sırasında girdiği ad soyad, adres, telefon ve hesabındaki e-posta adresidir."
+      },
+      "subject": {
+        "title": "Sözleşmenin konusu",
+        "body": "[Metin gelecek] Sözleşmenin konusu, Alıcının e-kariyerim üzerinden elektronik ortamda sipariş verdiği Pro planın satışı ve ifasına ilişkin tarafların hak ve yükümlülükleridir."
+      },
+      "service": {
+        "title": "Hizmetin nitelikleri",
+        "body": "[Metin gelecek] Pro plan: Alıcının kaydettiği kriterlere göre her hafta LinkedIn ve kariyer.net üzerindeki yeni ilanların toplanması, CV ile karşılaştırılıp puanlanması ve e-posta ile bildirilmesi. Aylık plan bir takvim ayı, yıllık plan bir takvim yılı süreyle geçerlidir; otomatik yenileme yoktur."
+      },
+      "price": {
+        "title": "Fiyat",
+        "body": "[Metin gelecek] Fiyat, ödeme sayfasında KDV dahil olarak gösterilen tutardır. Fiyat değişiklikleri başlamış dönemleri etkilemez."
+      },
+      "payment": {
+        "title": "Ödeme",
+        "body": "[Metin gelecek] Ödeme, PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş. altyapısı üzerinden kredi/banka kartı ile tek çekimde alınır. Kart bilgileri Satıcıya ulaşmaz."
+      },
+      "delivery": {
+        "title": "İfa (teslim)",
+        "body": "[Metin gelecek] Hizmet, ödemenin PayTR tarafından onaylanmasıyla derhal başlar ve Alıcının hesabında kullanıma açılır."
+      },
+      "withdrawal": {
+        "title": "Cayma hakkı",
+        "body": "[Metin gelecek] Elektronik ortamda anında ifa edilen hizmetlerde, Alıcının ifaya açıkça onay vermesi ve cayma hakkını kaybedeceğini kabul etmesi hâlinde cayma hakkı kullanılamaz (Mesafeli Sözleşmeler Yönetmeliği m. 15/1-ğ). Alıcı ödeme sırasında bu onayı vermektedir."
+      },
+      "refunds": {
+        "title": "İptal ve iade",
+        "body": "[Metin gelecek] Cayma hakkının dışında kalan iade talepleri, İptal ve İade Koşulları sayfasında açıklanan usulle değerlendirilir."
+      },
+      "obligations": {
+        "title": "Tarafların yükümlülükleri",
+        "body": "[Metin gelecek]"
+      },
+      "disputes": {
+        "title": "Uyuşmazlıkların çözümü",
+        "body": "[Metin gelecek] Uyuşmazlıklarda Ticaret Bakanlığınca ilan edilen parasal sınırlar dâhilinde Tüketici Hakem Heyetleri, aşan durumlarda Tüketici Mahkemeleri yetkilidir."
+      },
+      "effective": {
+        "title": "Yürürlük",
+        "body": "[Metin gelecek] Alıcı, ödeme sayfasındaki onay kutusunu işaretleyerek bu sözleşmeyi ve ön bilgilendirme formunu okuduğunu ve kabul ettiğini beyan eder; sözleşme ödeme onayıyla kurulur."
+      }
+    }
+  },
+  "refundPolicy": {
+    "title": "İptal ve İade Koşulları",
+    "lastUpdated": "Sürüm 2026-09 (taslak)",
+    "intro": "Bu sayfa e-kariyerim Pro planında iptal ve iadenin nasıl işlediğini açıklar.",
+    "seeAlso": "Bakınız:",
+    "termsLink": "Mesafeli Satış Sözleşmesi",
+    "sections": {
+      "scope": {
+        "title": "Kapsam",
+        "body": "[Metin gelecek] Bu koşullar Pro planın aylık ve yıllık dönemleri için geçerlidir."
+      },
+      "withdrawal": {
+        "title": "Cayma hakkı",
+        "body": "[Metin gelecek] Hizmet ödemeyle birlikte hemen başladığından ve ödeme sırasında buna açıkça onay verildiğinden yasal cayma hakkı kullanılamaz."
+      },
+      "cancellation": {
+        "title": "İptal",
+        "body": "[Metin gelecek] Otomatik yenileme yoktur; dönem sonunda hiçbir ücret alınmaz. Süreyi uzatmamak için herhangi bir işlem yapmanız gerekmez. Ödeme penceresi tamamlanmadan kapatılan bir sipariş için ücret alınmaz."
+      },
+      "howToRequest": {
+        "title": "İade nasıl talep edilir",
+        "body": "Ayarlar > Plan ve ödemeler ya da Pro plan sayfasındaki ilgili ödemenin yanındaki \"İade talep et\" düğmesiyle, nedeninizi yazarak. [Hangi koşullarda iade yapılacağı — metin gelecek]"
+      },
+      "decision": {
+        "title": "Değerlendirme",
+        "body": "[Metin gelecek] Talep en geç [N] iş günü içinde değerlendirilir; sonuç e-posta ile bildirilir."
+      },
+      "howRefunded": {
+        "title": "İade nasıl yapılır",
+        "body": "Onaylanan iade, PayTR üzerinden ödemeyi yaptığınız karta yapılır; bankanıza göre 3–10 iş gününde hesabınıza yansır. Başka bir hesaba ya da nakit iade yapılmaz."
+      },
+      "partial": {
+        "title": "Kısmi iade",
+        "body": "[Metin gelecek] Kısmi iade yapılan ödemelerde Pro planınız değişmeden devam eder."
+      },
+      "proAfterRefund": {
+        "title": "İade sonrası Pro",
+        "body": "Tam iade yapılan bir ödemenin eklediği süre Pro planınızdan geri alınır; başka ödemelerden kalan süreniz korunur."
+      },
+      "contact": {
+        "title": "İletişim",
+        "body": "[E-posta adresi — metin gelecek]"
+      }
+    }
   }
 }
