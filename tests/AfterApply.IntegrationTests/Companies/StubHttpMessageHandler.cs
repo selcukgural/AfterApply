@@ -13,7 +13,7 @@ namespace AfterApply.IntegrationTests.Companies;
 /// still run, which is the whole point of exercising this at integration level rather than
 /// stubbing the service away.
 /// </summary>
-internal sealed class StubHttpMessageHandler(IReadOnlyDictionary<string, string> responsesByHost) : HttpMessageHandler
+public sealed class StubHttpMessageHandler(IReadOnlyDictionary<string, string> responsesByHost) : HttpMessageHandler
 {
     private readonly List<Uri> _requested = [];
 
@@ -25,6 +25,15 @@ internal sealed class StubHttpMessageHandler(IReadOnlyDictionary<string, string>
             {
                 return [.. _requested];
             }
+        }
+    }
+
+    /// <summary>Forgets the requests seen so far — between tests, the handler serves a whole class.</summary>
+    public void Clear()
+    {
+        lock (_requested)
+        {
+            _requested.Clear();
         }
     }
 

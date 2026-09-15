@@ -9,9 +9,11 @@ internal static class TestHostDisposal
     /// stop in time.
     /// </summary>
     /// <remarks>
-    /// Only for the handful of classes that ask for a background server
-    /// (<c>Hangfire:ServerEnabled</c>); every other host has none and disposes cleanly, which is
-    /// why this is a helper the exceptions opt into rather than a blanket rule.
+    /// Only for the two classes that still ask for a background server
+    /// (<c>Hangfire:ServerEnabled</c>: HangfireServerInTestsTests and PostgresPoolCapTests, the
+    /// wiring guards); every other host runs its jobs inline (InlineBackgroundJobs), has no
+    /// server and disposes cleanly, which is why this is a helper the exceptions opt into rather
+    /// than a blanket rule.
     /// <para>
     /// What it swallows and why: Hangfire.PostgreSql's ExpirationManager does not observe the
     /// shutdown token, so <c>BackgroundProcessingServer.WaitForShutdownAsync</c> can run out its

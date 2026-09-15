@@ -17,6 +17,11 @@ namespace AfterApply.IntegrationTests.Infrastructure;
 /// TestContainerCleanup.DisableHangfireServerForTests). Without the second, "no server" would mean
 /// endpoints that enqueue start failing and the fix would be worse than the problem: production
 /// enqueues through IBackgroundJobClient in the request path, so that has to keep working here.
+///
+/// These hosts are built raw, not through ApiHost, on purpose: ApiHost swaps the job client for the
+/// inline one (InlineBackgroundJobs), and this class is one of the two places (with
+/// PostgresPoolCapTests) that still proves the real client and the real server wire up. It is the
+/// only class that opens a real server per test, and it opens three.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 public class HangfireServerInTestsTests(SharedInfrastructure shared) : IAsyncLifetime
@@ -57,19 +62,27 @@ public class HangfireServerInTestsTests(SharedInfrastructure shared) : IAsyncLif
         // fail, because that is production's path.
         await using var factory = Build();
         var jobs = factory.Services.GetRequiredService<IBackgroundJobClient>();
+        jobs.ShouldBeOfType<BackgroundJobClient>("this class must keep exercising Hangfire's own client");
 
         var jobId = jobs.Enqueue<IHangfireProbe>(probe => probe.DoNothing());
 
         jobId.ShouldNotBeNullOrWhiteSpace();
     }
 
-    private WebApplicationFactory<Program> Build(Action<Microsoft.AspNetCore.Hosting.IWebHostBuilder>? extra = null) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+    private RawFactory Build(Action<Microsoft.AspNetCore.Hosting.IWebHostBuilder>? extra = null) =>
+        new(_postgres, extra);
+
+    /// <summary>A plain factory: no inline job client, no fixture. Disposed by each test.</summary>
+    private sealed class RawFactory(string postgres, Action<Microsoft.AspNetCore.Hosting.IWebHostBuilder>? extra)
+        : WebApplicationFactory<Program>
+    {
+        protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
         {
-            builder.UseSetting("ConnectionStrings:Postgres", _postgres);
+            builder.UseSetting("ConnectionStrings:Postgres", postgres);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             extra?.Invoke(builder);
-        });
+        }
+    }
 
     private static string[] HostedServices(WebApplicationFactory<Program> factory) =>
         factory.Services.GetServices<IHostedService>()

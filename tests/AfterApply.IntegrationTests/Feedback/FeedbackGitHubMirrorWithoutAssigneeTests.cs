@@ -1,13 +1,12 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Feedback;
 using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Feedback;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +14,31 @@ using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.Feedback;
+
+/// <summary>As <see cref="FeedbackGitHubMirrorProfile" />, with whitespace rather than absent
+/// for the assignee: a half-filled value has to behave the same as an empty one, or a stray
+/// space breaks the mirror for whoever leaves it.</summary>
+public sealed class FeedbackGitHubMirrorWithoutAssigneeProfile : IHostProfile
+{
+    public StubGitHubHandler GitHub { get; } = new();
+
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Feedback:GitHub:Enabled"] = "true",
+            ["Feedback:GitHub:Repository"] = "owner/repo",
+            ["Feedback:GitHub:Token"] = "test-token",
+            ["Feedback:GitHub:Assignee"] = "   ",
+        }));
+
+        builder.ConfigureServices(services =>
+            services.AddHttpClient(nameof(IGitHubIssueMirror))
+                .ConfigurePrimaryHttpMessageHandler(() => GitHub));
+    }
+
+    public void Reset() => GitHub.Clear();
+}
 
 /// <summary>
 /// The mirror with no assignee configured — which is the default, and what anyone setting this up
@@ -24,47 +48,17 @@ namespace AfterApply.IntegrationTests.Feedback;
 /// while <see cref="FeedbackGitHubMirrorTests"/>, which sets one, stayed green.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class FeedbackGitHubMirrorWithoutAssigneeTests(SharedInfrastructure shared) : IAsyncLifetime
+public class FeedbackGitHubMirrorWithoutAssigneeTests(ApiHost<FeedbackGitHubMirrorWithoutAssigneeProfile> host) : IClassFixture<ApiHost<FeedbackGitHubMirrorWithoutAssigneeProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
-    private StubGitHubHandler _handler = null!;
+    private StubGitHubHandler _handler => host.Profile.GitHub;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(FeedbackGitHubMirrorWithoutAssigneeTests));
-        _handler = new StubGitHubHandler();
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // This class asserts what a background job did, so it needs the one thing the suite
-            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
-            builder.UseSetting("Hangfire:ServerEnabled", "true");
-            // Turning the mirror back on for this class only. TestContainerCleanup forces it off
-            // process-wide through environment variables, which sit above user secrets — the
-            // whole point being that a developer's live token can never reach a test host. An
-            // in-memory source added here is appended last, so it beats those variables.
-            // Whitespace rather than absent for the assignee: a half-filled value has to behave
-            // the same as an empty one, or a stray space breaks the mirror for whoever leaves it.
-            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Feedback:GitHub:Enabled"] = "true",
-                ["Feedback:GitHub:Repository"] = "owner/repo",
-                ["Feedback:GitHub:Token"] = "test-token",
-                ["Feedback:GitHub:Assignee"] = "   ",
-            }));
-
-            builder.ConfigureServices(services =>
-                services.AddHttpClient(nameof(IGitHubIssueMirror))
-                    .ConfigurePrimaryHttpMessageHandler(() => _handler));
-        });
+        await host.ResetAsync();
 
         _client = _factory.CreateClient();
         var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
@@ -74,13 +68,7 @@ public class FeedbackGitHubMirrorWithoutAssigneeTests(SharedInfrastructure share
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task With_No_Assignee_Configured_The_Field_Is_Omitted_Entirely()
@@ -100,23 +88,13 @@ public class FeedbackGitHubMirrorWithoutAssigneeTests(SharedInfrastructure share
 
     private async Task<FeedbackEntry> PollUntilMirroredAsync(Guid feedbackEntryId)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(60);
-        while (DateTime.UtcNow < deadline)
-        {
-            using (var scope = _factory!.Services.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var entry = await dbContext.FeedbackEntries.AsNoTracking()
-                    .SingleAsync(f => f.Id == feedbackEntryId);
-                if (entry.MirroredAt is not null)
-                {
-                    return entry;
-                }
-            }
+        await host.RunJobsAsync();
+        host.Jobs.Failed.ShouldBeEmpty();
 
-            await Task.Delay(200);
-        }
-
-        throw new TimeoutException($"Feedback {feedbackEntryId} was not mirrored within 60s.");
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var entry = await dbContext.FeedbackEntries.AsNoTracking().SingleAsync(f => f.Id == feedbackEntryId);
+        entry.MirroredAt.ShouldNotBeNull("the mirror job ran but did not mark the entry");
+        return entry;
     }
 }

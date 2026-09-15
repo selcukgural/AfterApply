@@ -100,17 +100,38 @@ internal static class TestContainerCleanup
     /// only change how much work is waited on or for how long. Not starting the server removes the
     /// wait altogether: nothing to poll, nothing to wind down, and a host that boots faster too.
     ///
-    /// Jobs still enqueue in these hosts (AddHangfire and its storage are untouched, so
-    /// IBackgroundJobClient and IRecurringJobManager work exactly as in production) — they simply
-    /// are not executed. The classes that assert a job's effect rather than an endpoint's response
-    /// switch the server back on for their own factory with
-    /// UseSetting("Hangfire:ServerEnabled", "true"): the import, enrichment, email-signal, feedback,
-    /// password-reset and mailing tests. HangfireServerInTestsTests is the guard for both halves.
+    /// Jobs still enqueue in these hosts — and since 2026-09-15 they also run: every ApiHost swaps
+    /// Hangfire's client for the inline one (InlineBackgroundJobs), so a class that asserts a job's
+    /// effect calls <c>await host.RunJobsAsync()</c> instead of switching a server on and polling.
+    /// Only the two wiring guards, HangfireServerInTestsTests and PostgresPoolCapTests, still set
+    /// UseSetting("Hangfire:ServerEnabled", "true") on a raw factory of their own.
     /// </summary>
     [ModuleInitializer]
     public static void DisableHangfireServerForTests()
     {
         Environment.SetEnvironmentVariable("Hangfire__ServerEnabled", "false");
+    }
+
+    /// <summary>
+    /// Stops every host this assembly builds from watching appsettings*.json for changes.
+    ///
+    /// The 2026-09-03 heap dump of a hung run found every disposed WebApplicationFactory host still
+    /// in memory, and the root of the chain holding each one was a FileSystemWatcher: the
+    /// reload-on-change watcher the default host builder attaches to appsettings.json and
+    /// appsettings.Development.json. A watcher is rooted by the OS callback it registered, its
+    /// change token holds the configuration provider, the provider holds the host — so disposing
+    /// the host freed nothing, and a run carried every host it had ever built (102 at test 47).
+    /// Nothing in a test edits appsettings while it runs; there is nothing to reload.
+    ///
+    /// An environment variable, not UseSetting: the file sources are added inside
+    /// WebApplication.CreateBuilder, from host configuration, before any per-factory setting is
+    /// applied — and host configuration reads DOTNET_-prefixed variables. HostLifecycleTests
+    /// checks that a disposed host is now actually collectable.
+    /// </summary>
+    [ModuleInitializer]
+    public static void DoNotWatchConfigurationFiles()
+    {
+        Environment.SetEnvironmentVariable("DOTNET_hostBuilder__reloadConfigOnChange", "false");
     }
 
     /// <summary>

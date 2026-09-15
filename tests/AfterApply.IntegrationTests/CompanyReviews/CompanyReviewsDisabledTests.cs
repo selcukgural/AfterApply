@@ -1,47 +1,36 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Application.Identity.Contracts;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.CompanyReviews;
 
+public sealed class CompanyReviewsDisabledProfile : IHostProfile
+{
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("CompanyReviews:Enabled", "false");
+    }
+}
+
 /// <summary>CompanyReviews:Enabled=false — the feature deployed dark. Every review route is a 404
 /// for everyone, admin included, and /api/config says so.</summary>
 [Collection(IntegrationTestCollection.Name)]
-public class CompanyReviewsDisabledTests(SharedInfrastructure shared) : IAsyncLifetime
+public class CompanyReviewsDisabledTests(ApiHost<CompanyReviewsDisabledProfile> host) : IClassFixture<ApiHost<CompanyReviewsDisabledProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CompanyReviewsDisabledTests));
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("CompanyReviews:Enabled", "false");
-        });
-    }
+    public Task InitializeAsync() => host.ResetAsync();
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Every_Route_Is_Not_Found_And_Config_Reports_The_Flag()

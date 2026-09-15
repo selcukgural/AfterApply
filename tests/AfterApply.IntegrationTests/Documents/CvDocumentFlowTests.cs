@@ -1,10 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Documents.Contracts;
 using AfterApply.Application.Identity.Contracts;
@@ -20,12 +18,9 @@ using Shouldly;
 namespace AfterApply.IntegrationTests.Documents;
 
 [Collection(IntegrationTestCollection.Name)]
-public class CvDocumentFlowTests(SharedInfrastructure shared) : IAsyncLifetime
+public class CvDocumentFlowTests(ApiHost<LocalStorageProfile> host) : IClassFixture<ApiHost<LocalStorageProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
     /// <summary>A minimal but genuinely well-formed PDF header — the upload path checks the leading
     /// bytes, so a placeholder of arbitrary content would be refused for the wrong reason.</summary>
@@ -33,41 +28,16 @@ public class CvDocumentFlowTests(SharedInfrastructure shared) : IAsyncLifetime
 
     private static readonly byte[] DocxBytes = [0x50, 0x4B, 0x03, 0x04, 0x14, 0x00, 0x06, 0x00, 0x08, 0x00];
 
-    private WebApplicationFactory<Program>? _factory;
-    private string _storageRoot = string.Empty;
+    private WebApplicationFactory<Program> _factory => host;
+    private string _storageRoot => host.Profile.StorageRoot;
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CvDocumentFlowTests));
+    public Task InitializeAsync() => host.ResetAsync();
 
-        // A directory of its own per test, so one test's files can never be mistaken for another's
-        // and the assertions about what is on disk mean what they say.
-        _storageRoot = Path.Combine(Path.GetTempPath(), "afterapply-cv-tests", Guid.CreateVersion7().ToString("N"));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("Storage:LocalRootPath", _storageRoot);
-        });
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-
-        if (Directory.Exists(_storageRoot))
-        {
-            Directory.Delete(_storageRoot, recursive: true);
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<HttpClient> AuthenticatedClientAsync(string email)
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
 
         var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest(email, "P@ssw0rd123!", "Cv", "Owner", true), JsonOptions);
@@ -228,7 +198,7 @@ public class CvDocumentFlowTests(SharedInfrastructure shared) : IAsyncLifetime
         var before = DateTimeOffset.UtcNow.AddSeconds(-5);
         var created = await UploadAsync(client, PdfBytes, "consented.pdf");
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var stored = await dbContext.CvDocuments.SingleAsync(d => d.Id == created.Id);
 
@@ -312,7 +282,7 @@ public class CvDocumentFlowTests(SharedInfrastructure shared) : IAsyncLifetime
         var owner = await AuthenticatedClientAsync("cv.anon.owner@example.com");
         var created = await UploadAsync(owner, PdfBytes, "cv.pdf");
 
-        var anonymous = _factory!.CreateClient();
+        var anonymous = _factory.CreateClient();
 
         (await anonymous.GetAsync("/api/cv-documents")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         (await anonymous.GetAsync($"/api/cv-documents/{created.Id}/content")).StatusCode

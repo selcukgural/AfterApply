@@ -11,6 +11,9 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    # The whole job, restore-to-tests, took ~9 minutes before 2026-09-15 and the suite alone ~2
+    # minutes after; anything past this is a hang, not a slow run.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
 
@@ -26,18 +29,17 @@ jobs:
       # container lifecycle directly against the Docker daemon ubuntu-latest
       # already ships — no `services:` block here, that's a different
       # mechanism (a long-lived, health-check-gated container for the whole
-      # job) and would be redundant/conflicting with what Testcontainers does
-      # per test class.
+      # job) and would be redundant/conflicting with what Testcontainers does.
       #
-      # Tried running this in parallel on CI (tests/AfterApply.IntegrationTests/xunit.runner.json's
-      # maxParallelThreads=1 was written for local dev's shared podman VM, not this dedicated
-      # runner — see DECISIONS.md "CI'da integration testler artık paralel..." 2026-09-01, later
-      # reverted by the same entry) — reverted: at both DOP=4 and DOP=2 it reproducibly failed a
-      # different test each run (LinkedInImportTests, then EmailForwardingTests twice), all the
-      # same root cause — a Hangfire background job not finishing inside a test's polling deadline
-      # under real concurrent CPU load, something serial execution (DOP=1) never exercises. Back to
-      # serial, matching xunit.runner.json, until that class of test is hardened.
-      - run: dotnet test AfterApply.slnx --no-build --configuration Release
+      # --blame-hang: a test that stalls ends the run in 3 minutes with its name in the log,
+      # instead of sitting there until the job's timeout-minutes cuts it off with no
+      # attribution (which is what a 40-minute local hang looked like on 2026-09-15 — see
+      # DECISIONS.md). Serial (xunit.runner.json, maxParallelThreads=1): the earlier parallel
+      # attempts failed on Hangfire polling deadlines, which no longer exist since jobs run inline;
+      # re-trying parallelism is a separate, measured change.
+      - run: >
+          dotnet test AfterApply.slnx --no-build --configuration Release
+          --blame-hang --blame-hang-timeout 3m --blame-hang-dump-type none
 
   frontend:
     runs-on: ubuntu-latest

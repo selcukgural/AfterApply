@@ -1,4 +1,6 @@
 using AfterApply.Infrastructure.Persistence;
+using Hangfire.PostgreSql;
+using Hangfire.PostgreSql.Factories;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Testcontainers.PostgreSql;
@@ -24,10 +26,16 @@ namespace AfterApply.IntegrationTests;
 /// WebApplicationFactory's own IMemoryCache and dies with the host — a per-test boundary the
 /// shared Redis could only approximate with one numbered database per caller.
 ///
+/// Since 2026-09-15 the clone is per test <em>class</em>, not per test: <see cref="ApiHost" /> takes
+/// one in its InitializeAsync and empties it between tests with <see cref="ResetDatabaseAsync" />.
+/// The template also carries Hangfire's schema, so a host booting on a clone finds it installed
+/// and runs no DDL.
+///
 /// This deliberately does not touch parallelism. Every class lives in one xunit collection, so they
 /// still run strictly one at a time, and xunit.runner.json keeps maxParallelThreads at 1. The
 /// DOP&gt;1 experiment that was tried and reverted (DECISIONS.md, 2026-09-01) failed on Hangfire jobs
-/// missing their polling deadlines under CPU contention; none of that is revisited here.
+/// missing their polling deadlines under CPU contention; those deadlines no longer exist (jobs run
+/// inline, see InlineBackgroundJobs), so that experiment can be rerun — separately, measured.
 /// </summary>
 public sealed class SharedInfrastructure : IAsyncLifetime
 {
@@ -68,6 +76,16 @@ public sealed class SharedInfrastructure : IAsyncLifetime
             await db.Database.MigrateAsync();
         }
 
+        // Hangfire.PostgreSql installs its schema (~20 scripts, under an advisory lock) the first
+        // time a storage is constructed against a database — which, with a clone per class, would
+        // be once per class at host boot. Constructing one storage against the template here means
+        // every clone already has the schema and the per-host check finds nothing to do. Its
+        // connection is unpooled and closed by the time this returns, so the template stays
+        // connection-free for CREATE DATABASE ... TEMPLATE.
+        _ = new PostgreSqlStorage(
+            new NpgsqlConnectionFactory(templateConnectionString, new PostgreSqlStorageOptions()),
+            new PostgreSqlStorageOptions());
+
         NpgsqlConnection.ClearAllPools();
     }
 
@@ -77,10 +95,13 @@ public sealed class SharedInfrastructure : IAsyncLifetime
     }
 
     /// <summary>Hands out an already-migrated Postgres database, as the connection string a
-    /// WebApplicationFactory needs. Called from InitializeAsync, which xunit runs once per test
-    /// method — so this is per test, not per class. The name is only used to make the database
-    /// recognisable in psql; uniqueness comes from the counter.</summary>
-    public async Task<string> CreateIsolatedDatabaseAsync(string name)
+    /// WebApplicationFactory needs. The name is only used to make the database recognisable in
+    /// psql; uniqueness comes from the counter.</summary>
+    public async Task<string> CreateIsolatedDatabaseAsync(string name) =>
+        (await CreateDatabaseAsync(name)).ConnectionString;
+
+    /// <summary>The same, also returning the database name so the caller can drop it.</summary>
+    public async Task<(string ConnectionString, string DatabaseName)> CreateDatabaseAsync(string name)
     {
         // Deliberately NOT calling NpgsqlConnection.ClearAllPools() here. It looks like the obvious
         // way to reclaim the pool each finished test leaves behind — every test uses a different
@@ -97,7 +118,45 @@ public sealed class SharedInfrastructure : IAsyncLifetime
         await ExecuteOnAdminDatabaseAsync(
             $"""CREATE DATABASE "{databaseName}" TEMPLATE "{TemplateDatabase}";""");
 
-        return ConnectionStringFor(databaseName, pooling: true);
+        return (ConnectionStringFor(databaseName, pooling: true), databaseName);
+    }
+
+    /// <summary>Drops a clone a class is done with. FORCE closes any straggling session first.</summary>
+    public Task DropDatabaseAsync(string databaseName) =>
+        ExecuteOnAdminDatabaseAsync($"""DROP DATABASE IF EXISTS "{databaseName}" WITH (FORCE);""");
+
+    // Built once per process: every clone has the same schema, so the table list is the same.
+    private static string? _resetSql;
+
+    /// <summary>
+    /// Empties a clone between two tests of the same class — every table in <c>public</c> in one
+    /// TRUNCATE ... CASCADE, except the three that must survive: the migration history, the
+    /// data-protection key ring the running host already loaded (a host whose keys vanish cannot
+    /// read the tokens it issued), and EmailTemplates, the schema's only seeded table
+    /// (EmailTemplateConfiguration.HasData) which the app only ever reads. Hangfire's tables live
+    /// in their own schema and are not touched; they hold the recurring-job definitions the host
+    /// wrote at boot. Sequences keep counting, which no test depends on.
+    /// </summary>
+    public async Task ResetDatabaseAsync(string connectionString)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        if (_resetSql is null)
+        {
+            await using var list = new NpgsqlCommand(
+                """
+                SELECT string_agg(format('%I.%I', schemaname, tablename), ', ')
+                FROM pg_tables
+                WHERE schemaname = 'public'
+                  AND tablename NOT IN ('__EFMigrationsHistory', 'DataProtectionKeys', 'EmailTemplates');
+                """, connection);
+            var tables = (string)(await list.ExecuteScalarAsync())!;
+            _resetSql = $"TRUNCATE TABLE {tables} CASCADE;";
+        }
+
+        await using var truncate = new NpgsqlCommand(_resetSql, connection);
+        await truncate.ExecuteNonQueryAsync();
     }
 
     private async Task ExecuteOnAdminDatabaseAsync(string sql)

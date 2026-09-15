@@ -32,11 +32,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Every test class here creates its own dedicated Postgres Testcontainers instance and
-         has no [Collection] attribute, so xUnit's default (parallelizeTestCollections=true,
-         maxParallelThreads=Environment.ProcessorCount) lets all ~16 of them boot containers at
-         once — enough concurrent container startups to stall the shared podman VM for minutes.
-         Capping the thread count bounds how many containers start simultaneously. -->
+    <!-- maxParallelThreads=1 and every class in one collection: the suite runs strictly serially.
+         Since 2026-09-15 each class shares one host (ApiHost) and jobs run inline, so the reasons
+         the earlier parallel attempts failed (DECISIONS.md 2026-09-01, 2026-09-08) are gone; raising
+         the thread count is a separate, measured experiment. diagnosticMessages+longRunningTestSeconds
+         make xunit name any test still running after 30 s while the run is in progress. -->
     <None Update="xunit.runner.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -1,13 +1,12 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -29,77 +28,65 @@ namespace AfterApply.IntegrationTests.Identity;
 /// providers' at the endpoint level, and two identities may hold the same verified email without
 /// either being able to take the other's account by subject alone.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
+/// <summary>The provider's OAuth client, faked, plus the two settings that make the app
+/// consider it configured. One instance serves the whole class.</summary>
+public sealed class GitHubSignInProfile : IHostProfile
 {
-    private const string ClientId = "test-github-client";
+    public const string ClientId = "test-github-client";
+
+    public FakeGitHubAuthClient GitHub { get; } = new();
+
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
+        builder.UseSetting("GitHubAuth:ClientId", ClientId);
+        builder.UseSetting("GitHubAuth:ClientSecret", "test-secret");
+        builder.ConfigureTestServices(services => services.AddSingleton<IGitHubAuthClient>(GitHub));
+    }
+
+    public void Reset() => GitHub.Exchanges.Clear();
+}
+
+[Collection(IntegrationTestCollection.Name)]
+public class GitHubSignInTests(ApiHost<GitHubSignInProfile> host) : IClassFixture<ApiHost<GitHubSignInProfile>>, IAsyncLifetime
+{
+    private const string ClientId = GitHubSignInProfile.ClientId;
     private const string RedirectUri = "http://localhost:3000/tr/auth/github/callback";
     private const string Password = "P@ssw0rd123!";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
+
+    private FakeGitHubAuthClient _gitHub => host.Profile.GitHub;
+    private WebApplicationFactory<Program> _factory => host;
+
+    // Same database, no GitHub client configured — the shape of a deployment that never set
+    // the two secrets. The test host runs as Development and therefore loads the developer's
+    // user-secrets, where a real client id/secret may well be set (it is on the machine this
+    // was written on); clearing them makes "not configured" mean exactly that, everywhere.
+    private WebApplicationFactory<Program> _unconfiguredFactory => host.Variant("unconfigured", builder =>
     {
-        Converters = { new JsonStringEnumConverter() }
-    };
+        builder.UseSetting("GitHubAuth:ClientId", "");
+        builder.UseSetting("GitHubAuth:ClientSecret", "");
+    });
 
-    private readonly FakeGitHubAuthClient _gitHub = new();
-    private WebApplicationFactory<Program>? _factory;
-    private WebApplicationFactory<Program>? _unconfiguredFactory;
+    public Task InitializeAsync() => host.ResetAsync();
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(GitHubSignInTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
-            builder.UseSetting("GitHubAuth:ClientId", ClientId);
-            builder.UseSetting("GitHubAuth:ClientSecret", "test-secret");
-            builder.ConfigureTestServices(services => services.AddSingleton<IGitHubAuthClient>(_gitHub));
-        });
-
-        // Same database, no GitHub client configured — the shape of a deployment that never set the
-        // two secrets.
-        _unconfiguredFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // The test host runs as Development and therefore loads the developer's user-secrets,
-            // where a real GitHubAuth client id/secret may well be set. Clear them so "not
-            // configured" means exactly that, everywhere.
-            builder.UseSetting("GitHubAuth:ClientId", "");
-            builder.UseSetting("GitHubAuth:ClientSecret", "");
-        });
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-
-        if (_unconfiguredFactory is not null)
-        {
-            await _unconfiguredFactory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Config_Publishes_Availability_And_The_Public_Client_Id()
     {
-        var configured = await _factory!.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
+        var configured = await _factory.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
         configured!.GitHubAuth.ShouldBe(new GitHubAuthConfigResponse(true, ClientId));
 
-        var unconfigured = await _unconfiguredFactory!.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
+        var unconfigured = await _unconfiguredFactory.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
         unconfigured!.GitHubAuth.ShouldBe(new GitHubAuthConfigResponse(false, null));
     }
 
     [Fact]
     public async Task Both_Endpoints_Are_404_When_Not_Configured()
     {
-        var client = _unconfiguredFactory!.CreateClient();
+        var client = _unconfiguredFactory.CreateClient();
 
         var signIn = await client.PostAsJsonAsync("/api/auth/github",
             new GitHubSignInRequest("code", RedirectUri), JsonOptions);
@@ -113,7 +100,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_New_GitHub_Account_With_A_Verified_Email_Gets_A_Signup_Step_And_Is_Created_Only_With_Consent()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var identity = new GitHubIdentity("gh-new-1", "new.github@example.com", true, "Augusta Ada", "King");
 
         var signIn = await SignInAsync(client, identity);
@@ -160,7 +147,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Verified_Email_Matching_A_Password_Account_Is_Linked_And_Signed_In()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var registered = await RegisterAsync(client, "linked.gh@example.com");
         registered.User.HasPassword.ShouldBeTrue();
 
@@ -185,7 +172,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Code_GitHub_Does_Not_Recognise_Is_Rejected()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
 
         var signIn = await client.PostAsJsonAsync("/api/auth/github",
             new GitHubSignInRequest("not-issued", RedirectUri), JsonOptions);
@@ -196,7 +183,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Redirect_Uri_Outside_Our_Web_Origin_Is_Rejected_Before_Reaching_GitHub()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var code = _gitHub.IssueCode(new GitHubIdentity("gh-redirect", "redirect.gh@example.com", true, null, null));
 
         var signIn = await client.PostAsJsonAsync("/api/auth/github",
@@ -209,7 +196,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Tampered_Or_Foreign_Signup_Token_Is_A_Validation_Problem()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var registered = await RegisterAsync(client, "foreign.token.gh@example.com");
 
         // One of our own access tokens: same signing key, wrong audience/purpose.
@@ -225,7 +212,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_GitHub_Only_Account_Is_Deleted_Without_A_Password()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var pending = (await (await SignInAsync(client, new GitHubIdentity("gh-delete", "delete.gh@example.com", true, "D", "G")))
             .Content.ReadFromJsonAsync<GitHubSignInResponse>(JsonOptions))!.PendingSignup!;
         var signup = await client.PostAsJsonAsync("/api/auth/github/signup",
@@ -241,7 +228,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task An_Emailless_Identity_Requires_A_Manually_Entered_Email_On_Signup()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var identity = new GitHubIdentity("gh-noemail-1", null, false, "Grace", "Hopper");
 
         var pending = (await (await SignInAsync(client, identity))
@@ -256,7 +243,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task An_Emailless_Identity_Registers_Successfully_With_A_Fresh_Manual_Email_And_Stays_Unconfirmed()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var identity = new GitHubIdentity("gh-noemail-2", null, false, "Grace", "Hopper");
 
         var pending = (await (await SignInAsync(client, identity))
@@ -279,7 +266,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task An_Emailless_Identity_Cannot_Take_Over_An_Existing_Account_By_Typing_Its_Email()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         await RegisterAsync(client, "gh.victim@example.com");
 
         var identity = new GitHubIdentity("gh-noemail-attacker", null, false, "Eve", "Attacker");
@@ -299,7 +286,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task An_Unverified_Email_Is_Dropped_And_Behaves_Exactly_Like_No_Email_At_All()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         // GitHubProfileReader would never build this, but the signup token round-trips whatever the
         // identity holds — the service, not the reader, has to be the one that refuses to match on it.
         var identity = new GitHubIdentity("gh-unverified", "gh.unverified@example.com", false, "U", "V");
@@ -319,7 +306,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         var identity = new GitHubIdentity("gh-noemail-return", null, false, "Return", "User");
 
-        var pending = (await (await SignInAsync(_factory!.CreateClient(), identity))
+        var pending = (await (await SignInAsync(_factory.CreateClient(), identity))
             .Content.ReadFromJsonAsync<GitHubSignInResponse>(JsonOptions))!.PendingSignup!;
         var signup = await _factory.CreateClient().PostAsJsonAsync("/api/auth/github/signup",
             new GitHubSignupRequest(pending.SignupToken, "Return", "User", "gh.return@example.com", true), JsonOptions);
@@ -336,7 +323,7 @@ public class GitHubSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Renamed_Login_Keeps_The_Account_Because_The_Subject_Is_The_Numeric_Id()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         // Same GitHub account, later: the display name changed and so did the email on file, but the
         // numeric id — what we store — did not.
         var before = new GitHubIdentity("gh-4241", "before.rename@example.com", true, "Ada", "Byron");

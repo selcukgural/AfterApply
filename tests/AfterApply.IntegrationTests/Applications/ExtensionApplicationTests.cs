@@ -1,10 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Common;
@@ -21,26 +19,16 @@ namespace AfterApply.IntegrationTests.Applications;
 // limitation as generic CSV import, DECISIONS.md Sprint 4), and same-JobUrl dedup returning the
 // existing row instead of creating a duplicate when the button is effectively clicked twice.
 [Collection(IntegrationTestCollection.Name)]
-public class ExtensionApplicationTests(SharedInfrastructure shared) : IAsyncLifetime
+public class ExtensionApplicationTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(ExtensionApplicationTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-        });
-
+        await host.ResetAsync();
 
         _client = _factory.CreateClient();
         var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
@@ -50,14 +38,7 @@ public class ExtensionApplicationTests(SharedInfrastructure shared) : IAsyncLife
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Create_Resolves_Company_And_Sets_BrowserExtension_Source_And_FullTime_Default()

@@ -13,6 +13,7 @@ using AfterApply.Domain.Common;
 using AfterApply.Domain.EmailIntegrations;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,135 +21,92 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.EmailIntegrations;
 
+/// <summary>What this class owns beyond the app: the three AI providers, faked. One instance of
+/// each serves the whole class; <see cref="Reset" /> puts them back before every test.</summary>
+public sealed class EmailSignalProfile : IHostProfile
+{
+    public FakeEmailClassificationProvider Classification { get; } = new();
+    public FakeEmailJobExtractionProvider Extraction { get; } = new();
+    public FakeEmailRejectionReasonExtractionProvider RejectionReason { get; } = new();
+
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("EmailForwarding:Enabled", "true");
+        // Explicit, not relying on appsettings.json's own curated list — this suite's
+        // "known job board domain" tests must stay deterministic regardless of what that list
+        // contains in production.
+        builder.UseSetting("JobBoardDomains:Domains:0", "linkedin.com");
+
+        builder.ConfigureServices(services =>
+        {
+            services.AddSingleton<IEmailClassificationProvider>(Classification);
+            services.AddSingleton<IEmailJobExtractionProvider>(Extraction);
+            services.AddSingleton<IEmailRejectionReasonExtractionProvider>(RejectionReason);
+        });
+    }
+
+    public void Reset()
+    {
+        Classification.Reset();
+        Extraction.Reset();
+        RejectionReason.Reset();
+    }
+}
+
 // Covers the browser extension's Gmail-scanning ingestion path (POST
 // /api/email-forwarding/extension-signal, the app's only email-signal intake since the earlier
 // forward-all-inbox-to-us design was removed — see DECISIONS.md) and the provider-agnostic
 // suggestion-review/notification routes it feeds.
 [Collection(IntegrationTestCollection.Name)]
-public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
+public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<ApiHost<EmailSignalProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private readonly FakeEmailClassificationProvider _fakeClassificationProvider = new();
-    private readonly FakeEmailJobExtractionProvider _fakeExtractionProvider = new();
-    private readonly FakeEmailRejectionReasonExtractionProvider _fakeRejectionReasonProvider = new();
-    private WebApplicationFactory<Program>? _factory;
+    private FakeEmailClassificationProvider _fakeClassificationProvider => host.Profile.Classification;
+    private FakeEmailJobExtractionProvider _fakeExtractionProvider => host.Profile.Extraction;
+    private FakeEmailRejectionReasonExtractionProvider _fakeRejectionReasonProvider => host.Profile.RejectionReason;
+
     private HttpClient _client = null!;
 
-    private WebApplicationFactory<Program>? _disabledFactory;
+    // The same app over the same database with the feature flag off.
+    private WebApplicationFactory<Program> _disabled = null!;
     private HttpClient _disabledClient = null!;
 
-    // EmailAutoApproval:Enabled=true, ShadowModeEnabled=false — a separate factory (same Postgres
-    // database) so the default suite (_factory) can stay in the shipped shadow-mode-first
-    // default without every test having to override it.
-    private WebApplicationFactory<Program>? _autoApplyFactory;
+    // EmailAutoApproval:Enabled=true, ShadowModeEnabled=false — a separate host (same Postgres
+    // database) so the default host can stay in the shipped shadow-mode-first default without
+    // every test having to override it.
+    private WebApplicationFactory<Program> _autoApply = null!;
     private HttpClient _autoApplyClient = null!;
     private Guid _autoApplyUserId;
 
     public async Task InitializeAsync()
     {
-        // All three factories share one database on purpose — the flag-off and auto-apply
-        // variants are the same app over the same data, only differently configured.
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(EmailSignalTests));
+        await host.ResetAsync();
 
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        // Both variants are built once for the class and share the fixture's database, fakes,
+        // job queue and signing key; the delegate's settings win over the profile's.
+        _disabled = host.Variant("disabled", builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // This class asserts what a background job did, so it needs the one thing the suite
-            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
-            builder.UseSetting("Hangfire:ServerEnabled", "true");
-            builder.UseSetting("EmailForwarding:Enabled", "true");
-            // Explicit, not relying on appsettings.json's own curated list — this suite's
-            // "known job board domain" tests must stay deterministic regardless of what that list
-            // contains in production.
-            builder.UseSetting("JobBoardDomains:Domains:0", "linkedin.com");
-
-            builder.ConfigureServices(services =>
-            {
-                services.AddSingleton<IEmailClassificationProvider>(_fakeClassificationProvider);
-                services.AddSingleton<IEmailJobExtractionProvider>(_fakeExtractionProvider);
-                services.AddSingleton<IEmailRejectionReasonExtractionProvider>(_fakeRejectionReasonProvider);
-            });
-        });
-
-        _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("email-signal.test@example.com", "P@ssw0rd123!", "Signal", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
-
-        _disabledFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // This class asserts what a background job did, so it needs the one thing the suite
-            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
-            builder.UseSetting("Hangfire:ServerEnabled", "true");
-            // Explicit, not just relying on appsettings.json's own default — this test must exercise
+            // Explicit, not just relying on appsettings.json's own default — this must exercise
             // "flag off" regardless of what the app ships as its default (EmailForwarding:Enabled is
             // now true there, since the feature is live).
             builder.UseSetting("EmailForwarding:Enabled", "false");
         });
-
-        _disabledClient = _disabledFactory.CreateClient();
-        var disabledRegisterResponse = await _disabledClient.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("email-signal.disabled@example.com", "P@ssw0rd123!", "Signal", "Test", true), JsonOptions);
-        disabledRegisterResponse.EnsureSuccessStatusCode();
-        var disabledAuth = await disabledRegisterResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
-        _disabledClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", disabledAuth!.AccessToken);
-
-        _autoApplyFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _autoApply = host.Variant("auto-apply", builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // This class asserts what a background job did, so it needs the one thing the suite
-            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
-            builder.UseSetting("Hangfire:ServerEnabled", "true");
-            builder.UseSetting("EmailForwarding:Enabled", "true");
-            builder.UseSetting("JobBoardDomains:Domains:0", "linkedin.com");
             builder.UseSetting("EmailAutoApproval:Enabled", "true");
             builder.UseSetting("EmailAutoApproval:ShadowModeEnabled", "false");
             builder.UseSetting("EmailAutoApproval:ConfidenceThreshold", "0.9");
-
-            builder.ConfigureServices(services =>
-            {
-                services.AddSingleton<IEmailClassificationProvider>(_fakeClassificationProvider);
-                services.AddSingleton<IEmailJobExtractionProvider>(_fakeExtractionProvider);
-                services.AddSingleton<IEmailRejectionReasonExtractionProvider>(_fakeRejectionReasonProvider);
-            });
         });
 
-        _autoApplyClient = _autoApplyFactory.CreateClient();
-        var autoApplyRegisterResponse = await _autoApplyClient.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("email-signal.autoapply@example.com", "P@ssw0rd123!", "Signal", "Test", true), JsonOptions);
-        autoApplyRegisterResponse.EnsureSuccessStatusCode();
-        var autoApplyAuth = await autoApplyRegisterResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
-        _autoApplyClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", autoApplyAuth!.AccessToken);
-        _autoApplyUserId = autoApplyAuth.User.Id;
+        (_client, _) = await host.RegisterAsync("email-signal.test@example.com", "Signal", "Test");
+        (_disabledClient, _) = await host.RegisterAsync("email-signal.disabled@example.com", "Signal", "Test", on: _disabled);
+        var autoApply = await host.RegisterAsync("email-signal.autoapply@example.com", "Signal", "Test", on: _autoApply);
+        _autoApplyClient = autoApply.Client;
+        _autoApplyUserId = autoApply.Auth.User.Id;
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-
-        if (_disabledFactory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_disabledFactory);
-        }
-
-        if (_autoApplyFactory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_autoApplyFactory);
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Suggestions_Returns_NotFound_When_Flag_Disabled()
@@ -192,7 +150,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         // A user of its own: the fixture's shared users receive signals in other tests, and xunit
         // does not promise their order, so "no signal yet" can only be asserted on a fresh account.
-        var client = _factory!.CreateClient();
+        var client = host.CreateClient();
         var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest("email-signal.scan-status@example.com", "P@ssw0rd123!", "Signal", "Test", true), JsonOptions);
         registerResponse.EnsureSuccessStatusCode();
@@ -253,7 +211,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
             "Interview invitation", "We'd like to invite you to an interview.", "thread-matching-rule");
         replay.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailSuggestions.CountAsync()).ShouldBe(1);
     }
@@ -285,7 +243,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         var timeline = await timelineResponse.Content.ReadFromJsonAsync<List<ApplicationEventResponse>>(JsonOptions);
         timeline!.ShouldContain(e => e.Type == ApplicationEventType.StatusChanged && e.Source == Source.Email);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await db.EmailSuggestions.SingleAsync();
         suggestion.Status.ShouldBe(EmailSuggestionStatus.Confirmed);
@@ -326,7 +284,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         // The address is not merely withheld from the application — it is never written down at
         // all, so the pipeline keeps reducing robot senders to a bare domain.
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await db.EmailSuggestions.SingleAsync(x => x.Id == suggestionId);
         suggestion.SenderEmail.ShouldBeNull();
@@ -426,7 +384,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
         confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var history = await db.ApplicationStatusHistories
             .Where(h => h.ApplicationId == applicationId && h.ToStatus == ApplicationStatus.Rejected)
@@ -461,7 +419,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
         confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var history = await db.ApplicationStatusHistories
             .Where(h => h.ApplicationId == applicationId && h.ToStatus == ApplicationStatus.Interview)
@@ -511,7 +469,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _fakeExtractionProvider.CallCount.ShouldBe(0);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
     }
@@ -529,7 +487,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _fakeExtractionProvider.CallCount.ShouldBe(1);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
     }
@@ -596,7 +554,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         // suggestion for an application that's already sitting at Applied.
         _fakeExtractionProvider.CallCount.ShouldBe(0);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
     }
@@ -632,7 +590,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _fakeClassificationProvider.CallCount.ShouldBe(0);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
     }
@@ -707,7 +665,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _fakeClassificationProvider.CallCount.ShouldBe(0);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailSuggestions.AnyAsync()).ShouldBeFalse();
     }
@@ -717,7 +675,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         var applicationId = await CreateApplicationAsync("Website Match Co");
 
-        using (var scope = _factory!.Services.CreateScope())
+        using (var scope = host.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
@@ -758,7 +716,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
         confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var application = await db.Applications.SingleAsync(a => a.JobTitle == "Senior Developer");
         application.Source.ShouldBe(Source.Email);
@@ -787,7 +745,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         var confirmResponse = await _client.PostAsync($"/api/email-forwarding/suggestions/{suggestionId}/confirm", null);
         confirmResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var application = await db.Applications.SingleAsync(a => a.JobTitle == "QA Engineer");
         application.Source.ShouldBe(Source.Email);
@@ -799,7 +757,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         var applicationId = await CreateApplicationAsync("Auto Apply Rule Co", _autoApplyClient);
 
-        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        using (var scope = _autoApply.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == applicationId);
@@ -812,12 +770,12 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         // RuleBasedEmailClassifier directly, so the LLM is never even called. Rule-based confidence
         // is a hand-tuned weight, never a calibrated probability, so it must never qualify for
         // auto-apply regardless of EmailAutoApproval:Enabled.
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "hr@auto-apply-rule-test.com",
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "hr@auto-apply-rule-test.com",
             "Recruiting Team", "Interview invitation", "We'd like to invite you to an interview.", "thread-autoapply-rule");
 
         _fakeClassificationProvider.CallCount.ShouldBe(0);
 
-        using var assertScope = _autoApplyFactory!.Services.CreateScope();
+        using var assertScope = _autoApply.Services.CreateScope();
         var assertDb = assertScope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await assertDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
         suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
@@ -835,11 +793,11 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
 
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "hr@some-ats-test.com",
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "hr@some-ats-test.com",
             "Auto Apply Fallback Co Recruiting", "Update on your recent application", "There's news about your application.",
             "thread-autoapply-namefallback");
 
-        using var scope = _autoApplyFactory!.Services.CreateScope();
+        using var scope = _autoApply.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await db.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
         suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
@@ -851,7 +809,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         var applicationId = await CreateApplicationAsync("Auto Apply LowConf Co", _autoApplyClient);
 
-        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        using (var scope = _autoApply.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
@@ -863,11 +821,11 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         // Below the factory's configured EmailAutoApproval:ConfidenceThreshold of 0.9.
         _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.6, "Llm:Interview");
 
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "hr@auto-apply-lowconf-test.com",
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "hr@auto-apply-lowconf-test.com",
             "Recruiting Team", "Update on your recent application", "There's news about your application.",
             "thread-autoapply-lowconf");
 
-        using var assertScope = _autoApplyFactory!.Services.CreateScope();
+        using var assertScope = _autoApply.Services.CreateScope();
         var assertDb = assertScope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await assertDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
         suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
@@ -876,13 +834,13 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task ExtensionSignal_DomainMatch_Llm_HighConfidence_In_ShadowMode_Stays_Pending()
     {
-        // Default _factory ships with the app's default EmailAutoApproval settings
+        // The default host ships with the app's default EmailAutoApproval settings
         // (Enabled=false, ShadowModeEnabled=true) — qualifying suggestions must only be logged,
         // never actually applied.
         var applicationId = await CreateApplicationAsync("Shadow Mode Co");
         Guid userId;
 
-        using (var scope = _factory!.Services.CreateScope())
+        using (var scope = host.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == applicationId);
@@ -894,11 +852,11 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
 
-        await ProcessExtensionSignalDirectlyAsync(_factory!, userId, "hr@shadow-mode-test.com",
+        await ProcessExtensionSignalDirectlyAsync(host, userId, "hr@shadow-mode-test.com",
             "Recruiting Team", "Update on your recent application", "There's news about your application.",
             "thread-shadow-mode");
 
-        using var assertScope = _factory!.Services.CreateScope();
+        using var assertScope = host.Services.CreateScope();
         var assertDb = assertScope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await assertDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
         suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
@@ -920,12 +878,12 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         // LlmThreshold=50) without matching any RuleBasedEmailClassifier phrase — this must reach the
         // LLM fake above for the test to actually exercise "MatchedRule=Llm:... + high confidence
         // still doesn't auto-apply an unmatched suggestion", not just "no signal was found at all".
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "hr@auto-apply-newjob-test.com",
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "hr@auto-apply-newjob-test.com",
             "Recruiting Team", "Update on your recent application",
             "There's news about your application. Our talent acquisition team wanted to share an update on the interview scheduled for your role.",
             "thread-autoapply-newjob");
 
-        using var scope = _autoApplyFactory!.Services.CreateScope();
+        using var scope = _autoApply.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await db.EmailSuggestions.SingleAsync(s => s.ApplicationId == null);
         suggestion.Status.ShouldBe(EmailSuggestionStatus.Pending);
@@ -937,7 +895,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         // One qualifying suggestion — auto-applied.
         var autoAppliedAppId = await CreateApplicationAsync("Notifications Auto Co", _autoApplyClient);
-        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        using (var scope = _autoApply.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == autoAppliedAppId);
@@ -947,14 +905,14 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         }
 
         _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "hr@notifications-auto-test.com",
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "hr@notifications-auto-test.com",
             "Recruiting Team", "Update on your recent application", "There's news about your application.",
             "thread-notifications-auto");
 
         // A second suggestion that stays Pending (rule-based, never auto-applies), then gets
         // manually confirmed by the user.
         var confirmedAppId = await CreateApplicationAsync("Notifications Confirmed Co", _autoApplyClient);
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "recruiter@notifications-confirmed-test.com",
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "recruiter@notifications-confirmed-test.com",
             "Notifications Confirmed Co Recruiting", "Interview invitation", "We'd like to invite you to an interview.",
             "thread-notifications-confirmed");
 
@@ -966,7 +924,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         // A third suggestion that gets dismissed — must never show up as a notification.
         var dismissedAppId = await CreateApplicationAsync("Notifications Dismissed Co", _autoApplyClient);
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "recruiter@notifications-dismissed-test.com",
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "recruiter@notifications-dismissed-test.com",
             "Notifications Dismissed Co Recruiting", "Interview invitation", "We'd like to invite you to an interview.",
             "thread-notifications-dismissed");
         var pendingSuggestions2 = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
@@ -993,7 +951,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task ExtensionSignal_Requires_Auth()
     {
-        var unauthenticatedClient = _factory!.CreateClient();
+        var unauthenticatedClient = host.CreateClient();
         var response = await unauthenticatedClient.PostAsJsonAsync("/api/email-forwarding/extension-signal", new
         {
             senderEmail = "recruiter@ext-auth-test.com", senderDisplayName = "Ext Auth Test Recruiting",
@@ -1016,7 +974,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         var suggestion = suggestionsResponse.EnumerateArray().Single();
         suggestion.GetProperty("applicationId").GetGuid().ShouldBe(applicationId);
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailConnections.CountAsync(c => c.Provider == EmailProvider.Extension)).ShouldBe(1);
     }
@@ -1031,7 +989,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         await SendExtensionSignalAsync("recruiter@ext-idempotent-test.com", "Ext Idempotent Test Recruiting",
             "Interview invitation", "We'd like to invite you to an interview.", "thread-ext-dup");
 
-        using var scope = _factory!.Services.CreateScope();
+        using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.EmailSuggestions.CountAsync(s => s.Subject == "Interview invitation")).ShouldBe(1);
     }
@@ -1040,7 +998,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     public async Task ExtensionSignal_Auto_Applies_When_Confidence_Qualifies()
     {
         var applicationId = await CreateApplicationAsync("Ext AutoApply Test", _autoApplyClient);
-        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        using (var scope = _autoApply.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
@@ -1051,15 +1009,12 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
 
-        // Direct in-process call, not SendExtensionSignalAsync's HTTP+Hangfire path — same reason
-        // ProcessExtensionSignalDirectlyAsync exists (see its own comment): Hangfire storage is
-        // shared across this class's three factories, so an enqueued job isn't guaranteed to be
-        // processed by _autoApplyFactory's own background server/config, and this test's whole
-        // point is that config's auto-apply behavior.
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "hr@ext-autoapply-test.com", "Ext AutoApply Recruiting",
+        // Direct in-process call under _autoApply's own config — this test's whole point is
+        // that config's auto-apply behaviour (see ProcessExtensionSignalDirectlyAsync).
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "hr@ext-autoapply-test.com", "Ext AutoApply Recruiting",
             "Update on your recent application", "There's news about your application.", "thread-ext-autoapply");
 
-        using var verifyScope = _autoApplyFactory!.Services.CreateScope();
+        using var verifyScope = _autoApply.Services.CreateScope();
         var verifyDb = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await verifyDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
         suggestion.Status.ShouldBe(EmailSuggestionStatus.AutoApplied);
@@ -1088,7 +1043,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        using var scope = _autoApplyFactory!.Services.CreateScope();
+        using var scope = _autoApply.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
@@ -1121,7 +1076,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
 
-        using var scope = _autoApplyFactory!.Services.CreateScope();
+        using var scope = _autoApply.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         (await db.Applications.SingleAsync(a => a.Id == applicationId)).Status.ShouldBe(ApplicationStatus.Offer);
         (await db.EmailSuggestions.SingleAsync(s => s.Id == suggestionId)).Status.ShouldBe(EmailSuggestionStatus.AutoApplied);
@@ -1135,12 +1090,12 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
         var applicationId = await CreateApplicationAsync("Nothing To Undo Co", _autoApplyClient);
 
         _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, "hr@some-unmatched-domain.com",
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "hr@some-unmatched-domain.com",
             "Nothing To Undo Co Recruiting", "Update on your recent application", "News about your application.",
             "thread-undo-pending");
 
         Guid suggestionId;
-        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        using (var scope = _autoApply.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var suggestion = await db.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
@@ -1172,7 +1127,7 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         var applicationId = await CreateApplicationAsync(companyName, _autoApplyClient);
 
-        using (var scope = _autoApplyFactory!.Services.CreateScope())
+        using (var scope = _autoApply.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
@@ -1183,26 +1138,22 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
 
         _fakeClassificationProvider.Result = new EmailClassificationResult(ApplicationStatus.Interview, 0.95, "Llm:Interview");
 
-        await ProcessExtensionSignalDirectlyAsync(_autoApplyFactory!, _autoApplyUserId, $"hr@{domain}",
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, $"hr@{domain}",
             $"{companyName} Recruiting", "Update on your recent application", "There's news about your application.",
             threadId);
 
-        using var verifyScope = _autoApplyFactory!.Services.CreateScope();
+        using var verifyScope = _autoApply.Services.CreateScope();
         var verifyDb = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
         var suggestion = await verifyDb.EmailSuggestions.SingleAsync(s => s.ApplicationId == applicationId);
         suggestion.Status.ShouldBe(EmailSuggestionStatus.AutoApplied);
         return (applicationId, suggestion.Id);
     }
 
-    // Calls IEmailForwardingService.ProcessExtensionSignalAsync directly within a given factory's
-    // own DI scope, instead of POSTing to /extension-signal and waiting on Hangfire.
-    // _factory/_disabledFactory/_autoApplyFactory all share the same Postgres-backed Hangfire
-    // storage (see WaitForHangfireIdleAsync's own comment about JobStorage.Current being a shared
-    // static), so a job enqueued via one factory's client is not guaranteed to be processed by that
-    // same factory's background server. Tests where the whole point is "which factory's config
-    // governs this decision" need that determinism; SendExtensionSignalAsync stays fine for tests
-    // that only care about the HTTP contract or where the outcome doesn't depend on which factory's
-    // config wins.
+    // Calls IEmailForwardingService.ProcessExtensionSignalAsync directly within a given host's
+    // own DI scope, instead of POSTing to /extension-signal and running the job. Kept for the
+    // tests whose whole point is "which host's config governs this decision": the direct call
+    // makes that explicit at the call site. SendExtensionSignalAsync is fine for tests that only
+    // care about the HTTP contract, or where the outcome does not depend on which host wins.
     private static async Task ProcessExtensionSignalDirectlyAsync(WebApplicationFactory<Program> factory,
         Guid userId, string senderEmail, string senderDisplayName, string subject, string snippet, string gmailMessageId)
     {
@@ -1214,53 +1165,22 @@ public class EmailSignalTests(SharedInfrastructure shared) : IAsyncLifetime
             CancellationToken.None);
     }
 
-    // Processed out-of-request via a Hangfire job (see EmailForwardingEndpoints.cs's /extension-signal
-    // comment) — the POST only ever enqueues and returns 204 immediately. Every assertion that
-    // depends on classification/extraction side effects (including a "this must NOT have happened"
-    // assertion, where there's nothing else to poll for) must wait for that job to actually finish
-    // first.
+    // Processed out-of-request via a background job (see EmailForwardingEndpoints.cs's
+    // /extension-signal comment) — the POST only ever enqueues and returns 204 immediately. The
+    // job then runs here, inline and to completion, in the scope of whichever host took the POST,
+    // so every assertion that follows (including "this must NOT have happened") sees its effect.
     private async Task<HttpResponseMessage> SendExtensionSignalAsync(string senderEmail, string senderDisplayName,
-        string subject, string snippet, string gmailMessageId, HttpClient? client = null, WebApplicationFactory<Program>? factory = null)
+        string subject, string snippet, string gmailMessageId, HttpClient? client = null)
     {
         client ??= _client;
-        factory ??= _factory;
 
         var response = await client.PostAsJsonAsync("/api/email-forwarding/extension-signal", new
         {
             senderEmail, senderDisplayName, subject, snippet,
             receivedAt = DateTimeOffset.UtcNow, linkDomains = Array.Empty<string>(), gmailMessageId
         }, JsonOptions);
-        await WaitForHangfireIdleAsync(factory);
+        await host.RunJobsAsync();
         return response;
-    }
-
-    // Queried straight from Hangfire's own Postgres tables (same container/database AppDbContext
-    // uses) rather than resolved JobStorage/IMonitoringApi from DI: this test class spins up a
-    // second factory (_disabledFactory) whose own AddHangfire call sets the same process-wide
-    // JobStorage.Current static, so resolving JobStorage from _factory's container isn't guaranteed
-    // to actually be _factory's own storage.
-    private async Task WaitForHangfireIdleAsync(WebApplicationFactory<Program>? factory = null)
-    {
-        factory ??= _factory;
-
-        var deadline = DateTime.UtcNow.AddSeconds(30);
-        while (DateTime.UtcNow < deadline)
-        {
-            using var scope = factory!.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var pending = await db.Database
-                .SqlQueryRaw<int>("SELECT COUNT(*)::int AS \"Value\" FROM hangfire.job WHERE statename IN ('Enqueued', 'Processing')")
-                .SingleAsync();
-
-            if (pending == 0)
-            {
-                return;
-            }
-
-            await Task.Delay(50);
-        }
-
-        throw new TimeoutException("Hangfire did not finish processing the enqueued extension-signal job within 30s.");
     }
 
     private async Task<Guid> CreateApplicationAsync(string companyName, HttpClient? client = null)

@@ -47,3 +47,4 @@ dump.rdb
 
 # graphify knowledge graph: regenerated locally by the git hooks / `graphify update .`, not versioned
 graphify-out/
+TestResults/

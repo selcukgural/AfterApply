@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.CompanyIntelligence.Contracts;
@@ -12,6 +10,7 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,23 +18,28 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.CompanyIntelligence;
 
-[Collection(IntegrationTestCollection.Name)]
-public class CompanyIntelligenceTests(SharedInfrastructure shared) : IAsyncLifetime
+/// <summary>Flag left at its real appsettings.json default (false). HiddenBelow is overridden to
+/// 2 purely so a handful of seeded applications is enough to exercise non-Hidden confidence
+/// buckets — it does not affect the Enabled flag itself.</summary>
+public sealed class CompanyIntelligenceProfile : IHostProfile
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    public void Configure(IWebHostBuilder builder) => builder.UseSetting("CompanyIntelligence:HiddenBelow", "2");
+}
 
-    // Flag left at its real appsettings.json default (false) — used both to assert every
-    // endpoint 404s while the flag is off, and (via direct DI, bypassing HTTP) to prove the
-    // aggregation pipeline itself is correct even while disabled in prod. HiddenBelow is
-    // overridden to 2 purely so a handful of seeded applications is enough to exercise
-    // non-Hidden confidence buckets — it does not affect the Enabled flag itself.
-    private WebApplicationFactory<Program>? _defaultFactory;
+[Collection(IntegrationTestCollection.Name)]
+public class CompanyIntelligenceTests(ApiHost<CompanyIntelligenceProfile> host) : IClassFixture<ApiHost<CompanyIntelligenceProfile>>, IAsyncLifetime
+{
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    // Same connection string / thresholds, only Enabled flipped to true.
-    private WebApplicationFactory<Program>? _enabledFactory;
+    // The flag-off host: used both to assert every endpoint 404s while the flag is off, and (via
+    // direct DI, bypassing HTTP) to prove the aggregation pipeline itself is correct even while
+    // disabled in prod.
+    private WebApplicationFactory<Program> _defaultFactory => host;
+
+    // Same database and thresholds, only Enabled flipped to true: the tests compare what the same
+    // data looks like through a disabled vs. an enabled CompanyIntelligence flag.
+    private WebApplicationFactory<Program> _enabledFactory =>
+        host.Variant("enabled", builder => builder.UseSetting("CompanyIntelligence:Enabled", "true"));
 
     private HttpClient _client = null!;
     private HttpClient _clientB = null!;
@@ -43,42 +47,14 @@ public class CompanyIntelligenceTests(SharedInfrastructure shared) : IAsyncLifet
 
     public async Task InitializeAsync()
     {
-        // Both factories deliberately share one database: the tests compare what the same data
-        // looks like through a disabled vs. an enabled CompanyIntelligence flag.
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CompanyIntelligenceTests));
-
-        _defaultFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("CompanyIntelligence:HiddenBelow", "2");
-        });
-
-        _enabledFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("CompanyIntelligence:HiddenBelow", "2");
-            builder.UseSetting("CompanyIntelligence:Enabled", "true");
-        });
+        await host.ResetAsync();
 
         _client = await CreateAuthenticatedClientAsync(_defaultFactory, "ci.default.a@example.com");
         _clientB = await CreateAuthenticatedClientAsync(_defaultFactory, "ci.default.b@example.com");
         _enabledClient = await CreateAuthenticatedClientAsync(_enabledFactory, "ci.enabled@example.com");
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_defaultFactory is not null)
-        {
-            await _defaultFactory.DisposeAsync();
-        }
-
-        if (_enabledFactory is not null)
-        {
-            await _enabledFactory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private static async Task<HttpClient> CreateAuthenticatedClientAsync(WebApplicationFactory<Program> factory, string email)
     {
@@ -142,7 +118,7 @@ public class CompanyIntelligenceTests(SharedInfrastructure shared) : IAsyncLifet
 
         company1.ShouldBe(company2);
 
-        using var scope = _defaultFactory!.Services.CreateScope();
+        using var scope = _defaultFactory.Services.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICompanyIntelligenceService>();
         var result = await service.GetByCompanyIdAsync(company1, CancellationToken.None);
 
@@ -180,7 +156,7 @@ public class CompanyIntelligenceTests(SharedInfrastructure shared) : IAsyncLifet
         await ChangeStatusAsync(_client, appWithdrawn, ApplicationStatus.Withdrawn, appliedAt.AddDays(1));
         companyId3.ShouldBe(companyId);
 
-        using var scope = _defaultFactory!.Services.CreateScope();
+        using var scope = _defaultFactory.Services.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICompanyIntelligenceService>();
         var result = await service.GetByCompanyIdAsync(companyId, CancellationToken.None);
 
@@ -195,7 +171,7 @@ public class CompanyIntelligenceTests(SharedInfrastructure shared) : IAsyncLifet
     {
         var (_, companyId) = await CreateApplicationAsync(_client, "Single App Co", DateTimeOffset.UtcNow.AddDays(-2));
 
-        using var scope = _defaultFactory!.Services.CreateScope();
+        using var scope = _defaultFactory.Services.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<ICompanyIntelligenceService>();
         var result = await service.GetByCompanyIdAsync(companyId, CancellationToken.None);
 

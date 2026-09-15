@@ -1,13 +1,12 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -25,77 +24,65 @@ namespace AfterApply.IntegrationTests.Identity;
 /// forces a manual, required email on the sign-up form, that path can never hijack an existing
 /// account by typing its address, and an unverified email is treated exactly like no email.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
+/// <summary>The provider's OAuth client, faked, plus the two settings that make the app
+/// consider it configured. One instance serves the whole class.</summary>
+public sealed class LinkedInSignInProfile : IHostProfile
 {
-    private const string ClientId = "test-linkedin-client";
+    public const string ClientId = "test-linkedin-client";
+
+    public FakeLinkedInAuthClient LinkedIn { get; } = new();
+
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
+        builder.UseSetting("LinkedInAuth:ClientId", ClientId);
+        builder.UseSetting("LinkedInAuth:ClientSecret", "test-secret");
+        builder.ConfigureTestServices(services => services.AddSingleton<ILinkedInAuthClient>(LinkedIn));
+    }
+
+    public void Reset() => LinkedIn.Exchanges.Clear();
+}
+
+[Collection(IntegrationTestCollection.Name)]
+public class LinkedInSignInTests(ApiHost<LinkedInSignInProfile> host) : IClassFixture<ApiHost<LinkedInSignInProfile>>, IAsyncLifetime
+{
+    private const string ClientId = LinkedInSignInProfile.ClientId;
     private const string RedirectUri = "http://localhost:3000/tr/auth/linkedin/callback";
     private const string Password = "P@ssw0rd123!";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
+
+    private FakeLinkedInAuthClient _linkedIn => host.Profile.LinkedIn;
+    private WebApplicationFactory<Program> _factory => host;
+
+    // Same database, no LinkedIn client configured — the shape of a deployment that never set
+    // the two secrets. The test host runs as Development and therefore loads the developer's
+    // user-secrets, where a real client id/secret may well be set (it is on the machine this
+    // was written on); clearing them makes "not configured" mean exactly that, everywhere.
+    private WebApplicationFactory<Program> _unconfiguredFactory => host.Variant("unconfigured", builder =>
     {
-        Converters = { new JsonStringEnumConverter() }
-    };
+        builder.UseSetting("LinkedInAuth:ClientId", "");
+        builder.UseSetting("LinkedInAuth:ClientSecret", "");
+    });
 
-    private readonly FakeLinkedInAuthClient _linkedIn = new();
-    private WebApplicationFactory<Program>? _factory;
-    private WebApplicationFactory<Program>? _unconfiguredFactory;
+    public Task InitializeAsync() => host.ResetAsync();
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(LinkedInSignInTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
-            builder.UseSetting("LinkedInAuth:ClientId", ClientId);
-            builder.UseSetting("LinkedInAuth:ClientSecret", "test-secret");
-            builder.ConfigureTestServices(services => services.AddSingleton<ILinkedInAuthClient>(_linkedIn));
-        });
-
-        // Same database, no LinkedIn client configured — the shape of a deployment that never set
-        // the two secrets.
-        _unconfiguredFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // The test host runs as Development and therefore loads the developer's user-secrets,
-            // where a real LinkedInAuth client id/secret may well be set. Clear them so "not
-            // configured" means exactly that, everywhere.
-            builder.UseSetting("LinkedInAuth:ClientId", "");
-            builder.UseSetting("LinkedInAuth:ClientSecret", "");
-        });
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-
-        if (_unconfiguredFactory is not null)
-        {
-            await _unconfiguredFactory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Config_Publishes_Availability_And_The_Public_Client_Id()
     {
-        var configured = await _factory!.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
+        var configured = await _factory.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
         configured!.LinkedInAuth.ShouldBe(new LinkedInAuthConfigResponse(true, ClientId));
 
-        var unconfigured = await _unconfiguredFactory!.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
+        var unconfigured = await _unconfiguredFactory.CreateClient().GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
         unconfigured!.LinkedInAuth.ShouldBe(new LinkedInAuthConfigResponse(false, null));
     }
 
     [Fact]
     public async Task Both_Endpoints_Are_404_When_Not_Configured()
     {
-        var client = _unconfiguredFactory!.CreateClient();
+        var client = _unconfiguredFactory.CreateClient();
 
         var signIn = await client.PostAsJsonAsync("/api/auth/linkedin",
             new LinkedInSignInRequest("code", RedirectUri), JsonOptions);
@@ -109,7 +96,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_New_LinkedIn_Account_With_A_Verified_Email_Gets_A_Signup_Step_And_Is_Created_Only_With_Consent()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var identity = new LinkedInIdentity("li-new-1", "new.linkedin@example.com", true, "Ada", "Lovelace");
 
         var signIn = await SignInAsync(client, identity);
@@ -156,7 +143,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Verified_Email_Matching_A_Password_Account_Is_Linked_And_Signed_In()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var registered = await RegisterAsync(client, "linked.li@example.com");
         registered.User.HasPassword.ShouldBeTrue();
 
@@ -181,7 +168,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Code_LinkedIn_Does_Not_Recognise_Is_Rejected()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
 
         var signIn = await client.PostAsJsonAsync("/api/auth/linkedin",
             new LinkedInSignInRequest("not-issued", RedirectUri), JsonOptions);
@@ -192,7 +179,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Redirect_Uri_Outside_Our_Web_Origin_Is_Rejected_Before_Reaching_LinkedIn()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var code = _linkedIn.IssueCode(new LinkedInIdentity("li-redirect", "redirect@example.com", true, null, null));
 
         var signIn = await client.PostAsJsonAsync("/api/auth/linkedin",
@@ -205,7 +192,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_Tampered_Or_Foreign_Signup_Token_Is_A_Validation_Problem()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var registered = await RegisterAsync(client, "foreign.token.li@example.com");
 
         // One of our own access tokens: same signing key, wrong audience/purpose.
@@ -221,7 +208,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task A_LinkedIn_Only_Account_Is_Deleted_Without_A_Password()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var pending = (await (await SignInAsync(client, new LinkedInIdentity("li-delete", "delete.li@example.com", true, "D", "G")))
             .Content.ReadFromJsonAsync<LinkedInSignInResponse>(JsonOptions))!.PendingSignup!;
         var signup = await client.PostAsJsonAsync("/api/auth/linkedin/signup",
@@ -237,7 +224,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task An_Emailless_Identity_Requires_A_Manually_Entered_Email_On_Signup()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var identity = new LinkedInIdentity("li-noemail-1", null, false, "Grace", "Hopper");
 
         var pending = (await (await SignInAsync(client, identity))
@@ -252,7 +239,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task An_Emailless_Identity_Registers_Successfully_With_A_Fresh_Manual_Email_And_Stays_Unconfirmed()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var identity = new LinkedInIdentity("li-noemail-2", null, false, "Grace", "Hopper");
 
         var pending = (await (await SignInAsync(client, identity))
@@ -275,7 +262,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task An_Emailless_Identity_Cannot_Take_Over_An_Existing_Account_By_Typing_Its_Email()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         await RegisterAsync(client, "victim@example.com");
 
         var identity = new LinkedInIdentity("li-noemail-attacker", null, false, "Eve", "Attacker");
@@ -295,7 +282,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     [Fact]
     public async Task An_Unverified_Email_Is_Dropped_And_Behaves_Exactly_Like_No_Email_At_All()
     {
-        var client = _factory!.CreateClient();
+        var client = _factory.CreateClient();
         var identity = new LinkedInIdentity("li-unverified", "unverified@example.com", false, "U", "V");
 
         var pending = (await (await SignInAsync(client, identity))
@@ -314,7 +301,7 @@ public class LinkedInSignInTests(SharedInfrastructure shared) : IAsyncLifetime
     {
         var identity = new LinkedInIdentity("li-noemail-return", null, false, "Return", "User");
 
-        var pending = (await (await SignInAsync(_factory!.CreateClient(), identity))
+        var pending = (await (await SignInAsync(_factory.CreateClient(), identity))
             .Content.ReadFromJsonAsync<LinkedInSignInResponse>(JsonOptions))!.PendingSignup!;
         var signup = await _factory.CreateClient().PostAsJsonAsync("/api/auth/linkedin/signup",
             new LinkedInSignupRequest(pending.SignupToken, "Return", "User", "return.user@example.com", true), JsonOptions);

@@ -1,18 +1,25 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.Identity;
+
+public sealed class ExtensionPairingProfile : IHostProfile
+{
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("App:WebBaseUrl", "https://ekariyerim.example");
+    }
+}
 
 /// <summary>
 /// The pairing handshake that replaced "generate a key, copy it, paste it into the extension".
@@ -24,14 +31,11 @@ namespace AfterApply.IntegrationTests.Identity;
 /// token confirm its own successor, or accept a code after it has expired.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class ExtensionPairingTests(SharedInfrastructure shared) : IAsyncLifetime
+public class ExtensionPairingTests(ApiHost<ExtensionPairingProfile> host) : IClassFixture<ApiHost<ExtensionPairingProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
 
     /// <summary>The signed-in browser session that confirms a pairing.</summary>
     private HttpClient _client = null!;
@@ -41,14 +45,7 @@ public class ExtensionPairingTests(SharedInfrastructure shared) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(ExtensionPairingTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            builder.UseSetting("App:WebBaseUrl", "https://ekariyerim.example");
-        });
+        await host.ResetAsync();
 
         _client = _factory.CreateClient();
         _anonymous = _factory.CreateClient();
@@ -60,13 +57,7 @@ public class ExtensionPairingTests(SharedInfrastructure shared) : IAsyncLifetime
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await _factory.DisposeAsync();
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task Start_Answers_An_Anonymous_Caller_With_A_Code_A_Secret_And_A_Url()

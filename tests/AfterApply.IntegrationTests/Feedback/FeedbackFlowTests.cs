@@ -1,14 +1,13 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Feedback;
 using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Feedback;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,52 +15,38 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Feedback;
 
+/// <summary>The mirror is off for this class (TestContainerCleanup turns it off for every host),
+/// so nothing here should ever call GitHub. The stub is the belt to those braces: if the switch
+/// ever fails, the call lands in a recorder the tests can assert on instead of opening a real
+/// issue in the live feedback repository — which is exactly what happened on 2026-09-07, five
+/// times, before this was here.</summary>
+public sealed class FeedbackFlowProfile : IHostProfile
+{
+    public StubGitHubHandler GitHub { get; } = new();
+
+    public void Configure(IWebHostBuilder builder) =>
+        builder.ConfigureServices(services =>
+            services.AddHttpClient(nameof(IGitHubIssueMirror))
+                .ConfigurePrimaryHttpMessageHandler(() => GitHub));
+
+    public void Reset() => GitHub.Clear();
+}
+
 /// <summary>
 /// The in-app feedback panel's endpoint, end to end. The GitHub mirror is deliberately left
 /// unconfigured for this class — see <see cref="FeedbackGitHubMirrorTests"/> for the other half.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
-public class FeedbackFlowTests(SharedInfrastructure shared) : IAsyncLifetime
+public class FeedbackFlowTests(ApiHost<FeedbackFlowProfile> host) : IClassFixture<ApiHost<FeedbackFlowProfile>>, IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
-    private StubGitHubHandler _gitHubHandler = null!;
+    private WebApplicationFactory<Program> _factory => host;
+    private StubGitHubHandler _gitHubHandler => host.Profile.GitHub;
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(FeedbackFlowTests));
-        _gitHubHandler = new StubGitHubHandler();
+    public Task InitializeAsync() => host.ResetAsync();
 
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // This class asserts what a background job did, so it needs the one thing the suite
-            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
-            builder.UseSetting("Hangfire:ServerEnabled", "true");
-
-            // The mirror is off for this class (TestContainerCleanup turns it off for every host),
-            // so nothing here should ever call GitHub. The stub is the belt to that braces: if the
-            // switch ever fails, the call lands in a recorder the tests can assert on instead of
-            // opening a real issue in the live feedback repository — which is exactly what happened
-            // on 2026-09-07, five times, before this was here.
-            builder.ConfigureServices(services =>
-                services.AddHttpClient(nameof(IGitHubIssueMirror))
-                    .ConfigurePrimaryHttpMessageHandler(() => _gitHubHandler));
-        });
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<HttpClient> AuthenticatedClientAsync(string email)
     {
@@ -172,11 +157,11 @@ public class FeedbackFlowTests(SharedInfrastructure shared) : IAsyncLifetime
         response.EnsureSuccessStatusCode();
         var receipt = await response.Content.ReadFromJsonAsync<FeedbackResponse>(JsonOptions);
 
-        // Asserting a negative about a background job means waiting for the job that should not
-        // exist to have had its chance. Without this delay the row is read before Hangfire has run
-        // anything, so the assertion passes no matter what the mirror does — which is how five real
-        // issues got opened while this test stayed green (2026-09-07).
-        await Task.Delay(2000);
+        // Asserting a negative about a background job: whatever was enqueued runs now, so the row
+        // is read after the job had its chance. Before jobs ran inline, this read the row before
+        // Hangfire had run anything and passed no matter what the mirror did — which is how five
+        // real issues got opened while this test stayed green (2026-09-07).
+        await host.RunJobsAsync();
 
         var stored = await ReadStoredAsync(receipt!.Id);
         stored.GitHubIssueNumber.ShouldBeNull();
@@ -186,8 +171,8 @@ public class FeedbackFlowTests(SharedInfrastructure shared) : IAsyncLifetime
     }
 
     // One host, every rejection. Written as a Fact looping over the cases rather than a Theory
-    // with one case each because xUnit constructs the test class per test method, so a four-case
-    // Theory here means four WebApplicationFactories, four databases and four Hangfire servers to
+    // with one case each; the host is shared by the class now, so the cost is only a reset per
+    // case, but the loop is still the clearer shape for "every one of these is refused" — it
     // start and wind down — the exact volume TestContainerCleanup exists to keep down.
     [Fact]
     public async Task Invalid_Submissions_Are_Rejected()

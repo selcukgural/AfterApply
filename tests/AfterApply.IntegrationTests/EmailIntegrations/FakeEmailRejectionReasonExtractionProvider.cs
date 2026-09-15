@@ -14,6 +14,12 @@ public sealed class FakeEmailRejectionReasonExtractionProvider : IEmailRejection
 
     public int CallCount { get; private set; }
 
+    public void Reset()
+    {
+        Result = new(RejectionReasonCategory.NotStated, Detail: null, Confidence: 0);
+        CallCount = 0;
+    }
+
     public Task<EmailRejectionReasonExtractionResult> ExtractAsync(string subject, string snippet, CancellationToken cancellationToken)
     {
         CallCount++;

@@ -1,11 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Mailing;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.WebUtilities;
@@ -15,54 +14,36 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Identity;
 
+public sealed class PasswordResetProfile : IHostProfile
+{
+    public CapturingEmailSender Emails { get; } = new();
+
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
+
+        // Never call the real Resend API from tests — capture what would have been sent
+        // instead, so a test can both assert "an email was sent" and pull the real token out
+        // of the link to drive the rest of the flow.
+        builder.ConfigureTestServices(services => services.AddSingleton<IEmailSender>(Emails));
+    }
+
+    public void Reset() => Emails.Reset();
+}
+
 [Collection(IntegrationTestCollection.Name)]
-public class PasswordResetTests(SharedInfrastructure shared) : IAsyncLifetime
+public class PasswordResetTests(ApiHost<PasswordResetProfile> host) : IClassFixture<ApiHost<PasswordResetProfile>>, IAsyncLifetime
 {
     private const string RegisteredPassword = "P@ssw0rd123!";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
-    private CapturingEmailSender _emailSender = null!;
+    private WebApplicationFactory<Program> _factory => host;
+    private CapturingEmailSender _emailSender => host.Profile.Emails;
 
-    public async Task InitializeAsync()
-    {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(PasswordResetTests));
+    public Task InitializeAsync() => host.ResetAsync();
 
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // This class asserts what a background job did, so it needs the one thing the suite
-            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
-            builder.UseSetting("Hangfire:ServerEnabled", "true");
-            builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
-
-            // Never call the real Resend API from tests — capture what would have been sent
-            // instead, so a test can both assert "an email was sent" and pull the real token out
-            // of the link to drive the rest of the flow.
-            builder.ConfigureTestServices(services =>
-            {
-                services.AddSingleton<CapturingEmailSender>();
-                services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<CapturingEmailSender>());
-            });
-        });
-
-
-        _emailSender = (CapturingEmailSender)_factory.Services.GetRequiredService<IEmailSender>();
-    }
-
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private async Task<AuthResponse> RegisterAsync(string email)
     {
@@ -79,39 +60,20 @@ public class PasswordResetTests(SharedInfrastructure shared) : IAsyncLifetime
         return (query["email"].ToString(), query["token"].ToString());
     }
 
-    // Sending is enqueued via Hangfire, not awaited inline within the request (see
-    // AuthService.ForgotPasswordAsync/ResetPasswordAsync) — same reason CsvImportTests/
-    // LinkedInImportTests poll instead of expecting a synchronous result.
+    // Sending is enqueued as a background job, not awaited inline within the request (see
+    // AuthService.ForgotPasswordAsync/ResetPasswordAsync); the job runs here.
     private async Task<string> WaitForResetLinkAsync()
     {
-        var deadline = DateTime.UtcNow.AddSeconds(30);
-        while (DateTime.UtcNow < deadline)
-        {
-            if (_emailSender.LastResetLink is not null)
-            {
-                return _emailSender.LastResetLink;
-            }
-
-            await Task.Delay(200);
-        }
-
-        throw new TimeoutException("Password reset email job did not run within 30s.");
+        await host.RunJobsAsync();
+        host.Jobs.Failed.ShouldBeEmpty();
+        return _emailSender.LastResetLink.ShouldNotBeNull("the password reset e-mail job did not send a link");
     }
 
     private async Task WaitForPasswordChangedEmailAsync()
     {
-        var deadline = DateTime.UtcNow.AddSeconds(30);
-        while (DateTime.UtcNow < deadline)
-        {
-            if (_emailSender.PasswordChangedCount > 0)
-            {
-                return;
-            }
-
-            await Task.Delay(200);
-        }
-
-        throw new TimeoutException("Password changed email job did not run within 30s.");
+        await host.RunJobsAsync();
+        host.Jobs.Failed.ShouldBeEmpty();
+        _emailSender.PasswordChangedCount.ShouldBeGreaterThan(0, "the password changed e-mail job did not run");
     }
 
     [Fact]
@@ -122,9 +84,11 @@ public class PasswordResetTests(SharedInfrastructure shared) : IAsyncLifetime
         var response = await client.PostAsJsonAsync("/api/auth/forgot-password",
             new ForgotPasswordRequest("no-such-user@example.com"), JsonOptions);
 
-        // No polling needed here: AuthService.ForgotPasswordAsync returns without ever enqueuing a
-        // job for an unknown email, so there's nothing async to race against.
+        // AuthService.ForgotPasswordAsync returns without ever enqueuing a job for an unknown
+        // email — and if it did, running it here would show.
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        host.Jobs.Pending.ShouldBeEmpty();
+        await host.RunJobsAsync();
         _emailSender.LastResetLink.ShouldBeNull();
     }
 
@@ -215,28 +179,5 @@ public class PasswordResetTests(SharedInfrastructure shared) : IAsyncLifetime
         var newLoginResponse = await client.PostAsJsonAsync("/api/auth/login",
             new LoginRequest(email, newPassword), JsonOptions);
         newLoginResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-    }
-}
-
-internal sealed class CapturingEmailSender : IEmailSender
-{
-    public string? LastResetLink { get; private set; }
-
-    public string? LastLocale { get; private set; }
-
-    public int PasswordChangedCount { get; private set; }
-
-    public Task SendPasswordResetEmailAsync(string toEmail, string resetLink, string locale, CancellationToken cancellationToken)
-    {
-        LastResetLink = resetLink;
-        LastLocale = locale;
-        return Task.CompletedTask;
-    }
-
-    public Task SendPasswordChangedEmailAsync(string toEmail, string locale, CancellationToken cancellationToken)
-    {
-        PasswordChangedCount++;
-        LastLocale = locale;
-        return Task.CompletedTask;
     }
 }

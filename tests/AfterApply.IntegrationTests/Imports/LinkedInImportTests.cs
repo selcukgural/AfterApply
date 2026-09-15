@@ -2,10 +2,8 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Imports.Contracts;
 using AfterApply.Domain.Common;
@@ -20,7 +18,7 @@ using Shouldly;
 namespace AfterApply.IntegrationTests.Imports;
 
 [Collection(IntegrationTestCollection.Name)]
-public class LinkedInImportTests(SharedInfrastructure shared) : IAsyncLifetime
+public class LinkedInImportTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private const string JobApplicationsCsv =
         "Company,Title,Applied At,Status,Job URL\n" +
@@ -35,27 +33,14 @@ public class LinkedInImportTests(SharedInfrastructure shared) : IAsyncLifetime
         "NoUrlCo,QA Engineer,2026-01-13,Applied,\n" +
         ",Something,2026-01-14,Applied,\n";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
+    private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
 
-    private WebApplicationFactory<Program>? _factory;
+    private WebApplicationFactory<Program> _factory => host;
     private HttpClient _client = null!;
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(LinkedInImportTests));
-
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
-            builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
-            // This class asserts what a background job did, so it needs the one thing the suite
-            // switches off by default — see TestContainerCleanup.DisableHangfireServerForTests.
-            builder.UseSetting("Hangfire:ServerEnabled", "true");
-        });
-
+        await host.ResetAsync();
 
         _client = _factory.CreateClient();
         var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
@@ -65,14 +50,7 @@ public class LinkedInImportTests(SharedInfrastructure shared) : IAsyncLifetime
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 
-    public async Task DisposeAsync()
-    {
-        if (_factory is not null)
-        {
-            await TestHostDisposal.DisposeQuietlyAsync(_factory);
-        }
-
-    }
+    public Task DisposeAsync() => Task.CompletedTask;
 
     private static byte[] BuildZip(params (string EntryName, string Content)[] entries)
     {
@@ -104,34 +82,19 @@ public class LinkedInImportTests(SharedInfrastructure shared) : IAsyncLifetime
         ("Jobs/Job Applications.csv", JobApplicationsCsv),
         ("Jobs/Job Applications_1.csv", JobApplicationsCsv1));
 
-    // Processing runs out-of-request via a Hangfire job (see ImportEndpoints.cs) — the POST only
-    // ever returns 202 + the batch id now. Every test that needs the final summary polls this
-    // endpoint until the batch leaves Pending/Processing, same as a real client would (or
-    // /hubs/import-progress, which isn't exercised here).
+    // Processing runs out-of-request via a background job (see ImportEndpoints.cs) — the POST only
+    // ever returns 202 + the batch id. The job runs here, inline, and the summary is read once;
+    // a real client would poll this endpoint (or /hubs/import-progress, not exercised here).
     private async Task<ImportSummaryResponse> PollUntilTerminalAsync(Guid batchId)
     {
-        // 60s, not a tighter number: under concurrent test-class load (each with its own
-        // in-process Hangfire server competing for CPU) a trivial import can legitimately take
-        // much longer than it would in isolation — a too-tight timeout here doesn't just fail the
-        // assertion, it risks the fixture disposing its containers out from under a Hangfire job
-        // that's still actually running, which was observed to crash the whole test host.
-        var deadline = DateTime.UtcNow.AddSeconds(60);
-        while (DateTime.UtcNow < deadline)
-        {
-            var response = await _client.GetAsync($"/api/imports/{batchId}");
-            response.EnsureSuccessStatusCode();
-            var summary = await response.Content.ReadFromJsonAsync<ImportSummaryResponse>(JsonOptions);
-            summary.ShouldNotBeNull();
+        await host.RunJobsAsync();
 
-            if (summary!.Status is ImportBatchStatus.Completed or ImportBatchStatus.Failed)
-            {
-                return summary;
-            }
-
-            await Task.Delay(200);
-        }
-
-        throw new TimeoutException($"Import batch {batchId} did not reach a terminal status within 60s.");
+        var response = await _client.GetAsync($"/api/imports/{batchId}");
+        response.EnsureSuccessStatusCode();
+        var summary = await response.Content.ReadFromJsonAsync<ImportSummaryResponse>(JsonOptions);
+        summary.ShouldNotBeNull();
+        summary.Status.ShouldBeOneOf(ImportBatchStatus.Completed, ImportBatchStatus.Failed);
+        return summary;
     }
 
     [Fact]
