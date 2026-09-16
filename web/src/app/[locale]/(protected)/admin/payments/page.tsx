@@ -513,7 +513,10 @@ function ActionModal({
 }) {
   const t = useTranslations("adminPayments");
   const { order } = action;
-  const [amount, setAmount] = useState(() => (order.refundableAmountMinor / 100).toFixed(2));
+  // The refund policy's amount is the default (everything inside the seven-day window, the
+  // unused share of the period after it); the admin can still type any amount up to what is left.
+  const policyMinor = action.kind === "refund" ? order.policyRefundMinor : order.refundableAmountMinor;
+  const [amount, setAmount] = useState(() => (policyMinor / 100).toFixed(2));
   const [note, setNote] = useState("");
   const [reference, setReference] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -570,6 +573,11 @@ function ActionModal({
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             {t(action.kind === "refund" ? "refund.refundBody" : "refund.markRefundedBody", { max: fmt(order.refundableAmountMinor, order.currency) })}
           </p>
+          {action.kind === "refund" && (
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              {t("refund.policyAmount", { amount: fmt(order.policyRefundMinor, order.currency) })}
+            </p>
+          )}
           <label htmlFor="refund-amount" className="mt-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
             {t("refund.amount")}
           </label>

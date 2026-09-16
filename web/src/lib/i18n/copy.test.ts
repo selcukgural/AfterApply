@@ -173,3 +173,58 @@ describe("company reviews have no free text (2026-09-16)", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+
+describe("the refund policy says the same thing everywhere (2026-09-16)", () => {
+  // The owner's policy — a full refund within seven days, used time deducted after that, a reply
+  // within three business days, requests from the app or by e-mail to destek@ekariyerim.com — is
+  // written into the agreement, the policy page, the help centre, the FAQ, the checkout consent
+  // and both refund dialogs. One of them drifting is a broken promise the reader cannot see.
+  const policySurfaces = [
+    "termsOfSale.sections.withdrawal.body",
+    "refundPolicy.sections.withdrawal.body",
+    "help.settings.billing.calloutWithdrawal.body",
+    "help.weeklyJobs.refund.body",
+    "help.faq.q18.answer",
+    "payments.refund.body",
+  ];
+
+  it.each(policySurfaces)("%s names the seven-day window (tr + en)", (key) => {
+    expect(trValue(key)).toMatch(/7 (?:\(yedi\) )?g[üu]n/i);
+    expect(enValue(key)).toMatch(/7 (?:\(seven\) )?days|seven days/i);
+  });
+
+  it.each(["termsOfSale.sections.refunds.body", "refundPolicy.sections.decision.body", "help.faq.q18.answer", "payments.refund.body"])(
+    "%s promises a reply within three business days (tr + en)",
+    (key) => {
+      expect(trValue(key)).toMatch(/3 iş günü/);
+      expect(enValue(key)).toMatch(/3 business days/);
+    },
+  );
+
+  it.each(["termsOfSale.sections.parties.body", "refundPolicy.sections.howToRequest.body", "refundPolicy.sections.contact.body", "help.faq.q18.answer"])(
+    "%s gives the support address (tr + en)",
+    (key) => {
+      expect(trValue(key)).toContain("destek@ekariyerim.com");
+      expect(enValue(key)).toContain("destek@ekariyerim.com");
+    },
+  );
+
+  it("carries no placeholder or draft marker in the legal texts", () => {
+    for (const [key, value] of [...trEntries, ...enEntries]) {
+      if (!key.startsWith("termsOfSale.") && !key.startsWith("refundPolicy.")) continue;
+      expect(value, key).not.toMatch(/\[[^\]]*(gelecek|to come)[^\]]*\]/i);
+      expect(value, key).not.toMatch(/taslak|\bdraft\b/i);
+    }
+    expect(trValue("legalDraft.notice")).toBe("");
+  });
+
+  it("the checkout consent keeps the statutory waiver and names the seven-day right", () => {
+    // The waiver sentence is what the Regulation requires for a service that starts at once; the
+    // contractual seven-day right is what makes it fair. Both, in one sentence, in both languages.
+    expect(trValue("payments.checkout.terms")).toMatch(/cayma hakkım/);
+    expect(trValue("payments.checkout.terms")).toMatch(/7 gün/);
+    expect(enValue("payments.checkout.terms")).toMatch(/withdrawal/);
+    expect(enValue("payments.checkout.terms")).toMatch(/7 days/);
+  });
+});

@@ -104,23 +104,58 @@ public class PaymentRefundAndAdminTests(ApiHost<PaymentProfile> host) : IClassFi
     }
 
     [Fact]
-    public async Task A_Partial_Refund_Leaves_Pro_Running()
+    public async Task A_Partial_Refund_Winds_Pro_Back_By_The_Same_Share()
     {
         var checkout = await PayAsync();
+        var periodEnd = PaymentTestHost.Start.AddMonths(1);
+        var period = periodEnd - PaymentTestHost.Start;
 
-        var response = await _admin.PostAsJsonAsync($"/api/admin/payments/orders/{checkout.OrderId}/refund", new AdminRefundRequest(10000), PaymentTestHost.JsonOptions);
+        var response = await _admin.PostAsJsonAsync($"/api/admin/payments/orders/{checkout.OrderId}/refund", new AdminRefundRequest(14950), PaymentTestHost.JsonOptions);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var order = await OrderAsync(checkout.OrderId);
         order.Status.ShouldBe(PaymentOrderStatus.PartiallyRefunded);
-        order.RefundableAmountMinor.ShouldBe(19900);
-        (await EntitlementAsync())!.ActiveUntil.ShouldBe(PaymentTestHost.Start.AddMonths(1));
-        _host.PayTr.Requests.Single(r => r.Path.EndsWith("/odeme/iade")).Form["return_amount"].ShouldBe("100.00");
+        order.RefundableAmountMinor.ShouldBe(14950);
+        // Half the money back, half the month taken back.
+        (await EntitlementAsync())!.ActiveUntil.ShouldBe(periodEnd - TimeSpan.FromTicks(period.Ticks / 2));
+        _host.PayTr.Requests.Single(r => r.Path.EndsWith("/odeme/iade")).Form["return_amount"].ShouldBe("149.50");
 
         // More than what is left is refused before PayTR is asked.
         var tooMuch = await _admin.PostAsJsonAsync($"/api/admin/payments/orders/{checkout.OrderId}/refund", new AdminRefundRequest(20000), PaymentTestHost.JsonOptions);
         tooMuch.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         _host.PayTr.Requests.Count(r => r.Path.EndsWith("/odeme/iade")).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task The_Policy_Amount_Is_Full_For_Seven_Days_Then_The_Unused_Share_And_Refunding_It_Ends_Pro_Now()
+    {
+        var checkout = await PayAsync();
+        var periodEnd = PaymentTestHost.Start.AddMonths(1);
+
+        // Day 3: the whole amount, no questions.
+        _host.Clock.Set(PaymentTestHost.Start.AddDays(3));
+        var day3 = await _admin.GetFromJsonAsync<AdminPaymentOrderDetailResponse>($"/api/admin/payments/orders/{checkout.OrderId}", PaymentTestHost.JsonOptions);
+        day3!.Order.PolicyRefundMinor.ShouldBe(29900);
+
+        // Day 10 of 30: used days are deducted.
+        var day10 = PaymentTestHost.Start.AddDays(10);
+        _host.Clock.Set(day10);
+        var detail = await _admin.GetFromJsonAsync<AdminPaymentOrderDetailResponse>($"/api/admin/payments/orders/{checkout.OrderId}", PaymentTestHost.JsonOptions);
+        var expected = (long)Math.Floor(29900m * (periodEnd - day10).Ticks / (periodEnd - PaymentTestHost.Start).Ticks);
+        detail!.Order.PolicyRefundMinor.ShouldBe(expected);
+        expected.ShouldBeInRange(19900, 19999);
+
+        // Refunding the policy amount ends the Pro period now (to the minute), not at the month's end.
+        (await _admin.PostAsJsonAsync($"/api/admin/payments/orders/{checkout.OrderId}/refund", new AdminRefundRequest(expected), PaymentTestHost.JsonOptions))
+            .EnsureSuccessStatusCode();
+        var entitlement = (await EntitlementAsync())!;
+        entitlement.ActiveUntil.ShouldBe(day10, tolerance: TimeSpan.FromMinutes(1));
+        entitlement.IsActive(day10.AddMinutes(2)).ShouldBeFalse();
+        (await OrderAsync(checkout.OrderId)).Status.ShouldBe(PaymentOrderStatus.PartiallyRefunded);
+
+        // Nothing more is owed under the policy once the unused share is back.
+        var after = await _admin.GetFromJsonAsync<AdminPaymentOrderDetailResponse>($"/api/admin/payments/orders/{checkout.OrderId}", PaymentTestHost.JsonOptions);
+        after!.Order.PolicyRefundMinor.ShouldBe(0);
     }
 
     [Fact]

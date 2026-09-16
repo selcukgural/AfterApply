@@ -7052,3 +7052,47 @@ hukuki metinler herkese görünür olurdu ve panel yine eski beş bildirimi tekr
 **Dokunulanlar.** `PayTrCallbackService` (bir dal + yorum), `PayTrCallbackTests`
 (`…Is_Recorded_And_Answered_OK`), `PayTrCheckoutTests` bayrak-kapalı testi (OK + bozuk hash hâlâ
 400), DEPLOYMENT.md §15. Payments entegrasyon sınıfları 47/47.
+
+## Pro plan fiyatı kesinleşti: ₺299/ay, ₺2.990/yıl (2026-09-16)
+
+`deploy.yml`'deki `29900` / `299000` (kuruş, KDV dahil) 15 Eylül'den beri "yer tutucu" diye
+anılıyordu; kullanıcı 16 Eylül'de bunları lansman fiyatı olarak onayladı — yıllık = 10 aylık kuralı
+korundu. Fiyat DB'de değil config'te (bayrağın yanında, reviewed deploy ile değişir); mesafeli
+satış sözleşmesi ve `/pro` kartları canlı değeri `GET /api/payments/plans`'ten okur, sabit yazmaz.
+Maliyet dayanağı: ≈$1/kullanıcı/ay Gemini (2026-09-12 notu), ₺299 bunun çok üstünde.
+
+## İade politikası ve hukuki metinler kesinleşti: 7 gün koşulsuz, sonrası gün hesabı (2026-09-16)
+
+**Girdi (kullanıcı).** "Herhangi bir dijital ürün satan sözleşmeyi bize uyarlayabiliriz. 7 gün
+sorgusuz sualsiz iade. 7 günden sonra kullanılan süre iade bedelinden düşer, geri kalan iade
+edilir. Destek için destek@ekariyerim.com'a sipariş numarasıyla e-posta ya da kullanıcıya sunulan
+menülerden iade talebi; en geç 3 iş günü içinde dönüş." Satıcı kimliği: "e-kariyerim".
+
+**Metinler.** `/terms-of-sale` 11 bölüm ve `/refund-policy` 9 bölüm tr+en yazıldı; `[Metin
+gelecek]` kalmadı, `LegalDraftNotice` silindi, sayfalar `PUBLIC_PATHS` + footer'a girdi ve
+indekslenir oldu. Cayma hakkı kurgusu: Yönetmelik md. 15 istisnası (anında ifa edilen dijital
+hizmet, checkout'taki onay) korunuyor; **7 günlük koşulsuz iade sözleşmesel bir hak** olarak
+üstüne veriliyor. Aynı politika yardım merkezi (fatura bölümü, haftalık ilanlar), SSS q18, checkout
+onay cümlesi, kullanıcı iade diyaloğu ve admin iade diyaloğunda aynı sözlerle; `copy.test.ts` bu
+yüzeylerin hepsinde "7 gün", "3 iş günü" ve destek adresini iki dilde arıyor, yer tutucu/taslak
+kelimesi kalırsa kırılıyor. Satıcı kimliği (md. 5): "e-kariyerim", Hamidiye Mah. Ülkü Yolu Cad.
+6903 Sk. No: 34 Edremit/Balıkesir, 0266 265 45 99 — kullanıcı verdi, `parties` bölümünde.
+destek@ekariyerim.com kutusunun açık olduğu teyit edilmedi; checkout açılmadan önce şart.
+
+**Politikayı işleten kod (küçük).** `PaymentOrder.PolicyRefundMinor(now)`: ödemeden itibaren 7
+gün içindeyse iade edilebilir tutarın tamamı; sonrasında `ödenen × kalan gün ÷ dönem günü`
+(dönem = siparişin eklediği entitlement aralığı; henüz başlamamış bir dönem tamamen
+kullanılmamış sayılır), daha önce iade edilen düşülür, kuruşa aşağı yuvarlanır. Admin panelinde
+iade tutarının **varsayılanı** bu (`AdminPaymentOrderResponse.PolicyRefundMinor`), admin yine
+istediği tutarı yazabilir. **Kısmi iade artık Pro süresini de geri alıyor**, iade edilen tutar
+oranında (`EntitlementWindBackFor`): tam iadede siparişin eklediği sürenin tamamı (eski davranış),
+politika tutarında kalan süre → Pro o anda biter. Önceki "kısmi iade Pro'ya dokunmaz" kuralı
+politikayla çelişiyordu (kalan süre para olarak geri veriliyorsa süre de gitmeli); iyi niyet
+kısmi iadesi yapıp süreyi korumak isteyen admin `PUT /api/admin/pro/entitlements` ile geri
+verir. Fiyat/period hesabı `PaidAmountMinor` üzerinden (PayTR'nin gerçekten çektiği tutar).
+
+**Doğrulama.** Unit 891/891 (5 yeni: 7 gün sınırı, gün hesabı, önceki iadenin düşülmesi,
+başlamamış dönem, orantılı geri alma), integration Payments+SiteTraffic+ClientConfig 69/69
+(`A_Partial_Refund_Winds_Pro_Back_By_The_Same_Share`,
+`The_Policy_Amount_Is_Full_For_Seven_Days_Then_The_Unused_Share_And_Refunding_It_Ends_Pro_Now`),
+vitest 557/557 (18 yeni copy/route/footer kuralı), tsc, eslint.

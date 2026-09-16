@@ -257,6 +257,62 @@ public sealed class PaymentOrder : AuditableEntity
 
     public long RefundableAmountMinor => IsPaid ? Math.Max(0, PaidAmountMinor - RefundedAmountMinor) : 0;
 
+    /// <summary>The refund policy's unconditional window (Cancellation and Refund Terms, 2026-09):
+    /// within this many days of the payment the whole amount goes back, no reason needed.</summary>
+    public const int UnconditionalRefundDays = 7;
+
+    /// <summary>
+    /// What the refund policy says this order is owed at <paramref name="now"/>: everything still
+    /// refundable inside the unconditional window; after it, the share of the paid amount that
+    /// covers the unused part of the period this order added (used days are deducted), less what
+    /// was already refunded. A period that has not started yet (a stacked order) counts as unused.
+    /// The admin panel offers this as the default amount; it is a suggestion, the admin decides.
+    /// </summary>
+    public long PolicyRefundMinor(DateTimeOffset now)
+    {
+        if (!IsPaid || PaidAt is not { } paidAt)
+        {
+            return 0;
+        }
+
+        if (now - paidAt <= TimeSpan.FromDays(UnconditionalRefundDays))
+        {
+            return RefundableAmountMinor;
+        }
+
+        if (EntitlementActiveUntilBefore is not { } start || EntitlementActiveUntilAfter is not { } end || end <= start)
+        {
+            // No period on record to measure use against (a grant without an entitlement change):
+            // nothing can be deducted, so the policy amount is what is left.
+            return RefundableAmountMinor;
+        }
+
+        var remaining = end - (now > start ? now : start);
+        if (remaining <= TimeSpan.Zero)
+        {
+            return 0;
+        }
+
+        var unusedShare = (long)Math.Floor(PaidAmountMinor * (decimal)remaining.Ticks / (end - start).Ticks);
+        return Math.Clamp(unusedShare - RefundedAmountMinor, 0, RefundableAmountMinor);
+    }
+
+    /// <summary>How much of the period this order added a refund of <paramref name="amountMinor"/>
+    /// takes back: the same share of the period as of the paid amount, so a policy refund after
+    /// the unconditional window (the unused share) ends the period now, and a full refund takes
+    /// back all of it.</summary>
+    public TimeSpan EntitlementWindBackFor(long amountMinor)
+    {
+        if (amountMinor <= 0 || PaidAmountMinor <= 0 || EntitlementExtension <= TimeSpan.Zero)
+        {
+            return TimeSpan.Zero;
+        }
+
+        return amountMinor >= PaidAmountMinor
+            ? EntitlementExtension
+            : TimeSpan.FromTicks((long)Math.Round(EntitlementExtension.Ticks * (decimal)amountMinor / PaidAmountMinor));
+    }
+
     public void RequestRefund(string reason, DateTimeOffset now)
     {
         if (Status == PaymentOrderStatus.RefundRequested)

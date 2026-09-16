@@ -79,7 +79,7 @@ internal sealed class PaymentAdminService(AppDbContext dbContext, IOptions<PayTr
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
-        return new PagedResult<AdminPaymentOrderResponse>(items.Select(o => o.ToAdminResponse()).ToList(), total, page, pageSize);
+        return new PagedResult<AdminPaymentOrderResponse>(items.Select(o => o.ToAdminResponse(_timeProvider.GetUtcNow())).ToList(), total, page, pageSize);
     }
 
     public async Task<AdminPaymentOrderDetailResponse?> GetOrderAsync(Guid orderId, CancellationToken cancellationToken)
@@ -103,7 +103,7 @@ internal sealed class PaymentAdminService(AppDbContext dbContext, IOptions<PayTr
             entitlement = row is null ? null : new PaymentEntitlementResponse(row.IsActive(now), row.ActiveUntil);
         }
 
-        return new AdminPaymentOrderDetailResponse(order.ToAdminResponse(), notifications.Select(n => n.ToResponse()).ToList(), entitlement);
+        return new AdminPaymentOrderDetailResponse(order.ToAdminResponse(_timeProvider.GetUtcNow()), notifications.Select(n => n.ToResponse()).ToList(), entitlement);
     }
 
     public async Task<IReadOnlyList<AdminPaymentOrderResponse>> ListRefundRequestsAsync(CancellationToken cancellationToken)
@@ -112,7 +112,7 @@ internal sealed class PaymentAdminService(AppDbContext dbContext, IOptions<PayTr
             .Where(o => o.Status == PaymentOrderStatus.RefundRequested)
             .OrderBy(o => o.RefundRequestedAt)
             .ToListAsync(cancellationToken);
-        return orders.Select(o => o.ToAdminResponse()).ToList();
+        return orders.Select(o => o.ToAdminResponse(_timeProvider.GetUtcNow())).ToList();
     }
 
     public async Task<PaymentAlertsResponse> GetAlertsAsync(int days, CancellationToken cancellationToken)
@@ -128,7 +128,7 @@ internal sealed class PaymentAdminService(AppDbContext dbContext, IOptions<PayTr
             .OrderByDescending(o => o.PaidAt)
             .Take(100)
             .ToListAsync(cancellationToken);
-        return new PaymentAlertsResponse(notifications.Select(n => n.ToResponse()).ToList(), mismatches.Select(o => o.ToAdminResponse()).ToList());
+        return new PaymentAlertsResponse(notifications.Select(n => n.ToResponse()).ToList(), mismatches.Select(o => o.ToAdminResponse(_timeProvider.GetUtcNow())).ToList());
     }
 
     public async Task<AdminPaymentOrderResponse?> CancelAsync(Guid adminUserId, Guid orderId, CancellationToken cancellationToken)
@@ -141,7 +141,7 @@ internal sealed class PaymentAdminService(AppDbContext dbContext, IOptions<PayTr
 
         order.Cancel(adminUserId, _timeProvider.GetUtcNow());
         await dbContext.SaveChangesAsync(cancellationToken);
-        return order.ToAdminResponse();
+        return order.ToAdminResponse(_timeProvider.GetUtcNow());
     }
 
     private static bool TryParseMonth(string month, out DateTimeOffset start)

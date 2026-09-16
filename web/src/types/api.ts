@@ -1417,6 +1417,9 @@ export interface AdminPaymentOrderResponse {
   refundedByUserId: string | null;
   refundRejectedAt: string | null;
   refundRejectionNote: string | null;
+  /** What the refund policy says is owed now: everything inside the seven-day window, the unused
+   *  share of the period after it, less refunds already made. The panel's default amount. */
+  policyRefundMinor: number;
 }
 
 export interface PaymentNotificationResponse {
