@@ -1,7 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
-import { guideRedirectForUnprefixedPath } from "./lib/guide/articles";
+import { guideRedirectForPath } from "./lib/guide/articles";
 import { apexRedirectUrl, isFileRequest, stripIndexHtml } from "./lib/http/canonicalHost";
 
 const withLocale = createMiddleware(routing);
@@ -25,10 +25,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // A locale-less /guide/<slug> goes to the slug's own language. Left to next-intl it would take
-  // the locale guessed from the cookie or Accept-Language, and an English slug under /tr is a 404
-  // (Search Console listed both /guide/<slug> and the /tr/<english slug> it then led to).
-  const guideUrl = guideRedirectForUnprefixedPath(request.nextUrl.pathname);
+  // A guide article at the wrong address — the other locale's slug under /tr or /en, or no locale
+  // at all — is sent to the right one from here, permanently. Here and not in the page: the
+  // article pages are static, and a redirect from inside one is a runtime static-to-dynamic error.
+  const guideUrl = guideRedirectForPath(request.nextUrl.pathname);
   if (guideUrl) {
     return NextResponse.redirect(new URL(`${guideUrl}${request.nextUrl.search}`, request.url), 301);
   }

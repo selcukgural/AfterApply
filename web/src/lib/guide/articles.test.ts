@@ -11,7 +11,7 @@ import {
   findArticleByKey,
   findArticleBySlug,
   guidePath,
-  guideRedirectForUnprefixedPath,
+  guideRedirectForPath,
   isGuideLocale,
   resolveGuideSlug,
 } from "./articles";
@@ -307,27 +307,41 @@ describe("a slug in the wrong locale still finds its article", () => {
   });
 });
 
-describe("a locale-less /guide/<slug> goes to the slug's own language", () => {
+describe("the proxy's guide redirects", () => {
   const article = findArticleByKey("kariyer-net-application-history")!;
 
-  it("prefixes a Turkish slug with /tr and an English one with /en", () => {
-    expect(guideRedirectForUnprefixedPath(`/guide/${article.copy.tr.slug}`)).toBe(
+  // Search Console: /tr/guide/export-linkedin-application-history and the reverse.
+  it("sends the other locale's slug under a prefix to that locale's own slug", () => {
+    expect(guideRedirectForPath(`/tr/guide/${article.copy.en.slug}`)).toBe(
       `/tr${GUIDE_PATH}/${article.copy.tr.slug}`,
     );
-    expect(guideRedirectForUnprefixedPath(`/guide/${article.copy.en.slug}`)).toBe(
+    expect(guideRedirectForPath(`/en/guide/${article.copy.tr.slug}`)).toBe(
       `/en${GUIDE_PATH}/${article.copy.en.slug}`,
     );
-    expect(guideRedirectForUnprefixedPath(`/guide/${article.copy.en.slug}/`)).toBe(
+    expect(guideRedirectForPath(`/en/guide/${article.copy.tr.slug}/`)).toBe(
       `/en${GUIDE_PATH}/${article.copy.en.slug}`,
     );
   });
 
-  it("leaves everything else to the locale middleware", () => {
-    expect(guideRedirectForUnprefixedPath("/guide")).toBeNull();
-    expect(guideRedirectForUnprefixedPath("/guide/no-such-article")).toBeNull();
-    expect(guideRedirectForUnprefixedPath(`/tr/guide/${article.copy.tr.slug}`)).toBeNull();
-    expect(guideRedirectForUnprefixedPath(`/guide/${article.copy.en.slug}/extra`)).toBeNull();
-    expect(guideRedirectForUnprefixedPath("/help/faq")).toBeNull();
+  it("prefixes a locale-less Turkish slug with /tr and an English one with /en", () => {
+    expect(guideRedirectForPath(`/guide/${article.copy.tr.slug}`)).toBe(`/tr${GUIDE_PATH}/${article.copy.tr.slug}`);
+    expect(guideRedirectForPath(`/guide/${article.copy.en.slug}`)).toBe(`/en${GUIDE_PATH}/${article.copy.en.slug}`);
+    expect(guideRedirectForPath(`/guide/${article.copy.en.slug}/`)).toBe(`/en${GUIDE_PATH}/${article.copy.en.slug}`);
+  });
+
+  it("leaves a correct address, an unknown slug and everything else alone", () => {
+    for (const entry of GUIDE_ARTICLES) {
+      for (const locale of GUIDE_LOCALES) {
+        expect(guideRedirectForPath(`/${locale}${GUIDE_PATH}/${entry.copy[locale].slug}`)).toBeNull();
+      }
+    }
+    expect(guideRedirectForPath("/guide")).toBeNull();
+    expect(guideRedirectForPath("/tr/guide")).toBeNull();
+    expect(guideRedirectForPath("/guide/no-such-article")).toBeNull();
+    expect(guideRedirectForPath("/tr/guide/no-such-article")).toBeNull();
+    expect(guideRedirectForPath("/de/guide/no-such-article")).toBeNull();
+    expect(guideRedirectForPath(`/guide/${article.copy.en.slug}/extra`)).toBeNull();
+    expect(guideRedirectForPath("/help/faq")).toBeNull();
   });
 });
 

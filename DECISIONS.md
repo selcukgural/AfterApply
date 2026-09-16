@@ -7166,3 +7166,16 @@ yumuşak inişi olmamasıydı.
 `stripIndexHtml` 2, sayfa/proxy kaynak sözleşmesi 2), tsc, eslint; local dev'de 8 curl (308/301
 hedefleri ve yönlendirilen makalenin 200 verdiği). Entegrasyon: `SiteRootTests` 3/3 +
 `ClientConfigTests` 7/7. Deploy sonrası Search Console'da "Doğrulamayı başlat" kullanıcıda.
+
+**Düzeltme (aynı gece, PR #63).** Deploy sonrası dil-çapraz slug prod'da 308 değil **500** verdi:
+"Page changed from static to dynamic at runtime … reason: headers". Rehber sayfaları SSG; sayfa
+içinden `permanentRedirect` (ve meğer `notFound()` da) statik sayfayı çalışma anında dinamiğe
+çevirmeye kalkıyor, Next bunu reddediyor — dev sunucusu bu kontrolü yapmadığı için yerelde 308
+görünmüştü. **Kural: rehber sayfası kendi kendini yönlendirmez; yönlendirme proxy'de.**
+`guideRedirectForPath` artık iki biçimi de (ön ekli dil-çapraz + ön eksiz) proxy'de 301 ile
+karşılıyor; sayfa sade `findArticleBySlug` + `notFound`. Yan bulgu: bilinmeyen slug
+(`/tr/guide/yok-boyle`) prod'da zaten 500'dü (aynı hata, `notFound` yolundan) →
+`export const dynamicParams = false`: `generateStaticParams`'ta olmayan slug sayfa çalışmadan 404.
+Doğrulama bu kez **prod build** ile (`next build && next start`): 301 hedefleri, yönlendirilen
+makale 200, bilinmeyen slug 404, log'da hata yok. Kaynak-sözleşme testi sayfada `redirect(`
+/`force-dynamic` olmamasını ve `dynamicParams = false`'u pinliyor.
