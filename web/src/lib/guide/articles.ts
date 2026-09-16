@@ -241,7 +241,9 @@ export type GuideSlugResolution = {
    * exists, just under this locale's own slug. Search Console showed Google (and the language
    * switcher, which keeps the path and swaps the prefix) asking for `/tr/guide/<english slug>`
    * and getting a 404 — the locale in the URL is what the reader chose, so they get that locale's
-   * article at its own address rather than a dead end.
+   * article at its own address rather than a dead end. Acted on by the proxy, never by the page:
+   * the article pages are static, and a redirect issued from inside one turns it dynamic at
+   * runtime, which Next refuses with a 500 (seen in production on 2026-09-16).
    */
   redirectTo?: string;
 };
@@ -261,16 +263,29 @@ export function resolveGuideSlug(slug: string, locale: GuideLocale): GuideSlugRe
 }
 
 /**
- * Where a locale-less `/guide/<slug>` should go. next-intl would otherwise prefix it with the
- * locale it guesses from the cookie or Accept-Language, and an English slug under `/tr` is a 404;
- * the slug itself says which language the reader wants, so that language wins here. Anything else
- * (unknown slug, `/guide` itself, an already-prefixed path) is null and takes the normal route.
+ * Where a guide URL that names a real article at the wrong address should go, or null when the
+ * path is fine (or not a guide article at all) and takes the normal route. Two shapes:
+ *
+ * - `/<locale>/guide/<slug>` where the slug is the *other* locale's: the locale in the URL wins,
+ *   so the reader gets that locale's article at its own slug (see `resolveGuideSlug`).
+ * - `/guide/<slug>` with no locale: next-intl would prefix it with the locale it guesses from the
+ *   cookie or Accept-Language, and an English slug under `/tr` is the first shape all over again;
+ *   the slug itself says which language the reader wants, so that language wins here.
+ *
+ * Unknown slugs, `/guide` itself and every other path are null.
  */
-export function guideRedirectForUnprefixedPath(pathname: string): string | null {
-  const match = /^\/guide\/([^/]+)\/?$/.exec(pathname);
-  if (!match) return null;
+export function guideRedirectForPath(pathname: string): string | null {
+  const prefixed = /^\/(tr|en)\/guide\/([^/]+)\/?$/.exec(pathname);
+  if (prefixed) {
+    const locale = prefixed[1] as GuideLocale;
+    const resolved = resolveGuideSlug(decodeURIComponent(prefixed[2]), locale);
+    return resolved?.redirectTo ? `/${locale}${resolved.redirectTo}` : null;
+  }
 
-  const slug = decodeURIComponent(match[1]);
+  const unprefixed = /^\/guide\/([^/]+)\/?$/.exec(pathname);
+  if (!unprefixed) return null;
+
+  const slug = decodeURIComponent(unprefixed[1]);
   for (const locale of GUIDE_LOCALES) {
     const article = findArticleBySlug(slug, locale);
     if (article) return `/${locale}${articlePath(article, locale)}`;
