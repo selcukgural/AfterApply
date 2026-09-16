@@ -5572,6 +5572,101 @@ içermediği, demo değerlerin `scene-job.html` ile aynı olduğu, `components/l
 `<img>`/`next/image`/ekran görüntüsü bulunmadığı, hero parıltısının dekoratif kaldığı. Tasarım
 kanvası: claude.ai/code/artifact/4666412e-242d-4ee7-9366-639d27ab2668 (seçilen A + keşif taslakları).
 
+## LinkedIn ilan kaynağı: JSearch yerine kendi fetch katmanımız; Pro haftalık çekme altyapısı, bayrak kapalı (2026-09-12)
+
+JSearch Türkiye'yi kapsamadığı için (`feat/jsearch-integration` branch'i "elde tutulur ama
+kullanılmaz", yukarıda) TR ilan kaynağı sorusu açıktı. Kullanıcı, LinkedIn'in oturumsuz arama
+URL'sinin sonuç verdiğini gözlemledi; bu turda önce **kaynak olarak kullanılabilir mi** araştırıldı,
+sonra Pro planındaki haftalık çekme altyapısı bunun üstüne kuruldu. Ürün planı değişmedi (Pro
+girdisi, yukarıda): her Pazartesi 04:00 ödemiş kullanıcının kriterine uyan ilanlar çekilir, sonra
+skorlanır, "N ilan hazır" e-postası gider. **Tek fark ilan kaynağı.**
+
+**Araştırma (canlı ölçüm, 12 Eylül).** Oturumsuz, çerezsiz, dürüst bot UA ile:
+- `GET /jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=&location=Türkiye&f_TPR=r604800&start=N`
+  → 200, sayfa başına 10 kart (`urn:li:jobPosting:{id}`, başlık, şirket + şirket URL'si, şehir,
+  `<time datetime>`, ilan URL'si). `f_WT=2` (remote) ve `f_TPR=r{saniye}` kabul ediliyor.
+- `GET /jobs-guest/jobs/api/jobPosting/{id}` → 200, tam açıklama (~5.5k karakter), seniority /
+  istihdam tipi / job function / industries, başvuran sayısı.
+- Sınırlar: sorgu başına **sert tavan 100** (start ≥ 100 boş); tam eşleşme sayısı (".NET Developer"
+  TR 30 gün → 54) aşılınca API "ilgili" ilanlarla **dolduruyor** (start=90'da "IT Analisti", "Vibe
+  Coder Intern") → yalnızca ilk 3–5 sayfa güvenilir. Maaş 100 kartın hiçbirinde yok. ~60 ardışık
+  istekte 429 gelmedi. Cloud Run egress IP'sinden LinkedIn şirket sayfası fetch'leri prod'da
+  çalışıyor (loglar 7–9 Eylül) → datacenter IP engeli şu an yok.
+
+**Politika ve karar.** LinkedIn `robots.txt`: `User-agent: * / Disallow: /`; başlık yorumu
+otomatik erişimi "strictly prohibited" ilan edip `whitelist-crawl@linkedin.com` başvurusuna
+yönlendiriyor; `/jobs-guest/` Googlebot için bile `Disallow`. Mevcut tek-URL fetch'lerimiz (link
+önizleme, şirket zenginleştirme) de aynı sınıfta; fark ölçek ve niyet. **Kullanıcı kararı: düşük
+hacimle ilerle** — dürüst ve ayırt edilebilir UA (`EKariyerimJobSource/1.0`), global günlük istek
+bütçesi (`JobSources:MaxRequestsPerDay=200`), sorgu başına en fazla 5 sayfa, istekler arası 1.5–3 s,
+içerik yeniden yayınlanmaz (kullanıcıya yalnızca kendi kriterine gelenler, LinkedIn'e link), ve
+**429/403/999 ya da authwall/login redirect'inde 24 saat otomatik durma**. Whitelist başvurusu açık
+bir seçenek olarak duruyor. Bu koşullar kalkarsa karar da kalkar.
+
+**Tasarım (ana kararlar).**
+- `main` üzerinde yeni `JobSources` modülü; JSearch branch'i merge edilmedi (RapidAPI kredi/kota
+  etrafında kurulu, 49 alanlık DTO). Fikirleri taşındı: UserId'siz paylaşımlı posting tablosu,
+  defter tabanlı bütçe, admin override'lı kullanıcı limitleri, `RemoveAllLoggers()`, bayrak → 404.
+- Posting'ler ayrı tabloda (`JobSourcePostings`), `Jobs`'ta değil: `Job` → `Company` zorunlu, her
+  ilan için şirket üretmek başvuru tarafını kirletirdi. `(Source, ExternalId)` tekil; açıklama düz
+  metin, HTML asla saklanmıyor.
+- Kriter = 1–3 unvan × 1 konum (+remote); aynı normalize sorgu kullanıcılar arası **7 gün
+  paylaşılır** (`JobSourceQueries.KeyHash`); kullanıcıya bir ilan **bir kez** teslim edilir
+  (`UserJobSourceDeliveries` PK); haftalık tavan varsayılan **50**, kullanıcı bazında admin
+  override (`UserJobSourceSettings`). Sıralama: kaynak rank'ı, unvanlar arası round-robin.
+- **Zaten başvurulan ilan teslim edilmez, sayısı söylenir:** posting'in id'si kullanıcının
+  başvurusuna bağlı `Job.ExternalId` / `Job.Url` / `Application.JobUrl`'den çıkan id kümesiyle
+  eşleşirse düşer; `UserJobSourceRuns` (aday / teslim / başvurulmuş / daha önce gösterilmiş)
+  sayıları tutar, listeleme ucu `run` olarak döner. Çıkarılan ilanın kimliği saklanmaz. Bunun için
+  `LinkedInJobIdExtractor` slug URL'lerini de (`/jobs/view/title-at-company-{id}`) okur oldu —
+  yan etkisi olumlu: slug URL'li başvurular artık `ExternalId` alıyor. `TrackedJob` hariç tutulmuyor.
+- **Ödemiş kullanıcı = `ProEntitlements`** (UserId, ActiveUntil, Source Manual/PayTr): PayTR gelene
+  kadar admin `PUT /api/admin/pro/entitlements/{userId}` ile yazıyor; ödeme entegrasyonu aynı
+  satırı yazacak. Sweep yalnızca aktif entitlement + kriter + CV + son 30 günde giriş (refresh
+  token) olan kullanıcı için çalışır — Pro planındaki "boşa çalışma yok" kuralı.
+- **Admin hiçbir şeyi tetiklemez.** Job Hangfire `job-source-sweep` (`0 4 * * 1`) olarak kendi
+  kendine koşar; elle tetik ucu yok. Aynı hafta ikinci koşu yeni teslim üretmez (idempotent), bu
+  yüzden min-instances=0'da kaçan tick sorun değil. `[DisableConcurrentExecution]` bilerek yok:
+  Hangfire recurring job'ı depoda tek kez planlar, örnek sayısı kaç olursa olsun çakışma olmaz.
+- **Polly (`Microsoft.Extensions.Http.Resilience`, repoda ilk kullanım)** yalnızca bu istemcide,
+  **özel** pipeline: retry en fazla 2 (üstel + jitter), yalnızca ağ hatası / deneme timeout'u /
+  5xx için; **429/403/999 retry edilmez, breaker'ı tetiklemez, `Retry-After`'a uyulmaz** — bunlar
+  "dur" sinyali. Standart handler bilerek kullanılmadı (429'u retry ediyor). Kalıcı 24 saatlik
+  durma DB'deki defterde (`JobSourceFetches`), Cloud Run örnekleri arası ortak. Mevcut link
+  önizleme / şirket zenginleştirme istemcileri değişmedi (kullanıcı tetikli; retry çıkış
+  amplifikasyonu yaratır).
+- Gizlilik: kullanıcının kriteri (unvan, konum) LinkedIn'e URL olarak gidiyor → `/privacy`
+  cross-border üçüncü vaka + `dataCollection.item6` (tr/en) **bayraktan önce** yayında ("bayrakla
+  birlikte hareket eder"). Defterde URL/anahtar kelime yok, HttpClient logger'ları kapalı, log
+  özeti sayılardan ibaret.
+
+**Kapsam dışı (sonraki turlar):** skorlama (Gemini), "N ilan hazır" e-postası, web UI, "başvurdum"
+bağlantısı, PayTR entegrasyonu, kariyer.net kaynağı, Cloud Scheduler tetikleyici. Hepsi
+`UserJobSourceDeliveries` üstüne kurulur.
+
+**Merge kararı (kullanıcı, aynı gün):** bu iş `feat/linkedin-job-source` branch'inde **commit'li ama
+merge edilmemiş** bekler; `main`'e merge **PayTR'den dönüş gelip ödeme netleşince** yapılır, çünkü
+özellik ücretli paketin parçası ve ödeme olmadan açılmayacak. `feat/jsearch-integration` da aynı
+şekilde kendi branch'inde park halinde kalır — iki geliştirme birbirinden bağımsız, ikisi de ödeme
+kararını bekliyor. Merge öncesi yapılacaklar: `main` üzerine rebase (migration sırası; bu branch'in
+migration'ı `20260912175002_AddJobSourcesAndProEntitlement`; rebase'de `20260914175914` olarak yeniden üretildi), unit + entegrasyon suite'ini yeniden
+koşturmak, `/privacy` metninin hâlâ doğru olduğunu teyit etmek. Bayrak merge'den sonra da kapalı
+kalır; açma reçetesi `DEPLOYMENT.md` §14.
+
+**Doğrulama.** Unit: parser'lar (gerçek yanıt şekli, sentetik şirketler), URL builder (escape,
+SSRF), normalizer, ISO hafta, bütçe, validator'lar, istemci + pipeline (503→200 ikinci denemede,
+429/403/999'da tek istek, authwall/dış redirect → Blocked). Entegrasyon (stub LinkedIn, gerçek
+sweep): aynı kriterli iki kullanıcı → tek fetch; entitlement'sız/CV'siz/pasif taranmaz;
+başvurulmuş ilan düşer ve sayılır (ExternalId ile ve yalnızca URL ile); haftalık limit (50 / admin
+5); aynı hafta ikinci koşu boş, sonraki hafta yalnızca yeni ilan; IDOR (başkasının posting'i → 404);
+admin 403; hesap silme cascade (posting kalır); 429 → koşu durur, cooldown, ertesi gün devam;
+5xx retry; günlük bütçe sorgular ve detaylar arası paylaşılır; bayrak kapalı → 404 + sweep no-op;
+`NoOutboundHttpTests` yeni istemciyi kapsıyor.
+
+**Açık üretim sorunu (bu işten bağımsız):** 12 Eylül 16:37–16:39 UTC prod loglarında
+`Npgsql.PostgresException 53300` — Cloud SQL bağlantı slotu tükenmesi. Aynı gün ayrı kayıtta çözüldü:
+"Cloud SQL bağlantı slotları tükendi (53300)", hemen aşağıda.
+
 ## Cloud SQL bağlantı slotları tükendi (53300): instance × havuz aritmetiği sabitlendi (2026-09-12)
 
 **Belirti.** Prod loglarında `Npgsql.PostgresException 53300: remaining connection slots are
@@ -6161,6 +6256,303 @@ gereken adımı gizlemekten iyidir (`resolveGmailEmptyState`).
 **Testler:** integration — `EmailSignalTests`: flag kapalıyken 404, taze hesapta `false`,
 sinyalden sonra `true`. Web — `emptyState.test.ts` (üç dal), `moderationTable.contract.test.ts`.
 
+## Haftalık ilan eşleştirme tamamlandı: Gemini puanlama, web arayüzü, özet e-postası, kariyer.net; PayTR anlaşıldı, entegrasyon en sona (2026-09-14)
+
+**Bağlam ve karar.** 12 Eylül'de "ödeme netleşene kadar park" denen `feat/linkedin-job-source`
+branch'i için kullanıcı aynı gün şunu söyledi: PayTR ile anlaşıldı, ödeme alınabilir; ama
+entegrasyon henüz yapılmadı — "bu işle ilgili tüm geliştirmeleri yaptıktan sonra en son ona
+göre geçeriz". Karar: branch `main` üzerine rebase edildi ve 12 Eylül'de "kapsam dışı (sonraki
+turlar)" denen parçalar aynı branch'te tamamlandı; **PayTR entegrasyonu bu branch'in son işi**,
+merge ondan sonra. Bayrak (`JobSources:Enabled=false`) merge'den sonra da kapalı kalır; açma
+reçetesi `DEPLOYMENT.md` §14 (yeniden yazıldı).
+
+**Rebase.** 9 commit gerideydi; çakışmalar (Program.cs, DI, DbContext, appsettings, deploy.yml,
+DECISIONS/DEPLOYMENT/README, tr/en mesajlar) hepsinde "iki taraf da eklemişti" biçimindeydi, iki
+taraf tutuldu. Bu branch'in migration'ı `main`'in üç yeni migration'ının (`AddCompanyReviews`,
+`AddStaleSuggestionDismissedAt`, `AddRequestAudits`) *önüne* sıralanacaktı; birebir aynı içerikle
+`20260914175914_AddJobSourcesAndProEntitlement` olarak yeniden üretildi (satır kümesi eskisiyle
+özdeş, sadece damga değişti). Gizlilik metninde `dataCollection.item6` `main`'deki işlem kaydı
+maddesiyle çakıştı → bu özelliğin maddesi `item7` oldu. DEPLOYMENT'taki "§13" → "§14".
+
+**1. Puanlama (Gemini, Vertex AI).** Her teslim edilen ilan, kullanıcının varsayılan CV'siyle
+tek bir model çağrısında karşılaştırılır: 0–100 uyum, bir-iki cümle gerekçe, uyan/eksik kriter
+listeleri, ilanın istediği yetkinlikler. Kararlar:
+- **Sağlayıcı sabit, model config:** KVKK gerekçesiyle 2 Eylül'de OpenAI eşleştirme silinmişti;
+  CV metni yalnızca Vertex AI `europe-west1`'e gider (ADC, anahtar yok) — CV taramasının B
+  katmanıyla aynı hat. `VertexGenerateContentClient` ortak sınıf olarak çıkarıldı, iki özellik de
+  onu kullanıyor (bölge URL'de görünür, hata gövdesi asla loglanmaz — CV içerebilir).
+  Model `JobSources:Scoring:Model = gemini-2.5-flash` (12 Eylül maliyet modeli); kendi
+  `ProjectId`'si var, CV taramasınınkiyle paylaşılmıyor ki biri kapatılınca öbürü etkilenmesin.
+  **Kullanıcının isteği (aynı gün): yayına almadan önce 2.5 Flash vs Flash-Lite kıyası gerçek CV +
+  gerçek ilanlarla ölçülecek** (`CvReviewEvalTests` kalıbı), sonuç buraya yazılıp model ona göre
+  sabitlenecek; Vertex'in model yaşam döngüsü sayfasından emeklilik tarihi de kontrol edilecek.
+- **Rıza ayrı ve zorunlu:** CV yükleme rızası "dosyam hiçbir üçüncü tarafa gönderilmez" diyordu;
+  bu özellik o vaadin tek istisnası. Kriter formunda hiçbir zaman önceden işaretli gelmeyen ayrı
+  bir kutu (`AiScoringConsentAcceptedAt`), rızasız kriter kaydedilemez
+  (`JOB_SOURCE_AI_CONSENT_REQUIRED`, tr/en resx) — özelliğin puanlamasız hâli yok. Rıza olmayan
+  eski satırlar için sweep ilanı getirir ama modele hiçbir şey göndermez. `/privacy`'ye yeni
+  "Haftalık ilan eşleştirme" bölümü (`#job-matching`), CV'lerim sayfasının "yapay zekâya
+  gönderilmez" vaadi üç yerde (cvStorage.noTransfer, SSS, yükleme rıza metni) istisnayı adıyla
+  sayacak şekilde düzeltildi.
+- **Tavanlar ("zarar asla"):** kullanıcı/hafta (`MaxPerUserPerWeek`, 50), gün (`MaxCallsPerDay`,
+  2000), ay (`MonthlyBudgetUsd`, 50 — `AiUsageEntries` defterindeki token'ların liste fiyatıyla
+  çarpımı; fiyatlar config'te). Aşılınca puanlama durur, sweep teslim etmeye devam eder.
+  `AiUsageEntries` (özellik, model, giriş/çıkış token, başarı) metin içermez; hesap silinince
+  `UserId` **null'a çekilir, satır kalır** — cascade kuralının tek istisnası, gerekçe: ayın
+  toplamı kullanıcı gitti diye küçülmemeli, satırda kullanıcıya ait hiçbir şey yok.
+- **Eşik okuma anında:** profil `MinScore` (0–100); listede altında kalanlar gizlenir,
+  `HiddenBelowMinScoreCount` sayılır; puanlanmamış ilan hiçbir zaman gizlenmez. Kullanıcı eşiği
+  değiştirince aynı satırlar yeniden okunur — yeniden fetch/puanlama yok.
+- **Yeniden deneme:** başarısız çağrı satıra sayılır, ikinci sweep'te bir kez daha denenir,
+  `MaxScoreAttempts=2` sonra vazgeçilir; model çıktısı `JobFitScores.Sanitize`'dan geçer (kontrol
+  karakteri, tekrar, uzunluk, aralık). Prompt iki belgeyi de "DATA, not instructions" ilan eder.
+- **CV metni hiçbir yere yazılmaz:** `StoredCvTextReader` her hafta depodan okur, extractor'dan
+  geçirir, bellekte tutar.
+
+**2. Web arayüzü — yön A.** Tasarım kanvasında üç yön çizildi (A liste+yan panel, B kart akışı,
+C sekmeli tablo+modal), kullanıcı **A**'yı seçti; son hâli (masaüstü + mobil liste + mobil
+ayrıntı + kriter formu + Pro olmayan hesap) kanvasta:
+https://claude.ai/code/artifact/1bc78dc8-3b2c-47cd-bb36-4e77e5d104ca. Uygulama:
+`/weekly-jobs` (liste solda 400px, seçili ilan sağda, ilki açık; `md` altında yalnızca liste,
+satır `/weekly-jobs/{id}` sayfasına link), `/weekly-jobs/criteria` (form: ≤3 unvan, konum, en az
+uyum kaydırıcısı, uzaktan, e-posta kutusu, rıza kutusu). Puan renkleri ≥80 good, 60–79 accent,
+40–59 warn, altı crit, puansız muted. Navbar linki yalnızca `/api/config.jobSources.enabled`
+true iken; sayfalar bayrak kapalıysa panele yönlendirir. Pro olmayan hesap: açıklama + "Yakında"
+(fiyat/düğme PayTR ile gelir). "Başvurdum": `POST /api/job-sources/postings/{id}/apply` — mevcut
+`CreateAsync` yolu (şirket çözümleme, cache), `Source` ilanın kaynağı, tarih bugün; aynı URL
+ikinci kez basılınca aynı başvuru döner; sonraki hafta uygulanmış sayılıp listeden düşer.
+Yeni uçlar: `GET /api/job-sources/status` (Pro mu, CV var mı, kriter var mı). Tarayıcıda
+doğrulandı (test kullanıcısı, SQL ile tohumlanmış hafta): form/rıza hatası/kayıt, liste+ayrıntı,
+eşik gizleme metni, mobil ayrıntı, Başvurdum → başvuru sayfası, Pro olmayan hâl, `#job-matching`.
+Kaynak-tarama testi `weeklyJobs.contract.test.ts` (bayrak kapısı, innerHTML yok, rıza kutusu
+önceden işaretsiz, mobil link, iki dilde kopya, vaat istisnası).
+
+**3. "N ilan hazır" e-postası.** Sweep puanlamadan sonra, o hafta teslimatı olan ve
+`EmailDigestEnabled` (varsayılan açık, formda kutu) kullanıcılar için kullanıcı başına bir
+Hangfire job'ı kuyruğa koyar (`IJobSourceDigestService.SendAsync` — sağlayıcı arızası kullanıcı
+başına retry'lanır, sweep'i düşürmez). İçerik sayfanın gösterdiği: eşik üstü ilan sayısı, en
+iyi ilanın adı/şirketi/puanı, `App:WebBaseUrl/{locale}/weekly-jobs` linki. Şablon
+`EmailTemplates.WeeklyJobsReady` (tr/en seed, yerinde düzenlenebilir); kazınmış başlık/şirket
+HTML-encode edilir (test: `<img onerror>` metin olarak gider). Haftada bir: `UserJobSourceRuns.DigestSentAt`.
+Gösterilecek ilan yoksa e-posta gitmez ama hafta damgalanır.
+
+**4. kariyer.net ikinci kaynak.** Canlı ölçüm (14 Eylül, dürüst bot UA):
+`robots.txt` `/is-ilanlari` ve `/is-ilani`'ye izin veriyor (yalnızca `/filtre` yasak) —
+LinkedIn'in tersine **politika sorunu yok**. Liste sunucu tarafında render ediliyor:
+`/is-ilanlari/{şehir-slug}?kw=…` → site 301 ile `?ct=34,82` (şehir id'leri) ekliyor, izlenir;
+sayfa n: `/is-ilanlari/{slug}-{n}?…&cp={n}`; ~50 kart/sayfa; kartlar `data-test` öznitelikli
+(`ad-card-item`, `ad-card-title`, `subtitle`, `location`, `work-model`, göreli tarih "3 gün /
+12 saat / Dün"). Bilinmeyen şehir ülke geneli listeye yönlendiriyor → **boş sayfa sayılır**
+(yanlış yerden 50 ilan değil). Detay `/is-ilani/{id}` → 301 kanonik slug URL'ye;
+`data-test="qualifications-and-job-description"` bloğu, `lastPublishDate`, "Aday Kriterleri"
+(Tecrübe → seniority). Uzaktan filtresi URL'de yok, kartın `work-model`'inden istemci tarafında.
+Tasarım: `IJobSourceClient` (`Source`, sayfa tabanlı `SearchAsync` → `JobSourceSearchPage(Cards,
+HasMore)`), ortak `JobSourceHttpClient` fetch döngüsü (host beyaz listesi, login duvarı, izin
+verilen statüler alt sınıfta), `KariyerNetJobSourceClient` kendi Polly pipeline'ıyla. Sweep
+kaynak farkındalı: **bütçe ve cooldown kaynak başına** (LinkedIn 429'u kariyer.net'i
+durdurmaz; admin usage `sources[]`), profil her unvan için kaynak başına bir paylaşımlı sorgu
+üretir, round-robin kaynak lane'leri arasında da döner, başvurulmuş eleme (kaynak, id)
+çiftiyle (`KariyerNetJobIdExtractor`). `JobSources:KariyerNetEnabled` (varsayılan true) ikinci
+kaynağı tek başına kapatır. Yanıtlarda `source`; UI "İlanı {kaynak} üzerinde aç". Gizlilik:
+kriter kariyer.net'e de gidiyor — yurt dışı aktarımı değil, `jobSourceTransfer`'de bütünlük için
+anıldı. Slug Türkçe harfleri ve birleşik işaretleri (i̇) ASCII'ye katlar.
+
+**Doğrulama.** Unit 707 → **753** (sanitize, teslimat satırı sınırları, maliyet, Vertex
+sağlayıcısı stub'la, kariyer.net builder/parser/istemci gerçek sayfalardan alınmış fixture'la,
+slug). Entegrasyon (podman): JobSources **25/25** (puanlama gerçek PDF → depo → extractor → sahte
+model; eşik; rıza; kullanıcı/gün tavanları; retry+vazgeçme; defter hesaptan sonra; özet
+e-postası bir kez + kapatma; iki kaynak tek fetch; kariyer.net başvuru eleme; kaynak başına
+stop), Resend digest şablonu/encode 4/4, mevcut sweep/stop/flag-off testleri iki kaynağa
+uyarlandı. Web: tsc, eslint, vitest 405 → **412**. Tam entegrasyon suite'i aşağıda.
+
+**Kalan (bu branch'te, sırayla):** (a) model kıyası (yukarıda), (b) **PayTR entegrasyonu**
+(`ProEntitlements` satırını yazacak; Pro olmayan sayfadaki "Yakında" düğmesi ve fiyat), sonra
+merge. Cloud Scheduler tetikleyicisi gereksiz (min-instances=1, §13).
+
+## Uyum puanı modeli: gemini-2.5-flash kaldı, Flash-Lite elendi; thinking kapalı (2026-09-14, akşam)
+
+**Ölçüm.** Kullanıcının isteğiyle (aynı gün) gerçek CV + gerçek ilanla kıyas yapıldı:
+`JobFitScoringEvalTests` (opt-in, `JOB_FIT_EVAL=1`, `CvReviewEvalTests` kalıbı; korpus ve CV
+repoda değil). CV: kullanıcının TR pazarı CV'si (PDF). Korpus: o gün gerçek istemcilerle çekilmiş
+15 ilan — 10 ".net developer / İstanbul" (5 LinkedIn, 5 kariyer.net), 2 "adjacent" (Java/Node
+full-stack), 3 "off" (satış, muhasebe). İki model, aynı prompt, aynı şema, temperature 0,
+Vertex `europe-west1`, proje `ekariyerim`.
+
+**Bulgu 1 — üretimi düşürecek hata yakalandı:** ilk koşuda **2.5 Flash 15/15 boş cevap** döndü
+(HTTP 200, metin yok). 2.5 Flash bir *thinking* modeli; düşünme token'ları `maxOutputTokens`
+(1024) bütçesinden düşüyor, cevaba yer kalmıyor (`finishReason MAX_TOKENS`). Flash-Lite'ta
+thinking varsayılan kapalı olduğundan 15/15 gelmişti. Düzeltme: `VertexGenerateContentCall`'a
+`ThinkingBudget` eklendi, puanlama `JobSources:Scoring:ThinkingBudget = 0` ile çağırıyor,
+`maxOutputTokens` 2048; `finishReason` ve `thoughtsTokenCount` artık okunuyor (thinking
+token'ları çıktı olarak faturalanır, deftere dahil). CV taramasının çağrısı değişmedi (null →
+model varsayılanı). Bu, kıyas yapılmasaydı ilk Pazartesi "hiçbir ilan puanlanmadı" olarak
+görülecekti.
+
+**Bulgu 2 — kalite (thinking kapalı, ikinci koşu, ikisi de 15/15):**
+
+| etiket (n) | 2.5 Flash | 2.5 Flash-Lite |
+|---|---|---|
+| net (10) | ort 69, aralık 20–95 | ort 83, aralık 75–95 |
+| adjacent (2) | 35, 35 | 30, 75 |
+| off (3) | 0, 0, 0 | 30, 0, 30 |
+| token giriş/çıkış (15 ilan) | 36.119 / 5.086 | 36.119 / 6.058 |
+| medyan gecikme | 2,3 s | 1,7 s |
+| liste fiyatıyla 15 ilan | ≈ $0,024 | ≈ $0,006 |
+
+Flash-Lite'ın yüksek puanları **uydurma eşleşmelerden** geliyor: Dynamics 365 CRM ilanına 75
+verip "matched" listesine "Microsoft Dynamics 365 üzerinde geliştirme"yi yazıyor — kendi
+özeti aynı cümlede tecrübenin olmadığını söylüyor; Node/TypeScript full-stack ilanına 75 verip
+"Node.js ile backend", "PostgreSQL şema tasarımı"nı eşleşmiş sayıyor (CV .NET); satış ve muhasebe
+ilanlarına "MS Office, takım çalışması" diye 30 veriyor. Flash aynı ilanlara 20 / 35 / 0 veriyor
+ve gerekçeleri doğru ("CRM temel gereksinimi eksik", "TypeScript/Node/React odaklı, .NET
+uzmanısınız", "ilgisi yok"). "net" ortalamasının düşük olması Flash'ın kusuru değil: 20 ve 40
+aldığı iki ilan gerçekten CRM ve Oracle/IFS ERP ilanı. Uydurma "uyan kriter" kullanıcıya
+"bu ilana uyuyorsun" demek olduğundan Lite'ın 4× ucuzluğu bu üründe anlamsız.
+
+**Karar.** `JobSources:Scoring:Model = gemini-2.5-flash` **kalır**, thinking kapalı. Maliyet
+gerçek ölçümle: ilan başına ≈ $0,0016 → 50 ilan/hafta ≈ $0,08/hafta ≈ **$0,35/ay/kullanıcı**
+(12 Eylül modelindeki ≈ $1'in altında; giriş ~2.400 token/ilan). Eşik varsayılanı (%60) Flash'ın
+ölçeğine uyuyor: gerçek .NET ilanları 65–95, yakın alan 35, alakasız 0.
+
+**Açık:** Vertex'in model yaşam döngüsü sayfası (JS ile render, buradan okunamadı) yayına
+alırken konsoldan kontrol edilecek — 2.5 Flash'ın emeklilik tarihi; geldiğinde env var'la
+model değişir ve **bu eval yeniden koşulur** (harness hazır, komut test dosyasının başında).
+
+**Ek (aynı gece) — 8 meslek, 36 ilan, Flash vs Pro.** Tek CV'yle karar vermemek için 8 sentetik
+CV yazıldı (frontend, muhasebe, saha satış, İK, makine mühendisi, hemşire, yeni mezun veri
+analisti, dijital pazarlama; TR/EN karışık, kıdem 0–9 yıl) ve 9 meslek için iki siteden 36
+gerçek ilan çekildi. Her CV kendi mesleğinin 4, komşu mesleğin 4 ve alakasız 2 ilanına karşı
+puanlandı; 80 çağrı × 2 model (`gemini-2.5-flash` thinking kapalı, `gemini-2.5-pro` thinking
+1024 — Pro'da kapatılamıyor).
+
+| CV | Flash own / adjacent / off | Pro own / adjacent / off |
+|---|---|---|
+| frontend | 35,75,75,75 / 35,0,25,20 / 0,0 | 30,78,65,65 / 30,30,30,30 / 0,0 |
+| hemşire | 85,45,65,85 / 0,0,0,0 / 0,0 | 95,55,75,95 / 0,0,10,0 / 0,0 |
+| İK | 35,85,85,85 / 0,0,10,20 / 0,0 | 35,80,85,78 / 0,0,29,0 / 0,0 |
+| makine | 30,10,85,75 / 0,20,20,0 / 0,0 | 35,0,78,65 / 29,0,30,10 / 0,0 |
+| muhasebe | 85,85,85,75 / 20,20,20,0 / 0,0 | 75,85,85,65 / 30,30,30,30 / 0,0 |
+| pazarlama | 20,85,92,85 / 20,20,20,20 / 0,0 | 0,75,95,95 / 30,20,10,10 / 0,0 |
+| saha satış | 85,75,75,35 / 20,0,0,0 / 0,0 | 85,75,65,35 / 10,10,29,0 / 0,0 |
+| yeni mezun | 35,20,65,75 / 0,20,0,20 / 0,0 | 55,30,85,65 / 0,30,30,30 / 0,0 |
+
+Okuma: iki model de 80/80 cevap verdi, alakasız ilana ikisi de 0 verdi, "own" içindeki düşük
+puanların hepsi gerekçeli (eğitim hemşiresi sertifikası, tıbbi satış portföyü, MEP/elektrik
+mühendisi vs makine tasarımı, bankacılık iş analisti, Felemenkçe bilen satış uzmanı — arama
+sonucundaki gürültü). Flash'ın "matched" listeleri örnekleme kontrolünde CV'de gerçekten olan
+şeyler (React, REST, Git, Excel, mezuniyet); uydurma yok. Pro daha ayrıntılı gerekçe yazıyor ve
+komşu mesleğe 30 tabanı koyuyor; puanlarda kararı değiştirecek bir fark yok. Bedel: Pro çağrı
+başına ≈ 11 s (Flash ≈ 1,8 s), çıktı token'ı 4× (thinking), liste fiyatıyla ilan başına ≈ $0,013
+(Flash ≈ $0,0012) → 50 ilan/hafta'da ≈ $2,9/ay/kullanıcı, KDV dahil $2,50 taban fiyatta zarar.
+Tekrarlanabilirlik (Flash, aynı korpus iki kez): 15 ilanın 5'inde ±10, hiçbirinde daha fazla —
+kabul edilebilir, eşik civarındaki ilanlar haftalar arasında kayabilir; UI puanı "≈" değil tam
+sayı gösteriyor, bu bilinerek kalıyor.
+
+**Karar (kesinleşti):** `gemini-2.5-flash`, thinking kapalı. Sentetik CV'ler ve korpus
+`tmp`'de, repoda değil; harness (`JobFitScoringEvalTests`, `own/adjacent/off` etiketleri) model
+değişince yeniden koşturulur.
+
+## PayTR iFrame ile Pro plan ödemesi: peşin dönem, tek gerçek kaynak bildirim, iade yalnız panelden (2026-09-15)
+
+**Bağlam.** 14 Eylül'de "PayTR ile anlaşıldı, entegrasyon bu dalın son işi" denmişti. PayTR'ın
+iki adımlı iFrame API dokümanı (get-token + Bildirim URL) ve İade API'si üzerinden entegrasyon aynı
+dalda (`feat/linkedin-job-source`, `main` üstüne rebase edildi) yapıldı. Kullanıcı kararları:
+**iFrame** (kart verisi bizim origin'e hiç gelmesin), **aylık + yıllık** plan (yıllık = 10 aylık;
+fiyat config'te kuruş, lansman değeri henüz verilmedi — `29900/299000` yer tutucu), ödeme öncesi
+**ad soyad + adres + telefon** (PayTR zorunlu tutuyor, fatura için gerekli), hukuki sayfalar
+**iskelet** (metin kullanıcıdan gelecek), bitişe 3 gün kala **hatırlatma e-postası**, iade
+**kullanıcı talebi + admin kararı**, tam iadede Pro **hemen** geri alınır, admin için ayrı
+**Ödemeler paneli** (aylık kazanç/iade/iptal, geçmiş aylar, kuyruk, siparişler, uyarılar).
+
+**iFrame'in bedeli ve karşılığı.** iFrame API'de abonelik/otomatik yenileme yok → Pro "peşin
+dönem": `ProEntitlement.ActiveUntil = max(mevcut bitiş, şimdi) + 1 ay/1 yıl`, bitince kullanıcı
+tekrar öder; hatırlatma e-postası (`pro-expiry-reminder`, dönem başına bir kez,
+`ExpiryReminderSentFor` ile) ve "süreyi uzat" akışı bu yüzden ürünün parçası. Taksit kapalı
+(`no_installment=1`): dijital hizmet, sabit tutar. CSP'de `script-src` **genişlemedi** (2026-09-12'de GIS'i
+reddeden gerekçe korunuyor): PayTR'ın iframeResizer betiği kendi origin'imizden servis ediliyor
+(`web/public/vendor/paytr-iframeResizer.min.js`, MIT). `frame-src https://www.paytr.com` ise
+**global** politikada — ilk denemede yalnız `/pro/checkout` rotasına verilmişti, ama checkout'a
+`/pro`'dan client-side navigation ile gelinince belge hâlâ `/pro`'nun CSP'sini taşıyor ve iframe
+tarayıcıda engellendi (canlı tarayıcı testinde görüldü); CSP belgeye aittir, rotaya değil.
+paytr.com'u her sayfada iframe kaynağı olarak tanımak zararsız. `/pro/return/*` için
+`frame-ancestors 'self' paytr.com` ve o rotada `X-Frame-Options` yok — PayTR'ın `merchant_ok_url`'e top window'u mu yoksa iframe'i mi
+yönlendirdiği dokümanda belirsiz, bu sayfa iki hâlde de çalışır (framed ise `window.top`'a çıkar;
+top bizim origin olduğundan izinli). Sonuca üç bağımsız yol var: checkout sayfasının 3 sn'lik
+poll'u, PayTR'ın yönlendirmesi, framed bounce. **Hiçbir sayfa onay vermez;** sipariş yalnızca
+Bildirim URL'ye gelen HMAC'i doğrulanmış POST ile `Paid` olur.
+
+**Model.** `PaymentOrders` (durumlar: Pending → Paid/Failed/Expired/Cancelled; Paid →
+RefundRequested/Refunded/PartiallyRefunded; **Expired/Cancelled/Failed → Paid izinli** — para
+çekildiyse geç bildirim de onaylanır, `LateApplied` olarak işaretlenir), `merchant_oid` = sipariş
+id'nin tiresiz hâli (PayTR alfanumerik ve ≤64 istiyor), `xmin` concurrency token (aynı sipariş için
+eş zamanlı iki bildirim → ikinci `Duplicate`; entegrasyon testi 6 paralel bildirimle tek uzatma
+doğruluyor). `PaymentNotifications` append-only kanıt: her bildirim ve her iade, sonucuyla
+(`Applied/Duplicate/LateApplied/UnknownOrder/BadHash/Malformed/Error/RefundRecorded`), `hash`
+alanı hariç ham form; ana işlem çökse de ayrı scope'ta yazılır. **Mali kayıt hesapla silinmez:**
+`PaymentOrders.UserId` `SetNull` (AiUsageEntries'ten sonra ikinci istisna), fatura alanları yasal
+saklama için satırda kalır; gizlilik metni (`/privacy#payments`) ve silme/export bildirimleri bunu
+söylüyor, export sipariş özetini içeriyor (sağlayıcı iç bilgileri hariç).
+
+**Cevap disiplini (Bildirim URL).** Yalnızca uygulanan ya da zaten uygulanmış bildirimlere `OK`;
+eksik alan/bozuk hash → 400 (hiçbir şey değişmez), **bilinmeyen `merchant_oid` → 404 non-OK**
+(PayTR tekrar dener ve panelde "Devam ediyor" görünür — bir kayıp siparişin görünür kalması
+tercih edildi), iç hata → 500 non-OK. `total_amount ≠ payment_amount` yine onaylanır ama
+`AmountMismatch` ile admin uyarılarına düşer. Callback `PayTr:Enabled`'a değil `IsConfigured`'a
+bakar: bayrak kapatıldıktan sonra gelen bildirim de işlenir. Request audit opt-out **yok**: uç
+`/api/*` altında, middleware PayTR'ın IP'sini kullanıcısız kaydeder, hiçbir yerde gösterilmez.
+
+**İade: yalnızca bizim sistemden.** `/admin/payments` → PayTR İade API (`return_amount` burada
+kuruş değil `"299.00"` metni; `reference_no` = sipariş id → PayTR tarafında da çift iade engeli).
+Sıra: önce PayTR, sonra sipariş + entitlement geri sarma (`ActiveUntil −= (After − Before)`, yalnız
+tam iadede; önceki dönemden kalan korunur) + kanıt satırı tek transaction'da, sonra e-posta.
+PayTR evet dedi ama bizim commit düştüyse ikinci denemede PayTR "tutar aşıldı" der → admin
+paneldeki referansla `mark-refunded`. **PayTR Mağaza Paneli'nden elle iade yasak** (DEPLOYMENT
+§15 kuralı; panelde kalıcı uyarı). Kısmi iade Pro'ya dokunmaz. Kullanıcı iadeyi uygulamadan
+talep eder (sebep metni), ret notu e-posta ile gider.
+
+**Ödemeler paneli tanımları.** Brüt = o ay `PaidAt` olan siparişlerin `total_amount` toplamı (KDV
+dahil, PayTR komisyonu düşülmemiş), iade hangi ayda yapıldıysa o aya, net = brüt − iade, aylar
+Europe/Istanbul takvimi (`MonthlySummary`, UTC ay başına ay eklemenin kayma hatası yakalanıp
+düzeltildi), test modu ödemeleri toplamlara girmez. Hesap saf ve unit testli.
+
+**Yerelleştirme.** PayTR'ın `failed_reason_code` tablosu (0,1,2,3,6,8,9,10,11,99) web'de tr/en'e
+map'lenir; kod 0'da bankanın Türkçe metni düz metin olarak gösterilir; `-1` bizim: get-token
+reddedildi. Backend `PAYMENT_*` resx anahtarları; e-posta şablonları (`PaymentReceived`,
+`ProExpiring`, `RefundCompleted`, `RefundRejected`) DB seed'i tr/en.
+
+**Açık kalanlar (canlıya alma kapısı).** (1) Fiyatlar; (2) Mesafeli Satış Sözleşmesi + İptal/İade
+metinleri — sayfalar taslak uyarısıyla, noindex ve footer dışında; metin gelince `PUBLIC_PATHS` +
+footer'a alınır; (3) Secret Manager'da üç `afterapply-paytr-*` secret (boş da olsa) + IAM — **deploy
+blocker**, `deploy.yml` onları istiyor; (4) PayTR panelinde Bildirim URL (HTTPS); (5) canlıda
+`TestMode=true` ile test kartı tur atıp `TestMode=false`. Reçete DEPLOYMENT §15.
+
+**Yerel tarayıcı doğrulaması (gerçek PayTR, test modu).** Gerçek mağaza bilgileriyle
+`/weekly-jobs` → ProGate fiyat + "Pro'ya geç" → `/pro` → checkout formu (sözleşme kutusu zorunlu
+doğrulaması) → PayTR get-token gerçek token döndü (30 dk sayaç) → PayTR sayfası iframe'de açıldı;
+PayTR "Bildirim Adresi (URL) bilgisi eksik" dedi — panel ayarı henüz yapılmamış, kart formu ondan
+sonra gelir. Bildirim `scripts/paytr-callback.sh` ile simüle edildi: bozuk hash 400 + hiçbir değişiklik,
+geçerli success → checkout sayfası poll'la kendiliğinden sonuç sayfasına geçti ("Ödemeniz alındı …
+15 Ekim 2026"), `/pro/return` top-level → sonuç sayfası, weekly-jobs kapısı kalktı; kod 6 başarısız
+sipariş yerel mesajla; ayarlar'dan iade talebi; admin panelinde özet/kuyruk/siparişler/uyarılar;
+"Tam iade" gerçek İade API'ye gitti ve PayTR `005 merchant_oid ile başarılı ödeme bulunamadı` dedi
+(sipariş değişmedi, kanıt satırı düştü — imza kabul edildi); ret notuyla talep reddedildi, sipariş
+"Ödendi"ye döndü; sipariş detayı zaman çizgisini gösterdi. Kullanıcı panele Bildirim URL'yi
+(canlı API: `https://afterapply-api-…run.app/api/payments/paytr/callback`) girince yerelde kart
+formu da açıldı: test kartı → PayTR'ın 3-D Secure test ekranı → **PayTR `merchant_ok_url`'e üst
+pencereyi yönlendiriyor** (iframe'i değil; belirsizlik kapandı, framed bounce yine yedek olarak
+kalıyor) → `/pro/return` → sonuç sayfası "doğrulanıyor" (bildirim canlı adrese gitti, henüz deploy
+yok → 404) → script ile bildirim → "15 Kasım 2026" (önceki 15 Ekim bitişinin üstüne bir ay).
+
+**Testler.** Unit 70 (imza vektörleri — dokümandaki birleştirme sırası, `return_amount` biçimi;
+sipariş durum makinesi; entitlement geri sarma/hatırlatma; aylık özet ay sınırları; validator;
+options validator). Integration 46 (`StubPayTrHandler`): checkout imzası birebir, resume, PayTR
+reddi/kesintisi tr/en, callback OK/duplicate/6 paralel/bad hash/tamper/malformed/unknown/late/
+mismatch/silinmiş hesap/audit satırı, iade tam/kısmi/ret/PayTR reddi/mark-refunded/başkasının
+siparişi, admin özet (ay sınırı, iade ayı, test hariç)/liste/filtre/detay/uyarılar/iptal, export,
+expiry ve hatırlatma job'ları. Web (vitest) 12: hata kodu haritası, poll takvimi, para biçimi,
+Pro nav, CSP contract (üç politika + bounce). Bileşen render harness'ı yok; sayfalar tarayıcıda
+elle doğrulanır.
+
 ## Entegrasyon testleri: sınıf başına host, inline iş, sızıntı kapandı — 33 dk'dan 2 dk'ya (2026-09-15, gece)
 
 **Tetikleyici.** Tam paket 410 testte 32 dk 56 s sürüp "Test Run Aborted" ile düştü; ardından tek
@@ -6538,3 +6930,104 @@ kısa sorgu boş, 10 tavan, emekli satır çıkmaz, anonim 401; maaş akışı k
 id 400, ham JSON'da `jobTitle` yok), web 483 + lint temiz. Tarayıcıda: "yazılım" → dört öneri iki
 dilli, "nurse" → TR hemşire satırları, "xyzqwv" → eşleşme yok, yazılıp seçilmeyen → red, seçim →
 kayıt → Maaşlarım TR adıyla, `/en` aynı satır "Software Architect", düzenleme seçimi geri yükler.
+
+## Pro / Haftalık İlanlar UX turu: menü D3, panel duyurusu, açılış + yardım, ödeme formu ve plan kartları (2026-09-16)
+
+**Tetikleyici.** Kullanıcı (backend geliştirici) UX denetimi istedi: Haftalık İlanlar menüde kime
+görünmeli, yeni ücretli özellik nerede/nasıl duyurulmalı, ödeme formundaki "bir uçtan bir uca
+textbox" sorunu, menü/araç/ödeme ekranlarının trend'e uygun ve yerli yerinde olması. Üç keşif
+ajanıyla denetim, sonra tasarım kanvası: `claude.ai/artifact/SWQZAVFZ8Z6kPxw7JZDTNi`
+("Seçilenler" sayfası kodlanan set, "Elenenler" alternatifler). Bulgular ve kararlar:
+
+**Menü (D3 — 2026-09-14 D3 nav kararını geçersiz kılar).** Giriş sonrası çubukta 10 metin öğesi
+vardı, Haftalık İlanlar 11 yapıyordu; bir gün önce bu yüzden `max-w-6xl`'e genişletilmişti.
+Şimdi dört öğe: **Panel · Başvurular ▾ · Keşfet ▾ · CV'lerim**; Öneriler ve Bildirimler sağda
+**gelen kutusu / zil ikonu + sayaç** (`iconLink`), avatarın yanında. `Başvurular ▾` = Tüm
+başvurular, Takip listem, İçe aktar, — , Yeni başvuru. `Keşfet ▾` = Haftalık ilanlar,
+Şirketler, CV Tarama, Kıyas, Rehber — **tek düz liste**: ilk taslaktaki "Fırsatlar / Hesap
+gerekmez" bölüm başlıkları "Şirketler için Pro gerekir" diye okunuyordu (Şirketler zaten
+hesapsız da okunabiliyor); ücret bilgisini yalnız **Pro rozeti** taşır (`ProBadge`,
+`useProBadge`: `jobSources && payments` açık **ve** hesap Pro değilken; `GET /api/job-sources/status`,
+5 dk staleTime, bayrak kapalıyken hiç çağrılmaz). Haftalık İlanlar herkese görünür (kapı
+sayfası deseni), Pro olunca rozet kalkar. `ToolsMenu` silindi; `NavMenu` (genel açılır grup)
++ `ExploreMenu` (`TOOL_LINKS` burada). Mobil menü düz liste olarak kaldı, rozet orada da var.
+"CV'lerim"i Keşfet'e alma denendi ve geri alındı: kullanıcının kendi verisi, keşif değil.
+`WEEKLY_JOBS_QUERY_KEYS` `lib/weeklyJobs/queryKeys.ts`'e taşındı (navbar `CriteriaForm`'u ve
+onun mesaj alanını import grafiğine çekmesin — `messageScopes` testi yakaladı).
+`siteChrome.contract.test.ts` güncel.
+
+**Panel duyurusu (2B1).** Pro olmayan + iki bayrak açık + kapatılmamış hesaba panelin en üstünde
+`WeeklyJobsAnnouncement`: beyaz kart + marka gradyan ışıması (`.aa-card-glow`, hero'nunkinin
+küçüğü), "YENİ · PRO" gradyan rozeti, başlık "İş aramayı siz değil, biz yapalım…", üç çip madde,
+sağda **puanlı örnek ilan listesi** (92/81/64, sayfanın puan renk kuralı), "Pro'ya geç ·
+{fiyat}/ay" (fiyat canlı `GET /api/payments/plans`, sabit değil) + "Nasıl çalışır →".
+Kullanıcı 2B'yi beğenip "daha vurucu" istedi; 2B1 (ışıma) ve 2B2 (koyu gradyan vitrin) çizildi,
+2B1 seçildi. **Kapatma sunucu tarafı:** `ApplicationUser.WeeklyJobsAnnouncementDismissedAt`
+(migration `AddWeeklyJobsAnnouncementDismissedAt`; `StaleSuggestionDismissedAt` ile aynı
+yaklaşım — iki nullable timestamp için ayrı tercih tablosu henüz değmiyor), `POST
+/api/job-sources/announcement/dismiss` (bayrak kapısının arkasında, idempotent, RequestAudit
+otomatik), `JobSourceStatusResponse.AnnouncementDismissed`. Kart tek seferlik: kapatınca
+hiçbir cihazda geri gelmez. Optimistic update ile tıklamada gider.
+
+**Açılış sayfası + yardım.** Özellik ızgarasına geniş "Yeni · Pro" kartı (`WeeklyJobsFeatureCard`)
+ve yol haritası "Bugün" listesine "Haftalık ilan eşleştirme [Pro]" (`WeeklyJobsRoadmapItem`) —
+ikisi de **client** bileşen, çünkü bayrak yalnız `/api/config`'de: özellik koyuyken açılış
+sayfası onu ilan etmez. Bölüm sırası değişmedi. Yardım: `/help/weekly-jobs` konusu (nasıl
+çalışır 4 adım, uyum puanı, ücret/süre, iade, rıza callout'u; ekran görüntüsü ilk gerçek
+haftadan sonra), kenar çubuğu + `HELP_TOPICS` + sitemap, SSS'ye q16–q18 (ücret/yenileme, CV ve
+yapay zekâ, iade). Görsel kanıt: yardım sayfası ve açılış kartı tarayıcıda doğrulandı.
+
+**Ödeme sayfaları (5A + 6).** Checkout korumalı alandaki **tek** form idi ki `max-w` ve kart yok:
+`Input` `w-full` → ~990 px adres/telefon. Şimdi `lg:grid-cols-[minmax(0,1fr)_20rem]`: solda
+form kartı (`max-w-2xl`, `rounded-xl border p-6`; telefon `sm:max-w-[240px]` — `FormField`
+`className` aldı), sağda `OrderSummary` (plan, KDV dahil, toplam, peşin dönem / otomatik
+yenileme yok, kilit ikonlu PayTR notu); adım 2'de iframe aynı sol sütunda. Başlık "Adım 1 / 2 ·
+Fatura bilgileri". `/pro`: `max-w-3xl`, tek cümle giriş, **yıllık kart önerilen** (`border-2
+border-accent`, "Önerilen · N ay bedava" rozeti — `saves` anahtarı `recommendedSaves` oldu),
+özellik listesi kart içinde (`feature1–4`), aylık `outline` / yıllık `primary`; kapı sayfasının
+üç maddesi artık kartların içinde. Pro sayfalarının `text-2xl` başlıkları uygulamanın `text-xl`
+standardına, `gray-700` açıklamalar `gray-600`'e çekildi (PaymentVerifying dahil). UI
+primitive'leri (`Input/Textarea/Select/Checkbox`) odak halkası/işaret rengi stok `blue-500/600`
+→ marka `accent` — uygulama geneli, butonlarla aynı token.
+
+**Doğrulama.** vitest 437/437, tsc, eslint; integration `JobSources` + `RequestAudit` 36/36
+(`The_Dashboard_Announcement_Stays_Closed_Once_Dismissed_For_That_Account_Only` yeni). Tarayıcı
+(1280 px, açık/koyu): yeni menü tek satır, Keşfet ▾ Pro rozetli, panel kartı, kapatma → DB'de
+zaman damgası ve kart gider, `/pro` kartları, checkout 5A, yardım konusu, açılış kartı + Bugün
+satırı. **Mobil ekran görüntüsü alınamadı** (Chrome penceresi tam ekranda yeniden
+boyutlanmadı, iframe deneme CSP'ye takıldı); mobil menü yapısı değişmedi (düz liste + rozet),
+checkout/kart yerleşimleri `lg`/`sm` altında tek sütuna düşen mevcut desenler.
+
+**Bilinçli yapılmayanlar.** Mevcut kullanıcılara duyuru e-postası (KVKK pazarlama izni yok,
+gerçek kullanıcı yok). Kart köşe yarıçapı ikiliği (`rounded-lg`/`rounded-xl`) dokunulmadı.
+Fiyatlar hâlâ yer tutucu (`29900/299000`); UI canlı değerleri okur.
+
+## `main` → `feat/linkedin-job-source` merge: Şirketler grubu Keşfet'in içine katlandı (2026-09-16)
+
+**Tetikleyici.** PayTR, Bildirim URL'yi kontrol ettiğinde ulaşamadı — kod henüz deploy edilmemişti
+(`feat/linkedin-job-source` main'in 16 commit ilerisinde, main de onun 2 commit ilerisindeydi:
+#53 yapılandırılmış değerlendirmeler, #54 maaş bilgisi). Deploy için önce dalın güncellenmesi
+gerekiyordu; rebase ilk commit'te bile snapshot + tr/en.json çakıştığı için tek geçişlik
+`git merge main` tercih edildi (21 dosya).
+
+**Tek tasarım kararı gerektiren çakışma: navbar.** main aynı gün "Şirketler ▾" grubunu
+(`CompaniesMenu`: dizin + değerlendirme yaz + maaş paylaş) satıra eklemişti; dal ise 2026-09-15
+D3 kararıyla satırı dört öğeye indirmişti (Panel · Başvurular ▾ · Keşfet ▾ · CV'lerim). Beşinci bir
+tetikleyici D3'ü bozacağından `CompaniesMenu` silindi, üç bağlantısı (`COMPANY_LINKS`) Keşfet'in
+içine, Haftalık ilanlar'ın altına, tek düz liste olarak girdi (`ExploreMenu`); mobil menüdeki
+"Şirketler" başlıklı bölüm main'den olduğu gibi kaldı. Avatar menüsü: Değerlendirmelerim ·
+Maaşlarım · Pro planı. main'in `companiesNote`/`toolsMenu`/`toolsNote` anahtarları ölü kaldığı için
+silindi; `siteChrome.contract.test.ts`'teki grup testi Keşfet'e göre yeniden yazıldı.
+
+**Mekanik birleştirmeler.** `/api/config`: `companySalaries` + `jobSources` + `payments` (bu
+sırayla); dışa aktarma: `companySalaries` + `payments` + `proEntitlement`; ayarlar dışa
+aktarma/silme metinleri iki tarafı da sayıyor (maaş bilgisi **ve** Pro ödeme kayıtlarının
+saklanması); gizlilik `item6` main'in (maaş bilgisi eklenmiş), `item7` dalın; SSS'de main'in maaş
+sorusu `q16` → `q21` (dalın q16–q20'si Pro). Model snapshot üç taraflı yapısal birleştirildi,
+`dotnet ef migrations has-pending-model-changes` → değişiklik yok.
+
+**Doğrulama.** dotnet build, unit 886/886, integration 510/510 (60 sınıf, 113 s), vitest 539/539,
+tsc, eslint (dokunulan dizinler 0 uyarı). Bayrak durumu değişmedi: `PayTr__Enabled=false`,
+`JobSources__Enabled=false`, `PayTr__TestMode=true`; callback bayrağa bakmaz, yalnızca üç Secret
+Manager değerini ister — bunlar 2026-09-16'da `afterapply-paytr-merchant-{id,key,salt}` olarak
+oluşturuldu ve runtime SA'ya bağlandı.

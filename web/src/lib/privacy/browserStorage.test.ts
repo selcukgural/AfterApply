@@ -176,6 +176,7 @@ describe("visit counter", () => {
     // rebuilt around the scan (2026-09-10). Note what is NOT on this list: HeroCvDropzone. Dropping
     // a CV reports nothing at all — the scan is counted where it happens, on /cv-tarama.
     "components/landing/HeroCtaButtons.tsx",
+    "components/landing/WeeklyJobsHeroCtas.tsx",
   ];
 
   it("is reported from public pages only", () => {

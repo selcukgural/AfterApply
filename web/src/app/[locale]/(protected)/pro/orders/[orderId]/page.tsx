@@ -1,0 +1,198 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { OrderStatusBadge } from "@/components/pro/OrderStatusBadge";
+import { PaymentVerifying } from "@/components/pro/PaymentVerifying";
+import { formatDate } from "@/components/pro/PlanCards";
+import { ProgressRing } from "@/components/pro/ProgressRing";
+import { PRO_QUERY_KEYS } from "@/components/pro/useProAccess";
+import { buttonClassName } from "@/components/ui/Button";
+import { WEEKLY_JOBS_QUERY_KEYS } from "@/components/weeklyJobs/CriteriaForm";
+import { ApiError } from "@/lib/api/httpClient";
+import { paymentsApi } from "@/lib/api/payments";
+import { explainFailure } from "@/lib/payments/failureReason";
+import { formatMinor } from "@/lib/payments/money";
+import { nextPollDelay } from "@/lib/payments/pollSchedule";
+
+const PENDING = new Set(["Pending"]);
+
+/**
+ * The result of a checkout. The page never decides anything: it reads the order, which only
+ * PayTR's server-to-server notification can move out of Pending, and polls until it does (fast
+ * for ninety seconds, then slowly for ten minutes). The `?outcome=` hint PayTR's redirect
+ * carries only picks the waiting copy; a "fail" hint with a Paid order shows Paid.
+ */
+export default function OrderResultPage() {
+  const t = useTranslations("payments.result");
+  const tPlans = useTranslations("payments.plans");
+  const tFailure = useTranslations("payments.failure");
+  const locale = useLocale();
+  const params = useParams<{ orderId: string }>();
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const outcomeHint = searchParams.get("outcome");
+  // When the wait began, taken once on mount (a lazy initial state, so the poll schedule
+  // never re-anchors on a re-render).
+  const [startedAt] = useState(() => Date.now());
+  // Ticks every second while the order is pending: the ring's readout, the phase the copy is
+  // in, and the "last checked" readout all read from it.
+  const [now, setNow] = useState(startedAt);
+  const elapsed = now - startedAt;
+
+  const order = useQuery({
+    queryKey: PRO_QUERY_KEYS.order(params.orderId),
+    queryFn: () => paymentsApi.getOrder(params.orderId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      if (!status || !PENDING.has(status)) {
+        return false;
+      }
+      return nextPollDelay(Date.now() - startedAt) ?? false;
+    },
+    retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 3,
+  });
+
+  useEffect(() => {
+    if (!order.data || !PENDING.has(order.data.status)) {
+      return;
+    }
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [order.data]);
+
+  // Pro-ness changed: every weekly-jobs screen re-reads its status.
+  useEffect(() => {
+    if (order.data?.status === "Paid") {
+      void queryClient.invalidateQueries({ queryKey: WEEKLY_JOBS_QUERY_KEYS.status });
+      void queryClient.invalidateQueries({ queryKey: PRO_QUERY_KEYS.plans });
+      void queryClient.invalidateQueries({ queryKey: PRO_QUERY_KEYS.orders });
+    }
+  }, [order.data?.status, queryClient]);
+
+  if (order.error instanceof ApiError && order.error.status === 404) {
+    return (
+      <div className="flex flex-col gap-3">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("notFoundTitle")}</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("notFound")}</p>
+        <Link href="/pro" className="text-sm underline">
+          {t("backToPlans")}
+        </Link>
+      </div>
+    );
+  }
+
+  if (!order.data) {
+    return (
+      <div className="flex flex-col items-center gap-4 px-4 pt-8 text-center" role="status" aria-live="polite">
+        <ProgressRing size={64} spinning />
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t("verifying")}</p>
+      </div>
+    );
+  }
+
+  const data = order.data;
+  const planName = tPlans(data.plan === "Yearly" ? "yearly" : "monthly");
+  // Once paid, say what the card was charged — on an amount mismatch that is not the plan's price.
+  const amount = formatMinor(data.chargedAmountMinor ?? data.amountMinor, data.currency, locale);
+
+  if (data.status === "Paid" || data.status === "RefundRequested" || data.status === "PartiallyRefunded") {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("paidTitle")}</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {t("paidBody", {
+            plan: planName,
+            amount,
+            date: data.entitlementActiveUntil ? formatDate(data.entitlementActiveUntil, locale) : "—",
+          })}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{t("receiptNote")}</p>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/weekly-jobs" className={buttonClassName("primary")}>
+            {t("goToJobs")}
+          </Link>
+          <Link href="/pro" className={buttonClassName("secondary")}>
+            {t("backToPlans")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (data.status === "Failed") {
+    const explanation = explainFailure(data);
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("failedTitle")}</h1>
+        <p role="alert" className="text-sm text-gray-700 dark:text-gray-300">
+          {tFailure(explanation.messageKey)}
+        </p>
+        {explanation.bankMessage && (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {t("bankSaid")} <q>{explanation.bankMessage}</q>
+          </p>
+        )}
+        <p className="text-xs text-gray-500 dark:text-gray-400">{t("noCharge")}</p>
+        <div className="flex flex-wrap gap-3">
+          {explanation.retryable && (
+            <Link href={`/pro/checkout?plan=${data.plan.toLowerCase()}`} className={buttonClassName("primary")}>
+              {t("tryAgain")}
+            </Link>
+          )}
+          <Link href="/pro" className={buttonClassName("secondary")}>
+            {t("backToPlans")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (data.status === "Expired" || data.status === "Cancelled") {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t(data.status === "Expired" ? "expiredTitle" : "cancelledTitle")}</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("noCharge")}</p>
+        <div className="flex flex-wrap gap-3">
+          <Link href={`/pro/checkout?plan=${data.plan.toLowerCase()}`} className={buttonClassName("primary")}>
+            {t("tryAgain")}
+          </Link>
+          <Link href="/pro" className={buttonClassName("secondary")}>
+            {t("backToPlans")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (data.status === "Refunded") {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("refundedTitle")}</h1>
+        <OrderStatusBadge status={data.status} />
+        <Link href="/pro" className="text-sm underline">
+          {t("backToPlans")}
+        </Link>
+      </div>
+    );
+  }
+
+  // Pending: waiting for PayTR's notification. The screen is the "B — Halka" direction
+  // (design canvas, 2026-09-15); its copy and badge follow the poll schedule's phases.
+  return (
+    <PaymentVerifying
+      elapsedMs={elapsed}
+      outcomeHint={outcomeHint}
+      orderId={data.id}
+      planName={planName}
+      amount={amount}
+      lastCheckedAt={order.dataUpdatedAt || null}
+      now={now}
+      isChecking={order.isFetching}
+      onCheckNow={() => void order.refetch()}
+    />
+  );
+}

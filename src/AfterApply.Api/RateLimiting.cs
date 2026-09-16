@@ -208,6 +208,14 @@ public static class RateLimiting
                     QueueLimit = 0
                 }));
 
+            options.AddPolicy(DependencyInjection.PaymentCheckoutRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.PaymentCheckout.PermitLimit,
+                    Window = sizes.PaymentCheckout.Window,
+                    QueueLimit = 0
+                }));
+
             // User-based, all three: the review routes require auth, and the thing being bounded
             // is what one account can write onto public pages. Sizing in RateLimitingOptions.
             options.AddPolicy(DependencyInjection.CompanyReviewWriteRateLimitPolicy, httpContext =>

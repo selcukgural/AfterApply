@@ -135,9 +135,33 @@
         "title": "Reply Rate Benchmark",
         "description": "Compare your own reply rate with your field's median; where the number comes from and when it is withheld."
       },
+      "helpWeeklyJobs": {
+        "title": "Weekly Postings and the Pro Plan",
+        "description": "Postings scored against your CV every Monday: how it works, the price, CV consent and refunds."
+      },
       "notFound": {
         "title": "Page not found",
         "description": "The page you were looking for is not on e-kariyerim."
+      },
+      "pro": {
+        "title": "Pro plan",
+        "description": "e-kariyerim Pro: a monthly or yearly plan for the weekly job matching."
+      },
+      "proCheckout": {
+        "title": "Checkout",
+        "description": "Secure payment for the Pro plan."
+      },
+      "proOrder": {
+        "title": "Payment result",
+        "description": "The status of your Pro plan payment."
+      },
+      "termsOfSale": {
+        "title": "Distance Sales Agreement",
+        "description": "The distance sales agreement and pre-contract information for the e-kariyerim Pro plan."
+      },
+      "refundPolicy": {
+        "title": "Cancellation and Refund Policy",
+        "description": "How cancellation and refunds work for the e-kariyerim Pro plan."
       }
     }
   },
@@ -147,11 +171,28 @@
     },
     "hero": {
       "eyebrow": "How many sent, how many replied",
+      "bandEyebrow": "How many applied, how many answered · free",
       "title": "You applied. So what happened next?",
       "subtitle": "How many of your applications got a reply, how many went quiet, and how long a first response actually took. Import your LinkedIn history or install the extension — let e-kariyerim do the collecting.",
       "ctaPrimary": "Scan my CV",
       "ctaSecondary": "Get Started Free",
       "ctaHowItWorks": "See how it works"
+    },
+    "weeklyHero": {
+      "badge": "NEW · PRO",
+      "eyebrow": "Every Monday, scored against your CV",
+      "title": "Let us do the searching, not you",
+      "subtitle": "New postings on LinkedIn and kariyer.net are compared with your CV every week and scored; matched and missing criteria are spelled out, and the ones you already applied to are left out. Tracking your applications stays free.",
+      "ctaSignedIn": "Go to weekly postings",
+      "ctaHow": "How it works",
+      "sampleLabel": "This week · sample",
+      "sampleFooter": "Monday morning · up to 50 postings · ranked by fit score",
+      "sample1Title": "Senior .NET Developer",
+      "sample1Company": "Acme Bankacılık · İstanbul",
+      "sample2Title": "Backend Engineer (C#)",
+      "sample2Company": "Kuzey Teknoloji · Remote",
+      "sample3Title": "Software Developer",
+      "sample3Company": "Marmara Yazılım · İstanbul"
     },
     "heroScan": {
       "title": "Drop your CV here",
@@ -278,7 +319,11 @@
       "companiesTitle": "Know companies from the inside",
       "companiesBody": "Anonymous reviews from people who worked there, a score with a published formula, and salary information by occupation — read reviews without an account, see salaries and add your own once signed in.",
       "companiesCta": "Browse companies",
-      "companiesBadge": "New"
+      "companiesBadge": "New",
+      "weeklyJobsTitle": "Postings that fit you, ready every Monday",
+      "weeklyJobsBody": "New postings on LinkedIn and kariyer.net are compared with your CV and scored; matched and missing criteria are spelled out, and the ones you already applied to are left out. Pro plan; prepaid period, no automatic renewal.",
+      "weeklyJobsCta": "How it works",
+      "weeklyJobsBadge": "New · Pro"
     },
     "linkedinImport": {
       "eyebrow": "Import",
@@ -356,7 +401,9 @@
       "futureInsights": "Anonymous, aggregate hiring insights",
       "todayCvScan": "CV scan (no account)",
       "todayBenchmark": "Reply rate benchmark (no account)",
-      "todayCompanies": "Company reviews"
+      "todayCompanies": "Company reviews",
+      "todayWeeklyJobs": "Weekly job matching",
+      "proBadge": "Pro"
     },
     "privacy": {
       "eyebrow": "Trust",
@@ -392,6 +439,8 @@
   },
   "common": {
     "loading": "Loading...",
+    "returningFromPayment": "Returning from PayTR…",
+    "returningFromPaymentNote": "You will be taken to the payment result page in a moment. Please keep this page open.",
     "delete": "Delete",
     "cancel": "Cancel"
   },
@@ -415,9 +464,13 @@
     "guide": "Guide",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "toolsMenu": "Tools",
-    "toolsNote": "No account needed",
-    "companiesNote": "Both anonymous, both need sign-in",
+    "applicationsMenu": "Applications",
+    "allApplications": "All applications",
+    "newApplication": "New application",
+    "explore": "Explore",
+    "proBadge": "Pro",
+    "weeklyJobs": "Weekly Jobs",
+    "pro": "Pro plan",
     "mySalaries": "My Salaries",
     "contributeSalary": "Salary Info",
     "contributeReview": "Review",
@@ -645,6 +698,25 @@
       "confirming": "Marking...",
       "notNow": "Not now",
       "error": "Marking didn't go through. Try again."
+    },
+    "weeklyJobsAnnouncement": {
+      "badge": "NEW · PRO",
+      "title": "Let us do the searching: postings that fit you, ready every Monday",
+      "body": "New postings on LinkedIn and kariyer.net are compared with your CV and scored; matched and missing criteria are spelled out, and the ones you already applied to are left out.",
+      "chip1": "Up to 50 postings a week",
+      "chip2": "Fit score + missing criteria",
+      "chip3": "One-click \"I applied\"",
+      "cta": "Go Pro · {price}/mo",
+      "how": "How it works",
+      "noAutoRenew": "No automatic renewal",
+      "sampleLabel": "This week · sample",
+      "sample1Title": "Senior .NET Developer",
+      "sample1Company": "Acme Bankacılık · İstanbul",
+      "sample2Title": "Backend Engineer (C#)",
+      "sample2Company": "Kuzey Teknoloji · Remote",
+      "sample3Title": "Software Developer",
+      "sample3Company": "Marmara Yazılım · İstanbul",
+      "close": "Close the announcement"
     }
   },
   "applications": {
@@ -684,6 +756,7 @@
       "last": "Last",
       "pageInfoCompanies": "Page {page} / {totalPages} ({totalCount} companies)",
       "pageInfoReminders": "Page {page} / {totalPages} ({totalCount} reminders)",
+      "pageInfoOrders": "Page {page} / {totalPages} ({totalCount} orders)",
       "pageInfoSalaries": "Page {page} / {totalPages} ({totalCount} salary entries)"
     },
     "form": {
@@ -851,7 +924,7 @@
     "title": "Account Settings",
     "export": {
       "title": "Export My Data",
-      "description": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks) and the salary entries you shared as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
+      "description": "Download your applications (with their status history), imports, reminders, CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared and your Pro plan payment records as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
       "download": "Download My Data",
       "preparing": "Preparing...",
       "error": "Could not export data."
@@ -884,7 +957,7 @@
     },
     "delete": {
       "title": "Delete My Account",
-      "description": "This action cannot be undone. Your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent — will be permanently deleted.",
+      "description": "This cannot be undone. Your account and everything in it — your applications, tracked jobs, CVs, imports, reminders, e-mail suggestions and notifications, company reviews, the salary entries you shared and the feedback you sent — is permanently deleted. Pro plan payment records are kept, detached from your account, for the statutory retention period.",
       "passwordLabel": "Your Password",
       "confirmLabel": "Type \"DELETE\" to confirm",
       "confirmWord": "DELETE",
@@ -894,6 +967,11 @@
       "finalConfirm": "Final warning: your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent, plus your extension connections — will be permanently deleted. This cannot be undone. Do you want to continue?",
       "genericError": "Could not delete account.",
       "noPasswordHint": "This account was created with Google, LinkedIn or GitHub and has no password. Type the confirmation word below to delete it."
+    },
+    "billing": {
+      "title": "Plan and payments",
+      "description": "Your Pro plan payments and refund requests. Your card details are never stored by e-kariyerim; payment is taken on PayTR's secure page.",
+      "manage": "Manage the plan and payment history"
     }
   },
   "emailSuggestions": {
@@ -984,7 +1062,8 @@
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "Apart from the request log, this data is used solely to provide you with application tracking and personal analytics features; the request log serves only the security and legal purposes listed above.",
       "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link.",
-      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\")."
+      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\").",
+      "item7": "If you use the weekly job matching (a paid feature): the job titles (up to three) and the location you save as your search criteria. They are stored on your account and, once a week, used as a search on LinkedIn and kariyer.net — see \"Cross-border data transfer\" below. The postings found are kept for you for a limited time; which ones you already applied to is worked out from your own applications and never stored as a separate record. If you also give consent, the fit score computed for each posting, its short reasoning and the matched/missing criteria are kept on your account too — see \"Weekly job matching\"."
     },
     "googleSignIn": {
       "title": "Sign in with Google",
@@ -1018,13 +1097,14 @@
     },
     "crossBorderTransfer": {
       "title": "Cross-border data transfer",
-      "intro": "Your data goes abroad in two cases. The first is Gmail Scanning: if you turn it on, the subject line and a short summary of each detected status-update email are sent abroad to work out what it means for your application.",
+      "intro": "Your data goes abroad in three cases. The first is Gmail Scanning: if you turn it on, the subject line and a short summary of each detected status-update email are sent abroad to work out what it means for your application.",
       "recipient": "Recipient: OpenAI, L.L.C. (United States) — our API provider.",
       "purpose": "Purpose: to classify the email's application-status signal, and — for a job not yet tracked — to read off a company name and job title; this only runs when a simpler, local rule-based check doesn't already recognize the email.",
       "legalBasis": "Legal basis: this only happens for Gmail Scanning you turn on yourself in the browser extension; nothing is sent unless you use this feature.",
       "withdraw": "Withdrawal: turn off Gmail Scanning in the browser extension's Settings page. Or delete your account, to stop this entirely.",
       "sensitiveDataNote": "The subject and snippet are also stored on your account (visible to you when reviewing a suggestion) — never the full email body.",
-      "feedbackTransfer": "The second is feedback: when you send feedback from inside the app, your message and its technical context are copied to a private repository on GitHub so it can be tracked. Recipient: GitHub, Inc. (Microsoft, United States). Your name, your account email address and your reply address are not sent. Lawful basis: legitimate interest — tracking and fixing what users report. See the \"Feedback you send\" section above for the detail."
+      "feedbackTransfer": "The second is feedback: when you send feedback from inside the app, your message and its technical context are copied to a private repository on GitHub so it can be tracked. Recipient: GitHub, Inc. (Microsoft, United States). Your name, your account email address and your reply address are not sent. Lawful basis: legitimate interest — tracking and fixing what users report. See the \"Feedback you send\" section above for the detail.",
+      "jobSourceTransfer": "The third is the weekly job matching (a paid feature): once a week, the job titles and the location you saved as criteria are sent as a search query to LinkedIn, and the public job postings it lists are fetched. Recipient: LinkedIn Ireland Unlimited Company (Ireland; LinkedIn Corporation, United States). The same search also goes to kariyer.net in Türkiye (Kariyer.net Elektronik Yayıncılık ve İletişim Hizmetleri A.Ş., Istanbul); that is not a cross-border transfer and is mentioned here for completeness. What is sent is the search itself — a job title and a place — and nothing else: not your name, not your account, not your CV. Lawful basis: this only happens for criteria you saved yourself, while your paid plan is active; delete the criteria or let the plan lapse and it stops. Withdrawal: remove your criteria from the job matching settings, or delete your account."
     },
     "browserExtension": {
       "title": "Browser extension",
@@ -1056,7 +1136,7 @@
       "intro": "Uploading a CV is entirely optional; the rest of the service works without one. When you do upload a CV:",
       "where": "The file is stored in a bucket closed to the public on Google Cloud in the European Union region (europe-west1) — the same region as your account and application data. Even a guessed address cannot reach it; the bucket is not exposed to the internet at all.",
       "access": "Only you, while signed in, can reach the file. Every download is checked against your own account and streamed through the e-kariyerim server; no shareable or time-limited link is ever produced. It is never shown to other users, to employers or to job boards.",
-      "noTransfer": "The contents of your CV are never sent to any third party, AI services included. The file is not read, converted to text or analysed; it is only stored and handed back to you. The first-page preview you see on the My CVs page is rendered in your own browser, not on the server.",
+      "noTransfer": "The contents of your CV are never sent to any third party, AI services included. The one exception is the paid feature described under \"Weekly job matching\" below, which you turn on yourself and consent to separately; then only the text of your default CV is sent, and only for scoring. The file is not read, converted to text or analysed; it is only stored and handed back to you. The first-page preview you see on the My CVs page is rendered in your own browser, not on the server.",
       "deletion": "A CV you delete is deleted permanently — the storage-side recovery window is deliberately turned off. Deleting your account deletes all of your CVs with it.",
       "sensitiveDataNote": "A CV can carry more than your work history — a photo, a date of birth, or health or military-service information — which is why we ask for your explicit consent before each upload. What goes into it is your decision: none of those fields are needed for the service to work, and you can delete the file at any time.",
       "consent": "The lawful basis is your explicit consent, and it is taken separately for every upload: you tick the consent box before choosing a file, the box is never pre-ticked, and it clears again after each upload. You can withdraw consent at any time by deleting the file, and deleting your account deletes all of your CVs with it."
@@ -1070,6 +1150,14 @@
       "contentNotes": "If you ask for notes on the writing (the second, optional box): the text of your CV is sent to Google Cloud Vertex AI — in the EU region our infrastructure already runs in, with the same processor; no new country is involved. It goes through paid Vertex, which does not train on the content. The notes do not affect the score, the text is still stored nowhere, and with the box unticked no model is involved at all.",
       "output": "The excerpts and the raw text you see on the result screen exist only inside the response to your own request; they are not recorded and never written to logs.",
       "consent": "The legal basis is your explicit consent, taken separately for every scan: the box is never pre-ticked and is cleared again after each scan. The second box, for the content notes, is separate and genuinely optional — the scan works fully without it and your score is identical. Since nothing is stored, there is no retention to withdraw; not running the scan is enough."
+    },
+    "jobMatching": {
+      "title": "Weekly job matching (a paid feature)",
+      "intro": "With the Pro plan and the search criteria you saved, new LinkedIn and kariyer.net postings are searched every Monday (for the criteria going to the two sites see \"Cross-border data transfer\"). Each posting found is compared with your default CV and scored — only if you separately consent:",
+      "what": "What is sent: the text of your default CV (not the file; the first 15,000 characters) together with the text of one posting. Recipient: Google Cloud Vertex AI, in the EU region our infrastructure already runs in (europe-west1) and with the same processor — no new country and no new processor is involved. It goes through paid Vertex, which does not train on the content and does not keep it.",
+      "kept": "What we keep: for each posting a 0–100 fit score, a sentence or two of reasoning, the lists of matched and missing criteria and the skills the posting asks for — on your account, next to the posting. The CV text itself is written nowhere: it is read again from your stored file every week and lives in memory for the length of the request. To track the cost of the calls, how many tokens were spent for which feature is also recorded against your account; that record holds no text and survives account deletion (detached from your identity).",
+      "consent": "The lawful basis is your explicit consent, given when you first save your criteria through a box that is never pre-ticked; the moment it was given is recorded and shown on the criteria page. Criteria cannot be saved without it, because there is no version of the feature without scoring.",
+      "withdraw": "Withdrawal: delete your criteria — the search and the scoring stop at once, that week's list and scores are deleted, and your CV is never sent again. Deleting your account has the same effect."
     },
     "feedback": {
       "title": "Feedback you send",
@@ -1095,6 +1183,17 @@
       "storage": "Reviews, reports and helpful marks are stored in our own database and are not sent to any third party.",
       "deletion": "Deleting your account deletes your reviews, your reports and your helpful marks. Reviews you wrote disappear from the company pages and from the company's score; this is also what your data export contains.",
       "legalBasis": "Lawful basis: your explicit action — you choose to write, report or mark — and, for moderation, legitimate interest: keeping what is published about a named company fair and lawful."
+    },
+    "payments": {
+      "title": "Payments (Pro plan)",
+      "intro": "When you buy the Pro plan, the payment is taken on the secure payment page of PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş.",
+      "card": "Your card number, expiry date and security code never reach e-kariyerim; they are entered on PayTR's page and processed there.",
+      "sent": "What we send PayTR: your e-mail address, the name, address and phone number you enter at checkout, the IP address of the connection you start the payment from, the chosen plan and the amount.",
+      "kept": "What we keep: the order record (plan, amount, date, outcome), the name, address and phone number you entered for the invoice, the result PayTR reported and, if any, the failure reason. The IP address of PayTR's server call that reports the result is recorded too and never shown anywhere.",
+      "retention": "Payment and invoicing records are kept for the retention period the tax legislation requires. If you delete your account, these records are detached from it (the link to your identity is removed) but not deleted until that period ends.",
+      "refunds": "Refunds are made only through our own system, via PayTR's refund service, to the card you paid with; your request and its outcome are kept on the order record.",
+      "provider": "PayTR is the data controller for the data it processes itself; its privacy notice is published at paytr.com.",
+      "legalBasis": "Legal basis: performance of the contract (KVKK art. 5/2-c) and compliance with a legal obligation (art. 5/2-ç)."
     },
     "companySalaries": {
       "title": "Salary information you share",
@@ -1259,7 +1358,7 @@
     "lastUpdated": "Last updated: 13 September 2026",
     "intro": {
       "title": "In short",
-      "body": "e-kariyerim uses exactly two cookies, both needed for the service to work. We use no advertising cookies, no tracking pixels, no analytics tool such as Google Analytics, and no third-party cookies at all. That is why you never see a cookie consent banner here: there is no optional cookie to leave to your choice.",
+      "body": "e-kariyerim uses only the two cookies the service needs to work. No advertising cookies, tracking pixels, analytics tools like Google Analytics, or any third-party cookies. That is why no cookie banner appears: there is no optional cookie to ask your consent for. The one exception is the Pro plan checkout: the payment form opens on PayTR's own page and PayTR may use its own strictly necessary cookies there; those cookies are not read on any other page of this site.",
       "legalNote": "Under Turkish data protection law (KVKK), strictly necessary and functional cookies do not require explicit consent — what they require is disclosure. This page is that disclosure."
     },
     "table": {
@@ -1443,6 +1542,93 @@
       "emptyCta": "About the extension"
     }
   },
+  "weeklyJobs": {
+    "title": "Weekly jobs",
+    "subtitle": "Week {week} · {date} · {found} found, {shown} shown",
+    "noCv": "Scoring needs a CV and your account has none right now. Postings are still searched for, just not scored.",
+    "noCvLink": "Upload a CV",
+    "hidden": {
+      "applied": "{count, plural, =1 {1 posting is} other {# postings are}} hidden because you already applied.",
+      "belowMinScore": "{count, plural, =1 {1 posting is} other {# postings are}} hidden for scoring under {score}%."
+    },
+    "empty": {
+      "title": "No postings for this week",
+      "beforeRun": "The first sweep runs on Monday morning; your criteria are saved and the results will appear here.",
+      "afterRun": "This week's sweep found no new postings matching your criteria. Widening them may help."
+    },
+    "notFound": {
+      "title": "Posting not found",
+      "description": "This posting is not among the ones delivered to you, or it is no longer listed."
+    },
+    "list": {
+      "ariaLabel": "This week's postings",
+      "unscored": "Not scored yet",
+      "scored": "Scored",
+      "scoreLabel": "Fit"
+    },
+    "detail": {
+      "fit": "fit",
+      "unscored": "Not scored yet",
+      "matched": "Matched criteria",
+      "missing": "Missing criteria",
+      "none": "—",
+      "requiredSkills": "Skills the posting asks for",
+      "applied": "I applied",
+      "applying": "Saving…",
+      "applyError": "The application could not be saved. Please try again.",
+      "openOnSource": "Open on {source}",
+      "description": "Posting text",
+      "noDescription": "The posting text has not been fetched yet; the next sweep completes it."
+    },
+    "strip": {
+      "searching": "Searching:",
+      "remoteOnly": "Remote",
+      "minScore": "· at least {score}% fit",
+      "edit": "Edit"
+    },
+    "criteria": {
+      "title": "My search criteria",
+      "intro": "Every Monday morning these criteria are searched on LinkedIn and kariyer.net and each new posting is compared with your default CV.",
+      "titles": "Job titles",
+      "titlesHint": "(up to {max})",
+      "titleAria": "Job title {n}",
+      "titlePlaceholder": "e.g. Software Engineer",
+      "titlesHelp": "Each title is its own search on both sites; write it the way the job sites do.",
+      "location": "Location",
+      "minScore": "Minimum fit score",
+      "minScoreHelp": "Postings scoring below this are hidden from the list; change it whenever you like.",
+      "remoteOnly": "Remote postings only",
+      "emailDigest": "Send the Monday \"N postings are ready\" e-mail",
+      "consent": "I give my explicit consent for the text of my default CV to be sent to Google Cloud Vertex AI (EU region) to be compared with postings. The text is not stored there and is not used for training; the scores are kept in my account.",
+      "consentGiven": "You consented on {date} to your CV being sent to Vertex AI for scoring.",
+      "consentNote": "Deleting the criteria stops the search and the scoring; your CV is then sent nowhere.",
+      "consentRequired": "Tick the consent box to continue.",
+      "privacyLink": "Privacy policy · Job matching",
+      "save": "Save",
+      "saving": "Saving…",
+      "saveError": "The criteria could not be saved. Please try again.",
+      "delete": "Delete criteria",
+      "deleteConfirm": "Delete the criteria? The weekly search and scoring stop, and this week's list is removed.",
+      "deleteYes": "Yes, delete",
+      "deleteNo": "Cancel"
+    },
+    "gate": {
+      "title": "Every Monday, the postings that fit you",
+      "body": "Save your job titles and city; every week the new LinkedIn and kariyer.net postings are searched, each is compared with your CV and scored, and the matched and missing criteria are written out. Postings you already applied to are left out.",
+      "point1": "Up to 50 new postings a week, ordered by fit",
+      "point2": "Matched and missing criteria, required skills and the full text for each",
+      "point3": "One-click \"I applied\": the posting joins your application list",
+      "privacy": "Your CV is sent to Vertex AI (EU) only if you give explicit consent, and only for scoring.",
+      "privacyLink": "Privacy policy",
+      "helpLink": "How it works: price, refunds, CV consent",
+      "plan": "Pro plan",
+      "comingSoon": "Coming soon",
+      "comingSoonNote": "Payments are being set up; this button goes live when they are.",
+      "perMonth": "/ month",
+      "upgrade": "Go Pro",
+      "upgradeNote": "Monthly or yearly, prepaid. No automatic renewal."
+    }
+  },
   "imports": {
     "title": "Import from LinkedIn",
     "subtitle": "Upload LinkedIn's own data archive to bring your past applications over in bulk. It takes three steps, and beyond waiting for the archive there is nothing for you to do.",
@@ -1534,7 +1720,8 @@
       "companyReviews": "Company Reviews",
       "companySalaries": "Salary Information",
       "cvScan": "CV Scan",
-      "benchmark": "Reply Rate Benchmark"
+      "benchmark": "Reply Rate Benchmark",
+      "weeklyJobs": "Weekly Postings and Pro"
     },
     "common": {
       "step": "Step",
@@ -1590,7 +1777,7 @@
           "description": "Bring in your LinkedIn data export in bulk."
         },
         "settings": {
-          "description": "Data export, extension token, deleting your account."
+          "description": "Data export, extension token, plan and payments, deleting your account."
         },
         "chromeExtension": {
           "description": "One-click \"I Applied\" on LinkedIn and kariyer.net."
@@ -1612,6 +1799,9 @@
         },
         "benchmark": {
           "description": "Compare your reply rate with your field's median, no account needed."
+        },
+        "weeklyJobs": {
+          "description": "How the Monday list is built, pricing, CV consent, refunds."
         }
       }
     },
@@ -1884,7 +2074,7 @@
     "settings": {
       "eyebrow": "Settings",
       "title": "Account Settings",
-      "intro": "Settings is where you export your data, manage the browser extension's connection and delete your account. Theme and language are switched from the top menu, not from Settings.",
+      "intro": "Settings is where you export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "export": {
         "title": "Export My Data",
         "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks) and the salary entries you shared as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
@@ -1911,6 +2101,27 @@
           "title": "The connection only reaches the endpoints the extension uses",
           "body": "The key given to the extension can add applications, search companies and — if you turn it on — send email signals. It cannot export your application history or manage your account. Still give it only to your own browser: it expires on its own after 90 days, and \"Revoke\" invalidates it immediately if you ever have doubts."
         }
+      },
+      "billing": {
+        "title": "Plan and payments",
+        "body": "The \"Plan and payments\" section lists your Pro plan payments with date, amount and status; the \"Manage plan and payment history\" link takes you to the Pro plan page. No card details are kept by e-kariyerim: payment is taken on PayTR's secure page, so there is no card to delete or update here.",
+        "step1": {
+          "title": "See a payment's status",
+          "body": "Each row shows the plan, the payment date, the amount and the status: paid, pending, failed, refund requested, refunded. A pending payment can be followed on its result page via \"Open\"; you also get an e-mail once the result is final."
+        },
+        "step2": {
+          "title": "Open a refund request",
+          "body": "Eligible payments show a \"Request refund\" button. Write your reason and send it; the request is reviewed by hand and the outcome is e-mailed. If approved, the amount goes back to the card you paid with through PayTR within 3–10 business days, and your Pro plan is shortened by the period that payment had added."
+        },
+        "step3": {
+          "title": "Nothing to do to cancel",
+          "body": "There is no automatic renewal; we e-mail you three days before the end. If you do not extend, nothing is charged, Pro simply ends on its end date, and your applications and CVs stay exactly as they are."
+        },
+        "calloutWithdrawal": {
+          "title": "Right of withdrawal",
+          "body": "Because you consent on the checkout page to the digital service starting at once, the statutory withdrawal right is waived; a refund request does not replace it, each request is judged on its own. The details are on the Cancellation and Refund Terms page."
+        },
+        "refundPolicyLink": "Cancellation and Refund Terms"
       },
       "delete": {
         "title": "Delete My Account",
@@ -2045,7 +2256,7 @@
       },
       "q11": {
         "question": "Is my CV shown to employers?",
-        "answer": "No. Files on the My CVs page are visible only to you, are never sent to a third party or to any AI service, and are not read or analysed — recording which CV an application went out with is a note to yourself. The account-free CV scan doesn't store your file either, and the score is computed on our server; only if you tick the optional \"writing notes\" box is the CV text sent to Google Cloud Vertex AI, and it is not kept there. The details are in the \"CV scan\" section of the privacy policy."
+        "answer": "No. Files on the My CVs page are visible only to you, are never sent to a third party or to any AI service, and are not read or analysed (the one exception: if you turn on the paid weekly job matching and give separate consent, the text of your default CV is sent to Google Cloud Vertex AI to be compared with postings; details in the \"Weekly job matching\" section of the privacy policy) — recording which CV an application went out with is a note to yourself. The account-free CV scan doesn't store your file either, and the score is computed on our server; only if you tick the optional \"writing notes\" box is the CV text sent to Google Cloud Vertex AI, and it is not kept there. The details are in the \"CV scan\" section of the privacy policy."
       },
       "q12": {
         "question": "I have several applications at the same company. Can I see them together?",
@@ -2061,9 +2272,29 @@
       },
       "q15": {
         "question": "What can I use on e-kariyerim without an account?",
-        "answer": "Three things: CV Scan (how machine-readable your CV is), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension, writing a review, and reading or sharing salary information need a free account."
+        "answer": "Three things: CV Scan (how machine-readable your CV is), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension and writing a review need a free account."
       },
       "q16": {
+        "question": "What are weekly postings and what do they cost?",
+        "answer": "The Pro plan's feature: every Monday, new postings matching your criteria are compared with your CV and scored. Monthly or yearly, prepaid; the price is on the Pro plan page, VAT included; there is no automatic renewal."
+      },
+      "q17": {
+        "question": "Is my CV sent to an AI?",
+        "answer": "Only for the Pro plan's scoring, only if you explicitly allowed it on the criteria form, and only to Vertex AI (EU). Otherwise your CV is never sent to any AI service; you can withdraw the consent at any time."
+      },
+      "q18": {
+        "question": "Can I get a refund on the Pro plan?",
+        "answer": "Because you consent on the checkout page to the service starting at once, the statutory withdrawal right is waived; you can still open a refund request under Settings › Plan and payments. Requests are reviewed by hand and refunds go back to the same card through PayTR."
+      },
+      "q19": {
+        "question": "How do I cancel the Pro plan?",
+        "answer": "There is nothing to cancel: Pro is a prepaid period, there is no automatic renewal and no card on file. We e-mail you three days before the end; if you do not extend, nothing is charged and the plan simply ends on its end date. Your data stays as it is."
+      },
+      "q20": {
+        "question": "My payment was interrupted or failed; was my card charged?",
+        "answer": "If the payment window closed, you chose \"Cancel\" or your bank declined, nothing was charged; you can start the same plan again. If the result page says \"verifying\", we are waiting for the bank's confirmation: even if you close the page, we e-mail you once the result is final and it shows under Settings › Plan and payments. If your card was charged and the payment is still not recognised after a few hours, write to us via Feedback."
+      },
+      "q21": {
         "question": "Is the salary I share anonymous, and who sees it?",
         "answer": "Yes. A salary entry never shows your name, e-mail or account; readers see the occupation you picked from the list, your experience as a band (0–1, 2–4, 5–9, 10+ years), your employment type, whether you are a current or former employee, the month and the amount. There is no free text. Only signed-in users can read salary entries; you can edit or delete yours on My Salaries."
       }
@@ -2286,6 +2517,47 @@
         "title": "If you have an account",
         "body": "The dashboard measures the same rate from your real applications: a record, not a statement. We keep the two apart; the benchmark tool writes nothing to your account."
       }
+    },
+    "weeklyJobs": {
+      "eyebrow": "Pro plan",
+      "title": "Weekly postings and the Pro plan",
+      "intro": "Every Monday morning the Pro plan searches LinkedIn and kariyer.net for new postings that match your criteria, compares each with your default CV, scores it, and spells out which criteria match and which are missing. Postings you already applied to are left out.",
+      "open": "Go to weekly postings →",
+      "how": {
+        "title": "How it works",
+        "step1": {
+          "title": "Save your criteria",
+          "body": "Up to three job titles and one city. Remote-work preference and the e-mail digest are optional."
+        },
+        "step2": {
+          "title": "Consent to your CV being scored",
+          "body": "Your CV is sent to the AI for scoring only if you explicitly allow it; without that consent the feature does not run, because there is no unscored version of it."
+        },
+        "step3": {
+          "title": "Your list is ready on Monday morning",
+          "body": "Up to 50 postings that appeared on the two sources that week and match your criteria, ranked by fit score. A \"N postings are ready\" e-mail comes if you want it."
+        },
+        "step4": {
+          "title": "One-click \"I applied\"",
+          "body": "A posting you apply to joins your application list and is never shown again in later weeks."
+        }
+      },
+      "score": {
+        "title": "What the fit score is",
+        "body": "A number from 0 to 100, produced by comparing the posting's text with your CV. Each posting also lists matched criteria, missing criteria and the required skills; the score is a measure for ranking and filtering, not advice. Postings under the minimum score you set in your criteria are hidden from the list."
+      },
+      "plan": {
+        "title": "Price and period",
+        "body": "Monthly or yearly, prepaid. Prices are shown on the Pro plan page, VAT included. There is no automatic renewal: we e-mail you three days before the end; if you do not extend, nothing is charged, and no card is stored — payment is taken on PayTR's secure page and your card details never reach e-kariyerim."
+      },
+      "refund": {
+        "title": "Refunds",
+        "body": "Because you consent on the checkout page to the digital service starting at once, the statutory withdrawal right is waived; you can still open a refund request under Settings › Plan and payments, every request is reviewed by hand, and a refund goes back to the same card through PayTR."
+      },
+      "calloutConsent": {
+        "title": "Where your CV goes",
+        "body": "Only for scoring, only if you consented, and only to Vertex AI (EU region). You can withdraw consent from the criteria form at any time; from then on your CV is not sent. Details are in the privacy policy's \"Job matching\" section."
+      }
     }
   },
   "guide": {
@@ -2356,7 +2628,7 @@
     "consent": {
       "before": "I give my",
       "link": "explicit consent",
-      "after": "to storing my CV — the file is shown only to me and is never sent to any third party.",
+      "after": "to storing my CV — the file is shown only to me and is never sent to any third party (unless I separately turn on the weekly job matching and consent to that).",
       "sensitiveWarning": "A CV does not have to carry a photo, a date of birth, or health or military-service information; what goes into it is your decision. You can withdraw your consent at any time by deleting the file."
     }
   },
@@ -2807,7 +3079,8 @@
     "label": "Admin sections",
     "metrics": "Metrics",
     "reviews": "Reviews",
-    "reports": "Reports"
+    "reports": "Reports",
+    "payments": "Payments"
   },
   "companies": {
     "directory": {
@@ -4275,5 +4548,360 @@
     "companies": "Company reviews",
     "guide": "Guide",
     "help": "Help Centre"
+  },
+  "payments": {
+    "plans": {
+      "title": "Pro plan",
+      "intro": "Every Monday, new postings on LinkedIn and kariyer.net are compared with your CV and scored. Prepaid period; no automatic renewal.",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "perMonth": "/ month",
+      "perYear": "/ year",
+      "perMonthEquivalent": "{amount} a month",
+      "recommended": "Recommended",
+      "recommendedSaves": "Recommended · {months} months free",
+      "feature1": "Up to 50 new postings a week, ranked by fit score",
+      "feature2": "Matched and missing criteria, required skills and the full text for every posting",
+      "feature3": "One-click \"I applied\": the posting joins your application list",
+      "feature4": "A \"N postings are ready\" e-mail every Monday",
+      "kdvIncluded": "VAT included",
+      "current": "Your Pro plan is active until {date}. Whatever you pay for now is added on top of that date.",
+      "extend": "Extend",
+      "choose": "Choose this plan",
+      "noAutoRenew": "Payment is taken on PayTR's secure page. There is no automatic renewal; we e-mail you three days before the end, and nothing is charged unless you extend.",
+      "historyTitle": "My payments",
+      "loadError": "The plans could not be loaded. Please reload the page."
+    },
+    "checkout": {
+      "title": "Checkout",
+      "step1": "Billing details",
+      "step2": "Payment",
+      "stepOf": "Step {step} of 2 · {label}",
+      "billingName": "Full name",
+      "billingAddress": "Address",
+      "billingPhone": "Phone",
+      "billingWhy": "These details are needed for the invoice and are passed to the payment provider, PayTR. Your card details never reach e-kariyerim.",
+      "terms": "I have read and accept the <sale>Distance Sales Agreement and Pre-contract Information</sale>. I consent to the digital service starting immediately and understand that I therefore lose my right of withdrawal (<refund>cancellation and refund policy</refund>).",
+      "termsRequired": "You must accept the agreement to continue.",
+      "pay": "Continue to payment",
+      "starting": "Preparing the payment page…",
+      "back": "Back to plans",
+      "unknownPlan": "The chosen plan was not found. Please pick one again on the plans page.",
+      "providerError": "The payment provider could not be reached. Nothing was charged; please try again in a moment.",
+      "timeLeft": "Time left in the payment window: {minutes}:{seconds}",
+      "cancel": "Cancel",
+      "cancelConfirm": "Give up on this payment?",
+      "cancelYes": "Yes, cancel",
+      "cancelNo": "Keep going",
+      "expired": "The payment window closed; nothing was charged. You can start again.",
+      "restart": "Start again",
+      "frameTitle": "PayTR secure payment page",
+      "frameNote": "The payment is taken on PayTR's secure page; your card details never reach e-kariyerim. You are sent to the result page when it completes."
+    },
+    "summary": {
+      "title": "Order summary",
+      "line": "Pro · {plan}",
+      "vat": "VAT (20%)",
+      "vatIncluded": "included",
+      "total": "Total",
+      "periodMonthly": "One prepaid month. No automatic renewal; we remind you before it ends.",
+      "periodYearly": "One prepaid year. No automatic renewal; we remind you before it ends.",
+      "secure": "Payment is taken on PayTR's secure page; your card details never reach e-kariyerim."
+    },
+    "result": {
+      "verifyingTitle": "Verifying your payment",
+      "verifyingFailTitle": "The payment does not seem to have completed",
+      "verifying": "Waiting for the bank's answer; this usually takes a few seconds.",
+      "pendingLong": "The bank's confirmation is taking longer than usual. We keep waiting; even if you close this page, we e-mail you once the result is final, and it shows under Settings > Plan and payments.",
+      "pendingGaveUp": "The result has not reached us yet. If your card was charged, the payment will be recognised shortly and we will e-mail you; if it was not, no payment was made. You can follow it under Settings > Plan and payments.",
+      "checkNow": "Check now",
+      "elapsedLabel": "elapsed",
+      "keepOpen": "Keep this page open — the result will show here",
+      "safeToClose": "You can close this page — the result arrives by e-mail",
+      "planLabel": "Plan",
+      "amountLabel": "Amount",
+      "orderLabel": "Order",
+      "lastCheckedLabel": "Last checked",
+      "lastChecked": "{seconds} s ago",
+      "lastCheckedNow": "just now",
+      "checksStopped": "Stopped",
+      "paidTitle": "Payment received",
+      "paidBody": "Your payment of {amount} for {plan} was confirmed. Your Pro plan is active until {date}.",
+      "receiptNote": "Your receipt e-mail arrives within a few minutes. There is no automatic renewal; we remind you a few days before the end.",
+      "goToJobs": "Go to weekly postings",
+      "backToPlans": "Back to plans",
+      "failedTitle": "The payment did not go through",
+      "bankSaid": "The bank's explanation:",
+      "noCharge": "Nothing was charged to your card.",
+      "tryAgain": "Try again",
+      "expiredTitle": "The payment window closed",
+      "cancelledTitle": "The payment was cancelled",
+      "refundedTitle": "This payment was refunded",
+      "notFoundTitle": "Order not found",
+      "notFound": "This link does not point at an order of yours."
+    },
+    "failure": {
+      "bank": "Your bank did not approve the payment.",
+      "1": "Authentication was not completed: no mobile number was entered. Please try again and complete the step.",
+      "2": "Authentication failed: the code sent to your phone was not entered correctly. Please try again.",
+      "3": "The security check did not approve the payment or could not be completed. Please try again or use another card.",
+      "6": "The payment page was closed before completing, or it timed out.",
+      "8": "This card cannot be used for instalments. (The Pro plan is a single charge; try a different card.)",
+      "9": "This card is not authorised for this transaction. Please use another card.",
+      "10": "3-D Secure is required for this payment. Please try again with a card that supports 3-D Secure.",
+      "11": "The payment was not approved after a security check. Please contact us.",
+      "99": "A technical error occurred. Please try again in a moment.",
+      "providerRejected": "The payment page could not be opened (the payment provider refused the request). Nothing was charged; please try again.",
+      "unknown": "The payment did not go through. Please try again or use another card."
+    },
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "failed": "Failed",
+      "expired": "Expired",
+      "cancelled": "Cancelled",
+      "refundRequested": "Refund requested",
+      "refunded": "Refunded",
+      "partiallyRefunded": "Partially refunded"
+    },
+    "history": {
+      "loading": "Loading payments…",
+      "empty": "You have no payments yet.",
+      "refunded": "{amount} refunded",
+      "open": "Open",
+      "requestRefund": "Request a refund",
+      "seeAll": "See all"
+    },
+    "refund": {
+      "title": "Refund request",
+      "body": "Your request is reviewed; if approved, the amount is refunded through PayTR to the card you paid with and your Pro plan is wound back by the period this payment added. You are told the outcome by e-mail.",
+      "policyLink": "Cancellation and refund policy",
+      "reason": "Why you want a refund",
+      "submit": "Send the request",
+      "cancel": "Cancel",
+      "error": "The request could not be sent. Please try again."
+    }
+  },
+  "adminPayments": {
+    "title": "Payments",
+    "panelWarning": "Refunds are made only from this panel. Do not refund by hand in the PayTR merchant panel: this system would not know, Pro would stay on and the monthly totals would be wrong.",
+    "loading": "Loading…",
+    "loadError": "The summary could not be loaded.",
+    "actionError": "The action failed. Please try again.",
+    "plan": {
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "summary": {
+      "thisMonth": "This month",
+      "gross": "Gross",
+      "refunds": "Refunds",
+      "net": "Net",
+      "sales": "{count} sales",
+      "refundCount": "{count} refunds",
+      "cancelled": "Cancelled / expired",
+      "failed": "Failed",
+      "openRequests": "Open refund requests",
+      "activePro": "Active Pro users",
+      "testOrders": "Test payments (30 days)",
+      "feeNote": "Amounts include VAT; PayTR's commission is not deducted. Test-mode payments are left out of the totals. Months follow Türkiye time; a refund counts in the month it was made.",
+      "last12Months": "Last 12 months",
+      "month": "Month",
+      "salesColumn": "Sales"
+    },
+    "queue": {
+      "title": "Refund requests",
+      "empty": "No refund requests waiting.",
+      "requestedAt": "Requested: {date}"
+    },
+    "orders": {
+      "title": "Orders",
+      "status": "Status",
+      "allStatuses": "All",
+      "month": "Month",
+      "search": "E-mail or order no",
+      "searchPlaceholder": "ada@… or merchant_oid",
+      "apply": "Apply",
+      "open": "Open",
+      "empty": "No orders match this filter.",
+      "test": "TEST",
+      "mismatch": "amount differs",
+      "columns": {
+        "date": "Date",
+        "email": "User",
+        "plan": "Plan",
+        "amount": "Amount",
+        "status": "Status",
+        "flags": "Flags"
+      }
+    },
+    "detail": {
+      "title": "Order",
+      "close": "Close",
+      "merchantOid": "Order no (merchant_oid)",
+      "plan": "Plan",
+      "asked": "Amount asked",
+      "charged": "Amount charged",
+      "refunded": "Refunded",
+      "created": "Created",
+      "paidAt": "Paid",
+      "failure": "Failure",
+      "paymentType": "Payment type",
+      "terms": "Agreement",
+      "billing": "Billing details",
+      "entitlement": "Pro status",
+      "entitlementState": "Active: {active, select, yes {yes} other {no}} · ends {date}",
+      "noEntitlement": "This user has no Pro record (the account may be deleted).",
+      "entitlementChange": "This order: {from} → {to}",
+      "refundSection": "Refund",
+      "refundReason": "User's reason",
+      "refundRejection": "Rejection note",
+      "refundReference": "PayTR reference",
+      "timeline": "PayTR notifications",
+      "noNotifications": "No notifications yet.",
+      "badHash": "bad hash",
+      "cancelOrder": "Cancel the order",
+      "cancelBody": "The pending order is closed; nothing is charged if it was not paid. A success notification that arrives later is still applied."
+    },
+    "outcome": {
+      "Applied": "Applied",
+      "Duplicate": "Repeat",
+      "LateApplied": "Applied late",
+      "UnknownOrder": "Unknown order",
+      "BadHash": "Bad hash",
+      "Malformed": "Missing field",
+      "Error": "Error",
+      "RefundRecorded": "Refund record"
+    },
+    "alerts": {
+      "title": "Alerts (last 30 days)",
+      "hint": "If a transaction shows as \"Devam ediyor\" in the PayTR panel, the reason is here: notifications we rejected or could not match, and amount mismatches.",
+      "empty": "No alerts.",
+      "mismatch": "{email}: {expected} asked, {charged} charged"
+    },
+    "refund": {
+      "start": "Refund",
+      "full": "Full refund",
+      "reject": "Reject",
+      "markRefunded": "Mark as refunded in PayTR",
+      "cancel": "Cancel",
+      "refundTitle": "Refund",
+      "refundConfirm": "Send the refund request to PayTR",
+      "refundBody": "The amount is refunded through PayTR to the same card (3–10 business days). At most {max} can still be refunded. A full refund winds the user's Pro period back by what this order added.",
+      "rejectTitle": "Reject the refund request",
+      "rejectConfirm": "Reject and notify the user",
+      "rejectBody": "The note is e-mailed to the user; the order goes back to 'Paid'.",
+      "markRefundedTitle": "Record a refund by hand",
+      "markRefundedConfirm": "Record (no request is sent to PayTR)",
+      "markRefundedBody": "Only when you have verified in the PayTR merchant panel that the refund was already made (e.g. it succeeded but our own record failed). At most {max}.",
+      "cancelTitle": "Cancel the order",
+      "cancelConfirm": "Cancel it",
+      "amount": "Refund amount (₺)",
+      "amountInvalid": "The amount must be above 0 and at most the refundable amount.",
+      "reference": "PayTR reference no",
+      "note": "Rejection note (sent to the user)"
+    }
+  },
+  "legalDraft": {
+    "notice": "This text is a draft; the Pro plan does not go on sale before the final version is published."
+  },
+  "termsOfSale": {
+    "title": "Distance Sales Agreement and Pre-contract Information",
+    "lastUpdated": "Version 2026-09 (draft)",
+    "intro": "This agreement governs the online sale of the e-kariyerim Pro plan (the weekly job matching service) under Türkiye's Consumer Protection Law No. 6502 and the Distance Contracts Regulation.",
+    "seeAlso": "See also:",
+    "refundLink": "Cancellation and refund policy",
+    "privacyLink": "Privacy policy (payments)",
+    "sections": {
+      "parties": {
+        "title": "Parties",
+        "body": "[Seller name, address, tax office/number, e-mail] and the consumer buying the service (the Buyer). The Buyer's details are the name, address and phone entered at checkout and the e-mail address on their account."
+      },
+      "subject": {
+        "title": "Subject",
+        "body": "[Text to come] The rights and obligations of the parties regarding the sale and performance of the Pro plan the Buyer orders electronically on e-kariyerim."
+      },
+      "service": {
+        "title": "The service",
+        "body": "[Text to come] The Pro plan: every week, new postings on LinkedIn and kariyer.net are collected for the Buyer's saved criteria, compared with their CV, scored and announced by e-mail. The monthly plan runs one calendar month, the yearly plan one calendar year; there is no automatic renewal."
+      },
+      "price": {
+        "title": "Price",
+        "body": "[Text to come] The price is the amount shown on the checkout page, VAT included. Price changes do not affect periods already started."
+      },
+      "payment": {
+        "title": "Payment",
+        "body": "[Text to come] Payment is taken as a single charge by credit or debit card through PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş. Card details never reach the Seller."
+      },
+      "delivery": {
+        "title": "Performance",
+        "body": "[Text to come] The service starts as soon as PayTR confirms the payment and is available in the Buyer's account."
+      },
+      "withdrawal": {
+        "title": "Right of withdrawal",
+        "body": "[Text to come] For services performed immediately in an electronic environment, the right of withdrawal cannot be used where the Buyer expressly consents to performance and acknowledges losing the right (Distance Contracts Regulation art. 15/1-ğ). The Buyer gives this consent at checkout."
+      },
+      "refunds": {
+        "title": "Cancellation and refunds",
+        "body": "[Text to come] Refund requests outside the right of withdrawal are handled as described on the Cancellation and Refund Policy page."
+      },
+      "obligations": {
+        "title": "Obligations of the parties",
+        "body": "[Text to come]"
+      },
+      "disputes": {
+        "title": "Disputes",
+        "body": "[Text to come] Consumer Arbitration Committees are competent within the monetary limits announced by the Ministry of Trade, Consumer Courts above them."
+      },
+      "effective": {
+        "title": "Entry into force",
+        "body": "[Text to come] By ticking the box on the checkout page the Buyer declares having read and accepted this agreement and the pre-contract information; the agreement is concluded when the payment is confirmed."
+      }
+    }
+  },
+  "refundPolicy": {
+    "title": "Cancellation and Refund Policy",
+    "lastUpdated": "Version 2026-09 (draft)",
+    "intro": "This page explains how cancellation and refunds work for the e-kariyerim Pro plan.",
+    "seeAlso": "See also:",
+    "termsLink": "Distance Sales Agreement",
+    "sections": {
+      "scope": {
+        "title": "Scope",
+        "body": "[Text to come] These terms apply to the monthly and yearly periods of the Pro plan."
+      },
+      "withdrawal": {
+        "title": "Right of withdrawal",
+        "body": "[Text to come] Because the service starts immediately with the payment and you expressly consent to that at checkout, the statutory right of withdrawal cannot be used."
+      },
+      "cancellation": {
+        "title": "Cancellation",
+        "body": "[Text to come] There is no automatic renewal; nothing is charged at the end of a period. You do not need to do anything to not extend. An order closed before the payment window completes is not charged."
+      },
+      "howToRequest": {
+        "title": "How to request a refund",
+        "body": "With the \"Request a refund\" button next to the payment under Settings > Plan and payments or on the Pro plan page, stating your reason. [Conditions under which a refund is granted — text to come]"
+      },
+      "decision": {
+        "title": "Review",
+        "body": "[Text to come] The request is reviewed within [N] business days; the outcome is sent by e-mail."
+      },
+      "howRefunded": {
+        "title": "How the refund is made",
+        "body": "An approved refund is sent through PayTR to the card you paid with; depending on your bank it appears within 3–10 business days. No refunds to another account or in cash."
+      },
+      "partial": {
+        "title": "Partial refunds",
+        "body": "[Text to come] After a partial refund your Pro plan continues unchanged."
+      },
+      "proAfterRefund": {
+        "title": "Pro after a refund",
+        "body": "A fully refunded payment's period is taken back from your Pro plan; time from other payments is kept."
+      },
+      "contact": {
+        "title": "Contact",
+        "body": "[E-mail address — text to come]"
+      }
+    }
   }
 }

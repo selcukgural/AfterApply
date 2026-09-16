@@ -31,6 +31,10 @@ public class NoOutboundHttpTests(ApiHost<DefaultProfile> host) : IClassFixture<A
     [InlineData("ICompanyEnrichmentService")]
     [InlineData("IJobLinkPreviewService")]
     [InlineData("LinkedInJwks")]
+    [InlineData("ILinkedInJobSourceClient")]
+    [InlineData("vertex-cv-review")]
+    [InlineData("vertex-job-fit")]
+    [InlineData("IPayTrClient")]
     // And any client at all, including one a future feature adds without touching this file.
     [InlineData("some-client-added-next-year")]
     public async Task Every_Factory_Client_Refuses_To_Leave_The_Machine(string clientName)

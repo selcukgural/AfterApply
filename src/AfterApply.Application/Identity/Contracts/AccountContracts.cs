@@ -133,4 +133,30 @@ public sealed record AccountExportResponse(
     IReadOnlyList<CompanyReviewExportItem>? CompanyReviews = null,
     IReadOnlyList<CompanyReviewReportExportItem>? CompanyReviewReports = null,
     IReadOnlyList<Guid>? HelpfulMarkedReviewIds = null,
-    IReadOnlyList<CompanySalaryExportItem>? CompanySalaries = null);
+    IReadOnlyList<CompanySalaryExportItem>? CompanySalaries = null,
+    IReadOnlyList<PaymentOrderExportItem>? Payments = null,
+    ProEntitlementExportItem? ProEntitlement = null);
+
+/// <summary>A Pro purchase as the user sees it: what they bought, what they typed for the
+/// invoice, what happened. Provider internals (merchant ids, tokens, hashes) stay out.</summary>
+public sealed record PaymentOrderExportItem(
+    Guid Id,
+    string Plan,
+    long AmountMinor,
+    long? TotalAmountMinor,
+    string Currency,
+    string Status,
+    string BillingName,
+    string BillingAddress,
+    string BillingPhone,
+    string TermsVersion,
+    DateTimeOffset TermsAcceptedAt,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? PaidAt,
+    int? FailedReasonCode,
+    long RefundedAmountMinor,
+    DateTimeOffset? RefundRequestedAt,
+    string? RefundReason,
+    DateTimeOffset? RefundedAt);
+
+public sealed record ProEntitlementExportItem(DateTimeOffset ActiveUntil, string Source, DateTimeOffset GrantedAt, DateTimeOffset? RevokedAt);

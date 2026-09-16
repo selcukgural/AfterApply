@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ADMIN_NAV_HREF, canSeeAdminNav } from "@/lib/auth/adminNav";
+import { PRO_NAV_HREF, canSeeProNav } from "@/lib/payments/proNav";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
 import { useNotificationCount } from "@/hooks/useNotificationCount";
 import { Button } from "@/components/ui/Button";
@@ -13,26 +14,34 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { displayName } from "@/lib/auth/displayName";
 import { UserMenu } from "@/components/layout/UserMenu";
-import { TOOL_LINKS, ToolsMenu } from "@/components/layout/ToolsMenu";
-import { COMPANY_LINKS, CompaniesMenu } from "@/components/layout/CompaniesMenu";
+import { COMPANY_LINKS, ExploreMenu, TOOL_LINKS } from "@/components/layout/ExploreMenu";
+import { NavMenu } from "@/components/layout/NavMenu";
+import { ProBadge } from "@/components/layout/ProBadge";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
+import { useClientConfig } from "@/hooks/useClientConfig";
+import { useProBadge } from "@/hooks/useProBadge";
 
+/** The flat list the mobile menu shows; the desktop row folds most of it into two groups. */
 const NAV_LINKS = [
   { href: "/dashboard", key: "dashboard" },
   { href: "/applications", key: "applications" },
   { href: "/tracked-jobs", key: "trackedJobs" },
   { href: "/cv", key: "cv" },
   { href: "/import", key: "import" },
-  // "Companies" is not here: it is a group (CompaniesMenu) — the directory plus the two
-  // contributions a signed-in person can make.
+  // "Companies" is not here: on desktop it sits in the Explore group, on mobile in its own
+  // section (COMPANY_LINKS) — the directory plus the two contributions a signed-in person can make.
 ] as const;
 
 /**
  * The signed-in app's header. Since 2026-09-14 it is also what a signed-in visitor gets on the
  * public pages (SiteHeader hands over to it), so /companies, the guide and the help centre no
- * longer drop the app's menu and avatar — which read as "I have been signed out". The
- * account-free tools sit in the "Tools" group (ToolsMenu) so that hand-over loses nothing the
- * public header offered.
+ * longer drop the app's menu and avatar — which read as "I have been signed out".
+ *
+ * The desktop row is four items (2026-09-15, option D3 on the header canvas): Dashboard, an
+ * "Applications" group (list, tracked jobs, import, new), an "Explore" group (weekly postings,
+ * companies, the account-free tools), and CVs — with suggestions and notifications as icon
+ * buttons by the avatar. The previous row had ten text items and the paid weekly postings made
+ * it eleven, which is what forced the header wider than its page a day earlier.
  */
 export function NavBar() {
   const { user, logout } = useAuth();
@@ -41,7 +50,16 @@ export function NavBar() {
   const t = useTranslations("nav");
   const { data: suggestionCount } = useSuggestionCount();
   const { data: notificationCount } = useNotificationCount();
+  const { config } = useClientConfig();
+  const { showProBadge } = useProBadge();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // The paid weekly job matching ships dark (JobSources:Enabled); its link appears only when the
+  // server says the routes exist, the same rule as the company pages' flag. Mobile only — on
+  // desktop it lives in the Explore group.
+  const mobileLinks = config.jobSources?.enabled
+    ? [...NAV_LINKS.slice(0, 3), { href: "/weekly-jobs", key: "weeklyJobs" } as const, ...NAV_LINKS.slice(3)]
+    : NAV_LINKS;
 
   const handleLogout = async () => {
     await logout();
@@ -52,6 +70,7 @@ export function NavBar() {
   // stored session against /api/users/me), so a grant or a revoke reaches the menu on the next page
   // load rather than at the next sign-in.
   const showAdmin = canSeeAdminNav(user);
+  const showPro = canSeeProNav(config);
 
   // An account may have no name at all (sign-up stopped asking on 2026-09-14): the header then
   // shows the part of the e-mail before the @, and the avatar its first letter.
@@ -68,29 +87,68 @@ export function NavBar() {
       </span>
     ) : null;
 
-  const suggestionsLink = (mobile: boolean) => (
+  const suggestionsLink = (
     <Link
       href="/suggestions"
-      onClick={mobile ? () => setMenuOpen(false) : undefined}
+      onClick={() => setMenuOpen(false)}
       aria-current={active("/suggestions") ? "page" : undefined}
-      className={mobile ? mobileLink("/suggestions") : desktopLink("/suggestions")}
+      className={mobileLink("/suggestions")}
     >
       {t("suggestions")}
       {badge(suggestionCount)}
     </Link>
   );
 
-  const notificationsLink = (mobile: boolean) => (
+  const notificationsLink = (
     <Link
       href="/notifications"
-      onClick={mobile ? () => setMenuOpen(false) : undefined}
+      onClick={() => setMenuOpen(false)}
       aria-current={active("/notifications") ? "page" : undefined}
-      className={mobile ? mobileLink("/notifications") : desktopLink("/notifications")}
+      className={mobileLink("/notifications")}
     >
       {t("notifications")}
       {badge(notificationCount)}
     </Link>
   );
+
+  // The two "something is waiting for you" destinations, as icons with their counts by the
+  // avatar: they are signals, not sections, and the count is what a glance is after.
+  const iconLink = (href: string, label: string, count: number | undefined, icon: ReactNode) => (
+    <Link
+      href={href}
+      aria-label={count ? `${label} (${count})` : label}
+      title={label}
+      aria-current={active(href) ? "page" : undefined}
+      className={`relative flex h-9 w-9 items-center justify-center rounded-md transition-colors ${
+        active(href)
+          ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+      }`}
+    >
+      {icon}
+      {count ? <span className="absolute -top-1 -right-1">{badge(count)}</span> : null}
+    </Link>
+  );
+
+  const inboxIcon = (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+      <path d="M5.5 5h13l3.5 7v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-7z" />
+    </svg>
+  );
+  const bellIcon = (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10 21h4" />
+    </svg>
+  );
+
+  const applicationsItems = [
+    { href: "/applications", label: t("allApplications") },
+    { href: "/tracked-jobs", label: t("trackedJobs") },
+    { href: "/import", label: t("import") },
+    { href: "/applications/new", label: t("newApplication"), dividerBefore: true },
+  ];
 
   return (
     <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
@@ -103,31 +161,30 @@ export function NavBar() {
             <Logo />
           </Link>
           <nav className="hidden items-center gap-4 text-sm md:flex">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={active(link.href) ? "page" : undefined}
-                className={desktopLink(link.href)}
-              >
-                {t(link.key)}
-              </Link>
-            ))}
-            <CompaniesMenu />
-            {suggestionsLink(false)}
-            {notificationsLink(false)}
-            <ToolsMenu />
+            <Link href="/dashboard" aria-current={active("/dashboard") ? "page" : undefined} className={desktopLink("/dashboard")}>
+              {t("dashboard")}
+            </Link>
+            <NavMenu label={t("applicationsMenu")} items={applicationsItems} />
+            <ExploreMenu />
+            <Link href="/cv" aria-current={active("/cv") ? "page" : undefined} className={desktopLink("/cv")}>
+              {t("cv")}
+            </Link>
           </nav>
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-1 md:flex">
+          {iconLink("/suggestions", t("suggestions"), suggestionCount, inboxIcon)}
+          {iconLink("/notifications", t("notifications"), notificationCount, bellIcon)}
           {user && (
-            <UserMenu
-              name={fullName}
-              initials={initials}
-              onLogout={handleLogout}
-              showAdmin={showAdmin}
-            />
+            <div className="ml-2">
+              <UserMenu
+                name={fullName}
+                initials={initials}
+                onLogout={handleLogout}
+                showAdmin={showAdmin}
+                showPro={showPro}
+              />
+            </div>
           )}
         </div>
 
@@ -154,7 +211,7 @@ export function NavBar() {
       {menuOpen && (
         <div id="app-mobile-menu" className="border-t border-gray-200 px-4 py-4 md:hidden dark:border-gray-800">
           <nav className="flex flex-col gap-1 text-sm">
-            {NAV_LINKS.map((link) => (
+            {mobileLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -163,10 +220,11 @@ export function NavBar() {
                 className={mobileLink(link.href)}
               >
                 {t(link.key)}
+                {link.href === "/weekly-jobs" && showProBadge && <ProBadge />}
               </Link>
             ))}
-            {suggestionsLink(true)}
-            {notificationsLink(true)}
+            {suggestionsLink}
+            {notificationsLink}
           </nav>
 
           <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
@@ -202,6 +260,11 @@ export function NavBar() {
               <Link href="/my-salaries" onClick={() => setMenuOpen(false)} className={mobileLink("/my-salaries")}>
                 {t("mySalaries")}
               </Link>
+              {showPro && (
+                <Link href={PRO_NAV_HREF} onClick={() => setMenuOpen(false)} className={mobileLink("/pro")}>
+                  {t("pro")}
+                </Link>
+              )}
               {/* Same group as on the desktop menu — help, settings, then admin for the accounts
                   that have it. */}
               {showAdmin && (

@@ -54,34 +54,68 @@ const apiWebSocketOrigin = apiOrigin.replace(/^http/, "ws");
 // help pages, into dynamic rendering. Deliberately deferred; see DECISIONS.md. That means this CSP
 // hardens exfiltration and framing rather than injection itself, and the sanitization at the one
 // dangerouslySetInnerHTML call site (JobDescriptionCard) is still the primary XSS control.
-const contentSecurityPolicy = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self' data:",
-  `connect-src 'self' ${apiOrigin} ${apiWebSocketOrigin}${sentryOrigin ? ` ${sentryOrigin}` : ""}`,
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "object-src 'none'",
-].join("; ");
+//
+// The PayTR checkout is the one deliberate exception (DECISIONS.md 2026-09-15):
+//  - frame-src https://www.paytr.com is in the *global* policy, because the checkout is reached by
+//    a client-side navigation and a CSP belongs to the document, not the route — a per-route
+//    header for /pro/checkout only applies on a full page load and left the frame blocked after a
+//    click from /pro. Allowing PayTR as a frame source on every page costs nothing: it only says
+//    which origins may be embedded, and the card form lives inside that frame, never on our origin.
+//  - script-src does NOT widen: PayTR's iframe-resizer parent script is served from our own
+//    origin (public/vendor/paytr-iframeResizer.min.js), so 'self' covers it.
+//  - /{locale}/pro/return/* may be rendered *inside* that frame when PayTR navigates it to our
+//    merchant_ok_url instead of the top window, so that route alone allows paytr.com as a frame
+//    ancestor and drops the legacy X-Frame-Options (which cannot express an allow-list). The page
+//    holds no state and only redirects the top window to the result page.
+const PAYTR_ORIGIN = "https://www.paytr.com";
+
+function buildCsp(overrides: Partial<Record<string, string>> = {}): string {
+  const directives: Record<string, string> = {
+    "default-src": "'self'",
+    "script-src": "'self' 'unsafe-inline'",
+    "style-src": "'self' 'unsafe-inline'",
+    "img-src": "'self' data: blob:",
+    "font-src": "'self' data:",
+    "frame-src": PAYTR_ORIGIN,
+    "connect-src": `'self' ${apiOrigin} ${apiWebSocketOrigin}${sentryOrigin ? ` ${sentryOrigin}` : ""}`,
+    "frame-ancestors": "'none'",
+    "base-uri": "'self'",
+    "form-action": "'self'",
+    "object-src": "'none'",
+    ...overrides,
+  };
+  return Object.entries(directives)
+    .map(([key, value]) => `${key} ${value}`)
+    .join("; ");
+}
+
+const contentSecurityPolicy = buildCsp();
+
+const commonSecurityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  // Password-reset links arrive as ?email=&token= query strings — strict-origin-when-cross-origin
+  // keeps that token out of the Referer header on any outbound navigation from the reset page.
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  // Nothing in this app uses any of these; denying them keeps an injected iframe or script from
+  // prompting the user for hardware access under our origin's name. PayTR's card form does not
+  // use the Payment Request API, so payment=() stays denied on the checkout too.
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  // Two years, the minimum for HSTS preload eligibility. Safe to assert unconditionally: this
+  // header is only ever set on responses the browser received over https to begin with.
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+];
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: contentSecurityPolicy },
   // frame-ancestors above already covers this for anything modern; kept for older browsers that
   // understand the legacy header but not the directive.
   { key: "X-Frame-Options", value: "DENY" },
-  { key: "X-Content-Type-Options", value: "nosniff" },
-  // Password-reset links arrive as ?email=&token= query strings — strict-origin-when-cross-origin
-  // keeps that token out of the Referer header on any outbound navigation from the reset page.
-  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  // Nothing in this app uses any of these; denying them keeps an injected iframe or script from
-  // prompting the user for hardware access under our origin's name.
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
-  // Two years, the minimum for HSTS preload eligibility. Safe to assert unconditionally: this
-  // header is only ever set on responses the browser received over https to begin with.
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  ...commonSecurityHeaders,
+];
+
+const paytrReturnSecurityHeaders = [
+  { key: "Content-Security-Policy", value: buildCsp({ "frame-ancestors": `'self' ${PAYTR_ORIGIN}` }) },
+  ...commonSecurityHeaders,
 ];
 
 const nextConfig: NextConfig = {
@@ -90,7 +124,12 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname),
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    // The PayTR return route is excluded from the catch-all outright: it must not carry
+    // X-Frame-Options at all, and a later matching entry can override a header but not remove it.
+    return [
+      { source: "/:path((?!(?:tr|en)/pro/return/).*)", headers: securityHeaders },
+      { source: "/:locale(tr|en)/pro/return/:path*", headers: paytrReturnSecurityHeaders },
+    ];
   },
 };
 

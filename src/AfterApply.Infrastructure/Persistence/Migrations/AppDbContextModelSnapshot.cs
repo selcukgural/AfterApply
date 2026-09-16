@@ -22,6 +22,46 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("AfterApply.Domain.Ai.AiUsageEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Feature")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("InputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("OutputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Feature", "At");
+
+                    b.ToTable("AiUsageEntries", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.Applications.Application", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1031,6 +1071,382 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.ToTable("ImportRowErrors", (string)null);
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.JobSources.JobSourceFetch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("At");
+
+                    b.ToTable("JobSourceFetches", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.JobSourcePosting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("CompanyProfileUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("DetailFetchedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmploymentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Industries")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("JobFunction")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly?>("PostedAt")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Seniority")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastSeenAt");
+
+                    b.HasIndex("Source", "ExternalId")
+                        .IsUnique();
+
+                    b.ToTable("JobSourcePostings", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.JobSourceQuery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("KeyHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Keywords")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LastOutcome")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("LastResultCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("LastRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("RemoteOnly")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TimeWindow")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KeyHash")
+                        .IsUnique();
+
+                    b.ToTable("JobSourceQueries", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.JobSourceQueryPosting", b =>
+                {
+                    b.Property<Guid>("QueryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PostingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Rank")
+                        .HasColumnType("integer");
+
+                    b.HasKey("QueryId", "PostingId");
+
+                    b.HasIndex("PostingId");
+
+                    b.HasIndex("QueryId", "LastSeenAt");
+
+                    b.ToTable("JobSourceQueryPostings", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceDelivery", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PostingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("DeliveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<string[]>("MatchedCriteria")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.PrimitiveCollection<string[]>("MissingCriteria")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<Guid>("QueryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Rank")
+                        .HasColumnType("integer");
+
+                    b.PrimitiveCollection<string[]>("RequiredSkills")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ScoreAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ScoreSummary")
+                        .HasMaxLength(600)
+                        .HasColumnType("character varying(600)");
+
+                    b.Property<DateTimeOffset?>("ScoredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("WeekKey")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "PostingId");
+
+                    b.HasIndex("PostingId");
+
+                    b.HasIndex("QueryId");
+
+                    b.HasIndex("UserId", "DeliveredAt");
+
+                    b.HasIndex("UserId", "WeekKey", "Rank");
+
+                    b.ToTable("UserJobSourceDeliveries", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AiScoringConsentAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("EmailDigestEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("MinScore")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RemoteOnly")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserJobSourceProfiles", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceProfileQuery", b =>
+                {
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("QueryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("ProfileId", "QueryId");
+
+                    b.HasIndex("QueryId");
+
+                    b.ToTable("UserJobSourceProfileQueries", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceRun", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("WeekKey")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CandidateCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DeliveredCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("DigestSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ExcludedAppliedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ExcludedRecentlyShownCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("RanAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "WeekKey");
+
+                    b.ToTable("UserJobSourceRuns", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("WeeklyPostingLimit")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserJobSourceSettings", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.Jobs.Job", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1168,6 +1584,86 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                             Key = "PasswordChanged",
                             Locale = "en",
                             Subject = "Your e-kariyerim password was changed"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000005"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Bu hafta {{Count}} ilan hazır</h2>\n  <p>Kaydettiğiniz kriterlerle bulunan yeni ilanlar CV'nizle karşılaştırıldı ve uyum puanına göre sıralandı.</p>\n  <p>En yüksek uyum: <strong>{{BestTitle}}</strong> — {{BestCompany}} (%{{BestScore}}).</p>\n  <p>\n    <a href=\"{{Link}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      İlanları gör\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">Bu e-postayı haftalık ilan eşleştirmeyi açtığınız için alıyorsunuz. Kriterler sayfasından kapatabilirsiniz.</p>\n</div>",
+                            Key = "WeeklyJobsReady",
+                            Locale = "tr",
+                            Subject = "Bu hafta size uyan {{Count}} ilan hazır"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000006"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>{{Count}} postings are ready this week</h2>\n  <p>The new postings found with your saved criteria were compared with your CV and ordered by fit.</p>\n  <p>Best fit: <strong>{{BestTitle}}</strong> — {{BestCompany}} ({{BestScore}}%).</p>\n  <p>\n    <a href=\"{{Link}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      See the postings\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">You receive this because you turned on the weekly job matching. You can switch it off on the criteria page.</p>\n</div>",
+                            Key = "WeeklyJobsReady",
+                            Locale = "en",
+                            Subject = "{{Count}} postings that fit you are ready this week"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000007"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Ödemeniz alındı</h2>\n  <p><strong>{{PlanName}}</strong> için {{Amount}} tutarındaki ödemeniz onaylandı. Pro planınız <strong>{{ActiveUntil}}</strong> tarihine kadar aktif.</p>\n  <p>Otomatik yenileme yoktur; süre dolmadan birkaç gün önce size hatırlatırız.</p>\n  <p>\n    <a href=\"{{OrdersLink}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      Ödemelerimi gör\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">Kart bilgileriniz e-kariyerim'e hiç ulaşmaz; ödeme PayTR güvenli ödeme sayfasında alınmıştır.</p>\n</div>",
+                            Key = "PaymentReceived",
+                            Locale = "tr",
+                            Subject = "Ödemeniz alındı — e-kariyerim Pro aktif"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000008"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Payment received</h2>\n  <p>Your payment of {{Amount}} for <strong>{{PlanName}}</strong> was confirmed. Your Pro plan is active until <strong>{{ActiveUntil}}</strong>.</p>\n  <p>There is no automatic renewal; we will remind you a few days before it ends.</p>\n  <p>\n    <a href=\"{{OrdersLink}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      See my payments\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">Your card details never reach e-kariyerim; the payment was taken on PayTR's secure payment page.</p>\n</div>",
+                            Key = "PaymentReceived",
+                            Locale = "en",
+                            Subject = "Payment received — e-kariyerim Pro is active"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000009"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Pro süreniz bitmek üzere</h2>\n  <p>Pro planınız <strong>{{ActiveUntil}}</strong> tarihinde sona eriyor. Otomatik yenileme yoktur; haftalık ilan eşleştirmenin kesilmemesi için süreyi dilediğiniz zaman uzatabilirsiniz.</p>\n  <p>\n    <a href=\"{{RenewLink}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      Süreyi uzat\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">Uzatmazsanız hiçbir ücret alınmaz; verileriniz ve kriterleriniz hesabınızda kalır.</p>\n</div>",
+                            Key = "ProExpiring",
+                            Locale = "tr",
+                            Subject = "e-kariyerim Pro süreniz {{ActiveUntil}} tarihinde bitiyor"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000a"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Your Pro period is about to end</h2>\n  <p>Your Pro plan ends on <strong>{{ActiveUntil}}</strong>. There is no automatic renewal; extend it whenever you like so the weekly job matching keeps running.</p>\n  <p>\n    <a href=\"{{RenewLink}}\" style=\"display:inline-block;padding:10px 20px;background:#2a5fd6;color:#fff;text-decoration:none;border-radius:6px;\">\n      Extend my plan\n    </a>\n  </p>\n  <p style=\"color:#555;font-size:13px;\">If you do not extend, nothing is charged; your data and criteria stay in your account.</p>\n</div>",
+                            Key = "ProExpiring",
+                            Locale = "en",
+                            Subject = "Your e-kariyerim Pro period ends on {{ActiveUntil}}"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000b"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>İadeniz yapıldı</h2>\n  <p>{{Amount}} tutarındaki iade, ödemeyi yaptığınız karta gönderildi. Bankanıza bağlı olarak hesabınıza yansıması 3–10 iş günü sürebilir.</p>\n  <p style=\"color:#555;font-size:13px;\">Sorunuz olursa bu e-postayı yanıtlayabilirsiniz.</p>\n</div>",
+                            Key = "RefundCompleted",
+                            Locale = "tr",
+                            Subject = "İadeniz yapıldı — e-kariyerim"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000c"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Your refund was sent</h2>\n  <p>A refund of {{Amount}} was sent to the card you paid with. Depending on your bank it can take 3–10 business days to appear.</p>\n  <p style=\"color:#555;font-size:13px;\">If you have a question, you can reply to this e-mail.</p>\n</div>",
+                            Key = "RefundCompleted",
+                            Locale = "en",
+                            Subject = "Your refund was sent — e-kariyerim"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000d"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>İade talebiniz karşılanamadı</h2>\n  <p>İade talebinizi inceledik; bu ödeme için iade yapamıyoruz. Açıklama:</p>\n  <blockquote style=\"margin:0;padding:8px 12px;border-left:3px solid #ccc;color:#333;\">{{Note}}</blockquote>\n  <p style=\"color:#555;font-size:13px;\">Pro planınız süresi dolana kadar aktif kalır. Sorunuz olursa bu e-postayı yanıtlayabilirsiniz.</p>\n</div>",
+                            Key = "RefundRejected",
+                            Locale = "tr",
+                            Subject = "İade talebiniz hakkında — e-kariyerim"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000e"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>We could not refund this payment</h2>\n  <p>We reviewed your refund request and cannot refund this payment. The reason given:</p>\n  <blockquote style=\"margin:0;padding:8px 12px;border-left:3px solid #ccc;color:#333;\">{{Note}}</blockquote>\n  <p style=\"color:#555;font-size:13px;\">Your Pro plan stays active until it ends. If you have a question, you can reply to this e-mail.</p>\n</div>",
+                            Key = "RefundRejected",
+                            Locale = "en",
+                            Subject = "About your refund request — e-kariyerim"
                         });
                 });
 
@@ -1326,6 +1822,267 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.HasIndex("Isco08Code");
 
                     b.ToTable("Occupations", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Payments.PaymentNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("FailedReasonCode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FailedReasonMsg")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("HashValid")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MerchantOid")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<long?>("PaymentAmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PaymentType")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("RawForm")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("TestMode")
+                        .HasColumnType("boolean");
+
+                    b.Property<long?>("TotalAmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantOid", "ReceivedAt");
+
+                    b.HasIndex("Outcome", "ReceivedAt");
+
+                    b.ToTable("PaymentNotifications", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Payments.PaymentOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("AmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("AmountMismatch")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("BillingAddress")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("BillingName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("BillingPhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CancelledByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset?>("EntitlementActiveUntilAfter")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("EntitlementActiveUntilBefore")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("FailedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("FailedReasonCode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FailedReasonMsg")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("IframeToken")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("MerchantOid")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PaymentType")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("RefundReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("RefundReferenceNo")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("RefundRejectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RefundRejectionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset?>("RefundRequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("RefundedAmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("RefundedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RefundedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset>("TermsAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TermsVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("TestMode")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("TokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("TotalAmountMinor")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MerchantOid")
+                        .IsUnique();
+
+                    b.HasIndex("PaidAt");
+
+                    b.HasIndex("Status", "TokenExpiresAt");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("PaymentOrders", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Pro.ProEntitlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ActiveUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiryReminderSentFor")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("GrantedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("ProEntitlements", (string)null);
                 });
 
             modelBuilder.Entity("AfterApply.Domain.SiteTraffic.SiteTrafficDailyCounter", b =>
@@ -1514,6 +2271,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("WeeklyJobsAnnouncementDismissedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -1745,6 +2505,14 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.Ai.AiUsageEntry", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.Applications.Application", b =>
                 {
                     b.HasOne("AfterApply.Domain.Companies.Company", null)
@@ -1945,6 +2713,84 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.JobSources.JobSourceQueryPosting", b =>
+                {
+                    b.HasOne("AfterApply.Domain.JobSources.JobSourcePosting", null)
+                        .WithMany()
+                        .HasForeignKey("PostingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AfterApply.Domain.JobSources.JobSourceQuery", null)
+                        .WithMany()
+                        .HasForeignKey("QueryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceDelivery", b =>
+                {
+                    b.HasOne("AfterApply.Domain.JobSources.JobSourcePosting", null)
+                        .WithMany()
+                        .HasForeignKey("PostingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AfterApply.Domain.JobSources.JobSourceQuery", null)
+                        .WithMany()
+                        .HasForeignKey("QueryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceProfile", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceProfileQuery", b =>
+                {
+                    b.HasOne("AfterApply.Domain.JobSources.UserJobSourceProfile", null)
+                        .WithMany("Queries")
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AfterApply.Domain.JobSources.JobSourceQuery", null)
+                        .WithMany()
+                        .HasForeignKey("QueryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceRun", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceSettings", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AfterApply.Domain.Notifications.Reminder", b =>
                 {
                     b.HasOne("AfterApply.Domain.Applications.Application", null)
@@ -1953,6 +2799,23 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Payments.PaymentOrder", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Pro.ProEntitlement", b =>
+                {
                     b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -2038,6 +2901,11 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("AfterApply.Domain.Imports.ImportBatch", b =>
                 {
                     b.Navigation("RowErrors");
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.JobSources.UserJobSourceProfile", b =>
+                {
+                    b.Navigation("Queries");
                 });
 #pragma warning restore 612, 618
         }

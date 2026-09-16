@@ -29,6 +29,7 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
             <li>{t("dataCollection.item4")}</li>
             <li>{t("dataCollection.item5")}</li>
             <li>{t("dataCollection.item6")}</li>
+            <li>{t("dataCollection.item7")}</li>
           </ul>
           <p className="mt-2">{t("dataCollection.outro")}</p>
         </section>
@@ -63,6 +64,37 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
             <li>{t("cvScan.output")}</li>
             <li>{t("cvScan.consent")}</li>
           </ul>
+        </section>
+
+        {/* The paid job matching's model call. Sits right after the CV sections because it is the
+            one exception to their "never sent to an AI service" promise, and the consent box on the
+            criteria form links straight here (#job-matching). */}
+        <section id="job-matching">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("jobMatching.title")}</h2>
+          <p>{t("jobMatching.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("jobMatching.what")}</li>
+            <li>{t("jobMatching.kept")}</li>
+            <li>{t("jobMatching.consent")}</li>
+            <li>{t("jobMatching.withdraw")}</li>
+          </ul>
+        </section>
+
+        {/* The Pro plan's payment. Card data never reaches us (PayTR's own page takes it); what
+            we send PayTR and what we keep for invoicing is listed here, and the checkout's
+            consent box links straight here (#payments). */}
+        <section id="payments">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("payments.title")}</h2>
+          <p>{t("payments.intro")}</p>
+          <ul className="mt-2 list-disc pl-5">
+            <li>{t("payments.card")}</li>
+            <li>{t("payments.sent")}</li>
+            <li>{t("payments.kept")}</li>
+            <li>{t("payments.retention")}</li>
+            <li>{t("payments.refunds")}</li>
+            <li>{t("payments.provider")}</li>
+          </ul>
+          <p className="mt-2">{t("payments.legalBasis")}</p>
         </section>
 
         <section id="feedback">
@@ -160,6 +192,7 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
           </ul>
           <p className="mt-2">{t("crossBorderTransfer.sensitiveDataNote")}</p>
           <p className="mt-2">{t("crossBorderTransfer.feedbackTransfer")}</p>
+          <p className="mt-2">{t("crossBorderTransfer.jobSourceTransfer")}</p>
         </section>
 
         <section id="error-monitoring">

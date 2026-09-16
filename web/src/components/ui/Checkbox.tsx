@@ -12,7 +12,7 @@ export function Checkbox({ id, label, error, className = "", ...props }: Checkbo
         <input
           id={id}
           type="checkbox"
-          className={`mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 ${className}`}
+          className={`mt-0.5 h-4 w-4 rounded border-gray-300 text-accent focus:ring-1 focus:ring-accent dark:border-gray-700 dark:bg-gray-900 ${className}`}
           {...props}
         />
         <span>{label}</span>

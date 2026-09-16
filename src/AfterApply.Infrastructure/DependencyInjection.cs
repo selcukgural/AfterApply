@@ -32,9 +32,16 @@ using AfterApply.Infrastructure.Documents;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
+using AfterApply.Infrastructure.JobSources;
+using AfterApply.Infrastructure.Payments;
+using AfterApply.Infrastructure.Pro;
+using AfterApply.Application.JobSources;
+using AfterApply.Application.Payments;
+using AfterApply.Application.Pro;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Benchmark;
+using AfterApply.Infrastructure.Ai;
 using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.SiteTraffic;
 using AfterApply.Infrastructure.OpenAi;
@@ -57,6 +64,7 @@ using Google.Cloud.Storage.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -64,12 +72,16 @@ namespace AfterApply.Infrastructure;
 
 public static class DependencyInjection
 {
+    public const string LinkedInJobSourceResiliencePipeline = "linkedin-job-source";
+    public const string KariyerNetJobSourceResiliencePipeline = "kariyernet-job-source";
+
     public const string CorsPolicyName = "Frontend";
     public const string AuthRateLimitPolicy = "auth-strict";
     public const string UploadRateLimitPolicy = "upload";
     public const string ExtensionSignalRateLimitPolicy = "extension-signal";
     public const string LinkPreviewRateLimitPolicy = "link-preview";
     public const string FeedbackRateLimitPolicy = "feedback";
+    public const string PaymentCheckoutRateLimitPolicy = "payment-checkout";
     public const string CompanyReviewWriteRateLimitPolicy = "company-review-write";
     public const string CompanyReviewReportRateLimitPolicy = "company-review-report";
     public const string CompanyReviewHelpfulRateLimitPolicy = "company-review-helpful";
@@ -137,6 +149,8 @@ public static class DependencyInjection
         services.Configure<CompanySalaryOptions>(configuration.GetSection(CompanySalaryOptions.SectionName));
         services.Configure<OccupationSearchOptions>(configuration.GetSection(OccupationSearchOptions.SectionName));
         services.Configure<RequestAuditOptions>(configuration.GetSection(RequestAuditOptions.SectionName));
+        services.Configure<JobSourceOptions>(configuration.GetSection(JobSourceOptions.SectionName));
+        services.AddPayments(configuration);
         services.AddDocumentStorage(configuration);
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
@@ -443,7 +457,9 @@ public static class DependencyInjection
         services.AddScoped<IBenchmarkService, BenchmarkService>();
         services.AddScoped<ICvScanService, CvScanService>();
         services.AddScoped<ICvTextExtractor, CvTextExtractor>();
+        services.AddSingleton<IVertexGenerateContentClient, VertexGenerateContentClient>();
         services.AddScoped<ICvReviewProvider, VertexCvReviewProvider>();
+        services.AddJobSources();
 
         // A named client so the timeout and the handler lifetime belong to this call rather than to
         // whatever DefaultClient happens to be configured with. No BaseAddress: the host carries
@@ -476,6 +492,78 @@ public static class DependencyInjection
             // GitHub rejects requests with no User-Agent; it wants something identifying.
             client.DefaultRequestHeaders.UserAgent.ParseAdd("e-kariyerim-feedback-mirror");
         });
+
+        return services;
+    }
+
+    private static IServiceCollection AddPayments(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Validated on start when enabled: an empty merchant key or a zero price must not reach a
+        // customer's checkout (PayTrOptionsValidator).
+        services.AddSingleton<IValidateOptions<PayTrOptions>, PayTrOptionsValidator>();
+        services.AddOptions<PayTrOptions>().Bind(configuration.GetSection(PayTrOptions.SectionName)).ValidateOnStart();
+        services.AddScoped<IPaymentCheckoutService, PaymentCheckoutService>();
+        services.AddScoped<IPayTrCallbackService, PayTrCallbackService>();
+        services.AddScoped<IPaymentRefundService, PaymentRefundService>();
+        services.AddScoped<IPaymentAdminService, PaymentAdminService>();
+        services.AddScoped<IPaymentMaintenanceService, PaymentMaintenanceService>();
+        // Both PayTR calls are short form POSTs; 15 s is well above their normal answer and short
+        // enough that a stuck call does not hold the user's request for long. No retry handler:
+        // a refund must never be repeated by a machine.
+        services.AddHttpClient<IPayTrClient, PayTrClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://www.paytr.com/");
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
+        return services;
+    }
+
+    private static IServiceCollection AddJobSources(this IServiceCollection services)
+    {
+        services.AddScoped<IProEntitlementService, ProEntitlementService>();
+        services.AddScoped<IUserJobSourceProfileService, UserJobSourceProfileService>();
+        services.AddScoped<IUserJobSourceDeliveryService, UserJobSourceDeliveryService>();
+        services.AddScoped<IJobSourceAdminService, JobSourceAdminService>();
+        services.AddScoped<IJobSourceSweepService, JobSourceSweepService>();
+        services.AddScoped<IJobFitScoringService, JobFitScoringService>();
+        services.AddScoped<IJobSourceDigestService, JobSourceDigestService>();
+        services.AddScoped<IJobFitScoringProvider, VertexJobFitScoringProvider>();
+        services.AddScoped<IUserCvTextReader, StoredCvTextReader>();
+        // Same shape as the CV scan's review client: a bare named client, the URL built per call
+        // so the region stays visible at the call site (VertexGenerateContentClient).
+        services.AddHttpClient(JobFitScoringSettings.HttpClientName);
+
+        // The search text is in the request URL, so the default request/response logging is
+        // removed — a user's job title and city are theirs, not the log's. The pipeline retries
+        // only what a network can cause (a dropped connection, a per-attempt timeout, a 5xx); a
+        // 429 or 403 from LinkedIn is not handled here on purpose, because retrying into a rate
+        // limit is how a low-volume client gets itself blocked — the client reports it and the
+        // sweep stops for a day (JobSourceBudget). The in-process breaker is a short local guard;
+        // the durable one is in the ledger.
+        services.AddHttpClient<ILinkedInJobSourceClient, LinkedInJobSourceClient>(client =>
+            {
+                // Above the pipeline's total timeout, so the pipeline is what gives up, not the client.
+                client.Timeout = TimeSpan.FromSeconds(60);
+            })
+            .RemoveAllLoggers()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddResilienceHandler(LinkedInJobSourceResiliencePipeline, (pipeline, context) =>
+                JobSourceResilience.Configure(pipeline,
+                    context.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value));
+
+        // kariyer.net, the same way: its own client and pipeline, so one site's breaker never
+        // trips for the other. The sweep asks for both through IEnumerable<IJobSourceClient>.
+        services.AddHttpClient<IKariyerNetJobSourceClient, KariyerNetJobSourceClient>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(60);
+            })
+            .RemoveAllLoggers()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddResilienceHandler(KariyerNetJobSourceResiliencePipeline, (pipeline, context) =>
+                JobSourceResilience.Configure(pipeline,
+                    context.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value));
+        services.AddScoped<IJobSourceClient>(sp => sp.GetRequiredService<ILinkedInJobSourceClient>());
+        services.AddScoped<IJobSourceClient>(sp => sp.GetRequiredService<IKariyerNetJobSourceClient>());
 
         return services;
     }

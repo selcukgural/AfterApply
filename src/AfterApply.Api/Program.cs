@@ -7,10 +7,14 @@ using AfterApply.Api.Imports;
 using AfterApply.Api.Middleware;
 using AfterApply.Application.Auditing;
 using AfterApply.Application.Imports;
+using AfterApply.Application.JobSources;
+using AfterApply.Application.Payments;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
 using AfterApply.Infrastructure.Auditing;
+using AfterApply.Infrastructure.JobSources;
+using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
 using Hangfire;
@@ -165,6 +169,8 @@ app.MapSiteTrafficEndpoints();
 app.MapBenchmarkEndpoints();
 app.MapCvScanEndpoints();
 app.MapAdminEndpoints();
+app.MapJobSourceEndpoints();
+app.MapPaymentEndpoints();
 app.MapHub<ImportProgressHub>("/hubs/import-progress");
 
 if (!DependencyInjection.IsOpenApiDocumentGeneration)
@@ -173,6 +179,7 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
     var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
     var notificationOptions = scope.ServiceProvider.GetRequiredService<IOptions<NotificationOptions>>().Value;
     var metricsOptions = scope.ServiceProvider.GetRequiredService<IOptions<ProductMetricsOptions>>().Value;
+    var jobSourceOptions = scope.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value;
 
     recurringJobManager.AddOrUpdate<IReminderService>(
         "reminder-scan",
@@ -189,6 +196,25 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "request-audit-purge",
         service => service.PurgeAnonymousAsync(CancellationToken.None),
         requestAuditOptions.PurgeCronExpression);
+    // Registered whether or not JobSources:Enabled is on — the sweep checks the flag itself and
+    // returns at once while it is off, so turning the feature on needs no redeploy for the schedule.
+    recurringJobManager.AddOrUpdate<IJobSourceSweepService>(
+        "job-source-sweep",
+        service => service.SweepAsync(CancellationToken.None),
+        jobSourceOptions.Cron);
+
+    // Payments: close pending PayTR orders whose window passed, and remind users whose prepaid
+    // Pro period is about to end. Both are no-ops on an empty table, so they run regardless of
+    // PayTr:Enabled.
+    var payTrOptions = scope.ServiceProvider.GetRequiredService<IOptions<PayTrOptions>>().Value;
+    recurringJobManager.AddOrUpdate<IPaymentMaintenanceService>(
+        "payment-order-expiry",
+        service => service.ExpirePendingOrdersAsync(CancellationToken.None),
+        payTrOptions.OrderExpiryCron);
+    recurringJobManager.AddOrUpdate<IPaymentMaintenanceService>(
+        "pro-expiry-reminder",
+        service => service.SendExpiryRemindersAsync(CancellationToken.None),
+        payTrOptions.ExpiryReminderCron);
 }
 
 app.Run();

@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { WeeklyJobsRoadmapItem } from "@/components/landing/WeeklyJobsRoadmapItem";
 
 export async function RoadmapSection() {
   const t = await getTranslations("landing.roadmap");
@@ -38,6 +39,7 @@ export async function RoadmapSection() {
                   {item}
                 </li>
               ))}
+              <WeeklyJobsRoadmapItem />
             </ul>
           </div>
 

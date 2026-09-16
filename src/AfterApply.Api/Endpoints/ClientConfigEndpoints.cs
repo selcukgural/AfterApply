@@ -2,6 +2,8 @@ using AfterApply.Application.ClientConfig;
 using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.CvScan;
+using AfterApply.Infrastructure.JobSources;
+using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -25,6 +27,8 @@ public static class ClientConfigEndpoints
                 IOptions<GitHubAuthOptions> gitHubAuthOptions,
                 IOptions<CvScanOptions> cvScanOptions,
                 IOptions<CompanyReviewOptions> companyReviewOptions,
+                IOptions<JobSourceOptions> jobSourceOptions,
+                IOptions<PayTrOptions> payTrOptions,
                 IOptions<CompanySalaryOptions> companySalaryOptions,
                 HttpContext httpContext) =>
             {
@@ -74,7 +78,9 @@ public static class ClientConfigEndpoints
                     new CompanyReviewsConfigResponse(reviews.Enabled, reviews.MaxReviewsPerUser,
                         reviews.MinimumReviewsForScore, reviews.PriorWeight),
                     new CompanySalariesConfigResponse(salaries.Enabled, salaries.MaxEntriesPerUser,
-                        salaries.MinimumEntriesForStats)));
+                        salaries.MinimumEntriesForStats),
+                    new JobSourcesConfigResponse(jobSourceOptions.Value.Enabled),
+                    new PaymentsConfigResponse(payTrOptions.Value.Enabled && payTrOptions.Value.IsConfigured)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

@@ -18,6 +18,8 @@ const RESOURCE_LINKS = [
   { href: "/privacy", key: "privacy" },
   { href: "/extension-privacy", key: "extensionPrivacy" },
   { href: "/cookies", key: "cookies" },
+  // /terms-of-sale and /refund-policy join this list once their text is final (they exist as
+  // drafts, linked only from the PayTR checkout, which is behind the payments flag).
   { href: "/terms", key: "terms" },
 ] as const;
 

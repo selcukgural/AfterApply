@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Encodings.Web;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -10,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.Mailing;
 
-/// <summary>Sends password-reset/password-changed email via Resend's REST API
+/// <summary>Sends password-reset/password-changed and weekly-jobs digest email via Resend's REST API
 /// (https://resend.com/docs/api-reference/emails/send-email). Subject/HTML come from the
 /// EmailTemplates table (see EmailTemplateConfiguration), never compiled into this class — editing
 /// a row takes effect on the next send, no redeploy required.
@@ -41,6 +43,58 @@ internal sealed class ResendEmailSender(
     {
         var template = await GetTemplateAsync(EmailTemplateKey.PasswordChanged, locale, cancellationToken);
         await SendAsync(toEmail, template.Subject, template.HtmlBody, cancellationToken);
+    }
+
+    public async Task SendWeeklyJobsReadyEmailAsync(string toEmail, string locale, WeeklyJobsDigest digest, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.WeeklyJobsReady, locale, cancellationToken);
+        // The title and company were scraped from a job site: encoded, so a posting cannot put
+        // markup into somebody's inbox. The link is ours (App:WebBaseUrl), the count a number.
+        var html = template.HtmlBody
+            .Replace("{{Count}}", digest.Count.ToString(CultureInfo.InvariantCulture))
+            .Replace("{{BestTitle}}", HtmlEncoder.Default.Encode(digest.BestTitle ?? string.Empty))
+            .Replace("{{BestCompany}}", HtmlEncoder.Default.Encode(digest.BestCompany ?? string.Empty))
+            .Replace("{{BestScore}}", digest.BestScore?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)
+            .Replace("{{Link}}", HtmlEncoder.Default.Encode(digest.Link));
+        var subject = template.Subject.Replace("{{Count}}", digest.Count.ToString(CultureInfo.InvariantCulture));
+        await SendAsync(toEmail, subject, html, cancellationToken);
+    }
+
+    public async Task SendPaymentReceivedEmailAsync(string toEmail, string locale, PaymentReceipt receipt, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.PaymentReceived, locale, cancellationToken);
+        // Plan name and amounts are ours; encoded anyway so a template edit can never turn a
+        // formatted value into markup.
+        var html = template.HtmlBody
+            .Replace("{{PlanName}}", HtmlEncoder.Default.Encode(receipt.PlanName))
+            .Replace("{{Amount}}", HtmlEncoder.Default.Encode(receipt.AmountText))
+            .Replace("{{ActiveUntil}}", HtmlEncoder.Default.Encode(receipt.ActiveUntilText))
+            .Replace("{{OrdersLink}}", HtmlEncoder.Default.Encode(receipt.OrdersLink));
+        await SendAsync(toEmail, template.Subject, html, cancellationToken);
+    }
+
+    public async Task SendProExpiringEmailAsync(string toEmail, string locale, string activeUntilText, string renewLink, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.ProExpiring, locale, cancellationToken);
+        var html = template.HtmlBody
+            .Replace("{{ActiveUntil}}", HtmlEncoder.Default.Encode(activeUntilText))
+            .Replace("{{RenewLink}}", HtmlEncoder.Default.Encode(renewLink));
+        var subject = template.Subject.Replace("{{ActiveUntil}}", activeUntilText);
+        await SendAsync(toEmail, subject, html, cancellationToken);
+    }
+
+    public async Task SendRefundCompletedEmailAsync(string toEmail, string locale, string amountText, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.RefundCompleted, locale, cancellationToken);
+        await SendAsync(toEmail, template.Subject, template.HtmlBody.Replace("{{Amount}}", HtmlEncoder.Default.Encode(amountText)), cancellationToken);
+    }
+
+    public async Task SendRefundRejectedEmailAsync(string toEmail, string locale, string note, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.RefundRejected, locale, cancellationToken);
+        // Admin-typed text: encoded, and newlines kept readable.
+        var encodedNote = HtmlEncoder.Default.Encode(note).Replace("&#xA;", "<br>").Replace("\n", "<br>");
+        await SendAsync(toEmail, template.Subject, template.HtmlBody.Replace("{{Note}}", encodedNote), cancellationToken);
     }
 
     private async Task<EmailTemplate> GetTemplateAsync(EmailTemplateKey key, string locale, CancellationToken cancellationToken)

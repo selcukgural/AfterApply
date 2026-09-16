@@ -20,6 +20,7 @@ export const HELP_TOPICS = [
   { href: "/help/company-salaries", key: "companySalaries" },
   { href: "/help/cv-scan", key: "cvScan" },
   { href: "/help/benchmark", key: "benchmark" },
+  { href: "/help/weekly-jobs", key: "weeklyJobs" },
   { href: "/help/faq", key: "faq" },
 ] as const;
 
@@ -50,6 +51,8 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "/privacy",
   "/extension-privacy",
   "/cookies",
+  // /terms-of-sale and /refund-policy are drafts until their text is final: reachable, noindex,
+  // not in the sitemap yet. Add them here (and to the footer) when they are.
   "/terms",
   ...HELP_TOPICS.map((topic) => topic.href),
   GUIDE_PATH,
@@ -75,6 +78,7 @@ export const PROTECTED_PATHS = [
   "/my-salaries",
   "/contribute",
   "/admin",
+  "/pro",
 ];
 
 /**

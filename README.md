@@ -162,7 +162,7 @@ podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod
   `dotnet test` with `--blame-hang` so a stalled test ends the run in two minutes **with its
   name** rather than hanging it, kills the run outright at fifteen, removes any container the
   run left behind, and prints a per-class timing table so a class that got slow is visible.
-  Current shape on this machine: **405 tests, ~1 min 25 s**, green, run after run.
+  Current shape on this branch: **482 tests, ~1 min 50 s**, green, run after run.
 
   How the suite is built, in one paragraph (details and history in `DECISIONS.md`, 2026-09-15):
   one Postgres container per run, its schema migrated once into a template database; **one
@@ -252,6 +252,32 @@ dark), `MaxReviewsPerUser` (10; an admin can override it per account through
 no score), `PriorWeight` (5 — the `m` in the Bayesian average, documented on `/companies/scoring`).
 Rate limits: `RateLimiting:CompanyReviewWrite|CompanyReviewReport|CompanyReviewHelpful|CompanyPublicSearch`.
 
+`JobSources:Enabled` defaults to `false` — the paid weekly job matching (on the
+`feat/linkedin-job-source` branch until the PayTR integration lands, see `DECISIONS.md`
+2026-09-12 and 2026-09-14). Every Monday 04:00 UTC a Hangfire job takes each paying
+user's saved criteria (up to three job titles and a location), searches LinkedIn's
+public job listing and kariyer.net's listing for them (`JobSources:KariyerNetEnabled`,
+default `true`, turns the second source off), and hands the user up to 50 new postings
+for the week (`JobSources:DefaultWeeklyPostingsPerUser`, per-user override via
+`PUT /api/admin/job-sources/settings/{userId}`). Two users with the same criteria cost
+one search per source; a posting the user already applied to is left out and counted
+in the week's run summary. Each delivered posting is then scored against the user's
+default CV with Gemini on Vertex AI (`JobSources:Scoring:*` — `ProjectId` empty means
+no model call at all, `Model` `gemini-2.5-flash`, ceilings `MaxPerUserPerWeek`,
+`MaxCallsPerDay`, `MonthlyBudgetUsd` computed from the `AiUsageEntries` ledger) — only
+for users who gave the separate consent the criteria form asks for — and the postings
+under the user's `MinScore` are hidden when the list is read. One "N postings are
+ready" e-mail per user per week goes out through Resend (`EmailTemplates` key
+`WeeklyJobsReady`; off per user on the profile). Volume against each site is capped in
+config (`MaxRequestsPerDay`, `MaxPagesPerQuery`, `MinDelayMs`) and a 429/403 or a
+login wall from a site stops that site for `CircuitCooldownHours` without touching the
+other. While disabled, every `/api/job-sources/*` and `/api/admin/job-sources/*` route
+returns `404`, the web app shows no nav link, and the sweep is a no-op. "Who is paying"
+is `ProEntitlements`, written by hand today (`PUT /api/admin/pro/entitlements/{userId}`)
+and by the payment integration later. Why we fetch LinkedIn ourselves, and on what
+terms, is in `DECISIONS.md` 2026-09-12 ("LinkedIn ilan kaynağı"); the scoring, the
+digest and kariyer.net are 2026-09-14.
+
 ## CV storage (`/cv`)
 
 Users can keep up to 10 CV files (PDF/DOC/DOCX, 5 MB each), download them,
@@ -312,6 +338,34 @@ No automated test calls the real OpenAI API (see `DECISIONS.md` — the
 persist/cache logic is tested against a fake `IJobMatchingProvider`
 instead); once a real key is in place, set a CV in `/settings` and compute
 a match from an application's detail page as a manual smoke test.
+
+## PayTR Setup (Pro plan payments)
+
+The Pro plan is sold through PayTR's iFrame API (DEPLOYMENT.md §15 for the production recipe).
+Locally the feature is off until three user-secrets are set and the flag is on:
+
+```bash
+dotnet user-secrets set "PayTr:MerchantId" "<merchant id>" --project src/AfterApply.Api
+dotnet user-secrets set "PayTr:MerchantKey" "<merchant key>" --project src/AfterApply.Api
+dotnet user-secrets set "PayTr:MerchantSalt" "<merchant salt>" --project src/AfterApply.Api
+dotnet user-secrets set "PayTr:Enabled" "true" --project src/AfterApply.Api
+# PayTR refuses private addresses as user_ip; on localhost put your public IP here:
+dotnet user-secrets set "PayTr:DevUserIpOverride" "<your public IPv4>" --project src/AfterApply.Api
+```
+
+`PayTr:TestMode` defaults to true, so a local checkout opens PayTR's real payment page in test
+mode (test card 4355 0843 5508 4358, 12/30, CVV 000, pre-filled). PayTR cannot reach localhost
+with the result, so the second half of the flow is driven by hand:
+
+```bash
+scripts/paytr-callback.sh <merchant_oid> success 29900          # → order paid, Pro extended, receipt queued
+scripts/paytr-callback.sh <merchant_oid> failed 29900 6 "left"  # → order failed with PayTR code 6
+PAYTR_BAD_HASH=1 scripts/paytr-callback.sh <merchant_oid> success 29900   # → 400, nothing changes
+```
+
+The script signs the form with the key/salt from user-secrets exactly as PayTR does; the
+`merchant_oid` is the order's id without hyphens (shown on `/admin/payments`). Refunds from
+`/admin/payments` call PayTR's real refund API even locally — fine for a test-mode payment.
 
 ## Google Sign-In Setup
 

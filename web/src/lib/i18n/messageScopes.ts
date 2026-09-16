@@ -72,6 +72,10 @@ export const PUBLIC_MESSAGE_SCOPE = [
   "help.sidebar",
   // The company directory pages with the applications list's pager.
   "applications.pagination",
+  // The distance-sales terms and the refund policy, linked from the checkout and the footer.
+  "termsOfSale",
+  "refundPolicy",
+  "legalDraft",
 ] as const;
 
 type Tree = { [key: string]: unknown };

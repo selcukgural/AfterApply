@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { WeeklyJobsFeatureCard } from "@/components/landing/WeeklyJobsFeatureCard";
 import { LandingIcon, type LandingIcon as LandingIconName } from "@/components/landing/landingIcons";
 import { CHROME_WEB_STORE_URL } from "@/lib/constants/chromeWebStore";
 
@@ -74,6 +75,8 @@ export async function FeaturesSection() {
               ) : null}
             </div>
           ))}
+          {/* Newest, paid, and dark until launch — decides for itself whether to appear. */}
+          <WeeklyJobsFeatureCard />
         </div>
       </ScrollReveal>
     </section>

@@ -542,6 +542,18 @@ export interface CompanyReviewsConfig {
   priorWeight: number;
 }
 
+/** Whether the paid weekly job matching is switched on. Off means every /api/job-sources route
+ *  answers 404 and the app shows no trace of it — no nav link, no page. */
+export interface JobSourcesConfig {
+  enabled: boolean;
+}
+
+/** Whether the Pro plan can be bought (PayTR switched on and configured). Prices are not here —
+ *  this response is public and cached; they come from GET /api/payments/plans. */
+export interface PaymentsConfig {
+  enabled: boolean;
+}
+
 /** Whether salary entries are switched on, the quota the form counts down from, and the
  *  per-currency threshold under which the company page shows no median. */
 export interface CompanySalariesConfig {
@@ -560,6 +572,8 @@ export interface ClientConfigResponse {
   // Optional: an API deployed before the reviews feature answers without it.
   companyReviews?: CompanyReviewsConfig;
   // Optional for the same reason.
+  jobSources?: JobSourcesConfig;
+  payments?: PaymentsConfig;
   companySalaries?: CompanySalariesConfig;
 }
 
@@ -1200,6 +1214,269 @@ export interface BulkReminderRequest {
 /** Mirrors AfterApply.Application.Notifications.Contracts.BulkReminderResponse. */
 export interface BulkReminderResponse {
   affected: number;
+}
+
+// ---- Weekly job matching (/api/job-sources) ----------------------------------------------------
+
+export interface JobSourceStatusResponse {
+  isPro: boolean;
+  proActiveUntil: string | null;
+  hasCv: boolean;
+  cvFileName: string | null;
+  hasProfile: boolean;
+  /** Whether the user closed the dashboard's announcement of this feature. */
+  announcementDismissed: boolean;
+}
+
+export interface JobSourceProfileResponse {
+  titles: string[];
+  location: string;
+  remoteOnly: boolean;
+  enabled: boolean;
+  minScore: number;
+  aiScoringConsentAcceptedAt: string | null;
+  emailDigest: boolean;
+  updatedAt: string;
+}
+
+export interface UpsertJobSourceProfileRequest {
+  titles: string[];
+  location: string;
+  remoteOnly: boolean;
+  enabled: boolean;
+  minScore: number;
+  acceptAiScoring: boolean;
+  emailDigest: boolean;
+}
+
+export interface JobSourcePostingSummaryResponse {
+  id: string;
+  // Which site the posting came from: "LinkedIn" or "KariyerNet" (the Source enum's names).
+  source: string;
+  title: string;
+  companyName: string;
+  companyProfileUrl: string | null;
+  location: string | null;
+  postedAt: string | null;
+  url: string;
+  seniority: string | null;
+  employmentType: string | null;
+  deliveredAt: string;
+  weekKey: number;
+  // Null until scored: no description yet, no consent, or the scorer has not reached it.
+  score: number | null;
+  scoreSummary: string | null;
+}
+
+export interface JobSourcePostingDetailResponse extends JobSourcePostingSummaryResponse {
+  description: string | null;
+  jobFunction: string | null;
+  industries: string | null;
+  matchedCriteria: string[];
+  missingCriteria: string[];
+  requiredSkills: string[];
+  scoredAt: string | null;
+}
+
+export interface JobSourceRunResponse {
+  weekKey: number;
+  ranAt: string;
+  candidateCount: number;
+  deliveredCount: number;
+  excludedAppliedCount: number;
+  excludedRecentlyShownCount: number;
+  scoredCount: number;
+  hiddenBelowMinScoreCount: number;
+}
+
+export interface JobSourceDeliveriesResponse {
+  items: JobSourcePostingSummaryResponse[];
+  run: JobSourceRunResponse | null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Payments (PayTR iFrame) — /api/payments/* and /api/admin/payments/*
+// ---------------------------------------------------------------------------------------------
+
+export type ProPlan = "Monthly" | "Yearly";
+
+export type PaymentOrderStatus =
+  | "Pending"
+  | "Paid"
+  | "Failed"
+  | "Expired"
+  | "Cancelled"
+  | "RefundRequested"
+  | "Refunded"
+  | "PartiallyRefunded";
+
+export interface PaymentPlanResponse {
+  plan: ProPlan;
+  /** Kuruş, KDV included. */
+  amountMinor: number;
+  months: number;
+}
+
+export interface PaymentEntitlementResponse {
+  isActive: boolean;
+  activeUntil: string | null;
+}
+
+export interface PaymentPlansResponse {
+  currency: string;
+  termsVersion: string;
+  plans: PaymentPlanResponse[];
+  entitlement: PaymentEntitlementResponse;
+}
+
+export interface StartCheckoutRequest {
+  plan: ProPlan;
+  billingName: string;
+  billingAddress: string;
+  billingPhone: string;
+  acceptTerms: boolean;
+}
+
+export interface CheckoutResponse {
+  orderId: string;
+  merchantOid: string;
+  iframeUrl: string;
+  expiresAt: string;
+  plan: ProPlan;
+  amountMinor: number;
+  currency: string;
+}
+
+export interface PaymentOrderResponse {
+  id: string;
+  plan: ProPlan;
+  amountMinor: number;
+  currency: string;
+  status: PaymentOrderStatus;
+  createdAt: string;
+  paidAt: string | null;
+  tokenExpiresAt: string | null;
+  /** PayTR's failed_reason_code; -1 means our own get-token call was refused. */
+  failedReasonCode: number | null;
+  failedReasonMsg: string | null;
+  refundedAmountMinor: number;
+  refundRequestedAt: string | null;
+  entitlementActiveUntil: string | null;
+  canRequestRefund: boolean;
+  /** What PayTR actually charged, once paid — differs from amountMinor only on a mismatch. */
+  chargedAmountMinor: number | null;
+}
+
+/** The billing details from the user's newest order; all null before their first checkout. */
+export interface BillingDefaultsResponse {
+  billingName: string | null;
+  billingAddress: string | null;
+  billingPhone: string | null;
+}
+
+export interface RequestRefundRequest {
+  reason: string;
+}
+
+export interface AdminPaymentOrderResponse {
+  id: string;
+  userId: string | null;
+  email: string;
+  merchantOid: string;
+  plan: ProPlan;
+  amountMinor: number;
+  totalAmountMinor: number | null;
+  currency: string;
+  status: PaymentOrderStatus;
+  billingName: string;
+  billingAddress: string;
+  billingPhone: string;
+  locale: string;
+  termsVersion: string;
+  termsAcceptedAt: string;
+  paymentType: string | null;
+  testMode: boolean;
+  amountMismatch: boolean;
+  failedReasonCode: number | null;
+  failedReasonMsg: string | null;
+  createdAt: string;
+  updatedAt: string;
+  tokenExpiresAt: string | null;
+  paidAt: string | null;
+  failedAt: string | null;
+  cancelledAt: string | null;
+  cancelledByUserId: string | null;
+  entitlementActiveUntilBefore: string | null;
+  entitlementActiveUntilAfter: string | null;
+  refundRequestedAt: string | null;
+  refundReason: string | null;
+  refundedAt: string | null;
+  refundedAmountMinor: number;
+  refundableAmountMinor: number;
+  refundReferenceNo: string | null;
+  refundedByUserId: string | null;
+  refundRejectedAt: string | null;
+  refundRejectionNote: string | null;
+}
+
+export interface PaymentNotificationResponse {
+  id: string;
+  merchantOid: string;
+  orderId: string | null;
+  status: string;
+  totalAmountMinor: number | null;
+  paymentAmountMinor: number | null;
+  paymentType: string | null;
+  failedReasonCode: number | null;
+  failedReasonMsg: string | null;
+  testMode: boolean;
+  hashValid: boolean;
+  outcome: string;
+  receivedAt: string;
+}
+
+export interface AdminPaymentOrderDetailResponse {
+  order: AdminPaymentOrderResponse;
+  notifications: PaymentNotificationResponse[];
+  entitlement: PaymentEntitlementResponse | null;
+}
+
+export interface PaymentsMonthSummary {
+  month: string;
+  paidCount: number;
+  grossMinor: number;
+  refundedMinor: number;
+  refundCount: number;
+  cancelledCount: number;
+  failedCount: number;
+  netMinor: number;
+}
+
+export interface PaymentsSummaryResponse {
+  currency: string;
+  currentMonth: PaymentsMonthSummary;
+  months: PaymentsMonthSummary[];
+  openRefundRequests: number;
+  activeProUsers: number;
+  testOrdersLast30Days: number;
+}
+
+export interface PaymentAlertsResponse {
+  notifications: PaymentNotificationResponse[];
+  amountMismatches: AdminPaymentOrderResponse[];
+}
+
+export interface AdminRefundRequest {
+  amountMinor: number | null;
+}
+
+export interface RejectRefundRequest {
+  note: string;
+}
+
+export interface MarkRefundedRequest {
+  amountMinor: number;
+  referenceNo: string;
 }
 
 // ---- Company salaries -------------------------------------------------------------------------

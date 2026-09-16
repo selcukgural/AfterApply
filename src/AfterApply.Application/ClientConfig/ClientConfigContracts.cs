@@ -13,7 +13,18 @@ public sealed record ClientConfigResponse(
     GitHubAuthConfigResponse GitHubAuth,
     CvScanConfigResponse CvScan,
     CompanyReviewsConfigResponse? CompanyReviews = null,
-    CompanySalariesConfigResponse? CompanySalaries = null);
+    CompanySalariesConfigResponse? CompanySalaries = null,
+    JobSourcesConfigResponse? JobSources = null,
+    PaymentsConfigResponse? Payments = null);
+
+/// <summary>Whether the paid weekly job matching is switched on at all. Off means every
+/// <c>/api/job-sources/*</c> route 404s and the web app shows no trace of the feature.</summary>
+public sealed record JobSourcesConfigResponse(bool Enabled);
+
+/// <summary>Whether the Pro plan can be bought right now (PayTR switched on and configured).
+/// Prices are not here — this response is public and cached; they come from
+/// <c>GET /api/payments/plans</c> to a signed-in user.</summary>
+public sealed record PaymentsConfigResponse(bool Enabled);
 
 /// <summary>Mirrors ASP.NET Identity's <c>PasswordOptions</c>, which is what the server actually
 /// validates against — the response is built from that object, not from a copy of the config.</summary>

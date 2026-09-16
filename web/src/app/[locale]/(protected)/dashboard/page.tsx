@@ -12,6 +12,7 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { HeroTile } from "@/components/dashboard/HeroTile";
 import { OutcomeCard } from "@/components/dashboard/OutcomeCard";
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
+import { WeeklyJobsAnnouncement } from "@/components/dashboard/WeeklyJobsAnnouncement";
 import { StaleApplicationsBanner } from "@/components/dashboard/StaleApplicationsBanner";
 import { ResponseTimeCard } from "@/components/dashboard/ResponseTimeCard";
 import { StatTile } from "@/components/dashboard/StatTile";
@@ -59,6 +60,10 @@ export default function DashboardPage() {
           {t("newApplication")}
         </Link>
       </div>
+
+      {/* Above everything else, for the accounts it applies to: the one thing on this page that
+          is news rather than the user's own numbers. */}
+      <WeeklyJobsAnnouncement />
 
       {isLoading ? (
         <DashboardSkeleton />
