@@ -7097,3 +7097,34 @@ başlamamış dönem, orantılı geri alma), integration Payments+SiteTraffic+Cl
 (`A_Partial_Refund_Winds_Pro_Back_By_The_Same_Share`,
 `The_Policy_Amount_Is_Full_For_Seven_Days_Then_The_Unused_Share_And_Refunding_It_Ends_Pro_Now`),
 vitest 557/557 (18 yeni copy/route/footer kuralı), tsc, eslint.
+
+## PayTR mağaza canlıda: ödeme ve haftalık ilanlar açıldı, test modu son turu bekliyor (2026-09-16)
+
+**Tetikleyici.** PayTR mağazayı canlı moda aldı (16 Eylül); kullanıcı "artık ödeme almaya
+başlayalım, haftalık ilanı da kullanıcılara açabiliriz" dedi. 15–16 Eylül'de sıralanan lansman
+kapısının kalan iki maddesi (Bildirim URL, canlı onay e-postası) böylece kapandı; fiyat, hukuki
+metinler, posta kutuları, Vertex, model seçimi ve gizlilik metni zaten hazırdı.
+
+**Karar.** `deploy.yml`'de tek reviewed deploy: `PayTr__Enabled=true`, `PayTr__TestMode=false`,
+`JobSources__Enabled=true`, `JobSources__Scoring__ProjectId=${{ env.GCP_PROJECT_ID }}`. İlk öneri
+§15'teki sırayı izlemekti (`TestMode=true` ile prod'da test kartı turu, sonra ayrı deploy'la
+`false`); **kullanıcı test modunun da bu deploy'da kapanmasını istedi** — tek deploy, ilk
+işlemden itibaren gerçek para. Doğrulama turu bu yüzden test kartıyla değil ilk gerçek siparişle
+yapılır (panelde Başarılı → `/admin/payments`'ta Paid+Applied → entitlement → makbuz → panelden
+iade; iade edilen çekimin PayTR komisyonunun geri gelip gelmediği PayTR'ye bağlı — gelmiyorsa test turunu atlamanın bedeli o). `TestMode=true`'ya geri
+dönmek checkout'u kapatmadan her yeni işlemi test ödemesine çevirir — PayTR tarafı yeniden
+denetlenecekse anahtar odur. İki özellik bayrağı birlikte açılıyor çünkü `/pro` fiyatı ve
+"Pro'ya geç" düğmesini ancak ikisi de açıkken gösteriyor; biri açık biri kapalı hâl kullanıcıya
+yarım bir sayfa gösterirdi.
+
+**Yan bulgu ve düzeltme.** `deploy.yml`'nin kendisi `plan` işinin backend path listesinde
+değildi: yalnız bayrak değiştiren bir push **hiçbir şeyi deploy etmiyordu**, elle
+`workflow_dispatch` gerekiyordu. Dosya listeye eklendi — env_vars bloğu backend'in canlı
+konfigürasyonu, onu değiştiren push'un deploy etmesi gerekir. Web tarafı etkilenmedi (web filtresi
+yalnız `web/`).
+
+**Dokunulanlar.** `deploy.yml` (üç bayrak + ProjectId + path listesi + yorumlar), DEPLOYMENT.md
+§14/§15 başlık ve durum metinleri. Kod değişmedi; test yok — salt konfigürasyon.
+
+**Sıradaki.** Deploy bitince ilk gerçek siparişle tur (yukarıdaki kontrol listesi) ve panelden
+iade. İlk pazartesi 04:00 UTC taramasından sonra `GET /api/admin/job-sources/usage` (§14 adım 6).

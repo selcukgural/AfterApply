@@ -780,17 +780,19 @@ show max_connections; show reserved_connections;
 select usename, state, count(*) from pg_stat_activity group by 1, 2;
 ```
 
-### 14. Weekly job matching (LinkedIn + kariyer.net, Gemini scoring, digest) — shipped off (2026-09-12, extended 2026-09-14)
+### 14. Weekly job matching (LinkedIn + kariyer.net, Gemini scoring, digest) — ON since 2026-09-16 (built 2026-09-12, extended 2026-09-14)
 
-**Branch state:** this lives on `feat/linkedin-job-source`, unmerged. The PayTR integration
-landed on the same branch on 2026-09-15 (§15); the branch merges with both flags off.
+**State:** merged to main in PR #55 (2026-09-16) with the flag off; switched **on** the same day
+together with the PayTR checkout (§15) once the merchant went live — `JobSources__Enabled=true`
+and `JobSources__Scoring__ProjectId` in `deploy.yml`. Steps 1–5 below are done and stay as the
+record of what the flag depends on; step 6 is the standing check after every Monday run.
 
 What the feature does when on: every Monday 04:00 UTC a Hangfire job searches LinkedIn's public
 listing **and** kariyer.net's listing with each paying user's criteria, delivers up to 50 new
 postings per user, fetches their descriptions, scores each one against the user's default CV
 with Gemini on Vertex AI (a 0–100 fit, a short reason, matched/missing criteria), and queues one
-"N postings are ready" e-mail per user. It ships **off** — `JobSources:Enabled=false` — and every
-`/api/job-sources/*` route 404s while it is.
+"N postings are ready" e-mail per user. With `JobSources:Enabled=false` every `/api/job-sources/*`
+route 404s and the web hides the nav entry — that is the switch if the feature ever has to go dark.
 
 To provision, in this order:
 
@@ -829,7 +831,13 @@ Logs carry counts only — never a title, a location, a URL, a CV or a posting's
 HttpClients' request logging is removed for both source clients for the same reason, and the
 Vertex error body is never logged (it can echo the request).
 
-### 15. PayTR iFrame payments for the Pro plan — shipped off (2026-09-15)
+### 15. PayTR iFrame payments for the Pro plan — ON since 2026-09-16 (built 2026-09-15)
+
+**State:** merged in PR #55 and deployed dark; PayTR approved the merchant for live mode on
+2026-09-16 and the same day `PayTr__Enabled=true` **and** `PayTr__TestMode=false` went into
+`deploy.yml` in one deploy (owner's decision — no test-mode round in production first). Charges
+are real from that deploy on; the first real order is the verification (step 5) and is refunded
+from `/admin/payments`.
 
 The Pro plan is bought through PayTR's iFrame API: the API asks PayTR for a single-use token
 (step 1), the web embeds `https://www.paytr.com/odeme/guvenli/{token}` on `/pro/checkout`, and
@@ -837,10 +845,10 @@ PayTR posts the result to our notification URL (step 2), which is the **only** t
 an order paid and extends `ProEntitlements`. A notification whose hash is valid but whose
 `merchant_oid` this database has never seen is recorded (`UnknownOrder`, in the alerts list) and
 answered OK: the panel's "Canlı Moda Geçiş" check replays test transactions made against another
-environment, and a non-OK answer only kept that check red (2026-09-16). No card data ever reaches us. Ships **off** —
-`PayTr:Enabled=false` — and every `/api/payments/*` route 404s while it is; the notification
-endpoint only needs the secrets, so a late notification is still applied after the flag goes
-back off. The web shows a price and a "Go Pro" button only when `/api/config` reports both
+environment, and a non-OK answer only kept that check red (2026-09-16). No card data ever reaches us. With
+`PayTr:Enabled=false` every `/api/payments/*` route 404s and `/pro` shows no price or button — the
+kill switch if checkout ever has to close; the notification endpoint only needs the secrets, so a
+late notification is still applied after the flag goes back off. The web shows a price and a "Go Pro" button only when `/api/config` reports both
 `payments.enabled` and `jobSources.enabled`.
 
 **Deploy blocker — do this before the first deploy after merging:** `deploy.yml` now lists
@@ -855,7 +863,7 @@ for s in afterapply-paytr-merchant-id afterapply-paytr-merchant-key afterapply-p
 done
 ```
 
-Then, to switch on, in this order:
+Then, to switch on, in this order (all done 2026-09-16; 5 and 6 were collapsed into one deploy):
 
 1. **Merchant values.** Mağaza Paneli › Destek & Kurulum › Entegrasyon Bilgileri (only the
    main/technical user sees them): `gcloud secrets versions add afterapply-paytr-merchant-id
@@ -873,7 +881,8 @@ Then, to switch on, in this order:
    proportion to the money. Seller identity on the agreement: "e-kariyerim", the Edremit/Balıkesir
    address and the 0266 phone number the owner supplied (`termsOfSale.sections.parties.body`). **destek@ekariyerim.com and support@ekariyerim.com
    must exist and be read** before the checkout opens: it is printed as the refund channel.
-4. **Notification URL.** Mağaza Paneli › Destek & Kurulum › Ayarlar › Bildirim URL:
+4. **Notification URL — DONE 2026-09-16** (the panel's "Canlı Moda Geçiş" check passed and PayTR
+   approved live mode). Mağaza Paneli › Destek & Kurulum › Ayarlar › Bildirim URL:
    `https://<API host>/api/payments/paytr/callback`, protocol **HTTPS**. The API host is the
    Cloud Run service URL (the value of the `GCP_API_URL` GitHub secret, e.g.
    `https://afterapply-api-os6kf5xydq-ew.a.run.app`) — the custom domain is on the web app only.
@@ -881,14 +890,21 @@ Then, to switch on, in this order:
    has nowhere to post the result: the payment page itself refuses to open ("Bildirim Adresi
    (URL) bilgisi eksik") and every transaction stays "Devam ediyor" in the panel. Enter it after
    the first deploy that carries this code, so the URL answers when PayTR checks it.
-5. **Test round-trip in production.** Deploy with `PayTr__Enabled=true`, `PayTr__TestMode=true`
-   and `JobSources__Enabled=true`. Buy a plan with PayTR's test card (4355 0843 5508 4358, 12/30,
-   CVV 000 — pre-filled on the test payment page). Check: the merchant panel shows the
-   transaction as **Başarılı** (if it shows "Devam ediyor", open its "Detay" — it prints the
-   body our endpoint answered), `/admin/payments` shows the order Paid with a TEST flag and an
-   `Applied` notification, the user has an active entitlement, the receipt e-mail arrived.
-   Refund it from `/admin/payments` and confirm the panel shows the refund.
-6. Flip `PayTr__TestMode=false` and redeploy. From then on charges are real.
+5. **Round-trip in production.** The recipe as written was: deploy with `PayTr__Enabled=true`,
+   `PayTr__TestMode=true` and `JobSources__Enabled=true`, buy a plan with PayTR's test card
+   (4355 0843 5508 4358, 12/30, CVV 000 — pre-filled on the test payment page), then flip
+   `TestMode=false`. On 2026-09-16 the owner chose to skip the test-mode round and go straight to
+   `TestMode=false`, so the check is done with the **first real order** instead (a real card,
+   ₺299): the merchant panel shows the transaction as **Başarılı** (if it shows "Devam ediyor",
+   open its "Detay" — it prints the body our endpoint answered), `/admin/payments` shows the
+   order Paid with an `Applied` notification, the user has an active entitlement, the receipt
+   e-mail arrived. Refund it from `/admin/payments` and confirm the panel shows the refund
+   (whether PayTR returns its commission on a refunded charge is theirs to say — if not, that is the price of skipping the test-mode round).
+   A push that only edits `deploy.yml` redeploys the backend since the same day — the file is on
+   the `plan` job's backend path list.
+6. `PayTr__TestMode=false` is in `deploy.yml` since 2026-09-16; charges are real. Setting it back
+   to `true` turns every new transaction into a PayTR test payment without closing the checkout —
+   the switch if PayTR's side ever needs re-checking.
 
 **Refunds — the standing rule.** Refunds are made only from `/admin/payments` (which calls
 PayTR's refund API and records the outcome on the order). **Never refund from the PayTR merchant
