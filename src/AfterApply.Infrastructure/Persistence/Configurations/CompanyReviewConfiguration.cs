@@ -13,11 +13,17 @@ public sealed class CompanyReviewConfiguration : IEntityTypeConfiguration<Compan
         builder.ToTable("CompanyReviews");
         builder.HasKey(r => r.Id);
 
-        // Same widths as the validator and the form's counters — bounded columns, not text.
-        builder.Property(r => r.Title).IsRequired().HasMaxLength(CompanyReview.MaxTitleLength);
-        builder.Property(r => r.Pros).IsRequired().HasMaxLength(CompanyReview.MaxTextLength);
-        builder.Property(r => r.Cons).IsRequired().HasMaxLength(CompanyReview.MaxTextLength);
+        // Legacy free text: nullable since the structured form (2026-09-16), widths unchanged so the
+        // rows written before it fit exactly as they were.
+        builder.Property(r => r.Title).HasMaxLength(CompanyReview.MaxTitleLength);
+        builder.Property(r => r.Pros).HasMaxLength(CompanyReview.MaxTextLength);
+        builder.Property(r => r.Cons).HasMaxLength(CompanyReview.MaxTextLength);
         builder.Property(r => r.RejectionReason).HasMaxLength(CompanyReview.MaxRejectionReasonLength);
+
+        // A database default rather than a CLR one: during a rollout an older instance still
+        // inserts rows without this column, and they are legacy rows by definition.
+        builder.Property(r => r.Format).HasConversion<string>().HasMaxLength(20).IsRequired()
+            .HasDefaultValue(ReviewFormat.Legacy);
 
         // Strings, as every enum column in this schema: the admin queue and the author's list read
         // these by name, and a renumbered enum silently rewriting history is not worth the bytes.

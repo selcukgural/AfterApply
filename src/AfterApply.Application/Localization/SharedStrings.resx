@@ -292,7 +292,7 @@
     <value>You already have an open report on this review.</value>
   </data>
   <data name="COMPANY_REVIEW_CONTENT_INVALID" xml:space="preserve">
-    <value>The review needs a title, pros and cons, and every rating between 1 and 5.</value>
+    <value>The overall rating must be between 1 and 5, each category rated once, and at most 5 catalogue statements picked per list.</value>
   </data>
   <data name="COMPANY_REVIEW_REJECTION_REASON_REQUIRED" xml:space="preserve">
     <value>Rejecting a review requires a reason.</value>
@@ -311,5 +311,17 @@
   </data>
   <data name="VALIDATION_RESOLUTION_REASON_REQUIRED" xml:space="preserve">
     <value>A reason is required unless the report is dismissed.</value>
+  </data>
+  <data name="VALIDATION_REVIEW_CATEGORY_DUPLICATE" xml:space="preserve">
+    <value>Each category can be rated once.</value>
+  </data>
+  <data name="VALIDATION_REVIEW_STATEMENTS_TOO_MANY" xml:space="preserve">
+    <value>Pick at most {0} statements in this list.</value>
+  </data>
+  <data name="VALIDATION_REVIEW_STATEMENTS_DUPLICATE" xml:space="preserve">
+    <value>A statement can be picked once.</value>
+  </data>
+  <data name="VALIDATION_REVIEW_STATEMENT_UNKNOWN" xml:space="preserve">
+    <value>One of the statements is not in the list for this section.</value>
   </data>
 </root>

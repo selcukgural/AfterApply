@@ -116,14 +116,15 @@ internal sealed class CompanyDirectoryService(
     public async Task<IReadOnlyList<ReviewedCompanySlugResponse>> ListReviewedSlugsAsync(CancellationToken cancellationToken) =>
         await cache.GetOrCreateAsync(ReviewedSlugsCacheKey, async ct =>
         {
-            var approved = dbContext.CompanyReviews
-                .Where(r => r.Status == ReviewModerationStatus.Approved && r.ModeratedAt != null);
+            // A structured review is published on save and never carries ModeratedAt; a legacy
+            // one became public when a human approved it. Either way, "last changed" is the later.
+            var approved = dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved);
             var rows = await dbContext.Companies
                 .Where(c => c.Slug != null && approved.Any(r => r.CompanyId == c.Id))
                 .OrderBy(c => c.Slug)
                 .Select(c => new ReviewedCompanySlugResponse(
                     c.Slug!,
-                    approved.Where(r => r.CompanyId == c.Id).Max(r => r.ModeratedAt!.Value)))
+                    approved.Where(r => r.CompanyId == c.Id).Max(r => r.ModeratedAt ?? r.SubmittedAt)))
                 .ToListAsync(ct);
             return (IReadOnlyList<ReviewedCompanySlugResponse>)rows;
         }, ReviewedSlugsCacheOptions, cancellationToken: cancellationToken);

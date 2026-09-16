@@ -13,8 +13,10 @@ namespace AfterApply.Application.CompanyReviews;
 /// reviews accumulate; a lone 5-star cannot put a company at the top. Below
 /// <c>CompanyReviews:MinimumReviewsForScore</c> approved reviews no score is shown at all.
 ///
-/// Category averages are plain means — they are shown as bars next to the sample size, not
-/// ranked, so there is nothing to defend against.
+/// Category averages are plain means — they are shown next to the sample size, not ranked, so
+/// there is nothing to defend against. Each one is gated by the same minimum as the score
+/// (<see cref="ThresholdedAverage"/>), because a category only some reviewers rate can sit on a
+/// single vote long after the company itself has a score.
 /// </summary>
 public static class CompanyReviewScoring
 {
@@ -37,4 +39,9 @@ public static class CompanyReviewScoring
 
     public static double? CategoryAverage(int approvedCount, double sum) =>
         approvedCount <= 0 ? null : Math.Round(sum / approvedCount, 1);
+
+    /// <summary>A category mean that stays hidden until <paramref name="minimumReviews"/> people
+    /// rated that category.</summary>
+    public static double? ThresholdedAverage(int count, double sum, int minimumReviews) =>
+        count < Math.Max(1, minimumReviews) ? null : Math.Round(sum / count, 1);
 }

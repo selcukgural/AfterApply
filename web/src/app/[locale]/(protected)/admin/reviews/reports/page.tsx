@@ -107,7 +107,7 @@ export default function AdminReportsPage() {
                 <div className="flex flex-col">
                   <span className="font-semibold text-gray-900 dark:text-gray-100">{tReasons(report.reason)}</span>
                   <span className="text-gray-600 dark:text-gray-400">
-                    {report.companyName} · “{report.reviewTitle}”
+                    {report.companyName} · “{report.reviewTitle ?? t("structuredReview")}”
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     {report.reporterEmail} · {formatDate(report.reportedAt)}

@@ -930,6 +930,43 @@ export interface PagedResult<T> {
   pageSize: number;
 }
 
+/** The ten optional categories plus Overall, in the order the form shows them. Mirrors
+ *  AfterApply.Domain.CompanyReviews.ReviewCategory. */
+export type ReviewCategory =
+  | "Overall"
+  | "WorkEnvironment"
+  | "Management"
+  | "CareerGrowth"
+  | "WorkLifeBalance"
+  | "Pay"
+  | "Benefits"
+  | "RemoteWork"
+  | "Tooling"
+  | "Hiring"
+  | "Onboarding";
+export type ReviewStatementKind = "Liked" | "Improve";
+/** Legacy rows were written before 2026-09-16 with free text; their text is never on the public
+ *  wire, only their ratings. */
+export type ReviewFormat = "Legacy" | "Structured";
+
+export interface ReviewCategoryRating {
+  category: ReviewCategory;
+  rating: number;
+}
+
+export interface ReviewCategoryAverage {
+  category: ReviewCategory;
+  /** How many published reviews rated this category. */
+  count: number;
+  /** Null while `count` is under the site minimum. */
+  average: number | null;
+}
+
+export interface ReviewStatementCount {
+  key: string;
+  count: number;
+}
+
 export interface CompanyReviewSummary {
   approvedCount: number;
   /** Null until `minimumForScore` reviews are published. */
@@ -937,12 +974,13 @@ export interface CompanyReviewSummary {
   minimumForScore: number;
   priorWeight: number;
   averageOverall: number | null;
-  averageManagement: number | null;
-  averageWorkEnvironment: number | null;
-  averageSalaryAndBenefits: number | null;
-  averageCareerAndDevelopment: number | null;
+  /** Always the ten optional categories, in `ReviewCategory` order. */
+  categories: ReviewCategoryAverage[];
   /** Approved reviews per Overall star, index 0 = 1 star. */
   distribution: number[];
+  /** Empty under the minimum; at most three each. */
+  topLiked: ReviewStatementCount[];
+  topImprovable: ReviewStatementCount[];
 }
 
 export interface CompanyPublicResponse {
@@ -961,20 +999,23 @@ export interface CompanyPublicListItem {
   score: number | null;
 }
 
-export interface ReviewRatings {
+/** What every review shape carries besides its identity. `categoryRatings` holds only the
+ *  categories the author rated; for a legacy row it is the three fixed ratings that map onto a
+ *  current category, with the fourth (salary & benefits) kept apart because it maps onto none. */
+export interface StructuredReviewFields {
+  format: ReviewFormat;
+  employmentStatus: EmploymentStatus;
   overallRating: number;
-  managementRating: number;
-  workEnvironmentRating: number;
-  salaryAndBenefitsRating: number;
-  careerAndDevelopmentRating: number;
+  categoryRatings: ReviewCategoryRating[];
+  legacySalaryAndBenefitsRating: number | null;
+  /** Catalogue keys — see statementCatalogue.ts; the wording is in the message catalogue. */
+  likedStatements: string[];
+  improvableStatements: string[];
 }
 
-export interface CompanyReviewPublic extends ReviewRatings {
+/** No free text, by design: a legacy review's title, pros and cons are not on this record. */
+export interface CompanyReviewPublic extends StructuredReviewFields {
   id: string;
-  title: string;
-  pros: string;
-  cons: string;
-  employmentStatus: EmploymentStatus;
   /** yyyy-MM — month precision on purpose. */
   submittedMonth: string;
   helpfulCount: number;
@@ -991,15 +1032,16 @@ export interface ResolvedCompany {
   name: string;
 }
 
-export interface MyCompanyReview extends ReviewRatings {
+/** The legacy text fields are null on a structured review and still present on a legacy one:
+ *  the author may read what they wrote until they convert it by editing. */
+export interface MyCompanyReview extends StructuredReviewFields {
   id: string;
   companyId: string;
   companySlug: string;
   companyName: string;
-  employmentStatus: EmploymentStatus;
-  title: string;
-  pros: string;
-  cons: string;
+  title: string | null;
+  pros: string | null;
+  cons: string | null;
   status: ReviewModerationStatus;
   rejectionReason: string | null;
   submittedAt: string;
@@ -1027,11 +1069,12 @@ export interface HelpfulToggleResponse {
   helpfulCount: number;
 }
 
-export interface CompanyReviewRequest extends ReviewRatings {
+export interface CompanyReviewRequest {
   employmentStatus: EmploymentStatus;
-  title: string;
-  pros: string;
-  cons: string;
+  overallRating: number;
+  categoryRatings: ReviewCategoryRating[];
+  likedStatements: string[];
+  improvableStatements: string[];
 }
 
 export interface ReportCompanyReviewRequest {
@@ -1044,7 +1087,8 @@ export interface AdminCompanyReviewListItem {
   companyId: string;
   companyName: string;
   companySlug: string | null;
-  title: string;
+  format: ReviewFormat;
+  title: string | null;
   overallRating: number;
   employmentStatus: EmploymentStatus;
   status: ReviewModerationStatus;
@@ -1056,7 +1100,8 @@ export interface AdminCompanyReviewListItem {
 export interface AdminReviewReport {
   id: string;
   reviewId: string;
-  reviewTitle: string;
+  reviewFormat: ReviewFormat;
+  reviewTitle: string | null;
   companyId: string;
   companyName: string;
   reporterUserId: string;
@@ -1070,17 +1115,16 @@ export interface AdminReviewReport {
   resolvedAt: string | null;
 }
 
-export interface AdminCompanyReview extends ReviewRatings {
+export interface AdminCompanyReview extends StructuredReviewFields {
   id: string;
   companyId: string;
   companyName: string;
   companySlug: string | null;
   authorUserId: string;
   authorEmail: string;
-  employmentStatus: EmploymentStatus;
-  title: string;
-  pros: string;
-  cons: string;
+  title: string | null;
+  pros: string | null;
+  cons: string | null;
   status: ReviewModerationStatus;
   rejectionReason: string | null;
   submittedAt: string;

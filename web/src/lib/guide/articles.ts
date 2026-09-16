@@ -45,7 +45,7 @@ export const GUIDE_PATH = "/guide";
 export const GUIDE_ARTICLES: GuideArticle[] = [
   {
     key: "writing-a-fair-review",
-    published: "2026-09-13",
+    published: "2026-09-16",
     related: ["reading-employee-reviews", "reapplying-to-the-same-company"],
     hideRegisterCta: true,
     copy: {
@@ -53,19 +53,19 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
         slug: "adil-ve-faydali-bir-degerlendirme-yazmak",
         title: "Adil ve faydalı bir değerlendirme yazmak",
         description:
-          "Yazdığını, o şirkete başvurmayı düşünen biri okuyacak. Ona en çok yarayan şey, gerçekten yaşadıklarını sade bir dille anlatman — olumsuz olsa bile.",
+          "Puanlarını, o şirkete başvurmayı düşünen biri okuyacak. Yazacak bir şey yok: dürüst puan ver, gerçekten yaşadıklarını hazır maddelerden seç — olumsuz olsa bile.",
       },
       en: {
         slug: "writing-a-fair-review",
         title: "Writing a fair and useful review",
         description:
-          "Someone weighing that company will read what you write. What helps them most is what actually happened to you, told plainly — even when it is negative.",
+          "Someone weighing that company will read your ratings. Nothing to write: rate honestly and pick the ready-made statements you actually lived — negative ones too.",
       },
     },
   },
   {
     key: "reading-employee-reviews",
-    published: "2026-09-13",
+    published: "2026-09-16",
     related: ["writing-a-fair-review", "reapplying-to-the-same-company"],
     copy: {
       tr: {

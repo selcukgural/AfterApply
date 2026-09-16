@@ -19,11 +19,16 @@ const GREY_CASES = [
   { key: "case7", approve: false },
 ] as const;
 
+const STRUCTURED_ITEMS = ["pattern", "quota", "report"] as const;
+
 /**
  * The moderation guide, above the queue. It is the one place the rules a review is judged by are
  * written down for the person judging, so every reject lands on the same line — and the two
  * principles at the top are there because the natural drift of a moderator is towards protecting
- * the company, which is not the job. Open/closed is the page's concern (it is remembered).
+ * the company, which is not the job. Since 2026-09-16 a review is ratings and catalogue picks,
+ * so the words cannot break a rule; the structured section is about accounts, and the free-text
+ * rules below it apply to the legacy rows still in the queue. Open/closed is the page's concern
+ * (it is remembered).
  */
 export function ModerationGuide({ open, onToggle }: { open: boolean; onToggle: (open: boolean) => void }) {
   const t = useTranslations("adminReviews.guide");
@@ -55,6 +60,21 @@ export function ModerationGuide({ open, onToggle }: { open: boolean; onToggle: (
           <div className="grid gap-3 sm:grid-cols-2">
             <p className="rounded-lg bg-accent-wash px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{t("principle1")}</p>
             <p className="rounded-lg bg-accent-wash px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{t("principle2")}</p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-accent-ink">{t("structured.title")}</h3>
+            <p className="text-gray-700 dark:text-gray-300">{t("structured.body")}</p>
+            <ul className="flex list-disc flex-col gap-1 pl-5 text-gray-700 dark:text-gray-300">
+              {STRUCTURED_ITEMS.map((item) => (
+                <li key={item}>{t(`structured.${item}`)}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("legacy.title")}</h3>
+            <p className="text-gray-700 dark:text-gray-300">{t("legacy.body")}</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

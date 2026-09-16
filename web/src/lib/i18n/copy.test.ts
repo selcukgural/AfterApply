@@ -120,3 +120,39 @@ describe("empty states point somewhere", () => {
     expect(enValue("cv.empty")).not.toMatch(/left/i);
   });
 });
+
+describe("company reviews have no free text (2026-09-16)", () => {
+  // A review is ratings plus catalogue statements. Copy that still promises "pros and cons", a
+  // title, or a moderator reading every review before it is published describes the old form.
+  // The legacy rows are the one legitimate reason to say "pros and cons": where the author's own
+  // list, the export/privacy text and the moderation guide explain what the old format was.
+  const allowed = [
+    /^companyReviews\.mine\.legacy/,
+    /^companyReviews\.edit\.legacyBanner$/,
+    /^companyReviews\.card\.legacy/,
+    /^privacy\.companyReviews\.what$/,
+    /^adminReviews\.guide\.(legacy|grey|approve|reject)\./,
+    /^adminReviews\.detail\.legacy/,
+    /^help\.companyReviews\.calloutModeration\.body$/,
+    /^companies\.scoring\.moderation\.legacy$/,
+  ];
+  const reviewCopy = [...trEntries, ...enEntries].filter(([key]) =>
+    /^(companyReviews|companies|adminReviews|help\.companyReviews|help\.faq\.q1[345]|privacy\.companyReviews|landing\.tools)\./.test(key),
+  );
+
+  it("promises no title, pros or cons outside the legacy explanations", () => {
+    const offenders = reviewCopy
+      .filter(([key]) => !allowed.some((rule) => rule.test(key)))
+      .filter(([, value]) => /\b(pros|cons|artılar|eksiler|artı ve eksi)\b/i.test(value) || /\b(başlık|a title)\b/i.test(value))
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+
+  it("says nowhere that a moderator reads every review before it is published", () => {
+    const offenders = reviewCopy
+      .filter(([key]) => !allowed.some((rule) => rule.test(key)))
+      .filter(([, value]) => /(reads every review|her değerlendirmeyi .*okur|yayımlanmadan önce .*moderatör|before it is published)/i.test(value))
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+});

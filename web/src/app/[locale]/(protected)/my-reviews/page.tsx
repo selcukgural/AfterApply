@@ -10,6 +10,7 @@ import { Button, buttonClassName } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { StarRating } from "@/components/companyReviews/StarRating";
 import { ReviewStatusBadge } from "@/components/companyReviews/ReviewStatusBadge";
+import { ReviewPicks } from "@/components/companyReviews/ReviewPicks";
 import { guidePath } from "@/lib/guide/articles";
 
 export default function MyReviewsPage() {
@@ -76,14 +77,33 @@ export default function MyReviewsPage() {
                   <Link href={`/companies/${review.companySlug}`} className="text-sm text-gray-500 underline-offset-2 hover:underline dark:text-gray-400">
                     {review.companyName}
                   </Link>
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">{review.title}</span>
+                  {review.format === "Legacy" ? (
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">{review.title}</span>
+                  ) : (
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      {t("structuredSummary", { count: review.likedStatements.length + review.improvableStatements.length })}
+                    </span>
+                  )}
                   <span className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                     <ReviewStatusBadge status={review.status} />
+                    {review.format === "Legacy" ? (
+                      <span className="rounded-full bg-muted-wash px-2 py-0.5 text-[11px] font-medium text-muted-ink">{t("legacyTag")}</span>
+                    ) : null}
                     <span>{new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(review.submittedAt))}</span>
                   </span>
                 </div>
                 <StarRating value={review.overallRating} label={String(review.overallRating)} size="lg" />
               </div>
+
+              {review.format === "Legacy" ? (
+                <div className="flex flex-col gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  {review.pros ? <p className="whitespace-pre-wrap">{review.pros}</p> : null}
+                  {review.cons ? <p className="whitespace-pre-wrap">{review.cons}</p> : null}
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t("legacyEditHint")}</p>
+                </div>
+              ) : (
+                <ReviewPicks liked={review.likedStatements} improvable={review.improvableStatements} />
+              )}
 
               {review.status === "Rejected" && review.rejectionReason && (
                 <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/30 dark:text-red-200">

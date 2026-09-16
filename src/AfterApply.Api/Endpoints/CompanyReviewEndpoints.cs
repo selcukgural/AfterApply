@@ -56,7 +56,9 @@ public static class CompanyReviewEndpoints
             })
             .WithValidation<PublicReviewListQuery>()
             .WithSummary("Published reviews of a company")
-            .WithDescription("Public and anonymous: no author, and the date is month precision.")
+            .WithDescription("Public and anonymous: no author, no free text (a legacy review's title, pros and cons " +
+                             "are not on the wire at all), and the date is month precision. Statements are catalogue " +
+                             "keys; the wording lives in the web's message catalogue.")
             .Produces<PagedResult<CompanyReviewPublicResponse>>();
 
         // Everything a signed-in person does. Extension tokens stay out (no AllowExtensionToken):
@@ -96,9 +98,11 @@ public static class CompanyReviewEndpoints
             .WithValidation<CreateCompanyReviewRequest>()
             .RequireRateLimiting(DependencyInjection.CompanyReviewWriteRateLimitPolicy)
             .WithSummary("Write a review of a company")
-            .WithDescription("Stored as Pending; nothing is public until an admin approves it. One review per " +
-                             "company per account, and at most CompanyReviews:MaxReviewsPerUser in total (or the " +
-                             "account's override) — both refusals are 400s with a coded detail.")
+            .WithDescription("A structured review — an overall rating, optional category ratings and picks from the " +
+                             "statement catalogue, no free text — and it is published on save; reports are the " +
+                             "moderation path. One review per company per account, and at most " +
+                             "CompanyReviews:MaxReviewsPerUser in total (or the account's override) — both refusals " +
+                             "are 400s with a coded detail.")
             .Produces<MyCompanyReviewResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status429TooManyRequests);
@@ -118,8 +122,9 @@ public static class CompanyReviewEndpoints
             .WithValidation<UpdateCompanyReviewRequest>()
             .RequireRateLimiting(DependencyInjection.CompanyReviewWriteRateLimitPolicy)
             .WithSummary("Edit the caller's own review")
-            .WithDescription("Sends the review back to Pending, so an edit is never public before an admin has " +
-                             "read it. Another account's review is 404, not 403.")
+            .WithDescription("Replaces the review with the structured shape (a legacy free-text review is converted " +
+                             "by this; its text stays stored but is no longer shown). Stays published, except that a " +
+                             "review a moderator rejected goes back to Pending. Another account's review is 404, not 403.")
             .Produces<MyCompanyReviewResponse>()
             .Produces(StatusCodes.Status429TooManyRequests);
 

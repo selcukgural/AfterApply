@@ -118,7 +118,7 @@ export function CompanyReviewsSection({ company, initialReviews }: CompanyReview
             <span className="font-medium text-gray-900 dark:text-gray-100">{t("yourReview")}</span>
             <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
               <ReviewStatusBadge status={ownReview.status} />
-              <span>{ownReview.title}</span>
+              <span>{t("ownSummary", { value: ownReview.overallRating })}</span>
             </span>
             {ownReview.status === "Rejected" && ownReview.rejectionReason && (
               <span className="text-xs text-red-700 dark:text-red-400">{t("rejectedReason", { reason: ownReview.rejectionReason })}</span>
