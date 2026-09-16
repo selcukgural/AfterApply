@@ -1464,8 +1464,13 @@ export interface PaymentsSummaryResponse {
   testOrdersLast30Days: number;
 }
 
+/** The five outcomes the alert list shows; Applied, Duplicate and RefundRecorded never appear. */
+export type PaymentAlertOutcome = "BadHash" | "UnknownOrder" | "LateApplied" | "Malformed" | "Error";
+
+export type PaymentAlertSortKey = "receivedAt" | "outcome" | "status" | "merchantOid";
+
 export interface PaymentAlertsResponse {
-  notifications: PaymentNotificationResponse[];
+  notifications: PagedResult<PaymentNotificationResponse>;
   amountMismatches: AdminPaymentOrderResponse[];
 }
 

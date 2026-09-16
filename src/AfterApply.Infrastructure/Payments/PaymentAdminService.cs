@@ -13,12 +13,6 @@ internal sealed class PaymentAdminService(AppDbContext dbContext, IOptions<PayTr
     private const int MaxPageSize = 100;
     private const int MaxMonths = 36;
 
-    private static readonly PaymentNotificationOutcome[] AlertOutcomes =
-    [
-        PaymentNotificationOutcome.BadHash, PaymentNotificationOutcome.UnknownOrder, PaymentNotificationOutcome.LateApplied,
-        PaymentNotificationOutcome.Malformed, PaymentNotificationOutcome.Error
-    ];
-
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
     public async Task<PaymentsSummaryResponse> GetSummaryAsync(int months, CancellationToken cancellationToken)
@@ -115,20 +109,59 @@ internal sealed class PaymentAdminService(AppDbContext dbContext, IOptions<PayTr
         return orders.Select(o => o.ToAdminResponse(_timeProvider.GetUtcNow())).ToList();
     }
 
-    public async Task<PaymentAlertsResponse> GetAlertsAsync(int days, CancellationToken cancellationToken)
+    public async Task<PaymentAlertsResponse> GetAlertsAsync(PaymentAlertListQuery query, CancellationToken cancellationToken)
     {
-        var since = _timeProvider.GetUtcNow().AddDays(-Math.Clamp(days, 1, 365));
-        var notifications = await dbContext.PaymentNotifications.AsNoTracking()
-            .Where(n => n.ReceivedAt >= since && AlertOutcomes.Contains(n.Outcome))
-            .OrderByDescending(n => n.ReceivedAt).ThenByDescending(n => n.Id)
-            .Take(200)
+        var now = _timeProvider.GetUtcNow();
+        var since = now.AddDays(-PaymentAlertList.ClampDays(query.Days));
+        var page = Math.Max(query.Page, 1);
+        var pageSize = PaymentAlertList.ClampPageSize(query.PageSize);
+        var alertOutcomes = PaymentAlertList.Outcomes;
+
+        var notifications = dbContext.PaymentNotifications.AsNoTracking()
+            .Where(n => n.ReceivedAt >= since && alertOutcomes.Contains(n.Outcome));
+
+        if (!string.IsNullOrWhiteSpace(query.Outcome))
+        {
+            // A name outside the alert set (or a typo) matches nothing rather than everything: the
+            // admin asked for a particular kind of alert, and there is none of that kind.
+            notifications = Enum.TryParse<PaymentNotificationOutcome>(query.Outcome, ignoreCase: true, out var outcome) && alertOutcomes.Contains(outcome)
+                ? notifications.Where(n => n.Outcome == outcome)
+                : notifications.Where(_ => false);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Status))
+        {
+            var status = query.Status.Trim().ToLowerInvariant();
+            notifications = notifications.Where(n => n.Status == status);
+        }
+
+        if (query.TestMode is { } testMode)
+        {
+            notifications = notifications.Where(n => n.TestMode == testMode);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            // merchant_oids are lowercase hex on our side; PayTR echoes them back unchanged.
+            var term = query.Search.Trim().ToLowerInvariant();
+            notifications = notifications.Where(n => n.MerchantOid.Contains(term));
+        }
+
+        var (sortKey, descending) = PaymentAlertList.ParseSort(query.Sort, query.Direction);
+        var total = await notifications.CountAsync(cancellationToken);
+        var items = await PaymentAlertList.Sort(notifications, sortKey, descending)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
         var mismatches = await dbContext.PaymentOrders.AsNoTracking()
             .Where(o => o.AmountMismatch && o.PaidAt >= since)
             .OrderByDescending(o => o.PaidAt)
             .Take(100)
             .ToListAsync(cancellationToken);
-        return new PaymentAlertsResponse(notifications.Select(n => n.ToResponse()).ToList(), mismatches.Select(o => o.ToAdminResponse(_timeProvider.GetUtcNow())).ToList());
+        return new PaymentAlertsResponse(
+            new PagedResult<PaymentNotificationResponse>(items.Select(n => n.ToResponse()).ToList(), total, page, pageSize),
+            mismatches.Select(o => o.ToAdminResponse(now)).ToList());
     }
 
     public async Task<AdminPaymentOrderResponse?> CancelAsync(Guid adminUserId, Guid orderId, CancellationToken cancellationToken)

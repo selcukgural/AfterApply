@@ -1,3 +1,5 @@
+using AfterApply.Application.Applications.Contracts;
+
 namespace AfterApply.Application.Payments.Contracts;
 
 public sealed record PaymentPlansResponse(
@@ -130,8 +132,9 @@ public sealed record PaymentsSummaryResponse(
     int ActiveProUsers,
     int TestOrdersLast30Days);
 
-/// <summary>What deserves a look: notifications we rejected or applied late, and paid orders whose
-/// charged amount differed from what we asked for.</summary>
+/// <summary>What deserves a look: notifications we rejected or applied late (paged, filtered and
+/// sorted as the query asked), and paid orders in the same window whose charged amount differed
+/// from what we asked for.</summary>
 public sealed record PaymentAlertsResponse(
-    IReadOnlyList<PaymentNotificationResponse> Notifications,
+    PagedResult<PaymentNotificationResponse> Notifications,
     IReadOnlyList<AdminPaymentOrderResponse> AmountMismatches);

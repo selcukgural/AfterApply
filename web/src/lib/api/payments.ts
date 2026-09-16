@@ -6,6 +6,8 @@ import type {
   CheckoutResponse,
   MarkRefundedRequest,
   PagedResult,
+  PaymentAlertOutcome,
+  PaymentAlertSortKey,
   PaymentAlertsResponse,
   PaymentOrderResponse,
   PaymentPlansResponse,
@@ -47,6 +49,39 @@ export interface AdminOrderFilters {
   pageSize?: number;
 }
 
+/** The alert list's filters, as the query string names them. Everything is optional: the server
+ *  defaults to the last 30 days, every alert outcome, ten rows, newest first. */
+export interface AdminAlertFilters {
+  days?: number;
+  outcome?: PaymentAlertOutcome;
+  /** PayTR's status word ("success" / "failed"), or "refund" for a refund call PayTR refused. */
+  status?: string;
+  /** true = test-mode rows only, false = live only, undefined = both. */
+  testMode?: boolean;
+  /** Matched inside the merchant_oid. */
+  q?: string;
+  sort?: PaymentAlertSortKey;
+  dir?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
+
+export const ALERT_PAGE_SIZE = 10;
+
+export function alertQueryString(filters: AdminAlertFilters): string {
+  const params = new URLSearchParams();
+  if (filters.days) params.set("days", String(filters.days));
+  if (filters.outcome) params.set("outcome", filters.outcome);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.testMode !== undefined) params.set("testMode", String(filters.testMode));
+  if (filters.q) params.set("q", filters.q);
+  if (filters.sort) params.set("sort", filters.sort);
+  if (filters.dir) params.set("dir", filters.dir);
+  params.set("page", String(filters.page ?? 1));
+  params.set("pageSize", String(filters.pageSize ?? ALERT_PAGE_SIZE));
+  return params.toString();
+}
+
 export const adminPaymentsApi = {
   getSummary: (months = 12) => apiFetch<PaymentsSummaryResponse>(`/api/admin/payments/summary?months=${months}`),
 
@@ -64,7 +99,8 @@ export const adminPaymentsApi = {
 
   listRefundRequests: () => apiFetch<AdminPaymentOrderResponse[]>("/api/admin/payments/refund-requests"),
 
-  getAlerts: (days = 30) => apiFetch<PaymentAlertsResponse>(`/api/admin/payments/alerts?days=${days}`),
+  getAlerts: (filters: AdminAlertFilters = {}) =>
+    apiFetch<PaymentAlertsResponse>(`/api/admin/payments/alerts?${alertQueryString(filters)}`),
 
   refund: (orderId: string, request: AdminRefundRequest) =>
     apiFetch<AdminPaymentOrderResponse>(`/api/admin/payments/orders/${orderId}/refund`, {

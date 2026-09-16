@@ -330,8 +330,85 @@ public class PaymentRefundAndAdminTests(ApiHost<PaymentProfile> host) : IClassFi
 
         var alerts = await _admin.GetFromJsonAsync<PaymentAlertsResponse>("/api/admin/payments/alerts", PaymentTestHost.JsonOptions);
 
-        alerts!.Notifications.Select(n => n.Outcome).ShouldBe(["BadHash", "UnknownOrder"]);
+        alerts!.Notifications.Items.Select(n => n.Outcome).ShouldBe(["BadHash", "UnknownOrder"]);
+        alerts.Notifications.TotalCount.ShouldBe(2);
+        alerts.Notifications.PageSize.ShouldBe(10);
         alerts.AmountMismatches.Single().Id.ShouldBe(mismatched.OrderId);
+    }
+
+    private Task<PaymentAlertsResponse> AlertsAsync(string query = "") =>
+        _admin.GetFromJsonAsync<PaymentAlertsResponse>($"/api/admin/payments/alerts{query}", PaymentTestHost.JsonOptions)!;
+
+    /// <summary>Twelve unknown-order notifications a minute apart, oldest oid "a…00", newest "a…11".</summary>
+    private async Task<List<string>> TwelveUnknownOrdersAsync()
+    {
+        var oids = new List<string>();
+        for (var i = 0; i < 12; i++)
+        {
+            var oid = $"a{i:d2}".PadRight(32, 'f');
+            oids.Add(oid);
+            await _host.NotifyAsync(oid, "success", 100);
+            _host.Clock.Advance(TimeSpan.FromMinutes(1));
+        }
+
+        return oids;
+    }
+
+    [Fact]
+    public async Task Alerts_Come_Ten_A_Page_Newest_First()
+    {
+        var oids = await TwelveUnknownOrdersAsync();
+
+        var first = await AlertsAsync();
+        first.Notifications.TotalCount.ShouldBe(12);
+        first.Notifications.Page.ShouldBe(1);
+        first.Notifications.Items.Count.ShouldBe(10);
+        first.Notifications.Items.Select(n => n.MerchantOid).ShouldBe(oids.AsEnumerable().Reverse().Take(10));
+
+        var second = await AlertsAsync("?page=2");
+        second.Notifications.Items.Select(n => n.MerchantOid).ShouldBe([oids[1], oids[0]]);
+
+        // The page size can be raised, but never past fifty.
+        (await AlertsAsync("?pageSize=500")).Notifications.PageSize.ShouldBe(50);
+    }
+
+    [Fact]
+    public async Task Alerts_Sort_By_Any_Column_In_Either_Direction()
+    {
+        var oids = await TwelveUnknownOrdersAsync();
+        await _host.NotifyAsync("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "failed", 100, hashOverride: "bad");
+
+        (await AlertsAsync("?sort=receivedAt&dir=asc")).Notifications.Items.Select(n => n.MerchantOid).ShouldBe(oids.Take(10));
+        (await AlertsAsync("?sort=merchantOid&dir=desc&pageSize=2")).Notifications.Items.Select(n => n.MerchantOid).ShouldBe(["bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", oids[11]]);
+        // Alphabetical by the outcome's name, then newest first inside the group.
+        (await AlertsAsync("?sort=outcome&pageSize=2")).Notifications.Items.Select(n => n.Outcome).ShouldBe(["BadHash", "UnknownOrder"]);
+        (await AlertsAsync("?sort=outcome&dir=desc&pageSize=1")).Notifications.Items.Single().Outcome.ShouldBe("UnknownOrder");
+        (await AlertsAsync("?sort=status&pageSize=1")).Notifications.Items.Single().Status.ShouldBe("failed");
+        // Nonsense falls back to the default, it is not an error.
+        (await AlertsAsync("?sort=colour&dir=up")).Notifications.Items.First().MerchantOid.ShouldBe("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+    }
+
+    [Fact]
+    public async Task Alerts_Filter_By_Outcome_Status_Test_Mode_Merchant_Oid_And_Window()
+    {
+        await _host.NotifyAsync("cccccccccccccccccccccccccccccccc", "success", 100);
+        _host.Clock.Advance(TimeSpan.FromDays(10));
+        await _host.NotifyAsync("dddddddddddddddddddddddddddddddd", "failed", 100, hashOverride: "bad");
+        await _host.NotifyAsync("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "success", 100, extra: new Dictionary<string, string> { ["test_mode"] = "0" });
+
+        (await AlertsAsync("?outcome=badhash")).Notifications.Items.Single().MerchantOid.ShouldBe("dddddddddddddddddddddddddddddddd");
+        (await AlertsAsync("?outcome=UnknownOrder")).Notifications.TotalCount.ShouldBe(2);
+        // Applied is never an alert: asking for it finds nothing, it does not widen the list.
+        (await AlertsAsync("?outcome=Applied")).Notifications.TotalCount.ShouldBe(0);
+        (await AlertsAsync("?status=FAILED")).Notifications.Items.Single().Status.ShouldBe("failed");
+        (await AlertsAsync("?testMode=false")).Notifications.Items.Single().MerchantOid.ShouldBe("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        (await AlertsAsync("?testMode=true")).Notifications.TotalCount.ShouldBe(2);
+        (await AlertsAsync("?q=DDDD")).Notifications.Items.Single().MerchantOid.ShouldBe("dddddddddddddddddddddddddddddddd");
+        (await AlertsAsync("?q=zzz")).Notifications.TotalCount.ShouldBe(0);
+        // The window: the first notification is ten days old, so a seven-day window leaves it out.
+        (await AlertsAsync("?days=7")).Notifications.TotalCount.ShouldBe(2);
+        (await AlertsAsync("?days=30")).Notifications.TotalCount.ShouldBe(3);
+        (await AlertsAsync("?outcome=UnknownOrder&status=success&testMode=true&q=cccc&days=30")).Notifications.Items.Single().MerchantOid.ShouldBe("cccccccccccccccccccccccccccccccc");
     }
 
     [Fact]
