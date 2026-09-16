@@ -324,4 +324,22 @@
   <data name="VALIDATION_REVIEW_STATEMENT_UNKNOWN" xml:space="preserve">
     <value>Maddelerden biri bu bölümün listesinde yok.</value>
   </data>
+  <data name="COMPANY_SALARY_QUOTA_REACHED" xml:space="preserve">
+    <value>En fazla {0} maaş kaydı girebilirsiniz. Yenisi için birini silin.</value>
+  </data>
+  <data name="COMPANY_SALARY_OCCUPATION_UNKNOWN" xml:space="preserve">
+    <value>Listeden bir meslek seç.</value>
+  </data>
+  <data name="COMPANY_SALARY_ALREADY_EXISTS" xml:space="preserve">
+    <value>Bu şirkette bu meslek için zaten bir maaş kaydınız var. Bunun yerine o kaydı düzenleyin.</value>
+  </data>
+  <data name="COMPANY_SALARY_CONTENT_INVALID" xml:space="preserve">
+    <value>Maaş kaydı kaydedilemedi: mesleği, tecrübe yılını ve tutarları kontrol edin.</value>
+  </data>
+  <data name="VALIDATION_SALARY_BONUS_AMOUNT_REQUIRED" xml:space="preserve">
+    <value>Yıllık prim tutarını girin ya da "prim yok" seçin.</value>
+  </data>
+  <data name="VALIDATION_SALARY_BONUS_AMOUNT_UNEXPECTED" xml:space="preserve">
+    <value>"Prim yok" seçiliyken bir prim tutarı girildi.</value>
+  </data>
 </root>

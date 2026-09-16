@@ -1,0 +1,690 @@
+code,isco08Code,source,nameTr,nameEn
+1111,1111,Isco08,Yasama meclisi üyeleri,Legislators
+1112,1112,Isco08,Üst düzey devlet görevlileri,Senior Government Officials
+1113,1113,Isco08,Geleneksel topluluk liderleri ve köy muhtarları,Traditional Chiefs and Heads of Villages
+1114,1114,Isco08,Sivil toplum ve meslek kuruluşlarının üst düzey yöneticileri,Senior Officials of Special-interest Organizations
+1120,1120,Isco08,Genel müdürler ve üst düzey yöneticiler (CEO),Managing Directors and Chief Executives
+1211,1211,Isco08,Finans müdürleri,Finance Managers
+1212,1212,Isco08,İnsan kaynakları müdürleri,Human Resource Managers
+1213,1213,Isco08,Politika ve planlama müdürleri,Policy and Planning Managers
+1219,1219,Isco08,İşletme hizmetleri ve idari işler müdürleri (bys),Business Services and Administration Managers Not Elsewhere Classified
+1221,1221,Isco08,Satış ve pazarlama müdürleri,Sales and Marketing Managers
+1222,1222,Isco08,Reklam ve halkla ilişkiler müdürleri,Advertising and Public Relations Managers
+1223,1223,Isco08,Araştırma ve geliştirme müdürleri,Research and Development Managers
+1311,1311,Isco08,Tarım ve ormancılık üretim müdürleri,Agricultural and Forestry Production Managers
+1312,1312,Isco08,Su ürünleri ve balıkçılık üretim müdürleri,Aquaculture and Fisheries Production Managers
+1321,1321,Isco08,İmalat müdürleri,Manufacturing Managers
+1322,1322,Isco08,Madencilik müdürleri,Mining Managers
+1323,1323,Isco08,İnşaat müdürleri,Construction Managers
+1324,1324,Isco08,"Tedarik, dağıtım ve lojistik müdürleri","Supply, Distribution and Related Managers"
+1330,1330,Isco08,Bilgi ve iletişim teknolojileri hizmet müdürleri,Information and Communications Technology Service Managers
+1341,1341,Isco08,Çocuk bakım hizmetleri müdürleri,Child Care Service Managers
+1342,1342,Isco08,Sağlık hizmetleri müdürleri,Health Service Managers
+1343,1343,Isco08,Yaşlı bakım hizmetleri müdürleri,Aged Care Service Managers
+1344,1344,Isco08,Sosyal hizmet müdürleri,Social Welfare Managers
+1345,1345,Isco08,Eğitim müdürleri,Education Managers
+1346,1346,Isco08,Finans ve sigorta hizmetleri şube müdürleri,Financial and Insurance Services Branch Managers
+1349,1349,Isco08,Profesyonel hizmet müdürleri (bys),Professional Services Managers Not Elsewhere Classified
+1411,1411,Isco08,Otel müdürleri,Hotel Managers
+1412,1412,Isco08,Restoran müdürleri,Restaurant Managers
+1420,1420,Isco08,Perakende ve toptan ticaret müdürleri,Retail and Wholesale Trade Managers
+1431,1431,Isco08,"Spor, eğlence ve kültür merkezi müdürleri","Sports, Recreation and Cultural Centre Managers"
+1439,1439,Isco08,Hizmet müdürleri (bys),Services Managers Not Elsewhere Classified
+2111,2111,Isco08,Fizikçiler ve astronomlar,Physicists and Astronomers
+2112,2112,Isco08,Meteoroloji uzmanları,Meteorologists
+2113,2113,Isco08,Kimyagerler,Chemists
+2114,2114,Isco08,Jeologlar ve jeofizikçiler,Geologists and Geophysicists
+2120,2120,Isco08,"Matematikçiler, aktüerler ve istatistikçiler","Mathematicians, Actuaries and Statisticians"
+2131,2131,Isco08,"Biyologlar, botanikçiler, zoologlar ve ilgili meslek mensupları","Biologists, Botanists, Zoologists and Related Professionals"
+2132,2132,Isco08,"Tarım, ormancılık ve balıkçılık danışmanları","Farming, Forestry and Fisheries Advisers"
+2133,2133,Isco08,Çevre koruma uzmanları,Environmental Protection Professionals
+2141,2141,Isco08,Endüstri ve üretim mühendisleri,Industrial and Production Engineers
+2142,2142,Isco08,İnşaat mühendisleri,Civil Engineers
+2143,2143,Isco08,Çevre mühendisleri,Environmental Engineers
+2144,2144,Isco08,Makine mühendisleri,Mechanical Engineers
+2145,2145,Isco08,Kimya mühendisleri,Chemical Engineers
+2146,2146,Isco08,"Maden mühendisleri, metalurji mühendisleri ve ilgili meslek mensupları","Mining Engineers, Metallurgists and Related Professionals"
+2149,2149,Isco08,Mühendislik meslek mensupları (bys),Engineering Professionals Not Elsewhere Classified
+2151,2151,Isco08,Elektrik mühendisleri,Electrical Engineers
+2152,2152,Isco08,Elektronik mühendisleri,Electronics Engineers
+2153,2153,Isco08,Telekomünikasyon mühendisleri,Telecommunications Engineers
+2161,2161,Isco08,Mimarlar,Building Architects
+2162,2162,Isco08,Peyzaj mimarları,Landscape Architects
+2163,2163,Isco08,Ürün ve giyim tasarımcıları,Product and Garment Designers
+2164,2164,Isco08,Şehir ve trafik plancıları,Town and Traffic Planners
+2165,2165,Isco08,Haritacılar ve harita mühendisleri,Cartographers and Surveyors
+2166,2166,Isco08,Grafik ve multimedya tasarımcıları,Graphic and Multimedia Designers
+2211,2211,Isco08,Pratisyen hekimler,Generalist Medical Practitioners
+2212,2212,Isco08,Uzman hekimler,Specialist Medical Practitioners
+2221,2221,Isco08,Hemşireler,Nursing Professionals
+2222,2222,Isco08,Ebeler,Midwifery Professionals
+2230,2230,Isco08,Geleneksel ve tamamlayıcı tıp uzmanları,Traditional and Complementary Medicine Professionals
+2240,2240,Isco08,Paramedikal uygulayıcılar,Paramedical Practitioners
+2250,2250,Isco08,Veteriner hekimler,Veterinarians
+2261,2261,Isco08,Diş hekimleri,Dentists
+2262,2262,Isco08,Eczacılar,Pharmacists
+2263,2263,Isco08,Çevre sağlığı ve iş sağlığı uzmanları,Environmental and Occupational Health and Hygiene Professionals
+2264,2264,Isco08,Fizyoterapistler,Physiotherapists
+2265,2265,Isco08,Diyetisyenler ve beslenme uzmanları,Dieticians and Nutritionists
+2266,2266,Isco08,Odyologlar ve dil ve konuşma terapistleri,Audiologists and Speech Therapists
+2267,2267,Isco08,Optometristler ve optisyenler,Optometrists and Ophthalmic Opticians
+2269,2269,Isco08,Sağlık meslek mensupları (bys),Health Professionals Not Elsewhere Classified
+2310,2310,Isco08,Üniversite ve yükseköğretim öğretim elemanları,University and Higher Education Teachers
+2320,2320,Isco08,Mesleki eğitim öğretmenleri,Vocational Education Teachers
+2330,2330,Isco08,Ortaöğretim öğretmenleri,Secondary Education Teachers
+2341,2341,Isco08,İlkokul öğretmenleri,Primary School Teachers
+2342,2342,Isco08,Okul öncesi öğretmenleri,Early Childhood Educators
+2351,2351,Isco08,Eğitim yöntemleri uzmanları,Education Methods Specialists
+2352,2352,Isco08,Özel eğitim öğretmenleri,Special Needs Teachers
+2353,2353,Isco08,Diğer dil öğretmenleri,Other Language Teachers
+2354,2354,Isco08,Diğer müzik öğretmenleri,Other Music Teachers
+2355,2355,Isco08,Diğer sanat öğretmenleri,Other Arts Teachers
+2356,2356,Isco08,Bilgi teknolojileri eğitmenleri,Information Technology Trainers
+2359,2359,Isco08,Öğretim meslek mensupları (bys),Teaching Professionals Not Elsewhere Classified
+2411,2411,Isco08,Muhasebeciler ve mali müşavirler,Accountants
+2412,2412,Isco08,Finans ve yatırım danışmanları,Financial and Investment Advisers
+2413,2413,Isco08,Finansal analistler,Financial Analysts
+2421,2421,Isco08,Yönetim ve organizasyon analistleri,Management and Organization Analysts
+2422,2422,Isco08,Politika yönetimi uzmanları,Policy Administration Professionals
+2423,2423,Isco08,Personel ve kariyer uzmanları,Personnel and Careers Professionals
+2424,2424,Isco08,Eğitim ve personel geliştirme uzmanları,Training and Staff Development Professionals
+2431,2431,Isco08,Reklam ve pazarlama uzmanları,Advertising and Marketing Professionals
+2432,2432,Isco08,Halkla ilişkiler uzmanları,Public Relations Professionals
+2433,2433,Isco08,Teknik ve tıbbi satış uzmanları (BİT hariç),Technical and Medical Sales Professionals (excluding ICT)
+2434,2434,Isco08,Bilgi ve iletişim teknolojileri satış uzmanları,Information and Communications Technology Sales Professionals
+2511,2511,Isco08,Sistem analistleri,Systems Analysts
+2512,2512,Isco08,Yazılım geliştiricileri,Software Developers
+2513,2513,Isco08,Web ve multimedya geliştiricileri,Web and Multimedia Developers
+2514,2514,Isco08,Uygulama programcıları,Applications Programmers
+2519,2519,Isco08,Yazılım ve uygulama geliştiricileri ve analistleri (bys),Software and Applications Developers and Analysts Not Elsewhere Classified
+2521,2521,Isco08,Veri tabanı tasarımcıları ve yöneticileri,Database Designers and Administrators
+2522,2522,Isco08,Sistem yöneticileri,Systems Administrators
+2523,2523,Isco08,Bilgisayar ağı uzmanları,Computer Network Professionals
+2529,2529,Isco08,Veri tabanı ve ağ uzmanları (bys),Database and Network Professionals Not Elsewhere Classified
+2611,2611,Isco08,Avukatlar,Lawyers
+2612,2612,Isco08,Hâkimler,Judges
+2619,2619,Isco08,Hukuk meslek mensupları (bys),Legal Professionals Not Elsewhere Classified
+2621,2621,Isco08,Arşivciler ve müze küratörleri,Archivists and Curators
+2622,2622,Isco08,Kütüphaneciler ve ilgili bilgi uzmanları,Librarians and Related Information Professionals
+2631,2631,Isco08,Ekonomistler,Economists
+2632,2632,Isco08,"Sosyologlar, antropologlar ve ilgili meslek mensupları","Sociologists, Anthropologists and Related Professionals"
+2633,2633,Isco08,"Felsefeciler, tarihçiler ve siyaset bilimciler","Philosophers, Historians and Political Scientists"
+2634,2634,Isco08,Psikologlar,Psychologists
+2635,2635,Isco08,Sosyal hizmet ve danışmanlık uzmanları,Social Work and Counselling Professionals
+2636,2636,Isco08,Din görevlileri ve din bilimciler,Religious Professionals
+2641,2641,Isco08,Yazarlar ve ilgili meslek mensupları,Authors and Related Writers
+2642,2642,Isco08,Gazeteciler,Journalists
+2643,2643,Isco08,"Çevirmenler, tercümanlar ve diğer dil bilimciler","Translators, Interpreters and Other Linguists"
+2651,2651,Isco08,Görsel sanatçılar,Visual Artists
+2652,2652,Isco08,"Müzisyenler, şarkıcılar ve besteciler","Musicians, Singers and Composers"
+2653,2653,Isco08,Dansçılar ve koreograflar,Dancers and Choreographers
+2654,2654,Isco08,"Film, sahne ve ilgili yönetmenler ve yapımcılar","Film, Stage and Related Directors and Producers"
+2655,2655,Isco08,Oyuncular,Actors
+2656,2656,Isco08,"Radyo, televizyon ve diğer medya sunucuları","Announcers on Radio, Television and Other Media"
+2659,2659,Isco08,Yaratıcı ve sahne sanatçıları (bys),Creative and Performing Artists Not Elsewhere Classified
+3111,3111,Isco08,Kimya ve fizik bilimleri teknisyenleri,Chemical and Physical Science Technicians
+3112,3112,Isco08,İnşaat mühendisliği teknisyenleri,Civil Engineering Technicians
+3113,3113,Isco08,Elektrik mühendisliği teknisyenleri,Electrical Engineering Technicians
+3114,3114,Isco08,Elektronik mühendisliği teknisyenleri,Electronics Engineering Technicians
+3115,3115,Isco08,Makine mühendisliği teknisyenleri,Mechanical Engineering Technicians
+3116,3116,Isco08,Kimya mühendisliği teknisyenleri,Chemical Engineering Technicians
+3117,3117,Isco08,Maden ve metalurji teknisyenleri,Mining and Metallurgical Technicians
+3118,3118,Isco08,Teknik ressamlar,Draughtspersons
+3119,3119,Isco08,Fizik ve mühendislik bilimleri teknisyenleri (bys),Physical and Engineering Science Technicians Not Elsewhere Classified
+3121,3121,Isco08,Madencilik ustabaşıları,Mining Supervisors
+3122,3122,Isco08,İmalat ustabaşıları,Manufacturing Supervisors
+3123,3123,Isco08,İnşaat ustabaşıları,Construction Supervisors
+3131,3131,Isco08,Enerji üretim tesisi operatörleri,Power Production Plant Operators
+3132,3132,Isco08,Yakma ve su arıtma tesisi operatörleri,Incinerator and Water Treatment Plant Operators
+3133,3133,Isco08,Kimyasal işleme tesisi kontrolörleri,Chemical Processing Plant Controllers
+3134,3134,Isco08,Petrol ve doğal gaz rafineri tesisi operatörleri,Petroleum and Natural Gas Refining Plant Operators
+3135,3135,Isco08,Metal üretim süreci kontrolörleri,Metal Production Process Controllers
+3139,3139,Isco08,Süreç kontrol teknisyenleri (bys),Process Control Technicians Not Elsewhere Classified
+3141,3141,Isco08,Yaşam bilimleri teknisyenleri (tıbbi hariç),Life Science Technicians (excluding Medical)
+3142,3142,Isco08,Tarım teknisyenleri,Agricultural Technicians
+3143,3143,Isco08,Ormancılık teknisyenleri,Forestry Technicians
+3151,3151,Isco08,Gemi makinistleri,Ships' Engineers
+3152,3152,Isco08,Gemi güverte zabitleri ve kılavuz kaptanlar,Ships' Deck Officers and Pilots
+3153,3153,Isco08,Pilotlar ve ilgili yardımcı meslek mensupları,Aircraft Pilots and Related Associate Professionals
+3154,3154,Isco08,Hava trafik kontrolörleri,Air Traffic Controllers
+3155,3155,Isco08,Hava trafik güvenliği elektronik teknisyenleri,Air Traffic Safety Electronics Technicians
+3211,3211,Isco08,Tıbbi görüntüleme ve tedavi cihazı teknisyenleri,Medical Imaging and Therapeutic Equipment Technicians
+3212,3212,Isco08,Tıbbi ve patoloji laboratuvar teknisyenleri,Medical and Pathology Laboratory Technicians
+3213,3213,Isco08,Eczane teknisyenleri ve yardımcıları,Pharmaceutical Technicians and Assistants
+3214,3214,Isco08,Tıbbi ve diş protez teknisyenleri,Medical and Dental Prosthetic Technicians
+3221,3221,Isco08,Hemşire yardımcıları (yardımcı sağlık personeli),Nursing Associate Professionals
+3222,3222,Isco08,Ebe yardımcıları,Midwifery Associate Professionals
+3230,3230,Isco08,Geleneksel ve tamamlayıcı tıp yardımcı meslek mensupları,Traditional and Complementary Medicine Associate Professionals
+3240,3240,Isco08,Veteriner teknisyenleri ve yardımcıları,Veterinary Technicians and Assistants
+3251,3251,Isco08,Diş hekimi yardımcıları ve ağız-diş sağlığı teknikerleri,Dental Assistants and Therapists
+3252,3252,Isco08,Tıbbi kayıt ve sağlık bilgi teknisyenleri,Medical Records and Health Information Technicians
+3253,3253,Isco08,Toplum sağlığı çalışanları,Community Health Workers
+3254,3254,Isco08,Gözlükçüler,Dispensing Opticians
+3255,3255,Isco08,Fizyoterapi teknisyenleri ve yardımcıları,Physiotherapy Technicians and Assistants
+3256,3256,Isco08,Tıbbi asistanlar,Medical Assistants
+3257,3257,Isco08,Çevre sağlığı ve iş sağlığı müfettişleri ve yardımcıları,Environmental and Occupational Health Inspectors and Associates
+3258,3258,Isco08,Ambulans çalışanları (acil tıp teknisyenleri),Ambulance Workers
+3259,3259,Isco08,Sağlık yardımcı meslek mensupları (bys),Health Associate Professionals Not Elsewhere Classified
+3311,3311,Isco08,Menkul kıymet ve finans aracıları ve brokerleri,Securities and Finance Dealers and Brokers
+3312,3312,Isco08,Kredi görevlileri,Credit and Loans Officers
+3313,3313,Isco08,Muhasebe yardımcı meslek mensupları,Accounting Associate Professionals
+3314,3314,Isco08,"İstatistik, matematik ve ilgili yardımcı meslek mensupları","Statistical, Mathematical and Related Associate Professionals"
+3315,3315,Isco08,Değerleme ve hasar tespit uzmanları (eksperler),Valuers and Loss Assessors
+3321,3321,Isco08,Sigorta temsilcileri,Insurance Representatives
+3322,3322,Isco08,Ticari satış temsilcileri,Commercial Sales Representatives
+3323,3323,Isco08,Satın alma görevlileri,Buyers
+3324,3324,Isco08,Ticaret aracıları (brokerler),Trade Brokers
+3331,3331,Isco08,Gümrük ve nakliye acenteleri,Clearing and Forwarding Agents
+3332,3332,Isco08,Konferans ve etkinlik planlayıcıları,Conference and Event Planners
+3333,3333,Isco08,İstihdam acenteleri ve iş bulma aracıları,Employment Agents and Contractors
+3334,3334,Isco08,Emlak danışmanları ve gayrimenkul yöneticileri,Real Estate Agents and Property Managers
+3339,3339,Isco08,İşletme hizmetleri aracıları (bys),Business Services Agents Not Elsewhere Classified
+3341,3341,Isco08,Ofis şefleri,Office Supervisors
+3342,3342,Isco08,Hukuk sekreterleri,Legal Secretaries
+3343,3343,Isco08,İdari ve yönetici sekreterleri,Administrative and Executive Secretaries
+3344,3344,Isco08,Tıbbi sekreterler,Medical Secretaries
+3351,3351,Isco08,Gümrük ve sınır müfettişleri,Customs and Border Inspectors
+3352,3352,Isco08,Vergi ve gümrük memurları,Government Tax and Excise Officials
+3353,3353,Isco08,Sosyal yardım memurları,Government Social Benefits Officials
+3354,3354,Isco08,Ruhsat ve lisans memurları,Government Licensing Officials
+3355,3355,Isco08,Polis müfettişleri ve dedektifler,Police Inspectors and Detectives
+3359,3359,Isco08,Kamu düzenleme yardımcı meslek mensupları (bys),Government Regulatory Associate Professionals Not Elsewhere Classified
+3411,3411,Isco08,Hukuk ve ilgili yardımcı meslek mensupları,Legal and Related Associate Professionals
+3412,3412,Isco08,Sosyal hizmet yardımcı meslek mensupları,Social Work Associate Professionals
+3413,3413,Isco08,Din yardımcı meslek mensupları,Religious Associate Professionals
+3421,3421,Isco08,Sporcular,Athletes and Sports Players
+3422,3422,Isco08,"Spor antrenörleri, eğitmenleri ve hakemleri","Sports Coaches, Instructors and Officials"
+3423,3423,Isco08,Fitness ve rekreasyon eğitmenleri ve program liderleri,Fitness and Recreation Instructors and Programme Leaders
+3431,3431,Isco08,Fotoğrafçılar,Photographers
+3432,3432,Isco08,İç mimarlar ve dekoratörler,Interior Designers and Decorators
+3433,3433,Isco08,"Galeri, müze ve kütüphane teknisyenleri","Gallery, Museum and Library Technicians"
+3434,3434,Isco08,Şefler (aşçıbaşılar),Chefs
+3435,3435,Isco08,Diğer sanat ve kültür yardımcı meslek mensupları,Other Artistic and Cultural Associate Professionals
+3511,3511,Isco08,Bilgi ve iletişim teknolojileri operasyon teknisyenleri,Information and Communications Technology Operations Technicians
+3512,3512,Isco08,Bilgi ve iletişim teknolojileri kullanıcı destek teknisyenleri,Information and Communications Technology User Support Technicians
+3513,3513,Isco08,Bilgisayar ağı ve sistem teknisyenleri,Computer Network and Systems Technicians
+3514,3514,Isco08,Web teknisyenleri,Web Technicians
+3521,3521,Isco08,Yayıncılık ve görsel-işitsel teknisyenler,Broadcasting and Audio-visual Technicians
+3522,3522,Isco08,Telekomünikasyon mühendisliği teknisyenleri,Telecommunications Engineering Technicians
+4110,4110,Isco08,Genel büro memurları,General Office Clerks
+4120,4120,Isco08,Sekreterler (genel),Secretaries (general)
+4131,4131,Isco08,Daktilograflar ve kelime işlem operatörleri,Typists and Word Processing Operators
+4132,4132,Isco08,Veri giriş elemanları,Data Entry Clerks
+4211,4211,Isco08,Banka veznedarları ve ilgili memurlar,Bank Tellers and Related Clerks
+4212,4212,Isco08,"Bahis, krupiye ve ilgili oyun çalışanları","Bookmakers, Croupiers and Related Gaming Workers"
+4213,4213,Isco08,Rehinciler ve tefeciler,Pawnbrokers and Money-lenders
+4214,4214,Isco08,Tahsilat memurları ve ilgili çalışanlar,Debt Collectors and Related Workers
+4221,4221,Isco08,Seyahat danışmanları ve memurları,Travel Consultants and Clerks
+4222,4222,Isco08,Çağrı merkezi bilgi memurları,Contact Centre Information Clerks
+4223,4223,Isco08,Telefon santral operatörleri,Telephone Switchboard Operators
+4224,4224,Isco08,Otel resepsiyonistleri,Hotel Receptionists
+4225,4225,Isco08,Danışma memurları,Inquiry Clerks
+4226,4226,Isco08,Resepsiyonistler (genel),Receptionists (general)
+4227,4227,Isco08,Anket ve pazar araştırması anketörleri,Survey and Market Research Interviewers
+4229,4229,Isco08,Müşteri bilgilendirme çalışanları (bys),Client Information Workers Not Elsewhere Classified
+4311,4311,Isco08,Muhasebe ve defter tutma memurları,Accounting and Bookkeeping Clerks
+4312,4312,Isco08,"İstatistik, finans ve sigorta memurları","Statistical, Finance and Insurance Clerks"
+4313,4313,Isco08,Bordro memurları,Payroll Clerks
+4321,4321,Isco08,Stok memurları,Stock Clerks
+4322,4322,Isco08,Üretim memurları,Production Clerks
+4323,4323,Isco08,Ulaştırma memurları,Transport Clerks
+4411,4411,Isco08,Kütüphane memurları,Library Clerks
+4412,4412,Isco08,Posta dağıtıcıları ve tasnif memurları,Mail Carriers and Sorting Clerks
+4413,4413,Isco08,"Kodlama, düzeltme ve ilgili memurlar","Coding, Proofreading and Related Clerks"
+4414,4414,Isco08,Arzuhalciler ve ilgili çalışanlar,Scribes and Related Workers
+4415,4415,Isco08,Dosyalama ve kopyalama memurları,Filing and Copying Clerks
+4416,4416,Isco08,Personel memurları,Personnel Clerks
+4419,4419,Isco08,Büro destek elemanları (bys),Clerical Support Workers Not Elsewhere Classified
+5111,5111,Isco08,Seyahat görevlileri ve kabin memurları,Travel Attendants and Travel Stewards
+5112,5112,Isco08,Ulaşım kondüktörleri,Transport Conductors
+5113,5113,Isco08,Turist rehberleri,Travel Guides
+5120,5120,Isco08,Aşçılar,Cooks
+5131,5131,Isco08,Garsonlar,Waiters
+5132,5132,Isco08,Barmenler,Bartenders
+5141,5141,Isco08,Kuaförler,Hairdressers
+5142,5142,Isco08,Güzellik uzmanları ve ilgili çalışanlar,Beauticians and Related Workers
+5151,5151,Isco08,"Ofis, otel ve diğer kuruluşlarda temizlik ve kat hizmetleri şefleri","Cleaning and Housekeeping Supervisors in Offices, Hotels and Other Establishments"
+5152,5152,Isco08,Ev kâhyaları,Domestic Housekeepers
+5153,5153,Isco08,Bina bakım görevlileri (kapıcılar),Building Caretakers
+5161,5161,Isco08,"Astrologlar, falcılar ve ilgili çalışanlar","Astrologers, Fortune-tellers and Related Workers"
+5162,5162,Isco08,Refakatçiler ve uşaklar,Companions and Valets
+5163,5163,Isco08,Cenaze hizmetleri çalışanları,Undertakers and Embalmers
+5164,5164,Isco08,Evcil hayvan bakıcıları ve hayvan bakım çalışanları,Pet Groomers and Animal Care Workers
+5165,5165,Isco08,Sürücü kursu eğitmenleri,Driving Instructors
+5169,5169,Isco08,Kişisel hizmet çalışanları (bys),Personal Services Workers Not Elsewhere Classified
+5211,5211,Isco08,Tezgâh ve pazar satıcıları,Stall and Market Salespersons
+5212,5212,Isco08,Sokak yiyecek satıcıları,Street Food Salespersons
+5221,5221,Isco08,Dükkân sahipleri (esnaf),Shopkeepers
+5222,5222,Isco08,Mağaza şefleri,Shop Supervisors
+5223,5223,Isco08,Mağaza satış görevlileri,Shop Sales Assistants
+5230,5230,Isco08,Kasiyerler ve bilet memurları,Cashiers and Ticket Clerks
+5241,5241,Isco08,Mankenler ve modeller,Fashion and Other Models
+5242,5242,Isco08,Ürün tanıtım elemanları,Sales Demonstrators
+5243,5243,Isco08,Kapıdan kapıya satıcılar,Door-to-door Salespersons
+5244,5244,Isco08,Çağrı merkezi satış temsilcileri,Contact Centre Salespersons
+5245,5245,Isco08,Akaryakıt istasyonu görevlileri,Service Station Attendants
+5246,5246,Isco08,Yiyecek servis tezgâhı görevlileri,Food Service Counter Attendants
+5249,5249,Isco08,Satış çalışanları (bys),Sales Workers Not Elsewhere Classified
+5311,5311,Isco08,Çocuk bakıcıları,Child Care Workers
+5312,5312,Isco08,Öğretmen yardımcıları,Teachers' Aides
+5321,5321,Isco08,Hasta bakıcılar,Health Care Assistants
+5322,5322,Isco08,Evde kişisel bakım çalışanları,Home-based Personal Care Workers
+5329,5329,Isco08,Sağlık hizmetlerinde kişisel bakım çalışanları (bys),Personal Care Workers in Health Services Not Elsewhere Classified
+5411,5411,Isco08,İtfaiyeciler,Fire Fighters
+5412,5412,Isco08,Polis memurları,Police Officers
+5413,5413,Isco08,İnfaz koruma memurları (gardiyanlar),Prison Guards
+5414,5414,Isco08,Güvenlik görevlileri,Security Guards
+5419,5419,Isco08,Koruma hizmetleri çalışanları (bys),Protective Services Workers Not Elsewhere Classified
+6111,6111,Isco08,Tarla bitkileri ve sebze yetiştiricileri,Field Crop and Vegetable Growers
+6112,6112,Isco08,Ağaç ve çalı ürünleri yetiştiricileri,Tree and Shrub Crop Growers
+6113,6113,Isco08,"Bahçıvanlar, bahçe bitkileri ve fidan yetiştiricileri","Gardeners, Horticultural and Nursery Growers"
+6114,6114,Isco08,Karma bitkisel ürün yetiştiricileri,Mixed Crop Growers
+6121,6121,Isco08,Büyükbaş hayvan ve süt üreticileri,Livestock and Dairy Producers
+6122,6122,Isco08,Kümes hayvanı üreticileri,Poultry Producers
+6123,6123,Isco08,Arıcılar ve ipek böceği yetiştiricileri,Apiarists and Sericulturists
+6129,6129,Isco08,Hayvan üreticileri (bys),Animal Producers Not Elsewhere Classified
+6130,6130,Isco08,Karma bitkisel ve hayvansal ürün üreticileri,Mixed Crop and Animal Producers
+6210,6210,Isco08,Ormancılık ve ilgili çalışanlar,Forestry and Related Workers
+6221,6221,Isco08,Su ürünleri yetiştiricileri,Aquaculture Workers
+6222,6222,Isco08,İç su ve kıyı balıkçıları,Inland and Coastal Waters Fishery Workers
+6223,6223,Isco08,Açık deniz balıkçıları,Deep-sea Fishery Workers
+6224,6224,Isco08,Avcılar ve tuzakçılar,Hunters and Trappers
+6310,6310,Isco08,Geçimlik bitkisel üretim çiftçileri,Subsistence Crop Farmers
+6320,6320,Isco08,Geçimlik hayvancılık çiftçileri,Subsistence Livestock Farmers
+6330,6330,Isco08,Geçimlik karma bitkisel ve hayvansal üretim çiftçileri,Subsistence Mixed Crop and Livestock Farmers
+6340,6340,Isco08,"Geçimlik balıkçılar, avcılar, tuzakçılar ve toplayıcılar","Subsistence Fishers, Hunters, Trappers and Gatherers"
+7111,7111,Isco08,Ev inşaatçıları,House Builders
+7112,7112,Isco08,Duvarcılar ve ilgili çalışanlar,Bricklayers and Related Workers
+7113,7113,Isco08,"Taş ustaları, taş kesicileri ve oymacıları","Stonemasons, Stone Cutters, Splitters and Carvers"
+7114,7114,Isco08,"Beton dökücüler, beton perdahçıları ve ilgili çalışanlar","Concrete Placers, Concrete Finishers and Related Workers"
+7115,7115,Isco08,Marangozlar ve doğramacılar,Carpenters and Joiners
+7119,7119,Isco08,Bina karkas ve ilgili işlerde çalışanlar (bys),Building Frame and Related Trades Workers Not Elsewhere Classified
+7121,7121,Isco08,Çatı ustaları,Roofers
+7122,7122,Isco08,Zemin döşemecileri ve fayansçılar,Floor Layers and Tile Setters
+7123,7123,Isco08,Sıvacılar,Plasterers
+7124,7124,Isco08,Yalıtım ustaları,Insulation Workers
+7125,7125,Isco08,Camcılar,Glaziers
+7126,7126,Isco08,Tesisatçılar ve boru montajcıları,Plumbers and Pipe Fitters
+7127,7127,Isco08,Klima ve soğutma teknisyenleri,Air Conditioning and Refrigeration Mechanics
+7131,7131,Isco08,Boyacılar ve ilgili çalışanlar,Painters and Related Workers
+7132,7132,Isco08,Püskürtme boyacıları ve vernikçiler,Spray Painters and Varnishers
+7133,7133,Isco08,Bina dış cephe temizleyicileri,Building Structure Cleaners
+7211,7211,Isco08,Metal dökümcüleri ve maça yapımcıları,Metal Moulders and Coremakers
+7212,7212,Isco08,Kaynakçılar ve alevle kesiciler,Welders and Flame Cutters
+7213,7213,Isco08,Sac işçileri,Sheet Metal Workers
+7214,7214,Isco08,Çelik konstrüksiyon hazırlayıcıları ve montajcıları,Structural Metal Preparers and Erectors
+7215,7215,Isco08,Halat ve kablo işçileri (rigger),Riggers and Cable Splicers
+7221,7221,Isco08,"Demirciler, çekiççiler ve dövme presi işçileri","Blacksmiths, Hammersmiths and Forging Press Workers"
+7222,7222,Isco08,Takım yapımcıları (kalıpçılar) ve ilgili çalışanlar,Toolmakers and Related Workers
+7223,7223,Isco08,Metal işleme tezgâhı ayarlayıcıları ve operatörleri,Metal Working Machine Tool Setters and Operators
+7224,7224,Isco08,"Metal parlatıcıları, taşlamacılar ve bileyiciler","Metal Polishers, Wheel Grinders and Tool Sharpeners"
+7231,7231,Isco08,Motorlu taşıt mekanikerleri ve tamircileri,Motor Vehicle Mechanics and Repairers
+7232,7232,Isco08,Uçak motoru mekanikerleri ve tamircileri,Aircraft Engine Mechanics and Repairers
+7233,7233,Isco08,Tarım ve sanayi makineleri mekanikerleri ve tamircileri,Agricultural and Industrial Machinery Mechanics and Repairers
+7234,7234,Isco08,Bisiklet ve ilgili araç tamircileri,Bicycle and Related Repairers
+7311,7311,Isco08,Hassas alet yapımcıları ve tamircileri,Precision-instrument Makers and Repairers
+7312,7312,Isco08,Müzik aleti yapımcıları ve akortçuları,Musical Instrument Makers and Tuners
+7313,7313,Isco08,Kuyumcular ve değerli metal işçileri,Jewellery and Precious Metal Workers
+7314,7314,Isco08,Çömlekçiler ve ilgili çalışanlar,Potters and Related Workers
+7315,7315,Isco08,"Cam yapımcıları, kesicileri, taşlayıcıları ve bitiricileri","Glass Makers, Cutters, Grinders and Finishers"
+7316,7316,Isco08,"Tabela yazıcıları, dekoratif boyacılar, gravürcüler ve hakkâklar","Sign Writers, Decorative Painters, Engravers and Etchers"
+7317,7317,Isco08,"Ahşap, sepetçilik ve ilgili malzemelerde el sanatları çalışanları","Handicraft Workers in Wood, Basketry and Related Materials"
+7318,7318,Isco08,"Tekstil, deri ve ilgili malzemelerde el sanatları çalışanları","Handicraft Workers in Textile, Leather and Related Materials"
+7319,7319,Isco08,El sanatları çalışanları (bys),Handicraft Workers Not Elsewhere Classified
+7321,7321,Isco08,Baskı öncesi teknisyenleri,Pre-press Technicians
+7322,7322,Isco08,Matbaacılar,Printers
+7323,7323,Isco08,Baskı sonrası ve ciltleme işçileri,Print Finishing and Binding Workers
+7411,7411,Isco08,Bina elektrikçileri ve ilgili elektrikçiler,Building and Related Electricians
+7412,7412,Isco08,Elektrik mekanikerleri ve montajcıları,Electrical Mechanics and Fitters
+7413,7413,Isco08,Elektrik hattı tesisatçıları ve tamircileri,Electrical Line Installers and Repairers
+7421,7421,Isco08,Elektronik mekanikerleri ve servis elemanları,Electronics Mechanics and Servicers
+7422,7422,Isco08,Bilgi ve iletişim teknolojileri montaj ve servis elemanları,Information and Communications Technology Installers and Servicers
+7511,7511,Isco08,"Kasaplar, balıkçılar ve ilgili gıda hazırlayıcıları","Butchers, Fishmongers and Related Food Preparers"
+7512,7512,Isco08,"Fırıncılar, pastacılar ve şekerlemeciler","Bakers, Pastry-cooks and Confectionery Makers"
+7513,7513,Isco08,Süt ürünleri yapımcıları,Dairy Products Makers
+7514,7514,Isco08,"Meyve, sebze ve ilgili ürün konserveciler","Fruit, Vegetable and Related Preservers"
+7515,7515,Isco08,Gıda ve içecek tadımcıları ve sınıflandırıcıları,Food and Beverage Tasters and Graders
+7516,7516,Isco08,Tütün hazırlayıcıları ve tütün ürünleri yapımcıları,Tobacco Preparers and Tobacco Products Makers
+7521,7521,Isco08,Ahşap işlemcileri (emprenyeciler),Wood Treaters
+7522,7522,Isco08,Mobilya ustaları ve ilgili çalışanlar,Cabinet-makers and Related Workers
+7523,7523,Isco08,Ahşap işleme tezgâhı ayarlayıcıları ve operatörleri,Woodworking Machine Tool Setters and Operators
+7531,7531,Isco08,"Terziler, kadın terzileri, kürkçüler ve şapkacılar","Tailors, Dressmakers, Furriers and Hatters"
+7532,7532,Isco08,Giysi ve ilgili ürün kalıpçıları ve kesicileri,Garment and Related Patternmakers and Cutters
+7533,7533,Isco08,"Dikiş, nakış ve ilgili işler çalışanları","Sewing, Embroidery and Related Workers"
+7534,7534,Isco08,Döşemeciler ve ilgili çalışanlar,Upholsterers and Related Workers
+7535,7535,Isco08,Deri ve post işleyicileri (tabaklayıcılar),"Pelt Dressers, Tanners and Fellmongers"
+7536,7536,Isco08,Ayakkabıcılar ve ilgili çalışanlar,Shoemakers and Related Workers
+7541,7541,Isco08,Sualtı dalgıçları,Underwater Divers
+7542,7542,Isco08,Ateşleyiciler ve patlatma işçileri,Shotfirers and Blasters
+7543,7543,Isco08,Ürün sınıflandırıcıları ve test ediciler (gıda ve içecek hariç),Product Graders and Testers (except Foods and Beverages)
+7544,7544,Isco08,İlaçlamacılar ve diğer zararlı ve yabani ot kontrolcüleri,Fumigators and Other Pest and Weed Controllers
+7549,7549,Isco08,Sanatkârlar ve ilgili işlerde çalışanlar (bys),Craft and Related Workers Not Elsewhere Classified
+8111,8111,Isco08,Madenciler ve taş ocağı işçileri,Miners and Quarriers
+8112,8112,Isco08,Mineral ve taş işleme tesisi operatörleri,Mineral and Stone Processing Plant Operators
+8113,8113,Isco08,Kuyu sondajcıları ve ilgili çalışanlar,Well Drillers and Borers and Related Workers
+8114,8114,Isco08,"Çimento, taş ve diğer mineral ürünleri makine operatörleri","Cement, Stone and Other Mineral Products Machine Operators"
+8121,8121,Isco08,Metal işleme tesisi operatörleri,Metal Processing Plant Operators
+8122,8122,Isco08,"Metal bitirme, kaplama ve boyama makinesi operatörleri","Metal Finishing, Plating and Coating Machine Operators"
+8131,8131,Isco08,Kimyasal ürün tesisi ve makine operatörleri,Chemical Products Plant and Machine Operators
+8132,8132,Isco08,Fotoğraf ürünleri makine operatörleri,Photographic Products Machine Operators
+8141,8141,Isco08,Kauçuk ürünleri makine operatörleri,Rubber Products Machine Operators
+8142,8142,Isco08,Plastik ürünleri makine operatörleri,Plastic Products Machine Operators
+8143,8143,Isco08,Kâğıt ürünleri makine operatörleri,Paper Products Machine Operators
+8151,8151,Isco08,"Elyaf hazırlama, eğirme ve sarma makinesi operatörleri","Fibre Preparing, Spinning and Winding Machine Operators"
+8152,8152,Isco08,Dokuma ve örme makinesi operatörleri,Weaving and Knitting Machine Operators
+8153,8153,Isco08,Dikiş makinesi operatörleri,Sewing Machine Operators
+8154,8154,Isco08,"Ağartma, boyama ve kumaş temizleme makinesi operatörleri","Bleaching, Dyeing and Fabric Cleaning Machine Operators"
+8155,8155,Isco08,Kürk ve deri hazırlama makinesi operatörleri,Fur and Leather Preparing Machine Operators
+8156,8156,Isco08,Ayakkabı yapımı ve ilgili makine operatörleri,Shoemaking and Related Machine Operators
+8157,8157,Isco08,Çamaşırhane makine operatörleri,Laundry Machine Operators
+8159,8159,Isco08,"Tekstil, kürk ve deri ürünleri makine operatörleri (bys)","Textile, Fur and Leather Products Machine Operators Not Elsewhere Classified"
+8160,8160,Isco08,Gıda ve ilgili ürünler makine operatörleri,Food and Related Products Machine Operators
+8171,8171,Isco08,Kâğıt hamuru ve kâğıt yapım tesisi operatörleri,Pulp and Papermaking Plant Operators
+8172,8172,Isco08,Ahşap işleme tesisi operatörleri,Wood Processing Plant Operators
+8181,8181,Isco08,Cam ve seramik tesisi operatörleri,Glass and Ceramics Plant Operators
+8182,8182,Isco08,Buhar makinesi ve kazan operatörleri,Steam Engine and Boiler Operators
+8183,8183,Isco08,"Paketleme, şişeleme ve etiketleme makinesi operatörleri","Packing, Bottling and Labelling Machine Operators"
+8189,8189,Isco08,Sabit tesis ve makine operatörleri (bys),Stationary Plant and Machine Operators Not Elsewhere Classified
+8211,8211,Isco08,Mekanik makine montajcıları,Mechanical Machinery Assemblers
+8212,8212,Isco08,Elektrikli ve elektronik ekipman montajcıları,Electrical and Electronic Equipment Assemblers
+8219,8219,Isco08,Montajcılar (bys),Assemblers Not Elsewhere Classified
+8311,8311,Isco08,Lokomotif makinistleri,Locomotive Engine Drivers
+8312,8312,Isco08,"Demiryolu fren, sinyal ve makas operatörleri","Railway Brake, Signal and Switch Operators"
+8321,8321,Isco08,Motosiklet sürücüleri,Motorcycle Drivers
+8322,8322,Isco08,"Otomobil, taksi ve kamyonet sürücüleri","Car, Taxi and Van Drivers"
+8331,8331,Isco08,Otobüs ve tramvay sürücüleri,Bus and Tram Drivers
+8332,8332,Isco08,Ağır kamyon ve tır sürücüleri,Heavy Truck and Lorry Drivers
+8341,8341,Isco08,Hareketli tarım ve ormancılık makinesi operatörleri,Mobile Farm and Forestry Plant Operators
+8342,8342,Isco08,Hafriyat ve ilgili iş makinesi operatörleri,Earthmoving and Related Plant Operators
+8343,8343,Isco08,"Vinç, kaldırma ve ilgili tesis operatörleri","Crane, Hoist and Related Plant Operators"
+8344,8344,Isco08,Forklift operatörleri,Lifting Truck Operators
+8350,8350,Isco08,Gemi güverte tayfaları ve ilgili çalışanlar,Ships' Deck Crews and Related Workers
+9111,9111,Isco08,Ev temizlikçileri ve yardımcıları,Domestic Cleaners and Helpers
+9112,9112,Isco08,"Ofis, otel ve diğer kuruluşlarda temizlikçiler ve yardımcılar","Cleaners and Helpers in Offices, Hotels and Other Establishments"
+9121,9121,Isco08,Elde çamaşır yıkayıcılar ve ütücüler,Hand Launderers and Pressers
+9122,9122,Isco08,Araç temizleyicileri,Vehicle Cleaners
+9123,9123,Isco08,Cam temizleyicileri,Window Cleaners
+9129,9129,Isco08,Diğer temizlik işçileri,Other Cleaning Workers
+9211,9211,Isco08,Bitkisel üretim tarım işçileri,Crop Farm Labourers
+9212,9212,Isco08,Hayvancılık işçileri,Livestock Farm Labourers
+9213,9213,Isco08,Karma bitkisel ve hayvansal üretim tarım işçileri,Mixed Crop and Livestock Farm Labourers
+9214,9214,Isco08,Bahçe ve bahçe bitkileri işçileri,Garden and Horticultural Labourers
+9215,9215,Isco08,Ormancılık işçileri,Forestry Labourers
+9216,9216,Isco08,Balıkçılık ve su ürünleri işçileri,Fishery and Aquaculture Labourers
+9311,9311,Isco08,Madencilik ve taş ocağı işçileri (vasıfsız),Mining and Quarrying Labourers
+9312,9312,Isco08,Altyapı inşaat işçileri,Civil Engineering Labourers
+9313,9313,Isco08,Bina inşaat işçileri,Building Construction Labourers
+9321,9321,Isco08,Elle paketleyiciler,Hand Packers
+9329,9329,Isco08,İmalat işçileri (bys),Manufacturing Labourers Not Elsewhere Classified
+9331,9331,Isco08,El ve pedal araçları sürücüleri,Hand and Pedal Vehicle Drivers
+9332,9332,Isco08,Hayvan çekişli araç ve makine sürücüleri,Drivers of Animal-drawn Vehicles and Machinery
+9333,9333,Isco08,Yük taşıyıcıları (hamallar),Freight Handlers
+9334,9334,Isco08,Raf doldurucular (reyon görevlileri),Shelf Fillers
+9411,9411,Isco08,Hızlı yiyecek hazırlayıcıları,Fast Food Preparers
+9412,9412,Isco08,Mutfak yardımcıları (bulaşıkçılar),Kitchen Helpers
+9510,9510,Isco08,Sokak ve ilgili hizmet çalışanları,Street and Related Service Workers
+9520,9520,Isco08,Seyyar satıcılar (gıda hariç),Street Vendors (excluding Food)
+9611,9611,Isco08,Çöp ve geri dönüşüm toplayıcıları,Garbage and Recycling Collectors
+9612,9612,Isco08,Atık ayırıcıları,Refuse Sorters
+9613,9613,Isco08,Çöpçüler ve ilgili işçiler,Sweepers and Related Labourers
+9621,9621,Isco08,"Kuryeler, paket dağıtıcıları ve bagaj taşıyıcıları","Messengers, Package Deliverers and Luggage Porters"
+9622,9622,Isco08,Ufak tefek iş yapanlar,Odd Job Persons
+9623,9623,Isco08,Sayaç okuyucuları ve otomat para toplayıcıları,Meter Readers and Vending-machine Collectors
+9624,9624,Isco08,Su ve yakacak odun toplayıcıları,Water and Firewood Collectors
+9629,9629,Isco08,Nitelik gerektirmeyen işlerde çalışanlar (bys),Elementary Workers Not Elsewhere Classified
+0110,0110,Isco08,Muvazzaf silahlı kuvvetler subayları,Commissioned Armed Forces Officers
+0210,0210,Isco08,Silahlı kuvvetler astsubayları,Non-commissioned Armed Forces Officers
+0310,0310,Isco08,Silahlı kuvvetler diğer rütbeleri (er ve erbaşlar),"Armed Forces Occupations, Other Ranks"
+EK-0001,2512,Curated,Backend Developer,Backend Developer
+EK-0002,2513,Curated,Frontend Developer,Frontend Developer
+EK-0003,2512,Curated,Full Stack Developer,Full Stack Developer
+EK-0004,2514,Curated,Mobil Uygulama Geliştirici,Mobile Application Developer
+EK-0005,2514,Curated,iOS Developer,iOS Developer
+EK-0006,2514,Curated,Android Developer,Android Developer
+EK-0007,2512,Curated,Yazılım Mühendisi,Software Engineer
+EK-0008,2512,Curated,Kıdemli Yazılım Mühendisi,Senior Software Engineer
+EK-0009,2512,Curated,Staff / Principal Yazılım Mühendisi,Staff / Principal Software Engineer
+EK-0010,2512,Curated,Yazılım Mimarı,Software Architect
+EK-0011,2512,Curated,Gömülü Yazılım Geliştirici,Embedded Software Developer
+EK-0012,2512,Curated,Oyun Geliştirici,Game Developer
+EK-0013,2519,Curated,Test Otomasyon Mühendisi,Test Automation Engineer
+EK-0014,2519,Curated,QA / Test Mühendisi,QA / Test Engineer
+EK-0015,2519,Curated,Yazılım Test Uzmanı (Manuel),Software Tester (Manual)
+EK-0016,2522,Curated,DevOps Mühendisi,DevOps Engineer
+EK-0017,2522,Curated,Site Reliability Engineer (SRE),Site Reliability Engineer (SRE)
+EK-0018,2522,Curated,Bulut (Cloud) Mühendisi,Cloud Engineer
+EK-0019,2522,Curated,Platform Mühendisi,Platform Engineer
+EK-0020,2523,Curated,Ağ (Network) Mühendisi,Network Engineer
+EK-0021,2529,Curated,Siber Güvenlik Uzmanı,Cybersecurity Specialist
+EK-0022,2529,Curated,Bilgi Güvenliği Mühendisi,Information Security Engineer
+EK-0023,2529,Curated,Sızma Testi Uzmanı (Pentester),Penetration Tester
+EK-0024,2521,Curated,Veri Mühendisi,Data Engineer
+EK-0025,2521,Curated,Veri Tabanı Yöneticisi (DBA),Database Administrator (DBA)
+EK-0026,2120,Curated,Veri Bilimci,Data Scientist
+EK-0027,2120,Curated,Makine Öğrenmesi Mühendisi,Machine Learning Engineer
+EK-0028,2120,Curated,Yapay Zekâ Mühendisi,AI Engineer
+EK-0029,2511,Curated,Veri Analisti,Data Analyst
+EK-0030,2511,Curated,İş Analisti,Business Analyst
+EK-0031,2511,Curated,İş Zekâsı (BI) Uzmanı,Business Intelligence (BI) Specialist
+EK-0032,2511,Curated,Ürün Analisti,Product Analyst
+EK-0033,2511,Curated,Sistem Analisti / ERP Danışmanı,Systems Analyst / ERP Consultant
+EK-0034,2511,Curated,SAP Danışmanı,SAP Consultant
+EK-0035,1330,Curated,Ürün Yöneticisi (Product Manager),Product Manager
+EK-0036,1330,Curated,Ürün Sahibi (Product Owner),Product Owner
+EK-0037,1330,Curated,Teknik Ürün Yöneticisi,Technical Product Manager
+EK-0038,1330,Curated,Proje Yöneticisi (BT),IT Project Manager
+EK-0039,1330,Curated,Scrum Master,Scrum Master
+EK-0040,1330,Curated,Engineering Manager,Engineering Manager
+EK-0041,1330,Curated,Yazılım Ekip Lideri (Tech Lead),Tech Lead
+EK-0042,1330,Curated,Teknolojiden Sorumlu Genel Müdür Yardımcısı (CTO),Chief Technology Officer (CTO)
+EK-0043,1330,Curated,Bilgi İşlem Müdürü,IT Manager
+EK-0044,2166,Curated,UX Tasarımcısı,UX Designer
+EK-0045,2166,Curated,UI Tasarımcısı,UI Designer
+EK-0046,2166,Curated,Ürün Tasarımcısı,Product Designer
+EK-0047,2166,Curated,UX Araştırmacısı,UX Researcher
+EK-0048,3512,Curated,BT Destek Uzmanı (Helpdesk),IT Support Specialist (Helpdesk)
+EK-0049,3513,Curated,Sistem ve Ağ Destek Uzmanı,Systems and Network Support Specialist
+EK-0050,2519,Curated,Teknik Yazar,Technical Writer
+EK-0051,2434,Curated,Yazılım Satış Uzmanı (SaaS),Software Sales Executive (SaaS)
+EK-0052,2434,Curated,Çözüm Mühendisi (Pre-sales),Solutions Engineer (Pre-sales)
+EK-0053,2519,Curated,Müşteri Başarı Yöneticisi (SaaS),Customer Success Manager (SaaS)
+EK-0054,2141,Curated,Kalite Mühendisi,Quality Engineer
+EK-0055,2141,Curated,Üretim Mühendisi,Production Engineer
+EK-0056,2141,Curated,Proses Mühendisi,Process Engineer
+EK-0057,2141,Curated,Yalın Üretim / Sürekli İyileştirme Uzmanı,Lean / Continuous Improvement Specialist
+EK-0058,2144,Curated,Makine Tasarım Mühendisi,Mechanical Design Engineer
+EK-0059,2144,Curated,Bakım Mühendisi,Maintenance Engineer
+EK-0060,2144,Curated,Otomotiv Mühendisi,Automotive Engineer
+EK-0061,2144,Curated,Ar-Ge Mühendisi,R&D Engineer
+EK-0062,2142,Curated,Şantiye Şefi,Site Manager (Construction)
+EK-0063,2142,Curated,Yapı Denetim Mühendisi,Building Inspection Engineer
+EK-0064,2142,Curated,Metraj ve Hakediş Mühendisi,Quantity Surveyor
+EK-0065,2151,Curated,Elektrik Proje Mühendisi,Electrical Project Engineer
+EK-0066,2151,Curated,Enerji Sistemleri Mühendisi,Energy Systems Engineer
+EK-0067,2152,Curated,Donanım Tasarım Mühendisi,Hardware Design Engineer
+EK-0068,2152,Curated,Mekatronik Mühendisi,Mechatronics Engineer
+EK-0069,2149,Curated,Otomasyon ve Kontrol Mühendisi,Automation and Control Engineer
+EK-0070,2149,Curated,İş Sağlığı ve Güvenliği Uzmanı,Occupational Health and Safety Specialist
+EK-0071,2149,Curated,Kalite Güvence Yöneticisi,Quality Assurance Manager
+EK-0072,2145,Curated,Gıda Mühendisi,Food Engineer
+EK-0073,2145,Curated,Tekstil Mühendisi,Textile Engineer
+EK-0074,2146,Curated,Metalurji ve Malzeme Mühendisi,Metallurgical and Materials Engineer
+EK-0075,2149,Curated,Havacılık ve Uzay Mühendisi,Aerospace Engineer
+EK-0076,2149,Curated,Biyomedikal Mühendisi,Biomedical Engineer
+EK-0077,2161,Curated,Proje Mimarı,Project Architect
+EK-0078,3118,Curated,CAD Teknik Ressamı,CAD Draughtsperson
+EK-0079,2411,Curated,Mali Müşavir (SMMM),Certified Public Accountant
+EK-0080,2411,Curated,Muhasebe Uzmanı,Accounting Specialist
+EK-0081,2411,Curated,Muhasebe Müdürü,Accounting Manager
+EK-0082,2411,Curated,Denetçi (Bağımsız Denetim),Auditor
+EK-0083,2411,Curated,İç Denetçi,Internal Auditor
+EK-0084,2413,Curated,Finansal Raporlama Uzmanı,Financial Reporting Specialist
+EK-0085,2413,Curated,Bütçe ve Planlama Uzmanı,Budget and Planning Specialist
+EK-0086,2413,Curated,Kurumsal Finansman Uzmanı,Corporate Finance Specialist
+EK-0087,2413,Curated,Yatırım Analisti,Investment Analyst
+EK-0088,2413,Curated,Risk Analisti,Risk Analyst
+EK-0089,1211,Curated,Finans Direktörü (CFO),Chief Financial Officer (CFO)
+EK-0090,1211,Curated,Finansal Kontrolör,Financial Controller
+EK-0091,3312,Curated,Bankacılık Müşteri Temsilcisi,Bank Customer Representative
+EK-0092,3312,Curated,Kurumsal Bankacılık Portföy Yöneticisi,Corporate Banking Relationship Manager
+EK-0093,3321,Curated,Sigorta Uzmanı,Insurance Specialist
+EK-0094,2120,Curated,Aktüer,Actuary
+EK-0095,2611,Curated,Şirket Avukatı (Hukuk Müşaviri),In-house Legal Counsel
+EK-0096,2611,Curated,Serbest Avukat,Attorney at Law
+EK-0097,2619,Curated,Uyum (Compliance) Uzmanı,Compliance Specialist
+EK-0098,2619,Curated,Kişisel Verilerin Korunması (KVKK) Uzmanı,Data Protection Specialist
+EK-0099,3411,Curated,Hukuk Asistanı (Paralegal),Paralegal
+EK-0100,1212,Curated,İnsan Kaynakları Direktörü,Human Resources Director
+EK-0101,2423,Curated,İnsan Kaynakları Uzmanı,Human Resources Specialist
+EK-0102,2423,Curated,İnsan Kaynakları İş Ortağı (HRBP),HR Business Partner
+EK-0103,2423,Curated,İşe Alım Uzmanı,Recruitment Specialist
+EK-0104,2423,Curated,Teknik İşe Alım Uzmanı,Technical Recruiter
+EK-0105,2423,Curated,Ücret ve Yan Haklar Uzmanı,Compensation and Benefits Specialist
+EK-0106,2424,Curated,Eğitim ve Gelişim Uzmanı,Learning and Development Specialist
+EK-0107,4416,Curated,Özlük İşleri Uzmanı,Personnel Affairs Specialist
+EK-0108,4313,Curated,Bordro Uzmanı,Payroll Specialist
+EK-0109,3343,Curated,Yönetici Asistanı,Executive Assistant
+EK-0110,4110,Curated,Ofis Asistanı,Office Assistant
+EK-0111,1219,Curated,İdari İşler Müdürü,Administrative Affairs Manager
+EK-0112,2421,Curated,Yönetim Danışmanı,Management Consultant
+EK-0113,2421,Curated,Strateji Uzmanı,Strategy Specialist
+EK-0114,1213,Curated,Operasyon Müdürü,Operations Manager
+EK-0115,1120,Curated,Genel Müdür,General Manager
+EK-0116,1120,Curated,Kurucu / Girişimci,Founder / Entrepreneur
+EK-0117,3322,Curated,Satış Temsilcisi,Sales Representative
+EK-0118,3322,Curated,Kurumsal Satış Yöneticisi (B2B),Key Account Manager (B2B)
+EK-0119,3322,Curated,Saha Satış Uzmanı,Field Sales Specialist
+EK-0120,1221,Curated,Satış Müdürü,Sales Manager
+EK-0121,1221,Curated,Bölge Satış Müdürü,Regional Sales Manager
+EK-0122,3322,Curated,İş Geliştirme Uzmanı,Business Development Specialist
+EK-0123,1221,Curated,İş Geliştirme Müdürü,Business Development Manager
+EK-0124,2431,Curated,Pazarlama Uzmanı,Marketing Specialist
+EK-0125,1221,Curated,Pazarlama Müdürü,Marketing Manager
+EK-0126,2431,Curated,Dijital Pazarlama Uzmanı,Digital Marketing Specialist
+EK-0127,2431,Curated,Performans Pazarlama Uzmanı,Performance Marketing Specialist
+EK-0128,2431,Curated,SEO Uzmanı,SEO Specialist
+EK-0129,2431,Curated,Sosyal Medya Uzmanı,Social Media Specialist
+EK-0130,2431,Curated,İçerik Pazarlama Uzmanı,Content Marketing Specialist
+EK-0131,2431,Curated,Marka Yöneticisi,Brand Manager
+EK-0132,2431,Curated,Ürün Pazarlama Yöneticisi,Product Marketing Manager
+EK-0133,2431,Curated,Growth Uzmanı,Growth Specialist
+EK-0134,2432,Curated,Kurumsal İletişim Uzmanı,Corporate Communications Specialist
+EK-0135,2641,Curated,Metin Yazarı (Copywriter),Copywriter
+EK-0136,2641,Curated,İçerik Editörü,Content Editor
+EK-0137,2166,Curated,Grafik Tasarımcı,Graphic Designer
+EK-0138,2166,Curated,Video Editörü,Video Editor
+EK-0139,2166,Curated,Motion / Animasyon Tasarımcısı,Motion Designer
+EK-0140,3339,Curated,E-ticaret Uzmanı,E-commerce Specialist
+EK-0141,3323,Curated,Kategori / Satın Alma Uzmanı (Perakende),Category / Buying Specialist (Retail)
+EK-0142,4222,Curated,Müşteri Hizmetleri Temsilcisi,Customer Service Representative
+EK-0143,4222,Curated,Müşteri Deneyimi Uzmanı,Customer Experience Specialist
+EK-0144,5244,Curated,Çağrı Merkezi Takım Lideri,Call Centre Team Leader
+EK-0145,1324,Curated,Tedarik Zinciri Müdürü,Supply Chain Manager
+EK-0146,3323,Curated,Satın Alma Uzmanı,Procurement Specialist
+EK-0147,1324,Curated,Satın Alma Müdürü,Procurement Manager
+EK-0148,3323,Curated,Planlama Uzmanı (Üretim / Talep),Planning Specialist (Production / Demand)
+EK-0149,1324,Curated,Lojistik Müdürü,Logistics Manager
+EK-0150,3331,Curated,Lojistik Operasyon Uzmanı,Logistics Operations Specialist
+EK-0151,3331,Curated,Dış Ticaret Uzmanı (İthalat / İhracat),Foreign Trade Specialist (Import / Export)
+EK-0152,1324,Curated,Depo Müdürü,Warehouse Manager
+EK-0153,4321,Curated,Depo Sorumlusu,Warehouse Supervisor
+EK-0154,3122,Curated,Üretim Vardiya Amiri,Production Shift Supervisor
+EK-0155,3122,Curated,Kalite Kontrol Teknikeri,Quality Control Technician
+EK-0156,7223,Curated,CNC Operatörü,CNC Operator
+EK-0157,3115,Curated,Makine Bakım Teknisyeni,Machine Maintenance Technician
+EK-0158,3113,Curated,Elektrik Bakım Teknisyeni,Electrical Maintenance Technician
+EK-0159,8332,Curated,Tır Şoförü,Truck Driver
+EK-0160,9621,Curated,Motorlu Kurye,Motorcycle Courier
+EK-0161,2212,Curated,Uzman Doktor (Dahiliye),Internal Medicine Specialist
+EK-0162,2212,Curated,Uzman Doktor (Cerrahi),Surgeon
+EK-0163,2212,Curated,Uzman Doktor (Psikiyatri),Psychiatrist
+EK-0164,2212,Curated,Uzman Doktor (Kadın Hastalıkları ve Doğum),Obstetrician-Gynaecologist
+EK-0165,2212,Curated,Uzman Doktor (Çocuk Sağlığı),Paediatrician
+EK-0166,2212,Curated,Radyolog,Radiologist
+EK-0167,2212,Curated,Anesteziyoloji Uzmanı,Anaesthesiologist
+EK-0168,2211,Curated,Aile Hekimi,Family Physician
+EK-0169,2211,Curated,Asistan Doktor,Resident Physician
+EK-0170,2211,Curated,İşyeri Hekimi,Occupational Physician
+EK-0171,2221,Curated,Yoğun Bakım Hemşiresi,Intensive Care Nurse
+EK-0172,2221,Curated,Ameliyathane Hemşiresi,Operating Room Nurse
+EK-0173,2221,Curated,Sorumlu Hemşire (Başhemşire),Head Nurse
+EK-0174,2634,Curated,Klinik Psikolog,Clinical Psychologist
+EK-0175,2634,Curated,Psikolojik Danışman,Counselling Psychologist
+EK-0176,2262,Curated,Serbest Eczacı,Community Pharmacist
+EK-0177,2262,Curated,Hastane Eczacısı,Hospital Pharmacist
+EK-0178,2261,Curated,Ortodontist,Orthodontist
+EK-0179,3212,Curated,Tıbbi Laboratuvar Teknikeri,Medical Laboratory Technician
+EK-0180,3211,Curated,Radyoloji Teknikeri,Radiology Technician
+EK-0181,3258,Curated,Paramedik,Paramedic
+EK-0182,2269,Curated,Ergoterapist,Occupational Therapist
+EK-0183,2433,Curated,Tıbbi Satış Mümessili,Medical Sales Representative
+EK-0184,2433,Curated,Klinik Araştırma Uzmanı,Clinical Research Associate
+EK-0185,1342,Curated,Hastane Müdürü,Hospital Administrator
+EK-0186,2330,Curated,Matematik Öğretmeni,Mathematics Teacher
+EK-0187,2330,Curated,İngilizce Öğretmeni,English Teacher
+EK-0188,2330,Curated,Fen Bilimleri Öğretmeni,Science Teacher
+EK-0189,2330,Curated,Türkçe ve Edebiyat Öğretmeni,Turkish Language and Literature Teacher
+EK-0190,2341,Curated,Sınıf Öğretmeni,Classroom Teacher (Primary)
+EK-0191,2342,Curated,Anaokulu Öğretmeni,Kindergarten Teacher
+EK-0192,2310,Curated,Öğretim Üyesi (Dr. Öğr. Üyesi / Doçent / Profesör),Faculty Member (Assistant / Associate / Full Professor)
+EK-0193,2310,Curated,Araştırma Görevlisi,Research Assistant (University)
+EK-0194,2359,Curated,Rehberlik ve Psikolojik Danışman (Okul),School Counsellor
+EK-0195,2359,Curated,Eğitim Koordinatörü,Education Coordinator
+EK-0196,2359,Curated,Özel Ders Öğretmeni,Private Tutor
+EK-0197,2424,Curated,Kurumsal Eğitmen,Corporate Trainer
+EK-0198,1345,Curated,Okul Müdürü,School Principal
+EK-0199,2131,Curated,Moleküler Biyolog ve Genetik Uzmanı,Molecular Biologist and Geneticist
+EK-0200,2113,Curated,Analitik Kimya Uzmanı (Laboratuvar),Analytical Chemist
+EK-0201,3111,Curated,Laboratuvar Teknikeri,Laboratory Technician
+EK-0202,2133,Curated,Sürdürülebilirlik Uzmanı,Sustainability Specialist
+EK-0203,2631,Curated,Ekonomist (Araştırma),Research Economist
+EK-0204,2120,Curated,İstatistikçi,Statistician
+EK-0205,1411,Curated,Otel Genel Müdürü,Hotel General Manager
+EK-0206,4224,Curated,Ön Büro Görevlisi,Front Office Agent
+EK-0207,3434,Curated,Mutfak Şefi (Executive Chef),Executive Chef
+EK-0208,5120,Curated,Aşçı Yardımcısı (Commis),Commis Chef
+EK-0209,5131,Curated,Garson,Waiter / Waitress
+EK-0210,5132,Curated,Barista,Barista
+EK-0211,1412,Curated,Restoran Müdürü,Restaurant Manager
+EK-0212,5222,Curated,Mağaza Müdürü,Store Manager
+EK-0213,5223,Curated,Mağaza Satış Danışmanı,Retail Sales Associate
+EK-0214,5230,Curated,Kasiyer,Cashier
+EK-0215,5141,Curated,Kuaför / Berber,Hairdresser / Barber
+EK-0216,5142,Curated,Estetisyen,Beautician
+EK-0217,3423,Curated,Kişisel Antrenör (PT),Personal Trainer
+EK-0218,5113,Curated,Turist Rehberi,Tour Guide
+EK-0219,5111,Curated,Kabin Memuru,Flight Attendant
+EK-0220,3153,Curated,Pilot (Havayolu),Airline Pilot
+EK-0221,5414,Curated,Özel Güvenlik Görevlisi,Private Security Guard
+EK-0222,9112,Curated,Temizlik Görevlisi,Cleaner
+EK-0223,5311,Curated,Çocuk Bakıcısı,Nanny
+EK-0224,5322,Curated,Hasta ve Yaşlı Bakıcısı,Home Care Worker
+EK-0225,7411,Curated,Elektrikçi,Electrician
+EK-0226,7126,Curated,Sıhhi Tesisatçı,Plumber
+EK-0227,7212,Curated,Kaynakçı,Welder
+EK-0228,7231,Curated,Oto Tamircisi (Mekaniker),Auto Mechanic
+EK-0229,7127,Curated,Klima Teknisyeni,HVAC Technician
+EK-0230,7115,Curated,Marangoz,Carpenter
+EK-0231,7112,Curated,Duvar Ustası,Bricklayer
+EK-0232,3123,Curated,İnşaat Formeni,Construction Foreman
+EK-0233,8342,Curated,İş Makinesi Operatörü,Heavy Equipment Operator
+EK-0234,2142,Curated,Harita Teknikeri,Survey Technician
+EK-0235,3352,Curated,Vergi Müfettişi,Tax Inspector
+EK-0236,2422,Curated,Uzman (Kamu),Public Sector Specialist
+EK-0237,4110,Curated,Memur (Kamu),Civil Servant (Clerical)
+EK-0238,5412,Curated,Polis Memuru,Police Officer
+EK-0239,2642,Curated,Muhabir,Reporter
+EK-0240,2642,Curated,Editör (Basın / Yayın),Editor (Press / Publishing)
+EK-0241,2643,Curated,Çevirmen (Yazılı),Translator
+EK-0242,2643,Curated,Simültane Tercüman,Conference Interpreter
+EK-0243,3431,Curated,Fotoğrafçı,Photographer
+EK-0244,3432,Curated,İç Mimar,Interior Architect
+EK-0245,2163,Curated,Moda Tasarımcısı,Fashion Designer
+EK-0246,2163,Curated,Endüstriyel Tasarımcı,Industrial Designer
+EK-0247,2652,Curated,Müzisyen,Musician
+EK-0248,3332,Curated,Etkinlik Yöneticisi,Event Manager
+EK-0249,3334,Curated,Gayrimenkul Danışmanı,Real Estate Consultant
+EK-0250,2132,Curated,Ziraat Mühendisi,Agricultural Engineer
+EK-0251,2250,Curated,Veteriner Hekim (Klinik),Veterinarian (Clinical)
+EK-0252,2635,Curated,Sosyal Hizmet Uzmanı,Social Worker
+EK-0253,2636,Curated,İmam / Din Görevlisi,Imam / Religious Officer

@@ -100,8 +100,8 @@
         "description": "Tarayıcı eklentini e-kariyerim hesabına tek onayla bağla."
       },
       "companies": {
-        "title": "Şirket Değerlendirmeleri",
-        "description": "Orada çalışmış kişilerden anonim, moderasyonlu işveren değerlendirmeleri: yönetim, çalışma ortamı, ücret ve kariyer gelişimi — puanı açık hesaplanır."
+        "title": "Şirket Değerlendirmeleri ve Maaşları",
+        "description": "Orada çalışmış kişilerden anonim, yapılandırılmış işveren değerlendirmeleri — yönetim, çalışma ortamı, ücret, kariyer — ve giriş yapınca meslek bazında anonim maaş bilgileri. Puanı açık hesaplanır."
       },
       "companyScoring": {
         "title": "Şirket Puanı Nasıl Hesaplanır",
@@ -111,9 +111,21 @@
         "title": "Değerlendirmelerim",
         "description": "Yazdığın şirket değerlendirmeleri, moderasyon durumları ve kalan hakkın."
       },
+      "mySalaries": {
+        "title": "Maaşlarım",
+        "description": "Paylaştığın maaş kayıtları ve kalan hakkın."
+      },
+      "contribute": {
+        "title": "Şirket katkısı",
+        "description": "Bir şirket için anonim değerlendirme yaz ya da maaş bilgisi paylaş."
+      },
       "helpCompanyReviews": {
         "title": "Şirket Değerlendirmeleri",
         "description": "Şirket değerlendirmelerini okuyun, anonim bir değerlendirme yazın; moderasyon, düzenleme ve şikâyet nasıl işler."
+      },
+      "helpCompanySalaries": {
+        "title": "Maaş Bilgileri",
+        "description": "Şirketlerdeki maaşları okuyun, kendi maaşınızı anonim paylaşın; meslek listeden seçilir, kim görür, ne görünür, nasıl düzenlenir."
       },
       "helpCvScan": {
         "title": "CV Tarama",
@@ -197,7 +209,7 @@
         "companies": {
           "eyebrow": "Şirket değerlendirmeleri · anonim, hesap gerekmez",
           "title": "Başvurmadan önce içeriyi öğren.",
-          "body": "Bir şirkette çalışmak gerçekte nasıl — genel puan, on alana kadar ortalama ve en sık seçilen maddeler. Okumak için hesap gerekmez; yazmak için yalnızca giriş.",
+          "body": "Bir şirkette çalışmak gerçekte nasıl — genel puan, on alana kadar ortalama, en sık seçilen maddeler ve çalışanların anonim maaş beyanları. Değerlendirmeleri okumak için hesap gerekmez; maaşlar ve yazmak için yalnızca giriş.",
           "bullet1": "Yazan görünmez: yalnızca ay ve çalışan ilişkisi (mevcut, eski, stajyer)",
           "bullet2": "Serbest metin yok: her madde herkese adil olacak şekilde yazılmış sabit bir listeden gelir",
           "bullet3": "Puan formülü açık; üç onaylı değerlendirmenin altında puan gösterilmez",
@@ -217,7 +229,7 @@
         }
       },
       "companiesTitle": "Şirket değerlendirmeleri",
-      "companiesBody": "Orada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler — puanlar ve hazır maddeler, serbest metin yok.",
+      "companiesBody": "Orada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler ve meslek bazında maaş bilgileri — puanlar ve hazır maddeler, serbest metin yok.",
       "companiesCta": "Şirketlere göz at"
     },
     "problem": {
@@ -264,7 +276,7 @@
       "cvTitle": "Hangi CV ile başvurduğunuzu bilin",
       "cvBody": "Başvururken kullandığınız CV dosyalarını tek yerde tutun ve her başvuruda hangisinin gittiğini kaydedin — altı hafta sonra gelen bir telefon tahminle başlamasın.",
       "companiesTitle": "Şirketleri içeriden tanı",
-      "companiesBody": "Orada çalışmış kişilerin anonim değerlendirmeleri ve açık formüllü bir puan — hesap gerekmeden oku, giriş yapınca yaz.",
+      "companiesBody": "Orada çalışmış kişilerin anonim değerlendirmeleri, açık formüllü bir puan ve meslek bazında maaş bilgileri — değerlendirmeleri hesap gerekmeden oku, giriş yapınca maaşları gör ve kendi katkını bırak.",
       "companiesCta": "Şirketlere göz at",
       "companiesBadge": "Yeni"
     },
@@ -404,7 +416,12 @@
     "openMenu": "Menüyü aç",
     "closeMenu": "Menüyü kapat",
     "toolsMenu": "Araçlar",
-    "toolsNote": "Hesap gerekmez"
+    "toolsNote": "Hesap gerekmez",
+    "companiesNote": "İkisi de anonim, ikisi de giriş ister",
+    "mySalaries": "Maaşlarım",
+    "contributeSalary": "Maaş Bilgisi",
+    "contributeReview": "Değerlendirme",
+    "companyDirectory": "Şirket dizini"
   },
   "auth": {
     "login": {
@@ -666,7 +683,8 @@
       "next": "Sonraki",
       "last": "Son",
       "pageInfoCompanies": "Sayfa {page} / {totalPages} ({totalCount} şirket)",
-      "pageInfoReminders": "Sayfa {page} / {totalPages} ({totalCount} hatırlatıcı)"
+      "pageInfoReminders": "Sayfa {page} / {totalPages} ({totalCount} hatırlatıcı)",
+      "pageInfoSalaries": "Sayfa {page} / {totalPages} ({totalCount} maaş kaydı)"
     },
     "form": {
       "companyName": "Şirket Adı",
@@ -833,7 +851,7 @@
     "title": "Hesap Ayarları",
     "export": {
       "title": "Verilerimi Dışa Aktar",
-      "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri ve şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
+      "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) ve paylaştığınız maaş bilgilerini tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
       "download": "Verilerimi İndir",
       "preparing": "Hazırlanıyor...",
       "error": "Veriler dışa aktarılamadı."
@@ -866,14 +884,14 @@
     },
     "delete": {
       "title": "Hesabımı Sil",
-      "description": "Bu işlem geri alınamaz. Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak silinir.",
+      "description": "Bu işlem geri alınamaz. Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini ve gönderdiğiniz geri bildirimleri — kalıcı olarak silinir.",
       "passwordLabel": "Şifreniz",
       "confirmLabel": "Onaylamak için \"SİL\" yazın",
       "confirmWord": "SİL",
       "confirmMismatch": "Onaylamak için kutuya \"SİL\" yazın.",
       "submit": "Hesabımı Kalıcı Olarak Sil",
       "deleting": "Siliniyor...",
-      "finalConfirm": "Son uyarı: Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri ve eklenti bağlantılarınız — kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
+      "finalConfirm": "Son uyarı: Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini ve gönderdiğiniz geri bildirimleri ve eklenti bağlantılarınız — kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
       "genericError": "Hesap silinemedi.",
       "noPasswordHint": "Bu hesap Google, LinkedIn veya GitHub ile açıldı ve şifresi yok. Silmek için aşağıya onay kelimesini yazmanız yeterli."
     }
@@ -966,7 +984,7 @@
       "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler, işlem kayıtları dışında, yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır; işlem kayıtları yalnızca yukarıda sayılan güvenlik ve hukuki amaçlara hizmet eder.",
       "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür.",
-      "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\")."
+      "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, maaş bilgisi, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\")."
     },
     "googleSignIn": {
       "title": "Google ile giriş",
@@ -1022,7 +1040,7 @@
       "title": "Haklarınız",
       "before": "Verilerinizin bir kopyasını istediğiniz zaman dışa aktarabilir veya hesabınızı kalıcı olarak silebilirsiniz. Bu işlemleri",
       "link": "Hesap Ayarları",
-      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, gönderdiğiniz geri bildirimleri ve işlem kayıtlarınızı — kalıcı olarak kaldırır. İşlem kayıtları dışa aktarım dosyasına dahil edilmez; kendi kayıtlarınıza erişmek isterseniz privacy@ekariyerim.com adresine yazmanız yeterlidir."
+      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, gönderdiğiniz geri bildirimleri ve işlem kayıtlarınızı — kalıcı olarak kaldırır. İşlem kayıtları dışa aktarım dosyasına dahil edilmez; kendi kayıtlarınıza erişmek isterseniz privacy@ekariyerim.com adresine yazmanız yeterlidir."
     },
     "notApplicable": {
       "title": "Şu an geçerli olmayanlar",
@@ -1077,6 +1095,17 @@
       "storage": "Değerlendirmeler, bildirimler ve faydalı işaretleri kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Hesabını silmek değerlendirmelerini, bildirimlerini ve faydalı işaretlerini siler. Yazdığın değerlendirmeler şirket sayfalarından ve şirketin puanından kalkar; veri dışa aktarımın da bunları içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — yazmayı, bildirmeyi veya işaretlemeyi sen seçersin — ve moderasyon için meşru menfaat: adı geçen bir şirket hakkında yayımlananların adil ve hukuka uygun kalması."
+    },
+    "companySalaries": {
+      "title": "Paylaştığın maaş bilgileri",
+      "intro": "Bir şirketteki maaşını paylaşmak isteğe bağlıdır ve hesap gerektirir. Paylaştığında:",
+      "what": "Kaydın — listeden seçtiğin meslek, toplam tecrübe yılın, çalışma şeklin, mevcut/eski çalışan olduğun, aylık net maaşın ve para birimi, varsa yıllık primin — hesabına bağlı saklanır. Serbest metin yoktur: meslek, ISCO-08'e dayanan hazır bir katalogdan seçilir.",
+      "whoSees": "Kayıtlar yalnızca giriş yapmış kullanıcılara gösterilir; herkese açık şirket sayfası yalnızca kaç kayıt olduğunu söyler.",
+      "band": "Okuyucular tam tecrübe yılını değil bir bant (0–1, 2–4, 5–9, 10+) ve günü değil ayı görür. Bilerek: meslekle birlikte tam yıl ve tam tarih küçük bir şirkette kimin yazdığını ele verirdi.",
+      "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez; içinde senin yazdığın hiçbir metin de yoktur. Kaydın arkasındaki hesabı yalnızca biz görürüz.",
+      "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
+      "deletion": "Kaydı Maaşlarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam yılıyla içerir.",
+      "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
     }
   },
   "terms": {
@@ -1089,6 +1118,7 @@
       "tracking": "Başvurularını, takip listeni ve hatırlatıcılarını kaydeden bir panel; LinkedIn dışa aktarımından içe aktarma; Chrome eklentisiyle ilan sayfalarından ve Gmail'deki yanıtlardan sinyal toplama.",
       "tools": "Hesapsız kullanılabilen araçlar: CV taraması, geri dönüş oranı kıyaslaması ve şirket değerlendirmelerini okuma.",
       "reviews": "Kayıtlı kullanıcıların şirketler hakkında anonim, yapılandırılmış değerlendirmeler yazabildiği herkese açık şirket sayfaları.",
+      "salaries": "Kayıtlı kullanıcıların şirketlerdeki maaşlarını anonim paylaşabildiği ve birbirininkini okuyabildiği maaş bilgileri.",
       "asIs": "Hizmet olduğu gibi sunulur. Özellikleri değiştirebilir, durdurabilir ya da kaldırabiliriz; ücretsiz bir hizmette bunun için önceden bildirim taahhüt etmiyoruz, ama kullanıcı verisini etkileyen bir değişikliği bu sayfada ve gerekiyorsa e-postayla duyururuz."
     },
     "account": {
@@ -1108,6 +1138,15 @@
       "noManipulation": "Değerlendirmeleri bir şirketi kayırmak ya da zarar vermek için düzenli biçimde kullanmak — birden fazla hesap, karşılık beklenen değerlendirme, koordineli puanlama — yasaktır ve hesabın kapatılmasına yol açar.",
       "opinion": "Yayımlanan her değerlendirme yazarının kişisel görüşüdür; e-kariyerim'in bir şirket hakkındaki beyanı değildir ve doğruluğunu garanti etmiyoruz.",
       "companies": "Bir şirketi temsil ediyorsan ve hakkındaki bir değerlendirmenin kurallara aykırı olduğunu düşünüyorsan, o değerlendirmeyi bildirebilir ya da aşağıdaki adrese yazabilirsin."
+    },
+    "salaries": {
+      "title": "Maaş bilgileri",
+      "intro": "Bir şirketteki maaşını paylaşırken:",
+      "ownData": "Yalnızca kendi maaşını paylaşırsın; başkası adına ya da duyduğunu değil.",
+      "accurate": "Verdiğin tutarlar ve seçtiğin meslek gerçeğe uygun olmalı.",
+      "signedInOnly": "Kayıtlar giriş yapmış kullanıcılara anonim olarak gösterilir; okuyucular adını değil, mesleği ve tecrübe bandını görür.",
+      "quota": "Hesap başına toplam on kayıt, aynı şirkette meslek başına bir kayıt. Silmek yer açar.",
+      "opinion": "Kayıtlar kullanıcı beyanıdır; e-kariyerim doğrulamaz ve maaş müzakeresi için tavsiye niteliği taşımaz."
     },
     "content": {
       "title": "İçeriğin ve lisans",
@@ -1129,7 +1168,8 @@
       "noAdvice": "CV taraması, kıyaslama ve iş uyumu gibi araçların çıktıları bilgi amaçlıdır; kariyer, hukuk ya da başka bir alanda profesyonel tavsiye değildir. Kararlarını bunlara dayanarak verirsen sorumluluk sende kalır.",
       "thirdParties": "Başvuru yaptığın işverenler, LinkedIn, kariyer.net ve Google gibi üçüncü taraflar bizim kontrolümüzde değildir; onlarla ilişkin kendi koşullarına tabidir.",
       "availability": "Hizmetin kesintisiz ya da hatasız olacağını taahhüt etmiyoruz. Yürürlükteki hukukun izin verdiği ölçüde, hizmetin kullanımından ya da kullanılamamasından doğan dolaylı zararlardan sorumlu değiliz.",
-      "reviewsDisclaimer": "Şirket değerlendirmeleri kullanıcıların görüşüdür; bir değerlendirme yüzünden uğradığını düşündüğün bir zarar için önce bildirim yolunu kullan — her bildirim bir moderatör tarafından okunur."
+      "reviewsDisclaimer": "Şirket değerlendirmeleri kullanıcıların görüşüdür; bir değerlendirme yüzünden uğradığını düşündüğün bir zarar için önce bildirim yolunu kullan — her bildirim bir moderatör tarafından okunur.",
+      "salariesDisclaimer": "Maaş bilgileri kullanıcıların kendi beyanıdır; doğrulanmaz ve maaş müzakeresi ya da başka bir karar için tavsiye değildir."
     },
     "termination": {
       "title": "Askıya alma ve fesih",
@@ -1357,7 +1397,12 @@
     "employmentStatusRequired": "Şirketle ilişkini seç",
     "ratingRequired": "1 ile 5 arasında bir puan ver",
     "reviewStatementsTooMany": "Liste başına en fazla 5 madde",
-    "reviewStatementUnknown": "Maddelerden biri listede yok"
+    "reviewStatementUnknown": "Maddelerden biri listede yok",
+    "salaryAmountInvalid": "Geçerli bir tutar gir",
+    "salaryYearsInvalid": "0 ile 50 arasında tam bir yıl gir",
+    "salaryCurrencyRequired": "Para birimini seç",
+    "salaryBonusAmountInvalid": "Prim varsa tutarını gir, yoksa boş bırak",
+    "salaryOccupationRequired": "Listeden bir meslek seç"
   },
   "errors": {
     "generic": "İstek başarısız oldu.",
@@ -1487,6 +1532,7 @@
       "faq": "Sık Sorulan Sorular",
       "cv": "CV'lerim",
       "companyReviews": "Şirket Değerlendirmeleri",
+      "companySalaries": "Maaş Bilgileri",
       "cvScan": "CV Tarama",
       "benchmark": "Geri Dönüş Kıyası"
     },
@@ -1557,6 +1603,9 @@
         },
         "companyReviews": {
           "description": "Anonim çalışan değerlendirmelerini okuyun, kendi değerlendirmenizi yazın."
+        },
+        "companySalaries": {
+          "description": "Şirketlerdeki maaşları okuyun, kendi maaşınızı anonim paylaşın."
         },
         "cvScan": {
           "description": "Hesap açmadan CV'nizin makine okunabilirliğini ölçün."
@@ -1838,7 +1887,7 @@
       "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "export": {
         "title": "Verilerimi Dışa Aktar",
-        "body": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri ve şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi bu dosyada yer almaz; onları CV'lerim sayfasından indirirsiniz."
+        "body": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) ve paylaştığınız maaş bilgilerini tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi bu dosyada yer almaz; onları CV'lerim sayfasından indirirsiniz."
       },
       "extension": {
         "title": "Tarayıcı eklentisi bağlantısı",
@@ -1868,7 +1917,7 @@
         "body": "Şifrenizi girip kutuya \"SİL\" yazın ve butona tıklayın. Tüm verilerinizin silineceğini belirten ikinci bir uyarı çıkar; onu da onayladığınızda hesabınız ve tüm verileriniz kalıcı olarak silinir.",
         "calloutIrreversible": {
           "title": "Geri alınamaz",
-          "body": "Hesabınız silindiğinde ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak kaybolur; bu işlemin geri dönüşü yoktur."
+          "body": "Hesabınız silindiğinde ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini ve gönderdiğiniz geri bildirimleri — kalıcı olarak kaybolur; bu işlemin geri dönüşü yoktur."
         }
       }
     },
@@ -1960,7 +2009,7 @@
       },
       "q2": {
         "question": "Hesabımı sildiğimde verilerimi geri alabilir miyim?",
-        "answer": "Hayır. Hesap silme işlemi geri alınamaz; başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi ve gönderdiğiniz geri bildirimleri kalıcı olarak silinir. Silmeden önce Hesap Ayarları'ndan verinizi dışa aktarabilirsiniz."
+        "answer": "Hayır. Hesap silme işlemi geri alınamaz; başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini ve gönderdiğiniz geri bildirimleri kalıcı olarak silinir. Silmeden önce Hesap Ayarları'ndan verinizi dışa aktarabilirsiniz."
       },
       "q3": {
         "question": "Chrome eklentisi bir ilanın bilgilerini yanlış okursa ne olur?",
@@ -2012,7 +2061,11 @@
       },
       "q15": {
         "question": "e-kariyerim'de hesap açmadan neler kullanılabilir?",
-        "answer": "Üç şey: CV Tarama (CV'nizin makine okunabilirliği), geri dönüş oranı kıyaslama ve şirket değerlendirmelerini okumak. Başvuru takibi, panel, Chrome eklentisi ve değerlendirme yazmak için ücretsiz bir hesap gerekir."
+        "answer": "Üç şey: CV Tarama (CV'nizin makine okunabilirliği), geri dönüş oranı kıyaslama ve şirket değerlendirmelerini okumak. Başvuru takibi, panel, Chrome eklentisi, değerlendirme yazmak ve maaş bilgilerini okuyup paylaşmak için ücretsiz bir hesap gerekir."
+      },
+      "q16": {
+        "question": "Paylaştığım maaş bilgisi anonim mi, kim görür?",
+        "answer": "Evet. Bir maaş kaydında adınız, e-postanız ya da hesabınız görünmez; okuyucular listeden seçtiğiniz mesleği, tecrübenizi bant olarak (0–1, 2–4, 5–9, 10+ yıl), çalışma şeklinizi, mevcut/eski çalışan olduğunuzu, ayı ve tutarı görür. Serbest metin yoktur. Maaş kayıtlarını yalnızca giriş yapmış kullanıcılar okuyabilir; kaydınızı Maaşlarım sayfasından düzenleyebilir ya da silebilirsiniz."
       }
     },
     "cv": {
@@ -2107,6 +2160,57 @@
       "report": {
         "title": "Kuralları çiğneyen bir değerlendirme gördüyseniz",
         "body": "Her değerlendirme kartındaki \"Bu yorumu bildir\" bağlantısıyla bir gerekçe seçip kısa bir not bırakın. Bildirimler bir moderatör tarafından incelenir; değerlendirme yayında kalabilir, yazardan değişiklik istenebilir ya da kaldırılabilir. \"Faydalı\" işareti ise sıralamayı besler; ne bildirim ne de faydalı işareti kimliğinizi başkalarına gösterir."
+      }
+    },
+    "companySalaries": {
+      "eyebrow": "Şirketler",
+      "title": "Maaş bilgileri",
+      "intro": "Bir şirkette ne kadar kazanılıyor — orada çalışmış insanların anonim beyanları, hazır listeden seçilen meslek ve tecrübe bandıyla. Okumak da yazmak da giriş ister.",
+      "read": {
+        "title": "Maaşları okumak",
+        "step1": {
+          "title": "Giriş yapın",
+          "body": "Maaş kayıtları yalnızca giriş yapmış kullanıcılara açıktır. Şirket sayfasındaki Maaşlar sekmesi giriş yapmadıysanız size önce girişi gösterir, sonra aynı sekmeye döndürür."
+        },
+        "step2": {
+          "title": "Şirket sayfasında Maaşlar sekmesini açın",
+          "body": "Her kayıt bir satırdır: meslek, tecrübe bandı (0–1, 2–4, 5–9, 10+ yıl), çalışma şekli, mevcut ya da eski çalışan, ay ve aylık net tutar; varsa yıllık prim. Kimse yazarını görmez."
+        },
+        "step3": {
+          "title": "Medyanı okumayı bilin",
+          "body": "Bir para biriminde yeterli kayıt toplanınca üstte medyan ve en düşük–en yüksek aralığı görünür; o zamana kadar yalnızca satırlar vardır. Medyan mesleğe göre ayrılmaz — bir şirketteki tüm kayıtların ortasıdır."
+        }
+      },
+      "write": {
+        "title": "Maaş paylaşmak",
+        "step1": {
+          "title": "Katkı sayfasını açın",
+          "body": "Üst menüde Şirketler ▾ → Maaş Bilgisi, ya da bir şirket sayfasındaki \"Maaş bilgisi paylaş\" düğmesi. Aynı sayfada değerlendirme de yazılır; ikisi arasında üstteki anahtarla geçersiniz."
+        },
+        "step2": {
+          "title": "Şirketi seçin",
+          "body": "Şirket bir kez seçilir ve her iki form için geçerlidir. Aradığınız şirket yoksa adını yazarak ekleyebilirsiniz."
+        },
+        "step3": {
+          "title": "Formu doldurun",
+          "body": "Meslek, toplam tecrübe yılı, çalışma şekli, mevcut/eski çalışan, aylık net maaş ve para birimi, prim var mı yok mu — hepsi zorunlu. Meslek hazır listeden seçilir: yazmaya başla, Türkçe ya da İngilizce adıyla bul ve listeden seç; listede olmayan bir meslek için kayıt oluşturulamaz."
+        },
+        "step4": {
+          "title": "Paylaşın",
+          "body": "Kayıt anında giriş yapmış okuyuculara açılır. Ardından aynı şirket için değerlendirme yazmanız önerilir; atlayabilirsiniz."
+        }
+      },
+      "calloutAnonymous": {
+        "title": "Kayıtlar anonimdir",
+        "body": "Okuyucular adınızı, e-postanızı ya da tam tecrübe yılınızı görmez; yalnızca meslek, bant, çalışma şekli, ilişki ve ay görünür. Tam yıl yalnızca sizin listenizde ve veri dışa aktarımınızdadır."
+      },
+      "calloutLimits": {
+        "title": "Meslek başına bir kayıt, toplam on",
+        "body": "Aynı şirkete farklı meslekler için birden fazla kayıt girebilirsiniz (terfi gibi); aynı meslek için ikinci kayıt yerine mevcut olanı düzenleyin. Hesap başına toplam on kayıt; silmek yer açar."
+      },
+      "manage": {
+        "title": "Düzenleme ve silme",
+        "body": "Maaşlarım sayfası paylaştığınız her kaydı tam figürleriyle listeler. Düzenle tutarları değiştirir ve kaydın ayını bugüne alır; Sil tamamen kaldırır."
       }
     },
     "cvScan": {
@@ -2670,6 +2774,16 @@
     "FormerEmployee": "Eski çalışan",
     "Intern": "Stajyer"
   },
+  "salaryEmploymentStatus": {
+    "CurrentEmployee": "Mevcut çalışan",
+    "FormerEmployee": "Eski çalışan"
+  },
+  "salaryCurrency": {
+    "TRY": "TRY ₺",
+    "EUR": "EUR €",
+    "USD": "USD $",
+    "GBP": "GBP £"
+  },
   "reviewModerationStatus": {
     "Pending": "İnceleme bekliyor",
     "Approved": "Yayında",
@@ -2697,8 +2811,8 @@
   },
   "companies": {
     "directory": {
-      "title": "Şirket değerlendirmeleri",
-      "subtitle": "Bir yerde çalışmak gerçekte nasıl — orada çalışmış insanlardan; anonim, yapılandırılmış, serbest metin yok.",
+      "title": "Şirket değerlendirmeleri ve maaşları",
+      "subtitle": "Bir yerde çalışmak gerçekte nasıl ve ne kadar kazanılıyor — orada çalışmış insanlardan; anonim, yapılandırılmış, serbest metin yok. Değerlendirmeler herkese açık, maaşlar giriş yapanlara.",
       "searchPlaceholder": "Şirket ara…",
       "searchLabel": "Şirket ara",
       "writeCta": "Değerlendirme yaz",
@@ -2713,7 +2827,7 @@
       "explainer": {
         "what": {
           "title": "Bir değerlendirme ne içerir",
-          "body": "Bir genel puan, isteğe bağlı on alan puanı — yönetim, ücret, uzaktan çalışma ve daha fazlası — ve beğenilen ile geliştirilebilir olanlar hakkında birkaç hazır madde."
+          "body": "Bir genel puan, isteğe bağlı on alan puanı — yönetim, ücret, uzaktan çalışma ve daha fazlası — ve beğenilen ile geliştirilebilir olanlar hakkında birkaç hazır madde. Giriş yapınca ayrıca meslek, tecrübe bandı ve aylık net tutarla maaş kayıtları."
         },
         "anonymous": {
           "title": "Anonim",
@@ -2726,12 +2840,17 @@
       }
     },
     "page": {
-      "metaTitle": "{company} değerlendirmeleri",
-      "metaDescription": "{count, plural, =0 {{company} için henüz yayımlanmış değerlendirme yok — ilk yazan sen ol.} =1 {{company} hakkında 1 anonim çalışan değerlendirmesi ve kontrol edebileceğin bir puan.} other {{company} hakkında # anonim çalışan değerlendirmesi ve kontrol edebileceğin bir puan.}}",
+      "metaTitle": "{company} değerlendirmeleri ve maaşları",
+      "metaDescription": "{count, plural, =0 {{company} için henüz yayımlanmış değerlendirme yok — ilk yazan sen ol. Çalışanların paylaştığı maaşlar giriş yapınca görünür.} =1 {{company} hakkında 1 anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.} other {{company} hakkında # anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.}}",
       "breadcrumbLabel": "Gezinti",
       "allCompanies": "← Tüm şirketler",
-      "subtitle": "Burada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler.",
+      "subtitle": "Burada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler ve maaş bilgileri.",
       "website": "Web sitesi ↗",
+      "tabs": {
+        "label": "Şirket sayfası bölümleri",
+        "reviews": "Değerlendirmeler",
+        "salaries": "Maaşlar"
+      },
       "disclaimer": "Değerlendirmeler anonim yazarlarının kişisel görüşleridir, e-kariyerim'in beyanı değildir. Değerlendirmeler yalnızca puanlardan ve hazır maddelerden oluşur; yine de yanlış görünen bir şey varsa “Bu değerlendirmeyi bildir”i kullan, bir moderatör bakar."
     },
     "summary": {
@@ -3825,6 +3944,154 @@
             "sentence": "Yeni çalışanlara yönelik eğitimler artırılabilir."
           }
         }
+      }
+    }
+  },
+  "companySalaries": {
+    "form": {
+      "heading": "{company} için maaş bilgisi",
+      "anonymityNote": "Okuyucular adını değil, mesleği ve tecrübe bandını görür. Meslek hazır listeden seçilir; tecrübe yılın bant olarak (2–4 yıl gibi) gösterilir.",
+      "occupation": "Meslek",
+      "occupationPlaceholder": "Mesleğini yazmaya başla (ör. backend, hemşire, muhasebe)",
+      "occupationSearching": "Aranıyor…",
+      "occupationNoMatch": "Eşleşme yok",
+      "occupationHint": "Listeden seç; yazdığın metin kaydedilmez. İki dilde de arayabilirsin.",
+      "years": "Toplam tecrübe (yıl)",
+      "yearsHint": "Bu şirkette değil, meslekteki toplam yılın.",
+      "employmentType": "Çalışma şekli",
+      "employmentTypePlaceholder": "Seç",
+      "employmentStatus": "Çalışma durumu",
+      "monthlyNet": "Aylık net maaş",
+      "monthlyNetPlaceholder": "Örn. 95.000",
+      "monthlyNetHint": "Eline geçen net tutar. Prim ve yan hakları buraya katma.",
+      "currency": "Para birimi",
+      "bonus": "Prim / bonus",
+      "bonusNo": "Yok",
+      "bonusYes": "Var",
+      "bonusAmount": "Yıllık prim tutarı",
+      "bonusAmountPlaceholder": "Yıllık toplam, örn. 120.000",
+      "bonusUnit": "{currency} / yıl",
+      "bonusHint": "Yıllık toplam; para birimi maaşla aynı.",
+      "quotaNote": "Hak: {used} / {limit} maaş kaydı. Kaydettiğin anda giriş yapmış okuyuculara açılır.",
+      "publishNote": "Kaydettiğin anda giriş yapmış okuyuculara açılır.",
+      "submitting": "Kaydediliyor…",
+      "problems": {
+        "occupationRequired": "Listeden bir meslek seç",
+        "yearsInvalid": "0 ile 50 arasında tam bir yıl gir",
+        "employmentTypeRequired": "Çalışma şeklini seç",
+        "employmentStatusRequired": "Çalışma durumunu seç",
+        "amountInvalid": "Geçerli bir tutar gir (1 – 10.000.000)",
+        "bonusAnswerRequired": "Prim var mı, yok mu — seç",
+        "bonusAmountInvalid": "Yıllık prim tutarını gir (1 – 10.000.000)"
+      }
+    },
+    "guidelines": {
+      "title": "Maaş bilgisi burada nasıl işler",
+      "intro": "Adın hiçbir yerde görünmez. Okuyucular mesleği, tecrübe bandını, çalışma şeklini ve tutarı görür.",
+      "signedIn": "Yalnızca giriş yapmış kullanıcılar okuyabilir.",
+      "band": "Tecrübe yılı bant olarak gösterilir: 0–1, 2–4, 5–9, 10+.",
+      "month": "Tarih ay hassasiyetindedir (Eylül 2026 gibi).",
+      "perTitle": "Aynı şirkete farklı meslekler için birden fazla kayıt girebilirsin; toplamda 10 kayıt.",
+      "editable": "Kaydı Maaşlarım sayfasından düzenleyebilir ya da silebilirsin.",
+      "fullGuide": "Tam rehber →"
+    },
+    "write": {
+      "submit": "Maaş bilgisini paylaş",
+      "error": "İşlem tamamlanamadı. Lütfen tekrar dene."
+    },
+    "edit": {
+      "title": "Maaş kaydını düzenle",
+      "subtitle": "Değişiklikler kaydettiğin anda görünür; kaydın ayı bugüne alınır.",
+      "loading": "Yükleniyor…",
+      "notFound": "Bu kayıt sana ait değil ya da artık yok.",
+      "backToMine": "Maaşlarım'a dön",
+      "submit": "Kaydet",
+      "error": "İşlem tamamlanamadı. Lütfen tekrar dene."
+    },
+    "mine": {
+      "title": "Maaşlarım",
+      "subtitle": "Paylaştığın maaş kayıtları.",
+      "quota": "{limit} haktan {used} kullanıldı",
+      "share": "Yeni maaş bilgisi",
+      "loading": "Yükleniyor…",
+      "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
+      "empty": "Henüz bir maaş kaydı paylaşmadın.",
+      "emptyBody": "Bir şirketteki maaşını anonim olarak paylaş; okuyucular mesleği ve tecrübe bandını görür, seni değil.",
+      "emptyCta": "Maaş bilgisi paylaş →",
+      "years": "{count, plural, =1 {1 yıl tecrübe} other {# yıl tecrübe}}",
+      "perMonthNet": "/ ay net",
+      "bonus": "Prim: {amount} / yıl",
+      "noBonus": "Prim yok",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "deleteTitle": "Bu maaş kaydı silinsin mi?",
+      "deleteBody": "Kayıt kalıcı olarak silinir ve hakkındaki yeri boşalır.",
+      "cancel": "Vazgeç",
+      "confirmDelete": "Sil",
+      "footnote": "Silmek hak yerini geri açar. Kayıtlar hesabınla birlikte silinir ve KVKK dışa aktarımına dahildir."
+    },
+    "panel": {
+      "heading": "{count, plural, =0 {Maaş kayıtları} =1 {1 maaş kaydı} other {# maaş kaydı}}",
+      "share": "Maaş bilgisi paylaş",
+      "readingNote": "Maaş bilgileri kullanıcıların kendi beyanıdır; e-kariyerim doğrulamaz. Meslek hazır listeden seçilir, tecrübe bant olarak, tarih ay hassasiyetinde gösterilir.",
+      "yours": "{count, plural, =1 {Bu şirkete 1 maaş kaydın var.} other {Bu şirkete # maaş kaydın var.}}",
+      "manageYours": "Maaşlarım",
+      "loading": "Yükleniyor…",
+      "loadError": "Maaş kayıtları yüklenemedi. Lütfen tekrar dene.",
+      "statsPending": "Medyan ve aralık, bir para biriminde en az {minimum} kayıt toplanınca görünür.",
+      "empty": "Bu şirket için henüz paylaşılmış maaş yok.",
+      "emptyCta": "İlk paylaşan sen ol",
+      "experience": "{band} tecrübe",
+      "perMonthNet": "/ ay net",
+      "bonus": "Prim: {amount} / yıl",
+      "noBonus": "Prim yok",
+      "lockedTitle": "Maaş bilgileri giriş yapmış kullanıcılara açık",
+      "lockedBody": "{company} için {count, plural, =0 {henüz paylaşılmış maaş yok} =1 {1 anonim maaş kaydı var} other {# anonim maaş kaydı var}}. Görmek ve kendi kaydını eklemek için giriş yap.",
+      "signIn": "Giriş yap",
+      "register": "Kayıt ol"
+    },
+    "stats": {
+      "median": "Medyan aylık net",
+      "sample": "{count} kayıt · {currency}",
+      "range": "Aralık",
+      "rangeHint": "en düşük – en yüksek",
+      "basis": "Nasıl hesaplanır",
+      "basisBody": "Tek para birimindeki tüm kayıtların medyanı; mesleğe ya da tecrübeye göre ayrılmaz."
+    },
+    "bands": {
+      "ZeroToOne": "0–1 yıl",
+      "TwoToFour": "2–4 yıl",
+      "FiveToNine": "5–9 yıl",
+      "TenPlus": "10+ yıl"
+    }
+  },
+  "contribute": {
+    "title": "Şirket katkısı",
+    "subtitle": "Değerlendirme de maaş bilgisi de anonim; kaydettiğin anda yayında.",
+    "companyLabel": "Şirket",
+    "status": "Bu şirkete {reviews, plural, =0 {değerlendirmen yok} other {1 değerlendirmen}}, {salaries, plural, =0 {maaş kaydın yok} =1 {1 maaş kaydın var} other {# maaş kaydın var}}",
+    "statusReviewsOnly": "Bu şirkete {reviews, plural, =0 {değerlendirmen yok} other {1 değerlendirmen var}}",
+    "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
+    "alreadyReviewed": "{company} için zaten bir değerlendirmen var",
+    "alreadyReviewedHint": "Şirket başına bir değerlendirme; görüşün değiştiyse düzenle.",
+    "editReview": "Değerlendirmeni düzenle",
+    "salaryQuotaFull": "Maaş kaydı hakkın doldu ({limit} kayıt). Yeni bir kayıt için Maaşlarım'dan birini sil.",
+    "goToMySalaries": "Maaşlarım'a git",
+    "tabs": {
+      "label": "Katkı türü",
+      "review": "Değerlendirme",
+      "salary": "Maaş Bilgisi"
+    },
+    "banner": {
+      "review": {
+        "thanks": "Teşekkürler, değerlendirmen yayında.",
+        "invite": "{company} için maaş bilgini de paylaşabilirsin — aşağıdaki form hazır.",
+        "skip": "Atla, Değerlendirmelerim'e git"
+      },
+      "salary": {
+        "thanks": "Teşekkürler, maaş bilgin kaydedildi.",
+        "invite": "{company} için bir değerlendirme de bırakabilirsin — aşağıdaki form hazır.",
+        "skip": "Atla, Maaşlarım'a git"
       }
     }
   },

@@ -130,10 +130,10 @@ public sealed class SharedInfrastructure : IAsyncLifetime
 
     /// <summary>
     /// Empties a clone between two tests of the same class — every table in <c>public</c> in one
-    /// TRUNCATE ... CASCADE, except the three that must survive: the migration history, the
+    /// TRUNCATE ... CASCADE, except the four that must survive: the migration history, the
     /// data-protection key ring the running host already loaded (a host whose keys vanish cannot
-    /// read the tokens it issued), and EmailTemplates, the schema's only seeded table
-    /// (EmailTemplateConfiguration.HasData) which the app only ever reads. Hangfire's tables live
+    /// read the tokens it issued), and the two seeded tables the app only ever reads —
+    /// EmailTemplates (EmailTemplateConfiguration.HasData) and Occupations (the catalogue migration). Hangfire's tables live
     /// in their own schema and are not touched; they hold the recurring-job definitions the host
     /// wrote at boot. Sequences keep counting, which no test depends on.
     /// </summary>
@@ -149,7 +149,7 @@ public sealed class SharedInfrastructure : IAsyncLifetime
                 SELECT string_agg(format('%I.%I', schemaname, tablename), ', ')
                 FROM pg_tables
                 WHERE schemaname = 'public'
-                  AND tablename NOT IN ('__EFMigrationsHistory', 'DataProtectionKeys', 'EmailTemplates');
+                  AND tablename NOT IN ('__EFMigrationsHistory', 'DataProtectionKeys', 'EmailTemplates', 'Occupations');
                 """, connection);
             var tables = (string)(await list.ExecuteScalarAsync())!;
             _resetSql = $"TRUNCATE TABLE {tables} CASCADE;";

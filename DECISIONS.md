@@ -6395,3 +6395,146 @@ aksini söylerse tek seferlik bir kabul ekranı gerekir (yapılmadı).
 yoktu; hukuk okumasında sorulacak ilk şey bu. Metin avukat görmedi; hukuk okuması listesi bu
 sayfayla birlikte: 206 madde + bu koşullar + işletmeci kimliği + eski serbest metinlerin saklama
 süresi.
+
+## Maaş bilgisi: girişli okuma, kullanıcı başına 10 kayıt, deneyim bandı, tek katkı sayfası (2026-09-16)
+
+**Neden.** Değerlendirmeler yapılandırılınca şirket sayfası bir "şeffaflık yüzeyi" oldu
+(2026-09-07 strateji notu); ikinci yarısı maaş. Kayıtlı kullanıcı bir şirketteki maaşını
+paylaşır, her katkı diğerini davet eder: değerlendirme yazan maaşını da paylaşmaya, maaş
+paylaşan şirketi değerlendirmeye çağrılır. Tasarım kanvası
+https://claude.ai/artifact/DKQAjUSaqYyose5m6Xekhq — kullanıcı **2B** (katkı sayfası: şirket bir
+kez seçilir, sağda Değerlendirme | Maaş Bilgisi anahtarı) ve **3B** (kayıttan sonra şerit + diğer
+form hazır) seçti; 2A/3A elendi.
+
+**Ürün kararları (kullanıcıyla bu oturumda).** Aylık **net** tutar + seçilebilir para birimi
+(TRY varsayılan; EUR/USD/GBP). Prim açık bir cevap (Yok / Var + yıllık tutar); satırda yalnızca
+nullable tutar durur — null "yok" demektir, "atlandı" değil (`HasBonus` yalnızca istekte).
+Zorunlu alanlar: pozisyon, şirket, toplam tecrübe yılı, çalışma şekli (`Domain.Common.EmploymentType`
+aynen), mevcut/eski çalışan (`SalaryEmploymentStatus`, kendi enum'u: stajyer burada bir çalışma
+şekli, üçüncü bir ilişki değil), aylık net + para birimi, prim cevabı. **Okumak da giriş ister**
+— give-to-get yok, giriş yeten herkes okur; anonim yüzey yalnızca public şirket yanıtındaki
+`salaryCount` (hassas değil, sekme etiketi için). Aynı şirkete farklı pozisyon için birden fazla
+kayıt (terfi senaryosu), tekillik `(UserId, CompanyId, NormalizedJobTitle)` —
+`JobTitleNormalizer` = `CompanyNameNormalizer`'ın Türkçe i-katlama + boşluk kuralı, hukuki ek
+kırpması olmadan. Toplam **10 kayıt** (`CompanySalaries:MaxEntriesPerUser`), silmek yer açar;
+kullanıcı başına override kolonu **açılmadı** (değerlendirmedeki `ReviewQuotaOverride`'ın gerekçesi
+spam'di; maaşta henüz o senaryo yok — gerekirse aynı kalıp).
+
+**Okuyucunun gördüğü.** Tek tek satırlar, ama tecrübe **bant** olarak (0–1, 2–4, 5–9, 10+;
+`ExperienceBands.From`) ve tarih ay hassasiyetinde. Gerekçe 2026-09-13'tekiyle aynı:
+değerlendirmede pozisyon adı bilerek yoktu çünkü "kıdemli backend + eski çalışan + Eylül 2026"
+küçük şirkette kişiyi teşhis eder; maaşta pozisyon **zorunlu** olduğundan telafi edici kontrol
+bant + ay. `CompanySalaryPublicResponse`'ta `YearsOfExperience` ve `UserId` **yok** — garanti
+yanıt tipinin kendisi; entegrasyon testi ham JSON'da ikisini de arıyor. Tam yıl yalnızca
+yazarın kendi listesinde ve KVKK dışa aktarımında. Para birimi başına medyan/min/maks yalnızca
+**≥3 kayıt** (`MinimumEntriesForStats`, değerlendirme eşiğiyle aynı asimetri: yükseltmek güvenli,
+düşürmek yayın kararı); pozisyona göre ayrılmaz (şirket başına tüm kayıtların ortası).
+
+**Pozisyon adı okuyucunun gördüğü tek serbest metindi** — aynı gün kapandı, aşağıdaki "Meslek
+kataloğu" girişine bakın: meslek artık listeden seçiliyor, maaş kaydında kullanıcı yazısı yok.
+Değerlendirmedeki bildirim/moderasyon yolunun maaşta olmaması bu yüzden bir açık madde değil:
+bildirilecek bir metin yok. Hukuk okuması listesi değişmedi (206 madde + koşullar + işletmeci
+kimliği + eski serbest metin saklama süresi).
+
+**Backend.** `CompanySalaryEntry` (`Domain/CompanySalaries`), tablo `CompanySalaryEntries`
+(numeric(12,2), enum'lar string, hesaba cascade FK, şirkete Restrict), migration
+`AddCompanySalaryEntries` yalnızca CREATE TABLE + 3 indeks + 2 FK (script elle okundu). Uçlar tek
+grupta `RequireAuthorization` + `CompanySalariesEnabledFilter` (bayrak `CompanySalaries:Enabled`,
+varsayılan açık; kapalıyken 404 + `salaryCount=0` + `/api/config` bildirir):
+`GET/POST /api/companies/{id}/salaries`, `GET …/salaries/me`, `GET /api/company-salaries/mine`,
+`PUT/DELETE /api/company-salaries/{id}`. Yazma limiti `company-salary-write` 5/saat kullanıcı
+bazlı — değerlendirmeyle **ayrı kova**: katkı sayfası maaştan hemen sonra değerlendirme istiyor,
+ikisi birbirinin beşini yememeli. Sahiplik → 404. Bant ve ay bellekte hesaplanır (EF `switch`
+çeviremez; sıralama projeksiyondan önce — 2026-09-13'teki iki EF tuzağı). Şirket seçimi mevcut
+`POST /api/companies/resolve`. `WithoutRequestAudit` eklenmedi. Dışa aktarım
+`AccountExportResponse.CompanySalaries` (sondaki nullable üye), silme FK cascade.
+
+**Web.** Tek sayfa `/contribute?tab=review|salary&company=<slug>`: taraf ve şirket URL'de
+(menüden gelen doğru tarafa düşer, yenileme şirketi tutar, şirket sayfası doğrudan bağlanır);
+`/my-reviews/write` yönlendirme olarak kaldı (`?company` taşınır, giriş dönüş allowlist'inde de).
+Menü: "Şirketler ▾" (ToolsMenu kalıbı) = Şirket dizini / Değerlendirme / Maaş Bilgisi; düz link
+satırdan çıktı; iki katkı linki yalnızca query'de farklı olduğu için hiçbiri "current" olmaz,
+tetikleyici altı çizili. 3B kararı saf fonksiyonda (`nextSideAfterSave`): maaştan sonra
+değerlendirme yalnızca o şirkete değerlendirme yoksa ve kota varsa; değerlendirmeden sonra maaş
+kota varsa (pozisyon başına olduğu için mevcut kayıt engel değil); yoksa eskisi gibi kendi
+listesine yönlendirme. Şirket sayfası: "Değerlendirmeler n | Maaşlar n" (client sekme, değerlendirme
+yarısı sunucuda render edilmeye devam eder — HTML'de kalsın diye; maaş yarısı girişli client
+fetch, ISR önbelleğine hiç girmez; `salaryCount` ≤60 sn gecikebilir). Girişsiz: bulanık **örnek**
+satırlar (statik, `aria-hidden`) + kilit kartı, `?next=/companies/<slug>?tab=salaries`.
+`/my-salaries` Değerlendirmelerim'in ikizi. `PUBLIC_MESSAGE_SCOPE`'a `companySalaries`,
+`salaryEmploymentStatus`, `salaryCurrency`, `employmentType` girdi. Gizlilik sayfasına
+"Paylaştığın maaş bilgileri" bölümü; silme/dışa aktarım metinleri "maaş bilgileri"ni sayıyor ve
+`copy.test.ts` bunu artık şart koşuyor; Kullanım Koşulları'na "Maaş bilgileri" bölümü + sorumluluk
+satırı; yardım konusu `/help/company-salaries` (iki görsel demo hesaptan CDP reçetesiyle çekildi;
+demo hesabın Beta A.Ş.'ye 1, Doğuş Teknoloji'ye 1 maaş kaydı ve Doğuş'a 1 değerlendirmesi var —
+silme, görseller onları gösteriyor).
+
+**Testler.** Birim 728 (entity, normalizer, bant, medyan, validator matrisi); entegrasyon: yeni
+sınıflar 12/12 + review/account/audit/config sınıfları 58/58 (girişsiz 401, ham JSON'da
+yıl/yazar yok, normalize başlık çakışması, kota + silme, sahiplik 404, eşikte medyan, public
+sayfada sayı, bayrak kapalı, export, cascade); web 490 + lint temiz (draft/parseAmount,
+3B kararı, redirect allowlist iki yeni şekil, chrome + contribute sözleşme testleri, kopya
+kuralları). Tarayıcıda (yerel yığın, demo hesap): menü, boş gönderim → her alan işaretli,
+maaş → (değerlendirme varsa) Maaşlarım; Doğuş Teknoloji'de maaş → şerit + değerlendirme formu →
+yayımla → şerit + maaş formu; "zaten değerlendirmen var" kartı; eski yazma adresi yönlendirmesi;
+şirket sayfası sekmesi girişli/girişsiz; düzenleme taslağı; 390 px.
+
+**Rollout.** Migration ek tablo, API önce; web sonra (eski API'ye karşı yeni menü linkleri 404
+verirdi). Bayrak varsayılan **açık** (onaylanan planın parçası; deploy anında `CompanySalaries:Enabled=false` ile kapatılabilir, web menü linklerini ve sekmeyi `/api/config`'ten okuyup gizler).
+
+### Meslek kataloğu: pozisyon serbest metin değil, ISCO-08 + piyasa unvanları listesinden seçim (2026-09-16)
+
+**Neden.** Maaş kaydındaki pozisyon adı okuyucunun gördüğü tek kullanıcı metniydi ("Sr. Backend
+Dev" / "Senior Backend Developer" iki ayrı meslek, bildirim yolu yok). Kullanıcı kararı: **serbest
+metin yok**, meslek Postgres'te önceden yüklü, iki dilli bir katalogdan yazdıkça aranarak seçilir;
+listede olmayan meslek için kayıt oluşmaz (combobox yalnızca "eşleşme yok" der, öneri kutusu ya da
+ipucu yok — kullanıcı kararı). Kapsam yalnızca maaş formu: başvuru/takip listesi pozisyon alanları
+serbest metin kalır (eklenti ilan sayfasından çekiyor, `/from-extension` additive-only).
+
+**Veri.** `Occupations` tablosu, 689 satır: ILO'nun ISCO-08 yapı dosyasından (`ISCO-08 EN
+Structure and definitions.xlsx`, 2021) alınan **436 birim grubunun resmi İngilizce adı** + her
+meslek grubuna dağılmış (yazılım/ürün/veri, mühendislik, finans/hukuk, İK/idari, satış/pazarlama,
+lojistik/üretim, sağlık, eğitim, bilim, konaklama/perakende/hizmet, inşaat/zanaat, kamu/medya/sanat)
+**253 piyasa unvanı** (`EK-0001…`, her biri bir ISCO birim grubuna eşli). **Türkçe adlar bizim
+yazdığımız çeviriler**, TÜİK'in resmi listesinden içe aktarım değil (TÜİK'in ISCO-08 çevirisi
+makinece indirilebilir biçimde yayımlanmıyor); TÜİK'in çoğul adlandırma biçimine uyuldu, CSV
+inceleme yüzeyi olarak duruyor. ILO dosyasındaki bariz yazım hataları ("Systems Aministrators",
+"Forwarding Aents") düzeltildi. Kimlik = koddan türetilen ad-tabanlı UUID (`Occupation.IdFor`,
+sabit namespace + SHA-1): her ortamda aynı satır aynı id, testler `IdFor("2512")` ile katalog
+satırına ulaşır.
+
+**Seed: sürümlü gömülü CSV + veri migration'ı, `HasData` değil.**
+`Infrastructure/Occupations/Seed/occupations.v1.csv` gömülü kaynak; `OccupationSeedReader` onu
+okur ve `AddOccupationsAndCompanySalaryEntries` migration'ı `migrationBuilder.Sql(BuildUpsertSql(1))`
+ile tek bir `INSERT … ON CONFLICT ("Code") DO UPDATE` çalıştırır. Migration kendi CSV sürümünü okur:
+katalog değişince `occupations.v2.csv` + yeni bir migration gelir, v1 hiç değişmez — her taze
+veritabanı (test container'ı, prod bundle'ı) aynı SQL'i görür. `HasData` seçilmedi: 689 satır model
+snapshot'ına ve **sonraki her migration'ın Designer dosyasına** (~250 KB) kopyalanırdı; 4 satırlık
+`EmailTemplates` için sorun olmayan şey burada olurdu. Silme yok: `IsActive=false` ile emekliye
+ayırma; `CompanySalaryEntries.OccupationId` FK **Restrict**. Entegrasyon harness'ının
+`TRUNCATE` listesi `Occupations`'ı `EmailTemplates` gibi atlıyor (seed veri, test verisi değil).
+
+**Arama.** `GET /api/occupations/search?q=` girişli (tek tüketici maaş formu); bayrağın
+**dışında** — katalog genel, ileride başka bir form da ondan seçebilir. Şirket aramasıyla aynı
+makine: `NormalizedNameTr`/`NormalizedNameEn` (Türkçe i katlaması + üst harf, `OccupationName`)
+üstünde iki `gin_trgm_ops` indeksi (`pg_trgm` uzantısı 2026-08-26'dan beri var), `ILIKE` +
+`TrigramsAreSimilar`, sıralama: önek eşleşmesi > içerme > en yüksek benzerlik. **Hangi dilde
+yazılırsa yazılsın iki ad da taranır**, yanıt iki adı da taşır; web arayüz dilinin adını, altında
+diğerini gösterir. `HybridCache` 10 dk (katalog yalnızca migration'la değişir). Adlandırılmış limit
+yok, global kullanıcı-bazlı limit yeter (`/api/companies/search` gibi).
+
+**Maaş kaydı.** `JobTitle`/`NormalizedJobTitle` gitti, `OccupationId` geldi; tekillik
+`(UserId, CompanyId, OccupationId)`; bilinmeyen/emekli id → 400 `COMPANY_SALARY_OCCUPATION_UNKNOWN`.
+Her yanıt `Occupation(Id, Code, NameTr, NameEn)` taşır; public satırda artık kullanıcı yazısı
+**hiç yok**. Sabahki `AddCompanySalaryEntries` migration'ı **değiştirilmedi, yerine yenisi
+üretildi**: hiçbir şey commit/deploy edilmemişti, yerel dev DB'deki dört satır atılabilir
+fikstürdü (yeniden yaratıldı). Web: `Combobox`'a geriye uyumlu `onSelect` + `hint` (ikinci satır)
+eklendi; seçimden sonra yazmak seçimi düşürür (`occupationId=null`), form "Listeden bir meslek
+seç" der. Gizlilik/koşullar/yardım metinlerindeki "pozisyon" → "meslek", serbest-metin uyarıları
+kaldırıldı. Testler: birim 720 (katalog bütünlüğü: 436 ISCO + ≥150 curated, benzersiz kod ve
+ad, EK satırları var olan birim gruba eşli, upsert her satırı bir kez; ad katlama; id türetimi
+sabitlendi), entegrasyon 67/67 (arama: EN sorgu TR satırı bulur ve tersi, i/ı katlama, önek önce,
+kısa sorgu boş, 10 tavan, emekli satır çıkmaz, anonim 401; maaş akışı katalog id'leriyle, bilinmeyen
+id 400, ham JSON'da `jobTitle` yok), web 483 + lint temiz. Tarayıcıda: "yazılım" → dört öneri iki
+dilli, "nurse" → TR hemşire satırları, "xyzqwv" → eşleşme yok, yazılıp seçilmeyen → red, seçim →
+kayıt → Maaşlarım TR adıyla, `/en` aynı satır "Software Architect", düzenleme seçimi geri yükler.

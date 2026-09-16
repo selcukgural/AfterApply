@@ -324,4 +324,22 @@
   <data name="VALIDATION_REVIEW_STATEMENT_UNKNOWN" xml:space="preserve">
     <value>One of the statements is not in the list for this section.</value>
   </data>
+  <data name="COMPANY_SALARY_QUOTA_REACHED" xml:space="preserve">
+    <value>You have reached your limit of {0} salary entries. Delete one to add another.</value>
+  </data>
+  <data name="COMPANY_SALARY_OCCUPATION_UNKNOWN" xml:space="preserve">
+    <value>Pick an occupation from the list.</value>
+  </data>
+  <data name="COMPANY_SALARY_ALREADY_EXISTS" xml:space="preserve">
+    <value>You have already shared a salary for this occupation at this company. Edit that entry instead.</value>
+  </data>
+  <data name="COMPANY_SALARY_CONTENT_INVALID" xml:space="preserve">
+    <value>The salary entry could not be saved: check the occupation, years of experience and amounts.</value>
+  </data>
+  <data name="VALIDATION_SALARY_BONUS_AMOUNT_REQUIRED" xml:space="preserve">
+    <value>Enter the annual bonus amount, or choose "no bonus".</value>
+  </data>
+  <data name="VALIDATION_SALARY_BONUS_AMOUNT_UNEXPECTED" xml:space="preserve">
+    <value>A bonus amount was given although "no bonus" is selected.</value>
+  </data>
 </root>

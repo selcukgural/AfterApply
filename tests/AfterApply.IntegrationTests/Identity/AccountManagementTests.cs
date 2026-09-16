@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.CompanyReviews.Contracts;
+using AfterApply.Application.CompanySalaries.Contracts;
 using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.TrackedJobs.Contracts;
@@ -12,6 +13,8 @@ using AfterApply.Domain.Auditing;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Domain.CompanySalaries;
+using AfterApply.Domain.Occupations;
 using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Notifications;
@@ -153,6 +156,8 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
         (await userA.PostAsync($"/api/company-reviews/{reviewByB}/helpful", null)).EnsureSuccessStatusCode();
         (await userA.PostAsJsonAsync($"/api/company-reviews/{reviewByB}/reports",
             new ReportCompanyReviewRequest(ReviewReportReason.Spam), JsonOptions)).EnsureSuccessStatusCode();
+        var salaryByA = await ShareSalaryAsync(userA, sharedCompanyId);
+        var salaryByB = await ShareSalaryAsync(userB, sharedCompanyId);
 
         Guid userAId;
         using (var scope = _factory!.Services.CreateScope())
@@ -190,8 +195,10 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
             (await db.CompanyReviewStatementPicks.AnyAsync(c => c.ReviewId == reviewByA)).ShouldBeFalse();
             (await db.CompanyReviewReports.AnyAsync(p => p.ReporterUserId == userAId)).ShouldBeFalse();
             (await db.CompanyReviewHelpfulMarks.AnyAsync(m => m.UserId == userAId)).ShouldBeFalse();
-            // B's review and the company it is about are untouched.
+            (await db.CompanySalaryEntries.AnyAsync(e => e.Id == salaryByA)).ShouldBeFalse();
+            // B's review, B's salary entry and the company they are about are untouched.
             (await db.CompanyReviews.AnyAsync(r => r.Id == reviewByB)).ShouldBeTrue();
+            (await db.CompanySalaryEntries.AnyAsync(e => e.Id == salaryByB)).ShouldBeTrue();
 
             // Shared Company must survive - user B's application still references it.
             var userBApplication = await db.Applications.SingleAsync(a => a.Id == userBApplicationId);
@@ -317,6 +324,34 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
         legacy.ManagementRating.ShouldBe(3);
         export.CompanyReviewReports.ShouldNotBeNull().ShouldHaveSingleItem().Reason.ShouldBe(ReviewReportReason.Advertising);
         export.HelpfulMarkedReviewIds.ShouldNotBeNull().ShouldBe([othersReview]);
+    }
+
+    [Fact]
+    public async Task ExportAccountData_Includes_Salary_Entries_With_The_Exact_Years()
+    {
+        var author = await RegisterAsync("export.salaries@example.com");
+        var companyId = await CompanyIdOfApplicationAsync(await CreateApplicationAsync(author, "Export Salary Co"));
+        await ShareSalaryAsync(author, companyId);
+
+        var export = await (await author.GetAsync("/api/users/me/export")).Content.ReadFromJsonAsync<AccountExportResponse>(JsonOptions);
+
+        var entry = export!.CompanySalaries.ShouldNotBeNull().ShouldHaveSingleItem();
+        entry.CompanyName.ShouldBe("Export Salary Co");
+        entry.OccupationCode.ShouldBe("2512");
+        entry.OccupationNameEn.ShouldBe("Software Developers");
+        entry.YearsOfExperience.ShouldBe(6);
+        entry.MonthlyNetAmount.ShouldBe(95_000m);
+        entry.Currency.ShouldBe(SalaryCurrency.TRY);
+        entry.AnnualBonusAmount.ShouldBe(120_000m);
+    }
+
+    private async Task<Guid> ShareSalaryAsync(HttpClient client, Guid companyId)
+    {
+        var response = await client.PostAsJsonAsync($"/api/companies/{companyId}/salaries",
+            new CompanySalaryRequest(Occupation.IdFor("2512"), 6, EmploymentType.FullTime, SalaryEmploymentStatus.CurrentEmployee,
+                95_000m, SalaryCurrency.TRY, true, 120_000m), JsonOptions);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        return (await response.Content.ReadFromJsonAsync<MyCompanySalaryResponse>(JsonOptions))!.Id;
     }
 
     private async Task<Guid> CompanyIdOfApplicationAsync(Guid applicationId)

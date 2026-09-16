@@ -100,8 +100,8 @@
         "description": "Connect your browser extension to your e-kariyerim account with a single confirmation."
       },
       "companies": {
-        "title": "Company Reviews",
-        "description": "Anonymous, moderated reviews of employers by the people who worked there: management, work environment, pay and career growth, scored openly."
+        "title": "Company Reviews and Salaries",
+        "description": "Anonymous, structured employer reviews from people who worked there — management, work environment, pay, career — and, once signed in, anonymous salary information by occupation. The score is computed in the open."
       },
       "companyScoring": {
         "title": "How Company Scores Are Calculated",
@@ -111,9 +111,21 @@
         "title": "My Reviews",
         "description": "The company reviews you wrote, their moderation status, and your remaining quota."
       },
+      "mySalaries": {
+        "title": "My Salaries",
+        "description": "The salary entries you shared and how many you have left."
+      },
+      "contribute": {
+        "title": "Company contribution",
+        "description": "Write an anonymous review or share salary information for a company."
+      },
       "helpCompanyReviews": {
         "title": "Company Reviews",
         "description": "Read company reviews and write an anonymous one; how moderation, editing and reporting work."
+      },
+      "helpCompanySalaries": {
+        "title": "Salary Information",
+        "description": "Read salaries at companies and share your own anonymously; the occupation is picked from a list — who sees what, and how to edit."
       },
       "helpCvScan": {
         "title": "CV Scan",
@@ -197,7 +209,7 @@
         "companies": {
           "eyebrow": "Company reviews · anonymous, no account needed",
           "title": "Know what it's like inside before you apply.",
-          "body": "What working at a company is actually like — an overall score, averages for up to ten areas and the statements picked most often. Reading needs no account; writing only needs a sign-in.",
+          "body": "What working at a company is really like — an overall score, up to ten category averages, the most-picked statements and employees' anonymous salary reports. Reading reviews needs no account; salaries and writing need only a sign-in.",
           "bullet1": "Authors stay invisible: only the month and the relationship (current, former, intern)",
           "bullet2": "No free text: every statement comes from a fixed list written to be fair to everyone",
           "bullet3": "The score formula is public; no score is shown below three approved reviews",
@@ -217,7 +229,7 @@
         }
       },
       "companiesTitle": "Company reviews",
-      "companiesBody": "Anonymous, structured reviews from people who worked there — ratings and ready-made statements, no free text.",
+      "companiesBody": "Anonymous, structured reviews and salary information by occupation from people who worked there — ratings and fixed statements, no free text.",
       "companiesCta": "Browse companies"
     },
     "problem": {
@@ -264,7 +276,7 @@
       "cvTitle": "Know which CV you sent",
       "cvBody": "Keep the CV files you apply with in one place, and record on each application which one went out — so a call six weeks later doesn't start with guesswork.",
       "companiesTitle": "Know companies from the inside",
-      "companiesBody": "Anonymous reviews from people who worked there and a score with a public formula — read without an account, write once signed in.",
+      "companiesBody": "Anonymous reviews from people who worked there, a score with a published formula, and salary information by occupation — read reviews without an account, see salaries and add your own once signed in.",
       "companiesCta": "Browse companies",
       "companiesBadge": "New"
     },
@@ -404,7 +416,12 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "toolsMenu": "Tools",
-    "toolsNote": "No account needed"
+    "toolsNote": "No account needed",
+    "companiesNote": "Both anonymous, both need sign-in",
+    "mySalaries": "My Salaries",
+    "contributeSalary": "Salary Info",
+    "contributeReview": "Review",
+    "companyDirectory": "Company directory"
   },
   "auth": {
     "login": {
@@ -666,7 +683,8 @@
       "next": "Next",
       "last": "Last",
       "pageInfoCompanies": "Page {page} / {totalPages} ({totalCount} companies)",
-      "pageInfoReminders": "Page {page} / {totalPages} ({totalCount} reminders)"
+      "pageInfoReminders": "Page {page} / {totalPages} ({totalCount} reminders)",
+      "pageInfoSalaries": "Page {page} / {totalPages} ({totalCount} salary entries)"
     },
     "form": {
       "companyName": "Company Name",
@@ -833,7 +851,7 @@
     "title": "Account Settings",
     "export": {
       "title": "Export My Data",
-      "description": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent and your company reviews (with your reports and helpful marks) as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
+      "description": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks) and the salary entries you shared as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
       "download": "Download My Data",
       "preparing": "Preparing...",
       "error": "Could not export data."
@@ -866,14 +884,14 @@
     },
     "delete": {
       "title": "Delete My Account",
-      "description": "This action cannot be undone. Your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent — will be permanently deleted.",
+      "description": "This action cannot be undone. Your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent — will be permanently deleted.",
       "passwordLabel": "Your Password",
       "confirmLabel": "Type \"DELETE\" to confirm",
       "confirmWord": "DELETE",
       "confirmMismatch": "Type \"DELETE\" in the box to confirm.",
       "submit": "Permanently Delete My Account",
       "deleting": "Deleting...",
-      "finalConfirm": "Final warning: your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent, plus your extension connections — will be permanently deleted. This cannot be undone. Do you want to continue?",
+      "finalConfirm": "Final warning: your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent, plus your extension connections — will be permanently deleted. This cannot be undone. Do you want to continue?",
       "genericError": "Could not delete account.",
       "noPasswordHint": "This account was created with Google, LinkedIn or GitHub and has no password. Type the confirmation word below to delete it."
     }
@@ -966,7 +984,7 @@
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "Apart from the request log, this data is used solely to provide you with application tracking and personal analytics features; the request log serves only the security and legal purposes listed above.",
       "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link.",
-      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\")."
+      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\")."
     },
     "googleSignIn": {
       "title": "Sign in with Google",
@@ -1022,7 +1040,7 @@
       "title": "Your rights",
       "before": "You can export a copy of your data or permanently delete your account at any time. You can do this from the",
       "link": "Account Settings",
-      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
+      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
     },
     "notApplicable": {
       "title": "Not currently applicable",
@@ -1077,6 +1095,17 @@
       "storage": "Reviews, reports and helpful marks are stored in our own database and are not sent to any third party.",
       "deletion": "Deleting your account deletes your reviews, your reports and your helpful marks. Reviews you wrote disappear from the company pages and from the company's score; this is also what your data export contains.",
       "legalBasis": "Lawful basis: your explicit action — you choose to write, report or mark — and, for moderation, legitimate interest: keeping what is published about a named company fair and lawful."
+    },
+    "companySalaries": {
+      "title": "Salary information you share",
+      "intro": "Sharing your salary at a company is optional and requires an account. When you do:",
+      "what": "Your entry — the occupation you picked from the list, total years of experience, employment type, whether you are a current or former employee, monthly net salary with its currency, and the annual bonus if any — is stored linked to your account. There is no free text: the occupation comes from a catalogue based on ISCO-08.",
+      "whoSees": "Entries are shown only to signed-in users; the public company page says only how many entries there are.",
+      "band": "Readers see an experience band (0–1, 2–4, 5–9, 10+) rather than your exact years, and the month rather than the day. Deliberately: together with an occupation, the exact years and date would give away who wrote it at a small company.",
+      "noAuthor": "A published entry never shows your name, e-mail or account, and contains nothing you typed. Only we can see the account behind an entry.",
+      "storage": "Entries are stored in our own database and are not sent to any third party.",
+      "deletion": "You can delete an entry from My Salaries at any time. Deleting your account deletes all of them; your data export includes them with the exact years.",
+      "legalBasis": "Legal basis: your explicit action — you choose to share."
     }
   },
   "terms": {
@@ -1089,6 +1118,7 @@
       "tracking": "A dashboard that records your applications, tracked jobs and reminders; import from a LinkedIn export; a Chrome extension that collects signals from job pages and from replies in Gmail.",
       "tools": "Tools that work without an account: CV scan, reply-rate benchmark, and reading company reviews.",
       "reviews": "Public company pages where registered users write anonymous, structured reviews of companies.",
+      "salaries": "Salary information: signed-in users share their salary at a company anonymously and read each other's entries.",
       "asIs": "The service is provided as is. We may change, pause or remove features; on a free service we do not promise advance notice, but a change that affects user data is announced on this page and, where needed, by email."
     },
     "account": {
@@ -1108,6 +1138,15 @@
       "noManipulation": "Using reviews in an organised way to favour or harm a company — several accounts, reviews written for something in return, coordinated rating — is prohibited and leads to the account being closed.",
       "opinion": "Every published review is its author's personal opinion; it is not a statement by e-kariyerim about a company and we do not guarantee its accuracy.",
       "companies": "If you represent a company and believe a review about it breaks the rules, you can report that review or write to the address below."
+    },
+    "salaries": {
+      "title": "Salary information",
+      "intro": "When you share your salary at a company:",
+      "ownData": "You share only your own salary; not someone else's, and not hearsay.",
+      "accurate": "The amounts and the occupation you pick must be truthful.",
+      "signedInOnly": "Entries are shown anonymously to signed-in users; readers see the occupation and an experience band, not your name.",
+      "quota": "Ten entries per account in total, one per occupation at the same company. Deleting frees a slot.",
+      "opinion": "Entries are user reports; e-kariyerim does not verify them, and they are not advice for salary negotiation."
     },
     "content": {
       "title": "Your content and licence",
@@ -1129,7 +1168,8 @@
       "noAdvice": "The output of tools such as the CV scan, the benchmark and job matching is for information; it is not professional advice on careers, law or anything else. Decisions you base on it remain yours.",
       "thirdParties": "The employers you apply to, and third parties such as LinkedIn, kariyer.net and Google, are not under our control; your relationship with them is subject to their own terms.",
       "availability": "We do not promise that the service will be uninterrupted or error-free. To the extent applicable law allows, we are not liable for indirect damages arising from use of, or inability to use, the service.",
-      "reviewsDisclaimer": "Company reviews are users' opinions; if you believe a review has harmed you, use the report path first — every report is read by a moderator."
+      "reviewsDisclaimer": "Company reviews are users' opinions; if you believe a review has harmed you, use the report path first — every report is read by a moderator.",
+      "salariesDisclaimer": "Salary entries are users' own reports; they are not verified and are not advice for salary negotiation or any other decision."
     },
     "termination": {
       "title": "Suspension and termination",
@@ -1357,7 +1397,12 @@
     "employmentStatusRequired": "Choose your relationship to the company",
     "ratingRequired": "Give a rating from 1 to 5",
     "reviewStatementsTooMany": "At most 5 statements per list",
-    "reviewStatementUnknown": "One of the statements is not in the list"
+    "reviewStatementUnknown": "One of the statements is not in the list",
+    "salaryAmountInvalid": "Enter a valid amount",
+    "salaryYearsInvalid": "Enter a whole number of years between 0 and 50",
+    "salaryCurrencyRequired": "Select a currency",
+    "salaryBonusAmountInvalid": "Enter the bonus amount if there is one, otherwise leave it empty",
+    "salaryOccupationRequired": "Pick an occupation from the list"
   },
   "errors": {
     "generic": "The request failed.",
@@ -1487,6 +1532,7 @@
       "faq": "FAQ",
       "cv": "My CVs",
       "companyReviews": "Company Reviews",
+      "companySalaries": "Salary Information",
       "cvScan": "CV Scan",
       "benchmark": "Reply Rate Benchmark"
     },
@@ -1557,6 +1603,9 @@
         },
         "companyReviews": {
           "description": "Read anonymous employee reviews and write your own."
+        },
+        "companySalaries": {
+          "description": "Read salaries at companies and share your own anonymously."
         },
         "cvScan": {
           "description": "Measure how machine-readable your CV is, no account needed."
@@ -1838,7 +1887,7 @@
       "intro": "Settings is where you export your data, manage the browser extension's connection and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "export": {
         "title": "Export My Data",
-        "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent and your company reviews (with your reports and helpful marks) as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
+        "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks) and the salary entries you shared as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
       },
       "extension": {
         "title": "Browser extension connection",
@@ -1868,7 +1917,7 @@
         "body": "Enter your password, type \"DELETE\" into the box, and click the button. A second warning tells you that all of your data will be deleted; once you confirm that too, your account and all of your data are permanently deleted.",
         "calloutIrreversible": {
           "title": "This can't be undone",
-          "body": "Once your account is deleted, everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent — is permanently gone; there's no way to reverse it."
+          "body": "Once your account is deleted, everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent — is permanently gone; there's no way to reverse it."
         }
       }
     },
@@ -1960,7 +2009,7 @@
       },
       "q2": {
         "question": "Can I get my data back after deleting my account?",
-        "answer": "No. Account deletion can't be undone; your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent are permanently deleted. You can export your data from Account Settings before deleting."
+        "answer": "No. Account deletion can't be undone; your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent are permanently deleted. You can export your data from Account Settings before deleting."
       },
       "q3": {
         "question": "What if the Chrome extension reads a job's details wrong?",
@@ -2012,7 +2061,11 @@
       },
       "q15": {
         "question": "What can I use on e-kariyerim without an account?",
-        "answer": "Three things: CV Scan (how machine-readable your CV is), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension and writing a review need a free account."
+        "answer": "Three things: CV Scan (how machine-readable your CV is), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension, writing a review, and reading or sharing salary information need a free account."
+      },
+      "q16": {
+        "question": "Is the salary I share anonymous, and who sees it?",
+        "answer": "Yes. A salary entry never shows your name, e-mail or account; readers see the occupation you picked from the list, your experience as a band (0–1, 2–4, 5–9, 10+ years), your employment type, whether you are a current or former employee, the month and the amount. There is no free text. Only signed-in users can read salary entries; you can edit or delete yours on My Salaries."
       }
     },
     "cv": {
@@ -2107,6 +2160,57 @@
       "report": {
         "title": "If you see a review that breaks the rules",
         "body": "Use the \"Report this review\" link on any review card, pick a reason and leave a short note. Reports are looked at by a moderator; the review may stay up, the author may be asked to change it, or it may be removed. The \"Helpful\" mark feeds the sorting; neither a report nor a helpful mark reveals your identity to anyone else."
+      }
+    },
+    "companySalaries": {
+      "eyebrow": "Companies",
+      "title": "Salary information",
+      "intro": "What people earn at a company — anonymous reports from people who worked there, with an occupation picked from a catalogue and an experience band. Reading and writing both need sign-in.",
+      "read": {
+        "title": "Reading salaries",
+        "step1": {
+          "title": "Sign in",
+          "body": "Salary entries are only shown to signed-in users. The Salaries tab on a company page shows you the sign-in first if you are not, then brings you back to the same tab."
+        },
+        "step2": {
+          "title": "Open the Salaries tab on a company page",
+          "body": "Each entry is one row: occupation, experience band (0–1, 2–4, 5–9, 10+ years), employment type, current or former employee, month and monthly net amount; the annual bonus if there is one. Nobody sees the author."
+        },
+        "step3": {
+          "title": "Know how to read the median",
+          "body": "Once enough entries exist in one currency, the median and the lowest–highest range appear at the top; until then there are only rows. The median is not split by occupation — it is the middle of every entry at the company."
+        }
+      },
+      "write": {
+        "title": "Sharing a salary",
+        "step1": {
+          "title": "Open the contribution page",
+          "body": "In the top menu, Companies ▾ → Salary Info, or the \"Share a salary\" button on a company page. Reviews are written on the same page; the switch at the top moves between the two."
+        },
+        "step2": {
+          "title": "Pick the company",
+          "body": "The company is picked once and applies to both forms. If yours is not listed, type its name to add it."
+        },
+        "step3": {
+          "title": "Fill in the form",
+          "body": "Occupation, total years of experience, employment type, current/former employee, monthly net salary with its currency, and whether there is a bonus — all required. The occupation is picked from a catalogue: start typing, find it by its Turkish or English name and pick it; an entry cannot be created for an occupation that is not listed."
+        },
+        "step4": {
+          "title": "Share",
+          "body": "The entry is visible to signed-in readers immediately. You are then invited to review the same company; you can skip that."
+        }
+      },
+      "calloutAnonymous": {
+        "title": "Entries are anonymous",
+        "body": "Readers never see your name, e-mail or exact years; only the occupation, band, employment type, relationship and month. The exact years are only on your own list and in your data export."
+      },
+      "calloutLimits": {
+        "title": "One entry per occupation, ten in total",
+        "body": "You can add several entries for one company under different occupations (a promotion, say); for the same occupation, edit the existing entry instead of adding a second. Ten entries per account in total; deleting frees a slot."
+      },
+      "manage": {
+        "title": "Editing and deleting",
+        "body": "The My Salaries page lists every entry you shared with its full figures. Edit changes the amounts and moves the entry's month to today; Delete removes it entirely."
       }
     },
     "cvScan": {
@@ -2670,6 +2774,16 @@
     "FormerEmployee": "Former employee",
     "Intern": "Intern"
   },
+  "salaryEmploymentStatus": {
+    "CurrentEmployee": "Current employee",
+    "FormerEmployee": "Former employee"
+  },
+  "salaryCurrency": {
+    "TRY": "TRY ₺",
+    "EUR": "EUR €",
+    "USD": "USD $",
+    "GBP": "GBP £"
+  },
   "reviewModerationStatus": {
     "Pending": "Awaiting review",
     "Approved": "Published",
@@ -2697,8 +2811,8 @@
   },
   "companies": {
     "directory": {
-      "title": "Company reviews",
-      "subtitle": "What it is actually like to work somewhere, from the people who did — anonymous, structured, no free text.",
+      "title": "Company reviews and salaries",
+      "subtitle": "What working somewhere is really like and what it pays — from people who worked there; anonymous, structured, no free text. Reviews are public, salaries are for signed-in readers.",
       "searchPlaceholder": "Search a company…",
       "searchLabel": "Search companies",
       "writeCta": "Write a review",
@@ -2713,7 +2827,7 @@
       "explainer": {
         "what": {
           "title": "What a review holds",
-          "body": "An overall rating, up to ten optional area ratings — management, pay, remote work and more — and a few ready-made statements about what was liked and what could be better."
+          "body": "One overall rating, up to ten optional category ratings — management, pay, remote work and more — and a few fixed statements about what was good and what could improve. Signed in, also salary entries with the occupation, an experience band and the monthly net amount."
         },
         "anonymous": {
           "title": "Anonymous",
@@ -2726,12 +2840,17 @@
       }
     },
     "page": {
-      "metaTitle": "{company} reviews",
-      "metaDescription": "{count, plural, =0 {No published review of {company} yet — be the first.} =1 {1 anonymous employee review of {company}, with a score you can check.} other {# anonymous employee reviews of {company}, with a score you can check.}}",
+      "metaTitle": "{company} reviews and salaries",
+      "metaDescription": "{count, plural, =0 {No published reviews of {company} yet — be the first. Salaries shared by employees are visible once you sign in.} =1 {1 anonymous employee review of {company}, a score you can check, and anonymous salary information by occupation once you sign in.} other {# anonymous employee reviews of {company}, a score you can check, and anonymous salary information by occupation once you sign in.}}",
       "breadcrumbLabel": "Breadcrumb",
       "allCompanies": "← All companies",
-      "subtitle": "Anonymous, structured reviews from people who worked here.",
+      "subtitle": "Anonymous, structured reviews and salary information from people who worked here.",
       "website": "Website ↗",
+      "tabs": {
+        "label": "Company page sections",
+        "reviews": "Reviews",
+        "salaries": "Salaries"
+      },
       "disclaimer": "Reviews are the personal opinions of their anonymous authors, not statements by e-kariyerim. Reviews are made of ratings and ready-made statements only; if one still looks wrong, use “Report this review” and a moderator will look at it."
     },
     "summary": {
@@ -3825,6 +3944,154 @@
             "sentence": "Training for new employees could be increased."
           }
         }
+      }
+    }
+  },
+  "companySalaries": {
+    "form": {
+      "heading": "Salary at {company}",
+      "anonymityNote": "Readers see the occupation and an experience band, not your name. The occupation is picked from a catalogue; your exact years are shown as a band (e.g. 2–4 years).",
+      "occupation": "Occupation",
+      "occupationPlaceholder": "Start typing your occupation (e.g. backend, nurse, accounting)",
+      "occupationSearching": "Searching…",
+      "occupationNoMatch": "No match",
+      "occupationHint": "Pick from the list; typed text is not saved. You can search in either language.",
+      "years": "Total experience (years)",
+      "yearsHint": "In the profession, not at this company.",
+      "employmentType": "Employment type",
+      "employmentTypePlaceholder": "Select",
+      "employmentStatus": "Employment status",
+      "monthlyNet": "Monthly net salary",
+      "monthlyNetPlaceholder": "e.g. 95,000",
+      "monthlyNetHint": "What lands in your account each month. Leave bonuses and benefits out.",
+      "currency": "Currency",
+      "bonus": "Bonus",
+      "bonusNo": "None",
+      "bonusYes": "Yes",
+      "bonusAmount": "Annual bonus amount",
+      "bonusAmountPlaceholder": "Annual total, e.g. 120,000",
+      "bonusUnit": "{currency} / year",
+      "bonusHint": "Annual total, in the same currency as the salary.",
+      "quotaNote": "Quota: {used} / {limit} salary entries. Visible to signed-in readers the moment you save.",
+      "publishNote": "Visible to signed-in readers the moment you save.",
+      "submitting": "Saving…",
+      "problems": {
+        "occupationRequired": "Pick an occupation from the list",
+        "yearsInvalid": "Enter a whole number of years between 0 and 50",
+        "employmentTypeRequired": "Select the employment type",
+        "employmentStatusRequired": "Select your employment status",
+        "amountInvalid": "Enter a valid amount (1 – 10,000,000)",
+        "bonusAnswerRequired": "Say whether there is a bonus",
+        "bonusAmountInvalid": "Enter the annual bonus amount (1 – 10,000,000)"
+      }
+    },
+    "guidelines": {
+      "title": "How salary sharing works here",
+      "intro": "Your name appears nowhere. Readers see the occupation, the experience band, the employment type and the amounts.",
+      "signedIn": "Only signed-in users can read entries.",
+      "band": "Years of experience are shown as a band: 0–1, 2–4, 5–9, 10+.",
+      "month": "Dates are month precision (e.g. September 2026).",
+      "perTitle": "You can add several entries for one company under different occupations; ten entries in total.",
+      "editable": "You can edit or delete an entry from My Salaries.",
+      "fullGuide": "Full guide →"
+    },
+    "write": {
+      "submit": "Share salary",
+      "error": "Something went wrong. Please try again."
+    },
+    "edit": {
+      "title": "Edit your salary entry",
+      "subtitle": "Changes are visible the moment you save; the entry's month becomes today's.",
+      "loading": "Loading…",
+      "notFound": "This entry is not yours or no longer exists.",
+      "backToMine": "Back to My Salaries",
+      "submit": "Save",
+      "error": "Something went wrong. Please try again."
+    },
+    "mine": {
+      "title": "My Salaries",
+      "subtitle": "The salary entries you shared.",
+      "quota": "{used} of {limit} used",
+      "share": "New salary entry",
+      "loading": "Loading…",
+      "error": "Something went wrong. Please try again.",
+      "empty": "You have not shared a salary yet.",
+      "emptyBody": "Share your salary at a company anonymously; readers see the occupation and an experience band, not you.",
+      "emptyCta": "Share a salary →",
+      "years": "{count, plural, =1 {1 year of experience} other {# years of experience}}",
+      "perMonthNet": "/ month net",
+      "bonus": "Bonus: {amount} / year",
+      "noBonus": "No bonus",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete this salary entry?",
+      "deleteBody": "The entry is deleted permanently and its quota slot is freed.",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete",
+      "footnote": "Deleting frees the quota slot. Entries are deleted with your account and included in your data export."
+    },
+    "panel": {
+      "heading": "{count, plural, =0 {Salary entries} =1 {1 salary entry} other {# salary entries}}",
+      "share": "Share a salary",
+      "readingNote": "Salary entries are what users reported; e-kariyerim does not verify them. The occupation is picked from a catalogue, experience is shown as a band and dates at month precision.",
+      "yours": "{count, plural, =1 {You have 1 salary entry at this company.} other {You have # salary entries at this company.}}",
+      "manageYours": "My Salaries",
+      "loading": "Loading…",
+      "loadError": "Salary entries could not be loaded. Please try again.",
+      "statsPending": "The median and range appear once at least {minimum} entries exist in one currency.",
+      "empty": "No salaries have been shared for this company yet.",
+      "emptyCta": "Be the first to share",
+      "experience": "{band} experience",
+      "perMonthNet": "/ month net",
+      "bonus": "Bonus: {amount} / year",
+      "noBonus": "No bonus",
+      "lockedTitle": "Salary entries are for signed-in users",
+      "lockedBody": "{company} has {count, plural, =0 {no salary entries yet} =1 {1 anonymous salary entry} other {# anonymous salary entries}}. Sign in to see them and add your own.",
+      "signIn": "Sign in",
+      "register": "Register"
+    },
+    "stats": {
+      "median": "Median monthly net",
+      "sample": "{count} entries · {currency}",
+      "range": "Range",
+      "rangeHint": "lowest – highest",
+      "basis": "How it is computed",
+      "basisBody": "The median of every entry in one currency; not split by occupation or experience."
+    },
+    "bands": {
+      "ZeroToOne": "0–1 years",
+      "TwoToFour": "2–4 years",
+      "FiveToNine": "5–9 years",
+      "TenPlus": "10+ years"
+    }
+  },
+  "contribute": {
+    "title": "Company contribution",
+    "subtitle": "Reviews and salary entries are both anonymous, and both go live the moment you save.",
+    "companyLabel": "Company",
+    "status": "At this company: {reviews, plural, =0 {no review} other {1 review}}, {salaries, plural, =0 {no salary entries} =1 {1 salary entry} other {# salary entries}}",
+    "statusReviewsOnly": "At this company: {reviews, plural, =0 {no review} other {1 review}}",
+    "error": "Something went wrong. Please try again.",
+    "alreadyReviewed": "You already have a review of {company}",
+    "alreadyReviewedHint": "One review per company; edit it if your view has changed.",
+    "editReview": "Edit your review",
+    "salaryQuotaFull": "You have used all {limit} salary entries. Delete one on My Salaries to add another.",
+    "goToMySalaries": "Go to My Salaries",
+    "tabs": {
+      "label": "Contribution type",
+      "review": "Review",
+      "salary": "Salary Info"
+    },
+    "banner": {
+      "review": {
+        "thanks": "Thank you, your review is live.",
+        "invite": "You can share your salary at {company} too — the form below is ready.",
+        "skip": "Skip, go to My Reviews"
+      },
+      "salary": {
+        "thanks": "Thank you, your salary entry is saved.",
+        "invite": "You can leave a review of {company} too — the form below is ready.",
+        "skip": "Skip, go to My Salaries"
       }
     }
   },

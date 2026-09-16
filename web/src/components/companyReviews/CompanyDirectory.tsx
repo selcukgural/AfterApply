@@ -35,7 +35,7 @@ export function CompanyDirectory() {
     queryFn: () => companiesApi.listPublic(query, page),
   });
 
-  const writeHref = isAuthenticated ? "/my-reviews/write" : `/login?next=${encodeURIComponent("/my-reviews/write")}`;
+  const writeHref = isAuthenticated ? "/contribute?tab=review" : `/login?next=${encodeURIComponent("/contribute?tab=review")}`;
 
   return (
     <div className="flex flex-col gap-6">

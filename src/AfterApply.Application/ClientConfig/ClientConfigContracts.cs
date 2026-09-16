@@ -12,7 +12,8 @@ public sealed record ClientConfigResponse(
     LinkedInAuthConfigResponse LinkedInAuth,
     GitHubAuthConfigResponse GitHubAuth,
     CvScanConfigResponse CvScan,
-    CompanyReviewsConfigResponse? CompanyReviews = null);
+    CompanyReviewsConfigResponse? CompanyReviews = null,
+    CompanySalariesConfigResponse? CompanySalaries = null);
 
 /// <summary>Mirrors ASP.NET Identity's <c>PasswordOptions</c>, which is what the server actually
 /// validates against — the response is built from that object, not from a copy of the config.</summary>
@@ -57,3 +58,8 @@ public sealed record CvScanConfigResponse(bool ContentNotesAvailable);
 /// feature is on at all, the quota the form should count down from, and the two numbers the
 /// scoring page prints so its formula quotes the live configuration rather than a copy.</summary>
 public sealed record CompanyReviewsConfigResponse(bool Enabled, int MaxReviewsPerUser, int MinimumReviewsForScore, int PriorWeight);
+
+/// <summary>What the contribute page and the company page's salary tab need before rendering:
+/// whether the feature is on (off hides the menu links and the tab), the quota the form counts
+/// down from, and the threshold under which no median is shown.</summary>
+public sealed record CompanySalariesConfigResponse(bool Enabled, int MaxEntriesPerUser, int MinimumEntriesForStats);

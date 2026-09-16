@@ -91,7 +91,15 @@ export function UserMenu({ name, initials, onLogout, showAdmin }: UserMenuProps)
           >
             {t("myReviews")}
           </Link>
-          {/* Below the two everyone has, and separated from them: it is the same menu the rest of
+          <Link
+            role="menuitem"
+            href="/my-salaries"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {t("mySalaries")}
+          </Link>
+          {/* Below the three everyone has, and separated from them: it is the same menu the rest of
               the utility links live in, so an admin reaches the page by clicking rather than by
               remembering a URL, without the primary nav growing an item that only one account
               would ever see. */}

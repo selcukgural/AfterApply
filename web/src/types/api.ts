@@ -542,6 +542,14 @@ export interface CompanyReviewsConfig {
   priorWeight: number;
 }
 
+/** Whether salary entries are switched on, the quota the form counts down from, and the
+ *  per-currency threshold under which the company page shows no median. */
+export interface CompanySalariesConfig {
+  enabled: boolean;
+  maxEntriesPerUser: number;
+  minimumEntriesForStats: number;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
@@ -551,6 +559,8 @@ export interface ClientConfigResponse {
   cvScan: CvScanConfig;
   // Optional: an API deployed before the reviews feature answers without it.
   companyReviews?: CompanyReviewsConfig;
+  // Optional for the same reason.
+  companySalaries?: CompanySalariesConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -989,6 +999,9 @@ export interface CompanyPublicResponse {
   name: string;
   website: string | null;
   summary: CompanyReviewSummary;
+  /** How many salary entries a signed-in reader would find. Optional: an API deployed before the
+   *  salary feature answers without it. */
+  salaryCount?: number;
 }
 
 export interface CompanyPublicListItem {
@@ -1187,4 +1200,101 @@ export interface BulkReminderRequest {
 /** Mirrors AfterApply.Application.Notifications.Contracts.BulkReminderResponse. */
 export interface BulkReminderResponse {
   affected: number;
+}
+
+// ---- Company salaries -------------------------------------------------------------------------
+
+export type SalaryCurrency = "TRY" | "EUR" | "USD" | "GBP";
+
+/** Its own pair, not the reviews' EmploymentStatus: an internship is an EmploymentType here. */
+export type SalaryEmploymentStatus = "CurrentEmployee" | "FormerEmployee";
+
+/** What readers see instead of the exact years — see CompanySalaryPublic. */
+export type ExperienceBand = "ZeroToOne" | "TwoToFour" | "FiveToNine" | "TenPlus";
+
+/** A row of the seeded occupation catalogue, as it rides on every salary response. */
+export interface OccupationRef {
+  id: string;
+  code: string;
+  nameTr: string;
+  nameEn: string;
+}
+
+export type OccupationSearchResult = OccupationRef;
+
+export interface CompanySalaryRequest {
+  /** From the catalogue (`/api/occupations/search`); typed text is never accepted. */
+  occupationId: string;
+  yearsOfExperience: number;
+  employmentType: EmploymentType;
+  employmentStatus: SalaryEmploymentStatus;
+  monthlyNetAmount: number;
+  currency: SalaryCurrency;
+  hasBonus: boolean;
+  annualBonusAmount: number | null;
+}
+
+/** Another person's entry, as a signed-in reader sees it: no author, the band instead of the
+ *  years, the month instead of the date. */
+export interface CompanySalaryPublic {
+  id: string;
+  occupation: OccupationRef;
+  experienceBand: ExperienceBand;
+  employmentType: EmploymentType;
+  employmentStatus: SalaryEmploymentStatus;
+  monthlyNetAmount: number;
+  currency: SalaryCurrency;
+  annualBonusAmount: number | null;
+  /** yyyy-MM */
+  submittedMonth: string;
+}
+
+/** Per currency; the three figures are null below `minimumForStats`. */
+export interface SalaryCurrencyStat {
+  currency: SalaryCurrency;
+  count: number;
+  medianMonthlyNet: number | null;
+  minMonthlyNet: number | null;
+  maxMonthlyNet: number | null;
+}
+
+export interface CompanySalaryPage {
+  items: CompanySalaryPublic[];
+  total: number;
+  page: number;
+  pageSize: number;
+  stats: SalaryCurrencyStat[];
+  minimumForStats: number;
+}
+
+/** The author's own row: everything, including the exact years. */
+export interface MyCompanySalary {
+  id: string;
+  companyId: string;
+  companySlug: string;
+  companyName: string;
+  occupation: OccupationRef;
+  yearsOfExperience: number;
+  employmentType: EmploymentType;
+  employmentStatus: SalaryEmploymentStatus;
+  monthlyNetAmount: number;
+  currency: SalaryCurrency;
+  annualBonusAmount: number | null;
+  submittedAt: string;
+  updatedAt: string;
+}
+
+export interface SalaryQuota {
+  used: number;
+  limit: number;
+}
+
+export interface MySalariesResponse {
+  items: MyCompanySalary[];
+  quota: SalaryQuota;
+}
+
+export interface CompanySalaryViewerState {
+  ownEntries: MyCompanySalary[];
+  quota: SalaryQuota;
 }

@@ -41,6 +41,25 @@ describe("the signed-in navbar", () => {
     expect(read("components/layout/UserMenu.tsx")).not.toContain("TOOL_LINKS");
   });
 
+  it("groups the company directory and the two contributions under one trigger", () => {
+    // 2026-09-16: "Companies" became a group (the ToolsMenu shape) so a review and a salary are
+    // one click from anywhere. The directory stays reachable from inside it; both contribute
+    // links open the same page on a different side; the mobile menu lists the same three.
+    const companiesMenu = read("components/layout/CompaniesMenu.tsx");
+    for (const href of ['"/companies"', '"/contribute?tab=review"', '"/contribute?tab=salary"']) {
+      expect(companiesMenu).toContain(href);
+    }
+    expect(companiesMenu).toContain('aria-haspopup="menu"');
+    expect(companiesMenu).toContain('from "@/components/layout/navLink"');
+    expect(navBar).toContain("<CompaniesMenu />");
+    expect(navBar).toContain("COMPANY_LINKS.map");
+    // Not twice: the plain link left the row when the group arrived.
+    expect(navBar).not.toMatch(/href: "\/companies"/);
+    // The author's two lists sit together in the avatar menu and the mobile menu.
+    expect(read("components/layout/UserMenu.tsx")).toContain('href="/my-salaries"');
+    expect(navBar).toContain('href="/my-salaries"');
+  });
+
   it("labels its menu button from the catalogue, not a hardcoded English string", () => {
     expect(navBar).not.toContain('"Open menu"');
     expect(navBar).not.toContain('"Close menu"');
