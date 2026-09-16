@@ -234,6 +234,51 @@ export function findArticleByKey(key: string): GuideArticle | undefined {
   return GUIDE_ARTICLES.find((article) => article.key === key);
 }
 
+export type GuideSlugResolution = {
+  article: GuideArticle;
+  /**
+   * Set when the slug belongs to the article in *another* locale: the page the reader asked for
+   * exists, just under this locale's own slug. Search Console showed Google (and the language
+   * switcher, which keeps the path and swaps the prefix) asking for `/tr/guide/<english slug>`
+   * and getting a 404 — the locale in the URL is what the reader chose, so they get that locale's
+   * article at its own address rather than a dead end.
+   */
+  redirectTo?: string;
+};
+
+/** The article behind a slug in the requested locale, or behind the same slug in any other one. */
+export function resolveGuideSlug(slug: string, locale: GuideLocale): GuideSlugResolution | undefined {
+  const own = findArticleBySlug(slug, locale);
+  if (own) return { article: own };
+
+  for (const other of GUIDE_LOCALES) {
+    if (other === locale) continue;
+    const article = findArticleBySlug(slug, other);
+    if (article) return { article, redirectTo: articlePath(article, locale) };
+  }
+
+  return undefined;
+}
+
+/**
+ * Where a locale-less `/guide/<slug>` should go. next-intl would otherwise prefix it with the
+ * locale it guesses from the cookie or Accept-Language, and an English slug under `/tr` is a 404;
+ * the slug itself says which language the reader wants, so that language wins here. Anything else
+ * (unknown slug, `/guide` itself, an already-prefixed path) is null and takes the normal route.
+ */
+export function guideRedirectForUnprefixedPath(pathname: string): string | null {
+  const match = /^\/guide\/([^/]+)\/?$/.exec(pathname);
+  if (!match) return null;
+
+  const slug = decodeURIComponent(match[1]);
+  for (const locale of GUIDE_LOCALES) {
+    const article = findArticleBySlug(slug, locale);
+    if (article) return `/${locale}${articlePath(article, locale)}`;
+  }
+
+  return null;
+}
+
 export function isGuideLocale(locale: string): locale is GuideLocale {
   return (GUIDE_LOCALES as readonly string[]).includes(locale);
 }

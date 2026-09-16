@@ -270,3 +270,24 @@ describe("share images", () => {
     expect(page).toMatch(/image: `\$\{SITE_URL\}\$\{ogImagePath\(/);
   });
 });
+
+describe("a guide slug under the wrong locale prefix", () => {
+  const read = (relative: string) => readFileSync(path.join(process.cwd(), relative), "utf8");
+
+  // Search Console listed /tr/guide/<english slug> and /en/guide/<turkish slug> as 404s. Both the
+  // metadata stage and the page body resolve through resolveGuideSlug and answer with a permanent
+  // redirect to the requested locale's own slug; a plain findArticleBySlug here would bring the
+  // 404 back for one of the two stages.
+  it("is a permanent redirect from both the metadata and the page, never a 404", () => {
+    const page = read("src/app/[locale]/(public)/guide/[slug]/page.tsx");
+    expect(page).not.toContain("findArticleBySlug(");
+    expect(page.match(/resolveGuideSlug\(slug, locale\)/g)).toHaveLength(2);
+    expect(page.match(/permanentRedirect\(`\/\$\{locale\}\$\{resolved\.redirectTo\}`\)/g)).toHaveLength(2);
+  });
+
+  it("is sent to the slug's own language by the proxy when there is no prefix at all", () => {
+    const proxy = read("src/proxy.ts");
+    expect(proxy).toContain("guideRedirectForUnprefixedPath(request.nextUrl.pathname)");
+    expect(proxy).toMatch(/NextResponse\.redirect\(new URL\(`\$\{guideUrl\}\$\{request\.nextUrl\.search\}`, request\.url\), 301\)/);
+  });
+});

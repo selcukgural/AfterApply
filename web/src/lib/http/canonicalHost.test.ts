@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apexRedirectUrl, isFileRequest } from "./canonicalHost";
+import { apexRedirectUrl, isFileRequest, stripIndexHtml } from "./canonicalHost";
 
 describe("apexRedirectUrl", () => {
   it("sends a www request to the apex, keeping path and query", () => {
@@ -46,6 +46,22 @@ describe("apexRedirectUrl", () => {
 
   it("does not turn a bare \"www.\" into a redirect to nowhere", () => {
     expect(apexRedirectUrl("www.", "/tr", "")).toBeNull();
+  });
+});
+
+describe("stripIndexHtml", () => {
+  // Search Console: http://www.ekariyerim.com/index.html — a crawler's guess at the front page.
+  it("folds the crawler's guessed index.html onto the root", () => {
+    expect(stripIndexHtml("/index.html")).toBe("/");
+    expect(stripIndexHtml("/tr/index.html")).toBe("/tr");
+    expect(apexRedirectUrl("www.ekariyerim.com", stripIndexHtml("/index.html"), "")).toBe("https://ekariyerim.com/");
+  });
+
+  it("leaves every other path alone", () => {
+    expect(stripIndexHtml("/")).toBe("/");
+    expect(stripIndexHtml("/tr")).toBe("/tr");
+    expect(stripIndexHtml("/sitemap.xml")).toBe("/sitemap.xml");
+    expect(stripIndexHtml("/guide/index.html.bak")).toBe("/guide/index.html.bak");
   });
 });
 

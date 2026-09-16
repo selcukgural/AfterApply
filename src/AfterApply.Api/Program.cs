@@ -146,6 +146,7 @@ if (app.Services.GetRequiredService<IOptions<RateLimitingOptions>>().Value.Enabl
 app.UseMiddleware<RequestAuditMiddleware>();
 
 app.MapHealthChecks("/health");
+app.MapSiteRootEndpoints();
 app.MapClientConfigEndpoints();
 app.MapAuthEndpoints();
 app.MapUserEndpoints();

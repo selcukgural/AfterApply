@@ -7128,3 +7128,41 @@ yalnız `web/`).
 
 **Sıradaki.** Deploy bitince ilk gerçek siparişle tur (yukarıdaki kontrol listesi) ve panelden
 iade. İlk pazartesi 04:00 UTC taramasından sonra `GET /api/admin/job-sources/usage` (§14 adım 6).
+
+## Search Console 404'leri kapandı; ödeme ve haftalık ilan bayrakları yeniden kapalı (2026-09-16, gece)
+
+**Bayraklar.** `PayTr__Enabled=false`, `JobSources__Enabled=false` (`deploy.yml`). Aynı gün açılan
+iki özellik (PR #61) fiyatın USD'ye geçişi ve PayTR'nin döviz tahsilatını açması beklenirken
+kullanıcıya görünmesin diye kapatıldı — kullanıcı kararı. Başka hiçbir şeye dokunulmadı:
+`TestMode=false`, `Scoring__ProjectId` ve 29900/299000 fiyatları yerinde; yeniden açmak iki satır.
+Bildirim ucu ve `/api/admin/payments/*` bayraktan bağımsız çalışmaya devam eder. USD işinin keşfi
+`~/.claude/plans/tamam-imdi-yle-bir-golden-rabbit.md` ekinde duruyor (PAUSED).
+
+**404 raporu.** Search Console "Bulunamadı (404)": 8 örnek, dört kalıp. Canlı sayfaların
+hreflang/canonical/sitemap/MDX linkleri doğruydu (curl ile bakıldı); sorun kalıpların hiçbirinin
+yumuşak inişi olmamasıydı.
+
+1. **Dil-çapraz slug** (`/tr/guide/export-linkedin-application-history`,
+   `/en/guide/kariyer-net-basvurularim-nerede`). Rehber slug'ları dile göre farklı (arama terimi
+   slug'da; `articles.ts` kararı), `findArticleBySlug` yalnız istenen dilde arıyordu. Üretici: dil
+   değiştirici (`LanguageSwitcher` yolu koruyup ön eki değiştiriyor) ve Google'ın kalıp tahmini.
+   **Kural: URL'deki dil kazanır** — `/tr/...` isteyen Türkçe makaleyi kendi slug'ında alır.
+   `resolveGuideSlug(slug, locale)` öteki dilde bulursa `redirectTo` döner; sayfa **ve**
+   `generateMetadata` `permanentRedirect` (308) atar (metadata aşaması önce koşar, ikisinden biri
+   eksik olsa 404 geri gelirdi). Dil değiştiriciye dokunulmadı; 308 onu da düzeltiyor.
+2. **Ön eksiz `/guide/<slug>`.** next-intl çerez/Accept-Language ile `/tr/`'ye 307 atıyor, İngilizce
+   slug 1'e düşüyordu. **Kural: ön ek yoksa slug'ın kendi dili kazanır** — İngilizce slug'la gelen
+   İngilizce içerik istiyordur. `guideRedirectForUnprefixedPath` proxy'de, locale middleware'den
+   önce, 301. Bilinmeyen slug eski yola (307 → 404) bırakılır.
+3. **`api.ekariyerim.com/`.** Bu host API'nin domain mapping'i (`/api/config` 200); web her sayfada
+   `preconnect` ile ilan ediyor, Google kökü çekiyordu. `GET /` → 301 `App:WebBaseUrl`,
+   `GET /robots.txt` → `Disallow: /`; ikisi de `ExcludeFromDescription` (openapi.json değişmez),
+   GET olduğu için `RequestAudit` yazmaz. `SiteRootEndpoints.cs`.
+4. **`www.ekariyerim.com/index.html`.** Proxy matcher'ı noktalı yolları dışarıda bıraktığından
+   www→apex 301'i hiç çalışmıyordu. `/index.html` matcher'a isimle eklendi (geniş desen açılmadı),
+   `stripIndexHtml` yolu köke katlıyor: www'da tek atlamada `https://apex/`, apex'te 301 `/`.
+
+**Doğrulama.** vitest 583/583 (yeni: `resolveGuideSlug` 4, `guideRedirectForUnprefixedPath` 2,
+`stripIndexHtml` 2, sayfa/proxy kaynak sözleşmesi 2), tsc, eslint; local dev'de 8 curl (308/301
+hedefleri ve yönlendirilen makalenin 200 verdiği). Entegrasyon: `SiteRootTests` 3/3 +
+`ClientConfigTests` 7/7. Deploy sonrası Search Console'da "Doğrulamayı başlat" kullanıcıda.

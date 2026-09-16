@@ -261,20 +261,19 @@ jobs:
           # Postgres__MaxPoolSize and Hangfire__WorkerCount belong to the scaling arithmetic
           # explained above the `flags` block; change them together with --max-instances.
           # On JobSources__Enabled: the weekly job matching (LinkedIn + kariyer.net sweep, Gemini
-          # scoring, digest e-mail) behind the paid plan. On since 2026-09-16 (DECISIONS.md, the
-          # PayTR go-live entry): Vertex is provisioned, the model is pinned from the eval, the
-          # privacy section is live and the payment writes the entitlement. Still declared here so
-          # the state is asserted on every deploy and flipping it stays a reviewed change;
-          # DEPLOYMENT.md §14 has the first-Monday checks (/api/admin/job-sources/usage).
+          # scoring, digest e-mail) behind the paid plan. Went on 2026-09-16 (DECISIONS.md, the
+          # PayTR go-live entry) and off again the same evening together with PayTr__Enabled,
+          # until the USD pricing lands — everything it needs (Vertex, the pinned model, the privacy
+          # section, the entitlement written by the payment) stays provisioned, so turning it back
+          # on is this one line. DEPLOYMENT.md §14 has the first-Monday checks.
           # JobSources__Scoring__ProjectId is the Vertex project for the scoring — its own key,
           # not CvScan__Review__ProjectId, so either feature can go off alone.
-          # On PayTr__*: the Pro plan's PayTR checkout (DEPLOYMENT.md §15). Enabled=true opens
-          # /pro and every /api/payments route; TestMode=false means real charges — both went on
-          # together on 2026-09-16, the day the merchant went live on PayTR's side (owner's call:
-          # no test-mode round in production first; the first real order is verified and refunded
-          # from /admin/payments instead). TestMode=true would turn every transaction into a PayTR
-          # test payment again without closing the checkout — that is the switch if PayTR's side
-          # ever needs re-checking. The three merchant values are Secret Manager secrets below.
+          # On PayTr__*: the Pro plan's PayTR checkout (DEPLOYMENT.md §15). Enabled=false keeps
+          # /pro and every /api/payments route dark; the notification endpoint and /admin/payments
+          # work regardless of it. It went on with TestMode=false on 2026-09-16, the day the
+          # merchant went live on PayTR's side, and off again the same evening until the USD
+          # pricing lands (owner's call) — TestMode stays false so re-opening is the Enabled line
+          # alone. The three merchant values are Secret Manager secrets below.
           # Prices are kuruş, KDV included; they live here so the sale price is visible next to
           # the flag and changes with a reviewed deploy, not a database edit.
           env_vars: |-
@@ -293,9 +292,9 @@ jobs:
             CvScan__Review__ProjectId=${{ env.GCP_PROJECT_ID }}
             Postgres__MaxPoolSize=5
             Hangfire__WorkerCount=2
-            JobSources__Enabled=true
+            JobSources__Enabled=false
             JobSources__Scoring__ProjectId=${{ env.GCP_PROJECT_ID }}
-            PayTr__Enabled=true
+            PayTr__Enabled=false
             PayTr__TestMode=false
             PayTr__Plans__Monthly__AmountMinor=29900
             PayTr__Plans__Yearly__AmountMinor=299000

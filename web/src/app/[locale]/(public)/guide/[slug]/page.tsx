@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { buildMetadata } from "@/lib/seo/pageMetadata";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -12,8 +12,8 @@ import {
   articlePath,
   articlePaths,
   findArticleByKey,
-  findArticleBySlug,
   isGuideLocale,
+  resolveGuideSlug,
 } from "@/lib/guide/articles";
 import { loadGuideArticle } from "@/lib/guide/content";
 import { SITE_NAME, SITE_URL } from "@/lib/seo/routes";
@@ -29,8 +29,12 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/guide/[s
   setRequestLocale(locale);
   if (!isGuideLocale(locale)) return {};
 
-  const article = findArticleBySlug(slug, locale);
-  if (!article) return {};
+  // Metadata runs before the page body; a slug that belongs to the other locale has to redirect
+  // from here as well, or this stage would answer with nothing and the redirect below never run.
+  const resolved = resolveGuideSlug(slug, locale);
+  if (!resolved) return {};
+  if (resolved.redirectTo) permanentRedirect(`/${locale}${resolved.redirectTo}`);
+  const { article } = resolved;
 
   const tSection = await getTranslations("metadata.pages");
   return buildMetadata({
@@ -49,8 +53,12 @@ export default async function GuideArticlePage({ params }: PageProps<"/[locale]/
   const { locale, slug } = await params;
   if (!isGuideLocale(locale)) notFound();
 
-  const article = findArticleBySlug(slug, locale);
-  if (!article) notFound();
+  // A slug the other locale owns (Google's guess, or the language switcher keeping the path while
+  // swapping the prefix) is a permanent redirect to this locale's own address, not a 404.
+  const resolved = resolveGuideSlug(slug, locale);
+  if (!resolved) notFound();
+  if (resolved.redirectTo) permanentRedirect(`/${locale}${resolved.redirectTo}`);
+  const { article } = resolved;
 
   const copy = article.copy[locale];
   const Body = await loadGuideArticle(article.key, locale);
