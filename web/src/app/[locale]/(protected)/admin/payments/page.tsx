@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { Pagination } from "@/components/applications/Pagination";
 import { Card, CardHeader } from "@/components/dashboard/Card";
-import { OrderStatusBadge } from "@/components/pro/OrderStatusBadge";
+import { OrderStatusBadge, statusKey } from "@/components/pro/OrderStatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
@@ -42,6 +42,8 @@ type Action =
  */
 export default function AdminPaymentsPage() {
   const t = useTranslations("adminPayments");
+  // The filter's labels are the same words the badge uses; they live under payments.status, not here.
+  const tStatus = useTranslations("payments.status");
   const locale = useLocale();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<AdminOrderFilters>({ page: 1, pageSize: PAGE_SIZE });
@@ -159,7 +161,7 @@ export default function AdminPaymentsPage() {
               <option value="">{t("orders.allStatuses")}</option>
               {STATUSES.map((status) => (
                 <option key={status} value={status}>
-                  {t(`status.${status.charAt(0).toLowerCase()}${status.slice(1)}`)}
+                  {tStatus(statusKey(status))}
                 </option>
               ))}
             </Select>
