@@ -30,7 +30,7 @@ export function WeeklyJobsFeatureCard() {
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("weeklyJobsTitle")}</h3>
       <p className="text-sm text-gray-600 dark:text-gray-400">{t("weeklyJobsBody")}</p>
       <Link
-        href="/weekly-jobs"
+        href="/help/weekly-jobs"
         className="mt-auto inline-flex w-fit items-center gap-1 pt-1 text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
       >
         {t("weeklyJobsCta")}

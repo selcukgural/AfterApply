@@ -39,6 +39,9 @@ export function ProGate() {
             {t("privacyLink")}
           </Link>
         </p>
+        <Link href="/help/weekly-jobs" className="w-fit text-sm font-medium text-accent-ink hover:underline">
+          {t("helpLink")} →
+        </Link>
       </div>
       <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
         <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("plan")}</span>

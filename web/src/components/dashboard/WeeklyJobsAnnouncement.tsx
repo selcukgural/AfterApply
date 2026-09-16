@@ -102,7 +102,7 @@ export function WeeklyJobsAnnouncement() {
           <Link href="/pro" className={buttonClassName("primary")}>
             {t("cta", { price })}
           </Link>
-          <Link href="/weekly-jobs" className="text-sm font-medium text-accent-ink hover:underline">
+          <Link href="/help/weekly-jobs" className="text-sm font-medium text-accent-ink hover:underline">
             {t("how")} →
           </Link>
           <span className="text-xs text-gray-500 dark:text-gray-400">{t("noAutoRenew")}</span>

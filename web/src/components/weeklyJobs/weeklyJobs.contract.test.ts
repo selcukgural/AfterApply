@@ -61,3 +61,41 @@ describe("the weekly jobs pages", () => {
     }
   });
 });
+
+describe("how the feature is explained", () => {
+  // 2026-09-16: three surfaces said "how it works"; two sent the reader to /weekly-jobs — the
+  // product page, which for a signed-out visitor is a login redirect — and the gate page had no
+  // way to the help topic at all. "How it works" is the help topic, everywhere.
+  it("sends every 'how it works' link to the help topic", () => {
+    expect(read("components/landing/WeeklyJobsFeatureCard.tsx")).toContain('href="/help/weekly-jobs"');
+    expect(read("components/landing/WeeklyJobsFeatureCard.tsx")).not.toContain('href="/weekly-jobs"');
+    expect(read("components/dashboard/WeeklyJobsAnnouncement.tsx")).toContain('href="/help/weekly-jobs"');
+    expect(read("components/weeklyJobs/ProGate.tsx")).toContain('href="/help/weekly-jobs"');
+  });
+
+  it("labels the gate page's help link in both languages", () => {
+    for (const messages of [tr, en]) {
+      expect(messages.weeklyJobs.gate.helpLink.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("the checkout form", () => {
+  // 2026-09-16 browser round: the second checkout started from an empty address and phone, and
+  // the server's per-field messages arrived as one red line under the consent box.
+  it("starts from the user's last billing details and shows validation under each field", () => {
+    const page = read("app/[locale]/(protected)/pro/checkout/page.tsx");
+    expect(page).toContain("paymentsApi.getBillingDefaults");
+    expect(page).toContain("fieldErrorsOf(err)");
+    const form = read("components/pro/BillingForm.tsx");
+    for (const field of ["billingName", "billingAddress", "billingPhone"]) {
+      expect(form).toContain(`error={fieldErrors.${field}}`);
+    }
+  });
+
+  it("tells the payer what was charged, not what the plan cost when the order was opened", () => {
+    expect(read("app/[locale]/(protected)/pro/orders/[orderId]/page.tsx")).toContain(
+      "data.chargedAmountMinor ?? data.amountMinor",
+    );
+  });
+});
