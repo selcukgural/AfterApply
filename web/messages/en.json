@@ -155,11 +155,28 @@
     },
     "hero": {
       "eyebrow": "How many sent, how many replied",
+      "bandEyebrow": "How many applied, how many answered · free",
       "title": "You applied. So what happened next?",
       "subtitle": "How many of your applications got a reply, how many went quiet, and how long a first response actually took. Import your LinkedIn history or install the extension — let e-kariyerim do the collecting.",
       "ctaPrimary": "Scan my CV",
       "ctaSecondary": "Get Started Free",
       "ctaHowItWorks": "See how it works"
+    },
+    "weeklyHero": {
+      "badge": "NEW · PRO",
+      "eyebrow": "Every Monday, scored against your CV",
+      "title": "Let us do the searching, not you",
+      "subtitle": "New postings on LinkedIn and kariyer.net are compared with your CV every week and scored; matched and missing criteria are spelled out, and the ones you already applied to are left out. Tracking your applications stays free.",
+      "ctaSignedIn": "Go to weekly postings",
+      "ctaHow": "How it works",
+      "sampleLabel": "This week · sample",
+      "sampleFooter": "Monday morning · up to 50 postings · ranked by fit score",
+      "sample1Title": "Senior .NET Developer",
+      "sample1Company": "Acme Bankacılık · İstanbul",
+      "sample2Title": "Backend Engineer (C#)",
+      "sample2Company": "Kuzey Teknoloji · Remote",
+      "sample3Title": "Software Developer",
+      "sample3Company": "Marmara Yazılım · İstanbul"
     },
     "heroScan": {
       "title": "Drop your CV here",

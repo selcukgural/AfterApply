@@ -16,9 +16,32 @@ import { HeroCvDropzone } from "@/components/landing/HeroCvDropzone";
  * gradient layer under the content, so it costs nothing to scroll and has nothing to switch off for
  * reduced motion. No negative z-index — the section creates no stacking context, so a `-z-10` child
  * would fall behind the body background and vanish; the content is simply painted after it.
+ *
+ * `band` (2026-09-16): the same content one screen down, when the weekly postings take the first
+ * screen (WeeklyJobsHero). Nothing is lost — the drop zone, the scan button, the copy — but it is
+ * an <h2> at a size that reads as second, on a plain white band with no glow: one hero per page.
  */
-export async function HeroSection() {
+export async function HeroSection({ band = false }: { band?: boolean }) {
   const t = await getTranslations("landing.hero");
+
+  if (band) {
+    return (
+      <section className="border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-4 py-16 md:flex-row md:items-center md:py-20">
+          <div className="flex flex-col items-start gap-5 md:w-1/2">
+            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{t("bandEyebrow")}</span>
+            <h2 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">{t("title")}</h2>
+            <p className="max-w-xl text-lg text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
+            <HeroCtaButtons />
+          </div>
+
+          <div className="flex justify-center md:w-1/2">
+            <HeroCvDropzone />
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative overflow-hidden">

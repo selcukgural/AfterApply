@@ -189,3 +189,57 @@ describe("the hero", () => {
     expect(source).toContain("<HeroCvDropzone />");
   });
 });
+
+describe("the weekly postings hero (2026-09-16, direction B)", () => {
+  const page = stripComments(read("src/app/[locale]/page.tsx"));
+  const hero = stripComments(readLanding("WeeklyJobsHero.tsx"));
+  const original = stripComments(readLanding("HeroSection.tsx"));
+
+  /** The flag is read on the server so the first screen is right in the HTML: a hero that swaps
+   *  after hydration jumps, and this is the one screen where that costs the most. */
+  it("is chosen from the server-side flag, with the original hero as the band under it", () => {
+    expect(page).toContain("fetchJobSourcesEnabled()");
+    expect(page).not.toContain("useClientConfig");
+    const branch = page.slice(page.indexOf("weeklyJobsOnSale ? ("), page.indexOf("<ToolsStrip />"));
+    const order = ["<WeeklyJobsHero />", "<HeroSection band />", ") : (", "<HeroSection />"].map((token) => {
+      const index = branch.indexOf(token);
+      expect(index, token).toBeGreaterThan(-1);
+      return index;
+    });
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+
+  it("keeps one <h1> per page: the band variant demotes the original hero to an <h2>", () => {
+    expect(hero).toContain("<h1 ");
+    // The band branch comes first in the file; it must carry an h2 and no glow, and the hero
+    // branch after it keeps the h1 and the glow.
+    const bandMarkup = original.slice(original.indexOf("if (band)"), original.lastIndexOf("return ("));
+    expect(bandMarkup.length).toBeGreaterThan(0);
+    expect(bandMarkup).toContain("<h2 ");
+    expect(bandMarkup).not.toContain("<h1 ");
+    expect(bandMarkup).not.toContain("aa-hero-glow");
+    expect(bandMarkup).toContain("<HeroCvDropzone />");
+    expect(bandMarkup).toContain("<HeroCtaButtons />");
+  });
+
+  it("sends the visitor to registration and to the help topic, and shows no price", () => {
+    const ctas = stripComments(readLanding("WeeklyJobsHeroCtas.tsx"));
+    expect(ctas).toContain('href="/register"');
+    expect(ctas).toContain('trackSiteTraffic("cta_get_started")');
+    expect(ctas).toContain('href="/help/weekly-jobs"');
+    expect(ctas).toContain('href="/weekly-jobs"');
+    expect(hero).not.toMatch(/formatMinor|paymentsApi|₺/);
+  });
+
+  it("shares the sample list with the dashboard announcement", () => {
+    expect(hero).toContain("<WeeklyJobsSampleList");
+    expect(stripComments(read("src/components/dashboard/WeeklyJobsAnnouncement.tsx"))).toContain("<WeeklyJobsSampleList");
+  });
+
+  it("says in both languages that the tracker itself stays free", () => {
+    const tr = JSON.parse(read("messages/tr.json")) as { landing: { weeklyHero: { subtitle: string } } };
+    const en = JSON.parse(read("messages/en.json")) as { landing: { weeklyHero: { subtitle: string } } };
+    expect(tr.landing.weeklyHero.subtitle).toContain("ücretsiz");
+    expect(en.landing.weeklyHero.subtitle.toLowerCase()).toContain("free");
+  });
+});

@@ -8,6 +8,7 @@ import { jsonLdGraph, organizationJsonLd, webApplicationJsonLd } from "@/lib/seo
 import { LANDING_SITE_LINKS, SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { WeeklyJobsHero } from "@/components/landing/WeeklyJobsHero";
 import { ToolsStrip } from "@/components/landing/ToolsStrip";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { AfterApplySection } from "@/components/landing/AfterApplySection";
@@ -20,6 +21,7 @@ import { RoadmapSection } from "@/components/landing/RoadmapSection";
 import { PrivacySection } from "@/components/landing/PrivacySection";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 import { SiteTrafficReporter } from "@/components/analytics/SiteTrafficReporter";
+import { fetchJobSourcesEnabled } from "@/lib/config/publicConfig.server";
 
 /**
  * The hero line ("Başvurdun. Peki sonra ne oldu?") stays the <h1>, but it made a poor <title>: it
@@ -53,6 +55,8 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
   // The landing sections and the hero's CV dropzone are client components; this is the one page
   // outside the (public) group, so it provides its own slice of the catalogue (messageScopes.ts).
   const messages = pickMessages(await getMessages(), LANDING_MESSAGE_SCOPE);
+  // Decided here, on the server, so the first screen is right in the HTML (see WeeklyJobsHero).
+  const weeklyJobsOnSale = await fetchJobSourcesEnabled();
 
   return (
     <NextIntlClientProvider messages={messages}>
@@ -67,7 +71,15 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
       <SiteTrafficReporter />
       <SiteHeader links={LANDING_SITE_LINKS} />
       <main className="flex-1">
-        <HeroSection />
+        {weeklyJobsOnSale ? (
+          // 2026-09-16 (direction B): the weekly postings lead; the original hero follows as a band.
+          <>
+            <WeeklyJobsHero />
+            <HeroSection band />
+          </>
+        ) : (
+          <HeroSection />
+        )}
         {/* The three things that work without an account, the extension's tab open first — one
             screen under the hero, before the page starts explaining itself (2026-09-12). Also the
             #extension target: this is the extension's whole showing on the page. */}

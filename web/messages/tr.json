@@ -155,11 +155,28 @@
     },
     "hero": {
       "eyebrow": "Kaç başvuru, kaç cevap",
+      "bandEyebrow": "Kaç başvuru, kaç cevap · ücretsiz",
       "title": "Başvurdun. Peki sonra ne oldu?",
       "subtitle": "Başvurularının kaçı cevaplandı, kaçı sessizce kayboldu, ilk dönüş ortalama kaç gün sürdü. LinkedIn geçmişini içe aktar ya da eklentiyi kur — toplamayı e-kariyerim yapsın.",
       "ctaPrimary": "CV'mi Tara",
       "ctaSecondary": "Ücretsiz Başla",
       "ctaHowItWorks": "Nasıl çalışıyor?"
+    },
+    "weeklyHero": {
+      "badge": "YENİ · PRO",
+      "eyebrow": "Her Pazartesi, CV'nize göre puanlanmış",
+      "title": "İş aramayı siz değil, biz yapalım",
+      "subtitle": "LinkedIn ve kariyer.net'teki yeni ilanlar her hafta CV'nizle karşılaştırılıp puanlanır; uyan ve eksik kriterler yazılır, zaten başvurduklarınız elenir. Başvurularınızı takip etmek ise ücretsiz.",
+      "ctaSignedIn": "Haftalık ilanlara git",
+      "ctaHow": "Nasıl çalışır",
+      "sampleLabel": "Bu hafta · örnek",
+      "sampleFooter": "Pazartesi sabahı · 50 ilana kadar · uyum puanına göre sıralı",
+      "sample1Title": "Senior .NET Developer",
+      "sample1Company": "Acme Bankacılık · İstanbul",
+      "sample2Title": "Backend Engineer (C#)",
+      "sample2Company": "Kuzey Teknoloji · Uzaktan",
+      "sample3Title": "Software Developer",
+      "sample3Company": "Marmara Yazılım · İstanbul"
     },
     "heroScan": {
       "title": "CV'ni buraya bırak",
