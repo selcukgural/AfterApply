@@ -5,6 +5,7 @@ using AfterApply.Application.Payments;
 using AfterApply.Application.Payments.Contracts;
 using AfterApply.Application.Pro;
 using AfterApply.Domain.Payments;
+using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Persistence;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
@@ -120,8 +121,10 @@ internal sealed class PaymentRefundService(
         var now = _timeProvider.GetUtcNow();
         await CommitRefundAsync(order, amountMinor, referenceNo.Trim(), adminUserId, now,
             JsonSerializer.Serialize(new { markedByHand = true, referenceNo }), cancellationToken);
+        // The reference is typed by the admin and only length-checked; strip CR/LF before it
+        // reaches the log so it cannot forge a second line (CodeQL cs/log-forging).
         logger.LogWarning("Refund of {Amount} kuruş on order {OrderId} recorded by hand by {AdminId} (reference {Reference})",
-            amountMinor, order.Id, adminUserId, referenceNo);
+            amountMinor, order.Id, adminUserId, SafeLogValue.SingleLine(referenceNo));
         return order.ToAdminResponse();
     }
 
