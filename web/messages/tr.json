@@ -759,7 +759,8 @@
       "pageInfoCompanies": "Sayfa {page} / {totalPages} ({totalCount} şirket)",
       "pageInfoReminders": "Sayfa {page} / {totalPages} ({totalCount} hatırlatıcı)",
       "pageInfoOrders": "Sayfa {page} / {totalPages} ({totalCount} sipariş)",
-      "pageInfoSalaries": "Sayfa {page} / {totalPages} ({totalCount} maaş kaydı)"
+      "pageInfoSalaries": "Sayfa {page} / {totalPages} ({totalCount} maaş kaydı)",
+      "pageInfoNotifications": "Sayfa {page} / {totalPages} ({totalCount} bildirim)"
     },
     "form": {
       "companyName": "Şirket Adı",
@@ -1022,6 +1023,15 @@
     "revertConflict": "Bu başvurunun durumu o zamandan beri değişmiş, geri alınmadı.",
     "emptyBody": "Bir e-posta önerisini onayladığında ya da bir öneri kendiliğinden uygulandığında burada kaydı kalır. Bunlar için Chrome eklentisinde Gmail Taraması'nın açık olması gerekir.",
     "emptyCta": "Gmail Taraması'nı aç",
+    "dismiss": "Bildirimi kaldır",
+    "dismissError": "Bildirim kaldırılamadı. Lütfen tekrar dene.",
+    "swipeHint": "Bir bildirimi kaldırmak için sağa ya da sola sürükle.",
+    "clearAll": "Tümünü temizle",
+    "clearAllConfirm": "Tüm bildirimler kaldırılsın mı?",
+    "clearAllYes": "Temizle",
+    "clearAllCancel": "Vazgeç",
+    "clearing": "Temizleniyor…",
+    "clearAllError": "Bildirimler temizlenemedi. Lütfen tekrar dene.",
     "emptyBodyScanning": "Gmail Taraması bu hesapla çalışıyor. Bir öneriyi onayladığında ya da bir öneri kendiliğinden uygulandığında kaydı burada kalır."
   },
   "privacy": {

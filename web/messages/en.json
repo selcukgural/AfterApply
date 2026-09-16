@@ -759,7 +759,8 @@
       "pageInfoCompanies": "Page {page} / {totalPages} ({totalCount} companies)",
       "pageInfoReminders": "Page {page} / {totalPages} ({totalCount} reminders)",
       "pageInfoOrders": "Page {page} / {totalPages} ({totalCount} orders)",
-      "pageInfoSalaries": "Page {page} / {totalPages} ({totalCount} salary entries)"
+      "pageInfoSalaries": "Page {page} / {totalPages} ({totalCount} salary entries)",
+      "pageInfoNotifications": "Page {page} / {totalPages} ({totalCount} notifications)"
     },
     "form": {
       "companyName": "Company Name",
@@ -1022,6 +1023,15 @@
     "revertConflict": "This application's status has changed since, so nothing was undone.",
     "emptyBody": "When you confirm an email suggestion, or one is applied on its own, the record lands here. Both need Gmail Scanning to be on in the Chrome extension.",
     "emptyCta": "Turn on Gmail Scanning",
+    "dismiss": "Dismiss notification",
+    "dismissError": "Couldn't dismiss the notification. Please try again.",
+    "swipeHint": "Drag a notification left or right to dismiss it.",
+    "clearAll": "Clear all",
+    "clearAllConfirm": "Clear all notifications?",
+    "clearAllYes": "Clear",
+    "clearAllCancel": "Cancel",
+    "clearing": "Clearing…",
+    "clearAllError": "Couldn't clear the notifications. Please try again.",
     "emptyBodyScanning": "Gmail Scanning is already talking to this account. When you confirm a suggestion, or one is applied on its own, the record lands here."
   },
   "privacy": {

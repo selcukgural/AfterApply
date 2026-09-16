@@ -132,6 +132,15 @@ describe("empty states point somewhere", () => {
     }
   });
 
+  it("lets a notification be cleared one at a time and all at once, in both languages", () => {
+    for (const value of [trValue, enValue]) {
+      for (const key of ["dismiss", "swipeHint", "clearAll", "clearAllConfirm", "clearAllYes", "clearAllCancel"]) {
+        expect(value(`notifications.${key}`)).not.toBe("");
+      }
+      expect(value("applications.pagination.pageInfoNotifications")).toContain("{totalCount}");
+    }
+  });
+
   it("does not describe the CV dropzone by a screen position", () => {
     expect(trValue("cv.empty")).not.toMatch(/sol/i);
     expect(enValue("cv.empty")).not.toMatch(/left/i);

@@ -9,6 +9,7 @@ const PAGE_INFO_KEY = {
   reminders: "pageInfoReminders",
   orders: "pageInfoOrders",
   salaries: "pageInfoSalaries",
+  notifications: "pageInfoNotifications",
 } as const;
 
 interface PaginationProps {
@@ -18,7 +19,7 @@ interface PaginationProps {
   /** What a page is made of. The company view pages over companies, and telling someone they are on
    *  "page 2 of 4 (34 applications)" while the pages hold companies gives them a number they cannot
    *  check against what is on screen. */
-  unit?: "applications" | "companies" | "reminders" | "orders" | "salaries";
+  unit?: "applications" | "companies" | "reminders" | "orders" | "salaries" | "notifications";
   onPageChange: (page: number) => void;
 }
 

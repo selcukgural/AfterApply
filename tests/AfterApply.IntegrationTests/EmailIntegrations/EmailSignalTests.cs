@@ -934,7 +934,10 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
             .StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var notifications = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications", JsonOptions);
-        var notificationList = notifications.EnumerateArray().ToList();
+        notifications.GetProperty("totalCount").GetInt32().ShouldBe(2);
+        notifications.GetProperty("page").GetInt32().ShouldBe(1);
+        notifications.GetProperty("pageSize").GetInt32().ShouldBe(10);
+        var notificationList = notifications.GetProperty("items").EnumerateArray().ToList();
         notificationList.Count.ShouldBe(2);
         notificationList.ShouldContain(n => n.GetProperty("applicationId").GetGuid() == autoAppliedAppId && n.GetProperty("wasAutoApplied").GetBoolean());
         notificationList.ShouldContain(n => n.GetProperty("applicationId").GetGuid() == confirmedAppId && !n.GetProperty("wasAutoApplied").GetBoolean());
@@ -946,6 +949,138 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
 
         var countAfterRead = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications/count", JsonOptions);
         countAfterRead.GetProperty("unreadCount").GetInt32().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Notifications_Dismiss_Hides_The_Row_And_Leaves_The_Suggestion_And_Its_Status_Change_Alone()
+    {
+        var (applicationId, suggestionId) = await AutoApplyOnceAsync("Dismiss One Co", "dismiss-one-test.com", "thread-dismiss-one");
+        var (keptApplicationId, _) = await AutoApplyOnceAsync("Dismiss Keep Co", "dismiss-keep-test.com", "thread-dismiss-keep");
+
+        (await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications/count", JsonOptions))
+            .GetProperty("unreadCount").GetInt32().ShouldBe(2);
+
+        (await _autoApplyClient.PostAsync($"/api/email-forwarding/notifications/{suggestionId}/dismiss", null))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var notifications = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications", JsonOptions);
+        notifications.GetProperty("totalCount").GetInt32().ShouldBe(1);
+        notifications.GetProperty("items").EnumerateArray().Single().GetProperty("applicationId").GetGuid().ShouldBe(keptApplicationId);
+
+        // Cleared is not read, but a cleared row is out of the badge either way.
+        (await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications/count", JsonOptions))
+            .GetProperty("unreadCount").GetInt32().ShouldBe(1);
+
+        // A second swipe on the same row (a retried request) is still a 204, not a 404.
+        (await _autoApplyClient.PostAsync($"/api/email-forwarding/notifications/{suggestionId}/dismiss", null))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var scope = _autoApply.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var suggestion = await db.EmailSuggestions.SingleAsync(s => s.Id == suggestionId);
+        suggestion.Status.ShouldBe(EmailSuggestionStatus.AutoApplied);
+        suggestion.NotificationDismissedAt.ShouldNotBeNull();
+        (await db.Applications.SingleAsync(a => a.Id == applicationId)).Status.ShouldBe(ApplicationStatus.Interview);
+    }
+
+    [Fact]
+    public async Task Notifications_Dismiss_Does_Not_Touch_Another_Users_Row_Or_A_Suggestion_That_Never_Became_One()
+    {
+        var (_, suggestionId) = await AutoApplyOnceAsync("Dismiss Other Co", "dismiss-other-test.com", "thread-dismiss-other");
+
+        // _client is a different user on the same database: the id is real, but not theirs.
+        (await _client.PostAsync($"/api/email-forwarding/notifications/{suggestionId}/dismiss", null))
+            .StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        // A Pending suggestion is not a notification, so clearing it is "not found" too — the route
+        // must not be a second way to touch the review queue.
+        var pendingAppId = await CreateApplicationAsync("Dismiss Pending Co", _autoApplyClient);
+        await ProcessExtensionSignalDirectlyAsync(_autoApply, _autoApplyUserId, "recruiter@dismiss-pending-test.com",
+            "Dismiss Pending Co Recruiting", "Interview invitation", "We'd like to invite you to an interview.",
+            "thread-dismiss-pending");
+        var pending = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        var pendingId = pending.EnumerateArray().Single(s => s.GetProperty("applicationId").GetGuid() == pendingAppId).GetProperty("id").GetGuid();
+        (await _autoApplyClient.PostAsync($"/api/email-forwarding/notifications/{pendingId}/dismiss", null))
+            .StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        using var scope = _autoApply.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailSuggestions.SingleAsync(s => s.Id == suggestionId)).NotificationDismissedAt.ShouldBeNull();
+        var pendingRow = await db.EmailSuggestions.SingleAsync(s => s.Id == pendingId);
+        pendingRow.NotificationDismissedAt.ShouldBeNull();
+        pendingRow.Status.ShouldBe(EmailSuggestionStatus.Pending);
+    }
+
+    [Fact]
+    public async Task Notifications_DismissAll_Clears_The_Callers_List_Only()
+    {
+        await AutoApplyOnceAsync("Clear All One Co", "clear-all-one-test.com", "thread-clear-all-one");
+        await AutoApplyOnceAsync("Clear All Two Co", "clear-all-two-test.com", "thread-clear-all-two");
+
+        // The other user has nothing to clear, and must still have nothing to clear afterwards —
+        // the bulk route is scoped like the single one.
+        (await _client.PostAsync("/api/email-forwarding/notifications/dismiss-all", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications", JsonOptions))
+            .GetProperty("totalCount").GetInt32().ShouldBe(2);
+
+        (await _autoApplyClient.PostAsync("/api/email-forwarding/notifications/dismiss-all", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var after = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications", JsonOptions);
+        after.GetProperty("totalCount").GetInt32().ShouldBe(0);
+        after.GetProperty("items").GetArrayLength().ShouldBe(0);
+        (await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications/count", JsonOptions))
+            .GetProperty("unreadCount").GetInt32().ShouldBe(0);
+
+        using var scope = _autoApply.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailSuggestions.CountAsync(s => s.UserId == _autoApplyUserId && s.Status == EmailSuggestionStatus.AutoApplied)).ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Notifications_Are_Paged_Ten_Per_Page_Newest_First()
+    {
+        var (applicationId, firstSuggestionId) = await AutoApplyOnceAsync("Paging Co", "paging-test.com", "thread-paging");
+
+        // Eleven more rows against the same application, seeded straight into the table with
+        // spaced CreatedAt values: the paging is what is under test, not the signal pipeline.
+        var seededIds = new List<Guid>();
+        using (var scope = _autoApply.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var template = await db.EmailSuggestions.SingleAsync(s => s.Id == firstSuggestionId);
+            var baseTime = template.CreatedAt;
+            for (var i = 1; i <= 11; i++)
+            {
+                var createdAt = baseTime.AddMinutes(i);
+                var row = EmailSuggestion.Create(_autoApplyUserId, template.EmailConnectionId, applicationId,
+                    $"paging-message-{i}", null, ApplicationStatus.Interview, 0.95, "Llm:Interview",
+                    EmailApplicationMatchType.DomainMatch, "paging-test.com", createdAt, createdAt);
+                row.AutoApply(createdAt);
+                db.EmailSuggestions.Add(row);
+                seededIds.Add(row.Id);
+            }
+            await db.SaveChangesAsync();
+        }
+
+        var pageOne = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications", JsonOptions);
+        pageOne.GetProperty("totalCount").GetInt32().ShouldBe(12);
+        pageOne.GetProperty("pageSize").GetInt32().ShouldBe(10);
+        var pageOneItems = pageOne.GetProperty("items").EnumerateArray().ToList();
+        pageOneItems.Count.ShouldBe(10);
+        pageOneItems.Select(n => n.GetProperty("createdAt").GetDateTimeOffset()).ShouldBeInOrder(Shouldly.SortDirection.Descending);
+        // The newest seeded row leads; the oldest of the twelve — the one the pipeline made — is not on this page.
+        pageOneItems[0].GetProperty("id").GetGuid().ShouldBe(seededIds[^1]);
+        pageOneItems.ShouldNotContain(n => n.GetProperty("id").GetGuid() == firstSuggestionId);
+
+        var pageTwo = await _autoApplyClient.GetFromJsonAsync<JsonElement>("/api/email-forwarding/notifications?page=2", JsonOptions);
+        pageTwo.GetProperty("page").GetInt32().ShouldBe(2);
+        var pageTwoItems = pageTwo.GetProperty("items").EnumerateArray().ToList();
+        pageTwoItems.Count.ShouldBe(2);
+        pageTwoItems[^1].GetProperty("id").GetGuid().ShouldBe(firstSuggestionId);
+        pageTwoItems.ShouldAllBe(n => n.GetProperty("companyName").GetString() == "Paging Co");
+
+        (await _autoApplyClient.GetAsync("/api/email-forwarding/notifications?pageSize=51")).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await _autoApplyClient.GetAsync("/api/email-forwarding/notifications?page=0")).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]

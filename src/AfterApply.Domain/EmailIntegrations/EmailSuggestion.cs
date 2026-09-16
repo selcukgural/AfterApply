@@ -75,6 +75,12 @@ public sealed class EmailSuggestion : Entity
 
     public DateTimeOffset? ReadAtUtc { get; private set; }
 
+    /// <summary>When the user cleared this row off the Notifications page. Hides it from that view
+    /// only — Status stays as it was, so an AutoApplied row still feeds the auto-approval calibration
+    /// and a Reverted-from-AutoApplied history still reads truthfully. Same idea as Reminder.DismissedAt:
+    /// the user has seen it and does not want it in front of them again; nothing is being deleted.</summary>
+    public DateTimeOffset? NotificationDismissedAt { get; private set; }
+
     private EmailSuggestion()
     {
     }
@@ -184,5 +190,11 @@ public sealed class EmailSuggestion : Entity
     {
         IsRead = true;
         ReadAtUtc = now;
+    }
+
+    /// <summary>Idempotent: a second swipe on a row already gone is not a new event.</summary>
+    public void DismissNotification(DateTimeOffset now)
+    {
+        NotificationDismissedAt ??= now;
     }
 }

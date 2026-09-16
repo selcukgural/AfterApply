@@ -1,3 +1,4 @@
+using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.EmailIntegrations.Contracts;
 
 namespace AfterApply.Application.EmailIntegrations;
@@ -34,18 +35,33 @@ public interface IEmailForwardingService
     /// is called is the one unbiased measure of whether the threshold is right.</summary>
     Task<RevertAutoApplyResult> RevertAutoApplyAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);
 
-    /// <summary>AutoApplied and Confirmed suggestions, newest first — the Notifications screen's
-    /// event log.</summary>
-    Task<IReadOnlyList<EmailNotificationResponse>> GetNotificationsAsync(Guid userId, CancellationToken cancellationToken);
+    /// <summary>AutoApplied and Confirmed suggestions the user has not cleared, newest first, one
+    /// page at a time — the Notifications screen's event log.</summary>
+    Task<PagedResult<EmailNotificationResponse>> GetNotificationsAsync(Guid userId, GetNotificationsQuery query,
+        CancellationToken cancellationToken);
 
     /// <summary>Cheap count-only variant for the nav badge — only AutoApplied &amp; unread counts,
-    /// since a Confirmed suggestion is something the user already knowingly did themselves.</summary>
+    /// since a Confirmed suggestion is something the user already knowingly did themselves. A row the
+    /// user cleared off the page is not counted either, whatever its read state.</summary>
     Task<int> GetUnreadNotificationCountAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>Marks every currently-unread notification for the user as read — fired once when the
     /// notifications page loads, not per-row.</summary>
     Task MarkNotificationsReadAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Clears one notification off the page (see EmailSuggestion.NotificationDismissedAt).
+    /// False when the id is not one of the caller's notifications — a suggestion that never became
+    /// one (Pending, Dismissed, Reverted) is "not found" here too, so the route cannot be used to
+    /// probe for other suggestion ids.</summary>
+    Task<bool> DismissNotificationAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken);
+
+    /// <summary>Clears every notification the caller currently has; returns how many rows it touched.</summary>
+    Task<int> DismissAllNotificationsAsync(Guid userId, CancellationToken cancellationToken);
 }
+
+/// <summary>The paged list's page. Ten rows is what the Notifications page shows; the ceiling is
+/// there so a client cannot ask for the whole list back in one response.</summary>
+public sealed record GetNotificationsQuery(int Page = 1, int PageSize = 10);
 
 /// <summary>Shape the Gmail content script POSTs — sender/subject/snippet it read directly from the
 /// opened thread's DOM (subject/body capped client-side before this is ever built), never the raw
