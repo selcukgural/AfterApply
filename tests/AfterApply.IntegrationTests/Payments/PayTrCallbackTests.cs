@@ -219,13 +219,17 @@ public class PayTrCallbackTests(ApiHost<PaymentProfile> host) : IClassFixture<Ap
     }
 
     [Fact]
-    public async Task An_Unknown_Order_With_A_Valid_Hash_Is_Answered_Non_OK_So_PayTR_Keeps_Trying()
+    public async Task An_Unknown_Order_With_A_Valid_Hash_Is_Recorded_And_Answered_OK()
     {
+        // 2026-09-16: the merchant panel's live-mode check replays test notifications made against
+        // another environment; a non-OK answer only kept it red, since the order can never appear
+        // here. The evidence row (and the admin alert it feeds) is what we keep, not the retry.
         var response = await _host.NotifyAsync("ffffffffffffffffffffffffffffffff", "success", 29900);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        (await response.Content.ReadAsStringAsync()).ShouldBe("PAYTR notification failed: unknown order");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await response.Content.ReadAsStringAsync()).ShouldBe("OK");
         (await NotificationsAsync("ffffffffffffffffffffffffffffffff")).Single().Outcome.ShouldBe(PaymentNotificationOutcome.UnknownOrder);
+        (await _host.WithDbAsync(db => db.PaymentOrders.AnyAsync(o => o.MerchantOid == "ffffffffffffffffffffffffffffffff"))).ShouldBeFalse();
     }
 
     [Theory]

@@ -7031,3 +7031,24 @@ tsc, eslint (dokunulan dizinler 0 uyarı). Bayrak durumu değişmedi: `PayTr__En
 `JobSources__Enabled=false`, `PayTr__TestMode=true`; callback bayrağa bakmaz, yalnızca üç Secret
 Manager değerini ister — bunlar 2026-09-16'da `afterapply-paytr-merchant-{id,key,salt}` olarak
 oluşturuldu ve runtime SA'ya bağlandı.
+
+## PayTR bildirimi: bilinmeyen `merchant_oid` artık OK alıyor (2026-09-16, akşam)
+
+**Tetikleyici.** #55 deploy'undan sonra PayTR panelinin "Canlı Moda Geçiş › 3. Bildirim Süreci"
+adımı kırmızı kaldı: "Bildirim URL'de sorun var". Cloud Run logları PayTR'nin (212.252.97.250)
+her "Tekrar Kontrol Et"te 2. adımdaki **beş test işleminin** bildirimini yeniden gönderdiğini,
+hash'in geçtiğini ve bizim `404 unknown order` döndüğümüzü gösterdi. O siparişler local
+veritabanında oluşmuştu; prod onları hiçbir zaman göremeyecek — 15 Eylül'deki "bilinmeyen oid →
+non-OK, PayTR kapıyı çalmaya devam etsin" kuralı bu adımı sonsuza dek kırmızı tutuyordu.
+
+**Karar (A, kullanıcı onayı).** Hash geçerli + sipariş yok → yine `PaymentNotifications`'a
+`UnknownOrder` yazılır (admin uyarı listesinde görünür), ama cevap **OK**. Gerekçe: checkout,
+PayTR'den token istemeden önce sipariş satırını yazar; dolayısıyla bu veritabanında "hash geçerli
+ama sipariş yok" ancak başka bir ortamın işlemi demektir — tekrar deneme hiçbir şeyi bulamaz,
+kalıcı sinyal kanıt satırıdır. Bozuk hash / eksik alan / iç hata cevapları değişmedi (400/400/500).
+Reddedilen B: bayrakları açıp prod'da yeni test ödemesi yapmak — placeholder fiyat ve taslak
+hukuki metinler herkese görünür olurdu ve panel yine eski beş bildirimi tekrar gönderecekti.
+
+**Dokunulanlar.** `PayTrCallbackService` (bir dal + yorum), `PayTrCallbackTests`
+(`…Is_Recorded_And_Answered_OK`), `PayTrCheckoutTests` bayrak-kapalı testi (OK + bozuk hash hâlâ
+400), DEPLOYMENT.md §15. Payments entegrasyon sınıfları 47/47.
