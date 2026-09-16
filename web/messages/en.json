@@ -100,8 +100,8 @@
         "description": "Connect your browser extension to your e-kariyerim account with a single confirmation."
       },
       "companies": {
-        "title": "Company Reviews",
-        "description": "Anonymous, moderated reviews of employers by the people who worked there: management, work environment, pay and career growth, scored openly."
+        "title": "Company Reviews and Salaries",
+        "description": "Anonymous, structured employer reviews from people who worked there — management, work environment, pay, career — and, once signed in, anonymous salary information by occupation. The score is computed in the open."
       },
       "companyScoring": {
         "title": "How Company Scores Are Calculated",
@@ -209,7 +209,7 @@
         "companies": {
           "eyebrow": "Company reviews · anonymous, no account needed",
           "title": "Know what it's like inside before you apply.",
-          "body": "What working at a company is actually like — an overall score, averages for up to ten areas and the statements picked most often. Reading needs no account; writing only needs a sign-in.",
+          "body": "What working at a company is really like — an overall score, up to ten category averages, the most-picked statements and employees' anonymous salary reports. Reading reviews needs no account; salaries and writing need only a sign-in.",
           "bullet1": "Authors stay invisible: only the month and the relationship (current, former, intern)",
           "bullet2": "No free text: every statement comes from a fixed list written to be fair to everyone",
           "bullet3": "The score formula is public; no score is shown below three approved reviews",
@@ -229,7 +229,7 @@
         }
       },
       "companiesTitle": "Company reviews",
-      "companiesBody": "Anonymous, structured reviews from people who worked there — ratings and ready-made statements, no free text.",
+      "companiesBody": "Anonymous, structured reviews and salary information by occupation from people who worked there — ratings and fixed statements, no free text.",
       "companiesCta": "Browse companies"
     },
     "problem": {
@@ -276,7 +276,7 @@
       "cvTitle": "Know which CV you sent",
       "cvBody": "Keep the CV files you apply with in one place, and record on each application which one went out — so a call six weeks later doesn't start with guesswork.",
       "companiesTitle": "Know companies from the inside",
-      "companiesBody": "Anonymous reviews from people who worked there and a score with a public formula — read without an account, write once signed in.",
+      "companiesBody": "Anonymous reviews from people who worked there, a score with a published formula, and salary information by occupation — read reviews without an account, see salaries and add your own once signed in.",
       "companiesCta": "Browse companies",
       "companiesBadge": "New"
     },
@@ -2061,7 +2061,11 @@
       },
       "q15": {
         "question": "What can I use on e-kariyerim without an account?",
-        "answer": "Three things: CV Scan (how machine-readable your CV is), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension and writing a review need a free account."
+        "answer": "Three things: CV Scan (how machine-readable your CV is), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension, writing a review, and reading or sharing salary information need a free account."
+      },
+      "q16": {
+        "question": "Is the salary I share anonymous, and who sees it?",
+        "answer": "Yes. A salary entry never shows your name, e-mail or account; readers see the occupation you picked from the list, your experience as a band (0–1, 2–4, 5–9, 10+ years), your employment type, whether you are a current or former employee, the month and the amount. There is no free text. Only signed-in users can read salary entries; you can edit or delete yours on My Salaries."
       }
     },
     "cv": {
@@ -2807,8 +2811,8 @@
   },
   "companies": {
     "directory": {
-      "title": "Company reviews",
-      "subtitle": "What it is actually like to work somewhere, from the people who did — anonymous, structured, no free text.",
+      "title": "Company reviews and salaries",
+      "subtitle": "What working somewhere is really like and what it pays — from people who worked there; anonymous, structured, no free text. Reviews are public, salaries are for signed-in readers.",
       "searchPlaceholder": "Search a company…",
       "searchLabel": "Search companies",
       "writeCta": "Write a review",
@@ -2823,7 +2827,7 @@
       "explainer": {
         "what": {
           "title": "What a review holds",
-          "body": "An overall rating, up to ten optional area ratings — management, pay, remote work and more — and a few ready-made statements about what was liked and what could be better."
+          "body": "One overall rating, up to ten optional category ratings — management, pay, remote work and more — and a few fixed statements about what was good and what could improve. Signed in, also salary entries with the occupation, an experience band and the monthly net amount."
         },
         "anonymous": {
           "title": "Anonymous",
@@ -2836,8 +2840,8 @@
       }
     },
     "page": {
-      "metaTitle": "{company} reviews",
-      "metaDescription": "{count, plural, =0 {No published review of {company} yet — be the first.} =1 {1 anonymous employee review of {company}, with a score you can check.} other {# anonymous employee reviews of {company}, with a score you can check.}}",
+      "metaTitle": "{company} reviews and salaries",
+      "metaDescription": "{count, plural, =0 {No published reviews of {company} yet — be the first. Salaries shared by employees are visible once you sign in.} =1 {1 anonymous employee review of {company}, a score you can check, and anonymous salary information by occupation once you sign in.} other {# anonymous employee reviews of {company}, a score you can check, and anonymous salary information by occupation once you sign in.}}",
       "breadcrumbLabel": "Breadcrumb",
       "allCompanies": "← All companies",
       "subtitle": "Anonymous, structured reviews and salary information from people who worked here.",

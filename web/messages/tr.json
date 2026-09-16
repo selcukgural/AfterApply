@@ -100,8 +100,8 @@
         "description": "Tarayıcı eklentini e-kariyerim hesabına tek onayla bağla."
       },
       "companies": {
-        "title": "Şirket Değerlendirmeleri",
-        "description": "Orada çalışmış kişilerden anonim, moderasyonlu işveren değerlendirmeleri: yönetim, çalışma ortamı, ücret ve kariyer gelişimi — puanı açık hesaplanır."
+        "title": "Şirket Değerlendirmeleri ve Maaşları",
+        "description": "Orada çalışmış kişilerden anonim, yapılandırılmış işveren değerlendirmeleri — yönetim, çalışma ortamı, ücret, kariyer — ve giriş yapınca meslek bazında anonim maaş bilgileri. Puanı açık hesaplanır."
       },
       "companyScoring": {
         "title": "Şirket Puanı Nasıl Hesaplanır",
@@ -209,7 +209,7 @@
         "companies": {
           "eyebrow": "Şirket değerlendirmeleri · anonim, hesap gerekmez",
           "title": "Başvurmadan önce içeriyi öğren.",
-          "body": "Bir şirkette çalışmak gerçekte nasıl — genel puan, on alana kadar ortalama ve en sık seçilen maddeler. Okumak için hesap gerekmez; yazmak için yalnızca giriş.",
+          "body": "Bir şirkette çalışmak gerçekte nasıl — genel puan, on alana kadar ortalama, en sık seçilen maddeler ve çalışanların anonim maaş beyanları. Değerlendirmeleri okumak için hesap gerekmez; maaşlar ve yazmak için yalnızca giriş.",
           "bullet1": "Yazan görünmez: yalnızca ay ve çalışan ilişkisi (mevcut, eski, stajyer)",
           "bullet2": "Serbest metin yok: her madde herkese adil olacak şekilde yazılmış sabit bir listeden gelir",
           "bullet3": "Puan formülü açık; üç onaylı değerlendirmenin altında puan gösterilmez",
@@ -229,7 +229,7 @@
         }
       },
       "companiesTitle": "Şirket değerlendirmeleri",
-      "companiesBody": "Orada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler — puanlar ve hazır maddeler, serbest metin yok.",
+      "companiesBody": "Orada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler ve meslek bazında maaş bilgileri — puanlar ve hazır maddeler, serbest metin yok.",
       "companiesCta": "Şirketlere göz at"
     },
     "problem": {
@@ -276,7 +276,7 @@
       "cvTitle": "Hangi CV ile başvurduğunuzu bilin",
       "cvBody": "Başvururken kullandığınız CV dosyalarını tek yerde tutun ve her başvuruda hangisinin gittiğini kaydedin — altı hafta sonra gelen bir telefon tahminle başlamasın.",
       "companiesTitle": "Şirketleri içeriden tanı",
-      "companiesBody": "Orada çalışmış kişilerin anonim değerlendirmeleri ve açık formüllü bir puan — hesap gerekmeden oku, giriş yapınca yaz.",
+      "companiesBody": "Orada çalışmış kişilerin anonim değerlendirmeleri, açık formüllü bir puan ve meslek bazında maaş bilgileri — değerlendirmeleri hesap gerekmeden oku, giriş yapınca maaşları gör ve kendi katkını bırak.",
       "companiesCta": "Şirketlere göz at",
       "companiesBadge": "Yeni"
     },
@@ -2061,7 +2061,11 @@
       },
       "q15": {
         "question": "e-kariyerim'de hesap açmadan neler kullanılabilir?",
-        "answer": "Üç şey: CV Tarama (CV'nizin makine okunabilirliği), geri dönüş oranı kıyaslama ve şirket değerlendirmelerini okumak. Başvuru takibi, panel, Chrome eklentisi ve değerlendirme yazmak için ücretsiz bir hesap gerekir."
+        "answer": "Üç şey: CV Tarama (CV'nizin makine okunabilirliği), geri dönüş oranı kıyaslama ve şirket değerlendirmelerini okumak. Başvuru takibi, panel, Chrome eklentisi, değerlendirme yazmak ve maaş bilgilerini okuyup paylaşmak için ücretsiz bir hesap gerekir."
+      },
+      "q16": {
+        "question": "Paylaştığım maaş bilgisi anonim mi, kim görür?",
+        "answer": "Evet. Bir maaş kaydında adınız, e-postanız ya da hesabınız görünmez; okuyucular listeden seçtiğiniz mesleği, tecrübenizi bant olarak (0–1, 2–4, 5–9, 10+ yıl), çalışma şeklinizi, mevcut/eski çalışan olduğunuzu, ayı ve tutarı görür. Serbest metin yoktur. Maaş kayıtlarını yalnızca giriş yapmış kullanıcılar okuyabilir; kaydınızı Maaşlarım sayfasından düzenleyebilir ya da silebilirsiniz."
       }
     },
     "cv": {
@@ -2807,8 +2811,8 @@
   },
   "companies": {
     "directory": {
-      "title": "Şirket değerlendirmeleri",
-      "subtitle": "Bir yerde çalışmak gerçekte nasıl — orada çalışmış insanlardan; anonim, yapılandırılmış, serbest metin yok.",
+      "title": "Şirket değerlendirmeleri ve maaşları",
+      "subtitle": "Bir yerde çalışmak gerçekte nasıl ve ne kadar kazanılıyor — orada çalışmış insanlardan; anonim, yapılandırılmış, serbest metin yok. Değerlendirmeler herkese açık, maaşlar giriş yapanlara.",
       "searchPlaceholder": "Şirket ara…",
       "searchLabel": "Şirket ara",
       "writeCta": "Değerlendirme yaz",
@@ -2823,7 +2827,7 @@
       "explainer": {
         "what": {
           "title": "Bir değerlendirme ne içerir",
-          "body": "Bir genel puan, isteğe bağlı on alan puanı — yönetim, ücret, uzaktan çalışma ve daha fazlası — ve beğenilen ile geliştirilebilir olanlar hakkında birkaç hazır madde."
+          "body": "Bir genel puan, isteğe bağlı on alan puanı — yönetim, ücret, uzaktan çalışma ve daha fazlası — ve beğenilen ile geliştirilebilir olanlar hakkında birkaç hazır madde. Giriş yapınca ayrıca meslek, tecrübe bandı ve aylık net tutarla maaş kayıtları."
         },
         "anonymous": {
           "title": "Anonim",
@@ -2836,8 +2840,8 @@
       }
     },
     "page": {
-      "metaTitle": "{company} değerlendirmeleri",
-      "metaDescription": "{count, plural, =0 {{company} için henüz yayımlanmış değerlendirme yok — ilk yazan sen ol.} =1 {{company} hakkında 1 anonim çalışan değerlendirmesi ve kontrol edebileceğin bir puan.} other {{company} hakkında # anonim çalışan değerlendirmesi ve kontrol edebileceğin bir puan.}}",
+      "metaTitle": "{company} değerlendirmeleri ve maaşları",
+      "metaDescription": "{count, plural, =0 {{company} için henüz yayımlanmış değerlendirme yok — ilk yazan sen ol. Çalışanların paylaştığı maaşlar giriş yapınca görünür.} =1 {{company} hakkında 1 anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.} other {{company} hakkında # anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.}}",
       "breadcrumbLabel": "Gezinti",
       "allCompanies": "← Tüm şirketler",
       "subtitle": "Burada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler ve maaş bilgileri.",
