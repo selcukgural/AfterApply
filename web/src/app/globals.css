@@ -128,3 +128,16 @@
     radial-gradient(38rem 24rem at 58% -5%, rgb(21 170 183 / 0.18), transparent 70%),
     radial-gradient(36rem 24rem at 92% 65%, rgb(47 196 95 / 0.16), transparent 70%);
 }
+
+/* The same two pools scaled to a card — the dashboard's weekly-postings announcement. */
+.aa-card-glow {
+  background-image:
+    radial-gradient(28rem 14rem at 0% 0%, rgb(28 57 183 / 0.14), transparent 70%),
+    radial-gradient(22rem 12rem at 100% 100%, rgb(21 170 183 / 0.16), transparent 70%);
+}
+
+.dark .aa-card-glow {
+  background-image:
+    radial-gradient(28rem 14rem at 0% 0%, rgb(28 57 183 / 0.32), transparent 70%),
+    radial-gradient(22rem 12rem at 100% 100%, rgb(21 170 183 / 0.22), transparent 70%);
+}

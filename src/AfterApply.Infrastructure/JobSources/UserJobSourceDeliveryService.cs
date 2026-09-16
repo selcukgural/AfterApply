@@ -123,6 +123,18 @@ internal sealed class UserJobSourceDeliveryService(
             .Select(d => d.FileName)
             .FirstOrDefaultAsync(cancellationToken);
         var hasProfile = await dbContext.UserJobSourceProfiles.AnyAsync(p => p.UserId == userId, cancellationToken);
-        return new JobSourceStatusResponse(activeUntil is not null, activeUntil, cv is not null, cv, hasProfile);
+        var announcementDismissed = await dbContext.Users.AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => u.WeeklyJobsAnnouncementDismissedAt != null)
+            .FirstOrDefaultAsync(cancellationToken);
+        return new JobSourceStatusResponse(activeUntil is not null, activeUntil, cv is not null, cv, hasProfile, announcementDismissed);
+    }
+
+    public async Task DismissAnnouncementAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var now = _timeProvider.GetUtcNow();
+        await dbContext.Users
+            .Where(u => u.Id == userId && u.WeeklyJobsAnnouncementDismissedAt == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.WeeklyJobsAnnouncementDismissedAt, now), cancellationToken);
     }
 }

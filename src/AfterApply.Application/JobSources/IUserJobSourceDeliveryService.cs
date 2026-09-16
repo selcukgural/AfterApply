@@ -18,4 +18,7 @@ public interface IUserJobSourceDeliveryService
 
     /// <summary>The page's opening question: paying, CV present, criteria saved.</summary>
     Task<JobSourceStatusResponse> GetStatusAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Closes the dashboard's announcement of the feature for good, for this account.</summary>
+    Task DismissAnnouncementAsync(Guid userId, CancellationToken cancellationToken);
 }

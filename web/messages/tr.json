@@ -653,6 +653,25 @@
       "confirming": "İşaretleniyor...",
       "notNow": "Şimdi değil",
       "error": "İşaretleme tamamlanamadı. Tekrar dene."
+    },
+    "weeklyJobsAnnouncement": {
+      "badge": "YENİ · PRO",
+      "title": "İş aramayı siz değil, biz yapalım: her Pazartesi size uyan ilanlar hazır",
+      "body": "LinkedIn ve kariyer.net'teki yeni ilanlar CV'nizle karşılaştırılıp puanlanır; uyan ve eksik kriterler yazılır, zaten başvurduklarınız elenir.",
+      "chip1": "Haftada 50 ilana kadar",
+      "chip2": "Uyum puanı + eksik kriterler",
+      "chip3": "Tek tıkla \"Başvurdum\"",
+      "cta": "Pro'ya geç · {price}/ay",
+      "how": "Nasıl çalışır",
+      "noAutoRenew": "Otomatik yenileme yok",
+      "sampleLabel": "Bu hafta · örnek",
+      "sample1Title": "Senior .NET Developer",
+      "sample1Company": "Acme Bankacılık · İstanbul",
+      "sample2Title": "Backend Engineer (C#)",
+      "sample2Company": "Kuzey Teknoloji · Uzaktan",
+      "sample3Title": "Software Developer",
+      "sample3Company": "Marmara Yazılım · İstanbul",
+      "close": "Duyuruyu kapat"
     }
   },
   "applications": {

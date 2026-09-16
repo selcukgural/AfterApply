@@ -34,6 +34,14 @@ public static class JobSourceEndpoints
             .WithSummary("Whether the current user is on the paid plan, has a CV and has saved criteria")
             .Produces<JobSourceStatusResponse>();
 
+        group.MapPost("/announcement/dismiss", async (ClaimsPrincipal user, IUserJobSourceDeliveryService service, CancellationToken cancellationToken) =>
+            {
+                await service.DismissAnnouncementAsync(user.GetUserId(), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithSummary("Close the dashboard's announcement of the weekly postings for good")
+            .Produces(StatusCodes.Status204NoContent);
+
         group.MapGet("/profile", async (ClaimsPrincipal user, IUserJobSourceProfileService service, CancellationToken cancellationToken) =>
             {
                 var profile = await service.GetAsync(user.GetUserId(), cancellationToken);

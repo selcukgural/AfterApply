@@ -55,6 +55,7 @@ public class JobSourceFlagOffTests(ApiHost<DefaultProfile> host) : IClassFixture
             .StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await _admin.GetAsync("/api/job-sources/postings")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await _admin.GetAsync("/api/job-sources/status")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await _admin.PostAsync("/api/job-sources/announcement/dismiss", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await _admin.PostAsync($"/api/job-sources/postings/{userId}/apply", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await _admin.GetFromJsonAsync<System.Text.Json.JsonElement>("/api/config", JsonOptions))
             .GetProperty("jobSources").GetProperty("enabled").GetBoolean().ShouldBeFalse();

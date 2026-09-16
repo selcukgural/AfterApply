@@ -79,7 +79,10 @@ public sealed record JobSourceStatusResponse(
     DateTimeOffset? ProActiveUntil,
     bool HasCv,
     string? CvFileName,
-    bool HasProfile);
+    bool HasProfile,
+    /// <summary>Whether the user closed the dashboard's announcement of this feature; the card
+    /// stays away once true.</summary>
+    bool AnnouncementDismissed);
 
 public sealed record UserJobSourceSettingsResponse(Guid UserId, int? WeeklyPostingLimit, int EffectiveWeeklyPostingLimit);
 

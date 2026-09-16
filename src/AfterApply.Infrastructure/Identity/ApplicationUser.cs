@@ -62,4 +62,14 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     /// becoming permanent. Null: never dismissed.
     /// </summary>
     public DateTimeOffset? StaleSuggestionDismissedAt { get; set; }
+
+    /// <summary>
+    /// When the user closed the dashboard's "weekly postings are here" announcement. One-shot:
+    /// a closed announcement never returns for this account, on any device. Null: not closed
+    /// (or never shown — the card only appears to accounts that are not Pro while the plan is on
+    /// sale). Lives here rather than in a preferences table because it is the second such flag
+    /// (StaleSuggestionDismissedAt is the first) and a table for two nullable timestamps is not
+    /// yet worth its migration.
+    /// </summary>
+    public DateTimeOffset? WeeklyJobsAnnouncementDismissedAt { get; set; }
 }

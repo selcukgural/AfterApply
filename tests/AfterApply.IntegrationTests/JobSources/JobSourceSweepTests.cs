@@ -391,6 +391,24 @@ public class JobSourceSweepTests(ApiHost<JobSourceSweepProfile> host) : IClassFi
     }
 
     [Fact]
+    public async Task The_Dashboard_Announcement_Stays_Closed_Once_Dismissed_For_That_Account_Only()
+    {
+        (await _free.GetFromJsonAsync<JobSourceStatusResponse>("/api/job-sources/status", JsonOptions))!.AnnouncementDismissed.ShouldBeFalse();
+
+        (await _free.PostAsync("/api/job-sources/announcement/dismiss", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        // Idempotent: a second close is a no-op, not an error.
+        (await _free.PostAsync("/api/job-sources/announcement/dismiss", null)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await _free.GetFromJsonAsync<JobSourceStatusResponse>("/api/job-sources/status", JsonOptions))!.AnnouncementDismissed.ShouldBeTrue();
+        // Per account: another user's card is untouched.
+        (await _pro1.GetFromJsonAsync<JobSourceStatusResponse>("/api/job-sources/status", JsonOptions))!.AnnouncementDismissed.ShouldBeFalse();
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.Users.SingleAsync(u => u.Id == _freeId)).WeeklyJobsAnnouncementDismissedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
     public async Task Admin_Routes_Refuse_Ordinary_Users_And_The_Profile_Is_Validated()
     {
         (await _pro1.GetAsync($"/api/admin/job-sources/settings/{_pro1Id}")).StatusCode.ShouldBe(HttpStatusCode.Forbidden);

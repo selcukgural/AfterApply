@@ -1168,6 +1168,8 @@ export interface JobSourceStatusResponse {
   hasCv: boolean;
   cvFileName: string | null;
   hasProfile: boolean;
+  /** Whether the user closed the dashboard's announcement of this feature. */
+  announcementDismissed: boolean;
 }
 
 export interface JobSourceProfileResponse {

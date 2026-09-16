@@ -33,6 +33,9 @@ export const jobSourcesApi = {
 
   deleteProfile: () => apiFetch<void>("/api/job-sources/profile", { method: "DELETE" }),
 
+  /** Closes the dashboard's announcement of the feature for good, for this account. */
+  dismissAnnouncement: () => apiFetch<void>("/api/job-sources/announcement/dismiss", { method: "POST" }),
+
   listPostings: (week?: number) =>
     apiFetch<JobSourceDeliveriesResponse>(`/api/job-sources/postings${week ? `?week=${week}` : ""}`),
 

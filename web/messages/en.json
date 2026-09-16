@@ -653,6 +653,25 @@
       "confirming": "Marking...",
       "notNow": "Not now",
       "error": "Marking didn't go through. Try again."
+    },
+    "weeklyJobsAnnouncement": {
+      "badge": "NEW · PRO",
+      "title": "Let us do the searching: postings that fit you, ready every Monday",
+      "body": "New postings on LinkedIn and kariyer.net are compared with your CV and scored; matched and missing criteria are spelled out, and the ones you already applied to are left out.",
+      "chip1": "Up to 50 postings a week",
+      "chip2": "Fit score + missing criteria",
+      "chip3": "One-click \"I applied\"",
+      "cta": "Go Pro · {price}/mo",
+      "how": "How it works",
+      "noAutoRenew": "No automatic renewal",
+      "sampleLabel": "This week · sample",
+      "sample1Title": "Senior .NET Developer",
+      "sample1Company": "Acme Bankacılık · İstanbul",
+      "sample2Title": "Backend Engineer (C#)",
+      "sample2Company": "Kuzey Teknoloji · Remote",
+      "sample3Title": "Software Developer",
+      "sample3Company": "Marmara Yazılım · İstanbul",
+      "close": "Close the announcement"
     }
   },
   "applications": {
