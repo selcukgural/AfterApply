@@ -2,28 +2,26 @@ using AfterApply.Domain.CompanyReviews;
 
 namespace AfterApply.Application.CompanyReviews.Contracts;
 
-/// <summary>What the author writes. The company comes from the route, never from the body.</summary>
+/// <summary>One optional category rating. A list of these rather than a dictionary keyed by
+/// enum: it serialises as plain JSON and reads the same in OpenAPI.</summary>
+public sealed record ReviewCategoryRatingDto(ReviewCategory Category, int Rating);
+
+/// <summary>What the author says — a required overall rating, optional category ratings and
+/// picks from <see cref="ReviewStatementCatalogue"/> by key. There is no free text on purpose.
+/// The company comes from the route, never from the body.</summary>
 public sealed record CreateCompanyReviewRequest(
     EmploymentStatus EmploymentStatus,
-    string Title,
-    string Pros,
-    string Cons,
     int OverallRating,
-    int ManagementRating,
-    int WorkEnvironmentRating,
-    int SalaryAndBenefitsRating,
-    int CareerAndDevelopmentRating);
+    IReadOnlyList<ReviewCategoryRatingDto>? CategoryRatings = null,
+    IReadOnlyList<string>? LikedStatements = null,
+    IReadOnlyList<string>? ImprovableStatements = null);
 
 public sealed record UpdateCompanyReviewRequest(
     EmploymentStatus EmploymentStatus,
-    string Title,
-    string Pros,
-    string Cons,
     int OverallRating,
-    int ManagementRating,
-    int WorkEnvironmentRating,
-    int SalaryAndBenefitsRating,
-    int CareerAndDevelopmentRating);
+    IReadOnlyList<ReviewCategoryRatingDto>? CategoryRatings = null,
+    IReadOnlyList<string>? LikedStatements = null,
+    IReadOnlyList<string>? ImprovableStatements = null);
 
 /// <summary>Find-or-create a company by name so it can be reviewed — the same resolver the
 /// application form uses, so "Türk Telekom A.Ş." and "turk telekom" land on one row.</summary>

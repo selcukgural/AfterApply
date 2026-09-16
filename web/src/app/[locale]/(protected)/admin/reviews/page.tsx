@@ -15,7 +15,8 @@ import {
   withFilterChange,
   type ModerationListFilters,
 } from "@/lib/companyReviews/moderationListView";
-import { RATING_KEYS } from "@/lib/companyReviews/reviewDraft";
+import { categoryMessageKey } from "@/lib/companyReviews/statementCatalogue";
+import { ReviewPicks } from "@/components/companyReviews/ReviewPicks";
 import { moderationGuideStore } from "@/lib/admin/moderationGuideStore";
 import { Card } from "@/components/dashboard/Card";
 import { Button } from "@/components/ui/Button";
@@ -36,7 +37,7 @@ export default function AdminReviewsPage() {
   const t = useTranslations("adminReviews");
   const tStatus = useTranslations("reviewModerationStatus");
   const tEmployment = useTranslations("employmentStatus");
-  const tRatings = useTranslations("companyReviews.ratings");
+  const tCategories = useTranslations("companyReviews.categories");
   const tReasons = useTranslations("reviewReportReason");
   const locale = useLocale();
   const router = useRouter();
@@ -209,7 +210,9 @@ export default function AdminReviewsPage() {
                   }}
                 >
                   <td className="px-4 py-2 text-gray-900 dark:text-gray-100">{item.companyName}</td>
-                  <td className="max-w-[16rem] truncate px-4 py-2 text-gray-700 dark:text-gray-300">{item.title}</td>
+                  <td className="max-w-[16rem] truncate px-4 py-2 text-gray-700 dark:text-gray-300">
+                    {item.format === "Legacy" ? item.title : t("detail.structuredRow", { overall: item.overallRating })}
+                  </td>
                   <td className="px-4 py-2 tabular-nums text-gray-900 dark:text-gray-100">{item.overallRating}</td>
                   <td className="px-4 py-2">
                     <ReviewStatusBadge status={item.status} />
@@ -266,7 +269,9 @@ export default function AdminReviewsPage() {
           {review && (
             <div className="flex flex-col gap-4 text-sm">
               <div>
-                <h2 className="text-lg font-semibold">{review.title}</h2>
+                <h2 className="text-lg font-semibold">
+                  {review.format === "Legacy" ? review.title : t("detail.structuredRow", { overall: review.overallRating })}
+                </h2>
                 <p className="text-gray-600 dark:text-gray-400">
                   {review.companySlug ? (
                     <Link href={`/companies/${review.companySlug}`} className="underline-offset-2 hover:underline">
@@ -283,25 +288,44 @@ export default function AdminReviewsPage() {
                 </p>
               </div>
 
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                {RATING_KEYS.map((key) => (
-                  <div key={key} className="flex items-center justify-between gap-2">
-                    <dt className="text-gray-600 dark:text-gray-400">{tRatings(key)}</dt>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs" aria-label={t("detail.categories")}>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-gray-600 dark:text-gray-400">{tCategories("overall")}</dt>
+                  <dd>
+                    <StarRating value={review.overallRating} label={String(review.overallRating)} />
+                  </dd>
+                </div>
+                {review.categoryRatings.map(({ category, rating }) => (
+                  <div key={category} className="flex items-center justify-between gap-2">
+                    <dt className="text-gray-600 dark:text-gray-400">{tCategories(categoryMessageKey(category))}</dt>
                     <dd>
-                      <StarRating value={review[key]} label={String(review[key])} />
+                      <StarRating value={rating} label={String(rating)} />
                     </dd>
                   </div>
                 ))}
+                {review.legacySalaryAndBenefitsRating !== null && (
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="text-gray-600 dark:text-gray-400">{t("detail.legacySalaryAndBenefits")}</dt>
+                    <dd>
+                      <StarRating value={review.legacySalaryAndBenefitsRating} label={String(review.legacySalaryAndBenefitsRating)} />
+                    </dd>
+                  </div>
+                )}
               </dl>
 
-              <div>
-                <h3 className="text-xs font-semibold uppercase text-green-700">{t("detail.pros")}</h3>
-                <p className="whitespace-pre-wrap">{review.pros}</p>
-              </div>
-              <div>
-                <h3 className="text-xs font-semibold uppercase text-red-700">{t("detail.cons")}</h3>
-                <p className="whitespace-pre-wrap">{review.cons}</p>
-              </div>
+              {review.format === "Legacy" ? (
+                <>
+                  {/* Legacy text: the moderator still reads it — a pending one needs a decision, and a
+                      reported one is judged on what it says. Rendered as text, never as HTML. */}
+                  <p className="text-xs font-semibold uppercase text-gray-500">{t("detail.legacyRow")}</p>
+                  <p className="whitespace-pre-wrap">{review.pros}</p>
+                  <p className="whitespace-pre-wrap">{review.cons}</p>
+                </>
+              ) : review.likedStatements.length + review.improvableStatements.length > 0 ? (
+                <ReviewPicks liked={review.likedStatements} improvable={review.improvableStatements} />
+              ) : (
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("detail.noStatements")}</p>
+              )}
 
               {/* The author: admin-only, on purpose. */}
               <div className="rounded-lg border border-gray-200 p-3 dark:border-gray-800">

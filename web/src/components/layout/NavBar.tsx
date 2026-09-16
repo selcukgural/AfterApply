@@ -14,7 +14,7 @@ import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { displayName } from "@/lib/auth/displayName";
 import { UserMenu } from "@/components/layout/UserMenu";
-import { ExploreMenu, TOOL_LINKS } from "@/components/layout/ExploreMenu";
+import { COMPANY_LINKS, ExploreMenu, TOOL_LINKS } from "@/components/layout/ExploreMenu";
 import { NavMenu } from "@/components/layout/NavMenu";
 import { ProBadge } from "@/components/layout/ProBadge";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
@@ -28,8 +28,8 @@ const NAV_LINKS = [
   { href: "/tracked-jobs", key: "trackedJobs" },
   { href: "/cv", key: "cv" },
   { href: "/import", key: "import" },
-  // Public page, but listed here too: a signed-in person is the one who can write a review.
-  { href: "/companies", key: "companies" },
+  // "Companies" is not here: on desktop it sits in the Explore group, on mobile in its own
+  // section (COMPANY_LINKS) — the directory plus the two contributions a signed-in person can make.
 ] as const;
 
 /**
@@ -228,6 +228,24 @@ export function NavBar() {
           </nav>
 
           <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
+            <p className="mb-1 px-3 text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">{t("companies")}</p>
+            <nav className="flex flex-col gap-1 text-sm">
+              {COMPANY_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  // A contribute link differs from its twin only by query string, which the
+                  // pathname does not carry — so only the directory can be "current" here.
+                  className={navLinkClassName("pill", !link.href.includes("?") && active(link.href), "flex items-center gap-1.5 px-3 py-2")}
+                >
+                  {t(link.key)}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
             {user && <p className="mb-3 px-3 text-sm font-medium text-gray-900 dark:text-gray-100">{fullName}</p>}
             <nav className="flex flex-col gap-1 text-sm">
               <Link href="/help" onClick={() => setMenuOpen(false)} className={mobileLink("/help")}>
@@ -238,6 +256,9 @@ export function NavBar() {
               </Link>
               <Link href="/my-reviews" onClick={() => setMenuOpen(false)} className={mobileLink("/my-reviews")}>
                 {t("myReviews")}
+              </Link>
+              <Link href="/my-salaries" onClick={() => setMenuOpen(false)} className={mobileLink("/my-salaries")}>
+                {t("mySalaries")}
               </Link>
               {showPro && (
                 <Link href={PRO_NAV_HREF} onClick={() => setMenuOpen(false)} className={mobileLink("/pro")}>

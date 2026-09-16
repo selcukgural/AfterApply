@@ -1,11 +1,23 @@
-import type { CompanyReviewRequest, EmploymentStatus, ReviewReportReason } from "@/types/api";
+import type {
+  CompanyReviewRequest,
+  EmploymentStatus,
+  MyCompanyReview,
+  ReviewCategory,
+  ReviewReportReason,
+  ReviewStatementKind,
+} from "@/types/api";
+import {
+  LEGACY_CATEGORY_MAP,
+  MAX_PICKS_PER_KIND,
+  OPTIONAL_CATEGORIES,
+  SUGGESTION_COUNT,
+  findStatement,
+  statementsFor,
+  type ReviewStatement,
+} from "@/lib/companyReviews/statementCatalogue";
 
-// Mirrors CompanyReview's constants and ReviewContentRules on the server. The server is the one
-// that decides; these exist so the form can say the same thing before a round trip.
-export const REVIEW_TITLE_MIN_LENGTH = 3;
-export const REVIEW_TITLE_MAX_LENGTH = 120;
-export const REVIEW_TEXT_MIN_LENGTH = 20;
-export const REVIEW_TEXT_MAX_LENGTH = 2000;
+// Mirrors CompanyReview's constants and StructuredReviewRules on the server. The server is the
+// one that decides; these exist so the form can say the same thing before a round trip.
 export const REPORT_NOTE_MAX_LENGTH = 500;
 export const RATING_MIN = 1;
 export const RATING_MAX = 5;
@@ -22,55 +34,39 @@ export const REPORT_REASONS: readonly ReviewReportReason[] = [
   "Other",
 ];
 
-/** The five ratings, in the order the form and the summary panel show them. Keys are the request
- *  field names, so the same list drives both. */
-export const RATING_KEYS = [
-  "overallRating",
-  "managementRating",
-  "workEnvironmentRating",
-  "salaryAndBenefitsRating",
-  "careerAndDevelopmentRating",
-] as const;
-
-export type RatingKey = (typeof RATING_KEYS)[number];
-
+/** What the form holds. `overall` is the one required rating; `ratings` holds only the optional
+ *  categories the author has rated (0 or absent = left blank, which is different from any number);
+ *  the two pick lists are catalogue keys in the order they were picked. */
 export interface ReviewDraft {
   employmentStatus: EmploymentStatus | "";
-  title: string;
-  pros: string;
-  cons: string;
-  ratings: Record<RatingKey, number>;
+  overall: number;
+  ratings: Partial<Record<ReviewCategory, number>>;
+  liked: string[];
+  improvable: string[];
 }
 
 export const EMPTY_REVIEW_DRAFT: ReviewDraft = {
   employmentStatus: "",
-  title: "",
-  pros: "",
-  cons: "",
-  ratings: {
-    overallRating: 0,
-    managementRating: 0,
-    workEnvironmentRating: 0,
-    salaryAndBenefitsRating: 0,
-    careerAndDevelopmentRating: 0,
-  },
+  overall: 0,
+  ratings: {},
+  liked: [],
+  improvable: [],
 };
 
 /** Translation keys under `companyReviews.form.problems`. */
 export type ReviewDraftProblem =
   | "employmentStatusRequired"
-  | "titleRequired"
-  | "titleTooShort"
-  | "titleTooLong"
-  | "prosRequired"
-  | "prosTooShort"
-  | "prosTooLong"
-  | "consRequired"
-  | "consTooShort"
-  | "consTooLong"
-  | "ratingRequired";
+  | "overallRequired"
+  | "ratingInvalid"
+  | "tooManyLiked"
+  | "tooManyImprovable"
+  | "unknownStatement";
 
-export type ReviewDraftField = "employmentStatus" | "title" | "pros" | "cons" | RatingKey;
+export type ReviewDraftField = "employmentStatus" | "overall" | "liked" | "improvable" | ReviewCategory;
+
+function isOnScale(value: number | undefined): value is number {
+  return Number.isInteger(value) && (value as number) >= RATING_MIN && (value as number) <= RATING_MAX;
+}
 
 /** Every problem at once, keyed by field, so the form can mark each field rather than the first. */
 export function validateReviewDraft(draft: ReviewDraft): Partial<Record<ReviewDraftField, ReviewDraftProblem>> {
@@ -80,27 +76,23 @@ export function validateReviewDraft(draft: ReviewDraft): Partial<Record<ReviewDr
     problems.employmentStatus = "employmentStatusRequired";
   }
 
-  const title = draft.title.trim();
-  if (title.length === 0) problems.title = "titleRequired";
-  else if (title.length < REVIEW_TITLE_MIN_LENGTH) problems.title = "titleTooShort";
-  else if (title.length > REVIEW_TITLE_MAX_LENGTH) problems.title = "titleTooLong";
+  if (!isOnScale(draft.overall)) {
+    problems.overall = "overallRequired";
+  }
 
-  const pros = draft.pros.trim();
-  if (pros.length === 0) problems.pros = "prosRequired";
-  else if (pros.length < REVIEW_TEXT_MIN_LENGTH) problems.pros = "prosTooShort";
-  else if (pros.length > REVIEW_TEXT_MAX_LENGTH) problems.pros = "prosTooLong";
-
-  const cons = draft.cons.trim();
-  if (cons.length === 0) problems.cons = "consRequired";
-  else if (cons.length < REVIEW_TEXT_MIN_LENGTH) problems.cons = "consTooShort";
-  else if (cons.length > REVIEW_TEXT_MAX_LENGTH) problems.cons = "consTooLong";
-
-  for (const key of RATING_KEYS) {
-    const value = draft.ratings[key];
-    if (!Number.isInteger(value) || value < RATING_MIN || value > RATING_MAX) {
-      problems[key] = "ratingRequired";
+  for (const category of OPTIONAL_CATEGORIES) {
+    const value = draft.ratings[category];
+    // Absent or zero is "left blank" and fine; anything else must be on the scale.
+    if (value !== undefined && value !== 0 && !isOnScale(value)) {
+      problems[category] = "ratingInvalid";
     }
   }
+
+  if (draft.liked.length > MAX_PICKS_PER_KIND) problems.liked = "tooManyLiked";
+  if (draft.improvable.length > MAX_PICKS_PER_KIND) problems.improvable = "tooManyImprovable";
+
+  if (draft.liked.some((key) => findStatement(key)?.kind !== "Liked")) problems.liked = "unknownStatement";
+  if (draft.improvable.some((key) => findStatement(key)?.kind !== "Improve")) problems.improvable = "unknownStatement";
 
   return problems;
 }
@@ -109,28 +101,66 @@ export function validateReviewDraft(draft: ReviewDraft): Partial<Record<ReviewDr
 export function buildReviewRequest(draft: ReviewDraft): CompanyReviewRequest {
   return {
     employmentStatus: draft.employmentStatus as EmploymentStatus,
-    title: draft.title.trim(),
-    pros: draft.pros.trim(),
-    cons: draft.cons.trim(),
-    ...draft.ratings,
+    overallRating: draft.overall,
+    categoryRatings: OPTIONAL_CATEGORIES.flatMap((category) => {
+      const rating = draft.ratings[category];
+      return isOnScale(rating) ? [{ category, rating }] : [];
+    }),
+    likedStatements: [...draft.liked],
+    improvableStatements: [...draft.improvable],
   };
 }
 
-/** The draft an edit form starts from. */
-export function draftFromReview(review: CompanyReviewRequest): ReviewDraft {
+/** The draft an edit form starts from. A legacy review contributes its overall rating and the
+ *  three fixed ratings that map onto a current category; its text has no place in the new form,
+ *  and its picks start empty. */
+export function draftFromReview(review: MyCompanyReview): ReviewDraft {
+  const ratings: Partial<Record<ReviewCategory, number>> = {};
+  for (const { category, rating } of review.categoryRatings) {
+    if (category !== "Overall") ratings[category] = rating;
+  }
   return {
     employmentStatus: review.employmentStatus,
-    title: review.title,
-    pros: review.pros,
-    cons: review.cons,
-    ratings: {
-      overallRating: review.overallRating,
-      managementRating: review.managementRating,
-      workEnvironmentRating: review.workEnvironmentRating,
-      salaryAndBenefitsRating: review.salaryAndBenefitsRating,
-      careerAndDevelopmentRating: review.careerAndDevelopmentRating,
-    },
+    overall: review.overallRating,
+    ratings,
+    liked: [...review.likedStatements],
+    improvable: [...review.improvableStatements],
   };
+}
+
+/** The category a legacy rating field maps onto, for pages that still show legacy rows. */
+export function legacyCategoryOf(field: keyof typeof LEGACY_CATEGORY_MAP): ReviewCategory {
+  return LEGACY_CATEGORY_MAP[field];
+}
+
+/** What a rated row offers first: 4–5 stars lead with what was liked, 1–3 with what could be
+ *  better. Nothing until there is a rating — the form is eleven star rows until then. */
+export function suggestionsFor(category: ReviewCategory, rating: number): ReviewStatement[] {
+  if (!isOnScale(rating)) return [];
+  return statementsFor(category, rating >= 4 ? "Liked" : "Improve").slice(0, SUGGESTION_COUNT);
+}
+
+export function picksOf(draft: ReviewDraft, kind: ReviewStatementKind): string[] {
+  return kind === "Liked" ? draft.liked : draft.improvable;
+}
+
+export function isCapReached(draft: ReviewDraft, kind: ReviewStatementKind): boolean {
+  return picksOf(draft, kind).length >= MAX_PICKS_PER_KIND;
+}
+
+/** Adds or removes one statement in its own list. Refuses a pick past the cap or a key the
+ *  catalogue does not know, returning the draft unchanged so the caller can render as is. */
+export function togglePick(draft: ReviewDraft, key: string): ReviewDraft {
+  const statement = findStatement(key);
+  if (!statement) return draft;
+  const list = picksOf(draft, statement.kind);
+  const next = list.includes(key)
+    ? list.filter((k) => k !== key)
+    : list.length >= MAX_PICKS_PER_KIND
+      ? list
+      : [...list, key];
+  if (next === list) return draft;
+  return statement.kind === "Liked" ? { ...draft, liked: next } : { ...draft, improvable: next };
 }
 
 export type ReportDraftProblem = "noteRequiredForOther" | "noteTooLong";

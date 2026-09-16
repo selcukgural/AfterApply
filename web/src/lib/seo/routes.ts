@@ -17,6 +17,7 @@ export const HELP_TOPICS = [
   { href: "/help/settings", key: "settings" },
   { href: "/help/chrome-extension", key: "chromeExtension" },
   { href: "/help/company-reviews", key: "companyReviews" },
+  { href: "/help/company-salaries", key: "companySalaries" },
   { href: "/help/cv-scan", key: "cvScan" },
   { href: "/help/benchmark", key: "benchmark" },
   { href: "/help/weekly-jobs", key: "weeklyJobs" },
@@ -52,6 +53,7 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "/cookies",
   // /terms-of-sale and /refund-policy are drafts until their text is final: reachable, noindex,
   // not in the sitemap yet. Add them here (and to the footer) when they are.
+  "/terms",
   ...HELP_TOPICS.map((topic) => topic.href),
   GUIDE_PATH,
   // The guide articles are the one place where the path itself differs per locale: the slug is
@@ -73,6 +75,8 @@ export const PROTECTED_PATHS = [
   "/notifications",
   "/settings",
   "/my-reviews",
+  "/my-salaries",
+  "/contribute",
   "/admin",
   "/pro",
 ];

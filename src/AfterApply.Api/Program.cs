@@ -162,6 +162,8 @@ app.MapCompanyIntelligenceEndpoints();
 app.MapCompanyEndpoints();
 app.MapCompanyReviewEndpoints();
 app.MapAdminCompanyReviewEndpoints();
+app.MapCompanySalaryEndpoints();
+app.MapOccupationEndpoints();
 app.MapFeedbackEndpoints();
 app.MapSiteTrafficEndpoints();
 app.MapBenchmarkEndpoints();

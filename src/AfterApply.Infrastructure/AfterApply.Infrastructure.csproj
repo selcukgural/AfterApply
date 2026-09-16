@@ -6,6 +6,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The occupation catalogue, one file per seed version; a migration reads its own version
+         (OccupationSeedReader), so a fresh database always gets exactly the rows that migration
+         was written against. -->
+    <EmbeddedResource Include="Occupations\Seed\occupations.v*.csv" LogicalName="AfterApply.Infrastructure.Occupations.Seed.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />

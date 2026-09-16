@@ -45,6 +45,30 @@ describe("sanitizeReturnTo", () => {
     }
   });
 
+  it("accepts the contribute page, on either side, with and without a company slug", () => {
+    expect(sanitizeReturnTo("/contribute?tab=review")).toBe("/contribute?tab=review");
+    expect(sanitizeReturnTo("/contribute?tab=salary")).toBe("/contribute?tab=salary");
+    expect(sanitizeReturnTo("/contribute?tab=salary&company=beta-a-s")).toBe("/contribute?tab=salary&company=beta-a-s");
+  });
+
+  it("rejects a contribute return path with any other shape", () => {
+    for (const path of ["/contribute", "/contribute?tab=other", "/contribute?company=beta", "/contribute?tab=salary&company=",
+      "/contribute?tab=salary&company=Türk", "/contribute?company=beta&tab=salary", "/contribute?tab=salary&x=1", "/contribute/salary"]) {
+      expect(sanitizeReturnTo(path), `${path} must not be a destination`).toBeNull();
+    }
+  });
+
+  it("accepts a company page, plain or on its salaries tab", () => {
+    expect(sanitizeReturnTo("/companies/beta-a-s")).toBe("/companies/beta-a-s");
+    expect(sanitizeReturnTo("/companies/beta-a-s?tab=salaries")).toBe("/companies/beta-a-s?tab=salaries");
+  });
+
+  it("rejects a company return path with any other shape", () => {
+    for (const path of ["/companies", "/companies/", "/companies/Türk", "/companies/beta/extra", "/companies/beta?tab=reviews", "/companies/beta?x=1"]) {
+      expect(sanitizeReturnTo(path), `${path} must not be a destination`).toBeNull();
+    }
+  });
+
   it("rejects a code longer than any code the server issues", () => {
     expect(sanitizeReturnTo(`/pair?code=${"A".repeat(17)}`)).toBeNull();
   });

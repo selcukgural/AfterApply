@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.CompanyReviews.Contracts;
+using AfterApply.Application.CompanySalaries.Contracts;
 using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.TrackedJobs.Contracts;
@@ -12,6 +13,8 @@ using AfterApply.Domain.Auditing;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Domain.CompanySalaries;
+using AfterApply.Domain.Occupations;
 using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Notifications;
@@ -153,6 +156,8 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
         (await userA.PostAsync($"/api/company-reviews/{reviewByB}/helpful", null)).EnsureSuccessStatusCode();
         (await userA.PostAsJsonAsync($"/api/company-reviews/{reviewByB}/reports",
             new ReportCompanyReviewRequest(ReviewReportReason.Spam), JsonOptions)).EnsureSuccessStatusCode();
+        var salaryByA = await ShareSalaryAsync(userA, sharedCompanyId);
+        var salaryByB = await ShareSalaryAsync(userB, sharedCompanyId);
 
         Guid userAId;
         using (var scope = _factory!.Services.CreateScope())
@@ -186,10 +191,14 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
             (await db.TrackedJobs.AnyAsync(t => t.UserId == userAId)).ShouldBeFalse();
             (await db.FeedbackEntries.AnyAsync(f => f.UserId == userAId)).ShouldBeFalse();
             (await db.CompanyReviews.AnyAsync(r => r.Id == reviewByA)).ShouldBeFalse();
+            (await db.CompanyReviewCategoryRatings.AnyAsync(c => c.ReviewId == reviewByA)).ShouldBeFalse();
+            (await db.CompanyReviewStatementPicks.AnyAsync(c => c.ReviewId == reviewByA)).ShouldBeFalse();
             (await db.CompanyReviewReports.AnyAsync(p => p.ReporterUserId == userAId)).ShouldBeFalse();
             (await db.CompanyReviewHelpfulMarks.AnyAsync(m => m.UserId == userAId)).ShouldBeFalse();
-            // B's review and the company it is about are untouched.
+            (await db.CompanySalaryEntries.AnyAsync(e => e.Id == salaryByA)).ShouldBeFalse();
+            // B's review, B's salary entry and the company they are about are untouched.
             (await db.CompanyReviews.AnyAsync(r => r.Id == reviewByB)).ShouldBeTrue();
+            (await db.CompanySalaryEntries.AnyAsync(e => e.Id == salaryByB)).ShouldBeTrue();
 
             // Shared Company must survive - user B's application still references it.
             var userBApplication = await db.Applications.SingleAsync(a => a.Id == userBApplicationId);
@@ -222,7 +231,7 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
         await Should.ThrowAsync<DbUpdateException>(() => db.SaveChangesAsync());
         db.ChangeTracker.Clear();
 
-        db.CompanyReviews.Add(CompanyReview.Create(Guid.CreateVersion7(), company.Id,
+        db.CompanyReviews.Add(CompanyReview.CreateLegacy(Guid.CreateVersion7(), company.Id,
             new ReviewContent(EmploymentStatus.Intern, "Orphan review", "Long enough pros for the check.",
                 "Long enough cons for the check.", 3, 3, 3, 3, 3), DateTimeOffset.UtcNow));
 
@@ -293,13 +302,56 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
         (await author.PostAsJsonAsync($"/api/company-reviews/{othersReview}/reports",
             new ReportCompanyReviewRequest(ReviewReportReason.Advertising), JsonOptions)).EnsureSuccessStatusCode();
 
+        // A legacy row, seeded the way the migration left them: its text must come back to its
+        // author even though nobody else sees it any more.
+        var legacyCompanyId = await CompanyIdOfApplicationAsync(await CreateApplicationAsync(author, "Export Legacy Co"));
+        await SeedLegacyReviewAsync(author, legacyCompanyId);
+
         var export = await (await author.GetAsync("/api/users/me/export")).Content.ReadFromJsonAsync<AccountExportResponse>(JsonOptions);
 
-        var review = export!.CompanyReviews.ShouldNotBeNull().ShouldHaveSingleItem();
-        review.CompanyName.ShouldBe("Export Review Co");
-        review.Status.ShouldBe(ReviewModerationStatus.Pending);
+        export!.CompanyReviews.ShouldNotBeNull().Count.ShouldBe(2);
+        var review = export.CompanyReviews.Single(r => r.CompanyName == "Export Review Co");
+        review.Format.ShouldBe(ReviewFormat.Structured);
+        review.Status.ShouldBe(ReviewModerationStatus.Approved);
+        review.Title.ShouldBeNull();
+        review.CategoryRatings.ShouldContain(c => c.Category == ReviewCategory.Management && c.Rating == 3);
+        review.LikedStatements.ShouldBe(["environment.pos.team_communication"]);
+        review.ImprovableStatements.ShouldBe(["career.imp.promotion_transparency"]);
+        var legacy = export.CompanyReviews.Single(r => r.CompanyName == "Export Legacy Co");
+        legacy.Format.ShouldBe(ReviewFormat.Legacy);
+        legacy.Title.ShouldBe("Fine place, on balance");
+        legacy.Pros.ShouldNotBeNullOrEmpty();
+        legacy.ManagementRating.ShouldBe(3);
         export.CompanyReviewReports.ShouldNotBeNull().ShouldHaveSingleItem().Reason.ShouldBe(ReviewReportReason.Advertising);
         export.HelpfulMarkedReviewIds.ShouldNotBeNull().ShouldBe([othersReview]);
+    }
+
+    [Fact]
+    public async Task ExportAccountData_Includes_Salary_Entries_With_The_Exact_Years()
+    {
+        var author = await RegisterAsync("export.salaries@example.com");
+        var companyId = await CompanyIdOfApplicationAsync(await CreateApplicationAsync(author, "Export Salary Co"));
+        await ShareSalaryAsync(author, companyId);
+
+        var export = await (await author.GetAsync("/api/users/me/export")).Content.ReadFromJsonAsync<AccountExportResponse>(JsonOptions);
+
+        var entry = export!.CompanySalaries.ShouldNotBeNull().ShouldHaveSingleItem();
+        entry.CompanyName.ShouldBe("Export Salary Co");
+        entry.OccupationCode.ShouldBe("2512");
+        entry.OccupationNameEn.ShouldBe("Software Developers");
+        entry.YearsOfExperience.ShouldBe(6);
+        entry.MonthlyNetAmount.ShouldBe(95_000m);
+        entry.Currency.ShouldBe(SalaryCurrency.TRY);
+        entry.AnnualBonusAmount.ShouldBe(120_000m);
+    }
+
+    private async Task<Guid> ShareSalaryAsync(HttpClient client, Guid companyId)
+    {
+        var response = await client.PostAsJsonAsync($"/api/companies/{companyId}/salaries",
+            new CompanySalaryRequest(Occupation.IdFor("2512"), 6, EmploymentType.FullTime, SalaryEmploymentStatus.CurrentEmployee,
+                95_000m, SalaryCurrency.TRY, true, 120_000m), JsonOptions);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        return (await response.Content.ReadFromJsonAsync<MyCompanySalaryResponse>(JsonOptions))!.Id;
     }
 
     private async Task<Guid> CompanyIdOfApplicationAsync(Guid applicationId)
@@ -312,15 +364,31 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
     private static async Task<Guid> WriteReviewAsync(HttpClient client, Guid companyId)
     {
         var response = await client.PostAsJsonAsync($"/api/companies/{companyId}/reviews", new CreateCompanyReviewRequest(
-            EmploymentStatus.FormerEmployee, "Fine place, on balance",
-            "Good people and a sane on-call rotation for a change.",
-            "Promotions depend on who your manager knows upstairs.", 4, 3, 4, 3, 3), JsonOptions);
+            EmploymentStatus.FormerEmployee, 4,
+            [new ReviewCategoryRatingDto(ReviewCategory.Management, 3), new ReviewCategoryRatingDto(ReviewCategory.WorkEnvironment, 4)],
+            ["environment.pos.team_communication"],
+            ["career.imp.promotion_transparency"]), JsonOptions);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<MyCompanyReviewResponse>(JsonOptions))!.Id;
     }
 
+    /// <summary>A pre-2026-09-16 row, written the only way one can be written now: straight into
+    /// the database, as the migration left them.</summary>
+    private async Task SeedLegacyReviewAsync(HttpClient client, Guid companyId)
+    {
+        var userId = (await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions))!.Id;
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.CompanyReviews.Add(CompanyReview.CreateLegacy(userId, companyId, new ReviewContent(
+            EmploymentStatus.FormerEmployee, "Fine place, on balance",
+            "Good people and a sane on-call rotation for a change.",
+            "Promotions depend on who your manager knows upstairs.", 4, 3, 4, 3, 3), DateTimeOffset.UtcNow));
+        await db.SaveChangesAsync();
+    }
+
     /// <summary>Approves straight in the database: this class is about the account, not the
-    /// moderation surface, which has its own tests.</summary>
+    /// moderation surface, which has its own tests. A no-op for a structured review, which is
+    /// published on save; kept for the legacy seeds.</summary>
     private async Task ApproveReviewAsync(Guid reviewId)
     {
         using var scope = _factory!.Services.CreateScope();

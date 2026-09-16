@@ -22,8 +22,9 @@ export function postAuthLocale(auth: AuthResponse, currentLocale: string): Local
  * This is an allowlist of one shape, not a sanitiser over arbitrary input, and that is the point.
  * A `?next=` parameter that accepts any path is an open redirect waiting to happen — and a
  * credential-shaped flow is precisely where one would be worth exploiting. Anything that is not
- * "/pair" (optionally with a pairing code) or "/my-reviews/write" (optionally with a company slug)
- * becomes null and the user lands on the dashboard.
+ * "/pair" (optionally with a pairing code), "/my-reviews/write" (optionally with a company slug),
+ * "/contribute" (a side and optionally a company slug) or a company page (optionally on its
+ * salaries tab) becomes null and the user lands on the dashboard.
  */
 const RETURN_TO_PATTERNS = [
   /^\/pair(\?code=[A-Za-z0-9-]{1,16})?$/,
@@ -31,6 +32,11 @@ const RETURN_TO_PATTERNS = [
   // and had to sign in first. The slug is the company's URL segment — lowercase ascii and hyphens,
   // the same alphabet CompanySlugGenerator emits — and nothing else may follow it.
   /^\/my-reviews\/write(\?company=[a-z0-9][a-z0-9-]{0,99})?$/,
+  // The third and fourth shapes (2026-09-16): the contribute page — a side, and the company it
+  // was opened for — and a company page whose salaries tab asked the reader to sign in. Same
+  // slug alphabet; the query keys are fixed and in this order, nothing else may follow.
+  /^\/contribute\?tab=(review|salary)(&company=[a-z0-9][a-z0-9-]{0,99})?$/,
+  /^\/companies\/[a-z0-9][a-z0-9-]{0,99}(\?tab=salaries)?$/,
 ];
 
 export function sanitizeReturnTo(raw: string | null | undefined): string | null {

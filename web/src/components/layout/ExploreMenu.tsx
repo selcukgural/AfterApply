@@ -12,10 +12,19 @@ export const TOOL_LINKS = [
   { href: "/guide", key: "guide" },
 ] as const;
 
+/** The directory, then the two things a signed-in person can contribute (2026-09-16). Both
+ *  contribute links open the same page on a different side. The mobile menu lists the same three
+ *  under their own heading. */
+export const COMPANY_LINKS = [
+  { href: "/companies", key: "companyDirectory" },
+  { href: "/contribute?tab=review", key: "contributeReview" },
+  { href: "/contribute?tab=salary", key: "contributeSalary" },
+] as const;
+
 /**
  * "Keşfet ▾": what is out there to look at, as opposed to the buyer's own data — the weekly
- * postings (paid), the company pages, and the account-free tools that used to be the "Tools"
- * menu. One flat list on purpose: a first draft split it into "needs an account / does not",
+ * postings (paid), the company pages with the two contributions, and the account-free tools
+ * that used to be the "Tools" menu. One flat list on purpose: a first draft split it into "needs an account / does not",
  * which read as "Companies needs Pro" — the Pro badge on the one paid item says all there is
  * to say about who gets what.
  *
@@ -41,8 +50,9 @@ export function ExploreMenu() {
           },
         ]
       : []),
-    // Public page, but listed here too: a signed-in person is the one who can write a review.
-    { href: "/companies", label: t("companies") },
+    // The directory is public, but listed here too: a signed-in person is the one who can
+    // review a company or share a salary, and both of those live next to it.
+    ...COMPANY_LINKS.map((link) => ({ href: link.href, label: t(link.key) })),
     ...TOOL_LINKS.map((link) => ({ href: link.href, label: t(link.key) })),
   ];
 

@@ -1,5 +1,7 @@
 using AfterApply.Domain.Applications;
+using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Domain.CompanySalaries;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.Notifications;
@@ -68,20 +70,25 @@ public sealed record FeedbackExportItem(
     string? AdminReply,
     DateTimeOffset SubmittedAt);
 
-/// <summary>What the user wrote about an employer, with the moderation outcome. Public readers
-/// never see the author; the author gets the whole row back, because it is theirs.</summary>
+/// <summary>What the user said about an employer, with the moderation outcome. Public readers
+/// never see the author; the author gets the whole row back, because it is theirs — including,
+/// on a legacy row, the free text that is no longer shown to anyone else.</summary>
 public sealed record CompanyReviewExportItem(
     Guid Id,
     string CompanyName,
+    ReviewFormat Format,
     EmploymentStatus EmploymentStatus,
-    string Title,
-    string Pros,
-    string Cons,
     int OverallRating,
-    int ManagementRating,
-    int WorkEnvironmentRating,
-    int SalaryAndBenefitsRating,
-    int CareerAndDevelopmentRating,
+    IReadOnlyList<ReviewCategoryRatingDto> CategoryRatings,
+    IReadOnlyList<string> LikedStatements,
+    IReadOnlyList<string> ImprovableStatements,
+    string? Title,
+    string? Pros,
+    string? Cons,
+    int? ManagementRating,
+    int? WorkEnvironmentRating,
+    int? SalaryAndBenefitsRating,
+    int? CareerAndDevelopmentRating,
     ReviewModerationStatus Status,
     string? RejectionReason,
     DateTimeOffset SubmittedAt,
@@ -98,6 +105,23 @@ public sealed record CompanyReviewReportExportItem(
     ReviewReportResolution? Resolution,
     DateTimeOffset ReportedAt);
 
+/// <summary>The author's copy of a salary entry: every column, including the exact years that
+/// readers only ever see as a band.</summary>
+public sealed record CompanySalaryExportItem(
+    Guid Id,
+    string CompanyName,
+    string OccupationCode,
+    string OccupationNameTr,
+    string OccupationNameEn,
+    int YearsOfExperience,
+    EmploymentType EmploymentType,
+    SalaryEmploymentStatus EmploymentStatus,
+    decimal MonthlyNetAmount,
+    SalaryCurrency Currency,
+    decimal? AnnualBonusAmount,
+    DateTimeOffset SubmittedAt,
+    DateTimeOffset UpdatedAt);
+
 public sealed record AccountExportResponse(
     UserProfileResponse Profile,
     IReadOnlyList<ApplicationExportItem> Applications,
@@ -109,6 +133,7 @@ public sealed record AccountExportResponse(
     IReadOnlyList<CompanyReviewExportItem>? CompanyReviews = null,
     IReadOnlyList<CompanyReviewReportExportItem>? CompanyReviewReports = null,
     IReadOnlyList<Guid>? HelpfulMarkedReviewIds = null,
+    IReadOnlyList<CompanySalaryExportItem>? CompanySalaries = null,
     IReadOnlyList<PaymentOrderExportItem>? Payments = null,
     ProEntitlementExportItem? ProEntitlement = null);
 

@@ -10,6 +10,7 @@ import { companyReviewsApi } from "@/lib/api/companyReviews";
 import { ApiError } from "@/lib/api/httpClient";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { guidePath } from "@/lib/guide/articles";
+import { contributeHref } from "@/lib/contribute/contributeState";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
 import { ReviewCard } from "@/components/companyReviews/ReviewCard";
@@ -72,7 +73,7 @@ export function CompanyReviewsSection({ company, initialReviews }: CompanyReview
     onError: (error) => setReportError(error instanceof ApiError ? error.message : t("actionError")),
   });
 
-  const writePath = `/my-reviews/write?company=${company.slug}`;
+  const writePath = contributeHref("review", company.slug);
   const signInHref = `/login?next=${encodeURIComponent(writePath)}`;
   const ownReview = viewerQuery.data?.ownReview ?? null;
   const marked = new Set(viewerQuery.data?.helpfulMarkedReviewIds ?? []);
@@ -118,7 +119,7 @@ export function CompanyReviewsSection({ company, initialReviews }: CompanyReview
             <span className="font-medium text-gray-900 dark:text-gray-100">{t("yourReview")}</span>
             <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
               <ReviewStatusBadge status={ownReview.status} />
-              <span>{ownReview.title}</span>
+              <span>{t("ownSummary", { value: ownReview.overallRating })}</span>
             </span>
             {ownReview.status === "Rejected" && ownReview.rejectionReason && (
               <span className="text-xs text-red-700 dark:text-red-400">{t("rejectedReason", { reason: ownReview.rejectionReason })}</span>

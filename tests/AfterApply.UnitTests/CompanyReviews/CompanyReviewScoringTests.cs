@@ -54,4 +54,14 @@ public class CompanyReviewScoringTests
         CompanyReviewScoring.CategoryAverage(0, 0).ShouldBeNull();
         CompanyReviewScoring.CategoryAverage(3, 11).ShouldBe(3.7);
     }
+
+    [Fact]
+    public void A_Category_Average_Waits_For_The_Same_Minimum_As_The_Score()
+    {
+        CompanyReviewScoring.ThresholdedAverage(2, 9, minimumReviews: 3).ShouldBeNull();
+        CompanyReviewScoring.ThresholdedAverage(3, 13, minimumReviews: 3).ShouldBe(4.3);
+        // A minimum of zero still means "at least one vote", never a division by nothing.
+        CompanyReviewScoring.ThresholdedAverage(0, 0, minimumReviews: 0).ShouldBeNull();
+        CompanyReviewScoring.ThresholdedAverage(1, 5, minimumReviews: 0).ShouldBe(5.0);
+    }
 }

@@ -9,48 +9,100 @@ public class CompanyReviewTests
     private static readonly Guid Author = Guid.CreateVersion7();
     private static readonly Guid Admin = Guid.CreateVersion7();
 
-    private static ReviewContent Content(int overall = 4, string title = "Solid engineering culture") => new(
+    private static ReviewContent LegacyContent(int overall = 4, string title = "Solid engineering culture") => new(
         EmploymentStatus.FormerEmployee, title,
         "Good tooling and honest code reviews across teams.",
         "Salary reviews lagged the market by a year or so.",
         overall, 4, 5, 3, 4);
 
-    [Fact]
-    public void A_New_Review_Is_Pending()
-    {
-        var review = CompanyReview.Create(Author, Guid.CreateVersion7(), Content(), Now);
+    private static StructuredReviewContent Structured(int overall = 4,
+        IReadOnlyList<CategoryRating>? categories = null, IReadOnlyList<string>? liked = null, IReadOnlyList<string>? improvable = null) =>
+        new(EmploymentStatus.FormerEmployee, overall,
+            categories ?? [new CategoryRating(ReviewCategory.WorkEnvironment, 5), new CategoryRating(ReviewCategory.Pay, 2)],
+            liked ?? ["environment.pos.team_communication"],
+            improvable ?? ["pay.imp.salary_level"]);
 
-        review.Status.ShouldBe(ReviewModerationStatus.Pending);
+    [Fact]
+    public void A_Structured_Review_Is_Published_On_Creation()
+    {
+        var review = CompanyReview.CreateStructured(Author, Guid.CreateVersion7(), Structured(), Now);
+
+        review.Format.ShouldBe(ReviewFormat.Structured);
+        review.Status.ShouldBe(ReviewModerationStatus.Approved);
         review.SubmittedAt.ShouldBe(Now);
         review.ModeratedAt.ShouldBeNull();
+        review.ModeratedByUserId.ShouldBeNull();
+        review.OverallRating.ShouldBe(4);
+        review.Title.ShouldBeNull();
+        review.ManagementRating.ShouldBeNull();
+    }
+
+    [Fact]
+    public void A_Legacy_Review_Is_Pending()
+    {
+        var review = CompanyReview.CreateLegacy(Author, Guid.CreateVersion7(), LegacyContent(), Now);
+
+        review.Format.ShouldBe(ReviewFormat.Legacy);
+        review.Status.ShouldBe(ReviewModerationStatus.Pending);
         review.Title.ShouldBe("Solid engineering culture");
+        review.ManagementRating.ShouldBe(4);
     }
 
     [Theory]
     [InlineData(0)]
     [InlineData(6)]
-    public void Ratings_Outside_One_To_Five_Are_Refused(int overall)
+    public void An_Overall_Rating_Off_The_Scale_Is_Refused(int overall)
     {
         Should.Throw<ReviewContentInvalidException>(() =>
-            CompanyReview.Create(Author, Guid.CreateVersion7(), Content(overall), Now));
+            CompanyReview.CreateStructured(Author, Guid.CreateVersion7(), Structured(overall), Now));
+        Should.Throw<ReviewContentInvalidException>(() =>
+            CompanyReview.CreateLegacy(Author, Guid.CreateVersion7(), LegacyContent(overall), Now));
     }
 
     [Fact]
-    public void Blank_Text_Is_Refused()
+    public void Category_Ratings_Must_Be_On_The_Scale_And_Unique_And_Never_Overall()
     {
         Should.Throw<ReviewContentInvalidException>(() =>
-            CompanyReview.Create(Author, Guid.CreateVersion7(), Content(title: "   "), Now));
+            Structured(categories: [new CategoryRating(ReviewCategory.Pay, 0)]).Validate());
+        Should.Throw<ReviewContentInvalidException>(() =>
+            Structured(categories: [new CategoryRating(ReviewCategory.Pay, 3), new CategoryRating(ReviewCategory.Pay, 4)]).Validate());
+        Should.Throw<ReviewContentInvalidException>(() =>
+            Structured(categories: [new CategoryRating(ReviewCategory.Overall, 3)]).Validate());
+        Should.NotThrow(() => Structured(categories: []).Validate());
     }
 
     [Fact]
-    public void Editing_An_Approved_Review_Sends_It_Back_To_Pending_And_Clears_The_Decision()
+    public void Statement_Picks_Must_Exist_Match_Their_List_And_Stay_Under_The_Cap()
     {
-        var review = CompanyReview.Create(Author, Guid.CreateVersion7(), Content(), Now);
+        Should.Throw<ReviewContentInvalidException>(() => Structured(liked: ["environment.pos.not_a_thing"]).Validate());
+        // A "liked" key in the improvable list would publish the opposite of what was meant.
+        Should.Throw<ReviewContentInvalidException>(() => Structured(improvable: ["environment.pos.team_communication"]).Validate());
+        Should.Throw<ReviewContentInvalidException>(() =>
+            Structured(liked: ["environment.pos.team_communication", "environment.pos.team_communication"]).Validate());
+
+        var six = ReviewStatementCatalogue.For(ReviewCategory.WorkEnvironment, ReviewStatementKind.Liked).Take(6).Select(s => s.Key).ToList();
+        Should.Throw<ReviewContentInvalidException>(() => Structured(liked: six).Validate());
+        Should.NotThrow(() => Structured(liked: six.Take(5).ToList()).Validate());
+        Should.NotThrow(() => Structured(liked: [], improvable: []).Validate());
+    }
+
+    [Fact]
+    public void Blank_Legacy_Text_Is_Refused()
+    {
+        Should.Throw<ReviewContentInvalidException>(() =>
+            CompanyReview.CreateLegacy(Author, Guid.CreateVersion7(), LegacyContent(title: "   "), Now));
+    }
+
+    [Fact]
+    public void Editing_A_Published_Review_Keeps_It_Published_And_Clears_Any_Decision()
+    {
+        var review = CompanyReview.CreateLegacy(Author, Guid.CreateVersion7(), LegacyContent(), Now);
         review.Approve(Admin, Now.AddHours(1));
 
-        review.Edit(Content(overall: 2, title: "Changed my mind"), Now.AddDays(1));
+        review.EditStructured(Structured(overall: 2), Now.AddDays(1));
 
-        review.Status.ShouldBe(ReviewModerationStatus.Pending);
+        review.Status.ShouldBe(ReviewModerationStatus.Approved);
+        review.Format.ShouldBe(ReviewFormat.Structured);
         review.ModeratedAt.ShouldBeNull();
         review.ModeratedByUserId.ShouldBeNull();
         review.RejectionReason.ShouldBeNull();
@@ -59,12 +111,26 @@ public class CompanyReviewTests
     }
 
     [Fact]
-    public void Editing_A_Rejected_Review_Drops_The_Old_Reason()
+    public void Converting_A_Legacy_Review_Leaves_Its_Text_And_Old_Ratings_In_Place()
     {
-        var review = CompanyReview.Create(Author, Guid.CreateVersion7(), Content(), Now);
-        review.Reject(Admin, "Names a colleague.", Now.AddHours(1));
+        var review = CompanyReview.CreateLegacy(Author, Guid.CreateVersion7(), LegacyContent(), Now);
 
-        review.Edit(Content(), Now.AddDays(1));
+        review.EditStructured(Structured(), Now.AddDays(1));
+
+        // Hidden, never erased.
+        review.Title.ShouldBe("Solid engineering culture");
+        review.Pros.ShouldNotBeNull();
+        review.ManagementRating.ShouldBe(4);
+        review.Format.ShouldBe(ReviewFormat.Structured);
+    }
+
+    [Fact]
+    public void Editing_A_Rejected_Review_Sends_It_To_Pending_Not_Straight_Back_Online()
+    {
+        var review = CompanyReview.CreateStructured(Author, Guid.CreateVersion7(), Structured(), Now);
+        review.Reject(Admin, "Removed after a report.", Now.AddHours(1));
+
+        review.EditStructured(Structured(), Now.AddDays(1));
 
         review.Status.ShouldBe(ReviewModerationStatus.Pending);
         review.RejectionReason.ShouldBeNull();
@@ -73,7 +139,7 @@ public class CompanyReviewTests
     [Fact]
     public void Approve_Records_Who_And_When()
     {
-        var review = CompanyReview.Create(Author, Guid.CreateVersion7(), Content(), Now);
+        var review = CompanyReview.CreateLegacy(Author, Guid.CreateVersion7(), LegacyContent(), Now);
 
         review.Approve(Admin, Now.AddHours(1));
 
@@ -85,13 +151,23 @@ public class CompanyReviewTests
     [Fact]
     public void Reject_Requires_A_Reason()
     {
-        var review = CompanyReview.Create(Author, Guid.CreateVersion7(), Content(), Now);
+        var review = CompanyReview.CreateStructured(Author, Guid.CreateVersion7(), Structured(), Now);
 
         Should.Throw<ReviewRejectionReasonRequiredException>(() => review.Reject(Admin, "  ", Now));
 
         review.Reject(Admin, " Too vague to publish. ", Now);
         review.Status.ShouldBe(ReviewModerationStatus.Rejected);
         review.RejectionReason.ShouldBe("Too vague to publish.");
+    }
+
+    [Fact]
+    public void Statements_Resolve_In_The_Order_They_Were_Picked()
+    {
+        var content = Structured(liked: ["environment.pos.motivating", "environment.pos.team_communication"], improvable: ["pay.imp.salary_level"]);
+
+        content.Statements().Select(s => s.Key).ShouldBe(
+            ["environment.pos.motivating", "environment.pos.team_communication", "pay.imp.salary_level"]);
+        content.Statements().Select(s => s.Kind).ShouldBe([ReviewStatementKind.Liked, ReviewStatementKind.Liked, ReviewStatementKind.Improve]);
     }
 }
 

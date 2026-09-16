@@ -10,12 +10,17 @@ namespace AfterApply.Infrastructure.CompanyReviews;
 
 /// <summary>
 /// The pieces every review service needs: the site-wide average behind the Bayesian score, a
-/// company's aggregate, and the projection of a review to its author-facing shape. Scoped, like
-/// the services that use it, so it shares their DbContext.
+/// company's aggregate, and the projection of a review to its author-facing and public shapes.
+/// Scoped, like the services that use it, so it shares their DbContext.
 /// </summary>
 internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache cache, IOptions<CompanyReviewOptions> options)
 {
     private const string GlobalAverageCacheKey = "company-reviews:global-average";
+    private const int TopStatements = 3;
+
+    /// <summary>The ten optional categories, in the order the form and the summary list them.</summary>
+    private static readonly ReviewCategory[] OptionalCategories =
+        Enum.GetValues<ReviewCategory>().Where(c => c != ReviewCategory.Overall).ToArray();
 
     private static readonly HybridCacheEntryOptions GlobalAverageCacheOptions = new()
     {
@@ -43,41 +48,100 @@ internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache c
                 : CompanyReviewScoring.NeutralAverage;
         }, GlobalAverageCacheOptions, cancellationToken: cancellationToken);
 
-    /// <summary>The aggregate a public page shows. Cached a minute per company; approve/reject
-    /// evict it, so an admin's decision shows on the next request from this instance.</summary>
+    /// <summary>The aggregate a public page shows. Cached a minute per company; every write that
+    /// changes what is public (a structured save, an approval, a rejection) evicts it.</summary>
     public ValueTask<CompanyReviewSummaryResponse> GetSummaryAsync(Guid companyId, CancellationToken cancellationToken) =>
         cache.GetOrCreateAsync(SummaryCacheKey(companyId), async ct =>
         {
-            var overalls = await dbContext.CompanyReviews
-                .Where(r => r.CompanyId == companyId && r.Status == ReviewModerationStatus.Approved)
-                .Select(r => new
-                {
-                    r.OverallRating, r.ManagementRating, r.WorkEnvironmentRating,
-                    r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating
-                })
+            var approved = dbContext.CompanyReviews
+                .Where(r => r.CompanyId == companyId && r.Status == ReviewModerationStatus.Approved);
+
+            var rows = await approved
+                .Select(r => new { r.OverallRating, r.Format, r.ManagementRating, r.WorkEnvironmentRating, r.CareerAndDevelopmentRating })
                 .ToListAsync(ct);
 
-            var n = overalls.Count;
+            var n = rows.Count;
             var opts = options.Value;
             var distribution = new int[CompanyReview.MaxRating];
-            foreach (var row in overalls)
+            foreach (var row in rows)
             {
                 distribution[row.OverallRating - CompanyReview.MinRating]++;
             }
 
             var globalAverage = n >= opts.MinimumReviewsForScore ? await GetGlobalAverageAsync(ct) : CompanyReviewScoring.NeutralAverage;
 
+            // Per-category: the structured child rows, plus the legacy rows' fixed columns folded
+            // into the three categories they map onto. A legacy row that was later converted has
+            // Format == Structured and its own child rows, so its stale columns are skipped.
+            var approvedIds = approved.Select(r => r.Id);
+            var grouped = await dbContext.CompanyReviewCategoryRatings
+                .Where(c => approvedIds.Contains(c.ReviewId))
+                .GroupBy(c => c.Category)
+                .Select(g => new { Category = g.Key, Count = g.Count(), Sum = g.Sum(c => c.Rating) })
+                .ToListAsync(ct);
+
+            var counts = OptionalCategories.ToDictionary(c => c, _ => 0);
+            var sums = OptionalCategories.ToDictionary(c => c, _ => 0);
+            foreach (var g in grouped)
+            {
+                counts[g.Category] += g.Count;
+                sums[g.Category] += g.Sum;
+            }
+
+            foreach (var row in rows.Where(r => r.Format == ReviewFormat.Legacy))
+            {
+                Fold(ReviewCategory.Management, row.ManagementRating);
+                Fold(ReviewCategory.WorkEnvironment, row.WorkEnvironmentRating);
+                Fold(ReviewCategory.CareerGrowth, row.CareerAndDevelopmentRating);
+            }
+
+            var categories = OptionalCategories
+                .Select(c => new ReviewCategoryAverageResponse(c, counts[c],
+                    CompanyReviewScoring.ThresholdedAverage(counts[c], sums[c], opts.MinimumReviewsForScore)))
+                .ToList();
+
+            // "Most picked" lists: below the threshold they would be one person's opinion with a
+            // number next to it.
+            var topLiked = new List<ReviewStatementCountResponse>();
+            var topImprovable = new List<ReviewStatementCountResponse>();
+            if (n >= opts.MinimumReviewsForScore)
+            {
+                var picks = await dbContext.CompanyReviewStatementPicks
+                    .Where(p => approvedIds.Contains(p.ReviewId))
+                    .GroupBy(p => new { p.Kind, p.StatementKey })
+                    .Select(g => new { g.Key.Kind, g.Key.StatementKey, Count = g.Count() })
+                    .ToListAsync(ct);
+
+                topLiked = Top(ReviewStatementKind.Liked);
+                topImprovable = Top(ReviewStatementKind.Improve);
+
+                List<ReviewStatementCountResponse> Top(ReviewStatementKind kind) => picks
+                    .Where(p => p.Kind == kind)
+                    .OrderByDescending(p => p.Count).ThenBy(p => p.StatementKey, StringComparer.Ordinal)
+                    .Take(TopStatements)
+                    .Select(p => new ReviewStatementCountResponse(p.StatementKey, p.Count))
+                    .ToList();
+            }
+
             return new CompanyReviewSummaryResponse(
                 n,
-                CompanyReviewScoring.BayesianScore(n, overalls.Sum(r => r.OverallRating), globalAverage, opts.PriorWeight, opts.MinimumReviewsForScore),
+                CompanyReviewScoring.BayesianScore(n, rows.Sum(r => r.OverallRating), globalAverage, opts.PriorWeight, opts.MinimumReviewsForScore),
                 opts.MinimumReviewsForScore,
                 opts.PriorWeight,
-                CompanyReviewScoring.CategoryAverage(n, overalls.Sum(r => r.OverallRating)),
-                CompanyReviewScoring.CategoryAverage(n, overalls.Sum(r => r.ManagementRating)),
-                CompanyReviewScoring.CategoryAverage(n, overalls.Sum(r => r.WorkEnvironmentRating)),
-                CompanyReviewScoring.CategoryAverage(n, overalls.Sum(r => r.SalaryAndBenefitsRating)),
-                CompanyReviewScoring.CategoryAverage(n, overalls.Sum(r => r.CareerAndDevelopmentRating)),
-                distribution);
+                CompanyReviewScoring.CategoryAverage(n, rows.Sum(r => r.OverallRating)),
+                categories,
+                distribution,
+                topLiked,
+                topImprovable);
+
+            void Fold(ReviewCategory category, int? rating)
+            {
+                if (rating is { } value)
+                {
+                    counts[category]++;
+                    sums[category] += value;
+                }
+            }
         }, SummaryCacheOptions, cancellationToken: cancellationToken);
 
     public async Task EvictSummaryAsync(Guid companyId, CancellationToken cancellationToken)
@@ -101,7 +165,9 @@ internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache c
 
     // Projections happen into anonymous rows and are mapped to the response records in memory:
     // EF Core translates a constructor projection, but nothing can be ordered or filtered on the
-    // result afterwards, so callers order the CompanyReview query first and hand it in.
+    // result afterwards, so callers order the CompanyReview query first and hand it in. The child
+    // rows (category ratings, statement picks) come in two further queries keyed by the page's
+    // review ids — a page is at most 25 rows, and no navigation collection means no Include.
 
     public async Task<List<MyCompanyReviewResponse>> ProjectMineAsync(IQueryable<CompanyReview> reviews, CancellationToken cancellationToken)
     {
@@ -109,30 +175,44 @@ internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache c
             .Join(dbContext.Companies, r => r.CompanyId, c => c.Id, (r, c) => new { Review = r, c.Slug, c.Name })
             .ToListAsync(cancellationToken);
 
-        return rows.Select(x => new MyCompanyReviewResponse(
-            x.Review.Id, x.Review.CompanyId, x.Slug ?? string.Empty, x.Name, x.Review.EmploymentStatus,
-            x.Review.Title, x.Review.Pros, x.Review.Cons, x.Review.OverallRating, x.Review.ManagementRating,
-            x.Review.WorkEnvironmentRating, x.Review.SalaryAndBenefitsRating, x.Review.CareerAndDevelopmentRating,
-            x.Review.Status, x.Review.RejectionReason, x.Review.SubmittedAt, x.Review.ModeratedAt)).ToList();
+        var children = await LoadChildrenAsync(rows.Select(x => x.Review.Id), cancellationToken);
+
+        return rows.Select(x =>
+        {
+            var r = x.Review;
+            var c = children.For(r);
+            return new MyCompanyReviewResponse(
+                r.Id, r.CompanyId, x.Slug ?? string.Empty, x.Name, r.Format, r.EmploymentStatus, r.OverallRating,
+                c.CategoryRatings, c.LegacySalaryAndBenefits, c.Liked, c.Improvable,
+                r.Title, r.Pros, r.Cons,
+                r.Status, r.RejectionReason, r.SubmittedAt, r.ModeratedAt);
+        }).ToList();
     }
 
     public async Task<List<CompanyReviewPublicResponse>> ProjectPublicAsync(IQueryable<CompanyReview> approvedReviews,
         CancellationToken cancellationToken)
     {
+        // Title/Pros/Cons are not selected here at all — the public record has no place for them.
         var rows = await approvedReviews
             .Select(r => new
             {
-                r.Id, r.Title, r.Pros, r.Cons, r.EmploymentStatus, r.OverallRating, r.ManagementRating,
-                r.WorkEnvironmentRating, r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating, r.SubmittedAt,
+                r.Id, r.Format, r.EmploymentStatus, r.OverallRating, r.ManagementRating, r.WorkEnvironmentRating,
+                r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating, r.SubmittedAt,
                 HelpfulCount = dbContext.CompanyReviewHelpfulMarks.Count(m => m.ReviewId == r.Id)
             })
             .ToListAsync(cancellationToken);
 
-        return rows.Select(r => new CompanyReviewPublicResponse(
-            r.Id, r.Title, r.Pros, r.Cons, r.EmploymentStatus, r.OverallRating, r.ManagementRating,
-            r.WorkEnvironmentRating, r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating,
-            // Month precision on purpose — see CompanyReviewPublicResponse.
-            r.SubmittedAt.ToString("yyyy-MM"), r.HelpfulCount)).ToList();
+        var children = await LoadChildrenAsync(rows.Select(r => r.Id), cancellationToken);
+
+        return rows.Select(r =>
+        {
+            var c = children.For(r.Id, r.Format, r.ManagementRating, r.WorkEnvironmentRating, r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating);
+            return new CompanyReviewPublicResponse(
+                r.Id, r.Format, r.EmploymentStatus, r.OverallRating,
+                c.CategoryRatings, c.LegacySalaryAndBenefits, c.Liked, c.Improvable,
+                // Month precision on purpose — see CompanyReviewPublicResponse.
+                r.SubmittedAt.ToString("yyyy-MM"), r.HelpfulCount);
+        }).ToList();
     }
 
     public IOrderedQueryable<CompanyReview> OrderForPublic(IQueryable<CompanyReview> approvedReviews, PublicReviewSort sort) =>
@@ -142,9 +222,88 @@ internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache c
                 .ThenByDescending(r => r.SubmittedAt)
             : approvedReviews.OrderByDescending(r => r.SubmittedAt);
 
-    public static ReviewContent ToContent(CreateCompanyReviewRequest r) => new(r.EmploymentStatus, r.Title, r.Pros, r.Cons,
-        r.OverallRating, r.ManagementRating, r.WorkEnvironmentRating, r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating);
+    /// <summary>The child rows of a set of reviews, grouped so a projection can be built in memory.</summary>
+    public async Task<ReviewChildren> LoadChildrenAsync(IEnumerable<Guid> reviewIds, CancellationToken cancellationToken)
+    {
+        var ids = reviewIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return new ReviewChildren(
+                Enumerable.Empty<ReviewCategoryRatingDto>().ToLookup(_ => Guid.Empty),
+                Enumerable.Empty<(string, ReviewStatementKind)>().ToLookup(_ => Guid.Empty));
+        }
 
-    public static ReviewContent ToContent(UpdateCompanyReviewRequest r) => new(r.EmploymentStatus, r.Title, r.Pros, r.Cons,
-        r.OverallRating, r.ManagementRating, r.WorkEnvironmentRating, r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating);
+        var ratings = await dbContext.CompanyReviewCategoryRatings
+            .Where(c => ids.Contains(c.ReviewId))
+            .Select(c => new { c.ReviewId, c.Category, c.Rating })
+            .ToListAsync(cancellationToken);
+
+        // Ids are version-7 GUIDs, so ordering by Id is the order the author picked them in.
+        var picks = await dbContext.CompanyReviewStatementPicks
+            .Where(p => ids.Contains(p.ReviewId))
+            .OrderBy(p => p.Id)
+            .Select(p => new { p.ReviewId, p.StatementKey, p.Kind })
+            .ToListAsync(cancellationToken);
+
+        return new ReviewChildren(
+            ratings.ToLookup(x => x.ReviewId, x => new ReviewCategoryRatingDto(x.Category, x.Rating)),
+            picks.ToLookup(x => x.ReviewId, x => (x.StatementKey, x.Kind)));
+    }
+
+    public static StructuredReviewContent ToContent(CreateCompanyReviewRequest r) =>
+        ToContent(r.EmploymentStatus, r.OverallRating, r.CategoryRatings, r.LikedStatements, r.ImprovableStatements);
+
+    public static StructuredReviewContent ToContent(UpdateCompanyReviewRequest r) =>
+        ToContent(r.EmploymentStatus, r.OverallRating, r.CategoryRatings, r.LikedStatements, r.ImprovableStatements);
+
+    private static StructuredReviewContent ToContent(EmploymentStatus status, int overall,
+        IReadOnlyList<ReviewCategoryRatingDto>? ratings, IReadOnlyList<string>? liked, IReadOnlyList<string>? improvable) =>
+        new(status, overall,
+            (ratings ?? []).Select(x => new CategoryRating(x.Category, x.Rating)).ToList(),
+            liked ?? [],
+            improvable ?? []);
+
+    /// <summary>What a review's child rows and, for a legacy row, its fixed columns amount to.</summary>
+    public sealed record ReviewChildren(
+        ILookup<Guid, ReviewCategoryRatingDto> Ratings,
+        ILookup<Guid, (string Key, ReviewStatementKind Kind)> Picks)
+    {
+        public Projection For(CompanyReview r) =>
+            For(r.Id, r.Format, r.ManagementRating, r.WorkEnvironmentRating, r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating);
+
+        /// <summary>A legacy row shows the three fixed ratings that map onto a current category
+        /// and keeps the fourth apart; a structured row shows its child rows and nothing else.</summary>
+        public Projection For(Guid id, ReviewFormat format, int? management, int? workEnvironment, int? salaryAndBenefits, int? career)
+        {
+            if (format == ReviewFormat.Legacy)
+            {
+                var legacy = new List<ReviewCategoryRatingDto>(3);
+                Add(ReviewCategory.WorkEnvironment, workEnvironment);
+                Add(ReviewCategory.Management, management);
+                Add(ReviewCategory.CareerGrowth, career);
+                return new Projection(legacy, salaryAndBenefits, [], []);
+
+                void Add(ReviewCategory category, int? rating)
+                {
+                    if (rating is { } value)
+                    {
+                        legacy.Add(new ReviewCategoryRatingDto(category, value));
+                    }
+                }
+            }
+
+            var picks = Picks[id].ToList();
+            return new Projection(
+                Ratings[id].OrderBy(x => x.Category).ToList(),
+                null,
+                picks.Where(p => p.Kind == ReviewStatementKind.Liked).Select(p => p.Key).ToList(),
+                picks.Where(p => p.Kind == ReviewStatementKind.Improve).Select(p => p.Key).ToList());
+        }
+    }
+
+    public sealed record Projection(
+        IReadOnlyList<ReviewCategoryRatingDto> CategoryRatings,
+        int? LegacySalaryAndBenefits,
+        IReadOnlyList<string> Liked,
+        IReadOnlyList<string> Improvable);
 }

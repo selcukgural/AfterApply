@@ -72,7 +72,8 @@ describe("the catalogues promise only what ships", () => {
 describe("every notice that enumerates account data names all of it", () => {
   // Deletion removes everything the account owns; the export contains the subset the API writes
   // (AuthService.ExportAccountDataAsync). Both lists went out of date twice — when CVs shipped and
-  // when company reviews did — because nothing checked them.
+  // when company reviews did — because nothing checked them. Salary entries (2026-09-16) are
+  // the third addition, and the first one these assertions caught.
   const deletionNotices = [
     "privacy.rights.after",
     "settings.delete.description",
@@ -82,12 +83,14 @@ describe("every notice that enumerates account data names all of it", () => {
   ];
   const exportNotices = ["settings.export.description", "help.settings.export.body"];
 
-  it.each(deletionNotices)("%s lists CVs, company reviews and feedback (tr + en)", (key) => {
+  it.each(deletionNotices)("%s lists CVs, company reviews, salary entries and feedback (tr + en)", (key) => {
     expect(trValue(key)).toMatch(/CV/);
     expect(trValue(key)).toMatch(/değerlendirme/);
+    expect(trValue(key)).toMatch(/maaş/);
     expect(trValue(key)).toMatch(/geri bildirim/);
     expect(enValue(key)).toMatch(/CV/);
     expect(enValue(key)).toMatch(/review/);
+    expect(enValue(key)).toMatch(/salar/);
     expect(enValue(key)).toMatch(/feedback/);
   });
 
@@ -98,13 +101,20 @@ describe("every notice that enumerates account data names all of it", () => {
     expect(enValue(key)).toMatch(/payment record/);
   });
 
-  it.each(exportNotices)("%s lists company reviews and CV records but not the tracked-jobs list (tr + en)", (key) => {
+  it.each(exportNotices)("%s lists company reviews, salary entries and CV records but not the tracked-jobs list (tr + en)", (key) => {
     expect(trValue(key)).toMatch(/değerlendirme/);
+    expect(trValue(key)).toMatch(/maaş/);
     expect(trValue(key)).toMatch(/CV/);
     expect(trValue(key)).not.toMatch(/takip liste/);
     expect(enValue(key)).toMatch(/review/);
+    expect(enValue(key)).toMatch(/salar/);
     expect(enValue(key)).toMatch(/CV/);
     expect(enValue(key)).not.toMatch(/tracked job/);
+  });
+
+  it("the request-log notice names salary entries among the audited actions (tr + en)", () => {
+    expect(trValue("privacy.dataCollection.item6")).toMatch(/maaş/);
+    expect(enValue("privacy.dataCollection.item6")).toMatch(/salary/);
   });
 });
 
@@ -125,5 +135,41 @@ describe("empty states point somewhere", () => {
   it("does not describe the CV dropzone by a screen position", () => {
     expect(trValue("cv.empty")).not.toMatch(/sol/i);
     expect(enValue("cv.empty")).not.toMatch(/left/i);
+  });
+});
+
+describe("company reviews have no free text (2026-09-16)", () => {
+  // A review is ratings plus catalogue statements. Copy that still promises "pros and cons", a
+  // title, or a moderator reading every review before it is published describes the old form.
+  // The legacy rows are the one legitimate reason to say "pros and cons": where the author's own
+  // list, the export/privacy text and the moderation guide explain what the old format was.
+  const allowed = [
+    /^companyReviews\.mine\.legacy/,
+    /^companyReviews\.edit\.legacyBanner$/,
+    /^companyReviews\.card\.legacy/,
+    /^privacy\.companyReviews\.what$/,
+    /^adminReviews\.guide\.(legacy|grey|approve|reject)\./,
+    /^adminReviews\.detail\.legacy/,
+    /^help\.companyReviews\.calloutModeration\.body$/,
+    /^companies\.scoring\.moderation\.legacy$/,
+  ];
+  const reviewCopy = [...trEntries, ...enEntries].filter(([key]) =>
+    /^(companyReviews|companies|adminReviews|help\.companyReviews|help\.faq\.q1[345]|privacy\.companyReviews|landing\.tools)\./.test(key),
+  );
+
+  it("promises no title, pros or cons outside the legacy explanations", () => {
+    const offenders = reviewCopy
+      .filter(([key]) => !allowed.some((rule) => rule.test(key)))
+      .filter(([, value]) => /\b(pros|cons|artılar|eksiler|artı ve eksi)\b/i.test(value) || /\b(başlık|a title)\b/i.test(value))
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+
+  it("says nowhere that a moderator reads every review before it is published", () => {
+    const offenders = reviewCopy
+      .filter(([key]) => !allowed.some((rule) => rule.test(key)))
+      .filter(([, value]) => /(reads every review|her değerlendirmeyi .*okur|yayımlanmadan önce .*moderatör|before it is published)/i.test(value))
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
   });
 });

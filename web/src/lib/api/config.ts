@@ -55,6 +55,12 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
     minimumReviewsForScore: 3,
     priorWeight: 5,
   },
+  // Same reason: menu links and the company page's salary tab stay hidden until the server says on.
+  companySalaries: {
+    enabled: false,
+    maxEntriesPerUser: 10,
+    minimumEntriesForStats: 3,
+  },
 };
 
 export const configApi = {

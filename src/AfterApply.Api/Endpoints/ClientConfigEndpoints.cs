@@ -1,5 +1,6 @@
 using AfterApply.Application.ClientConfig;
 using AfterApply.Infrastructure.CompanyReviews;
+using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Payments;
@@ -28,6 +29,7 @@ public static class ClientConfigEndpoints
                 IOptions<CompanyReviewOptions> companyReviewOptions,
                 IOptions<JobSourceOptions> jobSourceOptions,
                 IOptions<PayTrOptions> payTrOptions,
+                IOptions<CompanySalaryOptions> companySalaryOptions,
                 HttpContext httpContext) =>
             {
                 // Read from IdentityOptions rather than IdentityPolicyOptions: the former is the object
@@ -40,6 +42,7 @@ public static class ClientConfigEndpoints
                 var gitHub = gitHubAuthOptions.Value;
                 var cvScan = cvScanOptions.Value;
                 var reviews = companyReviewOptions.Value;
+                var salaries = companySalaryOptions.Value;
 
                 // The values change only with a deploy or a config rollout, so let browsers and the
                 // CDN hold them for a few minutes instead of re-fetching on every form mount.
@@ -74,6 +77,8 @@ public static class ClientConfigEndpoints
                                              && !string.IsNullOrWhiteSpace(cvScan.Review.ProjectId)),
                     new CompanyReviewsConfigResponse(reviews.Enabled, reviews.MaxReviewsPerUser,
                         reviews.MinimumReviewsForScore, reviews.PriorWeight),
+                    new CompanySalariesConfigResponse(salaries.Enabled, salaries.MaxEntriesPerUser,
+                        salaries.MinimumEntriesForStats),
                     new JobSourcesConfigResponse(jobSourceOptions.Value.Enabled),
                     new PaymentsConfigResponse(payTrOptions.Value.Enabled && payTrOptions.Value.IsConfigured)));
             })

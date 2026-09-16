@@ -87,6 +87,11 @@ public sealed class RateLimitingOptions
     /// clicking, not for a script inflating one review's count.</summary>
     public FixedWindowPolicy CompanyReviewHelpful { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };
 
+    /// <summary>Per user — writing, editing and deleting a salary entry. Its own bucket rather
+    /// than the review one: the contribute page invites a review right after a salary, and the
+    /// two should not eat each other's five. Ten entries is the lifetime quota anyway.</summary>
+    public FixedWindowPolicy CompanySalaryWrite { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
+
     /// <summary>Per IP, anonymous — the public company directory search: a trigram scan per
     /// request, from anyone. A person types a name and pages a few times; sixty a minute is
     /// invisible to that and a ceiling for a scraper.</summary>

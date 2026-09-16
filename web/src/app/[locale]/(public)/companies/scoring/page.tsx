@@ -46,18 +46,20 @@ export default async function CompanyScoringPage({ params }: PageProps<"/[locale
           </ul>
           <p className="mt-2">{t("formula.example", { m })}</p>
           <p className="mt-2">{t("formula.threshold", { minimum })}</p>
-          <p className="mt-2">{t("formula.categories")}</p>
+          <p className="mt-2">{t("formula.categories", { minimum })}</p>
+          <p className="mt-2">{t("formula.topStatements", { minimum })}</p>
           {!config && <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t("formula.defaultsNote")}</p>}
         </section>
 
         <section>
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("moderation.title")}</h2>
           <ul className="list-disc flex flex-col gap-1 pl-5">
-            <li>{t("moderation.preModeration")}</li>
+            <li>{t("moderation.structured")}</li>
             <li>{t("moderation.onePerCompany")}</li>
             <li>{t("moderation.editResets")}</li>
             <li>{t("moderation.reports")}</li>
             <li>{t("moderation.anonymity")}</li>
+            <li>{t("moderation.legacy")}</li>
           </ul>
         </section>
 
@@ -65,10 +67,9 @@ export default async function CompanyScoringPage({ params }: PageProps<"/[locale
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("guidelines.title")}</h2>
           <ul className="list-disc flex flex-col gap-1 pl-5">
             <li>{t("guidelines.ownExperience")}</li>
-            <li>{t("guidelines.noNames")}</li>
-            <li>{t("guidelines.noInsults")}</li>
-            <li>{t("guidelines.noClaims")}</li>
-            <li>{t("guidelines.noAds")}</li>
+            <li>{t("guidelines.statements")}</li>
+            <li>{t("guidelines.noFreeText")}</li>
+            <li>{t("guidelines.reportable")}</li>
           </ul>
         </section>
 

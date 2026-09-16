@@ -35,6 +35,10 @@
         "title": "Cookie Policy",
         "description": "The two cookies e-kariyerim uses, what they do, how long they last — and why there is no consent banner."
       },
+      "terms": {
+        "title": "Terms of Use",
+        "description": "The rules that apply when you use e-kariyerim — your account, company reviews, content licence, prohibited uses and liability."
+      },
       "extensionPrivacy": {
         "title": "Browser Extension Privacy Policy",
         "description": "What the e-kariyerim browser extension reads, stores and sends — and what Gmail Scanning does once you turn it on."
@@ -96,8 +100,8 @@
         "description": "Connect your browser extension to your e-kariyerim account with a single confirmation."
       },
       "companies": {
-        "title": "Company Reviews",
-        "description": "Anonymous, moderated reviews of employers by the people who worked there: management, work environment, pay and career growth, scored openly."
+        "title": "Company Reviews and Salaries",
+        "description": "Anonymous, structured employer reviews from people who worked there — management, work environment, pay, career — and, once signed in, anonymous salary information by occupation. The score is computed in the open."
       },
       "companyScoring": {
         "title": "How Company Scores Are Calculated",
@@ -107,9 +111,21 @@
         "title": "My Reviews",
         "description": "The company reviews you wrote, their moderation status, and your remaining quota."
       },
+      "mySalaries": {
+        "title": "My Salaries",
+        "description": "The salary entries you shared and how many you have left."
+      },
+      "contribute": {
+        "title": "Company contribution",
+        "description": "Write an anonymous review or share salary information for a company."
+      },
       "helpCompanyReviews": {
         "title": "Company Reviews",
         "description": "Read company reviews and write an anonymous one; how moderation, editing and reporting work."
+      },
+      "helpCompanySalaries": {
+        "title": "Salary Information",
+        "description": "Read salaries at companies and share your own anonymously; the occupation is picked from a list — who sees what, and how to edit."
       },
       "helpCvScan": {
         "title": "CV Scan",
@@ -234,25 +250,27 @@
         "companies": {
           "eyebrow": "Company reviews · anonymous, no account needed",
           "title": "Know what it's like inside before you apply.",
-          "body": "What working at a company is actually like — separate scores for management, work environment, pay and career, plus pros and cons. Reading needs no account; writing only needs a sign-in.",
+          "body": "What working at a company is really like — an overall score, up to ten category averages, the most-picked statements and employees' anonymous salary reports. Reading reviews needs no account; salaries and writing need only a sign-in.",
           "bullet1": "Authors stay invisible: only the month and the relationship (current, former, intern)",
-          "bullet2": "A moderator reads every review before it is published",
+          "bullet2": "No free text: every statement comes from a fixed list written to be fair to everyone",
           "bullet3": "The score formula is public; no score is shown below three approved reviews",
           "cta": "Browse companies",
           "scoringLink": "How is the score calculated?",
           "mock": {
-            "ariaLabel": "Example: a company page — a 4.1 score from 12 reviews, four category averages and one review excerpt.",
-            "title": "A friendly team that likes to learn",
+            "ariaLabel": "Example: a company page — a 4.1 score from 12 reviews, area averages and one review excerpt with its picked statements.",
             "month": "September 2026",
-            "prosLabel": "PROS",
-            "pros": "Code reviews are taken seriously and remote work flexibility is real.",
-            "consLabel": "CONS",
-            "cons": "Raises lag the market and promotion criteria aren't written down."
+            "likedLabel": "LIKED",
+            "improvableLabel": "COULD BE BETTER",
+            "liked1": "Team communication",
+            "liked2": "Remote work",
+            "liked3": "Flexible hours",
+            "improve1": "Salary level",
+            "improve2": "Promotion criteria"
           }
         }
       },
       "companiesTitle": "Company reviews",
-      "companiesBody": "Anonymous reviews from people who worked there; a moderator reads each one before it is published.",
+      "companiesBody": "Anonymous, structured reviews and salary information by occupation from people who worked there — ratings and fixed statements, no free text.",
       "companiesCta": "Browse companies"
     },
     "problem": {
@@ -299,7 +317,7 @@
       "cvTitle": "Know which CV you sent",
       "cvBody": "Keep the CV files you apply with in one place, and record on each application which one went out — so a call six weeks later doesn't start with guesswork.",
       "companiesTitle": "Know companies from the inside",
-      "companiesBody": "Anonymous reviews from people who worked there and a score with a public formula — read without an account, write once signed in.",
+      "companiesBody": "Anonymous reviews from people who worked there, a score with a published formula, and salary information by occupation — read reviews without an account, see salaries and add your own once signed in.",
       "companiesCta": "Browse companies",
       "companiesBadge": "New",
       "weeklyJobsTitle": "Postings that fit you, ready every Monday",
@@ -415,7 +433,8 @@
       "help": "Help Center",
       "cookies": "Cookie Policy",
       "benchmark": "Reply rate benchmark",
-      "extensionPrivacy": "Extension Privacy Policy"
+      "extensionPrivacy": "Extension Privacy Policy",
+      "terms": "Terms of Use"
     }
   },
   "common": {
@@ -451,7 +470,11 @@
     "explore": "Explore",
     "proBadge": "Pro",
     "weeklyJobs": "Weekly Jobs",
-    "pro": "Pro plan"
+    "pro": "Pro plan",
+    "mySalaries": "My Salaries",
+    "contributeSalary": "Salary Info",
+    "contributeReview": "Review",
+    "companyDirectory": "Company directory"
   },
   "auth": {
     "login": {
@@ -489,8 +512,6 @@
       "email": "Email",
       "password": "Password",
       "confirmPassword": "Confirm password",
-      "consentLink": "the privacy policy",
-      "consentSuffix": "and agree to it.",
       "submit": "Sign Up",
       "submitting": "Creating account...",
       "haveAccount": "Already have an account?",
@@ -500,7 +521,8 @@
         "item1": "See how many of your applications got a reply and how many went quiet — your own numbers",
         "item2": "Import your LinkedIn history or save applications with one click from the extension; no typing",
         "item3": "Free. Your data stays in your account alone; delete it whenever you like"
-      }
+      },
+      "consent": "I have read <privacy>the privacy policy</privacy> and <terms>the terms of use</terms> and agree to them."
     },
     "passwordRules": {
       "title": "Your password must contain:",
@@ -734,7 +756,8 @@
       "last": "Last",
       "pageInfoCompanies": "Page {page} / {totalPages} ({totalCount} companies)",
       "pageInfoReminders": "Page {page} / {totalPages} ({totalCount} reminders)",
-      "pageInfoOrders": "Page {page} / {totalPages} ({totalCount} orders)"
+      "pageInfoOrders": "Page {page} / {totalPages} ({totalCount} orders)",
+      "pageInfoSalaries": "Page {page} / {totalPages} ({totalCount} salary entries)"
     },
     "form": {
       "companyName": "Company Name",
@@ -901,7 +924,7 @@
     "title": "Account Settings",
     "export": {
       "title": "Export My Data",
-      "description": "Download your applications (with their status history), imports, reminders, CV records, the feedback you sent, your company reviews (with your reports and helpful marks) and your Pro plan payment records as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
+      "description": "Download your applications (with their status history), imports, reminders, CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared and your Pro plan payment records as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
       "download": "Download My Data",
       "preparing": "Preparing...",
       "error": "Could not export data."
@@ -934,14 +957,14 @@
     },
     "delete": {
       "title": "Delete My Account",
-      "description": "This cannot be undone. Your account and everything in it — your applications, tracked jobs, CVs, imports, reminders, e-mail suggestions and notifications, company reviews and the feedback you sent — is permanently deleted. Pro plan payment records are kept, detached from your account, for the statutory retention period.",
+      "description": "This cannot be undone. Your account and everything in it — your applications, tracked jobs, CVs, imports, reminders, e-mail suggestions and notifications, company reviews, the salary entries you shared and the feedback you sent — is permanently deleted. Pro plan payment records are kept, detached from your account, for the statutory retention period.",
       "passwordLabel": "Your Password",
       "confirmLabel": "Type \"DELETE\" to confirm",
       "confirmWord": "DELETE",
       "confirmMismatch": "Type \"DELETE\" in the box to confirm.",
       "submit": "Permanently Delete My Account",
       "deleting": "Deleting...",
-      "finalConfirm": "Final warning: your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent, plus your extension connections — will be permanently deleted. This cannot be undone. Do you want to continue?",
+      "finalConfirm": "Final warning: your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent, plus your extension connections — will be permanently deleted. This cannot be undone. Do you want to continue?",
       "genericError": "Could not delete account.",
       "noPasswordHint": "This account was created with Google, LinkedIn or GitHub and has no password. Type the confirmation word below to delete it."
     },
@@ -1039,7 +1062,7 @@
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "Apart from the request log, this data is used solely to provide you with application tracking and personal analytics features; the request log serves only the security and legal purposes listed above.",
       "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link.",
-      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\").",
+      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\").",
       "item7": "If you use the weekly job matching (a paid feature): the job titles (up to three) and the location you save as your search criteria. They are stored on your account and, once a week, used as a search on LinkedIn and kariyer.net — see \"Cross-border data transfer\" below. The postings found are kept for you for a limited time; which ones you already applied to is worked out from your own applications and never stored as a separate record. If you also give consent, the fit score computed for each posting, its short reasoning and the matched/missing criteria are kept on your account too — see \"Weekly job matching\"."
     },
     "googleSignIn": {
@@ -1097,7 +1120,7 @@
       "title": "Your rights",
       "before": "You can export a copy of your data or permanently delete your account at any time. You can do this from the",
       "link": "Account Settings",
-      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
+      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
     },
     "notApplicable": {
       "title": "Not currently applicable",
@@ -1152,9 +1175,9 @@
     "companyReviews": {
       "title": "Company reviews you write",
       "intro": "Writing a review of a company is optional and needs an account. When you do:",
-      "what": "Your review — the title, the pros and cons text, your relationship to the company (current employee, former employee, intern) and the five ratings — is stored against your account, together with its moderation status and any note the moderator wrote.",
-      "anonymous": "Published reviews never show your name, email or account; readers see the text, the ratings, your relationship to the company and the month it was written. The month rather than the day, on purpose: a date is one more clue to who wrote it.",
-      "admin": "The moderator who reads your review before it is published can see the account behind it. That is what makes moderation possible — a rule cannot be applied to an author nobody can identify — and it is the only place your identity meets your review.",
+      "what": "Your review — your overall rating, the optional area ratings, the ready-made statements you picked and your relationship to the company (current employee, former employee, intern) — is stored against your account, together with its moderation status and any note a moderator wrote. There is no free text in a review since 16 September 2026; if you wrote one before then, its title, pros and cons stay stored for you and are no longer shown to anyone else.",
+      "anonymous": "Published reviews never show your name, email or account; readers see the ratings, the statements, your relationship to the company and the month it was written. The month rather than the day, on purpose: a date is one more clue to who wrote it.",
+      "admin": "A moderator who looks at your review — after a report, or for a review from before the switch — can see the account behind it. That is what makes moderation possible, and it is the only place your identity meets your review.",
       "reports": "If you report someone else's review, the report (reason, your note, the time) is stored against your account and shown to the moderator. The review's author never sees who reported it.",
       "helpful": "Marking a review helpful is stored as one row per review per account, so it can be undone and cannot be counted twice. Nobody sees who marked what.",
       "storage": "Reviews, reports and helpful marks are stored in our own database and are not sent to any third party.",
@@ -1171,7 +1194,101 @@
       "refunds": "Refunds are made only through our own system, via PayTR's refund service, to the card you paid with; your request and its outcome are kept on the order record.",
       "provider": "PayTR is the data controller for the data it processes itself; its privacy notice is published at paytr.com.",
       "legalBasis": "Legal basis: performance of the contract (KVKK art. 5/2-c) and compliance with a legal obligation (art. 5/2-ç)."
+    },
+    "companySalaries": {
+      "title": "Salary information you share",
+      "intro": "Sharing your salary at a company is optional and requires an account. When you do:",
+      "what": "Your entry — the occupation you picked from the list, total years of experience, employment type, whether you are a current or former employee, monthly net salary with its currency, and the annual bonus if any — is stored linked to your account. There is no free text: the occupation comes from a catalogue based on ISCO-08.",
+      "whoSees": "Entries are shown only to signed-in users; the public company page says only how many entries there are.",
+      "band": "Readers see an experience band (0–1, 2–4, 5–9, 10+) rather than your exact years, and the month rather than the day. Deliberately: together with an occupation, the exact years and date would give away who wrote it at a small company.",
+      "noAuthor": "A published entry never shows your name, e-mail or account, and contains nothing you typed. Only we can see the account behind an entry.",
+      "storage": "Entries are stored in our own database and are not sent to any third party.",
+      "deletion": "You can delete an entry from My Salaries at any time. Deleting your account deletes all of them; your data export includes them with the exact years.",
+      "legalBasis": "Legal basis: your explicit action — you choose to share."
     }
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "lastUpdated": "Last updated: 16 September 2026",
+    "intro": "This page sets out the rules that apply when you use e-kariyerim — the website, the Chrome extension and the tools that work without an account. By using the site you accept these terms; if you do not accept them, please do not use it. How your personal data is handled is described in a separate document, the Privacy Policy; the two apply together.",
+    "service": {
+      "title": "What the service is",
+      "intro": "e-kariyerim is a tool for keeping track of your job search:",
+      "tracking": "A dashboard that records your applications, tracked jobs and reminders; import from a LinkedIn export; a Chrome extension that collects signals from job pages and from replies in Gmail.",
+      "tools": "Tools that work without an account: CV scan, reply-rate benchmark, and reading company reviews.",
+      "reviews": "Public company pages where registered users write anonymous, structured reviews of companies.",
+      "salaries": "Salary information: signed-in users share their salary at a company anonymously and read each other's entries.",
+      "asIs": "The service is provided as is. We may change, pause or remove features; on a free service we do not promise advance notice, but a change that affects user data is announced on this page and, where needed, by email."
+    },
+    "account": {
+      "title": "Your account",
+      "age": "You must be at least 18 to open an account.",
+      "accuracy": "You open an account for yourself and are responsible for the information you give being accurate. Do not share an account with anyone or use someone else's.",
+      "security": "Your password and your extension keys are your responsibility; anything done from your account counts as done by you. If you notice unauthorised use, change your password and write to us.",
+      "delete": "You can delete your account permanently at any time from Account Settings; what gets deleted is listed in the Privacy Policy."
+    },
+    "reviews": {
+      "title": "Company reviews",
+      "intro": "Writing a company review needs an account and is subject to these rules:",
+      "ownExperience": "You rate only what you experienced yourself — a company you worked at, interned at or went through the hiring process of. Do not rate hearsay, someone else's experience, or a company you have no relationship with.",
+      "structured": "A review is made of ratings and fixed statements we wrote; there is no free text. The list of statements is the same for everyone and may be updated from time to time, like this page.",
+      "onePerCompany": "You can write one review per company per account, and there is a cap on the total number per account; both are shown on the My Reviews page. If your view changes, you edit your existing review.",
+      "publication": "Your review is published the moment you save it, without your name. If a reader reports it, a moderator looks at it and may leave it up, ask you for changes, or remove it; the reason appears on the My Reviews page. You can edit and resubmit a removed review; whether it goes back online is the moderator's decision.",
+      "noManipulation": "Using reviews in an organised way to favour or harm a company — several accounts, reviews written for something in return, coordinated rating — is prohibited and leads to the account being closed.",
+      "opinion": "Every published review is its author's personal opinion; it is not a statement by e-kariyerim about a company and we do not guarantee its accuracy.",
+      "companies": "If you represent a company and believe a review about it breaks the rules, you can report that review or write to the address below."
+    },
+    "salaries": {
+      "title": "Salary information",
+      "intro": "When you share your salary at a company:",
+      "ownData": "You share only your own salary; not someone else's, and not hearsay.",
+      "accurate": "The amounts and the occupation you pick must be truthful.",
+      "signedInOnly": "Entries are shown anonymously to signed-in users; readers see the occupation and an experience band, not your name.",
+      "quota": "Ten entries per account in total, one per occupation at the same company. Deleting frees a slot.",
+      "opinion": "Entries are user reports; e-kariyerim does not verify them, and they are not advice for salary negotiation."
+    },
+    "content": {
+      "title": "Your content and licence",
+      "ownership": "Everything you save — your applications, CVs, notes, ratings and picks — is yours. We access it only to provide the service; the details are in the Privacy Policy.",
+      "licence": "When you save a company review you grant us permission to publish that review — your ratings and the statements you picked — anonymously on the company page, and to use it together with other reviews to produce scores and summaries. This permission ends when you delete the review or your account; the review leaves the pages and the company's score.",
+      "ourContent": "The site itself — its design, texts, the list of review statements, the help and guide content, the logo — belongs to e-kariyerim. Copying, reproducing or using it in your own service beyond personal use needs permission."
+    },
+    "prohibited": {
+      "title": "What you must not do",
+      "intro": "When using the service, the following is prohibited:",
+      "scraping": "Crawling, scraping or bulk-downloading the site or the company pages with automated tools.",
+      "limits": "Trying to get around quotas, rate limits, moderation or other limits; opening several accounts.",
+      "abuse": "Using the service to harm, mislead or harass another person.",
+      "security": "Anything that endangers the service's security, its infrastructure or other users' data.",
+      "unlawful": "Any use that breaks applicable law."
+    },
+    "liability": {
+      "title": "Liability",
+      "noAdvice": "The output of tools such as the CV scan, the benchmark and job matching is for information; it is not professional advice on careers, law or anything else. Decisions you base on it remain yours.",
+      "thirdParties": "The employers you apply to, and third parties such as LinkedIn, kariyer.net and Google, are not under our control; your relationship with them is subject to their own terms.",
+      "availability": "We do not promise that the service will be uninterrupted or error-free. To the extent applicable law allows, we are not liable for indirect damages arising from use of, or inability to use, the service.",
+      "reviewsDisclaimer": "Company reviews are users' opinions; if you believe a review has harmed you, use the report path first — every report is read by a moderator.",
+      "salariesDisclaimer": "Salary entries are users' own reports; they are not verified and are not advice for salary negotiation or any other decision."
+    },
+    "termination": {
+      "title": "Suspension and termination",
+      "us": "For an account that breaks these terms we may set its review allowance to zero, remove its reviews, or close it. Where we can, we say why.",
+      "you": "You can end the relationship at any time by deleting your account."
+    },
+    "changes": {
+      "title": "Changes",
+      "body": "We may update these terms; the latest date is at the top of the page. A significant change is announced to registered users by email. Continuing to use the service after a change means you accept the new terms."
+    },
+    "law": {
+      "title": "Governing law",
+      "body": "These terms are governed by the law of the Republic of Türkiye. If you use the service as a consumer, the mandatory consumer-protection rules of the country you live in are unaffected."
+    },
+    "contact": {
+      "title": "Contact",
+      "before": "For questions about these terms, write to",
+      "after": "."
+    },
+    "privacyLink": "Privacy Policy →"
   },
   "extensionPrivacy": {
     "title": "Browser Extension Privacy Policy",
@@ -1378,8 +1495,13 @@
     "hrLinkedInInvalid": "Enter a profile URL starting with https://www.linkedin.com/in/",
     "employmentStatusRequired": "Choose your relationship to the company",
     "ratingRequired": "Give a rating from 1 to 5",
-    "reviewTitleTooShort": "The title needs at least 3 characters",
-    "reviewTextTooShort": "Write at least 20 characters"
+    "reviewStatementsTooMany": "At most 5 statements per list",
+    "reviewStatementUnknown": "One of the statements is not in the list",
+    "salaryAmountInvalid": "Enter a valid amount",
+    "salaryYearsInvalid": "Enter a whole number of years between 0 and 50",
+    "salaryCurrencyRequired": "Select a currency",
+    "salaryBonusAmountInvalid": "Enter the bonus amount if there is one, otherwise leave it empty",
+    "salaryOccupationRequired": "Pick an occupation from the list"
   },
   "errors": {
     "generic": "The request failed.",
@@ -1596,6 +1718,7 @@
       "faq": "FAQ",
       "cv": "My CVs",
       "companyReviews": "Company Reviews",
+      "companySalaries": "Salary Information",
       "cvScan": "CV Scan",
       "benchmark": "Reply Rate Benchmark",
       "weeklyJobs": "Weekly Postings and Pro"
@@ -1667,6 +1790,9 @@
         },
         "companyReviews": {
           "description": "Read anonymous employee reviews and write your own."
+        },
+        "companySalaries": {
+          "description": "Read salaries at companies and share your own anonymously."
         },
         "cvScan": {
           "description": "Measure how machine-readable your CV is, no account needed."
@@ -1951,7 +2077,7 @@
       "intro": "Settings is where you export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "export": {
         "title": "Export My Data",
-        "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent and your company reviews (with your reports and helpful marks) as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
+        "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks) and the salary entries you shared as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
       },
       "extension": {
         "title": "Browser extension connection",
@@ -2002,7 +2128,7 @@
         "body": "Enter your password, type \"DELETE\" into the box, and click the button. A second warning tells you that all of your data will be deleted; once you confirm that too, your account and all of your data are permanently deleted.",
         "calloutIrreversible": {
           "title": "This can't be undone",
-          "body": "Once your account is deleted, everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent — is permanently gone; there's no way to reverse it."
+          "body": "Once your account is deleted, everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent — is permanently gone; there's no way to reverse it."
         }
       }
     },
@@ -2094,7 +2220,7 @@
       },
       "q2": {
         "question": "Can I get my data back after deleting my account?",
-        "answer": "No. Account deletion can't be undone; your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews and the feedback you sent are permanently deleted. You can export your data from Account Settings before deleting."
+        "answer": "No. Account deletion can't be undone; your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent are permanently deleted. You can export your data from Account Settings before deleting."
       },
       "q3": {
         "question": "What if the Chrome extension reads a job's details wrong?",
@@ -2141,8 +2267,8 @@
         "answer": "Yes. A published review shows neither your name, your email nor the day; only the month and your relationship with the company (current, former, intern). Only moderators can see who wrote it, and only for moderation."
       },
       "q14": {
-        "question": "Why isn't my review visible yet?",
-        "answer": "Every review is read by a moderator before it is published; until then only you see it, on the My Reviews page. If it was not published, the reason is on the same page; edit it according to the note and it is reviewed again."
+        "question": "Why isn't my review visible?",
+        "answer": "A review is published the moment you save it. If it is not on the company page, either a moderator took it down after a report — the reason is on the My Reviews page; edit it and it goes back to a moderator — or it was written before 16 September 2026 in the old free-text format and is still waiting in the queue."
       },
       "q15": {
         "question": "What can I use on e-kariyerim without an account?",
@@ -2167,6 +2293,10 @@
       "q20": {
         "question": "My payment was interrupted or failed; was my card charged?",
         "answer": "If the payment window closed, you chose \"Cancel\" or your bank declined, nothing was charged; you can start the same plan again. If the result page says \"verifying\", we are waiting for the bank's confirmation: even if you close the page, we e-mail you once the result is final and it shows under Settings › Plan and payments. If your card was charged and the payment is still not recognised after a few hours, write to us via Feedback."
+      },
+      "q21": {
+        "question": "Is the salary I share anonymous, and who sees it?",
+        "answer": "Yes. A salary entry never shows your name, e-mail or account; readers see the occupation you picked from the list, your experience as a band (0–1, 2–4, 5–9, 10+ years), your employment type, whether you are a current or former employee, the month and the amount. There is no free text. Only signed-in users can read salary entries; you can edit or delete yours on My Salaries."
       }
     },
     "cv": {
@@ -2208,7 +2338,7 @@
     "companyReviews": {
       "eyebrow": "Companies",
       "title": "Company reviews",
-      "intro": "What working at a company is actually like — anonymous reviews from people who worked there and a score with a public formula. Reading needs no account; writing only needs a sign-in.",
+      "intro": "What working at a company is actually like — anonymous, structured reviews from people who worked there and a score with a public formula. Reading needs no account; writing only needs a sign-in.",
       "read": {
         "title": "Reading reviews",
         "step1": {
@@ -2217,11 +2347,11 @@
         },
         "step2": {
           "title": "Open a company page",
-          "body": "At the top: the overall score, four category averages (management, work environment, pay and benefits, career and development) and the star distribution; below them, the reviews. Sort by newest or most helpful."
+          "body": "At the top: the overall score, the averages of up to ten areas (work environment, management, career, work-life balance, pay, benefits, remote work, tools, hiring, onboarding), the star distribution and the statements picked most often; below them, the reviews. Sort by newest or most helpful."
         },
         "step3": {
           "title": "Know how to read the score",
-          "body": "A score appears only once enough reviews are published; until then the page says how many are still needed. Every number carries the count it is based on."
+          "body": "A score appears only once enough reviews are published; until then the page says how many are still needed. An area average appears once enough people rated that area — until then you see the vote count. Every number carries the count it is based on."
         },
         "scoringLink": "How is the score calculated? →",
         "readingGuideLink": "How to read the reviews →"
@@ -2237,12 +2367,12 @@
           "body": "Choose the company from the list in the form. If it is missing, type its name to add it; an added company also shows up in other people's search."
         },
         "step3": {
-          "title": "Fill in the scores and the text",
-          "body": "Your relationship with the company (current employee, former employee, intern), five 1-5 scores, a title, pros and cons. Don't make anyone identifiable by name; the rules sit next to the form."
+          "title": "Rate, and pick statements if you like",
+          "body": "Your relationship with the company (current employee, former employee, intern) and an overall 1–5 rating are all that is required. Ten more areas can be rated or left blank. Once you rate an area, the form offers ready-made statements about it — pick up to five you liked and five that could be better. There is nothing to write."
         },
         "step4": {
-          "title": "Submit for review",
-          "body": "A submitted review is \"Pending review\" and visible only to you on the My Reviews page. Once a moderator has read it, it is published or comes back with a reason."
+          "title": "Publish",
+          "body": "Your review is published the moment you save it and appears on the company page and under My Reviews. Readers can report it; if a moderator takes it down, the reason is on the My Reviews page."
         },
         "guideLink": "How to write a fair and useful review →"
       },
@@ -2251,16 +2381,67 @@
         "body": "A published review shows neither your name, your email nor the day; only the month and your relationship appear. Only moderators can see who wrote it, and only for moderation."
       },
       "calloutModeration": {
-        "title": "Pre-moderation and one review per company",
-        "body": "Every review is read before it is published. You can write one review per company; if your view changes, edit the existing one. Editing a published review sends it back for review. There is a cap on the total number of reviews per account, shown on the My Reviews page."
+        "title": "No free text, one review per company",
+        "body": "A review is made of ratings and statements from a fixed list, which is what lets it be published on save. You can write one review per company; if your view changes, edit the existing one. There is a cap on the total number of reviews per account, shown on the My Reviews page. Reviews written before 16 September 2026 had free text; their ratings still count, their text is no longer shown."
       },
       "manage": {
         "title": "Editing and deleting",
-        "body": "The My Reviews page shows the status of each of your reviews (pending, published, not published) and the moderator's note, if any. Edit changes the text and the scores; Delete removes it entirely, and a deleted review also drops out of the company's score."
+        "body": "The My Reviews page shows the status of each of your reviews (published, pending, not published) and the moderator's note, if any. Edit changes the ratings and the statements; Delete removes it entirely, and a deleted review also drops out of the company's score."
       },
       "report": {
         "title": "If you see a review that breaks the rules",
         "body": "Use the \"Report this review\" link on any review card, pick a reason and leave a short note. Reports are looked at by a moderator; the review may stay up, the author may be asked to change it, or it may be removed. The \"Helpful\" mark feeds the sorting; neither a report nor a helpful mark reveals your identity to anyone else."
+      }
+    },
+    "companySalaries": {
+      "eyebrow": "Companies",
+      "title": "Salary information",
+      "intro": "What people earn at a company — anonymous reports from people who worked there, with an occupation picked from a catalogue and an experience band. Reading and writing both need sign-in.",
+      "read": {
+        "title": "Reading salaries",
+        "step1": {
+          "title": "Sign in",
+          "body": "Salary entries are only shown to signed-in users. The Salaries tab on a company page shows you the sign-in first if you are not, then brings you back to the same tab."
+        },
+        "step2": {
+          "title": "Open the Salaries tab on a company page",
+          "body": "Each entry is one row: occupation, experience band (0–1, 2–4, 5–9, 10+ years), employment type, current or former employee, month and monthly net amount; the annual bonus if there is one. Nobody sees the author."
+        },
+        "step3": {
+          "title": "Know how to read the median",
+          "body": "Once enough entries exist in one currency, the median and the lowest–highest range appear at the top; until then there are only rows. The median is not split by occupation — it is the middle of every entry at the company."
+        }
+      },
+      "write": {
+        "title": "Sharing a salary",
+        "step1": {
+          "title": "Open the contribution page",
+          "body": "In the top menu, Companies ▾ → Salary Info, or the \"Share a salary\" button on a company page. Reviews are written on the same page; the switch at the top moves between the two."
+        },
+        "step2": {
+          "title": "Pick the company",
+          "body": "The company is picked once and applies to both forms. If yours is not listed, type its name to add it."
+        },
+        "step3": {
+          "title": "Fill in the form",
+          "body": "Occupation, total years of experience, employment type, current/former employee, monthly net salary with its currency, and whether there is a bonus — all required. The occupation is picked from a catalogue: start typing, find it by its Turkish or English name and pick it; an entry cannot be created for an occupation that is not listed."
+        },
+        "step4": {
+          "title": "Share",
+          "body": "The entry is visible to signed-in readers immediately. You are then invited to review the same company; you can skip that."
+        }
+      },
+      "calloutAnonymous": {
+        "title": "Entries are anonymous",
+        "body": "Readers never see your name, e-mail or exact years; only the occupation, band, employment type, relationship and month. The exact years are only on your own list and in your data export."
+      },
+      "calloutLimits": {
+        "title": "One entry per occupation, ten in total",
+        "body": "You can add several entries for one company under different occupations (a promotion, say); for the same occupation, edit the existing entry instead of adding a second. Ten entries per account in total; deleting frees a slot."
+      },
+      "manage": {
+        "title": "Editing and deleting",
+        "body": "The My Salaries page lists every entry you shared with its full figures. Edit changes the amounts and moves the entry's month to today; Delete removes it entirely."
       }
     },
     "cvScan": {
@@ -2865,6 +3046,16 @@
     "FormerEmployee": "Former employee",
     "Intern": "Intern"
   },
+  "salaryEmploymentStatus": {
+    "CurrentEmployee": "Current employee",
+    "FormerEmployee": "Former employee"
+  },
+  "salaryCurrency": {
+    "TRY": "TRY ₺",
+    "EUR": "EUR €",
+    "USD": "USD $",
+    "GBP": "GBP £"
+  },
   "reviewModerationStatus": {
     "Pending": "Awaiting review",
     "Approved": "Published",
@@ -2893,8 +3084,8 @@
   },
   "companies": {
     "directory": {
-      "title": "Company reviews",
-      "subtitle": "What it is actually like to work somewhere, from the people who did — anonymous, read by a moderator before it is published.",
+      "title": "Company reviews and salaries",
+      "subtitle": "What working somewhere is really like and what it pays — from people who worked there; anonymous, structured, no free text. Reviews are public, salaries are for signed-in readers.",
       "searchPlaceholder": "Search a company…",
       "searchLabel": "Search companies",
       "writeCta": "Write a review",
@@ -2903,32 +3094,37 @@
       "tooMany": "Too many searches in a row — wait a moment and try again.",
       "empty": "No company has a published review yet.",
       "noMatches": "Nothing matches “{query}”.",
-      "beFirst": "Be the first to write one — your review goes live once a moderator has read it.",
+      "beFirst": "Be the first to write one — it goes live the moment you save it.",
       "noScore": "No score yet",
       "reviewCount": "{count, plural, =1 {1 review} other {# reviews}}",
       "explainer": {
         "what": {
           "title": "What a review holds",
-          "body": "Five separate scores — overall, management, work environment, pay and career — plus pros, cons, the relationship and the month."
+          "body": "One overall rating, up to ten optional category ratings — management, pay, remote work and more — and a few fixed statements about what was good and what could improve. Signed in, also salary entries with the occupation, an experience band and the monthly net amount."
         },
         "anonymous": {
           "title": "Anonymous",
           "body": "Reviews never show who wrote them. No name, no email, no day — only the month and the relationship."
         },
         "moderated": {
-          "title": "Moderated",
-          "body": "A moderator reads every review before it is published; one review per company."
+          "title": "No free text",
+          "body": "Every statement comes from a fixed list written to be fair to everyone; readers can report a review, and a moderator decides."
         }
       }
     },
     "page": {
-      "metaTitle": "{company} reviews",
-      "metaDescription": "{count, plural, =0 {No published review of {company} yet — be the first.} =1 {1 anonymous employee review of {company}, with a score you can check.} other {# anonymous employee reviews of {company}, with a score you can check.}}",
+      "metaTitle": "{company} reviews and salaries",
+      "metaDescription": "{count, plural, =0 {No published reviews of {company} yet — be the first. Salaries shared by employees are visible once you sign in.} =1 {1 anonymous employee review of {company}, a score you can check, and anonymous salary information by occupation once you sign in.} other {# anonymous employee reviews of {company}, a score you can check, and anonymous salary information by occupation once you sign in.}}",
       "breadcrumbLabel": "Breadcrumb",
       "allCompanies": "← All companies",
-      "subtitle": "Anonymous reviews from people who worked here, published after a moderator has read them.",
+      "subtitle": "Anonymous, structured reviews and salary information from people who worked here.",
       "website": "Website ↗",
-      "disclaimer": "Reviews are the personal opinions of their anonymous authors, not statements by e-kariyerim. Every review is read by a moderator before it appears; if one breaks the rules, use “Report this review” and we will look at it again."
+      "tabs": {
+        "label": "Company page sections",
+        "reviews": "Reviews",
+        "salaries": "Salaries"
+      },
+      "disclaimer": "Reviews are the personal opinions of their anonymous authors, not statements by e-kariyerim. Reviews are made of ratings and ready-made statements only; if one still looks wrong, use “Report this review” and a moderator will look at it."
     },
     "summary": {
       "scoreLabel": "Score {score} out of 5",
@@ -2936,7 +3132,12 @@
       "noScoreYet": "No score yet",
       "noReviewsYet": "The score appears once there are enough published reviews.",
       "untilScore": "{count, plural, =1 {1 published review} other {# published reviews}} — {remaining, plural, =1 {1 more} other {# more}} until a score is shown.",
-      "distributionLabel": "Overall rating distribution"
+      "distributionLabel": "Overall rating distribution",
+      "votes": "{count, plural, =0 {no votes} =1 {1 vote} other {# votes}}",
+      "categoriesLabel": "Area averages",
+      "topLiked": "Most often liked",
+      "topImprovable": "Most often “could be better”",
+      "topCount": "{label} · {count}"
     },
     "reviews": {
       "heading": "{count, plural, =0 {Reviews} =1 {1 review} other {# reviews}}",
@@ -2946,13 +3147,14 @@
       "yourReview": "Your review",
       "editYourReview": "Edit",
       "rejectedReason": "Not published: {reason}",
-      "cta": "Worked here? Share your experience — anonymously.",
+      "cta": "Worked here? Rate it — anonymously, in a minute.",
       "writeReview": "Write a review",
       "signInToWrite": "Sign in to write a review",
       "empty": "No published review yet.",
       "actionError": "That didn't go through. Please try again.",
       "readingNote": "Every review is one person's experience, not a verdict on the company.",
-      "readingGuide": "How to read these reviews →"
+      "readingGuide": "How to read these reviews →",
+      "ownSummary": "Your rating: {value} / 5"
     },
     "scoring": {
       "title": "How company scores are calculated",
@@ -2966,84 +3168,99 @@
         "m": "{m} — the prior weight: the company is treated as if it started with {m} average reviews",
         "example": "Example: three 5-star reviews with a site average of 3.5 give (3 × 5 + {m} × 3.5) / (3 + {m}) = 4.1, not 5.0. With thirty such reviews the score is 4.8.",
         "threshold": "No score is shown until a company has at least {minimum} published reviews; the page shows the count instead.",
-        "categories": "The four category averages (management, work environment, salary & benefits, career & development) are plain means of the published reviews and are always shown next to the number of reviews.",
-        "defaultsNote": "The live configuration could not be read just now; the numbers above are the documented defaults."
+        "categories": "Area averages (work environment, management, career, work-life balance, pay, benefits, remote work, tools, hiring, onboarding) are plain means of the reviews that rated that area, and each one is shown only once at least {minimum} reviews rated it — until then the page shows the vote count instead.",
+        "defaultsNote": "The live configuration could not be read just now; the numbers above are the documented defaults.",
+        "topStatements": "“Most often liked” and “most often could be better” count how many published reviews picked each statement, and show the top three; they appear together with the score, never below {minimum} reviews."
       },
       "moderation": {
         "title": "What gets published",
-        "preModeration": "Every review is read by a moderator before it appears. Until then it is visible only to its author.",
-        "onePerCompany": "One review per company per account. Editing it sends it back for moderation.",
-        "editResets": "An edited review disappears from the page until it is approved again.",
+        "structured": "A review is ratings plus statements from a fixed list; there is nothing to write. That is what lets it be published the moment it is saved.",
+        "onePerCompany": "One review per company per account. Editing replaces it in place.",
+        "editResets": "A review a moderator has taken down goes back to the queue when its author edits it, instead of straight back online.",
         "reports": "Anyone signed in can report a published review. A moderator then keeps it, asks the author for changes, or removes it.",
-        "anonymity": "Readers never see who wrote a review. Moderators can see the account behind it, which is what makes moderation possible."
+        "anonymity": "Readers never see who wrote a review. Moderators can see the account behind it, which is what makes moderation possible.",
+        "legacy": "Reviews written before 16 September 2026 had free text. Their ratings still count; their text is no longer shown."
       },
       "guidelines": {
-        "title": "What a review may contain",
-        "ownExperience": "Your own experience, in your own words.",
-        "noNames": "No names of colleagues or managers, no personal details about anyone.",
-        "noInsults": "No insults, threats or profanity.",
-        "noClaims": "No claims that cannot be verified — describe what you saw, not what you heard.",
-        "noAds": "No advertising, links or recruiting."
+        "title": "What a review can say",
+        "ownExperience": "Your own experience, as ratings.",
+        "statements": "Up to five things you liked and five that could be better, from a fixed list.",
+        "noFreeText": "No free text, no names, no claims: the list has none, so a review cannot carry them.",
+        "reportable": "Every review can be reported by any signed-in reader."
       },
       "linkLabel": "How the score is calculated →"
     }
   },
   "companyReviews": {
-    "ratings": {
-      "overallRating": "Overall",
-      "managementRating": "Management",
-      "workEnvironmentRating": "Work environment",
-      "salaryAndBenefitsRating": "Salary & benefits",
-      "careerAndDevelopmentRating": "Career & development"
+    "categories": {
+      "overall": "Overall",
+      "workEnvironment": "Work environment",
+      "management": "Management & communication",
+      "careerGrowth": "Career growth",
+      "workLifeBalance": "Work-life balance",
+      "pay": "Pay",
+      "benefits": "Benefits",
+      "remoteWork": "Remote / hybrid work",
+      "tooling": "Technology & tools",
+      "hiring": "Hiring process",
+      "onboarding": "Onboarding"
     },
     "card": {
       "overallLabel": "Overall rating {value} out of 5",
-      "pros": "Pros",
-      "cons": "Cons",
+      "ratedCategories": "{count, plural, =1 {1 category rated} other {# categories rated}}",
+      "liked": "Liked",
+      "improvable": "Could be better",
+      "legacyNote": "Written in the earlier free-text format. The text is no longer shown; the ratings still count toward the score.",
+      "legacySalaryAndBenefits": "Salary & benefits",
       "helpful": "{count, plural, =0 {Helpful} =1 {Helpful · 1} other {Helpful · #}}",
       "report": "Report this review"
     },
     "form": {
       "heading": "Your review of {company}",
-      "anonymityNote": "Published without your name. Moderators can see your account; readers cannot.",
+      "anonymityNote": "Published without your name. There is no free text: rate each area, and pick from ready-made statements if you want to point something out.",
       "employmentStatus": "Your relationship to the company",
       "employmentStatusPlaceholder": "Choose…",
-      "title": "Title",
-      "titlePlaceholder": "Sum it up in one line",
-      "pros": "Pros",
-      "prosPlaceholder": "What was genuinely good about working here?",
-      "cons": "Cons",
-      "consPlaceholder": "What should someone know before joining?",
-      "moderationNote": "A moderator reads every review before it is published. Reviews that name people, insult, advertise or make claims that cannot be checked are sent back.",
+      "required": "Required",
+      "optionalNote": "The rest is optional — leave out any area that doesn't apply to you.",
+      "suggestedLiked": "What you liked?",
+      "suggestedImprovable": "What could be better?",
+      "showMore": "{count, plural, =1 {+ 1 more statement} other {+ # more statements}}",
+      "showLess": "Close",
+      "likedHeading": "What I liked",
+      "improvableHeading": "Could be better",
+      "counters": "Liked {liked}/{max} · Could be better {improvable}/{max}",
+      "capReached": "You've picked the maximum for this list. Unpick one to choose another.",
+      "publishNote": "Statements are optional. Your review is published as soon as you save it; readers can report it.",
       "submitting": "Sending…",
       "starLabel": "{count, plural, =1 {1 star} other {# stars}}",
-      "ratingValue": "{value} / 5",
+      "ratingValue": "{value} / 5 · {scale}",
       "ratingNone": "Not rated",
+      "clearRating": "Clear",
+      "scale": {
+        "1": "Very negative",
+        "2": "Negative",
+        "3": "Could be better",
+        "4": "Positive",
+        "5": "Very positive"
+      },
       "problems": {
         "employmentStatusRequired": "Choose your relationship to the company.",
-        "titleRequired": "Add a title.",
-        "titleTooShort": "The title needs at least 3 characters.",
-        "titleTooLong": "The title can be at most 120 characters.",
-        "prosRequired": "Write the pros.",
-        "prosTooShort": "Write at least 20 characters.",
-        "prosTooLong": "At most 2000 characters.",
-        "consRequired": "Write the cons.",
-        "consTooShort": "Write at least 20 characters.",
-        "consTooLong": "At most 2000 characters.",
-        "ratingRequired": "Give a rating from 1 to 5."
+        "overallRequired": "Give an overall rating from 1 to 5.",
+        "ratingInvalid": "A rating is 1 to 5.",
+        "tooManyLiked": "At most five \"liked\" statements.",
+        "tooManyImprovable": "At most five \"could be better\" statements.",
+        "unknownStatement": "One of the statements is not in the list. Reload the page and try again."
       }
     },
     "guidelines": {
-      "title": "Writing a fair review",
-      "intro": "The most useful reviews are specific, honest and about you.",
-      "ownExperience": "Stick to what you experienced yourself.",
-      "specific": "Say what happened, not just how you feel about it.",
-      "noNames": "Don't name colleagues or managers, and don't share anyone's personal details.",
-      "noInsults": "No insults, threats or profanity — they get the review sent back, not published.",
-      "balanced": "Pros and cons both: a review with only one of them helps nobody.",
-      "noAds": "No links, advertising or recruiting.",
-      "moderation": "A moderator reads every review before it goes live. You'll see its status under My Reviews.",
-      "fullGuide": "The full guide, with examples →"
+      "title": "How a review works here",
+      "intro": "There is nothing to write. You rate, and you choose from statements that were written to be fair to everyone.",
+      "ownExperience": "Rate what you experienced yourself, not what you heard.",
+      "optional": "Only the overall rating is required. Skip any area you cannot judge.",
+      "statements": "Pick up to five things you liked and five that could be better — across the whole review, not per area.",
+      "noFreeText": "There is no free text on purpose: it keeps every review fair to the people behind a company name.",
+      "instant": "Your review is published as soon as you save it. Readers can report it; a moderator then decides.",
+      "fullGuide": "The full guide →"
     },
     "report": {
       "title": "Report this review",
@@ -3062,7 +3279,7 @@
     },
     "mine": {
       "title": "My reviews",
-      "subtitle": "What you wrote, and where each review stands.",
+      "subtitle": "Your reviews, and where each one stands.",
       "quota": "{used} of {limit} reviews used",
       "write": "Write a review",
       "loading": "Loading…",
@@ -3070,7 +3287,7 @@
       "empty": "You haven't written a review yet.",
       "browse": "Browse companies →",
       "rejectedTitle": "Not published:",
-      "rejectedHint": "Edit it to address the note and it will be reviewed again.",
+      "rejectedHint": "Edit it and it goes back to a moderator for a second look.",
       "pendingHint": "Waiting for a moderator. Only you can see it until then.",
       "edit": "Edit",
       "delete": "Delete",
@@ -3078,11 +3295,14 @@
       "deleteBody": "The review is removed for good, and its slot in your quota is freed.",
       "cancel": "Cancel",
       "confirmDelete": "Delete",
-      "rejectedGuideLink": "What passes and what doesn't: the guide →"
+      "rejectedGuideLink": "What passes and what doesn't: the guide →",
+      "legacyTag": "Earlier format",
+      "legacyEditHint": "Written before reviews became structured. Its text is no longer shown to readers; edit it to move it to the new format.",
+      "structuredSummary": "{count, plural, =0 {No statements picked} =1 {1 statement} other {# statements}}"
     },
     "write": {
       "title": "Write a review",
-      "subtitle": "Anonymous to readers, read by a moderator before it is published.",
+      "subtitle": "Anonymous to readers, published as soon as you save.",
       "loadingCompany": "Loading the company…",
       "companyNotFound": "That company page could not be found — pick the company below.",
       "companyLabel": "Company",
@@ -3094,22 +3314,1063 @@
       "resolving": "One moment…",
       "reviewing": "Reviewing",
       "changeCompany": "change",
-      "submit": "Submit for review",
+      "submit": "Publish review",
       "error": "That didn't go through. Please try again."
     },
     "edit": {
       "title": "Edit your review",
-      "subtitle": "Saving sends it back for moderation; it leaves the company page until it is approved again.",
+      "subtitle": "Changes are published as soon as you save.",
       "loading": "Loading…",
       "notFound": "That review is not yours or no longer exists.",
       "backToMine": "Back to my reviews",
-      "submit": "Save and resubmit",
-      "error": "That didn't go through. Please try again."
+      "submit": "Save",
+      "error": "That didn't go through. Please try again.",
+      "legacyBanner": "This review was written in the earlier free-text format. Saving moves it to the new format: your ratings carry over, and the old text stays stored for you but is no longer shown to anyone."
+    },
+    "statements": {
+      "general": {
+        "pos": {
+          "positive_experience": {
+            "label": "Positive experience overall",
+            "sentence": "Overall, I find my experience of working here positive."
+          },
+          "satisfied_working_here": {
+            "label": "Satisfied working here",
+            "sentence": "Overall, I am satisfied with working at this company."
+          },
+          "positive_environment": {
+            "label": "Positive work environment",
+            "sentence": "I rate the company positively in terms of its work environment."
+          },
+          "positive_employee_experience": {
+            "label": "Positive employee experience",
+            "sentence": "I find the company's employee experience positive."
+          },
+          "growth_opportunities": {
+            "label": "Growth opportunities",
+            "sentence": "I think the company offers good opportunities for professional growth."
+          }
+        },
+        "imp": {
+          "some_working_conditions": {
+            "label": "Some working conditions",
+            "sentence": "Overall, I would like some working conditions to be improved."
+          },
+          "employee_experience": {
+            "label": "Employee experience",
+            "sentence": "I think the employee experience needs improvement."
+          },
+          "internal_processes": {
+            "label": "Internal processes",
+            "sentence": "I would like some internal processes to be improved."
+          },
+          "work_environment": {
+            "label": "Work environment",
+            "sentence": "I think there are areas of the work environment that could be improved."
+          },
+          "room_to_improve": {
+            "label": "Room to improve",
+            "sentence": "I think there are areas where the company could improve the employee experience."
+          }
+        }
+      },
+      "environment": {
+        "pos": {
+          "positive_environment": {
+            "label": "Positive environment",
+            "sentence": "I find the work environment positive."
+          },
+          "suitable_for_employees": {
+            "label": "Suitable for employees",
+            "sentence": "I think the work environment is suitable for employees."
+          },
+          "team_collaboration": {
+            "label": "Team collaboration",
+            "sentence": "I think collaboration within the team is good."
+          },
+          "team_communication": {
+            "label": "Team communication",
+            "sentence": "I find communication between teammates positive."
+          },
+          "mutual_support": {
+            "label": "Mutual support",
+            "sentence": "I think employees support each other well."
+          },
+          "teamwork_encouraged": {
+            "label": "Teamwork encouraged",
+            "sentence": "I think the environment supports teamwork."
+          },
+          "motivating": {
+            "label": "Motivating",
+            "sentence": "I think the work environment is positive in terms of motivation."
+          },
+          "easy_to_communicate": {
+            "label": "Easy to communicate",
+            "sentence": "I find it easy to communicate with my colleagues."
+          },
+          "cross_team_collaboration": {
+            "label": "Cross-team collaboration",
+            "sentence": "I think it is easy to collaborate with other teams."
+          },
+          "general_communication": {
+            "label": "General communication",
+            "sentence": "I find the general communication in the workplace positive."
+          }
+        },
+        "imp": {
+          "work_environment": {
+            "label": "Work environment",
+            "sentence": "I would like the work environment to be improved."
+          },
+          "team_communication": {
+            "label": "Team communication",
+            "sentence": "I think communication within the team could be improved."
+          },
+          "cross_team_communication": {
+            "label": "Cross-team communication",
+            "sentence": "Communication between teams could be improved."
+          },
+          "collaboration_processes": {
+            "label": "Collaboration processes",
+            "sentence": "Collaboration processes could be improved."
+          },
+          "knowledge_sharing": {
+            "label": "Knowledge sharing",
+            "sentence": "Knowledge sharing within the team could be increased."
+          },
+          "employee_communication": {
+            "label": "Communication between employees",
+            "sentence": "Communication between employees could be made better."
+          },
+          "employee_experience": {
+            "label": "Employee experience",
+            "sentence": "I would like the work environment to be improved in terms of employee experience."
+          },
+          "teamwork_practices": {
+            "label": "Teamwork practices",
+            "sentence": "Practices that support teamwork could be increased."
+          },
+          "cross_team_coordination": {
+            "label": "Cross-team coordination",
+            "sentence": "Coordination between different teams could be improved."
+          },
+          "communication_processes": {
+            "label": "Communication processes",
+            "sentence": "Communication processes in the workplace could be improved."
+          }
+        }
+      },
+      "management": {
+        "pos": {
+          "communication_with_management": {
+            "label": "Communication with management",
+            "sentence": "I find communication with management positive."
+          },
+          "managers_accessible": {
+            "label": "Managers are accessible",
+            "sentence": "I think it is easy to communicate with managers."
+          },
+          "opinions_considered": {
+            "label": "Opinions are considered",
+            "sentence": "I think employees' opinions are taken into account."
+          },
+          "feedback_culture": {
+            "label": "Feedback culture",
+            "sentence": "I find the feedback culture positive."
+          },
+          "manager_employee_communication": {
+            "label": "Manager–employee communication",
+            "sentence": "I find managers' communication with employees positive."
+          },
+          "informed_about_decisions": {
+            "label": "Informed about decisions",
+            "sentence": "I think enough information is shared about decision processes."
+          },
+          "clear_expectations": {
+            "label": "Clear expectations",
+            "sentence": "I think expectations are generally communicated clearly to employees."
+          },
+          "management_employee_communication": {
+            "label": "Management–employee communication",
+            "sentence": "I find communication between management and employees positive."
+          },
+          "feedback_easy": {
+            "label": "Feedback is easy",
+            "sentence": "I find it easy to give and receive feedback."
+          },
+          "management_approach": {
+            "label": "Management approach",
+            "sentence": "I find the management approach positive."
+          }
+        },
+        "imp": {
+          "management_employee_communication": {
+            "label": "Management–employee communication",
+            "sentence": "Communication between management and employees could be improved."
+          },
+          "consideration_of_opinions": {
+            "label": "Consideration of opinions",
+            "sentence": "The way employees' opinions are considered could be improved."
+          },
+          "feedback_processes": {
+            "label": "Feedback processes",
+            "sentence": "Feedback processes could be improved."
+          },
+          "managers_communication": {
+            "label": "Managers' communication",
+            "sentence": "Management's communication with employees could be improved."
+          },
+          "information_about_decisions": {
+            "label": "Information about decisions",
+            "sentence": "More information could be shared about decision processes."
+          },
+          "clarity_of_expectations": {
+            "label": "Clarity of expectations",
+            "sentence": "I think employees' expectations could be addressed more clearly."
+          },
+          "access_to_managers": {
+            "label": "Access to managers",
+            "sentence": "Communication processes with managers could be improved."
+          },
+          "handling_of_feedback": {
+            "label": "Handling of feedback",
+            "sentence": "The way feedback from employees is handled could be improved."
+          },
+          "management_team_communication": {
+            "label": "Management–team communication",
+            "sentence": "Communication between management and teams could be increased."
+          },
+          "internal_communication": {
+            "label": "Internal communication",
+            "sentence": "I would like internal communication processes to be improved."
+          }
+        }
+      },
+      "career": {
+        "pos": {
+          "career_opportunities": {
+            "label": "Career opportunities",
+            "sentence": "I think there are good opportunities for career growth."
+          },
+          "career_growth_supported": {
+            "label": "Career growth supported",
+            "sentence": "I think career growth is supported."
+          },
+          "promotion_process": {
+            "label": "Promotion process",
+            "sentence": "I find the promotion processes positive."
+          },
+          "development_valued": {
+            "label": "Development is valued",
+            "sentence": "I think employees' development is valued."
+          },
+          "new_responsibilities": {
+            "label": "New responsibilities",
+            "sentence": "I think there are opportunities to take on new responsibilities."
+          },
+          "career_goals_supported": {
+            "label": "Career goals supported",
+            "sentence": "I think the environment supports my career goals."
+          },
+          "skill_development": {
+            "label": "Skill development",
+            "sentence": "I can find opportunities to develop my skills."
+          },
+          "career_guidance": {
+            "label": "Career guidance",
+            "sentence": "I can get guidance about my career."
+          },
+          "internal_career_paths": {
+            "label": "Internal career paths",
+            "sentence": "I think there are different career opportunities within the company."
+          },
+          "professional_development": {
+            "label": "Professional development",
+            "sentence": "I think the work environment supports my professional development."
+          },
+          "training_opportunities": {
+            "label": "Training opportunities",
+            "sentence": "I find the training opportunities positive."
+          },
+          "learning_supported": {
+            "label": "Learning is supported",
+            "sentence": "Learning and development are supported."
+          },
+          "technical_growth": {
+            "label": "Technical growth",
+            "sentence": "Opportunities for technical growth are offered."
+          },
+          "new_skills": {
+            "label": "New skills",
+            "sentence": "I find opportunities to gain new skills."
+          },
+          "training_resources": {
+            "label": "Training resources",
+            "sentence": "I think the training resources are sufficient."
+          },
+          "self_development": {
+            "label": "Self-development",
+            "sentence": "Employees are supported in developing themselves."
+          },
+          "learning_culture": {
+            "label": "Learning culture",
+            "sentence": "I find the learning culture positive."
+          },
+          "training_programs": {
+            "label": "Training programs",
+            "sentence": "I find the training programs useful."
+          },
+          "vocational_development": {
+            "label": "Vocational development",
+            "sentence": "Opportunities for vocational development are offered."
+          },
+          "new_technologies": {
+            "label": "New technologies",
+            "sentence": "There are opportunities to learn new technologies."
+          }
+        },
+        "imp": {
+          "career_opportunities": {
+            "label": "Career opportunities",
+            "sentence": "More opportunities for career growth could be offered."
+          },
+          "promotion_transparency": {
+            "label": "Promotion transparency",
+            "sentence": "Promotion processes could be made clearer."
+          },
+          "career_paths": {
+            "label": "Career paths",
+            "sentence": "I would like career paths to be defined more clearly."
+          },
+          "development_opportunities": {
+            "label": "Development opportunities",
+            "sentence": "Opportunities for employee development could be increased."
+          },
+          "new_responsibilities": {
+            "label": "New responsibilities",
+            "sentence": "Opportunities to take on new responsibilities could be increased."
+          },
+          "career_goal_support": {
+            "label": "Career goal support",
+            "sentence": "More support could be provided for career goals."
+          },
+          "professional_development": {
+            "label": "Professional development",
+            "sentence": "Professional development opportunities could be increased."
+          },
+          "visibility_of_opportunities": {
+            "label": "Visibility of opportunities",
+            "sentence": "Career opportunities within the company could be shared more openly."
+          },
+          "promotion_criteria": {
+            "label": "Promotion criteria",
+            "sentence": "Promotion criteria could be made clearer."
+          },
+          "development_programs": {
+            "label": "Development programs",
+            "sentence": "Programs that support employee development could be increased."
+          },
+          "training_opportunities": {
+            "label": "Training opportunities",
+            "sentence": "Training opportunities could be increased."
+          },
+          "technical_training": {
+            "label": "Technical training",
+            "sentence": "Technical training opportunities could be improved."
+          },
+          "vocational_programs": {
+            "label": "Vocational programs",
+            "sentence": "Vocational development programs could be increased."
+          },
+          "training_budget": {
+            "label": "Training budget",
+            "sentence": "The training budget or resources could be improved."
+          },
+          "skill_programs": {
+            "label": "Skill programs",
+            "sentence": "Programs that support gaining new skills could be increased."
+          },
+          "training_variety": {
+            "label": "Training variety",
+            "sentence": "Training content could be diversified."
+          },
+          "learning_support": {
+            "label": "Learning support",
+            "sentence": "More support could be provided for learning and development."
+          },
+          "technical_growth_opportunities": {
+            "label": "Technical growth opportunities",
+            "sentence": "More opportunities for technical growth could be offered."
+          },
+          "training_scope": {
+            "label": "Training scope",
+            "sentence": "The scope of training programs could be widened."
+          },
+          "development_resources": {
+            "label": "Development resources",
+            "sentence": "Resources for employee development could be increased."
+          }
+        }
+      },
+      "balance": {
+        "pos": {
+          "balanced_workload": {
+            "label": "Balanced workload",
+            "sentence": "I think the workload is balanced."
+          },
+          "working_hours": {
+            "label": "Working hours",
+            "sentence": "I find the working hours positive."
+          },
+          "predictable_hours": {
+            "label": "Predictable hours",
+            "sentence": "I think the working hours are predictable."
+          },
+          "organized_planning": {
+            "label": "Organised planning",
+            "sentence": "I think work planning is organised."
+          },
+          "fair_task_distribution": {
+            "label": "Fair task distribution",
+            "sentence": "I find the distribution of tasks balanced."
+          },
+          "work_pace": {
+            "label": "Work pace",
+            "sentence": "I find the pace of work appropriate."
+          },
+          "work_life_balance": {
+            "label": "Work-life balance",
+            "sentence": "I think there is a sufficient balance between work and personal life."
+          },
+          "low_overtime": {
+            "label": "Low overtime",
+            "sentence": "I think the need for overtime is low."
+          },
+          "planned_progress": {
+            "label": "Planned progress",
+            "sentence": "I think work progresses in a planned way."
+          },
+          "work_arrangement": {
+            "label": "Work arrangement",
+            "sentence": "I find the work arrangement positive."
+          }
+        },
+        "imp": {
+          "workload_distribution": {
+            "label": "Workload distribution",
+            "sentence": "I think the workload could be distributed more evenly."
+          },
+          "predictability_of_hours": {
+            "label": "Predictability of hours",
+            "sentence": "Working hours could be made more predictable."
+          },
+          "work_planning": {
+            "label": "Work planning",
+            "sentence": "Work planning could be improved."
+          },
+          "task_distribution": {
+            "label": "Task distribution",
+            "sentence": "Tasks could be distributed more evenly."
+          },
+          "work_life_balance": {
+            "label": "Work-life balance",
+            "sentence": "I would like the work-life balance to be improved."
+          },
+          "work_pace": {
+            "label": "Work pace",
+            "sentence": "A more balanced pace of work could be helpful."
+          },
+          "overtime": {
+            "label": "Overtime",
+            "sentence": "The need for overtime could be reduced."
+          },
+          "cross_team_workload": {
+            "label": "Cross-team workload",
+            "sentence": "I think the workload could be distributed more evenly across teams."
+          },
+          "prioritisation": {
+            "label": "Prioritisation",
+            "sentence": "Prioritisation processes could be improved."
+          },
+          "work_arrangement": {
+            "label": "Work arrangement",
+            "sentence": "I would like the work arrangement to be improved in terms of employee experience."
+          }
+        }
+      },
+      "pay": {
+        "pos": {
+          "salary_level": {
+            "label": "Salary level",
+            "sentence": "I find the salary level positive."
+          },
+          "pay_policy": {
+            "label": "Pay policy",
+            "sentence": "I find the pay policy positive."
+          },
+          "matches_responsibilities": {
+            "label": "Matches responsibilities",
+            "sentence": "I think my pay is in line with my responsibilities."
+          },
+          "matches_market": {
+            "label": "Matches the market",
+            "sentence": "I think the pay is in line with market conditions."
+          },
+          "raise_process": {
+            "label": "Raise process",
+            "sentence": "I find the pay-raise processes positive."
+          },
+          "performance_link": {
+            "label": "Performance link",
+            "sentence": "I think the link between performance and pay is appropriate."
+          },
+          "adequate_for_employees": {
+            "label": "Adequate for employees",
+            "sentence": "I find the pay policy adequate from the employees' perspective."
+          },
+          "total_compensation": {
+            "label": "Total compensation",
+            "sentence": "I find the total compensation package positive."
+          }
+        },
+        "imp": {
+          "salary_level": {
+            "label": "Salary level",
+            "sentence": "I would like the salary level to be improved."
+          },
+          "pay_policy": {
+            "label": "Pay policy",
+            "sentence": "I would like the pay policy to be improved."
+          },
+          "alignment_with_responsibilities": {
+            "label": "Alignment with responsibilities",
+            "sentence": "I think my pay could be brought more in line with my responsibilities."
+          },
+          "alignment_with_market": {
+            "label": "Alignment with the market",
+            "sentence": "I think pay could be brought more in line with market conditions."
+          },
+          "raise_process": {
+            "label": "Raise process",
+            "sentence": "Pay-raise processes could be improved."
+          },
+          "performance_link": {
+            "label": "Performance link",
+            "sentence": "I would like the link between performance and pay to be improved."
+          },
+          "alignment_with_expectations": {
+            "label": "Alignment with expectations",
+            "sentence": "I think the pay policy could be brought more in line with employees' expectations."
+          },
+          "total_compensation": {
+            "label": "Total compensation",
+            "sentence": "I would like the total compensation package to be improved."
+          }
+        }
+      },
+      "benefits": {
+        "pos": {
+          "benefits": {
+            "label": "Benefits",
+            "sentence": "I find the benefits positive."
+          },
+          "health": {
+            "label": "Health",
+            "sentence": "I find the health benefits positive."
+          },
+          "meals": {
+            "label": "Meals",
+            "sentence": "I find the meal benefits positive."
+          },
+          "transport": {
+            "label": "Transport",
+            "sentence": "I find the transport benefits positive."
+          },
+          "leave": {
+            "label": "Leave",
+            "sentence": "I find the leave arrangements positive."
+          },
+          "package_sufficient": {
+            "label": "Package is sufficient",
+            "sentence": "I find the benefits package sufficient."
+          },
+          "social_benefits": {
+            "label": "Social benefits",
+            "sentence": "I find the social benefits offered to employees positive."
+          },
+          "meets_needs": {
+            "label": "Meets needs",
+            "sentence": "I think the benefits meet employees' needs."
+          }
+        },
+        "imp": {
+          "benefits": {
+            "label": "Benefits",
+            "sentence": "I would like the benefits to be improved."
+          },
+          "health": {
+            "label": "Health",
+            "sentence": "Health benefits could be improved."
+          },
+          "meals": {
+            "label": "Meals",
+            "sentence": "Meal benefits could be improved."
+          },
+          "transport": {
+            "label": "Transport",
+            "sentence": "Transport benefits could be improved."
+          },
+          "leave": {
+            "label": "Leave",
+            "sentence": "Leave arrangements could be improved."
+          },
+          "package_scope": {
+            "label": "Package scope",
+            "sentence": "The scope of the benefits package could be widened."
+          },
+          "social_benefits": {
+            "label": "Social benefits",
+            "sentence": "Social benefits could be increased."
+          },
+          "variety": {
+            "label": "Variety",
+            "sentence": "The benefits offered to employees could be diversified."
+          }
+        }
+      },
+      "remote": {
+        "pos": {
+          "remote_work": {
+            "label": "Remote work",
+            "sentence": "I find the remote-work options positive."
+          },
+          "hybrid_model": {
+            "label": "Hybrid model",
+            "sentence": "I find the hybrid working model positive."
+          },
+          "flexible_model": {
+            "label": "Flexible model",
+            "sentence": "I think the working model is flexible."
+          },
+          "location_flexibility": {
+            "label": "Location flexibility",
+            "sentence": "I think there is enough flexibility about where to work."
+          },
+          "remote_setup": {
+            "label": "Remote setup",
+            "sentence": "I think what is needed for remote work is provided."
+          },
+          "flexible_hours": {
+            "label": "Flexible hours",
+            "sentence": "I find the flexible working hours positive."
+          },
+          "remote_teamwork": {
+            "label": "Remote teamwork",
+            "sentence": "I think remote teamwork works well."
+          },
+          "digital_tools": {
+            "label": "Digital tools",
+            "sentence": "I think the digital work tools are sufficient."
+          },
+          "fits_needs": {
+            "label": "Fits needs",
+            "sentence": "I think the working model fits employees' needs."
+          },
+          "flexibility": {
+            "label": "Flexibility",
+            "sentence": "I find the flexibility of the work arrangement positive."
+          }
+        },
+        "imp": {
+          "remote_work": {
+            "label": "Remote work",
+            "sentence": "Remote-work options could be increased."
+          },
+          "hybrid_options": {
+            "label": "Hybrid options",
+            "sentence": "Hybrid working options could be improved."
+          },
+          "model_flexibility": {
+            "label": "Model flexibility",
+            "sentence": "More flexibility could be provided in the working model."
+          },
+          "hours_flexibility": {
+            "label": "Hours flexibility",
+            "sentence": "More flexibility could be provided in working hours."
+          },
+          "remote_setup": {
+            "label": "Remote setup",
+            "sentence": "What is provided for remote work could be improved."
+          },
+          "digital_tools": {
+            "label": "Digital tools",
+            "sentence": "Digital work tools could be improved."
+          },
+          "remote_team_processes": {
+            "label": "Remote team processes",
+            "sentence": "Processes for remote teamwork could be improved."
+          },
+          "fit_to_needs": {
+            "label": "Fit to needs",
+            "sentence": "The working model could be made a better fit for employees' needs."
+          },
+          "flexible_work": {
+            "label": "Flexible work",
+            "sentence": "I would like flexible working options to be increased."
+          },
+          "remote_processes": {
+            "label": "Remote processes",
+            "sentence": "I would like remote-work processes to be improved."
+          }
+        }
+      },
+      "tooling": {
+        "pos": {
+          "technologies": {
+            "label": "Technologies",
+            "sentence": "I find the technologies in use positive."
+          },
+          "infrastructure": {
+            "label": "Infrastructure",
+            "sentence": "I think the technical infrastructure is sufficient."
+          },
+          "tools": {
+            "label": "Tools",
+            "sentence": "I find the work tools sufficient."
+          },
+          "keeps_up": {
+            "label": "Keeps up with technology",
+            "sentence": "I think technological developments are followed."
+          },
+          "tools_provided": {
+            "label": "Tools are provided",
+            "sentence": "I think employees are provided with the technical tools they need."
+          },
+          "development_process": {
+            "label": "Development process",
+            "sentence": "I find the software development processes positive."
+          },
+          "technical_team_conditions": {
+            "label": "Technical team conditions",
+            "sentence": "I find the working conditions of technical teams positive."
+          },
+          "technical_growth_environment": {
+            "label": "Technical growth environment",
+            "sentence": "I think the environment is suitable for technical growth."
+          }
+        },
+        "imp": {
+          "infrastructure": {
+            "label": "Infrastructure",
+            "sentence": "The technical infrastructure could be improved."
+          },
+          "tools": {
+            "label": "Tools",
+            "sentence": "Work tools could be improved."
+          },
+          "technology_currency": {
+            "label": "Technology currency",
+            "sentence": "The technologies in use could be updated."
+          },
+          "technical_resources": {
+            "label": "Technical resources",
+            "sentence": "The technical resources offered to employees could be increased."
+          },
+          "development_process": {
+            "label": "Development process",
+            "sentence": "Software development processes could be improved."
+          },
+          "technical_team_conditions": {
+            "label": "Technical team conditions",
+            "sentence": "The working conditions of technical teams could be improved."
+          },
+          "technology_investment": {
+            "label": "Technology investment",
+            "sentence": "Investment in technology could be increased."
+          },
+          "technical_growth_support": {
+            "label": "Technical growth support",
+            "sentence": "Support for technical growth could be increased."
+          }
+        }
+      },
+      "hiring": {
+        "pos": {
+          "hiring_process": {
+            "label": "Hiring process",
+            "sentence": "I find the hiring process positive."
+          },
+          "clear_process": {
+            "label": "Clear process",
+            "sentence": "I think the hiring process is easy to understand."
+          },
+          "interview_process": {
+            "label": "Interview process",
+            "sentence": "I find the interview process positive."
+          },
+          "professional_interviews": {
+            "label": "Professional interviews",
+            "sentence": "I think the interviews are conducted professionally."
+          },
+          "role_information": {
+            "label": "Role information",
+            "sentence": "I think enough information is given about the position."
+          },
+          "planned_process": {
+            "label": "Planned process",
+            "sentence": "I think the hiring process is well planned."
+          },
+          "communication": {
+            "label": "Communication",
+            "sentence": "I find the communication during the process positive."
+          },
+          "candidate_information": {
+            "label": "Candidate information",
+            "sentence": "I think candidates are kept sufficiently informed."
+          }
+        },
+        "imp": {
+          "hiring_process": {
+            "label": "Hiring process",
+            "sentence": "The hiring process could be improved."
+          },
+          "role_information": {
+            "label": "Role information",
+            "sentence": "More information could be shared about the position."
+          },
+          "interview_transparency": {
+            "label": "Interview transparency",
+            "sentence": "The interview process could be made clearer."
+          },
+          "candidate_communication": {
+            "label": "Candidate communication",
+            "sentence": "Communication with candidates could be improved."
+          },
+          "planning": {
+            "label": "Planning",
+            "sentence": "A more planned hiring process could be helpful."
+          },
+          "process_information": {
+            "label": "Process information",
+            "sentence": "Candidates could be given more information about the process."
+          },
+          "stage_clarity": {
+            "label": "Stage clarity",
+            "sentence": "I would like the interview stages to be stated more clearly."
+          },
+          "candidate_feedback": {
+            "label": "Candidate feedback",
+            "sentence": "Candidate feedback processes could be improved."
+          }
+        }
+      },
+      "onboarding": {
+        "pos": {
+          "onboarding": {
+            "label": "Onboarding",
+            "sentence": "I find the onboarding process positive."
+          },
+          "orientation": {
+            "label": "Orientation",
+            "sentence": "I find the orientation process sufficient."
+          },
+          "first_days_briefing": {
+            "label": "First-days briefing",
+            "sentence": "I think the necessary briefings are given in the first days."
+          },
+          "newcomer_support": {
+            "label": "Newcomer support",
+            "sentence": "I think new employees are supported."
+          },
+          "adaptation": {
+            "label": "Adaptation",
+            "sentence": "I find the process of settling into the company positive."
+          },
+          "planned_start": {
+            "label": "Planned start",
+            "sentence": "I think the onboarding process is well planned."
+          }
+        },
+        "imp": {
+          "orientation": {
+            "label": "Orientation",
+            "sentence": "The orientation process could be improved."
+          },
+          "planned_start": {
+            "label": "Planned start",
+            "sentence": "The onboarding process could be made more planned."
+          },
+          "briefing": {
+            "label": "Briefing",
+            "sentence": "The briefing given to new employees could be increased."
+          },
+          "adaptation_support": {
+            "label": "Adaptation support",
+            "sentence": "More support could be provided while settling into the company."
+          },
+          "first_days_guidance": {
+            "label": "First-days guidance",
+            "sentence": "Guidance in the first days could be improved."
+          },
+          "newcomer_training": {
+            "label": "Newcomer training",
+            "sentence": "Training for new employees could be increased."
+          }
+        }
+      }
+    }
+  },
+  "companySalaries": {
+    "form": {
+      "heading": "Salary at {company}",
+      "anonymityNote": "Readers see the occupation and an experience band, not your name. The occupation is picked from a catalogue; your exact years are shown as a band (e.g. 2–4 years).",
+      "occupation": "Occupation",
+      "occupationPlaceholder": "Start typing your occupation (e.g. backend, nurse, accounting)",
+      "occupationSearching": "Searching…",
+      "occupationNoMatch": "No match",
+      "occupationHint": "Pick from the list; typed text is not saved. You can search in either language.",
+      "years": "Total experience (years)",
+      "yearsHint": "In the profession, not at this company.",
+      "employmentType": "Employment type",
+      "employmentTypePlaceholder": "Select",
+      "employmentStatus": "Employment status",
+      "monthlyNet": "Monthly net salary",
+      "monthlyNetPlaceholder": "e.g. 95,000",
+      "monthlyNetHint": "What lands in your account each month. Leave bonuses and benefits out.",
+      "currency": "Currency",
+      "bonus": "Bonus",
+      "bonusNo": "None",
+      "bonusYes": "Yes",
+      "bonusAmount": "Annual bonus amount",
+      "bonusAmountPlaceholder": "Annual total, e.g. 120,000",
+      "bonusUnit": "{currency} / year",
+      "bonusHint": "Annual total, in the same currency as the salary.",
+      "quotaNote": "Quota: {used} / {limit} salary entries. Visible to signed-in readers the moment you save.",
+      "publishNote": "Visible to signed-in readers the moment you save.",
+      "submitting": "Saving…",
+      "problems": {
+        "occupationRequired": "Pick an occupation from the list",
+        "yearsInvalid": "Enter a whole number of years between 0 and 50",
+        "employmentTypeRequired": "Select the employment type",
+        "employmentStatusRequired": "Select your employment status",
+        "amountInvalid": "Enter a valid amount (1 – 10,000,000)",
+        "bonusAnswerRequired": "Say whether there is a bonus",
+        "bonusAmountInvalid": "Enter the annual bonus amount (1 – 10,000,000)"
+      }
+    },
+    "guidelines": {
+      "title": "How salary sharing works here",
+      "intro": "Your name appears nowhere. Readers see the occupation, the experience band, the employment type and the amounts.",
+      "signedIn": "Only signed-in users can read entries.",
+      "band": "Years of experience are shown as a band: 0–1, 2–4, 5–9, 10+.",
+      "month": "Dates are month precision (e.g. September 2026).",
+      "perTitle": "You can add several entries for one company under different occupations; ten entries in total.",
+      "editable": "You can edit or delete an entry from My Salaries.",
+      "fullGuide": "Full guide →"
+    },
+    "write": {
+      "submit": "Share salary",
+      "error": "Something went wrong. Please try again."
+    },
+    "edit": {
+      "title": "Edit your salary entry",
+      "subtitle": "Changes are visible the moment you save; the entry's month becomes today's.",
+      "loading": "Loading…",
+      "notFound": "This entry is not yours or no longer exists.",
+      "backToMine": "Back to My Salaries",
+      "submit": "Save",
+      "error": "Something went wrong. Please try again."
+    },
+    "mine": {
+      "title": "My Salaries",
+      "subtitle": "The salary entries you shared.",
+      "quota": "{used} of {limit} used",
+      "share": "New salary entry",
+      "loading": "Loading…",
+      "error": "Something went wrong. Please try again.",
+      "empty": "You have not shared a salary yet.",
+      "emptyBody": "Share your salary at a company anonymously; readers see the occupation and an experience band, not you.",
+      "emptyCta": "Share a salary →",
+      "years": "{count, plural, =1 {1 year of experience} other {# years of experience}}",
+      "perMonthNet": "/ month net",
+      "bonus": "Bonus: {amount} / year",
+      "noBonus": "No bonus",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete this salary entry?",
+      "deleteBody": "The entry is deleted permanently and its quota slot is freed.",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete",
+      "footnote": "Deleting frees the quota slot. Entries are deleted with your account and included in your data export."
+    },
+    "panel": {
+      "heading": "{count, plural, =0 {Salary entries} =1 {1 salary entry} other {# salary entries}}",
+      "share": "Share a salary",
+      "readingNote": "Salary entries are what users reported; e-kariyerim does not verify them. The occupation is picked from a catalogue, experience is shown as a band and dates at month precision.",
+      "yours": "{count, plural, =1 {You have 1 salary entry at this company.} other {You have # salary entries at this company.}}",
+      "manageYours": "My Salaries",
+      "loading": "Loading…",
+      "loadError": "Salary entries could not be loaded. Please try again.",
+      "statsPending": "The median and range appear once at least {minimum} entries exist in one currency.",
+      "empty": "No salaries have been shared for this company yet.",
+      "emptyCta": "Be the first to share",
+      "experience": "{band} experience",
+      "perMonthNet": "/ month net",
+      "bonus": "Bonus: {amount} / year",
+      "noBonus": "No bonus",
+      "lockedTitle": "Salary entries are for signed-in users",
+      "lockedBody": "{company} has {count, plural, =0 {no salary entries yet} =1 {1 anonymous salary entry} other {# anonymous salary entries}}. Sign in to see them and add your own.",
+      "signIn": "Sign in",
+      "register": "Register"
+    },
+    "stats": {
+      "median": "Median monthly net",
+      "sample": "{count} entries · {currency}",
+      "range": "Range",
+      "rangeHint": "lowest – highest",
+      "basis": "How it is computed",
+      "basisBody": "The median of every entry in one currency; not split by occupation or experience."
+    },
+    "bands": {
+      "ZeroToOne": "0–1 years",
+      "TwoToFour": "2–4 years",
+      "FiveToNine": "5–9 years",
+      "TenPlus": "10+ years"
+    }
+  },
+  "contribute": {
+    "title": "Company contribution",
+    "subtitle": "Reviews and salary entries are both anonymous, and both go live the moment you save.",
+    "companyLabel": "Company",
+    "status": "At this company: {reviews, plural, =0 {no review} other {1 review}}, {salaries, plural, =0 {no salary entries} =1 {1 salary entry} other {# salary entries}}",
+    "statusReviewsOnly": "At this company: {reviews, plural, =0 {no review} other {1 review}}",
+    "error": "Something went wrong. Please try again.",
+    "alreadyReviewed": "You already have a review of {company}",
+    "alreadyReviewedHint": "One review per company; edit it if your view has changed.",
+    "editReview": "Edit your review",
+    "salaryQuotaFull": "You have used all {limit} salary entries. Delete one on My Salaries to add another.",
+    "goToMySalaries": "Go to My Salaries",
+    "tabs": {
+      "label": "Contribution type",
+      "review": "Review",
+      "salary": "Salary Info"
+    },
+    "banner": {
+      "review": {
+        "thanks": "Thank you, your review is live.",
+        "invite": "You can share your salary at {company} too — the form below is ready.",
+        "skip": "Skip, go to My Reviews"
+      },
+      "salary": {
+        "thanks": "Thank you, your salary entry is saved.",
+        "invite": "You can leave a review of {company} too — the form below is ready.",
+        "skip": "Skip, go to My Salaries"
+      }
     }
   },
   "adminReviews": {
     "title": "Company review moderation",
-    "subtitle": "Pending first, oldest first. Click a row to read the review and decide.",
+    "subtitle": "Pending first, oldest first. Structured reviews publish on save and arrive here only through reports or after a rejection; free-text ones from before the switch still wait for a decision.",
     "forbiddenTitle": "You don't have access to this page",
     "forbiddenBody": "Moderation is limited to accounts flagged as an administrator on the server.",
     "loading": "Loading…",
@@ -3125,7 +4386,7 @@
     },
     "columns": {
       "company": "Company",
-      "title": "Title",
+      "title": "Summary",
       "overall": "Overall",
       "status": "Status",
       "submitted": "Submitted",
@@ -3136,8 +4397,6 @@
       "close": "Close",
       "approve": "Publish",
       "reject": "Reject",
-      "pros": "Pros",
-      "cons": "Cons",
       "author": "Author (visible to admins only)",
       "quotaOverride": "Review quota for this account",
       "quotaPlaceholder": "Blank = default",
@@ -3146,7 +4405,14 @@
       "reports": "{count, plural, =1 {1 report} other {# reports}}",
       "resolvedAs": "Resolved: {resolution}",
       "rejectReason": "Reason for rejecting (the author reads this)",
-      "rejectPlaceholder": "e.g. Names a colleague — please remove the name and resubmit."
+      "rejectPlaceholder": "e.g. Five identical reviews from one network in an hour — treated as a coordinated pattern.",
+      "structuredRow": "Structured · {overall} / 5",
+      "legacyRow": "Earlier format",
+      "liked": "Liked",
+      "improvable": "Could be better",
+      "noStatements": "No statements picked.",
+      "categories": "Area ratings",
+      "legacySalaryAndBenefits": "Salary & benefits (earlier format)"
     },
     "reports": {
       "title": "Reported reviews",
@@ -3173,14 +4439,26 @@
           "ChangesRequested": "The review comes down and the author sees your note; they can edit and resubmit.",
           "Removed": "The review comes down with your note. Every other open report on it is closed too."
         }
-      }
+      },
+      "structuredReview": "Structured review"
     },
     "guide": {
       "title": "Moderation guide",
       "show": "Show",
       "hide": "Hide",
-      "principle1": "A review being negative about the company is not, by itself, a reason to reject it.",
+      "principle1": "A review being negative about the company is not, by itself, a reason to take it down.",
       "principle2": "The moderator's job is not to protect the company but to protect the community rules.",
+      "structured": {
+        "title": "Structured reviews (from 16 September 2026)",
+        "body": "A structured review is ratings plus statements from the fixed list. It cannot name anyone, insult anyone or make a claim — so the only questions left are about the account, not the words:",
+        "pattern": "A coordinated pattern: many near-identical reviews of one company in a short time, or one network of accounts rating a competitor down.",
+        "quota": "An account abusing its quota — set its quota to zero from the review detail.",
+        "report": "A report on a structured review is usually one of the two above, or a reader who disagrees. Disagreement is not a rule violation; dismiss it."
+      },
+      "legacy": {
+        "title": "Free-text reviews written before the switch",
+        "body": "These still wait in the queue. The old rules apply to them, unchanged:"
+      },
       "approve": {
         "title": "Approve — even when harsh or one-sided",
         "workplace": "Personal opinions about the work environment",
@@ -3202,7 +4480,7 @@
         "fake": "Fake or manipulative reviews"
       },
       "grey": {
-        "title": "Grey areas",
+        "title": "Grey areas (free-text reviews)",
         "question": "Most doubts come down to one question: is this something the author lived through, or a claim about someone else?",
         "columns": {
           "review": "Review",
@@ -3242,9 +4520,9 @@
       },
       "sendBack": {
         "title": "When sending back:",
-        "body": "keep the note to one sentence and name the rule it broke — so the author knows what to change. “Not suitable” is not a note."
+        "body": "keep the note to one sentence and name the rule it broke — so the author knows what to change. “Not suitable” is not a note. A structured review sent back has only its ratings and picks to change; say which."
       },
-      "modalLink": "Not sure? Grey-area examples →"
+      "modalLink": "Not sure? The guide →"
     }
   },
   "siteNav": {

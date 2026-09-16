@@ -3,6 +3,7 @@ using AfterApply.Application.CompanyReviews;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -16,7 +17,8 @@ internal sealed class CompanyDirectoryService(
     AppDbContext dbContext,
     CompanyReviewQueries queries,
     HybridCache cache,
-    IOptions<CompanyReviewOptions> options) : ICompanyDirectoryService
+    IOptions<CompanyReviewOptions> options,
+    IOptions<CompanySalaryOptions> salaryOptions) : ICompanyDirectoryService
 {
     private const string ReviewedSlugsCacheKey = "company-reviews:reviewed-slugs";
 
@@ -82,7 +84,12 @@ internal sealed class CompanyDirectoryService(
         }
 
         var summary = await queries.GetSummaryAsync(company.Id, cancellationToken);
-        return new CompanyPublicResponse(company.Id, slug, company.Name, company.Website, summary);
+        // A count is not sensitive, and it is what lets the public page label its "Salaries" tab
+        // before the reader signs in. One indexed COUNT, not cached with the review summary.
+        var salaryCount = salaryOptions.Value.Enabled
+            ? await dbContext.CompanySalaryEntries.CountAsync(s => s.CompanyId == company.Id, cancellationToken)
+            : 0;
+        return new CompanyPublicResponse(company.Id, slug, company.Name, company.Website, summary, salaryCount);
     }
 
     public async Task<PagedResult<CompanyReviewPublicResponse>?> ListApprovedReviewsAsync(string slug, PublicReviewListQuery query,
@@ -116,14 +123,15 @@ internal sealed class CompanyDirectoryService(
     public async Task<IReadOnlyList<ReviewedCompanySlugResponse>> ListReviewedSlugsAsync(CancellationToken cancellationToken) =>
         await cache.GetOrCreateAsync(ReviewedSlugsCacheKey, async ct =>
         {
-            var approved = dbContext.CompanyReviews
-                .Where(r => r.Status == ReviewModerationStatus.Approved && r.ModeratedAt != null);
+            // A structured review is published on save and never carries ModeratedAt; a legacy
+            // one became public when a human approved it. Either way, "last changed" is the later.
+            var approved = dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved);
             var rows = await dbContext.Companies
                 .Where(c => c.Slug != null && approved.Any(r => r.CompanyId == c.Id))
                 .OrderBy(c => c.Slug)
                 .Select(c => new ReviewedCompanySlugResponse(
                     c.Slug!,
-                    approved.Where(r => r.CompanyId == c.Id).Max(r => r.ModeratedAt!.Value)))
+                    approved.Where(r => r.CompanyId == c.Id).Max(r => r.ModeratedAt ?? r.SubmittedAt)))
                 .ToListAsync(ct);
             return (IReadOnlyList<ReviewedCompanySlugResponse>)rows;
         }, ReviewedSlugsCacheOptions, cancellationToken: cancellationToken);

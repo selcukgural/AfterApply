@@ -554,6 +554,14 @@ export interface PaymentsConfig {
   enabled: boolean;
 }
 
+/** Whether salary entries are switched on, the quota the form counts down from, and the
+ *  per-currency threshold under which the company page shows no median. */
+export interface CompanySalariesConfig {
+  enabled: boolean;
+  maxEntriesPerUser: number;
+  minimumEntriesForStats: number;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
@@ -566,6 +574,7 @@ export interface ClientConfigResponse {
   // Optional for the same reason.
   jobSources?: JobSourcesConfig;
   payments?: PaymentsConfig;
+  companySalaries?: CompanySalariesConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -945,6 +954,43 @@ export interface PagedResult<T> {
   pageSize: number;
 }
 
+/** The ten optional categories plus Overall, in the order the form shows them. Mirrors
+ *  AfterApply.Domain.CompanyReviews.ReviewCategory. */
+export type ReviewCategory =
+  | "Overall"
+  | "WorkEnvironment"
+  | "Management"
+  | "CareerGrowth"
+  | "WorkLifeBalance"
+  | "Pay"
+  | "Benefits"
+  | "RemoteWork"
+  | "Tooling"
+  | "Hiring"
+  | "Onboarding";
+export type ReviewStatementKind = "Liked" | "Improve";
+/** Legacy rows were written before 2026-09-16 with free text; their text is never on the public
+ *  wire, only their ratings. */
+export type ReviewFormat = "Legacy" | "Structured";
+
+export interface ReviewCategoryRating {
+  category: ReviewCategory;
+  rating: number;
+}
+
+export interface ReviewCategoryAverage {
+  category: ReviewCategory;
+  /** How many published reviews rated this category. */
+  count: number;
+  /** Null while `count` is under the site minimum. */
+  average: number | null;
+}
+
+export interface ReviewStatementCount {
+  key: string;
+  count: number;
+}
+
 export interface CompanyReviewSummary {
   approvedCount: number;
   /** Null until `minimumForScore` reviews are published. */
@@ -952,12 +998,13 @@ export interface CompanyReviewSummary {
   minimumForScore: number;
   priorWeight: number;
   averageOverall: number | null;
-  averageManagement: number | null;
-  averageWorkEnvironment: number | null;
-  averageSalaryAndBenefits: number | null;
-  averageCareerAndDevelopment: number | null;
+  /** Always the ten optional categories, in `ReviewCategory` order. */
+  categories: ReviewCategoryAverage[];
   /** Approved reviews per Overall star, index 0 = 1 star. */
   distribution: number[];
+  /** Empty under the minimum; at most three each. */
+  topLiked: ReviewStatementCount[];
+  topImprovable: ReviewStatementCount[];
 }
 
 export interface CompanyPublicResponse {
@@ -966,6 +1013,9 @@ export interface CompanyPublicResponse {
   name: string;
   website: string | null;
   summary: CompanyReviewSummary;
+  /** How many salary entries a signed-in reader would find. Optional: an API deployed before the
+   *  salary feature answers without it. */
+  salaryCount?: number;
 }
 
 export interface CompanyPublicListItem {
@@ -976,20 +1026,23 @@ export interface CompanyPublicListItem {
   score: number | null;
 }
 
-export interface ReviewRatings {
+/** What every review shape carries besides its identity. `categoryRatings` holds only the
+ *  categories the author rated; for a legacy row it is the three fixed ratings that map onto a
+ *  current category, with the fourth (salary & benefits) kept apart because it maps onto none. */
+export interface StructuredReviewFields {
+  format: ReviewFormat;
+  employmentStatus: EmploymentStatus;
   overallRating: number;
-  managementRating: number;
-  workEnvironmentRating: number;
-  salaryAndBenefitsRating: number;
-  careerAndDevelopmentRating: number;
+  categoryRatings: ReviewCategoryRating[];
+  legacySalaryAndBenefitsRating: number | null;
+  /** Catalogue keys — see statementCatalogue.ts; the wording is in the message catalogue. */
+  likedStatements: string[];
+  improvableStatements: string[];
 }
 
-export interface CompanyReviewPublic extends ReviewRatings {
+/** No free text, by design: a legacy review's title, pros and cons are not on this record. */
+export interface CompanyReviewPublic extends StructuredReviewFields {
   id: string;
-  title: string;
-  pros: string;
-  cons: string;
-  employmentStatus: EmploymentStatus;
   /** yyyy-MM — month precision on purpose. */
   submittedMonth: string;
   helpfulCount: number;
@@ -1006,15 +1059,16 @@ export interface ResolvedCompany {
   name: string;
 }
 
-export interface MyCompanyReview extends ReviewRatings {
+/** The legacy text fields are null on a structured review and still present on a legacy one:
+ *  the author may read what they wrote until they convert it by editing. */
+export interface MyCompanyReview extends StructuredReviewFields {
   id: string;
   companyId: string;
   companySlug: string;
   companyName: string;
-  employmentStatus: EmploymentStatus;
-  title: string;
-  pros: string;
-  cons: string;
+  title: string | null;
+  pros: string | null;
+  cons: string | null;
   status: ReviewModerationStatus;
   rejectionReason: string | null;
   submittedAt: string;
@@ -1042,11 +1096,12 @@ export interface HelpfulToggleResponse {
   helpfulCount: number;
 }
 
-export interface CompanyReviewRequest extends ReviewRatings {
+export interface CompanyReviewRequest {
   employmentStatus: EmploymentStatus;
-  title: string;
-  pros: string;
-  cons: string;
+  overallRating: number;
+  categoryRatings: ReviewCategoryRating[];
+  likedStatements: string[];
+  improvableStatements: string[];
 }
 
 export interface ReportCompanyReviewRequest {
@@ -1059,7 +1114,8 @@ export interface AdminCompanyReviewListItem {
   companyId: string;
   companyName: string;
   companySlug: string | null;
-  title: string;
+  format: ReviewFormat;
+  title: string | null;
   overallRating: number;
   employmentStatus: EmploymentStatus;
   status: ReviewModerationStatus;
@@ -1071,7 +1127,8 @@ export interface AdminCompanyReviewListItem {
 export interface AdminReviewReport {
   id: string;
   reviewId: string;
-  reviewTitle: string;
+  reviewFormat: ReviewFormat;
+  reviewTitle: string | null;
   companyId: string;
   companyName: string;
   reporterUserId: string;
@@ -1085,17 +1142,16 @@ export interface AdminReviewReport {
   resolvedAt: string | null;
 }
 
-export interface AdminCompanyReview extends ReviewRatings {
+export interface AdminCompanyReview extends StructuredReviewFields {
   id: string;
   companyId: string;
   companyName: string;
   companySlug: string | null;
   authorUserId: string;
   authorEmail: string;
-  employmentStatus: EmploymentStatus;
-  title: string;
-  pros: string;
-  cons: string;
+  title: string | null;
+  pros: string | null;
+  cons: string | null;
   status: ReviewModerationStatus;
   rejectionReason: string | null;
   submittedAt: string;
@@ -1421,4 +1477,101 @@ export interface RejectRefundRequest {
 export interface MarkRefundedRequest {
   amountMinor: number;
   referenceNo: string;
+}
+
+// ---- Company salaries -------------------------------------------------------------------------
+
+export type SalaryCurrency = "TRY" | "EUR" | "USD" | "GBP";
+
+/** Its own pair, not the reviews' EmploymentStatus: an internship is an EmploymentType here. */
+export type SalaryEmploymentStatus = "CurrentEmployee" | "FormerEmployee";
+
+/** What readers see instead of the exact years — see CompanySalaryPublic. */
+export type ExperienceBand = "ZeroToOne" | "TwoToFour" | "FiveToNine" | "TenPlus";
+
+/** A row of the seeded occupation catalogue, as it rides on every salary response. */
+export interface OccupationRef {
+  id: string;
+  code: string;
+  nameTr: string;
+  nameEn: string;
+}
+
+export type OccupationSearchResult = OccupationRef;
+
+export interface CompanySalaryRequest {
+  /** From the catalogue (`/api/occupations/search`); typed text is never accepted. */
+  occupationId: string;
+  yearsOfExperience: number;
+  employmentType: EmploymentType;
+  employmentStatus: SalaryEmploymentStatus;
+  monthlyNetAmount: number;
+  currency: SalaryCurrency;
+  hasBonus: boolean;
+  annualBonusAmount: number | null;
+}
+
+/** Another person's entry, as a signed-in reader sees it: no author, the band instead of the
+ *  years, the month instead of the date. */
+export interface CompanySalaryPublic {
+  id: string;
+  occupation: OccupationRef;
+  experienceBand: ExperienceBand;
+  employmentType: EmploymentType;
+  employmentStatus: SalaryEmploymentStatus;
+  monthlyNetAmount: number;
+  currency: SalaryCurrency;
+  annualBonusAmount: number | null;
+  /** yyyy-MM */
+  submittedMonth: string;
+}
+
+/** Per currency; the three figures are null below `minimumForStats`. */
+export interface SalaryCurrencyStat {
+  currency: SalaryCurrency;
+  count: number;
+  medianMonthlyNet: number | null;
+  minMonthlyNet: number | null;
+  maxMonthlyNet: number | null;
+}
+
+export interface CompanySalaryPage {
+  items: CompanySalaryPublic[];
+  total: number;
+  page: number;
+  pageSize: number;
+  stats: SalaryCurrencyStat[];
+  minimumForStats: number;
+}
+
+/** The author's own row: everything, including the exact years. */
+export interface MyCompanySalary {
+  id: string;
+  companyId: string;
+  companySlug: string;
+  companyName: string;
+  occupation: OccupationRef;
+  yearsOfExperience: number;
+  employmentType: EmploymentType;
+  employmentStatus: SalaryEmploymentStatus;
+  monthlyNetAmount: number;
+  currency: SalaryCurrency;
+  annualBonusAmount: number | null;
+  submittedAt: string;
+  updatedAt: string;
+}
+
+export interface SalaryQuota {
+  used: number;
+  limit: number;
+}
+
+export interface MySalariesResponse {
+  items: MyCompanySalary[];
+  quota: SalaryQuota;
+}
+
+export interface CompanySalaryViewerState {
+  ownEntries: MyCompanySalary[];
+  quota: SalaryQuota;
 }

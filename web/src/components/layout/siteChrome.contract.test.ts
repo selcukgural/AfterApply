@@ -56,6 +56,24 @@ describe("the signed-in navbar", () => {
     expect(navBar).toContain("<ProBadge />");
   });
 
+  it("keeps the company directory and the two contributions together inside Explore", () => {
+    // 2026-09-16: a review and a salary are one click from anywhere. On main they got their own
+    // "Companies" group; on the four-item row (D3) they live inside Explore instead, next to
+    // the directory. Both contribute links open the same page on a different side; the mobile
+    // menu lists the same three under their own heading.
+    const exploreMenu = read("components/layout/ExploreMenu.tsx");
+    for (const href of ['"/companies"', '"/contribute?tab=review"', '"/contribute?tab=salary"']) {
+      expect(exploreMenu).toContain(href);
+    }
+    expect(exploreMenu).toContain("COMPANY_LINKS.map");
+    expect(navBar).toContain("COMPANY_LINKS.map");
+    // Not twice: the plain link left the row when the group arrived.
+    expect(navBar).not.toMatch(/href: "\/companies"/);
+    // The author's two lists sit together in the avatar menu and the mobile menu.
+    expect(read("components/layout/UserMenu.tsx")).toContain('href="/my-salaries"');
+    expect(navBar).toContain('href="/my-salaries"');
+  });
+
   it("labels its menu button from the catalogue, not a hardcoded English string", () => {
     expect(navBar).not.toContain('"Open menu"');
     expect(navBar).not.toContain('"Close menu"');
@@ -90,7 +108,7 @@ describe("the signed-out chrome", () => {
 
   it("keeps the companies pages and the account-free tools one click away", () => {
     for (const href of ['"/companies"', '"/benchmark"', '"/guide"', '"/help"']) expect(header).toContain(href);
-    for (const href of ['"/companies"', '"/benchmark"', '"/cv-tarama"', '"/extension-privacy"', '"/privacy"', '"/cookies"']) {
+    for (const href of ['"/companies"', '"/benchmark"', '"/cv-tarama"', '"/extension-privacy"', '"/privacy"', '"/cookies"', '"/terms"']) {
       expect(footer).toContain(href);
     }
   });
