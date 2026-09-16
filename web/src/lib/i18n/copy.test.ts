@@ -177,7 +177,8 @@ describe("company reviews have no free text (2026-09-16)", () => {
 
 describe("the refund policy says the same thing everywhere (2026-09-16)", () => {
   // The owner's policy — a full refund within seven days, used time deducted after that, a reply
-  // within three business days, requests from the app or by e-mail to destek@ekariyerim.com — is
+  // within three business days, requests from the app or by e-mail (destek@ for Turkish readers,
+  // support@ for English ones, both @ekariyerim.com) — is
   // written into the agreement, the policy page, the help centre, the FAQ, the checkout consent
   // and both refund dialogs. One of them drifting is a broken promise the reader cannot see.
   const policySurfaces = [
@@ -206,7 +207,9 @@ describe("the refund policy says the same thing everywhere (2026-09-16)", () => 
     "%s gives the support address (tr + en)",
     (key) => {
       expect(trValue(key)).toContain("destek@ekariyerim.com");
-      expect(enValue(key)).toContain("destek@ekariyerim.com");
+      expect(trValue(key)).not.toContain("support@");
+      expect(enValue(key)).toContain("support@ekariyerim.com");
+      expect(enValue(key)).not.toContain("destek@");
     },
   );
 

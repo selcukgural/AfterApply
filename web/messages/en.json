@@ -2113,7 +2113,7 @@
         },
         "step2": {
           "title": "Open a refund request",
-          "body": "Eligible payments show a \"Request a refund\" button; write your reason and send it (none is needed in the first seven days). You can also e-mail destek@ekariyerim.com with your order number. We reply within 3 business days at the latest and e-mail the outcome. An approved amount goes back to the card you paid with through PayTR within 3–10 business days, and your Pro plan is wound back in proportion."
+          "body": "Eligible payments show a \"Request a refund\" button; write your reason and send it (none is needed in the first seven days). You can also e-mail support@ekariyerim.com with your order number. We reply within 3 business days at the latest and e-mail the outcome. An approved amount goes back to the card you paid with through PayTR within 3–10 business days, and your Pro plan is wound back in proportion."
         },
         "step3": {
           "title": "Nothing to do to cancel",
@@ -2286,7 +2286,7 @@
       },
       "q18": {
         "question": "Can I get a refund on the Pro plan?",
-        "answer": "Yes. Within 7 days of the payment date you get a full refund without giving a reason; after seven days the time you used is deducted, the rest is refunded and Pro ends at that moment. Open the request under Settings › Plan and payments or e-mail destek@ekariyerim.com with your order number; we reply within 3 business days at the latest and the refund goes back to the same card through PayTR."
+        "answer": "Yes. Within 7 days of the payment date you get a full refund without giving a reason; after seven days the time you used is deducted, the rest is refunded and Pro ends at that moment. Open the request under Settings › Plan and payments or e-mail support@ekariyerim.com with your order number; we reply within 3 business days at the latest and the refund goes back to the same card through PayTR."
       },
       "q19": {
         "question": "How do I cancel the Pro plan?",
@@ -2554,7 +2554,7 @@
       },
       "refund": {
         "title": "Refunds",
-        "body": "A full refund, no questions asked, in the first seven days; after that the time you used is deducted and the rest is refunded. Open the request under Settings › Plan and payments or e-mail destek@ekariyerim.com with your order number; we reply within 3 business days at the latest and send the refund back to the same card through PayTR."
+        "body": "A full refund, no questions asked, in the first seven days; after that the time you used is deducted and the rest is refunded. Open the request under Settings › Plan and payments or e-mail support@ekariyerim.com with your order number; we reply within 3 business days at the latest and send the refund back to the same card through PayTR."
       },
       "calloutConsent": {
         "title": "Where your CV goes",
@@ -4815,7 +4815,7 @@
     "sections": {
       "parties": {
         "title": "Parties",
-        "body": "Seller: e-kariyerim — Address: Hamidiye Mahallesi, Ülkü Yolu Caddesi, 6903 Sokak No: 34, Edremit / Balıkesir, Türkiye. Phone: +90 266 265 45 99. E-mail: destek@ekariyerim.com. Web: ekariyerim.com.\nBuyer: the consumer who purchases the service through e-kariyerim. The Buyer's details are the full name, billing address and phone number entered at checkout and the e-mail address of their e-kariyerim account; they are stored on the order and the invoice is issued with them."
+        "body": "Seller: e-kariyerim — Address: Hamidiye Mahallesi, Ülkü Yolu Caddesi, 6903 Sokak No: 34, Edremit / Balıkesir, Türkiye. Phone: +90 266 265 45 99. E-mail: support@ekariyerim.com. Web: ekariyerim.com.\nBuyer: the consumer who purchases the service through e-kariyerim. The Buyer's details are the full name, billing address and phone number entered at checkout and the e-mail address of their e-kariyerim account; they are stored on the order and the invoice is issued with them."
       },
       "subject": {
         "title": "Subject",
@@ -4839,7 +4839,7 @@
       },
       "withdrawal": {
         "title": "Right of withdrawal",
-        "body": "Under Article 15 of the Distance Contracts Regulation, the statutory right of withdrawal does not apply to services performed instantly in an electronic environment and started, with the consumer's consent, before the withdrawal period ends; the Buyer gives that consent on the checkout page.\nNevertheless, the Seller grants the Buyer the following contractual right: within 7 (seven) days of the payment date the Buyer may withdraw from the agreement without giving any reason; the whole amount paid is refunded and the Pro period ends. The right is exercised from within the app (Settings › Plan and payments › \"Request a refund\") or by e-mailing destek@ekariyerim.com with the order number."
+        "body": "Under Article 15 of the Distance Contracts Regulation, the statutory right of withdrawal does not apply to services performed instantly in an electronic environment and started, with the consumer's consent, before the withdrawal period ends; the Buyer gives that consent on the checkout page.\nNevertheless, the Seller grants the Buyer the following contractual right: within 7 (seven) days of the payment date the Buyer may withdraw from the agreement without giving any reason; the whole amount paid is refunded and the Pro period ends. The right is exercised from within the app (Settings › Plan and payments › \"Request a refund\") or by e-mailing support@ekariyerim.com with the order number."
       },
       "refunds": {
         "title": "Cancellation and refunds",
@@ -4851,7 +4851,7 @@
       },
       "disputes": {
         "title": "Disputes",
-        "body": "This agreement is governed by Turkish law. Disputes within the monetary limits announced each year by the Ministry of Trade are heard by the Consumer Arbitration Committees of the Buyer's place of residence or the Seller's place of business; disputes above those limits by the Consumer Courts. The Buyer may first raise any complaint or objection at destek@ekariyerim.com; the Seller answers within 3 business days at the latest."
+        "body": "This agreement is governed by Turkish law. Disputes within the monetary limits announced each year by the Ministry of Trade are heard by the Consumer Arbitration Committees of the Buyer's place of residence or the Seller's place of business; disputes above those limits by the Consumer Courts. The Buyer may first raise any complaint or objection at support@ekariyerim.com; the Seller answers within 3 business days at the latest."
       },
       "effective": {
         "title": "Entry into force",
@@ -4880,7 +4880,7 @@
       },
       "howToRequest": {
         "title": "How to request a refund",
-        "body": "Two ways:\n• From within the app: the \"Request a refund\" button next to the payment under Settings › Plan and payments.\n• By e-mail: write to destek@ekariyerim.com with your order number (shown under Settings › Plan and payments).\nNo reason is needed in the first seven days; after that a short explanation is enough."
+        "body": "Two ways:\n• From within the app: the \"Request a refund\" button next to the payment under Settings › Plan and payments.\n• By e-mail: write to support@ekariyerim.com with your order number (shown under Settings › Plan and payments).\nNo reason is needed in the first seven days; after that a short explanation is enough."
       },
       "decision": {
         "title": "Review",
@@ -4900,7 +4900,7 @@
       },
       "contact": {
         "title": "Contact",
-        "body": "For refund and payment questions: destek@ekariyerim.com. Include your order number; writing from your account's e-mail address speeds things up. Phone: +90 266 265 45 99."
+        "body": "For refund and payment questions: support@ekariyerim.com. Include your order number; writing from your account's e-mail address speeds things up. Phone: +90 266 265 45 99."
       }
     }
   }

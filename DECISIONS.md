@@ -7077,7 +7077,8 @@ onay cümlesi, kullanıcı iade diyaloğu ve admin iade diyaloğunda aynı sözl
 yüzeylerin hepsinde "7 gün", "3 iş günü" ve destek adresini iki dilde arıyor, yer tutucu/taslak
 kelimesi kalırsa kırılıyor. Satıcı kimliği (md. 5): "e-kariyerim", Hamidiye Mah. Ülkü Yolu Cad.
 6903 Sk. No: 34 Edremit/Balıkesir, 0266 265 45 99 — kullanıcı verdi, `parties` bölümünde.
-destek@ekariyerim.com kutusunun açık olduğu teyit edilmedi; checkout açılmadan önce şart.
+Türkçe sayfalar destek@ekariyerim.com, İngilizce sayfalar support@ekariyerim.com yazar (kullanıcı
+kararı); iki kutunun da açık olduğu teyit edilmedi; checkout açılmadan önce şart.
 
 **Politikayı işleten kod (küçük).** `PaymentOrder.PolicyRefundMinor(now)`: ödemeden itibaren 7
 gün içindeyse iade edilebilir tutarın tamamı; sonrasında `ödenen × kalan gün ÷ dönem günü`
