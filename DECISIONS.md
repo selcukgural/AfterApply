@@ -6276,3 +6276,122 @@ pipeline sırası; hiç dönmüyor.
 ilk satır `await host.ResetAsync()`, iş etkisi için `await host.RunJobsAsync()`, kendi
 `WebApplicationFactory`'ni **kurma** — komşularla paylaşılamayan bir konfigürasyon gerçekten gerekiyorsa
 `host.Standalone(...)`. README "Running tests" aynı şeyi söylüyor.
+
+## Şirket değerlendirmeleri yapılandırılmış biçime geçti: serbest metin yok, anında yayın (2026-09-16)
+
+**Neden.** Değerlendirme başlık + artılar + eksiler serbest metniydi ve her biri yayından önce bir
+moderatör tarafından okunuyordu. Moderatör hukukçu değil: ona makul görünen bir cümle Türk
+hukukunda hakaret, kişilik hakkı ihlali ya da doğrulanamayan bir suç isnadı olabilir — ve o
+cümlenin arkasında yazarla birlikte biz de duruyoruz. Kararı kullanıcı verdi: kullanıcı şirket
+hakkında **hiçbir serbest metin yazmaz**; puan verir ve önceden yazılmış, düşük riskli maddelerden
+seçer. Bu hukuki garanti değil; madde metinleri avukat kontrolüne gidecek (kaynak dosya
+`ekariyerim-sirket-degerlendirme-secenekleri.md`, repoda değil).
+
+**Model.** 11 kategori: Genel değerlendirme (**tek zorunlu puan**, mevcut `OverallRating` kolonuna
+yazılır → Bayes şirket puanı kesintisiz) + 10 isteğe bağlı 1–5 puan (Çalışma ortamı, Yönetim ve
+iletişim, Kariyer gelişimi — md'deki "Eğitim ve Gelişim" maddeleri buraya katıldı —, İş-özel hayat
+dengesi, Ücret, Yan haklar, Uzaktan/hibrit, Teknoloji ve araçlar, İşe alım, İşe başlangıç). Her
+kategori için "beğendim" ve "geliştirilebilir" madde katalogu: 103 + 103 sabit ifade, anahtarı
+`{prefix}.{pos|imp}.{slug}` (`ReviewStatementCatalogue.cs`), metni yalnızca web mesaj
+kataloğunda (`companyReviews.statements.<key>.{label,sentence}`, TR+EN) — hukukçu cümleyi
+değiştirirse hiçbir satıra dokunulmaz. Seçim isteğe bağlı; **form başına en fazla 5 + 5**
+(kategori başına değil: kartta 55 çip okunmaz). `EmploymentStatus` kaldı.
+
+**UI (kanvas: https://claude.ai/artifact/2f74DRisuKysaMWixu6wQK, "Yön C" seçildi).** Form başta 11
+yıldız satırı; bir satır puanlanınca 3 öneri çipi belirir (4–5 → beğendiklerin, 1–3 →
+geliştirilebilir), "+ N madde daha" o kategorinin tam listesini açar; sticky altbilgide iki sayaç.
+Elenen alternatifler (her satırda "madde seç" düğmesi; iki adımlı sihirbaz) kanvasın ikinci
+sayfasında. Public kartta kısa etiketli çip, tam cümle `title`'da (Kart 2 — tam cümle listesi —
+elendi). Özet paneli **yalnızca oy almış kategorileri** listeler (kullanıcı kararı; "oy yok"
+satırları bilgi taşımıyordu), kategori ortalaması o kategoride `MinimumReviewsForScore` oy
+toplanana kadar "—" + oy sayısı; yeni "En çok beğenilen / geliştirilebilir" ilk-3 listeleri
+şirket puanıyla aynı eşikte açılır.
+
+**Veri: hiçbir şey silinmedi, overwrite edilmedi.** Migration `AddStructuredCompanyReviews`
+yalnızca `Title/Pros/Cons` + 4 eski kategori kolonunda `DROP NOT NULL`, `Format` kolonu
+(`DEFAULT 'Legacy'` — rollout penceresinde eski instance'ın INSERT'i de doğru etiketlenir), iki
+çocuk tablo (`CompanyReviewCategoryRatings`, `CompanyReviewStatementPicks`, FK cascade, navigation
+collection yok — 2026-09-13'teki EF Include tuzağı). `dotnet ef migrations script` çıktısı elle
+okundu: UPDATE/DROP yok; yerel dev DB'de 4 eski satırla uygulandı, hepsi `Legacy`, metin aynen.
+`Down` yalnızca şema geri alır (çocuk tabloları düşürür); structured satır oluştuktan sonra ileri
+sarılır. Eski satırların `SalaryAndBenefitsRating`'i hiçbir yeni kategoriye eşlenmez, kartta
+"Maaş ve yan haklar" satırı olarak ayrı döner (`legacySalaryAndBenefitsRating`); Management /
+WorkEnvironment / CareerAndDevelopment üç yeni kategorinin ortalamasına katılır (yalnızca
+`Format == Legacy` satırlarda — dönüştürülmüş satırın eski kolonları yerinde kalır ama okunmaz).
+
+**Public tel.** `CompanyReviewPublicResponse`'ta `title/pros/cons` **yok** — "gösterilmiyor"un
+garantisi yanıt tipinin kendisi (mevcut `userId`-yok testiyle aynı mantık; entegrasyon testi ham
+JSON'da anahtar adlarını arıyor). Yazar kendi listesinde ve KVKK dışa aktarımında eski metnini
+görmeye devam eder; düzenleyince satır `Structured` olur, eski metin DB'de kalır.
+
+**Moderasyon.** Yapılandırılmış değerlendirme kaydedilince `Approved` (kullanıcı kararı:
+otomatik onay; `ModeratedAt` null). Şikayet akışı aynen (Removed/ChangesRequested → Rejected).
+**Reddedilmiş bir değerlendirme düzenlenince `Pending`'e döner**, doğrudan yayına değil —
+moderatörün kararı aynı çipleri tekrar kaydederek geri alınamasın. Geçiş öncesi `Pending` eski
+satırlar insan kararı bekler; admin rehberi ikiye ayrıldı (yapılandırılmış için hesap/kalıp
+odaklı üç madde, eski satırlar için 7 gri-alan örneği aynen). Sitemap `ModeratedAt ?? SubmittedAt`
+okur. `WithoutRequestAudit` eklenmedi.
+
+**Web.** `statementCatalogue.ts` C# kataloğunun kopyası; `statementCatalogue.test.ts` C# kaynağını
+tarayıp anahtar kümesinin eşit olduğunu, her anahtarın TR+EN etiket+cümlesi olduğunu ve yetim
+çeviri olmadığını doğrular (`messageUsage.ts` şablon-literal anahtarları taramaz; bu test o
+boşluğu kapatır). `companyReviews.statements` (412 string) landing bundle'ına **girmez**: landing
+mock'unun çipleri kendi metnini taşır, DEMO'nun ilk-3 listeleri boş. `copy.test.ts`'e iki kural:
+değerlendirme metinlerinde "artılar/eksiler/pros/cons/başlık" ve "yayımlanmadan önce moderatör
+okur" yalnızca legacy açıklamalarında. Yazma sonrası yönlendirme Değerlendirmelerim'de kaldı:
+şirket sayfası 60 sn `revalidate` ile sunucuda render edilir, "anında yayında" dediğimiz kayıt bir
+dakika boyunca orada görünmezdi.
+
+**Testler.** Birim 672 (yeni: katalog bütünlüğü, entity geçişleri, validator matrisi,
+eşikli ortalama); entegrasyon: review + account sınıfları 29/29 (structured anında public ve
+sitemap'te; ham JSON'da metin yok; legacy pending kuyrukta; 6 madde / bilinmeyen anahtar / yanlış
+liste → 400; legacy edit → dönüşüm; Removed → edit → Pending; ilk-3 ve kategori eşiği; export iki
+biçim; cascade çocuk tablolar); web 420 + lint temiz. Tarayıcıda (yerel yığın, demo hesap): yazma
+→ anında "Yayında", düzenleme taslağı seçimleri geri yükler, şirket sayfası 3 kayıtla 4,3 + ilk-3,
+karanlık tema, 390 px, admin detay iki biçim. Yardım görselleri `review-form.png` ve
+`company-page.png` headless Chrome ile yeniden çekildi (demo hesap artık Beta A.Ş.'ye 1
+yapılandırılmış değerlendirme taşıyor).
+
+**Rollout notu.** Web + API birlikte deploy edilir; geçiş penceresinde eski instance NULL
+`Title` taşıyan yeni bir satırı okuyamaz (dakikalar). Açık kalanlar: eski `Pending` satırlar için
+moderatör kararı; `Down` yalnızca structured satır yokken.
+
+**Hukuk okumasının yeri değişti (kullanıcı sorusu, 2026-09-16).** Değerlendirme başına "moderatör
+hukukçu değil" sorunu bu değişiklikle kapandı: kullanıcıdan hiçbir serbest metin alınmıyor,
+yayımlanan her cümle bizim yazdığımız 206 sabit cümleden biri. Kalan şey **tek seferlik**: o 206
+cümle adı geçen bir şirketin yanında bizim adımıza yayımlanıyor ve kaynak md'nin kendi notu da
+"hukuki garanti değil, avukat kontrolü önerilir" diyor. Bu okuma yayın öncesi bir engel olarak
+görülmüyor; cümle değişirse yalnızca `web/messages/{tr,en}.json` düzenlenir, veriye dokunulmaz.
+Aynı okumaya eklenecek iki bağımsız madde: Kullanım Koşulları sayfası (2026-09-13'ten beri açık,
+aşağıdaki giriş) ve eski serbest metinlerin saklama süresi (yazarın kendi verisi, kendisine
+gösteriliyor, hesapla siliniyor — süre sorusu açık).
+
+## Kullanım Koşulları sayfası: `/terms` (2026-09-16)
+
+**Neden şimdi.** 2026-09-13'te "kullanıcı içeriği yayımlanıyor, koşullar hukuk okumasıyla birlikte"
+diye ertelenmişti; okuma yapılmadığı için sayfa da yoktu. Değerlendirmeler yapılandırılmış olunca
+koşulların söyleyeceği her şey kodda zaten uygulanan kurallara indi (şirket başına bir
+değerlendirme, kota, anında yayın, şikayet yolu, moderatör kararı, hesap silme) — sayfa artık bir
+vaat değil, mevcut davranışın yazıya dökülmüş hâli. Kullanıcı kararıyla yazıldı.
+
+**Yapı.** `/tr/terms`, `/en/terms`; gizlilik sayfasıyla aynı kalıp (tek sayfa, bölüm id'leri,
+başta tarih), `terms.*` mesaj namespace'i, footer "Kaynaklar" sütununda, `PUBLIC_PATHS` ve
+`SiteTrafficNormalizer.ExactPaths`'te (sitemap ↔ ziyaret sayacı allowlist testi ikisini birlikte
+ister). Bölümler: hizmet, hesap (18 yaş, tek hesap, anahtar sorumluluğu), şirket değerlendirmeleri
+(kendi deneyimi, sabit maddeler, sınırlar, anında yayın + şikayet, manipülasyon yasağı, görüşün
+yazara ait olduğu, şirket temsilcisi için yol), içerik lisansı (yazarın sahipliği; bize anonim
+yayımlama ve puanda kullanma izni, silinince biter), yasak kullanımlar, sorumluluk (araç çıktıları
+tavsiye değil), askıya alma, değişiklik, uygulanacak hukuk (TC), iletişim (mevcut
+`privacy@ekariyerim.com` — ayrı posta kutusu açılmadı).
+
+**Kayıt onayı iki belgeyi kapsıyor.** Kayıt formu ve üç OAuth callback'indeki onay metni
+`auth.register.consent` tek `t.rich` mesajına indi ("Gizlilik politikasını ve kullanım koşullarını
+okudum ve kabul ediyorum", iki link). Backend'de yeni alan yok: `ConsentAcceptedAt` zaten onay
+anını tutuyor, artık iki belgeye birden ait. Daha önce kayıt olanlar koşulları ayrıca onaylamış
+değil — "Değişiklikler" bölümündeki "kullanmaya devam = kabul" kuralı bunu kapsıyor; hukukçu
+aksini söylerse tek seferlik bir kabul ekranı gerekir (yapılmadı).
+
+**Açık.** İşletmecinin hukuki kimliği (unvan/adres) hiçbir sayfada yok — gizlilik sayfasında da
+yoktu; hukuk okumasında sorulacak ilk şey bu. Metin avukat görmedi; hukuk okuması listesi bu
+sayfayla birlikte: 206 madde + bu koşullar + işletmeci kimliği + eski serbest metinlerin saklama
+süresi.

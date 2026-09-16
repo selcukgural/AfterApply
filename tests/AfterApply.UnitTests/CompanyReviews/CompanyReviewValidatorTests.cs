@@ -20,14 +20,26 @@ public class CompanyReviewValidatorTests
         public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) => [];
     }
 
-    private static CreateCompanyReviewRequest Create(string title = "Fair place to grow", string pros = "Clear promotion criteria and patient mentors.",
-        string cons = "Meetings could easily be halved without loss.", int overall = 4) =>
-        new(EmploymentStatus.CurrentEmployee, title, pros, cons, overall, 4, 4, 3, 5);
+    private static CreateCompanyReviewRequest Create(int overall = 4,
+        IReadOnlyList<ReviewCategoryRatingDto>? categories = null, IReadOnlyList<string>? liked = null, IReadOnlyList<string>? improvable = null) =>
+        new(EmploymentStatus.CurrentEmployee, overall,
+            categories ?? [new ReviewCategoryRatingDto(ReviewCategory.CareerGrowth, 5)],
+            liked ?? ["career.pos.career_guidance"],
+            improvable ?? ["balance.imp.overtime"]);
+
+    private static CreateCompanyReviewRequestValidator Validator() => new(Localizer());
 
     [Fact]
     public void Accepts_A_Complete_Review()
     {
-        new CreateCompanyReviewRequestValidator().Validate(Create()).IsValid.ShouldBeTrue();
+        Validator().Validate(Create()).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Accepts_A_Bare_Overall_Rating()
+    {
+        // The minimum review: a number and a relationship, nothing else.
+        Validator().Validate(new CreateCompanyReviewRequest(EmploymentStatus.Intern, 3)).IsValid.ShouldBeTrue();
     }
 
     [Theory]
@@ -35,29 +47,54 @@ public class CompanyReviewValidatorTests
     [InlineData(6)]
     public void Rejects_A_Rating_Off_The_Scale(int overall)
     {
-        var result = new CreateCompanyReviewRequestValidator().Validate(Create(overall: overall));
+        var result = Validator().Validate(Create(overall: overall));
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.PropertyName == "OverallRating");
     }
 
     [Fact]
-    public void Rejects_Pros_Too_Short_To_Say_Anything()
+    public void Rejects_A_Category_Rated_Twice_Or_Off_The_Scale_Or_Named_Overall()
     {
-        var result = new CreateCompanyReviewRequestValidator().Validate(Create(pros: "Nice."));
-
-        result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldContain(e => e.PropertyName == "Pros");
+        Validator().Validate(Create(categories: [new(ReviewCategory.Pay, 2), new(ReviewCategory.Pay, 4)]))
+            .Errors.ShouldContain(e => e.PropertyName == "CategoryRatings" && e.ErrorMessage == "VALIDATION_REVIEW_CATEGORY_DUPLICATE");
+        Validator().Validate(Create(categories: [new(ReviewCategory.Pay, 0)]))
+            .Errors.ShouldContain(e => e.PropertyName.StartsWith("CategoryRatings"));
+        Validator().Validate(Create(categories: [new(ReviewCategory.Overall, 3)]))
+            .Errors.ShouldContain(e => e.PropertyName.StartsWith("CategoryRatings"));
     }
 
     [Fact]
-    public void Rejects_Text_Past_The_Column_Width()
+    public void Rejects_More_Than_Five_Picks_Per_List_With_A_Localised_Message()
     {
-        var tooLong = new string('a', CompanyReview.MaxTextLength + 1);
+        var six = ReviewStatementCatalogue.For(ReviewCategory.WorkEnvironment, ReviewStatementKind.Liked).Take(6).Select(s => s.Key).ToList();
 
-        new UpdateCompanyReviewRequestValidator()
-            .Validate(new UpdateCompanyReviewRequest(EmploymentStatus.Intern, "Title", tooLong, "Cons that are long enough.", 3, 3, 3, 3, 3))
+        var result = Validator().Validate(Create(liked: six));
+
+        result.Errors.ShouldContain(e => e.PropertyName == "LikedStatements" && e.ErrorMessage == "VALIDATION_REVIEW_STATEMENTS_TOO_MANY");
+        Validator().Validate(Create(liked: six.Take(5).ToList())).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Rejects_Unknown_Keys_Duplicates_And_Keys_From_The_Other_List()
+    {
+        Validator().Validate(Create(liked: ["career.pos.made_up"]))
+            .Errors.ShouldContain(e => e.PropertyName.StartsWith("LikedStatements") && e.ErrorMessage == "VALIDATION_REVIEW_STATEMENT_UNKNOWN");
+        Validator().Validate(Create(improvable: ["career.pos.career_guidance"]))
+            .Errors.ShouldContain(e => e.PropertyName.StartsWith("ImprovableStatements") && e.ErrorMessage == "VALIDATION_REVIEW_STATEMENT_UNKNOWN");
+        Validator().Validate(Create(improvable: ["balance.imp.overtime", "balance.imp.overtime"]))
+            .Errors.ShouldContain(e => e.PropertyName == "ImprovableStatements" && e.ErrorMessage == "VALIDATION_REVIEW_STATEMENTS_DUPLICATE");
+    }
+
+    [Fact]
+    public void The_Update_Validator_Applies_The_Same_Rules()
+    {
+        new UpdateCompanyReviewRequestValidator(Localizer())
+            .Validate(new UpdateCompanyReviewRequest(EmploymentStatus.Intern, 3, LikedStatements: ["nope"]))
             .IsValid.ShouldBeFalse();
+        new UpdateCompanyReviewRequestValidator(Localizer())
+            .Validate(new UpdateCompanyReviewRequest(EmploymentStatus.Intern, 3))
+            .IsValid.ShouldBeTrue();
     }
 
     [Fact]

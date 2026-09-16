@@ -35,6 +35,10 @@
         "title": "Çerez Politikası",
         "description": "e-kariyerim'in kullandığı iki çerez, ne işe yaradıkları, ne kadar kaldıkları — ve neden onay bandı olmadığı."
       },
+      "terms": {
+        "title": "Kullanım Koşulları",
+        "description": "e-kariyerim'i kullanırken geçerli olan kurallar — hesap, şirket değerlendirmeleri, içerik lisansı, yasak kullanımlar ve sorumluluk."
+      },
       "extensionPrivacy": {
         "title": "Tarayıcı Eklentisi Gizlilik Politikası",
         "description": "e-kariyerim tarayıcı eklentisinin ne okuduğu, ne sakladığı ve ne gönderdiği — ve açtığınızda Gmail Taraması'nın ne yaptığı."
@@ -193,25 +197,27 @@
         "companies": {
           "eyebrow": "Şirket değerlendirmeleri · anonim, hesap gerekmez",
           "title": "Başvurmadan önce içeriyi öğren.",
-          "body": "Bir şirkette çalışmak gerçekte nasıl — yönetim, çalışma ortamı, maaş ve kariyer için ayrı puanlar, artılar ve eksiler. Okumak için hesap gerekmez; yazmak için giriş yeter.",
+          "body": "Bir şirkette çalışmak gerçekte nasıl — genel puan, on alana kadar ortalama ve en sık seçilen maddeler. Okumak için hesap gerekmez; yazmak için yalnızca giriş.",
           "bullet1": "Yazan görünmez: yalnızca ay ve çalışan ilişkisi (mevcut, eski, stajyer)",
-          "bullet2": "Her değerlendirme yayına girmeden önce bir moderatör tarafından okunur",
+          "bullet2": "Serbest metin yok: her madde herkese adil olacak şekilde yazılmış sabit bir listeden gelir",
           "bullet3": "Puan formülü açık; üç onaylı değerlendirmenin altında puan gösterilmez",
           "cta": "Şirketlere göz at",
           "scoringLink": "Puan nasıl hesaplanıyor?",
           "mock": {
-            "ariaLabel": "Örnek: bir şirket sayfası — 12 değerlendirmeden 4,1 puan, dört kategori ortalaması ve bir değerlendirme alıntısı.",
-            "title": "Öğrenmeye açık, samimi bir ekip",
+            "ariaLabel": "Örnek: bir şirket sayfası — 12 değerlendirmeden 4,1 puan, alan ortalamaları ve seçilen maddeleriyle bir değerlendirme alıntısı.",
             "month": "Eylül 2026",
-            "prosLabel": "ARTILAR",
-            "pros": "Kod incelemeleri ciddiye alınıyor, uzaktan çalışma esnekliği gerçekten uygulanıyor.",
-            "consLabel": "EKSİLER",
-            "cons": "Maaş artışları piyasanın gerisinde, terfi kriterleri yazılı değil."
+            "likedLabel": "BEĞENİLENLER",
+            "improvableLabel": "GELİŞTİRİLEBİLİR",
+            "liked1": "Ekip içi iletişim",
+            "liked2": "Uzaktan çalışma",
+            "liked3": "Esnek saatler",
+            "improve1": "Ücret seviyesi",
+            "improve2": "Terfi kriterleri"
           }
         }
       },
       "companiesTitle": "Şirket değerlendirmeleri",
-      "companiesBody": "Orada çalışmış kişilerden anonim değerlendirmeler; yayından önce bir moderatör okur.",
+      "companiesBody": "Orada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler — puanlar ve hazır maddeler, serbest metin yok.",
       "companiesCta": "Şirketlere göz at"
     },
     "problem": {
@@ -368,7 +374,8 @@
       "help": "Yardım Merkezi",
       "cookies": "Çerez Politikası",
       "benchmark": "Geri dönüş oranı kıyaslama",
-      "extensionPrivacy": "Eklenti Gizlilik Politikası"
+      "extensionPrivacy": "Eklenti Gizlilik Politikası",
+      "terms": "Kullanım Koşulları"
     }
   },
   "common": {
@@ -435,8 +442,6 @@
       "email": "E-posta",
       "password": "Şifre",
       "confirmPassword": "Şifre (tekrar)",
-      "consentLink": "Gizlilik politikasını",
-      "consentSuffix": "okudum ve kabul ediyorum.",
       "submit": "Kayıt Ol",
       "submitting": "Kayıt oluşturuluyor...",
       "haveAccount": "Zaten hesabın var mı?",
@@ -446,7 +451,8 @@
         "item1": "Başvurularının kaçı cevaplandı, kaçı sessiz kaldı — kendi sayılarını gör",
         "item2": "LinkedIn geçmişini içe aktar ya da eklentiyle tek tıkla kaydet; elle yazma",
         "item3": "Ücretsiz. Verilerin yalnızca senin hesabında; istediğin an sil"
-      }
+      },
+      "consent": "<privacy>Gizlilik politikasını</privacy> ve <terms>kullanım koşullarını</terms> okudum ve kabul ediyorum."
     },
     "passwordRules": {
       "title": "Şifreniz şunları içermeli:",
@@ -1063,15 +1069,87 @@
     "companyReviews": {
       "title": "Yazdığın şirket değerlendirmeleri",
       "intro": "Bir şirket hakkında değerlendirme yazmak isteğe bağlıdır ve hesap gerektirir. Yazdığında:",
-      "what": "Değerlendirmen — başlık, artılar ve eksiler metni, şirketle ilişkin (mevcut çalışan, eski çalışan, stajyer) ve beş puan — moderasyon durumu ve moderatörün yazdığı notla birlikte hesabına bağlı olarak saklanır.",
-      "anonymous": "Yayımlanan değerlendirmeler adını, e-postanı veya hesabını asla göstermez; okuyucular metni, puanları, şirketle ilişkini ve yazıldığı ayı görür. Gün değil ay — bilerek: bir tarih, kimin yazdığına dair bir ipucu daha olurdu.",
-      "admin": "Değerlendirmeni yayımlanmadan önce okuyan moderatör arkasındaki hesabı görebilir. Moderasyonu mümkün kılan budur — kimliği bilinmeyen bir yazara kural uygulanamaz — ve kimliğinle değerlendirmenin buluştuğu tek yer burasıdır.",
+      "what": "Değerlendirmen — genel puanın, isteğe bağlı alan puanların, seçtiğin hazır maddeler ve şirketle ilişkin (mevcut çalışan, eski çalışan, stajyer) — moderasyon durumu ve varsa moderatörün yazdığı notla birlikte hesabına bağlı saklanır. 16 Eylül 2026'dan beri değerlendirmede serbest metin yok; daha önce yazdıysan başlığı, artıları ve eksileri senin için saklı kalır ve başka kimseye gösterilmez.",
+      "anonymous": "Yayımlanan değerlendirmeler adını, e-postanı ya da hesabını asla göstermez; okuyucular puanları, maddeleri, şirketle ilişkini ve yazıldığı ayı görür. Gün değil ay, bilerek: tarih kimin yazdığına dair bir ipucu daha olurdu.",
+      "admin": "Değerlendirmene bakan bir moderatör — bir şikayetten sonra ya da geçiş öncesi bir değerlendirme için — arkasındaki hesabı görebilir. Moderasyonu mümkün kılan budur ve kimliğinin değerlendirmenle buluştuğu tek yerdir.",
       "reports": "Başkasının değerlendirmesini bildirirsen, bildirim (gerekçe, notun, zaman) hesabına bağlı olarak saklanır ve moderatöre gösterilir. Değerlendirmenin yazarı kimin bildirdiğini asla görmez.",
       "helpful": "Bir değerlendirmeyi faydalı olarak işaretlemek, değerlendirme ve hesap başına tek satır olarak saklanır; böylece geri alınabilir ve iki kez sayılamaz. Kimin neyi işaretlediğini kimse görmez.",
       "storage": "Değerlendirmeler, bildirimler ve faydalı işaretleri kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Hesabını silmek değerlendirmelerini, bildirimlerini ve faydalı işaretlerini siler. Yazdığın değerlendirmeler şirket sayfalarından ve şirketin puanından kalkar; veri dışa aktarımın da bunları içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — yazmayı, bildirmeyi veya işaretlemeyi sen seçersin — ve moderasyon için meşru menfaat: adı geçen bir şirket hakkında yayımlananların adil ve hukuka uygun kalması."
     }
+  },
+  "terms": {
+    "title": "Kullanım Koşulları",
+    "lastUpdated": "Son güncelleme: 16 Eylül 2026",
+    "intro": "Bu sayfa e-kariyerim'i — web sitesini, Chrome eklentisini ve hesapsız kullanılabilen araçları — kullanırken geçerli olan kuralları anlatır. Siteyi kullanarak bu koşulları kabul etmiş olursun; kabul etmiyorsan lütfen kullanma. Kişisel verilerinin nasıl işlendiği ayrı bir belgede, Gizlilik Politikası'nda anlatılır; iki belge birlikte geçerlidir.",
+    "service": {
+      "title": "Hizmet nedir",
+      "intro": "e-kariyerim iş arama sürecini takip etmen için bir araçtır:",
+      "tracking": "Başvurularını, takip listeni ve hatırlatıcılarını kaydeden bir panel; LinkedIn dışa aktarımından içe aktarma; Chrome eklentisiyle ilan sayfalarından ve Gmail'deki yanıtlardan sinyal toplama.",
+      "tools": "Hesapsız kullanılabilen araçlar: CV taraması, geri dönüş oranı kıyaslaması ve şirket değerlendirmelerini okuma.",
+      "reviews": "Kayıtlı kullanıcıların şirketler hakkında anonim, yapılandırılmış değerlendirmeler yazabildiği herkese açık şirket sayfaları.",
+      "asIs": "Hizmet olduğu gibi sunulur. Özellikleri değiştirebilir, durdurabilir ya da kaldırabiliriz; ücretsiz bir hizmette bunun için önceden bildirim taahhüt etmiyoruz, ama kullanıcı verisini etkileyen bir değişikliği bu sayfada ve gerekiyorsa e-postayla duyururuz."
+    },
+    "account": {
+      "title": "Hesap",
+      "age": "Hesap açmak için en az 18 yaşında olmalısın.",
+      "accuracy": "Hesabını kendi adına açarsın ve verdiğin bilgilerin doğru olmasından sorumlusun. Bir hesabı başkasıyla paylaşma, başkasının hesabını kullanma.",
+      "security": "Şifren ve eklenti anahtarların senin sorumluluğundadır; hesabından yapılan her işlem senin yapmış sayılır. İzinsiz kullanım fark edersen şifreni değiştir ve bize yaz.",
+      "delete": "Hesabını istediğin zaman Hesap Ayarları'ndan kalıcı olarak silebilirsin; ne silindiği Gizlilik Politikası'nda yazar."
+    },
+    "reviews": {
+      "title": "Şirket değerlendirmeleri",
+      "intro": "Şirket değerlendirmesi yazmak hesap gerektirir ve şu kurallara tabidir:",
+      "ownExperience": "Yalnızca kendi yaşadığın deneyimi puanlarsın — çalıştığın, staj yaptığın ya da işe alım sürecinden geçtiğin bir şirketi. Duyduklarını, başkasının deneyimini ya da hiç ilişkin olmayan bir şirketi puanlama.",
+      "structured": "Bir değerlendirme puanlardan ve bizim yazdığımız sabit maddelerden oluşur; serbest metin yoktur. Maddelerin listesi herkes için aynıdır ve bu sayfa gibi zaman zaman güncellenebilir.",
+      "onePerCompany": "Hesap başına şirket başına bir değerlendirme yazabilirsin ve hesap başına toplam sayının bir üst sınırı vardır; ikisi de Değerlendirmelerim sayfasında görünür. Görüşün değişirse mevcut değerlendirmeni düzenlersin.",
+      "publication": "Değerlendirmen kaydettiğin anda, adın olmadan yayımlanır. Bir okuyucu değerlendirmeyi bildirirse bir moderatör inceler ve yayında bırakabilir, senden düzenleme isteyebilir ya da kaldırabilir; gerekçesi Değerlendirmelerim sayfasında görünür. Kaldırılan bir değerlendirmeyi düzenleyip yeniden gönderebilirsin; yeniden yayına alınması moderatörün kararıdır.",
+      "noManipulation": "Değerlendirmeleri bir şirketi kayırmak ya da zarar vermek için düzenli biçimde kullanmak — birden fazla hesap, karşılık beklenen değerlendirme, koordineli puanlama — yasaktır ve hesabın kapatılmasına yol açar.",
+      "opinion": "Yayımlanan her değerlendirme yazarının kişisel görüşüdür; e-kariyerim'in bir şirket hakkındaki beyanı değildir ve doğruluğunu garanti etmiyoruz.",
+      "companies": "Bir şirketi temsil ediyorsan ve hakkındaki bir değerlendirmenin kurallara aykırı olduğunu düşünüyorsan, o değerlendirmeyi bildirebilir ya da aşağıdaki adrese yazabilirsin."
+    },
+    "content": {
+      "title": "İçeriğin ve lisans",
+      "ownership": "Kaydettiğin her şey — başvuruların, CV'lerin, notların, puanların ve seçimlerin — senindir. Bunlara yalnızca hizmeti sağlamak için erişiriz; ayrıntı Gizlilik Politikası'nda.",
+      "licence": "Bir şirket değerlendirmesi kaydettiğinde bize o değerlendirmeyi — puanlarını ve seçtiğin maddeleri — şirket sayfasında anonim olarak yayımlama ve diğer değerlendirmelerle birlikte puan ve özet üretmek için kullanma izni verirsin. Bu izin değerlendirmeyi ya da hesabını sildiğinde sona erer; değerlendirme sayfalardan ve şirket puanından çıkar.",
+      "ourContent": "Sitenin kendisi — tasarımı, metinleri, değerlendirme madde listesi, yardım ve rehber içerikleri, logosu — e-kariyerim'e aittir. Kişisel kullanımın dışında kopyalamak, çoğaltmak ya da kendi hizmetinde kullanmak için izin gerekir."
+    },
+    "prohibited": {
+      "title": "Yapılmaması gerekenler",
+      "intro": "Hizmeti kullanırken şunlar yasaktır:",
+      "scraping": "Siteyi ya da şirket sayfalarını otomatik araçlarla taramak, kazımak ya da toplu indirmek.",
+      "limits": "Kota, hız sınırı ve moderasyon gibi sınırları aşmaya çalışmak; birden fazla hesap açmak.",
+      "abuse": "Hizmeti başka bir kişiye zarar vermek, yanıltmak ya da taciz etmek için kullanmak.",
+      "security": "Hizmetin güvenliğini, altyapısını ya da başka kullanıcıların verisini tehlikeye atacak herhangi bir şey.",
+      "unlawful": "Yürürlükteki hukuka aykırı herhangi bir kullanım."
+    },
+    "liability": {
+      "title": "Sorumluluk",
+      "noAdvice": "CV taraması, kıyaslama ve iş uyumu gibi araçların çıktıları bilgi amaçlıdır; kariyer, hukuk ya da başka bir alanda profesyonel tavsiye değildir. Kararlarını bunlara dayanarak verirsen sorumluluk sende kalır.",
+      "thirdParties": "Başvuru yaptığın işverenler, LinkedIn, kariyer.net ve Google gibi üçüncü taraflar bizim kontrolümüzde değildir; onlarla ilişkin kendi koşullarına tabidir.",
+      "availability": "Hizmetin kesintisiz ya da hatasız olacağını taahhüt etmiyoruz. Yürürlükteki hukukun izin verdiği ölçüde, hizmetin kullanımından ya da kullanılamamasından doğan dolaylı zararlardan sorumlu değiliz.",
+      "reviewsDisclaimer": "Şirket değerlendirmeleri kullanıcıların görüşüdür; bir değerlendirme yüzünden uğradığını düşündüğün bir zarar için önce bildirim yolunu kullan — her bildirim bir moderatör tarafından okunur."
+    },
+    "termination": {
+      "title": "Askıya alma ve fesih",
+      "us": "Bu koşulları ihlal eden bir hesabın değerlendirme hakkını sıfırlayabilir, değerlendirmelerini kaldırabilir ya da hesabı kapatabiliriz. Mümkün olan hâllerde nedenini söyleriz.",
+      "you": "Sen de istediğin zaman hesabını silerek ilişkiyi bitirebilirsin."
+    },
+    "changes": {
+      "title": "Değişiklikler",
+      "body": "Bu koşulları güncelleyebiliriz; en son tarih sayfanın başında yazar. Önemli bir değişikliği kayıtlı kullanıcılara e-postayla duyururuz. Değişiklikten sonra hizmeti kullanmaya devam etmen yeni koşulları kabul ettiğin anlamına gelir."
+    },
+    "law": {
+      "title": "Uygulanacak hukuk",
+      "body": "Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır. Tüketici olarak kullanıyorsan, bulunduğun ülkenin zorunlu tüketici koruma hükümleri saklıdır."
+    },
+    "contact": {
+      "title": "İletişim",
+      "before": "Bu koşullarla ilgili sorular için",
+      "after": " adresine yazabilirsin."
+    },
+    "privacyLink": "Gizlilik Politikası →"
   },
   "extensionPrivacy": {
     "title": "Tarayıcı Eklentisi Gizlilik Politikası",
@@ -1278,8 +1356,8 @@
     "hrLinkedInInvalid": "https://www.linkedin.com/in/... ile başlayan bir profil adresi gir.",
     "employmentStatusRequired": "Şirketle ilişkini seç",
     "ratingRequired": "1 ile 5 arasında bir puan ver",
-    "reviewTitleTooShort": "Başlık en az 3 karakter olmalı",
-    "reviewTextTooShort": "En az 20 karakter yaz"
+    "reviewStatementsTooMany": "Liste başına en fazla 5 madde",
+    "reviewStatementUnknown": "Maddelerden biri listede yok"
   },
   "errors": {
     "generic": "İstek başarısız oldu.",
@@ -1929,8 +2007,8 @@
         "answer": "Evet. Yayımlanan değerlendirmede adınız, e-postanız ya da gün görünmez; yalnızca ay ve şirketle ilişkiniz (mevcut, eski, stajyer). Kimin yazdığını yalnızca moderatörler, yalnızca moderasyon için görür."
       },
       "q14": {
-        "question": "Değerlendirmem neden hâlâ görünmüyor?",
-        "answer": "Her değerlendirme yayına girmeden önce bir moderatör tarafından okunur; o zamana kadar yalnızca siz Değerlendirmelerim sayfasında görürsünüz. Yayımlanmadıysa gerekçesi aynı sayfada yazar; nota göre düzenlerseniz yeniden incelenir."
+        "question": "Değerlendirmem neden görünmüyor?",
+        "answer": "Değerlendirme kaydettiğin anda yayımlanır. Şirket sayfasında yoksa ya bir şikayet sonrası moderatör kaldırmıştır — gerekçe Değerlendirmelerim sayfasındadır; düzenlersen moderatöre geri gider — ya da 16 Eylül 2026'dan önce eski serbest metinli biçimde yazılmıştır ve hâlâ kuyrukta bekliyordur."
       },
       "q15": {
         "question": "e-kariyerim'de hesap açmadan neler kullanılabilir?",
@@ -1976,7 +2054,7 @@
     "companyReviews": {
       "eyebrow": "Şirketler",
       "title": "Şirket değerlendirmeleri",
-      "intro": "Bir şirkette çalışmak gerçekte nasıl — orada çalışmış kişilerden anonim değerlendirmeler ve açık formüllü bir puan. Okumak için hesap gerekmez; yazmak için giriş yeter.",
+      "intro": "Bir şirkette çalışmak gerçekte nasıl — orada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler ve formülü herkese açık bir puan. Okumak için hesap gerekmez; yazmak için yalnızca giriş.",
       "read": {
         "title": "Değerlendirmeleri okumak",
         "step1": {
@@ -1985,11 +2063,11 @@
         },
         "step2": {
           "title": "Şirket sayfasına girin",
-          "body": "Sayfanın üstünde genel puan, dört kategori ortalaması (yönetim, çalışma ortamı, maaş ve yan haklar, kariyer ve gelişim) ve yıldız dağılımı; altında değerlendirmeler yer alır. En yeni ya da en faydalı olana göre sıralayabilirsiniz."
+          "body": "En üstte: genel puan, on alana kadar ortalama (çalışma ortamı, yönetim, kariyer, iş-özel hayat dengesi, ücret, yan haklar, uzaktan çalışma, araçlar, işe alım, onboarding), yıldız dağılımı ve en sık seçilen maddeler; altında değerlendirmeler. En yeniye ya da en faydalıya göre sırala."
         },
         "step3": {
           "title": "Puanı okumayı bilin",
-          "body": "Puan yalnızca yeterli sayıda yayımlanmış değerlendirme olunca görünür; azsa kaç değerlendirme kaldığı yazar. Her sayının yanında dayandığı değerlendirme sayısı vardır."
+          "body": "Puan ancak yeterli değerlendirme yayımlanınca görünür; o zamana kadar sayfa kaç tane daha gerektiğini söyler. Bir alan ortalaması yeterli kişi o alanı puanlayınca görünür — o zamana kadar oy sayısını görürsün. Her sayı dayandığı adedi taşır."
         },
         "scoringLink": "Puan nasıl hesaplanıyor? →",
         "readingGuideLink": "Yorumları nasıl okumalı? →"
@@ -2005,12 +2083,12 @@
           "body": "Formda şirketi listeden seçin. Aradığınız şirket yoksa adını yazarak ekleyebilirsiniz; ekleme, aynı adı diğer kullanıcıların aramasına da düşürür."
         },
         "step3": {
-          "title": "Puanları ve metni doldurun",
-          "body": "Şirketle ilişkiniz (mevcut çalışan, eski çalışan, stajyer), beş adet 1-5 puan, bir başlık, artılar ve eksiler. Kişileri adıyla tanımlanır hale getirmeyin; kurallar formun yanında yazar."
+          "title": "Puanla, istersen madde seç",
+          "body": "Şirketle ilişkin (mevcut çalışan, eski çalışan, stajyer) ve 1–5 arası bir genel puan gereken her şey. On alan daha puanlanabilir ya da boş bırakılabilir. Bir alanı puanladığında form o alanla ilgili hazır maddeler sunar — beğendiğin en fazla beş, geliştirilebilir en fazla beş madde seç. Yazacak bir şey yok."
         },
         "step4": {
-          "title": "İncelemeye gönderin",
-          "body": "Gönderilen değerlendirme \"İnceleme bekliyor\" durumuna düşer ve Değerlendirmelerim sayfasında yalnızca siz görürsünüz. Bir moderatör okuduktan sonra yayına girer ya da gerekçesiyle geri döner."
+          "title": "Yayımla",
+          "body": "Değerlendirmen kaydettiğin anda yayımlanır; şirket sayfasında ve Değerlendirmelerim'de görünür. Okuyucular bildirebilir; bir moderatör kaldırırsa gerekçe Değerlendirmelerim sayfasındadır."
         },
         "guideLink": "Adil ve faydalı bir değerlendirme nasıl yazılır? →"
       },
@@ -2019,12 +2097,12 @@
         "body": "Yayımlanan değerlendirme adınızı, e-postanızı ya da gününü göstermez; yalnızca ay ve çalışan ilişkisi görünür. Kimin yazdığını yalnızca moderatörler görür, o da yalnızca moderasyon için."
       },
       "calloutModeration": {
-        "title": "Ön moderasyon ve şirket başına bir değerlendirme",
-        "body": "Her değerlendirme yayına girmeden önce okunur. Bir şirket için yalnızca bir değerlendirme yazabilirsiniz; fikriniz değişirse mevcut olanı düzenlersiniz. Yayımlanmış bir değerlendirmeyi düzenlemek onu yeniden incelemeye alır. Hesap başına toplam değerlendirme sayısının bir üst sınırı vardır ve Değerlendirmelerim sayfasında yazar."
+        "title": "Serbest metin yok, şirket başına bir değerlendirme",
+        "body": "Bir değerlendirme puanlardan ve sabit bir listeden seçilen maddelerden oluşur; kaydedilince yayımlanabilmesinin sebebi budur. Şirket başına bir değerlendirme yazabilirsin; görüşün değişirse mevcut olanı düzenle. Hesap başına toplam değerlendirme sayısında bir üst sınır vardır; Değerlendirmelerim sayfasında gösterilir. 16 Eylül 2026'dan önce yazılan değerlendirmelerde serbest metin vardı; puanları sayılmaya devam ediyor, metinleri artık gösterilmiyor."
       },
       "manage": {
         "title": "Düzenleme ve silme",
-        "body": "Değerlendirmelerim sayfasında her değerlendirmenizin durumunu (inceleme bekliyor, yayında, yayımlanmadı) ve varsa moderatör notunu görürsünüz. Düzenle ile metni ve puanları değiştirebilir, Sil ile tamamen kaldırabilirsiniz; silinen değerlendirme şirketin puanından da düşer."
+        "body": "Değerlendirmelerim sayfası her değerlendirmenin durumunu (yayında, bekliyor, yayımlanmadı) ve varsa moderatör notunu gösterir. Düzenle puanları ve maddeleri değiştirir; Sil tamamen kaldırır, silinen değerlendirme şirketin puanından da düşer."
       },
       "report": {
         "title": "Kuralları çiğneyen bir değerlendirme gördüyseniz",
@@ -2620,7 +2698,7 @@
   "companies": {
     "directory": {
       "title": "Şirket değerlendirmeleri",
-      "subtitle": "Bir yerde çalışmak gerçekte nasıl — orada çalışmış kişilerden, anonim, yayımlanmadan önce bir moderatör tarafından okunmuş.",
+      "subtitle": "Bir yerde çalışmak gerçekte nasıl — orada çalışmış insanlardan; anonim, yapılandırılmış, serbest metin yok.",
       "searchPlaceholder": "Şirket ara…",
       "searchLabel": "Şirket ara",
       "writeCta": "Değerlendirme yaz",
@@ -2629,21 +2707,21 @@
       "tooMany": "Art arda çok fazla arama — biraz bekleyip tekrar dene.",
       "empty": "Henüz yayımlanmış değerlendirmesi olan bir şirket yok.",
       "noMatches": "“{query}” ile eşleşen bir şirket yok.",
-      "beFirst": "İlk yazan sen ol — değerlendirmen bir moderatör okuduktan sonra yayına girer.",
+      "beFirst": "İlk yazan sen ol — kaydettiğin anda yayında.",
       "noScore": "Henüz puan yok",
       "reviewCount": "{count, plural, =1 {1 değerlendirme} other {# değerlendirme}}",
       "explainer": {
         "what": {
-          "title": "Ne içerir",
-          "body": "Genel, yönetim, çalışma ortamı, maaş ve kariyer için beş ayrı puan; artılar ve eksiler; çalışan ilişkisi ve ay."
+          "title": "Bir değerlendirme ne içerir",
+          "body": "Bir genel puan, isteğe bağlı on alan puanı — yönetim, ücret, uzaktan çalışma ve daha fazlası — ve beğenilen ile geliştirilebilir olanlar hakkında birkaç hazır madde."
         },
         "anonymous": {
           "title": "Anonim",
-          "body": "Değerlendirmeler kimin yazdığını asla göstermez. Ad, e-posta ya da gün yok — yalnızca ay ve ilişki."
+          "body": "Değerlendirmelerde yazan hiç görünmez. Ad yok, e-posta yok, gün yok — yalnızca ay ve ilişki."
         },
         "moderated": {
-          "title": "Moderasyonlu",
-          "body": "Her değerlendirme yayına girmeden önce bir moderatör okur; şirket başına bir değerlendirme."
+          "title": "Serbest metin yok",
+          "body": "Her madde, herkese adil olacak şekilde yazılmış sabit bir listeden gelir; okuyucular bildirebilir, moderatör karar verir."
         }
       }
     },
@@ -2652,9 +2730,9 @@
       "metaDescription": "{count, plural, =0 {{company} için henüz yayımlanmış değerlendirme yok — ilk yazan sen ol.} =1 {{company} hakkında 1 anonim çalışan değerlendirmesi ve kontrol edebileceğin bir puan.} other {{company} hakkında # anonim çalışan değerlendirmesi ve kontrol edebileceğin bir puan.}}",
       "breadcrumbLabel": "Gezinti",
       "allCompanies": "← Tüm şirketler",
-      "subtitle": "Burada çalışmış kişilerden anonim değerlendirmeler; bir moderatör okuduktan sonra yayımlanır.",
+      "subtitle": "Burada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler.",
       "website": "Web sitesi ↗",
-      "disclaimer": "Değerlendirmeler anonim yazarlarının kişisel görüşleridir, e-kariyerim'in beyanı değildir. Her değerlendirme yayına girmeden önce bir moderatör tarafından okunur; kuralları çiğneyen bir değerlendirme görürsen “Bu yorumu bildir” ile haber ver, yeniden bakarız."
+      "disclaimer": "Değerlendirmeler anonim yazarlarının kişisel görüşleridir, e-kariyerim'in beyanı değildir. Değerlendirmeler yalnızca puanlardan ve hazır maddelerden oluşur; yine de yanlış görünen bir şey varsa “Bu değerlendirmeyi bildir”i kullan, bir moderatör bakar."
     },
     "summary": {
       "scoreLabel": "5 üzerinden {score} puan",
@@ -2662,7 +2740,12 @@
       "noScoreYet": "Henüz puan yok",
       "noReviewsYet": "Puan, yeterli sayıda yayımlanmış değerlendirme olunca görünür.",
       "untilScore": "{count, plural, =1 {1 yayımlanmış değerlendirme} other {# yayımlanmış değerlendirme}} — puanın görünmesine {remaining, plural, =1 {1 değerlendirme} other {# değerlendirme}} kaldı.",
-      "distributionLabel": "Genel puan dağılımı"
+      "distributionLabel": "Genel puan dağılımı",
+      "votes": "{count, plural, =0 {oy yok} =1 {1 oy} other {# oy}}",
+      "categoriesLabel": "Alan ortalamaları",
+      "topLiked": "En çok beğenilen",
+      "topImprovable": "En çok “geliştirilebilir”",
+      "topCount": "{label} · {count}"
     },
     "reviews": {
       "heading": "{count, plural, =0 {Değerlendirmeler} =1 {1 değerlendirme} other {# değerlendirme}}",
@@ -2672,13 +2755,14 @@
       "yourReview": "Senin değerlendirmen",
       "editYourReview": "Düzenle",
       "rejectedReason": "Yayımlanmadı: {reason}",
-      "cta": "Burada çalıştın mı? Deneyimini paylaş — anonim olarak.",
+      "cta": "Burada çalıştın mı? Puanla — anonim, bir dakikada.",
       "writeReview": "Değerlendirme yaz",
       "signInToWrite": "Değerlendirme yazmak için giriş yap",
       "empty": "Henüz yayımlanmış değerlendirme yok.",
       "actionError": "İşlem tamamlanamadı. Lütfen tekrar dene.",
-      "readingNote": "Her yorum bir kişinin deneyimi, şirket hakkında kesin bir hüküm değil.",
-      "readingGuide": "Bu yorumları nasıl okumalı? →"
+      "readingNote": "Her değerlendirme bir kişinin deneyimidir, şirket hakkında bir hüküm değil.",
+      "readingGuide": "Bu yorumları nasıl okumalı? →",
+      "ownSummary": "Senin puanın: {value} / 5"
     },
     "scoring": {
       "title": "Şirket puanı nasıl hesaplanır",
@@ -2692,84 +2776,99 @@
         "m": "{m} — ön ağırlık: şirket, {m} adet ortalama değerlendirmeyle başlamış gibi ele alınır",
         "example": "Örnek: site ortalaması 3,5 iken üç 5 yıldızlı değerlendirme (3 × 5 + {m} × 3,5) / (3 + {m}) = 4,1 verir, 5,0 değil. Otuz böyle değerlendirmeyle puan 4,8 olur.",
         "threshold": "Bir şirketin en az {minimum} yayımlanmış değerlendirmesi olana kadar puan gösterilmez; sayfa onun yerine sayıyı gösterir.",
-        "categories": "Dört kategori ortalaması (yönetim, çalışma ortamı, maaş ve yan haklar, kariyer ve gelişim) yayımlanmış değerlendirmelerin düz ortalamasıdır ve her zaman değerlendirme sayısının yanında gösterilir.",
-        "defaultsNote": "Canlı yapılandırma şu anda okunamadı; yukarıdaki sayılar belgelenmiş varsayılanlardır."
+        "categories": "Alan ortalamaları (çalışma ortamı, yönetim, kariyer, iş-özel hayat dengesi, ücret, yan haklar, uzaktan çalışma, araçlar, işe alım, onboarding) o alanı puanlayan değerlendirmelerin düz ortalamasıdır ve her biri ancak en az {minimum} değerlendirme o alanı puanlayınca gösterilir — o zamana kadar sayfa oy sayısını gösterir.",
+        "defaultsNote": "Canlı yapılandırma şu anda okunamadı; yukarıdaki sayılar belgelenmiş varsayılanlardır.",
+        "topStatements": "“En çok beğenilen” ve “en çok geliştirilebilir” listeleri her maddenin kaç yayımlanmış değerlendirmede seçildiğini sayar ve ilk üçü gösterir; puanla birlikte görünürler, {minimum} değerlendirmenin altında asla."
       },
       "moderation": {
         "title": "Ne yayımlanır",
-        "preModeration": "Her değerlendirme yayına girmeden önce bir moderatör tarafından okunur. O zamana kadar yalnızca yazarı görür.",
-        "onePerCompany": "Hesap başına şirket başına bir değerlendirme. Düzenlemek onu yeniden moderasyona gönderir.",
-        "editResets": "Düzenlenen bir değerlendirme yeniden onaylanana kadar sayfadan kalkar.",
-        "reports": "Giriş yapmış herkes yayımlanmış bir değerlendirmeyi bildirebilir. Moderatör ya olduğu gibi bırakır, ya yazardan değişiklik ister ya da kaldırır.",
-        "anonymity": "Okuyucular bir değerlendirmeyi kimin yazdığını asla görmez. Moderatörler arkasındaki hesabı görebilir; moderasyonu mümkün kılan budur."
+        "structured": "Bir değerlendirme puanlar ve sabit bir listeden seçilen maddelerdir; yazılacak bir şey yoktur. Kaydedildiği anda yayımlanabilmesinin sebebi budur.",
+        "onePerCompany": "Hesap başına şirket başına bir değerlendirme. Düzenleme yerinde değiştirir.",
+        "editResets": "Moderatörün kaldırdığı bir değerlendirme, yazarı düzenleyince doğrudan yayına dönmez, kuyruğa gider.",
+        "reports": "Giriş yapmış herkes yayımlanmış bir değerlendirmeyi bildirebilir. Sonra bir moderatör onu tutar, yazardan değişiklik ister ya da kaldırır.",
+        "anonymity": "Okuyucular bir değerlendirmeyi kimin yazdığını asla görmez. Moderatörler arkasındaki hesabı görebilir; moderasyonu mümkün kılan budur.",
+        "legacy": "16 Eylül 2026'dan önce yazılan değerlendirmelerde serbest metin vardı. Puanları sayılmaya devam ediyor; metinleri artık gösterilmiyor."
       },
       "guidelines": {
-        "title": "Bir değerlendirme ne içerebilir",
-        "ownExperience": "Kendi deneyimin, kendi sözlerinle.",
-        "noNames": "Çalışma arkadaşı veya yönetici adı yok, kimse hakkında kişisel ayrıntı yok.",
-        "noInsults": "Hakaret, tehdit veya küfür yok.",
-        "noClaims": "Doğrulanamayan iddia yok — duyduğunu değil, gördüğünü anlat.",
-        "noAds": "Reklam, bağlantı veya işe alım ilanı yok."
+        "title": "Bir değerlendirme ne söyleyebilir",
+        "ownExperience": "Kendi deneyimin, puan olarak.",
+        "statements": "Sabit bir listeden en fazla beş beğendiğin ve beş geliştirilebilir madde.",
+        "noFreeText": "Serbest metin, isim, iddia yok: listede yoklar, dolayısıyla bir değerlendirme taşıyamaz.",
+        "reportable": "Her değerlendirme giriş yapmış herhangi bir okuyucu tarafından bildirilebilir."
       },
       "linkLabel": "Puan nasıl hesaplanıyor? →"
     }
   },
   "companyReviews": {
-    "ratings": {
-      "overallRating": "Genel",
-      "managementRating": "Yönetim",
-      "workEnvironmentRating": "Çalışma ortamı",
-      "salaryAndBenefitsRating": "Maaş ve yan haklar",
-      "careerAndDevelopmentRating": "Kariyer ve gelişim"
+    "categories": {
+      "overall": "Genel değerlendirme",
+      "workEnvironment": "Çalışma ortamı",
+      "management": "Yönetim ve iletişim",
+      "careerGrowth": "Kariyer gelişimi",
+      "workLifeBalance": "İş-özel hayat dengesi",
+      "pay": "Ücret",
+      "benefits": "Yan haklar",
+      "remoteWork": "Uzaktan / hibrit çalışma",
+      "tooling": "Teknoloji ve araçlar",
+      "hiring": "İşe alım süreci",
+      "onboarding": "İşe başlangıç"
     },
     "card": {
       "overallLabel": "Genel puan 5 üzerinden {value}",
-      "pros": "Artılar",
-      "cons": "Eksiler",
+      "ratedCategories": "{count, plural, =1 {1 alan puanlandı} other {# alan puanlandı}}",
+      "liked": "Beğenilenler",
+      "improvable": "Geliştirilebilir",
+      "legacyNote": "Önceki serbest metinli biçimde yazıldı. Metni artık gösterilmiyor; puanları şirket puanına katılmaya devam ediyor.",
+      "legacySalaryAndBenefits": "Maaş ve yan haklar",
       "helpful": "{count, plural, =0 {Faydalı} =1 {Faydalı · 1} other {Faydalı · #}}",
-      "report": "Bu yorumu bildir"
+      "report": "Bu değerlendirmeyi bildir"
     },
     "form": {
       "heading": "{company} değerlendirmen",
-      "anonymityNote": "Adın olmadan yayımlanır. Moderatörler hesabını görebilir; okuyucular göremez.",
+      "anonymityNote": "Adın olmadan yayımlanır. Serbest metin yok: her alana puan ver; bir şeyi öne çıkarmak istersen hazır maddelerden seç.",
       "employmentStatus": "Şirketle ilişkin",
       "employmentStatusPlaceholder": "Seç…",
-      "title": "Başlık",
-      "titlePlaceholder": "Tek satırda özetle",
-      "pros": "Artılar",
-      "prosPlaceholder": "Burada çalışmanın gerçekten iyi yanı neydi?",
-      "cons": "Eksiler",
-      "consPlaceholder": "Katılmadan önce bilinmesi gereken ne var?",
-      "moderationNote": "Her değerlendirmeyi yayımlanmadan önce bir moderatör okur. Kişi adı geçen, hakaret içeren, reklam yapan veya doğrulanamayan iddialarda bulunan değerlendirmeler geri gönderilir.",
+      "required": "Zorunlu",
+      "optionalNote": "Aşağıdakiler isteğe bağlı — sana uymayan alanı boş bırak.",
+      "suggestedLiked": "Beğendiklerin?",
+      "suggestedImprovable": "Geliştirilebilir?",
+      "showMore": "{count, plural, =1 {+ 1 madde daha} other {+ # madde daha}}",
+      "showLess": "Kapat",
+      "likedHeading": "Beğendiklerim",
+      "improvableHeading": "Geliştirilebilir",
+      "counters": "Beğendiklerim {liked}/{max} · Geliştirilebilir {improvable}/{max}",
+      "capReached": "Bu listede en fazla sayıya ulaştın. Başka bir madde seçmek için birini kaldır.",
+      "publishNote": "Maddeler isteğe bağlı. Değerlendirmen kaydettiğin anda yayımlanır; okuyucular bildirebilir.",
       "submitting": "Gönderiliyor…",
       "starLabel": "{count, plural, =1 {1 yıldız} other {# yıldız}}",
-      "ratingValue": "{value} / 5",
+      "ratingValue": "{value} / 5 · {scale}",
       "ratingNone": "Puanlanmadı",
+      "clearRating": "Temizle",
+      "scale": {
+        "1": "Çok olumsuz",
+        "2": "Olumsuz",
+        "3": "Geliştirilebilir",
+        "4": "Olumlu",
+        "5": "Çok olumlu"
+      },
       "problems": {
         "employmentStatusRequired": "Şirketle ilişkini seç.",
-        "titleRequired": "Bir başlık ekle.",
-        "titleTooShort": "Başlık en az 3 karakter olmalı.",
-        "titleTooLong": "Başlık en fazla 120 karakter olabilir.",
-        "prosRequired": "Artıları yaz.",
-        "prosTooShort": "En az 20 karakter yaz.",
-        "prosTooLong": "En fazla 2000 karakter.",
-        "consRequired": "Eksileri yaz.",
-        "consTooShort": "En az 20 karakter yaz.",
-        "consTooLong": "En fazla 2000 karakter.",
-        "ratingRequired": "1 ile 5 arasında bir puan ver."
+        "overallRequired": "1 ile 5 arasında bir genel puan ver.",
+        "ratingInvalid": "Puan 1 ile 5 arasında olmalı.",
+        "tooManyLiked": "En fazla beş “beğendim” maddesi.",
+        "tooManyImprovable": "En fazla beş “geliştirilebilir” maddesi.",
+        "unknownStatement": "Maddelerden biri listede yok. Sayfayı yenileyip tekrar dene."
       }
     },
     "guidelines": {
-      "title": "Adil bir değerlendirme yazmak",
-      "intro": "En faydalı değerlendirmeler somut, dürüst ve senin hakkında olanlardır.",
-      "ownExperience": "Yalnızca kendi yaşadıklarını anlat.",
-      "specific": "Ne hissettiğini değil, ne olduğunu yaz.",
-      "noNames": "Çalışma arkadaşı veya yönetici adı verme, kimsenin kişisel bilgisini paylaşma.",
-      "noInsults": "Hakaret, tehdit veya küfür yok — bunlar değerlendirmeyi yayımlatmaz, geri gönderir.",
-      "balanced": "Hem artı hem eksi: yalnızca birini yazan değerlendirme kimseye yardımcı olmaz.",
-      "noAds": "Bağlantı, reklam veya işe alım ilanı yok.",
-      "moderation": "Her değerlendirmeyi yayına girmeden önce bir moderatör okur. Durumunu Değerlendirmelerim'de görürsün.",
-      "fullGuide": "Örneklerle tam rehber →"
+      "title": "Değerlendirme burada nasıl işler",
+      "intro": "Yazacak bir şey yok. Puan verirsin ve herkese adil olacak şekilde yazılmış maddelerden seçersin.",
+      "ownExperience": "Duyduğunu değil, kendi yaşadığını puanla.",
+      "optional": "Yalnızca genel puan zorunlu. Yargılayamadığın alanı atla.",
+      "statements": "En fazla beş beğendiğin, beş geliştirilebilir madde seç — alan başına değil, değerlendirmenin tamamı için.",
+      "noFreeText": "Serbest metin bilerek yok: her değerlendirmenin şirket adının arkasındaki insanlara adil kalmasını sağlar.",
+      "instant": "Değerlendirmen kaydettiğin anda yayımlanır. Okuyucular bildirebilir; sonra bir moderatör karar verir.",
+      "fullGuide": "Tam rehber →"
     },
     "report": {
       "title": "Bu yorumu bildir",
@@ -2788,7 +2887,7 @@
     },
     "mine": {
       "title": "Değerlendirmelerim",
-      "subtitle": "Yazdıkların ve her birinin durumu.",
+      "subtitle": "Değerlendirmelerin ve her birinin durumu.",
       "quota": "{limit} haktan {used} kullanıldı",
       "write": "Değerlendirme yaz",
       "loading": "Yükleniyor…",
@@ -2796,19 +2895,22 @@
       "empty": "Henüz bir değerlendirme yazmadın.",
       "browse": "Şirketlere göz at →",
       "rejectedTitle": "Yayımlanmadı:",
-      "rejectedHint": "Nota göre düzenlersen yeniden incelenir.",
-      "pendingHint": "Moderatör bekleniyor. O zamana kadar yalnızca sen görebilirsin.",
+      "rejectedHint": "Düzenlersen bir moderatör yeniden bakar.",
+      "pendingHint": "Moderatör bekliyor. O zamana kadar yalnızca sen görürsün.",
       "edit": "Düzenle",
       "delete": "Sil",
       "deleteTitle": "Bu değerlendirme silinsin mi?",
       "deleteBody": "Değerlendirme kalıcı olarak silinir ve kotandaki yeri boşalır.",
       "cancel": "Vazgeç",
       "confirmDelete": "Sil",
-      "rejectedGuideLink": "Neyin geçip neyin geçmediği: rehber →"
+      "rejectedGuideLink": "Neyin geçip neyin geçmediği: rehber →",
+      "legacyTag": "Önceki biçim",
+      "legacyEditHint": "Değerlendirmeler yapılandırılmadan önce yazıldı. Metni artık okuyuculara gösterilmiyor; yeni biçime taşımak için düzenle.",
+      "structuredSummary": "{count, plural, =0 {Madde seçilmedi} =1 {1 madde} other {# madde}}"
     },
     "write": {
       "title": "Değerlendirme yaz",
-      "subtitle": "Okuyucular için anonim; yayımlanmadan önce bir moderatör okur.",
+      "subtitle": "Okuyucular için anonim, kaydettiğin anda yayında.",
       "loadingCompany": "Şirket yükleniyor…",
       "companyNotFound": "Bu şirket sayfası bulunamadı — şirketi aşağıdan seç.",
       "companyLabel": "Şirket",
@@ -2820,22 +2922,915 @@
       "resolving": "Bir saniye…",
       "reviewing": "Değerlendirilen:",
       "changeCompany": "değiştir",
-      "submit": "İncelemeye gönder",
+      "submit": "Değerlendirmeyi yayımla",
       "error": "İşlem tamamlanamadı. Lütfen tekrar dene."
     },
     "edit": {
       "title": "Değerlendirmeni düzenle",
-      "subtitle": "Kaydetmek onu yeniden moderasyona gönderir; yeniden onaylanana kadar şirket sayfasından kalkar.",
+      "subtitle": "Değişiklikler kaydettiğin anda yayımlanır.",
       "loading": "Yükleniyor…",
       "notFound": "Bu değerlendirme sana ait değil ya da artık yok.",
       "backToMine": "Değerlendirmelerime dön",
-      "submit": "Kaydet ve yeniden gönder",
-      "error": "İşlem tamamlanamadı. Lütfen tekrar dene."
+      "submit": "Kaydet",
+      "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
+      "legacyBanner": "Bu değerlendirme önceki serbest metinli biçimde yazıldı. Kaydetmek onu yeni biçime taşır: puanların aynen geçer, eski metin senin için saklanır ama artık kimseye gösterilmez."
+    },
+    "statements": {
+      "general": {
+        "pos": {
+          "positive_experience": {
+            "label": "Genel deneyim olumlu",
+            "sentence": "Genel olarak çalışma deneyimimi olumlu buluyorum."
+          },
+          "satisfied_working_here": {
+            "label": "Çalışmaktan memnunum",
+            "sentence": "Şirkette çalışmaktan genel olarak memnunum."
+          },
+          "positive_environment": {
+            "label": "Çalışma ortamı olumlu",
+            "sentence": "Şirketi çalışma ortamı açısından olumlu değerlendiriyorum."
+          },
+          "positive_employee_experience": {
+            "label": "Çalışan deneyimi olumlu",
+            "sentence": "Şirketin çalışan deneyimini olumlu buluyorum."
+          },
+          "growth_opportunities": {
+            "label": "Gelişim fırsatları var",
+            "sentence": "Şirketin profesyonel gelişim açısından olumlu fırsatlar sunduğunu düşünüyorum."
+          }
+        },
+        "imp": {
+          "some_working_conditions": {
+            "label": "Bazı çalışma koşulları",
+            "sentence": "Genel olarak bazı çalışma koşullarının geliştirilmesini isterim."
+          },
+          "employee_experience": {
+            "label": "Çalışan deneyimi",
+            "sentence": "Çalışan deneyiminin geliştirilmesi gerektiğini düşünüyorum."
+          },
+          "internal_processes": {
+            "label": "Şirket içi süreçler",
+            "sentence": "Bazı şirket içi süreçlerin geliştirilmesini isterim."
+          },
+          "work_environment": {
+            "label": "Çalışma ortamı",
+            "sentence": "Çalışma ortamında iyileştirme yapılabilecek alanlar olduğunu düşünüyorum."
+          },
+          "room_to_improve": {
+            "label": "Geliştirilebilir alanlar var",
+            "sentence": "Şirketin çalışan deneyimini geliştirebileceği alanlar olduğunu düşünüyorum."
+          }
+        }
+      },
+      "environment": {
+        "pos": {
+          "positive_environment": {
+            "label": "Ortam olumlu",
+            "sentence": "Çalışma ortamını olumlu buluyorum."
+          },
+          "suitable_for_employees": {
+            "label": "Çalışana uygun ortam",
+            "sentence": "Çalışma ortamının çalışanlar için uygun olduğunu düşünüyorum."
+          },
+          "team_collaboration": {
+            "label": "Ekip içi iş birliği",
+            "sentence": "Ekip içinde iş birliğinin iyi olduğunu düşünüyorum."
+          },
+          "team_communication": {
+            "label": "Ekip içi iletişim",
+            "sentence": "Ekip arkadaşları arasındaki iletişimi olumlu buluyorum."
+          },
+          "mutual_support": {
+            "label": "Yardımlaşma",
+            "sentence": "Çalışanlar arasında yardımlaşmanın iyi olduğunu düşünüyorum."
+          },
+          "teamwork_encouraged": {
+            "label": "Ekip çalışması destekleniyor",
+            "sentence": "Ekip çalışmasını destekleyen bir ortam olduğunu düşünüyorum."
+          },
+          "motivating": {
+            "label": "Motivasyon",
+            "sentence": "Çalışma ortamının motivasyon açısından olumlu olduğunu düşünüyorum."
+          },
+          "easy_to_communicate": {
+            "label": "İletişim kurmak kolay",
+            "sentence": "İş arkadaşlarımla iletişim kurmayı kolay buluyorum."
+          },
+          "cross_team_collaboration": {
+            "label": "Ekipler arası iş birliği",
+            "sentence": "Farklı ekiplerle iş birliği yapmanın kolay olduğunu düşünüyorum."
+          },
+          "general_communication": {
+            "label": "Genel iletişim",
+            "sentence": "Çalışma ortamındaki genel iletişimi olumlu buluyorum."
+          }
+        },
+        "imp": {
+          "work_environment": {
+            "label": "Çalışma ortamı",
+            "sentence": "Çalışma ortamının geliştirilmesini isterim."
+          },
+          "team_communication": {
+            "label": "Ekip içi iletişim",
+            "sentence": "Ekip içi iletişimin geliştirilebileceğini düşünüyorum."
+          },
+          "cross_team_communication": {
+            "label": "Ekipler arası iletişim",
+            "sentence": "Ekipler arasındaki iletişim geliştirilebilir."
+          },
+          "collaboration_processes": {
+            "label": "İş birliği süreçleri",
+            "sentence": "İş birliği süreçleri geliştirilebilir."
+          },
+          "knowledge_sharing": {
+            "label": "Bilgi paylaşımı",
+            "sentence": "Ekip içindeki bilgi paylaşımı artırılabilir."
+          },
+          "employee_communication": {
+            "label": "Çalışanlar arası iletişim",
+            "sentence": "Çalışanlar arasındaki iletişim daha iyi hale getirilebilir."
+          },
+          "employee_experience": {
+            "label": "Çalışan deneyimi",
+            "sentence": "Çalışma ortamının çalışan deneyimi açısından geliştirilmesini isterim."
+          },
+          "teamwork_practices": {
+            "label": "Ekip çalışması uygulamaları",
+            "sentence": "Ekip çalışmasını destekleyen uygulamalar artırılabilir."
+          },
+          "cross_team_coordination": {
+            "label": "Ekipler arası koordinasyon",
+            "sentence": "Farklı ekipler arasındaki koordinasyon geliştirilebilir."
+          },
+          "communication_processes": {
+            "label": "İletişim süreçleri",
+            "sentence": "Çalışma ortamındaki iletişim süreçleri geliştirilebilir."
+          }
+        }
+      },
+      "management": {
+        "pos": {
+          "communication_with_management": {
+            "label": "Yönetimle iletişim",
+            "sentence": "Yönetimle iletişimi olumlu buluyorum."
+          },
+          "managers_accessible": {
+            "label": "Yöneticilere ulaşmak kolay",
+            "sentence": "Yöneticilerle iletişim kurmanın kolay olduğunu düşünüyorum."
+          },
+          "opinions_considered": {
+            "label": "Görüşler dikkate alınıyor",
+            "sentence": "Çalışan görüşlerinin dikkate alındığını düşünüyorum."
+          },
+          "feedback_culture": {
+            "label": "Geri bildirim kültürü",
+            "sentence": "Geri bildirim kültürünü olumlu buluyorum."
+          },
+          "manager_employee_communication": {
+            "label": "Yönetici–çalışan iletişimi",
+            "sentence": "Yöneticilerin çalışanlarla iletişimini olumlu buluyorum."
+          },
+          "informed_about_decisions": {
+            "label": "Kararlar hakkında bilgi",
+            "sentence": "Karar süreçleri hakkında yeterli bilgi verildiğini düşünüyorum."
+          },
+          "clear_expectations": {
+            "label": "Beklentiler açık",
+            "sentence": "Beklentilerin çalışanlara genel olarak açık şekilde aktarıldığını düşünüyorum."
+          },
+          "management_employee_communication": {
+            "label": "Yönetim–çalışan iletişimi",
+            "sentence": "Yönetim ve çalışanlar arasındaki iletişimi olumlu buluyorum."
+          },
+          "feedback_easy": {
+            "label": "Geri bildirim almak kolay",
+            "sentence": "Geri bildirim almayı ve vermeyi kolay buluyorum."
+          },
+          "management_approach": {
+            "label": "Yönetim yaklaşımı",
+            "sentence": "Yönetim yaklaşımını olumlu buluyorum."
+          }
+        },
+        "imp": {
+          "management_employee_communication": {
+            "label": "Yönetim–çalışan iletişimi",
+            "sentence": "Yönetim ve çalışan iletişimi geliştirilebilir."
+          },
+          "consideration_of_opinions": {
+            "label": "Görüşlerin değerlendirilmesi",
+            "sentence": "Çalışan görüşlerinin değerlendirilmesi geliştirilebilir."
+          },
+          "feedback_processes": {
+            "label": "Geri bildirim süreçleri",
+            "sentence": "Geri bildirim süreçleri geliştirilebilir."
+          },
+          "managers_communication": {
+            "label": "Yöneticilerin iletişimi",
+            "sentence": "Yönetimin çalışanlarla iletişimi geliştirilebilir."
+          },
+          "information_about_decisions": {
+            "label": "Kararlar hakkında bilgi",
+            "sentence": "Karar süreçleri hakkında daha fazla bilgi paylaşılabilir."
+          },
+          "clarity_of_expectations": {
+            "label": "Beklentilerin netliği",
+            "sentence": "Çalışan beklentilerinin daha açık şekilde ele alınabileceğini düşünüyorum."
+          },
+          "access_to_managers": {
+            "label": "Yöneticiye ulaşım",
+            "sentence": "Yöneticilerle iletişim süreçleri geliştirilebilir."
+          },
+          "handling_of_feedback": {
+            "label": "Geri bildirimlerin değerlendirilmesi",
+            "sentence": "Çalışanlardan alınan geri bildirimlerin değerlendirilmesi geliştirilebilir."
+          },
+          "management_team_communication": {
+            "label": "Yönetim–ekip iletişimi",
+            "sentence": "Yönetim ve ekipler arasındaki iletişim artırılabilir."
+          },
+          "internal_communication": {
+            "label": "Şirket içi iletişim",
+            "sentence": "Şirket içi iletişim süreçlerinin geliştirilmesini isterim."
+          }
+        }
+      },
+      "career": {
+        "pos": {
+          "career_opportunities": {
+            "label": "Kariyer fırsatları",
+            "sentence": "Kariyer gelişimi açısından olumlu fırsatlar olduğunu düşünüyorum."
+          },
+          "career_growth_supported": {
+            "label": "Kariyer gelişimi destekleniyor",
+            "sentence": "Kariyer gelişiminin desteklendiğini düşünüyorum."
+          },
+          "promotion_process": {
+            "label": "Terfi süreçleri",
+            "sentence": "Terfi süreçlerini olumlu buluyorum."
+          },
+          "development_valued": {
+            "label": "Gelişime önem veriliyor",
+            "sentence": "Çalışanların gelişimine önem verildiğini düşünüyorum."
+          },
+          "new_responsibilities": {
+            "label": "Yeni sorumluluk fırsatı",
+            "sentence": "Yeni sorumluluklar alma fırsatlarının olduğunu düşünüyorum."
+          },
+          "career_goals_supported": {
+            "label": "Kariyer hedefleri destekleniyor",
+            "sentence": "Kariyer hedeflerimi destekleyen bir ortam olduğunu düşünüyorum."
+          },
+          "skill_development": {
+            "label": "Yetenek geliştirme",
+            "sentence": "Yeteneklerimi geliştirmek için fırsatlar bulabiliyorum."
+          },
+          "career_guidance": {
+            "label": "Kariyer yönlendirmesi",
+            "sentence": "Kariyer konusunda yönlendirme alabiliyorum."
+          },
+          "internal_career_paths": {
+            "label": "Şirket içi kariyer fırsatları",
+            "sentence": "Şirket içinde farklı kariyer fırsatlarının olduğunu düşünüyorum."
+          },
+          "professional_development": {
+            "label": "Profesyonel gelişim",
+            "sentence": "Profesyonel gelişimimi destekleyen bir çalışma ortamı olduğunu düşünüyorum."
+          },
+          "training_opportunities": {
+            "label": "Eğitim imkanları",
+            "sentence": "Eğitim imkanlarını olumlu buluyorum."
+          },
+          "learning_supported": {
+            "label": "Öğrenme destekleniyor",
+            "sentence": "Öğrenme ve gelişim destekleniyor."
+          },
+          "technical_growth": {
+            "label": "Teknik gelişim",
+            "sentence": "Teknik gelişim için fırsatlar sunuluyor."
+          },
+          "new_skills": {
+            "label": "Yeni beceriler",
+            "sentence": "Yeni beceriler kazanma fırsatı buluyorum."
+          },
+          "training_resources": {
+            "label": "Eğitim kaynakları yeterli",
+            "sentence": "Eğitim kaynaklarının yeterli olduğunu düşünüyorum."
+          },
+          "self_development": {
+            "label": "Kendini geliştirme",
+            "sentence": "Çalışanların kendilerini geliştirmeleri destekleniyor."
+          },
+          "learning_culture": {
+            "label": "Öğrenme kültürü",
+            "sentence": "Öğrenme kültürünü olumlu buluyorum."
+          },
+          "training_programs": {
+            "label": "Eğitim programları",
+            "sentence": "Eğitim programlarını faydalı buluyorum."
+          },
+          "vocational_development": {
+            "label": "Mesleki gelişim",
+            "sentence": "Mesleki gelişim için fırsatlar sunuluyor."
+          },
+          "new_technologies": {
+            "label": "Yeni teknolojiler",
+            "sentence": "Yeni teknolojileri öğrenmek için imkanlar bulunuyor."
+          }
+        },
+        "imp": {
+          "career_opportunities": {
+            "label": "Kariyer fırsatları",
+            "sentence": "Kariyer gelişimi konusunda daha fazla fırsat sunulabilir."
+          },
+          "promotion_transparency": {
+            "label": "Terfi süreçlerinin açıklığı",
+            "sentence": "Terfi süreçleri daha açık hale getirilebilir."
+          },
+          "career_paths": {
+            "label": "Kariyer yolları",
+            "sentence": "Kariyer yollarının daha net tanımlanmasını isterim."
+          },
+          "development_opportunities": {
+            "label": "Gelişim fırsatları",
+            "sentence": "Çalışan gelişimine yönelik fırsatlar artırılabilir."
+          },
+          "new_responsibilities": {
+            "label": "Yeni sorumluluk fırsatı",
+            "sentence": "Yeni sorumluluk alma fırsatları artırılabilir."
+          },
+          "career_goal_support": {
+            "label": "Kariyer hedefi desteği",
+            "sentence": "Kariyer hedefleri konusunda daha fazla destek sağlanabilir."
+          },
+          "professional_development": {
+            "label": "Profesyonel gelişim",
+            "sentence": "Profesyonel gelişim imkanları artırılabilir."
+          },
+          "visibility_of_opportunities": {
+            "label": "Fırsatların duyurulması",
+            "sentence": "Şirket içindeki kariyer fırsatları daha açık şekilde paylaşılabilir."
+          },
+          "promotion_criteria": {
+            "label": "Terfi kriterleri",
+            "sentence": "Terfi kriterleri daha net hale getirilebilir."
+          },
+          "development_programs": {
+            "label": "Gelişim programları",
+            "sentence": "Çalışanların gelişimini destekleyen programlar artırılabilir."
+          },
+          "training_opportunities": {
+            "label": "Eğitim imkanları",
+            "sentence": "Eğitim imkanları artırılabilir."
+          },
+          "technical_training": {
+            "label": "Teknik eğitim",
+            "sentence": "Teknik eğitim imkanları geliştirilebilir."
+          },
+          "vocational_programs": {
+            "label": "Mesleki gelişim programları",
+            "sentence": "Mesleki gelişim programları artırılabilir."
+          },
+          "training_budget": {
+            "label": "Eğitim bütçesi",
+            "sentence": "Eğitim bütçesi veya kaynakları geliştirilebilir."
+          },
+          "skill_programs": {
+            "label": "Beceri programları",
+            "sentence": "Yeni beceriler kazanmayı destekleyen programlar artırılabilir."
+          },
+          "training_variety": {
+            "label": "Eğitim içeriği çeşitliliği",
+            "sentence": "Eğitim içerikleri çeşitlendirilebilir."
+          },
+          "learning_support": {
+            "label": "Öğrenme desteği",
+            "sentence": "Öğrenme ve gelişim konusunda daha fazla destek sağlanabilir."
+          },
+          "technical_growth_opportunities": {
+            "label": "Teknik gelişim fırsatları",
+            "sentence": "Teknik gelişim için daha fazla fırsat sunulabilir."
+          },
+          "training_scope": {
+            "label": "Eğitim kapsamı",
+            "sentence": "Eğitim programlarının kapsamı genişletilebilir."
+          },
+          "development_resources": {
+            "label": "Gelişim kaynakları",
+            "sentence": "Çalışanların gelişimine yönelik kaynaklar artırılabilir."
+          }
+        }
+      },
+      "balance": {
+        "pos": {
+          "balanced_workload": {
+            "label": "İş yükü dengeli",
+            "sentence": "İş yükünün dengeli olduğunu düşünüyorum."
+          },
+          "working_hours": {
+            "label": "Çalışma saatleri",
+            "sentence": "Çalışma saatlerini olumlu buluyorum."
+          },
+          "predictable_hours": {
+            "label": "Öngörülebilir saatler",
+            "sentence": "Çalışma saatlerinin öngörülebilir olduğunu düşünüyorum."
+          },
+          "organized_planning": {
+            "label": "Düzenli iş planlaması",
+            "sentence": "İş planlamasının düzenli olduğunu düşünüyorum."
+          },
+          "fair_task_distribution": {
+            "label": "Dengeli görev dağılımı",
+            "sentence": "Görev dağılımını dengeli buluyorum."
+          },
+          "work_pace": {
+            "label": "Çalışma temposu",
+            "sentence": "Çalışma temposunu uygun buluyorum."
+          },
+          "work_life_balance": {
+            "label": "İş-özel hayat dengesi",
+            "sentence": "İş ve özel hayat arasında yeterli denge olduğunu düşünüyorum."
+          },
+          "low_overtime": {
+            "label": "Düşük fazla mesai",
+            "sentence": "Fazla mesai gereksiniminin düşük olduğunu düşünüyorum."
+          },
+          "planned_progress": {
+            "label": "Planlı ilerleme",
+            "sentence": "İşlerin planlı şekilde ilerlediğini düşünüyorum."
+          },
+          "work_arrangement": {
+            "label": "Çalışma düzeni",
+            "sentence": "Çalışma düzenini olumlu buluyorum."
+          }
+        },
+        "imp": {
+          "workload_distribution": {
+            "label": "İş yükü dağılımı",
+            "sentence": "İş yükü dağılımının daha dengeli olabileceğini düşünüyorum."
+          },
+          "predictability_of_hours": {
+            "label": "Saatlerin öngörülebilirliği",
+            "sentence": "Çalışma saatleri daha öngörülebilir hale getirilebilir."
+          },
+          "work_planning": {
+            "label": "İş planlaması",
+            "sentence": "İş planlaması geliştirilebilir."
+          },
+          "task_distribution": {
+            "label": "Görev dağılımı",
+            "sentence": "Görev dağılımı daha dengeli yapılabilir."
+          },
+          "work_life_balance": {
+            "label": "İş-özel hayat dengesi",
+            "sentence": "İş ve özel hayat dengesinin geliştirilmesini isterim."
+          },
+          "work_pace": {
+            "label": "Çalışma temposu",
+            "sentence": "Çalışma temposunun daha dengeli olması faydalı olabilir."
+          },
+          "overtime": {
+            "label": "Fazla mesai",
+            "sentence": "Fazla mesai gereksinimi azaltılabilir."
+          },
+          "cross_team_workload": {
+            "label": "Ekipler arası iş yükü",
+            "sentence": "İş yükünün ekipler arasında daha dengeli dağıtılabileceğini düşünüyorum."
+          },
+          "prioritisation": {
+            "label": "Önceliklendirme",
+            "sentence": "Önceliklendirme süreçleri geliştirilebilir."
+          },
+          "work_arrangement": {
+            "label": "Çalışma düzeni",
+            "sentence": "Çalışma düzeninin çalışan deneyimi açısından geliştirilmesini isterim."
+          }
+        }
+      },
+      "pay": {
+        "pos": {
+          "salary_level": {
+            "label": "Ücret seviyesi",
+            "sentence": "Ücret seviyesini olumlu buluyorum."
+          },
+          "pay_policy": {
+            "label": "Ücret politikası",
+            "sentence": "Ücret politikasını olumlu buluyorum."
+          },
+          "matches_responsibilities": {
+            "label": "Görevle uyumlu ücret",
+            "sentence": "Aldığım ücretin görevlerimle uyumlu olduğunu düşünüyorum."
+          },
+          "matches_market": {
+            "label": "Piyasayla uyumlu",
+            "sentence": "Ücretin piyasa koşullarıyla uyumlu olduğunu düşünüyorum."
+          },
+          "raise_process": {
+            "label": "Ücret artışları",
+            "sentence": "Ücret artış süreçlerini olumlu buluyorum."
+          },
+          "performance_link": {
+            "label": "Performans–ücret ilişkisi",
+            "sentence": "Performans ve ücret ilişkisinin uygun olduğunu düşünüyorum."
+          },
+          "adequate_for_employees": {
+            "label": "Çalışan için yeterli",
+            "sentence": "Ücret politikasını çalışanlar açısından yeterli buluyorum."
+          },
+          "total_compensation": {
+            "label": "Toplam kazanç paketi",
+            "sentence": "Toplam kazanç paketini olumlu buluyorum."
+          }
+        },
+        "imp": {
+          "salary_level": {
+            "label": "Ücret seviyesi",
+            "sentence": "Ücret seviyesinin geliştirilmesini isterim."
+          },
+          "pay_policy": {
+            "label": "Ücret politikası",
+            "sentence": "Ücret politikasının geliştirilmesini isterim."
+          },
+          "alignment_with_responsibilities": {
+            "label": "Görevle uyum",
+            "sentence": "Aldığım ücretin görevlerimle daha uyumlu hale getirilebileceğini düşünüyorum."
+          },
+          "alignment_with_market": {
+            "label": "Piyasayla uyum",
+            "sentence": "Ücretlerin piyasa koşullarıyla daha uyumlu hale getirilebileceğini düşünüyorum."
+          },
+          "raise_process": {
+            "label": "Ücret artışları",
+            "sentence": "Ücret artış süreçleri geliştirilebilir."
+          },
+          "performance_link": {
+            "label": "Performans–ücret ilişkisi",
+            "sentence": "Performans ve ücret arasındaki ilişkinin geliştirilmesini isterim."
+          },
+          "alignment_with_expectations": {
+            "label": "Beklentilere uyum",
+            "sentence": "Ücret politikasının çalışan beklentilerine daha uygun hale getirilebileceğini düşünüyorum."
+          },
+          "total_compensation": {
+            "label": "Toplam kazanç paketi",
+            "sentence": "Toplam kazanç paketinin geliştirilmesini isterim."
+          }
+        }
+      },
+      "benefits": {
+        "pos": {
+          "benefits": {
+            "label": "Yan haklar",
+            "sentence": "Yan hakları olumlu buluyorum."
+          },
+          "health": {
+            "label": "Sağlık imkanları",
+            "sentence": "Sağlık imkanlarını olumlu buluyorum."
+          },
+          "meals": {
+            "label": "Yemek",
+            "sentence": "Yemek imkanlarını olumlu buluyorum."
+          },
+          "transport": {
+            "label": "Ulaşım",
+            "sentence": "Ulaşım imkanlarını olumlu buluyorum."
+          },
+          "leave": {
+            "label": "İzin imkanları",
+            "sentence": "İzin imkanlarını olumlu buluyorum."
+          },
+          "package_sufficient": {
+            "label": "Yan hak paketi yeterli",
+            "sentence": "Yan hak paketini yeterli buluyorum."
+          },
+          "social_benefits": {
+            "label": "Sosyal imkanlar",
+            "sentence": "Çalışanlara sunulan sosyal imkanları olumlu buluyorum."
+          },
+          "meets_needs": {
+            "label": "İhtiyaçları karşılıyor",
+            "sentence": "Yan hakların çalışan ihtiyaçlarını karşıladığını düşünüyorum."
+          }
+        },
+        "imp": {
+          "benefits": {
+            "label": "Yan haklar",
+            "sentence": "Yan hakların geliştirilmesini isterim."
+          },
+          "health": {
+            "label": "Sağlık imkanları",
+            "sentence": "Sağlık imkanları geliştirilebilir."
+          },
+          "meals": {
+            "label": "Yemek",
+            "sentence": "Yemek imkanları geliştirilebilir."
+          },
+          "transport": {
+            "label": "Ulaşım",
+            "sentence": "Ulaşım imkanları geliştirilebilir."
+          },
+          "leave": {
+            "label": "İzin imkanları",
+            "sentence": "İzin imkanları geliştirilebilir."
+          },
+          "package_scope": {
+            "label": "Paket kapsamı",
+            "sentence": "Yan hak paketinin kapsamı genişletilebilir."
+          },
+          "social_benefits": {
+            "label": "Sosyal imkanlar",
+            "sentence": "Sosyal imkanlar artırılabilir."
+          },
+          "variety": {
+            "label": "Çeşitlilik",
+            "sentence": "Çalışanlara sunulan yan haklar çeşitlendirilebilir."
+          }
+        }
+      },
+      "remote": {
+        "pos": {
+          "remote_work": {
+            "label": "Uzaktan çalışma",
+            "sentence": "Uzaktan çalışma imkanlarını olumlu buluyorum."
+          },
+          "hybrid_model": {
+            "label": "Hibrit model",
+            "sentence": "Hibrit çalışma modelini olumlu buluyorum."
+          },
+          "flexible_model": {
+            "label": "Esnek çalışma modeli",
+            "sentence": "Çalışma modelinin esnek olduğunu düşünüyorum."
+          },
+          "location_flexibility": {
+            "label": "Çalışma yeri esnekliği",
+            "sentence": "Çalışma yeri konusunda yeterli esneklik olduğunu düşünüyorum."
+          },
+          "remote_setup": {
+            "label": "Uzaktan çalışma imkanları",
+            "sentence": "Uzaktan çalışma için gerekli imkanların sağlandığını düşünüyorum."
+          },
+          "flexible_hours": {
+            "label": "Esnek saatler",
+            "sentence": "Esnek çalışma saatlerini olumlu buluyorum."
+          },
+          "remote_teamwork": {
+            "label": "Uzaktan ekip çalışması",
+            "sentence": "Uzaktan ekip çalışmasının başarılı olduğunu düşünüyorum."
+          },
+          "digital_tools": {
+            "label": "Dijital araçlar",
+            "sentence": "Dijital çalışma araçlarının yeterli olduğunu düşünüyorum."
+          },
+          "fits_needs": {
+            "label": "İhtiyaca uygun model",
+            "sentence": "Çalışma modelinin çalışan ihtiyaçlarına uygun olduğunu düşünüyorum."
+          },
+          "flexibility": {
+            "label": "Düzendeki esneklik",
+            "sentence": "Çalışma düzenindeki esnekliği olumlu buluyorum."
+          }
+        },
+        "imp": {
+          "remote_work": {
+            "label": "Uzaktan çalışma",
+            "sentence": "Uzaktan çalışma imkanları artırılabilir."
+          },
+          "hybrid_options": {
+            "label": "Hibrit imkanlar",
+            "sentence": "Hibrit çalışma imkanları geliştirilebilir."
+          },
+          "model_flexibility": {
+            "label": "Model esnekliği",
+            "sentence": "Çalışma modelinde daha fazla esneklik sağlanabilir."
+          },
+          "hours_flexibility": {
+            "label": "Saat esnekliği",
+            "sentence": "Çalışma saatlerinde daha fazla esneklik sağlanabilir."
+          },
+          "remote_setup": {
+            "label": "Uzaktan çalışma imkanları",
+            "sentence": "Uzaktan çalışma için sunulan imkanlar geliştirilebilir."
+          },
+          "digital_tools": {
+            "label": "Dijital araçlar",
+            "sentence": "Dijital çalışma araçları geliştirilebilir."
+          },
+          "remote_team_processes": {
+            "label": "Uzaktan ekip süreçleri",
+            "sentence": "Uzaktan ekip çalışmasına yönelik süreçler geliştirilebilir."
+          },
+          "fit_to_needs": {
+            "label": "İhtiyaca uygunluk",
+            "sentence": "Çalışma modeli çalışan ihtiyaçlarına daha uygun hale getirilebilir."
+          },
+          "flexible_work": {
+            "label": "Esnek çalışma",
+            "sentence": "Esnek çalışma imkanlarının artırılmasını isterim."
+          },
+          "remote_processes": {
+            "label": "Uzaktan çalışma süreçleri",
+            "sentence": "Uzaktan çalışma süreçlerinin geliştirilmesini isterim."
+          }
+        }
+      },
+      "tooling": {
+        "pos": {
+          "technologies": {
+            "label": "Kullanılan teknolojiler",
+            "sentence": "Kullanılan teknolojileri olumlu buluyorum."
+          },
+          "infrastructure": {
+            "label": "Teknik altyapı",
+            "sentence": "Teknik altyapının yeterli olduğunu düşünüyorum."
+          },
+          "tools": {
+            "label": "Çalışma araçları",
+            "sentence": "Çalışma araçlarını yeterli buluyorum."
+          },
+          "keeps_up": {
+            "label": "Teknoloji takibi",
+            "sentence": "Teknolojik gelişmelerin takip edildiğini düşünüyorum."
+          },
+          "tools_provided": {
+            "label": "Teknik araçlar sağlanıyor",
+            "sentence": "Çalışanlara gerekli teknik araçların sağlandığını düşünüyorum."
+          },
+          "development_process": {
+            "label": "Geliştirme süreçleri",
+            "sentence": "Yazılım geliştirme süreçlerini olumlu buluyorum."
+          },
+          "technical_team_conditions": {
+            "label": "Teknik ekip imkanları",
+            "sentence": "Teknik ekiplerin çalışma imkanlarını olumlu buluyorum."
+          },
+          "technical_growth_environment": {
+            "label": "Teknik gelişim ortamı",
+            "sentence": "Teknik gelişim için uygun bir ortam olduğunu düşünüyorum."
+          }
+        },
+        "imp": {
+          "infrastructure": {
+            "label": "Teknik altyapı",
+            "sentence": "Teknik altyapı geliştirilebilir."
+          },
+          "tools": {
+            "label": "Çalışma araçları",
+            "sentence": "Çalışma araçları geliştirilebilir."
+          },
+          "technology_currency": {
+            "label": "Teknoloji güncelliği",
+            "sentence": "Kullanılan teknolojiler güncellenebilir."
+          },
+          "technical_resources": {
+            "label": "Teknik imkanlar",
+            "sentence": "Çalışanlara sunulan teknik imkanlar artırılabilir."
+          },
+          "development_process": {
+            "label": "Geliştirme süreçleri",
+            "sentence": "Yazılım geliştirme süreçleri geliştirilebilir."
+          },
+          "technical_team_conditions": {
+            "label": "Teknik ekip imkanları",
+            "sentence": "Teknik ekiplerin çalışma imkanları geliştirilebilir."
+          },
+          "technology_investment": {
+            "label": "Teknolojik yatırım",
+            "sentence": "Teknolojik yatırımlar artırılabilir."
+          },
+          "technical_growth_support": {
+            "label": "Teknik gelişim desteği",
+            "sentence": "Teknik gelişimi destekleyen imkanlar artırılabilir."
+          }
+        }
+      },
+      "hiring": {
+        "pos": {
+          "hiring_process": {
+            "label": "İşe alım süreci",
+            "sentence": "İşe alım sürecini olumlu buluyorum."
+          },
+          "clear_process": {
+            "label": "Anlaşılır süreç",
+            "sentence": "İşe alım sürecinin anlaşılır olduğunu düşünüyorum."
+          },
+          "interview_process": {
+            "label": "Görüşme süreci",
+            "sentence": "Görüşme sürecini olumlu buluyorum."
+          },
+          "professional_interviews": {
+            "label": "Profesyonel görüşmeler",
+            "sentence": "Görüşmelerin profesyonel şekilde yürütüldüğünü düşünüyorum."
+          },
+          "role_information": {
+            "label": "Pozisyon bilgisi",
+            "sentence": "Pozisyon hakkında yeterli bilgi verildiğini düşünüyorum."
+          },
+          "planned_process": {
+            "label": "Planlı süreç",
+            "sentence": "İşe alım sürecinin planlı olduğunu düşünüyorum."
+          },
+          "communication": {
+            "label": "İletişim",
+            "sentence": "İletişim sürecini olumlu buluyorum."
+          },
+          "candidate_information": {
+            "label": "Aday bilgilendirmesi",
+            "sentence": "Adaylara yeterli bilgilendirme yapıldığını düşünüyorum."
+          }
+        },
+        "imp": {
+          "hiring_process": {
+            "label": "İşe alım süreci",
+            "sentence": "İşe alım süreci geliştirilebilir."
+          },
+          "role_information": {
+            "label": "Pozisyon bilgisi",
+            "sentence": "Pozisyon hakkında daha fazla bilgi paylaşılabilir."
+          },
+          "interview_transparency": {
+            "label": "Görüşme sürecinin açıklığı",
+            "sentence": "Görüşme süreci daha açık hale getirilebilir."
+          },
+          "candidate_communication": {
+            "label": "Adayla iletişim",
+            "sentence": "Adaylarla iletişim süreci geliştirilebilir."
+          },
+          "planning": {
+            "label": "Planlılık",
+            "sentence": "İşe alım sürecinin daha planlı olması faydalı olabilir."
+          },
+          "process_information": {
+            "label": "Süreç bilgisi",
+            "sentence": "Süreç hakkında adaylara daha fazla bilgi verilebilir."
+          },
+          "stage_clarity": {
+            "label": "Aşamaların netliği",
+            "sentence": "Görüşme aşamalarının daha açık şekilde belirtilmesini isterim."
+          },
+          "candidate_feedback": {
+            "label": "Aday geri bildirimi",
+            "sentence": "Aday geri bildirim süreçleri geliştirilebilir."
+          }
+        }
+      },
+      "onboarding": {
+        "pos": {
+          "onboarding": {
+            "label": "İşe başlangıç",
+            "sentence": "İşe başlangıç sürecini olumlu buluyorum."
+          },
+          "orientation": {
+            "label": "Oryantasyon",
+            "sentence": "Oryantasyon sürecini yeterli buluyorum."
+          },
+          "first_days_briefing": {
+            "label": "İlk gün bilgilendirmesi",
+            "sentence": "İlk günlerde gerekli bilgilendirmelerin yapıldığını düşünüyorum."
+          },
+          "newcomer_support": {
+            "label": "Yeni çalışana destek",
+            "sentence": "Yeni çalışanlara destek sağlandığını düşünüyorum."
+          },
+          "adaptation": {
+            "label": "Adaptasyon",
+            "sentence": "Şirkete adaptasyon sürecini olumlu buluyorum."
+          },
+          "planned_start": {
+            "label": "Planlı başlangıç",
+            "sentence": "İşe başlangıç sürecinin planlı olduğunu düşünüyorum."
+          }
+        },
+        "imp": {
+          "orientation": {
+            "label": "Oryantasyon",
+            "sentence": "Oryantasyon süreci geliştirilebilir."
+          },
+          "planned_start": {
+            "label": "Planlı başlangıç",
+            "sentence": "İşe başlangıç süreci daha planlı hale getirilebilir."
+          },
+          "briefing": {
+            "label": "Bilgilendirme",
+            "sentence": "Yeni çalışanlara verilen bilgilendirme artırılabilir."
+          },
+          "adaptation_support": {
+            "label": "Adaptasyon desteği",
+            "sentence": "Şirkete adaptasyon sürecinde daha fazla destek sağlanabilir."
+          },
+          "first_days_guidance": {
+            "label": "İlk gün yönlendirmesi",
+            "sentence": "İlk günlerdeki yönlendirme süreci geliştirilebilir."
+          },
+          "newcomer_training": {
+            "label": "Yeni çalışan eğitimleri",
+            "sentence": "Yeni çalışanlara yönelik eğitimler artırılabilir."
+          }
+        }
+      }
     }
   },
   "adminReviews": {
     "title": "Şirket değerlendirmesi moderasyonu",
-    "subtitle": "Önce bekleyenler, önce en eskiler. Değerlendirmeyi okuyup karar vermek için satıra tıkla.",
+    "subtitle": "Önce bekleyenler, önce en eski. Yapılandırılmış değerlendirmeler kaydedilince yayımlanır ve buraya yalnızca şikayetle ya da bir redden sonra düşer; geçişten önceki serbest metinli olanlar hâlâ karar bekliyor.",
     "forbiddenTitle": "Bu sayfaya erişimin yok",
     "forbiddenBody": "Moderasyon, sunucuda yönetici olarak işaretlenmiş hesaplarla sınırlıdır.",
     "loading": "Yükleniyor…",
@@ -2851,7 +3846,7 @@
     },
     "columns": {
       "company": "Şirket",
-      "title": "Başlık",
+      "title": "Özet",
       "overall": "Genel",
       "status": "Durum",
       "submitted": "Gönderilme",
@@ -2862,8 +3857,6 @@
       "close": "Kapat",
       "approve": "Yayımla",
       "reject": "Reddet",
-      "pros": "Artılar",
-      "cons": "Eksiler",
       "author": "Yazar (yalnızca yöneticiler görür)",
       "quotaOverride": "Bu hesabın değerlendirme hakkı",
       "quotaPlaceholder": "Boş = varsayılan",
@@ -2872,7 +3865,14 @@
       "reports": "{count, plural, =1 {1 bildirim} other {# bildirim}}",
       "resolvedAs": "Sonuç: {resolution}",
       "rejectReason": "Ret gerekçesi (yazar bunu okur)",
-      "rejectPlaceholder": "örn. Bir çalışma arkadaşının adı geçiyor — adı kaldırıp yeniden gönderin."
+      "rejectPlaceholder": "örn. Bir saat içinde aynı ağdan beş özdeş değerlendirme — koordineli kalıp olarak değerlendirildi.",
+      "structuredRow": "Yapılandırılmış · {overall} / 5",
+      "legacyRow": "Önceki biçim",
+      "liked": "Beğenilenler",
+      "improvable": "Geliştirilebilir",
+      "noStatements": "Madde seçilmemiş.",
+      "categories": "Alan puanları",
+      "legacySalaryAndBenefits": "Maaş ve yan haklar (önceki biçim)"
     },
     "reports": {
       "title": "Bildirilen değerlendirmeler",
@@ -2899,78 +3899,90 @@
           "ChangesRequested": "Değerlendirme yayından kalkar ve yazar notunu görür; düzenleyip yeniden gönderebilir.",
           "Removed": "Değerlendirme notunla birlikte kaldırılır. Üzerindeki diğer tüm açık bildirimler de kapanır."
         }
-      }
+      },
+      "structuredReview": "Yapılandırılmış değerlendirme"
     },
     "guide": {
       "title": "Moderasyon rehberi",
       "show": "Göster",
       "hide": "Gizle",
-      "principle1": "Bir yorumun şirket hakkında olumsuz olması, tek başına reddetme sebebi değildir.",
+      "principle1": "Bir değerlendirmenin şirket hakkında olumsuz olması tek başına kaldırma sebebi değildir.",
       "principle2": "Moderatörün görevi şirketi korumak değil, topluluk kurallarını korumaktır.",
+      "structured": {
+        "title": "Yapılandırılmış değerlendirmeler (16 Eylül 2026'dan itibaren)",
+        "body": "Yapılandırılmış bir değerlendirme puanlar ve sabit listeden maddelerdir. Kimseyi adlandıramaz, hakaret edemez, iddiada bulunamaz — geriye kalan sorular kelimelerle değil hesapla ilgilidir:",
+        "pattern": "Koordineli kalıp: kısa sürede tek şirkete çok sayıda neredeyse özdeş değerlendirme ya da bir rakibi aşağı puanlayan bir hesap ağı.",
+        "quota": "Kotasını kötüye kullanan hesap — değerlendirme detayından kotasını sıfıra çek.",
+        "report": "Yapılandırılmış bir değerlendirmeye gelen şikayet genellikle yukarıdaki ikisinden biri ya da katılmayan bir okuyucudur. Katılmamak kural ihlali değildir; reddet."
+      },
+      "legacy": {
+        "title": "Geçişten önce yazılmış serbest metinli değerlendirmeler",
+        "body": "Bunlar hâlâ kuyrukta bekliyor. Eski kurallar onlara aynen uygulanır:"
+      },
       "approve": {
-        "title": "Onaylanır — sert ya da tek taraflı olsa bile",
+        "title": "Onayla — sert ya da tek taraflı olsa bile",
         "workplace": "Çalışma ortamı hakkında kişisel görüşler",
-        "management": "Yönetimle ilgili kişisel deneyimler",
-        "pay": "Maaş ve yan haklarla ilgili deneyimler",
+        "management": "Yönetimle kişisel deneyimler",
+        "pay": "Ücret ve yan haklarla ilgili deneyimler",
         "career": "Kariyer gelişimiyle ilgili deneyimler",
         "balance": "İş/özel hayat dengesiyle ilgili deneyimler",
         "opinion": "Olumlu ya da olumsuz kişisel değerlendirmeler"
       },
       "reject": {
-        "title": "Reddedilir — geri kalanı ne kadar iyi olursa olsun",
+        "title": "Reddet — geri kalanı ne kadar iyi olursa olsun",
         "insults": "Hakaret ve küfür",
         "threats": "Tehdit",
-        "personalData": "Kişisel bilgiler (telefon, adres, e-posta, TC…)",
-        "targeting": "Belirli kişileri hedef alan saldırılar",
-        "accusations": "Doğrulanmamış ağır suçlamalar",
-        "confidential": "Gizli / ticari bilgiler",
+        "personalData": "Kişisel bilgi (telefon, adres, e-posta, kimlik numarası…)",
+        "targeting": "Belirli kişilere yönelik saldırılar",
+        "accusations": "Ciddi, doğrulanmamış suçlamalar",
+        "confidential": "Gizli / ticari bilgi",
         "spam": "Spam ve reklam",
-        "fake": "Sahte ya da manipülatif yorumlar"
+        "fake": "Sahte ya da manipülatif değerlendirmeler"
       },
       "grey": {
-        "title": "Gri alanlar",
-        "question": "Çoğu tereddüt tek soruyla çözülür: bu, yazarın kendi yaşadığı bir şey mi, yoksa başkası hakkında bir iddia mı?",
+        "title": "Gri alanlar (serbest metinli değerlendirmeler)",
+        "question": "Çoğu tereddüt tek soruya iner: bu yazarın yaşadığı bir şey mi, yoksa başkası hakkında bir iddia mı?",
         "columns": {
-          "review": "Yorum",
+          "review": "Değerlendirme",
           "verdict": "Karar",
           "why": "Neden"
         },
-        "approve": "Onay",
-        "reject": "Red",
+        "approve": "Onayla",
+        "reject": "Reddet",
         "case1": {
-          "review": "“Yöneticim çok kabaydı, hata yapınca ekibin önünde azarlardı.”",
-          "why": "Kişisel deneyim. Rol anılıyor ama kimse teşhis edilemiyor."
+          "review": "“Yöneticim çok kabaydı; hata yaptığımızda ekibin önünde azarlardı.”",
+          "why": "Kişisel deneyim. Bir rol anılıyor ama kimse teşhis edilemiyor."
         },
         "case2": {
-          "review": "“Satış müdürü A. K. herkese bağırıyor, psikopatın teki.”",
-          "why": "Belirli bir kişi hedefte; baş harf de isim sayılır. Üstüne hakaret var."
+          "review": "“Satış müdürü A. K. herkese bağırıyor, tam bir psikopat.”",
+          "why": "Belirli bir kişi hedefleniyor; baş harfler de isim sayılır. Üstüne hakaret."
         },
         "case3": {
-          "review": "“Maaşlar iki kez birer ay gecikti, kimse açıklama yapmadı.”",
-          "why": "Yazarın kendi başına gelen bir şey. Şirket için kötü görünmesi red sebebi değil."
+          "review": "“Maaşlar iki kez bir ay gecikti, kimse neden açıklamadı.”",
+          "why": "Yazarın başına gelen bir şey. Şirket için kötü görünmesi ret sebebi değil."
         },
         "case4": {
-          "review": "“Şirket vergi kaçırıyor, sahte fatura kesiyorlar.”",
-          "why": "Suç isnadı, doğrulanamaz. Notla geri gönder: “Kendi yaşadığın kısmı anlat.”"
+          "review": "“Şirket vergi kaçırıyor ve sahte fatura kesiyor.”",
+          "why": "Doğrulanamayan bir suç isnadı. Notla geri gönder: “Kendi yaşadığın kısmı anlat.”"
         },
         "case5": {
           "review": "“Herkes mutsuz, kimse bir yıldan fazla kalmıyor.”",
-          "why": "Genelleme ama görüş; abartı bir kural ihlali değil. Okuyan kendi tartar."
+          "why": "Genelleme ama görüş; abartı kural ihlali değil. Okuyucu tartar."
         },
         "case6": {
-          "review": "“Harika şirket, herkese tavsiye ederim!” — aynı gün, aynı şirkete, benzer beş tane.",
-          "why": "Tek başına gelse içeriksiz ama kurala uygun; toplu gelince manipülasyon."
+          "review": "“Harika şirket, herkese tavsiye ederim!” — aynı gün, aynı şirket, beş benzeri.",
+          "why": "Tek başına boş ama kurallara uygun; toplu gelince manipülasyon."
         },
         "case7": {
           "review": "“X Bankası projesini kaybettik, sözleşme 2 milyondu.”",
-          "why": "Müşteri ve sözleşme bilgisi. Yorumun geri kalanı düzgün olsa da geçmez."
+          "why": "Müşteri ve sözleşme ayrıntısı. Değerlendirmenin geri kalanı iyi olsa da geçmez."
         }
       },
       "sendBack": {
         "title": "Geri gönderirken:",
-        "body": "not tek cümle olsun ve hangi kurala takıldığını söylesin — yazar neyi değiştireceğini bilsin. “Uygun değil” bir not değildir."
+        "body": "notu tek cümlede tut ve ihlal edilen kuralı adlandır — yazar neyi değiştireceğini bilsin. “Uygun değil” bir not değildir. Geri gönderilen yapılandırılmış bir değerlendirmede değişecek yalnızca puanlar ve seçimler vardır; hangisi olduğunu söyle."
       },
-      "modalLink": "Emin değil misin? Gri alan örnekleri →"
+      "modalLink": "Emin değil misin? Rehber →"
     }
   },
   "siteNav": {

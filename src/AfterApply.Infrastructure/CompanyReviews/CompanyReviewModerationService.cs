@@ -53,7 +53,7 @@ internal sealed class CompanyReviewModerationService(
             .Skip((query.Page - 1) * pageSize)
             .Take(pageSize)
             .Select(x => new AdminCompanyReviewListItemResponse(
-                x.r.Id, x.c.Id, x.c.Name, x.c.Slug, x.r.Title, x.r.OverallRating, x.r.EmploymentStatus,
+                x.r.Id, x.c.Id, x.c.Name, x.c.Slug, x.r.Format, x.r.Title, x.r.OverallRating, x.r.EmploymentStatus,
                 x.r.Status, x.r.SubmittedAt, x.r.ModeratedAt,
                 dbContext.CompanyReviewReports.Count(p => p.ReviewId == x.r.Id && p.Status == ReviewReportStatus.Open)))
             .ToListAsync(cancellationToken);
@@ -79,9 +79,10 @@ internal sealed class CompanyReviewModerationService(
             cancellationToken);
 
         var r = row.r;
+        var children = (await queries.LoadChildrenAsync([r.Id], cancellationToken)).For(r);
         return new AdminCompanyReviewResponse(r.Id, row.c.Id, row.c.Name, row.c.Slug, r.UserId, row.AuthorEmail,
-            r.EmploymentStatus, r.Title, r.Pros, r.Cons, r.OverallRating, r.ManagementRating, r.WorkEnvironmentRating,
-            r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating, r.Status, r.RejectionReason, r.SubmittedAt,
+            r.Format, r.EmploymentStatus, r.OverallRating, children.CategoryRatings, children.LegacySalaryAndBenefits,
+            children.Liked, children.Improvable, r.Title, r.Pros, r.Cons, r.Status, r.RejectionReason, r.SubmittedAt,
             r.ModeratedAt, helpful, reports);
     }
 
@@ -143,8 +144,8 @@ internal sealed class CompanyReviewModerationService(
             var review = await dbContext.CompanyReviews.SingleAsync(r => r.Id == report.ReviewId, cancellationToken);
             review.Reject(adminUserId, request.Reason!, now);
 
-            // Every other open report on the same review was about the same text, and that text
-            // is now off the page — closing them with the same decision keeps the queue honest.
+            // Every other open report on the same review was about the same content, and that
+            // content is now off the page — closing them with the same decision keeps the queue honest.
             var siblings = await dbContext.CompanyReviewReports
                 .Where(p => p.ReviewId == report.ReviewId && p.Id != report.Id && p.Status == ReviewReportStatus.Open)
                 .ToListAsync(cancellationToken);
@@ -192,13 +193,13 @@ internal sealed class CompanyReviewModerationService(
             .Join(dbContext.Companies, x => x.r.CompanyId, c => c.Id, (x, c) => new { x.p, x.r, c })
             .Join(dbContext.Users, x => x.p.ReporterUserId, u => u.Id, (x, u) => new
             {
-                Report = x.p, ReviewTitle = x.r.Title, ReviewId = x.r.Id, CompanyId = x.c.Id, CompanyName = x.c.Name,
+                Report = x.p, ReviewFormat = x.r.Format, ReviewTitle = x.r.Title, ReviewId = x.r.Id, CompanyId = x.c.Id, CompanyName = x.c.Name,
                 ReporterEmail = u.Email ?? string.Empty
             })
             .ToListAsync(cancellationToken);
 
         return rows.Select(x => new AdminReviewReportResponse(
-            x.Report.Id, x.ReviewId, x.ReviewTitle, x.CompanyId, x.CompanyName, x.Report.ReporterUserId, x.ReporterEmail,
+            x.Report.Id, x.ReviewId, x.ReviewFormat, x.ReviewTitle, x.CompanyId, x.CompanyName, x.Report.ReporterUserId, x.ReporterEmail,
             x.Report.Reason, x.Report.Note, x.Report.Status, x.Report.Resolution, x.Report.ResolutionReason,
             x.Report.ReportedAt, x.Report.ResolvedAt)).ToList();
     }

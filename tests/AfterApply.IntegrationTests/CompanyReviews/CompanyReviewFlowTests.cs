@@ -27,10 +27,11 @@ public sealed class CompanyReviewFlowProfile : IHostProfile
 }
 
 /// <summary>
-/// Company reviews end to end: the anonymous read side never sees anything but approved rows,
-/// authors own only their own rows, the quota and the one-per-company rule hold, and the
-/// moderation surface is admin-only. One host for the class; each test uses its own accounts
-/// and its own company names.
+/// Company reviews end to end: a structured review is public the moment it is saved and carries
+/// no free text on the wire, legacy rows keep their ratings but lose their text publicly, the
+/// anonymous read side never sees a pending or rejected row, authors own only their own rows,
+/// the quota and the one-per-company rule hold, and the moderation surface is admin-only. One
+/// host for the class; each test uses its own accounts and its own company names.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IClassFixture<ApiHost<CompanyReviewFlowProfile>>, IAsyncLifetime
@@ -73,11 +74,47 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         await db.SaveChangesAsync();
     }
 
-    private static CreateCompanyReviewRequest Review(int overall = 4, string title = "Honest, slow-moving, fair") => new(
+    private const string LikedKey = "environment.pos.team_communication";
+    private const string ImprovableKey = "pay.imp.salary_level";
+
+    private static CreateCompanyReviewRequest Review(int overall = 4,
+        IReadOnlyList<ReviewCategoryRatingDto>? categories = null,
+        IReadOnlyList<string>? liked = null, IReadOnlyList<string>? improvable = null) => new(
+        EmploymentStatus.FormerEmployee, overall,
+        categories ?? [new ReviewCategoryRatingDto(ReviewCategory.WorkEnvironment, 5), new ReviewCategoryRatingDto(ReviewCategory.Pay, 2)],
+        liked ?? [LikedKey],
+        improvable ?? [ImprovableKey]);
+
+    private static UpdateCompanyReviewRequest Update(int overall = 4, IReadOnlyList<string>? liked = null) => new(
+        EmploymentStatus.CurrentEmployee, overall,
+        [new ReviewCategoryRatingDto(ReviewCategory.Management, 4)],
+        liked ?? ["management.pos.feedback_culture"],
+        []);
+
+    private static ReviewContent LegacyContent(int overall = 4, string title = "Honest, slow-moving, fair") => new(
         EmploymentStatus.FormerEmployee, title,
         "Clear expectations, good tooling, colleagues who actually review code.",
         "Decisions take a long time and the salary band lags the market.",
         overall, 4, 4, 3, 4);
+
+    /// <summary>A pre-2026-09-16 row, the only way one can come into being now: straight into
+    /// the database, exactly as the migration left them.</summary>
+    private async Task<Guid> SeedLegacyReviewAsync(HttpClient author, Guid companyId, bool approved, int overall = 4,
+        string title = "Honest, slow-moving, fair")
+    {
+        var userId = (await author.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions))!.Id;
+        await using var scope = _factory!.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var review = CompanyReview.CreateLegacy(userId, companyId, LegacyContent(overall, title), DateTimeOffset.UtcNow);
+        if (approved)
+        {
+            review.Approve(Guid.CreateVersion7(), DateTimeOffset.UtcNow);
+        }
+
+        db.CompanyReviews.Add(review);
+        await db.SaveChangesAsync();
+        return review.Id;
+    }
 
     private async Task<ResolvedCompanyResponse> ResolveAsync(HttpClient client, string name)
     {
@@ -99,13 +136,20 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
-    private async Task<Guid> ApprovedReviewByAsync(string email, Guid companyId, int overall = 4)
+    /// <summary>A structured review is published on save; no approval step.</summary>
+    private async Task<Guid> PublishedReviewByAsync(string email, Guid companyId, int overall = 4, IReadOnlyList<string>? liked = null)
     {
         var author = await RegisterAsync(email);
-        var review = await WriteAsync(author, companyId, Review(overall));
-        await ApproveAsync(review.Id);
+        var review = await WriteAsync(author, companyId, Review(overall, liked: liked));
         return review.Id;
     }
+
+    private async Task<PagedResult<CompanyReviewPublicResponse>> PublicReviewsAsync(string slug) =>
+        (await _factory!.CreateClient().GetFromJsonAsync<PagedResult<CompanyReviewPublicResponse>>(
+            $"/api/companies/public/{slug}/reviews", JsonOptions))!;
+
+    private async Task<CompanyReviewSummaryResponse> SummaryAsync(string slug) =>
+        (await _factory!.CreateClient().GetFromJsonAsync<CompanyPublicResponse>($"/api/companies/public/{slug}", JsonOptions))!.Summary;
 
     // ---- Public visibility ------------------------------------------------------------------
 
@@ -124,13 +168,19 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
     }
 
     [Fact]
-    public async Task A_Pending_Review_Is_Invisible_On_Every_Public_Route()
+    public async Task A_Pending_Legacy_Review_Is_Invisible_On_Every_Public_Route_And_Still_Waits_In_The_Queue()
     {
         var author = await RegisterAsync("pending.reviews@example.com");
         var company = await ResolveAsync(author, "Pending Visibility Co");
-        await WriteAsync(author, company.Id);
+        await SeedLegacyReviewAsync(author, company.Id, approved: false);
 
         var anonymous = _factory!.CreateClient();
+
+        // The switch to structured reviews did not decide these for the moderator.
+        (await _admin.GetFromJsonAsync<ModerationCountsResponse>("/api/admin/company-reviews/counts", JsonOptions))!
+            .PendingReviews.ShouldBe(1);
+        (await author.GetFromJsonAsync<MyReviewsResponse>("/api/company-reviews/mine", JsonOptions))!
+            .Items.ShouldHaveSingleItem().Status.ShouldBe(ReviewModerationStatus.Pending);
 
         var profile = await anonymous.GetFromJsonAsync<CompanyPublicResponse>($"/api/companies/public/{company.Slug}", JsonOptions);
         profile!.Summary.ApprovedCount.ShouldBe(0);
@@ -149,31 +199,44 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
     }
 
     [Fact]
-    public async Task An_Approved_Review_Is_Public_Without_Its_Author_And_A_Rejected_One_Is_Not()
+    public async Task A_Structured_Review_Is_Public_At_Once_Without_Its_Author_And_A_Rejected_One_Is_Not()
     {
         var author = await RegisterAsync("approved.reviews@example.com");
         var company = await ResolveAsync(author, "Approved Visibility Co");
         var review = await WriteAsync(author, company.Id);
-        await ApproveAsync(review.Id);
+        review.Status.ShouldBe(ReviewModerationStatus.Approved);
+        review.ModeratedAt.ShouldBeNull();
+        review.Format.ShouldBe(ReviewFormat.Structured);
 
         var rejectedAuthor = await RegisterAsync("rejected.reviews@example.com");
-        var rejected = await WriteAsync(rejectedAuthor, company.Id, Review(1, "Terrible"));
+        var rejected = await WriteAsync(rejectedAuthor, company.Id, Review(1, liked: ["general.pos.growth_opportunities"]));
         (await _admin.PostAsJsonAsync($"/api/admin/company-reviews/{rejected.Id}/reject",
-            new RejectCompanyReviewRequest("Names a colleague."), JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            new RejectCompanyReviewRequest("Looks like a coordinated pattern."), JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var anonymous = _factory!.CreateClient();
         var response = await anonymous.GetAsync($"/api/companies/public/{company.Slug}/reviews");
         response.EnsureSuccessStatusCode();
         var raw = await response.Content.ReadAsStringAsync();
 
-        // The promise on the privacy page, asserted on the wire rather than on a record type.
+        // The promises on the privacy page, asserted on the wire rather than on a record type:
+        // no author, and no free-text field at all.
         raw.ShouldNotContain("userId", Case.Insensitive);
         raw.ShouldNotContain("@example.com");
-        raw.ShouldNotContain("Terrible");
+        raw.ShouldNotContain("\"title\"", Case.Insensitive);
+        raw.ShouldNotContain("\"pros\"", Case.Insensitive);
+        raw.ShouldNotContain("\"cons\"", Case.Insensitive);
+        raw.ShouldNotContain("growth_opportunities");
 
         var page = JsonSerializer.Deserialize<PagedResult<CompanyReviewPublicResponse>>(raw, JsonOptions)!;
         var item = page.Items.ShouldHaveSingleItem();
-        item.Title.ShouldBe("Honest, slow-moving, fair");
+        item.Id.ShouldBe(review.Id);
+        item.Format.ShouldBe(ReviewFormat.Structured);
+        item.OverallRating.ShouldBe(4);
+        item.CategoryRatings.ShouldBe([
+            new ReviewCategoryRatingDto(ReviewCategory.WorkEnvironment, 5), new ReviewCategoryRatingDto(ReviewCategory.Pay, 2)]);
+        item.LegacySalaryAndBenefitsRating.ShouldBeNull();
+        item.LikedStatements.ShouldBe([LikedKey]);
+        item.ImprovableStatements.ShouldBe([ImprovableKey]);
         item.SubmittedMonth.ShouldBe(DateTimeOffset.UtcNow.ToString("yyyy-MM"));
         item.HelpfulCount.ShouldBe(0);
 
@@ -181,6 +244,7 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
             "/api/companies/public?q=approved%20visibility", JsonOptions);
         directory!.Items.ShouldHaveSingleItem().ApprovedCount.ShouldBe(1);
 
+        // Auto-published rows carry no ModeratedAt; the sitemap must still list the company.
         var slugs = await anonymous.GetFromJsonAsync<List<ReviewedCompanySlugResponse>>("/api/companies/public/slugs", JsonOptions);
         slugs!.ShouldContain(s => s.Slug == company.Slug);
 
@@ -188,7 +252,126 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         var mine = await rejectedAuthor.GetFromJsonAsync<MyReviewsResponse>("/api/company-reviews/mine", JsonOptions);
         var own = mine!.Items.ShouldHaveSingleItem();
         own.Status.ShouldBe(ReviewModerationStatus.Rejected);
-        own.RejectionReason.ShouldBe("Names a colleague.");
+        own.RejectionReason.ShouldBe("Looks like a coordinated pattern.");
+    }
+
+    [Fact]
+    public async Task A_Legacy_Review_Keeps_Its_Ratings_Publicly_But_Its_Text_Only_For_Its_Author()
+    {
+        var author = await RegisterAsync("legacy.reviews@example.com");
+        var company = await ResolveAsync(author, "Legacy Visibility Co");
+        var id = await SeedLegacyReviewAsync(author, company.Id, approved: true, title: "Honest, slow-moving, fair");
+
+        var response = await _factory!.CreateClient().GetAsync($"/api/companies/public/{company.Slug}/reviews");
+        var raw = await response.Content.ReadAsStringAsync();
+        raw.ShouldNotContain("Honest, slow-moving");
+        raw.ShouldNotContain("colleagues who actually");
+
+        var item = JsonSerializer.Deserialize<PagedResult<CompanyReviewPublicResponse>>(raw, JsonOptions)!.Items.ShouldHaveSingleItem();
+        item.Id.ShouldBe(id);
+        item.Format.ShouldBe(ReviewFormat.Legacy);
+        item.OverallRating.ShouldBe(4);
+        // Management 4, WorkEnvironment 4, Career 4 map onto current categories; SalaryAndBenefits
+        // maps onto none and travels separately.
+        item.CategoryRatings.Select(c => c.Category).ShouldBe(
+            [ReviewCategory.WorkEnvironment, ReviewCategory.Management, ReviewCategory.CareerGrowth]);
+        item.LegacySalaryAndBenefitsRating.ShouldBe(3);
+        item.LikedStatements.ShouldBeEmpty();
+
+        var mine = (await author.GetFromJsonAsync<MyReviewsResponse>("/api/company-reviews/mine", JsonOptions))!.Items.ShouldHaveSingleItem();
+        mine.Format.ShouldBe(ReviewFormat.Legacy);
+        mine.Title.ShouldBe("Honest, slow-moving, fair");
+        mine.Pros.ShouldNotBeNullOrEmpty();
+
+        // The legacy ratings feed the category averages once enough people rated the category.
+        await PublishedReviewByAsync("legacy2.reviews@example.com", company.Id);
+        await PublishedReviewByAsync("legacy3.reviews@example.com", company.Id);
+        var summary = await SummaryAsync(company.Slug);
+        summary.ApprovedCount.ShouldBe(3);
+        // Work environment: legacy 4 + structured 5 + 5.
+        summary.Categories.Single(c => c.Category == ReviewCategory.WorkEnvironment).ShouldSatisfyAllConditions(
+            c => c.Count.ShouldBe(3), c => c.Average.ShouldBe(4.7));
+        // Pay: two structured votes only — under the minimum, so a count but no number.
+        summary.Categories.Single(c => c.Category == ReviewCategory.Pay).ShouldSatisfyAllConditions(
+            c => c.Count.ShouldBe(2), c => c.Average.ShouldBeNull());
+        // Management: the legacy row alone.
+        summary.Categories.Single(c => c.Category == ReviewCategory.Management).Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Editing_A_Legacy_Review_Converts_It_And_Hides_Nothing_From_Its_Author()
+    {
+        var author = await RegisterAsync("convert.reviews@example.com");
+        var company = await ResolveAsync(author, "Conversion Co");
+        var id = await SeedLegacyReviewAsync(author, company.Id, approved: true);
+
+        var response = await author.PutAsJsonAsync($"/api/company-reviews/{id}", Update(overall: 3), JsonOptions);
+        response.EnsureSuccessStatusCode();
+        var updated = (await response.Content.ReadFromJsonAsync<MyCompanyReviewResponse>(JsonOptions))!;
+
+        updated.Format.ShouldBe(ReviewFormat.Structured);
+        updated.Status.ShouldBe(ReviewModerationStatus.Approved);
+        updated.OverallRating.ShouldBe(3);
+        updated.CategoryRatings.ShouldBe([new ReviewCategoryRatingDto(ReviewCategory.Management, 4)]);
+        updated.LikedStatements.ShouldBe(["management.pos.feedback_culture"]);
+        // Still stored, still the author's to read; not on the public wire.
+        updated.Title.ShouldBe("Honest, slow-moving, fair");
+
+        var item = (await PublicReviewsAsync(company.Slug)).Items.ShouldHaveSingleItem();
+        item.Format.ShouldBe(ReviewFormat.Structured);
+        item.CategoryRatings.ShouldBe([new ReviewCategoryRatingDto(ReviewCategory.Management, 4)]);
+        item.LegacySalaryAndBenefitsRating.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task The_Validator_Refuses_Too_Many_Unknown_And_Mislisted_Statements()
+    {
+        var author = await RegisterAsync("invalid.reviews@example.com");
+        var company = await ResolveAsync(author, "Validation Co");
+        var six = ReviewStatementCatalogue.For(ReviewCategory.CareerGrowth, ReviewStatementKind.Liked).Take(6).Select(x => x.Key).ToList();
+
+        async Task<HttpResponseMessage> Post(CreateCompanyReviewRequest request) =>
+            await author.PostAsJsonAsync($"/api/companies/{company.Id}/reviews", request, JsonOptions);
+
+        var tooMany = await Post(Review(liked: six));
+        tooMany.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await tooMany.Content.ReadAsStringAsync()).ShouldContain("at most 5");
+
+        (await Post(Review(liked: ["career.pos.does_not_exist"]))).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await Post(Review(improvable: [LikedKey]))).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await Post(Review(categories: [new ReviewCategoryRatingDto(ReviewCategory.Overall, 4)]))).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await Post(Review(overall: 0))).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        // Nothing was stored along the way.
+        (await author.GetFromJsonAsync<MyReviewsResponse>("/api/company-reviews/mine", JsonOptions))!.Items.ShouldBeEmpty();
+
+        // The bare minimum is a rating and a relationship.
+        (await Post(new CreateCompanyReviewRequest(EmploymentStatus.Intern, 3))).StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task The_Summary_Counts_Picks_Once_Three_People_Have_Spoken()
+    {
+        var first = await RegisterAsync("top1.reviews@example.com");
+        var company = await ResolveAsync(first, "Top Statements Co");
+        await WriteAsync(first, company.Id, Review(liked: [LikedKey, "environment.pos.motivating"]));
+        await PublishedReviewByAsync("top2.reviews@example.com", company.Id, liked: [LikedKey]);
+
+        var two = await SummaryAsync(company.Slug);
+        two.ApprovedCount.ShouldBe(2);
+        two.TopLiked.ShouldBeEmpty();
+        two.Categories.Count.ShouldBe(10);
+        two.Categories.ShouldAllBe(c => c.Average == null);
+
+        await PublishedReviewByAsync("top3.reviews@example.com", company.Id, liked: [LikedKey, "environment.pos.motivating"]);
+
+        var three = await SummaryAsync(company.Slug);
+        three.TopLiked.ShouldBe([new ReviewStatementCountResponse(LikedKey, 3), new ReviewStatementCountResponse("environment.pos.motivating", 2)]);
+        three.TopImprovable.ShouldBe([new ReviewStatementCountResponse(ImprovableKey, 3)]);
+        three.Categories.Single(c => c.Category == ReviewCategory.WorkEnvironment).Average.ShouldBe(5.0);
+        three.Categories.Single(c => c.Category == ReviewCategory.Pay).Average.ShouldBe(2.0);
+        three.Categories.Single(c => c.Category == ReviewCategory.Onboarding).ShouldSatisfyAllConditions(
+            c => c.Count.ShouldBe(0), c => c.Average.ShouldBeNull());
     }
 
     [Fact]
@@ -201,17 +384,17 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         // The prior is the site-wide mean, so make sure it is below 5 regardless of which other
         // tests have run: one approved 1-star review somewhere else.
         var elsewhere = await ResolveAsync(first, "Score Anchor Co");
-        await ApprovedReviewByAsync("score0.reviews@example.com", elsewhere.Id, 1);
+        await PublishedReviewByAsync("score0.reviews@example.com", elsewhere.Id, 1);
 
-        await ApproveAsync((await WriteAsync(first, company.Id, Review(5))).Id);
-        await ApprovedReviewByAsync("score2.reviews@example.com", company.Id, 5);
+        await WriteAsync(first, company.Id, Review(5));
+        await PublishedReviewByAsync("score2.reviews@example.com", company.Id, 5);
 
         var two = await anonymous.GetFromJsonAsync<CompanyPublicResponse>($"/api/companies/public/{company.Slug}", JsonOptions);
         two!.Summary.ApprovedCount.ShouldBe(2);
         two.Summary.Score.ShouldBeNull();
         two.Summary.AverageOverall.ShouldBe(5.0);
 
-        await ApprovedReviewByAsync("score3.reviews@example.com", company.Id, 5);
+        await PublishedReviewByAsync("score3.reviews@example.com", company.Id, 5);
 
         var three = await anonymous.GetFromJsonAsync<CompanyPublicResponse>($"/api/companies/public/{company.Slug}", JsonOptions);
         three!.Summary.ApprovedCount.ShouldBe(3);
@@ -251,30 +434,33 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
     }
 
     [Fact]
-    public async Task Editing_An_Approved_Review_Takes_It_Off_The_Page_Until_It_Is_Approved_Again()
+    public async Task Editing_A_Published_Review_Changes_The_Page_At_Once()
     {
         var author = await RegisterAsync("edit.reviews@example.com");
         var company = await ResolveAsync(author, "Edit Cycle Co");
         var review = await WriteAsync(author, company.Id);
-        await ApproveAsync(review.Id);
-        var anonymous = _factory!.CreateClient();
 
-        (await anonymous.GetFromJsonAsync<PagedResult<CompanyReviewPublicResponse>>(
-            $"/api/companies/public/{company.Slug}/reviews", JsonOptions))!.Items.ShouldHaveSingleItem();
+        (await PublicReviewsAsync(company.Slug)).Items.ShouldHaveSingleItem().OverallRating.ShouldBe(4);
+        (await SummaryAsync(company.Slug)).AverageOverall.ShouldBe(4.0);
 
-        var update = new UpdateCompanyReviewRequest(EmploymentStatus.CurrentEmployee, "Revised after a year",
-            "Things improved: the salary band caught up and reviews are quicker now.",
-            "Still too many meetings for the size of the team, honestly.", 4, 4, 4, 4, 4);
-        var response = await author.PutAsJsonAsync($"/api/company-reviews/{review.Id}", update, JsonOptions);
+        var response = await author.PutAsJsonAsync($"/api/company-reviews/{review.Id}", Update(overall: 2), JsonOptions);
         response.EnsureSuccessStatusCode();
         var updated = await response.Content.ReadFromJsonAsync<MyCompanyReviewResponse>(JsonOptions);
-        updated!.Status.ShouldBe(ReviewModerationStatus.Pending);
-        updated.Title.ShouldBe("Revised after a year");
+        updated!.Status.ShouldBe(ReviewModerationStatus.Approved);
+        updated.EmploymentStatus.ShouldBe(EmploymentStatus.CurrentEmployee);
 
-        (await anonymous.GetFromJsonAsync<PagedResult<CompanyReviewPublicResponse>>(
-            $"/api/companies/public/{company.Slug}/reviews", JsonOptions))!.Items.ShouldBeEmpty();
-        (await anonymous.GetFromJsonAsync<CompanyPublicResponse>($"/api/companies/public/{company.Slug}", JsonOptions))!
-            .Summary.ApprovedCount.ShouldBe(0);
+        // Still one review, now with the new content; the cached aggregate was evicted.
+        var item = (await PublicReviewsAsync(company.Slug)).Items.ShouldHaveSingleItem();
+        item.OverallRating.ShouldBe(2);
+        item.LikedStatements.ShouldBe(["management.pos.feedback_culture"]);
+        item.ImprovableStatements.ShouldBeEmpty();
+        (await SummaryAsync(company.Slug)).AverageOverall.ShouldBe(2.0);
+
+        // The old child rows are gone, not merely shadowed.
+        await using var scope = _factory!.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.CompanyReviewStatementPicks.CountAsync(p => p.ReviewId == review.Id)).ShouldBe(1);
+        (await db.CompanyReviewCategoryRatings.CountAsync(p => p.ReviewId == review.Id)).ShouldBe(1);
     }
 
     [Fact]
@@ -285,9 +471,7 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         var review = await WriteAsync(author, company.Id);
         var other = await RegisterAsync("other.reviews@example.com");
 
-        var update = new UpdateCompanyReviewRequest(EmploymentStatus.Intern, "Hijacked title here",
-            "This text is long enough to pass validation for sure.",
-            "This text is also long enough to pass validation.", 1, 1, 1, 1, 1);
+        var update = Update(overall: 1);
 
         (await other.PutAsJsonAsync($"/api/company-reviews/{review.Id}", update, JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await other.DeleteAsync($"/api/company-reviews/{review.Id}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -340,10 +524,10 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         var review = await WriteAsync(author, company.Id);
 
         var reader = await RegisterAsync("helpful.reader@example.com");
-        // Not approved yet: not on any page, so "not found".
-        (await reader.PostAsync($"/api/company-reviews/{review.Id}/helpful", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
-
-        await ApproveAsync(review.Id);
+        // A pending (legacy) review is not on any page, so "not found".
+        var pendingAuthor = await RegisterAsync("helpful.pending@example.com");
+        var pending = await SeedLegacyReviewAsync(pendingAuthor, company.Id, approved: false);
+        (await reader.PostAsync($"/api/company-reviews/{pending}/helpful", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
         var on = await (await reader.PostAsync($"/api/company-reviews/{review.Id}/helpful", null)).Content.ReadFromJsonAsync<HelpfulToggleResponse>(JsonOptions);
         on!.Marked.ShouldBeTrue();
@@ -368,7 +552,6 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         var author = await RegisterAsync("report.author@example.com");
         var company = await ResolveAsync(author, "Reported Co");
         var review = await WriteAsync(author, company.Id);
-        await ApproveAsync(review.Id);
 
         var readerA = await RegisterAsync("report.a@example.com");
         var readerB = await RegisterAsync("report.b@example.com");
@@ -414,9 +597,18 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         detail.Reports.Count.ShouldBe(2);
         detail.Reports.ShouldAllBe(r => r.Status == ReviewReportStatus.Resolved && r.Resolution == ReviewReportResolution.Removed);
 
-        var anonymous = _factory!.CreateClient();
-        (await anonymous.GetFromJsonAsync<PagedResult<CompanyReviewPublicResponse>>(
-            $"/api/companies/public/{company.Slug}/reviews", JsonOptions))!.Items.ShouldBeEmpty();
+        (await PublicReviewsAsync(company.Slug)).Items.ShouldBeEmpty();
+
+        // The author cannot undo a removal by saving again: the edit lands in the human queue.
+        var edited = await (await author.PutAsJsonAsync($"/api/company-reviews/{review.Id}", Update(), JsonOptions))
+            .Content.ReadFromJsonAsync<MyCompanyReviewResponse>(JsonOptions);
+        edited!.Status.ShouldBe(ReviewModerationStatus.Pending);
+        edited.RejectionReason.ShouldBeNull();
+        (await PublicReviewsAsync(company.Slug)).Items.ShouldBeEmpty();
+        (await _admin.GetFromJsonAsync<ModerationCountsResponse>("/api/admin/company-reviews/counts", JsonOptions))!.PendingReviews.ShouldBe(1);
+
+        await ApproveAsync(review.Id);
+        (await PublicReviewsAsync(company.Slug)).Items.ShouldHaveSingleItem();
     }
 
     [Fact]
@@ -425,7 +617,6 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         var author = await RegisterAsync("dismiss.author@example.com");
         var company = await ResolveAsync(author, "Dismissed Report Co");
         var review = await WriteAsync(author, company.Id);
-        await ApproveAsync(review.Id);
         var reader = await RegisterAsync("dismiss.reader@example.com");
 
         var report = await (await reader.PostAsJsonAsync($"/api/company-reviews/{review.Id}/reports",
@@ -438,7 +629,7 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         var detail = await _admin.GetFromJsonAsync<AdminCompanyReviewResponse>($"/api/admin/company-reviews/{review.Id}", JsonOptions);
         detail!.Status.ShouldBe(ReviewModerationStatus.Approved);
 
-        // Dismissed → the reader may report again if the text still bothers them.
+        // Dismissed → the reader may report again if the review still bothers them.
         (await reader.PostAsJsonAsync($"/api/company-reviews/{review.Id}/reports",
             new ReportCompanyReviewRequest(ReviewReportReason.Spam), JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.Created);
     }
@@ -488,15 +679,24 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         var a = await RegisterAsync("queue.a@example.com");
         var alpha = await ResolveAsync(a, "Queue Alpha Co");
         var beta = await ResolveAsync(a, "Queue Beta Co");
-        var pendingAlpha = await WriteAsync(a, alpha.Id);
+        var pendingAlpha = await SeedLegacyReviewAsync(a, alpha.Id, approved: false);
         var b = await RegisterAsync("queue.b@example.com");
         var approvedBeta = await WriteAsync(b, beta.Id);
-        await ApproveAsync(approvedBeta.Id);
 
         var pending = await _admin.GetFromJsonAsync<PagedResult<AdminCompanyReviewListItemResponse>>(
             "/api/admin/company-reviews?status=Pending&company=queue", JsonOptions);
-        pending!.Items.ShouldContain(r => r.Id == pendingAlpha.Id);
+        var pendingRow = pending!.Items.ShouldHaveSingleItem();
+        pendingRow.Id.ShouldBe(pendingAlpha);
+        pendingRow.Format.ShouldBe(ReviewFormat.Legacy);
+        pendingRow.Title.ShouldBe("Honest, slow-moving, fair");
         pending.Items.ShouldNotContain(r => r.Id == approvedBeta.Id);
+
+        // The admin detail carries both shapes: the structured picks, or the legacy text.
+        var detail = await _admin.GetFromJsonAsync<AdminCompanyReviewResponse>($"/api/admin/company-reviews/{approvedBeta.Id}", JsonOptions);
+        detail!.Format.ShouldBe(ReviewFormat.Structured);
+        detail.Title.ShouldBeNull();
+        detail.LikedStatements.ShouldBe([LikedKey]);
+        detail.AuthorEmail.ShouldBe("queue.b@example.com");
 
         var beta_ = await _admin.GetFromJsonAsync<PagedResult<AdminCompanyReviewListItemResponse>>(
             "/api/admin/company-reviews?company=queue%20beta", JsonOptions);

@@ -66,8 +66,10 @@ internal sealed class CompanyReviewService(
         // public page this review will appear on needs one.
         await EnsureSlugAsync(company, cancellationToken);
 
-        var review = CompanyReview.Create(userId, companyId, CompanyReviewQueries.ToContent(request), DateTimeOffset.UtcNow);
+        var content = CompanyReviewQueries.ToContent(request);
+        var review = CompanyReview.CreateStructured(userId, companyId, content, DateTimeOffset.UtcNow);
         dbContext.CompanyReviews.Add(review);
+        AddChildren(review.Id, content);
 
         try
         {
@@ -77,6 +79,9 @@ internal sealed class CompanyReviewService(
         {
             throw new CompanyReviewAlreadyExistsException();
         }
+
+        // Published on save: the cached aggregate does not know about it yet.
+        await queries.EvictSummaryAsync(companyId, cancellationToken);
 
         return (await queries.ProjectMineAsync(dbContext.CompanyReviews.Where(r => r.Id == review.Id), cancellationToken)).Single();
     }
@@ -93,12 +98,21 @@ internal sealed class CompanyReviewService(
         }
 
         var wasApproved = review.Status == ReviewModerationStatus.Approved;
-        review.Edit(CompanyReviewQueries.ToContent(request), DateTimeOffset.UtcNow);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var content = CompanyReviewQueries.ToContent(request);
 
-        if (wasApproved)
+        // The child rows are replaced wholesale, in one transaction with the row itself, so a
+        // failure halfway leaves the old review intact rather than a review with no picks.
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        review.EditStructured(content, DateTimeOffset.UtcNow);
+        await dbContext.CompanyReviewCategoryRatings.Where(c => c.ReviewId == review.Id).ExecuteDeleteAsync(cancellationToken);
+        await dbContext.CompanyReviewStatementPicks.Where(p => p.ReviewId == review.Id).ExecuteDeleteAsync(cancellationToken);
+        AddChildren(review.Id, content);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        if (wasApproved || review.Status == ReviewModerationStatus.Approved)
         {
-            // It just left the public page; the cached aggregate still counts it.
+            // What the public page shows changed either way.
             await queries.EvictSummaryAsync(review.CompanyId, cancellationToken);
         }
 
@@ -209,6 +223,15 @@ internal sealed class CompanyReviewService(
         }
 
         return new ReportCompanyReviewResponse(report.Id, report.ReportedAt);
+    }
+
+    /// <summary>Content the domain has already validated: every key resolves.</summary>
+    private void AddChildren(Guid reviewId, StructuredReviewContent content)
+    {
+        dbContext.CompanyReviewCategoryRatings.AddRange(
+            content.CategoryRatings.Select(c => CompanyReviewCategoryRating.Create(reviewId, c.Category, c.Rating)));
+        dbContext.CompanyReviewStatementPicks.AddRange(
+            content.Statements().Select(statement => CompanyReviewStatementPick.Create(reviewId, statement)));
     }
 
     private async Task EnsureSlugAsync(Domain.Companies.Company company, CancellationToken cancellationToken)

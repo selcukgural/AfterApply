@@ -49,6 +49,7 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "/privacy",
   "/extension-privacy",
   "/cookies",
+  "/terms",
   ...HELP_TOPICS.map((topic) => topic.href),
   GUIDE_PATH,
   // The guide articles are the one place where the path itself differs per locale: the slug is

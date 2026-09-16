@@ -25,7 +25,11 @@ export default function EditReviewPage({ params }: PageProps<"/[locale]/my-revie
   const update = useMutation({
     mutationFn: (request: CompanyReviewRequest) => companyReviewsApi.update(id, request),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["companyReviews", "mine"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["companyReviews", "mine"] }),
+        queryClient.invalidateQueries({ queryKey: ["companies", "public", review!.companySlug] }),
+        queryClient.invalidateQueries({ queryKey: ["companies", review!.companyId, "viewer"] }),
+      ]);
       router.push("/my-reviews");
     },
     onError: (err) => setServerError(err instanceof ApiError ? err.message : t("error")),
@@ -55,6 +59,7 @@ export default function EditReviewPage({ params }: PageProps<"/[locale]/my-revie
             initialDraft={draftFromReview(review)}
             submitLabel={t("submit")}
             serverError={serverError}
+            legacyNotice={review.format === "Legacy" ? t("legacyBanner") : undefined}
             onSubmit={async (request) => {
               setServerError(null);
               await update.mutateAsync(request).catch(() => undefined);

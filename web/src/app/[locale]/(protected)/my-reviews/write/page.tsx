@@ -48,7 +48,14 @@ export default function WriteReviewPage() {
   const create = useMutation({
     mutationFn: (request: CompanyReviewRequest) => companyReviewsApi.create(company!.id, request),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["companyReviews", "mine"] });
+      // Published on save. The author lands on their own list, which is fetched fresh, rather
+      // than on the company page: that page is server-rendered with a 60-second revalidation,
+      // so for up to a minute it would not yet show the review it just promised was live.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["companyReviews", "mine"] }),
+        queryClient.invalidateQueries({ queryKey: ["companies", "public", company!.slug] }),
+        queryClient.invalidateQueries({ queryKey: ["companies", company!.id, "viewer"] }),
+      ]);
       router.push("/my-reviews");
     },
     onError: (err) => setServerError(err instanceof ApiError ? err.message : t("error")),

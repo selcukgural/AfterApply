@@ -215,10 +215,18 @@ function CompleteSignupForm({
           error={errors.consentAccepted}
           label={
             <>
-              <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
-                {tRegister("consentLink")}
-              </Link>{" "}
-              {tRegister("consentSuffix")}
+              {tRegister.rich("consent", {
+                privacy: (chunks) => (
+                  <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
+                    {chunks}
+                  </Link>
+                ),
+                terms: (chunks) => (
+                  <Link href="/terms" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </>
           }
         />

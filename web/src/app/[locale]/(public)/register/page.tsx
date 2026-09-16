@@ -162,10 +162,18 @@ export default function RegisterPage() {
             error={errors.consentAccepted}
             label={
               <>
-                <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
-                  {t("consentLink")}
-                </Link>{" "}
-                {t("consentSuffix")}
+              {t.rich("consent", {
+                  privacy: (chunks) => (
+                    <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
+                      {chunks}
+                    </Link>
+                  ),
+                  terms: (chunks) => (
+                    <Link href="/terms" target="_blank" className="text-blue-600 hover:underline dark:text-blue-400">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
               </>
             }
           />

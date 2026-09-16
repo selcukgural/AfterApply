@@ -1,4 +1,5 @@
 using AfterApply.Domain.Applications;
+using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Domain.CompanyReviews;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Documents;
@@ -68,20 +69,25 @@ public sealed record FeedbackExportItem(
     string? AdminReply,
     DateTimeOffset SubmittedAt);
 
-/// <summary>What the user wrote about an employer, with the moderation outcome. Public readers
-/// never see the author; the author gets the whole row back, because it is theirs.</summary>
+/// <summary>What the user said about an employer, with the moderation outcome. Public readers
+/// never see the author; the author gets the whole row back, because it is theirs — including,
+/// on a legacy row, the free text that is no longer shown to anyone else.</summary>
 public sealed record CompanyReviewExportItem(
     Guid Id,
     string CompanyName,
+    ReviewFormat Format,
     EmploymentStatus EmploymentStatus,
-    string Title,
-    string Pros,
-    string Cons,
     int OverallRating,
-    int ManagementRating,
-    int WorkEnvironmentRating,
-    int SalaryAndBenefitsRating,
-    int CareerAndDevelopmentRating,
+    IReadOnlyList<ReviewCategoryRatingDto> CategoryRatings,
+    IReadOnlyList<string> LikedStatements,
+    IReadOnlyList<string> ImprovableStatements,
+    string? Title,
+    string? Pros,
+    string? Cons,
+    int? ManagementRating,
+    int? WorkEnvironmentRating,
+    int? SalaryAndBenefitsRating,
+    int? CareerAndDevelopmentRating,
     ReviewModerationStatus Status,
     string? RejectionReason,
     DateTimeOffset SubmittedAt,

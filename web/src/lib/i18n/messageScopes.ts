@@ -47,7 +47,9 @@ export const LANDING_MESSAGE_SCOPE = [
   "benchmark",
   "companies.summary",
   "companies.scoring",
-  "companyReviews.ratings",
+  // The category names only: the statement catalogue's 400 strings stay out of the landing
+  // bundle (the mock's chips carry landing copy, and its "most picked" lists are empty).
+  "companyReviews.categories",
 ] as const;
 
 export const PUBLIC_MESSAGE_SCOPE = [

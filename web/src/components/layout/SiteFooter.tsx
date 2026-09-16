@@ -18,6 +18,7 @@ const RESOURCE_LINKS = [
   { href: "/privacy", key: "privacy" },
   { href: "/extension-privacy", key: "extensionPrivacy" },
   { href: "/cookies", key: "cookies" },
+  { href: "/terms", key: "terms" },
 ] as const;
 
 /**

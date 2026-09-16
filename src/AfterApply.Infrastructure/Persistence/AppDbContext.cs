@@ -76,6 +76,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<CompanyReviewHelpfulMark> CompanyReviewHelpfulMarks => Set<CompanyReviewHelpfulMark>();
 
+    public DbSet<CompanyReviewCategoryRating> CompanyReviewCategoryRatings => Set<CompanyReviewCategoryRating>();
+
+    public DbSet<CompanyReviewStatementPick> CompanyReviewStatementPicks => Set<CompanyReviewStatementPick>();
+
     public DbSet<RequestAudit> RequestAudits => Set<RequestAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)

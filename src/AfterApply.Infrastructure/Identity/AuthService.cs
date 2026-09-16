@@ -4,6 +4,8 @@ using AfterApply.Application.Documents;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Mailing;
+using AfterApply.Domain.CompanyReviews;
+using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.Persistence;
 using Hangfire;
 using Microsoft.AspNetCore.Identity;
@@ -27,6 +29,7 @@ internal sealed class AuthService(
     IOptions<AppOptions> appOptions,
     IBackgroundJobClient jobClient,
     IdentityErrorDescriber errorDescriber,
+    CompanyReviewQueries reviewQueries,
     ILogger<AuthService> logger) : IAuthService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
@@ -741,16 +744,28 @@ internal sealed class AuthService(
                 f.Status, f.AdminReply, f.SubmittedAt))
             .ToListAsync(cancellationToken);
 
-        var companyReviews = (await dbContext.CompanyReviews
+        var reviewRows = await dbContext.CompanyReviews
             .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.SubmittedAt)
             .Join(dbContext.Companies, r => r.CompanyId, c => c.Id, (r, c) => new { Review = r, CompanyName = c.Name })
-            .ToListAsync(cancellationToken))
-            .Select(x => new CompanyReviewExportItem(
-                x.Review.Id, x.CompanyName, x.Review.EmploymentStatus, x.Review.Title, x.Review.Pros, x.Review.Cons,
-                x.Review.OverallRating, x.Review.ManagementRating, x.Review.WorkEnvironmentRating,
-                x.Review.SalaryAndBenefitsRating, x.Review.CareerAndDevelopmentRating, x.Review.Status,
-                x.Review.RejectionReason, x.Review.SubmittedAt, x.Review.UpdatedAt))
+            .ToListAsync(cancellationToken);
+        var reviewChildren = await reviewQueries.LoadChildrenAsync(reviewRows.Select(x => x.Review.Id), cancellationToken);
+        // Every column, whatever the format: the export is the author's copy, so the legacy text
+        // and the stale legacy ratings of a converted row come back too.
+        var companyReviews = reviewRows
+            .Select(x =>
+            {
+                var r = x.Review;
+                var picks = reviewChildren.Picks[r.Id].ToList();
+                return new CompanyReviewExportItem(
+                    r.Id, x.CompanyName, r.Format, r.EmploymentStatus, r.OverallRating,
+                    reviewChildren.Ratings[r.Id].OrderBy(c => c.Category).ToList(),
+                    picks.Where(p => p.Kind == ReviewStatementKind.Liked).Select(p => p.Key).ToList(),
+                    picks.Where(p => p.Kind == ReviewStatementKind.Improve).Select(p => p.Key).ToList(),
+                    r.Title, r.Pros, r.Cons,
+                    r.ManagementRating, r.WorkEnvironmentRating, r.SalaryAndBenefitsRating, r.CareerAndDevelopmentRating,
+                    r.Status, r.RejectionReason, r.SubmittedAt, r.UpdatedAt);
+            })
             .ToList();
 
         var reviewReports = await dbContext.CompanyReviewReports

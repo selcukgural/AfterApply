@@ -7,21 +7,31 @@ import { StarGlyph } from "@/components/companyReviews/StarRating";
 /**
  * One rating question: five stars as a radio group. Arrow keys move the selection the way a native
  * radio group does, so a keyboard user rates without a mouse; the hover preview is for the mouse.
+ * `onClear` makes it optional: a rated optional category can go back to "not rated", which is a
+ * different answer from any number.
  */
 export function RatingInput({
   label,
+  labelId: externalLabelId,
   value,
   onChange,
+  onClear,
   error,
+  hideLabel,
 }: {
   label: string;
+  /** Use an element rendered elsewhere as the group's name. */
+  labelId?: string;
   value: number;
   onChange: (value: number) => void;
+  onClear?: () => void;
   error?: string;
+  hideLabel?: boolean;
 }) {
   const t = useTranslations("companyReviews.form");
   const [hovered, setHovered] = useState(0);
-  const labelId = useId();
+  const ownLabelId = useId();
+  const labelId = externalLabelId ?? ownLabelId;
 
   const shown = hovered || value;
 
@@ -37,13 +47,15 @@ export function RatingInput({
 
   return (
     <div className="flex flex-col gap-1">
-      <span id={labelId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        {label}
-      </span>
+      {hideLabel ? null : (
+        <span id={ownLabelId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {label}
+        </span>
+      )}
       <div
         role="radiogroup"
         aria-labelledby={labelId}
-        className="flex items-center gap-1"
+        className="flex flex-wrap items-center gap-1"
         onMouseLeave={() => setHovered(0)}
         onKeyDown={handleKeyDown}
       >
@@ -68,8 +80,17 @@ export function RatingInput({
           </button>
         ))}
         <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-          {value > 0 ? t("ratingValue", { value }) : t("ratingNone")}
+          {value > 0 ? t("ratingValue", { value, scale: t(`scale.${value}`) }) : t("ratingNone")}
         </span>
+        {onClear && value > 0 ? (
+          <button
+            type="button"
+            onClick={onClear}
+            className="ml-1 text-xs text-gray-500 underline-offset-2 hover:underline dark:text-gray-400"
+          >
+            {t("clearRating")}
+          </button>
+        ) : null}
       </div>
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>

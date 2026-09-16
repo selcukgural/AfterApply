@@ -75,7 +75,7 @@ describe("the signed-out chrome", () => {
 
   it("keeps the companies pages and the account-free tools one click away", () => {
     for (const href of ['"/companies"', '"/benchmark"', '"/guide"', '"/help"']) expect(header).toContain(href);
-    for (const href of ['"/companies"', '"/benchmark"', '"/cv-tarama"', '"/extension-privacy"', '"/privacy"', '"/cookies"']) {
+    for (const href of ['"/companies"', '"/benchmark"', '"/cv-tarama"', '"/extension-privacy"', '"/privacy"', '"/cookies"', '"/terms"']) {
       expect(footer).toContain(href);
     }
   });

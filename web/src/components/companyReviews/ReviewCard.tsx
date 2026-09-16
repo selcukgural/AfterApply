@@ -2,9 +2,10 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import type { CompanyReviewPublic } from "@/types/api";
-import { RATING_KEYS } from "@/lib/companyReviews/reviewDraft";
+import { categoryMessageKey, findStatement } from "@/lib/companyReviews/statementCatalogue";
 import { formatSubmittedMonth } from "@/lib/companyReviews/score";
 import { StarRating } from "@/components/companyReviews/StarRating";
+import { StatementTag } from "@/components/companyReviews/StatementChip";
 
 interface ReviewCardProps {
   review: CompanyReviewPublic;
@@ -18,22 +19,41 @@ interface ReviewCardProps {
 }
 
 /**
- * One published review. The text is rendered as text (`whitespace-pre-wrap`), never as HTML: it is
- * written by a stranger about a named company, which is the most untrusted string this site holds.
+ * One published review: the relationship and month, the overall stars, only the categories the
+ * author rated, and the statements they picked as short labels (the full sentence is the
+ * tooltip). Nothing here is text the author typed — a legacy review's text is not even on the
+ * record — so there is nothing to escape and nothing a reader has to take on trust.
  */
 export function ReviewCard({ review, helpfulMarked, onToggleHelpful, onReport, signInHref, busy }: ReviewCardProps) {
   const t = useTranslations("companyReviews.card");
-  const tRatings = useTranslations("companyReviews.ratings");
+  const tCategories = useTranslations("companyReviews.categories");
+  const tStatements = useTranslations("companyReviews.statements");
   const tStatus = useTranslations("employmentStatus");
   const locale = useLocale();
+
+  const ratedCount = review.categoryRatings.length + (review.legacySalaryAndBenefitsRating !== null ? 1 : 0);
+  const hasPicks = review.likedStatements.length > 0 || review.improvableStatements.length > 0;
+
+  const tags = (keys: string[]) =>
+    keys.flatMap((key) => {
+      const statement = findStatement(key);
+      // A key the catalogue no longer knows renders as nothing rather than as its key.
+      if (!statement) return [];
+      return [
+        <li key={key}>
+          <StatementTag label={tStatements(`${key}.label`)} sentence={tStatements(`${key}.sentence`)} kind={statement.kind} />
+        </li>,
+      ];
+    });
 
   return (
     <article className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{review.title}</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{tStatus(review.employmentStatus)}</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            {tStatus(review.employmentStatus)} · {formatSubmittedMonth(review.submittedMonth, locale)}
+            {formatSubmittedMonth(review.submittedMonth, locale)}
+            {ratedCount > 0 ? ` · ${t("ratedCategories", { count: ratedCount })}` : null}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -42,27 +62,50 @@ export function ReviewCard({ review, helpfulMarked, onToggleHelpful, onReport, s
         </div>
       </header>
 
-      <dl className="grid gap-x-4 gap-y-1 text-xs text-gray-600 sm:grid-cols-2 dark:text-gray-400">
-        {RATING_KEYS.filter((key) => key !== "overallRating").map((key) => (
-          <div key={key} className="flex items-center justify-between gap-2">
-            <dt>{tRatings(key)}</dt>
-            <dd>
-              <StarRating value={review[key]} label={`${tRatings(key)}: ${review[key]}`} />
-            </dd>
-          </div>
-        ))}
-      </dl>
+      {ratedCount > 0 ? (
+        <dl className="grid gap-x-4 gap-y-1 text-xs text-gray-600 sm:grid-cols-2 dark:text-gray-400">
+          {review.categoryRatings.map(({ category, rating }) => (
+            <div key={category} className="flex items-center justify-between gap-2">
+              <dt>{tCategories(categoryMessageKey(category))}</dt>
+              <dd>
+                <StarRating value={rating} label={`${tCategories(categoryMessageKey(category))}: ${rating}`} />
+              </dd>
+            </div>
+          ))}
+          {review.legacySalaryAndBenefitsRating !== null ? (
+            <div className="flex items-center justify-between gap-2">
+              <dt>{t("legacySalaryAndBenefits")}</dt>
+              <dd>
+                <StarRating
+                  value={review.legacySalaryAndBenefitsRating}
+                  label={`${t("legacySalaryAndBenefits")}: ${review.legacySalaryAndBenefitsRating}`}
+                />
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <section>
-          <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">{t("pros")}</h4>
-          <p className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">{review.pros}</p>
-        </section>
-        <section>
-          <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">{t("cons")}</h4>
-          <p className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">{review.cons}</p>
-        </section>
-      </div>
+      {hasPicks ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {review.likedStatements.length > 0 ? (
+            <section>
+              <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-good-ink">{t("liked")}</h4>
+              <ul className="flex flex-wrap gap-1.5">{tags(review.likedStatements)}</ul>
+            </section>
+          ) : null}
+          {review.improvableStatements.length > 0 ? (
+            <section>
+              <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-warn-ink">{t("improvable")}</h4>
+              <ul className="flex flex-wrap gap-1.5">{tags(review.improvableStatements)}</ul>
+            </section>
+          ) : null}
+        </div>
+      ) : null}
+
+      {review.format === "Legacy" ? (
+        <p className="rounded-lg bg-muted-wash px-3 py-2 text-xs text-muted-ink">{t("legacyNote")}</p>
+      ) : null}
 
       <footer className="flex flex-wrap items-center gap-3 text-xs">
         {onToggleHelpful ? (

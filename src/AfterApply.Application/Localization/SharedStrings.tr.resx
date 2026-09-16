@@ -292,7 +292,7 @@
     <value>Bu değerlendirme için zaten açık bir bildiriminiz var.</value>
   </data>
   <data name="COMPANY_REVIEW_CONTENT_INVALID" xml:space="preserve">
-    <value>Değerlendirme için başlık, artılar ve eksiler gerekir; her puan 1 ile 5 arasında olmalıdır.</value>
+    <value>Genel puan 1 ile 5 arasında olmalı, her kategori bir kez puanlanmalı ve her listeden en fazla 5 hazır madde seçilmelidir.</value>
   </data>
   <data name="COMPANY_REVIEW_REJECTION_REASON_REQUIRED" xml:space="preserve">
     <value>Bir değerlendirmeyi reddetmek için bir gerekçe gerekir.</value>
@@ -311,5 +311,17 @@
   </data>
   <data name="VALIDATION_RESOLUTION_REASON_REQUIRED" xml:space="preserve">
     <value>Bildirim reddedilmiyorsa bir gerekçe gerekir.</value>
+  </data>
+  <data name="VALIDATION_REVIEW_CATEGORY_DUPLICATE" xml:space="preserve">
+    <value>Her kategori yalnızca bir kez puanlanabilir.</value>
+  </data>
+  <data name="VALIDATION_REVIEW_STATEMENTS_TOO_MANY" xml:space="preserve">
+    <value>Bu listeden en fazla {0} madde seçebilirsin.</value>
+  </data>
+  <data name="VALIDATION_REVIEW_STATEMENTS_DUPLICATE" xml:space="preserve">
+    <value>Bir madde yalnızca bir kez seçilebilir.</value>
+  </data>
+  <data name="VALIDATION_REVIEW_STATEMENT_UNKNOWN" xml:space="preserve">
+    <value>Maddelerden biri bu bölümün listesinde yok.</value>
   </data>
 </root>
