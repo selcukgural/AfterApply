@@ -6668,3 +6668,74 @@ pipeline sırası; hiç dönmüyor.
 ilk satır `await host.ResetAsync()`, iş etkisi için `await host.RunJobsAsync()`, kendi
 `WebApplicationFactory`'ni **kurma** — komşularla paylaşılamayan bir konfigürasyon gerçekten gerekiyorsa
 `host.Standalone(...)`. README "Running tests" aynı şeyi söylüyor.
+
+## Pro / Haftalık İlanlar UX turu: menü D3, panel duyurusu, açılış + yardım, ödeme formu ve plan kartları (2026-09-16)
+
+**Tetikleyici.** Kullanıcı (backend geliştirici) UX denetimi istedi: Haftalık İlanlar menüde kime
+görünmeli, yeni ücretli özellik nerede/nasıl duyurulmalı, ödeme formundaki "bir uçtan bir uca
+textbox" sorunu, menü/araç/ödeme ekranlarının trend'e uygun ve yerli yerinde olması. Üç keşif
+ajanıyla denetim, sonra tasarım kanvası: `claude.ai/artifact/SWQZAVFZ8Z6kPxw7JZDTNi`
+("Seçilenler" sayfası kodlanan set, "Elenenler" alternatifler). Bulgular ve kararlar:
+
+**Menü (D3 — 2026-09-14 D3 nav kararını geçersiz kılar).** Giriş sonrası çubukta 10 metin öğesi
+vardı, Haftalık İlanlar 11 yapıyordu; bir gün önce bu yüzden `max-w-6xl`'e genişletilmişti.
+Şimdi dört öğe: **Panel · Başvurular ▾ · Keşfet ▾ · CV'lerim**; Öneriler ve Bildirimler sağda
+**gelen kutusu / zil ikonu + sayaç** (`iconLink`), avatarın yanında. `Başvurular ▾` = Tüm
+başvurular, Takip listem, İçe aktar, — , Yeni başvuru. `Keşfet ▾` = Haftalık ilanlar,
+Şirketler, CV Tarama, Kıyas, Rehber — **tek düz liste**: ilk taslaktaki "Fırsatlar / Hesap
+gerekmez" bölüm başlıkları "Şirketler için Pro gerekir" diye okunuyordu (Şirketler zaten
+hesapsız da okunabiliyor); ücret bilgisini yalnız **Pro rozeti** taşır (`ProBadge`,
+`useProBadge`: `jobSources && payments` açık **ve** hesap Pro değilken; `GET /api/job-sources/status`,
+5 dk staleTime, bayrak kapalıyken hiç çağrılmaz). Haftalık İlanlar herkese görünür (kapı
+sayfası deseni), Pro olunca rozet kalkar. `ToolsMenu` silindi; `NavMenu` (genel açılır grup)
++ `ExploreMenu` (`TOOL_LINKS` burada). Mobil menü düz liste olarak kaldı, rozet orada da var.
+"CV'lerim"i Keşfet'e alma denendi ve geri alındı: kullanıcının kendi verisi, keşif değil.
+`WEEKLY_JOBS_QUERY_KEYS` `lib/weeklyJobs/queryKeys.ts`'e taşındı (navbar `CriteriaForm`'u ve
+onun mesaj alanını import grafiğine çekmesin — `messageScopes` testi yakaladı).
+`siteChrome.contract.test.ts` güncel.
+
+**Panel duyurusu (2B1).** Pro olmayan + iki bayrak açık + kapatılmamış hesaba panelin en üstünde
+`WeeklyJobsAnnouncement`: beyaz kart + marka gradyan ışıması (`.aa-card-glow`, hero'nunkinin
+küçüğü), "YENİ · PRO" gradyan rozeti, başlık "İş aramayı siz değil, biz yapalım…", üç çip madde,
+sağda **puanlı örnek ilan listesi** (92/81/64, sayfanın puan renk kuralı), "Pro'ya geç ·
+{fiyat}/ay" (fiyat canlı `GET /api/payments/plans`, sabit değil) + "Nasıl çalışır →".
+Kullanıcı 2B'yi beğenip "daha vurucu" istedi; 2B1 (ışıma) ve 2B2 (koyu gradyan vitrin) çizildi,
+2B1 seçildi. **Kapatma sunucu tarafı:** `ApplicationUser.WeeklyJobsAnnouncementDismissedAt`
+(migration `AddWeeklyJobsAnnouncementDismissedAt`; `StaleSuggestionDismissedAt` ile aynı
+yaklaşım — iki nullable timestamp için ayrı tercih tablosu henüz değmiyor), `POST
+/api/job-sources/announcement/dismiss` (bayrak kapısının arkasında, idempotent, RequestAudit
+otomatik), `JobSourceStatusResponse.AnnouncementDismissed`. Kart tek seferlik: kapatınca
+hiçbir cihazda geri gelmez. Optimistic update ile tıklamada gider.
+
+**Açılış sayfası + yardım.** Özellik ızgarasına geniş "Yeni · Pro" kartı (`WeeklyJobsFeatureCard`)
+ve yol haritası "Bugün" listesine "Haftalık ilan eşleştirme [Pro]" (`WeeklyJobsRoadmapItem`) —
+ikisi de **client** bileşen, çünkü bayrak yalnız `/api/config`'de: özellik koyuyken açılış
+sayfası onu ilan etmez. Bölüm sırası değişmedi. Yardım: `/help/weekly-jobs` konusu (nasıl
+çalışır 4 adım, uyum puanı, ücret/süre, iade, rıza callout'u; ekran görüntüsü ilk gerçek
+haftadan sonra), kenar çubuğu + `HELP_TOPICS` + sitemap, SSS'ye q16–q18 (ücret/yenileme, CV ve
+yapay zekâ, iade). Görsel kanıt: yardım sayfası ve açılış kartı tarayıcıda doğrulandı.
+
+**Ödeme sayfaları (5A + 6).** Checkout korumalı alandaki **tek** form idi ki `max-w` ve kart yok:
+`Input` `w-full` → ~990 px adres/telefon. Şimdi `lg:grid-cols-[minmax(0,1fr)_20rem]`: solda
+form kartı (`max-w-2xl`, `rounded-xl border p-6`; telefon `sm:max-w-[240px]` — `FormField`
+`className` aldı), sağda `OrderSummary` (plan, KDV dahil, toplam, peşin dönem / otomatik
+yenileme yok, kilit ikonlu PayTR notu); adım 2'de iframe aynı sol sütunda. Başlık "Adım 1 / 2 ·
+Fatura bilgileri". `/pro`: `max-w-3xl`, tek cümle giriş, **yıllık kart önerilen** (`border-2
+border-accent`, "Önerilen · N ay bedava" rozeti — `saves` anahtarı `recommendedSaves` oldu),
+özellik listesi kart içinde (`feature1–4`), aylık `outline` / yıllık `primary`; kapı sayfasının
+üç maddesi artık kartların içinde. Pro sayfalarının `text-2xl` başlıkları uygulamanın `text-xl`
+standardına, `gray-700` açıklamalar `gray-600`'e çekildi (PaymentVerifying dahil). UI
+primitive'leri (`Input/Textarea/Select/Checkbox`) odak halkası/işaret rengi stok `blue-500/600`
+→ marka `accent` — uygulama geneli, butonlarla aynı token.
+
+**Doğrulama.** vitest 437/437, tsc, eslint; integration `JobSources` + `RequestAudit` 36/36
+(`The_Dashboard_Announcement_Stays_Closed_Once_Dismissed_For_That_Account_Only` yeni). Tarayıcı
+(1280 px, açık/koyu): yeni menü tek satır, Keşfet ▾ Pro rozetli, panel kartı, kapatma → DB'de
+zaman damgası ve kart gider, `/pro` kartları, checkout 5A, yardım konusu, açılış kartı + Bugün
+satırı. **Mobil ekran görüntüsü alınamadı** (Chrome penceresi tam ekranda yeniden
+boyutlanmadı, iframe deneme CSP'ye takıldı); mobil menü yapısı değişmedi (düz liste + rozet),
+checkout/kart yerleşimleri `lg`/`sm` altında tek sütuna düşen mevcut desenler.
+
+**Bilinçli yapılmayanlar.** Mevcut kullanıcılara duyuru e-postası (KVKK pazarlama izni yok,
+gerçek kullanıcı yok). Kart köşe yarıçapı ikiliği (`rounded-lg`/`rounded-xl`) dokunulmadı.
+Fiyatlar hâlâ yer tutucu (`29900/299000`); UI canlı değerleri okur.

@@ -3256,24 +3256,31 @@
   "payments": {
     "plans": {
       "title": "Pro plan",
+      "intro": "Her Pazartesi LinkedIn ve kariyer.net'teki yeni ilanlar CV'nizle karşılaştırılıp puanlanır. Peşin dönem; otomatik yenileme yok.",
       "monthly": "Aylık",
       "yearly": "Yıllık",
       "perMonth": "/ ay",
       "perYear": "/ yıl",
       "perMonthEquivalent": "Aylık {amount} eder",
-      "saves": "{months} ay bedava",
+      "recommended": "Önerilen",
+      "recommendedSaves": "Önerilen · {months} ay bedava",
+      "feature1": "Haftada en fazla 50 yeni ilan, uyum puanına göre sıralı",
+      "feature2": "Her ilan için uyan ve eksik kriterler, istenen yetkinlikler, tam metin",
+      "feature3": "Tek tıkla \"Başvurdum\": ilan başvuru listenize geçer",
+      "feature4": "Her Pazartesi \"N ilan hazır\" e-postası",
       "kdvIncluded": "KDV dahil",
       "current": "Pro planınız aktif; bitiş: {date}. Şimdi ödediğiniz süre bu tarihin üstüne eklenir.",
       "extend": "Süreyi uzat",
       "choose": "Bu planı seç",
-      "noAutoRenew": "Otomatik yenileme yoktur. Süre dolmadan birkaç gün önce e-posta ile hatırlatırız; uzatmazsanız hiçbir ücret alınmaz.",
+      "noAutoRenew": "Ödeme PayTR'ın güvenli sayfasında alınır. Otomatik yenileme yoktur; süre dolmadan üç gün önce e-posta ile hatırlatırız, uzatmazsanız hiçbir ücret alınmaz.",
       "historyTitle": "Ödemelerim",
       "loadError": "Planlar yüklenemedi. Lütfen sayfayı yenileyin."
     },
     "checkout": {
       "title": "Ödeme",
-      "step1": "1. Fatura bilgileri",
-      "step2": "2. Ödeme",
+      "step1": "Fatura bilgileri",
+      "step2": "Ödeme",
+      "stepOf": "Adım {step} / 2 · {label}",
       "billingName": "Ad soyad",
       "billingAddress": "Adres",
       "billingPhone": "Telefon",
@@ -3294,6 +3301,16 @@
       "restart": "Yeniden başlat",
       "frameTitle": "PayTR güvenli ödeme sayfası",
       "frameNote": "Ödeme PayTR'ın güvenli sayfasında alınır; kart bilgileriniz e-kariyerim'e hiç ulaşmaz. Ödeme tamamlanınca sonuç sayfasına yönlendirilirsiniz."
+    },
+    "summary": {
+      "title": "Sipariş özeti",
+      "line": "Pro · {plan}",
+      "vat": "KDV (%20)",
+      "vatIncluded": "dahil",
+      "total": "Toplam",
+      "periodMonthly": "Peşin bir aylık dönem. Otomatik yenileme yok; süre dolmadan hatırlatırız.",
+      "periodYearly": "Peşin bir yıllık dönem. Otomatik yenileme yok; süre dolmadan hatırlatırız.",
+      "secure": "Ödeme PayTR'ın güvenli sayfasında alınır; kart bilgileriniz e-kariyerim'e ulaşmaz."
     },
     "result": {
       "verifyingTitle": "Ödemeniz doğrulanıyor",

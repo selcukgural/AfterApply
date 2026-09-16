@@ -76,8 +76,8 @@ export default function OrderResultPage() {
   if (order.error instanceof ApiError && order.error.status === 404) {
     return (
       <div className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t("notFoundTitle")}</h1>
-        <p className="text-sm text-gray-700 dark:text-gray-300">{t("notFound")}</p>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("notFoundTitle")}</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("notFound")}</p>
         <Link href="/pro" className="text-sm underline">
           {t("backToPlans")}
         </Link>
@@ -101,8 +101,8 @@ export default function OrderResultPage() {
   if (data.status === "Paid" || data.status === "RefundRequested" || data.status === "PartiallyRefunded") {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t("paidTitle")}</h1>
-        <p className="text-sm text-gray-700 dark:text-gray-300">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("paidTitle")}</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           {t("paidBody", {
             plan: planName,
             amount,
@@ -126,7 +126,7 @@ export default function OrderResultPage() {
     const explanation = explainFailure(data);
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t("failedTitle")}</h1>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("failedTitle")}</h1>
         <p role="alert" className="text-sm text-gray-700 dark:text-gray-300">
           {tFailure(explanation.messageKey)}
         </p>
@@ -153,8 +153,8 @@ export default function OrderResultPage() {
   if (data.status === "Expired" || data.status === "Cancelled") {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t(data.status === "Expired" ? "expiredTitle" : "cancelledTitle")}</h1>
-        <p className="text-sm text-gray-700 dark:text-gray-300">{t("noCharge")}</p>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t(data.status === "Expired" ? "expiredTitle" : "cancelledTitle")}</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("noCharge")}</p>
         <div className="flex flex-wrap gap-3">
           <Link href={`/pro/checkout?plan=${data.plan.toLowerCase()}`} className={buttonClassName("primary")}>
             {t("tryAgain")}
@@ -170,7 +170,7 @@ export default function OrderResultPage() {
   if (data.status === "Refunded") {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t("refundedTitle")}</h1>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("refundedTitle")}</h1>
         <OrderStatusBadge status={data.status} />
         <Link href="/pro" className="text-sm underline">
           {t("backToPlans")}

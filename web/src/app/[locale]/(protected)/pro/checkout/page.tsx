@@ -3,16 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { BillingForm, type BillingDetails } from "@/components/pro/BillingForm";
+import { OrderSummary } from "@/components/pro/OrderSummary";
 import { PayTrFrame } from "@/components/pro/PayTrFrame";
 import { PRO_QUERY_KEYS, useProAccess } from "@/components/pro/useProAccess";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ApiError } from "@/lib/api/httpClient";
 import { paymentsApi } from "@/lib/api/payments";
-import { formatMinor } from "@/lib/payments/money";
 import type { CheckoutResponse, ProPlan } from "@/types/api";
 
 const TERMINAL = new Set(["Paid", "Failed", "Expired", "Cancelled", "RefundRequested", "Refunded", "PartiallyRefunded"]);
@@ -26,9 +26,7 @@ const TERMINAL = new Set(["Paid", "Failed", "Expired", "Cancelled", "RefundReque
  */
 export default function CheckoutPage() {
   const t = useTranslations("payments.checkout");
-  const tPlans = useTranslations("payments.plans");
   const tCommon = useTranslations("common");
-  const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
@@ -82,8 +80,8 @@ export default function CheckoutPage() {
   if (!plan || !selected) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
-        <p className="text-sm text-gray-700 dark:text-gray-300">{t("unknownPlan")}</p>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("unknownPlan")}</p>
         <Link href="/pro" className="text-sm underline">
           {t("back")}
         </Link>
@@ -93,48 +91,53 @@ export default function CheckoutPage() {
 
   const initialName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
 
+  // 5A on the 2026-09-15 design canvas: the form (or, in step two, PayTR's frame) in a card on
+  // the left, the order summary on the right; below `lg` the summary drops under the form. Before
+  // this the form stretched naked across the page's full 1024px — a twenty-character phone field
+  // a thousand pixels wide.
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
-        <p className="text-sm text-gray-700 dark:text-gray-300">
-          {tPlans(plan === "Yearly" ? "yearly" : "monthly")} · {formatMinor(selected.amountMinor, plans.currency, locale)}{" "}
-          <span className="text-gray-500 dark:text-gray-400">{tPlans("kdvIncluded")}</span>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {t("stepOf", { step: checkout && !expired ? 2 : 1, label: checkout && !expired ? t("step2") : t("step1") })}
         </p>
       </div>
 
-      {expired ? (
-        <div className="flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950/40">
-          <p className="text-amber-800 dark:text-amber-300">{t("expired")}</p>
-          <div>
-            <Button
-              type="button"
-              onClick={() => {
-                setCheckout(null);
-                setExpired(false);
-              }}
-            >
-              {t("restart")}
-            </Button>
-          </div>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="max-w-2xl">
+          {expired ? (
+            <div className="flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50 p-5 text-sm dark:border-amber-800 dark:bg-amber-950/40">
+              <p className="text-amber-800 dark:text-amber-300">{t("expired")}</p>
+              <div>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setCheckout(null);
+                    setExpired(false);
+                  }}
+                >
+                  {t("restart")}
+                </Button>
+              </div>
+            </div>
+          ) : checkout ? (
+            <PayTrFrame
+              iframeUrl={checkout.iframeUrl}
+              expiresAt={checkout.expiresAt}
+              busy={cancel.isPending}
+              onCancel={() => cancel.mutate()}
+              onExpired={handleExpired}
+            />
+          ) : (
+            <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+              <BillingForm initialName={initialName} busy={start.isPending} error={error} onSubmit={(details) => start.mutate(details)} />
+            </div>
+          )}
         </div>
-      ) : checkout ? (
-        <>
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("step2")}</p>
-          <PayTrFrame
-            iframeUrl={checkout.iframeUrl}
-            expiresAt={checkout.expiresAt}
-            busy={cancel.isPending}
-            onCancel={() => cancel.mutate()}
-            onExpired={handleExpired}
-          />
-        </>
-      ) : (
-        <>
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("step1")}</p>
-          <BillingForm initialName={initialName} busy={start.isPending} error={error} onSubmit={(details) => start.mutate(details)} />
-        </>
-      )}
+
+        <OrderSummary plans={plans} plan={plan} />
+      </div>
     </div>
   );
 }

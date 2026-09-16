@@ -63,7 +63,7 @@ export function BillingForm({ initialName, busy, error, onSubmit }: BillingFormP
           autoComplete="street-address"
         />
       </FormField>
-      <FormField label={t("billingPhone")} htmlFor="billing-phone">
+      <FormField label={t("billingPhone")} htmlFor="billing-phone" className="sm:max-w-[240px]">
         <Input
           id="billing-phone"
           value={phone}

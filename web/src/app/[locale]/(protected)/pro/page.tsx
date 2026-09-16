@@ -17,22 +17,14 @@ export default function ProPage() {
   const tCommon = useTranslations("common");
   const { plans, isLoading, error } = useProAccess();
 
+  // The three points the gate makes now live inside each plan card (PlanCards), so the page
+  // itself is one sentence, the cards, the privacy line and the history — at the width of the
+  // other single-purpose pages rather than the full board.
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
-        <p className="text-sm text-gray-700 dark:text-gray-300">{tGate("body")}</p>
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-gray-700 dark:text-gray-300">
-          <li>{tGate("point1")}</li>
-          <li>{tGate("point2")}</li>
-          <li>{tGate("point3")}</li>
-        </ul>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {tGate("privacy")}{" "}
-          <Link href="/privacy#job-matching" className="underline">
-            {tGate("privacyLink")}
-          </Link>
-        </p>
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        <p className="max-w-[62ch] text-sm text-gray-600 dark:text-gray-400">{t("intro")}</p>
       </div>
 
       {isLoading && <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>}
@@ -42,6 +34,13 @@ export default function ProPage() {
         </p>
       )}
       {plans && <PlanCards plans={plans} />}
+
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        {tGate("privacy")}{" "}
+        <Link href="/privacy#job-matching" className="underline">
+          {tGate("privacyLink")}
+        </Link>
+      </p>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("historyTitle")}</h2>

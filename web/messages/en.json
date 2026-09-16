@@ -3256,24 +3256,31 @@
   "payments": {
     "plans": {
       "title": "Pro plan",
+      "intro": "Every Monday, new postings on LinkedIn and kariyer.net are compared with your CV and scored. Prepaid period; no automatic renewal.",
       "monthly": "Monthly",
       "yearly": "Yearly",
       "perMonth": "/ month",
       "perYear": "/ year",
       "perMonthEquivalent": "{amount} a month",
-      "saves": "{months} months free",
+      "recommended": "Recommended",
+      "recommendedSaves": "Recommended · {months} months free",
+      "feature1": "Up to 50 new postings a week, ranked by fit score",
+      "feature2": "Matched and missing criteria, required skills and the full text for every posting",
+      "feature3": "One-click \"I applied\": the posting joins your application list",
+      "feature4": "A \"N postings are ready\" e-mail every Monday",
       "kdvIncluded": "VAT included",
       "current": "Your Pro plan is active until {date}. Whatever you pay for now is added on top of that date.",
       "extend": "Extend",
       "choose": "Choose this plan",
-      "noAutoRenew": "There is no automatic renewal. We remind you by e-mail a few days before the end; if you do not extend, nothing is charged.",
+      "noAutoRenew": "Payment is taken on PayTR's secure page. There is no automatic renewal; we e-mail you three days before the end, and nothing is charged unless you extend.",
       "historyTitle": "My payments",
       "loadError": "The plans could not be loaded. Please reload the page."
     },
     "checkout": {
       "title": "Checkout",
-      "step1": "1. Billing details",
-      "step2": "2. Payment",
+      "step1": "Billing details",
+      "step2": "Payment",
+      "stepOf": "Step {step} of 2 · {label}",
       "billingName": "Full name",
       "billingAddress": "Address",
       "billingPhone": "Phone",
@@ -3294,6 +3301,16 @@
       "restart": "Start again",
       "frameTitle": "PayTR secure payment page",
       "frameNote": "The payment is taken on PayTR's secure page; your card details never reach e-kariyerim. You are sent to the result page when it completes."
+    },
+    "summary": {
+      "title": "Order summary",
+      "line": "Pro · {plan}",
+      "vat": "VAT (20%)",
+      "vatIncluded": "included",
+      "total": "Total",
+      "periodMonthly": "One prepaid month. No automatic renewal; we remind you before it ends.",
+      "periodYearly": "One prepaid year. No automatic renewal; we remind you before it ends.",
+      "secure": "Payment is taken on PayTR's secure page; your card details never reach e-kariyerim."
     },
     "result": {
       "verifyingTitle": "Verifying your payment",
