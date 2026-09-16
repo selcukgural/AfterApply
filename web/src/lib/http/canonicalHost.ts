@@ -41,6 +41,18 @@ export function apexRedirectUrl(
 }
 
 /**
+ * `/index.html` is the address a crawler guesses for a site's front page from the days when that
+ * was a real file; Search Console reported `www.ekariyerim.com/index.html` as a 404. The page it
+ * means is the root, so the path is folded onto it before the host is looked at — a www request
+ * lands on `https://<apex>/` in one hop, and the apex itself answers with a redirect to `/`
+ * rather than a 404. Anything else comes back unchanged.
+ */
+export function stripIndexHtml(pathname: string): string {
+  if (pathname === "/index.html") return "/";
+  return pathname.endsWith("/index.html") ? pathname.slice(0, -"/index.html".length) : pathname;
+}
+
+/**
  * A request for a file rather than a page — /sitemap.xml and /robots.txt.
  *
  * Those two reach the proxy only so the redirect above covers them as well; the locale middleware
