@@ -391,50 +391,69 @@ internal sealed class EmailForwardingService(
         return true;
     }
 
-    public async Task<IReadOnlyList<EmailNotificationResponse>> GetNotificationsAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        var resolvedStatuses = new[] { EmailSuggestionStatus.AutoApplied, EmailSuggestionStatus.Confirmed };
+    private static readonly EmailSuggestionStatus[] NotificationStatuses =
+        [EmailSuggestionStatus.AutoApplied, EmailSuggestionStatus.Confirmed];
 
-        var rows = await dbContext.EmailSuggestions
-            .Where(s => s.UserId == userId && resolvedStatuses.Contains(s.Status) && s.ApplicationId != null)
-            .Join(dbContext.Applications, s => s.ApplicationId, a => a.Id, (s, a) => new { s, a.JobTitle, a.CompanyId })
-            .Join(dbContext.Companies, x => x.CompanyId, c => c.Id, (x, c) => new { x.s, x.JobTitle, CompanyName = c.Name })
+    /// <summary>What the Notifications page is a view over: resolved-by-applying suggestions the user
+    /// has not swiped away. Every notification read and write below starts from here so the four
+    /// endpoints cannot drift on what counts as "a notification".</summary>
+    private IQueryable<EmailSuggestion> Notifications(Guid userId) =>
+        dbContext.EmailSuggestions.Where(s =>
+            s.UserId == userId && NotificationStatuses.Contains(s.Status) && s.NotificationDismissedAt == null);
+
+    public async Task<PagedResult<EmailNotificationResponse>> GetNotificationsAsync(Guid userId,
+        GetNotificationsQuery query, CancellationToken cancellationToken)
+    {
+        var notifications = Notifications(userId);
+        var totalCount = await notifications.CountAsync(cancellationToken);
+
+        // Id as the tie-break so two rows created in the same instant (one signal, one job) cannot
+        // swap sides of a page boundary between requests.
+        var page = await notifications
+            .OrderByDescending(s => s.CreatedAt)
+            .ThenByDescending(s => s.Id)
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var responses = rows.Select(row => new EmailNotificationResponse(
-            row.s.Id, row.s.ApplicationId, row.CompanyName, row.JobTitle,
-            row.s.SuggestedStatus, row.s.Status == EmailSuggestionStatus.AutoApplied,
-            IsNewApplicationSuggestion: false, row.s.MatchType, row.s.ConfidenceScore, row.s.IsRead,
-            row.s.CreatedAt, row.s.ResolvedAt))
-            .ToList();
+        // Company/job title come from the application for a matched suggestion; one lookup for the
+        // page rather than a join, so the paging above is over suggestions alone.
+        var applicationIds = page.Where(s => s.ApplicationId != null).Select(s => s.ApplicationId!.Value).Distinct().ToList();
+        var applications = applicationIds.Count == 0
+            ? new Dictionary<Guid, (string CompanyName, string JobTitle)>()
+            : await dbContext.Applications
+                .Where(a => applicationIds.Contains(a.Id))
+                .Join(dbContext.Companies, a => a.CompanyId, c => c.Id, (a, c) => new { a.Id, a.JobTitle, CompanyName = c.Name })
+                .AsNoTracking()
+                .ToDictionaryAsync(x => x.Id, x => (x.CompanyName, x.JobTitle), cancellationToken);
 
         // "New job" suggestions never get ApplicationId back-filled on Confirm (see EmailSuggestion.
         // ApplicationId doc comment — it's a permanent discriminator of the suggestion's original
-        // kind), so CompanyName/JobTitle come from the Extracted* fields, not a join.
-        var newJobRows = await dbContext.EmailSuggestions
-            .Where(s => s.UserId == userId && resolvedStatuses.Contains(s.Status) && s.ApplicationId == null)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        // kind), so CompanyName/JobTitle come from the Extracted* fields, not the lookup.
+        var items = page.Select(s =>
+        {
+            var isNewJob = s.ApplicationId is null;
+            var (companyName, jobTitle) = isNewJob
+                ? (s.ExtractedCompanyName ?? "", s.ExtractedJobTitle ?? "")
+                : applications.GetValueOrDefault(s.ApplicationId!.Value, ("", ""));
+            return new EmailNotificationResponse(
+                s.Id, s.ApplicationId, companyName, jobTitle,
+                s.SuggestedStatus, s.Status == EmailSuggestionStatus.AutoApplied,
+                IsNewApplicationSuggestion: isNewJob, s.MatchType, s.ConfidenceScore, s.IsRead,
+                s.CreatedAt, s.ResolvedAt);
+        }).ToList();
 
-        responses.AddRange(newJobRows.Select(s => new EmailNotificationResponse(
-            s.Id, ApplicationId: null, s.ExtractedCompanyName ?? "", s.ExtractedJobTitle ?? "",
-            s.SuggestedStatus, s.Status == EmailSuggestionStatus.AutoApplied,
-            IsNewApplicationSuggestion: true, s.MatchType, s.ConfidenceScore, s.IsRead,
-            s.CreatedAt, s.ResolvedAt)));
-
-        return [.. responses.OrderByDescending(r => r.CreatedAt)];
+        return new PagedResult<EmailNotificationResponse>(items, totalCount, query.Page, query.PageSize);
     }
 
     public Task<int> GetUnreadNotificationCountAsync(Guid userId, CancellationToken cancellationToken) =>
-        dbContext.EmailSuggestions.CountAsync(
-            s => s.UserId == userId && s.Status == EmailSuggestionStatus.AutoApplied && !s.IsRead,
-            cancellationToken);
+        Notifications(userId).CountAsync(s => s.Status == EmailSuggestionStatus.AutoApplied && !s.IsRead, cancellationToken);
 
     public async Task MarkNotificationsReadAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var unread = await dbContext.EmailSuggestions
-            .Where(s => s.UserId == userId && s.Status == EmailSuggestionStatus.AutoApplied && !s.IsRead)
+        var unread = await Notifications(userId)
+            .Where(s => s.Status == EmailSuggestionStatus.AutoApplied && !s.IsRead)
             .ToListAsync(cancellationToken);
 
         if (unread.Count == 0)
@@ -449,6 +468,30 @@ internal sealed class EmailForwardingService(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> DismissNotificationAsync(Guid userId, Guid suggestionId, CancellationToken cancellationToken)
+    {
+        // Not Notifications(userId): a row the user already cleared must answer 204 again, not 404 —
+        // a swipe that raced its own retry is not an error.
+        var suggestion = await dbContext.EmailSuggestions.FirstOrDefaultAsync(s =>
+            s.Id == suggestionId && s.UserId == userId && NotificationStatuses.Contains(s.Status), cancellationToken);
+
+        if (suggestion is null)
+        {
+            return false;
+        }
+
+        suggestion.DismissNotification(DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public Task<int> DismissAllNotificationsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        return Notifications(userId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.NotificationDismissedAt, now), cancellationToken);
     }
 
     private async Task<EmailClassificationResult> ClassifyAsync(string senderEmail, string subject, string snippet,

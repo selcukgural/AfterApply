@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using AfterApply.Api.Extensions;
+using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Application.Localization;
@@ -149,11 +150,15 @@ public static class EmailForwardingEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
-        group.MapGet("/notifications", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
-                Results.Ok(await service.GetNotificationsAsync(user.GetUserId(), cancellationToken)))
+        group.MapGet("/notifications", async ([AsParameters] GetNotificationsQuery query, ClaimsPrincipal user,
+                IEmailForwardingService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetNotificationsAsync(user.GetUserId(), query, cancellationToken)))
             .RequireAuthorization()
-            .WithSummary("List auto-applied and user-confirmed email-derived status changes, newest first")
-            .Produces<IReadOnlyList<EmailNotificationResponse>>()
+            .WithValidation<GetNotificationsQuery>()
+            .WithSummary("List auto-applied and user-confirmed email-derived status changes the user has not cleared, newest first")
+            .WithDescription("Paged; PageSize defaults to the ten rows the Notifications page shows.")
+            .Produces<PagedResult<EmailNotificationResponse>>()
+            .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/notifications/count", async (ClaimsPrincipal user, IEmailForwardingService service, CancellationToken cancellationToken) =>
@@ -170,6 +175,31 @@ public static class EmailForwardingEndpoints
             })
             .RequireAuthorization()
             .WithSummary("Mark all currently-unread notifications as read (fired once when the notifications page loads)")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/notifications/{id:guid}/dismiss", async (Guid id, ClaimsPrincipal user,
+                IEmailForwardingService service, CancellationToken cancellationToken) =>
+            {
+                var dismissed = await service.DismissNotificationAsync(user.GetUserId(), id, cancellationToken);
+                return dismissed ? Results.NoContent() : Results.NotFound();
+            })
+            .RequireAuthorization()
+            .WithSummary("Clear one notification off the page")
+            .WithDescription("Hides the row from the notifications list only; the underlying suggestion and the " +
+                             "status change it applied are untouched. Idempotent.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/notifications/dismiss-all", async (ClaimsPrincipal user, IEmailForwardingService service,
+                CancellationToken cancellationToken) =>
+            {
+                await service.DismissAllNotificationsAsync(user.GetUserId(), cancellationToken);
+                return Results.NoContent();
+            })
+            .RequireAuthorization()
+            .WithSummary("Clear every notification off the page")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
