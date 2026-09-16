@@ -284,7 +284,11 @@
       "companiesTitle": "Şirketleri içeriden tanı",
       "companiesBody": "Orada çalışmış kişilerin anonim değerlendirmeleri ve açık formüllü bir puan — hesap gerekmeden oku, giriş yapınca yaz.",
       "companiesCta": "Şirketlere göz at",
-      "companiesBadge": "Yeni"
+      "companiesBadge": "Yeni",
+      "weeklyJobsTitle": "Size uyan ilanlar her Pazartesi hazır",
+      "weeklyJobsBody": "LinkedIn ve kariyer.net'teki yeni ilanlar CV'nizle karşılaştırılıp puanlanır; uyan ve eksik kriterler yazılır, zaten başvurduklarınız elenir. Pro plan; peşin dönem, otomatik yenileme yok.",
+      "weeklyJobsCta": "Nasıl çalışır",
+      "weeklyJobsBadge": "Yeni · Pro"
     },
     "linkedinImport": {
       "eyebrow": "İçe aktarma",
@@ -362,7 +366,9 @@
       "futureInsights": "Anonim, toplu işe alım içgörüleri",
       "todayCvScan": "CV taraması (hesapsız)",
       "todayBenchmark": "Geri dönüş kıyası (hesapsız)",
-      "todayCompanies": "Şirket değerlendirmeleri"
+      "todayCompanies": "Şirket değerlendirmeleri",
+      "todayWeeklyJobs": "Haftalık ilan eşleştirme",
+      "proBadge": "Pro"
     },
     "privacy": {
       "eyebrow": "Güven",

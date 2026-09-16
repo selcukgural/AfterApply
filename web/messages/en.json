@@ -284,7 +284,11 @@
       "companiesTitle": "Know companies from the inside",
       "companiesBody": "Anonymous reviews from people who worked there and a score with a public formula — read without an account, write once signed in.",
       "companiesCta": "Browse companies",
-      "companiesBadge": "New"
+      "companiesBadge": "New",
+      "weeklyJobsTitle": "Postings that fit you, ready every Monday",
+      "weeklyJobsBody": "New postings on LinkedIn and kariyer.net are compared with your CV and scored; matched and missing criteria are spelled out, and the ones you already applied to are left out. Pro plan; prepaid period, no automatic renewal.",
+      "weeklyJobsCta": "How it works",
+      "weeklyJobsBadge": "New · Pro"
     },
     "linkedinImport": {
       "eyebrow": "Import",
@@ -362,7 +366,9 @@
       "futureInsights": "Anonymous, aggregate hiring insights",
       "todayCvScan": "CV scan (no account)",
       "todayBenchmark": "Reply rate benchmark (no account)",
-      "todayCompanies": "Company reviews"
+      "todayCompanies": "Company reviews",
+      "todayWeeklyJobs": "Weekly job matching",
+      "proBadge": "Pro"
     },
     "privacy": {
       "eyebrow": "Trust",

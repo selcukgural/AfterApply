@@ -39,6 +39,9 @@ export const LANDING_ICON_PATHS = {
       d="M3 21h18M5 21V5.5A1.5 1.5 0 016.5 4h7A1.5 1.5 0 0115 5.5V21M15 10h3.5A1.5 1.5 0 0120 11.5V21M8 8h3M8 11.5h3M8 15h3M18 14h.01M18 17.5h.01"
     />
   ),
+  weeklyJobs: (
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z" />
+  ),
 } as const;
 
 export type LandingIcon = keyof typeof LANDING_ICON_PATHS;
