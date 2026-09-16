@@ -51,9 +51,9 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "/privacy",
   "/extension-privacy",
   "/cookies",
-  // /terms-of-sale and /refund-policy are drafts until their text is final: reachable, noindex,
-  // not in the sitemap yet. Add them here (and to the footer) when they are.
   "/terms",
+  "/terms-of-sale",
+  "/refund-policy",
   ...HELP_TOPICS.map((topic) => topic.href),
   GUIDE_PATH,
   // The guide articles are the one place where the path itself differs per locale: the slug is

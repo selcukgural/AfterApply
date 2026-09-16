@@ -862,13 +862,17 @@ Then, to switch on, in this order:
    --data-file=-` and the same for `-key` and `-salt`. Locally: `dotnet user-secrets set
    "PayTr:MerchantId" …` (README "PayTR Setup"). Never in `appsettings.json`.
 2. **Prices.** `PayTr__Plans__Monthly__AmountMinor` / `__Yearly__` in `deploy.yml` `env_vars`,
-   kuruş, KDV included (29900 = ₺299,00). The yearly is meant to be ten monthlies. A zero price
-   fails the API on start while `PayTr__Enabled=true` (`PayTrOptionsValidator`).
-3. **Legal pages.** `/terms-of-sale` and `/refund-policy` exist as drafts (amber "draft" notice,
-   noindex, not in the footer). Replace the `[metin gelecek]` bodies in `web/messages/{tr,en}.json`
-   (`termsOfSale.*`, `refundPolicy.*`), remove `LegalDraftNotice` and the `legalDraft` keys, add
-   both paths to `PUBLIC_PATHS` (routes.ts) and `RESOURCE_LINKS` (SiteFooter). PayTR's merchant
-   review looks for these links on the site; the checkout's consent box links to both.
+   kuruş, KDV included. Confirmed 2026-09-16: 29900 (₺299,00/month) and 299000 (₺2.990,00/year,
+   ten monthlies) are the launch prices, not placeholders. A zero price fails the API on start
+   while `PayTr__Enabled=true` (`PayTrOptionsValidator`).
+3. **Legal pages — DONE 2026-09-16.** `/terms-of-sale` and `/refund-policy` are final, indexed,
+   in the sitemap and the footer. The policy they state (seven-day no-questions full refund, used
+   time deducted after that, a reply within three business days, requests from the app or by
+   e-mail to destek@ekariyerim.com / support@ekariyerim.com) is also what `PaymentOrder.PolicyRefundMinor` computes for
+   the admin panel's default refund amount, and every refund now winds the Pro period back in
+   proportion to the money. Seller identity on the agreement: "e-kariyerim", the Edremit/Balıkesir
+   address and the 0266 phone number the owner supplied (`termsOfSale.sections.parties.body`). **destek@ekariyerim.com and support@ekariyerim.com
+   must exist and be read** before the checkout opens: it is printed as the refund channel.
 4. **Notification URL.** Mağaza Paneli › Destek & Kurulum › Ayarlar › Bildirim URL:
    `https://<API host>/api/payments/paytr/callback`, protocol **HTTPS**. The API host is the
    Cloud Run service URL (the value of the `GCP_API_URL` GitHub secret, e.g.

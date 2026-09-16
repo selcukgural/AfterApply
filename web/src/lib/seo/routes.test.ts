@@ -166,6 +166,13 @@ describe("help topics", () => {
   });
 });
 
+describe("the Pro plan's sale terms", () => {
+  it("are public, indexed pages since their text went final (2026-09-16)", () => {
+    expect(PUBLIC_PATHS).toContain("/terms-of-sale");
+    expect(PUBLIC_PATHS).toContain("/refund-policy");
+  });
+});
+
 // The visit counter's allowlist lives in the API (SiteTrafficNormalizer) because that is where it
 // has to be enforced — a client-side copy would be advisory. But it is a hand-written list of this
 // app's routes, so it drifts the moment a page is added here and not there, and the failure is

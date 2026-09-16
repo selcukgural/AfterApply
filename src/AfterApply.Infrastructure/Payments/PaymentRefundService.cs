@@ -54,14 +54,15 @@ internal sealed class PaymentRefundService(
             return null;
         }
 
-        order.RejectRefund(note.Trim(), _timeProvider.GetUtcNow());
+        var now = _timeProvider.GetUtcNow();
+        order.RejectRefund(note.Trim(), now);
         await dbContext.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Refund request rejected for order {OrderId} by {AdminId}", order.Id, adminUserId);
 
         var (email, locale) = (order.Email, PaymentFormatting.NormalizeLocale(order.Locale));
         var trimmedNote = note.Trim();
         jobClient.Enqueue<IEmailSender>(s => s.SendRefundRejectedEmailAsync(email, locale, trimmedNote, CancellationToken.None));
-        return order.ToAdminResponse();
+        return order.ToAdminResponse(now);
     }
 
     public async Task<AdminPaymentOrderResponse?> RefundAsync(Guid adminUserId, Guid orderId, long? amountMinor, CancellationToken cancellationToken)
@@ -95,7 +96,7 @@ internal sealed class PaymentRefundService(
                 await CommitRefundAsync(order, amount, success.ReferenceNo ?? referenceNo, adminUserId, now,
                     JsonSerializer.Serialize(new { success.ReturnAmount, success.ReferenceNo, success.IsTest }), cancellationToken);
                 logger.LogInformation("Refunded {Amount} kuruş on order {OrderId} by {AdminId}", amount, order.Id, adminUserId);
-                return order.ToAdminResponse();
+                return order.ToAdminResponse(now);
             case PayTrRefundResult.Rejected rejected:
                 await RecordAsync(order, amount, PaymentNotificationOutcome.Error,
                     JsonSerializer.Serialize(new { rejected.ErrorNo, rejected.Message }), now);
@@ -125,7 +126,7 @@ internal sealed class PaymentRefundService(
         // reaches the log so it cannot forge a second line (CodeQL cs/log-forging).
         logger.LogWarning("Refund of {Amount} kuruş on order {OrderId} recorded by hand by {AdminId} (reference {Reference})",
             amountMinor, order.Id, adminUserId, SafeLogValue.SingleLine(referenceNo));
-        return order.ToAdminResponse();
+        return order.ToAdminResponse(now);
     }
 
     private async Task CommitRefundAsync(PaymentOrder order, long amountMinor, string referenceNo, Guid adminUserId, DateTimeOffset now,
@@ -134,11 +135,13 @@ internal sealed class PaymentRefundService(
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         order.RecordRefund(amountMinor, referenceNo, adminUserId, now);
-        if (order.Status == PaymentOrderStatus.Refunded && order.UserId is { } userId)
+        if (order.UserId is { } userId)
         {
-            // A full refund takes back exactly the period this order added; days from other,
+            // Every refund takes back the matching share of the period this order added — all of
+            // it for a full refund, the unused remainder for a policy refund after the seven-day
+            // window (the policy's "used days are deducted" is exactly this); days from other,
             // unrefunded orders stay.
-            await entitlements.WindBackAsync(userId, order.EntitlementExtension, cancellationToken);
+            await entitlements.WindBackAsync(userId, order.EntitlementWindBackFor(amountMinor), cancellationToken);
         }
 
         dbContext.PaymentNotifications.Add(PaymentNotification.Create(order.MerchantOid, order.Id, "refund", amountMinor, order.PaidAmountMinor,

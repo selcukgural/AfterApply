@@ -11,13 +11,13 @@ internal static class PaymentOrderMapper
             o.Status is PaymentOrderStatus.Paid or PaymentOrderStatus.PartiallyRefunded && o.RefundableAmountMinor > 0,
             o.TotalAmountMinor);
 
-    public static AdminPaymentOrderResponse ToAdminResponse(this PaymentOrder o) =>
+    public static AdminPaymentOrderResponse ToAdminResponse(this PaymentOrder o, DateTimeOffset now) =>
         new(o.Id, o.UserId, o.Email, o.MerchantOid, o.Plan.ToString(), o.AmountMinor, o.TotalAmountMinor, o.Currency, o.Status.ToString(),
             o.BillingName, o.BillingAddress, o.BillingPhone, o.Locale, o.TermsVersion, o.TermsAcceptedAt, o.PaymentType, o.TestMode,
             o.AmountMismatch, o.FailedReasonCode, o.FailedReasonMsg, o.CreatedAt, o.UpdatedAt, o.TokenExpiresAt, o.PaidAt, o.FailedAt,
             o.CancelledAt, o.CancelledByUserId, o.EntitlementActiveUntilBefore, o.EntitlementActiveUntilAfter, o.RefundRequestedAt,
             o.RefundReason, o.RefundedAt, o.RefundedAmountMinor, o.RefundableAmountMinor, o.RefundReferenceNo, o.RefundedByUserId,
-            o.RefundRejectedAt, o.RefundRejectionNote);
+            o.RefundRejectedAt, o.RefundRejectionNote, o.PolicyRefundMinor(now));
 
     public static PaymentNotificationResponse ToResponse(this PaymentNotification n) =>
         new(n.Id, n.MerchantOid, n.OrderId, n.Status, n.TotalAmountMinor, n.PaymentAmountMinor, n.PaymentType, n.FailedReasonCode,

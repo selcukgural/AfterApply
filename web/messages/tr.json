@@ -434,7 +434,9 @@
       "cookies": "Çerez Politikası",
       "benchmark": "Geri dönüş oranı kıyaslama",
       "extensionPrivacy": "Eklenti Gizlilik Politikası",
-      "terms": "Kullanım Koşulları"
+      "terms": "Kullanım Koşulları",
+      "termsOfSale": "Mesafeli Satış Sözleşmesi",
+      "refundPolicy": "İptal ve İade Koşulları"
     }
   },
   "common": {
@@ -2111,15 +2113,15 @@
         },
         "step2": {
           "title": "İade talebi açın",
-          "body": "Uygun ödemelerin yanında \"İade talep et\" düğmesi görünür. Nedeninizi yazıp gönderirsiniz; talep elle incelenir, sonuç e-posta ile bildirilir. Onaylanırsa tutar PayTR üzerinden ödemeyi yaptığınız karta 3–10 iş gününde iade edilir ve Pro planınız o ödemenin eklediği süre kadar geri alınır."
+          "body": "Uygun ödemelerin yanında \"İade talep et\" düğmesi görünür; nedeninizi yazıp gönderirsiniz (ilk 7 gün için gerekçe gerekmez). Dilerseniz sipariş numaranızla destek@ekariyerim.com adresine de yazabilirsiniz. En geç 3 iş günü içinde dönüş yapılır, sonuç e-posta ile bildirilir. Onaylanan tutar PayTR üzerinden ödemeyi yaptığınız karta 3–10 iş gününde iade edilir ve Pro planınız iade oranında geri alınır."
         },
         "step3": {
           "title": "İptal için bir şey yapmanız gerekmez",
           "body": "Otomatik yenileme yoktur; süre dolmadan üç gün önce e-posta ile hatırlatırız. Uzatmazsanız hiçbir ücret alınmaz, Pro plan bitiş tarihinde kendiliğinden kapanır ve başvurularınız, CV'leriniz olduğu gibi kalır."
         },
         "calloutWithdrawal": {
-          "title": "Cayma hakkı",
-          "body": "Ödeme sayfasında dijital hizmetin hemen başlamasına onay verdiğiniz için yasal cayma hakkı kalkar; iade talebi bunun yerine geçmez, her talep tek tek değerlendirilir. Ayrıntılar İptal ve İade Koşulları sayfasındadır."
+          "title": "İade hakkı",
+          "body": "Ödeme tarihinden itibaren 7 gün içinde gerekçe göstermeden tam iade alabilirsiniz. 7 günden sonra kullandığınız süre düşülür, kalanı iade edilir ve Pro planınız o anda sona erer. Talebinize en geç 3 iş günü içinde dönüş yaparız. Ayrıntılar İptal ve İade Koşulları sayfasındadır."
         },
         "refundPolicyLink": "İptal ve İade Koşulları"
       },
@@ -2284,7 +2286,7 @@
       },
       "q18": {
         "question": "Pro planı iade edebilir miyim?",
-        "answer": "Ödeme sayfasında hizmetin hemen başlamasına onay verdiğiniz için yasal cayma hakkı kalkar; yine de Ayarlar › Plan ve ödemeler'den iade talebi açabilirsiniz. Talepler elle incelenir, iade PayTR üzerinden aynı karta yapılır."
+        "answer": "Evet. Ödeme tarihinden itibaren 7 gün içinde gerekçe göstermeden tam iade alırsınız; 7 günden sonra kullandığınız süre düşülür, kalanı iade edilir ve Pro o anda biter. Talebi Ayarlar › Plan ve ödemeler'den ya da sipariş numaranızla destek@ekariyerim.com adresine yazarak açın; en geç 3 iş günü içinde dönüş yaparız, iade PayTR üzerinden aynı karta yapılır."
       },
       "q19": {
         "question": "Pro planı nasıl iptal ederim?",
@@ -2552,7 +2554,7 @@
       },
       "refund": {
         "title": "İade",
-        "body": "Ödeme sayfasında dijital hizmetin hemen başlamasına onay verdiğiniz için yasal cayma hakkı kalkar; yine de Ayarlar › Plan ve ödemeler'den iade talebi açabilirsiniz, her talebi elle inceleriz ve iade PayTR üzerinden aynı karta yapılır."
+        "body": "İlk 7 gün gerekçesiz tam iade; sonrasında kullandığınız süre düşülür, kalanı iade edilir. Talebi Ayarlar › Plan ve ödemeler'den ya da sipariş numaranızla destek@ekariyerim.com adresine yazarak açarsınız; en geç 3 iş günü içinde dönüş yapar, iadeyi PayTR üzerinden aynı karta göndeririz."
       },
       "calloutConsent": {
         "title": "CV'niz nereye gidiyor",
@@ -4581,7 +4583,7 @@
       "billingAddress": "Adres",
       "billingPhone": "Telefon",
       "billingWhy": "Bu bilgiler fatura için gereklidir ve ödeme sağlayıcısı PayTR'a iletilir. Kart bilgileriniz e-kariyerim'e hiç ulaşmaz.",
-      "terms": "<sale>Mesafeli Satış Sözleşmesi ve Ön Bilgilendirme Formu</sale>'nu okudum, kabul ediyorum. Dijital hizmetin hemen ifasına onay veriyorum ve bu nedenle cayma hakkımı kaybedeceğimi biliyorum (<refund>iptal ve iade koşulları</refund>).",
+      "terms": "<sale>Mesafeli Satış Sözleşmesi ve Ön Bilgilendirme Formu</sale>'nu okudum, kabul ediyorum. Dijital hizmetin hemen ifasına onay veriyorum ve bu nedenle yasal cayma hakkımın kalktığını biliyorum; ilk 7 gün için sözleşmedeki koşulsuz iade hakkım saklıdır (<refund>iptal ve iade koşulları</refund>).",
       "termsRequired": "Devam etmek için sözleşmeyi kabul etmelisiniz.",
       "pay": "Ödemeye geç",
       "starting": "Ödeme sayfası hazırlanıyor…",
@@ -4674,7 +4676,7 @@
     },
     "refund": {
       "title": "İade talebi",
-      "body": "Talebiniz incelenir; onaylanırsa tutar ödeme yaptığınız karta PayTR üzerinden iade edilir ve Pro planınız bu ödemenin eklediği süre kadar geri alınır. Sonuç e-posta ile bildirilir.",
+      "body": "Ödeme tarihinden itibaren 7 gün içindeyseniz tutarın tamamı iade edilir; sonrasında kullandığınız süre düşülür, kalanı iade edilir. Her iki durumda da Pro planınız iade oranında geri alınır. En geç 3 iş günü içinde dönüş yapar, tutarı PayTR üzerinden ödeme yaptığınız karta göndeririz; sonuç e-posta ile bildirilir.",
       "policyLink": "İptal ve iade koşulları",
       "reason": "İade nedeniniz",
       "submit": "Talebi gönder",
@@ -4787,7 +4789,7 @@
       "cancel": "Vazgeç",
       "refundTitle": "İade",
       "refundConfirm": "PayTR'a iade isteği gönder",
-      "refundBody": "Tutar PayTR üzerinden aynı karta iade edilir (3–10 iş günü). İade edilebilir en fazla {max}. Tam iadede kullanıcının Pro süresi bu siparişin eklediği kadar geri alınır.",
+      "refundBody": "Tutar PayTR üzerinden aynı karta iade edilir (3–10 iş günü). İade edilebilir en fazla {max}. Kullanıcının Pro süresi iade edilen tutar oranında geri alınır: tam iadede bu siparişin eklediği sürenin tamamı, politika tutarında kalan süre (Pro o anda biter).",
       "rejectTitle": "İade talebini reddet",
       "rejectConfirm": "Reddet ve kullanıcıya bildir",
       "rejectBody": "Not kullanıcıya e-posta ile gönderilir; sipariş 'Ödendi' durumuna döner.",
@@ -4799,15 +4801,13 @@
       "amount": "İade tutarı (₺)",
       "amountInvalid": "Tutar 0'dan büyük ve iade edilebilir tutardan küçük ya da eşit olmalı.",
       "reference": "PayTR referans no",
-      "note": "Ret notu (kullanıcıya gider)"
+      "note": "Ret notu (kullanıcıya gider)",
+      "policyAmount": "Politika tutarı (7 gün içinde tamamı, sonrasında kullanılan süre düşülmüş): {amount}. Varsayılan olarak dolduruldu."
     }
-  },
-  "legalDraft": {
-    "notice": "Bu metin taslaktır; nihai hâli yayımlanmadan Pro plan satışa açılmaz."
   },
   "termsOfSale": {
     "title": "Mesafeli Satış Sözleşmesi ve Ön Bilgilendirme Formu",
-    "lastUpdated": "Sürüm 2026-09 (taslak)",
+    "lastUpdated": "Sürüm 2026-09",
     "intro": "Bu sözleşme, e-kariyerim Pro planının (haftalık ilan eşleştirme hizmeti) internet üzerinden satışına ilişkin olarak 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği uyarınca düzenlenmiştir.",
     "seeAlso": "Bakınız:",
     "refundLink": "İptal ve iade koşulları",
@@ -4815,92 +4815,92 @@
     "sections": {
       "parties": {
         "title": "Taraflar",
-        "body": "[Satıcı unvanı, adresi, vergi dairesi/no, e-posta] ile hizmeti satın alan tüketici (Alıcı). Alıcının bilgileri ödeme sırasında girdiği ad soyad, adres, telefon ve hesabındaki e-posta adresidir."
+        "body": "Satıcı: e-kariyerim — Adres: Hamidiye Mahallesi, Ülkü Yolu Caddesi, 6903 Sokak No: 34, Edremit / Balıkesir. Telefon: 0266 265 45 99. E-posta: destek@ekariyerim.com. Web: ekariyerim.com.\nAlıcı: Hizmeti e-kariyerim üzerinden satın alan tüketici. Alıcının bilgileri, ödeme sırasında girdiği ad soyad, fatura adresi ve telefon ile e-kariyerim hesabındaki e-posta adresidir; bu bilgiler siparişte saklanır ve fatura bu bilgilerle düzenlenir."
       },
       "subject": {
         "title": "Sözleşmenin konusu",
-        "body": "[Metin gelecek] Sözleşmenin konusu, Alıcının e-kariyerim üzerinden elektronik ortamda sipariş verdiği Pro planın satışı ve ifasına ilişkin tarafların hak ve yükümlülükleridir."
+        "body": "Bu sözleşmenin konusu, Alıcının e-kariyerim (ekariyerim.com) üzerinden elektronik ortamda sipariş verdiği Pro planın (haftalık ilan eşleştirme hizmeti) satışı ve ifasına ilişkin olarak tarafların 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği'nden doğan hak ve yükümlülüklerinin belirlenmesidir. Bu metin aynı zamanda Yönetmeliğin 5. maddesi uyarınca ön bilgilendirme formu niteliğindedir; Alıcı ödeme sayfasındaki onay kutusunu işaretleyerek ön bilgilendirmeyi aldığını teyit eder."
       },
       "service": {
         "title": "Hizmetin nitelikleri",
-        "body": "[Metin gelecek] Pro plan: Alıcının kaydettiği kriterlere göre her hafta LinkedIn ve kariyer.net üzerindeki yeni ilanların toplanması, CV ile karşılaştırılıp puanlanması ve e-posta ile bildirilmesi. Aylık plan bir takvim ayı, yıllık plan bir takvim yılı süreyle geçerlidir; otomatik yenileme yoktur."
+        "body": "Pro plan, dijital ortamda sunulan bir hizmettir: Alıcının kaydettiği pozisyon adları, konum ve uzaktan çalışma tercihine göre her hafta LinkedIn ve kariyer.net üzerindeki yeni ilanlar toplanır, Alıcının ayrıca rıza vermesi hâlinde CV'siyle karşılaştırılıp puanlanır ve hazır olduğunda e-posta ile bildirilir. Hizmetin kapsamı ve sınırları (haftalık ilan sayısı, kaynak siteler, puanlama) yardım merkezindeki \"Haftalık ilanlar\" sayfasında açıklanmıştır.\nSüre: Aylık plan bir takvim ayı, yıllık plan bir takvim yılı süreyle geçerlidir. Dönem, ödemenin onaylandığı anda; devam eden bir Pro dönemi varsa onun bitiminde başlar. Otomatik yenileme yoktur, kart bilgisi saklanmaz; dönem sonunda hiçbir ücret alınmaz.\nHizmet, ilan bulunmasını ya da işe alınmayı garanti etmez; üçüncü taraf sitelerin erişilebilirliğine bağlı olarak bir hafta hiç ya da az ilan bulunabilir."
       },
       "price": {
         "title": "Fiyat",
-        "body": "[Metin gelecek] Fiyat, ödeme sayfasında KDV dahil olarak gösterilen tutardır. Fiyat değişiklikleri başlamış dönemleri etkilemez."
+        "body": "Hizmet bedeli, ödeme sayfasında ve plan seçim ekranında Türk lirası olarak, KDV dâhil gösterilen tutardır; ayrıca kargo, kurulum ya da başka bir ücret yoktur. Sipariş anındaki fiyat sipariş için bağlayıcıdır; sonraki fiyat değişiklikleri başlamış dönemleri etkilemez. Ödeme onaylandığında makbuz e-posta ile gönderilir; fatura, Alıcının girdiği bilgilerle düzenlenir."
       },
       "payment": {
         "title": "Ödeme",
-        "body": "[Metin gelecek] Ödeme, PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş. altyapısı üzerinden kredi/banka kartı ile tek çekimde alınır. Kart bilgileri Satıcıya ulaşmaz."
+        "body": "Ödeme, PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş. altyapısı üzerinden kredi kartı ya da banka kartıyla, tek çekimde alınır. Kart bilgileri PayTR'ın güvenli ödeme sayfasına girilir; Satıcıya hiçbir zaman ulaşmaz ve Satıcı tarafından saklanmaz. Bankanın işlemi onaylamaması hâlinde sipariş oluşmaz ve çekim yapılmaz. Kartla ilgili itiraz (chargeback) süreçleri Alıcının bankası ile PayTR arasında yürütülür."
       },
       "delivery": {
         "title": "İfa (teslim)",
-        "body": "[Metin gelecek] Hizmet, ödemenin PayTR tarafından onaylanmasıyla derhal başlar ve Alıcının hesabında kullanıma açılır."
+        "body": "Hizmet elektronik ortamda ifa edilir; ayrıca teslimat yoktur. Pro plan, ödemenin PayTR tarafından onaylanmasıyla derhal Alıcının hesabında kullanıma açılır ve ilk ilan listesi takip eden Pazartesi günü hazırlanır. Ödeme onayının bankadan geç gelmesi hâlinde hizmet, onayın geldiği anda ve tam süreyle başlar. Alıcı, ödeme sayfasındaki onay kutusunu işaretleyerek hizmetin cayma süresi dolmadan ifasına açıkça onay vermektedir."
       },
       "withdrawal": {
         "title": "Cayma hakkı",
-        "body": "[Metin gelecek] Elektronik ortamda anında ifa edilen hizmetlerde, Alıcının ifaya açıkça onay vermesi ve cayma hakkını kaybedeceğini kabul etmesi hâlinde cayma hakkı kullanılamaz (Mesafeli Sözleşmeler Yönetmeliği m. 15/1-ğ). Alıcı ödeme sırasında bu onayı vermektedir."
+        "body": "Mesafeli Sözleşmeler Yönetmeliği'nin 15. maddesi uyarınca, elektronik ortamda anında ifa edilen ve tüketicinin onayıyla cayma süresi dolmadan ifasına başlanan hizmetlerde yasal cayma hakkı kullanılamaz; Alıcı ödeme sayfasında bu onayı vermektedir.\nBununla birlikte Satıcı, Alıcıya sözleşmeye dayalı olarak şu hakkı tanır: Alıcı, ödeme tarihinden itibaren 7 (yedi) gün içinde hiçbir gerekçe göstermeksizin sözleşmeden dönebilir; bu durumda ödediği tutarın tamamı iade edilir ve Pro dönemi sona erer. Bu hak, uygulama içinden (Ayarlar › Plan ve ödemeler › \"İade talep et\") ya da sipariş numarasıyla destek@ekariyerim.com adresine e-posta göndererek kullanılır."
       },
       "refunds": {
         "title": "İptal ve iade",
-        "body": "[Metin gelecek] Cayma hakkının dışında kalan iade talepleri, İptal ve İade Koşulları sayfasında açıklanan usulle değerlendirilir."
+        "body": "7 günlük sürenin dolmasından sonra Alıcı yine iade talep edebilir; bu durumda kullanılan süre iade bedelinden düşülür: iade tutarı, ödenen tutarın dönemin kalan gün sayısına düşen payıdır ve iadeyle birlikte Pro dönemi sona erer. Talepler en geç 3 iş günü içinde değerlendirilir ve sonuç Alıcıya e-posta ile bildirilir. Onaylanan iade yalnızca PayTR üzerinden, ödemenin yapıldığı karta yapılır; bankaya bağlı olarak 3–10 iş gününde hesaba yansır. Ayrıntılar İptal ve İade Koşulları sayfasında yer alır; o sayfa bu sözleşmenin ayrılmaz parçasıdır."
       },
       "obligations": {
         "title": "Tarafların yükümlülükleri",
-        "body": "[Metin gelecek]"
+        "body": "Satıcı, hizmeti bu sözleşmede ve yardım merkezinde açıklandığı şekilde, dönem boyunca sunmakla; Alıcının kişisel verilerini Gizlilik Politikası'na uygun işlemekle; iade taleplerine belirtilen sürede yanıt vermekle yükümlüdür. Planlı bakım ya da üçüncü taraf sitelerden kaynaklanan kısa kesintiler hizmetin ifa edilmediği anlamına gelmez; hizmetin Satıcıdan kaynaklanan bir nedenle bir haftadan uzun süre hiç sunulamaması hâlinde Alıcı o süreye düşen bedelin iadesini isteyebilir.\nAlıcı, hesabına ait giriş bilgilerini korumakla; ödeme sırasında doğru fatura bilgileri vermekle; hizmeti yalnızca kendi iş arayışı için ve kullanım koşullarına uygun kullanmakla, ilan verilerini toplu olarak kopyalayıp üçüncü kişilere aktarmamakla yükümlüdür. Kullanım koşullarının ağır ihlali hâlinde Satıcı hizmeti sona erdirebilir; bu durumda kalan süreye düşen bedel, ihlalin niteliğine göre iade edilebilir."
       },
       "disputes": {
         "title": "Uyuşmazlıkların çözümü",
-        "body": "[Metin gelecek] Uyuşmazlıklarda Ticaret Bakanlığınca ilan edilen parasal sınırlar dâhilinde Tüketici Hakem Heyetleri, aşan durumlarda Tüketici Mahkemeleri yetkilidir."
+        "body": "Bu sözleşme Türk hukukuna tabidir. Uyuşmazlıklarda, Ticaret Bakanlığınca her yıl ilan edilen parasal sınırlar dâhilinde Alıcının yerleşim yerindeki ya da Satıcının bulunduğu yerdeki Tüketici Hakem Heyetleri; bu sınırları aşan uyuşmazlıklarda Tüketici Mahkemeleri yetkilidir. Alıcı, şikâyet ve itirazlarını önce destek@ekariyerim.com adresine iletebilir; Satıcı bunlara en geç 3 iş günü içinde yanıt verir."
       },
       "effective": {
         "title": "Yürürlük",
-        "body": "[Metin gelecek] Alıcı, ödeme sayfasındaki onay kutusunu işaretleyerek bu sözleşmeyi ve ön bilgilendirme formunu okuduğunu ve kabul ettiğini beyan eder; sözleşme ödeme onayıyla kurulur."
+        "body": "Alıcı, ödeme sayfasındaki onay kutusunu işaretleyerek bu sözleşmeyi ve ön bilgilendirme formunu okuduğunu, anladığını ve kabul ettiğini beyan eder. Sözleşme, ödemenin PayTR tarafından onaylanmasıyla kurulur ve Pro dönemi boyunca geçerlidir. Sözleşmenin sürümü ve kabul zamanı siparişte saklanır; Alıcı sözleşme metnine bu sayfadan her zaman ulaşabilir. Sonraki sürüm değişiklikleri, başlamış dönemleri etkilemez."
       }
     }
   },
   "refundPolicy": {
     "title": "İptal ve İade Koşulları",
-    "lastUpdated": "Sürüm 2026-09 (taslak)",
+    "lastUpdated": "Sürüm 2026-09",
     "intro": "Bu sayfa e-kariyerim Pro planında iptal ve iadenin nasıl işlediğini açıklar.",
     "seeAlso": "Bakınız:",
     "termsLink": "Mesafeli Satış Sözleşmesi",
     "sections": {
       "scope": {
         "title": "Kapsam",
-        "body": "[Metin gelecek] Bu koşullar Pro planın aylık ve yıllık dönemleri için geçerlidir."
+        "body": "Bu koşullar e-kariyerim Pro planının aylık ve yıllık dönemleri için geçerlidir ve Mesafeli Satış Sözleşmesi'nin ayrılmaz parçasıdır. Ödemeler PayTR üzerinden alınır; iadeler de yalnızca PayTR üzerinden yapılır."
       },
       "withdrawal": {
-        "title": "Cayma hakkı",
-        "body": "[Metin gelecek] Hizmet ödemeyle birlikte hemen başladığından ve ödeme sırasında buna açıkça onay verildiğinden yasal cayma hakkı kullanılamaz."
+        "title": "7 gün koşulsuz iade",
+        "body": "Ödeme tarihinden itibaren 7 gün içinde, hiçbir gerekçe göstermeden tam iade isteyebilirsiniz: ödediğiniz tutarın tamamı geri döner ve Pro planınız sona erer. Bu, hizmetin hemen başlamasına onay verdiğiniz için yasal cayma hakkının kalkmasından bağımsız olarak e-kariyerim'in size tanıdığı bir haktır."
       },
       "cancellation": {
         "title": "İptal",
-        "body": "[Metin gelecek] Otomatik yenileme yoktur; dönem sonunda hiçbir ücret alınmaz. Süreyi uzatmamak için herhangi bir işlem yapmanız gerekmez. Ödeme penceresi tamamlanmadan kapatılan bir sipariş için ücret alınmaz."
+        "body": "Otomatik yenileme yoktur, kart bilginiz saklanmaz; dönem sonunda hiçbir ücret alınmaz. Planı sürdürmemek için bir şey yapmanız gerekmez, süre dolunca kendiliğinden kapanır. Ödeme penceresi tamamlanmadan kapatılan ya da bankanın onaylamadığı bir sipariş için çekim yapılmaz."
       },
       "howToRequest": {
         "title": "İade nasıl talep edilir",
-        "body": "Ayarlar > Plan ve ödemeler ya da Pro plan sayfasındaki ilgili ödemenin yanındaki \"İade talep et\" düğmesiyle, nedeninizi yazarak. [Hangi koşullarda iade yapılacağı — metin gelecek]"
+        "body": "İki yol vardır:\n• Uygulama içinden: Ayarlar › Plan ve ödemeler'de ilgili ödemenin yanındaki \"İade talep et\" düğmesi.\n• E-posta ile: destek@ekariyerim.com adresine, sipariş numaranızı (Ayarlar › Plan ve ödemeler'de görünür) yazarak.\nİlk 7 gün için gerekçe gerekmez; sonrası için de kısa bir açıklama yeterlidir."
       },
       "decision": {
         "title": "Değerlendirme",
-        "body": "[Metin gelecek] Talep en geç [N] iş günü içinde değerlendirilir; sonuç e-posta ile bildirilir."
+        "body": "Talebinize en geç 3 iş günü içinde dönüş yaparız; sonuç e-posta ile bildirilir. 7 gün içindeki talepler doğrudan onaylanır; sonraki talepler yukarıdaki hesaba göre sonuçlandırılır."
       },
       "howRefunded": {
         "title": "İade nasıl yapılır",
-        "body": "Onaylanan iade, PayTR üzerinden ödemeyi yaptığınız karta yapılır; bankanıza göre 3–10 iş gününde hesabınıza yansır. Başka bir hesaba ya da nakit iade yapılmaz."
+        "body": "Onaylanan iade, PayTR üzerinden ödemeyi yaptığınız karta yapılır; bankanıza göre 3–10 iş gününde hesabınıza yansır. Başka bir karta, hesaba ya da nakit iade yapılmaz."
       },
       "partial": {
-        "title": "Kısmi iade",
-        "body": "[Metin gelecek] Kısmi iade yapılan ödemelerde Pro planınız değişmeden devam eder."
+        "title": "7 günden sonra iade",
+        "body": "7 gün dolduktan sonra da iade isteyebilirsiniz; bu durumda kullandığınız süre iade bedelinden düşülür, kalanı iade edilir. Hesap: ödenen tutar × dönemin kalan günü ÷ dönemin toplam günü. Örnek: ₺299'luk aylık planın 10. gününde istenen iade yaklaşık ₺199'dur. İade yapıldığı anda Pro planınız sona erer — kalan süreyi para olarak geri aldığınız için. Dönem bittikten sonra iade edilecek bir tutar kalmaz."
       },
       "proAfterRefund": {
         "title": "İade sonrası Pro",
-        "body": "Tam iade yapılan bir ödemenin eklediği süre Pro planınızdan geri alınır; başka ödemelerden kalan süreniz korunur."
+        "body": "İade yapılan her ödemede Pro süreniz iade edilen tutar oranında geri alınır: tam iadede o ödemenin eklediği sürenin tamamı, 7 günden sonraki iadede kalan süre. Başka ödemelerden kalan süreniz korunur. Verileriniz (kriterleriniz, ilan listeleri) silinmez; yeniden Pro olursanız kaldığınız yerden devam edersiniz."
       },
       "contact": {
         "title": "İletişim",
-        "body": "[E-posta adresi — metin gelecek]"
+        "body": "İade ve ödeme soruları için: destek@ekariyerim.com. Yazarken sipariş numaranızı ekleyin; hesabınızın e-posta adresinden yazmanız işlemi hızlandırır. Telefon: 0266 265 45 99."
       }
     }
   }

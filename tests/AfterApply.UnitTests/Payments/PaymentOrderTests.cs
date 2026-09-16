@@ -226,6 +226,83 @@ public sealed class PaymentOrderTests
 
         order.Status.ShouldBe(PaymentOrderStatus.PartiallyRefunded);
     }
+
+    // ---- Refund policy (Cancellation and Refund Terms, 2026-09) ----------------------------------
+    // PaidOrder(): paid at Now+5min, period Now+5min .. +1 month (30 days in September/October).
+
+    [Fact]
+    public void Inside_the_seven_day_window_the_policy_amount_is_everything_still_refundable()
+    {
+        var order = PaidOrder();
+        var paidAt = order.PaidAt!.Value;
+
+        order.PolicyRefundMinor(paidAt).ShouldBe(29900);
+        order.PolicyRefundMinor(paidAt.AddDays(7)).ShouldBe(29900);
+
+        order.RecordRefund(5000, "r", Admin, paidAt.AddDays(1));
+        order.PolicyRefundMinor(paidAt.AddDays(2)).ShouldBe(24900);
+    }
+
+    [Fact]
+    public void After_the_window_the_used_share_of_the_period_is_deducted()
+    {
+        var order = PaidOrder();
+        var start = order.EntitlementActiveUntilBefore!.Value;
+        var periodDays = (order.EntitlementActiveUntilAfter!.Value - start).TotalDays; // 30 (Sep 15 → Oct 15)
+
+        // Day 10 of 30: two thirds unused → 19933 (floored).
+        var expected = (long)Math.Floor(29900 * (periodDays - 10) / periodDays);
+        order.PolicyRefundMinor(start.AddDays(10)).ShouldBe(expected);
+        expected.ShouldBe(19933);
+
+        // Already refunded money comes off the unused share.
+        order.RecordRefund(10000, "r", Admin, start.AddDays(9));
+        order.PolicyRefundMinor(start.AddDays(10)).ShouldBe(9933);
+
+        // Period over: nothing is owed.
+        order.PolicyRefundMinor(start.AddDays(31)).ShouldBe(0);
+    }
+
+    [Fact]
+    public void A_stacked_period_that_has_not_started_counts_as_unused()
+    {
+        // Paid while an earlier period was still running: the new month starts 20 days later.
+        var order = NewOrder();
+        order.AttachToken("tok", Now.AddMinutes(30), Now);
+        order.MarkPaid(29900, "card", testMode: false, Now);
+        order.RecordEntitlementChange(Now.AddDays(20), Now.AddDays(20).AddMonths(1), Now);
+
+        order.PolicyRefundMinor(Now.AddDays(10)).ShouldBe(29900);
+    }
+
+    [Fact]
+    public void An_unpaid_order_or_one_without_a_period_on_record_falls_back_sensibly()
+    {
+        NewOrder().PolicyRefundMinor(Now.AddDays(30)).ShouldBe(0);
+
+        var paidWithoutPeriod = NewOrder();
+        paidWithoutPeriod.AttachToken("tok", Now.AddMinutes(30), Now);
+        paidWithoutPeriod.MarkPaid(29900, "card", testMode: false, Now);
+        paidWithoutPeriod.PolicyRefundMinor(Now.AddDays(30)).ShouldBe(29900);
+    }
+
+    [Fact]
+    public void A_refund_winds_the_period_back_by_the_same_share_as_the_money()
+    {
+        var order = PaidOrder();
+        var extension = order.EntitlementExtension;
+
+        order.EntitlementWindBackFor(29900).ShouldBe(extension);
+        order.EntitlementWindBackFor(14950).ShouldBe(TimeSpan.FromTicks(extension.Ticks / 2));
+        order.EntitlementWindBackFor(0).ShouldBe(TimeSpan.Zero);
+
+        // The policy amount after the window is the unused share, so it ends the period now.
+        var start = order.EntitlementActiveUntilBefore!.Value;
+        var now = start.AddDays(10);
+        var windBack = order.EntitlementWindBackFor(order.PolicyRefundMinor(now));
+        // Whole-kuruş flooring of the amount shifts the end by well under a minute over a month.
+        (order.EntitlementActiveUntilAfter!.Value - windBack).ShouldBe(now, tolerance: TimeSpan.FromMinutes(1));
+    }
 }
 
 public sealed class ProPlanPeriodTests

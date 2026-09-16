@@ -75,7 +75,6 @@ export const PUBLIC_MESSAGE_SCOPE = [
   // The distance-sales terms and the refund policy, linked from the checkout and the footer.
   "termsOfSale",
   "refundPolicy",
-  "legalDraft",
 ] as const;
 
 type Tree = { [key: string]: unknown };

@@ -84,7 +84,10 @@ public sealed record AdminPaymentOrderResponse(
     string? RefundReferenceNo,
     Guid? RefundedByUserId,
     DateTimeOffset? RefundRejectedAt,
-    string? RefundRejectionNote);
+    string? RefundRejectionNote,
+    /// <summary>What the refund policy says is owed right now (full inside the seven-day window,
+    /// the unused share of the period after it, less refunds already made). The panel's default.</summary>
+    long PolicyRefundMinor);
 
 public sealed record PaymentNotificationResponse(
     Guid Id,

@@ -434,7 +434,9 @@
       "cookies": "Cookie Policy",
       "benchmark": "Reply rate benchmark",
       "extensionPrivacy": "Extension Privacy Policy",
-      "terms": "Terms of Use"
+      "terms": "Terms of Use",
+      "termsOfSale": "Distance Sales Agreement",
+      "refundPolicy": "Cancellation and Refund Policy"
     }
   },
   "common": {
@@ -2111,15 +2113,15 @@
         },
         "step2": {
           "title": "Open a refund request",
-          "body": "Eligible payments show a \"Request refund\" button. Write your reason and send it; the request is reviewed by hand and the outcome is e-mailed. If approved, the amount goes back to the card you paid with through PayTR within 3–10 business days, and your Pro plan is shortened by the period that payment had added."
+          "body": "Eligible payments show a \"Request a refund\" button; write your reason and send it (none is needed in the first seven days). You can also e-mail support@ekariyerim.com with your order number. We reply within 3 business days at the latest and e-mail the outcome. An approved amount goes back to the card you paid with through PayTR within 3–10 business days, and your Pro plan is wound back in proportion."
         },
         "step3": {
           "title": "Nothing to do to cancel",
           "body": "There is no automatic renewal; we e-mail you three days before the end. If you do not extend, nothing is charged, Pro simply ends on its end date, and your applications and CVs stay exactly as they are."
         },
         "calloutWithdrawal": {
-          "title": "Right of withdrawal",
-          "body": "Because you consent on the checkout page to the digital service starting at once, the statutory withdrawal right is waived; a refund request does not replace it, each request is judged on its own. The details are on the Cancellation and Refund Terms page."
+          "title": "Your right to a refund",
+          "body": "Within 7 days of the payment date you get a full refund, no reason needed. After seven days the time you used is deducted, the rest is refunded and your Pro plan ends at that moment. We reply to your request within 3 business days at the latest. The details are on the Cancellation and Refund Policy page."
         },
         "refundPolicyLink": "Cancellation and Refund Terms"
       },
@@ -2284,7 +2286,7 @@
       },
       "q18": {
         "question": "Can I get a refund on the Pro plan?",
-        "answer": "Because you consent on the checkout page to the service starting at once, the statutory withdrawal right is waived; you can still open a refund request under Settings › Plan and payments. Requests are reviewed by hand and refunds go back to the same card through PayTR."
+        "answer": "Yes. Within 7 days of the payment date you get a full refund without giving a reason; after seven days the time you used is deducted, the rest is refunded and Pro ends at that moment. Open the request under Settings › Plan and payments or e-mail support@ekariyerim.com with your order number; we reply within 3 business days at the latest and the refund goes back to the same card through PayTR."
       },
       "q19": {
         "question": "How do I cancel the Pro plan?",
@@ -2552,7 +2554,7 @@
       },
       "refund": {
         "title": "Refunds",
-        "body": "Because you consent on the checkout page to the digital service starting at once, the statutory withdrawal right is waived; you can still open a refund request under Settings › Plan and payments, every request is reviewed by hand, and a refund goes back to the same card through PayTR."
+        "body": "A full refund, no questions asked, in the first seven days; after that the time you used is deducted and the rest is refunded. Open the request under Settings › Plan and payments or e-mail support@ekariyerim.com with your order number; we reply within 3 business days at the latest and send the refund back to the same card through PayTR."
       },
       "calloutConsent": {
         "title": "Where your CV goes",
@@ -4581,7 +4583,7 @@
       "billingAddress": "Address",
       "billingPhone": "Phone",
       "billingWhy": "These details are needed for the invoice and are passed to the payment provider, PayTR. Your card details never reach e-kariyerim.",
-      "terms": "I have read and accept the <sale>Distance Sales Agreement and Pre-contract Information</sale>. I consent to the digital service starting immediately and understand that I therefore lose my right of withdrawal (<refund>cancellation and refund policy</refund>).",
+      "terms": "I have read and accept the <sale>Distance Sales Agreement and Pre-contract Information</sale>. I consent to the digital service starting immediately and understand that the statutory right of withdrawal is therefore waived; my contractual right to a no-questions refund in the first 7 days remains (<refund>cancellation and refund policy</refund>).",
       "termsRequired": "You must accept the agreement to continue.",
       "pay": "Continue to payment",
       "starting": "Preparing the payment page…",
@@ -4674,7 +4676,7 @@
     },
     "refund": {
       "title": "Refund request",
-      "body": "Your request is reviewed; if approved, the amount is refunded through PayTR to the card you paid with and your Pro plan is wound back by the period this payment added. You are told the outcome by e-mail.",
+      "body": "Within 7 days of the payment date the whole amount is refunded; after that the time you used is deducted and the rest is refunded. Either way your Pro plan is wound back in proportion. We reply within 3 business days at the latest and send the amount back through PayTR to the card you paid with; you are told the outcome by e-mail.",
       "policyLink": "Cancellation and refund policy",
       "reason": "Why you want a refund",
       "submit": "Send the request",
@@ -4787,7 +4789,7 @@
       "cancel": "Cancel",
       "refundTitle": "Refund",
       "refundConfirm": "Send the refund request to PayTR",
-      "refundBody": "The amount is refunded through PayTR to the same card (3–10 business days). At most {max} can still be refunded. A full refund winds the user's Pro period back by what this order added.",
+      "refundBody": "The amount is refunded through PayTR to the same card (3–10 business days). At most {max} can still be refunded. The user's Pro period is wound back in proportion to the amount: all of what this order added for a full refund, the remaining time for the policy amount (Pro ends at that moment).",
       "rejectTitle": "Reject the refund request",
       "rejectConfirm": "Reject and notify the user",
       "rejectBody": "The note is e-mailed to the user; the order goes back to 'Paid'.",
@@ -4799,15 +4801,13 @@
       "amount": "Refund amount (₺)",
       "amountInvalid": "The amount must be above 0 and at most the refundable amount.",
       "reference": "PayTR reference no",
-      "note": "Rejection note (sent to the user)"
+      "note": "Rejection note (sent to the user)",
+      "policyAmount": "Policy amount (everything within seven days, used time deducted after that): {amount}. Filled in as the default."
     }
-  },
-  "legalDraft": {
-    "notice": "This text is a draft; the Pro plan does not go on sale before the final version is published."
   },
   "termsOfSale": {
     "title": "Distance Sales Agreement and Pre-contract Information",
-    "lastUpdated": "Version 2026-09 (draft)",
+    "lastUpdated": "Version 2026-09",
     "intro": "This agreement governs the online sale of the e-kariyerim Pro plan (the weekly job matching service) under Türkiye's Consumer Protection Law No. 6502 and the Distance Contracts Regulation.",
     "seeAlso": "See also:",
     "refundLink": "Cancellation and refund policy",
@@ -4815,92 +4815,92 @@
     "sections": {
       "parties": {
         "title": "Parties",
-        "body": "[Seller name, address, tax office/number, e-mail] and the consumer buying the service (the Buyer). The Buyer's details are the name, address and phone entered at checkout and the e-mail address on their account."
+        "body": "Seller: e-kariyerim — Address: Hamidiye Mahallesi, Ülkü Yolu Caddesi, 6903 Sokak No: 34, Edremit / Balıkesir, Türkiye. Phone: +90 266 265 45 99. E-mail: support@ekariyerim.com. Web: ekariyerim.com.\nBuyer: the consumer who purchases the service through e-kariyerim. The Buyer's details are the full name, billing address and phone number entered at checkout and the e-mail address of their e-kariyerim account; they are stored on the order and the invoice is issued with them."
       },
       "subject": {
         "title": "Subject",
-        "body": "[Text to come] The rights and obligations of the parties regarding the sale and performance of the Pro plan the Buyer orders electronically on e-kariyerim."
+        "body": "The subject of this agreement is the sale and performance of the Pro plan (the weekly job matching service) that the Buyer orders electronically through e-kariyerim (ekariyerim.com), and the parties' rights and obligations under Türkiye's Consumer Protection Law No. 6502 and the Distance Contracts Regulation. This text also serves as the pre-contract information form required by Article 5 of the Regulation; by ticking the box on the checkout page the Buyer confirms having received it."
       },
       "service": {
         "title": "The service",
-        "body": "[Text to come] The Pro plan: every week, new postings on LinkedIn and kariyer.net are collected for the Buyer's saved criteria, compared with their CV, scored and announced by e-mail. The monthly plan runs one calendar month, the yearly plan one calendar year; there is no automatic renewal."
+        "body": "The Pro plan is a service delivered digitally: every week, new postings on LinkedIn and kariyer.net are collected according to the job titles, location and remote-work preference the Buyer saved; if the Buyer separately consents, they are compared with the Buyer's CV and scored; and the Buyer is e-mailed when the list is ready. The scope and limits of the service (postings per week, source sites, scoring) are described on the \"Weekly jobs\" page of the help centre.\nTerm: the monthly plan runs for one calendar month, the yearly plan for one calendar year. The period starts when the payment is confirmed, or at the end of a Pro period that is still running. There is no automatic renewal and no card is stored; nothing is charged at the end of the period.\nThe service does not guarantee that postings will be found or that the Buyer will be hired; depending on the availability of the third-party sites, a week may bring few or no postings."
       },
       "price": {
         "title": "Price",
-        "body": "[Text to come] The price is the amount shown on the checkout page, VAT included. Price changes do not affect periods already started."
+        "body": "The price is the amount shown in Turkish lira, VAT included, on the plan selection screen and the checkout page; there is no shipping, setup or other fee. The price at the time of the order is binding for that order; later price changes do not affect periods that have started. A receipt is e-mailed when the payment is confirmed; the invoice is issued with the details the Buyer entered."
       },
       "payment": {
         "title": "Payment",
-        "body": "[Text to come] Payment is taken as a single charge by credit or debit card through PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş. Card details never reach the Seller."
+        "body": "Payment is taken in a single charge by credit or debit card through the infrastructure of PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş. Card details are entered on PayTR's secure payment page; they never reach the Seller and are never stored by the Seller. If the bank does not approve the transaction, no order is created and nothing is charged. Card disputes (chargebacks) are handled between the Buyer's bank and PayTR."
       },
       "delivery": {
         "title": "Performance",
-        "body": "[Text to come] The service starts as soon as PayTR confirms the payment and is available in the Buyer's account."
+        "body": "The service is performed electronically; there is no separate delivery. The Pro plan is switched on in the Buyer's account as soon as PayTR confirms the payment, and the first list of postings is prepared on the following Monday. If the bank's confirmation arrives late, the service starts when it arrives and runs for the full term. By ticking the box on the checkout page the Buyer expressly consents to the service starting before the withdrawal period ends."
       },
       "withdrawal": {
         "title": "Right of withdrawal",
-        "body": "[Text to come] For services performed immediately in an electronic environment, the right of withdrawal cannot be used where the Buyer expressly consents to performance and acknowledges losing the right (Distance Contracts Regulation art. 15/1-ğ). The Buyer gives this consent at checkout."
+        "body": "Under Article 15 of the Distance Contracts Regulation, the statutory right of withdrawal does not apply to services performed instantly in an electronic environment and started, with the consumer's consent, before the withdrawal period ends; the Buyer gives that consent on the checkout page.\nNevertheless, the Seller grants the Buyer the following contractual right: within 7 (seven) days of the payment date the Buyer may withdraw from the agreement without giving any reason; the whole amount paid is refunded and the Pro period ends. The right is exercised from within the app (Settings › Plan and payments › \"Request a refund\") or by e-mailing support@ekariyerim.com with the order number."
       },
       "refunds": {
         "title": "Cancellation and refunds",
-        "body": "[Text to come] Refund requests outside the right of withdrawal are handled as described on the Cancellation and Refund Policy page."
+        "body": "After the seven days the Buyer may still request a refund; in that case the time used is deducted: the refund is the share of the amount paid that corresponds to the remaining days of the period, and the Pro period ends with the refund. Requests are decided within 3 business days at the latest and the outcome is e-mailed to the Buyer. An approved refund is made only through PayTR, to the card the payment was made with; depending on the bank it appears within 3–10 business days. The details are on the Cancellation and Refund Policy page, which forms an integral part of this agreement."
       },
       "obligations": {
         "title": "Obligations of the parties",
-        "body": "[Text to come]"
+        "body": "The Seller undertakes to provide the service for the term as described in this agreement and the help centre; to process the Buyer's personal data in line with the Privacy Policy; and to answer refund requests within the stated time. Short interruptions from planned maintenance or from the third-party sites do not mean the service was not performed; if, for a reason attributable to the Seller, the service is not provided at all for more than a week, the Buyer may ask for the share of the price that corresponds to that time.\nThe Buyer undertakes to protect the sign-in details of the account; to give correct billing details at checkout; to use the service only for their own job search and in line with the Terms of Use; and not to copy the posting data in bulk or pass it on to third parties. In case of a serious breach of the Terms of Use the Seller may end the service; whether the share of the price for the remaining time is refunded then depends on the nature of the breach."
       },
       "disputes": {
         "title": "Disputes",
-        "body": "[Text to come] Consumer Arbitration Committees are competent within the monetary limits announced by the Ministry of Trade, Consumer Courts above them."
+        "body": "This agreement is governed by Turkish law. Disputes within the monetary limits announced each year by the Ministry of Trade are heard by the Consumer Arbitration Committees of the Buyer's place of residence or the Seller's place of business; disputes above those limits by the Consumer Courts. The Buyer may first raise any complaint or objection at support@ekariyerim.com; the Seller answers within 3 business days at the latest."
       },
       "effective": {
         "title": "Entry into force",
-        "body": "[Text to come] By ticking the box on the checkout page the Buyer declares having read and accepted this agreement and the pre-contract information; the agreement is concluded when the payment is confirmed."
+        "body": "By ticking the box on the checkout page the Buyer declares having read, understood and accepted this agreement and the pre-contract information form. The agreement is concluded when PayTR confirms the payment and remains in force for the Pro period. The version of the agreement and the time of acceptance are stored on the order; the Buyer can reach the text on this page at any time. Later versions do not affect periods that have started."
       }
     }
   },
   "refundPolicy": {
     "title": "Cancellation and Refund Policy",
-    "lastUpdated": "Version 2026-09 (draft)",
+    "lastUpdated": "Version 2026-09",
     "intro": "This page explains how cancellation and refunds work for the e-kariyerim Pro plan.",
     "seeAlso": "See also:",
     "termsLink": "Distance Sales Agreement",
     "sections": {
       "scope": {
         "title": "Scope",
-        "body": "[Text to come] These terms apply to the monthly and yearly periods of the Pro plan."
+        "body": "These terms apply to the monthly and yearly periods of the e-kariyerim Pro plan and form an integral part of the Distance Sales Agreement. Payments are taken through PayTR; refunds are made only through PayTR too."
       },
       "withdrawal": {
-        "title": "Right of withdrawal",
-        "body": "[Text to come] Because the service starts immediately with the payment and you expressly consent to that at checkout, the statutory right of withdrawal cannot be used."
+        "title": "Seven days, no questions asked",
+        "body": "Within 7 days of the payment date you can ask for a full refund without giving a reason: the whole amount goes back and your Pro plan ends. This is a right e-kariyerim grants you on top of the law, independent of the statutory withdrawal right being waived because you consented to the service starting at once."
       },
       "cancellation": {
         "title": "Cancellation",
-        "body": "[Text to come] There is no automatic renewal; nothing is charged at the end of a period. You do not need to do anything to not extend. An order closed before the payment window completes is not charged."
+        "body": "There is no automatic renewal and no card is stored; nothing is charged at the end of the period. You do not need to do anything to stop the plan, it simply ends when the period runs out. An order closed before the payment window completed, or one the bank did not approve, is never charged."
       },
       "howToRequest": {
         "title": "How to request a refund",
-        "body": "With the \"Request a refund\" button next to the payment under Settings > Plan and payments or on the Pro plan page, stating your reason. [Conditions under which a refund is granted — text to come]"
+        "body": "Two ways:\n• From within the app: the \"Request a refund\" button next to the payment under Settings › Plan and payments.\n• By e-mail: write to support@ekariyerim.com with your order number (shown under Settings › Plan and payments).\nNo reason is needed in the first seven days; after that a short explanation is enough."
       },
       "decision": {
         "title": "Review",
-        "body": "[Text to come] The request is reviewed within [N] business days; the outcome is sent by e-mail."
+        "body": "We reply to your request within 3 business days at the latest; the outcome is e-mailed. Requests within seven days are approved as they are; later ones are settled by the calculation above."
       },
       "howRefunded": {
         "title": "How the refund is made",
-        "body": "An approved refund is sent through PayTR to the card you paid with; depending on your bank it appears within 3–10 business days. No refunds to another account or in cash."
+        "body": "An approved refund goes back through PayTR to the card you paid with; depending on your bank it appears within 3–10 business days. No refund is made to another card, another account or in cash."
       },
       "partial": {
-        "title": "Partial refunds",
-        "body": "[Text to come] After a partial refund your Pro plan continues unchanged."
+        "title": "Refunds after seven days",
+        "body": "You can still ask for a refund after the seven days; the time you used is then deducted and the rest is refunded. The calculation: amount paid × remaining days of the period ÷ total days of the period. Example: a refund requested on day 10 of a ₺299 monthly plan is about ₺199. Your Pro plan ends the moment the refund is made — you are getting the remaining time back as money. Once the period is over there is nothing left to refund."
       },
       "proAfterRefund": {
         "title": "Pro after a refund",
-        "body": "A fully refunded payment's period is taken back from your Pro plan; time from other payments is kept."
+        "body": "With every refund your Pro period is wound back in proportion to the amount refunded: all of the period that payment added for a full refund, the remaining time for a refund after seven days. Time from other payments is kept. Your data (criteria, posting lists) is not deleted; if you go Pro again you continue where you left off."
       },
       "contact": {
         "title": "Contact",
-        "body": "[E-mail address — text to come]"
+        "body": "For refund and payment questions: support@ekariyerim.com. Include your order number; writing from your account's e-mail address speeds things up. Phone: +90 266 265 45 99."
       }
     }
   }

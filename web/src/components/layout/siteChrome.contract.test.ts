@@ -113,6 +113,15 @@ describe("the signed-out chrome", () => {
     }
   });
 
+  it("lists the Pro plan's sale terms in the footer regardless of the payments flag", () => {
+    // 2026-09-16: the distance-sales agreement and the refund policy went final. A consumer (and
+    // PayTR's merchant review) must find them without first reaching the checkout, so they are
+    // plain footer links, not gated on payments.enabled.
+    expect(footer).toContain('"/terms-of-sale"');
+    expect(footer).toContain('"/refund-policy"');
+    expect(footer).not.toContain("payments?.enabled");
+  });
+
   it("adds no traffic event and no hardcoded English menu label", () => {
     expect(header).not.toContain("trackSiteTraffic");
     expect(header).not.toContain('"Open menu"');
