@@ -650,7 +650,7 @@ internal sealed class AuthService(
         // ON DELETE CASCADE foreign key to Users, so the database removes Applications (and their
         // Events/StatusHistories), TrackedJobs, CvDocuments, ImportBatches (and their RowErrors),
         // Reminders, EmailSuggestions, EmailConnections, FeedbackEntries, CompanyReviews (and their
-        // reports and helpful marks, as author, reporter or marker), RefreshTokens and
+        // reports and helpful marks, as author, reporter or marker), CompanySalaryEntries, RefreshTokens and
         // PersonalAccessTokens itself. Companies and Jobs are shared and carry no UserId, so they
         // are never touched.
         //
@@ -779,8 +779,18 @@ internal sealed class AuthService(
             .Select(m => m.ReviewId)
             .ToListAsync(cancellationToken);
 
+        var companySalaries = await dbContext.CompanySalaryEntries
+            .Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.SubmittedAt)
+            .Join(dbContext.Companies, s => s.CompanyId, c => c.Id, (s, c) => new { Entry = s, CompanyName = c.Name })
+            .Join(dbContext.Occupations, x => x.Entry.OccupationId, o => o.Id, (x, o) => new CompanySalaryExportItem(
+                x.Entry.Id, x.CompanyName, o.Code, o.NameTr, o.NameEn, x.Entry.YearsOfExperience, x.Entry.EmploymentType,
+                x.Entry.EmploymentStatus, x.Entry.MonthlyNetAmount, x.Entry.Currency, x.Entry.AnnualBonusAmount,
+                x.Entry.SubmittedAt, x.Entry.UpdatedAt))
+            .ToListAsync(cancellationToken);
+
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
-            DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks);
+            DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks, companySalaries);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

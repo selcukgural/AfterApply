@@ -9,12 +9,13 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/terms">)
 }
 
 const LISTS = {
-  service: ["tracking", "tools", "reviews"],
+  service: ["tracking", "tools", "reviews", "salaries"],
   account: ["age", "accuracy", "security", "delete"],
   reviews: ["ownExperience", "structured", "onePerCompany", "publication", "noManipulation", "opinion", "companies"],
+  salaries: ["ownData", "accurate", "signedInOnly", "quota", "opinion"],
   content: ["ownership", "licence", "ourContent"],
   prohibited: ["scraping", "limits", "abuse", "security", "unlawful"],
-  liability: ["noAdvice", "thirdParties", "availability", "reviewsDisclaimer"],
+  liability: ["noAdvice", "thirdParties", "availability", "reviewsDisclaimer", "salariesDisclaimer"],
   termination: ["us", "you"],
 } as const;
 
@@ -66,6 +67,16 @@ export default async function TermsPage({ params }: PageProps<"/[locale]/terms">
           <ul className={list}>
             {LISTS.reviews.map((item) => (
               <li key={item}>{t(`reviews.${item}`)}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section id="company-salaries">
+          <h2 className={heading}>{t("salaries.title")}</h2>
+          <p>{t("salaries.intro")}</p>
+          <ul className={list}>
+            {LISTS.salaries.map((item) => (
+              <li key={item}>{t(`salaries.${item}`)}</li>
             ))}
           </ul>
         </section>

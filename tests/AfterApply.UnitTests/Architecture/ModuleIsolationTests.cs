@@ -31,4 +31,18 @@ public class ModuleIsolationTests
 
         result.IsSuccessful.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Occupations_Should_Not_Depend_On_CompanySalaries()
+    {
+        // The catalogue is generic (a later form may pick from it); salaries depend on it, never
+        // the other way round.
+        var result = Types.InAssembly(DomainAssembly)
+            .That().ResideInNamespace("AfterApply.Domain.Occupations")
+            .Should()
+            .NotHaveDependencyOn("AfterApply.Domain.CompanySalaries")
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue();
+    }
 }

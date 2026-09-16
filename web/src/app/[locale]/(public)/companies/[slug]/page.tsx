@@ -6,6 +6,8 @@ import { buildMetadata } from "@/lib/seo/pageMetadata";
 import { fetchApprovedReviews, fetchCompanyBySlug } from "@/lib/companies/publicApi.server";
 import { ReviewSummaryPanel } from "@/components/companyReviews/ReviewSummaryPanel";
 import { CompanyReviewsSection } from "@/components/companyReviews/CompanyReviewsSection";
+import { CompanyPageTabs } from "@/components/companies/CompanyPageTabs";
+import { CompanySalariesPanel } from "@/components/companySalaries/CompanySalariesPanel";
 
 /**
  * A company's public page: the aggregate and its published reviews, rendered on the server so
@@ -65,9 +67,19 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
         )}
       </header>
 
-      <ReviewSummaryPanel summary={company.summary} />
-
-      <CompanyReviewsSection company={company} initialReviews={reviews} />
+      {/* The reviews half is still rendered here with server data; the tabs only decide which
+          half is on screen. The salaries half fetches behind sign-in and is never in the cached page. */}
+      <CompanyPageTabs
+        reviewCount={company.summary.approvedCount}
+        salaryCount={company.salaryCount ?? 0}
+        reviews={
+          <>
+            <ReviewSummaryPanel summary={company.summary} />
+            <CompanyReviewsSection company={company} initialReviews={reviews} />
+          </>
+        }
+        salaries={<CompanySalariesPanel company={company} />}
+      />
 
       <p className="border-t border-gray-200 pt-6 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">{t("disclaimer")}</p>
     </div>

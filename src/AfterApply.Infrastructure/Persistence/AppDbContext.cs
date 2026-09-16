@@ -3,6 +3,8 @@ using AfterApply.Domain.Auditing;
 using AfterApply.Domain.Benchmark;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Domain.CompanySalaries;
+using AfterApply.Domain.Occupations;
 using AfterApply.Domain.CvScan;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.EmailIntegrations;
@@ -79,6 +81,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<CompanyReviewCategoryRating> CompanyReviewCategoryRatings => Set<CompanyReviewCategoryRating>();
 
     public DbSet<CompanyReviewStatementPick> CompanyReviewStatementPicks => Set<CompanyReviewStatementPick>();
+
+    public DbSet<Occupation> Occupations => Set<Occupation>();
+
+    public DbSet<CompanySalaryEntry> CompanySalaryEntries => Set<CompanySalaryEntry>();
 
     public DbSet<RequestAudit> RequestAudits => Set<RequestAudit>();
 

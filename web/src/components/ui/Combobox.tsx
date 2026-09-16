@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 export interface ComboboxOption {
   id: string;
   label: string;
+  /** A second, muted line under the label — the occupation catalogue shows the other language. */
+  hint?: string;
 }
 
 interface ComboboxProps {
@@ -12,6 +14,9 @@ interface ComboboxProps {
   value: string;
   onChange: (value: string) => void;
   onSearch: (query: string) => Promise<ComboboxOption[]>;
+  /** Fired when an option is picked (click or Enter), after `onChange(option.label)`. A parent
+   *  that must know *which* row was chosen — not just its text — listens here. */
+  onSelect?: (option: ComboboxOption) => void;
   minQueryLength?: number;
   debounceMs?: number;
   placeholder?: string;
@@ -28,6 +33,7 @@ export function Combobox({
   value,
   onChange,
   onSearch,
+  onSelect,
   minQueryLength = 2,
   debounceMs = 250,
   placeholder,
@@ -92,6 +98,7 @@ export function Combobox({
 
   function selectOption(option: ComboboxOption) {
     onChange(option.label);
+    onSelect?.(option);
     setOptions([]);
     setIsOpen(false);
   }
@@ -146,7 +153,8 @@ export function Combobox({
                       : "text-gray-900 dark:text-gray-100"
                   }`}
                 >
-                  {option.label}
+                  <span className="block">{option.label}</span>
+                  {option.hint ? <span className="block text-xs text-gray-500 dark:text-gray-400">{option.hint}</span> : null}
                 </button>
               </li>
             ))}

@@ -62,6 +62,11 @@ export const PUBLIC_MESSAGE_SCOPE = [
   "employmentStatus",
   "companies",
   "companyReviews",
+  // The company page's salary tab: its rows name the employment type, status and currency.
+  "companySalaries",
+  "salaryEmploymentStatus",
+  "salaryCurrency",
+  "employmentType",
   "reviewReportReason",
   "reviewModerationStatus",
   "help.sidebar",

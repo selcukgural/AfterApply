@@ -17,6 +17,7 @@ export const HELP_TOPICS = [
   { href: "/help/settings", key: "settings" },
   { href: "/help/chrome-extension", key: "chromeExtension" },
   { href: "/help/company-reviews", key: "companyReviews" },
+  { href: "/help/company-salaries", key: "companySalaries" },
   { href: "/help/cv-scan", key: "cvScan" },
   { href: "/help/benchmark", key: "benchmark" },
   { href: "/help/faq", key: "faq" },
@@ -71,6 +72,8 @@ export const PROTECTED_PATHS = [
   "/notifications",
   "/settings",
   "/my-reviews",
+  "/my-salaries",
+  "/contribute",
   "/admin",
 ];
 

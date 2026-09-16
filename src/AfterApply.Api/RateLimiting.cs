@@ -234,6 +234,14 @@ public static class RateLimiting
                     QueueLimit = 0
                 }));
 
+            options.AddPolicy(DependencyInjection.CompanySalaryWriteRateLimitPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = sizes.CompanySalaryWrite.PermitLimit,
+                    Window = sizes.CompanySalaryWrite.Window,
+                    QueueLimit = 0
+                }));
+
             // IP-based and anonymous, like the benchmark policy: the directory is readable without
             // an account, and a signed-in reader's browsing is not something to key to their id.
             options.AddPolicy(DependencyInjection.CompanyPublicSearchRateLimitPolicy, httpContext =>

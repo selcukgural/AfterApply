@@ -46,7 +46,7 @@ export default function MyReviewsPage() {
           )}
         </div>
         {quotaLeft > 0 && (
-          <Link href="/my-reviews/write" className={buttonClassName("primary")}>
+          <Link href="/contribute?tab=review" className={buttonClassName("primary")}>
             {t("write")}
           </Link>
         )}

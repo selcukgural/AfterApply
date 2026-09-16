@@ -1,6 +1,7 @@
 using AfterApply.Domain.Applications;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Domain.CompanySalaries;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.Notifications;
@@ -104,6 +105,23 @@ public sealed record CompanyReviewReportExportItem(
     ReviewReportResolution? Resolution,
     DateTimeOffset ReportedAt);
 
+/// <summary>The author's copy of a salary entry: every column, including the exact years that
+/// readers only ever see as a band.</summary>
+public sealed record CompanySalaryExportItem(
+    Guid Id,
+    string CompanyName,
+    string OccupationCode,
+    string OccupationNameTr,
+    string OccupationNameEn,
+    int YearsOfExperience,
+    EmploymentType EmploymentType,
+    SalaryEmploymentStatus EmploymentStatus,
+    decimal MonthlyNetAmount,
+    SalaryCurrency Currency,
+    decimal? AnnualBonusAmount,
+    DateTimeOffset SubmittedAt,
+    DateTimeOffset UpdatedAt);
+
 public sealed record AccountExportResponse(
     UserProfileResponse Profile,
     IReadOnlyList<ApplicationExportItem> Applications,
@@ -114,4 +132,5 @@ public sealed record AccountExportResponse(
     IReadOnlyList<FeedbackExportItem>? Feedback = null,
     IReadOnlyList<CompanyReviewExportItem>? CompanyReviews = null,
     IReadOnlyList<CompanyReviewReportExportItem>? CompanyReviewReports = null,
-    IReadOnlyList<Guid>? HelpfulMarkedReviewIds = null);
+    IReadOnlyList<Guid>? HelpfulMarkedReviewIds = null,
+    IReadOnlyList<CompanySalaryExportItem>? CompanySalaries = null);

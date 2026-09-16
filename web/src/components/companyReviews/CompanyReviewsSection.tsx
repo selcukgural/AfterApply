@@ -10,6 +10,7 @@ import { companyReviewsApi } from "@/lib/api/companyReviews";
 import { ApiError } from "@/lib/api/httpClient";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { guidePath } from "@/lib/guide/articles";
+import { contributeHref } from "@/lib/contribute/contributeState";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
 import { ReviewCard } from "@/components/companyReviews/ReviewCard";
@@ -72,7 +73,7 @@ export function CompanyReviewsSection({ company, initialReviews }: CompanyReview
     onError: (error) => setReportError(error instanceof ApiError ? error.message : t("actionError")),
   });
 
-  const writePath = `/my-reviews/write?company=${company.slug}`;
+  const writePath = contributeHref("review", company.slug);
   const signInHref = `/login?next=${encodeURIComponent(writePath)}`;
   const ownReview = viewerQuery.data?.ownReview ?? null;
   const marked = new Set(viewerQuery.data?.helpfulMarkedReviewIds ?? []);

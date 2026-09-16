@@ -36,7 +36,10 @@ public sealed record CompanyPublicResponse(
     string Slug,
     string Name,
     string? Website,
-    CompanyReviewSummaryResponse Summary);
+    CompanyReviewSummaryResponse Summary,
+    /// <summary>How many salary entries readers would find behind sign-in. Zero while the salary
+    /// feature is off. Trailing and defaulted: older clients never see it.</summary>
+    int SalaryCount = 0);
 
 public sealed record CompanyPublicListItemResponse(
     Guid Id,
