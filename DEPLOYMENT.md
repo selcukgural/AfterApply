@@ -834,7 +834,10 @@ Vertex error body is never logged (it can echo the request).
 The Pro plan is bought through PayTR's iFrame API: the API asks PayTR for a single-use token
 (step 1), the web embeds `https://www.paytr.com/odeme/guvenli/{token}` on `/pro/checkout`, and
 PayTR posts the result to our notification URL (step 2), which is the **only** thing that marks
-an order paid and extends `ProEntitlements`. No card data ever reaches us. Ships **off** —
+an order paid and extends `ProEntitlements`. A notification whose hash is valid but whose
+`merchant_oid` this database has never seen is recorded (`UnknownOrder`, in the alerts list) and
+answered OK: the panel's "Canlı Moda Geçiş" check replays test transactions made against another
+environment, and a non-OK answer only kept that check red (2026-09-16). No card data ever reaches us. Ships **off** —
 `PayTr:Enabled=false` — and every `/api/payments/*` route 404s while it is; the notification
 endpoint only needs the secrets, so a late notification is still applied after the flag goes
 back off. The web shows a price and a "Go Pro" button only when `/api/config` reports both

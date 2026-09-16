@@ -16,7 +16,8 @@ namespace AfterApply.Infrastructure.Payments;
 /// Step 2 of the iFrame flow. Verifies the HMAC, finds the order by merchant_oid, applies the
 /// result once, and answers PayTR. The answer discipline is the whole point: "OK" tells PayTR to
 /// stop, so it is only sent once the change is committed (or when there is nothing left to
-/// change); anything that goes wrong on our side is a non-OK answer, which makes PayTR retry and
+/// change, or when a retry could never change anything — an order this database has never
+/// had); anything that goes wrong on our side is a non-OK answer, which makes PayTR retry and
 /// show the transaction as "Devam ediyor" in the merchant panel until we get it right. Every
 /// notification is logged to PaymentNotifications in its own scope, so the evidence survives a
 /// failed transaction.
@@ -104,10 +105,14 @@ internal sealed class PayTrCallbackService(
         var order = await dbContext.PaymentOrders.SingleOrDefaultAsync(o => o.MerchantOid == fields.MerchantOid, cancellationToken);
         if (order is null)
         {
-            // A valid hash we cannot match is the one case we would rather keep PayTR knocking:
-            // the transaction stays visible as unfinished in the merchant panel until someone looks.
-            logger.LogError("PayTR notification for unknown oid {MerchantOid} ({Status})", fields.MerchantOid, fields.Status);
-            return (PayTrCallbackResult.Reject(404, "unknown order"), PaymentNotificationOutcome.UnknownOrder, null);
+            // A valid hash we cannot match: recorded as UnknownOrder (the admin alerts list shows
+            // it) and answered OK. The checkout writes the order before it asks PayTR for a token,
+            // so in this database the order can only be missing because the transaction was made
+            // against another environment (the local test payments, replayed by the merchant
+            // panel's live-mode check on 2026-09-16); a retry can never find it, and a non-OK
+            // answer only kept the panel's check red. The evidence log is the durable signal.
+            logger.LogError("PayTR notification for unknown oid {MerchantOid} ({Status}); recorded, answered OK", fields.MerchantOid, fields.Status);
+            return (PayTrCallbackResult.Ok, PaymentNotificationOutcome.UnknownOrder, null);
         }
 
         if (order.IsPaid)

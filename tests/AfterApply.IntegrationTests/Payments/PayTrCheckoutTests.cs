@@ -262,10 +262,11 @@ public class PayTrFlagOffTests(ApiHost<PayTrFlagOffProfile> host) : IClassFixtur
         var config = await _host.AnonymousClient().GetFromJsonAsync<ConfigLike>("/api/config", PaymentTestHost.JsonOptions);
         config!.Payments!.Enabled.ShouldBeFalse();
 
-        // Valid hash, unknown order: the endpoint is alive and verifies, it just has nothing to apply.
+        // Valid hash, unknown order: the endpoint is alive and verifies, it just has nothing to
+        // apply — recorded and answered OK (a bad hash would still be a 400, proving it checks).
         var response = await _host.NotifyAsync("0123456789abcdef0123456789abcdef", "success", 29900);
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        (await response.Content.ReadAsStringAsync()).ShouldBe("PAYTR notification failed: unknown order");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await _host.NotifyAsync("0123456789abcdef0123456789abcdef", "success", 29900, hashOverride: "bad")).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     private sealed record ConfigLike(PaymentsLike? Payments);
