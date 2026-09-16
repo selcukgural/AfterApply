@@ -6365,3 +6365,33 @@ görülmüyor; cümle değişirse yalnızca `web/messages/{tr,en}.json` düzenle
 Aynı okumaya eklenecek iki bağımsız madde: Kullanım Koşulları sayfası (2026-09-13'ten beri açık,
 aşağıdaki giriş) ve eski serbest metinlerin saklama süresi (yazarın kendi verisi, kendisine
 gösteriliyor, hesapla siliniyor — süre sorusu açık).
+
+## Kullanım Koşulları sayfası: `/terms` (2026-09-16)
+
+**Neden şimdi.** 2026-09-13'te "kullanıcı içeriği yayımlanıyor, koşullar hukuk okumasıyla birlikte"
+diye ertelenmişti; okuma yapılmadığı için sayfa da yoktu. Değerlendirmeler yapılandırılmış olunca
+koşulların söyleyeceği her şey kodda zaten uygulanan kurallara indi (şirket başına bir
+değerlendirme, kota, anında yayın, şikayet yolu, moderatör kararı, hesap silme) — sayfa artık bir
+vaat değil, mevcut davranışın yazıya dökülmüş hâli. Kullanıcı kararıyla yazıldı.
+
+**Yapı.** `/tr/terms`, `/en/terms`; gizlilik sayfasıyla aynı kalıp (tek sayfa, bölüm id'leri,
+başta tarih), `terms.*` mesaj namespace'i, footer "Kaynaklar" sütununda, `PUBLIC_PATHS` ve
+`SiteTrafficNormalizer.ExactPaths`'te (sitemap ↔ ziyaret sayacı allowlist testi ikisini birlikte
+ister). Bölümler: hizmet, hesap (18 yaş, tek hesap, anahtar sorumluluğu), şirket değerlendirmeleri
+(kendi deneyimi, sabit maddeler, sınırlar, anında yayın + şikayet, manipülasyon yasağı, görüşün
+yazara ait olduğu, şirket temsilcisi için yol), içerik lisansı (yazarın sahipliği; bize anonim
+yayımlama ve puanda kullanma izni, silinince biter), yasak kullanımlar, sorumluluk (araç çıktıları
+tavsiye değil), askıya alma, değişiklik, uygulanacak hukuk (TC), iletişim (mevcut
+`privacy@ekariyerim.com` — ayrı posta kutusu açılmadı).
+
+**Kayıt onayı iki belgeyi kapsıyor.** Kayıt formu ve üç OAuth callback'indeki onay metni
+`auth.register.consent` tek `t.rich` mesajına indi ("Gizlilik politikasını ve kullanım koşullarını
+okudum ve kabul ediyorum", iki link). Backend'de yeni alan yok: `ConsentAcceptedAt` zaten onay
+anını tutuyor, artık iki belgeye birden ait. Daha önce kayıt olanlar koşulları ayrıca onaylamış
+değil — "Değişiklikler" bölümündeki "kullanmaya devam = kabul" kuralı bunu kapsıyor; hukukçu
+aksini söylerse tek seferlik bir kabul ekranı gerekir (yapılmadı).
+
+**Açık.** İşletmecinin hukuki kimliği (unvan/adres) hiçbir sayfada yok — gizlilik sayfasında da
+yoktu; hukuk okumasında sorulacak ilk şey bu. Metin avukat görmedi; hukuk okuması listesi bu
+sayfayla birlikte: 206 madde + bu koşullar + işletmeci kimliği + eski serbest metinlerin saklama
+süresi.

@@ -35,6 +35,10 @@
         "title": "Cookie Policy",
         "description": "The two cookies e-kariyerim uses, what they do, how long they last — and why there is no consent banner."
       },
+      "terms": {
+        "title": "Terms of Use",
+        "description": "The rules that apply when you use e-kariyerim — your account, company reviews, content licence, prohibited uses and liability."
+      },
       "extensionPrivacy": {
         "title": "Browser Extension Privacy Policy",
         "description": "What the e-kariyerim browser extension reads, stores and sends — and what Gmail Scanning does once you turn it on."
@@ -370,7 +374,8 @@
       "help": "Help Center",
       "cookies": "Cookie Policy",
       "benchmark": "Reply rate benchmark",
-      "extensionPrivacy": "Extension Privacy Policy"
+      "extensionPrivacy": "Extension Privacy Policy",
+      "terms": "Terms of Use"
     }
   },
   "common": {
@@ -437,8 +442,6 @@
       "email": "Email",
       "password": "Password",
       "confirmPassword": "Confirm password",
-      "consentLink": "the privacy policy",
-      "consentSuffix": "and agree to it.",
       "submit": "Sign Up",
       "submitting": "Creating account...",
       "haveAccount": "Already have an account?",
@@ -448,7 +451,8 @@
         "item1": "See how many of your applications got a reply and how many went quiet — your own numbers",
         "item2": "Import your LinkedIn history or save applications with one click from the extension; no typing",
         "item3": "Free. Your data stays in your account alone; delete it whenever you like"
-      }
+      },
+      "consent": "I have read <privacy>the privacy policy</privacy> and <terms>the terms of use</terms> and agree to them."
     },
     "passwordRules": {
       "title": "Your password must contain:",
@@ -1074,6 +1078,78 @@
       "deletion": "Deleting your account deletes your reviews, your reports and your helpful marks. Reviews you wrote disappear from the company pages and from the company's score; this is also what your data export contains.",
       "legalBasis": "Lawful basis: your explicit action — you choose to write, report or mark — and, for moderation, legitimate interest: keeping what is published about a named company fair and lawful."
     }
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "lastUpdated": "Last updated: 16 September 2026",
+    "intro": "This page sets out the rules that apply when you use e-kariyerim — the website, the Chrome extension and the tools that work without an account. By using the site you accept these terms; if you do not accept them, please do not use it. How your personal data is handled is described in a separate document, the Privacy Policy; the two apply together.",
+    "service": {
+      "title": "What the service is",
+      "intro": "e-kariyerim is a tool for keeping track of your job search:",
+      "tracking": "A dashboard that records your applications, tracked jobs and reminders; import from a LinkedIn export; a Chrome extension that collects signals from job pages and from replies in Gmail.",
+      "tools": "Tools that work without an account: CV scan, reply-rate benchmark, and reading company reviews.",
+      "reviews": "Public company pages where registered users write anonymous, structured reviews of companies.",
+      "asIs": "The service is provided as is. We may change, pause or remove features; on a free service we do not promise advance notice, but a change that affects user data is announced on this page and, where needed, by email."
+    },
+    "account": {
+      "title": "Your account",
+      "age": "You must be at least 18 to open an account.",
+      "accuracy": "You open an account for yourself and are responsible for the information you give being accurate. Do not share an account with anyone or use someone else's.",
+      "security": "Your password and your extension keys are your responsibility; anything done from your account counts as done by you. If you notice unauthorised use, change your password and write to us.",
+      "delete": "You can delete your account permanently at any time from Account Settings; what gets deleted is listed in the Privacy Policy."
+    },
+    "reviews": {
+      "title": "Company reviews",
+      "intro": "Writing a company review needs an account and is subject to these rules:",
+      "ownExperience": "You rate only what you experienced yourself — a company you worked at, interned at or went through the hiring process of. Do not rate hearsay, someone else's experience, or a company you have no relationship with.",
+      "structured": "A review is made of ratings and fixed statements we wrote; there is no free text. The list of statements is the same for everyone and may be updated from time to time, like this page.",
+      "onePerCompany": "You can write one review per company per account, and there is a cap on the total number per account; both are shown on the My Reviews page. If your view changes, you edit your existing review.",
+      "publication": "Your review is published the moment you save it, without your name. If a reader reports it, a moderator looks at it and may leave it up, ask you for changes, or remove it; the reason appears on the My Reviews page. You can edit and resubmit a removed review; whether it goes back online is the moderator's decision.",
+      "noManipulation": "Using reviews in an organised way to favour or harm a company — several accounts, reviews written for something in return, coordinated rating — is prohibited and leads to the account being closed.",
+      "opinion": "Every published review is its author's personal opinion; it is not a statement by e-kariyerim about a company and we do not guarantee its accuracy.",
+      "companies": "If you represent a company and believe a review about it breaks the rules, you can report that review or write to the address below."
+    },
+    "content": {
+      "title": "Your content and licence",
+      "ownership": "Everything you save — your applications, CVs, notes, ratings and picks — is yours. We access it only to provide the service; the details are in the Privacy Policy.",
+      "licence": "When you save a company review you grant us permission to publish that review — your ratings and the statements you picked — anonymously on the company page, and to use it together with other reviews to produce scores and summaries. This permission ends when you delete the review or your account; the review leaves the pages and the company's score.",
+      "ourContent": "The site itself — its design, texts, the list of review statements, the help and guide content, the logo — belongs to e-kariyerim. Copying, reproducing or using it in your own service beyond personal use needs permission."
+    },
+    "prohibited": {
+      "title": "What you must not do",
+      "intro": "When using the service, the following is prohibited:",
+      "scraping": "Crawling, scraping or bulk-downloading the site or the company pages with automated tools.",
+      "limits": "Trying to get around quotas, rate limits, moderation or other limits; opening several accounts.",
+      "abuse": "Using the service to harm, mislead or harass another person.",
+      "security": "Anything that endangers the service's security, its infrastructure or other users' data.",
+      "unlawful": "Any use that breaks applicable law."
+    },
+    "liability": {
+      "title": "Liability",
+      "noAdvice": "The output of tools such as the CV scan, the benchmark and job matching is for information; it is not professional advice on careers, law or anything else. Decisions you base on it remain yours.",
+      "thirdParties": "The employers you apply to, and third parties such as LinkedIn, kariyer.net and Google, are not under our control; your relationship with them is subject to their own terms.",
+      "availability": "We do not promise that the service will be uninterrupted or error-free. To the extent applicable law allows, we are not liable for indirect damages arising from use of, or inability to use, the service.",
+      "reviewsDisclaimer": "Company reviews are users' opinions; if you believe a review has harmed you, use the report path first — every report is read by a moderator."
+    },
+    "termination": {
+      "title": "Suspension and termination",
+      "us": "For an account that breaks these terms we may set its review allowance to zero, remove its reviews, or close it. Where we can, we say why.",
+      "you": "You can end the relationship at any time by deleting your account."
+    },
+    "changes": {
+      "title": "Changes",
+      "body": "We may update these terms; the latest date is at the top of the page. A significant change is announced to registered users by email. Continuing to use the service after a change means you accept the new terms."
+    },
+    "law": {
+      "title": "Governing law",
+      "body": "These terms are governed by the law of the Republic of Türkiye. If you use the service as a consumer, the mandatory consumer-protection rules of the country you live in are unaffected."
+    },
+    "contact": {
+      "title": "Contact",
+      "before": "For questions about these terms, write to",
+      "after": "."
+    },
+    "privacyLink": "Privacy Policy →"
   },
   "extensionPrivacy": {
     "title": "Browser Extension Privacy Policy",

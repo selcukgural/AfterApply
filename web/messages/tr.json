@@ -35,6 +35,10 @@
         "title": "Çerez Politikası",
         "description": "e-kariyerim'in kullandığı iki çerez, ne işe yaradıkları, ne kadar kaldıkları — ve neden onay bandı olmadığı."
       },
+      "terms": {
+        "title": "Kullanım Koşulları",
+        "description": "e-kariyerim'i kullanırken geçerli olan kurallar — hesap, şirket değerlendirmeleri, içerik lisansı, yasak kullanımlar ve sorumluluk."
+      },
       "extensionPrivacy": {
         "title": "Tarayıcı Eklentisi Gizlilik Politikası",
         "description": "e-kariyerim tarayıcı eklentisinin ne okuduğu, ne sakladığı ve ne gönderdiği — ve açtığınızda Gmail Taraması'nın ne yaptığı."
@@ -370,7 +374,8 @@
       "help": "Yardım Merkezi",
       "cookies": "Çerez Politikası",
       "benchmark": "Geri dönüş oranı kıyaslama",
-      "extensionPrivacy": "Eklenti Gizlilik Politikası"
+      "extensionPrivacy": "Eklenti Gizlilik Politikası",
+      "terms": "Kullanım Koşulları"
     }
   },
   "common": {
@@ -437,8 +442,6 @@
       "email": "E-posta",
       "password": "Şifre",
       "confirmPassword": "Şifre (tekrar)",
-      "consentLink": "Gizlilik politikasını",
-      "consentSuffix": "okudum ve kabul ediyorum.",
       "submit": "Kayıt Ol",
       "submitting": "Kayıt oluşturuluyor...",
       "haveAccount": "Zaten hesabın var mı?",
@@ -448,7 +451,8 @@
         "item1": "Başvurularının kaçı cevaplandı, kaçı sessiz kaldı — kendi sayılarını gör",
         "item2": "LinkedIn geçmişini içe aktar ya da eklentiyle tek tıkla kaydet; elle yazma",
         "item3": "Ücretsiz. Verilerin yalnızca senin hesabında; istediğin an sil"
-      }
+      },
+      "consent": "<privacy>Gizlilik politikasını</privacy> ve <terms>kullanım koşullarını</terms> okudum ve kabul ediyorum."
     },
     "passwordRules": {
       "title": "Şifreniz şunları içermeli:",
@@ -1074,6 +1078,78 @@
       "deletion": "Hesabını silmek değerlendirmelerini, bildirimlerini ve faydalı işaretlerini siler. Yazdığın değerlendirmeler şirket sayfalarından ve şirketin puanından kalkar; veri dışa aktarımın da bunları içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — yazmayı, bildirmeyi veya işaretlemeyi sen seçersin — ve moderasyon için meşru menfaat: adı geçen bir şirket hakkında yayımlananların adil ve hukuka uygun kalması."
     }
+  },
+  "terms": {
+    "title": "Kullanım Koşulları",
+    "lastUpdated": "Son güncelleme: 16 Eylül 2026",
+    "intro": "Bu sayfa e-kariyerim'i — web sitesini, Chrome eklentisini ve hesapsız kullanılabilen araçları — kullanırken geçerli olan kuralları anlatır. Siteyi kullanarak bu koşulları kabul etmiş olursun; kabul etmiyorsan lütfen kullanma. Kişisel verilerinin nasıl işlendiği ayrı bir belgede, Gizlilik Politikası'nda anlatılır; iki belge birlikte geçerlidir.",
+    "service": {
+      "title": "Hizmet nedir",
+      "intro": "e-kariyerim iş arama sürecini takip etmen için bir araçtır:",
+      "tracking": "Başvurularını, takip listeni ve hatırlatıcılarını kaydeden bir panel; LinkedIn dışa aktarımından içe aktarma; Chrome eklentisiyle ilan sayfalarından ve Gmail'deki yanıtlardan sinyal toplama.",
+      "tools": "Hesapsız kullanılabilen araçlar: CV taraması, geri dönüş oranı kıyaslaması ve şirket değerlendirmelerini okuma.",
+      "reviews": "Kayıtlı kullanıcıların şirketler hakkında anonim, yapılandırılmış değerlendirmeler yazabildiği herkese açık şirket sayfaları.",
+      "asIs": "Hizmet olduğu gibi sunulur. Özellikleri değiştirebilir, durdurabilir ya da kaldırabiliriz; ücretsiz bir hizmette bunun için önceden bildirim taahhüt etmiyoruz, ama kullanıcı verisini etkileyen bir değişikliği bu sayfada ve gerekiyorsa e-postayla duyururuz."
+    },
+    "account": {
+      "title": "Hesap",
+      "age": "Hesap açmak için en az 18 yaşında olmalısın.",
+      "accuracy": "Hesabını kendi adına açarsın ve verdiğin bilgilerin doğru olmasından sorumlusun. Bir hesabı başkasıyla paylaşma, başkasının hesabını kullanma.",
+      "security": "Şifren ve eklenti anahtarların senin sorumluluğundadır; hesabından yapılan her işlem senin yapmış sayılır. İzinsiz kullanım fark edersen şifreni değiştir ve bize yaz.",
+      "delete": "Hesabını istediğin zaman Hesap Ayarları'ndan kalıcı olarak silebilirsin; ne silindiği Gizlilik Politikası'nda yazar."
+    },
+    "reviews": {
+      "title": "Şirket değerlendirmeleri",
+      "intro": "Şirket değerlendirmesi yazmak hesap gerektirir ve şu kurallara tabidir:",
+      "ownExperience": "Yalnızca kendi yaşadığın deneyimi puanlarsın — çalıştığın, staj yaptığın ya da işe alım sürecinden geçtiğin bir şirketi. Duyduklarını, başkasının deneyimini ya da hiç ilişkin olmayan bir şirketi puanlama.",
+      "structured": "Bir değerlendirme puanlardan ve bizim yazdığımız sabit maddelerden oluşur; serbest metin yoktur. Maddelerin listesi herkes için aynıdır ve bu sayfa gibi zaman zaman güncellenebilir.",
+      "onePerCompany": "Hesap başına şirket başına bir değerlendirme yazabilirsin ve hesap başına toplam sayının bir üst sınırı vardır; ikisi de Değerlendirmelerim sayfasında görünür. Görüşün değişirse mevcut değerlendirmeni düzenlersin.",
+      "publication": "Değerlendirmen kaydettiğin anda, adın olmadan yayımlanır. Bir okuyucu değerlendirmeyi bildirirse bir moderatör inceler ve yayında bırakabilir, senden düzenleme isteyebilir ya da kaldırabilir; gerekçesi Değerlendirmelerim sayfasında görünür. Kaldırılan bir değerlendirmeyi düzenleyip yeniden gönderebilirsin; yeniden yayına alınması moderatörün kararıdır.",
+      "noManipulation": "Değerlendirmeleri bir şirketi kayırmak ya da zarar vermek için düzenli biçimde kullanmak — birden fazla hesap, karşılık beklenen değerlendirme, koordineli puanlama — yasaktır ve hesabın kapatılmasına yol açar.",
+      "opinion": "Yayımlanan her değerlendirme yazarının kişisel görüşüdür; e-kariyerim'in bir şirket hakkındaki beyanı değildir ve doğruluğunu garanti etmiyoruz.",
+      "companies": "Bir şirketi temsil ediyorsan ve hakkındaki bir değerlendirmenin kurallara aykırı olduğunu düşünüyorsan, o değerlendirmeyi bildirebilir ya da aşağıdaki adrese yazabilirsin."
+    },
+    "content": {
+      "title": "İçeriğin ve lisans",
+      "ownership": "Kaydettiğin her şey — başvuruların, CV'lerin, notların, puanların ve seçimlerin — senindir. Bunlara yalnızca hizmeti sağlamak için erişiriz; ayrıntı Gizlilik Politikası'nda.",
+      "licence": "Bir şirket değerlendirmesi kaydettiğinde bize o değerlendirmeyi — puanlarını ve seçtiğin maddeleri — şirket sayfasında anonim olarak yayımlama ve diğer değerlendirmelerle birlikte puan ve özet üretmek için kullanma izni verirsin. Bu izin değerlendirmeyi ya da hesabını sildiğinde sona erer; değerlendirme sayfalardan ve şirket puanından çıkar.",
+      "ourContent": "Sitenin kendisi — tasarımı, metinleri, değerlendirme madde listesi, yardım ve rehber içerikleri, logosu — e-kariyerim'e aittir. Kişisel kullanımın dışında kopyalamak, çoğaltmak ya da kendi hizmetinde kullanmak için izin gerekir."
+    },
+    "prohibited": {
+      "title": "Yapılmaması gerekenler",
+      "intro": "Hizmeti kullanırken şunlar yasaktır:",
+      "scraping": "Siteyi ya da şirket sayfalarını otomatik araçlarla taramak, kazımak ya da toplu indirmek.",
+      "limits": "Kota, hız sınırı ve moderasyon gibi sınırları aşmaya çalışmak; birden fazla hesap açmak.",
+      "abuse": "Hizmeti başka bir kişiye zarar vermek, yanıltmak ya da taciz etmek için kullanmak.",
+      "security": "Hizmetin güvenliğini, altyapısını ya da başka kullanıcıların verisini tehlikeye atacak herhangi bir şey.",
+      "unlawful": "Yürürlükteki hukuka aykırı herhangi bir kullanım."
+    },
+    "liability": {
+      "title": "Sorumluluk",
+      "noAdvice": "CV taraması, kıyaslama ve iş uyumu gibi araçların çıktıları bilgi amaçlıdır; kariyer, hukuk ya da başka bir alanda profesyonel tavsiye değildir. Kararlarını bunlara dayanarak verirsen sorumluluk sende kalır.",
+      "thirdParties": "Başvuru yaptığın işverenler, LinkedIn, kariyer.net ve Google gibi üçüncü taraflar bizim kontrolümüzde değildir; onlarla ilişkin kendi koşullarına tabidir.",
+      "availability": "Hizmetin kesintisiz ya da hatasız olacağını taahhüt etmiyoruz. Yürürlükteki hukukun izin verdiği ölçüde, hizmetin kullanımından ya da kullanılamamasından doğan dolaylı zararlardan sorumlu değiliz.",
+      "reviewsDisclaimer": "Şirket değerlendirmeleri kullanıcıların görüşüdür; bir değerlendirme yüzünden uğradığını düşündüğün bir zarar için önce bildirim yolunu kullan — her bildirim bir moderatör tarafından okunur."
+    },
+    "termination": {
+      "title": "Askıya alma ve fesih",
+      "us": "Bu koşulları ihlal eden bir hesabın değerlendirme hakkını sıfırlayabilir, değerlendirmelerini kaldırabilir ya da hesabı kapatabiliriz. Mümkün olan hâllerde nedenini söyleriz.",
+      "you": "Sen de istediğin zaman hesabını silerek ilişkiyi bitirebilirsin."
+    },
+    "changes": {
+      "title": "Değişiklikler",
+      "body": "Bu koşulları güncelleyebiliriz; en son tarih sayfanın başında yazar. Önemli bir değişikliği kayıtlı kullanıcılara e-postayla duyururuz. Değişiklikten sonra hizmeti kullanmaya devam etmen yeni koşulları kabul ettiğin anlamına gelir."
+    },
+    "law": {
+      "title": "Uygulanacak hukuk",
+      "body": "Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır. Tüketici olarak kullanıyorsan, bulunduğun ülkenin zorunlu tüketici koruma hükümleri saklıdır."
+    },
+    "contact": {
+      "title": "İletişim",
+      "before": "Bu koşullarla ilgili sorular için",
+      "after": " adresine yazabilirsin."
+    },
+    "privacyLink": "Gizlilik Politikası →"
   },
   "extensionPrivacy": {
     "title": "Tarayıcı Eklentisi Gizlilik Politikası",
