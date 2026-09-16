@@ -119,6 +119,10 @@
         "title": "Reply Rate Benchmark",
         "description": "Compare your own reply rate with your field's median; where the number comes from and when it is withheld."
       },
+      "helpWeeklyJobs": {
+        "title": "Weekly Postings and the Pro Plan",
+        "description": "Postings scored against your CV every Monday: how it works, the price, CV consent and refunds."
+      },
       "notFound": {
         "title": "Page not found",
         "description": "The page you were looking for is not on e-kariyerim."
@@ -1547,7 +1551,8 @@
       "cv": "My CVs",
       "companyReviews": "Company Reviews",
       "cvScan": "CV Scan",
-      "benchmark": "Reply Rate Benchmark"
+      "benchmark": "Reply Rate Benchmark",
+      "weeklyJobs": "Weekly Postings and Pro"
     },
     "common": {
       "step": "Step",
@@ -1603,7 +1608,7 @@
           "description": "Bring in your LinkedIn data export in bulk."
         },
         "settings": {
-          "description": "Data export, extension token, deleting your account."
+          "description": "Data export, extension token, plan and payments, deleting your account."
         },
         "chromeExtension": {
           "description": "One-click \"I Applied\" on LinkedIn and kariyer.net."
@@ -1622,6 +1627,9 @@
         },
         "benchmark": {
           "description": "Compare your reply rate with your field's median, no account needed."
+        },
+        "weeklyJobs": {
+          "description": "How the Monday list is built, pricing, CV consent, refunds."
         }
       }
     },
@@ -1894,7 +1902,7 @@
     "settings": {
       "eyebrow": "Settings",
       "title": "Account Settings",
-      "intro": "Settings is where you export your data, manage the browser extension's connection and delete your account. Theme and language are switched from the top menu, not from Settings.",
+      "intro": "Settings is where you export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "export": {
         "title": "Export My Data",
         "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent and your company reviews (with your reports and helpful marks) as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
@@ -1921,6 +1929,27 @@
           "title": "The connection only reaches the endpoints the extension uses",
           "body": "The key given to the extension can add applications, search companies and — if you turn it on — send email signals. It cannot export your application history or manage your account. Still give it only to your own browser: it expires on its own after 90 days, and \"Revoke\" invalidates it immediately if you ever have doubts."
         }
+      },
+      "billing": {
+        "title": "Plan and payments",
+        "body": "The \"Plan and payments\" section lists your Pro plan payments with date, amount and status; the \"Manage plan and payment history\" link takes you to the Pro plan page. No card details are kept by e-kariyerim: payment is taken on PayTR's secure page, so there is no card to delete or update here.",
+        "step1": {
+          "title": "See a payment's status",
+          "body": "Each row shows the plan, the payment date, the amount and the status: paid, pending, failed, refund requested, refunded. A pending payment can be followed on its result page via \"Open\"; you also get an e-mail once the result is final."
+        },
+        "step2": {
+          "title": "Open a refund request",
+          "body": "Eligible payments show a \"Request refund\" button. Write your reason and send it; the request is reviewed by hand and the outcome is e-mailed. If approved, the amount goes back to the card you paid with through PayTR within 3–10 business days, and your Pro plan is shortened by the period that payment had added."
+        },
+        "step3": {
+          "title": "Nothing to do to cancel",
+          "body": "There is no automatic renewal; we e-mail you three days before the end. If you do not extend, nothing is charged, Pro simply ends on its end date, and your applications and CVs stay exactly as they are."
+        },
+        "calloutWithdrawal": {
+          "title": "Right of withdrawal",
+          "body": "Because you consent on the checkout page to the digital service starting at once, the statutory withdrawal right is waived; a refund request does not replace it, each request is judged on its own. The details are on the Cancellation and Refund Terms page."
+        },
+        "refundPolicyLink": "Cancellation and Refund Terms"
       },
       "delete": {
         "title": "Delete My Account",
@@ -2072,6 +2101,26 @@
       "q15": {
         "question": "What can I use on e-kariyerim without an account?",
         "answer": "Three things: CV Scan (how machine-readable your CV is), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension and writing a review need a free account."
+      },
+      "q16": {
+        "question": "What are weekly postings and what do they cost?",
+        "answer": "The Pro plan's feature: every Monday, new postings matching your criteria are compared with your CV and scored. Monthly or yearly, prepaid; the price is on the Pro plan page, VAT included; there is no automatic renewal."
+      },
+      "q17": {
+        "question": "Is my CV sent to an AI?",
+        "answer": "Only for the Pro plan's scoring, only if you explicitly allowed it on the criteria form, and only to Vertex AI (EU). Otherwise your CV is never sent to any AI service; you can withdraw the consent at any time."
+      },
+      "q18": {
+        "question": "Can I get a refund on the Pro plan?",
+        "answer": "Because you consent on the checkout page to the service starting at once, the statutory withdrawal right is waived; you can still open a refund request under Settings › Plan and payments. Requests are reviewed by hand and refunds go back to the same card through PayTR."
+      },
+      "q19": {
+        "question": "How do I cancel the Pro plan?",
+        "answer": "There is nothing to cancel: Pro is a prepaid period, there is no automatic renewal and no card on file. We e-mail you three days before the end; if you do not extend, nothing is charged and the plan simply ends on its end date. Your data stays as it is."
+      },
+      "q20": {
+        "question": "My payment was interrupted or failed; was my card charged?",
+        "answer": "If the payment window closed, you chose \"Cancel\" or your bank declined, nothing was charged; you can start the same plan again. If the result page says \"verifying\", we are waiting for the bank's confirmation: even if you close the page, we e-mail you once the result is final and it shows under Settings › Plan and payments. If your card was charged and the payment is still not recognised after a few hours, write to us via Feedback."
       }
     },
     "cv": {
@@ -2240,6 +2289,47 @@
       "calloutSignedIn": {
         "title": "If you have an account",
         "body": "The dashboard measures the same rate from your real applications: a record, not a statement. We keep the two apart; the benchmark tool writes nothing to your account."
+      }
+    },
+    "weeklyJobs": {
+      "eyebrow": "Pro plan",
+      "title": "Weekly postings and the Pro plan",
+      "intro": "Every Monday morning the Pro plan searches LinkedIn and kariyer.net for new postings that match your criteria, compares each with your default CV, scores it, and spells out which criteria match and which are missing. Postings you already applied to are left out.",
+      "open": "Go to weekly postings →",
+      "how": {
+        "title": "How it works",
+        "step1": {
+          "title": "Save your criteria",
+          "body": "Up to three job titles and one city. Remote-work preference and the e-mail digest are optional."
+        },
+        "step2": {
+          "title": "Consent to your CV being scored",
+          "body": "Your CV is sent to the AI for scoring only if you explicitly allow it; without that consent the feature does not run, because there is no unscored version of it."
+        },
+        "step3": {
+          "title": "Your list is ready on Monday morning",
+          "body": "Up to 50 postings that appeared on the two sources that week and match your criteria, ranked by fit score. A \"N postings are ready\" e-mail comes if you want it."
+        },
+        "step4": {
+          "title": "One-click \"I applied\"",
+          "body": "A posting you apply to joins your application list and is never shown again in later weeks."
+        }
+      },
+      "score": {
+        "title": "What the fit score is",
+        "body": "A number from 0 to 100, produced by comparing the posting's text with your CV. Each posting also lists matched criteria, missing criteria and the required skills; the score is a measure for ranking and filtering, not advice. Postings under the minimum score you set in your criteria are hidden from the list."
+      },
+      "plan": {
+        "title": "Price and period",
+        "body": "Monthly or yearly, prepaid. Prices are shown on the Pro plan page, VAT included. There is no automatic renewal: we e-mail you three days before the end; if you do not extend, nothing is charged, and no card is stored — payment is taken on PayTR's secure page and your card details never reach e-kariyerim."
+      },
+      "refund": {
+        "title": "Refunds",
+        "body": "Because you consent on the checkout page to the digital service starting at once, the statutory withdrawal right is waived; you can still open a refund request under Settings › Plan and payments, every request is reviewed by hand, and a refund goes back to the same card through PayTR."
+      },
+      "calloutConsent": {
+        "title": "Where your CV goes",
+        "body": "Only for scoring, only if you consented, and only to Vertex AI (EU region). You can withdraw consent from the criteria form at any time; from then on your CV is not sent. Details are in the privacy policy's \"Job matching\" section."
       }
     }
   },

@@ -19,6 +19,11 @@ const QUESTION_KEYS = [
   "q13",
   "q14",
   "q15",
+  "q16",
+  "q17",
+  "q18",
+  "q19",
+  "q20",
 ] as const;
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/help/faq">): Promise<Metadata> {

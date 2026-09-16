@@ -19,6 +19,7 @@ export const HELP_TOPICS = [
   { href: "/help/company-reviews", key: "companyReviews" },
   { href: "/help/cv-scan", key: "cvScan" },
   { href: "/help/benchmark", key: "benchmark" },
+  { href: "/help/weekly-jobs", key: "weeklyJobs" },
   { href: "/help/faq", key: "faq" },
 ] as const;
 

@@ -119,6 +119,10 @@
         "title": "Geri Dönüş Oranı Kıyaslama",
         "description": "Kendi geri dönüş oranınızı alanınızın medyanıyla kıyaslayın; sayı nereden geliyor, ne zaman gösterilmiyor."
       },
+      "helpWeeklyJobs": {
+        "title": "Haftalık İlanlar ve Pro Plan",
+        "description": "Her Pazartesi CV'nize göre puanlanmış ilanlar: nasıl çalışır, ücreti, CV rızası ve iade."
+      },
       "notFound": {
         "title": "Sayfa bulunamadı",
         "description": "Aradığın sayfa e-kariyerim'de yok."
@@ -1547,7 +1551,8 @@
       "cv": "CV'lerim",
       "companyReviews": "Şirket Değerlendirmeleri",
       "cvScan": "CV Tarama",
-      "benchmark": "Geri Dönüş Kıyası"
+      "benchmark": "Geri Dönüş Kıyası",
+      "weeklyJobs": "Haftalık İlanlar ve Pro"
     },
     "common": {
       "step": "Adım",
@@ -1603,7 +1608,7 @@
           "description": "LinkedIn veri dışa aktarımınızı toplu olarak içeri alın."
         },
         "settings": {
-          "description": "Veri dışa aktarma, eklenti anahtarı, hesap silme."
+          "description": "Veri dışa aktarma, eklenti anahtarı, plan ve ödemeler, hesap silme."
         },
         "chromeExtension": {
           "description": "LinkedIn ve kariyer.net'te tek tıkla \"Başvurdum\"."
@@ -1622,6 +1627,9 @@
         },
         "benchmark": {
           "description": "Geri dönüş oranınızı alanınızın medyanıyla kıyaslayın, hesap gerekmez."
+        },
+        "weeklyJobs": {
+          "description": "Pazartesi listesi nasıl oluşur, ücreti, CV rızası, iade."
         }
       }
     },
@@ -1894,7 +1902,7 @@
     "settings": {
       "eyebrow": "Ayarlar",
       "title": "Hesap Ayarları",
-      "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
+      "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir, Pro plan ödemelerinizi görüp iade talebi açabilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "export": {
         "title": "Verilerimi Dışa Aktar",
         "body": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri ve şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi bu dosyada yer almaz; onları CV'lerim sayfasından indirirsiniz."
@@ -1921,6 +1929,27 @@
           "title": "Bağlantı yalnızca eklentinin kullandığı uçlara erişir",
           "body": "Eklentiye verilen anahtar başvuru ekleyebilir, şirket araması yapabilir ve (siz açtıysanız) e-posta sinyali gönderebilir — başvuru geçmişinizi dışa aktaramaz, hesabınızı yönetemez. Yine de yalnızca kendi tarayıcınıza verin; 90 günde bir kendiliğinden sona erer ve şüphelendiğiniz an \"İptal Et\" ile anında geçersiz kılabilirsiniz."
         }
+      },
+      "billing": {
+        "title": "Plan ve ödemeler",
+        "body": "\"Plan ve ödemeler\" bölümü Pro plan ödemelerinizi tarih, tutar ve durumla listeler; \"Planı ve ödeme geçmişini yönet\" bağlantısı sizi Pro plan sayfasına götürür. Kart bilgileriniz e-kariyerim'de tutulmaz: ödeme PayTR'ın güvenli sayfasında alınır, bu yüzden burada silinecek ya da güncellenecek bir kart da yoktur.",
+        "step1": {
+          "title": "Ödemenin durumunu görün",
+          "body": "Her satırda planın adı, ödeme tarihi, tutar ve durum yazar: ödendi, bekliyor, tamamlanamadı, iade talebi, iade edildi. Bekleyen bir ödemeyi \"Aç\" ile sonuç sayfasında takip edebilirsiniz; sonuç kesinleşince ayrıca e-posta gelir."
+        },
+        "step2": {
+          "title": "İade talebi açın",
+          "body": "Uygun ödemelerin yanında \"İade talep et\" düğmesi görünür. Nedeninizi yazıp gönderirsiniz; talep elle incelenir, sonuç e-posta ile bildirilir. Onaylanırsa tutar PayTR üzerinden ödemeyi yaptığınız karta 3–10 iş gününde iade edilir ve Pro planınız o ödemenin eklediği süre kadar geri alınır."
+        },
+        "step3": {
+          "title": "İptal için bir şey yapmanız gerekmez",
+          "body": "Otomatik yenileme yoktur; süre dolmadan üç gün önce e-posta ile hatırlatırız. Uzatmazsanız hiçbir ücret alınmaz, Pro plan bitiş tarihinde kendiliğinden kapanır ve başvurularınız, CV'leriniz olduğu gibi kalır."
+        },
+        "calloutWithdrawal": {
+          "title": "Cayma hakkı",
+          "body": "Ödeme sayfasında dijital hizmetin hemen başlamasına onay verdiğiniz için yasal cayma hakkı kalkar; iade talebi bunun yerine geçmez, her talep tek tek değerlendirilir. Ayrıntılar İptal ve İade Koşulları sayfasındadır."
+        },
+        "refundPolicyLink": "İptal ve İade Koşulları"
       },
       "delete": {
         "title": "Hesabımı Sil",
@@ -2072,6 +2101,26 @@
       "q15": {
         "question": "e-kariyerim'de hesap açmadan neler kullanılabilir?",
         "answer": "Üç şey: CV Tarama (CV'nizin makine okunabilirliği), geri dönüş oranı kıyaslama ve şirket değerlendirmelerini okumak. Başvuru takibi, panel, Chrome eklentisi ve değerlendirme yazmak için ücretsiz bir hesap gerekir."
+      },
+      "q16": {
+        "question": "Haftalık ilanlar nedir, ücreti ne kadar?",
+        "answer": "Pro planın özelliği: her Pazartesi kriterlerinize uyan yeni ilanlar CV'nizle karşılaştırılıp puanlanır. Aylık veya yıllık peşin ödenir, fiyat Pro plan sayfasında KDV dahil yazar; otomatik yenileme yoktur."
+      },
+      "q17": {
+        "question": "CV'm yapay zekâya gönderiliyor mu?",
+        "answer": "Yalnızca Pro plandaki puanlama için, yalnızca kriter formunda açıkça izin verdiyseniz ve yalnızca Vertex AI'a (AB). Bunun dışında CV'niz hiçbir yapay zekâ servisine gönderilmez; izni istediğiniz an geri alabilirsiniz."
+      },
+      "q18": {
+        "question": "Pro planı iade edebilir miyim?",
+        "answer": "Ödeme sayfasında hizmetin hemen başlamasına onay verdiğiniz için yasal cayma hakkı kalkar; yine de Ayarlar › Plan ve ödemeler'den iade talebi açabilirsiniz. Talepler elle incelenir, iade PayTR üzerinden aynı karta yapılır."
+      },
+      "q19": {
+        "question": "Pro planı nasıl iptal ederim?",
+        "answer": "İptal edilecek bir şey yoktur: Pro plan peşin ödenen bir dönemdir, otomatik yenileme yoktur ve kayıtlı kartınız da yoktur. Süre dolmadan üç gün önce e-posta ile hatırlatırız; uzatmazsanız hiçbir ücret alınmaz ve plan bitiş tarihinde kendiliğinden kapanır. Verileriniz olduğu gibi kalır."
+      },
+      "q20": {
+        "question": "Ödeme yarıda kaldı ya da başarısız oldu; kartımdan para çekildi mi?",
+        "answer": "Ödeme penceresi kapanmış, \"Vazgeç\" demiş ya da bankanız onaylamamışsa kartınızdan çekim yapılmamıştır; aynı planı yeniden başlatabilirsiniz. Sonuç sayfası \"doğrulanıyor\" diyorsa bankanın onayını bekliyoruz demektir: sayfayı kapatsanız bile sonuç kesinleşince e-posta ile bildiririz ve Ayarlar › Plan ve ödemeler'de görünür. Çekim yapıldığı hâlde ödeme saatler içinde tanınmadıysa Geri Bildirim'den bize yazın."
       }
     },
     "cv": {
@@ -2240,6 +2289,47 @@
       "calloutSignedIn": {
         "title": "Hesabınız varsa",
         "body": "Panel, aynı oranı sizin gerçek başvurularınızdan ölçer: beyan değil, kayıt. İkisini ayrı tutuyoruz; kıyas aracı hesabınıza bir şey yazmaz."
+      }
+    },
+    "weeklyJobs": {
+      "eyebrow": "Pro plan",
+      "title": "Haftalık ilanlar ve Pro plan",
+      "intro": "Pro plan her Pazartesi sabahı kriterlerinize uyan yeni ilanları LinkedIn ve kariyer.net'te arar, her birini varsayılan CV'nizle karşılaştırıp puanlar ve hangi kriterlerin uyup uymadığını yazar. Zaten başvurduklarınız listeye girmez.",
+      "open": "Haftalık ilanlara git →",
+      "how": {
+        "title": "Nasıl çalışır",
+        "step1": {
+          "title": "Kriterlerinizi kaydedin",
+          "body": "En fazla üç pozisyon adı ve bir şehir. Uzaktan çalışma tercihi ve e-posta özeti isteğe bağlıdır."
+        },
+        "step2": {
+          "title": "CV'niz için rıza verin",
+          "body": "Puanlama için CV'niz yalnızca siz açıkça izin verirseniz yapay zekâya gönderilir; izin vermezseniz özellik çalışmaz, çünkü puansız bir hâli yoktur."
+        },
+        "step3": {
+          "title": "Pazartesi sabahı listeniz hazır",
+          "body": "O hafta iki kaynakta yeni çıkan, kriterlerinize uyan en fazla 50 ilan, uyum puanına göre sıralı. İsterseniz \"N ilan hazır\" e-postası gelir."
+        },
+        "step4": {
+          "title": "Tek tıkla \"Başvurdum\"",
+          "body": "Başvurduğunuz ilan başvuru listenize geçer ve sonraki haftalarda bir daha gösterilmez."
+        }
+      },
+      "score": {
+        "title": "Uyum puanı nedir",
+        "body": "0–100 arası bir sayı: ilan metni ile CV'nizin karşılaştırılmasından çıkar. Her ilanda uyan kriterler, eksik kriterler ve istenen yetkinlikler ayrıca yazılır; puan bir tavsiye değil, sıralama ve eleme için bir ölçüdür. Kriterlerinizde belirlediğiniz en düşük puanın altındakiler listede gizlenir."
+      },
+      "plan": {
+        "title": "Ücret ve süre",
+        "body": "Aylık veya yıllık, peşin. Fiyatlar Pro plan sayfasında KDV dahil yazar. Otomatik yenileme yoktur: süre dolmadan üç gün önce e-posta ile hatırlatırız; uzatmazsanız hiçbir ücret alınmaz ve kayıtlı bir kartınız da yoktur — ödeme PayTR'ın güvenli sayfasında alınır, kart bilgileriniz e-kariyerim'e ulaşmaz."
+      },
+      "refund": {
+        "title": "İade",
+        "body": "Ödeme sayfasında dijital hizmetin hemen başlamasına onay verdiğiniz için yasal cayma hakkı kalkar; yine de Ayarlar › Plan ve ödemeler'den iade talebi açabilirsiniz, her talebi elle inceleriz ve iade PayTR üzerinden aynı karta yapılır."
+      },
+      "calloutConsent": {
+        "title": "CV'niz nereye gidiyor",
+        "body": "Yalnızca puanlama için, yalnızca rıza verdiyseniz ve yalnızca Vertex AI'a (AB bölgesi). Rızayı kriter formundan istediğiniz an geri alabilirsiniz; o andan itibaren CV'niz gönderilmez. Ayrıntı gizlilik politikasının \"İş eşleştirme\" bölümünde."
       }
     }
   },
