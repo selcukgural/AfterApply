@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
+import { WEEKLY_JOBS_QUERY_KEYS } from "@/lib/weeklyJobs/queryKeys";
 
 const MAX_TITLES = 3;
 
@@ -19,12 +20,8 @@ interface CriteriaFormProps {
   profile: JobSourceProfileResponse | null;
 }
 
-export const WEEKLY_JOBS_QUERY_KEYS = {
-  status: ["weeklyJobs", "status"] as const,
-  profile: ["weeklyJobs", "profile"] as const,
-  postings: (week?: number) => ["weeklyJobs", "postings", week ?? "latest"] as const,
-  posting: (id: string) => ["weeklyJobs", "posting", id] as const,
-};
+// Re-exported for the pages that imported the keys from here before they moved.
+export { WEEKLY_JOBS_QUERY_KEYS };
 
 /**
  * The criteria the weekly sweep searches with, and the one consent this feature needs that the

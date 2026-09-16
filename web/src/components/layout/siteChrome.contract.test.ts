@@ -19,6 +19,7 @@ describe("the signed-in navbar", () => {
   it("marks the current section", () => {
     expect(navBar).toContain("usePathname");
     expect(navBar).toContain('aria-current={active(link.href) ? "page" : undefined}');
+    expect(read("components/layout/NavMenu.tsx")).toContain("isActivePath(pathname, item.href)");
   });
 
   it("draws the active state the same way the admin tabs and the help sidebar do", () => {
@@ -28,17 +29,31 @@ describe("the signed-in navbar", () => {
   });
 
   it("keeps the account-free tools reachable after sign-in, in a nav-level group", () => {
-    // 2026-09-14 (option D3): the tools moved out of the avatar menu into their own "Tools"
-    // trigger in the row, so the navbar loses nothing the public header offered when it takes
-    // that header's place for a signed-in visitor.
-    const toolsMenu = read("components/layout/ToolsMenu.tsx");
-    for (const href of ['"/cv-tarama"', '"/benchmark"', '"/guide"']) {
-      expect(toolsMenu).toContain(href);
+    // 2026-09-14: the tools moved out of the avatar menu into a trigger in the row, so the navbar
+    // loses nothing the public header offered when it takes that header's place for a signed-in
+    // visitor. 2026-09-15: that trigger became "Explore", which also carries the weekly postings
+    // and the company pages — one flat list, no "needs an account" split.
+    const exploreMenu = read("components/layout/ExploreMenu.tsx");
+    for (const href of ['"/weekly-jobs"', '"/companies"', '"/cv-tarama"', '"/benchmark"', '"/guide"']) {
+      expect(exploreMenu).toContain(href);
     }
-    expect(toolsMenu).toContain('aria-haspopup="menu"');
-    expect(navBar).toContain("<ToolsMenu />");
+    expect(read("components/layout/NavMenu.tsx")).toContain('aria-haspopup="menu"');
+    expect(navBar).toContain("<ExploreMenu />");
     expect(navBar).toContain("TOOL_LINKS.map");
     expect(read("components/layout/UserMenu.tsx")).not.toContain("TOOL_LINKS");
+  });
+
+  it("folds the row into four items and shows the two signals as icons with their counts", () => {
+    // 2026-09-15 (option D3 on the header canvas): ten text items plus the paid weekly postings
+    // had made the row eleven; the applications pages and the discovery pages are one group each,
+    // and suggestions/notifications sit by the avatar as an inbox and a bell.
+    expect(navBar).toContain('label={t("applicationsMenu")}');
+    for (const href of ['"/applications"', '"/tracked-jobs"', '"/import"', '"/applications/new"']) {
+      expect(navBar).toContain(href);
+    }
+    expect(navBar).toContain('iconLink("/suggestions"');
+    expect(navBar).toContain('iconLink("/notifications"');
+    expect(navBar).toContain("<ProBadge />");
   });
 
   it("labels its menu button from the catalogue, not a hardcoded English string", () => {

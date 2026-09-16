@@ -122,7 +122,7 @@ export function UserMenu({ name, initials, onLogout, showAdmin, showPro }: UserM
           )}
 
           {/* The account-free tools used to be a group here (2026-09-13); since 2026-09-14 they
-              are the navbar's own "Tools" menu (ToolsMenu), one level up. */}
+              are the navbar's own "Explore" menu (ExploreMenu), one level up. */}
           <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
 
           <div className="flex items-center justify-between px-4 py-2">

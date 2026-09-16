@@ -422,8 +422,11 @@
     "guide": "Rehber",
     "openMenu": "Menüyü aç",
     "closeMenu": "Menüyü kapat",
-    "toolsMenu": "Araçlar",
-    "toolsNote": "Hesap gerekmez",
+    "applicationsMenu": "Başvurular",
+    "allApplications": "Tüm başvurular",
+    "newApplication": "Yeni başvuru",
+    "explore": "Keşfet",
+    "proBadge": "Pro",
     "weeklyJobs": "Haftalık İlanlar",
     "pro": "Pro plan"
   },

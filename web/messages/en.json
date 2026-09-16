@@ -422,8 +422,11 @@
     "guide": "Guide",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "toolsMenu": "Tools",
-    "toolsNote": "No account needed",
+    "applicationsMenu": "Applications",
+    "allApplications": "All applications",
+    "newApplication": "New application",
+    "explore": "Explore",
+    "proBadge": "Pro",
     "weeklyJobs": "Weekly Jobs",
     "pro": "Pro plan"
   },
