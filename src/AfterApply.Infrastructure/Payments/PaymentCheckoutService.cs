@@ -141,6 +141,18 @@ internal sealed class PaymentCheckoutService(
         return orders.Select(o => o.ToUserResponse()).ToList();
     }
 
+    public async Task<BillingDefaultsResponse> GetBillingDefaultsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var last = await dbContext.PaymentOrders.AsNoTracking()
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.CreatedAt)
+            .Select(o => new { o.BillingName, o.BillingAddress, o.BillingPhone })
+            .FirstOrDefaultAsync(cancellationToken);
+        return last is null
+            ? new BillingDefaultsResponse(null, null, null)
+            : new BillingDefaultsResponse(last.BillingName, last.BillingAddress, last.BillingPhone);
+    }
+
     public async Task<bool> CancelAsync(Guid userId, Guid orderId, CancellationToken cancellationToken)
     {
         var order = await dbContext.PaymentOrders.SingleOrDefaultAsync(o => o.Id == orderId && o.UserId == userId, cancellationToken);

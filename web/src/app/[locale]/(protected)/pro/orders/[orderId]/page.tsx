@@ -96,7 +96,8 @@ export default function OrderResultPage() {
 
   const data = order.data;
   const planName = tPlans(data.plan === "Yearly" ? "yearly" : "monthly");
-  const amount = formatMinor(data.amountMinor, data.currency, locale);
+  // Once paid, say what the card was charged — on an amount mismatch that is not the plan's price.
+  const amount = formatMinor(data.chargedAmountMinor ?? data.amountMinor, data.currency, locale);
 
   if (data.status === "Paid" || data.status === "RefundRequested" || data.status === "PartiallyRefunded") {
     return (

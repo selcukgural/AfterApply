@@ -269,6 +269,12 @@ public class PayTrCallbackTests(ApiHost<PaymentProfile> host) : IClassFixture<Ap
         order.Status.ShouldBe(PaymentOrderStatus.Paid);
         order.AmountMismatch.ShouldBeTrue();
         order.TotalAmountMinor.ShouldBe(31000);
+
+        // The result page reads the charged figure, so the user is told what their card saw,
+        // not the price the plan carried when the order was opened.
+        var mine = await _client.GetFromJsonAsync<PaymentOrderResponse>($"/api/payments/orders/{checkout.OrderId}", PaymentTestHost.JsonOptions);
+        mine!.AmountMinor.ShouldBe(29900);
+        mine.ChargedAmountMinor.ShouldBe(31000);
     }
 
     [Fact]

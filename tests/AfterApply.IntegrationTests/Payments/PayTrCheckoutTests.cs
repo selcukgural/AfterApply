@@ -208,9 +208,28 @@ public class PayTrCheckoutTests(ApiHost<PaymentProfile> host) : IClassFixture<Ap
     }
 
     [Fact]
+    public async Task Billing_Defaults_Echo_The_Newest_Order_And_Only_To_Its_Owner()
+    {
+        (await _client.GetFromJsonAsync<BillingDefaultsResponse>("/api/payments/billing-defaults", PaymentTestHost.JsonOptions))!
+            .ShouldBe(new BillingDefaultsResponse(null, null, null));
+
+        (await _client.PostAsJsonAsync("/api/payments/checkout", Monthly(), PaymentTestHost.JsonOptions)).EnsureSuccessStatusCode();
+        var newer = Monthly() with { BillingAddress = "Elsewhere 2, Ankara", BillingPhone = "+90 555 111 11 11" };
+        (await _client.PostAsJsonAsync("/api/payments/checkout", newer with { Plan = "yearly" }, PaymentTestHost.JsonOptions)).EnsureSuccessStatusCode();
+
+        var defaults = await _client.GetFromJsonAsync<BillingDefaultsResponse>("/api/payments/billing-defaults", PaymentTestHost.JsonOptions);
+        defaults.ShouldBe(new BillingDefaultsResponse("Ada Lovelace", "Elsewhere 2, Ankara", "+90 555 111 11 11"));
+
+        var (other, _) = await _host.RegisterAsync("other@example.com");
+        (await other.GetFromJsonAsync<BillingDefaultsResponse>("/api/payments/billing-defaults", PaymentTestHost.JsonOptions))!
+            .ShouldBe(new BillingDefaultsResponse(null, null, null));
+    }
+
+    [Fact]
     public async Task Anonymous_Callers_Get_401()
     {
         (await _host.AnonymousClient().GetAsync("/api/payments/plans")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (await _host.AnonymousClient().GetAsync("/api/payments/billing-defaults")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     private sealed record ProblemDetailsLike(string? Title, string? Detail, int? Status);

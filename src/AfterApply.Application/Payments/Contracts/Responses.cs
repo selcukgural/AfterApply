@@ -37,7 +37,14 @@ public sealed record PaymentOrderResponse(
     long RefundedAmountMinor,
     DateTimeOffset? RefundRequestedAt,
     DateTimeOffset? EntitlementActiveUntil,
-    bool CanRequestRefund);
+    bool CanRequestRefund,
+    /// <summary>What PayTR reports it actually charged, once paid; null before that. It differs
+    /// from <see cref="AmountMinor"/> only on an amount mismatch, and it is what a receipt says.</summary>
+    long? ChargedAmountMinor);
+
+/// <summary>The billing details the caller typed on their most recent order, offered back as
+/// the checkout form's defaults. Nulls when they have never ordered.</summary>
+public sealed record BillingDefaultsResponse(string? BillingName, string? BillingAddress, string? BillingPhone);
 
 public sealed record AdminPaymentOrderResponse(
     Guid Id,

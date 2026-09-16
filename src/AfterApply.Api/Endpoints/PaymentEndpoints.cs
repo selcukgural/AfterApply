@@ -62,6 +62,15 @@ public static class PaymentEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status429TooManyRequests);
 
+        group.MapGet("/billing-defaults", async (ClaimsPrincipal user, HttpContext httpContext, IPaymentCheckoutService service,
+                CancellationToken cancellationToken) =>
+            {
+                httpContext.Response.Headers[HeaderNames.CacheControl] = "private, no-store";
+                return Results.Ok(await service.GetBillingDefaultsAsync(user.GetUserId(), cancellationToken));
+            })
+            .WithSummary("The billing details from the caller's most recent order, as defaults for the checkout form")
+            .Produces<BillingDefaultsResponse>();
+
         group.MapGet("/orders", async (int? take, ClaimsPrincipal user, IPaymentCheckoutService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.ListOrdersAsync(user.GetUserId(), take ?? DefaultHistoryTake, cancellationToken)))
             .WithSummary("The caller's payment history, newest first")

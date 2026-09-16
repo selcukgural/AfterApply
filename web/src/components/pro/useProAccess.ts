@@ -10,6 +10,7 @@ export const PRO_QUERY_KEYS = {
   plans: ["payments", "plans"] as const,
   orders: ["payments", "orders"] as const,
   order: (id: string) => ["payments", "order", id] as const,
+  billingDefaults: ["payments", "billing-defaults"] as const,
 };
 
 /**

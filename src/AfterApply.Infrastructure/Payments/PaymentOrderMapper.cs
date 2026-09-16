@@ -8,7 +8,8 @@ internal static class PaymentOrderMapper
     public static PaymentOrderResponse ToUserResponse(this PaymentOrder o) =>
         new(o.Id, o.Plan.ToString(), o.AmountMinor, o.Currency, o.Status.ToString(), o.CreatedAt, o.PaidAt, o.TokenExpiresAt,
             o.FailedReasonCode, o.FailedReasonMsg, o.RefundedAmountMinor, o.RefundRequestedAt, o.EntitlementActiveUntilAfter,
-            o.Status is PaymentOrderStatus.Paid or PaymentOrderStatus.PartiallyRefunded && o.RefundableAmountMinor > 0);
+            o.Status is PaymentOrderStatus.Paid or PaymentOrderStatus.PartiallyRefunded && o.RefundableAmountMinor > 0,
+            o.TotalAmountMinor);
 
     public static AdminPaymentOrderResponse ToAdminResponse(this PaymentOrder o) =>
         new(o.Id, o.UserId, o.Email, o.MerchantOid, o.Plan.ToString(), o.AmountMinor, o.TotalAmountMinor, o.Currency, o.Status.ToString(),

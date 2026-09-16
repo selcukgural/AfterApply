@@ -16,9 +16,13 @@ export interface BillingDetails {
 }
 
 interface BillingFormProps {
-  initialName: string;
+  /** Starting values: the profile name plus whatever the user typed on their last order. */
+  initial: BillingDetails;
   busy: boolean;
+  /** A message that belongs to no single field (the provider was unreachable, say). */
   error: string | null;
+  /** The server's validation messages, keyed by BillingDetails field. */
+  fieldErrors: Partial<Record<keyof BillingDetails, string>>;
   onSubmit: (details: BillingDetails) => void;
 }
 
@@ -29,11 +33,11 @@ interface BillingFormProps {
  * that waives the withdrawal right — the wording of that sentence is a legal requirement, not
  * copy.
  */
-export function BillingForm({ initialName, busy, error, onSubmit }: BillingFormProps) {
+export function BillingForm({ initial, busy, error, fieldErrors, onSubmit }: BillingFormProps) {
   const t = useTranslations("payments.checkout");
-  const [name, setName] = useState(initialName);
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
+  const [name, setName] = useState(initial.billingName);
+  const [address, setAddress] = useState(initial.billingAddress);
+  const [phone, setPhone] = useState(initial.billingPhone);
   const [accepted, setAccepted] = useState(false);
   const [termsError, setTermsError] = useState<string | null>(null);
 
@@ -49,10 +53,10 @@ export function BillingForm({ initialName, busy, error, onSubmit }: BillingFormP
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-      <FormField label={t("billingName")} htmlFor="billing-name">
+      <FormField label={t("billingName")} htmlFor="billing-name" error={fieldErrors.billingName}>
         <Input id="billing-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required autoComplete="name" />
       </FormField>
-      <FormField label={t("billingAddress")} htmlFor="billing-address">
+      <FormField label={t("billingAddress")} htmlFor="billing-address" error={fieldErrors.billingAddress}>
         <Textarea
           id="billing-address"
           value={address}
@@ -63,7 +67,7 @@ export function BillingForm({ initialName, busy, error, onSubmit }: BillingFormP
           autoComplete="street-address"
         />
       </FormField>
-      <FormField label={t("billingPhone")} htmlFor="billing-phone" className="sm:max-w-[240px]">
+      <FormField label={t("billingPhone")} htmlFor="billing-phone" className="sm:max-w-[240px]" error={fieldErrors.billingPhone}>
         <Input
           id="billing-phone"
           value={phone}

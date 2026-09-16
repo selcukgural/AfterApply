@@ -2,6 +2,7 @@ import type {
   AdminPaymentOrderDetailResponse,
   AdminPaymentOrderResponse,
   AdminRefundRequest,
+  BillingDefaultsResponse,
   CheckoutResponse,
   MarkRefundedRequest,
   PagedResult,
@@ -19,6 +20,8 @@ import { apiFetch } from "./httpClient";
  *  check `config.payments.enabled` before calling any of these. */
 export const paymentsApi = {
   getPlans: () => apiFetch<PaymentPlansResponse>("/api/payments/plans"),
+
+  getBillingDefaults: () => apiFetch<BillingDefaultsResponse>("/api/payments/billing-defaults"),
 
   startCheckout: (request: StartCheckoutRequest) =>
     apiFetch<CheckoutResponse>("/api/payments/checkout", { method: "POST", body: JSON.stringify(request) }),

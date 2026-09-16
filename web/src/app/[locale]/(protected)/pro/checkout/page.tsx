@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ApiError } from "@/lib/api/httpClient";
 import { paymentsApi } from "@/lib/api/payments";
+import { fieldErrorsOf } from "@/lib/api/validationErrors";
 import type { CheckoutResponse, ProPlan } from "@/types/api";
 
 const TERMINAL = new Set(["Paid", "Failed", "Expired", "Cancelled", "RefundRequested", "Refunded", "PartiallyRefunded"]);
@@ -37,15 +38,29 @@ export default function CheckoutPage() {
   const [checkout, setCheckout] = useState<CheckoutResponse | null>(null);
   const [expired, setExpired] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof BillingDetails, string>>>({});
+
+  // What the user typed on their last order, so a second checkout is not typed from scratch.
+  const billingDefaults = useQuery({
+    queryKey: PRO_QUERY_KEYS.billingDefaults,
+    queryFn: paymentsApi.getBillingDefaults,
+    staleTime: 60_000,
+  });
 
   const start = useMutation({
     mutationFn: (details: BillingDetails) => paymentsApi.startCheckout({ plan: plan!, acceptTerms: true, ...details }),
     onSuccess: (response) => {
       setError(null);
+      setFieldErrors({});
       setExpired(false);
       setCheckout(response);
     },
-    onError: (err) => setError(err instanceof ApiError ? err.message : t("providerError")),
+    onError: (err) => {
+      // A validation problem lands under its fields; anything else is one line above the button.
+      const perField = fieldErrorsOf(err);
+      setFieldErrors(perField);
+      setError(Object.keys(perField).length > 0 ? null : err instanceof ApiError ? err.message : t("providerError"));
+    },
   });
 
   const cancel = useMutation({
@@ -72,7 +87,9 @@ export default function CheckoutPage() {
 
   const handleExpired = useCallback(() => setExpired(true), []);
 
-  if (isLoading || !plans) {
+  // The defaults gate the form because BillingForm seeds its state once, on mount. A failed
+  // defaults call is not worth blocking a payment over: the form then starts from the profile name.
+  if (isLoading || !plans || billingDefaults.isLoading) {
     return <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>;
   }
 
@@ -89,7 +106,11 @@ export default function CheckoutPage() {
     );
   }
 
-  const initialName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+  const initial: BillingDetails = {
+    billingName: billingDefaults.data?.billingName || [user?.firstName, user?.lastName].filter(Boolean).join(" "),
+    billingAddress: billingDefaults.data?.billingAddress ?? "",
+    billingPhone: billingDefaults.data?.billingPhone ?? "",
+  };
 
   // 5A on the 2026-09-15 design canvas: the form (or, in step two, PayTR's frame) in a card on
   // the left, the order summary on the right; below `lg` the summary drops under the form. Before
@@ -131,7 +152,13 @@ export default function CheckoutPage() {
             />
           ) : (
             <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-              <BillingForm initialName={initialName} busy={start.isPending} error={error} onSubmit={(details) => start.mutate(details)} />
+              <BillingForm
+                initial={initial}
+                busy={start.isPending}
+                error={error}
+                fieldErrors={fieldErrors}
+                onSubmit={(details) => start.mutate(details)}
+              />
             </div>
           )}
         </div>

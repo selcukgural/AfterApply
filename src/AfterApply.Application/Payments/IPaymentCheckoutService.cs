@@ -16,6 +16,10 @@ public interface IPaymentCheckoutService
 
     Task<IReadOnlyList<PaymentOrderResponse>> ListOrdersAsync(Guid userId, int take, CancellationToken cancellationToken);
 
+    /// <summary>The billing details from the caller's newest order, whatever its status — they are
+    /// the caller's own words, offered back so a second checkout is not typed from scratch.</summary>
+    Task<BillingDefaultsResponse> GetBillingDefaultsAsync(Guid userId, CancellationToken cancellationToken);
+
     /// <summary>The user closed the payment window before paying. False when the order is not
     /// theirs or does not exist; throws when it is no longer pending.</summary>
     Task<bool> CancelAsync(Guid userId, Guid orderId, CancellationToken cancellationToken);

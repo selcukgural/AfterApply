@@ -1307,6 +1307,15 @@ export interface PaymentOrderResponse {
   refundRequestedAt: string | null;
   entitlementActiveUntil: string | null;
   canRequestRefund: boolean;
+  /** What PayTR actually charged, once paid — differs from amountMinor only on a mismatch. */
+  chargedAmountMinor: number | null;
+}
+
+/** The billing details from the user's newest order; all null before their first checkout. */
+export interface BillingDefaultsResponse {
+  billingName: string | null;
+  billingAddress: string | null;
+  billingPhone: string | null;
 }
 
 export interface RequestRefundRequest {
