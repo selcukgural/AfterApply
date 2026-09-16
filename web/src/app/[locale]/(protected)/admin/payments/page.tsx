@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { AdminTabs } from "@/components/admin/AdminTabs";
+import { PaymentAlertsSection } from "@/components/admin/PaymentAlertsSection";
 import { Pagination } from "@/components/applications/Pagination";
 import { Card, CardHeader } from "@/components/dashboard/Card";
 import { OrderStatusBadge, statusKey } from "@/components/pro/OrderStatusBadge";
@@ -25,7 +26,6 @@ const QUERY_KEYS = {
   orders: (filters: AdminOrderFilters) => ["admin", "payments", "orders", filters] as const,
   order: (id: string) => ["admin", "payments", "order", id] as const,
   refundRequests: ["admin", "payments", "refundRequests"] as const,
-  alerts: ["admin", "payments", "alerts"] as const,
 };
 
 type Action =
@@ -54,7 +54,6 @@ export default function AdminPaymentsPage() {
   const summary = useQuery({ queryKey: QUERY_KEYS.summary, queryFn: () => adminPaymentsApi.getSummary(12) });
   const refundRequests = useQuery({ queryKey: QUERY_KEYS.refundRequests, queryFn: adminPaymentsApi.listRefundRequests });
   const orders = useQuery({ queryKey: QUERY_KEYS.orders(filters), queryFn: () => adminPaymentsApi.listOrders(filters) });
-  const alerts = useQuery({ queryKey: QUERY_KEYS.alerts, queryFn: () => adminPaymentsApi.getAlerts(30) });
   const detail = useQuery({
     queryKey: QUERY_KEYS.order(openId ?? ""),
     queryFn: () => adminPaymentsApi.getOrder(openId!),
@@ -245,52 +244,7 @@ export default function AdminPaymentsPage() {
       </section>
 
       {/* 4. Alerts */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("alerts.title")}</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{t("alerts.hint")}</p>
-        {alerts.data && alerts.data.notifications.length === 0 && alerts.data.amountMismatches.length === 0 && (
-          <p className="text-sm text-gray-500 dark:text-gray-400">{t("alerts.empty")}</p>
-        )}
-        {alerts.data && alerts.data.notifications.length > 0 && (
-          <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 text-sm dark:divide-gray-800 dark:border-gray-800">
-            {alerts.data.notifications.map((n) => (
-              <li key={n.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-                <span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">{t(`outcome.${n.outcome}`)}</span>
-                  <span className="ml-2 font-mono text-xs text-gray-500 dark:text-gray-400">{n.merchantOid}</span>
-                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{n.status}</span>
-                </span>
-                <span className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                  {fmtDate(n.receivedAt)}
-                  {n.orderId && (
-                    <button type="button" onClick={() => setOpenId(n.orderId!)} className="underline">
-                      {t("orders.open")}
-                    </button>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        {alerts.data && alerts.data.amountMismatches.length > 0 && (
-          <ul className="divide-y divide-gray-200 rounded-lg border border-amber-300 text-sm dark:divide-gray-800 dark:border-amber-800">
-            {alerts.data.amountMismatches.map((order) => (
-              <li key={order.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-                <span>
-                  {t("alerts.mismatch", {
-                    expected: fmt(order.amountMinor, order.currency),
-                    charged: fmt(order.totalAmountMinor ?? 0, order.currency),
-                    email: order.email,
-                  })}
-                </span>
-                <button type="button" onClick={() => setOpenId(order.id)} className="text-xs underline">
-                  {t("orders.open")}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <PaymentAlertsSection fmt={fmt} fmtDate={fmtDate} onOpenOrder={setOpenId} />
 
       {openId && (
         <Modal title={t("detail.title")} onClose={() => setOpenId(null)} footer={<Button variant="secondary" onClick={() => setOpenId(null)}>{t("detail.close")}</Button>}>

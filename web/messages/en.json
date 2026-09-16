@@ -760,7 +760,8 @@
       "pageInfoReminders": "Page {page} / {totalPages} ({totalCount} reminders)",
       "pageInfoOrders": "Page {page} / {totalPages} ({totalCount} orders)",
       "pageInfoSalaries": "Page {page} / {totalPages} ({totalCount} salary entries)",
-      "pageInfoNotifications": "Page {page} / {totalPages} ({totalCount} notifications)"
+      "pageInfoNotifications": "Page {page} / {totalPages} ({totalCount} notifications)",
+      "pageInfoAlerts": "Page {page} / {totalPages} ({totalCount} alerts)"
     },
     "form": {
       "companyName": "Company Name",
@@ -4786,10 +4787,42 @@
       "RefundRecorded": "Refund record"
     },
     "alerts": {
-      "title": "Alerts (last 30 days)",
+      "title": "Alerts (last {days} days)",
       "hint": "If a transaction shows as \"Devam ediyor\" in the PayTR panel, the reason is here: notifications we rejected or could not match, and amount mismatches.",
       "empty": "No alerts.",
-      "mismatch": "{email}: {expected} asked, {charged} charged"
+      "emptyFiltered": "No alerts match this filter.",
+      "mismatch": "{email}: {expected} asked, {charged} charged",
+      "days": "Window",
+      "daysOption": "Last {days} days",
+      "outcome": "Outcome",
+      "allOutcomes": "All",
+      "status": "PayTR status",
+      "allStatuses": "All",
+      "statusSuccess": "success",
+      "statusFailed": "failed",
+      "statusRefund": "refund",
+      "mode": "Mode",
+      "allModes": "All",
+      "modeLive": "Live",
+      "modeTest": "Test",
+      "search": "Order no",
+      "searchPlaceholder": "merchant_oid",
+      "sort": "Sort",
+      "sortReceivedAt": "Date",
+      "sortOutcome": "Outcome",
+      "sortStatus": "PayTR status",
+      "sortMerchantOid": "Order no",
+      "dirDesc": "Descending",
+      "dirAsc": "Ascending",
+      "apply": "Apply",
+      "reset": "Reset",
+      "columns": {
+        "outcome": "Outcome",
+        "merchantOid": "Order no",
+        "status": "PayTR status",
+        "reason": "Reason",
+        "receivedAt": "Received"
+      }
     },
     "refund": {
       "start": "Refund",

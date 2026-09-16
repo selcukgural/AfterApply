@@ -174,9 +174,13 @@ public static class PaymentEndpoints
             .WithSummary("Open refund requests, oldest first")
             .Produces<IReadOnlyList<AdminPaymentOrderResponse>>();
 
-        group.MapGet("/alerts", async (int? days, IPaymentAdminService service, CancellationToken cancellationToken) =>
-                Results.Ok(await service.GetAlertsAsync(days ?? 30, cancellationToken)))
-            .WithSummary("Rejected or late notifications and amount mismatches")
+        group.MapGet("/alerts", async (int? days, string? outcome, string? status, bool? testMode, string? q, string? sort, string? dir,
+                int? page, int? pageSize, IPaymentAdminService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetAlertsAsync(
+                    new PaymentAlertListQuery(days, outcome, status, testMode, q, sort, dir, page ?? 1, pageSize), cancellationToken)))
+            .WithSummary("Rejected or late notifications (paged, ten by default) and amount mismatches")
+            .WithDescription("Notifications filter by outcome, PayTR status, test mode and merchant_oid; sort by receivedAt " +
+                             "(default, newest first), outcome, status or merchantOid with dir=asc|desc. Mismatches follow days only.")
             .Produces<PaymentAlertsResponse>();
 
         group.MapPost("/orders/{orderId:guid}/refund", async (Guid orderId, AdminRefundRequest request, ClaimsPrincipal user,

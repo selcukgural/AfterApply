@@ -760,7 +760,8 @@
       "pageInfoReminders": "Sayfa {page} / {totalPages} ({totalCount} hatırlatıcı)",
       "pageInfoOrders": "Sayfa {page} / {totalPages} ({totalCount} sipariş)",
       "pageInfoSalaries": "Sayfa {page} / {totalPages} ({totalCount} maaş kaydı)",
-      "pageInfoNotifications": "Sayfa {page} / {totalPages} ({totalCount} bildirim)"
+      "pageInfoNotifications": "Sayfa {page} / {totalPages} ({totalCount} bildirim)",
+      "pageInfoAlerts": "Sayfa {page} / {totalPages} ({totalCount} uyarı)"
     },
     "form": {
       "companyName": "Şirket Adı",
@@ -4786,10 +4787,42 @@
       "RefundRecorded": "İade kaydı"
     },
     "alerts": {
-      "title": "Uyarılar (son 30 gün)",
+      "title": "Uyarılar (son {days} gün)",
       "hint": "PayTR panelinde \"Devam ediyor\" görünen bir işlem varsa nedeni burada: reddettiğimiz ya da eşleştiremediğimiz bildirimler ve tutar uyuşmazlıkları.",
       "empty": "Uyarı yok.",
-      "mismatch": "{email}: {expected} istendi, {charged} çekildi"
+      "emptyFiltered": "Bu filtreyle uyarı yok.",
+      "mismatch": "{email}: {expected} istendi, {charged} çekildi",
+      "days": "Dönem",
+      "daysOption": "Son {days} gün",
+      "outcome": "Sonuç",
+      "allOutcomes": "Tümü",
+      "status": "PayTR durumu",
+      "allStatuses": "Tümü",
+      "statusSuccess": "success",
+      "statusFailed": "failed",
+      "statusRefund": "refund",
+      "mode": "Mod",
+      "allModes": "Tümü",
+      "modeLive": "Canlı",
+      "modeTest": "Test",
+      "search": "Sipariş no",
+      "searchPlaceholder": "merchant_oid",
+      "sort": "Sıralama",
+      "sortReceivedAt": "Tarih",
+      "sortOutcome": "Sonuç",
+      "sortStatus": "PayTR durumu",
+      "sortMerchantOid": "Sipariş no",
+      "dirDesc": "Azalan",
+      "dirAsc": "Artan",
+      "apply": "Uygula",
+      "reset": "Sıfırla",
+      "columns": {
+        "outcome": "Sonuç",
+        "merchantOid": "Sipariş no",
+        "status": "PayTR durumu",
+        "reason": "Neden",
+        "receivedAt": "Alındı"
+      }
     },
     "refund": {
       "start": "İade yap",
