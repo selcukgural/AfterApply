@@ -46,7 +46,7 @@ import { type BulkResult, BulkResultBanner } from "@/components/applications/Bul
 import { BulkStatusDialog } from "@/components/applications/BulkStatusDialog";
 import { CompanyGroupTable } from "@/components/applications/CompanyGroupTable";
 import { Pagination } from "@/components/applications/Pagination";
-import { Button } from "@/components/ui/Button";
+import { buttonClassName } from "@/components/ui/Button";
 
 const PAGE_SIZE = 10;
 /** Companies, not applications: each one draws its own applications underneath, so ten groups is
@@ -269,8 +269,10 @@ export default function ApplicationsListPage() {
     <div className={`flex flex-col gap-4 ${isSelectionEmpty(selection) ? "" : "pb-24 lg:pb-20"}`}>
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
-        <Link href="/applications/new">
-          <Button>{t("newApplication")}</Button>
+        {/* Phones only, like the dashboard's: the header carries this button on every page since
+            2026-09-17, and on a desktop two identical buttons in one view read as a mistake. */}
+        <Link href="/applications/new" className={buttonClassName("primary", "md:hidden")}>
+          {t("newApplication")}
         </Link>
       </div>
 
