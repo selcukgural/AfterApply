@@ -73,6 +73,7 @@ export const PROTECTED_PATHS = [
   "/cv",
   "/import",
   "/notifications",
+  "/profile",
   "/settings",
   "/my-reviews",
   "/my-salaries",

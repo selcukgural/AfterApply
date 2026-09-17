@@ -7,6 +7,7 @@ using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Application.CompanySalaries.Contracts;
 using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Application.Pro;
 using AfterApply.Application.TrackedJobs.Contracts;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Auditing;
@@ -98,6 +99,111 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
         var profile = await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
         profile!.FirstName.ShouldBe("");
         profile.LastName.ShouldBe("");
+    }
+
+    // ── Profile page: name editing and the plan line ────────────────────────────────────────
+
+    [Fact]
+    public async Task Update_Profile_Changes_The_Name_And_Keeps_The_Email()
+    {
+        var client = await RegisterAsync("rename@example.com");
+
+        var response = await client.PutAsJsonAsync("/api/users/me", new UpdateProfileRequest("  Ada ", "Lovelace  "), JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var updated = await response.Content.ReadFromJsonAsync<UserProfileResponse>(JsonOptions);
+        updated!.FirstName.ShouldBe("Ada");
+        updated.LastName.ShouldBe("Lovelace");
+        updated.Email.ShouldBe("rename@example.com");
+
+        var profile = await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
+        profile!.FirstName.ShouldBe("Ada");
+        profile.LastName.ShouldBe("Lovelace");
+        profile.Email.ShouldBe("rename@example.com");
+    }
+
+    /// <summary>Same rule as sign-up since 2026-09-14: a name is optional, so the profile page can
+    /// save one half or clear both without the request bouncing.</summary>
+    [Fact]
+    public async Task Update_Profile_Accepts_Empty_Names()
+    {
+        var client = await RegisterAsync("clearname@example.com");
+
+        var response = await client.PutAsJsonAsync("/api/users/me", new UpdateProfileRequest("", ""), JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var profile = await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
+        profile!.FirstName.ShouldBe("");
+        profile.LastName.ShouldBe("");
+    }
+
+    [Fact]
+    public async Task Update_Profile_Rejects_A_Name_Over_The_Column_Width()
+    {
+        var client = await RegisterAsync("longname@example.com");
+
+        var response = await client.PutAsJsonAsync("/api/users/me", new UpdateProfileRequest(new string('a', 101), "Ok"), JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var profile = await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
+        profile!.FirstName.ShouldBe("Account");
+    }
+
+    [Fact]
+    public async Task Plan_Requires_Authentication()
+    {
+        var client = _factory!.CreateClient();
+
+        var response = await client.GetAsync("/api/users/me/plan");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Plan_Is_Inactive_Without_An_Entitlement()
+    {
+        var client = await RegisterAsync("noplan@example.com");
+
+        var plan = await client.GetFromJsonAsync<UserPlanResponse>("/api/users/me/plan", JsonOptions);
+
+        plan!.IsActive.ShouldBeFalse();
+        plan.ActiveUntil.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Plan_Is_Active_With_Its_End_Date_After_A_Grant()
+    {
+        var client = await RegisterAsync("proplan@example.com");
+        var activeUntil = new DateTimeOffset(DateTimeOffset.UtcNow.AddDays(30).Date, TimeSpan.Zero);
+        await GrantProAsync("proplan@example.com", activeUntil);
+
+        var plan = await client.GetFromJsonAsync<UserPlanResponse>("/api/users/me/plan", JsonOptions);
+
+        plan!.IsActive.ShouldBeTrue();
+        plan.ActiveUntil.ShouldBe(activeUntil);
+    }
+
+    /// <summary>The page says "Pro ended on …", so an expired period keeps its end date on the wire
+    /// while reading as inactive.</summary>
+    [Fact]
+    public async Task Plan_Keeps_The_End_Date_Of_An_Expired_Period()
+    {
+        var client = await RegisterAsync("expired@example.com");
+        var endedAt = new DateTimeOffset(DateTimeOffset.UtcNow.AddDays(-10).Date, TimeSpan.Zero);
+        await GrantProAsync("expired@example.com", endedAt);
+
+        var plan = await client.GetFromJsonAsync<UserPlanResponse>("/api/users/me/plan", JsonOptions);
+
+        plan!.IsActive.ShouldBeFalse();
+        plan.ActiveUntil.ShouldBe(endedAt);
+    }
+
+    private async Task GrantProAsync(string email, DateTimeOffset activeUntil)
+    {
+        await using var scope = _factory!.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var userId = await db.Users.Where(u => u.Email == email).Select(u => u.Id).SingleAsync();
+        await scope.ServiceProvider.GetRequiredService<IProEntitlementService>().GrantAsync(userId, activeUntil, CancellationToken.None);
     }
 
     [Fact]

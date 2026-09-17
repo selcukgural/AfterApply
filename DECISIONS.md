@@ -7239,3 +7239,54 @@ küçültüldü. `/applications` başlık satırındaki "Yeni Başvuru" da Panel
 (ayrıca `<a><button>` iç içeliği giderildi); dört masaüstü görselinde bu buton zeminle boyandı.
 Ziyaretçi görsellerindeki eski kaydırma çubuğu sütunu temizlendi. Script: oturumun scratchpad'inde
 `shoot-headers.mjs` (memory'ye özetlendi).
+
+## Profilim sayfası: ad düzenlenir, e-posta kilitli, plan ve katkılar tek yerde (2026-09-17)
+
+**Sorun.** Kullanıcının kendi bilgilerini düzenleyebileceği bir yer yoktu. `/settings` uzantı
+anahtarı, veri indirme, ödeme geçmişi ve hesap silmeden ibaretti; `PUT /api/users/me` (ad/soyad)
+vardı ama hiçbir ekran çağırmıyordu; `createdAt` dönüyordu ama gösterilmiyordu. 14 Eylül'den beri
+e-posta kaydı ad sormadığından ("Ayarlar isterse ekler") adı boş hesaplar birikiyordu. Pro durumu
+yalnız bayrak kapılı uçlardan (`/api/payments/plans`, `/api/job-sources/status`) okunabiliyordu.
+
+**Karar.** Tasarım kanvası (üç varyant): https://claude.ai/artifact/Y45uaBdpGbJtRMkihfN55j.
+Kullanıcı **A**'yı seçti: ayrı `/profile` ("Profilim") sayfası; `/settings` olduğu gibi kalır.
+B (Ayarlar'ın tepesine bölüm: silme formuyla aynı ekran, katkı listesine yer yok) ve C (sekmeli
+`/account`, `/settings` taşınır; "mine" sayfalarıyla çift adres, sıfır kullanıcıyla en büyük iş)
+elendi. Gerekçe: "kim olduğum" ile "teknik/tehlikeli işler" ayrı sayfada; menüye tek satır.
+
+1. **Sayfa** (`web/src/app/[locale]/(protected)/profile/page.tsx`, `components/profile/*`):
+   kimlik kartı (baş harfler, ad — yoksa e-postanın @ öncesi —, kilitli e-posta, "Üyelik
+   başlangıcı: {tarih}"; Ad/Soyad her zaman düzenlenebilir, Kaydet → `PUT /api/users/me` →
+   `authStore.updateUser`, üst çubuk anında güncellenir; adı boş hesapta ipucu) · plan satırı ·
+   Katkılarım (son 3 değerlendirme: şirket, tarih, durum, puan; son 3 maaş kaydı; kota; "Tümünü
+   gör" → `/my-reviews` / `/my-salaries`, yazma düğmeleri → `/contribute?tab=`) · etkinlik
+   sayaçları (başvuru / takip / CV, kullanıcı kalmasını istedi) · alt satır → Hesap Ayarları.
+   Katkılarım kartı yalnız `companyReviews.enabled`, maaş sütunu yalnız `companySalaries.enabled`.
+2. **E-posta değiştirilemez** — metin olarak çizilir, `<input>` değil (sözleşme testi
+   `profile.contract.test.ts`); sunucuda değiştiren uç yok, açılmadı.
+3. **Yeni uç `GET /api/users/me/plan`** → `{ isActive, activeUntil }`; bayraklardan bağımsız,
+   `IProEntitlementService.GetAsync` üstünde. Süresi geçmiş/iptal edilmiş dönem `isActive=false`
+   ve bitiş tarihiyle döner ("Pro planın sona erdi: …"). `Source/GrantedAt/RevokedAt` dönmez.
+   Uzantı token'ına 403 (users grubu, `PersonalAccessTokenTests` theory'sine eklendi).
+   Plan satırının halleri (`lib/profile/planCardState.ts`): aktif → tarih + `/pro` linki; süresi
+   geçmiş → tarih + (ödeme açıksa) "Yeniden al"; ücretsiz + ödeme açık → "Pro'ya geç"; ücretsiz +
+   ödeme kapalı → yalnız rozet, "yakında" vaadi yok. "Ödeme açık" = `canSeeProNav`.
+4. **Doğrulayıcı kayıtla hizalandı:** `UpdateProfileRequestValidator` `NotEmpty` →
+   `NotNull().MaximumLength(100)`; `UpdateProfileAsync` kırpar. Boş ad kabul (kullanıcı seçti).
+5. **Navigasyon:** avatar menüsü ve mobil çekmece `Profilim → Hesap Ayarları → Pro → Yönetim ─
+   Yardım ─ dil/tema ─ Çıkış` (`siteChrome.contract.test.ts` sırayı pinler). `/profile`
+   `PROTECTED_PATHS`'te (robots). Yardım: `help/settings` konusuna "Profilim" bölümü +
+   `help/screenshots/profile.png` (demo hesap, headless Chrome/CDP, 1280×1150).
+6. **Alt başlık:** ilk taslak ("Hesabın kime ait, ne zamandan beri…") kullanıcıya anlaşılmaz geldi;
+   "Hesap bilgilerin ve e-kariyerim'de yaptıkların bir arada." seçildi. Tarih içeren metinler yıla
+   göre değişen ek almasın diye ("2026'dan" / "2027'den") iki nokta kalıbına çevrildi.
+
+**Kapsam dışı (bilerek):** şifre değiştirme (uç yok; unuttum akışı var), bağlı sağlayıcıları
+gösterme/çözme (2026-09-05 YAGNI), e-posta değiştirme, avatar yükleme.
+
+**Doğrulama.** Unit: `UpdateProfileRequestValidatorTests` (4); integration:
+`AccountManagementTests` +6 (`PUT /me` ad/boş/101 karakter, `/me/plan` 401/yok/aktif/süresi geçmiş)
++ PAT theory satırı; vitest 609 (yeni `planCardState`, `recent`, `profile.contract`; güncellenen
+`siteChrome`), tsc, eslint. Chrome'da yerel API ile: ad değiştir → üst çubuk anında; e-posta
+tıklanamaz; Pro satırı üç hâl (geçici `ProEntitlements` satırıyla, sonra silindi); adı boş hesap
+ipucu; EN; 390 px tek sütun; `/tr/help/settings`.

@@ -66,6 +66,14 @@ export interface UserProfileResponse {
   isAdmin: boolean;
 }
 
+/** GET /api/users/me/plan — the caller's own Pro status, readable whether or not the checkout or
+ *  the weekly job matching is switched on. `activeUntil` stays set after the period ends so the
+ *  profile page can say "Pro ended on …". */
+export interface UserPlanResponse {
+  isActive: boolean;
+  activeUntil: string | null;
+}
+
 export interface AuthResponse {
   accessToken: string;
   accessTokenExpiresAt: string;

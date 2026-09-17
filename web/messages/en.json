@@ -478,7 +478,8 @@
     "shareSalary": "Share salary",
     "writeReview": "Write a review",
     "allCompanies": "All companies",
-    "account": "Account"
+    "account": "Account",
+    "profile": "My Profile"
   },
   "auth": {
     "login": {
@@ -1516,7 +1517,8 @@
     "salaryYearsInvalid": "Enter a whole number of years between 0 and 50",
     "salaryCurrencyRequired": "Select a currency",
     "salaryBonusAmountInvalid": "Enter the bonus amount if there is one, otherwise leave it empty",
-    "salaryOccupationRequired": "Pick an occupation from the list"
+    "salaryOccupationRequired": "Pick an occupation from the list",
+    "nameTooLong": "At most 100 characters"
   },
   "errors": {
     "generic": "The request failed.",
@@ -2090,6 +2092,14 @@
       "eyebrow": "Settings",
       "title": "Account Settings",
       "intro": "Settings is where you export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
+      "profile": {
+        "title": "My Profile",
+        "body": "My Profile in the avatar menu shows whose account this is and what it holds: your first and last name (editable), your e-mail address (cannot be changed; sign-in and notifications are tied to it), the date you joined, your plan, your latest reviews and salary entries, and your application, tracked-job and CV counts.",
+        "calloutName": {
+          "title": "The name is optional",
+          "body": "Sign-up does not ask for a name. Add one under My Profile and the top bar and our e-mails address you by it; leave it empty and the part of your e-mail before the @ is shown instead."
+        }
+      },
       "export": {
         "title": "Export My Data",
         "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks) and the salary entries you shared as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
@@ -4947,6 +4957,62 @@
         "title": "Contact",
         "body": "For refund and payment questions: support@ekariyerim.com. Include your order number; writing from your account's e-mail address speeds things up. Phone: +90 266 265 45 99."
       }
+    }
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Your account details and your activity on e-kariyerim, in one place.",
+    "settingsHint": "The extension key, your data download and account deletion are under <link>Account Settings</link>.",
+    "identity": {
+      "memberSince": "Member since {date}",
+      "noNameHint": "Add your name and the top bar and our e-mails will address you by it.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "E-mail",
+      "emailLocked": "The e-mail address cannot be changed; sign-in and notifications are tied to it.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "saveError": "Could not save. Please try again."
+    },
+    "plan": {
+      "title": "Plan",
+      "proBadge": "Pro plan",
+      "freeBadge": "Free plan",
+      "activeUntil": "Active · until {date}",
+      "endedOn": "Pro ended on {date}.",
+      "freeBody": "Weekly job matching opens with Pro.",
+      "manage": "Manage plan and payments",
+      "goPro": "Go Pro",
+      "buyAgain": "Buy again"
+    },
+    "contributions": {
+      "title": "My contributions",
+      "anonymous": "Anonymous to everyone on the company pages; only you see them here.",
+      "quota": "{used} / {limit} used",
+      "loading": "Loading…",
+      "error": "Could not load. Please try again.",
+      "reviews": {
+        "title": "My reviews",
+        "empty": "No reviews yet.",
+        "rating": "{value} / 5",
+        "all": "See all",
+        "write": "Write a review"
+      },
+      "salaries": {
+        "title": "My salaries",
+        "empty": "No salary entries yet.",
+        "years": "{count, plural, =1 {1 year} other {# years}}",
+        "perMonthNet": "/ month net",
+        "all": "See all",
+        "share": "Share a salary"
+      }
+    },
+    "activity": {
+      "title": "Activity",
+      "applications": "applications",
+      "trackedJobs": "tracked jobs",
+      "cvs": "CVs"
     }
   }
 }

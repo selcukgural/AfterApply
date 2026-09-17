@@ -36,6 +36,15 @@ export default async function SettingsHelpPage({ params }: PageProps<"/[locale]/
         <p className="max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">{t("intro")}</p>
       </div>
 
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("profile.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("profile.body")}</p>
+        <Screenshot src="/help/screenshots/profile.png" alt={t("profile.title")} />
+        <Callout variant="info" label={tCommon("note")} title={t("profile.calloutName.title")}>
+          {t("profile.calloutName.body")}
+        </Callout>
+      </section>
+
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("export.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("export.body")}</p>

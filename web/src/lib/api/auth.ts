@@ -3,6 +3,7 @@ import type {
   GitHubSignInResponse,
   GoogleSignInResponse,
   LinkedInSignInResponse,
+  UserPlanResponse,
   UserProfileResponse,
 } from "@/types/api";
 import { API_BASE_URL, apiFetch } from "./httpClient";
@@ -146,6 +147,8 @@ export const authApi = {
     }),
 
   me: () => apiFetch<UserProfileResponse>("/api/users/me"),
+
+  plan: () => apiFetch<UserPlanResponse>("/api/users/me/plan"),
 
   updateProfile: (request: UpdateProfileRequest) =>
     apiFetch<UserProfileResponse>("/api/users/me", {

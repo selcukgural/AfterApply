@@ -4,6 +4,7 @@ using AfterApply.Api.Extensions;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Localization;
+using AfterApply.Application.Pro;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
@@ -36,6 +37,19 @@ public static class UserEndpoints
             .WithSummary("Update the current user's name")
             .Produces<UserProfileResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapGet("/me/plan", async (ClaimsPrincipal user, IProEntitlementService entitlements, CancellationToken cancellationToken) =>
+        {
+            var entitlement = await entitlements.GetAsync(user.GetUserId(), cancellationToken);
+            return Results.Ok(entitlement is null
+                ? new UserPlanResponse(IsActive: false, ActiveUntil: null)
+                : new UserPlanResponse(entitlement.IsActive, entitlement.ActiveUntil));
+        })
+            .WithSummary("Get the current user's Pro status")
+            .WithDescription("Not gated by the payments or job-sources flags, unlike /api/payments/plans and " +
+                             "/api/job-sources/status: the profile page shows the plan whether or not there is " +
+                             "anything to buy. A revoked or expired period comes back inactive with its end date kept.")
+            .Produces<UserPlanResponse>();
 
         group.MapPut("/me/language", async (UpdateLanguageRequest request, ClaimsPrincipal user,
                 IAuthService authService, CancellationToken cancellationToken) =>
