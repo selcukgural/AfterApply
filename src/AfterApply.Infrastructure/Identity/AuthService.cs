@@ -590,8 +590,8 @@ internal sealed class AuthService(
             return null;
         }
 
-        user.FirstName = request.FirstName;
-        user.LastName = request.LastName;
+        user.FirstName = request.FirstName.Trim();
+        user.LastName = request.LastName.Trim();
         await userManager.UpdateAsync(user);
 
         return ToProfile(user);

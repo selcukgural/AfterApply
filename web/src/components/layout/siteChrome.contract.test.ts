@@ -49,16 +49,19 @@ describe("the signed-in navbar", () => {
     expect(read("components/layout/NavMenu.tsx")).toContain('aria-haspopup="menu"');
   });
 
-  it("keeps content out of the avatar menu and orders it settings → help → sign out", () => {
+  it("keeps content out of the avatar menu and orders it profile → settings → help → sign out", () => {
     // What a person wrote lives next to what it is about (the Companies group); the avatar menu
-    // is for the account. Help used to be its first item.
+    // is for the account. Help used to be its first item. Since 2026-09-17 the profile page
+    // (who the account is) comes before the settings page (how it is wired).
     const userMenu = read("components/layout/UserMenu.tsx");
     expect(userMenu).not.toContain("/my-reviews");
     expect(userMenu).not.toContain("/my-salaries");
     expect(userMenu).not.toContain("TOOL_LINKS");
+    expect(userMenu.indexOf('href="/profile"')).toBeLessThan(userMenu.indexOf('href="/settings"'));
     expect(userMenu.indexOf('href="/settings"')).toBeLessThan(userMenu.indexOf('href="/help"'));
     expect(userMenu.indexOf('href="/help"')).toBeLessThan(userMenu.indexOf("onClick={onLogout}"));
     // The drawer's account block keeps the same order.
+    expect(navBar.indexOf('href="/profile"')).toBeLessThan(navBar.indexOf('href="/settings"'));
     expect(navBar.indexOf('href="/settings"')).toBeLessThan(navBar.indexOf('href="/help"'));
     expect(navBar).not.toContain('href="/my-reviews"');
   });

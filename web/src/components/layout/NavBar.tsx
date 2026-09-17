@@ -240,6 +240,9 @@ export function NavBar() {
           <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-800">
             {mobileHeading(user ? fullName : t("account"))}
             <nav className="flex flex-col gap-1 text-sm">
+              <Link href="/profile" onClick={() => setMenuOpen(false)} className={mobileLink("/profile")}>
+                {t("profile")}
+              </Link>
               <Link href="/settings" onClick={() => setMenuOpen(false)} className={mobileLink("/settings")}>
                 {t("accountSettings")}
               </Link>

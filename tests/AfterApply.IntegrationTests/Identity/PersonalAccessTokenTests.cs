@@ -117,6 +117,7 @@ public class PersonalAccessTokenTests(ApiHost<DefaultProfile> host) : IClassFixt
     [InlineData("/api/applications")]
     [InlineData("/api/users/me")]
     [InlineData("/api/users/me/export")]
+    [InlineData("/api/users/me/plan")]
     [InlineData("/api/personal-access-tokens")]
     public async Task Extension_Scoped_Token_Is_Forbidden_Everywhere_Else(string path)
     {

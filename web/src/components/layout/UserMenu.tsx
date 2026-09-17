@@ -70,6 +70,16 @@ export function UserMenu({ name, initials, onLogout, showAdmin, showPro }: UserM
           role="menu"
           className="absolute right-0 z-50 mt-2 w-60 rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-800 dark:bg-gray-900"
         >
+          {/* Who the account is (name, plan, contributions) before how it is wired (settings):
+              the 2026-09-17 profile page. */}
+          <Link
+            role="menuitem"
+            href="/profile"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {t("profile")}
+          </Link>
           <Link
             role="menuitem"
             href="/settings"

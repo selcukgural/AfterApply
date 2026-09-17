@@ -478,7 +478,8 @@
     "shareSalary": "Maaş paylaş",
     "writeReview": "Değerlendirme yaz",
     "allCompanies": "Tüm şirketler",
-    "account": "Hesap"
+    "account": "Hesap",
+    "profile": "Profilim"
   },
   "auth": {
     "login": {
@@ -1516,7 +1517,8 @@
     "salaryYearsInvalid": "0 ile 50 arasında tam bir yıl gir",
     "salaryCurrencyRequired": "Para birimini seç",
     "salaryBonusAmountInvalid": "Prim varsa tutarını gir, yoksa boş bırak",
-    "salaryOccupationRequired": "Listeden bir meslek seç"
+    "salaryOccupationRequired": "Listeden bir meslek seç",
+    "nameTooLong": "En fazla 100 karakter"
   },
   "errors": {
     "generic": "İstek başarısız oldu.",
@@ -2090,6 +2092,14 @@
       "eyebrow": "Ayarlar",
       "title": "Hesap Ayarları",
       "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir, Pro plan ödemelerinizi görüp iade talebi açabilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
+      "profile": {
+        "title": "Profilim",
+        "body": "Avatar menüsündeki Profilim, hesabın kime ait olduğunu ve neler bıraktığını gösterir: adın ve soyadın (düzenlenebilir), e-posta adresin (değiştirilemez; giriş ve bildirimler ona bağlı), üye olduğun tarih, planın, son değerlendirme ve maaş kayıtların ile başvuru, takip listesi ve CV sayıların.",
+        "calloutName": {
+          "title": "Ad ve soyad isteğe bağlı",
+          "body": "Kayıt olurken ad sorulmaz. Profilim'de eklersen üst çubukta ve e-postalarda adınla hitap ederiz; boş bırakırsan e-posta adresinin @ öncesi görünür."
+        }
+      },
       "export": {
         "title": "Verilerimi Dışa Aktar",
         "body": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) ve paylaştığınız maaş bilgilerini tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi bu dosyada yer almaz; onları CV'lerim sayfasından indirirsiniz."
@@ -4947,6 +4957,62 @@
         "title": "İletişim",
         "body": "İade ve ödeme soruları için: destek@ekariyerim.com. Yazarken sipariş numaranızı ekleyin; hesabınızın e-posta adresinden yazmanız işlemi hızlandırır. Telefon: 0266 265 45 99."
       }
+    }
+  },
+  "profile": {
+    "title": "Profilim",
+    "subtitle": "Hesap bilgilerin ve e-kariyerim'de yaptıkların bir arada.",
+    "settingsHint": "Uzantı anahtarı, verilerini indirme ve hesabı silme <link>Hesap Ayarları</link>'nda.",
+    "identity": {
+      "memberSince": "Üyelik başlangıcı: {date}",
+      "noNameHint": "Adını eklersen üst çubukta ve e-postalarda adınla hitap ederiz.",
+      "firstName": "Ad",
+      "lastName": "Soyad",
+      "email": "E-posta",
+      "emailLocked": "E-posta adresi değiştirilemez; giriş ve bildirimler bu adrese bağlı.",
+      "save": "Kaydet",
+      "saving": "Kaydediliyor…",
+      "saved": "Kaydedildi",
+      "saveError": "Kaydedilemedi. Lütfen tekrar dene."
+    },
+    "plan": {
+      "title": "Plan",
+      "proBadge": "Pro plan",
+      "freeBadge": "Ücretsiz plan",
+      "activeUntil": "Aktif · bitiş: {date}",
+      "endedOn": "Pro planın sona erdi: {date}",
+      "freeBody": "Haftalık ilan eşleştirme Pro ile açılır.",
+      "manage": "Planı ve ödemeleri yönet",
+      "goPro": "Pro'ya geç",
+      "buyAgain": "Yeniden al"
+    },
+    "contributions": {
+      "title": "Katkılarım",
+      "anonymous": "Şirket sayfalarında herkese anonim görünür; burada yalnızca sen görürsün.",
+      "quota": "{used} / {limit} hak",
+      "loading": "Yükleniyor…",
+      "error": "Yüklenemedi. Lütfen tekrar dene.",
+      "reviews": {
+        "title": "Değerlendirmelerim",
+        "empty": "Henüz değerlendirme yok.",
+        "rating": "{value} / 5",
+        "all": "Tümünü gör",
+        "write": "Değerlendirme yaz"
+      },
+      "salaries": {
+        "title": "Maaşlarım",
+        "empty": "Henüz maaş kaydı yok.",
+        "years": "{count, plural, =1 {1 yıl} other {# yıl}}",
+        "perMonthNet": "/ ay net",
+        "all": "Tümünü gör",
+        "share": "Maaş paylaş"
+      }
+    },
+    "activity": {
+      "title": "Etkinlik",
+      "applications": "başvuru",
+      "trackedJobs": "takip listesinde ilan",
+      "cvs": "CV"
     }
   }
 }
