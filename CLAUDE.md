@@ -119,26 +119,8 @@ bir talep ya da kötüye kullanım incelemesi için tutulur, başka hiçbir şey
 
 # Chrome extension release policy
 
-A change under `extension/` is a release, not just a code edit. In the same change:
-
-1. **Bump `"version"` in `extension/manifest.json`.** The Web Store rejects a re-upload of a
-   version already used, and the popup/Settings footer renders this number (`version.js`), so it
-   is what a bug report will quote back at you. The item is already live, so every upload is an
-   update — see `extension/store-listing/PUBLISHING_CHECKLIST.md` for the state of the listing.
-2. **Update the publish material the change invalidates**, under `extension/store-listing/`:
-   `PERMISSIONS_JUSTIFICATION.md` when `permissions`/`host_permissions`/`content_scripts` or the
-   data the extension sends changes (its data-usage table is what the Dashboard's Privacy
-   practices tab gets), `PRIVACY_POLICY.md` when what is stored or sent changes — **and with it
-   the published page it is the source for, `/extension-privacy` in the web app; the two must
-   never drift** — `LISTING.md` for user-facing copy (both TR and EN), and `PUBLISHING_CHECKLIST.md`
-   when the state of the listing moves.
-3. **Reshoot the screenshots the change stales, before committing.** Extension UI changes reach
-   two sets of public images: `extension/store-listing/screenshots/*.png` (Web Store assets, built
-   from the `scene-*.html` compositions, which carry *copied* markup and so never update
-   themselves) and `web/public/help/screenshots/chrome-extension-{popup,options}.png` (help
-   centre, shot from the real pages). Recipes for both are in `screenshots/README.md`.
-4. **Build the store package:**
-   `rm -f e-kariyerim-extension.zip && cd extension && zip -r ../e-kariyerim-extension.zip . -x "store-listing/*" -x "README.md" -x "*.DS_Store"`
+A change under `extension/` is a release, not just a code edit — the full checklist (version bump, store
+listing docs, screenshots, zip) lives in `extension/CLAUDE.md` and loads when you work there.
 
 Also standing: the backend must keep working with **every shipped extension build** —
 `/from-extension` is additive-only. See `DECISIONS.md` 2026-09-06.
