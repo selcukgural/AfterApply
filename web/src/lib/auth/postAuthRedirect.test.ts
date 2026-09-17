@@ -49,6 +49,7 @@ describe("sanitizeReturnTo", () => {
     expect(sanitizeReturnTo("/contribute?tab=review")).toBe("/contribute?tab=review");
     expect(sanitizeReturnTo("/contribute?tab=salary")).toBe("/contribute?tab=salary");
     expect(sanitizeReturnTo("/contribute?tab=salary&company=beta-a-s")).toBe("/contribute?tab=salary&company=beta-a-s");
+    expect(sanitizeReturnTo("/contribute?tab=experience&company=beta-a-s")).toBe("/contribute?tab=experience&company=beta-a-s");
   });
 
   it("rejects a contribute return path with any other shape", () => {
@@ -61,6 +62,7 @@ describe("sanitizeReturnTo", () => {
   it("accepts a company page, plain or on its salaries tab", () => {
     expect(sanitizeReturnTo("/companies/beta-a-s")).toBe("/companies/beta-a-s");
     expect(sanitizeReturnTo("/companies/beta-a-s?tab=salaries")).toBe("/companies/beta-a-s?tab=salaries");
+    expect(sanitizeReturnTo("/companies/beta-a-s?tab=experiences")).toBe("/companies/beta-a-s?tab=experiences");
   });
 
   it("rejects a company return path with any other shape", () => {

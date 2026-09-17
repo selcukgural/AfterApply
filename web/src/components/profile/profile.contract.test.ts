@@ -54,14 +54,18 @@ describe("the profile page", () => {
     expect(contributions).toContain('href="/my-salaries"');
     expect(contributions).toContain('href="/contribute?tab=review"');
     expect(contributions).toContain('href="/contribute?tab=salary"');
+    expect(contributions).toContain('href="/my-experiences"');
+    expect(contributions).toContain('href="/contribute?tab=experience"');
     expect(contributions).not.toContain("companyReviewsApi.remove");
     expect(contributions).not.toContain("companySalariesApi.remove");
+    expect(contributions).not.toContain("candidateExperiencesApi.remove");
   });
 
   it("draws the contributions only behind their flags, and points at settings for the rest", () => {
     expect(page).toContain("config.companyReviews?.enabled === true");
     expect(page).toContain("config.companySalaries?.enabled === true");
-    expect(page).toContain("{reviewsOn && <ContributionsCard showSalaries={salariesOn} />}");
+    expect(page).toContain("config.candidateExperiences?.enabled === true");
+    expect(page).toContain("{reviewsOn && <ContributionsCard showSalaries={salariesOn} showExperiences={experiencesOn} />}");
     expect(page).toContain('href="/settings"');
     expect(page).toContain("<ActivityTiles />");
   });

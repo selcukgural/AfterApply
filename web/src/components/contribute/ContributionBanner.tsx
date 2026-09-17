@@ -2,17 +2,16 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import type { ContributeTab } from "@/lib/contribute/contributeState";
+import { ownListHref, type ContributeTab } from "@/lib/contribute/contributeState";
 
 /**
- * The thank-you after a save (design canvas 3B, 2026-09-16): a status line above the other
+ * The thank-you after a save (design canvas 3B, 2026-09-16): a status line above the next
  * side's form, which is already open for the same company. `saved` is what was just written;
- * the invitation is for the other kind. "Skip" goes to the author's own list, where the saved
+ * `next` is the side being invited to. "Skip" goes to the author's own list, where the saved
  * row is. `role="status"` so a screen reader hears it without focus moving.
  */
-export function ContributionBanner({ saved, company }: { saved: ContributeTab; company: string }) {
+export function ContributionBanner({ saved, next, company }: { saved: ContributeTab; next: ContributeTab; company: string }) {
   const t = useTranslations("contribute.banner");
-  const skipHref = saved === "salary" ? "/my-salaries" : "/my-reviews";
 
   return (
     <div
@@ -26,10 +25,10 @@ export function ContributionBanner({ saved, company }: { saved: ContributeTab; c
           </svg>
         </span>
         <p className="text-gray-900 dark:text-gray-100">
-          <strong>{t(`${saved}.thanks`)}</strong> {t(`${saved}.invite`, { company })}
+          <strong>{t(`${saved}.thanks`)}</strong> {t(`invite.${next}`, { company })}
         </p>
       </div>
-      <Link href={skipHref} className="whitespace-nowrap text-gray-600 underline-offset-2 hover:underline dark:text-gray-400">
+      <Link href={ownListHref(saved)} className="whitespace-nowrap text-gray-600 underline-offset-2 hover:underline dark:text-gray-400">
         {t(`${saved}.skip`)}
       </Link>
     </div>

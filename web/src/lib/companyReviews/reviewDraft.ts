@@ -6,21 +6,14 @@ import type {
   ReviewReportReason,
   ReviewStatementKind,
 } from "@/types/api";
-import {
-  LEGACY_CATEGORY_MAP,
-  MAX_PICKS_PER_KIND,
-  OPTIONAL_CATEGORIES,
-  SUGGESTION_COUNT,
-  findStatement,
-  statementsFor,
-  type ReviewStatement,
-} from "@/lib/companyReviews/statementCatalogue";
+import { LEGACY_CATEGORY_MAP, OPTIONAL_CATEGORIES, REVIEW_CATALOGUE, type ReviewStatement } from "@/lib/companyReviews/statementCatalogue";
+import { RATING_MAX, RATING_MIN, isOnScale } from "@/lib/statements/catalogue";
+import * as picks from "@/lib/statements/picks";
 
 // Mirrors CompanyReview's constants and StructuredReviewRules on the server. The server is the
 // one that decides; these exist so the form can say the same thing before a round trip.
 export const REPORT_NOTE_MAX_LENGTH = 500;
-export const RATING_MIN = 1;
-export const RATING_MAX = 5;
+export { RATING_MAX, RATING_MIN };
 
 export const EMPLOYMENT_STATUSES: readonly EmploymentStatus[] = ["CurrentEmployee", "FormerEmployee", "Intern"];
 
@@ -64,10 +57,6 @@ export type ReviewDraftProblem =
 
 export type ReviewDraftField = "employmentStatus" | "overall" | "liked" | "improvable" | ReviewCategory;
 
-function isOnScale(value: number | undefined): value is number {
-  return Number.isInteger(value) && (value as number) >= RATING_MIN && (value as number) <= RATING_MAX;
-}
-
 /** Every problem at once, keyed by field, so the form can mark each field rather than the first. */
 export function validateReviewDraft(draft: ReviewDraft): Partial<Record<ReviewDraftField, ReviewDraftProblem>> {
   const problems: Partial<Record<ReviewDraftField, ReviewDraftProblem>> = {};
@@ -88,11 +77,7 @@ export function validateReviewDraft(draft: ReviewDraft): Partial<Record<ReviewDr
     }
   }
 
-  if (draft.liked.length > MAX_PICKS_PER_KIND) problems.liked = "tooManyLiked";
-  if (draft.improvable.length > MAX_PICKS_PER_KIND) problems.improvable = "tooManyImprovable";
-
-  if (draft.liked.some((key) => findStatement(key)?.kind !== "Liked")) problems.liked = "unknownStatement";
-  if (draft.improvable.some((key) => findStatement(key)?.kind !== "Improve")) problems.improvable = "unknownStatement";
+  Object.assign(problems, picks.validatePicks(REVIEW_CATALOGUE, draft));
 
   return problems;
 }
@@ -136,31 +121,21 @@ export function legacyCategoryOf(field: keyof typeof LEGACY_CATEGORY_MAP): Revie
 /** What a rated row offers first: 4–5 stars lead with what was liked, 1–3 with what could be
  *  better. Nothing until there is a rating — the form is eleven star rows until then. */
 export function suggestionsFor(category: ReviewCategory, rating: number): ReviewStatement[] {
-  if (!isOnScale(rating)) return [];
-  return statementsFor(category, rating >= 4 ? "Liked" : "Improve").slice(0, SUGGESTION_COUNT);
+  return picks.suggestionsFor(REVIEW_CATALOGUE, category, rating);
 }
 
 export function picksOf(draft: ReviewDraft, kind: ReviewStatementKind): string[] {
-  return kind === "Liked" ? draft.liked : draft.improvable;
+  return picks.picksOf(draft, kind);
 }
 
 export function isCapReached(draft: ReviewDraft, kind: ReviewStatementKind): boolean {
-  return picksOf(draft, kind).length >= MAX_PICKS_PER_KIND;
+  return picks.isCapReached(draft, kind);
 }
 
 /** Adds or removes one statement in its own list. Refuses a pick past the cap or a key the
  *  catalogue does not know, returning the draft unchanged so the caller can render as is. */
 export function togglePick(draft: ReviewDraft, key: string): ReviewDraft {
-  const statement = findStatement(key);
-  if (!statement) return draft;
-  const list = picksOf(draft, statement.kind);
-  const next = list.includes(key)
-    ? list.filter((k) => k !== key)
-    : list.length >= MAX_PICKS_PER_KIND
-      ? list
-      : [...list, key];
-  if (next === list) return draft;
-  return statement.kind === "Liked" ? { ...draft, liked: next } : { ...draft, improvable: next };
+  return picks.togglePick(REVIEW_CATALOGUE, draft, key);
 }
 
 export type ReportDraftProblem = "noteRequiredForOther" | "noteTooLong";

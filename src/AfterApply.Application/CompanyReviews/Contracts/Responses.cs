@@ -39,7 +39,10 @@ public sealed record CompanyPublicResponse(
     CompanyReviewSummaryResponse Summary,
     /// <summary>How many salary entries readers would find behind sign-in. Zero while the salary
     /// feature is off. Trailing and defaulted: older clients never see it.</summary>
-    int SalaryCount = 0);
+    int SalaryCount = 0,
+    /// <summary>How many candidate experiences the third tab holds. Zero while that feature is
+    /// off. Trailing and defaulted, like <see cref="SalaryCount"/>.</summary>
+    int CandidateExperienceCount = 0);
 
 public sealed record CompanyPublicListItemResponse(
     Guid Id,

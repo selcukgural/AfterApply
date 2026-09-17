@@ -8,6 +8,7 @@ import { ReviewSummaryPanel } from "@/components/companyReviews/ReviewSummaryPan
 import { CompanyReviewsSection } from "@/components/companyReviews/CompanyReviewsSection";
 import { CompanyPageTabs } from "@/components/companies/CompanyPageTabs";
 import { CompanySalariesPanel } from "@/components/companySalaries/CompanySalariesPanel";
+import { CandidateExperiencesPanel } from "@/components/candidateExperiences/CandidateExperiencesPanel";
 
 /**
  * A company's public page: the aggregate and its published reviews, rendered on the server so
@@ -68,10 +69,12 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
       </header>
 
       {/* The reviews half is still rendered here with server data; the tabs only decide which
-          half is on screen. The salaries half fetches behind sign-in and is never in the cached page. */}
+          half is on screen. The salaries and experiences halves fetch on the client and are never
+          in the cached page. */}
       <CompanyPageTabs
         reviewCount={company.summary.approvedCount}
         salaryCount={company.salaryCount ?? 0}
+        experienceCount={company.candidateExperienceCount ?? 0}
         reviews={
           <>
             <ReviewSummaryPanel summary={company.summary} />
@@ -79,6 +82,7 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
           </>
         }
         salaries={<CompanySalariesPanel company={company} />}
+        experiences={<CandidateExperiencesPanel company={company} />}
       />
 
       <p className="border-t border-gray-200 pt-6 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">{t("disclaimer")}</p>

@@ -7290,3 +7290,100 @@ gösterme/çözme (2026-09-05 YAGNI), e-posta değiştirme, avatar yükleme.
 `siteChrome`), tsc, eslint. Chrome'da yerel API ile: ad değiştir → üst çubuk anında; e-posta
 tıklanamaz; Pro satırı üç hâl (geçici `ProEntitlements` satırıyla, sonra silindi); adı boş hesap
 ipucu; EN; 390 px tek sütun; `/tr/help/settings`.
+
+## Aday deneyimi: işe alım sürecinin adayın gözünden puanlanması, şirket sayfasında üçüncü sekme (2026-09-17)
+
+**Neden.** Şirket sayfası iki şeffaflık yüzeyi taşıyordu: çalışan değerlendirmeleri ve maaş
+bilgileri; ikisi de "orada çalışmış" insanlardan. Süreçten geçip hiç çalışmamış aday — teklif
+alan, reddedilen, **haber alamayan** — sesini hiçbir yerde duyuramıyordu. Ürünün ana tezi (ghosting
+/ takip) tam bu kesitte: "sonucu hiç bildirilmeyen aday" oranı artık şirket sayfasında bir sayı.
+Araştırma: Glassdoor interview review (deneyim ±, zorluk, teklif, süre + zorunlu metin), kununu
+Bewerbungsprozess (yıldız kategorileri + "eingestellt?"; hukuk notu: olgu iddiası yok, İK
+personelinin kişisel verisi yok), CandE / Formbricks aday deneyimi anketleri (1–5 Likert: iletişim
+netliği, geri bildirim zamanlaması, görüşmeci hazırlığı, soruların role uygunluğu, zamana saygı).
+
+**Kanvas** https://claude.ai/artifact/VEMKBsK3aUUkahpupegik1 — form **Yön A** (değerlendirme
+formunun ikizi: süreç kutusu üstte, Genel değerlendirme zorunlu, 8 isteğe bağlı yıldız satırı,
+puanlanınca 3 öneri çipi, 5 + 5), şirket sayfası **Sekme 1** (Değerlendirmeler paneliyle aynı dil +
+altında süreç şeridi, her kayıt kart). Yön B (aşama aşama) ve Yön C (önce tek puan) ile Sekme 2
+(süreç istatistiği önde, kayıtlar satır) elendi.
+
+**Model.** Tek zorunlu puan: `OverallRating` (Bayes şirket puanı `CompanyReviewScoring` ile, kendi
+`PriorWeight`'i). 8 isteğe bağlı 1–5 alan (`ExperienceCategory`: İletişim ve bilgilendirme, Yanıt
+hızı, Görüşme zamanına saygı, Görüşmecilerin hazırlığı, Soruların role uygunluğu, Rol ve ücret
+hakkında şeffaflık, Ödev / case yükü, Sonuç bildirimi ve geri bildirim). Her alan için beğendim /
+geliştirilebilir madde katalogu (`ExperienceStatementCatalogue`, 64 sabit cümle, anahtar
+`{prefix}.{pos|imp}.{slug}`, metin yalnızca `web/messages`), form başına en fazla 5 + 5; kind enum'u
+değerlendirmelerin `ReviewStatementKind`'ı, anahtar ve prefix kümeleri ayrık (birim testi pinler).
+İsteğe bağlı kapalı süreç bilgileri: `HiringOutcome` (Teklif aldım / Olumsuz yanıt / Süreç devam
+ediyor / Kendim çekildim / **Haber alamadım**), `ProcessDuration` (5 bant), `StageCount` (1…5+),
+`InterviewType` (çoklu; çocuk tablo `CandidateExperienceInterviewTypes`, enum-string konvansiyonu,
+GroupBy sunucuda). `ProcessDuration`/`StageCount` bildirim sırası ordinal medyan için yük taşır.
+**Serbest metin yok, görüşmeci/ekip adı, pozisyon ve ay sorulmaz.** Her madde değer yargısı
+("…düşünüyorum", "…geliştirilebilir"); suç isnadına dönebilecek maddeler (ayrımcılık, yasa dışı
+soru) katalogda yok. Süreç bilgileri adayın kendi deneyimine dair beyan ("bana bildirilmedi").
+
+**Anonimlik, maaştan kritik:** şirket kimle görüştüğünü bilir. Public yanıt tipinde (`CandidateExperiencePublicResponse`)
+`UserId`, `SubmittedAt`, ay ve pozisyon **yok**; `SubmittedQuarter` (`2026-Q3`) var — garanti
+yanıt tipinin kendisi, entegrasyon testi ham JSON'da anahtar arar. Liste sunucuda `SubmittedAt`
+ile sıralanır ama tele çeyrek çıkar. Puan, alan ortalamaları, ilk-3 ve süreç istatistiği
+(sonuç dağılımı, tipik süre/aşama = ordinal medyan, görüşme türü sayıları, ödev sayısı)
+**tek eşik** `MinimumEntriesForStats` (3) altında null/boş; sayı, genel ortalama ve dağılım
+değerlendirmelerdeki gibi ilk kayıttan itibaren (her kayıt zaten public kart).
+
+**Okuma herkese açık** (değerlendirmeler gibi, maaş gibi giriş kapısı yok): kazınacak değer yok —
+puanlar, katalog anahtarları, kapalı listeler. Uç `GET /api/companies/public/{slug}/experiences`
+anonim; yazma uçları `RequireAuthorization`, uzantı token'ına kapalı, `candidate-experience-write`
+5/saat ayrı kova. Şirket başına kullanıcı başına **bir** kayıt (unique `(UserId, CompanyId)`),
+toplam `MaxEntriesPerUser` 10, silmek yer açar; kaydettiği anda yayında. **Şikâyet/moderasyon
+yolu yok** (maaşlarla aynı gerekçe: kullanıcının yazdığı hiçbir şey tele çıkmıyor; kötüye
+kullanım vektörü hacim → unique + kota + rate limit). `WithoutRequestAudit` eklenmedi.
+
+**Backend.** `Domain/CandidateExperiences` (entity + 3 çocuk, 5 enum, katalog);
+`Application/CandidateExperiences` (contracts, validator — madde mesajları değerlendirmelerinkiyle
+ortak —, `CandidateExperienceStats` saf: `Quarter`, `OrdinalMedian`, `Build`);
+`Infrastructure/CandidateExperiences` (options `CandidateExperiences:*`, servis — HybridCache 60 sn
+özet + 5 dk global ortalama, her yazımda evict; çocuklar review tarzı `ExecuteDelete` + AddRange
+tek transaction); 4 EF config (cascade `ApplicationUser`, Restrict `Company`); migration
+`AddCandidateExperiences` yalnız CreateTable/CreateIndex/FK; `CompanyPublicResponse` sonuna
+`CandidateExperienceCount`, `ClientConfigResponse` sonuna `CandidateExperiences`,
+`AccountExportResponse` sonuna `CandidateExperiences` (yazarın tam tarihleriyle); bayrak
+`CandidateExperiencesEnabledFilter` (kapalı → 404 + count 0 + config bildirir). Varsayılan **açık**.
+
+**Web.** Değerlendirme formunun madde mekaniği jenerikleştirildi: `lib/statements/{catalogue,picks,
+catalogueParity}` — `buildStatementCatalogue<C>()`, `togglePick/picksOf/isCapReached/
+suggestionsFor/validatePicks`, C# dosyasını okuyan parity yardımcısı; `companyReviews/
+statementCatalogue.ts` ve `reviewDraft.ts` ince sarmalayıcı (export adları aynen,
+`reviewDraft.test.ts` değişmeden geçer). `CategoryRatingRow` katalogdan bağımsız (`label`, `liked`,
+`improvable`, `statementText`); `companyReviews.form.*` chrome dizgeleri iki formda ortak.
+Yeni: `lib/candidateExperiences/{statementCatalogue,experienceDraft}` (+ parity/round-trip testleri),
+`components/candidateExperiences/{CandidateExperienceForm, FactPills (radyo/checkbox pill'leri,
+"Belirtmedim" görünür seçenek), ExperienceGuidelines, CandidateExperiencesPanel (public fetch,
+örnek satır yok), ExperienceSummaryPanel, ExperienceCard}`; `/contribute` üçlü: `ContributeTab`
++ `"experience"`, `nextSideAfterSave` sabit sırada (review → salary → experience) **açık + kotalı +
+bu şirkette henüz kullanılmamış** ilk tarafı seçer, yoksa eski kural (maaş), yoksa kendi listesi;
+`ContributeSwitch` açık tarafları alır, `ContributionBanner` `saved` + `next`
+(`contribute.banner.invite.{next}`); `CompanyPageTabs` sekme başına bayrak; `/my-experiences` (+
+edit); nav `Deneyim paylaş` / `Deneyimlerim`; profil Katkılarım üçüncü sütun; `postAuthRedirect`
+allowlist `tab=experience` / `?tab=experiences`; `PUBLIC_MESSAGE_SCOPE` +5 namespace; yardım
+`/help/candidate-experiences`; gizlilik `#candidate-experiences` + işlem kaydı cümlesi; koşullar
+"Aday deneyimleri" bölümü + feragat; silme (5) ve dışa aktarma (2) bildirimleri aday deneyimini
+sayar (`copy.test.ts` regex'leri genişletildi).
+
+**Testler.** Birim 965 (yeni 48: katalog, entity, validator matrisi, stats — çeyrek, ordinal medyan,
+eşik, tie-break, enum sırası); entegrasyon yeni 13/13 (`CandidateExperienceFlowTests` 12 —
+anonim okuma, ham JSON'da `userId/submittedAt/submittedMonth/occupation` yok, yalnız overall,
+duplicate 400, kota + silme, ownership 404, edit çocukları değiştirir, validation, eşikte
+istatistik, public count, ayrı rate-limit kovası — `CandidateExperiencesDisabledTests` 1;
+`ClientConfigTests`, `AccountManagementTests` cascade + export güncellendi; tam paket 543/543,
+132 s); vitest 635, tsc, eslint temiz, `next build` başarılı. Tarayıcıda (yerel yığın, demo hesap):
+form → kaydet → "yayında" + maaş daveti (değerlendirme zaten vardı), şirket sayfası 1 kayıtta
+"Henüz puan yok — 2 kayıt daha", 3 kayıtta puan 3,7 + süreç şeridi + kartlar, düzenleme taslağı
+seçimleri geri yükler, Deneyimlerim, profil Katkılarım üçüncü sütun, anonim okuma + 390 px, yardım
+sayfası. Yardım görselleri `company-experiences.png` / `experience-form.png` headless Chrome +
+CDP ile çekildi (demo hesap Beta A.Ş.'ye 1, iki geçici yerel hesap 2 kayıt — silme, görsel onları
+gösterir).
+
+**Açık kalanlar.** 64 madde metni değerlendirmelerinkiyle aynı avukat listesine gider (metin
+değişirse yalnız `web/messages`). Deneyim sekmesi client-only (crawler görmez; maaş sekmesiyle
+tutarlı; uç public olduğu için ileride SSR'a alınabilir). Web + API birlikte deploy.

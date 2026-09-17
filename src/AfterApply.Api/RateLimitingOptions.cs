@@ -92,6 +92,10 @@ public sealed class RateLimitingOptions
     /// two should not eat each other's five. Ten entries is the lifetime quota anyway.</summary>
     public FixedWindowPolicy CompanySalaryWrite { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
 
+    /// <summary>Per user — writing, editing and deleting a candidate experience. Its own bucket for
+    /// the same reason as the salary one: the contribute page chains the three forms.</summary>
+    public FixedWindowPolicy CandidateExperienceWrite { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
+
     /// <summary>Per IP, anonymous — the public company directory search: a trigram scan per
     /// request, from anyone. A person types a name and pages a few times; sixty a minute is
     /// invisible to that and a ceiling for a scraper.</summary>

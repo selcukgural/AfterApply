@@ -14,7 +14,7 @@ import {
   type ReviewDraftField,
   type ReviewDraftProblem,
 } from "@/lib/companyReviews/reviewDraft";
-import { MAX_PICKS_PER_KIND, OPTIONAL_CATEGORIES } from "@/lib/companyReviews/statementCatalogue";
+import { MAX_PICKS_PER_KIND, OPTIONAL_CATEGORIES, categoryMessageKey, statementsFor } from "@/lib/companyReviews/statementCatalogue";
 import { createCompanyReviewSchema } from "@/lib/validation/companyReviewSchema";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
@@ -42,6 +42,9 @@ export function CompanyReviewForm({ companyName, initialDraft, submitLabel, onSu
   const t = useTranslations("companyReviews.form");
   const tStatus = useTranslations("employmentStatus");
   const tValidation = useTranslations("validation");
+  const tCategories = useTranslations("companyReviews.categories");
+  const tStatements = useTranslations("companyReviews.statements");
+  const statementText = (key: string) => ({ label: tStatements(`${key}.label`), sentence: tStatements(`${key}.sentence`) });
 
   const [draft, setDraft] = useState<ReviewDraft>(initialDraft);
   const [problems, setProblems] = useState<Partial<Record<ReviewDraftField, ReviewDraftProblem>>>({});
@@ -123,7 +126,10 @@ export function CompanyReviewForm({ companyName, initialDraft, submitLabel, onSu
 
       <div className="flex flex-col">
         <CategoryRatingRow
-          category="Overall"
+          label={tCategories(categoryMessageKey("Overall"))}
+          liked={statementsFor("Overall", "Liked")}
+          improvable={statementsFor("Overall", "Improve")}
+          statementText={statementText}
           required
           rating={draft.overall}
           suggestions={suggestionsFor("Overall", draft.overall)}
@@ -137,7 +143,10 @@ export function CompanyReviewForm({ companyName, initialDraft, submitLabel, onSu
         {OPTIONAL_CATEGORIES.map((category) => (
           <CategoryRatingRow
             key={category}
-            category={category}
+            label={tCategories(categoryMessageKey(category))}
+            liked={statementsFor(category, "Liked")}
+            improvable={statementsFor(category, "Improve")}
+            statementText={statementText}
             rating={draft.ratings[category] ?? 0}
             suggestions={suggestionsFor(category, draft.ratings[category] ?? 0)}
             picked={picked}

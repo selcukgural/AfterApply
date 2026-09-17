@@ -72,8 +72,9 @@ describe("the catalogues promise only what ships", () => {
 describe("every notice that enumerates account data names all of it", () => {
   // Deletion removes everything the account owns; the export contains the subset the API writes
   // (AuthService.ExportAccountDataAsync). Both lists went out of date twice — when CVs shipped and
-  // when company reviews did — because nothing checked them. Salary entries (2026-09-16) are
-  // the third addition, and the first one these assertions caught.
+  // when company reviews did — because nothing checked them. Salary entries (2026-09-16) were
+  // the third addition, and the first one these assertions caught; candidate experiences
+  // (2026-09-17) the fourth.
   const deletionNotices = [
     "privacy.rights.after",
     "settings.delete.description",
@@ -83,14 +84,16 @@ describe("every notice that enumerates account data names all of it", () => {
   ];
   const exportNotices = ["settings.export.description", "help.settings.export.body"];
 
-  it.each(deletionNotices)("%s lists CVs, company reviews, salary entries and feedback (tr + en)", (key) => {
+  it.each(deletionNotices)("%s lists CVs, company reviews, salary entries, candidate experiences and feedback (tr + en)", (key) => {
     expect(trValue(key)).toMatch(/CV/);
     expect(trValue(key)).toMatch(/değerlendirme/);
     expect(trValue(key)).toMatch(/maaş/);
+    expect(trValue(key)).toMatch(/aday deneyim/);
     expect(trValue(key)).toMatch(/geri bildirim/);
     expect(enValue(key)).toMatch(/CV/);
     expect(enValue(key)).toMatch(/review/);
     expect(enValue(key)).toMatch(/salar/);
+    expect(enValue(key)).toMatch(/candidate experience/);
     expect(enValue(key)).toMatch(/feedback/);
   });
 
@@ -101,20 +104,24 @@ describe("every notice that enumerates account data names all of it", () => {
     expect(enValue(key)).toMatch(/payment record/);
   });
 
-  it.each(exportNotices)("%s lists company reviews, salary entries and CV records but not the tracked-jobs list (tr + en)", (key) => {
+  it.each(exportNotices)("%s lists company reviews, salary entries, candidate experiences and CV records but not the tracked-jobs list (tr + en)", (key) => {
     expect(trValue(key)).toMatch(/değerlendirme/);
     expect(trValue(key)).toMatch(/maaş/);
+    expect(trValue(key)).toMatch(/aday deneyim/);
     expect(trValue(key)).toMatch(/CV/);
     expect(trValue(key)).not.toMatch(/takip liste/);
     expect(enValue(key)).toMatch(/review/);
     expect(enValue(key)).toMatch(/salar/);
+    expect(enValue(key)).toMatch(/candidate experience/);
     expect(enValue(key)).toMatch(/CV/);
     expect(enValue(key)).not.toMatch(/tracked job/);
   });
 
-  it("the request-log notice names salary entries among the audited actions (tr + en)", () => {
+  it("the request-log notice names salary entries and candidate experiences among the audited actions (tr + en)", () => {
     expect(trValue("privacy.dataCollection.item6")).toMatch(/maaş/);
+    expect(trValue("privacy.dataCollection.item6")).toMatch(/aday deneyimi/);
     expect(enValue("privacy.dataCollection.item6")).toMatch(/salary/);
+    expect(enValue("privacy.dataCollection.item6")).toMatch(/candidate experience/);
   });
 });
 

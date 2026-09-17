@@ -32,11 +32,12 @@ const RETURN_TO_PATTERNS = [
   // and had to sign in first. The slug is the company's URL segment — lowercase ascii and hyphens,
   // the same alphabet CompanySlugGenerator emits — and nothing else may follow it.
   /^\/my-reviews\/write(\?company=[a-z0-9][a-z0-9-]{0,99})?$/,
-  // The third and fourth shapes (2026-09-16): the contribute page — a side, and the company it
-  // was opened for — and a company page whose salaries tab asked the reader to sign in. Same
-  // slug alphabet; the query keys are fixed and in this order, nothing else may follow.
-  /^\/contribute\?tab=(review|salary)(&company=[a-z0-9][a-z0-9-]{0,99})?$/,
-  /^\/companies\/[a-z0-9][a-z0-9-]{0,99}(\?tab=salaries)?$/,
+  // The third and fourth shapes (2026-09-16, a third side and tab on 2026-09-17): the contribute
+  // page — a side, and the company it was opened for — and a company page whose salaries or
+  // experiences tab asked the reader to sign in. Same slug alphabet; the query keys are fixed
+  // and in this order, nothing else may follow.
+  /^\/contribute\?tab=(review|salary|experience)(&company=[a-z0-9][a-z0-9-]{0,99})?$/,
+  /^\/companies\/[a-z0-9][a-z0-9-]{0,99}(\?tab=(salaries|experiences))?$/,
 ];
 
 export function sanitizeReturnTo(raw: string | null | undefined): string | null {

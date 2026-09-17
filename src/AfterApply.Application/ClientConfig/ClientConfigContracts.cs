@@ -15,7 +15,8 @@ public sealed record ClientConfigResponse(
     CompanyReviewsConfigResponse? CompanyReviews = null,
     CompanySalariesConfigResponse? CompanySalaries = null,
     JobSourcesConfigResponse? JobSources = null,
-    PaymentsConfigResponse? Payments = null);
+    PaymentsConfigResponse? Payments = null,
+    CandidateExperiencesConfigResponse? CandidateExperiences = null);
 
 /// <summary>Whether the paid weekly job matching is switched on at all. Off means every
 /// <c>/api/job-sources/*</c> route 404s and the web app shows no trace of the feature.</summary>
@@ -74,3 +75,9 @@ public sealed record CompanyReviewsConfigResponse(bool Enabled, int MaxReviewsPe
 /// whether the feature is on (off hides the menu links and the tab), the quota the form counts
 /// down from, and the threshold under which no median is shown.</summary>
 public sealed record CompanySalariesConfigResponse(bool Enabled, int MaxEntriesPerUser, int MinimumEntriesForStats);
+
+/// <summary>What the contribute page and the company page's candidate-experience tab need before
+/// rendering: whether the feature is on (off hides the menu links and the tab), the quota the
+/// form counts down from, the threshold under which no aggregate is shown and the prior weight
+/// the scoring page quotes.</summary>
+public sealed record CandidateExperiencesConfigResponse(bool Enabled, int MaxEntriesPerUser, int MinimumEntriesForStats, int PriorWeight);

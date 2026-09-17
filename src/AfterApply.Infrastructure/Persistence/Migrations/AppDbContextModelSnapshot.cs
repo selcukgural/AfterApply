@@ -324,6 +324,132 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.ToTable("BenchmarkSubmissions", (string)null);
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperience", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Duration")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Outcome")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("OverallRating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Stages")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CompanyId", "SubmittedAt");
+
+                    b.HasIndex("UserId", "CompanyId")
+                        .IsUnique();
+
+                    b.ToTable("CandidateExperiences", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceCategoryRating", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("ExperienceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExperienceId", "Category")
+                        .IsUnique();
+
+                    b.ToTable("CandidateExperienceCategoryRatings", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceInterviewType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExperienceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("ExperienceId", "Type")
+                        .IsUnique();
+
+                    b.ToTable("CandidateExperienceInterviewTypes", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceStatementPick", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExperienceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("StatementKey")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StatementKey");
+
+                    b.HasIndex("ExperienceId", "StatementKey")
+                        .IsUnique();
+
+                    b.ToTable("CandidateExperienceStatementPicks", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.Companies.Company", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2565,6 +2691,48 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperience", b =>
+                {
+                    b.HasOne("AfterApply.Domain.Companies.Company", null)
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceCategoryRating", b =>
+                {
+                    b.HasOne("AfterApply.Domain.CandidateExperiences.CandidateExperience", null)
+                        .WithMany()
+                        .HasForeignKey("ExperienceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceInterviewType", b =>
+                {
+                    b.HasOne("AfterApply.Domain.CandidateExperiences.CandidateExperience", null)
+                        .WithMany()
+                        .HasForeignKey("ExperienceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceStatementPick", b =>
+                {
+                    b.HasOne("AfterApply.Domain.CandidateExperiences.CandidateExperience", null)
+                        .WithMany()
+                        .HasForeignKey("ExperienceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AfterApply.Domain.CompanyReviews.CompanyReview", b =>

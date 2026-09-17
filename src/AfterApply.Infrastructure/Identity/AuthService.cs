@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.Documents;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
@@ -789,6 +790,38 @@ internal sealed class AuthService(
                 x.Entry.SubmittedAt, x.Entry.UpdatedAt))
             .ToListAsync(cancellationToken);
 
+        // The author's own rows, children included — the same lookups the service uses, by id.
+        var experienceRows = await dbContext.CandidateExperiences
+            .Where(e => e.UserId == userId)
+            .OrderByDescending(e => e.SubmittedAt)
+            .Join(dbContext.Companies, e => e.CompanyId, c => c.Id, (e, c) => new { Entry = e, CompanyName = c.Name })
+            .ToListAsync(cancellationToken);
+        var experienceIds = experienceRows.Select(x => x.Entry.Id).ToList();
+        var experienceRatings = (await dbContext.CandidateExperienceCategoryRatings
+                .Where(r => experienceIds.Contains(r.ExperienceId))
+                .Select(r => new { r.ExperienceId, r.Category, r.Rating })
+                .ToListAsync(cancellationToken))
+            .ToLookup(r => r.ExperienceId, r => new ExperienceCategoryRatingDto(r.Category, r.Rating));
+        var experiencePicks = (await dbContext.CandidateExperienceStatementPicks
+                .Where(p => experienceIds.Contains(p.ExperienceId))
+                .OrderBy(p => p.Id)
+                .Select(p => new { p.ExperienceId, p.StatementKey, p.Kind })
+                .ToListAsync(cancellationToken))
+            .ToLookup(p => p.ExperienceId);
+        var experienceTypes = (await dbContext.CandidateExperienceInterviewTypes
+                .Where(t => experienceIds.Contains(t.ExperienceId))
+                .Select(t => new { t.ExperienceId, t.Type })
+                .ToListAsync(cancellationToken))
+            .ToLookup(t => t.ExperienceId, t => t.Type);
+        var candidateExperiences = experienceRows.Select(x => new CandidateExperienceExportItem(
+            x.Entry.Id, x.CompanyName, x.Entry.OverallRating,
+            experienceRatings[x.Entry.Id].OrderBy(r => r.Category).ToList(),
+            experiencePicks[x.Entry.Id].Where(p => p.Kind == ReviewStatementKind.Liked).Select(p => p.StatementKey).ToList(),
+            experiencePicks[x.Entry.Id].Where(p => p.Kind == ReviewStatementKind.Improve).Select(p => p.StatementKey).ToList(),
+            x.Entry.Outcome, x.Entry.Duration, x.Entry.Stages,
+            experienceTypes[x.Entry.Id].OrderBy(t => t).ToList(),
+            x.Entry.SubmittedAt, x.Entry.UpdatedAt)).ToList();
+
         var payments = await dbContext.PaymentOrders
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.CreatedAt)
@@ -803,7 +836,8 @@ internal sealed class AuthService(
             .SingleOrDefaultAsync(cancellationToken);
 
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
-            DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks, companySalaries, payments, proEntitlement);
+            DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks, companySalaries, payments, proEntitlement,
+            candidateExperiences);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

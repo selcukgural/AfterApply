@@ -1,5 +1,6 @@
 using AfterApply.Application.ClientConfig;
 using AfterApply.Infrastructure.CompanyReviews;
+using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.JobSources;
@@ -30,6 +31,7 @@ public static class ClientConfigEndpoints
                 IOptions<JobSourceOptions> jobSourceOptions,
                 IOptions<PayTrOptions> payTrOptions,
                 IOptions<CompanySalaryOptions> companySalaryOptions,
+                IOptions<CandidateExperienceOptions> candidateExperienceOptions,
                 HttpContext httpContext) =>
             {
                 // Read from IdentityOptions rather than IdentityPolicyOptions: the former is the object
@@ -43,6 +45,7 @@ public static class ClientConfigEndpoints
                 var cvScan = cvScanOptions.Value;
                 var reviews = companyReviewOptions.Value;
                 var salaries = companySalaryOptions.Value;
+                var experiences = candidateExperienceOptions.Value;
 
                 // The values change only with a deploy or a config rollout, so let browsers and the
                 // CDN hold them for a few minutes instead of re-fetching on every form mount.
@@ -80,7 +83,9 @@ public static class ClientConfigEndpoints
                     new CompanySalariesConfigResponse(salaries.Enabled, salaries.MaxEntriesPerUser,
                         salaries.MinimumEntriesForStats),
                     new JobSourcesConfigResponse(jobSourceOptions.Value.Enabled),
-                    new PaymentsConfigResponse(payTrOptions.Value.Enabled && payTrOptions.Value.IsConfigured)));
+                    new PaymentsConfigResponse(payTrOptions.Value.Enabled && payTrOptions.Value.IsConfigured),
+                    new CandidateExperiencesConfigResponse(experiences.Enabled, experiences.MaxEntriesPerUser,
+                        experiences.MinimumEntriesForStats, experiences.PriorWeight)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

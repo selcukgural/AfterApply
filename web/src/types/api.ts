@@ -570,6 +570,15 @@ export interface CompanySalariesConfig {
   minimumEntriesForStats: number;
 }
 
+/** Whether candidate experiences are switched on, the quota the form counts down from, the
+ *  threshold under which the company page shows no aggregate, and the score's prior weight. */
+export interface CandidateExperiencesConfig {
+  enabled: boolean;
+  maxEntriesPerUser: number;
+  minimumEntriesForStats: number;
+  priorWeight: number;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
@@ -583,6 +592,7 @@ export interface ClientConfigResponse {
   jobSources?: JobSourcesConfig;
   payments?: PaymentsConfig;
   companySalaries?: CompanySalariesConfig;
+  candidateExperiences?: CandidateExperiencesConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -1024,6 +1034,8 @@ export interface CompanyPublicResponse {
   /** How many salary entries a signed-in reader would find. Optional: an API deployed before the
    *  salary feature answers without it. */
   salaryCount?: number;
+  /** How many candidate experiences the third tab holds; zero while that feature is off. */
+  candidateExperienceCount?: number;
 }
 
 export interface CompanyPublicListItem {
@@ -1590,4 +1602,144 @@ export interface MySalariesResponse {
 export interface CompanySalaryViewerState {
   ownEntries: MyCompanySalary[];
   quota: SalaryQuota;
+}
+
+// ---- Candidate experiences ----------------------------------------------------------------------
+
+/** The nine things a candidate can rate about a hiring process; `Overall` is the one required
+ *  rating. Order = form and summary order. */
+export type ExperienceCategory =
+  | "Overall"
+  | "Communication"
+  | "ResponseTime"
+  | "Punctuality"
+  | "InterviewerPreparation"
+  | "QuestionRelevance"
+  | "Transparency"
+  | "AssignmentLoad"
+  | "OutcomeCommunication";
+
+/** How the process ended for the candidate, as they report it. `NoResponse` = never told. */
+export type HiringOutcome = "Offer" | "Rejected" | "InProgress" | "Withdrew" | "NoResponse";
+
+/** Bands in time order — the "typical duration" is a median over these. */
+export type ProcessDuration = "UnderOneWeek" | "OneToTwoWeeks" | "TwoToFourWeeks" | "OneToTwoMonths" | "OverTwoMonths";
+
+export type StageCount = "One" | "Two" | "Three" | "Four" | "FivePlus";
+
+export type InterviewType = "Phone" | "Video" | "OnSite" | "TechnicalTest" | "TakeHomeAssignment" | "Panel" | "AssessmentCenter";
+
+export interface ExperienceCategoryRating {
+  category: ExperienceCategory;
+  rating: number;
+}
+
+/** One shape for create and update. Only `overallRating` is required; everything else may be
+ *  omitted, and there is no free text. */
+export interface CandidateExperienceRequest {
+  overallRating: number;
+  categoryRatings?: ExperienceCategoryRating[];
+  likedStatements?: string[];
+  improvableStatements?: string[];
+  outcome?: HiringOutcome | null;
+  duration?: ProcessDuration | null;
+  stages?: StageCount | null;
+  interviewTypes?: InterviewType[];
+}
+
+/** Another candidate's entry as anyone sees it: no author, no date beyond the quarter, no job
+ *  title — the company knows whom it interviewed in a given month. */
+export interface CandidateExperiencePublic {
+  id: string;
+  overallRating: number;
+  categoryRatings: ExperienceCategoryRating[];
+  likedStatements: string[];
+  improvableStatements: string[];
+  outcome: HiringOutcome | null;
+  duration: ProcessDuration | null;
+  stages: StageCount | null;
+  interviewTypes: InterviewType[];
+  /** yyyy-Qn */
+  submittedQuarter: string;
+}
+
+export interface ExperienceCategoryAverage {
+  category: ExperienceCategory;
+  count: number;
+  average: number | null;
+}
+
+export interface ExperienceStatementCount {
+  key: string;
+  count: number;
+}
+
+export interface HiringOutcomeCount {
+  outcome: HiringOutcome;
+  count: number;
+}
+
+export interface InterviewTypeCount {
+  type: InterviewType;
+  count: number;
+}
+
+/** `count`, `averageOverall` and `distribution` are real from the first entry; everything else
+ *  is null/empty below `minimumForStats`. */
+export interface CandidateExperienceSummary {
+  count: number;
+  score: number | null;
+  minimumForStats: number;
+  priorWeight: number;
+  averageOverall: number | null;
+  categories: ExperienceCategoryAverage[];
+  distribution: number[];
+  topLiked: ExperienceStatementCount[];
+  topImprovable: ExperienceStatementCount[];
+  outcomes: HiringOutcomeCount[];
+  typicalDuration: ProcessDuration | null;
+  typicalStages: StageCount | null;
+  interviewTypes: InterviewTypeCount[];
+  takeHomeAssignmentCount: number;
+}
+
+export interface CandidateExperiencePage {
+  items: CandidateExperiencePublic[];
+  total: number;
+  page: number;
+  pageSize: number;
+  summary: CandidateExperienceSummary;
+}
+
+/** The author's own row: everything, including the exact dates. */
+export interface MyCandidateExperience {
+  id: string;
+  companyId: string;
+  companySlug: string;
+  companyName: string;
+  overallRating: number;
+  categoryRatings: ExperienceCategoryRating[];
+  likedStatements: string[];
+  improvableStatements: string[];
+  outcome: HiringOutcome | null;
+  duration: ProcessDuration | null;
+  stages: StageCount | null;
+  interviewTypes: InterviewType[];
+  submittedAt: string;
+  updatedAt: string;
+}
+
+export interface ExperienceQuota {
+  used: number;
+  limit: number;
+}
+
+export interface MyCandidateExperiencesResponse {
+  items: MyCandidateExperience[];
+  quota: ExperienceQuota;
+}
+
+export interface CandidateExperienceViewerState {
+  ownEntry: MyCandidateExperience | null;
+  quota: ExperienceQuota;
 }

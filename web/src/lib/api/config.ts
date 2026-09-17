@@ -61,6 +61,13 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
     maxEntriesPerUser: 10,
     minimumEntriesForStats: 3,
   },
+  // And again for the third tab.
+  candidateExperiences: {
+    enabled: false,
+    maxEntriesPerUser: 10,
+    minimumEntriesForStats: 3,
+    priorWeight: 5,
+  },
 };
 
 export const configApi = {

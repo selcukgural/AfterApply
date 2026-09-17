@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { companyReviewsApi } from "@/lib/api/companyReviews";
 import { companySalariesApi } from "@/lib/api/companySalaries";
+import { candidateExperiencesApi } from "@/lib/api/candidateExperiences";
 import { formatAmount, occupationName } from "@/lib/companySalaries/salaryDraft";
 import { takeRecent } from "@/lib/profile/recent";
 import { buttonClassName } from "@/components/ui/Button";
@@ -17,16 +18,19 @@ import { ReviewStatusBadge } from "@/components/companyReviews/ReviewStatusBadge
  * and /my-salaries, which the Companies menu already points at. Readers of the company pages
  * never see who wrote these; the card says so once.
  *
- * The caller decides whether the card exists (reviews flag) and whether the salaries column is
- * drawn (salaries flag) — a flag that is off means no request either.
+ * The caller decides whether the card exists (reviews flag) and whether the salaries and the
+ * experiences columns are drawn (their flags) — a flag that is off means no request either.
  */
-export function ContributionsCard({ showSalaries }: { showSalaries: boolean }) {
+export function ContributionsCard({ showSalaries, showExperiences = false }: { showSalaries: boolean; showExperiences?: boolean }) {
   const t = useTranslations("profile.contributions");
+  const tOutcome = useTranslations("hiringOutcome");
   const locale = useLocale();
   const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
 
   const reviews = useQuery({ queryKey: ["companyReviews", "mine"], queryFn: companyReviewsApi.listMine });
   const salaries = useQuery({ queryKey: ["companySalaries", "mine"], queryFn: companySalariesApi.listMine, enabled: showSalaries });
+  const experiences = useQuery({ queryKey: ["candidateExperiences", "mine"], queryFn: candidateExperiencesApi.listMine, enabled: showExperiences });
+  const columns = 1 + (showSalaries ? 1 : 0) + (showExperiences ? 1 : 0);
 
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
@@ -35,7 +39,7 @@ export function ContributionsCard({ showSalaries }: { showSalaries: boolean }) {
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t("anonymous")}</p>
       </div>
 
-      <div className={`grid gap-6 ${showSalaries ? "md:grid-cols-2" : ""}`}>
+      <div className={`grid gap-6 ${columns === 3 ? "md:grid-cols-3" : columns === 2 ? "md:grid-cols-2" : ""}`}>
         <div className="flex flex-col gap-2">
           <h3 className="flex items-baseline justify-between gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
             {t("reviews.title")}
@@ -137,6 +141,58 @@ export function ContributionsCard({ showSalaries }: { showSalaries: boolean }) {
               </Link>
               <Link href="/contribute?tab=salary" className={buttonClassName("outline")}>
                 {t("salaries.share")}
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {showExperiences && (
+          <div className="flex flex-col gap-2">
+            <h3 className="flex items-baseline justify-between gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+              {t("experiences.title")}
+              {experiences.data && (
+                <span className="text-xs font-normal text-gray-500 tabular-nums dark:text-gray-400">
+                  {t("quota", { used: experiences.data.quota.used, limit: experiences.data.quota.limit })}
+                </span>
+              )}
+            </h3>
+            {experiences.isLoading && <p className="text-sm text-gray-500 dark:text-gray-400">{t("loading")}</p>}
+            {experiences.isError && (
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+                {t("error")}
+              </p>
+            )}
+            {experiences.data && experiences.data.items.length === 0 && (
+              <p className="rounded-lg border border-dashed border-gray-300 p-3 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                {t("experiences.empty")}
+              </p>
+            )}
+            {experiences.data && experiences.data.items.length > 0 && (
+              <ul className="flex flex-col gap-2">
+                {takeRecent(experiences.data.items).map((entry) => (
+                  <li
+                    key={entry.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-800"
+                  >
+                    <div className="min-w-0">
+                      <Link href={`/companies/${entry.companySlug}?tab=experiences`} className="block truncate font-medium text-gray-900 underline-offset-2 hover:underline dark:text-gray-100">
+                        {entry.companyName}
+                      </Link>
+                      <span className="block truncate text-xs text-gray-500 dark:text-gray-400">
+                        {[dateFormat.format(new Date(entry.submittedAt)), entry.outcome ? tOutcome(entry.outcome) : null].filter(Boolean).join(" · ")}
+                      </span>
+                    </div>
+                    <StarRating value={entry.overallRating} label={t("experiences.rating", { value: entry.overallRating })} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+              <Link href="/my-experiences" className="text-sm text-accent-ink underline-offset-2 hover:underline">
+                {t("experiences.all")}
+              </Link>
+              <Link href="/contribute?tab=experience" className={buttonClassName("outline")}>
+                {t("experiences.share")}
               </Link>
             </div>
           </div>

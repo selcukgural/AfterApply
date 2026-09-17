@@ -67,6 +67,13 @@ export const PUBLIC_MESSAGE_SCOPE = [
   "salaryEmploymentStatus",
   "salaryCurrency",
   "employmentType",
+  // The company page's candidate-experience tab: its cards and summary name the outcome, the
+  // duration and stage bands and the interview types.
+  "candidateExperiences",
+  "hiringOutcome",
+  "processDuration",
+  "stageCount",
+  "interviewType",
   "reviewReportReason",
   "reviewModerationStatus",
   "help.sidebar",
