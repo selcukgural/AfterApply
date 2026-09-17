@@ -5,7 +5,7 @@ import { LANDING_MESSAGE_SCOPE, pickMessages } from "@/lib/i18n/messageScopes";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { jsonLdGraph, organizationJsonLd, webApplicationJsonLd } from "@/lib/seo/jsonLd";
-import { LANDING_SITE_LINKS, SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { WeeklyJobsHero } from "@/components/landing/WeeklyJobsHero";
@@ -69,7 +69,7 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
           layout and the landing page is not in that group, so "/" sat in the API's path allowlist
           with no caller — the funnel had a first step nobody was counting. */}
       <SiteTrafficReporter />
-      <SiteHeader links={LANDING_SITE_LINKS} />
+      <SiteHeader />
       <main className="flex-1">
         {weeklyJobsOnSale ? (
           // 2026-09-16 (direction B): the weekly postings lead; the original hero follows as a band.

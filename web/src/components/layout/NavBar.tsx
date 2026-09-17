@@ -8,40 +8,30 @@ import { ADMIN_NAV_HREF, canSeeAdminNav } from "@/lib/auth/adminNav";
 import { PRO_NAV_HREF, canSeeProNav } from "@/lib/payments/proNav";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
 import { useNotificationCount } from "@/hooks/useNotificationCount";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassName } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { displayName } from "@/lib/auth/displayName";
 import { UserMenu } from "@/components/layout/UserMenu";
-import { COMPANY_LINKS, ExploreMenu, TOOL_LINKS } from "@/components/layout/ExploreMenu";
-import { NavMenu } from "@/components/layout/NavMenu";
+import { NavMenu, type NavMenuItem } from "@/components/layout/NavMenu";
 import { ProBadge } from "@/components/layout/ProBadge";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
+import { buildNavEntries, isNavItemActive, type NavItem } from "@/components/layout/navGroups";
 import { useClientConfig } from "@/hooks/useClientConfig";
 import { useProBadge } from "@/hooks/useProBadge";
-
-/** The flat list the mobile menu shows; the desktop row folds most of it into two groups. */
-const NAV_LINKS = [
-  { href: "/dashboard", key: "dashboard" },
-  { href: "/applications", key: "applications" },
-  { href: "/tracked-jobs", key: "trackedJobs" },
-  { href: "/cv", key: "cv" },
-  { href: "/import", key: "import" },
-  // "Companies" is not here: on desktop it sits in the Explore group, on mobile in its own
-  // section (COMPANY_LINKS) — the directory plus the two contributions a signed-in person can make.
-] as const;
 
 /**
  * The signed-in app's header. Since 2026-09-14 it is also what a signed-in visitor gets on the
  * public pages (SiteHeader hands over to it), so /companies, the guide and the help centre no
  * longer drop the app's menu and avatar — which read as "I have been signed out".
  *
- * The desktop row is four items (2026-09-15, option D3 on the header canvas): Dashboard, an
- * "Applications" group (list, tracked jobs, import, new), an "Explore" group (weekly postings,
- * companies, the account-free tools), and CVs — with suggestions and notifications as icon
- * buttons by the avatar. The previous row had ten text items and the paid weekly postings made
- * it eleven, which is what forced the header wider than its page a day earlier.
+ * The row and the mobile drawer are both drawn from `buildNavEntries` (navGroups.ts), in the
+ * same order with the same headings: Dashboard, an Applications group, CVs, a Companies group
+ * (browse → contribute → mine), a Tools group — then "New application" as the one primary
+ * button, suggestions and notifications as icon buttons, and the avatar menu for account matters
+ * (2026-09-17, variant A on the navigation canvas). The 2026-09-15 row had folded the discovery
+ * pages into one "Explore" list and the drawer had grown its own, different grouping.
  */
 export function NavBar() {
   const { user, logout } = useAuth();
@@ -54,12 +44,7 @@ export function NavBar() {
   const { showProBadge } = useProBadge();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // The paid weekly job matching ships dark (JobSources:Enabled); its link appears only when the
-  // server says the routes exist, the same rule as the company pages' flag. Mobile only — on
-  // desktop it lives in the Explore group.
-  const mobileLinks = config.jobSources?.enabled
-    ? [...NAV_LINKS.slice(0, 3), { href: "/weekly-jobs", key: "weeklyJobs" } as const, ...NAV_LINKS.slice(3)]
-    : NAV_LINKS;
+  const entries = buildNavEntries(config);
 
   const handleLogout = async () => {
     await logout();
@@ -78,7 +63,20 @@ export function NavBar() {
 
   const active = (href: string) => isActivePath(pathname, href);
   const desktopLink = (href: string) => navLinkClassName("underline", active(href), "flex items-center gap-1.5 whitespace-nowrap pb-0.5");
-  const mobileLink = (href: string) => navLinkClassName("pill", active(href), "flex items-center gap-1.5 px-3 py-2");
+  const mobileLink = (href: string, isActive = active(href)) => navLinkClassName("pill", isActive, "flex items-center gap-1.5 px-3 py-2");
+
+  const itemLabel = (item: NavItem): ReactNode =>
+    item.proBadge && showProBadge ? (
+      <>
+        {t(item.key)}
+        <ProBadge />
+      </>
+    ) : (
+      t(item.key)
+    );
+
+  const menuItems = (items: NavItem[]): NavMenuItem[] =>
+    items.map((item) => ({ href: item.href, label: itemLabel(item), dividerBefore: item.dividerBefore }));
 
   const badge = (count: number | undefined) =>
     count ? (
@@ -86,30 +84,6 @@ export function NavBar() {
         {count}
       </span>
     ) : null;
-
-  const suggestionsLink = (
-    <Link
-      href="/suggestions"
-      onClick={() => setMenuOpen(false)}
-      aria-current={active("/suggestions") ? "page" : undefined}
-      className={mobileLink("/suggestions")}
-    >
-      {t("suggestions")}
-      {badge(suggestionCount)}
-    </Link>
-  );
-
-  const notificationsLink = (
-    <Link
-      href="/notifications"
-      onClick={() => setMenuOpen(false)}
-      aria-current={active("/notifications") ? "page" : undefined}
-      className={mobileLink("/notifications")}
-    >
-      {t("notifications")}
-      {badge(notificationCount)}
-    </Link>
-  );
 
   // The two "something is waiting for you" destinations, as icons with their counts by the
   // avatar: they are signals, not sections, and the count is what a glance is after.
@@ -143,36 +117,48 @@ export function NavBar() {
     </svg>
   );
 
-  const applicationsItems = [
-    { href: "/applications", label: t("allApplications") },
-    { href: "/tracked-jobs", label: t("trackedJobs") },
-    { href: "/import", label: t("import") },
-    { href: "/applications/new", label: t("newApplication"), dividerBefore: true },
-  ];
+  // The app's one primary action, on every page rather than only on the dashboard. Hidden on the
+  // form itself.
+  const newApplicationButton = (mobile: boolean) =>
+    pathname === "/applications/new" ? null : (
+      <Link
+        href="/applications/new"
+        onClick={mobile ? () => setMenuOpen(false) : undefined}
+        className={buttonClassName("primary", mobile ? "block text-center" : "whitespace-nowrap px-3 py-1.5")}
+      >
+        {t("newApplication")}
+      </Link>
+    );
+
+  const mobileHeading = (label: string) => (
+    <p className="mb-1 px-3 text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">{label}</p>
+  );
 
   return (
     <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-      {/* max-w-6xl, the public header's width, not the app content's max-w-5xl: with the Tools
-          menu the row is ~1080px of links and the avatar, and at 5xl the logo wrapped onto two
-          lines. A header wider than its page is what the public pages already do. */}
+      {/* max-w-6xl, the public header's width, not the app content's max-w-5xl: the row with its
+          groups and the primary button is wider than the app's content column, and at 5xl the
+          logo wrapped onto two lines. A header wider than its page is what the public pages do. */}
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
           <Link href="/dashboard">
             <Logo />
           </Link>
           <nav className="hidden items-center gap-4 text-sm md:flex">
-            <Link href="/dashboard" aria-current={active("/dashboard") ? "page" : undefined} className={desktopLink("/dashboard")}>
-              {t("dashboard")}
-            </Link>
-            <NavMenu label={t("applicationsMenu")} items={applicationsItems} />
-            <ExploreMenu />
-            <Link href="/cv" aria-current={active("/cv") ? "page" : undefined} className={desktopLink("/cv")}>
-              {t("cv")}
-            </Link>
+            {entries.map((entry) =>
+              entry.type === "link" ? (
+                <Link key={entry.href} href={entry.href} aria-current={active(entry.href) ? "page" : undefined} className={desktopLink(entry.href)}>
+                  {t(entry.key)}
+                </Link>
+              ) : (
+                <NavMenu key={entry.key} label={t(entry.key)} items={menuItems(entry.items)} />
+              ),
+            )}
           </nav>
         </div>
 
         <div className="hidden items-center gap-1 md:flex">
+          <div className="mr-2">{newApplicationButton(false)}</div>
           {iconLink("/suggestions", t("suggestions"), suggestionCount, inboxIcon)}
           {iconLink("/notifications", t("notifications"), notificationCount, bellIcon)}
           {user && (
@@ -210,79 +196,66 @@ export function NavBar() {
 
       {menuOpen && (
         <div id="app-mobile-menu" className="border-t border-gray-200 px-4 py-4 md:hidden dark:border-gray-800">
+          {/* The row, read top to bottom: a group becomes a heading over its items. */}
           <nav className="flex flex-col gap-1 text-sm">
-            {mobileLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                aria-current={active(link.href) ? "page" : undefined}
-                className={mobileLink(link.href)}
-              >
-                {t(link.key)}
-                {link.href === "/weekly-jobs" && showProBadge && <ProBadge />}
-              </Link>
-            ))}
-            {suggestionsLink}
-            {notificationsLink}
+            {entries.map((entry, index) =>
+              entry.type === "link" ? (
+                <div key={entry.href} className={index === 0 ? "flex flex-col gap-2" : "mt-3 border-t border-gray-100 pt-3 dark:border-gray-800"}>
+                  <Link href={entry.href} onClick={() => setMenuOpen(false)} aria-current={active(entry.href) ? "page" : undefined} className={mobileLink(entry.href)}>
+                    {t(entry.key)}
+                  </Link>
+                  {index === 0 && newApplicationButton(true)}
+                </div>
+              ) : (
+                <div key={entry.key} className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-800">
+                  {mobileHeading(t(entry.key))}
+                  {entry.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      aria-current={isNavItemActive(pathname, item.href) ? "page" : undefined}
+                      className={mobileLink(item.href, isNavItemActive(pathname, item.href))}
+                    >
+                      {itemLabel(item)}
+                    </Link>
+                  ))}
+                </div>
+              ),
+            )}
           </nav>
 
-          <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-            <p className="mb-1 px-3 text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">{t("companies")}</p>
-            <nav className="flex flex-col gap-1 text-sm">
-              {COMPANY_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  // A contribute link differs from its twin only by query string, which the
-                  // pathname does not carry — so only the directory can be "current" here.
-                  className={navLinkClassName("pill", !link.href.includes("?") && active(link.href), "flex items-center gap-1.5 px-3 py-2")}
-                >
-                  {t(link.key)}
-                </Link>
-              ))}
-            </nav>
-          </div>
+          <nav className="mt-3 flex flex-col gap-1 border-t border-gray-100 pt-3 text-sm dark:border-gray-800">
+            <Link href="/suggestions" onClick={() => setMenuOpen(false)} aria-current={active("/suggestions") ? "page" : undefined} className={mobileLink("/suggestions")}>
+              {t("suggestions")}
+              {badge(suggestionCount)}
+            </Link>
+            <Link href="/notifications" onClick={() => setMenuOpen(false)} aria-current={active("/notifications") ? "page" : undefined} className={mobileLink("/notifications")}>
+              {t("notifications")}
+              {badge(notificationCount)}
+            </Link>
+          </nav>
 
-          <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-            {user && <p className="mb-3 px-3 text-sm font-medium text-gray-900 dark:text-gray-100">{fullName}</p>}
+          {/* The same items, in the same order, as the avatar menu on desktop (UserMenu). */}
+          <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-800">
+            {mobileHeading(user ? fullName : t("account"))}
             <nav className="flex flex-col gap-1 text-sm">
-              <Link href="/help" onClick={() => setMenuOpen(false)} className={mobileLink("/help")}>
-                {t("help")}
-              </Link>
               <Link href="/settings" onClick={() => setMenuOpen(false)} className={mobileLink("/settings")}>
                 {t("accountSettings")}
-              </Link>
-              <Link href="/my-reviews" onClick={() => setMenuOpen(false)} className={mobileLink("/my-reviews")}>
-                {t("myReviews")}
-              </Link>
-              <Link href="/my-salaries" onClick={() => setMenuOpen(false)} className={mobileLink("/my-salaries")}>
-                {t("mySalaries")}
               </Link>
               {showPro && (
                 <Link href={PRO_NAV_HREF} onClick={() => setMenuOpen(false)} className={mobileLink("/pro")}>
                   {t("pro")}
                 </Link>
               )}
-              {/* Same group as on the desktop menu — help, settings, then admin for the accounts
-                  that have it. */}
               {showAdmin && (
                 <Link href={ADMIN_NAV_HREF} onClick={() => setMenuOpen(false)} className={mobileLink("/admin")}>
                   {t("admin")}
                 </Link>
               )}
-            </nav>
-          </div>
-
-          <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-            <p className="mb-1 px-3 text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">{t("tools")}</p>
-            <nav className="flex flex-col gap-1 text-sm">
-              {TOOL_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)} className={mobileLink(link.href)}>
-                  {t(link.key)}
-                </Link>
-              ))}
+              <Link href="/help" onClick={() => setMenuOpen(false)} className={mobileLink("/help")}>
+                {t("help")}
+              </Link>
             </nav>
           </div>
 

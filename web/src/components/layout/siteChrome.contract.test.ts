@@ -18,8 +18,9 @@ describe("the signed-in navbar", () => {
 
   it("marks the current section", () => {
     expect(navBar).toContain("usePathname");
-    expect(navBar).toContain('aria-current={active(link.href) ? "page" : undefined}');
-    expect(read("components/layout/NavMenu.tsx")).toContain("isActivePath(pathname, item.href)");
+    expect(navBar).toContain('aria-current={active(entry.href) ? "page" : undefined}');
+    expect(navBar).toContain('aria-current={isNavItemActive(pathname, item.href) ? "page" : undefined}');
+    expect(read("components/layout/NavMenu.tsx")).toContain("isNavItemActive(pathname, item.href)");
   });
 
   it("draws the active state the same way the admin tabs and the help sidebar do", () => {
@@ -28,50 +29,38 @@ describe("the signed-in navbar", () => {
     }
   });
 
-  it("keeps the account-free tools reachable after sign-in, in a nav-level group", () => {
-    // 2026-09-14: the tools moved out of the avatar menu into a trigger in the row, so the navbar
-    // loses nothing the public header offered when it takes that header's place for a signed-in
-    // visitor. 2026-09-15: that trigger became "Explore", which also carries the weekly postings
-    // and the company pages — one flat list, no "needs an account" split.
-    const exploreMenu = read("components/layout/ExploreMenu.tsx");
-    for (const href of ['"/weekly-jobs"', '"/companies"', '"/cv-tarama"', '"/benchmark"', '"/guide"']) {
-      expect(exploreMenu).toContain(href);
-    }
-    expect(read("components/layout/NavMenu.tsx")).toContain('aria-haspopup="menu"');
-    expect(navBar).toContain("<ExploreMenu />");
-    expect(navBar).toContain("TOOL_LINKS.map");
-    expect(read("components/layout/UserMenu.tsx")).not.toContain("TOOL_LINKS");
+  it("draws the row and the mobile drawer from one list, so they cannot drift apart", () => {
+    // 2026-09-17 (variant A on the navigation canvas): the drawer had grown its own grouping —
+    // no "Explore", two headings the row never showed, no "New application". Both surfaces now
+    // map over buildNavEntries; nothing here is allowed to hand-list a section again.
+    expect(navBar).toContain("buildNavEntries(config)");
+    expect(navBar.match(/entries\.map\(/g)).toHaveLength(2);
+    expect(navBar).not.toContain("ExploreMenu");
+    expect(navBar).not.toContain("COMPANY_LINKS");
+    expect(navBar).not.toContain("TOOL_LINKS");
+    expect(navBar).not.toMatch(/href: "\/companies"/);
   });
 
-  it("folds the row into four items and shows the two signals as icons with their counts", () => {
-    // 2026-09-15 (option D3 on the header canvas): ten text items plus the paid weekly postings
-    // had made the row eleven; the applications pages and the discovery pages are one group each,
-    // and suggestions/notifications sit by the avatar as an inbox and a bell.
-    expect(navBar).toContain('label={t("applicationsMenu")}');
-    for (const href of ['"/applications"', '"/tracked-jobs"', '"/import"', '"/applications/new"']) {
-      expect(navBar).toContain(href);
-    }
+  it("shows the two signals as icons with their counts and the primary action as a button", () => {
     expect(navBar).toContain('iconLink("/suggestions"');
     expect(navBar).toContain('iconLink("/notifications"');
+    expect(navBar).toContain('href="/applications/new"');
     expect(navBar).toContain("<ProBadge />");
+    expect(read("components/layout/NavMenu.tsx")).toContain('aria-haspopup="menu"');
   });
 
-  it("keeps the company directory and the two contributions together inside Explore", () => {
-    // 2026-09-16: a review and a salary are one click from anywhere. On main they got their own
-    // "Companies" group; on the four-item row (D3) they live inside Explore instead, next to
-    // the directory. Both contribute links open the same page on a different side; the mobile
-    // menu lists the same three under their own heading.
-    const exploreMenu = read("components/layout/ExploreMenu.tsx");
-    for (const href of ['"/companies"', '"/contribute?tab=review"', '"/contribute?tab=salary"']) {
-      expect(exploreMenu).toContain(href);
-    }
-    expect(exploreMenu).toContain("COMPANY_LINKS.map");
-    expect(navBar).toContain("COMPANY_LINKS.map");
-    // Not twice: the plain link left the row when the group arrived.
-    expect(navBar).not.toMatch(/href: "\/companies"/);
-    // The author's two lists sit together in the avatar menu and the mobile menu.
-    expect(read("components/layout/UserMenu.tsx")).toContain('href="/my-salaries"');
-    expect(navBar).toContain('href="/my-salaries"');
+  it("keeps content out of the avatar menu and orders it settings → help → sign out", () => {
+    // What a person wrote lives next to what it is about (the Companies group); the avatar menu
+    // is for the account. Help used to be its first item.
+    const userMenu = read("components/layout/UserMenu.tsx");
+    expect(userMenu).not.toContain("/my-reviews");
+    expect(userMenu).not.toContain("/my-salaries");
+    expect(userMenu).not.toContain("TOOL_LINKS");
+    expect(userMenu.indexOf('href="/settings"')).toBeLessThan(userMenu.indexOf('href="/help"'));
+    expect(userMenu.indexOf('href="/help"')).toBeLessThan(userMenu.indexOf("onClick={onLogout}"));
+    // The drawer's account block keeps the same order.
+    expect(navBar.indexOf('href="/settings"')).toBeLessThan(navBar.indexOf('href="/help"'));
+    expect(navBar).not.toContain('href="/my-reviews"');
   });
 
   it("labels its menu button from the catalogue, not a hardcoded English string", () => {
@@ -87,9 +76,21 @@ describe("the signed-out chrome", () => {
   it("is one header and one footer for the landing page and every public page", () => {
     for (const file of ["app/[locale]/page.tsx", "app/[locale]/(public)/layout.tsx"]) {
       const page = read(file);
-      expect(page, file).toContain("<SiteHeader");
+      expect(page, file).toContain("<SiteHeader />");
       expect(page, file).toContain("<SiteFooter");
     }
+  });
+
+  it("shows the same links on every signed-out page", () => {
+    // 2026-09-17: the landing used to have its own set and the other public pages another, so
+    // the menu changed under a visitor who went from the home page to Companies. One list,
+    // no `links` prop, and the only anchor left is "how it works".
+    expect(header).toContain("export const SITE_LINKS");
+    expect(header).not.toContain("LANDING_SITE_LINKS");
+    expect(header).not.toContain("PUBLIC_SITE_LINKS");
+    expect(header).not.toContain("links: readonly SiteNavLink[]");
+    expect(header.match(/href: "\/#/g)).toHaveLength(1);
+    expect(read("app/[locale]/not-found.tsx")).toContain("<SiteHeader />");
   });
 
   it("knows whether the visitor is signed in and offers the right door", () => {
@@ -111,6 +112,15 @@ describe("the signed-out chrome", () => {
     for (const href of ['"/companies"', '"/benchmark"', '"/cv-tarama"', '"/extension-privacy"', '"/privacy"', '"/cookies"', '"/terms"']) {
       expect(footer).toContain(href);
     }
+  });
+
+  it("keeps the legal texts in their own footer column, apart from the pages to browse", () => {
+    // 2026-09-17: six legal links used to close a ten-line "Resources" list that opened with the
+    // tools and the guide.
+    for (const list of ["PRODUCT_LINKS", "EXPLORE_LINKS", "LEGAL_LINKS"]) expect(footer).toContain(list);
+    expect(footer).not.toContain("RESOURCE_LINKS");
+    expect(footer).toContain("CHROME_WEB_STORE_URL");
+    expect(footer.indexOf('"/guide"')).toBeLessThan(footer.indexOf("LEGAL_LINKS"));
   });
 
   it("lists the Pro plan's sale terms in the footer regardless of the payments flag", () => {

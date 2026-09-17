@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { LANDING_SITE_LINKS, SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GUIDE_PATH } from "@/lib/guide/articles";
 
@@ -26,7 +26,7 @@ export default async function NotFoundPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader links={LANDING_SITE_LINKS} />
+      <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-4 py-20">
         <div className="flex w-full max-w-lg flex-col items-start gap-6">
           <span className="font-mono text-sm text-gray-500 dark:text-gray-500">404</span>

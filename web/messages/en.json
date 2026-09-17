@@ -425,14 +425,17 @@
     "footer": {
       "tagline": "Your job search, understood.",
       "product": "Product",
-      "resources": "Resources",
+      "explore": "Explore",
+      "legal": "Legal",
+      "chromeWebStore": "Chrome Web Store",
+      "companies": "Companies",
       "cvScan": "CV Scan",
       "privacy": "Privacy Policy",
       "rights": "All rights reserved.",
       "guide": "Guide",
       "help": "Help Center",
       "cookies": "Cookie Policy",
-      "benchmark": "Reply rate benchmark",
+      "benchmark": "Benchmark",
       "extensionPrivacy": "Extension Privacy Policy",
       "terms": "Terms of Use",
       "termsOfSale": "Distance Sales Agreement",
@@ -448,7 +451,6 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "applications": "Applications",
     "accountSettings": "Account Settings",
     "logout": "Log Out",
     "trackedJobs": "Tracked Jobs",
@@ -460,7 +462,7 @@
     "admin": "Admin",
     "companies": "Companies",
     "myReviews": "My Reviews",
-    "tools": "Free tools",
+    "tools": "Tools",
     "cvScan": "CV Scan",
     "benchmark": "Benchmark",
     "guide": "Guide",
@@ -469,14 +471,14 @@
     "applicationsMenu": "Applications",
     "allApplications": "All applications",
     "newApplication": "New application",
-    "explore": "Explore",
     "proBadge": "Pro",
     "weeklyJobs": "Weekly Jobs",
     "pro": "Pro plan",
     "mySalaries": "My Salaries",
-    "contributeSalary": "Salary Info",
-    "contributeReview": "Review",
-    "companyDirectory": "Company directory"
+    "shareSalary": "Share salary",
+    "writeReview": "Write a review",
+    "allCompanies": "All companies",
+    "account": "Account"
   },
   "auth": {
     "login": {
@@ -2429,7 +2431,7 @@
         "title": "Sharing a salary",
         "step1": {
           "title": "Open the contribution page",
-          "body": "In the top menu, Companies ▾ → Salary Info, or the \"Share a salary\" button on a company page. Reviews are written on the same page; the switch at the top moves between the two."
+          "body": "In the top menu, Companies ▾ → Share salary, or the \"Share a salary\" button on a company page. Reviews are written on the same page; the switch at the top moves between the two."
         },
         "step2": {
           "title": "Pick the company",
@@ -4558,7 +4560,7 @@
     "body": "The address may have moved or never existed. One of these might be what you were after.",
     "home": "Home",
     "cvScan": "CV Scan",
-    "companies": "Company reviews",
+    "companies": "Companies",
     "guide": "Guide",
     "help": "Help Centre"
   },

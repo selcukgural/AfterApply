@@ -18,10 +18,10 @@ interface UserMenuProps {
   showPro: boolean;
 }
 
-// Consolidates the navbar's utility items (help, account settings, language,
-// theme, logout) behind one fixed-width trigger instead of listing them
-// inline, so it can never push the primary nav onto a second line no matter
-// how long a locale's labels get.
+// Consolidates the navbar's account items (settings, the paid plan, admin, help, language,
+// theme, logout) behind one fixed-width trigger instead of listing them inline, so it can never
+// push the primary nav onto a second line no matter how long a locale's labels get. Content does
+// not belong here: what a person wrote lives next to what it is about, in the row's groups.
 export function UserMenu({ name, initials, onLogout, showAdmin, showPro }: UserMenuProps) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
@@ -72,35 +72,11 @@ export function UserMenu({ name, initials, onLogout, showAdmin, showPro }: UserM
         >
           <Link
             role="menuitem"
-            href="/help"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            {t("help")}
-          </Link>
-          <Link
-            role="menuitem"
             href="/settings"
             onClick={() => setOpen(false)}
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             {t("accountSettings")}
-          </Link>
-          <Link
-            role="menuitem"
-            href="/my-reviews"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            {t("myReviews")}
-          </Link>
-          <Link
-            role="menuitem"
-            href="/my-salaries"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            {t("mySalaries")}
           </Link>
           {/* The paid plan: prices, the checkout and the payment history. Only while the server
               says the checkout exists (canSeeProNav). */}
@@ -114,8 +90,7 @@ export function UserMenu({ name, initials, onLogout, showAdmin, showPro }: UserM
               {t("pro")}
             </Link>
           )}
-          {/* Below the three everyone has, and separated from them: it is the same menu the rest of
-              the utility links live in, so an admin reaches the page by clicking rather than by
+          {/* Listed with the account items: an admin reaches the page by clicking rather than by
               remembering a URL, without the primary nav growing an item that only one account
               would ever see. */}
           {showAdmin && (
@@ -129,8 +104,19 @@ export function UserMenu({ name, initials, onLogout, showAdmin, showPro }: UserM
             </Link>
           )}
 
-          {/* The account-free tools used to be a group here (2026-09-13); since 2026-09-14 they
-              are the navbar's own "Explore" menu (ExploreMenu), one level up. */}
+          {/* Help sits apart from the account items, as the convention has it: settings first,
+              help in its own block, sign-out last. Until 2026-09-17 it was the first item, and
+              the author's own reviews and salaries were here too — those now live in the
+              Companies group of the row, next to the thing they are about (navGroups.ts). */}
+          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+          <Link
+            role="menuitem"
+            href="/help"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {t("help")}
+          </Link>
           <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
 
           <div className="flex items-center justify-between px-4 py-2">

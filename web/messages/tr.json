@@ -425,14 +425,17 @@
     "footer": {
       "tagline": "İş arama sürecin, artık anlaşılır.",
       "product": "Ürün",
-      "resources": "Kaynaklar",
+      "explore": "Keşfet",
+      "legal": "Yasal",
+      "chromeWebStore": "Chrome Web Store",
+      "companies": "Şirketler",
       "cvScan": "CV Tarama",
       "privacy": "Gizlilik Politikası",
       "rights": "Tüm hakları saklıdır.",
       "guide": "Rehber",
       "help": "Yardım Merkezi",
       "cookies": "Çerez Politikası",
-      "benchmark": "Geri dönüş oranı kıyaslama",
+      "benchmark": "Kıyaslama",
       "extensionPrivacy": "Eklenti Gizlilik Politikası",
       "terms": "Kullanım Koşulları",
       "termsOfSale": "Mesafeli Satış Sözleşmesi",
@@ -448,7 +451,6 @@
   },
   "nav": {
     "dashboard": "Panel",
-    "applications": "Başvurular",
     "accountSettings": "Hesap Ayarları",
     "logout": "Çıkış Yap",
     "trackedJobs": "Takip Listem",
@@ -460,23 +462,23 @@
     "admin": "Yönetim",
     "companies": "Şirketler",
     "myReviews": "Değerlendirmelerim",
-    "tools": "Ücretsiz araçlar",
+    "tools": "Araçlar",
     "cvScan": "CV Tarama",
-    "benchmark": "Kıyas",
+    "benchmark": "Kıyaslama",
     "guide": "Rehber",
     "openMenu": "Menüyü aç",
     "closeMenu": "Menüyü kapat",
     "applicationsMenu": "Başvurular",
     "allApplications": "Tüm başvurular",
     "newApplication": "Yeni başvuru",
-    "explore": "Keşfet",
     "proBadge": "Pro",
     "weeklyJobs": "Haftalık İlanlar",
     "pro": "Pro plan",
     "mySalaries": "Maaşlarım",
-    "contributeSalary": "Maaş Bilgisi",
-    "contributeReview": "Değerlendirme",
-    "companyDirectory": "Şirket dizini"
+    "shareSalary": "Maaş paylaş",
+    "writeReview": "Değerlendirme yaz",
+    "allCompanies": "Tüm şirketler",
+    "account": "Hesap"
   },
   "auth": {
     "login": {
@@ -2429,7 +2431,7 @@
         "title": "Maaş paylaşmak",
         "step1": {
           "title": "Katkı sayfasını açın",
-          "body": "Üst menüde Şirketler ▾ → Maaş Bilgisi, ya da bir şirket sayfasındaki \"Maaş bilgisi paylaş\" düğmesi. Aynı sayfada değerlendirme de yazılır; ikisi arasında üstteki anahtarla geçersiniz."
+          "body": "Üst menüde Şirketler ▾ → Maaş paylaş, ya da bir şirket sayfasındaki \"Maaş bilgisi paylaş\" düğmesi. Aynı sayfada değerlendirme de yazılır; ikisi arasında üstteki anahtarla geçersiniz."
         },
         "step2": {
           "title": "Şirketi seçin",
@@ -4543,7 +4545,7 @@
     "extension": "Eklenti",
     "features": "Özellikler",
     "companies": "Şirketler",
-    "benchmark": "Kıyas",
+    "benchmark": "Kıyaslama",
     "guide": "Rehber",
     "help": "Yardım",
     "mission": "Misyonumuz",
@@ -4558,7 +4560,7 @@
     "body": "Aradığın adres taşınmış ya da hiç var olmamış olabilir. Aşağıdakilerden biri işine yarayabilir.",
     "home": "Ana sayfa",
     "cvScan": "CV Tarama",
-    "companies": "Şirket değerlendirmeleri",
+    "companies": "Şirketler",
     "guide": "Rehber",
     "help": "Yardım Merkezi"
   },
