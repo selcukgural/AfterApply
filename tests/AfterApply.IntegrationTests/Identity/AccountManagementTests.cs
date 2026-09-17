@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.CompanyReviews.Contracts;
+using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.CompanySalaries.Contracts;
 using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Application.Identity.Contracts;
@@ -14,6 +15,7 @@ using AfterApply.Domain.Auditing;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Domain.CandidateExperiences;
 using AfterApply.Domain.CompanySalaries;
 using AfterApply.Domain.Occupations;
 using AfterApply.Domain.Feedback;
@@ -264,6 +266,8 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
             new ReportCompanyReviewRequest(ReviewReportReason.Spam), JsonOptions)).EnsureSuccessStatusCode();
         var salaryByA = await ShareSalaryAsync(userA, sharedCompanyId);
         var salaryByB = await ShareSalaryAsync(userB, sharedCompanyId);
+        var experienceByA = await ShareExperienceAsync(userA, sharedCompanyId);
+        var experienceByB = await ShareExperienceAsync(userB, sharedCompanyId);
 
         Guid userAId;
         using (var scope = _factory!.Services.CreateScope())
@@ -302,9 +306,14 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
             (await db.CompanyReviewReports.AnyAsync(p => p.ReporterUserId == userAId)).ShouldBeFalse();
             (await db.CompanyReviewHelpfulMarks.AnyAsync(m => m.UserId == userAId)).ShouldBeFalse();
             (await db.CompanySalaryEntries.AnyAsync(e => e.Id == salaryByA)).ShouldBeFalse();
+            (await db.CandidateExperiences.AnyAsync(e => e.Id == experienceByA)).ShouldBeFalse();
+            (await db.CandidateExperienceCategoryRatings.AnyAsync(c => c.ExperienceId == experienceByA)).ShouldBeFalse();
+            (await db.CandidateExperienceStatementPicks.AnyAsync(c => c.ExperienceId == experienceByA)).ShouldBeFalse();
+            (await db.CandidateExperienceInterviewTypes.AnyAsync(c => c.ExperienceId == experienceByA)).ShouldBeFalse();
             // B's review, B's salary entry and the company they are about are untouched.
             (await db.CompanyReviews.AnyAsync(r => r.Id == reviewByB)).ShouldBeTrue();
             (await db.CompanySalaryEntries.AnyAsync(e => e.Id == salaryByB)).ShouldBeTrue();
+            (await db.CandidateExperiences.AnyAsync(e => e.Id == experienceByB)).ShouldBeTrue();
 
             // Shared Company must survive - user B's application still references it.
             var userBApplication = await db.Applications.SingleAsync(a => a.Id == userBApplicationId);
@@ -449,6 +458,35 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
         entry.MonthlyNetAmount.ShouldBe(95_000m);
         entry.Currency.ShouldBe(SalaryCurrency.TRY);
         entry.AnnualBonusAmount.ShouldBe(120_000m);
+    }
+
+    [Fact]
+    public async Task ExportAccountData_Includes_Candidate_Experiences_With_Their_Picks()
+    {
+        var author = await RegisterAsync("export.experiences@example.com");
+        var companyId = await CompanyIdOfApplicationAsync(await CreateApplicationAsync(author, "Export Experience Co"));
+        await ShareExperienceAsync(author, companyId);
+
+        var export = await (await author.GetAsync("/api/users/me/export")).Content.ReadFromJsonAsync<AccountExportResponse>(JsonOptions);
+
+        var entry = export!.CandidateExperiences.ShouldNotBeNull().ShouldHaveSingleItem();
+        entry.CompanyName.ShouldBe("Export Experience Co");
+        entry.OverallRating.ShouldBe(4);
+        entry.CategoryRatings.ShouldHaveSingleItem().Category.ShouldBe(ExperienceCategory.Communication);
+        entry.LikedStatements.ShouldBe(["communication.pos.steps_clear_upfront"]);
+        entry.ImprovableStatements.ShouldBe(["outcome.imp.notification"]);
+        entry.Outcome.ShouldBe(HiringOutcome.Rejected);
+        entry.InterviewTypes.ShouldBe([InterviewType.Video]);
+    }
+
+    private async Task<Guid> ShareExperienceAsync(HttpClient client, Guid companyId)
+    {
+        var response = await client.PostAsJsonAsync($"/api/companies/{companyId}/experiences",
+            new CandidateExperienceRequest(4, [new ExperienceCategoryRatingDto(ExperienceCategory.Communication, 5)],
+                ["communication.pos.steps_clear_upfront"], ["outcome.imp.notification"], HiringOutcome.Rejected,
+                ProcessDuration.TwoToFourWeeks, StageCount.Three, [InterviewType.Video]), JsonOptions);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        return (await response.Content.ReadFromJsonAsync<MyCandidateExperienceResponse>(JsonOptions))!.Id;
     }
 
     private async Task<Guid> ShareSalaryAsync(HttpClient client, Guid companyId)

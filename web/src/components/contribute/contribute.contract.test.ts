@@ -24,8 +24,16 @@ describe("the contribute page", () => {
     expect(page).toContain("nextSideAfterSave(");
   });
 
-  it("offers an edit instead of a second review at the same company", () => {
+  it("offers an edit instead of a second review or experience at the same company", () => {
     expect(page).toContain("/my-reviews/${ownReview.id}/edit");
+    expect(page).toContain("/my-experiences/${ownExperience.id}/edit");
+  });
+
+  it("has a third side for the candidate experience, behind its own flag", () => {
+    expect(page).toContain('tab === "experience" && experiencesOn');
+    expect(page).toContain("<CandidateExperienceForm");
+    expect(page).toContain("createExperience");
+    expect(page).toContain("config.candidateExperiences?.enabled === true");
   });
 
   it("is where the old write address now lands, with the slug", () => {
@@ -48,6 +56,7 @@ describe("the company page's salary tab", () => {
     const page = read("app/[locale]/(public)/companies/[slug]/page.tsx");
     expect(page).toContain("<CompanyPageTabs");
     expect(page).toContain("<CompanySalariesPanel company={company} />");
+    expect(page).toContain("<CandidateExperiencesPanel company={company} />");
     expect(page).toContain("<CompanyReviewsSection company={company} initialReviews={reviews} />");
   });
 
@@ -70,9 +79,30 @@ describe("the company page's salary tab", () => {
     expect(form).not.toContain('autoComplete="organization-title"');
   });
 
-  it("hides the whole tab row while the feature is off", () => {
+  it("hides the whole tab row while both client features are off, and each tab behind its flag", () => {
     const tabs = read("components/companies/CompanyPageTabs.tsx");
     expect(tabs).toContain("config.companySalaries?.enabled");
+    expect(tabs).toContain("config.candidateExperiences?.enabled");
+    expect(tabs).toContain("if (!salariesOn && !experiencesOn)");
     expect(tabs).toContain('from "@/components/layout/navLink"');
+  });
+});
+
+describe("the company page's candidate-experience tab", () => {
+  it("is public: fetched for anyone, no sample rows, a visitor is only sent to sign in to share", () => {
+    const panel = read("components/candidateExperiences/CandidateExperiencesPanel.tsx");
+    expect(panel).not.toContain("enabled: isAuthenticated,\n    queryFn: () => candidateExperiencesApi.list");
+    expect(panel).toContain("queryFn: () => candidateExperiencesApi.list(company.slug, page),\n  });");
+    expect(panel).not.toContain("SAMPLE_ROWS");
+    expect(panel).toContain("/login?next=");
+    expect(panel).toContain("?tab=experiences");
+  });
+
+  it("publishes no free text and asks nothing that points at a person", () => {
+    const form = read("components/candidateExperiences/CandidateExperienceForm.tsx");
+    expect(form).not.toContain("<textarea");
+    expect(form).not.toContain("<Input");
+    expect(form).toContain("<CategoryRatingRow");
+    expect(form).toContain("<FactPills");
   });
 });

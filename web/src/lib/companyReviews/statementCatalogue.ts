@@ -1,22 +1,22 @@
 import type { ReviewCategory, ReviewStatementKind } from "@/types/api";
+import {
+  MAX_PICKS_PER_KIND,
+  SUGGESTION_COUNT,
+  buildStatementCatalogue,
+  categoryMessageKey,
+  type Statement,
+} from "@/lib/statements/catalogue";
 
 // Mirrors AfterApply.Domain.CompanyReviews.ReviewStatementCatalogue — the closed vocabulary a
 // review can be made of. statementCatalogue.test.ts reads the C# source and fails if the two
 // drift. Keys are `{prefix}.{pos|imp}.{slug}` and permanent; the wording lives under
 // `companyReviews.statements.<key>.{label,sentence}` in the message catalogue, so the legal text
-// can change without touching a stored review.
+// can change without touching a stored review. The mechanics are shared with the candidate
+// experience catalogue (lib/statements); this file is the review data plus its historical names.
 
-export interface ReviewStatement {
-  key: string;
-  category: ReviewCategory;
-  kind: ReviewStatementKind;
-}
+export type ReviewStatement = Statement<ReviewCategory>;
 
-/** Per review, per kind — the server refuses more. */
-export const MAX_PICKS_PER_KIND = 5;
-
-/** How many statements a rated row offers before "show more". */
-export const SUGGESTION_COUNT = 3;
+export { MAX_PICKS_PER_KIND, SUGGESTION_COUNT, categoryMessageKey };
 
 /** Overall first (required), then the ten optional categories in the order the form and the
  *  summary panel show them. */
@@ -97,19 +97,16 @@ const SLUGS: Record<ReviewCategory, { pos: readonly string[]; imp: readonly stri
   },
 };
 
-export const STATEMENTS: readonly ReviewStatement[] = REVIEW_CATEGORIES.flatMap((category) => [
-  ...SLUGS[category].pos.map((slug) => ({ key: `${CATEGORY_PREFIX[category]}.pos.${slug}`, category, kind: "Liked" as const })),
-  ...SLUGS[category].imp.map((slug) => ({ key: `${CATEGORY_PREFIX[category]}.imp.${slug}`, category, kind: "Improve" as const })),
-]);
+export const REVIEW_CATALOGUE = buildStatementCatalogue<ReviewCategory>(REVIEW_CATEGORIES, CATEGORY_PREFIX, SLUGS);
 
-const BY_KEY = new Map(STATEMENTS.map((s) => [s.key, s]));
+export const STATEMENTS: readonly ReviewStatement[] = REVIEW_CATALOGUE.statements;
 
 export function findStatement(key: string): ReviewStatement | undefined {
-  return BY_KEY.get(key);
+  return REVIEW_CATALOGUE.find(key);
 }
 
 export function statementsFor(category: ReviewCategory, kind: ReviewStatementKind): ReviewStatement[] {
-  return STATEMENTS.filter((s) => s.category === category && s.kind === kind);
+  return REVIEW_CATALOGUE.for(category, kind);
 }
 
 /** The legacy form's fixed ratings that map onto a current category; salary & benefits maps onto
@@ -119,8 +116,3 @@ export const LEGACY_CATEGORY_MAP = {
   workEnvironmentRating: "WorkEnvironment",
   careerAndDevelopmentRating: "CareerGrowth",
 } as const satisfies Record<string, ReviewCategory>;
-
-/** `companyReviews.categories.<key>` — the enum name with a lower-case first letter. */
-export function categoryMessageKey(category: ReviewCategory): string {
-  return category[0].toLowerCase() + category.slice(1);
-}

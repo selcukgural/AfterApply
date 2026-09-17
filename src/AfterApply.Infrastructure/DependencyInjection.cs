@@ -18,6 +18,7 @@ using AfterApply.Application.CvScan.Contracts;
 using AfterApply.Application.SiteTraffic;
 using AfterApply.Application.Notifications;
 using AfterApply.Application.CompanyReviews;
+using AfterApply.Application.CandidateExperiences;
 using AfterApply.Application.CompanySalaries;
 using AfterApply.Application.Occupations;
 using AfterApply.Application.Feedback;
@@ -48,6 +49,7 @@ using AfterApply.Infrastructure.OpenAi;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using AfterApply.Infrastructure.CompanyReviews;
+using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.Occupations;
 using AfterApply.Infrastructure.Feedback;
@@ -87,6 +89,7 @@ public static class DependencyInjection
     public const string CompanyReviewHelpfulRateLimitPolicy = "company-review-helpful";
     public const string CompanyPublicSearchRateLimitPolicy = "company-public-search";
     public const string CompanySalaryWriteRateLimitPolicy = "company-salary-write";
+    public const string CandidateExperienceWriteRateLimitPolicy = "candidate-experience-write";
     public const string SiteTrafficRateLimitPolicy = "site-traffic";
     public const string BenchmarkRateLimitPolicy = "benchmark";
     public const string CvScanRateLimitPolicy = "cv-scan";
@@ -147,6 +150,7 @@ public static class DependencyInjection
         services.Configure<CompanySearchOptions>(configuration.GetSection("Companies"));
         services.Configure<CompanyReviewOptions>(configuration.GetSection(CompanyReviewOptions.SectionName));
         services.Configure<CompanySalaryOptions>(configuration.GetSection(CompanySalaryOptions.SectionName));
+        services.Configure<CandidateExperienceOptions>(configuration.GetSection(CandidateExperienceOptions.SectionName));
         services.Configure<OccupationSearchOptions>(configuration.GetSection(OccupationSearchOptions.SectionName));
         services.Configure<RequestAuditOptions>(configuration.GetSection(RequestAuditOptions.SectionName));
         services.Configure<JobSourceOptions>(configuration.GetSection(JobSourceOptions.SectionName));
@@ -482,6 +486,7 @@ public static class DependencyInjection
         services.AddScoped<ICompanyDirectoryService, CompanyDirectoryService>();
         services.AddScoped<ICompanyReviewModerationService, CompanyReviewModerationService>();
         services.AddScoped<ICompanySalaryService, CompanySalaryService>();
+        services.AddScoped<ICandidateExperienceService, CandidateExperienceService>();
         services.AddScoped<IOccupationSearchService, OccupationSearchService>();
         services.AddHttpClient<IGitHubIssueMirror, GitHubIssueMirror>(client =>
         {

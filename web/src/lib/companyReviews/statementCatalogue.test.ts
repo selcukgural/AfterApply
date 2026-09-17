@@ -1,8 +1,8 @@
-import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import tr from "../../../messages/tr.json";
+import { keysFromCSharp, leaves, lookup, type MessageTree } from "@/lib/statements/catalogueParity";
 import { CATEGORY_PREFIX, REVIEW_CATEGORIES, STATEMENTS, statementsFor } from "./statementCatalogue";
 
 // Two copies of one list — the C# catalogue the API validates against and this one the form
@@ -12,33 +12,6 @@ import { CATEGORY_PREFIX, REVIEW_CATEGORIES, STATEMENTS, statementsFor } from ".
 const CSHARP = fileURLToPath(
   new URL("../../../../src/AfterApply.Domain/CompanyReviews/ReviewStatementCatalogue.cs", import.meta.url),
 );
-
-type MessageTree = { [key: string]: string | MessageTree };
-
-function lookup(tree: MessageTree, path: string): string | MessageTree | undefined {
-  return path.split(".").reduce<string | MessageTree | undefined>((node, key) => {
-    return node && typeof node !== "string" ? node[key] : undefined;
-  }, tree);
-}
-
-function leaves(tree: MessageTree, prefix = ""): string[] {
-  return Object.entries(tree).flatMap(([key, value]) => {
-    const path = prefix ? `${prefix}.${key}` : key;
-    return typeof value === "string" ? [path] : leaves(value, path);
-  });
-}
-
-/** The keys the C# file declares, rebuilt from its `Liked(ReviewCategory.X, "a", "b")` calls. */
-function keysFromCSharp(): string[] {
-  const source = readFileSync(CSHARP, "utf8");
-  const calls = source.matchAll(/\.\.(Liked|Improve)\(ReviewCategory\.(\w+),([^)]*)\)/g);
-  return [...calls].flatMap(([, kind, category, slugs]) => {
-    const prefix = CATEGORY_PREFIX[category as keyof typeof CATEGORY_PREFIX];
-    expect(prefix, `unknown category ${category} in the C# catalogue`).toBeDefined();
-    const segment = kind === "Liked" ? "pos" : "imp";
-    return [...slugs.matchAll(/"([a-z0-9_]+)"/g)].map(([, slug]) => `${prefix}.${segment}.${slug}`);
-  });
-}
 
 describe("statement catalogue", () => {
   it("has unique keys, each naming its own category and kind", () => {
@@ -59,7 +32,7 @@ describe("statement catalogue", () => {
   });
 
   it("is the same list as the API's", () => {
-    expect([...STATEMENTS.map((s) => s.key)].sort()).toEqual(keysFromCSharp().sort());
+    expect([...STATEMENTS.map((s) => s.key)].sort()).toEqual(keysFromCSharp(CSHARP, "ReviewCategory", CATEGORY_PREFIX).sort());
   });
 
   it("has a label and a sentence in both languages for every key", () => {

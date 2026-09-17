@@ -1,5 +1,7 @@
 using AfterApply.Domain.Applications;
+using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.CompanyReviews.Contracts;
+using AfterApply.Domain.CandidateExperiences;
 using AfterApply.Domain.CompanyReviews;
 using AfterApply.Domain.CompanySalaries;
 using AfterApply.Domain.Common;
@@ -122,6 +124,22 @@ public sealed record CompanySalaryExportItem(
     DateTimeOffset SubmittedAt,
     DateTimeOffset UpdatedAt);
 
+/// <summary>The author's copy of a candidate experience: every column, including the exact
+/// dates that readers only ever see as a quarter.</summary>
+public sealed record CandidateExperienceExportItem(
+    Guid Id,
+    string CompanyName,
+    int OverallRating,
+    IReadOnlyList<ExperienceCategoryRatingDto> CategoryRatings,
+    IReadOnlyList<string> LikedStatements,
+    IReadOnlyList<string> ImprovableStatements,
+    HiringOutcome? Outcome,
+    ProcessDuration? Duration,
+    StageCount? Stages,
+    IReadOnlyList<InterviewType> InterviewTypes,
+    DateTimeOffset SubmittedAt,
+    DateTimeOffset UpdatedAt);
+
 public sealed record AccountExportResponse(
     UserProfileResponse Profile,
     IReadOnlyList<ApplicationExportItem> Applications,
@@ -135,7 +153,8 @@ public sealed record AccountExportResponse(
     IReadOnlyList<Guid>? HelpfulMarkedReviewIds = null,
     IReadOnlyList<CompanySalaryExportItem>? CompanySalaries = null,
     IReadOnlyList<PaymentOrderExportItem>? Payments = null,
-    ProEntitlementExportItem? ProEntitlement = null);
+    ProEntitlementExportItem? ProEntitlement = null,
+    IReadOnlyList<CandidateExperienceExportItem>? CandidateExperiences = null);
 
 /// <summary>A Pro purchase as the user sees it: what they bought, what they typed for the
 /// invoice, what happened. Provider internals (merchant ids, tokens, hashes) stay out.</summary>

@@ -162,6 +162,14 @@
       "refundPolicy": {
         "title": "İptal ve İade Koşulları",
         "description": "e-kariyerim Pro planında iptal ve iade nasıl işler."
+      },
+      "myExperiences": {
+        "title": "Deneyimlerim",
+        "description": "Paylaştığın işe alım süreci deneyimleri."
+      },
+      "helpCandidateExperiences": {
+        "title": "Aday Deneyimi",
+        "description": "Şirketlerin işe alım süreçlerini adayların gözünden okuyun, kendi sürecinizi anonim puanlayın; neyin görünüp neyin görünmediği, sınırlar, nasıl düzenlenir."
       }
     }
   },
@@ -479,7 +487,9 @@
     "writeReview": "Değerlendirme yaz",
     "allCompanies": "Tüm şirketler",
     "account": "Hesap",
-    "profile": "Profilim"
+    "profile": "Profilim",
+    "shareExperience": "Deneyim paylaş",
+    "myExperiences": "Deneyimlerim"
   },
   "auth": {
     "login": {
@@ -764,7 +774,8 @@
       "pageInfoOrders": "Sayfa {page} / {totalPages} ({totalCount} sipariş)",
       "pageInfoSalaries": "Sayfa {page} / {totalPages} ({totalCount} maaş kaydı)",
       "pageInfoNotifications": "Sayfa {page} / {totalPages} ({totalCount} bildirim)",
-      "pageInfoAlerts": "Sayfa {page} / {totalPages} ({totalCount} uyarı)"
+      "pageInfoAlerts": "Sayfa {page} / {totalPages} ({totalCount} uyarı)",
+      "pageInfoExperiences": "Sayfa {page} / {totalPages} ({totalCount} aday deneyimi)"
     },
     "form": {
       "companyName": "Şirket Adı",
@@ -931,7 +942,7 @@
     "title": "Hesap Ayarları",
     "export": {
       "title": "Verilerimi Dışa Aktar",
-      "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle), paylaştığınız maaş bilgilerini ve Pro plan ödeme kayıtlarınızı tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
+      "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle), paylaştığınız maaş bilgilerini, aday deneyimlerinizi ve Pro plan ödeme kayıtlarınızı tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
       "download": "Verilerimi İndir",
       "preparing": "Hazırlanıyor...",
       "error": "Veriler dışa aktarılamadı."
@@ -964,14 +975,14 @@
     },
     "delete": {
       "title": "Hesabımı Sil",
-      "description": "Bu işlem geri alınamaz. Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini ve gönderdiğiniz geri bildirimleri — kalıcı olarak silinir. Pro plan ödeme kayıtları yasal saklama süresi boyunca hesabınızdan ayrılmış olarak tutulur.",
+      "description": "Bu işlem geri alınamaz. Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, aday deneyimlerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak silinir. Pro plan ödeme kayıtları yasal saklama süresi boyunca hesabınızdan ayrılmış olarak tutulur.",
       "passwordLabel": "Şifreniz",
       "confirmLabel": "Onaylamak için \"SİL\" yazın",
       "confirmWord": "SİL",
       "confirmMismatch": "Onaylamak için kutuya \"SİL\" yazın.",
       "submit": "Hesabımı Kalıcı Olarak Sil",
       "deleting": "Siliniyor...",
-      "finalConfirm": "Son uyarı: Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini ve gönderdiğiniz geri bildirimleri ve eklenti bağlantılarınız — kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
+      "finalConfirm": "Son uyarı: Hesabınız ve ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, aday deneyimlerinizi ve gönderdiğiniz geri bildirimleri ve eklenti bağlantılarınız — kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?",
       "genericError": "Hesap silinemedi.",
       "noPasswordHint": "Bu hesap Google, LinkedIn veya GitHub ile açıldı ve şifresi yok. Silmek için aşağıya onay kelimesini yazmanız yeterli."
     },
@@ -1078,7 +1089,7 @@
       "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler, işlem kayıtları dışında, yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır; işlem kayıtları yalnızca yukarıda sayılan güvenlik ve hukuki amaçlara hizmet eder.",
       "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür.",
-      "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, maaş bilgisi, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\").",
+      "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, maaş bilgisi, aday deneyimi, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\").",
       "item7": "Haftalık ilan eşleştirmeyi (ücretli özellik) kullanırsanız: arama kriteri olarak kaydettiğiniz pozisyon adları (en fazla üç) ve konum. Bunlar hesabınızda saklanır ve haftada bir, LinkedIn ve kariyer.net'te arama olarak kullanılır — aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın. Bulunan ilanlar sizin için sınırlı bir süre tutulur; hangilerine zaten başvurduğunuz kendi başvurularınızdan hesaplanır ve ayrı bir kayıt olarak asla saklanmaz. Ayrıca rıza verirseniz her ilan için hesaplanan uyum puanı, kısa gerekçesi ve uyan/eksik kriter listesi de hesabınızda tutulur — bkz. \"Haftalık ilan eşleştirme\"."
     },
     "googleSignIn": {
@@ -1136,7 +1147,7 @@
       "title": "Haklarınız",
       "before": "Verilerinizin bir kopyasını istediğiniz zaman dışa aktarabilir veya hesabınızı kalıcı olarak silebilirsiniz. Bu işlemleri",
       "link": "Hesap Ayarları",
-      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, gönderdiğiniz geri bildirimleri ve işlem kayıtlarınızı — kalıcı olarak kaldırır. İşlem kayıtları dışa aktarım dosyasına dahil edilmez; kendi kayıtlarınıza erişmek isterseniz privacy@ekariyerim.com adresine yazmanız yeterlidir."
+      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, aday deneyimlerinizi, gönderdiğiniz geri bildirimleri ve işlem kayıtlarınızı — kalıcı olarak kaldırır. İşlem kayıtları dışa aktarım dosyasına dahil edilmez; kendi kayıtlarınıza erişmek isterseniz privacy@ekariyerim.com adresine yazmanız yeterlidir."
     },
     "notApplicable": {
       "title": "Şu an geçerli olmayanlar",
@@ -1221,6 +1232,17 @@
       "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Kaydı Maaşlarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam yılıyla içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
+    },
+    "candidateExperiences": {
+      "title": "Paylaştığın aday deneyimleri",
+      "intro": "Bir şirketin işe alım sürecini puanlamak isteğe bağlıdır ve hesap gerektirir. Paylaştığında:",
+      "what": "Kaydın — genel puanın, puanladığın alanlar, hazır listeden seçtiğin maddeler ve yanıtladıysan sonuç, süre, aşama sayısı ve görüşme türleri — hesabına bağlı saklanır. Serbest metin yoktur: yayımlanan her cümle bizim yazdığımız sabit maddelerden biridir.",
+      "whoSees": "Kayıtlar herkese açık şirket sayfasında gösterilir: puanlar, maddeler ve süreç etiketleri. Puan, alan ortalamaları ve süreç istatistiği bir şirkette en az üç kayıt toplanınca görünür.",
+      "quarter": "Okuyucular günü ya da ayı değil yalnızca çeyreği görür (2026 Ç3 gibi); pozisyon, görüşmeci ya da ekip adı hiç sorulmaz. Bilerek: şirket kimle görüştüğünü bilir, ay ve pozisyon küçük bir şirkette kimin yazdığını ele verirdi.",
+      "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez. Kaydın arkasındaki hesabı yalnızca biz görürüz.",
+      "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
+      "deletion": "Kaydı Deneyimlerim sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam tarihiyle içerir.",
+      "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
     }
   },
   "terms": {
@@ -1234,7 +1256,8 @@
       "tools": "Hesapsız kullanılabilen araçlar: CV taraması, geri dönüş oranı kıyaslaması ve şirket değerlendirmelerini okuma.",
       "reviews": "Kayıtlı kullanıcıların şirketler hakkında anonim, yapılandırılmış değerlendirmeler yazabildiği herkese açık şirket sayfaları.",
       "salaries": "Kayıtlı kullanıcıların şirketlerdeki maaşlarını anonim paylaşabildiği ve birbirininkini okuyabildiği maaş bilgileri.",
-      "asIs": "Hizmet olduğu gibi sunulur. Özellikleri değiştirebilir, durdurabilir ya da kaldırabiliriz; ücretsiz bir hizmette bunun için önceden bildirim taahhüt etmiyoruz, ama kullanıcı verisini etkileyen bir değişikliği bu sayfada ve gerekiyorsa e-postayla duyururuz."
+      "asIs": "Hizmet olduğu gibi sunulur. Özellikleri değiştirebilir, durdurabilir ya da kaldırabiliriz; ücretsiz bir hizmette bunun için önceden bildirim taahhüt etmiyoruz, ama kullanıcı verisini etkileyen bir değişikliği bu sayfada ve gerekiyorsa e-postayla duyururuz.",
+      "experiences": "Kayıtlı kullanıcıların bir şirketin işe alım sürecini adayın gözünden anonim puanlayabildiği ve herkesin okuyabildiği aday deneyimleri."
     },
     "account": {
       "title": "Hesap",
@@ -1263,6 +1286,16 @@
       "quota": "Hesap başına toplam on kayıt, aynı şirkette meslek başına bir kayıt. Silmek yer açar.",
       "opinion": "Kayıtlar kullanıcı beyanıdır; e-kariyerim doğrulamaz ve maaş müzakeresi için tavsiye niteliği taşımaz."
     },
+    "experiences": {
+      "title": "Aday deneyimleri",
+      "intro": "Bir şirketin işe alım sürecini puanlarken:",
+      "ownProcess": "Yalnızca kendin geçtiğin bir süreci puanlarsın; başkası adına ya da duyduğunu değil.",
+      "structured": "Serbest metin yoktur: puan verir ve hazır maddelerden seçersin. Görüşmeci, ekip ya da pozisyon adı sorulmaz; kaydın bir kişiyi işaret etmez.",
+      "onePerCompany": "Şirket başına bir kayıt, hesap başına toplam on. Görüşün değişirse kaydı düzenlersin; silmek yer açar.",
+      "publication": "Kayıt kaydettiğin anda herkese açık şirket sayfasında yayımlanır; adın, e-postan ya da hesabın gösterilmez, tarih çeyrek hassasiyetindedir.",
+      "noManipulation": "Bir şirketi yükseltmek ya da düşürmek için birden fazla hesapla kayıt girmek, karşılığında kayıt istemek ya da bir sürece hiç girmeden puanlamak yasaktır.",
+      "opinion": "Kayıtlar adayın kendi sürecine dair görüşüdür; e-kariyerim doğrulamaz ve bir şirket hakkında hüküm niteliği taşımaz."
+    },
     "content": {
       "title": "İçeriğin ve lisans",
       "ownership": "Kaydettiğin her şey — başvuruların, CV'lerin, notların, puanların ve seçimlerin — senindir. Bunlara yalnızca hizmeti sağlamak için erişiriz; ayrıntı Gizlilik Politikası'nda.",
@@ -1284,7 +1317,8 @@
       "thirdParties": "Başvuru yaptığın işverenler, LinkedIn, kariyer.net ve Google gibi üçüncü taraflar bizim kontrolümüzde değildir; onlarla ilişkin kendi koşullarına tabidir.",
       "availability": "Hizmetin kesintisiz ya da hatasız olacağını taahhüt etmiyoruz. Yürürlükteki hukukun izin verdiği ölçüde, hizmetin kullanımından ya da kullanılamamasından doğan dolaylı zararlardan sorumlu değiliz.",
       "reviewsDisclaimer": "Şirket değerlendirmeleri kullanıcıların görüşüdür; bir değerlendirme yüzünden uğradığını düşündüğün bir zarar için önce bildirim yolunu kullan — her bildirim bir moderatör tarafından okunur.",
-      "salariesDisclaimer": "Maaş bilgileri kullanıcıların kendi beyanıdır; doğrulanmaz ve maaş müzakeresi ya da başka bir karar için tavsiye değildir."
+      "salariesDisclaimer": "Maaş bilgileri kullanıcıların kendi beyanıdır; doğrulanmaz ve maaş müzakeresi ya da başka bir karar için tavsiye değildir.",
+      "experiencesDisclaimer": "Aday deneyimleri kullanıcıların kendi süreçlerine dair görüşüdür; doğrulanmaz ve bir başvuru ya da başka bir karar için tavsiye değildir."
     },
     "termination": {
       "title": "Askıya alma ve fesih",
@@ -1738,7 +1772,8 @@
       "companySalaries": "Maaş Bilgileri",
       "cvScan": "CV Tarama",
       "benchmark": "Geri Dönüş Kıyası",
-      "weeklyJobs": "Haftalık İlanlar ve Pro"
+      "weeklyJobs": "Haftalık İlanlar ve Pro",
+      "candidateExperiences": "Aday Deneyimi"
     },
     "common": {
       "step": "Adım",
@@ -1819,6 +1854,9 @@
         },
         "weeklyJobs": {
           "description": "Pazartesi listesi nasıl oluşur, ücreti, CV rızası, iade."
+        },
+        "candidateExperiences": {
+          "description": "Şirketlerin işe alım süreçlerini adayların gözünden okuyun, kendi sürecinizi anonim puanlayın."
         }
       }
     },
@@ -2102,7 +2140,7 @@
       },
       "export": {
         "title": "Verilerimi Dışa Aktar",
-        "body": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle) ve paylaştığınız maaş bilgilerini tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi bu dosyada yer almaz; onları CV'lerim sayfasından indirirsiniz."
+        "body": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle), paylaştığınız maaş bilgilerini ve aday deneyimlerinizi tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi bu dosyada yer almaz; onları CV'lerim sayfasından indirirsiniz."
       },
       "extension": {
         "title": "Tarayıcı eklentisi bağlantısı",
@@ -2153,7 +2191,7 @@
         "body": "Şifrenizi girip kutuya \"SİL\" yazın ve butona tıklayın. Tüm verilerinizin silineceğini belirten ikinci bir uyarı çıkar; onu da onayladığınızda hesabınız ve tüm verileriniz kalıcı olarak silinir.",
         "calloutIrreversible": {
           "title": "Geri alınamaz",
-          "body": "Hesabınız silindiğinde ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini ve gönderdiğiniz geri bildirimleri — kalıcı olarak kaybolur; bu işlemin geri dönüşü yoktur."
+          "body": "Hesabınız silindiğinde ona ait tüm veri — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, aday deneyimlerinizi ve gönderdiğiniz geri bildirimleri — kalıcı olarak kaybolur; bu işlemin geri dönüşü yoktur."
         }
       }
     },
@@ -2245,7 +2283,7 @@
       },
       "q2": {
         "question": "Hesabımı sildiğimde verilerimi geri alabilir miyim?",
-        "answer": "Hayır. Hesap silme işlemi geri alınamaz; başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini ve gönderdiğiniz geri bildirimleri kalıcı olarak silinir. Silmeden önce Hesap Ayarları'ndan verinizi dışa aktarabilirsiniz."
+        "answer": "Hayır. Hesap silme işlemi geri alınamaz; başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, aday deneyimlerinizi ve gönderdiğiniz geri bildirimleri kalıcı olarak silinir. Silmeden önce Hesap Ayarları'ndan verinizi dışa aktarabilirsiniz."
       },
       "q3": {
         "question": "Chrome eklentisi bir ilanın bilgilerini yanlış okursa ne olur?",
@@ -2582,6 +2620,57 @@
       "calloutConsent": {
         "title": "CV'niz nereye gidiyor",
         "body": "Yalnızca puanlama için, yalnızca rıza verdiyseniz ve yalnızca Vertex AI'a (AB bölgesi). Rızayı kriter formundan istediğiniz an geri alabilirsiniz; o andan itibaren CV'niz gönderilmez. Ayrıntı gizlilik politikasının \"İş eşleştirme\" bölümünde."
+      }
+    },
+    "candidateExperiences": {
+      "eyebrow": "Şirketler",
+      "title": "Aday deneyimi",
+      "intro": "Bir şirketin işe alım süreci adayın gözünden nasıl — süreçten geçen insanların anonim puanları ve hazır maddelerden seçtikleri. Orada çalışmış olmak gerekmez; okumak herkese açık, yazmak giriş ister.",
+      "read": {
+        "title": "Aday deneyimlerini okumak",
+        "step1": {
+          "title": "Şirket sayfasında Aday deneyimi sekmesini açın",
+          "body": "Sekme herkese açıktır. Üstte genel puan, alan ortalamaları, puan dağılımı ve en çok seçilen maddeler; altında süreç istatistiği: sonuç dağılımı, tipik süre ve aşama sayısı, kaç sürecin ödev istediği."
+        },
+        "step2": {
+          "title": "Kartları okuyun",
+          "body": "Her kart bir adayın kendi sürecidir: genel puan, puanladığı alanlar, seçtiği maddeler ve sonuç, süre, aşama sayısı gibi kısa etiketler. Tarih çeyrek hassasiyetindedir; pozisyon, ay ya da görüşmeci adı yoktur."
+        },
+        "step3": {
+          "title": "Eşiği bilin",
+          "body": "Puan, alan ortalamaları ve süreç istatistiği bir şirkette en az üç kayıt toplanınca görünür; o zamana kadar yalnızca kayıt sayısı ve kartlar vardır. \"Tipik\" değerler medyandır."
+        }
+      },
+      "write": {
+        "title": "Deneyim paylaşmak",
+        "step1": {
+          "title": "Katkı sayfasını açın",
+          "body": "Üst menüde Şirketler ▾ → Deneyim paylaş, ya da bir şirket sayfasındaki \"Deneyimini paylaş\" düğmesi. Aynı sayfada değerlendirme ve maaş da paylaşılır; üstteki anahtarla geçersiniz."
+        },
+        "step2": {
+          "title": "Şirketi seçin",
+          "body": "Şirket bir kez seçilir ve her form için geçerlidir. Aradığınız şirket yoksa adını yazarak ekleyebilirsiniz."
+        },
+        "step3": {
+          "title": "Formu doldurun",
+          "body": "Yalnızca genel puan zorunludur. İstersen süreç hakkında birkaç kapalı soruyu yanıtla (sonuç, süre, aşama sayısı, görüşme türleri), sekiz alanı puanla ve puanladığın alanlar için hazır maddelerden seç — en fazla beş beğendiğin, beş geliştirilebilir. Serbest metin yoktur."
+        },
+        "step4": {
+          "title": "Yayımlayın",
+          "body": "Kayıt anında yayımlanır. Ardından aynı şirket için değerlendirme ya da maaş paylaşmanız önerilir; atlayabilirsiniz."
+        }
+      },
+      "calloutAnonymous": {
+        "title": "Kayıtlar anonimdir",
+        "body": "Okuyucular adınızı, e-postanızı, pozisyonunuzu ya da süreci hangi ay geçirdiğinizi görmez; yalnızca puanlar, maddeler, süreç etiketleri ve çeyrek görünür. Görüşmeci adı ya da ekip adı hiçbir yerde sorulmaz."
+      },
+      "calloutLimits": {
+        "title": "Şirket başına bir kayıt, toplam on",
+        "body": "Bir şirketin sürecini bir kez puanlarsınız; görüşünüz değişirse kaydı düzenlersiniz. Hesap başına toplam on kayıt; silmek yer açar."
+      },
+      "manage": {
+        "title": "Kayıtlarınızı yönetmek",
+        "body": "Deneyimlerim sayfasında kayıtlarınızı görür, düzenler ya da silersiniz. Kayıtlar hesabınızla birlikte silinir ve veri dışa aktarımınıza dâhildir."
       }
     }
   },
@@ -3142,12 +3231,13 @@
       "metaDescription": "{count, plural, =0 {{company} için henüz yayımlanmış değerlendirme yok — ilk yazan sen ol. Çalışanların paylaştığı maaşlar giriş yapınca görünür.} =1 {{company} hakkında 1 anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.} other {{company} hakkında # anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.}}",
       "breadcrumbLabel": "Gezinti",
       "allCompanies": "← Tüm şirketler",
-      "subtitle": "Burada çalışmış insanlardan anonim, yapılandırılmış değerlendirmeler ve maaş bilgileri.",
+      "subtitle": "Burada çalışmış ve buraya başvurmuş insanlardan anonim, yapılandırılmış değerlendirmeler, maaş bilgileri ve aday deneyimleri.",
       "website": "Web sitesi ↗",
       "tabs": {
         "label": "Şirket sayfası bölümleri",
         "reviews": "Değerlendirmeler",
-        "salaries": "Maaşlar"
+        "salaries": "Maaşlar",
+        "experiences": "Aday deneyimi"
       },
       "disclaimer": "Değerlendirmeler anonim yazarlarının kişisel görüşleridir, e-kariyerim'in beyanı değildir. Değerlendirmeler yalnızca puanlardan ve hazır maddelerden oluşur; yine de yanlış görünen bir şey varsa “Bu değerlendirmeyi bildir”i kullan, bir moderatör bakar."
     },
@@ -4365,10 +4455,12 @@
   },
   "contribute": {
     "title": "Şirket katkısı",
-    "subtitle": "Değerlendirme de maaş bilgisi de anonim; kaydettiğin anda yayında.",
+    "subtitle": "Değerlendirme, maaş bilgisi ve aday deneyimi anonim; kaydettiğin anda yayında.",
     "companyLabel": "Şirket",
-    "status": "Bu şirkete {reviews, plural, =0 {değerlendirmen yok} other {1 değerlendirmen}}, {salaries, plural, =0 {maaş kaydın yok} =1 {1 maaş kaydın var} other {# maaş kaydın var}}",
-    "statusReviewsOnly": "Bu şirkete {reviews, plural, =0 {değerlendirmen yok} other {1 değerlendirmen var}}",
+    "statusPrefix": "Burada:",
+    "statusReviews": "{reviews, plural, =0 {değerlendirme yok} other {1 değerlendirme}}",
+    "statusSalaries": "{salaries, plural, =0 {maaş yok} =1 {1 maaş} other {# maaş}}",
+    "statusExperiences": "{experiences, plural, =0 {deneyim yok} other {1 deneyim}}",
     "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
     "alreadyReviewed": "{company} için zaten bir değerlendirmen var",
     "alreadyReviewedHint": "Şirket başına bir değerlendirme; görüşün değiştiyse düzenle.",
@@ -4378,20 +4470,33 @@
     "tabs": {
       "label": "Katkı türü",
       "review": "Değerlendirme",
-      "salary": "Maaş Bilgisi"
+      "salary": "Maaş Bilgisi",
+      "experience": "Aday deneyimi"
     },
     "banner": {
       "review": {
         "thanks": "Teşekkürler, değerlendirmen yayında.",
-        "invite": "{company} için maaş bilgini de paylaşabilirsin — aşağıdaki form hazır.",
         "skip": "Atla, Değerlendirmelerim'e git"
       },
       "salary": {
         "thanks": "Teşekkürler, maaş bilgin kaydedildi.",
-        "invite": "{company} için bir değerlendirme de bırakabilirsin — aşağıdaki form hazır.",
         "skip": "Atla, Maaşlarım'a git"
+      },
+      "experience": {
+        "thanks": "Teşekkürler, aday deneyimin yayında.",
+        "skip": "Geç, Deneyimlerim'e git"
+      },
+      "invite": {
+        "review": "{company} için bir değerlendirme de yazabilirsin — form aşağıda hazır.",
+        "salary": "{company} için maaşını da paylaşabilirsin — form aşağıda hazır.",
+        "experience": "{company} ile işe alım deneyimini de puanlayabilirsin — form aşağıda hazır."
       }
-    }
+    },
+    "alreadyShared": "{company} için aday deneyimin zaten var",
+    "alreadySharedHint": "Şirket başına bir kayıt; görüşün değiştiyse düzenle.",
+    "editExperience": "Deneyimini düzenle",
+    "experienceQuotaFull": "{limit} aday deneyiminin tamamını kullandın. Yenisi için Deneyimlerim'den birini sil.",
+    "goToMyExperiences": "Deneyimlerim'e git"
   },
   "adminReviews": {
     "title": "Şirket değerlendirmesi moderasyonu",
@@ -5006,6 +5111,13 @@
         "perMonthNet": "/ ay net",
         "all": "Tümünü gör",
         "share": "Maaş paylaş"
+      },
+      "experiences": {
+        "title": "Deneyimlerim",
+        "empty": "Henüz aday deneyimi yok.",
+        "rating": "{value} / 5",
+        "all": "Tümünü gör",
+        "share": "Deneyim paylaş"
       }
     },
     "activity": {
@@ -5014,5 +5126,475 @@
       "trackedJobs": "takip listesinde ilan",
       "cvs": "CV"
     }
+  },
+  "candidateExperiences": {
+    "categories": {
+      "overall": "Genel değerlendirme",
+      "communication": "İletişim ve bilgilendirme",
+      "responseTime": "Yanıt hızı",
+      "punctuality": "Görüşme zamanına saygı",
+      "interviewerPreparation": "Görüşmecilerin hazırlığı",
+      "questionRelevance": "Soruların role uygunluğu",
+      "transparency": "Rol ve ücret hakkında şeffaflık",
+      "assignmentLoad": "Ödev / case yükü",
+      "outcomeCommunication": "Sonuç bildirimi ve geri bildirim"
+    },
+    "form": {
+      "heading": "{company} ile işe alım deneyimin",
+      "anonymityNote": "Adın olmadan yayımlanır; şirkette çalışmış olman gerekmez. Serbest metin yok: puan ver, bir şeyi öne çıkarmak istersen hazır maddelerden seç.",
+      "factsHeading": "Süreç hakkında",
+      "factsNote": "Hepsi isteğe bağlı. Kartında kısa etiket olarak, şirket sayfasında toplu istatistik olarak görünür.",
+      "outcome": "Sonuç",
+      "duration": "Sürecin toplam süresi",
+      "stages": "Aşama sayısı",
+      "interviewTypes": "Görüşme türleri",
+      "interviewTypesHint": "Birden fazla seçilebilir.",
+      "notSaid": "Belirtmedim",
+      "optional": "İsteğe bağlı",
+      "optionalNote": "Aşağıdakiler isteğe bağlı — sana uymayan alanı boş bırak.",
+      "publishNote": "Maddeler isteğe bağlı. Deneyimin kaydettiğin anda yayımlanır.",
+      "submitting": "Gönderiliyor…",
+      "problems": {
+        "overallRequired": "1–5 arası bir genel puan ver.",
+        "ratingInvalid": "Puan 1 ile 5 arasında olmalı.",
+        "tooManyLiked": "En fazla beş \"beğendim\" maddesi.",
+        "tooManyImprovable": "En fazla beş \"geliştirilebilir\" maddesi.",
+        "unknownStatement": "Maddelerden biri listede yok. Sayfayı yenileyip tekrar dene."
+      }
+    },
+    "guidelines": {
+      "title": "Aday deneyimi burada nasıl işler",
+      "intro": "Yalnızca kendi geçtiğin süreci puanla; şirkette çalışmış olman gerekmez.",
+      "optional": "Yalnızca genel puan zorunlu. Tek bir alanı puanlamak bile yeterli — kalanını boş bırak.",
+      "statements": "Serbest metin yok: puan ver, istersen hazır maddelerden seç — en fazla beş beğendiğin, beş geliştirilebilir.",
+      "noNames": "Görüşmeci adı, ekip, pozisyon ya da ay sorulmaz ve gösterilmez; kartında yalnızca çeyrek görünür.",
+      "facts": "Sonuç ve süre gibi bilgiler kartında kısa etiket, şirket sayfasında toplu istatistik olarak görünür.",
+      "instant": "Kaydettiğin anda yayımlanır; Deneyimlerim sayfasından düzenleyebilir ya da silebilirsin.",
+      "fullGuide": "Tam rehber →"
+    },
+    "write": {
+      "submit": "Deneyimi yayımla",
+      "error": "Bir şeyler ters gitti. Lütfen tekrar dene."
+    },
+    "edit": {
+      "title": "Aday deneyimini düzenle",
+      "subtitle": "Değişiklikler kaydettiğin anda yayında; kaydın çeyreği bugünün olur.",
+      "loading": "Yükleniyor…",
+      "notFound": "Bu kayıt senin değil ya da artık yok.",
+      "backToMine": "Deneyimlerim'e dön",
+      "submit": "Kaydet",
+      "error": "Bir şeyler ters gitti. Lütfen tekrar dene."
+    },
+    "mine": {
+      "title": "Deneyimlerim",
+      "subtitle": "Paylaştığın işe alım süreci deneyimleri.",
+      "quota": "{used} / {limit} kullanıldı",
+      "share": "Deneyim paylaş",
+      "loading": "Yükleniyor…",
+      "error": "Bir şeyler ters gitti. Lütfen tekrar dene.",
+      "empty": "Henüz bir aday deneyimi paylaşmadın.",
+      "emptyBody": "Bir şirketle geçirdiğin işe alım sürecini anonim olarak puanla; okuyucular seni değil, puanı ve maddeleri görür.",
+      "emptyCta": "Deneyim paylaş →",
+      "summary": "{count, plural, =0 {Madde seçilmedi} =1 {1 madde} other {# madde}}",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "deleteTitle": "Bu aday deneyimi silinsin mi?",
+      "deleteBody": "Kayıt kalıcı olarak silinir ve kotandaki yeri boşalır.",
+      "cancel": "Vazgeç",
+      "confirmDelete": "Sil",
+      "footnote": "Silmek kotadaki yeri boşaltır. Kayıtlar hesabınla birlikte silinir ve veri dışa aktarımına dâhildir."
+    },
+    "panel": {
+      "heading": "{count, plural, =0 {Aday deneyimi} =1 {1 aday deneyimi} other {# aday deneyimi}}",
+      "share": "Deneyimini paylaş",
+      "signInToShare": "Deneyimini paylaşmak için giriş yap",
+      "readingNote": "Her kayıt bir adayın kendi sürecine dair görüşüdür, şirket hakkında bir hüküm değil. e-kariyerim doğrulamaz.",
+      "yours": "Senin aday deneyimin",
+      "editYours": "Düzenle",
+      "ownSummary": "Senin puanın: {value} / 5",
+      "loading": "Yükleniyor…",
+      "loadError": "Aday deneyimleri yüklenemedi. Lütfen tekrar dene.",
+      "empty": "Bu şirket için henüz aday deneyimi paylaşılmadı.",
+      "emptyCta": "İlk paylaşan sen ol",
+      "cta": "Bu şirkete başvurdun mu? Süreci puanla — anonim, bir dakikada."
+    },
+    "summary": {
+      "scoreLabel": "Puan {score} / 5",
+      "basedOn": "{count, plural, =1 {1 aday deneyimine göre} other {# aday deneyimine göre}}",
+      "noScoreYet": "Henüz puan yok",
+      "untilStats": "{count, plural, =1 {1 kayıt} other {# kayıt}} — puan ve istatistik için {remaining, plural, =1 {1 kayıt} other {# kayıt}} daha",
+      "distributionLabel": "Genel puan dağılımı",
+      "votes": "{count, plural, =0 {oy yok} =1 {1 oy} other {# oy}}",
+      "categoriesLabel": "Alan ortalamaları",
+      "topLiked": "En çok beğenilen",
+      "topImprovable": "En çok \"geliştirilebilir\"",
+      "topCount": "{label} · {count}",
+      "processHeading": "Süreç",
+      "outcomes": "Sonuç dağılımı",
+      "outcomeShort": {
+        "Offer": "Teklif",
+        "Rejected": "Olumsuz yanıt",
+        "InProgress": "Devam ediyor",
+        "Withdrew": "Çekildi",
+        "NoResponse": "Haber alamadı"
+      },
+      "typicalDuration": "Tipik süreç süresi",
+      "typicalStages": "Tipik aşama sayısı",
+      "median": "medyan",
+      "takeHome": "Ödev / case istenen",
+      "takeHomeValue": "{count} / {total}",
+      "interviewTypes": "Görüşme türleri",
+      "notEnough": "—"
+    },
+    "card": {
+      "overallLabel": "Genel puan {value} / 5",
+      "ratedCategories": "{count, plural, =1 {1 alan puanlandı} other {# alan puanlandı}}",
+      "liked": "Beğendim",
+      "improvable": "Geliştirilebilir",
+      "stages": "{count} aşama",
+      "stagesFivePlus": "5+ aşama"
+    },
+    "statements": {
+      "general": {
+        "pos": {
+          "positive_process": {
+            "label": "Genel süreç olumlu",
+            "sentence": "İşe alım sürecini genel olarak olumlu buluyorum."
+          },
+          "respectful_approach": {
+            "label": "Saygılı yaklaşım",
+            "sentence": "Süreç boyunca saygılı bir yaklaşımla karşılaştığımı düşünüyorum."
+          },
+          "clear_process": {
+            "label": "Anlaşılır süreç",
+            "sentence": "Sürecin anlaşılır olduğunu düşünüyorum."
+          },
+          "professional_process": {
+            "label": "Profesyonel süreç",
+            "sentence": "Sürecin profesyonel yürütüldüğünü düşünüyorum."
+          },
+          "would_apply_again": {
+            "label": "Tekrar başvururum",
+            "sentence": "Bu şirkete tekrar başvurmayı düşünürüm."
+          }
+        },
+        "imp": {
+          "process": {
+            "label": "Süreç geliştirilebilir",
+            "sentence": "İşe alım süreci geliştirilebilir."
+          },
+          "candidate_experience": {
+            "label": "Aday deneyimi",
+            "sentence": "Aday deneyimi geliştirilebilir."
+          },
+          "predictability": {
+            "label": "Öngörülebilirlik",
+            "sentence": "Sürecin daha öngörülebilir olması faydalı olabilir."
+          },
+          "general_communication": {
+            "label": "Genel iletişim",
+            "sentence": "Süreç boyunca iletişim geliştirilebilir."
+          }
+        }
+      },
+      "communication": {
+        "pos": {
+          "steps_clear_upfront": {
+            "label": "Adımlar baştan netti",
+            "sentence": "Süreç adımlarının baştan net anlatıldığını düşünüyorum."
+          },
+          "timely_information": {
+            "label": "Zamanında bilgi",
+            "sentence": "Her aşamada zamanında bilgilendirildiğimi düşünüyorum."
+          },
+          "reachable_contact": {
+            "label": "Ulaşılabilir iletişim",
+            "sentence": "Sorularım için ulaşabileceğim bir muhatap olduğunu düşünüyorum."
+          },
+          "clear_expectations": {
+            "label": "Beklentiler netti",
+            "sentence": "Benden beklenenlerin net aktarıldığını düşünüyorum."
+          }
+        },
+        "imp": {
+          "step_information": {
+            "label": "Adım bilgilendirmesi",
+            "sentence": "Süreç adımları hakkında daha fazla bilgi verilebilir."
+          },
+          "information_timing": {
+            "label": "Bilgilendirme zamanlaması",
+            "sentence": "Bilgilendirmeler daha zamanında yapılabilir."
+          },
+          "reachability": {
+            "label": "Ulaşılabilirlik",
+            "sentence": "Sorular için ulaşılabilirlik geliştirilebilir."
+          },
+          "clarity_of_expectations": {
+            "label": "Beklentilerin netliği",
+            "sentence": "Adaydan beklenenler daha net aktarılabilir."
+          }
+        }
+      },
+      "response": {
+        "pos": {
+          "quick_replies": {
+            "label": "Hızlı geri dönüş",
+            "sentence": "Geri dönüşlerin hızlı olduğunu düşünüyorum."
+          },
+          "clear_scheduling": {
+            "label": "Net planlama",
+            "sentence": "Görüşmelerin net şekilde planlandığını düşünüyorum."
+          },
+          "fast_scheduling": {
+            "label": "Hızlı randevu",
+            "sentence": "Görüşme tarihlerinin hızlı belirlendiğini düşünüyorum."
+          }
+        },
+        "imp": {
+          "reply_time": {
+            "label": "Geri dönüş süresi",
+            "sentence": "Geri dönüş süresi kısaltılabilir."
+          },
+          "scheduling_speed": {
+            "label": "Planlama hızı",
+            "sentence": "Görüşmeler daha hızlı planlanabilir."
+          },
+          "waiting_between_stages": {
+            "label": "Aşamalar arası bekleme",
+            "sentence": "Aşamalar arasındaki bekleme süresi kısaltılabilir."
+          }
+        }
+      },
+      "punctuality": {
+        "pos": {
+          "started_on_time": {
+            "label": "Zamanında başladı",
+            "sentence": "Görüşmelerin planlanan saatte başladığını düşünüyorum."
+          },
+          "duration_as_planned": {
+            "label": "Süre planlandığı gibi",
+            "sentence": "Görüşme sürelerinin söylendiği gibi olduğunu düşünüyorum."
+          },
+          "changes_announced": {
+            "label": "Değişiklikler önceden bildirildi",
+            "sentence": "Plan değişikliklerinin önceden bildirildiğini düşünüyorum."
+          }
+        },
+        "imp": {
+          "start_time": {
+            "label": "Başlangıç saati",
+            "sentence": "Görüşmeler planlanan saatte başlayabilir."
+          },
+          "interview_duration": {
+            "label": "Görüşme süresi",
+            "sentence": "Görüşme süreleri planlandığı gibi tutulabilir."
+          },
+          "reschedule_notice": {
+            "label": "Erteleme bildirimi",
+            "sentence": "Ertelemeler daha önceden bildirilebilir."
+          }
+        }
+      },
+      "preparation": {
+        "pos": {
+          "knew_my_cv": {
+            "label": "CV'me hâkimdi",
+            "sentence": "Görüşmecilerin özgeçmişimi incelemiş olduğunu düşünüyorum."
+          },
+          "interview_flow": {
+            "label": "Görüşme akışı",
+            "sentence": "Görüşmelerin belirli bir akışla yürütüldüğünü düşünüyorum."
+          },
+          "role_knowledge": {
+            "label": "Rol bilgisi",
+            "sentence": "Görüşmecilerin role hâkim olduğunu düşünüyorum."
+          },
+          "room_for_my_questions": {
+            "label": "Sorularıma yer verildi",
+            "sentence": "Sorularım için yeterli zaman ayrıldığını düşünüyorum."
+          }
+        },
+        "imp": {
+          "preparation": {
+            "label": "Ön hazırlık",
+            "sentence": "Görüşmeler için ön hazırlık geliştirilebilir."
+          },
+          "cv_familiarity": {
+            "label": "CV'ye hâkimiyet",
+            "sentence": "Görüşmeciler adayın özgeçmişini önceden inceleyebilir."
+          },
+          "interview_flow": {
+            "label": "Görüşme akışı",
+            "sentence": "Görüşme akışı daha planlı olabilir."
+          },
+          "question_opportunity": {
+            "label": "Soru sorma fırsatı",
+            "sentence": "Adayın sorularına daha fazla zaman ayrılabilir."
+          }
+        }
+      },
+      "questions": {
+        "pos": {
+          "relevant_to_role": {
+            "label": "Role uygun sorular",
+            "sentence": "Soruların role uygun olduğunu düşünüyorum."
+          },
+          "practical_questions": {
+            "label": "Gerçekçi sorular",
+            "sentence": "Soruların işin gerçeğini yansıttığını düşünüyorum."
+          },
+          "level_appropriate": {
+            "label": "Seviyeye uygun",
+            "sentence": "Soruların pozisyonun seviyesine uygun olduğunu düşünüyorum."
+          }
+        },
+        "imp": {
+          "relevance_to_role": {
+            "label": "Role uygunluk",
+            "sentence": "Sorular role daha uygun olabilir."
+          },
+          "repeated_questions": {
+            "label": "Soru tekrarı",
+            "sentence": "Aşamalar arasında aynı soruların tekrarı azaltılabilir."
+          },
+          "level_fit": {
+            "label": "Seviye uyumu",
+            "sentence": "Sorular pozisyonun seviyesine daha uygun olabilir."
+          }
+        }
+      },
+      "transparency": {
+        "pos": {
+          "role_clarity": {
+            "label": "Rol netliği",
+            "sentence": "Rolün net anlatıldığını düşünüyorum."
+          },
+          "salary_range_shared_early": {
+            "label": "Maaş bandı erken paylaşıldı",
+            "sentence": "Ücret bandının süreçte erken paylaşıldığını düşünüyorum."
+          },
+          "work_model_clear": {
+            "label": "Çalışma şekli netti",
+            "sentence": "Çalışma şeklinin (ofis/uzaktan) net aktarıldığını düşünüyorum."
+          },
+          "process_steps_clear": {
+            "label": "Süreç adımları netti",
+            "sentence": "Sürecin kaç aşamadan oluşacağının baştan söylendiğini düşünüyorum."
+          }
+        },
+        "imp": {
+          "role_clarity": {
+            "label": "Rol netliği",
+            "sentence": "Rol daha net anlatılabilir."
+          },
+          "salary_information_timing": {
+            "label": "Ücret bilgisi zamanlaması",
+            "sentence": "Ücret bilgisi süreçte daha erken paylaşılabilir."
+          },
+          "work_model_information": {
+            "label": "Çalışma şekli bilgisi",
+            "sentence": "Çalışma şekli daha net aktarılabilir."
+          },
+          "posting_role_alignment": {
+            "label": "İlan-rol uyumu",
+            "sentence": "İlan ile anlatılan rolün uyumu geliştirilebilir."
+          }
+        }
+      },
+      "assignment": {
+        "pos": {
+          "reasonable_duration": {
+            "label": "Ödev süresi makul",
+            "sentence": "Ödev/case için istenen sürenin makul olduğunu düşünüyorum."
+          },
+          "relevant_to_role": {
+            "label": "Ödev role uygun",
+            "sentence": "Ödevin/case'in role uygun olduğunu düşünüyorum."
+          },
+          "feedback_received": {
+            "label": "Ödev geri bildirimi alındı",
+            "sentence": "Ödev hakkında geri bildirim aldım."
+          }
+        },
+        "imp": {
+          "duration": {
+            "label": "Ödev süresi",
+            "sentence": "Ödev/case için istenen süre azaltılabilir."
+          },
+          "scope": {
+            "label": "Ödev kapsamı",
+            "sentence": "Ödevin kapsamı daraltılabilir."
+          },
+          "feedback": {
+            "label": "Ödev geri bildirimi",
+            "sentence": "Ödev hakkında geri bildirim verilebilir."
+          }
+        }
+      },
+      "outcome": {
+        "pos": {
+          "timely_notification": {
+            "label": "Sonuç zamanında bildirildi",
+            "sentence": "Sonucun zamanında bildirildiğini düşünüyorum."
+          },
+          "rejection_feedback": {
+            "label": "Geri bildirim aldım",
+            "sentence": "Sonuçla birlikte geri bildirim aldım."
+          },
+          "kind_notification": {
+            "label": "Nazik bildirim",
+            "sentence": "Sonucun nazik bir dille iletildiğini düşünüyorum."
+          }
+        },
+        "imp": {
+          "notification": {
+            "label": "Sonuç bildirimi",
+            "sentence": "Adaylara sonuç bildirilebilir."
+          },
+          "notification_time": {
+            "label": "Bildirim süresi",
+            "sentence": "Sonuç daha kısa sürede bildirilebilir."
+          },
+          "feedback_content": {
+            "label": "Geri bildirim içeriği",
+            "sentence": "Sonuçla birlikte daha fazla geri bildirim verilebilir."
+          },
+          "rejection_communication": {
+            "label": "Ret iletişimi",
+            "sentence": "Olumsuz sonuçların iletilme biçimi geliştirilebilir."
+          }
+        }
+      }
+    }
+  },
+  "hiringOutcome": {
+    "Offer": "Teklif aldım",
+    "Rejected": "Olumsuz yanıt aldım",
+    "InProgress": "Süreç devam ediyor",
+    "Withdrew": "Kendim çekildim",
+    "NoResponse": "Haber alamadım"
+  },
+  "processDuration": {
+    "UnderOneWeek": "1 haftadan az",
+    "OneToTwoWeeks": "1–2 hafta",
+    "TwoToFourWeeks": "2–4 hafta",
+    "OneToTwoMonths": "1–2 ay",
+    "OverTwoMonths": "2 aydan uzun"
+  },
+  "stageCount": {
+    "One": "1",
+    "Two": "2",
+    "Three": "3",
+    "Four": "4",
+    "FivePlus": "5+"
+  },
+  "interviewType": {
+    "Phone": "Telefon görüşmesi",
+    "Video": "Video görüşme",
+    "OnSite": "Yüz yüze görüşme",
+    "TechnicalTest": "Teknik test",
+    "TakeHomeAssignment": "Ev ödevi / case",
+    "Panel": "Panel görüşme",
+    "AssessmentCenter": "Değerlendirme merkezi"
   }
 }

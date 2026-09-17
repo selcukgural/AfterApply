@@ -384,4 +384,16 @@
   <data name="VALIDATION_SALARY_BONUS_AMOUNT_UNEXPECTED" xml:space="preserve">
     <value>A bonus amount was given although "no bonus" is selected.</value>
   </data>
+  <data name="CANDIDATE_EXPERIENCE_QUOTA_REACHED" xml:space="preserve">
+    <value>You have reached your limit of {0} candidate experiences. Delete one to add another.</value>
+  </data>
+  <data name="CANDIDATE_EXPERIENCE_ALREADY_EXISTS" xml:space="preserve">
+    <value>You have already rated your hiring process at this company. Edit that entry instead.</value>
+  </data>
+  <data name="CANDIDATE_EXPERIENCE_CONTENT_INVALID" xml:space="preserve">
+    <value>The experience could not be saved: check the overall rating, the category ratings, the statements and the process details.</value>
+  </data>
+  <data name="VALIDATION_EXPERIENCE_INTERVIEW_TYPES_DUPLICATE" xml:space="preserve">
+    <value>An interview type was listed more than once.</value>
+  </data>
 </root>

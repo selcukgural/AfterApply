@@ -13,8 +13,10 @@ export type NavKey =
   | "allCompanies"
   | "writeReview"
   | "shareSalary"
+  | "shareExperience"
   | "myReviews"
   | "mySalaries"
+  | "myExperiences"
   | "tools"
   | "weeklyJobs"
   | "cvScan"
@@ -33,7 +35,7 @@ export interface NavItem {
 /** One position in the signed-in row: a plain link, or a trigger with a menu under it. */
 export type NavEntry = { type: "link"; href: string; key: NavKey } | { type: "group"; key: NavKey; items: NavItem[] };
 
-export type NavFlags = Pick<ClientConfigResponse, "jobSources" | "companyReviews" | "companySalaries">;
+export type NavFlags = Pick<ClientConfigResponse, "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences">;
 
 /**
  * The signed-in navigation, as data. The desktop row and the mobile drawer both render from this
@@ -54,14 +56,17 @@ export type NavFlags = Pick<ClientConfigResponse, "jobSources" | "companyReviews
 export function buildNavEntries(flags: NavFlags): NavEntry[] {
   const reviewsOn = flags.companyReviews?.enabled === true;
   const salariesOn = flags.companySalaries?.enabled === true;
+  const experiencesOn = flags.candidateExperiences?.enabled === true;
   const weeklyJobsOn = flags.jobSources?.enabled === true;
 
   const companies: NavItem[] = [
     { href: "/companies", key: "allCompanies" },
     { href: "/contribute?tab=review", key: "writeReview", dividerBefore: true },
     ...(salariesOn ? [{ href: "/contribute?tab=salary", key: "shareSalary" } as NavItem] : []),
+    ...(experiencesOn ? [{ href: "/contribute?tab=experience", key: "shareExperience" } as NavItem] : []),
     { href: "/my-reviews", key: "myReviews", dividerBefore: true },
     ...(salariesOn ? [{ href: "/my-salaries", key: "mySalaries" } as NavItem] : []),
+    ...(experiencesOn ? [{ href: "/my-experiences", key: "myExperiences" } as NavItem] : []),
   ];
 
   const tools: NavItem[] = [

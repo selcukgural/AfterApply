@@ -5,15 +5,17 @@ import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import type { CompanyReviewRequest, CompanySalaryRequest, ResolvedCompany } from "@/types/api";
+import type { CandidateExperienceRequest, CompanyReviewRequest, CompanySalaryRequest, ResolvedCompany } from "@/types/api";
 import { companiesApi } from "@/lib/api/companies";
 import { companyReviewsApi } from "@/lib/api/companyReviews";
+import { candidateExperiencesApi } from "@/lib/api/candidateExperiences";
 import { companySalariesApi } from "@/lib/api/companySalaries";
 import { ApiError } from "@/lib/api/httpClient";
 import { useClientConfig } from "@/hooks/useClientConfig";
 import { EMPTY_REVIEW_DRAFT } from "@/lib/companyReviews/reviewDraft";
 import { EMPTY_SALARY_DRAFT } from "@/lib/companySalaries/salaryDraft";
-import { contributeHref, nextSideAfterSave, parseContributeTab, type ContributeTab } from "@/lib/contribute/contributeState";
+import { EMPTY_EXPERIENCE_DRAFT } from "@/lib/candidateExperiences/experienceDraft";
+import { contributeHref, nextSideAfterSave, ownListHref, parseContributeTab, type ContributeTab } from "@/lib/contribute/contributeState";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Combobox } from "@/components/ui/Combobox";
 import { FormField } from "@/components/ui/FormField";
@@ -22,17 +24,20 @@ import { ReviewGuidelines } from "@/components/companyReviews/ReviewGuidelines";
 import { ReviewStatusBadge } from "@/components/companyReviews/ReviewStatusBadge";
 import { CompanySalaryForm } from "@/components/companySalaries/CompanySalaryForm";
 import { SalaryGuidelines } from "@/components/companySalaries/SalaryGuidelines";
+import { CandidateExperienceForm } from "@/components/candidateExperiences/CandidateExperienceForm";
+import { ExperienceGuidelines } from "@/components/candidateExperiences/ExperienceGuidelines";
 import { ContributeSwitch } from "@/components/contribute/ContributeSwitch";
 import { ContributionBanner } from "@/components/contribute/ContributionBanner";
 
 /**
- * One page for both things a signed-in person can say about a company (design canvas 2B,
- * 2026-09-16): pick the company once, then switch between the review and the salary form. The
- * side and the company ride in the URL (`?tab=`, `?company=`), so the menu's two links open the
- * right side, a refresh keeps the company, and a company page can link straight in.
+ * One page for everything a signed-in person can say about a company (design canvas 2B,
+ * 2026-09-16; a third side on 2026-09-17): pick the company once, then switch between the
+ * review, the salary and the candidate experience form. The side and the company ride in the
+ * URL (`?tab=`, `?company=`), so the menu's links open the right side, a refresh keeps the
+ * company, and a company page can link straight in.
  *
- * After a save the page flips to the other side with a thank-you banner (3B) — unless that side
- * has nothing left to offer, in which case it goes to the author's list as it always did.
+ * After a save the page flips to another side with a thank-you banner (3B) — unless no side has
+ * anything left to offer, in which case it goes to the author's list as it always did.
  */
 export default function ContributePage() {
   return (
@@ -46,6 +51,7 @@ function ContributeContent() {
   const t = useTranslations("contribute");
   const tWrite = useTranslations("companyReviews.write");
   const tSalary = useTranslations("companySalaries.write");
+  const tExperience = useTranslations("candidateExperiences.write");
   const router = useRouter();
   const queryClient = useQueryClient();
   const { config } = useClientConfig();
@@ -56,7 +62,7 @@ function ContributeContent() {
   const [companyName, setCompanyName] = useState("");
   const [picked, setPicked] = useState<ResolvedCompany | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [banner, setBanner] = useState<ContributeTab | null>(null);
+  const [banner, setBanner] = useState<{ saved: ContributeTab; next: ContributeTab } | null>(null);
 
   const fromSlug = useQuery({
     queryKey: ["companies", "public", slug],
@@ -87,6 +93,11 @@ function ContributeContent() {
     queryFn: () => companySalariesApi.viewerState(company!.id),
     enabled: !!company && config.companySalaries?.enabled !== false,
   });
+  const experienceViewer = useQuery({
+    queryKey: ["companies", company?.id, "experienceViewer"],
+    queryFn: () => candidateExperiencesApi.viewerState(company!.id),
+    enabled: !!company && config.candidateExperiences?.enabled === true,
+  });
 
   const goTo = (next: ContributeTab) => {
     setServerError(null);
@@ -97,10 +108,13 @@ function ContributeContent() {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ["companyReviews", "mine"] }),
       queryClient.invalidateQueries({ queryKey: ["companySalaries", "mine"] }),
+      queryClient.invalidateQueries({ queryKey: ["candidateExperiences", "mine"] }),
       queryClient.invalidateQueries({ queryKey: ["companies", "public", company!.slug] }),
       queryClient.invalidateQueries({ queryKey: ["companies", company!.id, "viewer"] }),
       queryClient.invalidateQueries({ queryKey: ["companies", company!.id, "salaryViewer"] }),
       queryClient.invalidateQueries({ queryKey: ["companies", company!.id, "salaries"] }),
+      queryClient.invalidateQueries({ queryKey: ["companies", company!.id, "experienceViewer"] }),
+      queryClient.invalidateQueries({ queryKey: ["companies", company!.slug, "experiences"] }),
     ]);
 
   // What the other side can still offer, after this save is counted. The viewer queries are
@@ -108,20 +122,25 @@ function ContributeContent() {
   const afterSave = (saved: ContributeTab) => {
     const reviewQuota = reviewViewer.data?.quota;
     const salaryQuota = salaryViewer.data?.quota;
+    const experienceQuota = experienceViewer.data?.quota;
     const salaryUsed = (salaryQuota?.used ?? 0) + (saved === "salary" ? 1 : 0);
+    const experienceUsed = (experienceQuota?.used ?? 0) + (saved === "experience" ? 1 : 0);
     const next = nextSideAfterSave(saved, {
-      ownReview: reviewViewer.data?.ownReview !== null && reviewViewer.data?.ownReview !== undefined,
+      ownReview: saved === "review" || (reviewViewer.data?.ownReview !== null && reviewViewer.data?.ownReview !== undefined),
       ownSalaryCount: (salaryViewer.data?.ownEntries.length ?? 0) + (saved === "salary" ? 1 : 0),
+      ownExperience: saved === "experience" || (experienceViewer.data?.ownEntry !== null && experienceViewer.data?.ownEntry !== undefined),
       reviewQuotaLeft: reviewQuota ? reviewQuota.limit - reviewQuota.used : 0,
       salaryQuotaLeft: salaryQuota ? salaryQuota.limit - salaryUsed : 0,
+      experienceQuotaLeft: experienceQuota ? experienceQuota.limit - experienceUsed : 0,
       reviewsEnabled: config.companyReviews?.enabled !== false,
       salariesEnabled: config.companySalaries?.enabled === true,
+      experiencesEnabled: config.candidateExperiences?.enabled === true,
     });
     if (next === null) {
-      router.push(saved === "salary" ? "/my-salaries" : "/my-reviews");
+      router.push(ownListHref(saved));
       return;
     }
-    setBanner(saved);
+    setBanner({ saved, next });
     goTo(next);
     if (typeof window !== "undefined") window.scrollTo({ top: 0 });
   };
@@ -144,10 +163,23 @@ function ContributeContent() {
     onError: (err) => setServerError(err instanceof ApiError ? err.message : tSalary("error")),
   });
 
+  const createExperience = useMutation({
+    mutationFn: (request: CandidateExperienceRequest) => candidateExperiencesApi.create(company!.id, request),
+    onSuccess: async () => {
+      await invalidate();
+      afterSave("experience");
+    },
+    onError: (err) => setServerError(err instanceof ApiError ? err.message : tExperience("error")),
+  });
+
   const ownReview = reviewViewer.data?.ownReview ?? null;
   const ownSalaries = salaryViewer.data?.ownEntries ?? [];
   const salaryQuota = salaryViewer.data?.quota;
+  const ownExperience = experienceViewer.data?.ownEntry ?? null;
+  const experienceQuota = experienceViewer.data?.quota;
   const salariesOn = config.companySalaries?.enabled === true;
+  const experiencesOn = config.candidateExperiences?.enabled === true;
+  const sides: ContributeTab[] = ["review", ...(salariesOn ? ["salary" as const] : []), ...(experiencesOn ? ["experience" as const] : [])];
 
   return (
     <div className="flex flex-col gap-6">
@@ -156,7 +188,7 @@ function ContributeContent() {
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
       </div>
 
-      {banner && company && <ContributionBanner saved={banner} company={company.name} />}
+      {banner && company && <ContributionBanner saved={banner.saved} next={banner.next} company={company.name} />}
 
       {!company && (
         <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
@@ -213,17 +245,57 @@ function ContributeContent() {
               </span>
               {reviewViewer.data && (
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {salariesOn
-                    ? t("status", { reviews: ownReview ? 1 : 0, salaries: ownSalaries.length })
-                    : t("statusReviewsOnly", { reviews: ownReview ? 1 : 0 })}
+                  {/* Short on purpose: three sides plus the switch have to share one row at 1280 px. */}
+                  {t("statusPrefix")}{" "}
+                  {[
+                    t("statusReviews", { reviews: ownReview ? 1 : 0 }),
+                    ...(salariesOn ? [t("statusSalaries", { salaries: ownSalaries.length })] : []),
+                    ...(experiencesOn ? [t("statusExperiences", { experiences: ownExperience ? 1 : 0 })] : []),
+                  ].join(" · ")}
                 </span>
               )}
             </div>
-            {salariesOn && <ContributeSwitch value={tab} onChange={goTo} />}
+            {sides.length > 1 && <ContributeSwitch tabs={sides} value={tab} onChange={goTo} />}
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-            {tab === "salary" && salariesOn ? (
+            {tab === "experience" && experiencesOn ? (
+              <>
+                <div className="flex flex-col gap-4">
+                  {ownExperience ? (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent-wash p-4 text-sm">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{t("alreadyShared", { company: company.name })}</span>
+                        <span className="text-gray-700 dark:text-gray-300">{t("alreadySharedHint")}</span>
+                      </div>
+                      <Link href={`/my-experiences/${ownExperience.id}/edit`} className={buttonClassName("outline")}>
+                        {t("editExperience")}
+                      </Link>
+                    </div>
+                  ) : experienceQuota && experienceQuota.used >= experienceQuota.limit ? (
+                    <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm dark:border-gray-800 dark:bg-gray-900/60">
+                      <p className="text-gray-700 dark:text-gray-300">{t("experienceQuotaFull", { limit: experienceQuota.limit })}</p>
+                      <Link href="/my-experiences" className={`${buttonClassName("outline")} self-start`}>
+                        {t("goToMyExperiences")}
+                      </Link>
+                    </div>
+                  ) : (
+                    <CandidateExperienceForm
+                      key={company.id}
+                      companyName={company.name}
+                      initialDraft={EMPTY_EXPERIENCE_DRAFT}
+                      submitLabel={tExperience("submit")}
+                      serverError={serverError}
+                      onSubmit={async (request) => {
+                        setServerError(null);
+                        await createExperience.mutateAsync(request).catch(() => undefined);
+                      }}
+                    />
+                  )}
+                </div>
+                <ExperienceGuidelines />
+              </>
+            ) : tab === "salary" && salariesOn ? (
               <>
                 <div className="flex flex-col gap-4">
                   {salaryQuota && salaryQuota.used >= salaryQuota.limit ? (

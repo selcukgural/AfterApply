@@ -384,4 +384,16 @@
   <data name="VALIDATION_SALARY_BONUS_AMOUNT_UNEXPECTED" xml:space="preserve">
     <value>"Prim yok" seçiliyken bir prim tutarı girildi.</value>
   </data>
+  <data name="CANDIDATE_EXPERIENCE_QUOTA_REACHED" xml:space="preserve">
+    <value>En fazla {0} aday deneyimi girebilirsiniz. Yenisi için birini silin.</value>
+  </data>
+  <data name="CANDIDATE_EXPERIENCE_ALREADY_EXISTS" xml:space="preserve">
+    <value>Bu şirketteki işe alım sürecini zaten puanladınız. Bunun yerine o kaydı düzenleyin.</value>
+  </data>
+  <data name="CANDIDATE_EXPERIENCE_CONTENT_INVALID" xml:space="preserve">
+    <value>Aday deneyimi kaydedilemedi: genel puanı, alan puanlarını, maddeleri ve süreç bilgilerini kontrol edin.</value>
+  </data>
+  <data name="VALIDATION_EXPERIENCE_INTERVIEW_TYPES_DUPLICATE" xml:space="preserve">
+    <value>Bir görüşme türü birden fazla kez listelendi.</value>
+  </data>
 </root>

@@ -7,6 +7,7 @@ const ALL_ON = {
   jobSources: { enabled: true },
   companyReviews: { enabled: true, maxReviewsPerUser: 10, minimumReviewsForScore: 3, priorWeight: 5 },
   companySalaries: { enabled: true, maxEntriesPerUser: 10, minimumEntriesForStats: 3 },
+  candidateExperiences: { enabled: true, maxEntriesPerUser: 10, minimumEntriesForStats: 3, priorWeight: 5 },
 };
 
 const hrefs = (entries: NavEntry[]) => entries.flatMap((entry) => (entry.type === "link" ? [entry.href] : entry.items.map((item) => item.href)));
@@ -35,8 +36,10 @@ describe("buildNavEntries", () => {
       "/companies",
       "/contribute?tab=review",
       "/contribute?tab=salary",
+      "/contribute?tab=experience",
       "/my-reviews",
       "/my-salaries",
+      "/my-experiences",
     ]);
     expect(companies.items.filter((item) => item.dividerBefore).map((item) => item.href)).toEqual(["/contribute?tab=review", "/my-reviews"]);
   });
@@ -55,8 +58,14 @@ describe("buildNavEntries", () => {
     // The menu used to link to /contribute?tab=salary and /my-salaries unconditionally while
     // the contribute page itself hid its salary side behind the flag.
     expect(buildNavEntries({}).some((entry) => entry.type === "group" && entry.key === "companies")).toBe(false);
-    const reviewsOnly = buildNavEntries({ ...ALL_ON, companySalaries: { ...ALL_ON.companySalaries, enabled: false } });
+    const reviewsOnly = buildNavEntries({
+      ...ALL_ON,
+      companySalaries: { ...ALL_ON.companySalaries, enabled: false },
+      candidateExperiences: { ...ALL_ON.candidateExperiences, enabled: false },
+    });
     expect(group(reviewsOnly, "companies").items.map((item) => item.href)).toEqual(["/companies", "/contribute?tab=review", "/my-reviews"]);
+    const noExperiences = buildNavEntries({ ...ALL_ON, candidateExperiences: { ...ALL_ON.candidateExperiences, enabled: false } });
+    expect(group(noExperiences, "companies").items.map((item) => item.href)).not.toContain("/my-experiences");
   });
 
   it("uses only keys both catalogues have", () => {
@@ -71,8 +80,10 @@ describe("buildNavEntries", () => {
     // "Maaş Bilgisi" promised a page and opened a form; a form is named for what you do on it.
     expect(tr.nav.writeReview).toMatch(/yaz$/);
     expect(tr.nav.shareSalary).toMatch(/paylaş$/);
+    expect(tr.nav.shareExperience).toMatch(/paylaş$/);
     expect(en.nav.writeReview).toMatch(/^Write/);
     expect(en.nav.shareSalary).toMatch(/^Share/);
+    expect(en.nav.shareExperience).toMatch(/^Share/);
   });
 });
 

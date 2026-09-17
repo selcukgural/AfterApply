@@ -9,13 +9,14 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/terms">)
 }
 
 const LISTS = {
-  service: ["tracking", "tools", "reviews", "salaries"],
+  service: ["tracking", "tools", "reviews", "salaries", "experiences"],
   account: ["age", "accuracy", "security", "delete"],
   reviews: ["ownExperience", "structured", "onePerCompany", "publication", "noManipulation", "opinion", "companies"],
   salaries: ["ownData", "accurate", "signedInOnly", "quota", "opinion"],
+  experiences: ["ownProcess", "structured", "onePerCompany", "publication", "noManipulation", "opinion"],
   content: ["ownership", "licence", "ourContent"],
   prohibited: ["scraping", "limits", "abuse", "security", "unlawful"],
-  liability: ["noAdvice", "thirdParties", "availability", "reviewsDisclaimer", "salariesDisclaimer"],
+  liability: ["noAdvice", "thirdParties", "availability", "reviewsDisclaimer", "salariesDisclaimer", "experiencesDisclaimer"],
   termination: ["us", "you"],
 } as const;
 
@@ -77,6 +78,16 @@ export default async function TermsPage({ params }: PageProps<"/[locale]/terms">
           <ul className={list}>
             {LISTS.salaries.map((item) => (
               <li key={item}>{t(`salaries.${item}`)}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section id="candidate-experiences">
+          <h2 className={heading}>{t("experiences.title")}</h2>
+          <p>{t("experiences.intro")}</p>
+          <ul className={list}>
+            {LISTS.experiences.map((item) => (
+              <li key={item}>{t(`experiences.${item}`)}</li>
             ))}
           </ul>
         </section>

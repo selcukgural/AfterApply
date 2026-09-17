@@ -3,6 +3,7 @@ using AfterApply.Application.CompanyReviews;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,8 @@ internal sealed class CompanyDirectoryService(
     CompanyReviewQueries queries,
     HybridCache cache,
     IOptions<CompanyReviewOptions> options,
-    IOptions<CompanySalaryOptions> salaryOptions) : ICompanyDirectoryService
+    IOptions<CompanySalaryOptions> salaryOptions,
+    IOptions<CandidateExperienceOptions> experienceOptions) : ICompanyDirectoryService
 {
     private const string ReviewedSlugsCacheKey = "company-reviews:reviewed-slugs";
 
@@ -89,7 +91,11 @@ internal sealed class CompanyDirectoryService(
         var salaryCount = salaryOptions.Value.Enabled
             ? await dbContext.CompanySalaryEntries.CountAsync(s => s.CompanyId == company.Id, cancellationToken)
             : 0;
-        return new CompanyPublicResponse(company.Id, slug, company.Name, company.Website, summary, salaryCount);
+        // Same shape for the third tab: a count, off → zero.
+        var experienceCount = experienceOptions.Value.Enabled
+            ? await dbContext.CandidateExperiences.CountAsync(e => e.CompanyId == company.Id, cancellationToken)
+            : 0;
+        return new CompanyPublicResponse(company.Id, slug, company.Name, company.Website, summary, salaryCount, experienceCount);
     }
 
     public async Task<PagedResult<CompanyReviewPublicResponse>?> ListApprovedReviewsAsync(string slug, PublicReviewListQuery query,

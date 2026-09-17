@@ -162,6 +162,14 @@
       "refundPolicy": {
         "title": "Cancellation and Refund Policy",
         "description": "How cancellation and refunds work for the e-kariyerim Pro plan."
+      },
+      "myExperiences": {
+        "title": "My Experiences",
+        "description": "The hiring-process experiences you shared."
+      },
+      "helpCandidateExperiences": {
+        "title": "Candidate Experience",
+        "description": "Read companies' hiring processes through candidates' eyes and rate your own anonymously; what is shown and what never is, the limits, how to edit."
       }
     }
   },
@@ -479,7 +487,9 @@
     "writeReview": "Write a review",
     "allCompanies": "All companies",
     "account": "Account",
-    "profile": "My Profile"
+    "profile": "My Profile",
+    "shareExperience": "Share an experience",
+    "myExperiences": "My Experiences"
   },
   "auth": {
     "login": {
@@ -764,7 +774,8 @@
       "pageInfoOrders": "Page {page} / {totalPages} ({totalCount} orders)",
       "pageInfoSalaries": "Page {page} / {totalPages} ({totalCount} salary entries)",
       "pageInfoNotifications": "Page {page} / {totalPages} ({totalCount} notifications)",
-      "pageInfoAlerts": "Page {page} / {totalPages} ({totalCount} alerts)"
+      "pageInfoAlerts": "Page {page} / {totalPages} ({totalCount} alerts)",
+      "pageInfoExperiences": "Page {page} / {totalPages} ({totalCount} candidate experiences)"
     },
     "form": {
       "companyName": "Company Name",
@@ -931,7 +942,7 @@
     "title": "Account Settings",
     "export": {
       "title": "Export My Data",
-      "description": "Download your applications (with their status history), imports, reminders, CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared and your Pro plan payment records as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
+      "description": "Download your applications (with their status history), imports, reminders, CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared, your candidate experiences and your Pro plan payment records as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
       "download": "Download My Data",
       "preparing": "Preparing...",
       "error": "Could not export data."
@@ -964,14 +975,14 @@
     },
     "delete": {
       "title": "Delete My Account",
-      "description": "This cannot be undone. Your account and everything in it — your applications, tracked jobs, CVs, imports, reminders, e-mail suggestions and notifications, company reviews, the salary entries you shared and the feedback you sent — is permanently deleted. Pro plan payment records are kept, detached from your account, for the statutory retention period.",
+      "description": "This cannot be undone. Your account and everything in it — your applications, tracked jobs, CVs, imports, reminders, e-mail suggestions and notifications, company reviews, the salary entries you shared, your candidate experiences and the feedback you sent — is permanently deleted. Pro plan payment records are kept, detached from your account, for the statutory retention period.",
       "passwordLabel": "Your Password",
       "confirmLabel": "Type \"DELETE\" to confirm",
       "confirmWord": "DELETE",
       "confirmMismatch": "Type \"DELETE\" in the box to confirm.",
       "submit": "Permanently Delete My Account",
       "deleting": "Deleting...",
-      "finalConfirm": "Final warning: your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent, plus your extension connections — will be permanently deleted. This cannot be undone. Do you want to continue?",
+      "finalConfirm": "Final warning: your account and everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, your candidate experiences and the feedback you sent, plus your extension connections — will be permanently deleted. This cannot be undone. Do you want to continue?",
       "genericError": "Could not delete account.",
       "noPasswordHint": "This account was created with Google, LinkedIn or GitHub and has no password. Type the confirmation word below to delete it."
     },
@@ -1078,7 +1089,7 @@
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "Apart from the request log, this data is used solely to provide you with application tracking and personal analytics features; the request log serves only the security and legal purposes listed above.",
       "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link.",
-      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\").",
+      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, a candidate experience, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\").",
       "item7": "If you use the weekly job matching (a paid feature): the job titles (up to three) and the location you save as your search criteria. They are stored on your account and, once a week, used as a search on LinkedIn and kariyer.net — see \"Cross-border data transfer\" below. The postings found are kept for you for a limited time; which ones you already applied to is worked out from your own applications and never stored as a separate record. If you also give consent, the fit score computed for each posting, its short reasoning and the matched/missing criteria are kept on your account too — see \"Weekly job matching\"."
     },
     "googleSignIn": {
@@ -1136,7 +1147,7 @@
       "title": "Your rights",
       "before": "You can export a copy of your data or permanently delete your account at any time. You can do this from the",
       "link": "Account Settings",
-      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
+      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, your candidate experiences, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
     },
     "notApplicable": {
       "title": "Not currently applicable",
@@ -1221,6 +1232,17 @@
       "storage": "Entries are stored in our own database and are not sent to any third party.",
       "deletion": "You can delete an entry from My Salaries at any time. Deleting your account deletes all of them; your data export includes them with the exact years.",
       "legalBasis": "Legal basis: your explicit action — you choose to share."
+    },
+    "candidateExperiences": {
+      "title": "The candidate experiences you share",
+      "intro": "Rating a company's hiring process is optional and needs an account. When you do:",
+      "what": "Your entry — your overall rating, the areas you rated, the statements you picked from the ready-made list and, if you answered them, the outcome, length, number of stages and interview types — is stored against your account. There is no free text: every published sentence is one of our own fixed statements.",
+      "whoSees": "Entries are shown on the public company page: the ratings, the statements and the process tags. The score, the area averages and the process statistics appear once a company has at least three entries.",
+      "quarter": "Readers see the quarter only (2026 Q3), never the day or the month; a job title, an interviewer or a team name is never asked. Deliberately: a company knows whom it interviewed, and a month with a title would give away who wrote it at a small company.",
+      "noAuthor": "A published entry never shows your name, e-mail or account. Only we can see the account behind it.",
+      "storage": "Entries are kept in our own database; nothing is sent to any third party.",
+      "deletion": "You can delete an entry at any time from My Experiences. Deleting your account deletes all of them; your data export includes them with their exact dates.",
+      "legalBasis": "Legal basis: your explicit action — you choose to share."
     }
   },
   "terms": {
@@ -1234,7 +1256,8 @@
       "tools": "Tools that work without an account: CV scan, reply-rate benchmark, and reading company reviews.",
       "reviews": "Public company pages where registered users write anonymous, structured reviews of companies.",
       "salaries": "Salary information: signed-in users share their salary at a company anonymously and read each other's entries.",
-      "asIs": "The service is provided as is. We may change, pause or remove features; on a free service we do not promise advance notice, but a change that affects user data is announced on this page and, where needed, by email."
+      "asIs": "The service is provided as is. We may change, pause or remove features; on a free service we do not promise advance notice, but a change that affects user data is announced on this page and, where needed, by email.",
+      "experiences": "Candidate experiences, where signed-in users rate a company's hiring process from the candidate's side anonymously and anyone can read them."
     },
     "account": {
       "title": "Your account",
@@ -1263,6 +1286,16 @@
       "quota": "Ten entries per account in total, one per occupation at the same company. Deleting frees a slot.",
       "opinion": "Entries are user reports; e-kariyerim does not verify them, and they are not advice for salary negotiation."
     },
+    "experiences": {
+      "title": "Candidate experiences",
+      "intro": "When you rate a company's hiring process:",
+      "ownProcess": "You rate only a process you went through yourself; not on someone's behalf, not from hearsay.",
+      "structured": "There is no free text: you rate and pick from ready-made statements. No interviewer, team or job title is asked; your entry does not point at a person.",
+      "onePerCompany": "One entry per company, ten per account in total. If your view changes, you edit the entry; deleting frees a slot.",
+      "publication": "An entry is published on the public company page the moment you save it; your name, e-mail or account is never shown, and the date is a quarter.",
+      "noManipulation": "Entering from several accounts to push a company up or down, soliciting entries in return for anything, or rating a process you never went through is not allowed.",
+      "opinion": "Entries are a candidate's view of their own process; e-kariyerim does not verify them and they are not a verdict on a company."
+    },
     "content": {
       "title": "Your content and licence",
       "ownership": "Everything you save — your applications, CVs, notes, ratings and picks — is yours. We access it only to provide the service; the details are in the Privacy Policy.",
@@ -1284,7 +1317,8 @@
       "thirdParties": "The employers you apply to, and third parties such as LinkedIn, kariyer.net and Google, are not under our control; your relationship with them is subject to their own terms.",
       "availability": "We do not promise that the service will be uninterrupted or error-free. To the extent applicable law allows, we are not liable for indirect damages arising from use of, or inability to use, the service.",
       "reviewsDisclaimer": "Company reviews are users' opinions; if you believe a review has harmed you, use the report path first — every report is read by a moderator.",
-      "salariesDisclaimer": "Salary entries are users' own reports; they are not verified and are not advice for salary negotiation or any other decision."
+      "salariesDisclaimer": "Salary entries are users' own reports; they are not verified and are not advice for salary negotiation or any other decision.",
+      "experiencesDisclaimer": "Candidate experiences are users' views of their own processes; they are not verified and are not advice for an application or any other decision."
     },
     "termination": {
       "title": "Suspension and termination",
@@ -1738,7 +1772,8 @@
       "companySalaries": "Salary Information",
       "cvScan": "CV Scan",
       "benchmark": "Reply Rate Benchmark",
-      "weeklyJobs": "Weekly Postings and Pro"
+      "weeklyJobs": "Weekly Postings and Pro",
+      "candidateExperiences": "Candidate Experience"
     },
     "common": {
       "step": "Step",
@@ -1819,6 +1854,9 @@
         },
         "weeklyJobs": {
           "description": "How the Monday list is built, pricing, CV consent, refunds."
+        },
+        "candidateExperiences": {
+          "description": "Read companies' hiring processes through candidates' eyes, rate your own anonymously."
         }
       }
     },
@@ -2102,7 +2140,7 @@
       },
       "export": {
         "title": "Export My Data",
-        "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks) and the salary entries you shared as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
+        "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared and your candidate experiences as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
       },
       "extension": {
         "title": "Browser extension connection",
@@ -2153,7 +2191,7 @@
         "body": "Enter your password, type \"DELETE\" into the box, and click the button. A second warning tells you that all of your data will be deleted; once you confirm that too, your account and all of your data are permanently deleted.",
         "calloutIrreversible": {
           "title": "This can't be undone",
-          "body": "Once your account is deleted, everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent — is permanently gone; there's no way to reverse it."
+          "body": "Once your account is deleted, everything belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, your candidate experiences and the feedback you sent — is permanently gone; there's no way to reverse it."
         }
       }
     },
@@ -2245,7 +2283,7 @@
       },
       "q2": {
         "question": "Can I get my data back after deleting my account?",
-        "answer": "No. Account deletion can't be undone; your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared and the feedback you sent are permanently deleted. You can export your data from Account Settings before deleting."
+        "answer": "No. Account deletion can't be undone; your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, your candidate experiences and the feedback you sent are permanently deleted. You can export your data from Account Settings before deleting."
       },
       "q3": {
         "question": "What if the Chrome extension reads a job's details wrong?",
@@ -2582,6 +2620,57 @@
       "calloutConsent": {
         "title": "Where your CV goes",
         "body": "Only for scoring, only if you consented, and only to Vertex AI (EU region). You can withdraw consent from the criteria form at any time; from then on your CV is not sent. Details are in the privacy policy's \"Job matching\" section."
+      }
+    },
+    "candidateExperiences": {
+      "eyebrow": "Companies",
+      "title": "Candidate experience",
+      "intro": "What a company's hiring process is like from the candidate's side — anonymous ratings from people who went through it, and the ready-made statements they picked. You don't need to have worked there; reading is public, writing needs an account.",
+      "read": {
+        "title": "Reading candidate experiences",
+        "step1": {
+          "title": "Open the Candidate experience tab on a company page",
+          "body": "The tab is public. On top: the overall score, the area averages, the rating distribution and the most-picked statements; below: the process statistics — outcomes, the typical length and number of stages, how many processes asked for an assignment."
+        },
+        "step2": {
+          "title": "Read the cards",
+          "body": "Each card is one candidate's own process: the overall rating, the areas they rated, the statements they picked and short tags such as the outcome, length and number of stages. The date is a quarter; there is no job title, month or interviewer name."
+        },
+        "step3": {
+          "title": "Know the threshold",
+          "body": "The score, the area averages and the process statistics appear once a company has at least three entries; until then only the count and the cards are shown. \"Typical\" values are medians."
+        }
+      },
+      "write": {
+        "title": "Sharing an experience",
+        "step1": {
+          "title": "Open the contribute page",
+          "body": "Companies ▾ → Share an experience in the top menu, or the \"Share your experience\" button on a company page. Reviews and salaries are shared on the same page; switch between them with the control at the top."
+        },
+        "step2": {
+          "title": "Pick the company",
+          "body": "The company is picked once and applies to every form. If yours is not there, type its name to add it."
+        },
+        "step3": {
+          "title": "Fill in the form",
+          "body": "Only the overall rating is required. If you like, answer a few closed questions about the process (outcome, length, number of stages, interview types), rate the eight areas and pick ready-made statements for the areas you rated — up to five you liked, five that could be better. There is no free text."
+        },
+        "step4": {
+          "title": "Publish",
+          "body": "The entry is published the moment you save. You are then invited to leave a review or share a salary for the same company; you can skip."
+        }
+      },
+      "calloutAnonymous": {
+        "title": "Entries are anonymous",
+        "body": "Readers never see your name, e-mail, job title or the month you went through the process; only the ratings, the statements, the process tags and the quarter. Interviewer or team names are never asked anywhere."
+      },
+      "calloutLimits": {
+        "title": "One entry per company, ten in total",
+        "body": "You rate a company's process once; if your view changes, you edit the entry. Ten entries per account in total; deleting one frees a slot."
+      },
+      "manage": {
+        "title": "Managing your entries",
+        "body": "On My Experiences you see, edit or delete your entries. They are deleted with your account and included in your data export."
       }
     }
   },
@@ -3142,12 +3231,13 @@
       "metaDescription": "{count, plural, =0 {No published reviews of {company} yet — be the first. Salaries shared by employees are visible once you sign in.} =1 {1 anonymous employee review of {company}, a score you can check, and anonymous salary information by occupation once you sign in.} other {# anonymous employee reviews of {company}, a score you can check, and anonymous salary information by occupation once you sign in.}}",
       "breadcrumbLabel": "Breadcrumb",
       "allCompanies": "← All companies",
-      "subtitle": "Anonymous, structured reviews and salary information from people who worked here.",
+      "subtitle": "Anonymous, structured reviews, salary information and candidate experiences from people who worked or interviewed here.",
       "website": "Website ↗",
       "tabs": {
         "label": "Company page sections",
         "reviews": "Reviews",
-        "salaries": "Salaries"
+        "salaries": "Salaries",
+        "experiences": "Candidate experience"
       },
       "disclaimer": "Reviews are the personal opinions of their anonymous authors, not statements by e-kariyerim. Reviews are made of ratings and ready-made statements only; if one still looks wrong, use “Report this review” and a moderator will look at it."
     },
@@ -4365,10 +4455,12 @@
   },
   "contribute": {
     "title": "Company contribution",
-    "subtitle": "Reviews and salary entries are both anonymous, and both go live the moment you save.",
+    "subtitle": "Reviews, salary entries and candidate experiences are all anonymous, and all go live the moment you save.",
     "companyLabel": "Company",
-    "status": "At this company: {reviews, plural, =0 {no review} other {1 review}}, {salaries, plural, =0 {no salary entries} =1 {1 salary entry} other {# salary entries}}",
-    "statusReviewsOnly": "At this company: {reviews, plural, =0 {no review} other {1 review}}",
+    "statusPrefix": "Here:",
+    "statusReviews": "{reviews, plural, =0 {no review} other {1 review}}",
+    "statusSalaries": "{salaries, plural, =0 {no salary} =1 {1 salary} other {# salaries}}",
+    "statusExperiences": "{experiences, plural, =0 {no experience} other {1 experience}}",
     "error": "Something went wrong. Please try again.",
     "alreadyReviewed": "You already have a review of {company}",
     "alreadyReviewedHint": "One review per company; edit it if your view has changed.",
@@ -4378,20 +4470,33 @@
     "tabs": {
       "label": "Contribution type",
       "review": "Review",
-      "salary": "Salary Info"
+      "salary": "Salary Info",
+      "experience": "Candidate experience"
     },
     "banner": {
       "review": {
         "thanks": "Thank you, your review is live.",
-        "invite": "You can share your salary at {company} too — the form below is ready.",
         "skip": "Skip, go to My Reviews"
       },
       "salary": {
         "thanks": "Thank you, your salary entry is saved.",
-        "invite": "You can leave a review of {company} too — the form below is ready.",
         "skip": "Skip, go to My Salaries"
+      },
+      "experience": {
+        "thanks": "Thank you, your candidate experience is live.",
+        "skip": "Skip, go to My Experiences"
+      },
+      "invite": {
+        "review": "You can leave a review of {company} too — the form below is ready.",
+        "salary": "You can share your salary at {company} too — the form below is ready.",
+        "experience": "You can rate your hiring experience at {company} too — the form below is ready."
       }
-    }
+    },
+    "alreadyShared": "You already have a candidate experience at {company}",
+    "alreadySharedHint": "One entry per company; edit it if your view has changed.",
+    "editExperience": "Edit your experience",
+    "experienceQuotaFull": "You have used all {limit} candidate experiences. Delete one on My Experiences to add another.",
+    "goToMyExperiences": "Go to My Experiences"
   },
   "adminReviews": {
     "title": "Company review moderation",
@@ -5006,6 +5111,13 @@
         "perMonthNet": "/ month net",
         "all": "See all",
         "share": "Share a salary"
+      },
+      "experiences": {
+        "title": "My experiences",
+        "empty": "No candidate experiences yet.",
+        "rating": "{value} / 5",
+        "all": "See all",
+        "share": "Share an experience"
       }
     },
     "activity": {
@@ -5014,5 +5126,475 @@
       "trackedJobs": "tracked jobs",
       "cvs": "CVs"
     }
+  },
+  "candidateExperiences": {
+    "categories": {
+      "overall": "Overall",
+      "communication": "Communication & information",
+      "responseTime": "Response time",
+      "punctuality": "Respect for your time",
+      "interviewerPreparation": "Interviewer preparation",
+      "questionRelevance": "Relevance of the questions",
+      "transparency": "Transparency on role & pay",
+      "assignmentLoad": "Assignment / case load",
+      "outcomeCommunication": "Outcome & feedback"
+    },
+    "form": {
+      "heading": "Your hiring experience at {company}",
+      "anonymityNote": "Published without your name; you don't need to have worked here. There is no free text: rate, and pick from ready-made statements if you want to point something out.",
+      "factsHeading": "About the process",
+      "factsNote": "All optional. Shown as short tags on your card and as aggregate statistics on the company page.",
+      "outcome": "Outcome",
+      "duration": "Total length of the process",
+      "stages": "Number of stages",
+      "interviewTypes": "Interview types",
+      "interviewTypesHint": "Pick any that apply.",
+      "notSaid": "Not saying",
+      "optional": "Optional",
+      "optionalNote": "The rest is optional — leave out any area that doesn't apply to you.",
+      "publishNote": "Statements are optional. Your experience is published as soon as you save it.",
+      "submitting": "Sending…",
+      "problems": {
+        "overallRequired": "Give an overall rating from 1 to 5.",
+        "ratingInvalid": "A rating is 1 to 5.",
+        "tooManyLiked": "At most five \"liked\" statements.",
+        "tooManyImprovable": "At most five \"could be better\" statements.",
+        "unknownStatement": "One of the statements is not in the list. Reload the page and try again."
+      }
+    },
+    "guidelines": {
+      "title": "How a candidate experience works here",
+      "intro": "Rate only a process you went through yourself; you don't need to have worked at the company.",
+      "optional": "Only the overall rating is required. Rating a single area is enough — leave the rest blank.",
+      "statements": "No free text: rate, and pick from ready-made statements if you like — up to five you liked, five that could be better.",
+      "noNames": "Interviewer names, teams, job titles and months are never asked or shown; your card carries only the quarter.",
+      "facts": "Details such as the outcome and the length show as short tags on your card and as aggregate statistics on the company page.",
+      "instant": "Published as soon as you save; you can edit or delete it from My Experiences.",
+      "fullGuide": "Full guide →"
+    },
+    "write": {
+      "submit": "Publish experience",
+      "error": "That didn't go through. Please try again."
+    },
+    "edit": {
+      "title": "Edit your candidate experience",
+      "subtitle": "Changes are live the moment you save; the entry's quarter becomes today's.",
+      "loading": "Loading…",
+      "notFound": "This entry is not yours or no longer exists.",
+      "backToMine": "Back to My Experiences",
+      "submit": "Save",
+      "error": "That didn't go through. Please try again."
+    },
+    "mine": {
+      "title": "My Experiences",
+      "subtitle": "The hiring-process experiences you shared.",
+      "quota": "{used} of {limit} used",
+      "share": "Share an experience",
+      "loading": "Loading…",
+      "error": "That didn't go through. Please try again.",
+      "empty": "You haven't shared a candidate experience yet.",
+      "emptyBody": "Rate a hiring process you went through, anonymously; readers see the rating and the statements, not you.",
+      "emptyCta": "Share an experience →",
+      "summary": "{count, plural, =0 {No statements picked} =1 {1 statement} other {# statements}}",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete this candidate experience?",
+      "deleteBody": "The entry is deleted permanently and its quota slot is freed.",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete",
+      "footnote": "Deleting frees the quota slot. Entries are deleted with your account and included in your data export."
+    },
+    "panel": {
+      "heading": "{count, plural, =0 {Candidate experiences} =1 {1 candidate experience} other {# candidate experiences}}",
+      "share": "Share your experience",
+      "signInToShare": "Sign in to share your experience",
+      "readingNote": "Every entry is one candidate's view of their own process, not a verdict on the company. e-kariyerim does not verify them.",
+      "yours": "Your candidate experience",
+      "editYours": "Edit",
+      "ownSummary": "Your rating: {value} / 5",
+      "loading": "Loading…",
+      "loadError": "Candidate experiences could not be loaded. Please try again.",
+      "empty": "No candidate experience has been shared for this company yet.",
+      "emptyCta": "Be the first to share",
+      "cta": "Applied here? Rate the process — anonymously, in a minute."
+    },
+    "summary": {
+      "scoreLabel": "Score {score} out of 5",
+      "basedOn": "{count, plural, =1 {based on 1 candidate experience} other {based on # candidate experiences}}",
+      "noScoreYet": "No score yet",
+      "untilStats": "{count, plural, =1 {1 entry} other {# entries}} — {remaining, plural, =1 {1 more} other {# more}} for a score and statistics",
+      "distributionLabel": "Overall rating distribution",
+      "votes": "{count, plural, =0 {no votes} =1 {1 vote} other {# votes}}",
+      "categoriesLabel": "Area averages",
+      "topLiked": "Most often liked",
+      "topImprovable": "Most often “could be better”",
+      "topCount": "{label} · {count}",
+      "processHeading": "Process",
+      "outcomes": "Outcomes",
+      "outcomeShort": {
+        "Offer": "Offer",
+        "Rejected": "Turned down",
+        "InProgress": "In progress",
+        "Withdrew": "Withdrew",
+        "NoResponse": "Never heard back"
+      },
+      "typicalDuration": "Typical length",
+      "typicalStages": "Typical number of stages",
+      "median": "median",
+      "takeHome": "Asked for an assignment",
+      "takeHomeValue": "{count} of {total}",
+      "interviewTypes": "Interview types",
+      "notEnough": "—"
+    },
+    "card": {
+      "overallLabel": "Overall rating {value} out of 5",
+      "ratedCategories": "{count, plural, =1 {1 area rated} other {# areas rated}}",
+      "liked": "Liked",
+      "improvable": "Could be better",
+      "stages": "{count, plural, =1 {1 stage} other {# stages}}",
+      "stagesFivePlus": "5+ stages"
+    },
+    "statements": {
+      "general": {
+        "pos": {
+          "positive_process": {
+            "label": "Positive process overall",
+            "sentence": "I found the hiring process positive overall."
+          },
+          "respectful_approach": {
+            "label": "Respectful approach",
+            "sentence": "I feel I was treated respectfully throughout the process."
+          },
+          "clear_process": {
+            "label": "Clear process",
+            "sentence": "I think the process was easy to follow."
+          },
+          "professional_process": {
+            "label": "Professional process",
+            "sentence": "I think the process was run professionally."
+          },
+          "would_apply_again": {
+            "label": "Would apply again",
+            "sentence": "I would consider applying to this company again."
+          }
+        },
+        "imp": {
+          "process": {
+            "label": "Process could be better",
+            "sentence": "The hiring process could be better."
+          },
+          "candidate_experience": {
+            "label": "Candidate experience",
+            "sentence": "The candidate experience could be better."
+          },
+          "predictability": {
+            "label": "Predictability",
+            "sentence": "A more predictable process would help."
+          },
+          "general_communication": {
+            "label": "Overall communication",
+            "sentence": "Communication throughout the process could be better."
+          }
+        }
+      },
+      "communication": {
+        "pos": {
+          "steps_clear_upfront": {
+            "label": "Steps clear upfront",
+            "sentence": "I think the steps of the process were explained clearly from the start."
+          },
+          "timely_information": {
+            "label": "Timely information",
+            "sentence": "I feel I was kept informed in time at each stage."
+          },
+          "reachable_contact": {
+            "label": "Reachable contact",
+            "sentence": "I feel there was someone I could reach with my questions."
+          },
+          "clear_expectations": {
+            "label": "Clear expectations",
+            "sentence": "I think what was expected of me was communicated clearly."
+          }
+        },
+        "imp": {
+          "step_information": {
+            "label": "Information on steps",
+            "sentence": "More information about the steps of the process could be given."
+          },
+          "information_timing": {
+            "label": "Timing of updates",
+            "sentence": "Updates could come sooner."
+          },
+          "reachability": {
+            "label": "Reachability",
+            "sentence": "It could be easier to reach someone with questions."
+          },
+          "clarity_of_expectations": {
+            "label": "Clarity of expectations",
+            "sentence": "What is expected of the candidate could be communicated more clearly."
+          }
+        }
+      },
+      "response": {
+        "pos": {
+          "quick_replies": {
+            "label": "Quick replies",
+            "sentence": "I think replies came quickly."
+          },
+          "clear_scheduling": {
+            "label": "Clear scheduling",
+            "sentence": "I think interviews were scheduled clearly."
+          },
+          "fast_scheduling": {
+            "label": "Fast scheduling",
+            "sentence": "I think interview dates were set quickly."
+          }
+        },
+        "imp": {
+          "reply_time": {
+            "label": "Reply time",
+            "sentence": "Replies could come faster."
+          },
+          "scheduling_speed": {
+            "label": "Scheduling speed",
+            "sentence": "Interviews could be scheduled faster."
+          },
+          "waiting_between_stages": {
+            "label": "Waiting between stages",
+            "sentence": "The wait between stages could be shorter."
+          }
+        }
+      },
+      "punctuality": {
+        "pos": {
+          "started_on_time": {
+            "label": "Started on time",
+            "sentence": "I think interviews started at the scheduled time."
+          },
+          "duration_as_planned": {
+            "label": "Ran as planned",
+            "sentence": "I think interviews took as long as I was told they would."
+          },
+          "changes_announced": {
+            "label": "Changes announced ahead",
+            "sentence": "I think changes to the plan were announced ahead of time."
+          }
+        },
+        "imp": {
+          "start_time": {
+            "label": "Start time",
+            "sentence": "Interviews could start at the scheduled time."
+          },
+          "interview_duration": {
+            "label": "Interview length",
+            "sentence": "Interviews could keep to their planned length."
+          },
+          "reschedule_notice": {
+            "label": "Reschedule notice",
+            "sentence": "Rescheduling could be announced earlier."
+          }
+        }
+      },
+      "preparation": {
+        "pos": {
+          "knew_my_cv": {
+            "label": "Knew my CV",
+            "sentence": "I think the interviewers had read my CV."
+          },
+          "interview_flow": {
+            "label": "Interview flow",
+            "sentence": "I think the interviews followed a clear structure."
+          },
+          "role_knowledge": {
+            "label": "Knew the role",
+            "sentence": "I think the interviewers knew the role well."
+          },
+          "room_for_my_questions": {
+            "label": "Room for my questions",
+            "sentence": "I feel there was enough time for my questions."
+          }
+        },
+        "imp": {
+          "preparation": {
+            "label": "Preparation",
+            "sentence": "Preparation for interviews could be better."
+          },
+          "cv_familiarity": {
+            "label": "CV familiarity",
+            "sentence": "Interviewers could review the candidate's CV beforehand."
+          },
+          "interview_flow": {
+            "label": "Interview flow",
+            "sentence": "The interviews could follow a clearer structure."
+          },
+          "question_opportunity": {
+            "label": "Time for questions",
+            "sentence": "More time could be left for the candidate's questions."
+          }
+        }
+      },
+      "questions": {
+        "pos": {
+          "relevant_to_role": {
+            "label": "Relevant to the role",
+            "sentence": "I think the questions were relevant to the role."
+          },
+          "practical_questions": {
+            "label": "Practical questions",
+            "sentence": "I think the questions reflected the actual work."
+          },
+          "level_appropriate": {
+            "label": "Right level",
+            "sentence": "I think the questions matched the level of the position."
+          }
+        },
+        "imp": {
+          "relevance_to_role": {
+            "label": "Relevance to the role",
+            "sentence": "The questions could be more relevant to the role."
+          },
+          "repeated_questions": {
+            "label": "Repeated questions",
+            "sentence": "Fewer questions could be repeated across stages."
+          },
+          "level_fit": {
+            "label": "Level fit",
+            "sentence": "The questions could better match the level of the position."
+          }
+        }
+      },
+      "transparency": {
+        "pos": {
+          "role_clarity": {
+            "label": "Clear role",
+            "sentence": "I think the role was explained clearly."
+          },
+          "salary_range_shared_early": {
+            "label": "Salary range shared early",
+            "sentence": "I think the salary range was shared early in the process."
+          },
+          "work_model_clear": {
+            "label": "Clear work model",
+            "sentence": "I think the work model (office/remote) was explained clearly."
+          },
+          "process_steps_clear": {
+            "label": "Clear process steps",
+            "sentence": "I think I was told from the start how many stages there would be."
+          }
+        },
+        "imp": {
+          "role_clarity": {
+            "label": "Role clarity",
+            "sentence": "The role could be explained more clearly."
+          },
+          "salary_information_timing": {
+            "label": "Timing of salary information",
+            "sentence": "Salary information could be shared earlier in the process."
+          },
+          "work_model_information": {
+            "label": "Work model information",
+            "sentence": "The work model could be explained more clearly."
+          },
+          "posting_role_alignment": {
+            "label": "Posting vs. role",
+            "sentence": "The role could match the job posting more closely."
+          }
+        }
+      },
+      "assignment": {
+        "pos": {
+          "reasonable_duration": {
+            "label": "Reasonable assignment time",
+            "sentence": "I think the time asked for the assignment was reasonable."
+          },
+          "relevant_to_role": {
+            "label": "Assignment fit the role",
+            "sentence": "I think the assignment was relevant to the role."
+          },
+          "feedback_received": {
+            "label": "Assignment feedback received",
+            "sentence": "I received feedback on the assignment."
+          }
+        },
+        "imp": {
+          "duration": {
+            "label": "Assignment time",
+            "sentence": "The time asked for the assignment could be shorter."
+          },
+          "scope": {
+            "label": "Assignment scope",
+            "sentence": "The assignment could be narrower in scope."
+          },
+          "feedback": {
+            "label": "Assignment feedback",
+            "sentence": "Feedback on the assignment could be given."
+          }
+        }
+      },
+      "outcome": {
+        "pos": {
+          "timely_notification": {
+            "label": "Told the outcome in time",
+            "sentence": "I think I was told the outcome in good time."
+          },
+          "rejection_feedback": {
+            "label": "Received feedback",
+            "sentence": "I received feedback along with the outcome."
+          },
+          "kind_notification": {
+            "label": "Kind notification",
+            "sentence": "I think the outcome was communicated kindly."
+          }
+        },
+        "imp": {
+          "notification": {
+            "label": "Outcome notification",
+            "sentence": "Candidates could be told the outcome."
+          },
+          "notification_time": {
+            "label": "Time to notify",
+            "sentence": "The outcome could be communicated sooner."
+          },
+          "feedback_content": {
+            "label": "Feedback content",
+            "sentence": "More feedback could be given along with the outcome."
+          },
+          "rejection_communication": {
+            "label": "Rejection communication",
+            "sentence": "The way a negative outcome is communicated could be better."
+          }
+        }
+      }
+    }
+  },
+  "hiringOutcome": {
+    "Offer": "Got an offer",
+    "Rejected": "Was turned down",
+    "InProgress": "Still in progress",
+    "Withdrew": "Withdrew",
+    "NoResponse": "Never heard back"
+  },
+  "processDuration": {
+    "UnderOneWeek": "Under a week",
+    "OneToTwoWeeks": "1–2 weeks",
+    "TwoToFourWeeks": "2–4 weeks",
+    "OneToTwoMonths": "1–2 months",
+    "OverTwoMonths": "Over 2 months"
+  },
+  "stageCount": {
+    "One": "1",
+    "Two": "2",
+    "Three": "3",
+    "Four": "4",
+    "FivePlus": "5+"
+  },
+  "interviewType": {
+    "Phone": "Phone screen",
+    "Video": "Video interview",
+    "OnSite": "On-site interview",
+    "TechnicalTest": "Technical test",
+    "TakeHomeAssignment": "Take-home assignment / case",
+    "Panel": "Panel interview",
+    "AssessmentCenter": "Assessment centre"
   }
 }

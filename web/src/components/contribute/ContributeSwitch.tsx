@@ -3,11 +3,11 @@
 import { useTranslations } from "next-intl";
 import type { ContributeTab } from "@/lib/contribute/contributeState";
 
-/** The two sides of the contribute page as a segmented control (the applications list's view
- *  toggle): there are only two, and which one is open should be readable without opening anything. */
-export function ContributeSwitch({ value, onChange }: { value: ContributeTab; onChange: (tab: ContributeTab) => void }) {
+/** The sides of the contribute page as a segmented control (the applications list's view
+ *  toggle): few enough that which one is open should be readable without opening anything. The
+ *  caller passes the sides that are switched on, in display order. */
+export function ContributeSwitch({ tabs, value, onChange }: { tabs: readonly ContributeTab[]; value: ContributeTab; onChange: (tab: ContributeTab) => void }) {
   const t = useTranslations("contribute.tabs");
-  const tabs: ContributeTab[] = ["review", "salary"];
 
   return (
     <div role="group" aria-label={t("label")} className="inline-flex overflow-hidden rounded-md border border-gray-300 dark:border-gray-700">

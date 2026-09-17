@@ -25,6 +25,7 @@ export default function ProfilePage() {
 
   const reviewsOn = config.companyReviews?.enabled === true;
   const salariesOn = config.companySalaries?.enabled === true;
+  const experiencesOn = config.candidateExperiences?.enabled === true;
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -35,7 +36,7 @@ export default function ProfilePage() {
 
       <ProfileIdentityCard key={user.id} user={user} />
       <PlanCard />
-      {reviewsOn && <ContributionsCard showSalaries={salariesOn} />}
+      {reviewsOn && <ContributionsCard showSalaries={salariesOn} showExperiences={experiencesOn} />}
       <ActivityTiles />
 
       <p className="text-sm text-gray-500 dark:text-gray-400">
