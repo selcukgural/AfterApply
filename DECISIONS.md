@@ -7227,3 +7227,15 @@ düz navbar'ı gösteriyordu; bu değişiklikle yeniden çekilmedi, ayrı iş. E
 CORS yalnız 3000'e izinli, 3100'de OAuth düğmeleri kaybolup yanıltmıştı) + yerel API ile Chrome'da
 1400px ve 400px: ziyaretçi header/footer, giriş yapmış satır + üç dropdown + avatar, mobil
 çekmece, /contribute'ta Şirketler altı çizili.
+
+**Ek (aynı gün, yardım merkezi görselleri).** 17 yardım ekran görüntüsü (uzantı, giriş/kayıt ve
+hesap-silme hariç hepsi) yeni navigasyona güncellendi. Reçete: gövde durumları (dolu formlar,
+seçili satırlar, tarama sonucu, 127-başvuruluk silinmiş dashboard tohumu) aynen geçerli olduğundan
+**yalnız header şeridi** demo hesapla, her görselin kendi rotasında headless Chrome/CDP ile yeniden
+çekildi (aktif sekme, 3'lü Öneriler rozeti, /applications/new'de gizlenen buton gerçek uygulamadan)
+ve eski gövdenin üstüne bindirildi; ziyaretçi header'ı 56→61 px büyüdüğü için gövde 5 px kaydı,
+boy korundu. `dashboard-overview.png` 1265 px'lik 0,85 ölçekli olduğundan header 1490 px'te çekilip
+küçültüldü. `/applications` başlık satırındaki "Yeni Başvuru" da Panel'deki gibi `md:hidden` yapıldı
+(ayrıca `<a><button>` iç içeliği giderildi); dört masaüstü görselinde bu buton zeminle boyandı.
+Ziyaretçi görsellerindeki eski kaydırma çubuğu sütunu temizlendi. Script: oturumun scratchpad'inde
+`shoot-headers.mjs` (memory'ye özetlendi).
