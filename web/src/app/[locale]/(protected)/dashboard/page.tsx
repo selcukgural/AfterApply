@@ -56,7 +56,10 @@ export default function DashboardPage() {
             </p>
           ) : null}
         </div>
-        <Link href="/applications/new" className={buttonClassName("primary")}>
+        {/* Phones only: since 2026-09-17 the header carries this button on every page, and on a
+            desktop two identical buttons forty pixels apart read as a mistake. On a phone the
+            header's copy is inside the drawer, so the page keeps its own. */}
+        <Link href="/applications/new" className={buttonClassName("primary", "md:hidden")}>
           {t("newApplication")}
         </Link>
       </div>

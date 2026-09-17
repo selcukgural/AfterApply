@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
+import { isNavItemActive } from "@/components/layout/navGroups";
 
 export interface NavMenuItem {
   href: string;
@@ -22,8 +23,8 @@ interface NavMenuProps {
 /**
  * One group in the signed-in navbar: a trigger that is underlined like a section link while any
  * page beneath one of its items is open, and a menu of links under it. Grew out of the 2026-09-14
- * "Tools" menu when the row reached eleven items (2026-09-15, option D3 on the header canvas):
- * the applications pages and the discovery pages each fold into one of these.
+ * "Tools" menu when the row reached eleven items (2026-09-15, option D3 on the header canvas);
+ * since 2026-09-17 every group in the row is one of these, fed from navGroups.ts.
  */
 export function NavMenu({ label, items, className = "" }: NavMenuProps) {
   const pathname = usePathname();
@@ -50,7 +51,10 @@ export function NavMenu({ label, items, className = "" }: NavMenuProps) {
     };
   }, [open]);
 
-  const active = items.some((item) => isActivePath(pathname, item.href));
+  // The trigger is underlined while any page beneath one of its items is open. A contribute link
+  // counts by its path alone, so the Companies group lights up on /contribute even though neither
+  // of its two query-string twins can be "current" (isNavItemActive).
+  const active = items.some((item) => isActivePath(pathname, item.href.split("?")[0]));
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
@@ -79,9 +83,9 @@ export function NavMenu({ label, items, className = "" }: NavMenuProps) {
                 role="menuitem"
                 href={item.href}
                 onClick={() => setOpen(false)}
-                aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+                aria-current={isNavItemActive(pathname, item.href) ? "page" : undefined}
                 className={`flex items-center justify-between gap-3 px-4 py-2 text-sm ${
-                  isActivePath(pathname, item.href)
+                  isNavItemActive(pathname, item.href)
                     ? "font-medium text-gray-900 dark:text-gray-100"
                     : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
                 }`}

@@ -12,25 +12,24 @@ import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { NavBar } from "@/components/layout/NavBar";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
 
-export type SiteNavKey = "howItWorks" | "extension" | "features" | "companies" | "benchmark" | "guide" | "help";
+export type SiteNavKey = "howItWorks" | "companies" | "benchmark" | "guide" | "help";
 
 export interface SiteNavLink {
-  /** A route (`/companies`) or a landing anchor (`/#extension`); both go through next-intl's Link. */
+  /** A route (`/companies`) or a landing anchor (`/#how-it-works`); both go through next-intl's Link. */
   href: string;
   key: SiteNavKey;
 }
 
-/** The landing page's links: its own sections first, then the two things that work without an account. */
-export const LANDING_SITE_LINKS: readonly SiteNavLink[] = [
+/**
+ * The one set of links for every signed-out page — the landing, the public pages and the 404.
+ * Until 2026-09-17 the landing had its own set (three of its section anchors, companies, help)
+ * and every other public page another (companies, benchmark, guide, help), so a visitor who
+ * went from the home page to Companies watched the menu change under them. "How it works" is
+ * the one anchor kept: it resolves from any page and is what a marketing header is expected to
+ * open with; the extension, features and mission anchors are the footer's "Product" column.
+ */
+export const SITE_LINKS: readonly SiteNavLink[] = [
   { href: "/#how-it-works", key: "howItWorks" },
-  { href: "/#extension", key: "extension" },
-  { href: "/#features", key: "features" },
-  { href: "/companies", key: "companies" },
-  { href: "/help", key: "help" },
-];
-
-/** Every other public page: the account-free tools, the guide and the help centre. */
-export const PUBLIC_SITE_LINKS: readonly SiteNavLink[] = [
   { href: "/companies", key: "companies" },
   { href: "/benchmark", key: "benchmark" },
   { href: "/guide", key: "guide" },
@@ -51,10 +50,10 @@ export const PUBLIC_SITE_LINKS: readonly SiteNavLink[] = [
  * been signed out. The three costs named when this was first rejected are accepted knowingly: the
  * header swaps once `authStore.hydrate()` runs after mount (one frame, the same moment the old
  * "Go to dashboard" button appeared); the suggestion/notification counters are fetched on public
- * pages too; and the public links (Benchmark, Guide, CV scan) live in the NavBar's Tools menu
+ * pages too; and the public links (Benchmark, Guide, CV scan) live in the NavBar's Tools group
  * rather than in its row.
  */
-export function SiteHeader({ links }: { links: readonly SiteNavLink[] }) {
+export function SiteHeader() {
   const t = useTranslations("siteNav");
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
@@ -91,7 +90,7 @@ export function SiteHeader({ links }: { links: readonly SiteNavLink[] }) {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm md:flex">
-          {links.map((link) => (
+          {SITE_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -136,7 +135,7 @@ export function SiteHeader({ links }: { links: readonly SiteNavLink[] }) {
       {menuOpen && (
         <div id="site-mobile-menu" className="border-t border-gray-200 bg-white px-4 py-4 md:hidden dark:border-gray-800 dark:bg-gray-950">
           <nav className="flex flex-col gap-1 text-sm">
-            {links.map((link) => (
+            {SITE_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

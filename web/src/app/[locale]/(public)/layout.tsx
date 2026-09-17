@@ -1,7 +1,7 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { SiteTrafficReporter } from "@/components/analytics/SiteTrafficReporter";
-import { PUBLIC_SITE_LINKS, SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { PUBLIC_MESSAGE_SCOPE, pickMessages } from "@/lib/i18n/messageScopes";
 
@@ -21,7 +21,7 @@ export default async function PublicLayout({ children, params }: LayoutProps<"/[
   return (
     <NextIntlClientProvider messages={messages}>
       <SiteTrafficReporter />
-      <SiteHeader links={PUBLIC_SITE_LINKS} />
+      <SiteHeader />
       <main className="flex flex-1 flex-col">{children}</main>
       <SiteFooter />
     </NextIntlClientProvider>

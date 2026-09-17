@@ -155,10 +155,11 @@ describe("the #extension anchor", () => {
     expect(strip).toContain('id="extension"');
     expect(strip).toContain("scroll-mt-20");
     expect(strip).toContain('window.location.hash === "#extension"');
-    // The header and footer now live in components/layout and point at the strip from every
-    // public page, so the anchor carries a leading slash.
-    expect(read("src/components/layout/SiteHeader.tsx")).toContain('"/#extension"');
+    // The footer lives in components/layout and points at the strip from every public page, so
+    // the anchor carries a leading slash. The header stopped listing it on 2026-09-17: one link
+    // set for every signed-out page, and "how it works" is the only anchor in it.
     expect(read("src/components/layout/SiteFooter.tsx")).toContain('"/#extension"');
+    expect(read("src/components/layout/SiteHeader.tsx")).not.toContain('"/#extension"');
   });
 });
 

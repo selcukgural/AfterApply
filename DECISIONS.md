@@ -7179,3 +7179,51 @@ karşılıyor; sayfa sade `findArticleBySlug` + `notFound`. Yan bulgu: bilinmeye
 Doğrulama bu kez **prod build** ile (`next build && next start`): 301 hedefleri, yönlendirilen
 makale 200, bilinmeyen slug 404, log'da hata yok. Kaynak-sözleşme testi sayfada `redirect(`
 /`force-dynamic` olmamasını ve `dynamicParams = false`'u pinliyor.
+
+## Navigasyon yeniden gruplandı: nesneye göre, tek kaynaktan, her cihazda aynı (2026-09-17)
+
+**Neden.** Kullanıcı "menüler yanlış gruplanmış gibi" dedi; senior front-end gözüyle canlı site +
+kod incelendi, on bulgu ve öneri bir design canvas'ta (mevcut/önerilen mock'lar, gerekçe
+pinleri, iki varyant) gösterildi; **Varyant A** seçildi. Teşhis tek cümle: menüler nesneye göre
+değil, özelliğin eklendiği tarihe göre gruplanmıştı.
+
+**Bulgular (özet).** B1 "Keşfet" okuma sayfası + form + aracı tek listede tutuyordu; "Maaş
+Bilgisi" isim gibi okunup forma gidiyordu. B2 Değerlendirme *yazmak* Keşfet'te, *yazdıklarım*
+avatar menüsündeydi. B3 Mobil çekmece masaüstünden bağımsız ikinci bir listeydi ("Keşfet" yok,
+"Ücretsiz araçlar" var, "Yeni başvuru" hiç yok). B5 Ziyaretçi header'ı ana sayfada 5, diğer
+public sayfalarda 4 farklı link gösteriyordu. B6 Footer "Ürün" sütunu 4/5 anchor, "Kaynaklar"
+altında 6 hukuki metin dâhil 10 kalemdi. B7 /companies üç adla anılıyordu (Şirketler / Şirket
+dizini / Şirket değerlendirmeleri), /benchmark üç adla. B8 Avatar menüsünde Yardım ilk sıradaydı.
+B9 Ana eylem dropdown'un dibindeydi. B10 Maaş linkleri `companySalaries.enabled`'ı okumuyordu.
+
+**Karar.**
+1. **Giriş yapmış satır:** `Panel · Başvurular▾ (Tüm başvurular, Takip listem, İçe aktar) ·
+   CV'lerim · Şirketler▾ (Tüm şirketler ─ Değerlendirme yaz, Maaş paylaş ─ Değerlendirmelerim,
+   Maaşlarım) · Araçlar▾ ([Haftalık İlanlar Pro], CV Tarama, Kıyaslama, Rehber)` + sağda kalıcı
+   **Yeni başvuru** birincil butonu, Öneriler/Bildirimler ikonları, avatar. Avatar menüsü yalnız
+   hesap: Hesap ayarları · Pro plan · Yönetim ─ Yardım ─ dil/tema ─ Çıkış.
+2. **Tek kaynak:** `navGroups.ts` `buildNavEntries(config)` satırı da mobil çekmeceyi de
+   üretir; iki liste bir daha ayrışamaz (sözleşme testi `entries.map` sayısını pinler).
+   `ExploreMenu.tsx` silindi; `NavMenu` veri güdümlü kaldı.
+3. **Fiil = eylem, isim = sayfa:** `writeReview` "Değerlendirme yaz", `shareSalary` "Maaş paylaş".
+4. **Ziyaretçi header'ı tek set** (`SITE_LINKS`, `links` prop'u yok): Nasıl çalışır · Şirketler ·
+   Kıyaslama · Rehber · Yardım. Eklenti/Özellikler/Misyon anchor'ları yalnız footer'da.
+5. **Footer 3 sütun:** Ürün (anchor'lar + Chrome Web Store) · Keşfet (Şirketler, CV Tarama,
+   Kıyaslama, Rehber, Yardım Merkezi) · Yasal (6 metin).
+6. **Etiket sözlüğü** (test: `navGroups.test.ts` "one name per destination"): /companies =
+   Şirketler (menü içinde "Tüm şirketler"), /benchmark = Kıyaslama (eski "Kıyas" / "Geri dönüş
+   oranı kıyaslama"), 404 kapısı da "Şirketler". Nav'da "Ücretsiz" kelimesi yasak.
+7. **Flag:** Şirketler grubu `companyReviews.enabled`, maaş öğeleri `companySalaries.enabled`,
+   Haftalık İlanlar `jobSources.enabled` — sayfaların kendi kuralıyla aynı.
+8. Panel sayfasının kendi "Yeni Başvuru" butonu `md:hidden`: masaüstünde header'daki yeter, telefonda
+   header'ınki çekmecede olduğundan sayfa kendi butonunu tutar.
+
+**Dokunulmayan.** `siteNav.goToDashboard` landing'de hâlâ kullanılıyor (kaldırılmadı). Yardım
+merkezi ekran görüntüleri (`web/public/help/screenshots/*`) zaten 15 Eyl D3 header'ından önceki
+düz navbar'ı gösteriyordu; bu değişiklikle yeniden çekilmedi, ayrı iş. Eklentiye dokunulmadı.
+
+**Doğrulama.** vitest 596/596 (yeni `navGroups.test.ts` 10, güncellenen `siteChrome`/`landing`/
+`weeklyJobs` sözleşmeleri), tsc, eslint, `next build`; prod build (`next start`, port 3000 —
+CORS yalnız 3000'e izinli, 3100'de OAuth düğmeleri kaybolup yanıltmıştı) + yerel API ile Chrome'da
+1400px ve 400px: ziyaretçi header/footer, giriş yapmış satır + üç dropdown + avatar, mobil
+çekmece, /contribute'ta Şirketler altı çizili.
