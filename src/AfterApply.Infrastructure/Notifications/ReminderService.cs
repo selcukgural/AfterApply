@@ -266,6 +266,102 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         return await applicationService.GhostApplicationsAsync(userId, applicationIds, cancellationToken);
     }
 
+    public async Task<ReminderPauseResponse> GetPauseAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var pause = await dbContext.Users
+            .Where(u => u.Id == userId)
+            .Select(u => new { u.RemindersPausedFrom, u.RemindersPausedUntil })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (pause?.RemindersPausedUntil is null || pause.RemindersPausedFrom is null)
+        {
+            return new ReminderPauseResponse(ReminderPauseState.None, null, null, 0);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (now < pause.RemindersPausedUntil)
+        {
+            return new ReminderPauseResponse(ReminderPauseState.Paused, pause.RemindersPausedFrom, pause.RemindersPausedUntil, 0);
+        }
+
+        var silenced = await SilencedDuringPause(userId, pause.RemindersPausedFrom.Value).CountAsync(cancellationToken);
+        return new ReminderPauseResponse(ReminderPauseState.Returned, pause.RemindersPausedFrom, pause.RemindersPausedUntil, silenced);
+    }
+
+    public async Task<ReminderPauseResponse> PauseAsync(Guid userId, PauseRemindersRequest request, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var until = now.AddDays(request.Days);
+        await dbContext.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(u => u.RemindersPausedFrom, now)
+                .SetProperty(u => u.RemindersPausedUntil, until), cancellationToken);
+
+        return new ReminderPauseResponse(ReminderPauseState.Paused, now, until, 0);
+    }
+
+    public async Task<ReminderPauseResponse> EndPauseAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        // Only a running break is cut short; an ended one keeps its real end date so the return
+        // question still describes the break the user actually took.
+        await dbContext.Users
+            .Where(u => u.Id == userId && u.RemindersPausedUntil > now)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.RemindersPausedUntil, now), cancellationToken);
+
+        return await GetPauseAsync(userId, cancellationToken);
+    }
+
+    public async Task AcknowledgePauseAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        await ClearPauseAsync(userId, cancellationToken);
+    }
+
+    public async Task<BulkChangeStatusResponse> CloseSilencedAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var pausedFrom = await dbContext.Users
+            .Where(u => u.Id == userId)
+            .Select(u => u.RemindersPausedFrom)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (pausedFrom is null)
+        {
+            return new BulkChangeStatusResponse(0, 0, []);
+        }
+
+        var applicationIds = await SilencedDuringPause(userId, pausedFrom.Value)
+            .Select(r => r.ApplicationId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        // Same act as the card's bulk "mark as ghosted": the status change is the answer, the
+        // application service retires the reminders behind it, and the response carries what it
+        // moved so the strip's undo can put it back.
+        var result = await applicationService.GhostApplicationsAsync(userId, applicationIds, cancellationToken);
+        await ClearPauseAsync(userId, cancellationToken);
+        return result;
+    }
+
+    /// <summary>The open "possibly ghosted" reminders raised since the break began. Follow-up
+    /// reminders are excluded on purpose: an application that replied and then went quiet is a
+    /// conversation to pick up, not one to close.</summary>
+    private IQueryable<Reminder> SilencedDuringPause(Guid userId, DateTimeOffset pausedFrom)
+    {
+        return dbContext.Reminders
+            .Where(r => r.UserId == userId && r.DismissedAt == null
+                        && r.Type == ReminderType.PossiblyGhosted && r.CreatedAt >= pausedFrom);
+    }
+
+    private async Task ClearPauseAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        await dbContext.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(u => u.RemindersPausedFrom, (DateTimeOffset?)null)
+                .SetProperty(u => u.RemindersPausedUntil, (DateTimeOffset?)null), cancellationToken);
+    }
+
     public async Task<int> ScanAndGenerateRemindersAsync(CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;

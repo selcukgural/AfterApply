@@ -290,12 +290,13 @@ public class ReminderTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost
         (await GetRemindersAsync()).ShouldHaveSingleItem();
     }
 
-    private async Task<Guid> InsertReminderAsync(Guid applicationId, ReminderType type, DateTimeOffset referenceAt)
+    private async Task<Guid> InsertReminderAsync(Guid applicationId, ReminderType type, DateTimeOffset referenceAt,
+        DateTimeOffset? createdAt = null)
     {
         using var scope = _factory!.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var userId = await dbContext.Applications.Where(a => a.Id == applicationId).Select(a => a.UserId).SingleAsync();
-        var reminder = Reminder.Create(userId, applicationId, type, referenceAt, 10, DateTimeOffset.UtcNow);
+        var reminder = Reminder.Create(userId, applicationId, type, referenceAt, 10, createdAt ?? DateTimeOffset.UtcNow);
         dbContext.Reminders.Add(reminder);
         await dbContext.SaveChangesAsync();
         return reminder.Id;
@@ -668,5 +669,136 @@ public class ReminderTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost
         result.Affected.ShouldBe(1);
         (await GetRemindersAsync()).ShouldBeEmpty();
         (await GetRemindersAsync(otherClient)).ShouldHaveSingleItem();
+    }
+
+    // ----- The break (T5) -----
+
+    private async Task<ReminderPauseResponse> GetPauseAsync(HttpClient? client = null)
+    {
+        var response = await (client ?? _client).GetAsync("/api/reminders/pause");
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<ReminderPauseResponse>(JsonOptions))!;
+    }
+
+    /// <summary>Writes the break straight to the user row: there is no fake clock in the host, so a
+    /// break that has already ended can only be arranged by dating it in the past.</summary>
+    private async Task SetPauseAsync(DateTimeOffset from, DateTimeOffset until)
+    {
+        using var scope = _factory!.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await dbContext.Users
+            .Where(u => u.Email == "reminders.test@example.com")
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(u => u.RemindersPausedFrom, from)
+                .SetProperty(u => u.RemindersPausedUntil, until));
+    }
+
+    [Fact]
+    public async Task Pause_Starts_At_None_And_A_Week_Off_Ends_A_Week_From_Now()
+    {
+        (await GetPauseAsync()).State.ShouldBe(ReminderPauseState.None);
+
+        var response = await _client.PutAsJsonAsync("/api/reminders/pause", new PauseRemindersRequest(7), JsonOptions);
+        response.EnsureSuccessStatusCode();
+        var pause = (await response.Content.ReadFromJsonAsync<ReminderPauseResponse>(JsonOptions))!;
+
+        pause.State.ShouldBe(ReminderPauseState.Paused);
+        pause.PausedUntil!.Value.ShouldBe(DateTimeOffset.UtcNow.AddDays(7), TimeSpan.FromMinutes(1));
+        pause.SilencedCount.ShouldBe(0);
+
+        (await GetPauseAsync()).State.ShouldBe(ReminderPauseState.Paused);
+    }
+
+    [Fact]
+    public async Task Pause_Refuses_Any_Length_But_The_Three_Offered()
+    {
+        var response = await _client.PutAsJsonAsync("/api/reminders/pause", new PauseRemindersRequest(3), JsonOptions);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await GetPauseAsync()).State.ShouldBe(ReminderPauseState.None);
+    }
+
+    [Fact]
+    public async Task Ending_A_Running_Break_Leaves_The_Return_Question_Waiting()
+    {
+        await _client.PutAsJsonAsync("/api/reminders/pause", new PauseRemindersRequest(14), JsonOptions);
+
+        var response = await _client.PostAsync("/api/reminders/pause/end", null);
+        response.EnsureSuccessStatusCode();
+        var pause = (await response.Content.ReadFromJsonAsync<ReminderPauseResponse>(JsonOptions))!;
+
+        pause.State.ShouldBe(ReminderPauseState.Returned);
+        pause.PausedUntil!.Value.ShouldBe(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
+    }
+
+    [Fact]
+    public async Task The_Return_Question_Counts_Only_What_Went_Quiet_During_The_Break()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var before = await CreateApplicationAsync(_client, "Before Co", now.AddDays(-80));
+        var during = await CreateApplicationAsync(_client, "During Co", now.AddDays(-60));
+        var followUp = await CreateApplicationAsync(_client, "Replied Co", now.AddDays(-50));
+
+        // Raised before the break, during it, and — during it — a follow-up rather than a ghost.
+        await InsertReminderAsync(before, ReminderType.PossiblyGhosted, now.AddDays(-80), createdAt: now.AddDays(-20));
+        await InsertReminderAsync(during, ReminderType.PossiblyGhosted, now.AddDays(-60), createdAt: now.AddDays(-5));
+        await InsertReminderAsync(followUp, ReminderType.FollowUp, now.AddDays(-50), createdAt: now.AddDays(-5));
+
+        await SetPauseAsync(from: now.AddDays(-10), until: now.AddDays(-1));
+
+        var pause = await GetPauseAsync();
+        pause.State.ShouldBe(ReminderPauseState.Returned);
+        pause.SilencedCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Closing_The_Silenced_Ghosts_Them_Clears_The_Break_And_Can_Be_Undone()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var before = await CreateApplicationAsync(_client, "Before Co", now.AddDays(-80));
+        var during = await CreateApplicationAsync(_client, "During Co", now.AddDays(-60));
+        await InsertReminderAsync(before, ReminderType.PossiblyGhosted, now.AddDays(-80), createdAt: now.AddDays(-20));
+        await InsertReminderAsync(during, ReminderType.PossiblyGhosted, now.AddDays(-60), createdAt: now.AddDays(-5));
+        await SetPauseAsync(from: now.AddDays(-10), until: now.AddDays(-1));
+
+        var response = await _client.PostAsync("/api/reminders/pause/close-silenced", null);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<BulkChangeStatusResponse>(JsonOptions))!;
+
+        result.Updated.ShouldBe(1);
+        (await GetStatusAsync(during)).ShouldBe(ApplicationStatus.Ghosted);
+        (await GetStatusAsync(before)).ShouldBe(ApplicationStatus.Applied);
+        (await GetPauseAsync()).State.ShouldBe(ReminderPauseState.None);
+
+        // The same undo as the card's bulk answer: the response carried what moved.
+        var undo = await _client.PostAsJsonAsync("/api/reminders/bulk/ghost/undo",
+            new UndoBulkStatusRequest(result.Changes.Select(c => new UndoBulkStatusEntry(c.ApplicationId, c.ToStatus, c.FromStatus)).ToList()),
+            JsonOptions);
+        undo.EnsureSuccessStatusCode();
+        (await GetStatusAsync(during)).ShouldBe(ApplicationStatus.Applied);
+    }
+
+    [Fact]
+    public async Task Not_Now_Clears_The_Break_And_Touches_Nothing()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var during = await CreateApplicationAsync(_client, "During Co", now.AddDays(-60));
+        await InsertReminderAsync(during, ReminderType.PossiblyGhosted, now.AddDays(-60), createdAt: now.AddDays(-5));
+        await SetPauseAsync(from: now.AddDays(-10), until: now.AddDays(-1));
+
+        var response = await _client.PostAsync("/api/reminders/pause/acknowledge", null);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await GetPauseAsync()).State.ShouldBe(ReminderPauseState.None);
+        (await GetStatusAsync(during)).ShouldBe(ApplicationStatus.Applied);
+        (await GetRemindersAsync()).ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task A_Break_Is_The_Callers_Own()
+    {
+        var other = await CreateAuthenticatedClientAsync("reminders.other@example.com");
+        await _client.PutAsJsonAsync("/api/reminders/pause", new PauseRemindersRequest(7), JsonOptions);
+
+        (await GetPauseAsync(other)).State.ShouldBe(ReminderPauseState.None);
     }
 }

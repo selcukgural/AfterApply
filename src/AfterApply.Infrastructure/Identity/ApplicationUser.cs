@@ -72,4 +72,16 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     /// yet worth its migration.
     /// </summary>
     public DateTimeOffset? WeeklyJobsAnnouncementDismissedAt { get; set; }
+
+    /// <summary>
+    /// The break the user asked for (DEVELOPMENT_PLAN.md, T-series, T5): from when, and until when,
+    /// the dashboard keeps reminders and the stale-applications question out of sight. The scan
+    /// keeps running underneath — the rows are what lets the return say "N went quiet while you were
+    /// away" — only the showing stops. Both null: no break. Until in the past: the break is over
+    /// and the return question is still waiting to be answered; answering clears both. Third and
+    /// fourth nullable timestamps on the user row, same reasoning as the two above.
+    /// </summary>
+    public DateTimeOffset? RemindersPausedFrom { get; set; }
+
+    public DateTimeOffset? RemindersPausedUntil { get; set; }
 }

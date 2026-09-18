@@ -117,6 +117,43 @@ public static class ReminderEndpoints
                              "batch was resolved from the caller's own reminders, never from a client-chosen filter.")
             .Produces<UndoBulkStatusResponse>();
 
+        // The break (T5). A person who has been searching for months sometimes needs a week off
+        // from the board; these let them take it without the reminders piling up in their face,
+        // and let the return be one question rather than a backlog.
+        group.MapGet("/pause", async (ClaimsPrincipal user, IReminderService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetPauseAsync(user.GetUserId(), cancellationToken)))
+            .WithSummary("Where the current user's break from reminders stands")
+            .Produces<ReminderPauseResponse>();
+
+        group.MapPut("/pause", async (PauseRemindersRequest request, ClaimsPrincipal user, IReminderService service,
+                CancellationToken cancellationToken) =>
+                Results.Ok(await service.PauseAsync(user.GetUserId(), request, cancellationToken)))
+            .WithValidation<PauseRemindersRequest>()
+            .WithSummary("Start a break from reminders")
+            .WithDescription("Hides the reminders card and the stale-applications question from the dashboard for 7, 14 or " +
+                             "30 days. The nightly scan keeps running underneath. A break already running is replaced.")
+            .Produces<ReminderPauseResponse>();
+
+        group.MapPost("/pause/end", async (ClaimsPrincipal user, IReminderService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.EndPauseAsync(user.GetUserId(), cancellationToken)))
+            .WithSummary("End a running break now")
+            .Produces<ReminderPauseResponse>();
+
+        group.MapPost("/pause/acknowledge", async (ClaimsPrincipal user, IReminderService service, CancellationToken cancellationToken) =>
+            {
+                await service.AcknowledgePauseAsync(user.GetUserId(), cancellationToken);
+                return Results.NoContent();
+            })
+            .WithSummary("Answer the return question with \"not now\"")
+            .Produces(StatusCodes.Status204NoContent);
+
+        group.MapPost("/pause/close-silenced", async (ClaimsPrincipal user, IReminderService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.CloseSilencedAsync(user.GetUserId(), cancellationToken)))
+            .WithSummary("Answer the return question with \"yes, close them\"")
+            .WithDescription("Moves every application that went quiet during the break to Ghosted and clears the break. " +
+                             "The response is a bulk status change's, and POST /bulk/ghost/undo takes it back.")
+            .Produces<BulkChangeStatusResponse>();
+
         return app;
     }
 

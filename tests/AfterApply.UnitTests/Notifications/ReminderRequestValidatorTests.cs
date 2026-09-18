@@ -69,4 +69,20 @@ public class ReminderRequestValidatorTests
         validator.Validate(new GetRemindersQuery(PageSize: 51)).IsValid.ShouldBeFalse();
         validator.Validate(new GetRemindersQuery(Page: 245, PageSize: 50)).IsValid.ShouldBeTrue();
     }
+
+    [Theory]
+    [InlineData(7, true)]
+    [InlineData(14, true)]
+    [InlineData(30, true)]
+    [InlineData(0, false)]
+    [InlineData(1, false)]
+    [InlineData(-7, false)]
+    [InlineData(31, false)]
+    [InlineData(365, false)]
+    public void A_Break_Is_A_Week_A_Fortnight_Or_A_Month_And_Nothing_Else(int days, bool valid)
+    {
+        // The profile card offers three lengths and the API accepts exactly those — a year-long
+        // "break" typed into a request body is not a break, it is turning the feature off.
+        new PauseRemindersRequestValidator().Validate(new PauseRemindersRequest(days)).IsValid.ShouldBe(valid);
+    }
 }

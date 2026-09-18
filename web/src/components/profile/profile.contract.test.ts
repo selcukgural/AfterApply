@@ -74,4 +74,32 @@ describe("the profile page", () => {
     expect(tr.nav.profile).toBe(tr.profile.title);
     expect(en.nav.profile).toBe(en.profile.title);
   });
+
+  it("offers a break in the three lengths the API accepts, and only from the profile (T5)", () => {
+    const card = read("components/profile/BreakCard.tsx");
+    const api = read("lib/api/reminders.ts");
+    const gate = read("components/dashboard/ReminderBreakGate.tsx");
+    const dashboard = read("app/[locale]/(protected)/dashboard/page.tsx");
+
+    expect(page).toContain("<BreakCard />");
+    expect(api).toContain("export const BREAK_LENGTHS = [7, 14, 30] as const;");
+    expect(card).toContain("BREAK_LENGTHS.map");
+    for (const messages of [tr, en]) {
+      expect(Object.keys(messages.profile.break.length)).toEqual(["7", "14", "30"]);
+    }
+
+    // The dashboard hides exactly the two things a break is about, and nothing else, and the
+    // way back is the profile — the gate never starts a break itself.
+    expect(dashboard).toContain("<ReminderBreakGate>\n            <StaleApplicationsBanner />\n            <RemindersPanel />\n          </ReminderBreakGate>");
+    expect(gate).toContain('href="/profile"');
+    expect(gate).not.toContain("useStartBreak");
+  });
+
+  it("greets the return with one question and never with the pile, in both languages", () => {
+    for (const messages of [tr, en]) {
+      expect(messages.dashboard.break.returnedSome).toContain("{count");
+      expect(messages.dashboard.break.returnedNone).not.toContain("{count");
+      expect(messages.dashboard.break.close).toContain("{count}");
+    }
+  });
 });

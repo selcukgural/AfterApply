@@ -1225,6 +1225,18 @@ export interface ReminderResponse {
   userMedianResponseDays?: number | null;
 }
 
+/** Mirrors AfterApply.Application.Notifications.Contracts.ReminderPauseState. */
+export type ReminderPauseState = "None" | "Paused" | "Returned";
+
+/** Mirrors AfterApply.Application.Notifications.Contracts.ReminderPauseResponse — where the
+ *  user's break from reminders stands (T5). `silencedCount` is only meaningful in "Returned". */
+export interface ReminderPauseResponse {
+  state: ReminderPauseState;
+  pausedFrom: string | null;
+  pausedUntil: string | null;
+  silencedCount: number;
+}
+
 /** Mirrors AfterApply.Application.Notifications.Contracts.ReminderSelection: the ticked ids, or
  *  "all" — every active reminder, resolved on the server, which is why `all` travels with an
  *  `expectedCount` on the request. */

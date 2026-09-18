@@ -3,6 +3,7 @@ import type {
   BulkReminderRequest,
   BulkReminderResponse,
   PagedResult,
+  ReminderPauseResponse,
   ReminderResponse,
   UndoBulkStatusEntry,
   UndoBulkStatusResponse,
@@ -45,4 +46,22 @@ export const remindersApi = {
       method: "POST",
       body: JSON.stringify({ entries }),
     }),
+
+  /** The break (T5): where it stands, start one, end one early, and the two answers to the
+   *  question that greets the return. */
+  getPause: () => apiFetch<ReminderPauseResponse>("/api/reminders/pause"),
+
+  pause: (days: BreakLength) =>
+    apiFetch<ReminderPauseResponse>("/api/reminders/pause", { method: "PUT", body: JSON.stringify({ days }) }),
+
+  endPause: () => apiFetch<ReminderPauseResponse>("/api/reminders/pause/end", { method: "POST" }),
+
+  acknowledgePause: () => apiFetch<void>("/api/reminders/pause/acknowledge", { method: "POST" }),
+
+  /** Ghosts everything that went quiet during the break and clears it; bulkGhostUndo takes it back. */
+  closeSilenced: () => apiFetch<BulkChangeStatusResponse>("/api/reminders/pause/close-silenced", { method: "POST" }),
 };
+
+/** The three lengths the API accepts (PauseRemindersRequestValidator). */
+export const BREAK_LENGTHS = [7, 14, 30] as const;
+export type BreakLength = (typeof BREAK_LENGTHS)[number];

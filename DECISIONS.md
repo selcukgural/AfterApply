@@ -7461,3 +7461,58 @@ nötr kalın. `StatusBadge.test.ts` hiçbir durumun `red-`/`rose-` almadığın�
 gösteren dört yardım görseli (`applications-list`, `applications-company-view`,
 `applications-bulk`, `suggestions-list`) demo hesabından yeniden çekildi — hesap verisi
 değişmedi. T5 (mola modu) ikinci parti.
+
+---
+
+## T5 mola modu: hatırlatıcılar susar, dönüşte tek soru (2026-09-18)
+
+**Ne.** T-serisinin dördüncü maddesi. Profil sayfasındaki "Ara ver" kartından 1 hafta / 2 hafta /
+1 ay seçilir; süre boyunca panoda hatırlatıcı kartı ve bayat başvuru sorusu görünmez, yerinde tek
+sönük satır durur ("Moladasın — hatırlatıcılar {tarih} tarihine kadar kapalı · Molayı bitir").
+Süre dolunca (ya da erken bitirilince) panoda tek soru: *"Hoş geldin. Ara verdiğin sürede N
+başvuru sessizleşti — hepsini kapatalım mı? Geri alınabilir."* — **Evet, kapat (N)** /
+**Şimdi değil**; N=0 ise "sessizleşen başvuru olmadı" + **Tamam**. Cevaplanınca kart olduğu gibi
+geri gelir. Uzun arayanın en sağlıklı davranışlarından biri bir hafta durmaktır; ara vermek churn
+değildir, churn dönmeye korkmaktır. Cümleler koda geçmeden önce onaylandı.
+
+**Plandan sapma — tarama durmuyor.** Plan "tarama bu kullanıcı için satır üretmez" demişti;
+yapılmadı. Gerekçe: dönüşteki N ancak satırlar üretilirse doğru olur, ve mola bir veri/gizlilik
+kararı değil bir **ekran** kararıdır. Kullanıcının yüzüne hiçbir şey birikmez — görünüm gizli —
+ama arkada hiçbir şey kaybolmaz.
+
+**Model.** `ApplicationUser.RemindersPausedFrom/Until` (nullable, migration
+`AddRemindersPause`; kullanıcı satırındaki üçüncü/dördüncü nullable zaman damgası, aynı gerekçe).
+Üç durum türetilir, saklanmaz: **None** (until yok) → **Paused** (şimdi < until) → **Returned**
+(until geçti, soru cevaplanana kadar). "Sessizleşen" = mola başladıktan sonra üretilmiş, hâlâ açık
+`PossiblyGhosted` hatırlatıcıları; **takip hatırlatıcıları bilerek dışarıda** — cevap almış sonra
+susmuş bir başvuru kapatılacak değil, sürdürülecek bir konuşmadır.
+
+**Uçlar** (`/api/reminders/pause`): `GET` durum; `PUT {days}` başlat (yalnız 7/14/30 —
+`PauseRemindersRequestValidator`; koşan mola **uzatılmaz, değiştirilir**); `POST /end` erken bitir
+(yalnız koşan molayı; bitmiş olanın gerçek bitiş tarihi korunur); `POST /acknowledge` "şimdi
+değil" (alanları temizler, hiçbir şeye dokunmaz); `POST /close-silenced` "evet" (sessizleşenleri
+`GhostApplicationsAsync` ile Kayboldu yapar — kartın toplu cevabıyla aynı yol, aynı `BulkChange
+StatusResponse`, `bulk/ghost/undo` ile geri alınır — ve molayı temizler). Hepsi kullanıcıya bağlı,
+yeni yanıt alanı yok, `RequestAudit` otomatik. Haftalık ilan e-postası **etkilenmez** (ödenmiş
+hizmet, mola onu kesmez) — kod değişikliği gerekmedi.
+
+**Web.** `hooks/useReminderBreak.ts` (anahtar `["reminders","pause"]` — hatırlatıcı
+invalidasyonları molayı da tazeler), `components/dashboard/ReminderBreakGate` (panoda
+`StaleApplicationsBanner` + `RemindersPanel`'i sarar; None → çocuklar, Paused → satır, Returned →
+soru; "evet"ten sonra kartın aynı `BulkResultBanner` şeridi + geri al), `components/profile/
+BreakCard` (üç düğme / molada bitir / döndüyse "panoda seni kısa bir soru bekliyor"). Kapı mola
+**başlatmaz**, yol profil — `profile.contract.test.ts` bunu ve üç süreyi pinliyor. Yardım
+merkezi pano sayfasına "Ara vermek" bölümü eklendi.
+
+**Testler.** Birim 973 (+3 validator), entegrasyon 550/550 (+7: None→Paused ve until≈+7g, 3 gün
+400, erken bitirme Returned, sayım yalnız mola içi ghost'ları sayar, "evet" kapatır + temizler +
+geri alınır, "şimdi değil" temizler ve dokunmaz, başkasının molası görünmez), vitest 637 (+2
+sözleşme), tsc + eslint temiz. Tarayıcıda (yerel yığın, demo hesap): profil → "1 hafta" → kart
+"25 Eylül 2026'ya kadar" + Molayı bitir; panoda kart ve soru gitti, tek satır; DB'de bitmiş mola
+kurgulanıp panoda "2 başvuru sessizleşti — Evet, kapat (2) / Şimdi değil"; "Şimdi değil" → durum
+None, kart geri, demo hesabın hiçbir başvurusu değişmedi.
+
+**Dal notu.** `feat/retention-t5-pause-mode` `origin/main`'den açıldı; #69 (T1/T3/T6) henüz
+merge değil. #69 main'e geçince bu dal yeniden rebase edilecek (`dashboard/page.tsx` ve
+`RemindersPanel` ortak dokunma noktaları); T-serisi bölümü de #69'da olduğu için
+`DEVELOPMENT_PLAN.md`'deki T5 ✅ işareti o rebase'le birlikte gelir.

@@ -740,6 +740,17 @@
       "sample3Title": "Software Developer",
       "sample3Company": "Marmara Yazılım · İstanbul",
       "close": "Close the announcement"
+    },
+    "break": {
+      "paused": "You're on a break — reminders are off until {date}.",
+      "end": "End the break",
+      "returnedSome": "Welcome back. {count, plural, one {# application} other {# applications}} went quiet while you were away — close them all? Reversible.",
+      "returnedNone": "Welcome back. Nothing went quiet while you were away.",
+      "close": "Yes, close them ({count})",
+      "closing": "Closing...",
+      "notNow": "Not now",
+      "ok": "OK",
+      "error": "That didn't go through. Try again."
     }
   },
   "applications": {
@@ -1927,6 +1938,10 @@
       "outcome": {
         "title": "Outcome",
         "body": "A breakdown of applications that have finished: offer/accepted, no answer, withdrawn and rejected. The band at the top shows their proportions and the line at the bottom gives your share of positive outcomes. Applications still in flight are left out of this."
+      },
+      "break": {
+        "title": "Taking a break",
+        "body": "The \"Take a break\" card on your profile gives you a week, two weeks or a month off. During the break the reminders card and the stale-applications question stay off the dashboard; your data stays where it is and the daily scan keeps running underneath. When you come back, one question greets you rather than a pile: whether to close, in one go, the applications that went quiet while you were away. Closing them is reversible; \"Not now\" brings the card back as it was. You can end the break from your profile at any time."
       }
     },
     "trackedJobs": {
@@ -5137,6 +5152,20 @@
       "applications": "applications",
       "trackedJobs": "tracked jobs",
       "cvs": "CVs"
+    },
+    "break": {
+      "title": "Take a break",
+      "body": "Reminders and the stale-applications question stay off the dashboard for as long as you choose. Your data stays where it is; when you come back, one question greets you, not a pile.",
+      "length": {
+        "7": "1 week",
+        "14": "2 weeks",
+        "30": "1 month"
+      },
+      "paused": "You're on a break — reminders are off until {date}.",
+      "end": "End the break",
+      "returned": "Your break is over. A short question is waiting on the dashboard.",
+      "goToDashboard": "Go to the dashboard",
+      "error": "That didn't go through. Try again."
     }
   },
   "candidateExperiences": {
