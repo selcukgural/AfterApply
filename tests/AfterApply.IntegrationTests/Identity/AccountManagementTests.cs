@@ -493,7 +493,7 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
     {
         var response = await client.PostAsJsonAsync($"/api/companies/{companyId}/salaries",
             new CompanySalaryRequest(Occupation.IdFor("2512"), 6, EmploymentType.FullTime, SalaryEmploymentStatus.CurrentEmployee,
-                95_000m, SalaryCurrency.TRY, true, 120_000m), JsonOptions);
+                95_000m, SalaryCurrency.TRY, true, 120_000m, PeriodStartYear: 2024), JsonOptions);
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         return (await response.Content.ReadFromJsonAsync<MyCompanySalaryResponse>(JsonOptions))!.Id;
     }

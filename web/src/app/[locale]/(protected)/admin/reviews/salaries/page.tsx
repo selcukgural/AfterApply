@@ -9,7 +9,7 @@ import type { AdminCompanySalaryListItem } from "@/types/api";
 import { adminApi } from "@/lib/api/admin";
 import { ApiError } from "@/lib/api/httpClient";
 import { parseContributionFilters, toContributionSearchParams, withCompanyChange } from "@/lib/admin/contributionListView";
-import { formatAmount, occupationName } from "@/lib/companySalaries/salaryDraft";
+import { formatAmount, formatSalaryPeriod, occupationName } from "@/lib/companySalaries/salaryDraft";
 import { clampPage } from "@/lib/dashboard/reminders";
 import { Card } from "@/components/dashboard/Card";
 import { Button } from "@/components/ui/Button";
@@ -116,6 +116,7 @@ export default function AdminSalariesPage() {
                 <th className="px-4 py-2 font-medium">{t("columns.occupation")}</th>
                 <th className="px-4 py-2 font-medium">{t("columns.net")}</th>
                 <th className="px-4 py-2 font-medium">{t("columns.years")}</th>
+                <th className="px-4 py-2 font-medium">{t("columns.period")}</th>
                 <th className="px-4 py-2 font-medium">{t("columns.author")}</th>
                 <th className="px-4 py-2 font-medium">{t("columns.submitted")}</th>
               </tr>
@@ -135,6 +136,9 @@ export default function AdminSalariesPage() {
                   <td className="max-w-[14rem] truncate px-4 py-2 text-gray-700 dark:text-gray-300">{occupationName(item.occupation, locale)}</td>
                   <td className="px-4 py-2 tabular-nums text-gray-900 dark:text-gray-100">{formatAmount(locale, item.monthlyNetAmount, item.currency)}</td>
                   <td className="px-4 py-2 tabular-nums text-gray-700 dark:text-gray-300">{item.yearsOfExperience}</td>
+                  <td className="px-4 py-2 tabular-nums text-gray-700 dark:text-gray-300">
+                    {formatSalaryPeriod(item, tMine("periodOngoing")) ?? tMine("periodMissing")}
+                  </td>
                   <td className="max-w-[14rem] truncate px-4 py-2 text-gray-700 dark:text-gray-300">{item.authorEmail}</td>
                   <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{formatDate(item.submittedAt)}</td>
                 </tr>
@@ -199,6 +203,8 @@ export default function AdminSalariesPage() {
               </dd>
               <dt className="text-gray-600 dark:text-gray-400">{t("detail.years")}</dt>
               <dd className="text-gray-900 dark:text-gray-100">{tMine("years", { count: open.yearsOfExperience })}</dd>
+              <dt className="text-gray-600 dark:text-gray-400">{t("detail.period")}</dt>
+              <dd className="tabular-nums text-gray-900 dark:text-gray-100">{formatSalaryPeriod(open, tMine("periodOngoing")) ?? tMine("periodMissing")}</dd>
               <dt className="text-gray-600 dark:text-gray-400">{t("detail.employment")}</dt>
               <dd className="text-gray-900 dark:text-gray-100">
                 {tType(open.employmentType)} · {tStatus(open.employmentStatus)}

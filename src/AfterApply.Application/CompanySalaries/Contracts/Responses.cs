@@ -5,7 +5,7 @@ using AfterApply.Domain.CompanySalaries;
 namespace AfterApply.Application.CompanySalaries.Contracts;
 
 // Three shapes, never mixed: what a signed-in reader sees of other people's rows (no author, the
-// experience band instead of the years, a month instead of a date), what the author sees of
+// experience band instead of the years, the period in years), what the author sees of
 // their own, and — behind the admin gate only — the row with its author joined. The public
 // record must not gain the years or an author field "because it is handy" — the anonymity
 // promise on the privacy page is exactly this file. Nothing here was typed by a user: the
@@ -20,11 +20,21 @@ public sealed record CompanySalaryPublicResponse(
     decimal MonthlyNetAmount,
     SalaryCurrency Currency,
     decimal? AnnualBonusAmount,
-    /// <summary>yyyy-MM of the submission — month precision on purpose.</summary>
-    string SubmittedMonth);
+    /// <summary>yyyy-MM of the submission — month precision on purpose. Since the period exists
+    /// (2026-09-18) the page shows it only on a row that has no period.</summary>
+    string SubmittedMonth,
+    /// <summary>The years the salary was drawn in; both null on a row written before the period
+    /// existed whose author has not edited it since. Year precision on purpose — a month next to
+    /// an occupation at a small company would name a person.</summary>
+    int? PeriodStartYear = null,
+    int? PeriodEndYear = null,
+    /// <summary>Whether the row counts as current — <see cref="Domain.CompanySalaries.SalaryPeriods"/>.
+    /// The list puts current rows first; the page draws the rest under a "previous periods" line.</summary>
+    bool IsCurrentPeriod = true);
 
-/// <summary>Per currency, because a median across TRY and EUR rows means nothing. The three
-/// figures are null below <see cref="CompanySalaryPageResponse.MinimumForStats"/>.</summary>
+/// <summary>Per currency, because a median across TRY and EUR rows means nothing, and over the
+/// current rows only — a 2012 salary is not what the company pays. The three figures are null
+/// below <see cref="CompanySalaryPageResponse.MinimumForStats"/>.</summary>
 public sealed record SalaryCurrencyStatResponse(
     SalaryCurrency Currency,
     int Count,
@@ -38,7 +48,12 @@ public sealed record CompanySalaryPageResponse(
     int Page,
     int PageSize,
     IReadOnlyList<SalaryCurrencyStatResponse> Stats,
-    int MinimumForStats);
+    int MinimumForStats,
+    /// <summary>How many of <see cref="Total"/> are not current — the count on the "previous
+    /// periods" line, which the page draws once the current rows run out.</summary>
+    int PreviousPeriodTotal = 0,
+    /// <summary>The window behind "current", for the page's "how it is calculated" text.</summary>
+    int CurrentWindowYears = 2);
 
 /// <summary>The author's view of their own row: everything, including the exact years.</summary>
 public sealed record MyCompanySalaryResponse(
@@ -54,7 +69,9 @@ public sealed record MyCompanySalaryResponse(
     SalaryCurrency Currency,
     decimal? AnnualBonusAmount,
     DateTimeOffset SubmittedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    int? PeriodStartYear = null,
+    int? PeriodEndYear = null);
 
 public sealed record SalaryQuotaResponse(int Used, int Limit);
 
@@ -76,7 +93,9 @@ public sealed record AdminCompanySalaryListItemResponse(
     SalaryCurrency Currency,
     decimal? AnnualBonusAmount,
     DateTimeOffset SubmittedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    int? PeriodStartYear = null,
+    int? PeriodEndYear = null);
 
 public sealed record MySalariesResponse(IReadOnlyList<MyCompanySalaryResponse> Items, SalaryQuotaResponse Quota);
 

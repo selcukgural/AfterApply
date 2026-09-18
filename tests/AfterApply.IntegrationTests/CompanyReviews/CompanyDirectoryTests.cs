@@ -67,7 +67,7 @@ public class CompanyDirectoryTests(ApiHost<CompanyDirectoryProfile> host) : ICla
         ["environment.pos.team_communication"], ["pay.imp.salary_level"]);
 
     private static CompanySalaryRequest Salary() => new(Occupation.IdFor("2512"), 6, EmploymentType.FullTime,
-        SalaryEmploymentStatus.CurrentEmployee, 95_000m, SalaryCurrency.TRY, false);
+        SalaryEmploymentStatus.CurrentEmployee, 95_000m, SalaryCurrency.TRY, false, PeriodStartYear: 2024);
 
     private static CandidateExperienceRequest Experience() => new(4,
         [new ExperienceCategoryRatingDto(ExperienceCategory.Communication, 5)],

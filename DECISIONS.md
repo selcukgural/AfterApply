@@ -8021,3 +8021,63 @@ unique index'li tüm "bir kullanıcı bir şirket" kuralları, CV ≤10 (`pg_adv
 **Hangfire `UseSlidingInvisibilityTimeout = true`** (Postgres, Redis değil): 30 dk'yı aşan bir
 job (politeness gecikmeli sweep) sabit invisibility penceresi dolunca başka instance'ın
 worker'ına yeniden düşüyordu; pencere job çalıştıkça uzuyor. Config; testi yok.
+
+## Maaş kaydına dönem: yıl aralığı, "güncel / önceki dönem" ayrımı, medyan yalnızca güncelleri sayar — DECIDED (2026-09-18)
+
+**Neden.** Maaş kaydı yalnızca "kaydedildiği ay"ı taşıyordu (`SubmittedAt`, okuyucuya "Eylül
+2026"). 2012'de ayrılmış bir eski çalışanın 4.500 ₺'si 2026 etiketiyle listeleniyor ve şirketin
+medyanını aşağı çekiyordu. Kullanıcı: "maaş girildiğinde tarih aralığı girilsin, 2012 yılında
+çalışmış birinin maaşı 2026 yılında çok komik görünüyor." Tasarım kanvası
+https://claude.ai/artifact/7uSqAGksT2DsTKga6kPipQ — form için A (tek yıl) / **B** (başlangıç –
+bitiş) / C (duruma göre tek soru), okuyucu için 1 (tek liste) / **2** (güncel / önceki ayrımı)
+sunuldu; kullanıcı B + 2'yi seçti ve mevcut kayıtlarda alanın olmadığına dikkat çekti.
+
+**Ürün kararları.** Form "Çalışma durumu"nun altına "Bu maaşı hangi dönemde aldın?" satırı alır:
+iki yıl seçici, 1990'dan bu yıla. Mevcut çalışanda bitiş kilitli ("Hâlâ alıyorum", istekte
+`null`); eski çalışanda bitiş zorunlu, başlangıç ≤ bitiş ≤ bu yıl. **Yıl hassasiyeti, ay değil** —
+2026-09-16'daki anonimlik gerekçesiyle aynı: ay + meslek + şirket küçük şirkette kişiyi teşhis
+eder. Okuyucu satırda "2010 – 2012" / "2024 – halen" görür; `submittedMonth` yanıtta kaldı (ek
+kırmadan) ama UI artık yalnızca dönemi olmayan satırda "Eylül 2026'da paylaşıldı" diye gösterir.
+**Güncel** = dönemi bilinen ve (bitişi boş ya da bitiş ≥ bu yıl − `CurrentWindowYears` + 1);
+pencere `CompanySalaries:CurrentWindowYears` = 2 (rehber ve yardım metni "son iki yıl" diye düz
+yazı, değiştirirsen o kopya da değişir). Güncel satırlar önce, sonra "Önceki dönemler · n kayıt ·
+medyana girmez" ayracı, eskiler kesikli çerçeveyle bitiş yılına göre; **medyan / aralık yalnızca
+güncel satırlardan** (`SalaryCurrencyStatResponse.Count` da güncel sayıdır, şerit "3 güncel kayıt"
+der).
+
+**Mevcut kayıtlar (kullanıcının uyarısı).** İki kolon nullable. Migration `AddCompanySalaryPeriod`
+mevcut çalışan satırlarını `SubmittedAt` yılıyla backfill eder (o satır zaten "hâlâ alıyorum"
+diyordu); eski çalışan satırları **null kalır** — dönemi yalnızca yazar bilir, uydurmuyoruz. Böyle
+bir satır okuyucuya "Dönem belirtilmedi" rozetiyle önceki dönemlerde görünür, medyana girmez;
+Katkılarım kartında sarı bir açıklama vardır ve düzenleme formu dönemi boş açıp sorar; ilk
+düzenlemede güncel listeye döner (`A_Row_Written_Before_The_Period_Existed_…` entegrasyon testi).
+İstek şeklinde `PeriodStartYear`/`PeriodEndYear` opsiyonel (eski istemci ayrıştırır) ama
+validator her yazımda başlangıcı ister — dönemi olmayan yeni kayıt açılamaz. Yerel `afterapply_dev`
+backfill'i doğrulandı: 3 mevcut çalışan satırı 2026 aldı, 1 eski çalışan satırı null.
+
+**Backend.** `CompanySalaryEntry.PeriodStartYear/PeriodEndYear` (`int?`), `SalaryContent` iki alan
+daha alır ve `Validate(currentYear)` (1990 ≤ başlangıç ≤ yıl; mevcut → bitiş null; eski → bitiş
+zorunlu ve aralıkta). `SalaryPeriods.CutoffYear/IsCurrent` saf; list sorgusunda aynı ifade inline
+(EF çağrıyı çeviremez). Sıralama: güncel önce, sonra bitiş yılı (halen = ∞, bilinmeyen = 0),
+sonra `SubmittedAt`. `CompanySalaryPageResponse.PreviousPeriodTotal` + `CurrentWindowYears`,
+`CompanySalaryPublicResponse.PeriodStartYear/PeriodEndYear/IsCurrentPeriod` (sona eklendi, ek
+kırmaz); Mine/Admin/Export yanıtları iki yılı taşır. Validator `TimeProvider?` alır (servislerdeki
+kalıp), beş yeni `VALIDATION_SALARY_PERIOD_*` anahtarı. Servis `DateTimeOffset.UtcNow` yerine
+`TimeProvider`.
+
+**Web.** `SalaryDraft` iki string alan; `validateSalaryDraft(draft, currentYear)`,
+`periodYearOptions`, `formatSalaryPeriod`; zod şemasında aynı kurallar. `SalaryRow` önceki dönem
+için kesikli/soluk varyant + rozet; `CompanySalariesPanel` ayracı ilk önceki satırın üstüne çizer
+(sunucu sıralamasına güvenir, sayfa sınırında da çalışır); `SalaryStatsStrip` `windowYears` alır;
+`MySalaryCard` dönem + eksik-dönem uyarısı; admin tablosuna "Dönem" kolonu. Rehber, panel notu,
+yardım sayfası ve gizlilik metnindeki "ay hassasiyeti" cümleleri "dönem yıl olarak" oldu.
+`salary-form.png` (1280×860) ve `company-salaries.png` (1280×1120) demo hesaptan yeniden çekildi.
+
+**Testler.** Birim 1052 (entity dönem kuralları, validator 8 dönem vakası, `SalaryPeriodsTests`);
+entegrasyon 604/604 (dönemsiz yazım 400 + alan adı, eski/mevcut bitiş kuralı, önceki dönemler
+sıralama + medyan dışı, dönemsiz eski satır servis + düzenleyince geri dönüş); web 715 + lint.
+Tarayıcıda (yerel yığın, demo hesap): Doğuş sayfasında "2026 – halen" + ayracın altında "Dönem
+belirtilmedi" satırı; Katkılarım'da eksik-dönem kartı; düzenlemede boş dönem → "Başlangıç yılını
+seç", 2021–2019 → "Bitiş yılı başlangıçtan önce olamaz", 2019–2023 kaydedildi; Beta'ya eski
+çalışan 2010–2012 / 4.500 ₺ girildi → önceki dönemlerde, medyan 95.000 ₺ (3 güncel kayıt) ona
+bakmadı.

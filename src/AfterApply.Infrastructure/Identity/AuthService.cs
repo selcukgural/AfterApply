@@ -822,7 +822,7 @@ internal sealed class AuthService(
             .Join(dbContext.Occupations, x => x.Entry.OccupationId, o => o.Id, (x, o) => new CompanySalaryExportItem(
                 x.Entry.Id, x.CompanyName, o.Code, o.NameTr, o.NameEn, x.Entry.YearsOfExperience, x.Entry.EmploymentType,
                 x.Entry.EmploymentStatus, x.Entry.MonthlyNetAmount, x.Entry.Currency, x.Entry.AnnualBonusAmount,
-                x.Entry.SubmittedAt, x.Entry.UpdatedAt))
+                x.Entry.SubmittedAt, x.Entry.UpdatedAt, x.Entry.PeriodStartYear, x.Entry.PeriodEndYear))
             .ToListAsync(cancellationToken);
 
         // The author's own rows, children included — the same lookups the service uses, by id.

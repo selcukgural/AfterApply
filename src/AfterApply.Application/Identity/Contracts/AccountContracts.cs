@@ -128,7 +128,9 @@ public sealed record CompanySalaryExportItem(
     SalaryCurrency Currency,
     decimal? AnnualBonusAmount,
     DateTimeOffset SubmittedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    int? PeriodStartYear = null,
+    int? PeriodEndYear = null);
 
 /// <summary>The author's copy of a candidate experience: every column, including the exact
 /// dates that readers only ever see as a quarter.</summary>

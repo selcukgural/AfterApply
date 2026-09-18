@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import type { MyCompanySalary } from "@/types/api";
 import { companySalariesApi } from "@/lib/api/companySalaries";
 import { ApiError } from "@/lib/api/httpClient";
-import { formatAmount, occupationName } from "@/lib/companySalaries/salaryDraft";
+import { formatAmount, formatSalaryPeriod, occupationName } from "@/lib/companySalaries/salaryDraft";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ContributionKindBadge } from "@/components/contributions/ContributionKindBadge";
@@ -27,6 +27,7 @@ export function MySalaryCard({ entry, onDeleted }: MySalaryCardProps) {
   const locale = useLocale();
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const period = formatSalaryPeriod(entry, t("periodOngoing"));
 
   const remove = useMutation({
     mutationFn: () => companySalariesApi.remove(entry.id),
@@ -53,6 +54,7 @@ export function MySalaryCard({ entry, onDeleted }: MySalaryCardProps) {
               t("years", { count: entry.yearsOfExperience }),
               tType(entry.employmentType),
               tStatus(entry.employmentStatus),
+              period ?? t("periodMissing"),
               new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(entry.submittedAt)),
             ].join(" · ")}
           </span>
@@ -67,6 +69,9 @@ export function MySalaryCard({ entry, onDeleted }: MySalaryCardProps) {
           </span>
         </div>
       </div>
+
+      {/* A row from before the period existed: readers see it as history until this is fixed. */}
+      {period === null && <p className="text-xs text-amber-700 dark:text-amber-300">{t("periodMissingHint")}</p>}
 
       {error && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">

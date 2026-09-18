@@ -20,5 +20,12 @@ public sealed class CompanySalaryOptions
     /// more and is always safe.</summary>
     public int MinimumEntriesForStats { get; init; } = 3;
 
+    /// <summary>How many calendar years back a row still counts as current: 2 means a salary
+    /// last drawn in 2025 still describes the company in 2026, one from 2024 is a previous
+    /// period. Only current rows make the median and range. The company page reads the value
+    /// off the list response; the form's guidelines and the help page say "two years" in prose,
+    /// so changing this means changing that copy too.</summary>
+    public int CurrentWindowYears { get; init; } = 2;
+
     public int PageSize { get; init; } = 10;
 }

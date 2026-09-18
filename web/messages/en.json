@@ -1215,9 +1215,9 @@
     "companySalaries": {
       "title": "Salary information you share",
       "intro": "Sharing your salary at a company is optional and requires an account. When you do:",
-      "what": "Your entry — the occupation you picked from the list, total years of experience, employment type, whether you are a current or former employee, monthly net salary with its currency, and the annual bonus if any — is stored linked to your account. There is no free text: the occupation comes from a catalogue based on ISCO-08.",
+      "what": "Your entry — the occupation you picked from the list, total years of experience, employment type, whether you are a current or former employee, the years of the period you drew the salary in, monthly net salary with its currency, and the annual bonus if any — is stored linked to your account. There is no free text: the occupation comes from a catalogue based on ISCO-08.",
       "whoSees": "Entries are shown only to signed-in users; the public company page says only how many entries there are.",
-      "band": "Readers see an experience band (0–1, 2–4, 5–9, 10+) rather than your exact years, and the month rather than the day. Deliberately: together with an occupation, the exact years and date would give away who wrote it at a small company.",
+      "band": "Readers see an experience band (0–1, 2–4, 5–9, 10+) rather than your exact years, and the period of the salary in years rather than a date or a month. Deliberately: together with an occupation, the exact years and date would give away who wrote it at a small company.",
       "noAuthor": "A published entry never shows your name, e-mail or account, and contains nothing you typed. Only we can see the account behind an entry.",
       "storage": "Entries are stored in our own database and are not sent to any third party.",
       "deletion": "You can delete an entry from My contributions at any time. Deleting your account deletes all of them; your data export includes them with the exact years.",
@@ -1540,6 +1540,8 @@
     "salaryYearsInvalid": "Enter a whole number of years between 0 and 50",
     "salaryCurrencyRequired": "Select a currency",
     "salaryBonusAmountInvalid": "Enter the bonus amount if there is one, otherwise leave it empty",
+    "salaryPeriodYearInvalid": "Pick a valid year",
+    "salaryPeriodEndInvalid": "Check the last year",
     "salaryOccupationRequired": "Pick an occupation from the list",
     "nameTooLong": "At most 100 characters"
   },
@@ -2465,11 +2467,11 @@
         },
         "step2": {
           "title": "Open the Salaries tab on a company page",
-          "body": "Each entry is one row: occupation, experience band (0–1, 2–4, 5–9, 10+ years), employment type, current or former employee, month and monthly net amount; the annual bonus if there is one. Nobody sees the author."
+          "body": "Each entry is one row: occupation, experience band (0–1, 2–4, 5–9, 10+ years), employment type, current or former employee, the period the salary was drawn in (e.g. 2021 – ongoing) and the monthly net amount; the annual bonus if any. Nobody sees the author."
         },
         "step3": {
           "title": "Know how to read the median",
-          "body": "Once enough entries exist in one currency, the median and the lowest–highest range appear at the top; until then there are only rows. The median is not split by occupation — it is the middle of every entry at the company."
+          "body": "Once a currency has enough current entries, the median and the lowest–highest range appear at the top; until then there are only rows. Entries current within the last two years count; older periods sit separately at the bottom of the list and do not affect the median. The median is not split by occupation — it is the middle of the current entries at a company."
         }
       },
       "write": {
@@ -2484,7 +2486,7 @@
         },
         "step3": {
           "title": "Fill in the form",
-          "body": "Occupation, total years of experience, employment type, current/former employee, monthly net salary with its currency, and whether there is a bonus — all required. The occupation is picked from a catalogue: start typing, find it by its Turkish or English name and pick it; an entry cannot be created for an occupation that is not listed."
+          "body": "Occupation, total years of experience, employment type, current/former employee, the period you drew the salary in (years only; the last year too if you are a former employee), monthly net salary with currency, bonus or not — all required. The occupation is picked from a catalogue: start typing, find it by its Turkish or English name and pick it from the list; no entry can be made for an occupation that is not in the catalogue."
         },
         "step4": {
           "title": "Share",
@@ -2493,7 +2495,7 @@
       },
       "calloutAnonymous": {
         "title": "Entries are anonymous",
-        "body": "Readers never see your name, e-mail or exact years; only the occupation, band, employment type, relationship and month. The exact years are only on your own list and in your data export."
+        "body": "Readers do not see your name, e-mail or exact years of experience; only the occupation, band, employment type, relationship and the years of the period are shown. The exact years are only in your own list and your data export."
       },
       "calloutLimits": {
         "title": "One entry per occupation, ten in total",
@@ -2501,7 +2503,7 @@
       },
       "manage": {
         "title": "Editing and deleting",
-        "body": "The My contributions page lists every entry you shared with its full figures, on the same list as your reviews and experiences. Edit changes the amounts and moves the entry's month to today; Delete removes it entirely."
+        "body": "The My contributions page shows every entry you shared with its full figures, in the same list as your reviews and experiences. Edit changes the amounts and the period; Delete removes it entirely. An entry shared before the period was asked is listed under \"previous periods\" until you edit it."
       }
     },
     "cvScan": {
@@ -4394,6 +4396,12 @@
       "employmentType": "Employment type",
       "employmentTypePlaceholder": "Select",
       "employmentStatus": "Employment status",
+      "period": "When did you draw this salary?",
+      "periodStart": "From",
+      "periodEnd": "To",
+      "periodOngoing": "Still drawing it",
+      "periodHintCurrent": "Years only, no month. For a current employee the end is saved as \"still drawing it\". If you had a raise in this period, enter the latest amount.",
+      "periodHintFormer": "The years you drew this salary at this company. If you had a raise, enter the latest amount and its period.",
       "monthlyNet": "Monthly net salary",
       "monthlyNetPlaceholder": "e.g. 95,000",
       "monthlyNetHint": "What lands in your account each month. Leave bonuses and benefits out.",
@@ -4415,7 +4423,12 @@
         "employmentStatusRequired": "Select your employment status",
         "amountInvalid": "Enter a valid amount (1 – 10,000,000)",
         "bonusAnswerRequired": "Say whether there is a bonus",
-        "bonusAmountInvalid": "Enter the annual bonus amount (1 – 10,000,000)"
+        "bonusAmountInvalid": "Enter the annual bonus amount (1 – 10,000,000)",
+        "periodStartRequired": "Pick the first year",
+        "periodStartInvalid": "Pick a year between 1990 and this year",
+        "periodEndRequired": "Pick the last year — needed for a former employee",
+        "periodEndInvalid": "Pick a year between 1990 and this year",
+        "periodEndBeforeStart": "The last year cannot be before the first"
       }
     },
     "guidelines": {
@@ -4423,7 +4436,7 @@
       "intro": "Your name appears nowhere. Readers see the occupation, the experience band, the employment type and the amounts.",
       "signedIn": "Only signed-in users can read entries.",
       "band": "Years of experience are shown as a band: 0–1, 2–4, 5–9, 10+.",
-      "month": "Dates are month precision (e.g. September 2026).",
+      "month": "The period a salary belongs to is shown in years (e.g. 2010 – 2012); no month is asked. Entries current within the last two years make the median; older ones are listed separately.",
       "perTitle": "You can add several entries for one company under different occupations; ten entries in total.",
       "editable": "You can edit or delete an entry from My contributions.",
       "fullGuide": "Full guide →"
@@ -4434,7 +4447,7 @@
     },
     "edit": {
       "title": "Edit your salary entry",
-      "subtitle": "Changes are visible the moment you save; the entry's month becomes today's.",
+      "subtitle": "Changes show the moment you save. Editing an older entry without a period asks for one; until then it is listed under \"previous periods\".",
       "loading": "Loading…",
       "notFound": "This entry is not yours or no longer exists.",
       "backToMine": "Back to my contributions",
@@ -4448,6 +4461,9 @@
       "perMonthNet": "/ month net",
       "bonus": "Bonus: {amount} / year",
       "noBonus": "No bonus",
+      "periodOngoing": "ongoing",
+      "periodMissing": "Period not given",
+      "periodMissingHint": "This entry was shared before the period was asked. Readers see it under \"previous periods\" and it is left out of the median; edit it and add the period to bring it back into the current list.",
       "edit": "Edit",
       "delete": "Delete",
       "deleteTitle": "Delete this salary entry?",
@@ -4459,7 +4475,7 @@
     "panel": {
       "heading": "{count, plural, =0 {Salary entries} =1 {1 salary entry} other {# salary entries}}",
       "share": "Share a salary",
-      "readingNote": "Salary entries are what users reported; e-kariyerim does not verify them. The occupation is picked from a catalogue, experience is shown as a band and dates at month precision.",
+      "readingNote": "Salary entries are what users reported; e-kariyerim does not verify them. The occupation is picked from a catalogue, experience is shown as a band and the period of a salary in years.",
       "yours": "{count, plural, =1 {You have 1 salary entry at this company.} other {You have # salary entries at this company.}}",
       "manageYours": "My contributions",
       "loading": "Loading…",
@@ -4471,6 +4487,10 @@
       "perMonthNet": "/ month net",
       "bonus": "Bonus: {amount} / year",
       "noBonus": "No bonus",
+      "periodOngoing": "ongoing",
+      "periodUnknown": "Period not given",
+      "sharedIn": "shared in {month}",
+      "previousPeriods": "{count, plural, =1 {Previous periods · 1 entry · not in the median} other {Previous periods · # entries · not in the median}}",
       "lockedTitle": "Salary entries are for signed-in users",
       "lockedBody": "{company} has {count, plural, =0 {no salary entries yet} =1 {1 anonymous salary entry} other {# anonymous salary entries}}. Sign in to see them and add your own.",
       "signIn": "Sign in",
@@ -4478,11 +4498,11 @@
     },
     "stats": {
       "median": "Median monthly net",
-      "sample": "{count} entries · {currency}",
+      "sample": "{count} current {count, plural, =1 {entry} other {entries}} · {currency}",
       "range": "Range",
       "rangeHint": "lowest – highest",
       "basis": "How it is computed",
-      "basisBody": "The median of every entry in one currency; not split by occupation or experience."
+      "basisBody": "The median of entries current within the last {years} years; previous periods are left out, and nothing is split by occupation or experience."
     },
     "bands": {
       "ZeroToOne": "0–1 years",
@@ -4628,6 +4648,7 @@
       "occupation": "Occupation",
       "net": "Net / month",
       "years": "Years",
+      "period": "Period",
       "author": "Author",
       "submitted": "Submitted"
     },
@@ -4637,6 +4658,7 @@
       "net": "Monthly net",
       "bonus": "Annual bonus",
       "years": "Experience",
+      "period": "Period",
       "employment": "Employment",
       "submitted": "Submitted",
       "updated": "Last edited",

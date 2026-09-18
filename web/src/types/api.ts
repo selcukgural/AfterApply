@@ -1611,6 +1611,10 @@ export interface CompanySalaryRequest {
   currency: SalaryCurrency;
   hasBonus: boolean;
   annualBonusAmount: number | null;
+  /** The first year this salary was drawn; required on every write since 2026-09-18. */
+  periodStartYear: number;
+  /** The last year, required for a former employee; null for a current one ("still drawing it"). */
+  periodEndYear: number | null;
 }
 
 /** Another person's entry, as a signed-in reader sees it: no author, the band instead of the
@@ -1624,8 +1628,14 @@ export interface CompanySalaryPublic {
   monthlyNetAmount: number;
   currency: SalaryCurrency;
   annualBonusAmount: number | null;
-  /** yyyy-MM */
+  /** yyyy-MM — shown only on a row without a period ("shared in September 2026"). */
   submittedMonth: string;
+  /** Both null on a row written before the period existed whose author has not edited it since. */
+  periodStartYear: number | null;
+  periodEndYear: number | null;
+  /** Current rows come first in the list and are the only ones in the figures; the rest sit
+   *  under a "previous periods" line. */
+  isCurrentPeriod: boolean;
 }
 
 /** Per currency; the three figures are null below `minimumForStats`. */
@@ -1644,6 +1654,10 @@ export interface CompanySalaryPage {
   pageSize: number;
   stats: SalaryCurrencyStat[];
   minimumForStats: number;
+  /** How many of `total` are not current — the count on the "previous periods" line. */
+  previousPeriodTotal: number;
+  /** The window behind "current", for the "how it is calculated" text. */
+  currentWindowYears: number;
 }
 
 /** The author's own row: everything, including the exact years. */
@@ -1661,6 +1675,9 @@ export interface MyCompanySalary {
   annualBonusAmount: number | null;
   submittedAt: string;
   updatedAt: string;
+  /** Null on a row written before the period existed and not edited since. */
+  periodStartYear: number | null;
+  periodEndYear: number | null;
 }
 
 /** The admin table's row: the author's full record plus who wrote it — admin-only, like the
@@ -1681,6 +1698,9 @@ export interface AdminCompanySalaryListItem {
   annualBonusAmount: number | null;
   submittedAt: string;
   updatedAt: string;
+  /** Null on a row written before the period existed and not edited since. */
+  periodStartYear: number | null;
+  periodEndYear: number | null;
 }
 
 export interface SalaryQuota {

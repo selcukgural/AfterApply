@@ -376,13 +376,28 @@
     <value>Bu şirkette bu meslek için zaten bir maaş kaydınız var. Bunun yerine o kaydı düzenleyin.</value>
   </data>
   <data name="COMPANY_SALARY_CONTENT_INVALID" xml:space="preserve">
-    <value>Maaş kaydı kaydedilemedi: mesleği, tecrübe yılını ve tutarları kontrol edin.</value>
+    <value>Maaş kaydı kaydedilemedi: mesleği, tecrübe yılını, dönemi ve tutarları kontrol edin.</value>
   </data>
   <data name="VALIDATION_SALARY_BONUS_AMOUNT_REQUIRED" xml:space="preserve">
     <value>Yıllık prim tutarını girin ya da "prim yok" seçin.</value>
   </data>
   <data name="VALIDATION_SALARY_BONUS_AMOUNT_UNEXPECTED" xml:space="preserve">
     <value>"Prim yok" seçiliyken bir prim tutarı girildi.</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_START_REQUIRED" xml:space="preserve">
+    <value>Bu maaşı almaya başladığın yılı gir.</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_END_REQUIRED" xml:space="preserve">
+    <value>Bu maaşı son aldığın yılı gir ya da "mevcut çalışan" seç.</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_END_UNEXPECTED" xml:space="preserve">
+    <value>Mevcut çalışanın maaşında bitiş yılı olmaz.</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_END_BEFORE_START" xml:space="preserve">
+    <value>Bitiş yılı başlangıç yılından önce olamaz.</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_YEAR_OUT_OF_RANGE" xml:space="preserve">
+    <value>{0} ile {1} arasında bir yıl gir.</value>
   </data>
   <data name="CANDIDATE_EXPERIENCE_QUOTA_REACHED" xml:space="preserve">
     <value>En fazla {0} aday deneyimi girebilirsiniz. Yenisi için birini silin.</value>

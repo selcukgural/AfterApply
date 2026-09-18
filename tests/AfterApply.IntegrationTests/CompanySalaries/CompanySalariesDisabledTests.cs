@@ -56,7 +56,7 @@ public class CompanySalariesDisabledTests(ApiHost<CompanySalariesDisabledProfile
         var company = (await resolve.Content.ReadFromJsonAsync<ResolvedCompanyResponse>(JsonOptions))!;
 
         var request = new CompanySalaryRequest(Occupation.IdFor("2512"), 3, EmploymentType.FullTime, SalaryEmploymentStatus.CurrentEmployee,
-            50_000m, SalaryCurrency.TRY, false);
+            50_000m, SalaryCurrency.TRY, false, PeriodStartYear: 2024);
         (await client.GetAsync($"/api/companies/{company.Id}/salaries")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await client.GetAsync($"/api/companies/{company.Id}/salaries/me")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await client.PostAsJsonAsync($"/api/companies/{company.Id}/salaries", request, JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -76,7 +76,7 @@ public class CompanySalariesDisabledTests(ApiHost<CompanySalariesDisabledProfile
             // A row the feature left behind before going dark: not a contribution while it is off.
             db.CompanySalaryEntries.Add(CompanySalaryEntry.Create(auth.User.Id, company.Id,
                 new SalaryContent(Occupation.IdFor("2512"), 3, EmploymentType.FullTime, SalaryEmploymentStatus.CurrentEmployee,
-                    50_000m, SalaryCurrency.TRY, null), DateTimeOffset.UtcNow));
+                    50_000m, SalaryCurrency.TRY, null, DateTimeOffset.UtcNow.Year, null), DateTimeOffset.UtcNow));
             await db.SaveChangesAsync();
         }
 

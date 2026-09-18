@@ -19,15 +19,26 @@ public class CompanySalaryValidatorTests
         public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) => [];
     }
 
-    private static CompanySalaryRequestValidator Validator() => new(new KeyEchoLocalizer());
+    // Pinned so "this year" in the rules is 2026 whatever the calendar says when the suite runs.
+    private static readonly DateTimeOffset Now = new(2026, 9, 18, 12, 0, 0, TimeSpan.Zero);
+
+    private static CompanySalaryRequestValidator Validator() => new(new KeyEchoLocalizer(), new FixedClock(Now));
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
 
     private static readonly Guid Backend = Guid.NewGuid();
 
     private static CompanySalaryRequest Request(Guid? occupation = null, int years = 6,
         decimal amount = 95_000m, bool hasBonus = true, decimal? bonus = 120_000m,
         EmploymentType type = EmploymentType.FullTime, SalaryEmploymentStatus status = SalaryEmploymentStatus.CurrentEmployee,
-        SalaryCurrency currency = SalaryCurrency.TRY) =>
-        new(occupation ?? Backend, years, type, status, amount, currency, hasBonus, bonus);
+        SalaryCurrency currency = SalaryCurrency.TRY, int? periodStart = 2024, int? periodEnd = null) =>
+        new(occupation ?? Backend, years, type, status, amount, currency, hasBonus, bonus, periodStart, periodEnd);
+
+    private static CompanySalaryRequest Former(int? periodStart, int? periodEnd) =>
+        Request(status: SalaryEmploymentStatus.FormerEmployee, periodStart: periodStart, periodEnd: periodEnd);
 
     [Fact]
     public void Accepts_A_Complete_Entry()
@@ -92,6 +103,58 @@ public class CompanySalaryValidatorTests
         result.Errors.ShouldContain(e => e.PropertyName == "EmploymentType");
         result.Errors.ShouldContain(e => e.PropertyName == "EmploymentStatus");
         result.Errors.ShouldContain(e => e.PropertyName == "Currency");
+    }
+
+    // ---- Period ------------------------------------------------------------------------------
+
+    [Fact]
+    public void Accepts_A_Former_Employees_Closed_Period()
+    {
+        Validator().Validate(Former(2010, 2012)).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void The_Start_Year_Is_Required_Even_Though_The_Shape_Allows_Null()
+    {
+        Validator().Validate(Request(periodStart: null))
+            .Errors.ShouldContain(e => e.PropertyName == "PeriodStartYear" && e.ErrorMessage == "VALIDATION_SALARY_PERIOD_START_REQUIRED");
+    }
+
+    [Theory]
+    [InlineData(1989)]
+    [InlineData(2027)]
+    public void The_Start_Year_Stays_Between_1990_And_This_Year(int start)
+    {
+        Validator().Validate(Request(periodStart: start))
+            .Errors.ShouldContain(e => e.PropertyName == "PeriodStartYear" && e.ErrorMessage == "VALIDATION_SALARY_PERIOD_YEAR_OUT_OF_RANGE");
+    }
+
+    [Fact]
+    public void A_Current_Employee_Refuses_An_End_Year()
+    {
+        Validator().Validate(Request(periodEnd: 2025))
+            .Errors.ShouldContain(e => e.PropertyName == "PeriodEndYear" && e.ErrorMessage == "VALIDATION_SALARY_PERIOD_END_UNEXPECTED");
+    }
+
+    [Fact]
+    public void A_Former_Employee_Needs_An_End_Year()
+    {
+        Validator().Validate(Former(2010, null))
+            .Errors.ShouldContain(e => e.PropertyName == "PeriodEndYear" && e.ErrorMessage == "VALIDATION_SALARY_PERIOD_END_REQUIRED");
+    }
+
+    [Fact]
+    public void The_End_Year_Cannot_Precede_The_Start()
+    {
+        Validator().Validate(Former(2012, 2010))
+            .Errors.ShouldContain(e => e.PropertyName == "PeriodEndYear" && e.ErrorMessage == "VALIDATION_SALARY_PERIOD_END_BEFORE_START");
+    }
+
+    [Fact]
+    public void The_End_Year_Cannot_Be_In_The_Future()
+    {
+        Validator().Validate(Former(2012, 2027))
+            .Errors.ShouldContain(e => e.PropertyName == "PeriodEndYear" && e.ErrorMessage == "VALIDATION_SALARY_PERIOD_YEAR_OUT_OF_RANGE");
     }
 
     [Theory]

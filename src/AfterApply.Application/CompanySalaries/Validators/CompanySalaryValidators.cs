@@ -8,8 +8,13 @@ namespace AfterApply.Application.CompanySalaries.Validators;
 
 public sealed class CompanySalaryRequestValidator : AbstractValidator<CompanySalaryRequest>
 {
-    public CompanySalaryRequestValidator(IStringLocalizer<SharedStrings> localizer)
+    public CompanySalaryRequestValidator(IStringLocalizer<SharedStrings> localizer, TimeProvider? timeProvider = null)
     {
+        // The clock is optional the way the services take it: tests pin a year, the host uses
+        // the system one. Read at construction, which is once per request (validators are
+        // scoped), so one request straddling New Year gets one answer.
+        var currentYear = (timeProvider ?? TimeProvider.System).GetUtcNow().Year;
+
         // The occupation comes from the catalogue; the service checks the id exists. Here only that
         // one was sent at all.
         RuleFor(x => x.OccupationId).NotEmpty()
@@ -36,6 +41,34 @@ public sealed class CompanySalaryRequestValidator : AbstractValidator<CompanySal
             .InclusiveBetween(CompanySalaryEntry.MinAmount, CompanySalaryEntry.MaxAmount)
             .When(x => x.HasBonus && x.AnnualBonusAmount.HasValue)
             .OverridePropertyName(nameof(CompanySalaryRequest.AnnualBonusAmount));
+
+        // The period: the shape allows null so older clients still parse, the rule does not —
+        // every write since 2026-09-18 says which years the salary belongs to.
+        RuleFor(x => x.PeriodStartYear).NotNull()
+            .WithMessage(_ => localizer["VALIDATION_SALARY_PERIOD_START_REQUIRED"]);
+        RuleFor(x => x.PeriodStartYear!.Value)
+            .InclusiveBetween(CompanySalaryEntry.MinPeriodYear, currentYear)
+            .When(x => x.PeriodStartYear.HasValue)
+            .WithMessage(_ => localizer["VALIDATION_SALARY_PERIOD_YEAR_OUT_OF_RANGE", CompanySalaryEntry.MinPeriodYear, currentYear])
+            .OverridePropertyName(nameof(CompanySalaryRequest.PeriodStartYear));
+
+        // A current employee is still drawing it (no end year); a former one must say when it ended.
+        RuleFor(x => x.PeriodEndYear).Null()
+            .When(x => x.EmploymentStatus == SalaryEmploymentStatus.CurrentEmployee)
+            .WithMessage(_ => localizer["VALIDATION_SALARY_PERIOD_END_UNEXPECTED"]);
+        RuleFor(x => x.PeriodEndYear).NotNull()
+            .When(x => x.EmploymentStatus == SalaryEmploymentStatus.FormerEmployee)
+            .WithMessage(_ => localizer["VALIDATION_SALARY_PERIOD_END_REQUIRED"]);
+        RuleFor(x => x.PeriodEndYear!.Value)
+            .InclusiveBetween(CompanySalaryEntry.MinPeriodYear, currentYear)
+            .When(x => x.EmploymentStatus == SalaryEmploymentStatus.FormerEmployee && x.PeriodEndYear.HasValue)
+            .WithMessage(_ => localizer["VALIDATION_SALARY_PERIOD_YEAR_OUT_OF_RANGE", CompanySalaryEntry.MinPeriodYear, currentYear])
+            .OverridePropertyName(nameof(CompanySalaryRequest.PeriodEndYear));
+        RuleFor(x => x.PeriodEndYear!.Value)
+            .GreaterThanOrEqualTo(x => x.PeriodStartYear!.Value)
+            .When(x => x.EmploymentStatus == SalaryEmploymentStatus.FormerEmployee && x.PeriodEndYear.HasValue && x.PeriodStartYear.HasValue)
+            .WithMessage(_ => localizer["VALIDATION_SALARY_PERIOD_END_BEFORE_START"])
+            .OverridePropertyName(nameof(CompanySalaryRequest.PeriodEndYear));
     }
 
 }

@@ -376,13 +376,28 @@
     <value>You have already shared a salary for this occupation at this company. Edit that entry instead.</value>
   </data>
   <data name="COMPANY_SALARY_CONTENT_INVALID" xml:space="preserve">
-    <value>The salary entry could not be saved: check the occupation, years of experience and amounts.</value>
+    <value>The salary entry could not be saved: check the occupation, years of experience, period and amounts.</value>
   </data>
   <data name="VALIDATION_SALARY_BONUS_AMOUNT_REQUIRED" xml:space="preserve">
     <value>Enter the annual bonus amount, or choose "no bonus".</value>
   </data>
   <data name="VALIDATION_SALARY_BONUS_AMOUNT_UNEXPECTED" xml:space="preserve">
     <value>A bonus amount was given although "no bonus" is selected.</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_START_REQUIRED" xml:space="preserve">
+    <value>Enter the first year this salary was drawn.</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_END_REQUIRED" xml:space="preserve">
+    <value>Enter the last year this salary was drawn, or choose "current employee".</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_END_UNEXPECTED" xml:space="preserve">
+    <value>A current employee's salary has no end year.</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_END_BEFORE_START" xml:space="preserve">
+    <value>The end year cannot be before the start year.</value>
+  </data>
+  <data name="VALIDATION_SALARY_PERIOD_YEAR_OUT_OF_RANGE" xml:space="preserve">
+    <value>Enter a year between {0} and {1}.</value>
   </data>
   <data name="CANDIDATE_EXPERIENCE_QUOTA_REACHED" xml:space="preserve">
     <value>You have reached your limit of {0} candidate experiences. Delete one to add another.</value>

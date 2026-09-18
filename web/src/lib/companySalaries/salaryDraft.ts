@@ -15,6 +15,7 @@ export const YEARS_MIN = 0;
 export const YEARS_MAX = 50;
 export const AMOUNT_MIN = 1;
 export const AMOUNT_MAX = 10_000_000;
+export const PERIOD_MIN_YEAR = 1990;
 
 export const SALARY_CURRENCIES: readonly SalaryCurrency[] = ["TRY", "EUR", "USD", "GBP"];
 export const SALARY_EMPLOYMENT_STATUSES: readonly SalaryEmploymentStatus[] = ["CurrentEmployee", "FormerEmployee"];
@@ -29,7 +30,8 @@ export const SALARY_EMPLOYMENT_TYPES: readonly EmploymentType[] = [
 export const EXPERIENCE_BANDS: readonly ExperienceBand[] = ["ZeroToOne", "TwoToFour", "FiveToNine", "TenPlus"];
 
 /** What the form holds: strings for the numeric fields (what an input gives back), the bonus
- *  answer as a tri-state so "not answered yet" is distinct from "no", and the occupation as the
+ *  answer as a tri-state so "not answered yet" is distinct from "no", the period as two year
+ *  strings (the end one only meaningful for a former employee), and the occupation as the
  *  picked catalogue id plus the text the input shows — typing after a pick clears the id, because
  *  what was typed is not what was picked. */
 export interface SalaryDraft {
@@ -38,6 +40,10 @@ export interface SalaryDraft {
   yearsOfExperience: string;
   employmentType: EmploymentType | "";
   employmentStatus: SalaryEmploymentStatus | "";
+  /** "" until picked; an entry written before the period existed starts here too. */
+  periodStartYear: string;
+  /** Only read when the status is FormerEmployee; the request carries null otherwise. */
+  periodEndYear: string;
   monthlyNetAmount: string;
   currency: SalaryCurrency;
   hasBonus: boolean | null;
@@ -50,6 +56,8 @@ export const EMPTY_SALARY_DRAFT: SalaryDraft = {
   yearsOfExperience: "",
   employmentType: "",
   employmentStatus: "",
+  periodStartYear: "",
+  periodEndYear: "",
   monthlyNetAmount: "",
   currency: "TRY",
   hasBonus: null,
@@ -62,6 +70,11 @@ export type SalaryDraftProblem =
   | "yearsInvalid"
   | "employmentTypeRequired"
   | "employmentStatusRequired"
+  | "periodStartRequired"
+  | "periodStartInvalid"
+  | "periodEndRequired"
+  | "periodEndInvalid"
+  | "periodEndBeforeStart"
   | "amountInvalid"
   | "bonusAnswerRequired"
   | "bonusAmountInvalid";
@@ -71,6 +84,8 @@ export type SalaryDraftField =
   | "yearsOfExperience"
   | "employmentType"
   | "employmentStatus"
+  | "periodStartYear"
+  | "periodEndYear"
   | "monthlyNetAmount"
   | "hasBonus"
   | "annualBonusAmount";
@@ -101,8 +116,22 @@ function isAmountInRange(value: number | null): value is number {
   return value !== null && value >= AMOUNT_MIN && value <= AMOUNT_MAX;
 }
 
-/** Every problem at once, keyed by field, so the form can mark each field rather than the first. */
-export function validateSalaryDraft(draft: SalaryDraft): Partial<Record<SalaryDraftField, SalaryDraftProblem>> {
+/** The years the period selects offer: this year first, back to 1990. */
+export function periodYearOptions(currentYear = new Date().getFullYear()): number[] {
+  return Array.from({ length: currentYear - PERIOD_MIN_YEAR + 1 }, (_, i) => currentYear - i);
+}
+
+function parseYear(raw: string): number | null {
+  const value = raw.trim() === "" ? NaN : Number(raw);
+  return Number.isInteger(value) ? value : null;
+}
+
+/** Every problem at once, keyed by field, so the form can mark each field rather than the first.
+ *  The year is a parameter so a test can pin "this year". */
+export function validateSalaryDraft(
+  draft: SalaryDraft,
+  currentYear = new Date().getFullYear(),
+): Partial<Record<SalaryDraftField, SalaryDraftProblem>> {
   const problems: Partial<Record<SalaryDraftField, SalaryDraftProblem>> = {};
 
   if (!draft.occupationId) {
@@ -116,6 +145,25 @@ export function validateSalaryDraft(draft: SalaryDraft): Partial<Record<SalaryDr
 
   if (draft.employmentType === "") problems.employmentType = "employmentTypeRequired";
   if (draft.employmentStatus === "") problems.employmentStatus = "employmentStatusRequired";
+
+  // The period: a start year always; an end year only for a former employee, and not before
+  // the start. A current employee's end is "still drawing it", which the request sends as null.
+  const start = parseYear(draft.periodStartYear);
+  if (draft.periodStartYear.trim() === "") {
+    problems.periodStartYear = "periodStartRequired";
+  } else if (start === null || start < PERIOD_MIN_YEAR || start > currentYear) {
+    problems.periodStartYear = "periodStartInvalid";
+  }
+  if (draft.employmentStatus === "FormerEmployee") {
+    const end = parseYear(draft.periodEndYear);
+    if (draft.periodEndYear.trim() === "") {
+      problems.periodEndYear = "periodEndRequired";
+    } else if (end === null || end < PERIOD_MIN_YEAR || end > currentYear) {
+      problems.periodEndYear = "periodEndInvalid";
+    } else if (start !== null && end < start) {
+      problems.periodEndYear = "periodEndBeforeStart";
+    }
+  }
 
   if (!isAmountInRange(parseAmount(draft.monthlyNetAmount))) {
     problems.monthlyNetAmount = "amountInvalid";
@@ -141,6 +189,8 @@ export function buildSalaryRequest(draft: SalaryDraft): CompanySalaryRequest {
     currency: draft.currency,
     hasBonus: draft.hasBonus === true,
     annualBonusAmount: draft.hasBonus ? (parseAmount(draft.annualBonusAmount) as number) : null,
+    periodStartYear: Number(draft.periodStartYear),
+    periodEndYear: draft.employmentStatus === "FormerEmployee" ? Number(draft.periodEndYear) : null,
   };
 }
 
@@ -152,6 +202,9 @@ export function draftFromSalary(entry: MyCompanySalary, locale: string): SalaryD
     yearsOfExperience: String(entry.yearsOfExperience),
     employmentType: entry.employmentType,
     employmentStatus: entry.employmentStatus,
+    // A row from before the period existed starts empty here, and the form asks.
+    periodStartYear: entry.periodStartYear === null ? "" : String(entry.periodStartYear),
+    periodEndYear: entry.periodEndYear === null ? "" : String(entry.periodEndYear),
     monthlyNetAmount: String(entry.monthlyNetAmount),
     currency: entry.currency,
     hasBonus: entry.annualBonusAmount !== null,
@@ -180,6 +233,17 @@ export function bandForYears(years: number): ExperienceBand {
 /** "95.000 ₺" in tr, "₺95,000" in en — whole units, no decimals: a salary is read at a glance. */
 export function formatAmount(locale: string, amount: number, currency: SalaryCurrency): string {
   return new Intl.NumberFormat(locale, { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
+}
+
+/** What a reader sees of the period: "2010 – 2012", "2024 – {ongoing}", or null when the row has
+ *  none (written before the period existed), in which case the caller shows the submission month
+ *  instead. The ongoing word is the caller's, so this stays free of the message catalogue. */
+export function formatSalaryPeriod(
+  entry: { periodStartYear: number | null; periodEndYear: number | null },
+  ongoingLabel: string,
+): string | null {
+  if (entry.periodStartYear === null) return null;
+  return `${entry.periodStartYear} – ${entry.periodEndYear ?? ongoingLabel}`;
 }
 
 /** "Eylül 2026" / "September 2026" for a yyyy-MM. */

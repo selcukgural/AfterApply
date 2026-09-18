@@ -47,7 +47,7 @@ internal sealed class CompanySalaryAdminService(AppDbContext dbContext, ICompany
                 x.s.Id, x.c.Id, x.c.Name, x.c.Slug, x.s.UserId, x.AuthorEmail,
                 new OccupationRefResponse(x.o.Id, x.o.Code, x.o.NameTr, x.o.NameEn),
                 x.s.YearsOfExperience, x.s.EmploymentType, x.s.EmploymentStatus, x.s.MonthlyNetAmount, x.s.Currency,
-                x.s.AnnualBonusAmount, x.s.SubmittedAt, x.s.UpdatedAt))
+                x.s.AnnualBonusAmount, x.s.SubmittedAt, x.s.UpdatedAt, x.s.PeriodStartYear, x.s.PeriodEndYear))
             .ToList();
 
         return new PagedResult<AdminCompanySalaryListItemResponse>(items, total, query.Page, pageSize);
