@@ -4,7 +4,7 @@
     "description": "How many of your applications got a reply, and how many went quiet — see your own numbers.",
     "pages": {
       "home": {
-        "title": "Job Application Tracker",
+        "title": "How many of your applications got a reply? Free job application tracker and ATS CV check",
         "description": "How many of your applications got a reply, how many went quiet, how long a first response takes. Job application tracking: import your LinkedIn history, or log one with a click."
       },
       "guide": {
@@ -92,7 +92,7 @@
         "description": "How many applications did you send, and how many came back? See your own reply rate against the median in your field. No sign-up needed."
       },
       "cvScan": {
-        "title": "CV Scan — how a machine reads your CV",
+        "title": "Free ATS CV Check — how a machine reads your CV",
         "description": "Upload your CV and see what an applicant tracking system reads from it. A machine-readability score, the raw text and a fix list. No sign-up, nothing stored."
       },
       "pair": {
@@ -100,7 +100,7 @@
         "description": "Connect your browser extension to your e-kariyerim account with a single confirmation."
       },
       "companies": {
-        "title": "Company Reviews and Salaries",
+        "title": "Company Employee Reviews and Salaries",
         "description": "Anonymous, structured employer reviews from people who worked there — management, work environment, pay, career — and, once signed in, anonymous salary information by occupation. The score is computed in the open."
       },
       "companyScoring": {
@@ -2883,8 +2883,7 @@
   "benchmark": {
     "title": "Is your reply rate normal?",
     "subtitle": "Four questions. No sign-up, no email. Answer them and see your own rate against the median in your field.",
-    "participation": "{count} people have answered.",
-    "participationEmpty": "Nobody has answered yet. Be the first.",
+    "participation": "Based on {count} answers.",
     "form": {
       "applicationsLabel": "How many applications did you send?",
       "applicationsHint": "The total you sent in the period you pick below.",
@@ -2951,7 +2950,10 @@
       "saved": "Your answer is counted in this figure.",
       "overallTitle": "{sector} has only {sampleSize} answers so far — a median needs {minimum}.",
       "overallMedianLabel": "Across all fields",
-      "overallNote": "based on {count} answers · not specific to your field"
+      "overallNote": "based on {count} answers · not specific to your field",
+      "shareLabel": "Share your result",
+      "shareTextWithMedian": "{replies} of my {applications} applications got a reply ({rate}%); the median in my field is {median}%. Is yours normal?",
+      "shareText": "{replies} of my {applications} applications got a reply ({rate}%). Is yours normal?"
     },
     "method": {
       "title": "Where does this number come from?",
@@ -3053,7 +3055,9 @@
       "ctaBenchmark": "Is your reply rate normal? Try the benchmark.",
       "ctaBenchmarkLink": "Go to the benchmark",
       "ctaTrack": "If you want your applications tracked in one place, you can open an account. Nothing up to this point needed one.",
-      "ctaRegister": "Create an account"
+      "ctaRegister": "Create an account",
+      "shareLabel": "Share your score",
+      "shareText": "My CV scored {score}/100 on machine readability. What does yours get? Free ATS check, no sign-up:"
     },
     "categories": {
       "MachineReadability": "Machine readability",
@@ -3254,7 +3258,7 @@
       }
     },
     "page": {
-      "metaTitle": "{company} reviews and salaries",
+      "metaTitle": "{company} employee reviews and salaries",
       "metaDescription": "{count, plural, =0 {No published reviews of {company} yet — be the first. Salaries shared by employees are visible once you sign in.} =1 {1 anonymous employee review of {company}, a score you can check, and anonymous salary information by occupation once you sign in.} other {# anonymous employee reviews of {company}, a score you can check, and anonymous salary information by occupation once you sign in.}}",
       "breadcrumbLabel": "Breadcrumb",
       "allCompanies": "← All companies",
@@ -3266,7 +3270,9 @@
         "salaries": "Salaries",
         "experiences": "Candidate experience"
       },
-      "disclaimer": "Reviews are the personal opinions of their anonymous authors, not statements by e-kariyerim. Reviews are made of ratings and ready-made statements only; if one still looks wrong, use “Report this review” and a moderator will look at it."
+      "disclaimer": "Reviews are the personal opinions of their anonymous authors, not statements by e-kariyerim. Reviews are made of ratings and ready-made statements only; if one still looks wrong, use “Report this review” and a moderator will look at it.",
+      "share": "Share",
+      "shareText": "Employee reviews, salaries and candidate experiences at {company} — e-kariyerim"
     },
     "summary": {
       "scoreLabel": "Score {score} out of 5",
@@ -5637,5 +5643,9 @@
     "TakeHomeAssignment": "Take-home assignment / case",
     "Panel": "Panel interview",
     "AssessmentCenter": "Assessment centre"
+  },
+  "share": {
+    "copyLink": "Copy link",
+    "copied": "Copied"
   }
 }

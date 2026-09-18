@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSiteTrafficPayload, isDoNotTrackEnabled } from "./siteTraffic";
+import { buildSiteTrafficPayload, isAutomatedBrowser, isDoNotTrackEnabled, isExcludedVisitor } from "./siteTraffic";
 
 // What is under test is the browser's half of the privacy promise: the API strips these things
 // again, but by then they have already crossed the network. These rules are what stop them
@@ -64,5 +64,20 @@ describe("isDoNotTrackEnabled", () => {
     for (const value of ["0", "unspecified", null, undefined, ""]) {
       expect(isDoNotTrackEnabled(value)).toBe(false);
     }
+  });
+});
+
+describe("who is not a visitor (growth audit finding 13)", () => {
+  it("treats a WebDriver/CDP-driven browser as automation", () => {
+    expect(isAutomatedBrowser(true)).toBe(true);
+    expect(isAutomatedBrowser(false)).toBe(false);
+    expect(isAutomatedBrowser(undefined)).toBe(false);
+  });
+
+  it("excludes an admin's own visits and nobody else's", () => {
+    expect(isExcludedVisitor({ isAdmin: true })).toBe(true);
+    expect(isExcludedVisitor({ isAdmin: false })).toBe(false);
+    expect(isExcludedVisitor(null)).toBe(false);
+    expect(isExcludedVisitor(undefined)).toBe(false);
   });
 });

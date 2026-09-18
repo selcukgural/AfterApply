@@ -27,5 +27,10 @@ public enum SiteTrafficEvent
     /// <summary>Registration came back successful. Together with RegisterStarted this separates
     /// "nobody tries" from "people try and the form rejects them" — two very different problems
     /// that a single conversion number hides.</summary>
-    RegisterCompleted
+    RegisterCompleted,
+
+    /// <summary>A share button was used — a CV score, a benchmark result or a company page handed
+    /// to someone else. The one number that says whether the product produces anything a person
+    /// wants to pass on (growth audit 2026-09-14, finding 03/14).</summary>
+    ShareClicked
 }

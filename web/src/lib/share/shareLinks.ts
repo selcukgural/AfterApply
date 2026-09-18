@@ -1,0 +1,38 @@
+/**
+ * The share targets behind every "share" button on the public site (growth audit 2026-09-14,
+ * findings 03 and 14): a CV score, a benchmark result, a company page. Kept pure — a URL and a
+ * sentence in, a set of links out — so the exact URLs can be tested without a DOM.
+ *
+ * Nothing here loads a third-party script or widget: each target is a plain link to that
+ * network's own share page, which the CSP and the cookie policy already allow (a navigation, not
+ * a script). LinkedIn's share page takes only the URL and reads the title from the page's own
+ * Open Graph card, which every public page carries since 2026-09-14.
+ */
+
+export type ShareTarget = "linkedin" | "whatsapp" | "x";
+
+export interface ShareContent {
+  /** What the person is passing on, without the link — the link is appended per target. */
+  text: string;
+  /** The absolute URL of the page the share points at. */
+  url: string;
+}
+
+export const SHARE_TARGETS: readonly ShareTarget[] = ["linkedin", "whatsapp", "x"];
+
+export function shareHref(target: ShareTarget, content: ShareContent): string {
+  const url = encodeURIComponent(content.url);
+  switch (target) {
+    case "linkedin":
+      return `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+    case "whatsapp":
+      return `https://wa.me/?text=${encodeURIComponent(`${content.text} ${content.url}`)}`;
+    case "x":
+      return `https://twitter.com/intent/tweet?text=${encodeURIComponent(content.text)}&url=${url}`;
+  }
+}
+
+/** What goes on the clipboard and into the native share sheet: the sentence, then the link. */
+export function shareClipboardText(content: ShareContent): string {
+  return `${content.text} ${content.url}`;
+}

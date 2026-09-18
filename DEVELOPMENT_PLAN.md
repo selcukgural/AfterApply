@@ -1266,14 +1266,13 @@ değil, "bir şey netleşti" olmalı.**
   episodiktir: 2 yıl sonra tekrar arayacak, güvenle döneceği yer olmalıyız.
 - **Kilidi:** yok, ama sıra sonda: kimse henüz çıkmıyor.
 
-### Sıra 8 (kod değil) — T8: "Zor bir dönemse" sayfası
+### T8 — plandan çıkarıldı (2026-09-18)
 
-- Yardım merkezinde bir kez, sessizce, gerçek kaynaklara işaret eden kısa bir
-  bölüm (ücretsiz psikolojik destek hatları, İŞKUR iş kulüpleri vb.). Kimse
-  tıklamayabilir; orada olması yeter.
-- **Kilidi:** kaynaklar ve numaralar **yayınlanmadan önce elle doğrulanır** —
-  yanlış bir yardım hattı numarası, hiç olmamasından kötüdür. İçerik işi,
-  kod değil.
+- "Zor bir dönemse" sayfası (ücretsiz psikolojik destek hatları, İŞKUR iş
+  kulüpleri vb.) plandan çıkarıldı: kaynak listesi elle doğrulanmadan
+  yayınlanamaz ve bu doğrulamanın sahibi yok. Yanlış bir yardım hattı numarası
+  hiç olmamasından kötüdür; standing kural ("terapi taklidi yok") zaten
+  sınırı çiziyor. İleride biri kaynak listesini doğrularsa yeniden açılır.
 
 ### Ölçüm (V0 üstüne, yeni altyapı yok)
 

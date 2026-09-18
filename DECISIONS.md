@@ -7516,3 +7516,66 @@ None, kart geri, demo hesabın hiçbir başvurusu değişmedi.
 #69 merge olunca üstüne rebase edildi (çakışma yalnız `DECISIONS.md` ve yardım metninin
 `outcome.body` satırında — her ikisi de iki tarafı koruyarak çözüldü), `DEVELOPMENT_PLAN.md`'deki
 T5 ✅ işareti o rebase'le geldi.
+
+---
+
+## Büyüme denetiminin açık kalanları: başlıklar, "6 kişi", sayaç bot filtresi, paylaş düğmeleri; T8 plandan çıktı (2026-09-18)
+
+**Ne ve neden.** T-serisinin kodu bizde olan maddeleri (T1/T3/T5/T6) bitince kalanların ortak
+kilidi V5 dağıtım çıktı — T2'nin verisi, T4'ün ölçümü, T7'nin çıkan kullanıcısı hep gelen insan
+istiyor. Bu yüzden bir T maddesine daha girmek yerine 2026-09-14 büyüme denetiminin dağıtımı
+besleyen açık maddeleri kapatıldı (bulgu 06, 10, 13 ve 03a/14). Cümleler koda geçmeden önce
+onaylandı; her yüzey tarayıcıda gezildi.
+
+**Başlıklar (06).** `<title>` artık aranan dili konuşuyor, H1'ler ve açıklamalar değişmedi:
+ana sayfa *"Başvurularının kaçı cevaplandı? Ücretsiz iş başvuru takibi ve ATS CV kontrolü"*,
+CV *"Ücretsiz ATS CV Kontrolü — CV'ni makine nasıl okuyor?"*, şirket *"{Şirket} çalışan
+yorumları, değerlendirmeleri ve maaşları"*, dizin *"Şirket Çalışan Yorumları, Değerlendirmeleri
+ve Maaşları"* (EN karşılıkları aynı yapıda). `routes.test.ts`'teki "başvuru takip" pini çekimli
+hâli de kabul ediyor (`taki[bp]`), "ATS" ve "çalışan yorumları / employee reviews" pinleri
+eklendi. Ana sayfa başlığı ~70 karakter; Google keser ama anahtar kelimeler başta.
+
+**"6 kişi cevapladı" (10).** Kıyas formundaki katılım satırı eşiğin (30) altında **gizli**;
+üstünde *"{count} kişinin cevabıyla."* `participationEmpty` ("Henüz kimse cevaplamadı") da
+gitti — aynı "kimse kullanmıyor" sinyali.
+
+**Sayaç bot filtresi (13).** İki katman, ikisi de kimlik saklamıyor. **Sunucu:** `/api/site-
+traffic/events` `User-Agent`'ı tek bir karşılaştırma için okuyor
+(`SiteTrafficNormalizer.IsNonHumanUserAgent`: bot/crawl/spider, HeadlessChrome, Lighthouse,
+PageSpeed, curl, wget, python-requests, Go-http-client…; **boş UA da bot** — her gerçek tarayıcı
+gönderir) ve eşleşirse yine 204 döner, satır yazmaz. UA saklanmıyor, loglanmıyor — Çerez
+Politikası'ndaki "tarayıcı bilgisi saklanmaz" cümlesi olduğu gibi doğru, metin değişmedi.
+**İstemci:** `navigator.webdriver === true` (otomasyon) ya da giriş yapmış kullanıcı **admin** ise
+rapor gönderilmiyor; `SiteTrafficReporter` oturum yüklenene kadar bekliyor ki admin'in ilk
+görüntülemesi de sayılmasın. Yeni olay **`share_clicked`** (aşağıdaki düğmeler; denetimin ölçüm
+tablosundaki "paylaş tıklaması" satırı). Not: bu projenin kendi headless ekran görüntüsü
+koşuları artık sayılmıyor — yerelde doğrulandı (iki sayfa gezildi, sayaç 28→28; curl 204 ama
+satır yok; tarayıcı UA'lı `share_clicked` 28→29).
+
+**Paylaş düğmeleri (03a/14).** Tek bileşen `components/share/ShareRow`: tarayıcıda
+`navigator.share` varsa tek düğme (sistem paylaşım sayfası — macOS Chrome'da da var), yoksa
+**LinkedIn · WhatsApp · X · Linki kopyala** ("Kopyalandı" 2 sn). Karar `useSyncExternalStore`
+ile (sunucu satırı çizer, istemci uyuşmazlıksız düğmeye geçer; effect içinde setState yok).
+Üçüncü taraf script yok, widget yok — ağların kendi paylaşım sayfalarına düz link, CSP ve çerez
+politikasıyla uyumlu; LinkedIn yalnız URL alır, başlığı sayfanın OG kartından okur.
+`lib/share/shareLinks.ts` saf, URL'ler testli. Üç yüzey: **CV sonucu** (*"CV'm makine
+okunabilirliğinden {score}/100 aldı. Seninki kaç? Ücretsiz, kayıtsız ATS kontrolü:"* + aracın
+sayfası — puan URL'ye konmadı, tarama anonim kalıyor), **kıyas sonucu** (medyan varsa cümlede,
+yoksa kısa hâli; *"Seninki normal mi?"*), **şirket sayfası** (*"{Şirket} hakkında çalışan
+yorumları, maaşlar ve aday deneyimleri — e-kariyerim"*). `browserStorage.test.ts`'teki sayaç
+çağıran dosya allowlist'ine `ShareRow` eklendi. **Kapsam dışı:** puan kartı OG görseli (puanı
+URL'ye koymayı gerektirir, ayrı karar) ve "raporu sakla = hesap" (03b, ürün kararı).
+
+**T8 plandan çıktı.** "Zor bir dönemse" sayfası: kaynak listesi elle doğrulanmadan
+yayınlanamaz ve doğrulamanın sahibi yok; yanlış bir yardım hattı numarası hiç olmamasından
+kötü. `DEVELOPMENT_PLAN.md`'de bölümün yerinde çıkarılma notu duruyor.
+
+**Testler.** Birim 990 (+12: UA sınıflandırması, `share_clicked` wire adı), entegrasyon 560/560
+(+7: beş bot UA + boş UA 204 ve satırsız, üç sayfada `share_clicked` sayılır), vitest 662
+(+11: paylaşım URL'leri, otomasyon/admin dışlama, başlık pinleri), tsc + eslint temiz.
+Tarayıcıda (yerel yığın): altı sayfanın `<title>`'ı curl ile okundu; kıyas sayfasında katılım
+satırı yok; şirket sayfasında tek "Paylaş" (native) ve `navigator.share` silinince dört linkli
+satır; kıyas formu doldurulup gönderildi → "Sonucunu paylaş" satırı, WhatsApp/X href'leri doğru
+cümleyi taşıyor, "Linki kopyala" → "Kopyalandı" ve `share_clicked` isteği atılıyor (fetch
+yakalandı); CV tarama: üretilmiş bir PDF yüklendi → 88/100, "Puanını paylaş" satırı doğru
+cümleyle. Yerel kıyas gönderimleri sonra silindi.

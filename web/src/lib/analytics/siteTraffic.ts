@@ -26,7 +26,8 @@ export type SiteTrafficEvent =
   | "cta_get_started"
   | "cv_scan_completed"
   | "register_started"
-  | "register_completed";
+  | "register_completed"
+  | "share_clicked";
 
 export interface SiteTrafficPayload {
   event: SiteTrafficEvent;
@@ -79,6 +80,27 @@ function originOf(referrer: string | null | undefined): string | null {
   }
 }
 
+/**
+ * Whether this browser is being driven by a program rather than a person — `navigator.webdriver`
+ * is set by every WebDriver/CDP automation, including the screenshot runs this project makes of
+ * its own pages, and none of those are visitors. Pure so it can be tested without a DOM. The
+ * server drops the well-known crawler and audit user agents on its side; this is the client's
+ * half, for the automations whose user agent looks like a normal browser.
+ */
+export function isAutomatedBrowser(webdriver: boolean | undefined): boolean {
+  return webdriver === true;
+}
+
+/**
+ * Whether a signed-in visitor's views should be reported at all. An admin — today, the team —
+ * is not a visitor, and the counter is what the team reads to find out whether anyone else came
+ * (growth audit 2026-09-14, finding 13). Decided in the browser and never sent: the report is
+ * simply not made, so the counter learns nothing about who was excluded.
+ */
+export function isExcludedVisitor(user: { isAdmin: boolean } | null | undefined): boolean {
+  return user?.isAdmin === true;
+}
+
 function doNotTrackValue(): string | null | undefined {
   if (typeof navigator === "undefined") {
     return undefined;
@@ -92,6 +114,9 @@ function doNotTrackValue(): string | null | undefined {
 
 export function trackSiteTraffic(event: SiteTrafficEvent, path?: string): void {
   if (typeof window === "undefined" || isDoNotTrackEnabled(doNotTrackValue())) {
+    return;
+  }
+  if (isAutomatedBrowser(navigator.webdriver)) {
     return;
   }
 

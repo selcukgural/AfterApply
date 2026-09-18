@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { ShareRow } from "@/components/share/ShareRow";
+import { SITE_URL } from "@/lib/seo/routes";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
 import { benchmarkApi } from "@/lib/api/benchmark";
@@ -98,11 +100,14 @@ export function BenchmarkForm() {
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-gray-600 dark:text-gray-400">
-        {summary && summary.totalSubmissions > 0
-          ? t("participation", { count: formatCount(summary.totalSubmissions, locale) })
-          : t("participationEmpty")}
-      </p>
+      {/* The participation line only once there are enough answers to compare against. Below the
+          threshold it was social proof in reverse — "6 people answered" reads as "nobody uses
+          this" — and the honest thing to say there is nothing (growth audit 2026-09-14, finding 10). */}
+      {summary && summary.totalSubmissions >= summary.minimumSampleSize ? (
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {t("participation", { count: formatCount(summary.totalSubmissions, locale) })}
+        </p>
+      ) : null}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
         <div className="grid gap-5 sm:grid-cols-2">
@@ -261,6 +266,29 @@ function BenchmarkResult({ result, onReset }: { result: BenchmarkResultResponse;
           </p>
         </div>
       )}
+
+      {/* The result as a sentence someone can pass on, with the median in it when there was one —
+          "is yours normal?" is the question that brings the next answer, and the next answer is
+          what lifts a sector over its threshold. */}
+      <ShareRow
+        label={t("result.shareLabel")}
+        content={{
+          text:
+            median !== null && result.scope !== "None"
+              ? t("result.shareTextWithMedian", {
+                  applications: formatCount(result.applicationCount, locale),
+                  replies: formatCount(result.replyCount, locale),
+                  rate: formatCount(Math.round(result.yourRate), locale),
+                  median: formatCount(Math.round(median), locale),
+                })
+              : t("result.shareText", {
+                  applications: formatCount(result.applicationCount, locale),
+                  replies: formatCount(result.replyCount, locale),
+                  rate: formatCount(Math.round(result.yourRate), locale),
+                }),
+          url: `${SITE_URL}/${locale}/benchmark`,
+        }}
+      />
 
       <button type="button" onClick={onReset} className="self-start text-sm text-blue-600 hover:underline dark:text-blue-400">
         {t("form.again")}

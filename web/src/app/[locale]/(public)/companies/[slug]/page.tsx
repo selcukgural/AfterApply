@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { buildMetadata } from "@/lib/seo/pageMetadata";
+import { SITE_URL } from "@/lib/seo/routes";
+import { ShareRow } from "@/components/share/ShareRow";
 import { fetchApprovedReviews, fetchCompanyBySlug } from "@/lib/companies/publicApi.server";
 import { ReviewSummaryPanel } from "@/components/companyReviews/ReviewSummaryPanel";
 import { CompanyReviewsSection } from "@/components/companyReviews/CompanyReviewsSection";
@@ -56,6 +58,12 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">{company.name}</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
+        {/* A public page with an Open Graph card is the easiest thing on the site to pass on, and
+            the one whose reach (each "X çalışan yorumları" search) the site depends on most. */}
+        <ShareRow
+          label={t("share")}
+          content={{ text: t("shareText", { company: company.name }), url: `${SITE_URL}/${locale}/companies/${slug}` }}
+        />
         {company.website && (
           <a
             href={company.website}

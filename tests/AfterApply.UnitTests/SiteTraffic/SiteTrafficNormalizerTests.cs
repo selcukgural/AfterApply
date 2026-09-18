@@ -148,7 +148,7 @@ public class SiteTrafficNormalizerTests
         // A member added to the enum but not to the normaliser's map would be unreportable — dead
         // storage that nothing could ever write.
         string[] wireNames =
-            ["page_view", "cta_get_started", "cv_scan_completed", "register_started", "register_completed"];
+            ["page_view", "cta_get_started", "cv_scan_completed", "register_started", "register_completed", "share_clicked"];
 
         var reachable = wireNames
             .Select(name => SiteTrafficNormalizer.Normalize(name, "/tr", null)!.Event)
@@ -203,5 +203,25 @@ public class SiteTrafficNormalizerTests
 
         result.ShouldNotBeNull();
         result.Path.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36", false)]
+    [InlineData("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1", false)]
+    [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0", false)]
+    [InlineData("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", true)]
+    [InlineData("Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)", true)]
+    [InlineData("Mozilla/5.0 (X11; Linux x86_64) HeadlessChrome/129.0.0.0 Safari/537.36", true)]
+    [InlineData("Mozilla/5.0 (Linux; Android 11; moto g power) Chrome/129 Mobile Safari/537.36 Chrome-Lighthouse", true)]
+    [InlineData("curl/8.4.0", true)]
+    [InlineData("python-requests/2.32", true)]
+    [InlineData("Go-http-client/1.1", true)]
+    [InlineData("", true)]
+    [InlineData(null, true)]
+    public void A_User_Agent_Is_Classified_As_Human_Or_Not(string? userAgent, bool nonHuman)
+    {
+        // Real browsers pass; crawlers, audit tools, headless browsers, HTTP libraries and an absent
+        // header (every real browser sends one) do not. The header is compared and forgotten.
+        SiteTrafficNormalizer.IsNonHumanUserAgent(userAgent).ShouldBe(nonHuman);
     }
 }

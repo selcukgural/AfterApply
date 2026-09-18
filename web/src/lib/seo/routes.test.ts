@@ -235,13 +235,32 @@ describe("visit counter allowlist", () => {
 // because nothing renders a title where a reviewer would notice it missing.
 describe("landing page title", () => {
   it("still carries the term people actually search for", () => {
-    expect(tr.metadata.pages.home.title.toLocaleLowerCase("tr")).toContain("başvuru takip");
+    // "takip" or its inflected "takibi" — the 2026-09-18 title says "iş başvuru takibi".
+    expect(tr.metadata.pages.home.title.toLocaleLowerCase("tr")).toMatch(/başvuru taki[bp]/);
     expect(en.metadata.pages.home.title.toLowerCase()).toContain("application tracker");
   });
 
   it("keeps that term in the description too, alongside the promise", () => {
     expect(tr.metadata.pages.home.description.toLocaleLowerCase("tr")).toContain("başvuru takib");
     expect(en.metadata.pages.home.description.toLowerCase()).toContain("application tracking");
+  });
+
+  // 2026-09-18 (growth audit finding 06): the titles now also speak the words people type —
+  // "ATS" for the CV check, "çalışan yorumları" / "employee reviews" for a company — because
+  // that is what the competing results rank on. The H1s did not change; only what a search
+  // engine matches did.
+  it("names ATS on the pages a CV-check search should land on", () => {
+    expect(tr.metadata.pages.home.title).toContain("ATS");
+    expect(en.metadata.pages.home.title).toContain("ATS");
+    expect(tr.metadata.pages.cvScan.title).toContain("ATS");
+    expect(en.metadata.pages.cvScan.title).toContain("ATS");
+  });
+
+  it("calls a company page what people search for", () => {
+    expect(tr.companies.page.metaTitle.toLocaleLowerCase("tr")).toContain("çalışan yorumları");
+    expect(en.companies.page.metaTitle.toLowerCase()).toContain("employee reviews");
+    expect(tr.metadata.pages.companies.title.toLocaleLowerCase("tr")).toContain("çalışan yorumları");
+    expect(en.metadata.pages.companies.title.toLowerCase()).toContain("employee reviews");
   });
 });
 

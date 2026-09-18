@@ -177,6 +177,11 @@ describe("visit counter", () => {
     // a CV reports nothing at all — the scan is counted where it happens, on /cv-tarama.
     "components/landing/HeroCtaButtons.tsx",
     "components/landing/WeeklyJobsHeroCtas.tsx",
+    // The share row reports one `share_clicked` per use — again a name and a path, never what was
+    // shared or with whom. It renders on the CV result, the benchmark result and the company page,
+    // all public; a signed-in page that ever mounted it would be caught by the (protected) rule
+    // below only if it were listed here, which is why the row itself stays the single caller.
+    "components/share/ShareRow.tsx",
   ];
 
   it("is reported from public pages only", () => {
