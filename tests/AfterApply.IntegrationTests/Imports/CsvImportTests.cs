@@ -9,6 +9,7 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Imports;
 using AfterApply.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -94,6 +95,31 @@ public class CsvImportTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHos
         fetched!.Id.ShouldBe(summary.Id);
         fetched.NewApplications.ShouldBe(2);
         fetched.Errors.Single().ErrorMessage.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    /// <summary>The progress hub sits on the Redis backplane, and a group send while Redis is
+    /// unreachable throws. That must cost the uploader a push, not the import: the notifier
+    /// swallows it, the job completes, and the poll endpoint still tells the truth.</summary>
+    [Fact]
+    public async Task ImportCsv_Completes_When_The_Progress_Push_Cannot_Reach_Redis()
+    {
+        await using var withoutRedis = host.Standalone(builder =>
+        {
+            builder.UseSetting("ConnectionStrings:Redis", "localhost:1,abortConnect=false,connectTimeout=300,syncTimeout=300");
+            builder.UseSetting("Redis:WaitForBackplaneSubscribe", "false");
+        });
+        var (client, _) = await host.RegisterAsync("imports.noredis@example.com", on: withoutRedis);
+
+        var response = await client.PostAsync("/api/imports/csv", BuildCsvUpload(SampleCsv));
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.Accepted);
+        var accepted = await response.Content.ReadFromJsonAsync<ImportAcceptedResponse>(JsonOptions);
+
+        await host.RunJobsAsync();
+        host.Jobs.Failed.ShouldBeEmpty("a lost progress push must not fail the import job");
+
+        var summary = await client.GetFromJsonAsync<ImportSummaryResponse>($"/api/imports/{accepted!.Id}", JsonOptions);
+        summary!.Status.ShouldBe(ImportBatchStatus.Completed);
+        summary.NewApplications.ShouldBe(2);
     }
 
     [Fact]

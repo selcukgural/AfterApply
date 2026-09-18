@@ -4,7 +4,9 @@ using System.Text.Json;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Companies;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
+using Medallion.Threading;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -188,6 +190,37 @@ public class CompanyEnrichmentTests(ApiHost<CompanyEnrichmentProfile> host) : IC
         company.LinkedInUrl.ShouldBeNull();
         company.KariyerNetUrl.ShouldBeNull();
         _handler.Requested.ShouldBeEmpty();
+    }
+
+    /// <summary>Two applications for a new company at the same moment enqueue two enrichments,
+    /// and with several instances they run on two workers at once. The lock in Redis lets one of
+    /// them do the fetch; the other finds the lock held and leaves without touching the network.
+    /// Here the "other worker" is simulated by holding the lock from the test.</summary>
+    [Fact]
+    public async Task A_Worker_That_Finds_The_Enrichment_Lock_Held_Fetches_Nothing()
+    {
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Locked Co", "Backend Engineer",
+                "https://www.linkedin.com/jobs/view/6666666666/", null, null, null, null,
+                CompanyLinkedInUrl: "https://www.linkedin.com/company/locked-co/"),
+            JsonOptions);
+        response.EnsureSuccessStatusCode();
+        var companyId = (await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions))!.Application.CompanyId;
+
+        var locks = _factory.Services.GetRequiredService<IDistributedLockProvider>();
+        var lockName = _factory.Services.GetRequiredService<DistributedLockNames>().CompanyEnrichment(companyId);
+
+        await using (await locks.AcquireLockAsync(lockName))
+        {
+            await host.RunJobsAsync();
+            host.Jobs.Failed.ShouldBeEmpty();
+            _handler.Requested.ShouldBeEmpty("the lock was held by 'another worker', so this one must not fetch");
+        }
+
+        // Released: the next run does the work.
+        using var scope = _factory.Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<ICompanyEnrichmentService>().EnrichAsync(companyId, CancellationToken.None);
+        _handler.Requested.ShouldContain(uri => uri.Host.EndsWith("linkedin.com"));
     }
 
     // The enrichment runs out of band as a background job; it runs here, inline, and the row is

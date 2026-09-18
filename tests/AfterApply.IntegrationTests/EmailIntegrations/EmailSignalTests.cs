@@ -169,6 +169,28 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
         after.GetProperty("hasReceivedSignal").GetBoolean().ShouldBeTrue();
     }
 
+    /// <summary>The extension can deliver one message twice (a retry, two tabs), and with several
+    /// instances both copies can pass the "already processed" check before either commits. The
+    /// unique index on (EmailConnectionId, ProviderMessageId) decides; the loser has to end
+    /// quietly rather than as a failed job that retries the classification. Two copies are run
+    /// at once here; whichever ordering the scheduler picks, the outcome is one suggestion and no
+    /// exception.</summary>
+    [Fact]
+    public async Task Two_Copies_Of_One_Signal_Processed_At_Once_Leave_One_Suggestion_And_No_Failure()
+    {
+        var (client, auth) = await host.RegisterAsync("email-signal.duplicate@example.com", "Signal", "Test");
+        await CreateApplicationAsync("Duplicate Signal Co", client);
+
+        await Task.WhenAll(
+            ProcessExtensionSignalDirectlyAsync(host, auth.User.Id, "hr@duplicate-signal-co.com", "Duplicate Signal Co",
+                "Interview invitation", "We'd like to invite you to an interview.", "thread-duplicate-race-1"),
+            ProcessExtensionSignalDirectlyAsync(host, auth.User.Id, "hr@duplicate-signal-co.com", "Duplicate Signal Co",
+                "Interview invitation", "We'd like to invite you to an interview.", "thread-duplicate-race-1"));
+
+        var suggestions = await client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/suggestions", JsonOptions);
+        suggestions.EnumerateArray().Count().ShouldBe(1);
+    }
+
     [Fact]
     public async Task SuggestionCount_Reflects_Pending_Suggestions_And_Drops_After_Confirm()
     {

@@ -61,6 +61,8 @@ using AfterApply.Infrastructure.TrackedJobs;
 using FluentValidation;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Medallion.Threading;
+using Medallion.Threading.Redis;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -326,6 +328,15 @@ public static class DependencyInjection
             }))
             .AsHybridCache();
         services.AddScoped<ICompanyCacheInvalidator, CompanyCacheInvalidator>();
+
+        // Cross-instance mutex, on the same multiplexer. Deliberately narrow in use: Hangfire's
+        // recurring jobs, the unique indexes and the CV advisory lock already serialise what
+        // Postgres can serialise; this is for work Postgres never sees, such as an outbound fetch
+        // two workers would otherwise both make (CompanyEnrichmentService). Lock names carry the
+        // key prefix so two deployments on one Redis cannot block each other.
+        services.AddSingleton<IDistributedLockProvider>(sp =>
+            new RedisDistributedSynchronizationProvider(sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase()));
+        services.AddSingleton(new DistributedLockNames(cachingOptions.KeyPrefix));
 
         services.AddHealthChecks()
             .AddNpgSql(postgresConnectionString, name: "postgres")
@@ -650,7 +661,14 @@ public static class DependencyInjection
         services.AddHangfire(config => config
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
-            .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(postgresConnectionString)));
+            .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(postgresConnectionString), new PostgreSqlStorageOptions
+            {
+                // A job's invisibility window (30 min by default) is extended while it is still
+                // running instead of expiring at a fixed point: without this a sweep that ran past
+                // thirty minutes — plausible with its politeness delays — was re-fetched by a
+                // worker on another instance and ran twice. Postgres-backed, no Redis involved.
+                UseSlidingInvisibilityTimeout = true
+            }));
 
         // The server is a background worker that immediately polls storage on start — pointless
         // (and, against the placeholder connection string above, noisy) during OpenAPI

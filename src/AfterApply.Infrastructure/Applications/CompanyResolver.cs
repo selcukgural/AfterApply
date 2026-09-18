@@ -56,6 +56,12 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache,
     // The slug is the public page's URL, so it has to be unique; the allocator picks the first
     // free suffix from what the table holds now, and the one race that survives (two requests
     // creating the same name at once) is caught on the index and retried once with the next one.
+    //
+    // The name itself can lose the same race: this instance cached "no such company" and another
+    // instance created it in the meantime (the backplane closes that window to milliseconds, and
+    // while Redis is down it is the whole cache TTL). Then the NormalizedName index refuses the
+    // insert, and the right answer is the row that won, not a 500 — so it is looked up and
+    // returned, and the cache learns the id.
     private async Task<Company> CreateWithSlugAsync(string companyName, CompanyProfileLinks? profileLinks,
         CancellationToken cancellationToken)
     {
@@ -75,8 +81,19 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache,
             {
                 dbContext.Entry(company).State = EntityState.Detached;
             }
+            catch (DbUpdateException ex) when (IsNameCollision(ex))
+            {
+                dbContext.Entry(company).State = EntityState.Detached;
+                return await dbContext.Companies.SingleAsync(c => c.NormalizedName == company.NormalizedName, cancellationToken);
+            }
         }
     }
+
+    /// <summary>The NormalizedName index saying "taken": another request created this company
+    /// between our cached miss and our insert.</summary>
+    internal static bool IsNameCollision(DbUpdateException exception) =>
+        exception.InnerException is Npgsql.PostgresException { SqlState: "23505" } pg
+        && pg.ConstraintName?.Contains("NormalizedName", StringComparison.Ordinal) == true;
 
     // A near-duplicate/exact-name match may predate the extension ever capturing a profile URL —
     // this is the only path (besides Company.Create itself) that ever writes them, so it's

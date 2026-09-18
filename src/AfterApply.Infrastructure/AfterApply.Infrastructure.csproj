@@ -21,6 +21,7 @@
     <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" />
     <PackageReference Include="ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" />
+    <PackageReference Include="DistributedLock.Redis" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
