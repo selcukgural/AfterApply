@@ -104,6 +104,9 @@ public static class SiteTrafficNormalizer
         // The scan's slug is translated: /tr/cv-tarama, /en/cv-scan (web/src/lib/cvScan/path.ts).
         "/cv-tarama",
         "/cv-scan",
+        // The about page, translated the same way: /tr/hakkimizda, /en/about.
+        "/hakkimizda",
+        "/about",
         "/companies",
         "/privacy",
         "/cookies",

@@ -1,6 +1,7 @@
 import { routing } from "@/i18n/routing";
 import { GUIDE_ARTICLES, GUIDE_PATH, articlePaths } from "@/lib/guide/articles";
 import { CV_SCAN_PATHS } from "@/lib/cvScan/path";
+import { ABOUT_PATHS } from "@/lib/about/path";
 
 export const SITE_URL = "https://ekariyerim.com";
 export const SITE_NAME = "e-kariyerim";
@@ -49,6 +50,7 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "/benchmark",
   // Translated like the guide slugs: /tr/cv-tarama, /en/cv-scan.
   CV_SCAN_PATHS,
+  ABOUT_PATHS,
   "/companies",
   "/companies/scoring",
   "/privacy",

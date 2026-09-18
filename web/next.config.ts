@@ -131,6 +131,8 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         { source: "/en/cv-scan", destination: "/en/cv-tarama" },
         { source: "/en/cv-scan/score/:card", destination: "/en/cv-tarama/puan/:card" },
+        // The about page, the same way (src/lib/about/path.ts).
+        { source: "/en/about", destination: "/en/hakkimizda" },
       ],
       afterFiles: [],
       fallback: [],

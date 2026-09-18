@@ -91,6 +91,10 @@
         "title": "Geri Dönüş Oranı Kıyaslama",
         "description": "Kaç başvuru yaptın, kaçından dönüş aldın? Kendi geri dönüş oranını gör ve alanındaki medyanla kıyasla. Kayıt gerekmiyor."
       },
+      "about": {
+        "title": "Hakkımızda — adayın tarafında bir ekip",
+        "description": "e-kariyerim'i kim, neden yapıyor: iş arama sürecinin aday tarafında gördüğümüz problem, ne yapmak istediğimiz, ilkelerimiz ve bize nasıl ulaşacağın."
+      },
       "cvScan": {
         "title": "Ücretsiz ATS CV Kontrolü — başvuru sistemi CV'ni nasıl okuyor?",
         "description": "CV'ni yükle, başvuru sistemlerinin ondan ne okuduğunu gör. ATS okunabilirliği puanı, ham metin ve düzeltme listesi. Kayıt gerekmiyor, dosya saklanmıyor."
@@ -368,51 +372,6 @@
         "submit": "Başvurdum"
       }
     },
-    "vision": {
-      "eyebrow": "Vizyon",
-      "title": "Daha büyük bir şey inşa ediyoruz.",
-      "body1": "Bugün kendi başvurularını takip ediyorsun.",
-      "body2": "Yarın, anonim ve toplu adaylık verileriyle işe alım süreçlerinin nasıl işlediğini daha iyi anlayabiliriz.",
-      "stepYours": "Senin Başvuruların",
-      "stepAggregate": "Anonim & Toplu Veri",
-      "stepOutcomes": "Başvuru Sonuçları",
-      "stepInsights": "İşe Alım İçgörüleri",
-      "stepTransparency": "Daha Şeffaf İşe Alım",
-      "disclaimer": "Bu henüz mevcut olmayan, uzun vadeli bir vizyon. Hayata geçtiğinde şirketleri hedef almadan, yeterli örneklem büyüklüğü şartıyla ve tamamen anonim/toplu veriyle çalışacak."
-    },
-    "mission": {
-      "eyebrow": "Misyonumuz",
-      "statement": "Bir ilana başvuran insanın da zamanı değerlidir.",
-      "narrative1": "CV hazırladı. Şirketi araştırdı. Başvuru yaptı.",
-      "narrative2": "Belki teknik bir test çözdü. Belki bir mülakata girdi.",
-      "narrative3": "Sonra bekledi. Bir gün. Bir hafta. İki hafta.",
-      "narrative4": "Ve hiçbir şey.",
-      "closing": "Biz bunun normalleşmesini istemiyoruz.",
-      "closingNote": "Olumsuz cevap bile cevapsızlıktan daha değerlidir.",
-      "philosophy1": "İnsanların zamanı değerlidir.",
-      "philosophy2": "Adayların cevap almaya hakkı vardır.",
-      "philosophy3": "Olumsuz cevap, cevapsızlıktan daha değerlidir.",
-      "philosophy4": "Şeffaflık hem adaylara hem şirketlere fayda sağlar.",
-      "philosophy5": "Veri, kişileri suçlamak için değil, sistemi iyileştirmek için kullanılmalıdır."
-    },
-    "roadmap": {
-      "title": "Bugün ve yarın",
-      "today": "Bugün",
-      "future": "Gelecek",
-      "todayTracking": "Başvuru takibi",
-      "todayAnalytics": "Kişisel analitik",
-      "todayImport": "LinkedIn içe aktarma",
-      "todayReminders": "Hatırlatıcılar",
-      "todayCv": "CV saklama",
-      "todayEmail": "Gmail taraması entegrasyonu",
-      "todayExtension": "Tarayıcı eklentisi",
-      "futureInsights": "Anonim, toplu işe alım içgörüleri",
-      "todayCvScan": "CV taraması (hesapsız)",
-      "todayBenchmark": "Geri dönüş kıyası (hesapsız)",
-      "todayCompanies": "Şirket değerlendirmeleri",
-      "todayWeeklyJobs": "Haftalık ilan eşleştirme",
-      "proBadge": "Pro"
-    },
     "privacy": {
       "eyebrow": "Güven",
       "title": "Verilerin senindir.",
@@ -425,6 +384,8 @@
       "link": "Gizlilik politikasını incele"
     },
     "finalCta": {
+      "who": "Kim yapıyor, neden?",
+      "whoLink": "Hakkımızda",
       "title": "Kaç başvuru yaptığını ve kaçının cevaplandığını bil.",
       "body": "Ücretsiz. LinkedIn geçmişini içe aktarınca ilk sayıların birkaç dakikada çıkar.",
       "button": "Ücretsiz Başla",
@@ -432,6 +393,8 @@
     },
     "footer": {
       "tagline": "İş arama sürecin, artık anlaşılır.",
+      "contact": "Bize yaz",
+      "follow": "Bizi takip et",
       "product": "Ürün",
       "explore": "Keşfet",
       "legal": "Yasal",
@@ -4732,6 +4695,56 @@
       "modalLink": "Emin değil misin? Rehber →"
     }
   },
+  "about": {
+    "eyebrow": "Hakkımızda",
+    "title": "Bir ilana başvuran insanın da zamanı değerlidir.",
+    "intro": "e-kariyerim, iş arama sürecinin aday tarafında yıllardır aynı sorunu gören bir ekibin projesi: insanlar onlarca ilana başvuruyor, çoğundan hiç haber almıyor ve elinde ne olup bittiğini gösteren tek bir sayı bile yok. Bu tarafta bir araç yoktu; biz onu yapmaya başladık.",
+    "problem": {
+      "title": "Sektörde gördüğümüz problem",
+      "story1": "CV hazırladın, şirketi araştırdın, başvurdun; belki bir test çözdün, bir mülakata girdin.",
+      "story2": "Sonra bekledin. Bir gün. Bir hafta. İki hafta.",
+      "story3": "Ve hiçbir şey.",
+      "body": "İşe alım araçlarının tamamı işverenin masasında duruyor: aday takip sistemleri, ilan panoları, filtreler. Adayın elinde ise gelen kutusu ve tahmin var.",
+      "closing": "Biz bunun normalleşmesini istemiyoruz.",
+      "closingNote": "Olumsuz cevap bile cevapsızlıktan daha değerlidir."
+    },
+    "aim": {
+      "title": "Ne yapmak istiyoruz",
+      "body": "Süreci adayın gözünden görünür kılmak: kendi başvurularını takip et, kaçının cevaplandığını gerçek verinden gör, CV'nin başvuru sistemlerinde nasıl okunduğunu ölç, oranını alanının medyanıyla kıyasla ve senden önce başvuranların şirketler hakkında anlattıklarını oku. Adayların birikmiş deneyimi, bir sonraki adaya yol olsun."
+    },
+    "today": {
+      "title": "Bugün ne var",
+      "items": {
+        "tracking": "Başvuru takibi ve kişisel analitik",
+        "import": "LinkedIn içe aktarma ve tarayıcı eklentisi",
+        "reminders": "Hatırlatıcılar ve Gmail taraması",
+        "cv": "CV saklama ve ATS okunabilirliği",
+        "tools": "Hesapsız araçlar: CV taraması ve geri dönüş kıyası",
+        "companies": "Şirket değerlendirmeleri, maaşlar ve aday deneyimleri"
+      }
+    },
+    "principles": {
+      "title": "İlkeler",
+      "items": {
+        "time": "İnsanların zamanı değerlidir; adayların cevap almaya hakkı vardır.",
+        "data": "Veri, kişileri suçlamak için değil, sistemi iyileştirmek için kullanılır.",
+        "transparency": "Şeffaflık hem adaylara hem şirketlere fayda sağlar; şirketleri hedef almayız ve eşiğin altında sayı göstermeyiz.",
+        "privacy": "Ne saklandığı madde madde yazılıdır — \"hiçbir şey\" ancak listelenince inandırıcıdır."
+      },
+      "privacyLink": "Gizlilik Politikası"
+    },
+    "contact": {
+      "title": "İletişim",
+      "body": "Yazmak için:",
+      "feedback": "Uygulama içinden \"Geri bildirim\" düğmesi de doğrudan bize ulaşır."
+    }
+  },
+  "siteStats": {
+    "soFar": "Bugüne kadar",
+    "cvScans": "{count, plural, one {CV tarandı} other {CV tarandı}}",
+    "benchmarkAnswers": "{count, plural, one {kıyas yapıldı} other {kıyas yapıldı}}",
+    "publishedReviews": "{count, plural, one {değerlendirme yayımlandı} other {değerlendirme yayımlandı}}"
+  },
   "siteNav": {
     "howItWorks": "Nasıl çalışır",
     "extension": "Eklenti",
@@ -4740,7 +4753,7 @@
     "benchmark": "Kıyaslama",
     "guide": "Rehber",
     "help": "Yardım",
-    "mission": "Misyonumuz",
+    "about": "Hakkımızda",
     "signIn": "Giriş Yap",
     "getStarted": "Ücretsiz Başla",
     "goToDashboard": "Panele Git",

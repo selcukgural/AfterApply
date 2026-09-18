@@ -43,6 +43,29 @@ describe("the landing page order", () => {
 
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
+
+  // 2026-09-18 (growth audit finding 11): the vision, mission and roadmap sections moved to the
+  // about page, and the site's running totals sit right under the tools strip, as one line.
+  it("carries the stats strip under the tools strip and no vision/mission/roadmap section", () => {
+    expect(indexOf("SiteStatsStrip")).toBeGreaterThan(indexOf("ToolsStrip"));
+    expect(indexOf("SiteStatsStrip")).toBeLessThan(indexOf("ProblemSection"));
+    for (const gone of ["VisionSection", "MissionSection", "RoadmapSection"]) {
+      expect(page).not.toContain(`<${gone} />`);
+    }
+  });
+
+  it("points at the about page from the final call to action", () => {
+    expect(stripComments(readLanding("FinalCtaSection.tsx"))).toContain("aboutPath(locale)");
+  });
+});
+
+describe("the stats strip", () => {
+  const source = stripComments(readLanding("SiteStatsStrip.tsx"));
+
+  it("draws nothing when no figure cleared the threshold, and never a tile", () => {
+    expect(source).toContain("if (figures.length === 0) return null;");
+    expect(source).not.toMatch(/text-[3-5]xl/);
+  });
 });
 
 describe("the tools strip", () => {

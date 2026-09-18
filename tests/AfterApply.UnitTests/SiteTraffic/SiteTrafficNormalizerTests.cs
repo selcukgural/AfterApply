@@ -71,6 +71,8 @@ public class SiteTrafficNormalizerTests
     /// </summary>
     [Theory]
     [InlineData("/en/cv-scan", "/cv-scan")]
+    [InlineData("/tr/hakkimizda", "/hakkimizda")]
+    [InlineData("/en/about", "/about")]
     [InlineData("/tr/cv-tarama/puan/88", "/cv-tarama/puan")]
     [InlineData("/tr/cv-tarama/puan/88-28-22-20-18", "/cv-tarama/puan")]
     [InlineData("/en/cv-scan/score/61-20-15-14-12", "/cv-scan/score")]

@@ -1,4 +1,5 @@
 import { SITE_NAME, SITE_URL } from "./routes";
+import { SOCIAL_LINKS } from "@/lib/constants/socialLinks";
 
 /**
  * schema.org descriptions of the site, emitted as JSON-LD.
@@ -23,6 +24,9 @@ export function organizationJsonLd(): JsonLdNode {
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/brand/logo-mark.png`,
+    // The product's own accounts — what lets a search engine tie the name to the site when
+    // "kariyerim" belongs to someone else's product (growth audit finding 07).
+    sameAs: SOCIAL_LINKS.map((link) => link.href),
   };
 }
 

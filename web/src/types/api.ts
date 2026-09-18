@@ -558,6 +558,13 @@ export interface GitHubAuthConfig {
 /** Whether the CV scan can offer its optional content-notes consent. False means the checkbox is
  *  not rendered at all — a box for something that cannot happen is a promise the page cannot
  *  keep. The scan itself does not depend on this. */
+/** GET /api/site-stats: running totals, each null while under the API's threshold. */
+export interface SiteStatsResponse {
+  cvScans: number | null;
+  benchmarkAnswers: number | null;
+  publishedReviews: number | null;
+}
+
 export interface CvScanConfig {
   /** The CvScan:Enabled flag: the stored-CV scan on /cv is offered only while the routes exist. */
   enabled: boolean;
