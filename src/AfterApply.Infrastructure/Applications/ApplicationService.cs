@@ -804,7 +804,7 @@ internal sealed class ApplicationService(
         // Industry and Country in the background, after this row already exists.
         var company = await dbContext.Companies
             .Where(c => c.Id == application.CompanyId)
-            .Select(c => new { c.Name, c.Website, c.LinkedInUrl, c.KariyerNetUrl, c.Industry, c.Country })
+            .Select(c => new { c.Name, c.Website, c.LinkedInUrl, c.KariyerNetUrl, c.Industry, c.Country, c.Slug })
             .FirstAsync(cancellationToken);
 
         var jobDescriptionHtml = application.JobId is null
@@ -831,6 +831,6 @@ internal sealed class ApplicationService(
             application.CreatedAt, application.UpdatedAt, jobDescriptionHtml,
             application.HrName, application.HrEmail, application.HrLinkedInUrl, application.HrEmailSource,
             application.CvDocumentId, cvDocumentFileName,
-            company.KariyerNetUrl, company.Industry, company.Country);
+            company.KariyerNetUrl, company.Industry, company.Country, company.Slug);
     }
 }

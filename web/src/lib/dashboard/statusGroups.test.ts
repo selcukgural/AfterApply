@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitDistribution, summariseOutcome } from "@/lib/dashboard/statusGroups";
+import { STATUS_TONE, splitDistribution, summariseOutcome } from "@/lib/dashboard/statusGroups";
 import type { StatusDistributionItem } from "@/types/api";
 
 describe("splitDistribution", () => {
@@ -87,5 +87,14 @@ describe("summariseOutcome", () => {
     const outcome = summariseOutcome([{ status: "Applied", count: 5 }]);
 
     expect(outcome).toMatchObject({ won: 0, lost: 0, resolved: 0, winRate: 0 });
+  });
+});
+
+describe("STATUS_TONE keeps red for errors, not outcomes (T1, 2026-09-18)", () => {
+  it("colours no application status as critical", () => {
+    // A rejection is a result. The moment a status is painted "crit" the board starts grading
+    // the person; whoever wants that back should read DEVELOPMENT_PLAN.md's T-series first.
+    expect(Object.values(STATUS_TONE)).not.toContain("crit");
+    expect(STATUS_TONE.Rejected).toBe("muted");
   });
 });

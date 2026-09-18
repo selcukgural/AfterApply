@@ -7387,3 +7387,77 @@ gösterir).
 **Açık kalanlar.** 64 madde metni değerlendirmelerinkiyle aynı avukat listesine gider (metin
 değişirse yalnız `web/messages`). Deneyim sekmesi client-only (crawler görmez; maaş sekmesiyle
 tutarlı; uç public olduğu için ileride SSR'a alınabilir). Web + API birlikte deploy.
+
+---
+
+## T-serisi ilk parti: pano tonu, ghost satırında kişinin kendi medyanı, kapanışta katkı daveti (2026-09-18)
+
+**Bağlam.** `DEVELOPMENT_PLAN.md`'ye aynı gün eklenen "Uzun süredir arayan için tutma ilkeleri —
+T-serisi" bölümünün ilk üç maddesi (T1, T6, T3) tek partide yapıldı. Teşhis orada: bir başvuru
+takip panosu, aylardır iş bulamayan insan için kendi çabasının aynada büyütülmüş hâlidir; "127
+başvuru, 4 görüşme, 0 teklif" yalnız başına bir başarısızlık anıtıdır ve kişi ona bakmamak için
+uygulamayı bırakır. Cümleler koda geçmeden önce kullanıcıya liste hâlinde gösterildi ve
+onaylandı.
+
+**T1 — panonun tonu (yalnız web).** Reddedilen kutusu `crit` → `muted`; `STATUS_TONE.Rejected`
+de `muted` oldu, yani sonuç kartı ve durum dağılımı da kırmızısız (test: hiçbir durum `crit`
+değil). Sonuç şeridindeki üç nötr dilim artık opaklıkla ayrışıyor (`opacity-60/35`) — eski
+"yeşil ile kırmızı arasına nötr ayırıcı" gerekçesi kırmızı gidince düştü. Sayı 0 olan kutuda
+oran çipi yok (`rateChip`): "0 · %0 oran" bilgi değil, aynı yokluğun iki kez söylenmesi. Başlık
+cümlesi ikiye bölündü: birinci cümle sabit, ikincisi yalnız hareket edeni söylüyor
+(`headlineProgress.{both,interviews,offers}`, `progressKey`); ikisi de sıfırsa ikinci cümle
+yok. "Kazanma oranı" → "Olumlu sonuç", "En dar boğaz ... yalnızca" → "En büyük düşüş ...".
+Bayat başvuru sorusundaki "açık başvuru sayın düşer" (kayıp gibi okunuyordu) → "bekleme listen
+kısalır". `copy.test.ts`'e **ton tripwire'ı**: `dashboard.*` altında kazanma/kaybettin/
+yalnızca/sadece/pes/maalesef (TR) ve win rate/won/lost/only/unfortunately/don't give up/keep
+going (EN) geçerse test kırılır — sonradan biri motivasyon cümlesi eklerse burada durur.
+Yardım merkezinin pano sayfası ("kazanma oranı", "en dar boğaz") aynı sürümde düzeltildi ve
+`dashboard-overview.png` yeniden çekildi (aşağıda).
+
+**T3 — ghost satırında kişinin kendi medyanı (API + web).** `ReminderResponse`'a **additive**
+`UserMedianResponseDays` (nullable). `ReminderService` sayfada `PossiblyGhosted` satır varsa
+kullanıcının ilk-yanıt sürelerini SQL'de gruplayıp (`AnalyticsService`'le aynı "yanıt geldi"
+tanımı: `ApplicationStatusClassification.RespondedStatuses`) `ReminderCalculations.
+UserMedianResponseDays` ile medyana indiriyor; **en az 3 yanıtlı başvuru** yoksa `null`
+(`MedianMinimumSampleSize` — tek hızlı retten "sana 2 günde dönüyorlar" çıkarmak sonraki otuz
+günü yalanlar). Tam güne yuvarlanır. Panel cümlesi: *"Muhtemelen sessize alındı · 31 gündür
+yanıt yok — sana normalde 7 günde dönüyorlar"*; medyan yoksa eski cümle. Yalnız ghost satırında —
+takip satırı zaten cevap almış bir başvuru hakkında. Sabit 30 günlük eşik değişmedi; değişen,
+bekleme iznini bitirme yetkisinin bir config değerinden değil kişinin kendi geçmişinden gelmesi.
+
+**T6 — kapanışta katkı daveti (web + bir additive alan).** `ApplicationDetailResponse`'a
+`CompanySlug`. Başvuru `Rejected` ya da `Ghosted` iken durum kontrolünün altında tek satır
+(`ShareExperienceInvite`): *"Bu süreçte yaşadığını senden sonrakiler bilsin — {company} ile
+deneyimini paylaş"* → `/contribute?tab=experience&company={slug}`, şirket önceden seçili.
+Yalnız aday deneyimi bayrağı açıkken, slug varken ve bu şirkette kişinin kaydı yokken
+(`viewerState.ownEntry === null`; sorgu yalnız o koşulda atılıyor). Kutu yok, vurgu rengi
+yok, ünlem yok — teklif, dürtme değil. İki durumu ayıran cümle **yazılmadı**: "reddedildin,
+anlat" retin vurgusunu büyütürdü. Hatırlatıcı panelinde toplu "sessize alındı" sonrası
+`BulkResultBanner`'a `aside` slotu: *"Bu şirketlerle deneyimini paylaşmak istersen: Deneyim
+paylaş"* → şirket seçimsiz (parti birden fazla şirketi kapsıyor). Katkı davet banner'ının
+deneyim cümlesi de "puanlayabilirsin" → "yaşadığını paylaşabilirsin — senden sonrakine yol olur".
+
+**Testler.** Birim 970 (yeni 5: medyan eşiği/yuvarlama), entegrasyon 546/546 (yeni 3:
+medyan 9 döner, n<3'te null, başka kullanıcının yanıtları sayılmaz; `AuthAndApplicationFlow`
+slug'ı pinliyor — ilk koşuda iki yeni test "tek satır" beklediği için düştü: cevaplanmış
+başvurular da takip hatırlatıcısı üretiyor, ghost satırı `Single(type)` ile seçildi), vitest 647
+(yeni: ton tripwire'ı, `progressKey`/`rateChip`, `invitesExperience`, `STATUS_TONE` pin),
+tsc + eslint temiz. Tarayıcıda (yerel yığın, demo hesap, headless CDP): pano — nötr ret
+kutusu, 0'sız çipler, iki ghost satırında "sana normalde 7 günde dönüyorlar", "Olumlu sonuç",
+"En büyük düşüş"; Insider/Data Analyst (Reddedildi) detayında davet satırı; link Insider
+seçili deneyim formunu açıyor.
+
+**Görsel.** `dashboard-overview.png` yeniden çekildi. Demo hesabına `Notes='[[seed:t1-shot]]'`
+işaretli 118 geçici satır eklendi (eski görselin sayılarıyla birebir: 127/37/%29,1/10/2/18/4),
+çekim sonrası satırlar + durum geçmişleri silindi, hesap 9 başvuruya döndü. Yeni görselde
+hatırlatıcı kartı **var** (T3 cümlesini gösteriyor; gerçek özellik), haftalık ilan duyurusu
+**yok** (prod'da bayrak kapalı; DOM'dan çıkarıldı, hesap durumu değişmedi). Reçete:
+help-screenshot notundaki CDP akışı, Node 26'nın yerleşik `WebSocket`'iyle.
+
+**Rozet de aynı partide (aynı gün, kullanıcı isteğiyle).** `StatusBadge`'in "Reddedildi" rozeti
+ve şirket görünümündeki çubuk rengi kırmızı → gri (`gray-200/700`, Geri çekildi'den bir ton koyu
+ki iki nötr son ayırt edilsin); e-posta önerilerindeki "Belirtilen ret sebebi" satırı kırmızı →
+nötr kalın. `StatusBadge.test.ts` hiçbir durumun `red-`/`rose-` almadığını pinliyor. Bu rozeti
+gösteren dört yardım görseli (`applications-list`, `applications-company-view`,
+`applications-bulk`, `suggestions-list`) demo hesabından yeniden çekildi — hesap verisi
+değişmedi. T5 (mola modu) ikinci parti.

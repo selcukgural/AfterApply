@@ -1103,3 +1103,184 @@ birkaç gün, ve çıktısı "haklıydım/haksızdım" değil rakam.
 Aynı test **K1'in kaderini de belirliyor:** kimse sektör sayısını umursamıyorsa
 şirket bazlı sayıyı hiç umursamaz, ve o hukuki görüş masrafına hiç girilmemiş
 olur. K1'in kalan iki kilidi (veri hacmi, hukuk) zaten bizde değil.
+
+## Uzun süredir arayan için tutma ilkeleri — T-serisi (2026-09-18)
+
+> **Bağlam:** V-serisi "kullanıcı neden gelmiyor" sorusuna bakıyordu. Bu bölüm
+> bir sonraki soruya bakıyor: **gelen, aylardır iş bulamayan ve sıkıntıdaki
+> insan neden kalsın?** Çıkış noktası uzun süreli işsizlik psikolojisi
+> literatürü (Jahoda'nın gizli yoksunluk modeli, öğrenilmiş çaresizlik,
+> kıtlık psikolojisi) ile ürünün mevcut yüzeylerinin karşılaştırılması.
+> Numara = yapılma sırası, T = kalıcı kimlik. **Hepsi hipotez** — kullanıcı
+> yok, V0 ölçümü olmadan hiçbirinin tuttuğu bilinemez.
+
+### Kabul edilen teşhis
+
+Uzun süredir arayanın yaşadığı şey "moral bozukluğu" değil, üst üste binen
+somut kayıplar: kimlik/statü kaybı, günün zaman yapısının çökmesi, ghosting'in
+yarattığı **belirsiz kayıp** (net ret yas tutulabilir, sessizlik tutulamaz →
+gelen kutusuna hipervijilans), sebep boşluğunun **kendini suçlamayla**
+doldurulması (ret e-postalarının yalnızca %15-20'si sebep veriyor; DECISIONS.md
+posta kutusu denetimi), kıtlık tüneli (para azaldıkça planlama kapasitesi
+düşer), utançla geri çekilme ve arama yorgunluğu ("pes etme" bu noktada
+yardım değil, hakaret).
+
+**Ürün açısından tek cümle:** bu insanın en büyük düşmanı kendi çabasının
+aynada büyütülmüş hâlidir — ve bir başvuru takip panosu tam olarak o aynadır.
+"127 başvuru, 4 görüşme, 0 teklif" yalnız başına bir başarısızlık anıtıdır;
+kişi ona bakmamak için uygulamayı bırakır. Bugünkü pano bunu yapıyor:
+`tiles.rejected` kırmızı (`tone="crit"`), teklif kutusu "0 · %0", sonuç kartı
+"Kazanma oranı / Reddedilen", huni "en dar boğaz ... yalnızca %X". Hepsi doğru,
+hepsi kişinin kontrolü dışında ve hepsi onu suçluyor.
+
+Hedef "sıkıntıdaki insanı tutmak" değil, ona faydalı olmak; tutma onun sonucu.
+Ölçülebilir karşılığı: **çıkışta hissettiği şey "kendimi daha kötü hissettim"
+değil, "bir şey netleşti" olmalı.**
+
+### Standing kurallar (her yeni yüzey için, madde değil)
+
+- **Motivasyon cümlesi yok.** "Pes etme", "her ret hedefe yaklaştırır" — asla.
+  Sakin, olgusal, yetişkin bir dil.
+- **Ret ve ghost için alarm rengi yok.** Bunlar hata değil, veri. Ghost dilde
+  retten ayrı tutulur: rette "onlar seçti", ghost'ta "onlar ayıp etti" — leke
+  kullanıcının değil şirketin sicilinde.
+- **Suçlayan bildirim yok.** "5 gündür başvuru yapmadın" ve benzeri cümleler
+  kıtlık tünelindeki insanı kaçırır.
+- **Gamification, streak, günlük kota yok.** Bu kitle için kaybedilen streak
+  bir başarısızlık daha.
+- **Başkalarıyla kıyas yok, normla kıyas var.** Sektör medyanı evet, lider
+  tablosu hayır.
+- **Sonuç metriği kişinin kontrolünde değil; süreç metriği kontrolünde.** Her
+  özet, kontrol edilebilir tek bir sonraki adım önerir — üç değil, bir.
+- **Terapi taklidi yok.** Bir iş sitesi terapi değildir; öyle görünmek
+  güvenilirliği bozar.
+
+### Sıra 1 — T1: Aynayı düzelt — panonun tonu ✅ (2026-09-18)
+
+- **Ne var:** `dashboard/page.tsx` — reddedilen kutusu `tone="crit"`, teklif
+  kutusu 0 iken "%0" çipi, başlık cümlesi "0 teklif yanıt bekliyor",
+  `outcome.winRate` = "Kazanma oranı", `outcome.lost` = "Reddedilen",
+  `funnel.bottleneck` = "yalnızca {rate} kadarı buraya geçiyor".
+- **Yapılacak:** (a) ret/ghost kutuları nötr ton; (b) sayı 0 iken oran çipi
+  gizlenir — "%0" bir bilgi değil, bir yargı; (c) başlık cümlesi sıfır
+  teklifte teklif tümcesini atar; (d) "Kazanma oranı" → "Sonuçlananlar" gibi
+  nötr etiket, "yalnızca" kelimesi huniden çıkar; (e) `copy.test.ts`'e
+  **ton tripwire'ı**: `dashboard.*` ve `reminders.*` altında yasaklı kelime
+  listesi (kazanma, kaybettin, pes, yalnızca ...) — sonradan biri motivasyon
+  cümlesi eklerse test kırılır.
+- **Maliyet:** saatler. Backend yok, migration yok.
+- **Kilidi:** yok. Bugün yapılabilir.
+
+### Sıra 2 — T6: Katkıyı anlam kaynağı yap ✅ (2026-09-18)
+
+- **Ne var:** Değerlendirme, maaş ve aday deneyimi formları; `/contribute`
+  üçlüsü; hatırlatıcı panelinde "ghost olarak işaretle". Sunum "şirketi
+  puanla" dilinde.
+- **Yapılacak:** Ghost işaretlemesinin ve ret geçişinin hemen ardından, tek
+  cümle ve tek link: *"Bu süreçte yaşadığını senden sonrakiler bilsin —
+  deneyimini paylaş."* → aday deneyimi formu, şirket önceden seçili.
+  Literatürde adı **anlam kurma**: reddedilen deneyimi bir sonraki adaya
+  faydalı hâle getirmek "boşa gitmedi" hissi verir ve uzun işsizlikte en
+  koruyucu davranışlardan biridir. Aynı dil `contribute.banner` ve şirket
+  sayfası sekme boş durumlarına.
+- **Maliyet:** saatler. Mevcut formlar, mevcut route'lar.
+- **Kilidi:** yok.
+
+### Sıra 3 — T3: Belirsizliğe kapanış — ghost hatırlatıcısı n=1 medyanla ✅ (2026-09-18)
+
+- **Ne var:** `ReminderCalculations` sabit eşikler (takip 7 gün, ghost 30 gün,
+  ufuk 90 gün — `Notifications:*ThresholdDays`). `AnalyticsService` kişinin
+  kendi medyan yanıt süresini zaten hesaplıyor (`ResponseTimeStatsResponse`).
+  Ghost hatırlatıcısının cümlesi "30 gündür yanıt yok".
+- **Yapılacak:** Cümleye kişinin kendi normunu ekle: *"Sana normalde 9 günde
+  dönüyorlar; bu 31 gündür sessiz. Kapatalım mı?"* Kapatma = `Ghosted`'a
+  geçiş, tek tık (var). Kişiye **bekleme iznini bitirme yetkisi** verilir;
+  kapatmak yenilgi değil zihinsel yer açmaktır. Medyan yoksa (n<3) bugünkü
+  sabit cümle kalır. İleride şirket medyanı (K1 verisi) aynı cümleye
+  takılır; n=1 sürümü onu beklemez.
+- **Maliyet:** 1-2 gün. Reminder yanıtına `UserMedianResponseDays?` alanı
+  (additive), panel cümlesi, birim + entegrasyon testleri.
+- **Kilidi:** yok. V4'ün "kişinin kendi ortalamasına göre" ilkesinin ilk
+  somut uygulaması — V4'ün önüne alınır, çünkü daha dar ve daha acil.
+- **Yapıldı (2026-09-18):** T1+T6+T3 tek partide, ret rozeti (`StatusBadge`)
+  ve e-posta önerilerindeki ret sebebi satırı da aynı partide nötrleşti;
+  DECISIONS.md'de aynı tarihli girdi.
+
+### Sıra 4 — T5: Mola modu (kod: API + web, migration)
+
+- **Ne var:** Hatırlatıcılar yalnız uygulama içi (e-posta yok — iyi), toplu
+  kapatma var (2026-09-13). Ama ara veren kişi döndüğünde "12 hatırlatıcı"
+  yığınıyla karşılanıyor; yığının hiç oluşmaması daha iyi.
+- **Yapılacak:** `User.RemindersPausedUntil` (nullable) — profil sayfasında
+  "1 hafta / 2 hafta / 1 ay ara ver". Süre boyunca hatırlatıcı paneli ve
+  bayat-başvuru sorusu gizli, tarama işi bu kullanıcı için satır üretmez.
+  Dönüşte bir cümle: *"Ara verdiğin sürede 12 başvuru sessizleşti — hepsini
+  kapatalım mı?"* (toplu kapatma, var). Haftalık ilan e-postası **etkilenmez**
+  — ödenmiş bir hizmettir, mola onu kesmez. Uzun arayanın en sağlıklı
+  davranışlarından biri bir hafta durmaktır; **ara vermek churn değildir,
+  churn dönmeye korkmaktır.**
+- **Maliyet:** 2-3 gün. Migration, `ReminderService` filtresi, `/me`
+  endpoint'ine alan, profil UI, testler.
+- **Kilidi:** yok.
+
+### Sıra 5 — T2: Normu aynanın yanına koy (kod: API + web)
+
+- **Ne var:** V2 kıyas aracı (`/benchmark`) anonim anket verisiyle sektör
+  medyanı veriyor, eşik 30. Panoda **yok**; kullanıcı iki sayıyı elle girmek
+  için ayrı sayfaya gidiyor.
+- **Yapılacak:** Panoya bir kart — kişinin **gerçek** başvuru/yanıt sayısı
+  otomatik, sektör bir kez seçilir ve hatırlanır, karşılaştırma
+  `BenchmarkCalculations` ile. *"30 başvuru, 2 yanıt"* yalnız başına
+  yıkıcıdır; *"sektör medyanı 35 başvuruda 2 yanıt"* yanına gelince
+  normalleştirir. Kendini suçlama döngüsünü doğrudan kıran tek karttır.
+  Girişli endpoint `GET /api/benchmark/compare?sector=` (kullanıcının kendi
+  sayılarından), sektör tercihi kullanıcıda saklanır.
+- **Maliyet:** 2-3 gün.
+- **Kilidi:** **veri.** Bugün ankette sektör başına 30 cevap yok (büyüme
+  denetimi: "6 kişi"). Kart "henüz yeterli veri yok" derse faydasızdır;
+  Overall fallback'i ("tüm alanlar geneli") var ama o da 30 istiyor. Yani T2
+  V5 dağıtımına bağlı — kodu yazmak kolay, göstereceği sayı yok. Sıra bu
+  yüzden beşinci.
+
+### Sıra 6 — T4 = V4: Haftalık ritim, süreç metrikleriyle (V4'ün ilkesi netleşti)
+
+- V4 planda zaten var ("bu hafta ne kıpırdadı"). T-serisi ona iki kural
+  ekliyor: **(1) sonuç satırı yok** — "0 teklif" haftalık özette hiç
+  görünmez, kişi onu zaten biliyor; özet süreç metriklerinden oluşur (6
+  başvuru, 2 takip, CV puanı 61→74). **(2) tek sonraki adım** — "İki başvurun
+  14 günü geçti, takip e-postası göndermek ister misin?"; üç öneri değil, bir.
+- Zaman yapısı kaybına doğrudan cevap: haftalık ritim, günü/haftayı yeniden
+  bölen tek üründür.
+- **Kilidi:** V4'ünki (tutundurma ölçümü). T1/T3/T5 kadar acil değil.
+
+### Sıra 7 — T7: Başarıyla çıkışta veri kaybettirme (kod: web, kopya)
+
+- **Ne var:** `Accepted` durumu, dışa aktarma, hesap silme.
+- **Yapılacak:** `Accepted`'a geçişte kutlama + son katkı isteği (*"Nereye
+  giriyorsun? Sürecini paylaş, bir sonrakine yol olsun"* → aday deneyimi),
+  ardından "verini indir, hesabın seni bekler" — silmeye itmeden. İş arama
+  episodiktir: 2 yıl sonra tekrar arayacak, güvenle döneceği yer olmalıyız.
+- **Kilidi:** yok, ama sıra sonda: kimse henüz çıkmıyor.
+
+### Sıra 8 (kod değil) — T8: "Zor bir dönemse" sayfası
+
+- Yardım merkezinde bir kez, sessizce, gerçek kaynaklara işaret eden kısa bir
+  bölüm (ücretsiz psikolojik destek hatları, İŞKUR iş kulüpleri vb.). Kimse
+  tıklamayabilir; orada olması yeter.
+- **Kilidi:** kaynaklar ve numaralar **yayınlanmadan önce elle doğrulanır** —
+  yanlış bir yardım hattı numarası, hiç olmamasından kötüdür. İçerik işi,
+  kod değil.
+
+### Ölçüm (V0 üstüne, yeni altyapı yok)
+
+Tutma hipotezi için üç sayı, hepsi `/admin/metrics`'te mevcut altyapıyla:
+14 gün sonra dönüş oranı; ghost kapatma eyleminin sayısı (T3'ün "netleşti"
+göstergesi); mola modunu kullananların dönüş oranı (T5 — dönüyorlarsa ara
+vermek churn değildi). Hiçbiri kişiye gösterilmez.
+
+### Envanterde **olmayanlar** (yanlış hatırlanmasın diye)
+
+- E-posta ile hatırlatıcı / dürtme — bilinçli olarak yok, standing kurallara
+  aykırı.
+- Ruh hâli takibi, günlük, "bugün nasılsın" — terapi taklidi, yok.
+- Kullanıcılar arası kıyas, rozetler, streak — yok.

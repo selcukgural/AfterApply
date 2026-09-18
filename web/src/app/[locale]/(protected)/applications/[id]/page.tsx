@@ -8,6 +8,7 @@ import { applicationsApi } from "@/lib/api/applications";
 import type { ApplicationEventType, ApplicationStatus } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusChangeSelect } from "@/components/applications/StatusChangeSelect";
+import { ShareExperienceInvite } from "@/components/applications/ShareExperienceInvite";
 import { ApplicationTimeline } from "@/components/applications/ApplicationTimeline";
 import { AddEventForm } from "@/components/applications/AddEventForm";
 import { writeEventNote } from "@/lib/applications/timeline";
@@ -190,6 +191,12 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             onChangeStatus={async (newStatus, note) => {
               await changeStatusMutation.mutateAsync({ newStatus, note });
             }}
+          />
+          <ShareExperienceInvite
+            status={application.status}
+            companyId={application.companyId}
+            companyName={application.companyName}
+            companySlug={application.companySlug}
           />
         </div>
 

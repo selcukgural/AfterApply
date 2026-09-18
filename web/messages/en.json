@@ -622,7 +622,12 @@
   "dashboard": {
     "title": "Dashboard",
     "newApplication": "New Application",
-    "headline": "{responded} of {total} applications got a reply ({rate}). In progress: {interviews, plural, =0 {no interviews} one {1 interview} other {# interviews}}, {offers, plural, =0 {no offers} one {1 offer} other {# offers}} awaiting a decision.",
+    "headline": "{responded} of {total} applications got a reply ({rate}).",
+    "headlineProgress": {
+      "both": "In progress: {interviews, plural, one {1 interview} other {# interviews}}, {offers, plural, one {1 offer} other {# offers}} awaiting a decision.",
+      "interviews": "In progress: {interviews, plural, one {1 interview} other {# interviews}}.",
+      "offers": "In progress: {offers, plural, one {1 offer} other {# offers}} awaiting a decision."
+    },
     "hero": {
       "label": "Open applications",
       "sub": "{share} of your {total} applications are still waiting for a reply.",
@@ -652,7 +657,7 @@
       "responded": "Replied",
       "interview": "Interview",
       "offer": "Offer",
-      "bottleneck": "The steepest drop is at <strong>{stage}</strong>: only {rate} of the previous stage gets through."
+      "bottleneck": "The steepest drop is at <strong>{stage}</strong>: {rate} of the previous stage gets through."
     },
     "responseTime": {
       "title": "Response time",
@@ -676,7 +681,7 @@
       "lost": "Rejected",
       "noAnswer": "No answer",
       "withdrawn": "Withdrawn",
-      "winRate": "Win rate",
+      "winRate": "Positive outcomes",
       "empty": "No applications have been resolved yet."
     },
     "empty": {
@@ -692,10 +697,13 @@
       "followUp": "Follow-up due",
       "possiblyGhosted": "Possibly ghosted",
       "days": "{count} days without a reply",
+      "usualReply": "you usually hear back in {median} days",
       "dismiss": "Dismiss",
       "error": "That didn't go through. Try again.",
       "followedUp": "Followed up",
       "markGhosted": "Mark as ghosted",
+      "shareAfterGhost": "If you'd like to say what those processes were like:",
+      "shareAfterGhostLink": "Share an experience",
       "staleNote": "{count, plural, one {# application older than {threshold} days produces no reminders.} other {# applications older than {threshold} days produce no reminders.}}",
       "staleBulkLink": "Bulk-mark them in Applications",
       "selectPage": "Select the reminders on this page",
@@ -708,7 +716,7 @@
     },
     "stale": {
       "title": "{count, plural, one {# application is} other {# applications are}} older than {threshold} days with no reply",
-      "body": "Mark them all as ghosted? The oldest is {oldest} days old. Your open count drops and the rates show where you really stand. Reversible.",
+      "body": "Mark them all as ghosted? The oldest is {oldest} days old. Your waiting list gets shorter and the rates show where you really stand. Reversible.",
       "confirm": "Yes, mark them ({count})",
       "confirming": "Marking...",
       "notNow": "Not now",
@@ -834,7 +842,11 @@
       "companyKariyerNet": "kariyer.net",
       "companyIndustry": "Industry",
       "companyCountry": "Country",
-      "timeline": "Timeline"
+      "timeline": "Timeline",
+      "shareExperience": {
+        "text": "Let the next candidate know what this process was like —",
+        "link": "share your experience with {company}"
+      }
     },
     "statusChange": {
       "changeStatus": "Change Status",
@@ -1914,7 +1926,7 @@
       },
       "outcome": {
         "title": "Outcome",
-        "body": "A breakdown of applications that have finished: offer/accepted, no answer, withdrawn and rejected. The band at the top shows their proportions and the line at the bottom gives your win rate. Applications still in flight are left out of this."
+        "body": "A breakdown of applications that have finished: offer/accepted, no answer, withdrawn and rejected. The band at the top shows their proportions and the line at the bottom gives your share of positive outcomes. Applications still in flight are left out of this."
       }
     },
     "trackedJobs": {
@@ -4489,7 +4501,7 @@
       "invite": {
         "review": "You can leave a review of {company} too — the form below is ready.",
         "salary": "You can share your salary at {company} too — the form below is ready.",
-        "experience": "You can rate your hiring experience at {company} too — the form below is ready."
+        "experience": "You can also share what {company}'s hiring process was like — it helps the next candidate. The form is ready below."
       }
     },
     "alreadyShared": "You already have a candidate experience at {company}",

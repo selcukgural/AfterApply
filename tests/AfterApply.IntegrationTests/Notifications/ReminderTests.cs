@@ -168,6 +168,67 @@ public class ReminderTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost
     }
 
     [Fact]
+    public async Task PossiblyGhosted_Row_Carries_The_Users_Own_Median_Reply_Time()
+    {
+        // Three answered applications (the floor) at 2, 9 and 40 days: the median is 9, and the
+        // one slow reply does not drag it — that number is the sentence's whole point.
+        var appliedAt = DateTimeOffset.UtcNow.AddDays(-60);
+        foreach (var (name, days) in new[] { ("Fast Co", 2), ("Usual Co", 9), ("Slow Co", 40) })
+        {
+            var id = await CreateApplicationAsync(_client, name, appliedAt);
+            await ChangeStatusAsync(_client, id, ApplicationStatus.Screening, appliedAt.AddDays(days));
+        }
+
+        var ghosted = await CreateApplicationAsync(_client, "Silent Co", DateTimeOffset.UtcNow.AddDays(-40));
+
+        await ScanAsync();
+
+        // The answered applications are still open and old enough to earn follow-up reminders of
+        // their own; the row under test is the one about the silent application.
+        var reminder = (await GetRemindersAsync()).Single(r => r.Type == ReminderType.PossiblyGhosted);
+        reminder.ApplicationId.ShouldBe(ghosted);
+        reminder.UserMedianResponseDays.ShouldBe(9);
+    }
+
+    [Fact]
+    public async Task PossiblyGhosted_Row_Has_No_Median_Below_The_Minimum_Sample()
+    {
+        var appliedAt = DateTimeOffset.UtcNow.AddDays(-60);
+        foreach (var (name, days) in new[] { ("Fast Co", 2), ("Usual Co", 9) })
+        {
+            var id = await CreateApplicationAsync(_client, name, appliedAt);
+            await ChangeStatusAsync(_client, id, ApplicationStatus.Screening, appliedAt.AddDays(days));
+        }
+
+        await CreateApplicationAsync(_client, "Silent Co", DateTimeOffset.UtcNow.AddDays(-40));
+
+        await ScanAsync();
+
+        var reminder = (await GetRemindersAsync()).Single(r => r.Type == ReminderType.PossiblyGhosted);
+        reminder.UserMedianResponseDays.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Median_Only_Counts_The_Callers_Own_Applications()
+    {
+        // Another user's fast replies must not become this user's norm.
+        var other = await CreateAuthenticatedClientAsync("reminders.other@example.com");
+        var appliedAt = DateTimeOffset.UtcNow.AddDays(-60);
+        foreach (var name in new[] { "A Co", "B Co", "C Co" })
+        {
+            var id = await CreateApplicationAsync(other, name, appliedAt);
+            await ChangeStatusAsync(other, id, ApplicationStatus.Screening, appliedAt.AddDays(1));
+        }
+
+        await CreateApplicationAsync(_client, "Silent Co", DateTimeOffset.UtcNow.AddDays(-40));
+
+        await ScanAsync();
+
+        var reminder = (await GetRemindersAsync()).ShouldHaveSingleItem();
+        reminder.UserMedianResponseDays.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Scan_Run_Twice_Does_Not_Create_Duplicate_Reminders()
     {
         var appliedAt = DateTimeOffset.UtcNow.AddDays(-10);

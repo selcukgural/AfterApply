@@ -99,4 +99,29 @@ public class ReminderCalculationsTests
     {
         ReminderCalculations.IsBeyondHorizon(daysElapsed, staleThresholdDays: 90).ShouldBe(expected);
     }
+
+    [Fact]
+    public void UserMedianResponseDays_Is_Null_Below_The_Minimum_Sample()
+    {
+        ReminderCalculations.UserMedianResponseDays([]).ShouldBeNull();
+        ReminderCalculations.UserMedianResponseDays([2.0]).ShouldBeNull();
+        ReminderCalculations.UserMedianResponseDays([2.0, 40.0]).ShouldBeNull();
+    }
+
+    [Fact]
+    public void UserMedianResponseDays_Is_The_Median_At_The_Minimum_Sample()
+    {
+        // Three answered applications is the floor (MedianMinimumSampleSize): the one slow reply
+        // does not drag the number the way an average would.
+        ReminderCalculations.UserMedianResponseDays([2.0, 9.0, 40.0]).ShouldBe(9);
+    }
+
+    [Theory]
+    [InlineData(new[] { 4.0, 5.0, 6.0, 7.0 }, 6)] // even count: (5 + 6) / 2 = 5.5 → rounds away from zero
+    [InlineData(new[] { 1.4, 1.4, 1.4 }, 1)]
+    [InlineData(new[] { 0.2, 0.3, 0.4 }, 0)]
+    public void UserMedianResponseDays_Rounds_To_Whole_Days(double[] days, int expected)
+    {
+        ReminderCalculations.UserMedianResponseDays(days).ShouldBe(expected);
+    }
 }

@@ -123,6 +123,9 @@ export interface ApplicationDetailResponse {
   companyKariyerNetUrl: string | null;
   companyIndustry: string | null;
   companyCountry: string | null;
+  // The company page's slug, for linking a closed application into `/contribute?company=`.
+  // Optional rather than nullable-only: during a rolling deploy the API may predate the field.
+  companySlug?: string | null;
 }
 
 export type HrEmailSource = "Manual" | "IncomingEmail";
@@ -1216,6 +1219,10 @@ export interface ReminderResponse {
   type: ReminderType;
   daysElapsed: number;
   createdAt: string;
+  /** This user's own median first-reply time in days — the norm a "possibly ghosted" row is read
+   *  against. Absent or null when too few of their applications have been answered, and on an API
+   *  instance that predates the field. */
+  userMedianResponseDays?: number | null;
 }
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.ReminderSelection: the ticked ids, or

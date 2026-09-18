@@ -247,3 +247,50 @@ describe("the refund policy says the same thing everywhere (2026-09-16)", () => 
     expect(enValue("payments.checkout.terms")).toMatch(/7 days/);
   });
 });
+
+describe("the dashboard does not keep score against the reader (T-series, 2026-09-18)", () => {
+  // A long job search turns the board into a monument to what did not happen. The words below
+  // each turn a fact into a verdict — "win rate" makes every rejection a loss, "only 12%" grades
+  // the person, "don't give up" tells them they were about to. Whatever the dashboard says, it
+  // says without them. Word boundaries so "kazanmak" is caught and "kazanç" (earnings) is not.
+  const forbiddenTr = [/\bkazanma\b/i, /\bkazandın\b/i, /\bkaybettin\b/i, /\bkaybedilen\b/i, /\byalnızca\b/i, /\bsadece\b/i, /\bpes\b/i, /\bmaalesef\b/i, /ne yazık ki/i];
+  const forbiddenEn = [/\bwin rate\b/i, /\bwon\b/i, /\blost\b/i, /\bonly\b/i, /\bunfortunately\b/i, /don't give up/i, /\bkeep going\b/i];
+
+  const offenders = (list: [string, string][], patterns: RegExp[]) =>
+    list
+      .filter(([key]) => key.startsWith("dashboard."))
+      .filter(([, value]) => patterns.some((pattern) => pattern.test(value)))
+      .map(([key]) => key);
+
+  it("uses none of the verdict words in Turkish", () => {
+    expect(offenders(trEntries, forbiddenTr)).toEqual([]);
+  });
+
+  it("uses none of the verdict words in English", () => {
+    expect(offenders(enEntries, forbiddenEn)).toEqual([]);
+  });
+
+  it("names the outcome card's good half neutrally", () => {
+    expect(trValue("dashboard.outcome.winRate")).toBe("Olumlu sonuç");
+    expect(enValue("dashboard.outcome.winRate")).toBe("Positive outcomes");
+  });
+
+  it("only ever says what is in motion in the headline", () => {
+    // The first sentence stands alone; the second exists in three shapes and none of them can
+    // say "0 offers" — a zero is expressed by the sentence not being there (lib/dashboard/tone).
+    for (const value of [trValue("dashboard.headline"), enValue("dashboard.headline")]) {
+      expect(value).not.toMatch(/\{interviews|\{offers/);
+    }
+    for (const lang of [trValue, enValue]) {
+      expect(lang("dashboard.headlineProgress.both")).toMatch(/\{interviews/);
+      expect(lang("dashboard.headlineProgress.both")).toMatch(/\{offers/);
+      expect(lang("dashboard.headlineProgress.interviews")).not.toMatch(/\{offers/);
+      expect(lang("dashboard.headlineProgress.offers")).not.toMatch(/\{interviews/);
+    }
+  });
+
+  it("reads the silence against the person's own norm, not against a threshold", () => {
+    expect(trValue("dashboard.reminders.usualReply")).toContain("{median}");
+    expect(enValue("dashboard.reminders.usualReply")).toContain("{median}");
+  });
+});

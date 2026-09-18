@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { analyticsApi } from "@/lib/api/analytics";
 import { applicationsApi } from "@/lib/api/applications";
 import { formatCount, formatRate } from "@/lib/dashboard/format";
+import { progressKey, rateChip } from "@/lib/dashboard/tone";
 import { ConversionFunnel } from "@/components/dashboard/ConversionFunnel";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
@@ -50,9 +51,19 @@ export default function DashboardPage() {
                 total: formatCount(overview.rates.totalApplications, locale),
                 responded: formatCount(overview.rates.respondedCount, locale),
                 rate: formatRate(overview.rates.responseRate, locale),
-                interviews: summary.interviews,
-                offers: summary.offers,
               })}
+              {/* The second sentence only names what is actually in motion. "0 offers awaiting a
+                  decision" is not news to the person reading it — it is the one number they came
+                  here hoping not to see, and the page has no business repeating it at them. */}
+              {progressKey(summary.interviews, summary.offers) ? (
+                <>
+                  {" "}
+                  {t(`headlineProgress.${progressKey(summary.interviews, summary.offers)}`, {
+                    interviews: summary.interviews,
+                    offers: summary.offers,
+                  })}
+                </>
+              ) : null}
             </p>
           ) : null}
         </div>
@@ -111,25 +122,29 @@ export default function DashboardPage() {
                 tone="accent"
                 label={t("tiles.interviews")}
                 value={formatCount(summary.interviews, locale)}
-                chip={t("chips.rate", { rate: formatRate(overview.rates.interviewRate, locale) })}
+                chip={rateChip(summary.interviews, t("chips.rate", { rate: formatRate(overview.rates.interviewRate, locale) }))}
               />
               <StatTile
                 tone="good"
                 label={t("tiles.offers")}
                 value={formatCount(summary.offers, locale)}
-                chip={t("chips.rate", { rate: formatRate(overview.rates.offerRate, locale) })}
+                chip={rateChip(summary.offers, t("chips.rate", { rate: formatRate(overview.rates.offerRate, locale) }))}
               />
+              {/* Rejected is muted, not "crit": a rejection is an outcome, not an error, and red on
+                  the tile that counts them turns a board of facts into a board of blame. Red on
+                  this page is reserved for things that went wrong in the app (DEVELOPMENT_PLAN.md,
+                  T-series). */}
               <StatTile
-                tone="crit"
+                tone="muted"
                 label={t("tiles.rejected")}
                 value={formatCount(summary.rejected, locale)}
-                chip={t("chips.rate", { rate: formatRate(overview.rates.rejectionRate, locale) })}
+                chip={rateChip(summary.rejected, t("chips.rate", { rate: formatRate(overview.rates.rejectionRate, locale) }))}
               />
               <StatTile
                 tone="muted"
                 label={t("tiles.ghosted")}
                 value={formatCount(summary.ghosted, locale)}
-                chip={t("chips.rate", { rate: formatRate(overview.rates.ghostingRate, locale) })}
+                chip={rateChip(summary.ghosted, t("chips.rate", { rate: formatRate(overview.rates.ghostingRate, locale) }))}
               />
             </div>
           </div>
