@@ -13,6 +13,7 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { HeroTile } from "@/components/dashboard/HeroTile";
 import { OutcomeCard } from "@/components/dashboard/OutcomeCard";
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
+import { ReminderBreakGate } from "@/components/dashboard/ReminderBreakGate";
 import { WeeklyJobsAnnouncement } from "@/components/dashboard/WeeklyJobsAnnouncement";
 import { StaleApplicationsBanner } from "@/components/dashboard/StaleApplicationsBanner";
 import { ResponseTimeCard } from "@/components/dashboard/ResponseTimeCard";
@@ -88,8 +89,10 @@ export default function DashboardPage() {
           {/* Above the board, not beside it: these are the two things here that ask for an action.
               The stale question first — one answer covers an entire old import, and it is the
               reason the reminders card below stays short. */}
-          <StaleApplicationsBanner />
-          <RemindersPanel />
+          <ReminderBreakGate>
+            <StaleApplicationsBanner />
+            <RemindersPanel />
+          </ReminderBreakGate>
           {/*
             Every row is the same two-column split with the same gap, so one uninterrupted vertical
             gutter runs down the whole board. The earlier version sized each row to its content

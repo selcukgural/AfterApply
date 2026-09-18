@@ -740,6 +740,17 @@
       "sample3Title": "Software Developer",
       "sample3Company": "Marmara Yazılım · İstanbul",
       "close": "Duyuruyu kapat"
+    },
+    "break": {
+      "paused": "Moladasın — hatırlatıcılar {date} tarihine kadar kapalı.",
+      "end": "Molayı bitir",
+      "returnedSome": "Hoş geldin. Ara verdiğin sürede {count} başvuru sessizleşti — hepsini kapatalım mı? Geri alınabilir.",
+      "returnedNone": "Hoş geldin. Ara verdiğin sürede sessizleşen başvuru olmadı.",
+      "close": "Evet, kapat ({count})",
+      "closing": "Kapatılıyor...",
+      "notNow": "Şimdi değil",
+      "ok": "Tamam",
+      "error": "İşlem tamamlanamadı. Tekrar dene."
     }
   },
   "applications": {
@@ -1927,6 +1938,10 @@
       "outcome": {
         "title": "Sonuç",
         "body": "Sonuçlanmış başvuruların dökümü: teklif/kabul, yanıtsız, geri çekildi ve reddedilen. Üstteki şerit bunların birbirine oranını, alttaki satır ise olumlu sonuç oranınızı verir. Hâlâ süren başvurular bu hesaba girmez."
+      },
+      "break": {
+        "title": "Ara vermek",
+        "body": "Profil sayfasındaki \"Ara ver\" kartından bir hafta, iki hafta ya da bir ay mola alabilirsin. Mola boyunca hatırlatıcı kartı ve bayat başvuru sorusu panoda görünmez; verin olduğu yerde durur ve günlük tarama arkada çalışmaya devam eder. Döndüğünde seni bir yığın değil, tek bir soru karşılar: molada sessizleşen başvuruları topluca kapatmak isteyip istemediğin. Kapatırsan geri alınabilir; \"Şimdi değil\" dersen kart olduğu gibi geri gelir. Molayı istediğin an profilden bitirebilirsin."
       }
     },
     "trackedJobs": {
@@ -5137,6 +5152,20 @@
       "applications": "başvuru",
       "trackedJobs": "takip listesinde ilan",
       "cvs": "CV"
+    },
+    "break": {
+      "title": "Ara ver",
+      "body": "Hatırlatıcılar ve bayat başvuru sorusu seçtiğin süre boyunca panoda görünmez. Verin olduğu yerde durur; döndüğünde seni bir yığın değil, tek bir soru karşılar.",
+      "length": {
+        "7": "1 hafta",
+        "14": "2 hafta",
+        "30": "1 ay"
+      },
+      "paused": "Moladasın — hatırlatıcılar {date} tarihine kadar kapalı.",
+      "end": "Molayı bitir",
+      "returned": "Molan bitti. Panoda seni kısa bir soru bekliyor.",
+      "goToDashboard": "Panoya git",
+      "error": "İşlem tamamlanamadı. Tekrar dene."
     }
   },
   "candidateExperiences": {

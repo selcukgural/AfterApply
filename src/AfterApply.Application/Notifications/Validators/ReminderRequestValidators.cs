@@ -38,3 +38,16 @@ public sealed class BulkReminderRequestValidator : AbstractValidator<BulkReminde
             .WithMessage("An all selection must state the count it was shown.");
     }
 }
+
+public sealed class PauseRemindersRequestValidator : AbstractValidator<PauseRemindersRequest>
+{
+    /// <summary>The three lengths the profile card offers: a week, a fortnight, a month.</summary>
+    public static readonly IReadOnlyCollection<int> AllowedDays = [7, 14, 30];
+
+    public PauseRemindersRequestValidator()
+    {
+        RuleFor(x => x.Days)
+            .Must(days => AllowedDays.Contains(days))
+            .WithMessage($"Days must be one of {string.Join(", ", AllowedDays)}.");
+    }
+}

@@ -8,6 +8,7 @@ import { ProfileIdentityCard } from "@/components/profile/ProfileIdentityCard";
 import { PlanCard } from "@/components/profile/PlanCard";
 import { ContributionsCard } from "@/components/profile/ContributionsCard";
 import { ActivityTiles } from "@/components/profile/ActivityTiles";
+import { BreakCard } from "@/components/profile/BreakCard";
 
 /**
  * Who the account is and what it holds: the name (editable), the e-mail (not), the member-since
@@ -38,6 +39,7 @@ export default function ProfilePage() {
       <PlanCard />
       {reviewsOn && <ContributionsCard showSalaries={salariesOn} showExperiences={experiencesOn} />}
       <ActivityTiles />
+      <BreakCard />
 
       <p className="text-sm text-gray-500 dark:text-gray-400">
         {t.rich("settingsHint", {

@@ -47,4 +47,23 @@ public interface IReminderService
     /// context. Returns the number of reminders created.
     /// </summary>
     Task<int> ScanAndGenerateRemindersAsync(CancellationToken cancellationToken);
+
+    /// <summary>Where the user's break stands — see <see cref="ReminderPauseResponse"/>.</summary>
+    Task<ReminderPauseResponse> GetPauseAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Starts a break of the given length from now. A break already running is replaced,
+    /// not extended: the new end date is what the user just chose.</summary>
+    Task<ReminderPauseResponse> PauseAsync(Guid userId, PauseRemindersRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Ends a running break now. The return question then waits like it would after the
+    /// break ran its course; a break that is not running is left alone.</summary>
+    Task<ReminderPauseResponse> EndPauseAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>"Not now" to the return question: clears the break without touching any application.</summary>
+    Task AcknowledgePauseAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>"Yes, close them" to the return question: moves every application that went quiet
+    /// during the break to Ghosted — the same reversible act as the bulk answer on the reminders
+    /// card — and clears the break. Follow-up reminders are not touched.</summary>
+    Task<BulkChangeStatusResponse> CloseSilencedAsync(Guid userId, CancellationToken cancellationToken);
 }

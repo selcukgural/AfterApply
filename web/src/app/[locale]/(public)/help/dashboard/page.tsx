@@ -4,7 +4,7 @@ import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Screenshot } from "@/components/help/Screenshot";
 
-const SECTIONS = ["hero", "funnel", "responseTime", "breakdown", "outcome"] as const;
+const SECTIONS = ["hero", "funnel", "responseTime", "breakdown", "outcome", "break"] as const;
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/help/dashboard">): Promise<Metadata> {
   const { locale } = await params;
