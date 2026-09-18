@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
+import { cvScanPath } from "@/lib/cvScan/path";
 import { HelpBreadcrumbJsonLd } from "@/components/seo/HelpBreadcrumbJsonLd";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
@@ -27,7 +28,7 @@ export default async function CvScanHelpPage({ params }: PageProps<"/[locale]/he
         <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{t("eyebrow")}</span>
         <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
         <p className="max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">{t("intro")}</p>
-        <Link href="/cv-tarama" className="text-sm font-medium text-accent-ink hover:underline">
+        <Link href={cvScanPath(locale)} className="text-sm font-medium text-accent-ink hover:underline">
           {t("openTool")}
         </Link>
       </div>

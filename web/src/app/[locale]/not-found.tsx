@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { cvScanPath } from "@/lib/cvScan/path";
 import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -18,7 +19,7 @@ export default async function NotFoundPage() {
 
   const doors = [
     { href: "/", label: t("home") },
-    { href: "/cv-tarama", label: t("cvScan") },
+    { href: cvScanPath(locale), label: t("cvScan") },
     { href: "/companies", label: t("companies") },
     { href: GUIDE_PATH, label: t("guide") },
     { href: "/help", label: t("help") },

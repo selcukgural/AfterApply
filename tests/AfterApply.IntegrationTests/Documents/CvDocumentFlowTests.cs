@@ -9,6 +9,7 @@ using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Documents;
 using AfterApply.Infrastructure.Persistence;
+using AfterApply.IntegrationTests.CvScan;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -427,5 +428,88 @@ public class CvDocumentFlowTests(ApiHost<LocalStorageProfile> host) : IClassFixt
         export.ShouldNotBeNull();
         export!.CvDocuments.ShouldNotBeNull();
         export.CvDocuments!.Single().FileName.ShouldBe("exported.pdf");
+    }
+
+    /// <summary>
+    /// The ATS-readability scan of a stored CV (growth audit 03b, 2026-09-18): the same engine as
+    /// the public scan, run over the file the user keeps here, with the report kept on the row.
+    /// </summary>
+    [Fact]
+    public async Task A_Stored_Cv_Can_Be_Scanned_And_The_Report_Is_Kept_Until_The_Cv_Goes()
+    {
+        var client = await AuthenticatedClientAsync("cv.scan@example.com");
+        var created = await UploadAsync(client, CvFixtures.ReadablePdf(), "readable.pdf");
+        created.Scan.ShouldBeNull("uploading never scans by itself");
+
+        var scanResponse = await client.PostAsync($"/api/cv-documents/{created.Id}/scan", null);
+        scanResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        scanResponse.Headers.CacheControl!.NoStore.ShouldBeTrue();
+        var report = await scanResponse.Content.ReadFromJsonAsync<CvDocumentScanReport>(JsonOptions);
+        report.ShouldNotBeNull();
+        report!.Score.ShouldBe(report.Categories.Sum(c => c.Score));
+        report.Categories.Count.ShouldBe(4);
+        report.Document.Format.ShouldBe(CvFileFormat.Pdf);
+        report.ExtractedTextPreview.ShouldNotBeEmpty();
+
+        var list = await client.GetFromJsonAsync<CvDocumentListResponse>("/api/cv-documents", JsonOptions);
+        var listed = list!.Items.Single(item => item.Id == created.Id);
+        listed.Scan.ShouldNotBeNull();
+        listed.Scan!.Score.ShouldBe(report.Score);
+
+        var stored = await client.GetFromJsonAsync<CvDocumentScanReport>($"/api/cv-documents/{created.Id}/scan", JsonOptions);
+        stored.ShouldNotBeNull();
+        stored!.Score.ShouldBe(report.Score);
+        stored.Findings.Count.ShouldBe(report.Findings.Count);
+        stored.ScannedAt.ShouldBe(report.ScannedAt);
+
+        // A second scan replaces the first — one row per document, never a history.
+        (await client.PostAsync($"/api/cv-documents/{created.Id}/scan", null)).EnsureSuccessStatusCode();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.CvDocumentScans.CountAsync(s => s.CvDocumentId == created.Id)).ShouldBe(1);
+            // The anonymous counter is the public page's measurement; a stored-CV scan is not one.
+            (await db.CvScanResults.CountAsync()).ShouldBe(0);
+        }
+
+        var export = await client.GetFromJsonAsync<AccountExportResponse>("/api/users/me/export", JsonOptions);
+        export!.CvDocuments!.Single().ScanScore.ShouldBe(report.Score);
+
+        (await client.DeleteAsync($"/api/cv-documents/{created.Id}")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await client.GetAsync($"/api/cv-documents/{created.Id}/scan")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.CvDocumentScans.AnyAsync(s => s.CvDocumentId == created.Id)).ShouldBeFalse();
+        }
+    }
+
+    [Fact]
+    public async Task A_Scan_Report_Is_Only_Reachable_By_The_Cvs_Owner()
+    {
+        var owner = await AuthenticatedClientAsync("cv.scan.owner@example.com");
+        var other = await AuthenticatedClientAsync("cv.scan.other@example.com");
+        var created = await UploadAsync(owner, CvFixtures.ReadablePdf(), "mine.pdf");
+
+        // Never scanned: nothing to read, for the owner too.
+        (await owner.GetAsync($"/api/cv-documents/{created.Id}/scan")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        (await other.PostAsync($"/api/cv-documents/{created.Id}/scan", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await owner.PostAsync($"/api/cv-documents/{created.Id}/scan", null)).EnsureSuccessStatusCode();
+        (await other.GetAsync($"/api/cv-documents/{created.Id}/scan")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Scanning_A_Cv_That_Cannot_Be_Read_Answers_400_And_Keeps_No_Report()
+    {
+        var client = await AuthenticatedClientAsync("cv.scan.unreadable@example.com");
+        // Passes the upload's header check but has nothing PdfPig can parse.
+        var created = await UploadAsync(client, PdfBytes, "broken.pdf");
+
+        var response = await client.PostAsync($"/api/cv-documents/{created.Id}/scan", null);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        var list = await client.GetFromJsonAsync<CvDocumentListResponse>("/api/cv-documents", JsonOptions);
+        list!.Items.Single().Scan.ShouldBeNull();
     }
 }

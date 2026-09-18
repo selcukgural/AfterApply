@@ -3,7 +3,9 @@ using AfterApply.Api.Extensions;
 using AfterApply.Application.Documents;
 using AfterApply.Application.Documents.Contracts;
 using AfterApply.Infrastructure;
+using AfterApply.Infrastructure.CvScan;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -109,6 +111,71 @@ public static class CvDocumentEndpoints
             .WithDescription("The default is pre-selected on the new-application form. Setting one " +
                              "clears the previous default; a user with any CV always has exactly one.")
             .Produces<CvDocumentResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        // The ATS-readability scan of a stored CV: the public scan's deterministic layer run over
+        // the file the user already keeps here, with the report kept on the document (growth audit
+        // finding 03b, 2026-09-18). Behind the same flag as the public scan — one engine, one switch.
+        var scans = group.MapGroup("/{id:guid}/scan")
+            .WithDescription("Hidden behind CvScan:Enabled — the routes 404 while the flag is off.");
+
+        scans.AddEndpointFilter(async (context, next) =>
+        {
+            var options = context.HttpContext.RequestServices.GetRequiredService<IOptions<CvScanOptions>>();
+            return options.Value.Enabled ? await next(context) : Results.NotFound();
+        });
+
+        scans.MapPost("/", async (Guid id, ClaimsPrincipal user, ICvDocumentService service,
+            HttpContext httpContext, CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var report = await service.ScanAsync(user.GetUserId(), id, cancellationToken);
+                if (report is null)
+                {
+                    return Results.NotFound();
+                }
+
+                // Excerpts of the user's own CV: never in a shared cache, never on the browser's disk.
+                httpContext.Response.Headers.CacheControl = "private, no-store";
+                return Results.Ok(report);
+            }
+            catch (CvUploadValidationException exception)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    [exception.Field] = exception.Errors.ToArray()
+                });
+            }
+        }).RequireRateLimiting(DependencyInjection.UploadRateLimitPolicy)
+            .WithSummary("Scan a stored CV for ATS readability")
+            .WithDescription("Reads the stored file and runs the same deterministic checks as the " +
+                             "public /api/cv-scan — a 0-100 score, the four category subtotals, the " +
+                             "findings with their evidence and the extracted text. No model " +
+                             "participates. The report is kept on the document, replacing any " +
+                             "earlier one, until the document is deleted. A file that cannot be " +
+                             "read answers 400 with the same localized message the public scan gives.")
+            .Produces<CvDocumentScanReport>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        scans.MapGet("/", async (Guid id, ClaimsPrincipal user, ICvDocumentService service,
+            HttpContext httpContext, CancellationToken cancellationToken) =>
+        {
+            var report = await service.GetScanAsync(user.GetUserId(), id, cancellationToken);
+            if (report is null)
+            {
+                return Results.NotFound();
+            }
+
+            httpContext.Response.Headers.CacheControl = "private, no-store";
+            return Results.Ok(report);
+        })
+            .WithSummary("Read a stored CV's last scan report")
+            .WithDescription("The report exactly as the last POST wrote it; 404 when the document " +
+                             "does not exist for this user or was never scanned.")
+            .Produces<CvDocumentScanReport>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         return app;

@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ADMIN_NAV_HREF, canSeeAdminNav } from "@/lib/auth/adminNav";
@@ -38,13 +38,14 @@ export function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const locale = useLocale();
   const { data: suggestionCount } = useSuggestionCount();
   const { data: notificationCount } = useNotificationCount();
   const { config } = useClientConfig();
   const { showProBadge } = useProBadge();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const entries = buildNavEntries(config);
+  const entries = buildNavEntries(config, locale);
 
   const handleLogout = async () => {
     await logout();

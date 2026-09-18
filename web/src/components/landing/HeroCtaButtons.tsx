@@ -1,10 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { buttonClassName } from "@/components/ui/Button";
 import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
+import { cvScanPath } from "@/lib/cvScan/path";
 
 /**
  * The hero's calls to action, now that the scan is the primary one.
@@ -21,13 +22,14 @@ import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
  */
 export function HeroCtaButtons() {
   const t = useTranslations("landing.hero");
+  const locale = useLocale();
   const tNav = useTranslations("siteNav");
   const { isAuthenticated } = useAuth();
 
   return (
     <div className="flex flex-col items-start gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <Link href="/cv-tarama" className={buttonClassName("primary", "px-6 py-3 text-base")}>
+        <Link href={cvScanPath(locale)} className={buttonClassName("primary", "px-6 py-3 text-base")}>
           {t("ctaPrimary")}
         </Link>
 

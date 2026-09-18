@@ -16,7 +16,7 @@ describe("the weekly jobs pages", () => {
   it("exist only when the server flag says so — nav link and pages alike", () => {
     // The nav item comes from navGroups.ts, which the navbar feeds with the client config.
     expect(read("components/layout/navGroups.ts")).toContain("flags.jobSources?.enabled === true");
-    expect(read("components/layout/NavBar.tsx")).toContain("buildNavEntries(config)");
+    expect(read("components/layout/NavBar.tsx")).toContain("buildNavEntries(config, locale)");
     const access = read("components/weeklyJobs/useWeeklyJobsAccess.ts");
     expect(access).toContain('router.replace("/dashboard")');
     expect(access).toContain("enabled: isLoaded && enabled");

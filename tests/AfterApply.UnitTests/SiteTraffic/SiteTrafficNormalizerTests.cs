@@ -64,6 +64,35 @@ public class SiteTrafficNormalizerTests
         completed.Locale.ShouldBe("en");
     }
 
+    /// <summary>
+    /// The English slug (growth audit finding 14) and the shared-score pages. A score page is the
+    /// address a share lands on, so arrivals there are the number that says whether sharing works;
+    /// the card itself is dropped, so the row says "through a shared score", never which one.
+    /// </summary>
+    [Theory]
+    [InlineData("/en/cv-scan", "/cv-scan")]
+    [InlineData("/tr/cv-tarama/puan/88", "/cv-tarama/puan")]
+    [InlineData("/tr/cv-tarama/puan/88-28-22-20-18", "/cv-tarama/puan")]
+    [InlineData("/en/cv-scan/score/61-20-15-14-12", "/cv-scan/score")]
+    public void The_English_Slug_And_The_Shared_Score_Pages_Are_Countable_Without_The_Card(string path, string expected)
+    {
+        var result = SiteTrafficNormalizer.Normalize("page_view", path, null);
+
+        result.ShouldNotBeNull();
+        result.Path.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("/tr/cv-tarama/puan")]
+    [InlineData("/tr/cv-tarama/puan/abc")]
+    [InlineData("/tr/cv-tarama/skor/88")]
+    [InlineData("/tr/benchmark/puan/88")]
+    [InlineData("/tr/cv-tarama/puan/88/extra")]
+    public void A_Score_Page_With_The_Wrong_Shape_Is_Dropped(string path)
+    {
+        SiteTrafficNormalizer.Normalize("page_view", path, null).ShouldBeNull();
+    }
+
     [Fact]
     public void The_Oauth_Callback_Is_Not_Countable_At_All()
     {

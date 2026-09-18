@@ -19,7 +19,7 @@ const group = (entries: NavEntry[], key: string) => {
 
 describe("buildNavEntries", () => {
   it("orders the row: dashboard, applications, CVs, companies, tools", () => {
-    expect(buildNavEntries(ALL_ON).map((entry) => (entry.type === "link" ? entry.href : entry.key))).toEqual([
+    expect(buildNavEntries(ALL_ON, "tr").map((entry) => (entry.type === "link" ? entry.href : entry.key))).toEqual([
       "/dashboard",
       "applicationsMenu",
       "/cv",
@@ -31,7 +31,7 @@ describe("buildNavEntries", () => {
   it("groups by object: everything about companies is one group, browse then contribute then mine", () => {
     // 2026-09-17: the contribution forms used to sit in "Explore" and the author's own lists in
     // the avatar menu — the same thing, two menus.
-    const companies = group(buildNavEntries(ALL_ON), "companies");
+    const companies = group(buildNavEntries(ALL_ON, "tr"), "companies");
     expect(companies.items.map((item) => item.href)).toEqual([
       "/companies",
       "/contribute?tab=review",
@@ -45,31 +45,31 @@ describe("buildNavEntries", () => {
   });
 
   it("keeps the account-free tools together, with the paid postings first when they exist", () => {
-    expect(group(buildNavEntries(ALL_ON), "tools").items.map((item) => item.href)).toEqual(["/weekly-jobs", "/cv-tarama", "/benchmark", "/guide"]);
-    expect(group(buildNavEntries({}), "tools").items.map((item) => item.href)).toEqual(["/cv-tarama", "/benchmark", "/guide"]);
-    expect(group(buildNavEntries(ALL_ON), "tools").items[0].proBadge).toBe(true);
+    expect(group(buildNavEntries(ALL_ON, "tr"), "tools").items.map((item) => item.href)).toEqual(["/weekly-jobs", "/cv-tarama", "/benchmark", "/guide"]);
+    expect(group(buildNavEntries({}, "tr"), "tools").items.map((item) => item.href)).toEqual(["/cv-tarama", "/benchmark", "/guide"]);
+    expect(group(buildNavEntries(ALL_ON, "tr"), "tools").items[0].proBadge).toBe(true);
   });
 
   it("does not list 'new application' — that is the header's primary button, on every page", () => {
-    expect(hrefs(buildNavEntries(ALL_ON))).not.toContain("/applications/new");
+    expect(hrefs(buildNavEntries(ALL_ON, "tr"))).not.toContain("/applications/new");
   });
 
   it("follows the company flags: no reviews, no group; no salaries, no salary items", () => {
     // The menu used to link to /contribute?tab=salary and /my-salaries unconditionally while
     // the contribute page itself hid its salary side behind the flag.
-    expect(buildNavEntries({}).some((entry) => entry.type === "group" && entry.key === "companies")).toBe(false);
+    expect(buildNavEntries({}, "tr").some((entry) => entry.type === "group" && entry.key === "companies")).toBe(false);
     const reviewsOnly = buildNavEntries({
       ...ALL_ON,
       companySalaries: { ...ALL_ON.companySalaries, enabled: false },
       candidateExperiences: { ...ALL_ON.candidateExperiences, enabled: false },
-    });
+    }, "tr");
     expect(group(reviewsOnly, "companies").items.map((item) => item.href)).toEqual(["/companies", "/contribute?tab=review", "/my-reviews"]);
-    const noExperiences = buildNavEntries({ ...ALL_ON, candidateExperiences: { ...ALL_ON.candidateExperiences, enabled: false } });
+    const noExperiences = buildNavEntries({ ...ALL_ON, candidateExperiences: { ...ALL_ON.candidateExperiences, enabled: false } }, "tr");
     expect(group(noExperiences, "companies").items.map((item) => item.href)).not.toContain("/my-experiences");
   });
 
   it("uses only keys both catalogues have", () => {
-    const keys = buildNavEntries(ALL_ON).flatMap((entry) => (entry.type === "link" ? [entry.key] : [entry.key, ...entry.items.map((item) => item.key)]));
+    const keys = buildNavEntries(ALL_ON, "tr").flatMap((entry) => (entry.type === "link" ? [entry.key] : [entry.key, ...entry.items.map((item) => item.key)]));
     for (const key of keys) {
       expect(tr.nav, `tr nav.${key}`).toHaveProperty(key);
       expect(en.nav, `en nav.${key}`).toHaveProperty(key);
@@ -113,5 +113,14 @@ describe("one name per destination", () => {
   it("no longer sells 'free tools' to someone who is already signed in", () => {
     expect(tr.nav.tools).not.toMatch(/ücretsiz/i);
     expect(en.nav.tools).not.toMatch(/free/i);
+  });
+});
+
+describe("the scan link follows the locale's slug", () => {
+  it("is /cv-tarama under tr and /cv-scan under en", () => {
+    const hrefs = (locale: string) => group(buildNavEntries({}, locale), "tools").items.map((item) => item.href);
+    expect(hrefs("tr")).toContain("/cv-tarama");
+    expect(hrefs("en")).toContain("/cv-scan");
+    expect(hrefs("en")).not.toContain("/cv-tarama");
   });
 });

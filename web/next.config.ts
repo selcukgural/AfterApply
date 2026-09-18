@@ -123,6 +123,19 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  // The CV scan's English address. The route directory is the Turkish slug (the phrase the page is
+  // built for); /en/cv-scan is served from it by rewrite, and the wrong-locale spellings are
+  // redirected from proxy.ts — see src/lib/cvScan/path.ts.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/en/cv-scan", destination: "/en/cv-tarama" },
+        { source: "/en/cv-scan/score/:card", destination: "/en/cv-tarama/puan/:card" },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
   async headers() {
     // The PayTR return route is excluded from the catch-all outright: it must not carry
     // X-Frame-Options at all, and a later matching entry can override a header but not remove it.

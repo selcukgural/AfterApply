@@ -92,8 +92,8 @@
         "description": "Kaç başvuru yaptın, kaçından dönüş aldın? Kendi geri dönüş oranını gör ve alanındaki medyanla kıyasla. Kayıt gerekmiyor."
       },
       "cvScan": {
-        "title": "Ücretsiz ATS CV Kontrolü — CV'ni makine nasıl okuyor?",
-        "description": "CV'ni yükle, başvuru sistemlerinin ondan ne okuduğunu gör. Makine okunabilirliği puanı, ham metin ve düzeltme listesi. Kayıt gerekmiyor, dosya saklanmıyor."
+        "title": "Ücretsiz ATS CV Kontrolü — başvuru sistemi CV'ni nasıl okuyor?",
+        "description": "CV'ni yükle, başvuru sistemlerinin ondan ne okuduğunu gör. ATS okunabilirliği puanı, ham metin ve düzeltme listesi. Kayıt gerekmiyor, dosya saklanmıyor."
       },
       "pair": {
         "title": "Eklentiyi Bağla",
@@ -215,7 +215,7 @@
       "tabsLabel": "Araçlar",
       "noAccount": "Hesap gerekmez",
       "cvTitle": "CV Tarama",
-      "cvBody": "CV'ni bırak, başvuru sistemlerinin ondan ne okuduğunu ve makine okunabilirliği puanını hemen gör.",
+      "cvBody": "CV'ni bırak, başvuru sistemlerinin ondan ne okuduğunu ve ATS okunabilirliği puanını hemen gör.",
       "cvCta": "CV'mi tara",
       "extensionPill": "LinkedIn + kariyer.net",
       "extensionTitle": "Chrome Eklentisi",
@@ -238,7 +238,7 @@
         "cv": {
           "eyebrow": "CV Tarama · hesap gerekmez",
           "title": "Başvuru sistemi CV'nden ne okuyor?",
-          "body": "CV'ni bırak; makine okunabilirliği puanını, puanın nereden geldiğini ve düzeltme listesini hemen gör.",
+          "body": "CV'ni bırak; ATS okunabilirliği puanını, puanın nereden geldiğini ve düzeltme listesini hemen gör.",
           "bullet1": "PDF veya DOCX, en fazla 5 MB",
           "bullet2": "Dosya diske yazılmıyor, tarama bitince bellekten siliniyor",
           "bullet3": "Her bulgu kendi dosyandaki sayfaya ve satıra işaret eder",
@@ -1199,6 +1199,7 @@
       "access": "Dosyaya yalnızca giriş yapmış hâlde siz erişebilirsiniz. Her indirme isteği, dosyanın gerçekten size ait olup olmadığı kontrol edildikten sonra e-kariyerim sunucusu üzerinden aktarılır; paylaşılabilir veya süreli bir bağlantı hiçbir zaman üretilmez. Başka kullanıcılara, işverenlere veya iş ilanı platformlarına gösterilmez.",
       "noTransfer": "CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez — yapay zekâ servisleri dahil. Tek istisna, aşağıdaki \"Haftalık ilan eşleştirme\" bölümünde anlatılan ücretli özelliği kendiniz açıp ayrıca rıza vermenizdir; o durumda yalnızca varsayılan CV'nizin metni, yalnızca puanlama için gönderilir. Dosya okunmaz, metne çevrilmez ve analiz edilmez; yalnızca saklanır ve size geri verilir. Bir PDF'in ilk sayfasını CV'lerim sayfasında gördüğünüz önizleme, sunucuda değil kendi tarayıcınızda oluşturulur.",
       "deletion": "Sildiğiniz bir CV kalıcı olarak silinir — depolama tarafında kurtarma penceresi bilerek kapalı tutulur. Hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir.",
+      "readability": "İsterseniz yüklediğiniz bir CV'nin ATS okunabilirliğini ölçebilirsiniz (CV'lerim sayfasındaki düğme). Bu, giriş yapmadan kullanılan CV taramasıyla aynı kontrollerdir ve sunucumuzda çalışır; yapay zekâ modeline hiçbir şey gönderilmez. Rapor (puan, bulgular, bulguların işaret ettiği satırlar ve dosyadan çıkarılan metin) yalnızca siz istediğinizde üretilir, o CV'nin yanında saklanır, yalnızca size görünür ve CV silindiğinde onunla birlikte silinir. Veri dışa aktarımında puan ve ölçüm tarihi yer alır.",
       "sensitiveDataNote": "Bir CV, iş deneyiminizin yanı sıra fotoğraf, doğum tarihi, askerlik durumu veya sağlık bilgisi gibi hassas sayılabilecek veriler içerebilir; bu nedenle yükleme öncesinde ayrıca açık rızanızı alıyoruz. Ne yükleyeceğinize siz karar verirsiniz: bu alanların CV'nizde bulunması hizmetin çalışması için gerekli değildir, ve dilediğiniz zaman dosyayı silebilirsiniz.",
       "consent": "Hukuki sebep açık rızanızdır ve bu rıza her yükleme için ayrı ayrı alınır: dosyayı seçmeden önce onay kutusunu işaretlemeniz gerekir, kutu hiçbir zaman önceden işaretli gelmez ve her yüklemeden sonra yeniden boşalır. Rızanızı dosyayı silerek istediğiniz zaman geri çekebilirsiniz; hesabınızı sildiğinizde de tüm CV'leriniz birlikte silinir."
     },
@@ -1881,7 +1882,7 @@
           "description": "Şirketlerdeki maaşları okuyun, kendi maaşınızı anonim paylaşın."
         },
         "cvScan": {
-          "description": "Hesap açmadan CV'nizin makine okunabilirliğini ölçün."
+          "description": "Hesap açmadan CV'nizin ATS okunabilirliğini ölçün."
         },
         "benchmark": {
           "description": "Geri dönüş oranınızı alanınızın medyanıyla kıyaslayın, hesap gerekmez."
@@ -2373,7 +2374,7 @@
       },
       "q15": {
         "question": "e-kariyerim'de hesap açmadan neler kullanılabilir?",
-        "answer": "Üç şey: CV Tarama (CV'nizin makine okunabilirliği), geri dönüş oranı kıyaslama ve şirket değerlendirmelerini okumak. Başvuru takibi, panel, Chrome eklentisi ve değerlendirme yazmak için ücretsiz bir hesap gerekir."
+        "answer": "Üç şey: CV Tarama (CV'nizin ATS okunabilirliği), geri dönüş oranı kıyaslama ve şirket değerlendirmelerini okumak. Başvuru takibi, panel, Chrome eklentisi ve değerlendirme yazmak için ücretsiz bir hesap gerekir."
       },
       "q16": {
         "question": "Haftalık ilanlar nedir, ücreti ne kadar?",
@@ -2426,6 +2427,10 @@
       "default": {
         "title": "Varsayılan CV",
         "body": "Bir dosyayı varsayılan yaptığınızda, yeni bir başvuru kaydederken o CV hazır seçili gelir. İlk yüklediğiniz dosya otomatik olarak varsayılan olur; varsayılanı sildiğinizde sıra en yeni dosyaya geçer. Başvuru formundaki Kullanılan CV alanını her zaman elle değiştirebilirsiniz."
+      },
+      "readability": {
+        "title": "ATS okunabilirliği",
+        "body": "Seçili CV'nin altındaki \"ATS okunabilirliğini ölç\" düğmesi, giriş yapmadan kullanılan CV taramasıyla aynı kontrolleri bu dosya üzerinde çalıştırır: 100 üzerinden puan, dört kategorinin alt toplamı, düzeltme listesi ve başvuru sisteminin dosyadan okuduğu metin. Rapor CV'nin yanında saklanır; listede puan görünür, \"Raporu aç\" ile ayrıntı açılır. Düzelttiğiniz sürümü yükleyip yeniden ölçtüğünüzde eski rapor yenisiyle değişir. Yükleme tek başına ölçüm yapmaz; yalnızca siz istediğinizde çalışır ve CV silindiğinde rapor da silinir."
       },
       "remove": {
         "title": "Silme",
@@ -2548,7 +2553,7 @@
     "cvScan": {
       "eyebrow": "Hesapsız araçlar",
       "title": "CV Tarama",
-      "intro": "Başvuru sistemleri (ATS) CV'nizi önce metne çevirir. Bu araç, dosyanızdan bir makinenin ne okuyabildiğini gösterir ve 0-100 arası bir okunabilirlik puanı verir. Hesap gerekmez.",
+      "intro": "Başvuru sistemleri (ATS) CV'nizi önce metne çevirir. Bu araç, dosyanızdan bir başvuru sisteminin ne okuyabildiğini gösterir ve 0-100 arası bir okunabilirlik puanı verir. Hesap gerekmez.",
       "openTool": "CV Tarama aracını aç →",
       "how": {
         "title": "Nasıl kullanılır",
@@ -2567,7 +2572,7 @@
       },
       "measures": {
         "title": "Ne ölçer",
-        "body": "Dört başlık: makine okunabilirliği, bölümler ve tarihler, iletişim bilgileri, biçim ve uzunluk. Bunlar her ayrıştırıcının ortak sorunlarıdır: metin çıkmıyorsa, tarihler sıraya girmiyorsa ya da iletişim bilgisi boş görünüyorsa CV'niz aramalarda kaybolur."
+        "body": "Dört başlık: metin okunabilirliği, bölümler ve tarihler, iletişim bilgileri, biçim ve uzunluk. Bunlar her ayrıştırıcının ortak sorunlarıdır: metin çıkmıyorsa, tarihler sıraya girmiyorsa ya da iletişim bilgisi boş görünüyorsa CV'niz aramalarda kaybolur."
       },
       "limits": {
         "title": "Ne ölçmez",
@@ -2776,6 +2781,20 @@
     "uploadError": "CV yüklenemedi. Lütfen tekrar dene.",
     "deleteError": "CV silinemedi. Lütfen tekrar dene.",
     "downloadError": "Dosya indirilemedi. Lütfen tekrar dene.",
+    "scan": {
+      "title": "ATS okunabilirliği",
+      "description": "Başvuru sistemi bu dosyadan ne okuyor? Ölç; puan ve düzeltme listesi bu CV'nin yanında durur, düzeltip yeni sürümü yüklediğinde yeniden ölçersin.",
+      "score": "{score}/100",
+      "measuredAt": "· {date} tarihinde ölçüldü",
+      "measure": "ATS okunabilirliğini ölç",
+      "measureAgain": "Yeniden ölç",
+      "measuring": "Ölçülüyor…",
+      "openReport": "Raporu aç",
+      "closeReport": "Raporu kapat",
+      "loading": "Rapor yükleniyor…",
+      "error": "Rapor alınamadı. Lütfen tekrar dene.",
+      "pill": "{score}/100"
+    },
     "defaultError": "Varsayılan CV değiştirilemedi. Lütfen tekrar dene.",
     "consent": {
       "before": "CV'mi saklamanız için",
@@ -2989,9 +3008,22 @@
     }
   },
   "cvScan": {
-    "title": "CV'ni makine nasıl okuyor?",
+    "title": "Başvuru sistemi (ATS) CV'ni nasıl okuyor?",
     "subtitle": "PDF veya Word dosyanı yükle; başvuru sistemlerinin CV'nden ne okuduğunu, nerede takıldığını ve neyi düzeltmen gerektiğini göster. Hesap gerekmiyor, dosya hiçbir yere kaydedilmiyor.",
     "navCta": "CV'ni Tara",
+    "shared": {
+      "eyebrow": "Biri sana bunu gönderdi",
+      "outOf": "/ 100 — ATS okunabilirliği",
+      "body": "Bir CV, başvuru sistemlerinin okuyabildiği kısım için 100 üzerinden {score} aldı. Bu puanı yapay zekâ vermiyor; dört kategorinin alt toplamı.",
+      "heading": "Seninki kaç? CV'ni bırak, hemen gör.",
+      "metaTitle": "Bir CV ATS okunabilirliğinden {score}/100 aldı — seninki kaç?",
+      "metaDescription": "Biri CV tarama sonucunu paylaştı: 100 üzerinden {score}. Kendi CV'ni yükle, başvuru sistemlerinin ondan ne okuduğunu ve puanını hemen gör. Kayıt gerekmiyor, dosya saklanmıyor.",
+      "card": {
+        "kicker": "ATS okunabilirliği",
+        "title": "Bir CV bu puanı aldı. Seninki kaç?",
+        "footer": "ekariyerim.com/cv-tarama · ücretsiz, kayıtsız"
+      }
+    },
     "form": {
       "choose": "Dosya seç",
       "dropHint": "PDF veya DOCX · en fazla 5 MB",
@@ -3017,7 +3049,7 @@
     "afterScan": {
       "title": "Taramadan sonra bunları göreceksin",
       "score": "0-100 arası bir puan ve puanın dört kategoriye nasıl dağıldığı — toplam, alt toplamların toplamı.",
-      "rawText": "CV'nin makine gözüyle hâli: dosyandan çıkan ham metin, senin gördüğün sırayla değil, ayrıştırıcının gördüğü sırayla.",
+      "rawText": "CV'nin ATS'nin gözüyle hâli: dosyandan çıkan ham metin, senin gördüğün sırayla değil, ayrıştırıcının gördüğü sırayla.",
       "fixes": "Düzeltme listesi: her bulgu hangi sayfada, hangi satırda ve kaç puana mal oluyor."
     },
     "ats": {
@@ -3033,7 +3065,7 @@
       "noContent": "İçeriğinin iyi olup olmadığını söylemez. Deneyimini nasıl anlattığın bu puanın dışında."
     },
     "result": {
-      "scoreLabel": "Makine okunabilirliği puanın",
+      "scoreLabel": "ATS okunabilirliği puanın",
       "outOf": "100 üzerinden",
       "bands": {
         "good": "CV'n bir ayrıştırıcı için sorunsuz görünüyor.",
@@ -3041,7 +3073,7 @@
         "poor": "Bir ayrıştırıcı CV'nin önemli bir kısmını okuyamıyor."
       },
       "deterministic": "Bu puanı yapay zekâ vermiyor: dört kategorinin alt toplamlarını toplayınca puanı elde ediyorsun, aşağıdaki bulguların puan bedelleri de aynı çıkarma işleminin parçası.",
-      "atsNote": "ATS'ler CV'leri otomatik elemez — bu puan \"elenirsin\" demek değil, \"makine şunları okuyamıyor\" demek.",
+      "atsNote": "ATS'ler CV'leri otomatik elemez — bu puan \"elenirsin\" demek değil, \"başvuru sistemi şunları okuyamıyor\" demek.",
       "categoriesTitle": "Puan nereden geliyor",
       "categoryScore": "{score}/{weight}",
       "findingsTitle": "Düzeltme listesi",
@@ -3054,7 +3086,7 @@
       "evidence": "CV'nde nerede",
       "evidencePage": "Sayfa {page}",
       "evidenceDocument": "Belgede",
-      "previewTitle": "Makine CV'ni böyle okuyor",
+      "previewTitle": "Başvuru sistemi CV'ni böyle okuyor",
       "previewHint": "Aşağıdaki metin dosyandan çıkarıldı. Sıra bozuksa, ayrıştırıcı da CV'ni bu sırayla okuyor.",
       "previewTruncated": "Metnin tamamı değil, ilk bölümü gösteriliyor.",
       "documentTitle": "Dosya",
@@ -3065,13 +3097,14 @@
       "ctaRescan": "CV'ni düzelt, tekrar tara — yine hesapsız.",
       "ctaBenchmark": "Geri dönüş oranın normal mi? Kıyaslama aracına bak.",
       "ctaBenchmarkLink": "Kıyaslamaya git",
-      "ctaTrack": "Başvurularını tek yerde takip etmek istersen hesap açabilirsin. Buraya kadar olan hiçbir şey için gerekmiyordu.",
+      "ctaTrack": "Bu rapor sayfayı kapatınca gider; dosyan da metnin de bizde kalmıyor. Hesap açıp CV'ni yüklersen puan CV'nin yanında durur, düzeltince yeniden ölçersin ve hangi CV'yle hangi başvuruyu yaptığın kayıtlı olur.",
+      "ctaTrackNote": "Ücretsiz. Yükleme ayrı bir onayla, sen istediğinde.",
       "ctaRegister": "Hesap aç",
       "shareLabel": "Puanını paylaş",
-      "shareText": "CV'm makine okunabilirliğinden {score}/100 aldı. Seninki kaç? Ücretsiz, kayıtsız ATS kontrolü:"
+      "shareText": "CV'm ATS okunabilirliğinden {score}/100 aldı. Seninki kaç? Ücretsiz, kayıtsız ATS kontrolü:"
     },
     "categories": {
-      "MachineReadability": "Makine okunabilirliği",
+      "MachineReadability": "Metin okunabilirliği",
       "SectionsAndDates": "Bölümler ve tarihler",
       "Contact": "İletişim",
       "FormatAndLength": "Biçim ve uzunluk"

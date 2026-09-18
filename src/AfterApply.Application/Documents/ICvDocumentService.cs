@@ -33,6 +33,18 @@ public interface ICvDocumentService
     Task<CvDocumentResponse?> SetDefaultAsync(Guid userId, Guid documentId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Runs the ATS-readability scan (the public scan's deterministic layer, nothing more) over a
+    /// stored CV and keeps the report on the document, replacing any earlier one. Null when the
+    /// user owns no such document.
+    /// </summary>
+    /// <exception cref="CvUploadValidationException">The file could not be read — password
+    /// protected, corrupt, too many pages — with the same localized message the public scan gives.</exception>
+    Task<CvDocumentScanReport?> ScanAsync(Guid userId, Guid documentId, CancellationToken cancellationToken);
+
+    /// <summary>The stored report, or null when there is no such document or it was never scanned.</summary>
+    Task<CvDocumentScanReport?> GetScanAsync(Guid userId, Guid documentId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Removes every stored object for a user. Called from account deletion, after the rows are
     /// already gone — see AuthService.DeleteAccountAsync for why the two cannot be one transaction.
     /// </summary>

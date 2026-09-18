@@ -67,6 +67,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<CvDocument> CvDocuments => Set<CvDocument>();
 
+    public DbSet<CvDocumentScan> CvDocumentScans => Set<CvDocumentScan>();
+
     public DbSet<FeedbackEntry> FeedbackEntries => Set<FeedbackEntry>();
 
     public DbSet<ProductMetricsDailySnapshot> ProductMetricsDailySnapshots => Set<ProductMetricsDailySnapshot>();

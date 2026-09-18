@@ -1048,6 +1048,14 @@ değil çıkarma işlemi) → "düzelttim, yeniden tara" (hesapsız) → benchma
 (hesapsız) → eklenti + hesap. Her adım bir öncekinden fazlasını istiyor, hesap en
 sonda ve gerekçesi yazılı.
 
+**2026-09-18 eklemeleri (büyüme denetimi 03a/03b, DECISIONS.md aynı tarih):**
+"Puanını paylaş" artık puan sayfasına gider — `/cv-tarama/puan/88-34-22-13-19`
+(`/en/cv-scan/score/…`), URL'de yalnız puan + dört alt toplam, OG görselinde
+büyük puan; hesabın gerekçesi "raporu sakla": `/cv`'deki her yüklü CV için
+"ATS okunabilirliğini ölç", rapor CV'nin yanında (`CvDocumentScans`), silme ve
+export CV ile birlikte. Kelime kararı: "makine" → "ATS / başvuru sistemi",
+kategori "Metin okunabilirliği".
+
 - **Kilidi:** Kodu tamamen bizde. Tek dış bağımlılık sağlayıcı seçimi (B katmanı),
   o da A katmanını bloklamıyor.
 - **Ölçüm:** V0 yolları — sayfa görüntüleme → tarama tamamlandı → CTA → kayıt.

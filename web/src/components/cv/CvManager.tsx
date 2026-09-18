@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Link } from "@/i18n/navigation";
 import { CvPdfPreview } from "@/components/cv/CvPdfPreview";
+import { CvDocumentScanPanel } from "@/components/cv/CvDocumentScanPanel";
 
 const CV_QUERY_KEY = ["cvDocuments"] as const;
 
@@ -261,6 +262,12 @@ export function CvManager() {
                           </span>
                         </span>
                       </span>
+                      {item.scan ? (
+                        // The number only, one colour: a list is not the place for a verdict.
+                        <span className="ml-auto shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs tabular-nums text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                          {t("scan.pill", { score: item.scan.score })}
+                        </span>
+                      ) : null}
                     </button>
                   </li>
                 );
@@ -384,6 +391,11 @@ export function CvManager() {
                   {selected.isDefault ? t("default.isDefault") : t("default.makeDefault")}
                 </Button>
               </div>
+
+              {/* Keyed like the preview — a report belongs to one file — but not with the same
+                  key: the preview is a sibling, and two siblings sharing a key made React keep a
+                  stale preview next to the new one after a refetch. */}
+              <CvDocumentScanPanel key={`scan-${selected.id}`} document={selected} onScanned={invalidate} />
             </div>
           ) : (
             !isLoading && (

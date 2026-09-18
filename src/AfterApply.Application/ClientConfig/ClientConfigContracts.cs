@@ -64,7 +64,9 @@ public sealed record GitHubAuthConfigResponse(bool Enabled, string? ClientId);
 /// cannot keep. The scan itself is always available while the route exists — a client that asks
 /// this and gets a 404 from the scan endpoint has learnt the same thing.
 /// </summary>
-public sealed record CvScanConfigResponse(bool ContentNotesAvailable);
+/// <summary><paramref name="Enabled"/> is the CvScan:Enabled flag — the CV page shows its
+/// "measure ATS readability" control only while the scan routes exist. Additive (2026-09-18).</summary>
+public sealed record CvScanConfigResponse(bool Enabled, bool ContentNotesAvailable);
 
 /// <summary>What the public company pages and the review form need before rendering: whether the
 /// feature is on at all, the quota the form should count down from, and the two numbers the

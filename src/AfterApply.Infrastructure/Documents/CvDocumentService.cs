@@ -1,7 +1,11 @@
+using System.Text.Json;
+using AfterApply.Application.CvScan;
+using AfterApply.Application.CvScan.Contracts;
 using AfterApply.Application.Documents;
 using AfterApply.Application.Documents.Contracts;
 using AfterApply.Application.Localization;
 using AfterApply.Domain.Documents;
+using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
@@ -13,11 +17,17 @@ namespace AfterApply.Infrastructure.Documents;
 internal sealed class CvDocumentService(
     AppDbContext dbContext,
     IFileStorage storage,
+    ICvTextExtractor extractor,
     IOptions<StorageOptions> options,
+    IOptions<CvScanOptions> scanOptions,
     IStringLocalizer<SharedStrings> localizer,
     ILogger<CvDocumentService> logger)
     : ICvDocumentService
 {
+    /// <summary>The stored report's wire shape, fixed here: the JSON in the row is read back by
+    /// this class only, and the web app gets the same casing it gets from every other endpoint.</summary>
+    private static readonly JsonSerializerOptions ReportJsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<CvDocumentListResponse> GetAllAsync(Guid userId, CancellationToken cancellationToken)
     {
         var items = await dbContext.CvDocuments
@@ -28,7 +38,11 @@ internal sealed class CvDocumentService(
             .ThenByDescending(d => d.UploadedAt)
             .Select(d => new CvDocumentResponse(
                 d.Id, d.FileName, d.Format, d.SizeBytes, d.IsDefault, d.UploadedAt,
-                dbContext.Applications.Count(a => a.CvDocumentId == d.Id)))
+                dbContext.Applications.Count(a => a.CvDocumentId == d.Id),
+                dbContext.CvDocumentScans
+                    .Where(scan => scan.CvDocumentId == d.Id)
+                    .Select(scan => new CvDocumentScanSummary(scan.Score, scan.ScannedAt))
+                    .FirstOrDefault()))
             .ToListAsync(cancellationToken);
 
         return new CvDocumentListResponse(items, CvDocument.MaxPerUser);
@@ -103,7 +117,7 @@ internal sealed class CvDocumentService(
         }
 
         return new CvDocumentResponse(document.Id, document.FileName, document.Format, document.SizeBytes,
-            document.IsDefault, document.UploadedAt, UsedByApplicationCount: 0);
+            document.IsDefault, document.UploadedAt, UsedByApplicationCount: 0, Scan: null);
     }
 
     public async Task<CvDocumentContent?> OpenAsync(Guid userId, Guid documentId, CancellationToken cancellationToken)
@@ -202,9 +216,93 @@ internal sealed class CvDocumentService(
 
         var usedByApplicationCount = await dbContext.Applications
             .CountAsync(a => a.CvDocumentId == target.Id, cancellationToken);
+        var scan = await dbContext.CvDocumentScans
+            .Where(s => s.CvDocumentId == target.Id)
+            .Select(s => new CvDocumentScanSummary(s.Score, s.ScannedAt))
+            .FirstOrDefaultAsync(cancellationToken);
 
         return new CvDocumentResponse(target.Id, target.FileName, target.Format, target.SizeBytes,
-            target.IsDefault, target.UploadedAt, usedByApplicationCount);
+            target.IsDefault, target.UploadedAt, usedByApplicationCount, scan);
+    }
+
+    public async Task<CvDocumentScanReport?> ScanAsync(Guid userId, Guid documentId, CancellationToken cancellationToken)
+    {
+        var document = await dbContext.CvDocuments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId, cancellationToken);
+
+        if (document is null)
+        {
+            return null;
+        }
+
+        await using var stored = await storage.OpenReadAsync(document.StorageObjectName, cancellationToken);
+        if (stored is null)
+        {
+            logger.LogWarning("CV document {DocumentId} has no stored object at {ObjectName}.",
+                document.Id, document.StorageObjectName);
+            return null;
+        }
+
+        // The extractor seeks (PdfPig reads the cross-reference table from the end), and a bucket
+        // stream does not. The file is at most StorageOptions.MaxFileSizeBytes, so buffering it
+        // whole is the honest option — and it is in memory for one request, like the public scan.
+        using var content = new MemoryStream();
+        await stored.CopyToAsync(content, cancellationToken);
+        content.Seek(0, SeekOrigin.Begin);
+
+        ExtractedCv extracted;
+        try
+        {
+            extracted = await extractor.ExtractAsync(content, document.Format, cancellationToken);
+        }
+        catch (CvExtractionException exception)
+        {
+            throw new CvUploadValidationException([MessageFor(exception.Failure)]);
+        }
+
+        // The public scan's layer A, exactly: same checks, same weights, same rounding. Layer B (the
+        // model's content notes) is deliberately not run here — this is a report about what a
+        // parser reads, kept with the file, not a second consent surface.
+        var score = CvScanScoring.Score(CvScanChecks.Run(extracted));
+        var previewLength = scanOptions.Value.PreviewCharacters;
+        var preview = extracted.Text.Length > previewLength ? extracted.Text[..previewLength] : extracted.Text;
+        var now = DateTimeOffset.UtcNow;
+
+        var report = new CvDocumentScanReport(
+            score.Score, score.Categories, score.Findings,
+            new CvScanDocumentSummary(document.Format, extracted.PageCount, extracted.WordCount),
+            preview,
+            extracted.TextTruncated || preview.Length < extracted.Text.Length,
+            now);
+        var reportJson = JsonSerializer.Serialize(report, ReportJsonOptions);
+
+        var existing = await dbContext.CvDocumentScans
+            .FirstOrDefaultAsync(s => s.CvDocumentId == document.Id, cancellationToken);
+        if (existing is null)
+        {
+            dbContext.CvDocumentScans.Add(CvDocumentScan.Create(document.Id, score.Score, reportJson, now));
+        }
+        else
+        {
+            existing.Replace(score.Score, reportJson, now);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return report;
+    }
+
+    public async Task<CvDocumentScanReport?> GetScanAsync(Guid userId, Guid documentId, CancellationToken cancellationToken)
+    {
+        // Ownership through the document, never through the scan row alone.
+        var reportJson = await dbContext.CvDocumentScans
+            .AsNoTracking()
+            .Where(s => s.CvDocumentId == documentId
+                        && dbContext.CvDocuments.Any(d => d.Id == documentId && d.UserId == userId))
+            .Select(s => s.ReportJson)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return reportJson is null ? null : JsonSerializer.Deserialize<CvDocumentScanReport>(reportJson, ReportJsonOptions);
     }
 
     public async Task DeleteStoredObjectsAsync(IReadOnlyCollection<string> storageObjectNames,
@@ -247,5 +345,17 @@ internal sealed class CvDocumentService(
         CvFileProblem.TooLarge => localizer["CV_FILE_TOO_LARGE", maxFileSizeBytes],
         CvFileProblem.ContentDoesNotMatchExtension => localizer["CV_FILE_CONTENT_MISMATCH"],
         _ => throw new ArgumentOutOfRangeException(nameof(problem), problem, null)
+    };
+
+    // The public scan's own wording for the same failures (CvScanService.MessageFor): a stored file
+    // that cannot be read gets the sentence the reader would have seen on the public page.
+    private string MessageFor(CvExtractionFailure failure) => failure switch
+    {
+        CvExtractionFailure.PasswordProtected => localizer["CV_SCAN_PASSWORD_PROTECTED"],
+        CvExtractionFailure.Corrupt => localizer["CV_SCAN_UNREADABLE"],
+        CvExtractionFailure.TooManyPages => localizer["CV_SCAN_TOO_MANY_PAGES", scanOptions.Value.MaxPages],
+        CvExtractionFailure.TooExpensive => localizer["CV_SCAN_TOO_EXPENSIVE"],
+        CvExtractionFailure.UnsupportedLegacyFormat => localizer["CV_SCAN_LEGACY_DOC"],
+        _ => throw new ArgumentOutOfRangeException(nameof(failure), failure, null)
     };
 }

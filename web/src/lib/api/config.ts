@@ -35,6 +35,7 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
   // Off until the server says otherwise, for the same reason as the sign-in buttons: the optional
   // consent box must never appear against a deployment where layer B cannot run.
   cvScan: {
+    enabled: false,
     contentNotesAvailable: false,
   },
   // Off until the server says otherwise: the review pages must never render against a deployment

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { buttonClassName } from "@/components/ui/Button";
 import { BenchmarkResultMock } from "@/components/landing/BenchmarkResultMock";
@@ -10,6 +10,7 @@ import { CvScanResultMock } from "@/components/landing/CvScanResultMock";
 import { ExtensionPopupMock } from "@/components/landing/ExtensionPopupMock";
 import { LandingIcon, type LandingIcon as LandingIconName } from "@/components/landing/landingIcons";
 import { CHROME_WEB_STORE_URL } from "@/lib/constants/chromeWebStore";
+import { cvScanPath } from "@/lib/cvScan/path";
 
 /**
  * The three things the site offers before asking for an account, one screen under the hero:
@@ -47,6 +48,7 @@ const ICON: Record<Tool, LandingIconName> = { cv: "cv", extension: "extension", 
 
 export function ToolsStrip() {
   const t = useTranslations("landing.tools");
+  const locale = useLocale();
   const [active, setActive] = useState<Tool>("extension");
   const baseId = useId();
   const tabRefs = useRef<Partial<Record<Tool, HTMLButtonElement | null>>>({});
@@ -123,7 +125,7 @@ export function ToolsStrip() {
       title: t("cvTitle"),
       body: t("cvBody"),
       cta: (
-        <Link href="/cv-tarama" className={buttonClassName("outline", "mt-auto w-fit")}>
+        <Link href={cvScanPath(locale)} className={buttonClassName("outline", "mt-auto w-fit")}>
           {t("cvCta")}
         </Link>
       ),
@@ -143,6 +145,9 @@ export function ToolsStrip() {
               // inside is what carries the role, the focus and the keyboard handling.
               <div
                 key={card.tool}
+                // The wrapper sits between the tablist and its tab; without this the tree reads
+                // "a tablist whose children are not tabs" (growth audit 2026-09-14, finding 14).
+                role="presentation"
                 onClick={() => setActive(card.tool)}
                 className={`relative flex cursor-pointer flex-col gap-3 rounded-xl border bg-white p-6 transition-shadow dark:bg-gray-900 ${
                   selected
@@ -154,7 +159,7 @@ export function ToolsStrip() {
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-wash text-accent-ink">
                     <LandingIcon name={ICON[card.tool]} />
                   </span>
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                     {card.pill}
                   </span>
                 </div>
@@ -267,6 +272,7 @@ function ExtensionPanel() {
 
 function CvPanel() {
   const t = useTranslations("landing.tools.panels.cv");
+  const locale = useLocale();
 
   return (
     <>
@@ -276,7 +282,7 @@ function CvPanel() {
         body={t("body")}
         bullets={[t("bullet1"), t("bullet2"), t("bullet3")]}
       >
-        <Link href="/cv-tarama" className={buttonClassName("primary", "px-6 py-3 text-base")}>
+        <Link href={cvScanPath(locale)} className={buttonClassName("primary", "px-6 py-3 text-base")}>
           {t("cta")}
         </Link>
       </PanelCopy>

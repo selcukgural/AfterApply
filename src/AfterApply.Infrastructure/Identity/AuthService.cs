@@ -735,7 +735,9 @@ internal sealed class AuthService(
         var cvDocuments = await dbContext.CvDocuments
             .Where(d => d.UserId == userId)
             .OrderByDescending(d => d.UploadedAt)
-            .Select(d => new CvDocumentExportItem(d.Id, d.FileName, d.Format, d.SizeBytes, d.IsDefault, d.UploadedAt))
+            .Select(d => new CvDocumentExportItem(d.Id, d.FileName, d.Format, d.SizeBytes, d.IsDefault, d.UploadedAt,
+                dbContext.CvDocumentScans.Where(s => s.CvDocumentId == d.Id).Select(s => (int?)s.Score).FirstOrDefault(),
+                dbContext.CvDocumentScans.Where(s => s.CvDocumentId == d.Id).Select(s => (DateTimeOffset?)s.ScannedAt).FirstOrDefault()))
             .ToListAsync(cancellationToken);
 
         var feedback = await dbContext.FeedbackEntries
