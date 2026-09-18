@@ -140,6 +140,24 @@ export interface CvDocumentResponse {
   isDefault: boolean;
   uploadedAt: string;
   usedByApplicationCount: number;
+  /** The last ATS-readability scan of this file; null until the user asks for one. */
+  scan: CvDocumentScanSummary | null;
+}
+
+export interface CvDocumentScanSummary {
+  score: number;
+  scannedAt: string;
+}
+
+/** The stored report of one CV — the public scan's response without the content notes. */
+export interface CvDocumentScanReport {
+  score: number;
+  categories: CvScanCategoryScore[];
+  findings: CvScanFinding[];
+  document: CvScanDocumentSummary;
+  extractedTextPreview: string;
+  extractedTextTruncated: boolean;
+  scannedAt: string;
 }
 
 export interface CvDocumentListResponse {
@@ -541,6 +559,8 @@ export interface GitHubAuthConfig {
  *  not rendered at all — a box for something that cannot happen is a promise the page cannot
  *  keep. The scan itself does not depend on this. */
 export interface CvScanConfig {
+  /** The CvScan:Enabled flag: the stored-CV scan on /cv is offered only while the routes exist. */
+  enabled: boolean;
   contentNotesAvailable: boolean;
 }
 

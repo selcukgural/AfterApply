@@ -57,7 +57,13 @@ public sealed record CvDocumentExportItem(
     CvFileFormat Format,
     long SizeBytes,
     bool IsDefault,
-    DateTimeOffset UploadedAt);
+    DateTimeOffset UploadedAt,
+    // The last ATS-readability scan of this file, when there was one: the score and when it was
+    // measured. The full report (findings, excerpts) is readable on the CV page and is derived
+    // from the file above, so the export carries the number rather than a second copy of the CV's
+    // own lines.
+    int? ScanScore,
+    DateTimeOffset? ScannedAt);
 
 /// <summary>What the user wrote in the in-app feedback panel, and what came back. The reply
 /// address is included because it is theirs; the technical context (page, browser) is not — it is

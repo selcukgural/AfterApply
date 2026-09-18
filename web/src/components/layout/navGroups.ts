@@ -1,5 +1,6 @@
 import type { ClientConfigResponse } from "@/types/api";
 import { isActivePath } from "@/components/layout/navLink";
+import { cvScanPath } from "@/lib/cvScan/path";
 
 /** A `nav.*` catalogue key. */
 export type NavKey =
@@ -53,7 +54,7 @@ export type NavFlags = Pick<ClientConfigResponse, "jobSources" | "companyReviews
  * Flags: the weekly postings and the company pages ship dark, so their items follow the server
  * config and appear only once it says the routes exist — the same rule the pages themselves use.
  */
-export function buildNavEntries(flags: NavFlags): NavEntry[] {
+export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
   const reviewsOn = flags.companyReviews?.enabled === true;
   const salariesOn = flags.companySalaries?.enabled === true;
   const experiencesOn = flags.candidateExperiences?.enabled === true;
@@ -71,7 +72,7 @@ export function buildNavEntries(flags: NavFlags): NavEntry[] {
 
   const tools: NavItem[] = [
     ...(weeklyJobsOn ? [{ href: "/weekly-jobs", key: "weeklyJobs", proBadge: true } as NavItem] : []),
-    { href: "/cv-tarama", key: "cvScan" },
+    { href: cvScanPath(locale), key: "cvScan" },
     { href: "/benchmark", key: "benchmark" },
     { href: "/guide", key: "guide" },
   ];

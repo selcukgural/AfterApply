@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { CV_SCAN_ACCEPT, inspectScanFile, type CvScanFileProblem } from "@/lib/cvScan/findings";
 import { stashScanFile } from "@/lib/cvScan/pendingScanFile";
+import { cvScanPath } from "@/lib/cvScan/path";
 
 /**
  * The hero's right-hand side: somewhere to put a CV.
@@ -26,6 +27,7 @@ export function HeroCvDropzone() {
   const t = useTranslations("landing.heroScan");
   const tErrors = useTranslations("cvScan.errors");
   const router = useRouter();
+  const locale = useLocale();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   // dragenter/dragleave fire for every child the pointer crosses, so a boolean flickers the
@@ -44,7 +46,7 @@ export function HeroCvDropzone() {
     if (found) return;
 
     stashScanFile(picked);
-    router.push("/cv-tarama");
+    router.push(cvScanPath(locale));
   };
 
   return (

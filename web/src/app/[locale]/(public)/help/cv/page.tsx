@@ -49,6 +49,11 @@ export default async function CvHelpPage({ params }: PageProps<"/[locale]/help/c
       </section>
 
       <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("readability.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("readability.body")}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("remove.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("remove.body")}</p>
       </section>

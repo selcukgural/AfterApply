@@ -33,7 +33,7 @@ describe("the signed-in navbar", () => {
     // 2026-09-17 (variant A on the navigation canvas): the drawer had grown its own grouping —
     // no "Explore", two headings the row never showed, no "New application". Both surfaces now
     // map over buildNavEntries; nothing here is allowed to hand-list a section again.
-    expect(navBar).toContain("buildNavEntries(config)");
+    expect(navBar).toContain("buildNavEntries(config, locale)");
     expect(navBar.match(/entries\.map\(/g)).toHaveLength(2);
     expect(navBar).not.toContain("ExploreMenu");
     expect(navBar).not.toContain("COMPANY_LINKS");
@@ -112,7 +112,8 @@ describe("the signed-out chrome", () => {
 
   it("keeps the companies pages and the account-free tools one click away", () => {
     for (const href of ['"/companies"', '"/benchmark"', '"/guide"', '"/help"']) expect(header).toContain(href);
-    for (const href of ['"/companies"', '"/benchmark"', '"/cv-tarama"', '"/extension-privacy"', '"/privacy"', '"/cookies"', '"/terms"']) {
+    // The scan's slug is translated, so the footer carries the per-locale set, not one string.
+    for (const href of ['"/companies"', '"/benchmark"', 'CV_SCAN_PATHS', '"/extension-privacy"', '"/privacy"', '"/cookies"', '"/terms"']) {
       expect(footer).toContain(href);
     }
   });

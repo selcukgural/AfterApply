@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ShareRow } from "@/components/share/ShareRow";
 import { SITE_URL } from "@/lib/seo/routes";
+import { cvScanPath } from "@/lib/cvScan/path";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "@/i18n/navigation";
 import { benchmarkApi } from "@/lib/api/benchmark";
@@ -304,7 +305,7 @@ function BenchmarkResult({ result, onReset }: { result: BenchmarkResultResponse;
             other. */}
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {t("cta.cvScan")}{" "}
-          <Link href="/cv-tarama" className="text-blue-600 underline underline-offset-2 dark:text-blue-400">
+          <Link href={cvScanPath(locale)} className="text-blue-600 underline underline-offset-2 dark:text-blue-400">
             {t("cta.cvScanLink")}
           </Link>
         </p>

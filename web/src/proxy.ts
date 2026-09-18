@@ -2,6 +2,8 @@ import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
 import { guideRedirectForPath } from "./lib/guide/articles";
+import { cvScanRedirectForPath, cvScanScoreCardOf } from "./lib/cvScan/path";
+import { parseScoreCard } from "./lib/cvScan/scoreCard";
 import { apexRedirectUrl, isFileRequest, stripIndexHtml } from "./lib/http/canonicalHost";
 
 const withLocale = createMiddleware(routing);
@@ -31,6 +33,23 @@ export function proxy(request: NextRequest) {
   const guideUrl = guideRedirectForPath(request.nextUrl.pathname);
   if (guideUrl) {
     return NextResponse.redirect(new URL(`${guideUrl}${request.nextUrl.search}`, request.url), 301);
+  }
+
+  // The CV scan is the other page with a translated slug: /en/cv-tarama and /tr/cv-scan (and the
+  // score pages under them) go to the right spelling the same way. The English address is served
+  // by a rewrite in next.config.ts, so this only ever fires for the wrong one.
+  const cvScanUrl = cvScanRedirectForPath(request.nextUrl.pathname);
+  if (cvScanUrl) {
+    return NextResponse.redirect(new URL(`${cvScanUrl}${request.nextUrl.search}`, request.url), 301);
+  }
+
+  // A score page whose card the scan could not have produced ("101", parts that do not add up)
+  // is a 404 — decided here, because the score pages are prerendered and a notFound() from
+  // inside one is a runtime static-to-dynamic error. Rewritten onto a path nothing claims, so
+  // the locale's own catch-all renders the site's 404 page under the original address.
+  const scoreCard = cvScanScoreCardOf(request.nextUrl.pathname);
+  if (scoreCard && !parseScoreCard(scoreCard.card)) {
+    return NextResponse.rewrite(new URL(`/${scoreCard.locale}/404`, request.url));
   }
 
   return withLocale(request);

@@ -1,4 +1,4 @@
-import type { CvDocumentListResponse, CvDocumentResponse } from "@/types/api";
+import type { CvDocumentListResponse, CvDocumentResponse, CvDocumentScanReport } from "@/types/api";
 import { apiFetch, apiFetchBlob } from "./httpClient";
 
 export const cvDocumentsApi = {
@@ -21,6 +21,13 @@ export const cvDocumentsApi = {
 
   setDefault: (id: string) =>
     apiFetch<CvDocumentResponse>(`/api/cv-documents/${id}/default`, { method: "POST" }),
+
+  /** Runs the ATS-readability scan over the stored file and keeps the report on it — the same
+   *  deterministic checks as the public scan, no model, nothing uploaded again. */
+  scan: (id: string) => apiFetch<CvDocumentScanReport>(`/api/cv-documents/${id}/scan`, { method: "POST" }),
+
+  /** The last report, as it was written. */
+  scanReport: (id: string) => apiFetch<CvDocumentScanReport>(`/api/cv-documents/${id}/scan`),
 
   /** The raw bytes. Used both for the preview (rendered in the browser) and for the save-to-disk
    *  download — one endpoint, because the server never serves a CV any way but as an attachment. */

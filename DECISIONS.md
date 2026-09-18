@@ -7519,6 +7519,94 @@ T5 ✅ işareti o rebase'le geldi.
 
 ---
 
+## Puan kartı URL'de, "raporu sakla" kayıtlı CV'de, "makine" → ATS, borç listesi kapandı (2026-09-18)
+
+**Ne ve neden.** Büyüme denetiminin (2026-09-14) #71'de "ayrı karar" diye bırakılan iki maddesi
+ve küçük borç listesi (bulgu 14), kullanıcının tasarım kanvasında A seçeneğini ve "kategoriler
+kartta olsun"u onaylamasıyla tek partide yapıldı. Aynı sırada kelime kararı: kullanıcı "makine"nin
+ne olduğunu anlamayabilir; site genelinde "makine okunabilirliği" → **"ATS okunabilirliği"**,
+"makine ... okuyor" → "başvuru sistemi ... okuyor" (tr, 15 yer), İngilizcede de "machine" →
+"ATS / applicant tracking system" (16 yer). Dört kategoriden biri genel puanla aynı adı taşıyordu;
+o kategori artık **"Metin okunabilirliği" / "Text readability"**.
+
+**Puan kartı (03a).** "Puanını paylaş" artık `/{tr}/cv-tarama/puan/{kart}` /
+`/en/cv-scan/score/{kart}` adresini paylaşıyor; kart = `88-34-22-13-19` (puan + dört alt toplam,
+rapor sırasında, `lib/cvScan/scoreCard.ts`). **URL'de yalnız sayılar var** — dosya, metin, kimlik
+yok; tarama anonim kalıyor, kartın kamusallığı paylaşan kişinin seçimi. Toplamı tutmayan ya da
+ağırlığı aşan kart **çizilmez** (404): elle yazılmış bir URL sitenin kartına taramanın vermediği
+bir sayı koyamaz. Sayfa: "Biri sana bunu gönderdi — 88 / 100" kutusu + kategori çubukları + aynı
+yükleme formu + aynı açıklama bölümleri (`CvScanExplainer` iki sayfanın ortak gövdesi).
+`canonical` aracın sayfası (101 adres bir sayfa sayılsın), hreflang puan sayfasının kendisi.
+OG: `/{locale}/og?card=…` → `ScoreOgCard` — büyük puan, kicker, soru, dört alt toplam; **tek
+renk**, banda göre kırmızı yok (T-serisi kuralı: düşük puanını paylaşan kişiyi kırmızıyla
+dolaştırmayız). 0–100 puan-tek sayfalar prerender, alt toplamlı kartlar ilk istekte. **Geçersiz
+kart 404'ü `proxy.ts`'te** (`cvScanScoreCardOf` + `parseScoreCard` → `/{locale}/404` rewrite):
+sayfanın içindeki `notFound()` prod'da "static to dynamic, reason: headers" 500'ü verdi
+(2026-09-16 notu doğrulandı). Sayaç: `/cv-tarama/puan/{kart}` → `/cv-tarama/puan` olarak sayılır,
+kart düşürülür (parmak izi olmasın). Kıyas ve şirket kartları kapsam dışı: kıyasın sayıları
+kişinin kendi verisi, URL'ye koymak "kimin" sorusunu açar.
+
+**Raporu sakla = hesap (03b, seçenek A).** Rapor bağımsız bir "Taramalarım" değil, hesabın zaten
+sakladığı CV dosyasına bağlı: `/cv`'de seçili CV'nin altında "ATS okunabilirliği" bölümü —
+**"ATS okunabilirliğini ölç"** → `POST /api/cv-documents/{id}/scan` depodaki dosyayı aynı
+deterministik motorla (`CvScanChecks` + `CvScanScoring`, katman B yok) okur, raporu
+**`CvDocumentScans`** tablosuna yazar (doküman başına tek satır, yeniden ölçüm üzerine yazar;
+`ReportJson` jsonb; CV ile cascade, hesapla CV üstünden). Listede puan rozeti, panelde
+"{puan}/100 · tarihinde ölçüldü", **Raporu aç** (`GET …/scan`, kayıtlı JSON okunur, dosya yeniden
+okunmaz) → puan kartı + kategoriler + düzeltme listesi + ham metin + "Puanını paylaş" (aynı
+kart). Yükleme **tek başına ölçüm yapmaz** — yükleme ne anlama geliyorsa o anlamda kalır, ölçüm
+yalnız istendiğinde; anonim tarama sayacına (`CvScanResults`) yazılmaz. `CvDocumentResponse.Scan`
+(additive), `CvDocumentExportItem.ScanScore/ScannedAt` (export'ta puan ve tarih; bulgular CV'nin
+kendi satırları, ikinci kopya değil), `CvScanConfigResponse.Enabled` (additive; düğme bayrak
+kapalıyken gizli, route'lar 404). Okunamayan dosya (şifreli, bozuk) → 400, halka açık taramanın
+aynı yerelleştirilmiş cümlesi, rapor yazılmaz. Anonim sonuçtaki kapanış cümlesi değişti: *"Bu
+rapor sayfayı kapatınca gider; dosyan da metnin de bizde kalmıyor. Hesap açıp CV'ni yüklersen
+puan CV'nin yanında durur, düzeltince yeniden ölçersin ve hangi CV'yle hangi başvuruyu yaptığın
+kayıtlı olur."* + "Ücretsiz. Yükleme ayrı bir onayla, sen istediğinde." Gizlilik metni
+(`privacy.cvStorage.readability`) ve yardım (`help.cv.readability`) aynı değişiklikte.
+**Seçenek B (bağımsız kayıtlı raporlar) reddedildi:** yeni veri türü, yedi gizlilik/ayar/SSS
+metni, anonim taramanın "hiçbir şey saklanmaz" vaadine istisna.
+
+**Borç listesi (14).** hreflang: `routing.alternateLinks=false` — HTTP `Link` başlığının
+x-default'u (`/`) HTML'dekiyle (`/tr`) çelişiyordu, HTML kaldı. Rehber JSON-LD Organization
+düğümü #47'de zaten eklenmiş, dokunulmadı. Kontrast: araç şeridi "Hesap gerekmez" rozeti
+gray-500→600, footer telif satırı gray-400→500 (AA). ARIA: şeritte tablist ile tab arasındaki
+kart sarmalayıcısı `role="presentation"`. URL: **`/en/cv-scan`** — dizin `/cv-tarama` kalır,
+İngilizce adres `next.config.ts` `rewrites.beforeFiles` ile o dizine gider; `/en/cv-tarama` →
+301 `/en/cv-scan`, `/tr/cv-scan` → 301 `/tr/cv-tarama` (`cvScanRedirectForPath`, proxy.ts, rehber
+slug'larıyla aynı yol); her link `cvScanPath(locale)` üstünden (nav, footer, hero, kıyas, 404,
+yardım), `PUBLIC_PATHS`'te `CV_SCAN_PATHS` (sitemap + hreflang), sayaçta `/cv-scan`. next-intl
+`pathnames` yine kullanılmadı (tüm `Link` href'lerini yeniden tiplemek demek). Görsel:
+`logo-mark.png` (33 KB, 256px) → `logo-mark.webp` (6 KB, 128px; işaret en fazla 24px çiziliyor);
+PNG JSON-LD `logo` için duruyor.
+
+**Yol boyunca bulunanlar.** (1) `CvPdfPreview` ile yeni panel aynı `key={selected.id}`'yi
+kardeş olarak taşıyınca React refetch sonrası eski önizlemeyi yenisinin yanında bıraktı (iki
+canvas) — anahtar `scan-{id}` oldu. (2) Yerel CV deposu (`$TMPDIR/afterapply-cv-storage`) macOS
+tarafından temizlenmiş; demo hesabının üç CV satırı dosyasızdı (önizleme "oluşturulamadı",
+ölçüm 404). Üç dosya yeniden üretilip yerine kondu (headless Chrome print-to-PDF; yardım
+görselindeki içerikle). (3) Yerel API `dotnet ef database update` istiyor, migration'ı
+kendiliğinden uygulamıyor.
+
+**Testler.** Birim 1.010+ (SiteTrafficNormalizer: İngilizce slug + puan sayfaları kartsız
+sayılır, yanlış şekil düşer), vitest 683 (`path.test`: yol/yönlendirme/kart çözümleme;
+`scoreCard.test`: kodek + **ağırlıklar `CvScanScoring.cs` kaynağından okunup pinlenir**;
+navGroups locale; sözleşme testleri), entegrasyon 3 yeni (`CvDocumentFlowTests`: ölç → listede
+puan → GET aynı rapor → yeniden ölç tek satır, anonim sayaç 0, export'ta puan, sil → 404 + satır
+yok; sahibi olmayan 404; okunamayan dosya 400 ve rapor yok), tsc + eslint temiz; `next build`
+prod'da 101×2 puan sayfası prerender. Tarayıcıda (kullanıcının Brave'i, Chrome MCP; API :5151 +
+`next start` :3000, demo hesabı): `/cv` → gerçek "ATS okunabilirliğini ölç" tıklaması → 100/100
+rozeti, panel, "Raporu aç" → rapor; "Yeniden ölç" sonrası tek önizleme; anonim tarama → kapanış
+cümlesi ve `navigator.share`'e giden URL `/tr/cv-tarama/puan/100-40-25-15-20`; `/en/cv-tarama/…`
+→ 301 → `/en/cv-scan/score/…` İngilizce sayfa; curl: `/en/cv-scan` 200, `/tr/cv-scan` 301,
+geçersiz kartlar 404, `og?card=` PNG 1200×630, `Link` başlığı yok, canonical/hreflang doğru.
+
+**Görseller.** `cv-list.png` (yeni panel + puan rozeti; demo hesabının varsayılan CV'sinde artık
+kayıtlı bir 100/100 raporu var — silme, görsel onu gösteriyor) ve `cv-scan-result.png` (ATS
+kelimeleri; 85/100, "İletişim okunamıyor" bulgusuyla) yeniden çekildi.
+
+---
+
 ## T7 başarıyla çıkış: kabul edilen teklifte kutlama, son katkı daveti, "verin senin" (2026-09-18)
 
 **Ne ve neden.** T-serisinin (DEVELOPMENT_PLAN.md, "Uzun süredir arayan için tutma ilkeleri")

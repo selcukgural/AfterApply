@@ -92,8 +92,8 @@
         "description": "How many applications did you send, and how many came back? See your own reply rate against the median in your field. No sign-up needed."
       },
       "cvScan": {
-        "title": "Free ATS CV Check — how a machine reads your CV",
-        "description": "Upload your CV and see what an applicant tracking system reads from it. A machine-readability score, the raw text and a fix list. No sign-up, nothing stored."
+        "title": "Free ATS CV Check — how an applicant tracking system reads your CV",
+        "description": "Upload your CV and see what an applicant tracking system reads from it. An ATS readability score, the raw text and a fix list. No sign-up, nothing stored."
       },
       "pair": {
         "title": "Connect the Extension",
@@ -215,7 +215,7 @@
       "tabsLabel": "Tools",
       "noAccount": "No account needed",
       "cvTitle": "CV Scan",
-      "cvBody": "Drop your CV and see what applicant tracking systems read from it, with a machine-readability score.",
+      "cvBody": "Drop your CV and see what applicant tracking systems read from it, with an ATS readability score.",
       "cvCta": "Scan my CV",
       "extensionPill": "LinkedIn + kariyer.net",
       "extensionTitle": "Chrome Extension",
@@ -238,7 +238,7 @@
         "cv": {
           "eyebrow": "CV Scan · no account needed",
           "title": "What does an applicant tracking system read from your CV?",
-          "body": "Drop your CV and see the machine-readability score, where the points come from, and the fix list — right away.",
+          "body": "Drop your CV and see the ATS readability score, where the points come from, and the fix list — right away.",
           "bullet1": "PDF or DOCX, up to 5 MB",
           "bullet2": "The file is never written to disk; it is dropped from memory when the scan ends",
           "bullet3": "Every finding points at a page and a line in your own file",
@@ -1199,6 +1199,7 @@
       "access": "Only you, while signed in, can reach the file. Every download is checked against your own account and streamed through the e-kariyerim server; no shareable or time-limited link is ever produced. It is never shown to other users, to employers or to job boards.",
       "noTransfer": "The contents of your CV are never sent to any third party, AI services included. The one exception is the paid feature described under \"Weekly job matching\" below, which you turn on yourself and consent to separately; then only the text of your default CV is sent, and only for scoring. The file is not read, converted to text or analysed; it is only stored and handed back to you. The first-page preview you see on the My CVs page is rendered in your own browser, not on the server.",
       "deletion": "A CV you delete is deleted permanently — the storage-side recovery window is deliberately turned off. Deleting your account deletes all of your CVs with it.",
+      "readability": "If you choose to, you can measure an uploaded CV's ATS readability (the button on the My CVs page). These are the same checks as the sign-in-free CV scan and they run on our server; nothing is sent to an AI model. The report (score, findings, the lines they point at and the text extracted from the file) is produced only when you ask, kept next to that CV, visible only to you, and deleted together with the CV. The data export carries the score and the date it was measured.",
       "sensitiveDataNote": "A CV can carry more than your work history — a photo, a date of birth, or health or military-service information — which is why we ask for your explicit consent before each upload. What goes into it is your decision: none of those fields are needed for the service to work, and you can delete the file at any time.",
       "consent": "The lawful basis is your explicit consent, and it is taken separately for every upload: you tick the consent box before choosing a file, the box is never pre-ticked, and it clears again after each upload. You can withdraw consent at any time by deleting the file, and deleting your account deletes all of your CVs with it."
     },
@@ -1881,7 +1882,7 @@
           "description": "Read salaries at companies and share your own anonymously."
         },
         "cvScan": {
-          "description": "Measure how machine-readable your CV is, no account needed."
+          "description": "Measure your CV's ATS readability, no account needed."
         },
         "benchmark": {
           "description": "Compare your reply rate with your field's median, no account needed."
@@ -2373,7 +2374,7 @@
       },
       "q15": {
         "question": "What can I use on e-kariyerim without an account?",
-        "answer": "Three things: CV Scan (how machine-readable your CV is), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension and writing a review need a free account."
+        "answer": "Three things: CV Scan (your CV's ATS readability), the reply rate benchmark, and reading company reviews. Tracking applications, the dashboard, the Chrome extension and writing a review need a free account."
       },
       "q16": {
         "question": "What are weekly postings and what do they cost?",
@@ -2426,6 +2427,10 @@
       "default": {
         "title": "Default CV",
         "body": "Making a file your default means it arrives pre-selected when you record a new application. The first file you upload becomes the default automatically, and deleting the default passes it to your newest remaining file. You can always change the CV used field on the application form."
+      },
+      "readability": {
+        "title": "ATS readability",
+        "body": "The \"Measure ATS readability\" button under the selected CV runs the same checks as the sign-in-free CV scan over this file: a score out of 100, the four category subtotals, the fix list and the text an applicant tracking system reads from the file. The report stays next to the CV; the list shows the score and \"Open report\" shows the detail. Upload the corrected version and measure again, and the old report is replaced. Uploading alone never measures anything; it runs only when you ask, and the report is deleted with the CV."
       },
       "remove": {
         "title": "Deleting",
@@ -2548,7 +2553,7 @@
     "cvScan": {
       "eyebrow": "Account-free tools",
       "title": "CV Scan",
-      "intro": "Applicant tracking systems (ATS) turn your CV into text first. This tool shows what a machine can read from your file and gives a 0-100 readability score. No account needed.",
+      "intro": "Applicant tracking systems (ATS) turn your CV into text first. This tool shows what an applicant tracking system can read from your file and gives a 0-100 readability score. No account needed.",
       "openTool": "Open the CV Scan tool →",
       "how": {
         "title": "How to use it",
@@ -2567,7 +2572,7 @@
       },
       "measures": {
         "title": "What it measures",
-        "body": "Four headings: machine readability, sections and dates, contact details, format and length. These are every parser's shared problems: if no text comes out, dates don't line up or the contact block looks empty, your CV goes missing in searches."
+        "body": "Four headings: text readability, sections and dates, contact details, format and length. These are every parser's shared problems: if no text comes out, dates don't line up or the contact block looks empty, your CV goes missing in searches."
       },
       "limits": {
         "title": "What it doesn't",
@@ -2776,6 +2781,20 @@
     "uploadError": "The CV could not be uploaded. Please try again.",
     "deleteError": "The CV could not be deleted. Please try again.",
     "downloadError": "The file could not be downloaded. Please try again.",
+    "scan": {
+      "title": "ATS readability",
+      "description": "What does an applicant tracking system read from this file? Measure it; the score and the fix list stay with this CV, and you measure again when you upload the corrected version.",
+      "score": "{score}/100",
+      "measuredAt": "· measured on {date}",
+      "measure": "Measure ATS readability",
+      "measureAgain": "Measure again",
+      "measuring": "Measuring…",
+      "openReport": "Open report",
+      "closeReport": "Close report",
+      "loading": "Loading the report…",
+      "error": "The report could not be loaded. Please try again.",
+      "pill": "{score}/100"
+    },
     "defaultError": "The default CV could not be changed. Please try again.",
     "consent": {
       "before": "I give my",
@@ -2989,9 +3008,22 @@
     }
   },
   "cvScan": {
-    "title": "How does a machine read your CV?",
+    "title": "How does an applicant tracking system (ATS) read your CV?",
     "subtitle": "Upload your PDF or Word file and see what an applicant tracking system reads from it, where it gets stuck, and what to fix. No account, and the file is never stored.",
     "navCta": "Scan your CV",
+    "shared": {
+      "eyebrow": "Someone sent you this",
+      "outOf": "/ 100 — ATS readability",
+      "body": "A CV scored {score} out of 100 for the part an applicant tracking system can read. No AI behind the number; it is the sum of four category subtotals.",
+      "heading": "What does yours get? Drop your CV and see.",
+      "metaTitle": "A CV scored {score}/100 on ATS readability — what does yours get?",
+      "metaDescription": "Someone shared their CV scan result: {score} out of 100. Upload your own CV and see what applicant tracking systems read from it, and your score. No sign-up, nothing stored.",
+      "card": {
+        "kicker": "ATS readability",
+        "title": "A CV scored this. What does yours get?",
+        "footer": "ekariyerim.com/cv-scan · free, no sign-up"
+      }
+    },
     "form": {
       "choose": "Choose a file",
       "dropHint": "PDF or DOCX · 5 MB max",
@@ -3017,7 +3049,7 @@
     "afterScan": {
       "title": "What you get after the scan",
       "score": "A score out of 100 and how it splits across four categories — the total is the sum of the subtotals.",
-      "rawText": "Your CV as a machine sees it: the raw text pulled out of the file, in the order a parser reads it rather than the order you laid out.",
+      "rawText": "Your CV as an ATS sees it: the raw text pulled out of the file, in the order a parser reads it rather than the order you laid out.",
       "fixes": "A fix list: which page and which line each finding is on, and how many points it costs."
     },
     "ats": {
@@ -3033,7 +3065,7 @@
       "noContent": "It does not judge your content. How well you describe your experience sits outside this score."
     },
     "result": {
-      "scoreLabel": "Your machine-readability score",
+      "scoreLabel": "Your ATS readability score",
       "outOf": "out of 100",
       "bands": {
         "good": "Your CV looks fine to a parser.",
@@ -3041,7 +3073,7 @@
         "poor": "A parser cannot read a significant part of your CV."
       },
       "deterministic": "No AI produced this number: add up the four category subtotals and you get the score, and the point costs of the findings below are the other half of the same subtraction.",
-      "atsNote": "ATS software does not auto-reject CVs — this score does not say \"you will be rejected\", it says \"a machine cannot read this\".",
+      "atsNote": "ATS software does not auto-reject CVs — this score does not say \"you will be rejected\", it says \"an applicant tracking system cannot read this\".",
       "categoriesTitle": "Where the score comes from",
       "categoryScore": "{score}/{weight}",
       "findingsTitle": "Fix list",
@@ -3054,7 +3086,7 @@
       "evidence": "Where in your CV",
       "evidencePage": "Page {page}",
       "evidenceDocument": "In the document",
-      "previewTitle": "This is how a machine reads your CV",
+      "previewTitle": "This is how an applicant tracking system reads your CV",
       "previewHint": "The text below was pulled out of your file. If the order looks scrambled, that is the order a parser reads it in.",
       "previewTruncated": "Showing the beginning of the text, not all of it.",
       "documentTitle": "File",
@@ -3065,13 +3097,14 @@
       "ctaRescan": "Fix your CV and scan it again — still no account.",
       "ctaBenchmark": "Is your reply rate normal? Try the benchmark.",
       "ctaBenchmarkLink": "Go to the benchmark",
-      "ctaTrack": "If you want your applications tracked in one place, you can open an account. Nothing up to this point needed one.",
+      "ctaTrack": "This report is gone when you close the page; neither your file nor its text stays with us. If you open an account and upload your CV, the score stays next to the CV, you measure again once you have fixed it, and which CV went with which application is on record.",
+      "ctaTrackNote": "Free. Uploading is a separate consent, when you choose.",
       "ctaRegister": "Create an account",
       "shareLabel": "Share your score",
-      "shareText": "My CV scored {score}/100 on machine readability. What does yours get? Free ATS check, no sign-up:"
+      "shareText": "My CV scored {score}/100 on ATS readability. What does yours get? Free ATS check, no sign-up:"
     },
     "categories": {
-      "MachineReadability": "Machine readability",
+      "MachineReadability": "Text readability",
       "SectionsAndDates": "Sections and dates",
       "Contact": "Contact details",
       "FormatAndLength": "Format and length"

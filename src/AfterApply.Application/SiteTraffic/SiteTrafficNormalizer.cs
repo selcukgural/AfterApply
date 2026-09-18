@@ -101,7 +101,9 @@ public static class SiteTrafficNormalizer
         "/guide",
         "/help",
         "/benchmark",
+        // The scan's slug is translated: /tr/cv-tarama, /en/cv-scan (web/src/lib/cvScan/path.ts).
         "/cv-tarama",
+        "/cv-scan",
         "/companies",
         "/privacy",
         "/cookies",
@@ -121,6 +123,15 @@ public static class SiteTrafficNormalizer
     /// <see cref="SlugPattern"/> rather than by a list the Application layer would have to keep in
     /// step with the MDX files.</summary>
     private static readonly HashSet<string> SlugSections = new(StringComparer.Ordinal) { "/guide", "/help", "/companies" };
+
+    /// <summary>The shared-score pages (<c>/cv-tarama/puan/88-28-22-20-18</c>, <c>/cv-scan/score/…</c>).
+    /// Counted as their section, with the card dropped: the number of people who arrive through a
+    /// shared score is the measurement — which score they arrived on is not, and a card is specific
+    /// enough to act as a fingerprint of one person's share.</summary>
+    private static readonly HashSet<string> ScoreSections = new(StringComparer.Ordinal) { "/cv-tarama/puan", "/cv-scan/score" };
+
+    private static readonly Regex ScoreCardPattern =
+        new("^[0-9]{1,3}(-[0-9]{1,2}){0,4}$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private static readonly Regex SlugPattern =
         new("^[a-z0-9][a-z0-9-]{0,63}$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -193,6 +204,15 @@ public static class SiteTrafficNormalizer
         if (rest.Length == 2 && SlugSections.Contains("/" + rest[0]) && SlugPattern.IsMatch(rest[1]))
         {
             return (locale, candidate);
+        }
+
+        if (rest.Length == 3 && ScoreCardPattern.IsMatch(rest[2]))
+        {
+            var section = "/" + rest[0] + "/" + rest[1];
+            if (ScoreSections.Contains(section))
+            {
+                return (locale, section);
+            }
         }
 
         // Not a public page — a signed-in screen, a static file, or something invented. Dropped.

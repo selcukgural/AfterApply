@@ -1,7 +1,9 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Logo } from "@/components/layout/Logo";
 import { CHROME_WEB_STORE_URL } from "@/lib/constants/chromeWebStore";
+import { CV_SCAN_PATHS } from "@/lib/cvScan/path";
+import { pathFor, type LocalisedPath } from "@/lib/seo/routes";
 
 /** The landing page's sections — the anchors resolve from any page — and the store listing. */
 const PRODUCT_LINKS = [
@@ -12,13 +14,14 @@ const PRODUCT_LINKS = [
 ] as const;
 
 /** Every public page a visitor can browse, under the same names the header uses. */
-const EXPLORE_LINKS = [
+const EXPLORE_LINKS: readonly { href: LocalisedPath; key: "companies" | "cvScan" | "benchmark" | "guide" | "help" }[] = [
   { href: "/companies", key: "companies" },
-  { href: "/cv-tarama", key: "cvScan" },
+  // The scan's slug is translated (/cv-tarama, /cv-scan); every other page is the same in both.
+  { href: CV_SCAN_PATHS, key: "cvScan" },
   { href: "/benchmark", key: "benchmark" },
   { href: "/guide", key: "guide" },
   { href: "/help", key: "help" },
-] as const;
+];
 
 const LEGAL_LINKS = [
   { href: "/privacy", key: "privacy" },
@@ -41,6 +44,7 @@ const LEGAL_LINKS = [
 export async function SiteFooter() {
   const t = await getTranslations("landing.footer");
   const tNav = await getTranslations("siteNav");
+  const locale = await getLocale();
   const year = new Date().getFullYear();
 
   const linkClass = "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100";
@@ -70,7 +74,7 @@ export async function SiteFooter() {
           <div className="flex flex-col gap-2 text-sm">
             <span className={headingClass}>{t("explore")}</span>
             {EXPLORE_LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className={linkClass}>
+              <Link key={link.key} href={pathFor(link.href, locale)} className={linkClass}>
                 {t(link.key)}
               </Link>
             ))}
@@ -87,7 +91,7 @@ export async function SiteFooter() {
         </div>
       </div>
 
-      <p className="mx-auto mt-8 max-w-6xl px-4 text-xs text-gray-400 dark:text-gray-600">
+      <p className="mx-auto mt-8 max-w-6xl px-4 text-xs text-gray-500 dark:text-gray-500">
         © {year} e-kariyerim. {t("rights")}
       </p>
     </footer>

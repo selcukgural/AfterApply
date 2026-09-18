@@ -76,7 +76,7 @@ public static class ClientConfigEndpoints
                     // Both halves have to be true for the box to be worth offering: the feature
                     // flag, and a project to call. A flag on with no project configured would
                     // render a checkbox whose only outcome is "unavailable".
-                    new CvScanConfigResponse(cvScan.Enabled && cvScan.LlmEnabled
+                    new CvScanConfigResponse(cvScan.Enabled, cvScan.Enabled && cvScan.LlmEnabled
                                              && !string.IsNullOrWhiteSpace(cvScan.Review.ProjectId)),
                     new CompanyReviewsConfigResponse(reviews.Enabled, reviews.MaxReviewsPerUser,
                         reviews.MinimumReviewsForScore, reviews.PriorWeight),

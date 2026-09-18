@@ -34,13 +34,13 @@ export function inspectScanFile(file: { name: string; size: number }): CvScanFil
 
 /** The findings a reader can actually act on, worst first. A finding that cost nothing — its
  *  category had already run out of points — is still shown, but below the ones that did. */
-export function fixList(result: CvScanResponse): CvScanFinding[] {
+export function fixList(result: Pick<CvScanResponse, "findings">): CvScanFinding[] {
   return [...result.findings].sort((a, b) => b.pointCost - a.pointCost);
 }
 
 /** What the fix list adds up to. Equal to 100 minus the score, by construction: the server charges
  *  each finding out of its category's remaining weight, so the costs shown are the costs paid. */
-export function pointsAtStake(result: CvScanResponse): number {
+export function pointsAtStake(result: Pick<CvScanResponse, "findings">): number {
   return result.findings.reduce((total, finding) => total + finding.pointCost, 0);
 }
 
