@@ -30,6 +30,9 @@ export const ROOT_MESSAGE_SCOPE = [
   "notFound",
   // The header's "Scan your CV" button.
   "cvScan.navCta",
+  // The share row's two labels ("copy link" / "copied") — the row sits on the CV result, which
+  // the landing hero can show, and on public pages.
+  "share",
 ] as const;
 
 // The landing page shows sample dashboard cards, a sample benchmark result and a sample company

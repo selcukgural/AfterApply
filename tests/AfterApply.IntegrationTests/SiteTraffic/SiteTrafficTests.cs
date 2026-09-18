@@ -32,9 +32,15 @@ public class SiteTrafficTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiH
         await host.ResetAsync();
 
         // No Authorization header is ever set on this client, on purpose: every test below is also
-        // an assertion that the counter works for a visitor who has no account.
+        // an assertion that the counter works for a visitor who has no account. It does carry a
+        // browser's user agent, because since 2026-09-18 a report without one is a bot's and is
+        // dropped (see the tests at the bottom).
         _client = _factory.CreateClient();
+        _client.DefaultRequestHeaders.UserAgent.ParseAdd(BrowserUserAgent);
     }
+
+    private const string BrowserUserAgent =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36";
 
     public Task DisposeAsync()
     {
@@ -206,5 +212,44 @@ public class SiteTrafficTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiH
 
         (await signedIn.GetAsync("/api/admin/site-traffic")).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         signedIn.Dispose();
+    }
+
+    private async Task<HttpResponseMessage> ReportAsAsync(string? userAgent, string eventName = "page_view", string path = "/tr")
+    {
+        using var client = _factory!.CreateClient();
+        if (userAgent is not null)
+        {
+            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", userAgent);
+        }
+        return await client.PostAsJsonAsync("/api/site-traffic/events",
+            new RecordSiteTrafficEventRequest(eventName, path, null), JsonOptions);
+    }
+
+    [Theory]
+    [InlineData("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")]
+    [InlineData("Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 Chrome/129 Mobile Safari/537.36 Chrome-Lighthouse")]
+    [InlineData("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/129.0.0.0 Safari/537.36")]
+    [InlineData("curl/8.4.0")]
+    [InlineData("python-requests/2.32")]
+    [InlineData(null)]
+    public async Task A_Report_From_Something_That_Is_Not_A_Person_Is_Accepted_And_Not_Counted(string? userAgent)
+    {
+        // 204 either way — the answer must not tell a caller what the filter looks for — but no
+        // row: a crawler, an audit run or a headless browser is not a visitor.
+        var response = await ReportAsAsync(userAgent);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await RowsAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_Share_Click_Is_Countable_On_The_Pages_That_Have_A_Share_Button()
+    {
+        (await ReportAsync("share_clicked", "/tr/cv-tarama")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await ReportAsync("share_clicked", "/en/benchmark")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await ReportAsync("share_clicked", "/tr/companies/acme")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var rows = await RowsAsync();
+        rows.Count(r => r.Event == "ShareClicked").ShouldBe(3);
     }
 }

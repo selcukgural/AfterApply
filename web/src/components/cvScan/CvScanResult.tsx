@@ -3,6 +3,8 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button, buttonClassName } from "@/components/ui/Button";
+import { ShareRow } from "@/components/share/ShareRow";
+import { SITE_URL } from "@/lib/seo/routes";
 import { formatCount } from "@/lib/dashboard/format";
 import { findingDetails, fixList, pointsAtStake } from "@/lib/cvScan/findings";
 import { CvScanCategoryBars, CvScanScoreCard } from "@/components/cvScan/CvScanResultCards";
@@ -93,6 +95,18 @@ export function CvScanResult({ result, onReset }: { result: CvScanResponse; onRe
       {/* The chain: each step asks for more than the one before it, and the account is last. */}
       <section className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
         <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t("result.ctaTitle")}</h2>
+
+        {/* The score is the one thing this page produces that a person might pass on, and the
+            sentence asks the question that brings the next person here. The link is the tool's
+            page, not a per-score URL: the scan stays anonymous and nothing about this file is
+            put anywhere it could be fetched back. */}
+        <ShareRow
+          label={t("result.shareLabel")}
+          content={{
+            text: t("result.shareText", { score: result.score }),
+            url: `${SITE_URL}/${locale}/cv-tarama`,
+          }}
+        />
 
         <p className="text-sm text-gray-600 dark:text-gray-400">{t("result.ctaRescan")}</p>
         <div>

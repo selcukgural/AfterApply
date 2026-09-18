@@ -4,7 +4,7 @@
     "description": "Başvurularının kaçı cevaplandı, kaçı sessizce kayboldu — kendi sayılarını gör.",
     "pages": {
       "home": {
-        "title": "İş Başvuru Takip Uygulaması",
+        "title": "Başvurularının kaçı cevaplandı? Ücretsiz iş başvuru takibi ve ATS CV kontrolü",
         "description": "Başvurularının kaçı cevaplandı, kaçı sessizce kayboldu, ilk dönüş kaç gün sürüyor. İş başvuru takibi: LinkedIn geçmişini içe aktar ya da tek tıkla kaydet."
       },
       "guide": {
@@ -92,7 +92,7 @@
         "description": "Kaç başvuru yaptın, kaçından dönüş aldın? Kendi geri dönüş oranını gör ve alanındaki medyanla kıyasla. Kayıt gerekmiyor."
       },
       "cvScan": {
-        "title": "CV Tarama — CV'ni makine nasıl okuyor?",
+        "title": "Ücretsiz ATS CV Kontrolü — CV'ni makine nasıl okuyor?",
         "description": "CV'ni yükle, başvuru sistemlerinin ondan ne okuduğunu gör. Makine okunabilirliği puanı, ham metin ve düzeltme listesi. Kayıt gerekmiyor, dosya saklanmıyor."
       },
       "pair": {
@@ -100,7 +100,7 @@
         "description": "Tarayıcı eklentini e-kariyerim hesabına tek onayla bağla."
       },
       "companies": {
-        "title": "Şirket Değerlendirmeleri ve Maaşları",
+        "title": "Şirket Çalışan Yorumları, Değerlendirmeleri ve Maaşları",
         "description": "Orada çalışmış kişilerden anonim, yapılandırılmış işveren değerlendirmeleri — yönetim, çalışma ortamı, ücret, kariyer — ve giriş yapınca meslek bazında anonim maaş bilgileri. Puanı açık hesaplanır."
       },
       "companyScoring": {
@@ -2883,8 +2883,7 @@
   "benchmark": {
     "title": "Geri dönüş oranın normal mi?",
     "subtitle": "Dört soru. Kayıt yok, e-posta yok. Cevabını ver, kendi oranını ve alanındaki medyanı gör.",
-    "participation": "{count} kişi cevapladı.",
-    "participationEmpty": "Henüz kimse cevaplamadı. İlk sen ol.",
+    "participation": "{count} kişinin cevabıyla.",
     "form": {
       "applicationsLabel": "Kaç başvuru yaptın?",
       "applicationsHint": "Seçtiğin dönemde gönderdiğin toplam başvuru sayısı.",
@@ -2951,7 +2950,10 @@
       "saved": "Cevabın bu sayıya dahil edildi.",
       "overallTitle": "{sector} alanında henüz {sampleSize} cevap var — medyan için {minimum} gerekiyor.",
       "overallMedianLabel": "Tüm alanlar geneli",
-      "overallNote": "{count} cevaba göre · alanına özel değil"
+      "overallNote": "{count} cevaba göre · alanına özel değil",
+      "shareLabel": "Sonucunu paylaş",
+      "shareTextWithMedian": "{applications} başvurumdan {replies} tanesine dönüş geldi (%{rate}); alanımda medyan %{median}. Seninki normal mi?",
+      "shareText": "{applications} başvurumdan {replies} tanesine dönüş geldi (%{rate}). Seninki normal mi?"
     },
     "method": {
       "title": "Bu sayı nereden geliyor?",
@@ -3053,7 +3055,9 @@
       "ctaBenchmark": "Geri dönüş oranın normal mi? Kıyaslama aracına bak.",
       "ctaBenchmarkLink": "Kıyaslamaya git",
       "ctaTrack": "Başvurularını tek yerde takip etmek istersen hesap açabilirsin. Buraya kadar olan hiçbir şey için gerekmiyordu.",
-      "ctaRegister": "Hesap aç"
+      "ctaRegister": "Hesap aç",
+      "shareLabel": "Puanını paylaş",
+      "shareText": "CV'm makine okunabilirliğinden {score}/100 aldı. Seninki kaç? Ücretsiz, kayıtsız ATS kontrolü:"
     },
     "categories": {
       "MachineReadability": "Makine okunabilirliği",
@@ -3254,7 +3258,7 @@
       }
     },
     "page": {
-      "metaTitle": "{company} değerlendirmeleri ve maaşları",
+      "metaTitle": "{company} çalışan yorumları, değerlendirmeleri ve maaşları",
       "metaDescription": "{count, plural, =0 {{company} için henüz yayımlanmış değerlendirme yok — ilk yazan sen ol. Çalışanların paylaştığı maaşlar giriş yapınca görünür.} =1 {{company} hakkında 1 anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.} other {{company} hakkında # anonim çalışan değerlendirmesi, kontrol edebileceğin bir puan ve giriş yapınca meslek bazında anonim maaş bilgileri.}}",
       "breadcrumbLabel": "Gezinti",
       "allCompanies": "← Tüm şirketler",
@@ -3266,7 +3270,9 @@
         "salaries": "Maaşlar",
         "experiences": "Aday deneyimi"
       },
-      "disclaimer": "Değerlendirmeler anonim yazarlarının kişisel görüşleridir, e-kariyerim'in beyanı değildir. Değerlendirmeler yalnızca puanlardan ve hazır maddelerden oluşur; yine de yanlış görünen bir şey varsa “Bu değerlendirmeyi bildir”i kullan, bir moderatör bakar."
+      "disclaimer": "Değerlendirmeler anonim yazarlarının kişisel görüşleridir, e-kariyerim'in beyanı değildir. Değerlendirmeler yalnızca puanlardan ve hazır maddelerden oluşur; yine de yanlış görünen bir şey varsa “Bu değerlendirmeyi bildir”i kullan, bir moderatör bakar.",
+      "share": "Paylaş",
+      "shareText": "{company} hakkında çalışan yorumları, maaşlar ve aday deneyimleri — e-kariyerim"
     },
     "summary": {
       "scoreLabel": "5 üzerinden {score} puan",
@@ -5637,5 +5643,9 @@
     "TakeHomeAssignment": "Ev ödevi / case",
     "Panel": "Panel görüşme",
     "AssessmentCenter": "Değerlendirme merkezi"
+  },
+  "share": {
+    "copyLink": "Linki kopyala",
+    "copied": "Kopyalandı"
   }
 }

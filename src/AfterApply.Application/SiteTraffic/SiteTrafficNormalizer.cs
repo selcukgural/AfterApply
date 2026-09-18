@@ -52,8 +52,38 @@ public static class SiteTrafficNormalizer
             ["cta_get_started"] = SiteTrafficEvent.CtaGetStarted,
             ["cv_scan_completed"] = SiteTrafficEvent.CvScanCompleted,
             ["register_started"] = SiteTrafficEvent.RegisterStarted,
-            ["register_completed"] = SiteTrafficEvent.RegisterCompleted
+            ["register_completed"] = SiteTrafficEvent.RegisterCompleted,
+            ["share_clicked"] = SiteTrafficEvent.ShareClicked
         };
+
+    /// <summary>
+    /// Fragments that mark a user agent as not a person: crawlers, audit tools, headless browsers
+    /// and HTTP libraries. Matched case-insensitively against the header, which is read for this
+    /// one comparison and never stored — the Çerez Politikası promises the counter keeps no user
+    /// agent, and dropping a report on the way in keeps that promise while stopping Lighthouse runs
+    /// and CI browsers from counting as visitors (growth audit 2026-09-14, finding 13). The list
+    /// is deliberately short and generic: "bot", "crawl" and "spider" cover the long tail, the rest
+    /// are the tools that were actually found in the counter.
+    /// </summary>
+    private static readonly string[] NonHumanUserAgentFragments =
+    [
+        "bot", "crawl", "spider", "headlesschrome", "lighthouse", "pagespeed", "slurp",
+        "facebookexternalhit", "prerender", "curl/", "wget/", "python-requests", "python-urllib",
+        "go-http-client", "node-fetch", "axios/", "okhttp", "java/", "libwww", "httpclient", "phantomjs",
+        "puppeteer", "playwright", "selenium"
+    ];
+
+    /// <summary>True when the user agent belongs to something that is not a person browsing. An
+    /// absent or empty header counts as non-human too: every real browser sends one.</summary>
+    public static bool IsNonHumanUserAgent(string? userAgent)
+    {
+        if (string.IsNullOrWhiteSpace(userAgent))
+        {
+            return true;
+        }
+
+        return NonHumanUserAgentFragments.Any(fragment => userAgent.Contains(fragment, StringComparison.OrdinalIgnoreCase));
+    }
 
     /// <summary>
     /// Public pages, with the language prefix already removed. The OAuth callback routes

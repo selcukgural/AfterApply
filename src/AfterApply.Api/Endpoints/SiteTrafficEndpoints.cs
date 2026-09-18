@@ -15,10 +15,16 @@ public static class SiteTrafficEndpoints
         // an authenticated request would let a count be tied back to an account, which is precisely
         // what the Çerez Politikası promises the site does not do. See web/src/lib/analytics.
         app.MapPost("/api/site-traffic/events", async (
-                RecordSiteTrafficEventRequest request, ISiteTrafficService service,
+                RecordSiteTrafficEventRequest request, HttpContext httpContext, ISiteTrafficService service,
                 CancellationToken cancellationToken) =>
             {
-                await service.RecordAsync(request, cancellationToken);
+                // Read for one comparison and never stored, logged or passed on: a crawler, an
+                // audit run or a headless browser is not a visitor, and the counter must not
+                // learn anything else about the ones that are (SiteTrafficNormalizer).
+                if (!SiteTrafficNormalizer.IsNonHumanUserAgent(httpContext.Request.Headers.UserAgent))
+                {
+                    await service.RecordAsync(request, cancellationToken);
+                }
 
                 // 204 whether or not a count was recorded. A report that fails the allowlist is
                 // dropped silently on purpose: a distinguishable response would tell a caller which

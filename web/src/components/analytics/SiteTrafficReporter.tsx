@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
+import { isExcludedVisitor, trackSiteTraffic } from "@/lib/analytics/siteTraffic";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 /**
  * Reports one page view per public page, including after a client-side navigation (which fires no
@@ -24,10 +25,16 @@ import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
  */
 export function SiteTrafficReporter() {
   const pathname = usePathname();
+  const { user, isLoading } = useAuth();
+  // Decided here and not sent anywhere: an admin's own visits are not what the counter is for.
+  // Waits for the session to load first — reporting on the first render and excluding on the
+  // second would count the admin's arrival anyway.
+  const excluded = isExcludedVisitor(user);
 
   useEffect(() => {
+    if (isLoading || excluded) return;
     trackSiteTraffic("page_view", pathname);
-  }, [pathname]);
+  }, [pathname, isLoading, excluded]);
 
   return null;
 }
