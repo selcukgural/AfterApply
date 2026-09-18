@@ -1,10 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { candidateExperiencesApi } from "@/lib/api/candidateExperiences";
-import { useClientConfig } from "@/hooks/useClientConfig";
+import { useExperienceInvite } from "@/hooks/useExperienceInvite";
 import { invitesExperience } from "@/lib/applications/shareExperience";
 import type { ApplicationStatus } from "@/types/api";
 
@@ -23,20 +21,13 @@ interface ShareExperienceInviteProps {
  * the next candidate cannot find out anywhere else, and putting it on record is the difference
  * between "that was for nothing" and "that was for someone". No box, no accent colour, no
  * exclamation mark — it is an offer, not a prompt, and it disappears once they have taken it.
+ * An accepted offer gets its own card instead (AcceptedClosingNote).
  */
 export function ShareExperienceInvite({ status, companyId, companyName, companySlug }: ShareExperienceInviteProps) {
   const t = useTranslations("applications.detail.shareExperience");
-  const { config } = useClientConfig();
-  const enabled = config.candidateExperiences?.enabled === true && invitesExperience(status) && !!companySlug;
+  const invite = useExperienceInvite(companyId, companySlug, invitesExperience(status));
 
-  // Only asked when the line could show at all — a fresh application never fires this request.
-  const viewer = useQuery({
-    queryKey: ["companies", companyId, "experienceViewer"],
-    queryFn: () => candidateExperiencesApi.viewerState(companyId),
-    enabled,
-  });
-
-  if (!enabled || !viewer.data || viewer.data.ownEntry !== null) return null;
+  if (!invite) return null;
 
   return (
     <p className="text-sm text-gray-600 dark:text-gray-400">

@@ -125,7 +125,8 @@ export default function SettingsPage() {
     <div className="flex max-w-lg flex-col gap-8">
       <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
 
-      <section className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+      {/* `#export` is the target of the "download your data" line on an accepted application. */}
+      <section id="export" className="scroll-mt-20 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
         <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("export.title")}</h2>
         <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{t("export.description")}</p>
         {exportError && <p className="mb-3 text-sm text-red-600 dark:text-red-400">{exportError}</p>}

@@ -1257,7 +1257,7 @@ değil, "bir şey netleşti" olmalı.**
   bölen tek üründür.
 - **Kilidi:** V4'ünki (tutundurma ölçümü). T1/T3/T5 kadar acil değil.
 
-### Sıra 7 — T7: Başarıyla çıkışta veri kaybettirme (kod: web, kopya)
+### Sıra 7 — T7: Başarıyla çıkışta veri kaybettirme ✅ (2026-09-18)
 
 - **Ne var:** `Accepted` durumu, dışa aktarma, hesap silme.
 - **Yapılacak:** `Accepted`'a geçişte kutlama + son katkı isteği (*"Nereye
@@ -1265,6 +1265,12 @@ değil, "bir şey netleşti" olmalı.**
   ardından "verini indir, hesabın seni bekler" — silmeye itmeden. İş arama
   episodiktir: 2 yıl sonra tekrar arayacak, güvenle döneceği yer olmalıyız.
 - **Kilidi:** yok, ama sıra sonda: kimse henüz çıkmıyor.
+- **Yapıldı (2026-09-18):** başvuru detayında, durum `Accepted` olduğu sürece
+  duran bir kart (`AcceptedClosingNote`): "Hayırlı olsun." + T6 ile aynı
+  deneyim daveti (aynı koşullar, ortak `useExperienceInvite`) + "Verin senin;
+  … hesabın … seni bekler" → `/settings#export`. Silme hiçbir yerde anılmıyor.
+  "Nereye giriyorsun?" sorusu yazılmadı — şirket zaten sayfada. DECISIONS.md'de
+  aynı tarihli girdi.
 
 ### T8 — plandan çıkarıldı (2026-09-18)
 

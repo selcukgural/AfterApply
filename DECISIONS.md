@@ -7519,6 +7519,49 @@ T5 ✅ işareti o rebase'le geldi.
 
 ---
 
+## T7 başarıyla çıkış: kabul edilen teklifte kutlama, son katkı daveti, "verin senin" (2026-09-18)
+
+**Ne ve neden.** T-serisinin (DEVELOPMENT_PLAN.md, "Uzun süredir arayan için tutma ilkeleri")
+kilitsiz tek maddesi. İş arama episodik: bugün teklif kabul eden kişi iki yıl sonra yeniden
+arayacak, ve o gün güvenle döneceği yer olmak için gidişin iyi olması gerekiyor. Bugüne kadar
+`Accepted` bir rozetten ibaretti; sayfa ne kutluyor ne de veriyle ne olacağını söylüyordu.
+
+**Yapılan (yalnız web + kopya).** Başvuru detayında, durum `Accepted` olduğu sürece başlığın
+hemen altında, detay kartının üstünde duran bir kart (`AcceptedClosingNote`):
+
+- *"Hayırlı olsun."* — ünlemsiz, vurgu rengi yok; standart kart.
+- T6'nın deneyim daveti, aynı cümle yapısıyla (*"Bu süreç nasıl geçti, senden sonraki bilsin —
+  {company} ile deneyimini paylaş"* → `/contribute?tab=experience&company={slug}`). Koşullar
+  T6 ile birebir — aday deneyimi bayrağı açık, slug var, bu şirkette kişinin kaydı yok — ve
+  ikisi artık ortak `useExperienceInvite` kancasını kullanıyor (viewer-state sorgusu yalnız
+  gösterilebilecekse atılıyor). Kayıt yazılınca satır kaybolur, kart kalır.
+- *"Verin senin; istediğin zaman indirebilirsin. Hesabın olduğu gibi kalır, bir gün yeniden
+  gerekirse seni bekler."* → **Verimi indir** → `/settings#export` (ayarlardaki dışa aktarma
+  bölümüne `id="export"` verildi). Silme hiçbir yerde anılmıyor; indirme bağlantısı ayrı bir
+  indirme yolu açmak yerine ayarlara gidiyor ki tek dışa aktarma yolu kalsın.
+
+**Yazılmayanlar.** Plandaki *"Nereye giriyorsun?"* sorusu: şirket zaten sayfada, sormak
+yapaydı. Kapatma/"bir daha gösterme" düğmesi: kart başvurunun kapanış cümlesi, dürtme değil;
+ayrıca yerel depolama tripwire'ına (çerez politikası) girmeye değmezdi. Pano/liste tarafında
+hiçbir şey değişmedi; toplu değişiklikle `Accepted` olan başvuru kartı bir sonraki açılışta
+görür — geçiş anını yakalamak için ayrı istemci durumu tutulmadı, sayfa zaten durum
+değişikliğinden sonra yeniden çiziliyor.
+
+**Yardımcı.** `invitesExperience` (T6) artık `closingMoment(status)` üstünden:
+`"ending"` (Rejected/Ghosted) | `"accepted"` | `null`; T6 satırı yalnız `"ending"`de.
+
+**Testler.** vitest 669 (yeni: `closingMoment`, `copy.test.ts`'e T-serisi ton kuralı — iki
+kapanış yüzeyinin kopyasında ünlem yok, motivasyon cümlesi yok, "hesabını sil" yok, veri
+bağlantısı "indir"). tsc + eslint temiz. Backend'e dokunulmadı; entegrasyon paketi koşulmadı.
+Tarayıcıda (yerel yığın, tarayıcı-test kullanıcısı, headless CDP): Deneme Yazılım A.Ş. /
+Senior Backend Developer gerçek "Durumu Değiştir → Kabul Edildi → Onayla" akışıyla `Accepted`
+yapıldı, kart aynı yeniden çizimde başlığın altında belirdi (tr + en); deneyim bağlantısı
+`/contribute?tab=experience&company=deneme-yazilim-a-s`, veri bağlantısı `/settings#export`;
+Uzak Teknoloji (Reddedildi) detayında T6 satırı yerinde. Fixture sonra `Interview`'a geri
+alındı (geçmişte iki yeni satır kaldı, kasıtlı).
+
+---
+
 ## Büyüme denetiminin açık kalanları: başlıklar, "6 kişi", sayaç bot filtresi, paylaş düğmeleri; T8 plandan çıktı (2026-09-18)
 
 **Ne ve neden.** T-serisinin kodu bizde olan maddeleri (T1/T3/T5/T6) bitince kalanların ortak
