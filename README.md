@@ -40,6 +40,7 @@ direction is enforced by NetArchTest (`tests/AfterApply.UnitTests/Architecture`)
 
 - .NET SDK `10.0.105`+ (see `global.json`) — check with `dotnet --version`
 - PostgreSQL (native, or via container)
+- Redis 7 (a container is the easy way; the API requires it, see step 2b)
 - For the container path: Podman (or Docker) + `docker-compose` on PATH.
   This repo was verified against Podman — no Docker Desktop required.
 
@@ -52,12 +53,17 @@ direction is enforced by NetArchTest (`tests/AfterApply.UnitTests/Architecture`)
 
 1. Start Postgres (e.g. `brew services start postgresql@17`).
 2. `createdb afterapply_dev`
+   2b. Start Redis: `podman run -d --name ekariyerim-redis -p 6382:6379 redis:7-alpine`
+   (6382 rather than 6379 because another local project's container already owns
+   6379 on this machine — same story as Postgres above; `podman start ekariyerim-redis`
+   brings it back after a reboot).
 3. `dotnet user-secrets init --project src/AfterApply.Api` (one-time)
 4. ```bash
    dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=afterapply_dev;Username=$(whoami)" --project src/AfterApply.Api
+   dotnet user-secrets set "ConnectionStrings:Redis" "localhost:6382,abortConnect=false" --project src/AfterApply.Api
    dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -base64 48)" --project src/AfterApply.Api
    ```
-   (adjust the port if you hit a conflict per the warning above)
+   (adjust the ports if you hit a conflict per the warning above)
 5. Apply migrations: `dotnet ef database update --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api`
 6. `dotnet build AfterApply.slnx`
 7. `dotnet run --project src/AfterApply.Api --launch-profile http` (always
@@ -233,10 +239,17 @@ it's supplied as the `ConnectionStrings__Postgres` environment variable in
 `docker-compose.yml`. If unset, the API fails fast on startup with an
 explanatory error instead of silently connecting to the wrong database.
 
-Caching is in-process only (`HybridCache` with no distributed backend). The
-Redis/Memorystore L2 that used to sit behind it was removed — see
-`DECISIONS.md` "Redis kaldırıldı" for why it never changed an outcome. There is
-no cache connection string to configure, and nothing to run locally for it.
+`ConnectionStrings:Redis` is required the same way (`ConnectionStrings__Redis`
+in `docker-compose.yml`, a user-secret natively). The services depend on
+Microsoft's `HybridCache` abstraction; behind it runs FusionCache with the
+in-process `MemoryCache` as L1, Redis as L2 and a Redis pub/sub backplane that
+fans every eviction out to the other API instances — the piece that was missing
+while the cache was L1-only, and the reason a company page could stay stale on
+one Cloud Run instance after a write on another (`DECISIONS.md` 2026-09-18
+"Redis geri geldi"). Keep `abortConnect=false` on the string: the API then boots
+and serves from L1 while Redis is unreachable, and `/health` reports `Degraded`
+(200) instead of `Unhealthy`. `Redis:KeyPrefix` / `Redis:ChannelPrefix` let two
+deployments share one Redis; the integration suite uses them per test class.
 
 `CompanyIntelligence:Enabled` defaults to `false` — the aggregation pipeline
 (cross-user company-level Response/Ghosting/Interview/Offer Rate, gated by a

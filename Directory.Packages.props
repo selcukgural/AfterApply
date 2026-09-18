@@ -12,7 +12,19 @@
   <ItemGroup>
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.9.0" />
+    <!-- Caching (DECISIONS.md 2026-09-18 "Redis geri geldi"). The HybridCache abstract class the
+         services depend on lives in Caching.Abstractions; FusionCache implements it (AsHybridCache)
+         on top of the DI MemoryCache (L1), a Redis IDistributedCache (L2) and a Redis pub/sub
+         backplane that fans every Remove/Set out to the other Cloud Run instances' L1s — the part
+         Microsoft's own DefaultHybridCache does not have. StackExchange.Redis is pinned on the 2.x
+         line explicitly because five packages below share it and transitive pinning is on. -->
+    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.12" />
+    <PackageVersion Include="StackExchange.Redis" Version="2.13.17" />
+    <PackageVersion Include="ZiggyCreatures.FusionCache" Version="2.8.0" />
+    <PackageVersion Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.8.0" />
+    <PackageVersion Include="ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis" Version="2.8.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="9.0.0" />
     <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
@@ -27,7 +39,7 @@
     <!-- Polly v8 through Microsoft's HttpClient integration, for the job-source client only: the
          one outbound call that runs unattended in a job and so has to decide by itself what to
          do about a dropped connection (retry, briefly) versus a 429/403 (stop, and do not retry —
-         see LinkedInJobSourceClient). Same version line as Caching.Hybrid. -->
+         see LinkedInJobSourceClient). Same version line the Caching.Hybrid package used to sit on. -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.9.0" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
@@ -56,6 +68,7 @@
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.14.0" />
     <PackageVersion Include="Testcontainers.FakeGcsServer" Version="4.14.0" />
+    <PackageVersion Include="Testcontainers.Redis" Version="4.14.0" />
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
     <PackageVersion Include="Hangfire.Core" Version="1.8.24" />
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.24" />

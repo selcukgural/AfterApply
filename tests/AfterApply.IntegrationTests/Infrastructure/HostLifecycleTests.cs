@@ -79,17 +79,20 @@ public class HostLifecycleTests(ApiHost<DefaultProfile> host) : IClassFixture<Ap
         // its own list until it is disposed) and not the WithWebHostBuilder idiom (the outer
         // factory is never disposed). The reference is to the host's service provider, which is
         // what all the leaked hosts were.
-        await using var factory = new PlainFactory(host.ConnectionString, host.JwtSigningKey);
+        await using var factory = new PlainFactory(host.Stores, host.JwtSigningKey);
         var reference = new WeakReference(factory.Services);
         (await factory.CreateClient().GetAsync("/health")).EnsureSuccessStatusCode();
         return reference;
     }
 
-    private sealed class PlainFactory(string postgres, string signingKey) : WebApplicationFactory<Program>
+    private sealed class PlainFactory(IsolatedStores stores, string signingKey) : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
         {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
+            // Through IsolatedStores like every other host, so the required ConnectionStrings:Redis
+            // is set here and not — as it was on the machine this was first written on — supplied
+            // by a developer's user-secrets and missing on CI.
+            stores.Apply(builder);
             builder.UseSetting("Jwt:SigningKey", signingKey);
         }
     }

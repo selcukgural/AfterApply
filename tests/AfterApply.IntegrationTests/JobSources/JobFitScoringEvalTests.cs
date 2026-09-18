@@ -77,7 +77,7 @@ public class JobFitScoringEvalTests(SharedInfrastructure shared, ITestOutputHelp
 
         // A real database for the same reason CvReviewEvalTests needs one: the host opens a
         // connection for Hangfire at startup before a single test line runs.
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(JobFitScoringEvalTests));
+        var stores = await shared.CreateIsolatedStoresAsync(nameof(JobFitScoringEvalTests));
         var rows = new List<Row>();
         string cvText;
 
@@ -86,7 +86,7 @@ public class JobFitScoringEvalTests(SharedInfrastructure shared, ITestOutputHelp
             var (modelId, thinkingBudget) = ParseModel(model);
             await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
             {
-                builder.UseSetting("ConnectionStrings:Postgres", postgres);
+                stores.Apply(builder);
                 builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
                 builder.UseSetting("JobSources:Enabled", "true");
                 builder.UseSetting("JobSources:Scoring:ProjectId", projectId);

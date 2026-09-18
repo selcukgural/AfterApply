@@ -6,6 +6,7 @@ using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -14,14 +15,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Shouldly;
+using StackExchange.Redis;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace AfterApply.IntegrationTests.Caching;
 
 /// <summary>
-/// Covers the Redis removal (DECISIONS.md 2026-09-06). The host below is configured exactly like
-/// production minus the Memorystore instance — no ConnectionStrings:Redis at all — so "the API
-/// still boots and serves traffic without Redis" is not asserted separately: every test in this
-/// class, and every other class in the suite, only passes because it does.
+/// Covers the cache's wiring (DECISIONS.md 2026-09-18 "Redis geri geldi"): FusionCache behind the
+/// HybridCache abstraction, the DI MemoryCache as L1, Redis as L2 and as the backplane, and the
+/// health check that reports Redis as Degraded rather than Unhealthy. The cross-instance
+/// behaviour — the reason for all of it — is in <see cref="CrossInstanceInvalidationTests" />.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 public class CacheConfigurationTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
@@ -45,38 +48,53 @@ public class CacheConfigurationTests(ApiHost<DefaultProfile> host) : IClassFixtu
 
     public Task DisposeAsync() => Task.CompletedTask;
 
-    /// <summary>The invariant that actually matters: HybridCache promotes itself to a two-level
-    /// cache the moment any IDistributedCache is in the container, so an absent registration — not
-    /// an absent connection string — is what keeps it L1-only.</summary>
+    /// <summary>The services depend on the HybridCache abstract class; what they get must be
+    /// FusionCache's adapter over the one IFusionCache, with a Redis L2 and a backplane behind
+    /// it. Microsoft's DefaultHybridCache would satisfy the first assertion and none of the
+    /// others — and it has no backplane, which is the whole point.</summary>
     [Fact]
-    public void HybridCache_Runs_Without_A_Distributed_Cache_Backend()
+    public void HybridCache_Is_FusionCache_Over_Redis_With_A_Backplane()
     {
-        _factory!.Services.GetService<HybridCache>().ShouldNotBeNull();
+        var hybridCache = _factory!.Services.GetRequiredService<HybridCache>();
+        hybridCache.GetType().Name.ShouldBe("FusionHybridCache");
+
+        var fusionCache = _factory.Services.GetRequiredService<IFusionCache>();
+        fusionCache.HasDistributedCache.ShouldBeTrue();
+        fusionCache.HasBackplane.ShouldBeTrue();
+
+        // The Redis IDistributedCache is FusionCache's own, not a container-wide registration:
+        // nothing else in the app should reach for a distributed cache directly.
         _factory.Services.GetService<IDistributedCache>().ShouldBeNull();
+        _factory.Services.GetService<IConnectionMultiplexer>().ShouldNotBeNull();
     }
 
-    /// <summary>L1-only makes bounding L1 the whole safety story. MemoryCache does no size-based
-    /// eviction at all while SizeLimit is null, and the key space includes company-search:{query},
-    /// whose cardinality comes from user input — so an unbounded L1 is a memory-exhaustion vector
-    /// against a Cloud Run container, not just untidiness.</summary>
+    /// <summary>The L1 is the DI MemoryCache with a SizeLimit: the key space includes
+    /// company-search:{query}, whose cardinality comes from user input, so an unbounded L1 is a
+    /// memory-exhaustion vector against a Cloud Run container. FusionCache does not stamp entries
+    /// with their byte size the way DefaultHybridCache did, so the unit is entries and every
+    /// entry must weigh 1 — a size-limited MemoryCache throws on an entry with no Size.</summary>
     [Fact]
     public void In_Memory_Cache_Is_Size_Bounded()
     {
         var memoryCacheOptions = _factory!.Services.GetRequiredService<IOptions<MemoryCacheOptions>>().Value;
-        memoryCacheOptions.SizeLimit.ShouldBe(16 * 1024 * 1024);
+        memoryCacheOptions.SizeLimit.ShouldBe(10_000);
 
-        var hybridCacheOptions = _factory.Services.GetRequiredService<IOptions<HybridCacheOptions>>().Value;
-        hybridCacheOptions.MaximumPayloadBytes.ShouldBe(1024 * 1024);
-        hybridCacheOptions.MaximumKeyLength.ShouldBe(512);
+        var fusionCacheOptions = _factory.Services.GetRequiredService<IOptions<FusionCacheOptions>>().Value;
+        fusionCacheOptions.DefaultEntryOptions.Size.ShouldBe(1);
+        fusionCacheOptions.CacheKeyPrefix.ShouldNotBeNullOrEmpty();
+        fusionCacheOptions.BackplaneChannelPrefix.ShouldBe(host.Stores.ChannelPrefix);
     }
 
     [Fact]
-    public async Task Health_Check_Reports_Postgres_And_Nothing_Else()
+    public async Task Health_Check_Reports_Postgres_And_Redis()
     {
         var registrations = _factory!.Services.GetRequiredService<IOptions<HealthCheckServiceOptions>>()
-            .Value.Registrations.Select(registration => registration.Name).ToArray();
+            .Value.Registrations.ToArray();
 
-        registrations.ShouldBe(["postgres"]);
+        registrations.Select(registration => registration.Name).ShouldBe(["postgres", "redis"]);
+        // Redis being down must not take the API down with it: the cache degrades to L1, so the
+        // check degrades too. Postgres keeps its default (Unhealthy → 503).
+        registrations.Single(registration => registration.Name == "redis").FailureStatus.ShouldBe(HealthStatus.Degraded);
 
         var response = await _client.GetAsync("/health");
 
@@ -84,10 +102,37 @@ public class CacheConfigurationTests(ApiHost<DefaultProfile> host) : IClassFixtu
         (await response.Content.ReadAsStringAsync()).ShouldBe("Healthy");
     }
 
-    /// <summary>The behaviour the L2 was assumed to protect. Summary counts are cached for 20s and
-    /// evicted by ChangeStatusAsync; with a single host, eviction reaching L1 is the whole of
-    /// correctness, which is exactly what it was with Redis too — the L2 was never consulted while
-    /// an unexpired L1 entry existed, because LocalCacheExpiration equals Expiration.</summary>
+    /// <summary>Redis being unreachable must cost latency at most, never availability: the cache
+    /// degrades to L1 (FusionCache swallows the L2 and backplane failures — ReThrow*Exceptions are
+    /// off, the circuit breaker stops retrying), requests keep answering, and /health says
+    /// Degraded with a 200 rather than Unhealthy with a 503. Port 1 answers nothing on any machine;
+    /// abortConnect=false is what production's secret carries too, so the host boots the same way.</summary>
+    [Fact]
+    public async Task Without_Redis_The_Api_Serves_From_L1_And_Health_Is_Degraded()
+    {
+        await using var withoutRedis = host.Standalone(builder =>
+        {
+            builder.UseSetting("ConnectionStrings:Redis", "localhost:1,abortConnect=false,connectTimeout=300,syncTimeout=300");
+            builder.UseSetting("Redis:WaitForBackplaneSubscribe", "false");
+        });
+        var (client, _) = await host.RegisterAsync("no.redis@example.com", on: withoutRedis);
+
+        var created = await client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
+            "No Redis Co", "Engineer", null, null, EmploymentType.FullTime, DateTimeOffset.UtcNow.AddDays(-1), null, null), JsonOptions);
+        created.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Read twice: the first populates L1 (and fails to write L2), the second is served from it.
+        (await client.GetFromJsonAsync<ApplicationSummaryCountsResponse>("/api/applications/summary", JsonOptions))!.Total.ShouldBe(1);
+        (await client.GetFromJsonAsync<ApplicationSummaryCountsResponse>("/api/applications/summary", JsonOptions))!.Total.ShouldBe(1);
+
+        var health = await withoutRedis.CreateClient().GetAsync("/health");
+        health.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await health.Content.ReadAsStringAsync()).ShouldBe("Degraded");
+    }
+
+    /// <summary>Summary counts are cached for 20s and evicted by ChangeStatusAsync; on a single
+    /// host, eviction reaching L1 is the whole of correctness. The multi-host version of the same
+    /// assertion is in CrossInstanceInvalidationTests.</summary>
     [Fact]
     public async Task Summary_Counts_Are_Refreshed_Immediately_After_A_Status_Change()
     {
@@ -109,8 +154,8 @@ public class CacheConfigurationTests(ApiHost<DefaultProfile> host) : IClassFixtu
     /// <summary>CompanyResolver caches a "not found" null for 10 minutes before inserting, then
     /// overwrites it with the new id. That overwrite is the only thing stopping the second
     /// application from reading the stale null and inserting a duplicate Company, which the unique
-    /// index on NormalizedName would reject — so it is worth pinning now that the write lands in
-    /// L1 alone.</summary>
+    /// index on NormalizedName would reject — and a cached null now has to survive the trip
+    /// through Redis and back as "null was cached", not "nothing was cached".</summary>
     [Fact]
     public async Task Resolving_The_Same_Company_Twice_Reuses_The_First_Company()
     {

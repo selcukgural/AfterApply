@@ -60,9 +60,10 @@ public sealed class DefaultProfile : IHostProfile;
 /// run, which is where the suite was when it was last fast and stable.
 ///
 /// Isolation between tests moves from "a fresh database per test" to <see cref="ResetAsync" />,
-/// which every test calls first: the class's database is emptied, every host's memory cache is
-/// cleared, the inline job queue is dropped and the profile's fakes are reset. The database is
-/// still a private, migrated clone per class (SharedInfrastructure), so classes cannot see each
+/// which every test calls first: the class's database is emptied, its Redis database is flushed,
+/// every host's memory cache is cleared, the inline job queue is dropped and the profile's fakes
+/// are reset. The database is still a private, migrated clone per class (SharedInfrastructure),
+/// and the Redis database and backplane channel are the class's own, so classes cannot see each
 /// other at all.
 ///
 /// A subclass of WebApplicationFactory rather than <c>new WebApplicationFactory().WithWebHostBuilder(...)</c>:
@@ -80,7 +81,7 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
 
     private readonly SharedInfrastructure _shared;
     private readonly Dictionary<string, WebApplicationFactory<Program>> _variants = new(StringComparer.Ordinal);
-    private string? _databaseName;
+    private IsolatedStores? _stores;
 
     protected ApiHost(SharedInfrastructure shared, IHostProfile profile)
     {
@@ -99,11 +100,16 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
     public string JwtSigningKey { get; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
 
     /// <summary>The class's own migrated database. Set by InitializeAsync, before the host boots.</summary>
-    public string ConnectionString { get; private set; } = null!;
+    public string ConnectionString => Stores.Postgres;
+
+    /// <summary>The class's Postgres clone and Redis database. Every Variant/Standalone host built
+    /// from this fixture shares them — which is what lets a test write through one host and read
+    /// through another with a separate L1, the multi-instance shape production runs in.</summary>
+    public IsolatedStores Stores => _stores ?? throw new InvalidOperationException("The fixture has not been initialised yet.");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseSetting("ConnectionStrings:Postgres", ConnectionString);
+        Stores.Apply(builder);
         builder.UseSetting("Jwt:SigningKey", JwtSigningKey);
         builder.ConfigureTestServices(services => InlineBackgroundJobs.Register(services, Jobs));
         Profile.Configure(builder);
@@ -112,7 +118,7 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
     public async Task InitializeAsync()
     {
         await Profile.InitializeAsync();
-        (ConnectionString, _databaseName) = await _shared.CreateDatabaseAsync(GetType().Name);
+        _stores = await _shared.CreateIsolatedStoresAsync(GetType().Name);
 
         // Boot now rather than on the first test's first request, so a host that cannot start
         // fails the fixture — attributed to the class, once — instead of the first test that
@@ -129,7 +135,9 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
         // After the truncate, never before: CompanyResolver caches company name → id,
         // PersonalAccessTokenService caches token → user, CompanySearchService caches results.
         // A cached id pointing at a truncated row is a foreign-key failure two tests later.
-        // HybridCache's L1 is this same IMemoryCache, so this clears both.
+        // L2 first, then every host's L1 — in that order, so a lapsed L1 entry cannot be refilled
+        // from a not-yet-flushed L2 in between.
+        await _shared.FlushRedisAsync(Stores.RedisDatabase);
         foreach (var host in BuiltHosts())
         {
             ((MemoryCache)host.Services.GetRequiredService<IMemoryCache>()).Clear();
@@ -234,7 +242,7 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
 
     private async Task DropDatabaseAsync()
     {
-        if (_databaseName is null)
+        if (_stores is null)
         {
             return;
         }
@@ -247,7 +255,7 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
             // database is dropped so the container does not carry ~60 dead clones to the end of
             // the run.
             NpgsqlConnection.ClearPool(new NpgsqlConnection(ConnectionString));
-            await _shared.DropDatabaseAsync(_databaseName);
+            await _shared.DropDatabaseAsync(_stores.DatabaseName);
         }
         catch (Exception)
         {

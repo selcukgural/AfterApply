@@ -201,21 +201,26 @@ jobs:
       # OpenAI) still go through Secret Manager for consistency, not
       # because they're sensitive when empty.
       #
-      # `flags` wires up the one GCP-specific connection (DECISIONS.md
+      # `flags` wires up the two GCP-specific connections (DECISIONS.md
       # "Postgres + Redis + web de Google Cloud'a taşındı"):
       #  - `--add-cloudsql-instances` is Cloud Run's built-in Cloud SQL
       #    connector (no proxy sidecar) — Npgsql then connects over the
       #    Unix socket it mounts at /cloudsql/<instance-connection-name>.
+      #  - `--network`/`--subnet` enable Direct VPC Egress so Cloud Run
+      #    can reach Memorystore's private IP (Memorystore has no public
+      #    IP at all); `private-ranges-only` keeps everything else on the
+      #    normal internet path. Both reference the project's default
+      #    VPC/subnet — no custom VPC was created for this.
       #
-      # `--network`/`--subnet` (Direct VPC Egress) used to sit here too,
-      # purely so Cloud Run could reach Memorystore's private IP. Redis
-      # was removed in 2026-09-06 (DECISIONS.md) and Cloud SQL reaches
-      # the instance over that Unix socket, not the VPC, so nothing here
-      # needs VPC egress any more. Dropping the flags from this file does
-      # NOT clear the setting on the deployed service — gcloud only
-      # changes what it is told to change — so the live revision was
-      # detached once, by hand, with `gcloud run services update
-      # afterapply-api --clear-network`.
+      # Redis was removed 2026-09-06 and came back 2026-09-18 (DECISIONS.md
+      # "Redis geri geldi"): with several instances, a cache whose
+      # evictions stop at the instance boundary served stale company
+      # pages, so the cache now has a Redis L2 and a pub/sub backplane.
+      # ConnectionStrings__Redis is REQUIRED by the code — the secret and
+      # the VPC path were attached to the live service by hand, before
+      # this file changed, so no cold start ever ran without them
+      # (DEPLOYMENT.md §10; the reverse order in 2026-09-06 nearly took
+      # production down).
       #
       # `--max-instances` / `--min-instances` and the two Postgres__MaxPoolSize /
       # Hangfire__WorkerCount env vars below are one decision and have to be read
@@ -240,6 +245,9 @@ jobs:
           image: ${{ env.IMAGE }}
           flags: >-
             --add-cloudsql-instances=${{ env.GCP_PROJECT_ID }}:${{ env.GCP_REGION }}:afterapply-db
+            --network=default
+            --subnet=default
+            --vpc-egress=private-ranges-only
             --min-instances=1
             --max-instances=4
           # env_vars is a literal block: every line is passed through as KEY=VALUE, so notes go
@@ -300,6 +308,7 @@ jobs:
             PayTr__Plans__Yearly__AmountMinor=299000
           secrets: |-
             ConnectionStrings__Postgres=afterapply-postgres-connection:latest
+            ConnectionStrings__Redis=afterapply-redis-connection:latest
             Jwt__SigningKey=afterapply-jwt-signing-key:latest
             Sentry__Dsn=afterapply-sentry-dsn:latest
             OpenAI__ApiKey=afterapply-openai-api-key:latest
@@ -406,7 +415,7 @@ jobs:
 
       # No --add-cloudsql-instances here — the web service only talks to
       # the api service over HTTPS (NEXT_PUBLIC_API_BASE_URL, baked in
-      # above), never directly to Postgres.
+      # above), never directly to Postgres or Redis.
       #
       # `--min-instances=1` (2026-09-14): with zero warm instances every first visit after a
       # quiet spell paid a Node cold start — the request log for 2026-09-07..14 showed 133 page

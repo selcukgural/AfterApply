@@ -150,7 +150,7 @@ internal sealed class CompanyReviewService(
     {
         var review = await dbContext.CompanyReviews
             .Where(r => r.Id == reviewId)
-            .Select(r => new { r.UserId, r.Status })
+            .Select(r => new { r.UserId, r.Status, r.CompanyId })
             .FirstOrDefaultAsync(cancellationToken);
         if (review is null || review.Status != ReviewModerationStatus.Approved)
         {
@@ -186,6 +186,10 @@ internal sealed class CompanyReviewService(
             // Double-click: the other request already marked it. Same end state, report it.
             marked = true;
         }
+
+        // The public list pages carry HelpfulCount (and "most helpful" is a sort), so a mark is a
+        // write to what the company's pages show.
+        await queries.EvictSummaryAsync(review.CompanyId, cancellationToken);
 
         var count = await dbContext.CompanyReviewHelpfulMarks.CountAsync(m => m.ReviewId == reviewId, cancellationToken);
         return new HelpfulToggleResponse(marked, count);

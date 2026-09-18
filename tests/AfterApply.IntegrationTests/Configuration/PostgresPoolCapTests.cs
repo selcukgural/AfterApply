@@ -36,17 +36,17 @@ public class PostgresPoolCapTests(SharedInfrastructure shared) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(PostgresPoolCapTests));
-        _factory = new CappedFactory(postgres);
+        var stores = await shared.CreateIsolatedStoresAsync(nameof(PostgresPoolCapTests));
+        _factory = new CappedFactory(stores);
     }
 
     public Task DisposeAsync() => TestHostDisposal.DisposeQuietlyAsync(_factory);
 
-    private sealed class CappedFactory(string postgres) : WebApplicationFactory<Program>
+    private sealed class CappedFactory(IsolatedStores stores) : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
         {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
+            stores.Apply(builder);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             // deploy.yml: Postgres__MaxPoolSize=5, Hangfire__WorkerCount=2.
             builder.UseSetting(PostgresConnectionString.MaxPoolSizeKey, "5");

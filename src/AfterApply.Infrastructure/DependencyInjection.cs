@@ -43,6 +43,7 @@ using AfterApply.Application.Pro;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Benchmark;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Ai;
 using AfterApply.Infrastructure.CvScan;
 using AfterApply.Infrastructure.SiteStats;
@@ -67,10 +68,16 @@ using Microsoft.AspNetCore.Identity;
 using Google.Cloud.Storage.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
+using ZiggyCreatures.Caching.Fusion;
+using ZiggyCreatures.Caching.Fusion.Backplane.StackExchangeRedis;
+using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
 
 namespace AfterApply.Infrastructure;
 
@@ -244,33 +251,81 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(postgresConnectionString));
 
-        // HybridCache with no IDistributedCache registered: it runs L1-only, in-process. The
-        // Redis L2 that used to sit behind this was removed (DECISIONS.md 2026-09-06) because it
-        // bought nothing — every HybridCacheEntryOptions in this codebase sets
-        // LocalCacheExpiration equal to Expiration, so L1 is the sole authority for the whole TTL
-        // and there is no backplane wiring L2 invalidation back to other instances. An eviction on
-        // one instance never reached another instance's L1 with Redis either, and once an L1 entry
-        // does lapse the fallback is the DB in both designs. See PersonalAccessTokenService, whose
-        // revocation-latency comment describes the same property from the token side.
+        // Two-level cache (DECISIONS.md 2026-09-18 "Redis geri geldi"): the DI MemoryCache is the
+        // in-process L1, Memorystore Redis is the shared L2, and a Redis pub/sub backplane carries
+        // every Remove/Set/RemoveByTag from the instance that made it to every other Cloud Run
+        // instance's L1. That last part is why this is FusionCache rather than Microsoft's own
+        // AddHybridCache(): DefaultHybridCache never consults L2 while an L1 entry exists and reads a
+        // tag's invalidation time from L2 exactly once, so with two or more instances an eviction on
+        // one of them left the others serving the old value until their L1 TTL lapsed — the bug of
+        // 2026-09-18 (a candidate experience written on one instance, the company summary stale on
+        // another). The services keep depending on the HybridCache abstract class; AsHybridCache()
+        // registers FusionCache as its implementation, so none of them changed.
         //
-        // L1-only makes bounding it the whole safety story, so both limits below are deliberate,
-        // not defaults-by-omission:
-        //  - SizeLimit: MemoryCache does no size-based eviction at all while SizeLimit is null, and
-        //    HybridCache's key space includes company-search:{query}, whose cardinality is
-        //    user-supplied and therefore unbounded. HybridCache stamps each L1 entry's Size with
-        //    its payload byte count, so this cap is what actually gets enforced. The unit is those
-        //    bytes: 16 MiB is far above the working set at this scale and far below the container's
-        //    memory, so it only ever engages on an abusive burst.
-        //  - MaximumPayloadBytes: caps one entry, so a single large payload cannot evict the rest.
-        services.AddMemoryCache(options => options.SizeLimit = 16 * 1024 * 1024);
-        services.AddHybridCache(options =>
-        {
-            options.MaximumPayloadBytes = 1024 * 1024;
-            options.MaximumKeyLength = 512;
-        });
+        // Redis being unreachable degrades rather than fails: the soft/hard timeouts bound how long a
+        // request waits on L2, the circuit breakers stop trying for a while, auto-recovery replays the
+        // backplane traffic that was missed, and the health check reports Degraded (200), not
+        // Unhealthy. Fail-safe (serving a stale entry when the factory throws) stays off so a DB error
+        // surfaces the way it does today.
+        //
+        // SizeLimit counts entries, not bytes: FusionCache stamps each L1 entry with
+        // DefaultEntryOptions.Size (1 below) — a MemoryCache with a SizeLimit throws on any entry
+        // that has none — and the bound is still needed because company-search:{query} has
+        // user-supplied cardinality. 10k entries is far above the working set and far below the
+        // container's memory, so it only engages on an abusive burst.
+        var cachingOptions = configuration.GetSection(CachingOptions.SectionName).Get<CachingOptions>() ?? new CachingOptions();
+        var redisConnectionString = RedisConnectionString.Resolve(configuration, IsOpenApiDocumentGeneration);
+        services.Configure<CachingOptions>(configuration.GetSection(CachingOptions.SectionName));
+
+        // One multiplexer for everything that talks to Redis (L2, backplane, health check, and the
+        // rate limiter/SignalR/locks that follow), created on first use. Connect (sync) is the only
+        // API StackExchange.Redis offers for a lazily-built singleton in a DI factory — the
+        // composition-root exception to the async rule; with abortConnect=false in the connection
+        // string it returns at once and keeps retrying in the background if Redis is down.
+        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+
+        services.AddMemoryCache(options => options.SizeLimit = 10_000);
+        services.AddFusionCache()
+            .WithOptions(options =>
+            {
+                options.CacheKeyPrefix = cachingOptions.KeyPrefix;
+                options.BackplaneChannelPrefix = cachingOptions.ChannelPrefix;
+                options.DistributedCacheCircuitBreakerDuration = TimeSpan.FromSeconds(30);
+                options.BackplaneCircuitBreakerDuration = TimeSpan.FromSeconds(30);
+                options.EnableAutoRecovery = true;
+                options.WaitForInitialBackplaneSubscribe = cachingOptions.WaitForBackplaneSubscribe;
+            })
+            .WithDefaultEntryOptions(options =>
+            {
+                options.Size = 1;
+                // An in-region Memorystore read takes about a millisecond; past the soft timeout
+                // the factory runs and the L2 result is applied in the background, past the hard
+                // one the L2 call is abandoned. Measured 2026-09-18 with Redis stopped: a request
+                // that nests two cache reads (company page → summary) waited 2 × hard timeout once
+                // before the circuit breaker opened, so the hard limit is kept at a second.
+                options.DistributedCacheSoftTimeout = TimeSpan.FromMilliseconds(200);
+                options.DistributedCacheHardTimeout = TimeSpan.FromSeconds(1);
+                options.AllowBackgroundDistributedCacheOperations = true;
+                options.ReThrowDistributedCacheExceptions = false;
+                options.ReThrowBackplaneExceptions = false;
+                options.IsFailSafeEnabled = false;
+            })
+            .WithRegisteredMemoryCache()
+            .WithSerializer(new FusionCacheSystemTextJsonSerializer())
+            .WithDistributedCache(sp => new RedisCache(new RedisCacheOptions
+            {
+                ConnectionMultiplexerFactory = () => Task.FromResult(sp.GetRequiredService<IConnectionMultiplexer>())
+            }))
+            .WithBackplane(sp => new RedisBackplane(new RedisBackplaneOptions
+            {
+                ConnectionMultiplexerFactory = () => Task.FromResult(sp.GetRequiredService<IConnectionMultiplexer>())
+            }))
+            .AsHybridCache();
+        services.AddScoped<ICompanyCacheInvalidator, CompanyCacheInvalidator>();
 
         services.AddHealthChecks()
-            .AddNpgSql(postgresConnectionString, name: "postgres");
+            .AddNpgSql(postgresConnectionString, name: "postgres")
+            .AddRedis(sp => sp.GetRequiredService<IConnectionMultiplexer>(), name: "redis", failureStatus: HealthStatus.Degraded);
 
         return services;
     }

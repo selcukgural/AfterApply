@@ -97,9 +97,9 @@ This profile deliberately stops short of being cloud-ready:
 - **No secrets manager.** `.env.prod` is a plain file; a real deployment
   should use the target cloud's secrets manager instead.
 - **Cloud provider decided, not yet wired up** — everything on Google
-  Cloud: Cloud Run × 2 (`api` + `web`) and Cloud SQL (Postgres), see
-  `DECISIONS.md` §5. (Memorystore was part of this until 2026-09-06; see
-  "Redis kaldırıldı".) The container images built here
+  Cloud: Cloud Run × 2 (`api` + `web`), Cloud SQL (Postgres) and Memorystore
+  (Redis), see `DECISIONS.md` §5. (Memorystore was removed 2026-09-06 and
+  came back 2026-09-18 — see "Redis geri geldi".) The container images built here
   (`src/AfterApply.Api/Dockerfile`, `web/Dockerfile`) are the deployable
   artifacts either way — no further image changes should be needed,
   only the hosting/networking/secrets layer around them (Sprint 13).
@@ -115,16 +115,18 @@ This profile deliberately stops short of being cloud-ready:
 > gerçek deploy" for the full list of what broke and why. `db-f1-micro` +
 > `--edition=ENTERPRISE` (step 2) was accepted as-is, no fallback needed.
 >
-> **Updated 2026-09-06:** the Memorystore/Redis instance this section used
-> to create was deleted and its steps removed — see `DECISIONS.md` "Redis
-> kaldırıldı". An environment built before that date also needs the
-> teardown at the end of this section.
+> **Updated 2026-09-18:** Memorystore for Redis is back (it was deleted
+> 2026-09-06 as unused — see `DECISIONS.md` "Redis kaldırıldı" and "Redis
+> geri geldi"): with several Cloud Run instances the cache needs a shared L2
+> and a backplane, or a write on one instance leaves the others serving
+> stale pages. §2/§3 create it; §10 records the order the re-add had to
+> follow so no cold start ever ran without the secret.
 
 > **Cost note (see `DECISIONS.md` §5):** Cloud Run stays free forever.
 > Cloud SQL does **not** — it's free only for the 90-day/$300 GCP trial.
-> Budget roughly $10-15/mo once that trial ends. Memorystore used to add
-> another $35-40/mo on top of that; it was deleted on 2026-09-06 and is
-> no longer part of this stack.
+> Budget roughly $10-15/mo once that trial ends, plus ~$36/mo for the
+> Memorystore Basic 1 GiB instance — billed on provisioned capacity, not on
+> requests, so using more of that gigabyte costs nothing extra.
 
 ### 1. Accounts
 
@@ -151,7 +153,7 @@ GH_REPO="AfterApply"
 gcloud config set project "$PROJECT_ID"
 gcloud services enable run.googleapis.com artifactregistry.googleapis.com \
   iamcredentials.googleapis.com secretmanager.googleapis.com \
-  sqladmin.googleapis.com
+  sqladmin.googleapis.com redis.googleapis.com
 
 # Artifact Registry — where built API/web images are pushed
 gcloud artifacts repositories create afterapply \
@@ -196,6 +198,14 @@ DB_PASSWORD="$(openssl rand -base64 24)"
 gcloud sql users create afterapply --instance=afterapply-db --password="$DB_PASSWORD"
 echo "DB_PASSWORD=$DB_PASSWORD"   # you'll need this once, for the secret below — don't lose it
 
+# --- Memorystore for Redis (cache L2 + backplane, DECISIONS.md 2026-09-18) ---
+# --size is GiB; 1 is the minimum and plenty (billed on capacity, not requests).
+# --network=default uses the project's existing default VPC — no custom VPC
+# was created; Cloud Run reaches the private IP through Direct VPC Egress
+# (the --network/--subnet flags in deploy.yml). Takes 10-15 minutes.
+gcloud redis instances create afterapply-redis \
+  --size=1 --region="$REGION" --tier=basic --network=default --redis-version=redis_7_2
+
 # The runtime service account (the one Cloud Run services actually run
 # as, not the deployer above) needs to read Postgres over the Cloud SQL
 # connector:
@@ -213,6 +223,15 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 # Cloud Run's built-in Cloud SQL connector.
 printf '%s' "Host=/cloudsql/${PROJECT_ID}:${REGION}:afterapply-db;Database=afterapply;Username=afterapply;Password=${DB_PASSWORD};SSL Mode=Disable" \
   | gcloud secrets create afterapply-postgres-connection --data-file=-
+
+# Memorystore — private IP, no TLS needed (already inside the private VPC).
+# abortConnect=false is not optional: StackExchange.Redis's default (true)
+# throws when Redis is unreachable at the moment the client is first built,
+# and a Cloud Run container would then never come up. With false the API boots,
+# serves from its in-process L1 and reports /health "Degraded" until Redis is back.
+REDIS_IP="$(gcloud redis instances describe afterapply-redis --region="$REGION" --format='value(host)')"
+printf '%s' "${REDIS_IP}:6379,abortConnect=false,connectTimeout=2000,syncTimeout=2000" \
+  | gcloud secrets create afterapply-redis-connection --data-file=-
 
 openssl rand -base64 48 | gcloud secrets create afterapply-jwt-signing-key --data-file=-
 printf '%s' "<backend-sentry-dsn>" | gcloud secrets create afterapply-sentry-dsn --data-file=-
@@ -244,7 +263,7 @@ printf '%s' "<github-client-secret-veya-bos>" | gcloud secrets create afterapply
 # App:WebBaseUrl (see deploy.yml) — same value, used to build links in outbound email.
 printf '%s' "https://REPLACE-ONCE-DEPLOYED" | gcloud secrets create afterapply-web-origin --data-file=-
 
-for s in afterapply-postgres-connection \
+for s in afterapply-postgres-connection afterapply-redis-connection \
          afterapply-jwt-signing-key afterapply-sentry-dsn afterapply-openai-api-key \
          afterapply-resend-api-key \
          afterapply-google-client-id afterapply-google-client-secret \
@@ -500,13 +519,48 @@ change (e.g. after rotating a secret), dispatch it manually:
 gh workflow run deploy.yml -f target=backend  # or web, or both
 ```
 
-### 10. Teardown: removing the Memorystore instance (done 2026-09-06)
+### 10. Memorystore: the order that keeps every cold start alive
 
-Kept here because it is the exact order an environment built before
-2026-09-06 has to follow, and because getting it wrong takes the API
-down rather than just costing money. The API refuses to start when
-`ConnectionStrings:Redis` is required but missing, so the code that
-stopped requiring it must be **live** before anything is deleted.
+Two events live here — the removal of 2026-09-06 and the re-add of
+2026-09-18 — because both turn on the same fact: the API refuses to start
+when `ConnectionStrings:Redis` is missing, and Cloud Run resolves
+`secretKeyRef` at **container start**, not at deploy. So a secret that is
+missing (or a VPC path that is missing) breaks the *next cold start*, not
+the deploy that looked fine, and `/health` on the warm instance stays green
+the whole time.
+
+#### 10a. Re-adding (done 2026-09-18) — infrastructure first, code second
+
+```bash
+# 1. §2 (enable redis.googleapis.com, create the instance) and §3 (the
+#    secret + its accessor binding). Wait for the instance: state READY.
+gcloud redis instances describe afterapply-redis --region="$REGION" --format='value(state,host)'
+
+# 2. Attach the VPC path and the secret to the LIVE service, by hand, before
+#    any code that needs them is merged. The Redis-free code ignores the extra
+#    env var, and this creates a revision whose cold starts are verified
+#    working with both in place — so when the code lands there is no window.
+gcloud run services update afterapply-api --region="$REGION" \
+  --network=default --subnet=default --vpc-egress=private-ranges-only \
+  --update-secrets=ConnectionStrings__Redis=afterapply-redis-connection:latest
+
+# 3. Confirm the revision now serving traffic carries the secret.
+REV="$(gcloud run services describe afterapply-api --region="$REGION" \
+  --format='value(status.traffic[0].revisionName)')"
+gcloud run revisions describe "$REV" --region="$REGION" \
+  --format='yaml(spec.containers[0].env)' | grep -i redis   # expect: a match
+
+# 4. Only now merge the code + the deploy.yml change (the flags and the
+#    secret line, so every later deploy re-asserts them). After the deploy:
+curl -fsS "${API_URL}/health"    # Healthy — Degraded would mean Redis unreachable (VPC path missing?)
+```
+
+#### 10b. Teardown (done 2026-09-06) — code first, infrastructure second
+
+Kept because it is the exact inverse of 10a and because getting it wrong
+takes the API down rather than just costing money: the code that stopped
+requiring `ConnectionStrings:Redis` must be **live** before anything is
+deleted.
 
 Two of these steps exist only because **removing something from
 `deploy.yml` does not remove it from the deployed service** — gcloud, and

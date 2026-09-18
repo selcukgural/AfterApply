@@ -1,6 +1,7 @@
 using AfterApply.Application.CompanyReviews;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -13,9 +14,12 @@ namespace AfterApply.Infrastructure.CompanyReviews;
 /// company's aggregate, and the projection of a review to its author-facing and public shapes.
 /// Scoped, like the services that use it, so it shares their DbContext.
 /// </summary>
-internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache cache, IOptions<CompanyReviewOptions> options)
+internal sealed class CompanyReviewQueries(
+    AppDbContext dbContext,
+    HybridCache cache,
+    ICompanyCacheInvalidator invalidator,
+    IOptions<CompanyReviewOptions> options)
 {
-    private const string GlobalAverageCacheKey = "company-reviews:global-average";
     private const int TopStatements = 3;
 
     /// <summary>The ten optional categories, in the order the form and the summary list them.</summary>
@@ -28,19 +32,20 @@ internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache c
         LocalCacheExpiration = TimeSpan.FromMinutes(5)
     };
 
+    // Ten minutes, up from one: with the backplane every write that changes the public aggregate
+    // evicts it on every instance, so the TTL is no longer what bounds staleness — only a safety
+    // net if Redis were down, and a cap on how long a hot company sits in memory untouched.
     private static readonly HybridCacheEntryOptions SummaryCacheOptions = new()
     {
-        Expiration = TimeSpan.FromSeconds(60),
-        LocalCacheExpiration = TimeSpan.FromSeconds(60)
+        Expiration = TimeSpan.FromMinutes(10),
+        LocalCacheExpiration = TimeSpan.FromMinutes(10)
     };
-
-    public static string SummaryCacheKey(Guid companyId) => $"company-reviews:summary:{companyId}";
 
     /// <summary>Mean Overall rating over every approved review on the site — the prior the score
     /// pulls toward. Cached for five minutes: it moves by a rounding error per review, and every
     /// public page reads it. Falls back to the scale's midpoint while nothing is approved yet.</summary>
     public ValueTask<double> GetGlobalAverageAsync(CancellationToken cancellationToken) =>
-        cache.GetOrCreateAsync(GlobalAverageCacheKey, async ct =>
+        cache.GetOrCreateAsync(CacheKeys.Company.ReviewGlobalAverage, async ct =>
         {
             var approved = dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved);
             return await approved.AnyAsync(ct)
@@ -48,10 +53,11 @@ internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache c
                 : CompanyReviewScoring.NeutralAverage;
         }, GlobalAverageCacheOptions, cancellationToken: cancellationToken);
 
-    /// <summary>The aggregate a public page shows. Cached a minute per company; every write that
-    /// changes what is public (a structured save, an approval, a rejection) evicts it.</summary>
+    /// <summary>The aggregate a public page shows. Cached per company under the company's tag;
+    /// every write that changes what is public (a structured save, an approval, a rejection, a
+    /// helpful mark) drops the tag through <see cref="EvictSummaryAsync"/>.</summary>
     public ValueTask<CompanyReviewSummaryResponse> GetSummaryAsync(Guid companyId, CancellationToken cancellationToken) =>
-        cache.GetOrCreateAsync(SummaryCacheKey(companyId), async ct =>
+        cache.GetOrCreateAsync(CacheKeys.Company.ReviewSummary(companyId), async ct =>
         {
             var approved = dbContext.CompanyReviews
                 .Where(r => r.CompanyId == companyId && r.Status == ReviewModerationStatus.Approved);
@@ -142,13 +148,12 @@ internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache c
                     sums[category] += value;
                 }
             }
-        }, SummaryCacheOptions, cancellationToken: cancellationToken);
+        }, SummaryCacheOptions, tags: [CacheKeys.Company.Tag(companyId)], cancellationToken: cancellationToken);
 
-    public async Task EvictSummaryAsync(Guid companyId, CancellationToken cancellationToken)
-    {
-        await cache.RemoveAsync(SummaryCacheKey(companyId), cancellationToken);
-        await cache.RemoveAsync(GlobalAverageCacheKey, cancellationToken);
-    }
+    /// <summary>Everything cached for the company, not just the summary — the page, the review
+    /// list pages, the directory. See <see cref="ICompanyCacheInvalidator"/>.</summary>
+    public ValueTask EvictSummaryAsync(Guid companyId, CancellationToken cancellationToken) =>
+        invalidator.InvalidateCompanyAsync(companyId, cancellationToken);
 
     public async Task<int> CountUserReviewsAsync(Guid userId, CancellationToken cancellationToken) =>
         await dbContext.CompanyReviews.CountAsync(r => r.UserId == userId, cancellationToken);

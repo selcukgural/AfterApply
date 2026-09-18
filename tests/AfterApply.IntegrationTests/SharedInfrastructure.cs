@@ -1,14 +1,19 @@
+using System.Globalization;
 using AfterApply.Infrastructure.Persistence;
 using Hangfire.PostgreSql;
 using Hangfire.PostgreSql.Factories;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using StackExchange.Redis;
 using Testcontainers.PostgreSql;
+using Testcontainers.Redis;
 
 namespace AfterApply.IntegrationTests;
 
 /// <summary>
-/// One Postgres container for the entire assembly, with the schema built exactly once.
+/// One Postgres container and one Redis container for the entire assembly, with the schema built
+/// exactly once.
 ///
 /// The cost this removes is easy to undercount. Each test class declared its containers as
 /// instance fields, and xunit constructs a fresh instance of a test class for every test method —
@@ -21,10 +26,15 @@ namespace AfterApply.IntegrationTests;
 /// Here the schema is migrated once into a template database and each caller clones it with
 /// CREATE DATABASE ... TEMPLATE, which Postgres does as a file copy. Isolation is unchanged —
 /// every test still gets a private, empty-but-migrated database, exactly as it did when it had a
-/// whole container to itself. Cache isolation no longer needs a hand-out at all: HybridCache runs
-/// L1-only now that Redis is gone (DECISIONS.md 2026-09-06), so its store is each
-/// WebApplicationFactory's own IMemoryCache and dies with the host — a per-test boundary the
-/// shared Redis could only approximate with one numbered database per caller.
+/// whole container to itself.
+///
+/// Redis (back since DECISIONS.md 2026-09-18) is shared the same way: one container, started with
+/// 128 logical databases instead of the default 16, and each class gets one of them by number.
+/// <c>defaultDatabase=N</c> on the connection string scopes every keyed consumer — the cache's L2,
+/// the rate limiter, the locks — but Redis pub/sub is not database-scoped, so the class also gets
+/// its own backplane channel prefix; without it one class's invalidations would evict entries in
+/// the next class's L1. The class's L1 is still each WebApplicationFactory's own IMemoryCache and
+/// dies with the host; the Redis database is flushed when handed out and on every reset.
 ///
 /// Since 2026-09-15 the clone is per test <em>class</em>, not per test: <see cref="ApiHost" /> takes
 /// one in its InitializeAsync and empties it between tests with <see cref="ResetDatabaseAsync" />.
@@ -58,11 +68,24 @@ public sealed class SharedInfrastructure : IAsyncLifetime
         .WithCommand("-c", "max_connections=300")
         .Build();
 
+    // Stock Redis ships 16 databases; one per class (~60 hosts) needs more. Database 0 is never
+    // handed out — it is what a connection string without defaultDatabase lands on, so a host that
+    // lost its setting would show up there rather than silently sharing a class's data.
+    private const int RedisDatabaseCount = 128;
+
+    private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine")
+        .WithCommand("redis-server", "--databases", RedisDatabaseCount.ToString(CultureInfo.InvariantCulture))
+        .Build();
+
+    // The fixture's own connection, admin-enabled for FLUSHDB. The hosts build their own.
+    private IConnectionMultiplexer _redisAdmin = null!;
+
     private int _nextDatabaseIndex = -1;
 
     public async Task InitializeAsync()
     {
-        await _postgres.StartAsync();
+        await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
+        _redisAdmin = await ConnectionMultiplexer.ConnectAsync($"{_redis.GetConnectionString()},allowAdmin=true");
 
         await ExecuteOnAdminDatabaseAsync($"""CREATE DATABASE "{TemplateDatabase}";""");
 
@@ -91,17 +114,14 @@ public sealed class SharedInfrastructure : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await _postgres.DisposeAsync();
+        await _redisAdmin.DisposeAsync();
+        await Task.WhenAll(_postgres.DisposeAsync().AsTask(), _redis.DisposeAsync().AsTask());
     }
 
-    /// <summary>Hands out an already-migrated Postgres database, as the connection string a
-    /// WebApplicationFactory needs. The name is only used to make the database recognisable in
-    /// psql; uniqueness comes from the counter.</summary>
-    public async Task<string> CreateIsolatedDatabaseAsync(string name) =>
-        (await CreateDatabaseAsync(name)).ConnectionString;
-
-    /// <summary>The same, also returning the database name so the caller can drop it.</summary>
-    public async Task<(string ConnectionString, string DatabaseName)> CreateDatabaseAsync(string name)
+    /// <summary>Hands out an already-migrated Postgres database and a flushed Redis database, as
+    /// the settings a WebApplicationFactory needs (<see cref="IsolatedStores.Apply" />). The name
+    /// is only used to make the database recognisable in psql; uniqueness comes from the counter.</summary>
+    public async Task<IsolatedStores> CreateIsolatedStoresAsync(string name)
     {
         // Deliberately NOT calling NpgsqlConnection.ClearAllPools() here. It looks like the obvious
         // way to reclaim the pool each finished test leaves behind — every test uses a different
@@ -118,7 +138,23 @@ public sealed class SharedInfrastructure : IAsyncLifetime
         await ExecuteOnAdminDatabaseAsync(
             $"""CREATE DATABASE "{databaseName}" TEMPLATE "{TemplateDatabase}";""");
 
-        return (ConnectionStringFor(databaseName, pooling: true), databaseName);
+        // Wraps around after 127 classes; the flush is what makes a reused number safe.
+        var redisDatabase = databaseIndex % (RedisDatabaseCount - 1) + 1;
+        await FlushRedisAsync(redisDatabase);
+
+        return new IsolatedStores(
+            ConnectionStringFor(databaseName, pooling: true),
+            databaseName,
+            $"{_redis.GetConnectionString()},defaultDatabase={redisDatabase},abortConnect=false",
+            redisDatabase);
+    }
+
+    /// <summary>Empties one class's Redis database: L2 entries, tag markers, rate-limit windows,
+    /// lock keys — everything a previous test of the class could have left.</summary>
+    public async Task FlushRedisAsync(int redisDatabase)
+    {
+        var endpoint = _redisAdmin.GetEndPoints().Single();
+        await _redisAdmin.GetServer(endpoint).FlushDatabaseAsync(redisDatabase);
     }
 
     /// <summary>Drops a clone a class is done with. FORCE closes any straggling session first.</summary>
@@ -219,6 +255,26 @@ public sealed class SharedInfrastructure : IAsyncLifetime
     /// name lowercase and alphanumeric means it reads the same in psql as it does here.</summary>
     private static string Sanitize(string name) =>
         new string(name.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
+}
+
+/// <summary>What one test class (or one standalone host) gets to itself: a migrated Postgres
+/// clone and a numbered, flushed Redis database. <see cref="Apply" /> is the one place the
+/// settings are spelled, so a host built outside <see cref="ApiHost" /> cannot forget one.</summary>
+public sealed record IsolatedStores(string Postgres, string DatabaseName, string Redis, int RedisDatabase)
+{
+    /// <summary>Pub/sub is not scoped by Redis database, so the backplane channel carries the
+    /// number too — otherwise a class's invalidations would reach the next class's L1.</summary>
+    public string ChannelPrefix => $"aa-test-{RedisDatabase}";
+
+    public void Apply(IWebHostBuilder builder)
+    {
+        builder.UseSetting("ConnectionStrings:Postgres", Postgres);
+        builder.UseSetting("ConnectionStrings:Redis", Redis);
+        builder.UseSetting("Redis:ChannelPrefix", ChannelPrefix);
+        // A test writes on one host and reads on another a millisecond later; production leaves
+        // this off so a slow Redis cannot delay start-up.
+        builder.UseSetting("Redis:WaitForBackplaneSubscribe", "true");
+    }
 }
 
 /// <summary>
