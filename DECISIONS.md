@@ -7846,3 +7846,98 @@ flow testlerinde `PageSize=10`; 401/403 rota tablosuna dört admin rotası); vit
 `directoryCard`, `adminTabs`, `contributionListView`, `myContributions.contract`,
 `moderationTable` üç sayfaya genişledi; navGroups/contributeState/profile/browserStorage/copy
 güncellendi). `tsc`, eslint (48 uyarı = önceki taban), `next build` temiz.
+
+## Redis geri geldi: L1+L2 önbellek, backplane, şirket sayfaları tag'le önbellekte — DECIDED (2026-09-18)
+
+**Karar.** Memorystore for Redis (Basic, 1 GiB, `europe-west1`, `redis_7_2`) yeniden açıldı; önbellek
+artık **FusionCache** (2.8.0) üzerinden çalışıyor: DI'daki `MemoryCache` L1, Redis L2, Redis pub/sub
+**backplane**. Servisler `HybridCache` soyut sınıfına bağımlı kalmaya devam ediyor —
+`AsHybridCache()` FusionCache'i o sınıfın implementasyonu olarak kaydediyor, 13 tüketicinin hiçbiri
+değişmedi. `ConnectionStrings:Redis` Postgres gibi zorunlu (`Caching/RedisConnectionString`).
+Maliyet ~$36/ay; 2026-09-06'daki "Redis kaldırıldı" kararına çapraz referans — o karar o gün doğruydu,
+aşağıdaki neden bugün yanlış.
+
+**Neden — bugünün bug'ı.** API 2026-09-12'den beri 1–4 Cloud Run instance'ı ile koşuyor. Bir aday
+deneyimi A instance'ında yazıldı; `EvictSummaryAsync` yalnızca A'nın `MemoryCache`'ini düşürdü; B
+instance'ı `candidate-experiences:summary:{companyId}`'i 60 sn daha eski hâliyle servis etti. L1-only
+tasarımda invalidation instance sınırını hiç geçmiyordu — 2026-09-06 kaydının kendisi bunu söylüyordu,
+ama o gün tek instance vardı.
+
+**Neden Microsoft'un kendi `AddHybridCache()`'i değil.** Kaynağı okundu (`DefaultHybridCache`):
+L1'de entry varken L2'ye hiç sorulmuyor; tag iptal zamanı L2'den *bir kez* okunup process içinde
+süresiz tutuluyor (`_tagInvalidationTimes.TryAdd`). Yani sadece Redis L2 eklemek bu bug'ı çözmezdi —
+backplane şart ve Microsoft'unkinde yok. FusionCache: Remove/Set/RemoveByTag her instance'ın L1'ine
+ms içinde ulaşır; Redis düşerse L1'e degrade olur (soft 200 ms / hard 1 s timeout, 30 sn circuit
+breaker, `ReThrow*Exceptions=false`), auto-recovery kaçan backplane mesajlarını geri döndüğünde
+telafi eder; fail-safe **kapalı** (factory hata verirse hata — bugünkü semantik).
+`Microsoft.Extensions.Caching.Hybrid` paketi çıkarıldı (ikinci bir kayıt olurdu);
+`CachingDependencyTests` artık tersine bekçi: Infrastructure backplane paketini referans **etmek
+zorunda**, Microsoft'un implementasyonunu **etmemek** zorunda.
+
+**Bulgu — `SizeLimit` byte'tan entry sayısına döndü.** FusionCache, `DefaultHybridCache` gibi her L1
+girdisini payload byte'ıyla damgalamıyor; `SizeLimit`'li bir `MemoryCache` `Size`'sız entry'de fırlatır.
+`DefaultEntryOptions.Size = 1`, `SizeLimit = 10_000` entry. Sınır hâlâ gerekli (`company-search:{query}`
+kardinalitesi kullanıcıdan). `MaximumPayloadBytes`/`MaximumKeyLength`'in karşılığı yok; sorgu 300
+karakterle zaten sınırlı. `WithRegisteredMemoryCache()` bilinçli: FusionCache'in kendi MemoryCache'i
+sınırsız olurdu ve test `ResetAsync`'i DI'daki cache'i temizliyor.
+
+**Kapasite batık maliyet → şirket sayfaları geniş önbellekte, tek anahtar `company:{id}` tag'i.**
+Memorystore istek değil kapasite faturalar; 1 GiB'ın kullanılmayanı israf. Herkese açık okuma yolları
+tag'le önbelleğe alındı (10 dk; dizin 5 dk): `company:public:{id}` (şirket sayfası),
+`company-reviews:list:{id}:p{n}:{sort}`, `candidate-experiences:list:{id}:p{n}`,
+`company-salaries:list:{id}:p{n}`, `company-directory:p{n}` (yalnızca `Q` boşken — arama sonuçları
+cache'lenmez), `company-reviews:reviewed-slugs` (`directory` tag'i). İki özet 60 sn → 10 dk. Kural:
+**düşüren yazma yolu tablosu yazılamayan aday cache'lenmez.** Tek çağrı
+`ICompanyCacheInvalidator.InvalidateCompanyAsync` = şirket tag'i + `directory` tag'i + iki global
+ortalama; review create/update/delete/approve/reject/resolve, **helpful işareti** (liste
+`HelpfulCount` taşıyor), deneyim create/update/delete + admin delete, maaş create/update/delete + admin
+delete, `CompanyEnrichmentService` (Website sayfada) ve hesap silme çağırır. Slug→id adımı sorgu kalır
+(tag entry kurulmadan bilinmeli; tek indeksli satır). **Cache'lenmeyenler:** `/mine`, `/me`,
+`contributions/mine` (kullanıcıya özel, kazanç yok), `company-intelligence/{id}` (tüm kullanıcıların
+başvurularından agregat; tag'le kesin invalidation yok).
+
+**Redis'ten bağımsız üç invalidation boşluğu aynı değişiklikte kapandı.**
+`AuthService.DeleteAccountAsync` cascade ile review/maaş/deneyim/PAT siliyordu ama hiçbir şeyi
+düşürmüyordu — silmeden önce katkı yapılan `companyId`'ler ve PAT hash'leri toplanıp commit sonrası
+düşürülüyor (silinen hesabın PAT'i 15 sn daha doğrulanmasın; hâlâ geçerli JWT eski sayıları
+okumasın). `ImportService` başvuru ekleyip `applications:summary` düşürmüyordu. Reminder tarama job'u
+retire/create yazıp `reminders:active` tag'ini düşürmüyordu (retire yarısı erken `return`'den önce).
+Ortak key'ler `Caching/CacheKeys` kataloğuna toplandı (`applications:summary` iki yerde tanımlıydı;
+`ReminderCacheKeys` buraya taşındı).
+
+**Web.** `publicApi.server.ts` şirket sayfası + review fetch'leri `cache: "no-store"` — Next data
+cache web container'ı başına ayrıydı (`output: standalone`, cache handler yok), API cache'inden bağımsız
+60 sn bayatlık ekliyordu. Slug listesi (sitemap) ve `/api/config` 60 sn'de kaldı. Bu dosya için web
+test harness'ı yok.
+
+**Deploy sırası — 2026-09-06 dersinin tersi.** Cloud Run `secretKeyRef`'i container başlangıcında
+çözer: secret/VPC eksikse deploy değil sonraki cold start ölür. Sıra: API aç → instance oluştur →
+secret + runtime SA accessor → **canlı servise `--network=default --subnet=default
+--vpc-egress=private-ranges-only --update-secrets=ConnectionStrings__Redis=...` elle** (eski kod
+fazladan env'i yok sayar; yeni revizyonun cold start'ı kod gelmeden doğrulanır) → deploy.yml + kod
+merge. Secret `abortConnect=false,connectTimeout=2000,syncTimeout=2000` taşır: varsayılan `true`
+Redis ulaşılamazken multiplexer'ı fırlatır ve container hiç kalkmazdı. Migrate job'a dokunulmadı
+(`efbundle` → `AppDbContextFactory`, `AddInfrastructure`'ı hiç çağırmıyor). `DEPLOYMENT.md` §10a.
+`/health`: `redis` kontrolü `Degraded` (200) — Postgres `Unhealthy` (503) kalır.
+
+**Test altyapısı.** `SharedInfrastructure` bir `redis:7-alpine` (`--databases 128`) daha kaldırıyor;
+sınıf başına `defaultDatabase=N` + `FLUSHDB` (`IsolatedStores.Apply` tek yerden). **Bulgu:** Redis
+pub/sub DB'ye göre ayrılmaz — sınıf başına `Redis:ChannelPrefix` şart, yoksa bir sınıfın
+invalidation'ı diğerinin L1'ini düşürür. `ResetAsync` sırası: truncate → FLUSHDB → L1 clear.
+`Redis:WaitForBackplaneSubscribe=true` yalnız testte. Yeni `CrossInstanceInvalidationTests` (11):
+fixture + `Variant` = aynı Postgres+Redis, **ayrı L1** — bugünkü bug'ın birebir tekrarı (A okur, B
+yazar, A hemen taze okur): deneyim yazma/silme, review sayfa+liste, helpful, maaş, dizin, başvuru
+sayıları, PAT iptali, resolver null→id, hesap silme. Dişleri doğrulandı: backplane kaldırılınca
+key-tabanlılar ilk turda, tag-tabanlılar ikinci turda kırılıyor (FusionCache tag marker'ını L2'den ilk
+kez okuyunca kurtarıyor, L1'e aldıktan sonra yalnız backplane haber verir — ana teste ikinci tur
+eklendi). `Without_Redis_The_Api_Serves_From_L1_And_Health_Is_Degraded` (port 1) degrade davranışını
+pinliyor. Standalone host kuran beş test `CreateIsolatedStoresAsync`'e geçti.
+
+**Ertelenen, aynı Redis'i bekleyen işler (ayrı PR'lar):** rate limit sayaçları Redis'e (18 policy
+in-memory, etkin limit = N × instance; `RedisRateLimiting` `rl:fw:{key}` üretir, key'e policy adı
+eklenmeli, `Retry-After` metadata adı farklı, Redis hatası yakalanmıyor → fallback dekoratörü);
+SignalR `ImportProgressHub` backplane (import job'u X'te, socket Y'de → ilerleme mesajı kayıp);
+`DistributedLock.Redis` + `CompanyEnrichment` dedupe; DB-constraint düzeltmeleri (`CompanyResolver`
+`NormalizedName` 23505 yakalama, `EnsureSlugAsync` retry, e-posta sinyali 23505). **Redis kilidi
+gerekmeyenler (kayda geçer):** Hangfire recurring job'lar (Postgres storage lock + `SKIP LOCKED`),
+migration (ayrı job), DataProtection, lockout, unique index'li kurallar, CV ≤10 (`pg_advisory_xact_lock`).

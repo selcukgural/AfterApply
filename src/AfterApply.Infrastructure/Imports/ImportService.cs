@@ -9,9 +9,11 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using DomainApplication = AfterApply.Domain.Applications.Application;
@@ -20,7 +22,7 @@ namespace AfterApply.Infrastructure.Imports;
 
 internal sealed partial class ImportService(
     AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver, IOptions<ImportOptions> options,
-    IStringLocalizer<SharedStrings> localizer, IImportProgressNotifier progressNotifier)
+    IStringLocalizer<SharedStrings> localizer, IImportProgressNotifier progressNotifier, HybridCache cache)
     : IImportService
 {
     // How often (in rows) processing pushes a progress update. Small enough to feel live on a
@@ -89,6 +91,7 @@ internal sealed partial class ImportService(
 
             batch.Complete(counts.Total, counts.New, counts.Duplicate, counts.Invalid, DateTimeOffset.UtcNow);
             await dbContext.SaveChangesAsync(cancellationToken);
+            await EvictSummaryCountsAsync(batch, counts, cancellationToken);
             await progressNotifier.NotifyCompletedAsync(ToSummary(batch), cancellationToken);
         }
         catch (CsvImportValidationException ex)
@@ -219,6 +222,7 @@ internal sealed partial class ImportService(
 
             batch.Complete(counts.Total, counts.New, counts.Duplicate, counts.Invalid, DateTimeOffset.UtcNow);
             await dbContext.SaveChangesAsync(cancellationToken);
+            await EvictSummaryCountsAsync(batch, counts, cancellationToken);
             await progressNotifier.NotifyCompletedAsync(ToSummary(batch), cancellationToken);
         }
         catch (CsvImportValidationException ex)
@@ -250,6 +254,14 @@ internal sealed partial class ImportService(
         await dbContext.SaveChangesAsync(cancellationToken);
         await progressNotifier.NotifyFailedAsync(ToSummary(batch), cancellationToken);
     }
+
+    /// <summary>The dashboard's status counts are cached per user (ApplicationService); rows
+    /// inserted here bypass that service, so the entry is dropped by hand once the batch is
+    /// committed. An import that added nothing changes no count.</summary>
+    private ValueTask EvictSummaryCountsAsync(ImportBatch batch, RowCounts counts, CancellationToken cancellationToken) =>
+        counts.New > 0
+            ? cache.RemoveAsync(CacheKeys.ApplicationsSummary(batch.UserId), cancellationToken)
+            : ValueTask.CompletedTask;
 
     private async Task ReportProgressAsync(ImportBatch batch, int processedRows, CancellationToken cancellationToken)
     {

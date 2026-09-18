@@ -1,26 +1,21 @@
 using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Domain.CandidateExperiences;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Hybrid;
 
 namespace AfterApply.Infrastructure.CandidateExperiences;
 
 /// <summary>What the author-facing service and the admin service share: the child-row loader
 /// behind every projection, and the cache keys a write has to evict. One place, so an admin
 /// delete evicts exactly what an owner delete evicts.</summary>
-internal sealed class CandidateExperienceQueries(AppDbContext dbContext, HybridCache cache)
+internal sealed class CandidateExperienceQueries(AppDbContext dbContext, ICompanyCacheInvalidator invalidator)
 {
-    public const string GlobalAverageCacheKey = "candidate-experiences:global-average";
-
-    public static string SummaryCacheKey(Guid companyId) => $"candidate-experiences:summary:{companyId}";
-
-    public async Task EvictSummaryAsync(Guid companyId, CancellationToken cancellationToken)
-    {
-        await cache.RemoveAsync(SummaryCacheKey(companyId), cancellationToken);
-        await cache.RemoveAsync(GlobalAverageCacheKey, cancellationToken);
-    }
+    /// <summary>Everything cached for the company, not just the summary — the page, the list
+    /// pages, the directory. See <see cref="ICompanyCacheInvalidator"/>.</summary>
+    public ValueTask EvictSummaryAsync(Guid companyId, CancellationToken cancellationToken) =>
+        invalidator.InvalidateCompanyAsync(companyId, cancellationToken);
 
     /// <summary>The child rows of a set of entries, grouped so a projection can be built in memory.</summary>
     public async Task<Children> LoadChildrenAsync(IEnumerable<Guid> experienceIds, CancellationToken cancellationToken)

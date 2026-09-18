@@ -1,5 +1,6 @@
 using System.Net;
 using AfterApply.Application.Companies;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -35,7 +36,7 @@ namespace AfterApply.Infrastructure.Companies;
 /// redirect hop).
 /// </summary>
 internal sealed class CompanyEnrichmentService(
-    HttpClient httpClient, AppDbContext dbContext, ILogger<CompanyEnrichmentService> logger) : ICompanyEnrichmentService
+    HttpClient httpClient, AppDbContext dbContext, ICompanyCacheInvalidator invalidator, ILogger<CompanyEnrichmentService> logger) : ICompanyEnrichmentService
 {
     private const int MaxRedirectHops = 5;
     private const int MaxBodyChars = 200_000;
@@ -84,7 +85,11 @@ internal sealed class CompanyEnrichmentService(
             }
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        // The public company page shows the website, so a fill-in is a write to that page.
+        if (await dbContext.SaveChangesAsync(cancellationToken) > 0)
+        {
+            await invalidator.InvalidateCompanyAsync(companyId, cancellationToken);
+        }
     }
 
     private async Task<string?> FetchAsync(AllowedUri allowed, Guid companyId, CancellationToken cancellationToken)

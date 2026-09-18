@@ -3,6 +3,7 @@ using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.CompanyReviews;
 using AfterApply.Domain.CandidateExperiences;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -25,11 +26,16 @@ internal sealed class CandidateExperienceService(
         LocalCacheExpiration = TimeSpan.FromMinutes(5)
     };
 
+    // Ten minutes, up from one: with the backplane every write evicts the company's tag on every
+    // instance, so the TTL only bounds staleness while Redis is down. The list pages sit under the
+    // same tag for the same reason.
     private static readonly HybridCacheEntryOptions SummaryCacheOptions = new()
     {
-        Expiration = TimeSpan.FromSeconds(60),
-        LocalCacheExpiration = TimeSpan.FromSeconds(60)
+        Expiration = TimeSpan.FromMinutes(10),
+        LocalCacheExpiration = TimeSpan.FromMinutes(10)
     };
+
+    private static readonly HybridCacheEntryOptions ListCacheOptions = SummaryCacheOptions;
 
 
     public async Task<CandidateExperienceViewerStateResponse?> GetViewerStateAsync(Guid userId, Guid companyId, CancellationToken cancellationToken)
@@ -60,33 +66,41 @@ internal sealed class CandidateExperienceService(
             return null;
         }
 
-        var entries = dbContext.CandidateExperiences.Where(e => e.CompanyId == companyId);
-        var total = await entries.CountAsync(cancellationToken);
         var pageSize = options.Value.PageSize;
+        var page = await cache.GetOrCreateAsync(CacheKeys.Company.ExperienceList(companyId.Value, query.Page), async ct =>
+        {
+            var entries = dbContext.CandidateExperiences.Where(e => e.CompanyId == companyId);
+            var total = await entries.CountAsync(ct);
 
-        // Ordered before the projection, and only the columns the public record has a place for:
-        // the author is never selected. SubmittedAt orders the page and becomes a quarter label in
-        // memory — the exact date does not leave this method.
-        var rows = await entries
-            .OrderByDescending(e => e.SubmittedAt).ThenBy(e => e.Id)
-            .Skip((query.Page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(e => new { e.Id, e.OverallRating, e.Outcome, e.Duration, e.Stages, e.SubmittedAt })
-            .ToListAsync(cancellationToken);
-        var children = await queries.LoadChildrenAsync(rows.Select(r => r.Id), cancellationToken);
+            // Ordered before the projection, and only the columns the public record has a place
+            // for: the author is never selected. SubmittedAt orders the page and becomes a quarter
+            // label in memory — the exact date does not leave this method.
+            var rows = await entries
+                .OrderByDescending(e => e.SubmittedAt).ThenBy(e => e.Id)
+                .Skip((query.Page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(e => new { e.Id, e.OverallRating, e.Outcome, e.Duration, e.Stages, e.SubmittedAt })
+                .ToListAsync(ct);
+            var children = await queries.LoadChildrenAsync(rows.Select(r => r.Id), ct);
 
-        var items = rows.Select(e => new CandidateExperiencePublicResponse(
-            e.Id, e.OverallRating,
-            children.Ratings[e.Id].OrderBy(r => r.Category).ToList(),
-            children.Picks[e.Id].Where(p => p.Kind == ReviewStatementKind.Liked).Select(p => p.Key).ToList(),
-            children.Picks[e.Id].Where(p => p.Kind == ReviewStatementKind.Improve).Select(p => p.Key).ToList(),
-            e.Outcome, e.Duration, e.Stages,
-            children.Types[e.Id].OrderBy(t => t).ToList(),
-            CandidateExperienceStats.Quarter(e.SubmittedAt))).ToList();
+            var items = rows.Select(e => new CandidateExperiencePublicResponse(
+                e.Id, e.OverallRating,
+                children.Ratings[e.Id].OrderBy(r => r.Category).ToList(),
+                children.Picks[e.Id].Where(p => p.Kind == ReviewStatementKind.Liked).Select(p => p.Key).ToList(),
+                children.Picks[e.Id].Where(p => p.Kind == ReviewStatementKind.Improve).Select(p => p.Key).ToList(),
+                e.Outcome, e.Duration, e.Stages,
+                children.Types[e.Id].OrderBy(t => t).ToList(),
+                CandidateExperienceStats.Quarter(e.SubmittedAt))).ToList();
+            return new CachedExperiencePage(items, total);
+        }, ListCacheOptions, tags: [CacheKeys.Company.Tag(companyId.Value)], cancellationToken: cancellationToken);
 
         var summary = await GetSummaryAsync(companyId.Value, cancellationToken);
-        return new CandidateExperiencePageResponse(items, total, query.Page, pageSize, summary);
+        return new CandidateExperiencePageResponse(page.Items, page.Total, query.Page, pageSize, summary);
     }
+
+    /// <summary>One list page as cached: the items and the company's total. Page number and size
+    /// are in the key; the summary is cached on its own so a page hit never recomputes it.</summary>
+    internal sealed record CachedExperiencePage(IReadOnlyList<CandidateExperiencePublicResponse> Items, int Total);
 
     public async Task<MyCandidateExperienceResponse?> CreateAsync(Guid userId, Guid companyId, CandidateExperienceRequest request, CancellationToken cancellationToken)
     {
@@ -179,10 +193,10 @@ internal sealed class CandidateExperienceService(
         CancellationToken cancellationToken) =>
         await ProjectMineAsync(dbContext.CandidateExperiences.Where(e => e.UserId == userId && ids.Contains(e.Id)), cancellationToken);
 
-    /// <summary>The aggregate a public page shows. Cached a minute per company; every write
-    /// evicts it.</summary>
+    /// <summary>The aggregate a public page shows. Cached per company under the company's tag;
+    /// every write drops the tag.</summary>
     private ValueTask<CandidateExperienceSummaryResponse> GetSummaryAsync(Guid companyId, CancellationToken cancellationToken) =>
-        cache.GetOrCreateAsync(CandidateExperienceQueries.SummaryCacheKey(companyId), async ct =>
+        cache.GetOrCreateAsync(CacheKeys.Company.ExperienceSummary(companyId), async ct =>
         {
             // The whole company, not the page: a median of page two is not a median. Bounded by
             // one entry per contributor, so it stays a short list.
@@ -199,12 +213,12 @@ internal sealed class CandidateExperienceService(
 
             var globalAverage = await GetGlobalAverageAsync(ct);
             return CandidateExperienceStats.Build(aggregate, globalAverage, options.Value.MinimumEntriesForStats, options.Value.PriorWeight);
-        }, SummaryCacheOptions, cancellationToken: cancellationToken);
+        }, SummaryCacheOptions, tags: [CacheKeys.Company.Tag(companyId)], cancellationToken: cancellationToken);
 
     /// <summary>Mean Overall rating over every experience on the site — the prior the score pulls
     /// toward. Falls back to the scale's midpoint while there is none.</summary>
     private ValueTask<double> GetGlobalAverageAsync(CancellationToken cancellationToken) =>
-        cache.GetOrCreateAsync(CandidateExperienceQueries.GlobalAverageCacheKey, async ct =>
+        cache.GetOrCreateAsync(CacheKeys.Company.ExperienceGlobalAverage, async ct =>
             await dbContext.CandidateExperiences.AnyAsync(ct)
                 ? await dbContext.CandidateExperiences.AverageAsync(e => (double)e.OverallRating, ct)
                 : CompanyReviewScoring.NeutralAverage,

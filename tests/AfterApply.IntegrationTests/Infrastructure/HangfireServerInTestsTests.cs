@@ -26,10 +26,10 @@ namespace AfterApply.IntegrationTests.Infrastructure;
 [Collection(IntegrationTestCollection.Name)]
 public class HangfireServerInTestsTests(SharedInfrastructure shared) : IAsyncLifetime
 {
-    private string _postgres = null!;
+    private IsolatedStores _stores = null!;
 
     public async Task InitializeAsync() =>
-        _postgres = await shared.CreateIsolatedDatabaseAsync(nameof(HangfireServerInTestsTests));
+        _stores = await shared.CreateIsolatedStoresAsync(nameof(HangfireServerInTestsTests));
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -70,15 +70,15 @@ public class HangfireServerInTestsTests(SharedInfrastructure shared) : IAsyncLif
     }
 
     private RawFactory Build(Action<Microsoft.AspNetCore.Hosting.IWebHostBuilder>? extra = null) =>
-        new(_postgres, extra);
+        new(_stores, extra);
 
     /// <summary>A plain factory: no inline job client, no fixture. Disposed by each test.</summary>
-    private sealed class RawFactory(string postgres, Action<Microsoft.AspNetCore.Hosting.IWebHostBuilder>? extra)
+    private sealed class RawFactory(IsolatedStores stores, Action<Microsoft.AspNetCore.Hosting.IWebHostBuilder>? extra)
         : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
         {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
+            stores.Apply(builder);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             extra?.Invoke(builder);
         }

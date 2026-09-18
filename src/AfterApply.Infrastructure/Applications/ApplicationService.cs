@@ -4,6 +4,7 @@ using AfterApply.Application.Companies;
 using AfterApply.Application.Imports;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using Hangfire;
@@ -25,7 +26,6 @@ internal sealed class ApplicationService(
         LocalCacheExpiration = TimeSpan.FromSeconds(20)
     };
 
-    private static string SummaryCountsCacheKey(Guid userId) => $"applications:summary:{userId}";
     /// <summary>
     /// The one place that decides which of a user's applications a search term and a status filter
     /// match. Both the list and every bulk operation go through it, on purpose: a bulk delete
@@ -194,7 +194,7 @@ internal sealed class ApplicationService(
     public Task<ApplicationSummaryCountsResponse> GetSummaryCountsAsync(Guid userId, CancellationToken cancellationToken)
     {
         return cache.GetOrCreateAsync(
-            SummaryCountsCacheKey(userId),
+            CacheKeys.ApplicationsSummary(userId),
             userId,
             async (uid, ct) =>
             {
@@ -242,7 +242,7 @@ internal sealed class ApplicationService(
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
     }
@@ -299,7 +299,7 @@ internal sealed class ApplicationService(
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
 
         return new ExtensionApplicationResponse(await ToDetailAsync(application, cancellationToken), WasDuplicate: false);
     }
@@ -416,7 +416,7 @@ internal sealed class ApplicationService(
         if (changes.Count > 0)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-            await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+            await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
             await RetireRemindersIfTerminalAsync(userId, request.NewStatus, changes.Select(c => c.ApplicationId).ToList(), cancellationToken);
         }
 
@@ -478,7 +478,7 @@ internal sealed class ApplicationService(
         if (reverted > 0)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-            await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+            await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
             await RetireRemindersAsync(userId, revertedIntoTerminal, cancellationToken);
         }
 
@@ -505,7 +505,7 @@ internal sealed class ApplicationService(
 
         if (deleted > 0)
         {
-            await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+            await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
         }
 
         return new BulkDeleteResponse(deleted);
@@ -521,7 +521,7 @@ internal sealed class ApplicationService(
 
         dbContext.Applications.Remove(application);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
         return true;
     }
 
@@ -555,7 +555,7 @@ internal sealed class ApplicationService(
         dbContext.ApplicationEvents.Add(application.Events.Last());
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
         await RetireRemindersIfTerminalAsync(userId, newStatus, [applicationId], cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
@@ -589,7 +589,7 @@ internal sealed class ApplicationService(
             .Where(r => r.UserId == userId && r.DismissedAt == null && applicationIds.Contains(r.ApplicationId))
             .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.DismissedAt, now), cancellationToken);
 
-        await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
     }
 
     /// <summary>
@@ -683,7 +683,7 @@ internal sealed class ApplicationService(
         if (changes.Count > 0)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-            await cache.RemoveAsync(SummaryCountsCacheKey(userId), cancellationToken);
+            await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
             await RetireRemindersAsync(userId, changes.Select(c => c.ApplicationId).ToList(), cancellationToken);
         }
 

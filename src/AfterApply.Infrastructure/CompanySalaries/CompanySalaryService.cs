@@ -2,16 +2,32 @@ using AfterApply.Application.CompanySalaries;
 using AfterApply.Application.CompanySalaries.Contracts;
 using AfterApply.Application.Occupations.Contracts;
 using AfterApply.Domain.CompanySalaries;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.CompanySalaries;
 
-internal sealed class CompanySalaryService(AppDbContext dbContext, CompanySlugAllocator slugAllocator, IOptions<CompanySalaryOptions> options)
+internal sealed class CompanySalaryService(
+    AppDbContext dbContext,
+    CompanySlugAllocator slugAllocator,
+    HybridCache cache,
+    ICompanyCacheInvalidator invalidator,
+    IOptions<CompanySalaryOptions> options)
     : ICompanySalaryService
 {
+    // The list is read by every signed-in visitor of the company page and changes only when an
+    // entry is written; each write drops the company's tag on every instance, so the TTL is a
+    // safety net for a Redis outage, not the staleness bound.
+    private static readonly HybridCacheEntryOptions ListCacheOptions = new()
+    {
+        Expiration = TimeSpan.FromMinutes(10),
+        LocalCacheExpiration = TimeSpan.FromMinutes(10)
+    };
+
     public async Task<CompanySalaryViewerStateResponse?> GetViewerStateAsync(Guid userId, Guid companyId, CancellationToken cancellationToken)
     {
         var company = await dbContext.Companies.FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
@@ -37,53 +53,56 @@ internal sealed class CompanySalaryService(AppDbContext dbContext, CompanySlugAl
             return null;
         }
 
-        var entries = dbContext.CompanySalaryEntries.Where(s => s.CompanyId == companyId);
-        var total = await entries.CountAsync(cancellationToken);
-        var pageSize = options.Value.PageSize;
+        return await cache.GetOrCreateAsync(CacheKeys.Company.SalaryList(companyId, query.Page), async ct =>
+        {
+            var entries = dbContext.CompanySalaryEntries.Where(s => s.CompanyId == companyId);
+            var total = await entries.CountAsync(ct);
+            var pageSize = options.Value.PageSize;
 
-        // Only the columns the public record has a place for: the years and the author are not
-        // selected at all. The band and the month are derived in memory — EF cannot translate
-        // either, and a page is at most PageSize rows.
-        var rows = await entries
-            .OrderByDescending(s => s.SubmittedAt).ThenBy(s => s.Id)
-            .Skip((query.Page - 1) * pageSize)
-            .Take(pageSize)
-            .Join(dbContext.Occupations, s => s.OccupationId, o => o.Id, (s, o) => new
-            {
-                s.Id, s.YearsOfExperience, s.EmploymentType, s.EmploymentStatus,
-                s.MonthlyNetAmount, s.Currency, s.AnnualBonusAmount, s.SubmittedAt,
-                Occupation = new OccupationRefResponse(o.Id, o.Code, o.NameTr, o.NameEn)
-            })
-            .ToListAsync(cancellationToken);
+            // Only the columns the public record has a place for: the years and the author are
+            // not selected at all. The band and the month are derived in memory — EF cannot
+            // translate either, and a page is at most PageSize rows.
+            var rows = await entries
+                .OrderByDescending(s => s.SubmittedAt).ThenBy(s => s.Id)
+                .Skip((query.Page - 1) * pageSize)
+                .Take(pageSize)
+                .Join(dbContext.Occupations, s => s.OccupationId, o => o.Id, (s, o) => new
+                {
+                    s.Id, s.YearsOfExperience, s.EmploymentType, s.EmploymentStatus,
+                    s.MonthlyNetAmount, s.Currency, s.AnnualBonusAmount, s.SubmittedAt,
+                    Occupation = new OccupationRefResponse(o.Id, o.Code, o.NameTr, o.NameEn)
+                })
+                .ToListAsync(ct);
 
-        var items = rows.Select(s => new CompanySalaryPublicResponse(
-            s.Id, s.Occupation, ExperienceBands.From(s.YearsOfExperience), s.EmploymentType, s.EmploymentStatus,
-            s.MonthlyNetAmount, s.Currency, s.AnnualBonusAmount,
-            // Month precision on purpose — see CompanySalaryPublicResponse.
-            s.SubmittedAt.ToString("yyyy-MM"))).ToList();
+            var items = rows.Select(s => new CompanySalaryPublicResponse(
+                s.Id, s.Occupation, ExperienceBands.From(s.YearsOfExperience), s.EmploymentType, s.EmploymentStatus,
+                s.MonthlyNetAmount, s.Currency, s.AnnualBonusAmount,
+                // Month precision on purpose — see CompanySalaryPublicResponse.
+                s.SubmittedAt.ToString("yyyy-MM"))).ToList();
 
-        // The whole company's amounts, not the page's: a median of page two is not a median.
-        // Bounded by the quota times the number of contributors, so it stays a short list.
-        var amounts = await entries
-            .Select(s => new { s.Currency, s.MonthlyNetAmount })
-            .ToListAsync(cancellationToken);
-        var minimum = options.Value.MinimumEntriesForStats;
-        var stats = amounts
-            .GroupBy(a => a.Currency)
-            .OrderBy(g => g.Key)
-            .Select(g =>
-            {
-                var values = g.Select(a => a.MonthlyNetAmount).ToList();
-                var enough = values.Count >= minimum;
-                return new SalaryCurrencyStatResponse(
-                    g.Key, values.Count,
-                    enough ? SalaryStats.Median(values) : null,
-                    enough ? values.Min() : null,
-                    enough ? values.Max() : null);
-            })
-            .ToList();
+            // The whole company's amounts, not the page's: a median of page two is not a median.
+            // Bounded by the quota times the number of contributors, so it stays a short list.
+            var amounts = await entries
+                .Select(s => new { s.Currency, s.MonthlyNetAmount })
+                .ToListAsync(ct);
+            var minimum = options.Value.MinimumEntriesForStats;
+            var stats = amounts
+                .GroupBy(a => a.Currency)
+                .OrderBy(g => g.Key)
+                .Select(g =>
+                {
+                    var values = g.Select(a => a.MonthlyNetAmount).ToList();
+                    var enough = values.Count >= minimum;
+                    return new SalaryCurrencyStatResponse(
+                        g.Key, values.Count,
+                        enough ? SalaryStats.Median(values) : null,
+                        enough ? values.Min() : null,
+                        enough ? values.Max() : null);
+                })
+                .ToList();
 
-        return new CompanySalaryPageResponse(items, total, query.Page, pageSize, stats, minimum);
+            return new CompanySalaryPageResponse(items, total, query.Page, pageSize, stats, minimum);
+        }, ListCacheOptions, tags: [CacheKeys.Company.Tag(companyId)], cancellationToken: cancellationToken);
     }
 
     public async Task<MyCompanySalaryResponse?> CreateAsync(Guid userId, Guid companyId, CompanySalaryRequest request, CancellationToken cancellationToken)
@@ -121,6 +140,7 @@ internal sealed class CompanySalaryService(AppDbContext dbContext, CompanySlugAl
             throw new CompanySalaryAlreadyExistsException();
         }
 
+        await invalidator.InvalidateCompanyAsync(companyId, cancellationToken);
         return (await ProjectMineAsync(dbContext.CompanySalaryEntries.Where(s => s.Id == entry.Id), cancellationToken)).Single();
     }
 
@@ -153,6 +173,7 @@ internal sealed class CompanySalaryService(AppDbContext dbContext, CompanySlugAl
             throw new CompanySalaryAlreadyExistsException();
         }
 
+        await invalidator.InvalidateCompanyAsync(entry.CompanyId, cancellationToken);
         return (await ProjectMineAsync(dbContext.CompanySalaryEntries.Where(s => s.Id == entry.Id), cancellationToken)).Single();
     }
 
@@ -167,6 +188,7 @@ internal sealed class CompanySalaryService(AppDbContext dbContext, CompanySlugAl
 
         dbContext.CompanySalaryEntries.Remove(entry);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await invalidator.InvalidateCompanyAsync(entry.CompanyId, cancellationToken);
         return true;
     }
 

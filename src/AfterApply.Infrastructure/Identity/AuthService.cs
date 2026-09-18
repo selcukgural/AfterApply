@@ -6,12 +6,14 @@ using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Mailing;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.Persistence;
 using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -31,6 +33,8 @@ internal sealed class AuthService(
     IBackgroundJobClient jobClient,
     IdentityErrorDescriber errorDescriber,
     CompanyReviewQueries reviewQueries,
+    HybridCache cache,
+    ICompanyCacheInvalidator companyCacheInvalidator,
     ILogger<AuthService> logger) : IAuthService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
@@ -668,6 +672,20 @@ internal sealed class AuthService(
             .Select(d => d.StorageObjectName)
             .ToListAsync(cancellationToken);
 
+        // Same reason, for the cache: the cascade takes the user's reviews, salary entries and
+        // candidate experiences with it, and every company they touched has public pages cached
+        // under its tag on every instance. The token hashes are needed for the same reason — a
+        // personal access token of a deleted account must stop authenticating at once, not when
+        // its cache entry lapses. Collected here, evicted after the commit.
+        var contributedCompanyIds = (await dbContext.CompanyReviews.Where(r => r.UserId == userId).Select(r => r.CompanyId)
+                .Union(dbContext.CompanySalaryEntries.Where(s => s.UserId == userId).Select(s => s.CompanyId))
+                .Union(dbContext.CandidateExperiences.Where(e => e.UserId == userId).Select(e => e.CompanyId))
+                .ToListAsync(cancellationToken));
+        var personalAccessTokenHashes = await dbContext.PersonalAccessTokens
+            .Where(t => t.UserId == userId)
+            .Select(t => t.TokenHash)
+            .ToListAsync(cancellationToken);
+
         var deleteResult = await userManager.DeleteAsync(user);
         if (!deleteResult.Succeeded)
         {
@@ -675,6 +693,21 @@ internal sealed class AuthService(
         }
 
         await transaction.CommitAsync(cancellationToken);
+
+        foreach (var companyId in contributedCompanyIds)
+        {
+            await companyCacheInvalidator.InvalidateCompanyAsync(companyId, cancellationToken);
+        }
+
+        foreach (var tokenHash in personalAccessTokenHashes)
+        {
+            await cache.RemoveAsync(CacheKeys.PersonalAccessToken(tokenHash), cancellationToken);
+        }
+
+        // A JWT issued before the deletion stays valid until it expires; what it could still read
+        // must not be a cached snapshot of the account that no longer exists.
+        await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
         // Object storage is outside the transaction and cannot join it, so the files are removed
         // after the commit rather than before it. Getting the order the other way round would risk

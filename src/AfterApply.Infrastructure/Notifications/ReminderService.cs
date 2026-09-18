@@ -5,6 +5,7 @@ using AfterApply.Application.Notifications.Contracts;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Notifications;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -59,7 +60,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         CancellationToken cancellationToken)
     {
         return cache.GetOrCreateAsync(
-            ReminderCacheKeys.ActivePage(userId, query.Page, query.PageSize),
+            CacheKeys.Reminders.ActivePage(userId, query.Page, query.PageSize),
             (userId, query),
             async (state, ct) =>
             {
@@ -85,7 +86,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
                 return new PagedResult<ReminderResponse>(items, totalCount, state.query.Page, state.query.PageSize);
             },
             ActiveRemindersCacheOptions,
-            tags: [ReminderCacheKeys.ActiveTag(userId)],
+            tags: [CacheKeys.Reminders.ActiveTag(userId)],
             cancellationToken: cancellationToken).AsTask();
     }
 
@@ -125,7 +126,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
         reminder.Dismiss(DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
         return true;
     }
@@ -159,7 +160,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         reminder.Dismiss(now);
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
         return true;
     }
@@ -210,7 +211,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
         if (affected > 0)
         {
-            await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
+            await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
         }
 
         return new BulkReminderResponse(affected);
@@ -247,7 +248,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveByTagAsync(ReminderCacheKeys.ActiveTag(userId), cancellationToken);
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
         return new BulkReminderResponse(reminders.Count);
     }
@@ -375,7 +376,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         // retires reminders is the other half of the job that creates them.
         var activeReminders = await dbContext.Reminders
             .Where(r => r.DismissedAt == null)
-            .Select(r => new { r.Id, r.ApplicationId, r.Type })
+            .Select(r => new { r.Id, r.UserId, r.ApplicationId, r.Type })
             .ToListAsync(cancellationToken);
 
         var applicationIds = applications.Select(a => a.Id).ToList();
@@ -428,20 +429,26 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         // cascade already), it went past the horizon, or it now rates "possibly ghosted" and the
         // earlier follow-up would otherwise sit beside it as a second row for the same application.
         var openApplicationIds = applicationIds.ToHashSet();
-        var retiredIds = activeReminders
+        var retired = activeReminders
             .Where(r => !openApplicationIds.Contains(r.ApplicationId)
                 || beyondHorizon.Contains(r.ApplicationId)
                 || (r.Type == ReminderType.FollowUp
                     && candidateTypeByApplication.TryGetValue(r.ApplicationId, out var candidateType)
                     && candidateType == ReminderType.PossiblyGhosted))
-            .Select(r => r.Id)
             .ToList();
 
-        if (retiredIds.Count > 0)
+        if (retired.Count > 0)
         {
+            var retiredIds = retired.Select(r => r.Id).ToList();
             await dbContext.Reminders
                 .Where(r => retiredIds.Contains(r.Id))
                 .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.DismissedAt, now), cancellationToken);
+
+            // This job writes reminders without going through the per-answer paths that evict the
+            // list, so it evicts by hand: a row retired here must not linger on a dashboard whose
+            // cached page still lists it. Before the early return below, which skips the create
+            // half but not this one.
+            await EvictActiveListsAsync(retired.Select(r => r.UserId), cancellationToken);
         }
 
         if (candidates.Count == 0)
@@ -472,7 +479,16 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
         dbContext.Reminders.AddRange(newReminders);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await EvictActiveListsAsync(newReminders.Select(r => r.UserId), cancellationToken);
 
         return newReminders.Count;
+    }
+
+    private async Task EvictActiveListsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
+    {
+        foreach (var userId in userIds.Distinct())
+        {
+            await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
+        }
     }
 }

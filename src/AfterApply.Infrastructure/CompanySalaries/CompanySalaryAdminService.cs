@@ -4,6 +4,7 @@ using AfterApply.Application.CompanySalaries.Contracts;
 using AfterApply.Application.Occupations.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Infrastructure.CompanyReviews;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -12,7 +13,7 @@ namespace AfterApply.Infrastructure.CompanySalaries;
 
 /// <summary>Admin only — the caller has already passed <c>IAdminAccessService</c>. The one place
 /// a salary entry's author is joined to a response.</summary>
-internal sealed class CompanySalaryAdminService(AppDbContext dbContext, IOptions<CompanyReviewOptions> options)
+internal sealed class CompanySalaryAdminService(AppDbContext dbContext, ICompanyCacheInvalidator invalidator, IOptions<CompanyReviewOptions> options)
     : ICompanySalaryAdminService
 {
     public async Task<PagedResult<AdminCompanySalaryListItemResponse>> ListAsync(AdminCompanySalaryListQuery query,
@@ -60,9 +61,11 @@ internal sealed class CompanySalaryAdminService(AppDbContext dbContext, IOptions
             return false;
         }
 
-        // Same removal as the owner's: nothing is cached per company for salaries.
+        // Same removal as the owner's, same eviction: the salary list pages sit under the
+        // company's tag.
         dbContext.CompanySalaryEntries.Remove(entry);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await invalidator.InvalidateCompanyAsync(entry.CompanyId, cancellationToken);
         return true;
     }
 }

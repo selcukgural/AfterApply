@@ -4,6 +4,7 @@ using AfterApply.Application.TrackedJobs;
 using AfterApply.Application.TrackedJobs.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.TrackedJobs;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -14,8 +15,6 @@ namespace AfterApply.Infrastructure.TrackedJobs;
 internal sealed class TrackedJobService(
     AppDbContext dbContext, ICompanyResolver companyResolver, HybridCache cache) : ITrackedJobService
 {
-    private static string ApplicationsSummaryCacheKey(Guid userId) => $"applications:summary:{userId}";
-
     public async Task<IReadOnlyCollection<TrackedJobResponse>> GetAllAsync(Guid userId, CancellationToken cancellationToken)
     {
         return await dbContext.TrackedJobs
@@ -85,7 +84,7 @@ internal sealed class TrackedJobService(
         dbContext.Applications.Add(application);
         dbContext.TrackedJobs.Remove(trackedJob);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveAsync(ApplicationsSummaryCacheKey(userId), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
 
         var company = await ReadCompanyAsync(application.CompanyId, cancellationToken);
 

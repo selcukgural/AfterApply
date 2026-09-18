@@ -1,6 +1,7 @@
 using AfterApply.Application.Common;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -14,19 +15,17 @@ internal sealed class PersonalAccessTokenService(
     HybridCache cache,
     IOptions<PersonalAccessTokenOptions> options) : IPersonalAccessTokenService
 {
-    // Was 60s. RevokeAsync evicts this key, but HybridCache's in-process L1 has no backplane here,
-    // so a revocation only reaches the instance that served the revoke request — every other Cloud
-    // Run instance keeps honoring the token until its own L1 entry lapses. That window is the real
-    // revocation latency, so it's kept short. 15s still absorbs the burst this cache exists for (a
-    // Gmail content script firing several requests as the user moves through threads) while cutting
-    // the worst-case "revoked token still works" window to a quarter of what it was.
+    // 15s absorbs the burst this cache exists for (a Gmail content script firing several requests
+    // as the user moves through threads). RevokeAsync evicts the key, and since 2026-09-18 that
+    // eviction rides the Redis backplane to every other Cloud Run instance's L1 as well, so a
+    // revoked token stops working everywhere within milliseconds — the TTL is no longer the
+    // revocation latency, only the ceiling if the backplane were down (FusionCache degrades to
+    // L1-only while Redis is unreachable and replays what it missed once it is back).
     private static readonly HybridCacheEntryOptions ValidationCacheOptions = new()
     {
         Expiration = TimeSpan.FromSeconds(15),
         LocalCacheExpiration = TimeSpan.FromSeconds(15)
     };
-
-    private static string ValidationCacheKey(string tokenHash) => $"pat:{tokenHash}";
 
     public async Task<CreatedPersonalAccessTokenResponse> CreateAsync(Guid userId, CreatePersonalAccessTokenRequest request, CancellationToken cancellationToken)
     {
@@ -79,7 +78,7 @@ internal sealed class PersonalAccessTokenService(
 
         token.Revoke(now);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await cache.RemoveAsync(ValidationCacheKey(token.TokenHash), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.PersonalAccessToken(token.TokenHash), cancellationToken);
         return true;
     }
 
@@ -91,7 +90,7 @@ internal sealed class PersonalAccessTokenService(
         // RecordUsage UPDATE below, so LastUsedAt only goes stale by up to the cache TTL. That's
         // the point of caching this path — it's on every single extension-authenticated request.
         var cached = await cache.GetOrCreateAsync<ValidatedPersonalAccessToken?>(
-            ValidationCacheKey(tokenHash),
+            CacheKeys.PersonalAccessToken(tokenHash),
             async ct =>
             {
                 var now = DateTimeOffset.UtcNow;

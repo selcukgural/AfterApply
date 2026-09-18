@@ -54,11 +54,11 @@ public class CvReviewEvalTests(SharedInfrastructure shared, ITestOutputHelper ou
         // Hangfire's recurring jobs at startup (Program.cs), which opens a connection before a
         // single test line runs. A fake connection string got as far as
         // "role \"unused\" does not exist" and no further.
-        var postgres = await shared.CreateIsolatedDatabaseAsync(nameof(CvReviewEvalTests));
+        var stores = await shared.CreateIsolatedStoresAsync(nameof(CvReviewEvalTests));
 
         await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("ConnectionStrings:Postgres", postgres);
+            stores.Apply(builder);
             builder.UseSetting("Jwt:SigningKey", Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)));
             builder.UseSetting("CvScan:LlmEnabled", "true");
             builder.UseSetting("CvScan:Review:ProjectId", projectId);

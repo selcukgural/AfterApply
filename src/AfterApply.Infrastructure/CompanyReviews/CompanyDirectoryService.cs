@@ -3,6 +3,7 @@ using AfterApply.Application.CompanyReviews;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.Persistence;
@@ -23,15 +24,39 @@ internal sealed class CompanyDirectoryService(
     IOptions<CompanySalaryOptions> salaryOptions,
     IOptions<CandidateExperienceOptions> experienceOptions) : ICompanyDirectoryService
 {
-    private const string ReviewedSlugsCacheKey = "company-reviews:reviewed-slugs";
-
-    private static readonly HybridCacheEntryOptions ReviewedSlugsCacheOptions = new()
+    // Every entry in this service sits under a tag — the company's for its own page and review
+    // pages, the directory's for the lists that span companies — and every contribution write
+    // drops both through ICompanyCacheInvalidator, on every instance. The TTLs only bound
+    // staleness while Redis is unreachable.
+    private static readonly HybridCacheEntryOptions CompanyCacheOptions = new()
     {
         Expiration = TimeSpan.FromMinutes(10),
         LocalCacheExpiration = TimeSpan.FromMinutes(10)
     };
 
+    private static readonly HybridCacheEntryOptions DirectoryCacheOptions = new()
+    {
+        Expiration = TimeSpan.FromMinutes(5),
+        LocalCacheExpiration = TimeSpan.FromMinutes(5)
+    };
+
+    private static readonly HybridCacheEntryOptions ReviewedSlugsCacheOptions = CompanyCacheOptions;
+
     public async Task<PagedResult<CompanyPublicListItemResponse>> ListAsync(PublicCompanyListQuery query, CancellationToken cancellationToken)
+    {
+        // A search is not cached: its key space is the user's input. The plain directory pages
+        // are what every visitor and every crawler read, and they are a handful of keys.
+        if (string.IsNullOrWhiteSpace(query.Q))
+        {
+            return await cache.GetOrCreateAsync(CacheKeys.Company.DirectoryPage(query.Page),
+                ct => new ValueTask<PagedResult<CompanyPublicListItemResponse>>(QueryDirectoryAsync(query, ct)),
+                DirectoryCacheOptions, tags: [CacheKeys.Company.DirectoryTag], cancellationToken: cancellationToken);
+        }
+
+        return await QueryDirectoryAsync(query, cancellationToken);
+    }
+
+    private async Task<PagedResult<CompanyPublicListItemResponse>> QueryDirectoryAsync(PublicCompanyListQuery query, CancellationToken cancellationToken)
     {
         var approved = dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved);
         var salariesOn = salaryOptions.Value.Enabled;
@@ -103,58 +128,70 @@ internal sealed class CompanyDirectoryService(
 
     public async Task<CompanyPublicResponse?> GetBySlugAsync(string slug, CancellationToken cancellationToken)
     {
-        var company = await dbContext.Companies
-            .Where(c => c.Slug == slug)
-            .Select(c => new { c.Id, c.Name, c.Website })
-            .FirstOrDefaultAsync(cancellationToken);
-        if (company is null)
-        {
-            return null;
-        }
-
-        var summary = await queries.GetSummaryAsync(company.Id, cancellationToken);
-        // A count is not sensitive, and it is what lets the public page label its "Salaries" tab
-        // before the reader signs in. One indexed COUNT, not cached with the review summary.
-        var salaryCount = salaryOptions.Value.Enabled
-            ? await dbContext.CompanySalaryEntries.CountAsync(s => s.CompanyId == company.Id, cancellationToken)
-            : 0;
-        // Same shape for the third tab: a count, off → zero.
-        var experienceCount = experienceOptions.Value.Enabled
-            ? await dbContext.CandidateExperiences.CountAsync(e => e.CompanyId == company.Id, cancellationToken)
-            : 0;
-        return new CompanyPublicResponse(company.Id, slug, company.Name, company.Website, summary, salaryCount, experienceCount);
-    }
-
-    public async Task<PagedResult<CompanyReviewPublicResponse>?> ListApprovedReviewsAsync(string slug, PublicReviewListQuery query,
-        CancellationToken cancellationToken)
-    {
-        var companyId = await dbContext.Companies
-            .Where(c => c.Slug == slug)
-            .Select(c => (Guid?)c.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+        // The slug → id step stays a query so the cache entry can carry the company's tag (a tag
+        // has to be known before the entry is built); it is one indexed row.
+        var companyId = await CompanyIdBySlugAsync(slug, cancellationToken);
         if (companyId is null)
         {
             return null;
         }
 
-        var approved = dbContext.CompanyReviews
-            .Where(r => r.CompanyId == companyId && r.Status == ReviewModerationStatus.Approved);
+        return await cache.GetOrCreateAsync(CacheKeys.Company.PublicPage(companyId.Value), async ct =>
+        {
+            var company = await dbContext.Companies
+                .Where(c => c.Id == companyId)
+                .Select(c => new { c.Name, c.Website })
+                .FirstAsync(ct);
+            var summary = await queries.GetSummaryAsync(companyId.Value, ct);
+            // A count is not sensitive, and it is what lets the public page label its "Salaries"
+            // tab before the reader signs in. One indexed COUNT each.
+            var salaryCount = salaryOptions.Value.Enabled
+                ? await dbContext.CompanySalaryEntries.CountAsync(s => s.CompanyId == companyId, ct)
+                : 0;
+            // Same shape for the third tab: a count, off → zero.
+            var experienceCount = experienceOptions.Value.Enabled
+                ? await dbContext.CandidateExperiences.CountAsync(e => e.CompanyId == companyId, ct)
+                : 0;
+            return new CompanyPublicResponse(companyId.Value, slug, company.Name, company.Website, summary, salaryCount, experienceCount);
+        }, CompanyCacheOptions, tags: [CacheKeys.Company.Tag(companyId.Value)], cancellationToken: cancellationToken);
+    }
 
-        var total = await approved.CountAsync(cancellationToken);
-        var pageSize = options.Value.PublicPageSize;
+    private Task<Guid?> CompanyIdBySlugAsync(string slug, CancellationToken cancellationToken) =>
+        dbContext.Companies
+            .Where(c => c.Slug == slug)
+            .Select(c => (Guid?)c.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        var items = await queries.ProjectPublicAsync(
-            queries.OrderForPublic(approved, query.Sort)
-                .ThenBy(r => r.Id)
-                .Skip((query.Page - 1) * pageSize)
-                .Take(pageSize),
-            cancellationToken);
+    public async Task<PagedResult<CompanyReviewPublicResponse>?> ListApprovedReviewsAsync(string slug, PublicReviewListQuery query,
+        CancellationToken cancellationToken)
+    {
+        var companyId = await CompanyIdBySlugAsync(slug, cancellationToken);
+        if (companyId is null)
+        {
+            return null;
+        }
 
-        return new PagedResult<CompanyReviewPublicResponse>(items, total, query.Page, pageSize);
+        return await cache.GetOrCreateAsync(CacheKeys.Company.ReviewList(companyId.Value, query.Page, query.Sort.ToString()), async ct =>
+        {
+            var approved = dbContext.CompanyReviews
+                .Where(r => r.CompanyId == companyId && r.Status == ReviewModerationStatus.Approved);
+
+            var total = await approved.CountAsync(ct);
+            var pageSize = options.Value.PublicPageSize;
+
+            var items = await queries.ProjectPublicAsync(
+                queries.OrderForPublic(approved, query.Sort)
+                    .ThenBy(r => r.Id)
+                    .Skip((query.Page - 1) * pageSize)
+                    .Take(pageSize),
+                ct);
+
+            return new PagedResult<CompanyReviewPublicResponse>(items, total, query.Page, pageSize);
+        }, CompanyCacheOptions, tags: [CacheKeys.Company.Tag(companyId.Value)], cancellationToken: cancellationToken);
     }
 
     public async Task<IReadOnlyList<ReviewedCompanySlugResponse>> ListReviewedSlugsAsync(CancellationToken cancellationToken) =>
-        await cache.GetOrCreateAsync(ReviewedSlugsCacheKey, async ct =>
+        await cache.GetOrCreateAsync(CacheKeys.Company.ReviewedSlugs, async ct =>
         {
             // A structured review is published on save and never carries ModeratedAt; a legacy
             // one became public when a human approved it. Either way, "last changed" is the later.
@@ -175,5 +212,5 @@ internal sealed class CompanyDirectoryService(
                     stamps.Where(x => x.CompanyId == c.Id).Max(x => x.At)))
                 .ToListAsync(ct);
             return (IReadOnlyList<ReviewedCompanySlugResponse>)rows;
-        }, ReviewedSlugsCacheOptions, cancellationToken: cancellationToken);
+        }, ReviewedSlugsCacheOptions, tags: [CacheKeys.Company.DirectoryTag], cancellationToken: cancellationToken);
 }
