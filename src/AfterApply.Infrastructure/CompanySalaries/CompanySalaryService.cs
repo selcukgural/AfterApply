@@ -2,20 +2,27 @@ using AfterApply.Application.CompanySalaries;
 using AfterApply.Application.CompanySalaries.Contracts;
 using AfterApply.Application.Occupations.Contracts;
 using AfterApply.Domain.CompanySalaries;
+using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.CompanySalaries;
 
-internal sealed class CompanySalaryService(AppDbContext dbContext, IOptions<CompanySalaryOptions> options) : ICompanySalaryService
+internal sealed class CompanySalaryService(AppDbContext dbContext, CompanySlugAllocator slugAllocator, IOptions<CompanySalaryOptions> options)
+    : ICompanySalaryService
 {
     public async Task<CompanySalaryViewerStateResponse?> GetViewerStateAsync(Guid userId, Guid companyId, CancellationToken cancellationToken)
     {
-        if (!await dbContext.Companies.AnyAsync(c => c.Id == companyId, cancellationToken))
+        var company = await dbContext.Companies.FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
+        if (company is null)
         {
             return null;
         }
+
+        // The directory lists a company by its slug; a row that still lacks one gets it now, so
+        // this contribution shows up there the way a review would.
+        await slugAllocator.EnsureSlugAsync(company, cancellationToken);
 
         var own = await ProjectMineAsync(
             dbContext.CompanySalaryEntries.Where(s => s.UserId == userId && s.CompanyId == companyId).OrderByDescending(s => s.SubmittedAt),
@@ -170,7 +177,11 @@ internal sealed class CompanySalaryService(AppDbContext dbContext, IOptions<Comp
         return new MySalariesResponse(items, await GetQuotaAsync(userId, cancellationToken));
     }
 
-    private async Task<SalaryQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<MyCompanySalaryResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken) =>
+        await ProjectMineAsync(dbContext.CompanySalaryEntries.Where(s => s.UserId == userId && ids.Contains(s.Id)), cancellationToken);
+
+    public async Task<SalaryQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken)
     {
         var used = await dbContext.CompanySalaryEntries.CountAsync(s => s.UserId == userId, cancellationToken);
         return new SalaryQuotaResponse(used, options.Value.MaxEntriesPerUser);

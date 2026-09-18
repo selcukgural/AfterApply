@@ -24,5 +24,5 @@ public sealed class CandidateExperienceOptions
     /// <summary>The <c>m</c> of the Bayesian score (see <c>CompanyReviewScoring</c>).</summary>
     public int PriorWeight { get; init; } = 5;
 
-    public int PageSize { get; init; } = 20;
+    public int PageSize { get; init; } = 10;
 }

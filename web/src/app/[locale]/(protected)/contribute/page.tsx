@@ -106,6 +106,7 @@ function ContributeContent() {
 
   const invalidate = () =>
     Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["contributions", "mine"] }),
       queryClient.invalidateQueries({ queryKey: ["companyReviews", "mine"] }),
       queryClient.invalidateQueries({ queryKey: ["companySalaries", "mine"] }),
       queryClient.invalidateQueries({ queryKey: ["candidateExperiences", "mine"] }),
@@ -275,7 +276,7 @@ function ContributeContent() {
                   ) : experienceQuota && experienceQuota.used >= experienceQuota.limit ? (
                     <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm dark:border-gray-800 dark:bg-gray-900/60">
                       <p className="text-gray-700 dark:text-gray-300">{t("experienceQuotaFull", { limit: experienceQuota.limit })}</p>
-                      <Link href="/my-experiences" className={`${buttonClassName("outline")} self-start`}>
+                      <Link href="/my-reviews" className={`${buttonClassName("outline")} self-start`}>
                         {t("goToMyExperiences")}
                       </Link>
                     </div>
@@ -301,7 +302,7 @@ function ContributeContent() {
                   {salaryQuota && salaryQuota.used >= salaryQuota.limit ? (
                     <div className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm dark:border-gray-800 dark:bg-gray-900/60">
                       <p className="text-gray-700 dark:text-gray-300">{t("salaryQuotaFull", { limit: salaryQuota.limit })}</p>
-                      <Link href="/my-salaries" className={`${buttonClassName("outline")} self-start`}>
+                      <Link href="/my-reviews" className={`${buttonClassName("outline")} self-start`}>
                         {t("goToMySalaries")}
                       </Link>
                     </div>

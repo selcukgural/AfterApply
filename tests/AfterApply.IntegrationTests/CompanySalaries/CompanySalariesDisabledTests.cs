@@ -9,8 +9,12 @@ using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.CompanySalaries;
 using AfterApply.Domain.Occupations;
+using AfterApply.Application.Applications.Contracts;
+using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.CompanySalaries;
@@ -62,6 +66,31 @@ public class CompanySalariesDisabledTests(ApiHost<CompanySalariesDisabledProfile
 
         var page = await client.GetFromJsonAsync<CompanyPublicResponse>($"/api/companies/public/{company.Slug}", JsonOptions);
         page!.SalaryCount.ShouldBe(0);
+
+        // The admin table is dark with the feature, for an admin too.
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var user = await db.Users.SingleAsync(u => u.Id == auth.User.Id);
+            user.IsAdmin = true;
+            // A row the feature left behind before going dark: not a contribution while it is off.
+            db.CompanySalaryEntries.Add(CompanySalaryEntry.Create(auth.User.Id, company.Id,
+                new SalaryContent(Occupation.IdFor("2512"), 3, EmploymentType.FullTime, SalaryEmploymentStatus.CurrentEmployee,
+                    50_000m, SalaryCurrency.TRY, null), DateTimeOffset.UtcNow));
+            await db.SaveChangesAsync();
+        }
+
+        (await client.GetAsync("/api/admin/company-salaries")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await client.DeleteAsync($"/api/admin/company-salaries/{Guid.NewGuid()}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        // The directory does not list a company on the strength of a dark feature's row, and the
+        // author's merged list neither shows the row nor a salary quota.
+        var directory = await client.GetFromJsonAsync<PagedResult<CompanyPublicListItemResponse>>("/api/companies/public?q=dark%20salary", JsonOptions);
+        directory!.Items.ShouldBeEmpty();
+        var mine = await client.GetFromJsonAsync<MyContributionsResponse>("/api/contributions/mine", JsonOptions);
+        mine!.Items.ShouldBeEmpty();
+        mine.SalaryQuota.ShouldBeNull();
+        mine.ExperienceQuota.ShouldNotBeNull();
 
         // The catalogue is generic and stays reachable while salaries are dark.
         (await client.GetAsync("/api/occupations/search?q=soft")).StatusCode.ShouldBe(HttpStatusCode.OK);

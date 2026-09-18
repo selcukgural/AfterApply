@@ -7764,3 +7764,84 @@ satır; kıyas formu doldurulup gönderildi → "Sonucunu paylaş" satırı, Wha
 cümleyi taşıyor, "Linki kopyala" → "Kopyalandı" ve `share_clicked` isteği atılıyor (fetch
 yakalandı); CV tarama: üretilmiş bir PDF yüklendi → 88/100, "Puanını paylaş" satırı doğru
 cümleyle. Yerel kıyas gönderimleri sonra silindi.
+
+## Katkılar tek çatı altında: dizin, "Katkılarım", admin alt sekmeleri; moderasyon rehberi kaldırıldı (2026-09-18)
+
+**Bulgu.** `/companies` yalnız *onaylı değerlendirmesi* olan şirketi listeliyordu
+(`CompanyDirectoryService.ListAsync` → `approved.Any(...)`); ilk katkısı maaş kaydı ya da aday
+deneyimi olan şirket dizine hiç çıkmıyordu. Aynı gün fark edilen diğerleri: kullanıcının kendi
+katkıları üç ayrı sayfadaydı (`/my-reviews`, `/my-salaries`, `/my-experiences`), admin kuyruğu
+25/sayfa ve "bekleyen önce, en eski ilk"di, yalnız değerlendirme gösteriyordu; şirket
+detayındaki maaş/deneyim sekmeleri 20/sayfaydı; dizin kartı tek satır "N değerlendirme"ydi ve
+sıralama "en çok değerlendirme"ydi; moderasyon rehberine artık ihtiyaç kalmamıştı.
+
+**Kanvas.** https://claude.ai/artifact/Vts6XejDeHHs2tMKehZQnu — dört artboard (Katkılarım,
+dizin kartı, admin maaş sekmesi, admin deneyim detay + silme); kodlamadan önce onaylandı.
+
+**Dizin (A/B/C).** Şirket ≥1 onaylı değerlendirme **veya** ≥1 maaş kaydı (flag açıkken) **veya**
+≥1 aday deneyimi (flag açıkken) taşıyorsa listelenir. EF şekli: üç tablonun `(CompanyId, At)`
+projeksiyonu **anonim tip** ile `Concat` (UNION ALL); üyelik `contributions.Any(...)`, sıralama
+`contributions.Where(...).Max(At)` korelasyonlu alt sorgu — EF Core 10 + Npgsql çeviriyor,
+entegrasyon testi pinliyor. Flag kapalı tür birliğe girmez; sayımlar SQL'de her zaman hesaplanır,
+flag kapalıysa bellekte sıfırlanır. **Sıra: en son katkı alan şirket önce**, sonra ad — sayım
+sıralaması aynı birkaç ismi ilk sayfaya sabitliyordu. `CompanyPublicListItemResponse` sonuna
+`SalaryCount` ve `CandidateExperienceCount` (defaultlu, eski istemci görmez). Kart kuralı
+(`directoryCountLines`): **yalnız sıfır olmayan satırlar**, tab sırasında, en az bir satır
+("0 değerlendirme"). Puan yalnız değerlendirmeden gelir. Sitemap (`/slugs`) üyeliği: onaylı
+değerlendirme ∪ aday deneyimi — **maaş hariç**, giriş kapılı; cache 10 dk (yazımda evict yok,
+kabul). Şirket sayfası `index`: `approvedCount > 0 || candidateExperienceCount > 0`.
+**Slug garantisi:** `EnsureSlugAsync` `CompanySlugAllocator`'a taşındı; maaş ve deneyim
+`CreateAsync` de çağırıyor — `c.Slug != null` filtresi slug'sız şirketi sessizce saklamasın.
+
+**Sayfa boyutları (D/F).** `CompanySalaries:PageSize` ve `CandidateExperiences:PageSize` 20→10;
+`CompanyReviews:AdminPageSize` 25→10 (şikâyet listesini de kısaltır, kabul); yeni
+`CompanyReviews:ContributionsPageSize` 10. Değerlendirmeler zaten 10; üç sekme de zaten en yeni ilk.
+
+**Katkılarım (E).** `/my-reviews` artık **tek kronolojik liste**: değerlendirme + maaş kaydı +
+aday deneyimi, en yeni ilk, 10/sayfa, sunucu sayfalama. Yeni `GET /api/contributions/mine?page=`
+(`userGroup`, `CompanyReviewsEnabledFilter` — `/companies/resolve` ile aynı kapı; nav grubu zaten
+reviews flag'ine bağlı). Yanıt: `Items[{Kind, SubmittedAt, Review?|Salary?|Experience?}]`,
+`TotalCount/Page/PageSize`, üç kota (flag kapalı tür → `null`; sayfa kota satırını ve CTA'yı
+buna göre gizler, `useClientConfig` gerekmez). **Bellekte birleştirme** (`ContributionPaging`,
+birim testli): tür başına `(Id, SubmittedAt)` okunur, sıralanır/sayfalanır, sayfanın id'leri
+her türün kendi `ListMineByIdsAsync(userId, ids)` projeksiyonuyla doldurulur (filtre kullanıcı
+id'sinde — IDOR yolu yok). Gerekçe: kullanıcı başına katkı kota ile sınırlı (10+10+10, admin
+override ≤1000); üç dar indeksli okuma UNION'dan ucuz ve kural okunur. Web: üç kart
+(`components/contributions/My{Review,Salary,Experience}Card`, her biri kendi silme mutation'ı +
+onayı, tür rozeti mavi/yeşil/turuncu), `Pagination unit="contributions"`, silmede `clampPage`.
+`/my-salaries` ve `/my-experiences` liste sayfaları **client redirect** → `/my-reviews`
+(yardım metni ve yer imleri için URL yaşıyor; `PROTECTED_PATHS`'ta kalıyor); `[id]/edit`
+sayfaları duruyor ve `/my-reviews`'a dönüyor. Nav: `mySalaries`/`myExperiences` kalktı,
+`nav.myReviews` → **"Katkılarım" / "My contributions"**; `ownListHref` hep `/my-reviews`;
+profil kartı, contribute sayfası, maaş paneli linkleri ve "Maaşlarım/Deneyimlerim sayfası"
+diyen bütün metinler (yardım, gizlilik, banner, kota doldu) "Katkılarım"a çevrildi.
+
+**Admin (F).** Üst "Değerlendirmeler" sekmesi şemsiye; altında üç hap alt sekme
+(`AdminContributionTabs`): `/admin/reviews` (kuyruk), `/admin/reviews/salaries`,
+`/admin/reviews/experiences`. Üst sekme aktiflik kuralı `isAdminTabActive` (saf, testli):
+`/admin/reviews` iki kardeş tabloda da yanar, `/admin/reviews/reports`'ta **yanmaz**.
+Kuyruk sırası **en yeni ilk** (`SubmittedAt desc, Id desc`) — bekleyen önce/en eski ilk
+kalktı; Pending filtresi + sekmedeki rozet kuyruğu işlemeye yeter. Yeni endpoint'ler
+(`AdminContributionEndpoints`, `IsAdminAsync` kapısı + tür flag filtresi, `WithoutRequestAudit`
+yok): `GET/DELETE /api/admin/company-salaries[/{id}]`, `GET/DELETE
+/api/admin/candidate-experiences[/{id}]`; liste `company=` ILike filtresi, en yeni ilk,
+`AdminPageSize`. **Satır tam kaydı + yazar e-postasını taşır** (admin-only yüzey, değerlendirme
+detayıyla aynı vaat; detay endpoint'i yok, modal satırdan açılır). Silme iki adımlı (satır →
+modal → "Evet, sil"). Deneyim silme, sahip silmenin evict ettiği özet/global-ortalama cache'ini
+aynen evict eder — bunun için `LoadChildrenAsync` + cache anahtarları
+`CandidateExperienceQueries`'e taşındı; entegrasyon testi silme sonrası `Summary.Count`'ın anında
+düştüğünü pinliyor. Silme `RequestAudits`'e olağan satırı bırakır (testli).
+
+**Moderasyon rehberi kaldırıldı (G).** `ModerationGuide.tsx`, `moderationGuideStore.ts` (+test)
+silindi; `adminReviews.guide.*` bloğu ve modaldaki "gri alanlar" linki gitti;
+`aa_moderation_guide_dismissed` localStorage anahtarı artık yazılmıyor → çerez politikasında
+üçüncü depo maddesi silindi, `outro` "ikisi de zorunlu" oldu, "Son güncelleme: 18 Eylül 2026";
+`browserStorage.test.ts` envanteri güncellendi. Yazar/okur rehberleri (`/guide` MDX) yerinde.
+
+**Testler.** Birim +5 (`ContributionPagingTests`); entegrasyon +15 (yeni
+`CompanyDirectoryTests` 6, `MyContributionsTests` 3, `AdminContributionTests` 6) ve mevcutlar
+genişledi (üç Disabled sınıfı: dark tür dizine/sitemap'e girmez, admin rotası 404, kota null;
+flow testlerinde `PageSize=10`; 401/403 rota tablosuna dört admin rotası); vitest 709 (+18:
+`directoryCard`, `adminTabs`, `contributionListView`, `myContributions.contract`,
+`moderationTable` üç sayfaya genişledi; navGroups/contributeState/profile/browserStorage/copy
+güncellendi). `tsc`, eslint (48 uyarı = önceki taban), `next build` temiz.

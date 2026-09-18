@@ -6,13 +6,18 @@ import { describe, expect, it } from "vitest";
  * Source scan, like siteChrome.contract.test.ts — there is no render harness. A table cell with
  * no text colour of its own falls back to the browser's default black, which is invisible on the
  * dark theme (the "Overall" and "Open reports" columns shipped that way; reported 2026-09-14).
- * Every cell must set its colour explicitly, with a dark variant.
+ * Every cell must set its colour explicitly, with a dark variant — on all three admin tables
+ * since the salary and experience ones arrived (2026-09-18).
  */
 const SRC = path.join(process.cwd(), "src");
 const read = (relative: string) => readFileSync(path.join(SRC, relative), "utf8");
 
-describe("the review moderation table", () => {
-  const page = read("app/[locale]/(protected)/admin/reviews/page.tsx");
+describe.each([
+  "app/[locale]/(protected)/admin/reviews/page.tsx",
+  "app/[locale]/(protected)/admin/reviews/salaries/page.tsx",
+  "app/[locale]/(protected)/admin/reviews/experiences/page.tsx",
+])("the admin table in %s", (relative) => {
+  const page = read(relative);
   const cells = [...page.matchAll(/<td className="([^"]*)">/g)].map((m) => m[1]);
 
   it("has cells to check", () => {

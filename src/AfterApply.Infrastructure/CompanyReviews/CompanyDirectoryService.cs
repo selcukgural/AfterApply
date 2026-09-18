@@ -12,8 +12,9 @@ using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.CompanyReviews;
 
-/// <summary>The anonymous side. Every query here starts from
-/// <c>Status == Approved</c> — the filter is in the query, not in a mapper that could be bypassed.</summary>
+/// <summary>The anonymous side. Every review query here starts from
+/// <c>Status == Approved</c> — the filter is in the query, not in a mapper that could be bypassed.
+/// Salary entries and candidate experiences have no moderation state: saved is published.</summary>
 internal sealed class CompanyDirectoryService(
     AppDbContext dbContext,
     CompanyReviewQueries queries,
@@ -33,11 +34,28 @@ internal sealed class CompanyDirectoryService(
     public async Task<PagedResult<CompanyPublicListItemResponse>> ListAsync(PublicCompanyListQuery query, CancellationToken cancellationToken)
     {
         var approved = dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved);
+        var salariesOn = salaryOptions.Value.Enabled;
+        var experiencesOn = experienceOptions.Value.Enabled;
 
-        // Only companies somebody has reviewed: the directory is a list of pages worth opening,
-        // not a dump of every name anyone ever typed into an application form. Correlated
+        // Only companies somebody has contributed to — a published review, a salary entry or a
+        // candidate experience (2026-09-18; until then reviews alone counted, so a company whose
+        // first contribution was a salary never reached the directory). The three tables become
+        // one (CompanyId, At) union; a feature that is off contributes nothing to it. Correlated
         // subqueries rather than GroupBy+Join, which EF Core cannot translate here.
-        var companies = dbContext.Companies.Where(c => c.Slug != null && approved.Any(r => r.CompanyId == c.Id));
+        // Anonymous type on purpose: Concat needs the three projections to share one CLR shape,
+        // and same-named members of the same types unify to one anonymous type.
+        var contributions = approved.Select(r => new { r.CompanyId, At = r.SubmittedAt });
+        if (salariesOn)
+        {
+            contributions = contributions.Concat(dbContext.CompanySalaryEntries.Select(s => new { s.CompanyId, At = s.SubmittedAt }));
+        }
+
+        if (experiencesOn)
+        {
+            contributions = contributions.Concat(dbContext.CandidateExperiences.Select(e => new { e.CompanyId, At = e.SubmittedAt }));
+        }
+
+        var companies = dbContext.Companies.Where(c => c.Slug != null && contributions.Any(x => x.CompanyId == c.Id));
         var q = query.Q?.Trim();
         if (!string.IsNullOrEmpty(q))
         {
@@ -45,19 +63,26 @@ internal sealed class CompanyDirectoryService(
             companies = companies.Where(c => EF.Functions.ILike(c.NormalizedName, pattern));
         }
 
+        // The two feature-gated counts are always computed in SQL and zeroed in memory when the
+        // feature is off: a flag inside the projection would become a CASE WHEN for nothing.
         var joined = companies.Select(c => new
         {
             c.Id,
             Slug = c.Slug!,
             c.Name,
             Count = approved.Count(r => r.CompanyId == c.Id),
-            Sum = approved.Where(r => r.CompanyId == c.Id).Sum(r => r.OverallRating)
+            Sum = approved.Where(r => r.CompanyId == c.Id).Sum(r => r.OverallRating),
+            SalaryCount = dbContext.CompanySalaryEntries.Count(s => s.CompanyId == c.Id),
+            ExperienceCount = dbContext.CandidateExperiences.Count(e => e.CompanyId == c.Id),
+            LatestAt = contributions.Where(x => x.CompanyId == c.Id).Max(x => (DateTimeOffset?)x.At)
         });
 
         var total = await joined.CountAsync(cancellationToken);
         var pageSize = options.Value.PublicPageSize;
         var rows = await joined
-            .OrderByDescending(x => x.Count).ThenBy(x => x.Name)
+            // The company that got a contribution most recently is on top; the count used to be
+            // the key, which pinned the same few names to page one forever.
+            .OrderByDescending(x => x.LatestAt).ThenBy(x => x.Name).ThenBy(x => x.Id)
             .Skip((query.Page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
@@ -68,7 +93,9 @@ internal sealed class CompanyDirectoryService(
             : CompanyReviewScoring.NeutralAverage;
 
         var items = rows.Select(r => new CompanyPublicListItemResponse(r.Id, r.Slug, r.Name, r.Count,
-                CompanyReviewScoring.BayesianScore(r.Count, r.Sum, globalAverage, opts.PriorWeight, opts.MinimumReviewsForScore)))
+                CompanyReviewScoring.BayesianScore(r.Count, r.Sum, globalAverage, opts.PriorWeight, opts.MinimumReviewsForScore),
+                salariesOn ? r.SalaryCount : 0,
+                experiencesOn ? r.ExperienceCount : 0))
             .ToList();
 
         return new PagedResult<CompanyPublicListItemResponse>(items, total, query.Page, pageSize);
@@ -131,13 +158,21 @@ internal sealed class CompanyDirectoryService(
         {
             // A structured review is published on save and never carries ModeratedAt; a legacy
             // one became public when a human approved it. Either way, "last changed" is the later.
+            // A candidate experience is public from the moment it is saved, so it counts too;
+            // salaries do not — they sit behind sign-in, a crawler sees nothing there.
             var approved = dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved);
+            var stamps = approved.Select(r => new { r.CompanyId, At = r.ModeratedAt ?? r.SubmittedAt });
+            if (experienceOptions.Value.Enabled)
+            {
+                stamps = stamps.Concat(dbContext.CandidateExperiences.Select(e => new { e.CompanyId, At = e.SubmittedAt }));
+            }
+
             var rows = await dbContext.Companies
-                .Where(c => c.Slug != null && approved.Any(r => r.CompanyId == c.Id))
+                .Where(c => c.Slug != null && stamps.Any(x => x.CompanyId == c.Id))
                 .OrderBy(c => c.Slug)
                 .Select(c => new ReviewedCompanySlugResponse(
                     c.Slug!,
-                    approved.Where(r => r.CompanyId == c.Id).Max(r => r.ModeratedAt ?? r.SubmittedAt)))
+                    stamps.Where(x => x.CompanyId == c.Id).Max(x => x.At)))
                 .ToListAsync(ct);
             return (IReadOnlyList<ReviewedCompanySlugResponse>)rows;
         }, ReviewedSlugsCacheOptions, cancellationToken: cancellationToken);

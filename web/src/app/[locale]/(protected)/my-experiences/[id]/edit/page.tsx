@@ -26,11 +26,12 @@ export default function EditExperiencePage({ params }: PageProps<"/[locale]/my-e
     mutationFn: (request: CandidateExperienceRequest) => candidateExperiencesApi.update(id, request),
     onSuccess: async () => {
       await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["contributions", "mine"] }),
         queryClient.invalidateQueries({ queryKey: ["candidateExperiences", "mine"] }),
         queryClient.invalidateQueries({ queryKey: ["companies", entry!.companySlug, "experiences"] }),
         queryClient.invalidateQueries({ queryKey: ["companies", entry!.companyId, "experienceViewer"] }),
       ]);
-      router.push("/my-experiences");
+      router.push("/my-reviews");
     },
     onError: (err) => setServerError(err instanceof ApiError ? err.message : t("error")),
   });
@@ -46,7 +47,7 @@ export default function EditExperiencePage({ params }: PageProps<"/[locale]/my-e
       {data && !entry && (
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {t("notFound")}{" "}
-          <Link href="/my-experiences" className="text-accent-ink underline-offset-2 hover:underline">
+          <Link href="/my-reviews" className="text-accent-ink underline-offset-2 hover:underline">
             {t("backToMine")}
           </Link>
         </p>

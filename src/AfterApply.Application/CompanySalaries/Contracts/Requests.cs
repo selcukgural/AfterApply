@@ -18,3 +18,6 @@ public sealed record CompanySalaryRequest(
     decimal? AnnualBonusAmount = null);
 
 public sealed record CompanySalaryListQuery(int Page = 1);
+
+/// <summary>The admin table: an optional company-name filter, newest first.</summary>
+public sealed record AdminCompanySalaryListQuery(string? Company = null, int Page = 1);

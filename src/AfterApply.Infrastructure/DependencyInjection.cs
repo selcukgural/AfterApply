@@ -490,7 +490,11 @@ public static class DependencyInjection
         services.AddScoped<ICompanyDirectoryService, CompanyDirectoryService>();
         services.AddScoped<ICompanyReviewModerationService, CompanyReviewModerationService>();
         services.AddScoped<ICompanySalaryService, CompanySalaryService>();
+        services.AddScoped<ICompanySalaryAdminService, CompanySalaryAdminService>();
+        services.AddScoped<CandidateExperienceQueries>();
         services.AddScoped<ICandidateExperienceService, CandidateExperienceService>();
+        services.AddScoped<ICandidateExperienceAdminService, CandidateExperienceAdminService>();
+        services.AddScoped<ICompanyContributionService, CompanyContributionService>();
         services.AddScoped<IOccupationSearchService, OccupationSearchService>();
         services.AddHttpClient<IGitHubIssueMirror, GitHubIssueMirror>(client =>
         {

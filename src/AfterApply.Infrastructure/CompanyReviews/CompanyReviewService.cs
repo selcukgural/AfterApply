@@ -18,7 +18,7 @@ internal sealed class CompanyReviewService(
     {
         var companyId = await companyResolver.ResolveOrCreateAsync(name.Trim(), cancellationToken);
         var company = await dbContext.Companies.SingleAsync(c => c.Id == companyId, cancellationToken);
-        await EnsureSlugAsync(company, cancellationToken);
+        await slugAllocator.EnsureSlugAsync(company, cancellationToken);
         return new ResolvedCompanyResponse(company.Id, company.Slug!, company.Name);
     }
 
@@ -64,7 +64,7 @@ internal sealed class CompanyReviewService(
 
         // A company created by an old instance during a rollout can still carry no slug; the
         // public page this review will appear on needs one.
-        await EnsureSlugAsync(company, cancellationToken);
+        await slugAllocator.EnsureSlugAsync(company, cancellationToken);
 
         var content = CompanyReviewQueries.ToContent(request);
         var review = CompanyReview.CreateStructured(userId, companyId, content, DateTimeOffset.UtcNow);
@@ -140,6 +140,11 @@ internal sealed class CompanyReviewService(
             dbContext.CompanyReviews.Where(r => r.UserId == userId).OrderByDescending(r => r.SubmittedAt), cancellationToken);
         return new MyReviewsResponse(items, await queries.GetQuotaAsync(userId, cancellationToken));
     }
+
+    public async Task<IReadOnlyList<MyCompanyReviewResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken) =>
+        await queries.ProjectMineAsync(
+            dbContext.CompanyReviews.Where(r => r.UserId == userId && ids.Contains(r.Id)), cancellationToken);
 
     public async Task<HelpfulToggleResponse?> ToggleHelpfulAsync(Guid userId, Guid reviewId, CancellationToken cancellationToken)
     {
@@ -232,16 +237,5 @@ internal sealed class CompanyReviewService(
             content.CategoryRatings.Select(c => CompanyReviewCategoryRating.Create(reviewId, c.Category, c.Rating)));
         dbContext.CompanyReviewStatementPicks.AddRange(
             content.Statements().Select(statement => CompanyReviewStatementPick.Create(reviewId, statement)));
-    }
-
-    private async Task EnsureSlugAsync(Domain.Companies.Company company, CancellationToken cancellationToken)
-    {
-        if (company.Slug is not null)
-        {
-            return;
-        }
-
-        company.AssignSlug(await slugAllocator.AllocateAsync(company.Name, cancellationToken), DateTimeOffset.UtcNow);
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

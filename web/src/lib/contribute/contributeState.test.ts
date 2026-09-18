@@ -72,9 +72,9 @@ describe("contributeHref", () => {
 });
 
 describe("ownListHref", () => {
-  it("names each side's own list", () => {
+  it("names the one contributions list for every side (2026-09-18)", () => {
     expect(ownListHref("review")).toBe("/my-reviews");
-    expect(ownListHref("salary")).toBe("/my-salaries");
-    expect(ownListHref("experience")).toBe("/my-experiences");
+    expect(ownListHref("salary")).toBe("/my-reviews");
+    expect(ownListHref("experience")).toBe("/my-reviews");
   });
 });

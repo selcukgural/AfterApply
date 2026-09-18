@@ -112,12 +112,8 @@
         "description": "e-kariyerim'deki her şirket puanının arkasındaki formül, değerlendirme eşiği ve bir değerlendirmenin uyması gereken kurallar."
       },
       "myReviews": {
-        "title": "Değerlendirmelerim",
-        "description": "Yazdığın şirket değerlendirmeleri, moderasyon durumları ve kalan hakkın."
-      },
-      "mySalaries": {
-        "title": "Maaşlarım",
-        "description": "Paylaştığın maaş kayıtları ve kalan hakkın."
+        "title": "Katkılarım",
+        "description": "Yazdığın değerlendirmeler, paylaştığın maaş kayıtları ve aday deneyimleri — tek listede, en yeni önce."
       },
       "contribute": {
         "title": "Şirket katkısı",
@@ -166,10 +162,6 @@
       "refundPolicy": {
         "title": "İptal ve İade Koşulları",
         "description": "e-kariyerim Pro planında iptal ve iade nasıl işler."
-      },
-      "myExperiences": {
-        "title": "Deneyimlerim",
-        "description": "Paylaştığın işe alım süreci deneyimleri."
       },
       "helpCandidateExperiences": {
         "title": "Aday Deneyimi",
@@ -432,7 +424,7 @@
     "cv": "CV'lerim",
     "admin": "Yönetim",
     "companies": "Şirketler",
-    "myReviews": "Değerlendirmelerim",
+    "myReviews": "Katkılarım",
     "tools": "Araçlar",
     "cvScan": "CV Tarama",
     "benchmark": "Kıyaslama",
@@ -445,14 +437,12 @@
     "proBadge": "Pro",
     "weeklyJobs": "Haftalık İlanlar",
     "pro": "Pro plan",
-    "mySalaries": "Maaşlarım",
     "shareSalary": "Maaş paylaş",
     "writeReview": "Değerlendirme yaz",
     "allCompanies": "Tüm şirketler",
     "account": "Hesap",
     "profile": "Profilim",
-    "shareExperience": "Deneyim paylaş",
-    "myExperiences": "Deneyimlerim"
+    "shareExperience": "Deneyim paylaş"
   },
   "auth": {
     "login": {
@@ -757,7 +747,9 @@
       "pageInfoSalaries": "Sayfa {page} / {totalPages} ({totalCount} maaş kaydı)",
       "pageInfoNotifications": "Sayfa {page} / {totalPages} ({totalCount} bildirim)",
       "pageInfoAlerts": "Sayfa {page} / {totalPages} ({totalCount} uyarı)",
-      "pageInfoExperiences": "Sayfa {page} / {totalPages} ({totalCount} aday deneyimi)"
+      "pageInfoExperiences": "Sayfa {page} / {totalPages} ({totalCount} aday deneyimi)",
+      "pageInfoReviews": "Sayfa {page} / {totalPages} ({totalCount} değerlendirme)",
+      "pageInfoContributions": "Sayfa {page} / {totalPages} ({totalCount} katkı)"
     },
     "form": {
       "companyName": "Şirket Adı",
@@ -1228,7 +1220,7 @@
       "band": "Okuyucular tam tecrübe yılını değil bir bant (0–1, 2–4, 5–9, 10+) ve günü değil ayı görür. Bilerek: meslekle birlikte tam yıl ve tam tarih küçük bir şirkette kimin yazdığını ele verirdi.",
       "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez; içinde senin yazdığın hiçbir metin de yoktur. Kaydın arkasındaki hesabı yalnızca biz görürüz.",
       "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
-      "deletion": "Kaydı Maaşlarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam yılıyla içerir.",
+      "deletion": "Kaydı Katkılarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam yılıyla içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
     },
     "candidateExperiences": {
@@ -1239,7 +1231,7 @@
       "quarter": "Okuyucular günü ya da ayı değil yalnızca çeyreği görür (2026 Ç3 gibi); pozisyon, görüşmeci ya da ekip adı hiç sorulmaz. Bilerek: şirket kimle görüştüğünü bilir, ay ve pozisyon küçük bir şirkette kimin yazdığını ele verirdi.",
       "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez. Kaydın arkasındaki hesabı yalnızca biz görürüz.",
       "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
-      "deletion": "Kaydı Deneyimlerim sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam tarihiyle içerir.",
+      "deletion": "Kaydı Katkılarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam tarihiyle içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
     }
   },
@@ -1403,7 +1395,7 @@
   },
   "cookies": {
     "title": "Çerez Politikası",
-    "lastUpdated": "Son güncelleme: 13 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 18 Eylül 2026",
     "intro": {
       "title": "Kısaca",
       "body": "e-kariyerim yalnızca hizmetin çalışması için gereken iki çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok. Tek istisna Pro plan ödeme sayfasıdır: ödeme formu PayTR'ın kendi sayfasında açılır ve PayTR o sayfada kendi zorunlu çerezlerini kullanabilir; bu çerezler sitemizin diğer sayfalarında okunmaz.",
@@ -1428,8 +1420,7 @@
       "intro": "Bunlar çerez değil, ama aynı mantıkla cihazınızda veri sakladıkları için şeffaflık adına burada da sayıyoruz:",
       "item1": "Oturum jetonları — aa_access_token, aa_refresh_token, bunların geçerlilik süreleri ve aa_user (adınız, e-posta adresiniz ve arayüz tercihleriniz). Giriş yaptıktan sonra oturumunuzun açık kalmasını sağlar; localStorage'da tutulur ve çıkış yaptığınızda silinir.",
       "item2": "Giriş güvenliği anahtarları — aa_google_oauth, aa_linkedin_oauth ve aa_github_oauth. Google, LinkedIn veya GitHub ile giriş sırasında araya girme (CSRF) saldırısını engelleyen tek kullanımlık değerlerdir; sessionStorage'da tutulur ve giriş tamamlanır tamamlanmaz silinir.",
-      "outro": "İlk ikisi hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz. Üçüncüsü yalnızca bir arayüz tercihidir.",
-      "item3": "Moderasyon rehberi tercihi — aa_moderation_guide_dismissed. Yalnızca yönetici hesaplarının gördüğü değerlendirme moderasyonu sayfasında, rehber panelini bir kez kapattığınızı hatırlar; içinde bir “1”den başka bir şey yoktur. localStorage'da tutulur, paneli yeniden açtığınızda silinir."
+      "outro": "İkisi de hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz."
     },
     "visitCounter": {
       "title": "Ziyaret sayacı",
@@ -2441,7 +2432,7 @@
         },
         "step4": {
           "title": "Yayımla",
-          "body": "Değerlendirmen kaydettiğin anda yayımlanır; şirket sayfasında ve Değerlendirmelerim'de görünür. Okuyucular bildirebilir; bir moderatör kaldırırsa gerekçe Değerlendirmelerim sayfasındadır."
+          "body": "Değerlendirmen kaydettiğin anda yayımlanır; şirket sayfasında ve Katkılarım'da görünür. Okuyucular bildirebilir; bir moderatör kaldırırsa gerekçe Katkılarım sayfasındadır."
         },
         "guideLink": "Adil ve faydalı bir değerlendirme nasıl yazılır? →"
       },
@@ -2455,7 +2446,7 @@
       },
       "manage": {
         "title": "Düzenleme ve silme",
-        "body": "Değerlendirmelerim sayfası her değerlendirmenin durumunu (yayında, bekliyor, yayımlanmadı) ve varsa moderatör notunu gösterir. Düzenle puanları ve maddeleri değiştirir; Sil tamamen kaldırır, silinen değerlendirme şirketin puanından da düşer."
+        "body": "Katkılarım sayfası her değerlendirmenin durumunu (yayında, bekliyor, yayımlanmadı) ve varsa moderatör notunu gösterir; maaş kayıtların ve aday deneyimlerin de aynı listededir, en yeni önce. Düzenle puanları ve maddeleri değiştirir; Sil tamamen kaldırır, silinen değerlendirme şirketin puanından da düşer."
       },
       "report": {
         "title": "Kuralları çiğneyen bir değerlendirme gördüyseniz",
@@ -2510,7 +2501,7 @@
       },
       "manage": {
         "title": "Düzenleme ve silme",
-        "body": "Maaşlarım sayfası paylaştığınız her kaydı tam figürleriyle listeler. Düzenle tutarları değiştirir ve kaydın ayını bugüne alır; Sil tamamen kaldırır."
+        "body": "Katkılarım sayfası paylaştığınız her kaydı tam figürleriyle, değerlendirme ve deneyimlerinizle aynı listede gösterir. Düzenle tutarları değiştirir ve kaydın ayını bugüne alır; Sil tamamen kaldırır."
       }
     },
     "cvScan": {
@@ -2676,7 +2667,7 @@
       },
       "manage": {
         "title": "Kayıtlarınızı yönetmek",
-        "body": "Deneyimlerim sayfasında kayıtlarınızı görür, düzenler ya da silersiniz. Kayıtlar hesabınızla birlikte silinir ve veri dışa aktarımınıza dâhildir."
+        "body": "Katkılarım sayfasında kayıtlarınızı değerlendirme ve maaş kayıtlarınızla aynı listede görür, düzenler ya da silersiniz. Kayıtlar hesabınızla birlikte silinir ve veri dışa aktarımınıza dâhildir."
       }
     }
   },
@@ -3234,6 +3225,12 @@
     "reports": "Şikayetler",
     "payments": "Ödemeler"
   },
+  "adminContributionTabs": {
+    "label": "Katkı türleri",
+    "reviews": "Değerlendirmeler",
+    "salaries": "Maaşlar",
+    "experiences": "Aday deneyimleri"
+  },
   "companies": {
     "directory": {
       "title": "Şirket değerlendirmeleri ve maaşları",
@@ -3244,7 +3241,7 @@
       "loading": "Yükleniyor…",
       "error": "Şirketler yüklenemedi. Lütfen tekrar dene.",
       "tooMany": "Art arda çok fazla arama — biraz bekleyip tekrar dene.",
-      "empty": "Henüz yayımlanmış değerlendirmesi olan bir şirket yok.",
+      "empty": "Henüz katkı almış bir şirket yok.",
       "noMatches": "“{query}” ile eşleşen bir şirket yok.",
       "beFirst": "İlk yazan sen ol — kaydettiğin anda yayında.",
       "noScore": "Henüz puan yok",
@@ -3262,7 +3259,9 @@
           "title": "Serbest metin yok",
           "body": "Her madde, herkese adil olacak şekilde yazılmış sabit bir listeden gelir; okuyucular bildirebilir, moderatör karar verir."
         }
-      }
+      },
+      "salaryCount": "{count, plural, =1 {1 maaş kaydı} other {# maaş kaydı}}",
+      "experienceCount": "{count, plural, =1 {1 aday deneyimi} other {# aday deneyimi}}"
     },
     "page": {
       "metaTitle": "{company} çalışan yorumları, değerlendirmeleri ve maaşları",
@@ -3433,13 +3432,12 @@
       }
     },
     "mine": {
-      "title": "Değerlendirmelerim",
-      "subtitle": "Değerlendirmelerin ve her birinin durumu.",
-      "quota": "{limit} haktan {used} kullanıldı",
+      "title": "Katkılarım",
+      "subtitle": "Değerlendirmelerin, maaş kayıtların ve aday deneyimlerin — en yeni önce.",
       "write": "Değerlendirme yaz",
       "loading": "Yükleniyor…",
       "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
-      "empty": "Henüz bir değerlendirme yazmadın.",
+      "empty": "Henüz bir katkın yok.",
       "browse": "Şirketlere göz at →",
       "rejectedTitle": "Yayımlanmadı:",
       "rejectedHint": "Düzenlersen bir moderatör yeniden bakar.",
@@ -3453,7 +3451,14 @@
       "rejectedGuideLink": "Neyin geçip neyin geçmediği: rehber →",
       "legacyTag": "Önceki biçim",
       "legacyEditHint": "Değerlendirmeler yapılandırılmadan önce yazıldı. Metni artık okuyuculara gösterilmiyor; yeni biçime taşımak için düzenle.",
-      "structuredSummary": "{count, plural, =0 {Madde seçilmedi} =1 {1 madde} other {# madde}}"
+      "structuredSummary": "{count, plural, =0 {Madde seçilmedi} =1 {1 madde} other {# madde}}",
+      "quotaLine": "Değerlendirme {used} / {limit}",
+      "footnote": "Silmek ilgili hakkın yerini geri açar. Kayıtlar hesabınla birlikte silinir ve veri dışa aktarımına dâhildir.",
+      "kind": {
+        "review": "Değerlendirme",
+        "salary": "Maaş kaydı",
+        "experience": "Aday deneyimi"
+      }
     },
     "write": {
       "title": "Değerlendirme yaz",
@@ -3477,7 +3482,7 @@
       "subtitle": "Değişiklikler kaydettiğin anda yayımlanır.",
       "loading": "Yükleniyor…",
       "notFound": "Bu değerlendirme sana ait değil ya da artık yok.",
-      "backToMine": "Değerlendirmelerime dön",
+      "backToMine": "Katkılarım'a dön",
       "submit": "Kaydet",
       "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
       "legacyBanner": "Bu değerlendirme önceki serbest metinli biçimde yazıldı. Kaydetmek onu yeni biçime taşır: puanların aynen geçer, eski metin senin için saklanır ama artık kimseye gösterilmez."
@@ -4420,7 +4425,7 @@
       "band": "Tecrübe yılı bant olarak gösterilir: 0–1, 2–4, 5–9, 10+.",
       "month": "Tarih ay hassasiyetindedir (Eylül 2026 gibi).",
       "perTitle": "Aynı şirkete farklı meslekler için birden fazla kayıt girebilirsin; toplamda 10 kayıt.",
-      "editable": "Kaydı Maaşlarım sayfasından düzenleyebilir ya da silebilirsin.",
+      "editable": "Kaydı Katkılarım sayfasından düzenleyebilir ya da silebilirsin.",
       "fullGuide": "Tam rehber →"
     },
     "write": {
@@ -4432,20 +4437,13 @@
       "subtitle": "Değişiklikler kaydettiğin anda görünür; kaydın ayı bugüne alınır.",
       "loading": "Yükleniyor…",
       "notFound": "Bu kayıt sana ait değil ya da artık yok.",
-      "backToMine": "Maaşlarım'a dön",
+      "backToMine": "Katkılarım'a dön",
       "submit": "Kaydet",
       "error": "İşlem tamamlanamadı. Lütfen tekrar dene."
     },
     "mine": {
-      "title": "Maaşlarım",
-      "subtitle": "Paylaştığın maaş kayıtları.",
-      "quota": "{limit} haktan {used} kullanıldı",
       "share": "Yeni maaş bilgisi",
-      "loading": "Yükleniyor…",
       "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
-      "empty": "Henüz bir maaş kaydı paylaşmadın.",
-      "emptyBody": "Bir şirketteki maaşını anonim olarak paylaş; okuyucular mesleği ve tecrübe bandını görür, seni değil.",
-      "emptyCta": "Maaş bilgisi paylaş →",
       "years": "{count, plural, =1 {1 yıl tecrübe} other {# yıl tecrübe}}",
       "perMonthNet": "/ ay net",
       "bonus": "Prim: {amount} / yıl",
@@ -4456,14 +4454,14 @@
       "deleteBody": "Kayıt kalıcı olarak silinir ve hakkındaki yeri boşalır.",
       "cancel": "Vazgeç",
       "confirmDelete": "Sil",
-      "footnote": "Silmek hak yerini geri açar. Kayıtlar hesabınla birlikte silinir ve KVKK dışa aktarımına dahildir."
+      "quotaLine": "Maaş kaydı {used} / {limit}"
     },
     "panel": {
       "heading": "{count, plural, =0 {Maaş kayıtları} =1 {1 maaş kaydı} other {# maaş kaydı}}",
       "share": "Maaş bilgisi paylaş",
       "readingNote": "Maaş bilgileri kullanıcıların kendi beyanıdır; e-kariyerim doğrulamaz. Meslek hazır listeden seçilir, tecrübe bant olarak, tarih ay hassasiyetinde gösterilir.",
       "yours": "{count, plural, =1 {Bu şirkete 1 maaş kaydın var.} other {Bu şirkete # maaş kaydın var.}}",
-      "manageYours": "Maaşlarım",
+      "manageYours": "Katkılarım",
       "loading": "Yükleniyor…",
       "loadError": "Maaş kayıtları yüklenemedi. Lütfen tekrar dene.",
       "statsPending": "Medyan ve aralık, bir para biriminde en az {minimum} kayıt toplanınca görünür.",
@@ -4505,8 +4503,8 @@
     "alreadyReviewed": "{company} için zaten bir değerlendirmen var",
     "alreadyReviewedHint": "Şirket başına bir değerlendirme; görüşün değiştiyse düzenle.",
     "editReview": "Değerlendirmeni düzenle",
-    "salaryQuotaFull": "Maaş kaydı hakkın doldu ({limit} kayıt). Yeni bir kayıt için Maaşlarım'dan birini sil.",
-    "goToMySalaries": "Maaşlarım'a git",
+    "salaryQuotaFull": "Maaş kaydı hakkın doldu ({limit} kayıt). Yeni bir kayıt için Katkılarım'dan birini sil.",
+    "goToMySalaries": "Katkılarım'a git",
     "tabs": {
       "label": "Katkı türü",
       "review": "Değerlendirme",
@@ -4516,15 +4514,15 @@
     "banner": {
       "review": {
         "thanks": "Teşekkürler, değerlendirmen yayında.",
-        "skip": "Atla, Değerlendirmelerim'e git"
+        "skip": "Atla, Katkılarım'a git"
       },
       "salary": {
         "thanks": "Teşekkürler, maaş bilgin kaydedildi.",
-        "skip": "Atla, Maaşlarım'a git"
+        "skip": "Atla, Katkılarım'a git"
       },
       "experience": {
         "thanks": "Teşekkürler, aday deneyimin yayında.",
-        "skip": "Geç, Deneyimlerim'e git"
+        "skip": "Geç, Katkılarım'a git"
       },
       "invite": {
         "review": "{company} için bir değerlendirme de yazabilirsin — form aşağıda hazır.",
@@ -4535,12 +4533,12 @@
     "alreadyShared": "{company} için aday deneyimin zaten var",
     "alreadySharedHint": "Şirket başına bir kayıt; görüşün değiştiyse düzenle.",
     "editExperience": "Deneyimini düzenle",
-    "experienceQuotaFull": "{limit} aday deneyiminin tamamını kullandın. Yenisi için Deneyimlerim'den birini sil.",
-    "goToMyExperiences": "Deneyimlerim'e git"
+    "experienceQuotaFull": "{limit} aday deneyiminin tamamını kullandın. Yenisi için Katkılarım'dan birini sil.",
+    "goToMyExperiences": "Katkılarım'a git"
   },
   "adminReviews": {
     "title": "Şirket değerlendirmesi moderasyonu",
-    "subtitle": "Önce bekleyenler, önce en eski. Yapılandırılmış değerlendirmeler kaydedilince yayımlanır ve buraya yalnızca şikayetle ya da bir redden sonra düşer; geçişten önceki serbest metinli olanlar hâlâ karar bekliyor.",
+    "subtitle": "En yeni önce. Yapılandırılmış değerlendirmeler kaydedilince yayımlanır ve buraya yalnızca şikayetle ya da bir redden sonra düşer; geçişten önceki serbest metinli olanlar hâlâ karar bekliyor.",
     "forbiddenTitle": "Bu sayfaya erişimin yok",
     "forbiddenBody": "Moderasyon, sunucuda yönetici olarak işaretlenmiş hesaplarla sınırlıdır.",
     "loading": "Yükleniyor…",
@@ -4611,88 +4609,74 @@
         }
       },
       "structuredReview": "Yapılandırılmış değerlendirme"
+    }
+  },
+  "adminSalaries": {
+    "title": "Yönetim",
+    "subtitle": "Maaş kayıtları — en yeni önce, sayfa başına 10. Bir satıra tıklayınca tam kayıt ve yazarı açılır.",
+    "forbiddenTitle": "Bu sayfa yöneticilere özel",
+    "forbiddenBody": "Hesabında yönetici yetkisi yok.",
+    "loading": "Yükleniyor…",
+    "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
+    "disabled": "Bu özellik şu anda kapalı.",
+    "empty": "Henüz maaş kaydı yok.",
+    "filters": {
+      "company": "Şirket"
     },
-    "guide": {
-      "title": "Moderasyon rehberi",
-      "show": "Göster",
-      "hide": "Gizle",
-      "principle1": "Bir değerlendirmenin şirket hakkında olumsuz olması tek başına kaldırma sebebi değildir.",
-      "principle2": "Moderatörün görevi şirketi korumak değil, topluluk kurallarını korumaktır.",
-      "structured": {
-        "title": "Yapılandırılmış değerlendirmeler (16 Eylül 2026'dan itibaren)",
-        "body": "Yapılandırılmış bir değerlendirme puanlar ve sabit listeden maddelerdir. Kimseyi adlandıramaz, hakaret edemez, iddiada bulunamaz — geriye kalan sorular kelimelerle değil hesapla ilgilidir:",
-        "pattern": "Koordineli kalıp: kısa sürede tek şirkete çok sayıda neredeyse özdeş değerlendirme ya da bir rakibi aşağı puanlayan bir hesap ağı.",
-        "quota": "Kotasını kötüye kullanan hesap — değerlendirme detayından kotasını sıfıra çek.",
-        "report": "Yapılandırılmış bir değerlendirmeye gelen şikayet genellikle yukarıdaki ikisinden biri ya da katılmayan bir okuyucudur. Katılmamak kural ihlali değildir; reddet."
-      },
-      "legacy": {
-        "title": "Geçişten önce yazılmış serbest metinli değerlendirmeler",
-        "body": "Bunlar hâlâ kuyrukta bekliyor. Eski kurallar onlara aynen uygulanır:"
-      },
-      "approve": {
-        "title": "Onayla — sert ya da tek taraflı olsa bile",
-        "workplace": "Çalışma ortamı hakkında kişisel görüşler",
-        "management": "Yönetimle kişisel deneyimler",
-        "pay": "Ücret ve yan haklarla ilgili deneyimler",
-        "career": "Kariyer gelişimiyle ilgili deneyimler",
-        "balance": "İş/özel hayat dengesiyle ilgili deneyimler",
-        "opinion": "Olumlu ya da olumsuz kişisel değerlendirmeler"
-      },
-      "reject": {
-        "title": "Reddet — geri kalanı ne kadar iyi olursa olsun",
-        "insults": "Hakaret ve küfür",
-        "threats": "Tehdit",
-        "personalData": "Kişisel bilgi (telefon, adres, e-posta, kimlik numarası…)",
-        "targeting": "Belirli kişilere yönelik saldırılar",
-        "accusations": "Ciddi, doğrulanmamış suçlamalar",
-        "confidential": "Gizli / ticari bilgi",
-        "spam": "Spam ve reklam",
-        "fake": "Sahte ya da manipülatif değerlendirmeler"
-      },
-      "grey": {
-        "title": "Gri alanlar (serbest metinli değerlendirmeler)",
-        "question": "Çoğu tereddüt tek soruya iner: bu yazarın yaşadığı bir şey mi, yoksa başkası hakkında bir iddia mı?",
-        "columns": {
-          "review": "Değerlendirme",
-          "verdict": "Karar",
-          "why": "Neden"
-        },
-        "approve": "Onayla",
-        "reject": "Reddet",
-        "case1": {
-          "review": "“Yöneticim çok kabaydı; hata yaptığımızda ekibin önünde azarlardı.”",
-          "why": "Kişisel deneyim. Bir rol anılıyor ama kimse teşhis edilemiyor."
-        },
-        "case2": {
-          "review": "“Satış müdürü A. K. herkese bağırıyor, tam bir psikopat.”",
-          "why": "Belirli bir kişi hedefleniyor; baş harfler de isim sayılır. Üstüne hakaret."
-        },
-        "case3": {
-          "review": "“Maaşlar iki kez bir ay gecikti, kimse neden açıklamadı.”",
-          "why": "Yazarın başına gelen bir şey. Şirket için kötü görünmesi ret sebebi değil."
-        },
-        "case4": {
-          "review": "“Şirket vergi kaçırıyor ve sahte fatura kesiyor.”",
-          "why": "Doğrulanamayan bir suç isnadı. Notla geri gönder: “Kendi yaşadığın kısmı anlat.”"
-        },
-        "case5": {
-          "review": "“Herkes mutsuz, kimse bir yıldan fazla kalmıyor.”",
-          "why": "Genelleme ama görüş; abartı kural ihlali değil. Okuyucu tartar."
-        },
-        "case6": {
-          "review": "“Harika şirket, herkese tavsiye ederim!” — aynı gün, aynı şirket, beş benzeri.",
-          "why": "Tek başına boş ama kurallara uygun; toplu gelince manipülasyon."
-        },
-        "case7": {
-          "review": "“X Bankası projesini kaybettik, sözleşme 2 milyondu.”",
-          "why": "Müşteri ve sözleşme ayrıntısı. Değerlendirmenin geri kalanı iyi olsa da geçmez."
-        }
-      },
-      "sendBack": {
-        "title": "Geri gönderirken:",
-        "body": "notu tek cümlede tut ve ihlal edilen kuralı adlandır — yazar neyi değiştireceğini bilsin. “Uygun değil” bir not değildir. Geri gönderilen yapılandırılmış bir değerlendirmede değişecek yalnızca puanlar ve seçimler vardır; hangisi olduğunu söyle."
-      },
-      "modalLink": "Emin değil misin? Rehber →"
+    "columns": {
+      "company": "Şirket",
+      "occupation": "Meslek",
+      "net": "Net / ay",
+      "years": "Yıl",
+      "author": "Yazar",
+      "submitted": "Gönderim"
+    },
+    "detail": {
+      "title": "Maaş kaydı",
+      "close": "Kapat",
+      "net": "Aylık net",
+      "bonus": "Yıllık prim",
+      "years": "Tecrübe",
+      "employment": "Çalışma",
+      "submitted": "Gönderim",
+      "updated": "Son düzenleme",
+      "author": "Yazar (yalnız yönetici görür)",
+      "delete": "Sil",
+      "confirmDelete": "Evet, sil",
+      "deleteWarning": "Bu kaydı kalıcı olarak silmek üzeresin.",
+      "deleteBody": "Şirket sayfasından ve dizin sayımlarından hemen düşer; geri alınamaz. Yazara bildirim gitmez."
+    }
+  },
+  "adminExperiences": {
+    "title": "Yönetim",
+    "subtitle": "Aday deneyimleri — en yeni önce, sayfa başına 10. Bir satıra tıklayınca tam kayıt ve yazarı açılır.",
+    "forbiddenTitle": "Bu sayfa yöneticilere özel",
+    "forbiddenBody": "Hesabında yönetici yetkisi yok.",
+    "loading": "Yükleniyor…",
+    "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
+    "disabled": "Bu özellik şu anda kapalı.",
+    "empty": "Henüz aday deneyimi yok.",
+    "filters": {
+      "company": "Şirket"
+    },
+    "columns": {
+      "company": "Şirket",
+      "overall": "Genel",
+      "outcome": "Sonuç",
+      "duration": "Süre",
+      "author": "Yazar",
+      "submitted": "Gönderim"
+    },
+    "detail": {
+      "title": "Aday deneyimi",
+      "close": "Kapat",
+      "submitted": "Gönderim",
+      "updated": "Son düzenleme",
+      "author": "Yazar (yalnız yönetici görür)",
+      "delete": "Sil",
+      "confirmDelete": "Evet, sil",
+      "deleteWarning": "Bu kaydı kalıcı olarak silmek üzeresin.",
+      "deleteBody": "Şirket sayfasından ve dizin sayımlarından hemen düşer; geri alınamaz. Yazara bildirim gitmez."
     }
   },
   "about": {
@@ -5273,7 +5257,7 @@
       "statements": "Serbest metin yok: puan ver, istersen hazır maddelerden seç — en fazla beş beğendiğin, beş geliştirilebilir.",
       "noNames": "Görüşmeci adı, ekip, pozisyon ya da ay sorulmaz ve gösterilmez; kartında yalnızca çeyrek görünür.",
       "facts": "Sonuç ve süre gibi bilgiler kartında kısa etiket, şirket sayfasında toplu istatistik olarak görünür.",
-      "instant": "Kaydettiğin anda yayımlanır; Deneyimlerim sayfasından düzenleyebilir ya da silebilirsin.",
+      "instant": "Kaydettiğin anda yayımlanır; Katkılarım sayfasından düzenleyebilir ya da silebilirsin.",
       "fullGuide": "Tam rehber →"
     },
     "write": {
@@ -5285,20 +5269,13 @@
       "subtitle": "Değişiklikler kaydettiğin anda yayında; kaydın çeyreği bugünün olur.",
       "loading": "Yükleniyor…",
       "notFound": "Bu kayıt senin değil ya da artık yok.",
-      "backToMine": "Deneyimlerim'e dön",
+      "backToMine": "Katkılarım'a dön",
       "submit": "Kaydet",
       "error": "Bir şeyler ters gitti. Lütfen tekrar dene."
     },
     "mine": {
-      "title": "Deneyimlerim",
-      "subtitle": "Paylaştığın işe alım süreci deneyimleri.",
-      "quota": "{used} / {limit} kullanıldı",
       "share": "Deneyim paylaş",
-      "loading": "Yükleniyor…",
       "error": "Bir şeyler ters gitti. Lütfen tekrar dene.",
-      "empty": "Henüz bir aday deneyimi paylaşmadın.",
-      "emptyBody": "Bir şirketle geçirdiğin işe alım sürecini anonim olarak puanla; okuyucular seni değil, puanı ve maddeleri görür.",
-      "emptyCta": "Deneyim paylaş →",
       "summary": "{count, plural, =0 {Madde seçilmedi} =1 {1 madde} other {# madde}}",
       "edit": "Düzenle",
       "delete": "Sil",
@@ -5306,7 +5283,7 @@
       "deleteBody": "Kayıt kalıcı olarak silinir ve kotandaki yeri boşalır.",
       "cancel": "Vazgeç",
       "confirmDelete": "Sil",
-      "footnote": "Silmek kotadaki yeri boşaltır. Kayıtlar hesabınla birlikte silinir ve veri dışa aktarımına dâhildir."
+      "quotaLine": "Aday deneyimi {used} / {limit}"
     },
     "panel": {
       "heading": "{count, plural, =0 {Aday deneyimi} =1 {1 aday deneyimi} other {# aday deneyimi}}",

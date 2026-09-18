@@ -26,5 +26,10 @@ public sealed class CompanyReviewOptions
 
     public int PublicPageSize { get; init; } = 10;
 
-    public int AdminPageSize { get; init; } = 25;
+    /// <summary>The admin lists — the moderation queue, the reports, the salary and experience
+    /// tables. Ten since 2026-09-18 (was 25): they are read newest first, a short page is enough.</summary>
+    public int AdminPageSize { get; init; } = 10;
+
+    /// <summary>The author's own "my contributions" list, all three kinds in one page.</summary>
+    public int ContributionsPageSize { get; init; } = 10;
 }

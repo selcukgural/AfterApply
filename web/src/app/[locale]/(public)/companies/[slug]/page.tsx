@@ -16,7 +16,8 @@ import { CandidateExperiencesPanel } from "@/components/candidateExperiences/Can
  * A company's public page: the aggregate and its published reviews, rendered on the server so
  * the reviews are in the HTML. A company nobody has reviewed yet still has a page (the "write a
  * review" call to action needs somewhere to live) but tells crawlers not to index it — a page
- * with a name and nothing else is the thin content that gets a whole site marked down.
+ * with a name and nothing else is the thin content that gets a whole site marked down. A public
+ * candidate experience counts as content for that purpose; salaries, behind sign-in, do not.
  */
 export async function generateMetadata({ params }: PageProps<"/[locale]/companies/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/companie
     path: `/companies/${slug}`,
     title: t("metaTitle", { company: company.name }),
     description: t("metaDescription", { company: company.name, count: company.summary.approvedCount }),
-    index: company.summary.approvedCount > 0,
+    index: company.summary.approvedCount > 0 || (company.candidateExperienceCount ?? 0) > 0,
     kicker: tPages("companies.title"),
   });
 }

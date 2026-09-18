@@ -112,12 +112,8 @@
         "description": "The exact formula behind every company score on e-kariyerim, the review threshold, and the rules a review has to meet."
       },
       "myReviews": {
-        "title": "My Reviews",
-        "description": "The company reviews you wrote, their moderation status, and your remaining quota."
-      },
-      "mySalaries": {
-        "title": "My Salaries",
-        "description": "The salary entries you shared and how many you have left."
+        "title": "My contributions",
+        "description": "The reviews you wrote, the salary entries and candidate experiences you shared — one list, newest first."
       },
       "contribute": {
         "title": "Company contribution",
@@ -166,10 +162,6 @@
       "refundPolicy": {
         "title": "Cancellation and Refund Policy",
         "description": "How cancellation and refunds work for the e-kariyerim Pro plan."
-      },
-      "myExperiences": {
-        "title": "My Experiences",
-        "description": "The hiring-process experiences you shared."
       },
       "helpCandidateExperiences": {
         "title": "Candidate Experience",
@@ -432,7 +424,7 @@
     "cv": "My CVs",
     "admin": "Admin",
     "companies": "Companies",
-    "myReviews": "My Reviews",
+    "myReviews": "My contributions",
     "tools": "Tools",
     "cvScan": "CV Scan",
     "benchmark": "Benchmark",
@@ -445,14 +437,12 @@
     "proBadge": "Pro",
     "weeklyJobs": "Weekly Jobs",
     "pro": "Pro plan",
-    "mySalaries": "My Salaries",
     "shareSalary": "Share salary",
     "writeReview": "Write a review",
     "allCompanies": "All companies",
     "account": "Account",
     "profile": "My Profile",
-    "shareExperience": "Share an experience",
-    "myExperiences": "My Experiences"
+    "shareExperience": "Share an experience"
   },
   "auth": {
     "login": {
@@ -757,7 +747,9 @@
       "pageInfoSalaries": "Page {page} / {totalPages} ({totalCount} salary entries)",
       "pageInfoNotifications": "Page {page} / {totalPages} ({totalCount} notifications)",
       "pageInfoAlerts": "Page {page} / {totalPages} ({totalCount} alerts)",
-      "pageInfoExperiences": "Page {page} / {totalPages} ({totalCount} candidate experiences)"
+      "pageInfoExperiences": "Page {page} / {totalPages} ({totalCount} candidate experiences)",
+      "pageInfoReviews": "Page {page} / {totalPages} ({totalCount} reviews)",
+      "pageInfoContributions": "Page {page} / {totalPages} ({totalCount} contributions)"
     },
     "form": {
       "companyName": "Company Name",
@@ -1228,7 +1220,7 @@
       "band": "Readers see an experience band (0–1, 2–4, 5–9, 10+) rather than your exact years, and the month rather than the day. Deliberately: together with an occupation, the exact years and date would give away who wrote it at a small company.",
       "noAuthor": "A published entry never shows your name, e-mail or account, and contains nothing you typed. Only we can see the account behind an entry.",
       "storage": "Entries are stored in our own database and are not sent to any third party.",
-      "deletion": "You can delete an entry from My Salaries at any time. Deleting your account deletes all of them; your data export includes them with the exact years.",
+      "deletion": "You can delete an entry from My contributions at any time. Deleting your account deletes all of them; your data export includes them with the exact years.",
       "legalBasis": "Legal basis: your explicit action — you choose to share."
     },
     "candidateExperiences": {
@@ -1239,7 +1231,7 @@
       "quarter": "Readers see the quarter only (2026 Q3), never the day or the month; a job title, an interviewer or a team name is never asked. Deliberately: a company knows whom it interviewed, and a month with a title would give away who wrote it at a small company.",
       "noAuthor": "A published entry never shows your name, e-mail or account. Only we can see the account behind it.",
       "storage": "Entries are kept in our own database; nothing is sent to any third party.",
-      "deletion": "You can delete an entry at any time from My Experiences. Deleting your account deletes all of them; your data export includes them with their exact dates.",
+      "deletion": "You can delete an entry at any time from My contributions. Deleting your account deletes all of them; your data export includes them with their exact dates.",
       "legalBasis": "Legal basis: your explicit action — you choose to share."
     }
   },
@@ -1403,7 +1395,7 @@
   },
   "cookies": {
     "title": "Cookie Policy",
-    "lastUpdated": "Last updated: 13 September 2026",
+    "lastUpdated": "Last updated: 18 September 2026",
     "intro": {
       "title": "In short",
       "body": "e-kariyerim uses only the two cookies the service needs to work. No advertising cookies, tracking pixels, analytics tools like Google Analytics, or any third-party cookies. That is why no cookie banner appears: there is no optional cookie to ask your consent for. The one exception is the Pro plan checkout: the payment form opens on PayTR's own page and PayTR may use its own strictly necessary cookies there; those cookies are not read on any other page of this site.",
@@ -1428,8 +1420,7 @@
       "intro": "These are not cookies, but they store data on your device in the same way, so we list them here too:",
       "item1": "Session tokens — aa_access_token, aa_refresh_token, their expiry times, and aa_user (your name, email address and interface preferences). They keep you signed in; they live in localStorage and are deleted when you sign out.",
       "item2": "Sign-in security keys — aa_google_oauth, aa_linkedin_oauth and aa_github_oauth. These are single-use values that block a CSRF attack during a Google, LinkedIn or GitHub sign-in; they live in sessionStorage and are deleted the moment the sign-in completes.",
-      "outro": "The first two are required for the service to work — without them you cannot sign in. The third is only an interface preference.",
-      "item3": "Moderation guide preference — aa_moderation_guide_dismissed. Only on the review moderation page that admin accounts see, it remembers that you closed the guide panel once; it holds nothing but a “1”. It lives in localStorage and is deleted when you reopen the panel."
+      "outro": "Both are required for the service to work — without them you cannot sign in."
     },
     "visitCounter": {
       "title": "Visit counter",
@@ -2441,7 +2432,7 @@
         },
         "step4": {
           "title": "Publish",
-          "body": "Your review is published the moment you save it and appears on the company page and under My Reviews. Readers can report it; if a moderator takes it down, the reason is on the My Reviews page."
+          "body": "Your review is published the moment you save it and appears on the company page and under My contributions. Readers can report it; if a moderator takes it down, the reason is on the My contributions page."
         },
         "guideLink": "How to write a fair and useful review →"
       },
@@ -2455,7 +2446,7 @@
       },
       "manage": {
         "title": "Editing and deleting",
-        "body": "The My Reviews page shows the status of each of your reviews (published, pending, not published) and the moderator's note, if any. Edit changes the ratings and the statements; Delete removes it entirely, and a deleted review also drops out of the company's score."
+        "body": "The My contributions page shows the status of each of your reviews (published, pending, not published) and the moderator's note, if any; your salary entries and candidate experiences are on the same list, newest first. Edit changes the ratings and the statements; Delete removes it entirely, and a deleted review also drops out of the company's score."
       },
       "report": {
         "title": "If you see a review that breaks the rules",
@@ -2510,7 +2501,7 @@
       },
       "manage": {
         "title": "Editing and deleting",
-        "body": "The My Salaries page lists every entry you shared with its full figures. Edit changes the amounts and moves the entry's month to today; Delete removes it entirely."
+        "body": "The My contributions page lists every entry you shared with its full figures, on the same list as your reviews and experiences. Edit changes the amounts and moves the entry's month to today; Delete removes it entirely."
       }
     },
     "cvScan": {
@@ -2676,7 +2667,7 @@
       },
       "manage": {
         "title": "Managing your entries",
-        "body": "On My Experiences you see, edit or delete your entries. They are deleted with your account and included in your data export."
+        "body": "On My contributions you see, edit or delete your entries on the same list as your reviews and salary entries. They are deleted with your account and included in your data export."
       }
     }
   },
@@ -3234,6 +3225,12 @@
     "reports": "Reports",
     "payments": "Payments"
   },
+  "adminContributionTabs": {
+    "label": "Contribution kinds",
+    "reviews": "Reviews",
+    "salaries": "Salaries",
+    "experiences": "Candidate experiences"
+  },
   "companies": {
     "directory": {
       "title": "Company reviews and salaries",
@@ -3244,7 +3241,7 @@
       "loading": "Loading…",
       "error": "Couldn't load the companies. Please try again.",
       "tooMany": "Too many searches in a row — wait a moment and try again.",
-      "empty": "No company has a published review yet.",
+      "empty": "No company has a contribution yet.",
       "noMatches": "Nothing matches “{query}”.",
       "beFirst": "Be the first to write one — it goes live the moment you save it.",
       "noScore": "No score yet",
@@ -3262,7 +3259,9 @@
           "title": "No free text",
           "body": "Every statement comes from a fixed list written to be fair to everyone; readers can report a review, and a moderator decides."
         }
-      }
+      },
+      "salaryCount": "{count, plural, =1 {1 salary entry} other {# salary entries}}",
+      "experienceCount": "{count, plural, =1 {1 candidate experience} other {# candidate experiences}}"
     },
     "page": {
       "metaTitle": "{company} employee reviews and salaries",
@@ -3433,13 +3432,12 @@
       }
     },
     "mine": {
-      "title": "My reviews",
-      "subtitle": "Your reviews, and where each one stands.",
-      "quota": "{used} of {limit} reviews used",
+      "title": "My contributions",
+      "subtitle": "Your reviews, salary entries and candidate experiences — newest first.",
       "write": "Write a review",
       "loading": "Loading…",
       "error": "That didn't go through. Please try again.",
-      "empty": "You haven't written a review yet.",
+      "empty": "You have no contributions yet.",
       "browse": "Browse companies →",
       "rejectedTitle": "Not published:",
       "rejectedHint": "Edit it and it goes back to a moderator for a second look.",
@@ -3453,7 +3451,14 @@
       "rejectedGuideLink": "What passes and what doesn't: the guide →",
       "legacyTag": "Earlier format",
       "legacyEditHint": "Written before reviews became structured. Its text is no longer shown to readers; edit it to move it to the new format.",
-      "structuredSummary": "{count, plural, =0 {No statements picked} =1 {1 statement} other {# statements}}"
+      "structuredSummary": "{count, plural, =0 {No statements picked} =1 {1 statement} other {# statements}}",
+      "quotaLine": "Reviews {used} / {limit}",
+      "footnote": "Deleting frees that kind's quota slot. Entries are deleted with your account and included in your data export.",
+      "kind": {
+        "review": "Review",
+        "salary": "Salary entry",
+        "experience": "Candidate experience"
+      }
     },
     "write": {
       "title": "Write a review",
@@ -3477,7 +3482,7 @@
       "subtitle": "Changes are published as soon as you save.",
       "loading": "Loading…",
       "notFound": "That review is not yours or no longer exists.",
-      "backToMine": "Back to my reviews",
+      "backToMine": "Back to my contributions",
       "submit": "Save",
       "error": "That didn't go through. Please try again.",
       "legacyBanner": "This review was written in the earlier free-text format. Saving moves it to the new format: your ratings carry over, and the old text stays stored for you but is no longer shown to anyone."
@@ -4420,7 +4425,7 @@
       "band": "Years of experience are shown as a band: 0–1, 2–4, 5–9, 10+.",
       "month": "Dates are month precision (e.g. September 2026).",
       "perTitle": "You can add several entries for one company under different occupations; ten entries in total.",
-      "editable": "You can edit or delete an entry from My Salaries.",
+      "editable": "You can edit or delete an entry from My contributions.",
       "fullGuide": "Full guide →"
     },
     "write": {
@@ -4432,20 +4437,13 @@
       "subtitle": "Changes are visible the moment you save; the entry's month becomes today's.",
       "loading": "Loading…",
       "notFound": "This entry is not yours or no longer exists.",
-      "backToMine": "Back to My Salaries",
+      "backToMine": "Back to my contributions",
       "submit": "Save",
       "error": "Something went wrong. Please try again."
     },
     "mine": {
-      "title": "My Salaries",
-      "subtitle": "The salary entries you shared.",
-      "quota": "{used} of {limit} used",
       "share": "New salary entry",
-      "loading": "Loading…",
       "error": "Something went wrong. Please try again.",
-      "empty": "You have not shared a salary yet.",
-      "emptyBody": "Share your salary at a company anonymously; readers see the occupation and an experience band, not you.",
-      "emptyCta": "Share a salary →",
       "years": "{count, plural, =1 {1 year of experience} other {# years of experience}}",
       "perMonthNet": "/ month net",
       "bonus": "Bonus: {amount} / year",
@@ -4456,14 +4454,14 @@
       "deleteBody": "The entry is deleted permanently and its quota slot is freed.",
       "cancel": "Cancel",
       "confirmDelete": "Delete",
-      "footnote": "Deleting frees the quota slot. Entries are deleted with your account and included in your data export."
+      "quotaLine": "Salary entries {used} / {limit}"
     },
     "panel": {
       "heading": "{count, plural, =0 {Salary entries} =1 {1 salary entry} other {# salary entries}}",
       "share": "Share a salary",
       "readingNote": "Salary entries are what users reported; e-kariyerim does not verify them. The occupation is picked from a catalogue, experience is shown as a band and dates at month precision.",
       "yours": "{count, plural, =1 {You have 1 salary entry at this company.} other {You have # salary entries at this company.}}",
-      "manageYours": "My Salaries",
+      "manageYours": "My contributions",
       "loading": "Loading…",
       "loadError": "Salary entries could not be loaded. Please try again.",
       "statsPending": "The median and range appear once at least {minimum} entries exist in one currency.",
@@ -4505,8 +4503,8 @@
     "alreadyReviewed": "You already have a review of {company}",
     "alreadyReviewedHint": "One review per company; edit it if your view has changed.",
     "editReview": "Edit your review",
-    "salaryQuotaFull": "You have used all {limit} salary entries. Delete one on My Salaries to add another.",
-    "goToMySalaries": "Go to My Salaries",
+    "salaryQuotaFull": "You have used all {limit} salary entries. Delete one on My contributions to add another.",
+    "goToMySalaries": "Go to My contributions",
     "tabs": {
       "label": "Contribution type",
       "review": "Review",
@@ -4516,15 +4514,15 @@
     "banner": {
       "review": {
         "thanks": "Thank you, your review is live.",
-        "skip": "Skip, go to My Reviews"
+        "skip": "Skip, go to My contributions"
       },
       "salary": {
         "thanks": "Thank you, your salary entry is saved.",
-        "skip": "Skip, go to My Salaries"
+        "skip": "Skip, go to My contributions"
       },
       "experience": {
         "thanks": "Thank you, your candidate experience is live.",
-        "skip": "Skip, go to My Experiences"
+        "skip": "Skip, go to My contributions"
       },
       "invite": {
         "review": "You can leave a review of {company} too — the form below is ready.",
@@ -4535,12 +4533,12 @@
     "alreadyShared": "You already have a candidate experience at {company}",
     "alreadySharedHint": "One entry per company; edit it if your view has changed.",
     "editExperience": "Edit your experience",
-    "experienceQuotaFull": "You have used all {limit} candidate experiences. Delete one on My Experiences to add another.",
-    "goToMyExperiences": "Go to My Experiences"
+    "experienceQuotaFull": "You have used all {limit} candidate experiences. Delete one on My contributions to add another.",
+    "goToMyExperiences": "Go to My contributions"
   },
   "adminReviews": {
     "title": "Company review moderation",
-    "subtitle": "Pending first, oldest first. Structured reviews publish on save and arrive here only through reports or after a rejection; free-text ones from before the switch still wait for a decision.",
+    "subtitle": "Newest first. Structured reviews are published on save and only land here through a report or after a rejection; the free-text ones from before the change are still waiting for a decision.",
     "forbiddenTitle": "You don't have access to this page",
     "forbiddenBody": "Moderation is limited to accounts flagged as an administrator on the server.",
     "loading": "Loading…",
@@ -4611,88 +4609,74 @@
         }
       },
       "structuredReview": "Structured review"
+    }
+  },
+  "adminSalaries": {
+    "title": "Administration",
+    "subtitle": "Salary entries — newest first, ten per page. Click a row for the full entry and its author.",
+    "forbiddenTitle": "This page is for administrators",
+    "forbiddenBody": "Your account does not have administrator access.",
+    "loading": "Loading…",
+    "error": "Something went wrong. Please try again.",
+    "disabled": "This feature is currently off.",
+    "empty": "No salary entries yet.",
+    "filters": {
+      "company": "Company"
     },
-    "guide": {
-      "title": "Moderation guide",
-      "show": "Show",
-      "hide": "Hide",
-      "principle1": "A review being negative about the company is not, by itself, a reason to take it down.",
-      "principle2": "The moderator's job is not to protect the company but to protect the community rules.",
-      "structured": {
-        "title": "Structured reviews (from 16 September 2026)",
-        "body": "A structured review is ratings plus statements from the fixed list. It cannot name anyone, insult anyone or make a claim — so the only questions left are about the account, not the words:",
-        "pattern": "A coordinated pattern: many near-identical reviews of one company in a short time, or one network of accounts rating a competitor down.",
-        "quota": "An account abusing its quota — set its quota to zero from the review detail.",
-        "report": "A report on a structured review is usually one of the two above, or a reader who disagrees. Disagreement is not a rule violation; dismiss it."
-      },
-      "legacy": {
-        "title": "Free-text reviews written before the switch",
-        "body": "These still wait in the queue. The old rules apply to them, unchanged:"
-      },
-      "approve": {
-        "title": "Approve — even when harsh or one-sided",
-        "workplace": "Personal opinions about the work environment",
-        "management": "Personal experiences with management",
-        "pay": "Experiences with pay and benefits",
-        "career": "Experiences with career growth",
-        "balance": "Experiences with work/life balance",
-        "opinion": "Positive or negative personal assessments"
-      },
-      "reject": {
-        "title": "Reject — however good the rest of it is",
-        "insults": "Insults and profanity",
-        "threats": "Threats",
-        "personalData": "Personal information (phone, address, e-mail, ID numbers…)",
-        "targeting": "Attacks aimed at specific people",
-        "accusations": "Serious unverified accusations",
-        "confidential": "Confidential / commercial information",
-        "spam": "Spam and advertising",
-        "fake": "Fake or manipulative reviews"
-      },
-      "grey": {
-        "title": "Grey areas (free-text reviews)",
-        "question": "Most doubts come down to one question: is this something the author lived through, or a claim about someone else?",
-        "columns": {
-          "review": "Review",
-          "verdict": "Verdict",
-          "why": "Why"
-        },
-        "approve": "Approve",
-        "reject": "Reject",
-        "case1": {
-          "review": "“My manager was very rude; when we made a mistake he told us off in front of the team.”",
-          "why": "Personal experience. A role is mentioned, but nobody can be identified."
-        },
-        "case2": {
-          "review": "“Sales manager A. K. shouts at everyone, a total psychopath.”",
-          "why": "A specific person is targeted; initials count as a name. Plus an insult."
-        },
-        "case3": {
-          "review": "“Salaries were a month late twice, nobody explained why.”",
-          "why": "Something that happened to the author. Looking bad for the company is not a reason to reject."
-        },
-        "case4": {
-          "review": "“The company evades tax and issues fake invoices.”",
-          "why": "An accusation of a crime, unverifiable. Send back with a note: “Tell the part you experienced yourself.”"
-        },
-        "case5": {
-          "review": "“Everyone is unhappy, nobody stays longer than a year.”",
-          "why": "A generalisation, but an opinion; exaggeration is not a rule violation. The reader weighs it."
-        },
-        "case6": {
-          "review": "“Great company, I recommend it to everyone!” — five similar ones, same day, same company.",
-          "why": "On its own it's empty but within the rules; arriving in bulk it's manipulation."
-        },
-        "case7": {
-          "review": "“We lost the X Bank project, the contract was worth 2 million.”",
-          "why": "Client and contract details. Doesn't pass even if the rest of the review is fine."
-        }
-      },
-      "sendBack": {
-        "title": "When sending back:",
-        "body": "keep the note to one sentence and name the rule it broke — so the author knows what to change. “Not suitable” is not a note. A structured review sent back has only its ratings and picks to change; say which."
-      },
-      "modalLink": "Not sure? The guide →"
+    "columns": {
+      "company": "Company",
+      "occupation": "Occupation",
+      "net": "Net / month",
+      "years": "Years",
+      "author": "Author",
+      "submitted": "Submitted"
+    },
+    "detail": {
+      "title": "Salary entry",
+      "close": "Close",
+      "net": "Monthly net",
+      "bonus": "Annual bonus",
+      "years": "Experience",
+      "employment": "Employment",
+      "submitted": "Submitted",
+      "updated": "Last edited",
+      "author": "Author (visible to administrators only)",
+      "delete": "Delete",
+      "confirmDelete": "Yes, delete",
+      "deleteWarning": "You are about to delete this entry for good.",
+      "deleteBody": "It leaves the company page and the directory counts at once; this cannot be undone. The author is not notified."
+    }
+  },
+  "adminExperiences": {
+    "title": "Administration",
+    "subtitle": "Candidate experiences — newest first, ten per page. Click a row for the full entry and its author.",
+    "forbiddenTitle": "This page is for administrators",
+    "forbiddenBody": "Your account does not have administrator access.",
+    "loading": "Loading…",
+    "error": "Something went wrong. Please try again.",
+    "disabled": "This feature is currently off.",
+    "empty": "No candidate experiences yet.",
+    "filters": {
+      "company": "Company"
+    },
+    "columns": {
+      "company": "Company",
+      "overall": "Overall",
+      "outcome": "Outcome",
+      "duration": "Duration",
+      "author": "Author",
+      "submitted": "Submitted"
+    },
+    "detail": {
+      "title": "Candidate experience",
+      "close": "Close",
+      "submitted": "Submitted",
+      "updated": "Last edited",
+      "author": "Author (visible to administrators only)",
+      "delete": "Delete",
+      "confirmDelete": "Yes, delete",
+      "deleteWarning": "You are about to delete this entry for good.",
+      "deleteBody": "It leaves the company page and the directory counts at once; this cannot be undone. The author is not notified."
     }
   },
   "about": {
@@ -5273,7 +5257,7 @@
       "statements": "No free text: rate, and pick from ready-made statements if you like — up to five you liked, five that could be better.",
       "noNames": "Interviewer names, teams, job titles and months are never asked or shown; your card carries only the quarter.",
       "facts": "Details such as the outcome and the length show as short tags on your card and as aggregate statistics on the company page.",
-      "instant": "Published as soon as you save; you can edit or delete it from My Experiences.",
+      "instant": "Published as soon as you save; you can edit or delete it from My contributions.",
       "fullGuide": "Full guide →"
     },
     "write": {
@@ -5285,20 +5269,13 @@
       "subtitle": "Changes are live the moment you save; the entry's quarter becomes today's.",
       "loading": "Loading…",
       "notFound": "This entry is not yours or no longer exists.",
-      "backToMine": "Back to My Experiences",
+      "backToMine": "Back to my contributions",
       "submit": "Save",
       "error": "That didn't go through. Please try again."
     },
     "mine": {
-      "title": "My Experiences",
-      "subtitle": "The hiring-process experiences you shared.",
-      "quota": "{used} of {limit} used",
       "share": "Share an experience",
-      "loading": "Loading…",
       "error": "That didn't go through. Please try again.",
-      "empty": "You haven't shared a candidate experience yet.",
-      "emptyBody": "Rate a hiring process you went through, anonymously; readers see the rating and the statements, not you.",
-      "emptyCta": "Share an experience →",
       "summary": "{count, plural, =0 {No statements picked} =1 {1 statement} other {# statements}}",
       "edit": "Edit",
       "delete": "Delete",
@@ -5306,7 +5283,7 @@
       "deleteBody": "The entry is deleted permanently and its quota slot is freed.",
       "cancel": "Cancel",
       "confirmDelete": "Delete",
-      "footnote": "Deleting frees the quota slot. Entries are deleted with your account and included in your data export."
+      "quotaLine": "Candidate experiences {used} / {limit}"
     },
     "panel": {
       "heading": "{count, plural, =0 {Candidate experiences} =1 {1 candidate experience} other {# candidate experiences}}",

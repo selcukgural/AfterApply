@@ -3,6 +3,7 @@ import type {
   CompanyReviewViewerState,
   HelpfulToggleResponse,
   MyCompanyReview,
+  MyContributionsResponse,
   MyReviewsResponse,
   ReportCompanyReviewRequest,
 } from "@/types/api";
@@ -23,6 +24,9 @@ export const companyReviewsApi = {
   remove: (reviewId: string) => apiFetch<void>(`/api/company-reviews/${reviewId}`, { method: "DELETE" }),
 
   listMine: () => apiFetch<MyReviewsResponse>("/api/company-reviews/mine"),
+
+  /** Reviews, salary entries and candidate experiences as one newest-first page. */
+  listMyContributions: (page: number) => apiFetch<MyContributionsResponse>(`/api/contributions/mine?page=${page}`),
 
   toggleHelpful: (reviewId: string) =>
     apiFetch<HelpfulToggleResponse>(`/api/company-reviews/${reviewId}/helpful`, { method: "POST" }),

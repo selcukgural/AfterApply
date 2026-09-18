@@ -190,13 +190,12 @@ describe("company reviews have no free text (2026-09-16)", () => {
   // A review is ratings plus catalogue statements. Copy that still promises "pros and cons", a
   // title, or a moderator reading every review before it is published describes the old form.
   // The legacy rows are the one legitimate reason to say "pros and cons": where the author's own
-  // list, the export/privacy text and the moderation guide explain what the old format was.
+  // list, the export/privacy text and the moderation detail explain what the old format was.
   const allowed = [
     /^companyReviews\.mine\.legacy/,
     /^companyReviews\.edit\.legacyBanner$/,
     /^companyReviews\.card\.legacy/,
     /^privacy\.companyReviews\.what$/,
-    /^adminReviews\.guide\.(legacy|grey|approve|reject)\./,
     /^adminReviews\.detail\.legacy/,
     /^help\.companyReviews\.calloutModeration\.body$/,
     /^companies\.scoring\.moderation\.legacy$/,

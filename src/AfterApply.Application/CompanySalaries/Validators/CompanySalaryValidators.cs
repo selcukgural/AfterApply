@@ -47,3 +47,12 @@ public sealed class CompanySalaryListQueryValidator : AbstractValidator<CompanyS
         RuleFor(x => x.Page).InclusiveBetween(1, 1000);
     }
 }
+
+public sealed class AdminCompanySalaryListQueryValidator : AbstractValidator<AdminCompanySalaryListQuery>
+{
+    public AdminCompanySalaryListQueryValidator()
+    {
+        RuleFor(x => x.Company).MaximumLength(100);
+        RuleFor(x => x.Page).InclusiveBetween(1, 1000);
+    }
+}

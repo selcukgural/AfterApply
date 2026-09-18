@@ -6,8 +6,13 @@ using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Domain.CandidateExperiences;
+using AfterApply.Application.Applications.Contracts;
+using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.CandidateExperiences;
@@ -60,6 +65,32 @@ public class CandidateExperiencesDisabledTests(ApiHost<CandidateExperiencesDisab
 
         var page = await client.GetFromJsonAsync<CompanyPublicResponse>($"/api/companies/public/{company.Slug}", JsonOptions);
         page!.CandidateExperienceCount.ShouldBe(0);
+
+        // The admin table is dark with the feature, for an admin too.
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var user = await db.Users.SingleAsync(u => u.Id == auth.User.Id);
+            user.IsAdmin = true;
+            // A row the feature left behind before going dark: not a contribution while it is off.
+            db.CandidateExperiences.Add(CandidateExperience.Create(auth.User.Id, company.Id,
+                new CandidateExperienceContent(4, [], [], [], null, null, null, []), DateTimeOffset.UtcNow));
+            await db.SaveChangesAsync();
+        }
+
+        (await client.GetAsync("/api/admin/candidate-experiences")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await client.DeleteAsync($"/api/admin/candidate-experiences/{Guid.NewGuid()}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        // Neither the directory nor the sitemap lists a company on the strength of a dark
+        // feature's row, and the author's merged list shows no experience quota.
+        var directory = await client.GetFromJsonAsync<PagedResult<CompanyPublicListItemResponse>>("/api/companies/public?q=dark%20experience", JsonOptions);
+        directory!.Items.ShouldBeEmpty();
+        var slugs = await client.GetFromJsonAsync<IReadOnlyList<ReviewedCompanySlugResponse>>("/api/companies/public/slugs", JsonOptions);
+        slugs!.ShouldNotContain(s => s.Slug == company.Slug);
+        var mine = await client.GetFromJsonAsync<MyContributionsResponse>("/api/contributions/mine", JsonOptions);
+        mine!.Items.ShouldBeEmpty();
+        mine.ExperienceQuota.ShouldBeNull();
+        mine.SalaryQuota.ShouldNotBeNull();
 
         var config = await client.GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions);
         config!.CandidateExperiences.ShouldNotBeNull();

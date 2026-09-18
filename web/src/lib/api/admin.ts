@@ -1,6 +1,8 @@
 import type {
+  AdminCandidateExperienceListItem,
   AdminCompanyReview,
   AdminCompanyReviewListItem,
+  AdminCompanySalaryListItem,
   AdminReviewReport,
   AutoApprovalCalibrationResponse,
   ModerationCounts,
@@ -13,6 +15,8 @@ import type {
 } from "@/types/api";
 import type { ModerationListFilters } from "@/lib/companyReviews/moderationListView";
 import { buildModerationQueryString } from "@/lib/companyReviews/moderationListView";
+import type { ContributionListFilters } from "@/lib/admin/contributionListView";
+import { buildContributionQueryString } from "@/lib/admin/contributionListView";
 import { apiFetch } from "./httpClient";
 
 export const adminApi = {
@@ -49,6 +53,19 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify({ resolution, reason }),
     }),
+
+  // Salary entries and candidate experiences: no moderation state, so the admin's table lists
+  // them with their author and can only remove one. Same author-joining rule as the queue.
+  listSalaries: (filters: ContributionListFilters) =>
+    apiFetch<PagedResult<AdminCompanySalaryListItem>>(`/api/admin/company-salaries${buildContributionQueryString(filters)}`),
+
+  deleteSalary: (entryId: string) => apiFetch<void>(`/api/admin/company-salaries/${entryId}`, { method: "DELETE" }),
+
+  listExperiences: (filters: ContributionListFilters) =>
+    apiFetch<PagedResult<AdminCandidateExperienceListItem>>(`/api/admin/candidate-experiences${buildContributionQueryString(filters)}`),
+
+  deleteExperience: (experienceId: string) =>
+    apiFetch<void>(`/api/admin/candidate-experiences/${experienceId}`, { method: "DELETE" }),
 
   setReviewQuota: (userId: string, reviewQuotaOverride: number | null) =>
     apiFetch<UserReviewQuota>(`/api/admin/users/${userId}/review-quota`, {

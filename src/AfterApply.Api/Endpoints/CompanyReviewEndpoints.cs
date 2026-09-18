@@ -27,15 +27,16 @@ public static class CompanyReviewEndpoints
             Results.Ok(await directory.ListAsync(query, cancellationToken)))
             .WithValidation<PublicCompanyListQuery>()
             .RequireRateLimiting(DependencyInjection.CompanyPublicSearchRateLimitPolicy)
-            .WithSummary("Companies with at least one published review")
-            .WithDescription("Public. Ordered by review count; the optional q filters by name. Companies nobody has " +
-                             "reviewed yet are not listed — there is nothing on their page to read.")
+            .WithSummary("Companies with at least one published contribution")
+            .WithDescription("Public. A company is listed once it has a published review, a salary entry or a candidate " +
+                             "experience; the most recently contributed-to company comes first, and the optional q filters " +
+                             "by name. The salary and experience counts are zero while that feature is off.")
             .Produces<PagedResult<CompanyPublicListItemResponse>>()
             .Produces(StatusCodes.Status429TooManyRequests);
 
         publicGroup.MapGet("/slugs", async (ICompanyDirectoryService directory, CancellationToken cancellationToken) =>
             Results.Ok(await directory.ListReviewedSlugsAsync(cancellationToken)))
-            .WithSummary("Slugs of the companies with a published review, for the sitemap")
+            .WithSummary("Slugs of the companies with a published review or candidate experience, for the sitemap")
             .Produces<IReadOnlyList<ReviewedCompanySlugResponse>>();
 
         publicGroup.MapGet("/{slug}", async (string slug, ICompanyDirectoryService directory, CancellationToken cancellationToken) =>
@@ -112,6 +113,15 @@ public static class CompanyReviewEndpoints
             Results.Ok(await service.ListMineAsync(user.GetUserId(), cancellationToken)))
             .WithSummary("The caller's reviews, with moderation status and quota")
             .Produces<MyReviewsResponse>();
+
+        userGroup.MapGet("/contributions/mine", async ([AsParameters] MyContributionsQuery query, ClaimsPrincipal user,
+                ICompanyContributionService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListMineAsync(user.GetUserId(), query, cancellationToken)))
+            .WithValidation<MyContributionsQuery>()
+            .WithSummary("The caller's reviews, salary entries and candidate experiences as one list, newest first")
+            .WithDescription("Ten per page. Each item carries exactly one of the three per-kind records. A kind whose " +
+                             "feature is off is absent and its quota is null.")
+            .Produces<MyContributionsResponse>();
 
         userGroup.MapPut("/company-reviews/{reviewId:guid}", async (Guid reviewId, UpdateCompanyReviewRequest request,
                 ClaimsPrincipal user, ICompanyReviewService service, CancellationToken cancellationToken) =>

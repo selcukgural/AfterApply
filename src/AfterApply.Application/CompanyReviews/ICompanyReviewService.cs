@@ -27,6 +27,10 @@ public interface ICompanyReviewService
 
     Task<MyReviewsResponse> ListMineAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>The caller's own reviews among <paramref name="ids"/>, in no particular order;
+    /// anyone else's id is silently absent. Feeds the merged contributions page.</summary>
+    Task<IReadOnlyList<MyCompanyReviewResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
+
     /// <exception cref="CompanyReviewNotMarkableException">Own review, or not approved.</exception>
     /// <returns>Null when there is no approved review with that id.</returns>
     Task<HelpfulToggleResponse?> ToggleHelpfulAsync(Guid userId, Guid reviewId, CancellationToken cancellationToken);
@@ -36,6 +40,12 @@ public interface ICompanyReviewService
     /// <returns>Null when there is no approved review with that id.</returns>
     Task<ReportCompanyReviewResponse?> ReportAsync(Guid userId, Guid reviewId, ReportCompanyReviewRequest request,
         CancellationToken cancellationToken);
+}
+
+/// <summary>The author's reviews, salary entries and candidate experiences as one list.</summary>
+public interface ICompanyContributionService
+{
+    Task<MyContributionsResponse> ListMineAsync(Guid userId, MyContributionsQuery query, CancellationToken cancellationToken);
 }
 
 /// <summary>The anonymous read side: company pages and their approved reviews.</summary>

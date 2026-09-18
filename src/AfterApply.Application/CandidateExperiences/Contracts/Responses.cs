@@ -2,11 +2,12 @@ using AfterApply.Domain.CandidateExperiences;
 
 namespace AfterApply.Application.CandidateExperiences.Contracts;
 
-// Two shapes, never mixed: what anyone on the internet sees and what the author sees of their
-// own row. The public record carries the quarter of the submission and nothing else about when
-// or by whom: the company knows exactly whom it interviewed in a given month, so a month, a job
-// title or an author field would each undo the anonymity promise on the privacy page. That
-// promise is exactly this file — do not widen the public record "because it is handy".
+// Three shapes, never mixed: what anyone on the internet sees, what the author sees of their
+// own row, and — behind the admin gate only — the row with its author joined. The public record
+// carries the quarter of the submission and nothing else about when or by whom: the company
+// knows exactly whom it interviewed in a given month, so a month, a job title or an author field
+// would each undo the anonymity promise on the privacy page. That promise is exactly this file —
+// do not widen the public record "because it is handy".
 
 public sealed record CandidateExperiencePublicResponse(
     Guid Id,
@@ -82,6 +83,27 @@ public sealed record MyCandidateExperienceResponse(
 public sealed record ExperienceQuotaResponse(int Used, int Limit);
 
 public sealed record MyCandidateExperiencesResponse(IReadOnlyList<MyCandidateExperienceResponse> Items, ExperienceQuotaResponse Quota);
+
+/// <summary>The admin table's row (2026-09-18): the author's full record plus who wrote it, the
+/// one surface besides the review moderation detail where an author is joined to a response.
+/// Carries everything the detail modal shows, so there is no separate detail endpoint.</summary>
+public sealed record AdminCandidateExperienceListItemResponse(
+    Guid Id,
+    Guid CompanyId,
+    string CompanyName,
+    string? CompanySlug,
+    Guid AuthorUserId,
+    string AuthorEmail,
+    int OverallRating,
+    IReadOnlyList<ExperienceCategoryRatingDto> CategoryRatings,
+    IReadOnlyList<string> LikedStatements,
+    IReadOnlyList<string> ImprovableStatements,
+    HiringOutcome? Outcome,
+    ProcessDuration? Duration,
+    StageCount? Stages,
+    IReadOnlyList<InterviewType> InterviewTypes,
+    DateTimeOffset SubmittedAt,
+    DateTimeOffset UpdatedAt);
 
 /// <summary>What a signed-in reader needs on top of the company's list: their own entry for this
 /// company, if any, and how much quota is left — the contribute page's status line.</summary>

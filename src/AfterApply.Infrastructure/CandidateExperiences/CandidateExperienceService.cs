@@ -3,6 +3,7 @@ using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.CompanyReviews;
 using AfterApply.Domain.CandidateExperiences;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -10,11 +11,14 @@ using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.CandidateExperiences;
 
-internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridCache cache, IOptions<CandidateExperienceOptions> options)
+internal sealed class CandidateExperienceService(
+    AppDbContext dbContext,
+    CandidateExperienceQueries queries,
+    CompanySlugAllocator slugAllocator,
+    HybridCache cache,
+    IOptions<CandidateExperienceOptions> options)
     : ICandidateExperienceService
 {
-    private const string GlobalAverageCacheKey = "candidate-experiences:global-average";
-
     private static readonly HybridCacheEntryOptions GlobalAverageCacheOptions = new()
     {
         Expiration = TimeSpan.FromMinutes(5),
@@ -27,14 +31,18 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
         LocalCacheExpiration = TimeSpan.FromSeconds(60)
     };
 
-    public static string SummaryCacheKey(Guid companyId) => $"candidate-experiences:summary:{companyId}";
 
     public async Task<CandidateExperienceViewerStateResponse?> GetViewerStateAsync(Guid userId, Guid companyId, CancellationToken cancellationToken)
     {
-        if (!await dbContext.Companies.AnyAsync(c => c.Id == companyId, cancellationToken))
+        var company = await dbContext.Companies.FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
+        if (company is null)
         {
             return null;
         }
+
+        // The directory lists a company by its slug; a row that still lacks one gets it now, so
+        // this contribution shows up there the way a review would.
+        await slugAllocator.EnsureSlugAsync(company, cancellationToken);
 
         var own = await ProjectMineAsync(
             dbContext.CandidateExperiences.Where(e => e.UserId == userId && e.CompanyId == companyId), cancellationToken);
@@ -65,7 +73,7 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
             .Take(pageSize)
             .Select(e => new { e.Id, e.OverallRating, e.Outcome, e.Duration, e.Stages, e.SubmittedAt })
             .ToListAsync(cancellationToken);
-        var children = await LoadChildrenAsync(rows.Select(r => r.Id), cancellationToken);
+        var children = await queries.LoadChildrenAsync(rows.Select(r => r.Id), cancellationToken);
 
         var items = rows.Select(e => new CandidateExperiencePublicResponse(
             e.Id, e.OverallRating,
@@ -114,7 +122,7 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
             throw new CandidateExperienceAlreadyExistsException();
         }
 
-        await EvictSummaryAsync(companyId, cancellationToken);
+        await queries.EvictSummaryAsync(companyId, cancellationToken);
         return (await ProjectMineAsync(dbContext.CandidateExperiences.Where(e => e.Id == experience.Id), cancellationToken)).Single();
     }
 
@@ -141,7 +149,7 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        await EvictSummaryAsync(experience.CompanyId, cancellationToken);
+        await queries.EvictSummaryAsync(experience.CompanyId, cancellationToken);
         return (await ProjectMineAsync(dbContext.CandidateExperiences.Where(e => e.Id == experience.Id), cancellationToken)).Single();
     }
 
@@ -156,7 +164,7 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
 
         dbContext.CandidateExperiences.Remove(experience);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await EvictSummaryAsync(experience.CompanyId, cancellationToken);
+        await queries.EvictSummaryAsync(experience.CompanyId, cancellationToken);
         return true;
     }
 
@@ -167,10 +175,14 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
         return new MyCandidateExperiencesResponse(items, await GetQuotaAsync(userId, cancellationToken));
     }
 
+    public async Task<IReadOnlyList<MyCandidateExperienceResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken) =>
+        await ProjectMineAsync(dbContext.CandidateExperiences.Where(e => e.UserId == userId && ids.Contains(e.Id)), cancellationToken);
+
     /// <summary>The aggregate a public page shows. Cached a minute per company; every write
     /// evicts it.</summary>
     private ValueTask<CandidateExperienceSummaryResponse> GetSummaryAsync(Guid companyId, CancellationToken cancellationToken) =>
-        cache.GetOrCreateAsync(SummaryCacheKey(companyId), async ct =>
+        cache.GetOrCreateAsync(CandidateExperienceQueries.SummaryCacheKey(companyId), async ct =>
         {
             // The whole company, not the page: a median of page two is not a median. Bounded by
             // one entry per contributor, so it stays a short list.
@@ -178,7 +190,7 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
                 .Where(e => e.CompanyId == companyId)
                 .Select(e => new { e.Id, e.OverallRating, e.Outcome, e.Duration, e.Stages })
                 .ToListAsync(ct);
-            var children = await LoadChildrenAsync(rows.Select(r => r.Id), ct);
+            var children = await queries.LoadChildrenAsync(rows.Select(r => r.Id), ct);
             var aggregate = rows.Select(e => new ExperienceAggregateRow(
                 e.OverallRating, e.Outcome, e.Duration, e.Stages,
                 children.Ratings[e.Id].Select(r => new ExperienceCategoryRating(r.Category, r.Rating)).ToList(),
@@ -192,19 +204,13 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
     /// <summary>Mean Overall rating over every experience on the site — the prior the score pulls
     /// toward. Falls back to the scale's midpoint while there is none.</summary>
     private ValueTask<double> GetGlobalAverageAsync(CancellationToken cancellationToken) =>
-        cache.GetOrCreateAsync(GlobalAverageCacheKey, async ct =>
+        cache.GetOrCreateAsync(CandidateExperienceQueries.GlobalAverageCacheKey, async ct =>
             await dbContext.CandidateExperiences.AnyAsync(ct)
                 ? await dbContext.CandidateExperiences.AverageAsync(e => (double)e.OverallRating, ct)
                 : CompanyReviewScoring.NeutralAverage,
             GlobalAverageCacheOptions, cancellationToken: cancellationToken);
 
-    private async Task EvictSummaryAsync(Guid companyId, CancellationToken cancellationToken)
-    {
-        await cache.RemoveAsync(SummaryCacheKey(companyId), cancellationToken);
-        await cache.RemoveAsync(GlobalAverageCacheKey, cancellationToken);
-    }
-
-    private async Task<ExperienceQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<ExperienceQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken)
     {
         var used = await dbContext.CandidateExperiences.CountAsync(e => e.UserId == userId, cancellationToken);
         return new ExperienceQuotaResponse(used, options.Value.MaxEntriesPerUser);
@@ -215,7 +221,7 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
         var rows = await entries
             .Join(dbContext.Companies, e => e.CompanyId, c => c.Id, (e, c) => new { Entry = e, c.Slug, c.Name })
             .ToListAsync(cancellationToken);
-        var children = await LoadChildrenAsync(rows.Select(r => r.Entry.Id), cancellationToken);
+        var children = await queries.LoadChildrenAsync(rows.Select(r => r.Entry.Id), cancellationToken);
 
         return rows.Select(x =>
         {
@@ -229,41 +235,6 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
                 children.Types[e.Id].OrderBy(t => t).ToList(),
                 e.SubmittedAt, e.UpdatedAt);
         }).ToList();
-    }
-
-    /// <summary>The child rows of a set of entries, grouped so a projection can be built in memory.</summary>
-    private async Task<Children> LoadChildrenAsync(IEnumerable<Guid> experienceIds, CancellationToken cancellationToken)
-    {
-        var ids = experienceIds.Distinct().ToList();
-        if (ids.Count == 0)
-        {
-            return new Children(
-                Enumerable.Empty<ExperienceCategoryRatingDto>().ToLookup(_ => Guid.Empty),
-                Enumerable.Empty<(string, ReviewStatementKind)>().ToLookup(_ => Guid.Empty),
-                Enumerable.Empty<InterviewType>().ToLookup(_ => Guid.Empty));
-        }
-
-        var ratings = await dbContext.CandidateExperienceCategoryRatings
-            .Where(c => ids.Contains(c.ExperienceId))
-            .Select(c => new { c.ExperienceId, c.Category, c.Rating })
-            .ToListAsync(cancellationToken);
-
-        // Ids are version-7 GUIDs, so ordering by Id is the order the author picked them in.
-        var picks = await dbContext.CandidateExperienceStatementPicks
-            .Where(p => ids.Contains(p.ExperienceId))
-            .OrderBy(p => p.Id)
-            .Select(p => new { p.ExperienceId, p.StatementKey, p.Kind })
-            .ToListAsync(cancellationToken);
-
-        var types = await dbContext.CandidateExperienceInterviewTypes
-            .Where(t => ids.Contains(t.ExperienceId))
-            .Select(t => new { t.ExperienceId, t.Type })
-            .ToListAsync(cancellationToken);
-
-        return new Children(
-            ratings.ToLookup(x => x.ExperienceId, x => new ExperienceCategoryRatingDto(x.Category, x.Rating)),
-            picks.ToLookup(x => x.ExperienceId, x => (x.StatementKey, x.Kind)),
-            types.ToLookup(x => x.ExperienceId, x => x.Type));
     }
 
     /// <summary>Content the domain has already validated: every key resolves.</summary>
@@ -284,9 +255,4 @@ internal sealed class CandidateExperienceService(AppDbContext dbContext, HybridC
         r.ImprovableStatements ?? [],
         r.Outcome, r.Duration, r.Stages,
         r.InterviewTypes ?? []);
-
-    private sealed record Children(
-        ILookup<Guid, ExperienceCategoryRatingDto> Ratings,
-        ILookup<Guid, (string Key, ReviewStatementKind Kind)> Picks,
-        ILookup<Guid, InterviewType> Types);
 }

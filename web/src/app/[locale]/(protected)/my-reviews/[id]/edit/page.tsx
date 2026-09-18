@@ -26,6 +26,7 @@ export default function EditReviewPage({ params }: PageProps<"/[locale]/my-revie
     mutationFn: (request: CompanyReviewRequest) => companyReviewsApi.update(id, request),
     onSuccess: async () => {
       await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["contributions", "mine"] }),
         queryClient.invalidateQueries({ queryKey: ["companyReviews", "mine"] }),
         queryClient.invalidateQueries({ queryKey: ["companies", "public", review!.companySlug] }),
         queryClient.invalidateQueries({ queryKey: ["companies", review!.companyId, "viewer"] }),
