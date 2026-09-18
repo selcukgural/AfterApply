@@ -231,6 +231,20 @@ export function RemindersPanel() {
             result={result}
             isUndoing={undoGhost.isPending}
             undoError={undoError}
+            // A batch just closed as ghosted is the moment the experience form has a reason to
+            // exist for this person: what those processes were like is exactly what the next
+            // candidate cannot find out anywhere else. Company left unselected — a batch spans
+            // several — and the sentence stays a sentence, not a call to action.
+            aside={
+              result.kind === "statusChanged" && result.updated > 0 ? (
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {t("shareAfterGhost")}{" "}
+                  <Link href="/contribute?tab=experience" className="font-medium text-gray-700 hover:underline dark:text-gray-300">
+                    {t("shareAfterGhostLink")}
+                  </Link>
+                </span>
+              ) : null
+            }
             onUndo={() => {
               if (result.kind !== "statusChanged") return;
               undoGhost.mutate(toUndoEntries(result.changes), {
@@ -267,6 +281,18 @@ export function RemindersPanel() {
                 </Link>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {t(REMINDER_LABEL_KEY[reminder.type])} · {t("days", { count: formatCount(reminder.daysElapsed, locale) })}
+                  {/* The user's own norm next to the silence, so "31 days" is read against "usually
+                      9" rather than against nothing — the permission to stop waiting comes from
+                      their own history, not from a threshold in a config file. Only for the ghost
+                      row: a follow-up row is about an application that already replied. */}
+                  {reminder.type === "PossiblyGhosted" && reminder.userMedianResponseDays != null ? (
+                    <>
+                      {" — "}
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {t("usualReply", { median: formatCount(reminder.userMedianResponseDays, locale) })}
+                      </span>
+                    </>
+                  ) : null}
                 </p>
               </div>
             </div>

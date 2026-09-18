@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { BulkStatusChange } from "@/types/api";
 import { Button } from "@/components/ui/Button";
@@ -20,11 +21,14 @@ interface BulkResultBannerProps {
   result: BulkResult;
   isUndoing: boolean;
   undoError: string | null;
+  /** One more thing the caller wants said next to the outcome — the reminders card uses it to
+   *  offer the experience form after a batch of ghosted applications. Rendered as-is. */
+  aside?: ReactNode;
   onUndo: () => void;
   onDismiss: () => void;
 }
 
-export function BulkResultBanner({ result, isUndoing, undoError, onUndo, onDismiss }: BulkResultBannerProps) {
+export function BulkResultBanner({ result, isUndoing, undoError, aside, onUndo, onDismiss }: BulkResultBannerProps) {
   const t = useTranslations("applications.bulk.result");
 
   // Sits in the page flow where the selection toolbar was, rather than as a floating toast: the
@@ -53,6 +57,8 @@ export function BulkResultBanner({ result, isUndoing, undoError, onUndo, onDismi
       )}
 
       {undoError && <span className="text-sm text-red-600 dark:text-red-400">{undoError}</span>}
+
+      {aside}
 
       <span className="flex-1" />
 

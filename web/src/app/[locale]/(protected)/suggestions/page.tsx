@@ -114,8 +114,10 @@ export default function EmailSuggestionsPage() {
                   {t("location")}: {s.location}
                 </p>
               )}
+              {/* Neutral, not red: the reason is the one useful thing in a rejection e-mail, and
+                  painting it as an alarm makes it read as a verdict on the reader (T1). */}
               {s.rejectionReasonCategory && s.rejectionReasonCategory !== "NotStated" && (
-                <p className="mb-2 text-xs text-red-700 dark:text-red-400">
+                <p className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
                   {t("rejectionReason")}: {t(`rejectionReasonCategory.${s.rejectionReasonCategory}`)}
                   {s.rejectionReasonDetail && ` — “${s.rejectionReasonDetail}”`}
                 </p>

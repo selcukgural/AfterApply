@@ -90,7 +90,11 @@ public sealed record ApplicationDetailResponse(
     // until 2026-09-07 — see DEVELOPMENT_PLAN.md, K4. Null until something has resolved them.
     string? CompanyKariyerNetUrl = null,
     string? CompanyIndustry = null,
-    string? CompanyCountry = null);
+    string? CompanyCountry = null,
+    // The company page's slug, so a closed application can link straight into the contribution
+    // form with the company pre-selected (`/contribute?company=<slug>`). Null for the few
+    // Company rows that predate slugs (see Company.Slug).
+    string? CompanySlug = null);
 
 public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);
 

@@ -3,7 +3,11 @@
 import { useTranslations } from "next-intl";
 import type { ApplicationStatus } from "@/types/api";
 
-const STATUS_COLORS: Record<ApplicationStatus, string> = {
+// Rejected is grey, not red: a rejection is an outcome the reader already knows about, and red
+// on it turns every list and timeline into a tally of verdicts. Red stays for things that went
+// wrong in the app (DEVELOPMENT_PLAN.md, T-series, T1; same rule as the dashboard's STATUS_TONE).
+// A shade darker than Withdrawn so the two neutral endings still read apart at a glance.
+export const STATUS_COLORS: Record<ApplicationStatus, string> = {
   Applied: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
   Screening: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   Interview: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -11,7 +15,7 @@ const STATUS_COLORS: Record<ApplicationStatus, string> = {
   FinalInterview: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   Offer: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   Accepted: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-  Rejected: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  Rejected: "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200",
   Withdrawn: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
   Ghosted: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
 };
@@ -30,7 +34,7 @@ export const STATUS_BAR_COLORS: Record<ApplicationStatus, string> = {
   FinalInterview: "bg-blue-500 dark:bg-blue-500",
   Offer: "bg-amber-400 dark:bg-amber-500",
   Accepted: "bg-green-500 dark:bg-green-500",
-  Rejected: "bg-red-400 dark:bg-red-500",
+  Rejected: "bg-gray-400 dark:bg-gray-500",
   Withdrawn: "bg-gray-200 dark:bg-gray-700",
   Ghosted: "bg-purple-400 dark:bg-purple-500",
 };

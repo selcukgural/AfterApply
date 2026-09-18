@@ -622,7 +622,12 @@
   "dashboard": {
     "title": "Panel",
     "newApplication": "Yeni Başvuru",
-    "headline": "{total} başvurudan {responded} tanesi yanıt aldı ({rate}). Şu an {interviews} görüşme sürüyor, {offers} teklif yanıt bekliyor.",
+    "headline": "{total} başvurudan {responded} tanesi yanıt aldı ({rate}).",
+    "headlineProgress": {
+      "both": "Şu an {interviews} görüşme sürüyor, {offers} teklif yanıt bekliyor.",
+      "interviews": "Şu an {interviews} görüşme sürüyor.",
+      "offers": "Şu an {offers} teklif yanıt bekliyor."
+    },
     "hero": {
       "label": "Açık başvuru",
       "sub": "Toplam {total} başvurunun {share} kadarı hâlâ yanıt bekliyor.",
@@ -652,7 +657,7 @@
       "responded": "Yanıt geldi",
       "interview": "Görüşme",
       "offer": "Teklif",
-      "bottleneck": "En dar boğaz <strong>{stage}</strong> aşamasında: bir önceki aşamanın yalnızca {rate} kadarı buraya geçiyor."
+      "bottleneck": "En büyük düşüş <strong>{stage}</strong> aşamasında: bir önceki aşamanın {rate} kadarı buraya geçiyor."
     },
     "responseTime": {
       "title": "Yanıt süresi",
@@ -676,7 +681,7 @@
       "lost": "Reddedilen",
       "noAnswer": "Yanıtsız",
       "withdrawn": "Geri çekildi",
-      "winRate": "Kazanma oranı",
+      "winRate": "Olumlu sonuç",
       "empty": "Henüz sonuçlanan bir başvuru yok."
     },
     "empty": {
@@ -692,10 +697,13 @@
       "followUp": "Takip mesajı zamanı",
       "possiblyGhosted": "Muhtemelen sessize alındı",
       "days": "{count} gündür yanıt yok",
+      "usualReply": "sana normalde {median} günde dönüyorlar",
       "dismiss": "Yoksay",
       "error": "İşlem tamamlanamadı. Tekrar dene.",
       "followedUp": "Takip ettim",
       "markGhosted": "Sessize alındı",
+      "shareAfterGhost": "Bu şirketlerle deneyimini paylaşmak istersen:",
+      "shareAfterGhostLink": "Deneyim paylaş",
       "staleNote": "{threshold} günden eski {count} başvuru hatırlatıcı üretmez.",
       "staleBulkLink": "Başvurular'da toplu işaretle",
       "selectPage": "Bu sayfadaki hatırlatıcıları seç",
@@ -708,7 +716,7 @@
     },
     "stale": {
       "title": "{count} başvuru {threshold} günden eski ve yanıtsız",
-      "body": "Hepsini \"sessize alındı\" olarak işaretleyelim mi? En eskisi {oldest} gün önce. Açık başvuru sayın düşer, oranlar gerçek durumu gösterir. Geri alınabilir.",
+      "body": "Hepsini \"sessize alındı\" olarak işaretleyelim mi? En eskisi {oldest} gün önce. Bekleme listen kısalır, oranlar gerçek durumu gösterir. Geri alınabilir.",
       "confirm": "Evet, işaretle ({count})",
       "confirming": "İşaretleniyor...",
       "notNow": "Şimdi değil",
@@ -834,7 +842,11 @@
       "companyKariyerNet": "kariyer.net",
       "companyIndustry": "Sektör",
       "companyCountry": "Ülke",
-      "timeline": "Süreç"
+      "timeline": "Süreç",
+      "shareExperience": {
+        "text": "Bu süreçte yaşadığını senden sonrakiler bilsin —",
+        "link": "{company} ile deneyimini paylaş"
+      }
     },
     "statusChange": {
       "changeStatus": "Durumu Değiştir",
@@ -1902,7 +1914,7 @@
       },
       "funnel": {
         "title": "Dönüşüm hunisi",
-        "body": "Başvuruldu → yanıt geldi → görüşme → teklif zincirinde her aşamanın bir öncekinden ne kadarını geçirdiğini gösterir. Ham sayılar birbirinden çok uzak olduğunda (örneğin binlerce başvuru, birkaç görüşme) her çubuk kendi tam genişliğinde çizildiği için küçük aşamalar da okunabilir kalır. Altındaki cümle en dar boğazın hangi aşamada olduğunu söyler."
+        "body": "Başvuruldu → yanıt geldi → görüşme → teklif zincirinde her aşamanın bir öncekinden ne kadarını geçirdiğini gösterir. Ham sayılar birbirinden çok uzak olduğunda (örneğin binlerce başvuru, birkaç görüşme) her çubuk kendi tam genişliğinde çizildiği için küçük aşamalar da okunabilir kalır. Altındaki cümle en büyük düşüşün hangi aşamada olduğunu söyler."
       },
       "responseTime": {
         "title": "Yanıt süresi",
@@ -1914,7 +1926,7 @@
       },
       "outcome": {
         "title": "Sonuç",
-        "body": "Sonuçlanmış başvuruların dökümü: teklif/kabul, yanıtsız, geri çekildi ve reddedilen. Üstteki şerit bunların birbirine oranını, alttaki satır ise kazanma oranınızı verir. Hâlâ süren başvurular bu hesaba girmez."
+        "body": "Sonuçlanmış başvuruların dökümü: teklif/kabul, yanıtsız, geri çekildi ve reddedilen. Üstteki şerit bunların birbirine oranını, alttaki satır ise olumlu sonuç oranınızı verir. Hâlâ süren başvurular bu hesaba girmez."
       }
     },
     "trackedJobs": {
@@ -4489,7 +4501,7 @@
       "invite": {
         "review": "{company} için bir değerlendirme de yazabilirsin — form aşağıda hazır.",
         "salary": "{company} için maaşını da paylaşabilirsin — form aşağıda hazır.",
-        "experience": "{company} ile işe alım deneyimini de puanlayabilirsin — form aşağıda hazır."
+        "experience": "{company} ile işe alım sürecinde yaşadığını da paylaşabilirsin — senden sonrakine yol olur. Form aşağıda hazır."
       }
     },
     "alreadyShared": "{company} için aday deneyimin zaten var",

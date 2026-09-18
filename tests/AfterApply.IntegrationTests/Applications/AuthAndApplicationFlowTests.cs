@@ -44,6 +44,9 @@ public class AuthAndApplicationFlowTests(ApiHost<DefaultProfile> host) : IClassF
         var created = await createResponse.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
         created.ShouldNotBeNull();
         created!.Status.ShouldBe(ApplicationStatus.Applied);
+        // The company page slug rides on the detail so a closed application can open the
+        // contribution form with the company pre-selected.
+        created.CompanySlug.ShouldBe("flow-co");
 
         var statusResponse = await client.PostAsJsonAsync($"/api/applications/{created.Id}/status",
             new ChangeStatusRequest(ApplicationStatus.Screening, "Recruiter reached out", null), JsonOptions);

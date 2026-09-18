@@ -11,14 +11,14 @@ export function OutcomeCard({ distribution }: { distribution: StatusDistribution
   const locale = useLocale();
   const outcome = summariseOutcome(distribution);
 
-  // Deliberate order: the neutral segments sit between good and crit. Green and red as *touching*
-  // marks fail colour-blindness separation on the dark surface (deutan ΔE 4.8); a neutral spacer
-  // between them is the documented fix, and it also reads as a real progression.
-  const segments: { key: string; count: number; tone: Tone }[] = [
-    { key: "won", count: outcome.won, tone: "good" },
-    { key: "noAnswer", count: outcome.noAnswer, tone: "muted" },
-    { key: "withdrawn", count: outcome.withdrawn, tone: "muted" },
-    { key: "lost", count: outcome.lost, tone: "crit" },
+  // Everything that is not a positive outcome is neutral — a rejection is a result, not an
+  // alarm (T1). The three neutral segments still have to be told apart on the bar, so they step
+  // down in opacity in the order the legend lists them; the chips carry the labels.
+  const segments: { key: string; count: number; tone: Tone; fill: string }[] = [
+    { key: "won", count: outcome.won, tone: "good", fill: TONE_FILL.good },
+    { key: "lost", count: outcome.lost, tone: "muted", fill: TONE_FILL.muted },
+    { key: "noAnswer", count: outcome.noAnswer, tone: "muted", fill: `${TONE_FILL.muted} opacity-60` },
+    { key: "withdrawn", count: outcome.withdrawn, tone: "muted", fill: `${TONE_FILL.muted} opacity-35` },
   ];
 
   if (outcome.resolved === 0) {
@@ -42,7 +42,7 @@ export function OutcomeCard({ distribution }: { distribution: StatusDistribution
           .map((segment) => (
             <span
               key={segment.key}
-              className={TONE_FILL[segment.tone]}
+              className={segment.fill}
               style={{ flex: `${segment.count} 0 0` }}
             />
           ))}

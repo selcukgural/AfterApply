@@ -11,7 +11,10 @@ export const STATUS_TONE: Record<ApplicationStatus, Tone> = {
   FinalInterview: "accent",
   Offer: "good",
   Accepted: "good",
-  Rejected: "crit",
+  // Rejected is muted, not "crit": a rejection is an outcome, not an error, and red on the
+  // count of them turns a board of facts into a board of blame. "crit" stays reserved for
+  // things that went wrong in the app (DEVELOPMENT_PLAN.md, T-series, T1).
+  Rejected: "muted",
   Withdrawn: "muted",
   Ghosted: "muted",
 };

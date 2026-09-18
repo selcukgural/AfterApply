@@ -69,11 +69,48 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
                     .Skip((state.query.Page - 1) * state.query.PageSize)
                     .Take(state.query.PageSize)
                     .ToListAsync(ct);
+
+                // The user's own norm, once per page rather than once per row: every row on the
+                // page reads against the same median, and a page with no "possibly ghosted" row
+                // has no sentence to put it in.
+                if (items.Any(i => i.Type == ReminderType.PossiblyGhosted))
+                {
+                    var median = await GetUserMedianResponseDaysAsync(state.userId, ct);
+                    if (median is not null)
+                    {
+                        items = items.Select(i => i with { UserMedianResponseDays = median }).ToList();
+                    }
+                }
+
                 return new PagedResult<ReminderResponse>(items, totalCount, state.query.Page, state.query.PageSize);
             },
             ActiveRemindersCacheOptions,
             tags: [ReminderCacheKeys.ActiveTag(userId)],
             cancellationToken: cancellationToken).AsTask();
+    }
+
+    /// <summary>
+    /// Days from AppliedAt to the first "responded" status transition, per answered application,
+    /// reduced to the median by <see cref="ReminderCalculations.UserMedianResponseDays"/>. The same
+    /// definition of "first reply" as AnalyticsService.GetOverviewAsync, computed in SQL here
+    /// because this runs on every reminders page load and only needs one number back.
+    /// </summary>
+    private async Task<int?> GetUserMedianResponseDaysAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var firstReplies = await dbContext.ApplicationStatusHistories
+            .Join(dbContext.Applications.Where(a => a.UserId == userId),
+                h => h.ApplicationId, a => a.Id,
+                (h, a) => new { h.ApplicationId, h.ToStatus, h.ChangedAt, a.AppliedAt })
+            .Where(x => ApplicationStatusClassification.RespondedStatuses.Contains(x.ToStatus))
+            .GroupBy(x => new { x.ApplicationId, x.AppliedAt })
+            .Select(g => new { g.Key.AppliedAt, FirstReplyAt = g.Min(x => x.ChangedAt) })
+            .ToListAsync(cancellationToken);
+
+        var days = firstReplies
+            .Select(x => (x.FirstReplyAt - x.AppliedAt).TotalDays)
+            .ToList();
+
+        return ReminderCalculations.UserMedianResponseDays(days);
     }
 
     public async Task<bool> DismissAsync(Guid userId, Guid reminderId, CancellationToken cancellationToken)
