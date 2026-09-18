@@ -1206,7 +1206,7 @@ değil, "bir şey netleşti" olmalı.**
   ve e-posta önerilerindeki ret sebebi satırı da aynı partide nötrleşti;
   DECISIONS.md'de aynı tarihli girdi.
 
-### Sıra 4 — T5: Mola modu (kod: API + web, migration)
+### Sıra 4 — T5: Mola modu ✅ (2026-09-18)
 
 - **Ne var:** Hatırlatıcılar yalnız uygulama içi (e-posta yok — iyi), toplu
   kapatma var (2026-09-13). Ama ara veren kişi döndüğünde "12 hatırlatıcı"
@@ -1222,6 +1222,10 @@ değil, "bir şey netleşti" olmalı.**
 - **Maliyet:** 2-3 gün. Migration, `ReminderService` filtresi, `/me`
   endpoint'ine alan, profil UI, testler.
 - **Kilidi:** yok.
+- **Yapıldı (2026-09-18), bir sapmayla:** tarama **durmuyor**, yalnız görünüm
+  susuyor — dönüşteki "N başvuru sessizleşti" sayısı ancak satırlar üretilirse
+  doğru olur. Uçlar `/api/reminders/pause*`, profilde `BreakCard`, panoda
+  `ReminderBreakGate`. DECISIONS.md'de aynı tarihli girdi.
 
 ### Sıra 5 — T2: Normu aynanın yanına koy (kod: API + web)
 

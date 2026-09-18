@@ -7512,7 +7512,7 @@ sözleşme), tsc + eslint temiz. Tarayıcıda (yerel yığın, demo hesap): prof
 kurgulanıp panoda "2 başvuru sessizleşti — Evet, kapat (2) / Şimdi değil"; "Şimdi değil" → durum
 None, kart geri, demo hesabın hiçbir başvurusu değişmedi.
 
-**Dal notu.** `feat/retention-t5-pause-mode` `origin/main`'den açıldı; #69 (T1/T3/T6) henüz
-merge değil. #69 main'e geçince bu dal yeniden rebase edilecek (`dashboard/page.tsx` ve
-`RemindersPanel` ortak dokunma noktaları); T-serisi bölümü de #69'da olduğu için
-`DEVELOPMENT_PLAN.md`'deki T5 ✅ işareti o rebase'le birlikte gelir.
+**Dal notu.** `feat/retention-t5-pause-mode` #69 (T1/T3/T6) açıkken `origin/main`'den açıldı;
+#69 merge olunca üstüne rebase edildi (çakışma yalnız `DECISIONS.md` ve yardım metninin
+`outcome.body` satırında — her ikisi de iki tarafı koruyarak çözüldü), `DEVELOPMENT_PLAN.md`'deki
+T5 ✅ işareti o rebase'le geldi.
