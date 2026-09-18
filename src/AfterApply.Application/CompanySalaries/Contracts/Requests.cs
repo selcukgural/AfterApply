@@ -15,7 +15,13 @@ public sealed record CompanySalaryRequest(
     decimal MonthlyNetAmount,
     SalaryCurrency Currency,
     bool HasBonus,
-    decimal? AnnualBonusAmount = null);
+    decimal? AnnualBonusAmount = null,
+    /// <summary>The first year the salary was drawn. Optional in the shape only so older
+    /// clients still parse; the validator requires it on every write.</summary>
+    int? PeriodStartYear = null,
+    /// <summary>The last year, required for a former employee and forbidden for a current one —
+    /// "still drawing it" is the null.</summary>
+    int? PeriodEndYear = null);
 
 public sealed record CompanySalaryListQuery(int Page = 1);
 

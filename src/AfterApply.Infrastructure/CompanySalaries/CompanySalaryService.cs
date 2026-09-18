@@ -16,9 +16,12 @@ internal sealed class CompanySalaryService(
     CompanySlugAllocator slugAllocator,
     HybridCache cache,
     ICompanyCacheInvalidator invalidator,
-    IOptions<CompanySalaryOptions> options)
+    IOptions<CompanySalaryOptions> options,
+    TimeProvider? timeProvider = null)
     : ICompanySalaryService
 {
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
+
     // The list is read by every signed-in visitor of the company page and changes only when an
     // entry is written; each write drops the company's tag on every instance, so the TTL is a
     // safety net for a Redis outage, not the staleness bound.
@@ -53,23 +56,38 @@ internal sealed class CompanySalaryService(
             return null;
         }
 
+        // The cache key carries no year: at New Year a company's list may say "current" about a
+        // row for up to the TTL, which is the staleness this cache already accepts.
+        var windowYears = options.Value.CurrentWindowYears;
+        var cutoffYear = SalaryPeriods.CutoffYear(_timeProvider.GetUtcNow().Year, windowYears);
+
         return await cache.GetOrCreateAsync(CacheKeys.Company.SalaryList(companyId, query.Page), async ct =>
         {
             var entries = dbContext.CompanySalaryEntries.Where(s => s.CompanyId == companyId);
             var total = await entries.CountAsync(ct);
             var pageSize = options.Value.PageSize;
 
-            // Only the columns the public record has a place for: the years and the author are
-            // not selected at all. The band and the month are derived in memory — EF cannot
-            // translate either, and a page is at most PageSize rows.
+            // SalaryPeriods.IsCurrent, written inline so it translates. A row without a period
+            // is not current: nobody knows when it was drawn.
+            var current = entries.Where(s => s.PeriodStartYear != null && (s.PeriodEndYear == null || s.PeriodEndYear >= cutoffYear));
+            var previousTotal = total - await current.CountAsync(ct);
+
+            // Current rows first, then previous periods by the year they ended, unknown periods
+            // last — so the page can draw one "previous periods" line where the current rows run
+            // out. Only the columns the public record has a place for: the years and the author
+            // are not selected at all. The band is derived in memory — EF cannot translate it,
+            // and a page is at most PageSize rows.
             var rows = await entries
-                .OrderByDescending(s => s.SubmittedAt).ThenBy(s => s.Id)
+                .OrderByDescending(s => s.PeriodStartYear != null && (s.PeriodEndYear == null || s.PeriodEndYear >= cutoffYear))
+                .ThenByDescending(s => s.PeriodEndYear ?? (s.PeriodStartYear == null ? 0 : int.MaxValue))
+                .ThenByDescending(s => s.SubmittedAt).ThenBy(s => s.Id)
                 .Skip((query.Page - 1) * pageSize)
                 .Take(pageSize)
                 .Join(dbContext.Occupations, s => s.OccupationId, o => o.Id, (s, o) => new
                 {
                     s.Id, s.YearsOfExperience, s.EmploymentType, s.EmploymentStatus,
                     s.MonthlyNetAmount, s.Currency, s.AnnualBonusAmount, s.SubmittedAt,
+                    s.PeriodStartYear, s.PeriodEndYear,
                     Occupation = new OccupationRefResponse(o.Id, o.Code, o.NameTr, o.NameEn)
                 })
                 .ToListAsync(ct);
@@ -78,11 +96,14 @@ internal sealed class CompanySalaryService(
                 s.Id, s.Occupation, ExperienceBands.From(s.YearsOfExperience), s.EmploymentType, s.EmploymentStatus,
                 s.MonthlyNetAmount, s.Currency, s.AnnualBonusAmount,
                 // Month precision on purpose — see CompanySalaryPublicResponse.
-                s.SubmittedAt.ToString("yyyy-MM"))).ToList();
+                s.SubmittedAt.ToString("yyyy-MM"),
+                s.PeriodStartYear, s.PeriodEndYear,
+                SalaryPeriods.IsCurrent(s.PeriodStartYear, s.PeriodEndYear, cutoffYear))).ToList();
 
-            // The whole company's amounts, not the page's: a median of page two is not a median.
-            // Bounded by the quota times the number of contributors, so it stays a short list.
-            var amounts = await entries
+            // The whole company's current amounts, not the page's: a median of page two is not a
+            // median, and a median over a 2012 salary is not what the company pays. Bounded by
+            // the quota times the number of contributors, so it stays a short list.
+            var amounts = await current
                 .Select(s => new { s.Currency, s.MonthlyNetAmount })
                 .ToListAsync(ct);
             var minimum = options.Value.MinimumEntriesForStats;
@@ -101,7 +122,7 @@ internal sealed class CompanySalaryService(
                 })
                 .ToList();
 
-            return new CompanySalaryPageResponse(items, total, query.Page, pageSize, stats, minimum);
+            return new CompanySalaryPageResponse(items, total, query.Page, pageSize, stats, minimum, previousTotal, windowYears);
         }, ListCacheOptions, tags: [CacheKeys.Company.Tag(companyId)], cancellationToken: cancellationToken);
     }
 
@@ -128,7 +149,7 @@ internal sealed class CompanySalaryService(
             throw new CompanySalaryQuotaReachedException(quota.Limit);
         }
 
-        var entry = CompanySalaryEntry.Create(userId, companyId, ToContent(request), DateTimeOffset.UtcNow);
+        var entry = CompanySalaryEntry.Create(userId, companyId, ToContent(request), _timeProvider.GetUtcNow());
         dbContext.CompanySalaryEntries.Add(entry);
 
         try
@@ -162,7 +183,7 @@ internal sealed class CompanySalaryService(
             throw new CompanySalaryAlreadyExistsException();
         }
 
-        entry.Edit(ToContent(request), DateTimeOffset.UtcNow);
+        entry.Edit(ToContent(request), _timeProvider.GetUtcNow());
 
         try
         {
@@ -225,7 +246,7 @@ internal sealed class CompanySalaryService(
             return new MyCompanySalaryResponse(
                 s.Id, s.CompanyId, x.Slug ?? string.Empty, x.Name, x.Occupation, s.YearsOfExperience,
                 s.EmploymentType, s.EmploymentStatus, s.MonthlyNetAmount, s.Currency, s.AnnualBonusAmount,
-                s.SubmittedAt, s.UpdatedAt);
+                s.SubmittedAt, s.UpdatedAt, s.PeriodStartYear, s.PeriodEndYear);
         }).ToList();
     }
 
@@ -238,7 +259,10 @@ internal sealed class CompanySalaryService(
         }
     }
 
+    // The validator has already refused a missing start year; the 0 only exists so a request
+    // that skipped validation fails in SalaryContent.Validate rather than storing a null.
     private static SalaryContent ToContent(CompanySalaryRequest request) => new(
         request.OccupationId, request.YearsOfExperience, request.EmploymentType, request.EmploymentStatus,
-        request.MonthlyNetAmount, request.Currency, request.HasBonus ? request.AnnualBonusAmount : null);
+        request.MonthlyNetAmount, request.Currency, request.HasBonus ? request.AnnualBonusAmount : null,
+        request.PeriodStartYear ?? 0, request.PeriodEndYear);
 }

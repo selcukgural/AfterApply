@@ -11,6 +11,7 @@ import {
   buildSalaryRequest,
   occupationName,
   occupationOtherName,
+  periodYearOptions,
   validateSalaryDraft,
   type SalaryDraft,
   type SalaryDraftField,
@@ -37,11 +38,13 @@ interface CompanySalaryFormProps {
 const RADIO_CLASSES = "h-4 w-4 border-gray-300 text-accent focus:ring-accent dark:border-gray-600 dark:bg-gray-900";
 
 /**
- * The salary form (design canvas 2B, 2026-09-16): an occupation picked from the catalogue, the
- * total years, the working arrangement, whether the author still draws this salary, the monthly
- * net with its currency, and the bonus as an explicit yes/no. Nothing here is free text a reader
- * would see: the occupation must be a catalogue row (the typeahead searches both languages), and
- * typing again after a pick drops the pick.
+ * The salary form (design canvas 2B, 2026-09-16; period added 2026-09-18): an occupation picked
+ * from the catalogue, the total years, the working arrangement, whether the author still draws
+ * this salary, the years it was drawn in, the monthly net with its currency, and the bonus as an
+ * explicit yes/no. The period's end year exists only for a former employee — a current one sees
+ * "still drawing it" in its place, and switching back to current clears it. Nothing here is free
+ * text a reader would see: the occupation must be a catalogue row (the typeahead searches both
+ * languages), and typing again after a pick drops the pick.
  */
 export function CompanySalaryForm({ companyName, initialDraft, submitLabel, onSubmit, serverError, quota }: CompanySalaryFormProps) {
   const t = useTranslations("companySalaries.form");
@@ -54,6 +57,8 @@ export function CompanySalaryForm({ companyName, initialDraft, submitLabel, onSu
   const [draft, setDraft] = useState<SalaryDraft>(initialDraft);
   const [problems, setProblems] = useState<Partial<Record<SalaryDraftField, SalaryDraftProblem>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [yearOptions] = useState(periodYearOptions);
+  const isFormer = draft.employmentStatus === "FormerEmployee";
 
   const problemText = (field: SalaryDraftField) => {
     const problem = problems[field];
@@ -157,7 +162,14 @@ export function CompanySalaryForm({ companyName, initialDraft, submitLabel, onSu
                 name="salary-employment-status"
                 value={status}
                 checked={draft.employmentStatus === status}
-                onChange={() => set("employmentStatus", status)}
+                // Back to "current" means "still drawing it": the end year has nothing to say.
+                onChange={() =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    employmentStatus: status,
+                    periodEndYear: status === "FormerEmployee" ? prev.periodEndYear : "",
+                  }))
+                }
                 className={RADIO_CLASSES}
               />
               {tStatus(status)}
@@ -165,6 +177,55 @@ export function CompanySalaryForm({ companyName, initialDraft, submitLabel, onSu
           ))}
         </div>
         {problemText("employmentStatus") && <p className="text-sm text-red-600 dark:text-red-400">{problemText("employmentStatus")}</p>}
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-1">
+        <legend className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("period")}</legend>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+          <Select
+            id="salary-period-start"
+            aria-label={t("periodStart")}
+            value={draft.periodStartYear}
+            onChange={(e) => set("periodStartYear", e.target.value)}
+          >
+            <option value="">{t("periodStart")}</option>
+            {yearOptions.map((year) => (
+              <option key={year} value={String(year)}>
+                {year}
+              </option>
+            ))}
+          </Select>
+          <span className="text-gray-400 dark:text-gray-500" aria-hidden="true">
+            –
+          </span>
+          {isFormer ? (
+            <Select
+              id="salary-period-end"
+              aria-label={t("periodEnd")}
+              value={draft.periodEndYear}
+              onChange={(e) => set("periodEndYear", e.target.value)}
+            >
+              <option value="">{t("periodEnd")}</option>
+              {yearOptions.map((year) => (
+                <option key={year} value={String(year)}>
+                  {year}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            <div
+              id="salary-period-end-static"
+              className="flex min-h-[2.5rem] items-center rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+            >
+              {draft.employmentStatus === "CurrentEmployee" ? t("periodOngoing") : t("periodEnd")}
+            </div>
+          )}
+        </div>
+        {problemText("periodStartYear") || problemText("periodEndYear") ? (
+          <p className="text-sm text-red-600 dark:text-red-400">{problemText("periodStartYear") ?? problemText("periodEndYear")}</p>
+        ) : (
+          <p className="text-xs text-gray-500 dark:text-gray-400">{isFormer ? t("periodHintFormer") : t("periodHintCurrent")}</p>
+        )}
       </fieldset>
 
       <div className="flex flex-col gap-1">

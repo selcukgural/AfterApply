@@ -10,6 +10,7 @@ using AfterApply.Domain.Common;
 using AfterApply.Domain.CompanySalaries;
 using AfterApply.Domain.Occupations;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shouldly;
@@ -23,15 +24,18 @@ public sealed class CompanySalaryFlowProfile : IHostProfile
         // Small on purpose so the quota test does not have to write ten entries.
         builder.UseSetting("CompanySalaries:MaxEntriesPerUser", "2");
         builder.UseSetting("CompanySalaries:MinimumEntriesForStats", "3");
+        builder.UseSetting("CompanySalaries:CurrentWindowYears", "2");
     }
 }
 
 /// <summary>
 /// Salary entries end to end: reading needs an account, the reader's row carries the catalogue
-/// occupation, a band and a month but never the years or the author, one entry per occupation
+/// occupation, a band and the period but never the years or the author, one entry per occupation
 /// per company per account, the total quota holds and deleting frees it, other people's rows are
-/// 404 to edit, the per-currency figures appear only at the threshold, and the public company page
-/// counts entries. Occupations are the seeded catalogue rows (ids derived from their codes).
+/// 404 to edit, the per-currency figures appear only at the threshold and only over current
+/// rows, previous periods sort after current ones, a row written before the period existed is
+/// still served, and the public company page counts entries. Occupations are the seeded
+/// catalogue rows (ids derived from their codes).
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 public class CompanySalaryFlowTests(ApiHost<CompanySalaryFlowProfile> host) : IClassFixture<ApiHost<CompanySalaryFlowProfile>>, IAsyncLifetime
@@ -70,9 +74,18 @@ public class CompanySalaryFlowTests(ApiHost<CompanySalaryFlowProfile> host) : IC
     private static readonly Guid SystemsAnalysts = Occupation.IdFor("2511");
     private static readonly Guid DatabaseAdmins = Occupation.IdFor("2521");
 
+    private static readonly int ThisYear = DateTimeOffset.UtcNow.Year;
+
     private static CompanySalaryRequest Salary(Guid? occupation = null, int years = 6, decimal amount = 95_000m,
-        SalaryCurrency currency = SalaryCurrency.TRY, bool hasBonus = true, decimal? bonus = 120_000m) =>
-        new(occupation ?? SoftwareDevelopers, years, EmploymentType.FullTime, SalaryEmploymentStatus.CurrentEmployee, amount, currency, hasBonus, bonus);
+        SalaryCurrency currency = SalaryCurrency.TRY, bool hasBonus = true, decimal? bonus = 120_000m,
+        SalaryEmploymentStatus status = SalaryEmploymentStatus.CurrentEmployee, int? periodStart = null, int? periodEnd = null) =>
+        new(occupation ?? SoftwareDevelopers, years, EmploymentType.FullTime, status, amount, currency, hasBonus, bonus,
+            periodStart ?? ThisYear - 2, periodEnd);
+
+    /// <summary>A former employee's salary that ended <paramref name="yearsAgo"/> years ago.</summary>
+    private static CompanySalaryRequest Former(Guid occupation, decimal amount, int yearsAgo) =>
+        Salary(occupation, amount: amount, status: SalaryEmploymentStatus.FormerEmployee,
+            periodStart: ThisYear - yearsAgo - 2, periodEnd: ThisYear - yearsAgo);
 
     private async Task<MyCompanySalaryResponse> ShareAsync(HttpClient client, Guid companyId, CompanySalaryRequest? request = null)
     {
@@ -125,9 +138,129 @@ public class CompanySalaryFlowTests(ApiHost<CompanySalaryFlowProfile> host) : IC
         row.Currency.ShouldBe(SalaryCurrency.TRY);
         row.AnnualBonusAmount.ShouldBe(120_000m);
         row.SubmittedMonth.ShouldBe(DateTimeOffset.UtcNow.ToString("yyyy-MM"));
+        row.PeriodStartYear.ShouldBe(ThisYear - 2);
+        row.PeriodEndYear.ShouldBeNull();
+        row.IsCurrentPeriod.ShouldBeTrue();
         page.Total.ShouldBe(1);
+        page.PreviousPeriodTotal.ShouldBe(0);
+        page.CurrentWindowYears.ShouldBe(2);
         page.PageSize.ShouldBe(10);
         page.MinimumForStats.ShouldBe(3);
+    }
+
+    // ---- Period ------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task A_Write_Without_A_Period_Is_Refused_With_The_Field_Named()
+    {
+        var author = await RegisterAsync("period.missing@example.com");
+        var company = await ResolveAsync(author, "Period Missing Co");
+
+        // The pre-2026-09-18 shape, exactly as an older client would send it.
+        var response = await author.PostAsJsonAsync($"/api/companies/{company.Id}/salaries", new
+        {
+            occupationId = SoftwareDevelopers, yearsOfExperience = 6, employmentType = "FullTime",
+            employmentStatus = "CurrentEmployee", monthlyNetAmount = 95_000m, currency = "TRY", hasBonus = false
+        }, JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(JsonOptions);
+        problem!.Errors.Keys.ShouldContain(k => k.Equals("periodStartYear", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task A_Former_Employee_Must_Close_The_Period_And_A_Current_One_Must_Not()
+    {
+        var author = await RegisterAsync("period.ends@example.com");
+        var company = await ResolveAsync(author, "Period Ends Co");
+
+        var open = await author.PostAsJsonAsync($"/api/companies/{company.Id}/salaries",
+            Salary(status: SalaryEmploymentStatus.FormerEmployee, periodStart: ThisYear - 3), JsonOptions);
+        open.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await open.Content.ReadFromJsonAsync<ValidationProblemDetails>(JsonOptions))!.Errors.Keys
+            .ShouldContain(k => k.Equals("periodEndYear", StringComparison.OrdinalIgnoreCase));
+
+        var closed = await author.PostAsJsonAsync($"/api/companies/{company.Id}/salaries",
+            Salary(periodStart: ThisYear - 3, periodEnd: ThisYear - 1), JsonOptions);
+        closed.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await closed.Content.ReadFromJsonAsync<ValidationProblemDetails>(JsonOptions))!.Errors.Keys
+            .ShouldContain(k => k.Equals("periodEndYear", StringComparison.OrdinalIgnoreCase));
+
+        var future = await author.PostAsJsonAsync($"/api/companies/{company.Id}/salaries", Salary(periodStart: ThisYear + 1), JsonOptions);
+        future.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Previous_Periods_Sort_After_Current_Rows_And_Stay_Out_Of_The_Figures()
+    {
+        var one = await RegisterAsync("period.one@example.com");
+        var company = await ResolveAsync(one, "Period Co");
+        // Ended twelve years ago — the row the whole feature exists for.
+        await ShareAsync(one, company.Id, Former(SoftwareDevelopers, 4_500m, yearsAgo: 12));
+        await ShareAsync(one, company.Id, Salary(WebDevelopers, amount: 118_000m));
+        var two = await RegisterAsync("period.two@example.com");
+        // Ended last year: inside a two-year window, so still current.
+        await ShareAsync(two, company.Id, Former(SystemsAnalysts, 72_000m, yearsAgo: 1));
+        // Ended two years ago: the first year outside the window.
+        await ShareAsync(two, company.Id, Former(DatabaseAdmins, 30_000m, yearsAgo: 2));
+        var three = await RegisterAsync("period.three@example.com");
+        await ShareAsync(three, company.Id, Salary(SoftwareDevelopers, amount: 96_000m));
+
+        var page = await ListAsync(one, company.Id);
+
+        page.Total.ShouldBe(5);
+        page.PreviousPeriodTotal.ShouldBe(2);
+        page.Items.Select(i => i.IsCurrentPeriod).ShouldBe([true, true, true, false, false]);
+        // Current rows newest first; previous periods by the year they ended, latest first.
+        page.Items[3].PeriodEndYear.ShouldBe(ThisYear - 2);
+        page.Items[4].PeriodEndYear.ShouldBe(ThisYear - 12);
+        page.Items[4].MonthlyNetAmount.ShouldBe(4_500m);
+
+        // Three current TRY rows make the threshold; the 4,500 and the 30,000 are not among them.
+        var stat = page.Stats.Single(s => s.Currency == SalaryCurrency.TRY);
+        stat.Count.ShouldBe(3);
+        stat.MedianMonthlyNet.ShouldBe(96_000m);
+        stat.MinMonthlyNet.ShouldBe(72_000m);
+        stat.MaxMonthlyNet.ShouldBe(118_000m);
+    }
+
+    [Fact]
+    public async Task A_Row_Written_Before_The_Period_Existed_Is_Served_As_A_Previous_Period_Until_Its_Author_Edits_It()
+    {
+        var author = await RegisterAsync("period.legacy@example.com");
+        var reader = await RegisterAsync("period.legacy.reader@example.com");
+        var company = await ResolveAsync(author, "Legacy Period Co");
+        var legacy = await ShareAsync(author, company.Id, Salary(status: SalaryEmploymentStatus.FormerEmployee,
+            periodStart: ThisYear - 1, periodEnd: ThisYear));
+        await ShareAsync(author, company.Id, Salary(WebDevelopers, amount: 80_000m));
+
+        // What the migration leaves on a former employee's row: no period, because only the
+        // author knows when it ended. Written the only way such a row can exist now.
+        await host.WithDbAsync(db => db.Database.ExecuteSqlAsync(
+            $"""UPDATE "CompanySalaryEntries" SET "PeriodStartYear" = NULL, "PeriodEndYear" = NULL WHERE "Id" = {legacy.Id}"""));
+
+        var page = await ListAsync(reader, company.Id);
+        page.Total.ShouldBe(2);
+        page.PreviousPeriodTotal.ShouldBe(1);
+        var row = page.Items.Last();
+        row.Id.ShouldBe(legacy.Id);
+        row.PeriodStartYear.ShouldBeNull();
+        row.PeriodEndYear.ShouldBeNull();
+        row.IsCurrentPeriod.ShouldBeFalse();
+        row.SubmittedMonth.ShouldBe(DateTimeOffset.UtcNow.ToString("yyyy-MM"));
+        page.Stats.Single(s => s.Currency == SalaryCurrency.TRY).Count.ShouldBe(1);
+
+        // The author's own list says the same, so the edit form can start empty on the period.
+        var mine = await author.GetFromJsonAsync<MySalariesResponse>("/api/company-salaries/mine", JsonOptions);
+        mine!.Items.Single(i => i.Id == legacy.Id).PeriodStartYear.ShouldBeNull();
+
+        // The first edit asks for it, and the row is current again.
+        var edit = await author.PutAsJsonAsync($"/api/company-salaries/{legacy.Id}",
+            Salary(status: SalaryEmploymentStatus.FormerEmployee, periodStart: ThisYear - 1, periodEnd: ThisYear), JsonOptions);
+        edit.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var after = await ListAsync(reader, company.Id);
+        after.PreviousPeriodTotal.ShouldBe(0);
+        after.Items.Single(i => i.Id == legacy.Id).PeriodEndYear.ShouldBe(ThisYear);
     }
 
     [Fact]

@@ -1215,9 +1215,9 @@
     "companySalaries": {
       "title": "Paylaştığın maaş bilgileri",
       "intro": "Bir şirketteki maaşını paylaşmak isteğe bağlıdır ve hesap gerektirir. Paylaştığında:",
-      "what": "Kaydın — listeden seçtiğin meslek, toplam tecrübe yılın, çalışma şeklin, mevcut/eski çalışan olduğun, aylık net maaşın ve para birimi, varsa yıllık primin — hesabına bağlı saklanır. Serbest metin yoktur: meslek, ISCO-08'e dayanan hazır bir katalogdan seçilir.",
+      "what": "Kaydın — listeden seçtiğin meslek, toplam tecrübe yılın, çalışma şeklin, mevcut/eski çalışan olduğun, maaşı aldığın dönemin yılları, aylık net maaşın ve para birimi, varsa yıllık primin — hesabına bağlı saklanır. Serbest metin yoktur: meslek, ISCO-08'e dayanan hazır bir katalogdan seçilir.",
       "whoSees": "Kayıtlar yalnızca giriş yapmış kullanıcılara gösterilir; herkese açık şirket sayfası yalnızca kaç kayıt olduğunu söyler.",
-      "band": "Okuyucular tam tecrübe yılını değil bir bant (0–1, 2–4, 5–9, 10+) ve günü değil ayı görür. Bilerek: meslekle birlikte tam yıl ve tam tarih küçük bir şirkette kimin yazdığını ele verirdi.",
+      "band": "Okuyucular tam tecrübe yılını değil bir bant (0–1, 2–4, 5–9, 10+) ve maaşın dönemini gün ya da ay olarak değil yıl olarak görür. Bilerek: meslekle birlikte tam yıl ve tam tarih küçük bir şirkette kimin yazdığını ele verirdi.",
       "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez; içinde senin yazdığın hiçbir metin de yoktur. Kaydın arkasındaki hesabı yalnızca biz görürüz.",
       "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Kaydı Katkılarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam yılıyla içerir.",
@@ -1540,6 +1540,8 @@
     "salaryYearsInvalid": "0 ile 50 arasında tam bir yıl gir",
     "salaryCurrencyRequired": "Para birimini seç",
     "salaryBonusAmountInvalid": "Prim varsa tutarını gir, yoksa boş bırak",
+    "salaryPeriodYearInvalid": "Geçerli bir yıl seç",
+    "salaryPeriodEndInvalid": "Bitiş yılını kontrol et",
     "salaryOccupationRequired": "Listeden bir meslek seç",
     "nameTooLong": "En fazla 100 karakter"
   },
@@ -2465,11 +2467,11 @@
         },
         "step2": {
           "title": "Şirket sayfasında Maaşlar sekmesini açın",
-          "body": "Her kayıt bir satırdır: meslek, tecrübe bandı (0–1, 2–4, 5–9, 10+ yıl), çalışma şekli, mevcut ya da eski çalışan, ay ve aylık net tutar; varsa yıllık prim. Kimse yazarını görmez."
+          "body": "Her kayıt bir satırdır: meslek, tecrübe bandı (0–1, 2–4, 5–9, 10+ yıl), çalışma şekli, mevcut ya da eski çalışan, maaşın alındığı dönem (2021 – halen gibi) ve aylık net tutar; varsa yıllık prim. Kimse yazarını görmez."
         },
         "step3": {
           "title": "Medyanı okumayı bilin",
-          "body": "Bir para biriminde yeterli kayıt toplanınca üstte medyan ve en düşük–en yüksek aralığı görünür; o zamana kadar yalnızca satırlar vardır. Medyan mesleğe göre ayrılmaz — bir şirketteki tüm kayıtların ortasıdır."
+          "body": "Bir para biriminde yeterli güncel kayıt toplanınca üstte medyan ve en düşük–en yüksek aralığı görünür; o zamana kadar yalnızca satırlar vardır. Son iki yıl içinde geçerli olan kayıtlar sayılır; daha eski dönemler listenin altında ayrıca durur ve medyanı etkilemez. Medyan mesleğe göre ayrılmaz — bir şirketteki güncel kayıtların ortasıdır."
         }
       },
       "write": {
@@ -2484,7 +2486,7 @@
         },
         "step3": {
           "title": "Formu doldurun",
-          "body": "Meslek, toplam tecrübe yılı, çalışma şekli, mevcut/eski çalışan, aylık net maaş ve para birimi, prim var mı yok mu — hepsi zorunlu. Meslek hazır listeden seçilir: yazmaya başla, Türkçe ya da İngilizce adıyla bul ve listeden seç; listede olmayan bir meslek için kayıt oluşturulamaz."
+          "body": "Meslek, toplam tecrübe yılı, çalışma şekli, mevcut/eski çalışan, maaşı aldığınız dönem (yıl olarak; eski çalışansanız bitiş yılı da), aylık net maaş ve para birimi, prim var mı yok mu — hepsi zorunlu. Meslek hazır listeden seçilir: yazmaya başla, Türkçe ya da İngilizce adıyla bul ve listeden seç; listede olmayan bir meslek için kayıt oluşturulamaz."
         },
         "step4": {
           "title": "Paylaşın",
@@ -2493,7 +2495,7 @@
       },
       "calloutAnonymous": {
         "title": "Kayıtlar anonimdir",
-        "body": "Okuyucular adınızı, e-postanızı ya da tam tecrübe yılınızı görmez; yalnızca meslek, bant, çalışma şekli, ilişki ve ay görünür. Tam yıl yalnızca sizin listenizde ve veri dışa aktarımınızdadır."
+        "body": "Okuyucular adınızı, e-postanızı ya da tam tecrübe yılınızı görmez; yalnızca meslek, bant, çalışma şekli, ilişki ve dönemin yılları görünür. Tam yıl yalnızca sizin listenizde ve veri dışa aktarımınızdadır."
       },
       "calloutLimits": {
         "title": "Meslek başına bir kayıt, toplam on",
@@ -2501,7 +2503,7 @@
       },
       "manage": {
         "title": "Düzenleme ve silme",
-        "body": "Katkılarım sayfası paylaştığınız her kaydı tam figürleriyle, değerlendirme ve deneyimlerinizle aynı listede gösterir. Düzenle tutarları değiştirir ve kaydın ayını bugüne alır; Sil tamamen kaldırır."
+        "body": "Katkılarım sayfası paylaştığınız her kaydı tam figürleriyle, değerlendirme ve deneyimlerinizle aynı listede gösterir. Düzenle tutarları ve dönemi değiştirir; Sil tamamen kaldırır. Dönem sorulmadan önce paylaştığınız bir kayıt, siz düzenleyene kadar \"önceki dönemler\"de listelenir."
       }
     },
     "cvScan": {
@@ -4394,6 +4396,12 @@
       "employmentType": "Çalışma şekli",
       "employmentTypePlaceholder": "Seç",
       "employmentStatus": "Çalışma durumu",
+      "period": "Bu maaşı hangi dönemde aldın?",
+      "periodStart": "Başlangıç",
+      "periodEnd": "Bitiş",
+      "periodOngoing": "Hâlâ alıyorum",
+      "periodHintCurrent": "Yıl olarak; ay istenmez. Mevcut çalışanda bitiş \"hâlâ alıyorum\" olarak kaydedilir. Bu dönemde zam aldıysan son tutarı gir.",
+      "periodHintFormer": "Bu şirkette bu maaşı aldığın yıllar. Zam aldıysan son tutarı ve o dönemi gir.",
       "monthlyNet": "Aylık net maaş",
       "monthlyNetPlaceholder": "Örn. 95.000",
       "monthlyNetHint": "Eline geçen net tutar. Prim ve yan hakları buraya katma.",
@@ -4415,7 +4423,12 @@
         "employmentStatusRequired": "Çalışma durumunu seç",
         "amountInvalid": "Geçerli bir tutar gir (1 – 10.000.000)",
         "bonusAnswerRequired": "Prim var mı, yok mu — seç",
-        "bonusAmountInvalid": "Yıllık prim tutarını gir (1 – 10.000.000)"
+        "bonusAmountInvalid": "Yıllık prim tutarını gir (1 – 10.000.000)",
+        "periodStartRequired": "Başlangıç yılını seç",
+        "periodStartInvalid": "1990 ile bu yıl arasında bir yıl seç",
+        "periodEndRequired": "Bitiş yılını seç — eski çalışan için gerekli",
+        "periodEndInvalid": "1990 ile bu yıl arasında bir yıl seç",
+        "periodEndBeforeStart": "Bitiş yılı başlangıçtan önce olamaz"
       }
     },
     "guidelines": {
@@ -4423,7 +4436,7 @@
       "intro": "Adın hiçbir yerde görünmez. Okuyucular mesleği, tecrübe bandını, çalışma şeklini ve tutarı görür.",
       "signedIn": "Yalnızca giriş yapmış kullanıcılar okuyabilir.",
       "band": "Tecrübe yılı bant olarak gösterilir: 0–1, 2–4, 5–9, 10+.",
-      "month": "Tarih ay hassasiyetindedir (Eylül 2026 gibi).",
+      "month": "Maaşın ait olduğu dönem yıl olarak görünür (2010 – 2012 gibi); ay istenmez. Son iki yıl içinde geçerli olan kayıtlar medyana girer, eskiler ayrı listelenir.",
       "perTitle": "Aynı şirkete farklı meslekler için birden fazla kayıt girebilirsin; toplamda 10 kayıt.",
       "editable": "Kaydı Katkılarım sayfasından düzenleyebilir ya da silebilirsin.",
       "fullGuide": "Tam rehber →"
@@ -4434,7 +4447,7 @@
     },
     "edit": {
       "title": "Maaş kaydını düzenle",
-      "subtitle": "Değişiklikler kaydettiğin anda görünür; kaydın ayı bugüne alınır.",
+      "subtitle": "Değişiklikler kaydettiğin anda görünür. Dönemi olmayan eski bir kaydı düzenlerken dönem sorulur; o zamana kadar \"önceki dönemler\"de listelenir.",
       "loading": "Yükleniyor…",
       "notFound": "Bu kayıt sana ait değil ya da artık yok.",
       "backToMine": "Katkılarım'a dön",
@@ -4448,6 +4461,9 @@
       "perMonthNet": "/ ay net",
       "bonus": "Prim: {amount} / yıl",
       "noBonus": "Prim yok",
+      "periodOngoing": "halen",
+      "periodMissing": "Dönem belirtilmedi",
+      "periodMissingHint": "Bu kayıt dönem sorulmadan önce paylaşıldı. Okuyucular onu \"önceki dönemler\"de görür ve medyana girmez; düzenleyip dönemi eklersen güncel listeye döner.",
       "edit": "Düzenle",
       "delete": "Sil",
       "deleteTitle": "Bu maaş kaydı silinsin mi?",
@@ -4459,7 +4475,7 @@
     "panel": {
       "heading": "{count, plural, =0 {Maaş kayıtları} =1 {1 maaş kaydı} other {# maaş kaydı}}",
       "share": "Maaş bilgisi paylaş",
-      "readingNote": "Maaş bilgileri kullanıcıların kendi beyanıdır; e-kariyerim doğrulamaz. Meslek hazır listeden seçilir, tecrübe bant olarak, tarih ay hassasiyetinde gösterilir.",
+      "readingNote": "Maaş bilgileri kullanıcıların kendi beyanıdır; e-kariyerim doğrulamaz. Meslek hazır listeden seçilir, tecrübe bant olarak, maaşın dönemi yıl olarak gösterilir.",
       "yours": "{count, plural, =1 {Bu şirkete 1 maaş kaydın var.} other {Bu şirkete # maaş kaydın var.}}",
       "manageYours": "Katkılarım",
       "loading": "Yükleniyor…",
@@ -4471,6 +4487,10 @@
       "perMonthNet": "/ ay net",
       "bonus": "Prim: {amount} / yıl",
       "noBonus": "Prim yok",
+      "periodOngoing": "halen",
+      "periodUnknown": "Dönem belirtilmedi",
+      "sharedIn": "{month}'da paylaşıldı",
+      "previousPeriods": "{count, plural, =1 {Önceki dönemler · 1 kayıt · medyana girmez} other {Önceki dönemler · # kayıt · medyana girmez}}",
       "lockedTitle": "Maaş bilgileri giriş yapmış kullanıcılara açık",
       "lockedBody": "{company} için {count, plural, =0 {henüz paylaşılmış maaş yok} =1 {1 anonim maaş kaydı var} other {# anonim maaş kaydı var}}. Görmek ve kendi kaydını eklemek için giriş yap.",
       "signIn": "Giriş yap",
@@ -4478,11 +4498,11 @@
     },
     "stats": {
       "median": "Medyan aylık net",
-      "sample": "{count} kayıt · {currency}",
+      "sample": "{count} güncel kayıt · {currency}",
       "range": "Aralık",
       "rangeHint": "en düşük – en yüksek",
       "basis": "Nasıl hesaplanır",
-      "basisBody": "Tek para birimindeki tüm kayıtların medyanı; mesleğe ya da tecrübeye göre ayrılmaz."
+      "basisBody": "Son {years} yıl içinde geçerli olan kayıtların medyanı; önceki dönemler sayılmaz, mesleğe ya da tecrübeye göre ayrılmaz."
     },
     "bands": {
       "ZeroToOne": "0–1 yıl",
@@ -4628,6 +4648,7 @@
       "occupation": "Meslek",
       "net": "Net / ay",
       "years": "Yıl",
+      "period": "Dönem",
       "author": "Yazar",
       "submitted": "Gönderim"
     },
@@ -4637,6 +4658,7 @@
       "net": "Aylık net",
       "bonus": "Yıllık prim",
       "years": "Tecrübe",
+      "period": "Dönem",
       "employment": "Çalışma",
       "submitted": "Gönderim",
       "updated": "Son düzenleme",

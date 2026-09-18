@@ -7,9 +7,10 @@ import { formatAmount } from "@/lib/companySalaries/salaryDraft";
 /**
  * The per-currency figures, one strip per currency that has reached the threshold. A currency
  * under it is not shown here at all — the rows below carry its entries, and a "not enough yet"
- * line under the heading says how many are missing.
+ * line under the heading says how many are missing. Only current rows are counted (the server
+ * decides which; `windowYears` is how far back "current" reaches, for the explanation).
  */
-export function SalaryStatsStrip({ stats }: { stats: SalaryCurrencyStat[] }) {
+export function SalaryStatsStrip({ stats, windowYears }: { stats: SalaryCurrencyStat[]; windowYears: number }) {
   const t = useTranslations("companySalaries.stats");
   const tCurrency = useTranslations("salaryCurrency");
   const locale = useLocale();
@@ -41,7 +42,7 @@ export function SalaryStatsStrip({ stats }: { stats: SalaryCurrencyStat[] }) {
           </div>
           <div className="flex flex-col gap-0.5">
             <dt className="text-xs text-gray-500 dark:text-gray-400">{t("basis")}</dt>
-            <dd className="text-sm text-gray-700 dark:text-gray-300">{t("basisBody")}</dd>
+            <dd className="text-sm text-gray-700 dark:text-gray-300">{t("basisBody", { years: windowYears })}</dd>
           </div>
         </dl>
       ))}

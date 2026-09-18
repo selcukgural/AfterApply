@@ -135,7 +135,7 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
 
         var shared = await authorOnB.PostAsJsonAsync($"/api/companies/{company.Id}/salaries",
             new CompanySalaryRequest(Occupation.IdFor("2512"), 6, EmploymentType.FullTime, SalaryEmploymentStatus.CurrentEmployee,
-                95_000m, SalaryCurrency.TRY, false), JsonOptions);
+                95_000m, SalaryCurrency.TRY, false, PeriodStartYear: 2024), JsonOptions);
         shared.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         (await SalariesAsync(readerOnA, company.Id)).Total.ShouldBe(1);

@@ -26,6 +26,9 @@ const SAMPLE_ROWS: CompanySalaryPublic[] = [
     currency: "TRY",
     annualBonusAmount: 120_000,
     submittedMonth: "2026-09",
+    periodStartYear: 2024,
+    periodEndYear: null,
+    isCurrentPeriod: true,
   },
   {
     id: "sample-2",
@@ -37,6 +40,9 @@ const SAMPLE_ROWS: CompanySalaryPublic[] = [
     currency: "TRY",
     annualBonusAmount: null,
     submittedMonth: "2026-08",
+    periodStartYear: 2023,
+    periodEndYear: 2025,
+    isCurrentPeriod: true,
   },
 ];
 
@@ -108,6 +114,9 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
   const own = viewerQuery.data;
   const quotaLeft = own ? Math.max(0, own.quota.limit - own.quota.used) : 0;
   const pendingStats = list?.stats.filter((s) => s.medianMonthlyNet === null) ?? [];
+  // The server puts current rows first, so the "previous periods" line is drawn once, where the
+  // first previous row sits — on whichever page that happens to be.
+  const firstPreviousIndex = list?.items.findIndex((entry) => !entry.isCurrentPeriod) ?? -1;
 
   return (
     <section className="flex flex-col gap-4">
@@ -138,7 +147,7 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
         </p>
       )}
 
-      {list && <SalaryStatsStrip stats={list.stats} />}
+      {list && <SalaryStatsStrip stats={list.stats} windowYears={list.currentWindowYears} />}
       {list && pendingStats.length > 0 && list.items.length > 0 && (
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {t("statsPending", { minimum: list.minimumForStats })}
@@ -158,8 +167,15 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
 
       {list && list.items.length > 0 && (
         <ul className="flex flex-col gap-3">
-          {list.items.map((entry) => (
-            <li key={entry.id}>
+          {list.items.map((entry, index) => (
+            <li key={entry.id} className="flex flex-col gap-3">
+              {index === firstPreviousIndex && (
+                <div className="flex items-center gap-3 pt-1 text-xs text-gray-500 dark:text-gray-400" role="separator">
+                  <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" aria-hidden="true" />
+                  <span>{t("previousPeriods", { count: list.previousPeriodTotal })}</span>
+                  <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" aria-hidden="true" />
+                </div>
+              )}
               <SalaryRow entry={entry} />
             </li>
           ))}

@@ -88,7 +88,7 @@ public class AdminContributionTests(ApiHost<AdminContributionProfile> host) : IC
     private async Task<MyCompanySalaryResponse> ShareSalaryAsync(HttpClient client, Guid companyId, string occupationCode = "2512")
     {
         var request = new CompanySalaryRequest(Occupation.IdFor(occupationCode), 6, EmploymentType.FullTime,
-            SalaryEmploymentStatus.CurrentEmployee, 95_000m, SalaryCurrency.TRY, true, 120_000m);
+            SalaryEmploymentStatus.CurrentEmployee, 95_000m, SalaryCurrency.TRY, true, 120_000m, PeriodStartYear: 2024);
         var response = await client.PostAsJsonAsync($"/api/companies/{companyId}/salaries", request, JsonOptions);
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         return (await response.Content.ReadFromJsonAsync<MyCompanySalaryResponse>(JsonOptions))!;

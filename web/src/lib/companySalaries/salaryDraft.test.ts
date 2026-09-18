@@ -7,14 +7,18 @@ import {
   draftFromSalary,
   formatAmount,
   formatSalaryMonth,
+  formatSalaryPeriod,
   occupationName,
   occupationOtherName,
   parseAmount,
+  periodYearOptions,
   validateSalaryDraft,
   type SalaryDraft,
 } from "./salaryDraft";
 
 const BACKEND = "11111111-1111-4111-8111-111111111111";
+// "This year" for every rule that has one, so the suite does not age.
+const THIS_YEAR = 2026;
 
 const filled: SalaryDraft = {
   occupationId: BACKEND,
@@ -22,6 +26,8 @@ const filled: SalaryDraft = {
   yearsOfExperience: "6",
   employmentType: "FullTime",
   employmentStatus: "CurrentEmployee",
+  periodStartYear: "2024",
+  periodEndYear: "",
   monthlyNetAmount: "95.000",
   currency: "TRY",
   hasBonus: true,
@@ -49,9 +55,12 @@ describe("parseAmount", () => {
   });
 });
 
+const former: SalaryDraft = { ...filled, employmentStatus: "FormerEmployee", periodStartYear: "2010", periodEndYear: "2012" };
+
 describe("validateSalaryDraft", () => {
   it("accepts a filled-in draft", () => {
-    expect(validateSalaryDraft(filled)).toEqual({});
+    expect(validateSalaryDraft(filled, THIS_YEAR)).toEqual({});
+    expect(validateSalaryDraft(former, THIS_YEAR)).toEqual({});
   });
 
   it("accepts no bonus without an amount", () => {
@@ -64,9 +73,29 @@ describe("validateSalaryDraft", () => {
       yearsOfExperience: "yearsInvalid",
       employmentType: "employmentTypeRequired",
       employmentStatus: "employmentStatusRequired",
+      periodStartYear: "periodStartRequired",
       monthlyNetAmount: "amountInvalid",
       hasBonus: "bonusAnswerRequired",
     });
+  });
+
+  it("wants the period's first year between 1990 and this year", () => {
+    expect(validateSalaryDraft({ ...filled, periodStartYear: "1989" }, THIS_YEAR)).toEqual({ periodStartYear: "periodStartInvalid" });
+    expect(validateSalaryDraft({ ...filled, periodStartYear: "2027" }, THIS_YEAR)).toEqual({ periodStartYear: "periodStartInvalid" });
+    expect(validateSalaryDraft({ ...filled, periodStartYear: "1990" }, THIS_YEAR)).toEqual({});
+    expect(validateSalaryDraft({ ...filled, periodStartYear: "2026" }, THIS_YEAR)).toEqual({});
+  });
+
+  it("wants a last year from a former employee, not before the first and not in the future", () => {
+    expect(validateSalaryDraft({ ...former, periodEndYear: "" }, THIS_YEAR)).toEqual({ periodEndYear: "periodEndRequired" });
+    expect(validateSalaryDraft({ ...former, periodEndYear: "2027" }, THIS_YEAR)).toEqual({ periodEndYear: "periodEndInvalid" });
+    expect(validateSalaryDraft({ ...former, periodEndYear: "2009" }, THIS_YEAR)).toEqual({ periodEndYear: "periodEndBeforeStart" });
+    expect(validateSalaryDraft({ ...former, periodEndYear: "2010" }, THIS_YEAR)).toEqual({});
+  });
+
+  it("ignores a stray last year on a current employee — the request drops it", () => {
+    expect(validateSalaryDraft({ ...filled, periodEndYear: "2025" }, THIS_YEAR)).toEqual({});
+    expect(buildSalaryRequest({ ...filled, periodEndYear: "2025" })).toMatchObject({ periodEndYear: null });
   });
 
   it("wants a picked occupation, not typed text", () => {
@@ -101,11 +130,14 @@ describe("buildSalaryRequest", () => {
       currency: "TRY",
       hasBonus: true,
       annualBonusAmount: 120000,
+      periodStartYear: 2024,
+      periodEndYear: null,
     });
     expect(buildSalaryRequest({ ...filled, hasBonus: false, annualBonusAmount: "999" })).toMatchObject({
       hasBonus: false,
       annualBonusAmount: null,
     });
+    expect(buildSalaryRequest(former)).toMatchObject({ periodStartYear: 2010, periodEndYear: 2012 });
   });
 });
 
@@ -124,6 +156,8 @@ describe("draftFromSalary", () => {
     annualBonusAmount: null,
     submittedAt: "2026-09-16T10:00:00Z",
     updatedAt: "2026-09-16T10:00:00Z",
+    periodStartYear: 2019,
+    periodEndYear: 2023,
   };
 
   it("round-trips a row into a valid draft, labelled in the reader's language", () => {
@@ -134,17 +168,42 @@ describe("draftFromSalary", () => {
       yearsOfExperience: "9",
       employmentType: "Contract",
       employmentStatus: "FormerEmployee",
+      periodStartYear: "2019",
+      periodEndYear: "2023",
       monthlyNetAmount: "130000",
       currency: "EUR",
       hasBonus: false,
       annualBonusAmount: "",
     });
-    expect(validateSalaryDraft(draft)).toEqual({});
+    expect(validateSalaryDraft(draft, THIS_YEAR)).toEqual({});
     expect(draftFromSalary({ ...entry, annualBonusAmount: 5000 }, "en")).toMatchObject({
       occupationLabel: "Backend Developer",
       hasBonus: true,
       annualBonusAmount: "5000",
     });
+  });
+
+  it("starts the period empty on a row written before it existed, so the form asks", () => {
+    const draft = draftFromSalary({ ...entry, periodStartYear: null, periodEndYear: null }, "tr");
+    expect(draft).toMatchObject({ periodStartYear: "", periodEndYear: "" });
+    expect(validateSalaryDraft(draft, THIS_YEAR)).toEqual({ periodStartYear: "periodStartRequired", periodEndYear: "periodEndRequired" });
+  });
+});
+
+describe("periodYearOptions", () => {
+  it("runs from this year back to 1990", () => {
+    const years = periodYearOptions(THIS_YEAR);
+    expect(years[0]).toBe(2026);
+    expect(years.at(-1)).toBe(1990);
+    expect(years).toHaveLength(37);
+  });
+});
+
+describe("formatSalaryPeriod", () => {
+  it("writes a closed period, an open one with the caller's word, and nothing for none", () => {
+    expect(formatSalaryPeriod({ periodStartYear: 2010, periodEndYear: 2012 }, "halen")).toBe("2010 – 2012");
+    expect(formatSalaryPeriod({ periodStartYear: 2024, periodEndYear: null }, "halen")).toBe("2024 – halen");
+    expect(formatSalaryPeriod({ periodStartYear: null, periodEndYear: null }, "halen")).toBeNull();
   });
 });
 
