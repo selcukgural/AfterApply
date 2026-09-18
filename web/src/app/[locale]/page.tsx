@@ -10,14 +10,12 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { WeeklyJobsHero } from "@/components/landing/WeeklyJobsHero";
 import { ToolsStrip } from "@/components/landing/ToolsStrip";
+import { SiteStatsStrip } from "@/components/landing/SiteStatsStrip";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { AfterApplySection } from "@/components/landing/AfterApplySection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { LinkedInImportSection } from "@/components/landing/LinkedInImportSection";
 import { AnalyticsSection } from "@/components/landing/AnalyticsSection";
-import { VisionSection } from "@/components/landing/VisionSection";
-import { MissionSection } from "@/components/landing/MissionSection";
-import { RoadmapSection } from "@/components/landing/RoadmapSection";
 import { PrivacySection } from "@/components/landing/PrivacySection";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 import { SiteTrafficReporter } from "@/components/analytics/SiteTrafficReporter";
@@ -84,6 +82,10 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
             screen under the hero, before the page starts explaining itself (2026-09-12). Also the
             #extension target: this is the extension's whole showing on the page. */}
         <ToolsStrip />
+        {/* The site's running totals, one line, only once they clear the API's threshold — and the
+            about page is where the story behind them now lives (the vision, mission and roadmap
+            sections moved there on 2026-09-18, growth audit finding 11). */}
+        <SiteStatsStrip />
         <ProblemSection />
         <AfterApplySection />
         {/*
@@ -99,9 +101,6 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
         <AnalyticsSection />
         <LinkedInImportSection />
         <FeaturesSection />
-        <VisionSection />
-        <MissionSection />
-        <RoadmapSection />
         <PrivacySection />
         <FinalCtaSection />
       </main>

@@ -91,6 +91,10 @@
         "title": "Reply Rate Benchmark",
         "description": "How many applications did you send, and how many came back? See your own reply rate against the median in your field. No sign-up needed."
       },
+      "about": {
+        "title": "About — a team on the candidate's side",
+        "description": "Who builds e-kariyerim and why: the problem we see on the candidate side of job searching, what we want to do about it, our principles, and how to reach us."
+      },
       "cvScan": {
         "title": "Free ATS CV Check — how an applicant tracking system reads your CV",
         "description": "Upload your CV and see what an applicant tracking system reads from it. An ATS readability score, the raw text and a fix list. No sign-up, nothing stored."
@@ -368,51 +372,6 @@
         "submit": "I Applied"
       }
     },
-    "vision": {
-      "eyebrow": "Vision",
-      "title": "We're building something bigger.",
-      "body1": "Today, you're tracking your own applications.",
-      "body2": "Tomorrow, anonymous and aggregate candidate data could help everyone understand how hiring processes actually work.",
-      "stepYours": "Your Applications",
-      "stepAggregate": "Anonymous & Aggregate Data",
-      "stepOutcomes": "Application Outcomes",
-      "stepInsights": "Hiring Insights",
-      "stepTransparency": "More Transparent Hiring",
-      "disclaimer": "This is a long-term vision that doesn't exist yet. When it does, it will work without targeting individual companies, with a minimum sample size, and on fully anonymous/aggregate data."
-    },
-    "mission": {
-      "eyebrow": "Our mission",
-      "statement": "A candidate's time is valuable too.",
-      "narrative1": "They prepared a CV. Researched the company. Applied.",
-      "narrative2": "Maybe solved a technical test. Maybe sat through an interview.",
-      "narrative3": "Then waited. A day. A week. Two weeks.",
-      "narrative4": "And nothing.",
-      "closing": "We don't want that to be normal.",
-      "closingNote": "Even a no is worth more than silence.",
-      "philosophy1": "People's time is valuable.",
-      "philosophy2": "Candidates have a right to a response.",
-      "philosophy3": "A rejection is worth more than silence.",
-      "philosophy4": "Transparency benefits candidates and companies alike.",
-      "philosophy5": "Data should be used to improve the system, not to blame people."
-    },
-    "roadmap": {
-      "title": "Today and tomorrow",
-      "today": "Today",
-      "future": "Future",
-      "todayTracking": "Application tracking",
-      "todayAnalytics": "Personal analytics",
-      "todayImport": "LinkedIn import",
-      "todayReminders": "Reminders",
-      "todayCv": "CV storage",
-      "todayEmail": "Gmail scanning integration",
-      "todayExtension": "Browser extension",
-      "futureInsights": "Anonymous, aggregate hiring insights",
-      "todayCvScan": "CV scan (no account)",
-      "todayBenchmark": "Reply rate benchmark (no account)",
-      "todayCompanies": "Company reviews",
-      "todayWeeklyJobs": "Weekly job matching",
-      "proBadge": "Pro"
-    },
     "privacy": {
       "eyebrow": "Trust",
       "title": "Your data is yours.",
@@ -425,6 +384,8 @@
       "link": "Read the privacy policy"
     },
     "finalCta": {
+      "who": "Who is behind this, and why?",
+      "whoLink": "About us",
       "title": "Know how many you sent — and how many ever came back.",
       "body": "Free. Import your LinkedIn history and your first numbers are there in minutes.",
       "button": "Get Started Free",
@@ -432,6 +393,8 @@
     },
     "footer": {
       "tagline": "Your job search, understood.",
+      "contact": "Write to us",
+      "follow": "Follow us",
       "product": "Product",
       "explore": "Explore",
       "legal": "Legal",
@@ -4732,6 +4695,56 @@
       "modalLink": "Not sure? The guide →"
     }
   },
+  "about": {
+    "eyebrow": "About",
+    "title": "A person applying for a job has valuable time too.",
+    "intro": "e-kariyerim is the project of a team that has watched the same problem on the candidate side of job searching for years: people apply to dozens of postings, hear nothing back from most of them, and have not a single number to tell them what is going on. There was no tool on this side. We started building one.",
+    "problem": {
+      "title": "The problem we see in the industry",
+      "story1": "You prepared a CV, researched the company, applied; maybe you sat a test, maybe an interview.",
+      "story2": "Then you waited. A day. A week. Two weeks.",
+      "story3": "And nothing.",
+      "body": "Every hiring tool sits on the employer's desk: applicant tracking systems, job boards, filters. The candidate has an inbox and a guess.",
+      "closing": "We do not want this to become normal.",
+      "closingNote": "Even a rejection is worth more than silence."
+    },
+    "aim": {
+      "title": "What we want to do",
+      "body": "Make the process visible from the candidate's side: track your own applications, see from real data how many were answered, measure how applicant tracking systems read your CV, compare your reply rate with your field's median, and read what people who applied before you say about companies. Let candidates' accumulated experience be a path for the next one."
+    },
+    "today": {
+      "title": "What exists today",
+      "items": {
+        "tracking": "Application tracking and personal analytics",
+        "import": "LinkedIn import and the browser extension",
+        "reminders": "Reminders and Gmail scanning",
+        "cv": "CV storage and ATS readability",
+        "tools": "Account-free tools: the CV scan and the reply-rate benchmark",
+        "companies": "Company reviews, salaries and candidate experiences"
+      }
+    },
+    "principles": {
+      "title": "Principles",
+      "items": {
+        "time": "People's time is valuable; candidates have a right to an answer.",
+        "data": "Data is for improving the system, never for blaming individuals.",
+        "transparency": "Transparency helps candidates and companies alike; we target no company and show no number below the threshold.",
+        "privacy": "What is stored is written out item by item — \"nothing\" is only believable when it is listed."
+      },
+      "privacyLink": "Privacy Policy"
+    },
+    "contact": {
+      "title": "Contact",
+      "body": "Write to us:",
+      "feedback": "The \"Feedback\" button inside the app reaches us directly too."
+    }
+  },
+  "siteStats": {
+    "soFar": "So far",
+    "cvScans": "{count, plural, one {CV scanned} other {CVs scanned}}",
+    "benchmarkAnswers": "{count, plural, one {benchmark answered} other {benchmarks answered}}",
+    "publishedReviews": "{count, plural, one {review published} other {reviews published}}"
+  },
   "siteNav": {
     "howItWorks": "How it works",
     "extension": "Extension",
@@ -4740,7 +4753,7 @@
     "benchmark": "Benchmark",
     "guide": "Guide",
     "help": "Help",
-    "mission": "Our mission",
+    "about": "About",
     "signIn": "Log In",
     "getStarted": "Get Started Free",
     "goToDashboard": "Go to Dashboard",

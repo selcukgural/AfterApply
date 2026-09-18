@@ -4,6 +4,7 @@ import { routing } from "./i18n/routing";
 import { guideRedirectForPath } from "./lib/guide/articles";
 import { cvScanRedirectForPath, cvScanScoreCardOf } from "./lib/cvScan/path";
 import { parseScoreCard } from "./lib/cvScan/scoreCard";
+import { aboutRedirectForPath } from "./lib/about/path";
 import { apexRedirectUrl, isFileRequest, stripIndexHtml } from "./lib/http/canonicalHost";
 
 const withLocale = createMiddleware(routing);
@@ -41,6 +42,12 @@ export function proxy(request: NextRequest) {
   const cvScanUrl = cvScanRedirectForPath(request.nextUrl.pathname);
   if (cvScanUrl) {
     return NextResponse.redirect(new URL(`${cvScanUrl}${request.nextUrl.search}`, request.url), 301);
+  }
+
+  // The about page, translated the same way (/tr/hakkimizda, /en/about).
+  const aboutUrl = aboutRedirectForPath(request.nextUrl.pathname);
+  if (aboutUrl) {
+    return NextResponse.redirect(new URL(`${aboutUrl}${request.nextUrl.search}`, request.url), 301);
   }
 
   // A score page whose card the scan could not have produced ("101", parts that do not add up)

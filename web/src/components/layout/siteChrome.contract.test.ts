@@ -112,8 +112,9 @@ describe("the signed-out chrome", () => {
 
   it("keeps the companies pages and the account-free tools one click away", () => {
     for (const href of ['"/companies"', '"/benchmark"', '"/guide"', '"/help"']) expect(header).toContain(href);
-    // The scan's slug is translated, so the footer carries the per-locale set, not one string.
-    for (const href of ['"/companies"', '"/benchmark"', 'CV_SCAN_PATHS', '"/extension-privacy"', '"/privacy"', '"/cookies"', '"/terms"']) {
+    // The scan's and the about page's slugs are translated, so the footer carries the per-locale
+    // sets, not one string.
+    for (const href of ['"/companies"', '"/benchmark"', 'CV_SCAN_PATHS', 'ABOUT_PATHS', '"/extension-privacy"', '"/privacy"', '"/cookies"', '"/terms"']) {
       expect(footer).toContain(href);
     }
   });
@@ -184,5 +185,17 @@ describe("labels", () => {
     const page = read("app/[locale]/(public)/companies/page.tsx");
     for (const key of ['"what"', '"anonymous"', '"moderated"']) expect(page).toContain(key);
     expect(page.match(/"\/companies\/scoring"/g)).toHaveLength(1);
+  });
+});
+
+describe("the footer's brand column (2026-09-18)", () => {
+  const footer = readFileSync(path.join(process.cwd(), "src/components/layout/SiteFooter.tsx"), "utf8");
+
+  it("carries the contact address and the product's accounts from the one shared list", () => {
+    expect(footer).toContain("CONTACT_EMAIL");
+    expect(footer).toContain("SOCIAL_LINKS.map(");
+    expect(footer).toContain('rel="noopener noreferrer"');
+    // The old "Mission" anchor pointed at a landing section that no longer exists.
+    expect(footer).not.toContain("/#mission");
   });
 });

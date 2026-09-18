@@ -1,10 +1,14 @@
 import { getTranslations } from "next-intl/server";
 import { CtaButtons } from "@/components/landing/CtaButtons";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { Link } from "@/i18n/navigation";
+import { getLocale } from "next-intl/server";
+import { aboutPath } from "@/lib/about/path";
 
 export async function FinalCtaSection() {
   const t = await getTranslations("landing.finalCta");
   const tNav = await getTranslations("siteNav");
+  const locale = await getLocale();
 
   return (
     <section className="border-t border-gray-200 bg-blue-50 py-20 dark:border-gray-800 dark:bg-blue-950/20">
@@ -17,6 +21,14 @@ export async function FinalCtaSection() {
           secondaryHref="#how-it-works"
           dashboardLabel={tNav("goToDashboard")}
         />
+        {/* The one place the landing page points at the story behind it, now that the vision,
+            mission and roadmap sections live on the about page. */}
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {t("who")}{" "}
+          <Link href={aboutPath(locale)} className="font-medium text-gray-900 underline underline-offset-2 dark:text-gray-100">
+            {t("whoLink")}
+          </Link>
+        </p>
       </ScrollReveal>
     </section>
   );

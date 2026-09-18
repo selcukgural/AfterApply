@@ -7519,6 +7519,60 @@ T5 ✅ işareti o rebase'le geldi.
 
 ---
 
+## Hakkımızda sayfası, canlı sayaçlar, footer'da iletişim ve sosyal hesaplar (2026-09-18)
+
+**Ne ve neden.** Büyüme denetiminin 11. bulgusu (+ 07'nin kod yarısı): landing'de Vizyon, Misyon ve
+"Bugün ve yarın" yatırımcı diliyle üç bölümdü; projenin kim tarafından ve neden yapıldığı, nasıl
+ulaşılacağı ve gerçek bir sayı yoktu; marka aramasında site kendi adıyla çıkmıyordu. Kanvasta
+onaylanan: sayfa **A** (tek sütun, mektup gibi), sayaç **A** (araç şeridinin altında tek satır),
+eşik **25**, "Henüz yok" bölümü **çıkarıldı**, kişi adı **yok**.
+
+**Kişi adı yok, ekip dili.** Kullanıcının kararı: sayfada ad, şehir ya da kişisel hesap geçmez;
+"biz" diliyle, ekibin sektörde gördüğü problemden başlayarak anlatılır. GitHub deposu kişisel hesap
+altında olduğu için bilerek bağlanmadı. Sosyal hesaplar ürünün kendisinin: LinkedIn
+`company/ekariyerim`, X `ekariyerim`, Instagram `ekariyerim` — tek listede
+(`lib/constants/socialLinks.ts`, `CONTACT_EMAIL = destek@ekariyerim.com`), footer, Hakkımızda ve
+Organization JSON-LD `sameAs` aynı listeyi okur.
+
+**Hakkımızda.** `/tr/hakkimizda`, `/en/about` (cv-scan'deki gibi rewrite + 301, `lib/about/path.ts`).
+Bölümler: giriş (ekibin projesi, aday tarafında araç yoktu) → **Sektörde gördüğümüz problem**
+(eski Misyon anlatısı + "araçların tamamı işverenin masasında, adayın elinde gelen kutusu ve
+tahmin") → **Ne yapmak istiyoruz** → sayaçlar ("Bugüne kadar", eşik üstündeyse) → **Bugün ne var**
+(eski yol haritasının "Bugün" sütunu, altı madde) → **İlkeler** (eski Misyon felsefesi + "eşiğin
+altında sayı göstermeyiz") → **İletişim** (e-posta, üç hesap, geri bildirim düğmesi). Eski "Gelecek"
+sütunu ve "anonim toplu içgörüler" vaadi sayfaya alınmadı (kullanıcı kararı; K1 zaten
+kilitli). Header menüsüne eklenmedi (nav dolu); footer "Keşfet" + Son CTA'daki "Kim yapıyor,
+neden? → Hakkımızda" satırı yeterli.
+
+**Sayaçlar.** `GET /api/site-stats` (anonim, `SiteStatsService`, HybridCache 1 saat): tamamlanan
+anonim CV taraması (`CvScanResults`), kıyas cevabı (`BenchmarkSubmissions`), yayımlanmış
+değerlendirme (`CompanyReviews.Status = Approved`). **Eşik sunucuda** (`SiteStats:MinimumCount`
+= 25): altındaki sayı `null` döner, istemci hiç görmez — "6 kişi" dersi; hiçbiri geçmiyorsa satır
+çizilmez (`visibleFigures` boş → `SiteStatsStrip` null). Web tarafı sunucu bileşeni, `fetch`
+`revalidate: 3600`; landing statik kalır. Kutu/tile değil satır: tile küçük sayıyı büyütür.
+Bugün prod'da büyük ihtimalle üçü de eşiğin altında — satır ilk günler görünmeyecek, bu bilerek.
+Yol boyunca: Next'in derleme zamanı veri önbelleği (`.next/cache/fetch-cache`) ilk (boş) yanıtı
+ikinci derlemede de kullandı; yerelde silinerek doğrulandı, prod'da her deploy temiz imaj.
+
+**Landing.** 12 bölümden 9'a: Hero → Araçlar → **sayaç satırı** → Problem → Neden → Oranlar → İçe
+aktarma → Özellikler → Gizlilik → Son CTA. `VisionSection`, `MissionSection`, `RoadmapSection`,
+`WeeklyJobsRoadmapItem` silindi; `landing.vision/mission/roadmap` katalogdan çıktı, metinler
+`about.*` altında yeniden yazıldı. Footer: "Ürün" sütunundan `/#mission` çıktı; marka sütununa
+e-posta ve üç hesap (`SocialIcon`: LinkedIn "in" kutusu, X harfi, Instagram glifi — `currentColor`,
+iki temada footer'ın metin rengini alır; harici varlık yok, CSP zaten izin vermezdi).
+
+**Testler.** Birim 1.006 (`SiteStatsRules`: eşik altı null, üstü sayı, `HasAny`; normaliser
+`/hakkimizda`, `/about`), entegrasyon 2 yeni (`SiteStatsTests`: eşik 3 ile 3 tarama → 3, 2 kıyas →
+null, 0 değerlendirme → null, `Cache-Control: public`; anonim GET audit satırı bırakmaz), vitest 690
+(`about/path.test`, `siteStats/figures.test`, landing sözleşmesi: şerit araç şeridinin altında,
+üç bölüm yok, Son CTA Hakkımızda'ya; footer sözleşmesi: e-posta + hesaplar + `/#mission` yok;
+`organizationJsonLd.sameAs` = liste, kişisel hesap yok), tsc + eslint + `next build` temiz
+(`/tr/hakkimizda` ve `/en/hakkimizda` prerender). Tarayıcı: yerel yığın, `SiteStats__MinimumCount=1`
+ile satır görünür (5 · 5 · 4), normal eşikle görünmez; `/en/about` 200, `/en/hakkimizda` → 301,
+`/tr/about` → 301; Hakkımızda tr/en, karanlık temada simgeler.
+
+---
+
 ## Puan kartı URL'de, "raporu sakla" kayıtlı CV'de, "makine" → ATS, borç listesi kapandı (2026-09-18)
 
 **Ne ve neden.** Büyüme denetiminin (2026-09-14) #71'de "ayrı karar" diye bırakılan iki maddesi

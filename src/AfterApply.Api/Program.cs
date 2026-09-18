@@ -169,6 +169,7 @@ app.MapOccupationEndpoints();
 app.MapFeedbackEndpoints();
 app.MapSiteTrafficEndpoints();
 app.MapBenchmarkEndpoints();
+app.MapSiteStatsEndpoints();
 app.MapCvScanEndpoints();
 app.MapAdminEndpoints();
 app.MapJobSourceEndpoints();

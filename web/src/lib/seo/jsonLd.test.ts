@@ -98,3 +98,16 @@ describe("articleJsonLd", () => {
     expect(article.dateModified).toBe("2026-09-08");
   });
 });
+
+describe("organizationJsonLd", () => {
+  // Finding 07: the product's own accounts are what let a search engine tie the name to the
+  // site; they come from one list the footer and the about page share.
+  it("lists the product's accounts as sameAs — never a personal one", async () => {
+    const { SOCIAL_LINKS } = await import("@/lib/constants/socialLinks");
+    const node = organizationJsonLd();
+    expect(node.sameAs).toEqual(SOCIAL_LINKS.map((link) => link.href));
+    for (const href of node.sameAs as string[]) {
+      expect(href).toMatch(/\/(company\/)?ekariyerim\/?$/);
+    }
+  });
+});

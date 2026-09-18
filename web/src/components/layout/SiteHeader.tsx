@@ -26,7 +26,8 @@ export interface SiteNavLink {
  * and every other public page another (companies, benchmark, guide, help), so a visitor who
  * went from the home page to Companies watched the menu change under them. "How it works" is
  * the one anchor kept: it resolves from any page and is what a marketing header is expected to
- * open with; the extension, features and mission anchors are the footer's "Product" column.
+ * open with; the extension and features anchors are the footer's "Product" column, and the
+ * about page (the old mission section's home) is in its "Explore" column.
  */
 export const SITE_LINKS: readonly SiteNavLink[] = [
   { href: "/#how-it-works", key: "howItWorks" },

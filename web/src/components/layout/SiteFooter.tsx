@@ -3,6 +3,9 @@ import { Link } from "@/i18n/navigation";
 import { Logo } from "@/components/layout/Logo";
 import { CHROME_WEB_STORE_URL } from "@/lib/constants/chromeWebStore";
 import { CV_SCAN_PATHS } from "@/lib/cvScan/path";
+import { ABOUT_PATHS } from "@/lib/about/path";
+import { CONTACT_EMAIL, SOCIAL_LINKS } from "@/lib/constants/socialLinks";
+import { SocialIcon } from "@/components/layout/SocialIcon";
 import { pathFor, type LocalisedPath } from "@/lib/seo/routes";
 
 /** The landing page's sections — the anchors resolve from any page — and the store listing. */
@@ -10,17 +13,17 @@ const PRODUCT_LINKS = [
   { href: "/#how-it-works", key: "howItWorks" },
   { href: "/#extension", key: "extension" },
   { href: "/#features", key: "features" },
-  { href: "/#mission", key: "mission" },
 ] as const;
 
 /** Every public page a visitor can browse, under the same names the header uses. */
-const EXPLORE_LINKS: readonly { href: LocalisedPath; key: "companies" | "cvScan" | "benchmark" | "guide" | "help" }[] = [
+const EXPLORE_LINKS: readonly { href: LocalisedPath; key: "companies" | "cvScan" | "benchmark" | "guide" | "help" | "about" }[] = [
   { href: "/companies", key: "companies" },
-  // The scan's slug is translated (/cv-tarama, /cv-scan); every other page is the same in both.
+  // The scan's and the about page's slugs are translated; every other page is the same in both.
   { href: CV_SCAN_PATHS, key: "cvScan" },
   { href: "/benchmark", key: "benchmark" },
   { href: "/guide", key: "guide" },
   { href: "/help", key: "help" },
+  { href: ABOUT_PATHS, key: "about" },
 ];
 
 const LEGAL_LINKS = [
@@ -40,6 +43,8 @@ const LEGAL_LINKS = [
  * the pages to browse, and the legal texts — the last had been six lines at the bottom of a
  * ten-line "Resources" list that also held the tools and the guide. Product links go through
  * next-intl's Link with a leading `/`, so the landing's section anchors resolve from any page.
+ * Since 2026-09-18 the brand column also carries the contact address and the product's own
+ * accounts (growth audit finding 11) — the same list the Organization JSON-LD's `sameAs` reads.
  */
 export async function SiteFooter() {
   const t = await getTranslations("landing.footer");
@@ -53,9 +58,30 @@ export async function SiteFooter() {
   return (
     <footer className="border-t border-gray-200 py-12 dark:border-gray-800">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 lg:flex-row lg:justify-between">
-        <div className="flex flex-col gap-2">
-          <Logo />
-          <p className="text-sm text-gray-500 dark:text-gray-400">{t("tagline")}</p>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
+            <Logo />
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t("tagline")}</p>
+          </div>
+          <a href={`mailto:${CONTACT_EMAIL}`} className={`text-sm ${linkClass}`} aria-label={`${t("contact")}: ${CONTACT_EMAIL}`}>
+            {CONTACT_EMAIL}
+          </a>
+          <ul className="flex items-center gap-2" aria-label={t("follow")}>
+            {SOCIAL_LINKS.map((link) => (
+              <li key={link.network}>
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                  title={link.label}
+                  className="flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-900 dark:border-gray-800 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-100"
+                >
+                  <SocialIcon network={link.network} />
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-12">
@@ -75,7 +101,7 @@ export async function SiteFooter() {
             <span className={headingClass}>{t("explore")}</span>
             {EXPLORE_LINKS.map((link) => (
               <Link key={link.key} href={pathFor(link.href, locale)} className={linkClass}>
-                {t(link.key)}
+                {link.key === "about" ? tNav("about") : t(link.key)}
               </Link>
             ))}
           </div>
