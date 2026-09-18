@@ -114,7 +114,11 @@ public class MyContributionsTests(ApiHost<MyContributionsProfile> host) : IClass
         first.Items[0].Salary!.Id.ShouldBe(secondSalary.Id);
         first.Items[0].Review.ShouldBeNull();
         first.Items[0].Experience.ShouldBeNull();
-        first.Items[0].SubmittedAt.ShouldBe(secondSalary.SubmittedAt);
+        // The stamp and the hydrated row come from the same database read, so they agree exactly;
+        // the create response carried the in-memory timestamp, which keeps 100 ns ticks that
+        // Postgres rounds to microseconds — compare that one with a tolerance.
+        first.Items[0].SubmittedAt.ShouldBe(first.Items[0].Salary!.SubmittedAt);
+        first.Items[0].SubmittedAt.ShouldBe(secondSalary.SubmittedAt, TimeSpan.FromMilliseconds(1));
         first.Items[1].Experience!.Id.ShouldBe(experience.Id);
         first.Items[1].Experience!.CompanySlug.ShouldBe(beta.Slug);
         first.Items[2].Salary!.Id.ShouldBe(firstSalary.Id);
