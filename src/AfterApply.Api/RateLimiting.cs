@@ -1,9 +1,13 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
+using AfterApply.Api.RateLimits;
 using AfterApply.Infrastructure;
+using AfterApply.Infrastructure.Caching;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
+using RedisRateLimiting;
+using StackExchange.Redis;
 
 namespace AfterApply.Api;
 
@@ -15,12 +19,36 @@ public static class RateLimiting
 
         services.Configure<RateLimitingOptions>(configuration.GetSection(RateLimitingOptions.SectionName));
 
-        services.AddOptions<RateLimiterOptions>().Configure<IHostApplicationLifetime, IOptions<RateLimitingOptions>>((options, lifetime, limits) =>
+        services.AddOptions<RateLimiterOptions>().Configure<IHostApplicationLifetime, IOptions<RateLimitingOptions>,
+            IOptions<CachingOptions>, IConnectionMultiplexer, ILoggerFactory>((options, lifetime, limits, caching, redis, loggerFactory) =>
         {
             // Sizes come from the "RateLimiting" section (RateLimitingOptions holds the defaults) so
             // a bucket can be retuned without a redeploy; the comments on each policy below explain
             // the sizing, not the numbers.
             var sizes = limits.Value;
+
+            // Every window below is counted in Redis, shared by every instance, with the in-memory
+            // window as the fallback while Redis is unreachable — see RedisFirstFixedWindowLimiter.
+            // One partition = one limiter, built on first sight of the key and evicted once idle.
+            var logger = loggerFactory.CreateLogger("RateLimiting");
+            var keyPrefix = caching.Value.KeyPrefix;
+            RateLimitPartition<string> Partition(string policy, string partitionKey, RateLimitingOptions.FixedWindowPolicy size) =>
+                RateLimitPartition.Get(partitionKey, key => (RateLimiter)new RedisFirstFixedWindowLimiter(
+                    new RedisFixedWindowRateLimiter<string>(RateLimitPartitionKeys.ForRedis(keyPrefix, policy, key), new RedisFixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = size.PermitLimit,
+                        Window = size.Window,
+                        ConnectionMultiplexerFactory = () => redis
+                    }),
+                    new FixedWindowRateLimiter(new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = size.PermitLimit,
+                        Window = size.Window,
+                        QueueLimit = 0
+                    }),
+                    redisIsConnected: () => redis.IsConnected,
+                    // The policy name only: the partition key is an IP or a user id.
+                    onFallback: ex => logger.LogWarning(ex, "Rate limit window for {Policy} counted locally: Redis unavailable", policy)));
 
             // ASP.NET Core's default rejection status is 503 — 429 is the conventional
             // status for rate limiting and what clients are expected to handle.
@@ -30,10 +58,16 @@ public static class RateLimiting
             {
                 // Without this a client has nothing to back off against and the sensible thing for
                 // it to do — retry immediately — is the worst thing for us.
+                // Two spellings, one header: the in-memory limiter reports MetadataName.RetryAfter
+                // (a TimeSpan), the Redis one RateLimitMetadataName.RetryAfter (whole seconds).
                 if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                 {
                     context.HttpContext.Response.Headers.RetryAfter =
                         ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+                }
+                else if (context.Lease.TryGetMetadata(RateLimitMetadataName.RetryAfter, out var retryAfterSeconds))
+                {
+                    context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
                 }
 
                 var logger = context.HttpContext.RequestServices
@@ -55,12 +89,7 @@ public static class RateLimiting
             // policies below use. This runs after UseAuthentication (see Program.cs's pipeline
             // order), so the sub claim is already available here.
             var globalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.Global.PermitLimit,
-                    Window = sizes.Global.Window,
-                    QueueLimit = 0
-                }));
+                Partition("global", PartitionKey(httpContext), sizes.Global));
             options.GlobalLimiter = globalLimiter;
 
             // The limiter is ours, so its lifetime is ours too. Nothing else ever disposes it:
@@ -80,37 +109,19 @@ public static class RateLimiting
 
             // IP-based: auth endpoints are called before the caller is authenticated.
             options.AddPolicy(DependencyInjection.AuthRateLimitPolicy, httpContext =>
-            {
-                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.Auth.PermitLimit,
-                    Window = sizes.Auth.Window,
-                    QueueLimit = 0
-                });
-            });
+                Partition(DependencyInjection.AuthRateLimitPolicy, IpPartitionKey(httpContext), sizes.Auth));
 
             // User-based: upload endpoints already require auth, so this is more precise
             // than IP-based (avoids penalizing legitimate users sharing a NAT'd IP).
             options.AddPolicy(DependencyInjection.UploadRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.Upload.PermitLimit,
-                    Window = sizes.Upload.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.UploadRateLimitPolicy, PartitionKey(httpContext), sizes.Upload));
 
             // User-based, same idiom as UploadRateLimitPolicy. A backstop against a buggy/looping
             // Gmail content script, not the primary control: the extension's own client-side dedup
             // of already-submitted thread ids is what normally keeps volume low, since a user only
             // opens so many emails per session.
             options.AddPolicy(DependencyInjection.ExtensionSignalRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.ExtensionSignal.PermitLimit,
-                    Window = sizes.ExtensionSignal.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.ExtensionSignalRateLimitPolicy, PartitionKey(httpContext), sizes.ExtensionSignal));
 
             // Tighter than the global limit because this endpoint is the only one that makes an
             // outbound request to a third party (JobLinkPreviewService fetches the pasted URL from
@@ -118,26 +129,13 @@ public static class RateLimiting
             // a few hundred requests a minute at someone else's servers over our IP — the kind of
             // amplification that gets an egress address blocked. A human pastes one link at a time.
             options.AddPolicy(DependencyInjection.LinkPreviewRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.LinkPreview.PermitLimit,
-                    Window = sizes.LinkPreview.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.LinkPreviewRateLimitPolicy, PartitionKey(httpContext), sizes.LinkPreview));
 
             // IP-based and anonymous, same idiom as the site-traffic policy above. PartitionKey
             // is not used here for the same reason: it would start partitioning a signed-in
             // visitor by their user id, and a benchmark answer is not supposed to be attributable.
             options.AddPolicy(DependencyInjection.BenchmarkRateLimitPolicy, httpContext =>
-            {
-                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.Benchmark.PermitLimit,
-                    Window = sizes.Benchmark.Window,
-                    QueueLimit = 0
-                });
-            });
+                Partition(DependencyInjection.BenchmarkRateLimitPolicy, IpPartitionKey(httpContext), sizes.Benchmark));
 
             // IP-based and anonymous, like the benchmark policy above and for the same reason: the
             // scan is answerable without an account, and partitioning a signed-in visitor by user
@@ -145,15 +143,7 @@ public static class RateLimiting
             // do. The bucket is the tightest of the anonymous ones because a scan costs a parser
             // run — see RateLimitingOptions.CvScan.
             options.AddPolicy(DependencyInjection.CvScanRateLimitPolicy, httpContext =>
-            {
-                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.CvScan.PermitLimit,
-                    Window = sizes.CvScan.Window,
-                    QueueLimit = 0
-                });
-            });
+                Partition(DependencyInjection.CvScanRateLimitPolicy, IpPartitionKey(httpContext), sizes.CvScan));
 
             // User-based. Free-text that a human writes and, when the GitHub mirror is on, that
             // leaves our infrastructure — so it is bounded far tighter than the global backstop,
@@ -163,15 +153,7 @@ public static class RateLimiting
             // visitor, but calling it here would silently start partitioning signed-in visitors by
             // their user id, which is the one thing this feature must not do with traffic data.
             options.AddPolicy(DependencyInjection.SiteTrafficRateLimitPolicy, httpContext =>
-            {
-                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.SiteTraffic.PermitLimit,
-                    Window = sizes.SiteTraffic.Window,
-                    QueueLimit = 0
-                });
-            });
+                Partition(DependencyInjection.SiteTrafficRateLimitPolicy, IpPartitionKey(httpContext), sizes.SiteTraffic));
 
             // Both halves of the extension pairing flow are anonymous and therefore IP-partitioned,
             // like the two policies above. They are split because they answer to different callers:
@@ -179,97 +161,38 @@ public static class RateLimiting
             // as long as the pairing does. One bucket sized for the timer would leave the start
             // endpoint effectively unbounded.
             options.AddPolicy(DependencyInjection.ExtensionPairingStartRateLimitPolicy, httpContext =>
-            {
-                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.ExtensionPairingStart.PermitLimit,
-                    Window = sizes.ExtensionPairingStart.Window,
-                    QueueLimit = 0
-                });
-            });
+                Partition(DependencyInjection.ExtensionPairingStartRateLimitPolicy, IpPartitionKey(httpContext), sizes.ExtensionPairingStart));
 
             options.AddPolicy(DependencyInjection.ExtensionPairingPollRateLimitPolicy, httpContext =>
-            {
-                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.ExtensionPairingPoll.PermitLimit,
-                    Window = sizes.ExtensionPairingPoll.Window,
-                    QueueLimit = 0
-                });
-            });
+                Partition(DependencyInjection.ExtensionPairingPollRateLimitPolicy, IpPartitionKey(httpContext), sizes.ExtensionPairingPoll));
 
             options.AddPolicy(DependencyInjection.FeedbackRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.Feedback.PermitLimit,
-                    Window = sizes.Feedback.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.FeedbackRateLimitPolicy, PartitionKey(httpContext), sizes.Feedback));
 
             options.AddPolicy(DependencyInjection.PaymentCheckoutRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.PaymentCheckout.PermitLimit,
-                    Window = sizes.PaymentCheckout.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.PaymentCheckoutRateLimitPolicy, PartitionKey(httpContext), sizes.PaymentCheckout));
 
             // User-based, all three: the review routes require auth, and the thing being bounded
             // is what one account can write onto public pages. Sizing in RateLimitingOptions.
             options.AddPolicy(DependencyInjection.CompanyReviewWriteRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.CompanyReviewWrite.PermitLimit,
-                    Window = sizes.CompanyReviewWrite.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.CompanyReviewWriteRateLimitPolicy, PartitionKey(httpContext), sizes.CompanyReviewWrite));
 
             options.AddPolicy(DependencyInjection.CompanyReviewReportRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.CompanyReviewReport.PermitLimit,
-                    Window = sizes.CompanyReviewReport.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.CompanyReviewReportRateLimitPolicy, PartitionKey(httpContext), sizes.CompanyReviewReport));
 
             options.AddPolicy(DependencyInjection.CompanyReviewHelpfulRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.CompanyReviewHelpful.PermitLimit,
-                    Window = sizes.CompanyReviewHelpful.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.CompanyReviewHelpfulRateLimitPolicy, PartitionKey(httpContext), sizes.CompanyReviewHelpful));
 
             options.AddPolicy(DependencyInjection.CompanySalaryWriteRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.CompanySalaryWrite.PermitLimit,
-                    Window = sizes.CompanySalaryWrite.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.CompanySalaryWriteRateLimitPolicy, PartitionKey(httpContext), sizes.CompanySalaryWrite));
 
             options.AddPolicy(DependencyInjection.CandidateExperienceWriteRateLimitPolicy, httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(PartitionKey(httpContext), _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.CandidateExperienceWrite.PermitLimit,
-                    Window = sizes.CandidateExperienceWrite.Window,
-                    QueueLimit = 0
-                }));
+                Partition(DependencyInjection.CandidateExperienceWriteRateLimitPolicy, PartitionKey(httpContext), sizes.CandidateExperienceWrite));
 
             // IP-based and anonymous, like the benchmark policy: the directory is readable without
             // an account, and a signed-in reader's browsing is not something to key to their id.
             options.AddPolicy(DependencyInjection.CompanyPublicSearchRateLimitPolicy, httpContext =>
-            {
-                var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = sizes.CompanyPublicSearch.PermitLimit,
-                    Window = sizes.CompanyPublicSearch.Window,
-                    QueueLimit = 0
-                });
-            });
+                Partition(DependencyInjection.CompanyPublicSearchRateLimitPolicy, IpPartitionKey(httpContext), sizes.CompanyPublicSearch));
         });
 
         return services;
@@ -280,6 +203,10 @@ public static class RateLimiting
     /// anonymous caller behind Cloud Run's frontend shares a single partition.</summary>
     private static string PartitionKey(HttpContext httpContext) =>
         httpContext.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? httpContext.Connection.RemoteIpAddress?.ToString()
-        ?? "unknown";
+        ?? IpPartitionKey(httpContext);
+
+    /// <summary>The IP alone, for the anonymous policies that must not key a signed-in visitor by
+    /// their id (see each policy's comment).</summary>
+    private static string IpPartitionKey(HttpContext httpContext) =>
+        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 }

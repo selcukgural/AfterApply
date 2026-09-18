@@ -7941,3 +7941,40 @@ SignalR `ImportProgressHub` backplane (import job'u X'te, socket Y'de → ilerle
 `NormalizedName` 23505 yakalama, `EnsureSlugAsync` retry, e-posta sinyali 23505). **Redis kilidi
 gerekmeyenler (kayda geçer):** Hangfire recurring job'lar (Postgres storage lock + `SKIP LOCKED`),
 migration (ayrı job), DataProtection, lockout, unique index'li kurallar, CV ≤10 (`pg_advisory_xact_lock`).
+
+## Rate limit pencereleri Redis'te: instance sayısı kadar değil, bir limit — DECIDED (2026-09-18)
+
+**Karar.** 18 policy'nin (global backstop dâhil) fixed-window sayaçları Redis'e taşındı
+(`RedisRateLimiting.AspNetCore` 1.2.1, `RedisFixedWindowRateLimiter<string>`, istek başına tek Lua
+INCR; key TTL = pencere). Bugüne kadar her pencere process içindeydi, yani **etkin limit =
+N × instance**: `cv-scan` 5/2sa IP başına 4 container'da 20'ydi (DECISIONS 2026-09-10'daki
+"per-instance" notu ve 2026-09-12'de max-instances'ı 4'e çekerken "çarpanı küçültür" gerekçesi bu
+sorunun kabulüydü). Aynı Redis, aynı multiplexer.
+
+**Fallback tasarımı (`Api/RateLimits/RedisFirstFixedWindowLimiter`).** Kütüphane Redis
+istisnasını yakalamıyor; middleware de yakalamıyor → Redis kesintisi her rate-limit'li endpoint'i
+500 yapardı. Sarmalayıcı: `RedisConnectionException`/`RedisTimeoutException` → aynı partition'ın
+yerel `FixedWindowRateLimiter`'ı (2026-09-18 öncesi davranışa degrade, açık kapı değil, kendi
+kesintimiz değil); multiplexer `IsConnected=false` ise Redis'e hiç gidilmez; ilk düşüşte policy
+adıyla warning. `IdleDuration` boşta non-null (yoksa `PartitionedRateLimiter` IP-keyli
+partition'ları hiç tahliye etmez; eşik 10 sn).
+
+**Bulgu — senkron `AttemptAcquire` Redis'i baypas ediyordu.** `RateLimitingMiddleware` önce
+senkron `AttemptAcquire` çağırır, yalnız reddedilirse `AcquireAsync`'e düşer. Sarmalayıcının
+senkron yolu yerel pencereye gidince ilk `PermitLimit` istek Redis'i hiç görmedi (6 başarısız
+login, Redis 2 saydı). Senkron yol artık her zaman "reddedildi" döndürüyor — kütüphanenin kendi
+limiter'ının da aynı sebeple yaptığı şey; maliyeti yok, aynı isteğin bir sonraki çağrısı async.
+
+**Key:** kütüphane `rl:fw:{partition}` üretir, policy adı yok — 7 IP-bazlı policy aynı IP için
+tek pencereyi paylaşırdı. Partition = `{Redis:KeyPrefix}{policy}:{sha256(ham key)[:24 hex]}`; IP
+veya kullanıcı id'si Redis'te hiç durmaz (yerel fallback ham key'le çalışır, eskisi gibi).
+**Retry-After:** yerel limiter `MetadataName.RetryAfter` (TimeSpan), Redis limiter
+`RateLimitMetadataName.RetryAfter` (tam saniye) — `OnRejected` ikisine de bakıyor, yoksa header
+sessizce düşüyordu.
+
+**Testler.** Birim +11 (`RedisFirstFixedWindowLimiterTests`: Redis yanıtı, iki istisna tipinde
+fallback + rapor, disconnected kısa devre, başka istisna yüzeye çıkar, idle/busy, senkron erteleme,
+dispose; `RateLimitPartitionKeysTests`). Entegrasyon +3 (`RedisRateLimitTests`): **iki host tek
+pencere** (3 A + 2 B → A'da 6. ve B'de 6. 429, Retry-After ≤ 60 sn), iki policy aynı IP'de ayrı
+pencere, Redis kapalıyken yerel sayım + Retry-After. Mevcut üç `RateLimiting:Enabled=true` testi
+sınıf başına `FLUSHDB` sayesinde pencere paylaşmıyor.
