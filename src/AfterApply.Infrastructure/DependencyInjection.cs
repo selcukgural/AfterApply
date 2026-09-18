@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using AfterApply.Application.Admin;
 using AfterApply.Application.Analytics;
 using AfterApply.Application.Auditing;
@@ -311,7 +312,10 @@ public static class DependencyInjection
                 options.IsFailSafeEnabled = false;
             })
             .WithRegisteredMemoryCache()
-            .WithSerializer(new FusionCacheSystemTextJsonSerializer())
+            // IncludeFields so the serializer can also carry value tuples; nothing cached today
+            // holds one, but FusionCache probes for it at start-up and warns on every boot
+            // otherwise.
+            .WithSerializer(new FusionCacheSystemTextJsonSerializer(new JsonSerializerOptions { IncludeFields = true }))
             .WithDistributedCache(sp => new RedisCache(new RedisCacheOptions
             {
                 ConnectionMultiplexerFactory = () => Task.FromResult(sp.GetRequiredService<IConnectionMultiplexer>())
