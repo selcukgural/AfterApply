@@ -857,6 +857,17 @@
       "shareExperience": {
         "text": "Bu süreçte yaşadığını senden sonrakiler bilsin —",
         "link": "{company} ile deneyimini paylaş"
+      },
+      "accepted": {
+        "title": "Hayırlı olsun.",
+        "share": {
+          "text": "Bu süreç nasıl geçti, senden sonraki bilsin —",
+          "link": "{company} ile deneyimini paylaş"
+        },
+        "keep": {
+          "text": "Verin senin; istediğin zaman indirebilirsin. Hesabın olduğu gibi kalır, bir gün yeniden gerekirse seni bekler.",
+          "link": "Verimi indir"
+        }
       }
     },
     "statusChange": {

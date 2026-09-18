@@ -154,6 +154,38 @@ describe("empty states point somewhere", () => {
   });
 });
 
+describe("the closing lines of an application keep the T-series tone (2026-09-18)", () => {
+  // DEVELOPMENT_PLAN.md, "Standing kurallar": calm, factual, adult. The two closing surfaces —
+  // the ending line (T6) and the accepted-offer card (T7) — are where a slip would be loudest:
+  // an exclamation mark on a congratulation, a "don't give up" after a rejection, a nudge
+  // towards deleting the account on the way out.
+  const closingCopy = [...trEntries, ...enEntries].filter(([key]) => /^applications\.detail\.(shareExperience|accepted)\./.test(key));
+
+  it("covers both surfaces", () => {
+    expect(closingCopy.map(([key]) => key)).toEqual(expect.arrayContaining(["applications.detail.accepted.title", "applications.detail.shareExperience.text"]));
+  });
+
+  it("uses no exclamation mark", () => {
+    const offenders = closingCopy.filter(([, value]) => value.includes("!")).map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+
+  it("says nothing motivational", () => {
+    const offenders = closingCopy
+      .filter(([, value]) => /(pes etme|vazgeçme|don't give up|never give up|keep going|yaklaştır|closer to)/i.test(value))
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+
+  it("leaves the account alone on the way out — the data offer is a download, never a deletion", () => {
+    const offenders = closingCopy.filter(([, value]) => /(hesabını sil|hesabı sil|delete your account|delete the account)/i.test(value)).map(([key]) => key);
+    expect(offenders).toEqual([]);
+    for (const value of [trValue("applications.detail.accepted.keep.link"), enValue("applications.detail.accepted.keep.link")]) {
+      expect(value).toMatch(/indir|download/i);
+    }
+  });
+});
+
 describe("company reviews have no free text (2026-09-16)", () => {
   // A review is ratings plus catalogue statements. Copy that still promises "pros and cons", a
   // title, or a moderator reading every review before it is published describes the old form.

@@ -857,6 +857,17 @@
       "shareExperience": {
         "text": "Let the next candidate know what this process was like —",
         "link": "share your experience with {company}"
+      },
+      "accepted": {
+        "title": "Congratulations.",
+        "share": {
+          "text": "Let the next candidate know how this process went —",
+          "link": "share your experience with {company}"
+        },
+        "keep": {
+          "text": "Your data is yours; download it whenever you like. Your account stays as it is and will be here if you ever need it again.",
+          "link": "Download my data"
+        }
       }
     },
     "statusChange": {

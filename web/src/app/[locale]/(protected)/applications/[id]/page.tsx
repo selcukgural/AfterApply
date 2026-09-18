@@ -9,6 +9,7 @@ import type { ApplicationEventType, ApplicationStatus } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusChangeSelect } from "@/components/applications/StatusChangeSelect";
 import { ShareExperienceInvite } from "@/components/applications/ShareExperienceInvite";
+import { AcceptedClosingNote } from "@/components/applications/AcceptedClosingNote";
 import { ApplicationTimeline } from "@/components/applications/ApplicationTimeline";
 import { AddEventForm } from "@/components/applications/AddEventForm";
 import { writeEventNote } from "@/lib/applications/timeline";
@@ -117,6 +118,15 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
       </div>
 
       <div className="flex flex-col gap-6">
+        {/* Above the details, not under the status control: once the offer is accepted the
+            closing line is the first thing the page has to say, and the moment it appears is the
+            re-render right after the status change below. */}
+        <AcceptedClosingNote
+          status={application.status}
+          companyId={application.companyId}
+          companyName={application.companyName}
+          companySlug={application.companySlug}
+        />
         <div className="flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <div className="flex items-center gap-2">
             <StatusBadge status={application.status} />
