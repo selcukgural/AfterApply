@@ -21,3 +21,6 @@ public sealed record CandidateExperienceRequest(
     IReadOnlyList<InterviewType>? InterviewTypes = null);
 
 public sealed record CandidateExperienceListQuery(int Page = 1);
+
+/// <summary>The admin table: an optional company-name filter, newest first.</summary>
+public sealed record AdminCandidateExperienceListQuery(string? Company = null, int Page = 1);

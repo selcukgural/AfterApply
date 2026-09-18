@@ -44,12 +44,18 @@ public sealed record CompanyPublicResponse(
     /// off. Trailing and defaulted, like <see cref="SalaryCount"/>.</summary>
     int CandidateExperienceCount = 0);
 
+/// <summary>One directory card. A company is on the list once it has any published
+/// contribution — a review, a salary entry or a candidate experience — and the three counts say
+/// which; <see cref="Score"/> comes from reviews alone. The two trailing counts are zero while
+/// their feature is off, and defaulted so older clients never see them.</summary>
 public sealed record CompanyPublicListItemResponse(
     Guid Id,
     string Slug,
     string Name,
     int ApprovedCount,
-    double? Score);
+    double? Score,
+    int SalaryCount = 0,
+    int CandidateExperienceCount = 0);
 
 /// <summary>
 /// Month precision on <see cref="SubmittedMonth"/> (<c>yyyy-MM</c>) is deliberate: an exact
@@ -72,7 +78,9 @@ public sealed record CompanyReviewPublicResponse(
     string SubmittedMonth,
     int HelpfulCount);
 
-/// <summary>For the sitemap: which company pages are worth a crawler's visit.</summary>
+/// <summary>For the sitemap: which company pages are worth a crawler's visit — those with a
+/// published review or a public candidate experience (salaries sit behind sign-in, so they do not
+/// count). <see cref="LastApprovedAt"/> is the later of the two.</summary>
 public sealed record ReviewedCompanySlugResponse(string Slug, DateTimeOffset LastApprovedAt);
 
 public sealed record ResolvedCompanyResponse(Guid Id, string Slug, string Name);

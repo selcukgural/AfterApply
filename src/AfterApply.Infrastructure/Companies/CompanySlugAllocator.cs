@@ -43,6 +43,21 @@ internal sealed class CompanySlugAllocator(AppDbContext dbContext)
         }
     }
 
+    /// <summary>Gives a company its slug if it has none yet and saves. Every write path that can
+    /// make a company public — review, salary entry, candidate experience — goes through here,
+    /// because the directory lists a company only by its slug: a row without one would take the
+    /// contribution and then never show it.</summary>
+    public async Task EnsureSlugAsync(Company company, CancellationToken cancellationToken)
+    {
+        if (company.Slug is not null)
+        {
+            return;
+        }
+
+        company.AssignSlug(await AllocateAsync(company.Name, cancellationToken), DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     /// <summary>True when the failed write is the slug index saying "taken" — the one collision
     /// worth retrying rather than surfacing.</summary>
     public static bool IsSlugCollision(DbUpdateException exception) =>

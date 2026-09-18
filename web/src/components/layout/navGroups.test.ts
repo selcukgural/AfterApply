@@ -38,8 +38,6 @@ describe("buildNavEntries", () => {
       "/contribute?tab=salary",
       "/contribute?tab=experience",
       "/my-reviews",
-      "/my-salaries",
-      "/my-experiences",
     ]);
     expect(companies.items.filter((item) => item.dividerBefore).map((item) => item.href)).toEqual(["/contribute?tab=review", "/my-reviews"]);
   });
@@ -64,8 +62,14 @@ describe("buildNavEntries", () => {
       candidateExperiences: { ...ALL_ON.candidateExperiences, enabled: false },
     }, "tr");
     expect(group(reviewsOnly, "companies").items.map((item) => item.href)).toEqual(["/companies", "/contribute?tab=review", "/my-reviews"]);
+    // One "mine" page for every kind since 2026-09-18: the group ends on it whatever the flags say.
     const noExperiences = buildNavEntries({ ...ALL_ON, candidateExperiences: { ...ALL_ON.candidateExperiences, enabled: false } }, "tr");
-    expect(group(noExperiences, "companies").items.map((item) => item.href)).not.toContain("/my-experiences");
+    for (const entries of [buildNavEntries(ALL_ON, "tr"), reviewsOnly, noExperiences]) {
+      const items = group(entries, "companies").items.map((item) => item.href);
+      expect(items.at(-1)).toBe("/my-reviews");
+      expect(items).not.toContain("/my-salaries");
+      expect(items).not.toContain("/my-experiences");
+    }
   });
 
   it("uses only keys both catalogues have", () => {

@@ -1,3 +1,4 @@
+using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Common;
 using AfterApply.Application.CompanySalaries.Contracts;
 
@@ -21,6 +22,21 @@ public interface ICompanySalaryService
     Task<bool> DeleteAsync(Guid userId, Guid entryId, CancellationToken cancellationToken);
 
     Task<MySalariesResponse> ListMineAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>The caller's own entries among <paramref name="ids"/>, in no particular order;
+    /// anyone else's id is silently absent. Feeds the merged contributions page.</summary>
+    Task<IReadOnlyList<MyCompanySalaryResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
+
+    Task<SalaryQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken);
+}
+
+/// <summary>Admin only — the caller has already passed <c>IAdminAccessService</c>. Lists every
+/// entry with its author and removes one outright; there is no moderation state to move.</summary>
+public interface ICompanySalaryAdminService
+{
+    Task<PagedResult<AdminCompanySalaryListItemResponse>> ListAsync(AdminCompanySalaryListQuery query, CancellationToken cancellationToken);
+
+    Task<bool> DeleteAsync(Guid entryId, CancellationToken cancellationToken);
 }
 
 /// <summary>The account holds as many salary entries as it is allowed to. {0} = the limit.</summary>

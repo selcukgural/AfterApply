@@ -653,6 +653,10 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
             (HttpMethod.Get, "/api/admin/company-review-reports", null),
             (HttpMethod.Post, $"/api/admin/company-review-reports/{id}/resolve", new ResolveReviewReportRequest(ReviewReportResolution.Dismissed)),
             (HttpMethod.Put, $"/api/admin/users/{id}/review-quota", new SetReviewQuotaRequest(1)),
+            (HttpMethod.Get, "/api/admin/company-salaries", null),
+            (HttpMethod.Delete, $"/api/admin/company-salaries/{id}", null),
+            (HttpMethod.Get, "/api/admin/candidate-experiences", null),
+            (HttpMethod.Delete, $"/api/admin/candidate-experiences/{id}", null),
         };
 
         foreach (var (method, path, body) in routes)

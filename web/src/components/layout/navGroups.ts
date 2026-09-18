@@ -16,8 +16,6 @@ export type NavKey =
   | "shareSalary"
   | "shareExperience"
   | "myReviews"
-  | "mySalaries"
-  | "myExperiences"
   | "tools"
   | "weeklyJobs"
   | "cvScan"
@@ -48,7 +46,7 @@ export type NavFlags = Pick<ClientConfigResponse, "jobSources" | "companyReviews
  * navigation canvas): the previous "Explore" menu put the company directory, the two contribution
  * forms and the account-free tools in one flat list, while the author's own reviews and salaries
  * sat in the avatar menu. Now everything about companies is one group — browse, then contribute,
- * then mine — and the tools are their own. "New application" is not here: it is the header's
+ * then mine (one page for all three kinds since 2026-09-18) — and the tools are their own. "New application" is not here: it is the header's
  * primary button, rendered by NavBar on every page.
  *
  * Flags: the weekly postings and the company pages ship dark, so their items follow the server
@@ -65,9 +63,8 @@ export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
     { href: "/contribute?tab=review", key: "writeReview", dividerBefore: true },
     ...(salariesOn ? [{ href: "/contribute?tab=salary", key: "shareSalary" } as NavItem] : []),
     ...(experiencesOn ? [{ href: "/contribute?tab=experience", key: "shareExperience" } as NavItem] : []),
+    // One "mine" page since 2026-09-18: reviews, salaries and experiences are one list there.
     { href: "/my-reviews", key: "myReviews", dividerBefore: true },
-    ...(salariesOn ? [{ href: "/my-salaries", key: "mySalaries" } as NavItem] : []),
-    ...(experiencesOn ? [{ href: "/my-experiences", key: "myExperiences" } as NavItem] : []),
   ];
 
   const tools: NavItem[] = [

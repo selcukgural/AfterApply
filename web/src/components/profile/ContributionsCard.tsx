@@ -14,8 +14,9 @@ import { ReviewStatusBadge } from "@/components/companyReviews/ReviewStatusBadge
 
 /**
  * The newest few of what the person has written about companies, with the quota, and the doors
- * to the full lists. Summary here, management there: editing and deleting stay on /my-reviews
- * and /my-salaries, which the Companies menu already points at. Readers of the company pages
+ * to the full list. Summary here, management there: editing and deleting stay on /my-reviews —
+ * one contributions list for all three kinds since 2026-09-18 — which the Companies menu
+ * already points at. Readers of the company pages
  * never see who wrote these; the card says so once.
  *
  * The caller decides whether the card exists (reviews flag) and whether the salaries and the
@@ -136,7 +137,7 @@ export function ContributionsCard({ showSalaries, showExperiences = false }: { s
               </ul>
             )}
             <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-              <Link href="/my-salaries" className="text-sm text-accent-ink underline-offset-2 hover:underline">
+              <Link href="/my-reviews" className="text-sm text-accent-ink underline-offset-2 hover:underline">
                 {t("salaries.all")}
               </Link>
               <Link href="/contribute?tab=salary" className={buttonClassName("outline")}>
@@ -188,7 +189,7 @@ export function ContributionsCard({ showSalaries, showExperiences = false }: { s
               </ul>
             )}
             <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-              <Link href="/my-experiences" className="text-sm text-accent-ink underline-offset-2 hover:underline">
+              <Link href="/my-reviews" className="text-sm text-accent-ink underline-offset-2 hover:underline">
                 {t("experiences.all")}
               </Link>
               <Link href="/contribute?tab=experience" className={buttonClassName("outline")}>

@@ -47,9 +47,10 @@ internal sealed class CompanyReviewModerationService(
         var pageSize = options.Value.AdminPageSize;
 
         var items = await joined
-            // Oldest pending first: the queue is worked in the order people submitted.
-            .OrderBy(x => x.r.Status == ReviewModerationStatus.Pending ? 0 : 1)
-            .ThenBy(x => x.r.SubmittedAt)
+            // Newest first (2026-09-18; was pending-first, oldest-first): the queue is a log of
+            // what arrived, and the Pending filter plus the tab's badge is how it is worked.
+            .OrderByDescending(x => x.r.SubmittedAt)
+            .ThenByDescending(x => x.r.Id)
             .Skip((query.Page - 1) * pageSize)
             .Take(pageSize)
             .Select(x => new AdminCompanyReviewListItemResponse(

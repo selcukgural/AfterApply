@@ -45,6 +45,7 @@ public class CompanyReviewsDisabledTests(ApiHost<CompanyReviewsDisabledProfile> 
         (await client.GetAsync("/api/companies/public")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await client.GetAsync("/api/companies/public/anything")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await client.GetAsync("/api/company-reviews/mine")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await client.GetAsync("/api/contributions/mine")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await client.PostAsJsonAsync("/api/companies/resolve", new ResolveCompanyRequest("Dark Co"), JsonOptions))
             .StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await client.GetAsync("/api/admin/company-reviews/counts")).StatusCode.ShouldBe(HttpStatusCode.NotFound);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -17,7 +17,6 @@ import {
 } from "@/lib/companyReviews/moderationListView";
 import { categoryMessageKey } from "@/lib/companyReviews/statementCatalogue";
 import { ReviewPicks } from "@/components/companyReviews/ReviewPicks";
-import { moderationGuideStore } from "@/lib/admin/moderationGuideStore";
 import { Card } from "@/components/dashboard/Card";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
@@ -27,12 +26,13 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Pagination } from "@/components/applications/Pagination";
 import { AdminTabs } from "@/components/admin/AdminTabs";
-import { MODERATION_GUIDE_GREY_AREAS_ID, ModerationGuide } from "@/components/admin/ModerationGuide";
+import { AdminContributionTabs } from "@/components/admin/AdminContributionTabs";
 import { ReviewStatusBadge } from "@/components/companyReviews/ReviewStatusBadge";
 import { StarRating } from "@/components/companyReviews/StarRating";
 
-/** The moderation queue. Filters live in the URL (see moderationListView); the detail opens in a
- *  modal and is the one screen on the site that shows a review next to its author. */
+/** The moderation queue, newest first. Filters live in the URL (see moderationListView); the detail
+ *  opens in a modal and, with the two sibling tables, is the one place on the site that shows a
+ *  contribution next to its author. */
 export default function AdminReviewsPage() {
   const t = useTranslations("adminReviews");
   const tStatus = useTranslations("reviewModerationStatus");
@@ -47,30 +47,6 @@ export default function AdminReviewsPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [quotaInput, setQuotaInput] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
-
-  // Open on the first visit, closed once the moderator closes it — remembered across reloads.
-  const guideOpen = useSyncExternalStore(moderationGuideStore.subscribe, moderationGuideStore.isOpen, moderationGuideStore.isOpenOnServer);
-  // Set by the modal's "grey-area examples" link: the panel has to be open (and rendered) before
-  // there is anything to scroll to, so the scroll waits for the commit that opens it.
-  const scrollToGreyAreas = useRef(false);
-  useEffect(() => {
-    if (!guideOpen || !scrollToGreyAreas.current) return;
-    scrollToGreyAreas.current = false;
-    document.getElementById(MODERATION_GUIDE_GREY_AREAS_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [guideOpen]);
-
-  const showGreyAreas = () => {
-    setOpenId(null);
-    if (moderationGuideStore.isOpen()) {
-      // Already rendered, so nothing will re-commit: scroll once the modal is gone.
-      requestAnimationFrame(() =>
-        document.getElementById(MODERATION_GUIDE_GREY_AREAS_ID)?.scrollIntoView({ behavior: "smooth", block: "start" }),
-      );
-      return;
-    }
-    scrollToGreyAreas.current = true;
-    moderationGuideStore.setOpen(true);
-  };
 
   const apply = useCallback(
     (next: ModerationListFilters) => {
@@ -146,8 +122,7 @@ export default function AdminReviewsPage() {
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
       </div>
       <AdminTabs />
-
-      <ModerationGuide open={guideOpen} onToggle={moderationGuideStore.setOpen} />
+      <AdminContributionTabs />
 
       <div className="grid gap-3 sm:grid-cols-4">
         <FormField label={t("filters.status")} htmlFor="mod-status">
@@ -233,7 +208,7 @@ export default function AdminReviewsPage() {
           page={list.data.page}
           pageSize={list.data.pageSize}
           totalCount={list.data.totalCount}
-          unit="companies"
+          unit="reviews"
           onPageChange={(page) => apply({ ...filters, page })}
         />
       )}
@@ -380,11 +355,6 @@ export default function AdminReviewsPage() {
                   <FormField label={t("detail.rejectReason")} htmlFor="reject-reason">
                     <Textarea id="reject-reason" rows={2} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder={t("detail.rejectPlaceholder")} />
                   </FormField>
-                  {/* Closes the modal: the guide sits behind it. The typed reason survives — it is
-                      page state, cleared only by a successful reject. */}
-                  <button type="button" onClick={showGreyAreas} className="self-start text-xs font-medium text-accent-ink hover:underline">
-                    {t("guide.modalLink")}
-                  </button>
                 </div>
               )}
 

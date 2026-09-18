@@ -167,7 +167,7 @@ internal sealed class CompanyReviewQueries(AppDbContext dbContext, HybridCache c
     // EF Core translates a constructor projection, but nothing can be ordered or filtered on the
     // result afterwards, so callers order the CompanyReview query first and hand it in. The child
     // rows (category ratings, statement picks) come in two further queries keyed by the page's
-    // review ids — a page is at most 25 rows, and no navigation collection means no Include.
+    // review ids — a page is at most ten rows, and no navigation collection means no Include.
 
     public async Task<List<MyCompanyReviewResponse>> ProjectMineAsync(IQueryable<CompanyReview> reviews, CancellationToken cancellationToken)
     {

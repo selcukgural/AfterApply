@@ -47,7 +47,9 @@ export function contributeHref(tab: ContributeTab, companySlug?: string | null):
   return companySlug ? `/contribute?tab=${tab}&company=${encodeURIComponent(companySlug)}` : `/contribute?tab=${tab}`;
 }
 
-/** The author's own list for a side — where "skip" and a save with nothing left to invite to go. */
+/** The author's own list for a side — where "skip" and a save with nothing left to invite to go.
+ *  One page for every kind since 2026-09-18; the parameter stays so the call sites read the same. */
 export function ownListHref(tab: ContributeTab): string {
-  return tab === "salary" ? "/my-salaries" : tab === "experience" ? "/my-experiences" : "/my-reviews";
+  void tab;
+  return "/my-reviews";
 }

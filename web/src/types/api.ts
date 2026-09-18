@@ -1068,12 +1068,17 @@ export interface CompanyPublicResponse {
   candidateExperienceCount?: number;
 }
 
+/** One directory card: a company is listed once it has any published contribution, and the three
+ *  counts say which. The score comes from reviews alone; the two trailing counts are 0 while
+ *  that feature is off. */
 export interface CompanyPublicListItem {
   id: string;
   slug: string;
   name: string;
   approvedCount: number;
   score: number | null;
+  salaryCount: number;
+  candidateExperienceCount: number;
 }
 
 /** What every review shape carries besides its identity. `categoryRatings` holds only the
@@ -1133,6 +1138,29 @@ export interface ReviewQuota {
 export interface MyReviewsResponse {
   items: MyCompanyReview[];
   quota: ReviewQuota;
+}
+
+export type ContributionKind = "Review" | "Salary" | "Experience";
+
+/** One row of the author's merged "my contributions" list: exactly one of the three per-kind
+ *  records is set, named by `kind`. */
+export interface MyContribution {
+  kind: ContributionKind;
+  submittedAt: string;
+  review: MyCompanyReview | null;
+  salary: MyCompanySalary | null;
+  experience: MyCandidateExperience | null;
+}
+
+/** Newest first, ten per page. A quota is null while its feature is off. */
+export interface MyContributionsResponse {
+  items: MyContribution[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  reviewQuota: ReviewQuota;
+  salaryQuota: SalaryQuota | null;
+  experienceQuota: ExperienceQuota | null;
 }
 
 export interface CompanyReviewViewerState {
@@ -1635,6 +1663,26 @@ export interface MyCompanySalary {
   updatedAt: string;
 }
 
+/** The admin table's row: the author's full record plus who wrote it — admin-only, like the
+ *  review moderation detail. Never reuse in a non-admin type. */
+export interface AdminCompanySalaryListItem {
+  id: string;
+  companyId: string;
+  companyName: string;
+  companySlug: string | null;
+  authorUserId: string;
+  authorEmail: string;
+  occupation: OccupationRef;
+  yearsOfExperience: number;
+  employmentType: EmploymentType;
+  employmentStatus: SalaryEmploymentStatus;
+  monthlyNetAmount: number;
+  currency: SalaryCurrency;
+  annualBonusAmount: number | null;
+  submittedAt: string;
+  updatedAt: string;
+}
+
 export interface SalaryQuota {
   used: number;
   limit: number;
@@ -1763,6 +1811,27 @@ export interface MyCandidateExperience {
   companyId: string;
   companySlug: string;
   companyName: string;
+  overallRating: number;
+  categoryRatings: ExperienceCategoryRating[];
+  likedStatements: string[];
+  improvableStatements: string[];
+  outcome: HiringOutcome | null;
+  duration: ProcessDuration | null;
+  stages: StageCount | null;
+  interviewTypes: InterviewType[];
+  submittedAt: string;
+  updatedAt: string;
+}
+
+/** The admin table's row: the author's full record plus who wrote it — admin-only, like the
+ *  review moderation detail. Never reuse in a non-admin type. */
+export interface AdminCandidateExperienceListItem {
+  id: string;
+  companyId: string;
+  companyName: string;
+  companySlug: string | null;
+  authorUserId: string;
+  authorEmail: string;
   overallRating: number;
   categoryRatings: ExperienceCategoryRating[];
   likedStatements: string[];

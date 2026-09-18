@@ -8,12 +8,14 @@ import { companiesApi } from "@/lib/api/companies";
 import { ApiError } from "@/lib/api/httpClient";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { formatScore } from "@/lib/companyReviews/score";
+import { directoryCountLines } from "@/lib/companyReviews/directoryCard";
 import { Input } from "@/components/ui/Input";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
 import { StarRating } from "@/components/companyReviews/StarRating";
 
-/** The public directory: companies with at least one published review, searchable by name. */
+/** The public directory: companies with at least one published contribution — a review, a salary
+ *  entry or a candidate experience — most recently contributed-to first, searchable by name. */
 export function CompanyDirectory() {
   const t = useTranslations("companies.directory");
   const locale = useLocale();
@@ -86,8 +88,14 @@ export function CompanyDirectory() {
                   ) : (
                     <span>{t("noScore")}</span>
                   )}
-                  <span>· {t("reviewCount", { count: company.approvedCount })}</span>
                 </span>
+                {/* One line per kind the company has (see directoryCountLines), so a reader sees at
+                    a glance what the page holds before opening it. */}
+                <ul className="flex flex-col gap-0.5 text-xs text-gray-600 dark:text-gray-400">
+                  {directoryCountLines(company).map((line) => (
+                    <li key={line.key}>{t(line.key, { count: line.count })}</li>
+                  ))}
+                </ul>
               </Link>
             </li>
           ))}

@@ -4,11 +4,12 @@ using AfterApply.Domain.CompanySalaries;
 
 namespace AfterApply.Application.CompanySalaries.Contracts;
 
-// Two shapes, never mixed: what a signed-in reader sees of other people's rows (no author, the
-// experience band instead of the years, a month instead of a date) and what the author sees of
-// their own. The public record must not gain the years or an author field "because it is handy"
-// — the anonymity promise on the privacy page is exactly this file. Nothing here was typed by a
-// user: the occupation is a catalogue row.
+// Three shapes, never mixed: what a signed-in reader sees of other people's rows (no author, the
+// experience band instead of the years, a month instead of a date), what the author sees of
+// their own, and — behind the admin gate only — the row with its author joined. The public
+// record must not gain the years or an author field "because it is handy" — the anonymity
+// promise on the privacy page is exactly this file. Nothing here was typed by a user: the
+// occupation is a catalogue row.
 
 public sealed record CompanySalaryPublicResponse(
     Guid Id,
@@ -56,6 +57,26 @@ public sealed record MyCompanySalaryResponse(
     DateTimeOffset UpdatedAt);
 
 public sealed record SalaryQuotaResponse(int Used, int Limit);
+
+/// <summary>The admin table's row (2026-09-18): the author's full record plus who wrote it, the
+/// one surface besides the review moderation detail where an author is joined to a response.
+/// Carries everything the detail modal shows, so there is no separate detail endpoint.</summary>
+public sealed record AdminCompanySalaryListItemResponse(
+    Guid Id,
+    Guid CompanyId,
+    string CompanyName,
+    string? CompanySlug,
+    Guid AuthorUserId,
+    string AuthorEmail,
+    OccupationRefResponse Occupation,
+    int YearsOfExperience,
+    EmploymentType EmploymentType,
+    SalaryEmploymentStatus EmploymentStatus,
+    decimal MonthlyNetAmount,
+    SalaryCurrency Currency,
+    decimal? AnnualBonusAmount,
+    DateTimeOffset SubmittedAt,
+    DateTimeOffset UpdatedAt);
 
 public sealed record MySalariesResponse(IReadOnlyList<MyCompanySalaryResponse> Items, SalaryQuotaResponse Quota);
 

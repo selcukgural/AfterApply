@@ -1,4 +1,5 @@
 using AfterApply.Application.CandidateExperiences.Contracts;
+using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Common;
 
 namespace AfterApply.Application.CandidateExperiences;
@@ -22,6 +23,21 @@ public interface ICandidateExperienceService
     Task<bool> DeleteAsync(Guid userId, Guid experienceId, CancellationToken cancellationToken);
 
     Task<MyCandidateExperiencesResponse> ListMineAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>The caller's own entries among <paramref name="ids"/>, in no particular order;
+    /// anyone else's id is silently absent. Feeds the merged contributions page.</summary>
+    Task<IReadOnlyList<MyCandidateExperienceResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
+
+    Task<ExperienceQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken);
+}
+
+/// <summary>Admin only — the caller has already passed <c>IAdminAccessService</c>. Lists every
+/// entry with its author and removes one outright; there is no moderation state to move.</summary>
+public interface ICandidateExperienceAdminService
+{
+    Task<PagedResult<AdminCandidateExperienceListItemResponse>> ListAsync(AdminCandidateExperienceListQuery query, CancellationToken cancellationToken);
+
+    Task<bool> DeleteAsync(Guid experienceId, CancellationToken cancellationToken);
 }
 
 /// <summary>The account holds as many experiences as it is allowed to. {0} = the limit.</summary>

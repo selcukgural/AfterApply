@@ -71,3 +71,12 @@ public sealed class CandidateExperienceListQueryValidator : AbstractValidator<Ca
         RuleFor(x => x.Page).InclusiveBetween(1, 1000);
     }
 }
+
+public sealed class AdminCandidateExperienceListQueryValidator : AbstractValidator<AdminCandidateExperienceListQuery>
+{
+    public AdminCandidateExperienceListQueryValidator()
+    {
+        RuleFor(x => x.Company).MaximumLength(100);
+        RuleFor(x => x.Page).InclusiveBetween(1, 1000);
+    }
+}

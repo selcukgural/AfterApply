@@ -27,11 +27,12 @@ export default function EditSalaryPage({ params }: PageProps<"/[locale]/my-salar
     mutationFn: (request: CompanySalaryRequest) => companySalariesApi.update(id, request),
     onSuccess: async () => {
       await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["contributions", "mine"] }),
         queryClient.invalidateQueries({ queryKey: ["companySalaries", "mine"] }),
         queryClient.invalidateQueries({ queryKey: ["companies", entry!.companyId, "salaries"] }),
         queryClient.invalidateQueries({ queryKey: ["companies", entry!.companyId, "salaryViewer"] }),
       ]);
-      router.push("/my-salaries");
+      router.push("/my-reviews");
     },
     onError: (err) => setServerError(err instanceof ApiError ? err.message : t("error")),
   });
@@ -47,7 +48,7 @@ export default function EditSalaryPage({ params }: PageProps<"/[locale]/my-salar
       {data && !entry && (
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {t("notFound")}{" "}
-          <Link href="/my-salaries" className="text-accent-ink underline-offset-2 hover:underline">
+          <Link href="/my-reviews" className="text-accent-ink underline-offset-2 hover:underline">
             {t("backToMine")}
           </Link>
         </p>

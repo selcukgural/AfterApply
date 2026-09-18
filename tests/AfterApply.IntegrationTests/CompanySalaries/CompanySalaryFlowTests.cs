@@ -126,6 +126,7 @@ public class CompanySalaryFlowTests(ApiHost<CompanySalaryFlowProfile> host) : IC
         row.AnnualBonusAmount.ShouldBe(120_000m);
         row.SubmittedMonth.ShouldBe(DateTimeOffset.UtcNow.ToString("yyyy-MM"));
         page.Total.ShouldBe(1);
+        page.PageSize.ShouldBe(10);
         page.MinimumForStats.ShouldBe(3);
     }
 

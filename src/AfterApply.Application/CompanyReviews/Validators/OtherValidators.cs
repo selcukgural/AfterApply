@@ -65,6 +65,14 @@ public sealed class PublicCompanyListQueryValidator : AbstractValidator<PublicCo
     }
 }
 
+public sealed class MyContributionsQueryValidator : AbstractValidator<MyContributionsQuery>
+{
+    public MyContributionsQueryValidator()
+    {
+        RuleFor(x => x.Page).InclusiveBetween(1, 1000);
+    }
+}
+
 public sealed class PublicReviewListQueryValidator : AbstractValidator<PublicReviewListQuery>
 {
     public PublicReviewListQueryValidator()

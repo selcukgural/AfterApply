@@ -124,6 +124,7 @@ public class CandidateExperienceFlowTests(ApiHost<CandidateExperienceFlowProfile
         var now = DateTimeOffset.UtcNow;
         row.SubmittedQuarter.ShouldBe($"{now.Year}-Q{(now.Month - 1) / 3 + 1}");
         page.Total.ShouldBe(1);
+        page.PageSize.ShouldBe(10);
         page.Summary.Count.ShouldBe(1);
         page.Summary.MinimumForStats.ShouldBe(3);
     }

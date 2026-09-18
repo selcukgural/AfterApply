@@ -32,7 +32,7 @@ public static class AdminCompanyReviewEndpoints
             })
             .WithValidation<AdminReviewListQuery>()
             .WithSummary("The moderation queue")
-            .WithDescription("Filter by status, company name and submission date. Pending first, oldest first.")
+            .WithDescription("Filter by status, company name and submission date. Newest first.")
             .Produces<PagedResult<AdminCompanyReviewListItemResponse>>();
 
         group.MapGet("/company-reviews/counts", async (ClaimsPrincipal user, IAdminAccessService adminAccess,

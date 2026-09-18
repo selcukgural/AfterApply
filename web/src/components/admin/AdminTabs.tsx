@@ -6,6 +6,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { adminApi } from "@/lib/api/admin";
 import { ApiError } from "@/lib/api/httpClient";
 import { navLinkClassName } from "@/components/layout/navLink";
+import { isAdminTabActive } from "@/lib/admin/adminTabs";
 
 const TABS = [
   { href: "/admin/metrics", key: "metrics" },
@@ -42,7 +43,7 @@ export function AdminTabs() {
   return (
     <nav aria-label={t("label")} className="flex flex-wrap gap-1 border-b border-gray-200 text-sm dark:border-gray-800">
       {TABS.map((tab) => {
-        const active = pathname === tab.href;
+        const active = isAdminTabActive(pathname, tab.href);
         return (
           <Link
             key={tab.href}

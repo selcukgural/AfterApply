@@ -48,13 +48,14 @@ describe("the profile page", () => {
     expect(plan).toContain("PRO_NAV_HREF");
   });
 
-  it("summarises contributions here and manages them on the existing pages", () => {
+  it("summarises contributions here and manages them on the one contributions page", () => {
     expect(contributions).toContain("takeRecent(");
-    expect(contributions).toContain('href="/my-reviews"');
-    expect(contributions).toContain('href="/my-salaries"');
+    // Three doors, one page: /my-salaries and /my-experiences are redirects since 2026-09-18.
+    expect(contributions.match(/href="\/my-reviews"/g)).toHaveLength(3);
+    expect(contributions).not.toContain('href="/my-salaries"');
+    expect(contributions).not.toContain('href="/my-experiences"');
     expect(contributions).toContain('href="/contribute?tab=review"');
     expect(contributions).toContain('href="/contribute?tab=salary"');
-    expect(contributions).toContain('href="/my-experiences"');
     expect(contributions).toContain('href="/contribute?tab=experience"');
     expect(contributions).not.toContain("companyReviewsApi.remove");
     expect(contributions).not.toContain("companySalariesApi.remove");

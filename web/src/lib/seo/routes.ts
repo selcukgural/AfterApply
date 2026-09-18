@@ -81,6 +81,7 @@ export const PROTECTED_PATHS = [
   "/profile",
   "/settings",
   "/my-reviews",
+  // Redirects to /my-reviews since 2026-09-18, still real URLs: stay disallowed and uncounted.
   "/my-salaries",
   "/my-experiences",
   "/contribute",

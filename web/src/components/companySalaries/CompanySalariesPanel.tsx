@@ -125,7 +125,7 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
       {own && own.ownEntries.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent-wash p-4 text-sm">
           <span className="text-gray-900 dark:text-gray-100">{t("yours", { count: own.ownEntries.length })}</span>
-          <Link href="/my-salaries" className={buttonClassName("outline")}>
+          <Link href="/my-reviews" className={buttonClassName("outline")}>
             {t("manageYours")}
           </Link>
         </div>
