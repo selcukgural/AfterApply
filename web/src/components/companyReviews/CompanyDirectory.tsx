@@ -8,7 +8,14 @@ import { companiesApi } from "@/lib/api/companies";
 import { ApiError } from "@/lib/api/httpClient";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { formatScore } from "@/lib/companyReviews/score";
-import { directoryCountLines } from "@/lib/companyReviews/directoryCard";
+import { directoryCountLines, type DirectoryCountKey } from "@/lib/companyReviews/directoryCard";
+
+/** The kind colours, shared with ContributionKindBadge: blue reviews, green salaries, amber experiences. */
+const COUNT_DOT: Record<DirectoryCountKey, string> = {
+  reviewCount: "bg-accent",
+  salaryCount: "bg-emerald-600 dark:bg-emerald-400",
+  experienceCount: "bg-amber-600 dark:bg-amber-400",
+};
 import { Input } from "@/components/ui/Input";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
@@ -90,10 +97,14 @@ export function CompanyDirectory() {
                   )}
                 </span>
                 {/* One line per kind the company has (see directoryCountLines), so a reader sees at
-                    a glance what the page holds before opening it. */}
+                    a glance what the page holds before opening it. The dot carries the kind's
+                    colour — the same three the contribution badges wear on "My contributions". */}
                 <ul className="flex flex-col gap-0.5 text-xs text-gray-600 dark:text-gray-400">
                   {directoryCountLines(company).map((line) => (
-                    <li key={line.key}>{t(line.key, { count: line.count })}</li>
+                    <li key={line.key} className="flex items-center gap-2">
+                      <span aria-hidden="true" className={`h-1.5 w-1.5 shrink-0 rounded-full ${COUNT_DOT[line.key]}`} />
+                      {t(line.key, { count: line.count })}
+                    </li>
                   ))}
                 </ul>
               </Link>
