@@ -7787,7 +7787,8 @@ flag kapalıysa bellekte sıfırlanır. **Sıra: en son katkı alan şirket önc
 sıralaması aynı birkaç ismi ilk sayfaya sabitliyordu. `CompanyPublicListItemResponse` sonuna
 `SalaryCount` ve `CandidateExperienceCount` (defaultlu, eski istemci görmez). Kart kuralı
 (`directoryCountLines`): **yalnız sıfır olmayan satırlar**, tab sırasında, en az bir satır
-("0 değerlendirme"). Puan yalnız değerlendirmeden gelir. Sitemap (`/slugs`) üyeliği: onaylı
+("0 değerlendirme"); her satırın önünde türün rengi (mavi / yeşil / turuncu — Katkılarım
+rozetleriyle aynı; ilk PR'da atlanmıştı, aynı gün eklendi). Puan yalnız değerlendirmeden gelir. Sitemap (`/slugs`) üyeliği: onaylı
 değerlendirme ∪ aday deneyimi — **maaş hariç**, giriş kapılı; cache 10 dk (yazımda evict yok,
 kabul). Şirket sayfası `index`: `approvedCount > 0 || candidateExperienceCount > 0`.
 **Slug garantisi:** `EnsureSlugAsync` `CompanySlugAllocator`'a taşındı; maaş ve deneyim
