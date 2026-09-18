@@ -7978,3 +7978,46 @@ dispose; `RateLimitPartitionKeysTests`). Entegrasyon +3 (`RedisRateLimitTests`):
 pencere** (3 A + 2 B → A'da 6. ve B'de 6. 429, Retry-After ≤ 60 sn), iki policy aynı IP'de ayrı
 pencere, Redis kapalıyken yerel sayım + Retry-After. Mevcut üç `RateLimiting:Enabled=true` testi
 sınıf başına `FLUSHDB` sayesinde pencere paylaşmıyor.
+
+## Çok-container'ın kalan üç açığı: SignalR backplane, enrichment kilidi, unique-index yarışları — DECIDED (2026-09-18)
+
+Redis planının üçüncü PR'ı. Hepsi bir şeyi düzeltiyor: iki instance'ın aynı anda görmediği bir
+şey.
+
+**SignalR `ImportProgressHub` Redis backplane'de.** Import job'u hangi instance'ın Hangfire
+worker'ı aldıysa orada koşar; yükleyicinin socket'i sayfayı hangi instance servis ettiyse orada.
+Backplane'siz `Clients.Group(...)` yalnızca kendi instance'ının bağlantılarına gidiyordu — çok
+instance'ta ilerleme mesajı çoğunlukla hiç varmıyordu. `AddStackExchangeRedis` + `RedisOptions`
+DI'dan bağlanıyor (cache'in multiplexer'ı; ikinci bağlantı yok), kanal prefix'i
+`{Redis:ChannelPrefix}:signalr` (pub/sub DB'ye göre ayrılmaz; test sınıfları ve aynı Redis'i
+paylaşan iki deployment birbirinin hub mesajını almasın). **Notifier best-effort oldu:** backplane'de
+Redis ulaşılamazken `SendGroupAsync` fırlatır; `ImportService`'in catch bloğu bunu
+`FailBatchAsync` → `NotifyFailedAsync` → yeniden fırlatma zinciriyle Hangfire job'unu düşürürdü.
+Push kaybolur, client zaten polling yapıyor. Test: iki host (fixture'ın `IHubContext`'i gönderir,
+`HubConnection` Variant'a bağlıdır) — backplane kaldırılınca 10 sn timeout ile kırılıyor,
+doğrulandı; Redis'siz host'ta CSV import `Completed` (catch kaldırılınca kırılıyor).
+
+**`DistributedLock.Redis` — dar kullanım.** `IDistributedLockProvider` tek kayıt, isimler
+`DistributedLockNames` (key prefix'li). İlk ve tek tüketici `CompanyEnrichmentService`: aynı
+şirket için aynı anda kuyruğa giren iki enrichment iki worker'da iki LinkedIn/kariyer.net fetch'i
+demekti; `TryAcquireLockAsync(…, TimeSpan.Zero)` alamayan çıkar. Redis ulaşılamazsa kilitsiz
+(eski) davranışa düşer, job düşmez. **Kayda geçer — kilit gerekmeyenler:** Hangfire recurring
+job'lar (storage lock + `SKIP LOCKED`), migration (ayrı Cloud Run Job), DataProtection, lockout,
+unique index'li tüm "bir kullanıcı bir şirket" kuralları, CV ≤10 (`pg_advisory_xact_lock`).
+
+**Unique index yarışları — kilit değil, doğru araç zaten oradaydı; yakalanmıyordu.**
+- `CompanyResolver.CreateWithSlugAsync`: cached-null penceresinde başka instance şirketi
+  yaratınca `IX_Companies_NormalizedName` 23505 → 500'dü. Şimdi kazanan satır okunup döndürülüyor.
+  Test null'u cache'e ekip satırı DB'ye doğrudan yazarak pencereyi deterministik kuruyor.
+- `CompanySlugAllocator.EnsureSlugAsync`: `CreateWithSlugAsync`'teki slug-collision retry'ı buraya
+  da (iki katkı aynı anda aynı şirketi herkese açık yapınca). Deterministik testi yok — yarış
+  penceresi allocate ile save arası; kayda geçer.
+- `EmailForwardingService.ProcessSignalAsync`: `AnyAsync` kontrolünü iki kopya da geçebilir
+  (uzantı retry'ı, iki sekme); `IX_EmailSuggestions_EmailConnectionId_ProviderMessageId` 23505
+  artık sessiz — kaybeden kopya Hangfire'da tekrar sınıflandırma (OpenAI) yakmaz. Test iki
+  kopyayı `Task.WhenAll` ile koşturuyor; catch olmadan iki koşuda iki kez kırıldı (yarış yerel
+  Postgres'te güvenilir şekilde oluşuyor).
+
+**Hangfire `UseSlidingInvisibilityTimeout = true`** (Postgres, Redis değil): 30 dk'yı aşan bir
+job (politeness gecikmeli sweep) sabit invisibility penceresi dolunca başka instance'ın
+worker'ına yeniden düşüyordu; pencere job çalıştıkça uzuyor. Config; testi yok.

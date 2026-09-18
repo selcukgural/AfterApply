@@ -2,8 +2,10 @@ using System.Net;
 using AfterApply.Application.Companies;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
+using Medallion.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace AfterApply.Infrastructure.Companies;
 
@@ -36,7 +38,12 @@ namespace AfterApply.Infrastructure.Companies;
 /// redirect hop).
 /// </summary>
 internal sealed class CompanyEnrichmentService(
-    HttpClient httpClient, AppDbContext dbContext, ICompanyCacheInvalidator invalidator, ILogger<CompanyEnrichmentService> logger) : ICompanyEnrichmentService
+    HttpClient httpClient,
+    AppDbContext dbContext,
+    ICompanyCacheInvalidator invalidator,
+    IDistributedLockProvider locks,
+    DistributedLockNames lockNames,
+    ILogger<CompanyEnrichmentService> logger) : ICompanyEnrichmentService
 {
     private const int MaxRedirectHops = 5;
     private const int MaxBodyChars = 200_000;
@@ -44,6 +51,38 @@ internal sealed class CompanyEnrichmentService(
     private const string KariyerNetHost = "kariyer.net";
 
     public async Task EnrichAsync(Guid companyId, CancellationToken cancellationToken)
+    {
+        // Two applications for a new company created at the same moment enqueue two of these,
+        // and with several instances they run on two workers at once — two fetches of the same
+        // profile page, last write wins. The lock is held for the fetch; a worker that cannot take
+        // it leaves, because whoever holds it is doing exactly this work. Redis being unreachable
+        // degrades to the unlocked behaviour of before rather than failing the job.
+        IDistributedSynchronizationHandle? held;
+        try
+        {
+            held = await locks.TryAcquireLockAsync(lockNames.CompanyEnrichment(companyId), TimeSpan.Zero, cancellationToken);
+        }
+        catch (Exception ex) when (ex is RedisConnectionException or RedisTimeoutException)
+        {
+            logger.LogWarning(ex, "Enrichment lock for {CompanyId} unavailable; proceeding without it", companyId);
+            held = null;
+            await EnrichUnlockedAsync(companyId, cancellationToken);
+            return;
+        }
+
+        if (held is null)
+        {
+            logger.LogInformation("Enrichment for {CompanyId} is already running elsewhere; skipping", companyId);
+            return;
+        }
+
+        await using (held)
+        {
+            await EnrichUnlockedAsync(companyId, cancellationToken);
+        }
+    }
+
+    private async Task EnrichUnlockedAsync(Guid companyId, CancellationToken cancellationToken)
     {
         var company = await dbContext.Companies.FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
         if (company is null)

@@ -54,8 +54,21 @@ internal sealed class CompanySlugAllocator(AppDbContext dbContext)
             return;
         }
 
-        company.AssignSlug(await AllocateAsync(company.Name, cancellationToken), DateTimeOffset.UtcNow);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        // Same retry as CompanyResolver's create path: two contributions making the same company
+        // public at once can pick the same suffix, and the second one takes the next.
+        for (var attempt = 0; ; attempt++)
+        {
+            company.AssignSlug(await AllocateAsync(company.Name, cancellationToken), DateTimeOffset.UtcNow);
+            try
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+                return;
+            }
+            catch (DbUpdateException ex) when (attempt == 0 && IsSlugCollision(ex))
+            {
+                // The entry stays tracked; only the slug is re-chosen.
+            }
+        }
     }
 
     /// <summary>True when the failed write is the slug index saying "taken" — the one collision

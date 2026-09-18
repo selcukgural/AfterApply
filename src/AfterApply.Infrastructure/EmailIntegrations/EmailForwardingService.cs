@@ -131,7 +131,7 @@ internal sealed class EmailForwardingService(
                 await TryAutoApplyAsync(connection.UserId, suggestion, cancellationToken);
             }
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await SaveSuggestionAsync(cancellationToken);
             return;
         }
 
@@ -153,7 +153,25 @@ internal sealed class EmailForwardingService(
             rejectionReason?.Category, rejectionReason?.Detail, rejectionReason?.Confidence,
             hrEmailCandidate));
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SaveSuggestionAsync(cancellationToken);
+    }
+
+    /// <summary>The (EmailConnectionId, ProviderMessageId) index is what actually makes a message
+    /// process once; the AnyAsync check above is the cheap path. The extension can send the same
+    /// signal twice (a retry, two tabs), and with several instances both copies can pass that
+    /// check before either commits — the loser must end quietly, not as a failed Hangfire job
+    /// that retries the classification.</summary>
+    private async Task SaveSuggestionAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" } pg
+                                           && pg.ConstraintName?.Contains("ProviderMessageId", StringComparison.Ordinal) == true)
+        {
+            // The other copy of this signal already wrote the suggestion.
+        }
     }
 
     public Task<int> GetPendingSuggestionCountAsync(Guid userId, CancellationToken cancellationToken) =>

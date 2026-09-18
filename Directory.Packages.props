@@ -30,6 +30,15 @@
          Wrapped by RedisFirstFixedWindowLimiter, which falls back to the in-memory limiter while
          Redis is unreachable — the library itself lets a Redis exception escape AcquireAsync. -->
     <PackageVersion Include="RedisRateLimiting.AspNetCore" Version="1.2.1" />
+    <!-- SignalR backplane: an import job runs on whichever instance's Hangfire worker picked it
+         up, the uploader's socket is on whichever instance served the page; without this the
+         progress push never crossed between them. Same multiplexer as the cache. -->
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
+    <!-- Cross-instance mutex (Redis SET NX + Lua release). One consumer so far: company
+         enrichment, so two workers do not fetch the same LinkedIn page at once. Not for anything
+         Postgres already serialises — Hangfire's recurring jobs, unique indexes, advisory locks. -->
+    <PackageVersion Include="DistributedLock.Redis" Version="1.1.1" />
     <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />

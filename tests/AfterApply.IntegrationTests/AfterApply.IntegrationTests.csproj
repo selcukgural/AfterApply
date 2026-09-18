@@ -17,6 +17,7 @@
     <PackageReference Include="Shouldly" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Testcontainers.Redis" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <PackageReference Include="Testcontainers.FakeGcsServer" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <!-- The CV scan fixtures are real files, generated in-process: a PDF built with PdfPig's

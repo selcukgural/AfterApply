@@ -12,6 +12,7 @@ using AfterApply.Application.Payments;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Auditing;
 using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Payments;
@@ -22,6 +23,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,7 +77,22 @@ builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 // the last poll flipped a finished import to the "failed" branch of the uploader.
 builder.Services.AddSignalR()
     .AddJsonProtocol(options =>
-        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
+    // Redis backplane (DECISIONS.md 2026-09-18 "PR C"): the import job runs on whichever
+    // instance's Hangfire worker fetched it, and the uploader's socket is on whichever instance
+    // served the page — with several instances those are usually different, and a group send on
+    // one never reached a connection on another. The options are bound below rather than here so
+    // the backplane shares the cache's multiplexer instead of opening a second connection.
+    .AddStackExchangeRedis(_ => { });
+builder.Services.AddOptions<Microsoft.AspNetCore.SignalR.StackExchangeRedis.RedisOptions>()
+    .Configure<IConnectionMultiplexer, IOptions<CachingOptions>>((options, multiplexer, caching) =>
+    {
+        options.ConnectionFactory = _ => Task.FromResult(multiplexer);
+        // Prefixed like the cache's backplane channel: pub/sub is not scoped by Redis database, so
+        // this is what keeps the integration suite's classes (and any two deployments sharing one
+        // Redis) from receiving each other's hub messages.
+        options.Configuration.ChannelPrefix = RedisChannel.Literal(caching.Value.ChannelPrefix + ":signalr");
+    });
 builder.Services.AddScoped<IImportProgressNotifier, SignalRImportProgressNotifier>();
 
 var app = builder.Build();
