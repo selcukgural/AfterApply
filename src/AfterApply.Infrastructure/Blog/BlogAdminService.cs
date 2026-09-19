@@ -66,9 +66,21 @@ internal sealed class BlogAdminService(
     public async Task<AdminBlogPostResponse> CreateAsync(Guid adminUserId, CreateBlogPostRequest request,
         CancellationToken cancellationToken)
     {
-        var post = BlogPost.Create(adminUserId, request.Language, DateTimeOffset.UtcNow);
+        var now = DateTimeOffset.UtcNow;
+        var content = Sanitized(request);
+
+        // The validator has already refused a request with nothing written; this repeats it on
+        // the sanitized body, which is what would be stored — markup the sanitizer strips is not
+        // content either.
+        if (!BlogDraftText.HasAny(content.Title, content.Excerpt, content.ContentHtml))
+        {
+            throw new BlogPostEmptyException();
+        }
+
+        var post = BlogPost.Create(adminUserId, request.Language, now);
         dbContext.BlogPosts.Add(post);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await ApplyDraftAsync(adminUserId, post, request, content, now, cancellationToken);
+        await SaveHandlingSlugCollisionAsync(cancellationToken);
         return ToResponse(post, adminUserId, likeCount: 0);
     }
 
@@ -96,33 +108,8 @@ internal sealed class BlogAdminService(
             throw new BlogPostRevisionConflictException();
         }
 
-        post.SetLanguage(request.Language, now);
-
-        // A blank slug means "let publish generate one" before the first publish, and "no
-        // change" after it (the editor shows the locked slug and sends it back; an empty field
-        // there is not an instruction).
-        var slug = string.IsNullOrWhiteSpace(request.Slug) ? null : request.Slug.Trim();
-        if (slug is not null || !post.HasEverBeenPublished)
-        {
-            post.SetSlug(slug, now);
-        }
-
-        if (slug is not null && await SlugTakenAsync(post, slug, cancellationToken))
-        {
-            throw new BlogSlugTakenException();
-        }
-
-        await LinkTranslationAsync(adminUserId, post, request.TranslationOfPostId, now, cancellationToken);
         await SetCoverAsync(post, request.CoverMediaId, now, cancellationToken);
-
-        // Sanitized on the way in, so what is stored is what will be rendered — the public page
-        // never runs a sanitizer of its own.
-        var content = new BlogDraftContent(
-            request.Title.Trim(),
-            request.Excerpt?.Trim() ?? string.Empty,
-            request.ContentJson,
-            sanitizer.Sanitize(request.ContentHtml));
-        post.SaveDraft(content, request.Revision, now);
+        await ApplyDraftAsync(adminUserId, post, request, Sanitized(request), now, cancellationToken);
 
         var orphans = await CollectOrphanMediaAsync(post, now, cancellationToken);
         await SaveHandlingSlugCollisionAsync(cancellationToken);
@@ -265,6 +252,39 @@ internal sealed class BlogAdminService(
     /// <summary>Published, or the caller's own. The one visibility rule, in the query.</summary>
     private IQueryable<BlogPost> Visible(Guid adminUserId) =>
         dbContext.BlogPosts.Where(p => p.Status == BlogPostStatus.Published || p.AuthorUserId == adminUserId);
+
+    /// <summary>Sanitized on the way in, so what is stored is what will be rendered — the public
+    /// page never runs a sanitizer of its own.</summary>
+    private BlogDraftContent Sanitized(IBlogDraftFields request) => new(
+        request.Title.Trim(),
+        request.Excerpt?.Trim() ?? string.Empty,
+        request.ContentJson,
+        sanitizer.Sanitize(request.ContentHtml));
+
+    /// <summary>The form landing on the row — the same steps for the first draft (create) and
+    /// every one after (the autosave), so create cannot accept what a save would refuse.</summary>
+    private async Task ApplyDraftAsync(Guid adminUserId, BlogPost post, IBlogDraftFields request, BlogDraftContent content,
+        DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        post.SetLanguage(request.Language, now);
+
+        // A blank slug means "let publish generate one" before the first publish, and "no
+        // change" after it (the editor shows the locked slug and sends it back; an empty field
+        // there is not an instruction).
+        var slug = string.IsNullOrWhiteSpace(request.Slug) ? null : request.Slug.Trim();
+        if (slug is not null || !post.HasEverBeenPublished)
+        {
+            post.SetSlug(slug, now);
+        }
+
+        if (slug is not null && await SlugTakenAsync(post, slug, cancellationToken))
+        {
+            throw new BlogSlugTakenException();
+        }
+
+        await LinkTranslationAsync(adminUserId, post, request.TranslationOfPostId, now, cancellationToken);
+        post.SaveDraft(content, post.Revision, now);
+    }
 
     private Task<bool> SlugTakenAsync(BlogPost post, string slug, CancellationToken cancellationToken) =>
         dbContext.BlogPosts.AnyAsync(p => p.Id != post.Id && p.Language == post.Language && p.Slug == slug, cancellationToken);

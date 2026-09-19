@@ -8190,6 +8190,20 @@ alınan ve bu PR'la kesinleşen kararlar:
   geçen görsel taslaktan silinse de bir sonraki yayıma kadar durur (sitede görünüyor). Tarayıcı/
   CDN'deki `immutable` kopyalar kendi süreleri dolana kadar kalır — her immutable statik dosyanın
   doğası. Entegrasyon testi: kapak değişimi, gövdeden çıkarma, yayım sonrası toplama.
+- **Boş taslak yok** (aynı gün, kullanıcı isteği): "Yeni yazı" artık tek düğme — dil editörün
+  içinden seçiliyor, iki dil için iki düğmeye gerek yoktu. Düğme bir POST atmıyor, editörü
+  `/admin/blog/new` adresinde boş açıyor; yazı satırı **ilk anlamlı autosave'de** oluşuyor:
+  başlık, özet ya da gövdede en az bir karakter varsa (`BlogDraftText.HasAny`; HTML etiketleri
+  atılır, `&nbsp;` metin sayılmaz). Boş açılıp kapanan editör satır bırakmaz — 5 boş
+  "(Başlıksız)" birikmişti. `POST /posts` artık ilk taslağı taşıyor (form alanlarının tamamı,
+  kapak hariç) ve hiçbir şey yazılmamışsa `BLOG_POST_EMPTY` ile 400 döner; kural iki tarafta da
+  (validator + sanitize sonrası servis). Create ve autosave aynı adımlardan geçer
+  (`ApplyDraftAsync`), aynı validator (`BlogDraftFieldsValidator<T>`). Yazı oluşunca URL
+  `history.replaceState` ile `/admin/blog/{id}` olur — navigasyon formu yeniden kurar, imleç
+  kaybolurdu. Görsel yüklemek yazı gerektirir: yeni yazıda metin yazılmadan görsel eklenirse
+  "önce bir şey yazın" uyarısı. Sonradan içeriği boşaltılan mevcut taslak silinmez (yazarın
+  işi). Testler: unit (metin kuralı, validator), entegrasyon (boş create 400 + satır yok,
+  ilk taslak + revision, sanitize sonrası boş, slug/çeviri kuralları).
 - **Kapsam dışı (v1):** sunucuda görsel küçültme (ImageSharp yok; editör `width` saklar, CSS
   `max-width:100%`), yorum, etiket/kategori, RSS, yardım merkezi konusu.
 

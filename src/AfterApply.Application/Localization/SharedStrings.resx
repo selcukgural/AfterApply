@@ -420,6 +420,9 @@
   <data name="BLOG_POST_INCOMPLETE" xml:space="preserve">
     <value>Give the post a title and some content before publishing it.</value>
   </data>
+  <data name="BLOG_POST_EMPTY" xml:space="preserve">
+    <value>Write something — a title, a summary or a line of text — and the draft will be created.</value>
+  </data>
   <data name="BLOG_SLUG_TAKEN" xml:space="preserve">
     <value>Another post in this language already uses that address.</value>
   </data>

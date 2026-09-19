@@ -143,7 +143,7 @@ public class CvGoogleCloudStorageTests(ApiHost<FakeGcsProfile> host)
         var me = await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
         await host.MakeAdminAsync(me!.Id);
 
-        var create = await client.PostAsJsonAsync("/api/admin/blog/posts", new CreateBlogPostRequest("tr"), JsonOptions);
+        var create = await client.PostAsJsonAsync("/api/admin/blog/posts", new CreateBlogPostRequest("Taslak", null, """{"type":"doc","content":[]}""", "", "tr", null, null), JsonOptions);
         create.EnsureSuccessStatusCode();
         var post = (await create.Content.ReadFromJsonAsync<AdminBlogPostResponse>(JsonOptions))!;
 

@@ -56,11 +56,14 @@ public static class AdminBlogEndpoints
                 return Results.Created($"/api/admin/blog/posts/{post.Id}", post);
             })
             .WithValidation<CreateBlogPostRequest>()
-            .WithSummary("Create an empty draft")
-            .WithDescription("Admin only. The draft is the caller's alone until it is published; everything else " +
-                             "arrives through the draft autosave.")
+            .WithSummary("Create a post from its first draft")
+            .WithDescription("Admin only. The editor sends this once something has been typed; a request with no " +
+                             "title, no summary and no text in the body is refused (BLOG_POST_EMPTY), so an editor " +
+                             "opened and abandoned leaves no post. The draft is the caller's alone until it is " +
+                             "published; later saves arrive through the draft autosave with the returned revision.")
             .Produces<AdminBlogPostResponse>(StatusCodes.Status201Created)
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         group.MapGet("/posts/{postId:guid}", async (Guid postId, ClaimsPrincipal user,
                 IAdminAccessService adminAccess, IBlogAdminService service, CancellationToken cancellationToken) =>

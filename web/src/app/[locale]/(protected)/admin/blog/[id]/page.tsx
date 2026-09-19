@@ -10,7 +10,8 @@ const BlogEditorPage = dynamic(() => import("@/components/blog/editor/BlogEditor
   loading: () => <p className="text-sm text-gray-500 dark:text-gray-400">…</p>,
 });
 
+/** `/admin/blog/new` opens the editor on a post that does not exist yet; anything else is an id. */
 export default function AdminBlogEditorRoute() {
   const { id } = useParams<{ id: string }>();
-  return <BlogEditorPage postId={id} />;
+  return <BlogEditorPage postId={id === "new" ? null : id} />;
 }

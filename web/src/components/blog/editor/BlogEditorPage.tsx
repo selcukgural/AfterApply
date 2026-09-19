@@ -25,21 +25,61 @@ import { useMediaObjectUrl } from "./useMediaObjectUrl";
 
 const OTHER_LANGUAGE: Record<BlogLanguage, BlogLanguage> = { tr: "en", en: "tr" };
 
+/** What the editor opens on for a new post: nothing, in the UI's language. The id is empty
+ *  until the first non-empty autosave creates the row (see `useAutosave`). */
+function emptyPost(language: BlogLanguage): AdminBlogPost {
+  const now = new Date().toISOString();
+  return {
+    id: "",
+    status: "Draft",
+    language,
+    slug: null,
+    authorUserId: null,
+    isMine: true,
+    translationOfPostId: null,
+    coverMediaId: null,
+    draftTitle: "",
+    draftExcerpt: "",
+    draftContentJson: JSON.stringify({ type: "doc", content: [] }),
+    draftContentHtml: "",
+    draftUpdatedAt: now,
+    revision: 0,
+    publishedTitle: "",
+    publishedAt: null,
+    publishedUpdatedAt: null,
+    hasUnpublishedChanges: false,
+    likeCount: 0,
+    createdAt: now,
+  };
+}
+
 /**
  * The editor route's body: loads the post and hands it to the form once. Loaded with
  * `ssr: false` by the route (ProseMirror touches `document` at import), so everything below is
  * browser-only.
+ *
+ * `postId` null is a new post (`/admin/blog/new`): the form opens on nothing and creates the
+ * post itself on the first autosave that has something to save, then rewrites the URL to the
+ * new id. That URL change reaches this component as a new `postId`, which is ignored on purpose
+ * — refetching would remount the form and drop the caret mid-sentence.
  */
-export function BlogEditorPage({ postId }: { postId: string }) {
+export function BlogEditorPage({ postId }: { postId: string | null }) {
   const t = useTranslations("adminBlog");
+  // Fixed at mount: the form, not the URL, owns a post that was opened as new.
+  const [openedNew] = useState(postId === null);
   const query = useQuery({
     queryKey: ["admin", "blog", "post", postId],
-    queryFn: () => adminBlogApi.get(postId),
+    queryFn: () => adminBlogApi.get(postId!),
+    enabled: postId !== null && !openedNew,
     retry: (failureCount, err) => !(err instanceof ApiError && (err.status === 403 || err.status === 404)) && failureCount < 2,
     // The form owns the draft after the first load; a refetch would overwrite what is being typed.
     staleTime: Number.POSITIVE_INFINITY,
     refetchOnWindowFocus: false,
   });
+
+  if (openedNew) {
+    return <BlogEditorForm initial={null} />;
+  }
 
   if (query.error instanceof ApiError && query.error.status === 403) {
     return (
@@ -71,7 +111,7 @@ export function BlogEditorPage({ postId }: { postId: string }) {
   return <BlogEditorForm initial={query.data} />;
 }
 
-function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
+function BlogEditorForm({ initial }: { initial: AdminBlogPost | null }) {
   const t = useTranslations("adminBlog");
   const tEditor = useTranslations("adminBlog.editor");
   const tSave = useTranslations("adminBlog.autosave");
@@ -80,15 +120,19 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  // A new post starts from nothing and has no id until its first save creates it.
+  const [seed] = useState(() => initial ?? emptyPost(locale === "en" ? "en" : "tr"));
+  const [postId, setPostId] = useState<string | null>(initial?.id ?? null);
+
   // The server-owned facts (status, slug once published, dates) — refreshed from every action's
   // response. The editable fields live in their own state below.
-  const [meta, setMeta] = useState(initial);
-  const [title, setTitle] = useState(initial.draftTitle);
-  const [excerpt, setExcerpt] = useState(initial.draftExcerpt);
-  const [language, setLanguage] = useState<BlogLanguage>(initial.language);
-  const [slug, setSlug] = useState(initial.slug ?? "");
-  const [translationOfPostId, setTranslationOfPostId] = useState(initial.translationOfPostId);
-  const [coverMediaId, setCoverMediaId] = useState(initial.coverMediaId);
+  const [meta, setMeta] = useState(seed);
+  const [title, setTitle] = useState(seed.draftTitle);
+  const [excerpt, setExcerpt] = useState(seed.draftExcerpt);
+  const [language, setLanguage] = useState<BlogLanguage>(seed.language);
+  const [slug, setSlug] = useState(seed.slug ?? "");
+  const [translationOfPostId, setTranslationOfPostId] = useState(seed.translationOfPostId);
+  const [coverMediaId, setCoverMediaId] = useState(seed.coverMediaId);
   const [uploadState, setUploadState] = useState<"idle" | "uploading" | "error">("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -96,6 +140,34 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const locked = meta.publishedAt !== null;
+
+  // Declared before the uploader (which needs `ensurePost`) and before the editor (which needs
+  // the uploader). `buildRequest` mentions `editor` from further down, which is fine: the hook
+  // only calls it at save time, long after this render has finished.
+  const autosave = useAutosave({
+    postId,
+    initialRevision: seed.revision,
+    buildRequest: () => ({
+      title,
+      excerpt,
+      contentJson: JSON.stringify(editor?.getJSON() ?? parseDocument(seed.draftContentJson)),
+      contentHtml: editor?.getHTML() ?? seed.draftContentHtml,
+      language,
+      slug: slug.trim() || null,
+      coverMediaId,
+      translationOfPostId,
+    }),
+    onCreated: (post) => {
+      setPostId(post.id);
+      setMeta(post);
+      queryClient.setQueryData(["admin", "blog", "post", post.id], post);
+      void queryClient.invalidateQueries({ queryKey: ["admin", "blog"], exact: false, refetchType: "none" });
+      // `/admin/blog/new` becomes the post's own address without a navigation: a navigation
+      // would remount the form and drop the caret. A reload from here opens the saved post.
+      window.history.replaceState(window.history.state, "", window.location.pathname.replace(/\/new$/, `/${post.id}`));
+    },
+  });
+  const { markEdited, ensurePost } = autosave;
 
   const uploadImage = useCallback(
     async (file: File): Promise<string | null> => {
@@ -110,9 +182,15 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
         setUploadError(tUpload("tooLarge"));
         return null;
       }
+      const id = await ensurePost();
+      if (!id) {
+        setUploadState("error");
+        setUploadError(tUpload("needsTextFirst"));
+        return null;
+      }
       setUploadState("uploading");
       try {
-        const media = await adminBlogApi.uploadMedia(initial.id, file);
+        const media = await adminBlogApi.uploadMedia(id, file);
         setUploadState("idle");
         return media.url;
       } catch (err) {
@@ -121,7 +199,7 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
         return null;
       }
     },
-    [initial.id, tUpload],
+    [ensurePost, tUpload],
   );
 
   const extensions = useMemo(
@@ -129,12 +207,12 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
     // The placeholder and the uploader do not change for a post; rebuilding the extension list
     // would rebuild the editor and lose the caret.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [initial.id],
+    [seed.id],
   );
 
   const editor = useEditor({
     extensions,
-    content: parseDocument(initial.draftContentJson),
+    content: parseDocument(seed.draftContentJson),
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -144,22 +222,6 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
       },
     },
   });
-
-  const autosave = useAutosave({
-    postId: initial.id,
-    initialRevision: initial.revision,
-    buildRequest: () => ({
-      title,
-      excerpt,
-      contentJson: JSON.stringify(editor?.getJSON() ?? parseDocument(initial.draftContentJson)),
-      contentHtml: editor?.getHTML() ?? initial.draftContentHtml,
-      language,
-      slug: slug.trim() || null,
-      coverMediaId,
-      translationOfPostId,
-    }),
-  });
-  const { markEdited } = autosave;
 
   useEffect(() => {
     if (!editor) return;
@@ -185,27 +247,29 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
   const applyResponse = (post: AdminBlogPost) => {
     setMeta(post);
     setSlug(post.slug ?? "");
-    queryClient.setQueryData(["admin", "blog", "post", initial.id], post);
+    queryClient.setQueryData(["admin", "blog", "post", post.id], post);
     void queryClient.invalidateQueries({ queryKey: ["admin", "blog"], exact: false, refetchType: "none" });
   };
 
   const publish = useMutation({
     mutationFn: async () => {
+      const id = await ensurePost();
+      if (!id) throw new Error(tEditor("nothingWritten"));
       if (!(await autosave.flush())) throw new Error(tSave("unsaved"));
-      return adminBlogApi.publish(initial.id);
+      return adminBlogApi.publish(id);
     },
     onSuccess: applyResponse,
     onError: (err) => setActionError(err instanceof Error ? err.message : t("error")),
   });
 
   const unpublish = useMutation({
-    mutationFn: () => adminBlogApi.unpublish(initial.id),
+    mutationFn: () => adminBlogApi.unpublish(postId!),
     onSuccess: applyResponse,
     onError: (err) => setActionError(err instanceof ApiError ? err.message : t("error")),
   });
 
   const remove = useMutation({
-    mutationFn: () => adminBlogApi.remove(initial.id),
+    mutationFn: () => adminBlogApi.remove(postId!),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "blog"] });
       router.push("/admin/blog");
@@ -240,9 +304,10 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
       case "error":
         return <span className="text-crit-ink">{tSave("error", { message: s.error ?? "" })}</span>;
       case "saved":
-        return <span className="text-good-ink">{tSave("saved", { time: formatTime(s.lastSavedAt ?? new Date(initial.draftUpdatedAt).getTime()) })}</span>;
+        return <span className="text-good-ink">{tSave("saved", { time: formatTime(s.lastSavedAt ?? new Date(seed.draftUpdatedAt).getTime()) })}</span>;
       default:
-        return <span className="text-gray-500 dark:text-gray-400">{tSave("saved", { time: formatTime(new Date(initial.draftUpdatedAt).getTime()) })}</span>;
+        if (postId === null) return <span className="text-gray-500 dark:text-gray-400">{tSave("notYet")}</span>;
+        return <span className="text-gray-500 dark:text-gray-400">{tSave("saved", { time: formatTime(new Date(seed.draftUpdatedAt).getTime()) })}</span>;
     }
   })();
 
@@ -318,7 +383,7 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
                   {tEditor("unpublish")}
                 </Button>
               )}
-              <Button variant="outline" onClick={() => setDeleting(true)} disabled={busy}>
+              <Button variant="outline" onClick={() => setDeleting(true)} disabled={busy || postId === null}>
                 {tEditor("delete")}
               </Button>
             </div>
@@ -396,7 +461,7 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost }) {
               >
                 <option value="">{tEditor("translationNone")}</option>
                 {(translationCandidates.data?.items ?? [])
-                  .filter((item) => item.id !== initial.id)
+                  .filter((item) => item.id !== postId)
                   .map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.title || t("untitled")} ({t(`status.${item.status}`)})

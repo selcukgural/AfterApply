@@ -1977,6 +1977,19 @@ export interface AdminBlogPost {
   createdAt: string;
 }
 
+/** Create, from the first draft: sent once the author has typed at least one character into the
+ *  title, the summary or the body (a request with none of the three is a 400, `BLOG_POST_EMPTY`).
+ *  No cover — an image belongs to a post, so there is none before the post exists. */
+export interface CreateBlogPostRequest {
+  title: string;
+  excerpt: string | null;
+  contentJson: string;
+  contentHtml: string;
+  language: BlogLanguage;
+  slug: string | null;
+  translationOfPostId: string | null;
+}
+
 /** The autosave. Everything editable travels every time; `revision` is the one the editor last
  *  received, and a mismatch is a 409. */
 export interface SaveBlogDraftRequest {

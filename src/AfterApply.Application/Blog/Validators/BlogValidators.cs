@@ -7,22 +7,13 @@ using Microsoft.Extensions.Localization;
 
 namespace AfterApply.Application.Blog.Validators;
 
-public sealed class CreateBlogPostRequestValidator : AbstractValidator<CreateBlogPostRequest>
+/// <summary>The form's own rules, shared by create and the autosave. Field by field so the
+/// ProblemDetails names the field the editor has to highlight. The domain's
+/// <see cref="BlogDraftContent.Validate"/> repeats the length caps at the boundary that stores
+/// the row; this layer is the one that speaks the user's language.</summary>
+public sealed class BlogDraftFieldsValidator<T> : AbstractValidator<T> where T : IBlogDraftFields
 {
-    public CreateBlogPostRequestValidator(IStringLocalizer<SharedStrings> localizer)
-    {
-        RuleFor(x => x.Language)
-            .Must(BlogLanguage.IsSupported)
-            .WithMessage(_ => localizer["VALIDATION_UNSUPPORTED_LANGUAGE"]);
-    }
-}
-
-/// <summary>Field by field so the ProblemDetails names the field the editor has to highlight.
-/// The domain's <see cref="BlogDraftContent.Validate"/> repeats the length caps at the boundary
-/// that stores the row; this layer is the one that speaks the user's language.</summary>
-public sealed class SaveBlogDraftRequestValidator : AbstractValidator<SaveBlogDraftRequest>
-{
-    public SaveBlogDraftRequestValidator(IStringLocalizer<SharedStrings> localizer)
+    public BlogDraftFieldsValidator(IStringLocalizer<SharedStrings> localizer)
     {
         RuleFor(x => x.Title).NotNull().MaximumLength(BlogPost.MaxTitleLength);
         RuleFor(x => x.Excerpt).MaximumLength(BlogPost.MaxExcerptLength);
@@ -42,7 +33,6 @@ public sealed class SaveBlogDraftRequestValidator : AbstractValidator<SaveBlogDr
         RuleFor(x => x.Slug)
             .Must(slug => string.IsNullOrWhiteSpace(slug) || BlogSlugGenerator.IsValid(slug.Trim()))
             .WithMessage(_ => localizer["BLOG_SLUG_INVALID"]);
-        RuleFor(x => x.Revision).GreaterThanOrEqualTo(1);
     }
 
     private static bool BeAnEditorDocument(string? json)
@@ -64,6 +54,29 @@ public sealed class SaveBlogDraftRequestValidator : AbstractValidator<SaveBlogDr
         {
             return false;
         }
+    }
+}
+
+/// <summary>The form's rules plus the one that makes create different from a save: something
+/// has to have been written. The message hangs off <see cref="CreateBlogPostRequest.Title"/> so
+/// the editor has a field to point at, though any of the three would have satisfied it.</summary>
+public sealed class CreateBlogPostRequestValidator : AbstractValidator<CreateBlogPostRequest>
+{
+    public CreateBlogPostRequestValidator(IStringLocalizer<SharedStrings> localizer)
+    {
+        Include(new BlogDraftFieldsValidator<CreateBlogPostRequest>(localizer));
+        RuleFor(x => x.Title)
+            .Must((request, _) => BlogDraftText.HasAny(request.Title, request.Excerpt, request.ContentHtml))
+            .WithMessage(_ => localizer["BLOG_POST_EMPTY"]);
+    }
+}
+
+public sealed class SaveBlogDraftRequestValidator : AbstractValidator<SaveBlogDraftRequest>
+{
+    public SaveBlogDraftRequestValidator(IStringLocalizer<SharedStrings> localizer)
+    {
+        Include(new BlogDraftFieldsValidator<SaveBlogDraftRequest>(localizer));
+        RuleFor(x => x.Revision).GreaterThanOrEqualTo(1);
     }
 }
 

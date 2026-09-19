@@ -80,12 +80,17 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         return client;
     }
 
+    /// <summary>A post from its first draft — a title and nothing else, the least the API accepts.</summary>
     private static async Task<AdminBlogPostResponse> CreateAsync(HttpClient admin, string language = "tr")
     {
-        var response = await admin.PostAsJsonAsync("/api/admin/blog/posts", new CreateBlogPostRequest(language), JsonOptions);
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var response = await admin.PostAsJsonAsync("/api/admin/blog/posts", NewPost(language), JsonOptions);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
         return (await response.Content.ReadFromJsonAsync<AdminBlogPostResponse>(JsonOptions))!;
     }
+
+    private static CreateBlogPostRequest NewPost(string language = "tr", string title = "Taslak", string? excerpt = null,
+        string html = "", string? slug = null, Guid? translationOf = null) =>
+        new(title, excerpt, Doc, html, language, slug, translationOf);
 
     private static SaveBlogDraftRequest Draft(AdminBlogPostResponse post, string title = "İşe Alım Sürecinde Ghosting",
         string html = "<p>Merhaba</p>", string? slug = null, string? language = null, Guid? translationOf = null,
@@ -148,9 +153,82 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         var user = await RegisterUserAsync("reader.blog@example.com");
 
         (await user.GetAsync("/api/admin/blog/posts")).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        (await user.PostAsJsonAsync("/api/admin/blog/posts", new CreateBlogPostRequest("tr"), JsonOptions))
+        (await user.PostAsJsonAsync("/api/admin/blog/posts", NewPost(), JsonOptions))
             .StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         (await _factory.CreateClient().GetAsync("/api/admin/blog/posts")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    // ---- Create -------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Create_Refuses_A_Draft_With_Nothing_Written_So_An_Abandoned_Editor_Leaves_No_Post()
+    {
+        var admin = (await RegisterAdminAsync("create.empty@example.com")).Client;
+        var before = (await admin.GetFromJsonAsync<PagedResult<AdminBlogPostListItemResponse>>("/api/admin/blog/posts", JsonOptions))!.TotalCount;
+
+        var empty = await admin.PostAsJsonAsync("/api/admin/blog/posts", NewPost(title: "", excerpt: "  ", html: "<p></p>"), JsonOptions);
+
+        empty.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await empty.Content.ReadAsStringAsync()).ShouldContain("Write something");
+        (await admin.GetFromJsonAsync<PagedResult<AdminBlogPostListItemResponse>>("/api/admin/blog/posts", JsonOptions))!
+            .TotalCount.ShouldBe(before);
+    }
+
+    [Fact]
+    public async Task Create_Stores_The_First_Draft_And_Hands_Back_The_Revision_The_Autosave_Continues_From()
+    {
+        var admin = (await RegisterAdminAsync("create.first@example.com")).Client;
+
+        var response = await admin.PostAsJsonAsync("/api/admin/blog/posts",
+            NewPost("en", title: "", excerpt: null, html: "<p>a</p><script>alert(1)</script>", slug: "first-words"), JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
+        var post = (await response.Content.ReadFromJsonAsync<AdminBlogPostResponse>(JsonOptions))!;
+        post.Status.ShouldBe(BlogPostStatus.Draft);
+        post.Language.ShouldBe("en");
+        post.Slug.ShouldBe("first-words");
+        post.DraftTitle.ShouldBe("");
+        post.DraftContentHtml.ShouldBe("<p>a</p>");
+        post.DraftContentJson.ShouldBe(Doc);
+        post.IsMine.ShouldBeTrue();
+
+        // The revision the create returned is the one the first autosave must send.
+        var saved = await SaveAsync(admin, post.Id, Draft(post, title: "First words"));
+        saved.Revision.ShouldBe(post.Revision + 1);
+    }
+
+    [Fact]
+    public async Task Create_Refuses_A_Body_The_Sanitizer_Empties()
+    {
+        var admin = (await RegisterAdminAsync("create.sanitized@example.com")).Client;
+
+        var response = await admin.PostAsJsonAsync("/api/admin/blog/posts", NewPost(title: "", html: "<script>alert(1)</script>"), JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await ProblemCodeAsync(response)).ShouldContain("Write something");
+    }
+
+    [Fact]
+    public async Task Create_Applies_The_Same_Rules_As_A_Save_Slug_Taken_And_Bad_Translation()
+    {
+        var admin = (await RegisterAdminAsync("create.rules@example.com")).Client;
+        var existing = await CreateAsync(admin);
+        await SaveAsync(admin, existing.Id, Draft(existing, slug: "taken-at-create"));
+
+        var taken = await admin.PostAsJsonAsync("/api/admin/blog/posts", NewPost(slug: "taken-at-create"), JsonOptions);
+        taken.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await ProblemCodeAsync(taken)).ShouldContain("already uses that address");
+
+        // A translation must be in the other language; the existing post is Turkish, so is this one.
+        var sameLanguage = await admin.PostAsJsonAsync("/api/admin/blog/posts", NewPost(translationOf: existing.Id), JsonOptions);
+        sameLanguage.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        var linked = await admin.PostAsJsonAsync("/api/admin/blog/posts", NewPost("en", translationOf: existing.Id), JsonOptions);
+        linked.StatusCode.ShouldBe(HttpStatusCode.Created, await linked.Content.ReadAsStringAsync());
+        var created = (await linked.Content.ReadFromJsonAsync<AdminBlogPostResponse>(JsonOptions))!;
+        created.TranslationOfPostId.ShouldBe(existing.Id);
+        (await admin.GetFromJsonAsync<AdminBlogPostResponse>($"/api/admin/blog/posts/{existing.Id}", JsonOptions))!
+            .TranslationOfPostId.ShouldBe(created.Id);
     }
 
     // ---- Drafts and publishing ----------------------------------------------------------------
@@ -160,18 +238,19 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
     {
         var (admin, _) = await RegisterAdminAsync("author.blog@example.com");
         var post = await CreateAsync(admin);
-        post.Revision.ShouldBe(1);
+        // The row is born at 1 and the first draft (which create carries) is its first save.
+        post.Revision.ShouldBe(2);
         post.Status.ShouldBe(BlogPostStatus.Draft);
 
         var saved = await SaveAsync(admin, post.Id, Draft(post));
-        saved.Revision.ShouldBe(2);
+        saved.Revision.ShouldBe(3);
 
         // The same tab, saving again from what it last saw: fine.
-        var again = await SaveAsync(admin, post.Id, Draft(post, title: "v3", revision: 2));
-        again.Revision.ShouldBe(3);
+        var again = await SaveAsync(admin, post.Id, Draft(post, title: "v3", revision: 3));
+        again.Revision.ShouldBe(4);
 
-        // A second tab still holding revision 2: refused, and nothing changed.
-        var stale = await admin.PutAsJsonAsync($"/api/admin/blog/posts/{post.Id}/draft", Draft(post, title: "stale", revision: 2), JsonOptions);
+        // A second tab still holding revision 3: refused, and nothing changed.
+        var stale = await admin.PutAsJsonAsync($"/api/admin/blog/posts/{post.Id}/draft", Draft(post, title: "stale", revision: 3), JsonOptions);
         stale.StatusCode.ShouldBe(HttpStatusCode.Conflict);
         (await GetAdminAsync(admin, post.Id)).DraftTitle.ShouldBe("v3");
 

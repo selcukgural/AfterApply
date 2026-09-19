@@ -6,6 +6,7 @@ import type {
   BlogLikeToggleResponse,
   BlogMediaResponse,
   BlogPostStatus,
+  CreateBlogPostRequest,
   PagedResult,
   SaveBlogDraftRequest,
 } from "@/types/api";
@@ -41,8 +42,9 @@ export const adminBlogApi = {
     return apiFetch<PagedResult<AdminBlogPostListItem>>(`/api/admin/blog/posts${query ? `?${query}` : ""}`);
   },
 
-  create: (language: BlogLanguage) =>
-    apiFetch<AdminBlogPost>("/api/admin/blog/posts", { method: "POST", body: JSON.stringify({ language }) }),
+  /** The first save of a new post — the editor calls this instead of `saveDraft` until it has an id. */
+  create: (request: CreateBlogPostRequest) =>
+    apiFetch<AdminBlogPost>("/api/admin/blog/posts", { method: "POST", body: JSON.stringify(request) }),
 
   get: (postId: string) => apiFetch<AdminBlogPost>(`/api/admin/blog/posts/${postId}`),
 

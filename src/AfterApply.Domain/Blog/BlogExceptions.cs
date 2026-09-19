@@ -17,6 +17,11 @@ public sealed class BlogPostFieldLockedException()
 public sealed class BlogPostIncompleteException()
     : DomainException("BLOG_POST_INCOMPLETE", "A post needs a title and a body before it can be published.");
 
+/// <summary>Create asked with nothing written — no title, no summary, no text in the body. A
+/// post row exists only once there is at least one character to keep (2026-09-19).</summary>
+public sealed class BlogPostEmptyException()
+    : DomainException("BLOG_POST_EMPTY", "A post is created once something has been written in it.");
+
 /// <summary>Another post in the same language already lives at that slug.</summary>
 public sealed class BlogSlugTakenException()
     : DomainException("BLOG_SLUG_TAKEN", "Another post in this language already uses that slug.");

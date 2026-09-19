@@ -30,6 +30,9 @@ export type AutosaveAction =
   | { type: "edited"; at: number }
   | { type: "saveStarted" }
   | { type: "saveSucceeded"; revision: number; at: number }
+  /** The save found nothing worth sending — a new post with nothing written yet — and sent
+   *  nothing. Back to clean: there is nothing to lose by leaving. */
+  | { type: "saveSkipped" }
   | { type: "saveConflicted" }
   | { type: "saveFailed"; message: string; at: number };
 
@@ -74,6 +77,8 @@ export function autosaveReducer(state: AutosaveState, action: AutosaveAction): A
         error: null,
       };
     }
+    case "saveSkipped":
+      return { ...state, status: "idle", dirtySince: null, editedWhileSaving: false, error: null };
     case "saveConflicted":
       return { ...state, status: "conflict", editedWhileSaving: false };
     case "saveFailed":

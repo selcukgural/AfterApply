@@ -125,12 +125,51 @@ public class BlogValidatorTests
         validator.Validate(new AdminBlogListQuery((BlogPostStatus)42)).IsValid.ShouldBeFalse();
     }
 
+    private static CreateBlogPostRequest Create(string title = "Başlık", string? excerpt = "Özet", string json = Doc,
+        string html = "<p>x</p>", string language = "tr", string? slug = null) =>
+        new(title, excerpt, json, html, language, slug, null);
+
     [Fact]
     public void Create_Needs_A_Known_Language()
     {
         var validator = new CreateBlogPostRequestValidator(new KeyEchoLocalizer());
 
-        validator.Validate(new CreateBlogPostRequest("en")).IsValid.ShouldBeTrue();
-        validator.Validate(new CreateBlogPostRequest("")).IsValid.ShouldBeFalse();
+        validator.Validate(Create(language: "en")).IsValid.ShouldBeTrue();
+        validator.Validate(Create(language: "")).IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Create_Shares_The_Forms_Rules_With_The_Autosave()
+    {
+        var validator = new CreateBlogPostRequestValidator(new KeyEchoLocalizer());
+
+        validator.Validate(Create(json: "{}")).Errors
+            .ShouldContain(e => e.PropertyName == nameof(CreateBlogPostRequest.ContentJson)
+                                && e.ErrorMessage == "VALIDATION_BLOG_CONTENT_JSON_INVALID");
+        validator.Validate(Create(slug: "Not A Slug")).Errors
+            .ShouldContain(e => e.PropertyName == nameof(CreateBlogPostRequest.Slug) && e.ErrorMessage == "BLOG_SLUG_INVALID");
+        validator.Validate(Create(title: new string('a', BlogPost.MaxTitleLength + 1))).Errors
+            .ShouldContain(e => e.PropertyName == nameof(CreateBlogPostRequest.Title));
+    }
+
+    [Theory]
+    [InlineData("", null, "")]
+    [InlineData("   ", "", "<p></p>")]
+    [InlineData("", "", "<p>&nbsp;</p><p> </p>")]
+    public void Create_Refuses_A_Draft_With_Nothing_Written(string title, string? excerpt, string html)
+    {
+        var result = new CreateBlogPostRequestValidator(new KeyEchoLocalizer()).Validate(Create(title, excerpt, html: html));
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.PropertyName == nameof(CreateBlogPostRequest.Title) && e.ErrorMessage == "BLOG_POST_EMPTY");
+    }
+
+    [Theory]
+    [InlineData("a", null, "")]
+    [InlineData("", "a", "<p></p>")]
+    [InlineData("", "", "<p>a</p>")]
+    public void Create_Accepts_A_Draft_With_One_Character_Anywhere(string title, string? excerpt, string html)
+    {
+        new CreateBlogPostRequestValidator(new KeyEchoLocalizer()).Validate(Create(title, excerpt, html: html)).IsValid.ShouldBeTrue();
     }
 }

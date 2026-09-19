@@ -420,6 +420,9 @@
   <data name="BLOG_POST_INCOMPLETE" xml:space="preserve">
     <value>Yayımlamadan önce yazıya bir başlık ve içerik verin.</value>
   </data>
+  <data name="BLOG_POST_EMPTY" xml:space="preserve">
+    <value>Bir şey yazın — başlık, özet ya da bir satır metin — taslak o zaman oluşturulur.</value>
+  </data>
   <data name="BLOG_SLUG_TAKEN" xml:space="preserve">
     <value>Bu dilde başka bir yazı zaten bu adresi kullanıyor.</value>
   </data>

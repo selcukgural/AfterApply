@@ -27,6 +27,21 @@ describe("autosave scheduler", () => {
     expect(shouldAutosave(state, 1_000 + AUTOSAVE_IDLE_MS)).toBe(true);
   });
 
+  it("a skipped save (a new post with nothing written) returns to clean", () => {
+    const dirty = edited(initialAutosaveState(0), 1_000);
+    expect(hasUnsavedChanges(dirty)).toBe(true);
+
+    const skipped = autosaveReducer(dirty, { type: "saveSkipped" });
+    expect(skipped.status).toBe("idle");
+    expect(hasUnsavedChanges(skipped)).toBe(false);
+    expect(shouldAutosave(skipped, 60_000)).toBe(false);
+
+    // The next keystroke starts a fresh dirty run.
+    const again = edited(skipped, 2_000);
+    expect(again.status).toBe("dirty");
+    expect(again.dirtySince).toBe(2_000);
+  });
+
   it("saves at the latest every max-dirty window while typing never pauses", () => {
     let state = edited(initialAutosaveState(1), 0);
     // Keystrokes every second: the idle rule never fires, the max-dirty rule does.

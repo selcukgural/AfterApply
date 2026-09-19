@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { BlogLanguage, BlogPostStatus } from "@/types/api";
 import { adminBlogApi } from "@/lib/api/blog";
 import { ApiError } from "@/lib/api/httpClient";
 import { Card } from "@/components/dashboard/Card";
-import { Button } from "@/components/ui/Button";
+import { buttonClassName } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { Select } from "@/components/ui/Select";
 import { Pagination } from "@/components/applications/Pagination";
@@ -17,8 +17,9 @@ import { AdminTabs } from "@/components/admin/AdminTabs";
 /**
  * The admin's blog table (2026-09-19): the caller's drafts and every published post, most
  * recently touched first. A draft another admin has not published is not in this list — the API
- * filters, the table cannot leak what the API withholds. A row opens the editor; "new" creates an
- * empty draft in the chosen language and opens it.
+ * filters, the table cannot leak what the API withholds. A row opens the editor; "new" opens it
+ * on nothing — the post is created by the editor's first non-empty save, in the language chosen
+ * there, so a "new post" that is opened and abandoned leaves no row (2026-09-19).
  */
 export default function AdminBlogPage() {
   const t = useTranslations("adminBlog");
@@ -27,18 +28,11 @@ export default function AdminBlogPage() {
   const [status, setStatus] = useState<BlogPostStatus | "">("");
   const [lang, setLang] = useState<BlogLanguage | "">("");
   const [page, setPage] = useState(1);
-  const [createError, setCreateError] = useState<string | null>(null);
 
   const list = useQuery({
     queryKey: ["admin", "blog", { status, lang, page }],
     queryFn: () => adminBlogApi.list({ status: status || undefined, lang: lang || undefined, page }),
     retry: (failureCount, err) => !(err instanceof ApiError && (err.status === 403 || err.status === 404)) && failureCount < 2,
-  });
-
-  const create = useMutation({
-    mutationFn: (language: BlogLanguage) => adminBlogApi.create(language),
-    onSuccess: (post) => router.push(`/admin/blog/${post.id}`),
-    onError: (err) => setCreateError(err instanceof ApiError ? err.message : t("error")),
   });
 
   const formatDate = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
@@ -92,20 +86,12 @@ export default function AdminBlogPage() {
             <option value="en">{t("language.en")}</option>
           </Select>
         </FormField>
-        <div className="ml-auto flex flex-wrap gap-2">
-          <Button variant="primary" disabled={create.isPending} onClick={() => create.mutate("tr")}>
-            {create.isPending ? t("creating") : `${t("newPost")} · ${t("newPostTr")}`}
-          </Button>
-          <Button variant="outline" disabled={create.isPending} onClick={() => create.mutate("en")}>
-            {t("newPostEn")}
-          </Button>
+        <div className="ml-auto">
+          <Link href="/admin/blog/new" className={buttonClassName("primary")}>
+            {t("newPost")}
+          </Link>
         </div>
       </div>
-      {createError && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {createError}
-        </p>
-      )}
 
       {list.isLoading && <p className="text-sm text-gray-500 dark:text-gray-400">{t("loading")}</p>}
       {list.error && !(list.error instanceof ApiError && list.error.status === 403) && (
