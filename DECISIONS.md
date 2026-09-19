@@ -8220,6 +8220,13 @@ alınan ve bu PR'la kesinleşen kararlar:
   değişmez (`previewMedia`, testli). Düğme önce autosave'i flush eder; sekme `await`'ten önce
   açılır (sonra açılan popup engellenir). `preview` rezerve slug oldu. `metadata.pages.blog`
   public mesaj kapsamına eklendi (bileşen istemcide de çalışıyor).
+- **Blog'un menüdeki yeri** (2026-09-20, soru üzerine): "Araçlar" grubundan çıktı. Araçlar
+  *kullanılan* sayfalar (CV tarama, kıyaslama, haftalık ilanlar); blog *okunan* içerik, ve
+  ziyaretçi header'ında zaten birinci seviyede — üye de aynı yerde bulmalı. Signed-in satır
+  yeniden sıralandı: Panel · Başvurular ▾ · Şirketler ▾ · Araçlar ▾ · **CV'lerim · Blog** —
+  altı öğesi olmayan iki düz bağlantı, iki tetikleyici arasına sıkışmak yerine satırın sonunda
+  yan yana (çekmece aynı listeden). Rehber Araçlar'da kaldı (iki öğelik bir "Kaynaklar" grubu
+  fazla). `hasPublishedPosts` kuralı değişmedi; footer'daki yeri zaten doğruydu.
 - **Kapsam dışı (v1):** sunucuda görsel küçültme (ImageSharp yok; editör `width` saklar, CSS
   `max-width:100%`), yorum, etiket/kategori, RSS, yardım merkezi konusu.
 
