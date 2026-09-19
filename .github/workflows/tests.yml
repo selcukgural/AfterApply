@@ -40,6 +40,17 @@ jobs:
       - run: >
           dotnet test AfterApply.slnx --no-build --configuration Release
           --blame-hang --blame-hang-timeout 3m --blame-hang-dump-type none
+          --logger "trx;LogFileName=results.trx" --results-directory TestResults
+
+      # The console shows a failure's message but not its stack — a fixture-teardown failure
+      # ("Test Class Cleanup Failure ... ObjectDisposedException", 2026-09-19) came through as
+      # one line with nothing to chase. The .trx has the full trace; keep it when something failed.
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: backend-test-results
+          path: TestResults/*.trx
+          retention-days: 14
 
   frontend:
     runs-on: ubuntu-latest
