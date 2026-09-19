@@ -191,7 +191,26 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
 
         (await owner.DeleteAsync($"/api/personal-access-tokens/{token.Id}")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        (await tokenOnB.GetAsync("/api/applications")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        // The revoke evicts A's L1 and Redis at once; B's L1 hears about it over the backplane,
+        // which is a pub/sub hop — milliseconds, not zero. Wait for that hop rather than assume
+        // it (it lost the race once on the 2026-09-19 deploy run), bounded so a broken backplane
+        // still fails here.
+        await EventuallyAsync(async () => (await tokenOnB.GetAsync("/api/applications")).StatusCode == HttpStatusCode.Unauthorized,
+            "the revoked token still authenticates on the other instance");
+    }
+
+    private static async Task EventuallyAsync(Func<Task<bool>> condition, string otherwise)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (!await condition())
+        {
+            if (DateTime.UtcNow > deadline)
+            {
+                throw new ShouldAssertException(otherwise);
+            }
+
+            await Task.Delay(50);
+        }
     }
 
     [Fact]
