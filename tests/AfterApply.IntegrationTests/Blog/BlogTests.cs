@@ -43,6 +43,16 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
 
     private const string Doc = """{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Merhaba"}]}]}""";
 
+    /// <summary>
+    /// The slack for comparing a timestamp the API answered from memory with the same one read
+    /// back from Postgres. `DateTimeOffset.UtcNow` has 100 ns ticks on Linux (µs-aligned on
+    /// macOS, which is why this never showed locally) and timestamptz keeps microseconds, so a
+    /// value that made the round trip can be up to 900 ns short of the one that did not. Exact
+    /// equality failed three of these on the 2026-09-19 deploy run and passed the same code on
+    /// the PR run — a coin toss, not a bug in the dates.
+    /// </summary>
+    private static readonly TimeSpan StoredClock = TimeSpan.FromMilliseconds(1);
+
     // A PNG header with a 640×480 IHDR — enough for the format and dimension checks; the body
     // is never decoded.
     private static readonly byte[] PngBytes =
@@ -306,7 +316,7 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         stillOld.ContentHtml.ShouldBe("<p>Merhaba</p>");
 
         var updated = await PublishAsync(admin, post.Id);
-        updated.PublishedAt.ShouldBe(published.PublishedAt);
+        updated.PublishedAt!.Value.ShouldBe(published.PublishedAt!.Value, StoredClock);
         updated.PublishedUpdatedAt!.Value.ShouldBeGreaterThan(published.PublishedUpdatedAt!.Value);
         (await (await GetPublicAsync("tr", "ise-alim-surecinde-ghosting")).Content
             .ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!.Title.ShouldBe("Yarım kalmış");
@@ -356,7 +366,7 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         pending.Title.ShouldBe("Yeni başlık");
         pending.ContentHtml.ShouldBe("<p>Yeni</p>");
         pending.Slug.ShouldBe(published.Slug);
-        pending.PublishedAt.ShouldBe(published.PublishedAt!.Value);
+        pending.PublishedAt.ShouldBe(published.PublishedAt!.Value, StoredClock);
         pending.UpdatedAt.ShouldBeGreaterThan(published.PublishedUpdatedAt!.Value);
         (await (await GetPublicAsync("tr", published.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!
             .Title.ShouldBe("İşe Alım Sürecinde Ghosting");
@@ -412,7 +422,7 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
 
         var back = await PublishAsync(admin, post.Id);
         back.Slug.ShouldBe(post.Slug);
-        back.PublishedAt.ShouldBe(post.PublishedAt);
+        back.PublishedAt!.Value.ShouldBe(post.PublishedAt!.Value, StoredClock);
         (await GetPublicAsync("tr", post.Slug!)).StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
