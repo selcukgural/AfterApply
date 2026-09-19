@@ -14,6 +14,7 @@ using AfterApply.Application.Imports;
 using AfterApply.Application.Mailing;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Benchmark;
+using AfterApply.Application.Blog;
 using AfterApply.Application.CvScan;
 using AfterApply.Application.CvScan.Contracts;
 using AfterApply.Application.SiteStats;
@@ -44,6 +45,7 @@ using AfterApply.Application.Pro;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Benchmark;
+using AfterApply.Infrastructure.Blog;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Ai;
 using AfterApply.Infrastructure.CvScan;
@@ -107,6 +109,7 @@ public static class DependencyInjection
     public const string CvScanRateLimitPolicy = "cv-scan";
     public const string ExtensionPairingStartRateLimitPolicy = "extension-pairing-start";
     public const string ExtensionPairingPollRateLimitPolicy = "extension-pairing-poll";
+    public const string BlogLikeRateLimitPolicy = "blog-like";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -167,8 +170,10 @@ public static class DependencyInjection
         services.Configure<OccupationSearchOptions>(configuration.GetSection(OccupationSearchOptions.SectionName));
         services.Configure<RequestAuditOptions>(configuration.GetSection(RequestAuditOptions.SectionName));
         services.Configure<JobSourceOptions>(configuration.GetSection(JobSourceOptions.SectionName));
+        services.Configure<BlogOptions>(configuration.GetSection(BlogOptions.SectionName));
         services.AddPayments(configuration);
         services.AddDocumentStorage(configuration);
+        services.AddBlog(configuration);
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
 
@@ -232,6 +237,52 @@ public static class DependencyInjection
         }
 
         services.AddScoped<ICvDocumentService, CvDocumentService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// The blog (DECISIONS.md 2026-09-19). Its images get a storage binding of their own over the
+    /// same two implementations as the CVs — a second bucket (or directory), never a prefix in the
+    /// CV one, so a public image and a private document can never share an access policy by
+    /// accident. Same Production rule as <see cref="AddDocumentStorage"/>: Cloud Storage or fail
+    /// at startup, and the bucket name has to be there while the feature is on.
+    /// </summary>
+    private static IServiceCollection AddBlog(this IServiceCollection services, IConfiguration configuration)
+    {
+        var storageOptions = configuration.GetSection(StorageOptions.SectionName).Get<StorageOptions>()
+            ?? new StorageOptions();
+        var blogOptions = configuration.GetSection(BlogOptions.SectionName).Get<BlogOptions>() ?? new BlogOptions();
+
+        if (storageOptions.Provider == FileStorageProvider.GoogleCloudStorage)
+        {
+            if (blogOptions.Enabled && string.IsNullOrWhiteSpace(storageOptions.BlogMediaBucketName)
+                && !IsOpenApiDocumentGeneration)
+            {
+                throw new InvalidOperationException(
+                    "Storage:BlogMediaBucketName is required when Storage:Provider is GoogleCloudStorage and " +
+                    "Blog:Enabled is true. Set Storage__BlogMediaBucketName to the blog media bucket's name " +
+                    "(see DEPLOYMENT.md), or switch the blog off.");
+            }
+
+            // The StorageClient singleton is registered by AddDocumentStorage.
+            services.AddScoped<IBlogMediaStorage>(sp =>
+                new GoogleCloudStorageFileStorage(sp.GetRequiredService<StorageClient>(),
+                    sp.GetRequiredService<IOptions<StorageOptions>>().Value.BlogMediaBucketName));
+        }
+        else
+        {
+            // Production is already refused by AddDocumentStorage for this provider.
+            services.AddScoped<IBlogMediaStorage>(sp =>
+                new FileSystemFileStorage(sp.GetRequiredService<IOptions<StorageOptions>>().Value.BlogLocalRootPath));
+        }
+
+        // Built once: the allowlists are fixed and the sanitizer is thread-safe after construction.
+        services.AddSingleton<IBlogHtmlSanitizer, BlogHtmlSanitizer>();
+        services.AddScoped<IBlogCacheInvalidator, BlogCacheInvalidator>();
+        services.AddScoped<IBlogAdminService, BlogAdminService>();
+        services.AddScoped<IBlogPublicService, BlogPublicService>();
+        services.AddScoped<IBlogMediaService, BlogMediaService>();
 
         return services;
     }

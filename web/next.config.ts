@@ -52,8 +52,12 @@ const apiWebSocketOrigin = apiOrigin.replace(/^http/, "ws");
 // (self.__next_f.push(...)) with no nonce unless we generate one per request in the proxy and read
 // it back in the root layout — which opts every page, including the statically-rendered landing and
 // help pages, into dynamic rendering. Deliberately deferred; see DECISIONS.md. That means this CSP
-// hardens exfiltration and framing rather than injection itself, and the sanitization at the one
-// dangerouslySetInnerHTML call site (JobDescriptionCard) is still the primary XSS control.
+// hardens exfiltration and framing rather than injection itself, and sanitization at the two
+// content dangerouslySetInnerHTML call sites is still the primary XSS control: JobDescriptionCard
+// (untrusted, scraped text — DOMPurify in the browser, right before the write) and BlogArticleBody
+// (admin-authored, sanitized by the API's allowlist on every save and stored clean — the page
+// renders what the sanitizer produced; see that component and DECISIONS.md 2026-09-19).
+// blog.contract.test.ts pins the set of files allowed to use the attribute.
 //
 // The PayTR checkout is the one deliberate exception (DECISIONS.md 2026-09-15):
 //  - frame-src https://www.paytr.com is in the *global* policy, because the checkout is reached by
@@ -133,6 +137,12 @@ const nextConfig: NextConfig = {
         { source: "/en/cv-scan/score/:card", destination: "/en/cv-tarama/puan/:card" },
         // The about page, the same way (src/lib/about/path.ts).
         { source: "/en/about", destination: "/en/hakkimizda" },
+        // Blog images (2026-09-19). The post's HTML stores the image as the relative path the API
+        // serves it at, and this proxies that path to the API — so the stored markup carries no
+        // hostname (the same HTML works on a laptop, a preview and production), the CSP's
+        // img-src stays 'self', and a share card's image URL is on our own origin. The API sets
+        // the cache headers (a year, immutable, for a published post's image); Next passes them on.
+        { source: "/api/blog/media/:id", destination: `${apiOrigin}/api/blog/media/:id` },
       ],
       afterFiles: [],
       fallback: [],

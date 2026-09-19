@@ -189,6 +189,9 @@ public static class RateLimiting
             options.AddPolicy(DependencyInjection.CandidateExperienceWriteRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.CandidateExperienceWriteRateLimitPolicy, PartitionKey(httpContext), sizes.CandidateExperienceWrite));
 
+            options.AddPolicy(DependencyInjection.BlogLikeRateLimitPolicy, httpContext =>
+                Partition(DependencyInjection.BlogLikeRateLimitPolicy, PartitionKey(httpContext), sizes.BlogLike));
+
             // IP-based and anonymous, like the benchmark policy: the directory is readable without
             // an account, and a signed-in reader's browsing is not something to key to their id.
             options.AddPolicy(DependencyInjection.CompanyPublicSearchRateLimitPolicy, httpContext =>

@@ -11,6 +11,9 @@ describe("isAdminTabActive", () => {
   it("keeps the Reviews tab lit on its two sibling tables", () => {
     expect(isAdminTabActive("/admin/reviews/salaries", "/admin/reviews")).toBe(true);
     expect(isAdminTabActive("/admin/reviews/experiences", "/admin/reviews")).toBe(true);
+    expect(isAdminTabActive("/admin/blog", "/admin/blog")).toBe(true);
+    expect(isAdminTabActive("/admin/blog/0199a0a0-0000-7000-8000-000000000001", "/admin/blog")).toBe(true);
+    expect(isAdminTabActive("/admin/blog", "/admin/reviews")).toBe(false);
   });
 
   it("does not light Reviews on Reports, which is its own tab, nor anything else", () => {

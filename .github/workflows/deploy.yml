@@ -36,6 +36,11 @@ env:
   # via Application Default Credentials, so nothing is stored in Secret Manager for it.
   # See DEPLOYMENT.md §11.
   CV_BUCKET: ${{ secrets.GCP_CV_BUCKET }}
+  # The bucket holding blog images (2026-09-19). A second bucket rather than a prefix in the CV
+  # one so the two never share an access policy by accident; same trust model otherwise — private
+  # at the bucket level, bytes proxied by the API, name is an address not a credential.
+  # See DEPLOYMENT.md §16.
+  BLOG_MEDIA_BUCKET: ${{ secrets.GCP_BLOG_MEDIA_BUCKET }}
 
 jobs:
   # Decides which side(s) should deploy. On a manual dispatch the `target` input states intent
@@ -289,6 +294,11 @@ jobs:
             ASPNETCORE_URLS=http://+:8080
             Storage__Provider=GoogleCloudStorage
             Storage__BucketName=${{ env.CV_BUCKET }}
+            Storage__BlogMediaBucketName=${{ env.BLOG_MEDIA_BUCKET }}
+            # The blog (2026-09-19) launches on: the bucket and the GCP_BLOG_MEDIA_BUCKET secret
+            # exist (DEPLOYMENT.md §16). The API refuses to start with this on and no bucket
+            # name, so the line above and this one move together.
+            Blog__Enabled=true
             Feedback__GitHub__Enabled=true
             Feedback__GitHub__Repository=selcukgural/ekariyerim-feedback
             Feedback__GitHub__Assignee=selcukgural

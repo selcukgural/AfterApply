@@ -32,7 +32,11 @@ export function shareHref(target: ShareTarget, content: ShareContent): string {
   }
 }
 
-/** What goes on the clipboard and into the native share sheet: the sentence, then the link. */
+/**
+ * What "copy link" puts on the clipboard: the link and nothing else (2026-09-19). The button
+ * says "link", and a pasted "Title https://…" read as a mistake next to it; the sentence still
+ * rides along on WhatsApp, X and the native share sheet, where it is the message.
+ */
 export function shareClipboardText(content: ShareContent): string {
-  return `${content.text} ${content.url}`;
+  return content.url;
 }

@@ -61,4 +61,23 @@ internal static class CacheKeys
 
         public const string ReviewedSlugs = "company-reviews:reviewed-slugs";
     }
+
+    /// <summary>
+    /// Everything the public blog reads. One tag for the lot: a publish, unpublish, edit of a
+    /// live post or like changes what a list page, a post page, the sitemap feed and the "is
+    /// there a blog at all" flag say, and the writes are rare enough that dropping all of them
+    /// on every one is cheaper than reasoning about which survive.
+    /// </summary>
+    public static class Blog
+    {
+        public const string Tag = "blog";
+
+        public static string ListPage(string language, int page) => $"blog:list:{language}:p{page}";
+
+        public static string Post(string language, string slug) => $"blog:post:{language}:{slug}";
+
+        public const string Slugs = "blog:slugs";
+
+        public const string HasPublished = "blog:has-published";
+    }
 }

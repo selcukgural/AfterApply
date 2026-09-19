@@ -1,6 +1,7 @@
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Auditing;
 using AfterApply.Domain.Benchmark;
+using AfterApply.Domain.Blog;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.CompanyReviews;
 using AfterApply.Domain.CandidateExperiences;
@@ -125,6 +126,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<PaymentOrder> PaymentOrders => Set<PaymentOrder>();
 
     public DbSet<PaymentNotification> PaymentNotifications => Set<PaymentNotification>();
+
+    public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
+
+    public DbSet<BlogPostLike> BlogPostLikes => Set<BlogPostLike>();
+
+    public DbSet<BlogMedia> BlogMedia => Set<BlogMedia>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

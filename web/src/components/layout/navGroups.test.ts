@@ -8,6 +8,7 @@ const ALL_ON = {
   companyReviews: { enabled: true, maxReviewsPerUser: 10, minimumReviewsForScore: 3, priorWeight: 5 },
   companySalaries: { enabled: true, maxEntriesPerUser: 10, minimumEntriesForStats: 3 },
   candidateExperiences: { enabled: true, maxEntriesPerUser: 10, minimumEntriesForStats: 3, priorWeight: 5 },
+  blog: { enabled: true, hasPublishedPosts: true },
 };
 
 const hrefs = (entries: NavEntry[]) => entries.flatMap((entry) => (entry.type === "link" ? [entry.href] : entry.items.map((item) => item.href)));
@@ -18,14 +19,22 @@ const group = (entries: NavEntry[], key: string) => {
 };
 
 describe("buildNavEntries", () => {
-  it("orders the row: dashboard, applications, CVs, companies, tools", () => {
+  it("orders the row: dashboard, the three menus, then the two plain links (CVs, blog) at the end", () => {
+    // 2026-09-20: "My CVs" used to sit between two triggers and the blog inside "Tools".
     expect(buildNavEntries(ALL_ON, "tr").map((entry) => (entry.type === "link" ? entry.href : entry.key))).toEqual([
       "/dashboard",
       "applicationsMenu",
-      "/cv",
       "companies",
       "tools",
+      "/cv",
+      "/blog",
     ]);
+  });
+
+  it("puts the blog at the top level, as the signed-out header does — it is read, not a tool", () => {
+    const entries = buildNavEntries(ALL_ON, "tr");
+    expect(entries.at(-1)).toEqual({ type: "link", href: "/blog", key: "blog" });
+    expect(group(entries, "tools").items.map((item) => item.href)).not.toContain("/blog");
   });
 
   it("groups by object: everything about companies is one group, browse then contribute then mine", () => {
@@ -46,6 +55,12 @@ describe("buildNavEntries", () => {
     expect(group(buildNavEntries(ALL_ON, "tr"), "tools").items.map((item) => item.href)).toEqual(["/weekly-jobs", "/cv-tarama", "/benchmark", "/guide"]);
     expect(group(buildNavEntries({}, "tr"), "tools").items.map((item) => item.href)).toEqual(["/cv-tarama", "/benchmark", "/guide"]);
     expect(group(buildNavEntries(ALL_ON, "tr"), "tools").items[0].proBadge).toBe(true);
+  });
+
+  it("offers the blog only once something is published, not merely when the feature is on", () => {
+    const on = { ...ALL_ON, blog: { enabled: true, hasPublishedPosts: false } };
+    expect(hrefs(buildNavEntries(on, "tr"))).not.toContain("/blog");
+    expect(hrefs(buildNavEntries(ALL_ON, "tr"))).toContain("/blog");
   });
 
   it("does not list 'new application' — that is the header's primary button, on every page", () => {
@@ -110,6 +125,8 @@ describe("one name per destination", () => {
       expect(m.landing.footer.benchmark).toBe(m.nav.benchmark);
       expect(m.siteNav.guide).toBe(m.nav.guide);
       expect(m.landing.footer.guide).toBe(m.nav.guide);
+      expect(m.siteNav.blog).toBe(m.nav.blog);
+      expect(m.landing.footer.blog).toBe(m.nav.blog);
       expect(m.landing.footer.cvScan).toBe(m.nav.cvScan);
     }
   });

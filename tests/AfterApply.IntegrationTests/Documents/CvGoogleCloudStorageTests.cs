@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using AfterApply.Application.Blog.Contracts;
 using AfterApply.Application.Documents.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using Microsoft.AspNetCore.Hosting;
@@ -21,6 +22,10 @@ namespace AfterApply.IntegrationTests.Documents;
 public sealed class FakeGcsProfile : IHostProfile
 {
     public const string BucketName = "afterapply-cvs-test";
+
+    /// <summary>The blog's own bucket (2026-09-19) — a second one, as in production, so the two
+    /// storage bindings are proven to point at different places.</summary>
+    public const string BlogMediaBucketName = "afterapply-blog-media-test";
 
     // Pinned, like the Postgres image: the parameterless builder is obsolete, and an
     // unpinned emulator is a test that can start failing without anything here changing.
@@ -51,15 +56,18 @@ public sealed class FakeGcsProfile : IHostProfile
         // fake-gcs-server starts empty and object writes to an unknown bucket fail, so the bucket
         // is created the same way the real one is: once, out of band, before anything uploads.
         using var client = new HttpClient();
-        var response = await client.PostAsJsonAsync($"{BaseUri}b?project=afterapply-test",
-            new { name = BucketName });
-        response.EnsureSuccessStatusCode();
+        foreach (var bucket in new[] { BucketName, BlogMediaBucketName })
+        {
+            var response = await client.PostAsJsonAsync($"{BaseUri}b?project=afterapply-test", new { name = bucket });
+            response.EnsureSuccessStatusCode();
+        }
     }
 
     public void Configure(IWebHostBuilder builder)
     {
         builder.UseSetting("Storage:Provider", "GoogleCloudStorage");
         builder.UseSetting("Storage:BucketName", BucketName);
+        builder.UseSetting("Storage:BlogMediaBucketName", BlogMediaBucketName);
         builder.UseSetting("Storage:EmulatorBaseUri", BaseUri);
     }
 
@@ -67,10 +75,10 @@ public sealed class FakeGcsProfile : IHostProfile
 }
 
 /// <summary>
-/// Covers the Cloud Storage adapter itself — the one part of the CV feature the rest of the suite
-/// never touches, because every other test runs against the filesystem provider. Deliberately a
-/// single class with a handful of tests: it is here so the GCS path cannot rot unnoticed, not to
-/// re-test the rules CvDocumentFlowTests already covers.
+/// Covers the Cloud Storage adapter itself — the one part of the CV and blog-media features the
+/// rest of the suite never touches, because every other test runs against the filesystem
+/// provider. Deliberately a single class with a handful of tests: it is here so the GCS path
+/// cannot rot unnoticed, not to re-test the rules CvDocumentFlowTests and BlogTests already cover.
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 public class CvGoogleCloudStorageTests(ApiHost<FakeGcsProfile> host)
@@ -127,4 +135,44 @@ public class CvGoogleCloudStorageTests(ApiHost<FakeGcsProfile> host)
         (await client.GetAsync($"/api/cv-documents/{created.Id}/content")).StatusCode
             .ShouldBe(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task A_Blog_Image_Round_Trips_Through_Its_Own_Bucket()
+    {
+        var client = await AuthenticatedClientAsync("gcs.blog@example.com");
+        var me = await client.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions);
+        await host.MakeAdminAsync(me!.Id);
+
+        var create = await client.PostAsJsonAsync("/api/admin/blog/posts", new CreateBlogPostRequest("Taslak", null, """{"type":"doc","content":[]}""", "", "tr", null, null), JsonOptions);
+        create.EnsureSuccessStatusCode();
+        var post = (await create.Content.ReadFromJsonAsync<AdminBlogPostResponse>(JsonOptions))!;
+
+        using var content = new MultipartFormDataContent { { new ByteArrayContent(PngBytes), "file", "photo.png" } };
+        var upload = await client.PostAsync($"/api/admin/blog/posts/{post.Id}/media", content);
+        upload.StatusCode.ShouldBe(HttpStatusCode.Created, await upload.Content.ReadAsStringAsync());
+        var media = (await upload.Content.ReadFromJsonAsync<BlogMediaResponse>(JsonOptions))!;
+
+        var read = await client.GetAsync(media.Url);
+        read.EnsureSuccessStatusCode();
+        (await read.Content.ReadAsByteArrayAsync()).ShouldBe(PngBytes);
+
+        // In the blog bucket, and only there — the CV bucket is untouched by a blog upload.
+        using var gcs = new HttpClient();
+        var objectName = $"blog/{post.Id:D}/{media.Id:D}.png";
+        (await gcs.GetAsync($"{host.Profile.BaseUri}b/{FakeGcsProfile.BlogMediaBucketName}/o/{Uri.EscapeDataString(objectName)}"))
+            .StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await gcs.GetAsync($"{host.Profile.BaseUri}b/{FakeGcsProfile.BucketName}/o/{Uri.EscapeDataString(objectName)}"))
+            .StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        // Deleting the post deletes the object.
+        (await client.DeleteAsync($"/api/admin/blog/posts/{post.Id}")).EnsureSuccessStatusCode();
+        (await gcs.GetAsync($"{host.Profile.BaseUri}b/{FakeGcsProfile.BlogMediaBucketName}/o/{Uri.EscapeDataString(objectName)}"))
+            .StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    private static readonly byte[] PngBytes =
+    [
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13, (byte)'I', (byte)'H', (byte)'D', (byte)'R',
+        0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0
+    ];
 }

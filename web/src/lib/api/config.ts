@@ -69,6 +69,12 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
     minimumEntriesForStats: 3,
     priorWeight: 5,
   },
+  // Off, and empty, until the server says otherwise: a "Blog" link must never point at a
+  // deployment whose /api/blog routes answer 404 or at a list with nothing on it.
+  blog: {
+    enabled: false,
+    hasPublishedPosts: false,
+  },
 };
 
 export const configApi = {

@@ -411,4 +411,46 @@
   <data name="VALIDATION_EXPERIENCE_INTERVIEW_TYPES_DUPLICATE" xml:space="preserve">
     <value>An interview type was listed more than once.</value>
   </data>
+  <data name="BLOG_POST_REVISION_CONFLICT" xml:space="preserve">
+    <value>This draft was changed elsewhere since you opened it. Reload the page to continue from the latest version.</value>
+  </data>
+  <data name="BLOG_POST_FIELD_LOCKED" xml:space="preserve">
+    <value>The slug and the language cannot change once a post has been published.</value>
+  </data>
+  <data name="BLOG_POST_INCOMPLETE" xml:space="preserve">
+    <value>Give the post a title and some content before publishing it.</value>
+  </data>
+  <data name="BLOG_POST_EMPTY" xml:space="preserve">
+    <value>Write something — a title, a summary or a line of text — and the draft will be created.</value>
+  </data>
+  <data name="BLOG_SLUG_TAKEN" xml:space="preserve">
+    <value>Another post in this language already uses that address.</value>
+  </data>
+  <data name="BLOG_SLUG_INVALID" xml:space="preserve">
+    <value>The address may only contain lowercase letters, digits and single dashes.</value>
+  </data>
+  <data name="BLOG_POST_NOT_PUBLISHED" xml:space="preserve">
+    <value>This post is not published.</value>
+  </data>
+  <data name="BLOG_TRANSLATION_INVALID" xml:space="preserve">
+    <value>A translation must be a different post in the other language.</value>
+  </data>
+  <data name="BLOG_POST_CONTENT_INVALID" xml:space="preserve">
+    <value>The title, summary or body is longer than allowed.</value>
+  </data>
+  <data name="BLOG_COVER_INVALID" xml:space="preserve">
+    <value>The cover must be an image uploaded to this post.</value>
+  </data>
+  <data name="BLOG_IMAGE_EMPTY" xml:space="preserve">
+    <value>The image is empty.</value>
+  </data>
+  <data name="BLOG_IMAGE_TOO_LARGE" xml:space="preserve">
+    <value>The image exceeds the {0} byte size limit.</value>
+  </data>
+  <data name="BLOG_IMAGE_UNSUPPORTED" xml:space="preserve">
+    <value>Only PNG, JPEG, GIF and WebP images can be uploaded.</value>
+  </data>
+  <data name="VALIDATION_BLOG_CONTENT_JSON_INVALID" xml:space="preserve">
+    <value>The editor document is not in a shape the editor can reopen.</value>
+  </data>
 </root>

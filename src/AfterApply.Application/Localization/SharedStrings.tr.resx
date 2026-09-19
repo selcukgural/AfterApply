@@ -411,4 +411,46 @@
   <data name="VALIDATION_EXPERIENCE_INTERVIEW_TYPES_DUPLICATE" xml:space="preserve">
     <value>Bir görüşme türü birden fazla kez listelendi.</value>
   </data>
+  <data name="BLOG_POST_REVISION_CONFLICT" xml:space="preserve">
+    <value>Bu taslak siz açtıktan sonra başka bir yerde değiştirildi. En son sürümden devam etmek için sayfayı yenileyin.</value>
+  </data>
+  <data name="BLOG_POST_FIELD_LOCKED" xml:space="preserve">
+    <value>Bir yazı yayımlandıktan sonra adresi ve dili değiştirilemez.</value>
+  </data>
+  <data name="BLOG_POST_INCOMPLETE" xml:space="preserve">
+    <value>Yayımlamadan önce yazıya bir başlık ve içerik verin.</value>
+  </data>
+  <data name="BLOG_POST_EMPTY" xml:space="preserve">
+    <value>Bir şey yazın — başlık, özet ya da bir satır metin — taslak o zaman oluşturulur.</value>
+  </data>
+  <data name="BLOG_SLUG_TAKEN" xml:space="preserve">
+    <value>Bu dilde başka bir yazı zaten bu adresi kullanıyor.</value>
+  </data>
+  <data name="BLOG_SLUG_INVALID" xml:space="preserve">
+    <value>Adres yalnızca küçük harf, rakam ve tekil tire içerebilir.</value>
+  </data>
+  <data name="BLOG_POST_NOT_PUBLISHED" xml:space="preserve">
+    <value>Bu yazı yayında değil.</value>
+  </data>
+  <data name="BLOG_TRANSLATION_INVALID" xml:space="preserve">
+    <value>Çeviri, diğer dildeki farklı bir yazı olmalıdır.</value>
+  </data>
+  <data name="BLOG_POST_CONTENT_INVALID" xml:space="preserve">
+    <value>Başlık, özet veya içerik izin verilenden uzun.</value>
+  </data>
+  <data name="BLOG_COVER_INVALID" xml:space="preserve">
+    <value>Kapak, bu yazıya yüklenmiş bir görsel olmalıdır.</value>
+  </data>
+  <data name="BLOG_IMAGE_EMPTY" xml:space="preserve">
+    <value>Görsel boş.</value>
+  </data>
+  <data name="BLOG_IMAGE_TOO_LARGE" xml:space="preserve">
+    <value>Görsel {0} byte boyut sınırını aşıyor.</value>
+  </data>
+  <data name="BLOG_IMAGE_UNSUPPORTED" xml:space="preserve">
+    <value>Yalnızca PNG, JPEG, GIF ve WebP görseller yüklenebilir.</value>
+  </data>
+  <data name="VALIDATION_BLOG_CONTENT_JSON_INVALID" xml:space="preserve">
+    <value>Editör belgesi, editörün yeniden açabileceği bir biçimde değil.</value>
+  </data>
 </root>

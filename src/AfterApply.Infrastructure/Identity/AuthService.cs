@@ -709,6 +709,10 @@ internal sealed class AuthService(
         await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
         await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
+        // The account's blog likes cascaded with it, and the public pages carry like counts.
+        // (Posts themselves survive with no author — BlogPostConfiguration.)
+        await cache.RemoveByTagAsync(CacheKeys.Blog.Tag, cancellationToken);
+
         // Object storage is outside the transaction and cannot join it, so the files are removed
         // after the commit rather than before it. Getting the order the other way round would risk
         // deleting a user's CVs and then failing to delete the account — files gone, account still

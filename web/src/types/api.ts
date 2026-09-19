@@ -609,6 +609,13 @@ export interface CandidateExperiencesConfig {
   priorWeight: number;
 }
 
+/** Whether the blog is switched on, and whether there is anything published to link to. A blog
+ *  with no posts is not offered at all: every "Blog" link keys off `hasPublishedPosts`. */
+export interface BlogConfig {
+  enabled: boolean;
+  hasPublishedPosts: boolean;
+}
+
 export interface ClientConfigResponse {
   passwordPolicy: PasswordPolicy;
   personalAccessTokens: PersonalAccessTokenLimits;
@@ -623,6 +630,8 @@ export interface ClientConfigResponse {
   payments?: PaymentsConfig;
   companySalaries?: CompanySalariesConfig;
   candidateExperiences?: CandidateExperiencesConfig;
+  // Optional for the same reason (2026-09-19).
+  blog?: BlogConfig;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -1878,3 +1887,135 @@ export interface CandidateExperienceViewerState {
   ownEntry: MyCandidateExperience | null;
   quota: ExperienceQuota;
 }
+
+// ---- Blog (2026-09-19) --------------------------------------------------------------------------
+
+export type BlogLanguage = "tr" | "en";
+
+export type BlogPostStatus = "Draft" | "Published";
+
+/** Where the same post lives in the other language, when the author linked one. */
+export interface BlogTranslationLink {
+  language: BlogLanguage;
+  slug: string;
+}
+
+/** A card on the public list. The published version only; no author. */
+export interface BlogPostListItem {
+  id: string;
+  slug: string;
+  language: BlogLanguage;
+  title: string;
+  excerpt: string;
+  /** Relative (`/api/blog/media/{id}`); the web serves that path from its own origin. */
+  coverImageUrl: string | null;
+  publishedAt: string;
+  updatedAt: string;
+  likeCount: number;
+}
+
+/** The public page. `contentHtml` is sanitized by the API at write time and rendered as-is;
+ *  `likedByMe` is null for an anonymous reader. */
+export interface BlogPostPublic extends BlogPostListItem {
+  contentHtml: string;
+  likedByMe: boolean | null;
+  translation: BlogTranslationLink | null;
+}
+
+/** One sitemap entry per published post. */
+export interface BlogSlug {
+  language: BlogLanguage;
+  slug: string;
+  publishedAt: string;
+  updatedAt: string;
+  translation: BlogTranslationLink | null;
+}
+
+export interface BlogLikeToggleResponse {
+  liked: boolean;
+  likeCount: number;
+}
+
+export interface AdminBlogPostListItem {
+  id: string;
+  status: BlogPostStatus;
+  language: BlogLanguage;
+  slug: string | null;
+  /** The draft title — what the author is looking for. */
+  title: string;
+  authorUserId: string | null;
+  authorEmail: string | null;
+  isMine: boolean;
+  updatedAt: string;
+  publishedAt: string | null;
+  hasUnpublishedChanges: boolean;
+}
+
+/** Everything the editor needs to open a post: the draft slot to edit, the published dates to
+ *  show, the revision to send back with the next save. */
+export interface AdminBlogPost {
+  id: string;
+  status: BlogPostStatus;
+  language: BlogLanguage;
+  slug: string | null;
+  authorUserId: string | null;
+  isMine: boolean;
+  translationOfPostId: string | null;
+  coverMediaId: string | null;
+  draftTitle: string;
+  draftExcerpt: string;
+  /** The editor's own document (ProseMirror JSON), serialised. */
+  draftContentJson: string;
+  draftContentHtml: string;
+  draftUpdatedAt: string;
+  revision: number;
+  publishedTitle: string;
+  publishedAt: string | null;
+  publishedUpdatedAt: string | null;
+  hasUnpublishedChanges: boolean;
+  likeCount: number;
+  createdAt: string;
+}
+
+/** Create, from the first draft: sent once the author has typed at least one character into the
+ *  title, the summary or the body (a request with none of the three is a 400, `BLOG_POST_EMPTY`).
+ *  No cover — an image belongs to a post, so there is none before the post exists. */
+export interface CreateBlogPostRequest {
+  title: string;
+  excerpt: string | null;
+  contentJson: string;
+  contentHtml: string;
+  language: BlogLanguage;
+  slug: string | null;
+  translationOfPostId: string | null;
+}
+
+/** The autosave. Everything editable travels every time; `revision` is the one the editor last
+ *  received, and a mismatch is a 409. */
+export interface SaveBlogDraftRequest {
+  title: string;
+  excerpt: string | null;
+  contentJson: string;
+  contentHtml: string;
+  language: BlogLanguage;
+  slug: string | null;
+  coverMediaId: string | null;
+  translationOfPostId: string | null;
+  revision: number;
+}
+
+export interface BlogDraftSaved {
+  revision: number;
+  draftUpdatedAt: string;
+}
+
+export interface BlogMediaResponse {
+  id: string;
+  /** Relative (`/api/blog/media/{id}`) — what goes in the image's `src`. */
+  url: string;
+  contentType: string;
+  byteSize: number;
+  width: number | null;
+  height: number | null;
+}
+

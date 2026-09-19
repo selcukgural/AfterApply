@@ -8108,3 +8108,195 @@ gerçek DOCX taraması (88/100) — sayaç 0'dan sıralı yükselip yanıt değe
 `aa-bar-grow` 900 ms animasyonu DOM'da doğrulandı; paylaşılan puan sayfası `76-30-22-15-9` üç
 bandı gösterdi; koyu tema; landing mock'u. `help/screenshots/cv-scan-result.png` aynı sahneden
 (85/100, imzasız) CDP reçetesiyle yeniden çekildi.
+
+## Blog: admin yazar, taslak yazara özel, iki yuvalı yayın, sunucuda temizlenen HTML — DECIDED (2026-09-19)
+
+**Karar.** Siteye bir blog geliyor: yalnızca admin'ler yazar/düzenler/yayından kaldırır, herkes
+okur. Planlama oturumunda (`~/.claude/plans/ekariyerim-com-a-blog-zelli-i-lovely-frog.md`)
+alınan ve bu PR'la kesinleşen kararlar:
+
+- **Yazı başına tek dil** (`tr` | `en`). `/tr/blog` yalnızca Türkçe yazıları listeler. İsteğe
+  bağlı `TranslationOfPostId` iki yazıyı eşleştirir (link iki yönlü tutulur; `hreflang` ve
+  "diğer dilde oku" bağlantısı bundan çıkar). Rehberdeki tr+en çift zorunluluğu buraya
+  taşınmadı: tek yazar için iki metin yazmak şart koşulmuyor.
+- **Taslak yazara özeldir.** Yayımlanmamış (hiç yayımlanmamış *veya* yayından kaldırılmış) bir
+  yazıyı yalnızca yazarı görür; başka admin her admin rotasında **404** alır (403 değil —
+  varlığı bile görünmez), listede de çıkmaz. Yayımlanmış yazıyı her admin düzenler,
+  yayından kaldırır, siler.
+- **İki yuvalı model.** Aynı satırda taslak yuvası (`Draft*`, 5 sn'de bir autosave) ve yayın
+  yuvası (`Title/Excerpt/ContentHtml/PublishedContentJson`). "Yayımla" taslağı yayın yuvasına
+  kopyalar; ilk ve sonraki yayımlar aynı işlem (`PublishedAt` bir kez, `PublishedUpdatedAt` her
+  seferinde). Autosave yarım cümleyi asla siteye çıkaramaz. "Yayından kaldır" yalnızca durum
+  değiştirir; anlık görüntü ve slug kalır, tekrar yayımlanınca aynı URL'ye döner.
+- **Revizyon kontrolü.** Her taslak kaydı `Revision`'ı artırır; editör son gördüğü değeri
+  gönderir, uyuşmazlık **409** (diğer domain hataları gibi 400 değil — editör "yenile" ile
+  "alanı düzelt"i ayırt etmeli). İki sekme birbirinin üstüne yazamaz.
+- **Slug.** İlk yayımda başlıktan üretilir (`BlogSlugGenerator`, `CompanySlugGenerator`'ın
+  kopyası — modül izolasyonu için referans değil; birim testi ikisini aynı girdilerde
+  eşitler), ya da yayımdan önce elle yazılır (`^[a-z0-9]+(-[a-z0-9]+)*$`, rezerve: public,
+  new, media, admin, feed, rss, page). Dil başına tekil (filtreli unique index
+  `IX_BlogPosts_Language_Slug`). **İlk yayımdan sonra slug ve dil kilitlenir** — canlı olmuş bir
+  URL sözdür. Aynı anda aynı başlıkla iki yayım çakışırsa 23505 → `BLOG_SLUG_TAKEN`; ikinci
+  tıklama bir sonraki eki alır. (Retry denendi, `Publish()` `PublishedAt`'i set ettiği için
+  kilide takılıyordu; nadir durum için dürüst hata daha doğru.)
+- **HTML sunucuda temizlenir**, her autosave'de: `HtmlSanitizer` (Ganss, AngleSharp) allowlist —
+  etiketler p/h1-h4/strong/em/u/s/sub/sup/mark/a/img/ul/ol/li/blockquote/pre/code/hr/br/span/
+  figure/figcaption/table*/label/input/div; attribute'lar href/target/rel/src/alt/title/width/
+  height/style/colspan/rowspan/type/checked/disabled/data-type/data-checked/start/class; CSS
+  color/background-color/font-family/font-size/text-align/line-height/width; şema http/https.
+  Üstüne iki kural: `<img src>` yalnızca bizim medya yolumuz olabilir (`/api/blog/media/{guid}`;
+  mutlak URL göreliye katlanır, başka her kaynak elemanı siler), dış `<a>` `target=_blank
+  rel="noopener noreferrer nofollow"` alır. Saklanan HTML doğrudan render edilir; web tarafı
+  ikinci bir sanitizer çalıştırmaz (sunucu bileşeninde DOMPurify yok) — bu yüzden
+  `dangerouslySetInnerHTML`'in ikinci gerekçeli çağrı yeri web PR'ında bu karara işaret edecek.
+  Bulgu: `Uri.TryCreate("/tr/guide/x", Absolute)` Unix'te `file:` olarak *başarılı* — dış link
+  tespiti `http(s)://` önekine bakar.
+- **Görseller ayrı bucket'ta** (`afterapply-blog-media`, CV bucket'ında prefix değil: zıt erişim
+  kuralları tek politikayı paylaşmasın), bayt'lar API'den geçer: `GET /api/blog/media/{id}` —
+  yazı yayındaysa herkese `public, max-age=31536000, immutable`; taslaksa yalnızca yazara
+  (Bearer) `private, no-store`, diğer herkese (diğer admin dahil) 404. Kabul: PNG/JPEG/GIF/WebP
+  **yalnızca ilk baytlara göre** (uzantı ve Content-Type bakılmaz), SVG asla (inline sunulan SVG
+  script barındırır), 5 MB (`Storage:MaxFileSizeBytes`). CV'deki disiplin: önce storage sonra
+  satır, satır yazılamazsa nesne silinir; yazı silinince nesneler commit'ten sonra best-effort
+  silinir. Nesne adı `blog/{postId}/{mediaId}.{ext}` — istemciden gelen hiçbir şey anahtara
+  girmez. HTML'de görsel yolu **göreli** saklanır; web tarafı bu yolu API'ye rewrite edecek (CSP
+  `img-src 'self'` genişlemeden).
+- **Beğeni yalnızca giriş yapmış kullanıcıya**: `CompanyReviewHelpfulMark`'ın kopyası
+  (`BlogPostLike`, unique `(PostId, UserId)`, toggle, 23505 → "zaten beğenilmiş"),
+  `blog-like` rate limit 60/5 dk. Anonim girdi yüzeyi açılmadı → gizlilik metni ve çerez
+  envanteri değişmedi. Public detay `likeCount` her zaman, `likedByMe` yalnızca geçerli Bearer
+  varsa (`ClaimsPrincipal.TryGetUserId`) — public rota **asla 401 vermez**.
+- **Yazar FK `SET NULL`**, cascade değil (`ApplicationConfiguration`'daki kuraldan bilinçli
+  sapma): yazı site içeriğidir, kullanıcı verisi değil. Admin hesabı silinince yayımlı yazı
+  yazarsız kalır ve URL'de durur; taslağı kimseye görünmez (yazarı gitmiş taslağın dürüst hâli).
+  Beğeni kullanıcıyla cascade; medya `UploaderUserId` SET NULL.
+- **Flag `Blog:Enabled`** (`BlogEnabledFilter`, kapalıysa admin dahil her rota 404) +
+  `/api/config` → `blog: { enabled, hasPublishedPosts }`. `hasPublishedPosts` bu endpoint'in
+  ilk DB'ye dokunan değeri: `blog` tag'iyle önbellekte, hata → `false` (giriş düğmeleri bu
+  endpoint'i okur, blog sayılamıyor diye düşmemeli). Web, yayımlanmış yazı yokken blog linkini
+  göstermeyecek; `/api/config` `max-age=300` olduğu için ilk yayından sonra link ~5 dk gecikir,
+  yazının URL'si anında canlı.
+- **Önbellek**: `CacheKeys.Blog` tek tag (`blog`) — liste sayfaları, yazı sayfaları, sitemap
+  slug listesi, `has-published`; her yayım/kaldırma/canlı düzenleme/beğeni tag'i düşürür
+  (backplane ile her instance'ta; iki-host testi var).
+- **Request audit opt-out yok.** Autosave PUT'ları da satır bırakır (yazarken saatte en çok
+  ~720 satır); allowlist testi değişmedi.
+- **Öksüz görsel toplama** (aynı gün eklendi, soru üzerine): her taslak kaydı ve yayımda, yazının
+  medya satırları `DraftContentHtml ∪ ContentHtml ∪ CoverMediaId` içindeki id'lerle karşılaştırılır;
+  hiçbirinde geçmeyen **ve `Blog:OrphanMediaGraceMinutes` (1) dakikadan eski** satırlar silinir,
+  nesneleri commit'ten sonra bucket'tan kaldırılır. Gecikme tek bir yarış için: yükleme ile
+  editöre yerleşme arasına giren bir autosave taze görseli çöp sanmasın (aralık yüz milisaniyeler;
+  bir dakika fazlasıyla yeter, 10 dk'dan 1'e indirildi). Yayın yuvasında hâlâ
+  geçen görsel taslaktan silinse de bir sonraki yayıma kadar durur (sitede görünüyor). Tarayıcı/
+  CDN'deki `immutable` kopyalar kendi süreleri dolana kadar kalır — her immutable statik dosyanın
+  doğası. Entegrasyon testi: kapak değişimi, gövdeden çıkarma, yayım sonrası toplama.
+- **Boş taslak yok** (aynı gün, kullanıcı isteği): "Yeni yazı" artık tek düğme — dil editörün
+  içinden seçiliyor, iki dil için iki düğmeye gerek yoktu. Düğme bir POST atmıyor, editörü
+  `/admin/blog/new` adresinde boş açıyor; yazı satırı **ilk anlamlı autosave'de** oluşuyor:
+  başlık, özet ya da gövdede en az bir karakter varsa (`BlogDraftText.HasAny`; HTML etiketleri
+  atılır, `&nbsp;` metin sayılmaz). Boş açılıp kapanan editör satır bırakmaz — 5 boş
+  "(Başlıksız)" birikmişti. `POST /posts` artık ilk taslağı taşıyor (form alanlarının tamamı,
+  kapak hariç) ve hiçbir şey yazılmamışsa `BLOG_POST_EMPTY` ile 400 döner; kural iki tarafta da
+  (validator + sanitize sonrası servis). Create ve autosave aynı adımlardan geçer
+  (`ApplyDraftAsync`), aynı validator (`BlogDraftFieldsValidator<T>`). Yazı oluşunca URL
+  `history.replaceState` ile `/admin/blog/{id}` olur — navigasyon formu yeniden kurar, imleç
+  kaybolurdu. Görsel yüklemek yazı gerektirir: yeni yazıda metin yazılmadan görsel eklenirse
+  "önce bir şey yazın" uyarısı. Sonradan içeriği boşaltılan mevcut taslak silinmez (yazarın
+  işi). Testler: unit (metin kuralı, validator), entegrasyon (boş create 400 + satır yok,
+  ilk taslak + revision, sanitize sonrası boş, slug/çeviri kuralları).
+- **Önizleme** (2026-09-20, kullanıcı isteği: "gerçekten yayımlandığı hâliyle göstersin,
+  yanıltmasın"): editörde "Önizle" düğmesi, yeni sekmede `/{dil}/blog/preview/{id}`. Aldatmama
+  garantisi bileşen paylaşımıyla: yayın sayfasının makale kısmı `BlogArticle`'a çıkarıldı ve
+  önizleme **aynı bileşeni** kullanıyor — iki sayfa yalnızca veriyle ayrışabilir
+  (`blog.contract.test` iki sayfayı da bu bileşene sabitliyor; ikisinde de `<h1>`, `BlogArticleBody`,
+  `LikeButton` ayrıca yazılamaz). Veri `GET /posts/{id}/preview`: taslak slotu, public yanıtın
+  şekliyle; slug, yayımlansa alınacak olan (`AllocateSlugAsync`, yazılmaz); tarihler yayımlamanın
+  basacağı tarihler; çeviri bağlantısı yalnızca ikizi yayındaysa (public sorguyla aynı kural).
+  Önizleme public layout'un (SiteHeader/Footer) altında — signed-in layout'un çerçevesi farklı;
+  istemci tarafında render (token tarayıcıda), `noindex`. Üstte ince bir "Önizleme — adresi: …"
+  şeridi (tek ekleme); footer `inert` (yayımlanmamış yazıya beğeni 404 olurdu). Tek veri
+  farkı görseller: taslak görselleri token ister, `<img src>` gönderemez → gövde HTML'inde
+  `/api/blog/media/{id}` adresleri token'lı fetch'le blob URL'e çevrilir, başka bayt
+  değişmez (`previewMedia`, testli). Düğme önce autosave'i flush eder; sekme `await`'ten önce
+  açılır (sonra açılan popup engellenir). `preview` rezerve slug oldu. `metadata.pages.blog`
+  public mesaj kapsamına eklendi (bileşen istemcide de çalışıyor).
+- **Blog'un menüdeki yeri** (2026-09-20, soru üzerine): "Araçlar" grubundan çıktı. Araçlar
+  *kullanılan* sayfalar (CV tarama, kıyaslama, haftalık ilanlar); blog *okunan* içerik, ve
+  ziyaretçi header'ında zaten birinci seviyede — üye de aynı yerde bulmalı. Signed-in satır
+  yeniden sıralandı: Panel · Başvurular ▾ · Şirketler ▾ · Araçlar ▾ · **CV'lerim · Blog** —
+  altı öğesi olmayan iki düz bağlantı, iki tetikleyici arasına sıkışmak yerine satırın sonunda
+  yan yana (çekmece aynı listeden). Rehber Araçlar'da kaldı (iki öğelik bir "Kaynaklar" grubu
+  fazla). `hasPublishedPosts` kuralı değişmedi; footer'daki yeri zaten doğruydu.
+- **Kapsam dışı (v1):** sunucuda görsel küçültme (ImageSharp yok; editör `width` saklar, CSS
+  `max-width:100%`), yorum, etiket/kategori, RSS, yardım merkezi konusu.
+
+**Ne yapıldı (PR 1 — backend, karanlık).** Domain `Blog/` (BlogPost, BlogPostLike, BlogMedia,
+BlogSlugGenerator, BlogLanguage, BlogPostStatus, istisnalar); Application `Blog/` (contracts,
+FluentValidation, `IBlogAdminService/IBlogPublicService/IBlogMediaService/IBlogHtmlSanitizer/
+IBlogMediaStorage`, `BlogImageRules` magic-byte + PNG/GIF boyut okuma, `BlogMediaPath`);
+Infrastructure `Blog/` (servisler, sanitizer, `BlogOptions`, `BlogCacheInvalidator`), EF
+konfigürasyonları, `AddBlog` migration'ı, `IBlogMediaStorage` için aynı iki storage sınıfının
+ikinci bucket/dizin üzerinden bağlanması (`StorageOptions.BlogMediaBucketName/BlogLocalRootPath`;
+Production'da GCS + flag açık + boş ad → başlangıçta hata). API: `BlogEndpoints`
+(`/api/blog/public/*`, `/api/blog/media/{id}`, `/api/blog/posts/{id}/like`),
+`AdminBlogEndpoints` (`/api/admin/blog/posts*`, `/media`), `BlogEnabledFilter`, resx 13 kod.
+`deploy.yml`: `Storage__BlogMediaBucketName` + `Blog__Enabled=true` (bucket ve secret aynı gün
+açıldı — DEPLOYMENT.md §16; ayrı bucket ek maliyet değil, GCS bucket başına ücret almaz, karar
+erişim politikası ayrımı için). Postman koleksiyonu üretildi (181 istek).
+
+**Testler.** Birim 1178 (yeni 48: `BlogPostTests`, `BlogSlugGeneratorTests`,
+`BlogHtmlSanitizerTests` — script/onerror/javascript:/data:/expression()/iframe/form/svg/style
+düşer, stil/tablo/görev listesi/kendi görselimiz kalır, dış link sertleşir, idempotent —
+`BlogImageRulesTests`, `BlogMediaPathTests`, `BlogValidatorTests`, `ModuleIsolationTests`
+blog kuralı). Entegrasyon 19 (`BlogTests`: 403/401, revizyon 409 + audit satırı, sanitize,
+yayım/autosave-görünmez/güncelle/config bayrağı, kaldır/geri koy, kilitli alanlar, slug
+tekilliği + dil başına, diğer admin görünürlüğü, çeviri çift yönlü, liste dil+sayfa, 401
+vermeyen public, beğeni + rate limit, medya görünürlük/immutable/silme, byte'a göre kabul,
+kapak doğrulaması, iki instance önbellek, flag kapalı) + `ClientConfigTests` `blog` alanı.
+Bulgu: `jsonb` sütun boş string kabul etmez → her iki JSON yuvası `{"type":"doc","content":[]}`
+ile başlar.
+
+**Ne yapıldı (PR 2 — web).** Tiptap 3 (MIT, 3.31.3'e sabitlenmiş 16 paket) doğrudan; CLI'nin
+"Simple Editor" şablonu kullanılmadı — CLI etkileşimsiz çalışmıyor, çıktısı da kendi SCSS/bileşen
+ağacını getiriyordu; araç çubuğu sitenin kendi primitifleri ve token'larıyla yazıldı
+(`components/blog/editor/`). Yayın tarafı: `(public)/blog` listesi ve `blog/[slug]` sayfası
+(`no-store` fetch → dinamik, `notFound()` güvenli; `dynamicParams`/`force-static` yok, kontrat
+testi pinliyor), `BlogArticleBody` sunucu bileşeni `dangerouslySetInnerHTML` #2 (allowlist
+`blog.contract.test.ts`: layout tema scripti, JobDescriptionCard, BlogArticleBody, JsonLd —
+attribute yazımı `dangerouslySetInnerHTML={` aranır, yorumdaki isim sayılmaz), `.blog-prose`
+CSS (mdx-components'in sınıf haritası element seçicilerle; editör içerik alanı aynı sınıf →
+WYSIWYG), `LikeButton` (girişsiz → `/login?next=/blog/{slug}`; `postAuthRedirect` allowlist'ine
+beşinci şekil eklendi), `ShareRow` yeniden kullanıldı. Nav: `SiteHeader.siteLinksFor` /
+`SiteFooter.exploreLinksFor` / `navGroups` üçü de `blog.enabled && hasPublishedPosts` ile Rehber
+ve Yardım arasına ekler; `PUBLIC_PATHS`'e `/blog` **girmedi**, sitemap `blogSitemapEntries` ile
+yalnızca yayın varken dil başına indeks + yazı (hreflang sadece var olan diller,
+`blogAlternates`). `next.config.ts` rewrite `/api/blog/media/:id → API` (CSP `img-src 'self'`
+değişmedi; kontrat testi pinliyor). `pageMetadata.buildMetadata` `languages` override'ı.
+Admin: `/admin/blog` tablosu (AdminTabs beşinci sekme; `isAdminTabActive` editörde de yanar),
+`/admin/blog/[id]` `dynamic(..., { ssr:false })` ile tarayıcıya özel; `useAutosave` +
+saf `autosaveScheduler` (5 sn boşta *veya* yazarken en geç 5 sn'de bir; tek istek uçuşta; 409 →
+makine durur, "sayfayı yenile"); `MediaImage` NodeView taslak görselini Bearer'lı blob'dan
+gösterir (bare `<img>` 404 alırdı), sağ kenardan sürükleyerek genişlik; link için `window.prompt`
+**değil** satır içi alan (native dialog sayfayı ve otomasyonu kilitliyor — bulgu). Kapak yükleme
+ayrı input. Mesajlar `blog` (PUBLIC scope) + `adminBlog`; pager `posts` birimi.
+
+**Testler / doğrulama.** Web birim 751 (yeni: `autosaveScheduler`, `blogPaths`, sitemap blog
+girişleri, `postAuthRedirect` blog şekli, `navGroups` "yalnız yayın varsa", `adminTabs`,
+`blog.contract`, `moderationTable.contract`'a blog tablosu) + lint (0 hata) + tsc.
+Tarayıcı yerel yığın (API :5151 + web :3000, üç test hesabı: iki admin, bir okur; giriş tokenleri
+API'den alınıp `tokenStorage` anahtarlarına yazıldı): yayın yokken `/tr/blog` 404 ve menüde Blog
+yok → admin A yeni yazı, başlık, gövde (`- ` madde kuralı), H2, kalın, kırmızı, link, görsel
+yükleme + sürükleyerek küçültme, tablo, özet, kapak; "Kaydedildi · hh:mm" ↔ "Kaydedilmemiş"
+geçişleri; API'den okunan taslak HTML temizlenmiş biçimde (rgba renk, `rel="noopener noreferrer
+nofollow"`) → Yayımla: slug üretildi ve kilitlendi, "Sayfayı aç" → `/tr/blog` liste (kapak
+rewrite üzerinden), yazı sayfası tam gövde, beğeni 0→1, koyu tema, 400 px genişlik (yatay
+kaydırma yok) → başka sekmeden aynı revizyonla kayıt → editörde 409 bandı, yayımla düğmesi
+kapalı → admin B: listede yalnız yayımlı yazı (A'nın e-postası + "yayımlanmamış değişiklik"),
+A'nın taslağı "görünür değil" → girişsiz: header'da Blog, beğeni → `/tr/login?next=/blog/…` →
+yayından kaldır: liste/yazı/medya 404, `hasPublishedPosts=false`; geri yayımla. `next build &&
+next start`: blog sayfaları ƒ dinamik, sitemap'te yazı, hreflang yalnız `tr`+`x-default`,
+`og:type=article`, konsol hatasız. **Açık (polish):** OG görseli hâlâ satori kartı (kapak
+JSON-LD `image`'da; `og:image` için kapak boyutu DTO'ya eklenmeli), tercüme adayı seçicisi
+tüm dildeki yazıları listeler (durum etiketiyle), sürükle-bırak blok sıralama (`DragHandle`
+paketi kuruldu, bağlanmadı).
+

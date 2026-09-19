@@ -11,6 +11,10 @@
         "title": "Guide",
         "description": "The job hunt from the applicant's side: exporting your LinkedIn history, tracking applications, reply times and rejection emails."
       },
+      "blog": {
+        "title": "Blog",
+        "description": "Stories of looking for a job, not of finding one."
+      },
       "login": {
         "title": "Log In",
         "description": "Log in to e-kariyerim to see how many of your applications got a reply, and how many are still waiting."
@@ -396,6 +400,7 @@
       "privacy": "Privacy Policy",
       "rights": "All rights reserved.",
       "guide": "Guide",
+      "blog": "Blog",
       "help": "Help Center",
       "cookies": "Cookie Policy",
       "benchmark": "Benchmark",
@@ -429,6 +434,7 @@
     "cvScan": "CV Scan",
     "benchmark": "Benchmark",
     "guide": "Guide",
+    "blog": "Blog",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "applicationsMenu": "Applications",
@@ -749,7 +755,8 @@
       "pageInfoAlerts": "Page {page} / {totalPages} ({totalCount} alerts)",
       "pageInfoExperiences": "Page {page} / {totalPages} ({totalCount} candidate experiences)",
       "pageInfoReviews": "Page {page} / {totalPages} ({totalCount} reviews)",
-      "pageInfoContributions": "Page {page} / {totalPages} ({totalCount} contributions)"
+      "pageInfoContributions": "Page {page} / {totalPages} ({totalCount} contributions)",
+      "pageInfoPosts": "Page {page} / {totalPages} ({totalCount} posts)"
     },
     "form": {
       "companyName": "Company Name",
@@ -2691,6 +2698,34 @@
       }
     }
   },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Stories of looking for a job, not of finding one.",
+    "readMore": "Read more",
+    "publishedOn": "Published {date}",
+    "updatedOn": "Updated {date}",
+    "readInOtherLanguage": "{language, select, en {Read in English} tr {Türkçesini oku} other {Read in the other language}}",
+    "like": "Like",
+    "likeCount": "{count, plural, =1 {1 like} other {# likes}}",
+    "likeError": "The like could not be saved. Try again.",
+    "signInToLike": "Sign in to like",
+    "share": "Share",
+    "backToList": "← All posts",
+    "pagination": "Pages",
+    "pageInfo": "Page {page} of {totalPages}",
+    "newer": "← Newer",
+    "older": "Older →",
+    "preview": {
+      "badge": "Preview —",
+      "address": "once published, its address: {url}.",
+      "noAddressYet": "its address is set once there is a title.",
+      "backToEditor": "Back to the editor",
+      "loading": "Loading the preview…",
+      "notFound": "Post not found, or not visible to you.",
+      "forbidden": "This page is for admins only.",
+      "backToAdmin": "← Posts"
+    }
+  },
   "hrContact": {
     "legend": "HR contact",
     "hint": "Job sites don't publish these, so add a contact here yourself if you know one. All optional.",
@@ -3225,7 +3260,8 @@
     "metrics": "Metrics",
     "reviews": "Reviews",
     "reports": "Reports",
-    "payments": "Payments"
+    "payments": "Payments",
+    "blog": "Blog"
   },
   "adminContributionTabs": {
     "label": "Contribution kinds",
@@ -4669,6 +4705,143 @@
       "deleteBody": "It leaves the company page and the directory counts at once; this cannot be undone. The author is not notified."
     }
   },
+  "adminBlog": {
+    "title": "Blog",
+    "subtitle": "Your drafts and every published post. A draft is visible to its author alone; a published post can be edited by any admin.",
+    "forbiddenTitle": "This page is for admins",
+    "forbiddenBody": "Your account does not have admin access.",
+    "loading": "Loading…",
+    "error": "The posts could not be loaded.",
+    "disabled": "The blog is switched off on this deployment.",
+    "empty": "No posts yet. Use the button above to write the first one.",
+    "newPost": "New post",
+    "filters": {
+      "status": "Status",
+      "statusAll": "All",
+      "language": "Language",
+      "languageAll": "All languages"
+    },
+    "columns": {
+      "title": "Title",
+      "status": "Status",
+      "language": "Language",
+      "author": "Author",
+      "updated": "Last change",
+      "published": "Published"
+    },
+    "status": {
+      "Draft": "Draft",
+      "Published": "Published"
+    },
+    "unpublishedChanges": "Has unpublished changes",
+    "untitled": "(Untitled)",
+    "mine": "You",
+    "language": {
+      "tr": "Turkish",
+      "en": "English"
+    },
+    "editor": {
+      "back": "← Posts",
+      "notFound": "The post does not exist or is not visible to you.",
+      "titlePlaceholder": "Title",
+      "excerpt": "Summary",
+      "excerptPlaceholder": "A sentence or two for the list and the share card.",
+      "excerptHint": "Up to 500 characters. Search engines and social cards show this.",
+      "language": "Language",
+      "slug": "Address",
+      "slugHint": "Leave empty to generate it from the title on publish. Lowercase letters, digits and dashes.",
+      "slugLocked": "A published post's address and language cannot change.",
+      "slugPreview": "/{language}/blog/{slug}",
+      "translation": "Same post in the other language",
+      "translationNone": "Not linked",
+      "translationHint": "The two posts are linked both ways; the page gets a \"read in the other language\" link and hreflang.",
+      "cover": "Cover image",
+      "coverNone": "No cover — the share card uses the title.",
+      "coverClear": "Remove cover",
+      "coverUpload": "Upload a cover",
+      "body": "Body",
+      "publish": "Publish",
+      "updatePublished": "Update the live version",
+      "unpublish": "Unpublish",
+      "delete": "Delete",
+      "confirmDelete": "Yes, delete",
+      "cancel": "Cancel",
+      "deleteTitle": "Delete this post?",
+      "deleteBody": "The post, its likes and its uploaded images are deleted for good. If it is live, its address goes with it.",
+      "viewPublic": "Open the page",
+      "publishedAt": "First published: {date}",
+      "publishedUpdatedAt": "Live version: {date}",
+      "likeCount": "{count, plural, =0 {No likes yet} =1 {1 like} other {# likes}}",
+      "publishHint": "Publishing puts the draft on the site as it is; later edits stay hidden until you publish again.",
+      "preview": "Preview",
+      "previewHint": "The preview shows the draft with the site's own post page — exactly how it will look once published.",
+      "nothingWritten": "Nothing to publish — write something first."
+    },
+    "autosave": {
+      "saved": "Saved · {time}",
+      "unsaved": "Unsaved changes",
+      "saving": "Saving…",
+      "conflict": "This draft was changed in another tab. Reload the page to continue.",
+      "error": "Not saved: {message}",
+      "reload": "Reload the page",
+      "notYet": "Not saved yet — the draft is created once you write something"
+    },
+    "toolbar": {
+      "label": "Formatting",
+      "undo": "Undo",
+      "redo": "Redo",
+      "block": "Block type",
+      "paragraph": "Paragraph",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "heading4": "Heading 4",
+      "fontFamily": "Font",
+      "fontDefault": "Default",
+      "fontSize": "Size",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "code": "Code",
+      "subscript": "Subscript",
+      "superscript": "Superscript",
+      "highlight": "Highlight",
+      "textColor": "Text colour",
+      "clearColor": "Clear colour",
+      "alignLeft": "Align left",
+      "alignCenter": "Centre",
+      "alignRight": "Align right",
+      "alignJustify": "Justify",
+      "bulletList": "Bullet list",
+      "orderedList": "Numbered list",
+      "taskList": "Task list",
+      "blockquote": "Quote",
+      "codeBlock": "Code block",
+      "horizontalRule": "Horizontal rule",
+      "link": "Link",
+      "linkPrompt": "Link address",
+      "unlink": "Remove link",
+      "image": "Insert image",
+      "imageHint": "PNG, JPEG, GIF or WebP, up to 5 MB. You can also paste or drop one.",
+      "table": "Insert table",
+      "addRowAfter": "Row below",
+      "addColumnAfter": "Column right",
+      "deleteRow": "Delete row",
+      "deleteColumn": "Delete column",
+      "deleteTable": "Delete table",
+      "clearFormatting": "Clear formatting",
+      "words": "{count, plural, =1 {1 word} other {# words}}",
+      "characters": "{count, plural, =1 {1 character} other {# characters}}"
+    },
+    "upload": {
+      "uploading": "Uploading image…",
+      "error": "The image could not be uploaded.",
+      "unsupported": "Only PNG, JPEG, GIF and WebP can be uploaded.",
+      "tooLarge": "The image exceeds the 5 MB limit.",
+      "needsTextFirst": "Write something first — a title or a line of text — and the draft will be created; then add the image."
+    }
+  },
   "adminExperiences": {
     "title": "Administration",
     "subtitle": "Candidate experiences — newest first, ten per page. Click a row for the full entry and its author.",
@@ -4758,6 +4931,7 @@
     "companies": "Companies",
     "benchmark": "Benchmark",
     "guide": "Guide",
+    "blog": "Blog",
     "help": "Help",
     "about": "About",
     "signIn": "Log In",

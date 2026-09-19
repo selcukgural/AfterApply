@@ -11,6 +11,10 @@
         "title": "Rehber",
         "description": "İş başvurusu sürecinin arka planı: LinkedIn geçmişini dışa aktarma, başvuru takibi, dönüş süreleri ve red mailleri — iş arayanın tarafından anlatılmış."
       },
+      "blog": {
+        "title": "Blog",
+        "description": "İş bulmanın değil, iş aramanın hikâyeleri."
+      },
       "login": {
         "title": "Giriş Yap",
         "description": "Başvurularınızın kaçının cevaplandığını, kaçının beklediğini görmek için e-kariyerim'e giriş yapın."
@@ -396,6 +400,7 @@
       "privacy": "Gizlilik Politikası",
       "rights": "Tüm hakları saklıdır.",
       "guide": "Rehber",
+      "blog": "Blog",
       "help": "Yardım Merkezi",
       "cookies": "Çerez Politikası",
       "benchmark": "Kıyaslama",
@@ -429,6 +434,7 @@
     "cvScan": "CV Tarama",
     "benchmark": "Kıyaslama",
     "guide": "Rehber",
+    "blog": "Blog",
     "openMenu": "Menüyü aç",
     "closeMenu": "Menüyü kapat",
     "applicationsMenu": "Başvurular",
@@ -749,7 +755,8 @@
       "pageInfoAlerts": "Sayfa {page} / {totalPages} ({totalCount} uyarı)",
       "pageInfoExperiences": "Sayfa {page} / {totalPages} ({totalCount} aday deneyimi)",
       "pageInfoReviews": "Sayfa {page} / {totalPages} ({totalCount} değerlendirme)",
-      "pageInfoContributions": "Sayfa {page} / {totalPages} ({totalCount} katkı)"
+      "pageInfoContributions": "Sayfa {page} / {totalPages} ({totalCount} katkı)",
+      "pageInfoPosts": "Sayfa {page} / {totalPages} ({totalCount} yazı)"
     },
     "form": {
       "companyName": "Şirket Adı",
@@ -2691,6 +2698,34 @@
       }
     }
   },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "İş bulmanın değil, iş aramanın hikâyeleri.",
+    "readMore": "Devamını oku",
+    "publishedOn": "{date} tarihinde yayımlandı",
+    "updatedOn": "{date} tarihinde güncellendi",
+    "readInOtherLanguage": "{language, select, en {Read in English} tr {Türkçesini oku} other {Diğer dilde oku}}",
+    "like": "Beğen",
+    "likeCount": "{count, plural, =1 {1 beğeni} other {# beğeni}}",
+    "likeError": "Beğeni kaydedilemedi. Tekrar deneyin.",
+    "signInToLike": "Beğenmek için giriş yapın",
+    "share": "Paylaş",
+    "backToList": "← Tüm yazılar",
+    "pagination": "Sayfalar",
+    "pageInfo": "Sayfa {page} / {totalPages}",
+    "newer": "← Daha yeni",
+    "older": "Daha eski →",
+    "preview": {
+      "badge": "Önizleme —",
+      "address": "yayımlandığında adresi: {url}.",
+      "noAddressYet": "başlık yazılınca adresi belli olur.",
+      "backToEditor": "Editöre dön",
+      "loading": "Önizleme yükleniyor…",
+      "notFound": "Yazı bulunamadı ya da size görünür değil.",
+      "forbidden": "Bu sayfa yöneticilere özel.",
+      "backToAdmin": "← Yazılar"
+    }
+  },
   "hrContact": {
     "legend": "İK kontağı",
     "hint": "İlan siteleri bu bilgileri yayınlamıyor, bu yüzden bildiğin bir kontak varsa buraya sen ekleyebilirsin. Tamamı isteğe bağlı.",
@@ -3225,7 +3260,8 @@
     "metrics": "Metrikler",
     "reviews": "Değerlendirmeler",
     "reports": "Şikayetler",
-    "payments": "Ödemeler"
+    "payments": "Ödemeler",
+    "blog": "Blog"
   },
   "adminContributionTabs": {
     "label": "Katkı türleri",
@@ -4669,6 +4705,143 @@
       "deleteBody": "Şirket sayfasından ve dizin sayımlarından hemen düşer; geri alınamaz. Yazara bildirim gitmez."
     }
   },
+  "adminBlog": {
+    "title": "Blog",
+    "subtitle": "Taslaklarınız ve yayımlanmış tüm yazılar. Taslak yalnızca yazarına görünür; yayımlanan yazıyı her yönetici düzenleyebilir.",
+    "forbiddenTitle": "Bu sayfa yöneticilere özel",
+    "forbiddenBody": "Hesabınızın yönetici yetkisi yok.",
+    "loading": "Yükleniyor…",
+    "error": "Yazılar yüklenemedi.",
+    "disabled": "Blog bu kurulumda kapalı.",
+    "empty": "Henüz yazı yok. İlkini yazmak için üstteki düğmeyi kullanın.",
+    "newPost": "Yeni yazı",
+    "filters": {
+      "status": "Durum",
+      "statusAll": "Tümü",
+      "language": "Dil",
+      "languageAll": "Tüm diller"
+    },
+    "columns": {
+      "title": "Başlık",
+      "status": "Durum",
+      "language": "Dil",
+      "author": "Yazar",
+      "updated": "Son değişiklik",
+      "published": "Yayım"
+    },
+    "status": {
+      "Draft": "Taslak",
+      "Published": "Yayında"
+    },
+    "unpublishedChanges": "Yayımlanmamış değişiklik var",
+    "untitled": "(Başlıksız)",
+    "mine": "Siz",
+    "language": {
+      "tr": "Türkçe",
+      "en": "İngilizce"
+    },
+    "editor": {
+      "back": "← Yazılar",
+      "notFound": "Yazı bulunamadı ya da size görünür değil.",
+      "titlePlaceholder": "Başlık",
+      "excerpt": "Özet",
+      "excerptPlaceholder": "Listede ve paylaşım kartında görünen bir-iki cümle.",
+      "excerptHint": "En fazla 500 karakter. Arama motorları ve sosyal medya kartları bunu gösterir.",
+      "language": "Dil",
+      "slug": "Adres",
+      "slugHint": "Boş bırakırsanız yayımlarken başlıktan üretilir. Küçük harf, rakam ve tire.",
+      "slugLocked": "Yayımlanmış bir yazının adresi ve dili değiştirilemez.",
+      "slugPreview": "/{language}/blog/{slug}",
+      "translation": "Diğer dildeki karşılığı",
+      "translationNone": "Bağlantı yok",
+      "translationHint": "İki yazı birbirine bağlanır; sayfa \"diğer dilde oku\" bağlantısı ve hreflang alır.",
+      "cover": "Kapak görseli",
+      "coverNone": "Kapak yok — paylaşım kartı başlığı kullanır.",
+      "coverClear": "Kapağı kaldır",
+      "coverUpload": "Kapak yükle",
+      "body": "İçerik",
+      "publish": "Yayımla",
+      "updatePublished": "Yayındaki sürümü güncelle",
+      "unpublish": "Yayından kaldır",
+      "delete": "Sil",
+      "confirmDelete": "Eminim, sil",
+      "cancel": "Vazgeç",
+      "deleteTitle": "Yazıyı silmek istiyor musunuz?",
+      "deleteBody": "Yazı, beğenileri ve yüklenen görseller kalıcı olarak silinir. Yayındaysa adresi de kaybolur.",
+      "viewPublic": "Sayfayı aç",
+      "publishedAt": "İlk yayım: {date}",
+      "publishedUpdatedAt": "Yayındaki sürüm: {date}",
+      "likeCount": "{count, plural, =0 {Henüz beğeni yok} =1 {1 beğeni} other {# beğeni}}",
+      "publishHint": "Yayımlamak taslağı olduğu gibi siteye koyar; sonraki düzenlemeler siz tekrar yayımlayana kadar görünmez.",
+      "preview": "Önizle",
+      "previewHint": "Önizleme, taslağı sitedeki yazı sayfasının kendisiyle gösterir — yayımlanınca tam böyle görünür.",
+      "nothingWritten": "Yayımlanacak bir şey yok — önce bir şey yazın."
+    },
+    "autosave": {
+      "saved": "Kaydedildi · {time}",
+      "unsaved": "Kaydedilmemiş değişiklikler",
+      "saving": "Kaydediliyor…",
+      "conflict": "Bu taslak başka bir sekmede değiştirildi. Devam etmek için sayfayı yenileyin.",
+      "error": "Kaydedilemedi: {message}",
+      "reload": "Sayfayı yenile",
+      "notYet": "Henüz kaydedilmedi — bir şey yazınca taslak oluşur"
+    },
+    "toolbar": {
+      "label": "Biçimlendirme",
+      "undo": "Geri al",
+      "redo": "Yinele",
+      "block": "Blok türü",
+      "paragraph": "Paragraf",
+      "heading1": "Başlık 1",
+      "heading2": "Başlık 2",
+      "heading3": "Başlık 3",
+      "heading4": "Başlık 4",
+      "fontFamily": "Yazı tipi",
+      "fontDefault": "Varsayılan",
+      "fontSize": "Boyut",
+      "bold": "Kalın",
+      "italic": "İtalik",
+      "underline": "Altı çizili",
+      "strike": "Üstü çizili",
+      "code": "Kod",
+      "subscript": "Alt simge",
+      "superscript": "Üst simge",
+      "highlight": "Vurgu",
+      "textColor": "Yazı rengi",
+      "clearColor": "Rengi kaldır",
+      "alignLeft": "Sola hizala",
+      "alignCenter": "Ortala",
+      "alignRight": "Sağa hizala",
+      "alignJustify": "İki yana yasla",
+      "bulletList": "Madde listesi",
+      "orderedList": "Numaralı liste",
+      "taskList": "Görev listesi",
+      "blockquote": "Alıntı",
+      "codeBlock": "Kod bloğu",
+      "horizontalRule": "Yatay çizgi",
+      "link": "Bağlantı",
+      "linkPrompt": "Bağlantı adresi",
+      "unlink": "Bağlantıyı kaldır",
+      "image": "Görsel ekle",
+      "imageHint": "PNG, JPEG, GIF veya WebP; en fazla 5 MB. Yapıştırabilir ya da sürükleyebilirsiniz.",
+      "table": "Tablo ekle",
+      "addRowAfter": "Altına satır",
+      "addColumnAfter": "Sağına sütun",
+      "deleteRow": "Satırı sil",
+      "deleteColumn": "Sütunu sil",
+      "deleteTable": "Tabloyu sil",
+      "clearFormatting": "Biçimi temizle",
+      "words": "{count, plural, =1 {1 kelime} other {# kelime}}",
+      "characters": "{count, plural, =1 {1 karakter} other {# karakter}}"
+    },
+    "upload": {
+      "uploading": "Görsel yükleniyor…",
+      "error": "Görsel yüklenemedi.",
+      "unsupported": "Yalnızca PNG, JPEG, GIF ve WebP yüklenebilir.",
+      "tooLarge": "Görsel 5 MB sınırını aşıyor.",
+      "needsTextFirst": "Görsel eklemeden önce bir şey yazın — başlık ya da bir satır metin; taslak o zaman oluşur."
+    }
+  },
   "adminExperiences": {
     "title": "Yönetim",
     "subtitle": "Aday deneyimleri — en yeni önce, sayfa başına 10. Bir satıra tıklayınca tam kayıt ve yazarı açılır.",
@@ -4758,6 +4931,7 @@
     "companies": "Şirketler",
     "benchmark": "Kıyaslama",
     "guide": "Rehber",
+    "blog": "Blog",
     "help": "Yardım",
     "about": "Hakkımızda",
     "signIn": "Giriş Yap",

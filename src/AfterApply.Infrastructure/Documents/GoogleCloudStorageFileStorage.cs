@@ -1,4 +1,5 @@
 using System.Net;
+using AfterApply.Application.Blog;
 using AfterApply.Application.Documents;
 using Google;
 using Google.Apis.Storage.v1;
@@ -19,10 +20,17 @@ namespace AfterApply.Infrastructure.Documents;
 /// through the API instead keeps every download behind the same authentication and the same
 /// ownership check as every other endpoint, and the bucket can stay closed to the internet.
 /// </remarks>
-internal sealed class GoogleCloudStorageFileStorage(StorageClient client, IOptions<StorageOptions> options)
-    : IFileStorage
+internal sealed class GoogleCloudStorageFileStorage(StorageClient client, string bucket)
+    : IFileStorage, IBlogMediaStorage
 {
-    private readonly string _bucket = options.Value.BucketName;
+    /// <summary>The CV bucket — the DI-constructed instance behind <see cref="IFileStorage"/>.
+    /// The blog media bucket is the same class over a different name (see AddBlogMediaStorage).</summary>
+    public GoogleCloudStorageFileStorage(StorageClient client, IOptions<StorageOptions> options)
+        : this(client, options.Value.BucketName)
+    {
+    }
+
+    private readonly string _bucket = bucket;
 
     public async Task SaveAsync(string objectName, Stream content, string contentType,
         CancellationToken cancellationToken)
