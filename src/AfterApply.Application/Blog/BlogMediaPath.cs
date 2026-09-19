@@ -27,6 +27,30 @@ public static partial class BlogMediaPath
         return match.Success && Guid.TryParseExact(match.Groups["id"].Value, "D", out var id) ? id : null;
     }
 
+    /// <summary>Every media id a piece of stored HTML points at. Used to tell which of a post's
+    /// uploads are still in use — the rest are orphans the post no longer needs.</summary>
+    public static IReadOnlySet<Guid> ReferencedIn(string? html)
+    {
+        var ids = new HashSet<Guid>();
+        if (string.IsNullOrEmpty(html))
+        {
+            return ids;
+        }
+
+        foreach (Match match in AnyMediaPathRegex().Matches(html))
+        {
+            if (Guid.TryParseExact(match.Groups["id"].Value, "D", out var id))
+            {
+                ids.Add(id);
+            }
+        }
+
+        return ids;
+    }
+
     [GeneratedRegex(@"^(?:https?://[^/?#]+)?/api/blog/media/(?<id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/?$")]
     private static partial Regex MediaPathRegex();
+
+    [GeneratedRegex(@"/api/blog/media/(?<id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})")]
+    private static partial Regex AnyMediaPathRegex();
 }

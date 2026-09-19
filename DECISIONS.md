@@ -8181,9 +8181,17 @@ alınan ve bu PR'la kesinleşen kararlar:
   (backplane ile her instance'ta; iki-host testi var).
 - **Request audit opt-out yok.** Autosave PUT'ları da satır bırakır (yazarken saatte en çok
   ~720 satır); allowlist testi değişmedi.
+- **Öksüz görsel toplama** (aynı gün eklendi, soru üzerine): her taslak kaydı ve yayımda, yazının
+  medya satırları `DraftContentHtml ∪ ContentHtml ∪ CoverMediaId` içindeki id'lerle karşılaştırılır;
+  hiçbirinde geçmeyen **ve `Blog:OrphanMediaGraceMinutes` (1) dakikadan eski** satırlar silinir,
+  nesneleri commit'ten sonra bucket'tan kaldırılır. Gecikme tek bir yarış için: yükleme ile
+  editöre yerleşme arasına giren bir autosave taze görseli çöp sanmasın (aralık yüz milisaniyeler;
+  bir dakika fazlasıyla yeter, 10 dk'dan 1'e indirildi). Yayın yuvasında hâlâ
+  geçen görsel taslaktan silinse de bir sonraki yayıma kadar durur (sitede görünüyor). Tarayıcı/
+  CDN'deki `immutable` kopyalar kendi süreleri dolana kadar kalır — her immutable statik dosyanın
+  doğası. Entegrasyon testi: kapak değişimi, gövdeden çıkarma, yayım sonrası toplama.
 - **Kapsam dışı (v1):** sunucuda görsel küçültme (ImageSharp yok; editör `width` saklar, CSS
-  `max-width:100%`), medya tekil silme (yazı silinince toplanır), yorum, etiket/kategori, RSS,
-  yardım merkezi konusu.
+  `max-width:100%`), yorum, etiket/kategori, RSS, yardım merkezi konusu.
 
 **Ne yapıldı (PR 1 — backend, karanlık).** Domain `Blog/` (BlogPost, BlogPostLike, BlogMedia,
 BlogSlugGenerator, BlogLanguage, BlogPostStatus, istisnalar); Application `Blog/` (contracts,

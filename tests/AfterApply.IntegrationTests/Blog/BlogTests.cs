@@ -25,6 +25,8 @@ public sealed class BlogProfile() : LocalStorageProfile("blog")
         builder.UseSetting("Storage:BlogLocalRootPath", BlogMediaRoot);
         // Two per page so paging is testable with three posts.
         builder.UseSetting("Blog:PageSize", "2");
+        // No grace: an orphan is collected on the very next save, so the test does not wait.
+        builder.UseSetting("Blog:OrphanMediaGraceMinutes", "0");
     }
 }
 
@@ -549,6 +551,44 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
 
         // A PNG named .exe is a PNG.
         (await UploadAsync(admin, post.Id, PngBytes, "photo.exe")).ContentType.ShouldBe("image/png");
+        Directory.GetFiles(host.Profile.BlogMediaRoot, "*", SearchOption.AllDirectories).ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task An_Image_Nothing_Points_At_Any_More_Is_Deleted_From_The_Bucket_On_The_Next_Save()
+    {
+        var (admin, _) = await RegisterAdminAsync("orphan.blog@example.com");
+        var post = await CreateAsync(admin);
+        var first = await UploadAsync(admin, post.Id, PngBytes);
+        var second = await UploadAsync(admin, post.Id, PngBytes);
+        var inBody = await UploadAsync(admin, post.Id, PngBytes);
+        string PathOf(BlogMediaResponse m) => Path.Combine(host.Profile.BlogMediaRoot, "blog", post.Id.ToString("D"), $"{m.Id:D}.png");
+
+        // Cover = first, body shows the third: both referenced, both kept; the second is nobody's.
+        var saved = await SaveAsync(admin, post.Id, Draft(post, html: $"<p>x</p><img src=\"{inBody.Url}\">", cover: first.Id));
+        File.Exists(PathOf(first)).ShouldBeTrue();
+        File.Exists(PathOf(inBody)).ShouldBeTrue();
+        File.Exists(PathOf(second)).ShouldBeFalse();
+        (await admin.GetAsync(second.Url)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        // Swap the cover: the old one goes, the new one (uploaded now) stays.
+        var replacement = await UploadAsync(admin, post.Id, PngBytes);
+        var current = await GetAdminAsync(admin, post.Id);
+        await SaveAsync(admin, post.Id, Draft(current, html: current.DraftContentHtml, cover: replacement.Id, revision: saved.Revision));
+        File.Exists(PathOf(first)).ShouldBeFalse();
+        File.Exists(PathOf(replacement)).ShouldBeTrue();
+
+        // Publish, then drop the body image from the draft: it is still on the live page, so it
+        // survives the autosave — and goes with the next publish.
+        await PublishAsync(admin, post.Id);
+        current = await GetAdminAsync(admin, post.Id);
+        await SaveAsync(admin, post.Id, Draft(current, html: "<p>no image</p>", cover: replacement.Id));
+        File.Exists(PathOf(inBody)).ShouldBeTrue();
+        (await _factory.CreateClient().GetAsync(inBody.Url)).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        await PublishAsync(admin, post.Id);
+        File.Exists(PathOf(inBody)).ShouldBeFalse();
+        (await _factory.CreateClient().GetAsync(inBody.Url)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         Directory.GetFiles(host.Profile.BlogMediaRoot, "*", SearchOption.AllDirectories).ShouldHaveSingleItem();
     }
 

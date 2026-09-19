@@ -13,7 +13,7 @@
       },
       "blog": {
         "title": "Blog",
-        "description": "What we write about the job hunt: data, observations, experiments."
+        "description": "Stories of looking for a job, not of finding one."
       },
       "login": {
         "title": "Log In",
@@ -2700,12 +2700,13 @@
   },
   "blog": {
     "title": "Blog",
-    "subtitle": "What we write about the job hunt: data, observations, experiments.",
+    "subtitle": "Stories of looking for a job, not of finding one.",
     "readMore": "Read more",
     "publishedOn": "Published {date}",
     "updatedOn": "Updated {date}",
     "readInOtherLanguage": "{language, select, en {Read in English} tr {Türkçesini oku} other {Read in the other language}}",
-    "like": "{count, plural, =0 {Like} =1 {1 like} other {# likes}}",
+    "like": "Like",
+    "likeCount": "{count, plural, =1 {1 like} other {# likes}}",
     "likeError": "The like could not be saved. Try again.",
     "signInToLike": "Sign in to like",
     "share": "Share",

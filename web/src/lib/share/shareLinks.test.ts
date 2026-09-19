@@ -39,7 +39,7 @@ describe("shareHref", () => {
 });
 
 describe("shareClipboardText", () => {
-  it("is the sentence followed by the link", () => {
-    expect(shareClipboardText(content)).toBe("CV'm 80/100 aldı. Seninki kaç? https://ekariyerim.com/tr/cv-tarama");
+  it("is the link alone — the button says \"link\", the sentence belongs to the share targets", () => {
+    expect(shareClipboardText(content)).toBe("https://ekariyerim.com/tr/cv-tarama");
   });
 });

@@ -124,6 +124,7 @@ internal sealed class BlogAdminService(
             sanitizer.Sanitize(request.ContentHtml));
         post.SaveDraft(content, request.Revision, now);
 
+        var orphans = await CollectOrphanMediaAsync(post, now, cancellationToken);
         await SaveHandlingSlugCollisionAsync(cancellationToken);
 
         // The draft slot is invisible to the public; the cover and the translation link are not.
@@ -131,6 +132,8 @@ internal sealed class BlogAdminService(
         {
             await cacheInvalidator.InvalidateAsync(cancellationToken);
         }
+
+        await DeleteObjectsAsync(orphans, cancellationToken);
 
         return new BlogDraftSavedResponse(post.Revision, post.DraftUpdatedAt);
     }
@@ -163,8 +166,11 @@ internal sealed class BlogAdminService(
         }
 
         post.Publish(now);
+        // A publish is when an image dropped from the draft stops being on the site too.
+        var orphans = await CollectOrphanMediaAsync(post, now, cancellationToken);
         await SaveHandlingSlugCollisionAsync(cancellationToken);
         await cacheInvalidator.InvalidateAsync(cancellationToken);
+        await DeleteObjectsAsync(orphans, cancellationToken);
 
         return ToResponse(post, adminUserId, await LikeCountAsync(postId, cancellationToken));
     }
@@ -210,14 +216,50 @@ internal sealed class BlogAdminService(
             await cacheInvalidator.InvalidateAsync(cancellationToken);
         }
 
-        // After the commit, and best-effort: a failed object delete is a storage leak to clean
-        // up, not a failed request to show the admin. Nothing can read it any more either way.
+        await DeleteObjectsAsync(objectNames, cancellationToken);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Marks for deletion the post's uploads that nothing points at any more — not the draft,
+    /// not the published version, not the cover — and are older than the grace period (see
+    /// <see cref="BlogOptions.OrphanMediaGraceMinutes"/> for the race it covers). The rows go
+    /// with the caller's SaveChanges; the object names come back so the caller can delete the
+    /// bytes after the commit. A cover swap, a re-upload or an image removed from the body
+    /// would otherwise leave a reachable object in the bucket until the post itself was deleted.
+    /// </summary>
+    private async Task<IReadOnlyList<string>> CollectOrphanMediaAsync(BlogPost post, DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var referenced = new HashSet<Guid>(BlogMediaPath.ReferencedIn(post.DraftContentHtml));
+        referenced.UnionWith(BlogMediaPath.ReferencedIn(post.ContentHtml));
+        if (post.CoverMediaId is { } cover)
+        {
+            referenced.Add(cover);
+        }
+
+        var cutoff = now.AddMinutes(-options.Value.OrphanMediaGraceMinutes);
+        var orphans = await dbContext.BlogMedia
+            .Where(m => m.PostId == post.Id && m.CreatedAt < cutoff && !referenced.Contains(m.Id))
+            .ToListAsync(cancellationToken);
+        if (orphans.Count == 0)
+        {
+            return [];
+        }
+
+        dbContext.BlogMedia.RemoveRange(orphans);
+        return orphans.Select(m => m.ObjectName).ToList();
+    }
+
+    /// <summary>After the commit, and best-effort: a failed object delete is a storage leak to
+    /// clean up, not a failed request to show the admin. Nothing can read it any more either way.</summary>
+    private async Task DeleteObjectsAsync(IReadOnlyList<string> objectNames, CancellationToken cancellationToken)
+    {
         foreach (var objectName in objectNames)
         {
             await TryDeleteObjectAsync(objectName, cancellationToken);
         }
-
-        return true;
     }
 
     /// <summary>Published, or the caller's own. The one visibility rule, in the query.</summary>

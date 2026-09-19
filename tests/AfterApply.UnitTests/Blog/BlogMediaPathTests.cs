@@ -37,4 +37,16 @@ public class BlogMediaPathTests
     {
         BlogMediaPath.Parse(url).ShouldBeNull();
     }
+
+    [Fact]
+    public void Lists_Every_Media_Id_A_Stored_Html_Points_At()
+    {
+        var other = Guid.Parse("0199a0a0-0000-7000-8000-000000000002");
+        var html = $"<p>x</p><img src=\"{BlogMediaPath.For(Id)}\" alt=\"\"><figure><img src=\"https://ekariyerim.com{BlogMediaPath.For(other)}\"></figure>" +
+                   $"<img src=\"{BlogMediaPath.For(Id)}\"><a href=\"/api/cv-documents/{Id}/content\">not media</a>";
+
+        BlogMediaPath.ReferencedIn(html).ShouldBe([Id, other], ignoreOrder: true);
+        BlogMediaPath.ReferencedIn("").ShouldBeEmpty();
+        BlogMediaPath.ReferencedIn(null).ShouldBeEmpty();
+    }
 }
