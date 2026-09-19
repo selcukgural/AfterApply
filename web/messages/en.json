@@ -2701,6 +2701,8 @@
   "blog": {
     "title": "Blog",
     "subtitle": "Stories of looking for a job, not of finding one.",
+    "emptyInLanguage": "Nothing in English yet; {count, plural, =1 {one post is} other {# posts are}} up in {language, select, tr {Turkish} other {the other language}}.",
+    "readListInOtherLanguage": "{language, select, tr {Go to the Turkish posts →} other {Go to the other language →}}",
     "readMore": "Read more",
     "publishedOn": "Published {date}",
     "updatedOn": "Updated {date}",

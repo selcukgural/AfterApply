@@ -8227,6 +8227,16 @@ alınan ve bu PR'la kesinleşen kararlar:
   altı öğesi olmayan iki düz bağlantı, iki tetikleyici arasına sıkışmak yerine satırın sonunda
   yan yana (çekmece aynı listeden). Rehber Araçlar'da kaldı (iki öğelik bir "Kaynaklar" grubu
   fazla). `hasPublishedPosts` kuralı değişmedi; footer'daki yeri zaten doğruydu.
+- **Canlı ilk yazı bulguları** (2026-09-20, ilk yayının hemen ardından): (1) Kapak yüklemesi 500 —
+  `afterapply-blog-media` bucket'ında runtime servis hesabının `storage.objectAdmin` bağlaması
+  yapılmamıştı (DEPLOYMENT.md §16'nın atlanan adımı); bağlama verildi, kod değişmedi. (2) İlk
+  Türkçe yazı "Blog" bağlantısını İngilizce sitede de yaktı (`hasPublishedPosts` iki dili sayar)
+  ama `/en/blog` 404 veriyordu — "o dilde yazı yoksa sayfa yoktur" kuralı bağlantıyla
+  çelişiyordu. Kural değişti: dilde yazı yoksa ve diğer dilde varsa kısa bir not + diğer dilin
+  listesine bağlantı; 404 yalnızca blog kapalıyken ya da iki dilde de yazı yokken (o zaman zaten
+  bağlantı yok). (3) Liste kartındaki beğeni sayısı `blog.like`'ı kullanıyordu; o anahtar 19'unda
+  düğme etiketi ("Beğen") oldu — kart `likeCount`'a geçti. Footer'daki Blog bağlantısı zaten
+  vardı: public sayfalarda 60 sn `revalidate` ile geliyor, signed-in düzende footer yok.
 - **Kapsam dışı (v1):** sunucuda görsel küçültme (ImageSharp yok; editör `width` saklar, CSS
   `max-width:100%`), yorum, etiket/kategori, RSS, yardım merkezi konusu.
 

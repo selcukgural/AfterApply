@@ -2701,6 +2701,8 @@
   "blog": {
     "title": "Blog",
     "subtitle": "İş bulmanın değil, iş aramanın hikâyeleri.",
+    "emptyInLanguage": "Henüz Türkçe yazı yok; {language, select, en {İngilizce} other {diğer dilde}} {count, plural, =1 {bir yazı} other {# yazı}} var.",
+    "readListInOtherLanguage": "{language, select, en {İngilizce yazılara git →} other {Diğer dildeki yazılara git →}}",
     "readMore": "Devamını oku",
     "publishedOn": "{date} tarihinde yayımlandı",
     "updatedOn": "{date} tarihinde güncellendi",
