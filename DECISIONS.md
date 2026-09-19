@@ -8204,6 +8204,22 @@ alınan ve bu PR'la kesinleşen kararlar:
   "önce bir şey yazın" uyarısı. Sonradan içeriği boşaltılan mevcut taslak silinmez (yazarın
   işi). Testler: unit (metin kuralı, validator), entegrasyon (boş create 400 + satır yok,
   ilk taslak + revision, sanitize sonrası boş, slug/çeviri kuralları).
+- **Önizleme** (2026-09-20, kullanıcı isteği: "gerçekten yayımlandığı hâliyle göstersin,
+  yanıltmasın"): editörde "Önizle" düğmesi, yeni sekmede `/{dil}/blog/preview/{id}`. Aldatmama
+  garantisi bileşen paylaşımıyla: yayın sayfasının makale kısmı `BlogArticle`'a çıkarıldı ve
+  önizleme **aynı bileşeni** kullanıyor — iki sayfa yalnızca veriyle ayrışabilir
+  (`blog.contract.test` iki sayfayı da bu bileşene sabitliyor; ikisinde de `<h1>`, `BlogArticleBody`,
+  `LikeButton` ayrıca yazılamaz). Veri `GET /posts/{id}/preview`: taslak slotu, public yanıtın
+  şekliyle; slug, yayımlansa alınacak olan (`AllocateSlugAsync`, yazılmaz); tarihler yayımlamanın
+  basacağı tarihler; çeviri bağlantısı yalnızca ikizi yayındaysa (public sorguyla aynı kural).
+  Önizleme public layout'un (SiteHeader/Footer) altında — signed-in layout'un çerçevesi farklı;
+  istemci tarafında render (token tarayıcıda), `noindex`. Üstte ince bir "Önizleme — adresi: …"
+  şeridi (tek ekleme); footer `inert` (yayımlanmamış yazıya beğeni 404 olurdu). Tek veri
+  farkı görseller: taslak görselleri token ister, `<img src>` gönderemez → gövde HTML'inde
+  `/api/blog/media/{id}` adresleri token'lı fetch'le blob URL'e çevrilir, başka bayt
+  değişmez (`previewMedia`, testli). Düğme önce autosave'i flush eder; sekme `await`'ten önce
+  açılır (sonra açılan popup engellenir). `preview` rezerve slug oldu. `metadata.pages.blog`
+  public mesaj kapsamına eklendi (bileşen istemcide de çalışıyor).
 - **Kapsam dışı (v1):** sunucuda görsel küçültme (ImageSharp yok; editör `width` saklar, CSS
   `max-width:100%`), yorum, etiket/kategori, RSS, yardım merkezi konusu.
 

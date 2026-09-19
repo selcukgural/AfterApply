@@ -3,6 +3,14 @@ import type { BlogLanguage, BlogTranslationLink } from "@/types/api";
 
 export const BLOG_PATH = "/blog";
 
+/** Where the API serves a post's images, as the stored HTML refers to them (relative, id only). */
+export const BLOG_MEDIA_PATH_PREFIX = "/api/blog/media/";
+
+/** The editor's preview of one post, under the post's own language. */
+export function blogPreviewPath(postId: string): string {
+  return `${BLOG_PATH}/preview/${postId}`;
+}
+
 export function blogPostPath(slug: string): string {
   return `${BLOG_PATH}/${slug}`;
 }

@@ -90,6 +90,36 @@ internal sealed class BlogAdminService(
         return post is null ? null : ToResponse(post, adminUserId, await LikeCountAsync(postId, cancellationToken));
     }
 
+    public async Task<BlogPostPublicResponse?> PreviewAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
+    {
+        var post = await Visible(adminUserId).AsNoTracking().FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+        if (post is null)
+        {
+            return null;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        // The address the page would get: the slug it has, else the one PublishAsync would
+        // allocate from the draft title — computed the same way, so the preview's URL is the
+        // real one. Nothing is written here; a title with no slug-able character has no address
+        // yet, and publish would refuse it anyway (no title).
+        var slug = post.Slug
+                   ?? (string.IsNullOrWhiteSpace(post.DraftTitle) ? string.Empty : await AllocateSlugAsync(post.Language, post.DraftTitle, cancellationToken));
+
+        // The same rule as the public query: a twin that is not on the site is not linked.
+        var translation = await dbContext.BlogPosts
+            .Where(t => t.Id == post.TranslationOfPostId && t.Status == BlogPostStatus.Published)
+            .Select(t => new BlogTranslationLink(t.Language, t.Slug!))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        // The dates publish would stamp: the first publish date stays, "updated" becomes now.
+        return new BlogPostPublicResponse(
+            post.Id, slug, post.Language, post.DraftTitle, post.DraftExcerpt, post.DraftContentHtml,
+            post.CoverMediaId is { } coverId ? BlogMediaPath.For(coverId) : null,
+            post.PublishedAt ?? now, now, await LikeCountAsync(postId, cancellationToken), LikedByMe: null, translation);
+    }
+
     public async Task<BlogDraftSavedResponse?> SaveDraftAsync(Guid adminUserId, Guid postId, SaveBlogDraftRequest request,
         CancellationToken cancellationToken)
     {

@@ -5,6 +5,7 @@ import type {
   BlogLanguage,
   BlogLikeToggleResponse,
   BlogMediaResponse,
+  BlogPostPublic,
   BlogPostStatus,
   CreateBlogPostRequest,
   PagedResult,
@@ -47,6 +48,9 @@ export const adminBlogApi = {
     apiFetch<AdminBlogPost>("/api/admin/blog/posts", { method: "POST", body: JSON.stringify(request) }),
 
   get: (postId: string) => apiFetch<AdminBlogPost>(`/api/admin/blog/posts/${postId}`),
+
+  /** The draft in the public post's shape — what `BlogArticle` renders on the preview page. */
+  preview: (postId: string) => apiFetch<BlogPostPublic>(`/api/admin/blog/posts/${postId}/preview`),
 
   /** The autosave. A 409 means another tab saved since — reload, do not retry. */
   saveDraft: (postId: string, request: SaveBlogDraftRequest) =>

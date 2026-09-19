@@ -80,6 +80,25 @@ public static class AdminBlogEndpoints
             .Produces<AdminBlogPostResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapGet("/posts/{postId:guid}/preview", async (Guid postId, ClaimsPrincipal user,
+                IAdminAccessService adminAccess, IBlogAdminService service, CancellationToken cancellationToken) =>
+            {
+                if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
+                {
+                    return Results.Forbid();
+                }
+
+                var preview = await service.PreviewAsync(user.GetUserId(), postId, cancellationToken);
+                return preview is null ? Results.NotFound() : Results.Ok(preview);
+            })
+            .WithSummary("The draft as the public page would show it")
+            .WithDescription("Admin only; the author only while the post is unpublished. The draft slot in the public " +
+                             "post's shape — same fields, same rules — so the web can render it with the public page's " +
+                             "own component. The slug is the one publish would use; the dates are the ones publish " +
+                             "would set. Reads only; nothing is published or saved.")
+            .Produces<BlogPostPublicResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         group.MapPut("/posts/{postId:guid}/draft", async (Guid postId, SaveBlogDraftRequest request, ClaimsPrincipal user,
                 IAdminAccessService adminAccess, IBlogAdminService service, IStringLocalizer<SharedStrings> localizer,
                 CancellationToken cancellationToken) =>

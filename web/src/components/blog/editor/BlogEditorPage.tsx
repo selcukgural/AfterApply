@@ -9,7 +9,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import type { AdminBlogPost, BlogLanguage } from "@/types/api";
 import { adminBlogApi } from "@/lib/api/blog";
 import { ApiError } from "@/lib/api/httpClient";
-import { blogPostPath } from "@/lib/blog/blogPaths";
+import { blogPostPath, blogPreviewPath } from "@/lib/blog/blogPaths";
 import { Card } from "@/components/dashboard/Card";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
@@ -268,6 +268,27 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost | null }) {
     onError: (err) => setActionError(err instanceof ApiError ? err.message : t("error")),
   });
 
+  // The preview opens in a tab of its own, after the draft is saved so it shows what is on
+  // screen. The tab is opened before the await — a window.open after one is a popup to block —
+  // and pointed at the preview once the save has landed, or closed when it has not.
+  const preview = useMutation({
+    mutationFn: async () => {
+      const tab = window.open("", "_blank");
+      try {
+        const id = await ensurePost();
+        if (!id) throw new Error(tEditor("nothingWritten"));
+        if (!(await autosave.flush())) throw new Error(tSave("unsaved"));
+        const target = `${window.location.origin}/${language}${blogPreviewPath(id)}`;
+        if (tab) tab.location.href = target;
+        else window.open(target, "_blank");
+      } catch (err) {
+        tab?.close();
+        throw err;
+      }
+    },
+    onError: (err) => setActionError(err instanceof Error ? err.message : t("error")),
+  });
+
   const remove = useMutation({
     mutationFn: () => adminBlogApi.remove(postId!),
     onSuccess: () => {
@@ -311,7 +332,7 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost | null }) {
     }
   })();
 
-  const busy = publish.isPending || unpublish.isPending || remove.isPending;
+  const busy = publish.isPending || unpublish.isPending || remove.isPending || preview.isPending;
 
   return (
     <div className="flex flex-col gap-6">
@@ -378,6 +399,9 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost | null }) {
                   {tEditor("publish")}
                 </Button>
               )}
+              <Button variant="secondary" onClick={() => preview.mutate()} disabled={busy || autosave.state.status === "conflict"}>
+                {tEditor("preview")}
+              </Button>
               {meta.status === "Published" && (
                 <Button variant="secondary" onClick={() => unpublish.mutate()} disabled={busy}>
                   {tEditor("unpublish")}
@@ -388,6 +412,7 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost | null }) {
               </Button>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">{tEditor("publishHint")}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{tEditor("previewHint")}</p>
             {meta.publishedAt && (
               <dl className="flex flex-col gap-1 text-xs text-gray-600 dark:text-gray-400">
                 <dd>{tEditor("publishedAt", { date: formatDate(meta.publishedAt) })}</dd>

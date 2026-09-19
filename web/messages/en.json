@@ -2714,7 +2714,17 @@
     "pagination": "Pages",
     "pageInfo": "Page {page} of {totalPages}",
     "newer": "← Newer",
-    "older": "Older →"
+    "older": "Older →",
+    "preview": {
+      "badge": "Preview —",
+      "address": "once published, its address: {url}.",
+      "noAddressYet": "its address is set once there is a title.",
+      "backToEditor": "Back to the editor",
+      "loading": "Loading the preview…",
+      "notFound": "Post not found, or not visible to you.",
+      "forbidden": "This page is for admins only.",
+      "backToAdmin": "← Posts"
+    }
   },
   "hrContact": {
     "legend": "HR contact",
@@ -4763,6 +4773,8 @@
       "publishedUpdatedAt": "Live version: {date}",
       "likeCount": "{count, plural, =0 {No likes yet} =1 {1 like} other {# likes}}",
       "publishHint": "Publishing puts the draft on the site as it is; later edits stay hidden until you publish again.",
+      "preview": "Preview",
+      "previewHint": "The preview shows the draft with the site's own post page — exactly how it will look once published.",
       "nothingWritten": "Nothing to publish — write something first."
     },
     "autosave": {

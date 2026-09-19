@@ -27,7 +27,7 @@ public static partial class BlogSlugGenerator
     /// </summary>
     public static readonly IReadOnlySet<string> Reserved = new HashSet<string>(StringComparer.Ordinal)
     {
-        "public", "new", "media", "admin", "feed", "rss", "page"
+        "public", "new", "media", "admin", "feed", "rss", "page", "preview"
     };
 
     public static string Generate(string title)

@@ -317,6 +317,73 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
     }
 
     [Fact]
+    public async Task Preview_Is_The_Draft_In_The_Public_Shape_With_The_Slug_And_Dates_Publish_Would_Use()
+    {
+        var (admin, _) = await RegisterAdminAsync("preview.blog@example.com");
+        var (other, _) = await RegisterAdminAsync("preview.other@example.com");
+        var post = await CreateAsync(admin);
+        await SaveAsync(admin, post.Id, Draft(post, html: "<p>Taslak</p>"));
+
+        // Before any publish: the draft slot, at the address publish would allocate, dated today.
+        var before = await admin.GetAsync($"/api/admin/blog/posts/{post.Id}/preview");
+        before.StatusCode.ShouldBe(HttpStatusCode.OK, await before.Content.ReadAsStringAsync());
+        var preview = (await before.Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
+        preview.Id.ShouldBe(post.Id);
+        preview.Slug.ShouldBe("ise-alim-surecinde-ghosting");
+        preview.Title.ShouldBe("İşe Alım Sürecinde Ghosting");
+        preview.Excerpt.ShouldBe("Özet");
+        preview.ContentHtml.ShouldBe("<p>Taslak</p>");
+        preview.LikeCount.ShouldBe(0);
+        preview.LikedByMe.ShouldBeNull();
+        preview.Translation.ShouldBeNull();
+        preview.PublishedAt.ShouldBeGreaterThan(DateTimeOffset.UtcNow.AddMinutes(-1));
+        preview.UpdatedAt.ShouldBeGreaterThanOrEqualTo(preview.PublishedAt);
+
+        // Nothing was written: still a draft, still no slug, still not on the site.
+        var untouched = await GetAdminAsync(admin, post.Id);
+        untouched.Status.ShouldBe(BlogPostStatus.Draft);
+        untouched.Slug.ShouldBeNull();
+        (await GetPublicAsync("tr", "ise-alim-surecinde-ghosting")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        // Another admin's draft is as absent in preview as everywhere else.
+        (await other.GetAsync($"/api/admin/blog/posts/{post.Id}/preview")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        // Published, then edited: the preview shows the pending draft, the public page the live one,
+        // and the first publish date is kept while "updated" is now.
+        var published = await PublishAsync(admin, post.Id);
+        await SaveAsync(admin, post.Id, Draft(published, title: "Yeni başlık", html: "<p>Yeni</p>"));
+        var pending = (await admin.GetFromJsonAsync<BlogPostPublicResponse>($"/api/admin/blog/posts/{post.Id}/preview", JsonOptions))!;
+        pending.Title.ShouldBe("Yeni başlık");
+        pending.ContentHtml.ShouldBe("<p>Yeni</p>");
+        pending.Slug.ShouldBe(published.Slug);
+        pending.PublishedAt.ShouldBe(published.PublishedAt!.Value);
+        pending.UpdatedAt.ShouldBeGreaterThan(published.PublishedUpdatedAt!.Value);
+        (await (await GetPublicAsync("tr", published.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!
+            .Title.ShouldBe("İşe Alım Sürecinde Ghosting");
+
+        // Once published, any admin may preview it — the same rule as editing it.
+        (await other.GetAsync($"/api/admin/blog/posts/{post.Id}/preview")).StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Preview_Links_A_Translation_Only_Once_The_Twin_Is_Published()
+    {
+        var (admin, _) = await RegisterAdminAsync("preview.twin@example.com");
+        var tr = await CreateAsync(admin);
+        await SaveAsync(admin, tr.Id, Draft(tr));
+        var en = await CreateAsync(admin, "en");
+        await SaveAsync(admin, en.Id, Draft(en, title: "Ghosting in Hiring", translationOf: tr.Id));
+
+        (await admin.GetFromJsonAsync<BlogPostPublicResponse>($"/api/admin/blog/posts/{en.Id}/preview", JsonOptions))!
+            .Translation.ShouldBeNull();
+
+        await PublishAsync(admin, tr.Id);
+
+        (await admin.GetFromJsonAsync<BlogPostPublicResponse>($"/api/admin/blog/posts/{en.Id}/preview", JsonOptions))!
+            .Translation.ShouldBe(new BlogTranslationLink("tr", "ise-alim-surecinde-ghosting"));
+    }
+
+    [Fact]
     public async Task Publish_Needs_A_Title_And_A_Body()
     {
         var (admin, _) = await RegisterAdminAsync("incomplete.blog@example.com");

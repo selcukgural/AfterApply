@@ -27,6 +27,15 @@ public interface IBlogAdminService
     Task<BlogDraftSavedResponse?> SaveDraftAsync(Guid adminUserId, Guid postId, SaveBlogDraftRequest request,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The post as the public page would render it if it were published right now: the draft
+    /// slot in the public response's own shape (2026-09-20). The slug is the one it has, else the
+    /// one publish would allocate from the draft title; the dates are what publish would set; the
+    /// translation link shows only when the twin is published, exactly as on the live page. Null
+    /// when the caller may not see the post.
+    /// </summary>
+    Task<BlogPostPublicResponse?> PreviewAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken);
+
     /// <summary>First publish and "update the live version" alike.</summary>
     /// <exception cref="BlogPostIncompleteException">No title or no body.</exception>
     /// <exception cref="BlogSlugTakenException">The hand-typed slug is another post's.</exception>

@@ -36,6 +36,7 @@ public class BlogSlugGeneratorTests
     [Theory]
     [InlineData("Media")]
     [InlineData("new")]
+    [InlineData("preview")]
     [InlineData("Public")]
     public void A_Reserved_Segment_Is_Suffixed_Rather_Than_Taken(string title)
     {

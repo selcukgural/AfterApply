@@ -66,6 +66,32 @@ describe("the blog pages", () => {
   }
 });
 
+describe("the preview", () => {
+  const publicPage = read("app/[locale]/(public)/blog/[slug]/page.tsx");
+  const preview = read("components/blog/BlogPreview.tsx");
+
+  it("renders the article with the public page's own component, so it cannot drift from the live page except by data", () => {
+    expect(publicPage).toContain("<BlogArticle post={post} url={url} />");
+    expect(preview).toContain("<BlogArticle post={post} url={url} inert />");
+    // Neither page lays out a title, a body or a footer of its own.
+    for (const source of [publicPage, preview]) {
+      expect(source).not.toContain("<h1");
+      expect(source).not.toContain("<BlogArticleBody");
+      expect(source).not.toContain("<LikeButton");
+    }
+  });
+
+  it("lives under the public chrome and is never indexed", () => {
+    const route = read("app/[locale]/(public)/blog/preview/[id]/page.tsx");
+    expect(route).toContain("robots: { index: false, follow: false }");
+  });
+
+  it("fetches a draft's images with the token instead of leaving <img src> to 404", () => {
+    expect(preview).toContain("rewriteMediaSources");
+    expect(preview).toContain("fetchMediaBlob");
+  });
+});
+
 describe("the editor", () => {
   it("is loaded in the browser only — ProseMirror touches document at import", () => {
     const route = read("app/[locale]/(protected)/admin/blog/[id]/page.tsx");
