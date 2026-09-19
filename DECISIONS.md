@@ -8081,3 +8081,30 @@ belirtilmedi" satırı; Katkılarım'da eksik-dönem kartı; düzenlemede boş d
 seç", 2021–2019 → "Bitiş yılı başlangıçtan önce olamaz", 2019–2023 kaydedildi; Beta'ya eski
 çalışan 2010–2012 / 4.500 ₺ girildi → önceki dönemlerde, medyan 95.000 ₺ (3 güncel kayıt) ona
 bakmadı.
+
+## CV tarama kategori barları: bant rengi + sıralı büyüme + sayaç — DECIDED (2026-09-19)
+
+**Karar.** Sonuç ekranındaki dört kategori barı düz siyah/gri 6 px çizgi olmaktan çıktı. Beş
+seçenek tasarım canvas'ında (https://claude.ai/artifact/Lg4VNU6hLWDxrKAmVVAbAg — A bant rengi,
+B on dilim, C marka gradyanı + parıltı, D tek toplam barı, E dört halka) açık/koyu temada
+karşılaştırıldı; **A** seçildi. Gerekçe: "bar aynı sayının tekrarı" kuralı bozulmuyor (genişlik
+hâlâ alt toplam/ağırlık), renk düzeltme listesiyle aynı dili konuşuyor, dört kullanım yerinde de
+(sonuç ekranı, /cv paneli, paylaşılan puan sayfası, landing mock'u) yerleşim değişmiyor. C'nin
+gradyan-üzerinde-konum okuması ve D'nin paylaşılan sayfada kapladığı yer nedeniyle elendi.
+
+**Ne yapıldı.** `lib/cvScan/categoryBars.ts`: `categoryBand` (başlık eşikleri kategori oranına
+uygulanır: ≥%80 iyi, ≥%55 orta, altı zayıf — yuvarlama yok), `categoryFillPercent` (0–100'e
+kırpılır), zamanlama (`BAR_GROW_MS` 900, `BAR_STAGGER_MS` 140, `easeOutCubic`, `countUpValue`).
+`hooks/useElapsedMs`: rAF ile ilerleyen süre; sunucuda ve `prefers-reduced-motion: reduce`
+altında doğrudan son değeri verir, yani statik HTML sıfır değil gerçek alt toplamları taşır.
+`CvScanResultCards`: 8 px bar, dolgu `bg-good/warn/crit`, ray aynı rampanın wash tonu,
+`.aa-bar-grow` (globals.css, `transform: scaleX`, `both`, reduced-motion'da kapalı), satır başına
+`animation-delay`; `<ul>`'un key'i sonuç anahtarı, yeni tarama animasyonu yeniden başlatır.
+Büyük puan sabit kalır. OG kartı bar çizmediği için dokunulmadı.
+
+**Testler / doğrulama.** Web birim 726 (yeni `categoryBars.test.ts`: bant eşikleri, kırpma,
+zamanlama, sayaç monotonluğu ve sunucu değerinde son rakam) + lint + tsc. Tarayıcıda yerel yığın:
+gerçek DOCX taraması (88/100) — sayaç 0'dan sıralı yükselip yanıt değerlerinde durdu,
+`aa-bar-grow` 900 ms animasyonu DOM'da doğrulandı; paylaşılan puan sayfası `76-30-22-15-9` üç
+bandı gösterdi; koyu tema; landing mock'u. `help/screenshots/cv-scan-result.png` aynı sahneden
+(85/100, imzasız) CDP reçetesiyle yeniden çekildi.

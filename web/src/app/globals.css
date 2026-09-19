@@ -102,8 +102,23 @@
   animation: aa-shimmer 1.6s linear infinite;
 }
 
+/* CV-scan category bar growing in from the left — see CvScanResultCards. Transform rather than
+   width so the fill is painted once at its final size; `both` keeps it at scaleX(0) through its
+   per-bar delay. The timing pairs with BAR_GROW_MS and easeOutCubic in lib/cvScan/categoryBars.ts,
+   which drive the number next to the bar. */
+@keyframes aa-bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.aa-bar-grow {
+  transform-origin: left center;
+  animation: aa-bar-grow 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .aa-skeleton {
+  .aa-skeleton,
+  .aa-bar-grow {
     animation: none;
   }
 }
