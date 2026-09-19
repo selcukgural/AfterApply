@@ -85,6 +85,8 @@ export const PUBLIC_MESSAGE_SCOPE = [
   // The distance-sales terms and the refund policy, linked from the checkout and the footer.
   "termsOfSale",
   "refundPolicy",
+  // The blog post's like button.
+  "blog",
 ] as const;
 
 type Tree = { [key: string]: unknown };

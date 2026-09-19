@@ -16,7 +16,14 @@ public sealed record ClientConfigResponse(
     CompanySalariesConfigResponse? CompanySalaries = null,
     JobSourcesConfigResponse? JobSources = null,
     PaymentsConfigResponse? Payments = null,
-    CandidateExperiencesConfigResponse? CandidateExperiences = null);
+    CandidateExperiencesConfigResponse? CandidateExperiences = null,
+    BlogConfigResponse? Blog = null);
+
+/// <summary>What the site chrome needs before it shows a "Blog" link: the flag, and whether
+/// there is anything published to link to. A blog with no posts is not offered at all —
+/// <paramref name="HasPublishedPosts"/> is false until the first publish (and cached with this
+/// response for a few minutes, so the link follows the first post with a short lag).</summary>
+public sealed record BlogConfigResponse(bool Enabled, bool HasPublishedPosts);
 
 /// <summary>Whether the paid weekly job matching is switched on at all. Off means every
 /// <c>/api/job-sources/*</c> route 404s and the web app shows no trace of the feature.</summary>

@@ -1,0 +1,136 @@
+using AfterApply.Application.Blog.Contracts;
+using AfterApply.Application.Blog.Validators;
+using AfterApply.Application.Localization;
+using AfterApply.Domain.Blog;
+using Microsoft.Extensions.Localization;
+using Shouldly;
+
+namespace AfterApply.UnitTests.Blog;
+
+public class BlogValidatorTests
+{
+    private sealed class KeyEchoLocalizer : IStringLocalizer<SharedStrings>
+    {
+        public LocalizedString this[string name] => new(name, name);
+
+        public LocalizedString this[string name, params object[] arguments] => new(name, name);
+
+        public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures) => [];
+    }
+
+    private const string Doc = """{"type":"doc","content":[{"type":"paragraph"}]}""";
+
+    private static SaveBlogDraftRequest Draft(string title = "Başlık", string? excerpt = "Özet", string json = Doc,
+        string html = "<p>x</p>", string language = "tr", string? slug = null, int revision = 1) =>
+        new(title, excerpt, json, html, language, slug, null, null, revision);
+
+    [Fact]
+    public void Accepts_A_Complete_Draft()
+    {
+        new SaveBlogDraftRequestValidator(new KeyEchoLocalizer()).Validate(Draft()).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Accepts_An_Empty_Draft_The_Editor_Autosaves_Before_Any_Typing()
+    {
+        // A blank title and body are a valid draft; only publish insists on them.
+        var result = new SaveBlogDraftRequestValidator(new KeyEchoLocalizer())
+            .Validate(Draft(title: "", excerpt: null, html: ""));
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("not json")]
+    [InlineData("[]")]
+    [InlineData("""{"type":"paragraph"}""")]
+    [InlineData("""{"content":[]}""")]
+    public void The_Editor_Document_Has_To_Be_A_Doc(string json)
+    {
+        var result = new SaveBlogDraftRequestValidator(new KeyEchoLocalizer()).Validate(Draft(json: json));
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.PropertyName == nameof(SaveBlogDraftRequest.ContentJson)
+                                         && e.ErrorMessage == "VALIDATION_BLOG_CONTENT_JSON_INVALID");
+    }
+
+    [Fact]
+    public void Refuses_An_Unknown_Language()
+    {
+        var result = new SaveBlogDraftRequestValidator(new KeyEchoLocalizer()).Validate(Draft(language: "de"));
+
+        result.Errors.ShouldContain(e => e.PropertyName == nameof(SaveBlogDraftRequest.Language)
+                                         && e.ErrorMessage == "VALIDATION_UNSUPPORTED_LANGUAGE");
+    }
+
+    [Theory]
+    [InlineData("İşe-Alım")]
+    [InlineData("media")]
+    [InlineData("a--b")]
+    public void Refuses_A_Malformed_Or_Reserved_Slug(string slug)
+    {
+        var result = new SaveBlogDraftRequestValidator(new KeyEchoLocalizer()).Validate(Draft(slug: slug));
+
+        result.Errors.ShouldContain(e => e.PropertyName == nameof(SaveBlogDraftRequest.Slug)
+                                         && e.ErrorMessage == "BLOG_SLUG_INVALID");
+    }
+
+    [Fact]
+    public void Enforces_The_Length_Caps_Field_By_Field()
+    {
+        var result = new SaveBlogDraftRequestValidator(new KeyEchoLocalizer())
+            .Validate(Draft(title: new string('t', BlogPost.MaxTitleLength + 1), excerpt: new string('e', BlogPost.MaxExcerptLength + 1)));
+
+        result.Errors.Select(e => e.PropertyName).ShouldBe(
+            [nameof(SaveBlogDraftRequest.Title), nameof(SaveBlogDraftRequest.Excerpt)], ignoreOrder: true);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    [InlineData("ise-alim")]
+    public void A_Blank_Slug_Means_None(string? slug)
+    {
+        new SaveBlogDraftRequestValidator(new KeyEchoLocalizer()).Validate(Draft(slug: slug)).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void A_Revision_Below_One_Is_Not_A_Revision()
+    {
+        new SaveBlogDraftRequestValidator(new KeyEchoLocalizer()).Validate(Draft(revision: 0)).IsValid.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("tr", 1, true)]
+    [InlineData("en", 1000, true)]
+    [InlineData("de", 1, false)]
+    [InlineData("tr", 0, false)]
+    [InlineData("tr", 1001, false)]
+    public void Public_List_Query_Needs_A_Known_Language_And_A_Sane_Page(string lang, int page, bool valid)
+    {
+        new PublicBlogListQueryValidator(new KeyEchoLocalizer()).Validate(new PublicBlogListQuery(lang, page))
+            .IsValid.ShouldBe(valid);
+    }
+
+    [Fact]
+    public void Admin_List_Query_Filters_Are_Optional()
+    {
+        var validator = new AdminBlogListQueryValidator(new KeyEchoLocalizer());
+
+        validator.Validate(new AdminBlogListQuery()).IsValid.ShouldBeTrue();
+        validator.Validate(new AdminBlogListQuery(BlogPostStatus.Published, "en", 2)).IsValid.ShouldBeTrue();
+        validator.Validate(new AdminBlogListQuery(Lang: "fr")).IsValid.ShouldBeFalse();
+        validator.Validate(new AdminBlogListQuery((BlogPostStatus)42)).IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Create_Needs_A_Known_Language()
+    {
+        var validator = new CreateBlogPostRequestValidator(new KeyEchoLocalizer());
+
+        validator.Validate(new CreateBlogPostRequest("en")).IsValid.ShouldBeTrue();
+        validator.Validate(new CreateBlogPostRequest("")).IsValid.ShouldBeFalse();
+    }
+}

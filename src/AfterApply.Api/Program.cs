@@ -190,6 +190,8 @@ app.MapBenchmarkEndpoints();
 app.MapSiteStatsEndpoints();
 app.MapCvScanEndpoints();
 app.MapAdminEndpoints();
+app.MapBlogEndpoints();
+app.MapAdminBlogEndpoints();
 app.MapJobSourceEndpoints();
 app.MapPaymentEndpoints();
 app.MapHub<ImportProgressHub>("/hubs/import-progress");

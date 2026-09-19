@@ -96,6 +96,10 @@ public sealed class RateLimitingOptions
     /// the same reason as the salary one: the contribute page chains the three forms.</summary>
     public FixedWindowPolicy CandidateExperienceWrite { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
 
+    /// <summary>Per user — the blog like toggle. Same size and reasoning as
+    /// <see cref="CompanyReviewHelpful"/>: a reader clicking, not a script inflating a count.</summary>
+    public FixedWindowPolicy BlogLike { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };
+
     /// <summary>Per IP, anonymous — the public company directory search: a trigram scan per
     /// request, from anyone. A person types a name and pages a few times; sixty a minute is
     /// invisible to that and a ceiling for a scraper.</summary>

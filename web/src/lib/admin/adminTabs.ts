@@ -6,6 +6,9 @@
  */
 export function isAdminTabActive(pathname: string, href: string): boolean {
   if (pathname === href) return true;
+  // The blog tab stays lit inside an editor (/admin/blog/{id}), the way the reviews tab does on
+  // its sibling tables.
+  if (href === "/admin/blog") return pathname.startsWith("/admin/blog/");
   return href === "/admin/reviews" && (pathname === "/admin/reviews/salaries" || pathname === "/admin/reviews/experiences");
 }
 

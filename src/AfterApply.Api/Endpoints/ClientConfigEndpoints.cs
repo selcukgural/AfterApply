@@ -1,4 +1,6 @@
+using AfterApply.Application.Blog;
 using AfterApply.Application.ClientConfig;
+using AfterApply.Infrastructure.Blog;
 using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
@@ -20,7 +22,7 @@ public static class ClientConfigEndpoints
         // before there is an account. Not under the Auth rate-limit policy either — that bucket is
         // 5/min per IP and the form fetching its own rules would spend one of the five attempts a
         // user gets at actually registering. The global per-IP limiter still applies.
-        app.MapGet("/api/config", (
+        app.MapGet("/api/config", async (
                 IOptions<IdentityOptions> identityOptions,
                 IOptions<PersonalAccessTokenOptions> personalAccessTokenOptions,
                 IOptions<GoogleAuthOptions> googleAuthOptions,
@@ -32,7 +34,10 @@ public static class ClientConfigEndpoints
                 IOptions<PayTrOptions> payTrOptions,
                 IOptions<CompanySalaryOptions> companySalaryOptions,
                 IOptions<CandidateExperienceOptions> candidateExperienceOptions,
-                HttpContext httpContext) =>
+                IOptions<BlogOptions> blogOptions,
+                IBlogPublicService blog,
+                HttpContext httpContext,
+                CancellationToken cancellationToken) =>
             {
                 // Read from IdentityOptions rather than IdentityPolicyOptions: the former is the object
                 // PasswordValidator enforces, so whatever ends up here is by construction what a
@@ -46,6 +51,11 @@ public static class ClientConfigEndpoints
                 var reviews = companyReviewOptions.Value;
                 var salaries = companySalaryOptions.Value;
                 var experiences = candidateExperienceOptions.Value;
+                // The one value here that comes from the database rather than from options. It is
+                // cached in the service and answers false on any failure, so this route keeps its
+                // "never down" property (the sign-in buttons read it).
+                var blogEnabled = blogOptions.Value.Enabled;
+                var hasPublishedPosts = blogEnabled && await blog.HasPublishedPostsAsync(cancellationToken);
 
                 // The values change only with a deploy or a config rollout, so let browsers and the
                 // CDN hold them for a few minutes instead of re-fetching on every form mount.
@@ -85,7 +95,8 @@ public static class ClientConfigEndpoints
                     new JobSourcesConfigResponse(jobSourceOptions.Value.Enabled),
                     new PaymentsConfigResponse(payTrOptions.Value.Enabled && payTrOptions.Value.IsConfigured),
                     new CandidateExperiencesConfigResponse(experiences.Enabled, experiences.MaxEntriesPerUser,
-                        experiences.MinimumEntriesForStats, experiences.PriorWeight)));
+                        experiences.MinimumEntriesForStats, experiences.PriorWeight),
+                    new BlogConfigResponse(blogEnabled, hasPublishedPosts)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

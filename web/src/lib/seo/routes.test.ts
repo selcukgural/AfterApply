@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import tr from "../../../messages/tr.json";
 import robots from "@/app/robots";
-import { companySitemapEntries, staticSitemapEntries } from "@/app/sitemap";
+import { blogSitemapEntries, companySitemapEntries, staticSitemapEntries } from "@/app/sitemap";
 import { routing } from "@/i18n/routing";
 import { GUIDE_ARTICLES, GUIDE_PATH, articlePath } from "@/lib/guide/articles";
 import { HELP_TOPICS, PROTECTED_PATHS, PUBLIC_PATHS, SITE_URL, alternateLanguages, disallowedPaths, pathFor } from "./routes";
@@ -107,6 +107,44 @@ describe("company pages in the sitemap", () => {
 
   it("lists nothing when no company has a published review", () => {
     expect(companySitemapEntries([])).toEqual([]);
+  });
+});
+
+describe("blog posts in the sitemap", () => {
+  it("lists nothing while nothing is published — the index is a 404 then", () => {
+    expect(blogSitemapEntries([])).toEqual([]);
+    expect(PUBLIC_PATHS).not.toContain("/blog");
+  });
+
+  it("lists an index per language that has a post, and each post under its own language only", () => {
+    const entries = blogSitemapEntries([
+      { language: "tr", slug: "ise-alim", publishedAt: "2026-09-19T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z", translation: null },
+    ]);
+    expect(entries.map((entry) => entry.url)).toEqual([`${SITE_URL}/tr/blog`, `${SITE_URL}/tr/blog/ise-alim`]);
+    expect(entries[1].lastModified).toEqual(new Date("2026-09-20T10:00:00Z"));
+    expect(entries[1].alternates?.languages).toEqual({
+      tr: `${SITE_URL}/tr/blog/ise-alim`,
+      "x-default": `${SITE_URL}/tr/blog/ise-alim`,
+    });
+    expect(entries[0].alternates?.languages).not.toHaveProperty("en");
+  });
+
+  it("links a translated pair both ways", () => {
+    const entries = blogSitemapEntries([
+      { language: "tr", slug: "merhaba", publishedAt: "2026-09-19T10:00:00Z", updatedAt: "2026-09-19T10:00:00Z", translation: { language: "en", slug: "hello" } },
+      { language: "en", slug: "hello", publishedAt: "2026-09-19T10:00:00Z", updatedAt: "2026-09-19T10:00:00Z", translation: { language: "tr", slug: "merhaba" } },
+    ]);
+    expect(entries.map((entry) => entry.url)).toEqual([
+      `${SITE_URL}/tr/blog`,
+      `${SITE_URL}/en/blog`,
+      `${SITE_URL}/tr/blog/merhaba`,
+      `${SITE_URL}/en/blog/hello`,
+    ]);
+    expect(entries[3].alternates?.languages).toEqual({
+      en: `${SITE_URL}/en/blog/hello`,
+      tr: `${SITE_URL}/tr/blog/merhaba`,
+      "x-default": `${SITE_URL}/tr/blog/merhaba`,
+    });
   });
 });
 

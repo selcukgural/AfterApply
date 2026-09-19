@@ -7,6 +7,7 @@ import { ABOUT_PATHS } from "@/lib/about/path";
 import { CONTACT_EMAIL, SOCIAL_LINKS } from "@/lib/constants/socialLinks";
 import { SocialIcon } from "@/components/layout/SocialIcon";
 import { pathFor, type LocalisedPath } from "@/lib/seo/routes";
+import { fetchPublicConfig } from "@/lib/config/publicConfig.server";
 
 /** The landing page's sections — the anchors resolve from any page — and the store listing. */
 const PRODUCT_LINKS = [
@@ -16,7 +17,9 @@ const PRODUCT_LINKS = [
 ] as const;
 
 /** Every public page a visitor can browse, under the same names the header uses. */
-const EXPLORE_LINKS: readonly { href: LocalisedPath; key: "companies" | "cvScan" | "benchmark" | "guide" | "help" | "about" }[] = [
+type ExploreLink = { href: LocalisedPath; key: "companies" | "cvScan" | "benchmark" | "guide" | "blog" | "help" | "about" };
+
+const EXPLORE_LINKS: readonly ExploreLink[] = [
   { href: "/companies", key: "companies" },
   // The scan's and the about page's slugs are translated; every other page is the same in both.
   { href: CV_SCAN_PATHS, key: "cvScan" },
@@ -25,6 +28,14 @@ const EXPLORE_LINKS: readonly { href: LocalisedPath; key: "companies" | "cvScan"
   { href: "/help", key: "help" },
   { href: ABOUT_PATHS, key: "about" },
 ];
+
+/** The blog, between the guide and the help centre, only once there is a published post — the
+ *  header's rule (SiteHeader.siteLinksFor), read here from the server-side config. */
+function exploreLinksFor(hasBlog: boolean): readonly ExploreLink[] {
+  if (!hasBlog) return EXPLORE_LINKS;
+  const helpIndex = EXPLORE_LINKS.findIndex((link) => link.key === "help");
+  return [...EXPLORE_LINKS.slice(0, helpIndex), { href: "/blog", key: "blog" }, ...EXPLORE_LINKS.slice(helpIndex)];
+}
 
 const LEGAL_LINKS = [
   { href: "/privacy", key: "privacy" },
@@ -51,6 +62,9 @@ export async function SiteFooter() {
   const tNav = await getTranslations("siteNav");
   const locale = await getLocale();
   const year = new Date().getFullYear();
+  // Null when the API is unreachable: the footer then simply has no blog link.
+  const config = await fetchPublicConfig();
+  const exploreLinks = exploreLinksFor(config?.blog?.enabled === true && config.blog.hasPublishedPosts === true);
 
   const linkClass = "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100";
   const headingClass = "font-medium text-gray-700 dark:text-gray-300";
@@ -99,7 +113,7 @@ export async function SiteFooter() {
 
           <div className="flex flex-col gap-2 text-sm">
             <span className={headingClass}>{t("explore")}</span>
-            {EXPLORE_LINKS.map((link) => (
+            {exploreLinks.map((link) => (
               <Link key={link.key} href={pathFor(link.href, locale)} className={linkClass}>
                 {link.key === "about" ? tNav("about") : t(link.key)}
               </Link>

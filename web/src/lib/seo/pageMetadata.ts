@@ -25,9 +25,12 @@ export type PageMetadataOptions = {
   kicker?: string;
   /** What the share card says when it should not be the <title> (the landing page's hero line). */
   shareTitle?: string;
+  /** The hreflang set, when it is not "this path in every locale" — a blog post exists in one
+   *  language (plus a linked translation, if any), so its set is built from the post. */
+  languages?: Record<string, string>;
 };
 
-export function buildMetadata({ locale, path, title, description, index, article, kicker, shareTitle }: PageMetadataOptions): Metadata {
+export function buildMetadata({ locale, path, title, description, index, article, kicker, shareTitle, languages }: PageMetadataOptions): Metadata {
   const fullTitle = `${title} · ${SITE_NAME}`;
   const url = `/${locale}${pathFor(path, locale)}`;
   // Every page gets a card with its own title (or the share title it asks for).
@@ -39,7 +42,7 @@ export function buildMetadata({ locale, path, title, description, index, article
     description,
     alternates: {
       canonical: url,
-      languages: alternateLanguages(path),
+      languages: languages ?? alternateLanguages(path),
     },
     // Password reset and OAuth callbacks are per-request, single-use pages: indexing them puts a
     // dead link in the results and nothing useful on the page behind it.
@@ -89,5 +92,6 @@ export async function pageMetadata(
 export function sectionKicker(path: string, t: (key: string) => string): string | undefined {
   if (path.startsWith("/help/")) return t("help.title");
   if (path.startsWith("/companies/")) return t("companies.title");
+  if (path.startsWith("/blog/")) return t("blog.title");
   return undefined;
 }

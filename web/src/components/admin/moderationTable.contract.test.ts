@@ -16,6 +16,7 @@ describe.each([
   "app/[locale]/(protected)/admin/reviews/page.tsx",
   "app/[locale]/(protected)/admin/reviews/salaries/page.tsx",
   "app/[locale]/(protected)/admin/reviews/experiences/page.tsx",
+  "app/[locale]/(protected)/admin/blog/page.tsx",
 ])("the admin table in %s", (relative) => {
   const page = read(relative);
   const cells = [...page.matchAll(/<td className="([^"]*)">/g)].map((m) => m[1]);

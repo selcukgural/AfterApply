@@ -45,6 +45,7 @@
     <PackageReference Include="OpenAI" />
     <PackageReference Include="Google.Cloud.Storage.V1" />
     <PackageReference Include="PdfPig" />
+    <PackageReference Include="HtmlSanitizer" />
     <PackageReference Include="DocumentFormat.OpenXml" />
     <PackageReference Include="Google.Apis.Auth" />
   </ItemGroup>

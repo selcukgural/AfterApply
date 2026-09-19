@@ -38,6 +38,9 @@ const RETURN_TO_PATTERNS = [
   // and in this order, nothing else may follow.
   /^\/contribute\?tab=(review|salary|experience)(&company=[a-z0-9][a-z0-9-]{0,99})?$/,
   /^\/companies\/[a-z0-9][a-z0-9-]{0,99}(\?tab=(salaries|experiences))?$/,
+  // The fifth shape (2026-09-19): a blog post whose like button asked the reader to sign in. The
+  // slug is BlogSlugGenerator's alphabet (lowercase ascii, digits, dashes); no query string.
+  /^\/blog\/[a-z0-9][a-z0-9-]{0,99}$/,
 ];
 
 export function sanitizeReturnTo(raw: string | null | undefined): string | null {

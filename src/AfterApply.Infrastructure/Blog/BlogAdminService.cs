@@ -1,0 +1,349 @@
+using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.Blog;
+using AfterApply.Application.Blog.Contracts;
+using AfterApply.Domain.Blog;
+using AfterApply.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+namespace AfterApply.Infrastructure.Blog;
+
+/// <summary>
+/// The admin side. Every read starts from <see cref="Visible"/> — published, or the caller's own
+/// — so a post another admin has not published yet is "not found" here exactly as it is for a
+/// stranger. The caller has already passed <c>IAdminAccessService</c>.
+/// </summary>
+internal sealed class BlogAdminService(
+    AppDbContext dbContext,
+    IBlogHtmlSanitizer sanitizer,
+    IBlogMediaStorage storage,
+    IBlogCacheInvalidator cacheInvalidator,
+    IOptions<BlogOptions> options,
+    ILogger<BlogAdminService> logger) : IBlogAdminService
+{
+    public async Task<PagedResult<AdminBlogPostListItemResponse>> ListAsync(Guid adminUserId, AdminBlogListQuery query,
+        CancellationToken cancellationToken)
+    {
+        var posts = Visible(adminUserId);
+        if (query.Status is { } status)
+        {
+            posts = posts.Where(p => p.Status == status);
+        }
+
+        if (query.Lang is { } lang)
+        {
+            posts = posts.Where(p => p.Language == lang);
+        }
+
+        var total = await posts.CountAsync(cancellationToken);
+        var pageSize = options.Value.AdminPageSize;
+
+        // Most recently touched first: the table is where an author finds what they were
+        // working on, and a publish, an edit and an autosave all count as touching.
+        var rows = await posts
+            .OrderByDescending(p => p.UpdatedAt).ThenByDescending(p => p.Id)
+            .Skip((query.Page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new
+            {
+                Post = p,
+                AuthorEmail = dbContext.Users.Where(u => u.Id == p.AuthorUserId).Select(u => u.Email).FirstOrDefault()
+            })
+            .ToListAsync(cancellationToken);
+
+        var items = rows.Select(r => new AdminBlogPostListItemResponse(
+            r.Post.Id, r.Post.Status, r.Post.Language, r.Post.Slug,
+            // The draft title is what the author is looking for; it equals the published one
+            // until they start editing again.
+            r.Post.DraftTitle,
+            r.Post.AuthorUserId, r.AuthorEmail, r.Post.AuthorUserId == adminUserId,
+            r.Post.UpdatedAt, r.Post.PublishedAt, HasUnpublishedChanges(r.Post))).ToList();
+
+        return new PagedResult<AdminBlogPostListItemResponse>(items, total, query.Page, pageSize);
+    }
+
+    public async Task<AdminBlogPostResponse> CreateAsync(Guid adminUserId, CreateBlogPostRequest request,
+        CancellationToken cancellationToken)
+    {
+        var post = BlogPost.Create(adminUserId, request.Language, DateTimeOffset.UtcNow);
+        dbContext.BlogPosts.Add(post);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return ToResponse(post, adminUserId, likeCount: 0);
+    }
+
+    public async Task<AdminBlogPostResponse?> GetAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
+    {
+        var post = await Visible(adminUserId).AsNoTracking().FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+        return post is null ? null : ToResponse(post, adminUserId, await LikeCountAsync(postId, cancellationToken));
+    }
+
+    public async Task<BlogDraftSavedResponse?> SaveDraftAsync(Guid adminUserId, Guid postId, SaveBlogDraftRequest request,
+        CancellationToken cancellationToken)
+    {
+        var post = await Visible(adminUserId).FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+        if (post is null)
+        {
+            return null;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        // The revision check first, before any field is touched: a stale tab must not be able to
+        // change the language or the translation link either.
+        if (request.Revision != post.Revision)
+        {
+            throw new BlogPostRevisionConflictException();
+        }
+
+        post.SetLanguage(request.Language, now);
+
+        // A blank slug means "let publish generate one" before the first publish, and "no
+        // change" after it (the editor shows the locked slug and sends it back; an empty field
+        // there is not an instruction).
+        var slug = string.IsNullOrWhiteSpace(request.Slug) ? null : request.Slug.Trim();
+        if (slug is not null || !post.HasEverBeenPublished)
+        {
+            post.SetSlug(slug, now);
+        }
+
+        if (slug is not null && await SlugTakenAsync(post, slug, cancellationToken))
+        {
+            throw new BlogSlugTakenException();
+        }
+
+        await LinkTranslationAsync(adminUserId, post, request.TranslationOfPostId, now, cancellationToken);
+        await SetCoverAsync(post, request.CoverMediaId, now, cancellationToken);
+
+        // Sanitized on the way in, so what is stored is what will be rendered — the public page
+        // never runs a sanitizer of its own.
+        var content = new BlogDraftContent(
+            request.Title.Trim(),
+            request.Excerpt?.Trim() ?? string.Empty,
+            request.ContentJson,
+            sanitizer.Sanitize(request.ContentHtml));
+        post.SaveDraft(content, request.Revision, now);
+
+        await SaveHandlingSlugCollisionAsync(cancellationToken);
+
+        // The draft slot is invisible to the public; the cover and the translation link are not.
+        if (post.IsPublished)
+        {
+            await cacheInvalidator.InvalidateAsync(cancellationToken);
+        }
+
+        return new BlogDraftSavedResponse(post.Revision, post.DraftUpdatedAt);
+    }
+
+    public async Task<AdminBlogPostResponse?> PublishAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
+    {
+        var post = await Visible(adminUserId).FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+        if (post is null)
+        {
+            return null;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        if (post.Slug is null)
+        {
+            // Title → slug, first free one in this language. Two publishes racing on the same
+            // title can still pick the same suffix; the unique index catches that and the save
+            // below answers "taken" — the next click allocates past it.
+            if (string.IsNullOrWhiteSpace(post.DraftTitle))
+            {
+                throw new BlogPostIncompleteException();
+            }
+
+            post.AssignGeneratedSlug(await AllocateSlugAsync(post.Language, post.DraftTitle, cancellationToken), now);
+        }
+        else if (!post.HasEverBeenPublished && await SlugTakenAsync(post, post.Slug, cancellationToken))
+        {
+            throw new BlogSlugTakenException();
+        }
+
+        post.Publish(now);
+        await SaveHandlingSlugCollisionAsync(cancellationToken);
+        await cacheInvalidator.InvalidateAsync(cancellationToken);
+
+        return ToResponse(post, adminUserId, await LikeCountAsync(postId, cancellationToken));
+    }
+
+    public async Task<AdminBlogPostResponse?> UnpublishAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
+    {
+        var post = await Visible(adminUserId).FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+        if (post is null)
+        {
+            return null;
+        }
+
+        post.Unpublish(DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await cacheInvalidator.InvalidateAsync(cancellationToken);
+
+        return ToResponse(post, adminUserId, await LikeCountAsync(postId, cancellationToken));
+    }
+
+    public async Task<bool> DeleteAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
+    {
+        var post = await Visible(adminUserId).FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+        if (post is null)
+        {
+            return false;
+        }
+
+        // Collected before the rows go: the row is the only index into the object.
+        var objectNames = await dbContext.BlogMedia
+            .Where(m => m.PostId == postId)
+            .Select(m => m.ObjectName)
+            .ToListAsync(cancellationToken);
+
+        var wasPublished = post.IsPublished;
+
+        // Likes and media rows cascade from the post (their configurations); a post that names
+        // this one as its translation is unlinked by the same FK's SET NULL.
+        dbContext.BlogPosts.Remove(post);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (wasPublished)
+        {
+            await cacheInvalidator.InvalidateAsync(cancellationToken);
+        }
+
+        // After the commit, and best-effort: a failed object delete is a storage leak to clean
+        // up, not a failed request to show the admin. Nothing can read it any more either way.
+        foreach (var objectName in objectNames)
+        {
+            await TryDeleteObjectAsync(objectName, cancellationToken);
+        }
+
+        return true;
+    }
+
+    /// <summary>Published, or the caller's own. The one visibility rule, in the query.</summary>
+    private IQueryable<BlogPost> Visible(Guid adminUserId) =>
+        dbContext.BlogPosts.Where(p => p.Status == BlogPostStatus.Published || p.AuthorUserId == adminUserId);
+
+    private Task<bool> SlugTakenAsync(BlogPost post, string slug, CancellationToken cancellationToken) =>
+        dbContext.BlogPosts.AnyAsync(p => p.Id != post.Id && p.Language == post.Language && p.Slug == slug, cancellationToken);
+
+    private async Task<string> AllocateSlugAsync(string language, string title, CancellationToken cancellationToken)
+    {
+        var baseSlug = BlogSlugGenerator.Generate(title);
+        var prefix = baseSlug + "-";
+
+        var taken = await dbContext.BlogPosts
+            .Where(p => p.Language == language && p.Slug != null && (p.Slug == baseSlug || p.Slug.StartsWith(prefix)))
+            .Select(p => p.Slug!)
+            .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
+
+        if (!taken.Contains(baseSlug))
+        {
+            return baseSlug;
+        }
+
+        for (var n = 2; ; n++)
+        {
+            var candidate = BlogSlugGenerator.WithSuffix(baseSlug, n);
+            if (!taken.Contains(candidate))
+            {
+                return candidate;
+            }
+        }
+    }
+
+    /// <summary>Saves, turning the slug index's 23505 into the domain's "taken". The in-memory
+    /// entity is left as it is: the context is scoped to the request and discarded with it.</summary>
+    private async Task SaveHandlingSlugCollisionAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsSlugCollision(exception))
+        {
+            throw new BlogSlugTakenException();
+        }
+    }
+
+    private static bool IsSlugCollision(DbUpdateException exception) =>
+        exception.InnerException is Npgsql.PostgresException { SqlState: "23505" } pg
+        && pg.ConstraintName?.Contains("Slug", StringComparison.Ordinal) == true;
+
+    /// <summary>Keeps the translation link symmetric: linking A to B links B to A, unlinking A
+    /// unlinks whatever pointed back at it. The target must be a different post, in the other
+    /// language, that the caller may see.</summary>
+    private async Task LinkTranslationAsync(Guid adminUserId, BlogPost post, Guid? targetId, DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (targetId == post.TranslationOfPostId)
+        {
+            return;
+        }
+
+        if (post.TranslationOfPostId is { } oldTargetId)
+        {
+            var oldTarget = await dbContext.BlogPosts.FirstOrDefaultAsync(p => p.Id == oldTargetId, cancellationToken);
+            if (oldTarget is not null && oldTarget.TranslationOfPostId == post.Id)
+            {
+                oldTarget.SetTranslationOf(null, now);
+            }
+        }
+
+        if (targetId is null)
+        {
+            post.SetTranslationOf(null, now);
+            return;
+        }
+
+        var target = await Visible(adminUserId).FirstOrDefaultAsync(p => p.Id == targetId, cancellationToken);
+        if (target is null || target.Language == post.Language)
+        {
+            throw new BlogTranslationInvalidException();
+        }
+
+        post.SetTranslationOf(target.Id, now);
+        target.SetTranslationOf(post.Id, now);
+    }
+
+    private async Task SetCoverAsync(BlogPost post, Guid? mediaId, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        if (mediaId == post.CoverMediaId)
+        {
+            return;
+        }
+
+        if (mediaId is { } id && !await dbContext.BlogMedia.AnyAsync(m => m.Id == id && m.PostId == post.Id, cancellationToken))
+        {
+            throw new BlogCoverInvalidException();
+        }
+
+        post.SetCover(mediaId, now);
+    }
+
+    private Task<int> LikeCountAsync(Guid postId, CancellationToken cancellationToken) =>
+        dbContext.BlogPostLikes.CountAsync(l => l.PostId == postId, cancellationToken);
+
+    private async Task TryDeleteObjectAsync(string objectName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await storage.DeleteAsync(objectName, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogError(exception, "Failed to delete stored blog media object {ObjectName}.", objectName);
+        }
+    }
+
+    /// <summary>A published post whose draft has moved on since the last publish — the table's
+    /// "has unpublished changes" hint.</summary>
+    private static bool HasUnpublishedChanges(BlogPost post) =>
+        post.PublishedUpdatedAt is { } publishedAt && post.DraftUpdatedAt > publishedAt;
+
+    private static AdminBlogPostResponse ToResponse(BlogPost post, Guid adminUserId, int likeCount) => new(
+        post.Id, post.Status, post.Language, post.Slug, post.AuthorUserId, post.AuthorUserId == adminUserId,
+        post.TranslationOfPostId, post.CoverMediaId,
+        post.DraftTitle, post.DraftExcerpt, post.DraftContentJson, post.DraftContentHtml, post.DraftUpdatedAt,
+        post.Revision, post.Title, post.PublishedAt, post.PublishedUpdatedAt, HasUnpublishedChanges(post), likeCount, post.CreatedAt);
+}

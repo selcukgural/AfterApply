@@ -320,6 +320,9 @@ In GitHub → repo Settings → Secrets and variables → Actions, add:
 - `GCP_SERVICE_ACCOUNT` — `afterapply-deployer@${PROJECT_ID}.iam.gserviceaccount.com`
 - `SENTRY_DSN_WEB` — the frontend Sentry DSN (not sensitive, it's meant
   to ship in the browser bundle, but stored as a secret for consistency)
+- `GCP_BLOG_MEDIA_BUCKET` — the blog images bucket's name
+  (`afterapply-blog-media`; §16 creates it). Same reasoning as the CV
+  bucket below: an address, not a credential.
 - `GCP_CV_BUCKET` — the CV bucket's name (`afterapply-cvs`; §11 creates
   it). Not sensitive either, and for the same kind of reason: the bucket
   is protected by `public_access_prevention=enforced` plus IAM, not by
@@ -979,3 +982,57 @@ closes pending orders whose window passed) and `pro-expiry-reminder` (06:00 UTC 
 Logs carry the order id, merchant_oid and PayTR's reason text; never the merchant key, the
 salt or a hash. The notification's caller IP is recorded by `RequestAuditMiddleware` like any
 other write (PayTR's address, no user) and shown nowhere.
+
+### 16. Cloud Storage bucket for blog images (2026-09-19)
+
+The blog (DECISIONS.md 2026-09-19) stores its images in a bucket of its own,
+`afterapply-blog-media`, never as a prefix inside the CV bucket: a CV is one
+person's private document and a blog image is public the moment its post is,
+and two things with opposite access rules must not share one policy. The
+bucket is otherwise built exactly like §11 — private at the bucket level,
+soft delete off, the runtime service account alone holding an object role —
+because the bytes are still proxied by the API (`GET /api/blog/media/{id}`),
+which is what lets an image stay the author's alone while the post is a
+draft and become public, with a year-long cache header, once it is published.
+
+```bash
+PROJECT_ID="$(gcloud config get-value project)"
+REGION=europe-west1
+
+gcloud storage buckets create "gs://afterapply-blog-media" \
+  --project="$PROJECT_ID" \
+  --location="$REGION" \
+  --default-storage-class=STANDARD \
+  --uniform-bucket-level-access \
+  --public-access-prevention
+
+# A deleted post's images are deleted; nothing to keep for a week.
+gcloud storage buckets update "gs://afterapply-blog-media" --clear-soft-delete
+gcloud storage buckets describe "gs://afterapply-blog-media" \
+  --format='yaml(name,location,softDeletePolicy,iamConfiguration)'
+
+RUNTIME_SA="$(gcloud iam service-accounts list \
+  --filter='email~compute@developer' --format='value(email)')"
+gcloud storage buckets add-iam-policy-binding "gs://afterapply-blog-media" \
+  --member="serviceAccount:${RUNTIME_SA}" \
+  --role="roles/storage.objectAdmin"
+```
+
+Then add the GitHub Actions secret `GCP_BLOG_MEDIA_BUCKET=afterapply-blog-media`
+(§4): `deploy.yml` passes the name as `Storage__BlogMediaBucketName` next to
+`Blog__Enabled=true`, and the API refuses to start when the flag is on and
+the name is empty (`AddBlog` in `DependencyInjection.cs`) — the same
+fail-fast the CV bucket has, for the same reason. To take the blog dark, set
+`Blog__Enabled=false`: every blog route then answers 404 and `/api/config`
+reports the feature off, so the web shows nothing.
+
+**Already run, 2026-09-19** against project `ekariyerim`, with the secret set
+the same day. A second bucket rather than a prefix in the CV one costs nothing
+extra — Cloud Storage bills bytes, operations and egress, never buckets — the
+separation is purely so two opposite access rules never share one policy.
+
+No new Secret Manager entry, for the reason §11 spells out: the API reaches
+the bucket as its own runtime identity. Local development and tests use the
+`FileSystem` provider under `Storage:BlogLocalRootPath` (a temp directory
+separate from the CVs'), and Production refuses that provider as before.
+

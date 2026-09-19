@@ -1,0 +1,66 @@
+import type {
+  AdminBlogPost,
+  AdminBlogPostListItem,
+  BlogDraftSaved,
+  BlogLanguage,
+  BlogLikeToggleResponse,
+  BlogMediaResponse,
+  BlogPostStatus,
+  PagedResult,
+  SaveBlogDraftRequest,
+} from "@/types/api";
+import { apiFetch, apiFetchBlob } from "./httpClient";
+
+/** The one thing a signed-in reader does on a post. Public reads are server-side only
+ *  (`lib/blog/publicApi.server.ts`), so nothing here is anonymous. */
+export const blogApi = {
+  toggleLike: (postId: string) => apiFetch<BlogLikeToggleResponse>(`/api/blog/posts/${postId}/like`, { method: "POST" }),
+
+  /**
+   * An image's bytes, with the caller's token. An `<img>` cannot send a Bearer, and a draft's
+   * images are 404 to anyone but the author — so the editor renders them from a blob URL fetched
+   * here, while the stored HTML keeps the plain relative path the public page will use.
+   */
+  fetchMediaBlob: (mediaUrl: string) => apiFetchBlob(mediaUrl),
+};
+
+export interface AdminBlogListFilters {
+  status?: BlogPostStatus;
+  lang?: BlogLanguage;
+  page?: number;
+}
+
+export const adminBlogApi = {
+  /** The caller's drafts and every published post, most recently touched first. */
+  list: (filters: AdminBlogListFilters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.status) params.set("status", filters.status);
+    if (filters.lang) params.set("lang", filters.lang);
+    if (filters.page && filters.page > 1) params.set("page", String(filters.page));
+    const query = params.toString();
+    return apiFetch<PagedResult<AdminBlogPostListItem>>(`/api/admin/blog/posts${query ? `?${query}` : ""}`);
+  },
+
+  create: (language: BlogLanguage) =>
+    apiFetch<AdminBlogPost>("/api/admin/blog/posts", { method: "POST", body: JSON.stringify({ language }) }),
+
+  get: (postId: string) => apiFetch<AdminBlogPost>(`/api/admin/blog/posts/${postId}`),
+
+  /** The autosave. A 409 means another tab saved since — reload, do not retry. */
+  saveDraft: (postId: string, request: SaveBlogDraftRequest) =>
+    apiFetch<BlogDraftSaved>(`/api/admin/blog/posts/${postId}/draft`, { method: "PUT", body: JSON.stringify(request) }),
+
+  publish: (postId: string) => apiFetch<AdminBlogPost>(`/api/admin/blog/posts/${postId}/publish`, { method: "POST" }),
+
+  unpublish: (postId: string) => apiFetch<AdminBlogPost>(`/api/admin/blog/posts/${postId}/unpublish`, { method: "POST" }),
+
+  remove: (postId: string) => apiFetch<void>(`/api/admin/blog/posts/${postId}`, { method: "DELETE" }),
+
+  uploadMedia: (postId: string, file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    // No Content-Type header: the browser sets multipart/form-data with its own boundary (see
+    // performFetch, which skips the JSON default for FormData bodies).
+    return apiFetch<BlogMediaResponse>(`/api/admin/blog/posts/${postId}/media`, { method: "POST", body });
+  },
+};

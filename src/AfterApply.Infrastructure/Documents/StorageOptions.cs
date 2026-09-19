@@ -22,6 +22,14 @@ public sealed class StorageOptions
     /// being unguessable — so it ships as a plain environment variable, not through Secret Manager.</summary>
     public string BucketName { get; init; } = string.Empty;
 
+    /// <summary>The GCS bucket holding blog images (2026-09-19) — a second bucket, not a prefix in
+    /// the CV one, so the two never share an access policy by accident: CVs are one person's
+    /// private documents, blog images are public the moment their post is. Same trust model as
+    /// <see cref="BucketName"/>: private at the bucket level, bytes proxied by the API, name is an
+    /// infrastructure identifier rather than a secret. Required when <see cref="Provider"/> is
+    /// GoogleCloudStorage and <c>Blog:Enabled</c> is true.</summary>
+    public string BlogMediaBucketName { get; init; } = string.Empty;
+
     /// <summary>Points the GCS client at a fake server instead of Google's. Set only by the
     /// integration suite; unset everywhere else, which is what makes the real client authenticate
     /// with Application Default Credentials.</summary>
@@ -30,6 +38,10 @@ public sealed class StorageOptions
     /// <summary>Where <see cref="FileStorageProvider.FileSystem"/> keeps its files. Defaults under
     /// the OS temp directory so a fresh clone runs with no configuration at all.</summary>
     public string LocalRootPath { get; init; } = Path.Combine(Path.GetTempPath(), "afterapply-cv-storage");
+
+    /// <summary>The blog images' directory under <see cref="FileStorageProvider.FileSystem"/> —
+    /// separate from the CVs' for the same reason the buckets are.</summary>
+    public string BlogLocalRootPath { get; init; } = Path.Combine(Path.GetTempPath(), "afterapply-blog-media");
 
     /// <summary>Per-file cap. 5 MB is already generous for a CV — a text-heavy PDF is well under
     /// 1 MB, and a design-led one with embedded images rarely passes 3 — and it is far below Cloud

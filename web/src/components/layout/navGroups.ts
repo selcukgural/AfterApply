@@ -20,7 +20,8 @@ export type NavKey =
   | "weeklyJobs"
   | "cvScan"
   | "benchmark"
-  | "guide";
+  | "guide"
+  | "blog";
 
 export interface NavItem {
   href: string;
@@ -34,7 +35,7 @@ export interface NavItem {
 /** One position in the signed-in row: a plain link, or a trigger with a menu under it. */
 export type NavEntry = { type: "link"; href: string; key: NavKey } | { type: "group"; key: NavKey; items: NavItem[] };
 
-export type NavFlags = Pick<ClientConfigResponse, "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences">;
+export type NavFlags = Pick<ClientConfigResponse, "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences" | "blog">;
 
 /**
  * The signed-in navigation, as data. The desktop row and the mobile drawer both render from this
@@ -51,12 +52,15 @@ export type NavFlags = Pick<ClientConfigResponse, "jobSources" | "companyReviews
  *
  * Flags: the weekly postings and the company pages ship dark, so their items follow the server
  * config and appear only once it says the routes exist — the same rule the pages themselves use.
+ * The blog follows a stricter one: its item appears only once there is a published post to read
+ * (`blog.hasPublishedPosts`), because a "Blog" that opens on nothing is worse than no blog.
  */
 export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
   const reviewsOn = flags.companyReviews?.enabled === true;
   const salariesOn = flags.companySalaries?.enabled === true;
   const experiencesOn = flags.candidateExperiences?.enabled === true;
   const weeklyJobsOn = flags.jobSources?.enabled === true;
+  const blogOn = flags.blog?.enabled === true && flags.blog.hasPublishedPosts === true;
 
   const companies: NavItem[] = [
     { href: "/companies", key: "allCompanies" },
@@ -72,6 +76,7 @@ export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
     { href: cvScanPath(locale), key: "cvScan" },
     { href: "/benchmark", key: "benchmark" },
     { href: "/guide", key: "guide" },
+    ...(blogOn ? [{ href: "/blog", key: "blog" } as NavItem] : []),
   ];
 
   return [

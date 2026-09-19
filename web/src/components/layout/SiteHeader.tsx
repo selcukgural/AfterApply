@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { useClientConfig } from "@/hooks/useClientConfig";
 import { buttonClassName } from "@/components/ui/Button";
 import { CvScanNavButton } from "@/components/cvScan/CvScanNavButton";
 import { Logo } from "@/components/layout/Logo";
@@ -12,7 +13,7 @@ import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { NavBar } from "@/components/layout/NavBar";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
 
-export type SiteNavKey = "howItWorks" | "companies" | "benchmark" | "guide" | "help";
+export type SiteNavKey = "howItWorks" | "companies" | "benchmark" | "guide" | "blog" | "help";
 
 export interface SiteNavLink {
   /** A route (`/companies`) or a landing anchor (`/#how-it-works`); both go through next-intl's Link. */
@@ -37,6 +38,17 @@ export const SITE_LINKS: readonly SiteNavLink[] = [
   { href: "/help", key: "help" },
 ];
 
+/** The blog's link, between the guide and the help centre — but only once there is a published
+ *  post to read (`blog.hasPublishedPosts`, DECISIONS.md 2026-09-19). A "Blog" that opens on nothing
+ *  is worse than no blog, so the header follows the server rather than the route existing. */
+const BLOG_LINK: SiteNavLink = { href: "/blog", key: "blog" };
+
+export function siteLinksFor(hasBlog: boolean): readonly SiteNavLink[] {
+  if (!hasBlog) return SITE_LINKS;
+  const helpIndex = SITE_LINKS.findIndex((link) => link.key === "help");
+  return [...SITE_LINKS.slice(0, helpIndex), BLOG_LINK, ...SITE_LINKS.slice(helpIndex)];
+}
+
 /**
  * The one header every signed-out surface shares: the landing page and every page under
  * `(public)`. Until 2026-09-13 those were two headers — the landing's, with sign-in and register,
@@ -57,12 +69,15 @@ export const SITE_LINKS: readonly SiteNavLink[] = [
 export function SiteHeader() {
   const t = useTranslations("siteNav");
   const { isAuthenticated } = useAuth();
+  const { config } = useClientConfig();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
   if (isAuthenticated) {
     return <NavBar />;
   }
+
+  const links = siteLinksFor(config.blog?.enabled === true && config.blog.hasPublishedPosts === true);
 
   // Anchors are never "active": the landing page is one page, and underlining a section name
   // while you are anywhere on it would claim a precision the link does not have.
@@ -91,7 +106,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm md:flex">
-          {SITE_LINKS.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -136,7 +151,7 @@ export function SiteHeader() {
       {menuOpen && (
         <div id="site-mobile-menu" className="border-t border-gray-200 bg-white px-4 py-4 md:hidden dark:border-gray-800 dark:bg-gray-950">
           <nav className="flex flex-col gap-1 text-sm">
-            {SITE_LINKS.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}

@@ -71,6 +71,13 @@ describe("sanitizeReturnTo", () => {
     }
   });
 
+  it("accepts a blog post, and nothing else under /blog", () => {
+    expect(sanitizeReturnTo("/blog/ise-alim-surecinde-ghosting")).toBe("/blog/ise-alim-surecinde-ghosting");
+    for (const path of ["/blog", "/blog/", "/blog/İşe", "/blog/a/b", "/blog/a?x=1", "/tr/blog/a"]) {
+      expect(sanitizeReturnTo(path), `${path} must not be a destination`).toBeNull();
+    }
+  });
+
   it("rejects a code longer than any code the server issues", () => {
     expect(sanitizeReturnTo(`/pair?code=${"A".repeat(17)}`)).toBeNull();
   });

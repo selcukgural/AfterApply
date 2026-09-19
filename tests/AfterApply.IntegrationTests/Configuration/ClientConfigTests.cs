@@ -74,6 +74,8 @@ public class ClientConfigTests(ApiHost<ClientConfigProfile> host) : IClassFixtur
         config.GitHubAuth.ShouldBe(new GitHubAuthConfigResponse(false, null));
         // The candidate-experience slot carries the appsettings defaults: on, ten per account, three for stats.
         config.CandidateExperiences.ShouldBe(new CandidateExperiencesConfigResponse(true, 10, 3, 5));
+        // The blog is on by default and empty on a fresh database: no link to show yet.
+        config.Blog.ShouldBe(new BlogConfigResponse(true, false));
     }
 
     [Fact]
