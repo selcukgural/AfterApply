@@ -131,6 +131,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<BlogPostLike> BlogPostLikes => Set<BlogPostLike>();
 
+    public DbSet<BlogComment> BlogComments => Set<BlogComment>();
+
+    public DbSet<BlogCommentHelpfulVote> BlogCommentHelpfulVotes => Set<BlogCommentHelpfulVote>();
+
+    public DbSet<BlogCommentReport> BlogCommentReports => Set<BlogCommentReport>();
+
     public DbSet<BlogMedia> BlogMedia => Set<BlogMedia>();
 
     protected override void OnModelCreating(ModelBuilder builder)

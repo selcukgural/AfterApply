@@ -8378,3 +8378,58 @@ görüntülenme sayacı (29/29). `BlogValidatorTests` grouped query; web `newPos
 `blog.contract.test.ts` (makale görüntülenme), `moderationTable.contract.test.ts` (boş hücrenin
 de renk sınıfı var). Local stack'te tarayıcı: açık/koyu tema, tr/en, Taslak filtresi, çeviri
 ekle akışı.
+
+## Blog yorumları MVP: giriş zorunlu, her yorum onaydan geçer, tek seviye yanıt, silme yok — DECIDED (2026-09-20)
+
+**Karar.** Blog yazılarına okuyucu yorumu geliyor (kullanıcının 39 maddelik MVP spec'i; kanvas:
+https://claude.ai/artifact/HkhmD3oWUo5uVqq8r3XyuK — okuyucu tarafı, mobil, bildir diyaloğu,
+Katkılarım kartları, admin kuyruğu; hepsi onaylandı). Mevcut kalıplar üstüne kuruldu; yeni
+katman yok.
+
+- **Kim:** okuma herkese açık (SSR ilk sayfa, token varsa tarayıcıda yeniden okunur); yazma,
+  yanıt, faydalı, bildir hesap ister; onay/ret `Users.IsAdmin`. Başkasının yorumu 404, 403 değil.
+- **Moderasyon:** her yeni yorum `Pending`; **admin'in kendi yorumu doğrudan `Approved`**
+  (onaylayacağı kuyruğa kendi yorumunu sokmak anlamsız). Reputation/güvenilir kullanıcı yok.
+  `Rejected` yazara yalnızca genel "yayınlanmadı" mesajı; neden tutulmaz. **Kök reddedilince
+  yanıtları sayfadan düşer** (sorgu `parent.Status == Approved` ister); yanıt satırları
+  değiştirilmez.
+- **Düzenleme yalnızca `Pending`'de** (yazının altındaki kutudan ya da Katkılarım'dan); sonrası
+  `BLOG_COMMENT_LOCKED` → **409** (revizyon çakışması gibi: form "artık olmaz"ı "alanı düzelt"ten
+  ayırmalı). Düzenleme `Pending`'i bozmaz, `EditedAt` damgalanır.
+- **Silme yok — hiçbir durumda** (kullanıcı kararı 2026-09-20, kanvastaki Sil butonları
+  kaldırıldı). Satır hesapla, yazıyla ve kök yorumla cascade gider; başka bir yol yok.
+- **Düz metin.** HTML/markdown yok, linkleştirme yok; React escape eder, `dangerouslySetInnerHTML`
+  contract-testle yasak. XSS ve link spam'i tek hamlede kapanır; `rel=ugc` konusu boşa düşer.
+- **İsim:** `BlogCommentAuthorName.Format` — ad + soyad baş harfi ("Selin Y."), soyad küçük
+  harfliyse tr-TR ile büyütülür ("ipek" → "İ."); ad yoksa **null → "Bir okuyucu"** (e-posta
+  yerel kısmı asla). Admin listesi e-postayı görür, başka hiçbir yüzey görmez.
+- **Tek seviye yanıt:** yanıta yanıt kökü hedefler (`ParentCommentId` daima kök). Sayfalama 10
+  kök + tüm yanıtları, en yeni önce; "Daha fazla yorum göster". `TotalCount` onaylı tümünü sayar
+  ("Yorumlar (12)"), `TotalRootCount` sayfaları keser.
+- **Duplicate:** aynı kullanıcı + aynı yazı + aynı normalize metin (her durumda) →
+  `BLOG_COMMENT_DUPLICATE` 400. Unique index yok.
+- **Faydalı:** `BlogPostLike` kalıbı (toggle, unique index, 23505 → "zaten var"). **Bildir:**
+  `CompanyReviewReport` kalıbının nedensiz hâli; kullanıcı+yorum unique, ikinci bildirim ilkini
+  döner (`alreadyReported`). Reject → açık bildirimler `ActionTaken`; "Şikayetleri kapat" →
+  `Dismissed`, yorum kalır.
+- **IP:** ayrı kolon **yok** — `RequestAuditMiddleware` her POST/PUT'a zaten IP yazıyor;
+  `UserId + Path + At` ile yorum eşlenir. İkinci kopya veri minimizasyonuna aykırı olurdu.
+  Gizlilik metnine "Blog yazılarına yazdığın yorumlar" bölümü + işlem kaydı maddesine "blog
+  yorumu" eklendi; hesap silme cümlesi ve export (`BlogComments`) güncellendi.
+- **Rate limit:** `BlogCommentWrite` 10/10dk (yaz+yanıt+düzenle), `BlogCommentReport` 10/saat,
+  `BlogCommentHelpful` 60/5dk; Redis-first pencere sayısı 21 oldu.
+- **Cache yok:** liste indeksli tek sorgu, onay anında görünmeli. Yazı sayfası cache'i etkilenmez.
+- **Katkılarım:** 4. tür `ContributionKind.BlogComment`; `?filter=BlogComments|Company` çipleri.
+  Blog kapalıyken tür listeye girmez.
+- **Admin:** yeni "Comments" sekmesi (`/admin/comments`, `[id]`), `ModerationCountsResponse.
+  PendingComments` rozeti; filtreler Pending/Reported/Approved/Rejected/All.
+- **Kapsam dışı (spec §36 + MVP):** analytics event'i eklenmedi (sayaç anonim, hesaba bağlı
+  event üretmez); bildirim/e-posta yok; captcha yok; yardım merkezi konusu yok (sonra).
+
+**Test.** `BlogCommentTests` 10 (spec §33'ün tamamı + rate limit ayrı host + hesap cascade +
+Katkılarım filtreleri + export); `BlogCommentTests` unit (domain, isim, validator);
+web: `commentDraft.test.ts`, contract testleri (makale/preview/kart), `adminTabs.test.ts`.
+Tarayıcı (local stack): anonim SSR liste, giriş yapmış okuyucu (pending kutusu, düzenle, faydalı,
+bildir → "daha önce bildirmiştiniz", yanıt), Katkılarım kartları + çipler, 400px mobil, admin
+kuyruk → şikayetli yorumu reddet (şikayet "işlem yapıldı") → pending onayla (rozet 2→1),
+gizlilik bölümü.

@@ -15,6 +15,9 @@ public sealed class BlogOptions
     /// <summary>Rows per page on the admin table.</summary>
     public int AdminPageSize { get; init; } = 25;
 
+    /// <summary>Root comments per page under a post; each comes with all its replies.</summary>
+    public int CommentPageSize { get; init; } = 10;
+
     /// <summary>
     /// How old an upload has to be before a save may treat it as an orphan (not in the draft,
     /// not in the published version, not the cover) and delete it. The grace exists for one race:

@@ -1149,9 +1149,12 @@ export interface MyReviewsResponse {
   quota: ReviewQuota;
 }
 
-export type ContributionKind = "Review" | "Salary" | "Experience";
+export type ContributionKind = "Review" | "Salary" | "Experience" | "BlogComment";
 
-/** One row of the author's merged "my contributions" list: exactly one of the three per-kind
+/** The contributions page's chips: blog comments alone, or everything about companies. */
+export type ContributionFilter = "BlogComments" | "Company";
+
+/** One row of the author's merged "my contributions" list: exactly one of the per-kind
  *  records is set, named by `kind`. */
 export interface MyContribution {
   kind: ContributionKind;
@@ -1159,6 +1162,7 @@ export interface MyContribution {
   review: MyCompanyReview | null;
   salary: MyCompanySalary | null;
   experience: MyCandidateExperience | null;
+  blogComment: MyBlogComment | null;
 }
 
 /** Newest first, ten per page. A quota is null while its feature is off. */
@@ -1250,6 +1254,8 @@ export interface AdminCompanyReview extends StructuredReviewFields {
 export interface ModerationCounts {
   pendingReviews: number;
   openReports: number;
+  /** Blog comments waiting for approval (2026-09-20). */
+  pendingComments: number;
 }
 
 export interface UserReviewQuota {
@@ -1922,6 +1928,113 @@ export interface BlogPostPublic extends BlogPostListItem {
   translation: BlogTranslationLink | null;
   /** Reads of the published post so far — a plain tally, bumped by this very fetch. */
   viewCount: number;
+}
+
+// ---- blog comments (2026-09-20) ----
+
+export type BlogCommentStatus = "Pending" | "Approved" | "Rejected";
+export type BlogCommentReportReason = "Spam" | "Insult" | "Inappropriate" | "Advertising" | "Other";
+export type BlogCommentReportStatus = "Open" | "Dismissed" | "ActionTaken";
+
+/**
+ * One comment as the page shows it. `authorName` is the first name and last initial ("Selin
+ * Y."), or null for an account with no name — the page then says "a reader". `status` is Approved
+ * for everyone else's comment and whatever it is for the viewer's own (a pending one is on the
+ * list for its author alone). `helpfulByMe` is null for an anonymous reader.
+ */
+export interface BlogComment {
+  id: string;
+  postId: string;
+  parentCommentId: string | null;
+  content: string;
+  status: BlogCommentStatus;
+  authorName: string | null;
+  isMine: boolean;
+  createdAt: string;
+  editedAt: string | null;
+  helpfulCount: number;
+  helpfulByMe: boolean | null;
+  replies: BlogComment[];
+}
+
+/** `totalCount` counts every approved comment, replies included; `totalRootCount` is what the
+ *  pages are cut from. */
+export interface BlogCommentList {
+  items: BlogComment[];
+  totalCount: number;
+  totalRootCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface BlogCommentHelpfulResponse {
+  helpful: boolean;
+  helpfulCount: number;
+}
+
+export interface BlogCommentReportResponse {
+  id: string;
+  alreadyReported: boolean;
+}
+
+export interface CreateBlogCommentRequest {
+  content: string;
+}
+
+export interface ReportBlogCommentRequest {
+  reason: BlogCommentReportReason;
+  note: string | null;
+}
+
+/** A reader's own comment on the contributions list, whatever its status. */
+export interface MyBlogComment {
+  id: string;
+  postId: string;
+  postTitle: string;
+  postSlug: string;
+  postLanguage: BlogLanguage;
+  parentCommentId: string | null;
+  parentAuthorName: string | null;
+  content: string;
+  status: BlogCommentStatus;
+  createdAt: string;
+  editedAt: string | null;
+  helpfulCount: number;
+  replyCount: number;
+}
+
+export interface AdminBlogCommentListItem {
+  id: string;
+  postId: string;
+  postTitle: string;
+  postSlug: string | null;
+  postLanguage: BlogLanguage;
+  parentCommentId: string | null;
+  parentAuthorName: string | null;
+  authorName: string | null;
+  authorEmail: string | null;
+  content: string;
+  status: BlogCommentStatus;
+  openReportCount: number;
+  helpfulCount: number;
+  replyCount: number;
+  createdAt: string;
+  editedAt: string | null;
+}
+
+export interface AdminBlogCommentReport {
+  id: string;
+  reason: BlogCommentReportReason;
+  note: string | null;
+  status: BlogCommentReportStatus;
+  reportedAt: string;
+  resolvedAt: string | null;
+}
+
+export interface AdminBlogComment {
+  comment: AdminBlogCommentListItem;
+  parentContent: string | null;
+  reports: AdminBlogCommentReport[];
 }
 
 /** One sitemap entry per published post. */

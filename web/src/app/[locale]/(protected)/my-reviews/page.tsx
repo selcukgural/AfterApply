@@ -11,6 +11,8 @@ import { Pagination } from "@/components/applications/Pagination";
 import { MyReviewCard } from "@/components/contributions/MyReviewCard";
 import { MySalaryCard } from "@/components/contributions/MySalaryCard";
 import { MyExperienceCard } from "@/components/contributions/MyExperienceCard";
+import { MyBlogCommentCard } from "@/components/contributions/MyBlogCommentCard";
+import type { ContributionFilter, MyBlogComment } from "@/types/api";
 
 /**
  * "My contributions" (2026-09-18): the author's reviews, salary entries and candidate experiences
@@ -23,13 +25,41 @@ export default function MyContributionsPage() {
   const t = useTranslations("companyReviews.mine");
   const tSalaries = useTranslations("companySalaries.mine");
   const tExperiences = useTranslations("candidateExperiences.mine");
+  const tComment = useTranslations("companyReviews.mine.blogComment");
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+  // The chips (2026-09-20): everything, the blog comments alone, or the company contributions.
+  const [filter, setFilter] = useState<ContributionFilter | null>(null);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["contributions", "mine", page],
-    queryFn: () => companyReviewsApi.listMyContributions(page),
+    queryKey: ["contributions", "mine", page, filter],
+    queryFn: () => companyReviewsApi.listMyContributions(page, filter ?? undefined),
   });
+
+  const onCommentEdited = (edited: MyBlogComment) =>
+    queryClient.setQueryData(["contributions", "mine", page, filter], (current: typeof data) =>
+      current
+        ? { ...current, items: current.items.map((item) => (item.blogComment?.id === edited.id ? { ...item, blogComment: edited } : item)) }
+        : current,
+    );
+
+  const chip = (value: ContributionFilter | null, label: string) => (
+    <button
+      type="button"
+      aria-pressed={filter === value}
+      onClick={() => {
+        setFilter(value);
+        setPage(1);
+      }}
+      className={`inline-flex h-8 items-center rounded-full border px-3 text-[13px] font-medium ${
+        filter === value
+          ? "border-accent bg-accent-wash text-accent-ink"
+          : "border-gray-300 text-gray-700 hover:border-gray-400 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-500"
+      }`}
+    >
+      {label}
+    </button>
+  );
 
   // The per-kind "mine" lists feed the profile card and the edit forms; they change with us.
   const onDeleted = async () => {
@@ -85,6 +115,12 @@ export default function MyContributionsPage() {
         )}
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {chip(null, tComment("filterAll"))}
+        {chip("BlogComments", tComment("filterComments"))}
+        {chip("Company", tComment("filterCompany"))}
+      </div>
+
       {isLoading && <p className="text-sm text-gray-500 dark:text-gray-400">{t("loading")}</p>}
       {error && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
@@ -109,6 +145,9 @@ export default function MyContributionsPage() {
             }
             if (item.kind === "Experience" && item.experience) {
               return <MyExperienceCard key={`experience-${item.experience.id}`} entry={item.experience} onDeleted={onDeleted} />;
+            }
+            if (item.kind === "BlogComment" && item.blogComment) {
+              return <MyBlogCommentCard key={`comment-${item.blogComment.id}`} comment={item.blogComment} onEdited={onCommentEdited} />;
             }
             return item.review ? <MyReviewCard key={`review-${item.review.id}`} review={item.review} onDeleted={onDeleted} /> : null;
           })}

@@ -13,11 +13,12 @@ const read = (relative: string) => readFileSync(path.join(SRC, relative), "utf8"
 describe("the contributions page", () => {
   const page = read("app/[locale]/(protected)/my-reviews/page.tsx");
 
-  it("renders the three kinds through their cards and pages server-side", () => {
+  it("renders the four kinds through their cards and pages server-side", () => {
     expect(page).toContain("MyReviewCard");
     expect(page).toContain("MySalaryCard");
     expect(page).toContain("MyExperienceCard");
-    expect(page).toContain("listMyContributions(page)");
+    expect(page).toContain("MyBlogCommentCard");
+    expect(page).toContain("listMyContributions(page, filter ?? undefined)");
     expect(page).toContain('unit="contributions"');
     // Deleting the last row of a page lands on the previous page, not on an empty one.
     expect(page).toContain("clampPage(");
@@ -46,9 +47,17 @@ describe("the contribution cards", () => {
   });
 
   it("each wear the kind badge", () => {
-    for (const file of ["MyReviewCard", "MySalaryCard", "MyExperienceCard"]) {
+    for (const file of ["MyReviewCard", "MySalaryCard", "MyExperienceCard", "MyBlogCommentCard"]) {
       expect(read(`components/contributions/${file}.tsx`)).toContain("<ContributionKindBadge kind=");
     }
+  });
+
+  it("a blog comment can be edited while pending and never deleted (2026-09-20)", () => {
+    const card = read("components/contributions/MyBlogCommentCard.tsx");
+    expect(card).toContain('comment.status === "Pending" && (');
+    expect(card).toContain("blogCommentsApi.edit(");
+    expect(card).not.toContain("remove(");
+    expect(card).not.toContain("onDeleted");
   });
 });
 

@@ -117,7 +117,7 @@
       },
       "myReviews": {
         "title": "Katkılarım",
-        "description": "Yazdığın değerlendirmeler, paylaştığın maaş kayıtları ve aday deneyimleri — tek listede, en yeni önce."
+        "description": "Yazdığın değerlendirmeler, paylaştığın maaş kayıtları, aday deneyimleri ve blog yorumların — tek listede, en yeni önce."
       },
       "contribute": {
         "title": "Şirket katkısı",
@@ -756,7 +756,8 @@
       "pageInfoExperiences": "Sayfa {page} / {totalPages} ({totalCount} aday deneyimi)",
       "pageInfoReviews": "Sayfa {page} / {totalPages} ({totalCount} değerlendirme)",
       "pageInfoContributions": "Sayfa {page} / {totalPages} ({totalCount} katkı)",
-      "pageInfoPosts": "Sayfa {page} / {totalPages} ({totalCount} yazı)"
+      "pageInfoPosts": "Sayfa {page} / {totalPages} ({totalCount} yazı)",
+      "pageInfoComments": "Sayfa {page} / {totalPages} ({totalCount} yorum)"
     },
     "form": {
       "companyName": "Şirket Adı",
@@ -1047,7 +1048,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 14 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 20 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -1085,7 +1086,7 @@
       "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler, işlem kayıtları dışında, yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır; işlem kayıtları yalnızca yukarıda sayılan güvenlik ve hukuki amaçlara hizmet eder.",
       "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür.",
-      "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, maaş bilgisi, aday deneyimi, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\").",
+      "item6": "İşlem kayıtları: siteye bir şey gönderdiğiniz her istekte — kayıt, giriş, başvuru ekleme veya düzenleme, içe aktarma, CV yükleme, şirket değerlendirmesi, maaş bilgisi, aday deneyimi, blog yorumu, geri bildirim ve benzerleri — bağlantınızın IP adresi, isteğin yolu, sonucu ve zamanı. Bu kayıt yalnızca hesabınızın güvenliği, kötüye kullanımla mücadele ve hukuki yükümlülüklerimiz (yetkili bir makamdan gelen usulüne uygun bir talep gibi) için tutulur; hiçbir ekranda, raporda veya veri dışa aktarımında gösterilmez ve hesabınızla birlikte silinir. Girişsiz kullanılan yüzeylerde (CV taraması, benchmark) ve başarısız giriş denemelerinde de aynı kayıt tutulur; bunlar bir hesaba bağlı olmadığından 12 ay sonra silinir. Hangi işlemin kaydedilmediği: sayfa görüntülemeleri (bkz. \"Ziyaret sayacı\").",
       "item7": "Haftalık ilan eşleştirmeyi (ücretli özellik) kullanırsanız: arama kriteri olarak kaydettiğiniz pozisyon adları (en fazla üç) ve konum. Bunlar hesabınızda saklanır ve haftada bir, LinkedIn ve kariyer.net'te arama olarak kullanılır — aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın. Bulunan ilanlar sizin için sınırlı bir süre tutulur; hangilerine zaten başvurduğunuz kendi başvurularınızdan hesaplanır ve ayrı bir kayıt olarak asla saklanmaz. Ayrıca rıza verirseniz her ilan için hesaplanan uyum puanı, kısa gerekçesi ve uyan/eksik kriter listesi de hesabınızda tutulur — bkz. \"Haftalık ilan eşleştirme\"."
     },
     "googleSignIn": {
@@ -1143,7 +1144,7 @@
       "title": "Haklarınız",
       "before": "Verilerinizin bir kopyasını istediğiniz zaman dışa aktarabilir veya hesabınızı kalıcı olarak silebilirsiniz. Bu işlemleri",
       "link": "Hesap Ayarları",
-      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, aday deneyimlerinizi, gönderdiğiniz geri bildirimleri ve işlem kayıtlarınızı — kalıcı olarak kaldırır. İşlem kayıtları dışa aktarım dosyasına dahil edilmez; kendi kayıtlarınıza erişmek isterseniz privacy@ekariyerim.com adresine yazmanız yeterlidir."
+      "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, aday deneyimlerinizi, blog yorumlarınızı, gönderdiğiniz geri bildirimleri ve işlem kayıtlarınızı — kalıcı olarak kaldırır. İşlem kayıtları dışa aktarım dosyasına dahil edilmez; kendi kayıtlarınıza erişmek isterseniz privacy@ekariyerim.com adresine yazmanız yeterlidir."
     },
     "notApplicable": {
       "title": "Şu an geçerli olmayanlar",
@@ -1240,6 +1241,18 @@
       "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Kaydı Katkılarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam tarihiyle içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
+    },
+    "blogComments": {
+      "title": "Blog yazılarına yazdığın yorumlar",
+      "intro": "Bir blog yazısına yorum yazmak isteğe bağlıdır ve hesap gerektirir. Yazdığında:",
+      "what": "Yorumun düz metin olarak, yazıldığı ve düzenlendiği zamanla ve moderasyon durumuyla birlikte hesabına bağlı saklanır. Her yorum bir yönetici onaylayana kadar yalnızca sana görünür; onaylanmayan yorum hiç yayımlanmaz.",
+      "name": "Yayımlanan yorum, adının ilk kısmı ve soyadının baş harfiyle görünür (örneğin \"Selin Y.\"); hesabında ad yoksa \"Bir okuyucu\" yazar. E-posta adresin, hesabın ya da başka bir bilgin hiçbir zaman gösterilmez. Yorumunu okuyan herkes bu adı görür — yazmadan önce bunu bil.",
+      "noEdit": "Onaylanmış bir yorum değiştirilemez ve silinemez: başkaları ona yanıt vermiştir. Onay beklerken Katkılarım sayfasından ya da yazının altından düzenleyebilirsin.",
+      "moderation": "Yorumuna bakan yönetici arkasındaki hesabı görür; moderasyonu mümkün kılan budur ve kimliğinin yorumunla buluştuğu tek yerdir. Bir yorumu bildirirsen bildirim (gerekçe, notun, zaman) hesabına bağlı saklanır ve yalnızca yöneticiye gösterilir; yorumun yazarı kimin bildirdiğini görmez. \"Faydalı\" işaretin yorum ve hesap başına tek satır olarak saklanır, kimseye gösterilmez.",
+      "audit": "Yorum yazdığın, düzenlediğin, yanıtladığın ya da bildirdiğin her istekte bağlantının IP adresi işlem kayıtlarına yazılır (yukarıdaki \"İşlem kayıtları\" maddesi). Hiçbir yerde gösterilmez; yalnızca hukuki bir talep ya da kötüye kullanım incelemesi için tutulur.",
+      "storage": "Yorumlar, bildirimler ve faydalı işaretleri kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
+      "deletion": "Hesabını silmek tüm yorumlarını — ve onlara verilmiş yanıtları — siler; veri dışa aktarımın yorumlarını içerir.",
+      "legalBasis": "Hukuki sebep: açık eylemin — yorum yazmayı sen seçersin."
     }
   },
   "terms": {
@@ -2729,6 +2742,78 @@
       "backToAdmin": "← Yazılar"
     }
   },
+  "blogComments": {
+    "heading": "Bu yazı hakkında ne düşünüyorsunuz?",
+    "intro": "Deneyiminizi paylaşarak başka iş arayanlara yardımcı olun.",
+    "policy": "Lütfen deneyimlerinizi saygılı ve yapıcı bir şekilde paylaşın. Hakaret, spam, reklam ve kişisel bilgilerin paylaşılmasına izin verilmez.",
+    "nameNote": "Yorumlar adınızın ilk kısmı ve soyadınızın baş harfiyle yayınlanır (ör. Selin Y.).",
+    "label": "Yorumunuz",
+    "placeholder": "Yorumunuzu yazın…",
+    "replyLabel": "Yanıtınız",
+    "replyPlaceholder": "{name} adlı kullanıcıya yanıt…",
+    "editLabel": "Yorumunuzu düzenleyin",
+    "submit": "Gönder",
+    "sending": "Gönderiliyor…",
+    "save": "Kaydet",
+    "cancel": "Vazgeç",
+    "counter": "{count} / {max}",
+    "signInPrompt": "Yorum yapmak için giriş yapmalısınız.",
+    "signIn": "Giriş yap",
+    "listTitle": "Yorumlar ({count})",
+    "emptyTitle": "Henüz yorum yok.",
+    "emptyBody": "İlk yorumu siz yazın ve deneyiminizi başka iş arayanlarla paylaşın.",
+    "loadMore": "Daha fazla yorum göster",
+    "loading": "Yükleniyor…",
+    "loadError": "Yorumlar yüklenemedi.",
+    "anonymousAuthor": "Bir okuyucu",
+    "you": "Siz",
+    "edited": "düzenlendi",
+    "pendingBadge": "Onay bekliyor",
+    "pendingHint": "Onaylanana kadar yalnızca siz görüyorsunuz ve düzenleyebilirsiniz.",
+    "submittedPending": "Yorumunuz alındı. İncelendikten sonra herkese görünür olacak.",
+    "helpful": "Faydalı",
+    "helpfulCount": "{count, plural, =0 {Henüz kimse faydalı bulmadı} =1 {1 kişi faydalı buldu} other {# kişi faydalı buldu}}",
+    "signInToVote": "Faydalı bulmak için giriş yapın",
+    "reply": "Yanıtla",
+    "edit": "Düzenle",
+    "more": "Diğer işlemler",
+    "report": "Bildir",
+    "problems": {
+      "empty": "Yorum boş olamaz.",
+      "tooShort": "Yorum en az {min} karakter olmalı.",
+      "tooLong": "Yorum en fazla {max} karakter olabilir."
+    },
+    "errors": {
+      "generic": "Yorumunuz gönderilirken bir sorun oluştu. Lütfen tekrar deneyin.",
+      "locked": "Bu yorum artık düzenlenemez: onaylandı ya da yayınlanmadı.",
+      "tooMany": "Çok sık yorum gönderdiniz. Biraz sonra tekrar deneyin."
+    },
+    "reportDialog": {
+      "title": "Yorumu bildir",
+      "intro": "Bildiriminiz yalnızca yöneticilere gider; yorumu yazan kişi görmez.",
+      "reason": "Neden",
+      "note": "Kısa açıklama (isteğe bağlı)",
+      "noteRequired": "Kısa açıklama (zorunlu)",
+      "notePlaceholder": "Neyi sorunlu buldunuz?",
+      "noteProblem": "Gerekçe \"Diğer\" ise lütfen sorunu açıklayın.",
+      "submit": "Bildir",
+      "sending": "Gönderiliyor…",
+      "thanks": "Bildiriminiz alındı; yöneticiler inceleyecek.",
+      "already": "Bu yorumu daha önce bildirmiştiniz."
+    },
+    "reasons": {
+      "Spam": "Spam",
+      "Insult": "Hakaret veya saldırgan içerik",
+      "Inappropriate": "Uygunsuz içerik",
+      "Advertising": "Reklam veya tanıtım",
+      "Other": "Diğer"
+    },
+    "status": {
+      "Pending": "Onay bekliyor",
+      "Approved": "Yayında",
+      "Rejected": "Yayınlanmadı"
+    }
+  },
   "hrContact": {
     "legend": "İK kontağı",
     "hint": "İlan siteleri bu bilgileri yayınlamıyor, bu yüzden bildiğin bir kontak varsa buraya sen ekleyebilirsin. Tamamı isteğe bağlı.",
@@ -3264,7 +3349,8 @@
     "reviews": "Değerlendirmeler",
     "reports": "Şikayetler",
     "payments": "Ödemeler",
-    "blog": "Blog"
+    "blog": "Blog",
+    "comments": "Yorumlar"
   },
   "adminContributionTabs": {
     "label": "Katkı türleri",
@@ -3474,7 +3560,7 @@
     },
     "mine": {
       "title": "Katkılarım",
-      "subtitle": "Değerlendirmelerin, maaş kayıtların ve aday deneyimlerin — en yeni önce.",
+      "subtitle": "Değerlendirmelerin, maaş kayıtların, aday deneyimlerin ve blog yorumların — en yeni önce.",
       "write": "Değerlendirme yaz",
       "loading": "Yükleniyor…",
       "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
@@ -3498,7 +3584,22 @@
       "kind": {
         "review": "Değerlendirme",
         "salary": "Maaş kaydı",
-        "experience": "Aday deneyimi"
+        "experience": "Aday deneyimi",
+        "blogComment": "Blog yorumu"
+      },
+      "blogComment": {
+        "replyTo": "{name} adlı kullanıcıya yanıt",
+        "replyToReader": "Bir okuyucuya yanıt",
+        "edited": "düzenlendi {date}",
+        "pendingHint": "Bir yönetici onaylayana kadar yalnızca siz görüyorsunuz; onaylanana kadar düzenleyebilirsiniz.",
+        "approvedHint": "Yayındaki yorum değiştirilemez.",
+        "rejectedMessage": "Yorumunuz moderasyon kriterlerine uygun olmadığı için yayınlanamadı.",
+        "stats": "{helpful, plural, =0 {Henüz faydalı bulunmadı} =1 {1 kişi faydalı buldu} other {# kişi faydalı buldu}} · {replies, plural, =0 {yanıt yok} =1 {1 yanıt} other {# yanıt}}",
+        "view": "Yorumu gör ↗",
+        "edit": "Düzenle",
+        "filterAll": "Tümü",
+        "filterComments": "Blog yorumları",
+        "filterCompany": "Şirket katkıları"
       }
     },
     "write": {
@@ -4847,6 +4948,67 @@
       "unsupported": "Yalnızca PNG, JPEG, GIF ve WebP yüklenebilir.",
       "tooLarge": "Görsel 5 MB sınırını aşıyor.",
       "needsTextFirst": "Görsel eklemeden önce bir şey yazın — başlık ya da bir satır metin; taslak o zaman oluşur."
+    }
+  },
+  "adminComments": {
+    "title": "Yorumlar",
+    "subtitle": "Blog yazılarına gelen okuyucu yorumları. Yeni bir yorum bir yönetici onaylayana kadar burada bekler; sitede yalnızca onaylananlar görünür.",
+    "forbiddenTitle": "Bu sayfa yöneticilere özel",
+    "forbiddenBody": "Hesabınızın yönetici yetkisi yok.",
+    "loading": "Yükleniyor…",
+    "error": "Yorumlar yüklenemedi.",
+    "disabled": "Blog bu kurulumda kapalı.",
+    "empty": "Bu filtrede yorum yok.",
+    "filters": {
+      "pending": "Onay bekleyen",
+      "reported": "Şikayetli",
+      "approved": "Onaylanan",
+      "rejected": "Reddedilen",
+      "all": "Tümü"
+    },
+    "columns": {
+      "author": "Yazar",
+      "post": "Yazı",
+      "comment": "Yorum",
+      "reports": "Şikayet",
+      "status": "Durum",
+      "date": "Tarih"
+    },
+    "replyTo": "↳ {name} adlı kullanıcıya yanıt",
+    "anonymousAuthor": "(isimsiz)",
+    "status": {
+      "Pending": "Onay bekliyor",
+      "Approved": "Onaylandı",
+      "Rejected": "Reddedildi"
+    },
+    "hint": "Bir satır yorumu açar. \"Şikayetli\" en az bir açık şikayeti olan yorumları listeler.",
+    "detail": {
+      "back": "← Yorumlar",
+      "notFound": "Yorum bulunamadı.",
+      "author": "Yazar",
+      "post": "Yazı",
+      "openPost": "Yazıyı aç ↗",
+      "comment": "Yorum",
+      "written": "Yazıldı",
+      "edited": "Düzenlendi",
+      "helpful": "Faydalı",
+      "replies": "Yanıt",
+      "approve": "Onayla",
+      "reject": "Reddet",
+      "working": "Kaydediliyor…",
+      "rejectHint": "Reddetmek yorumu siteden kaldırır; yazar yalnızca \"yayınlanmadı\" görür. Kök yorum reddedilirse yanıtları da görünmez olur.",
+      "reports": "Şikayetler ({count})",
+      "noReports": "Bu yorum için şikayet yok.",
+      "reportStatus": {
+        "Open": "açık",
+        "Dismissed": "kapatıldı",
+        "ActionTaken": "işlem yapıldı"
+      },
+      "dismiss": "Şikayetleri kapat",
+      "dismissHint": "Reddetmek açık şikayetleri \"işlem yapıldı\" olarak kapatır; \"Şikayetleri kapat\" yorumu yerinde bırakır.",
+      "inReplyTo": "Yanıtladığı yorum",
+      "rootComment": "— (kök yorum)",
+      "actionError": "İşlem tamamlanamadı. Tekrar deneyin."
     }
   },
   "adminExperiences": {

@@ -5,15 +5,17 @@ const STYLE: Record<ContributionKind, string> = {
   Review: "bg-accent-wash text-accent-ink",
   Salary: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
   Experience: "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
+  BlogComment: "bg-sky-50 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300",
 };
 
-const KEY: Record<ContributionKind, "review" | "salary" | "experience"> = {
+const KEY: Record<ContributionKind, "review" | "salary" | "experience" | "blogComment"> = {
   Review: "review",
   Salary: "salary",
   Experience: "experience",
+  BlogComment: "blogComment",
 };
 
-/** Which of the three kinds a card on the merged "my contributions" list is. */
+/** Which kind a card on the merged "my contributions" list is. */
 export function ContributionKindBadge({ kind }: { kind: ContributionKind }) {
   const t = useTranslations("companyReviews.mine.kind");
   return (

@@ -137,6 +137,44 @@ public class BlogValidatorTests
         validator.Validate(new AdminBlogGroupedListQuery(Page: 1001)).IsValid.ShouldBeFalse();
     }
 
+    [Fact]
+    public void A_Comment_Is_Ten_To_Three_Thousand_Characters_Once_Trimmed()
+    {
+        var create = new CreateBlogCommentRequestValidator(new KeyEchoLocalizer());
+        var edit = new EditBlogCommentRequestValidator(new KeyEchoLocalizer());
+
+        create.Validate(new CreateBlogCommentRequest("Tam on kar.")).IsValid.ShouldBeTrue();
+        create.Validate(new CreateBlogCommentRequest("")).IsValid.ShouldBeFalse();
+        create.Validate(new CreateBlogCommentRequest("kısa")).IsValid.ShouldBeFalse();
+        // Nine letters padded with spaces to ten are still nine letters.
+        create.Validate(new CreateBlogCommentRequest("  dokuzhrf  ")).IsValid.ShouldBeFalse();
+        create.Validate(new CreateBlogCommentRequest(new string('a', BlogComment.MaxContentLength))).IsValid.ShouldBeTrue();
+        create.Validate(new CreateBlogCommentRequest(new string('a', BlogComment.MaxContentLength + 1))).IsValid.ShouldBeFalse();
+        edit.Validate(new EditBlogCommentRequest("kısa")).Errors.ShouldHaveSingleItem().ErrorMessage.ShouldBe("VALIDATION_BLOG_COMMENT_TOO_SHORT");
+    }
+
+    [Fact]
+    public void A_Comment_Report_Needs_A_Note_Only_For_Other()
+    {
+        var validator = new ReportBlogCommentRequestValidator(new KeyEchoLocalizer());
+
+        validator.Validate(new ReportBlogCommentRequest(BlogCommentReportReason.Spam, null)).IsValid.ShouldBeTrue();
+        validator.Validate(new ReportBlogCommentRequest(BlogCommentReportReason.Other, null)).IsValid.ShouldBeFalse();
+        validator.Validate(new ReportBlogCommentRequest(BlogCommentReportReason.Other, "Yazıyla ilgisi yok.")).IsValid.ShouldBeTrue();
+        validator.Validate(new ReportBlogCommentRequest(BlogCommentReportReason.Spam, new string('x', BlogCommentReport.MaxNoteLength + 1))).IsValid.ShouldBeFalse();
+        validator.Validate(new ReportBlogCommentRequest((BlogCommentReportReason)42, null)).IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Comment_List_Queries_Bound_The_Page_And_Check_The_Status()
+    {
+        new PublicBlogCommentListQueryValidator().Validate(new PublicBlogCommentListQuery(0)).IsValid.ShouldBeFalse();
+        new MyBlogCommentListQueryValidator().Validate(new MyBlogCommentListQuery(1001)).IsValid.ShouldBeFalse();
+        var admin = new AdminBlogCommentListQueryValidator();
+        admin.Validate(new AdminBlogCommentListQuery(BlogCommentStatus.Pending, true, 2)).IsValid.ShouldBeTrue();
+        admin.Validate(new AdminBlogCommentListQuery((BlogCommentStatus)42)).IsValid.ShouldBeFalse();
+    }
+
     private static CreateBlogPostRequest Create(string title = "Başlık", string? excerpt = "Özet", string json = Doc,
         string html = "<p>x</p>", string language = "tr", string? slug = null) =>
         new(title, excerpt, json, html, language, slug, null);

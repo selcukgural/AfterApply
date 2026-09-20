@@ -87,6 +87,8 @@ export const PUBLIC_MESSAGE_SCOPE = [
   "refundPolicy",
   // The blog post's like button, and the preview's bar.
   "blog",
+  // The comments under a post (2026-09-20): the form, the list and the report dialog.
+  "blogComments",
   // The section name the post's own component puts above the title ("Blog"): on the public page
   // it renders on the server, on the editor's preview in the browser.
   "metadata.pages.blog",

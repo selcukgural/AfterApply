@@ -48,3 +48,18 @@ public sealed class BlogPostContentInvalidException()
 /// <summary>A cover image that is not one of this post's own uploads.</summary>
 public sealed class BlogCoverInvalidException()
     : DomainException("BLOG_COVER_INVALID", "The cover must be an image uploaded to this post.");
+
+/// <summary>An edit on a comment that is no longer pending: approved text is what others replied
+/// to, rejected text has nothing left to fix. Answered as 409, not 400 — the form must tell
+/// "you can't any more" apart from "fix the field".</summary>
+public sealed class BlogCommentLockedException()
+    : DomainException("BLOG_COMMENT_LOCKED", "A comment can only be edited while it is waiting for approval.");
+
+/// <summary>The same reader sending the same text to the same post again — a double click or a
+/// paste-and-resend, never a second comment.</summary>
+public sealed class BlogCommentDuplicateException()
+    : DomainException("BLOG_COMMENT_DUPLICATE", "You have already posted this comment.");
+
+/// <summary>A report with reason "Other" and nothing written.</summary>
+public sealed class BlogCommentReportNoteRequiredException()
+    : DomainException("BLOG_COMMENT_REPORT_NOTE_REQUIRED", "A report with the reason \"Other\" needs a short explanation.");

@@ -14,6 +14,7 @@ const TABS = [
   { href: "/admin/reviews/reports", key: "reports" },
   { href: "/admin/payments", key: "payments" },
   { href: "/admin/blog", key: "blog" },
+  { href: "/admin/comments", key: "comments" },
 ] as const;
 
 /**
@@ -33,7 +34,8 @@ export function AdminTabs() {
   });
 
   const badge = (key: (typeof TABS)[number]["key"]) => {
-    const value = key === "reviews" ? counts?.pendingReviews : key === "reports" ? counts?.openReports : 0;
+    const value =
+      key === "reviews" ? counts?.pendingReviews : key === "reports" ? counts?.openReports : key === "comments" ? counts?.pendingComments : 0;
     return value ? (
       <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-xs font-semibold leading-none text-white">
         {value}

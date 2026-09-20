@@ -453,4 +453,16 @@
   <data name="VALIDATION_BLOG_CONTENT_JSON_INVALID" xml:space="preserve">
     <value>Editör belgesi, editörün yeniden açabileceği bir biçimde değil.</value>
   </data>
+  <data name="BLOG_COMMENT_LOCKED" xml:space="preserve">
+    <value>Yorum yalnızca onay beklerken düzenlenebilir.</value>
+  </data>
+  <data name="BLOG_COMMENT_DUPLICATE" xml:space="preserve">
+    <value>Bu yorumu zaten gönderdiniz.</value>
+  </data>
+  <data name="BLOG_COMMENT_REPORT_NOTE_REQUIRED" xml:space="preserve">
+    <value>Gerekçe "Diğer" ise kısa bir açıklama gerekir.</value>
+  </data>
+  <data name="VALIDATION_BLOG_COMMENT_TOO_SHORT" xml:space="preserve">
+    <value>Yorum en az {0} karakter olmalıdır.</value>
+  </data>
 </root>
