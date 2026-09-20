@@ -49,6 +49,12 @@ public sealed class BlogPost : AuditableEntity
 
     public Guid? CoverMediaId { get; private set; }
 
+    /// <summary>How many times the published post was fetched by a reader (2026-09-20). A plain
+    /// tally: every public fetch counts, bots and reloads included, and nothing about who fetched
+    /// it is kept. Bumped in place by the public service (<c>ExecuteUpdate</c>), never through the
+    /// aggregate, so a read does not touch <see cref="UpdatedAt"/> or the revision.</summary>
+    public int ViewCount { get; private set; }
+
     // ---- draft slot ----
 
     public string DraftTitle { get; private set; } = string.Empty;

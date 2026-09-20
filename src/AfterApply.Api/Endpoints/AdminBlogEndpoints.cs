@@ -44,6 +44,24 @@ public static class AdminBlogEndpoints
             .WithDescription("Admin only. Other admins' unpublished posts are not listed. Optional status and lang filters.")
             .Produces<PagedResult<AdminBlogPostListItemResponse>>();
 
+        group.MapGet("/posts/grouped", async ([AsParameters] AdminBlogGroupedListQuery query, ClaimsPrincipal user,
+                IAdminAccessService adminAccess, IBlogAdminService service, CancellationToken cancellationToken) =>
+            {
+                if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
+                {
+                    return Results.Forbid();
+                }
+
+                return Results.Ok(await service.ListGroupedAsync(user.GetUserId(), query, cancellationToken));
+            })
+            .WithValidation<AdminBlogGroupedListQuery>()
+            .WithSummary("The admin table: one row per post and its translation, most recently touched pair first")
+            .WithDescription("Admin only. A row holds the Turkish and the English post side by side, either null when " +
+                             "there is none — or when it is another admin's draft, which the visible side's " +
+                             "translationOfPostId still names. Paged by row, so a pair never straddles a page. The " +
+                             "optional status filter keeps a row when either side matches and still shows both.")
+            .Produces<PagedResult<AdminBlogPostGroupResponse>>();
+
         group.MapPost("/posts", async (CreateBlogPostRequest request, ClaimsPrincipal user,
                 IAdminAccessService adminAccess, IBlogAdminService service, CancellationToken cancellationToken) =>
             {

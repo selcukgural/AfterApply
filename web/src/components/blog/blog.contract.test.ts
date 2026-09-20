@@ -84,6 +84,14 @@ describe("the list page", () => {
   });
 });
 
+describe("the article", () => {
+  const article = read("components/blog/BlogArticle.tsx");
+
+  it("shows how many times the post was read, next to the like (2026-09-20)", () => {
+    expect(article).toContain('t("viewCount", { count: post.viewCount })');
+  });
+});
+
 describe("the preview", () => {
   const publicPage = read("app/[locale]/(public)/blog/[slug]/page.tsx");
   const preview = read("components/blog/BlogPreview.tsx");

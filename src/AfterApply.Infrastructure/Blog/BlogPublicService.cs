@@ -45,13 +45,26 @@ internal sealed class BlogPublicService(
             ct => new ValueTask<BlogPostPublicResponse?>(QueryPostAsync(language, slug, ct)),
             CacheOptions, tags: [CacheKeys.Blog.Tag], cancellationToken: cancellationToken);
 
-        if (post is null || viewerUserId is null)
+        if (post is null)
         {
-            return post;
+            return null;
         }
 
-        var liked = await dbContext.BlogPostLikes.AnyAsync(l => l.PostId == post.Id && l.UserId == viewerUserId, cancellationToken);
-        return post with { LikedByMe = liked };
+        // Every fetch of a published post is a view (2026-09-20): one in-place increment, no
+        // record of who, and no cache eviction — the tally is read back fresh here instead of
+        // from the cached body, so the page shows the number it just became.
+        await dbContext.BlogPosts
+            .Where(p => p.Id == post.Id && p.Status == BlogPostStatus.Published)
+            .ExecuteUpdateAsync(set => set.SetProperty(p => p.ViewCount, p => p.ViewCount + 1), cancellationToken);
+        var viewCount = await dbContext.BlogPosts
+            .Where(p => p.Id == post.Id)
+            .Select(p => p.ViewCount)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var liked = viewerUserId is null
+            ? (bool?)null
+            : await dbContext.BlogPostLikes.AnyAsync(l => l.PostId == post.Id && l.UserId == viewerUserId, cancellationToken);
+        return post with { LikedByMe = liked, ViewCount = viewCount };
     }
 
     public async Task<IReadOnlyList<BlogSlugResponse>> ListSlugsAsync(CancellationToken cancellationToken) =>

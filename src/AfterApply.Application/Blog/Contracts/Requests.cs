@@ -53,3 +53,7 @@ public sealed record PublicBlogListQuery(string Lang, int Page = 1);
 
 /// <summary>The admin table: optionally one status or one language, newest first.</summary>
 public sealed record AdminBlogListQuery(BlogPostStatus? Status = null, string? Lang = null, int Page = 1);
+
+/// <summary>The admin table's query: one row per post-and-translation pair. No language — a row
+/// shows both. A status filter keeps a row when either side matches, and the row still shows both.</summary>
+public sealed record AdminBlogGroupedListQuery(BlogPostStatus? Status = null, int Page = 1);

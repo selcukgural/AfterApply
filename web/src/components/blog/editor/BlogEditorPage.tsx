@@ -10,6 +10,7 @@ import type { AdminBlogPost, BlogLanguage } from "@/types/api";
 import { adminBlogApi } from "@/lib/api/blog";
 import { ApiError } from "@/lib/api/httpClient";
 import { blogPostPath, blogPreviewPath } from "@/lib/blog/blogPaths";
+import type { NewPostSeed } from "@/lib/blog/newPostSeed";
 import { Card } from "@/components/dashboard/Card";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
@@ -25,18 +26,18 @@ import { useMediaObjectUrl } from "./useMediaObjectUrl";
 
 const OTHER_LANGUAGE: Record<BlogLanguage, BlogLanguage> = { tr: "en", en: "tr" };
 
-/** What the editor opens on for a new post: nothing, in the UI's language. The id is empty
- *  until the first non-empty autosave creates the row (see `useAutosave`). */
-function emptyPost(language: BlogLanguage): AdminBlogPost {
+/** What the editor opens on for a new post: nothing, in the seed's language (the UI's by
+ *  default). The id is empty until the first non-empty autosave creates the row (see `useAutosave`). */
+function emptyPost(seed: NewPostSeed): AdminBlogPost {
   const now = new Date().toISOString();
   return {
     id: "",
     status: "Draft",
-    language,
+    language: seed.language,
     slug: null,
     authorUserId: null,
     isMine: true,
-    translationOfPostId: null,
+    translationOfPostId: seed.translationOfPostId,
     coverMediaId: null,
     draftTitle: "",
     draftExcerpt: "",
@@ -50,6 +51,7 @@ function emptyPost(language: BlogLanguage): AdminBlogPost {
     hasUnpublishedChanges: false,
     likeCount: 0,
     createdAt: now,
+    viewCount: 0,
   };
 }
 
@@ -63,7 +65,7 @@ function emptyPost(language: BlogLanguage): AdminBlogPost {
  * new id. That URL change reaches this component as a new `postId`, which is ignored on purpose
  * — refetching would remount the form and drop the caret mid-sentence.
  */
-export function BlogEditorPage({ postId }: { postId: string | null }) {
+export function BlogEditorPage({ postId, newPostSeed }: { postId: string | null; newPostSeed?: NewPostSeed }) {
   const t = useTranslations("adminBlog");
   // Fixed at mount: the form, not the URL, owns a post that was opened as new.
   const [openedNew] = useState(postId === null);
@@ -78,7 +80,7 @@ export function BlogEditorPage({ postId }: { postId: string | null }) {
   });
 
   if (openedNew) {
-    return <BlogEditorForm initial={null} />;
+    return <BlogEditorForm initial={null} newPostSeed={newPostSeed} />;
   }
 
   if (query.error instanceof ApiError && query.error.status === 403) {
@@ -111,7 +113,7 @@ export function BlogEditorPage({ postId }: { postId: string | null }) {
   return <BlogEditorForm initial={query.data} />;
 }
 
-function BlogEditorForm({ initial }: { initial: AdminBlogPost | null }) {
+function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | null; newPostSeed?: NewPostSeed }) {
   const t = useTranslations("adminBlog");
   const tEditor = useTranslations("adminBlog.editor");
   const tSave = useTranslations("adminBlog.autosave");
@@ -121,7 +123,9 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost | null }) {
   const queryClient = useQueryClient();
 
   // A new post starts from nothing and has no id until its first save creates it.
-  const [seed] = useState(() => initial ?? emptyPost(locale === "en" ? "en" : "tr"));
+  const [seed] = useState(
+    () => initial ?? emptyPost(newPostSeed ?? { language: locale === "en" ? "en" : "tr", translationOfPostId: null }),
+  );
   const [postId, setPostId] = useState<string | null>(initial?.id ?? null);
 
   // The server-owned facts (status, slug once published, dates) — refreshed from every action's
@@ -418,6 +422,7 @@ function BlogEditorForm({ initial }: { initial: AdminBlogPost | null }) {
                 <dd>{tEditor("publishedAt", { date: formatDate(meta.publishedAt) })}</dd>
                 {meta.publishedUpdatedAt && <dd>{tEditor("publishedUpdatedAt", { date: formatDate(meta.publishedUpdatedAt) })}</dd>}
                 <dd>{tEditor("likeCount", { count: meta.likeCount })}</dd>
+                <dd>{tEditor("viewCount", { count: meta.viewCount })}</dd>
               </dl>
             )}
             {actionError && (

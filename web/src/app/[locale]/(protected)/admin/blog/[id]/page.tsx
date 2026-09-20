@@ -1,7 +1,9 @@
 "use client";
 
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import { newPostSeedFrom } from "@/lib/blog/newPostSeed";
 
 // ProseMirror touches `document` when it loads, so the editor is a browser-only chunk: nothing
 // of it is rendered on the server, and nothing of it reaches any other page's bundle.
@@ -10,8 +12,23 @@ const BlogEditorPage = dynamic(() => import("@/components/blog/editor/BlogEditor
   loading: () => <p className="text-sm text-gray-500 dark:text-gray-400">…</p>,
 });
 
-/** `/admin/blog/new` opens the editor on a post that does not exist yet; anything else is an id. */
-export default function AdminBlogEditorRoute() {
+/**
+ * `/admin/blog/new` opens the editor on a post that does not exist yet — with `?lang=&translationOf=`
+ * from the admin table's "add translation" (2026-09-20) it opens on the other language, linked;
+ * anything else is an id.
+ */
+function AdminBlogEditor() {
   const { id } = useParams<{ id: string }>();
-  return <BlogEditorPage postId={id === "new" ? null : id} />;
+  const searchParams = useSearchParams();
+  const isNew = id === "new";
+  return <BlogEditorPage postId={isNew ? null : id} newPostSeed={isNew ? newPostSeedFrom(searchParams) : undefined} />;
+}
+
+export default function AdminBlogEditorRoute() {
+  // `useSearchParams` needs a boundary above it on a page that may be prerendered.
+  return (
+    <Suspense fallback={<p className="text-sm text-gray-500 dark:text-gray-400">…</p>}>
+      <AdminBlogEditor />
+    </Suspense>
+  );
 }

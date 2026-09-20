@@ -125,6 +125,18 @@ public class BlogValidatorTests
         validator.Validate(new AdminBlogListQuery((BlogPostStatus)42)).IsValid.ShouldBeFalse();
     }
 
+    [Fact]
+    public void Grouped_Admin_List_Query_Has_A_Status_And_A_Page_And_No_Language()
+    {
+        var validator = new AdminBlogGroupedListQueryValidator();
+
+        validator.Validate(new AdminBlogGroupedListQuery()).IsValid.ShouldBeTrue();
+        validator.Validate(new AdminBlogGroupedListQuery(BlogPostStatus.Draft, 3)).IsValid.ShouldBeTrue();
+        validator.Validate(new AdminBlogGroupedListQuery((BlogPostStatus)42)).IsValid.ShouldBeFalse();
+        validator.Validate(new AdminBlogGroupedListQuery(Page: 0)).IsValid.ShouldBeFalse();
+        validator.Validate(new AdminBlogGroupedListQuery(Page: 1001)).IsValid.ShouldBeFalse();
+    }
+
     private static CreateBlogPostRequest Create(string title = "Başlık", string? excerpt = "Özet", string json = Doc,
         string html = "<p>x</p>", string language = "tr", string? slug = null) =>
         new(title, excerpt, json, html, language, slug, null);

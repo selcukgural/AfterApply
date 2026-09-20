@@ -103,3 +103,13 @@ public sealed class AdminBlogListQueryValidator : AbstractValidator<AdminBlogLis
         RuleFor(x => x.Page).InclusiveBetween(1, 1000);
     }
 }
+
+public sealed class AdminBlogGroupedListQueryValidator : AbstractValidator<AdminBlogGroupedListQuery>
+{
+    public AdminBlogGroupedListQueryValidator()
+    {
+        RuleFor(x => x.Status!.Value).IsInEnum().When(x => x.Status.HasValue)
+            .OverridePropertyName(nameof(AdminBlogGroupedListQuery.Status));
+        RuleFor(x => x.Page).InclusiveBetween(1, 1000);
+    }
+}

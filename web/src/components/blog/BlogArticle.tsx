@@ -79,6 +79,15 @@ export function BlogArticle({ post, url, inert = false }: BlogArticleProps) {
             signInHref={`/login?next=${encodeURIComponent(path)}`}
           />
           <ShareRow label={t("share")} content={{ text: post.title, url }} />
+          {/* How many times the post has been opened (2026-09-20): the API's plain tally, bumped
+              by this very fetch, so a reader is always at least the first. */}
+          <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span className="tabular-nums">{t("viewCount", { count: post.viewCount })}</span>
+          </span>
         </div>
         <Link href={BLOG_PATH} className="text-sm font-medium text-blue-600 underline-offset-2 hover:underline dark:text-blue-400">
           {t("backToList")}

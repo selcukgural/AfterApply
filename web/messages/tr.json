@@ -2709,6 +2709,7 @@
     "readInOtherLanguage": "{language, select, en {Read in English} tr {Türkçesini oku} other {Diğer dilde oku}}",
     "like": "Beğen",
     "likeCount": "{count, plural, =1 {1 beğeni} other {# beğeni}}",
+    "viewCount": "{count, plural, =1 {1 görüntülenme} other {# görüntülenme}}",
     "likeError": "Beğeni kaydedilemedi. Tekrar deneyin.",
     "signInToLike": "Beğenmek için giriş yapın",
     "share": "Paylaş",
@@ -4719,17 +4720,20 @@
     "newPost": "Yeni yazı",
     "filters": {
       "status": "Durum",
-      "statusAll": "Tümü",
-      "language": "Dil",
-      "languageAll": "Tüm diller"
+      "statusAll": "Tümü"
     },
     "columns": {
-      "title": "Başlık",
-      "status": "Durum",
-      "language": "Dil",
+      "tr": "Türkçe",
+      "en": "İngilizce",
       "author": "Yazar",
-      "updated": "Son değişiklik",
-      "published": "Yayım"
+      "updated": "Son değişiklik"
+    },
+    "cell": {
+      "notPublished": "Yayımlanmadı",
+      "likeCount": "{count, plural, =1 {1 beğeni} other {# beğeni}}",
+      "viewCount": "{count, plural, =1 {1 görüntülenme} other {# görüntülenme}}",
+      "addTranslation": "{language, select, en {İngilizce çevirisini ekle} tr {Türkçe çevirisini ekle} other {Çeviri ekle}}",
+      "hiddenTranslation": "Başka bir yöneticinin taslağı"
     },
     "status": {
       "Draft": "Taslak",
@@ -4774,6 +4778,7 @@
       "publishedAt": "İlk yayım: {date}",
       "publishedUpdatedAt": "Yayındaki sürüm: {date}",
       "likeCount": "{count, plural, =0 {Henüz beğeni yok} =1 {1 beğeni} other {# beğeni}}",
+      "viewCount": "{count, plural, =0 {Henüz görüntülenme yok} =1 {1 görüntülenme} other {# görüntülenme}}",
       "publishHint": "Yayımlamak taslağı olduğu gibi siteye koyar; sonraki düzenlemeler siz tekrar yayımlayana kadar görünmez.",
       "preview": "Önizle",
       "previewHint": "Önizleme, taslağı sitedeki yazı sayfasının kendisiyle gösterir — yayımlanınca tam böyle görünür.",
