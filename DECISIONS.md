@@ -8227,6 +8227,34 @@ alınan ve bu PR'la kesinleşen kararlar:
   altı öğesi olmayan iki düz bağlantı, iki tetikleyici arasına sıkışmak yerine satırın sonunda
   yan yana (çekmece aynı listeden). Rehber Araçlar'da kaldı (iki öğelik bir "Kaynaklar" grubu
   fazla). `hasPublishedPosts` kuralı değişmedi; footer'daki yeri zaten doğruydu.
+- **Canlı ilk yazı bulguları** (2026-09-20, ilk yayının hemen ardından): (1) Kapak yüklemesi 500 —
+  `afterapply-blog-media` bucket'ında runtime servis hesabının `storage.objectAdmin` bağlaması
+  yapılmamıştı (DEPLOYMENT.md §16'nın atlanan adımı); bağlama verildi, kod değişmedi. (2) İlk
+  Türkçe yazı "Blog" bağlantısını İngilizce sitede de yaktı (`hasPublishedPosts` iki dili sayar)
+  ama `/en/blog` 404 veriyordu — "o dilde yazı yoksa sayfa yoktur" kuralı bağlantıyla
+  çelişiyordu. Kural değişti: dilde yazı yoksa ve diğer dilde varsa kısa bir not + diğer dilin
+  listesine bağlantı; 404 yalnızca blog kapalıyken ya da iki dilde de yazı yokken (o zaman zaten
+  bağlantı yok). (3) Liste kartındaki beğeni sayısı `blog.like`'ı kullanıyordu; o anahtar 19'unda
+  düğme etiketi ("Beğen") oldu — kart `likeCount`'a geçti. Footer'daki Blog bağlantısı zaten
+  vardı: public sayfalarda 60 sn `revalidate` ile geliyor, signed-in düzende footer yok.
+- **CI teardown çökmesi kök nedeni** (2026-09-20, artifact'a alınan `.trx` ile): tüm testler
+  geçtikten sonra `CacheConfigurationTests` fixture kapanışında `ObjectDisposedException` —
+  iz: `RedisHubLifetimeManager.Dispose → UnsubscribeAll` kapatılmış multiplexer üzerinde.
+  Neden: FusionCache'in `RedisBackplane`'i dispose edilirken elindeki bağlantıyı **kim vermiş
+  olursa olsun** dispose ediyor (`Disconnect → _muxer.Dispose()`), paylaşılan multiplexer'ı
+  herkesin altından çekiyordu; container ters yaratılış sırasıyla dispose ettiğinden hub
+  yöneticisi cache'ten yaşlıysa (ilk isteklerin rastgele sırası) kapanış fırlatıyordu — üç CI
+  koşusundan biri. **Karar:** "tek multiplexer" (2026-09-18) kuralına tek istisna — backplane
+  pub/sub'ı kendi bağlantısını açar ve yalnız onu kapatır (`RedisBackplaneOptions.Configuration`);
+  L2, SignalR, rate limiter, kilit, health check paylaşılanda kalır. Yaratılış sırasını Program.cs'te
+  sabitleme denendi ve geri alındı (her host'ta cache'i erkenden kuruyor, `HostLifecycleTests`
+  ve iki JobSources testi kırıldı). Regresyon testi: hub yöneticisi cache'ten önce bağlanmış bir
+  host'un dispose'u fırlatmaz. Bilinen, kapsam dışı: Redis'siz senaryoda (`localhost:1`)
+  FusionCache'in auto-recovery döngüsü host kapandıktan sonra da koşu sonuna kadar log basıyor
+  (her koşuda böyleydi; test-only gürültü). Aynı gün: iki JobSources testi "yarın = aynı hafta"
+  varsayıyordu ve Pazar (UTC) koşularında kırılıyordu; saat gerçek "şimdi"den başlamak zorunda
+  (JWT nbf/exp duvar saatiyle doğrulanıyor), bu yüzden Pazar günü gün-devri adımı atlanıyor
+  (`MutableTimeProvider.StaysInIsoWeek`), diğer altı gün kapsıyor.
 - **Kapsam dışı (v1):** sunucuda görsel küçültme (ImageSharp yok; editör `width` saklar, CSS
   `max-width:100%`), yorum, etiket/kategori, RSS, yardım merkezi konusu.
 

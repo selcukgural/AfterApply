@@ -180,7 +180,9 @@ public class JobSourceSweepTests(ApiHost<JobSourceSweepProfile> host) : IClassFi
         usage.Sources.Single(s => s.Source == Source.LinkedIn).RequestsToday.ShouldBe(15);
         usage.Sources.Single(s => s.Source == Source.KariyerNet).RequestsToday.ShouldBe(1);
 
-        // Next day kariyer.net is tried again and its postings join the week.
+        // Next day kariyer.net is tried again and its postings join the week — unless the next
+        // day is a new week (a Sunday run; see MutableTimeProvider.StaysInIsoWeek).
+        if (!_clock.StaysInIsoWeek(TimeSpan.FromHours(25))) return;
         _clock.Advance(TimeSpan.FromHours(25));
         await SweepAsync();
         (await ListAsync(_pro1)).Items.Count.ShouldBe(17);

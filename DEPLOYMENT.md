@@ -1018,6 +1018,10 @@ gcloud storage buckets add-iam-policy-binding "gs://afterapply-blog-media" \
   --role="roles/storage.objectAdmin"
 ```
 
+Do not skip the binding: on 2026-09-19 the bucket was created and the secret set but
+the binding was not run, and the first cover upload in production answered 500
+(`storage.objects.create` denied for the runtime service account) until it was.
+
 Then add the GitHub Actions secret `GCP_BLOG_MEDIA_BUCKET=afterapply-blog-media`
 (§4): `deploy.yml` passes the name as `Storage__BlogMediaBucketName` next to
 `Blog__Enabled=true`, and the API refuses to start when the flag is on and

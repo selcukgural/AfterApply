@@ -66,6 +66,24 @@ describe("the blog pages", () => {
   }
 });
 
+describe("the list page", () => {
+  const list = read("app/[locale]/(public)/blog/page.tsx");
+
+  it("404s only when the blog is off or empty everywhere — a language with no posts points at the other (2026-09-20)", () => {
+    // The first Turkish post lit the "Blog" link on the English site (hasPublishedPosts counts
+    // both languages) and the link opened on a 404.
+    expect(list).not.toContain("!list || list.totalCount === 0) notFound()");
+    expect(list).toContain('t("emptyInLanguage"');
+    expect(list).toContain('t("readListInOtherLanguage"');
+    expect(list).toContain("if (!list) notFound();");
+  });
+
+  it("shows a card's like count with the count string, not the button's label", () => {
+    expect(list).toContain('t("likeCount", { count: post.likeCount })');
+    expect(list).not.toContain('t("like", { count');
+  });
+});
+
 describe("the preview", () => {
   const publicPage = read("app/[locale]/(public)/blog/[slug]/page.tsx");
   const preview = read("components/blog/BlogPreview.tsx");

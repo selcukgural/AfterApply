@@ -16,6 +16,8 @@ function isBlogLanguage(locale: string): locale is BlogLanguage {
   return (routing.locales as readonly string[]).includes(locale);
 }
 
+const OTHER_LANGUAGE: Record<BlogLanguage, BlogLanguage> = { tr: "en", en: "tr" };
+
 export async function generateMetadata({ params }: PageProps<"/[locale]/blog">): Promise<Metadata> {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -25,8 +27,13 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/blog">):
 /**
  * The blog's front page: the published posts of this locale's language, newest first. Rendered on
  * the server from a `no-store` fetch, so the page is dynamic and `notFound()` is safe here (the
- * static-page 500 of 2026-09-16 does not apply). A blog with nothing published in this language
- * is not a page at all — the 404 is the rule, and the "Blog" links follow the same flag.
+ * static-page 500 of 2026-09-16 does not apply).
+ *
+ * A language with nothing published is not a 404 while the other language has posts (2026-09-20):
+ * the "Blog" links follow `hasPublishedPosts`, which counts both languages, so the first Turkish
+ * post lit the link on the English site and the link opened on "This page does not exist". Now
+ * it opens on a short note and the way to the posts that do exist. The 404 stays for a blog with
+ * nothing in either language (no link points here then) and for a blog that is switched off.
  */
 export default async function BlogListPage({ params, searchParams }: PageProps<"/[locale]/blog">) {
   const { locale } = await params;
@@ -35,12 +42,33 @@ export default async function BlogListPage({ params, searchParams }: PageProps<"
   const page = Math.max(1, Number.parseInt(typeof rawPage === "string" ? rawPage : "1", 10) || 1);
 
   const list = await fetchBlogList(locale, page);
-  if (!list || list.totalCount === 0) notFound();
-  const totalPages = Math.max(1, Math.ceil(list.totalCount / list.pageSize));
-  if (page > totalPages) notFound();
+  if (!list) notFound();
 
   const t = await getTranslations("blog");
   const tSection = await getTranslations("metadata.pages");
+
+  if (list.totalCount === 0) {
+    const other = OTHER_LANGUAGE[locale];
+    const elsewhere = await fetchBlogList(other, 1);
+    if (!elsewhere || elsewhere.totalCount === 0) notFound();
+    return (
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-12">
+        <header className="flex flex-col gap-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{t("title")}</h1>
+          <p className="text-lg leading-7 text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
+        </header>
+        <p className="leading-7 text-gray-700 dark:text-gray-300">
+          {t("emptyInLanguage", { count: elsewhere.totalCount, language: other })}{" "}
+          <Link href={BLOG_PATH} locale={other} hrefLang={other} className="font-medium text-blue-600 underline-offset-2 hover:underline dark:text-blue-400">
+            {t("readListInOtherLanguage", { language: other })}
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  const totalPages = Math.max(1, Math.ceil(list.totalCount / list.pageSize));
+  if (page > totalPages) notFound();
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 py-12">
@@ -89,7 +117,7 @@ export default async function BlogListPage({ params, searchParams }: PageProps<"
                   <Link href={blogPostPath(post.slug)} className="font-medium text-blue-600 underline-offset-2 hover:underline dark:text-blue-400">
                     {t("readMore")}
                   </Link>
-                  {post.likeCount > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">{t("like", { count: post.likeCount })}</span>}
+                  {post.likeCount > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">{t("likeCount", { count: post.likeCount })}</span>}
                 </div>
               </div>
             </article>
