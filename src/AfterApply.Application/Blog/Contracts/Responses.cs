@@ -32,7 +32,8 @@ public sealed record BlogPostPublicResponse(
     DateTimeOffset UpdatedAt,
     int LikeCount,
     bool? LikedByMe,
-    BlogTranslationLink? Translation);
+    BlogTranslationLink? Translation,
+    int ViewCount = 0);
 
 /// <summary>One sitemap entry per published post.</summary>
 public sealed record BlogSlugResponse(
@@ -57,7 +58,21 @@ public sealed record AdminBlogPostListItemResponse(
     bool IsMine,
     DateTimeOffset UpdatedAt,
     DateTimeOffset? PublishedAt,
-    bool HasUnpublishedChanges);
+    bool HasUnpublishedChanges,
+    int LikeCount,
+    int ViewCount,
+    Guid? TranslationOfPostId);
+
+/// <summary>
+/// One row of the admin table (2026-09-20): a post and its translation side by side, either
+/// side null when there is no such post — or when there is one the caller may not see (another
+/// admin's draft), which the visible side's <see cref="AdminBlogPostListItemResponse.TranslationOfPostId"/>
+/// still points at. <paramref name="UpdatedAt"/> is the later of the two, the row's sort key.
+/// </summary>
+public sealed record AdminBlogPostGroupResponse(
+    AdminBlogPostListItemResponse? Tr,
+    AdminBlogPostListItemResponse? En,
+    DateTimeOffset UpdatedAt);
 
 /// <summary>Everything the editor needs to open a post: the draft slot to edit, the published
 /// dates to show, the revision to send back with the next save.</summary>
@@ -81,7 +96,8 @@ public sealed record AdminBlogPostResponse(
     DateTimeOffset? PublishedUpdatedAt,
     bool HasUnpublishedChanges,
     int LikeCount,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    int ViewCount = 0);
 
 public sealed record BlogDraftSavedResponse(int Revision, DateTimeOffset DraftUpdatedAt);
 

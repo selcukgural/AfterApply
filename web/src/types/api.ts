@@ -1920,6 +1920,8 @@ export interface BlogPostPublic extends BlogPostListItem {
   contentHtml: string;
   likedByMe: boolean | null;
   translation: BlogTranslationLink | null;
+  /** Reads of the published post so far — a plain tally, bumped by this very fetch. */
+  viewCount: number;
 }
 
 /** One sitemap entry per published post. */
@@ -1949,6 +1951,22 @@ export interface AdminBlogPostListItem {
   updatedAt: string;
   publishedAt: string | null;
   hasUnpublishedChanges: boolean;
+  likeCount: number;
+  viewCount: number;
+  /** The same post in the other language — set even when that post is not in the caller's
+   *  list (another admin's draft). */
+  translationOfPostId: string | null;
+}
+
+/**
+ * One row of the admin table (2026-09-20): the Turkish and the English post side by side. A
+ * side is null when there is no such post — or when there is one the caller cannot see, which
+ * the visible side's `translationOfPostId` still names. `updatedAt` is the later of the two.
+ */
+export interface AdminBlogPostGroup {
+  tr: AdminBlogPostListItem | null;
+  en: AdminBlogPostListItem | null;
+  updatedAt: string;
 }
 
 /** Everything the editor needs to open a post: the draft slot to edit, the published dates to
@@ -1975,6 +1993,7 @@ export interface AdminBlogPost {
   hasUnpublishedChanges: boolean;
   likeCount: number;
   createdAt: string;
+  viewCount: number;
 }
 
 /** Create, from the first draft: sent once the author has typed at least one character into the

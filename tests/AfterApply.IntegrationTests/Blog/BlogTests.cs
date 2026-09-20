@@ -23,8 +23,9 @@ public sealed class BlogProfile() : LocalStorageProfile("blog")
     {
         base.Configure(builder);
         builder.UseSetting("Storage:BlogLocalRootPath", BlogMediaRoot);
-        // Two per page so paging is testable with three posts.
+        // Two per page so paging is testable with three posts — the admin table too.
         builder.UseSetting("Blog:PageSize", "2");
+        builder.UseSetting("Blog:AdminPageSize", "2");
         // No grace: an orphan is collected on the very next save, so the test does not wait.
         builder.UseSetting("Blog:OrphanMediaGraceMinutes", "0");
     }
@@ -529,6 +530,122 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         var trNow = await GetAdminAsync(admin, tr.Id);
         await SaveAsync(admin, tr.Id, Draft(trNow, translationOf: null) with { TranslationOfPostId = null });
         (await GetAdminAsync(admin, en.Id)).TranslationOfPostId.ShouldBeNull();
+    }
+
+    // ---- The admin table (2026-09-20) ----------------------------------------------------------
+
+    private static async Task<PagedResult<AdminBlogPostGroupResponse>> GroupedAsync(HttpClient admin, string query = "")
+    {
+        var response = await admin.GetAsync($"/api/admin/blog/posts/grouped{query}");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+        return (await response.Content.ReadFromJsonAsync<PagedResult<AdminBlogPostGroupResponse>>(JsonOptions))!;
+    }
+
+    [Fact]
+    public async Task Grouped_List_Pairs_A_Post_With_Its_Translation_Sorts_By_The_Later_Touch_And_Pages_By_Pair()
+    {
+        var (admin, _) = await RegisterAdminAsync("grouped.blog@example.com");
+        var tr = await PublishedPostAsync(admin, "Türkçe yazı", "tr");
+        var en = await CreateAsync(admin, "en");
+        await SaveAsync(admin, en.Id, Draft(en, "English draft", translationOf: tr.Id));
+        var loneTr = await CreateAsync(admin, "tr");
+        await SaveAsync(admin, loneTr.Id, Draft(loneTr, "Yalnız Türkçe"));
+        var loneEn = await PublishedPostAsync(admin, "Lone English", "en");
+
+        // Touching the English side moves the whole pair to the top.
+        var enNow = await GetAdminAsync(admin, en.Id);
+        await SaveAsync(admin, en.Id, Draft(enNow, "English draft, edited"));
+
+        var page1 = await GroupedAsync(admin);
+        page1.TotalCount.ShouldBe(3);
+        page1.PageSize.ShouldBe(2);
+        page1.Items.Count.ShouldBe(2);
+        var pair = page1.Items.ElementAt(0);
+        pair.Tr.ShouldNotBeNull().Id.ShouldBe(tr.Id);
+        pair.En.ShouldNotBeNull().Id.ShouldBe(en.Id);
+        pair.En.Title.ShouldBe("English draft, edited");
+        pair.En.TranslationOfPostId.ShouldBe(tr.Id);
+        pair.Tr.TranslationOfPostId.ShouldBe(en.Id);
+        pair.UpdatedAt.ShouldBe(pair.En.UpdatedAt);
+        page1.Items.ElementAt(1).En.ShouldNotBeNull().Id.ShouldBe(loneEn.Id);
+        page1.Items.ElementAt(1).Tr.ShouldBeNull();
+
+        var page2 = await GroupedAsync(admin, "?page=2");
+        page2.Items.ShouldHaveSingleItem().Tr.ShouldNotBeNull().Id.ShouldBe(loneTr.Id);
+        page2.Items.ElementAt(0).En.ShouldBeNull();
+
+        // A status filter keeps the row when either side matches — and still shows both sides.
+        var published = await GroupedAsync(admin, "?status=Published");
+        published.TotalCount.ShouldBe(2);
+        published.Items.ElementAt(0).En.ShouldNotBeNull().Status.ShouldBe(BlogPostStatus.Draft);
+        published.Items.Select(g => g.Tr?.Id).ShouldNotContain(loneTr.Id);
+        var drafts = await GroupedAsync(admin, "?status=Draft");
+        drafts.TotalCount.ShouldBe(2);
+        drafts.Items.ElementAt(0).Tr.ShouldNotBeNull().Status.ShouldBe(BlogPostStatus.Published);
+        drafts.Items.ElementAt(1).Tr.ShouldNotBeNull().Id.ShouldBe(loneTr.Id);
+
+        (await admin.GetAsync("/api/admin/blog/posts/grouped?status=Nope")).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await admin.GetAsync("/api/admin/blog/posts/grouped?page=0")).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Grouped_List_Leaves_Another_Admins_Draft_Translation_Out_But_Says_It_Exists()
+    {
+        var (author, _) = await RegisterAdminAsync("grouped-author.blog@example.com");
+        var (other, _) = await RegisterAdminAsync("grouped-other.blog@example.com");
+        var tr = await PublishedPostAsync(author, "Türkçe yazı", "tr");
+        var en = await CreateAsync(author, "en");
+        await SaveAsync(author, en.Id, Draft(en, "English draft", translationOf: tr.Id));
+
+        var mine = await GroupedAsync(author);
+        mine.Items.ShouldHaveSingleItem().En.ShouldNotBeNull().Id.ShouldBe(en.Id);
+
+        // The other admin sees the published half only; the link tells them the draft exists
+        // without leaking anything about it beyond its id.
+        var theirs = await GroupedAsync(other);
+        var row = theirs.Items.ShouldHaveSingleItem();
+        row.En.ShouldBeNull();
+        row.Tr.ShouldNotBeNull().TranslationOfPostId.ShouldBe(en.Id);
+        row.Tr.IsMine.ShouldBeFalse();
+        row.UpdatedAt.ShouldBe(row.Tr.UpdatedAt);
+
+        var user = await RegisterUserAsync("grouped-user.blog@example.com");
+        (await user.GetAsync("/api/admin/blog/posts/grouped")).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await _factory.CreateClient().GetAsync("/api/admin/blog/posts/grouped")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    // ---- Views (2026-09-20) --------------------------------------------------------------------
+
+    [Fact]
+    public async Task A_Public_Read_Counts_A_View_That_Reaches_The_Admin_Without_Touching_The_Post()
+    {
+        var (admin, _) = await RegisterAdminAsync("views.blog@example.com");
+        var post = await PublishedPostAsync(admin);
+        var before = (await admin.GetFromJsonAsync<PagedResult<AdminBlogPostListItemResponse>>("/api/admin/blog/posts", JsonOptions))!
+            .Items.Single();
+        before.ViewCount.ShouldBe(0);
+        before.LikeCount.ShouldBe(0);
+
+        var first = (await (await GetPublicAsync("tr", post.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
+        first.ViewCount.ShouldBe(1);
+        var reader = await RegisterUserAsync("viewer.blog@example.com");
+        var second = (await (await GetPublicAsync("tr", post.Slug!, reader)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
+        second.ViewCount.ShouldBe(2);
+        second.LikedByMe.ShouldBe(false);
+
+        // The tally is on the admin's side too, and a read is not an edit: the post's own clock
+        // and revision stay where they were, and the preview does not count.
+        var after = (await admin.GetFromJsonAsync<PagedResult<AdminBlogPostListItemResponse>>("/api/admin/blog/posts", JsonOptions))!
+            .Items.Single();
+        after.ViewCount.ShouldBe(2);
+        after.UpdatedAt.ShouldBe(before.UpdatedAt);
+        var detail = await GetAdminAsync(admin, post.Id);
+        detail.ViewCount.ShouldBe(2);
+        detail.Revision.ShouldBe(post.Revision);
+        (await GroupedAsync(admin)).Items.Single().Tr.ShouldNotBeNull().ViewCount.ShouldBe(2);
+        var preview = await admin.GetFromJsonAsync<BlogPostPublicResponse>($"/api/admin/blog/posts/{post.Id}/preview", JsonOptions);
+        preview!.ViewCount.ShouldBe(2);
+        (await GetAdminAsync(admin, post.Id)).ViewCount.ShouldBe(2);
     }
 
     // ---- Public reading -------------------------------------------------------------------------

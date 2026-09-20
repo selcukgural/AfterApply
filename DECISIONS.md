@@ -8328,3 +8328,53 @@ JSON-LD `image`'da; `og:image` için kapak boyutu DTO'ya eklenmeli), tercüme ad
 tüm dildeki yazıları listeler (durum etiketiyle), sürükle-bırak blok sıralama (`DragHandle`
 paketi kuruldu, bağlanmadı).
 
+
+## Admin blog tablosu: yazı başına tek satır (TR | EN), görüntülenme sayacı — DECIDED (2026-09-20)
+
+**Sorun.** `/admin/blog` listesi gönderi bazlıydı: birbirine bağlı Türkçe ve İngilizce
+kayıtlar ayrı satırlarda, `UpdatedAt`'e göre dağınık duruyor, ilişkileri hiç görünmüyordu.
+Bağ modelde zaten simetrik ve birebir (`TranslationOfPostId`, tr↔en); iş tamamen listede.
+
+**Seçim.** Tasarım kanvası (https://claude.ai/artifact/ELXF2JfSmUAsu2sdWK2V3L) dört yön
+gösterdi: A grup bandı (çift satır + köşeli ayraç), **B yazı başına tek satır — Turkish |
+English sütunları**, C ana satır + alt satır, D yalnız rozet. Kullanıcı **B**'yi seçti ve satır
+içi TR/EN rozetlerini kaldırttı ("başlıkta hangi dil olduğu zaten yazıyor"); dili yalnızca
+sütun başlığı taşır.
+
+- **Yeni endpoint:** `GET /api/admin/blog/posts/grouped` →
+  `PagedResult<AdminBlogPostGroupResponse(Tr?, En?, UpdatedAt)>`. Düz `GET /posts` olduğu gibi
+  kalır (editörün çeviri seçicisi `lang` filtresiyle onu kullanıyor); satır DTO'suna
+  `likeCount`, `viewCount`, `translationOfPostId` additive eklendi.
+- **Anahtar = Türkçe tarafın id'si.** Bağ her zaman dil sınırını geçtiği için EN yazının anahtarı
+  işaret ettiği TR, TR'ninki kendisi, bağsız yazınınki kendisi. Sayfalama bu anahtarla yapılır:
+  **bir çift asla iki sayfaya bölünmez**; sıra çiftin en yeni `UpdatedAt`'i (EN'e autosave
+  TR'yi de yukarı taşır).
+- **Durum filtresi satır seçer, yarım seçmez:** iki taraftan biri eşleşirse satır görünür ve
+  öteki taraf da gösterilir; sıralama filtreye rağmen iki tarafın en yenisine göre (ilk
+  denemede yalnızca eşleşen taraf sayılıyordu, integration testi yakaladı).
+- **Dil filtresi kalktı** — satır zaten iki dili gösteriyor.
+- **Görünmeyen taraf:** başka admin'in taslağı `Visible` dışında kalır (satırda null), ama görünen
+  tarafın `translationOfPostId`'si onu adlandırır → tablo "Başka bir yöneticinin taslağı" yazar,
+  "çeviri ekle" sunmaz (ikinci bir çeviri açılıp bağ çalınmasın).
+- **Eksik taraf → "İngilizce/Türkçe çevirisini ekle"** →
+  `/admin/blog/new?lang=en&translationOf=<id>` (`lib/blog/newPostSeed.ts`: dil tr/en değilse
+  yok sayılır, id GUID değilse düşer). Editör o dilde ve bağ seçili açılır; ilk autosave
+  `CreateBlogPostRequest.TranslationOfPostId` ile bağı kurar — başlık yazılmadan çift bağlanmış
+  olur (tarayıcıda doğrulandı).
+
+**Görüntülenme sayacı (aynı PR).** Kullanıcı istedi: tabloda beğeni yanında görüntülenme,
+public yazının altında da okuyucu görsün. En yalın yol: `BlogPosts.ViewCount` (int, migration
+`AddBlogPostViewCount`), `GetBySlugAsync`'te yayımlanmış yazının her public fetch'inde
+`ExecuteUpdate` ile +1 — **önbellek dışında** (cache eviction yok; sayı `LikedByMe` gibi
+sonradan taze okunup damgalanır), `UpdatedAt`/`Revision`'a dokunmaz. Kim okuduğu tutulmaz;
+bot ve yenileme de sayılır ("gerçek okuyucu" ölçümü istenirse ayrı iş). Next'te
+`generateMetadata` + sayfa aynı `fetch`'i paylaştığı için istek başına bir artış (tarayıcıda
+iki yüklemede "2 views"). Public liste kartı sayıyı taşımıyor (önbellekten servis ediliyor,
+sayaç orada bayat olurdu). Admin editör meta bloğu ve preview de sayıyı gösterir; preview
+saymaz.
+
+**Test.** `BlogTests`: gruplama/sıralama/sayfalama/durum filtresi, gizli taslak tarafı,
+görüntülenme sayacı (29/29). `BlogValidatorTests` grouped query; web `newPostSeed.test.ts`,
+`blog.contract.test.ts` (makale görüntülenme), `moderationTable.contract.test.ts` (boş hücrenin
+de renk sınıfı var). Local stack'te tarayıcı: açık/koyu tema, tr/en, Taslak filtresi, çeviri
+ekle akışı.

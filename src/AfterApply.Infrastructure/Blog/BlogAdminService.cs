@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Blog;
 using AfterApply.Application.Blog.Contracts;
@@ -45,23 +46,84 @@ internal sealed class BlogAdminService(
             .OrderByDescending(p => p.UpdatedAt).ThenByDescending(p => p.Id)
             .Skip((query.Page - 1) * pageSize)
             .Take(pageSize)
-            .Select(p => new
-            {
-                Post = p,
-                AuthorEmail = dbContext.Users.Where(u => u.Id == p.AuthorUserId).Select(u => u.Email).FirstOrDefault()
-            })
+            .Select(ListRow)
             .ToListAsync(cancellationToken);
 
-        var items = rows.Select(r => new AdminBlogPostListItemResponse(
-            r.Post.Id, r.Post.Status, r.Post.Language, r.Post.Slug,
-            // The draft title is what the author is looking for; it equals the published one
-            // until they start editing again.
-            r.Post.DraftTitle,
-            r.Post.AuthorUserId, r.AuthorEmail, r.Post.AuthorUserId == adminUserId,
-            r.Post.UpdatedAt, r.Post.PublishedAt, HasUnpublishedChanges(r.Post))).ToList();
-
+        var items = rows.Select(r => ToListItem(r, adminUserId)).ToList();
         return new PagedResult<AdminBlogPostListItemResponse>(items, total, query.Page, pageSize);
     }
+
+    public async Task<PagedResult<AdminBlogPostGroupResponse>> ListGroupedAsync(Guid adminUserId, AdminBlogGroupedListQuery query,
+        CancellationToken cancellationToken)
+    {
+        var visible = Visible(adminUserId);
+
+        // A pair is keyed by its Turkish side's id: the link is symmetric and always crosses the
+        // language line (LinkTranslationAsync), so an English post's key is the post it points
+        // at and a Turkish post's key is itself. A post with no translation is a pair of one
+        // under its own id. The key is what gets paged, so a pair never straddles a page, and a
+        // pair is sorted by whichever side was touched last — an autosave on the English side
+        // brings the Turkish one up with it.
+        var keyed = visible.Select(p => new { Key = p.Language == BlogLanguage.Tr ? p.Id : p.TranslationOfPostId ?? p.Id, p.Status, p.UpdatedAt });
+        if (query.Status is { } status)
+        {
+            // The filter picks rows, not halves: a pair stays when either side matches, and it
+            // still sorts by its later side even when that side is the one that did not match.
+            var matchingKeys = keyed.Where(x => x.Status == status).Select(x => x.Key);
+            keyed = keyed.Where(x => matchingKeys.Contains(x.Key));
+        }
+
+        var groups = keyed
+            .GroupBy(x => x.Key)
+            .Select(g => new { g.Key, UpdatedAt = g.Max(x => x.UpdatedAt) });
+
+        var total = await groups.CountAsync(cancellationToken);
+        var pageSize = options.Value.AdminPageSize;
+        var page = await groups
+            .OrderByDescending(g => g.UpdatedAt).ThenByDescending(g => g.Key)
+            .Skip((query.Page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        // Both sides of every pair on the page, whatever their status: the filter decides which
+        // rows are shown, not which half of a row. The other admin's draft stays out — Visible.
+        var keys = page.Select(g => g.Key).ToList();
+        var rows = await visible
+            .Where(p => keys.Contains(p.Id) || (p.TranslationOfPostId != null && keys.Contains(p.TranslationOfPostId.Value)))
+            .Select(ListRow)
+            .ToListAsync(cancellationToken);
+
+        var items = page.Select(g =>
+        {
+            var members = rows.Where(r => r.Post.Id == g.Key || r.Post.TranslationOfPostId == g.Key).ToList();
+            var tr = members.FirstOrDefault(r => r.Post.Language == BlogLanguage.Tr);
+            var en = members.FirstOrDefault(r => r.Post.Language == BlogLanguage.En);
+            return new AdminBlogPostGroupResponse(
+                tr is null ? null : ToListItem(tr, adminUserId),
+                en is null ? null : ToListItem(en, adminUserId),
+                g.UpdatedAt);
+        }).ToList();
+
+        return new PagedResult<AdminBlogPostGroupResponse>(items, total, query.Page, pageSize);
+    }
+
+    /// <summary>What a table row needs beyond the post: the author's address and the like tally,
+    /// both from other tables. One projection for both list shapes.</summary>
+    private Expression<Func<BlogPost, ListRowData>> ListRow => p => new ListRowData(
+        p,
+        dbContext.Users.Where(u => u.Id == p.AuthorUserId).Select(u => u.Email).FirstOrDefault(),
+        dbContext.BlogPostLikes.Count(l => l.PostId == p.Id));
+
+    private sealed record ListRowData(BlogPost Post, string? AuthorEmail, int LikeCount);
+
+    private static AdminBlogPostListItemResponse ToListItem(ListRowData r, Guid adminUserId) => new(
+        r.Post.Id, r.Post.Status, r.Post.Language, r.Post.Slug,
+        // The draft title is what the author is looking for; it equals the published one
+        // until they start editing again.
+        r.Post.DraftTitle,
+        r.Post.AuthorUserId, r.AuthorEmail, r.Post.AuthorUserId == adminUserId,
+        r.Post.UpdatedAt, r.Post.PublishedAt, HasUnpublishedChanges(r.Post),
+        r.LikeCount, r.Post.ViewCount, r.Post.TranslationOfPostId);
 
     public async Task<AdminBlogPostResponse> CreateAsync(Guid adminUserId, CreateBlogPostRequest request,
         CancellationToken cancellationToken)
@@ -117,7 +179,8 @@ internal sealed class BlogAdminService(
         return new BlogPostPublicResponse(
             post.Id, slug, post.Language, post.DraftTitle, post.DraftExcerpt, post.DraftContentHtml,
             post.CoverMediaId is { } coverId ? BlogMediaPath.For(coverId) : null,
-            post.PublishedAt ?? now, now, await LikeCountAsync(postId, cancellationToken), LikedByMe: null, translation);
+            post.PublishedAt ?? now, now, await LikeCountAsync(postId, cancellationToken), LikedByMe: null, translation,
+            post.ViewCount);
     }
 
     public async Task<BlogDraftSavedResponse?> SaveDraftAsync(Guid adminUserId, Guid postId, SaveBlogDraftRequest request,
@@ -437,5 +500,6 @@ internal sealed class BlogAdminService(
         post.Id, post.Status, post.Language, post.Slug, post.AuthorUserId, post.AuthorUserId == adminUserId,
         post.TranslationOfPostId, post.CoverMediaId,
         post.DraftTitle, post.DraftExcerpt, post.DraftContentJson, post.DraftContentHtml, post.DraftUpdatedAt,
-        post.Revision, post.Title, post.PublishedAt, post.PublishedUpdatedAt, HasUnpublishedChanges(post), likeCount, post.CreatedAt);
+        post.Revision, post.Title, post.PublishedAt, post.PublishedUpdatedAt, HasUnpublishedChanges(post), likeCount, post.CreatedAt,
+        post.ViewCount);
 }

@@ -1,5 +1,6 @@
 import type {
   AdminBlogPost,
+  AdminBlogPostGroup,
   AdminBlogPostListItem,
   BlogDraftSaved,
   BlogLanguage,
@@ -41,6 +42,18 @@ export const adminBlogApi = {
     if (filters.page && filters.page > 1) params.set("page", String(filters.page));
     const query = params.toString();
     return apiFetch<PagedResult<AdminBlogPostListItem>>(`/api/admin/blog/posts${query ? `?${query}` : ""}`);
+  },
+
+  /**
+   * The admin table: one row per post and its translation, most recently touched pair first,
+   * paged by pair. The flat `list` stays for the editor's translation picker.
+   */
+  listGrouped: (filters: { status?: BlogPostStatus; page?: number } = {}) => {
+    const params = new URLSearchParams();
+    if (filters.status) params.set("status", filters.status);
+    if (filters.page && filters.page > 1) params.set("page", String(filters.page));
+    const query = params.toString();
+    return apiFetch<PagedResult<AdminBlogPostGroup>>(`/api/admin/blog/posts/grouped${query ? `?${query}` : ""}`);
   },
 
   /** The first save of a new post — the editor calls this instead of `saveDraft` until it has an id. */

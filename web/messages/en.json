@@ -2709,6 +2709,7 @@
     "readInOtherLanguage": "{language, select, en {Read in English} tr {Türkçesini oku} other {Read in the other language}}",
     "like": "Like",
     "likeCount": "{count, plural, =1 {1 like} other {# likes}}",
+    "viewCount": "{count, plural, =1 {1 view} other {# views}}",
     "likeError": "The like could not be saved. Try again.",
     "signInToLike": "Sign in to like",
     "share": "Share",
@@ -4719,17 +4720,20 @@
     "newPost": "New post",
     "filters": {
       "status": "Status",
-      "statusAll": "All",
-      "language": "Language",
-      "languageAll": "All languages"
+      "statusAll": "All"
     },
     "columns": {
-      "title": "Title",
-      "status": "Status",
-      "language": "Language",
+      "tr": "Turkish",
+      "en": "English",
       "author": "Author",
-      "updated": "Last change",
-      "published": "Published"
+      "updated": "Last change"
+    },
+    "cell": {
+      "notPublished": "Not published",
+      "likeCount": "{count, plural, =1 {1 like} other {# likes}}",
+      "viewCount": "{count, plural, =1 {1 view} other {# views}}",
+      "addTranslation": "{language, select, en {Add English translation} tr {Add Turkish translation} other {Add translation}}",
+      "hiddenTranslation": "Another admin's draft"
     },
     "status": {
       "Draft": "Draft",
@@ -4774,6 +4778,7 @@
       "publishedAt": "First published: {date}",
       "publishedUpdatedAt": "Live version: {date}",
       "likeCount": "{count, plural, =0 {No likes yet} =1 {1 like} other {# likes}}",
+      "viewCount": "{count, plural, =0 {No views yet} =1 {1 view} other {# views}}",
       "publishHint": "Publishing puts the draft on the site as it is; later edits stay hidden until you publish again.",
       "preview": "Preview",
       "previewHint": "The preview shows the draft with the site's own post page — exactly how it will look once published.",

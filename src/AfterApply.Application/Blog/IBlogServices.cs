@@ -15,6 +15,11 @@ public interface IBlogAdminService
     Task<PagedResult<AdminBlogPostListItemResponse>> ListAsync(Guid adminUserId, AdminBlogListQuery query,
         CancellationToken cancellationToken);
 
+    /// <summary>The admin table: one row per post and its translation, the most recently touched
+    /// pair first, paged by pair so a pair never straddles a page (2026-09-20).</summary>
+    Task<PagedResult<AdminBlogPostGroupResponse>> ListGroupedAsync(Guid adminUserId, AdminBlogGroupedListQuery query,
+        CancellationToken cancellationToken);
+
     Task<AdminBlogPostResponse> CreateAsync(Guid adminUserId, CreateBlogPostRequest request, CancellationToken cancellationToken);
 
     Task<AdminBlogPostResponse?> GetAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken);
