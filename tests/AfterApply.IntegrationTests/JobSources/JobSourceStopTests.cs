@@ -162,7 +162,9 @@ public class JobSourceStopTests(ApiHost<JobSourceStopProfile> host) : IClassFixt
 
         // Tomorrow: both queries are marked run for the week (the second got one page before the
         // budget cut it off, and one page is a run), but the details are still owed and now get
-        // the day's budget.
+        // the day's budget. Not on a Sunday: tomorrow is a new week then, and the queries run again
+        // (see MutableTimeProvider.StaysInIsoWeek).
+        if (!_clock.StaysInIsoWeek(TimeSpan.FromHours(24))) return;
         _clock.Advance(TimeSpan.FromHours(24));
         await SweepAsync();
         _linkedIn.PostingRequests.ShouldBe(DailyBudget);

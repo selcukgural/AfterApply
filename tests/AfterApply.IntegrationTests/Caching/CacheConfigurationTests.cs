@@ -5,9 +5,11 @@ using System.Text.Json;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Domain.Applications;
+using AfterApply.Api.Imports;
 using AfterApply.Domain.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Caching.Memory;
@@ -100,6 +102,32 @@ public class CacheConfigurationTests(ApiHost<DefaultProfile> host) : IClassFixtu
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await response.Content.ReadAsStringAsync()).ShouldBe("Healthy");
+    }
+
+    /// <summary>
+    /// Shutting a host down must not throw whatever order its Redis users were first touched in.
+    /// Everything shares one multiplexer, and FusionCache's backplane disposes that connection
+    /// when it is disposed, factory-provided or not. The container disposes singletons in reverse
+    /// order of creation, so when the SignalR hub manager was older than the cache, the cache's
+    /// disposal closed the connection under the manager's own Dispose (UnsubscribeAll →
+    /// ObjectDisposedException out of Host.Dispose): "Test Class Cleanup Failure" on one CI run in
+    /// three, 2026-09-19/20, the trace in the run's trx. Program.cs now creates the connection and
+    /// the cache before the host starts, so they are the oldest objects and go last. This test
+    /// forces the order that failed: the hub manager connected before any cache use.
+    /// </summary>
+    [Fact]
+    public async Task Disposing_A_Host_Whose_Hub_Manager_Was_Created_Before_The_Cache_Does_Not_Throw()
+    {
+        var standalone = host.Standalone(_ => { });
+
+        // The SignalR Redis hub manager first, and connected: a send is what makes it subscribe.
+        await standalone.Services.GetRequiredService<IHubContext<ImportProgressHub>>().Clients.All.SendAsync("noop", "x");
+
+        // Then the cache: a request that reads through L2.
+        var (client, _) = await host.RegisterAsync("dispose.order@example.com", on: standalone);
+        (await client.GetFromJsonAsync<ApplicationSummaryCountsResponse>("/api/applications/summary", JsonOptions))!.Total.ShouldBe(0);
+
+        await Should.NotThrowAsync(async () => await standalone.DisposeAsync());
     }
 
     /// <summary>Redis being unreachable must cost latency at most, never availability: the cache

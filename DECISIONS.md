@@ -8237,6 +8237,24 @@ alınan ve bu PR'la kesinleşen kararlar:
   bağlantı yok). (3) Liste kartındaki beğeni sayısı `blog.like`'ı kullanıyordu; o anahtar 19'unda
   düğme etiketi ("Beğen") oldu — kart `likeCount`'a geçti. Footer'daki Blog bağlantısı zaten
   vardı: public sayfalarda 60 sn `revalidate` ile geliyor, signed-in düzende footer yok.
+- **CI teardown çökmesi kök nedeni** (2026-09-20, artifact'a alınan `.trx` ile): tüm testler
+  geçtikten sonra `CacheConfigurationTests` fixture kapanışında `ObjectDisposedException` —
+  iz: `RedisHubLifetimeManager.Dispose → UnsubscribeAll` kapatılmış multiplexer üzerinde.
+  Neden: FusionCache'in `RedisBackplane`'i dispose edilirken elindeki bağlantıyı **kim vermiş
+  olursa olsun** dispose ediyor (`Disconnect → _muxer.Dispose()`), paylaşılan multiplexer'ı
+  herkesin altından çekiyordu; container ters yaratılış sırasıyla dispose ettiğinden hub
+  yöneticisi cache'ten yaşlıysa (ilk isteklerin rastgele sırası) kapanış fırlatıyordu — üç CI
+  koşusundan biri. **Karar:** "tek multiplexer" (2026-09-18) kuralına tek istisna — backplane
+  pub/sub'ı kendi bağlantısını açar ve yalnız onu kapatır (`RedisBackplaneOptions.Configuration`);
+  L2, SignalR, rate limiter, kilit, health check paylaşılanda kalır. Yaratılış sırasını Program.cs'te
+  sabitleme denendi ve geri alındı (her host'ta cache'i erkenden kuruyor, `HostLifecycleTests`
+  ve iki JobSources testi kırıldı). Regresyon testi: hub yöneticisi cache'ten önce bağlanmış bir
+  host'un dispose'u fırlatmaz. Bilinen, kapsam dışı: Redis'siz senaryoda (`localhost:1`)
+  FusionCache'in auto-recovery döngüsü host kapandıktan sonra da koşu sonuna kadar log basıyor
+  (her koşuda böyleydi; test-only gürültü). Aynı gün: iki JobSources testi "yarın = aynı hafta"
+  varsayıyordu ve Pazar (UTC) koşularında kırılıyordu; saat gerçek "şimdi"den başlamak zorunda
+  (JWT nbf/exp duvar saatiyle doğrulanıyor), bu yüzden Pazar günü gün-devri adımı atlanıyor
+  (`MutableTimeProvider.StaysInIsoWeek`), diğer altı gün kapsıyor.
 - **Kapsam dışı (v1):** sunucuda görsel küçültme (ImageSharp yok; editör `width` saklar, CSS
   `max-width:100%`), yorum, etiket/kategori, RSS, yardım merkezi konusu.
 

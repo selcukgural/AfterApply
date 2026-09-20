@@ -373,10 +373,14 @@ public static class DependencyInjection
             {
                 ConnectionMultiplexerFactory = () => Task.FromResult(sp.GetRequiredService<IConnectionMultiplexer>())
             }))
-            .WithBackplane(sp => new RedisBackplane(new RedisBackplaneOptions
-            {
-                ConnectionMultiplexerFactory = () => Task.FromResult(sp.GetRequiredService<IConnectionMultiplexer>())
-            }))
+            // The backplane's pub/sub on a connection of its own (2026-09-20), the one exception
+            // to the shared multiplexer above: RedisBackplane disposes whatever connection it
+            // holds when FusionCache is disposed, factory-provided or not (Disconnect →
+            // _muxer.Dispose()), and on the shared one that closed Redis under everything the
+            // container disposed after it — the SignalR hub manager's own Dispose then threw
+            // ObjectDisposedException out of Host.Dispose (a CI run in three, 2026-09-19/20).
+            // Owning its connection, the backplane can only close its own.
+            .WithBackplane(_ => new RedisBackplane(new RedisBackplaneOptions { Configuration = redisConnectionString }))
             .AsHybridCache();
         services.AddScoped<ICompanyCacheInvalidator, CompanyCacheInvalidator>();
 
