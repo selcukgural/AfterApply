@@ -192,6 +192,7 @@ app.MapCvScanEndpoints();
 app.MapAdminEndpoints();
 app.MapBlogEndpoints();
 app.MapAdminBlogEndpoints();
+app.MapBlogCommentEndpoints();
 app.MapJobSourceEndpoints();
 app.MapPaymentEndpoints();
 app.MapHub<ImportProgressHub>("/hubs/import-progress");

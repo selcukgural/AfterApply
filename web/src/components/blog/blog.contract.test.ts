@@ -87,6 +87,15 @@ describe("the list page", () => {
 describe("the article", () => {
   const article = read("components/blog/BlogArticle.tsx");
 
+  it("renders the comments only when the page hands them over — the preview never does (2026-09-20)", () => {
+    expect(article).toContain("{comments !== undefined && (");
+    expect(read("components/blog/BlogPreview.tsx")).not.toContain("comments=");
+    // A comment is plain text: React escapes it, and nothing here turns it into markup.
+    const item = read("components/blog/comments/CommentItem.tsx");
+    expect(item).not.toContain("dangerouslySetInnerHTML");
+    expect(item).toContain("{comment.content}");
+  });
+
   it("shows how many times the post was read, next to the like (2026-09-20)", () => {
     expect(article).toContain('t("viewCount", { count: post.viewCount })');
   });
@@ -97,7 +106,7 @@ describe("the preview", () => {
   const preview = read("components/blog/BlogPreview.tsx");
 
   it("renders the article with the public page's own component, so it cannot drift from the live page except by data", () => {
-    expect(publicPage).toContain("<BlogArticle post={post} url={url} />");
+    expect(publicPage).toContain("<BlogArticle post={post} url={url} comments={comments} renderedAt={new Date().toISOString()} />");
     expect(preview).toContain("<BlogArticle post={post} url={url} inert />");
     // Neither page lays out a title, a body or a footer of its own.
     for (const source of [publicPage, preview]) {

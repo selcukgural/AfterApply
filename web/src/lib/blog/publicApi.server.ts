@@ -1,6 +1,6 @@
 // Server-side only by convention (called from server components and the sitemap); it holds no
 // secret, so the `server-only` guard package is not pulled in for it.
-import type { BlogLanguage, BlogPostListItem, BlogPostPublic, BlogSlug, PagedResult } from "@/types/api";
+import type { BlogCommentList, BlogLanguage, BlogPostListItem, BlogPostPublic, BlogSlug, PagedResult } from "@/types/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5151";
 
@@ -35,6 +35,20 @@ export function fetchBlogList(language: BlogLanguage, page: number): Promise<Pag
 
 export function fetchBlogPost(language: BlogLanguage, slug: string): Promise<BlogPostPublic | null> {
   return fetchPublic<BlogPostPublic>(`/api/blog/public/posts/${language}/${encodeURIComponent(slug)}`, language, "fresh");
+}
+
+/**
+ * The anonymous first page of a post's comments (2026-09-20), rendered with the post so a reader
+ * — and a crawler — gets the approved comments in the HTML. The signed-in view (own pending
+ * comments, helpful votes) is fetched again in the browser with the token. Null when the API
+ * cannot answer: the article still renders, the section then loads client-side.
+ */
+export async function fetchBlogComments(postId: string, locale: string): Promise<BlogCommentList | null> {
+  try {
+    return await fetchPublic<BlogCommentList>(`/api/blog/public/posts/${postId}/comments`, locale, "fresh");
+  } catch {
+    return null;
+  }
 }
 
 /** Empty when the API is unreachable or the blog is off: the sitemap degrades, never fails. */

@@ -1,9 +1,11 @@
+using AfterApply.Application.Blog;
 using AfterApply.Application.CandidateExperiences;
 using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.CompanyReviews;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Application.CompanySalaries;
 using AfterApply.Application.CompanySalaries.Contracts;
+using AfterApply.Infrastructure.Blog;
 using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.Persistence;
@@ -24,22 +26,40 @@ internal sealed class CompanyContributionService(
     ICompanyReviewService reviews,
     ICompanySalaryService salaries,
     ICandidateExperienceService experiences,
+    IBlogCommentService blogComments,
     IOptions<CompanyReviewOptions> options,
     IOptions<CompanySalaryOptions> salaryOptions,
-    IOptions<CandidateExperienceOptions> experienceOptions) : ICompanyContributionService
+    IOptions<CandidateExperienceOptions> experienceOptions,
+    IOptions<BlogOptions> blogOptions) : ICompanyContributionService
 {
     public async Task<MyContributionsResponse> ListMineAsync(Guid userId, MyContributionsQuery query, CancellationToken cancellationToken)
     {
         var salariesOn = salaryOptions.Value.Enabled;
         var experiencesOn = experienceOptions.Value.Enabled;
+        // The chips: "blog comments" is that kind alone, "company" is everything else.
+        var companyKinds = query.Filter != ContributionFilter.BlogComments;
+        var blogOn = blogOptions.Value.Enabled && query.Filter != ContributionFilter.Company;
 
         var stamps = new List<ContributionStamp>();
-        stamps.AddRange((await dbContext.CompanyReviews
-                .Where(r => r.UserId == userId)
-                .Select(r => new { r.Id, r.SubmittedAt })
-                .ToListAsync(cancellationToken))
-            .Select(x => new ContributionStamp(ContributionKind.Review, x.Id, x.SubmittedAt)));
-        if (salariesOn)
+        if (companyKinds)
+        {
+            stamps.AddRange((await dbContext.CompanyReviews
+                    .Where(r => r.UserId == userId)
+                    .Select(r => new { r.Id, r.SubmittedAt })
+                    .ToListAsync(cancellationToken))
+                .Select(x => new ContributionStamp(ContributionKind.Review, x.Id, x.SubmittedAt)));
+        }
+
+        if (blogOn)
+        {
+            stamps.AddRange((await dbContext.BlogComments
+                    .Where(c => c.UserId == userId)
+                    .Select(c => new { c.Id, c.CreatedAt })
+                    .ToListAsync(cancellationToken))
+                .Select(x => new ContributionStamp(ContributionKind.BlogComment, x.Id, x.CreatedAt)));
+        }
+
+        if (salariesOn && companyKinds)
         {
             stamps.AddRange((await dbContext.CompanySalaryEntries
                     .Where(s => s.UserId == userId)
@@ -48,7 +68,7 @@ internal sealed class CompanyContributionService(
                 .Select(x => new ContributionStamp(ContributionKind.Salary, x.Id, x.SubmittedAt)));
         }
 
-        if (experiencesOn)
+        if (experiencesOn && companyKinds)
         {
             stamps.AddRange((await dbContext.CandidateExperiences
                     .Where(e => e.UserId == userId)
@@ -66,6 +86,8 @@ internal sealed class CompanyContributionService(
             ids => salaries.ListMineByIdsAsync(userId, ids, cancellationToken), s => s.Id);
         var experienceRows = await HydrateAsync(page, ContributionKind.Experience,
             ids => experiences.ListMineByIdsAsync(userId, ids, cancellationToken), e => e.Id);
+        var commentRows = await HydrateAsync(page, ContributionKind.BlogComment,
+            ids => blogComments.ListMineByIdsAsync(userId, ids, cancellationToken), c => c.Id);
 
         // A row deleted between the stamp read and the hydration simply drops out of the page.
         var items = page
@@ -77,6 +99,8 @@ internal sealed class CompanyContributionService(
                     new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, null, salary, null),
                 ContributionKind.Experience when experienceRows.TryGetValue(stamp.Id, out var experience) =>
                     new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, null, null, experience),
+                ContributionKind.BlogComment when commentRows.TryGetValue(stamp.Id, out var comment) =>
+                    new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, null, null, null, comment),
                 _ => null
             })
             .Where(item => item is not null)

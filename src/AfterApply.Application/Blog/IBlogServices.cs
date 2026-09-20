@@ -133,3 +133,64 @@ public sealed class BlogUploadValidationException(IReadOnlyList<string> errors)
 
     public string Field => "file";
 }
+
+/// <summary>
+/// Reader comments on published posts (DECISIONS.md 2026-09-20). Every public read starts from
+/// <c>Status == Approved</c> on a <c>Published</c> post; the one exception is the viewer's own
+/// pending comment, which the list carries for its author alone. A comment another reader
+/// cannot see is null → 404 here, never 403.
+/// </summary>
+public interface IBlogCommentService
+{
+    /// <summary>Null when the post is not published (or the blog is off for it).</summary>
+    Task<BlogCommentListResponse?> ListAsync(Guid postId, Guid? viewerUserId, PublicBlogCommentListQuery query,
+        CancellationToken cancellationToken);
+
+    /// <summary>Null when the post is not published. Pending unless the author is an admin.</summary>
+    /// <exception cref="BlogCommentDuplicateException">The same text from the same reader on the same post.</exception>
+    Task<BlogCommentResponse?> CreateAsync(Guid userId, Guid postId, CreateBlogCommentRequest request, CancellationToken cancellationToken);
+
+    /// <summary>A reply. The parent may itself be a reply: the new comment then answers that
+    /// reply's root, so the thread stays one level deep. Null when the parent is not approved.</summary>
+    /// <exception cref="BlogCommentDuplicateException">The same text from the same reader on the same post.</exception>
+    Task<BlogCommentResponse?> ReplyAsync(Guid userId, Guid parentCommentId, CreateBlogCommentRequest request,
+        CancellationToken cancellationToken);
+
+    /// <summary>The author's edit. Null when the comment is not the caller's.</summary>
+    /// <exception cref="BlogCommentLockedException">The comment is no longer pending.</exception>
+    Task<BlogCommentResponse?> EditAsync(Guid userId, Guid commentId, EditBlogCommentRequest request, CancellationToken cancellationToken);
+
+    /// <summary>On, then off. Null when the comment is not approved.</summary>
+    Task<BlogCommentHelpfulResponse?> ToggleHelpfulAsync(Guid userId, Guid commentId, CancellationToken cancellationToken);
+
+    /// <summary>Null when the comment is not approved.</summary>
+    /// <exception cref="BlogCommentReportNoteRequiredException">Reason "Other" without a note.</exception>
+    Task<BlogCommentReportResponse?> ReportAsync(Guid userId, Guid commentId, ReportBlogCommentRequest request,
+        CancellationToken cancellationToken);
+
+    /// <summary>The caller's own comments, every status, newest first.</summary>
+    Task<PagedResult<MyBlogCommentResponse>> ListMineAsync(Guid userId, MyBlogCommentListQuery query, CancellationToken cancellationToken);
+
+    /// <summary>The caller's own comments among <paramref name="commentIds"/> — the contributions
+    /// page's hydration; an id that is not the caller's is simply absent.</summary>
+    Task<IReadOnlyList<MyBlogCommentResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> commentIds,
+        CancellationToken cancellationToken);
+
+    // ---- admin (the caller has passed IAdminAccessService) ----
+
+    Task<PagedResult<AdminBlogCommentListItemResponse>> ListForAdminAsync(AdminBlogCommentListQuery query, CancellationToken cancellationToken);
+
+    Task<AdminBlogCommentResponse?> GetForAdminAsync(Guid commentId, CancellationToken cancellationToken);
+
+    Task<AdminBlogCommentResponse?> ApproveAsync(Guid adminUserId, Guid commentId, CancellationToken cancellationToken);
+
+    /// <summary>Takes the comment off the site — its replies with it, since the page shows a reply
+    /// only under an approved root — and closes its open reports as action taken.</summary>
+    Task<AdminBlogCommentResponse?> RejectAsync(Guid adminUserId, Guid commentId, CancellationToken cancellationToken);
+
+    /// <summary>Closes the comment's open reports and keeps the comment.</summary>
+    Task<AdminBlogCommentResponse?> DismissReportsAsync(Guid adminUserId, Guid commentId, CancellationToken cancellationToken);
+
+    /// <summary>What the admin tabs' badge shows.</summary>
+    Task<int> CountPendingAsync(CancellationToken cancellationToken);
+}

@@ -874,9 +874,19 @@ internal sealed class AuthService(
             .Select(e => new ProEntitlementExportItem(e.ActiveUntil, e.Source.ToString(), e.GrantedAt, e.RevokedAt))
             .SingleOrDefaultAsync(cancellationToken);
 
+        var blogComments = await dbContext.BlogComments
+            .Where(c => c.UserId == userId)
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new BlogCommentExportItem(c.Id,
+                dbContext.BlogPosts.Where(p => p.Id == c.PostId).Select(p => p.Title).First(),
+                dbContext.BlogPosts.Where(p => p.Id == c.PostId).Select(p => p.Language).First(),
+                dbContext.BlogPosts.Where(p => p.Id == c.PostId).Select(p => p.Slug).First(),
+                c.ParentCommentId, c.Content, c.Status.ToString(), c.CreatedAt, c.EditedAt))
+            .ToListAsync(cancellationToken);
+
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
             DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks, companySalaries, payments, proEntitlement,
-            candidateExperiences);
+            candidateExperiences, blogComments);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

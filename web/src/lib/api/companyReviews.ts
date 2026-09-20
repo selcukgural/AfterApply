@@ -1,6 +1,7 @@
 import type {
   CompanyReviewRequest,
   CompanyReviewViewerState,
+  ContributionFilter,
   HelpfulToggleResponse,
   MyCompanyReview,
   MyContributionsResponse,
@@ -26,7 +27,8 @@ export const companyReviewsApi = {
   listMine: () => apiFetch<MyReviewsResponse>("/api/company-reviews/mine"),
 
   /** Reviews, salary entries and candidate experiences as one newest-first page. */
-  listMyContributions: (page: number) => apiFetch<MyContributionsResponse>(`/api/contributions/mine?page=${page}`),
+  listMyContributions: (page: number, filter?: ContributionFilter) =>
+    apiFetch<MyContributionsResponse>(`/api/contributions/mine?page=${page}${filter ? `&filter=${filter}` : ""}`),
 
   toggleHelpful: (reviewId: string) =>
     apiFetch<HelpfulToggleResponse>(`/api/company-reviews/${reviewId}/helpful`, { method: "POST" }),

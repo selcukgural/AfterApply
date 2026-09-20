@@ -100,6 +100,17 @@ public sealed class RateLimitingOptions
     /// <see cref="CompanyReviewHelpful"/>: a reader clicking, not a script inflating a count.</summary>
     public FixedWindowPolicy BlogLike { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };
 
+    /// <summary>Per user — writing, replying to and editing a blog comment (2026-09-20). Ten in
+    /// ten minutes: a reader in a lively thread, not a paste loop; every comment is moderated
+    /// anyway, so this bounds the queue, not the site.</summary>
+    public FixedWindowPolicy BlogCommentWrite { get; init; } = new() { PermitLimit = 10, WindowSeconds = 600 };
+
+    /// <summary>Per user — reporting a blog comment. Same size as <see cref="CompanyReviewReport"/>.</summary>
+    public FixedWindowPolicy BlogCommentReport { get; init; } = new() { PermitLimit = 10, WindowSeconds = 3600 };
+
+    /// <summary>Per user — the "helpful" toggle on a blog comment. Same size as <see cref="BlogLike"/>.</summary>
+    public FixedWindowPolicy BlogCommentHelpful { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };
+
     /// <summary>Per IP, anonymous — the public company directory search: a trigram scan per
     /// request, from anyone. A person types a name and pages a few times; sixty a minute is
     /// invisible to that and a ceiling for a scraper.</summary>

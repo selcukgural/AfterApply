@@ -110,6 +110,9 @@ public static class DependencyInjection
     public const string ExtensionPairingStartRateLimitPolicy = "extension-pairing-start";
     public const string ExtensionPairingPollRateLimitPolicy = "extension-pairing-poll";
     public const string BlogLikeRateLimitPolicy = "blog-like";
+    public const string BlogCommentWriteRateLimitPolicy = "blog-comment-write";
+    public const string BlogCommentReportRateLimitPolicy = "blog-comment-report";
+    public const string BlogCommentHelpfulRateLimitPolicy = "blog-comment-helpful";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -282,6 +285,7 @@ public static class DependencyInjection
         services.AddScoped<IBlogCacheInvalidator, BlogCacheInvalidator>();
         services.AddScoped<IBlogAdminService, BlogAdminService>();
         services.AddScoped<IBlogPublicService, BlogPublicService>();
+        services.AddScoped<IBlogCommentService, BlogCommentService>();
         services.AddScoped<IBlogMediaService, BlogMediaService>();
 
         return services;

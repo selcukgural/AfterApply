@@ -453,4 +453,16 @@
   <data name="VALIDATION_BLOG_CONTENT_JSON_INVALID" xml:space="preserve">
     <value>The editor document is not in a shape the editor can reopen.</value>
   </data>
+  <data name="BLOG_COMMENT_LOCKED" xml:space="preserve">
+    <value>A comment can only be edited while it is waiting for approval.</value>
+  </data>
+  <data name="BLOG_COMMENT_DUPLICATE" xml:space="preserve">
+    <value>You have already posted this comment.</value>
+  </data>
+  <data name="BLOG_COMMENT_REPORT_NOTE_REQUIRED" xml:space="preserve">
+    <value>A report with the reason "Other" needs a short explanation.</value>
+  </data>
+  <data name="VALIDATION_BLOG_COMMENT_TOO_SHORT" xml:space="preserve">
+    <value>A comment must be at least {0} characters.</value>
+  </data>
 </root>

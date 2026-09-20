@@ -15,6 +15,7 @@ const PAGE_INFO_KEY = {
   reviews: "pageInfoReviews",
   contributions: "pageInfoContributions",
   posts: "pageInfoPosts",
+  comments: "pageInfoComments",
 } as const;
 
 interface PaginationProps {
@@ -35,7 +36,8 @@ interface PaginationProps {
     | "alerts"
     | "reviews"
     | "contributions"
-    | "posts";
+    | "posts"
+    | "comments";
   onPageChange: (page: number) => void;
 }
 

@@ -117,7 +117,7 @@
       },
       "myReviews": {
         "title": "My contributions",
-        "description": "The reviews you wrote, the salary entries and candidate experiences you shared — one list, newest first."
+        "description": "The reviews you wrote, the salary entries and candidate experiences you shared and your blog comments — one list, newest first."
       },
       "contribute": {
         "title": "Company contribution",
@@ -756,7 +756,8 @@
       "pageInfoExperiences": "Page {page} / {totalPages} ({totalCount} candidate experiences)",
       "pageInfoReviews": "Page {page} / {totalPages} ({totalCount} reviews)",
       "pageInfoContributions": "Page {page} / {totalPages} ({totalCount} contributions)",
-      "pageInfoPosts": "Page {page} / {totalPages} ({totalCount} posts)"
+      "pageInfoPosts": "Page {page} / {totalPages} ({totalCount} posts)",
+      "pageInfoComments": "Page {page} of {totalPages} ({totalCount} comments)"
     },
     "form": {
       "companyName": "Company Name",
@@ -1047,7 +1048,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 14 September 2026",
+    "lastUpdated": "Last updated: 20 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -1085,7 +1086,7 @@
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "Apart from the request log, this data is used solely to provide you with application tracking and personal analytics features; the request log serves only the security and legal purposes listed above.",
       "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link.",
-      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, a candidate experience, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\").",
+      "item6": "Request log: for every request in which you send something to the site — sign-up, sign-in, adding or editing an application, importing, uploading a CV, a company review, a salary entry, a candidate experience, a blog comment, feedback and the like — the IP address of your connection, the request path, its outcome and the time. This log is kept solely for the security of your account, for fighting abuse and for our legal obligations (such as a properly made request from a competent authority); it is never shown on any screen, report or data export, and it is deleted together with your account. The same log is kept on the surfaces that need no sign-in (CV scan, benchmark) and for failed sign-in attempts; as those belong to no account, they are deleted after 12 months. What is not logged: page views (see \"Visit counter\").",
       "item7": "If you use the weekly job matching (a paid feature): the job titles (up to three) and the location you save as your search criteria. They are stored on your account and, once a week, used as a search on LinkedIn and kariyer.net — see \"Cross-border data transfer\" below. The postings found are kept for you for a limited time; which ones you already applied to is worked out from your own applications and never stored as a separate record. If you also give consent, the fit score computed for each posting, its short reasoning and the matched/missing criteria are kept on your account too — see \"Weekly job matching\"."
     },
     "googleSignIn": {
@@ -1143,7 +1144,7 @@
       "title": "Your rights",
       "before": "You can export a copy of your data or permanently delete your account at any time. You can do this from the",
       "link": "Account Settings",
-      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, your candidate experiences, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
+      "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, your candidate experiences, your blog comments, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
     },
     "notApplicable": {
       "title": "Not currently applicable",
@@ -1240,6 +1241,18 @@
       "storage": "Entries are kept in our own database; nothing is sent to any third party.",
       "deletion": "You can delete an entry at any time from My contributions. Deleting your account deletes all of them; your data export includes them with their exact dates.",
       "legalBasis": "Legal basis: your explicit action — you choose to share."
+    },
+    "blogComments": {
+      "title": "The comments you write on blog posts",
+      "intro": "Commenting on a blog post is optional and needs an account. When you do:",
+      "what": "Your comment is kept as plain text, tied to your account, with when it was written and edited and its moderation status. Every comment is visible only to you until an admin approves it; a comment that is not approved is never published.",
+      "name": "A published comment shows your first name and the initial of your last name (for example \"Selin Y.\"); an account with no name shows \"A reader\". Your e-mail address, your account and anything else about you are never shown. Everyone who reads the post sees that name — know this before you write.",
+      "noEdit": "An approved comment can be neither changed nor deleted: others have replied to it. While it waits for approval you can edit it from My contributions or under the post.",
+      "moderation": "The admin who reviews your comment sees the account behind it; that is what makes moderation possible, and it is the only place your identity meets your comment. If you report a comment, the report (reason, your note, time) is kept against your account and shown only to admins; the comment's author never sees who reported it. A \"helpful\" mark is kept as one row per comment and account and shown to nobody.",
+      "audit": "Every request that writes, edits, replies to or reports a comment records the connection's IP address in the request log (the \"Request log\" item above). It is never shown anywhere; it is kept only for a legal request or an abuse investigation.",
+      "storage": "Comments, reports and helpful marks are kept in our own database and sent to no third party.",
+      "deletion": "Deleting your account deletes all your comments — and the replies they received; your data export includes your comments.",
+      "legalBasis": "Legal basis: your own explicit action — you choose to comment."
     }
   },
   "terms": {
@@ -2729,6 +2742,78 @@
       "backToAdmin": "← Posts"
     }
   },
+  "blogComments": {
+    "heading": "What do you think about this post?",
+    "intro": "Share your experience and help other job seekers.",
+    "policy": "Please share your experience respectfully and constructively. Insults, spam, advertising and personal information are not allowed.",
+    "nameNote": "Comments are published under your first name and last initial (e.g. Selin Y.).",
+    "label": "Your comment",
+    "placeholder": "Write your comment…",
+    "replyLabel": "Your reply",
+    "replyPlaceholder": "Reply to {name}…",
+    "editLabel": "Edit your comment",
+    "submit": "Post",
+    "sending": "Posting…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "counter": "{count} / {max}",
+    "signInPrompt": "Sign in to comment.",
+    "signIn": "Sign in",
+    "listTitle": "Comments ({count})",
+    "emptyTitle": "No comments yet.",
+    "emptyBody": "Be the first to comment and share your experience with other job seekers.",
+    "loadMore": "Show more comments",
+    "loading": "Loading…",
+    "loadError": "The comments could not be loaded.",
+    "anonymousAuthor": "A reader",
+    "you": "You",
+    "edited": "edited",
+    "pendingBadge": "Awaiting approval",
+    "pendingHint": "Only you can see it until it is approved, and you can still edit it.",
+    "submittedPending": "Your comment is in. It will be visible to everyone once reviewed.",
+    "helpful": "Helpful",
+    "helpfulCount": "{count, plural, =0 {Nobody has found this helpful yet} =1 {1 person found this helpful} other {# people found this helpful}}",
+    "signInToVote": "Sign in to mark as helpful",
+    "reply": "Reply",
+    "edit": "Edit",
+    "more": "More actions",
+    "report": "Report",
+    "problems": {
+      "empty": "A comment cannot be empty.",
+      "tooShort": "A comment must be at least {min} characters.",
+      "tooLong": "A comment can be at most {max} characters."
+    },
+    "errors": {
+      "generic": "Your comment could not be sent. Please try again.",
+      "locked": "This comment can no longer be edited: it has been approved or was not published.",
+      "tooMany": "You are commenting too often. Try again in a little while."
+    },
+    "reportDialog": {
+      "title": "Report comment",
+      "intro": "Your report goes to the admins only; the author does not see it.",
+      "reason": "Reason",
+      "note": "Short explanation (optional)",
+      "noteRequired": "Short explanation (required)",
+      "notePlaceholder": "What is the problem?",
+      "noteProblem": "Please explain the problem when the reason is \"Other\".",
+      "submit": "Report",
+      "sending": "Sending…",
+      "thanks": "Thank you — an admin will take a look.",
+      "already": "You have already reported this comment."
+    },
+    "reasons": {
+      "Spam": "Spam",
+      "Insult": "Insult or abusive content",
+      "Inappropriate": "Inappropriate content",
+      "Advertising": "Advertising or promotion",
+      "Other": "Other"
+    },
+    "status": {
+      "Pending": "Awaiting approval",
+      "Approved": "Published",
+      "Rejected": "Not published"
+    }
+  },
   "hrContact": {
     "legend": "HR contact",
     "hint": "Job sites don't publish these, so add a contact here yourself if you know one. All optional.",
@@ -3264,7 +3349,8 @@
     "reviews": "Reviews",
     "reports": "Reports",
     "payments": "Payments",
-    "blog": "Blog"
+    "blog": "Blog",
+    "comments": "Comments"
   },
   "adminContributionTabs": {
     "label": "Contribution kinds",
@@ -3474,7 +3560,7 @@
     },
     "mine": {
       "title": "My contributions",
-      "subtitle": "Your reviews, salary entries and candidate experiences — newest first.",
+      "subtitle": "Your reviews, salary entries, candidate experiences and blog comments — newest first.",
       "write": "Write a review",
       "loading": "Loading…",
       "error": "That didn't go through. Please try again.",
@@ -3498,7 +3584,22 @@
       "kind": {
         "review": "Review",
         "salary": "Salary entry",
-        "experience": "Candidate experience"
+        "experience": "Candidate experience",
+        "blogComment": "Blog comment"
+      },
+      "blogComment": {
+        "replyTo": "Reply to {name}",
+        "replyToReader": "Reply to a reader",
+        "edited": "edited {date}",
+        "pendingHint": "Only you can see it until an admin approves it; you can edit it until then.",
+        "approvedHint": "A published comment cannot be changed.",
+        "rejectedMessage": "Your comment was not published because it did not meet the moderation guidelines.",
+        "stats": "{helpful, plural, =0 {Not marked helpful yet} =1 {1 person found it helpful} other {# people found it helpful}} · {replies, plural, =0 {no replies} =1 {1 reply} other {# replies}}",
+        "view": "View comment ↗",
+        "edit": "Edit",
+        "filterAll": "All",
+        "filterComments": "Blog comments",
+        "filterCompany": "Company contributions"
       }
     },
     "write": {
@@ -4847,6 +4948,67 @@
       "unsupported": "Only PNG, JPEG, GIF and WebP can be uploaded.",
       "tooLarge": "The image exceeds the 5 MB limit.",
       "needsTextFirst": "Write something first — a title or a line of text — and the draft will be created; then add the image."
+    }
+  },
+  "adminComments": {
+    "title": "Comments",
+    "subtitle": "Reader comments on blog posts. A new comment waits here until an admin approves it; only approved comments are on the site.",
+    "forbiddenTitle": "This page is for admins",
+    "forbiddenBody": "Your account does not have admin access.",
+    "loading": "Loading…",
+    "error": "The comments could not be loaded.",
+    "disabled": "The blog is switched off on this deployment.",
+    "empty": "No comments match this filter.",
+    "filters": {
+      "pending": "Pending",
+      "reported": "Reported",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "all": "All"
+    },
+    "columns": {
+      "author": "Author",
+      "post": "Post",
+      "comment": "Comment",
+      "reports": "Reports",
+      "status": "Status",
+      "date": "Date"
+    },
+    "replyTo": "↳ reply to {name}",
+    "anonymousAuthor": "(no name)",
+    "status": {
+      "Pending": "Pending",
+      "Approved": "Approved",
+      "Rejected": "Rejected"
+    },
+    "hint": "A row opens the comment. \"Reported\" lists comments with at least one open report.",
+    "detail": {
+      "back": "← Comments",
+      "notFound": "The comment does not exist.",
+      "author": "Author",
+      "post": "Post",
+      "openPost": "Open the post ↗",
+      "comment": "Comment",
+      "written": "Written",
+      "edited": "Edited",
+      "helpful": "Helpful",
+      "replies": "Replies",
+      "approve": "Approve",
+      "reject": "Reject",
+      "working": "Saving…",
+      "rejectHint": "Rejecting takes the comment off the site; the author sees only \"not published\". Rejecting a root comment hides its replies too.",
+      "reports": "Reports ({count})",
+      "noReports": "No reports on this comment.",
+      "reportStatus": {
+        "Open": "open",
+        "Dismissed": "dismissed",
+        "ActionTaken": "action taken"
+      },
+      "dismiss": "Dismiss reports",
+      "dismissHint": "Reject closes every open report as \"action taken\"; \"Dismiss reports\" closes them and keeps the comment.",
+      "inReplyTo": "In reply to",
+      "rootComment": "— (root comment)",
+      "actionError": "The action could not be completed. Try again."
     }
   },
   "adminExperiences": {

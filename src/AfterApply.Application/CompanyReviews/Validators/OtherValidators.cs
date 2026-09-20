@@ -70,6 +70,8 @@ public sealed class MyContributionsQueryValidator : AbstractValidator<MyContribu
     public MyContributionsQueryValidator()
     {
         RuleFor(x => x.Page).InclusiveBetween(1, 1000);
+        RuleFor(x => x.Filter!.Value).IsInEnum().When(x => x.Filter.HasValue)
+            .OverridePropertyName(nameof(MyContributionsQuery.Filter));
     }
 }
 

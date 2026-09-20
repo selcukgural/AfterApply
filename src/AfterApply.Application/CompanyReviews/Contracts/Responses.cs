@@ -180,6 +180,9 @@ public sealed record AdminReviewReportResponse(
     DateTimeOffset ReportedAt,
     DateTimeOffset? ResolvedAt);
 
-public sealed record ModerationCountsResponse(int PendingReviews, int OpenReports);
+/// <summary>The admin tabs' badges. <paramref name="PendingComments"/> (2026-09-20) counts blog
+/// comments waiting for approval — the one number here that is not about company reviews, kept
+/// on this response so the tabs stay one request.</summary>
+public sealed record ModerationCountsResponse(int PendingReviews, int OpenReports, int PendingComments = 0);
 
 public sealed record UserReviewQuotaResponse(Guid UserId, int? ReviewQuotaOverride, int EffectiveLimit, int Used);

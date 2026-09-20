@@ -162,7 +162,21 @@ public sealed record AccountExportResponse(
     IReadOnlyList<CompanySalaryExportItem>? CompanySalaries = null,
     IReadOnlyList<PaymentOrderExportItem>? Payments = null,
     ProEntitlementExportItem? ProEntitlement = null,
-    IReadOnlyList<CandidateExperienceExportItem>? CandidateExperiences = null);
+    IReadOnlyList<CandidateExperienceExportItem>? CandidateExperiences = null,
+    IReadOnlyList<BlogCommentExportItem>? BlogComments = null);
+
+/// <summary>The author's copy of a blog comment (2026-09-20): the text, the post it is on, its
+/// status and its dates. Reports it received and who found it helpful are other readers' data.</summary>
+public sealed record BlogCommentExportItem(
+    Guid Id,
+    string PostTitle,
+    string PostLanguage,
+    string? PostSlug,
+    Guid? ParentCommentId,
+    string Content,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? EditedAt);
 
 /// <summary>A Pro purchase as the user sees it: what they bought, what they typed for the
 /// invoice, what happened. Provider internals (merchant ids, tokens, hashes) stay out.</summary>

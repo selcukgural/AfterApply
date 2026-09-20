@@ -14,6 +14,9 @@ describe("isAdminTabActive", () => {
     expect(isAdminTabActive("/admin/blog", "/admin/blog")).toBe(true);
     expect(isAdminTabActive("/admin/blog/0199a0a0-0000-7000-8000-000000000001", "/admin/blog")).toBe(true);
     expect(isAdminTabActive("/admin/blog", "/admin/reviews")).toBe(false);
+    expect(isAdminTabActive("/admin/comments", "/admin/comments")).toBe(true);
+    expect(isAdminTabActive("/admin/comments/0199a0a0-0000-7000-8000-000000000001", "/admin/comments")).toBe(true);
+    expect(isAdminTabActive("/admin/comments", "/admin/blog")).toBe(false);
   });
 
   it("does not light Reviews on Reports, which is its own tab, nor anything else", () => {

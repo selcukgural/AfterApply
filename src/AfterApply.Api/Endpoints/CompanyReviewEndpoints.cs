@@ -118,9 +118,10 @@ public static class CompanyReviewEndpoints
                 ICompanyContributionService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListMineAsync(user.GetUserId(), query, cancellationToken)))
             .WithValidation<MyContributionsQuery>()
-            .WithSummary("The caller's reviews, salary entries and candidate experiences as one list, newest first")
-            .WithDescription("Ten per page. Each item carries exactly one of the three per-kind records. A kind whose " +
-                             "feature is off is absent and its quota is null.")
+            .WithSummary("The caller's reviews, salary entries, candidate experiences and blog comments as one list, newest first")
+            .WithDescription("Ten per page. Each item carries exactly one of the per-kind records. A kind whose " +
+                             "feature is off is absent and its quota is null. filter=BlogComments keeps the blog " +
+                             "comments alone, filter=Company everything about companies.")
             .Produces<MyContributionsResponse>();
 
         userGroup.MapPut("/company-reviews/{reviewId:guid}", async (Guid reviewId, UpdateCompanyReviewRequest request,

@@ -9,7 +9,7 @@ import { ogImagePath } from "@/lib/seo/ogImage";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd } from "@/lib/seo/jsonLd";
 import { BLOG_PATH, blogAlternates, blogPostPath } from "@/lib/blog/blogPaths";
-import { fetchBlogPost } from "@/lib/blog/publicApi.server";
+import { fetchBlogComments, fetchBlogPost } from "@/lib/blog/publicApi.server";
 import { BlogArticle } from "@/components/blog/BlogArticle";
 
 function isBlogLanguage(locale: string): locale is BlogLanguage {
@@ -51,7 +51,7 @@ export default async function BlogPostPage({ params }: PageProps<"/[locale]/blog
   const post = await fetchBlogPost(locale, slug);
   if (!post) notFound();
 
-  const tSection = await getTranslations("metadata.pages");
+  const [tSection, comments] = await Promise.all([getTranslations("metadata.pages"), fetchBlogComments(post.id, locale)]);
   const path = blogPostPath(post.slug);
   const url = `${SITE_URL}/${locale}${path}`;
   const image = post.coverImageUrl ? `${SITE_URL}${post.coverImageUrl}` : `${SITE_URL}${ogImagePath(locale, post.title, tSection("blog.title"))}`;
@@ -77,7 +77,7 @@ export default async function BlogPostPage({ params }: PageProps<"/[locale]/blog
           }),
         )}
       />
-      <BlogArticle post={post} url={url} />
+      <BlogArticle post={post} url={url} comments={comments} renderedAt={new Date().toISOString()} />
     </>
   );
 }

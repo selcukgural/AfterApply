@@ -1,6 +1,7 @@
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.CompanyReviews;
 using AfterApply.Application.CompanyReviews.Contracts;
+using AfterApply.Domain.Blog;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.CompanyReviews;
 using AfterApply.Infrastructure.Persistence;
@@ -168,7 +169,8 @@ internal sealed class CompanyReviewModerationService(
     {
         var pending = await dbContext.CompanyReviews.CountAsync(r => r.Status == ReviewModerationStatus.Pending, cancellationToken);
         var open = await dbContext.CompanyReviewReports.CountAsync(p => p.Status == ReviewReportStatus.Open, cancellationToken);
-        return new ModerationCountsResponse(pending, open);
+        var pendingComments = await dbContext.BlogComments.CountAsync(c => c.Status == BlogCommentStatus.Pending, cancellationToken);
+        return new ModerationCountsResponse(pending, open, pendingComments);
     }
 
     public async Task<UserReviewQuotaResponse?> SetUserQuotaAsync(Guid userId, int? reviewQuotaOverride, CancellationToken cancellationToken)

@@ -6,6 +6,8 @@ import { formatArticleDate } from "@/lib/guide/formatArticleDate";
 import { ShareRow } from "@/components/share/ShareRow";
 import { BlogArticleBody } from "@/components/blog/BlogArticleBody";
 import { LikeButton } from "@/components/blog/LikeButton";
+import { CommentSection } from "@/components/blog/comments/CommentSection";
+import type { BlogCommentList } from "@/types/api";
 
 interface BlogArticleProps {
   post: BlogPostPublic;
@@ -17,6 +19,14 @@ interface BlogArticleProps {
    * live yet. The `inert` attribute keeps them visible and untouchable.
    */
   inert?: boolean;
+  /**
+   * The comments under the post (2026-09-20): the anonymous first page fetched with the post, or
+   * null when the API could not answer (the section then loads in the browser). Left out
+   * entirely by the preview — a draft has no comments and nothing to write one on.
+   */
+  comments?: BlogCommentList | null;
+  /** The server's clock at render, for the comments' relative times (see `CommentSection`). */
+  renderedAt?: string;
 }
 
 /**
@@ -26,7 +36,7 @@ interface BlogArticleProps {
  * except by data. Sync (no `async`), so it renders inside both a server page and the preview's
  * client tree; `useTranslations` and `useLocale` work in both.
  */
-export function BlogArticle({ post, url, inert = false }: BlogArticleProps) {
+export function BlogArticle({ post, url, inert = false, comments, renderedAt }: BlogArticleProps) {
   const locale = useLocale();
   const t = useTranslations("blog");
   const tSection = useTranslations("metadata.pages");
@@ -93,6 +103,15 @@ export function BlogArticle({ post, url, inert = false }: BlogArticleProps) {
           {t("backToList")}
         </Link>
       </footer>
+
+      {comments !== undefined && (
+        <CommentSection
+          postId={post.id}
+          initial={comments}
+          signInHref={`/login?next=${encodeURIComponent(path)}`}
+          renderedAt={renderedAt ?? new Date().toISOString()}
+        />
+      )}
     </div>
   );
 }
