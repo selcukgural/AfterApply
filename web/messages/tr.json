@@ -4887,7 +4887,14 @@
       "publishHint": "Yayımlamak taslağı olduğu gibi siteye koyar; sonraki düzenlemeler siz tekrar yayımlayana kadar görünmez.",
       "preview": "Önizle",
       "previewHint": "Önizleme, taslağı sitedeki yazı sayfasının kendisiyle gösterir — yayımlanınca tam böyle görünür.",
-      "nothingWritten": "Yayımlanacak bir şey yok — önce bir şey yazın."
+      "nothingWritten": "Yayımlanacak bir şey yok — önce bir şey yazın.",
+      "coverRequirement": "Paylaşım kartında kullanılması için en az {width}×{height} px ve yatay (≈1,9:1) olmalı; küçük ya da dikey kapak yazıda görünür, paylaşımda başlık kartı çıkar.",
+      "coverShare": {
+        "cover": "Paylaşımda bu kapak kullanılır.",
+        "tooSmall": "Paylaşım kartı için küçük (en az {width}×{height} px) — paylaşımda başlık kartı çıkar.",
+        "wrongRatio": "Paylaşım kartı için yatay olmalı (≈1,9:1) — paylaşımda başlık kartı çıkar.",
+        "unknownSize": "Boyutu okunamadı — paylaşımda başlık kartı çıkar."
+      }
     },
     "seo": {
       "heading": "SEO",
@@ -4949,7 +4956,10 @@
       "basis": {
         "google": "Google",
         "practice": "iyi uygulama"
-      }
+      },
+      "shareKicker": "Blog",
+      "shareUsesCover": "Paylaşımda kapak görseli kullanılır.",
+      "shareUsesCard": "Paylaşımda sitenin ürettiği başlık kartı kullanılır — kapak yoksa ya da kart boyutunun altındaysa."
     },
     "autosave": {
       "saved": "Kaydedildi · {time}",

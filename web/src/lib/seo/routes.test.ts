@@ -315,6 +315,14 @@ describe("share images", () => {
     expect(source).toMatch(/twitter:\s*\{[\s\S]*?images,/);
   });
 
+  it("are the post's cover on a blog post when it is card-sized, else the generated card (2026-09-21)", () => {
+    const page = read("src/app/[locale]/(public)/blog/[slug]/page.tsx");
+    expect(page).toContain("coverIsShareImage(coverSize)");
+    expect(page).toMatch(/image:\s*\{\s*url:\s*`\$\{SITE_URL\}\$\{post\.coverImageUrl\}`/);
+    const source = read("src/lib/seo/pageMetadata.ts");
+    expect(source).toContain("const images = [image ?? {");
+  });
+
   it("show the hero line on the landing page's card, not its search title", () => {
     const page = read("src/app/[locale]/page.tsx");
     expect(page).toContain('shareTitle: tHero("title")');

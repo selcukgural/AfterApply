@@ -21,6 +21,7 @@ import {
   type SeoScore,
 } from "@/lib/blog/seoChecks";
 import { SITE_NAME } from "@/lib/seo/routes";
+import { ogImagePath } from "@/lib/seo/ogImage";
 
 export interface BlogSeoSectionProps {
   language: BlogLanguage;
@@ -37,6 +38,8 @@ export interface BlogSeoSectionProps {
   onSlugChange: (value: string) => void;
   onSlugReset: () => void;
   hasCover: boolean;
+  /** The cover's blob URL when it is the share image (card-sized); null shows the generated card. */
+  coverUrl: string | null;
   /** The body as HTML, for the word count and the keyword checks. */
   contentHtml: string;
   /** Asks the model, after the draft is saved so it reads what is on screen. Null: no post yet. */
@@ -87,7 +90,7 @@ export function seoInputOf(props: Pick<BlogSeoSectionProps, "title" | "excerpt" 
  * field when one is crossed.
  */
 export function BlogSeoSection(props: BlogSeoSectionProps) {
-  const { language, title, excerpt, onExcerptChange, seo, onSeoChange, slug, slugLocked, slugTouched, onSlugChange, onSlugReset, hasCover } = props;
+  const { language, title, excerpt, onExcerptChange, seo, onSeoChange, slug, slugLocked, slugTouched, onSlugChange, onSlugReset, hasCover, coverUrl } = props;
   const t = useTranslations("adminBlog.seo");
   const [keywordDraft, setKeywordDraft] = useState("");
   const [suggestion, setSuggestion] = useState<BlogSeoSuggestion | null>(null);
@@ -358,43 +361,45 @@ export function BlogSeoSection(props: BlogSeoSectionProps) {
             <div className="flex flex-col gap-1.5">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("shareHeading")}</span>
               <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
-                <div className="flex aspect-[1200/630] items-end bg-gradient-to-br from-[#1e3a8a] via-[#2a5fd6] to-[#60a5fa] p-3 text-sm font-bold leading-tight text-white">
-                  <span className="line-clamp-3">{shownTitle || title || "…"}</span>
-                </div>
+                {/* The picture a shared link shows, as it is: the cover when it is card-sized, else
+                    the site's generated card rendered by its own route (2026-09-21). */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- a preview of a generated image, sized by its box */}
+                <img src={coverUrl ?? ogImagePath(language, shownTitle || title || SITE_NAME, t("shareKicker"))} alt="" className="aspect-[1200/630] w-full object-cover" />
                 <div className="px-2.5 py-2 text-xs">
                   <div className="truncate font-medium text-gray-900 dark:text-gray-100">{fullTitle}</div>
                   <div className="truncate text-gray-500 dark:text-gray-400">{excerpt.trim() || "…"}</div>
                   <div className="text-gray-500 dark:text-gray-400">ekariyerim.com</div>
                 </div>
               </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{coverUrl ? t("shareUsesCover") : t("shareUsesCard")}</p>
             </div>
 
             <div className="flex flex-col gap-1.5">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("checklistHeading")}</span>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{t("checklistIntro")}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t("checklistIntro")}</p>
               <ul className="flex flex-col gap-1.5 text-[13px] text-gray-700 dark:text-gray-300">
-              {checks.map((check) => {
-                const source = SEO_CHECK_SOURCES[check.id];
-                const label = t(`checks.${check.id}`, { value: check.value ?? 0 });
-                return (
-                  <li key={check.id} className="flex items-center gap-2">
-                    <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${CHECK_DOT[check.status]}`} />
-                    <span className="min-w-0 flex-1">{label}</span>
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide underline-offset-2 hover:underline ${
-                        source.basis === "google" ? "bg-accent-wash text-accent-ink" : "bg-muted-wash text-muted-ink"
-                      }`}
-                      aria-label={t("sourceLabel", { item: label })}
-                    >
-                      {t(`basis.${source.basis}`)}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
+                {checks.map((check) => {
+                  const source = SEO_CHECK_SOURCES[check.id];
+                  const label = t(`checks.${check.id}`, { value: check.value ?? 0 });
+                  return (
+                    <li key={check.id} className="flex items-center gap-2">
+                      <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${CHECK_DOT[check.status]}`} />
+                      <span className="min-w-0 flex-1">{label}</span>
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide underline-offset-2 hover:underline ${
+                          source.basis === "google" ? "bg-accent-wash text-accent-ink" : "bg-muted-wash text-muted-ink"
+                        }`}
+                        aria-label={t("sourceLabel", { item: label })}
+                      >
+                        {t(`basis.${source.basis}`)}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           </div>
         </div>

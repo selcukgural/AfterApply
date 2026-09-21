@@ -151,7 +151,9 @@ internal sealed partial class BlogAdminService(
     public async Task<AdminBlogPostResponse?> GetAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
     {
         var post = await Visible(adminUserId).AsNoTracking().FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
-        return post is null ? null : ToResponse(post, adminUserId, await LikeCountAsync(postId, cancellationToken));
+        return post is null
+            ? null
+            : ToResponse(post, adminUserId, await LikeCountAsync(postId, cancellationToken), await CoverSizeAsync(post.CoverMediaId, cancellationToken));
     }
 
     public async Task<BlogPostPublicResponse?> PreviewAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
@@ -163,6 +165,7 @@ internal sealed partial class BlogAdminService(
         }
 
         var now = DateTimeOffset.UtcNow;
+        var cover = await CoverSizeAsync(post.CoverMediaId, cancellationToken);
 
         // The address the page would get: the slug it has, else the one PublishAsync would
         // allocate from the draft title — computed the same way, so the preview's URL is the
@@ -182,7 +185,8 @@ internal sealed partial class BlogAdminService(
             post.Id, slug, post.Language, post.DraftTitle, post.DraftExcerpt, post.DraftContentHtml,
             post.CoverMediaId is { } coverId ? BlogMediaPath.For(coverId) : null,
             post.PublishedAt ?? now, now, await LikeCountAsync(postId, cancellationToken), LikedByMe: null, translation,
-            post.ViewCount, post.DraftSeo.SeoTitle, post.DraftSeo.CoverAlt, post.DraftSeo.AllKeywords);
+            post.ViewCount, post.DraftSeo.SeoTitle, post.DraftSeo.CoverAlt, post.DraftSeo.AllKeywords,
+            cover?.Width, cover?.Height);
     }
 
     public async Task<BlogDraftSavedResponse?> SaveDraftAsync(Guid adminUserId, Guid postId, SaveBlogDraftRequest request,
@@ -530,12 +534,26 @@ internal sealed partial class BlogAdminService(
     private static bool HasUnpublishedChanges(BlogPost post) =>
         post.PublishedUpdatedAt is { } publishedAt && post.DraftUpdatedAt > publishedAt;
 
-    private static AdminBlogPostResponse ToResponse(BlogPost post, Guid adminUserId, int likeCount) => new(
+    /// <summary>The cover's pixel size, read at upload; null when there is no cover or the
+    /// bytes did not say (2026-09-21 — what the editor's share-card note goes by).</summary>
+    private async Task<(int? Width, int? Height)?> CoverSizeAsync(Guid? coverMediaId, CancellationToken cancellationToken)
+    {
+        if (coverMediaId is null)
+        {
+            return null;
+        }
+
+        var size = await dbContext.BlogMedia.Where(m => m.Id == coverMediaId).Select(m => new { m.Width, m.Height })
+            .FirstOrDefaultAsync(cancellationToken);
+        return size is null ? null : (size.Width, size.Height);
+    }
+
+    private static AdminBlogPostResponse ToResponse(BlogPost post, Guid adminUserId, int likeCount, (int? Width, int? Height)? cover = null) => new(
         post.Id, post.Status, post.Language, post.Slug, post.AuthorUserId, post.AuthorUserId == adminUserId,
         post.TranslationOfPostId, post.CoverMediaId,
         post.DraftTitle, post.DraftExcerpt, post.DraftContentJson, post.DraftContentHtml, post.DraftUpdatedAt,
         post.Revision, post.Title, post.PublishedAt, post.PublishedUpdatedAt, HasUnpublishedChanges(post), likeCount, post.CreatedAt,
-        post.ViewCount, ToResponse(post.DraftSeo));
+        post.ViewCount, ToResponse(post.DraftSeo), cover?.Width, cover?.Height);
 
     private static BlogSeoResponse ToResponse(BlogSeo seo) =>
         new(seo.SeoTitle, seo.PrimaryKeyword, seo.SecondaryKeywords, seo.CoverAlt);

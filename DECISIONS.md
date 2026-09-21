@@ -8519,3 +8519,16 @@ görünürlük 404/403, yazmaz, kilit), `Seo_Suggestion_Without_A_Configured_Mod
 Tarayıcı (local): eski yazıda gerçek Vertex çağrısı → Türkçe öneriler → Boşları doldur → yayınla →
 public sayfa doğrulandı; gövde görseli alt kutusu; yeni yazıda canlı slug / elle / başlıktan üret;
 rozetli kontrol listesi 11/12.
+
+**Ek (aynı gün) — paylaşım görseli kapak.** Kullanıcı sordu: önizlemedeki mavi kart neydi? Kanvastan
+kalan yer tutucuydu; gerçek OG görseli sitenin ürettiği lacivert başlık kartıydı ve **kapak hiç
+kullanılmıyordu** (JSON-LD kapağı veriyordu → tutarsız). Karar: **kapak varsa ve kart boyutundaysa
+paylaşım görseli kapak**, değilse üretilen kart. Kural tek yerde (`web/src/lib/seo/shareImage.ts`):
+≥1200×630 px ve oran 1,6–2,1 (OG 1,91:1); küçük ya da dikey kapak yazıda görünür, paylaşımda kart
+çıkar. `BlogPostPublicResponse`/`AdminBlogPostResponse` kapak boyutunu taşır (`BlogMedia` zaten
+okuyordu). Editör: kapak kartının altında boyut + karar cümlesi ("640×360 px · Paylaşım kartı için
+küçük…" / "Paylaşımda bu kapak kullanılır."), kapak yokken gereksinim notu; SEO bölümünün önizlemesi
+artık gerçek görseli gösterir (kapak ya da `/{locale}/og` rotasının ürettiği kart). Test:
+`shareImage.test.ts`, `routes.test.ts` (kapak/kart seçimi), integration kapak boyutu (640×480 fixture).
+Tarayıcı: 640×360 kapak → uyarı + kart; 1200×630 kapak → "bu kapak kullanılır", yayın → `og:image`
+kapak URL'si, 1200×630, alt metni.

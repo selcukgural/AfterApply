@@ -11,6 +11,7 @@ import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd } from
 import { BLOG_PATH, blogAlternates, blogPostPath } from "@/lib/blog/blogPaths";
 import { fetchBlogComments, fetchBlogPost } from "@/lib/blog/publicApi.server";
 import { wordCount } from "@/lib/blog/seoChecks";
+import { coverIsShareImage } from "@/lib/seo/shareImage";
 import { BlogArticle } from "@/components/blog/BlogArticle";
 
 function isBlogLanguage(locale: string): locale is BlogLanguage {
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/blog/[sl
   if (!post) return {};
 
   const tSection = await getTranslations("metadata.pages");
+  const coverSize = { width: post.coverWidth, height: post.coverHeight };
   return buildMetadata({
     locale,
     path: blogPostPath(slug),
@@ -38,6 +40,11 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/blog/[sl
     description: post.excerpt || post.title,
     article: { publishedTime: post.publishedAt, modifiedTime: post.updatedAt },
     kicker: tSection("blog.title"),
+    // The cover is the share image when it is big and wide enough for a card; a small or tall
+    // one would render worse than the generated card (2026-09-21).
+    ...(post.coverImageUrl && coverIsShareImage(coverSize)
+      ? { image: { url: `${SITE_URL}${post.coverImageUrl}`, width: post.coverWidth!, height: post.coverHeight!, alt: post.coverAlt ?? post.title } }
+      : {}),
   });
 }
 

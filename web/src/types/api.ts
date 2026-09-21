@@ -1934,6 +1934,9 @@ export interface BlogPostPublic extends BlogPostListItem {
   coverAlt: string | null;
   /** Primary keyword first, then the secondary ones — the JSON-LD's `keywords`. Never printed as meta keywords. */
   keywords: string[];
+  /** The cover's pixel size when the upload could read it — decides cover vs generated card as the share image. */
+  coverWidth: number | null;
+  coverHeight: number | null;
 }
 
 /** What the model proposed for a draft (2026-09-21): proposals only, applied field by field by the author. */
@@ -2136,6 +2139,8 @@ export interface AdminBlogPost {
   viewCount: number;
   /** The draft's SEO fields (2026-09-21). */
   draftSeo: BlogSeo;
+  coverWidth: number | null;
+  coverHeight: number | null;
 }
 
 /** Create, from the first draft: sent once the author has typed at least one character into the

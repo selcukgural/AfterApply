@@ -4887,7 +4887,14 @@
       "publishHint": "Publishing puts the draft on the site as it is; later edits stay hidden until you publish again.",
       "preview": "Preview",
       "previewHint": "The preview shows the draft with the site's own post page — exactly how it will look once published.",
-      "nothingWritten": "Nothing to publish — write something first."
+      "nothingWritten": "Nothing to publish — write something first.",
+      "coverRequirement": "To be the share card it must be at least {width}×{height} px and landscape (≈1.9:1); a smaller or portrait cover shows on the post, the title card is shared instead.",
+      "coverShare": {
+        "cover": "This cover is used when shared.",
+        "tooSmall": "Too small for the share card (at least {width}×{height} px) — the title card is shared instead.",
+        "wrongRatio": "Must be landscape for the share card (≈1.9:1) — the title card is shared instead.",
+        "unknownSize": "Size could not be read — the title card is shared instead."
+      }
     },
     "seo": {
       "heading": "SEO",
@@ -4949,7 +4956,10 @@
       "basis": {
         "google": "Google",
         "practice": "best practice"
-      }
+      },
+      "shareKicker": "Blog",
+      "shareUsesCover": "The cover is used when the link is shared.",
+      "shareUsesCard": "The site's generated title card is used when shared — no cover, or one below card size."
     },
     "autosave": {
       "saved": "Saved · {time}",

@@ -28,14 +28,18 @@ export type PageMetadataOptions = {
   /** The hreflang set, when it is not "this path in every locale" — a blog post exists in one
    *  language (plus a linked translation, if any), so its set is built from the post. */
   languages?: Record<string, string>;
+  /** A picture of the page's own for the share card — a blog post's cover, when it is big enough
+   *  (`lib/seo/shareImage.ts`). Absolute URL. Without it the generated title card is used. */
+  image?: { url: string; width: number; height: number; alt: string };
 };
 
-export function buildMetadata({ locale, path, title, description, index, article, kicker, shareTitle, languages }: PageMetadataOptions): Metadata {
+export function buildMetadata({ locale, path, title, description, index, article, kicker, shareTitle, languages, image }: PageMetadataOptions): Metadata {
   const fullTitle = `${title} · ${SITE_NAME}`;
   const url = `/${locale}${pathFor(path, locale)}`;
-  // Every page gets a card with its own title (or the share title it asks for).
+  // Every page gets a card with its own title (or the share title it asks for), unless it
+  // brings a picture of its own.
   const cardTitle = shareTitle ?? title;
-  const images = [{ url: ogImagePath(locale, cardTitle, kicker), width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: cardTitle }];
+  const images = [image ?? { url: ogImagePath(locale, cardTitle, kicker), width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: cardTitle }];
 
   return {
     title: fullTitle,

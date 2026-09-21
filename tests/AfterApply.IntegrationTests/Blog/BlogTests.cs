@@ -962,6 +962,11 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         (await everyone.Content.ReadAsByteArrayAsync()).ShouldBe(PngBytes);
         var page = (await (await GetPublicAsync("tr", "ise-alim-surecinde-ghosting")).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
         page.CoverImageUrl.ShouldBe(media.Url);
+        // The cover's pixel size rides along (the fixture's IHDR says 640×480) — what the web app
+        // decides the share image by (2026-09-21); the admin view carries it too.
+        (page.CoverWidth, page.CoverHeight).ShouldBe((640, 480));
+        var admin = await GetAdminAsync(author, post.Id);
+        (admin.CoverWidth, admin.CoverHeight).ShouldBe((640, 480));
 
         // Deleted with the post — rows and bytes.
         (await author.DeleteAsync($"/api/admin/blog/posts/{post.Id}")).StatusCode.ShouldBe(HttpStatusCode.NoContent);

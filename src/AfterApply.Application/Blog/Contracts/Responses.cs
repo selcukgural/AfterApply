@@ -36,7 +36,11 @@ public sealed record BlogPostPublicResponse(
     int ViewCount = 0,
     string? SeoTitle = null,
     string? CoverAlt = null,
-    IReadOnlyList<string>? Keywords = null);
+    IReadOnlyList<string>? Keywords = null,
+    /// <summary>The cover's pixel size, when the upload could read it — what decides whether
+    /// the cover or the generated card is the share image (2026-09-21).</summary>
+    int? CoverWidth = null,
+    int? CoverHeight = null);
 
 /// <summary>
 /// What the model proposed for the draft (DECISIONS.md 2026-09-21). Every field may be null —
@@ -124,7 +128,9 @@ public sealed record AdminBlogPostResponse(
     int LikeCount,
     DateTimeOffset CreatedAt,
     int ViewCount = 0,
-    BlogSeoResponse? DraftSeo = null);
+    BlogSeoResponse? DraftSeo = null,
+    int? CoverWidth = null,
+    int? CoverHeight = null);
 
 public sealed record BlogDraftSavedResponse(int Revision, DateTimeOffset DraftUpdatedAt);
 

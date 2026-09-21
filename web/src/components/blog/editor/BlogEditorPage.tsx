@@ -6,12 +6,13 @@ import { useLocale, useTranslations } from "next-intl";
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Link, useRouter } from "@/i18n/navigation";
-import type { AdminBlogPost, BlogLanguage, BlogSeo } from "@/types/api";
+import type { AdminBlogPost, BlogLanguage, BlogMediaResponse, BlogSeo } from "@/types/api";
 import { adminBlogApi } from "@/lib/api/blog";
 import { ApiError } from "@/lib/api/httpClient";
 import { blogPostPath, blogPreviewPath } from "@/lib/blog/blogPaths";
 import type { NewPostSeed } from "@/lib/blog/newPostSeed";
 import { seoChecklist, seoScore, slugFromTitle } from "@/lib/blog/seoChecks";
+import { SHARE_IMAGE_MIN_HEIGHT, SHARE_IMAGE_MIN_WIDTH, shareImageVerdict, type ImageSize } from "@/lib/seo/shareImage";
 import { Card } from "@/components/dashboard/Card";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
@@ -54,6 +55,8 @@ function emptyPost(seed: NewPostSeed): AdminBlogPost {
     createdAt: now,
     viewCount: 0,
     draftSeo: { seoTitle: null, primaryKeyword: null, secondaryKeywords: [], coverAlt: null },
+    coverWidth: null,
+    coverHeight: null,
   };
 }
 
@@ -148,6 +151,11 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   const [bodyHtml, setBodyHtml] = useState(seed.draftContentHtml);
   const [translationOfPostId, setTranslationOfPostId] = useState(seed.translationOfPostId);
   const [coverMediaId, setCoverMediaId] = useState(seed.coverMediaId);
+  // The cover's pixel size, from the post (an existing cover) or the upload's answer (a new one):
+  // what decides whether the cover or the generated card is the share image.
+  const [coverSize, setCoverSize] = useState<ImageSize | null>(
+    seed.coverMediaId ? { width: seed.coverWidth, height: seed.coverHeight } : null,
+  );
   const [uploadState, setUploadState] = useState<"idle" | "uploading" | "error">("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -155,6 +163,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const locked = meta.publishedAt !== null;
+  const coverVerdict = shareImageVerdict(coverSize);
   const effectiveSlug = locked ? (meta.slug ?? "") : slugTouched ? slug : slugFromTitle(title);
 
   // Declared before the uploader (which needs `ensurePost`) and before the editor (which needs
@@ -188,8 +197,10 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   });
   const { markEdited, ensurePost } = autosave;
 
-  const uploadImage = useCallback(
-    async (file: File): Promise<string | null> => {
+  // The cover goes up through the same checks as a body image, but the editor needs the
+  // upload's answer whole (its pixel size), not just the URL.
+  const uploadCover = useCallback(
+    async (file: File): Promise<BlogMediaResponse | null> => {
       setUploadError(null);
       if (!IMAGE_MIME_TYPES.includes(file.type)) {
         setUploadState("error");
@@ -211,7 +222,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
       try {
         const media = await adminBlogApi.uploadMedia(id, file);
         setUploadState("idle");
-        return media.url;
+        return media;
       } catch (err) {
         setUploadState("error");
         setUploadError(err instanceof ApiError ? err.message : tUpload("error"));
@@ -220,6 +231,8 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
     },
     [ensurePost, tUpload],
   );
+
+  const uploadImage = useCallback(async (file: File): Promise<string | null> => (await uploadCover(file))?.url ?? null, [uploadCover]);
 
   const extensions = useMemo(
     () => buildExtensions({ placeholder: tEditor("body"), imageAlt: { label: tSeo("imageAltLabel"), placeholder: tSeo("imageAltPlaceholder") }, uploadImage }),
@@ -432,6 +445,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
               edit(setSlug)("");
             }}
             hasCover={coverMediaId !== null}
+            coverUrl={coverVerdict === "cover" ? cover.url : null}
             contentHtml={bodyHtml}
             onSuggest={async () => {
               // The model reads the draft as saved, so what is on screen is flushed first.
@@ -539,13 +553,25 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
                   ) : (
                     <div className="aa-skeleton aspect-[16/10] w-full rounded-md" />
                   )}
-                  <button type="button" className="self-start text-xs text-red-600 underline-offset-2 hover:underline dark:text-red-400" onClick={() => edit(setCoverMediaId)(null)}>
+                  <p className={`text-xs ${coverVerdict === "cover" ? "text-gray-500 dark:text-gray-400" : "text-warn-ink"}`}>
+                    {coverSize?.width && coverSize.height ? `${coverSize.width}×${coverSize.height} px · ` : ""}
+                    {tEditor(`coverShare.${coverVerdict ?? "unknownSize"}`, { width: SHARE_IMAGE_MIN_WIDTH, height: SHARE_IMAGE_MIN_HEIGHT })}
+                  </p>
+                  <button
+                    type="button"
+                    className="self-start text-xs text-red-600 underline-offset-2 hover:underline dark:text-red-400"
+                    onClick={() => {
+                      edit(setCoverMediaId)(null);
+                      setCoverSize(null);
+                    }}
+                  >
                     {tEditor("coverClear")}
                   </button>
                 </>
               ) : (
                 <>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{tEditor("coverNone")}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{tEditor("coverRequirement", { width: SHARE_IMAGE_MIN_WIDTH, height: SHARE_IMAGE_MIN_HEIGHT })}</p>
                   <label className={buttonClassName("secondary", "cursor-pointer self-start text-center")}>
                     {tEditor("coverUpload")}
                     <input
@@ -556,8 +582,11 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
                         const file = e.target.files?.[0];
                         e.target.value = "";
                         if (!file) return;
-                        const url = await uploadImage(file);
-                        if (url) edit(setCoverMediaId)(url.slice(url.lastIndexOf("/") + 1));
+                        const media = await uploadCover(file);
+                        if (media) {
+                          edit(setCoverMediaId)(media.id);
+                          setCoverSize({ width: media.width, height: media.height });
+                        }
                       }}
                     />
                   </label>
