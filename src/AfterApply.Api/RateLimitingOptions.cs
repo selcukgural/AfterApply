@@ -111,6 +111,10 @@ public sealed class RateLimitingOptions
     /// <summary>Per user — the "helpful" toggle on a blog comment. Same size as <see cref="BlogLike"/>.</summary>
     public FixedWindowPolicy BlogCommentHelpful { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };
 
+    /// <summary>Per admin — the SEO suggestion button, a model call each (2026-09-21). Twenty an
+    /// hour is many posts' worth of "suggest again"; it bounds a stuck retry, not an author.</summary>
+    public FixedWindowPolicy BlogSeoSuggest { get; init; } = new() { PermitLimit = 20, WindowSeconds = 3600 };
+
     /// <summary>Per IP, anonymous — the public company directory search: a trigram scan per
     /// request, from anyone. A person types a name and pages a few times; sixty a minute is
     /// invisible to that and a ceiling for a scraper.</summary>

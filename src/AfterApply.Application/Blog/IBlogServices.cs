@@ -49,6 +49,13 @@ public interface IBlogAdminService
     /// <exception cref="BlogPostNotPublishedException">The post is not on the site.</exception>
     Task<AdminBlogPostResponse?> UnpublishAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Asks the model for the draft's SEO fields (DECISIONS.md 2026-09-21) and answers what it
+    /// proposed, normalised to the store's caps. Writes nothing: the editor applies what the
+    /// author picks through the next autosave. Null when the caller may not see the post.
+    /// </summary>
+    Task<BlogSeoSuggestionResponse?> SuggestSeoAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken);
+
     /// <summary>Removes the post, its likes, its media rows and — after the commit — its stored
     /// images. False when there is no such post the caller may see.</summary>
     Task<bool> DeleteAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken);

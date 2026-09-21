@@ -113,6 +113,7 @@ public static class DependencyInjection
     public const string BlogCommentWriteRateLimitPolicy = "blog-comment-write";
     public const string BlogCommentReportRateLimitPolicy = "blog-comment-report";
     public const string BlogCommentHelpfulRateLimitPolicy = "blog-comment-helpful";
+    public const string BlogSeoSuggestRateLimitPolicy = "blog-seo-suggest";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -284,6 +285,10 @@ public static class DependencyInjection
         services.AddSingleton<IBlogHtmlSanitizer, BlogHtmlSanitizer>();
         services.AddScoped<IBlogCacheInvalidator, BlogCacheInvalidator>();
         services.AddScoped<IBlogAdminService, BlogAdminService>();
+        // The SEO suggestion (2026-09-21): the same Vertex client as the CV review, its own named
+        // HttpClient so its timeout is its own.
+        services.AddScoped<IBlogSeoSuggestionProvider, VertexBlogSeoSuggestionProvider>();
+        services.AddHttpClient(BlogOptions.BlogSeoSettings.HttpClientName);
         services.AddScoped<IBlogPublicService, BlogPublicService>();
         services.AddScoped<IBlogCommentService, BlogCommentService>();
         services.AddScoped<IBlogMediaService, BlogMediaService>();

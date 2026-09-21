@@ -35,6 +35,8 @@ export const TEXT_COLORS: readonly string[] = [
 
 export interface EditorExtensionOptions {
   placeholder: string;
+  /** The image node's alt box (2026-09-21): its label and placeholder, translated. */
+  imageAlt: { label: string; placeholder: string };
   /** Uploads a dropped or pasted image and answers its `src`; null when it was refused. */
   uploadImage: (file: File) => Promise<string | null>;
 }
@@ -44,7 +46,7 @@ export interface EditorExtensionOptions {
  * are reviewed together: anything added here has to survive `BlogHtmlSanitizer` or it will be
  * silently stripped on save.
  */
-export function buildExtensions({ placeholder, uploadImage }: EditorExtensionOptions) {
+export function buildExtensions({ placeholder, imageAlt, uploadImage }: EditorExtensionOptions) {
   const insertUploaded = async (editor: Editor, files: File[], pos?: number) => {
     for (const file of files) {
       const src = await uploadImage(file);
@@ -76,7 +78,7 @@ export function buildExtensions({ placeholder, uploadImage }: EditorExtensionOpt
     TaskList,
     TaskItem.configure({ nested: true }),
     TableKit.configure({ table: { resizable: true } }),
-    MediaImage,
+    MediaImage.configure({ allowBase64: false, inline: false, altLabel: imageAlt.label, altPlaceholder: imageAlt.placeholder }),
     Placeholder.configure({ placeholder }),
     CharacterCount,
     FileHandler.configure({

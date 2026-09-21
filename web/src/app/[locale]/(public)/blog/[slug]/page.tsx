@@ -10,6 +10,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd } from "@/lib/seo/jsonLd";
 import { BLOG_PATH, blogAlternates, blogPostPath } from "@/lib/blog/blogPaths";
 import { fetchBlogComments, fetchBlogPost } from "@/lib/blog/publicApi.server";
+import { wordCount } from "@/lib/blog/seoChecks";
 import { BlogArticle } from "@/components/blog/BlogArticle";
 
 function isBlogLanguage(locale: string): locale is BlogLanguage {
@@ -31,7 +32,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/blog/[sl
     // A post exists in one language (plus a linked translation): the hreflang set is built from
     // the post, not from "this path in every locale".
     languages: blogAlternates(post),
-    title: post.title,
+    // The author's shorter, keyword-first title for the tab and the result, when they set one;
+    // the headline on the page stays the headline (2026-09-21).
+    title: post.seoTitle || post.title,
     description: post.excerpt || post.title,
     article: { publishedTime: post.publishedAt, modifiedTime: post.updatedAt },
     kicker: tSection("blog.title"),
@@ -74,6 +77,9 @@ export default async function BlogPostPage({ params }: PageProps<"/[locale]/blog
             datePublished: post.publishedAt,
             dateModified: post.updatedAt,
             image,
+            type: "BlogPosting",
+            keywords: post.keywords,
+            wordCount: wordCount(post.contentHtml),
           }),
         )}
       />

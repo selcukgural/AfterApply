@@ -3,13 +3,16 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.Blog;
 using AfterApply.Application.Blog.Contracts;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Domain.Blog;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.Blog;
@@ -105,9 +108,9 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
 
     private static SaveBlogDraftRequest Draft(AdminBlogPostResponse post, string title = "İşe Alım Sürecinde Ghosting",
         string html = "<p>Merhaba</p>", string? slug = null, string? language = null, Guid? translationOf = null,
-        Guid? cover = null, int? revision = null) =>
+        Guid? cover = null, int? revision = null, BlogSeoRequest? seo = null) =>
         new(title, "Özet", Doc, html, language ?? post.Language, slug ?? post.Slug, cover ?? post.CoverMediaId,
-            translationOf ?? post.TranslationOfPostId, revision ?? post.Revision);
+            translationOf ?? post.TranslationOfPostId, revision ?? post.Revision, seo);
 
     private static async Task<BlogDraftSavedResponse> SaveAsync(HttpClient admin, Guid postId, SaveBlogDraftRequest request)
     {
@@ -696,6 +699,141 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
 
         // The wrong language for a slug is a 404, not a redirect.
         (await GetPublicAsync("en", post.Slug!)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    // ---- SEO fields (2026-09-21) ------------------------------------------------------------------
+
+    [Fact]
+    public async Task Seo_Fields_Are_Saved_With_The_Draft_And_Reach_The_Page_On_Publish()
+    {
+        var (admin, _) = await RegisterAdminAsync("seo.blog@example.com");
+        var post = await CreateAsync(admin);
+
+        // An editor build without the SEO section sends no `seo` at all: stored as none, not refused.
+        var first = await SaveAsync(admin, post.Id, Draft(post));
+        ShouldBeSeo((await GetAdminAsync(admin, post.Id)).DraftSeo, null, null, [], null);
+
+        var seo = new BlogSeoRequest(" İşe Alımda Ghosting ", "işe alımda ghosting",
+            ["mülakat sonrası sessizlik", "Mülakat Sonrası Sessizlik", " ", "İK geri dönüş süresi"], "Soyut gradyan");
+        await SaveAsync(admin, post.Id, Draft(post, revision: first.Revision, seo: seo));
+        var draft = await GetAdminAsync(admin, post.Id);
+        ShouldBeSeo(draft.DraftSeo, "İşe Alımda Ghosting", "işe alımda ghosting", ["mülakat sonrası sessizlik", "İK geri dönüş süresi"], "Soyut gradyan");
+
+        // The preview shows the draft's SEO as publish would put it.
+        var preview = (await admin.GetFromJsonAsync<BlogPostPublicResponse>($"/api/admin/blog/posts/{post.Id}/preview", JsonOptions))!;
+        preview.SeoTitle.ShouldBe("İşe Alımda Ghosting");
+        preview.CoverAlt.ShouldBe("Soyut gradyan");
+        preview.Keywords.ShouldBe(["işe alımda ghosting", "mülakat sonrası sessizlik", "İK geri dönüş süresi"]);
+
+        var published = await PublishAsync(admin, post.Id);
+        var page = (await (await GetPublicAsync("tr", published.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
+        page.SeoTitle.ShouldBe("İşe Alımda Ghosting");
+        page.CoverAlt.ShouldBe("Soyut gradyan");
+        page.Keywords.ShouldBe(["işe alımda ghosting", "mülakat sonrası sessizlik", "İK geri dönüş süresi"]);
+
+        // Clearing the draft's fields does not touch the page until the next publish.
+        await SaveAsync(admin, post.Id, Draft(post, revision: published.Revision, seo: new BlogSeoRequest("", "", [], "")));
+        (await (await GetPublicAsync("tr", published.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!
+            .SeoTitle.ShouldBe("İşe Alımda Ghosting");
+        await PublishAsync(admin, post.Id);
+        var cleared = (await (await GetPublicAsync("tr", published.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
+        cleared.SeoTitle.ShouldBeNull();
+        cleared.CoverAlt.ShouldBeNull();
+        cleared.Keywords.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Seo_Fields_Over_The_Caps_Are_A_Validation_Problem_Naming_The_Field()
+    {
+        var (admin, _) = await RegisterAdminAsync("seo2.blog@example.com");
+        var post = await CreateAsync(admin);
+
+        var tooManyKeywords = Enumerable.Repeat("k", BlogSeo.MaxSecondaryKeywords + 1).ToArray();
+        var response = await admin.PutAsJsonAsync($"/api/admin/blog/posts/{post.Id}/draft",
+            Draft(post, seo: new BlogSeoRequest(new string('t', BlogSeo.MaxSeoTitleLength + 1), null, tooManyKeywords, null)), JsonOptions);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("Seo.SeoTitle");
+        body.ShouldContain("Seo.SecondaryKeywords");
+    }
+
+    /// <summary>Member by member: the record's own equality compares the keyword list by reference.</summary>
+    private static void ShouldBeSeo(BlogSeoResponse? actual, string? seoTitle, string? primaryKeyword, string[] secondaryKeywords, string? coverAlt)
+    {
+        actual.ShouldNotBeNull();
+        actual.SeoTitle.ShouldBe(seoTitle);
+        actual.PrimaryKeyword.ShouldBe(primaryKeyword);
+        actual.SecondaryKeywords.ShouldBe(secondaryKeywords);
+        actual.CoverAlt.ShouldBe(coverAlt);
+    }
+
+    /// <summary>Records what the service sent and answers a fixed proposal — the model is never
+    /// reached from a test.</summary>
+    private sealed class StubSeoProvider : IBlogSeoSuggestionProvider
+    {
+        public BlogSeoSuggestionRequest? LastRequest { get; private set; }
+
+        public Task<BlogSeoSuggestionResponse> SuggestAsync(BlogSeoSuggestionRequest request, CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            return Task.FromResult(new BlogSeoSuggestionResponse("İşe Alımda Ghosting", "Başvuruların yüzde sekseni yanıtsız kalıyor.",
+                "işe alımda ghosting", ["mülakat sonrası sessizlik"], request.HasCover ? "Soyut gradyan" : null,
+                request.LockedSlug is null ? "ise-alimda-ghosting" : null, "Bilgi arayan aday."));
+        }
+    }
+
+    [Fact]
+    public async Task Seo_Suggestion_Sends_The_Draft_As_Text_Answers_Proposals_And_Writes_Nothing()
+    {
+        var provider = new StubSeoProvider();
+        await using var suggesting = host.Standalone(builder =>
+            builder.ConfigureTestServices(services => services.AddScoped<IBlogSeoSuggestionProvider>(_ => provider)));
+        var (admin, _) = await RegisterAdminAsync("seo3.blog@example.com", suggesting);
+        var post = await CreateAsync(admin);
+        await SaveAsync(admin, post.Id, Draft(post, html: "<p>Başvuruların <strong>yüzde sekseni</strong> yanıtsız.</p>"));
+
+        var response = await admin.PostAsync($"/api/admin/blog/posts/{post.Id}/seo-suggestions", null);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+        var suggestion = (await response.Content.ReadFromJsonAsync<BlogSeoSuggestionResponse>(JsonOptions))!;
+        suggestion.SeoTitle.ShouldBe("İşe Alımda Ghosting");
+        suggestion.Slug.ShouldBe("ise-alimda-ghosting");
+        suggestion.CoverAlt.ShouldBeNull();
+
+        // The body went as text, not markup; no cover, no slug lock on a never-published post.
+        provider.LastRequest.ShouldNotBeNull();
+        provider.LastRequest.BodyText.ShouldBe("Başvuruların yüzde sekseni yanıtsız.");
+        provider.LastRequest.Title.ShouldBe("İşe Alım Sürecinde Ghosting");
+        provider.LastRequest.HasCover.ShouldBeFalse();
+        provider.LastRequest.LockedSlug.ShouldBeNull();
+
+        // Proposals only: the draft's fields are as they were.
+        ShouldBeSeo((await GetAdminAsync(admin, post.Id)).DraftSeo, null, null, [], null);
+
+        // After publish the slug is locked, and the provider is told so.
+        await PublishAsync(admin, post.Id);
+        await admin.PostAsync($"/api/admin/blog/posts/{post.Id}/seo-suggestions", null);
+        provider.LastRequest!.LockedSlug.ShouldNotBeNull();
+
+        // Another admin sees a published post, so may ask; a stranger's draft is 404; a reader is 403.
+        var (otherAdmin, _) = await RegisterAdminAsync("seo4.blog@example.com", suggesting);
+        (await otherAdmin.PostAsync($"/api/admin/blog/posts/{post.Id}/seo-suggestions", null)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        var theirDraft = await CreateAsync(otherAdmin);
+        (await admin.PostAsync($"/api/admin/blog/posts/{theirDraft.Id}/seo-suggestions", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        var reader = await RegisterUserAsync("seo.reader@example.com", suggesting);
+        (await reader.PostAsync($"/api/admin/blog/posts/{post.Id}/seo-suggestions", null)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Seo_Suggestion_Without_A_Configured_Model_Is_A_Coded_400_Not_A_500()
+    {
+        // The real provider, no project id: the button gets a message, not a crash.
+        var (admin, _) = await RegisterAdminAsync("seo5.blog@example.com");
+        var post = await CreateAsync(admin);
+        await SaveAsync(admin, post.Id, Draft(post));
+
+        var response = await admin.PostAsync($"/api/admin/blog/posts/{post.Id}/seo-suggestions", null);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.Content.ReadFromJsonAsync<ProblemDetails>(JsonOptions))!.Detail.ShouldNotBeNullOrWhiteSpace();
     }
 
     // ---- Likes ----------------------------------------------------------------------------------

@@ -1928,6 +1928,33 @@ export interface BlogPostPublic extends BlogPostListItem {
   translation: BlogTranslationLink | null;
   /** Reads of the published post so far — a plain tally, bumped by this very fetch. */
   viewCount: number;
+  /** What `<title>` says instead of the headline, when the author set one (2026-09-21). */
+  seoTitle: string | null;
+  /** The cover's alt text; null renders an empty alt. */
+  coverAlt: string | null;
+  /** Primary keyword first, then the secondary ones — the JSON-LD's `keywords`. Never printed as meta keywords. */
+  keywords: string[];
+}
+
+/** What the model proposed for a draft (2026-09-21): proposals only, applied field by field by the author. */
+export interface BlogSeoSuggestion {
+  seoTitle: string | null;
+  metaDescription: string | null;
+  primaryKeyword: string | null;
+  secondaryKeywords: string[];
+  coverAlt: string | null;
+  /** Only before the first publish. */
+  slug: string | null;
+  /** One line of advice about the search intent; shown, never stored. */
+  intentNote: string | null;
+}
+
+/** The four SEO fields of a draft (DECISIONS.md 2026-09-21). Every one optional. */
+export interface BlogSeo {
+  seoTitle: string | null;
+  primaryKeyword: string | null;
+  secondaryKeywords: string[];
+  coverAlt: string | null;
 }
 
 // ---- blog comments (2026-09-20) ----
@@ -2107,6 +2134,8 @@ export interface AdminBlogPost {
   likeCount: number;
   createdAt: string;
   viewCount: number;
+  /** The draft's SEO fields (2026-09-21). */
+  draftSeo: BlogSeo;
 }
 
 /** Create, from the first draft: sent once the author has typed at least one character into the
@@ -2134,6 +2163,7 @@ export interface SaveBlogDraftRequest {
   coverMediaId: string | null;
   translationOfPostId: string | null;
   revision: number;
+  seo: BlogSeo;
 }
 
 export interface BlogDraftSaved {

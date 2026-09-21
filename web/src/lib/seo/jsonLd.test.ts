@@ -97,6 +97,33 @@ describe("articleJsonLd", () => {
   it("falls back to the publication date when there is no modification date", () => {
     expect(article.dateModified).toBe("2026-09-08");
   });
+
+  it("is a plain Article with no keywords or word count unless told otherwise", () => {
+    expect(article["@type"]).toBe("Article");
+    expect(article).not.toHaveProperty("keywords");
+    expect(article).not.toHaveProperty("wordCount");
+  });
+
+  it("becomes a BlogPosting with a comma-joined keyword list and a word count for a blog post", () => {
+    const post = articleJsonLd({
+      locale: "tr",
+      path: "/blog/ghosting",
+      headline: "Ghosting",
+      description: "…",
+      datePublished: "2026-09-19",
+      image: "https://ekariyerim.com/x.png",
+      type: "BlogPosting",
+      keywords: ["işe alımda ghosting", "mülakat sonrası sessizlik"],
+      wordCount: 812,
+    });
+    expect(post["@type"]).toBe("BlogPosting");
+    expect(post.keywords).toBe("işe alımda ghosting, mülakat sonrası sessizlik");
+    expect(post.wordCount).toBe(812);
+
+    const bare = articleJsonLd({ locale: "tr", path: "/blog/x", headline: "x", description: "", datePublished: "2026-09-19", image: "i", type: "BlogPosting", keywords: [], wordCount: 0 });
+    expect(bare).not.toHaveProperty("keywords");
+    expect(bare).not.toHaveProperty("wordCount");
+  });
 });
 
 describe("organizationJsonLd", () => {

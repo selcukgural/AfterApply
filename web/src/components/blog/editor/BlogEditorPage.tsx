@@ -6,20 +6,21 @@ import { useLocale, useTranslations } from "next-intl";
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Link, useRouter } from "@/i18n/navigation";
-import type { AdminBlogPost, BlogLanguage } from "@/types/api";
+import type { AdminBlogPost, BlogLanguage, BlogSeo } from "@/types/api";
 import { adminBlogApi } from "@/lib/api/blog";
 import { ApiError } from "@/lib/api/httpClient";
 import { blogPostPath, blogPreviewPath } from "@/lib/blog/blogPaths";
 import type { NewPostSeed } from "@/lib/blog/newPostSeed";
+import { seoChecklist, seoScore, slugFromTitle } from "@/lib/blog/seoChecks";
 import { Card } from "@/components/dashboard/Card";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { Textarea } from "@/components/ui/Textarea";
 import { Modal } from "@/components/ui/Modal";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { BlogToolbar } from "./BlogToolbar";
+import { BlogSeoSection, SeoScorePill, seoInputOf } from "./BlogSeoSection";
 import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES, buildExtensions } from "./extensions";
 import { useAutosave } from "./useAutosave";
 import { useMediaObjectUrl } from "./useMediaObjectUrl";
@@ -52,6 +53,7 @@ function emptyPost(seed: NewPostSeed): AdminBlogPost {
     likeCount: 0,
     createdAt: now,
     viewCount: 0,
+    draftSeo: { seoTitle: null, primaryKeyword: null, secondaryKeywords: [], coverAlt: null },
   };
 }
 
@@ -118,6 +120,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   const tEditor = useTranslations("adminBlog.editor");
   const tSave = useTranslations("adminBlog.autosave");
   const tUpload = useTranslations("adminBlog.upload");
+  const tSeo = useTranslations("adminBlog.seo");
   const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -135,6 +138,14 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   const [excerpt, setExcerpt] = useState(seed.draftExcerpt);
   const [language, setLanguage] = useState<BlogLanguage>(seed.language);
   const [slug, setSlug] = useState(seed.slug ?? "");
+  // Before the first publish the address follows the title until the author types one (then it
+  // is theirs, and "from the title" hands it back). A post that already has a slug — assigned at
+  // publish, or typed earlier — starts as touched (2026-09-21).
+  const [slugTouched, setSlugTouched] = useState(seed.slug !== null);
+  const [seo, setSeo] = useState<BlogSeo>(seed.draftSeo);
+  // The body as HTML for the SEO checks, refreshed a beat after typing stops — `getHTML` on every
+  // keystroke of a long post is not free, and the checklist does not need to be that quick.
+  const [bodyHtml, setBodyHtml] = useState(seed.draftContentHtml);
   const [translationOfPostId, setTranslationOfPostId] = useState(seed.translationOfPostId);
   const [coverMediaId, setCoverMediaId] = useState(seed.coverMediaId);
   const [uploadState, setUploadState] = useState<"idle" | "uploading" | "error">("idle");
@@ -144,6 +155,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const locked = meta.publishedAt !== null;
+  const effectiveSlug = locked ? (meta.slug ?? "") : slugTouched ? slug : slugFromTitle(title);
 
   // Declared before the uploader (which needs `ensurePost`) and before the editor (which needs
   // the uploader). `buildRequest` mentions `editor` from further down, which is fine: the hook
@@ -157,9 +169,12 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
       contentJson: JSON.stringify(editor?.getJSON() ?? parseDocument(seed.draftContentJson)),
       contentHtml: editor?.getHTML() ?? seed.draftContentHtml,
       language,
-      slug: slug.trim() || null,
+      // A generated address is not sent: the server generates the same one at publish and adds a
+      // suffix if it is taken, where a hand-typed duplicate would be refused on every autosave.
+      slug: locked ? meta.slug : slugTouched ? slug.trim() || null : null,
       coverMediaId,
       translationOfPostId,
+      seo,
     }),
     onCreated: (post) => {
       setPostId(post.id);
@@ -207,7 +222,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   );
 
   const extensions = useMemo(
-    () => buildExtensions({ placeholder: tEditor("body"), uploadImage }),
+    () => buildExtensions({ placeholder: tEditor("body"), imageAlt: { label: tSeo("imageAltLabel"), placeholder: tSeo("imageAltPlaceholder") }, uploadImage }),
     // The placeholder and the uploader do not change for a post; rebuilding the extension list
     // would rebuild the editor and lose the caret.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -229,9 +244,15 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
 
   useEffect(() => {
     if (!editor) return;
-    const onUpdate = () => markEdited();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onUpdate = () => {
+      markEdited();
+      clearTimeout(timer);
+      timer = setTimeout(() => setBodyHtml(editor.getHTML()), 300);
+    };
     editor.on("update", onUpdate);
     return () => {
+      clearTimeout(timer);
       editor.off("update", onUpdate);
     };
   }, [editor, markEdited]);
@@ -251,6 +272,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   const applyResponse = (post: AdminBlogPost) => {
     setMeta(post);
     setSlug(post.slug ?? "");
+    if (post.slug !== null) setSlugTouched(true);
     queryClient.setQueryData(["admin", "blog", "post", post.id], post);
     void queryClient.invalidateQueries({ queryKey: ["admin", "blog"], exact: false, refetchType: "none" });
   };
@@ -337,6 +359,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   })();
 
   const busy = publish.isPending || unpublish.isPending || remove.isPending || preview.isPending;
+  const score = seoScore(seoChecklist(seoInputOf({ title, excerpt, seo, slug: effectiveSlug, hasCover: coverMediaId !== null, contentHtml: bodyHtml })));
 
   return (
     <div className="flex flex-col gap-6">
@@ -389,6 +412,35 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
               {uploadError}
             </p>
           )}
+
+          <BlogSeoSection
+            language={language}
+            title={title}
+            excerpt={excerpt}
+            onExcerptChange={edit(setExcerpt)}
+            seo={seo}
+            onSeoChange={edit(setSeo)}
+            slug={effectiveSlug}
+            slugLocked={locked}
+            slugTouched={slugTouched}
+            onSlugChange={(value) => {
+              setSlugTouched(true);
+              edit(setSlug)(value);
+            }}
+            onSlugReset={() => {
+              setSlugTouched(false);
+              edit(setSlug)("");
+            }}
+            hasCover={coverMediaId !== null}
+            contentHtml={bodyHtml}
+            onSuggest={async () => {
+              // The model reads the draft as saved, so what is on screen is flushed first.
+              const id = await ensurePost();
+              if (!id) throw new Error(tEditor("nothingWritten"));
+              if (!(await autosave.flush())) throw new Error(tSave("unsaved"));
+              return adminBlogApi.suggestSeo(id);
+            }}
+          />
         </div>
 
         <aside className="flex flex-col gap-5">
@@ -432,21 +484,18 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
             )}
           </Card>
 
-          <Card className="flex flex-col gap-4">
-            <FormField label={tEditor("excerpt")} htmlFor="blog-excerpt">
-              <Textarea
-                id="blog-excerpt"
-                value={excerpt}
-                onChange={(e) => edit(setExcerpt)(e.target.value)}
-                placeholder={tEditor("excerptPlaceholder")}
-                maxLength={500}
-                rows={4}
-                lang={language}
-                spellCheck
-              />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{tEditor("excerptHint")}</p>
-            </FormField>
+          <Card className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{tSeo("scoreCard")}</span>
+              <SeoScorePill score={score} />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{tSeo("scoreCardHint", { ok: score.ok, total: score.total })}</p>
+            <a href="#blog-seo" className="text-xs text-accent-ink underline-offset-2 hover:underline">
+              {tSeo("goToSection")}
+            </a>
+          </Card>
 
+          <Card className="flex flex-col gap-4">
             <FormField label={tEditor("language")} htmlFor="blog-language">
               <Select
                 id="blog-language"
@@ -461,26 +510,6 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
                 <option value="tr">{t("language.tr")}</option>
                 <option value="en">{t("language.en")}</option>
               </Select>
-            </FormField>
-
-            <FormField label={tEditor("slug")} htmlFor="blog-slug">
-              <Input
-                id="blog-slug"
-                value={slug}
-                disabled={locked}
-                onChange={(e) => edit(setSlug)(e.target.value.toLowerCase())}
-                placeholder="ise-alim-surecinde-ghosting"
-                pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              />
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {locked ? tEditor("slugLocked") : tEditor("slugHint")}
-                {slug && (
-                  <>
-                    {" "}
-                    <code className="text-gray-700 dark:text-gray-300">{tEditor("slugPreview", { language, slug })}</code>
-                  </>
-                )}
-              </p>
             </FormField>
 
             <FormField label={tEditor("translation")} htmlFor="blog-translation">

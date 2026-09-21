@@ -70,7 +70,7 @@ export function BlogArticle({ post, url, inert = false, comments, renderedAt }: 
         {post.coverImageUrl && (
           <img
             src={post.coverImageUrl}
-            alt=""
+            alt={post.coverAlt ?? ""}
             className="mt-2 w-full rounded-lg border border-gray-200 object-cover dark:border-gray-800"
           />
         )}

@@ -8467,3 +8467,55 @@ dıştan gelen cevap uçuşta yok sayılır, negatif sayı yok); `Like_State_Is_
 Toggling_And_Is_Per_Account` (anonim 401, okuma toggle'lamaz, hesap başına, taslak 404). Tarayıcı
 (local stack): anonim link, girişli 1→2 "Beğendin", yeniden yükle → sayfa "Beğendin 2" ile açılır,
 tık → "Beğen 1" (3 yok, 0 yok), yorum 0→1→0→1 ara değer yok, hover ipucu, karanlık tema.
+
+## Blog SEO: 4 alan, editörde SEO bölümü, Vertex önerisi, Google-dokümanı tabanlı kontrol listesi — DECIDED (2026-09-21)
+
+**Soru.** Kullanıcının 14 maddelik "SEO bilgileri" listesi (Alan, H1, SEO Title, Meta Description,
+Slug, Primary/Secondary Keyword, Search Intent, Schema, Canonical, Image filename/alt, OG
+Title/Description) blog yazısında gerekli mi, hangisi otomatik çıkar, yapay zekâ nereye girer.
+Kanvas: https://claude.ai/artifact/JsC1VR89uo83i9avnV6NnM (karar tablosu + A/B yerleşim; **B seçildi**).
+
+**Alan alan.** Zaten otomatik (5): H1 = başlık, slug (başlıktan, yayın sonrası kilitli), canonical,
+OG title/description. Var ama eksikti (2): meta description = özet → 70–160 sayacı; JSON-LD
+`Article` → **`BlogPosting` + `keywords` + `wordCount`**. **Yeni alan (4):** `SeoTitle` (≤120 saklama,
+≤60 rehber; boşsa başlık), `PrimaryKeyword`, `SecondaryKeywords` (≤8, text[]), `CoverAlt` (≤300) —
+taslak + yayın yuvası olarak 8 kolon, `Publish` kopyalar; eski editör `seo` göndermezse "hiçbiri".
+Gerekmiyor (3): kategori (SEO gerekçesiyle açılmaz), search intent (saklanmaz, öneride tek satır),
+image filename (zayıf sinyal; `/{slug}.jpg` ileride). Gövde görselleri: seçilince alt kutusu
+(node view), `alt` sanitizer'dan zaten geçiyor.
+
+**Slug (kullanıcı kararı).** Yayın öncesi alan **başlıktan canlı dolar** (`slugFromTitle`, API
+üreticisinin aynası), elle değiştirilebilir, "Başlıktan üret" geri alır; üretilen slug istek
+olarak gönderilmez (sunucu yayında üretir, çakışırsa sonek), elle yazılan gönderilir. Yayın sonrası
+kilit korunur — değiştirmek 301 tablosu ister, ayrı iş. Türkçe katlama doğru çalıştığı için slug
+için yapay zekâ gerekmedi; yalnız kilit açıkken alternatif önerir.
+
+**Yapay zekâ.** `POST /api/admin/blog/posts/{id}/seo-suggestions` → Vertex Gemini
+(`gemini-2.5-flash`, thinking 0, EU bölgesi, ADC; CV tarama ile aynı istemci, kendi HttpClient'ı;
+`Blog:Seo:ProjectId`). Giden: başlık + özet + gövde **metni** (≤12k). Dönen: seoTitle,
+metaDescription, primaryKeyword, secondaryKeywords, coverAlt (kapak varsa), slug (kilit yoksa),
+intentNote. **Yazmaz** — editörde alan altı "Öneri → Uygula" + "Boşları doldur". Hız sınırı
+`BlogSeoSuggest` 20/saat/admin. Gönderilen içerik site içeriği, kişisel veri değil → gizlilik
+metnine dokunulmadı. Kurulu değilse/boş dönerse kodlu 400 (`BLOG_SEO_SUGGEST_*`), 500 değil.
+
+**Kontrol listesi (kullanıcı kararı: "en doğru yöntem").** Taban Google Search Central'ın
+dokümante ettikleri, üstüne alanın yerleşik iyi uygulamaları; her maddede **rozet + kaynak linki**
+(`SEO_CHECK_SOURCES`). Google: başlık açıklayıcı/kısa, özet sayfayı anlatıyor, arama terimleri
+metinde, adres açıklayıcı + anahtar kelime, ara başlık, bağlantı, görsel alt'ları, yapısal veri.
+İyi uygulama: anahtar kelime başlıkta, ilk paragrafta. **Ölçülmeyenler (kalıcı):** kelime sayısı
+(Google SSS: şart yok), anahtar kelime yoğunluğu/tekrar (spam politikası: yığma), yan kelime
+hedefi (kanıt yok). Eşleşme sözcük bazlı (Yoast kuralı: öbeğin tüm sözcükleri geçiyorsa geçer;
+"İşe Alım Sürecinde Ghosting" ⊇ "işe alım ghosting") — birebir öbek zorlamak Google'ın istemediği
+başlık bozmasına iter. 60/160 sayıları kural değil, sonucun kestiği genişlik; öyle etiketlendi.
+
+**Eski yazılar.** Migration alanları boş açar; yayındaki her yazı her admin tarafından
+düzenlenebildiğinden SEO bölümünü doldurup "Yayındaki sürümü güncelle" yeter — Ghosting yazısında
+tarayıcıda yapıldı, sayfa `<title>`/description/alt/BlogPosting ile çıktı.
+
+**Test.** Unit: `BlogPostTests` (+2), `BlogSeoTests` (4), `VertexBlogSeoSuggestionProviderTests`
+(5, stub Vertex); web `seoChecks.test.ts` (21), `jsonLd.test.ts` (+2). Integration: `Seo_Fields_
+Are_Saved…`, `Seo_Fields_Over_The_Caps…`, `Seo_Suggestion_Sends_The_Draft…` (sahte sağlayıcı;
+görünürlük 404/403, yazmaz, kilit), `Seo_Suggestion_Without_A_Configured_Model…` (kodlu 400).
+Tarayıcı (local): eski yazıda gerçek Vertex çağrısı → Türkçe öneriler → Boşları doldur → yayınla →
+public sayfa doğrulandı; gövde görseli alt kutusu; yeni yazıda canlı slug / elle / başlıktan üret;
+rozetli kontrol listesi 11/12.

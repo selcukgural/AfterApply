@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import Image from "@tiptap/extension-image";
+import Image, { type ImageOptions } from "@tiptap/extension-image";
 import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from "@tiptap/react";
 import { useMediaObjectUrl } from "./useMediaObjectUrl";
 
@@ -13,8 +13,13 @@ const MIN_WIDTH = 80;
  * serialised HTML is untouched by this — it keeps the plain `<img src="/api/blog/media/…"
  * width="…">` the sanitizer accepts and the public page renders.
  */
-function MediaImageView({ node, selected, updateAttributes, editor }: NodeViewProps) {
+/** The alt box's label and placeholder come in as extension options, from the editor's
+ *  translations — a node view has no intl context of its own. */
+type MediaImageOptions = ImageOptions & { altLabel?: string; altPlaceholder?: string };
+
+function MediaImageView({ node, selected, updateAttributes, editor, extension, getPos }: NodeViewProps) {
   const { src, alt, width } = node.attrs as { src: string; alt: string | null; width: number | null };
+  const { altLabel, altPlaceholder } = extension.options as MediaImageOptions;
   const { url, failed } = useMediaObjectUrl(src);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -60,6 +65,12 @@ function MediaImageView({ node, selected, updateAttributes, editor }: NodeViewPr
           style={previewWidth ? { width: previewWidth } : undefined}
           className={`block h-auto max-w-full rounded-lg ${selected ? "ring-2 ring-accent" : ""}`}
           draggable={false}
+          // A click on the picture selects the node — ProseMirror does not do that by itself for a
+          // React node view — which is what shows the ring, the handle and the alt box below.
+          onClick={() => {
+            const pos = getPos();
+            if (editor.isEditable && pos !== undefined) editor.commands.setNodeSelection(pos);
+          }}
         />
       ) : (
         <div
@@ -68,6 +79,22 @@ function MediaImageView({ node, selected, updateAttributes, editor }: NodeViewPr
         >
           {failed ? "!" : null}
         </div>
+      )}
+      {/* The alt text, edited in place while the image is selected (2026-09-21): what a reader
+          who cannot see the picture gets, and what the SEO checklist counts. Kept in the node's
+          attrs, so it reaches the stored HTML like the width does. */}
+      {editor.isEditable && selected && (
+        <label className="mt-1.5 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+          <span className="shrink-0 font-medium">{altLabel ?? "alt"}</span>
+          <input
+            type="text"
+            value={alt ?? ""}
+            placeholder={altPlaceholder}
+            maxLength={300}
+            onChange={(e) => updateAttributes({ alt: e.target.value })}
+            className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-accent focus:outline-none dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+          />
+        </label>
       )}
       {editor.isEditable && (
         <span
@@ -88,7 +115,12 @@ function MediaImageView({ node, selected, updateAttributes, editor }: NodeViewPr
  * the HTML) and the view above. Base64 sources are refused at the node level too — the sanitizer
  * would strip them anyway, but there is no reason to let one into the document.
  */
-export const MediaImage = Image.extend({
+export const MediaImage = Image.extend<MediaImageOptions>({
+  addOptions() {
+    // `parent` is the Image extension's own defaults; it is always there for an extend().
+    return { ...this.parent!(), altLabel: undefined, altPlaceholder: undefined };
+  },
+
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -106,4 +138,4 @@ export const MediaImage = Image.extend({
   addNodeView() {
     return ReactNodeViewRenderer(MediaImageView);
   },
-}).configure({ allowBase64: false, inline: false });
+});

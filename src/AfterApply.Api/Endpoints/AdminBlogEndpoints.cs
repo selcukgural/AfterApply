@@ -150,6 +150,29 @@ public static class AdminBlogEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        // The SEO suggestion (DECISIONS.md 2026-09-21): one model call over the draft's own text,
+        // answered as proposals the editor applies field by field. Nothing is written here — an
+        // author never finds their fields overwritten by a click.
+        group.MapPost("/posts/{postId:guid}/seo-suggestions", async (Guid postId, ClaimsPrincipal user,
+                IAdminAccessService adminAccess, IBlogAdminService service, CancellationToken cancellationToken) =>
+            {
+                if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
+                {
+                    return Results.Forbid();
+                }
+
+                var suggestion = await service.SuggestSeoAsync(user.GetUserId(), postId, cancellationToken);
+                return suggestion is null ? Results.NotFound() : Results.Ok(suggestion);
+            })
+            .RequireRateLimiting(DependencyInjection.BlogSeoSuggestRateLimitPolicy)
+            .WithSummary("Ask the model for the draft's SEO fields")
+            .WithDescription("Proposals only — nothing is saved. seoTitle, metaDescription, primaryKeyword, " +
+                             "secondaryKeywords, coverAlt (only with a cover), slug (only before the first publish) " +
+                             "and a one-line intent note. 400 with a code when the model is not configured or answered nothing.")
+            .Produces<BlogSeoSuggestionResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
         group.MapPost("/posts/{postId:guid}/publish", async (Guid postId, ClaimsPrincipal user,
                 IAdminAccessService adminAccess, IBlogAdminService service, CancellationToken cancellationToken) =>
             {
