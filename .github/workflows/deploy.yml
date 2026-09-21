@@ -308,6 +308,11 @@ jobs:
             # flipped without a code change.
             CompanyReviews__Enabled=true
             CvScan__Review__ProjectId=${{ env.GCP_PROJECT_ID }}
+            # The blog editor's "suggest with AI" (DECISIONS.md 2026-09-21): the same Vertex
+            # project, region and runtime service account as the CV review, its own key so the
+            # button can go dark alone. Without it the button answers a coded message and the
+            # rest of the SEO section keeps working.
+            Blog__Seo__ProjectId=${{ env.GCP_PROJECT_ID }}
             Postgres__MaxPoolSize=5
             Hangfire__WorkerCount=2
             JobSources__Enabled=false
