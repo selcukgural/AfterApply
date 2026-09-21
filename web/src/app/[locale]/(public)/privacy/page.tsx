@@ -291,9 +291,19 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
           </p>
         </section>
 
+        {/* Replaces the "not currently applicable" paragraph that stood here until 2026-09-22 and
+            promised an update the day company-wide analytics arrived — this is that update. */}
         <section>
-          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("notApplicable.title")}</h2>
-          <p>{t("notApplicable.body")}</p>
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("aggregates.title")}</h2>
+          <p>{t("aggregates.intro")}</p>
+          <ul className="mt-2 list-disc flex flex-col gap-1 pl-5">
+            <li>{t("aggregates.what")}</li>
+            <li>{t("aggregates.sector")}</li>
+            <li>{t("aggregates.company")}</li>
+            <li>{t("aggregates.noReverse")}</li>
+            <li>{t("aggregates.deletion")}</li>
+          </ul>
+          <p className="mt-2">{t("aggregates.legalBasis")}</p>
         </section>
 
         <section>

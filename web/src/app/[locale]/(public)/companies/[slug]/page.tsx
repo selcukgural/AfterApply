@@ -11,6 +11,7 @@ import { CompanyReviewsSection } from "@/components/companyReviews/CompanyReview
 import { CompanyPageTabs } from "@/components/companies/CompanyPageTabs";
 import { CompanySalariesPanel } from "@/components/companySalaries/CompanySalariesPanel";
 import { CandidateExperiencesPanel } from "@/components/candidateExperiences/CandidateExperiencesPanel";
+import { CompanyIntelligencePanel } from "@/components/companyIntelligence/CompanyIntelligencePanel";
 
 /**
  * A company's public page: the aggregate and its published reviews, rendered on the server so
@@ -81,6 +82,7 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
           half is on screen. The salaries and experiences halves fetch on the client and are never
           in the cached page. */}
       <CompanyPageTabs
+        companyId={company.id}
         reviewCount={company.summary.approvedCount}
         salaryCount={company.salaryCount ?? 0}
         experienceCount={company.candidateExperienceCount ?? 0}
@@ -92,6 +94,7 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
         }
         salaries={<CompanySalariesPanel company={company} />}
         experiences={<CandidateExperiencesPanel company={company} />}
+        intelligence={<CompanyIntelligencePanel company={company} />}
       />
 
       <p className="border-t border-gray-200 pt-6 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">{t("disclaimer")}</p>

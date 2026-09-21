@@ -20,10 +20,17 @@ namespace AfterApply.IntegrationTests.CompanyIntelligence;
 
 /// <summary>Flag left at its real appsettings.json default (false). HiddenBelow is overridden to
 /// 2 purely so a handful of seeded applications is enough to exercise non-Hidden confidence
-/// buckets — it does not affect the Enabled flag itself.</summary>
+/// buckets — it does not affect the Enabled flag itself. The contributor-share guard is lifted
+/// for the same reason (most tests seed from one account); its own tests use the "guarded"
+/// variant with the shipped third.</summary>
 public sealed class CompanyIntelligenceProfile : IHostProfile
 {
-    public void Configure(IWebHostBuilder builder) => builder.UseSetting("CompanyIntelligence:HiddenBelow", "2");
+    public void Configure(IWebHostBuilder builder)
+    {
+        builder.UseSetting("CompanyIntelligence:HiddenBelow", "2");
+        builder.UseSetting("CompanyIntelligence:MaxContributorShare", "1");
+        builder.UseSetting("ResponseRates:CacheSeconds", "1");
+    }
 }
 
 [Collection(IntegrationTestCollection.Name)]
@@ -106,7 +113,7 @@ public class CompanyIntelligenceTests(ApiHost<CompanyIntelligenceProfile> host) 
     [Fact]
     public async Task Aggregation_Computes_Correctly_Across_Multiple_Users_Even_While_Flag_Disabled()
     {
-        var appliedAt = DateTimeOffset.UtcNow.AddDays(-30);
+        var appliedAt = DateTimeOffset.UtcNow.AddDays(-45);
 
         // Two different registered users applying to the same company — CompanyResolver's
         // find-or-create-by-NormalizedName is what's expected to land both on one CompanyId.
@@ -126,6 +133,8 @@ public class CompanyIntelligenceTests(ApiHost<CompanyIntelligenceProfile> host) 
         result!.Confidence.ShouldBe(ConfidenceBucket.VeryLow); // 2 apps: >= HiddenBelow(2), < VeryLowBelow(50)
         result.Metrics.ShouldNotBeNull();
         result.Metrics!.TotalApplications.ShouldBe(2);
+        result.Metrics.MatureApplications.ShouldBe(2);
+        result.Metrics.DistinctContributors.ShouldBe(2);
         result.Metrics.ResponseRate.ShouldBe(100.0);
         result.Metrics.InterviewRate.ShouldBe(50.0);
         result.Metrics.OfferRate.ShouldBe(0.0);
@@ -183,7 +192,7 @@ public class CompanyIntelligenceTests(ApiHost<CompanyIntelligenceProfile> host) 
     [Fact]
     public async Task Endpoint_Returns_Ok_With_Metrics_When_Flag_Enabled_And_Above_Threshold()
     {
-        var appliedAt = DateTimeOffset.UtcNow.AddDays(-10);
+        var appliedAt = DateTimeOffset.UtcNow.AddDays(-40);
         var (_, companyId) = await CreateApplicationAsync(_enabledClient, "Enabled Co", appliedAt);
         await CreateApplicationAsync(_enabledClient, "Enabled Co", appliedAt);
 
@@ -258,5 +267,142 @@ public class CompanyIntelligenceTests(ApiHost<CompanyIntelligenceProfile> host) 
         var response = await _enabledClient.GetAsync($"/api/company-intelligence/{Guid.NewGuid()}");
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Endpoint_Answers_Without_A_Token_When_Flag_Enabled()
+    {
+        // The company page reads this the way it reads reviews: no account. The thresholds are
+        // the guard, not sign-in.
+        var (_, companyId) = await CreateApplicationAsync(_enabledClient, "Anonymous Co", DateTimeOffset.UtcNow.AddDays(-40));
+        await CreateApplicationAsync(_enabledClient, "Anonymous Co", DateTimeOffset.UtcNow.AddDays(-40));
+
+        var anonymous = _enabledFactory.CreateClient();
+        var response = await anonymous.GetAsync($"/api/company-intelligence/{companyId}");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Headers.CacheControl!.Public.ShouldBeTrue();
+        var result = await response.Content.ReadFromJsonAsync<CompanyIntelligenceResponse>(JsonOptions);
+        result!.Metrics.ShouldNotBeNull();
+        result.Thresholds.HiddenBelow.ShouldBe(2);
+        result.Thresholds.MaturityDays.ShouldBe(30);
+    }
+
+    [Fact]
+    public async Task Applications_Too_Young_To_Be_Answered_Count_Toward_The_Total_But_Not_The_Rates()
+    {
+        // Two answered applications from six weeks ago and one three-day-old application nobody
+        // has had time to answer: the young one is in the count (3) but not in any rate, so the
+        // response rate stays 100 instead of dropping to 66.7 for no fault of the company's.
+        var old = DateTimeOffset.UtcNow.AddDays(-45);
+        var (app1, companyId) = await CreateApplicationAsync(_enabledClient, "Maturity Co", old);
+        await ChangeStatusAsync(_enabledClient, app1, ApplicationStatus.Rejected, old.AddDays(4));
+        var (app2, _) = await CreateApplicationAsync(_enabledClient, "Maturity Co", old);
+        await ChangeStatusAsync(_enabledClient, app2, ApplicationStatus.Screening, old.AddDays(6));
+        await CreateApplicationAsync(_enabledClient, "Maturity Co", DateTimeOffset.UtcNow.AddDays(-3));
+
+        var response = await _enabledClient.GetAsync($"/api/company-intelligence/{companyId}");
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<CompanyIntelligenceResponse>(JsonOptions);
+
+        result!.Metrics.ShouldNotBeNull();
+        result.Metrics!.TotalApplications.ShouldBe(3);
+        result.Metrics.MatureApplications.ShouldBe(2);
+        result.Metrics.ResponseRate.ShouldBe(100.0);
+        result.Metrics.GhostingRate.ShouldBe(0.0);
+        result.Metrics.MedianResponseTimeDays.ShouldBe(5.0);
+    }
+
+    [Fact]
+    public async Task Post_Interview_Silence_Is_Reported_Separately_From_Ghosting()
+    {
+        var old = DateTimeOffset.UtcNow.AddDays(-60);
+        var (interviewedThenSilent, companyId) = await CreateApplicationAsync(_enabledClient, "Silence Co", old);
+        await ChangeStatusAsync(_enabledClient, interviewedThenSilent, ApplicationStatus.Interview, old.AddDays(5));
+        await ChangeStatusAsync(_enabledClient, interviewedThenSilent, ApplicationStatus.Ghosted, old.AddDays(40));
+        var (interviewedThenRejected, _) = await CreateApplicationAsync(_enabledClient, "Silence Co", old);
+        await ChangeStatusAsync(_enabledClient, interviewedThenRejected, ApplicationStatus.Interview, old.AddDays(5));
+        await ChangeStatusAsync(_enabledClient, interviewedThenRejected, ApplicationStatus.Rejected, old.AddDays(12));
+        var (neverAnswered, _) = await CreateApplicationAsync(_enabledClient, "Silence Co", old);
+        await ChangeStatusAsync(_enabledClient, neverAnswered, ApplicationStatus.Ghosted, old.AddDays(40));
+
+        var response = await _enabledClient.GetAsync($"/api/company-intelligence/{companyId}");
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<CompanyIntelligenceResponse>(JsonOptions);
+
+        result!.Metrics.ShouldNotBeNull();
+        result.Metrics!.PostInterviewSilenceRate.ShouldBe(50.0); // 1 of the 2 interviewed
+        result.Metrics.GhostingRate.ShouldBe(66.7); // 2 of 3 overall
+    }
+
+    [Fact]
+    public async Task One_Person_Being_Most_Of_The_Sample_Hides_The_Company_Like_A_Small_Count_Would()
+    {
+        // The shipped guard: a third. Four applications, three from one account — the count clears
+        // the (test) ladder, the people do not, and the answer is the same Hidden as a small count.
+        var guarded = host.Variant("guarded", builder =>
+        {
+            builder.UseSetting("CompanyIntelligence:Enabled", "true");
+            builder.UseSetting("CompanyIntelligence:MaxContributorShare", "0.3334");
+        });
+        var (clientA, _) = await host.RegisterAsync("ci.guard.a@example.com", on: guarded);
+        var (clientB, _) = await host.RegisterAsync("ci.guard.b@example.com", on: guarded);
+        var old = DateTimeOffset.UtcNow.AddDays(-40);
+
+        var (_, companyId) = await CreateApplicationAsync(clientA, "Dominated Co", old);
+        await CreateApplicationAsync(clientA, "Dominated Co", old);
+        await CreateApplicationAsync(clientA, "Dominated Co", old);
+        await CreateApplicationAsync(clientB, "Dominated Co", old);
+
+        var response = await guarded.CreateClient().GetAsync($"/api/company-intelligence/{companyId}");
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<CompanyIntelligenceResponse>(JsonOptions);
+
+        result!.Confidence.ShouldBe(ConfidenceBucket.Hidden);
+        result.Metrics.ShouldBeNull();
+        result.Thresholds.MaxContributorSharePercent.ShouldBe(33);
+    }
+
+    [Fact]
+    public async Task Sector_Comparison_Travels_With_A_Hidden_Company_When_Its_Industry_Is_Known()
+    {
+        // The company is below its own threshold, but its sector is not below the sector page's
+        // — the "not yet, but here is the wider picture" state.
+        var sectorHost = host.Variant("sector", builder =>
+        {
+            builder.UseSetting("CompanyIntelligence:Enabled", "true");
+            builder.UseSetting("CompanyIntelligence:HiddenBelow", "50");
+            builder.UseSetting("ResponseRates:MinimumContributors", "2");
+            builder.UseSetting("ResponseRates:MinimumApplications", "3");
+            builder.UseSetting("ResponseRates:CacheSeconds", "1");
+        });
+        var (clientA, _) = await host.RegisterAsync("ci.sector.a@example.com", on: sectorHost);
+        var (clientB, _) = await host.RegisterAsync("ci.sector.b@example.com", on: sectorHost);
+        var (clientC, _) = await host.RegisterAsync("ci.sector.c@example.com", on: sectorHost);
+        var old = DateTimeOffset.UtcNow.AddDays(-40);
+
+        // Three people, one application each: clears the sector's people and count floors (2 / 3
+        // on this host) and its half-share guard, while staying far under the company's 50.
+        var (_, companyId) = await CreateApplicationAsync(clientA, "Sector Software Co", old);
+        await CreateApplicationAsync(clientB, "Sector Software Co", old);
+        await CreateApplicationAsync(clientC, "Sector Software Co", old);
+        using (var scope = sectorHost.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var company = await db.Companies.SingleAsync(c => c.Id == companyId);
+            company.EnrichFrom(null, "Software Development", null, DateTimeOffset.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        var response = await sectorHost.CreateClient().GetAsync($"/api/company-intelligence/{companyId}");
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<CompanyIntelligenceResponse>(JsonOptions);
+
+        result!.Confidence.ShouldBe(ConfidenceBucket.Hidden);
+        result.SectorComparison.ShouldNotBeNull();
+        result.SectorComparison!.Sector.ShouldBe(AfterApply.Domain.Benchmark.BenchmarkSector.SoftwareAndIt);
+        result.SectorComparison.Figures.ShouldNotBeNull();
+        result.SectorComparison.Figures!.Applications.ShouldBe(3);
+        result.SectorComparison.Figures.Contributors.ShouldBe(3);
     }
 }

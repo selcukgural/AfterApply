@@ -11,14 +11,29 @@ public sealed class CompanyIntelligenceOptions
     /// way for it to ever improve. A stated window means the figure describes the company as it is
     /// now, and the response says which window it used.
     ///
-    /// <b>Known limitation, to settle before anything is published under a company's name:</b>
-    /// applications submitted very recently have not had time to be answered, so they push the
-    /// response rate down and the ghosting rate up. The distortion is small at twelve months and
-    /// would not be at one; the honest fix is to exclude applications younger than the ghosting
-    /// threshold from those two denominators, which is a change to what the numbers mean and
-    /// belongs with the fairness review, not here.
+    /// The recency distortion this used to carry — applications too young to have been answered
+    /// dragging the rates down — is settled by <see cref="MaturityDays"/> (2026-09-22).
     /// </summary>
     public int WindowMonths { get; init; } = 12;
+
+    /// <summary>
+    /// An application younger than this is not judged: it stays in the window's count (and so in
+    /// the confidence ladder) but out of every rate's denominator, because "no reply yet" three
+    /// days in is not "no reply". Thirty days is the same figure as the ghosting reminder's
+    /// threshold and means the same thing here — the point at which silence starts to be an
+    /// answer — but it is its own setting so the two can move apart if the data says they should.
+    /// </summary>
+    public int MaturityDays { get; init; } = 30;
+
+    /// <summary>
+    /// The largest share (0–1) of a company's applications one person may account for before the
+    /// page hides itself. A "company aggregate" that is mostly one person's history is that
+    /// person's job search with a company name on it — fifty applications from two people is
+    /// not fifty opinions. A third: at the fifty-application floor that forces at least three
+    /// contributors, and no one of them is the number. Hidden by this rule looks exactly like
+    /// Hidden by the count, on purpose.
+    /// </summary>
+    public double MaxContributorShare { get; init; } = 1.0 / 3.0;
 
     /// <summary>
     /// The confidence ladder, raised (2026-09-07) from 20/50/200/1000. Twenty applications is not a

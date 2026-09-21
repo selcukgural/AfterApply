@@ -108,6 +108,8 @@ public static class SiteTrafficNormalizer
         "/hakkimizda",
         "/about",
         "/companies",
+        // The public sector response-rate table (2026-09-22), same shared segment in both locales.
+        "/response-rates",
         "/privacy",
         "/cookies",
         "/extension-privacy",

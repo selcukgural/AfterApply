@@ -170,6 +170,10 @@
       "helpCandidateExperiences": {
         "title": "Candidate Experience",
         "description": "Read companies' hiring processes through candidates' eyes and rate your own anonymously; what is shown and what never is, the limits, how to edit."
+      },
+      "responseRates": {
+        "title": "Application Response Rates by Sector",
+        "description": "How much each sector replies to applications: response rate, median first reply, post-interview silence. From tracked applications, with no company named."
       }
     }
   },
@@ -407,7 +411,8 @@
       "extensionPrivacy": "Extension Privacy Policy",
       "terms": "Terms of Use",
       "termsOfSale": "Distance Sales Agreement",
-      "refundPolicy": "Cancellation and Refund Policy"
+      "refundPolicy": "Cancellation and Refund Policy",
+      "responseRates": "Response Rates"
     }
   },
   "common": {
@@ -448,7 +453,8 @@
     "allCompanies": "All companies",
     "account": "Account",
     "profile": "My Profile",
-    "shareExperience": "Share an experience"
+    "shareExperience": "Share an experience",
+    "responseRates": "Response Rates"
   },
   "auth": {
     "login": {
@@ -1048,7 +1054,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 20 September 2026",
+    "lastUpdated": "Last updated: 22 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -1145,10 +1151,6 @@
       "before": "You can export a copy of your data or permanently delete your account at any time. You can do this from the",
       "link": "Account Settings",
       "after": "page. Deleting your account permanently removes every piece of data belonging to it — your applications, your tracked jobs, your CVs, your imports, your reminders, your email suggestions and notifications, your company reviews, the salary entries you shared, your candidate experiences, your blog comments, the feedback you sent and your request log. The request log is not part of the export file; to access your own entries, write to privacy@ekariyerim.com."
-    },
-    "notApplicable": {
-      "title": "Not currently applicable",
-      "body": "e-kariyerim does not yet offer public/company-wide analytics features. As a result, anonymization/minimum-sample-size controls are not currently applicable — this policy will be updated when these features are added."
     },
     "contact": {
       "title": "Contact",
@@ -1253,6 +1255,16 @@
       "storage": "Comments, reports and helpful marks are kept in our own database and sent to no third party.",
       "deletion": "Deleting your account deletes all your comments — and the replies they received; your data export includes your comments.",
       "legalBasis": "Legal basis: your own explicit action — you choose to comment."
+    },
+    "aggregates": {
+      "title": "Aggregate response data (the sector table and a company page's \"Response\" tab)",
+      "intro": "The applications you track feed aggregate figures detached from your identity: a sector's or a company's response rate, first-reply time, post-interview silence and ghosting rate. When they do:",
+      "what": "Only the company, the application date, the status and the dates of status changes are aggregated. Your notes, HR contact, CV, e-mails and name never enter any aggregate.",
+      "sector": "The sector table is public and names no company. A sector row is not shown until at least 5 different people have 30 applications between them, and it stays closed while one person accounts for more than half of them.",
+      "company": "A company page's \"Response\" tab shows nothing until that company has at least 50 applications in the last 12 months, and nothing if one person accounts for more than a third of them; below the threshold it does not say how many are missing either. This tab stays off until the legal review is complete.",
+      "noReverse": "An aggregate cannot be walked back to one person's application: the pages show only rates, medians and a count of people, and individual application rows never leave the server.",
+      "deletion": "Deleting your account deletes your applications, and the next calculation drops them from the aggregates too (the tables are cached for at most an hour).",
+      "legalBasis": "Legal basis: legitimate interest — letting candidates see how much a sector or a company replies to applications; below the threshold no personal data is processed at all, above it it is shown only in aggregate."
     }
   },
   "terms": {
@@ -3405,7 +3417,8 @@
         "label": "Company page sections",
         "reviews": "Reviews",
         "salaries": "Salaries",
-        "experiences": "Candidate experience"
+        "experiences": "Candidate experience",
+        "intelligence": "Response"
       },
       "disclaimer": "Reviews are the personal opinions of their anonymous authors, not statements by e-kariyerim. Reviews are made of ratings and ready-made statements only; if one still looks wrong, use “Report this review” and a moderator will look at it.",
       "share": "Share",
@@ -3474,6 +3487,60 @@
         "reportable": "Every review can be reported by any signed-in reader."
       },
       "linkLabel": "How the score is calculated →"
+    },
+    "intelligence": {
+      "sampleLine": "From <b>{applications, plural, one {# application} other {# applications}} by {contributors, plural, one {# person} other {# people}}</b> between {start} and {end}. Tracked data, not a survey.",
+      "confidence": {
+        "VeryLow": "Low confidence",
+        "Low": "Low–medium confidence",
+        "Medium": "Medium confidence",
+        "High": "High confidence"
+      },
+      "metrics": {
+        "responseRate": "Response rate",
+        "medianFirstReply": "Median first reply",
+        "postInterviewSilence": "Post-interview silence",
+        "ghosting": "Ghosted",
+        "interview": "Interview invitations",
+        "offer": "Offers",
+        "closure": "Gave an outcome",
+        "closureHint": "wrote a rejection or an offer",
+        "days": "days",
+        "none": "—"
+      },
+      "sectorMedian": "{sector} median <b>{value}</b>",
+      "sectorMedianShort": "sector {value}",
+      "sectorUnavailable": "No sector median yet",
+      "method": {
+        "title": "Where do these numbers come from?",
+        "source": "Applications e-kariyerim users made to this company in the last 12 months, counted as they update the status by hand or through Gmail scanning. One person can contribute several applications; if a single person accounts for more than {share}% of them, the page is not shown.",
+        "maturity": "Applications younger than {days} days are left out of the response and silence denominators — a reply is given time to arrive. Below {floor} applications nothing is shown.",
+        "link": "Full method →"
+      },
+      "hidden": {
+        "title": "No response data for {company} yet",
+        "body": "The number of applications to this company between {start} and {end} is below the threshold. The figure opens once enough people have contributed for a company to be named on it — we do not say how many are missing, because that is a number too.",
+        "threshold": "Threshold",
+        "thresholdValue": "At least {floor} applications in the last 12 months",
+        "diversity": "Diversity",
+        "diversityValue": "No single person above {share}% of them",
+        "maturity": "Maturity",
+        "maturityValue": "Applications younger than {days} days wait",
+        "cta": "Add your application to this company",
+        "ctaHint": "Import your LinkedIn history and your older applications count too."
+      },
+      "sectorStrip": {
+        "title": "Meanwhile: {sector}",
+        "subtitle": "The whole sector, no company named, last 12 months",
+        "link": "Sectors →"
+      },
+      "footer": {
+        "sectors": "Response rates by sector →",
+        "prompt": "Applied here?",
+        "add": "Add your application",
+        "addHint": " and the figure updates with your data."
+      },
+      "error": "The response data could not be loaded right now."
     }
   },
   "companyReviews": {
@@ -5183,7 +5250,8 @@
     "getStarted": "Get Started Free",
     "goToDashboard": "Go to Dashboard",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "responseRates": "Response rates"
   },
   "notFound": {
     "title": "This page does not exist",
@@ -6122,5 +6190,59 @@
   "share": {
     "copyLink": "Copy link",
     "copied": "Copied"
+  },
+  "responseRates": {
+    "title": "Which sectors actually reply?",
+    "lead": "From e-kariyerim users' applications in the last {months} months, with no company named. Not a survey: data that accumulates as people track their applications. A sector is not shown until it has at least {contributors} people and {applications} applications; n is on every row.",
+    "periodLabel": "Period",
+    "updated": "Updated: {date}",
+    "counts": "{visible, plural, =0 {no sector above the threshold} one {# sector above the threshold} other {# sectors above the threshold}}, {hidden, plural, =0 {} one {# below} other {# below}}",
+    "columns": {
+      "sector": "Sector",
+      "applications": "Applications",
+      "contributors": "People",
+      "responseRate": "Response rate",
+      "medianFirstReply": "Median first reply",
+      "postInterviewSilence": "Post-interview silence",
+      "ghosting": "Ghosted"
+    },
+    "days": "{value} days",
+    "none": "—",
+    "belowThreshold": "below threshold — at least {contributors} people and {applications} applications needed",
+    "belowThresholdShort": "below threshold",
+    "hiddenList": "{count, plural, one {# more sector below the threshold} other {# more sectors below the threshold}}: {sectors}",
+    "shareRule": "A row stays closed while one person accounts for more than {share}% of a sector's applications.",
+    "unclassified": "{count, plural, =0 {} one {# application's company has no readable sector; it is in no row.} other {# applications' companies have no readable sector; they are in no row.}}",
+    "empty": {
+      "title": "No sector is above the threshold yet",
+      "body": "A row opens once at least {contributors} different people have {applications} applications between them. Your own sector accumulates as you track your applications."
+    },
+    "benchmark": {
+      "title": "How this differs from the benchmark",
+      "body": "The benchmark asks you for two numbers; this table is computed from tracked applications. The two are kept apart on purpose and never pooled into one average.",
+      "link": "Enter your own rate →"
+    },
+    "companies": {
+      "title": "Where are the per-company figures?",
+      "body": "A company's figures open on its own page once it reaches {floor} applications in the last 12 months. Tracking your applications fills both the sector row and the company page.",
+      "link": "Full method →"
+    },
+    "method": {
+      "title": "Method",
+      "items": {
+        "source": "Source: applications tracked on e-kariyerim, counted as people update the status by hand or through Gmail scanning. Benchmark answers never enter this table.",
+        "sector": "Sector: the industry label on the company's LinkedIn or kariyer.net profile, mapped onto the benchmark's 12 sectors. Labels we cannot read go in no row.",
+        "window": "Period: the last 3, 6 or 12 months by application date. A status change that arrives late is written to the application's own period.",
+        "maturity": "Maturity: applications younger than {days} days are left out of the response, ghosting and silence denominators, so a reply has time to arrive. First-reply time is taken from every answered application.",
+        "threshold": "Threshold: a row needs at least {contributors} different people and {applications} applications, and closes if one person accounts for more than {share}% of them. Below the threshold nothing is shown, not even how much is missing.",
+        "definitions": "Definitions: response rate = applications a human touched (rejections included); ghosted = the ones the user marked as ghosted; post-interview silence = invited to an interview and then ghosted, as a share of those invited; median first reply = days between applying and the first status change."
+      }
+    },
+    "cta": {
+      "title": "If your sector is not here",
+      "body": "The row opens as you track your applications. The account is free; your data stays in your account only.",
+      "button": "Get started free"
+    },
+    "error": "The table could not be loaded right now."
   }
 }

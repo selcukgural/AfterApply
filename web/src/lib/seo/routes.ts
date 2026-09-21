@@ -53,6 +53,7 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   ABOUT_PATHS,
   "/companies",
   "/companies/scoring",
+  "/response-rates",
   "/privacy",
   "/extension-privacy",
   "/cookies",

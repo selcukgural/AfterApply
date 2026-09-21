@@ -170,6 +170,10 @@
       "helpCandidateExperiences": {
         "title": "Aday Deneyimi",
         "description": "Şirketlerin işe alım süreçlerini adayların gözünden okuyun, kendi sürecinizi anonim puanlayın; neyin görünüp neyin görünmediği, sınırlar, nasıl düzenlenir."
+      },
+      "responseRates": {
+        "title": "Sektörlere Göre Başvuru Yanıt Oranları",
+        "description": "Hangi sektör başvurulara ne kadar geri dönüyor: yanıt oranı, medyan ilk dönüş süresi, mülakat sonrası sessizlik. Takip edilen başvurulardan, şirket adı olmadan."
       }
     }
   },
@@ -407,7 +411,8 @@
       "extensionPrivacy": "Eklenti Gizlilik Politikası",
       "terms": "Kullanım Koşulları",
       "termsOfSale": "Mesafeli Satış Sözleşmesi",
-      "refundPolicy": "İptal ve İade Koşulları"
+      "refundPolicy": "İptal ve İade Koşulları",
+      "responseRates": "Yanıt Oranları"
     }
   },
   "common": {
@@ -448,7 +453,8 @@
     "allCompanies": "Tüm şirketler",
     "account": "Hesap",
     "profile": "Profilim",
-    "shareExperience": "Deneyim paylaş"
+    "shareExperience": "Deneyim paylaş",
+    "responseRates": "Yanıt Oranları"
   },
   "auth": {
     "login": {
@@ -1048,7 +1054,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 20 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 22 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -1145,10 +1151,6 @@
       "before": "Verilerinizin bir kopyasını istediğiniz zaman dışa aktarabilir veya hesabınızı kalıcı olarak silebilirsiniz. Bu işlemleri",
       "link": "Hesap Ayarları",
       "after": "sayfasından yapabilirsiniz. Hesap silme işlemi, hesabınıza ait tüm veriyi — başvurularınızı, takip listenizi, CV'lerinizi, içe aktarımlarınızı, hatırlatmalarınızı, e-posta önerilerinizi ve bildirimlerinizi, şirket değerlendirmelerinizi, paylaştığınız maaş bilgilerini, aday deneyimlerinizi, blog yorumlarınızı, gönderdiğiniz geri bildirimleri ve işlem kayıtlarınızı — kalıcı olarak kaldırır. İşlem kayıtları dışa aktarım dosyasına dahil edilmez; kendi kayıtlarınıza erişmek isterseniz privacy@ekariyerim.com adresine yazmanız yeterlidir."
-    },
-    "notApplicable": {
-      "title": "Şu an geçerli olmayanlar",
-      "body": "e-kariyerim henüz herkese açık/şirket bazlı analitik özellikleri sunmamaktadır. Bu nedenle anonimleştirme/minimum örneklem kontrolleri şu an için uygulanabilir değildir — bu özellikler eklendiğinde bu politika güncellenecektir."
     },
     "contact": {
       "title": "İletişim",
@@ -1253,6 +1255,16 @@
       "storage": "Yorumlar, bildirimler ve faydalı işaretleri kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Hesabını silmek tüm yorumlarını — ve onlara verilmiş yanıtları — siler; veri dışa aktarımın yorumlarını içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — yorum yazmayı sen seçersin."
+    },
+    "aggregates": {
+      "title": "Toplu yanıt verisi (sektör tablosu ve şirket sayfasındaki \"Yanıt\" sekmesi)",
+      "intro": "Takip ettiğin başvurular, kimliğinden ayrılmış toplu sayılara katılır: bir sektör ya da bir şirket için yanıt oranı, ilk dönüş süresi, mülakat sonrası sessizlik ve kayıp oranı. Bunu yaparken:",
+      "what": "Toplulaşan alanlar yalnızca şirket, başvuru tarihi, durum ve durum değişikliği tarihleridir. Notların, İK kontağın, CV'n, e-postaların ve adın hiçbir toplu sayıya girmez.",
+      "sector": "Sektör tablosu herkese açıktır ve şirket adı içermez. Bir sektör satırı, en az 5 farklı kişinin toplam 30 başvurusu birikmeden gösterilmez; tek bir kişi başvuruların yarısından fazlasını oluşturuyorsa satır kapalı kalır.",
+      "company": "Şirket sayfasındaki \"Yanıt\" sekmesi, o şirkete son 12 ayda en az 50 başvuru yapılmadan ve tek bir kişi bunların üçte birinden fazlasını oluşturuyorsa hiçbir sayı göstermez; eşiğin altında kaç başvuru eksik olduğu da yazılmaz. Bu sekme, hukuki değerlendirme tamamlanana kadar kapalı tutulur.",
+      "noReverse": "Toplu sayılardan tek bir kişinin başvurusuna geri gidilemez: sayfalar yalnızca oran, medyan ve kişi sayısı gösterir, tekil başvuru satırları hiçbir zaman dışarı çıkmaz.",
+      "deletion": "Hesabını sildiğinde başvuruların silinir ve bir sonraki hesaplamada toplu sayılardan da çıkar (tablolar en fazla bir saat önbellekte kalır).",
+      "legalBasis": "Hukuki sebep: meşru menfaat — adayların hangi sektörün ve şirketin başvurulara ne kadar geri döndüğünü görebilmesi; kişisel veri eşiğin altında hiç işlenmez, üstünde yalnızca toplu hâlde gösterilir."
     }
   },
   "terms": {
@@ -3405,7 +3417,8 @@
         "label": "Şirket sayfası bölümleri",
         "reviews": "Değerlendirmeler",
         "salaries": "Maaşlar",
-        "experiences": "Aday deneyimi"
+        "experiences": "Aday deneyimi",
+        "intelligence": "Yanıt"
       },
       "disclaimer": "Değerlendirmeler anonim yazarlarının kişisel görüşleridir, e-kariyerim'in beyanı değildir. Değerlendirmeler yalnızca puanlardan ve hazır maddelerden oluşur; yine de yanlış görünen bir şey varsa “Bu değerlendirmeyi bildir”i kullan, bir moderatör bakar.",
       "share": "Paylaş",
@@ -3474,6 +3487,60 @@
         "reportable": "Her değerlendirme giriş yapmış herhangi bir okuyucu tarafından bildirilebilir."
       },
       "linkLabel": "Puan nasıl hesaplanıyor? →"
+    },
+    "intelligence": {
+      "sampleLine": "{start} – {end} arasında <b>{contributors, plural, one {# kişinin} other {# kişinin}} {applications, plural, one {# başvurusu} other {# başvurusu}}</b>ndan. Anket değil, takip verisi.",
+      "confidence": {
+        "VeryLow": "Düşük güven",
+        "Low": "Orta-düşük güven",
+        "Medium": "Orta güven",
+        "High": "Yüksek güven"
+      },
+      "metrics": {
+        "responseRate": "Yanıt oranı",
+        "medianFirstReply": "Medyan ilk dönüş",
+        "postInterviewSilence": "Mülakat sonrası sessizlik",
+        "ghosting": "Kayboldu",
+        "interview": "Mülakata çağrı",
+        "offer": "Teklif",
+        "closure": "Açık sonuç verdi",
+        "closureHint": "ret ya da kabul yazdı",
+        "days": "gün",
+        "none": "—"
+      },
+      "sectorMedian": "{sector} medyanı <b>{value}</b>",
+      "sectorMedianShort": "sektör {value}",
+      "sectorUnavailable": "Sektör medyanı henüz yok",
+      "method": {
+        "title": "Bu sayılar nereden geliyor?",
+        "source": "e-kariyerim kullanıcılarının bu şirkete son 12 ayda yaptığı başvurular; kullanıcı durumu elle ya da Gmail taramasıyla güncelledikçe sayılır. Bir kişi birden fazla başvuruyla katkı verebilir; tek bir kişinin payı yüzde {share} sınırını aşıyorsa sayfa gösterilmez.",
+        "maturity": "{days} günden genç başvurular yanıt ve sessizlik paydasına girmez — cevap gelmesine vakit tanınır. {floor} başvurunun altında hiçbir sayı gösterilmez.",
+        "link": "Yöntemin tamamı →"
+      },
+      "hidden": {
+        "title": "{company} için henüz yanıt verisi gösterilmiyor",
+        "body": "{start} – {end} arasında bu şirkete yapılan başvuru sayısı eşiğin altında. Sayı, bir şirketin adıyla anılmasına yetecek kadar insan katkı verdiğinde açılır — kaç kişinin eksik olduğunu söylemiyoruz, çünkü o da bir sayıdır.",
+        "threshold": "Eşik",
+        "thresholdValue": "Son 12 ayda en az {floor} başvuru",
+        "diversity": "Çeşitlilik",
+        "diversityValue": "Tek kişinin payı yüzde {share} sınırını aşamaz",
+        "maturity": "Olgunluk",
+        "maturityValue": "{days} günden genç başvurular beklemede",
+        "cta": "Bu şirkete başvurunu ekle",
+        "ctaHint": "LinkedIn geçmişini içe aktarırsan eski başvuruların da sayılır."
+      },
+      "sectorStrip": {
+        "title": "Bu arada: {sector}",
+        "subtitle": "Şirket adı olmadan, sektörün tamamı için son 12 ay",
+        "link": "Sektörler →"
+      },
+      "footer": {
+        "sectors": "Sektörlere göre yanıt oranları →",
+        "prompt": "Bu şirkete başvurdun mu?",
+        "add": "Başvurunu ekle",
+        "addHint": ", sayı senin verinle güncellensin."
+      },
+      "error": "Yanıt verisi şu an yüklenemedi."
     }
   },
   "companyReviews": {
@@ -5183,7 +5250,8 @@
     "getStarted": "Ücretsiz Başla",
     "goToDashboard": "Panele Git",
     "openMenu": "Menüyü aç",
-    "closeMenu": "Menüyü kapat"
+    "closeMenu": "Menüyü kapat",
+    "responseRates": "Yanıt oranları"
   },
   "notFound": {
     "title": "Bu sayfa yok",
@@ -6122,5 +6190,59 @@
   "share": {
     "copyLink": "Linki kopyala",
     "copied": "Kopyalandı"
+  },
+  "responseRates": {
+    "title": "Hangi sektör ne kadar geri dönüyor?",
+    "lead": "e-kariyerim kullanıcılarının son {months} aydaki başvurularından, şirket adı olmadan. Anket değil: kullanıcılar başvurularını takip ettikçe biriken veri. Bir sektör en az {contributors} kişi ve {applications} başvuruya ulaşmadan gösterilmez; n her satırda yazar.",
+    "periodLabel": "Dönem",
+    "updated": "Güncellendi: {date}",
+    "counts": "{visible, plural, =0 {hiçbir sektör eşik üstü değil} one {# sektör eşik üstü} other {# sektör eşik üstü}}, {hidden, plural, =0 {} one {# sektör eşik altı} other {# sektör eşik altı}}",
+    "columns": {
+      "sector": "Sektör",
+      "applications": "Başvuru",
+      "contributors": "Kişi",
+      "responseRate": "Yanıt oranı",
+      "medianFirstReply": "Medyan ilk dönüş",
+      "postInterviewSilence": "Mülakat sonrası sessizlik",
+      "ghosting": "Kayboldu"
+    },
+    "days": "{value} gün",
+    "none": "—",
+    "belowThreshold": "eşik altı — en az {contributors} kişi ve {applications} başvuru gerekiyor",
+    "belowThresholdShort": "eşik altı",
+    "hiddenList": "{count, plural, one {# sektör daha eşiğin altında} other {# sektör daha eşiğin altında}}: {sectors}",
+    "shareRule": "Bir sektörde tek kişinin payı yüzde {share} sınırını aşıyorsa satır kapalı kalır.",
+    "unclassified": "{count, plural, =0 {} one {# başvurunun şirketi hangi sektörde bilinmiyor; hiçbir satırda değil.} other {# başvurunun şirketi hangi sektörde bilinmiyor; hiçbir satırda değil.}}",
+    "empty": {
+      "title": "Henüz hiçbir sektör eşiğin üstünde değil",
+      "body": "Bir satırın açılması için en az {contributors} farklı kişinin toplam {applications} başvurusu gerekiyor. Başvurularını takip etmeye başladığında kendi sektörün de birikir."
+    },
+    "benchmark": {
+      "title": "Bu tablo ile kıyaslama aracı arasındaki fark",
+      "body": "Kıyaslama aracı iki sayıyı sana sorar; bu tablo takip edilen başvurulardan hesaplanır. İkisi bilerek ayrı tutulur, tek ortalamada toplanmaz.",
+      "link": "Kendi oranını gir →"
+    },
+    "companies": {
+      "title": "Şirket bazında sayılar nerede?",
+      "body": "Bir şirket son 12 ayda {floor} başvuruya ulaştığında kendi sayfasında açılır. Başvurularını takip ettikçe hem sektör satırı hem şirket sayfası dolar.",
+      "link": "Yöntemin tamamı →"
+    },
+    "method": {
+      "title": "Yöntem",
+      "items": {
+        "source": "Kaynak: e-kariyerim'de takip edilen başvurular. Kullanıcı durumu elle ya da Gmail taramasıyla güncelledikçe sayılır; anket cevapları bu tabloya karışmaz.",
+        "sector": "Sektör: şirketin LinkedIn ya da kariyer.net profilindeki sektör etiketi, kıyaslama aracının 12 sektörüne eşlenir. Okunamayan etiketler hiçbir satıra girmez.",
+        "window": "Dönem: başvuru tarihine göre son 3, 6 ya da 12 ay. Eski bir başvuruya yeni gelen durum değişikliği, başvurunun kendi dönemine yazılır.",
+        "maturity": "Olgunluk: {days} günden genç başvurular yanıt, kayıp ve sessizlik paydalarına girmez; cevap gelmesine vakit tanınır. İlk dönüş süresi ise cevaplanmış her başvurudan hesaplanır.",
+        "threshold": "Eşik: bir satır için en az {contributors} farklı kişi ve {applications} başvuru; tek kişinin payı yüzde {share} sınırını aşıyorsa satır kapanır. Eşik altında hiçbir sayı gösterilmez, kaç eksik olduğu bile.",
+        "definitions": "Tanımlar: yanıt oranı = bir insanın dokunduğu başvurular (ret dâhil); kayboldu = kullanıcının 'kayboldu' işaretledikleri; mülakat sonrası sessizlik = mülakata çağrılıp sonra kaybolanlar, mülakata çağrılanlara oranla; medyan ilk dönüş = başvuru ile ilk durum değişikliği arasındaki gün."
+      }
+    },
+    "cta": {
+      "title": "Kendi sektörün burada yoksa",
+      "body": "Başvurularını takip etmeye başladığında satır açılır. Hesap ücretsiz; verilerin yalnızca senin hesabında.",
+      "button": "Ücretsiz başla"
+    },
+    "error": "Tablo şu an yüklenemedi."
   }
 }

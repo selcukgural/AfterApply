@@ -17,6 +17,7 @@ export type NavKey =
   | "shareExperience"
   | "myReviews"
   | "tools"
+  | "responseRates"
   | "weeklyJobs"
   | "cvScan"
   | "benchmark"
@@ -35,7 +36,10 @@ export interface NavItem {
 /** One position in the signed-in row: a plain link, or a trigger with a menu under it. */
 export type NavEntry = { type: "link"; href: string; key: NavKey } | { type: "group"; key: NavKey; items: NavItem[] };
 
-export type NavFlags = Pick<ClientConfigResponse, "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences" | "blog">;
+export type NavFlags = Pick<
+  ClientConfigResponse,
+  "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences" | "blog" | "responseRates"
+>;
 
 /**
  * The signed-in navigation, as data. The desktop row and the mobile drawer both render from this
@@ -67,6 +71,7 @@ export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
   const experiencesOn = flags.candidateExperiences?.enabled === true;
   const weeklyJobsOn = flags.jobSources?.enabled === true;
   const blogOn = flags.blog?.enabled === true && flags.blog.hasPublishedPosts === true;
+  const responseRatesOn = flags.responseRates?.enabled === true;
 
   const companies: NavItem[] = [
     { href: "/companies", key: "allCompanies" },
@@ -79,6 +84,9 @@ export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
 
   const tools: NavItem[] = [
     ...(weeklyJobsOn ? [{ href: "/weekly-jobs", key: "weeklyJobs", proBadge: true } as NavItem] : []),
+    // The sector table reads like a tool (2026-09-22): a public number to look up, not a place to
+    // contribute — so it sits with the scan and the benchmark rather than in the companies group.
+    ...(responseRatesOn ? [{ href: "/response-rates", key: "responseRates" } as NavItem] : []),
     { href: cvScanPath(locale), key: "cvScan" },
     { href: "/benchmark", key: "benchmark" },
     { href: "/guide", key: "guide" },

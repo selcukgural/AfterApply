@@ -79,11 +79,12 @@ describe("the company page's salary tab", () => {
     expect(form).not.toContain('autoComplete="organization-title"');
   });
 
-  it("hides the whole tab row while both client features are off, and each tab behind its flag", () => {
+  it("hides the whole tab row while every client feature is off, and each tab behind its flag", () => {
     const tabs = read("components/companies/CompanyPageTabs.tsx");
     expect(tabs).toContain("config.companySalaries?.enabled");
     expect(tabs).toContain("config.candidateExperiences?.enabled");
-    expect(tabs).toContain("if (!salariesOn && !experiencesOn)");
+    expect(tabs).toContain("config.companyIntelligence?.enabled");
+    expect(tabs).toContain("if (!salariesOn && !experiencesOn && !intelligenceOn)");
     expect(tabs).toContain('from "@/components/layout/navLink"');
   });
 });

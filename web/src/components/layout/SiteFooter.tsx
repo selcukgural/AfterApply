@@ -17,7 +17,7 @@ const PRODUCT_LINKS = [
 ] as const;
 
 /** Every public page a visitor can browse, under the same names the header uses. */
-type ExploreLink = { href: LocalisedPath; key: "companies" | "cvScan" | "benchmark" | "guide" | "blog" | "help" | "about" };
+type ExploreLink = { href: LocalisedPath; key: "companies" | "responseRates" | "cvScan" | "benchmark" | "guide" | "blog" | "help" | "about" };
 
 const EXPLORE_LINKS: readonly ExploreLink[] = [
   { href: "/companies", key: "companies" },
@@ -31,10 +31,17 @@ const EXPLORE_LINKS: readonly ExploreLink[] = [
 
 /** The blog, between the guide and the help centre, only once there is a published post — the
  *  header's rule (SiteHeader.siteLinksFor), read here from the server-side config. */
-function exploreLinksFor(hasBlog: boolean): readonly ExploreLink[] {
-  if (!hasBlog) return EXPLORE_LINKS;
-  const helpIndex = EXPLORE_LINKS.findIndex((link) => link.key === "help");
-  return [...EXPLORE_LINKS.slice(0, helpIndex), { href: "/blog", key: "blog" }, ...EXPLORE_LINKS.slice(helpIndex)];
+function exploreLinksFor(hasBlog: boolean, hasResponseRates: boolean): readonly ExploreLink[] {
+  let links: readonly ExploreLink[] = EXPLORE_LINKS;
+  if (hasResponseRates) {
+    const companiesIndex = links.findIndex((link) => link.key === "companies");
+    links = [...links.slice(0, companiesIndex + 1), { href: "/response-rates", key: "responseRates" }, ...links.slice(companiesIndex + 1)];
+  }
+  if (hasBlog) {
+    const helpIndex = links.findIndex((link) => link.key === "help");
+    links = [...links.slice(0, helpIndex), { href: "/blog", key: "blog" }, ...links.slice(helpIndex)];
+  }
+  return links;
 }
 
 const LEGAL_LINKS = [
@@ -64,7 +71,10 @@ export async function SiteFooter() {
   const year = new Date().getFullYear();
   // Null when the API is unreachable: the footer then simply has no blog link.
   const config = await fetchPublicConfig();
-  const exploreLinks = exploreLinksFor(config?.blog?.enabled === true && config.blog.hasPublishedPosts === true);
+  const exploreLinks = exploreLinksFor(
+    config?.blog?.enabled === true && config.blog.hasPublishedPosts === true,
+    config?.responseRates?.enabled === true,
+  );
 
   const linkClass = "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100";
   const headingClass = "font-medium text-gray-700 dark:text-gray-300";

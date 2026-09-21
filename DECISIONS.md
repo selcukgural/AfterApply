@@ -8532,3 +8532,77 @@ artık gerçek görseli gösterir (kapak ya da `/{locale}/og` rotasının ürett
 `shareImage.test.ts`, `routes.test.ts` (kapak/kart seçimi), integration kapak boyutu (640×480 fixture).
 Tarayıcı: 640×360 kapak → uyarı + kart; 1200×630 kapak → "bu kapak kullanılır", yayın → `og:image`
 kapak URL'si, 1200×630, alt metni.
+
+## Yanıt verisi: herkese açık sektör tablosu + şirket sayfasında "Yanıt" sekmesi (K1'in yüzeyi) — DECIDED (2026-09-22)
+
+**Bağlam.** 2026-09-21 derin araştırması ve yabancı gözüyle site incelemesinin ilk bulgusu: sitenin
+var oluş tezi ("hangi şirket geri dönmüyor") hiçbir sayfada görünmüyor; K1 (Company Intelligence)
+kodu bitmiş ama ekranı yok, hesapsız kıyaslama aracı da eşik altında hiçbir şey vermiyor. Kullanıcı
+araştırma raporunun 0.2 maddesini seçti; tasarım kanvası (https://claude.ai/artifact/7bTqtRYiL9FAMFcVxTzbEL)
+üzerinden **B için Yön A (kartlar + sektör kıyası), A için tablo** seçildi; eşikler önerildiği gibi
+kabul edildi. Üç parça tek dalda: A (sektör), B (şirket sekmesi), C (sayıların adaleti).
+
+**A — `/response-rates` (her iki dilde aynı segment, /benchmark gibi).** Yeni endpoint
+`GET /api/response-rates/sectors?period=LastThreeMonths|LastSixMonths|LastTwelveMonths`, anonim,
+`ResponseRates:Enabled` (varsayılan **açık**; şirket adı yok) kapalıyken 404, HybridCache 1 saat,
+`Cache-Control: public`. Şirketin sektörü: `Company.Industry` serbest metni (LinkedIn/kariyer.net
+etiketi) `IndustrySectorClassifier` ile kıyaslama aracının 13 sektörüne eşlenir (EN+TR anahtar
+kelime, özel önce genel: fintech→finans, "marketing"→medya, "IT consulting"→yazılım); okunamayan
+etiket `Other` değil **hiçbir satır** ve sayfa kaç başvurunun dışarıda kaldığını söyler. Satır eşiği:
+**≥ 5 farklı kişi, ≥ 30 başvuru, tek kişinin payı ≤ %50**; altında satır yalnızca adını taşır —
+sayı, "kaç eksik" bile yok (herkese açık sayfa, iki kişilik bir sektör o iki kişiyi adlandırır).
+Her sektör (Other hariç) enum sırasıyla bir satırdır ki sayfa eşik altındakileri adıyla listeleyebilsin.
+
+**B — şirket sayfasında dördüncü sekme.** `CompanyIntelligence:Enabled` bayrağı **prod'da kapalı
+kalır** (hukuki okuma, DEVELOPMENT_PLAN K1 kilidi 3); açılınca sekme değerlendirmeler gibi
+**hesapsız** okunur — endpoint'in `RequireAuthorization`'ı kaldırıldı, veriyi koruyan şey eşik,
+giriş değil. Eşik altı hâli boş panel değil: üç kural kartı (eşik / çeşitlilik / olgunluk) +
+"başvurunu ekle" + sektörün toplu şeridi. Sektör kıyası (`SectorComparison`) şirket gizliyken de
+yanıtla gelir; sektör aggregate'i kimseyi adlandırmaz. Sekmenin sayacı yalnızca eşik üstünde
+görünür (sayı, saklanan şeyin ta kendisi). `HiddenBelow` **50'de kalıyor** (raporda 20 yazmıştı;
+repodaki karar ve testi bağlayıcı).
+
+**C — sayıların anlamı (planın "yayından önce kapatılmalı" dediği madde).**
+`ResponseRateAggregator` tek hesaplayıcı; şirket ve sektör aynı fonksiyondan geçer.
+(1) **Olgunluk:** `MaturityDays` (30) gününden genç başvurular pencere sayımında (güven merdiveni)
+kalır ama **hiçbir oranın paydasına girmez**; ilk dönüş süresi ise cevaplanmış her başvurudan
+(genç dâhil) hesaplanır — gerçekleşmiş cevap gerçek veridir. (2) **Çeşitlilik:** tek kişinin payı
+şirkette > 1/3 (`MaxContributorShare`, appsettings 0.3334) ise şirket **Hidden** — sayı eşiğiyle
+ayırt edilemez, kasıtlı. (3) **Mülakat sonrası sessizlik:** mülakata çağrılıp şu an Ghosted
+olanların, mülakata çağrılanlara oranı; kimse çağrılmadıysa null. Ekşi/Blind'daki asıl şikâyet
+buydu. Yanıta `MatureApplications`, `DistinctContributors`, `PostInterviewSilenceRate`,
+`SectorComparison`, `Thresholds` eklendi; eski alanlar korundu.
+
+**Gizlilik metni aynı değişiklikte.** `privacy.notApplicable` ("henüz şirket bazlı analitik yok,
+eklendiğinde güncellenecek") kaldırıldı, yerine `privacy.aggregates` bölümü: toplulaşan alanlar,
+sektör ve şirket eşikleri, geri gidilemezlik, silme, hukuki sebep (meşru menfaat). Son güncelleme
+tarihi 22 Eylül 2026. `SiteTrafficNormalizer` allowlist'ine `/response-rates` eklendi.
+
+**Nav.** Signed-out header ve footer "Keşfet": Şirketler'den hemen sonra "Yanıt oranları"
+(bayrağa bağlı); signed-in Araçlar grubunda Haftalık İlanlar'ın altında. `nav`/`siteNav`/
+`landing.footer` `responseRates` anahtarları; `PUBLIC_MESSAGE_SCOPE` `responseRates`.
+
+**Bilerek yapılmayanlar.** Şirket sekmesinde SSR yok (bayrak kapalı, istemci sorgusu; sayaç ve
+panel aynı react-query anahtarını paylaşır). "Başvurunu ekle" düz `/applications/new` (form
+şirket ön-doldurma almıyor; ileride). Sektör sayfası da istemci sorgusu: dönem anahtarı gezinme
+değil; başlık/lead/yöntem statik ve indekslenebilir.
+
+**Test.** Unit: `ResponseRateAggregatorTests` (12: olgunluk, sessizlik, pay, boş pencere, örnek
+katlama, sevk edilen eşikleri kilitleyen test), `IndustrySectorClassifierTests` (LinkedIn + TR
+etiketleri, özel>genel, okunamayan→null); web `rows.test.ts`, contract testleri güncellendi.
+Integration: `SectorResponseRatesTests` (8: eşik üstü/altı, kişi azlığı, pay, sınıflanamayan,
+3 aylık pencere, Longer→400, olgunluk, bayrak kapalı→404), `CompanyIntelligenceTests` (+5:
+anonim okuma, olgunluk, sessizlik, pay guard, gizli şirkette sektör kıyası; profil `MaxContributor
+Share=1` ki eski tohumlar tek hesaptan gelebilsin). Tarayıcı (local, eşikler env ile düşürülmüş,
+dev DB'ye sektör etiketi tohumlanmış): sektör sayfası TR/EN + dönem anahtarı, Trendyol eşik üstü,
+Doğuş Teknoloji eşik altı + sektör şeridi, Araçlar menüsü, footer.
+
+**Hukuki kilidin adı düzeltildi (aynı gün, kullanıcı sorusu üzerine).** K1'in üçüncü kilidi
+"KVKK + itibar" diye yazılıydı; iki risk ayrı. KVKK gerçek kişileri (başvuranları) korur ve o risk
+şirket adından bağımsızdır — sektör tablosunda da vardır — ve eşiklerle (50 başvuru, tek kişi ≤ 1/3,
+eşik altında sayı yok) bugün karşılanmıştır. Şirket sekmesini bekleten şey **itibar / haksız
+rekabet** riskidir: adı geçen bir tüzel kişi hakkında aday-raporlu bir oran yayınlamak. Bu yalnızca
+ad yazınca doğar ve sekmenin doğası gereği kaçınılmazdır (sekme şirketin kendi sayfasında). Alınacak
+hukuki görüşün sorusu "KVKK'ya uygun mu" değil, "itibar riski ne, şirket itiraz ederse süreç ne
+olmalı" olmalıdır; Glassdoor ve İşteMülakat'ın "yazarın görüşüdür + itiraz yolu" yapısı bu soruya
+verilmiş cevaplardır. (Avukat görüşü değildir.)
