@@ -7,6 +7,7 @@ import type { BlogComment, BlogCommentReportReason } from "@/types/api";
 import { blogCommentsApi } from "@/lib/api/blogComments";
 import { ApiError } from "@/lib/api/httpClient";
 import { relativeTime } from "@/lib/blog/commentDraft";
+import { VotePill } from "@/components/blog/VotePill";
 import { CommentForm } from "./CommentForm";
 import { ReportCommentDialog } from "./ReportCommentDialog";
 
@@ -41,23 +42,11 @@ export function CommentItem({ comment, rootId, isAuthenticated, signInHref, now,
   const locale = useLocale();
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [helpful, setHelpful] = useState(comment.helpfulByMe === true);
-  const [helpfulCount, setHelpfulCount] = useState(comment.helpfulCount);
-  const [helpfulBusy, setHelpfulBusy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  // The list is read again when the viewer signs in; the vote state follows the fresh data
-  // (the "adjust state on a prop change" pattern — a render-time reset, not an effect).
-  const [seen, setSeen] = useState({ byMe: comment.helpfulByMe, count: comment.helpfulCount });
-  if (seen.byMe !== comment.helpfulByMe || seen.count !== comment.helpfulCount) {
-    setSeen({ byMe: comment.helpfulByMe, count: comment.helpfulCount });
-    setHelpful(comment.helpfulByMe === true);
-    setHelpfulCount(comment.helpfulCount);
-  }
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -72,25 +61,6 @@ export function CommentItem({ comment, rootId, isAuthenticated, signInHref, now,
   const name = comment.isMine ? t("you") : (comment.authorName ?? t("anonymousAuthor"));
   const replyTarget = comment.authorName ?? t("anonymousAuthor");
 
-  const toggleHelpful = async () => {
-    if (helpfulBusy) return;
-    setHelpfulBusy(true);
-    const wasHelpful = helpful;
-    const wasCount = helpfulCount;
-    setHelpful(!wasHelpful);
-    setHelpfulCount(wasCount + (wasHelpful ? -1 : 1));
-    try {
-      const result = await blogCommentsApi.toggleHelpful(comment.id);
-      setHelpful(result.helpful);
-      setHelpfulCount(result.helpfulCount);
-    } catch {
-      setHelpful(wasHelpful);
-      setHelpfulCount(wasCount);
-    } finally {
-      setHelpfulBusy(false);
-    }
-  };
-
   const report = async (reason: BlogCommentReportReason, note: string | null) => {
     setReportError(null);
     try {
@@ -103,12 +73,6 @@ export function CommentItem({ comment, rootId, isAuthenticated, signInHref, now,
     }
   };
 
-  const pillClass = (on: boolean) =>
-    `inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors disabled:opacity-60 ${
-      on
-        ? "border-accent bg-accent/10 text-accent-ink"
-        : "border-gray-300 text-gray-700 hover:border-gray-400 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-500"
-    }`;
   const textButtonClass = "inline-flex h-8 items-center px-2 text-xs font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100";
 
   const body = (
@@ -163,26 +127,24 @@ export function CommentItem({ comment, rootId, isAuthenticated, signInHref, now,
 
       {!pending && (
         <div className="flex flex-wrap items-center gap-1" ref={menuRef}>
-          {isAuthenticated ? (
-            <button
-              type="button"
-              className={pillClass(helpful)}
-              aria-pressed={helpful}
-              aria-label={t("helpfulCount", { count: helpfulCount })}
-              disabled={helpfulBusy}
-              onClick={() => void toggleHelpful()}
-            >
-              <ThumbIcon />
-              {t("helpful")}
-              <span className="tabular-nums opacity-80">{helpfulCount}</span>
-            </button>
-          ) : (
-            <Link href={signInHref} className={pillClass(false)} title={t("signInToVote")}>
-              <ThumbIcon />
-              {t("helpful")}
-              <span className="tabular-nums opacity-80">{helpfulCount}</span>
-            </Link>
-          )}
+          {/* The list is read again with the token once the viewer is signed in, so `helpfulByMe`
+              becomes a boolean by itself — no `load` here; the pill waits for it. */}
+          <VotePill
+            icon="thumb"
+            on={comment.helpfulByMe}
+            count={comment.helpfulCount}
+            toggle={() => blogCommentsApi.toggleHelpful(comment.id)}
+            isAuthenticated={isAuthenticated}
+            signInHref={signInHref}
+            labels={{
+              off: t("helpful"),
+              on: t("helpfulByYou"),
+              remove: t("unvote"),
+              count: (count) => t("helpfulCount", { count }),
+              signIn: t("signInToVote"),
+              error: t("errors.generic"),
+            }}
+          />
           {isAuthenticated ? (
             <button type="button" className={textButtonClass} onClick={() => setReplying((open) => !open)}>
               {t("reply")}
@@ -278,15 +240,6 @@ export function CommentItem({ comment, rootId, isAuthenticated, signInHref, now,
         </div>
       )}
     </article>
-  );
-}
-
-function ThumbIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M7 10v12" />
-      <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
-    </svg>
   );
 }
 

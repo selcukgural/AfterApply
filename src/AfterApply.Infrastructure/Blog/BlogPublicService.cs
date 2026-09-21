@@ -135,6 +135,18 @@ internal sealed class BlogPublicService(
         return new BlogLikeToggleResponse(liked, count);
     }
 
+    public async Task<BlogLikeToggleResponse?> GetLikeStateAsync(Guid userId, Guid postId, CancellationToken cancellationToken)
+    {
+        if (!await Published().AnyAsync(p => p.Id == postId, cancellationToken))
+        {
+            return null;
+        }
+
+        var liked = await dbContext.BlogPostLikes.AnyAsync(l => l.PostId == postId && l.UserId == userId, cancellationToken);
+        var count = await dbContext.BlogPostLikes.CountAsync(l => l.PostId == postId, cancellationToken);
+        return new BlogLikeToggleResponse(liked, count);
+    }
+
     private IQueryable<BlogPost> Published() =>
         dbContext.BlogPosts.Where(p => p.Status == BlogPostStatus.Published);
 

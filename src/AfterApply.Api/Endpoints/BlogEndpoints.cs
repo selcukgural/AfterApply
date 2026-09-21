@@ -82,6 +82,19 @@ public static class BlogEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // The page is server-rendered without the reader's token, so the like button arrives not
+        // knowing whether this reader already liked the post. It asks here before it lets a click
+        // through — otherwise a second click would silently *remove* the like (2026-09-21).
+        userGroup.MapGet("/posts/{postId:guid}/like", async (Guid postId, ClaimsPrincipal user, IBlogPublicService service,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetLikeStateAsync(user.GetUserId(), postId, cancellationToken);
+                return result is null ? Results.NotFound() : Results.Ok(result);
+            })
+            .WithSummary("Whether the caller liked a published post, and its like count")
+            .WithDescription("Same shape as the toggle's answer, without changing anything. A post that is not published is 404.")
+            .Produces<BlogLikeToggleResponse>();
+
         userGroup.MapPost("/posts/{postId:guid}/like", async (Guid postId, ClaimsPrincipal user, IBlogPublicService service,
                 CancellationToken cancellationToken) =>
             {

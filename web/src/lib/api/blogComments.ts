@@ -11,6 +11,7 @@ import type {
   PagedResult,
   ReportBlogCommentRequest,
 } from "@/types/api";
+import type { VoteSnapshot } from "@/lib/blog/vote";
 import { apiFetch } from "./httpClient";
 
 /**
@@ -33,8 +34,11 @@ export const blogCommentsApi = {
   edit: (commentId: string, request: CreateBlogCommentRequest) =>
     apiFetch<BlogComment>(`/api/blog/comments/${commentId}`, { method: "PUT", body: JSON.stringify(request) }),
 
-  toggleHelpful: (commentId: string) =>
-    apiFetch<BlogCommentHelpfulResponse>(`/api/blog/comments/${commentId}/helpful`, { method: "POST" }),
+  toggleHelpful: (commentId: string): Promise<VoteSnapshot> =>
+    apiFetch<BlogCommentHelpfulResponse>(`/api/blog/comments/${commentId}/helpful`, { method: "POST" }).then((response) => ({
+      on: response.helpful,
+      count: response.helpfulCount,
+    })),
 
   report: (commentId: string, request: ReportBlogCommentRequest) =>
     apiFetch<BlogCommentReportResponse>(`/api/blog/comments/${commentId}/reports`, { method: "POST", body: JSON.stringify(request) }),

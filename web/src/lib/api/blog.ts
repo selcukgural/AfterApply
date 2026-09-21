@@ -12,12 +12,19 @@ import type {
   PagedResult,
   SaveBlogDraftRequest,
 } from "@/types/api";
+import type { VoteSnapshot } from "@/lib/blog/vote";
 import { apiFetch, apiFetchBlob } from "./httpClient";
+
+const toSnapshot = (response: BlogLikeToggleResponse): VoteSnapshot => ({ on: response.liked, count: response.likeCount });
 
 /** The one thing a signed-in reader does on a post. Public reads are server-side only
  *  (`lib/blog/publicApi.server.ts`), so nothing here is anonymous. */
 export const blogApi = {
-  toggleLike: (postId: string) => apiFetch<BlogLikeToggleResponse>(`/api/blog/posts/${postId}/like`, { method: "POST" }),
+  /** Whether the caller liked the post, and its count — asked before the first click, since the page was fetched without the token. */
+  likeState: (postId: string) => apiFetch<BlogLikeToggleResponse>(`/api/blog/posts/${postId}/like`).then(toSnapshot),
+
+  toggleLike: (postId: string) =>
+    apiFetch<BlogLikeToggleResponse>(`/api/blog/posts/${postId}/like`, { method: "POST" }).then(toSnapshot),
 
   /**
    * An image's bytes, with the caller's token. An `<img>` cannot send a Bearer, and a draft's

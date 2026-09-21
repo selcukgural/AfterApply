@@ -8433,3 +8433,37 @@ Tarayıcı (local stack): anonim SSR liste, giriş yapmış okuyucu (pending kut
 bildir → "daha önce bildirmiştiniz", yanıt), Katkılarım kartları + çipler, 400px mobil, admin
 kuyruk → şikayetli yorumu reddet (şikayet "işlem yapıldı") → pending onayla (rozet 2→1),
 gizlilik bölümü.
+
+## Beğen / Faydalı pill'i: durum bilinmeden tık geçmez, "Beğendin" etiketi — DECIDED (2026-09-21)
+
+**Sorun.** Yazı sayfası sunucuda okuyucunun token'ı olmadan render ediliyor (`fetchBlogPost`), bu
+yüzden `likedByMe` canlıda herkes için `null`. `LikeButton` bunu "beğenmemiş" sayıp iyimser +1
+yapıyor; sunucu ise gerçek durumu bildiği için beğeniyi *kaldırıp* 0 döndürüyor: **1 → 2 → 0**.
+Hata yolu da bir öncekine değil sayfa açılış değerine dönüyordu. Yorumlardaki "Faydalı" liste
+token'la yeniden çekildiği için fiilen doğru çalışıyordu ama aynı kodu paylaşmıyordu.
+
+**Karar.** Kanvas https://claude.ai/artifact/MXpBWWSGaDzL73vwLqPYSd — A (önce öğren, sonra
+iyimser), B (sunucu onaylayınca say), C (A + "Beğendin" etiketi); **C seçildi**.
+
+- **Önce öğren:** yeni `GET /api/blog/posts/{id}/like` → `{ liked, likeCount }` (yalnız girişli,
+  okuma → audit dışı). Pill girişli okuyucu için `on === null` iken bunu bir kez sorar; cevap
+  gelene kadar sayı yerinde iskelet, pill pasif. **Bilinmeyen durumda tık geçmez** — hatanın
+  kökü "tahmin üstüne tık"tı. Yorum pill'i `load` almaz; liste zaten token'la yeniden okunuyor,
+  `helpfulByMe` boolean olana kadar bekler.
+- **Sonra iyimser:** tık anında yansır, sunucu cevabı sayıyı düzeltir. Hata → *bir önceki*
+  değere dönüş (açılış değerine değil), hata metni pill'in altında. İstek uçuştayken pill pasif,
+  ikinci tık düşer, kuyruğa girmez.
+- **"Beğendin" / "Faydalı buldun":** oy verilmiş pill'in yazısı değişir; hover'da ikon boşalır
+  (kalp kırmızı kontur), kenarlık kırmızıya kayar ve "Beğeniyi kaldır" / "İşareti kaldır" ipucu
+  çıkar — "zaten beğendin" bilgisi renkten bağımsız okunur, emin olmak için yeniden basma turu
+  biter. `aria-pressed` zaten vardı; etiket ekran okuyucuya da aynı şeyi söyler.
+- **Tek bileşen:** `VotePill` (`web/src/components/blog/VotePill.tsx`) + saf durum makinesi
+  `lib/blog/vote.ts` (`voteReducer`: known/click/settled/failed). `LikeButton` ve `CommentItem`
+  bunun üstünde ince sarmalayıcı. Bildir/yanıt gibi tek atımlık butonlara dokunulmadı ("daha önce
+  bildirmiştiniz" cevabı zaten var).
+
+**Test.** `vote.test.ts` 8 (bilinmeyen durumda tık düşer, önceki değere dönüş, uçuşta ikinci tık,
+dıştan gelen cevap uçuşta yok sayılır, negatif sayı yok); `Like_State_Is_Readable_Without_
+Toggling_And_Is_Per_Account` (anonim 401, okuma toggle'lamaz, hesap başına, taslak 404). Tarayıcı
+(local stack): anonim link, girişli 1→2 "Beğendin", yeniden yükle → sayfa "Beğendin 2" ile açılır,
+tık → "Beğen 1" (3 yok, 0 yok), yorum 0→1→0→1 ara değer yok, hover ipucu, karanlık tema.
