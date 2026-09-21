@@ -728,6 +728,38 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
     }
 
     [Fact]
+    public async Task Like_State_Is_Readable_Without_Toggling_And_Is_Per_Account()
+    {
+        // The page is rendered without the reader's token (LikedByMe null), so the button asks
+        // here before its first click. Reading must never flip anything (2026-09-21).
+        var (admin, _) = await RegisterAdminAsync("likestate.blog@example.com");
+        var post = await PublishedPostAsync(admin);
+        var reader = await RegisterUserAsync("reader3.blog@example.com");
+        var other = await RegisterUserAsync("reader4.blog@example.com");
+
+        (await _factory.CreateClient().GetAsync($"/api/blog/posts/{post.Id}/like")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
+        (await reader.GetFromJsonAsync<BlogLikeToggleResponse>($"/api/blog/posts/{post.Id}/like", JsonOptions))
+            .ShouldBe(new BlogLikeToggleResponse(false, 0));
+
+        (await reader.PostAsync($"/api/blog/posts/{post.Id}/like", null)).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        // Read twice: the answer is the same and the like is still there.
+        (await reader.GetFromJsonAsync<BlogLikeToggleResponse>($"/api/blog/posts/{post.Id}/like", JsonOptions))
+            .ShouldBe(new BlogLikeToggleResponse(true, 1));
+        (await reader.GetFromJsonAsync<BlogLikeToggleResponse>($"/api/blog/posts/{post.Id}/like", JsonOptions))
+            .ShouldBe(new BlogLikeToggleResponse(true, 1));
+
+        // Another account sees the count but not the reader's like.
+        (await other.GetFromJsonAsync<BlogLikeToggleResponse>($"/api/blog/posts/{post.Id}/like", JsonOptions))
+            .ShouldBe(new BlogLikeToggleResponse(false, 1));
+
+        // A draft is not on any page, so it has no state to read.
+        var draft = await CreateAsync(admin);
+        (await reader.GetAsync($"/api/blog/posts/{draft.Id}/like")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Likes_Have_Their_Own_Rate_Limit()
     {
         // The suite disables rate limiting for every host; this test opts back in on a host of

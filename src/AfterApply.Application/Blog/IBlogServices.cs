@@ -75,6 +75,11 @@ public interface IBlogPublicService
     /// <summary>Like on, then off. Null when the post is not published — an unpublished post is
     /// not on any page, so "not found" is what the caller can see.</summary>
     Task<BlogLikeToggleResponse?> ToggleLikeAsync(Guid userId, Guid postId, CancellationToken cancellationToken);
+
+    /// <summary>The caller's own like on a post and the post's count — what the page's button
+    /// asks before its first click, because the post itself was rendered without a token and
+    /// arrived with <c>LikedByMe</c> null (2026-09-21). Null when the post is not published.</summary>
+    Task<BlogLikeToggleResponse?> GetLikeStateAsync(Guid userId, Guid postId, CancellationToken cancellationToken);
 }
 
 public interface IBlogMediaService
