@@ -10,6 +10,8 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd } from "@/lib/seo/jsonLd";
 import { BLOG_PATH, blogAlternates, blogPostPath } from "@/lib/blog/blogPaths";
 import { fetchBlogComments, fetchBlogPost } from "@/lib/blog/publicApi.server";
+import { wordCount } from "@/lib/blog/seoChecks";
+import { coverIsShareImage } from "@/lib/seo/shareImage";
 import { BlogArticle } from "@/components/blog/BlogArticle";
 
 function isBlogLanguage(locale: string): locale is BlogLanguage {
@@ -25,16 +27,24 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/blog/[sl
   if (!post) return {};
 
   const tSection = await getTranslations("metadata.pages");
+  const coverSize = { width: post.coverWidth, height: post.coverHeight };
   return buildMetadata({
     locale,
     path: blogPostPath(slug),
     // A post exists in one language (plus a linked translation): the hreflang set is built from
     // the post, not from "this path in every locale".
     languages: blogAlternates(post),
-    title: post.title,
+    // The author's shorter, keyword-first title for the tab and the result, when they set one;
+    // the headline on the page stays the headline (2026-09-21).
+    title: post.seoTitle || post.title,
     description: post.excerpt || post.title,
     article: { publishedTime: post.publishedAt, modifiedTime: post.updatedAt },
     kicker: tSection("blog.title"),
+    // The cover is the share image when it is big and wide enough for a card; a small or tall
+    // one would render worse than the generated card (2026-09-21).
+    ...(post.coverImageUrl && coverIsShareImage(coverSize)
+      ? { image: { url: `${SITE_URL}${post.coverImageUrl}`, width: post.coverWidth!, height: post.coverHeight!, alt: post.coverAlt ?? post.title } }
+      : {}),
   });
 }
 
@@ -74,6 +84,9 @@ export default async function BlogPostPage({ params }: PageProps<"/[locale]/blog
             datePublished: post.publishedAt,
             dateModified: post.updatedAt,
             image,
+            type: "BlogPosting",
+            keywords: post.keywords,
+            wordCount: wordCount(post.contentHtml),
           }),
         )}
       />

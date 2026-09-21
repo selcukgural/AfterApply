@@ -9,8 +9,10 @@ public class BlogPostTests
     private static readonly Guid OtherAdmin = Guid.NewGuid();
     private static readonly DateTimeOffset T0 = new(2026, 9, 19, 10, 0, 0, TimeSpan.Zero);
 
-    private static BlogDraftContent Content(string title = "İşe alım", string html = "<p>Merhaba</p>") =>
-        new(title, "Özet", """{"type":"doc","content":[]}""", html);
+    private static BlogDraftContent Content(string title = "İşe alım", string html = "<p>Merhaba</p>", BlogSeo? seo = null) =>
+        new(title, "Özet", """{"type":"doc","content":[]}""", html, seo ?? BlogSeo.Empty);
+
+    private static readonly BlogSeo Seo = new("İşe Alımda Ghosting", "işe alımda ghosting", ["mülakat sonrası sessizlik"], "Soyut gradyan");
 
     [Fact]
     public void A_New_Post_Is_An_Empty_Draft_At_Revision_One()
@@ -114,6 +116,38 @@ public class BlogPostTests
 
         Should.Throw<BlogPostIncompleteException>(() => post.Publish(T0));
         post.Status.ShouldBe(BlogPostStatus.Draft);
+    }
+
+    [Fact]
+    public void Seo_Fields_Ride_The_Draft_And_Reach_The_Published_Slot_Only_On_Publish()
+    {
+        var post = BlogPost.Create(Author, BlogLanguage.Tr, T0);
+
+        post.SaveDraft(Content(seo: Seo), expectedRevision: 1, T0);
+        post.DraftSeo.ShouldBe(Seo);
+        post.Seo.ShouldBe(BlogSeo.Empty);
+        post.Seo.AllKeywords.ShouldBeEmpty();
+
+        post.SetSlug("ise-alim", T0);
+        post.Publish(T0.AddMinutes(1));
+        post.Seo.ShouldBe(Seo);
+        post.Seo.AllKeywords.ShouldBe(["işe alımda ghosting", "mülakat sonrası sessizlik"]);
+
+        // Clearing them in the draft clears the published copy on the next publish, nothing sooner.
+        post.SaveDraft(Content(), expectedRevision: 2, T0.AddMinutes(2));
+        post.Seo.ShouldBe(Seo);
+        post.Publish(T0.AddMinutes(3));
+        post.Seo.ShouldBe(BlogSeo.Empty);
+    }
+
+    [Fact]
+    public void Over_Long_Seo_Fields_Are_Refused()
+    {
+        var post = BlogPost.Create(Author, BlogLanguage.Tr, T0);
+        var tooLong = new BlogSeo(new string('a', BlogSeo.MaxSeoTitleLength + 1), null, [], null);
+
+        Should.Throw<BlogPostContentInvalidException>(() => post.SaveDraft(Content(seo: tooLong), expectedRevision: 1, T0));
+        post.Revision.ShouldBe(1);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Linq.Expressions;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Blog;
@@ -15,11 +16,12 @@ namespace AfterApply.Infrastructure.Blog;
 /// — so a post another admin has not published yet is "not found" here exactly as it is for a
 /// stranger. The caller has already passed <c>IAdminAccessService</c>.
 /// </summary>
-internal sealed class BlogAdminService(
+internal sealed partial class BlogAdminService(
     AppDbContext dbContext,
     IBlogHtmlSanitizer sanitizer,
     IBlogMediaStorage storage,
     IBlogCacheInvalidator cacheInvalidator,
+    IBlogSeoSuggestionProvider seoSuggestions,
     IOptions<BlogOptions> options,
     ILogger<BlogAdminService> logger) : IBlogAdminService
 {
@@ -149,7 +151,9 @@ internal sealed class BlogAdminService(
     public async Task<AdminBlogPostResponse?> GetAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
     {
         var post = await Visible(adminUserId).AsNoTracking().FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
-        return post is null ? null : ToResponse(post, adminUserId, await LikeCountAsync(postId, cancellationToken));
+        return post is null
+            ? null
+            : ToResponse(post, adminUserId, await LikeCountAsync(postId, cancellationToken), await CoverSizeAsync(post.CoverMediaId, cancellationToken));
     }
 
     public async Task<BlogPostPublicResponse?> PreviewAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
@@ -161,6 +165,7 @@ internal sealed class BlogAdminService(
         }
 
         var now = DateTimeOffset.UtcNow;
+        var cover = await CoverSizeAsync(post.CoverMediaId, cancellationToken);
 
         // The address the page would get: the slug it has, else the one PublishAsync would
         // allocate from the draft title — computed the same way, so the preview's URL is the
@@ -180,7 +185,8 @@ internal sealed class BlogAdminService(
             post.Id, slug, post.Language, post.DraftTitle, post.DraftExcerpt, post.DraftContentHtml,
             post.CoverMediaId is { } coverId ? BlogMediaPath.For(coverId) : null,
             post.PublishedAt ?? now, now, await LikeCountAsync(postId, cancellationToken), LikedByMe: null, translation,
-            post.ViewCount);
+            post.ViewCount, post.DraftSeo.SeoTitle, post.DraftSeo.CoverAlt, post.DraftSeo.AllKeywords,
+            cover?.Width, cover?.Height);
     }
 
     public async Task<BlogDraftSavedResponse?> SaveDraftAsync(Guid adminUserId, Guid postId, SaveBlogDraftRequest request,
@@ -342,6 +348,35 @@ internal sealed class BlogAdminService(
         }
     }
 
+    public async Task<BlogSeoSuggestionResponse?> SuggestSeoAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
+    {
+        var post = await Visible(adminUserId)
+            .Where(p => p.Id == postId)
+            .Select(p => new { p.Language, p.DraftTitle, p.DraftExcerpt, p.DraftContentHtml, p.Slug, p.PublishedAt, p.CoverMediaId })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (post is null)
+        {
+            return null;
+        }
+
+        // The draft as it stands — what the author is looking at, not the published copy. The
+        // body goes as text: the model has no use for the markup and it would eat the input cap.
+        // TextOf leaves a space where every tag was; folded so the model sees prose, not gaps.
+        var body = WhitespaceRuns().Replace(BlogDraftText.TextOf(post.DraftContentHtml), " ").Trim();
+        if (string.IsNullOrWhiteSpace(post.DraftTitle) && body.Length == 0)
+        {
+            throw new BlogPostEmptyException();
+        }
+
+        return await seoSuggestions.SuggestAsync(new BlogSeoSuggestionRequest(
+            post.Language, post.DraftTitle, post.DraftExcerpt, body,
+            LockedSlug: post.PublishedAt is null ? null : post.Slug,
+            HasCover: post.CoverMediaId is not null), cancellationToken);
+    }
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRuns();
+
     /// <summary>Published, or the caller's own. The one visibility rule, in the query.</summary>
     private IQueryable<BlogPost> Visible(Guid adminUserId) =>
         dbContext.BlogPosts.Where(p => p.Status == BlogPostStatus.Published || p.AuthorUserId == adminUserId);
@@ -352,7 +387,10 @@ internal sealed class BlogAdminService(
         request.Title.Trim(),
         request.Excerpt?.Trim() ?? string.Empty,
         request.ContentJson,
-        sanitizer.Sanitize(request.ContentHtml));
+        sanitizer.Sanitize(request.ContentHtml),
+        request.Seo is null
+            ? BlogSeo.Empty
+            : BlogSeo.Normalize(request.Seo.SeoTitle, request.Seo.PrimaryKeyword, request.Seo.SecondaryKeywords, request.Seo.CoverAlt));
 
     /// <summary>The form landing on the row — the same steps for the first draft (create) and
     /// every one after (the autosave), so create cannot accept what a save would refuse.</summary>
@@ -496,10 +534,27 @@ internal sealed class BlogAdminService(
     private static bool HasUnpublishedChanges(BlogPost post) =>
         post.PublishedUpdatedAt is { } publishedAt && post.DraftUpdatedAt > publishedAt;
 
-    private static AdminBlogPostResponse ToResponse(BlogPost post, Guid adminUserId, int likeCount) => new(
+    /// <summary>The cover's pixel size, read at upload; null when there is no cover or the
+    /// bytes did not say (2026-09-21 — what the editor's share-card note goes by).</summary>
+    private async Task<(int? Width, int? Height)?> CoverSizeAsync(Guid? coverMediaId, CancellationToken cancellationToken)
+    {
+        if (coverMediaId is null)
+        {
+            return null;
+        }
+
+        var size = await dbContext.BlogMedia.Where(m => m.Id == coverMediaId).Select(m => new { m.Width, m.Height })
+            .FirstOrDefaultAsync(cancellationToken);
+        return size is null ? null : (size.Width, size.Height);
+    }
+
+    private static AdminBlogPostResponse ToResponse(BlogPost post, Guid adminUserId, int likeCount, (int? Width, int? Height)? cover = null) => new(
         post.Id, post.Status, post.Language, post.Slug, post.AuthorUserId, post.AuthorUserId == adminUserId,
         post.TranslationOfPostId, post.CoverMediaId,
         post.DraftTitle, post.DraftExcerpt, post.DraftContentJson, post.DraftContentHtml, post.DraftUpdatedAt,
         post.Revision, post.Title, post.PublishedAt, post.PublishedUpdatedAt, HasUnpublishedChanges(post), likeCount, post.CreatedAt,
-        post.ViewCount);
+        post.ViewCount, ToResponse(post.DraftSeo), cover?.Width, cover?.Height);
+
+    private static BlogSeoResponse ToResponse(BlogSeo seo) =>
+        new(seo.SeoTitle, seo.PrimaryKeyword, seo.SecondaryKeywords, seo.CoverAlt);
 }

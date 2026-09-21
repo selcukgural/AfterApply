@@ -201,6 +201,9 @@ public static class RateLimiting
             options.AddPolicy(DependencyInjection.BlogCommentHelpfulRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.BlogCommentHelpfulRateLimitPolicy, PartitionKey(httpContext), sizes.BlogCommentHelpful));
 
+            options.AddPolicy(DependencyInjection.BlogSeoSuggestRateLimitPolicy, httpContext =>
+                Partition(DependencyInjection.BlogSeoSuggestRateLimitPolicy, PartitionKey(httpContext), sizes.BlogSeoSuggest));
+
             // IP-based and anonymous, like the benchmark policy: the directory is readable without
             // an account, and a signed-in reader's browsing is not something to key to their id.
             options.AddPolicy(DependencyInjection.CompanyPublicSearchRateLimitPolicy, httpContext =>

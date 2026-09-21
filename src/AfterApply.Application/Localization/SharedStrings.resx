@@ -453,6 +453,18 @@
   <data name="VALIDATION_BLOG_CONTENT_JSON_INVALID" xml:space="preserve">
     <value>The editor document is not in a shape the editor can reopen.</value>
   </data>
+  <data name="VALIDATION_BLOG_SEO_KEYWORDS_INVALID" xml:space="preserve">
+    <value>At most 8 secondary keywords, each up to 80 characters.</value>
+  </data>
+  <data name="BLOG_SEO_SUGGEST_NOT_CONFIGURED" xml:space="preserve">
+    <value>The SEO suggestion is not set up on this server.</value>
+  </data>
+  <data name="BLOG_SEO_SUGGEST_FAILED" xml:space="preserve">
+    <value>The model could not be reached. Try again in a moment.</value>
+  </data>
+  <data name="BLOG_SEO_SUGGEST_EMPTY" xml:space="preserve">
+    <value>The model returned no suggestion. Try again.</value>
+  </data>
   <data name="BLOG_COMMENT_LOCKED" xml:space="preserve">
     <value>A comment can only be edited while it is waiting for approval.</value>
   </data>

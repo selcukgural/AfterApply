@@ -69,6 +69,18 @@ public sealed class BlogPost : AuditableEntity
     /// preview can render it without a second sanitising pass.</summary>
     public string DraftContentHtml { get; private set; } = string.Empty;
 
+    // The SEO fields of the draft (DECISIONS.md 2026-09-21). Stored flat, read as one value
+    // through <see cref="DraftSeo"/>; the published slot mirrors them below.
+    public string? DraftSeoTitle { get; private set; }
+
+    public string? DraftPrimaryKeyword { get; private set; }
+
+    public string[] DraftSecondaryKeywords { get; private set; } = [];
+
+    public string? DraftCoverAlt { get; private set; }
+
+    public BlogSeo DraftSeo => new(DraftSeoTitle, DraftPrimaryKeyword, DraftSecondaryKeywords, DraftCoverAlt);
+
     public DateTimeOffset DraftUpdatedAt { get; private set; }
 
     /// <summary>Bumped on every draft save; the editor sends the one it last saw and a mismatch
@@ -86,6 +98,22 @@ public sealed class BlogPost : AuditableEntity
     public string ContentHtml { get; private set; } = string.Empty;
 
     public string PublishedContentJson { get; private set; } = EmptyDocumentJson;
+
+    /// <summary>What the page's <c>&lt;title&gt;</c> says when the author wanted something other
+    /// than the headline (shorter, keyword first). Null: the title is used.</summary>
+    public string? SeoTitle { get; private set; }
+
+    /// <summary>Never printed on the page — meta keywords are dead. What it is for: the editor's
+    /// checklist (is it in the title, the slug, the first paragraph?) and the JSON-LD's
+    /// <c>keywords</c>, together with <see cref="SecondaryKeywords"/>.</summary>
+    public string? PrimaryKeyword { get; private set; }
+
+    public string[] SecondaryKeywords { get; private set; } = [];
+
+    /// <summary>The cover image's alt text. Null renders an empty alt, as before 2026-09-21.</summary>
+    public string? CoverAlt { get; private set; }
+
+    public BlogSeo Seo => new(SeoTitle, PrimaryKeyword, SecondaryKeywords, CoverAlt);
 
     /// <summary>First time the post went live. Set once; the URL lock (<see cref="SetSlug"/>,
     /// <see cref="SetLanguage"/>) keys off this, not off <see cref="Status"/>, so an unpublished
@@ -144,6 +172,10 @@ public sealed class BlogPost : AuditableEntity
         DraftExcerpt = content.Excerpt;
         DraftContentJson = content.ContentJson;
         DraftContentHtml = content.ContentHtml;
+        DraftSeoTitle = content.Seo.SeoTitle;
+        DraftPrimaryKeyword = content.Seo.PrimaryKeyword;
+        DraftSecondaryKeywords = content.Seo.SecondaryKeywords.ToArray();
+        DraftCoverAlt = content.Seo.CoverAlt;
         DraftUpdatedAt = now;
         Revision++;
         Touch(now);
@@ -260,6 +292,10 @@ public sealed class BlogPost : AuditableEntity
         Excerpt = DraftExcerpt;
         ContentHtml = DraftContentHtml;
         PublishedContentJson = DraftContentJson;
+        SeoTitle = DraftSeoTitle;
+        PrimaryKeyword = DraftPrimaryKeyword;
+        SecondaryKeywords = DraftSecondaryKeywords.ToArray();
+        CoverAlt = DraftCoverAlt;
         PublishedAt ??= now;
         PublishedUpdatedAt = now;
         Status = BlogPostStatus.Published;
@@ -285,16 +321,86 @@ public sealed class BlogPost : AuditableEntity
 /// request validator says the same things earlier and in the user's language; this is the
 /// boundary that stores the row, so it checks again.
 /// </summary>
-public readonly record struct BlogDraftContent(string Title, string Excerpt, string ContentJson, string ContentHtml)
+public readonly record struct BlogDraftContent(string Title, string Excerpt, string ContentJson, string ContentHtml, BlogSeo Seo)
 {
     public void Validate()
     {
         if (Title.Length > BlogPost.MaxTitleLength
             || Excerpt.Length > BlogPost.MaxExcerptLength
             || ContentJson.Length > BlogPost.MaxContentJsonLength
-            || ContentHtml.Length > BlogPost.MaxContentHtmlLength)
+            || ContentHtml.Length > BlogPost.MaxContentHtmlLength
+            || !Seo.IsValid)
         {
             throw new BlogPostContentInvalidException();
         }
+    }
+}
+
+/// <summary>
+/// The four SEO fields an author may fill (DECISIONS.md 2026-09-21), as one value so the draft
+/// and the published slot carry the same shape. Every field is optional: a post with none of
+/// them renders exactly as it did before they existed. The caps are generous on purpose — the
+/// editor's counters say what a search result shows (60 / 160), the store only refuses what
+/// could not be a field at all.
+/// </summary>
+public sealed record BlogSeo(string? SeoTitle, string? PrimaryKeyword, IReadOnlyList<string> SecondaryKeywords, string? CoverAlt)
+{
+    public const int MaxSeoTitleLength = 120;
+    public const int MaxKeywordLength = 80;
+    public const int MaxSecondaryKeywords = 8;
+    public const int MaxCoverAltLength = 300;
+
+    public static readonly BlogSeo Empty = new(null, null, [], null);
+
+    /// <summary>Trims, drops blanks and duplicates (case-folded), and turns "" into null — the
+    /// one place the form's raw values become what is stored.</summary>
+    public static BlogSeo Normalize(string? seoTitle, string? primaryKeyword, IEnumerable<string>? secondaryKeywords, string? coverAlt)
+    {
+        var keywords = (secondaryKeywords ?? [])
+            .Select(k => k.Trim())
+            .Where(k => k.Length > 0)
+            .DistinctBy(k => Common.TurkishTextNormalizer.FoldCase(k))
+            .ToArray();
+        return new BlogSeo(Blank(seoTitle), Blank(primaryKeyword), keywords, Blank(coverAlt));
+    }
+
+    public bool IsValid =>
+        (SeoTitle?.Length ?? 0) <= MaxSeoTitleLength
+        && (PrimaryKeyword?.Length ?? 0) <= MaxKeywordLength
+        && SecondaryKeywords.Count <= MaxSecondaryKeywords
+        && SecondaryKeywords.All(k => k.Length is > 0 and <= MaxKeywordLength)
+        && (CoverAlt?.Length ?? 0) <= MaxCoverAltLength;
+
+    /// <summary>Primary first, then the rest — the JSON-LD's <c>keywords</c>.</summary>
+    public IReadOnlyList<string> AllKeywords =>
+        PrimaryKeyword is null ? SecondaryKeywords : [PrimaryKeyword, .. SecondaryKeywords];
+
+    // A value: two with the same keywords in the same order are the same, whichever list
+    // instance carries them (the record default would compare the lists by reference).
+    public bool Equals(BlogSeo? other) =>
+        other is not null
+        && SeoTitle == other.SeoTitle
+        && PrimaryKeyword == other.PrimaryKeyword
+        && CoverAlt == other.CoverAlt
+        && SecondaryKeywords.SequenceEqual(other.SecondaryKeywords, StringComparer.Ordinal);
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(SeoTitle);
+        hash.Add(PrimaryKeyword);
+        hash.Add(CoverAlt);
+        foreach (var keyword in SecondaryKeywords)
+        {
+            hash.Add(keyword);
+        }
+
+        return hash.ToHashCode();
+    }
+
+    private static string? Blank(string? value)
+    {
+        var trimmed = value?.Trim();
+        return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 }

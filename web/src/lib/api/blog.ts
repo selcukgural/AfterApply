@@ -8,6 +8,7 @@ import type {
   BlogMediaResponse,
   BlogPostPublic,
   BlogPostStatus,
+  BlogSeoSuggestion,
   CreateBlogPostRequest,
   PagedResult,
   SaveBlogDraftRequest,
@@ -75,6 +76,9 @@ export const adminBlogApi = {
   /** The autosave. A 409 means another tab saved since — reload, do not retry. */
   saveDraft: (postId: string, request: SaveBlogDraftRequest) =>
     apiFetch<BlogDraftSaved>(`/api/admin/blog/posts/${postId}/draft`, { method: "PUT", body: JSON.stringify(request) }),
+
+  /** One model call over the draft as saved — the editor flushes the autosave first. Proposals only. */
+  suggestSeo: (postId: string) => apiFetch<BlogSeoSuggestion>(`/api/admin/blog/posts/${postId}/seo-suggestions`, { method: "POST" }),
 
   publish: (postId: string) => apiFetch<AdminBlogPost>(`/api/admin/blog/posts/${postId}/publish`, { method: "POST" }),
 

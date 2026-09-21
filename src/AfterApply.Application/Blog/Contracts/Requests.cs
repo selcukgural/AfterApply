@@ -13,7 +13,17 @@ public interface IBlogDraftFields
     string Language { get; }
     string? Slug { get; }
     Guid? TranslationOfPostId { get; }
+    /// <summary>Null from an editor build that predates the SEO fields (2026-09-21): stored as
+    /// "none of them", never as an error.</summary>
+    BlogSeoRequest? Seo { get; }
 }
+
+/// <summary>The SEO fields of the form (DECISIONS.md 2026-09-21). Every one optional.</summary>
+public sealed record BlogSeoRequest(
+    string? SeoTitle,
+    string? PrimaryKeyword,
+    IReadOnlyList<string>? SecondaryKeywords,
+    string? CoverAlt);
 
 /// <summary>
 /// Creates a post from its first draft. There is no "empty post" (2026-09-19): the editor opens
@@ -29,7 +39,8 @@ public sealed record CreateBlogPostRequest(
     string ContentHtml,
     string Language,
     string? Slug,
-    Guid? TranslationOfPostId) : IBlogDraftFields;
+    Guid? TranslationOfPostId,
+    BlogSeoRequest? Seo = null) : IBlogDraftFields;
 
 /// <summary>
 /// The autosave. Everything editable on a post travels together: the editor does not know which
@@ -46,7 +57,8 @@ public sealed record SaveBlogDraftRequest(
     string? Slug,
     Guid? CoverMediaId,
     Guid? TranslationOfPostId,
-    int Revision) : IBlogDraftFields;
+    int Revision,
+    BlogSeoRequest? Seo = null) : IBlogDraftFields;
 
 /// <summary>The public list of one language, newest first.</summary>
 public sealed record PublicBlogListQuery(string Lang, int Page = 1);

@@ -33,7 +33,37 @@ public sealed record BlogPostPublicResponse(
     int LikeCount,
     bool? LikedByMe,
     BlogTranslationLink? Translation,
-    int ViewCount = 0);
+    int ViewCount = 0,
+    string? SeoTitle = null,
+    string? CoverAlt = null,
+    IReadOnlyList<string>? Keywords = null,
+    /// <summary>The cover's pixel size, when the upload could read it — what decides whether
+    /// the cover or the generated card is the share image (2026-09-21).</summary>
+    int? CoverWidth = null,
+    int? CoverHeight = null);
+
+/// <summary>
+/// What the model proposed for the draft (DECISIONS.md 2026-09-21). Every field may be null —
+/// the editor shows what came and offers "apply" per field; nothing is written to the post
+/// here. <paramref name="Slug"/> only comes for a post that has never been published (the
+/// address is locked after). <paramref name="IntentNote"/> is one sentence of advice about the
+/// search intent, shown, never stored.
+/// </summary>
+public sealed record BlogSeoSuggestionResponse(
+    string? SeoTitle,
+    string? MetaDescription,
+    string? PrimaryKeyword,
+    IReadOnlyList<string> SecondaryKeywords,
+    string? CoverAlt,
+    string? Slug,
+    string? IntentNote);
+
+/// <summary>The draft's SEO fields, as the editor holds them (DECISIONS.md 2026-09-21).</summary>
+public sealed record BlogSeoResponse(
+    string? SeoTitle,
+    string? PrimaryKeyword,
+    IReadOnlyList<string> SecondaryKeywords,
+    string? CoverAlt);
 
 /// <summary>One sitemap entry per published post.</summary>
 public sealed record BlogSlugResponse(
@@ -97,7 +127,10 @@ public sealed record AdminBlogPostResponse(
     bool HasUnpublishedChanges,
     int LikeCount,
     DateTimeOffset CreatedAt,
-    int ViewCount = 0);
+    int ViewCount = 0,
+    BlogSeoResponse? DraftSeo = null,
+    int? CoverWidth = null,
+    int? CoverHeight = null);
 
 public sealed record BlogDraftSavedResponse(int Revision, DateTimeOffset DraftUpdatedAt);
 

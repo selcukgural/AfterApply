@@ -453,6 +453,18 @@
   <data name="VALIDATION_BLOG_CONTENT_JSON_INVALID" xml:space="preserve">
     <value>Editör belgesi, editörün yeniden açabileceği bir biçimde değil.</value>
   </data>
+  <data name="VALIDATION_BLOG_SEO_KEYWORDS_INVALID" xml:space="preserve">
+    <value>En fazla 8 yan anahtar kelime, her biri en çok 80 karakter.</value>
+  </data>
+  <data name="BLOG_SEO_SUGGEST_NOT_CONFIGURED" xml:space="preserve">
+    <value>SEO önerisi bu sunucuda kurulu değil.</value>
+  </data>
+  <data name="BLOG_SEO_SUGGEST_FAILED" xml:space="preserve">
+    <value>Modele ulaşılamadı. Biraz sonra tekrar deneyin.</value>
+  </data>
+  <data name="BLOG_SEO_SUGGEST_EMPTY" xml:space="preserve">
+    <value>Model bir öneri döndürmedi. Tekrar deneyin.</value>
+  </data>
   <data name="BLOG_COMMENT_LOCKED" xml:space="preserve">
     <value>Yorum yalnızca onay beklerken düzenlenebilir.</value>
   </data>

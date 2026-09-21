@@ -21,6 +21,14 @@ public sealed class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
         builder.Property(p => p.DraftExcerpt).HasMaxLength(BlogPost.MaxExcerptLength);
         builder.Property(p => p.Title).HasMaxLength(BlogPost.MaxTitleLength);
         builder.Property(p => p.Excerpt).HasMaxLength(BlogPost.MaxExcerptLength);
+        // The SEO fields (2026-09-21), one set per slot. The keyword lists are text[] — never
+        // queried, only carried to the page.
+        builder.Property(p => p.DraftSeoTitle).HasMaxLength(BlogSeo.MaxSeoTitleLength);
+        builder.Property(p => p.SeoTitle).HasMaxLength(BlogSeo.MaxSeoTitleLength);
+        builder.Property(p => p.DraftPrimaryKeyword).HasMaxLength(BlogSeo.MaxKeywordLength);
+        builder.Property(p => p.PrimaryKeyword).HasMaxLength(BlogSeo.MaxKeywordLength);
+        builder.Property(p => p.DraftCoverAlt).HasMaxLength(BlogSeo.MaxCoverAltLength);
+        builder.Property(p => p.CoverAlt).HasMaxLength(BlogSeo.MaxCoverAltLength);
         // The editor's documents as jsonb: not queried today, but a jsonb column is validated on
         // write (a truncated document cannot be stored) and is what a later query would want.
         builder.Property(p => p.DraftContentJson).HasColumnType("jsonb");

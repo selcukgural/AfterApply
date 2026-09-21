@@ -70,6 +70,13 @@ export type ArticleJsonLdInput = {
   /** Absolute URL of the share card. Google's Article result wants an image; the card is the one
    *  every article has. */
   image: string;
+  /** `BlogPosting` for a blog post (a subtype of Article — every consumer of Article reads it), the
+   *  default `Article` for a guide. */
+  type?: "Article" | "BlogPosting";
+  /** Primary keyword first. Left out of the node when empty, not sent as an empty list. */
+  keywords?: string[];
+  /** Words in the body; left out when unknown or zero. */
+  wordCount?: number;
 };
 
 /**
@@ -85,10 +92,13 @@ export function articleJsonLd({
   datePublished,
   dateModified,
   image,
+  type = "Article",
+  keywords,
+  wordCount,
 }: ArticleJsonLdInput): JsonLdNode {
   const url = `${SITE_URL}/${locale}${path}`;
   return {
-    "@type": "Article",
+    "@type": type,
     "@id": `${url}#article`,
     headline,
     description,
@@ -99,6 +109,9 @@ export function articleJsonLd({
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     author: { "@id": ORGANIZATION_ID },
     publisher: { "@id": ORGANIZATION_ID },
+    // Google's own list is a comma-separated string, not an array (2026-09-21).
+    ...(keywords && keywords.length > 0 ? { keywords: keywords.join(", ") } : {}),
+    ...(wordCount && wordCount > 0 ? { wordCount } : {}),
   };
 }
 

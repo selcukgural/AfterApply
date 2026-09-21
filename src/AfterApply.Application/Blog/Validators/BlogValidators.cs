@@ -33,6 +33,20 @@ public sealed class BlogDraftFieldsValidator<T> : AbstractValidator<T> where T :
         RuleFor(x => x.Slug)
             .Must(slug => string.IsNullOrWhiteSpace(slug) || BlogSlugGenerator.IsValid(slug.Trim()))
             .WithMessage(_ => localizer["BLOG_SLUG_INVALID"]);
+        // The store's caps, named field by field so the editor can point at the one that is over.
+        RuleFor(x => x.Seo!.SeoTitle).MaximumLength(BlogSeo.MaxSeoTitleLength)
+            .OverridePropertyName("Seo.SeoTitle").When(x => x.Seo is not null);
+        RuleFor(x => x.Seo!.PrimaryKeyword).MaximumLength(BlogSeo.MaxKeywordLength)
+            .OverridePropertyName("Seo.PrimaryKeyword").When(x => x.Seo is not null);
+        RuleFor(x => x.Seo!.CoverAlt).MaximumLength(BlogSeo.MaxCoverAltLength)
+            .OverridePropertyName("Seo.CoverAlt").When(x => x.Seo is not null);
+        RuleFor(x => x.Seo!.SecondaryKeywords)
+            .Must(keywords => keywords is null
+                              || (keywords.Count <= BlogSeo.MaxSecondaryKeywords
+                                  && keywords.All(k => k is not null && k.Length <= BlogSeo.MaxKeywordLength)))
+            .OverridePropertyName("Seo.SecondaryKeywords")
+            .WithMessage(_ => localizer["VALIDATION_BLOG_SEO_KEYWORDS_INVALID"])
+            .When(x => x.Seo is not null);
     }
 
     private static bool BeAnEditorDocument(string? json)

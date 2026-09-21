@@ -183,6 +183,8 @@ internal sealed class BlogPublicService(
             .Select(p => new
             {
                 p.Id, p.Slug, p.Language, p.Title, p.Excerpt, p.ContentHtml, p.CoverMediaId, p.PublishedAt, p.PublishedUpdatedAt,
+                p.SeoTitle, p.PrimaryKeyword, p.SecondaryKeywords, p.CoverAlt,
+                Cover = dbContext.BlogMedia.Where(m => m.Id == p.CoverMediaId).Select(m => new { m.Width, m.Height }).FirstOrDefault(),
                 LikeCount = dbContext.BlogPostLikes.Count(l => l.PostId == p.Id),
                 Translation = dbContext.BlogPosts
                     .Where(t => t.Id == p.TranslationOfPostId && t.Status == BlogPostStatus.Published)
@@ -195,7 +197,10 @@ internal sealed class BlogPublicService(
             ? null
             : new BlogPostPublicResponse(
                 row.Id, row.Slug!, row.Language, row.Title, row.Excerpt, row.ContentHtml, CoverUrl(row.CoverMediaId),
-                row.PublishedAt!.Value, row.PublishedUpdatedAt!.Value, row.LikeCount, LikedByMe: null, row.Translation);
+                row.PublishedAt!.Value, row.PublishedUpdatedAt!.Value, row.LikeCount, LikedByMe: null, row.Translation,
+                ViewCount: 0, row.SeoTitle, row.CoverAlt,
+                new BlogSeo(row.SeoTitle, row.PrimaryKeyword, row.SecondaryKeywords, row.CoverAlt).AllKeywords,
+                row.Cover?.Width, row.Cover?.Height);
     }
 
     private static string? CoverUrl(Guid? coverMediaId) =>
