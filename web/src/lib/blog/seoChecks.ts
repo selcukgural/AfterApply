@@ -35,17 +35,16 @@ export function slugFromTitle(title: string): string {
   return RESERVED_SLUGS.has(slug) ? `${slug}-2` : slug;
 }
 
-/** The body as plain text: tags dropped, entities the sanitizer emits decoded, whitespace folded. */
+const ENTITIES: Record<string, string> = { "&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&apos;": "'" };
+
+/** The body as plain text: tags dropped, entities the sanitizer emits decoded, whitespace folded.
+ *  Entities go in one pass, so "&amp;lt;" becomes "&lt;" and not "<" (a second decode would
+ *  otherwise re-read what the first produced). */
 export function textOfHtml(html: string): string {
   return html
     .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
     .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&(?:nbsp|amp|lt|gt|quot|#39|apos);/g, (entity) => ENTITIES[entity] ?? entity)
     .replace(/\s+/g, " ")
     .trim();
 }

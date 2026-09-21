@@ -37,6 +37,8 @@ describe("html reading", () => {
 
   it("turns html into words", () => {
     expect(textOfHtml("<p>Merhaba&nbsp;dünya</p>")).toBe("Merhaba dünya");
+    // One decoding pass: an escaped entity stays an entity, it is not decoded twice.
+    expect(textOfHtml("<p>a &amp;lt;b&amp;gt; c &amp;amp; d</p>")).toBe("a &lt;b&gt; c &amp; d");
     expect(wordCount(html)).toBe(9);
     expect(wordCount("")).toBe(0);
   });
