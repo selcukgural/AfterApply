@@ -307,6 +307,11 @@ jobs:
             # this line is here so the launch state is visible next to the other flags and can be
             # flipped without a code change.
             CompanyReviews__Enabled=true
+            # The sector response-rate table (2026-09-22) ships on; the company page's "Response"
+            # tab stays off until the legal read (DEVELOPMENT_PLAN.md K1). Both are listed here
+            # so the launch state is visible next to the other flags.
+            ResponseRates__Enabled=true
+            CompanyIntelligence__Enabled=false
             CvScan__Review__ProjectId=${{ env.GCP_PROJECT_ID }}
             # The blog editor's "suggest with AI" (DECISIONS.md 2026-09-21): the same Vertex
             # project, region and runtime service account as the CV review, its own key so the

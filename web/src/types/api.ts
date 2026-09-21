@@ -632,6 +632,18 @@ export interface ClientConfigResponse {
   candidateExperiences?: CandidateExperiencesConfig;
   // Optional for the same reason (2026-09-19).
   blog?: BlogConfig;
+  // Optional for the same reason (2026-09-22): the company page's "Response" tab and the public
+  // sector response-rate page each follow their own flag.
+  companyIntelligence?: CompanyIntelligenceConfig;
+  responseRates?: ResponseRatesConfig;
+}
+
+export interface CompanyIntelligenceConfig {
+  enabled: boolean;
+}
+
+export interface ResponseRatesConfig {
+  enabled: boolean;
 }
 
 // POST /api/auth/google: exactly one of the two is set.
@@ -741,6 +753,85 @@ export type BenchmarkSector =
   | "Other";
 
 export type BenchmarkPeriod = "LastThreeMonths" | "LastSixMonths" | "LastTwelveMonths" | "Longer";
+
+// GET /api/response-rates/sectors and the sector half of GET /api/company-intelligence/{id}.
+// Percentages are 0–100 with one decimal; durations are days.
+export interface ResponseRateFigures {
+  applications: number;
+  contributors: number;
+  responseRate: number;
+  ghostingRate: number;
+  interviewRate: number;
+  offerRate: number;
+  /** Of those who reached an interview, the share now marked Ghosted; null when none did. */
+  postInterviewSilenceRate: number | null;
+  medianFirstReplyDays: number | null;
+  closureRate: number;
+}
+
+/** A sector row; `figures` is null below the threshold and the row then says nothing else. */
+export interface SectorResponseRateRow {
+  sector: BenchmarkSector;
+  figures: ResponseRateFigures | null;
+}
+
+export interface ResponseRateThresholds {
+  minimumContributors: number;
+  minimumApplications: number;
+  maturityDays: number;
+  maxContributorSharePercent: number;
+}
+
+export interface SectorResponseRatesResponse {
+  period: BenchmarkPeriod;
+  windowStart: string;
+  windowEnd: string;
+  sectors: SectorResponseRateRow[];
+  unclassifiedApplications: number;
+  thresholds: ResponseRateThresholds;
+}
+
+// GET /api/company-intelligence/{companyId} — 404 while the feature flag is off.
+export type ConfidenceBucket = "Hidden" | "VeryLow" | "Low" | "Medium" | "High";
+
+export interface CompanyIntelligenceMetrics {
+  totalApplications: number;
+  matureApplications: number;
+  distinctContributors: number;
+  responseRate: number;
+  ghostingRate: number;
+  interviewRate: number;
+  offerRate: number;
+  postInterviewSilenceRate: number | null;
+  averageResponseTimeDays: number | null;
+  medianResponseTimeDays: number | null;
+  closureRate: number;
+  candidateExperienceScore: number;
+}
+
+export interface CompanySectorComparison {
+  sector: BenchmarkSector;
+  figures: ResponseRateFigures | null;
+}
+
+export interface CompanyIntelligenceThresholds {
+  hiddenBelow: number;
+  maturityDays: number;
+  maxContributorSharePercent: number;
+}
+
+export interface CompanyIntelligenceResponse {
+  companyId: string;
+  companyName: string;
+  confidence: ConfidenceBucket;
+  windowStart: string;
+  windowEnd: string;
+  /** Null while `confidence` is "Hidden" — below the count floor or dominated by one person. */
+  metrics: CompanyIntelligenceMetrics | null;
+  /** Null when the company's industry could not be mapped to a sector. */
+  sectorComparison: CompanySectorComparison | null;
+  thresholds: CompanyIntelligenceThresholds;
+}
 
 export type BenchmarkSeniority = "StudentOrIntern" | "Junior" | "Mid" | "Senior" | "LeadOrAbove";
 

@@ -253,10 +253,18 @@ deployments share one Redis; the integration suite uses them per test class.
 
 `CompanyIntelligence:Enabled` defaults to `false` — the aggregation pipeline
 (cross-user company-level Response/Ghosting/Interview/Offer Rate, gated by a
-sample-size confidence bucket) is implemented and integration-tested, but
-kept switched off until enough real usage exists to make it meaningful; see
-`DECISIONS.md`'s Sprint 10 entry. While disabled, every
-`/api/company-intelligence/*` endpoint returns `404` for all callers.
+sample-size confidence bucket, a 30-day maturity rule and a one-third
+single-contributor guard) is implemented, integration-tested and has its
+screen (the company page's "Response" tab), but stays off until the legal
+read; see `DECISIONS.md` 2026-09-22 and the Sprint 10 entry. While disabled,
+every `/api/company-intelligence/*` endpoint returns `404` for all callers.
+When on, the endpoint is anonymous like the company reviews.
+
+`ResponseRates:Enabled` (default `true`) is the company-less half: the public
+sector table at `/response-rates` (`GET /api/response-rates/sectors`), a row
+only once a sector has `MinimumContributors` (5) people and
+`MinimumApplications` (30) applications with no one person over
+`MaxContributorShare` (0.5); cached `CacheSeconds` (3600).
 
 `CompanyReviews` (company reviews — the public `/companies` pages): `Enabled` (default `true`;
 off → every review endpoint answers 404 and the web app hides the pages, so the feature can ship

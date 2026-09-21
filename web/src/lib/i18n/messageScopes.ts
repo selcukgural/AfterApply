@@ -65,6 +65,8 @@ export const PUBLIC_MESSAGE_SCOPE = [
   "employmentStatus",
   "companies",
   "companyReviews",
+  // The public sector response-rate page.
+  "responseRates",
   // The company page's salary tab: its rows name the employment type, status and currency.
   "companySalaries",
   "salaryEmploymentStatus",

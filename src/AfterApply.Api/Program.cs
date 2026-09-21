@@ -177,6 +177,7 @@ app.MapEmailForwardingEndpoints();
 app.MapPersonalAccessTokenEndpoints();
 app.MapExtensionPairingEndpoints();
 app.MapCompanyIntelligenceEndpoints();
+app.MapResponseRateEndpoints();
 app.MapCompanyEndpoints();
 app.MapCompanyReviewEndpoints();
 app.MapAdminCompanyReviewEndpoints();

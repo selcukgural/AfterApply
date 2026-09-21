@@ -630,6 +630,16 @@ değişikliği değil. Bkz. `CompanyIntelligenceOptions.WindowMonths` yorumu.
 - **Bu yüzden en sonda.** Kod hazır olması onu ilk sıraya taşımıyor; K1'i
   bugün açmak boş ekran yayınlamak demek.
 
+> **Yüzeyi yapıldı (2026-09-22), bayrak prod'da kapalı.** Araştırma raporunun 0.2
+> maddesi olarak: (a) `web/src` artık ekranı taşıyor — şirket sayfasında "Yanıt"
+> sekmesi, eşik altında boş panel değil kural kartları; (b) "yayından önce
+> kapatılmalı" denen olgunluk maddesi kapatıldı (`MaturityDays`), üstüne tek kişi
+> guard'ı (`MaxContributorShare`) ve mülakat sonrası sessizlik metriği; (c) şirket
+> adı olmayan sektör tablosu `/response-rates` **canlı** (`ResponseRates:Enabled`,
+> eşik 5 kişi / 30 başvuru / pay ≤ %50). Kalan kilit: **hukuki görüş** (3) — bayrak
+> onunla açılır; veri hacmi (2) ise sektör satırlarıyla artık görünür biçimde
+> birikiyor. Bkz. DECISIONS.md 2026-09-22.
+
 ### Sıra 6 (paralel, küçük) — K6: Geri bildirimin GitHub Issues aynası ✅ (2026-09-07)
 
 - **Ne vardı:** `Feedback:GitHub:Enabled=false`. Geri bildirim DB'ye yazılıyor,

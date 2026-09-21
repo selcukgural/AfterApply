@@ -29,6 +29,10 @@ const NO_AUTH_ENDPOINTS = [
   // Same reasoning as the benchmark: the CV scan is answerable without an account and the score it
   // stores is anonymous. A signed-in visitor's token arriving here would tie a scan to a person.
   "/api/cv-scan",
+  // Aggregates that name no one and read the same for everyone: a token would only make the
+  // browser's copy of a public, cacheable answer uncacheable.
+  "/api/response-rates",
+  "/api/company-intelligence",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
 ];

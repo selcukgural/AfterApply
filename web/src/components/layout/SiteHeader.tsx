@@ -13,7 +13,7 @@ import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { NavBar } from "@/components/layout/NavBar";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
 
-export type SiteNavKey = "howItWorks" | "companies" | "benchmark" | "guide" | "blog" | "help";
+export type SiteNavKey = "howItWorks" | "companies" | "responseRates" | "benchmark" | "guide" | "blog" | "help";
 
 export interface SiteNavLink {
   /** A route (`/companies`) or a landing anchor (`/#how-it-works`); both go through next-intl's Link. */
@@ -43,10 +43,21 @@ export const SITE_LINKS: readonly SiteNavLink[] = [
  *  is worse than no blog, so the header follows the server rather than the route existing. */
 const BLOG_LINK: SiteNavLink = { href: "/blog", key: "blog" };
 
-export function siteLinksFor(hasBlog: boolean): readonly SiteNavLink[] {
-  if (!hasBlog) return SITE_LINKS;
-  const helpIndex = SITE_LINKS.findIndex((link) => link.key === "help");
-  return [...SITE_LINKS.slice(0, helpIndex), BLOG_LINK, ...SITE_LINKS.slice(helpIndex)];
+/** The public sector response-rate table (2026-09-22), right after Companies — it is the other
+ *  half of what the company pages show, and it follows its own server flag the way the blog does. */
+const RESPONSE_RATES_LINK: SiteNavLink = { href: "/response-rates", key: "responseRates" };
+
+export function siteLinksFor(hasBlog: boolean, hasResponseRates = false): readonly SiteNavLink[] {
+  let result: readonly SiteNavLink[] = SITE_LINKS;
+  if (hasResponseRates) {
+    const companiesIndex = result.findIndex((link) => link.key === "companies");
+    result = [...result.slice(0, companiesIndex + 1), RESPONSE_RATES_LINK, ...result.slice(companiesIndex + 1)];
+  }
+  if (hasBlog) {
+    const helpIndex = result.findIndex((link) => link.key === "help");
+    result = [...result.slice(0, helpIndex), BLOG_LINK, ...result.slice(helpIndex)];
+  }
+  return result;
 }
 
 /**
@@ -77,7 +88,10 @@ export function SiteHeader() {
     return <NavBar />;
   }
 
-  const links = siteLinksFor(config.blog?.enabled === true && config.blog.hasPublishedPosts === true);
+  const links = siteLinksFor(
+    config.blog?.enabled === true && config.blog.hasPublishedPosts === true,
+    config.responseRates?.enabled === true,
+  );
 
   // Anchors are never "active": the landing page is one page, and underlining a section name
   // while you are anywhere on it would claim a precision the link does not have.

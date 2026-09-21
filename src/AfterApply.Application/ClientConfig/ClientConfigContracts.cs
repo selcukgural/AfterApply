@@ -17,7 +17,16 @@ public sealed record ClientConfigResponse(
     JobSourcesConfigResponse? JobSources = null,
     PaymentsConfigResponse? Payments = null,
     CandidateExperiencesConfigResponse? CandidateExperiences = null,
-    BlogConfigResponse? Blog = null);
+    BlogConfigResponse? Blog = null,
+    CompanyIntelligenceConfigResponse? CompanyIntelligence = null,
+    ResponseRatesConfigResponse? ResponseRates = null);
+
+/// <summary>Whether a company page has a "Response" tab: the CompanyIntelligence flag, off in
+/// production until the legal read (DEVELOPMENT_PLAN.md K1). The tab is not rendered while off.</summary>
+public sealed record CompanyIntelligenceConfigResponse(bool Enabled);
+
+/// <summary>Whether the public sector response-rate page and its nav links exist.</summary>
+public sealed record ResponseRatesConfigResponse(bool Enabled);
 
 /// <summary>What the site chrome needs before it shows a "Blog" link: the flag, and whether
 /// there is anything published to link to. A blog with no posts is not offered at all —
