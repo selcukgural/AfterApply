@@ -79,7 +79,7 @@ export function ToolsStrip() {
     tabRefs.current[next]?.focus();
   };
 
-  const cards: { tool: Tool; pill: string; title: string; body: string; cta: ReactNode }[] = [
+  const cards: { tool: Tool; pill?: string; title: string; body: string; cta: ReactNode }[] = [
     {
       tool: "extension",
       pill: t("extensionPill"),
@@ -99,7 +99,6 @@ export function ToolsStrip() {
     },
     {
       tool: "companies",
-      pill: t("noAccount"),
       title: t("companiesTitle"),
       body: t("companiesBody"),
       cta: (
@@ -110,7 +109,6 @@ export function ToolsStrip() {
     },
     {
       tool: "benchmark",
-      pill: t("noAccount"),
       title: t("benchmarkTitle"),
       body: t("benchmarkBody"),
       cta: (
@@ -121,7 +119,6 @@ export function ToolsStrip() {
     },
     {
       tool: "cv",
-      pill: t("noAccount"),
       title: t("cvTitle"),
       body: t("cvBody"),
       cta: (
@@ -135,7 +132,11 @@ export function ToolsStrip() {
   return (
     <section id="extension" className="scroll-mt-20 border-t border-gray-200 py-12 dark:border-gray-800">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4">
-        <h2 className="sr-only">{t("title")}</h2>
+        {/* Visible since 2026-09-22 (report item 0.4). It was sr-only, so the only thing a
+            sighted reader had for "you can try these without an account" was the same pill printed
+            on three of the four cards — the page's most-repeated sentence, said three times inside
+            one strip. The heading says it once, where it covers all four. */}
+        <h2 className="text-sm font-medium text-accent-ink">{t("title")}</h2>
 
         <div role="tablist" aria-label={t("tabsLabel")} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {cards.map((card) => {
@@ -159,9 +160,13 @@ export function ToolsStrip() {
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-wash text-accent-ink">
                     <LandingIcon name={ICON[card.tool]} />
                   </span>
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                    {card.pill}
-                  </span>
+                  {/* Only where it says something the card does not: the extension card names
+                      the two sites it has its own code for. */}
+                  {card.pill ? (
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                      {card.pill}
+                    </span>
+                  ) : null}
                 </div>
 
                 <button

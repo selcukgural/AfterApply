@@ -186,6 +186,7 @@
       "bandEyebrow": "Kaç başvuru, kaç cevap · ücretsiz",
       "title": "Başvurdun. Peki sonra ne oldu?",
       "subtitle": "Başvurularının kaçı cevaplandı, kaçı sessizce kayboldu, ilk dönüş ortalama kaç gün sürdü. LinkedIn geçmişini içe aktar ya da eklentiyi kur — toplamayı e-kariyerim yapsın.",
+      "audience": "Türkiye'de yazılım, ürün ve veri işlerine başvuranlar için. Ayda 20+ başvurun varsa buradaki sayılar seninle ilgili.",
       "ctaPrimary": "CV'mi Tara",
       "ctaSecondary": "Ücretsiz Başla",
       "ctaHowItWorks": "Nasıl çalışıyor?"
@@ -217,7 +218,6 @@
     "tools": {
       "title": "Hesap açmadan deneyebileceklerin",
       "tabsLabel": "Araçlar",
-      "noAccount": "Hesap gerekmez",
       "cvTitle": "CV Tarama",
       "cvBody": "CV'ni bırak, başvuru sistemlerinin ondan ne okuduğunu ve ATS okunabilirliği puanını hemen gör.",
       "cvCta": "CV'mi tara",
@@ -240,7 +240,7 @@
           "help": "Nasıl kurulur?"
         },
         "cv": {
-          "eyebrow": "CV Tarama · hesap gerekmez",
+          "eyebrow": "CV Tarama",
           "title": "Başvuru sistemi CV'nden ne okuyor?",
           "body": "CV'ni bırak; ATS okunabilirliği puanını, puanın nereden geldiğini ve düzeltme listesini hemen gör.",
           "bullet1": "PDF veya DOCX, en fazla 5 MB",
@@ -250,19 +250,19 @@
           "mockAriaLabel": "Örnek: bir CV tarama sonucu — 100 üzerinden 78 puan, dört kategorinin alt toplamları ve bir düzeltme kartı."
         },
         "benchmark": {
-          "eyebrow": "Geri dönüş oranı kıyaslama · hesap gerekmez",
+          "eyebrow": "Geri dönüş oranı kıyaslama",
           "title": "Oranın alanının medyanına göre nerede?",
           "body": "Kaç başvuru yaptığını ve kaçına cevap geldiğini gir; kendi oranını ve alanındaki medyanı yan yana gör.",
           "bullet1": "İki sayı, bir sektör, bir dönem — bu kadar",
           "bullet2": "Medyan yalnızca senin alanından yeterli cevap varsa gösterilir",
-          "bullet3": "Girdiğin sayılar anonim; hesap gerekmez",
+          "bullet3": "Girdiğin sayılar anonim kaydedilir",
           "cta": "Kıyasla",
           "mockAriaLabel": "Örnek: bir kıyaslama sonucu — senin geri dönüş oranın %23,3 (7/30), Yazılım / Bilişim alanının medyanı %31."
         },
         "companies": {
-          "eyebrow": "Şirket değerlendirmeleri · anonim, hesap gerekmez",
+          "eyebrow": "Şirket değerlendirmeleri · anonim",
           "title": "Başvurmadan önce içeriyi öğren.",
-          "body": "Bir şirkette çalışmak gerçekte nasıl — genel puan, on alana kadar ortalama, en sık seçilen maddeler ve çalışanların anonim maaş beyanları. Değerlendirmeleri okumak için hesap gerekmez; maaşlar ve yazmak için yalnızca giriş.",
+          "body": "Bir şirkette çalışmak gerçekte nasıl — genel puan, on alana kadar ortalama, en sık seçilen maddeler ve çalışanların anonim maaş beyanları. Okumak serbest; maaşlar ve yazmak için giriş gerekir.",
           "bullet1": "Yazan görünmez: yalnızca ay ve çalışan ilişkisi (mevcut, eski, stajyer)",
           "bullet2": "Serbest metin yok: her madde herkese adil olacak şekilde yazılmış sabit bir listeden gelir",
           "bullet3": "Puan formülü açık; üç onaylı değerlendirmenin altında puan gösterilmez",
@@ -294,11 +294,9 @@
       "sourceJobSites": "Kariyer siteleri",
       "sourceCompanyPages": "Şirket kariyer sayfaları",
       "sourceOther": "Diğer kaynaklar",
-      "outcome": "Onlarca başvuru. Dört ayrı yer. Ortada tek bir toplam yok.",
-      "question": "Bu başvuru ne olmuştu?"
+      "outcome": "Onlarca başvuru. Dört ayrı yer. Ortada tek bir toplam yok."
     },
     "afterApply": {
-      "eyebrow": "e-kariyerim neden var",
       "title": "Asıl hikâye başvurduktan sonra başlar.",
       "happyApplied": "Başvuruldu",
       "happyScreening": "Ön Değerlendirme",
@@ -311,31 +309,6 @@
       "silentWaiting": "Bekleniyor",
       "silentQuestion": "Ne oldu?",
       "note": "Her başvuru aynı süreci izlemez — ve çoğu hiç bitmez. e-kariyerim sessizliği de bir sonuç olarak sayar: hangisi ne kadardır beklemede, hangisi artık dönmeyecek."
-    },
-    "features": {
-      "eyebrow": "Neler yapabilirsin?",
-      "title": "e-kariyerim ne yapar?",
-      "trackingTitle": "Tüm başvuruların tek yerde",
-      "trackingBody": "Şirket, pozisyon, tarih, kaynak ve durumu tek ekranda takip edin — ya da şirket görünümüne geçip aynı işverene gönderdiğiniz her şeyi bir arada görün.",
-      "timelineTitle": "Ne kadar beklediğini bil",
-      "timelineBody": "Başvurunun üzerinden ne kadar zaman geçtiğini gör. Takip zamanı geldiğinde hatırlatıcı al.",
-      "analyticsTitle": "İş arama sürecini ölç",
-      "analyticsBody": "Yanıt oranı, mülakat oranı, teklif oranı ve yanıt süreleri gibi metriklerle kendi sürecini gör.",
-      "noResponseTitle": "Cevapsız kalanları unutma",
-      "noResponseBody": "Uzun süre herhangi bir gelişme olmayan başvuruları fark et ve takip edilmesi gerekenleri kolayca bul.",
-      "extensionTitle": "Başvurunuzu ilan sayfasından çıkmadan kaydedin",
-      "extensionBody": "Chrome eklentisi, LinkedIn veya kariyer.net'teki bir ilanı tek tıkla takip edilen bir başvuruya çevirir. Gmail Taraması'nı açarsanız orada açtığınız yanıtlar durum önerisine dönüşür.",
-      "extensionCta": "Chrome eklentisini edinin",
-      "cvTitle": "Hangi CV ile başvurduğunuzu bilin",
-      "cvBody": "Başvururken kullandığınız CV dosyalarını tek yerde tutun ve her başvuruda hangisinin gittiğini kaydedin — altı hafta sonra gelen bir telefon tahminle başlamasın.",
-      "companiesTitle": "Şirketleri içeriden tanı",
-      "companiesBody": "Orada çalışmış kişilerin anonim değerlendirmeleri, açık formüllü bir puan ve meslek bazında maaş bilgileri — değerlendirmeleri hesap gerekmeden oku, giriş yapınca maaşları gör ve kendi katkını bırak.",
-      "companiesCta": "Şirketlere göz at",
-      "companiesBadge": "Yeni",
-      "weeklyJobsTitle": "Size uyan ilanlar her Pazartesi hazır",
-      "weeklyJobsBody": "LinkedIn ve kariyer.net'teki yeni ilanlar CV'nizle karşılaştırılıp puanlanır; uyan ve eksik kriterler yazılır, zaten başvurduklarınız elenir. Pro plan; peşin dönem, otomatik yenileme yok.",
-      "weeklyJobsCta": "Nasıl çalışır",
-      "weeklyJobsBadge": "Yeni · Pro"
     },
     "linkedinImport": {
       "eyebrow": "İçe aktarma",
@@ -354,12 +327,7 @@
     "analytics": {
       "eyebrow": "Senin gerçek oranların",
       "title": "Kaçından cevap geldi? Kaçı hiç dönmedi?",
-      "subtitle": "Yanıt oranı, mülakat oranı, ghosting oranı ve ilk dönüşün kaç gün sürdüğü — tahmin değil, kendi verinden.",
-      "benchmarkCard": {
-        "title": "Bu sayılar örnek. Seninkiler ne?",
-        "body": "Kaç başvuru yaptın, kaçından dönüş aldın — iki sayı gir, kendi geri dönüş oranını gör ve alanının medyanıyla kıyasla. Hesap gerekmiyor.",
-        "button": "Kıyasla"
-      }
+      "subtitle": "Yanıt oranı, mülakat oranı, ghosting oranı ve ilk dönüşün kaç gün sürdüğü — tahmin değil, kendi verinden."
     },
     "extension": {
       "mock": {
@@ -3404,7 +3372,6 @@
       "empty": "Henüz katkı almış bir şirket yok.",
       "noMatches": "“{query}” ile eşleşen bir şirket yok.",
       "beFirst": "İlk yazan sen ol — kaydettiğin anda yayında.",
-      "noScore": "Henüz puan yok",
       "reviewCount": "{count, plural, =1 {1 değerlendirme} other {# değerlendirme}}",
       "explainer": {
         "what": {
@@ -5256,7 +5223,6 @@
   "siteNav": {
     "howItWorks": "Nasıl çalışır",
     "extension": "Eklenti",
-    "features": "Özellikler",
     "companies": "Şirketler",
     "benchmark": "Kıyaslama",
     "guide": "Rehber",

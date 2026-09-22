@@ -9,11 +9,12 @@ import { SocialIcon } from "@/components/layout/SocialIcon";
 import { pathFor, type LocalisedPath } from "@/lib/seo/routes";
 import { fetchPublicConfig } from "@/lib/config/publicConfig.server";
 
-/** The landing page's sections — the anchors resolve from any page — and the store listing. */
+/** The landing page's sections — the anchors resolve from any page — and the store listing.
+ *  "Özellikler" / "Features" went on 2026-09-22 with the section it pointed at: the feature grid
+ *  listed seven cards, five of which the tools strip and the numbers section already showed. */
 const PRODUCT_LINKS = [
   { href: "/#how-it-works", key: "howItWorks" },
   { href: "/#extension", key: "extension" },
-  { href: "/#features", key: "features" },
 ] as const;
 
 /** Every public page a visitor can browse, under the same names the header uses. */

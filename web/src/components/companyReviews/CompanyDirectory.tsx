@@ -86,16 +86,17 @@ export function CompanyDirectory() {
                 className="flex h-full flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-accent/60 dark:border-gray-800 dark:bg-gray-900"
               >
                 <span className="font-semibold text-gray-900 dark:text-gray-100">{company.name}</span>
-                <span className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  {company.score !== null ? (
-                    <>
-                      <StarRating value={company.score} label={formatScore(company.score, locale)} />
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{formatScore(company.score, locale)}</span>
-                    </>
-                  ) : (
-                    <span>{t("noScore")}</span>
-                  )}
-                </span>
+                {/* No score, no line (2026-09-22). A score needs three approved reviews, so most
+                    cards had "Henüz puan yok" where the stars go — a directory of eighteen
+                    companies reading as seventeen absences, when every one of those cards holds a
+                    real contribution and says so on the lines right below. The stars appear the
+                    moment there is a score; until then the card leads with what it has. */}
+                {company.score !== null && (
+                  <span className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <StarRating value={company.score} label={formatScore(company.score, locale)} />
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatScore(company.score, locale)}</span>
+                  </span>
+                )}
                 {/* One line per kind the company has (see directoryCountLines), so a reader sees at
                     a glance what the page holds before opening it. The dot carries the kind's
                     colour — the same three the contribution badges wear on "My contributions". */}

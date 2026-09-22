@@ -11,12 +11,9 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { WeeklyJobsHero } from "@/components/landing/WeeklyJobsHero";
 import { ToolsStrip } from "@/components/landing/ToolsStrip";
 import { SiteStatsStrip } from "@/components/landing/SiteStatsStrip";
-import { ProblemSection } from "@/components/landing/ProblemSection";
 import { AfterApplySection } from "@/components/landing/AfterApplySection";
-import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { LinkedInImportSection } from "@/components/landing/LinkedInImportSection";
 import { AnalyticsSection } from "@/components/landing/AnalyticsSection";
-import { PrivacySection } from "@/components/landing/PrivacySection";
 import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 import { SiteTrafficReporter } from "@/components/analytics/SiteTrafficReporter";
 import { fetchJobSourcesEnabled } from "@/lib/config/publicConfig.server";
@@ -86,22 +83,23 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
             about page is where the story behind them now lives (the vision, mission and roadmap
             sections moved there on 2026-09-18, growth audit finding 11). */}
         <SiteStatsStrip />
-        <ProblemSection />
-        <AfterApplySection />
         {/*
           Order carries the promise (2026-09-08). The page used to run
           hero → problem → why → *feature list* → import → numbers, which put the thing the product
           is actually for six sections down, well below anywhere a first-time visitor reads. The
-          numbers now come straight after the "why", and the import right behind them, because the
-          two together are the whole pitch: here is what you get, and here is how it fills itself
-          without you typing anything. The feature list is what you read *after* you want it.
-          #how-it-works still resolves to AfterApplySection and #features to FeaturesSection, so the
-          navbar and the hero's secondary CTA are unaffected.
+          numbers come straight after the "why", and the import right behind them, because the two
+          together are the whole pitch: here is what you get, and here is how it fills itself
+          without you typing anything.
+
+          Narrowed to seven sections on 2026-09-22 (research report item 0.4). The page said the
+          same three things over and over: the problem and the "why" were one argument in two
+          sections and are now one band; the feature list repeated five things the tools strip and
+          the numbers had already shown; the privacy promises and the closing invitation both ended
+          a page that only ends once. #how-it-works still resolves to AfterApplySection.
         */}
+        <AfterApplySection />
         <AnalyticsSection />
         <LinkedInImportSection />
-        <FeaturesSection />
-        <PrivacySection />
         <FinalCtaSection />
       </main>
       <SiteFooter />

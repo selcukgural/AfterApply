@@ -1,6 +1,4 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { buttonClassName } from "@/components/ui/Button";
 import type { AnalyticsRatesResponse, ApplicationStatus } from "@/types/api";
 import { formatRate } from "@/lib/dashboard/format";
 import type { Tone } from "@/lib/dashboard/statusGroups";
@@ -53,10 +51,9 @@ export async function AnalyticsSection() {
   ];
 
   return (
-    // border-t because of what now sits above it. The page separates sections either by a change
-    // of background or by a rule, never by nothing: this one is white-on-white against
-    // AfterApplySection since the 2026-09-08 reorder, where it used to follow the grey
-    // LinkedInImportSection and needed no rule at all.
+    // The page separates sections either by a change of background or by a rule, never by nothing.
+    // This one gets both since 2026-09-22: it is white under the merged grey problem/why band,
+    // and grey LinkedInImportSection follows it, so the three alternate down the page.
     <section className="border-t border-gray-200 py-20 dark:border-gray-800">
       <ScrollReveal className="mx-auto flex max-w-5xl flex-col gap-10 px-4">
         <div className="flex flex-col gap-3 text-center">
@@ -88,26 +85,13 @@ export async function AnalyticsSection() {
           <OutcomeCard distribution={MOCK_STATUS_DISTRIBUTION} />
         </div>
 
+        {/* The comparison card that used to close this section went on 2026-09-22: the tools strip
+            one screen under the hero already carries the benchmark, with its own panel, its own
+            sample result and its own button. Saying it twice on one page is what the strip was
+            built to stop. */}
         <div className="grid gap-4 lg:grid-cols-2">
           <StatusBreakdown data={MOCK_STATUS_DISTRIBUTION} />
           <ResponseTimeCard stats={{ sampleSize: 80, averageDays: 6.4, medianDays: 4 }} />
-        </div>
-
-        {/* The numbers above are samples, and this is the one place on the page where a visitor can
-            get a real one about themselves without an account — the section makes the claim, the
-            card is where they test it. A card rather than the text link it replaced: a line of blue
-            text under a wall of statistics is not an offer anybody notices. It sits below the
-            numbers rather than above them, so it competes with nothing in the hero. */}
-        <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-6 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex flex-col gap-1 text-left">
-            <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
-              {t("benchmarkCard.title")}
-            </p>
-            <p className="max-w-xl text-sm text-gray-600 dark:text-gray-400">{t("benchmarkCard.body")}</p>
-          </div>
-          <Link href="/benchmark" className={`${buttonClassName("primary")} shrink-0 text-center`}>
-            {t("benchmarkCard.button")}
-          </Link>
         </div>
       </ScrollReveal>
     </section>

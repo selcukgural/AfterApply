@@ -186,6 +186,7 @@
       "bandEyebrow": "How many applied, how many answered · free",
       "title": "You applied. So what happened next?",
       "subtitle": "How many of your applications got a reply, how many went quiet, and how long a first response actually took. Import your LinkedIn history or install the extension — let e-kariyerim do the collecting.",
+      "audience": "For people applying to software, product and data roles in Türkiye. If you send 20+ applications a month, these numbers are about you.",
       "ctaPrimary": "Scan my CV",
       "ctaSecondary": "Get Started Free",
       "ctaHowItWorks": "See how it works"
@@ -217,7 +218,6 @@
     "tools": {
       "title": "Things you can try without an account",
       "tabsLabel": "Tools",
-      "noAccount": "No account needed",
       "cvTitle": "CV Scan",
       "cvBody": "Drop your CV and see what applicant tracking systems read from it, with an ATS readability score.",
       "cvCta": "Scan my CV",
@@ -240,7 +240,7 @@
           "help": "How to set it up"
         },
         "cv": {
-          "eyebrow": "CV Scan · no account needed",
+          "eyebrow": "CV scan",
           "title": "What does an applicant tracking system read from your CV?",
           "body": "Drop your CV and see the ATS readability score, where the points come from, and the fix list — right away.",
           "bullet1": "PDF or DOCX, up to 5 MB",
@@ -250,19 +250,19 @@
           "mockAriaLabel": "Sample: a CV scan result — 78 out of 100, the four category subtotals and one fix card."
         },
         "benchmark": {
-          "eyebrow": "Reply rate benchmark · no account needed",
+          "eyebrow": "Reply-rate comparison",
           "title": "Where is your rate against your field's median?",
           "body": "Enter how many applications you sent and how many got a reply; see your own rate next to the median in your field.",
           "bullet1": "Two numbers, a sector, a period — that's all",
           "bullet2": "The median is shown only when your field has enough answers",
-          "bullet3": "Your numbers are anonymous; no account needed",
+          "bullet3": "The numbers you enter are stored anonymously",
           "cta": "Compare",
           "mockAriaLabel": "Sample: a benchmark result — your reply rate 23.3% (7/30), the Software / IT median 31%."
         },
         "companies": {
-          "eyebrow": "Company reviews · anonymous, no account needed",
+          "eyebrow": "Company reviews · anonymous",
           "title": "Know what it's like inside before you apply.",
-          "body": "What working at a company is really like — an overall score, up to ten category averages, the most-picked statements and employees' anonymous salary reports. Reading reviews needs no account; salaries and writing need only a sign-in.",
+          "body": "What working somewhere is actually like — an overall score, averages across up to ten areas, the most-picked statements and employees' anonymous salary entries. Reading is open; salaries and writing need a sign-in.",
           "bullet1": "Authors stay invisible: only the month and the relationship (current, former, intern)",
           "bullet2": "No free text: every statement comes from a fixed list written to be fair to everyone",
           "bullet3": "The score formula is public; no score is shown below three approved reviews",
@@ -294,11 +294,9 @@
       "sourceJobSites": "Job boards",
       "sourceCompanyPages": "Company career pages",
       "sourceOther": "Other sources",
-      "outcome": "Dozens of applications. Four separate places. No single total anywhere.",
-      "question": "What happened to this one again?"
+      "outcome": "Dozens of applications. Four separate places. No single total anywhere."
     },
     "afterApply": {
-      "eyebrow": "Why e-kariyerim exists",
       "title": "The real story starts after you apply.",
       "happyApplied": "Applied",
       "happyScreening": "Screening",
@@ -311,31 +309,6 @@
       "silentWaiting": "Waiting",
       "silentQuestion": "What happened?",
       "note": "Not every application follows the same path — and most never end at all. e-kariyerim counts silence as an outcome too: which one has been waiting how long, and which one is not coming back."
-    },
-    "features": {
-      "eyebrow": "What can you do?",
-      "title": "What e-kariyerim does",
-      "trackingTitle": "Every application, in one place",
-      "trackingBody": "Track company, position, date, source, and status on a single screen — or switch to the company view and see everything you sent to one employer together.",
-      "timelineTitle": "Know how long you've been waiting",
-      "timelineBody": "See how much time has passed since you applied. Get a reminder when it's time to follow up.",
-      "analyticsTitle": "Measure your job search",
-      "analyticsBody": "See your own process through metrics like response rate, interview rate, offer rate, and response time.",
-      "noResponseTitle": "Never forget the ones left hanging",
-      "noResponseBody": "Spot applications with no movement in a long time, and easily find the ones that need a follow-up.",
-      "extensionTitle": "Log an application without leaving the job page",
-      "extensionBody": "The Chrome extension turns a LinkedIn or kariyer.net posting into a tracked application with one click. Turn on Gmail Scanning and the replies you open there become status suggestions.",
-      "extensionCta": "Get the Chrome extension",
-      "cvTitle": "Know which CV you sent",
-      "cvBody": "Keep the CV files you apply with in one place, and record on each application which one went out — so a call six weeks later doesn't start with guesswork.",
-      "companiesTitle": "Know companies from the inside",
-      "companiesBody": "Anonymous reviews from people who worked there, a score with a published formula, and salary information by occupation — read reviews without an account, see salaries and add your own once signed in.",
-      "companiesCta": "Browse companies",
-      "companiesBadge": "New",
-      "weeklyJobsTitle": "Postings that fit you, ready every Monday",
-      "weeklyJobsBody": "New postings on LinkedIn and kariyer.net are compared with your CV and scored; matched and missing criteria are spelled out, and the ones you already applied to are left out. Pro plan; prepaid period, no automatic renewal.",
-      "weeklyJobsCta": "How it works",
-      "weeklyJobsBadge": "New · Pro"
     },
     "linkedinImport": {
       "eyebrow": "Import",
@@ -354,12 +327,7 @@
     "analytics": {
       "eyebrow": "Your actual numbers",
       "title": "How many replied? How many never did?",
-      "subtitle": "Response rate, interview rate, ghosting rate, and how long a first reply takes — not a guess, your own data.",
-      "benchmarkCard": {
-        "title": "Those numbers are samples. What are yours?",
-        "body": "How many applications did you send, and how many ever came back — enter two numbers, see your own reply rate and compare it with the median in your field. No account needed.",
-        "button": "Compare"
-      }
+      "subtitle": "Response rate, interview rate, ghosting rate, and how long a first reply takes — not a guess, your own data."
     },
     "extension": {
       "mock": {
@@ -3404,7 +3372,6 @@
       "empty": "No company has a contribution yet.",
       "noMatches": "Nothing matches “{query}”.",
       "beFirst": "Be the first to write one — it goes live the moment you save it.",
-      "noScore": "No score yet",
       "reviewCount": "{count, plural, =1 {1 review} other {# reviews}}",
       "explainer": {
         "what": {
@@ -5256,7 +5223,6 @@
   "siteNav": {
     "howItWorks": "How it works",
     "extension": "Extension",
-    "features": "Features",
     "companies": "Companies",
     "benchmark": "Benchmark",
     "guide": "Guide",
