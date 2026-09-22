@@ -216,4 +216,42 @@ public class SectorResponseRatesTests(ApiHost<SectorResponseRatesProfile> host)
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
+    private static async Task PromiseThenRejectAsync(HttpClient client, Guid applicationId, int answeredAfterDays,
+        RejectionNotice notice)
+    {
+        // Promised in the Applied stage for ten days after applying; answered on the given day.
+        var promise = await client.PutAsJsonAsync($"/api/applications/{applicationId}/reply-promise",
+            new SetReplyPromiseRequest(DateOnly.FromDateTime(Old.AddDays(10).UtcDateTime)), JsonOptions);
+        promise.EnsureSuccessStatusCode();
+        var status = await client.PostAsJsonAsync($"/api/applications/{applicationId}/status",
+            new ChangeStatusRequest(ApplicationStatus.Rejected, null, Old.AddDays(answeredAfterDays), null, notice), JsonOptions);
+        status.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Promise_Keeping_And_Rejection_Notice_Show_Once_Five_Answers_From_Three_People_Are_In()
+    {
+        var (a1, company) = await ApplyAsync(_userA, "Promise Sector Co", Old);
+        var (a2, _) = await ApplyAsync(_userA, "Promise Sector Co", Old);
+        var (b1, _) = await ApplyAsync(_userB, "Promise Sector Co", Old);
+        var (b2, _) = await ApplyAsync(_userB, "Promise Sector Co", Old);
+        var (c1, _) = await ApplyAsync(_userC, "Promise Sector Co", Old);
+        await SetIndustryAsync(company, "Software Development");
+
+        await PromiseThenRejectAsync(_userA, a1, 5, RejectionNotice.CompanyNotified);
+        await PromiseThenRejectAsync(_userA, a2, 9, RejectionNotice.CompanyNotified);
+        await PromiseThenRejectAsync(_userB, b1, 20, RejectionNotice.SeenOnPortal);
+        await PromiseThenRejectAsync(_userB, b2, 12, RejectionNotice.CompanyNotified);
+
+        // Four answers: the row is open, the two new rates are not.
+        var four = Row(await GetTableAsync(), BenchmarkSector.SoftwareAndIt).Figures!;
+        four.PromiseKeptRate.ShouldBeNull();
+        four.RejectionNoticeRate.ShouldBeNull();
+
+        await PromiseThenRejectAsync(_userC, c1, 25, RejectionNotice.OtherOrInferred);
+
+        var five = Row(await GetTableAsync(), BenchmarkSector.SoftwareAndIt).Figures!;
+        five.PromiseKeptRate.ShouldBe(60.0);   // days 5, 9, 12 kept (grace to 12); 20 and 25 late
+        five.RejectionNoticeRate.ShouldBe(60.0);
+    }
 }

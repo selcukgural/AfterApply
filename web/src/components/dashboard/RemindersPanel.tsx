@@ -36,7 +36,8 @@ import {
   toUndoEntries,
   type SelectionState,
 } from "@/lib/applications/bulkSelection";
-import { REMINDER_ANSWER_KEY, REMINDER_LABEL_KEY, clampPage, toReminderSelection } from "@/lib/dashboard/reminders";
+import { REMINDER_ANSWER_KEY, REMINDER_LABEL_KEY, answersByGhosting, clampPage, toReminderSelection } from "@/lib/dashboard/reminders";
+import { formatPromiseDate } from "@/lib/applications/replyPromise";
 import { formatCount } from "@/lib/dashboard/format";
 import type { BulkReminderRequest, ReminderResponse } from "@/types/api";
 
@@ -103,7 +104,7 @@ export function RemindersPanel() {
     (followUp.isPending && followUp.variables === reminder.id) ||
     (markGhosted.isPending && markGhosted.variables?.id === reminder.id);
   const answer = (reminder: ReminderResponse) =>
-    reminder.type === "FollowUp" ? followUp.mutate(reminder.id) : markGhosted.mutate(reminder);
+    answersByGhosting(reminder.type) ? markGhosted.mutate(reminder) : followUp.mutate(reminder.id);
   const rowError = dismiss.isError || followUp.isError || markGhosted.isError;
   const showStaleNote = stale !== undefined && stale.count > 0 && !stale.suggest;
   const hasSelection = !isSelectionEmpty(selection);
@@ -280,7 +281,15 @@ export function RemindersPanel() {
                   {reminder.companyName} — {reminder.jobTitle}
                 </Link>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {t(REMINDER_LABEL_KEY[reminder.type])} · {t("days", { count: formatCount(reminder.daysElapsed, locale) })}
+                  {t(REMINDER_LABEL_KEY[reminder.type])} ·{" "}
+                  {/* A missed promise is read against the date they gave, not against a count of
+                      silent days — that date is the whole reason to write to them now. */}
+                  {reminder.type === "PromiseMissed" && reminder.promisedReplyBy
+                    ? t("promiseMissedSince", {
+                        date: formatPromiseDate(reminder.promisedReplyBy, locale),
+                        count: formatCount(reminder.daysElapsed, locale),
+                      })
+                    : t("days", { count: formatCount(reminder.daysElapsed, locale) })}
                   {/* The user's own norm next to the silence, so "31 days" is read against "usually
                       9" rather than against nothing — the permission to stop waiting comes from
                       their own history, not from a threshold in a config file. Only for the ghost

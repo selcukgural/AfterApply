@@ -221,4 +221,111 @@ public class ApplicationTests
         application.Events.Count.ShouldBe(2);
         application.Events.Last().Type.ShouldBe(ApplicationEventType.RecruiterContacted);
     }
+    [Fact]
+    public void SetReplyPromise_Records_The_Date_And_The_Stage_It_Was_Given_In()
+    {
+        var application = CreateApplication();
+        application.ChangeStatus(ApplicationStatus.Interview, Now.AddDays(3), StatusChangeContext.Manual());
+
+        application.SetReplyPromise(new DateOnly(2026, 9, 5), Now.AddDays(3), Now.AddDays(4));
+
+        application.PromisedReplyBy.ShouldBe(new DateOnly(2026, 9, 5));
+        application.PromisedReplyStatus.ShouldBe(ApplicationStatus.Interview);
+        application.PromisedReplySince.ShouldBe(Now.AddDays(3));
+        application.UpdatedAt.ShouldBe(Now.AddDays(4));
+    }
+
+    [Fact]
+    public void SetReplyPromise_Moving_The_Date_In_The_Same_Stage_Keeps_The_Stage()
+    {
+        var application = CreateApplication();
+        application.SetReplyPromise(new DateOnly(2026, 9, 1), Now, Now);
+
+        // "They pushed it to Friday": same promise, new date.
+        application.SetReplyPromise(new DateOnly(2026, 9, 4), Now, Now.AddDays(2));
+
+        application.PromisedReplyBy.ShouldBe(new DateOnly(2026, 9, 4));
+        application.PromisedReplyStatus.ShouldBe(ApplicationStatus.Applied);
+        application.PromisedReplySince.ShouldBe(Now);
+    }
+
+    [Fact]
+    public void SetReplyPromise_In_A_Later_Stage_Replaces_The_Earlier_Promise()
+    {
+        var application = CreateApplication();
+        application.SetReplyPromise(new DateOnly(2026, 9, 1), Now, Now);
+        application.ChangeStatus(ApplicationStatus.Screening, Now.AddDays(5), StatusChangeContext.Manual());
+
+        application.SetReplyPromise(new DateOnly(2026, 9, 12), Now.AddDays(5), Now.AddDays(5));
+
+        application.PromisedReplyStatus.ShouldBe(ApplicationStatus.Screening);
+        application.PromisedReplySince.ShouldBe(Now.AddDays(5));
+    }
+
+    [Fact]
+    public void SetReplyPromise_Null_Clears_All_Three_Fields()
+    {
+        var application = CreateApplication();
+        application.SetReplyPromise(new DateOnly(2026, 9, 1), Now, Now);
+
+        application.SetReplyPromise(null, Now, Now.AddDays(1));
+
+        application.PromisedReplyBy.ShouldBeNull();
+        application.PromisedReplyStatus.ShouldBeNull();
+        application.PromisedReplySince.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(ApplicationStatus.Rejected)]
+    [InlineData(ApplicationStatus.Accepted)]
+    [InlineData(ApplicationStatus.Withdrawn)]
+    [InlineData(ApplicationStatus.Ghosted)]
+    public void SetReplyPromise_Refuses_A_Closed_Application_But_Still_Lets_It_Be_Cleared(ApplicationStatus closed)
+    {
+        var application = CreateApplication();
+        application.SetReplyPromise(new DateOnly(2026, 9, 1), Now, Now);
+        application.ChangeStatus(closed, Now.AddDays(1), StatusChangeContext.Manual());
+
+        Should.Throw<ReplyPromiseOnClosedApplicationException>(() =>
+            application.SetReplyPromise(new DateOnly(2026, 9, 9), Now.AddDays(1), Now.AddDays(1)));
+
+        application.SetReplyPromise(null, Now, Now.AddDays(2));
+        application.PromisedReplyBy.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ChangeStatus_To_Rejected_Keeps_What_The_User_Said_About_How_They_Learned()
+    {
+        var application = CreateApplication();
+
+        application.ChangeStatus(ApplicationStatus.Rejected, Now.AddDays(1), StatusChangeContext.Manual(),
+            RejectionNotice.SeenOnPortal);
+
+        application.RejectionNotice.ShouldBe(RejectionNotice.SeenOnPortal);
+    }
+
+    [Theory]
+    [InlineData(StatusChangeOrigin.EmailSuggestionConfirmed)]
+    [InlineData(StatusChangeOrigin.EmailAutoApplied)]
+    public void ChangeStatus_To_Rejected_From_The_Companys_Email_Is_CompanyNotified_Without_Asking(StatusChangeOrigin origin)
+    {
+        var application = CreateApplication();
+
+        application.ChangeStatus(ApplicationStatus.Rejected, Now.AddDays(1), new StatusChangeContext(Source.Email, origin));
+
+        application.RejectionNotice.ShouldBe(RejectionNotice.CompanyNotified);
+    }
+
+    [Fact]
+    public void ChangeStatus_Away_From_Rejected_Clears_The_Answer_And_A_Non_Rejection_Never_Takes_One()
+    {
+        var application = CreateApplication();
+        application.ChangeStatus(ApplicationStatus.Rejected, Now.AddDays(1), StatusChangeContext.Manual(),
+            RejectionNotice.CompanyNotified);
+
+        application.ChangeStatus(ApplicationStatus.Interview, Now.AddDays(2), StatusChangeContext.Manual(),
+            RejectionNotice.CompanyNotified);
+
+        application.RejectionNotice.ShouldBeNull();
+    }
 }

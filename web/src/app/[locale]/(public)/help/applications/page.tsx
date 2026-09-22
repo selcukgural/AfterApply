@@ -77,6 +77,11 @@ export default async function ApplicationsHelpPage({ params }: PageProps<"/[loca
       </section>
 
       <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("promise.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("promise.body")}</p>
+      </section>
+
+      <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("contact.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("contact.body")}</p>
       </section>

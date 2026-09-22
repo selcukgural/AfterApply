@@ -49,7 +49,11 @@ internal sealed class SectorResponseRateService(
         var rows = await dbContext.Applications
             .Where(a => a.AppliedAt >= windowStart && a.AppliedAt <= windowEnd)
             .Join(dbContext.Companies, a => a.CompanyId, c => c.Id,
-                (a, c) => new { a.Id, a.UserId, a.Status, a.AppliedAt, c.Industry })
+                (a, c) => new
+                {
+                    a.Id, a.UserId, a.Status, a.AppliedAt,
+                    a.PromisedReplyBy, a.PromisedReplySince, a.RejectionNotice, c.Industry
+                })
             .ToListAsync(cancellationToken);
 
         var applicationIds = rows.Select(r => r.Id).ToList();
@@ -73,7 +77,8 @@ internal sealed class SectorResponseRateService(
             }
 
             var transitions = historyByApplication.GetValueOrDefault(row.Id) ?? [];
-            var sample = ResponseRateAggregator.ToSample(row.Id, row.UserId, row.Status, row.AppliedAt, transitions);
+            var sample = ResponseRateAggregator.ToSample(row.Id, row.UserId, row.Status, row.AppliedAt, transitions,
+                row.PromisedReplyBy, row.PromisedReplySince, row.RejectionNotice, windowEnd);
             if (!samplesBySector.TryGetValue(sector.Value, out var list))
             {
                 samplesBySector[sector.Value] = list = [];

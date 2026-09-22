@@ -194,8 +194,21 @@ public static class ApplicationEndpoints
             })
             .WithValidation<ChangeStatusRequest>()
             .WithSummary("Change an application's status")
-            .WithDescription("Also appends a StatusChanged event to the application's timeline.")
+            .WithDescription("Also appends a StatusChanged event to the application's timeline. Optionally records the reply date the company gave for the stage this change opens, and how a rejection was learned of.")
             .Produces<ApplicationDetailResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPut("/{id:guid}/reply-promise", async (Guid id, SetReplyPromiseRequest request, ClaimsPrincipal user,
+                IApplicationService service, CancellationToken cancellationToken) =>
+            {
+                var updated = await service.SetReplyPromiseAsync(user.GetUserId(), id, request, cancellationToken);
+                return updated is not null ? Results.Ok(updated) : Results.NotFound();
+            })
+            .WithValidation<SetReplyPromiseRequest>()
+            .WithSummary("Record, move or clear the reply date the company promised")
+            .WithDescription("A null date clears it. The promise belongs to the application's current stage; a closed application cannot be given one.")
+            .Produces<ApplicationDetailResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/{id:guid}/status-history", async (Guid id, ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>

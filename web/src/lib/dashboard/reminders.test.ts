@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_SELECTION, selectAllMatching } from "@/lib/applications/bulkSelection";
-import { REMINDER_ANSWER_KEY, REMINDER_LABEL_KEY, clampPage, lastPage, toReminderSelection } from "./reminders";
+import { REMINDER_ANSWER_KEY, REMINDER_LABEL_KEY, answersByGhosting, clampPage, lastPage, toReminderSelection } from "./reminders";
 
 describe("REMINDER_LABEL_KEY", () => {
   it("covers every reminder type", () => {
     expect(REMINDER_LABEL_KEY.FollowUp).toBe("followUp");
     expect(REMINDER_LABEL_KEY.PossiblyGhosted).toBe("possiblyGhosted");
+    expect(REMINDER_LABEL_KEY.PromiseMissed).toBe("promiseMissed");
   });
 });
 
@@ -13,6 +14,14 @@ describe("REMINDER_ANSWER_KEY", () => {
   it("gives each reminder type the answer its question asks for", () => {
     expect(REMINDER_ANSWER_KEY.FollowUp).toBe("followedUp");
     expect(REMINDER_ANSWER_KEY.PossiblyGhosted).toBe("markGhosted");
+    // A missed date is a reason to write, not to close.
+    expect(REMINDER_ANSWER_KEY.PromiseMissed).toBe("followedUp");
+  });
+
+  it("changes a status only for the ghosting question", () => {
+    expect(answersByGhosting("PossiblyGhosted")).toBe(true);
+    expect(answersByGhosting("FollowUp")).toBe(false);
+    expect(answersByGhosting("PromiseMissed")).toBe(false);
   });
 });
 

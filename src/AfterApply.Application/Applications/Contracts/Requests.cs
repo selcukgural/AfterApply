@@ -81,7 +81,21 @@ public sealed record UpdateApplicationRequest(
 // here: provenance is decided by the code path that handles the change, never by the caller.
 // The endpoint always records StatusChangeOrigin.Manual; internal callers (email suggestions,
 // imports) go through IApplicationService's StatusChangeContext overload instead.
-public sealed record ChangeStatusRequest(ApplicationStatus NewStatus, string? Note, DateTimeOffset? ChangedAt);
+//
+// PromisedReplyBy and RejectionNotice are optional answers to the two questions the status panel
+// asks alongside the change — "did they give you a date?" (only for a status still in play) and
+// "how did you learn of it?" (only for Rejected). Additive: a caller that never sends them gets
+// the change it always got.
+public sealed record ChangeStatusRequest(
+    ApplicationStatus NewStatus,
+    string? Note,
+    DateTimeOffset? ChangedAt,
+    DateOnly? PromisedReplyBy = null,
+    RejectionNotice? RejectionNotice = null);
+
+// Sets, moves or (null) clears the company's promised reply date without a status change — the
+// "+ add a date / change" cell on the application page.
+public sealed record SetReplyPromiseRequest(DateOnly? PromisedReplyBy);
 
 public sealed record CreateEventRequest(
     ApplicationEventType Type,

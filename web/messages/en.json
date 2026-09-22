@@ -645,7 +645,9 @@
       "selectAll": "Select all {count} reminders",
       "allSelected": "All {count} reminders selected — other pages included ·",
       "clearSelection": "Clear",
-      "countMismatch": "The list changed while this was open — you now have {count} reminders. Nothing was changed; look again."
+      "countMismatch": "The list changed while this was open — you now have {count} reminders. Nothing was changed; look again.",
+      "promiseMissed": "The promised date has passed",
+      "promiseMissedSince": "{count} days since {date}"
     },
     "stale": {
       "title": "{count, plural, one {# application is} other {# applications are}} older than {threshold} days with no reply",
@@ -805,6 +807,26 @@
           "text": "Your data is yours; download it whenever you like. Your account stays as it is and will be here if you ever need it again.",
           "link": "Download my data"
         }
+      },
+      "promise": {
+        "label": "Promised reply by",
+        "add": "+ Add a date",
+        "change": "Change",
+        "remove": "Remove",
+        "save": "Save",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "stage": "given at {status}",
+        "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+        "dueToday": "Today",
+        "overdue": "{count, plural, one {Date passed # day ago} other {Date passed # days ago}}",
+        "kept": "Kept their word",
+        "late": "Replied late"
+      },
+      "rejectionNotice": {
+        "CompanyNotified": "told by e-mail / message",
+        "SeenOnPortal": "seen on the portal",
+        "OtherOrInferred": "heard another way / assumed"
       }
     },
     "statusChange": {
@@ -812,7 +834,16 @@
       "notePlaceholder": "Note (optional)",
       "confirm": "Confirm",
       "cancel": "Cancel",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "newStatus": "New status",
+      "promiseLabel": "Did they give you a date to hear back by? (optional)",
+      "promiseHint": "No follow-up reminder until that date; if it passes, we'll let you know.",
+      "rejectionNoticeLegend": "How did you learn of the rejection? (optional)",
+      "rejectionNotice": {
+        "CompanyNotified": "They told me by e-mail or message",
+        "SeenOnPortal": "I saw it on the portal / application page",
+        "OtherOrInferred": "I heard another way / I'm assuming"
+      }
     },
     "statusHistory": {
       "empty": "No status changes yet.",
@@ -1022,7 +1053,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 22 September 2026",
+    "lastUpdated": "Last updated: 23 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -1226,8 +1257,8 @@
     },
     "aggregates": {
       "title": "Aggregate response data (the sector table and a company page's \"Response\" tab)",
-      "intro": "The applications you track feed aggregate figures detached from your identity: a sector's or a company's response rate, first-reply time, post-interview silence and ghosting rate. When they do:",
-      "what": "Only the company, the application date, the status and the dates of status changes are aggregated. Your notes, HR contact, CV, e-mails and name never enter any aggregate.",
+      "intro": "The applications you track feed aggregate figures detached from your identity: a sector's or a company's response rate, first-reply time, post-interview silence, ghosting rate, promise keeping and rejection notice rate. When they do:",
+      "what": "Only the company, the application date, the status, the dates of status changes and, if you give them, two optional answers are aggregated: the reply date the company promised and how you learned of a rejection. Your notes, HR contact, CV, e-mails and name never enter any aggregate.",
       "sector": "The sector table is public and names no company. A sector row is not shown until at least 5 different people have 30 applications between them, and it stays closed while one person accounts for more than half of them.",
       "company": "A company page's \"Response\" tab shows nothing until that company has at least 50 applications in the last 12 months, and nothing if one person accounts for more than a third of them; below the threshold it does not say how many are missing either. This tab stays off until the legal review is complete.",
       "noReverse": "An aggregate cannot be walked back to one person's application: the pages show only rates, medians and a count of people, and individual application rows never leave the server.",
@@ -1999,7 +2030,7 @@
       },
       "detail": {
         "title": "Application detail",
-        "body": "Opening an application shows its status badge, location, employment type, applied date, when it was added, the job URL (if any), the CV you recorded it with and your notes, with the Timeline and — if available — the job description below. Applications created automatically via Gmail Scanning show a \"Created from Email\" badge."
+        "body": "Opening an application shows its status badge, location, employment type, applied date, when it was added, the job URL (if any), the CV you recorded it with and your notes, with the Timeline and — if available — the job description below. Applications created automatically via Gmail Scanning show a \"Created from Email\" badge. An application still in progress also has a \"Promised reply by\" cell: the date the company gave, the stage it was given at, and how many days are left or have passed."
       },
       "contact": {
         "title": "HR contact and company links",
@@ -2028,7 +2059,7 @@
         },
         "step3": {
           "title": "Optionally add a note and confirm",
-          "body": "The change is recorded in the Status History section as \"Old Status → New Status\", together with your note, which appears under that row."
+          "body": "The change is recorded in the Status History section as \"Old Status → New Status\", together with your note, which appears under that row. Moving to a status still in progress, you can also enter the reply date the company gave; moving to Rejected, how you learned of it — both optional."
         }
       },
       "statuses": {
@@ -2070,6 +2101,10 @@
           "title": "A bulk delete cannot be undone",
           "body": "There is no recycle bin. Deleted applications, their timelines and the HR contacts attached to them are gone for good; the CV files themselves stay on the My CVs page. If you are not sure, export your data from Settings first."
         }
+      },
+      "promise": {
+        "title": "Promised reply date",
+        "body": "If they said \"we'll get back to you by Friday\", record the date when you change the status, or with \"+ Add a date\" on the detail page. No follow-up reminder comes before that date; if it passes and the application hasn't moved, the dashboard shows a \"The promised date has passed\" reminder. Once the application moves, the promise stays as \"Kept their word\" or \"Replied late\". These answers and how you learned of a rejection enter only aggregate rates (the sector table), without your name; no rate is shown until 5 answers from at least 3 people are in."
       }
     },
     "suggestions": {
@@ -3506,7 +3541,12 @@
         "closure": "Gave an outcome",
         "closureHint": "wrote a rejection or an offer",
         "days": "days",
-        "none": "—"
+        "none": "—",
+        "promiseKept": "Kept its word",
+        "promiseKeptHint": "replied by the date it gave",
+        "rejectionNotice": "Told of rejection",
+        "rejectionNoticeHint": "rejections written to the candidate",
+        "subRateFloor": "not enough answers yet"
       },
       "sectorMedian": "{sector} median <b>{value}</b>",
       "sectorMedianShort": "sector {value}",
@@ -6203,7 +6243,9 @@
       "responseRate": "Response rate",
       "medianFirstReply": "Median first reply",
       "postInterviewSilence": "Post-interview silence",
-      "ghosting": "Ghosted"
+      "ghosting": "Ghosted",
+      "promiseKept": "Kept promise",
+      "rejectionNotice": "Told of rejection"
     },
     "days": "{value} days",
     "none": "—",
@@ -6234,7 +6276,7 @@
         "window": "Period: the last 3, 6 or 12 months by application date. A status change that arrives late is written to the application's own period.",
         "maturity": "Maturity: applications younger than {days} days are left out of the response, ghosting and silence denominators, so a reply has time to arrive. First-reply time is taken from every answered application.",
         "threshold": "Threshold: a row needs at least {contributors} different people and {applications} applications, and closes if one person accounts for more than {share}% of them. Below the threshold nothing is shown, not even how much is missing.",
-        "definitions": "Definitions: response rate = applications a human touched (rejections included); ghosted = the ones the user marked as ghosted; post-interview silence = invited to an interview and then ghosted, as a share of those invited; median first reply = days between applying and the first status change."
+        "definitions": "Definitions: response rate = applications a human touched (rejections included); ghosted = the ones the user marked as ghosted; post-interview silence = invited to an interview and then ghosted, as a share of those invited; median first reply = days between applying and the first status change. Kept promise = the application moved by the reply date the company gave (with 2 days' grace), as a share of promises whose outcome is settled; told of rejection = rejections the company told the candidate of itself, as a share of rejections whose route is known."
       }
     },
     "cta": {
@@ -6242,6 +6284,7 @@
       "body": "The row opens as you track your applications. The account is free; your data stays in your account only.",
       "button": "Get started free"
     },
-    "error": "The table could not be loaded right now."
+    "error": "The table could not be loaded right now.",
+    "subRateRule": "Kept promise and told of rejection come from users' optional answers; they show “—” until 5 answers from at least 3 people are in."
   }
 }

@@ -134,9 +134,24 @@ export interface ApplicationDetailResponse {
   // The company page's slug, for linking a closed application into `/contribute?company=`.
   // Optional rather than nullable-only: during a rolling deploy the API may predate the field.
   companySlug?: string | null;
+  // The company's "we'll get back to you by …": the date (YYYY-MM-DD, a calendar date with no
+  // time or zone), the stage it was given in, and where it stands (ReplyPromises on the server —
+  // the same reading the reminders and the response-rate figures use). All null when there is
+  // none; optional for the same rolling-deploy reason as companySlug.
+  promisedReplyBy?: string | null;
+  promisedReplyStatus?: ApplicationStatus | null;
+  promisedReplyOutcome?: ReplyPromiseOutcome | null;
+  /** How the user learned of the rejection; null unless the status is Rejected and they said. */
+  rejectionNotice?: RejectionNotice | null;
 }
 
 export type HrEmailSource = "Manual" | "IncomingEmail";
+
+/** Mirrors AfterApply.Domain.Applications.ReplyPromiseOutcome. */
+export type ReplyPromiseOutcome = "Pending" | "Overdue" | "Kept" | "Late" | "Void";
+
+/** Mirrors AfterApply.Domain.Applications.RejectionNotice. */
+export type RejectionNotice = "CompanyNotified" | "SeenOnPortal" | "OtherOrInferred";
 
 export type CvFileFormat = "Pdf" | "Doc" | "Docx";
 
@@ -296,6 +311,15 @@ export interface ChangeStatusRequest {
   newStatus: ApplicationStatus;
   note: string | null;
   changedAt: string | null;
+  /** YYYY-MM-DD; only with a status still in play. */
+  promisedReplyBy?: string | null;
+  /** Only with Rejected. */
+  rejectionNotice?: RejectionNotice | null;
+}
+
+export interface SetReplyPromiseRequest {
+  /** YYYY-MM-DD, or null to clear. */
+  promisedReplyBy: string | null;
 }
 
 export interface ApplicationListQuery {
@@ -775,6 +799,11 @@ export interface ResponseRateFigures {
   postInterviewSilenceRate: number | null;
   medianFirstReplyDays: number | null;
   closureRate: number;
+  /** Of the settled reply promises, the share kept; null below its own floor (5 answers from 3
+   *  people) and on an API that predates it. */
+  promiseKeptRate?: number | null;
+  /** Of the rejections whose route is known, the share the company told the candidate itself. */
+  rejectionNoticeRate?: number | null;
 }
 
 /** A sector row; `figures` is null below the threshold and the row then says nothing else. */
@@ -815,6 +844,8 @@ export interface CompanyIntelligenceMetrics {
   medianResponseTimeDays: number | null;
   closureRate: number;
   candidateExperienceScore: number;
+  promiseKeptRate?: number | null;
+  rejectionNoticeRate?: number | null;
 }
 
 export interface CompanySectorComparison {
@@ -1383,7 +1414,7 @@ export interface StaleApplicationsSummaryResponse {
 // --- Reminders ---------------------------------------------------------------------------------
 
 /** Mirrors AfterApply.Domain.Notifications.ReminderType. */
-export type ReminderType = "FollowUp" | "PossiblyGhosted";
+export type ReminderType = "FollowUp" | "PossiblyGhosted" | "PromiseMissed";
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.ReminderResponse. */
 export interface ReminderResponse {
@@ -1398,6 +1429,8 @@ export interface ReminderResponse {
    *  against. Absent or null when too few of their applications have been answered, and on an API
    *  instance that predates the field. */
   userMedianResponseDays?: number | null;
+  /** The date the company said it would answer by (YYYY-MM-DD); set on PromiseMissed rows only. */
+  promisedReplyBy?: string | null;
 }
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.ReminderPauseState. */

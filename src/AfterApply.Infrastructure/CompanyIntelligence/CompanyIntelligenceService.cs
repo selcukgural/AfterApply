@@ -46,7 +46,11 @@ internal sealed class CompanyIntelligenceService(
         // No UserId filter — unlike AnalyticsService, this aggregates across ALL users.
         var applications = await dbContext.Applications
             .Where(a => a.CompanyId == companyId && a.AppliedAt >= windowStart && a.AppliedAt <= windowEnd)
-            .Select(a => new { a.Id, a.UserId, a.Status, a.AppliedAt })
+            .Select(a => new
+            {
+                a.Id, a.UserId, a.Status, a.AppliedAt,
+                a.PromisedReplyBy, a.PromisedReplySince, a.RejectionNotice
+            })
             .ToListAsync(cancellationToken);
 
         var total = applications.Count;
@@ -75,7 +79,8 @@ internal sealed class CompanyIntelligenceService(
 
         var samples = applications
             .Select(a => ResponseRateAggregator.ToSample(a.Id, a.UserId, a.Status, a.AppliedAt,
-                historyByApplication.GetValueOrDefault(a.Id) ?? []))
+                historyByApplication.GetValueOrDefault(a.Id) ?? [],
+                a.PromisedReplyBy, a.PromisedReplySince, a.RejectionNotice, windowEnd))
             .ToList();
         var figures = ResponseRateAggregator.Compute(samples, windowEnd, opts.MaturityDays);
 
@@ -104,7 +109,9 @@ internal sealed class CompanyIntelligenceService(
             AverageResponseTimeDays: figures.AverageFirstReplyDays,
             MedianResponseTimeDays: figures.MedianFirstReplyDays,
             ClosureRate: figures.ClosureRate,
-            CandidateExperienceScore: candidateExperienceScore);
+            CandidateExperienceScore: candidateExperienceScore,
+            PromiseKeptRate: figures.PromiseKeptRate,
+            RejectionNoticeRate: figures.RejectionNoticeRate);
 
         return new CompanyIntelligenceResponse(company.Id, company.Name, confidence,
             windowStart, windowEnd, metrics, comparison, thresholds);

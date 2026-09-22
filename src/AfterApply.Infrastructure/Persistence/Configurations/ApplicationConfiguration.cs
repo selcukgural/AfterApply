@@ -28,6 +28,10 @@ public sealed class ApplicationConfiguration : IEntityTypeConfiguration<DomainAp
         builder.Property(a => a.EmploymentType).HasConversion<string>().HasMaxLength(50);
         builder.Property(a => a.Status).HasConversion<string>().HasMaxLength(50);
         builder.Property(a => a.Source).HasConversion<string>().HasMaxLength(50);
+        // A calendar date, not an instant: "by the 10th" has no time of day and no zone.
+        builder.Property(a => a.PromisedReplyBy).HasColumnType("date");
+        builder.Property(a => a.PromisedReplyStatus).HasConversion<string>().HasMaxLength(50);
+        builder.Property(a => a.RejectionNotice).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(a => a.UserId);
         builder.HasIndex(a => new { a.UserId, a.Status });

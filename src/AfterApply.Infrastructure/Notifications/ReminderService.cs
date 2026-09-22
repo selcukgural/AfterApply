@@ -37,14 +37,14 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         return dbContext.Reminders
             .Where(r => r.UserId == userId && r.DismissedAt == null)
             .Join(dbContext.Applications, r => r.ApplicationId, a => a.Id,
-                (r, a) => new { r, a.CompanyId, a.JobTitle, a.Status })
+                (r, a) => new { r, a.CompanyId, a.JobTitle, a.Status, a.PromisedReplyBy })
             // A closed application has nothing left to remind about. Status changes retire
             // reminders as they happen (ApplicationService) and the nightly scan sweeps up the
             // rest; this filter is the guarantee that neither has to be perfect for the list
             // to be right.
             .Where(x => !TerminalApplicationStatuses.Values.Contains(x.Status))
             .Join(dbContext.Companies, x => x.CompanyId, c => c.Id,
-                (x, c) => new { x.r, x.JobTitle, CompanyName = c.Name })
+                (x, c) => new { x.r, x.JobTitle, x.PromisedReplyBy, CompanyName = c.Name })
             // The application that has waited longest first, and among equals the reminder
             // created first: the one that actually needs attention is on page one, not the
             // freshest nudge. Ordered here rather than on the client because the client only
@@ -53,7 +53,9 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             .ThenBy(x => x.r.CreatedAt)
             .ThenBy(x => x.r.Id)
             .Select(x => new ReminderResponse(
-                x.r.Id, x.r.ApplicationId, x.CompanyName, x.JobTitle, x.r.Type, x.r.DaysElapsedAtCreation, x.r.CreatedAt));
+                x.r.Id, x.r.ApplicationId, x.CompanyName, x.JobTitle, x.r.Type, x.r.DaysElapsedAtCreation, x.r.CreatedAt,
+                null,
+                x.r.Type == ReminderType.PromiseMissed ? x.PromisedReplyBy : null));
     }
 
     public Task<PagedResult<ReminderResponse>> GetActiveRemindersAsync(Guid userId, GetRemindersQuery query,
@@ -369,14 +371,14 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
         var applications = await dbContext.Applications
             .Where(a => !TerminalApplicationStatuses.Values.Contains(a.Status))
-            .Select(a => new { a.Id, a.UserId, a.AppliedAt })
+            .Select(a => new { a.Id, a.UserId, a.AppliedAt, a.PromisedReplyBy, a.PromisedReplySince })
             .ToListAsync(cancellationToken);
 
         // Every open reminder, across users like the application scan above: the sweep that
         // retires reminders is the other half of the job that creates them.
         var activeReminders = await dbContext.Reminders
             .Where(r => r.DismissedAt == null)
-            .Select(r => new { r.Id, r.UserId, r.ApplicationId, r.Type })
+            .Select(r => new { r.Id, r.UserId, r.ApplicationId, r.Type, r.ReferenceAt })
             .ToListAsync(cancellationToken);
 
         var applicationIds = applications.Select(a => a.Id).ToList();
@@ -391,6 +393,9 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         var candidates = new List<(Guid ApplicationId, Guid UserId, ReminderType Type, DateTimeOffset ReferenceAt, int DaysElapsed)>();
         var candidateTypeByApplication = new Dictionary<Guid, ReminderType>();
         var beyondHorizon = new HashSet<Guid>();
+        // Applications whose company promised a date that has not come yet: nothing is due, and
+        // any reminder already open about them is retired below.
+        var waitingOnPromise = new HashSet<Guid>();
 
         foreach (var application in applications)
         {
@@ -409,32 +414,60 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
                 continue;
             }
 
+            // A promise still open on this stage decides first: before its date nothing is due,
+            // after it the follow-up becomes "the date has passed". Only an Overdue promise is open
+            // — Kept/Late/Void ones were answered by a later status change, which also moved the
+            // reference date the rest of this loop measures from.
+            var promise = application is { PromisedReplyBy: { } promisedBy, PromisedReplySince: { } promisedSince }
+                ? ReplyPromises.Evaluate(promisedBy, promisedSince, history.Select(h => (h.ToStatus, h.ChangedAt)), now)
+                : null;
+            if (promise?.Outcome == ReplyPromiseOutcome.Pending)
+            {
+                waitingOnPromise.Add(application.Id);
+                continue;
+            }
+
             // Ghosting takes precedence: an application eligible for both never
             // surfaces both suggestions at once (product decision, Sprint 6 plan).
-            ReminderType? type = ReminderCalculations.IsPossiblyGhosted(hasResponded, daysElapsed, options.Value.GhostingThresholdDays)
-                ? ReminderType.PossiblyGhosted
-                : ReminderCalculations.IsFollowUpDue(daysElapsed, options.Value.FollowUpThresholdDays)
-                    ? ReminderType.FollowUp
-                    : null;
-
-            if (type is not null)
+            if (ReminderCalculations.IsPossiblyGhosted(hasResponded, daysElapsed, options.Value.GhostingThresholdDays))
             {
-                candidates.Add((application.Id, application.UserId, type.Value, referenceAt, daysElapsed));
-                candidateTypeByApplication[application.Id] = type.Value;
+                candidates.Add((application.Id, application.UserId, ReminderType.PossiblyGhosted, referenceAt, daysElapsed));
+                candidateTypeByApplication[application.Id] = ReminderType.PossiblyGhosted;
+            }
+            else if (promise?.Outcome == ReplyPromiseOutcome.Overdue)
+            {
+                var promisedAt = PromisedAt(application.PromisedReplyBy!.Value);
+                candidates.Add((application.Id, application.UserId, ReminderType.PromiseMissed, promisedAt,
+                    ReminderCalculations.DaysElapsed(promisedAt, now)));
+                candidateTypeByApplication[application.Id] = ReminderType.PromiseMissed;
+            }
+            else if (ReminderCalculations.IsFollowUpDue(daysElapsed, options.Value.FollowUpThresholdDays))
+            {
+                candidates.Add((application.Id, application.UserId, ReminderType.FollowUp, referenceAt, daysElapsed));
+                candidateTypeByApplication[application.Id] = ReminderType.FollowUp;
             }
         }
 
-        // Retire what no longer applies. Three reasons, one UPDATE: the application reached a
-        // terminal status (it is absent from the open set — a deleted one is gone through the
-        // cascade already), it went past the horizon, or it now rates "possibly ghosted" and the
-        // earlier follow-up would otherwise sit beside it as a second row for the same application.
+        // Retire what no longer applies, in one UPDATE: the application reached a terminal status
+        // (it is absent from the open set — a deleted one is gone through the cascade already), it
+        // went past the horizon, the company's promised date has not come yet, or a stronger
+        // reminder now stands for it and the earlier one would sit beside it as a second row —
+        // "possibly ghosted" over a follow-up or a missed promise, a missed promise over a
+        // follow-up. A missed-promise row whose date is no longer the promised one (moved,
+        // cleared, answered) goes too.
         var openApplicationIds = applicationIds.ToHashSet();
+        var promisedAtByApplication = applications
+            .Where(a => a.PromisedReplyBy is not null)
+            .ToDictionary(a => a.Id, a => PromisedAt(a.PromisedReplyBy!.Value));
         var retired = activeReminders
             .Where(r => !openApplicationIds.Contains(r.ApplicationId)
                 || beyondHorizon.Contains(r.ApplicationId)
-                || (r.Type == ReminderType.FollowUp
-                    && candidateTypeByApplication.TryGetValue(r.ApplicationId, out var candidateType)
-                    && candidateType == ReminderType.PossiblyGhosted))
+                || waitingOnPromise.Contains(r.ApplicationId)
+                || (candidateTypeByApplication.TryGetValue(r.ApplicationId, out var candidateType)
+                    && Outranks(candidateType, r.Type))
+                || (r.Type == ReminderType.PromiseMissed
+                    && (candidateTypeByApplication.GetValueOrDefault(r.ApplicationId) != ReminderType.PromiseMissed
+                        || promisedAtByApplication.GetValueOrDefault(r.ApplicationId) != r.ReferenceAt)))
             .ToList();
 
         if (retired.Count > 0)
@@ -483,6 +516,19 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
         return newReminders.Count;
     }
+
+    /// <summary>The promised date as the instant a PromiseMissed reminder is keyed and counted from.</summary>
+    private static DateTimeOffset PromisedAt(DateOnly promisedBy) =>
+        new(promisedBy.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+
+    /// <summary>Whether a reminder of <paramref name="candidate"/> type replaces an open one of
+    /// <paramref name="open"/> type on the same application.</summary>
+    private static bool Outranks(ReminderType candidate, ReminderType open) => (candidate, open) switch
+    {
+        (ReminderType.PossiblyGhosted, ReminderType.FollowUp or ReminderType.PromiseMissed) => true,
+        (ReminderType.PromiseMissed, ReminderType.FollowUp) => true,
+        _ => false
+    };
 
     private async Task EvictActiveListsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
     {

@@ -645,7 +645,9 @@
       "selectAll": "{count} hatırlatıcının tümünü seç",
       "allSelected": "{count} hatırlatıcının tümü seçildi — diğer sayfalar dahil ·",
       "clearSelection": "Temizle",
-      "countMismatch": "Bu ekran açıkken liste değişti — şu an {count} hatırlatıcın var. Hiçbir şey değiştirilmedi; listeye tekrar bak."
+      "countMismatch": "Bu ekran açıkken liste değişti — şu an {count} hatırlatıcın var. Hiçbir şey değiştirilmedi; listeye tekrar bak.",
+      "promiseMissed": "Söz verilen tarih geçti",
+      "promiseMissedSince": "{date} tarihinden bu yana {count} gün"
     },
     "stale": {
       "title": "{count} başvuru {threshold} günden eski ve yanıtsız",
@@ -805,6 +807,26 @@
           "text": "Verin senin; istediğin zaman indirebilirsin. Hesabın olduğu gibi kalır, bir gün yeniden gerekirse seni bekler.",
           "link": "Verimi indir"
         }
+      },
+      "promise": {
+        "label": "Söz verilen dönüş",
+        "add": "+ Tarih ekle",
+        "change": "Değiştir",
+        "remove": "Kaldır",
+        "save": "Kaydet",
+        "saving": "Kaydediliyor...",
+        "cancel": "Vazgeç",
+        "stage": "{status} aşamasında",
+        "daysLeft": "{count, plural, one {# gün kaldı} other {# gün kaldı}}",
+        "dueToday": "Bugün",
+        "overdue": "Tarih {count} gün önce geçti",
+        "kept": "Sözünü tuttu",
+        "late": "Geç döndüler"
+      },
+      "rejectionNotice": {
+        "CompanyNotified": "e-postayla / mesajla bildirildi",
+        "SeenOnPortal": "portalda görüldü",
+        "OtherOrInferred": "başka yoldan / tahmin"
       }
     },
     "statusChange": {
@@ -812,7 +834,16 @@
       "notePlaceholder": "Not (opsiyonel)",
       "confirm": "Onayla",
       "cancel": "Vazgeç",
-      "saving": "Kaydediliyor..."
+      "saving": "Kaydediliyor...",
+      "newStatus": "Yeni durum",
+      "promiseLabel": "Bir dönüş tarihi verdiler mi? (opsiyonel)",
+      "promiseHint": "Bu tarihe kadar takip hatırlatması gelmez; tarih geçerse haber veririz.",
+      "rejectionNoticeLegend": "Reddi nasıl öğrendin? (opsiyonel)",
+      "rejectionNotice": {
+        "CompanyNotified": "E-posta ya da mesajla bana bildirdiler",
+        "SeenOnPortal": "Portalda / başvuru sayfasında gördüm",
+        "OtherOrInferred": "Başka yoldan duydum / tahmin ediyorum"
+      }
     },
     "statusHistory": {
       "empty": "Henüz bir durum değişikliği yok.",
@@ -1022,7 +1053,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 22 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 23 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -1226,8 +1257,8 @@
     },
     "aggregates": {
       "title": "Toplu yanıt verisi (sektör tablosu ve şirket sayfasındaki \"Yanıt\" sekmesi)",
-      "intro": "Takip ettiğin başvurular, kimliğinden ayrılmış toplu sayılara katılır: bir sektör ya da bir şirket için yanıt oranı, ilk dönüş süresi, mülakat sonrası sessizlik ve kayıp oranı. Bunu yaparken:",
-      "what": "Toplulaşan alanlar yalnızca şirket, başvuru tarihi, durum ve durum değişikliği tarihleridir. Notların, İK kontağın, CV'n, e-postaların ve adın hiçbir toplu sayıya girmez.",
+      "intro": "Takip ettiğin başvurular, kimliğinden ayrılmış toplu sayılara katılır: bir sektör ya da bir şirket için yanıt oranı, ilk dönüş süresi, mülakat sonrası sessizlik, kayıp oranı, sözünü tutma ve reddi bildirme oranı. Bunu yaparken:",
+      "what": "Toplulaşan alanlar yalnızca şirket, başvuru tarihi, durum, durum değişikliği tarihleri ve verirsen iki isteğe bağlı cevaptır: şirketin söz verdiği dönüş tarihi ve reddi nasıl öğrendiğin. Notların, İK kontağın, CV'n, e-postaların ve adın hiçbir toplu sayıya girmez.",
       "sector": "Sektör tablosu herkese açıktır ve şirket adı içermez. Bir sektör satırı, en az 5 farklı kişinin toplam 30 başvurusu birikmeden gösterilmez; tek bir kişi başvuruların yarısından fazlasını oluşturuyorsa satır kapalı kalır.",
       "company": "Şirket sayfasındaki \"Yanıt\" sekmesi, o şirkete son 12 ayda en az 50 başvuru yapılmadan ve tek bir kişi bunların üçte birinden fazlasını oluşturuyorsa hiçbir sayı göstermez; eşiğin altında kaç başvuru eksik olduğu da yazılmaz. Bu sekme, hukuki değerlendirme tamamlanana kadar kapalı tutulur.",
       "noReverse": "Toplu sayılardan tek bir kişinin başvurusuna geri gidilemez: sayfalar yalnızca oran, medyan ve kişi sayısı gösterir, tekil başvuru satırları hiçbir zaman dışarı çıkmaz.",
@@ -1999,7 +2030,7 @@
       },
       "detail": {
         "title": "Başvuru detayı",
-        "body": "Bir başvuruyu açtığınızda durum rozeti, konum, çalışma şekli, başvuru tarihi, sisteme eklenme zamanı, varsa ilan bağlantısı, kaydettiğiniz CV ve notlarınız görünür; altında Süreç akışı ve varsa ilan açıklaması yer alır. Gmail Taraması ile otomatik oluşturulan başvurularda \"E-postadan otomatik oluşturuldu\" etiketi bulunur."
+        "body": "Bir başvuruyu açtığınızda durum rozeti, konum, çalışma şekli, başvuru tarihi, sisteme eklenme zamanı, varsa ilan bağlantısı, kaydettiğiniz CV ve notlarınız görünür; altında Süreç akışı ve varsa ilan açıklaması yer alır. Gmail Taraması ile otomatik oluşturulan başvurularda \"E-postadan otomatik oluşturuldu\" etiketi bulunur. Süren bir başvuruda \"Söz verilen dönüş\" hücresi de vardır: şirketin verdiği tarih, hangi aşamada verildiği ve kaç gün kaldığı ya da geçtiği."
       },
       "contact": {
         "title": "İK iletişim bilgisi ve şirket bağlantıları",
@@ -2028,7 +2059,7 @@
         },
         "step3": {
           "title": "İsteğe bağlı bir not ekleyip onaylayın",
-          "body": "Değişiklik, notunuzla birlikte \"Durum Geçmişi\" bölümüne \"Eski Durum → Yeni Durum\" olarak işlenir. Yazdığınız not orada satırın altında görünür."
+          "body": "Değişiklik, notunuzla birlikte \"Durum Geçmişi\" bölümüne \"Eski Durum → Yeni Durum\" olarak işlenir. Yazdığınız not orada satırın altında görünür. Süren bir duruma geçerken şirketin verdiği dönüş tarihini, Reddedildi'ye geçerken reddi nasıl öğrendiğinizi de isteğe bağlı olarak girebilirsiniz."
         }
       },
       "statuses": {
@@ -2070,6 +2101,10 @@
           "title": "Toplu silme geri alınamaz",
           "body": "Geri dönüşüm kutusu yoktur. Silinen başvurular, süreç geçmişleri ve onlara iliştirilmiş İK iletişim bilgileri kalıcı olarak gider; CV dosyalarının kendisi CV'lerim sayfasında kalır. Emin değilseniz önce Ayarlar'dan verinizi dışa aktarın."
         }
+      },
+      "promise": {
+        "title": "Söz verilen dönüş tarihi",
+        "body": "\"Cumaya kadar döneriz\" dendiyse tarihi, durum değiştirirken ya da detaydaki \"+ Tarih ekle\" ile kaydedin. Bu tarihe kadar takip hatırlatması gelmez; tarih geçer ve başvuru ilerlemezse panelde \"Söz verilen tarih geçti\" hatırlatması çıkar. Başvuru ilerlediğinde söz \"Sözünü tuttu\" ya da \"Geç döndüler\" olarak kalır. Bu cevaplar ve reddi nasıl öğrendiğiniz, adınız olmadan yalnızca toplu oranlara (sektör tablosu) katılır; en az 3 kişiden 5 cevap birikmeden hiçbir oran gösterilmez."
       }
     },
     "suggestions": {
@@ -3506,7 +3541,12 @@
         "closure": "Açık sonuç verdi",
         "closureHint": "ret ya da kabul yazdı",
         "days": "gün",
-        "none": "—"
+        "none": "—",
+        "promiseKept": "Sözünü tuttu",
+        "promiseKeptHint": "verdiği tarihe kadar döndü",
+        "rejectionNotice": "Reddi bildirdi",
+        "rejectionNoticeHint": "retlerden adaya yazılanlar",
+        "subRateFloor": "henüz yeterli cevap yok"
       },
       "sectorMedian": "{sector} medyanı <b>{value}</b>",
       "sectorMedianShort": "sektör {value}",
@@ -6203,7 +6243,9 @@
       "responseRate": "Yanıt oranı",
       "medianFirstReply": "Medyan ilk dönüş",
       "postInterviewSilence": "Mülakat sonrası sessizlik",
-      "ghosting": "Kayboldu"
+      "ghosting": "Kayboldu",
+      "promiseKept": "Sözünü tutma",
+      "rejectionNotice": "Reddi bildirme"
     },
     "days": "{value} gün",
     "none": "—",
@@ -6234,7 +6276,7 @@
         "window": "Dönem: başvuru tarihine göre son 3, 6 ya da 12 ay. Eski bir başvuruya yeni gelen durum değişikliği, başvurunun kendi dönemine yazılır.",
         "maturity": "Olgunluk: {days} günden genç başvurular yanıt, kayıp ve sessizlik paydalarına girmez; cevap gelmesine vakit tanınır. İlk dönüş süresi ise cevaplanmış her başvurudan hesaplanır.",
         "threshold": "Eşik: bir satır için en az {contributors} farklı kişi ve {applications} başvuru; tek kişinin payı yüzde {share} sınırını aşıyorsa satır kapanır. Eşik altında hiçbir sayı gösterilmez, kaç eksik olduğu bile.",
-        "definitions": "Tanımlar: yanıt oranı = bir insanın dokunduğu başvurular (ret dâhil); kayboldu = kullanıcının 'kayboldu' işaretledikleri; mülakat sonrası sessizlik = mülakata çağrılıp sonra kaybolanlar, mülakata çağrılanlara oranla; medyan ilk dönüş = başvuru ile ilk durum değişikliği arasındaki gün."
+        "definitions": "Tanımlar: yanıt oranı = bir insanın dokunduğu başvurular (ret dâhil); kayboldu = kullanıcının 'kayboldu' işaretledikleri; mülakat sonrası sessizlik = mülakata çağrılıp sonra kaybolanlar, mülakata çağrılanlara oranla; medyan ilk dönüş = başvuru ile ilk durum değişikliği arasındaki gün. Sözünü tutma = şirketin verdiği dönüş tarihine (2 gün tolerans) kadar başvurunun ilerlemesi, sonucu belli sözlere oranla; reddi bildirme = retlerden şirketin adaya kendisinin bildirdikleri, nasıl öğrenildiği bilinen retlere oranla."
       }
     },
     "cta": {
@@ -6242,6 +6284,7 @@
       "body": "Başvurularını takip etmeye başladığında satır açılır. Hesap ücretsiz; verilerin yalnızca senin hesabında.",
       "button": "Ücretsiz başla"
     },
-    "error": "Tablo şu an yüklenemedi."
+    "error": "Tablo şu an yüklenemedi.",
+    "subRateRule": "Sözünü tutma ve reddi bildirme, kullanıcıların isteğe bağlı cevaplarından hesaplanır; en az 3 kişiden 5 cevap birikmeden “—” yazar."
   }
 }

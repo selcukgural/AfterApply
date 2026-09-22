@@ -801,4 +801,95 @@ public class ReminderTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost
 
         (await GetPauseAsync(other)).State.ShouldBe(ReminderPauseState.None);
     }
+    private async Task SetPromiseAsync(Guid applicationId, DateOnly? promisedBy)
+    {
+        var response = await _client.PutAsJsonAsync($"/api/applications/{applicationId}/reply-promise",
+            new SetReplyPromiseRequest(promisedBy), JsonOptions);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static DateOnly TodayPlus(int days) => DateOnly.FromDateTime(DateTime.UtcNow).AddDays(days);
+
+    [Fact]
+    public async Task A_Promised_Date_Still_Ahead_Holds_Back_The_Follow_Up()
+    {
+        // Ten days of silence would normally be a follow-up; "they'll answer by next week" says wait.
+        var applicationId = await CreateApplicationAsync(_client, "Promise Wait Co", DateTimeOffset.UtcNow.AddDays(-10));
+        await SetPromiseAsync(applicationId, TodayPlus(5));
+
+        await ScanAsync();
+
+        (await GetRemindersAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Recording_A_Date_Ahead_Retires_The_Follow_Up_Already_On_The_Dashboard_At_Once()
+    {
+        var applicationId = await CreateApplicationAsync(_client, "Promise Retire Co", DateTimeOffset.UtcNow.AddDays(-10));
+        await ScanAsync();
+        (await GetRemindersAsync()).ShouldHaveSingleItem().Type.ShouldBe(ReminderType.FollowUp);
+
+        await SetPromiseAsync(applicationId, TodayPlus(3));
+
+        (await GetRemindersAsync()).ShouldBeEmpty();
+        await ScanAsync();
+        (await GetRemindersAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_Passed_Date_With_No_Answer_Becomes_A_Promise_Missed_Reminder_Carrying_The_Date()
+    {
+        var applicationId = await CreateApplicationAsync(_client, "Promise Missed Co", DateTimeOffset.UtcNow.AddDays(-12));
+        await SetPromiseAsync(applicationId, TodayPlus(-3));
+
+        await ScanAsync();
+
+        var reminder = (await GetRemindersAsync()).ShouldHaveSingleItem();
+        reminder.ApplicationId.ShouldBe(applicationId);
+        reminder.Type.ShouldBe(ReminderType.PromiseMissed);
+        reminder.PromisedReplyBy.ShouldBe(TodayPlus(-3));
+        reminder.DaysElapsed.ShouldBeInRange(2, 3);
+    }
+
+    [Fact]
+    public async Task A_Missed_Promise_Replaces_The_Follow_Up_And_Moving_The_Date_Retires_It()
+    {
+        var applicationId = await CreateApplicationAsync(_client, "Promise Replace Co", DateTimeOffset.UtcNow.AddDays(-12));
+        await ScanAsync();
+        (await GetRemindersAsync()).ShouldHaveSingleItem().Type.ShouldBe(ReminderType.FollowUp);
+
+        await SetPromiseAsync(applicationId, TodayPlus(-2));
+        await ScanAsync();
+        (await GetRemindersAsync()).ShouldHaveSingleItem().Type.ShouldBe(ReminderType.PromiseMissed);
+
+        // "They pushed it to Friday": the old missed-date row goes, nothing is due until Friday.
+        await SetPromiseAsync(applicationId, TodayPlus(4));
+        await ScanAsync();
+        (await GetRemindersAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Possibly_Ghosted_Still_Outranks_A_Missed_Promise()
+    {
+        var applicationId = await CreateApplicationAsync(_client, "Promise Ghost Co", DateTimeOffset.UtcNow.AddDays(-40));
+        await SetPromiseAsync(applicationId, TodayPlus(-20));
+
+        await ScanAsync();
+
+        (await GetRemindersAsync()).ShouldHaveSingleItem().Type.ShouldBe(ReminderType.PossiblyGhosted);
+    }
+
+    [Fact]
+    public async Task An_Answered_Promise_No_Longer_Shapes_The_Reminders()
+    {
+        // Promised in the Applied stage, answered by a move to Screening eight days ago: the
+        // ordinary follow-up clock runs from that move, as before promises existed.
+        var applicationId = await CreateApplicationAsync(_client, "Promise Answered Co", DateTimeOffset.UtcNow.AddDays(-20));
+        await SetPromiseAsync(applicationId, TodayPlus(-15));
+        await ChangeStatusAsync(_client, applicationId, ApplicationStatus.Screening, DateTimeOffset.UtcNow.AddDays(-8));
+
+        await ScanAsync();
+
+        (await GetRemindersAsync()).ShouldHaveSingleItem().Type.ShouldBe(ReminderType.FollowUp);
+    }
 }

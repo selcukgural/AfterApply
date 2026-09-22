@@ -8925,3 +8925,41 @@ değişiklikte güncellendi. Amaç tek seferlik topluluk kampanyasında hangi ka
 **Bilinçli dışarıda.** E-postayla "sonuç çıkınca haber ver" yok (yeni kişisel veri yüzeyi). 3. adım
 bir rapor sözü veriyor ama tarih vermiyor; metin, medyan açıkken de doğru kalacak şekilde yazıldı.
 Kampanyadan önce 2026-09-21'de prod'a girilen sahte test satırının silindiği doğrulanmalı.
+
+## Söz verilen dönüş tarihi + reddi nasıl öğrendin (1.3) — DECIDED (2026-09-23)
+
+**Karar.** Büyüme araştırmasının (2026-09-21) 1.3 maddesi, kullanıcının seçimleriyle. Tasarım
+tuvali: https://claude.ai/artifact/92Keha8VZUW8Mk5jFHhQ4y — "Son hâl" satırı = B+A (söz) · D (ret).
+
+- **Söz = tek söz + aşama.** `Applications`'a `PromisedReplyBy` (date), `PromisedReplyStatus`,
+  `PromisedReplySince` (sözün verildiği aşamanın başladığı an). Yeni söz eskisinin üstüne yazar;
+  aynı aşamada yalnızca tarih değişirse aşama korunur ("cumaya ertelediler" aynı söz). Ayrı tablo
+  kurulmadı: çoğu başvuruda tek söz olur, birden çok söz ihtiyacı görülürse o zaman.
+- **Nerede sorulur.** Durum panelinde, süren bir duruma geçerken isteğe bağlı tarih alanı (aşama =
+  o değişikliğin açtığı aşama); detay ızgarasında "Söz verilen dönüş" hücresi (+ Tarih ekle /
+  Değiştir / Kaldır → `PUT /api/applications/{id}/reply-promise`, aşama = son gerçek durum
+  değişikliği). Düzenleme formuna **eklenmedi**: form tüm alanları düz yazar, kapalı bir başvuruda
+  gizli alan boş gidip çözülmüş sözü (metriğin verisi) silerdi; hücre aynı işi görüyor.
+- **Tutuldu mu — tek okuma.** `ReplyPromises.Evaluate` (Domain): sözden sonraki ilk "yanıt"
+  durumuna geçiş (`RespondedStatuses`; Ghosted cevap sayılmaz) tarih + **2 gün tolerans** içindeyse
+  Kept, sonra ise Late; hiç geçiş yoksa tarih geçene kadar Pending, sonra Overdue (tolerans dolunca
+  metrikte "tutmadı"). Tarihten önce geri çekilme Void (hiçbir tarafa sayılmaz). Detay sayfası,
+  hatırlatıcı taraması ve toplayıcı aynı fonksiyonu kullanır.
+- **Ret nasıl öğrenildi.** `Applications.RejectionNotice`: CompanyNotified / SeenOnPortal /
+  OtherOrInferred; Reddedildi seçilince panelde isteğe bağlı sorulur. E-postadan gelen ret
+  (`EmailSuggestionConfirmed`/`EmailAutoApplied`) sorulmadan CompanyNotified; Reddedildi'den çıkınca
+  temizlenir. Migration, son geçişi e-postadan gelen mevcut retleri geriye dönük CompanyNotified yaptı;
+  diğer eski retler null (bilinmiyor) kaldı.
+- **Hatırlatıcı.** Tarihi gelmemiş söz varken FollowUp/PossiblyGhosted üretilmez, açık olanlar
+  (kayıt anında ve gece taramasında) kapatılır. Tarih geçip başvuru kıpırdamadıysa yeni
+  `ReminderType.PromiseMissed` (ReferenceAt = söz tarihi): FollowUp'ın yerini alır, PossiblyGhosted'a
+  yenilir; tarih değişince eski satır kapanır. Satırın cevabı "Takip ettim".
+- **Metrik.** `ResponseRateFigures`'a `PromiseKeptRate` (sonucu belli sözler içinde tutulanlar) ve
+  `RejectionNoticeRate` (nasıl öğrenildiği bilinen retler içinde şirketin kendisinin bildirdikleri).
+  Kendi alt eşikleri var: **en az 3 kişiden 5 cevap** (`ResponseRateAggregator.SubRateMinimum*`,
+  testle sabit); altında null → sayfada "—", satırın geri kalanı açık kalır. Sektör tablosunda iki
+  sütun, şirket "Yanıt" sekmesinde iki kart (sekme hâlâ flag'le kapalı). `CandidateExperienceScore`'a
+  **girmedi**: eşikle görünüp kaybolan girdi skoru şirketle ilgisiz sebeple oynatırdı.
+- **Gizlilik.** İki cevap toplu sayılara giriyor → `privacy.aggregates.intro/what` aynı değişiklikte
+  güncellendi, tarih 23 Eylül 2026. Hesap dışa aktarımı üç alanı taşıyor. Yeni girdi yüzeyi
+  `/api/*` PUT/POST olduğu için `RequestAuditMiddleware` kapsamında; opt-out yok.

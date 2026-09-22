@@ -94,7 +94,16 @@ public sealed record ApplicationDetailResponse(
     // The company page's slug, so a closed application can link straight into the contribution
     // form with the company pre-selected (`/contribute?company=<slug>`). Null for the few
     // Company rows that predate slugs (see Company.Slug).
-    string? CompanySlug = null);
+    string? CompanySlug = null,
+    // The company's "we'll get back to you by …", when the user recorded one: the date, the stage
+    // it was given in, and where it stands now (ReplyPromises.Evaluate — the same reading the
+    // reminder scan and the response-rate aggregate use). All three null when there is none.
+    DateOnly? PromisedReplyBy = null,
+    ApplicationStatus? PromisedReplyStatus = null,
+    ReplyPromiseOutcome? PromisedReplyOutcome = null,
+    // How the user learned of the rejection; null unless Status is Rejected and they said (or the
+    // rejection came in as the company's email).
+    RejectionNotice? RejectionNotice = null);
 
 public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);
 

@@ -731,7 +731,11 @@ internal sealed class AuthService(
         var applications = await dbContext.Applications
             .Where(a => a.UserId == userId)
             .Join(dbContext.Companies, a => a.CompanyId, c => c.Id,
-                (a, c) => new { a.Id, CompanyName = c.Name, a.JobTitle, a.Status, a.AppliedAt, a.CreatedAt, a.UpdatedAt })
+                (a, c) => new
+                {
+                    a.Id, CompanyName = c.Name, a.JobTitle, a.Status, a.AppliedAt, a.CreatedAt, a.UpdatedAt,
+                    a.PromisedReplyBy, a.PromisedReplyStatus, a.RejectionNotice
+                })
             .ToListAsync(cancellationToken);
 
         var applicationIds = applications.Select(a => a.Id).ToList();
@@ -756,7 +760,8 @@ internal sealed class AuthService(
                     .ToList(),
                 historyByApplication[a.Id]
                     .Select(h => new StatusHistoryExportItem(h.FromStatus, h.ToStatus, h.ChangedAt, h.Note, h.Origin))
-                    .ToList()))
+                    .ToList(),
+                a.PromisedReplyBy, a.PromisedReplyStatus, a.RejectionNotice))
             .ToList();
 
         var importBatches = await dbContext.ImportBatches

@@ -15,7 +15,10 @@ public sealed record ResponseRateFiguresResponse(
     double OfferRate,
     double? PostInterviewSilenceRate,
     double? MedianFirstReplyDays,
-    double ClosureRate)
+    double ClosureRate,
+    // Null below ResponseRateAggregator's sub-rate floor; the page prints a dash and the row stays.
+    double? PromiseKeptRate = null,
+    double? RejectionNoticeRate = null)
 {
     public static ResponseRateFiguresResponse From(ResponseRateFigures figures) => new(
         figures.TotalApplications,
@@ -26,7 +29,9 @@ public sealed record ResponseRateFiguresResponse(
         figures.OfferRate,
         figures.PostInterviewSilenceRate,
         figures.MedianFirstReplyDays,
-        figures.ClosureRate);
+        figures.ClosureRate,
+        figures.PromiseKeptRate,
+        figures.RejectionNoticeRate);
 }
 
 /// <summary>

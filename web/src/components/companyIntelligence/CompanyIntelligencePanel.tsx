@@ -30,8 +30,8 @@ function formatWindowDate(iso: string, locale: string): string {
 }
 
 /** `value` is a 0–100 percentage or null; the dash is the honest render for "nobody reached that stage". */
-function rateOrDash(value: number | null, locale: string, none: string): string {
-  return value === null ? none : formatRate(value, locale);
+function rateOrDash(value: number | null | undefined, locale: string, none: string): string {
+  return value == null ? none : formatRate(value, locale);
 }
 
 const CARD = "rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900";
@@ -97,6 +97,26 @@ function Figures({ data }: { data: CompanyIntelligenceResponse }) {
       hint: median ? t("sectorMedianShort", { value: formatRate(median.offerRate, locale) }) : "",
     },
     { label: t("metrics.closure"), value: formatRate(metrics.closureRate, locale), hint: t("metrics.closureHint") },
+    // The two self-reported rates. Each has its own floor, so a dash here beside open figures is
+    // "not enough answers yet", which the hint says rather than letting it read as a zero.
+    {
+      label: t("metrics.promiseKept"),
+      value: rateOrDash(metrics.promiseKeptRate, locale, none),
+      hint: metrics.promiseKeptRate == null
+        ? t("metrics.subRateFloor")
+        : median?.promiseKeptRate != null
+          ? t("sectorMedianShort", { value: formatRate(median.promiseKeptRate, locale) })
+          : t("metrics.promiseKeptHint"),
+    },
+    {
+      label: t("metrics.rejectionNotice"),
+      value: rateOrDash(metrics.rejectionNoticeRate, locale, none),
+      hint: metrics.rejectionNoticeRate == null
+        ? t("metrics.subRateFloor")
+        : median?.rejectionNoticeRate != null
+          ? t("sectorMedianShort", { value: formatRate(median.rejectionNoticeRate, locale) })
+          : t("metrics.rejectionNoticeHint"),
+    },
   ];
 
   return (
@@ -143,7 +163,7 @@ function Figures({ data }: { data: CompanyIntelligenceResponse }) {
         </div>
       </div>
 
-      <div className={`${CARD} grid grid-cols-2 gap-3 sm:grid-cols-4`}>
+      <div className={`${CARD} grid grid-cols-2 gap-3 sm:grid-cols-3`}>
         {secondary.map((item) => (
           <div key={item.label} className="flex flex-col gap-0.5">
             <span className="text-xs text-gray-500 dark:text-gray-400">{item.label}</span>
