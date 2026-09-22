@@ -54,7 +54,14 @@ public sealed record CreateFromExtensionRequest(
     // in the popup before submitting, so a wrong guess is the user's to correct, not a silent write.
     string? HrName = null,
     string? HrEmail = null,
-    string? HrLinkedInUrl = null);
+    string? HrLinkedInUrl = null,
+    // The company's job board on whichever ATS hosted the posting (e.g.
+    // https://job-boards.greenhouse.io/stripe), read from the page the same way the two links
+    // above are. Added in extension 0.9.0 alongside the ATS adapters; optional and additive, so a
+    // body from any earlier shipped build still creates an application unchanged (DECISIONS.md
+    // 2026-09-06). Pinned to JobPostingSourceResolver.AtsDomains by the validator because
+    // AtsJobEnrichmentService fetches it server-side.
+    string? CompanyAtsUrl = null);
 
 public sealed record UpdateApplicationRequest(
     string JobTitle,

@@ -79,6 +79,112 @@ public class ExtensionApplicationTests(ApiHost<DefaultProfile> host) : IClassFix
         job.ExternalId.ShouldBe("4539310");
     }
 
+    [Theory]
+    // The six ATS adapters added in extension 0.9.0. The URL shapes are the canonical ones
+    // adapters.js submits, and the expected ids are the twins of AtsJobIdExtractorTests.
+    [InlineData("https://job-boards.greenhouse.io/stripe/jobs/4512345", Source.Greenhouse, "stripe/4512345")]
+    [InlineData("https://jobs.lever.co/acme/8f2b1c34-1a2b-4c3d-9e8f-0a1b2c3d4e5f", Source.Lever, "acme/8f2b1c34-1a2b-4c3d-9e8f-0a1b2c3d4e5f")]
+    [InlineData("https://jobs.ashbyhq.com/acme/8f2b1c34-1a2b-4c3d-9e8f-0a1b2c3d4e5f", Source.Ashby, "acme/8f2b1c34-1a2b-4c3d-9e8f-0a1b2c3d4e5f")]
+    [InlineData("https://nvidia.wd5.myworkdayjobs.com/en-US/Site/job/Remote/Staff-Engineer_R-98765", Source.Workday, "nvidia/R-98765")]
+    [InlineData("https://apply.workable.com/acme/j/A1B2C3D4E5", Source.Workable, "acme/A1B2C3D4E5")]
+    [InlineData("https://jobs.smartrecruiters.com/Acme/743999123456789", Source.SmartRecruiters, "Acme/743999123456789")]
+    public async Task Create_From_An_Ats_Url_Records_That_Ats_As_The_Job_Source(string jobUrl, Source expectedSource, string expectedExternalId)
+    {
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Acme", "Staff Engineer", jobUrl,
+                "Remote", "Build things.", DateTimeOffset.UtcNow.AddDays(-1)),
+            JsonOptions);
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        // The entry channel is still the extension; only the posting's provenance changes.
+        result!.Application.Source.ShouldBe(Source.BrowserExtension);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var application = await db.Applications.SingleAsync(a => a.Id == result.Application.Id);
+        var job = await db.Jobs.SingleAsync(j => j.Id == application.JobId);
+        job.Source.ShouldBe(expectedSource);
+        job.ExternalId.ShouldBe(expectedExternalId);
+    }
+
+    [Fact]
+    public async Task Create_From_A_Site_With_No_Adapter_Still_Tracks_The_Application()
+    {
+        // The generic schema.org path: a board nobody wrote an adapter for. Source.Other with no
+        // external id is the correct outcome — there is no per-site identity to dedupe on, and
+        // Application.JobUrl still dedupes per user, which is the boundary the person notices.
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Seek Ltd", "Backend Engineer",
+                "https://www.seek.com.au/job/12345678", "Sydney", "Build things.", null),
+            JsonOptions);
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var application = await db.Applications.SingleAsync(a => a.Id == result!.Application.Id);
+        var job = await db.Jobs.SingleAsync(j => j.Id == application.JobId);
+        job.Source.ShouldBe(Source.Other);
+        job.ExternalId.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task An_Ats_Board_Link_Becomes_A_Company_Profile_Link_Under_That_Platform()
+    {
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Stripe", "Abuse Investigator",
+                "https://job-boards.greenhouse.io/stripe/jobs/4512345", "Remote", "Build things.", null,
+                CompanyAtsUrl: "https://job-boards.greenhouse.io/stripe"),
+            JsonOptions);
+
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var application = await db.Applications.SingleAsync(a => a.Id == result!.Application.Id);
+        var links = await db.CompanyProfileLinks.Where(l => l.CompanyId == application.CompanyId).ToListAsync();
+
+        // The platform is derived from the URL's host, not from anything the client asserted.
+        links.ShouldHaveSingleItem();
+        links[0].Platform.ShouldBe(Source.Greenhouse);
+        links[0].Url.ShouldBe("https://job-boards.greenhouse.io/stripe");
+    }
+
+    [Fact]
+    public async Task A_Second_Capture_Of_The_Same_Company_Does_Not_Duplicate_Its_Board_Link()
+    {
+        for (var i = 0; i < 2; i++)
+        {
+            var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+                new CreateFromExtensionRequest("Stripe", "Abuse Investigator",
+                    $"https://job-boards.greenhouse.io/stripe/jobs/451234{i}", "Remote", "Build things.", null,
+                    CompanyAtsUrl: "https://job-boards.greenhouse.io/stripe"),
+                JsonOptions);
+            response.EnsureSuccessStatusCode();
+        }
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.CompanyProfileLinks.CountAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task A_Company_Ats_Url_On_A_Host_We_Do_Not_Fetch_Is_Refused()
+    {
+        // The enrichment job fetches this URL, so the door is the validator, not the parser.
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Acme", "Backend Engineer",
+                "https://job-boards.greenhouse.io/acme/jobs/1", "Remote", "Build things.", null,
+                CompanyAtsUrl: "https://169.254.169.254/latest/meta-data/"),
+            JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
     [Fact]
     public async Task Create_With_Same_JobUrl_Twice_Returns_Existing_Application_As_Duplicate()
     {

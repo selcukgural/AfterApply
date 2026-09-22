@@ -1,4 +1,5 @@
 using System.Net;
+using AfterApply.Application.Common;
 using AfterApply.Application.Companies;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
@@ -201,10 +202,7 @@ internal sealed class CompanyEnrichmentService(
         return true;
     }
 
-    private static bool IsAllowed(Uri uri, string host) =>
-        uri.Scheme == Uri.UriSchemeHttps
-        && (uri.Host.Equals(host, StringComparison.OrdinalIgnoreCase)
-            || uri.Host.EndsWith("." + host, StringComparison.OrdinalIgnoreCase));
+    private static bool IsAllowed(Uri uri, string host) => HostRules.IsHttpsHost(uri, host);
 
     private readonly record struct AllowedUri(Uri Uri, string Host);
 }

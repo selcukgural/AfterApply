@@ -29,6 +29,13 @@ public sealed class Company : AuditableEntity
     /// not a state the product has to support.</summary>
     public string? Slug { get; private set; }
 
+    private readonly List<CompanyProfileLink> _profileLinks = [];
+
+    /// <summary>Pages on platforms beyond the original LinkedIn/kariyer.net pair — see
+    /// <see cref="CompanyProfileLink"/> for why those two are still columns. Only loaded when a
+    /// query asks for it; nothing on the hot application-creation path reads it.</summary>
+    public IReadOnlyCollection<CompanyProfileLink> ProfileLinks => _profileLinks;
+
     private Company()
     {
     }
@@ -89,6 +96,31 @@ public sealed class Company : AuditableEntity
         {
             Touch(now);
         }
+    }
+
+    /// <summary>
+    /// Records the company's page on a platform it has none stored for yet. Same fill-if-missing
+    /// rule as <see cref="SetProfileLinksIfMissing"/>: whatever is already there wins over a later
+    /// guess, because these arrive from a page scrape and the first one is no more likely to be
+    /// wrong than the second.
+    ///
+    /// Returns the new link, or null when there was already one for that platform. The caller gets
+    /// it back rather than just a bool because the persistence layer has to insert it explicitly:
+    /// <see cref="Entity.Id"/> is assigned in the constructor, so EF sees a child with a non-default
+    /// key appear in a tracked collection and marks it Modified — an UPDATE against a row that does
+    /// not exist yet. Adding it to its own DbSet is what makes it an INSERT.
+    /// </summary>
+    public CompanyProfileLink? AddProfileLinkIfMissing(Source platform, string? url, DateTimeOffset now)
+    {
+        if (url is null || _profileLinks.Any(link => link.Platform == platform))
+        {
+            return null;
+        }
+
+        var link = CompanyProfileLink.Create(Id, platform, url, now);
+        _profileLinks.Add(link);
+        Touch(now);
+        return link;
     }
 
     // Fills in only the fields still missing — CompanyEnrichmentService's best-effort fetch of the

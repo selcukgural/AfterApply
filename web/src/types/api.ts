@@ -29,7 +29,15 @@ export type Source =
   | "BrowserExtension"
   | "Email"
   | "System"
-  | "Other";
+  | "Other"
+  // Applicant tracking systems — Job.source only, never Application.source. See
+  // JobPostingSourceResolver on the backend and ADAPTERS in extension/adapters.js.
+  | "Greenhouse"
+  | "Lever"
+  | "Ashby"
+  | "Workday"
+  | "Workable"
+  | "SmartRecruiters";
 
 export type ApplicationEventType =
   | "ApplicationCreated"

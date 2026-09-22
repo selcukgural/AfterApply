@@ -223,6 +223,21 @@ main#content {
   font-weight: 600;
 }
 
+/* The provenance note that sits next to the site badge on a page read through the generic
+   schema.org reader ("read from the page" / "guessed from the page title"). Same pill, muted
+   colours and no dot: it says HOW the fields were filled, and in the accent colour it read as a
+   second site name — which is exactly how it looked in the 0.9.0 store shot before this rule. */
+.site-badge.muted-badge {
+  margin-left: 6px;
+  background: var(--secondary-bg);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.site-badge.muted-badge::before {
+  display: none;
+}
+
 .site-badge::before {
   content: "";
   width: 6px;

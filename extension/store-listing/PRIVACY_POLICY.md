@@ -15,14 +15,15 @@ text._
 
 The e-kariyerim Browser Extension ("the extension") is a companion to the e-kariyerim web
 application (ekariyerim.com). It lets a signed-in e-kariyerim user save a job posting they are
-viewing on LinkedIn or kariyer.net as a tracked application in their own e-kariyerim account, and
-offers an opt-in "Gmail Scanning" feature that checks an email you open in Gmail on your own device
-and only sends a short summary when it looks job-related.
+viewing — on LinkedIn, on kariyer.net, or on any other job site they choose to allow it on — as a
+tracked application in their own e-kariyerim account, and offers an opt-in "Gmail Scanning" feature
+that checks an email you open in Gmail on your own device and only sends a short summary when it
+looks job-related.
 
 ## What data the extension accesses, and when
 
 The extension does nothing until you click its toolbar icon. When you do, and only if the active
-tab is a supported LinkedIn or kariyer.net job posting, it reads:
+tab is a job posting it is allowed to read, it reads:
 
 - The job title, company name, and location visible on that page.
 - The job description text and a formatted (bold/headings/lists) snapshot of it, visible on that
@@ -35,6 +36,36 @@ tab is a supported LinkedIn or kariyer.net job posting, it reads:
 
 Every field is shown to you, editable, in the extension's popup before anything is sent anywhere —
 including the contact, which you can change or clear before saving.
+
+### Sites beyond LinkedIn and kariyer.net
+
+LinkedIn and kariyer.net are the two sites the extension can read as installed. Anywhere else —
+Greenhouse, Lever, Ashby, Workday, Workable, SmartRecruiters, a company's own careers page, a job
+board in your country — the popup shows an **Allow** button first, and Chrome asks you to confirm
+that one site before the extension can read anything there. Nothing is read on a site you have not
+allowed, and allowing one site says nothing about any other.
+
+On those sites the extension reads the page's own schema.org job-posting markup: the structured
+description of the job that the page already publishes for search engines. If the page has none,
+nothing is filled in and you can still type the two fields yourself.
+
+Every site you have allowed is listed in the extension's Settings page with a **Remove** button.
+Removing it stops the extension reading that site, immediately.
+
+### When the job posting is read a second time, on our servers
+
+For a posting hosted on one of the applicant tracking systems above, e-kariyerim's own servers may
+afterwards request that posting from that system's public, unauthenticated job-board API, to fill
+in a description the page read could not reach — the text the CV-matching features need to work.
+The request contains the posting's own public address and nothing about you: no account, no
+cookie, no identifier. It happens on our servers after the application is saved, never in your
+browser, and only for these systems:
+
+- Greenhouse (`boards-api.greenhouse.io`)
+- Lever (`api.lever.co`)
+- Ashby (`api.ashbyhq.com`)
+- SmartRecruiters (`api.smartrecruiters.com`)
+- Workday (the employer's own `myworkdayjobs.com` / `myworkdaysite.com` address)
 
 ### Gmail Scanning (opt-in)
 
@@ -108,7 +139,9 @@ tracking services, and it does not sell or share your data with third parties.
 ## Your controls
 
 - The job-tracking popup only acts when you click its icon — there is no background scraping or
-  polling on LinkedIn/kariyer.net.
+  polling on any site, including the ones you allow.
+- A site you allowed can be taken back at any time from the extension's Settings page, which lists
+  every one of them, or from Chrome's own extension settings.
 - Gmail Scanning is off by default and does nothing until you turn it on in Settings; once on, it
   only reads an email when you personally open it in Gmail — it does not scan your inbox in the
   background, and does nothing at all on any other site. Turn it off anytime in Settings, with the

@@ -10,6 +10,10 @@
     details.manual summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-subtle); }
     details.manual > *:not(summary) { margin-top: 8px; }
     hr.section-divider { margin: 18px 0 0; border: none; border-top: 1px solid var(--border-subtle); }
+    ul.permission-list { list-style: none; margin: 8px 0 0; padding: 0; }
+    ul.permission-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 0; }
+    ul.permission-list li span { font-size: 13px; overflow-wrap: anywhere; }
+    ul.permission-list button.secondary { display: inline-block; width: auto; flex: none; margin-top: 0; padding: 4px 10px; font-size: 12px; }
     /* Scoped here rather than in popup.css: the popup's footer holds the version alone, where
        .version-line's right-alignment is already right. This page puts the privacy policy on the
        same line, which needs the two ends pushed apart. */
@@ -66,6 +70,16 @@
       <input id="gmailScanEnabled" type="checkbox" />
       <span id="gmailScanToggle">Scan opened Gmail emails</span>
     </label>
+
+    <hr class="section-divider" />
+
+    <label id="sitePermissionsLabel">Sites you allowed</label>
+    <p id="sitePermissionsHelp" class="muted">
+      Job boards you let this extension read, one at a time, from the popup. It only ever reads the
+      page you have open, and only when you ask it to. Remove one and it stops reading that site.
+    </p>
+    <ul id="sitePermissions" class="permission-list"></ul>
+    <p id="sitePermissionsEmpty" class="muted" hidden>None yet.</p>
   </main>
 
   <!-- The extension's only route to its own privacy policy. The Web Store Dashboard has a field

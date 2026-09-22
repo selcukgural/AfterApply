@@ -41,6 +41,25 @@ export default async function ExtensionPrivacyPage({ params }: PageProps<"/[loca
           <p className="mt-2">{t("access.outro")}</p>
         </section>
 
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("otherSites.title")}</h2>
+          <p>{t("otherSites.allow")}</p>
+          <p className="mt-2">{t("otherSites.markup")}</p>
+          <p className="mt-2">{t("otherSites.remove")}</p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("serverFetch.title")}</h2>
+          <p>{t("serverFetch.body")}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>{t("serverFetch.item1")}</li>
+            <li>{t("serverFetch.item2")}</li>
+            <li>{t("serverFetch.item3")}</li>
+            <li>{t("serverFetch.item4")}</li>
+            <li>{t("serverFetch.item5")}</li>
+          </ul>
+        </section>
+
         <section id="gmail-scanning">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("gmail.title")}</h2>
           <p>{t("gmail.intro")}</p>
@@ -83,6 +102,7 @@ export default async function ExtensionPrivacyPage({ params }: PageProps<"/[loca
             <li>{t("controls.item3")}</li>
             <li>{t("controls.item4")}</li>
             <li>{t("controls.item5")}</li>
+            <li>{t("controls.item6")}</li>
           </ul>
         </section>
 

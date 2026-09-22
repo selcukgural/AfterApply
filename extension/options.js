@@ -47,6 +47,11 @@ function applyLanguage(lang) {
   document.getElementById("gmailScanLabel").textContent = t(lang, "options.gmailScanLabel");
   document.getElementById("gmailScanHelp").textContent = t(lang, "options.gmailScanHelp");
   document.getElementById("gmailScanToggle").textContent = t(lang, "options.gmailScanToggle");
+  document.getElementById("sitePermissionsLabel").textContent = t(lang, "options.sitePermissionsLabel");
+  document.getElementById("sitePermissionsHelp").textContent = t(lang, "options.sitePermissionsHelp");
+  document.getElementById("sitePermissionsEmpty").textContent = t(lang, "options.sitePermissionsEmpty");
+  // Re-rendered rather than relabelled: each row carries its own Remove button.
+  void renderSitePermissions();
   connectButton.textContent = t(lang, pairing ? "options.connecting" : "options.connect");
   openPairingPageButton.textContent = t(lang, "options.openPage");
 
@@ -275,6 +280,8 @@ async function init() {
   if (new URLSearchParams(location.search).get("pair") === "1") {
     await connect();
   }
+
+  await renderSitePermissions();
 }
 
 connectButton.addEventListener("click", () => void connect());
@@ -315,5 +322,52 @@ document.getElementById("save").addEventListener("click", async () => {
 gmailScanEnabledInput.addEventListener("change", async () => {
   await setGmailScanEnabled(gmailScanEnabledInput.checked);
 });
+
+/**
+ * The sites granted at runtime from the popup (manifest.json's optional_host_permissions), listed
+ * so they can be taken back. Giving a permission from a button and only being able to withdraw it
+ * through chrome://extensions would be a one-way door — the page that asked should be the page
+ * that lets go.
+ *
+ * The five origins declared in manifest host_permissions are filtered out: Chrome reports them
+ * here too, but they are part of the installed extension and revoking them is not something this
+ * page can do.
+ */
+const MANIFEST_ORIGINS = chrome.runtime.getManifest().host_permissions ?? [];
+
+async function renderSitePermissions() {
+  const list = document.getElementById("sitePermissions");
+  const empty = document.getElementById("sitePermissionsEmpty");
+  const granted = await chrome.permissions.getAll().catch(() => ({ origins: [] }));
+  const origins = (granted.origins ?? []).filter((origin) => !MANIFEST_ORIGINS.includes(origin)).sort();
+
+  list.replaceChildren();
+  empty.hidden = origins.length > 0;
+
+  for (const origin of origins) {
+    const row = document.createElement("li");
+
+    // textContent, never innerHTML: the host comes from a page the user visited.
+    const name = document.createElement("span");
+    name.textContent = origin.replace(/^https:\/\//, "").replace(/\/\*$/, "");
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "secondary";
+    remove.textContent = t(currentLang, "options.sitePermissionRemove");
+    remove.addEventListener("click", async () => {
+      await chrome.permissions.remove({ origins: [origin] }).catch(() => false);
+      await renderSitePermissions();
+    });
+
+    row.append(name, remove);
+    list.append(row);
+  }
+}
+
+// Chrome fires these when a permission is granted or revoked anywhere — including from the popup
+// while this page is open in another tab, and from chrome://extensions.
+chrome.permissions.onAdded.addListener(() => { void renderSitePermissions(); });
+chrome.permissions.onRemoved.addListener(() => { void renderSitePermissions(); });
 
 init();

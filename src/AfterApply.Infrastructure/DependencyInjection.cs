@@ -38,6 +38,8 @@ using AfterApply.Infrastructure.Documents;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
+using AfterApply.Application.AtsSources;
+using AfterApply.Infrastructure.AtsSources;
 using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Pro;
@@ -91,6 +93,8 @@ namespace AfterApply.Infrastructure;
 public static class DependencyInjection
 {
     public const string LinkedInJobSourceResiliencePipeline = "linkedin-job-source";
+
+    public const string AtsJobSourceResiliencePipeline = "ats-job-source";
     public const string KariyerNetJobSourceResiliencePipeline = "kariyernet-job-source";
 
     public const string CorsPolicyName = "Frontend";
@@ -177,6 +181,7 @@ public static class DependencyInjection
         services.Configure<OccupationSearchOptions>(configuration.GetSection(OccupationSearchOptions.SectionName));
         services.Configure<RequestAuditOptions>(configuration.GetSection(RequestAuditOptions.SectionName));
         services.Configure<JobSourceOptions>(configuration.GetSection(JobSourceOptions.SectionName));
+        services.Configure<AtsSourceOptions>(configuration.GetSection(AtsSourceOptions.SectionName));
         services.Configure<BlogOptions>(configuration.GetSection(BlogOptions.SectionName));
         services.AddPayments(configuration);
         services.AddDocumentStorage(configuration);
@@ -715,6 +720,20 @@ public static class DependencyInjection
                     context.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value));
         services.AddScoped<IJobSourceClient>(sp => sp.GetRequiredService<ILinkedInJobSourceClient>());
         services.AddScoped<IJobSourceClient>(sp => sp.GetRequiredService<IKariyerNetJobSourceClient>());
+
+        // The ATS posting APIs: one client for all five, because they are public JSON endpoints
+        // with none of the per-site behaviour the two scraped sites have. Its own pipeline all the
+        // same, so a breaker tripped by an ATS outage never stops the sweep, or the reverse.
+        services.AddHttpClient<IAtsJobClient, AtsJobClient>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(60);
+            })
+            .RemoveAllLoggers()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddResilienceHandler(AtsJobSourceResiliencePipeline, (pipeline, context) =>
+                JobSourceResilience.Configure(pipeline,
+                    context.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value));
+        services.AddScoped<IAtsJobEnrichmentService, AtsJobEnrichmentService>();
 
         return services;
     }

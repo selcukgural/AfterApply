@@ -44,6 +44,13 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache,
 
         var company = await CreateWithSlugAsync(companyName, profileLinks, cancellationToken);
 
+        // Company.Create takes the two column-backed links, but a CompanyProfileLink row needs the
+        // company's id, which only exists once the insert above has run.
+        if (profileLinks?.HasAts == true)
+        {
+            await BackfillProfileLinksAsync(company.Id, profileLinks, cancellationToken);
+        }
+
         // The lookup above just cached a "not found" (null) result for this key — without
         // overwriting it here, every other row in the same import batch (or any request within
         // the TTL) would see that stale null, skip the now-successful DB lookup, and attempt to
@@ -100,15 +107,41 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache,
     // deliberately a narrow, separate write rather than folded into the cached lookup above.
     private async Task BackfillProfileLinksAsync(Guid companyId, CompanyProfileLinks profileLinks, CancellationToken cancellationToken)
     {
-        var company = await dbContext.Companies.FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
+        var company = await dbContext.Companies
+            .Include(c => c.ProfileLinks)
+            .FirstOrDefaultAsync(c => c.Id == companyId, cancellationToken);
         if (company is null)
         {
             return;
         }
 
-        company.SetProfileLinksIfMissing(profileLinks.LinkedInUrl, profileLinks.KariyerNetUrl, DateTimeOffset.UtcNow);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        company.SetProfileLinksIfMissing(profileLinks.LinkedInUrl, profileLinks.KariyerNetUrl, now);
+
+        if (profileLinks.HasAts
+            && company.AddProfileLinkIfMissing(profileLinks.AtsPlatform!.Value, profileLinks.AtsUrl, now) is { } link)
+        {
+            // Explicitly, not just via the navigation: see Company.AddProfileLinkIfMissing for why
+            // a child with a constructor-assigned key would otherwise be saved as an UPDATE.
+            dbContext.CompanyProfileLinks.Add(link);
+        }
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsProfileLinkCollision(ex))
+        {
+            // Two captures of the same company landing at once: the unique (CompanyId, Platform)
+            // index refused the second one. The link is already there, which is the outcome we
+            // wanted — this is a backfill, not something the caller is waiting on a result from.
+            dbContext.ChangeTracker.Clear();
+        }
     }
+
+    private static bool IsProfileLinkCollision(DbUpdateException exception) =>
+        exception.InnerException is Npgsql.PostgresException { SqlState: "23505" } pg
+        && pg.ConstraintName?.Contains("CompanyProfileLinks", StringComparison.Ordinal) == true;
 
     private static string LookupCacheKey(string normalizedName) => $"company:normalized:{normalizedName}";
 }

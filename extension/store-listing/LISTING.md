@@ -16,30 +16,41 @@ Matches `manifest.json`'s `name` field; the Web Store requires these to be ident
 
 **EN** (117 chars)
 ```
-Get your job applications into e-kariyerim — one click from LinkedIn/kariyer.net. No copy-pasting.
+Get your job applications into e-kariyerim — one click from LinkedIn, kariyer.net, Greenhouse, Lever, Workday and more.
 ```
 
 **TR** (108 chars)
 ```
-Başvurularınızı e-kariyerim'e aktarın — LinkedIn/kariyer.net'te tek tıkla. Kopyala-yapıştır yok.
+Başvurularınızı e-kariyerim'e aktarın — LinkedIn, kariyer.net, Greenhouse, Lever, Workday ve daha fazlasında tek tıkla.
 ```
 
 ## Detailed description
 
 **EN**
 ```
-e-kariyerim — Job Import turns a LinkedIn or kariyer.net job posting into a tracked application
-in your e-kariyerim account, in one click.
+e-kariyerim — Job Import turns a job posting you are looking at into a tracked application in
+your e-kariyerim account, in one click.
+
+WHERE IT WORKS
+LinkedIn and kariyer.net work the moment you install it. Everywhere else — Greenhouse, Lever,
+Ashby, Workday, Workable, SmartRecruiters, a company's own careers page, a job board in your
+country — the popup offers an "Allow" button for that one site, and from then on it reads that
+site the same way. Every site you allow is listed in Settings with a Remove button next to it.
 
 HOW IT WORKS
-1. Open a job posting on LinkedIn (a /jobs/view/ page, or a job selected in search results) or on
-   kariyer.net (an /is-ilani/ page).
-2. Click the e-kariyerim icon in your toolbar.
+1. Open a job posting anywhere.
+2. Click the e-kariyerim icon in your toolbar (and allow the site, the first time you use it
+   somewhere new).
 3. The popup reads the job title, company, and location straight off the page and fills them in
    for you — every field stays editable before you submit, so an imperfect read never becomes a
    wrong entry.
 4. Click "I Applied." Done — it's now tracked in e-kariyerim, matched to the job description for
    later reference.
+
+On a site with no dedicated support, the popup reads the page's own schema.org job markup — the
+same structured data the page publishes for search engines — so most job boards fill themselves in
+anyway. When a page has nothing readable, "Add it by hand" gives you the same form with two fields
+to type, and the application is tracked just the same.
 
 Clicking it again on the same posting is safe: e-kariyerim recognizes the job by its URL and opens
 your existing application instead of creating a duplicate.
@@ -66,8 +77,8 @@ REQUIREMENTS
 An e-kariyerim account. The extension does nothing until it is connected to one.
 
 PRIVACY
-The extension only reads a job page when you click its icon, only on linkedin.com and kariyer.net,
-and only sends the fields you see in the popup — to your own e-kariyerim account, using your own
+The extension only reads a job page when you click its icon, only on linkedin.com, kariyer.net and
+the sites you have allowed one at a time, and only sends the fields you see in the popup — to your own e-kariyerim account, using your own
 token. If a LinkedIn posting shows its hiring team, that person's name and profile address appear
 among those fields too; you can edit or clear them before submitting, and they stay on your own
 account as your note of who to contact. Gmail Scanning, described above, is off by default and reads only a message you've
@@ -77,23 +88,34 @@ email. Nothing is sent to any third party, and nothing is used for advertising. 
 privacy policy linked on this listing.
 
 This is an independent tool and is not affiliated with, endorsed by, or sponsored by LinkedIn
-Corporation, kariyer.net, or Google.
+Corporation, kariyer.net, Google, or any applicant tracking system named above.
 ```
 
 **TR**
 ```
-e-kariyerim — Job Import, LinkedIn veya kariyer.net'teki bir iş ilanını tek tıkla e-kariyerim
-hesabınıza kaydedilmiş bir başvuruya dönüştürür.
+e-kariyerim — Job Import, baktığınız bir iş ilanını tek tıkla e-kariyerim hesabınıza kaydedilmiş
+bir başvuruya dönüştürür.
+
+NEREDE ÇALIŞIR
+LinkedIn ve kariyer.net kurar kurmaz çalışır. Başka her yerde — Greenhouse, Lever, Ashby, Workday,
+Workable, SmartRecruiters, bir şirketin kendi kariyer sayfası, ülkenizdeki bir iş sitesi — pencere
+o tek site için bir "İzin ver" düğmesi sunar ve izin verdikten sonra orayı da aynı şekilde okur.
+İzin verdiğiniz her site, yanında bir Kaldır düğmesiyle Ayarlar'da listelenir.
 
 NASIL ÇALIŞIR
-1. LinkedIn'de bir iş ilanı açın (/jobs/view/ sayfası veya arama sonuçlarında seçili bir ilan) ya
-   da kariyer.net'te bir ilan açın (/is-ilani/ sayfası).
-2. Araç çubuğundaki e-kariyerim simgesine tıklayın.
+1. Herhangi bir yerde bir iş ilanı açın.
+2. Araç çubuğundaki e-kariyerim simgesine tıklayın (yeni bir sitede ilk kullanımda siteye izin
+   verin).
 3. Açılan pencere; ilan başlığını, şirket adını ve konumu doğrudan sayfadan okuyup sizin için
    doldurur — göndermeden önce tüm alanlar düzenlenebilir, böylece eksik bir okuma asla yanlış bir
    kayda dönüşmez.
 4. "Başvurdum"a tıklayın. Bu kadar — başvurunuz artık e-kariyerim'de, ileride bakmak üzere ilan
    metniyle birlikte kayıtlı.
+
+Özel desteği olmayan bir sitede pencere, sayfanın kendi schema.org ilan işaretlemesini okur —
+sayfanın arama motorları için yayımladığı yapılandırılmış veri — yani çoğu iş sitesi yine de
+kendiliğinden dolar. Okunacak hiçbir şey olmayan bir sayfada ise "Elle ekle" aynı formu iki alan
+yazmanız için açar; başvuru yine aynı şekilde takip edilir.
 
 Aynı ilanda tekrar tıklamak güvenlidir: e-kariyerim ilanı URL'sinden tanır ve yinelenen bir kayıt
 oluşturmak yerine mevcut başvurunuzu açar.
@@ -120,9 +142,9 @@ GEREKSİNİMLER
 Bir e-kariyerim hesabı. Eklenti, bir hesaba bağlanana kadar hiçbir şey yapmaz.
 
 GİZLİLİK
-Eklenti bir ilan sayfasını yalnızca simgesine tıkladığınızda, yalnızca linkedin.com ve kariyer.net
-üzerinde okur ve yalnızca açılan pencerede gördüğünüz alanları — kendi erişim anahtarınızla,
-yalnızca kendi e-kariyerim hesabınıza gönderir. Bir LinkedIn ilanı işe alım sorumlusunu ("hiring
+Eklenti bir ilan sayfasını yalnızca simgesine tıkladığınızda, yalnızca linkedin.com, kariyer.net ve
+teker teker izin verdiğiniz siteler üzerinde okur ve yalnızca açılan pencerede gördüğünüz alanları
+— kendi erişim anahtarınızla, yalnızca kendi e-kariyerim hesabınıza gönderir. Bir LinkedIn ilanı işe alım sorumlusunu ("hiring
 team") gösteriyorsa, o kişinin adı ve profil adresi de bu alanlar arasında görünür; göndermeden
 önce düzenleyebilir veya tamamen silebilirsiniz; bu bilgi yalnızca sizin hesabınızda kalır.
 Yukarıda anlatılan Gmail Taraması varsayılan olarak

@@ -1,6 +1,7 @@
 using AfterApply.Domain.Common;
 using System.Diagnostics;
 using System.Net;
+using AfterApply.Application.Common;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.JobSources.Contracts;
 using AfterApply.Domain.JobSources;
@@ -48,10 +49,7 @@ public sealed class LinkedInJobSourceClient(HttpClient httpClient, IOptions<JobS
         return FetchAsync(uri, (html, _) => LinkedInJobPostingParser.Parse(html), cancellationToken);
     }
 
-    protected override bool IsAllowedHost(Uri uri) =>
-        uri.Scheme == Uri.UriSchemeHttps
-        && (uri.Host.Equals(LinkedInHost, StringComparison.OrdinalIgnoreCase)
-            || uri.Host.EndsWith("." + LinkedInHost, StringComparison.OrdinalIgnoreCase));
+    protected override bool IsAllowedHost(Uri uri) => HostRules.IsHttpsHost(uri, LinkedInHost);
 
     protected override bool IsWall(Uri uri) =>
         uri.AbsolutePath.StartsWith("/authwall", StringComparison.OrdinalIgnoreCase)
@@ -84,6 +82,13 @@ public abstract class JobSourceHttpClient(HttpClient httpClient, IOptions<JobSou
 
     protected abstract bool IsDenied(HttpStatusCode status);
 
+    /// <summary>Anything else the request needs beyond the User-Agent. The HTML sources need
+    /// nothing; the ATS client asks for JSON, since at least one of those APIs answers a browser's
+    /// default Accept header with a page instead.</summary>
+    protected virtual void ConfigureRequest(HttpRequestMessage request)
+    {
+    }
+
     /// <param name="parse">Gets the body and the URL it was finally served from, which a site
     /// that answers an unknown filter with a redirect elsewhere makes worth looking at.</param>
     protected async Task<JobSourceFetchResult<T>> FetchAsync<T>(Uri uri, Func<string, Uri, T> parse, CancellationToken cancellationToken)
@@ -97,6 +102,7 @@ public abstract class JobSourceHttpClient(HttpClient httpClient, IOptions<JobSou
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, currentUri);
                 request.Headers.UserAgent.ParseAdd(options.Value.UserAgent);
+                ConfigureRequest(request);
 
                 using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 var status = response.StatusCode;
