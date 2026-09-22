@@ -31,6 +31,7 @@ public static class AtsJobPostingParser
                 Source.Ashby => Ashby(root, externalId),
                 Source.SmartRecruiters => SmartRecruiters(root),
                 Source.Workday => Workday(root),
+                Source.Workable => Workable(root, externalId),
                 _ => null
             };
         }
@@ -135,6 +136,53 @@ public static class AtsJobPostingParser
             Location: Text(info, "location"),
             PublishedAt: Timestamp(info, "startDate"),
             EmploymentType: MapEmploymentType(Text(info, "timeType")));
+    }
+
+    // {"name","jobs":[{"shortcode","title","description" (HTML),"city","state","country",
+    //  "employment_type","published_on"}]} — the board, like Ashby's, so the row is picked out by
+    // the shortcode half of the external id. A board that no longer lists it yields nothing, which
+    // is right: a closed job's stored fields should not be rewritten from a page that dropped it.
+    private static AtsJobPosting? Workable(JsonElement root, string externalId)
+    {
+        var shortcode = externalId.Split('/').ElementAtOrDefault(1);
+        var jobs = Child(root, "jobs");
+        if (shortcode is null || jobs.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        foreach (var job in jobs.EnumerateArray())
+        {
+            if (!string.Equals(Text(job, "shortcode"), shortcode, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var html = Text(job, "description");
+
+            return new AtsJobPosting(
+                Title: Text(job, "title"),
+                Description: HtmlToPlainText.Convert(html),
+                DescriptionHtml: html,
+                // The row has no single location string, so it is assembled the way a person would
+                // write it. The state sits between city and country only when there is no city to
+                // carry the meaning ("Attica, Greece" says nothing "Athens, Greece" does not).
+                Location: JoinLocation(Text(job, "city"), Text(job, "state"), Text(job, "country")),
+                PublishedAt: Timestamp(job, "published_on") ?? Timestamp(job, "created_at"),
+                EmploymentType: MapEmploymentType(Text(job, "employment_type")));
+        }
+
+        return null;
+    }
+
+    private static string? JoinLocation(string? city, string? state, string? country)
+    {
+        var parts = (string.IsNullOrWhiteSpace(city) ? new[] { state, country } : new[] { city, country })
+            .Where(part => !string.IsNullOrWhiteSpace(part))
+            .Select(part => part!.Trim())
+            .ToArray();
+
+        return parts.Length == 0 ? null : string.Join(", ", parts);
     }
 
     /// <summary>The five write the same handful of concepts five ways ("FullTime", "Full-time",

@@ -21,10 +21,15 @@ namespace AfterApply.Application.AtsSources;
 /// <item>Workday — <c>{tenant}.wd{n}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/job/...</c>, derived
 ///   from the posting's own page URL rather than from the external id, because the career-site
 ///   name and location path are part of the address and are not in the id</item>
+/// <item>Workable — <c>apply.workable.com/api/v1/widget/accounts/{account}?details=true</c> (whole
+///   board again, the posting picked out by shortcode). <c>details=true</c> is the whole of it:
+///   without that parameter the response carries the company and a list of job titles and no
+///   description at all, which is what an earlier reading of this endpoint saw, and why 0.9.0
+///   shipped with Workable deliberately unsupported (DECISIONS.md 2026-09-22). With it, each row
+///   carries the posting's HTML description, city/state/country, employment type and publish
+///   date — measured live 2026-09-22 against a board with seven open jobs.</item>
 /// </list>
-/// Workable is deliberately absent: its public widget endpoint returns the company, not the
-/// posting, so there is nothing per-job to fetch. Those postings keep whatever the extension read
-/// off the page. Pure functions — no I/O.
+/// Pure functions — no I/O.
 /// </summary>
 public static partial class AtsApiUrlBuilder
 {
@@ -34,7 +39,7 @@ public static partial class AtsApiUrlBuilder
     public static readonly string[] ApiDomains =
     [
         "greenhouse.io", "lever.co", "ashbyhq.com", "smartrecruiters.com",
-        "myworkdayjobs.com", "myworkdaysite.com"
+        "myworkdayjobs.com", "myworkdaysite.com", "workable.com"
     ];
 
     public static Uri? Build(Source source, string jobUrl, string externalId)
@@ -63,6 +68,8 @@ public static partial class AtsApiUrlBuilder
                 new Uri($"https://api.ashbyhq.com/posting-api/job-board/{account}"),
             Source.SmartRecruiters when NumericRegex().IsMatch(posting) =>
                 new Uri($"https://api.smartrecruiters.com/v1/companies/{account}/postings/{posting}"),
+            Source.Workable when ShortcodeRegex().IsMatch(posting) =>
+                new Uri($"https://apply.workable.com/api/v1/widget/accounts/{account}?details=true"),
             _ => null
         };
     }
@@ -121,6 +128,11 @@ public static partial class AtsApiUrlBuilder
 
     [GeneratedRegex(@"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")]
     private static partial Regex UuidRegex();
+
+    // Workable's own shortcode: uppercase hex in practice, matched case-insensitively because it
+    // is copied out of whatever casing the page URL carried.
+    [GeneratedRegex(@"^[0-9A-Fa-f]{8,32}$")]
+    private static partial Regex ShortcodeRegex();
 
     [GeneratedRegex(@"^[a-z]{2}(-[A-Za-z]{2,4})?$")]
     private static partial Regex LocaleRegex();

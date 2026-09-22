@@ -72,6 +72,50 @@ public class AtsJobPostingParserTests
     }
 
     [Fact]
+    public void Workable_Picks_The_Row_Out_Of_The_Board_And_Builds_A_Location_A_Person_Would_Write()
+    {
+        // Shapes taken from a live board (blueground, 2026-09-22): the row carries city, state and
+        // country separately and no single location string.
+        const string json = """
+            {"name":"acme","jobs":[
+              {"shortcode":"9999999999","title":"Other Role","city":"Berlin","country":"Germany"},
+              {"shortcode":"186545F8C1","title":"Client Experience Coordinator",
+               "description":"<h3>About</h3><p>Join <strong>us</strong>.</p>",
+               "city":"Athens","state":"Attica","country":"Greece",
+               "employment_type":"Full-time","published_on":"2026-02-12","created_at":"2025-09-30"}]}
+            """;
+
+        var posting = AtsJobPostingParser.Parse(Source.Workable, json, "acme/186545F8C1");
+
+        posting.ShouldNotBeNull();
+        posting.Title.ShouldBe("Client Experience Coordinator");
+        posting.DescriptionHtml.ShouldBe("<h3>About</h3><p>Join <strong>us</strong>.</p>");
+        posting.Description.ShouldContain("Join us.");
+        // Not "Athens, Attica, Greece": the region says nothing the city does not.
+        posting.Location.ShouldBe("Athens, Greece");
+        posting.EmploymentType.ShouldBe(EmploymentType.FullTime);
+        posting.PublishedAt!.Value.ToString("yyyy-MM-dd").ShouldBe("2026-02-12");
+    }
+
+    [Fact]
+    public void Workable_Falls_Back_To_The_Region_Only_When_There_Is_No_City()
+    {
+        const string json = """
+            {"jobs":[{"shortcode":"A1B2C3D4E5","title":"Remote Role","state":"Attica","country":"Greece"}]}
+            """;
+
+        AtsJobPostingParser.Parse(Source.Workable, json, "acme/A1B2C3D4E5")!.Location.ShouldBe("Attica, Greece");
+    }
+
+    [Fact]
+    public void A_Workable_Board_That_No_Longer_Lists_The_Posting_Yields_Nothing()
+    {
+        const string json = """{"jobs":[{"shortcode":"9999999999","title":"Other Role"}]}""";
+
+        AtsJobPostingParser.Parse(Source.Workable, json, "acme/A1B2C3D4E5").ShouldBeNull();
+    }
+
+    [Fact]
     public void An_Ashby_Board_That_No_Longer_Lists_The_Posting_Yields_Nothing()
     {
         // A filled or unpublished job. Returning nothing is right: we do not want a closed

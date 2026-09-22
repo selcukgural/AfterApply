@@ -23,6 +23,7 @@ public sealed class AtsEnrichmentProfile : IHostProfile
     public StubHttpMessageHandler Handler { get; } = new(new Dictionary<string, string>
     {
         ["greenhouse.io"] = AtsJobEnrichmentTests.GreenhouseJson,
+        ["workable.com"] = AtsJobEnrichmentTests.WorkableBoardJson,
     });
 
     public void Configure(IWebHostBuilder builder)
@@ -52,6 +53,19 @@ public class AtsJobEnrichmentTests(ApiHost<AtsEnrichmentProfile> host) : IClassF
         {"id":"4512345","title":"Abuse Investigator","location":{"name":"Seattle, San Francisco"},
          "first_published":"2026-09-09T10:50:29-04:00",
          "content":"&lt;p&gt;You will investigate abuse across the payments network, working with risk and legal.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Five years of experience&lt;/li&gt;&lt;li&gt;Strong written communication&lt;/li&gt;&lt;/ul&gt;"}
+        """;
+
+    // Trimmed from a real apply.workable.com widget response (2026-09-22). The board, not a single
+    // posting — Workable publishes no per-job endpoint, so the row is picked out by shortcode, the
+    // same shape Ashby needs. Without "?details=true" these rows carry no description at all,
+    // which is the reading that made 0.9.0 skip Workable entirely.
+    internal const string WorkableBoardJson = """
+        {"name":"acme","jobs":[
+          {"shortcode":"9999999999","title":"Another Role","city":"Berlin","country":"Germany"},
+          {"shortcode":"A1B2C3D4E5","title":"Client Experience Coordinator",
+           "description":"<h3>About the role</h3><p>You will coordinate the client experience team.</p>",
+           "city":"Athens","state":"Attica","country":"Greece",
+           "employment_type":"Full-time","published_on":"2026-02-12"}]}
         """;
 
     private WebApplicationFactory<Program> _factory => host;
@@ -128,13 +142,32 @@ public class AtsJobEnrichmentTests(ApiHost<AtsEnrichmentProfile> host) : IClassF
     }
 
     [Fact]
-    public async Task Workable_Is_Not_Fetched_Because_It_Publishes_No_Per_Posting_Endpoint()
+    public async Task Workable_Is_Read_Out_Of_The_Board_It_Publishes()
     {
-        // The job is still queued (it is an ATS), but the builder gives it no address, so it
-        // leaves without a request. Asserted so "Workable quietly does nothing" stays deliberate.
+        // 0.9.0 skipped Workable on the reading that its widget endpoint returns the company and
+        // not the posting. It does — until "?details=true", which puts each posting's description
+        // in the rows (DECISIONS.md 2026-09-22, "Workable'ın ucu meğer varmış").
         var job = await CaptureAsync("https://apply.workable.com/acme/j/A1B2C3D4E5", description: null);
 
-        _handler.Requested.ShouldBeEmpty();
+        _handler.Requested.ShouldContain(uri => uri.Query.Contains("details=true", StringComparison.Ordinal));
+        // The title the extension captured stands — enrichment is fill-if-missing and never
+        // rewrites a field the page already answered. What it fills is what was empty.
+        job.Title.ShouldBe("Abuse Investigator");
+        job.Description.ShouldContain("coordinate the client experience team");
+        job.DescriptionHtml.ShouldContain("<h3>About the role</h3>");
+        // The city carries the meaning; the region is dropped rather than repeated.
+        job.Location.ShouldBe("Athens, Greece");
+    }
+
+    [Fact]
+    public async Task A_Workable_Board_That_No_Longer_Lists_The_Posting_Leaves_The_Row_Alone()
+    {
+        // A filled or unpublished job: the board answers, the shortcode is not in it, and nothing
+        // is written — rather than the first row's fields landing on someone else's application.
+        var job = await CaptureAsync("https://apply.workable.com/acme/j/DEADBEEF99", description: null);
+
+        _handler.Requested.ShouldNotBeEmpty();
+        job.Title.ShouldBe("Abuse Investigator");
         job.Description.ShouldBeNull();
     }
 
