@@ -12,6 +12,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
+using AfterApply.Infrastructure.Persistence.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -1071,6 +1074,67 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         (await admin.PostAsync($"/api/admin/blog/posts/{post.Id}/unpublish", null)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await reader.GetAsync($"/api/blog/public/posts/tr/{post.Slug}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await reader.GetFromJsonAsync<ClientConfigResponse>("/api/config", JsonOptions))!.Blog!.HasPublishedPosts.ShouldBeFalse();
+    }
+
+    // ---- Slug corrections (data migrations) --------------------------------------------------------
+
+    private const string MisspelledSlug = "how-can-i-kep-my-motivation-while-job-searching";
+    private const string CorrectedSlug = "how-can-i-keep-my-motivation-while-job-searching";
+
+    /// <summary>Runs one direction of a data migration's SQL against the test database — the same
+    /// statements the deploy's migrate step runs, taken from the migration itself.</summary>
+    private Task RunMigrationSqlAsync(Migration migration, bool up) =>
+        host.WithDbAsync(async db =>
+        {
+            foreach (var sql in (up ? migration.UpOperations : migration.DownOperations).OfType<SqlOperation>())
+            {
+                await db.Database.ExecuteSqlRawAsync(sql.Sql);
+            }
+        });
+
+    private Task<string?> StoredSlugAsync(Guid postId) =>
+        host.WithDbAsync(db => db.BlogPosts.Where(p => p.Id == postId).Select(p => p.Slug).SingleAsync());
+
+    [Fact]
+    public async Task The_Slug_Fix_Migration_Renames_The_Misspelled_English_Post_And_Back()
+    {
+        var (admin, _) = await RegisterAdminAsync("slugfix.blog@example.com");
+        var post = await CreateAsync(admin, "en");
+        await SaveAsync(admin, post.Id, Draft(post, title: "How Can I Keep My Motivation While Job Searching?", slug: MisspelledSlug));
+        (await PublishAsync(admin, post.Id)).Slug.ShouldBe(MisspelledSlug);
+        // A Turkish post with the same slug is another language's address: left alone.
+        var turkish = await CreateAsync(admin, "tr");
+        await SaveAsync(admin, turkish.Id, Draft(turkish, slug: MisspelledSlug));
+        await PublishAsync(admin, turkish.Id);
+
+        await RunMigrationSqlAsync(new FixEnglishMotivationPostSlug(), up: true);
+
+        (await StoredSlugAsync(post.Id)).ShouldBe(CorrectedSlug);
+        (await StoredSlugAsync(turkish.Id)).ShouldBe(MisspelledSlug);
+        // Everything hangs off the post id, so the page is the same post at the new address.
+        var page = (await (await GetPublicAsync("en", CorrectedSlug)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
+        page.Id.ShouldBe(post.Id);
+
+        await RunMigrationSqlAsync(new FixEnglishMotivationPostSlug(), up: false);
+        (await StoredSlugAsync(post.Id)).ShouldBe(MisspelledSlug);
+    }
+
+    [Fact]
+    public async Task The_Slug_Fix_Migration_Leaves_The_Row_Alone_When_The_Corrected_Slug_Is_Taken()
+    {
+        var (admin, _) = await RegisterAdminAsync("slugfix.taken.blog@example.com");
+        var misspelled = await CreateAsync(admin, "en");
+        await SaveAsync(admin, misspelled.Id, Draft(misspelled, slug: MisspelledSlug));
+        await PublishAsync(admin, misspelled.Id);
+        var holder = await CreateAsync(admin, "en");
+        await SaveAsync(admin, holder.Id, Draft(holder, slug: CorrectedSlug));
+        await PublishAsync(admin, holder.Id);
+
+        // No unique-index violation to fail the deploy's migrate step; nothing moves.
+        await RunMigrationSqlAsync(new FixEnglishMotivationPostSlug(), up: true);
+
+        (await StoredSlugAsync(misspelled.Id)).ShouldBe(MisspelledSlug);
+        (await StoredSlugAsync(holder.Id)).ShouldBe(CorrectedSlug);
     }
 
     // ---- Feature switch ---------------------------------------------------------------------------
