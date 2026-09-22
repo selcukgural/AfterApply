@@ -18,31 +18,22 @@ showing the old logo. Prefer a shared asset over a copied glyph here.
 
 ## Regenerating them
 
-Last shot 2026-09-22 for `0.9.0` — all three.
+Last shot 2026-09-22 for `0.9.0` — `options-light.png` only.
 
-`options-light.png` for the "Sites you allowed" section Settings gained with the per-site runtime
-permission.
+The two popup shots were reshot once, on an ATS posting with the provenance badge, and then put
+back. `0.9.0` was rejected for keyword spam over the six ATS names in its description
+(PUBLISHING_CHECKLIST.md), and the rule that came out of it covers screenshots too: Store metadata
+does not carry third-party brands. A shot of the popup over `jobs.lever.co` is a third-party brand
+in metadata, so the scene stays on the LinkedIn posting — which is also still accurate, since
+`buildForm()` renders the provenance badge only for `foundBy === "jsonld"`/`"meta"` and LinkedIn
+reports `"linkedin"`. The site's own landing mock follows the scene because a contract test pins
+the pair; the site's *text* is free to name the systems, and does.
 
-`popup-light.png` / `popup-dark.png` were reshot too, and the first reason to leave them alone
-turned out to be the wrong one. The badge argument said: `0.9.0` adds a provenance badge that
-`buildForm()` renders only for `foundBy === "jsonld"`/`"meta"`, the scene shows a LinkedIn job
-(`foundBy: "linkedin"`), so the badge would not appear and the shot was still accurate. True as far
-as it goes — but the scene is a *marketing* composition, and its copy said "LinkedIn ve kariyer.net
-desteği" and "Version 0.6.0" while the release it illustrates is the one that stops the extension
-being a two-site tool. The screenshot was not stale in its widget rendering; it was stale in what
-it promised. The scene is now a Lever posting with the provenance badge beside the site badge, the
-bullets name the ATS family and the runtime permission, and the version line reads 0.9.0.
-
-**That reshoot caught a second styling bug**, the same way the options one did. `buildForm()`
-renders the provenance note as `<span class="site-badge muted-badge">` — and `muted-badge` did not
-exist in `popup.css`. The note therefore rendered in the accent pill, identical to the site badge
-next to it, so "Greenhouse · sayfadan okundu" read as two site names. `popup.css` now carries the
-modifier (muted surface, no leading dot). Reviewing the markup would not have shown it; rendering
-it did.
-
-The help centre's `chrome-extension-popup.png` was *not* reshot, and here the badge argument does
-hold: it is the real `popup.html` on a LinkedIn job, where `foundBy` is `"linkedin"` and no
-provenance badge renders. Nothing else in that view changed.
+**The one reshoot did catch a real styling bug**, which is why it was worth doing anyway:
+`buildForm()` renders the provenance note as `<span class="site-badge muted-badge">` and
+`muted-badge` did not exist in `popup.css`, so the note rendered in the accent pill, identical to
+the site badge beside it — "Greenhouse · sayfadan okundu" read as two site names. The modifier is
+in `popup.css` now. Reviewing the markup would not have shown it; rendering it did.
 
 `scene-options.html` had to lose two rows to fit: the "Not connected yet." status and the "Enter a
 key by hand" row. The canvas is a fixed 1280×800 and the card grew by a whole section; without that
