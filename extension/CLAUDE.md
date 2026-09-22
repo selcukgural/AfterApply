@@ -19,9 +19,15 @@ A change under `extension/` is a release, not just a code edit. In the same chan
    themselves) and `web/public/help/screenshots/chrome-extension-{popup,options}.png` (help
    centre, shot from the real pages). Recipes for both are in `screenshots/README.md`.
 4. **Build the store package:**
-   `rm -f e-kariyerim-extension.zip && cd extension && zip -r ../e-kariyerim-extension.zip . -x "store-listing/*" -x "README.md" -x "*.DS_Store" -x "package.json" -x "package-lock.json" -x "node_modules/*" -x "tests/*" -x "vitest.config.js"`
+   `rm -f e-kariyerim-extension.zip && cd extension && zip -r ../e-kariyerim-extension.zip . -x "store-listing/*" -x "README.md" -x "CLAUDE.md" -x "*.DS_Store" -x "package.json" -x "package-lock.json" -x "node_modules/*" -x "tests/*" -x "vitest.config.js"`
+
+   Then look inside it (`unzip -l ../e-kariyerim-extension.zip`) before uploading. The list should
+   be the runtime files and `icons/` and nothing else.
 
    The exclusions past `*.DS_Store` are the test harness added in 0.9.0 (`npm test` in this
    directory). None of it ships: the extension is still plain files with no build step, and
    uploading `node_modules` would both bloat the package and give the Web Store reviewer
-   thousands of files of third-party code to read.
+   thousands of files of third-party code to read. `CLAUDE.md` — this file — was missing from the
+   list until 0.9.0 and therefore shipped inside the 0.8.0 package: harmless to a user, but it is
+   our own release checklist, and handing a reviewer a document about how we talk to the Store is
+   not something to do by accident.
