@@ -10,6 +10,7 @@ import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { CharacterCount, Placeholder } from "@tiptap/extensions";
 import FileHandler from "@tiptap/extension-file-handler";
 import type { Editor } from "@tiptap/core";
+import { shouldAutoLinkBlogText } from "@/lib/blog/autolink";
 import { MediaImage } from "./MediaImage";
 
 /** What the upload accepts — the server decides by the bytes; this only spares a round trip. */
@@ -64,6 +65,9 @@ export function buildExtensions({ placeholder, imageAlt, uploadImage }: EditorEx
       link: {
         openOnClick: false,
         autolink: true,
+        // Typed or pasted text only becomes a link when it is an address, not a brand like
+        // "Kariyer.net" — see lib/blog/autolink.
+        shouldAutoLink: shouldAutoLinkBlogText,
         defaultProtocol: "https",
         // The sanitizer re-applies these on save; setting them here keeps the editor honest.
         HTMLAttributes: { rel: "noopener noreferrer nofollow", target: "_blank" },
