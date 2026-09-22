@@ -14,14 +14,14 @@ Matches `manifest.json`'s `name` field; the Web Store requires these to be ident
 
 ## Summary (short description, max 132 characters)
 
-**EN** (117 chars)
+**EN** (108 chars)
 ```
-Get your job applications into e-kariyerim — one click from LinkedIn, kariyer.net, Greenhouse, Lever, Workday and more.
+Get your job applications into e-kariyerim — one click from LinkedIn, kariyer.net and the job sites you allow.
 ```
 
-**TR** (108 chars)
+**TR** (110 chars)
 ```
-Başvurularınızı e-kariyerim'e aktarın — LinkedIn, kariyer.net, Greenhouse, Lever, Workday ve daha fazlasında tek tıkla.
+Başvurularınızı e-kariyerim'e aktarın — LinkedIn, kariyer.net ve izin verdiğiniz iş sitelerinde tek tıkla.
 ```
 
 ## Detailed description
@@ -32,10 +32,10 @@ e-kariyerim — Job Import turns a job posting you are looking at into a tracked
 your e-kariyerim account, in one click.
 
 WHERE IT WORKS
-LinkedIn and kariyer.net work the moment you install it. Everywhere else — Greenhouse, Lever,
-Ashby, Workday, Workable, SmartRecruiters, a company's own careers page, a job board in your
-country — the popup offers an "Allow" button for that one site, and from then on it reads that
-site the same way. Every site you allow is listed in Settings with a Remove button next to it.
+LinkedIn and kariyer.net work the moment you install it. On any other job page — a company's own
+careers site, the recruiting system it happens to use, a job board in your country — the popup
+offers an "Allow" button for that one site, and from then on it reads that site the same way.
+Every site you allow is listed in Settings with a Remove button next to it.
 
 HOW IT WORKS
 1. Open a job posting anywhere.
@@ -88,7 +88,7 @@ email. Nothing is sent to any third party, and nothing is used for advertising. 
 privacy policy linked on this listing.
 
 This is an independent tool and is not affiliated with, endorsed by, or sponsored by LinkedIn
-Corporation, kariyer.net, Google, or any applicant tracking system named above.
+Corporation, kariyer.net or Google.
 ```
 
 **TR**
@@ -97,10 +97,10 @@ e-kariyerim — Job Import, baktığınız bir iş ilanını tek tıkla e-kariye
 bir başvuruya dönüştürür.
 
 NEREDE ÇALIŞIR
-LinkedIn ve kariyer.net kurar kurmaz çalışır. Başka her yerde — Greenhouse, Lever, Ashby, Workday,
-Workable, SmartRecruiters, bir şirketin kendi kariyer sayfası, ülkenizdeki bir iş sitesi — pencere
-o tek site için bir "İzin ver" düğmesi sunar ve izin verdikten sonra orayı da aynı şekilde okur.
-İzin verdiğiniz her site, yanında bir Kaldır düğmesiyle Ayarlar'da listelenir.
+LinkedIn ve kariyer.net kurar kurmaz çalışır. Başka herhangi bir ilan sayfasında — bir şirketin
+kendi kariyer sitesinde, o şirketin kullandığı işe alım sisteminde, ülkenizdeki bir iş sitesinde —
+pencere o tek site için bir "İzin ver" düğmesi sunar ve izin verdikten sonra orayı da aynı şekilde
+okur. İzin verdiğiniz her site, yanında bir Kaldır düğmesiyle Ayarlar'da listelenir.
 
 NASIL ÇALIŞIR
 1. Herhangi bir yerde bir iş ilanı açın.

@@ -12,10 +12,30 @@ the repo can only show what was committed, not what was shipped.
 a working Gmail Scanning reach every user. The paragraph above is kept as the history of how the
 item got here; `0.6.0` is no longer what anyone is running.
 
-Current package version: **0.9.0** — not yet uploaded. It is the release that stops the extension
-being a two-site tool: an adapter table plus a generic schema.org reader, six ATS adapters
-(Greenhouse, Lever, Ashby, Workday, Workable, SmartRecruiters), and a per-site runtime permission
-so any other job board can be added by the user from the popup.
+Current package version: **0.9.1** — the resubmission of the release that stops the extension
+being a two-site tool: an adapter table plus a generic schema.org reader, six adapters for the
+common applicant-tracking systems, and a per-site runtime permission so any other job board can be
+added by the user from the popup.
+
+**`0.9.0` was rejected, and not for anything it does — for what the listing said.** Rejection on
+2026-09-22 (reference *Yellow Argon*, routing id *FZSL*): **keyword spam**, citing the Turkish
+description's line "Greenhouse, Lever, Ashby, Workday, Workable, SmartRecruiters". The policy
+forbids irrelevant or excessive keywords in listing metadata, and a run of six third-party product
+names reads as exactly that however functional the intent was. The fix is the copy, not the
+feature: both descriptions now name the capability ("a company's own careers site, the recruiting
+system it happens to use, a job board in your country") and keep only LinkedIn and kariyer.net,
+which are the two sites the extension supports without a permission prompt and which the approved
+`0.8.0` listing already named. `manifest.json`'s own `description` carried the same list and was
+rewritten with it.
+
+**The rule this leaves behind: never enumerate third-party brands in Store metadata** — the item
+name, the summary, either description, or the screenshots. Say what the extension can do and let
+the capability speak. `PERMISSIONS_JUSTIFICATION.md` is deliberately *not* held to this: it is the
+justification field a reviewer reads, not listing metadata, and naming the systems there is what
+explains why a broad host permission is asked for at all.
+
+Appealing was considered and dropped: the reviewer's reading is defensible on the policy's own
+words, and an appeal costs days the release does not need to spend.
 
 **The one thing to watch in this review is `optional_host_permissions: ["https://*/*"]`.** It is a
 broad pattern and the Dashboard will likely flag the upload for an in-depth review, which is
