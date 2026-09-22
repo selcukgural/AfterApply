@@ -8,13 +8,22 @@ capture are therefore all live to real users. `0.4.0` was the first publish, aro
 (commit `fa2daff` added the install link to the help centre "now that the extension is
 published"). Always confirm the currently published version in the Dashboard before uploading;
 the repo can only show what was committed, not what was shipped.
-Current package version: **0.8.0** — uploaded to the Dashboard on 2026-09-10 and **awaiting
-review**. It replaced the `0.7.0` submission that was still pending from 2026-09-09, so `0.7.0`
-never reaches users as its own release: its Connect flow ships as part of `0.8.0`. Until `0.8.0` is
-approved, `0.6.0` is what users are running — the Connect flow exists in the API and at `/pair` but
-reaches nobody through the store yet, and pasted keys keep working regardless (`/from-extension` is
-unchanged). **Gmail Scanning stays dead for everyone on `0.6.0`**, which is every user, until this
-review clears; that is the thing to watch for here, not the Connect flow.
+`0.8.0` cleared review and has been the **live** version since 2026-09-13, so the Connect flow and
+a working Gmail Scanning reach every user. The paragraph above is kept as the history of how the
+item got here; `0.6.0` is no longer what anyone is running.
+
+Current package version: **0.9.0** — not yet uploaded. It is the release that stops the extension
+being a two-site tool: an adapter table plus a generic schema.org reader, six ATS adapters
+(Greenhouse, Lever, Ashby, Workday, Workable, SmartRecruiters), and a per-site runtime permission
+so any other job board can be added by the user from the popup.
+
+**The one thing to watch in this review is `optional_host_permissions: ["https://*/*"]`.** It is a
+broad pattern and the Dashboard will likely flag the upload for an in-depth review, which is
+accepted: there is no enumerable list of hosts that job postings live on, and the alternative —
+declaring them as *required* `host_permissions` — would disable the extension for every existing
+user until they re-accept the new permissions. Nothing is granted at install; the justification in
+`PERMISSIONS_JUSTIFICATION.md` is written around that. Expect this review to take longer than
+`0.8.0`'s.
 
 **Why `0.8.0` matters more than a normal bump:** Gmail Scanning has never worked in any published
 build. `gmail-scan.js` posted its signal straight from the content script, where the request
@@ -64,10 +73,17 @@ production API needed no deploy alongside it.
       `https://api.ekariyerim.com`.
 - [x] **One-time $5 developer registration fee** — paid. It was a precondition of the first
       publish, and this item has been live since `0.4.0`; the box was simply never ticked.
-- [x] **`manifest.json`'s `"version"`** is `0.8.0`. Bump it for every subsequent upload — the
+- [x] **`manifest.json`'s `"version"`** is `0.9.0`. Bump it for every subsequent upload — the
       Dashboard rejects a re-upload with a version already used. The popup and Settings footers
       render this same number (`version.js` reads it off the manifest), so it is also what a bug
       report will quote back at you.
+- [x] **Screenshots reshot for 0.9.0** — done 2026-09-22. Settings gained the allowed-sites
+      section, which stales `screenshots/options-light.png` and the help centre's
+      `chrome-extension-options.png`; `scene-options.html` was updated first (its markup is copied,
+      not shared) and both were recaptured per `screenshots/README.md`. The popup shots are
+      deliberately unchanged: the new provenance badge renders only for `foundBy` `jsonld`/`meta`,
+      and both popup scenes show a LinkedIn job, which reports `linkedin`. Reasoning recorded in
+      `screenshots/README.md` so the next release does not re-litigate it.
 - [x] **Screenshots reshot for 0.8.0** — done 2026-09-10. The Settings footer gained the privacy
       link, which stales `options-light.png` and the help centre's `chrome-extension-options.png`;
       `scene-options.html` was updated first (its markup is copied, not shared) and both were

@@ -1,0 +1,13 @@
+{
+  "name": "ekariyerim-extension",
+  "private": true,
+  "type": "module",
+  "description": "Test harness only. The extension itself ships as the plain files next to this one — there is no build step and nothing here is bundled or packaged (see CLAUDE.md's zip command, which excludes this file, node_modules and tests).",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "happy-dom": "^15.11.7",
+    "vitest": "^2.1.8"
+  }
+}

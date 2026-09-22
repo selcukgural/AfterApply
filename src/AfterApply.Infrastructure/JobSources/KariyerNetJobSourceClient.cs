@@ -1,4 +1,5 @@
 using System.Net;
+using AfterApply.Application.Common;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.JobSources.Contracts;
 using AfterApply.Domain.Common;
@@ -53,10 +54,7 @@ public sealed class KariyerNetJobSourceClient(HttpClient httpClient, IOptions<Jo
         return FetchAsync(uri, (html, _) => KariyerNetJobPostingParser.Parse(html), cancellationToken);
     }
 
-    protected override bool IsAllowedHost(Uri uri) =>
-        uri.Scheme == Uri.UriSchemeHttps
-        && (uri.Host.Equals("kariyer.net", StringComparison.OrdinalIgnoreCase)
-            || uri.Host.EndsWith(".kariyer.net", StringComparison.OrdinalIgnoreCase));
+    protected override bool IsAllowedHost(Uri uri) => HostRules.IsHttpsHost(uri, "kariyer.net");
 
     protected override bool IsWall(Uri uri) =>
         uri.AbsolutePath.StartsWith("/aday/giris", StringComparison.OrdinalIgnoreCase)

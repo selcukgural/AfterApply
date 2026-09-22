@@ -54,7 +54,7 @@
 
   .headline {
     position: absolute;
-    top: 140px;
+    top: 104px;
     left: 0;
     right: 0;
     text-align: center;
@@ -83,12 +83,16 @@
   details.manual summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-subtle); }
   details.manual > *:not(summary) { margin-top: 8px; }
   hr.section-divider { margin: 18px 0 0; border: none; border-top: 1px solid var(--border-subtle); }
+  ul.permission-list { list-style: none; margin: 8px 0 0; padding: 0; }
+  ul.permission-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 0; }
+  ul.permission-list li span { font-size: 13px; overflow-wrap: anywhere; }
+  ul.permission-list button.secondary { display: inline-block; width: auto; flex: none; margin-top: 0; padding: 4px 10px; font-size: 12px; }
   footer.version-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   footer.version-line a { color: inherit; text-decoration: underline; }
 
   .options-window {
     position: absolute;
-    top: 236px;
+    top: 196px;
     left: 50%;
     transform: translateX(-50%);
     width: 460px;
@@ -140,31 +144,37 @@
         <p class="muted">
           Press Connect and confirm on the page that opens. No copying, no pasting.
         </p>
-        <p class="status warning">Not connected yet.</p>
         <button class="primary">Connect</button>
         <p class="pairing-code">K7M3-QXAB</p>
         <p class="status warning">Confirm this code on the page that just opened:</p>
-
-        <details class="manual">
-          <summary>Enter a key by hand (advanced)</summary>
-        </details>
 
         <hr class="section-divider" />
 
         <label>Gmail Scanning (beta)</label>
         <p class="muted">
-          When you open an email in Gmail, this extension reads it in your browser only and, if it
-          looks job-related, sends just the extracted subject/snippet — never the raw email — as a
-          status suggestion. Off by default. Only threads you actually open are read.
+          When you open an email in Gmail, this extension reads it in your browser only and sends
+          just the extracted subject/snippet — never the raw email. Off by default.
         </p>
         <label class="checkbox-row">
           <input type="checkbox" checked readonly tabindex="-1" />
           <span>Scan opened Gmail emails</span>
         </label>
+
+        <hr class="section-divider" />
+
+        <label>Sites you allowed</label>
+        <p class="muted">
+          Job boards you let this extension read, one at a time, from the popup. Remove one and it
+          stops reading that site.
+        </p>
+        <ul class="permission-list">
+          <li><span>job-boards.greenhouse.io</span><button class="secondary" tabindex="-1">Remove</button></li>
+          <li><span>jobs.lever.co</span><button class="secondary" tabindex="-1">Remove</button></li>
+        </ul>
       </main>
       <footer class="version-line">
         <a href="https://ekariyerim.com/en/extension-privacy">Privacy policy</a>
-        <span>Version 0.8.0</span>
+        <span>Version 0.9.0</span>
       </footer>
     </div>
   </div>

@@ -8606,3 +8606,144 @@ ad yazınca doğar ve sekmenin doğası gereği kaçınılmazdır (sekme şirket
 hukuki görüşün sorusu "KVKK'ya uygun mu" değil, "itibar riski ne, şirket itiraz ederse süreç ne
 olmalı" olmalıdır; Glassdoor ve İşteMülakat'ın "yazarın görüşüdür + itiraz yolu" yapısı bu soruya
 verilmiş cevaplardır. (Avukat görüşü değildir.)
+
+---
+
+## Eklenti iki siteden çıktı: jenerik JSON-LD okuyucu + altı ATS adaptörü (2026-09-22)
+
+**Soru neydi.** "LinkedIn ve kariyer.net üzerindeki ilanları içeriye alabiliyoruz; bunu global
+anlamda daha fazla iş arama sitesinden başvuru kaydı alacak şekilde geliştirmek istiyorum.
+Glassdoor, Indeed, Greenhouse... hangi platformu içeriye alabiliriz?"
+
+**Araştırmanın verdiği cevap, "hangi site" sorusunu büyük ölçüde geçersiz kıldı.** Üç bulgu:
+
+1. **Resmî API yolu kapalı.** Indeed'in Publisher API'si 2023'te emekliye ayrıldı ve yeni
+   yayıncılara 2022'den beri kapalı; LinkedIn'in tek jobs API'si partner-gated *ilan yayınlama*
+   aracı ve 2018'den beri üçüncü taraflara veri erişimi verilmiyor. Bu iki site için tarayıcı içi
+   okuma dışında yol yok — ki kod kullanıcının kendi oturumlu sekmesinde çalıştığı için bot
+   koruması da devreye girmiyor.
+2. **Asıl kaldıraç `schema.org/JobPosting` JSON-LD.** Google for Jobs zorunluluğu yüzünden ATS
+   boardlarının ve ülke bazlı iş sitelerinin büyük kısmı ilan sayfasında bu işaretlemeyi
+   yayımlıyor. Tek bir jenerik okuyucu yüzlerce siteyi kapsıyor. Rakipler (Huntr, Teal, Simplify)
+   da tam olarak bunu yapıyor: geniş jenerik kapsama + birkaç özel adaptör + desteklenmeyen sitede
+   elle doldurulabilir form.
+3. **ATS'lerin hepsinin auth'suz public JSON API'si var** — sunucu tarafı zenginleştirme için
+   temiz ve ToS-uyumlu yol.
+
+Yani darboğaz erişim değil, mimariydi: `popup.js`'te iki `if` dalı, iki scraper ve
+`sanitizeDescriptionHtml`'in iki kopyası. **Karar: siteyi koda gömmek yerine, siteyi tablodan
+okunur hale getirmek.**
+
+**Kapsam — kullanıcı kararı.** Jenerik JSON-LD adaptörü + ATS ailesi (Greenhouse, Lever, Ashby,
+Workday, Workable, SmartRecruiters). **Indeed, Glassdoor ve ülke boardları (SEEK, Naukri,
+StepStone, Reed, Welcome to the Jungle) bilerek dışarıda.** Indeed trafiğin zirvesi ama JSON-LD'si
+güvenilmez ve SPA yapısı LinkedIn scraper'ı kadar kırılgan bir bakım yükü demek; ülke boardları
+ise doğrulanmamış talep. Jenerik adaptör bunların çoğunda zaten çalışıyor; ölçüm bir sitede
+çalışmadığını gösterirse adaptör o zaman yazılır. Greenhouse/Workday'in **iframe ile şirket
+sitesine gömülü** varyantı da kapsam dışı: `all_frames` gerektirir, izin yüzeyini büyütür.
+
+**2026-09-09'daki "daha çok iş sitesi ekleme" reddi iptal edilmedi, daraltıldı.** O kaydın
+gerekçesi iki kalemdi: (a) ATS başvuruları onay e-postasıyla Gmail Taraması üzerinden zaten
+düşüyor, (b) eklentiye o siteleri eklemek yeni `host_permissions` + yeni Web Store incelemesi
+demek. (b) bu turda ortadan kalktı — siteler runtime izinle ekleniyor, statik listeye yazılmıyor.
+(a) kısmen doğru kaldı ama üç boşluğu var: Gmail bağlamayan ya da Gmail dışı posta kullanan
+kullanıcı; onay e-postası göndermeyen başvuru; ve en önemlisi **e-postanın ilan açıklamasını
+taşımaması** — CV taraması ve AI iş-uyum puanlaması o başvurular için çalışmıyor.
+
+**İzin modeli: `optional_host_permissions: ["https://*/*"]`, zorunlu host izni değil.** İki somut
+sebep, tercih değil. Birincisi, öğe **zaten canlı** (0.8.0, 2026-09-13'ten beri): yayındaki bir
+eklentiye yeni *zorunlu* host izni eklemek, Chrome'un eklentiyi mevcut kullanıcılarda onlar yeni
+izinleri kabul edene kadar devre dışı bırakması demek. İkincisi, jenerik adaptörün tüm anlamı
+listede olmayan sitede de çalışması; "dünyadaki her ilan sitesi" statik bir `matches` listesine
+zaten sığmıyor. LinkedIn ve kariyer.net manifest'teki yerlerinde kaldı, yani bugünkü akış hiç
+değişmiyor ve kimse yeniden izin vermek zorunda kalmıyor. Verilen her izin eklentinin Ayarlar
+sayfasında **Kaldır** düğmesiyle listeleniyor — izni bir düğmeyle veren ürünün, geri almak için
+`chrome://extensions`'a göndermesi tek yönlü bir kapı olurdu. Bu geniş desenin Web Store'da
+derinlemesine incelemeyi tetiklemesi ve `0.9.0` incelemesinin `0.8.0`'dan uzun sürmesi **kabul
+edilen maliyet**.
+
+**Tetikleyici değişmedi.** Yakalama hâlâ elle: kullanıcı popup'ı açar, alanları görür,
+"Başvurdum" der. Otomatik başvuru algılama (apply tıklamasını izlemek) değerlendirildi ve
+alınmadı — her sitede sürekli çalışan bir content script, gizlilik metnini ve izin gerekçesini
+büyütür, yanlış pozitif riski getirir.
+
+**Sunucu tarafı zenginleştirme — beş ATS, altıncısı yok.** `AtsJobEnrichmentService`, ilan
+açıklaması boş ya da kısaysa (`AtsSources:MinDescriptionChars`, 400) ilanı o ATS'nin public
+API'sinden geri okuyor. Uçlar **canlıya karşı doğrulandı** (2026-09-22), dokümandan okunmadı:
+`boards-api.greenhouse.io/v1/boards/{board}/jobs/{id}?content=true` (içerik iki kez
+entity-escape'li), `api.lever.co/v0/postings/{site}/{id}?mode=json` (`createdAt` epoch ms),
+`api.ashbyhq.com/posting-api/job-board/{org}` (tek ilan ucu yok, board dönüyor, satır id'den
+seçiliyor), `api.smartrecruiters.com/v1/companies/{company}/postings/{id}` (`jobAd.sections.*`),
+ve Workday için `{tenant}.wd{n}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/job/...` — bu sonuncusu
+`ExternalId`'den değil **ilan sayfasının kendi URL'inden** türetiliyor, çünkü kariyer sitesi adı ve
+konum yolu id'nin içinde yok.
+
+**Workable'ın sunucu tarafı zenginleştirmesi yok, bilerek.** Public widget ucu
+(`apply.workable.com/api/v1/widget/accounts/{account}`) şirketi döndürüyor, ilanı değil; ilan başına
+çekilecek bir şey yok. O ilanlar eklentinin sayfadan okuduğuyla kalıyor. `AtsApiUrlBuilder` bu
+durumda adres üretmiyor ve testi bunun sessiz bir hata değil kasıt olduğunu sabitliyor.
+
+**Bayrak açık gidiyor (`AtsSources__Enabled=true`), ve gerekçesi ölçüme dayanıyor.** Dışarıya
+istek atan her özellik burada kapalı doğar; bu, o kuralın bilinçli istisnası. Sebep 2026-09-22'de
+canlı sayfalarda ölçüldü: **Greenhouse'un barındırdığı panolar `schema.org/JobPosting` işaretlemesi
+hiç yayınlamıyor** — GitLab ve Anthropic panolarının ilan sayfalarında tarayıcının kendi DOM'unda
+sıfır `application/ld+json` bloğu var; eklenti orada yalnızca `og:title`'dan başlığı alabiliyor,
+`og:description` ise konum satırı. Lever (Match Group) ve Ashby (OpenAI) sayfalarında işaretleme
+tam: başlık, şirket, konum ve 7–8 bin karakterlik açıklama. Yani planın "JSON-LD ATS'lerde
+neredeyse evrensel" varsayımı en büyük oyuncu için yanlış çıktı ve **Greenhouse ilanlarında iş
+açıklaması yalnızca bu yoldan geliyor**; bayrak kapalı olsaydı CV eşleştirme ve iş-uyum puanlaması
+o başvurular için çalışacak metin bulamazdı. İstek ilanın kendi public adresini taşıyor, kullanıcı
+hakkında hiçbir şey taşımıyor; hata hâlinde satır olduğu gibi kalıyor; geri almak tek satır.
+Bayrak ve gizlilik metni birlikte hareket ettiği için kapatmak `/extension-privacy` ve
+`PRIVACY_POLICY.md`'deki alıcı listesini de geri almak demek.
+
+**Dürüst not — ATS ailesi iş zenginleştirmesi için güçlü, şirket zenginleştirmesi için zayıf.**
+Bu uçlar ilan verisi döndürüyor, şirket verisi değil; `Website`/`Industry`/`Country` bu turdan
+sonra da esas olarak LinkedIn ve kariyer.net'ten geliyor. Şirket tarafını gerçekten genişletecek
+platform Glassdoor'du ve kapsam kararı gereği dışarıda. Yapılan şey `CompanyProfileLink` tablosu:
+şirketin ATS board kökü (`job-boards.greenhouse.io/{board}`) artık saklanıyor ve platform
+**URL'in host'undan** türetiliyor, istemcinin iddiasından değil.
+
+**`Company.LinkedInUrl`/`KariyerNetUrl` kolonları tabloya taşınmadı.** Enrichment, şirket yanıtları,
+`/api/users/me/export` ve yorum/maaş sayfaları hepsi onları okuyor; taşımak bu değişikliği
+gereksiz genişletirdi. Yani ayrım şu: o iki kolon orijinal çift, tablo ise sonradan eklenen her
+platform. İkisinin tabloda birleşmesi doğru ama ayrı bir iş.
+
+**İki bulgu, ikisi de bir testin ürünü:**
+
+- **EF, istemci tarafında anahtar üreten bir çocuğu koleksiyona eklemeyi `Added` değil `Modified`
+  sayıyor.** `Entity.Id` constructor'da `Guid.CreateVersion7()` ile atandığı için,
+  `company.ProfileLinks`'e eklenen yeni `CompanyProfileLink` var olmayan bir satıra UPDATE olarak
+  gidiyor ve `SaveChangesAsync` "expected to affect 1 row(s), but actually affected 0" ile
+  patlıyor. `dbContext.CompanyProfileLinks.Add(link)` ile açıkça eklemek çözüyor; domain metodu bu
+  yüzden `bool` değil yeni link'i döndürüyor. Entegrasyon testi olmasaydı bu ancak canlıda 500
+  olarak görünürdü.
+- **`AtsJobPostingParser` kök tipi kontrol etmeden `TryGetProperty` çağırıyordu.** Yanıt bir
+  diziye dönüştüğünde `System.Text.Json` fırlatıyor ve üstteki `catch (JsonException)` bunu
+  yakalamıyor. Artık her okuma tek bir korumalı `Child()` erişimcisinden geçiyor — bu API'ler
+  haber vermeden değişiyor, ve şema değişikliği bir exception değil boş bir sonuç olmalı.
+
+**Eklenti ilk kez test koşumuna kavuştu.** `extension/` altında hiç JS testi yoktu; `npm test`
+(vitest + happy-dom) artık adaptör tablosunu, altı ATS id çıkarıcısını (suffix tuzakları dahil:
+`notgreenhouse.io`, `greenhouse.io.evil.com`), JSON-LD okuyucusunu ve sanitizer'ı koruyor.
+Harness paketlenmiyor — `CLAUDE.md`'deki zip komutu `package.json`, `node_modules` ve `tests`'i
+dışarıda bırakıyor, eklenti hâlâ build adımı olmayan düz dosyalar.
+
+**Yayın ikiye bölündü, çünkü mağaza onayı bizim elimizde değil.** Arka uç, eklenti paketi ve
+mağaza materyali bugün çıkıyor; sitenin eklentiyi anlatan metinleri (landing araç şeridi ve özellik
+bölümü, yardım merkezinin Chrome Eklentisi sayfası, oradaki ekran görüntüsü ve landing'deki popup
+maketi) **ayrı bir dalda bekliyor ve 0.9.0 mağazada yayına girince merge edilecek**. Sebep: bugün
+prod'a çıkarsak siteyi ziyaret eden biri "İzin ver" düğmesini, "Elle ekle" çıkışını ve Ayarlar'daki
+izin listesini anlatan bir yardım sayfası okur, ama mağazadan hâlâ 0.8.0 iner —
+`optional_host_permissions: ["https://*/*"]` derin incelemeyi tetikleyebildiği için o pencere
+saatler değil günler olabilir. Teknik bir kırılma yok, kontrol edildi: `/from-extension`
+sözleşmesinden alan silinmedi (`CompanyAtsUrl` opsiyonel ve yalnızca doluysa doğrulanıyor), hiçbir
+endpoint dosyası değişmedi, `Source` üyeleri string olarak saklanıyor, ve `IsAts` çağrılarının
+hepsi `CreateFromExtensionAsync` içinde olduğu için 0.8.0'ın gönderdiği linkedin/kariyer URL'leriyle
+`AtsSources__Enabled=true` bayrağı bile ölü kalıyor. Ayrışan tek şey vaat; onu da ayrı tutuyoruz.
+Gizlilik metni (`/extension-privacy`) **bilerek bu PR'da**: metnin davranışın önünde gitmesi güvenli
+yön, arkasında kalması değil.
+
+**Altı yerde kopyalanmış host kontrolü tek yere alındı** (`HostRules`): `host == domain ||
+host.EndsWith("." + domain)`. Allow-list ikiden dokuza çıkarken altı kopya arasındaki ince bir
+ayrışma tam da kimsenin fark etmeyeceği türden bir açık olurdu.

@@ -1,3 +1,4 @@
+using AfterApply.Application.AtsSources;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Companies;
@@ -265,7 +266,19 @@ internal sealed class ApplicationService(
         // resolver only when no such match exists. Manual entry (CreateAsync) is unaffected: it
         // still calls ResolveOrCreateAsync directly, since the autocomplete UI already steers
         // users to type an existing company's exact name when one applies.
-        var profileLinks = new CompanyProfileLinks(request.CompanyLinkedInUrl, request.CompanyKariyerNetUrl);
+        //
+        // CompanyAtsUrl arrives as a URL, not a platform name — the platform is whatever the
+        // resolver says that host is, so a client cannot mislabel a Greenhouse board as a Workday
+        // one. IsAts filters out the case where a validator-allowed host somehow resolves to
+        // something else, rather than storing a link under a platform it does not belong to.
+        var (atsPlatform, _) = request.CompanyAtsUrl is null
+            ? (Source.Other, null)
+            : JobPostingSourceResolver.Resolve(request.CompanyAtsUrl);
+        var profileLinks = new CompanyProfileLinks(
+            request.CompanyLinkedInUrl,
+            request.CompanyKariyerNetUrl,
+            JobPostingSourceResolver.IsAts(atsPlatform) ? request.CompanyAtsUrl : null,
+            JobPostingSourceResolver.IsAts(atsPlatform) ? atsPlatform : null);
 
         var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
             ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken, profileLinks);
@@ -288,6 +301,16 @@ internal sealed class ApplicationService(
         var (jobSource, externalId) = JobPostingSourceResolver.Resolve(normalizedUrl);
         var jobId = await jobResolver.ResolveOrCreateAsync(companyId, request.JobTitle, jobSource, normalizedUrl,
             externalId, request.Location, cancellationToken, request.Description, request.PublishedAt, request.DescriptionHtml);
+
+        // An ATS posting can be read back from that ATS's own public API, which is worth doing
+        // when the page scrape came back without a usable description — the field CV scanning and
+        // job-fit scoring both need. The service re-checks the flag, the length and the source
+        // itself, so this is only a cheap "might be worth a look", and it runs after the Job row
+        // is committed by the resolver above.
+        if (JobPostingSourceResolver.IsAts(jobSource) && externalId is not null)
+        {
+            jobClient.Enqueue<IAtsJobEnrichmentService>(s => s.EnrichAsync(jobId, CancellationToken.None));
+        }
 
         // The extension doesn't scrape employment type (spec §11's field list omits it) — same
         // known limitation as generic CSV import (DECISIONS.md Sprint 4), defaults to FullTime.

@@ -8,11 +8,13 @@ the field has a character limit) — copy them as text since the field doesn't a
 
 ```
 This extension helps a signed-in e-kariyerim user get their job applications into their own
-e-kariyerim account: with one click while viewing a LinkedIn or kariyer.net job posting; or, if
-they opt in, by locally checking an email they open in Gmail and sending only a short extracted
-summary when it looks job-related. Both are the same single purpose — getting the user's own
-application activity into their own account — via two entry points, the second capturing status
-updates that arrive by email.
+e-kariyerim account: with one click while viewing a job posting they have open — on LinkedIn or
+kariyer.net, on an applicant tracking system such as Greenhouse, Lever, Ashby, Workday, Workable
+or SmartRecruiters, or on any other job page the user chooses to allow; or, if they opt in, by
+locally checking an email they open in Gmail and sending only a short extracted summary when it
+looks job-related. Both are the same single purpose — getting the user's own application activity
+into their own account — via two entry points, the second capturing status updates that arrive by
+email.
 ```
 
 ## Permission justifications
@@ -29,23 +31,40 @@ Authorization header.
 **activeTab**
 ```
 Used only when the user clicks the extension's toolbar icon, to read the URL of the active tab and
-determine whether it's a supported LinkedIn or kariyer.net job posting.
+determine whether it looks like a job posting the extension can read.
 ```
 
 **scripting**
 ```
-Used only after the user clicks the extension's toolbar icon on a supported job posting, to run a
-one-time script in that tab that reads what is already visible on the page — the job title,
-company, location and description, and, on a LinkedIn posting that shows a hiring-team card, the
-name and profile URL of the person who posted the job — so the user doesn't have to retype them
-into the popup. Everything read is shown in the popup and can be edited or cleared before it is
-sent. Nothing runs until that click.
+Used only after the user clicks the extension's toolbar icon on a job posting, to run a one-time
+script in that tab that reads what is already visible on the page — the job title, company,
+location and description, and, on a LinkedIn posting that shows a hiring-team card, the name and
+profile URL of the person who posted the job — so the user doesn't have to retype them into the
+popup. On sites other than LinkedIn and kariyer.net it reads the page's own schema.org job-posting
+markup, the same structured data the page publishes for search engines. Everything read is shown
+in the popup and can be edited or cleared before it is sent. Nothing runs until that click.
 ```
 
 **host_permissions — https://www.linkedin.com/*, https://www.kariyer.net/***
 ```
 Required for the activeTab + scripting read above to run on these two job sites, and (LinkedIn
 only) so the popup can detect a job opened via the search-results side panel.
+```
+
+**optional_host_permissions — https://*/***
+```
+Not granted at install. Nothing is requested, and nothing can be read, until the user is looking at
+a job posting on a site the extension does not already cover and presses the "Allow" button in the
+popup for that one site; Chrome then shows its own permission prompt for that origin alone. Job
+postings live on thousands of hosts — every company's own careers page, every applicant tracking
+system tenant, every country's job board — so there is no list of sites that could be declared up
+front and still let someone track an application they made on their employer's own site. The
+extension asks for one host at a time, only the host the user is on, only when they press the
+button. Each granted site is listed in the extension's Settings page with a Remove button next to
+it. What happens after the grant is exactly what happens on LinkedIn and kariyer.net today: one
+click-triggered read of that page's visible job details and schema.org markup, shown in the popup,
+editable, and sent only when the user presses "I Applied". No background access, no content script
+registered on those sites, nothing read on any later visit without another click.
 ```
 
 **host_permissions — https://mail.google.com/*, plus a declared content_scripts entry matching
@@ -121,7 +140,7 @@ Chrome's form asks what data the item handles and how. Based on what `popup.js` 
 |---|---|---|
 | Personally identifiable information | Yes | Not about the user: the extension does not collect their name, address, or similar. But on a LinkedIn posting that publicly shows a hiring-team card, the popup reads the job poster's name and public profile URL and offers them as the application's contact — visible and editable in the popup before anything is sent, stored only on the user's own account as their own note of who to contact, never shown to anyone else and never used to contact that person. |
 | Authentication information | Yes | The user's own e-kariyerim access token, stored locally, used only to authenticate the extension's own requests to their account. Obtained by the user pressing Connect and confirming a code on their own account page (or, for a custom API address, entered by hand); the extension holds a random secret for the duration of that handshake and nothing else. |
-| Website content | Yes | Job title, company name, location, and job description text scraped from the LinkedIn/kariyer.net page the user opened, sent to the user's own e-kariyerim account. |
+| Website content | Yes | Job title, company name, location, and job description text read from the job posting the user opened — on LinkedIn or kariyer.net, or on any other site the user granted this extension access to, one site at a time — and sent to the user's own e-kariyerim account. |
 | Personal communications | Yes, opt-in only | Only if the user turns on Gmail Scanning in Settings (off by default): the sender, subject, and body text of an email the user personally opens in Gmail are read in the browser to score local relevance; only a short extracted summary (sender, subject, capped snippet — never the full email) is sent, and only for a message that scores as job-application-related, to the user's own e-kariyerim account. No other message is read or sent. |
 | Location, financial, health | No | — |
 

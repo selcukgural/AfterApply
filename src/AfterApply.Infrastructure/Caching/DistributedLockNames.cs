@@ -6,4 +6,6 @@ namespace AfterApply.Infrastructure.Caching;
 public sealed class DistributedLockNames(string keyPrefix)
 {
     public string CompanyEnrichment(Guid companyId) => $"{keyPrefix}lock:enrich:{companyId}";
+
+    public string AtsJobEnrichment(Guid jobId) => $"{keyPrefix}lock:enrich-job:{jobId}";
 }

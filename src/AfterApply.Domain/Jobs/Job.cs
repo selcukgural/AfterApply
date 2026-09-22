@@ -41,6 +41,60 @@ public sealed class Job : AuditableEntity
     {
     }
 
+    /// <summary>
+    /// Fills in whatever the capture left blank, from a later read of the same posting through the
+    /// ATS's own API (see <c>AtsJobEnrichmentService</c>). Fill-if-missing throughout, like
+    /// <c>Company.EnrichFrom</c>: the extension read the page the user was actually looking at, so
+    /// a value it produced outranks one fetched afterwards — the API is a backstop for the fields
+    /// the scrape could not reach, not a correction of the ones it could.
+    ///
+    /// Title is the one exception and is never touched: it is what the person sees on their own
+    /// application row, it was editable in the popup before they submitted it, and quietly
+    /// rewriting an edited title would undo their correction.
+    /// </summary>
+    public bool EnrichFrom(string? description, string? descriptionHtml, string? location,
+        EmploymentType? employmentType, DateTimeOffset? publishedAt, DateTimeOffset now)
+    {
+        var changed = false;
+
+        if (Description is null && description is not null)
+        {
+            Description = description;
+            changed = true;
+        }
+
+        if (DescriptionHtml is null && descriptionHtml is not null)
+        {
+            DescriptionHtml = descriptionHtml;
+            changed = true;
+        }
+
+        if (Location is null && location is not null)
+        {
+            Location = location;
+            changed = true;
+        }
+
+        if (EmploymentType is null && employmentType is not null)
+        {
+            EmploymentType = employmentType;
+            changed = true;
+        }
+
+        if (PublishedAt is null && publishedAt is not null)
+        {
+            PublishedAt = publishedAt;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            Touch(now);
+        }
+
+        return changed;
+    }
+
     public static Job Create(Guid companyId, string title, Source source, DateTimeOffset now,
         string? description = null, string? url = null, string? externalId = null,
         string? location = null, RemoteType? remoteType = null, EmploymentType? employmentType = null,

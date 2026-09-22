@@ -36,10 +36,10 @@ const AFTERAPPLY_DEFAULT_LOCAL_FILTER_CONFIG = {
     marketing: ["promotional", "kampanya"],
     jobAlert: ["job alert", "recommended jobs", "önerilen ilanlar"],
     digest: ["weekly digest", "daily digest", "haftalık özet"],
-    atsLinkDomains: ["greenhouse.io", "lever.co", "myworkdayjobs.com", "workday.com", "smartrecruiters.com", "ashbyhq.com"],
+    atsLinkDomains: ["greenhouse.io", "lever.co", "myworkdayjobs.com", "myworkdaysite.com", "workday.com", "smartrecruiters.com", "ashbyhq.com", "workable.com", "icims.com", "recruitee.com", "teamtailor.com", "personio.de"],
     calendarLinkDomains: ["calendly.com", "zoom.us", "teams.microsoft.com", "meet.google.com"],
   },
-  jobBoardDomains: ["linkedin.com", "indeed.com", "kariyer.net", "greenhouse.io", "lever.co", "workday.com", "smartrecruiters.com"],
+  jobBoardDomains: ["linkedin.com", "indeed.com", "kariyer.net", "greenhouse.io", "lever.co", "workday.com", "myworkdayjobs.com", "smartrecruiters.com", "ashbyhq.com", "workable.com"],
 };
 
 /** Asks background.js to make one allow-listed API call — see its AFTERAPPLY_ROUTES table. Shared

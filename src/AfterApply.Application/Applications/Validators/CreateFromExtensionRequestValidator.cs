@@ -1,5 +1,6 @@
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Common;
+using AfterApply.Application.Imports;
 using FluentValidation;
 
 namespace AfterApply.Application.Applications.Validators;
@@ -33,13 +34,19 @@ public sealed class CreateFromExtensionRequestValidator : AbstractValidator<Crea
             .WithMessage("CompanyKariyerNetUrl must be an https://www.kariyer.net/firma-profil/... URL.")
             .When(x => x.CompanyKariyerNetUrl is not null);
 
+        // Same reasoning again, against the whole ATS allow-list rather than one domain: the
+        // enrichment job fetches this URL, so the set of hosts it may point at has to be closed.
+        // The list is JobPostingSourceResolver's own, so a site added to the resolver table and a
+        // site accepted here can never drift apart.
+        RuleFor(x => x.CompanyAtsUrl)
+            .MaximumLength(500)
+            .Must(url => BeAnAllowedProfileUrl(url, JobPostingSourceResolver.AtsDomains))
+            .WithMessage("CompanyAtsUrl must be an https URL on a supported ATS domain.")
+            .When(x => x.CompanyAtsUrl is not null);
+
         this.ApplyHrContactRules(x => x.HrName, x => x.HrEmail, x => x.HrLinkedInUrl);
     }
 
-    private static bool BeAnAllowedProfileUrl(string? url, string domain) =>
-        url is not null
-        && Uri.TryCreate(url, UriKind.Absolute, out var uri)
-        && uri.Scheme == Uri.UriSchemeHttps
-        && (uri.Host.Equals(domain, StringComparison.OrdinalIgnoreCase)
-            || uri.Host.EndsWith("." + domain, StringComparison.OrdinalIgnoreCase));
+    private static bool BeAnAllowedProfileUrl(string? url, params string[] domains) =>
+        HostRules.IsHttpsUrlOnAllowedHost(url, domains);
 }

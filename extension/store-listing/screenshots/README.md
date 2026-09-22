@@ -18,10 +18,28 @@ showing the old logo. Prefer a shared asset over a copied glyph here.
 
 ## Regenerating them
 
-Last shot 2026-09-10 for `0.8.0` — `options-light.png` only, for the privacy-policy link the
+Last shot 2026-09-22 for `0.9.0` — `options-light.png` only, for the "Sites you allowed" section
+Settings gained with the per-site runtime permission. **The two popup shots were left alone on
+purpose, and the reasoning is worth keeping**: `0.9.0` adds a provenance badge to the popup's form,
+but `buildForm()` renders it only for `foundBy === "jsonld"` or `"meta"`. The scene shows a
+LinkedIn job, whose strategy reports `foundBy: "linkedin"` — so the badge does not appear there and
+the shot is still accurate. A future scene built on an ATS posting would need it.
+
+`scene-options.html` had to lose two rows to fit: the "Not connected yet." status and the "Enter a
+key by hand" row. The canvas is a fixed 1280×800 and the card grew by a whole section; without that
+trim the new section falls off the bottom edge, which is exactly what the first two attempts at
+this shot produced.
+
+**The shot caught a real styling bug before it shipped.** `popup.css`'s `button.secondary` is
+`display: block; width: 100%; margin-top: 10px` — built for the full-width "open the page again"
+button. Dropped into a list row it took the whole line and pushed the host name into a wrap. Both
+`options.html` and this scene now override it to an inline chip. Reviewing the markup would not
+have shown that; rendering it did.
+
+Before that, 2026-09-10 for `0.8.0` — `options-light.png` only, for the privacy-policy link the
 Settings footer gained (the release's other change, the background service worker, is invisible).
-The two popup shots were left alone again: `popup.html` is untouched by that release, and its
-footer deliberately still holds the version alone.
+The two popup shots were left alone that time too: `popup.html` was untouched by that release, and
+its footer deliberately still holds the version alone.
 
 Each `scene-*.html` renders its own 1280×800 design inside a flex-centered viewport, and takes a
 **`?pin=1`** parameter that drops the fit-to-viewport scale-down and pins the canvas to the
@@ -69,11 +87,16 @@ stale from the same commits these do, but they are **not** the marketing scenes 
 real `popup.html` / `options.html`, which can't be captured from an ordinary tab because they need
 the `chrome.*` APIs. Recipe:
 
-1. Copy `extension/` to a scratch directory, drop `store-listing/`, and add a `chrome-stub.js`
-   that defines `chrome.runtime.getManifest`, `chrome.storage.local` (seeded with
+1. Copy `extension/` to a scratch directory, drop `store-listing/` (and, since `0.9.0`,
+   `node_modules/`, `tests/`, `package*.json` and `vitest.config.js` — the test harness), and add a
+   `chrome-stub.js` that defines `chrome.runtime.getManifest` (**including `host_permissions`**,
+   which `options.js` reads to filter the allowed-sites list), `chrome.storage.local` (seeded with
    `afterapply_settings` holding a token, `afterapply_theme`, `afterapply_language: "tr"`,
-   `afterapply_gmail_scan_enabled: true`), `chrome.tabs.query` returning a LinkedIn job URL, and
-   `chrome.scripting.executeScript` returning a scraped-job object. Load it with a plain
+   `afterapply_gmail_scan_enabled: true`), `chrome.permissions` (`getAll` returning a few granted
+   origins plus the manifest ones, `contains`, `request`, `remove`, and `onAdded`/`onRemoved` with
+   an `addListener` that does nothing — `options.js` registers both at module scope and throws
+   without them), `chrome.tabs.query` returning a LinkedIn job URL, and
+   `chrome.scripting.executeScript` returning a scraped-job object with a `foundBy` field. Load it with a plain
    `<script src="chrome-stub.js">` placed **before** each page's `<script type="module">`, so the
    stub exists by the time `popup.js` runs `main()`.
 2. Add a `frame.html` that centres an `<iframe>` of the page on a soft gradient inside a
@@ -82,8 +105,11 @@ the `chrome.*` APIs. Recipe:
 3. Serve the scratch copy, open `frame.html?src=popup.html&w=360&scale=1.35` (and
    `?src=options.html&w=420&scale=1.35`), then capture and downscale as in the steps above —
    these two are 1280 wide with a free height, since the help page renders them `w-full`. Set
-   `--window-size` to roughly the rendered height (1280×760 fitted the 0.7.0 Settings page), or the
-   shot comes back with a band of empty gradient underneath.
+   `--window-size` to roughly the rendered height (1280×760 fitted the 0.7.0 Settings page;
+   1280×1005 fitted the 0.9.0 one), or the shot comes back with a band of empty gradient
+   underneath. Cropping that band off afterwards does not work as neatly as it sounds — the
+   frame's canvas gradient and the body background differ by a few units, so "find the last row
+   that is not the background colour" finds the very last row. Get the window height right instead.
 
 The stub is also the cheapest way to *look at* a page that only runs inside an extension. The
 0.7.0 Settings page shipped its "open the confirmation page again" button visible with no pairing

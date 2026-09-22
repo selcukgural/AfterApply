@@ -834,6 +834,39 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.ToTable("Companies", (string)null);
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.Companies.CompanyProfileLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Platform")
+                        .IsUnique();
+
+                    b.ToTable("CompanyProfileLinks", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.CompanyReviews.CompanyReview", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3198,6 +3231,15 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.Companies.CompanyProfileLink", b =>
+                {
+                    b.HasOne("AfterApply.Domain.Companies.Company", null)
+                        .WithMany("ProfileLinks")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AfterApply.Domain.CompanyReviews.CompanyReview", b =>
                 {
                     b.HasOne("AfterApply.Domain.Companies.Company", null)
@@ -3539,6 +3581,11 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.Navigation("Events");
 
                     b.Navigation("StatusHistory");
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Companies.Company", b =>
+                {
+                    b.Navigation("ProfileLinks");
                 });
 
             modelBuilder.Entity("AfterApply.Domain.Imports.ImportBatch", b =>

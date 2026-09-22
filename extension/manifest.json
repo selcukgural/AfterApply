@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "e-kariyerim — Job Import",
-  "version": "0.8.0",
-  "description": "Get your job applications into e-kariyerim — one click from LinkedIn/kariyer.net. No copy-pasting.",
+  "version": "0.9.0",
+  "description": "Get your job applications into e-kariyerim — one click from LinkedIn, kariyer.net, Greenhouse, Lever, Workday and more.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "e-kariyerim",
@@ -29,6 +29,7 @@
     "https://afterapply-api-188370748893.europe-west1.run.app/*",
     "https://api.ekariyerim.com/*"
   ],
+  "optional_host_permissions": ["https://*/*"],
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*"],

@@ -1,4 +1,5 @@
 using System.Net;
+using AfterApply.Application.Common;
 using AfterApply.Application.Imports;
 using AfterApply.Application.TrackedJobs;
 using AfterApply.Application.TrackedJobs.Contracts;
@@ -59,7 +60,7 @@ internal sealed class JobLinkPreviewService(HttpClient httpClient, ILogger<JobLi
                         return Empty(jobUrl);
                     }
 
-                    if (IsHost(nextUri, "linkedin.com"))
+                    if (HostRules.IsHost(nextUri, "linkedin.com"))
                     {
                         var (title, company) = LinkedInJobSlugParser.Parse(nextUri.ToString());
                         if (title is not null && company is not null)
@@ -80,7 +81,7 @@ internal sealed class JobLinkPreviewService(HttpClient httpClient, ILogger<JobLi
                     // (title-at-company-id), even on a request that got served at 200 with no
                     // redirect (redirect-vs-200 behavior varies with User-Agent/locale) — reading
                     // it from the body gets the same clean split as the redirect-header path.
-                    if (IsHost(currentUri, "linkedin.com"))
+                    if (HostRules.IsHost(currentUri, "linkedin.com"))
                     {
                         var canonicalHref = OpenGraphMetadataParser.ExtractLinkHref(html, "canonical");
                         var (canonicalTitle, canonicalCompany) = LinkedInJobSlugParser.Parse(canonicalHref);
@@ -94,7 +95,7 @@ internal sealed class JobLinkPreviewService(HttpClient httpClient, ILogger<JobLi
                     // delimiter (can't be split reliably), but its meta description follows a
                     // fixed template with an unambiguous one ("... {Company} firmasına ait
                     // {JobTitle} ...") — see KariyerNetJobDescriptionParser.
-                    if (IsHost(currentUri, "kariyer.net"))
+                    if (HostRules.IsHost(currentUri, "kariyer.net"))
                     {
                         var description = OpenGraphMetadataParser.ExtractProperty(html, "og:description")
                             ?? OpenGraphMetadataParser.ExtractProperty(html, "description");
@@ -137,10 +138,5 @@ internal sealed class JobLinkPreviewService(HttpClient httpClient, ILogger<JobLi
         status is HttpStatusCode.Moved or HttpStatusCode.Found or HttpStatusCode.SeeOther
             or HttpStatusCode.TemporaryRedirect or HttpStatusCode.PermanentRedirect;
 
-    private static bool IsAllowed(Uri uri) =>
-        uri.Scheme == Uri.UriSchemeHttps && AllowedHosts.Any(host => IsHost(uri, host));
-
-    private static bool IsHost(Uri uri, string domain) =>
-        uri.Host.Equals(domain, StringComparison.OrdinalIgnoreCase)
-        || uri.Host.EndsWith("." + domain, StringComparison.OrdinalIgnoreCase);
+    private static bool IsAllowed(Uri uri) => HostRules.IsHttpsHost(uri, AllowedHosts);
 }

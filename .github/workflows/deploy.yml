@@ -322,6 +322,15 @@ jobs:
             Hangfire__WorkerCount=2
             JobSources__Enabled=false
             JobSources__Scoring__ProjectId=${{ env.GCP_PROJECT_ID }}
+            # Reading an ATS posting back from that ATS's own public API after it is captured
+            # (0.9.0). On, because it is where the job description comes from for the biggest of
+            # them: Greenhouse's hosted boards publish no schema.org markup at all (measured on
+            # two live boards, 2026-09-22), so the extension can only read the title there and
+            # the CV-matching features would have nothing to work with. The request carries the
+            # posting's own public URL and nothing about the user. This flag and the privacy text
+            # move together — /extension-privacy and PRIVACY_POLICY.md name these recipients, so
+            # turning it off again means walking that text back.
+            AtsSources__Enabled=true
             PayTr__Enabled=false
             PayTr__TestMode=false
             PayTr__Plans__Monthly__AmountMinor=29900
