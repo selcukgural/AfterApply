@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "e-kariyerim — Job Import",
-  "version": "0.9.0",
-  "description": "Get your job applications into e-kariyerim — one click from LinkedIn, kariyer.net, Greenhouse, Lever, Workday and more.",
+  "version": "0.9.1",
+  "description": "Get your job applications into e-kariyerim — one click from LinkedIn, kariyer.net and the job sites you allow.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "e-kariyerim",

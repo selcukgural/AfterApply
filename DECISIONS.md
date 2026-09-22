@@ -8729,6 +8729,21 @@ platform. İkisinin tabloda birleşmesi doğru ama ayrı bir iş.
 Harness paketlenmiyor — `CLAUDE.md`'deki zip komutu `package.json`, `node_modules` ve `tests`'i
 dışarıda bırakıyor, eklenti hâlâ build adımı olmayan düz dosyalar.
 
+**Mağaza `0.9.0`'ı reddetti — özellik yüzünden değil, listeleme metni yüzünden (2026-09-22).**
+Gerekçe "anahtar kelime spam'i" ve alıntılanan içerik Türkçe açıklamadaki "Greenhouse, Lever,
+Ashby, Workday, Workable, SmartRecruiters" satırı (referans *Yellow Argon*). Politika listeleme
+meta verisinde alakasız veya lüzumsuz anahtar kelimeleri yasaklıyor; art arda altı üçüncü taraf
+ürün adı, niyet ne olursa olsun tam da o tarife giriyor. İtiraz değerlendirildi ve bırakıldı:
+inceleyenin okuması politikanın kendi lafzıyla savunulabilir, itiraz ise sürümün harcamasına gerek
+olmayan günleri harcatır. Düzeltme metinde: iki açıklama da artık yeteneği anlatıyor ("bir şirketin
+kendi kariyer sitesi, o şirketin kullandığı işe alım sistemi, ülkenizdeki bir iş sitesi") ve yalnız
+LinkedIn ile kariyer.net'i adıyla anıyor — onlar izin istemeden desteklenen iki site ve zaten
+onaylı `0.8.0` listesinde de vardı. `manifest.json`'ın `description` alanı aynı listeyi taşıdığı
+için o da yeniden yazıldı, sürüm `0.9.1`'e çıktı. **Kalıcı kural: Store meta verisinde (ad, özet,
+açıklamalar, ekran görüntüleri) üçüncü taraf markaları sıralanmaz.** `PERMISSIONS_JUSTIFICATION.md`
+bilinçli istisna — o listeleme metni değil, inceleyenin okuduğu gerekçe alanı, ve geniş host
+izninin neden istendiğini açıklayan şey tam olarak o sistemlerin adı.
+
 **Yayın ikiye bölündü, çünkü mağaza onayı bizim elimizde değil.** Arka uç, eklenti paketi ve
 mağaza materyali bugün çıkıyor; sitenin eklentiyi anlatan metinleri (landing araç şeridi ve özellik
 bölümü, yardım merkezinin Chrome Eklentisi sayfası, oradaki ekran görüntüsü ve landing'deki popup
