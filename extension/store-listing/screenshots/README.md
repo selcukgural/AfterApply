@@ -18,12 +18,31 @@ showing the old logo. Prefer a shared asset over a copied glyph here.
 
 ## Regenerating them
 
-Last shot 2026-09-22 for `0.9.0` — `options-light.png` only, for the "Sites you allowed" section
-Settings gained with the per-site runtime permission. **The two popup shots were left alone on
-purpose, and the reasoning is worth keeping**: `0.9.0` adds a provenance badge to the popup's form,
-but `buildForm()` renders it only for `foundBy === "jsonld"` or `"meta"`. The scene shows a
-LinkedIn job, whose strategy reports `foundBy: "linkedin"` — so the badge does not appear there and
-the shot is still accurate. A future scene built on an ATS posting would need it.
+Last shot 2026-09-22 for `0.9.0` — all three.
+
+`options-light.png` for the "Sites you allowed" section Settings gained with the per-site runtime
+permission.
+
+`popup-light.png` / `popup-dark.png` were reshot too, and the first reason to leave them alone
+turned out to be the wrong one. The badge argument said: `0.9.0` adds a provenance badge that
+`buildForm()` renders only for `foundBy === "jsonld"`/`"meta"`, the scene shows a LinkedIn job
+(`foundBy: "linkedin"`), so the badge would not appear and the shot was still accurate. True as far
+as it goes — but the scene is a *marketing* composition, and its copy said "LinkedIn ve kariyer.net
+desteği" and "Version 0.6.0" while the release it illustrates is the one that stops the extension
+being a two-site tool. The screenshot was not stale in its widget rendering; it was stale in what
+it promised. The scene is now a Lever posting with the provenance badge beside the site badge, the
+bullets name the ATS family and the runtime permission, and the version line reads 0.9.0.
+
+**That reshoot caught a second styling bug**, the same way the options one did. `buildForm()`
+renders the provenance note as `<span class="site-badge muted-badge">` — and `muted-badge` did not
+exist in `popup.css`. The note therefore rendered in the accent pill, identical to the site badge
+next to it, so "Greenhouse · sayfadan okundu" read as two site names. `popup.css` now carries the
+modifier (muted surface, no leading dot). Reviewing the markup would not have shown it; rendering
+it did.
+
+The help centre's `chrome-extension-popup.png` was *not* reshot, and here the badge argument does
+hold: it is the real `popup.html` on a LinkedIn job, where `foundBy` is `"linkedin"` and no
+provenance badge renders. Nothing else in that view changed.
 
 `scene-options.html` had to lose two rows to fit: the "Not connected yet." status and the "Enter a
 key by hand" row. The canvas is a fixed 1280×800 and the card grew by a whole section; without that

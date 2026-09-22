@@ -4,10 +4,15 @@ import { SampleDataBadge } from "@/components/landing/SampleDataBadge";
 import { LogoMark } from "@/components/layout/Logo";
 
 /**
- * The extension's popup, open over a LinkedIn job page, as markup with demo values.
+ * The extension's popup, open over an applicant-tracking-system job page, as markup with demo
+ * values.
  *
  * The values are the ones the Web Store screenshots use (extension/store-listing/screenshots/
- * scene-job.html), so the store and the site show the same job. The field labels come from the
+ * scene-job.html), so the store and the site show the same job — a contract a test holds to. It
+ * is an ATS posting rather than a LinkedIn one since 0.9.0, because that is the release's whole
+ * point: the second badge is the popup's own "read from the page" note, which appears exactly
+ * when the fields came from the page's schema.org markup rather than a site-specific reader. An
+ * ATS posting publishes no hiring contact, so that field is empty here, as it is in the popup. The field labels come from the
  * catalogue under the extension's own words — a Turkish visitor sees the popup a Turkish user gets.
  *
  * Accessibility: the whole thing is one picture. `role="img"` with a one-sentence label on the
@@ -16,12 +21,12 @@ import { LogoMark } from "@/components/layout/Logo";
  * badge sits outside the picture so it is announced.
  */
 const DEMO = {
-  url: "www.linkedin.com/jobs/view/4123456789",
-  source: "LinkedIn",
+  url: "jobs.lever.co/acme/8f2b1c34-1a2b-4c3d-9e8f-0a1b2c3d4e5f",
+  source: "Lever",
   company: "Acme Yazılım",
   jobTitle: "Senior Backend Engineer",
   location: "İstanbul, Türkiye",
-  contact: "Elif Demir",
+  contact: "",
 } as const;
 
 const SKELETON_WIDTHS = ["w-11/12", "w-5/6", "w-7/12", "w-10/12", "w-5/6", "w-11/12"];
@@ -63,6 +68,9 @@ export function ExtensionPopupMock({ className = "" }: { className?: string }) {
                 <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent-wash px-2 py-0.5 text-[11px] font-semibold text-accent-ink">
                   <span className="h-1.5 w-1.5 rounded-full bg-current" />
                   {DEMO.source}
+                </span>
+                <span className="-mt-1 inline-flex w-fit items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                  {t("readFromPage")}
                 </span>
                 {fields.map((field) => (
                   <div key={field.label}>

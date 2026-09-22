@@ -153,11 +153,26 @@ describe("the extension mock", () => {
   });
 
   it("shows the same job as the Web Store screenshots", () => {
+    // The store shot and the landing mock are two hand-built pictures of one popup; the only thing
+    // keeping them from drifting apart is this list. Since 0.9.0 the job is an ATS posting — the
+    // release's own story — so the site badge and the "read from the page" note travel with it.
     const scene = read("../extension/store-listing/screenshots/scene-job.html");
-    for (const value of ["Acme Yazılım", "Senior Backend Engineer", "İstanbul, Türkiye", "Elif Demir"]) {
+    for (const value of ["Acme Yazılım", "Senior Backend Engineer", "İstanbul, Türkiye", "Lever"]) {
       expect(source, value).toContain(value);
       expect(scene, `${value} in scene-job.html`).toContain(value);
     }
+  });
+
+  it("carries the provenance note the popup renders for a page read through its markup", () => {
+    const scene = read("../extension/store-listing/screenshots/scene-job.html");
+    expect(source).toContain('t("readFromPage")');
+    expect(scene).toContain("muted-badge");
+  });
+
+  /** An ATS posting publishes no hiring contact, and the popup leaves that field empty — showing a
+   *  name there would advertise something the capture cannot do on these sites. */
+  it("shows no hiring contact on the ATS posting", () => {
+    expect(source).not.toContain("Elif Demir");
   });
 });
 

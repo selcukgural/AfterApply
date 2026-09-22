@@ -229,9 +229,9 @@
       "cvTitle": "CV Tarama",
       "cvBody": "CV'ni bırak, başvuru sistemlerinin ondan ne okuduğunu ve ATS okunabilirliği puanını hemen gör.",
       "cvCta": "CV'mi tara",
-      "extensionPill": "LinkedIn + kariyer.net",
+      "extensionPill": "LinkedIn, kariyer.net + ATS",
       "extensionTitle": "Chrome Eklentisi",
-      "extensionBody": "LinkedIn ve kariyer.net'te tek tık: ilan sayfasından çıkmadan başvuruyu kaydet.",
+      "extensionBody": "Açık olan ilanda tek tık: LinkedIn ve kariyer.net kurulur kurulmaz, Greenhouse/Lever/Workday gibi siteler izin verdiğin anda.",
       "extensionCta": "Chrome'a ekle",
       "benchmarkTitle": "Geri dönüş oranı kıyaslama",
       "benchmarkBody": "İki sayı gir, kendi geri dönüş oranını gör ve alanının medyanıyla kıyasla.",
@@ -242,11 +242,11 @@
       "newBadge": "Yeni",
       "panels": {
         "extension": {
-          "eyebrow": "Chrome eklentisi · LinkedIn + kariyer.net",
+          "eyebrow": "Chrome eklentisi · LinkedIn, kariyer.net + ATS",
           "title": "Başvurdun. Bir tıkla kayda geçsin.",
-          "body": "İlan sayfasındayken eklentiye bas: şirket, pozisyon ve konum kendiliğinden dolar, sen sadece \"Başvurdum\" dersin.",
+          "body": "İlan sayfasındayken eklentiye bas: şirket, pozisyon ve konum kendiliğinden dolar, sen sadece \"Başvurdum\" dersin. Tanımadığı bir sitede önce o site için izin ister; verirsen orada da aynı şekilde çalışır.",
           "bullet1": "Şirket, pozisyon ve konum otomatik dolar — göndermeden önce düzenleyebilirsin",
-          "bullet2": "İlanı paylaşan işe alım sorumlusu da kaydedilir",
+          "bullet2": "LinkedIn ilanlarında ilanı paylaşan işe alım sorumlusu da kaydedilir",
           "bullet3": "Aynı ilana ikinci kez basınca mevcut başvurun açılır, kopya oluşmaz",
           "cta": "Chrome'a ekle",
           "help": "Nasıl kurulur?"
@@ -354,11 +354,12 @@
     },
     "extension": {
       "mock": {
-        "ariaLabel": "Örnek: bir LinkedIn ilanının üzerinde açılmış e-kariyerim eklentisi; şirket, pozisyon, konum ve İK kontağı otomatik dolmuş, altta Başvurdum düğmesi.",
+        "ariaLabel": "Örnek: bir Lever ilanının üzerinde açılmış e-kariyerim eklentisi; şirket, pozisyon ve konum sayfadan okunup otomatik dolmuş, altta Başvurdum düğmesi.",
         "company": "Şirket",
         "jobTitle": "Pozisyon",
         "location": "Konum",
         "contact": "İK kontağı",
+        "readFromPage": "sayfadan okundu",
         "optional": "isteğe bağlı",
         "submit": "Başvurdum"
       }
@@ -1975,7 +1976,7 @@
           "description": "Veri dışa aktarma, eklenti anahtarı, plan ve ödemeler, hesap silme."
         },
         "chromeExtension": {
-          "description": "LinkedIn ve kariyer.net'te tek tıkla \"Başvurdum\"."
+          "description": "Açık olan ilanda tek tıkla \"Başvurdum\"."
         },
         "faq": {
           "description": "Merak edilenler ve bilinen sınırlamalar."
@@ -2359,8 +2360,8 @@
     },
     "chromeExtension": {
       "eyebrow": "Chrome Eklentisi",
-      "title": "LinkedIn ve kariyer.net'te tek tıkla başvuru kaydedin",
-      "intro": "e-kariyerim Chrome eklentisi, bir LinkedIn ya da kariyer.net ilan sayfasını tek tıkla takip edilen bir başvuruya dönüştürür — \"Başvurdum\" düğmesine basmanız yeterli.",
+      "title": "Açık olan ilanı tek tıkla başvuruya çevirin",
+      "intro": "e-kariyerim Chrome eklentisi, bir ilan sayfasını tek tıkla takip edilen bir başvuruya dönüştürür — \"Başvurdum\" düğmesine basmanız yeterli. LinkedIn ve kariyer.net kurulduğu anda çalışır; Greenhouse, Lever, Ashby, Workday, Workable, SmartRecruiters ve herhangi bir şirketin kendi kariyer sayfası için eklenti önce o siteyi okuma izni ister, siz verdiğiniz sürece orada da aynı şekilde çalışır.",
       "install": {
         "title": "Kurulum",
         "storeIntro": "e-kariyerim eklentisi Chrome Web Mağazası'nda yayında — kurulum tek tıkla, geliştirici modu falan gerekmiyor.",
@@ -2407,7 +2408,8 @@
       "use": {
         "title": "Kullanım",
         "step1": {
-          "title": "Bir LinkedIn ya da kariyer.net ilan sayfasını açın"
+          "title": "Bir ilan sayfası açın",
+          "body": "LinkedIn ve kariyer.net doğrudan çalışır. Başka bir sitedeyseniz eklenti \"İzin ver\" düğmesi gösterir; Chrome yalnızca o site için onayınızı ister ve bir daha sormaz."
         },
         "step2": {
           "title": "Eklenti simgesine tıklayın",
@@ -2424,7 +2426,7 @@
       },
       "calloutScraping": {
         "title": "Otomatik doldurma en iyi çabayla çalışır",
-        "body": "LinkedIn ve kariyer.net zaman zaman sayfa yapılarını değiştirir; bu durumda bazı alanlar boş gelebilir. Bu, yanlış veri göndermek yerine sizin elle doldurmanız gereken boş bir alan olarak kendini gösterir."
+        "body": "Siteler sayfa yapılarını değiştirir; LinkedIn ve kariyer.net dışındaki sitelerde eklenti sayfanın kendi schema.org ilan işaretlemesini okur ve her site bunu yayınlamaz (örneğin Greenhouse panolarında yalnızca başlık gelir). Okunamayan alan boş kalır, siz elle doldurursunuz — yanlış veri gönderilmez. Hiçbir şey okunamazsa \"Elle ekle\" ile iki alanı kendiniz yazıp başvuruyu yine de kaydedebilirsiniz."
       },
       "calloutDedupe": {
         "title": "Aynı ilana tekrar tıklamak güvenlidir",
@@ -2435,7 +2437,10 @@
         "body": "Eklentinin ayarlar sayfasında Gmail Taraması'nı açarsanız, Gmail'de açtığınız e-postalar arasında işe alım yazışması gibi görünenler (mülakat daveti, ret, teklif) tanınır ve yalnızca gönderen, konu, kısa bir özet ve tarih e-kariyerim'e gönderilir — e-postanın tamamı değil. Kapalı gelir; açmadığınız sürece eklenti Gmail'e hiç dokunmaz.",
         "next": "Tanınan her e-posta Öneriler sayfasında bir kart olur; ne yapacağınıza orada siz karar verirsiniz. Ayrıntılar Öneriler yardım sayfasında."
       },
-      "calloutPermission": {}
+      "calloutPermission": {
+        "title": "İzin verdiğiniz siteler sizde kalır",
+        "body": "Eklenti yalnızca siz açtığınız sayfayı, yalnızca siz simgesine bastığınızda okur; arka planda hiçbir sitede çalışmaz. İzin verdiğiniz her site eklentinin Ayarlar sayfasında listelenir ve yanındaki \"Kaldır\" ile geri alınır; kaldırdığınız an o siteyi okumayı bırakır."
+      }
     },
     "faq": {
       "eyebrow": "Sık Sorulan Sorular",
