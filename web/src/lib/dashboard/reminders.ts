@@ -2,9 +2,10 @@ import type { SelectionState } from "@/lib/applications/bulkSelection";
 import type { ReminderSelection, ReminderType } from "@/types/api";
 
 /** Message key under `dashboard.reminders` for each reminder type. */
-export const REMINDER_LABEL_KEY: Record<ReminderType, "followUp" | "possiblyGhosted"> = {
+export const REMINDER_LABEL_KEY: Record<ReminderType, "followUp" | "possiblyGhosted" | "promiseMissed"> = {
   FollowUp: "followUp",
   PossiblyGhosted: "possiblyGhosted",
+  PromiseMissed: "promiseMissed",
 };
 
 /**
@@ -16,7 +17,15 @@ export const REMINDER_LABEL_KEY: Record<ReminderType, "followUp" | "possiblyGhos
 export const REMINDER_ANSWER_KEY: Record<ReminderType, "followedUp" | "markGhosted"> = {
   FollowUp: "followedUp",
   PossiblyGhosted: "markGhosted",
+  // A missed date is a reason to write to them, not to close the application: the answer is the
+  // follow-up, same as the plain follow-up row.
+  PromiseMissed: "followedUp",
 };
+
+/** Whether a row's own answer is "mark as ghosted" (a status change) rather than "followed up". */
+export function answersByGhosting(type: ReminderType): boolean {
+  return REMINDER_ANSWER_KEY[type] === "markGhosted";
+}
 
 /**
  * The wire form of the card's selection. The applications list's selection state fits as it is —

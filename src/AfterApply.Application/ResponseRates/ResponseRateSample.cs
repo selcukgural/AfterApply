@@ -13,6 +13,10 @@ namespace AfterApply.Application.ResponseRates;
 /// <param name="FirstRespondedAt">When the company first did anything a candidate would call a
 /// reply (<see cref="ApplicationStatusClassification.RespondedStatuses"/>), or null if it never
 /// has.</param>
+/// <param name="Promise">The company's reply promise, already read by
+/// <see cref="ReplyPromises.Evaluate"/>; null when none was recorded.</param>
+/// <param name="RejectionNotice">How the candidate learned of the rejection; null unless the
+/// application is Rejected and they said.</param>
 public sealed record ResponseRateSample(
     Guid ApplicationId,
     Guid UserId,
@@ -20,4 +24,6 @@ public sealed record ResponseRateSample(
     DateTimeOffset AppliedAt,
     DateTimeOffset? FirstRespondedAt,
     bool ReachedInterview,
-    bool ReachedOffer);
+    bool ReachedOffer,
+    ReplyPromiseEvaluation? Promise = null,
+    RejectionNotice? RejectionNotice = null);

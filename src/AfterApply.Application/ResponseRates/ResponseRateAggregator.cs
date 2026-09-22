@@ -11,6 +11,17 @@ namespace AfterApply.Application.ResponseRates;
 /// </summary>
 public static class ResponseRateAggregator
 {
+    /// <summary>
+    /// The floor under each of the two self-reported sub-rates — promise keeping and rejection
+    /// notice. They are asked, optionally, so they come from far fewer applications than the row
+    /// they sit in; a row that clears its own threshold can still hold the promise record of one
+    /// person. Five answers from three different people is the least that reads as a pattern
+    /// rather than an anecdote; below it the rate is null and the page prints a dash.
+    /// </summary>
+    public const int SubRateMinimumSamples = 5;
+
+    public const int SubRateMinimumContributors = 3;
+
     public static ResponseRateFigures Compute(IReadOnlyList<ResponseRateSample> samples, DateTimeOffset now, int maturityDays)
     {
         var total = samples.Count;
@@ -35,6 +46,13 @@ public static class ResponseRateAggregator
             .Select(s => (s.FirstRespondedAt!.Value - s.AppliedAt).TotalDays)
             .ToList();
 
+        var settledPromises = samples
+            .Where(s => s.Promise is { } p && (p.CountsAsKept || p.CountsAsBroken))
+            .ToList();
+        var knownRejections = samples
+            .Where(s => s.Status == ApplicationStatus.Rejected && s.RejectionNotice is not null)
+            .ToList();
+
         return new ResponseRateFigures(
             TotalApplications: total,
             MatureApplications: mature.Count,
@@ -49,7 +67,22 @@ public static class ResponseRateAggregator
                 : AnalyticsCalculations.CalculateRate(silentAfterInterview, interviewed),
             AverageFirstReplyDays: AnalyticsCalculations.Average(replyDays),
             MedianFirstReplyDays: AnalyticsCalculations.Median(replyDays),
-            ClosureRate: AnalyticsCalculations.CalculateRate(closed, mature.Count));
+            ClosureRate: AnalyticsCalculations.CalculateRate(closed, mature.Count),
+            PromiseKeptRate: SubRate(settledPromises, s => s.Promise!.CountsAsKept),
+            PromiseSamples: settledPromises.Count,
+            RejectionNoticeRate: SubRate(knownRejections, s => s.RejectionNotice == RejectionNotice.CompanyNotified),
+            RejectionNoticeSamples: knownRejections.Count);
+    }
+
+    private static double? SubRate(IReadOnlyCollection<ResponseRateSample> answered, Func<ResponseRateSample, bool> isYes)
+    {
+        if (answered.Count < SubRateMinimumSamples
+            || answered.Select(s => s.UserId).Distinct().Count() < SubRateMinimumContributors)
+        {
+            return null;
+        }
+
+        return AnalyticsCalculations.CalculateRate(answered.Count(isYes), answered.Count);
     }
 
     /// <summary>
@@ -60,11 +93,27 @@ public static class ResponseRateAggregator
         Guid applicationId, Guid userId, ApplicationStatus status, DateTimeOffset appliedAt,
         IEnumerable<(ApplicationStatus ToStatus, DateTimeOffset ChangedAt)> history)
     {
+        return ToSample(applicationId, userId, status, appliedAt, history,
+            promisedReplyBy: null, promisedReplySince: null, rejectionNotice: null, now: default);
+    }
+
+    /// <summary>
+    /// As above, plus the two self-reported answers. <paramref name="now"/> settles an unanswered
+    /// promise whose date and grace have run out; it is only read when a promise is present.
+    /// </summary>
+    public static ResponseRateSample ToSample(
+        Guid applicationId, Guid userId, ApplicationStatus status, DateTimeOffset appliedAt,
+        IEnumerable<(ApplicationStatus ToStatus, DateTimeOffset ChangedAt)> history,
+        DateOnly? promisedReplyBy, DateTimeOffset? promisedReplySince, RejectionNotice? rejectionNotice,
+        DateTimeOffset now)
+    {
+        var transitions = history as IReadOnlyCollection<(ApplicationStatus ToStatus, DateTimeOffset ChangedAt)>
+                          ?? history.ToList();
         DateTimeOffset? firstResponded = null;
         var reachedInterview = false;
         var reachedOffer = false;
 
-        foreach (var (toStatus, changedAt) in history)
+        foreach (var (toStatus, changedAt) in transitions)
         {
             if (ApplicationStatusClassification.RespondedStatuses.Contains(toStatus)
                 && (firstResponded is null || changedAt < firstResponded))
@@ -76,6 +125,11 @@ public static class ResponseRateAggregator
             reachedOffer |= ApplicationStatusClassification.OfferStatuses.Contains(toStatus);
         }
 
-        return new ResponseRateSample(applicationId, userId, status, appliedAt, firstResponded, reachedInterview, reachedOffer);
+        var promise = promisedReplyBy is { } by && promisedReplySince is { } since
+            ? ReplyPromises.Evaluate(by, since, transitions, now)
+            : null;
+
+        return new ResponseRateSample(applicationId, userId, status, appliedAt, firstResponded, reachedInterview, reachedOffer,
+            promise, status == ApplicationStatus.Rejected ? rejectionNotice : null);
     }
 }

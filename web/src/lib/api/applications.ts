@@ -16,6 +16,7 @@ import type {
   ApplicationStatusHistoryResponse,
   ApplicationSummaryResponse,
   ChangeStatusRequest,
+  SetReplyPromiseRequest,
   CreateApplicationRequest,
   PagedResult,
   UpdateApplicationRequest,
@@ -78,6 +79,13 @@ export const applicationsApi = {
   changeStatus: (id: string, request: ChangeStatusRequest) =>
     apiFetch<ApplicationDetailResponse>(`/api/applications/${id}/status`, {
       method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  /** Records, moves or (null) clears the company's promised reply date. */
+  setReplyPromise: (id: string, request: SetReplyPromiseRequest) =>
+    apiFetch<ApplicationDetailResponse>(`/api/applications/${id}/reply-promise`, {
+      method: "PUT",
       body: JSON.stringify(request),
     }),
 

@@ -29,7 +29,12 @@ public sealed record ApplicationExportItem(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyList<ApplicationEventExportItem> Events,
-    IReadOnlyList<StatusHistoryExportItem> StatusHistory);
+    IReadOnlyList<StatusHistoryExportItem> StatusHistory,
+    // The user's own answers to "did they give you a date?" and "how did you learn of the
+    // rejection?" — theirs, so they leave with the export.
+    DateOnly? PromisedReplyBy = null,
+    ApplicationStatus? PromisedReplyStatus = null,
+    RejectionNotice? RejectionNotice = null);
 
 public sealed record ImportBatchExportItem(
     Guid Id,

@@ -52,6 +52,23 @@ public sealed class Application : AuditableEntity
     /// any other.</summary>
     public Guid? CvDocumentId { get; private set; }
 
+    /// <summary>The date the company said it would get back by, when the candidate recorded one.
+    /// One promise per application: a new one replaces the old. Read through
+    /// <see cref="ReplyPromises.Evaluate"/>, never on its own.</summary>
+    public DateOnly? PromisedReplyBy { get; private set; }
+
+    /// <summary>The stage the promise was given in — "after the interview we'll let you know".
+    /// Null exactly when <see cref="PromisedReplyBy"/> is.</summary>
+    public ApplicationStatus? PromisedReplyStatus { get; private set; }
+
+    /// <summary>When that stage began: the first status change after this moment is the company's
+    /// answer to the promise. Null exactly when <see cref="PromisedReplyBy"/> is.</summary>
+    public DateTimeOffset? PromisedReplySince { get; private set; }
+
+    /// <summary>How the candidate learned of the rejection; null unless <see cref="Status"/> is
+    /// Rejected, and null there too when they did not say.</summary>
+    public RejectionNotice? RejectionNotice { get; private set; }
+
     public IReadOnlyCollection<ApplicationEvent> Events => _events;
 
     public IReadOnlyCollection<ApplicationStatusHistory> StatusHistory => _statusHistory;
@@ -147,7 +164,8 @@ public sealed class Application : AuditableEntity
         Touch(now);
     }
 
-    public void ChangeStatus(ApplicationStatus newStatus, DateTimeOffset changedAt, StatusChangeContext context)
+    public void ChangeStatus(ApplicationStatus newStatus, DateTimeOffset changedAt, StatusChangeContext context,
+        RejectionNotice? rejectionNotice = null)
     {
         if (newStatus == Status)
         {
@@ -156,11 +174,52 @@ public sealed class Application : AuditableEntity
 
         var fromStatus = Status;
         Status = newStatus;
+        // A rejection that arrived as the company's own email answers the question without asking
+        // it; any other rejection carries what the candidate said, or nothing. Leaving Rejected
+        // (an undo, a reversal) takes the answer with it — it described that rejection.
+        RejectionNotice = newStatus != ApplicationStatus.Rejected
+            ? null
+            : context.Origin is StatusChangeOrigin.EmailSuggestionConfirmed or StatusChangeOrigin.EmailAutoApplied
+                ? Applications.RejectionNotice.CompanyNotified
+                : rejectionNotice;
         Touch(changedAt);
 
         _statusHistory.Add(ApplicationStatusHistory.Create(Id, fromStatus, newStatus, changedAt, context));
         _events.Add(ApplicationEvent.Create(Id, ApplicationEventType.StatusChanged, changedAt, context.Source,
             metadata: $$"""{"fromStatus":"{{fromStatus}}","toStatus":"{{newStatus}}"}"""));
+    }
+
+    /// <summary>
+    /// Records, moves or clears the company's promised reply date. <paramref name="stageSince"/> is
+    /// when the current stage began (the caller reads it off the status history). Changing only the
+    /// date of a promise given in this same stage keeps its stage — "they pushed it to Friday" is
+    /// the same promise, moved; anything else starts a new one. Clearing is allowed on a closed
+    /// application (it is the user's record), setting one is not: nothing is left to wait for.
+    /// </summary>
+    public void SetReplyPromise(DateOnly? promisedBy, DateTimeOffset stageSince, DateTimeOffset now)
+    {
+        if (promisedBy is null)
+        {
+            PromisedReplyBy = null;
+            PromisedReplyStatus = null;
+            PromisedReplySince = null;
+            Touch(now);
+            return;
+        }
+
+        if (TerminalApplicationStatuses.Values.Contains(Status))
+        {
+            throw new ReplyPromiseOnClosedApplicationException();
+        }
+
+        if (PromisedReplyStatus != Status || PromisedReplySince != stageSince)
+        {
+            PromisedReplyStatus = Status;
+            PromisedReplySince = stageSince;
+        }
+
+        PromisedReplyBy = promisedBy;
+        Touch(now);
     }
 
     /// <summary>The origin implied by the Source a brand-new application was created with. Only used
@@ -188,6 +247,9 @@ public sealed class Application : AuditableEntity
 
 public sealed class ApplicationAlreadyInStatusException()
     : DomainException("APPLICATION_ALREADY_IN_STATUS", "Application is already in this status.");
+
+public sealed class ReplyPromiseOnClosedApplicationException()
+    : DomainException("REPLY_PROMISE_ON_CLOSED_APPLICATION", "A closed application cannot be given a reply date.");
 
 public sealed class StatusChangedEventNotAllowedException()
     : DomainException("STATUS_CHANGED_EVENT_INVALID", "StatusChanged events can only be created via ChangeStatus.");

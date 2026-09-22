@@ -186,4 +186,98 @@ public class ResponseRateAggregatorTests
         Should.Throw<ArgumentOutOfRangeException>(() =>
             ResponseRatePeriods.MonthsOf(AfterApply.Domain.Benchmark.BenchmarkPeriod.Longer));
     }
+    private static ResponseRateSample WithPromise(Guid user, bool kept) =>
+        Sample(user, 60, ApplicationStatus.Interview, repliedAfterDays: 5, interview: true) with
+        {
+            Promise = kept
+                ? new ReplyPromiseEvaluation(ReplyPromiseOutcome.Kept, CountsAsKept: true, CountsAsBroken: false)
+                : new ReplyPromiseEvaluation(ReplyPromiseOutcome.Late, CountsAsKept: false, CountsAsBroken: true)
+        };
+
+    private static ResponseRateSample Rejected(Guid user, RejectionNotice? notice) =>
+        Sample(user, 60, ApplicationStatus.Rejected, repliedAfterDays: 5) with { RejectionNotice = notice };
+
+    [Fact]
+    public void The_Sub_Rate_Floor_Is_Five_Answers_From_Three_People()
+    {
+        // Guarded like the row thresholds: lowering it is a publishing decision, not a refactor.
+        ResponseRateAggregator.SubRateMinimumSamples.ShouldBe(5);
+        ResponseRateAggregator.SubRateMinimumContributors.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Promise_Kept_Rate_Is_Over_Settled_Promises_Only()
+    {
+        var samples = new[]
+        {
+            WithPromise(UserA, kept: true), WithPromise(UserA, kept: true), WithPromise(UserB, kept: true),
+            WithPromise(UserB, kept: false), WithPromise(UserC, kept: false),
+            // Pending and unrecorded promises are in the row but not in the rate.
+            Sample(UserC, 60) with { Promise = new ReplyPromiseEvaluation(ReplyPromiseOutcome.Pending, false, false) },
+            Sample(UserC, 60)
+        };
+
+        var figures = ResponseRateAggregator.Compute(samples, Now, 30);
+
+        figures.PromiseSamples.ShouldBe(5);
+        figures.PromiseKeptRate.ShouldBe(60.0);
+    }
+
+    [Fact]
+    public void Promise_Kept_Rate_Is_Null_Below_Five_Settled_Promises()
+    {
+        var samples = new[]
+        {
+            WithPromise(UserA, kept: true), WithPromise(UserB, kept: true),
+            WithPromise(UserC, kept: false), WithPromise(UserC, kept: true)
+        };
+
+        var figures = ResponseRateAggregator.Compute(samples, Now, 30);
+
+        figures.PromiseSamples.ShouldBe(4);
+        figures.PromiseKeptRate.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Promise_Kept_Rate_Is_Null_When_Fewer_Than_Three_People_Gave_The_Answers()
+    {
+        // Enough promises, but one person's record with a company name on it.
+        var samples = Enumerable.Range(0, 6).Select(i => WithPromise(i < 5 ? UserA : UserB, kept: true)).ToArray();
+
+        ResponseRateAggregator.Compute(samples, Now, 30).PromiseKeptRate.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Rejection_Notice_Rate_Counts_Only_Rejections_Whose_Route_Is_Known()
+    {
+        var samples = new[]
+        {
+            Rejected(UserA, RejectionNotice.CompanyNotified), Rejected(UserA, RejectionNotice.CompanyNotified),
+            Rejected(UserB, RejectionNotice.CompanyNotified), Rejected(UserB, RejectionNotice.SeenOnPortal),
+            Rejected(UserC, RejectionNotice.OtherOrInferred), Rejected(UserC, null)
+        };
+
+        var figures = ResponseRateAggregator.Compute(samples, Now, 30);
+
+        figures.RejectionNoticeSamples.ShouldBe(5);
+        figures.RejectionNoticeRate.ShouldBe(60.0);
+    }
+
+    [Fact]
+    public void ToSample_Reads_The_Promise_Through_ReplyPromises_And_Drops_A_Notice_On_A_Non_Rejection()
+    {
+        var appliedAt = Now.AddDays(-40);
+        var history = new[]
+        {
+            (ApplicationStatus.Applied, appliedAt),
+            (ApplicationStatus.Interview, appliedAt.AddDays(10)),
+            (ApplicationStatus.Offer, appliedAt.AddDays(14))
+        };
+
+        var sample = ResponseRateAggregator.ToSample(Guid.NewGuid(), UserA, ApplicationStatus.Offer, appliedAt, history,
+            DateOnly.FromDateTime(appliedAt.AddDays(15).UtcDateTime), appliedAt.AddDays(10), RejectionNotice.SeenOnPortal, Now);
+
+        sample.Promise!.Outcome.ShouldBe(ReplyPromiseOutcome.Kept);
+        sample.RejectionNotice.ShouldBeNull();
+    }
 }

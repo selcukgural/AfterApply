@@ -7,7 +7,8 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { applicationsApi } from "@/lib/api/applications";
 import type { ApplicationEventType, ApplicationStatus } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
-import { StatusChangeSelect } from "@/components/applications/StatusChangeSelect";
+import { StatusChangeSelect, type StatusChangeExtras } from "@/components/applications/StatusChangeSelect";
+import { ReplyPromiseField } from "@/components/applications/ReplyPromiseField";
 import { ShareExperienceInvite } from "@/components/applications/ShareExperienceInvite";
 import { AcceptedClosingNote } from "@/components/applications/AcceptedClosingNote";
 import { ApplicationTimeline } from "@/components/applications/ApplicationTimeline";
@@ -58,10 +59,26 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   });
 
   const changeStatusMutation = useMutation({
-    mutationFn: (variables: { newStatus: ApplicationStatus; note: string | null }) =>
-      applicationsApi.changeStatus(id, { ...variables, changedAt: null }),
+    mutationFn: (variables: { newStatus: ApplicationStatus; note: string | null; extras: StatusChangeExtras }) =>
+      applicationsApi.changeStatus(id, {
+        newStatus: variables.newStatus,
+        note: variables.note,
+        changedAt: null,
+        promisedReplyBy: variables.extras.promisedReplyBy,
+        rejectionNotice: variables.extras.rejectionNotice,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
+      // A new promise can retire a reminder on the dashboard at once (server side); keep it honest.
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+  });
+
+  const replyPromiseMutation = useMutation({
+    mutationFn: (promisedReplyBy: string | null) => applicationsApi.setReplyPromise(id, { promisedReplyBy }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
     },
   });
 
@@ -130,6 +147,11 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         <div className="flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <div className="flex items-center gap-2">
             <StatusBadge status={application.status} />
+            {application.status === "Rejected" && application.rejectionNotice && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                · {t(`rejectionNotice.${application.rejectionNotice}`)}
+              </span>
+            )}
           </div>
           <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <div>
@@ -148,6 +170,14 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               <dt className="text-gray-500 dark:text-gray-400">{t("createdAt")}</dt>
               <dd className="text-gray-900 dark:text-gray-100">{new Date(application.createdAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}</dd>
             </div>
+            <ReplyPromiseField
+              application={application}
+              isSaving={replyPromiseMutation.isPending}
+              error={replyPromiseMutation.error instanceof Error ? replyPromiseMutation.error.message : null}
+              onSave={async (promisedReplyBy) => {
+                await replyPromiseMutation.mutateAsync(promisedReplyBy);
+              }}
+            />
             {application.companyIndustry && (
               <div className="min-w-0">
                 <dt className="text-gray-500 dark:text-gray-400">{t("companyIndustry")}</dt>
@@ -198,8 +228,8 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           <StatusChangeSelect
             currentStatus={application.status}
             isSubmitting={changeStatusMutation.isPending}
-            onChangeStatus={async (newStatus, note) => {
-              await changeStatusMutation.mutateAsync({ newStatus, note });
+            onChangeStatus={async (newStatus, note, extras) => {
+              await changeStatusMutation.mutateAsync({ newStatus, note, extras });
             }}
           />
           <ShareExperienceInvite

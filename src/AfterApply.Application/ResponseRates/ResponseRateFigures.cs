@@ -22,6 +22,15 @@ namespace AfterApply.Application.ResponseRates;
 /// the share now marked Ghosted — the grievance Ekşi and Blind threads single out ("they called
 /// me in and then nothing"). Null when nobody reached an interview.</param>
 /// <param name="ClosureRate">The share the company gave an explicit outcome (Rejected/Accepted).</param>
+/// <param name="PromiseKeptRate">Of the reply promises whose outcome is settled (kept, or broken:
+/// answered after the date or still silent past it), the share kept. Over every settled promise in
+/// the window — maturity is already in the settling. Null below the sub-rate floor
+/// (<see cref="ResponseRateAggregator.SubRateMinimumSamples"/> promises from
+/// <see cref="ResponseRateAggregator.SubRateMinimumContributors"/> people).</param>
+/// <param name="PromiseSamples">How many settled promises <see cref="PromiseKeptRate"/> is over.</param>
+/// <param name="RejectionNoticeRate">Of the rejections whose route is known, the share the company
+/// told the candidate itself. Null below the same floor.</param>
+/// <param name="RejectionNoticeSamples">How many known-route rejections that rate is over.</param>
 public sealed record ResponseRateFigures(
     int TotalApplications,
     int MatureApplications,
@@ -34,4 +43,8 @@ public sealed record ResponseRateFigures(
     double? PostInterviewSilenceRate,
     double? AverageFirstReplyDays,
     double? MedianFirstReplyDays,
-    double ClosureRate);
+    double ClosureRate,
+    double? PromiseKeptRate = null,
+    int PromiseSamples = 0,
+    double? RejectionNoticeRate = null,
+    int RejectionNoticeSamples = 0);

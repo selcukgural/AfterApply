@@ -53,6 +53,11 @@ public interface IApplicationService
     Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId, ApplicationStatus newStatus,
         DateTimeOffset changedAt, StatusChangeContext context, CancellationToken cancellationToken);
 
+    /// <summary>Records, moves or clears the company's promised reply date without a status change.
+    /// Null when the application is not the user's.</summary>
+    Task<ApplicationDetailResponse?> SetReplyPromiseAsync(Guid userId, Guid applicationId, SetReplyPromiseRequest request,
+        CancellationToken cancellationToken);
+
     /// <summary>Newest first. Null when the application is not the user's.</summary>
     Task<IReadOnlyCollection<ApplicationStatusHistoryResponse>?> GetStatusHistoryAsync(Guid userId, Guid applicationId, CancellationToken cancellationToken);
 

@@ -86,7 +86,8 @@ function Table({ data }: { data: SectorResponseRatesResponse }) {
   const thresholds = data.thresholds;
   const none = t("none");
 
-  const rateCell = (value: number | null) => (value === null ? none : formatRate(value, locale));
+  // `undefined` too: an API that predates a column sends nothing for it, and a dash is the honest cell.
+  const rateCell = (value: number | null | undefined) => (value == null ? none : formatRate(value, locale));
 
   if (visible.length === 0) {
     return (
@@ -103,7 +104,7 @@ function Table({ data }: { data: SectorResponseRatesResponse }) {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] border-collapse">
+        <table className="w-full min-w-[920px] border-collapse">
           <thead className="border-b border-gray-200 dark:border-gray-800">
             <tr>
               <th scope="col" className={`${HEAD} text-left`}>{t("columns.sector")}</th>
@@ -113,6 +114,8 @@ function Table({ data }: { data: SectorResponseRatesResponse }) {
               <th scope="col" className={`${HEAD} text-right`}>{t("columns.medianFirstReply")}</th>
               <th scope="col" className={`${HEAD} text-right`}>{t("columns.postInterviewSilence")}</th>
               <th scope="col" className={`${HEAD} text-right`}>{t("columns.ghosting")}</th>
+              <th scope="col" className={`${HEAD} text-right`}>{t("columns.promiseKept")}</th>
+              <th scope="col" className={`${HEAD} text-right`}>{t("columns.rejectionNotice")}</th>
             </tr>
           </thead>
           <tbody>
@@ -127,13 +130,17 @@ function Table({ data }: { data: SectorResponseRatesResponse }) {
                   <td className={NUM}>{f.medianFirstReplyDays === null ? none : t("days", { value: formatDays(f.medianFirstReplyDays, locale) })}</td>
                   <td className={NUM}>{rateCell(f.postInterviewSilenceRate)}</td>
                   <td className={NUM}>{formatRate(f.ghostingRate, locale)}</td>
+                  {/* Self-reported and optional, so each has its own floor: a dash here while the
+                      rest of the row is open is the floor, not a zero. */}
+                  <td className={NUM}>{rateCell(f.promiseKeptRate)}</td>
+                  <td className={NUM}>{rateCell(f.rejectionNoticeRate)}</td>
                 </tr>
               );
             })}
             {hidden.map((row) => (
               <tr key={row.sector} className="border-b border-gray-100 text-gray-500 last:border-b-0 dark:border-gray-800 dark:text-gray-500">
                 <th scope="row" className={`${CELL} text-left font-normal text-gray-500 dark:text-gray-500`}>{tSectors(row.sector)}</th>
-                <td colSpan={6} className={`${CELL} text-right text-xs text-gray-500 dark:text-gray-500`}>
+                <td colSpan={8} className={`${CELL} text-right text-xs text-gray-500 dark:text-gray-500`}>
                   {t("belowThreshold", { contributors: thresholds.minimumContributors, applications: thresholds.minimumApplications })}
                 </td>
               </tr>
@@ -143,6 +150,7 @@ function Table({ data }: { data: SectorResponseRatesResponse }) {
       </div>
       <div className="flex flex-col gap-1 border-t border-gray-200 px-4 py-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-500">
         <span>{t("shareRule", { share: thresholds.maxContributorSharePercent })}</span>
+        <span>{t("subRateRule")}</span>
         {data.unclassifiedApplications > 0 && <span>{t("unclassified", { count: data.unclassifiedApplications })}</span>}
       </div>
     </div>

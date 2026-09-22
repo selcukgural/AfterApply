@@ -27,7 +27,14 @@ public sealed record CompanyIntelligenceMetrics(
     // Composite of Responsiveness (=ResponseRate) / Response Time / ClosureRate — spec §14.
     // Interview Experience and Process Transparency are not included: no raw data exists yet
     // for either (see DEVELOPMENT_PLAN.md Sprint 11).
-    double CandidateExperienceScore);
+    double CandidateExperienceScore,
+    // Of the settled reply promises, the share kept; of the rejections whose route is known, the
+    // share the company told the candidate itself. Self-reported and optional, so each has its own
+    // floor (ResponseRateAggregator.SubRateMinimumSamples) and is null below it. Deliberately not
+    // in CandidateExperienceScore: a score whose inputs appear and disappear with a floor would
+    // move for reasons that have nothing to do with the company.
+    double? PromiseKeptRate = null,
+    double? RejectionNoticeRate = null);
 
 /// <summary>
 /// The company's sector and, when that sector is itself above the public threshold, its figures

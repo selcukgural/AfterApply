@@ -3,6 +3,7 @@ using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Companies;
 using AfterApply.Application.Imports;
+using AfterApply.Application.Notifications;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Infrastructure.Caching;
@@ -553,12 +554,21 @@ internal sealed class ApplicationService(
         // The HTTP surface can only ever produce a manual change. Origin is not taken from the
         // request body on purpose — a status history that a client can label however it likes is
         // not a history.
-        return ChangeStatusAsync(userId, applicationId, request.NewStatus,
-            request.ChangedAt ?? DateTimeOffset.UtcNow, StatusChangeContext.Manual(request.Note), cancellationToken);
+        return ChangeStatusCoreAsync(userId, applicationId, request.NewStatus,
+            request.ChangedAt ?? DateTimeOffset.UtcNow, StatusChangeContext.Manual(request.Note),
+            request.PromisedReplyBy, request.RejectionNotice, cancellationToken);
     }
 
-    public async Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId,
+    public Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId,
         ApplicationStatus newStatus, DateTimeOffset changedAt, StatusChangeContext context, CancellationToken cancellationToken)
+    {
+        return ChangeStatusCoreAsync(userId, applicationId, newStatus, changedAt, context,
+            promisedReplyBy: null, rejectionNotice: null, cancellationToken);
+    }
+
+    private async Task<ApplicationDetailResponse?> ChangeStatusCoreAsync(Guid userId, Guid applicationId,
+        ApplicationStatus newStatus, DateTimeOffset changedAt, StatusChangeContext context,
+        DateOnly? promisedReplyBy, RejectionNotice? rejectionNotice, CancellationToken cancellationToken)
     {
         var application = await FindOwnedAsync(userId, applicationId, cancellationToken);
         if (application is null)
@@ -566,7 +576,15 @@ internal sealed class ApplicationService(
             return null;
         }
 
-        application.ChangeStatus(newStatus, changedAt, context);
+        application.ChangeStatus(newStatus, changedAt, context, rejectionNotice);
+
+        // A date given alongside the change belongs to the stage this change opens, so the stage
+        // begins at the change itself. No date leaves any earlier promise as it was: it is now
+        // answered (kept or late) by this very change, and that answer is the point of keeping it.
+        if (promisedReplyBy is not null)
+        {
+            application.SetReplyPromise(promisedReplyBy, changedAt, DateTimeOffset.UtcNow);
+        }
 
         // application.Events/StatusHistory were never Included (FindOwnedAsync
         // loads the bare row), so EF has no prior tracking entry to confuse the new
@@ -580,8 +598,49 @@ internal sealed class ApplicationService(
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
         await RetireRemindersIfTerminalAsync(userId, newStatus, [applicationId], cancellationToken);
+        await RetireRemindersIfPromisePendingAsync(application, cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
+    }
+
+    public async Task<ApplicationDetailResponse?> SetReplyPromiseAsync(Guid userId, Guid applicationId,
+        SetReplyPromiseRequest request, CancellationToken cancellationToken)
+    {
+        var application = await FindOwnedAsync(userId, applicationId, cancellationToken);
+        if (application is null)
+        {
+            return null;
+        }
+
+        // The stage the promise belongs to began at the last real status change — the same
+        // reference the reminder scan measures silence from.
+        var history = await dbContext.ApplicationStatusHistories
+            .Where(h => h.ApplicationId == applicationId)
+            .Select(h => new { h.FromStatus, h.ChangedAt })
+            .ToListAsync(cancellationToken);
+        var stageSince = ReminderCalculations.GetReferenceAt(application.AppliedAt,
+            history.Select(h => (h.FromStatus, h.ChangedAt)));
+
+        application.SetReplyPromise(request.PromisedReplyBy, stageSince, DateTimeOffset.UtcNow);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await RetireRemindersIfPromisePendingAsync(application, cancellationToken);
+
+        return await ToDetailAsync(application, cancellationToken);
+    }
+
+    /// <summary>
+    /// "They said they'd answer by the 10th" is the reason not to nudge before the 10th, so a
+    /// follow-up or ghosting reminder already on the dashboard goes the moment a date still ahead
+    /// is recorded, rather than at the next nightly scan. A date already past is left to the scan,
+    /// which turns it into a "the date has passed" reminder.
+    /// </summary>
+    private Task RetireRemindersIfPromisePendingAsync(DomainApplication application, CancellationToken cancellationToken)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        return application.PromisedReplyBy is { } promisedBy && promisedBy >= today
+               && !TerminalApplicationStatuses.Values.Contains(application.Status)
+            ? RetireRemindersAsync(application.UserId, [application.Id], cancellationToken)
+            : Task.CompletedTask;
     }
 
     /// <summary>
@@ -847,6 +906,17 @@ internal sealed class ApplicationService(
                 .Select(d => d.FileName)
                 .FirstOrDefaultAsync(cancellationToken);
 
+        ReplyPromiseOutcome? promiseOutcome = null;
+        if (application is { PromisedReplyBy: { } promisedBy, PromisedReplySince: { } promisedSince })
+        {
+            var transitions = await dbContext.ApplicationStatusHistories
+                .Where(h => h.ApplicationId == application.Id)
+                .Select(h => new { h.ToStatus, h.ChangedAt })
+                .ToListAsync(cancellationToken);
+            promiseOutcome = ReplyPromises.Evaluate(promisedBy, promisedSince,
+                transitions.Select(h => (h.ToStatus, h.ChangedAt)), DateTimeOffset.UtcNow).Outcome;
+        }
+
         return new ApplicationDetailResponse(
             application.Id, application.CompanyId, company.Name, company.Website, company.LinkedInUrl,
             application.JobTitle, application.JobUrl, application.Location, application.EmploymentType,
@@ -854,6 +924,8 @@ internal sealed class ApplicationService(
             application.CreatedAt, application.UpdatedAt, jobDescriptionHtml,
             application.HrName, application.HrEmail, application.HrLinkedInUrl, application.HrEmailSource,
             application.CvDocumentId, cvDocumentFileName,
-            company.KariyerNetUrl, company.Industry, company.Country, company.Slug);
+            company.KariyerNetUrl, company.Industry, company.Country, company.Slug,
+            application.PromisedReplyBy, application.PromisedReplyStatus, promiseOutcome,
+            application.RejectionNotice);
     }
 }

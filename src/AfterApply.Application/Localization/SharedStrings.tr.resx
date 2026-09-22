@@ -477,4 +477,16 @@
   <data name="VALIDATION_BLOG_COMMENT_TOO_SHORT" xml:space="preserve">
     <value>Yorum en az {0} karakter olmalıdır.</value>
   </data>
+  <data name="REPLY_PROMISE_ON_CLOSED_APPLICATION" xml:space="preserve">
+    <value>Kapanmış bir başvuruya dönüş tarihi eklenemez.</value>
+  </data>
+  <data name="VALIDATION_REPLY_PROMISE_RANGE" xml:space="preserve">
+    <value>Dönüş tarihi bugünden en fazla bir yıl önce ya da sonra olabilir.</value>
+  </data>
+  <data name="VALIDATION_REPLY_PROMISE_ON_CLOSING_STATUS" xml:space="preserve">
+    <value>Dönüş tarihi yalnızca süren bir durum için kaydedilebilir.</value>
+  </data>
+  <data name="VALIDATION_REJECTION_NOTICE_NOT_REJECTED" xml:space="preserve">
+    <value>Reddi nasıl öğrendiğin yalnızca yeni durum Reddedildi iken verilebilir.</value>
+  </data>
 </root>
