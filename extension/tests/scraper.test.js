@@ -115,6 +115,24 @@ describe("the description sanitizer", () => {
     expect((await scrapeJobPosting({ strategy: "jsonld" })).descriptionHtml).toBe("<p>We use C++ &amp; &lt;framework&gt;</p>");
   });
 
+  // The shapes a regex filter gets wrong, and the reason there is no regex here any more: an end
+  // tag may carry junk (`</script foo="bar">` is valid HTML), and one pass over a nested opener
+  // leaves a live one behind. The sanitizer works on parsed elements by tag name, so none of this
+  // reaches the output as markup — whatever survives does so as escaped text.
+  it.each([
+    '<p>ok</p><script foo="bar">alert(1)</script bar>',
+    "<p>ok</p><scr<script>ipt>alert(1)</scr</script>ipt>",
+    "<p>ok</p><STYLE>body{display:none}</STYLE>",
+    "<p>ok</p><script>alert(1)",
+  ])("never emits script or style markup for %s", async (description) => {
+    jsonLd({ ...POSTING, description });
+
+    const result = await scrapeJobPosting({ strategy: "jsonld" });
+    expect(result.descriptionHtml).toContain("<p>ok</p>");
+    expect(result.descriptionHtml.toLowerCase()).not.toContain("<script");
+    expect(result.descriptionHtml.toLowerCase()).not.toContain("<style");
+  });
+
   it("clamps to what the backend validator accepts", async () => {
     jsonLd({ ...POSTING, description: `<p>${"x".repeat(30_000)}</p>` });
 

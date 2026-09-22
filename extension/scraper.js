@@ -269,22 +269,24 @@ export async function scrapeJobPosting(config) {
     }
 
     // schema.org's description is an HTML string, written by whoever posted the job. DOMParser
-    // reads it because the document it builds is inert in a browser — no scripts run, no images
-    // or other subresources are fetched — unlike assigning the string to a live node's innerHTML.
+    // reads it because the document it builds is inert — no scripts run, no images or other
+    // subresources are fetched — unlike assigning the string to a live node's innerHTML.
     //
-    // The script/style blocks are cut out of the string first anyway, so nothing here depends on
-    // that inertness being honoured: happy-dom, which the tests run on, does execute scripts from
-    // parseFromString, and a guarantee that holds in one parser and not another is not a
-    // guarantee. The sanitizer drops both tags from the output as well — this is the earlier of
-    // the two, not a replacement for it.
+    // Deliberately no regex pre-pass over the string. An earlier version cut <script>/<style>
+    // blocks out with two `.replace()` calls, and CodeQL was right to flag them: a regular
+    // expression cannot filter HTML tags correctly. `</script foo="bar">` is a valid end tag and
+    // the pattern missed it, and one pass over `<scr<script>ipt>` leaves a live `<script` behind.
+    // Two things already do this job properly: the parser, which does not execute what it parses,
+    // and sanitizeDescriptionHtml, which drops SCRIPT and STYLE elements from the output by tag
+    // name rather than by text matching. (The tests run on happy-dom, whose parseFromString does
+    // evaluate scripts unlike a browser's; vitest.config.js turns that off with
+    // disableJavaScriptEvaluation, which is the right place for an environment quirk to be
+    // handled — not in shipped code.)
     function descriptionOf(raw) {
       if (typeof raw !== "string" || !raw.trim()) {
         return { text: null, html: null };
       }
-      const inert = raw
-        .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, "")
-        .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, "");
-      const parsed = new DOMParser().parseFromString(inert, "text/html");
+      const parsed = new DOMParser().parseFromString(raw, "text/html");
       const text = parsed.body.textContent?.replace(/\n{3,}/g, "\n\n").trim() || null;
       return { text, html: text ? sanitizeDescriptionHtml(parsed.body) : null };
     }
