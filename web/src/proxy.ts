@@ -5,6 +5,7 @@ import { guideRedirectForPath } from "./lib/guide/articles";
 import { cvScanRedirectForPath, cvScanScoreCardOf } from "./lib/cvScan/path";
 import { parseScoreCard } from "./lib/cvScan/scoreCard";
 import { aboutRedirectForPath } from "./lib/about/path";
+import { blogSlugRedirectForPath } from "./lib/blog/slugRedirects";
 import { apexRedirectUrl, isFileRequest, stripIndexHtml } from "./lib/http/canonicalHost";
 
 const withLocale = createMiddleware(routing);
@@ -48,6 +49,13 @@ export function proxy(request: NextRequest) {
   const aboutUrl = aboutRedirectForPath(request.nextUrl.pathname);
   if (aboutUrl) {
     return NextResponse.redirect(new URL(`${aboutUrl}${request.nextUrl.search}`, request.url), 301);
+  }
+
+  // A blog post whose slug was corrected after it went live: the old address, permanently, to
+  // the new one — the list lives next to the migration that renamed it (lib/blog/slugRedirects).
+  const blogUrl = blogSlugRedirectForPath(request.nextUrl.pathname);
+  if (blogUrl) {
+    return NextResponse.redirect(new URL(`${blogUrl}${request.nextUrl.search}`, request.url), 301);
   }
 
   // A score page whose card the scan could not have produced ("101", parts that do not add up)

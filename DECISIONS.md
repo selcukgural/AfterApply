@@ -8883,3 +8883,23 @@ cümlesi (bant varyantında da, çünkü yerelde `JobSources:Enabled=true`), ara
 "Hesap açmadan deneyebileceklerin" ve tek rozet, "Nasıl çalışıyor?" düğmesi birleşen banda iniyor,
 kapanış bandı güven üçlüsü → ayraç → CTA, footer "Ürün" grubunda Özellikler yok, `/tr/companies`
 kartlarında puansız üçlü artık yalnızca ne tuttuğunu yazıyor.
+
+## Yayımlanmış blog slug'ı ancak migration + 301 ile düzelir (2026-09-22)
+
+**Karar.** 2026-09-19'daki "ilk yayımdan sonra slug kilitlenir" kuralı duruyor; admin ekranında
+slug değiştirme **açılmadı**. Canlı bir slug yalnızca şöyle düzelir: veriyi değiştiren bir EF
+migration (şema yok, `UPDATE "BlogPosts"`; hedef slug doluysa dokunmaz, unique index deploy'u
+düşürmesin) **ve aynı değişiklikte** `web/src/lib/blog/slugRedirects.ts` tablosuna eski → yeni
+satırı; `proxy.ts` eski adresi 301'le yeniye gönderir. URL sözü böylece bozulmuyor: eski link ve
+indeks kaydı aynı yazıya varıyor. Beğeni/yorum/görüntülenme yazının id'sine bağlı, taşınan bir şey yok.
+
+**İlk kullanım.** `/en/blog/how-can-i-kep-my-motivation-while-job-searching` → `…-keep-…`
+(`FixEnglishMotivationPostSlug`). Yazım hatası Search Console'a bakarken fark edildi; yazı 2 günlük
+olduğu için erken düzeltildi. Genel bir "slug geçmişi" tablosu/admin aksiyonu kurulmadı: bir kez
+oldu, tekrar ederse o zaman düşünülür.
+
+**Test.** `BlogTests`: migration'ın kendi `UpOperations`/`DownOperations` SQL'i gerçek Postgres'te
+koşuyor (yeniden adlandırma, TR'deki aynı slug'a dokunmama, geri alma, hedef doluyken no-op);
+`slugRedirects.test.ts` yönlendirme tablosunu sabitliyor. Prod build'de `curl`: eski adres 301 →
+yeni adres. Önbellek (`blog` tag, 10 dk) deploy sonrası en fazla 10 dk eski slug'ı listede
+gösterebilir; o link de yönlendirmeyle doğru yere varır.
