@@ -1,5 +1,7 @@
 using AfterApply.Application.Blog;
+using AfterApply.Infrastructure;
 using AfterApply.Infrastructure.Blog;
+using Microsoft.Extensions.Options;
 using Shouldly;
 
 namespace AfterApply.UnitTests.Blog;
@@ -12,7 +14,7 @@ namespace AfterApply.UnitTests.Blog;
 /// </summary>
 public class BlogHtmlSanitizerTests
 {
-    private static readonly BlogHtmlSanitizer Sanitizer = new();
+    private static readonly BlogHtmlSanitizer Sanitizer = new(Options.Create(new AppOptions { WebBaseUrl = "https://ekariyerim.com" }));
     private static readonly Guid MediaId = Guid.Parse("0199a0a0-0000-7000-8000-000000000001");
     private static readonly string MediaUrl = BlogMediaPath.For(MediaId);
 
@@ -128,6 +130,33 @@ public class BlogHtmlSanitizerTests
         result.ShouldContain("href=\"#section\"");
         result.ShouldNotContain("target=");
         result.ShouldNotContain("rel=");
+    }
+
+    [Theory]
+    [InlineData("https://ekariyerim.com/tr/guide/kariyer-net-basvurularim-nerede", "/tr/guide/kariyer-net-basvurularim-nerede")]
+    [InlineData("https://www.ekariyerim.com/tr/register", "/tr/register")]
+    [InlineData("http://EKARIYERIM.com/en/blog/x?utm=1#top", "/en/blog/x?utm=1#top")]
+    [InlineData("https://ekariyerim.com", "/")]
+    public void Links_To_Our_Own_Site_Written_In_Full_Become_Internal(string href, string expected)
+    {
+        var result = Sanitizer.Sanitize($"<a href=\"{href}\" target=\"_blank\" rel=\"noopener noreferrer nofollow\">x</a>");
+
+        result.ShouldContain($"href=\"{expected}\"");
+        result.ShouldNotContain("target=");
+        result.ShouldNotContain("rel=");
+    }
+
+    [Theory]
+    [InlineData("https://ekariyerim.com.evil.example/x")]
+    [InlineData("https://notekariyerim.com/x")]
+    [InlineData("https://api.ekariyerim.com/x")]
+    [InlineData("https://www.kariyer.net/tum-basvurular")]
+    public void Look_Alike_And_Other_Hosts_Stay_External(string href)
+    {
+        var result = Sanitizer.Sanitize($"<a href=\"{href}\">x</a>");
+
+        result.ShouldContain($"href=\"{href}\"");
+        result.ShouldContain("rel=\"noopener noreferrer nofollow\"");
     }
 
     [Theory]

@@ -2,6 +2,7 @@ using AfterApply.Application.Blog;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Ganss.Xss;
+using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.Blog;
 
@@ -19,7 +20,11 @@ namespace AfterApply.Infrastructure.Blog;
 /// ones that were uploaded through the post, full stop.</item>
 /// <item>A link to another site opens in a new tab with <c>rel="noopener noreferrer nofollow"</c>:
 /// noopener so the target cannot script the opener, nofollow because the blog must not become a
-/// place to buy links from.</item>
+/// place to buy links from. A link to our own site written out in full
+/// (<c>https://ekariyerim.com/tr/guide/…</c>, the host of <see cref="AppOptions.WebBaseUrl"/>, with
+/// or without <c>www.</c>) is folded to its path first, so it stays an internal link: pasting
+/// from anywhere but the site itself — a copied page, a document — hands the editor absolute
+/// URLs, and those must not come out as nofollow links to ourselves.</item>
 /// </list>
 /// Thread-safe once built, so registered as a singleton.
 /// </summary>
@@ -45,9 +50,14 @@ public sealed class BlogHtmlSanitizer : IBlogHtmlSanitizer
     ];
 
     private readonly HtmlSanitizer _sanitizer;
+    private readonly string? _siteHost;
 
-    public BlogHtmlSanitizer()
+    public BlogHtmlSanitizer(IOptions<AppOptions> appOptions)
     {
+        _siteHost = Uri.TryCreate(appOptions.Value.WebBaseUrl, UriKind.Absolute, out var webBase)
+            ? StripWww(webBase.Host)
+            : null;
+
         _sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
         {
             AllowedTags = new HashSet<string>(AllowedTags, StringComparer.OrdinalIgnoreCase),
@@ -78,7 +88,7 @@ public sealed class BlogHtmlSanitizer : IBlogHtmlSanitizer
         return _sanitizer.Sanitize(html);
     }
 
-    private static void OnPostProcessNode(object? sender, PostProcessNodeEventArgs e)
+    private void OnPostProcessNode(object? sender, PostProcessNodeEventArgs e)
     {
         switch (e.Node)
         {
@@ -86,6 +96,7 @@ public sealed class BlogHtmlSanitizer : IBlogHtmlSanitizer
                 FoldImageSource(image);
                 break;
             case IHtmlAnchorElement anchor:
+                FoldOwnSiteLink(anchor);
                 HardenAnchor(anchor);
                 break;
             case IHtmlInputElement input:
@@ -116,6 +127,24 @@ public sealed class BlogHtmlSanitizer : IBlogHtmlSanitizer
         image.SetAttribute("src", BlogMediaPath.For(mediaId.Value));
         image.SetAttribute("loading", "lazy");
     }
+
+    /// <summary><c>https://ekariyerim.com/tr/guide/x?y#z</c> → <c>/tr/guide/x?y#z</c>; any other
+    /// href is left alone. Scheme is not checked beyond http(s) — the allowlist already ran.</summary>
+    private void FoldOwnSiteLink(IHtmlAnchorElement anchor)
+    {
+        if (_siteHost is null
+            || !Uri.TryCreate(anchor.GetAttribute("href"), UriKind.Absolute, out var href)
+            || (href.Scheme != Uri.UriSchemeHttps && href.Scheme != Uri.UriSchemeHttp)
+            || !string.Equals(StripWww(href.Host), _siteHost, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        anchor.SetAttribute("href", href.PathAndQuery + href.Fragment);
+    }
+
+    private static string StripWww(string host) =>
+        host.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? host[4..] : host;
 
     private static void HardenAnchor(IHtmlAnchorElement anchor)
     {
