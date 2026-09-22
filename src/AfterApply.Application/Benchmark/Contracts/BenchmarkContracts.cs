@@ -11,6 +11,9 @@ namespace AfterApply.Application.Benchmark.Contracts;
 /// something filling every input it found. It is here because the usual answer — reCAPTCHA,
 /// hCaptcha, Turnstile — is a third-party script, which the CSP forbids and the Cookie Policy
 /// denies the site carries; the same constraint that shaped the visit counter shapes this.</param>
+/// <param name="Source">The channel the page was reached through, mapped by the page from the
+/// link's <c>utm_source</c>. Optional and last, so an older page that never sends it still
+/// answers.</param>
 public sealed record SubmitBenchmarkRequest(
     int? ApplicationCount,
     int? ReplyCount,
@@ -19,7 +22,8 @@ public sealed record SubmitBenchmarkRequest(
     BenchmarkSeniority? Seniority,
     BenchmarkLocation? Location,
     string? Locale,
-    string? Website);
+    string? Website,
+    BenchmarkSource? Source = null);
 
 /// <param name="Sector">Echoed back so the page can name the cell it is comparing against.</param>
 /// <param name="MinimumSampleSize">Carried on the result, not just on the summary, so a withheld

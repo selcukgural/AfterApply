@@ -30,6 +30,9 @@ export default async function BenchmarkPage({ params }: PageProps<"/[locale]/ben
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 py-12">
       <header className="flex flex-col gap-3">
+        {/* Named as a survey (growth research 2026-09-21, item 0.1): the page is shared as one, and
+            below the threshold taking part is what it offers. */}
+        <p className="text-xs font-semibold tracking-wider text-accent uppercase">{t("survey.eyebrow")}</p>
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
           {t("title")}
         </h1>

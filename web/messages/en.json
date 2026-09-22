@@ -2586,11 +2586,11 @@
       },
       "scope": {
         "title": "When the median is withheld",
-        "body": "A field's median is not shown until that field has enough answers; the threshold is stated in the tool's own \"Where does this number come from?\" section. If your field is below it, the overall median is shown, clearly labelled as such. Answers for short periods tend to look low: recent applications may not have had time to be answered."
+        "body": "A field's median is not shown until that field has enough answers; the threshold is stated in the tool's own \"Where does this number come from?\" section. If your field is below it, the overall median is shown, clearly labelled as such. If no median has opened yet, the result shows step by step which median opens at how many answers. Answers for short periods tend to look low: recent applications may not have had time to be answered."
       },
       "calloutAnonymous": {
         "title": "No identity is kept",
-        "body": "No email, no cookie, and no IP address on your answer's row. Your IP address is kept only in a separate security record of each submission, for 12 months, and is never linked to your answer. Fields come from fixed lists; nothing beyond your two numbers and your choices is stored."
+        "body": "No email, no cookie, and no IP address on your answer's row. Your IP address is kept only in a separate security record of each submission, for 12 months, and is never linked to your answer. Fields come from fixed lists; beyond your two numbers and your choices, the only thing stored is the channel’s name when the link names one (such as X or Reddit)."
       },
       "calloutSignedIn": {
         "title": "If you have an account",
@@ -2993,7 +2993,26 @@
   "benchmark": {
     "title": "Is your reply rate normal?",
     "subtitle": "Four questions. No sign-up, no email. Answer them and see your own rate against the median in your field.",
-    "participation": "Based on {count} answers.",
+    "survey": {
+      "eyebrow": "Türkiye Application Response Survey",
+      "participantLabel": "Your place in the survey",
+      "participantValue": "#{number}",
+      "participantNote": "Your answer is counted",
+      "earlyTitle": "Too early to compare",
+      "earlyBody": "We don’t show a median before {minimum} answers; fewer would present a handful of people’s answers as “normal”. The results open in this order:",
+      "nextTitle": "Next steps",
+      "overallStep": "Median across all fields",
+      "overallStepDone": "Median across all fields is open",
+      "overallStepHint": "Opens at {minimum} answers in total. It is not specific to your field, and says so when it opens.",
+      "sectorStep": "{sector} median",
+      "sectorStepHint": "Opens when your field has {minimum} answers.",
+      "reportStep": "First report",
+      "reportStepHint": "Once enough answers are in, the results will be published on the site as a report. No single answer is ever shown.",
+      "progress": "{count} / {minimum}",
+      "answers": "{n, plural, one {# answer} other {# answers}}",
+      "shareNudge": "Every new answer brings the next step closer — share to speed it up."
+    },
+    "participation": "Based on {n, plural, one {# answer} other {# answers}}.",
     "form": {
       "applicationsLabel": "How many applications did you send?",
       "applicationsHint": "The total you sent in the period you pick below.",
@@ -3048,29 +3067,26 @@
     "result": {
       "yourRateLabel": "Your reply rate",
       "yourRateDetail": "{replies} of {applications} applications",
-      "comparedTitle": "{sampleSize} answers in {sector}",
+      "comparedTitle": "{n, plural, one {# answer} other {# answers}} in {sector}",
       "median": "Median reply rate",
       "shareBelow": "{share}% of the answers report a lower rate than yours.",
       "aboveMedian": "Your rate is above the median.",
       "belowMedian": "Your rate is below the median.",
       "atMedian": "Your rate is exactly the median.",
-      "withheldTitle": "Too early to compare",
-      "withheldBody": "{sector} has {sampleSize} answers so far; showing a median needs {minimum}. Publishing one below that would be presenting a handful of people's answers as “normal for the sector”.",
-      "withheldRemaining": "Your answer is saved. {remaining} more to go before the median appears.",
       "saved": "Your answer is counted in this figure.",
-      "overallTitle": "{sector} has only {sampleSize} answers so far — a median needs {minimum}.",
+      "overallTitle": "{sector} has only {n, plural, one {# answer} other {# answers}} so far — a median needs {minimum}.",
       "overallMedianLabel": "Across all fields",
-      "overallNote": "based on {count} answers · not specific to your field",
+      "overallNote": "based on {n, plural, one {# answer} other {# answers}} · not specific to your field",
       "shareLabel": "Share your result",
       "shareTextWithMedian": "{replies} of my {applications} applications got a reply ({rate}%); the median in my field is {median}%. Is yours normal?",
-      "shareText": "{replies} of my {applications} applications got a reply ({rate}%). Is yours normal?"
+      "shareText": "I took part in the Türkiye Application Response Survey: {replies} of my {applications} applications got a reply ({rate}%). Is yours normal?"
     },
     "method": {
       "title": "Where does this number come from?",
       "source": "Entirely from what people filling in this form report about themselves. It is not mixed with the application data the product collects — one is self-reported, the other measured, and pooling them into one average would corrupt the figure.",
       "median": "We use the median, not the mean. Answers are anonymous, so one person can answer more than once and an extreme value can be sent deliberately; a median barely moves under either, a mean is at their mercy.",
       "recency": "Answers covering a short period tend to read low: applications sent recently may not have had time to be answered yet.",
-      "privacy": "No identifier is stored — no email, no cookie, no IP on your answer's row. Your IP address is kept only in a separate security record for 12 months and is never linked to your answer. Every field is picked from a fixed list; no free text is collected.",
+      "privacy": "No identifier is stored — no email, no cookie, no IP on your answer's row. Your IP address is kept only in a separate security record for 12 months and is never linked to your answer. Every field is picked from a fixed list; no free text is collected. If the link names a channel (such as X or Reddit), that channel’s name is stored too, from a fixed list, so we can see which shares work.",
       "threshold": "A field's median is not shown until it holds at least {minimum} answers."
     },
     "cta": {

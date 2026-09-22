@@ -10,6 +10,7 @@ import {
   BENCHMARK_SECTORS,
   BENCHMARK_SENIORITIES,
 } from "./options";
+import { BENCHMARK_SOURCES } from "./source";
 
 // The benchmark form's options exist in three places that nothing keeps in step: the C# enums the
 // API validates against, the lists this app renders, and the two message catalogues that label
@@ -66,5 +67,11 @@ describe("benchmark options", () => {
     // alphabetical sort would be the sign someone "tidied" it and buried the beachhead.
     expect(BENCHMARK_SECTORS[0]).toBe("SoftwareAndIt");
     expect(BENCHMARK_SECTORS.at(-1)).toBe("Other");
+  });
+
+  it("maps campaign links onto exactly the channels the API accepts", () => {
+    // Not a visible option, so no labels to check — but a channel the API does not know is a 400,
+    // and the visitor who followed the campaign link reads that as "could not be saved".
+    expect([...BENCHMARK_SOURCES].sort()).toEqual([...csharpEnum("BenchmarkSource")].sort());
   });
 });

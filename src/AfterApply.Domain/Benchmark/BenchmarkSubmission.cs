@@ -19,7 +19,7 @@ namespace AfterApply.Domain.Benchmark;
 /// person can answer twice. The defence is the median rather than the mean — a handful of extreme
 /// or repeated answers moves a median very little — plus the rate limit.
 ///
-/// Nothing here is personal data: four coarse categories and two counts, no identifier, no free
+/// Nothing here is personal data: a few coarse categories and two counts, no identifier, no free
 /// text, no IP address.
 /// </summary>
 public sealed class BenchmarkSubmission : Entity
@@ -47,6 +47,11 @@ public sealed class BenchmarkSubmission : Entity
     /// sample that whoever publishes the number needs to know.</summary>
     public string Locale { get; private set; } = string.Empty;
 
+    /// <summary>The channel the answer came through, when the link named one on the allowed list;
+    /// null for everything else, including a direct visit. A campaign measurement, not a
+    /// breakdown axis — see <see cref="BenchmarkSource"/>.</summary>
+    public BenchmarkSource? Source { get; private set; }
+
     public DateTimeOffset SubmittedAt { get; private set; }
 
     private BenchmarkSubmission()
@@ -56,7 +61,7 @@ public sealed class BenchmarkSubmission : Entity
     public static BenchmarkSubmission Create(
         int applicationCount, int replyCount, BenchmarkSector sector, BenchmarkPeriod period,
         BenchmarkSeniority? seniority, BenchmarkLocation? location, string locale,
-        DateTimeOffset submittedAt)
+        BenchmarkSource? source, DateTimeOffset submittedAt)
     {
         return new BenchmarkSubmission
         {
@@ -67,6 +72,7 @@ public sealed class BenchmarkSubmission : Entity
             Seniority = seniority,
             Location = location,
             Locale = locale,
+            Source = source,
             SubmittedAt = submittedAt
         };
     }

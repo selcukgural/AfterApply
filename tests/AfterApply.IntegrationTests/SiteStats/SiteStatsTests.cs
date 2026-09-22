@@ -46,7 +46,7 @@ public class SiteStatsTests(ApiHost<SiteStatsProfile> host) : IClassFixture<ApiH
             for (var i = 0; i < 2; i++)
             {
                 db.BenchmarkSubmissions.Add(BenchmarkSubmission.Create(30, 3, BenchmarkSector.SoftwareAndIt,
-                    BenchmarkPeriod.LastThreeMonths, null, null, "tr", now));
+                    BenchmarkPeriod.LastThreeMonths, null, null, "tr", null, now));
             }
             await db.SaveChangesAsync();
         }

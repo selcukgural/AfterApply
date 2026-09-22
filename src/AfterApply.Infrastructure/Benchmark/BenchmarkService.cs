@@ -21,7 +21,7 @@ internal sealed class BenchmarkService(AppDbContext dbContext, IOptions<Benchmar
 
         var submission = BenchmarkSubmission.Create(
             applicationCount, replyCount, sector, request.Period!.Value,
-            request.Seniority, request.Location, request.Locale!, DateTimeOffset.UtcNow);
+            request.Seniority, request.Location, request.Locale!, request.Source, DateTimeOffset.UtcNow);
 
         dbContext.BenchmarkSubmissions.Add(submission);
         await dbContext.SaveChangesAsync(cancellationToken);

@@ -27,6 +27,7 @@ public sealed class SubmitBenchmarkRequestValidator : AbstractValidator<SubmitBe
 
         RuleFor(r => r.Seniority).IsInEnum().When(r => r.Seniority.HasValue);
         RuleFor(r => r.Location).IsInEnum().When(r => r.Location.HasValue);
+        RuleFor(r => r.Source).IsInEnum().When(r => r.Source.HasValue);
 
         RuleFor(r => r.Locale).NotEmpty().Must(l => l is "tr" or "en");
 

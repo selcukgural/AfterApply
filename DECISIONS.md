@@ -8903,3 +8903,25 @@ koşuyor (yeniden adlandırma, TR'deki aynı slug'a dokunmama, geri alma, hedef 
 `slugRedirects.test.ts` yönlendirme tablosunu sabitliyor. Prod build'de `curl`: eski adres 301 →
 yeni adres. Önbellek (`blog` tag, 10 dk) deploy sonrası en fazla 10 dk eski slug'ı listede
 gösterebilir; o link de yönlendirmeyle doğru yere varır.
+
+## Kıyaslama "Türkiye Başvuru Yanıt Anketi" olarak çerçevelendi + kanal ölçümü (0.1) — DECIDED (2026-09-22)
+
+**Karar.** Büyüme araştırmasının (2026-09-21) 0.1 maddesi. Eşik **30'da kaldı**: araştırmanın "eşik
+altındayken üst kırılımın medyanını göster" önerisi zaten `Overall` geri dönüşü olarak vardı ve o da
+30'a bağlı; 6 cevapla medyan göstermek eşiği düşürmek olurdu, o da yayın kararıdır, ayar değil.
+Onun yerine eşik altı sonuç ekranı bir ankete katılım olarak yeniden çizildi (tuvalde varyant B):
+oranın yanında "Ankete katılım sıran: N." kartı ve üç adım — tüm alanların medyanı (toplam/30),
+senin alanının medyanı (sektör/30), ilk rapor. Sektör kendi 30'unu geçince panel kalkar, ekran
+bugünkü kıyas olur. Hepsi API'nin zaten döndürdüğü `totalSubmissions`/`sampleSize`'tan; yeni sayı yok.
+Sarı "Kıyas için henüz erken / eşiğe N kaldı" kartı kaldırıldı.
+
+**Kanal ölçümü.** `BenchmarkSubmissions.Source` (nullable, sabit enum: X, Eksi, Reddit, Discord,
+LinkedIn, WhatsApp, Share). Sayfa linkin `utm_source`'unu yalnızca bu listeye eşler, başka her şey
+null; API de listedışını 400'ler. `Share` = katılımcının kendi paylaşım linki (`?utm_source=share`).
+Kişisel veri değil; yine de "saklanan her şey" cümleleri (yöntem notu, yardım merkezi callout'u) aynı
+değişiklikte güncellendi. Amaç tek seferlik topluluk kampanyasında hangi kanalın cevap getirdiğini
+ölçmek ("ölçemeden değiştirme" kuralı).
+
+**Bilinçli dışarıda.** E-postayla "sonuç çıkınca haber ver" yok (yeni kişisel veri yüzeyi). 3. adım
+bir rapor sözü veriyor ama tarih vermiyor; metin, medyan açıkken de doğru kalacak şekilde yazıldı.
+Kampanyadan önce 2026-09-21'de prod'a girilen sahte test satırının silindiği doğrulanmalı.

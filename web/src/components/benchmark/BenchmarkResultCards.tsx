@@ -73,10 +73,13 @@ export function BenchmarkMedianCard({
           ? t("result.comparedTitle", {
               sector: t(`sectors.${sector}`),
               sampleSize: formatCount(sampleSize, locale),
+              // Raw, for the English plural ("1 answer"); Turkish reads the formatted figure.
+              n: sampleSize,
             })
           : t("result.overallTitle", {
               sector: t(`sectors.${sector}`),
               sampleSize: formatCount(sampleSize, locale),
+              n: sampleSize,
               minimum: formatCount(minimumSampleSize, locale),
             })}
       </p>
@@ -92,7 +95,7 @@ export function BenchmarkMedianCard({
 
       {scope === "Overall" && comparedAgainstCount !== null ? (
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t("result.overallNote", { count: formatCount(comparedAgainstCount, locale) })}
+          {t("result.overallNote", { count: formatCount(comparedAgainstCount, locale), n: comparedAgainstCount })}
         </p>
       ) : null}
 

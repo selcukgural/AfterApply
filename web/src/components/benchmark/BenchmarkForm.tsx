@@ -18,6 +18,9 @@ import {
 } from "@/lib/benchmark/options";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { BenchmarkMedianCard, BenchmarkYourRateCard } from "@/components/benchmark/BenchmarkResultCards";
+import { BenchmarkParticipantCard, BenchmarkSurveySteps } from "@/components/benchmark/BenchmarkSurvey";
+import { benchmarkSourceFromSearch } from "@/lib/benchmark/source";
+import { surveyProgress } from "@/lib/benchmark/survey";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -86,6 +89,9 @@ export function BenchmarkForm() {
       location: location === "" ? null : location,
       locale,
       website,
+      // Read at submit rather than render: the page stays static, and the only thing wanted from
+      // the address is which campaign link, if any, brought this visitor here.
+      source: benchmarkSourceFromSearch(window.location.search),
     });
   };
 
@@ -106,7 +112,7 @@ export function BenchmarkForm() {
           this" — and the honest thing to say there is nothing (growth audit 2026-09-14, finding 10). */}
       {summary && summary.totalSubmissions >= summary.minimumSampleSize ? (
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          {t("participation", { count: formatCount(summary.totalSubmissions, locale) })}
+          {t("participation", { count: formatCount(summary.totalSubmissions, locale), n: summary.totalSubmissions })}
         </p>
       ) : null}
 
@@ -223,19 +229,35 @@ function BenchmarkResult({ result, onReset }: { result: BenchmarkResultResponse;
   const locale = useLocale();
 
   const median = result.medianRate;
+  const progress = surveyProgress(result);
 
   return (
     <div className="flex flex-col gap-6">
-      <BenchmarkYourRateCard
-        yourRate={result.yourRate}
-        replyCount={result.replyCount}
-        applicationCount={result.applicationCount}
-      />
+      {/* Until the reader's own sector can stand alone, the result is framed as taking part in a
+          survey (growth research 2026-09-21, item 0.1; canvas variant B): their place in it beside
+          their rate, and what opens next. Once the sector clears the threshold this falls away and
+          the page is the plain comparison it was built to be. */}
+      {progress ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <BenchmarkYourRateCard
+            yourRate={result.yourRate}
+            replyCount={result.replyCount}
+            applicationCount={result.applicationCount}
+          />
+          <BenchmarkParticipantCard participant={progress.participant} />
+        </div>
+      ) : (
+        <BenchmarkYourRateCard
+          yourRate={result.yourRate}
+          replyCount={result.replyCount}
+          applicationCount={result.applicationCount}
+        />
+      )}
 
-      {/* Three states, and the difference between the first two is the whole honesty of the page:
-          a median drawn from every field must never read as one drawn from the reader's. The scope
-          decides the heading and the label beside the number, not just a footnote — inside the
-          card. The third state is decided here: nothing at all to compare against yet. */}
+      {/* The difference between a sector median and an overall one is the whole honesty of the
+          page: a median drawn from every field must never read as one drawn from the reader's. The
+          scope decides the heading and the label beside the number, inside the card. With nothing
+          at all to compare against yet, the survey steps say so instead. */}
       {median !== null && result.scope !== "None" ? (
         <BenchmarkMedianCard
           scope={result.scope}
@@ -247,49 +269,36 @@ function BenchmarkResult({ result, onReset }: { result: BenchmarkResultResponse;
           yourRate={result.yourRate}
           medianRate={median}
         />
-      ) : (
-        // Nothing at all to compare against yet — not even the overall pool. Explained rather than
-        // shown as an error, with the distance left, because that is the reason to tell someone
-        // else about the page.
-        <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-900/60 dark:bg-amber-950/30">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("result.withheldTitle")}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {t("result.withheldBody", {
-              sector: t(`sectors.${result.sector}`),
-              sampleSize: formatCount(result.sampleSize, locale),
-              minimum: formatCount(result.minimumSampleSize, locale),
-            })}
-          </p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {t("result.withheldRemaining", {
-              remaining: formatCount(Math.max(result.minimumSampleSize - result.sampleSize, 0), locale),
-            })}
-          </p>
-        </div>
-      )}
+      ) : null}
+
+      {progress ? <BenchmarkSurveySteps progress={progress} sector={result.sector} /> : null}
 
       {/* The result as a sentence someone can pass on, with the median in it when there was one —
           "is yours normal?" is the question that brings the next answer, and the next answer is
-          what lifts a sector over its threshold. */}
-      <ShareRow
-        label={t("result.shareLabel")}
-        content={{
-          text:
-            median !== null && result.scope !== "None"
-              ? t("result.shareTextWithMedian", {
-                  applications: formatCount(result.applicationCount, locale),
-                  replies: formatCount(result.replyCount, locale),
-                  rate: formatCount(Math.round(result.yourRate), locale),
-                  median: formatCount(Math.round(median), locale),
-                })
-              : t("result.shareText", {
-                  applications: formatCount(result.applicationCount, locale),
-                  replies: formatCount(result.replyCount, locale),
-                  rate: formatCount(Math.round(result.yourRate), locale),
-                }),
-          url: `${SITE_URL}/${locale}/benchmark`,
-        }}
-      />
+          what lifts a sector over its threshold. The link carries utm_source=share so answers that
+          arrive through a participant's own share can be told apart from the campaign channels. */}
+      <div className="flex flex-col gap-2">
+        {progress ? <p className="text-sm text-gray-700 dark:text-gray-300">{t("survey.shareNudge")}</p> : null}
+        <ShareRow
+          label={t("result.shareLabel")}
+          content={{
+            text:
+              median !== null && result.scope !== "None"
+                ? t("result.shareTextWithMedian", {
+                    applications: formatCount(result.applicationCount, locale),
+                    replies: formatCount(result.replyCount, locale),
+                    rate: formatCount(Math.round(result.yourRate), locale),
+                    median: formatCount(Math.round(median), locale),
+                  })
+                : t("result.shareText", {
+                    applications: formatCount(result.applicationCount, locale),
+                    replies: formatCount(result.replyCount, locale),
+                    rate: formatCount(Math.round(result.yourRate), locale),
+                  }),
+            url: `${SITE_URL}/${locale}/benchmark?utm_source=share`,
+          }}
+        />
+      </div>
 
       <button type="button" onClick={onReset} className="self-start text-sm text-blue-600 hover:underline dark:text-blue-400">
         {t("form.again")}

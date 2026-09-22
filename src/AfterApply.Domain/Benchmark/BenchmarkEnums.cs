@@ -68,3 +68,24 @@ public enum BenchmarkLocation
     Abroad,
     Remote
 }
+
+/// <summary>
+/// Which channel a benchmark answer arrived through, read from the link's <c>utm_source</c> —
+/// optional, and a fixed list for the same reason as <see cref="BenchmarkLocation"/>: whatever a
+/// link carries is untrusted text, and only a value on this list is ever stored.
+///
+/// It exists because the threshold is being crossed with a one-off community push (growth research
+/// 2026-09-21, item 0.1): which of those channels actually brings answers is the only thing worth
+/// learning from it, and a guess is not a measurement. <see cref="Share"/> is the link a participant
+/// passes on from their own result — the loop the result page is built around.
+/// </summary>
+public enum BenchmarkSource
+{
+    X,
+    Eksi,
+    Reddit,
+    Discord,
+    LinkedIn,
+    WhatsApp,
+    Share
+}
