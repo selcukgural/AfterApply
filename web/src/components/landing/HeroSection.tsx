@@ -32,6 +32,7 @@ export async function HeroSection({ band = false }: { band?: boolean }) {
             <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{t("bandEyebrow")}</span>
             <h2 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">{t("title")}</h2>
             <p className="max-w-xl text-lg text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
+            <p className="max-w-xl border-l-2 border-accent/40 pl-3 text-sm text-gray-500 dark:text-gray-400">{t("audience")}</p>
             <HeroCtaButtons />
           </div>
 
@@ -53,6 +54,12 @@ export async function HeroSection({ band = false }: { band?: boolean }) {
             {t("title")}
           </h1>
           <p className="max-w-xl text-lg text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
+          {/* Who this is for, on the first screen (2026-09-22). The page used to address everyone
+              and therefore nobody: a visitor could read the whole thing without finding a sentence
+              that said "this is you". Quiet by design — a rule and small type, under the promise
+              rather than competing with it. It narrows the tone, not the product: the sector list
+              in the benchmark form still has all thirteen. */}
+          <p className="max-w-xl border-l-2 border-accent/40 pl-3 text-sm text-gray-500 dark:text-gray-400">{t("audience")}</p>
           <HeroCtaButtons />
         </div>
 

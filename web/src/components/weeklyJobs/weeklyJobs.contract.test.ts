@@ -67,10 +67,10 @@ describe("the weekly jobs pages", () => {
 describe("how the feature is explained", () => {
   // 2026-09-16: three surfaces said "how it works"; two sent the reader to /weekly-jobs — the
   // product page, which for a signed-out visitor is a login redirect — and the gate page had no
-  // way to the help topic at all. "How it works" is the help topic, everywhere.
+  // way to the help topic at all. "How it works" is the help topic, everywhere. The landing page's
+  // feature card was the third; it went with the feature grid on 2026-09-22, and the landing hero
+  // (WeeklyJobsHeroCtas, pinned in landing.contract.test.ts) is the surface that replaced it.
   it("sends every 'how it works' link to the help topic", () => {
-    expect(read("components/landing/WeeklyJobsFeatureCard.tsx")).toContain('href="/help/weekly-jobs"');
-    expect(read("components/landing/WeeklyJobsFeatureCard.tsx")).not.toContain('href="/weekly-jobs"');
     expect(read("components/dashboard/WeeklyJobsAnnouncement.tsx")).toContain('href="/help/weekly-jobs"');
     expect(read("components/weeklyJobs/ProGate.tsx")).toContain('href="/help/weekly-jobs"');
   });

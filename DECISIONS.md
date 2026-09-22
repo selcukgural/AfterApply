@@ -8798,3 +8798,88 @@ yanlış gerekçenin düzelmesi. (Not: o JSON-LD ham HTML'de değil, JS ile bas�
 bakıldığında görünmüyor, tarayıcıda görünüyor. Eklenti tarayıcıda çalıştığı için fark etmiyor, ama
 "sayfa işaretleme yayınlıyor mu" sorusu ham HTML'e bakarak yanıtlanamaz; bu, Greenhouse ölçümünde de
 tarayıcının DOM'una bakılmasının sebebiydi.)
+
+---
+
+## Landing tek kitleye daraldı, dizin kartı puansızken de bir şey söylüyor (0.4 + 0.3) — DECIDED (2026-09-22)
+
+**Bağlam.** 2026-09-21 araştırma raporunun 0.3 ve 0.4 maddeleri. 0.2 (yanıt verisi) aynı gün
+gönderildi; sıradaki iki madde bunlardı. Tasarım kanvasından (https://claude.ai/artifact/RWQhoN5SZ7WKYCNUwvdYEb)
+**B — "Tek kitle"** seçildi: üç varyant arasında omurgayı koruyup en çok konumlandırma kazandıran.
+
+**0.4 — landing on bölümden yediye.** Sayfa aynı üç şeyi tekrar tekrar söylüyordu; sayım
+`landing.*` anahtarları üzerinden yapıldı, tahminle değil.
+
+- **Kitle cümlesi hero'da** (`landing.hero.audience`, iki dilde): "Türkiye'de yazılım, ürün ve veri
+  işlerine başvuranlar için. Ayda 20+ başvurun varsa buradaki sayılar seninle ilgili." Hem tam
+  hero'da hem `band` varyantında — haftalık ilanlar satıştayken ilk ekran bant oluyor. **Ses tonunu
+  daraltır, ürünü değil:** kıyaslama formundaki 13 sektör olduğu gibi duruyor, hiçbir yerden bir
+  seçenek eksilmedi.
+- **Problem + "neden var" tek bant.** İkisi tek argümanın iki yarısıydı (geçmiş dağınık *çünkü*
+  başvurunun peşine kimse düşmüyor) ama iki `py-20`, iki eyebrow, iki başlık harcıyordu. Şimdi bir
+  bant: problem başlığı `h2`, "Asıl hikâye başvurduktan sonra başlar." altındaki `h3`. `ProblemSection`
+  silindi, içeriği `AfterApplySection`'a taşındı — **`#how-it-works` çıpası orada kaldı** (header,
+  footer, hero'nun ikinci düğmesi ve kapanış CTA'sı oraya bakıyor). Giden tek beat: problem
+  bölümünü kapatan italik "Bu başvuru ne olmuştu?" — altındaki sessiz zaman çizelgesi zaten aynı
+  soruyu aynı kelimelerle soruyor.
+- **Özellik listesi (7 kart) gitti.** Beşi yukarıda zaten vardı (eklenti, şirketler ve CV araç
+  şeridinde; takip ve analitik sayılar bölümünde), kalan ikisi — "ne kadar beklediğini bil",
+  "cevapsız kalanları unutma" — birleşen bandın kapanış cümlesinin birebir konusu. `FeaturesSection`
+  ve `WeeklyJobsFeatureCard` silindi: haftalık ilanlar satıştayken kendi hero'su var, kapalıyken
+  kart zaten çizilmiyordu. Footer'daki `/#features` bağlantısı da gitti — çıpası kalmayan bağlantı
+  hiçbir yere kaydırmaz.
+- **Analitik bölümündeki kıyas kartı gitti.** Araç şeridinde kıyaslamanın kendi sekmesi, kendi örnek
+  sonucu ve kendi düğmesi var; şerit tam da bunu bir kez söylemek için yapılmıştı.
+- **Gizlilik + kapanış CTA tek bant.** Arka arkaya iki kapanış bandı vardı, ikisi de bir bağlantıyla
+  bitiyordu. Aynı üç madde, aynı politika bağlantısı; davetin üstünde duruyor, çünkü teklifin şartı.
+- **"Hesap gerekmez" 9 yerde → 2.** Asıl tekrar metinde değil ekrandaydı: araç şeridinin başlığı
+  (`landing.tools.title`, "Hesap açmadan deneyebileceklerin") `sr-only`'ydi, dolayısıyla gören
+  okuyucuya kalan şey dört karttan üçüne basılan aynı rozetti. Başlık **görünür** oldu, rozet yalnızca
+  kartın söylemediği bir şeyi söylediği yerde kaldı (eklenti kartındaki "LinkedIn + kariyer.net").
+  Kalan iki yer: o başlık ve hero'daki CV kutusu (orada cümle dosyaya ne olduğunun parçası).
+  `landing.features`, `landing.analytics.benchmarkCard`, `landing.tools.noAccount`, `siteNav.features`,
+  `landing.problem.question`, `landing.afterApply.eyebrow` katalogdan silindi.
+
+**0.3 — dizin kartı.** Rapor dört madde yazıyordu; **canlı veriye bakınca üçü geçersiz çıktı**:
+
+- **"Test görünümlü şirketleri gizle" — yapılmadı, yapılmamalı.** Canlı dizindeki 18 şirketin hepsi
+  gerçek (Baha Tarım, C-Tech, Dreams & Bytes, BK Mobil dâhil) ve hepsinin gerçek bir katkısı var;
+  dizin zaten yalnızca en az bir yayımlanmış katkısı olanı listeliyor. Gizlemek, gerçek katkıyı
+  gizlemek olurdu. Raporun "test verisi gibi duruyor" bulgusu bir algı tespitiydi, veri tespiti değil.
+- **"Katkı sayısına göre sırala" — yapılmadı.** 2026-09-18'de bilinçli olarak "en yeni katkı üstte"
+  seçildi; katkı sayısı aynı birkaç ismi birinci sayfaya çiviliyordu. Dört gün önceki kararı rapor
+  geri almaz.
+- **"30 CV şeridini eşik altında kaldır" — zaten yapılmış** (`SiteStats:MinimumCount = 25`).
+- **Mağaza adı — ertelendi.** Raporun önerdiği ad ("e-kariyerim: LinkedIn ve kariyer.net başvuru
+  takibi") 0.9.0'ı reddettiren üçüncü-taraf marka kuralına giriyor; ayrıca 0.9.1 şu an incelemede.
+- **Yapılan:** puanı olmayan kartta **"Henüz puan yok" satırı hiç basılmıyor**. Puan üç onaylı
+  değerlendirme istiyor, dolayısıyla 18 şirketin 17'si o satırı taşıyordu — altındaki katkı
+  satırları ("1 maaş kaydı", "1 aday deneyimi") her biri gerçek bir şeyi adlandırırken, kart
+  yokluğu duyuruyordu. Puan çıktığı an yıldızlar geri geliyor. `companies.directory.noScore` silindi.
+
+**Sektör filtresi yapılmadı — sebebi bir bulgu.** Canlı `/api/response-rates/sectors`
+**929 başvurunun 929'unu "sınıflanamayan"** sayıyor: prod'daki hiçbir şirkette `Company.Industry`
+dolu değil. Zenginleştirme (`CompanyEnrichmentService`) yalnızca eklentiden gelip profil URL'si
+yakalanmış şirketler için çalışıyor; 929 başvuru içe aktarmadan geldiği için hiçbiri zenginleşmedi.
+Yani dün gönderilen sektör tablosunun boş olmasının sebebi eşikler değil, sektör verisinin hiç
+olmaması — ve bugün eklenecek bir sektör filtresi her seçimde boş liste verirdi. **Sıradaki iş bu:**
+profil URL'si olup `Industry`'si boş olanlara backfill + en sık geçen TR şirketleri için küratörlü
+sektör eşlemesi (maaş katalogundaki CSV migration deseni). Not: sektör tablosu sektör verisi
+gelse bile ≥ 5 farklı kişi istiyor; veri şart ama tek başına yetmez.
+
+**Test.** `landing.contract.test.ts`: yeni bölüm sırası (6 bileşen), kaldırılan üç bölümün
+render edilmediği, birleşen bandın iki yarısını da taşıyıp çıpayı koruduğu ve tek `h2` + `h3`
+tuttuğu, kapanış bandının üç gizlilik maddesini ve politika bağlantısını taşıdığı, hero'nun kitle
+cümlesini iki yerde (tam + bant) bastığı, araç şeridinin "hesap gerekmez"i **bir kez** ve görünür
+başlıkta söylediği, footer'da `/#features` kalmadığı. Yeni **kopya kuralı testi**: iki katalogda da
+`landing.*` içinde "hesap gerek" / "no account" en fazla iki kez — bir sonraki kopya turu bu
+değişikliği sessizce geri alamasın diye. Yeni `companyDirectory.contract.test.ts`: puan yokken
+yıldız satırı yok, katkı satırları duruyor, `noScore` iki katalogdan da gitmiş. `weeklyJobs.contract.test.ts`
+silinen karta bakan iddiadan arındırıldı. 85 dosya / 829 test geçiyor; `tsc --noEmit` ve
+`npm run lint` (0 hata) temiz.
+
+**Tarayıcı (prod build, `next build && next start -p 3000`, yerel API).** TR ve EN: hero'da kitle
+cümlesi (bant varyantında da, çünkü yerelde `JobSources:Enabled=true`), araç şeridinde tek görünür
+"Hesap açmadan deneyebileceklerin" ve tek rozet, "Nasıl çalışıyor?" düğmesi birleşen banda iniyor,
+kapanış bandı güven üçlüsü → ayraç → CTA, footer "Ürün" grubunda Özellikler yok, `/tr/companies`
+kartlarında puansız üçlü artık yalnızca ne tuttuğunu yazıyor.
