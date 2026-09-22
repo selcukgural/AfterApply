@@ -855,7 +855,13 @@ export interface SubmitBenchmarkRequest {
   locale: string;
   /** Honeypot — always sent empty. See the API contract for why a CAPTCHA is not an option here. */
   website: string;
+  /** The channel the page was reached through, mapped from the link's `utm_source`; omitted when
+   *  the link named none or one off the list. */
+  source?: BenchmarkSource | null;
 }
+
+/** Campaign channels a benchmark answer can be attributed to. `Share` is a participant's own link. */
+export type BenchmarkSource = "X" | "Eksi" | "Reddit" | "Discord" | "LinkedIn" | "WhatsApp" | "Share";
 
 /** Which pool the median shown was drawn from. `Overall` is the fallback for a sector that has not
  *  reached the threshold yet, and the page must label it as not being about the reader's field. */

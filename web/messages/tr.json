@@ -2586,11 +2586,11 @@
       },
       "scope": {
         "title": "Medyan ne zaman gösterilmez",
-        "body": "Bir alanın medyanı, o alanda yeterli sayıda cevap olmadan gösterilmez; eşik aracın kendi \"Bu sayı nereden geliyor?\" bölümünde yazar. Alanınız eşiğin altındaysa, açıkça \"tüm alanlar geneli\" diye etiketlenmiş genel medyan gösterilir. Kısa dönem seçen cevaplar düşük görünme eğilimindedir: yakın başvurular henüz cevaplanmaya vakit bulamamış olabilir."
+        "body": "Bir alanın medyanı, o alanda yeterli sayıda cevap olmadan gösterilmez; eşik aracın kendi \"Bu sayı nereden geliyor?\" bölümünde yazar. Alanınız eşiğin altındaysa, açıkça \"tüm alanlar geneli\" diye etiketlenmiş genel medyan gösterilir. Henüz hiçbir medyan açılmadıysa sonuç ekranı, hangi medyanın kaç cevapta açılacağını adım adım gösterir. Kısa dönem seçen cevaplar düşük görünme eğilimindedir: yakın başvurular henüz cevaplanmaya vakit bulamamış olabilir."
       },
       "calloutAnonymous": {
         "title": "Hiçbir kimlik saklanmaz",
-        "body": "E-posta ya da çerez kaydedilmez; yanıtınızın satırında IP adresi yoktur. IP adresiniz yalnızca her gönderimde tutulan ayrı bir güvenlik kaydında 12 ay saklanır ve yanıtınızla ilişkilendirilmez. Alanlar sabit listelerden seçilir; girdiğiniz iki sayı ve seçimleriniz dışında hiçbir şey saklanmaz."
+        "body": "E-posta ya da çerez kaydedilmez; yanıtınızın satırında IP adresi yoktur. IP adresiniz yalnızca her gönderimde tutulan ayrı bir güvenlik kaydında 12 ay saklanır ve yanıtınızla ilişkilendirilmez. Alanlar sabit listelerden seçilir; girdiğiniz iki sayı ve seçimleriniz dışında yalnızca, bağlantı bir kanal belirtiyorsa (X, Ekşi Sözlük gibi) o kanalın adı saklanır."
       },
       "calloutSignedIn": {
         "title": "Hesabınız varsa",
@@ -2993,6 +2993,25 @@
   "benchmark": {
     "title": "Geri dönüş oranın normal mi?",
     "subtitle": "Dört soru. Kayıt yok, e-posta yok. Cevabını ver, kendi oranını ve alanındaki medyanı gör.",
+    "survey": {
+      "eyebrow": "Türkiye Başvuru Yanıt Anketi",
+      "participantLabel": "Ankete katılım sıran",
+      "participantValue": "{number}.",
+      "participantNote": "Cevabın hesaba katıldı",
+      "earlyTitle": "Kıyas için henüz erken",
+      "earlyBody": "Bir medyanı {minimum} cevaptan önce göstermiyoruz; daha azı birkaç kişinin cevabını “normal” diye sunmak olurdu. Sonuçlar şu sırayla açılıyor:",
+      "nextTitle": "Sıradaki adımlar",
+      "overallStep": "Tüm alanların medyanı",
+      "overallStepDone": "Tüm alanların medyanı açıldı",
+      "overallStepHint": "Toplam {minimum} cevapta açılır. Kendi alanına özel değildir; açıldığında da öyle yazar.",
+      "sectorStep": "{sector} medyanı",
+      "sectorStepHint": "Senin alanında {minimum} cevap olunca açılır.",
+      "reportStep": "İlk rapor",
+      "reportStepHint": "Yeterli cevap toplandığında sonuçlar sitede rapor olarak yayımlanacak. Tekil cevap asla gösterilmez.",
+      "progress": "{count} / {minimum}",
+      "answers": "{count} cevap",
+      "shareNudge": "Her yeni cevap bir sonraki adımı yaklaştırıyor — paylaşarak hızlandır."
+    },
     "participation": "{count} kişinin cevabıyla.",
     "form": {
       "applicationsLabel": "Kaç başvuru yaptın?",
@@ -3054,23 +3073,20 @@
       "aboveMedian": "Senin oranın medyanın üzerinde.",
       "belowMedian": "Senin oranın medyanın altında.",
       "atMedian": "Senin oranın tam medyanda.",
-      "withheldTitle": "Kıyas için henüz erken",
-      "withheldBody": "{sector} alanında şu ana kadar {sampleSize} cevap var; bir medyan göstermek için {minimum} gerekiyor. Eşiğin altında medyan yayınlamak, birkaç kişinin cevabını “sektör normali” diye sunmak olurdu.",
-      "withheldRemaining": "Cevabın kaydedildi. Eşiğe {remaining} cevap kaldı.",
       "saved": "Cevabın bu sayıya dahil edildi.",
       "overallTitle": "{sector} alanında henüz {sampleSize} cevap var — medyan için {minimum} gerekiyor.",
       "overallMedianLabel": "Tüm alanlar geneli",
       "overallNote": "{count} cevaba göre · alanına özel değil",
       "shareLabel": "Sonucunu paylaş",
       "shareTextWithMedian": "{applications} başvurumdan {replies} tanesine dönüş geldi (%{rate}); alanımda medyan %{median}. Seninki normal mi?",
-      "shareText": "{applications} başvurumdan {replies} tanesine dönüş geldi (%{rate}). Seninki normal mi?"
+      "shareText": "Türkiye Başvuru Yanıt Anketi'ne katıldım: {applications} başvurumdan {replies} tanesine dönüş geldi (%{rate}). Seninki normal mi?"
     },
     "method": {
       "title": "Bu sayı nereden geliyor?",
       "source": "Tamamı bu formu dolduran insanların kendi beyanı. Ürünün topladığı başvuru verisiyle karıştırılmıyor — biri beyan, diğeri ölçüm; ikisini tek ortalamada toplamak sayıyı bozardı.",
       "median": "Ortalama değil medyan kullanıyoruz. Cevaplar anonim olduğu için aynı kişi birden fazla kez cevaplayabilir ve kasten uç değer gönderilebilir; medyan bunlardan neredeyse etkilenmez, ortalama fazlasıyla etkilenir.",
       "recency": "Kısa dönem seçen cevaplar düşük görünme eğilimindedir: yakın zamanda yapılan başvurular henüz cevaplanmaya vakit bulamamış olabilir.",
-      "privacy": "Hiçbir kimlik saklanmıyor — e-posta yok, çerez yok, yanıtın satırında IP yok. IP adresin yalnızca ayrı bir güvenlik kaydında 12 ay tutuluyor, yanıtınla ilişkilendirilmiyor. Alanlar sabit listelerden seçiliyor, serbest metin alınmıyor.",
+      "privacy": "Hiçbir kimlik saklanmıyor — e-posta yok, çerez yok, yanıtın satırında IP yok. IP adresin yalnızca ayrı bir güvenlik kaydında 12 ay tutuluyor, yanıtınla ilişkilendirilmiyor. Alanlar sabit listelerden seçiliyor, serbest metin alınmıyor. Bağlantı bir kanal belirtiyorsa (X, Ekşi Sözlük gibi) o kanalın adı da sabit listeden kaydediliyor; hangi paylaşımın işe yaradığını görmek için.",
       "threshold": "Bir alanın medyanı, o alanda en az {minimum} cevap olmadan gösterilmiyor."
     },
     "cta": {

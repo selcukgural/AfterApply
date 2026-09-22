@@ -18,6 +18,7 @@ public sealed class BenchmarkSubmissionConfiguration : IEntityTypeConfiguration<
         builder.Property(s => s.Seniority).HasConversion<string>().HasMaxLength(32);
         builder.Property(s => s.Location).HasConversion<string>().HasMaxLength(32);
         builder.Property(s => s.Locale).HasMaxLength(8).IsRequired();
+        builder.Property(s => s.Source).HasConversion<string>().HasMaxLength(32);
 
         // The comparison cell is the sector, and it is read on every submission.
         builder.HasIndex(s => s.Sector);

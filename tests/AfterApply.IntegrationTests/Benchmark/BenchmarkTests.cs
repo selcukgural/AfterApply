@@ -214,6 +214,56 @@ public class BenchmarkTests(ApiHost<BenchmarkProfile> host) : IClassFixture<ApiH
     }
 
     [Fact]
+    public async Task The_Channel_Is_Stored_When_The_Page_Names_One()
+    {
+        await SubmitAsync(Answer() with { Source = BenchmarkSource.Eksi });
+
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.BenchmarkSubmissions.AsNoTracking().SingleAsync()).Source.ShouldBe(BenchmarkSource.Eksi);
+    }
+
+    [Fact]
+    public async Task A_Page_That_Sends_No_Channel_Still_Answers()
+    {
+        // The shape every page shipped before the field existed. The body is written by hand so no
+        // "source" key is present at all, rather than present and null.
+        var response = await _client.PostAsync("/api/benchmark/submissions", JsonContent.Create(new
+        {
+            applicationCount = 50,
+            replyCount = 5,
+            sector = "SoftwareAndIt",
+            period = "LastSixMonths",
+            locale = "en",
+            website = ""
+        }));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.BenchmarkSubmissions.AsNoTracking().SingleAsync()).Source.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task A_Channel_Off_The_List_Is_Rejected()
+    {
+        // Whatever a link carries is untrusted text; only the fixed list is ever stored.
+        var response = await _client.PostAsync("/api/benchmark/submissions", JsonContent.Create(new
+        {
+            applicationCount = 50,
+            replyCount = 5,
+            sector = "SoftwareAndIt",
+            period = "LastSixMonths",
+            locale = "tr",
+            website = "",
+            source = "<script>alert(1)</script>"
+        }));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await ShouldHaveStoredNothingAsync();
+    }
+
+    [Fact]
     public async Task The_Summary_Is_Public_And_Reports_Participation_Per_Sector()
     {
         await SubmitAsync(Answer(sector: BenchmarkSector.SoftwareAndIt));
