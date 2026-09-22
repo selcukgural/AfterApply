@@ -8683,6 +8683,10 @@ konum yolu id'nin içinde yok.
 çekilecek bir şey yok. O ilanlar eklentinin sayfadan okuduğuyla kalıyor. `AtsApiUrlBuilder` bu
 durumda adres üretmiyor ve testi bunun sessiz bir hata değil kasıt olduğunu sabitliyor.
 
+> **Düzeltme (2026-09-22, aynı gün):** yukarıdaki gerekçe yanlıştı ve Workable artık destekleniyor —
+> bkz. aşağıdaki "Workable'ın ucu meğer varmış" kaydı. Paragraf, kararın neye dayandığı görülsün
+> diye duruyor.
+
 **Bayrak açık gidiyor (`AtsSources__Enabled=true`), ve gerekçesi ölçüme dayanıyor.** Dışarıya
 istek atan her özellik burada kapalı doğar; bu, o kuralın bilinçli istisnası. Sebep 2026-09-22'de
 canlı sayfalarda ölçüldü: **Greenhouse'un barındırdığı panolar `schema.org/JobPosting` işaretlemesi
@@ -8762,3 +8766,35 @@ yön, arkasında kalması değil.
 **Altı yerde kopyalanmış host kontrolü tek yere alındı** (`HostRules`): `host == domain ||
 host.EndsWith("." + domain)`. Allow-list ikiden dokuza çıkarken altı kopya arasındaki ince bir
 ayrışma tam da kimsenin fark etmeyeceği türden bir açık olurdu.
+
+## Workable'ın ucu meğer varmış: `details=true` (2026-09-22)
+
+**Karar:** Workable da sunucu tarafı ilan zenginleştirmesine dahil edildi. Aynı gün alınan "Workable'ın
+sunucu tarafı zenginleştirmesi yok, bilerek" kararı **yanlış bir gözleme dayanıyordu** ve geri alındı;
+o paragraf, neye dayandığı görülsün diye yerinde duruyor, üstünde bu kayda yönlendiren bir not var.
+
+**Yanlış olan neydi.** `apply.workable.com/api/v1/widget/accounts/{account}` parametresiz çağrıldığında
+`{name, description, jobs:[{shortcode, title, city, country, employment_type, published_on, …}]}`
+döndürüyor — ilan satırları var ama **`description` yok**. Buradan "şirketi döndürüyor, ilanı değil"
+sonucuna varılmış. Aynı uç **`?details=true`** ile çağrıldığında her satır ilanın **HTML açıklamasını**
+da taşıyor. 2026-09-22'de canlı bir panoda ölçüldü (yedi açık ilan): 4216, 4164, 4149 karakterlik
+açıklamalar, şehir/eyalet/ülke ayrı alanlar, `employment_type` ("Full-time"), `published_on`.
+
+**Uygulama Ashby'nin desenini birebir izliyor** — çünkü Ashby'nin de ilan başına ucu yok:
+`AtsApiUrlBuilder` pano adresini üretiyor (`…/widget/accounts/{account}?details=true`),
+`AtsJobPostingParser` satırı `ExternalId`'nin shortcode yarısından seçiyor, panoda artık listelenmeyen
+ilan **hiçbir şey döndürmüyor** (kapanmış bir ilanın alanlarını başka bir satırdan yeniden yazmak
+yanlış olurdu). Shortcode şekli doğrulanmadan adrese girmiyor (`^[0-9A-Fa-f]{8,32}$`); `workable.com`
+`ApiDomains`'e eklendi, yani redirect kontrolü de kapsıyor. Konum satırda tek parça olmadığı için
+insanın yazacağı gibi birleştiriliyor: şehir varken eyalet atlanıyor ("Athens, Greece", "Athens,
+Attica, Greece" değil), şehir yoksa eyalet devreye giriyor.
+
+**Bu boşluk zaten can yakmıyordu, ve bunu da ölçtük.** Workable ilan sayfaları — Greenhouse'un aksine —
+**tam `schema.org/JobPosting` işaretlemesi yayınlıyor** (iki canlı ilanda 4149 ve 4511 karakter
+açıklama), yani eklentinin jenerik okuyucusu alanları zaten dolduruyor. Sunucu tarafı yol, yalnızca
+"Elle ekle" ile açılan ya da JSON-LD yetişmeden gönderilen başvurular için devreye giriyor —
+`MinDescriptionChars` (400) eşiğinin altındakiler. Küçük ama gerçek bir kazanç; asıl değeri, kayıttaki
+yanlış gerekçenin düzelmesi. (Not: o JSON-LD ham HTML'de değil, JS ile basılıyor — `curl` ile
+bakıldığında görünmüyor, tarayıcıda görünüyor. Eklenti tarayıcıda çalıştığı için fark etmiyor, ama
+"sayfa işaretleme yayınlıyor mu" sorusu ham HTML'e bakarak yanıtlanamaz; bu, Greenhouse ölçümünde de
+tarayıcının DOM'una bakılmasının sebebiydi.)

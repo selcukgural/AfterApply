@@ -33,8 +33,8 @@ public sealed class AtsJobClient(HttpClient httpClient, IOptions<JobSourceOption
         var uri = AtsApiUrlBuilder.Build(source, jobUrl, externalId);
         if (uri is null)
         {
-            // No address we are willing to request — an id shape we do not recognise, or Workable,
-            // which publishes no per-posting endpoint. Not an error worth retrying.
+            // No address we are willing to request: an id whose shape the builder could not prove,
+            // or a source with no public endpoint. Not an error worth retrying.
             return Task.FromResult(new JobSourceFetchResult<AtsJobPosting>(
                 JobSourceFetchOutcome.Blocked, StatusCode: null, DurationMs: 0, Value: null));
         }

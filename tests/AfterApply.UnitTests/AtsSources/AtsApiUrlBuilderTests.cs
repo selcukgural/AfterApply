@@ -75,12 +75,24 @@ public class AtsApiUrlBuilderTests
     }
 
     [Fact]
-    public void Workable_Has_No_Per_Posting_Endpoint_So_Nothing_Is_Fetched()
+    public void Workable_Asks_For_The_Board_With_The_Descriptions_In_It()
     {
-        // Its public widget endpoint describes the company, not the posting. Those jobs keep
-        // whatever the extension read off the page — see AtsApiUrlBuilder's own note.
+        // details=true is the whole point: without it the same endpoint answers with the company
+        // and a list of titles and no description, which is why 0.9.0 shipped without Workable
+        // support at all (DECISIONS.md 2026-09-22).
         AtsApiUrlBuilder.Build(Source.Workable, "https://apply.workable.com/acme/j/A1B2C3D4E5/", "acme/A1B2C3D4E5")
-            .ShouldBeNull();
+            !.ToString()
+            .ShouldBe("https://apply.workable.com/api/v1/widget/accounts/acme?details=true");
+    }
+
+    [Theory]
+    [InlineData("acme/short")]
+    [InlineData("acme/A1B2C3D")]
+    [InlineData("acme/NOTHEXADECIMAL")]
+    [InlineData("acme/A1B2C3D4E5/extra")]
+    public void Workable_Refuses_A_Shortcode_It_Cannot_Prove(string externalId)
+    {
+        AtsApiUrlBuilder.Build(Source.Workable, "https://apply.workable.com/acme/j/x/", externalId).ShouldBeNull();
     }
 
     [Fact]
