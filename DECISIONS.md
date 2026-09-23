@@ -8963,3 +8963,30 @@ tuvali: https://claude.ai/artifact/92Keha8VZUW8Mk5jFHhQ4y — "Son hâl" satır�
 - **Gizlilik.** İki cevap toplu sayılara giriyor → `privacy.aggregates.intro/what` aynı değişiklikte
   güncellendi, tarih 23 Eylül 2026. Hesap dışa aktarımı üç alanı taşıyor. Yeni girdi yüzeyi
   `/api/*` PUT/POST olduğu için `RequestAuditMiddleware` kapsamında; opt-out yok.
+
+## Kabul kartında çıkış katkısı (1.2) — DECIDED (2026-09-23)
+
+**Karar.** Büyüme araştırmasının (2026-09-21) 1.2 maddesi. Tasarım tuvali:
+https://claude.ai/artifact/DPApbkTdi5jSyHgQCMyW3b — kullanıcı **A**'yı seçti ("Son hâl — A" satırı).
+T7 kartındaki tek "deneyimini paylaş" linki, kartın içinde iki bölümlü bir forma dönüştü: **İşe alım
+süreci** (genel puan zorunlu; aşama sayısı ve görüşme türleri isteğe bağlı) ve **Maaş** (meslek,
+toplam yıl, aylık net + para birimi, prim var/yok). Tek "Kaydet"; yalnızca kişinin dokunduğu bölüm
+gönderilir, dokunulmayan bölüm atlanır, hiçbiri doluysa "kaydedilecek bir şey yok".
+
+- **Yeni endpoint yok.** Bölümler mevcut aday deneyimi (`POST /api/companies/{id}/experiences`) ve
+  maaş (`POST /api/companies/{id}/salaries`) kayıtlarıdır; sırayla gönderilir, ikincisi düşerse
+  birincisi kayıtlı kalır ve kart bunu söyler. `RequestAuditMiddleware` ikisini de zaten kapsıyor.
+- **Başvurudan dolanlar.** Sonuç = Teklif; süre = başvuru tarihi → son `Accepted` geçişi, bantlanmış
+  (1 hafta / 2 hafta / 30 gün / 61 gün sınırları); maaşta çalışma şekli başvurudan, durum "şu an
+  çalışıyor", dönem kabul yılından bu yana. Meslek kutusuna ilan başlığı yazılır; katalogda iki dilden
+  birinde **birebir** aynı isim (tek eşleşme) varsa seçili gelir, yoksa kişi listeden seçer — yakın
+  eşleşme mesleği tahmin etmek olurdu.
+- **Şirket puanı yok.** Araştırma "şirket puanı" diyordu; yorum formu orada çalışıyor/çalışmış olmayı
+  soruyor, kabul günü kişi henüz çalışmıyor. Yerine sürecin genel puanı.
+- **Teklif maaşı = mevcut model.** Kabul edilen teklif "şu an çalışan, bu yıldan beri" maaşı olarak
+  kaydedilir; ayrı bir "teklif" türü açılmadı.
+- **Görünürlük.** Kişinin o şirket için zaten deneyimi/maaşı varsa ya da kotası bittiyse ilgili bölüm
+  gösterilmez. Kayıttan sonra (ve sonraki ziyaretlerde) kart "Buraya bir şey girmen artık gerekmiyor"
+  der; veri indirme satırı kalır, silme hiçbir yerde anılmaz. Metinler T-serisi ton testinin
+  (`copy.test.ts`) kapsamında; "adın olmadan" ve maaşın yalnızca giriş yapmış okuyuculara açık olduğu
+  metinde yazılı ve testle sabit.

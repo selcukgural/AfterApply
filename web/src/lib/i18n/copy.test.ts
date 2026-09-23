@@ -177,6 +177,20 @@ describe("the closing lines of an application keep the T-series tone (2026-09-18
     expect(offenders).toEqual([]);
   });
 
+  // The exit contribution on the accepted card (growth item 1.2, 2026-09-23) publishes what the
+  // person enters: every line that asks for it or confirms it says it goes out without a name,
+  // and the salary's narrower audience is named where the salary is asked for.
+  it("says the exit contribution is published without a name, and who reads the salary (tr + en)", () => {
+    for (const key of ["intro.both", "intro.experience", "intro.salary", "saved.both", "saved.experience", "saved.salary"]) {
+      expect(trValue(`applications.detail.accepted.${key}`)).toMatch(/adın olmadan/i);
+      expect(enValue(`applications.detail.accepted.${key}`)).toMatch(/without your name/i);
+    }
+    for (const key of ["intro.both", "intro.salary"]) {
+      expect(trValue(`applications.detail.accepted.${key}`)).toMatch(/giriş yapmış/);
+      expect(enValue(`applications.detail.accepted.${key}`)).toMatch(/signed-in/);
+    }
+  });
+
   it("leaves the account alone on the way out — the data offer is a download, never a deletion", () => {
     const offenders = closingCopy.filter(([, value]) => /(hesabını sil|hesabı sil|delete your account|delete the account)/i.test(value)).map(([key]) => key);
     expect(offenders).toEqual([]);

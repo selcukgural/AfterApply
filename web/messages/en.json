@@ -799,12 +799,44 @@
       },
       "accepted": {
         "title": "Congratulations.",
-        "share": {
-          "text": "Let the next candidate know how this process went —",
-          "link": "share your experience with {company}"
+        "intro": {
+          "both": "The process is over; you can leave what you learned here, once. The next person applying to the same company cannot find it anywhere else. Published without your name: the process for everyone, the salary for signed-in readers. Both sections are optional.",
+          "experience": "The process is over; you can leave how it went here, once. The next person applying to the same company cannot find it anywhere else. Published without your name.",
+          "salary": "The process is over; you can leave your salary here, once. The next person applying to the same company cannot find it anywhere else. Shown without your name, to signed-in readers."
+        },
+        "experience": {
+          "heading": "Hiring process",
+          "overall": "How was it overall?",
+          "prefilled": "Filled in from your application: outcome \"{outcome}\", total time {duration}.",
+          "prefilledNoDuration": "Filled in from your application: outcome \"{outcome}\".",
+          "more": "For what you liked and what could be better, use the",
+          "moreLink": "full form"
+        },
+        "salary": {
+          "heading": "Salary",
+          "occupationMatched": "The job title is in the list as it is, so it is picked. You can change it.",
+          "occupationPick": "We typed in the job title; pick your occupation from the list.",
+          "years": "Your total experience (years)",
+          "bonus": "Is there a bonus?",
+          "bonusYes": "Yes",
+          "bonusNo": "No",
+          "prefilled": "From your application: {employmentType}, recorded as working at this company since {year}.",
+          "fullForm": "Enter the salary in the full form"
+        },
+        "save": "Save",
+        "saving": "Saving…",
+        "saveNote": "Only the section you filled in is saved.",
+        "nothingToSave": "Nothing to save yet; fill in one of the sections.",
+        "error": "Could not save. Try again in a moment.",
+        "saved": {
+          "both": "Saved: your hiring experience and your salary, both without your name.",
+          "experience": "Saved: your hiring experience, without your name.",
+          "salary": "Saved: your salary, without your name.",
+          "link": "See it on the {company} page"
         },
         "keep": {
           "text": "Your data is yours; download it whenever you like. Your account stays as it is and will be here if you ever need it again.",
+          "doneText": "There is nothing more you need to enter here. Your data is yours, download it whenever you like; your account stays as it is and will be here if you ever need it again.",
           "link": "Download my data"
         }
       },

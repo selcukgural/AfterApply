@@ -143,6 +143,10 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           companyId={application.companyId}
           companyName={application.companyName}
           companySlug={application.companySlug}
+          jobTitle={application.jobTitle}
+          employmentType={application.employmentType}
+          appliedAt={application.appliedAt}
+          statusHistory={statusHistory}
         />
         <div className="flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <div className="flex items-center gap-2">
