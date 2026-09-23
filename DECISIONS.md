@@ -9092,3 +9092,34 @@ uygulama içinde tarih+saatli bir satır görür; blog yazısı beğenisi kapsam
   dışa aktarma notları güncellendi. Yardım: Ayarlar sayfasına "Bildirimler" bölümü + `settings-notifications.png`;
   `settings-extension-token.png` bölüm kırpması olarak yeniden çekildi.
 - **Gerçek zaman yok (bilerek):** rozet mevcut 60 sn polling'le güncellenir; SignalR per-user push ayrı adım.
+
+## Paylaşılabilir başvuru akışı kartı (Sankey) — DECIDED (2026-09-23)
+
+Rakip araştırmasının (2026-09-23, Claude Docs) önerilen sırasındaki ilk madde. Tasarım tuvali:
+https://claude.ai/artifact/YCJ7rnCzQaxzqm9TSA2R17 — varyant A seçildi; B (büyük sayı) ve C (kare +
+özet kutular) elendi.
+
+- **Veri:** `GET /api/analytics/flow?period=30|90|all` (yalnızca okuma, kendi başvuruları, yalnızca
+  sayılar). `ApplicationFlowClassifier` her başvuruyu ilk sütunda tek düğüme koyar (cevapsız kaldı,
+  cevap bekleniyor, mülakatsız red, ön elemede, geri çekildi, mülakata çağrıldı), mülakata çağrılanları
+  ikinci sütunda tek düğüme (teklif, hâlâ süren, red, sessizlik, geri çekildi); iki sütun da her zaman
+  toplanır. Teklif her şeyin önünde gelir (reddedilen teklif de teklif). Cevapsız ile bekleniyor sınırı
+  hatırlatıcılarla aynı: `Notifications:GhostingThresholdDays` (30).
+- **Kart adresi yalnızca sayılar** (CV puan kartıyla aynı kural): 12 düğüm sayısı + ortanca ilk cevap
+  günü + ay aralığı. Sunucuda hiçbir şey saklanmaz. Toplamı tutmayan ya da 10 başvurudan az kart 404
+  (proxy.ts'te, sayfa render edilmeden). Kısa kimlik (saklanan kart) tartışıldı, **şimdilik yok**:
+  paylaşım kullanılır ve adres sorun olursa yeniden açılır.
+- **Boyutlar:** bağlantı önizlemesi her zaman 1200×630; indirilen görsel platforma göre 1600×900 (X),
+  1080×1350 (LinkedIn/Facebook/Instagram), 1080×1920 (hikâye/durum, üst 260 / alt 290 px boş). Her boyut
+  diyagramı yeniden yerleştirir. Ekran ve indirme `d=2` ile iki kat piksel (retina'da bulanıklık);
+  og:image standart boyutta kalır.
+- **Görsel:** satori'nin tek ağırlıklı fontu yerine Geist (SIL OFL, `public/fonts/geist`) ve gerçek logo
+  (`logo-mark-og.png`, data URI). Satori `transform-origin`'i yok saydığı için 2x ölçek CSS transform ile
+  değil, bütün ölçüler çarpılarak.
+- **Paylaşılan sayfa** `/tr/akis/<kart>` (`/en/flow/<kart>`): `noindex, follow` (kişisel sayılar,
+  sonsuz adres; bağlantıları izlenebilir), görsel `X-Robots-Tag: noindex` (görsel aramaya düşmesin).
+  SEO değeri ayrı planlanan rehber sayfasından gelecek.
+- **Panel:** "Akışını paylaş" yalnızca 10+ başvuruda görünür. Pencere önce platformu sorar, sonra çıktıyı
+  ve dönemi; "Kartta ne var?" açıklaması hem pencerede hem paylaşılan sayfada. Pencere ziyaret sayacına
+  **yazmaz** (girişli sayfa kuralı, `browserStorage.test.ts`); paylaşımın etkisi paylaşılan sayfanın
+  ziyaretlerinden okunur. Facebook `shareHref`'e eklendi ama herkese açık paylaşım satırında yok.

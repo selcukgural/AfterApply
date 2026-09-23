@@ -279,6 +279,33 @@ export interface AnalyticsOverviewResponse {
   applicationsPerWeek: ApplicationsPerWeekItem[];
 }
 
+/** `GET /api/analytics/flow?period=` — the window the shareable flow card covers. */
+export type FlowPeriod = "30" | "90" | "all";
+
+/** The flow card's nodes; both columns add up (ApplicationFlowClassifier on the API). */
+export interface ApplicationFlowCounts {
+  total: number;
+  unanswered: number;
+  awaitingReply: number;
+  rejectedBeforeInterview: number;
+  inScreening: number;
+  withdrawnBeforeInterview: number;
+  interviewed: number;
+  offer: number;
+  interviewInProgress: number;
+  rejectedAfterInterview: number;
+  silentAfterInterview: number;
+  withdrawnAfterInterview: number;
+}
+
+export interface ApplicationFlowResponse {
+  counts: ApplicationFlowCounts;
+  medianFirstReplyDays: number | null;
+  /** `yyyy-MM-dd`, null when the window is empty. */
+  firstAppliedOn: string | null;
+  today: string;
+}
+
 export interface CreateApplicationRequest {
   companyName: string;
   jobTitle: string;

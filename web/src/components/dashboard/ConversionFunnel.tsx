@@ -1,12 +1,15 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Card, CardHeader } from "@/components/dashboard/Card";
 import { formatCount, formatRate } from "@/lib/dashboard/format";
 import { buildFunnel, findBottleneck } from "@/lib/dashboard/funnel";
 import type { AnalyticsRatesResponse } from "@/types/api";
 
-export function ConversionFunnel({ rates }: { rates: AnalyticsRatesResponse }) {
+/** `action` sits beside the title — the dashboard's "share your flow" button; the landing page's
+ *  sample funnel passes none. */
+export function ConversionFunnel({ rates, action }: { rates: AnalyticsRatesResponse; action?: ReactNode }) {
   const t = useTranslations("dashboard.funnel");
   const locale = useLocale();
 
@@ -15,7 +18,17 @@ export function ConversionFunnel({ rates }: { rates: AnalyticsRatesResponse }) {
 
   return (
     <Card className="flex flex-col">
-      <CardHeader title={t("title")} hint={t("hint")} />
+      {action ? (
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("title")}</h3>
+            <span className="text-xs text-gray-500 dark:text-gray-400">{t("hint")}</span>
+          </div>
+          {action}
+        </div>
+      ) : (
+        <CardHeader title={t("title")} hint={t("hint")} />
+      )}
 
       <ol className="flex flex-col">
         {stages.map((stage) => {

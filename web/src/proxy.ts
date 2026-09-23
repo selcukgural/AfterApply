@@ -4,6 +4,8 @@ import { routing } from "./i18n/routing";
 import { guideRedirectForPath } from "./lib/guide/articles";
 import { cvScanRedirectForPath, cvScanScoreCardOf } from "./lib/cvScan/path";
 import { parseScoreCard } from "./lib/cvScan/scoreCard";
+import { parseFlowCard } from "./lib/flowCard/card";
+import { flowCardOf, flowCardRedirectForPath } from "./lib/flowCard/path";
 import { aboutRedirectForPath } from "./lib/about/path";
 import { blogSlugRedirectForPath } from "./lib/blog/slugRedirects";
 import { apexRedirectUrl, isFileRequest, stripIndexHtml } from "./lib/http/canonicalHost";
@@ -45,6 +47,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`${cvScanUrl}${request.nextUrl.search}`, request.url), 301);
   }
 
+  // A shared flow card under the other locale's slug (/tr/flow/…, /en/akis/…).
+  const flowUrl = flowCardRedirectForPath(request.nextUrl.pathname);
+  if (flowUrl) {
+    return NextResponse.redirect(new URL(`${flowUrl}${request.nextUrl.search}`, request.url), 301);
+  }
+
   // The about page, translated the same way (/tr/hakkimizda, /en/about).
   const aboutUrl = aboutRedirectForPath(request.nextUrl.pathname);
   if (aboutUrl) {
@@ -65,6 +73,12 @@ export function proxy(request: NextRequest) {
   const scoreCard = cvScanScoreCardOf(request.nextUrl.pathname);
   if (scoreCard && !parseScoreCard(scoreCard.card)) {
     return NextResponse.rewrite(new URL(`/${scoreCard.locale}/404`, request.url));
+  }
+
+  // A flow card that does not add up is a 404 the same way, before the page renders.
+  const flowCard = flowCardOf(request.nextUrl.pathname);
+  if (flowCard && !parseFlowCard(flowCard.card)) {
+    return NextResponse.rewrite(new URL(`/${flowCard.locale}/404`, request.url));
   }
 
   return withLocale(request);

@@ -31,6 +31,16 @@ describe("shareHref", () => {
     expect(href.searchParams.get("url")).toBe(content.url);
   });
 
+  it("gives Facebook only the URL — its sharer reads the page's own card", () => {
+    expect(shareHref("facebook", content)).toBe(
+      "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fekariyerim.com%2Ftr%2Fcv-tarama",
+    );
+  });
+
+  it("keeps Facebook off the public share row, which stays at three networks", () => {
+    expect(SHARE_TARGETS).toEqual(["linkedin", "whatsapp", "x"]);
+  });
+
   it("encodes characters that would otherwise break the query", () => {
     const tricky = { text: "a&b=c #tag", url: "https://ekariyerim.com/tr/companies/a-b" };
     const href = new URL(shareHref("x", tricky));

@@ -498,4 +498,7 @@
   <data name="SILENCE_REPORT_RECENT" xml:space="preserve">
     <value>Bu şirketi yakın zamanda bildirdiniz.</value>
   </data>
+  <data name="ANALYTICS_FLOW_PERIOD_INVALID" xml:space="preserve">
+    <value>Dönem 30, 90 ya da all olmalı.</value>
+  </data>
 </root>

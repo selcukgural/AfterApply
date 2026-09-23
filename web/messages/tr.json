@@ -2018,7 +2018,7 @@
       },
       "funnel": {
         "title": "Dönüşüm hunisi",
-        "body": "Başvuruldu → yanıt geldi → görüşme → teklif zincirinde her aşamanın bir öncekinden ne kadarını geçirdiğini gösterir. Ham sayılar birbirinden çok uzak olduğunda (örneğin binlerce başvuru, birkaç görüşme) her çubuk kendi tam genişliğinde çizildiği için küçük aşamalar da okunabilir kalır. Altındaki cümle en büyük düşüşün hangi aşamada olduğunu söyler."
+        "body": "Başvuruldu → yanıt geldi → görüşme → teklif zincirinde her aşamanın bir öncekinden ne kadarını geçirdiğini gösterir. Ham sayılar birbirinden çok uzak olduğunda (örneğin binlerce başvuru, birkaç görüşme) her çubuk kendi tam genişliğinde çizildiği için küçük aşamalar da okunabilir kalır. Altındaki cümle en büyük düşüşün hangi aşamada olduğunu söyler. 10 veya daha fazla başvurun olduğunda kartın başındaki \"Akışını paylaş\" düğmesi, başvurularının nereye gittiğini gösteren bir kart hazırlar: LinkedIn, X, Facebook, Instagram ya da WhatsApp için uygun boyutta indirebilir veya bağlantısını paylaşabilirsin. Kartta yalnızca sayılar ve dönem yer alır; şirket adı ya da pozisyon yoktur."
       },
       "responseTime": {
         "title": "Yanıt süresi",
@@ -6431,5 +6431,114 @@
   "helpful": {
     "label": "{count, plural, =0 {Faydalı} other {Faydalı · #}}",
     "ownHint": "Senin paylaşımın — kendi paylaşımını işaretleyemezsin."
+  },
+  "flowCard": {
+    "card": {
+      "headline": "{total} başvurumun {unanswered} cevapsız kaldı.",
+      "headlineAllAnswered": "{total} başvurumun hepsine cevap geldi.",
+      "question": "Başvurularım nereye gitti?",
+      "median": "Cevap verenlerin yarısı ilk {days} günde döndü.",
+      "medianSameDay": "Cevap verenlerin yarısı aynı gün döndü.",
+      "columns": {
+        "applications": "BAŞVURULAR",
+        "firstOutcome": "İLK SONUÇ",
+        "afterInterview": "MÜLAKATTAN SONRA"
+      },
+      "nodes": {
+        "total": "Toplam",
+        "unanswered": "Cevapsız kaldı",
+        "awaitingReply": "Cevap bekleniyor",
+        "rejectedBeforeInterview": "Mülakat olmadan red",
+        "inScreening": "Ön elemede",
+        "withdrawnBeforeInterview": "Geri çekildi",
+        "interviewed": "Mülakata çağrıldı",
+        "offer": "Teklif",
+        "interviewInProgress": "Hâlâ süren",
+        "rejectedAfterInterview": "Red",
+        "silentAfterInterview": "Sessizlik",
+        "withdrawnAfterInterview": "Geri çekildi"
+      },
+      "cta": "Kendi akışını çıkar → ekariyerim.com",
+      "footnote": "Kişinin kendi başvurularından · şirket adı içermez"
+    },
+    "legend": {
+      "title": "Kartta ne var?",
+      "intro": "Her başvuru ilk sütunda bir yere düşer; mülakata çağrılanlar ikinci sütunda devam eder. Şeritlerin kalınlığı başvuru sayısıyla orantılı.",
+      "items": {
+        "unanswered": "Hiç cevap gelmeyen (30 günden eski) ya da süreci sessizce kapanan başvurular.",
+        "awaitingReply": "Son 30 günde yapılan, cevabı henüz beklenen başvurular.",
+        "rejectedBeforeInterview": "Mülakata çağrılmadan ret gelenler.",
+        "inScreening": "Şirketin döndüğü ama henüz mülakat olmayanlar.",
+        "withdrawnBeforeInterview": "Mülakattan önce başvuranın geri çektiği başvurular.",
+        "interviewed": "En az bir mülakata çağrılan başvurular.",
+        "offer": "Teklif gelenler — kabul edilmese de.",
+        "interviewInProgress": "Mülakat süreci hâlâ devam edenler.",
+        "rejectedAfterInterview": "Mülakattan sonra ret gelenler.",
+        "silentAfterInterview": "Mülakattan sonra bir daha cevap gelmeyenler.",
+        "withdrawnAfterInterview": "Mülakattan sonra başvuranın çekildiği başvurular."
+      }
+    },
+    "share": {
+      "button": "Akışını paylaş",
+      "title": "Başvuru akışını paylaş",
+      "close": "Kapat",
+      "platformLabel": "Nerede paylaşacaksın?",
+      "outputLabel": "Ne paylaşacaksın?",
+      "periodLabel": "Dönem",
+      "periods": {
+        "30": "30 gün",
+        "90": "90 gün",
+        "all": "Tümü"
+      },
+      "outputs": {
+        "post": "Gönderi görseli",
+        "story": "Hikâye",
+        "status": "Durum",
+        "link": "Bağlantı"
+      },
+      "notes": {
+        "linkedinPost": "Dikey 4:5 — mobil akışta en çok yer kaplayan boyut. Görseli yükle, bağlantıyı metne ekle.",
+        "xPost": "Yatay 16:9 — X akışında kırpılmadan görünür.",
+        "facebookPost": "Dikey 4:5 — Facebook akışının önerdiği boyut.",
+        "instagramPost": "Dikey 4:5. Instagram gönderilerinde bağlantı tıklanmaz; adres görselin altında yazıyor.",
+        "story": "Üstte ve altta uygulamanın düğmelerine yer bırakıldı; yazılar güvenli alanda.",
+        "link": "Bağlantıyı paylaşınca {platform} bu 1200×630 önizlemeyi kendisi gösterir."
+      },
+      "previewAlt": "Paylaşılacak kartın önizlemesi",
+      "captionLabel": "Gönderi metni",
+      "caption": "{period} {total} başvuru yaptım, {unanswered} cevapsız kaldı. Sen de kendi akışını çıkar:",
+      "captionAllAnswered": "{period} {total} başvuru yaptım, hepsine cevap geldi. Sen de kendi akışını çıkar:",
+      "captionPeriod": {
+        "30": "Son 30 günde",
+        "90": "Son 3 ayda",
+        "all": "Şimdiye kadar"
+      },
+      "copyCaption": "Metni kopyala",
+      "copied": "Kopyalandı",
+      "download": "Görseli indir (PNG · {size})",
+      "shareFile": "Uygulamaya gönder",
+      "shareOn": {
+        "linkedin": "LinkedIn’de paylaş",
+        "x": "X’te paylaş",
+        "facebook": "Facebook’ta paylaş",
+        "whatsapp": "WhatsApp’ta paylaş"
+      },
+      "copyLink": "Linki kopyala",
+      "privacy": "Görselde yalnızca sayılar ve dönem var. Şirket adı, pozisyon ya da hesabına giden bir iz yok.",
+      "tooFew": "Bu dönemde {count} başvuru var; kart en az {min} başvuruyla çıkıyor. Daha uzun bir dönem seç.",
+      "loading": "Hazırlanıyor…",
+      "error": "Kart hazırlanamadı. Biraz sonra tekrar dene.",
+      "fileName": "e-kariyerim-basvuru-akisi"
+    },
+    "page": {
+      "metaTitle": "Başvurularım nereye gitti? {total} başvurunun akışı",
+      "metaDescription": "Bir e-kariyerim kullanıcısının {total} başvurusunun nereye gittiği. Sen de kendi başvuru akışını çıkar.",
+      "eyebrow": "Paylaşılan başvuru akışı",
+      "imageAlt": "{total} başvurunun ilk sonuçlarını ve mülakat sonrasını gösteren akış diyagramı",
+      "heading": "Senin başvuruların nereye gidiyor?",
+      "body": "e-kariyerim başvurularını tek yerde toplar, Gmail'deki cevapları başvurularla eşleştirir ve hangilerinin cevapsız kaldığını gösterir. Kendi akışını görmek için ücretsiz hesap aç.",
+      "cta": "Ücretsiz başla",
+      "secondary": "e-kariyerim nedir?"
+    }
   }
 }

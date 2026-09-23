@@ -2018,7 +2018,7 @@
       },
       "funnel": {
         "title": "Conversion funnel",
-        "body": "Shows how much of each stage made it to the next one along applied → replied → interview → offer. When the raw numbers are far apart (thousands of applications, a handful of interviews), every rail is still drawn at its own full width, so the small stages stay readable. The line underneath names the stage with the steepest drop-off."
+        "body": "Shows how much of each stage made it to the next one along applied → replied → interview → offer. When the raw numbers are far apart (thousands of applications, a handful of interviews), every rail is still drawn at its own full width, so the small stages stay readable. The line underneath names the stage with the steepest drop-off. Once you have 10 or more applications, the \"Share your flow\" button on this card builds a card showing where your applications went: download it at the right size for LinkedIn, X, Facebook, Instagram or WhatsApp, or share its link. The card holds only numbers and the period — no company names or roles."
       },
       "responseTime": {
         "title": "Response time",
@@ -6431,5 +6431,114 @@
   "helpful": {
     "label": "{count, plural, =0 {Helpful} other {Helpful · #}}",
     "ownHint": "Yours — you can't mark your own."
+  },
+  "flowCard": {
+    "card": {
+      "headline": "{unanswered} of my {total} applications went unanswered.",
+      "headlineAllAnswered": "All {total} of my applications got an answer.",
+      "question": "Where did my applications go?",
+      "median": "Half of the replies came within {days, plural, one {# day} other {# days}}.",
+      "medianSameDay": "Half of the replies came the same day.",
+      "columns": {
+        "applications": "APPLICATIONS",
+        "firstOutcome": "FIRST OUTCOME",
+        "afterInterview": "AFTER THE INTERVIEW"
+      },
+      "nodes": {
+        "total": "Total",
+        "unanswered": "Went unanswered",
+        "awaitingReply": "Awaiting a reply",
+        "rejectedBeforeInterview": "Rejected, no interview",
+        "inScreening": "In screening",
+        "withdrawnBeforeInterview": "Withdrawn",
+        "interviewed": "Interviewed",
+        "offer": "Offer",
+        "interviewInProgress": "Still in progress",
+        "rejectedAfterInterview": "Rejected",
+        "silentAfterInterview": "Silence",
+        "withdrawnAfterInterview": "Withdrawn"
+      },
+      "cta": "Map your own flow → ekariyerim.com",
+      "footnote": "From the person's own applications · no company names"
+    },
+    "legend": {
+      "title": "What's on the card?",
+      "intro": "Every application lands somewhere in the first column; the ones that reached an interview carry on into the second. Ribbon widths are proportional to the number of applications.",
+      "items": {
+        "unanswered": "No reply at all (older than 30 days), or the process went quiet.",
+        "awaitingReply": "Sent in the last 30 days and still waiting for a reply.",
+        "rejectedBeforeInterview": "Rejected without an interview.",
+        "inScreening": "The company replied, but no interview yet.",
+        "withdrawnBeforeInterview": "Withdrawn by the applicant before any interview.",
+        "interviewed": "Invited to at least one interview.",
+        "offer": "An offer came — accepted or not.",
+        "interviewInProgress": "The interview process is still going.",
+        "rejectedAfterInterview": "Rejected after an interview.",
+        "silentAfterInterview": "No reply ever came after an interview.",
+        "withdrawnAfterInterview": "Withdrawn by the applicant after an interview."
+      }
+    },
+    "share": {
+      "button": "Share your flow",
+      "title": "Share your application flow",
+      "close": "Close",
+      "platformLabel": "Where will you share it?",
+      "outputLabel": "What will you share?",
+      "periodLabel": "Period",
+      "periods": {
+        "30": "30 days",
+        "90": "90 days",
+        "all": "All"
+      },
+      "outputs": {
+        "post": "Post image",
+        "story": "Story",
+        "status": "Status",
+        "link": "Link"
+      },
+      "notes": {
+        "linkedinPost": "Portrait 4:5 — takes up the most room in the mobile feed. Upload the image and put the link in your text.",
+        "xPost": "Landscape 16:9 — shows uncropped in the X timeline.",
+        "facebookPost": "Portrait 4:5 — the size Facebook's feed recommends.",
+        "instagramPost": "Portrait 4:5. Links in Instagram posts aren't clickable; the address is printed under the image.",
+        "story": "The top and bottom are left clear for the app's own buttons; the text sits in the safe area.",
+        "link": "When you share the link, {platform} shows this 1200×630 preview by itself."
+      },
+      "previewAlt": "Preview of the card you are about to share",
+      "captionLabel": "Post text",
+      "caption": "{period} I sent {total} applications and {unanswered} went unanswered. Map your own:",
+      "captionAllAnswered": "{period} I sent {total} applications and every one got an answer. Map your own:",
+      "captionPeriod": {
+        "30": "In the last 30 days",
+        "90": "In the last 3 months",
+        "all": "So far"
+      },
+      "copyCaption": "Copy text",
+      "copied": "Copied",
+      "download": "Download image (PNG · {size})",
+      "shareFile": "Send to an app",
+      "shareOn": {
+        "linkedin": "Share on LinkedIn",
+        "x": "Share on X",
+        "facebook": "Share on Facebook",
+        "whatsapp": "Share on WhatsApp"
+      },
+      "copyLink": "Copy link",
+      "privacy": "The image holds only numbers and the period. No company name, role or anything that leads back to your account.",
+      "tooFew": "This period has {count} applications; the card needs at least {min}. Pick a longer period.",
+      "loading": "Preparing…",
+      "error": "The card couldn't be prepared. Try again in a moment.",
+      "fileName": "e-kariyerim-application-flow"
+    },
+    "page": {
+      "metaTitle": "Where did my applications go? The flow of {total} applications",
+      "metaDescription": "Where one e-kariyerim user's {total} applications went. Map your own application flow.",
+      "eyebrow": "A shared application flow",
+      "imageAlt": "Flow diagram of {total} applications: first outcomes and what happened after interviews",
+      "heading": "Where are your applications going?",
+      "body": "e-kariyerim keeps your applications in one place, matches the replies in your Gmail to them and shows which ones went unanswered. Create a free account to see your own flow.",
+      "cta": "Start free",
+      "secondary": "What is e-kariyerim?"
+    }
   }
 }
