@@ -188,6 +188,7 @@ app.MapOccupationEndpoints();
 app.MapFeedbackEndpoints();
 app.MapSiteTrafficEndpoints();
 app.MapBenchmarkEndpoints();
+app.MapSilenceReportEndpoints();
 app.MapSiteStatsEndpoints();
 app.MapCvScanEndpoints();
 app.MapAdminEndpoints();

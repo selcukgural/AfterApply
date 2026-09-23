@@ -51,6 +51,12 @@ public sealed class RateLimitingOptions
     /// Policy denies the site carries.</summary>
     public FixedWindowPolicy Benchmark { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
 
+    /// <summary>Per IP, anonymous — the "no reply" report on a company page. Same size as the
+    /// benchmark and for the same reason: a person reports a handful of companies at most, and
+    /// this plus the per-company thirty-day block (SilenceReports:RepeatDays) is what bounds one
+    /// source's weight in a count that names an employer.</summary>
+    public FixedWindowPolicy SilenceReport { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
+
     /// <summary>Per IP, anonymous — the CV scan. The tightest anonymous bucket in the app, and
     /// deliberately: every call reads a file with a parser, which is the most expensive thing an
     /// unauthenticated stranger can ask this API to do. Five in two hours covers the honest

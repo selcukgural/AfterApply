@@ -137,6 +137,11 @@ public static class RateLimiting
             options.AddPolicy(DependencyInjection.BenchmarkRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.BenchmarkRateLimitPolicy, IpPartitionKey(httpContext), sizes.Benchmark));
 
+            // IP-based and anonymous, like the benchmark: a silence report must not be attributable
+            // to an account, so a signed-in visitor is partitioned by address like anyone else.
+            options.AddPolicy(DependencyInjection.SilenceReportRateLimitPolicy, httpContext =>
+                Partition(DependencyInjection.SilenceReportRateLimitPolicy, IpPartitionKey(httpContext), sizes.SilenceReport));
+
             // IP-based and anonymous, like the benchmark policy above and for the same reason: the
             // scan is answerable without an account, and partitioning a signed-in visitor by user
             // id would attach a CV scan to a person, which is precisely what this surface does not

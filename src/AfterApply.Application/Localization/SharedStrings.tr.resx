@@ -489,4 +489,7 @@
   <data name="VALIDATION_REJECTION_NOTICE_NOT_REJECTED" xml:space="preserve">
     <value>Reddi nasıl öğrendiğin yalnızca yeni durum Reddedildi iken verilebilir.</value>
   </data>
+  <data name="SILENCE_REPORT_RECENT" xml:space="preserve">
+    <value>Bu şirketi yakın zamanda bildirdiniz.</value>
+  </data>
 </root>

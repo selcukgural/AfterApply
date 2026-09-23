@@ -4,6 +4,7 @@ using AfterApply.Infrastructure.Blog;
 using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.ResponseRates;
+using AfterApply.Infrastructure.SilenceReports;
 using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.CvScan;
@@ -39,6 +40,7 @@ public static class ClientConfigEndpoints
                 IOptions<BlogOptions> blogOptions,
                 IOptions<CompanyIntelligenceOptions> companyIntelligenceOptions,
                 IOptions<ResponseRateOptions> responseRateOptions,
+                IOptions<SilenceReportOptions> silenceReportOptions,
                 IBlogPublicService blog,
                 HttpContext httpContext,
                 CancellationToken cancellationToken) =>
@@ -102,7 +104,8 @@ public static class ClientConfigEndpoints
                         experiences.MinimumEntriesForStats, experiences.PriorWeight),
                     new BlogConfigResponse(blogEnabled, hasPublishedPosts),
                     new CompanyIntelligenceConfigResponse(companyIntelligenceOptions.Value.Enabled),
-                    new ResponseRatesConfigResponse(responseRateOptions.Value.Enabled)));
+                    new ResponseRatesConfigResponse(responseRateOptions.Value.Enabled),
+                    new SilenceReportsConfigResponse(silenceReportOptions.Value.Enabled)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

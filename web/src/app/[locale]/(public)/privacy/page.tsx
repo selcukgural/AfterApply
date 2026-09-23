@@ -300,6 +300,7 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
             <li>{t("aggregates.what")}</li>
             <li>{t("aggregates.sector")}</li>
             <li>{t("aggregates.company")}</li>
+            <li>{t("aggregates.silenceReports")}</li>
             <li>{t("aggregates.noReverse")}</li>
             <li>{t("aggregates.deletion")}</li>
           </ul>

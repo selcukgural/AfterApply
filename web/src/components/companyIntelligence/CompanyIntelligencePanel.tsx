@@ -173,6 +173,7 @@ function Figures({ data }: { data: CompanyIntelligenceResponse }) {
         ))}
       </div>
 
+      <SilenceReportsCard data={data} />
       <MethodCard data={data} />
       <FooterLinks withHint />
     </div>
@@ -265,6 +266,34 @@ function BelowThreshold({ data, company }: { data: CompanyIntelligenceResponse; 
       </div>
 
       {sector?.figures && <SectorStrip sectorName={tSectors(sector.sector)} figures={sector.figures} />}
+      <SilenceReportsCard data={data} />
+    </div>
+  );
+}
+
+/**
+ * The anonymous "no reply" reports (growth item 1.6), on their own floor and apart from the
+ * tracker's figures: only people who heard nothing fill the form in, so it is a count, never a
+ * rate, and the card says so. Nothing renders below the floor — not even that reports exist.
+ */
+function SilenceReportsCard({ data }: { data: CompanyIntelligenceResponse }) {
+  const t = useTranslations("companies.intelligence.silenceReports");
+  const tStages = useTranslations("companies.silenceReport.stages");
+  const reports = data.silenceReports;
+  const thresholds = data.silenceReportThresholds;
+  if (!reports || !thresholds) return null;
+
+  const top = [...reports.byStage].sort((a, b) => b.count - a.count)[0];
+  return (
+    <div className={`${CARD} flex flex-col gap-1.5`}>
+      <span className="text-xs text-gray-500 dark:text-gray-400">{t("label", { months: thresholds.windowMonths })}</span>
+      <span className="text-2xl font-semibold tracking-tight text-gray-900 tabular-nums dark:text-gray-100">
+        {t("count", { count: reports.count })}
+      </span>
+      {top && <span className="text-xs text-gray-600 dark:text-gray-400">{t("topStage", { stage: tStages(top.stage) })}</span>}
+      <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+        {t("note", { reports: thresholds.minimumReports, quarters: thresholds.minimumQuarters })}
+      </p>
     </div>
   );
 }

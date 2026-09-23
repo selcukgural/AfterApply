@@ -15,6 +15,7 @@ using AfterApply.Application.Imports;
 using AfterApply.Application.Mailing;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Benchmark;
+using AfterApply.Application.SilenceReports;
 using AfterApply.Application.Blog;
 using AfterApply.Application.CvScan;
 using AfterApply.Application.CvScan.Contracts;
@@ -49,6 +50,7 @@ using AfterApply.Application.Pro;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Benchmark;
+using AfterApply.Infrastructure.SilenceReports;
 using AfterApply.Infrastructure.Blog;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Ai;
@@ -112,6 +114,8 @@ public static class DependencyInjection
     public const string CandidateExperienceWriteRateLimitPolicy = "candidate-experience-write";
     public const string SiteTrafficRateLimitPolicy = "site-traffic";
     public const string BenchmarkRateLimitPolicy = "benchmark";
+
+    public const string SilenceReportRateLimitPolicy = "silence-report";
     public const string CvScanRateLimitPolicy = "cv-scan";
     public const string ExtensionPairingStartRateLimitPolicy = "extension-pairing-start";
     public const string ExtensionPairingPollRateLimitPolicy = "extension-pairing-poll";
@@ -154,6 +158,7 @@ public static class DependencyInjection
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<ProductMetricsOptions>(configuration.GetSection(ProductMetricsOptions.SectionName));
         services.Configure<BenchmarkOptions>(configuration.GetSection(BenchmarkOptions.SectionName));
+        services.Configure<SilenceReportOptions>(configuration.GetSection(SilenceReportOptions.SectionName));
         services.Configure<SiteStatsOptions>(configuration.GetSection(SiteStatsOptions.SectionName));
         services.Configure<CvScanOptions>(configuration.GetSection(CvScanOptions.SectionName));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
@@ -604,6 +609,7 @@ public static class DependencyInjection
         services.AddScoped<IRequestAuditRetentionService, RequestAuditRetentionService>();
         services.AddScoped<ISiteTrafficService, SiteTrafficService>();
         services.AddScoped<IBenchmarkService, BenchmarkService>();
+        services.AddScoped<ISilenceReportService, SilenceReportService>();
         services.AddScoped<ISiteStatsService, SiteStatsService>();
         services.AddScoped<ICvScanService, CvScanService>();
         services.AddScoped<ICvTextExtractor, CvTextExtractor>();

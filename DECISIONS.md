@@ -8990,3 +8990,40 @@ gönderilir, dokunulmayan bölüm atlanır, hiçbiri doluysa "kaydedilecek bir �
   der; veri indirme satırı kalır, silme hiçbir yerde anılmaz. Metinler T-serisi ton testinin
   (`copy.test.ts`) kapsamında; "adın olmadan" ve maaşın yalnızca giriş yapmış okuyuculara açık olduğu
   metinde yazılı ve testle sabit.
+
+## Şirket sayfasında adsız "dönüş alamadım" bildirimi (1.6) — DECIDED (2026-09-23)
+
+**Karar.** Büyüme araştırmasının (2026-09-21) 1.6 maddesi. Tasarım tuvali:
+https://claude.ai/artifact/GManpMkCmoTMpr27m2waoL — önce A (ayrı sayfa) seçildi, sonra kullanıcı
+**C**'ye döndü ("Son hâl — C" satırı): her şirket sayfasında sekmelerin altında, kapalı başlayan bir
+kart. Açılınca üç soru: hangi aşamadan sonra (5 seçenek, "Başvurudan sonra" dahil), ne kadar oldu
+(2–4 hafta / 1–2 ay / 2–3 ay / 3+ ay; iki haftadan kısası sayılmaz), dönüş sözü verilmiş miydi
+(isteğe bağlı). Serbest metin, ad, e-posta yok; hesap gerekmez.
+
+- **Veri Ekşi'den alınmaz.** Araştırmadaki Ekşi başlığı talebin kanıtıdır, kaynak değildir: entry'ler
+  doğrulanamaz tek kişilik iddialar (itibar riski bizim olur), yazarlarının eseri, bazıları kişi
+  adı içerebilir; robots.txt `ai-input=no`. Ekşi yalnızca kanal olarak kullanılabilir
+  (`utm_source=eksi`, kıyaslamanın `BenchmarkSource` listesi paylaşılıyor).
+- **Tablo `SilenceReports`:** CompanyId, Stage, Wait, PromiseGiven?, SilentSinceMonth (gönderim ayı −
+  bandın alt sınırı, ay hassasiyeti), Locale, Source, SubmittedAt. UserId ve IP **yok**. Kayıtlar
+  **süresiz saklanır** (kullanıcı kararı: kişisel veri yok, eski kayıtlar yıllık rapor için işe yarar);
+  gösterim yalnızca son 12 ayı okur. Şirket silinirse bildirimleri de gider (FK cascade).
+- **Endpoint:** `POST /api/companies/public/{slug}/silence-reports`, anonim, `SilenceReports:Enabled`
+  (varsayılan açık — toplamak hiçbir şey yayımlamaz), honeypot `Website`, IP başına saatte 5
+  (`RateLimiting:SilenceReport`), aynı şirket aynı bağlantıdan 30 günde bir. Tekrar kilidi yalnızca
+  Redis'te: `HMAC(pepper, ip|companyId)` anahtarı 30 gün TTL ile; pepper Redis'te bir kez üretilen
+  rastgele sır (IPv4 uzayı ham hash'i kırılabilir kılardı). Veritabanına hiçbir şey yazılmaz.
+  Reddedilince `SILENCE_REPORT_RECENT` (400), başka ayrıntı yok. RequestAudit otomatik; opt-out yok.
+  Web tarafında yol `NO_AUTH_PATTERNS` ile token'sız gider (giriş yapmış ziyaretçinin bildirimi de
+  hesaba bağlanmaz — tarayıcıda doğrulandı).
+- **Oranlara karışmaz.** Formu yalnızca dönüş alamayanlar doldurur, paydası yok: "N kişi bildirdi"
+  der, "yüzde N" diyemez. `CompanyIntelligenceResponse.SilenceReports` ayrı alan; eşik **en az 5
+  bildirim ve en az 2 farklı çeyrek** (sessizliğin başladığı ay üzerinden), son 12 ay. Altında null
+  ve "kaç eksik" söylenmez. `Confidence`'tan bağımsız (eşik altı görünümde de çıkar). Görünüm "Yanıt"
+  sekmesinde ayrı bir sayı kartı — sekme `CompanyIntelligence` bayrağıyla kapalı olduğu için prod'da
+  bugün hiçbir yerde görünmez.
+- **Kapsam:** form yalnızca şirket sayfasında; sayfası olmayan şirket bildirilemez. "Bilinen şirket"
+  araması (A için tasarlanan) C ile gereksizleşti.
+- **Gizlilik:** `privacy.dataCollection.item6` girişsiz yüzeylere bildirimi ekledi,
+  `privacy.aggregates.silenceReports` ne tutulduğunu, Redis anahtarını ve eşiği anlatıyor; ikisi de
+  `copy.test.ts` ile sabit.

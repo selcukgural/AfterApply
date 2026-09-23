@@ -489,4 +489,7 @@
   <data name="VALIDATION_REJECTION_NOTICE_NOT_REJECTED" xml:space="preserve">
     <value>How you learned of the rejection can only be given when the new status is Rejected.</value>
   </data>
+  <data name="SILENCE_REPORT_RECENT" xml:space="preserve">
+    <value>You have already reported this company recently.</value>
+  </data>
 </root>

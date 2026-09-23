@@ -66,8 +66,13 @@ function getCurrentLocale(): string {
   return (routing.locales as readonly string[]).includes(segment) ? segment : routing.defaultLocale;
 }
 
-function isNoAuthEndpoint(path: string): boolean {
-  return NO_AUTH_ENDPOINTS.some((endpoint) => path.startsWith(endpoint));
+// Anonymous writes whose path carries a slug, so no prefix names them. The silence report is
+// anonymous by design (growth item 1.6): a signed-in visitor's token arriving with it would tie a
+// complaint about a named employer to an account.
+const NO_AUTH_PATTERNS = [/^\/api\/companies\/public\/[^/]+\/silence-reports$/];
+
+export function isNoAuthEndpoint(path: string): boolean {
+  return NO_AUTH_ENDPOINTS.some((endpoint) => path.startsWith(endpoint)) || NO_AUTH_PATTERNS.some((pattern) => pattern.test(path));
 }
 
 // Last-resort fallback only — this module sits below the React tree (no

@@ -1,6 +1,7 @@
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Auditing;
 using AfterApply.Domain.Benchmark;
+using AfterApply.Domain.SilenceReports;
 using AfterApply.Domain.Blog;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.CompanyReviews;
@@ -79,6 +80,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<SiteTrafficDailyCounter> SiteTrafficDailyCounters => Set<SiteTrafficDailyCounter>();
 
     public DbSet<BenchmarkSubmission> BenchmarkSubmissions => Set<BenchmarkSubmission>();
+
+    public DbSet<SilenceReport> SilenceReports => Set<SilenceReport>();
 
     public DbSet<CvScanResult> CvScanResults => Set<CvScanResult>();
 

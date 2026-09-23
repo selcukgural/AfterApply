@@ -117,6 +117,15 @@ describe("every notice that enumerates account data names all of it", () => {
     expect(enValue(key)).not.toMatch(/tracked job/);
   });
 
+  // A new anonymous input surface updates the privacy text in the same change (CLAUDE.md, request
+  // audit): the company page's "no reply" report (2026-09-23).
+  it("names the anonymous no-reply report in the request log and says what it keeps (tr + en)", () => {
+    expect(trValue("privacy.dataCollection.item6")).toMatch(/dönüş alamadım/);
+    expect(enValue("privacy.dataCollection.item6")).toMatch(/no reply/);
+    expect(trValue("privacy.aggregates.silenceReports")).toMatch(/IP adresi tutulmaz/);
+    expect(enValue("privacy.aggregates.silenceReports")).toMatch(/no name, email, free text or IP address/);
+  });
+
   it("the request-log notice names salary entries and candidate experiences among the audited actions (tr + en)", () => {
     expect(trValue("privacy.dataCollection.item6")).toMatch(/maaş/);
     expect(trValue("privacy.dataCollection.item6")).toMatch(/aday deneyimi/);
