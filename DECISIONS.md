@@ -9148,3 +9148,21 @@ toplanıyor.
   sayfaları `follow`); kariyer.net ve "kaç başvuru" rehberlerinden de metin içi bağlantı.
 - Yapılmadı, açık: site geneli `max-image-preview:large` (Discover için Google'ın önerdiği robots
   değeri) — ayrı ve tüm siteyi etkileyen bir karar.
+
+## Akış kartı paylaşım penceresi: canlı taslak + platform daireleri — DECIDED (2026-09-23)
+
+Canvas: https://claude.ai/artifact/QL33Fxn2QDNagv6itzV28E ("Yükleniyor" sayfası D, "C · iki temada"
+sayfası "Önerilen").
+
+- **Önizleme beklerken:** PNG sunucuda birkaç saniyede üretiliyor ve kutu o sırada boştu. Artık kart
+  tarayıcıda anında, route'la aynı bileşen (`FlowOgCard`) ve aynı metinle (`flowCardText`) soluk
+  çiziliyor; "Görsel hazırlanıyor" etiketi, PNG gelince yumuşak geçiş. Yüklenemezse taslak kalır,
+  "Tekrar dene". İskelet (A), çizim animasyonu (B), önce sayılar (C) denendi; kullanıcı D'yi seçti.
+  `prefers-reduced-motion` açıkken hareket durur.
+- **Platform butonları:** telefon paylaşım menüsü gibi yuvarlak daireler; nötr yüzeyde markanın kendi
+  renginde logo, seçilen daire marka rengiyle dolar + sitenin accent halkası. Paylaş düğmesi sitenin
+  ana düğmesi, üstünde platform logosu — marka rengi yalnızca seçili dairede. X logosu tema yazı
+  rengini alır (açıkta siyah, koyuda beyaz). Marka renkleri tek yerde: `lib/flowCard/platformStyle.ts`.
+- **Platformların kendi gömülü düğmeleri (Facebook SDK, X widget) kullanılmadı:** üçüncü taraf script,
+  çerez ve izleme getirir; CSP ve gizlilik taahhüdüyle çelişir. Düğmeyi biz çiziyoruz, logo ve renk
+  platformun.

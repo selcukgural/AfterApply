@@ -8,10 +8,9 @@ import { routing } from "@/i18n/routing";
 import { OgCard } from "@/components/seo/OgCard";
 import { ScoreOgCard } from "@/components/seo/ScoreOgCard";
 import { FlowOgCard } from "@/components/seo/FlowOgCard";
-import { formatMonthRange, parseFlowCard } from "@/lib/flowCard/card";
-import { FLOW_NODE_KEYS, flowHeadline, flowSubline } from "@/lib/flowCard/copy";
+import { parseFlowCard } from "@/lib/flowCard/card";
+import { flowCardText } from "@/lib/flowCard/cardText";
 import { FLOW_FORMAT_SPECS, parseFlowFormat } from "@/lib/flowCard/formats";
-import type { FlowNodeKey } from "@/lib/flowCard/layout";
 import { parseScoreCard } from "@/lib/cvScan/scoreCard";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, OG_KICKER_MAX_LENGTH, OG_TITLE_MAX_LENGTH, sanitizeOgText } from "@/lib/seo/ogImage";
 
@@ -67,7 +66,6 @@ export async function GET(request: NextRequest, context: RouteContext<"/[locale]
     }
 
     const t = await getTranslations({ locale, namespace: "flowCard.card" });
-    const names = Object.fromEntries(FLOW_NODE_KEYS.map((key) => [key, t(`nodes.${key}`)])) as Record<FlowNodeKey, string>;
     const spec = FLOW_FORMAT_SPECS[format];
     // `d=2` doubles the pixels for screens and downloads; anything else is the standard size.
     const density = params.get("d") === "2" ? 2 : 1;
@@ -77,13 +75,7 @@ export async function GET(request: NextRequest, context: RouteContext<"/[locale]
           format={format}
           counts={card.counts}
           logoSrc={flowLogoSrc}
-          headline={flowHeadline(card, locale, t)}
-          subline={flowSubline(card, t)}
-          dateRange={formatMonthRange(card.from, card.to, locale)}
-          headers={[t("columns.applications"), t("columns.firstOutcome"), t("columns.afterInterview")]}
-          names={names}
-          cta={t("cta")}
-          footnote={t("footnote")}
+          {...flowCardText(card, locale, t)}
           density={density}
         />
       ),
