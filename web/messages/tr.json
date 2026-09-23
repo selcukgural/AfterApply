@@ -6528,6 +6528,9 @@
       "privacy": "Görselde yalnızca sayılar ve dönem var. Şirket adı, pozisyon ya da hesabına giden bir iz yok.",
       "tooFew": "Bu dönemde {count} başvuru var; kart en az {min} başvuruyla çıkıyor. Daha uzun bir dönem seç.",
       "loading": "Hazırlanıyor…",
+      "preparing": "Görsel hazırlanıyor",
+      "imageError": "Görsel yüklenemedi.",
+      "retry": "Tekrar dene",
       "error": "Kart hazırlanamadı. Biraz sonra tekrar dene.",
       "fileName": "e-kariyerim-basvuru-akisi"
     },

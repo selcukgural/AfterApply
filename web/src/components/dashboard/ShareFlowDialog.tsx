@@ -9,8 +9,11 @@ import { analyticsApi } from "@/lib/api/analytics";
 import { MIN_FLOW_CARD_TOTAL, flowCardFromResponse, formatFlowCard, isShareable } from "@/lib/flowCard/card";
 import { FLOW_NODE_KEYS, flowCaption } from "@/lib/flowCard/copy";
 import { flowCardPath } from "@/lib/flowCard/path";
-import { PLATFORM_NAME, SHARE_OUTPUTS, SHARE_PLATFORMS, outputSize, type SharePlatform } from "@/lib/flowCard/sharePlan";
+import { PLATFORM_NAME, SHARE_OUTPUTS, outputSize, type SharePlatform } from "@/lib/flowCard/sharePlan";
 import { shareHref } from "@/lib/share/shareLinks";
+import { FlowCardPreview } from "@/components/dashboard/FlowCardPreview";
+import { SharePlatformPicker } from "@/components/dashboard/SharePlatformPicker";
+import { SocialIcon } from "@/components/layout/SocialIcon";
 import type { FlowPeriod } from "@/types/api";
 
 const PERIODS: readonly FlowPeriod[] = ["30", "90", "all"];
@@ -28,13 +31,6 @@ function browserCanShareFiles(): boolean {
   }
 }
 
-const chipClass = (active: boolean) =>
-  `h-10 rounded-full border px-4 text-sm transition-colors ${
-    active
-      ? "border-accent bg-accent-wash font-semibold text-accent-ink"
-      : "border-gray-300 text-gray-800 hover:border-gray-400 dark:border-gray-700 dark:text-gray-200"
-  }`;
-
 const segmentClass = (active: boolean) =>
   `h-9 rounded px-3 text-sm transition-colors ${
     active
@@ -46,7 +42,7 @@ const segmentClass = (active: boolean) =>
  * "Share your flow" (2026-09-23, canvas "A · Platformlar"): the person picks where they are
  * posting, then what — an image sized for that network or a link whose preview the network draws —
  * and the period. The preview is the real image from `/[locale]/og`, so what they see is what they
- * post.
+ * post — with the same card drawn in the browser while that image renders (FlowCardPreview).
  *
  * Nothing is uploaded or stored: the card is the counts in its own URL, an image download is a
  * fetch of that URL, and a link share is a navigation to the network's own share page. No visit
@@ -172,22 +168,13 @@ export function ShareFlowDialog({ onClose }: { onClose: () => void }) {
 
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 text-sm font-semibold text-gray-600 dark:text-gray-400">{t("platformLabel")}</legend>
-          <div className="flex flex-wrap gap-2">
-            {SHARE_PLATFORMS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={platform === id}
-                onClick={() => {
-                  setPlatform(id);
-                  setOutputIndex(0);
-                }}
-                className={chipClass(platform === id)}
-              >
-                {PLATFORM_NAME[id]}
-              </button>
-            ))}
-          </div>
+          <SharePlatformPicker
+            value={platform}
+            onChange={(id) => {
+              setPlatform(id);
+              setOutputIndex(0);
+            }}
+          />
         </fieldset>
 
         <div className="flex flex-wrap gap-5">
@@ -237,13 +224,7 @@ export function ShareFlowDialog({ onClose }: { onClose: () => void }) {
               {t("tooFew", { count: data?.counts.total ?? 0, min: MIN_FLOW_CARD_TOTAL })}
             </p>
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element -- a generated PNG from our own route
-            <img
-              key={imagePath}
-              src={imagePath!}
-              alt={t("previewAlt")}
-              className="max-h-full max-w-full rounded border border-gray-200 bg-white object-contain dark:border-gray-700"
-            />
+            <FlowCardPreview card={card} format={output.format} imagePath={imagePath!} alt={t("previewAlt")} />
           )}
         </div>
 
@@ -301,8 +282,11 @@ export function ShareFlowDialog({ onClose }: { onClose: () => void }) {
                       href={shareHref(linkTarget, { text: suggestedCaption, url: pageUrl })}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={buttonClassName("primary")}
+                      className={`${buttonClassName("primary")} inline-flex items-center gap-2`}
                     >
+                      {/* The site's own button with the network's mark on it: the brand colour stays
+                          on the picked circle above, so this is the one filled button on the page. */}
+                      <SocialIcon network={linkTarget} className="h-4 w-4" />
                       {t(`shareOn.${linkTarget}`)}
                     </a>
                   ) : null}

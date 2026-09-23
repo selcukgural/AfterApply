@@ -6528,6 +6528,9 @@
       "privacy": "The image holds only numbers and the period. No company name, role or anything that leads back to your account.",
       "tooFew": "This period has {count} applications; the card needs at least {min}. Pick a longer period.",
       "loading": "Preparing…",
+      "preparing": "Preparing the image",
+      "imageError": "The image could not be loaded.",
+      "retry": "Try again",
       "error": "The card couldn't be prepared. Try again in a moment.",
       "fileName": "e-kariyerim-application-flow"
     },

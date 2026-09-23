@@ -17,6 +17,9 @@ export interface FlowOgCardProps {
   /** 1 for the og:image crawlers fetch; 2 for what a person looks at or downloads on a
    *  high-density screen. The card is laid out once and scaled, so both are the same picture. */
   density?: 1 | 2;
+  /** The route registers Geist under that name for satori; a browser page has it under
+   *  next/font's variable instead (the share dialog's draft passes `var(--font-geist-sans)`). */
+  fontFamily?: string;
 }
 
 const INK = "#111827";
@@ -32,6 +35,9 @@ const RULE = "#e8ebf2";
  * Satori's rules shape the markup: flexbox only, every element with more than one child
  * `display: flex`. The ribbons and bars are one inline `<svg>`; labels are absolutely positioned
  * divs over it, because satori does not lay out `<text>` inside an svg with the card's font.
+ *
+ * The same markup is plain React DOM, so the share dialog draws it in the browser as the draft
+ * shown while the PNG renders (FlowCardPreview) — layout and text identical by construction.
  */
 export function FlowOgCard(props: FlowOgCardProps) {
   // Every measure multiplied rather than a CSS scale: satori ignores transform-origin, and drawing
@@ -62,7 +68,7 @@ function FlowOgCardBody(props: FlowOgCardProps & { spec: FlowFormatSpec }) {
         padding: `${pt}px ${pr}px ${pb}px ${pl}px`,
         background: "#ffffff",
         color: INK,
-        fontFamily: "Geist",
+        fontFamily: props.fontFamily ?? "Geist",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
