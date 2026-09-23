@@ -19,10 +19,14 @@ const COUNT_DOT: Record<DirectoryCountKey, string> = {
 import { Input } from "@/components/ui/Input";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
+import { useClientConfig } from "@/hooks/useClientConfig";
 import { StarRating } from "@/components/companyReviews/StarRating";
 
 /** The public directory: companies with at least one published contribution — a review, a salary
  *  entry or a candidate experience — most recently contributed-to first, searchable by name. */
+/** Mirrors CompanyReviews:KnownCompanyMinimumQueryLength: shorter searches are not sent. */
+const KNOWN_MIN_QUERY = 2;
+
 export function CompanyDirectory() {
   const t = useTranslations("companies.directory");
   const locale = useLocale();
@@ -43,6 +47,17 @@ export function CompanyDirectory() {
     queryKey: ["companies", "public", { query, page }],
     queryFn: () => companiesApi.listPublic(query, page),
   });
+
+  // The second section (canvas variant A, 2026-09-23): companies that have a page but no
+  // contribution yet, only for a search, only past the server's applicant floor.
+  const { config } = useClientConfig();
+  const known = useQuery({
+    queryKey: ["companies", "known", query],
+    queryFn: () => companiesApi.listKnown(query),
+    enabled: query.length >= KNOWN_MIN_QUERY,
+  });
+  const knownItems = query.length >= KNOWN_MIN_QUERY ? (known.data ?? []) : [];
+  const knownCta = config.silenceReports?.enabled === true ? t("known.cta") : t("known.ctaNoReport");
 
   const writeHref = isAuthenticated ? "/contribute?tab=review" : `/login?next=${encodeURIComponent("/contribute?tab=review")}`;
 
@@ -70,7 +85,11 @@ export function CompanyDirectory() {
         </p>
       )}
 
-      {data && data.items.length === 0 && (
+      {data && data.items.length === 0 && knownItems.length > 0 && (
+        <p className="text-sm text-gray-600 dark:text-gray-400">{t("noContributedMatches", { query })}</p>
+      )}
+
+      {data && data.items.length === 0 && knownItems.length === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
           <p>{query ? t("noMatches", { query }) : t("empty")}</p>
           <p className="mt-2">{t("beFirst")}</p>
@@ -116,6 +135,33 @@ export function CompanyDirectory() {
 
       {data && (
         <Pagination page={data.page} pageSize={data.pageSize} totalCount={data.totalCount} unit="companies" onPageChange={setPage} />
+      )}
+
+      {/* Name and a pointer only: no count of any kind, since how many applied is exactly what
+          the applicant floor keeps private. Dashed, so a page with content and a page without
+          are told apart at a glance. */}
+      {knownItems.length > 0 && (
+        <section aria-labelledby="directory-known-title" className="flex flex-col gap-3 border-t border-gray-200 pt-5 dark:border-gray-800">
+          <div className="flex flex-col gap-0.5">
+            <h2 id="directory-known-title" className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              {t("known.title")}
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t("known.note")}</p>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {knownItems.map((company) => (
+              <li key={company.slug}>
+                <Link
+                  href={`/companies/${company.slug}`}
+                  className="flex h-full flex-col gap-2 rounded-xl border border-dashed border-gray-300 bg-white p-4 transition-colors hover:border-accent/60 dark:border-gray-700 dark:bg-gray-900"
+                >
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{company.name}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">{knownCta}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

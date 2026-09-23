@@ -65,6 +65,14 @@ public sealed class PublicCompanyListQueryValidator : AbstractValidator<PublicCo
     }
 }
 
+public sealed class KnownCompanyQueryValidator : AbstractValidator<KnownCompanyQuery>
+{
+    public KnownCompanyQueryValidator()
+    {
+        RuleFor(x => x.Q).MaximumLength(100);
+    }
+}
+
 public sealed class MyContributionsQueryValidator : AbstractValidator<MyContributionsQuery>
 {
     public MyContributionsQueryValidator()

@@ -1294,6 +1294,7 @@
       "sector": "Sektör tablosu herkese açıktır ve şirket adı içermez. Bir sektör satırı, en az 5 farklı kişinin toplam 30 başvurusu birikmeden gösterilmez; tek bir kişi başvuruların yarısından fazlasını oluşturuyorsa satır kapalı kalır.",
       "company": "Şirket sayfasındaki \"Yanıt\" sekmesi, o şirkete son 12 ayda en az 50 başvuru yapılmadan ve tek bir kişi bunların üçte birinden fazlasını oluşturuyorsa hiçbir sayı göstermez; eşiğin altında kaç başvuru eksik olduğu da yazılmaz. Bu sekme, hukuki değerlendirme tamamlanana kadar kapalı tutulur.",
       "silenceReports": "Şirket sayfasındaki \"Dönüş alamadım\" bildirimi hesap gerektirmez ve hiçbir hesaba bağlanmaz: saklanan yalnızca şirket, aşama, bekleme süresi, verdiysen dönüş sözü ve ay. Bildirimde ad, e-posta, serbest metin ve IP adresi tutulmaz. Aynı şirketin aynı bağlantıdan 30 gün içinde tekrar bildirilmesini önlemek için, bağlantı adresinden türetilen ve geri çözülemeyen bir anahtar 30 gün boyunca geçici bellekte tutulur, sonra kendiliğinden silinir. Bildirimler oranlara karışmaz; bir şirket için en az 5 bildirim en az iki farklı çeyrekten gelmeden sayı gösterilmez ve bu sayı \"Yanıt\" sekmesiyle birlikte kapalıdır.",
+      "knownCompanies": "Bir şirketin adı, henüz katkı almamış olsa bile, en az üç farklı kişi o şirkete başvurduysa şirket dizininin aramasında görünebilir. Kaç kişinin başvurduğu ve kimin başvurduğu gösterilmez.",
       "noReverse": "Toplu sayılardan tek bir kişinin başvurusuna geri gidilemez: sayfalar yalnızca oran, medyan ve kişi sayısı gösterir, tekil başvuru satırları hiçbir zaman dışarı çıkmaz.",
       "deletion": "Hesabını sildiğinde başvuruların silinir ve bir sonraki hesaplamada toplu sayılardan da çıkar (tablolar en fazla bir saat önbellekte kalır).",
       "legalBasis": "Hukuki sebep: meşru menfaat — adayların hangi sektörün ve şirketin başvurulara ne kadar geri döndüğünü görebilmesi; kişisel veri eşiğin altında hiç işlenmez, üstünde yalnızca toplu hâlde gösterilir."
@@ -3472,7 +3473,14 @@
         }
       },
       "salaryCount": "{count, plural, =1 {1 maaş kaydı} other {# maaş kaydı}}",
-      "experienceCount": "{count, plural, =1 {1 aday deneyimi} other {# aday deneyimi}}"
+      "experienceCount": "{count, plural, =1 {1 aday deneyimi} other {# aday deneyimi}}",
+      "noContributedMatches": "“{query}” ile katkı almış bir şirket yok.",
+      "known": {
+        "title": "Sayfası olan, henüz katkı almamış şirketler",
+        "note": "Yalnızca en az üç farklı kişinin başvurduğu şirketler gösterilir.",
+        "cta": "Sayfayı aç: ilk değerlendirmeyi yaz ya da \"dönüş alamadım\" bildir",
+        "ctaNoReport": "Sayfayı aç: ilk değerlendirmeyi sen yaz"
+      }
     },
     "page": {
       "metaTitle": "{company} çalışan yorumları, değerlendirmeleri ve maaşları",

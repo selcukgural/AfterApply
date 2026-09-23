@@ -3,6 +3,7 @@ import type {
   CompanyPublicResponse,
   CompanyReviewPublic,
   CompanySearchResult,
+  KnownCompany,
   PagedResult,
   PublicReviewSort,
   ResolvedCompany,
@@ -24,6 +25,10 @@ export const companiesApi = {
     ),
 
   getPublic: (slug: string) => apiFetch<CompanyPublicResponse>(`/api/companies/public/${encodeURIComponent(slug)}`),
+
+  /** The directory search's second section: companies with a page and no contribution yet. On
+   *  httpClient's NO_AUTH list — the answer is the same for everyone. */
+  listKnown: (q: string) => apiFetch<KnownCompany[]>(`/api/companies/known?q=${encodeURIComponent(q)}`),
 
   listPublicReviews: (slug: string, page: number, sort: PublicReviewSort) =>
     apiFetch<PagedResult<CompanyReviewPublic>>(

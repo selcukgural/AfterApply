@@ -38,6 +38,8 @@ public sealed record SetReviewQuotaRequest(int? ReviewQuotaOverride);
 
 public sealed record PublicCompanyListQuery(string? Q = null, int Page = 1);
 
+public sealed record KnownCompanyQuery(string? Q = null);
+
 public enum PublicReviewSort
 {
     Newest,
