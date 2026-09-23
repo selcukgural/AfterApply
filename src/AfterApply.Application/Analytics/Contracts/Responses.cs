@@ -27,3 +27,35 @@ public sealed record AnalyticsOverviewResponse(
     ResponseTimeStatsResponse ResponseTime,
     IReadOnlyCollection<StatusDistributionItem> StatusDistribution,
     IReadOnlyCollection<ApplicationsPerWeekItem> ApplicationsPerWeek);
+
+/// <summary>
+/// The shareable flow card's nodes (ApplicationFlowClassifier). First column: Unanswered +
+/// AwaitingReply + RejectedBeforeInterview + InScreening + WithdrawnBeforeInterview + Interviewed
+/// = Total. Second column, out of Interviewed: Offer + InterviewInProgress +
+/// RejectedAfterInterview + SilentAfterInterview + WithdrawnAfterInterview = Interviewed.
+/// </summary>
+public sealed record ApplicationFlowCounts(
+    int Total,
+    int Unanswered,
+    int AwaitingReply,
+    int RejectedBeforeInterview,
+    int InScreening,
+    int WithdrawnBeforeInterview,
+    int Interviewed,
+    int Offer,
+    int InterviewInProgress,
+    int RejectedAfterInterview,
+    int SilentAfterInterview,
+    int WithdrawnAfterInterview);
+
+/// <summary>
+/// Counts only — no company, role or date of any single application — because this is what a
+/// person puts on a public card. <paramref name="FirstAppliedOn"/> and <paramref name="Today"/>
+/// give the card its month range; <paramref name="MedianFirstReplyDays"/> is null when nothing in
+/// the window was answered.
+/// </summary>
+public sealed record ApplicationFlowResponse(
+    ApplicationFlowCounts Counts,
+    double? MedianFirstReplyDays,
+    DateOnly? FirstAppliedOn,
+    DateOnly Today);

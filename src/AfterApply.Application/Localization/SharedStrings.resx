@@ -498,4 +498,7 @@
   <data name="SILENCE_REPORT_RECENT" xml:space="preserve">
     <value>You have already reported this company recently.</value>
   </data>
+  <data name="ANALYTICS_FLOW_PERIOD_INVALID" xml:space="preserve">
+    <value>Period must be one of: 30, 90, all.</value>
+  </data>
 </root>

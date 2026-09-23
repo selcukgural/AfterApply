@@ -11,7 +11,7 @@ interface ShareRowProps {
   content: ShareContent;
 }
 
-const TARGET_LABEL: Record<ShareTarget, string> = { linkedin: "LinkedIn", whatsapp: "WhatsApp", x: "X" };
+const TARGET_LABEL: Record<ShareTarget, string> = { linkedin: "LinkedIn", whatsapp: "WhatsApp", x: "X", facebook: "Facebook" };
 
 // navigator.share never changes during a page's life, so there is nothing to subscribe to.
 const subscribeToNothing = () => () => {};

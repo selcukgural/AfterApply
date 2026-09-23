@@ -9,7 +9,7 @@
  * Open Graph card, which every public page carries since 2026-09-14.
  */
 
-export type ShareTarget = "linkedin" | "whatsapp" | "x";
+export type ShareTarget = "linkedin" | "whatsapp" | "x" | "facebook";
 
 export interface ShareContent {
   /** What the person is passing on, without the link — the link is appended per target. */
@@ -18,6 +18,8 @@ export interface ShareContent {
   url: string;
 }
 
+/** The row the public share control shows. Facebook is reachable through `shareHref` for the flow
+ *  card's share dialog (2026-09-23), which picks one network at a time, but stays off this row. */
 export const SHARE_TARGETS: readonly ShareTarget[] = ["linkedin", "whatsapp", "x"];
 
 export function shareHref(target: ShareTarget, content: ShareContent): string {
@@ -29,6 +31,8 @@ export function shareHref(target: ShareTarget, content: ShareContent): string {
       return `https://wa.me/?text=${encodeURIComponent(`${content.text} ${content.url}`)}`;
     case "x":
       return `https://twitter.com/intent/tweet?text=${encodeURIComponent(content.text)}&url=${url}`;
+    case "facebook":
+      return `https://www.facebook.com/sharer/sharer.php?u=${url}`;
   }
 }
 

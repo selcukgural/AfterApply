@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -8,6 +9,8 @@ import { applicationsApi } from "@/lib/api/applications";
 import { formatCount, formatRate } from "@/lib/dashboard/format";
 import { progressKey, rateChip } from "@/lib/dashboard/tone";
 import { ConversionFunnel } from "@/components/dashboard/ConversionFunnel";
+import { ShareFlowDialog } from "@/components/dashboard/ShareFlowDialog";
+import { MIN_FLOW_CARD_TOTAL } from "@/lib/flowCard/card";
 import { DashboardEmptyState } from "@/components/dashboard/DashboardEmptyState";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { HeroTile } from "@/components/dashboard/HeroTile";
@@ -23,7 +26,9 @@ import { buttonClassName } from "@/components/ui/Button";
 
 export default function DashboardPage() {
   const t = useTranslations("dashboard");
+  const tFlow = useTranslations("flowCard.share");
   const locale = useLocale();
+  const [sharingFlow, setSharingFlow] = useState(false);
 
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: ["applications", "summary"],
@@ -153,7 +158,27 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <ConversionFunnel rates={overview.rates} />
+            <ConversionFunnel
+              rates={overview.rates}
+              action={
+                // Under ten applications a card is not a picture of anything (lib/flowCard/card.ts),
+                // so the button is not offered at all rather than opening onto a refusal.
+                overview.rates.totalApplications >= MIN_FLOW_CARD_TOTAL ? (
+                  <button
+                    type="button"
+                    onClick={() => setSharingFlow(true)}
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-accent bg-accent-wash px-3 text-sm font-semibold text-accent-ink transition-colors hover:bg-accent hover:text-white"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" />
+                      <path d="M16 6l-4-4-4 4" />
+                      <path d="M12 2v14" />
+                    </svg>
+                    {tFlow("button")}
+                  </button>
+                ) : undefined
+              }
+            />
             <OutcomeCard distribution={overview.statusDistribution} />
           </div>
 
@@ -163,6 +188,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+      {sharingFlow ? <ShareFlowDialog onClose={() => setSharingFlow(false)} /> : null}
     </div>
   );
 }

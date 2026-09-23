@@ -141,4 +141,102 @@ public class AnalyticsOverviewTests(ApiHost<DefaultProfile> host) : IClassFixtur
         // The 400-day-old application is outside the window and must not be counted.
         trend.Sum(x => x.Count).ShouldBe(3);
     }
+
+    [Fact]
+    public async Task GetFlow_Sorts_Applications_Into_The_Card_Nodes_Within_The_Period()
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        // Unanswered: applied 45 days ago, never heard back (past the 30-day ghosting threshold).
+        await CreateApplicationAsync("Silent Co", now.AddDays(-45));
+
+        // Awaiting: applied 5 days ago, still inside the threshold.
+        await CreateApplicationAsync("Fresh Co", now.AddDays(-5));
+
+        // Rejected before any interview, first reply after 3 days.
+        var rejected = await CreateApplicationAsync("No Thanks Co", now.AddDays(-40));
+        await ChangeStatusAsync(rejected, ApplicationStatus.Rejected, now.AddDays(-37));
+
+        // Interviewed, then went silent. First reply after 9 days.
+        var silent = await CreateApplicationAsync("Went Quiet Co", now.AddDays(-60));
+        await ChangeStatusAsync(silent, ApplicationStatus.Interview, now.AddDays(-51));
+        await ChangeStatusAsync(silent, ApplicationStatus.Ghosted, now.AddDays(-20));
+
+        // Interviewed, then offered. First reply after 1 day.
+        var offer = await CreateApplicationAsync("Yes Co", now.AddDays(-20));
+        await ChangeStatusAsync(offer, ApplicationStatus.Screening, now.AddDays(-19));
+        await ChangeStatusAsync(offer, ApplicationStatus.TechnicalInterview, now.AddDays(-15));
+        await ChangeStatusAsync(offer, ApplicationStatus.Offer, now.AddDays(-5));
+
+        // Outside the 90-day window: must not be counted for period=90.
+        var old = await CreateApplicationAsync("Last Year Co", now.AddDays(-200));
+        await ChangeStatusAsync(old, ApplicationStatus.Rejected, now.AddDays(-190));
+
+        var flow = await GetFlowAsync("90");
+
+        flow.Counts.ShouldBe(new ApplicationFlowCounts(
+            Total: 5, Unanswered: 1, AwaitingReply: 1, RejectedBeforeInterview: 1, InScreening: 0,
+            WithdrawnBeforeInterview: 0, Interviewed: 2, Offer: 1, InterviewInProgress: 0,
+            RejectedAfterInterview: 0, SilentAfterInterview: 1, WithdrawnAfterInterview: 0));
+        flow.MedianFirstReplyDays.ShouldBe(3.0);
+        flow.FirstAppliedOn.ShouldBe(DateOnly.FromDateTime(now.AddDays(-60).UtcDateTime));
+        flow.Today.ShouldBe(DateOnly.FromDateTime(now.UtcDateTime));
+
+        var all = await GetFlowAsync("all");
+        all.Counts.Total.ShouldBe(6);
+        all.Counts.RejectedBeforeInterview.ShouldBe(2);
+
+        var last30 = await GetFlowAsync("30");
+        last30.Counts.Total.ShouldBe(2);
+        last30.Counts.AwaitingReply.ShouldBe(1);
+        last30.Counts.Offer.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task GetFlow_Counts_Only_The_Callers_Own_Applications()
+    {
+        await CreateApplicationAsync("Mine Co", DateTimeOffset.UtcNow.AddDays(-2));
+
+        var other = _factory.CreateClient();
+        var registerResponse = await other.PostAsJsonAsync("/api/auth/register",
+            new RegisterRequest("analytics.flow.other@example.com", "P@ssw0rd123!", "Other", "User", true), JsonOptions);
+        registerResponse.EnsureSuccessStatusCode();
+        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        other.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
+
+        var response = await other.GetAsync("/api/analytics/flow?period=all");
+        response.EnsureSuccessStatusCode();
+        var flow = await response.Content.ReadFromJsonAsync<ApplicationFlowResponse>(JsonOptions);
+
+        flow!.Counts.Total.ShouldBe(0);
+        flow.FirstAppliedOn.ShouldBeNull();
+        flow.MedianFirstReplyDays.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("?period=60")]
+    [InlineData("?period=week")]
+    public async Task GetFlow_Refuses_An_Unknown_Period(string query)
+    {
+        var response = await _client.GetAsync($"/api/analytics/flow{query}");
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetFlow_Requires_Authentication()
+    {
+        var anonymous = _factory.CreateClient();
+        var response = await anonymous.GetAsync("/api/analytics/flow?period=90");
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.Unauthorized);
+    }
+
+    private async Task<ApplicationFlowResponse> GetFlowAsync(string period)
+    {
+        var response = await _client.GetAsync($"/api/analytics/flow?period={period}");
+        response.EnsureSuccessStatusCode();
+        var flow = await response.Content.ReadFromJsonAsync<ApplicationFlowResponse>(JsonOptions);
+        flow.ShouldNotBeNull();
+        return flow!;
+    }
 }

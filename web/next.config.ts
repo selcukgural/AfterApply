@@ -137,6 +137,8 @@ const nextConfig: NextConfig = {
         { source: "/en/cv-scan/score/:card", destination: "/en/cv-tarama/puan/:card" },
         // The about page, the same way (src/lib/about/path.ts).
         { source: "/en/about", destination: "/en/hakkimizda" },
+        // A shared application-flow card (src/lib/flowCard/path.ts).
+        { source: "/en/flow/:card", destination: "/en/akis/:card" },
         // Blog images (2026-09-19). The post's HTML stores the image as the relative path the API
         // serves it at, and this proxies that path to the API — so the stored markup carries no
         // hostname (the same HTML works on a laptop, a preview and production), the CSP's

@@ -19,6 +19,9 @@ export type PageMetadataOptions = {
   title: string;
   description: string;
   index?: boolean;
+  /** With `index: false`, whether the page's links may still be followed. Default no — the
+   *  single-use auth pages have nothing worth crawling; a shared flow card links to sign-up. */
+  follow?: boolean;
   /** Set for the guide articles, so a result can show when the piece was written. */
   article?: { publishedTime: string; modifiedTime?: string };
   /** The small line above the title on the share card ("Rehber", "Şirket değerlendirmeleri"). */
@@ -33,7 +36,7 @@ export type PageMetadataOptions = {
   image?: { url: string; width: number; height: number; alt: string };
 };
 
-export function buildMetadata({ locale, path, title, description, index, article, kicker, shareTitle, languages, image }: PageMetadataOptions): Metadata {
+export function buildMetadata({ locale, path, title, description, index, follow, article, kicker, shareTitle, languages, image }: PageMetadataOptions): Metadata {
   const fullTitle = `${title} · ${SITE_NAME}`;
   const url = `/${locale}${pathFor(path, locale)}`;
   // Every page gets a card with its own title (or the share title it asks for), unless it
@@ -50,7 +53,7 @@ export function buildMetadata({ locale, path, title, description, index, article
     },
     // Password reset and OAuth callbacks are per-request, single-use pages: indexing them puts a
     // dead link in the results and nothing useful on the page behind it.
-    ...(index === false ? { robots: { index: false, follow: false } } : {}),
+    ...(index === false ? { robots: { index: false, follow: follow ?? false } } : {}),
     openGraph: {
       title: fullTitle,
       description,
