@@ -104,8 +104,21 @@ describe("the signed-out chrome", () => {
   it("knows whether the visitor is signed in and offers the right door", () => {
     expect(header).toContain("useAuth");
     for (const href of ['"/login"', '"/register"']) expect(header).toContain(href);
-    expect(header).toContain("<CvScanNavButton");
     expect(header).toContain("aria-expanded");
+  });
+
+  it("fits its row: full menu from lg, labels never wrap, language and theme in one Preferences button", () => {
+    // 2026-09-24: measured with every flag on, the row wrapped its labels onto two lines from
+    // 1024px up and scrolled the page sideways below that. The fix is structural — response rates
+    // and the CV scan live in the Tools menu, language and theme in one button — and these three
+    // properties keep it from quietly coming back.
+    expect(header).toContain('<nav className="hidden items-center gap-6 text-sm lg:flex">');
+    expect(header).not.toMatch(/\bmd:(flex|hidden)\b/);
+    expect(header).toContain("whitespace-nowrap");
+    expect(header).toContain("<PreferencesMenu />");
+    expect(header).not.toContain("<LanguageSwitcher");
+    expect(header).not.toContain("<ThemeSwitcher");
+    expect(header).not.toContain("CvScanNavButton");
   });
 
   it("hands a signed-in visitor the app's own navbar instead of a lone dashboard button", () => {

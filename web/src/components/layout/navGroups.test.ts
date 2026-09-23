@@ -52,8 +52,8 @@ describe("buildNavEntries", () => {
   });
 
   it("keeps the account-free tools together, with the paid postings first when they exist", () => {
-    expect(group(buildNavEntries(ALL_ON, "tr"), "tools").items.map((item) => item.href)).toEqual(["/weekly-jobs", "/cv-tarama", "/benchmark", "/guide"]);
-    expect(group(buildNavEntries({}, "tr"), "tools").items.map((item) => item.href)).toEqual(["/cv-tarama", "/benchmark", "/guide"]);
+    expect(group(buildNavEntries(ALL_ON, "tr"), "tools").items.map((item) => item.href)).toEqual(["/weekly-jobs", "/cv-tarama", "/benchmark", "/teklif-karsilastirma", "/guide"]);
+    expect(group(buildNavEntries({}, "tr"), "tools").items.map((item) => item.href)).toEqual(["/cv-tarama", "/benchmark", "/teklif-karsilastirma", "/guide"]);
     expect(group(buildNavEntries(ALL_ON, "tr"), "tools").items[0].proBadge).toBe(true);
   });
 
@@ -121,8 +121,14 @@ describe("one name per destination", () => {
       expect(m.siteNav.companies).toBe(m.nav.companies);
       expect(m.landing.footer.companies).toBe(m.nav.companies);
       expect(m.notFound.companies).toBe(m.nav.companies);
-      expect(m.siteNav.benchmark).toBe(m.nav.benchmark);
+      // The signed-out header names the tools inside its Tools menu since 2026-09-24.
+      expect(m.siteNav.tools).toBe(m.nav.tools);
+      expect(m.siteNav.toolsMenu.benchmark.title).toBe(m.nav.benchmark);
+      expect(m.siteNav.toolsMenu.offerCompare.title).toBe(m.nav.offerCompare);
+      expect(m.siteNav.toolsMenu.cvScan.title).toBe(m.nav.cvScan);
+      expect(m.siteNav.toolsMenu.responseRates.title).toBe(m.nav.responseRates);
       expect(m.landing.footer.benchmark).toBe(m.nav.benchmark);
+      expect(m.landing.footer.offerCompare).toBe(m.nav.offerCompare);
       expect(m.siteNav.guide).toBe(m.nav.guide);
       expect(m.landing.footer.guide).toBe(m.nav.guide);
       expect(m.siteNav.blog).toBe(m.nav.blog);

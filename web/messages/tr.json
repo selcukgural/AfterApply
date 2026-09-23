@@ -103,6 +103,10 @@
         "title": "Ücretsiz ATS CV Kontrolü — başvuru sistemi CV'ni nasıl okuyor?",
         "description": "CV'ni yükle, başvuru sistemlerinin ondan ne okuduğunu gör. ATS okunabilirliği puanı, ham metin ve düzeltme listesi. Kayıt gerekmiyor, dosya saklanmıyor."
       },
+      "offerCompare": {
+        "title": "İş Teklifi Karşılaştırma — brütten nete 2026 maaş, ikramiye ve yan haklar",
+        "description": "İki-üç iş teklifini 2026 vergi dilimleri ve SGK kurallarıyla yıllık olarak karşılaştır: brüt/net maaş, ikramiye, yemek kartı, özel sağlık, BES ve ofis günleri. Kayıt gerekmiyor, hiçbir şey saklanmıyor."
+      },
       "pair": {
         "title": "Eklentiyi Bağla",
         "description": "Tarayıcı eklentini e-kariyerim hesabına tek onayla bağla."
@@ -138,6 +142,10 @@
       "helpBenchmark": {
         "title": "Geri Dönüş Oranı Kıyaslama",
         "description": "Kendi geri dönüş oranınızı alanınızın medyanıyla kıyaslayın; sayı nereden geliyor, ne zaman gösterilmiyor."
+      },
+      "helpOfferCompare": {
+        "title": "İş Teklifi Karşılaştırma",
+        "description": "Brüt ve net teklifler, ikramiye ve yan haklar nasıl karşılaştırılır; net maaş neden yıl içinde düşer, neler hesaba girmez."
       },
       "helpWeeklyJobs": {
         "title": "Haftalık İlanlar ve Pro Plan",
@@ -228,6 +236,10 @@
       "benchmarkTitle": "Geri dönüş oranı kıyaslama",
       "benchmarkBody": "İki sayı gir, kendi geri dönüş oranını gör ve alanının medyanıyla kıyasla.",
       "benchmarkCta": "Kıyasla",
+      "offerTitle": "Teklif karşılaştırma",
+      "offerBody": "İki-üç iş teklifini brüt ya da net, ikramiye ve yan haklarla 2026 kurallarıyla yıllık kıyasla.",
+      "offerCta": "Karşılaştır",
+      "newBadge": "Yeni",
       "panels": {
         "extension": {
           "eyebrow": "Chrome eklentisi · LinkedIn + kariyer.net",
@@ -258,6 +270,17 @@
           "bullet3": "Girdiğin sayılar anonim kaydedilir",
           "cta": "Kıyasla",
           "mockAriaLabel": "Örnek: bir kıyaslama sonucu — senin geri dönüş oranın %23,3 (7/30), Yazılım / Bilişim alanının medyanı %31."
+        },
+        "offer": {
+          "eyebrow": "İş teklifi karşılaştırma · 2026 vergi ve SGK kuralları",
+          "title": "Hangi teklif yılda daha çok bırakıyor?",
+          "body": "Brüt ya da net maaşı, ikramiyeyi, yemek kartını, özel sağlığı ve ofis günlerini gir; teklifler yıllık toplamla ve ay ay eline geçenle yan yana gelsin.",
+          "bullet1": "Vergi dilimi yıl içinde yükselir: ay ay neti gösterir",
+          "bullet2": "Resmî 2026 rakamları; kaynaklar sayfada",
+          "bullet3": "Tarayıcında hesaplanır, hiçbir şey kaydedilmez",
+          "cta": "Teklifleri karşılaştır",
+          "mockAriaLabel": "Örnek: iki teklifin karşılaştırması — {name} yılda {amount} daha fazla bırakıyor; altında {name} için ay ay eline geçen tutar, Haziran ve Aralık’ta ikramiyeyle.",
+          "monthsLabel": "{name} · ay ay eline geçen (bin ₺)"
         },
         "companies": {
           "eyebrow": "Şirket değerlendirmeleri · anonim",
@@ -376,6 +399,7 @@
       "help": "Yardım Merkezi",
       "cookies": "Çerez Politikası",
       "benchmark": "Kıyaslama",
+      "offerCompare": "Teklif Karşılaştırma",
       "extensionPrivacy": "Eklenti Gizlilik Politikası",
       "terms": "Kullanım Koşulları",
       "termsOfSale": "Mesafeli Satış Sözleşmesi",
@@ -406,6 +430,7 @@
     "tools": "Araçlar",
     "cvScan": "CV Tarama",
     "benchmark": "Kıyaslama",
+    "offerCompare": "Teklif Karşılaştırma",
     "guide": "Rehber",
     "blog": "Blog",
     "openMenu": "Menüyü aç",
@@ -1346,13 +1371,13 @@
   },
   "terms": {
     "title": "Kullanım Koşulları",
-    "lastUpdated": "Son güncelleme: 16 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 24 Eylül 2026",
     "intro": "Bu sayfa e-kariyerim'i — web sitesini, Chrome eklentisini ve hesapsız kullanılabilen araçları — kullanırken geçerli olan kuralları anlatır. Siteyi kullanarak bu koşulları kabul etmiş olursun; kabul etmiyorsan lütfen kullanma. Kişisel verilerinin nasıl işlendiği ayrı bir belgede, Gizlilik Politikası'nda anlatılır; iki belge birlikte geçerlidir.",
     "service": {
       "title": "Hizmet nedir",
       "intro": "e-kariyerim iş arama sürecini takip etmen için bir araçtır:",
       "tracking": "Başvurularını, takip listeni ve hatırlatıcılarını kaydeden bir panel; LinkedIn dışa aktarımından içe aktarma; Chrome eklentisiyle ilan sayfalarından ve Gmail'deki yanıtlardan sinyal toplama.",
-      "tools": "Hesapsız kullanılabilen araçlar: CV taraması, geri dönüş oranı kıyaslaması ve şirket değerlendirmelerini okuma.",
+      "tools": "Hesapsız kullanılabilen araçlar: CV taraması, geri dönüş oranı kıyaslaması, iş teklifi karşılaştırma ve şirket değerlendirmelerini okuma.",
       "reviews": "Kayıtlı kullanıcıların şirketler hakkında anonim, yapılandırılmış değerlendirmeler yazabildiği herkese açık şirket sayfaları.",
       "salaries": "Kayıtlı kullanıcıların şirketlerdeki maaşlarını anonim paylaşabildiği ve birbirininkini okuyabildiği maaş bilgileri.",
       "asIs": "Hizmet olduğu gibi sunulur. Özellikleri değiştirebilir, durdurabilir ya da kaldırabiliriz; ücretsiz bir hizmette bunun için önceden bildirim taahhüt etmiyoruz, ama kullanıcı verisini etkileyen bir değişikliği bu sayfada ve gerekiyorsa e-postayla duyururuz.",
@@ -1417,6 +1442,7 @@
       "availability": "Hizmetin kesintisiz ya da hatasız olacağını taahhüt etmiyoruz. Yürürlükteki hukukun izin verdiği ölçüde, hizmetin kullanımından ya da kullanılamamasından doğan dolaylı zararlardan sorumlu değiliz.",
       "reviewsDisclaimer": "Şirket değerlendirmeleri kullanıcıların görüşüdür; bir değerlendirme yüzünden uğradığını düşündüğün bir zarar için önce bildirim yolunu kullan — her bildirim bir moderatör tarafından okunur.",
       "salariesDisclaimer": "Maaş bilgileri kullanıcıların kendi beyanıdır; doğrulanmaz ve maaş müzakeresi ya da başka bir karar için tavsiye değildir.",
+      "offerCompareDisclaimer": "İş teklifi karşılaştırma aracı, sayfasında yazan vergi ve SGK kurallarıyla ve varsayımlarla yaklaşık bir hesap yapar. Sonuç bordro, vergi ya da mali müşavirlik hizmeti değildir; gerçek net tutar işverenin bordrosuna, sözleşme şartlarına ve mevzuat değişikliklerine göre farklı olabilir. Bir teklifi kabul etmeden önce tutarları işverenden yazılı olarak teyit etmek senin sorumluluğundadır.",
       "experiencesDisclaimer": "Aday deneyimleri kullanıcıların kendi süreçlerine dair görüşüdür; doğrulanmaz ve bir başvuru ya da başka bir karar için tavsiye değildir."
     },
     "termination": {
@@ -1888,6 +1914,7 @@
       "companySalaries": "Maaş Bilgileri",
       "cvScan": "CV Tarama",
       "benchmark": "Geri Dönüş Kıyası",
+      "offerCompare": "Teklif Karşılaştırma",
       "weeklyJobs": "Haftalık İlanlar ve Pro",
       "candidateExperiences": "Aday Deneyimi"
     },
@@ -1967,6 +1994,9 @@
         },
         "benchmark": {
           "description": "Geri dönüş oranınızı alanınızın medyanıyla kıyaslayın, hesap gerekmez."
+        },
+        "offerCompare": {
+          "description": "İş tekliflerini 2026 vergi kurallarıyla yıllık olarak kıyaslayın, hesap gerekmez."
         },
         "weeklyJobs": {
           "description": "Pazartesi listesi nasıl oluşur, ücreti, CV rızası, iade."
@@ -2718,6 +2748,48 @@
         "body": "Panel, aynı oranı sizin gerçek başvurularınızdan ölçer: beyan değil, kayıt. İkisini ayrı tutuyoruz; kıyas aracı hesabınıza bir şey yazmaz."
       }
     },
+    "offerCompare": {
+      "eyebrow": "Hesapsız araçlar",
+      "title": "İş teklifi karşılaştırma",
+      "intro": "Elinizdeki iki-üç iş teklifini 2026 vergi ve SGK kurallarıyla yıllık olarak yan yana koyun: brüt ya da net maaş, ikramiye, yemek kartı, özel sağlık, BES ve ofis günleri. Kayıt yok, hiçbir şey saklanmaz.",
+      "openTool": "Teklif karşılaştırma aracını aç →",
+      "screenshotAlt": "Teklif karşılaştırma aracı: solda teklif formu, sağda hangi teklifin yılda ne kadar fazla bıraktığını söyleyen karar ve teklif başına ayrışma çubukları.",
+      "how": {
+        "title": "Nasıl kullanılır",
+        "step1": {
+          "title": "Teklifleri girin",
+          "body": "Her teklif için maaşın brüt mü net mi olduğunu seçip aylık tutarı yazın. İkramiyeyi yıllık maaş sayısı olarak girin (\"14 maaş\" için 2); yemek kartını KDV dahil günlük tutarıyla, özel sağlık ve BES katkısını işverenin aylık ödediği tutarla girin."
+        },
+        "step2": {
+          "title": "Çalışma düzenini ekleyin",
+          "body": "Haftada kaç gün uzaktan çalışacağınızı ve bir ofis gününün size maliyetini (yol, öğle yemeği) yazın. Ofise gidilen günler bu tutarla yıllık toplamdan düşülür."
+        },
+        "step3": {
+          "title": "Sonucu okuyun",
+          "body": "Üstte hangi teklifin yılda ne kadar fazla bıraktığı, her teklif için net maaş, ikramiye, yan haklar ve ofis masrafının dökümü; altta her ayın eline geçen tutarı. Üçüncü bir teklif ekleyebilir, örneklere dönebilirsiniz."
+        }
+      },
+      "grossNet": {
+        "title": "Brüt mü net mi?",
+        "body": "Türkiye’de teklifler iki şekilde verilir. Brüt anlaşmada vergi ve SGK kesintileri sizden yapılır; gelir vergisi dilimi yıl içinde yükseldikçe eline geçen tutar azalır. Net anlaşmada her ay aynı tutar yatar, yıl içindeki vergi artışını işveren karşılar. Araç iki türü de hesaplar; teklifinizin hangisi olduğunu işverenden yazılı olarak öğrenin."
+      },
+      "monthly": {
+        "title": "Net maaş neden yıl içinde düşer?",
+        "body": "Gelir vergisi yıl başından beri biriken matrah üzerinden hesaplanır. Toplam 190.000 ₺’yi geçtiği ay oran %15’ten %20’ye, 400.000 ₺’yi geçtiği ay %27’ye çıkar. Brüt maaşınız aynı kalsa da bu aylardan sonra net tutar düşer; ikramiye yatan ay matrahı büyüttüğü için sonraki ayları da etkiler. Ay ay grafiği bunu gösterir."
+      },
+      "excluded": {
+        "title": "Neler hesaba girmez",
+        "body": "Engellilik indirimi, ay ortasında başlama (kıst ay), birden fazla işverenden gelir, işverene tanınan teşvikler ve sözleşmeye özel şartlar hesaba girmez. İkramiye tek maaşsa Aralık’ta, iki maaşsa Haziran ve Aralık’ta, daha fazlaysa üç ayda bir ödenmiş sayılır. Ayda 22 iş günü varsayılır."
+      },
+      "calloutPrivacy": {
+        "title": "Hiçbir şey kaydedilmez",
+        "body": "Hesap tamamen tarayıcınızda yapılır; girdiğiniz tutarlar sunucumuza gönderilmez ve sayfayı yenilediğinizde silinir."
+      },
+      "calloutEstimate": {
+        "title": "Bu bir tahmindir",
+        "body": "Sonuçlar, sayfada yazan kurallar ve varsayımlarla yapılmış bilgilendirme amaçlı bir hesaptır; bordro, vergi ya da hukuki danışmanlık değildir. Gerçek tutar işverenin bordrosuna göre farklı olabilir. Bir teklifi kabul etmeden önce brüt ve net tutarı işverenden yazılı olarak teyit edin, gerekirse bir mali müşavire danışın."
+      }
+    },
     "weeklyJobs": {
       "eyebrow": "Pro plan",
       "title": "Haftalık ilanlar ve Pro plan",
@@ -3227,7 +3299,6 @@
   "cvScan": {
     "title": "Başvuru sistemi (ATS) CV'ni nasıl okuyor?",
     "subtitle": "PDF veya Word dosyanı yükle; başvuru sistemlerinin CV'nden ne okuduğunu, nerede takıldığını ve neyi düzeltmen gerektiğini göster. Hesap gerekmiyor, dosya hiçbir yere kaydedilmiyor.",
-    "navCta": "CV'ni Tara",
     "shared": {
       "eyebrow": "Biri sana bunu gönderdi",
       "outOf": "/ 100 — ATS okunabilirliği",
@@ -3415,6 +3486,97 @@
       "tooLarge": "Dosya 5 MB sınırını aşıyor.",
       "tooMany": "Çok fazla tarama yaptın. Biraz bekleyip tekrar dene.",
       "generic": "Tarama tamamlanamadı. Biraz sonra tekrar dene."
+    }
+  },
+  "offerCompare": {
+    "eyebrow": "Ücretsiz araç · giriş gerekmez",
+    "title": "İş teklifi karşılaştırma",
+    "subtitle": "Brüt ya da net maaş, ikramiye, yemek kartı, özel sağlık ve ofis günleri: iki-üç teklifi 2026 vergi ve SGK kurallarıyla yıllık olarak yan yana koy. Hesap tarayıcında yapılır, hiçbir şey kaydedilmez.",
+    "examplesNote": "Sayfa iki örnek teklifle açılır; kendi rakamlarını yazdıkça sonuç güncellenir.",
+    "offers": {
+      "defaultName": "Teklif {letter}",
+      "tabsLabel": "Teklifler",
+      "add": "+ Teklif ekle",
+      "remove": "Bu teklifi kaldır",
+      "nameLabel": "Teklifin adı",
+      "reset": "Örneklere dön"
+    },
+    "fields": {
+      "salary": "Maaş",
+      "basisLabel": "Maaş türü",
+      "gross": "Brüt",
+      "net": "Net",
+      "grossUnit": "brüt ₺ / ay",
+      "netUnit": "net ₺ / ay",
+      "bonus": "İkramiye",
+      "bonusUnit": "maaş / yıl",
+      "meal": "Yemek kartı",
+      "mealUnit": "₺ / gün",
+      "health": "Özel sağlık (işveren öder)",
+      "bes": "BES işveren katkısı",
+      "perMonthUnit": "₺ / ay",
+      "remote": "Uzaktan çalışma",
+      "remoteUnit": "gün / hafta",
+      "officeCost": "Ofis günü masrafı (yol, öğle)",
+      "officeCostUnit": "₺ / gün",
+      "belowMinimum": "Brüt asgari ücretin ({amount}) altında; hesap bu tutar için tutarlı olmaz."
+    },
+    "verdict": {
+      "best": "{name}, yılda {amount} daha fazla bırakıyor.",
+      "tie": "Teklifler yılda aynı tutarı bırakıyor.",
+      "waiting": "Karşılaştırmak için en az iki teklifin maaşını yaz.",
+      "officeDays": "{count, plural, =0 {tam uzaktan} other {haftada # gün ofis}}",
+      "breakdown": "net maaş {salary} · ikramiye {bonus} · yan haklar {perks} · ofis {office}",
+      "none": "—",
+      "total": "{name}: yılda {amount}",
+      "legendSalary": "Net maaş",
+      "legendBonus": "İkramiye",
+      "legendPerks": "Yemek, sağlık, BES",
+      "legendOffice": "Ofis masrafı (düşülür)",
+      "note": "Bu bir tahmindir; bordro ya da vergi danışmanlığı değildir. <link>Nasıl hesapladığımızı gör</link>."
+    },
+    "months": {
+      "title": "Ay ay eline geçen",
+      "intro": "Brüt anlaşmada vergi dilimi yıl içinde yükselir, net maaş düşer. Açık renkli kısım o ay yatan ikramiye.",
+      "pick": "Grafikte gösterilecek teklif",
+      "chartLabel": "{name}, ay ay eline geçen tutar",
+      "bar": "{month}: {amount}",
+      "barWithBonus": "{month}: {amount}, {bonus} ikramiye dahil",
+      "noteGross": "Brüt anlaşma: maaşın neti Ocak {first}, Aralık {last}.",
+      "noteNet": "Net anlaşma: her ay {amount}; vergi artışını işveren üstlenir.",
+      "bonusOne": "İkramiye Aralık’ta.",
+      "bonusTwo": "İkramiye Haziran ve Aralık’ta.",
+      "bonusQuarterly": "İkramiye Mart, Haziran, Eylül ve Aralık’ta."
+    },
+    "salaryCta": {
+      "title": "Teklifi kabul ettin mi?",
+      "body": "Maaşını şirket sayfasına anonim ekle; bir sonraki aday pazarlığa elinde bir bantla girsin. Adın ve tam tutarın hiçbir yerde görünmez.",
+      "button": "Maaşını anonim ekle"
+    },
+    "method": {
+      "title": "Nasıl hesaplıyoruz",
+      "stepsTitle": "Brütten nete, her ay",
+      "steps": {
+        "sgk": "Brüt maaştan SGK işçi payı (%14) ve işsizlik sigortası işçi payı (%1) kesilir; bu kesinti aylık 297.270 ₺ tavanın üstündeki kısma uygulanmaz.",
+        "base": "Kalan tutar o ayın gelir vergisi matrahıdır. Matrah yıl başından beri toplanır; toplam hangi dilime düşüyorsa o ayın vergisi o dilimin oranıyla hesaplanır.",
+        "exemption": "Hesaplanan vergiden, asgari ücretin aynı ay için çıkan vergisi kadar istisna düşülür.",
+        "stamp": "Damga vergisi, brütün asgari ücreti aşan kısmının binde 7,59’udur.",
+        "net": "Net = brüt − SGK − işsizlik sigortası − gelir vergisi − damga vergisi. Yıllık toplama yemek kartı, özel sağlık ve BES eklenir, ofis günü masrafı düşülür."
+      },
+      "rulesTitle": "Rakamlar ve varsayımlar",
+      "brackets": "Gelir vergisi: 2026 ücret tarifesi (%15–%40), Gelir Vergisi Genel Tebliği Seri No 332. Matrah kümülatif, ay ay hesaplanır.",
+      "minimumWage": "Asgari ücret 33.030 ₺ brüt. Asgari ücret kadar kısmı gelir vergisinden ve damga vergisinden istisna.",
+      "sgk": "SGK işçi payı %14, işsizlik sigortası %1; tavan 297.270 ₺ (asgari ücretin 9 katı). Damga vergisi binde 7,59.",
+      "benefits": "Yemek kartı KDV dahil tutarıyla, ayda 22 iş günü üzerinden eklenir. Gelir vergisinde KDV hariç günlük 300 ₺’yi, SGK’da KDV dahil günlük 300 ₺’yi aşan kısmı maaş gibi kesintiye girer. İşverenin ödediği özel sağlık ve BES maaş gibi vergilenir, özel sağlık yasal sınır içinde matrahtan düşülür.",
+      "assumptions": "İkramiye tek maaşsa Aralık’ta, iki maaşsa Haziran ve Aralık’ta, daha fazlaysa üç ayda bir ödenmiş sayılır. Ofis günü masrafını sen girersin; uzaktan çalışma için vergi istisnası yoktur.",
+      "netOffer": "Net teklifte her ay aynı tutar yatar; yıl içindeki vergi artışını işveren karşılar.",
+      "updated": "Rakamlar her yıl Ocak’ta, yeni tebliğ ve asgari ücret kararıyla güncellenir.",
+      "sourcesTitle": "Kaynaklar",
+      "sourceTariff": "Gelir Vergisi Genel Tebliği Seri No 332 (Resmî Gazete, 31.12.2025)",
+      "sourceGuide": "GİB, Ücret Geliri Elde Edenler İçin Vergi Rehberi 2026",
+      "sourceSgk": "SGK, 2026 prime esas kazanç tutarları",
+      "disclaimer": "Sonuçlar, yukarıdaki kurallar ve varsayımlarla yapılmış bilgilendirme amaçlı bir tahmindir; bordro, vergi ya da hukuki danışmanlık değildir. Engellilik indirimi, kıst ay, birden fazla işveren, teşvikler ve sözleşmeye özel şartlar hesaba girmez; mevzuat yıl içinde değişebilir. Gerçek tutar işverenin bordrosuna göre farklı olabilir: bir teklifi kabul etmeden önce brüt ve net tutarı işverenden yazılı olarak teyit et, gerekirse bir mali müşavire danış. e-kariyerim bu sonuçlara dayanılarak verilen kararlardan sorumlu değildir; ayrıntısı <terms>Kullanım Koşulları</terms>’nda.",
+      "helpLink": "Yardım merkezinde adım adım anlatım →"
     }
   },
   "pair": {
@@ -5420,7 +5582,6 @@
     "howItWorks": "Nasıl çalışır",
     "extension": "Eklenti",
     "companies": "Şirketler",
-    "benchmark": "Kıyaslama",
     "guide": "Rehber",
     "blog": "Blog",
     "help": "Yardım",
@@ -5430,7 +5591,28 @@
     "goToDashboard": "Panele Git",
     "openMenu": "Menüyü aç",
     "closeMenu": "Menüyü kapat",
-    "responseRates": "Yanıt oranları"
+    "tools": "Araçlar",
+    "toolsMenu": {
+      "responseRates": {
+        "title": "Yanıt Oranları",
+        "description": "Sektörlere göre şirketlerin geri dönüş oranı"
+      },
+      "benchmark": {
+        "title": "Kıyaslama",
+        "description": "Geri dönüş oranını alanının medyanıyla kıyasla"
+      },
+      "offerCompare": {
+        "title": "Teklif Karşılaştırma",
+        "description": "İş tekliflerini yıllık net olarak yan yana koy"
+      },
+      "cvScan": {
+        "title": "CV Tarama",
+        "description": "Başvuru sistemi CV'nden ne okuyor, hemen gör"
+      }
+    },
+    "preferences": "Tercihler",
+    "preferencesLanguage": "Dil",
+    "preferencesTheme": "Tema"
   },
   "notFound": {
     "title": "Bu sayfa yok",

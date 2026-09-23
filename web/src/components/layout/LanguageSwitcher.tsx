@@ -6,13 +6,18 @@ import { routing } from "@/i18n/routing";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
 
-export function LanguageSwitcher() {
-  const locale = useLocale();
+export type Locale = (typeof routing.locales)[number];
+
+/**
+ * Switches the page to another locale, and — signed in — remembers it on the account. Shared by
+ * the inline switcher (user menu, app navbar) and the signed-out header's Preferences popover.
+ */
+export function useSwitchLanguage(): (code: Locale) => void {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
-  const handleSwitch = (code: (typeof routing.locales)[number]) => {
+  return (code) => {
     router.replace(pathname, { locale: code });
     if (isAuthenticated) {
       // Persists the choice to the account so it's applied on the next
@@ -22,6 +27,11 @@ export function LanguageSwitcher() {
       void authApi.updateLanguage(code);
     }
   };
+}
+
+export function LanguageSwitcher() {
+  const locale = useLocale();
+  const handleSwitch = useSwitchLanguage();
 
   return (
     <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">

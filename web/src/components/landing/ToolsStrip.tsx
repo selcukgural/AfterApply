@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { buttonClassName } from "@/components/ui/Button";
@@ -8,9 +8,11 @@ import { BenchmarkResultMock } from "@/components/landing/BenchmarkResultMock";
 import { CompanyReviewsMock } from "@/components/landing/CompanyReviewsMock";
 import { CvScanResultMock } from "@/components/landing/CvScanResultMock";
 import { ExtensionPopupMock } from "@/components/landing/ExtensionPopupMock";
+import { OfferCompareMock } from "@/components/landing/OfferCompareMock";
 import { LandingIcon, type LandingIcon as LandingIconName } from "@/components/landing/landingIcons";
 import { CHROME_WEB_STORE_URL } from "@/lib/constants/chromeWebStore";
 import { cvScanPath } from "@/lib/cvScan/path";
+import { offerComparePath } from "@/lib/offerCompare/path";
 
 /**
  * The three things the site offers before asking for an account, one screen under the hero:
@@ -38,18 +40,47 @@ import { cvScanPath } from "@/lib/cvScan/path";
  * card's call to action is a separate link beside the tab rather than inside it — a link inside
  * a button is invalid HTML and unreachable by keyboard.
  */
-type Tool = "cv" | "extension" | "benchmark" | "companies";
+type Tool = "cv" | "extension" | "benchmark" | "companies" | "offer";
 
 // Extension first, scan last (2026-09-12 review): the hero already carries the scan. Companies
 // second (2026-09-13): the newest tool, and the only one you browse rather than run.
-const TOOLS: readonly Tool[] = ["extension", "companies", "benchmark", "cv"];
+// The offer comparison (2026-09-24) sits between the benchmark and the scan: it is the second
+// calculator, and the scan keeps the last place the hero already gives it the button for.
+const TOOLS: readonly Tool[] = ["extension", "companies", "benchmark", "offer", "cv"];
 
-const ICON: Record<Tool, LandingIconName> = { cv: "cv", extension: "extension", benchmark: "analytics", companies: "companies" };
+const ICON: Record<Tool, LandingIconName> = {
+  cv: "cv",
+  extension: "extension",
+  benchmark: "analytics",
+  companies: "companies",
+  offer: "offer",
+};
+
+/**
+ * Five cards as three over two (strip canvas S2, 2026-09-24): five across left each card four or
+ * five lines of copy, a scrolling row hid the fifth. The two wide cards are the newest and the
+ * scan; on a two-column tablet the scan, left alone on its row, takes the row.
+ */
+const CARD_SPAN: Record<Tool, string> = {
+  extension: "lg:col-span-2",
+  companies: "lg:col-span-2",
+  benchmark: "lg:col-span-2",
+  offer: "lg:col-span-3",
+  cv: "sm:col-span-2 lg:col-span-3",
+};
+
+/** The offer card's "New" badge comes off by itself after this. The static page renders without
+ *  it (the server snapshot) and the browser adds it, so the two never disagree during hydration. */
+const OFFER_NEW_UNTIL = Date.UTC(2026, 10, 1);
+const noSubscription = () => () => {};
+const offerIsNewNow = () => Date.now() < OFFER_NEW_UNTIL;
+const offerIsNewOnServer = () => false;
 
 export function ToolsStrip() {
   const t = useTranslations("landing.tools");
   const locale = useLocale();
   const [active, setActive] = useState<Tool>("extension");
+  const offerIsNew = useSyncExternalStore(noSubscription, offerIsNewNow, offerIsNewOnServer);
   const baseId = useId();
   const tabRefs = useRef<Partial<Record<Tool, HTMLButtonElement | null>>>({});
 
@@ -79,7 +110,7 @@ export function ToolsStrip() {
     tabRefs.current[next]?.focus();
   };
 
-  const cards: { tool: Tool; pill?: string; title: string; body: string; cta: ReactNode }[] = [
+  const cards: { tool: Tool; pill?: string; badge?: string; title: string; body: string; cta: ReactNode }[] = [
     {
       tool: "extension",
       pill: t("extensionPill"),
@@ -118,6 +149,17 @@ export function ToolsStrip() {
       ),
     },
     {
+      tool: "offer",
+      badge: offerIsNew ? t("newBadge") : undefined,
+      title: t("offerTitle"),
+      body: t("offerBody"),
+      cta: (
+        <Link href={offerComparePath(locale)} className={buttonClassName("outline", "mt-auto w-fit")}>
+          {t("offerCta")}
+        </Link>
+      ),
+    },
+    {
       tool: "cv",
       title: t("cvTitle"),
       body: t("cvBody"),
@@ -138,7 +180,7 @@ export function ToolsStrip() {
             one strip. The heading says it once, where it covers all four. */}
         <h2 className="text-sm font-medium text-accent-ink">{t("title")}</h2>
 
-        <div role="tablist" aria-label={t("tabsLabel")} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div role="tablist" aria-label={t("tabsLabel")} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           {cards.map((card) => {
             const selected = card.tool === active;
             return (
@@ -150,7 +192,7 @@ export function ToolsStrip() {
                 // "a tablist whose children are not tabs" (growth audit 2026-09-14, finding 14).
                 role="presentation"
                 onClick={() => setActive(card.tool)}
-                className={`relative flex cursor-pointer flex-col gap-3 rounded-xl border bg-white p-6 transition-shadow dark:bg-gray-900 ${
+                className={`relative flex cursor-pointer flex-col gap-3 rounded-xl border bg-white p-6 transition-shadow dark:bg-gray-900 ${CARD_SPAN[card.tool]} ${
                   selected
                     ? "border-accent/60 ring-[3px] ring-accent-wash"
                     : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700"
@@ -166,6 +208,8 @@ export function ToolsStrip() {
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                       {card.pill}
                     </span>
+                  ) : card.badge ? (
+                    <span className="rounded-full bg-accent-wash px-2 py-0.5 text-xs font-semibold text-accent-ink">{card.badge}</span>
                   ) : null}
                 </div>
 
@@ -203,9 +247,22 @@ export function ToolsStrip() {
           role="tabpanel"
           id={panelId(active)}
           aria-labelledby={tabId(active)}
-          className="grid gap-10 rounded-xl border border-gray-200 bg-white p-6 sm:p-10 lg:grid-cols-2 lg:items-center dark:border-gray-800 dark:bg-gray-900"
+          // grid-cols-1 on a phone, not the implicit track: an implicit column sizes to its widest
+          // child, and the extension demo's address bar made it ~400px on a 390px screen (the page
+          // scrolled sideways; found 2026-09-24).
+          className="grid grid-cols-1 gap-10 rounded-xl border border-gray-200 bg-white p-6 sm:p-10 lg:grid-cols-2 lg:items-center dark:border-gray-800 dark:bg-gray-900"
         >
-          {active === "extension" ? <ExtensionPanel /> : active === "companies" ? <CompaniesPanel /> : active === "cv" ? <CvPanel /> : <BenchmarkPanel />}
+          {active === "extension" ? (
+            <ExtensionPanel />
+          ) : active === "companies" ? (
+            <CompaniesPanel />
+          ) : active === "cv" ? (
+            <CvPanel />
+          ) : active === "offer" ? (
+            <OfferPanel />
+          ) : (
+            <BenchmarkPanel />
+          )}
         </div>
       </div>
     </section>
@@ -338,6 +395,27 @@ function BenchmarkPanel() {
         </Link>
       </PanelCopy>
       <BenchmarkResultMock />
+    </>
+  );
+}
+
+function OfferPanel() {
+  const t = useTranslations("landing.tools.panels.offer");
+  const locale = useLocale();
+
+  return (
+    <>
+      <PanelCopy
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        body={t("body")}
+        bullets={[t("bullet1"), t("bullet2"), t("bullet3")]}
+      >
+        <Link href={offerComparePath(locale)} className={buttonClassName("primary", "px-6 py-3 text-base")}>
+          {t("cta")}
+        </Link>
+      </PanelCopy>
+      <OfferCompareMock />
     </>
   );
 }

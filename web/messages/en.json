@@ -103,6 +103,10 @@
         "title": "Free ATS CV Check — how an applicant tracking system reads your CV",
         "description": "Upload your CV and see what an applicant tracking system reads from it. An ATS readability score, the raw text and a fix list. No sign-up, nothing stored."
       },
+      "offerCompare": {
+        "title": "Job Offer Comparison — 2026 Turkish gross-to-net salary, bonus and benefits",
+        "description": "Compare two or three job offers in Turkey over a year under the 2026 tax brackets and social security rules: gross or net salary, bonuses, meal card, health insurance, pension and office days. No sign-up, nothing stored."
+      },
       "pair": {
         "title": "Connect the Extension",
         "description": "Connect your browser extension to your e-kariyerim account with a single confirmation."
@@ -138,6 +142,10 @@
       "helpBenchmark": {
         "title": "Reply Rate Benchmark",
         "description": "Compare your own reply rate with your field's median; where the number comes from and when it is withheld."
+      },
+      "helpOfferCompare": {
+        "title": "Job Offer Comparison",
+        "description": "How gross and net offers, bonuses and benefits are compared; why net pay falls during the year and what is not included."
       },
       "helpWeeklyJobs": {
         "title": "Weekly Postings and the Pro Plan",
@@ -228,6 +236,10 @@
       "benchmarkTitle": "Reply rate benchmark",
       "benchmarkBody": "Enter two numbers, see your own reply rate and compare it with the median in your field.",
       "benchmarkCta": "Compare",
+      "offerTitle": "Offer comparison",
+      "offerBody": "Compare two or three job offers over a year, gross or net, with bonuses and benefits, under the 2026 rules.",
+      "offerCta": "Compare",
+      "newBadge": "New",
       "panels": {
         "extension": {
           "eyebrow": "Chrome extension · LinkedIn + kariyer.net",
@@ -258,6 +270,17 @@
           "bullet3": "The numbers you enter are stored anonymously",
           "cta": "Compare",
           "mockAriaLabel": "Sample: a benchmark result — your reply rate 23.3% (7/30), the Software / IT median 31%."
+        },
+        "offer": {
+          "eyebrow": "Job offer comparison · 2026 tax and social security rules",
+          "title": "Which offer leaves you more a year?",
+          "body": "Enter the gross or net salary, bonuses, meal card, health insurance and office days; see the offers side by side as an annual total and month by month.",
+          "bullet1": "Tax brackets rise through the year: see the net for each month",
+          "bullet2": "Official 2026 figures, sources on the page",
+          "bullet3": "Computed in your browser, nothing is stored",
+          "cta": "Compare offers",
+          "mockAriaLabel": "Example: two offers compared — {name} leaves {amount} more a year; below it, {name}’s take-home pay month by month, with bonuses in June and December.",
+          "monthsLabel": "{name} · take-home by month (₺ thousands)"
         },
         "companies": {
           "eyebrow": "Company reviews · anonymous",
@@ -376,6 +399,7 @@
       "help": "Help Center",
       "cookies": "Cookie Policy",
       "benchmark": "Benchmark",
+      "offerCompare": "Offer Comparison",
       "extensionPrivacy": "Extension Privacy Policy",
       "terms": "Terms of Use",
       "termsOfSale": "Distance Sales Agreement",
@@ -406,6 +430,7 @@
     "tools": "Tools",
     "cvScan": "CV Scan",
     "benchmark": "Benchmark",
+    "offerCompare": "Offer Comparison",
     "guide": "Guide",
     "blog": "Blog",
     "openMenu": "Open menu",
@@ -1346,13 +1371,13 @@
   },
   "terms": {
     "title": "Terms of Use",
-    "lastUpdated": "Last updated: 16 September 2026",
+    "lastUpdated": "Last updated: 24 September 2026",
     "intro": "This page sets out the rules that apply when you use e-kariyerim — the website, the Chrome extension and the tools that work without an account. By using the site you accept these terms; if you do not accept them, please do not use it. How your personal data is handled is described in a separate document, the Privacy Policy; the two apply together.",
     "service": {
       "title": "What the service is",
       "intro": "e-kariyerim is a tool for keeping track of your job search:",
       "tracking": "A dashboard that records your applications, tracked jobs and reminders; import from a LinkedIn export; a Chrome extension that collects signals from job pages and from replies in Gmail.",
-      "tools": "Tools that work without an account: CV scan, reply-rate benchmark, and reading company reviews.",
+      "tools": "Tools that work without an account: CV scan, reply-rate benchmark, job offer comparison, and reading company reviews.",
       "reviews": "Public company pages where registered users write anonymous, structured reviews of companies.",
       "salaries": "Salary information: signed-in users share their salary at a company anonymously and read each other's entries.",
       "asIs": "The service is provided as is. We may change, pause or remove features; on a free service we do not promise advance notice, but a change that affects user data is announced on this page and, where needed, by email.",
@@ -1417,6 +1442,7 @@
       "availability": "We do not promise that the service will be uninterrupted or error-free. To the extent applicable law allows, we are not liable for indirect damages arising from use of, or inability to use, the service.",
       "reviewsDisclaimer": "Company reviews are users' opinions; if you believe a review has harmed you, use the report path first — every report is read by a moderator.",
       "salariesDisclaimer": "Salary entries are users' own reports; they are not verified and are not advice for salary negotiation or any other decision.",
+      "offerCompareDisclaimer": "The job offer comparison makes an approximate calculation under the tax and social security rules and assumptions stated on its page. The result is not a payslip, tax or accounting service; the actual net pay may differ with the employer's payroll, the contract's terms and changes in legislation. Confirming the amounts in writing with the employer before accepting an offer is your responsibility.",
       "experiencesDisclaimer": "Candidate experiences are users' views of their own processes; they are not verified and are not advice for an application or any other decision."
     },
     "termination": {
@@ -1888,6 +1914,7 @@
       "companySalaries": "Salary Information",
       "cvScan": "CV Scan",
       "benchmark": "Reply Rate Benchmark",
+      "offerCompare": "Offer Comparison",
       "weeklyJobs": "Weekly Postings and Pro",
       "candidateExperiences": "Candidate Experience"
     },
@@ -1967,6 +1994,9 @@
         },
         "benchmark": {
           "description": "Compare your reply rate with your field's median, no account needed."
+        },
+        "offerCompare": {
+          "description": "Compare job offers over a year under the 2026 tax rules, no account needed."
         },
         "weeklyJobs": {
           "description": "How the Monday list is built, pricing, CV consent, refunds."
@@ -2718,6 +2748,48 @@
         "body": "The dashboard measures the same rate from your real applications: a record, not a statement. We keep the two apart; the benchmark tool writes nothing to your account."
       }
     },
+    "offerCompare": {
+      "eyebrow": "Tools without an account",
+      "title": "Job offer comparison",
+      "intro": "Put two or three job offers side by side for a whole year under Turkey’s 2026 tax and social security rules: gross or net salary, bonuses, meal card, health insurance, pension and office days. No sign-up, nothing stored.",
+      "openTool": "Open the offer comparison →",
+      "screenshotAlt": "The offer comparison: the offer form on the left, and on the right the verdict saying which offer leaves more a year, with a breakdown bar per offer.",
+      "how": {
+        "title": "How to use it",
+        "step1": {
+          "title": "Enter the offers",
+          "body": "For each offer, choose whether the salary is gross or net and enter the monthly amount. Enter the bonus as a number of monthly salaries a year (2 for a \"14-salary\" year), the meal card at its daily value including VAT, and health insurance and pension contributions at what the employer pays a month."
+        },
+        "step2": {
+          "title": "Add how you would work",
+          "body": "Enter how many days a week you would work remotely and what an office day costs you (travel, lunch). Office days are deducted from the annual total at that cost."
+        },
+        "step3": {
+          "title": "Read the result",
+          "body": "At the top, which offer leaves more a year and by how much, with each offer’s net salary, bonus, benefits and office costs; below, what you take home each month. You can add a third offer or go back to the examples."
+        }
+      },
+      "grossNet": {
+        "title": "Gross or net?",
+        "body": "Offers in Turkey come in two forms. In a gross agreement tax and social security come out of your pay, so as the income tax bracket rises through the year you take home less. In a net agreement the same amount is paid every month and the employer covers the tax increase. The tool computes both; ask the employer in writing which one your offer is."
+      },
+      "monthly": {
+        "title": "Why does net pay fall during the year?",
+        "body": "Income tax is charged on the base accumulated since January. In the month the total passes ₺190,000 the rate goes from 15% to 20%, and past ₺400,000 to 27%. Even with the same gross salary, the net drops after those months; a bonus month enlarges the base and so affects the months after it too. The month-by-month chart shows this."
+      },
+      "excluded": {
+        "title": "What is not included",
+        "body": "Disability allowances, starting mid-month, income from more than one employer, employer incentives and contract-specific terms are not included. A single bonus salary is taken as paid in December, two in June and December, more every three months. 22 working days a month are assumed."
+      },
+      "calloutPrivacy": {
+        "title": "Nothing is stored",
+        "body": "The calculation runs entirely in your browser; the amounts you enter are not sent to our server and are gone when you reload the page."
+      },
+      "calloutEstimate": {
+        "title": "This is an estimate",
+        "body": "The results are an informational calculation under the rules and assumptions stated on the page; they are not payroll, tax or legal advice. The actual amount may differ with the employer’s payroll. Before accepting an offer, confirm the gross and net amounts in writing with the employer and, if needed, consult an accountant."
+      }
+    },
     "weeklyJobs": {
       "eyebrow": "Pro plan",
       "title": "Weekly postings and the Pro plan",
@@ -3227,7 +3299,6 @@
   "cvScan": {
     "title": "How does an applicant tracking system (ATS) read your CV?",
     "subtitle": "Upload your PDF or Word file and see what an applicant tracking system reads from it, where it gets stuck, and what to fix. No account, and the file is never stored.",
-    "navCta": "Scan your CV",
     "shared": {
       "eyebrow": "Someone sent you this",
       "outOf": "/ 100 — ATS readability",
@@ -3415,6 +3486,97 @@
       "tooLarge": "The file exceeds the 5 MB limit.",
       "tooMany": "That is a lot of scans. Wait a little and try again.",
       "generic": "The scan could not be completed. Try again in a moment."
+    }
+  },
+  "offerCompare": {
+    "eyebrow": "Free tool · no sign-up",
+    "title": "Job offer comparison",
+    "subtitle": "Gross or net salary, bonuses, meal card, private health insurance and office days: put two or three offers side by side for a whole year under Turkey’s 2026 tax and social security rules. Everything is computed in your browser and nothing is stored.",
+    "examplesNote": "The page opens with two example offers; the result updates as you type your own figures.",
+    "offers": {
+      "defaultName": "Offer {letter}",
+      "tabsLabel": "Offers",
+      "add": "+ Add an offer",
+      "remove": "Remove this offer",
+      "nameLabel": "Offer name",
+      "reset": "Back to the examples"
+    },
+    "fields": {
+      "salary": "Salary",
+      "basisLabel": "Salary type",
+      "gross": "Gross",
+      "net": "Net",
+      "grossUnit": "gross ₺ / month",
+      "netUnit": "net ₺ / month",
+      "bonus": "Bonus",
+      "bonusUnit": "salaries / year",
+      "meal": "Meal card",
+      "mealUnit": "₺ / day",
+      "health": "Private health insurance (employer pays)",
+      "bes": "Employer pension (BES) contribution",
+      "perMonthUnit": "₺ / month",
+      "remote": "Remote work",
+      "remoteUnit": "days / week",
+      "officeCost": "Cost of an office day (travel, lunch)",
+      "officeCostUnit": "₺ / day",
+      "belowMinimum": "Below the gross minimum wage ({amount}); the result will not be meaningful for this amount."
+    },
+    "verdict": {
+      "best": "{name} leaves you {amount} more a year.",
+      "tie": "The offers leave you the same amount a year.",
+      "waiting": "Enter a salary for at least two offers to compare them.",
+      "officeDays": "{count, plural, =0 {fully remote} one {# office day a week} other {# office days a week}}",
+      "breakdown": "net salary {salary} · bonus {bonus} · benefits {perks} · office {office}",
+      "none": "—",
+      "total": "{name}: {amount} a year",
+      "legendSalary": "Net salary",
+      "legendBonus": "Bonus",
+      "legendPerks": "Meal, health, pension",
+      "legendOffice": "Office costs (deducted)",
+      "note": "This is an estimate, not a payslip or tax advice. <link>See how we calculate</link>."
+    },
+    "months": {
+      "title": "What you take home, month by month",
+      "intro": "On a gross salary the tax bracket rises through the year, so the net falls. The lighter part is the bonus paid that month.",
+      "pick": "Offer shown in the chart",
+      "chartLabel": "{name}, take-home pay month by month",
+      "bar": "{month}: {amount}",
+      "barWithBonus": "{month}: {amount}, including a {bonus} bonus",
+      "noteGross": "Gross agreement: the salary nets {first} in January and {last} in December.",
+      "noteNet": "Net agreement: {amount} every month; the employer carries the tax increase.",
+      "bonusOne": "Bonus in December.",
+      "bonusTwo": "Bonuses in June and December.",
+      "bonusQuarterly": "Bonuses in March, June, September and December."
+    },
+    "salaryCta": {
+      "title": "Accepted the offer?",
+      "body": "Add your salary to the company’s page anonymously, so the next candidate negotiates with a range in hand. Your name and the exact amount are never shown.",
+      "button": "Add your salary anonymously"
+    },
+    "method": {
+      "title": "How we calculate",
+      "stepsTitle": "From gross to net, each month",
+      "steps": {
+        "sgk": "The employee social security share (14%) and unemployment insurance share (1%) come off the gross salary; they are not charged on the part above the ₺297,270 monthly ceiling.",
+        "base": "What remains is the month's income tax base. The base accumulates from January; the month's tax is charged at the rate of whichever bracket the running total falls into.",
+        "exemption": "From that tax, an exemption equal to the tax the minimum wage would pay in the same month is deducted.",
+        "stamp": "Stamp duty is 0.759% of the gross above the minimum wage.",
+        "net": "Net = gross − social security − unemployment insurance − income tax − stamp duty. The annual total then adds the meal card, health insurance and pension contribution and deducts the cost of office days."
+      },
+      "rulesTitle": "Figures and assumptions",
+      "brackets": "Income tax: the 2026 wage tariff (15–40%), Income Tax General Communiqué No. 332. The tax base is cumulative, computed month by month.",
+      "minimumWage": "The minimum wage is ₺33,030 gross. The part of a wage up to the minimum wage is exempt from income tax and stamp duty.",
+      "sgk": "Employee social security share 14%, unemployment insurance 1%; ceiling ₺297,270 (nine minimum wages). Stamp duty 0.759%.",
+      "benefits": "The meal card counts at its face value including VAT, over 22 working days a month. For income tax the part above ₺300 a day excluding VAT, and for social security the part above ₺300 a day including VAT, is charged like salary. Employer-paid health insurance and pension contributions are taxed as salary, and health insurance is deducted from the tax base within the legal limit.",
+      "assumptions": "A single bonus salary is taken as paid in December, two in June and December, more every three months. You enter the cost of an office day; there is no tax exemption for remote work.",
+      "netOffer": "A net offer pays the same amount every month; the employer covers the tax increase over the year.",
+      "updated": "The figures are updated every January with the new communiqué and minimum wage decision.",
+      "sourcesTitle": "Sources",
+      "sourceTariff": "Income Tax General Communiqué No. 332 (Official Gazette, 31.12.2025, in Turkish)",
+      "sourceGuide": "Revenue Administration (GİB), 2026 tax guide for wage earners (in Turkish)",
+      "sourceSgk": "Social Security Institution (SGK), 2026 contribution base amounts (in Turkish)",
+      "disclaimer": "The results are an estimate for information, made under the rules and assumptions above; they are not payroll, tax or legal advice. Disability allowances, partial months, multiple employers, incentives and contract-specific terms are not included, and legislation can change during the year. The actual amount may differ with the employer's payroll: before accepting an offer, confirm the gross and net amounts in writing with the employer and, if needed, consult an accountant. e-kariyerim is not responsible for decisions made on the basis of these results; see the <terms>Terms of Use</terms>.",
+      "helpLink": "Step-by-step guide in the help centre →"
     }
   },
   "pair": {
@@ -5420,7 +5582,6 @@
     "howItWorks": "How it works",
     "extension": "Extension",
     "companies": "Companies",
-    "benchmark": "Benchmark",
     "guide": "Guide",
     "blog": "Blog",
     "help": "Help",
@@ -5430,7 +5591,28 @@
     "goToDashboard": "Go to Dashboard",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "responseRates": "Response rates"
+    "tools": "Tools",
+    "toolsMenu": {
+      "responseRates": {
+        "title": "Response Rates",
+        "description": "How often companies reply, by sector"
+      },
+      "benchmark": {
+        "title": "Benchmark",
+        "description": "Compare your reply rate with your field's median"
+      },
+      "offerCompare": {
+        "title": "Offer Comparison",
+        "description": "Put job offers side by side, net over a year"
+      },
+      "cvScan": {
+        "title": "CV Scan",
+        "description": "See what applicant tracking systems read from your CV"
+      }
+    },
+    "preferences": "Preferences",
+    "preferencesLanguage": "Language",
+    "preferencesTheme": "Theme"
   },
   "notFound": {
     "title": "This page does not exist",

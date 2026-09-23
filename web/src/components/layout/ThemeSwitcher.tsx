@@ -6,20 +6,14 @@ import { authApi } from "@/lib/api/auth";
 import { useDocumentTheme } from "@/hooks/useDocumentTheme";
 import { applyTheme, type Theme } from "@/lib/theme/theme";
 
-const THEMES: Theme[] = ["light", "dark"];
+export const THEMES: Theme[] = ["light", "dark"];
 
-/**
- * The server renders this with "light" selected while the page itself is already in the right
- * theme (the boot script in the root layout stamps `<html>` before first paint); on the client the
- * highlight follows the class on `<html>`. That one render of lag on the highlight is the price of
- * not reading the cookie on the server, which is what keeps the public pages static.
- */
-export function ThemeSwitcher() {
-  const theme = useDocumentTheme();
+/** Applies a theme, and — signed in — remembers it on the account. Shared by the inline switcher
+ *  and the signed-out header's Preferences popover. */
+export function useSwitchTheme(): (next: Theme) => void {
   const { isAuthenticated } = useAuth();
-  const t = useTranslations("theme");
 
-  const handleSwitch = (next: Theme) => {
+  return (next) => {
     applyTheme(next);
     if (isAuthenticated) {
       // Persists the choice to the account so it's applied on the next
@@ -29,6 +23,18 @@ export function ThemeSwitcher() {
       void authApi.updateTheme(next);
     }
   };
+}
+
+/**
+ * The server renders this with "light" selected while the page itself is already in the right
+ * theme (the boot script in the root layout stamps `<html>` before first paint); on the client the
+ * highlight follows the class on `<html>`. That one render of lag on the highlight is the price of
+ * not reading the cookie on the server, which is what keeps the public pages static.
+ */
+export function ThemeSwitcher() {
+  const theme = useDocumentTheme();
+  const t = useTranslations("theme");
+  const handleSwitch = useSwitchTheme();
 
   return (
     <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">

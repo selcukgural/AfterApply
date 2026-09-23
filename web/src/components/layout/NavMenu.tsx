@@ -18,6 +18,9 @@ interface NavMenuProps {
   items: NavMenuItem[];
   /** Left in the DOM for the mobile menu's flat list; the dropdown itself is desktop-only. */
   className?: string;
+  /** Replaces the dropdown's default width and padding — the signed-out Tools menu's items carry a
+   *  line of description and need the room. */
+  menuClassName?: string;
 }
 
 /**
@@ -26,7 +29,7 @@ interface NavMenuProps {
  * "Tools" menu when the row reached eleven items (2026-09-15, option D3 on the header canvas);
  * since 2026-09-17 every group in the row is one of these, fed from navGroups.ts.
  */
-export function NavMenu({ label, items, className = "" }: NavMenuProps) {
+export function NavMenu({ label, items, className = "", menuClassName = "w-56 py-1" }: NavMenuProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -74,7 +77,7 @@ export function NavMenu({ label, items, className = "" }: NavMenuProps) {
       {open && (
         <div
           role="menu"
-          className="absolute left-0 z-50 mt-2 w-56 rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-800 dark:bg-gray-900"
+          className={`absolute left-0 z-50 mt-2 rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900 ${menuClassName}`}
         >
           {items.map((item) => (
             <div key={item.href}>

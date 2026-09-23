@@ -16,7 +16,7 @@ const LISTS = {
   experiences: ["ownProcess", "structured", "onePerCompany", "publication", "noManipulation", "opinion"],
   content: ["ownership", "licence", "ourContent"],
   prohibited: ["scraping", "limits", "abuse", "security", "unlawful"],
-  liability: ["noAdvice", "thirdParties", "availability", "reviewsDisclaimer", "salariesDisclaimer", "experiencesDisclaimer"],
+  liability: ["noAdvice", "thirdParties", "availability", "reviewsDisclaimer", "salariesDisclaimer", "offerCompareDisclaimer", "experiencesDisclaimer"],
   termination: ["us", "you"],
 } as const;
 

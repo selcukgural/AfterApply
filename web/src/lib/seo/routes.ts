@@ -2,6 +2,7 @@ import { routing } from "@/i18n/routing";
 import { GUIDE_ARTICLES, GUIDE_PATH, articlePaths } from "@/lib/guide/articles";
 import { CV_SCAN_PATHS } from "@/lib/cvScan/path";
 import { ABOUT_PATHS } from "@/lib/about/path";
+import { OFFER_COMPARE_PATHS } from "@/lib/offerCompare/path";
 
 export const SITE_URL = "https://ekariyerim.com";
 export const SITE_NAME = "e-kariyerim";
@@ -23,6 +24,7 @@ export const HELP_TOPICS = [
   { href: "/help/candidate-experiences", key: "candidateExperiences" },
   { href: "/help/cv-scan", key: "cvScan" },
   { href: "/help/benchmark", key: "benchmark" },
+  { href: "/help/offer-comparison", key: "offerCompare" },
   { href: "/help/weekly-jobs", key: "weeklyJobs" },
   { href: "/help/faq", key: "faq" },
 ] as const;
@@ -50,6 +52,7 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "/benchmark",
   // Translated like the guide slugs: /tr/cv-tarama, /en/cv-scan.
   CV_SCAN_PATHS,
+  OFFER_COMPARE_PATHS,
   ABOUT_PATHS,
   "/companies",
   "/companies/scoring",

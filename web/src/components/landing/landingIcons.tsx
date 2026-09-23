@@ -31,6 +31,14 @@ export const LANDING_ICON_PATHS = {
       d="M9 12.75h4.5m-4.5 3h6m3-10.5v13.5a1.5 1.5 0 01-1.5 1.5h-9a1.5 1.5 0 01-1.5-1.5V5.25a1.5 1.5 0 011.5-1.5h5.379a1.5 1.5 0 011.06.44l3.122 3.12a1.5 1.5 0 01.439 1.061z"
     />
   ),
+  // A pair of scales: the offer comparison (2026-09-24).
+  offer: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 3v18M5 21h14M6 7h12M6 7l-3 7a3 3 0 006 0L6 7zm12 0l-3 7a3 3 0 006 0l-3-7z"
+    />
+  ),
   check: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
   companies: (
     <path

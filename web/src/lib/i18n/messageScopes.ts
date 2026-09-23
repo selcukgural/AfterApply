@@ -28,8 +28,6 @@ export const ROOT_MESSAGE_SCOPE = [
   "siteNav",
   "theme",
   "notFound",
-  // The header's "Scan your CV" button.
-  "cvScan.navCta",
   // The share row's two labels ("copy link" / "copied") — the row sits on the CV result, which
   // the landing hero can show, and on public pages.
   "share",
@@ -64,6 +62,10 @@ export const LANDING_MESSAGE_SCOPE = [
   "benchmark",
   "companies.summary",
   "companies.scoring",
+  // The offer comparison's demo in the tools strip draws the tool's own verdict card, and names
+  // its example offers the way the tool does.
+  "offerCompare.verdict",
+  "offerCompare.offers",
   // The category names only: the statement catalogue's 400 strings stay out of the landing
   // bundle (the mock's chips carry landing copy, and its "most picked" lists are empty).
   "companyReviews.categories",
@@ -76,6 +78,8 @@ export const PUBLIC_MESSAGE_SCOPE = [
   "pair",
   "benchmark",
   "cvScan",
+  // The offer comparison runs in the browser: its form, verdict and month chart.
+  "offerCompare",
   "employmentStatus",
   "companies",
   "companyReviews",
