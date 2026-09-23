@@ -2018,7 +2018,7 @@
       },
       "funnel": {
         "title": "Dönüşüm hunisi",
-        "body": "Başvuruldu → yanıt geldi → görüşme → teklif zincirinde her aşamanın bir öncekinden ne kadarını geçirdiğini gösterir. Ham sayılar birbirinden çok uzak olduğunda (örneğin binlerce başvuru, birkaç görüşme) her çubuk kendi tam genişliğinde çizildiği için küçük aşamalar da okunabilir kalır. Altındaki cümle en büyük düşüşün hangi aşamada olduğunu söyler."
+        "body": "Başvuruldu → yanıt geldi → görüşme → teklif zincirinde her aşamanın bir öncekinden ne kadarını geçirdiğini gösterir. Ham sayılar birbirinden çok uzak olduğunda (örneğin binlerce başvuru, birkaç görüşme) her çubuk kendi tam genişliğinde çizildiği için küçük aşamalar da okunabilir kalır. Altındaki cümle en büyük düşüşün hangi aşamada olduğunu söyler. 10 veya daha fazla başvurun olduğunda kartın başındaki \"Akışını paylaş\" düğmesi, başvurularının nereye gittiğini gösteren bir kart hazırlar: LinkedIn, X, Facebook, Instagram ya da WhatsApp için uygun boyutta indirebilir veya bağlantısını paylaşabilirsin. Kartta yalnızca sayılar ve dönem yer alır; şirket adı ya da pozisyon yoktur."
       },
       "responseTime": {
         "title": "Yanıt süresi",

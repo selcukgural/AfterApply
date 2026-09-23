@@ -2018,7 +2018,7 @@
       },
       "funnel": {
         "title": "Conversion funnel",
-        "body": "Shows how much of each stage made it to the next one along applied → replied → interview → offer. When the raw numbers are far apart (thousands of applications, a handful of interviews), every rail is still drawn at its own full width, so the small stages stay readable. The line underneath names the stage with the steepest drop-off."
+        "body": "Shows how much of each stage made it to the next one along applied → replied → interview → offer. When the raw numbers are far apart (thousands of applications, a handful of interviews), every rail is still drawn at its own full width, so the small stages stay readable. The line underneath names the stage with the steepest drop-off. Once you have 10 or more applications, the \"Share your flow\" button on this card builds a card showing where your applications went: download it at the right size for LinkedIn, X, Facebook, Instagram or WhatsApp, or share its link. The card holds only numbers and the period — no company names or roles."
       },
       "responseTime": {
         "title": "Response time",
