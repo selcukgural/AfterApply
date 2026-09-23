@@ -84,4 +84,25 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     public DateTimeOffset? RemindersPausedFrom { get; set; }
 
     public DateTimeOffset? RemindersPausedUntil { get; set; }
+
+    /// <summary>
+    /// What the bell may tell this account (Account settings › Notifications, DECISIONS.md
+    /// 2026-09-23). All on by default; the migration sets existing rows to true as well. The master
+    /// switch silences the four contribution kinds without losing their individual settings. A
+    /// contribution kind that is off is never written, not merely hidden — turning it back on does
+    /// not bring back the marks made meanwhile. Gmail is the exception: it only hides the rows,
+    /// the scan and its status changes carry on. Columns on the user row, same reasoning as the
+    /// timestamps above.
+    /// </summary>
+    public bool NotifyContributions { get; set; } = true;
+
+    public bool NotifyReviewHelpful { get; set; } = true;
+
+    public bool NotifySalaryHelpful { get; set; } = true;
+
+    public bool NotifyExperienceHelpful { get; set; } = true;
+
+    public bool NotifyBlogCommentHelpful { get; set; } = true;
+
+    public bool NotifyGmailUpdates { get; set; } = true;
 }

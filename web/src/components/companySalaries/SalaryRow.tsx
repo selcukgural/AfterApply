@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { CompanySalaryPublic } from "@/types/api";
 import { formatAmount, formatSalaryMonth, formatSalaryPeriod, occupationName } from "@/lib/companySalaries/salaryDraft";
@@ -14,7 +15,7 @@ import { formatAmount, formatSalaryMonth, formatSalaryPeriod, occupationName } f
  * ground — so a 2012 salary under a 2026 one reads as history, not as a bargain. A row written
  * before the period existed says so and shows the month it was shared instead.
  */
-export function SalaryRow({ entry }: { entry: CompanySalaryPublic }) {
+export function SalaryRow({ entry, footer }: { entry: CompanySalaryPublic; footer?: ReactNode }) {
   const t = useTranslations("companySalaries.panel");
   const tBands = useTranslations("companySalaries.bands");
   const tType = useTranslations("employmentType");
@@ -71,6 +72,7 @@ export function SalaryRow({ entry }: { entry: CompanySalaryPublic }) {
           <span className="text-xs text-gray-400 dark:text-gray-500">{t("noBonus")}</span>
         )}
       </div>
+      {footer ? <div className="basis-full">{footer}</div> : null}
     </article>
   );
 }

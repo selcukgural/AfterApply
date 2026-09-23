@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { CandidateExperiencePublic } from "@/types/api";
 import { EXPERIENCE_CATALOGUE } from "@/lib/candidateExperiences/statementCatalogue";
@@ -14,7 +15,7 @@ import { StatementTag } from "@/components/companyReviews/StatementChip";
  * labels (the full sentence is the tooltip). Nothing here is text the author typed, and nothing
  * points at a person — no title, no month.
  */
-export function ExperienceCard({ experience }: { experience: CandidateExperiencePublic }) {
+export function ExperienceCard({ experience, footer }: { experience: CandidateExperiencePublic; footer?: ReactNode }) {
   const t = useTranslations("candidateExperiences.card");
   const tCategories = useTranslations("candidateExperiences.categories");
   const tStatements = useTranslations("candidateExperiences.statements");
@@ -93,6 +94,7 @@ export function ExperienceCard({ experience }: { experience: CandidateExperience
           ) : null}
         </div>
       ) : null}
+      {footer ? <footer className="flex flex-wrap items-center gap-3 text-xs">{footer}</footer> : null}
     </article>
   );
 }

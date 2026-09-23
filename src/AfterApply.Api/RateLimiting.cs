@@ -188,6 +188,12 @@ public static class RateLimiting
             options.AddPolicy(DependencyInjection.CompanyReviewHelpfulRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.CompanyReviewHelpfulRateLimitPolicy, PartitionKey(httpContext), sizes.CompanyReviewHelpful));
 
+            options.AddPolicy(DependencyInjection.CompanySalaryHelpfulRateLimitPolicy, httpContext =>
+                Partition(DependencyInjection.CompanySalaryHelpfulRateLimitPolicy, PartitionKey(httpContext), sizes.CompanySalaryHelpful));
+
+            options.AddPolicy(DependencyInjection.CandidateExperienceHelpfulRateLimitPolicy, httpContext =>
+                Partition(DependencyInjection.CandidateExperienceHelpfulRateLimitPolicy, PartitionKey(httpContext), sizes.CandidateExperienceHelpful));
+
             options.AddPolicy(DependencyInjection.CompanySalaryWriteRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.CompanySalaryWriteRateLimitPolicy, PartitionKey(httpContext), sizes.CompanySalaryWrite));
 

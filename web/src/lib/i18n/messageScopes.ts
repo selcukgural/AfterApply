@@ -33,6 +33,20 @@ export const ROOT_MESSAGE_SCOPE = [
   // The share row's two labels ("copy link" / "copied") — the row sits on the CV result, which
   // the landing hero can show, and on public pages.
   "share",
+  // The bell's panel in the signed-in header (2026-09-23) — its own lines and the contribution
+  // sentences, not the Notifications page's strings.
+  "notifications.title",
+  "notifications.settingsLink",
+  "notifications.loadError",
+  "notifications.loading",
+  "notifications.panelEmpty",
+  "notifications.seeAll",
+  "notifications.unread",
+  "notifications.contribution",
+  // The status badge on a Gmail row in that panel — the key is dynamic, so the scope test cannot see it.
+  "status",
+  // The "Helpful · N" pill, under reviews, salaries and experiences on the public company page.
+  "helpful",
 ] as const;
 
 // The landing page shows sample dashboard cards, a sample benchmark result and a sample company

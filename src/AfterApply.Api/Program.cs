@@ -173,6 +173,7 @@ app.MapAnalyticsEndpoints();
 app.MapImportEndpoints();
 app.MapCvDocumentEndpoints();
 app.MapReminderEndpoints();
+app.MapNotificationEndpoints();
 app.MapEmailForwardingEndpoints();
 app.MapPersonalAccessTokenEndpoints();
 app.MapExtensionPairingEndpoints();
@@ -211,6 +212,11 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "reminder-scan",
         service => service.ScanAndGenerateRemindersAsync(CancellationToken.None),
         notificationOptions.ScanCronExpression);
+
+    recurringJobManager.AddOrUpdate<IContributionNotificationRetentionService>(
+        "contribution-notification-purge",
+        service => service.PurgeAsync(CancellationToken.None),
+        notificationOptions.ContributionPurgeCronExpression);
 
     recurringJobManager.AddOrUpdate<IProductMetricsService>(
         "product-metrics-snapshot",

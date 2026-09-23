@@ -2,6 +2,7 @@ import type {
   CandidateExperiencePage,
   CandidateExperienceRequest,
   CandidateExperienceViewerState,
+  HelpfulToggleResponse,
   MyCandidateExperience,
   MyCandidateExperiencesResponse,
 } from "@/types/api";
@@ -26,4 +27,8 @@ export const candidateExperiencesApi = {
   remove: (experienceId: string) => apiFetch<void>(`/api/candidate-experiences/${experienceId}`, { method: "DELETE" }),
 
   listMine: () => apiFetch<MyCandidateExperiencesResponse>("/api/candidate-experiences/mine"),
+
+  /** On, then off. The author's own experience is refused with a 400. */
+  toggleHelpful: (experienceId: string) =>
+    apiFetch<HelpfulToggleResponse>(`/api/candidate-experiences/${experienceId}/helpful`, { method: "POST" }),
 };

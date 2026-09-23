@@ -1,6 +1,7 @@
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Common;
 using AfterApply.Application.CompanySalaries.Contracts;
+using AfterApply.Application.CompanyReviews.Contracts;
 
 namespace AfterApply.Application.CompanySalaries;
 
@@ -28,6 +29,10 @@ public interface ICompanySalaryService
     Task<IReadOnlyList<MyCompanySalaryResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
 
     Task<SalaryQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Helpful on, then off — the review toggle. Null when there is no such entry; the
+    /// author's own entry throws <see cref="CompanySalaryNotMarkableException"/>.</summary>
+    Task<HelpfulToggleResponse?> ToggleHelpfulAsync(Guid userId, Guid entryId, CancellationToken cancellationToken);
 }
 
 /// <summary>Admin only — the caller has already passed <c>IAdminAccessService</c>. Lists every
@@ -49,3 +54,8 @@ public sealed class CompanySalaryAlreadyExistsException()
 /// <summary>The request named an occupation that is not in the catalogue (or is retired).</summary>
 public sealed class CompanySalaryOccupationUnknownException()
     : CodedException("COMPANY_SALARY_OCCUPATION_UNKNOWN", "The occupation must be picked from the catalogue.");
+
+/// <summary>Helpful on one's own salary entry — the review rule, for the same reason: a count the
+/// author can raise is not a signal.</summary>
+public sealed class CompanySalaryNotMarkableException()
+    : CodedException("COMPANY_SALARY_NOT_MARKABLE", "Only another person's salary entry can be marked helpful.");

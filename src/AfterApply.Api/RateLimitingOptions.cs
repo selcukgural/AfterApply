@@ -102,6 +102,14 @@ public sealed class RateLimitingOptions
     /// the same reason as the salary one: the contribute page chains the three forms.</summary>
     public FixedWindowPolicy CandidateExperienceWrite { get; init; } = new() { PermitLimit = 5, WindowSeconds = 3600 };
 
+    /// <summary>Per user — the salary helpful toggle (2026-09-23). Same size and reasoning as
+    /// <see cref="CompanyReviewHelpful"/>; its own bucket so a reader going through a company's
+    /// reviews and then its salaries is not cut off halfway.</summary>
+    public FixedWindowPolicy CompanySalaryHelpful { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };
+
+    /// <summary>Per user — the candidate experience helpful toggle. Same as <see cref="CompanySalaryHelpful"/>.</summary>
+    public FixedWindowPolicy CandidateExperienceHelpful { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };
+
     /// <summary>Per user — the blog like toggle. Same size and reasoning as
     /// <see cref="CompanyReviewHelpful"/>: a reader clicking, not a script inflating a count.</summary>
     public FixedWindowPolicy BlogLike { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };

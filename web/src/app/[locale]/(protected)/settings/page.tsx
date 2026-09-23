@@ -14,6 +14,7 @@ import type { CreatedPersonalAccessTokenResponse, PersonalAccessTokenResponse } 
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { NotificationSettingsCard } from "@/components/settings/NotificationSettingsCard";
 
 export default function SettingsPage() {
   const t = useTranslations("settings");
@@ -124,6 +125,9 @@ export default function SettingsPage() {
   return (
     <div className="flex max-w-lg flex-col gap-8">
       <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+
+      {/* `#notifications` is where the bell's gear and the Notifications page link land. */}
+      <NotificationSettingsCard />
 
       {/* `#export` is the target of the "download your data" line on an accepted application. */}
       <section id="export" className="scroll-mt-20 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">

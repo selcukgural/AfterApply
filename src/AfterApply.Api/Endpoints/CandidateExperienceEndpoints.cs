@@ -3,6 +3,7 @@ using AfterApply.Api.Extensions;
 using AfterApply.Api.Filters;
 using AfterApply.Application.CandidateExperiences;
 using AfterApply.Application.CandidateExperiences.Contracts;
+using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Infrastructure;
 
 namespace AfterApply.Api.Endpoints;
@@ -92,6 +93,20 @@ public static class CandidateExperienceEndpoints
             .WithSummary("Delete the caller's own candidate experience")
             .WithDescription("Frees a quota slot. Another account's entry is 404, not 403.")
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        group.MapPost("/candidate-experiences/{experienceId:guid}/helpful", async (Guid experienceId, ClaimsPrincipal user,
+                ICandidateExperienceService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.ToggleHelpfulAsync(user.GetUserId(), experienceId, cancellationToken);
+                return result is null ? Results.NotFound() : Results.Ok(result);
+            })
+            .RequireRateLimiting(DependencyInjection.CandidateExperienceHelpfulRateLimitPolicy)
+            .WithSummary("Toggle 'helpful' on a candidate experience")
+            .WithDescription("Idempotent per account: on, then off. Own experiences are refused with a 400. The first " +
+                             "mark from an account tells the author — how many that day, never who.")
+            .Produces<HelpfulToggleResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status429TooManyRequests);
 
         return app;

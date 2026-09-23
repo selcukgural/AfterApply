@@ -109,6 +109,10 @@ public static class DependencyInjection
     public const string CompanyReviewWriteRateLimitPolicy = "company-review-write";
     public const string CompanyReviewReportRateLimitPolicy = "company-review-report";
     public const string CompanyReviewHelpfulRateLimitPolicy = "company-review-helpful";
+
+    public const string CompanySalaryHelpfulRateLimitPolicy = "company-salary-helpful";
+
+    public const string CandidateExperienceHelpfulRateLimitPolicy = "candidate-experience-helpful";
     public const string CompanyPublicSearchRateLimitPolicy = "company-public-search";
     public const string CompanySalaryWriteRateLimitPolicy = "company-salary-write";
     public const string CandidateExperienceWriteRateLimitPolicy = "candidate-experience-write";
@@ -605,6 +609,9 @@ public static class DependencyInjection
         services.AddScoped<IJobResolver, JobResolver>();
         services.AddScoped<IImportService, ImportService>();
         services.AddScoped<IReminderService, ReminderService>();
+        services.AddScoped<ContributionNotificationWriter>();
+        services.AddScoped<INotificationFeedService, NotificationFeedService>();
+        services.AddScoped<IContributionNotificationRetentionService, ContributionNotificationRetentionService>();
         services.AddScoped<IProductMetricsService, ProductMetricsService>();
         services.AddScoped<IRequestAuditRetentionService, RequestAuditRetentionService>();
         services.AddScoped<ISiteTrafficService, SiteTrafficService>();

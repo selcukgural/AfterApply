@@ -20,7 +20,9 @@ public sealed record CandidateExperiencePublicResponse(
     StageCount? Stages,
     IReadOnlyList<InterviewType> InterviewTypes,
     /// <summary><c>yyyy-Qn</c> of the submission — quarter precision on purpose.</summary>
-    string SubmittedQuarter);
+    string SubmittedQuarter,
+    /// <summary>How many readers marked it helpful (2026-09-23). A count, never who.</summary>
+    int HelpfulCount);
 
 /// <summary>The aggregate a public company page shows. <see cref="Count"/> is always real;
 /// <see cref="AverageOverall"/> and <see cref="Distribution"/> follow the review summary (shown
@@ -109,4 +111,6 @@ public sealed record AdminCandidateExperienceListItemResponse(
 /// company, if any, and how much quota is left — the contribute page's status line.</summary>
 public sealed record CandidateExperienceViewerStateResponse(
     MyCandidateExperienceResponse? OwnEntry,
-    ExperienceQuotaResponse Quota);
+    ExperienceQuotaResponse Quota,
+    /// <summary>The experiences at this company the caller has marked helpful — lights their buttons.</summary>
+    IReadOnlyList<Guid> HelpfulMarkedExperienceIds);

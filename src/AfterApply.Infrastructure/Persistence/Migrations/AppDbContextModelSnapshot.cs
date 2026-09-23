@@ -742,6 +742,31 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.ToTable("CandidateExperienceCategoryRatings", (string)null);
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceHelpfulMark", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExperienceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("MarkedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ExperienceId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("CandidateExperienceHelpfulMarks", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceInterviewType", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1181,6 +1206,31 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("CompanySalaryEntries", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.CompanySalaries.CompanySalaryHelpfulMark", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("MarkedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("EntryId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("CompanySalaryHelpfulMarks", (string)null);
                 });
 
             modelBuilder.Entity("AfterApply.Domain.CvScan.CvScanResult", b =>
@@ -2269,6 +2319,80 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.ToTable("ProductMetricsDailySnapshots", (string)null);
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.Notifications.ContributionNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Day")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("DismissedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("LastEventAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "LastEventAt");
+
+                    b.HasIndex("UserId", "Type", "TargetId", "Day")
+                        .IsUnique();
+
+                    b.ToTable("ContributionNotifications", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Notifications.HelpfulNotificationLedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CountedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("VoterUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountedAt");
+
+                    b.HasIndex("VoterUserId");
+
+                    b.HasIndex("Type", "TargetId", "VoterUserId")
+                        .IsUnique();
+
+                    b.ToTable("HelpfulNotificationLedger", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.Notifications.Reminder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2823,6 +2947,24 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<bool>("NotifyBlogCommentHelpful")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyContributions")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyExperienceHelpful")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyGmailUpdates")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyReviewHelpful")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifySalaryHelpful")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
 
@@ -3275,6 +3417,21 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceHelpfulMark", b =>
+                {
+                    b.HasOne("AfterApply.Domain.CandidateExperiences.CandidateExperience", null)
+                        .WithMany()
+                        .HasForeignKey("ExperienceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperienceInterviewType", b =>
                 {
                     b.HasOne("AfterApply.Domain.CandidateExperiences.CandidateExperience", null)
@@ -3377,6 +3534,21 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("OccupationId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.CompanySalaries.CompanySalaryHelpfulMark", b =>
+                {
+                    b.HasOne("AfterApply.Domain.CompanySalaries.CompanySalaryEntry", null)
+                        .WithMany()
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
@@ -3534,6 +3706,24 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Notifications.ContributionNotification", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Notifications.HelpfulNotificationLedgerEntry", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("VoterUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

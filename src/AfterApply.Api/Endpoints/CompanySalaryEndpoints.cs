@@ -3,6 +3,7 @@ using AfterApply.Api.Extensions;
 using AfterApply.Api.Filters;
 using AfterApply.Application.CompanySalaries;
 using AfterApply.Application.CompanySalaries.Contracts;
+using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Infrastructure;
 
 namespace AfterApply.Api.Endpoints;
@@ -86,6 +87,20 @@ public static class CompanySalaryEndpoints
             .WithSummary("Delete the caller's own salary entry")
             .WithDescription("Frees a quota slot. Another account's entry is 404, not 403.")
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        group.MapPost("/company-salaries/{entryId:guid}/helpful", async (Guid entryId, ClaimsPrincipal user,
+                ICompanySalaryService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.ToggleHelpfulAsync(user.GetUserId(), entryId, cancellationToken);
+                return result is null ? Results.NotFound() : Results.Ok(result);
+            })
+            .RequireRateLimiting(DependencyInjection.CompanySalaryHelpfulRateLimitPolicy)
+            .WithSummary("Toggle 'helpful' on a salary entry")
+            .WithDescription("Idempotent per account: on, then off. Own entries are refused with a 400. The first mark " +
+                             "from an account tells the author — how many that day, never who.")
+            .Produces<HelpfulToggleResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status429TooManyRequests);
 
         return app;

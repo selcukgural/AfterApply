@@ -102,7 +102,12 @@ export default function NotificationsPage() {
   return (
     <div className="flex max-w-2xl flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+          <Link href="/settings#notifications" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+            {t("settingsLink")}
+          </Link>
+        </div>
         {totalCount > 0 &&
           (confirmingClear ? (
             // Inline rather than a dialog: the question is small, and the answer sits where the
@@ -148,7 +153,7 @@ export default function NotificationsPage() {
             {visible.map((n) => (
               <NotificationCard
                 key={n.id}
-                notification={n}
+                item={n}
                 locale={locale}
                 reverted={revertedIds.includes(n.id)}
                 reverting={revertingId === n.id}

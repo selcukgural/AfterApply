@@ -1,10 +1,13 @@
 using AfterApply.Application.CandidateExperiences;
 using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.CompanyReviews;
+using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Domain.CandidateExperiences;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Companies;
+using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -17,7 +20,8 @@ internal sealed class CandidateExperienceService(
     CandidateExperienceQueries queries,
     CompanySlugAllocator slugAllocator,
     HybridCache cache,
-    IOptions<CandidateExperienceOptions> options)
+    IOptions<CandidateExperienceOptions> options,
+    ContributionNotificationWriter notifications)
     : ICandidateExperienceService
 {
     private static readonly HybridCacheEntryOptions GlobalAverageCacheOptions = new()
@@ -52,7 +56,11 @@ internal sealed class CandidateExperienceService(
 
         var own = await ProjectMineAsync(
             dbContext.CandidateExperiences.Where(e => e.UserId == userId && e.CompanyId == companyId), cancellationToken);
-        return new CandidateExperienceViewerStateResponse(own.SingleOrDefault(), await GetQuotaAsync(userId, cancellationToken));
+        var marked = await dbContext.CandidateExperienceHelpfulMarks
+            .Where(m => m.UserId == userId)
+            .Join(dbContext.CandidateExperiences.Where(e => e.CompanyId == companyId), m => m.ExperienceId, e => e.Id, (m, _) => m.ExperienceId)
+            .ToListAsync(cancellationToken);
+        return new CandidateExperienceViewerStateResponse(own.SingleOrDefault(), await GetQuotaAsync(userId, cancellationToken), marked);
     }
 
     public async Task<CandidateExperiencePageResponse?> ListForCompanyAsync(string slug, CandidateExperienceListQuery query, CancellationToken cancellationToken)
@@ -79,7 +87,11 @@ internal sealed class CandidateExperienceService(
                 .OrderByDescending(e => e.SubmittedAt).ThenBy(e => e.Id)
                 .Skip((query.Page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(e => new { e.Id, e.OverallRating, e.Outcome, e.Duration, e.Stages, e.SubmittedAt })
+                .Select(e => new
+                {
+                    e.Id, e.OverallRating, e.Outcome, e.Duration, e.Stages, e.SubmittedAt,
+                    HelpfulCount = dbContext.CandidateExperienceHelpfulMarks.Count(m => m.ExperienceId == e.Id)
+                })
                 .ToListAsync(ct);
             var children = await queries.LoadChildrenAsync(rows.Select(r => r.Id), ct);
 
@@ -90,7 +102,8 @@ internal sealed class CandidateExperienceService(
                 children.Picks[e.Id].Where(p => p.Kind == ReviewStatementKind.Improve).Select(p => p.Key).ToList(),
                 e.Outcome, e.Duration, e.Stages,
                 children.Types[e.Id].OrderBy(t => t).ToList(),
-                CandidateExperienceStats.Quarter(e.SubmittedAt))).ToList();
+                CandidateExperienceStats.Quarter(e.SubmittedAt),
+                e.HelpfulCount)).ToList();
             return new CachedExperiencePage(items, total);
         }, ListCacheOptions, tags: [CacheKeys.Company.Tag(companyId.Value)], cancellationToken: cancellationToken);
 
@@ -223,6 +236,60 @@ internal sealed class CandidateExperienceService(
                 ? await dbContext.CandidateExperiences.AverageAsync(e => (double)e.OverallRating, ct)
                 : CompanyReviewScoring.NeutralAverage,
             GlobalAverageCacheOptions, cancellationToken: cancellationToken);
+
+    public async Task<HelpfulToggleResponse?> ToggleHelpfulAsync(Guid userId, Guid experienceId, CancellationToken cancellationToken)
+    {
+        // Experiences are not moderated: every one is on its company's page, so existing is enough.
+        var experience = await dbContext.CandidateExperiences
+            .Where(e => e.Id == experienceId)
+            .Select(e => new { e.UserId, e.CompanyId })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (experience is null)
+        {
+            return null;
+        }
+
+        if (experience.UserId == userId)
+        {
+            throw new CandidateExperienceNotMarkableException();
+        }
+
+        var existing = await dbContext.CandidateExperienceHelpfulMarks
+            .FirstOrDefaultAsync(m => m.ExperienceId == experienceId && m.UserId == userId, cancellationToken);
+        var marked = existing is null;
+        if (existing is null)
+        {
+            dbContext.CandidateExperienceHelpfulMarks.Add(CandidateExperienceHelpfulMark.Create(experienceId, userId, DateTimeOffset.UtcNow));
+        }
+        else
+        {
+            dbContext.CandidateExperienceHelpfulMarks.Remove(existing);
+        }
+
+        var raced = false;
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+        {
+            // Double-click: the other request already marked it — and told the author. Same end state.
+            marked = true;
+            raced = true;
+        }
+
+        if (marked && !raced)
+        {
+            await notifications.RecordHelpfulAsync(ContributionNotificationType.ExperienceHelpful, experienceId, experience.UserId, userId,
+                cancellationToken);
+        }
+
+        // The cached list pages carry HelpfulCount.
+        await queries.EvictSummaryAsync(experience.CompanyId, cancellationToken);
+
+        var count = await dbContext.CandidateExperienceHelpfulMarks.CountAsync(m => m.ExperienceId == experienceId, cancellationToken);
+        return new HelpfulToggleResponse(marked, count);
+    }
 
     public async Task<ExperienceQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken)
     {

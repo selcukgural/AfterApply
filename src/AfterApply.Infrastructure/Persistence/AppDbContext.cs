@@ -59,6 +59,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<Reminder> Reminders => Set<Reminder>();
 
+    public DbSet<ContributionNotification> ContributionNotifications => Set<ContributionNotification>();
+
+    public DbSet<HelpfulNotificationLedgerEntry> HelpfulNotificationLedger => Set<HelpfulNotificationLedgerEntry>();
+
     public DbSet<EmailConnection> EmailConnections => Set<EmailConnection>();
 
     public DbSet<EmailSuggestion> EmailSuggestions => Set<EmailSuggestion>();
@@ -90,6 +94,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<CompanyReviewReport> CompanyReviewReports => Set<CompanyReviewReport>();
 
     public DbSet<CompanyReviewHelpfulMark> CompanyReviewHelpfulMarks => Set<CompanyReviewHelpfulMark>();
+
+    public DbSet<CompanySalaryHelpfulMark> CompanySalaryHelpfulMarks => Set<CompanySalaryHelpfulMark>();
+
+    public DbSet<CandidateExperienceHelpfulMark> CandidateExperienceHelpfulMarks => Set<CandidateExperienceHelpfulMark>();
 
     public DbSet<CompanyReviewCategoryRating> CompanyReviewCategoryRatings => Set<CompanyReviewCategoryRating>();
 
