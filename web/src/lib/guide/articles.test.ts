@@ -11,6 +11,7 @@ import {
   findArticleByKey,
   findArticleBySlug,
   guidePath,
+  guideImageAt,
   guideRedirectForPath,
   isGuideLocale,
   resolveGuideSlug,
@@ -18,6 +19,7 @@ import {
 import { GUIDE_LOADER_KEYS } from "./content";
 import { HELP_TOPICS } from "@/lib/seo/routes";
 import { formatArticleDate } from "./formatArticleDate";
+import { GUIDE_IMAGES, guideImageSize } from "./images";
 
 const CONTENT_DIR = fileURLToPath(new URL("../../content/guide", import.meta.url));
 
@@ -218,6 +220,75 @@ describe("guide article bodies", () => {
       expect(source.trim().length, file).toBeGreaterThan(1500);
       expect(source, file).not.toContain("Placeholder");
     }
+  });
+});
+
+describe("guide article pictures", () => {
+  const PUBLIC_DIR = fileURLToPath(new URL("../../../public", import.meta.url));
+
+  /** Every `![alt](src "title")` in a body: markdown images, the only way an article shows one. */
+  function bodyImages(source: string): { alt: string; src: string }[] {
+    return [...source.matchAll(/!\[([^\]]*)\]\((\/[^)\s]+)(?:\s+"[^"]*")?\)/g)].map((match) => ({ alt: match[1], src: match[2] }));
+  }
+
+  /** A PNG's size from its IHDR chunk: bytes 16–23, big-endian width then height. */
+  function pngSize(file: string): { width: number; height: number } {
+    const bytes = readFileSync(file);
+    return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+  }
+
+  const bodies = GUIDE_ARTICLES.flatMap((article) =>
+    GUIDE_LOCALES.map((locale) => ({
+      article,
+      locale,
+      file: `${article.key}.${locale}.mdx`,
+      source: readFileSync(join(CONTENT_DIR, `${article.key}.${locale}.mdx`), "utf8"),
+    })),
+  );
+
+  // The share preview, the JSON-LD and the sitemap all use `copy.image`; the reader sees the body.
+  // They have to be the same picture with the same description, or a link preview promises a
+  // picture the page does not explain.
+  it("shows the article's own picture in its body, with the same alt text", () => {
+    for (const { article, locale, file, source } of bodies) {
+      const image = article.copy[locale].image;
+      if (!image) continue;
+      expect(bodyImages(source), file).toContainEqual({ alt: image.alt, src: image.src });
+    }
+  });
+
+  // mdx-components.tsx throws on an image GUIDE_IMAGES does not list — this finds it before the build.
+  it("lists every picture a body uses in GUIDE_IMAGES, with a real alt text", () => {
+    for (const { file, source } of bodies) {
+      for (const { alt, src } of bodyImages(source)) {
+        expect(GUIDE_IMAGES[src], `${file}: ${src}`).toBeDefined();
+        expect(alt.trim().length, `${file}: ${src}`).toBeGreaterThan(20);
+      }
+    }
+  });
+
+  // A size that does not match the file is layout shift all over again, only harder to spot.
+  it("records each picture's real pixel size, and the file is in public/", () => {
+    for (const [src, size] of Object.entries(GUIDE_IMAGES)) {
+      const path = join(PUBLIC_DIR, src);
+      expect(existsSync(path), src).toBe(true);
+      expect(pngSize(path), src).toEqual(size);
+    }
+  });
+
+  it("refuses a picture nobody listed", () => {
+    expect(() => guideImageSize("/guide/nope.png")).toThrow(/not listed/);
+  });
+
+  it("finds an article's picture by its path, and nothing for any other page", () => {
+    const flow = findArticleByKey("application-flow")!;
+    expect(guideImageAt(articlePath(flow, "tr"), "tr")?.src).toBe("/guide/basvuru-akis-karti-ornegi.png");
+    expect(guideImageAt(articlePath(flow, "en"), "en")?.src).toBe("/guide/job-application-flow-card-example.png");
+    // The Turkish slug under /en is not an article there.
+    expect(guideImageAt(articlePath(flow, "tr"), "en")).toBeUndefined();
+    expect(guideImageAt(articlePath(findArticleByKey("response-time")!, "tr"), "tr")).toBeUndefined();
+    expect(guideImageAt("/help/faq", "tr")).toBeUndefined();
+    expect(guideImageAt(articlePath(flow, "tr"), "de")).toBeUndefined();
   });
 });
 

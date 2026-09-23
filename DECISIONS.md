@@ -9123,3 +9123,28 @@ https://claude.ai/artifact/YCJ7rnCzQaxzqm9TSA2R17 — varyant A seçildi; B (bü
   ve dönemi; "Kartta ne var?" açıklaması hem pencerede hem paylaşılan sayfada. Pencere ziyaret sayacına
   **yazmaz** (girişli sayfa kuralı, `browserStorage.test.ts`); paylaşımın etkisi paylaşılan sayfanın
   ziyaretlerinden okunur. Facebook `shareHref`'e eklendi ama herkese açık paylaşım satırında yok.
+
+## Akış kartının SEO'su: "Başvurularım nereye gitti?" rehberi — DECIDED (2026-09-23)
+
+Paylaşılan kart sayfaları bilerek `noindex, follow`; kartın arama değeri tek bir indekslenen sayfada
+toplanıyor.
+
+- **Rehber makalesi** `application-flow`: `/tr/guide/basvurularim-nereye-gitti`,
+  `/en/guide/where-did-my-applications-go`. Hedef "başvurularım nerede" kümesinin *ne oldu* niyeti
+  (kaçı cevapsız, kaçı mülakata döndü); kariyer.net rehberi aynı kümenin *ekran nerede* niyetinde
+  kalıyor, ikisi birbirine bağlanıyor. İçerik ürünün gerçek sınıflandırmasıyla birebir (30 gün eşiği,
+  sütun toplamları, kartta yalnızca sayılar + dönem).
+- **Örnek görsel** Google görsel rehberine göre (developers.google.com/search/docs/appearance/google-images):
+  HTML `<img>`, açıklayıcı dosya adı (`public/guide/basvuru-akis-karti-ornegi.png`,
+  `job-application-flow-card-example.png`), rakamları söyleyen alt metin, altında figcaption, görseli
+  anlatan metnin içinde. Kart görseli (`/og?flow=`) `X-Robots-Tag: noindex` kaldığı için rehberdeki
+  görsel ayrı statik dosya. Rakamlar yerel test kullanıcısının; başlık altında "gerçek bir kişiye ait
+  değildir" yazıyor.
+- **Görselin bağlandığı yerler:** makalenin og:image/twitter:image'ı, Article JSON-LD `image`'ı ve
+  sitemap'te `<image:image>` (Google image sitemap uzantısı) aynı dosya. `copy.image` ile gövdedeki
+  `![alt](src)` aynı alt metni taşımak zorunda (`articles.test.ts`). Markdown görseli boyut taşımadığı
+  için boyutlar `lib/guide/images.ts`'te; listede olmayan görsel build hatası, boyut dosyayla test ediliyor.
+- **İç bağlantılar:** her paylaşılan kart sayfası "Bu kart nasıl okunur" ile rehbere bağlanıyor (kart
+  sayfaları `follow`); kariyer.net ve "kaç başvuru" rehberlerinden de metin içi bağlantı.
+- Yapılmadı, açık: site geneli `max-image-preview:large` (Discover için Google'ın önerdiği robots
+  değeri) — ayrı ve tüm siteyi etkileyen bir karar.

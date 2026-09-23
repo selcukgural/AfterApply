@@ -6464,6 +6464,7 @@
     "legend": {
       "title": "Kartta ne var?",
       "intro": "Her başvuru ilk sütunda bir yere düşer; mülakata çağrılanlar ikinci sütunda devam eder. Şeritlerin kalınlığı başvuru sayısıyla orantılı.",
+      "guideLink": "Bu kart nasıl okunur: her kol ne anlatır",
       "items": {
         "unanswered": "Hiç cevap gelmeyen (30 günden eski) ya da süreci sessizce kapanan başvurular.",
         "awaitingReply": "Son 30 günde yapılan, cevabı henüz beklenen başvurular.",

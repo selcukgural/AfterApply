@@ -1,12 +1,24 @@
+import { isValidElement, type ReactNode } from "react";
 import type { MDXComponents } from "mdx/types";
 import { Link } from "@/i18n/navigation";
+import { guideImageSize } from "@/lib/guide/images";
+
+/**
+ * True for a paragraph markdown made around a lone `![alt](src)`. The image renders as a <figure>,
+ * which may not sit inside a <p> — the browser would split the paragraph and React would warn about
+ * the mismatch — so such a paragraph renders its image and nothing else.
+ */
+function isLoneImage(children: ReactNode): boolean {
+  return isValidElement<{ src?: unknown }>(children) && typeof children.props.src === "string";
+}
 
 /**
  * How the guide articles' markdown renders.
  *
  * Required by `@next/mdx` under the App Router — without this file the loader has no component map
  * and the build fails. Everything here is prose styling for `src/content/guide/*.mdx`; the articles
- * themselves contain no JSX, so this is the only place their look is decided.
+ * themselves contain no JSX, so this is the only place their look is decided — images included:
+ * `![alt](/guide/file.png "caption")` becomes a figure, sized from GUIDE_IMAGES.
  */
 const components: MDXComponents = {
   h2: ({ children }) => (
@@ -17,7 +29,32 @@ const components: MDXComponents = {
   h3: ({ children }) => (
     <h3 className="mt-8 text-lg font-semibold text-gray-900 dark:text-gray-100">{children}</h3>
   ),
-  p: ({ children }) => <p className="mt-4 leading-7 text-gray-700 dark:text-gray-300">{children}</p>,
+  p: ({ children }) =>
+    isLoneImage(children) ? children : <p className="mt-4 leading-7 text-gray-700 dark:text-gray-300">{children}</p>,
+  /**
+   * A plain <img> in the HTML, with its alt text, its real size and the caption right under it —
+   * what Google's image guidance asks for (an HTML image element, descriptive alt, text next to the
+   * picture). Not next/image: these are a handful of static PNGs, and a stable file URL is what the
+   * sitemap's image entry and the share preview point at.
+   */
+  img: ({ src, alt, title }) => {
+    const path = typeof src === "string" ? src : "";
+    const { width, height } = guideImageSize(path);
+    return (
+      <figure className="mt-6">
+        {/* eslint-disable-next-line @next/next/no-img-element -- a static file with a stable URL, see above */}
+        <img
+          src={path}
+          alt={alt ?? ""}
+          width={width}
+          height={height}
+          decoding="async"
+          className="h-auto w-full rounded-xl border border-gray-200 dark:border-gray-800"
+        />
+        {title && <figcaption className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">{title}</figcaption>}
+      </figure>
+    );
+  },
   ul: ({ children }) => (
     <ul className="mt-4 flex list-disc flex-col gap-2 pl-5 leading-7 text-gray-700 dark:text-gray-300">{children}</ul>
   ),

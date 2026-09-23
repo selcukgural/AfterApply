@@ -13,6 +13,10 @@ type GuideLoader = () => Promise<GuideModule>;
  * two lists to the same set of keys.
  */
 const GUIDE_LOADERS: Record<string, Record<GuideLocale, GuideLoader>> = {
+  "application-flow": {
+    tr: () => import("@/content/guide/application-flow.tr.mdx"),
+    en: () => import("@/content/guide/application-flow.en.mdx"),
+  },
   "writing-a-fair-review": {
     tr: () => import("@/content/guide/writing-a-fair-review.tr.mdx"),
     en: () => import("@/content/guide/writing-a-fair-review.en.mdx"),

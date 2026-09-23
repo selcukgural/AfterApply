@@ -152,6 +152,31 @@ describe("guide articles in the sitemap", () => {
   const entries = staticSitemapEntries();
   const urls = entries.map((entry) => entry.url);
 
+  // Google's image sitemap extension: the picture is tied to the page that explains it, by its
+  // absolute URL, and nothing else in the sitemap claims one.
+  it("lists an article's own picture under that article, in its own locale, and nowhere else", () => {
+    const withImages = entries.filter((entry) => entry.images !== undefined);
+    const expected = GUIDE_ARTICLES.flatMap((article) =>
+      (["tr", "en"] as const)
+        .filter((locale) => article.copy[locale].image)
+        .map((locale) => ({
+          url: `${SITE_URL}/${locale}${articlePath(article, locale)}`,
+          images: [`${SITE_URL}${article.copy[locale].image!.src}`],
+        })),
+    );
+
+    expect(expected.length).toBeGreaterThan(0);
+    expect(withImages.map((entry) => ({ url: entry.url, images: entry.images }))).toEqual(expected);
+  });
+
+  it("gives the application-flow article its example card in each language", () => {
+    const tr = entries.find((entry) => entry.url === `${SITE_URL}/tr/guide/basvurularim-nereye-gitti`);
+    const en = entries.find((entry) => entry.url === `${SITE_URL}/en/guide/where-did-my-applications-go`);
+
+    expect(tr?.images).toEqual([`${SITE_URL}/guide/basvuru-akis-karti-ornegi.png`]);
+    expect(en?.images).toEqual([`${SITE_URL}/guide/job-application-flow-card-example.png`]);
+  });
+
   it("lists the index and every article under its own locale's slug", () => {
     expect(urls).toContain(`${SITE_URL}/tr${GUIDE_PATH}`);
     expect(urls).toContain(`${SITE_URL}/en${GUIDE_PATH}`);
@@ -329,10 +354,13 @@ describe("share images", () => {
     expect(existsSync(path.join(process.cwd(), "src/app/[locale]/opengraph-image.tsx"))).toBe(false);
   });
 
+  // …unless the article has a picture of its own (the flow-card guide's example card, 2026-09-23):
+  // then that picture is the share image and the JSON-LD image both, never one of each.
   it("are the image the guide article's JSON-LD names, next to the Organization it references", () => {
     const page = read("src/app/[locale]/(public)/guide/[slug]/page.tsx");
     expect(page).toContain("organizationJsonLd()");
-    expect(page).toMatch(/image: `\$\{SITE_URL\}\$\{ogImagePath\(/);
+    expect(page).toMatch(/image: `\$\{SITE_URL\}\$\{copy\.image\?\.src \?\? ogImagePath\(/);
+    expect(page).toMatch(/image: \{ url: `\$\{SITE_URL\}\$\{image\.src\}`/);
   });
 });
 

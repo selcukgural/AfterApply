@@ -16,6 +16,7 @@ import {
   isGuideLocale,
 } from "@/lib/guide/articles";
 import { loadGuideArticle } from "@/lib/guide/content";
+import { guideImageSize } from "@/lib/guide/images";
 import { SITE_NAME, SITE_URL } from "@/lib/seo/routes";
 import { formatArticleDate } from "@/lib/guide/formatArticleDate";
 
@@ -42,6 +43,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/guide/[s
   if (!article) return {};
 
   const tSection = await getTranslations("metadata.pages");
+  const image = article.copy[locale].image;
   return buildMetadata({
     locale,
     // The slug differs per locale, so the hreflang set has to be built from the article rather
@@ -51,6 +53,8 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/guide/[s
     description: article.copy[locale].description,
     article: { publishedTime: article.published, modifiedTime: article.updated },
     kicker: tSection("guide.title"),
+    // An article with its own picture shares that picture, not the generated title card.
+    ...(image ? { image: { url: `${SITE_URL}${image.src}`, alt: image.alt, ...guideImageSize(image.src) } } : {}),
   });
 }
 
@@ -90,7 +94,7 @@ export default async function GuideArticlePage({ params }: PageProps<"/[locale]/
             description: copy.description,
             datePublished: article.published,
             dateModified: article.updated,
-            image: `${SITE_URL}${ogImagePath(locale, copy.title, tSection("guide.title"))}`,
+            image: `${SITE_URL}${copy.image?.src ?? ogImagePath(locale, copy.title, tSection("guide.title"))}`,
           }),
         )}
       />
