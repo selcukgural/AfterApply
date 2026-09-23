@@ -80,7 +80,7 @@ describe("the tools strip", () => {
 
   it("opens on the extension, and lists it first", () => {
     expect(source).toContain('useState<Tool>("extension")');
-    expect(source).toContain('["extension", "companies", "benchmark", "cv"]');
+    expect(source).toContain('["extension", "companies", "benchmark", "offer", "cv"]');
   });
 
   it("is a tab group, not three links", () => {

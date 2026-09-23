@@ -107,6 +107,9 @@ public static class SiteTrafficNormalizer
         // The about page, translated the same way: /tr/hakkimizda, /en/about.
         "/hakkimizda",
         "/about",
+        // The offer comparison, the same way: /tr/teklif-karsilastirma, /en/offer-comparison.
+        "/teklif-karsilastirma",
+        "/offer-comparison",
         "/companies",
         // The public sector response-rate table (2026-09-22), same shared segment in both locales.
         "/response-rates",

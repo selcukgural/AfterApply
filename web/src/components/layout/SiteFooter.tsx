@@ -4,6 +4,7 @@ import { Logo } from "@/components/layout/Logo";
 import { CHROME_WEB_STORE_URL } from "@/lib/constants/chromeWebStore";
 import { CV_SCAN_PATHS } from "@/lib/cvScan/path";
 import { ABOUT_PATHS } from "@/lib/about/path";
+import { OFFER_COMPARE_PATHS } from "@/lib/offerCompare/path";
 import { CONTACT_EMAIL, SOCIAL_LINKS } from "@/lib/constants/socialLinks";
 import { SocialIcon } from "@/components/layout/SocialIcon";
 import { pathFor, type LocalisedPath } from "@/lib/seo/routes";
@@ -18,13 +19,14 @@ const PRODUCT_LINKS = [
 ] as const;
 
 /** Every public page a visitor can browse, under the same names the header uses. */
-type ExploreLink = { href: LocalisedPath; key: "companies" | "responseRates" | "cvScan" | "benchmark" | "guide" | "blog" | "help" | "about" };
+type ExploreLink = { href: LocalisedPath; key: "companies" | "responseRates" | "cvScan" | "benchmark" | "offerCompare" | "guide" | "blog" | "help" | "about" };
 
 const EXPLORE_LINKS: readonly ExploreLink[] = [
   { href: "/companies", key: "companies" },
-  // The scan's and the about page's slugs are translated; every other page is the same in both.
+  // The scan's, the offer comparison's and the about page's slugs are translated; every other page is the same in both.
   { href: CV_SCAN_PATHS, key: "cvScan" },
   { href: "/benchmark", key: "benchmark" },
+  { href: OFFER_COMPARE_PATHS, key: "offerCompare" },
   { href: "/guide", key: "guide" },
   { href: "/help", key: "help" },
   { href: ABOUT_PATHS, key: "about" },

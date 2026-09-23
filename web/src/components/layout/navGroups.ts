@@ -1,6 +1,7 @@
 import type { ClientConfigResponse } from "@/types/api";
 import { isActivePath } from "@/components/layout/navLink";
 import { cvScanPath } from "@/lib/cvScan/path";
+import { offerComparePath } from "@/lib/offerCompare/path";
 
 /** A `nav.*` catalogue key. */
 export type NavKey =
@@ -20,6 +21,7 @@ export type NavKey =
   | "responseRates"
   | "weeklyJobs"
   | "cvScan"
+  | "offerCompare"
   | "benchmark"
   | "guide"
   | "blog";
@@ -89,6 +91,7 @@ export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
     ...(responseRatesOn ? [{ href: "/response-rates", key: "responseRates" } as NavItem] : []),
     { href: cvScanPath(locale), key: "cvScan" },
     { href: "/benchmark", key: "benchmark" },
+    { href: offerComparePath(locale), key: "offerCompare" },
     { href: "/guide", key: "guide" },
   ];
 

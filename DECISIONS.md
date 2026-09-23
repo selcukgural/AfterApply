@@ -9166,3 +9166,66 @@ sayfası "Önerilen").
 - **Platformların kendi gömülü düğmeleri (Facebook SDK, X widget) kullanılmadı:** üçüncü taraf script,
   çerez ve izleme getirir; CSP ve gizlilik taahhüdüyle çelişir. Düğmeyi biz çiziyoruz, logo ve renk
   platformun.
+
+## İş teklifi karşılaştırma aracı — DECIDED (2026-09-24)
+
+Rakip araştırmasının 6. maddesi. Canvas: https://claude.ai/artifact/2nnjnjLdbmuyzyFrL72upD ("B · Son
+hâli" sayfası; A tablo ve C adım adım "İlk seçenekler"de, reddedildi). Adres `/tr/teklif-karsilastirma`,
+`/en/offer-comparison` (CV tarama gibi çevrilmiş slug: rewrite + proxy yönlendirmesi).
+
+- **Tamamen tarayıcıda:** istek yok, saklama yok, yeniden yüklemede gider — sayfanın vaadi bu. Bu yüzden
+  `RequestAudit`/gizlilik metninde değişiklik gerekmedi (sunucuya girdi gitmiyor). Ziyaret sayacı
+  allowlist'ine iki yol eklendi (`SiteTrafficNormalizer`).
+- **Yerleşim B:** solda sekmeli form (2–3 teklif), sağda karar cümlesi + teklif başına ayrışma çubuğu
+  (net maaş / ikramiye / yan haklar / taralı ofis masrafı), altında tam genişlik "Ay ay eline geçen".
+  Kullanıcı isteği: her ayın tutarı barın **içinde** yazıyor; geniş ekranda 12 dikey bar, telefonda teklif
+  seçici + yatay barlar. İkramiye ayları açık renk ayrı dilim, barlar ikramiye dahil tutarı gösterir.
+- **Hesap (`web/src/lib/offerCompare`):** 2026 ücret tarifesi (Tebliğ 332), kümülatif matrah ay ay,
+  asgari ücret gelir/damga istisnası tarifeden hesaplanıyor (sabit tablo yok), SGK %14+%1 tavan
+  297.270 (9×). Yemek kartı KDV dahil × 22 gün; KDV hariç 300 ₺/gün üstü maaş gibi vergilenir (SGK
+  istisnası 17.04.2026'dan beri 300 — ileriye bakan araç olduğu için güncel kural). İşverenin ödediği
+  özel sağlık + BES maaş gibi vergilenir, özel sağlık GVK 63 sınırında matrahtan düşülür; SGK'ya
+  asgari ücretin %30'unu aşan kısmı girer. Uzaktan çalışma istisnası yok (araştırıldı).
+- **Net teklif:** her ay aynı net; yıl içindeki dilim artışını işveren üstlenir (TR'de net anlaşmanın
+  anlamı). Brüt teklifte Ocak→Aralık düşüş gösteriliyor.
+- **Varsayımlar sayfada yazılı:** ikramiye 1 maaşsa Aralık, 2 ise Haziran+Aralık, fazlası çeyreklik;
+  ofis günü masrafını ziyaretçi girer ((5 − uzaktan gün)/5 × 22 × 12). Sayfa iki örnek teklifle açılır
+  (boş form karşılaştırmayı göstermiyor), "Örneklere dön" var.
+- **Yıllık güncelleme:** `payroll.ts` başındaki adımlar; `payroll.test.ts` 15 Ocak'tan sonra eski yılda
+  kalırsa bilerek kırılır — sayfa "2026 kuralları" diyor, sessizce eski vergiyle hesaplamasın.
+- **Bitiş:** "Maaşını anonim ekle" → `/contribute?tab=salary` (girişsizse login `next` ile); maaş
+  özelliği kapalıyken kart gizli.
+- **Dış doğrulama (2026-09-24):** hesaplama.net, vergi.net ve kariyer.net hesaplayıcılarıyla 33.030 /
+  50.000 / 90.000 / 150.000 / 400.000 brüt ve ikramiyeli senaryo (100.000 + Haziran/Aralık) karşılaştırıldı;
+  her ay 1 kuruş içinde aynı. Sonrasında bordro pratiğine uyuldu: SGK, vergi, istisna ve damga her ay
+  kuruşa yuvarlanıyor (istisna yayımlanan 4.211,33). Yemek kartında SGK istisnası KDV dahil tutarla
+  karşılaştırılıyor (330 ₺'lik kartın 30 ₺'si prime tabi; gelir vergisinde KDV hariç 300). Ocak–16 Nisan
+  arasındaki 158 ₺ SGK sınırı uygulanmıyor — araç ileriye bakıyor. Doğrulanan rakamlar
+  `netSalary.test.ts`'te sabit.
+- **Sorumluluk (kullanıcı isteği, 2026-09-24):** karar cümlesinin hemen altında "Bu bir tahmindir;
+  bordro ya da vergi danışmanlığı değildir" + `#method` bağlantısı; yöntem bölümünde brütten nete 5 adım
+  yazılı, altında kurallar/varsayımlar ve kaynaklar, en sonda kutulu sorumluluk reddi (dahil olmayanlar,
+  işverenden yazılı teyit, mali müşavir, e-kariyerim sorumlu değildir) → Kullanım Koşulları
+  `#liability`. Kullanım Koşulları: hizmet listesine araç eklendi, `liability.offerCompareDisclaimer`
+  maddesi, son güncelleme 24 Eylül 2026. `lib/offerCompare/copy.test.ts` bu metinlerin kalkmasını yakalar.
+- **Aynı dalda bağlı işler (kullanıcı isteği: testler uzadı, özelliğe bağlı işler aynı PR'da):**
+  - Ana sayfa araç şeridi 5 kart, **3 + 2** (canvas "Şerit ve menü" S2): teklif kartı benchmark'tan sonra,
+    "Yeni" rozeti 1 Kasım 2026'ya kadar (hidrasyon güvenli, sunucu rozetsiz çizer). Panelde gerçek
+    hesapla çalışan demo: aracın kendi karar kartı + B teklifinin ay ay barları (bin ₺). 5 yan yana (S1)
+    ve kaydırmalı (S3) reddedildi.
+  - Giriş yapmamış üst menü **"Araçlar" açılır menüsü** (H1): "Kıyaslama" bağlantısının yerine; içinde
+    Kıyaslama, Teklif Karşılaştırma, CV Tarama, her biri tek satır açıklamayla. Telefonda menü içinde
+    "ARAÇLAR" başlıklı düz liste. `siteNav.benchmark` kalktı, adlar `nav.*` ile aynı (test).
+  - Yardım konusu `/help/offer-comparison` (ekran görüntüsü prod build'den), araç sayfasından bağlantı.
+  - **Giriş yapmamış üst menü sığmıyordu (ölçüldü, main'de de var):** tüm bayraklar açıkken 1024px ve
+    üstünde etiketler iki satıra bölünüyor, İngilizcede 1440'ta bile boşluk 0; 768–1023'te sayfa yana
+    taşıyordu. Kap 1152px, içerik sığmıyordu. Canvas "Üst menü sıkışması" P2 + "Üst menü · son hâli" D1:
+    Yanıt oranları Araçlar menüsüne (giriş yapmış menüyle aynı), ayrı "CV'ni Tara" düğmesi kalktı
+    (CV Tarama Araçlar'da; `CvScanNavButton` silindi), dil + tema tek **Tercihler** düğmesinde (🌐 TR +
+    tema simgesi → Dil [Türkçe|English], Tema [Açık|Koyu]; Esc/dışarı tıklama kapatır; giriş yapmışsa
+    hesaba yazar — aynı hook'lar), telefon menüsünde aynı iki seçim satır olarak. Tam menü `lg`
+    (1024) ve üstü, etiketler `whitespace-nowrap`. Ölçüm sonrası: 390–1440 TR/EN hiçbir yerde kırılma
+    ya da taşma yok, 1024'te menü kenarlarında ≥71px. P1 (≥1280 tam menü, CV düğmesi kalır) ve D2 (dil
+    listesi + tema düğmesi) reddedildi; dil/temayı birleştirmenin tek başına yer kazandırmadığı ölçüldü.
+  - Bulunup düzeltilen eski hata: araç şeridi panelinin telefonda örtük grid kolonu eklenti demosunun
+    genişliğine (≈400px) büyüyor, sayfa yana kayıyordu → `grid-cols-1`.

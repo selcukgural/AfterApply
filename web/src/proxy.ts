@@ -7,6 +7,7 @@ import { parseScoreCard } from "./lib/cvScan/scoreCard";
 import { parseFlowCard } from "./lib/flowCard/card";
 import { flowCardOf, flowCardRedirectForPath } from "./lib/flowCard/path";
 import { aboutRedirectForPath } from "./lib/about/path";
+import { offerCompareRedirectForPath } from "./lib/offerCompare/path";
 import { blogSlugRedirectForPath } from "./lib/blog/slugRedirects";
 import { apexRedirectUrl, isFileRequest, stripIndexHtml } from "./lib/http/canonicalHost";
 
@@ -57,6 +58,12 @@ export function proxy(request: NextRequest) {
   const aboutUrl = aboutRedirectForPath(request.nextUrl.pathname);
   if (aboutUrl) {
     return NextResponse.redirect(new URL(`${aboutUrl}${request.nextUrl.search}`, request.url), 301);
+  }
+
+  // The offer comparison, the same way (/tr/teklif-karsilastirma, /en/offer-comparison).
+  const offerCompareUrl = offerCompareRedirectForPath(request.nextUrl.pathname);
+  if (offerCompareUrl) {
+    return NextResponse.redirect(new URL(`${offerCompareUrl}${request.nextUrl.search}`, request.url), 301);
   }
 
   // A blog post whose slug was corrected after it went live: the old address, permanently, to

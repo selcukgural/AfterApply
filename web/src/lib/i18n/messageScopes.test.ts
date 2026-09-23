@@ -69,7 +69,7 @@ function stripComments(source: string): string {
 /**
  * Every full message key (`useTranslations("dashboard")` + `t("funnel.title")` → "dashboard.funnel.title")
  * a client component reachable from the entries asks for, with the files asking. Resolved through
- * the same scanner the catalogue-usage test uses, so a scope may name a branch ("cvScan.navCta")
+ * the same scanner the catalogue-usage test uses, so a scope may name a branch ("help.sidebar")
  * and still be checked key by key.
  */
 function clientMessageKeysFrom(entries: string[]): Map<string, string[]> {
