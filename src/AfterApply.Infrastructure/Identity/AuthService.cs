@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using AfterApply.Application.Notifications.Contracts;
 
 namespace AfterApply.Infrastructure.Identity;
 
@@ -889,9 +890,36 @@ internal sealed class AuthService(
                 c.ParentCommentId, c.Content, c.Status.ToString(), c.CreatedAt, c.EditedAt))
             .ToListAsync(cancellationToken);
 
+        var helpfulMarkedSalaryIds = await dbContext.CompanySalaryHelpfulMarks
+            .Where(m => m.UserId == userId)
+            .Select(m => m.EntryId)
+            .ToListAsync(cancellationToken);
+
+        var helpfulMarkedExperienceIds = await dbContext.CandidateExperienceHelpfulMarks
+            .Where(m => m.UserId == userId)
+            .Select(m => m.ExperienceId)
+            .ToListAsync(cancellationToken);
+
+        var contributionNotifications = await dbContext.ContributionNotifications
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.LastEventAt)
+            .Select(n => new ContributionNotificationExportItem(n.Type, n.TargetId, n.Day, n.Count, n.LastEventAt, n.ReadAt, n.DismissedAt))
+            .ToListAsync(cancellationToken);
+
+        var helpfulMarksCounted = await dbContext.HelpfulNotificationLedger
+            .Where(e => e.VoterUserId == userId)
+            .OrderByDescending(e => e.CountedAt)
+            .Select(e => new HelpfulMarkCountedExportItem(e.Type, e.TargetId, e.CountedAt))
+            .ToListAsync(cancellationToken);
+
+        var notificationPreferences = new NotificationPreferencesResponse(
+            user.NotifyContributions, user.NotifyReviewHelpful, user.NotifySalaryHelpful,
+            user.NotifyExperienceHelpful, user.NotifyBlogCommentHelpful, user.NotifyGmailUpdates);
+
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
             DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks, companySalaries, payments, proEntitlement,
-            candidateExperiences, blogComments);
+            candidateExperiences, blogComments, helpfulMarkedSalaryIds, helpfulMarkedExperienceIds, contributionNotifications,
+            helpfulMarksCounted, notificationPreferences);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

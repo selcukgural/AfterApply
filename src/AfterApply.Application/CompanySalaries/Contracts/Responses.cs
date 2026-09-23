@@ -30,7 +30,9 @@ public sealed record CompanySalaryPublicResponse(
     int? PeriodEndYear = null,
     /// <summary>Whether the row counts as current — <see cref="Domain.CompanySalaries.SalaryPeriods"/>.
     /// The list puts current rows first; the page draws the rest under a "previous periods" line.</summary>
-    bool IsCurrentPeriod = true);
+    bool IsCurrentPeriod = true,
+    /// <summary>How many readers marked it helpful (2026-09-23). A count, never who.</summary>
+    int HelpfulCount = 0);
 
 /// <summary>Per currency, because a median across TRY and EUR rows means nothing, and over the
 /// current rows only — a 2012 salary is not what the company pays. The three figures are null
@@ -103,4 +105,6 @@ public sealed record MySalariesResponse(IReadOnlyList<MyCompanySalaryResponse> I
 /// this company and how much quota is left — the contribute page's "you have N here" line.</summary>
 public sealed record CompanySalaryViewerStateResponse(
     IReadOnlyList<MyCompanySalaryResponse> OwnEntries,
-    SalaryQuotaResponse Quota);
+    SalaryQuotaResponse Quota,
+    /// <summary>The entries at this company the caller has marked helpful — lights their buttons.</summary>
+    IReadOnlyList<Guid> HelpfulMarkedEntryIds);

@@ -45,6 +45,15 @@ export default async function SettingsHelpPage({ params }: PageProps<"/[locale]/
         </Callout>
       </section>
 
+      <section id="notifications" className="flex scroll-mt-20 flex-col gap-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("notifications.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("notifications.body")}</p>
+        <Screenshot src="/help/screenshots/settings-notifications.png" alt={t("notifications.title")} />
+        <Callout variant="info" label={tCommon("note")} title={t("notifications.calloutWho.title")}>
+          {t("notifications.calloutWho.body")}
+        </Callout>
+      </section>
+
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("export.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("export.body")}</p>

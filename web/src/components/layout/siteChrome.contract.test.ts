@@ -43,7 +43,12 @@ describe("the signed-in navbar", () => {
 
   it("shows the two signals as icons with their counts and the primary action as a button", () => {
     expect(navBar).toContain('iconLink("/suggestions"');
-    expect(navBar).toContain('iconLink("/notifications"');
+    // The bell opens a panel since 2026-09-23 (canvas variant A); the page is behind "see all"
+    // and stays a plain link in the mobile drawer.
+    expect(navBar).toContain("<NotificationBell badge={badge} icon={bellIcon} />");
+    const bell = read("components/notifications/NotificationBell.tsx");
+    expect(bell).toContain('href="/notifications"');
+    expect(bell).toContain('href="/settings#notifications"');
     expect(navBar).toContain('href="/applications/new"');
     expect(navBar).toContain("<ProBadge />");
     expect(read("components/layout/NavMenu.tsx")).toContain('aria-haspopup="menu"');

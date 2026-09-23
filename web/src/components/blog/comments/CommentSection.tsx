@@ -90,7 +90,7 @@ export function CommentSection({ postId, initial, signInHref, renderedAt }: Comm
     patchAll((comment) => (comment.id === edited.id ? { ...comment, content: edited.content, editedAt: edited.editedAt } : comment));
 
   return (
-    <section className="flex flex-col gap-8 border-t border-gray-200 pt-8 dark:border-gray-800" aria-labelledby="comments-heading">
+    <section id="comments" className="flex scroll-mt-20 flex-col gap-8 border-t border-gray-200 pt-8 dark:border-gray-800" aria-labelledby="comments-heading">
       <div className="flex flex-col gap-3">
         <h2 id="comments-heading" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {t("heading")}

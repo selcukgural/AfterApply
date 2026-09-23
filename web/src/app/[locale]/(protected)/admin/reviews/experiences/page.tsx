@@ -34,6 +34,8 @@ function asPublic(item: AdminCandidateExperienceListItem): CandidateExperiencePu
     stages: item.stages,
     interviewTypes: item.interviewTypes,
     submittedQuarter: `${at.getUTCFullYear()}-Q${Math.floor(at.getUTCMonth() / 3) + 1}`,
+    // The admin view shows no helpful pill (no footer), so the count is never read.
+    helpfulCount: 0,
   };
 }
 

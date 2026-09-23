@@ -440,6 +440,43 @@ export interface NotificationCountResponse {
   unreadCount: number;
 }
 
+// ---- The bell (contribution notifications + Gmail rows, DECISIONS.md 2026-09-23) ---------------
+
+export type ContributionNotificationType = "ReviewHelpful" | "SalaryHelpful" | "ExperienceHelpful" | "BlogCommentHelpful";
+
+/** "Your … was found helpful `count` times" that day. Never says who — the row does not know. */
+export interface ContributionNotificationResponse {
+  type: ContributionNotificationType;
+  targetId: string;
+  count: number;
+  companyName: string | null;
+  companySlug: string | null;
+  blogPostTitle: string | null;
+  blogPostSlug: string | null;
+  blogPostLanguage: string | null;
+}
+
+export type NotificationFeedKind = "Contribution" | "Email";
+
+/** Exactly one of `contribution` / `email` is set, as `kind` says. */
+export interface NotificationFeedItemResponse {
+  id: string;
+  kind: NotificationFeedKind;
+  occurredAt: string;
+  isRead: boolean;
+  contribution: ContributionNotificationResponse | null;
+  email: EmailNotificationResponse | null;
+}
+
+export interface NotificationPreferences {
+  contributions: boolean;
+  reviewHelpful: boolean;
+  salaryHelpful: boolean;
+  experienceHelpful: boolean;
+  blogCommentHelpful: boolean;
+  gmailUpdates: boolean;
+}
+
 export type PersonalAccessTokenScope = "Full" | "Extension";
 
 export interface PersonalAccessTokenResponse {
@@ -1841,6 +1878,8 @@ export interface CompanySalaryPublic {
   /** Current rows come first in the list and are the only ones in the figures; the rest sit
    *  under a "previous periods" line. */
   isCurrentPeriod: boolean;
+  /** How many readers marked it helpful. A count, never who. */
+  helpfulCount: number;
 }
 
 /** Per currency; the three figures are null below `minimumForStats`. */
@@ -1921,6 +1960,8 @@ export interface MySalariesResponse {
 export interface CompanySalaryViewerState {
   ownEntries: MyCompanySalary[];
   quota: SalaryQuota;
+  /** Entries at this company the reader has marked helpful. */
+  helpfulMarkedEntryIds: string[];
 }
 
 // ---- Candidate experiences ----------------------------------------------------------------------
@@ -1980,6 +2021,8 @@ export interface CandidateExperiencePublic {
   interviewTypes: InterviewType[];
   /** yyyy-Qn */
   submittedQuarter: string;
+  /** How many readers marked it helpful. A count, never who. */
+  helpfulCount: number;
 }
 
 export interface ExperienceCategoryAverage {
@@ -2082,6 +2125,8 @@ export interface MyCandidateExperiencesResponse {
 export interface CandidateExperienceViewerState {
   ownEntry: MyCandidateExperience | null;
   quota: ExperienceQuota;
+  /** Experiences at this company the reader has marked helpful. */
+  helpfulMarkedExperienceIds: string[];
 }
 
 // ---- Blog (2026-09-19) --------------------------------------------------------------------------

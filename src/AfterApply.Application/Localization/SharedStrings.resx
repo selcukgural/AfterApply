@@ -288,6 +288,12 @@
   <data name="COMPANY_REVIEW_NOT_MARKABLE" xml:space="preserve">
     <value>Only another person's published review can be marked as helpful.</value>
   </data>
+  <data name="COMPANY_SALARY_NOT_MARKABLE" xml:space="preserve">
+    <value>Only another person's salary entry can be marked as helpful.</value>
+  </data>
+  <data name="CANDIDATE_EXPERIENCE_NOT_MARKABLE" xml:space="preserve">
+    <value>Only another person's candidate experience can be marked as helpful.</value>
+  </data>
   <data name="COMPANY_REVIEW_NOT_REPORTABLE" xml:space="preserve">
     <value>Only another person's published review can be reported.</value>
   </data>

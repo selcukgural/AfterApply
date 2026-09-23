@@ -1,6 +1,7 @@
 using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Common;
+using AfterApply.Application.CompanyReviews.Contracts;
 
 namespace AfterApply.Application.CandidateExperiences;
 
@@ -29,6 +30,10 @@ public interface ICandidateExperienceService
     Task<IReadOnlyList<MyCandidateExperienceResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
 
     Task<ExperienceQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Helpful on, then off — the review toggle. Null when there is no such experience;
+    /// the author's own one throws <see cref="CandidateExperienceNotMarkableException"/>.</summary>
+    Task<HelpfulToggleResponse?> ToggleHelpfulAsync(Guid userId, Guid experienceId, CancellationToken cancellationToken);
 }
 
 /// <summary>Admin only — the caller has already passed <c>IAdminAccessService</c>. Lists every
@@ -46,3 +51,8 @@ public sealed class CandidateExperienceQuotaReachedException(int limit)
 
 public sealed class CandidateExperienceAlreadyExistsException()
     : CodedException("CANDIDATE_EXPERIENCE_ALREADY_EXISTS", "This account already rated its hiring process at this company; edit that entry instead.");
+
+/// <summary>Helpful on one's own experience — the review rule, for the same reason: a count the
+/// author can raise is not a signal.</summary>
+public sealed class CandidateExperienceNotMarkableException()
+    : CodedException("CANDIDATE_EXPERIENCE_NOT_MARKABLE", "Only another person's candidate experience can be marked helpful.");

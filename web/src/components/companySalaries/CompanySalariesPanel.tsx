@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { CompanyPublicResponse, CompanySalaryPublic } from "@/types/api";
@@ -11,6 +11,8 @@ import { contributeHref } from "@/lib/contribute/contributeState";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
 import { SalaryRow } from "@/components/companySalaries/SalaryRow";
+import { HelpfulPill } from "@/components/contributions/HelpfulPill";
+import { ApiError } from "@/lib/api/httpClient";
 import { SalaryStatsStrip } from "@/components/companySalaries/SalaryStatsStrip";
 
 // Two rows behind the sign-in card, so a visitor sees the shape of what they would get. Sample
@@ -29,6 +31,7 @@ const SAMPLE_ROWS: CompanySalaryPublic[] = [
     periodStartYear: 2024,
     periodEndYear: null,
     isCurrentPeriod: true,
+    helpfulCount: 0,
   },
   {
     id: "sample-2",
@@ -43,6 +46,7 @@ const SAMPLE_ROWS: CompanySalaryPublic[] = [
     periodStartYear: 2023,
     periodEndYear: 2025,
     isCurrentPeriod: true,
+    helpfulCount: 0,
   },
 ];
 
@@ -66,6 +70,19 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
     queryKey: ["companies", company.id, "salaryViewer"],
     queryFn: () => companySalariesApi.viewerState(company.id),
     enabled: isAuthenticated,
+  });
+
+  const queryClient = useQueryClient();
+  const [helpfulError, setHelpfulError] = useState<string | null>(null);
+  const helpful = useMutation({
+    mutationFn: (entryId: string) => companySalariesApi.toggleHelpful(entryId),
+    onMutate: () => setHelpfulError(null),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["companies", company.id, "salaries"] }),
+        queryClient.invalidateQueries({ queryKey: ["companies", company.id, "salaryViewer"] }),
+      ]),
+    onError: (error) => setHelpfulError(error instanceof ApiError ? error.message : t("helpfulError")),
   });
 
   const shareHref = contributeHref("salary", company.slug);
@@ -113,6 +130,8 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
   const list = listQuery.data;
   const own = viewerQuery.data;
   const quotaLeft = own ? Math.max(0, own.quota.limit - own.quota.used) : 0;
+  const marked = new Set(own?.helpfulMarkedEntryIds ?? []);
+  const ownIds = new Set(own?.ownEntries.map((entry) => entry.id) ?? []);
   const pendingStats = list?.stats.filter((s) => s.medianMonthlyNet === null) ?? [];
   // The server puts current rows first, so the "previous periods" line is drawn once, where the
   // first previous row sits — on whichever page that happens to be.
@@ -165,6 +184,12 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
         </div>
       )}
 
+      {helpfulError && (
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          {helpfulError}
+        </p>
+      )}
+
       {list && list.items.length > 0 && (
         <ul className="flex flex-col gap-3">
           {list.items.map((entry, index) => (
@@ -176,7 +201,18 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
                   <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" aria-hidden="true" />
                 </div>
               )}
-              <SalaryRow entry={entry} />
+              <SalaryRow
+                entry={entry}
+                footer={
+                  <HelpfulPill
+                    count={entry.helpfulCount}
+                    marked={marked.has(entry.id)}
+                    busy={helpful.isPending}
+                    own={ownIds.has(entry.id)}
+                    onToggle={() => helpful.mutate(entry.id)}
+                  />
+                }
+              />
             </li>
           ))}
         </ul>

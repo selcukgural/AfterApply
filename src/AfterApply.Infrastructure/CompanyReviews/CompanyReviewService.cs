@@ -2,7 +2,9 @@ using AfterApply.Application.Applications;
 using AfterApply.Application.CompanyReviews;
 using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Companies;
+using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +14,8 @@ internal sealed class CompanyReviewService(
     AppDbContext dbContext,
     ICompanyResolver companyResolver,
     CompanySlugAllocator slugAllocator,
-    CompanyReviewQueries queries) : ICompanyReviewService
+    CompanyReviewQueries queries,
+    ContributionNotificationWriter notifications) : ICompanyReviewService
 {
     public async Task<ResolvedCompanyResponse> ResolveCompanyAsync(Guid userId, string name, CancellationToken cancellationToken)
     {
@@ -166,6 +169,7 @@ internal sealed class CompanyReviewService(
         var existing = await dbContext.CompanyReviewHelpfulMarks
             .FirstOrDefaultAsync(m => m.ReviewId == reviewId && m.UserId == userId, cancellationToken);
         bool marked;
+        var raced = false;
         if (existing is null)
         {
             dbContext.CompanyReviewHelpfulMarks.Add(CompanyReviewHelpfulMark.Create(reviewId, userId, DateTimeOffset.UtcNow));
@@ -183,8 +187,14 @@ internal sealed class CompanyReviewService(
         }
         catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
         {
-            // Double-click: the other request already marked it. Same end state, report it.
+            // Double-click: the other request already marked it — and told the author. Same end state.
             marked = true;
+            raced = true;
+        }
+
+        if (marked && !raced)
+        {
+            await notifications.RecordHelpfulAsync(ContributionNotificationType.ReviewHelpful, reviewId, review.UserId, userId, cancellationToken);
         }
 
         // The public list pages carry HelpfulCount (and "most helpful" is a sort), so a mark is a

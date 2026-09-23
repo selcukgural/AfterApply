@@ -2,11 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { notificationsApi } from "@/lib/api/notifications";
 import { ApiError } from "@/lib/api/httpClient";
 
-export const notificationCountQueryKey = ["email-notifications", "count"] as const;
+export const notificationCountQueryKey = ["notifications", "count"] as const;
 
-// A 404 means EmailForwarding:Enabled is off in this environment, not a real error — retrying
-// would just hammer the endpoint forever, so this opts out of the global retry, same as
-// useSuggestionCount.
+// The bell's badge: contribution rows plus the Gmail rows the user has not switched off. A 404 is
+// kept as "not a real error" (no retry), the rule every badge poll here follows.
 export function useNotificationCount() {
   return useQuery({
     queryKey: notificationCountQueryKey,

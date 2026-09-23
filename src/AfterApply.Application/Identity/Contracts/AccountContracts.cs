@@ -8,6 +8,8 @@ using AfterApply.Domain.Common;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.Notifications;
 using AfterApply.Domain.Feedback;
+using AfterApply.Application.Notifications.Contracts;
+using AfterApply.Domain.Notifications;
 
 namespace AfterApply.Application.Identity.Contracts;
 
@@ -168,7 +170,27 @@ public sealed record AccountExportResponse(
     IReadOnlyList<PaymentOrderExportItem>? Payments = null,
     ProEntitlementExportItem? ProEntitlement = null,
     IReadOnlyList<CandidateExperienceExportItem>? CandidateExperiences = null,
-    IReadOnlyList<BlogCommentExportItem>? BlogComments = null);
+    IReadOnlyList<BlogCommentExportItem>? BlogComments = null,
+    IReadOnlyList<Guid>? HelpfulMarkedSalaryIds = null,
+    IReadOnlyList<Guid>? HelpfulMarkedExperienceIds = null,
+    IReadOnlyList<ContributionNotificationExportItem>? ContributionNotifications = null,
+    IReadOnlyList<HelpfulMarkCountedExportItem>? HelpfulMarksCounted = null,
+    NotificationPreferencesResponse? NotificationPreferences = null);
+
+/// <summary>A "your contribution was found helpful" row as the author holds it: which of their
+/// contributions, which day, how many marks. It never knew who made them, so neither does this.</summary>
+public sealed record ContributionNotificationExportItem(
+    ContributionNotificationType Type,
+    Guid TargetId,
+    DateOnly Day,
+    int Count,
+    DateTimeOffset LastEventAt,
+    DateTimeOffset? ReadAt,
+    DateTimeOffset? DismissedAt);
+
+/// <summary>The first-mark ledger's rows about this account as a reader: a contribution it marked
+/// helpful and was counted for, kept even after an un-mark so a re-mark does not notify twice.</summary>
+public sealed record HelpfulMarkCountedExportItem(ContributionNotificationType Type, Guid TargetId, DateTimeOffset CountedAt);
 
 /// <summary>The author's copy of a blog comment (2026-09-20): the text, the post it is on, its
 /// status and its dates. Reports it received and who found it helpful are other readers' data.</summary>

@@ -13,6 +13,7 @@ import { Logo } from "@/components/layout/Logo";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { displayName } from "@/lib/auth/displayName";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { NavMenu, type NavMenuItem } from "@/components/layout/NavMenu";
 import { ProBadge } from "@/components/layout/ProBadge";
@@ -161,7 +162,7 @@ export function NavBar() {
         <div className="hidden items-center gap-1 md:flex">
           <div className="mr-2">{newApplicationButton(false)}</div>
           {iconLink("/suggestions", t("suggestions"), suggestionCount, inboxIcon)}
-          {iconLink("/notifications", t("notifications"), notificationCount, bellIcon)}
+          <NotificationBell badge={badge} icon={bellIcon} />
           {user && (
             <div className="ml-2">
               <UserMenu

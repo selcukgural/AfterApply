@@ -1,9 +1,12 @@
 using AfterApply.Application.CompanySalaries;
 using AfterApply.Application.CompanySalaries.Contracts;
+using AfterApply.Application.CompanyReviews.Contracts;
 using AfterApply.Application.Occupations.Contracts;
 using AfterApply.Domain.CompanySalaries;
+using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Companies;
+using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -17,6 +20,7 @@ internal sealed class CompanySalaryService(
     HybridCache cache,
     ICompanyCacheInvalidator invalidator,
     IOptions<CompanySalaryOptions> options,
+    ContributionNotificationWriter notifications,
     TimeProvider? timeProvider = null)
     : ICompanySalaryService
 {
@@ -46,7 +50,11 @@ internal sealed class CompanySalaryService(
         var own = await ProjectMineAsync(
             dbContext.CompanySalaryEntries.Where(s => s.UserId == userId && s.CompanyId == companyId).OrderByDescending(s => s.SubmittedAt),
             cancellationToken);
-        return new CompanySalaryViewerStateResponse(own, await GetQuotaAsync(userId, cancellationToken));
+        var marked = await dbContext.CompanySalaryHelpfulMarks
+            .Where(m => m.UserId == userId)
+            .Join(dbContext.CompanySalaryEntries.Where(s => s.CompanyId == companyId), m => m.EntryId, s => s.Id, (m, _) => m.EntryId)
+            .ToListAsync(cancellationToken);
+        return new CompanySalaryViewerStateResponse(own, await GetQuotaAsync(userId, cancellationToken), marked);
     }
 
     public async Task<CompanySalaryPageResponse?> ListForCompanyAsync(Guid companyId, CompanySalaryListQuery query, CancellationToken cancellationToken)
@@ -88,7 +96,8 @@ internal sealed class CompanySalaryService(
                     s.Id, s.YearsOfExperience, s.EmploymentType, s.EmploymentStatus,
                     s.MonthlyNetAmount, s.Currency, s.AnnualBonusAmount, s.SubmittedAt,
                     s.PeriodStartYear, s.PeriodEndYear,
-                    Occupation = new OccupationRefResponse(o.Id, o.Code, o.NameTr, o.NameEn)
+                    Occupation = new OccupationRefResponse(o.Id, o.Code, o.NameTr, o.NameEn),
+                    HelpfulCount = dbContext.CompanySalaryHelpfulMarks.Count(m => m.EntryId == s.Id)
                 })
                 .ToListAsync(ct);
 
@@ -98,7 +107,8 @@ internal sealed class CompanySalaryService(
                 // Month precision on purpose — see CompanySalaryPublicResponse.
                 s.SubmittedAt.ToString("yyyy-MM"),
                 s.PeriodStartYear, s.PeriodEndYear,
-                SalaryPeriods.IsCurrent(s.PeriodStartYear, s.PeriodEndYear, cutoffYear))).ToList();
+                SalaryPeriods.IsCurrent(s.PeriodStartYear, s.PeriodEndYear, cutoffYear),
+                s.HelpfulCount)).ToList();
 
             // The whole company's current amounts, not the page's: a median of page two is not a
             // median, and a median over a 2012 salary is not what the company pays. Bounded by
@@ -223,6 +233,59 @@ internal sealed class CompanySalaryService(
     public async Task<IReadOnlyList<MyCompanySalaryResponse>> ListMineByIdsAsync(Guid userId, IReadOnlyCollection<Guid> ids,
         CancellationToken cancellationToken) =>
         await ProjectMineAsync(dbContext.CompanySalaryEntries.Where(s => s.UserId == userId && ids.Contains(s.Id)), cancellationToken);
+
+    public async Task<HelpfulToggleResponse?> ToggleHelpfulAsync(Guid userId, Guid entryId, CancellationToken cancellationToken)
+    {
+        // Salaries are not moderated: every entry is on its company's page, so existing is enough.
+        var entry = await dbContext.CompanySalaryEntries
+            .Where(s => s.Id == entryId)
+            .Select(s => new { s.UserId, s.CompanyId })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (entry is null)
+        {
+            return null;
+        }
+
+        if (entry.UserId == userId)
+        {
+            throw new CompanySalaryNotMarkableException();
+        }
+
+        var existing = await dbContext.CompanySalaryHelpfulMarks
+            .FirstOrDefaultAsync(m => m.EntryId == entryId && m.UserId == userId, cancellationToken);
+        var marked = existing is null;
+        if (existing is null)
+        {
+            dbContext.CompanySalaryHelpfulMarks.Add(CompanySalaryHelpfulMark.Create(entryId, userId, _timeProvider.GetUtcNow()));
+        }
+        else
+        {
+            dbContext.CompanySalaryHelpfulMarks.Remove(existing);
+        }
+
+        var raced = false;
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+        {
+            // Double-click: the other request already marked it — and told the author. Same end state.
+            marked = true;
+            raced = true;
+        }
+
+        if (marked && !raced)
+        {
+            await notifications.RecordHelpfulAsync(ContributionNotificationType.SalaryHelpful, entryId, entry.UserId, userId, cancellationToken);
+        }
+
+        // The cached list carries HelpfulCount.
+        await invalidator.InvalidateCompanyAsync(entry.CompanyId, cancellationToken);
+
+        var count = await dbContext.CompanySalaryHelpfulMarks.CountAsync(m => m.EntryId == entryId, cancellationToken);
+        return new HelpfulToggleResponse(marked, count);
+    }
 
     public async Task<SalaryQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken)
     {

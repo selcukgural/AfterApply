@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { CompanyPublicResponse } from "@/types/api";
@@ -11,6 +11,8 @@ import { contributeHref } from "@/lib/contribute/contributeState";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
 import { ExperienceCard } from "@/components/candidateExperiences/ExperienceCard";
+import { HelpfulPill } from "@/components/contributions/HelpfulPill";
+import { ApiError } from "@/lib/api/httpClient";
 import { ExperienceSummaryPanel } from "@/components/candidateExperiences/ExperienceSummaryPanel";
 
 /**
@@ -34,12 +36,26 @@ export function CandidateExperiencesPanel({ company }: { company: CompanyPublicR
     enabled: isAuthenticated,
   });
 
+  const queryClient = useQueryClient();
+  const [helpfulError, setHelpfulError] = useState<string | null>(null);
+  const helpful = useMutation({
+    mutationFn: (experienceId: string) => candidateExperiencesApi.toggleHelpful(experienceId),
+    onMutate: () => setHelpfulError(null),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["companies", company.slug, "experiences"] }),
+        queryClient.invalidateQueries({ queryKey: ["companies", company.id, "experienceViewer"] }),
+      ]),
+    onError: (error) => setHelpfulError(error instanceof ApiError ? error.message : t("helpfulError")),
+  });
+
   const shareHref = contributeHref("experience", company.slug);
   const returnTo = `/companies/${company.slug}?tab=experiences`;
   const signInHref = `/login?next=${encodeURIComponent(returnTo)}`;
   const list = listQuery.data;
   const own = viewerQuery.data;
   const ownEntry = own?.ownEntry ?? null;
+  const marked = new Set(own?.helpfulMarkedExperienceIds ?? []);
   const quotaLeft = own ? Math.max(0, own.quota.limit - own.quota.used) : 0;
   const canShare = !isAuthenticated || (own !== undefined && ownEntry === null && quotaLeft > 0);
   const count = list?.total ?? company.candidateExperienceCount ?? 0;
@@ -92,11 +108,29 @@ export function CandidateExperiencesPanel({ company }: { company: CompanyPublicR
         </div>
       )}
 
+      {helpfulError && (
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          {helpfulError}
+        </p>
+      )}
+
       {list && list.items.length > 0 && (
         <ul className="flex flex-col gap-3">
           {list.items.map((entry) => (
             <li key={entry.id}>
-              <ExperienceCard experience={entry} />
+              <ExperienceCard
+                experience={entry}
+                footer={
+                  <HelpfulPill
+                    count={entry.helpfulCount}
+                    marked={marked.has(entry.id)}
+                    busy={helpful.isPending}
+                    own={ownEntry?.id === entry.id}
+                    onToggle={isAuthenticated ? () => helpful.mutate(entry.id) : undefined}
+                    signInHref={signInHref}
+                  />
+                }
+              />
             </li>
           ))}
         </ul>

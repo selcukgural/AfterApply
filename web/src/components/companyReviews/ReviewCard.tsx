@@ -6,6 +6,7 @@ import { categoryMessageKey, findStatement } from "@/lib/companyReviews/statemen
 import { formatSubmittedMonth } from "@/lib/companyReviews/score";
 import { StarRating } from "@/components/companyReviews/StarRating";
 import { StatementTag } from "@/components/companyReviews/StatementChip";
+import { HelpfulPill } from "@/components/contributions/HelpfulPill";
 
 interface ReviewCardProps {
   review: CompanyReviewPublic;
@@ -108,28 +109,13 @@ export function ReviewCard({ review, helpfulMarked, onToggleHelpful, onReport, s
       ) : null}
 
       <footer className="flex flex-wrap items-center gap-3 text-xs">
-        {onToggleHelpful ? (
-          <button
-            type="button"
-            onClick={onToggleHelpful}
-            disabled={busy}
-            aria-pressed={helpfulMarked === true}
-            className={`rounded-full border px-3 py-1 font-medium transition-colors disabled:opacity-60 ${
-              helpfulMarked
-                ? "border-accent bg-accent/10 text-accent-ink"
-                : "border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            }`}
-          >
-            {t("helpful", { count: review.helpfulCount })}
-          </button>
-        ) : (
-          <a
-            href={signInHref}
-            className="rounded-full border border-gray-300 px-3 py-1 font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            {t("helpful", { count: review.helpfulCount })}
-          </a>
-        )}
+        <HelpfulPill
+          count={review.helpfulCount}
+          marked={helpfulMarked === true}
+          busy={busy}
+          onToggle={onToggleHelpful}
+          signInHref={signInHref}
+        />
         {onReport ? (
           <button type="button" onClick={onReport} disabled={busy} className="text-gray-500 underline-offset-2 hover:underline dark:text-gray-400">
             {t("report")}

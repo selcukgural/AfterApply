@@ -9049,3 +9049,46 @@ sonuçların altına kesikli kartlarla ikinci bir bölüm gelir: "Sayfası olan,
   görünebileceği, kaç kişinin/kimin başvurduğunun gösterilmediği; `copy.test.ts` ile sabit.
 - Dizin sorgusundaki katkı birleşimi (`Contributions`) iki arama arasında paylaşılan bir yardımcıya taşındı;
   anonim tip yerine üye-atamalı bir sınıf (EF `Concat` için aynı şekil).
+
+## Katkı bildirimleri ("faydalı bulundu") + bildirim tercihleri — DECIDED (2026-09-23)
+
+**Karar.** Tasarım tuvali: https://claude.ai/artifact/HEhZv7Kq3SyyThZcMgGSV8 — kullanıcı **A** (zilden
+açılan panel), **C1** (anonim, günlük toplu metin) ve **D** (tercihler Hesap Ayarları'nda) seçti; maaş
+ve aday deneyimine "Faydalı" düğmesinin **bu işe dahil** edilmesini istedi. Son hâl tuvalin "Son —"
+satırında. Bir değerlendirme, maaş kaydı, aday deneyimi ya da blog yorumu faydalı bulununca yazar
+uygulama içinde tarih+saatli bir satır görür; blog yazısı beğenisi kapsam dışı (yazarı admin).
+
+- **Kim işaretledi söylenmez (C1).** `ContributionNotifications` satırında oy verenin id'si yok; metin
+  "Trendyol değerlendirmeni 3 kişi faydalı buldu" der. Gerekçe: gizlilik metni zaten "kimin neyi
+  işaretlediğini kimse görmez" diyordu, değerlendirmeler anonim, ve C2 (isimli) okurun kimliğini ilk kez
+  birine açardı. Aynı gün (Europe/Istanbul takvimi) aynı katkıya gelen işaretler tek satırda toplanır
+  (`UserId, Type, TargetId, Day` unique); yeni işaret okunmuş/temizlenmiş satırı yeniden okunmamış yapar.
+- **Toggle spam'i: ilk-işaret defteri.** İşaretler toggle ve geri alma satırı siler; bu yüzden ayrı
+  `HelpfulNotificationLedger (Type, TargetId, VoterUserId)` — bir okurun bir katkıyı yalnızca **ilk**
+  işaretlemesi bildirim üretir. Ledger ekleme + gün satırı upsert'i tek SQL (CTE, `ON CONFLICT`);
+  yarış yok, Redis kilidi gerekmez. Yazma best-effort: işaret kaydedildikten sonra, hata loglanır,
+  okurun isteği düşmez. Tercih kapalıyken de ledger'a yazılır (açınca eski bir işaretin yeniden
+  basılması bildirim olmasın). Blog yorumunda kendi yorumuna oy serbest kaldı; yazıcı kendine bildirimi atlar.
+- **Tercihler `Users` kolonları** (`Notify*`, 6 adet, varsayılan açık; migration mevcut satırları da
+  `true` yapar — scaffold'un `false`'u elle değiştirildi, snapshot'ta DB default yok). Ana anahtar dört
+  katkı türünü susturur ama tek tek seçimleri silmez. Kapalı tür için satır **hiç yazılmaz**. Gmail
+  anahtarı farklı: yalnızca zildeki satırları/rozeti gizler, tarama ve değişiklikleri sürer; gizliyken
+  "tümünü temizle" onlara dokunmaz. Bayrak yok (kullanıcı ayarı yeterli).
+- **Tek akış.** `GET /api/notifications` katkı satırlarını ve Gmail satırlarını zamana göre birleştirir
+  (her kaynaktan `page*pageSize` okunur, sayfa ≤100); `count`, `read`, `{id}/dismiss` (iki türün id'si),
+  `dismiss-all`; `GET/PUT /api/users/me/notification-preferences`. Eski
+  `/api/email-forwarding/notifications*` uçları duruyor; web yenisini okur. Hedefi yayından kalkmış
+  (moderasyon, silinme, yayından çekilen yazı) satır listelenmez ve sayılmaz.
+- **Maaş + deneyim "Faydalı".** `CompanySalaryHelpfulMarks`, `CandidateExperienceHelpfulMarks`
+  (değerlendirme deseni: tekil (hedef, kullanıcı), iki yöne cascade), `POST /api/company-salaries/{id}/helpful`,
+  `POST /api/candidate-experiences/{id}/helpful`, kendi kaydına 400, kendi rate-limit kovaları (60/5 dk).
+  Public yanıtlara yalnızca `HelpfulCount`; viewer state'e işaretli id'ler. Web'de üç kart ortak
+  `HelpfulPill`'i kullanır; kendi kaydında sayı düz yazı.
+- **Saklama:** okunmuş/temizlenmiş satırlar ve ledger 90 gün sonra `contribution-notification-purge`
+  (`Notifications:ContributionRetentionDays`); okunmamış satır silinmez. Hesap silme: satırlar, işaretler
+  ve ledger cascade; yazarın satırları okurun hesabı silinince kalır (okuru zaten bilmiyordu).
+- **Dışa aktarma** yeni işaretleri, alınan bildirimleri, ledger'daki kendi işaretlerini ve tercihleri içerir;
+  `privacy.companyReviews.helpful`, `privacy.blogComments.moderation`, maaş/deneyim `noAuthor` metinleri ve
+  dışa aktarma notları güncellendi. Yardım: Ayarlar sayfasına "Bildirimler" bölümü + `settings-notifications.png`;
+  `settings-extension-token.png` bölüm kırpması olarak yeniden çekildi.
+- **Gerçek zaman yok (bilerek):** rozet mevcut 60 sn polling'le güncellenir; SignalR per-user push ayrı adım.

@@ -1,5 +1,6 @@
 import type {
   CompanySalaryPage,
+  HelpfulToggleResponse,
   CompanySalaryRequest,
   CompanySalaryViewerState,
   MyCompanySalary,
@@ -23,6 +24,10 @@ export const companySalariesApi = {
     apiFetch<MyCompanySalary>(`/api/company-salaries/${entryId}`, { method: "PUT", body: JSON.stringify(request) }),
 
   remove: (entryId: string) => apiFetch<void>(`/api/company-salaries/${entryId}`, { method: "DELETE" }),
+
+  /** On, then off. The author's own entry is refused with a 400. */
+  toggleHelpful: (entryId: string) =>
+    apiFetch<HelpfulToggleResponse>(`/api/company-salaries/${entryId}/helpful`, { method: "POST" }),
 
   listMine: () => apiFetch<MySalariesResponse>("/api/company-salaries/mine"),
 };

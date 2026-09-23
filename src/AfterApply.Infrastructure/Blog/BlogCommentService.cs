@@ -2,6 +2,8 @@ using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Blog;
 using AfterApply.Application.Blog.Contracts;
 using AfterApply.Domain.Blog;
+using AfterApply.Domain.Notifications;
+using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -14,7 +16,10 @@ namespace AfterApply.Infrastructure.Blog;
 /// added on top, for the reader alone. No cache: the lists are one indexed query each and a
 /// comment must show the moment it is approved.
 /// </summary>
-internal sealed class BlogCommentService(AppDbContext dbContext, IOptions<BlogOptions> options) : IBlogCommentService
+internal sealed class BlogCommentService(
+    AppDbContext dbContext,
+    IOptions<BlogOptions> options,
+    ContributionNotificationWriter notifications) : IBlogCommentService
 {
     // ---- the reader's side ---------------------------------------------------------------------
 
@@ -145,7 +150,11 @@ internal sealed class BlogCommentService(AppDbContext dbContext, IOptions<BlogOp
 
     public async Task<BlogCommentHelpfulResponse?> ToggleHelpfulAsync(Guid userId, Guid commentId, CancellationToken cancellationToken)
     {
-        if (!await dbContext.BlogComments.AnyAsync(c => c.Id == commentId && c.Status == BlogCommentStatus.Approved, cancellationToken))
+        var authorUserId = await dbContext.BlogComments
+            .Where(c => c.Id == commentId && c.Status == BlogCommentStatus.Approved)
+            .Select(c => (Guid?)c.UserId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (authorUserId is null)
         {
             return null;
         }
@@ -153,6 +162,7 @@ internal sealed class BlogCommentService(AppDbContext dbContext, IOptions<BlogOp
         var existing = await dbContext.BlogCommentHelpfulVotes
             .FirstOrDefaultAsync(v => v.CommentId == commentId && v.UserId == userId, cancellationToken);
         bool helpful;
+        var raced = false;
         if (existing is null)
         {
             dbContext.BlogCommentHelpfulVotes.Add(BlogCommentHelpfulVote.Create(commentId, userId, DateTimeOffset.UtcNow));
@@ -170,8 +180,16 @@ internal sealed class BlogCommentService(AppDbContext dbContext, IOptions<BlogOp
         }
         catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
         {
-            // Double-click: the other request already voted. Same end state, report it.
+            // Double-click: the other request already voted — and told the author. Same end state.
             helpful = true;
+            raced = true;
+        }
+
+        // Voting on one's own comment is allowed here; the writer is what skips telling oneself.
+        if (helpful && !raced)
+        {
+            await notifications.RecordHelpfulAsync(ContributionNotificationType.BlogCommentHelpful, commentId, authorUserId.Value, userId,
+                cancellationToken);
         }
 
         return new BlogCommentHelpfulResponse(helpful, await HelpfulCountAsync(commentId, cancellationToken));

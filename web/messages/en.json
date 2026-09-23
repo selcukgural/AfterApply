@@ -974,9 +974,36 @@
   },
   "settings": {
     "title": "Account Settings",
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choose what the bell shows. A kind you switch off is never written; switching it back on does not bring back the marks made meanwhile. Who marked something is never shown.",
+      "loadError": "Could not load your notification settings.",
+      "saveError": "Couldn't save that setting. Please try again.",
+      "contributions": {
+        "label": "Contribution notifications",
+        "hint": "When something you shared is found helpful. Off silences every kind below; your choices for each are kept."
+      },
+      "reviewHelpful": {
+        "label": "My company reviews"
+      },
+      "salaryHelpful": {
+        "label": "My salary entries"
+      },
+      "experienceHelpful": {
+        "label": "My candidate experiences"
+      },
+      "blogCommentHelpful": {
+        "label": "My blog comments"
+      },
+      "dailyHint": "Marks on the same day are grouped into one row.",
+      "gmailUpdates": {
+        "label": "When Gmail Scanning updates an application",
+        "hint": "Off hides these rows from the bell; the scan and the changes it makes carry on."
+      }
+    },
     "export": {
       "title": "Export My Data",
-      "description": "Download your applications (with their status history), imports, reminders, CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared, your candidate experiences and your Pro plan payment records as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
+      "description": "Download your applications (with their status history), imports, reminders, CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared, your candidate experiences, the helpful marks you gave, the contribution notifications you received and your notification settings, and your Pro plan payment records as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
       "download": "Download My Data",
       "preparing": "Preparing...",
       "error": "Could not export data."
@@ -1070,7 +1097,7 @@
     "reverted": "Undone",
     "revertError": "Couldn't undo it. Please try again.",
     "revertConflict": "This application's status has changed since, so nothing was undone.",
-    "emptyBody": "When you confirm an email suggestion, or one is applied on its own, the record lands here. Both need Gmail Scanning to be on in the Chrome extension.",
+    "emptyBody": "When a review, salary entry, candidate experience or blog comment of yours is found helpful, you see it here. With Gmail Scanning on, confirming an email suggestion — or one being applied on its own — also leaves a record here.",
     "emptyCta": "Turn on Gmail Scanning",
     "dismiss": "Dismiss notification",
     "dismissError": "Couldn't dismiss the notification. Please try again.",
@@ -1081,7 +1108,24 @@
     "clearAllCancel": "Cancel",
     "clearing": "Clearing…",
     "clearAllError": "Couldn't clear the notifications. Please try again.",
-    "emptyBodyScanning": "Gmail Scanning is already talking to this account. When you confirm a suggestion, or one is applied on its own, the record lands here."
+    "emptyBodyScanning": "Gmail Scanning is already talking to this account. When you confirm a suggestion, one is applied on its own, or a contribution of yours is found helpful, the record lands here.",
+    "settingsLink": "Notification settings",
+    "seeAll": "See all notifications",
+    "panelEmpty": "No notifications yet. When a contribution of yours is found helpful, it shows up here.",
+    "loading": "Loading…",
+    "unread": "unread",
+    "contribution": {
+      "ReviewHelpful": "{count, plural, =1 {Someone} other {# people}} found your review of <b>{company}</b> helpful.",
+      "SalaryHelpful": "{count, plural, =1 {Someone} other {# people}} found your salary entry at <b>{company}</b> helpful.",
+      "ExperienceHelpful": "{count, plural, =1 {Someone} other {# people}} found your candidate experience at <b>{company}</b> helpful.",
+      "BlogCommentHelpful": "{count, plural, =1 {Someone} other {# people}} found your comment on <b>“{post}”</b> helpful."
+    },
+    "contributionLink": {
+      "ReviewHelpful": "Go to the reviews",
+      "SalaryHelpful": "Go to the salaries",
+      "ExperienceHelpful": "Go to the candidate experiences",
+      "BlogCommentHelpful": "Go to the comments"
+    }
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -1237,7 +1281,7 @@
       "anonymous": "Published reviews never show your name, email or account; readers see the ratings, the statements, your relationship to the company and the month it was written. The month rather than the day, on purpose: a date is one more clue to who wrote it.",
       "admin": "A moderator who looks at your review — after a report, or for a review from before the switch — can see the account behind it. That is what makes moderation possible, and it is the only place your identity meets your review.",
       "reports": "If you report someone else's review, the report (reason, your note, the time) is stored against your account and shown to the moderator. The review's author never sees who reported it.",
-      "helpful": "Marking a review helpful is stored as one row per review per account, so it can be undone and cannot be counted twice. Nobody sees who marked what.",
+      "helpful": "Marking a review helpful is stored as one row per review per account, so it can be undone and cannot be counted twice. Nobody sees who marked what — the review's author included: the author is told in the app only how many people found it helpful that day (they can switch this off). So that one person toggling a mark on and off is not counted twice, the fact that an account first marked a contribution is kept for 90 days.",
       "storage": "Reviews, reports and helpful marks are stored in our own database and are not sent to any third party.",
       "deletion": "Deleting your account deletes your reviews, your reports and your helpful marks. Reviews you wrote disappear from the company pages and from the company's score; this is also what your data export contains.",
       "legalBasis": "Lawful basis: your explicit action — you choose to write, report or mark — and, for moderation, legitimate interest: keeping what is published about a named company fair and lawful."
@@ -1259,7 +1303,7 @@
       "what": "Your entry — the occupation you picked from the list, total years of experience, employment type, whether you are a current or former employee, the years of the period you drew the salary in, monthly net salary with its currency, and the annual bonus if any — is stored linked to your account. There is no free text: the occupation comes from a catalogue based on ISCO-08.",
       "whoSees": "Entries are shown only to signed-in users; the public company page says only how many entries there are.",
       "band": "Readers see an experience band (0–1, 2–4, 5–9, 10+) rather than your exact years, and the period of the salary in years rather than a date or a month. Deliberately: together with an occupation, the exact years and date would give away who wrote it at a small company.",
-      "noAuthor": "A published entry never shows your name, e-mail or account, and contains nothing you typed. Only we can see the account behind an entry.",
+      "noAuthor": "A published entry never shows your name, e-mail or account, and contains nothing you typed. Only we can see the account behind an entry. If a reader finds your entry helpful you are told only how many did, never who; and the author of an entry you mark is never told it was you.",
       "storage": "Entries are stored in our own database and are not sent to any third party.",
       "deletion": "You can delete an entry from My contributions at any time. Deleting your account deletes all of them; your data export includes them with the exact years.",
       "legalBasis": "Legal basis: your explicit action — you choose to share."
@@ -1270,7 +1314,7 @@
       "what": "Your entry — your overall rating, the areas you rated, the statements you picked from the ready-made list and, if you answered them, the outcome, length, number of stages and interview types — is stored against your account. There is no free text: every published sentence is one of our own fixed statements.",
       "whoSees": "Entries are shown on the public company page: the ratings, the statements and the process tags. The score, the area averages and the process statistics appear once a company has at least three entries.",
       "quarter": "Readers see the quarter only (2026 Q3), never the day or the month; a job title, an interviewer or a team name is never asked. Deliberately: a company knows whom it interviewed, and a month with a title would give away who wrote it at a small company.",
-      "noAuthor": "A published entry never shows your name, e-mail or account. Only we can see the account behind it.",
+      "noAuthor": "A published entry never shows your name, e-mail or account. Only we can see the account behind it. If a reader finds your entry helpful you are told only how many did, never who; and the author of an entry you mark is never told it was you.",
       "storage": "Entries are kept in our own database; nothing is sent to any third party.",
       "deletion": "You can delete an entry at any time from My contributions. Deleting your account deletes all of them; your data export includes them with their exact dates.",
       "legalBasis": "Legal basis: your explicit action — you choose to share."
@@ -1281,7 +1325,7 @@
       "what": "Your comment is kept as plain text, tied to your account, with when it was written and edited and its moderation status. Every comment is visible only to you until an admin approves it; a comment that is not approved is never published.",
       "name": "A published comment shows your first name and the initial of your last name (for example \"Selin Y.\"); an account with no name shows \"A reader\". Your e-mail address, your account and anything else about you are never shown. Everyone who reads the post sees that name — know this before you write.",
       "noEdit": "An approved comment can be neither changed nor deleted: others have replied to it. While it waits for approval you can edit it from My contributions or under the post.",
-      "moderation": "The admin who reviews your comment sees the account behind it; that is what makes moderation possible, and it is the only place your identity meets your comment. If you report a comment, the report (reason, your note, time) is kept against your account and shown only to admins; the comment's author never sees who reported it. A \"helpful\" mark is kept as one row per comment and account and shown to nobody.",
+      "moderation": "The admin who reviews your comment sees the account behind it; that is what makes moderation possible, and it is the only place your identity meets your comment. If you report a comment, the report (reason, your note, time) is kept against your account and shown only to admins; the comment's author never sees who reported it. A \"helpful\" mark is kept as one row per comment and account and shown to nobody; the comment's author is told only how many people found it helpful.",
       "audit": "Every request that writes, edits, replies to or reports a comment records the connection's IP address in the request log (the \"Request log\" item above). It is never shown anywhere; it is kept only for a legal request or an abuse investigation.",
       "storage": "Comments, reports and helpful marks are kept in our own database and sent to no third party.",
       "deletion": "Deleting your account deletes all your comments — and the replies they received; your data export includes your comments.",
@@ -2209,7 +2253,7 @@
     "settings": {
       "eyebrow": "Settings",
       "title": "Account Settings",
-      "intro": "Settings is where you export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
+      "intro": "Settings is where you choose your notifications, export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "profile": {
         "title": "My Profile",
         "body": "My Profile in the avatar menu shows whose account this is and what it holds: your first and last name (editable), your e-mail address (cannot be changed; sign-in and notifications are tied to it), the date you joined, your plan, your latest reviews and salary entries, and your application, tracked-job and CV counts.",
@@ -2218,9 +2262,17 @@
           "body": "Sign-up does not ask for a name. Add one under My Profile and the top bar and our e-mails address you by it; leave it empty and the part of your e-mail before the @ is shown instead."
         }
       },
+      "notifications": {
+        "title": "Notifications",
+        "body": "The bell in the top bar tells you when a review, salary entry, candidate experience or blog comment of yours is found helpful, and when Gmail Scanning updates one of your applications; every row carries the date and the time. Click the bell for the latest ones — opening it marks them read — and find all of them on the Notifications page. In Settings, the Notifications section switches each kind on or off; the Contribution notifications switch at the top silences all four contribution kinds at once.",
+        "calloutWho": {
+          "title": "Who marked it is never said",
+          "body": "A notification says only how many people found something helpful that day, never who they were. One person removing and re-adding a mark does not create a second notification. A kind you switch off is never written; switching it back on does not bring back the marks made meanwhile."
+        }
+      },
       "export": {
         "title": "Export My Data",
-        "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared and your candidate experiences as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
+        "body": "Download your applications (with their status history), your imports, your reminders, your CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared, your candidate experiences, the helpful marks you gave and the contribution notifications you received as a single JSON file. The CV files themselves are not in it; you download those from the My CVs page."
       },
       "extension": {
         "title": "Browser extension connection",
@@ -3692,7 +3744,6 @@
       "improvable": "Could be better",
       "legacyNote": "Written in the earlier free-text format. The text is no longer shown; the ratings still count toward the score.",
       "legacySalaryAndBenefits": "Salary & benefits",
-      "helpful": "{count, plural, =0 {Helpful} =1 {Helpful · 1} other {Helpful · #}}",
       "report": "Report this review"
     },
     "form": {
@@ -4833,7 +4884,8 @@
       "lockedTitle": "Salary entries are for signed-in users",
       "lockedBody": "{company} has {count, plural, =0 {no salary entries yet} =1 {1 anonymous salary entry} other {# anonymous salary entries}}. Sign in to see them and add your own.",
       "signIn": "Sign in",
-      "register": "Register"
+      "register": "Register",
+      "helpfulError": "Couldn't save the mark. Please try again."
     },
     "stats": {
       "median": "Median monthly net",
@@ -5933,7 +5985,8 @@
       "loadError": "Candidate experiences could not be loaded. Please try again.",
       "empty": "No candidate experience has been shared for this company yet.",
       "emptyCta": "Be the first to share",
-      "cta": "Applied here? Rate the process — anonymously, in a minute."
+      "cta": "Applied here? Rate the process — anonymously, in a minute.",
+      "helpfulError": "Couldn't save the mark. Please try again."
     },
     "summary": {
       "scoreLabel": "Score {score} out of 5",
@@ -6374,5 +6427,9 @@
     },
     "error": "The table could not be loaded right now.",
     "subRateRule": "Kept promise and told of rejection come from users' optional answers; they show “—” until 5 answers from at least 3 people are in."
+  },
+  "helpful": {
+    "label": "{count, plural, =0 {Helpful} other {Helpful · #}}",
+    "ownHint": "Yours — you can't mark your own."
   }
 }

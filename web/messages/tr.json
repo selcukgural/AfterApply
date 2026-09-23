@@ -974,9 +974,36 @@
   },
   "settings": {
     "title": "Hesap Ayarları",
+    "notifications": {
+      "title": "Bildirimler",
+      "description": "Zilde neyin görüneceğini seç. Kapattığın tür için bildirim hiç oluşturulmaz; tekrar açtığında aradaki işaretler geri gelmez. Kimin işaretlediği hiçbir zaman gösterilmez.",
+      "loadError": "Bildirim ayarları yüklenemedi.",
+      "saveError": "Ayar kaydedilemedi. Lütfen tekrar dene.",
+      "contributions": {
+        "label": "Katkı bildirimleri",
+        "hint": "Paylaştığın bir şey faydalı bulunduğunda. Kapatırsan alttaki türlerin hepsi susar; tek tek seçimlerin saklanır."
+      },
+      "reviewHelpful": {
+        "label": "Şirket değerlendirmem"
+      },
+      "salaryHelpful": {
+        "label": "Maaş bilgim"
+      },
+      "experienceHelpful": {
+        "label": "Aday deneyimim"
+      },
+      "blogCommentHelpful": {
+        "label": "Blog yorumum"
+      },
+      "dailyHint": "Aynı güne düşen işaretler tek satırda toplanır.",
+      "gmailUpdates": {
+        "label": "Gmail taraması başvurumu güncellediğinde",
+        "hint": "Kapatırsan bu satırlar zilde görünmez; tarama ve yaptığı değişiklikler aynen sürer."
+      }
+    },
     "export": {
       "title": "Verilerimi Dışa Aktar",
-      "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle), paylaştığınız maaş bilgilerini, aday deneyimlerinizi ve Pro plan ödeme kayıtlarınızı tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
+      "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle), paylaştığınız maaş bilgilerini, aday deneyimlerinizi, verdiğiniz faydalı işaretlerini, aldığınız katkı bildirimlerini, bildirim ayarlarınızı ve Pro plan ödeme kayıtlarınızı tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
       "download": "Verilerimi İndir",
       "preparing": "Hazırlanıyor...",
       "error": "Veriler dışa aktarılamadı."
@@ -1070,7 +1097,7 @@
     "reverted": "Geri alındı",
     "revertError": "Geri alınamadı. Lütfen tekrar dene.",
     "revertConflict": "Bu başvurunun durumu o zamandan beri değişmiş, geri alınmadı.",
-    "emptyBody": "Bir e-posta önerisini onayladığında ya da bir öneri kendiliğinden uygulandığında burada kaydı kalır. Bunlar için Chrome eklentisinde Gmail Taraması'nın açık olması gerekir.",
+    "emptyBody": "Bir değerlendirmen, maaş bilgin, aday deneyimin ya da blog yorumun faydalı bulunduğunda burada görürsün. Gmail Taraması açıksa bir e-posta önerisini onayladığında ya da bir öneri kendiliğinden uygulandığında da kaydı burada kalır.",
     "emptyCta": "Gmail Taraması'nı aç",
     "dismiss": "Bildirimi kaldır",
     "dismissError": "Bildirim kaldırılamadı. Lütfen tekrar dene.",
@@ -1081,7 +1108,24 @@
     "clearAllCancel": "Vazgeç",
     "clearing": "Temizleniyor…",
     "clearAllError": "Bildirimler temizlenemedi. Lütfen tekrar dene.",
-    "emptyBodyScanning": "Gmail Taraması bu hesapla çalışıyor. Bir öneriyi onayladığında ya da bir öneri kendiliğinden uygulandığında kaydı burada kalır."
+    "emptyBodyScanning": "Gmail Taraması bu hesapla çalışıyor. Bir öneriyi onayladığında ya da bir öneri kendiliğinden uygulandığında, ya da bir katkın faydalı bulunduğunda kaydı burada kalır.",
+    "settingsLink": "Bildirim ayarları",
+    "seeAll": "Tüm bildirimleri gör",
+    "panelEmpty": "Henüz bildirim yok. Bir katkın faydalı bulunduğunda burada görünür.",
+    "loading": "Yükleniyor…",
+    "unread": "okunmadı",
+    "contribution": {
+      "ReviewHelpful": "<b>{company}</b> değerlendirmeni {count, plural, =1 {biri} other {# kişi}} faydalı buldu.",
+      "SalaryHelpful": "<b>{company}</b> maaş bilgini {count, plural, =1 {biri} other {# kişi}} faydalı buldu.",
+      "ExperienceHelpful": "<b>{company}</b> aday deneyimini {count, plural, =1 {biri} other {# kişi}} faydalı buldu.",
+      "BlogCommentHelpful": "<b>“{post}”</b> yazısındaki yorumunu {count, plural, =1 {biri} other {# kişi}} faydalı buldu."
+    },
+    "contributionLink": {
+      "ReviewHelpful": "Değerlendirmelere git",
+      "SalaryHelpful": "Maaşlara git",
+      "ExperienceHelpful": "Aday deneyimlerine git",
+      "BlogCommentHelpful": "Yorumlara git"
+    }
   },
   "privacy": {
     "title": "Gizlilik Politikası",
@@ -1237,7 +1281,7 @@
       "anonymous": "Yayımlanan değerlendirmeler adını, e-postanı ya da hesabını asla göstermez; okuyucular puanları, maddeleri, şirketle ilişkini ve yazıldığı ayı görür. Gün değil ay, bilerek: tarih kimin yazdığına dair bir ipucu daha olurdu.",
       "admin": "Değerlendirmene bakan bir moderatör — bir şikayetten sonra ya da geçiş öncesi bir değerlendirme için — arkasındaki hesabı görebilir. Moderasyonu mümkün kılan budur ve kimliğinin değerlendirmenle buluştuğu tek yerdir.",
       "reports": "Başkasının değerlendirmesini bildirirsen, bildirim (gerekçe, notun, zaman) hesabına bağlı olarak saklanır ve moderatöre gösterilir. Değerlendirmenin yazarı kimin bildirdiğini asla görmez.",
-      "helpful": "Bir değerlendirmeyi faydalı olarak işaretlemek, değerlendirme ve hesap başına tek satır olarak saklanır; böylece geri alınabilir ve iki kez sayılamaz. Kimin neyi işaretlediğini kimse görmez.",
+      "helpful": "Bir değerlendirmeyi faydalı olarak işaretlemek, değerlendirme ve hesap başına tek satır olarak saklanır; böylece geri alınabilir ve iki kez sayılamaz. Kimin neyi işaretlediğini kimse görmez — değerlendirmenin yazarı da: yazara uygulama içinde yalnızca o gün kaç kişinin faydalı bulduğu bildirilir (ayarlardan kapatılabilir). Aynı kişinin açıp kapatıp tekrar işaretlemesi iki kez sayılmasın diye, bir hesabın bir katkıyı ilk işaretlediği kayıt 90 gün tutulur.",
       "storage": "Değerlendirmeler, bildirimler ve faydalı işaretleri kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Hesabını silmek değerlendirmelerini, bildirimlerini ve faydalı işaretlerini siler. Yazdığın değerlendirmeler şirket sayfalarından ve şirketin puanından kalkar; veri dışa aktarımın da bunları içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — yazmayı, bildirmeyi veya işaretlemeyi sen seçersin — ve moderasyon için meşru menfaat: adı geçen bir şirket hakkında yayımlananların adil ve hukuka uygun kalması."
@@ -1259,7 +1303,7 @@
       "what": "Kaydın — listeden seçtiğin meslek, toplam tecrübe yılın, çalışma şeklin, mevcut/eski çalışan olduğun, maaşı aldığın dönemin yılları, aylık net maaşın ve para birimi, varsa yıllık primin — hesabına bağlı saklanır. Serbest metin yoktur: meslek, ISCO-08'e dayanan hazır bir katalogdan seçilir.",
       "whoSees": "Kayıtlar yalnızca giriş yapmış kullanıcılara gösterilir; herkese açık şirket sayfası yalnızca kaç kayıt olduğunu söyler.",
       "band": "Okuyucular tam tecrübe yılını değil bir bant (0–1, 2–4, 5–9, 10+) ve maaşın dönemini gün ya da ay olarak değil yıl olarak görür. Bilerek: meslekle birlikte tam yıl ve tam tarih küçük bir şirkette kimin yazdığını ele verirdi.",
-      "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez; içinde senin yazdığın hiçbir metin de yoktur. Kaydın arkasındaki hesabı yalnızca biz görürüz.",
+      "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez; içinde senin yazdığın hiçbir metin de yoktur. Kaydın arkasındaki hesabı yalnızca biz görürüz. Bir okur kaydını faydalı bulursa sana yalnızca kaç kişinin bulduğu bildirilir, kim olduğu değil; senin işaretlediğin kayıtların yazarına da senin kim olduğun söylenmez.",
       "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Kaydı Katkılarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam yılıyla içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
@@ -1270,7 +1314,7 @@
       "what": "Kaydın — genel puanın, puanladığın alanlar, hazır listeden seçtiğin maddeler ve yanıtladıysan sonuç, süre, aşama sayısı ve görüşme türleri — hesabına bağlı saklanır. Serbest metin yoktur: yayımlanan her cümle bizim yazdığımız sabit maddelerden biridir.",
       "whoSees": "Kayıtlar herkese açık şirket sayfasında gösterilir: puanlar, maddeler ve süreç etiketleri. Puan, alan ortalamaları ve süreç istatistiği bir şirkette en az üç kayıt toplanınca görünür.",
       "quarter": "Okuyucular günü ya da ayı değil yalnızca çeyreği görür (2026 Ç3 gibi); pozisyon, görüşmeci ya da ekip adı hiç sorulmaz. Bilerek: şirket kimle görüştüğünü bilir, ay ve pozisyon küçük bir şirkette kimin yazdığını ele verirdi.",
-      "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez. Kaydın arkasındaki hesabı yalnızca biz görürüz.",
+      "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez. Kaydın arkasındaki hesabı yalnızca biz görürüz. Bir okur kaydını faydalı bulursa sana yalnızca kaç kişinin bulduğu bildirilir, kim olduğu değil; senin işaretlediğin kayıtların yazarına da senin kim olduğun söylenmez.",
       "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Kaydı Katkılarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam tarihiyle içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
@@ -1281,7 +1325,7 @@
       "what": "Yorumun düz metin olarak, yazıldığı ve düzenlendiği zamanla ve moderasyon durumuyla birlikte hesabına bağlı saklanır. Her yorum bir yönetici onaylayana kadar yalnızca sana görünür; onaylanmayan yorum hiç yayımlanmaz.",
       "name": "Yayımlanan yorum, adının ilk kısmı ve soyadının baş harfiyle görünür (örneğin \"Selin Y.\"); hesabında ad yoksa \"Bir okuyucu\" yazar. E-posta adresin, hesabın ya da başka bir bilgin hiçbir zaman gösterilmez. Yorumunu okuyan herkes bu adı görür — yazmadan önce bunu bil.",
       "noEdit": "Onaylanmış bir yorum değiştirilemez ve silinemez: başkaları ona yanıt vermiştir. Onay beklerken Katkılarım sayfasından ya da yazının altından düzenleyebilirsin.",
-      "moderation": "Yorumuna bakan yönetici arkasındaki hesabı görür; moderasyonu mümkün kılan budur ve kimliğinin yorumunla buluştuğu tek yerdir. Bir yorumu bildirirsen bildirim (gerekçe, notun, zaman) hesabına bağlı saklanır ve yalnızca yöneticiye gösterilir; yorumun yazarı kimin bildirdiğini görmez. \"Faydalı\" işaretin yorum ve hesap başına tek satır olarak saklanır, kimseye gösterilmez.",
+      "moderation": "Yorumuna bakan yönetici arkasındaki hesabı görür; moderasyonu mümkün kılan budur ve kimliğinin yorumunla buluştuğu tek yerdir. Bir yorumu bildirirsen bildirim (gerekçe, notun, zaman) hesabına bağlı saklanır ve yalnızca yöneticiye gösterilir; yorumun yazarı kimin bildirdiğini görmez. \"Faydalı\" işaretin yorum ve hesap başına tek satır olarak saklanır, kimseye gösterilmez; yorumun yazarına yalnızca kaç kişinin faydalı bulduğu bildirilir.",
       "audit": "Yorum yazdığın, düzenlediğin, yanıtladığın ya da bildirdiğin her istekte bağlantının IP adresi işlem kayıtlarına yazılır (yukarıdaki \"İşlem kayıtları\" maddesi). Hiçbir yerde gösterilmez; yalnızca hukuki bir talep ya da kötüye kullanım incelemesi için tutulur.",
       "storage": "Yorumlar, bildirimler ve faydalı işaretleri kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Hesabını silmek tüm yorumlarını — ve onlara verilmiş yanıtları — siler; veri dışa aktarımın yorumlarını içerir.",
@@ -2209,7 +2253,7 @@
     "settings": {
       "eyebrow": "Ayarlar",
       "title": "Hesap Ayarları",
-      "intro": "Ayarlar sayfasından verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir, Pro plan ödemelerinizi görüp iade talebi açabilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
+      "intro": "Ayarlar sayfasından bildirimlerinizi seçebilir, verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir, Pro plan ödemelerinizi görüp iade talebi açabilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "profile": {
         "title": "Profilim",
         "body": "Avatar menüsündeki Profilim, hesabın kime ait olduğunu ve neler bıraktığını gösterir: adın ve soyadın (düzenlenebilir), e-posta adresin (değiştirilemez; giriş ve bildirimler ona bağlı), üye olduğun tarih, planın, son değerlendirme ve maaş kayıtların ile başvuru, takip listesi ve CV sayıların.",
@@ -2218,9 +2262,17 @@
           "body": "Kayıt olurken ad sorulmaz. Profilim'de eklersen üst çubukta ve e-postalarda adınla hitap ederiz; boş bırakırsan e-posta adresinin @ öncesi görünür."
         }
       },
+      "notifications": {
+        "title": "Bildirimler",
+        "body": "Üst çubuktaki zil, bir değerlendirmeniz, maaş bilginiz, aday deneyiminiz ya da blog yorumunuz faydalı bulunduğunda ve Gmail Taraması bir başvurunuzu güncellediğinde size haber verir; her satırda tarih ve saat yazar. Zile tıklayınca son bildirimler açılır, açtığınız anda okunmuş sayılır; tümü Bildirimler sayfasındadır. Ayarlar'daki Bildirimler bölümünden her türü ayrı ayrı açıp kapatabilirsiniz; üstteki Katkı bildirimleri anahtarı dört katkı türünü birden susturur.",
+        "calloutWho": {
+          "title": "Kimin işaretlediği söylenmez",
+          "body": "Bildirim yalnızca o gün kaç kişinin faydalı bulduğunu söyler, kim olduklarını değil. Aynı kişinin işareti kaldırıp yeniden koyması ikinci bir bildirim oluşturmaz. Kapattığınız bir tür için bildirim hiç oluşturulmaz; tekrar açtığınızda aradaki işaretler gelmez."
+        }
+      },
       "export": {
         "title": "Verilerimi Dışa Aktar",
-        "body": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle), paylaştığınız maaş bilgilerini ve aday deneyimlerinizi tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi bu dosyada yer almaz; onları CV'lerim sayfasından indirirsiniz."
+        "body": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle), paylaştığınız maaş bilgilerini, aday deneyimlerinizi, verdiğiniz faydalı işaretlerini ve aldığınız katkı bildirimlerini tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi bu dosyada yer almaz; onları CV'lerim sayfasından indirirsiniz."
       },
       "extension": {
         "title": "Tarayıcı eklentisi bağlantısı",
@@ -3692,7 +3744,6 @@
       "improvable": "Geliştirilebilir",
       "legacyNote": "Önceki serbest metinli biçimde yazıldı. Metni artık gösterilmiyor; puanları şirket puanına katılmaya devam ediyor.",
       "legacySalaryAndBenefits": "Maaş ve yan haklar",
-      "helpful": "{count, plural, =0 {Faydalı} =1 {Faydalı · 1} other {Faydalı · #}}",
       "report": "Bu değerlendirmeyi bildir"
     },
     "form": {
@@ -4833,7 +4884,8 @@
       "lockedTitle": "Maaş bilgileri giriş yapmış kullanıcılara açık",
       "lockedBody": "{company} için {count, plural, =0 {henüz paylaşılmış maaş yok} =1 {1 anonim maaş kaydı var} other {# anonim maaş kaydı var}}. Görmek ve kendi kaydını eklemek için giriş yap.",
       "signIn": "Giriş yap",
-      "register": "Kayıt ol"
+      "register": "Kayıt ol",
+      "helpfulError": "İşaret kaydedilemedi. Lütfen tekrar dene."
     },
     "stats": {
       "median": "Medyan aylık net",
@@ -5933,7 +5985,8 @@
       "loadError": "Aday deneyimleri yüklenemedi. Lütfen tekrar dene.",
       "empty": "Bu şirket için henüz aday deneyimi paylaşılmadı.",
       "emptyCta": "İlk paylaşan sen ol",
-      "cta": "Bu şirkete başvurdun mu? Süreci puanla — anonim, bir dakikada."
+      "cta": "Bu şirkete başvurdun mu? Süreci puanla — anonim, bir dakikada.",
+      "helpfulError": "İşaret kaydedilemedi. Lütfen tekrar dene."
     },
     "summary": {
       "scoreLabel": "Puan {score} / 5",
@@ -6374,5 +6427,9 @@
     },
     "error": "Tablo şu an yüklenemedi.",
     "subRateRule": "Sözünü tutma ve reddi bildirme, kullanıcıların isteğe bağlı cevaplarından hesaplanır; en az 3 kişiden 5 cevap birikmeden “—” yazar."
+  },
+  "helpful": {
+    "label": "{count, plural, =0 {Faydalı} other {Faydalı · #}}",
+    "ownHint": "Senin paylaşımın — kendi paylaşımını işaretleyemezsin."
   }
 }

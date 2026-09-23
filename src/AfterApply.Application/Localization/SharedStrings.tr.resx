@@ -288,6 +288,12 @@
   <data name="COMPANY_REVIEW_NOT_MARKABLE" xml:space="preserve">
     <value>Yalnızca başkasının yayımlanmış değerlendirmesi faydalı olarak işaretlenebilir.</value>
   </data>
+  <data name="COMPANY_SALARY_NOT_MARKABLE" xml:space="preserve">
+    <value>Yalnızca başka birinin paylaştığı maaş bilgisi faydalı olarak işaretlenebilir.</value>
+  </data>
+  <data name="CANDIDATE_EXPERIENCE_NOT_MARKABLE" xml:space="preserve">
+    <value>Yalnızca başka birinin paylaştığı aday deneyimi faydalı olarak işaretlenebilir.</value>
+  </data>
   <data name="COMPANY_REVIEW_NOT_REPORTABLE" xml:space="preserve">
     <value>Yalnızca başkasının yayımlanmış değerlendirmesi bildirilebilir.</value>
   </data>
