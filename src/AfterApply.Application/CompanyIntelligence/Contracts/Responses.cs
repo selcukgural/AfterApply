@@ -1,4 +1,5 @@
 using AfterApply.Application.ResponseRates.Contracts;
+using AfterApply.Application.SilenceReports;
 using AfterApply.Domain.Benchmark;
 using AfterApply.Domain.Companies;
 
@@ -65,7 +66,12 @@ public sealed record CompanyIntelligenceResponse(
     // Null when the company's industry could not be read; see CompanySectorComparison.
     CompanySectorComparison? SectorComparison,
     // Printed, not hard-coded, so the page's method text matches what the server enforces.
-    CompanyIntelligenceThresholds Thresholds);
+    CompanyIntelligenceThresholds Thresholds,
+    // The anonymous "no reply" reports (growth item 1.6), on their own floor and independent of
+    // Confidence: they are not applications and never enter the rates above. Null below
+    // SilenceReportThresholds — and then nothing says how many there are.
+    CompanySilenceReports? SilenceReports = null,
+    SilenceReportThresholds? SilenceReportThresholds = null);
 
 /// <summary>The three rules the "why is nothing shown" card states — the count floor, the age an
 /// application must reach before it is judged, and the largest share one person may hold.</summary>

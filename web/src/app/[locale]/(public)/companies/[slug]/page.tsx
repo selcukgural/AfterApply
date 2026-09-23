@@ -12,6 +12,7 @@ import { CompanyPageTabs } from "@/components/companies/CompanyPageTabs";
 import { CompanySalariesPanel } from "@/components/companySalaries/CompanySalariesPanel";
 import { CandidateExperiencesPanel } from "@/components/candidateExperiences/CandidateExperiencesPanel";
 import { CompanyIntelligencePanel } from "@/components/companyIntelligence/CompanyIntelligencePanel";
+import { SilenceReportCard } from "@/components/companies/SilenceReportCard";
 
 /**
  * A company's public page: the aggregate and its published reviews, rendered on the server so
@@ -96,6 +97,10 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
         experiences={<CandidateExperiencesPanel company={company} />}
         intelligence={<CompanyIntelligencePanel company={company} />}
       />
+
+      {/* Under the tabs, whichever is open: the one thing on the page a stranger can add without
+          an account. A client component — the cached page carries none of its state. */}
+      <SilenceReportCard companySlug={slug} />
 
       <p className="border-t border-gray-200 pt-6 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">{t("disclaimer")}</p>
     </div>

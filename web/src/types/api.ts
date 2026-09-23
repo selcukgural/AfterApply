@@ -668,6 +668,12 @@ export interface ClientConfigResponse {
   // sector response-rate page each follow their own flag.
   companyIntelligence?: CompanyIntelligenceConfig;
   responseRates?: ResponseRatesConfig;
+  // Optional for the same reason (2026-09-23): the company page's anonymous "no reply" report.
+  silenceReports?: SilenceReportsConfig;
+}
+
+export interface SilenceReportsConfig {
+  enabled: boolean;
 }
 
 export interface CompanyIntelligenceConfig {
@@ -870,6 +876,45 @@ export interface CompanyIntelligenceResponse {
   /** Null when the company's industry could not be mapped to a sector. */
   sectorComparison: CompanySectorComparison | null;
   thresholds: CompanyIntelligenceThresholds;
+  /** The anonymous "no reply" reports, on their own floor; null below it. Optional: an older API
+   *  build does not send it. */
+  silenceReports?: CompanySilenceReports | null;
+  silenceReportThresholds?: SilenceReportThresholds | null;
+}
+
+// ---- Silence reports (growth item 1.6, 2026-09-23) ---------------------------------------------
+
+/** The last step before the silence. Order = form order. */
+export type SilenceStage = "AfterApplication" | "AfterHrScreen" | "AfterTechnicalInterview" | "AfterFinalInterview" | "AfterOfferTalk";
+
+/** Nothing under two weeks. */
+export type SilenceWait = "TwoToFourWeeks" | "OneToTwoMonths" | "TwoToThreeMonths" | "OverThreeMonths";
+
+export interface SubmitSilenceReportRequest {
+  stage: SilenceStage;
+  wait: SilenceWait;
+  /** null = not said. */
+  promiseGiven: boolean | null;
+  locale: string;
+  /** Honeypot; always empty from a real form. */
+  website: string;
+  source: BenchmarkSource | null;
+}
+
+export interface SilenceStageCount {
+  stage: SilenceStage;
+  count: number;
+}
+
+export interface CompanySilenceReports {
+  count: number;
+  byStage: SilenceStageCount[];
+}
+
+export interface SilenceReportThresholds {
+  minimumReports: number;
+  minimumQuarters: number;
+  windowMonths: number;
 }
 
 export type BenchmarkSeniority = "StudentOrIntern" | "Junior" | "Mid" | "Senior" | "LeadOrAbove";

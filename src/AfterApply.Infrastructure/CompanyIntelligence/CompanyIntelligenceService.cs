@@ -1,8 +1,10 @@
 using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.CompanyIntelligence.Contracts;
 using AfterApply.Application.ResponseRates;
+using AfterApply.Application.SilenceReports;
 using AfterApply.Domain.Companies;
 using AfterApply.Infrastructure.Persistence;
+using AfterApply.Infrastructure.SilenceReports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -11,7 +13,8 @@ namespace AfterApply.Infrastructure.CompanyIntelligence;
 internal sealed class CompanyIntelligenceService(
     AppDbContext dbContext,
     ISectorResponseRateService sectorResponseRates,
-    IOptions<CompanyIntelligenceOptions> options)
+    IOptions<CompanyIntelligenceOptions> options,
+    IOptions<SilenceReportOptions> silenceReportOptions)
     : ICompanyIntelligenceService
 {
     public async Task<CompanyIntelligenceResponse?> GetByCompanyIdAsync(Guid companyId, CancellationToken cancellationToken)
@@ -52,6 +55,8 @@ internal sealed class CompanyIntelligenceService(
                 a.PromisedReplyBy, a.PromisedReplySince, a.RejectionNotice
             })
             .ToListAsync(cancellationToken);
+
+        var (silenceReports, silenceThresholds) = await SilenceReportsAsync(companyId, windowEnd, cancellationToken);
 
         var total = applications.Count;
         var confidence = CompanyIntelligenceCalculations.ClassifyConfidence(
@@ -114,9 +119,28 @@ internal sealed class CompanyIntelligenceService(
             RejectionNoticeRate: figures.RejectionNoticeRate);
 
         return new CompanyIntelligenceResponse(company.Id, company.Name, confidence,
-            windowStart, windowEnd, metrics, comparison, thresholds);
+            windowStart, windowEnd, metrics, comparison, thresholds, silenceReports, silenceThresholds);
 
         CompanyIntelligenceResponse Hidden() => new(company.Id, company.Name, ConfidenceBucket.Hidden,
-            windowStart, windowEnd, Metrics: null, comparison, thresholds);
+            windowStart, windowEnd, Metrics: null, comparison, thresholds, silenceReports, silenceThresholds);
+    }
+
+    /// <summary>The company's anonymous reports over their own window, summarised only above their
+    /// own floor. Stage and month only are read — nothing else in the row is needed to count.</summary>
+    private async Task<(CompanySilenceReports?, SilenceReportThresholds)> SilenceReportsAsync(
+        Guid companyId, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var opts = silenceReportOptions.Value;
+        var thresholds = new SilenceReportThresholds(opts.MinimumReports, opts.MinimumQuarters, opts.WindowMonths);
+        var since = now.AddMonths(-opts.WindowMonths);
+
+        var rows = await dbContext.SilenceReports
+            .Where(r => r.CompanyId == companyId && r.SubmittedAt >= since)
+            .Select(r => new { r.Stage, r.SilentSinceMonth })
+            .ToListAsync(cancellationToken);
+
+        var summary = SilenceReportCalculations.Summarize(
+            rows.Select(r => (r.Stage, r.SilentSinceMonth)).ToList(), opts.MinimumReports, opts.MinimumQuarters);
+        return (summary, thresholds);
     }
 }
