@@ -1289,6 +1289,10 @@ değil, "bir şey netleşti" olmalı.**
   … hesabın … seni bekler" → `/settings#export`. Silme hiçbir yerde anılmıyor.
   "Nereye giriyorsun?" sorusu yazılmadı — şirket zaten sayfada. DECISIONS.md'de
   aynı tarihli girdi.
+- **Genişletildi (2026-09-23, büyüme 1.2):** deneyim linki kartın içinde iki
+  bölümlü forma döndü — süreç puanı + maaş, başvurudan bilinenler önceden dolu,
+  kayıttan sonra "buraya bir şey girmen artık gerekmiyor". DECISIONS.md'de aynı
+  tarihli girdi.
 
 ### T8 — plandan çıkarıldı (2026-09-18)
 

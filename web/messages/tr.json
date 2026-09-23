@@ -799,12 +799,44 @@
       },
       "accepted": {
         "title": "Hayırlı olsun.",
-        "share": {
-          "text": "Bu süreç nasıl geçti, senden sonraki bilsin —",
-          "link": "{company} ile deneyimini paylaş"
+        "intro": {
+          "both": "Süreç bitti; bildiklerini burada bir kez bırakabilirsin. Senden sonra aynı şirkete başvuracak kişi bunları başka yerde bulamaz. Adın olmadan yayımlanır: süreç herkese, maaş giriş yapmış okuyuculara açılır. İki bölüm de isteğe bağlı.",
+          "experience": "Süreç bitti; nasıl geçtiğini burada bir kez bırakabilirsin. Senden sonra aynı şirkete başvuracak kişi bunu başka yerde bulamaz. Adın olmadan yayımlanır.",
+          "salary": "Süreç bitti; maaşını burada bir kez bırakabilirsin. Senden sonra aynı şirkete başvuracak kişi bunu başka yerde bulamaz. Adın olmadan, giriş yapmış okuyuculara açılır."
+        },
+        "experience": {
+          "heading": "İşe alım süreci",
+          "overall": "Genel olarak nasıldı?",
+          "prefilled": "Başvurundan dolduruldu: sonuç \"{outcome}\", toplam süre {duration}.",
+          "prefilledNoDuration": "Başvurundan dolduruldu: sonuç \"{outcome}\".",
+          "more": "Beğendiğin ve geliştirilebilir bulduğun maddeler için",
+          "moreLink": "tam form"
+        },
+        "salary": {
+          "heading": "Maaş",
+          "occupationMatched": "İlan başlığı listede birebir var, seçili geldi. Değiştirebilirsin.",
+          "occupationPick": "İlan başlığını yazdık; listeden mesleğini seç.",
+          "years": "Toplam deneyimin (yıl)",
+          "bonus": "Prim var mı?",
+          "bonusYes": "Evet",
+          "bonusNo": "Hayır",
+          "prefilled": "Başvurundan: {employmentType}, {year} yılından beri bu şirkette çalışan olarak kaydedilir.",
+          "fullForm": "Maaşı tam formda gir"
+        },
+        "save": "Kaydet",
+        "saving": "Kaydediliyor…",
+        "saveNote": "Yalnızca doldurduğun bölüm kaydedilir.",
+        "nothingToSave": "Kaydedilecek bir şey yok; bölümlerden birini doldur.",
+        "error": "Kaydedilemedi. Biraz sonra tekrar dene.",
+        "saved": {
+          "both": "Kaydedildi: işe alım deneyimin ve maaşın, ikisi de adın olmadan.",
+          "experience": "Kaydedildi: işe alım deneyimin, adın olmadan.",
+          "salary": "Kaydedildi: maaşın, adın olmadan.",
+          "link": "{company} sayfasında gör"
         },
         "keep": {
           "text": "Verin senin; istediğin zaman indirebilirsin. Hesabın olduğu gibi kalır, bir gün yeniden gerekirse seni bekler.",
+          "doneText": "Buraya bir şey girmen artık gerekmiyor. Verin senin, istediğin zaman indirebilirsin; hesabın olduğu gibi kalır, bir gün yeniden gerekirse seni bekler.",
           "link": "Verimi indir"
         }
       },
