@@ -882,6 +882,13 @@ export interface CompanyIntelligenceResponse {
   silenceReportThresholds?: SilenceReportThresholds | null;
 }
 
+/** A company with a page but no contribution yet, found by the directory search once enough
+ *  different people applied to it (2026-09-23). Name and slug only, by design. */
+export interface KnownCompany {
+  slug: string;
+  name: string;
+}
+
 // ---- Silence reports (growth item 1.6, 2026-09-23) ---------------------------------------------
 
 /** The last step before the silence. Order = form order. */

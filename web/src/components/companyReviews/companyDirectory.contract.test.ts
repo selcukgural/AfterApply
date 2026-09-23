@@ -36,3 +36,20 @@ describe("the directory card", () => {
     expect(source).toContain("COUNT_DOT[line.key]");
   });
 });
+
+describe("the directory search's second section (2026-09-23)", () => {
+  const section = stripComments(source).split('aria-labelledby="directory-known-title"')[1] ?? "";
+
+  it("exists, and only for a search long enough to be sent", () => {
+    expect(section).not.toBe("");
+    expect(source).toContain("enabled: query.length >= KNOWN_MIN_QUERY");
+  });
+
+  /** How many applied is what the applicant floor keeps private: the card is a name and a link. */
+  it("prints no count of any kind and looks different from a contributed card", () => {
+    expect(section).not.toMatch(/count|Count|StarRating|directoryCountLines/);
+    expect(section).toContain("border-dashed");
+    expect(section).toContain("company.name");
+  });
+});
+

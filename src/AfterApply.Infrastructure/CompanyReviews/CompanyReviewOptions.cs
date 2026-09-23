@@ -32,4 +32,21 @@ public sealed class CompanyReviewOptions
 
     /// <summary>The author's own "my contributions" list, all three kinds in one page.</summary>
     public int ContributionsPageSize { get; init; } = 10;
+
+    /// <summary>
+    /// How many different people must have applied to a company before its name may come up in the
+    /// directory's anonymous search while it has no contribution yet. The company table is built
+    /// from people's own applications, so a name one person applied to says "somebody applied
+    /// here" — for a small firm, close to saying who. Three is the least at which the name points
+    /// at nobody, the same idea as the response rates' one-person-share rule. Raising it only
+    /// hides more.
+    /// </summary>
+    public int KnownCompanyMinimumApplicants { get; init; } = 3;
+
+    /// <summary>How many such companies one search returns at most; the section is a pointer to
+    /// pages, not a second directory.</summary>
+    public int KnownCompanyResultLimit { get; init; } = 6;
+
+    /// <summary>Shorter queries return nothing: two letters match half the table.</summary>
+    public int KnownCompanyMinimumQueryLength { get; init; } = 2;
 }

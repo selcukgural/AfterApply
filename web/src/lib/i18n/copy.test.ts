@@ -126,6 +126,15 @@ describe("every notice that enumerates account data names all of it", () => {
     expect(enValue("privacy.aggregates.silenceReports")).toMatch(/no name, email, free text or IP address/);
   });
 
+  // Company names come from people's applications; the directory search shows one without a
+  // contribution only past three applicants, and the privacy page says so (2026-09-23).
+  it("says a company name can appear in the directory search past three applicants (tr + en)", () => {
+    expect(trValue("privacy.aggregates.knownCompanies")).toMatch(/en az üç farklı kişi/);
+    expect(enValue("privacy.aggregates.knownCompanies")).toMatch(/at least three different people/);
+    expect(trValue("companies.directory.known.note")).toMatch(/en az üç/);
+    expect(enValue("companies.directory.known.note")).toMatch(/at least three/);
+  });
+
   it("the request-log notice names salary entries and candidate experiences among the audited actions (tr + en)", () => {
     expect(trValue("privacy.dataCollection.item6")).toMatch(/maaş/);
     expect(trValue("privacy.dataCollection.item6")).toMatch(/aday deneyimi/);

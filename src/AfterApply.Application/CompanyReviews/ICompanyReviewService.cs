@@ -60,6 +60,11 @@ public interface ICompanyDirectoryService
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ReviewedCompanySlugResponse>> ListReviewedSlugsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Companies matching <paramref name="q"/> that have a page but no contribution, and
+    /// that at least KnownCompanyMinimumApplicants different people applied to. Empty for a
+    /// query below KnownCompanyMinimumQueryLength.</summary>
+    Task<IReadOnlyList<KnownCompanyResponse>> SearchKnownAsync(string? q, CancellationToken cancellationToken);
 }
 
 public interface ICompanyReviewModerationService

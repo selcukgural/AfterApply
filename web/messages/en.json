@@ -1294,6 +1294,7 @@
       "sector": "The sector table is public and names no company. A sector row is not shown until at least 5 different people have 30 applications between them, and it stays closed while one person accounts for more than half of them.",
       "company": "A company page's \"Response\" tab shows nothing until that company has at least 50 applications in the last 12 months, and nothing if one person accounts for more than a third of them; below the threshold it does not say how many are missing either. This tab stays off until the legal review is complete.",
       "silenceReports": "The \"I heard nothing back\" report on a company page needs no account and is tied to none: only the company, stage, wait, any reply promise and the month are stored. The report holds no name, email, free text or IP address. To stop the same company being reported from the same connection within 30 days, a one-way key derived from the connection address is held in temporary memory for 30 days and then expires by itself. Reports are never mixed into the rates; no figure is shown for a company until it has at least 5 reports from at least two different quarters, and that figure stays off together with the \"Response\" tab.",
+      "knownCompanies": "A company's name can come up in the company directory's search even before it has any contribution, once at least three different people have applied to it. How many applied, and who, is never shown.",
       "noReverse": "An aggregate cannot be walked back to one person's application: the pages show only rates, medians and a count of people, and individual application rows never leave the server.",
       "deletion": "Deleting your account deletes your applications, and the next calculation drops them from the aggregates too (the tables are cached for at most an hour).",
       "legalBasis": "Legal basis: legitimate interest — letting candidates see how much a sector or a company replies to applications; below the threshold no personal data is processed at all, above it it is shown only in aggregate."
@@ -3472,7 +3473,14 @@
         }
       },
       "salaryCount": "{count, plural, =1 {1 salary entry} other {# salary entries}}",
-      "experienceCount": "{count, plural, =1 {1 candidate experience} other {# candidate experiences}}"
+      "experienceCount": "{count, plural, =1 {1 candidate experience} other {# candidate experiences}}",
+      "noContributedMatches": "No company with contributions matches “{query}”.",
+      "known": {
+        "title": "Companies with a page and no contributions yet",
+        "note": "Only companies at least three different people applied to are shown.",
+        "cta": "Open the page: write the first review or report that you heard nothing back",
+        "ctaNoReport": "Open the page: write the first review"
+      }
     },
     "page": {
       "metaTitle": "{company} employee reviews and salaries",

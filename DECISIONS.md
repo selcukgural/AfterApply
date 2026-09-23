@@ -9027,3 +9027,25 @@ kart. Açılınca üç soru: hangi aşamadan sonra (5 seçenek, "Başvurudan son
 - **Gizlilik:** `privacy.dataCollection.item6` girişsiz yüzeylere bildirimi ekledi,
   `privacy.aggregates.silenceReports` ne tutulduğunu, Redis anahtarını ve eşiği anlatıyor; ikisi de
   `copy.test.ts` ile sabit.
+
+## Dizin aramasında "sayfası olan, henüz katkı almamış şirketler" — DECIDED (2026-09-23)
+
+**Karar.** Tasarım tuvali: https://claude.ai/artifact/LPBHSBSK4MxVjZTTGTQbqJ — kullanıcı **A**'yı seçti
+(iki bölüm). Dizin (`/companies`) yalnızca katkı almış şirketleri listeler; oysa her şirketin bir
+sayfası vardır ve 1.6'nın "dönüş alamadım" kartı o sayfalarda durur. Arama yapıldığında, katkı almış
+sonuçların altına kesikli kartlarla ikinci bir bölüm gelir: "Sayfası olan, henüz katkı almamış
+şirketler". Varsayılan (aramasız) liste değişmez; boş sayfalar noindex kalır.
+
+- **Eşik: en az 3 farklı başvuran** (`CompanyReviews:KnownCompanyMinimumApplicants`). Şirket tablosu
+  kullanıcıların başvurularından oluşur; tek kişinin başvurduğu küçük bir firmanın adı "birisi buraya
+  başvurmuş" demektir. Başvuru değil kişi sayılır (tek kişinin 40 başvurusu bir kişidir).
+- **Endpoint:** `GET /api/companies/known?q=` — `/public/{slug}` dışında ki hiçbir slug onu gölgelemesin;
+  anonim, `CompanyReviews:Enabled` filtresi, dizinle aynı arama rate limit'i, en az 2 karakter, en fazla
+  6 sonuç, ada göre sıralı. Yanıt yalnızca `slug` ve `name`: sayı yok, id yok (kaç kişinin başvurduğu
+  tam olarak saklanan şeydir). Web tarafında `NO_AUTH_ENDPOINTS`'e eklendi.
+- **Prod gerçeği:** 22 Eylül ölçümünde prod'daki başvuruların tamamı 3 kişiden geliyordu; bölüm kullanıcılar
+  gelene kadar büyük olasılıkla boş kalır ve boşken hiç çizilmez. Bilerek altyapı olarak kuruldu.
+- **Gizlilik:** `privacy.aggregates.knownCompanies` — şirket adının 3 farklı başvurandan sonra aramada
+  görünebileceği, kaç kişinin/kimin başvurduğunun gösterilmediği; `copy.test.ts` ile sabit.
+- Dizin sorgusundaki katkı birleşimi (`Contributions`) iki arama arasında paylaşılan bir yardımcıya taşındı;
+  anonim tip yerine üye-atamalı bir sınıf (EF `Concat` için aynı şekil).

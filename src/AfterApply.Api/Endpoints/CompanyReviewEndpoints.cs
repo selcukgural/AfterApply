@@ -34,6 +34,25 @@ public static class CompanyReviewEndpoints
             .Produces<PagedResult<CompanyPublicListItemResponse>>()
             .Produces(StatusCodes.Status429TooManyRequests);
 
+        // The directory's second section (2026-09-23): companies that have a page but no
+        // contribution yet. Its own path outside /public/{slug} so no slug can shadow it; anonymous
+        // like the directory, same flag, same search bucket.
+        app.MapGroup("/api/companies").WithTags("CompanyReviews")
+            .AddEndpointFilter<CompanyReviewsEnabledFilter>()
+            .MapGet("/known", async ([AsParameters] KnownCompanyQuery query, ICompanyDirectoryService directory,
+                    CancellationToken cancellationToken) =>
+                Results.Ok(await directory.SearchKnownAsync(query.Q, cancellationToken)))
+            .WithValidation<KnownCompanyQuery>()
+            .RequireRateLimiting(DependencyInjection.CompanyPublicSearchRateLimitPolicy)
+            .WithSummary("Companies with a page but no contribution yet, matching a search")
+            .WithDescription("Public. Only names at least CompanyReviews:KnownCompanyMinimumApplicants different " +
+                             "people applied to, since the company list is built from people's applications; name " +
+                             "and slug only, no counts. Empty below CompanyReviews:KnownCompanyMinimumQueryLength " +
+                             "characters, at most CompanyReviews:KnownCompanyResultLimit results.")
+            .Produces<IReadOnlyList<KnownCompanyResponse>>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
         publicGroup.MapGet("/slugs", async (ICompanyDirectoryService directory, CancellationToken cancellationToken) =>
             Results.Ok(await directory.ListReviewedSlugsAsync(cancellationToken)))
             .WithSummary("Slugs of the companies with a published review or candidate experience, for the sitemap")

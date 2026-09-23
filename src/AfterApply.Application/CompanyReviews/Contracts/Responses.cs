@@ -186,3 +186,10 @@ public sealed record AdminReviewReportResponse(
 public sealed record ModerationCountsResponse(int PendingReviews, int OpenReports, int PendingComments = 0);
 
 public sealed record UserReviewQuotaResponse(Guid UserId, int? ReviewQuotaOverride, int EffectiveLimit, int Used);
+
+/// <summary>
+/// A company that has a page but no contribution yet, returned by the directory's search once
+/// enough different people have applied to it (CompanyReviewOptions.KnownCompanyMinimumApplicants).
+/// Name and slug only: no count of any kind, since how many applied is exactly what must not leak.
+/// </summary>
+public sealed record KnownCompanyResponse(string Slug, string Name);

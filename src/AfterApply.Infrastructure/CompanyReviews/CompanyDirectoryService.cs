@@ -61,30 +61,14 @@ internal sealed class CompanyDirectoryService(
         var approved = dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved);
         var salariesOn = salaryOptions.Value.Enabled;
         var experiencesOn = experienceOptions.Value.Enabled;
+        var contributions = Contributions(approved);
 
-        // Only companies somebody has contributed to — a published review, a salary entry or a
-        // candidate experience (2026-09-18; until then reviews alone counted, so a company whose
-        // first contribution was a salary never reached the directory). The three tables become
-        // one (CompanyId, At) union; a feature that is off contributes nothing to it. Correlated
-        // subqueries rather than GroupBy+Join, which EF Core cannot translate here.
-        // Anonymous type on purpose: Concat needs the three projections to share one CLR shape,
-        // and same-named members of the same types unify to one anonymous type.
-        var contributions = approved.Select(r => new { r.CompanyId, At = r.SubmittedAt });
-        if (salariesOn)
-        {
-            contributions = contributions.Concat(dbContext.CompanySalaryEntries.Select(s => new { s.CompanyId, At = s.SubmittedAt }));
-        }
-
-        if (experiencesOn)
-        {
-            contributions = contributions.Concat(dbContext.CandidateExperiences.Select(e => new { e.CompanyId, At = e.SubmittedAt }));
-        }
-
+        // Only companies somebody has contributed to (see Contributions).
         var companies = dbContext.Companies.Where(c => c.Slug != null && contributions.Any(x => x.CompanyId == c.Id));
         var q = query.Q?.Trim();
         if (!string.IsNullOrEmpty(q))
         {
-            var pattern = $"%{TurkishTextNormalizer.FoldCase(q).ToUpperInvariant()}%";
+            var pattern = NamePattern(q);
             companies = companies.Where(c => EF.Functions.ILike(c.NormalizedName, pattern));
         }
 
@@ -124,6 +108,65 @@ internal sealed class CompanyDirectoryService(
             .ToList();
 
         return new PagedResult<CompanyPublicListItemResponse>(items, total, query.Page, pageSize);
+    }
+
+    public async Task<IReadOnlyList<KnownCompanyResponse>> SearchKnownAsync(string? q, CancellationToken cancellationToken)
+    {
+        var opts = options.Value;
+        var trimmed = q?.Trim() ?? string.Empty;
+        if (trimmed.Length < opts.KnownCompanyMinimumQueryLength)
+        {
+            return [];
+        }
+
+        // Not cached, like any search: the key space is the user's input.
+        var contributions = Contributions(dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved));
+        var pattern = NamePattern(trimmed);
+        var minimum = opts.KnownCompanyMinimumApplicants;
+
+        // The complement of the directory — a page, no contribution — narrowed to the names enough
+        // different people applied to. Distinct users, never applications: one person's forty
+        // applications to the same firm are still one person.
+        return await dbContext.Companies
+            .Where(c => c.Slug != null
+                        && EF.Functions.ILike(c.NormalizedName, pattern)
+                        && !contributions.Any(x => x.CompanyId == c.Id)
+                        && dbContext.Applications.Where(a => a.CompanyId == c.Id).Select(a => a.UserId).Distinct().Count() >= minimum)
+            .OrderBy(c => c.Name).ThenBy(c => c.Id)
+            .Take(opts.KnownCompanyResultLimit)
+            .Select(c => new KnownCompanyResponse(c.Slug!, c.Name))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>Every company somebody has contributed to — a published review, a salary entry or
+    /// a candidate experience (2026-09-18; until then reviews alone counted, so a company whose
+    /// first contribution was a salary never reached the directory) — as one (CompanyId, At)
+    /// union; a feature that is off contributes nothing to it. Correlated subqueries use it rather
+    /// than GroupBy+Join, which EF Core cannot translate here. One member-init shape for all
+    /// three projections, because Concat needs them to match.</summary>
+    private IQueryable<ContributionRow> Contributions(IQueryable<CompanyReview> approved)
+    {
+        var contributions = approved.Select(r => new ContributionRow { CompanyId = r.CompanyId, At = r.SubmittedAt });
+        if (salaryOptions.Value.Enabled)
+        {
+            contributions = contributions.Concat(dbContext.CompanySalaryEntries.Select(s => new ContributionRow { CompanyId = s.CompanyId, At = s.SubmittedAt }));
+        }
+
+        if (experienceOptions.Value.Enabled)
+        {
+            contributions = contributions.Concat(dbContext.CandidateExperiences.Select(e => new ContributionRow { CompanyId = e.CompanyId, At = e.SubmittedAt }));
+        }
+
+        return contributions;
+    }
+
+    private static string NamePattern(string q) => $"%{TurkishTextNormalizer.FoldCase(q).ToUpperInvariant()}%";
+
+    private sealed class ContributionRow
+    {
+        public Guid CompanyId { get; init; }
+
+        public DateTimeOffset At { get; init; }
     }
 
     public async Task<CompanyPublicResponse?> GetBySlugAsync(string slug, CancellationToken cancellationToken)

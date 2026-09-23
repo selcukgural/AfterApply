@@ -33,6 +33,8 @@ const NO_AUTH_ENDPOINTS = [
   // browser's copy of a public, cacheable answer uncacheable.
   "/api/response-rates",
   "/api/company-intelligence",
+  // The directory's "has a page, no contribution yet" search: public, the same for everyone.
+  "/api/companies/known",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
 ];
