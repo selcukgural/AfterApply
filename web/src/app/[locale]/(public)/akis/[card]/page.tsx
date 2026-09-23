@@ -8,6 +8,7 @@ import { parseFlowCard } from "@/lib/flowCard/card";
 import { FLOW_NODE_KEYS } from "@/lib/flowCard/copy";
 import { flowCardPath } from "@/lib/flowCard/path";
 import { buttonClassName } from "@/components/ui/Button";
+import { guidePath } from "@/lib/guide/articles";
 
 /**
  * Where a shared flow card lands: `/tr/akis/<card>` (`/en/flow/<card>` by rewrite). The card itself
@@ -18,7 +19,8 @@ import { buttonClassName } from "@/components/ui/Button";
  * decided in proxy.ts before this renders (a notFound() here would 500 in production, DECISIONS.md
  * 2026-09-16). Not indexed: every card is one person's numbers, a thousand addresses of the same
  * page to a search engine, and nothing a searcher is looking for — but followed, so the links out of
- * it count. The image route keeps the picture out of image search the same way (X-Robots-Tag).
+ * it count: above all the one to the guide article that explains the card, which is the indexable
+ * page every shared card points at. The image route keeps the picture out of image search the same way (X-Robots-Tag).
  */
 export async function generateMetadata({ params }: PageProps<"/[locale]/akis/[card]">): Promise<Metadata> {
   const { locale, card: segment } = await params;
@@ -82,6 +84,12 @@ export default async function SharedFlowPage({ params }: PageProps<"/[locale]/ak
             </div>
           ))}
         </dl>
+        <Link
+          href={guidePath("application-flow", locale)}
+          className="text-sm font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700 dark:text-blue-400"
+        >
+          {t("legend.guideLink")}
+        </Link>
       </section>
 
       <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-900">

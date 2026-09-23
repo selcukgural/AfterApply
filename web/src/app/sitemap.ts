@@ -5,18 +5,27 @@ import { fetchReviewedSlugs } from "@/lib/companies/publicApi.server";
 import { fetchBlogSlugs } from "@/lib/blog/publicApi.server";
 import { BLOG_PATH, blogAlternates, blogPostPath } from "@/lib/blog/blogPaths";
 import type { BlogSlug } from "@/types/api";
+import { guideImageAt } from "@/lib/guide/articles";
 
-/** The static public pages: everything in PUBLIC_PATHS, in every locale. */
+/**
+ * The static public pages: everything in PUBLIC_PATHS, in every locale. A guide article with a
+ * picture of its own lists it as an `<image:image>`, which is how Google's image sitemap extension
+ * tells it which picture belongs to which page (developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps).
+ */
 export function staticSitemapEntries(): MetadataRoute.Sitemap {
   return routing.locales.flatMap((locale) =>
-    PUBLIC_PATHS.map((path) => ({
-      url: `${SITE_URL}/${locale}${pathFor(path, locale)}`,
-      // No `lastModified`. This route is rendered per request, so `new Date()` reported every one
-      // of these URLs as changed on every crawl — a signal Google learns to ignore outright. An
-      // absent lastmod is read as "use your own crawl history", which is the honest answer until
-      // there is a real per-page modification date to give.
-      alternates: { languages: alternateLanguages(path, SITE_URL) },
-    })),
+    PUBLIC_PATHS.map((path) => {
+      const image = guideImageAt(pathFor(path, locale), locale);
+      return {
+        url: `${SITE_URL}/${locale}${pathFor(path, locale)}`,
+        ...(image ? { images: [`${SITE_URL}${image.src}`] } : {}),
+        // No `lastModified`. This route is rendered per request, so `new Date()` reported every one
+        // of these URLs as changed on every crawl — a signal Google learns to ignore outright. An
+        // absent lastmod is read as "use your own crawl history", which is the honest answer until
+        // there is a real per-page modification date to give.
+        alternates: { languages: alternateLanguages(path, SITE_URL) },
+      };
+    }),
   );
 }
 

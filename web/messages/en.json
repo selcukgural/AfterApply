@@ -6464,6 +6464,7 @@
     "legend": {
       "title": "What's on the card?",
       "intro": "Every application lands somewhere in the first column; the ones that reached an interview carry on into the second. Ribbon widths are proportional to the number of applications.",
+      "guideLink": "How to read this card: what each branch tells you",
       "items": {
         "unanswered": "No reply at all (older than 30 days), or the process went quiet.",
         "awaitingReply": "Sent in the last 30 days and still waiting for a reply.",

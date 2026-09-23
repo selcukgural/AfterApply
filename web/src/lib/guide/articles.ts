@@ -21,6 +21,19 @@ export type GuideArticleCopy = {
   slug: string;
   title: string;
   description: string;
+  /**
+   * The article's own picture, when it has one: the share image, the JSON-LD `image` and the
+   * sitemap's `<image:image>` all use it instead of the generated title card. It must also appear
+   * in the body as `![alt](src …)` with the same alt text (articles.test.ts), so the picture people
+   * see in a link preview is the one the article explains, placed next to the text about it.
+   */
+  image?: GuideArticleImage;
+};
+
+/** A file in `public/guide/`, with dimensions listed in `GUIDE_IMAGES` (lib/guide/images.ts). */
+export type GuideArticleImage = {
+  src: string;
+  alt: string;
 };
 
 export type GuideArticle = {
@@ -43,6 +56,33 @@ export type GuideArticle = {
 export const GUIDE_PATH = "/guide";
 
 export const GUIDE_ARTICLES: GuideArticle[] = [
+  {
+    key: "application-flow",
+    published: "2026-09-23",
+    related: ["response-time", "how-many-applications"],
+    copy: {
+      tr: {
+        slug: "basvurularim-nereye-gitti",
+        title: "Başvurularım nereye gitti? Başvuru akışını okumak",
+        description:
+          "Cevapsız kalan, mülakatsız reddedilen, mülakata dönen: kendi başvuru akışını çıkarmak ve akıştaki her kolun sana ne söylediğini okumak.",
+        image: {
+          src: "/guide/basvuru-akis-karti-ornegi.png",
+          alt: "86 iş başvurusunun akış diyagramı: 47 cevapsız, 21 mülakatsız red, 18 mülakat; mülakattan sonra 2 teklif, 4 süren, 9 red, 3 sessizlik",
+        },
+      },
+      en: {
+        slug: "where-did-my-applications-go",
+        title: "Where did my job applications go? Reading the flow",
+        description:
+          "Unanswered, rejected without an interview, or through to one: how to map where your applications went and what each branch of the flow tells you.",
+        image: {
+          src: "/guide/job-application-flow-card-example.png",
+          alt: "Flow diagram of 86 job applications: 47 unanswered, 21 rejected without an interview, 18 interviews; after them 2 offers, 4 ongoing, 9 rejections, 3 silences",
+        },
+      },
+    },
+  },
   {
     key: "writing-a-fair-review",
     published: "2026-09-16",
@@ -228,6 +268,16 @@ export function articlePaths(article: GuideArticle): Record<string, string> {
 
 export function findArticleBySlug(slug: string, locale: GuideLocale): GuideArticle | undefined {
   return GUIDE_ARTICLES.find((article) => article.copy[locale].slug === slug);
+}
+
+/**
+ * The picture of the guide article at this path in this locale, if it is one and has one — the
+ * sitemap's `<image:image>` for that URL. Anything else (another page, an article without a
+ * picture) is undefined.
+ */
+export function guideImageAt(path: string, locale: string): GuideArticleImage | undefined {
+  if (!isGuideLocale(locale)) return undefined;
+  return GUIDE_ARTICLES.find((article) => articlePath(article, locale) === path)?.copy[locale].image;
 }
 
 export function findArticleByKey(key: string): GuideArticle | undefined {
