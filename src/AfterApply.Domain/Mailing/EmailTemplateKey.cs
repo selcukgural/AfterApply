@@ -14,5 +14,8 @@ public enum EmailTemplateKey
     /// <summary>A refund was sent back to the card. Placeholders: {{Amount}}.</summary>
     RefundCompleted,
     /// <summary>A refund request was turned down, with the admin's note. Placeholders: {{Note}}.</summary>
-    RefundRejected
+    RefundRejected,
+    /// <summary>The six-digit code that verifies a new account's email address. Placeholders: {{Code}}
+    /// (subject and body).</summary>
+    EmailVerificationCode
 }

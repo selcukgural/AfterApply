@@ -25,9 +25,16 @@ public sealed record AuthResult
 
     public AuthResponse? Response { get; private init; }
 
+    /// <summary>Set, with <see cref="Succeeded"/> true and no <see cref="Response"/>, when the
+    /// account exists but its email is unverified: no tokens until the emailed code comes back.</summary>
+    public EmailVerificationPendingResponse? PendingVerification { get; private init; }
+
     public IReadOnlyCollection<string> Errors { get; private init; } = [];
 
     public static AuthResult Success(AuthResponse response) => new() { Succeeded = true, Response = response };
+
+    public static AuthResult VerificationRequired(EmailVerificationPendingResponse pending) =>
+        new() { Succeeded = true, PendingVerification = pending };
 
     public static AuthResult Failure(params IReadOnlyCollection<string> errors) => new() { Succeeded = false, Errors = errors };
 }

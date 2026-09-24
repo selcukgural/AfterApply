@@ -20,29 +20,33 @@ public static class AuthEndpoints
             {
                 var result = await authService.RegisterAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 return result.Succeeded
-                    ? Results.Created("/api/users/me", result.Response)
+                    ? Results.Accepted(value: result.PendingVerification)
                     : Results.ValidationProblem(ToErrorDictionary(result.Errors));
             })
             .WithValidation<RegisterRequest>()
             .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
             .WithSummary("Register a new account")
-            .WithDescription("Creates the account and returns an access/refresh token pair, same shape as Login. " +
-                              "A taken email or unmet consent requirement comes back as a 400 validation problem, not a 409.")
-            .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .WithDescription("Creates the account unverified and emails a six-digit code; no tokens until " +
+                              "POST /verify-email. 202 with the verification ticket. A taken email or unmet consent " +
+                              "requirement comes back as a 400 validation problem, not a 409.")
+            .Produces<EmailVerificationPendingResponse>(StatusCodes.Status202Accepted)
             .Produces(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("/login", async (LoginRequest request, IAuthService authService,
                 IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
             {
                 var result = await authService.LoginAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
-                return result.Succeeded
-                    ? Results.Ok(result.Response)
-                    : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
+                return !result.Succeeded
+                    ? Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized)
+                    : ToAuthOrPending(result, StatusCodes.Status200OK);
             })
             .WithValidation<LoginRequest>()
             .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
             .WithSummary("Log in with email and password")
+            .WithDescription("200 with the token pair, or 202 with a verification ticket when the password is right " +
+                              "but the account's email was never verified (a code has been emailed).")
             .Produces<AuthResponse>()
+            .Produces<EmailVerificationPendingResponse>(StatusCodes.Status202Accepted)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status429TooManyRequests);
 
@@ -88,7 +92,7 @@ public static class AuthEndpoints
                 var result = await authService.CompleteGoogleSignupAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 if (result.Succeeded)
                 {
-                    return Results.Created("/api/users/me", result.Response);
+                    return ToAuthOrPending(result, StatusCodes.Status201Created);
                 }
 
                 // Either the one bare code (expired/tampered signup token) or Identity's already
@@ -104,6 +108,7 @@ public static class AuthEndpoints
                               "user confirmed, and returns the token pair like Register. An expired or tampered signup token " +
                               "is a 400 validation problem. 404 when Sign in with Google is not configured.")
             .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .Produces<EmailVerificationPendingResponse>(StatusCodes.Status202Accepted)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status429TooManyRequests);
 
@@ -147,7 +152,7 @@ public static class AuthEndpoints
                 var result = await authService.CompleteLinkedInSignupAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 if (result.Succeeded)
                 {
-                    return Results.Created("/api/users/me", result.Response);
+                    return ToAuthOrPending(result, StatusCodes.Status201Created);
                 }
 
                 // The two bare codes (expired/tampered signup token, or a required-but-missing
@@ -165,6 +170,7 @@ public static class AuthEndpoints
                               "email is used. An expired/tampered signup token or a missing required email is a 400 " +
                               "validation problem. 404 when Sign in with LinkedIn is not configured.")
             .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .Produces<EmailVerificationPendingResponse>(StatusCodes.Status202Accepted)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status429TooManyRequests);
 
@@ -208,7 +214,7 @@ public static class AuthEndpoints
                 var result = await authService.CompleteGitHubSignupAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
                 if (result.Succeeded)
                 {
-                    return Results.Created("/api/users/me", result.Response);
+                    return ToAuthOrPending(result, StatusCodes.Status201Created);
                 }
 
                 // The two bare codes (expired/tampered signup token, or a required-but-missing
@@ -226,7 +232,45 @@ public static class AuthEndpoints
                               "from the token is used. An expired/tampered signup token or a missing required email " +
                               "is a 400 validation problem. 404 when Sign in with GitHub is not configured.")
             .Produces<AuthResponse>(StatusCodes.Status201Created)
+            .Produces<EmailVerificationPendingResponse>(StatusCodes.Status202Accepted)
             .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        group.MapPost("/verify-email", async (VerifyEmailRequest request, IAuthService authService,
+                IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                var result = await authService.VerifyEmailAsync(request, httpContext.GetClientIpAddress(), cancellationToken);
+                return result.Succeeded
+                    ? Results.Ok(result.Response)
+                    : VerificationProblem(result.Errors.First(), localizer);
+            })
+            .WithValidation<VerifyEmailRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Verify the account's email address with the emailed code")
+            .WithDescription("Takes the ticket from the 202 pending response and the six-digit code from the email; " +
+                              "returns the token pair on success. A wrong code is a 400 with code " +
+                              "AUTH_VERIFICATION_CODE_INVALID; a code past its lifetime or its attempts is " +
+                              "AUTH_VERIFICATION_CODE_EXPIRED (request a new one); an unknown or expired ticket is " +
+                              "AUTH_VERIFICATION_EXPIRED (sign in again).")
+            .Produces<AuthResponse>()
+            .ProducesValidationProblem()
+            .Produces(StatusCodes.Status429TooManyRequests);
+
+        group.MapPost("/verify-email/resend", async (ResendVerificationCodeRequest request, IAuthService authService,
+                IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
+            {
+                var (response, error) = await authService.ResendVerificationCodeAsync(request, cancellationToken);
+                return response is not null
+                    ? Results.Ok(response)
+                    : VerificationProblem(error!, localizer);
+            })
+            .WithValidation<ResendVerificationCodeRequest>()
+            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
+            .WithSummary("Email a new verification code")
+            .WithDescription("Sends a new code for a pending verification unless one went out too recently; the " +
+                              "response says when the next one can be requested either way.")
+            .Produces<ResendVerificationCodeResponse>()
+            .ProducesValidationProblem()
             .Produces(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("/refresh", async (RefreshRequest request, IAuthService authService,
@@ -297,6 +341,22 @@ public static class AuthEndpoints
 
         return app;
     }
+
+    /// <summary>The token pair with <paramref name="signedInStatus"/>, or 202 with the verification
+    /// ticket when the account's email still has to be verified.</summary>
+    private static IResult ToAuthOrPending(AuthResult result, int signedInStatus) =>
+        result.PendingVerification is not null
+            ? Results.Accepted(value: result.PendingVerification)
+            : signedInStatus == StatusCodes.Status201Created
+                ? Results.Created("/api/users/me", result.Response)
+                : Results.Ok(result.Response);
+
+    /// <summary>The localized message where every client reads messages, and the bare code as a
+    /// top-level <c>code</c> member for a client that has to branch on it (a new code vs. sign in again).</summary>
+    private static IResult VerificationProblem(string code, IStringLocalizer<SharedStrings> localizer) =>
+        Results.ValidationProblem(
+            new Dictionary<string, string[]> { ["error"] = [localizer[code]] },
+            extensions: new Dictionary<string, object?> { ["code"] = code });
 
     private static Dictionary<string, string[]> ToErrorDictionary(IReadOnlyCollection<string> errors) =>
         new() { ["error"] = errors.ToArray() };

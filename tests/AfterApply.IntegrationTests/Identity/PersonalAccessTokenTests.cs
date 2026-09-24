@@ -18,10 +18,11 @@ namespace AfterApply.IntegrationTests.Identity;
 // with NO JWT anywhere in the request, to authenticate against an ordinary RequireAuthorization()
 // endpoint (GET /api/applications). A revoked token must stop working immediately.
 //
-// Since the 2026-09-03 security pass, tokens also carry a scope, so the tests that just need "a
-// working credential" ask for Full explicitly rather than relying on the default — the default is
-// now Extension, which deliberately cannot reach GET /api/applications. The scope boundary itself
-// is covered by its own pair of tests below (allowed endpoint → 200, everything else → 403).
+// Since the 2026-09-03 security pass, tokens also carry a scope, and since 2026-09-24 every token is
+// held to the extension's endpoints: Full can no longer be issued, and a Full token issued before
+// reaches no more than an Extension one. The tests that just need "a working credential" therefore
+// use GET /api/companies/search, one of those endpoints. The scope boundary itself is covered by
+// its own tests below (allowed endpoint → 200, everything else → 403).
 [Collection(IntegrationTestCollection.Name)]
 public class PersonalAccessTokenTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
@@ -34,12 +35,7 @@ public class PersonalAccessTokenTests(ApiHost<DefaultProfile> host) : IClassFixt
     {
         await host.ResetAsync();
 
-        _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("pat.test@example.com", "P@ssw0rd123!", "Pat", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
+        (_client, _) = await host.RegisterAsync("pat.test@example.com", "Pat", "Test");
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -61,13 +57,13 @@ public class PersonalAccessTokenTests(ApiHost<DefaultProfile> host) : IClassFixt
     }
 
     [Fact]
-    public async Task Raw_Token_Alone_Authenticates_Against_An_Ordinary_Protected_Endpoint()
+    public async Task Raw_Token_Alone_Authenticates_Against_A_Protected_Endpoint()
     {
-        var created = await CreateTokenAsync("Scripting", PersonalAccessTokenScope.Full);
+        var created = await CreateTokenAsync("Chrome Extension");
 
         using var patOnlyClient = CreatePatOnlyClient(created.Token);
 
-        var response = await patOnlyClient.GetAsync("/api/applications");
+        var response = await patOnlyClient.GetAsync("/api/companies/search?q=acme");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
@@ -75,14 +71,14 @@ public class PersonalAccessTokenTests(ApiHost<DefaultProfile> host) : IClassFixt
     [Fact]
     public async Task Revoked_Token_No_Longer_Authenticates()
     {
-        var created = await CreateTokenAsync("Scripting", PersonalAccessTokenScope.Full);
+        var created = await CreateTokenAsync("Chrome Extension");
 
         var revokeResponse = await _client.DeleteAsync($"/api/personal-access-tokens/{created.Id}");
         revokeResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         using var patOnlyClient = CreatePatOnlyClient(created.Token);
 
-        var response = await patOnlyClient.GetAsync("/api/applications");
+        var response = await patOnlyClient.GetAsync("/api/companies/search?q=acme");
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
@@ -126,6 +122,57 @@ public class PersonalAccessTokenTests(ApiHost<DefaultProfile> host) : IClassFixt
         using var patOnlyClient = CreatePatOnlyClient(created.Token);
 
         var response = await patOnlyClient.GetAsync(path);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    // A token outlives the session that minted it by 90 days; a session-equivalent one would turn
+    // twenty minutes with a stolen access token into three months with the whole account.
+    [Fact]
+    public async Task A_Full_Scoped_Token_Cannot_Be_Created()
+    {
+        var response = await _client.PostAsJsonAsync("/api/personal-access-tokens",
+            new CreatePersonalAccessTokenRequest("Scripting", PersonalAccessTokenScope.Full), JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await host.WithDbAsync(db => db.PersonalAccessTokens.CountAsync())).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task A_Scope_The_Enum_Does_Not_Know_Is_Rejected()
+    {
+        var response = await _client.PostAsJsonAsync("/api/personal-access-tokens", new { name = "Odd", scope = 7 }, JsonOptions);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    // Full tokens issued before 2026-09-24 still exist; they keep working for the extension and
+    // reach nothing else — token management and export included.
+    [Theory]
+    [InlineData("/api/applications")]
+    [InlineData("/api/users/me/export")]
+    [InlineData("/api/personal-access-tokens")]
+    public async Task A_Full_Token_Issued_Before_Is_Held_To_The_Extension_Endpoints(string path)
+    {
+        var created = await CreateTokenAsync("Old scripting token");
+        // Before the token's first use, so no cached validation carries the old scope.
+        await host.WithDbAsync(db => db.PersonalAccessTokens.Where(t => t.Id == created.Id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.Scope, PersonalAccessTokenScope.Full)));
+
+        using var patOnlyClient = CreatePatOnlyClient(created.Token);
+
+        (await patOnlyClient.GetAsync("/api/companies/search?q=acme")).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await patOnlyClient.GetAsync(path)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task A_Token_Cannot_Mint_Another_Token()
+    {
+        var created = await CreateTokenAsync("Chrome Extension");
+
+        using var patOnlyClient = CreatePatOnlyClient(created.Token);
+        var response = await patOnlyClient.PostAsJsonAsync("/api/personal-access-tokens",
+            new CreatePersonalAccessTokenRequest("Second"), JsonOptions);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }

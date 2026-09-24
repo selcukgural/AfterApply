@@ -36,10 +36,9 @@ public class CsvImportTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHos
         await host.ResetAsync();
 
         _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("imports.test@example.com", "P@ssw0rd123!", "Imports", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory.Services,
+            new RegisterRequest("imports.test@example.com", "P@ssw0rd123!", "Imports", "Test", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 

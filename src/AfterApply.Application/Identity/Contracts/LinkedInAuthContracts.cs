@@ -18,10 +18,12 @@ public sealed record LinkedInSignupRequest(string SignupToken, string FirstName,
 /// one.</summary>
 public sealed record LinkedInSignupPrefill(string SignupToken, string? Email, string FirstName, string LastName);
 
-/// <summary>Exactly one of the two is non-null: <see cref="Auth"/> when an account was found (or
+/// <summary>Exactly one of the three is non-null: <see cref="Auth"/> when an account was found (or
 /// linked by verified email) and the user is signed in, <see cref="PendingSignup"/> when the client
-/// has to show the complete-your-sign-up step first.</summary>
-public sealed record LinkedInSignInResponse(AuthResponse? Auth, LinkedInSignupPrefill? PendingSignup);
+/// has to show the complete-your-sign-up step first. <see cref="PendingVerification"/>
+/// when the account exists but its email is unverified and the emailed code must come back first.</summary>
+public sealed record LinkedInSignInResponse(AuthResponse? Auth, LinkedInSignupPrefill? PendingSignup,
+    EmailVerificationPendingResponse? PendingVerification = null);
 
 public sealed record LinkedInSignInResult
 {
@@ -36,6 +38,11 @@ public sealed record LinkedInSignInResult
 
     public static LinkedInSignInResult SignupRequired(LinkedInSignupPrefill prefill) =>
         new() { Succeeded = true, Response = new LinkedInSignInResponse(null, prefill) };
+
+    /// <summary>The identity maps to an account whose email address was never verified — the
+    /// manual-email sign-up path, or an account from before verification existed.</summary>
+    public static LinkedInSignInResult VerificationRequired(EmailVerificationPendingResponse pending) =>
+        new() { Succeeded = true, Response = new LinkedInSignInResponse(null, null, pending) };
 
     public static LinkedInSignInResult Failure(params IReadOnlyCollection<string> errors) =>
         new() { Succeeded = false, Errors = errors };

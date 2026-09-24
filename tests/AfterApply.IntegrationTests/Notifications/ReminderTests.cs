@@ -37,10 +37,8 @@ public class ReminderTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost
     private async Task<HttpClient> CreateAuthenticatedClientAsync(string email)
     {
         var client = _factory!.CreateClient();
-        var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Reminders", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory!.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "Reminders", "Test", true));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
         return client;
     }

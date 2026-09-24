@@ -36,6 +36,8 @@ internal sealed class AuthService(
     CompanyReviewQueries reviewQueries,
     HybridCache cache,
     ICompanyCacheInvalidator companyCacheInvalidator,
+    EmailVerificationService verification,
+    AuthEmailThrottle emailThrottle,
     ILogger<AuthService> logger) : IAuthService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
@@ -43,6 +45,16 @@ internal sealed class AuthService(
 
     public async Task<AuthResult> RegisterAsync(RegisterRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
+        // An address is held by an account that verified it, or by one that signed in before
+        // verification existed (2026-09-24) — those fall through to CreateAsync's DuplicateEmail as
+        // always. A sign-up that did neither holds nothing: it may have been made by somebody who
+        // does not own the address, so registering it again replaces it.
+        var existing = await userManager.FindByEmailAsync(request.Email);
+        if (existing is not null && !existing.EmailConfirmed && !await HasSignedInAsync(existing.Id, cancellationToken))
+        {
+            return await ReplaceUnverifiedSignupAsync(existing, request, cancellationToken);
+        }
+
         var user = new ApplicationUser
         {
             UserName = request.Email,
@@ -68,8 +80,71 @@ internal sealed class AuthService(
             return AuthResult.Failure(result.Errors.Select(e => e.Description).ToArray());
         }
 
-        return AuthResult.Success(await IssueTokensAsync(user, ipAddress, cancellationToken));
+        return AuthResult.VerificationRequired(await verification.StartAsync(user, cancellationToken));
     }
+
+    /// <summary>Gives an unverified, never-signed-in sign-up the new registrant's password and names,
+    /// and drops everything the earlier one attached to it — its provider logins and its pending
+    /// verification — so nothing from before survives into the account the code will open.</summary>
+    private async Task<AuthResult> ReplaceUnverifiedSignupAsync(ApplicationUser user, RegisterRequest request, CancellationToken cancellationToken)
+    {
+        await using (var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken))
+        {
+            foreach (var login in await userManager.GetLoginsAsync(user))
+            {
+                await userManager.RemoveLoginAsync(user, login.LoginProvider, login.ProviderKey);
+            }
+
+            if (await userManager.HasPasswordAsync(user))
+            {
+                await userManager.RemovePasswordAsync(user);
+            }
+
+            var added = await userManager.AddPasswordAsync(user, request.Password);
+            if (!added.Succeeded)
+            {
+                // Disposing the transaction without a commit rolls the removals back.
+                return AuthResult.Failure(added.Errors.Select(e => e.Description).ToArray());
+            }
+
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
+            user.CreatedAt = DateTimeOffset.UtcNow;
+            user.ConsentAcceptedAt = DateTimeOffset.UtcNow;
+            user.PreferredLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            await userManager.UpdateAsync(user);
+            await verification.DiscardAsync(user.Id, cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        logger.LogInformation("Replaced the unverified sign-up of user {UserId} with a new registration", user.Id);
+        return AuthResult.VerificationRequired(await verification.StartAsync(user, cancellationToken));
+    }
+
+    public async Task<AuthResult> VerifyEmailAsync(VerifyEmailRequest request, string? ipAddress, CancellationToken cancellationToken)
+    {
+        var (user, error) = await verification.VerifyAsync(request.VerificationTicket, request.Code, cancellationToken);
+        return user is null
+            ? AuthResult.Failure(error!)
+            : AuthResult.Success(await IssueTokensAsync(user, ipAddress, cancellationToken));
+    }
+
+    public async Task<(ResendVerificationCodeResponse? Response, string? Error)> ResendVerificationCodeAsync(
+        ResendVerificationCodeRequest request, CancellationToken cancellationToken)
+    {
+        var (resendAvailableAt, error) = await verification.ResendAsync(request.VerificationTicket, cancellationToken);
+        return resendAvailableAt is null ? (null, error) : (new ResendVerificationCodeResponse(resendAvailableAt.Value), null);
+    }
+
+    private Task<bool> HasSignedInAsync(Guid userId, CancellationToken cancellationToken) =>
+        dbContext.RefreshTokens.AnyAsync(rt => rt.UserId == userId, cancellationToken);
+
+    /// <summary>Tokens for a verified account, a pending verification for any other.</summary>
+    private async Task<AuthResult> SignInOrVerifyAsync(ApplicationUser user, string? ipAddress, CancellationToken cancellationToken) =>
+        user.EmailConfirmed
+            ? AuthResult.Success(await IssueTokensAsync(user, ipAddress, cancellationToken))
+            : AuthResult.VerificationRequired(await verification.StartAsync(user, cancellationToken));
 
     public async Task<AuthResult> LoginAsync(LoginRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
@@ -85,7 +160,9 @@ internal sealed class AuthService(
             return AuthResult.Failure("AUTH_INVALID_CREDENTIALS");
         }
 
-        return AuthResult.Success(await IssueTokensAsync(user, ipAddress, cancellationToken));
+        // Only after the password checked out, so the pending answer says nothing a wrong password
+        // could not already learn.
+        return await SignInOrVerifyAsync(user, ipAddress, cancellationToken);
     }
 
     public async Task<AuthResult> RefreshAsync(string refreshToken, string? ipAddress, CancellationToken cancellationToken)
@@ -111,6 +188,15 @@ internal sealed class AuthService(
         }
 
         var now = DateTimeOffset.UtcNow;
+
+        // A session from before verification existed does not renew: the account verifies at its
+        // next sign-in like every other.
+        if (!user.EmailConfirmed)
+        {
+            stored.Revoke(now);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return AuthResult.Failure("AUTH_INVALID_REFRESH_TOKEN");
+        }
         var newRefreshTokenValue = tokenService.GenerateRefreshToken();
         var newRefreshTokenHash = tokenService.HashRefreshToken(newRefreshTokenValue);
 
@@ -163,10 +249,13 @@ internal sealed class AuthService(
             return GoogleSignInResult.Failure("AUTH_GOOGLE_EMAIL_NOT_VERIFIED");
         }
 
-        var user = await FindOrLinkExternalUserAsync(GoogleAuthOptions.LoginProvider, identity.Subject, identity.Email);
+        var user = await FindOrLinkExternalUserAsync(GoogleAuthOptions.LoginProvider, identity.Subject, identity.Email, cancellationToken);
         if (user is not null)
         {
-            return GoogleSignInResult.SignedIn(await IssueTokensAsync(user, ipAddress, cancellationToken));
+            var signedIn = await SignInOrVerifyAsync(user, ipAddress, cancellationToken);
+            return signedIn.Response is not null
+                ? GoogleSignInResult.SignedIn(signedIn.Response)
+                : GoogleSignInResult.VerificationRequired(signedIn.PendingVerification!);
         }
 
         // New to us: no account yet. The privacy-policy consent a password sign-up collects on its
@@ -186,18 +275,17 @@ internal sealed class AuthService(
         }
 
         // Replay or a race with another tab: the account exists now, so behave like a sign-in.
-        var existing = await FindOrLinkExternalUserAsync(GoogleAuthOptions.LoginProvider, identity.Subject, identity.Email);
+        var existing = await FindOrLinkExternalUserAsync(GoogleAuthOptions.LoginProvider, identity.Subject, identity.Email, cancellationToken);
         if (existing is not null)
         {
-            return AuthResult.Success(await IssueTokensAsync(existing, ipAddress, cancellationToken));
+            return await SignInOrVerifyAsync(existing, ipAddress, cancellationToken);
         }
 
         var user = new ApplicationUser
         {
             UserName = identity.Email,
             Email = identity.Email,
-            // Google vouched for the address — the one thing a password sign-up can't say yet
-            // (see DECISIONS.md "E-posta doğrulaması bilinçli olarak ertelendi").
+            // Google vouched for the address, so it needs no code of ours.
             EmailConfirmed = true,
             FirstName = request.FirstName,
             LastName = request.LastName,
@@ -252,10 +340,13 @@ internal sealed class AuthService(
         // sign-up form (see CompleteLinkedInSignupAsync).
         var verifiedEmail = UsableEmail(identity);
 
-        var user = await FindOrLinkExternalUserAsync(LinkedInAuthOptions.LoginProvider, identity.Subject, verifiedEmail);
+        var user = await FindOrLinkExternalUserAsync(LinkedInAuthOptions.LoginProvider, identity.Subject, verifiedEmail, cancellationToken);
         if (user is not null)
         {
-            return LinkedInSignInResult.SignedIn(await IssueTokensAsync(user, ipAddress, cancellationToken));
+            var signedIn = await SignInOrVerifyAsync(user, ipAddress, cancellationToken);
+            return signedIn.Response is not null
+                ? LinkedInSignInResult.SignedIn(signedIn.Response)
+                : LinkedInSignInResult.VerificationRequired(signedIn.PendingVerification!);
         }
 
         var signupToken = tokenService.CreateLinkedInSignupToken(identity);
@@ -274,10 +365,10 @@ internal sealed class AuthService(
         var verifiedEmail = UsableEmail(identity);
 
         // Replay or a race with another tab: the account exists now, so behave like a sign-in.
-        var existing = await FindOrLinkExternalUserAsync(LinkedInAuthOptions.LoginProvider, identity.Subject, verifiedEmail);
+        var existing = await FindOrLinkExternalUserAsync(LinkedInAuthOptions.LoginProvider, identity.Subject, verifiedEmail, cancellationToken);
         if (existing is not null)
         {
-            return AuthResult.Success(await IssueTokensAsync(existing, ipAddress, cancellationToken));
+            return await SignInOrVerifyAsync(existing, ipAddress, cancellationToken);
         }
 
         string email;
@@ -299,11 +390,10 @@ internal sealed class AuthService(
                 return AuthResult.Failure("AUTH_LINKEDIN_EMAIL_REQUIRED");
             }
 
-            // LinkedIn didn't vouch for it and neither do we — no different from a password sign-up,
-            // which never verifies its email either (DECISIONS.md "E-posta doğrulaması bilinçli
-            // olarak ertelendi"). A duplicate lands on the ordinary DuplicateEmail IdentityError from
-            // CreateAsync below — this identity is never matched to an existing account by email, so
-            // it can't be used to take one over.
+            // LinkedIn didn't vouch for it, so it is verified by an emailed code exactly like a
+            // password sign-up's (2026-09-24). A duplicate lands on the ordinary DuplicateEmail
+            // IdentityError from CreateAsync below — this identity is never matched to an existing
+            // account by email, so it can't be used to take one over.
             email = request.Email;
             emailConfirmed = false;
         }
@@ -334,11 +424,14 @@ internal sealed class AuthService(
             return AuthResult.Failure(linked.Errors.Select(e => e.Description).ToArray());
         }
 
-        var response = await IssueTokensAsync(user, ipAddress, cancellationToken);
+        // A typed-in address gets no session until its code comes back, like a password sign-up.
+        var response = emailConfirmed ? await IssueTokensAsync(user, ipAddress, cancellationToken) : null;
         await transaction.CommitAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} registered via LinkedIn sign-in", user.Id);
-        return AuthResult.Success(response);
+        return response is not null
+            ? AuthResult.Success(response)
+            : AuthResult.VerificationRequired(await verification.StartAsync(user, cancellationToken));
     }
 
     public async Task<GitHubSignInResult> GitHubSignInAsync(GitHubSignInRequest request, string? ipAddress, CancellationToken cancellationToken)
@@ -363,10 +456,13 @@ internal sealed class AuthService(
         // three arrive here as "no email", handled exactly like LinkedIn's optional one.
         var verifiedEmail = UsableEmail(identity);
 
-        var user = await FindOrLinkExternalUserAsync(GitHubAuthOptions.LoginProvider, identity.Subject, verifiedEmail);
+        var user = await FindOrLinkExternalUserAsync(GitHubAuthOptions.LoginProvider, identity.Subject, verifiedEmail, cancellationToken);
         if (user is not null)
         {
-            return GitHubSignInResult.SignedIn(await IssueTokensAsync(user, ipAddress, cancellationToken));
+            var signedIn = await SignInOrVerifyAsync(user, ipAddress, cancellationToken);
+            return signedIn.Response is not null
+                ? GitHubSignInResult.SignedIn(signedIn.Response)
+                : GitHubSignInResult.VerificationRequired(signedIn.PendingVerification!);
         }
 
         var signupToken = tokenService.CreateGitHubSignupToken(identity);
@@ -385,10 +481,10 @@ internal sealed class AuthService(
         var verifiedEmail = UsableEmail(identity);
 
         // Replay or a race with another tab: the account exists now, so behave like a sign-in.
-        var existing = await FindOrLinkExternalUserAsync(GitHubAuthOptions.LoginProvider, identity.Subject, verifiedEmail);
+        var existing = await FindOrLinkExternalUserAsync(GitHubAuthOptions.LoginProvider, identity.Subject, verifiedEmail, cancellationToken);
         if (existing is not null)
         {
-            return AuthResult.Success(await IssueTokensAsync(existing, ipAddress, cancellationToken));
+            return await SignInOrVerifyAsync(existing, ipAddress, cancellationToken);
         }
 
         string email;
@@ -407,8 +503,8 @@ internal sealed class AuthService(
                 return AuthResult.Failure("AUTH_GITHUB_EMAIL_REQUIRED");
             }
 
-            // Same as LinkedIn's manual path: nobody vouched for this address, so it stays
-            // unconfirmed, and a duplicate lands on the ordinary DuplicateEmail IdentityError from
+            // Same as LinkedIn's manual path: nobody vouched for this address, so it is verified by
+            // an emailed code, and a duplicate lands on the ordinary DuplicateEmail IdentityError from
             // CreateAsync below — this identity is never matched to an existing account by email, so
             // it cannot be used to take one over.
             email = request.Email;
@@ -441,11 +537,14 @@ internal sealed class AuthService(
             return AuthResult.Failure(linked.Errors.Select(e => e.Description).ToArray());
         }
 
-        var response = await IssueTokensAsync(user, ipAddress, cancellationToken);
+        // A typed-in address gets no session until its code comes back, like a password sign-up.
+        var response = emailConfirmed ? await IssueTokensAsync(user, ipAddress, cancellationToken) : null;
         await transaction.CommitAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} registered via GitHub sign-in", user.Id);
-        return AuthResult.Success(response);
+        return response is not null
+            ? AuthResult.Success(response)
+            : AuthResult.VerificationRequired(await verification.StartAsync(user, cancellationToken));
     }
 
     private static string? UsableEmail(LinkedInIdentity identity) =>
@@ -460,7 +559,8 @@ internal sealed class AuthService(
     /// the first branch. A null <paramref name="verifiedEmail"/> skips the email lookup entirely:
     /// matching by an address the provider never verified would let anyone claim an existing account
     /// just by typing it in. Null means "no account yet".</summary>
-    private async Task<ApplicationUser?> FindOrLinkExternalUserAsync(string provider, string subject, string? verifiedEmail)
+    private async Task<ApplicationUser?> FindOrLinkExternalUserAsync(string provider, string subject, string? verifiedEmail,
+        CancellationToken cancellationToken)
     {
         var user = await userManager.FindByLoginAsync(provider, subject);
         if (user is not null)
@@ -479,8 +579,14 @@ internal sealed class AuthService(
             return null;
         }
 
-        // Auto-link on a verified email (DECISIONS.md, 2026-09-05). Password sign-ups never verified
-        // their address; the provider just did, so record that too.
+        // Auto-link on a verified email (DECISIONS.md, 2026-09-05). An account that never verified
+        // its address may have been opened by somebody who does not own it; the provider has just
+        // shown who does, so whatever that account's maker could sign in with goes first.
+        if (!user.EmailConfirmed)
+        {
+            await ClaimUnverifiedAccountAsync(user, provider, cancellationToken);
+        }
+
         var linked = await userManager.AddLoginAsync(user, new UserLoginInfo(provider, subject, provider));
         if (!linked.Succeeded)
         {
@@ -499,6 +605,30 @@ internal sealed class AuthService(
 
         logger.LogInformation("Linked {Provider} login to existing user {UserId} by verified email", provider, user.Id);
         return user;
+    }
+
+    /// <summary>Strips an unverified account of every way in it had — password, provider logins,
+    /// sessions, access tokens, a pending verification — before a verified identity takes it over.
+    /// Its data stays: if the account was the owner's own all along, only its sign-in methods change.</summary>
+    private async Task ClaimUnverifiedAccountAsync(ApplicationUser user, string provider, CancellationToken cancellationToken)
+    {
+        foreach (var login in await userManager.GetLoginsAsync(user))
+        {
+            await userManager.RemoveLoginAsync(user, login.LoginProvider, login.ProviderKey);
+        }
+
+        if (await userManager.HasPasswordAsync(user))
+        {
+            await userManager.RemovePasswordAsync(user);
+        }
+
+        await RevokeAllActiveTokensAsync(user.Id, cancellationToken);
+        await RevokePersonalAccessTokensAsync(user.Id, cancellationToken);
+        await verification.DiscardAsync(user.Id, cancellationToken);
+        await userManager.UpdateSecurityStampAsync(user);
+
+        logger.LogWarning("Unverified account {UserId} claimed by a verified {Provider} identity; its earlier sign-in methods were removed",
+            user.Id, provider);
     }
 
     private bool IsOurWebOrigin(string redirectUri)
@@ -526,6 +656,15 @@ internal sealed class AuthService(
             return;
         }
 
+        // Per account and in total, so nobody can flood an inbox or spend the day's send quota that
+        // every other reset depends on. A throttled request answers exactly like any other.
+        var decision = await emailThrottle.TryReserveAsync(user.Id, AuthEmailKind.PasswordReset, cancellationToken);
+        if (!decision.Allowed)
+        {
+            logger.LogInformation("Password reset email for user {UserId} not sent: throttled", user.Id);
+            return;
+        }
+
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
         var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
@@ -537,7 +676,7 @@ internal sealed class AuthService(
         // (10 attempts, backoff) for free on a transient send failure — see ResendEmailSender.
         var email = user.Email!;
         jobClient.Enqueue<IEmailSender>(s => s.SendPasswordResetEmailAsync(email, resetLink, locale, CancellationToken.None));
-        logger.LogInformation("Password reset requested for user {UserId} from {Ip}", user.Id, ipAddress);
+        logger.LogInformation("Password reset requested for user {UserId}", user.Id);
     }
 
     public async Task<PasswordResetResult> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken)
@@ -570,9 +709,25 @@ internal sealed class AuthService(
             return PasswordResetResult.Failure(result.Errors.Select(e => e.Description).ToArray());
         }
 
+        // The emailed token proves the address. On an account that never verified it, that makes
+        // this the owner arriving — and the provider logins someone else may have attached go.
+        if (!user.EmailConfirmed)
+        {
+            foreach (var login in await userManager.GetLoginsAsync(user))
+            {
+                await userManager.RemoveLoginAsync(user, login.LoginProvider, login.ProviderKey);
+            }
+
+            user.EmailConfirmed = true;
+            await userManager.UpdateAsync(user);
+            await verification.DiscardAsync(user.Id, cancellationToken);
+        }
+
         // Force logout everywhere: a password reset is exactly the moment a stolen session should
-        // stop working, on every device, not just the one completing the reset.
+        // stop working, on every device, not just the one completing the reset — access tokens
+        // included, or a token minted from the stolen session would outlive the reset.
         await RevokeAllActiveTokensAsync(user.Id, cancellationToken);
+        await RevokePersonalAccessTokensAsync(user.Id, cancellationToken);
 
         var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
         var email = user.Email!;
@@ -944,6 +1099,32 @@ internal sealed class AuthService(
         if (activeTokens.Count > 0)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task RevokePersonalAccessTokensAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var activeTokens = await dbContext.PersonalAccessTokens
+            .Where(t => t.UserId == userId && t.RevokedAt == null)
+            .ToListAsync(cancellationToken);
+        if (activeTokens.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var token in activeTokens)
+        {
+            token.Revoke(now);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Validation is cached per token on every instance; without this a revoked token would keep
+        // authenticating until its cache entry lapsed.
+        foreach (var token in activeTokens)
+        {
+            await cache.RemoveAsync(CacheKeys.PersonalAccessToken(token.TokenHash), cancellationToken);
         }
     }
 

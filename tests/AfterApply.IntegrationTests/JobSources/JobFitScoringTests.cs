@@ -446,10 +446,9 @@ public class JobFitScoringTests(ApiHost<JobFitScoringProfile> host) : IClassFixt
     private async Task<(HttpClient Client, Guid UserId)> RegisterAsync(string email)
     {
         var client = _factory.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Job", "Fit", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "Job", "Fit", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
 
         await using var scope = _factory.Services.CreateAsyncScope();

@@ -5,6 +5,7 @@ using System.Text.Json;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Application.Mailing;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -36,15 +37,26 @@ public sealed class GitHubSignInProfile : IHostProfile
 
     public FakeGitHubAuthClient GitHub { get; } = new();
 
+    /// <summary>Where a typed-in address's verification code lands.</summary>
+    public CapturingEmailSender Emails { get; } = new();
+
     public void Configure(IWebHostBuilder builder)
     {
         builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
         builder.UseSetting("GitHubAuth:ClientId", ClientId);
         builder.UseSetting("GitHubAuth:ClientSecret", "test-secret");
-        builder.ConfigureTestServices(services => services.AddSingleton<IGitHubAuthClient>(GitHub));
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<IGitHubAuthClient>(GitHub);
+            services.AddSingleton<IEmailSender>(Emails);
+        });
     }
 
-    public void Reset() => GitHub.Exchanges.Clear();
+    public void Reset()
+    {
+        GitHub.Exchanges.Clear();
+        Emails.Reset();
+    }
 }
 
 [Collection(IntegrationTestCollection.Name)]
@@ -241,7 +253,7 @@ public class GitHubSignInTests(ApiHost<GitHubSignInProfile> host) : IClassFixtur
     }
 
     [Fact]
-    public async Task An_Emailless_Identity_Registers_Successfully_With_A_Fresh_Manual_Email_And_Stays_Unconfirmed()
+    public async Task An_Emailless_Identity_Registers_With_A_Manual_Email_And_Signs_In_Once_The_Code_Comes_Back()
     {
         var client = _factory.CreateClient();
         var identity = new GitHubIdentity("gh-noemail-2", null, false, "Grace", "Hopper");
@@ -251,16 +263,19 @@ public class GitHubSignInTests(ApiHost<GitHubSignInProfile> host) : IClassFixtur
 
         var signup = await client.PostAsJsonAsync("/api/auth/github/signup",
             new GitHubSignupRequest(pending.SignupToken, "Grace", "Hopper", "grace.gh@example.com", true), JsonOptions);
-        signup.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var auth = (await signup.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
+        // GitHub never vouched for this address, so it gets a code like a password sign-up's — and
+        // no session until the code comes back.
+        signup.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        var verification = (await signup.Content.ReadFromJsonAsync<EmailVerificationPendingResponse>(JsonOptions))!;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.Users.SingleAsync(u => u.Email == "grace.gh@example.com")).EmailConfirmed.ShouldBeFalse();
+        }
+
+        var auth = await VerifyAsync(client, verification);
         auth.User.Email.ShouldBe("grace.gh@example.com");
         auth.User.HasPassword.ShouldBeFalse();
-
-        await using var scope = _factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var user = await db.Users.SingleAsync(u => u.Id == auth.User.Id);
-        // GitHub never vouched for this address and neither do we — same as a password sign-up.
-        user.EmailConfirmed.ShouldBeFalse();
     }
 
     [Fact]
@@ -298,7 +313,7 @@ public class GitHubSignInTests(ApiHost<GitHubSignInProfile> host) : IClassFixtur
 
         var signup = await client.PostAsJsonAsync("/api/auth/github/signup",
             new GitHubSignupRequest(pending.SignupToken, "U", "V", "gh.unverified@example.com", true), JsonOptions);
-        signup.StatusCode.ShouldBe(HttpStatusCode.Created);
+        signup.StatusCode.ShouldBe(HttpStatusCode.Accepted);
     }
 
     [Fact]
@@ -308,9 +323,11 @@ public class GitHubSignInTests(ApiHost<GitHubSignInProfile> host) : IClassFixtur
 
         var pending = (await (await SignInAsync(_factory.CreateClient(), identity))
             .Content.ReadFromJsonAsync<GitHubSignInResponse>(JsonOptions))!.PendingSignup!;
-        var signup = await _factory.CreateClient().PostAsJsonAsync("/api/auth/github/signup",
+        var client = _factory.CreateClient();
+        var signup = await client.PostAsJsonAsync("/api/auth/github/signup",
             new GitHubSignupRequest(pending.SignupToken, "Return", "User", "gh.return@example.com", true), JsonOptions);
-        var firstUserId = (await signup.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!.User.Id;
+        var verification = (await signup.Content.ReadFromJsonAsync<EmailVerificationPendingResponse>(JsonOptions))!;
+        var firstUserId = (await VerifyAsync(client, verification)).User.Id;
 
         // Still no email from GitHub on the second visit — the subject alone is enough to recognise
         // the account; it must not be sent through the sign-up step again.
@@ -347,12 +364,24 @@ public class GitHubSignInTests(ApiHost<GitHubSignInProfile> host) : IClassFixtur
         client.PostAsJsonAsync("/api/auth/github",
             new GitHubSignInRequest(_gitHub.IssueCode(identity), RedirectUri), JsonOptions);
 
-    private static async Task<AuthResponse> RegisterAsync(HttpClient client, string email)
+    /// <summary>A verified password account, signed in.</summary>
+    private async Task<AuthResponse> RegisterAsync(HttpClient client, string email)
     {
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, Password, "Pass", "Word", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory.Services,
+            new RegisterRequest(email, Password, "Pass", "Word", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
+        return auth;
+    }
+
+    /// <summary>Sends the code, reads it out of the captured email, and posts it back.</summary>
+    private async Task<AuthResponse> VerifyAsync(HttpClient client, EmailVerificationPendingResponse pending)
+    {
+        await host.RunJobsAsync();
+        host.Jobs.Failed.ShouldBeEmpty();
+        var code = host.Profile.Emails.LastCodeFor(pending.Email).ShouldNotBeNull();
+        var verified = await client.PostAsJsonAsync("/api/auth/verify-email", new VerifyEmailRequest(pending.VerificationTicket, code), JsonOptions);
+        verified.StatusCode.ShouldBe(HttpStatusCode.OK);
+        return (await verified.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
     }
 
     private static Task<HttpResponseMessage> DeleteAccountAsync(HttpClient client, string? password)

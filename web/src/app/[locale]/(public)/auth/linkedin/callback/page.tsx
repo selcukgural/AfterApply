@@ -5,13 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { authApi } from "@/lib/api/auth";
+import { authApi, isVerificationPending } from "@/lib/api/auth";
 import { consumeLinkedInSignIn } from "@/lib/auth/linkedinOAuth";
 import { postAuthDestination, postAuthLocale } from "@/lib/auth/postAuthRedirect";
 import { applyTheme, getStoredThemeCookie, type Theme } from "@/lib/theme/theme";
 import { createLinkedInSignupSchema } from "@/lib/validation/linkedinSignupSchema";
 import { ApiError } from "@/lib/api/httpClient";
-import type { AuthResponse, LinkedInSignupPrefill } from "@/types/api";
+import type { AuthResponse, EmailVerificationPendingResponse, LinkedInSignupPrefill } from "@/types/api";
+import { EmailVerificationStep } from "@/components/auth/EmailVerificationStep";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -34,6 +35,8 @@ export default function LinkedInCallbackPage() {
 type Phase =
   | { kind: "working" }
   | { kind: "signup"; prefill: LinkedInSignupPrefill }
+  // The account exists but its address was never verified (2026-09-24): the emailed code first.
+  | { kind: "verify"; pending: EmailVerificationPendingResponse }
   | { kind: "error"; message: string };
 
 function LinkedInCallback() {
@@ -87,6 +90,9 @@ function LinkedInCallback() {
           finishSignIn(result.auth);
           return null;
         }
+        if (result.pendingVerification) {
+          return { kind: "verify", pending: result.pendingVerification };
+        }
         if (result.pendingSignup) {
           return { kind: "signup", prefill: result.pendingSignup };
         }
@@ -124,7 +130,14 @@ function LinkedInCallback() {
             </p>
           </>
         )}
-        {phase.kind === "signup" && <CompleteSignupForm prefill={phase.prefill} onSignedUp={finishSignIn} />}
+        {phase.kind === "signup" && (
+          <CompleteSignupForm
+            prefill={phase.prefill}
+            onSignedUp={finishSignIn}
+            onVerificationRequired={(pending) => setPhase({ kind: "verify", pending })}
+          />
+        )}
+        {phase.kind === "verify" && <EmailVerificationStep pending={phase.pending} onVerified={finishSignIn} />}
       </div>
     </div>
   );
@@ -135,9 +148,12 @@ type FieldErrors = Partial<Record<"email" | "firstName" | "lastName" | "consentA
 function CompleteSignupForm({
   prefill,
   onSignedUp,
+  onVerificationRequired,
 }: {
   prefill: LinkedInSignupPrefill;
   onSignedUp: (auth: AuthResponse) => void;
+  // A typed-in address is verified by an emailed code before the account can be used.
+  onVerificationRequired: (pending: EmailVerificationPendingResponse) => void;
 }) {
   const t = useTranslations("auth.linkedin.completeSignup");
   const tRegister = useTranslations("auth.register");
@@ -179,7 +195,7 @@ function CompleteSignupForm({
 
     setIsSubmitting(true);
     try {
-      const auth = await completeLinkedInSignup({
+      const outcome = await completeLinkedInSignup({
         signupToken: prefill.signupToken,
         firstName: result.data.firstName,
         lastName: result.data.lastName,
@@ -187,6 +203,11 @@ function CompleteSignupForm({
         // Only when LinkedIn gave us none — the API ignores it otherwise.
         email: requiresEmail ? result.data.email : undefined,
       });
+      if (isVerificationPending(outcome)) {
+        onVerificationRequired(outcome);
+        return;
+      }
+      const auth = outcome;
       // Same as the register page: push a theme already chosen on this browser up to the new
       // account instead of letting it snap back to the server default.
       const localTheme = getStoredThemeCookie();

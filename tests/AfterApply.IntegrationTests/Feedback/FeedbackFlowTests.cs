@@ -52,10 +52,9 @@ public class FeedbackFlowTests(ApiHost<FeedbackFlowProfile> host) : IClassFixtur
     {
         var client = _factory!.CreateClient();
 
-        var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Feed", "Back", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory!.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "Feed", "Back", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
         auth.ShouldNotBeNull();
 
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);

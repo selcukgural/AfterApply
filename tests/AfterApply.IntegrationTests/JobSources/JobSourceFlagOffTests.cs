@@ -31,10 +31,8 @@ public class JobSourceFlagOffTests(ApiHost<DefaultProfile> host) : IClassFixture
         await host.ResetAsync();
 
         _admin = _factory.CreateClient();
-        var response = await _admin.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("admin.flagoff@ekariyerim.com", "P@ssw0rd123!", "Flag", "Off", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_admin, _factory.Services,
+            new RegisterRequest("admin.flagoff@ekariyerim.com", "P@ssw0rd123!", "Flag", "Off", true));
         _admin.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
 
         await using var scope = _factory.Services.CreateAsyncScope();

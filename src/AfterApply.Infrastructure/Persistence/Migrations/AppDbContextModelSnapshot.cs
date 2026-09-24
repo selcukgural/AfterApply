@@ -2279,6 +2279,22 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                             Key = "RefundRejected",
                             Locale = "en",
                             Subject = "About your refund request — e-kariyerim"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-00000000000f"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>E-posta adresinizi doğrulayın</h2>\n  <p>e-kariyerim hesabınızı açmak için bu kodu, kaydı başlattığınız sayfaya girin:</p>\n  <p style=\"font-size:28px;font-weight:600;letter-spacing:6px;margin:16px 0;\">{{Code}}</p>\n  <p>Kod 15 dakika geçerlidir.</p>\n  <p style=\"color:#555;font-size:13px;\">Bu kaydı siz başlatmadıysanız bu e-postayı yok sayın ve kodu kimseyle paylaşmayın. Doğrulanmayan hesap 7 gün içinde silinir.</p>\n</div>",
+                            Key = "EmailVerificationCode",
+                            Locale = "tr",
+                            Subject = "e-kariyerim doğrulama kodunuz: {{Code}}"
+                        },
+                        new
+                        {
+                            Id = new Guid("5a1e0000-0000-4000-8000-000000000010"),
+                            HtmlBody = "<div style=\"font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;\">\n  <h2>Verify your email address</h2>\n  <p>To open your e-kariyerim account, enter this code on the page where you started signing up:</p>\n  <p style=\"font-size:28px;font-weight:600;letter-spacing:6px;margin:16px 0;\">{{Code}}</p>\n  <p>The code works for 15 minutes.</p>\n  <p style=\"color:#555;font-size:13px;\">If you did not start this sign-up, ignore this email and don't share the code with anyone. An account that is never verified is deleted within 7 days.</p>\n</div>",
+                            Key = "EmailVerificationCode",
+                            Locale = "en",
+                            Subject = "Your e-kariyerim verification code: {{Code}}"
                         });
                 });
 
@@ -3042,6 +3058,73 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Infrastructure.Identity.AuthEmailDispatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "SentAt");
+
+                    b.HasIndex("UserId", "Kind", "SentAt");
+
+                    b.ToTable("AuthEmailDispatches", (string)null);
+                });
+
+            modelBuilder.Entity("AfterApply.Infrastructure.Identity.EmailVerificationChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CodeHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset?>("CodeIssuedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("FailedAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TicketHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("EmailVerificationChallenges", (string)null);
                 });
 
             modelBuilder.Entity("AfterApply.Infrastructure.Identity.ExtensionPairingRequest", b =>
@@ -3817,6 +3900,24 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Infrastructure.Identity.AuthEmailDispatch", b =>
+                {
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Infrastructure.Identity.EmailVerificationChallenge", b =>
+                {
                     b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")

@@ -100,10 +100,9 @@ internal sealed class PaymentTestHost(ApiHost host)
         var client = Factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Forwarded-For", ClientIp);
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(locale);
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Ada", "Lovelace", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, Factory.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "Ada", "Lovelace", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
 
         await using var scope = Factory.Services.CreateAsyncScope();

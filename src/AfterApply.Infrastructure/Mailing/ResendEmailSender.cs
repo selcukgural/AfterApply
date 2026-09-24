@@ -45,6 +45,12 @@ internal sealed class ResendEmailSender(
         await SendAsync(toEmail, template.Subject, template.HtmlBody, cancellationToken);
     }
 
+    public async Task SendEmailVerificationCodeAsync(string toEmail, string code, string locale, CancellationToken cancellationToken)
+    {
+        var template = await GetTemplateAsync(EmailTemplateKey.EmailVerificationCode, locale, cancellationToken);
+        await SendAsync(toEmail, template.Subject.Replace("{{Code}}", code), template.HtmlBody.Replace("{{Code}}", code), cancellationToken);
+    }
+
     public async Task SendWeeklyJobsReadyEmailAsync(string toEmail, string locale, WeeklyJobsDigest digest, CancellationToken cancellationToken)
     {
         var template = await GetTemplateAsync(EmailTemplateKey.WeeklyJobsReady, locale, cancellationToken);

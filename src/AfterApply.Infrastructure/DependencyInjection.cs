@@ -158,6 +158,7 @@ public static class DependencyInjection
         services.Configure<ApplicationBulkOptions>(configuration.GetSection(ApplicationBulkOptions.SectionName));
         services.Configure<IdentityPolicyOptions>(configuration.GetSection(IdentityPolicyOptions.SectionName));
         services.Configure<PersonalAccessTokenOptions>(configuration.GetSection(PersonalAccessTokenOptions.SectionName));
+        services.Configure<EmailVerificationOptions>(configuration.GetSection(EmailVerificationOptions.SectionName));
         services.Configure<ExtensionPairingOptions>(configuration.GetSection(ExtensionPairingOptions.SectionName));
         services.Configure<NotificationOptions>(configuration.GetSection("Notifications"));
         services.Configure<ProductMetricsOptions>(configuration.GetSection(ProductMetricsOptions.SectionName));
@@ -566,6 +567,10 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<AuthEmailThrottle>();
+        services.AddScoped<EmailVerificationService>();
+        services.AddScoped<IEmailVerificationCodeSender, EmailVerificationCodeSender>();
+        services.AddScoped<IUnverifiedAccountCleanupService, UnverifiedAccountCleanupService>();
         services.AddScoped<IPersonalAccessTokenService, PersonalAccessTokenService>();
         services.AddScoped<IExtensionPairingService, ExtensionPairingService>();
 

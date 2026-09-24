@@ -35,6 +35,15 @@
   <data name="AUTH_INVALID_CREDENTIALS" xml:space="preserve">
     <value>Invalid email or password.</value>
   </data>
+  <data name="AUTH_VERIFICATION_EXPIRED" xml:space="preserve">
+    <value>This verification has expired. Please sign in again to get a new code.</value>
+  </data>
+  <data name="AUTH_VERIFICATION_CODE_EXPIRED" xml:space="preserve">
+    <value>This code is no longer valid. Request a new code and try again.</value>
+  </data>
+  <data name="AUTH_VERIFICATION_CODE_INVALID" xml:space="preserve">
+    <value>That code is not correct. Check the email and try again.</value>
+  </data>
   <data name="AUTH_INVALID_REFRESH_TOKEN" xml:space="preserve">
     <value>Invalid refresh token.</value>
   </data>

@@ -21,10 +21,12 @@ public sealed record GitHubSignupRequest(string SignupToken, string FirstName, s
 /// are meant to be corrected.</summary>
 public sealed record GitHubSignupPrefill(string SignupToken, string? Email, string FirstName, string LastName);
 
-/// <summary>Exactly one of the two is non-null: <see cref="Auth"/> when an account was found (or
+/// <summary>Exactly one of the three is non-null: <see cref="Auth"/> when an account was found (or
 /// linked by verified email) and the user is signed in, <see cref="PendingSignup"/> when the client
-/// has to show the complete-your-sign-up step first.</summary>
-public sealed record GitHubSignInResponse(AuthResponse? Auth, GitHubSignupPrefill? PendingSignup);
+/// has to show the complete-your-sign-up step first. <see cref="PendingVerification"/>
+/// when the account exists but its email is unverified and the emailed code must come back first.</summary>
+public sealed record GitHubSignInResponse(AuthResponse? Auth, GitHubSignupPrefill? PendingSignup,
+    EmailVerificationPendingResponse? PendingVerification = null);
 
 public sealed record GitHubSignInResult
 {
@@ -39,6 +41,11 @@ public sealed record GitHubSignInResult
 
     public static GitHubSignInResult SignupRequired(GitHubSignupPrefill prefill) =>
         new() { Succeeded = true, Response = new GitHubSignInResponse(null, prefill) };
+
+    /// <summary>The identity maps to an account whose email address was never verified — the
+    /// manual-email sign-up path, or an account from before verification existed.</summary>
+    public static GitHubSignInResult VerificationRequired(EmailVerificationPendingResponse pending) =>
+        new() { Succeeded = true, Response = new GitHubSignInResponse(null, null, pending) };
 
     public static GitHubSignInResult Failure(params IReadOnlyCollection<string> errors) =>
         new() { Succeeded = false, Errors = errors };

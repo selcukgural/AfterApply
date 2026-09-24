@@ -59,10 +59,11 @@ public class ResendEmailSenderTests(ApiHost<ResendEmailSenderProfile> host) : IC
 
     private async Task<AuthResponse> RegisterAsync(HttpClient client, string email)
     {
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Reset", "Test", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "Reset", "Test", true));
+        // The sign-up's own verification-code mail would otherwise be the first one sent here.
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
+        return auth;
     }
 
     // Sending is enqueued as a background job, not awaited inline within the request — see

@@ -194,6 +194,66 @@ public class GoogleSignInTests(ApiHost<GoogleSignInProfile> host) : IClassFixtur
         (await db.UserLogins.CountAsync(l => l.UserId == user.Id)).ShouldBe(1);
     }
 
+    // The pre-registration takeover (2026-09-24): somebody signs up with the owner's address and a
+    // password of their own. The sign-up is never verified, so it opens nothing — and when the owner
+    // arrives through Google, the account becomes theirs and the stranger's password stops working.
+    [Fact]
+    public async Task A_Sign_Up_Nobody_Verified_Is_Claimed_By_The_Verified_Google_Identity()
+    {
+        var stranger = _factory.CreateClient();
+        (await stranger.PostAsJsonAsync("/api/auth/register",
+            new RegisterRequest("claimed@example.com", Password, "Not", "Owner", true), JsonOptions))
+            .StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
+
+        var owner = _factory.CreateClient();
+        var signIn = await SignInAsync(owner, new GoogleIdentity("g-claimed", "claimed@example.com", true, "Real", "Owner"));
+        signIn.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = (await signIn.Content.ReadFromJsonAsync<GoogleSignInResponse>(JsonOptions))!;
+        body.Auth.ShouldNotBeNull();
+        body.Auth.User.HasPassword.ShouldBeFalse();
+
+        (await stranger.PostAsJsonAsync("/api/auth/login", new LoginRequest("claimed@example.com", Password), JsonOptions))
+            .StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    // The same claim against an account that got a session before verification existed: whatever
+    // its maker could still sign in with — password, refresh token, access token — goes, and the
+    // data stays with the account.
+    [Fact]
+    public async Task Claiming_An_Unverified_Account_Revokes_Its_Password_Sessions_And_Tokens()
+    {
+        var earlier = _factory.CreateClient();
+        var registered = await RegisterAsync(earlier, "legacy.claim@example.com");
+        earlier.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", registered.AccessToken);
+        var patResponse = await earlier.PostAsJsonAsync("/api/personal-access-tokens",
+            new CreatePersonalAccessTokenRequest("Chrome Extension"), JsonOptions);
+        patResponse.EnsureSuccessStatusCode();
+        var pat = (await patResponse.Content.ReadFromJsonAsync<CreatedPersonalAccessTokenResponse>(JsonOptions))!;
+        await host.WithDbAsync(db => db.Users.Where(u => u.Id == registered.User.Id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.EmailConfirmed, false)));
+
+        var signIn = await SignInAsync(_factory.CreateClient(), new GoogleIdentity("g-legacy", "legacy.claim@example.com", true, "L", "C"));
+        signIn.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = (await signIn.Content.ReadFromJsonAsync<GoogleSignInResponse>(JsonOptions))!;
+        body.Auth!.User.Id.ShouldBe(registered.User.Id);
+        body.Auth.User.HasPassword.ShouldBeFalse();
+
+        (await earlier.PostAsJsonAsync("/api/auth/login", new LoginRequest("legacy.claim@example.com", Password), JsonOptions))
+            .StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (await earlier.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(registered.RefreshToken), JsonOptions))
+            .StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        using var patClient = _factory.CreateClient();
+        patClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", pat.Token);
+        (await patClient.GetAsync("/api/companies/search?q=acme")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.Users.SingleAsync(u => u.Id == registered.User.Id)).EmailConfirmed.ShouldBeTrue();
+        (await db.UserLogins.Where(l => l.UserId == registered.User.Id).Select(l => l.LoginProvider).ToListAsync())
+            .ShouldBe(["Google"]);
+    }
+
     [Fact]
     public async Task An_Unverified_Google_Email_Is_Rejected()
     {
@@ -285,12 +345,13 @@ public class GoogleSignInTests(ApiHost<GoogleSignInProfile> host) : IClassFixtur
         client.PostAsJsonAsync("/api/auth/google",
             new GoogleSignInRequest(_google.IssueCode(identity), CodeVerifier, RedirectUri), JsonOptions);
 
-    private static async Task<AuthResponse> RegisterAsync(HttpClient client, string email)
+    /// <summary>A verified password account, signed in.</summary>
+    private async Task<AuthResponse> RegisterAsync(HttpClient client, string email)
     {
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, Password, "Pass", "Word", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory.Services,
+            new RegisterRequest(email, Password, "Pass", "Word", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
+        return auth;
     }
 
     private static Task<HttpResponseMessage> DeleteAccountAsync(HttpClient client, string? password)

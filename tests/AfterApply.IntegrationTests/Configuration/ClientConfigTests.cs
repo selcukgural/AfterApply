@@ -95,10 +95,11 @@ public class ClientConfigTests(ApiHost<ClientConfigProfile> host) : IClassFixtur
         var problem = await tooShort.Content.ReadAsStringAsync();
         problem.ShouldContain("20");
 
-        // 20 chars, no special character — accepted with the override.
+        // 20 chars, no special character — accepted with the override (202: the account now waits
+        // for its emailed code).
         var accepted = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest("policy.long@example.com", "LongPassword12345678", "Policy", "Test", true), JsonOptions);
-        accepted.StatusCode.ShouldBe(HttpStatusCode.Created);
+        accepted.StatusCode.ShouldBe(HttpStatusCode.Accepted);
     }
 
     /// <summary>
@@ -107,8 +108,8 @@ public class ClientConfigTests(ApiHost<ClientConfigProfile> host) : IClassFixtur
     /// is a short one and one made of a few repeated characters.
     /// </summary>
     [Theory]
-    [InlineData("correct horse battery", HttpStatusCode.Created)]
-    [InlineData("kelimelerbirarada", HttpStatusCode.Created)]
+    [InlineData("correct horse battery", HttpStatusCode.Accepted)]
+    [InlineData("kelimelerbirarada", HttpStatusCode.Accepted)]
     [InlineData("kisa sifre", HttpStatusCode.BadRequest)]
     [InlineData("aaaaaaaaaaaa", HttpStatusCode.BadRequest)]
     public async Task Default_Policy_Judges_A_Password_By_Its_Length_Not_Its_Character_Classes(string password, HttpStatusCode expected)
@@ -125,10 +126,8 @@ public class ClientConfigTests(ApiHost<ClientConfigProfile> host) : IClassFixtur
     public async Task Overridden_Token_Limit_Is_Enforced_And_Quoted_In_The_Error()
     {
         var client = _overriddenFactory.CreateClient();
-        var register = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("policy.tokens@example.com", "LongPassword12345678", "Policy", "Test", true), JsonOptions);
-        register.EnsureSuccessStatusCode();
-        var auth = await register.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _overriddenFactory.Services,
+            new RegisterRequest("policy.tokens@example.com", "LongPassword12345678", "Policy", "Test", true));
         client.DefaultRequestHeaders.Authorization = new("Bearer", auth!.AccessToken);
 
         for (var i = 0; i < 3; i++)

@@ -203,11 +203,8 @@ public class SiteTrafficTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiH
         (await _client.GetAsync("/api/admin/site-traffic")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
 
         var signedIn = _factory!.CreateClient();
-        var registration = await signedIn.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("traffic.reader@example.com", "P@ssw0rd123!", "Traffic", "Reader", true),
-            JsonOptions);
-        registration.EnsureSuccessStatusCode();
-        var auth = await registration.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(signedIn, _factory!.Services,
+            new RegisterRequest("traffic.reader@example.com", "P@ssw0rd123!", "Traffic", "Reader", true));
         signedIn.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
 
         (await signedIn.GetAsync("/api/admin/site-traffic")).StatusCode.ShouldBe(HttpStatusCode.Forbidden);

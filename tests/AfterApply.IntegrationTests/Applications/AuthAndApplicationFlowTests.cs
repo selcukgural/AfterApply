@@ -29,10 +29,8 @@ public class AuthAndApplicationFlowTests(ApiHost<DefaultProfile> host) : IClassF
     {
         var client = _factory!.CreateClient();
 
-        var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("flow.test@example.com", "P@ssw0rd123!", "Flow", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory!.Services,
+            new RegisterRequest("flow.test@example.com", "P@ssw0rd123!", "Flow", "Test", true));
         auth.ShouldNotBeNull();
 
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
@@ -66,8 +64,8 @@ public class AuthAndApplicationFlowTests(ApiHost<DefaultProfile> host) : IClassF
     {
         var client = _factory!.CreateClient();
 
-        await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("wrongpw.test@example.com", "P@ssw0rd123!", "Wrong", "Pw", true), JsonOptions);
+        await TestAccounts.RegisterVerifiedAsync(client, _factory.Services,
+            new RegisterRequest("wrongpw.test@example.com", "P@ssw0rd123!", "Wrong", "Pw", true));
 
         var loginResponse = await client.PostAsJsonAsync("/api/auth/login",
             new LoginRequest("wrongpw.test@example.com", "NotTheRightPassword!"), JsonOptions);

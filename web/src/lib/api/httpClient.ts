@@ -23,6 +23,9 @@ const NO_AUTH_ENDPOINTS = [
   // the callback page straight back to /login, hiding the real error — seen live 2026-09-05.
   "/api/auth/linkedin",
   "/api/auth/refresh",
+  // Prefix match, so also /verify-email/resend. The ticket in the body is the credential; a 400 or
+  // 401 here is the verification's own answer, never a session to refresh.
+  "/api/auth/verify-email",
   // The public benchmark is answerable without an account and its answers are anonymous by
   // design — attaching a signed-in visitor's token would make one of them attributable.
   "/api/benchmark",

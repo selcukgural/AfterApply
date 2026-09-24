@@ -41,10 +41,8 @@ public class CacheConfigurationTests(ApiHost<DefaultProfile> host) : IClassFixtu
         await host.ResetAsync();
 
         _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("cache.config@example.com", "P@ssw0rd123!", "Cache", "Config", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory.Services,
+            new RegisterRequest("cache.config@example.com", "P@ssw0rd123!", "Cache", "Config", true));
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 

@@ -151,10 +151,9 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
         // A user of its own: the fixture's shared users receive signals in other tests, and xunit
         // does not promise their order, so "no signal yet" can only be asserted on a fresh account.
         var client = host.CreateClient();
-        var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("email-signal.scan-status@example.com", "P@ssw0rd123!", "Signal", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, host.Services,
+            new RegisterRequest("email-signal.scan-status@example.com", "P@ssw0rd123!", "Signal", "Test", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
 
         var before = await client.GetFromJsonAsync<JsonElement>("/api/email-forwarding/gmail-scan-status", JsonOptions);

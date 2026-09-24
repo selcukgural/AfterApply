@@ -61,10 +61,9 @@ public class FeedbackGitHubMirrorWithoutAssigneeTests(ApiHost<FeedbackGitHubMirr
         await host.ResetAsync();
 
         _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("feedback.noassignee@example.com", "P@ssw0rd123!", "Mirror", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory.Services,
+            new RegisterRequest("feedback.noassignee@example.com", "P@ssw0rd123!", "Mirror", "Test", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 

@@ -77,10 +77,9 @@ public class AtsJobEnrichmentTests(ApiHost<AtsEnrichmentProfile> host) : IClassF
         await host.ResetAsync();
 
         _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("ats.enrichment@example.com", "P@ssw0rd123!", "Ats", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory.Services,
+            new RegisterRequest("ats.enrichment@example.com", "P@ssw0rd123!", "Ats", "Test", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 
@@ -231,10 +230,9 @@ public class AtsJobEnrichmentFlagOffTests(ApiHost<AtsEnrichmentFlagOffProfile> h
         await host.ResetAsync();
 
         _client = ((WebApplicationFactory<Program>)host).CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("ats.flagoff@example.com", "P@ssw0rd123!", "Ats", "Off", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, ((WebApplicationFactory<Program>)host).Services,
+            new RegisterRequest("ats.flagoff@example.com", "P@ssw0rd123!", "Ats", "Off", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 

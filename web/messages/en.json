@@ -575,6 +575,19 @@
         "submitting": "Creating account...",
         "genericError": "Could not create account."
       }
+    },
+    "verifyEmail": {
+      "title": "Verify your email",
+      "sentTo": "We sent a 6-digit code to <email></email>. Enter it here to open your account.",
+      "codeLabel": "Verification code",
+      "submit": "Verify and continue",
+      "submitting": "Verifying...",
+      "resend": "Send the code again",
+      "resendIn": "Send the code again ({seconds}s)",
+      "resent": "We sent a new code.",
+      "spamHint": "If it doesn't arrive within a few minutes, check your spam folder too.",
+      "restart": "Sign in again",
+      "genericError": "Verification could not be completed."
     }
   },
   "dashboard": {
@@ -1170,7 +1183,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 23 September 2026",
+    "lastUpdated": "Last updated: 24 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -1202,7 +1215,7 @@
     "dataCollection": {
       "title": "What data we collect and why",
       "intro": "e-kariyerim is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
-      "item1": "Account details: email address and password (stored hashed); first and last name are optional — the sign-up form does not ask for them, you can add them under Settings. If you sign in with Google, LinkedIn or GitHub, that account's identifier is stored instead of a password (see below).",
+      "item1": "Account details: email address and password (stored hashed); first and last name are optional — the sign-up form does not ask for them, you can add them under Settings. If you sign in with Google, LinkedIn or GitHub, that account's identifier is stored instead of a password (see below). When you sign up, we send a 6-digit code to your address to verify it; the account cannot be used until the code is entered.",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes.",
       "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
@@ -1218,27 +1231,27 @@
       "item2": "Your email address, as verified by Google.",
       "item3": "The first and last name on your Google profile (pre-filled in the sign-up form; you can change them before saving).",
       "noAccess": "We do not access, and never request permission for, your Gmail, contacts, Drive or any other data in your Google account. We do not store the access tokens Google issues us; they are discarded as soon as sign-in completes.",
-      "linking": "If the verified email address of your Google account already belongs to an e-kariyerim account created with a password, the Google sign-in is linked to that account and signs you into it; your password keeps working.",
+      "linking": "If the verified email address of your Google account already belongs to an e-kariyerim account created with a password, the Google sign-in is linked to that account and signs you into it; your password keeps working. If that account's email address was never verified, its password, other sign-in methods, open sessions and extension keys are removed before linking; the account passes to you, whom Google has just shown to own the address.",
       "revoke": "You can remove the permission on Google's side at any time under Google Account → Security → Third-party apps. Deleting your e-kariyerim account also removes the link to Google."
     },
     "linkedInSignIn": {
       "title": "Sign in with LinkedIn",
       "intro": "Sign in with LinkedIn is an optional login method, an alternative to registering with email and password. When you use it, we receive only the following from LinkedIn:",
       "item1": "Your LinkedIn account's permanent identifier (so we can recognise your account even if your email address changes).",
-      "item2": "Your email address, as verified by LinkedIn — if LinkedIn shares it. LinkedIn does not always do so; in that case we ask you to enter an email address yourself when you complete your sign-up, and that address is not verified by us.",
+      "item2": "Your email address, as verified by LinkedIn — if LinkedIn shares it. LinkedIn does not always do so; in that case we ask you to enter an email address yourself when you complete your sign-up, and we send a verification code to that address; the account cannot be used until the code is entered.",
       "item3": "The first and last name on your LinkedIn profile (pre-filled in the sign-up form; you can change them before saving).",
       "noAccess": "We do not access, and never request permission for, your connections, messages, posts or any other data in your LinkedIn account. We do not store the access tokens LinkedIn issues us; they are discarded as soon as sign-in completes.",
-      "linking": "If the email address verified by LinkedIn already belongs to an e-kariyerim account created with a password, the LinkedIn sign-in is linked to that account and signs you into it; your password keeps working. An email address you typed in yourself is never used to link to an existing account.",
+      "linking": "If the email address verified by LinkedIn already belongs to an e-kariyerim account created with a password, the LinkedIn sign-in is linked to that account and signs you into it; your password keeps working. If that account's email address was never verified, its password, other sign-in methods, open sessions and extension keys are removed before linking; the account passes to you, whom LinkedIn has just shown to own the address. An email address you typed in yourself is never used to link to an existing account.",
       "revoke": "You can remove the permission on LinkedIn's side at any time under Settings & Privacy → Data privacy → Other applications → Permitted services. Deleting your e-kariyerim account also removes the link to LinkedIn."
     },
     "gitHubSignIn": {
       "title": "Sign in with GitHub",
       "intro": "Sign in with GitHub is an optional login method, an alternative to registering with email and password. When you use it, we receive only the following from GitHub:",
       "item1": "Your GitHub account's numeric identifier (so we can recognise your account even if you change your username or email address).",
-      "item2": "Your email address, as verified by GitHub — if GitHub shares one. An account that keeps its address private shares none; in that case we ask you to enter an email address yourself when you complete your sign-up, and that address is not verified by us.",
+      "item2": "Your GitHub account's primary email address, as verified by GitHub — if GitHub shares one. An account that keeps its address private shares none; in that case we ask you to enter an email address yourself when you complete your sign-up, and we send a verification code to that address; the account cannot be used until the code is entered.",
       "item3": "The display name on your GitHub profile, split into a first and last name (pre-filled in the sign-up form; you can change them before saving).",
       "noAccess": "We ask GitHub for two permissions only — read your profile and read your email addresses. We do not access, and never request permission for, your repositories (public or private), your code, your issues or anything else in your GitHub account. We do not store the access tokens GitHub issues us; they are discarded as soon as sign-in completes.",
-      "linking": "If the email address verified by GitHub already belongs to an e-kariyerim account created with a password, the GitHub sign-in is linked to that account and signs you into it; your password keeps working. An email address you typed in yourself is never used to link to an existing account.",
+      "linking": "If the email address verified by GitHub already belongs to an e-kariyerim account created with a password, the GitHub sign-in is linked to that account and signs you into it; your password keeps working. If that account's email address was never verified, its password, other sign-in methods, open sessions and extension keys are removed before linking; the account passes to you, whom GitHub has just shown to own the address. An email address you typed in yourself is never used to link to an existing account.",
       "revoke": "You can remove the permission on GitHub's side at any time under Settings → Applications → Authorized OAuth Apps. Deleting your e-kariyerim account also removes the link to GitHub."
     },
     "crossBorderTransfer": {
@@ -1260,7 +1273,7 @@
     },
     "retention": {
       "title": "Retention period",
-      "body": "Data tied to your account is kept until you delete your account; no automatic time-based deletion is applied to it. The one exception is request-log entries that belong to no account (an anonymous CV scan, a benchmark answer, a failed sign-in attempt): those are deleted automatically after 12 months."
+      "body": "Data tied to your account is kept until you delete your account; no automatic time-based deletion is applied to it. There are two exceptions. First, sign-ups that could never be used because their email address was not verified: they are deleted entirely if not verified within 7 days. Second, request-log entries that belong to no account (an anonymous CV scan, a benchmark answer, a failed sign-in attempt): those are deleted automatically after 12 months."
     },
     "rights": {
       "title": "Your rights",

@@ -52,10 +52,8 @@ public class RequestAuditTests(ApiHost<DefaultProfile> host) : IClassFixture<Api
     private async Task<(HttpClient Client, Guid UserId, AuthResponse Auth)> RegisterAsync(string email)
     {
         var client = AnonymousClient();
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Audit", "Test", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory!.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "Audit", "Test", true));
         auth.ShouldNotBeNull();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
         return (client, auth.User.Id, auth);

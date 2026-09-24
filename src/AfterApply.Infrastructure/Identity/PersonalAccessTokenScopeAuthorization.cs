@@ -15,7 +15,7 @@ public sealed class ExtensionTokenAllowedMetadata;
 public static class ExtensionTokenEndpointExtensions
 {
     /// <summary>Marks an endpoint as reachable by an Extension-scoped personal access token.
-    /// Everything else in the API is, by default, JWT-session-or-Full-scope-token only — so the
+    /// Everything else in the API is, by default, JWT-session only — so the
     /// safe outcome is what you get by forgetting to call this, and the deliberate one is what you
     /// have to type. Applied to exactly the three authenticated endpoints extension/ calls:
     /// POST /api/applications/from-extension, POST /api/email-forwarding/extension-signal, and
@@ -31,9 +31,14 @@ public static class ExtensionTokenEndpointExtensions
 public sealed class PersonalAccessTokenScopeRequirement : IAuthorizationRequirement;
 
 /// <summary>
-/// Holds an Extension-scoped personal access token to the endpoints marked with
-/// <see cref="ExtensionTokenEndpointExtensions.AllowExtensionToken{TBuilder}"/>, and lets every
-/// other caller through untouched.
+/// Holds every personal access token to the endpoints marked with
+/// <see cref="ExtensionTokenEndpointExtensions.AllowExtensionToken{TBuilder}"/>, and lets a JWT
+/// session (no scope claim) through untouched.
+///
+/// Any scope claim counts as a token, whatever its value (2026-09-24). Tokens used to be allowed
+/// everywhere unless they said "Extension", which let a "Full" token — or any value the enum did
+/// not know — reach token management, export, account deletion and admin. Full can no longer be
+/// issued, and the Full tokens issued before are held to the extension's endpoints like the rest.
 ///
 /// Wired into the *default* authorization policy (DependencyInjection.AddIdentityAndJwt) rather
 /// than added per-endpoint, because the property worth having is the negative one: an endpoint
@@ -47,9 +52,8 @@ internal sealed class PersonalAccessTokenScopeHandler : AuthorizationHandler<Per
     {
         var scope = context.User.FindFirstValue(PersonalAccessTokenDefaults.ScopeClaimType);
 
-        // No scope claim means a JWT session; Full means a token deliberately issued with session-
-        // equivalent access. Neither is restricted here.
-        if (scope != nameof(PersonalAccessTokenScope.Extension))
+        // No scope claim means a JWT session, the only caller not restricted here.
+        if (scope is null)
         {
             context.Succeed(requirement);
             return Task.CompletedTask;
@@ -57,7 +61,7 @@ internal sealed class PersonalAccessTokenScopeHandler : AuthorizationHandler<Per
 
         // Under endpoint routing the authorization middleware passes the HttpContext as the
         // resource, which is how the requirement gets at the endpoint's metadata. Failing closed
-        // when it isn't an HttpContext is intentional: an Extension token should never be granted
+        // when it isn't an HttpContext is intentional: a token should never be granted
         // access by a code path this handler can't actually inspect.
         if (context.Resource is HttpContext httpContext &&
             httpContext.GetEndpoint()?.Metadata.GetMetadata<ExtensionTokenAllowedMetadata>() is not null)

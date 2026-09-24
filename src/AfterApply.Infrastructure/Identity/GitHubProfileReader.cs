@@ -39,8 +39,10 @@ public static class GitHubProfileReader
     /// an unverified address would let anyone claim an existing account by adding its email to their
     /// own GitHub profile.
     ///
-    /// The primary one wins when it qualifies, because that is the address the owner considers
-    /// theirs; otherwise the first other verified address, which is just as proven. A null here is
+    /// Only the primary address qualifies (2026-09-24). A secondary one can be an old address the
+    /// owner no longer controls — a former employer's, still marked verified — and matching on it
+    /// would link this GitHub account into whatever account that address's new owner opened. A
+    /// null here is
     /// not an error — it sends the user through the same manual-email sign-up step LinkedIn already
     /// has (private-email GitHub accounts are common, and <c>GET /user</c>'s own <c>email</c> field
     /// is null for all of them).
@@ -56,7 +58,7 @@ public static class GitHubProfileReader
             .Where(e => e.Verified && !string.IsNullOrWhiteSpace(e.Email) && !IsNoReply(e.Email))
             .ToList();
 
-        return usable.FirstOrDefault(e => e.Primary)?.Email ?? usable.FirstOrDefault()?.Email;
+        return usable.FirstOrDefault(e => e.Primary)?.Email;
     }
 
     private static bool IsNoReply(string email) =>

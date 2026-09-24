@@ -19,6 +19,7 @@ public sealed class CapturingEmailSender : IEmailSender
         lock (ExpiryReminders) ExpiryReminders.Clear();
         lock (RefundsCompleted) RefundsCompleted.Clear();
         lock (RefundsRejected) RefundsRejected.Clear();
+        lock (VerificationCodes) VerificationCodes.Clear();
     }
 
     public string? LastResetLink { get; private set; }
@@ -38,6 +39,27 @@ public sealed class CapturingEmailSender : IEmailSender
     {
         PasswordChangedCount++;
         LastLocale = locale;
+        return Task.CompletedTask;
+    }
+
+    public List<(string ToEmail, string Code, string Locale)> VerificationCodes { get; } = [];
+
+    /// <summary>The last code sent to <paramref name="email"/>, or null.</summary>
+    public string? LastCodeFor(string email)
+    {
+        lock (VerificationCodes)
+        {
+            return VerificationCodes.LastOrDefault(c => c.ToEmail == email).Code;
+        }
+    }
+
+    public Task SendEmailVerificationCodeAsync(string toEmail, string code, string locale, CancellationToken cancellationToken)
+    {
+        lock (VerificationCodes)
+        {
+            VerificationCodes.Add((toEmail, code, locale));
+        }
+
         return Task.CompletedTask;
     }
 

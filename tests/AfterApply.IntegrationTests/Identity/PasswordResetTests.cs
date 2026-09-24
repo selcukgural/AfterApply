@@ -48,10 +48,10 @@ public class PasswordResetTests(ApiHost<PasswordResetProfile> host) : IClassFixt
     private async Task<AuthResponse> RegisterAsync(string email)
     {
         var client = _factory!.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, RegisteredPassword, "Reset", "Test", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory.Services,
+            new RegisterRequest(email, RegisteredPassword, "Reset", "Test", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
+        return auth;
     }
 
     private static (string Email, string Token) ParseResetLink(string resetLink)
@@ -179,5 +179,78 @@ public class PasswordResetTests(ApiHost<PasswordResetProfile> host) : IClassFixt
         var newLoginResponse = await client.PostAsJsonAsync("/api/auth/login",
             new LoginRequest(email, newPassword), JsonOptions);
         newLoginResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    // A token minted from a stolen session must not outlive the reset the victim does to get rid
+    // of it (2026-09-24).
+    [Fact]
+    public async Task ResetPassword_Also_Revokes_Personal_Access_Tokens()
+    {
+        const string email = "reset.pat@example.com";
+        var auth = await RegisterAsync(email);
+        var owner = _factory!.CreateClient();
+        owner.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        var created = await owner.PostAsJsonAsync("/api/personal-access-tokens",
+            new CreatePersonalAccessTokenRequest("Chrome Extension"), JsonOptions);
+        var pat = (await created.Content.ReadFromJsonAsync<CreatedPersonalAccessTokenResponse>(JsonOptions))!;
+        using var patClient = _factory.CreateClient();
+        patClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", pat.Token);
+        (await patClient.GetAsync("/api/companies/search?q=acme")).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var client = _factory.CreateClient();
+        await client.PostAsJsonAsync("/api/auth/forgot-password", new ForgotPasswordRequest(email), JsonOptions);
+        var (_, token) = ParseResetLink(await WaitForResetLinkAsync());
+        (await client.PostAsJsonAsync("/api/auth/reset-password",
+            new ResetPasswordRequest(email, token, "N3wStr0ng!Passw0rd"), JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await patClient.GetAsync("/api/companies/search?q=acme")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    // One inbox cannot be flooded, and the day's send quota every other reset depends on cannot be
+    // spent from one script. A throttled request answers exactly like any other.
+    [Fact]
+    public async Task A_Second_Reset_Email_Inside_The_Cooldown_Is_Not_Sent()
+    {
+        const string email = "reset.cooldown@example.com";
+        await RegisterAsync(email);
+        var client = _factory!.CreateClient();
+
+        (await client.PostAsJsonAsync("/api/auth/forgot-password", new ForgotPasswordRequest(email), JsonOptions))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await WaitForResetLinkAsync();
+
+        (await client.PostAsJsonAsync("/api/auth/forgot-password", new ForgotPasswordRequest(email), JsonOptions))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        host.Jobs.Pending.ShouldBeEmpty();
+    }
+
+    // The reset link proves the address, so an account that never verified it becomes verified —
+    // and whatever provider login somebody else attached to it goes.
+    [Fact]
+    public async Task Resetting_An_Unverified_Account_Verifies_It_And_Removes_Its_Provider_Logins()
+    {
+        const string email = "reset.unverified@example.com";
+        var auth = await RegisterAsync(email);
+        await host.WithDbAsync(async db =>
+        {
+            await db.Users.Where(u => u.Id == auth.User.Id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.EmailConfirmed, false));
+            db.UserLogins.Add(new Microsoft.AspNetCore.Identity.IdentityUserLogin<Guid>
+            {
+                UserId = auth.User.Id, LoginProvider = "LinkedIn", ProviderKey = "li-someone-else", ProviderDisplayName = "LinkedIn"
+            });
+            await db.SaveChangesAsync();
+        });
+
+        var client = _factory!.CreateClient();
+        await client.PostAsJsonAsync("/api/auth/forgot-password", new ForgotPasswordRequest(email), JsonOptions);
+        var (_, token) = ParseResetLink(await WaitForResetLinkAsync());
+        (await client.PostAsJsonAsync("/api/auth/reset-password",
+            new ResetPasswordRequest(email, token, "N3wStr0ng!Passw0rd"), JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.Users.SingleAsync(u => u.Id == auth.User.Id)).EmailConfirmed.ShouldBeTrue();
+        (await db.UserLogins.AnyAsync(l => l.UserId == auth.User.Id)).ShouldBeFalse();
     }
 }
