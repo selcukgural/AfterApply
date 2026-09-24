@@ -70,12 +70,14 @@ public static class RateLimiting
                     context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
                 }
 
-                // The path only: a caller's address is recorded in RequestAudits and nowhere else
-                // (CLAUDE.md, "Request audit"), log lines included.
+                // The route template only: a caller's address is recorded in RequestAudits and nowhere
+                // else (CLAUDE.md, "Request audit"), and the raw path is the caller's own text — a
+                // template ("/api/companies/public/{slug}") says which endpoint without either.
                 var logger = context.HttpContext.RequestServices
                     .GetRequiredService<ILoggerFactory>()
                     .CreateLogger("RateLimiting");
-                logger.LogWarning("Rate limit exceeded on {Path}", context.HttpContext.Request.Path);
+                var route = (context.HttpContext.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText ?? "(no endpoint)";
+                logger.LogWarning("Rate limit exceeded on {Route}", route);
                 return ValueTask.CompletedTask;
             };
 
