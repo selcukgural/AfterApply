@@ -1,7 +1,12 @@
 # Version updates for every ecosystem the build pulls code from. Security updates are a repository
 # setting and arrive regardless; this file is what keeps the pins (action SHAs, image digests,
 # lockfiles) from quietly aging. Weekly, minor and patch grouped per ecosystem so a week's
-# updates are one PR to review rather than twenty; majors come on their own.
+# updates are one PR to review rather than twenty.
+#
+# Majors are never proposed (2026-09-24): a major is a planned change — read its notes, move
+# the things that share it together (Node image + CI setup-node, codeql init + analyze,
+# StackExchange.Redis + the packages built on it) — not a PR to click through. At most two open
+# PRs per ecosystem. Security updates are separate and not limited by this file.
 version: 2
 
 updates:
@@ -9,10 +14,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 2
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       # init and analyze must run the same version (analyze refuses a config written by another),
-      # so they move together, majors included. Listed first: a dependency joins the first group
-      # that matches.
+      # so they move together. Listed first: a dependency joins the first group that matches.
       codeql:
         patterns: ["github/codeql-action*"]
       actions:
@@ -23,6 +31,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 2
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       nuget:
         update-types: [minor, patch]
@@ -31,11 +43,10 @@ updates:
     directory: /web
     schedule:
       interval: weekly
+    open-pull-requests-limit: 2
     ignore:
-      # eslint-config-next bundles an eslint-plugin-react that ESLint 10 cannot load
-      # (2026-09-24). Lift once Next's config supports it.
-      - dependency-name: eslint
-        versions: [">=10"]
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       web:
         update-types: [minor, patch]
@@ -46,6 +57,10 @@ updates:
     directory: /extension
     schedule:
       interval: weekly
+    open-pull-requests-limit: 2
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       extension:
         update-types: [minor, patch]
@@ -54,6 +69,10 @@ updates:
     directory: /postman
     schedule:
       interval: weekly
+    open-pull-requests-limit: 2
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       postman:
         update-types: [minor, patch]
@@ -65,11 +84,9 @@ updates:
       - /web
     schedule:
       interval: weekly
+    open-pull-requests-limit: 2
     ignore:
-      # A Node major is a decision, not a routine bump: only even-numbered (LTS) lines, and the
-      # image moves together with CI's setup-node version so tests run what production runs.
-      # Dependabot offered 25-alpine, a line already past end of life (2026-06-01).
-      - dependency-name: node
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
     groups:
       images:
