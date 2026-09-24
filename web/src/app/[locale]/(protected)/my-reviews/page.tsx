@@ -6,25 +6,24 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { companyReviewsApi } from "@/lib/api/companyReviews";
 import { clampPage } from "@/lib/dashboard/reminders";
-import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
 import { MyReviewCard } from "@/components/contributions/MyReviewCard";
 import { MySalaryCard } from "@/components/contributions/MySalaryCard";
 import { MyExperienceCard } from "@/components/contributions/MyExperienceCard";
 import { MyBlogCommentCard } from "@/components/contributions/MyBlogCommentCard";
+import { ContributionQuotaTiles } from "@/components/contributions/ContributionQuotaTiles";
+import { buildContributionTiles } from "@/lib/contributions/quotaTiles";
 import type { ContributionFilter, MyBlogComment } from "@/types/api";
 
 /**
  * "My contributions" (2026-09-18): the author's reviews, salary entries and candidate experiences
  * as one newest-first list, ten per page, at the address "My reviews" always had. The three kinds
- * used to be three pages; /my-salaries and /my-experiences now redirect here. A quota line and a
- * call to action per kind, shown only while the server reports that kind's quota — a feature
- * that is off reports none.
+ * used to be three pages; /my-salaries and /my-experiences now redirect here. Above the list, a
+ * tile per kind with its quota and its call to action (2026-09-24), shown only while the server
+ * reports that kind's quota — a feature that is off reports none.
  */
 export default function MyContributionsPage() {
   const t = useTranslations("companyReviews.mine");
-  const tSalaries = useTranslations("companySalaries.mine");
-  const tExperiences = useTranslations("candidateExperiences.mine");
   const tComment = useTranslations("companyReviews.mine.blogComment");
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -74,46 +73,14 @@ export default function MyContributionsPage() {
     }
   };
 
-  const quotaLeft = (quota: { used: number; limit: number } | null) => (quota ? Math.max(0, quota.limit - quota.used) : 0);
-
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
-          {data && (
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {[
-                t("quotaLine", { used: data.reviewQuota.used, limit: data.reviewQuota.limit }),
-                data.salaryQuota ? tSalaries("quotaLine", { used: data.salaryQuota.used, limit: data.salaryQuota.limit }) : null,
-                data.experienceQuota ? tExperiences("quotaLine", { used: data.experienceQuota.used, limit: data.experienceQuota.limit }) : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          )}
-        </div>
-        {data && (
-          <div className="flex flex-col gap-2 sm:items-end">
-            {quotaLeft(data.reviewQuota) > 0 && (
-              <Link href="/contribute?tab=review" className={buttonClassName("primary")}>
-                {t("write")}
-              </Link>
-            )}
-            {quotaLeft(data.salaryQuota) > 0 && (
-              <Link href="/contribute?tab=salary" className={buttonClassName("outline")}>
-                {tSalaries("share")}
-              </Link>
-            )}
-            {quotaLeft(data.experienceQuota) > 0 && (
-              <Link href="/contribute?tab=experience" className={buttonClassName("outline")}>
-                {tExperiences("share")}
-              </Link>
-            )}
-          </div>
-        )}
+      <div>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
       </div>
+
+      {data && <ContributionQuotaTiles tiles={buildContributionTiles(data)} />}
 
       <div className="flex flex-wrap gap-2">
         {chip(null, tComment("filterAll"))}
