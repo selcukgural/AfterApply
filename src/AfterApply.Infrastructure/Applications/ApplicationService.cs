@@ -58,9 +58,9 @@ internal sealed class ApplicationService(
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var pattern = $"%{search.Trim()}%";
-            applications = applications.Where(a => EF.Functions.ILike(a.JobTitle, pattern)
-                || dbContext.Companies.Any(c => c.Id == a.CompanyId && EF.Functions.ILike(c.Name, pattern)));
+            var pattern = LikePattern.Contains(search.Trim());
+            applications = applications.Where(a => EF.Functions.ILike(a.JobTitle, pattern, LikePattern.EscapeCharacter)
+                || dbContext.Companies.Any(c => c.Id == a.CompanyId && EF.Functions.ILike(c.Name, pattern, LikePattern.EscapeCharacter)));
         }
 
         return applications;

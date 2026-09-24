@@ -7,6 +7,9 @@ public sealed record ImportRowErrorResponse(int RowNumber, string RawRow, string
 
 public sealed record ImportAcceptedResponse(Guid Id);
 
+/// <summary>Passed as the SignalR client's access token when connecting to the progress hub.</summary>
+public sealed record HubTicketResponse(string Ticket);
+
 public sealed record ImportSummaryResponse(
     Guid Id,
     Source Source,

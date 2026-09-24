@@ -65,7 +65,7 @@ public class GitHubIssueComposerTests
 
         body.ShouldNotContain("private@example.com");
         // But the reader has to know an answer is expected, and where to find the address.
-        body.ShouldContain("Wants a reply | yes");
+        body.ShouldContain("Wants a reply | ` yes");
     }
 
     [Fact]
@@ -82,6 +82,35 @@ public class GitHubIssueComposerTests
         var body = GitHubIssueComposer.Body(Entry("Hi", userAgent: "Mozilla/5.0 | injected | cells"));
 
         body.ShouldContain(@"Mozilla/5.0 \| injected \| cells");
+    }
+
+    [Fact]
+    public void A_Mention_Or_Issue_Reference_In_The_Title_Links_Nothing()
+    {
+        // A title is not fenced, and GitHub turns "@name" and "#12" there into a ping and a link.
+        var title = GitHubIssueComposer.Title(Entry("@someone see #12 and org/repo#3"));
+
+        title.ShouldNotContain("@someone");
+        title.ShouldNotContain("#12");
+        title.ShouldNotContain("repo#3");
+        // Still reads the same: the joiner is invisible.
+        title.Replace("\u2060", "").ShouldBe("[Bug] @someone see #12 and org/repo#3");
+    }
+
+    [Fact]
+    public void Metadata_Values_Are_Code_Spans_So_Links_And_Mentions_In_Them_Stay_Text()
+    {
+        var body = GitHubIssueComposer.Body(Entry("Hi", userAgent: "[x](https://evil.example) ![](https://t.example/p.png) @someone"));
+
+        body.ShouldContain("| User agent | ` [x](https://evil.example) ![](https://t.example/p.png) @someone ` |");
+    }
+
+    [Fact]
+    public void A_Backtick_In_A_Metadata_Value_Cannot_Close_Its_Code_Span()
+    {
+        var body = GitHubIssueComposer.Body(Entry("Hi", userAgent: "a ` b `` c"));
+
+        body.ShouldContain("| User agent | ``` a ` b `` c ``` |");
     }
 
     [Theory]

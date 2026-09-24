@@ -534,18 +534,33 @@ public static class DependencyInjection
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
+            })
+            // The hubs' own scheme (HubTicketDefaults). The session access token is header-only
+            // everywhere, hubs included; the one credential read from a query string is a ticket,
+            // and only on a hub path.
+            .AddJwtBearer(HubTicketDefaults.AuthenticationScheme, options =>
+            {
+                options.MapInboundClaims = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtOptions.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = HubTicketDefaults.Audience,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwtOptions.SigningKey)),
+                    ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.FromSeconds(5)
+                };
                 options.Events = new JwtBearerEvents
                 {
-                    // SignalR's browser client can't set an Authorization header on the
-                    // WebSocket handshake, so it sends the token as ?access_token=... instead
-                    // (its accessTokenFactory default). Only honor that for the hub path.
                     OnMessageReceived = context =>
                     {
-                        var accessToken = context.Request.Query["access_token"];
-                        if (!string.IsNullOrEmpty(accessToken) &&
-                            context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        var ticket = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(ticket) && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
                         {
-                            context.Token = accessToken;
+                            context.Token = ticket;
                         }
 
                         return Task.CompletedTask;
@@ -574,6 +589,7 @@ public static class DependencyInjection
         services.AddScoped<AuthEmailThrottle>();
         services.AddScoped<EmailVerificationService>();
         services.AddScoped<IEmailVerificationCodeSender, EmailVerificationCodeSender>();
+        services.AddScoped<IAccountEmailJobs, AccountEmailJobs>();
         services.AddScoped<IUnverifiedAccountCleanupService, UnverifiedAccountCleanupService>();
         services.AddScoped<IPersonalAccessTokenService, PersonalAccessTokenService>();
         services.AddScoped<IExtensionPairingService, ExtensionPairingService>();
@@ -685,6 +701,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentCheckoutService, PaymentCheckoutService>();
         services.AddScoped<IPayTrCallbackService, PayTrCallbackService>();
         services.AddScoped<IPaymentRefundService, PaymentRefundService>();
+        services.AddScoped<IPaymentEmailJobs, PaymentEmailJobs>();
         services.AddScoped<IPaymentAdminService, PaymentAdminService>();
         services.AddScoped<IPaymentMaintenanceService, PaymentMaintenanceService>();
         // Both PayTR calls are short form POSTs; 15 s is well above their normal answer and short
@@ -765,6 +782,8 @@ public static class DependencyInjection
     private static IServiceCollection AddBackgroundJobs(this IServiceCollection services, IConfiguration configuration)
     {
         var postgresConnectionString = PostgresConnectionString.Resolve(configuration, IsOpenApiDocumentGeneration);
+
+        HangfireJobRetention.Apply();
 
         // Same resolved string as AddPersistence, deliberately: Npgsql pools per connection string,
         // so this is what puts Hangfire's connections under the one Postgres:MaxPoolSize cap the

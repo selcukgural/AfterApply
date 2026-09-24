@@ -39,8 +39,8 @@ internal sealed class CompanyReviewModerationService(
         var company = query.Company?.Trim();
         if (!string.IsNullOrEmpty(company))
         {
-            var pattern = $"%{TurkishTextNormalizer.FoldCase(company).ToUpperInvariant()}%";
-            companies = companies.Where(c => EF.Functions.ILike(c.NormalizedName, pattern));
+            var pattern = LikePattern.Contains(TurkishTextNormalizer.FoldCase(company).ToUpperInvariant());
+            companies = companies.Where(c => EF.Functions.ILike(c.NormalizedName, pattern, LikePattern.EscapeCharacter));
         }
 
         var joined = reviews.Join(companies, r => r.CompanyId, c => c.Id, (r, c) => new { r, c });

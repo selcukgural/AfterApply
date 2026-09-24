@@ -39,14 +39,14 @@ internal sealed class CompanySearchService(AppDbContext dbContext, IOptions<Comp
             normalizedQuery,
             async (nq, ct) =>
             {
-                var pattern = $"%{EscapeLike(nq)}%";
+                var pattern = LikePattern.Contains(nq);
 
                 // ILIKE substring recall covers short prefixes, where trigram similarity() alone is a
                 // weak signal (too few 3-char n-grams); TrigramsAreSimilar (the pg_trgm `%` operator)
                 // adds a fuzzy net for typo'd/reordered names that don't substring-match. Both candidate
                 // sets are then ranked together by actual similarity.
                 var matches = await visibility.VisibleTo(dbContext.Companies, userId)
-                    .Where(c => EF.Functions.ILike(c.NormalizedName, pattern, @"\")
+                    .Where(c => EF.Functions.ILike(c.NormalizedName, pattern, LikePattern.EscapeCharacter)
                         || EF.Functions.TrigramsAreSimilar(c.NormalizedName, nq))
                     .OrderByDescending(c => EF.Functions.TrigramsSimilarity(c.NormalizedName, nq))
                     .ThenBy(c => c.Name)
@@ -81,8 +81,4 @@ internal sealed class CompanySearchService(AppDbContext dbContext, IOptions<Comp
             .Where(c => c.Slug == slug)
             .Select(c => new CompanyReferenceResponse(c.Id, c.Slug!, c.Name))
             .FirstOrDefaultAsync(cancellationToken);
-
-    /// <summary>A typed "%" or "_" is a character to find, not a wildcard.</summary>
-    private static string EscapeLike(string value) =>
-        value.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
 }

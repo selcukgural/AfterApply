@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using AfterApply.Application.Applications;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.EmailIntegrations;
@@ -31,6 +32,12 @@ internal sealed class EmailForwardingService(
 {
     private const string PaidCallFeature = "email-signals";
 
+    /// <summary>Longer than Hangfire's ten retries take (about a day and a half), so a signal is
+    /// never purged under a job that is still retrying it.</summary>
+    internal static readonly TimeSpan PendingSignalRetention = TimeSpan.FromDays(3);
+
+    private static readonly JsonSerializerOptions PayloadJson = new(JsonSerializerDefaults.Web);
+
     /// <summary>Reserves one OpenAI call for this account's Gmail scanning (see PaidCallBudget).
     /// Refused, the flow carries on with what the free rules already said.</summary>
     private Task<bool> TryReservePaidCallAsync(Guid userId)
@@ -59,6 +66,39 @@ internal sealed class EmailForwardingService(
             await paidCalls.ForgetSightingAsync(PaidCallFeature, $"{connection.Id:N}:{providerMessageId}");
             throw;
         }
+    }
+
+    public async Task<Guid> StageExtensionSignalAsync(Guid userId, ExtensionEmailSignalRequest request, CancellationToken cancellationToken)
+    {
+        var pending = PendingEmailSignal.Create(userId, JsonSerializer.Serialize(request, PayloadJson), DateTimeOffset.UtcNow);
+        dbContext.PendingEmailSignals.Add(pending);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return pending.Id;
+    }
+
+    public async Task ProcessPendingExtensionSignalAsync(Guid pendingSignalId, CancellationToken cancellationToken)
+    {
+        var pending = await dbContext.PendingEmailSignals.AsNoTracking()
+            .SingleOrDefaultAsync(s => s.Id == pendingSignalId, cancellationToken);
+        if (pending is null)
+        {
+            return;
+        }
+
+        var request = JsonSerializer.Deserialize<ExtensionEmailSignalRequest>(pending.Payload, PayloadJson);
+        if (request is not null)
+        {
+            // A failure throws past the delete, so Hangfire's retry finds the row again.
+            await ProcessExtensionSignalAsync(pending.UserId, request, cancellationToken);
+        }
+
+        await dbContext.PendingEmailSignals.Where(s => s.Id == pendingSignalId).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public Task<int> PurgeStalePendingSignalsAsync(CancellationToken cancellationToken)
+    {
+        var cutoff = DateTimeOffset.UtcNow - PendingSignalRetention;
+        return dbContext.PendingEmailSignals.Where(s => s.CreatedAt < cutoff).ExecuteDeleteAsync(cancellationToken);
     }
 
     private async Task<EmailConnection> GetOrCreateExtensionConnectionAsync(Guid userId, CancellationToken cancellationToken)

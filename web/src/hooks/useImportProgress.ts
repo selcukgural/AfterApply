@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import type { ImportSummaryResponse } from "@/types/api";
 import { API_BASE_URL } from "@/lib/api/httpClient";
-import { authStore } from "@/lib/api/authStore";
 import { importsApi } from "@/lib/api/imports";
 
 const POLL_INTERVAL_MS = 3000;
@@ -61,13 +60,19 @@ export function useImportProgress(batchId: string | null) {
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${API_BASE_URL}/hubs/import-progress`, {
-        accessTokenFactory: () => authStore.getAccessToken() ?? "",
+        // A browser cannot put a header on the WebSocket handshake, so this value ends up in the
+        // URL — and URLs end up in request logs. Hence a one-minute ticket that opens this hub
+        // and nothing else, fetched fresh on every connect and reconnect, rather than the session
+        // token.
+        accessTokenFactory: () => importsApi.getProgressTicket(),
         // Auth here is the bearer token above, not cookies — and the API's CORS policy
         // doesn't set Access-Control-Allow-Credentials, so the client's credentialed-fetch
         // default (withCredentials: true) makes every negotiate call fail CORS.
         withCredentials: false,
       })
       .withAutomaticReconnect()
+      // The client logs the connected URL, ticket included, at Information.
+      .configureLogging(signalR.LogLevel.Warning)
       .build();
 
     connection.on("importStatusChanged", (payload: ImportSummaryResponse) => {

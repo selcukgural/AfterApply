@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -12,6 +12,7 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { PasswordRequirements } from "@/components/ui/PasswordRequirements";
+import { removeQueryParamsFromAddressBar } from "@/lib/privacy/urlSecrets";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -21,9 +22,16 @@ export default function ResetPasswordPage() {
   const { config } = useClientConfig();
 
   // Both come straight from the link in the password-reset email (see
-  // AuthService.ForgotPasswordAsync) — never rendered back to the user, only forwarded as-is.
-  const email = searchParams.get("email") ?? "";
-  const token = searchParams.get("token") ?? "";
+  // AccountEmailJobs.SendPasswordResetAsync) — never rendered back to the user, only forwarded
+  // as-is. Read once into state, then taken out of the address bar: a token left in the URL lives
+  // on in the history entry and in whatever records the page's address after this.
+  const [{ email, token }] = useState(() => ({
+    email: searchParams.get("email") ?? "",
+    token: searchParams.get("token") ?? "",
+  }));
+  useEffect(() => {
+    removeQueryParamsFromAddressBar(["email", "token"]);
+  }, []);
 
   const [values, setValues] = useState({ newPassword: "", confirmPassword: "" });
   const [errors, setErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});

@@ -59,9 +59,8 @@ internal sealed class PaymentRefundService(
         await dbContext.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Refund request rejected for order {OrderId} by {AdminId}", order.Id, adminUserId);
 
-        var (email, locale) = (order.Email, PaymentFormatting.NormalizeLocale(order.Locale));
-        var trimmedNote = note.Trim();
-        jobClient.Enqueue<IEmailSender>(s => s.SendRefundRejectedEmailAsync(email, locale, trimmedNote, CancellationToken.None));
+        var rejectedOrderId = order.Id;
+        jobClient.Enqueue<IPaymentEmailJobs>(s => s.SendRefundRejectedAsync(rejectedOrderId, CancellationToken.None));
         return order.ToAdminResponse(now);
     }
 
@@ -149,9 +148,8 @@ internal sealed class PaymentRefundService(
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        var (email, locale) = (order.Email, PaymentFormatting.NormalizeLocale(order.Locale));
-        var amountText = PaymentFormatting.Amount(amountMinor, locale);
-        jobClient.Enqueue<IEmailSender>(s => s.SendRefundCompletedEmailAsync(email, locale, amountText, CancellationToken.None));
+        var orderId = order.Id;
+        jobClient.Enqueue<IPaymentEmailJobs>(s => s.SendRefundCompletedAsync(orderId, amountMinor, CancellationToken.None));
     }
 
     private async Task RecordAsync(PaymentOrder order, long amountMinor, PaymentNotificationOutcome outcome, string rawAnswer, DateTimeOffset now)

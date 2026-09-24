@@ -1,0 +1,60 @@
+# Version updates for every ecosystem the build pulls code from. Security updates are a repository
+# setting and arrive regardless; this file is what keeps the pins (action SHAs, image digests,
+# lockfiles) from quietly aging. Weekly, minor and patch grouped per ecosystem so a week's
+# updates are one PR to review rather than twenty; majors come on their own.
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        update-types: [minor, patch]
+
+  # Central package management: Directory.Packages.props at the root holds every version.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      nuget:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+    groups:
+      web:
+        update-types: [minor, patch]
+
+  # A version bump here is a Chrome Web Store release (extension/CLAUDE.md), so these PRs are
+  # batched into the next extension release rather than merged on their own.
+  - package-ecosystem: npm
+    directory: /extension
+    schedule:
+      interval: weekly
+    groups:
+      extension:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /postman
+    schedule:
+      interval: weekly
+    groups:
+      postman:
+        update-types: [minor, patch]
+
+  # Base images are pinned by digest; these move the digest (and the tag, for a new release).
+  - package-ecosystem: docker
+    directories:
+      - /src/AfterApply.Api
+      - /web
+    schedule:
+      interval: weekly
+    groups:
+      images:
+        update-types: [minor, patch]

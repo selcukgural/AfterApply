@@ -18,7 +18,10 @@ namespace AfterApply.Application.Feedback;
 /// third party. Inside a fenced block it cannot become a heading, a link, an image, a
 /// <c>#123</c> issue cross-reference, or an <c>@name</c> that notifies a stranger. The fence is
 /// grown past the longest backtick run in the text, per CommonMark, so the user cannot close it
-/// early by pasting one of their own.</item>
+/// early by pasting one of their own. The title cannot be fenced, so a word joiner after every
+/// "@" and "#" keeps GitHub from reading a mention or a cross-reference there, and the metadata
+/// cells — client-supplied too, a page path or a User-Agent is whatever the request said — go
+/// in code spans.</item>
 /// </list>
 /// </summary>
 public static class GitHubIssueComposer
@@ -38,7 +41,7 @@ public static class GitHubIssueComposer
         // First line only: a title is one line whatever the user pressed Enter in.
         var firstLine = entry.Message.ReplaceLineEndings("\n").Split('\n')[0].Trim();
         var summary = firstLine.Length == 0 ? "(no summary)" : Truncate(firstLine, MaxTitleLength);
-        return $"[{entry.Category}] {summary}";
+        return $"[{entry.Category}] {Defuse(summary)}";
     }
 
     public static string Body(FeedbackEntry entry)
@@ -68,25 +71,40 @@ public static class GitHubIssueComposer
 
     /// <summary>A fence at least three backticks long, and always longer than the longest run
     /// inside the text — otherwise a pasted ``` closes the block and the rest renders as Markdown.</summary>
-    private static string Fence(string message)
+    private static string Fence(string message) =>
+        new('`', Math.Max(3, LongestBacktickRun(message) + 1));
+
+    private static int LongestBacktickRun(string text)
     {
         var longestRun = 0;
         var currentRun = 0;
-        foreach (var character in message)
+        foreach (var character in text)
         {
             currentRun = character == '`' ? currentRun + 1 : 0;
             longestRun = Math.Max(longestRun, currentRun);
         }
 
-        return new string('`', Math.Max(3, longestRun + 1));
+        return longestRun;
     }
 
-    /// <summary>Metadata is ours, not the user's, but it still lands in a table cell — a stray
-    /// pipe from a User-Agent would split the row.</summary>
-    private static void AppendRow(StringBuilder builder, string key, string value) =>
+    /// <summary>The value goes in a code span, so a page path or User-Agent carrying a link, an
+    /// image or an @name renders as text. GFM splits table cells before it parses code spans, so a
+    /// pipe still needs its backslash inside one.</summary>
+    private static void AppendRow(StringBuilder builder, string key, string value)
+    {
+        var flat = value.ReplaceLineEndings(" ");
+        var fence = new string('`', LongestBacktickRun(flat) + 1);
         builder.Append("| ").Append(key).Append(" | ")
-            .Append(value.Replace("|", "\\|", StringComparison.Ordinal).ReplaceLineEndings(" "))
+            .Append(fence).Append(' ')
+            .Append(flat.Replace("|", "\\|", StringComparison.Ordinal))
+            .Append(' ').Append(fence)
             .Append(" |\n");
+    }
+
+    /// <summary>A word joiner (U+2060) after "@" and "#": invisible, but it breaks the token GitHub
+    /// looks for, so "@someone" notifies nobody and "#12" or "org/repo#12" links nothing.</summary>
+    private static string Defuse(string text) =>
+        text.Replace("@", "@\u2060", StringComparison.Ordinal).Replace("#", "#\u2060", StringComparison.Ordinal);
 
     private static string Truncate(string value, int maxLength) =>
         value.Length <= maxLength ? value : string.Concat(value.AsSpan(0, maxLength - 1).TrimEnd(), "…");

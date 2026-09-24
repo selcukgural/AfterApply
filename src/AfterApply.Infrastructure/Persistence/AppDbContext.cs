@@ -23,6 +23,7 @@ using AfterApply.Domain.Payments;
 using AfterApply.Domain.Pro;
 using AfterApply.Domain.SiteTraffic;
 using AfterApply.Domain.TrackedJobs;
+using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Persistence.Converters;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -56,6 +57,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<EmailVerificationChallenge> EmailVerificationChallenges => Set<EmailVerificationChallenge>();
 
     public DbSet<AuthEmailDispatch> AuthEmailDispatches => Set<AuthEmailDispatch>();
+
+    public DbSet<PendingEmailSignal> PendingEmailSignals => Set<PendingEmailSignal>();
 
     public DbSet<ExtensionPairingRequest> ExtensionPairingRequests => Set<ExtensionPairingRequest>();
 

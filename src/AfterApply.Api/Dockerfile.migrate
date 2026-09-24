@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
 #
+# Base images are pinned by digest (tag kept for readability); Dependabot's docker updates move
+# the digest forward.
+#
 # Builds a self-contained EF Core migration bundle (`efbundle`) and packages
 # it as a minimal runtime image. Run as a Cloud Run Job before the API
 # service is updated, so a new deploy's schema changes land before the new
@@ -8,7 +11,7 @@
 # Database.Migrate() on startup (see DEPLOYMENT.md "Migrations"); this image
 # is the explicit, out-of-band migration step, just automated instead of
 # run by hand.
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:35d40304542c8689331f8cab17c65926cdf48fe711e289321d71924b230a7d29 AS build
 WORKDIR /src
 COPY Directory.Build.props Directory.Packages.props ./
 COPY src/ src/
@@ -28,9 +31,12 @@ RUN dotnet ef migrations bundle \
       --self-contained -r linux-x64 --configuration Release \
       -o /app/efbundle
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0@sha256:099f6f87ed745377dd27bd722f0d1a352bca71b4fddaabfd75e7c064bcaa82da AS runtime
 WORKDIR /app
 COPY --from=build /app/efbundle ./efbundle
+# The base image ships a non-root "app" user and defaults to root, like the API's. The bundle
+# only reads its own files and talks to Postgres over the network; it needs root for nothing.
+USER app
 # Shell form: efbundle takes the connection string as a --connection flag,
 # not an env var, so it has to be interpolated at container start.
 ENTRYPOINT ["/bin/sh", "-c", "exec ./efbundle --connection \"$ConnectionStrings__Postgres\" --verbose"]

@@ -82,6 +82,21 @@ public class ApplicationListPaginationTests(ApiHost<DefaultProfile> host) : ICla
         page.Items.Single().CompanyName.ShouldBe("Searchable Robotics");
     }
 
+    [Theory]
+    [InlineData("_")]
+    [InlineData("%")]
+    public async Task A_Wildcard_Typed_Into_Search_Is_Matched_Literally(string wildcard)
+    {
+        await CreateApplicationAsync("Plain Co", "Backend Engineer");
+        await CreateApplicationAsync("Under_Score 100% Co", "Engineer");
+
+        var response = await _client.GetAsync($"/api/applications?search={Uri.EscapeDataString(wildcard)}");
+        response.EnsureSuccessStatusCode();
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<ApplicationSummaryResponse>>(JsonOptions);
+
+        page!.Items.Single().CompanyName.ShouldBe("Under_Score 100% Co");
+    }
+
     [Fact]
     public async Task GetAll_Filters_By_Status()
     {

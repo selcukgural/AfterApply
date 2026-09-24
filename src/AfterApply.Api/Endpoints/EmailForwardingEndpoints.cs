@@ -55,10 +55,13 @@ public static class EmailForwardingEndpoints
         // fetch() fast rather than blocking on an LLM round-trip. Rate-limited
         // per user as a backstop against a buggy/looping content script — the extension's own
         // client-side dedup (already-submitted Gmail thread ids) is what normally keeps volume low.
-        group.MapPost("/extension-signal", (ExtensionEmailSignalRequest request, ClaimsPrincipal user, IBackgroundJobClient jobClient) =>
+        // The signal is staged in a row and the job gets its id: a job's arguments are stored as
+        // plain text for as long as the job lives, and this one's would be someone's email.
+        group.MapPost("/extension-signal", async (ExtensionEmailSignalRequest request, ClaimsPrincipal user,
+                IEmailForwardingService service, IBackgroundJobClient jobClient, CancellationToken cancellationToken) =>
             {
-                var userId = user.GetUserId();
-                jobClient.Enqueue<IEmailForwardingService>(s => s.ProcessExtensionSignalAsync(userId, request, CancellationToken.None));
+                var pendingSignalId = await service.StageExtensionSignalAsync(user.GetUserId(), request, cancellationToken);
+                jobClient.Enqueue<IEmailForwardingService>(s => s.ProcessPendingExtensionSignalAsync(pendingSignalId, CancellationToken.None));
                 return Results.NoContent();
             })
             .WithValidation<ExtensionEmailSignalRequest>()

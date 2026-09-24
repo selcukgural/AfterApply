@@ -14,6 +14,19 @@ public interface IEmailForwardingService
     /// on first call, then runs the shared classify/match/auto-apply/persist pipeline.</summary>
     Task ProcessExtensionSignalAsync(Guid userId, ExtensionEmailSignalRequest request, CancellationToken cancellationToken);
 
+    /// <summary>Stores a signal for <see cref="ProcessPendingExtensionSignalAsync"/> and returns the
+    /// id to enqueue. The job carries only that id, so the email text never lands in the job
+    /// store's plain-text arguments.</summary>
+    Task<Guid> StageExtensionSignalAsync(Guid userId, ExtensionEmailSignalRequest request, CancellationToken cancellationToken);
+
+    /// <summary>The Hangfire job: processes a staged signal and deletes it. A signal whose account
+    /// is gone (the row cascaded) is a no-op.</summary>
+    Task ProcessPendingExtensionSignalAsync(Guid pendingSignalId, CancellationToken cancellationToken);
+
+    /// <summary>Deletes staged signals whose job never succeeded, once they are older than the
+    /// retry window. Returns how many went.</summary>
+    Task<int> PurgeStalePendingSignalsAsync(CancellationToken cancellationToken);
+
     Task<IReadOnlyList<EmailSuggestionResponse>> GetPendingSuggestionsAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>Cheap count-only variant of <see cref="GetPendingSuggestionsAsync"/> for UI badges —

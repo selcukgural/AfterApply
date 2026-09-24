@@ -20,6 +20,10 @@ public interface ITokenService
 
     string HashExtensionPairingSecret(string secret);
 
+    /// <summary>A one-minute credential for opening a SignalR connection — the one value
+    /// that has to travel in a URL (see HubTicketDefaults). Accepted by the hubs only.</summary>
+    string CreateHubTicket(Guid userId);
+
     /// <summary>Short-lived, signed carrier for a verified Google identity between the two steps of a
     /// Google sign-up (see GoogleSignupPrefill): the authorization code is single-use and already
     /// spent by the time the user sees the consent form, so this is what proves, on the second
