@@ -31,6 +31,28 @@ describe("the contributions page", () => {
   });
 });
 
+describe("the contributions header (2026-09-24, variant C)", () => {
+  const page = read("app/[locale]/(protected)/my-reviews/page.tsx");
+  const tiles = read("components/contributions/ContributionQuotaTiles.tsx");
+
+  it("draws one tile per kind from the server's quotas instead of a quota line and stacked buttons", () => {
+    expect(page).toContain("<ContributionQuotaTiles tiles={buildContributionTiles(data)} />");
+    expect(page).not.toContain("quotaLine");
+    expect(page).not.toContain("buttonClassName");
+  });
+
+  it("switches from tiles to a list of rows below sm, both at least 56px tall on a phone", () => {
+    expect(tiles).toContain("hidden gap-3 sm:grid");
+    expect(tiles).toContain("sm:hidden");
+    expect(tiles).toContain("min-h-14");
+  });
+
+  it("keeps a full kind on screen but never as a link", () => {
+    expect(tiles).toMatch(/if \(tile\.full\) \{\s*return \(\s*<div/);
+    expect(tiles).toContain("tile.full ? (\n                <div");
+  });
+});
+
 describe("the contribution cards", () => {
   it("each link to their own kind's edit page and delete through their own endpoint", () => {
     const review = read("components/contributions/MyReviewCard.tsx");

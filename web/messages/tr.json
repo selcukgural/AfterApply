@@ -4016,7 +4016,6 @@
     "mine": {
       "title": "Katkılarım",
       "subtitle": "Değerlendirmelerin, maaş kayıtların, aday deneyimlerin ve blog yorumların — en yeni önce.",
-      "write": "Değerlendirme yaz",
       "loading": "Yükleniyor…",
       "error": "İşlem tamamlanamadı. Lütfen tekrar dene.",
       "empty": "Henüz bir katkın yok.",
@@ -4034,7 +4033,6 @@
       "legacyTag": "Önceki biçim",
       "legacyEditHint": "Değerlendirmeler yapılandırılmadan önce yazıldı. Metni artık okuyuculara gösterilmiyor; yeni biçime taşımak için düzenle.",
       "structuredSummary": "{count, plural, =0 {Madde seçilmedi} =1 {1 madde} other {# madde}}",
-      "quotaLine": "Değerlendirme {used} / {limit}",
       "footnote": "Silmek ilgili hakkın yerini geri açar. Kayıtlar hesabınla birlikte silinir ve veri dışa aktarımına dâhildir.",
       "kind": {
         "review": "Değerlendirme",
@@ -4055,6 +4053,27 @@
         "filterAll": "Tümü",
         "filterComments": "Blog yorumları",
         "filterCompany": "Şirket katkıları"
+      },
+      "actions": {
+        "count": "{used} / {limit}",
+        "full": "Hak doldu — bir kaydı silersen yeniden açılır",
+        "rowUsed": "{label} · {used} / {limit} kullanıldı",
+        "rowFull": "{label} · hak doldu ({used} / {limit})",
+        "review": {
+          "label": "Değerlendirme",
+          "cta": "Değerlendirme yaz",
+          "ctaLong": "Değerlendirme yaz"
+        },
+        "salary": {
+          "label": "Maaş kaydı",
+          "cta": "Maaş ekle",
+          "ctaLong": "Maaş bilgisi ekle"
+        },
+        "experience": {
+          "label": "Aday deneyimi",
+          "cta": "Deneyim paylaş",
+          "ctaLong": "Deneyim paylaş"
+        }
       }
     },
     "write": {
@@ -5064,8 +5083,7 @@
       "deleteTitle": "Bu maaş kaydı silinsin mi?",
       "deleteBody": "Kayıt kalıcı olarak silinir ve hakkındaki yeri boşalır.",
       "cancel": "Vazgeç",
-      "confirmDelete": "Sil",
-      "quotaLine": "Maaş kaydı {used} / {limit}"
+      "confirmDelete": "Sil"
     },
     "panel": {
       "heading": "{count, plural, =0 {Maaş kayıtları} =1 {1 maaş kaydı} other {# maaş kaydı}}",
@@ -6211,8 +6229,7 @@
       "deleteTitle": "Bu aday deneyimi silinsin mi?",
       "deleteBody": "Kayıt kalıcı olarak silinir ve kotandaki yeri boşalır.",
       "cancel": "Vazgeç",
-      "confirmDelete": "Sil",
-      "quotaLine": "Aday deneyimi {used} / {limit}"
+      "confirmDelete": "Sil"
     },
     "panel": {
       "heading": "{count, plural, =0 {Aday deneyimi} =1 {1 aday deneyimi} other {# aday deneyimi}}",

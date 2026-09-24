@@ -4016,7 +4016,6 @@
     "mine": {
       "title": "My contributions",
       "subtitle": "Your reviews, salary entries, candidate experiences and blog comments — newest first.",
-      "write": "Write a review",
       "loading": "Loading…",
       "error": "That didn't go through. Please try again.",
       "empty": "You have no contributions yet.",
@@ -4034,7 +4033,6 @@
       "legacyTag": "Earlier format",
       "legacyEditHint": "Written before reviews became structured. Its text is no longer shown to readers; edit it to move it to the new format.",
       "structuredSummary": "{count, plural, =0 {No statements picked} =1 {1 statement} other {# statements}}",
-      "quotaLine": "Reviews {used} / {limit}",
       "footnote": "Deleting frees that kind's quota slot. Entries are deleted with your account and included in your data export.",
       "kind": {
         "review": "Review",
@@ -4055,6 +4053,27 @@
         "filterAll": "All",
         "filterComments": "Blog comments",
         "filterCompany": "Company contributions"
+      },
+      "actions": {
+        "count": "{used} / {limit}",
+        "full": "Limit reached — delete an entry to free a slot",
+        "rowUsed": "{label} · {used} / {limit} used",
+        "rowFull": "{label} · limit reached ({used} / {limit})",
+        "review": {
+          "label": "Reviews",
+          "cta": "Write a review",
+          "ctaLong": "Write a review"
+        },
+        "salary": {
+          "label": "Salary entries",
+          "cta": "Add a salary",
+          "ctaLong": "Add a salary entry"
+        },
+        "experience": {
+          "label": "Candidate experiences",
+          "cta": "Share an experience",
+          "ctaLong": "Share an experience"
+        }
       }
     },
     "write": {
@@ -5064,8 +5083,7 @@
       "deleteTitle": "Delete this salary entry?",
       "deleteBody": "The entry is deleted permanently and its quota slot is freed.",
       "cancel": "Cancel",
-      "confirmDelete": "Delete",
-      "quotaLine": "Salary entries {used} / {limit}"
+      "confirmDelete": "Delete"
     },
     "panel": {
       "heading": "{count, plural, =0 {Salary entries} =1 {1 salary entry} other {# salary entries}}",
@@ -6211,8 +6229,7 @@
       "deleteTitle": "Delete this candidate experience?",
       "deleteBody": "The entry is deleted permanently and its quota slot is freed.",
       "cancel": "Cancel",
-      "confirmDelete": "Delete",
-      "quotaLine": "Candidate experiences {used} / {limit}"
+      "confirmDelete": "Delete"
     },
     "panel": {
       "heading": "{count, plural, =0 {Candidate experiences} =1 {1 candidate experience} other {# candidate experiences}}",
