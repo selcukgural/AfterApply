@@ -354,12 +354,11 @@
     },
     "extension": {
       "mock": {
-        "ariaLabel": "Örnek: bir Lever ilanının üzerinde açılmış e-kariyerim eklentisi; şirket, pozisyon ve konum sayfadan okunup otomatik dolmuş, altta Başvurdum düğmesi.",
+        "ariaLabel": "Örnek: bir LinkedIn ilanının üzerinde açılmış e-kariyerim eklentisi; şirket, pozisyon, konum ve İK kontağı otomatik dolmuş, altta Başvurdum düğmesi.",
         "company": "Şirket",
         "jobTitle": "Pozisyon",
         "location": "Konum",
         "contact": "İK kontağı",
-        "readFromPage": "sayfadan okundu",
         "optional": "isteğe bağlı",
         "submit": "Başvurdum"
       }

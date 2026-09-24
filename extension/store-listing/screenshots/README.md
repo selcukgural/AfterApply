@@ -20,6 +20,10 @@ showing the old logo. Prefer a shared asset over a copied glyph here.
 
 Last shot 2026-09-22 for `0.9.0` — `options-light.png` only.
 
+The help centre's two extension images (below) were reshot 2026-09-24 when `0.9.1` went live in
+the Store: both footers still read an old build — Settings `0.9.0`, the popup `0.6.0`. Windows
+1280×1052 (Settings, which grew by the allowed-sites list) and 1280×870 (popup).
+
 The two popup shots were reshot once, on an ATS posting with the provenance badge, and then put
 back. `0.9.0` was rejected for keyword spam over the six ATS names in its description
 (PUBLISHING_CHECKLIST.md), and the rule that came out of it covers screenshots too: Store metadata

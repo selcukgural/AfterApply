@@ -354,12 +354,11 @@
     },
     "extension": {
       "mock": {
-        "ariaLabel": "Sample: the e-kariyerim extension open over a Lever job posting; company, title and location read from the page and filled in automatically, with an I Applied button below.",
+        "ariaLabel": "Sample: the e-kariyerim extension open over a LinkedIn job posting; company, title, location and HR contact filled in automatically, with an I Applied button below.",
         "company": "Company",
         "jobTitle": "Job title",
         "location": "Location",
         "contact": "HR contact",
-        "readFromPage": "read from the page",
         "optional": "optional",
         "submit": "I Applied"
       }
