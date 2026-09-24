@@ -8,6 +8,7 @@ using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.EmailIntegrations;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -24,8 +25,20 @@ internal sealed class EmailForwardingService(
     IJobBoardDomainMatcher jobBoardDomainMatcher,
     IOptions<EmailIntelligenceOptions> intelligenceOptions,
     IOptions<EmailAutoApprovalOptions> autoApprovalOptions,
+    PaidCallBudget paidCalls,
+    IOptions<PaidCallOptions> paidCallOptions,
     ILogger<EmailForwardingService> logger) : IEmailForwardingService
 {
+    private const string PaidCallFeature = "email-signals";
+
+    /// <summary>Reserves one OpenAI call for this account's Gmail scanning (see PaidCallBudget).
+    /// Refused, the flow carries on with what the free rules already said.</summary>
+    private Task<bool> TryReservePaidCallAsync(Guid userId)
+    {
+        var budget = paidCallOptions.Value.EmailSignals;
+        return paidCalls.TryReserveAsync(PaidCallFeature, budget.GlobalDaily, userId, budget.PerUserDaily);
+    }
+
     public async Task ProcessExtensionSignalAsync(Guid userId, ExtensionEmailSignalRequest request, CancellationToken cancellationToken)
     {
         var connection = await GetOrCreateExtensionConnectionAsync(userId, cancellationToken);
@@ -34,9 +47,18 @@ internal sealed class EmailForwardingService(
         // job is ever enqueued (see ExtensionEmailSignalRequestValidator), so in practice it can't
         // arrive null here. It stays because this method is also reachable as a Hangfire job
         // re-executing an argument payload deserialized from storage, which no validator re-runs.
-        await ProcessSignalAsync(connection, request.SenderEmail, request.SenderDisplayName, request.Subject,
-            request.Snippet, request.ReceivedAt, request.LinkDomains ?? [], ComputeIdempotencyKey(request.GmailMessageId),
-            cancellationToken);
+        var providerMessageId = ComputeIdempotencyKey(request.GmailMessageId);
+        try
+        {
+            await ProcessSignalAsync(connection, request.SenderEmail, request.SenderDisplayName, request.Subject,
+                request.Snippet, request.ReceivedAt, request.LinkDomains ?? [], providerMessageId, cancellationToken);
+        }
+        catch
+        {
+            // Hangfire retries a failed run; it must not find the message marked as already seen.
+            await paidCalls.ForgetSightingAsync(PaidCallFeature, $"{connection.Id:N}:{providerMessageId}");
+            throw;
+        }
     }
 
     private async Task<EmailConnection> GetOrCreateExtensionConnectionAsync(Guid userId, CancellationToken cancellationToken)
@@ -70,6 +92,14 @@ internal sealed class EmailForwardingService(
             return;
         }
 
+        // The check above only knows messages that became a suggestion. A message that did not is
+        // not written anywhere, so sending it again would pay for the same classification again;
+        // remembering every message seen for a month closes that.
+        if (!await paidCalls.IsFirstSightingAsync(PaidCallFeature, $"{connection.Id:N}:{providerMessageId}", TimeSpan.FromDays(30)))
+        {
+            return;
+        }
+
         var candidates = await BuildCandidatesAsync(connection.UserId, cancellationToken);
 
         // The original sender is the company; there's no "self-sent" concept here since the user
@@ -90,7 +120,7 @@ internal sealed class EmailForwardingService(
         // is never written down.
         var hrEmailCandidate = HrEmailCandidate.From(fromEmail, jobBoardDomainMatcher.IsKnown(senderDomain));
 
-        var classification = await ClassifyAsync(fromEmail, subject, snippet,
+        var classification = await ClassifyAsync(connection.UserId, fromEmail, subject, snippet,
             senderDomain, applicationId is not null, linkDomains, isKnownSender, cancellationToken);
 
         // ApplicationReceived only counts as a signal for an *unmatched* sender — a "we got your
@@ -111,6 +141,7 @@ internal sealed class EmailForwardingService(
         // Only worth an extra LLM call when the email actually signals a rejection — see
         // IEmailRejectionReasonExtractionProvider (always returns a result, NotStated included).
         var rejectionReason = classification.SuggestedStatus == ApplicationStatus.Rejected
+                              && await TryReservePaidCallAsync(connection.UserId)
             ? await emailRejectionReasonExtractionProvider.ExtractAsync(subject, snippet, cancellationToken)
             : null;
 
@@ -139,7 +170,9 @@ internal sealed class EmailForwardingService(
         // detail (an extra LLM call) now that we know the email carries a real status signal — a
         // signal-less unmatched email (newsletter, unrelated mail) was already returned above, same
         // as before this "new job" flow existed (DECISIONS.md "Eşleşmeyen email'ler gösterilmiyor").
-        var extraction = await emailJobExtractionProvider.ExtractAsync(subject, snippet, cancellationToken);
+        var extraction = await TryReservePaidCallAsync(connection.UserId)
+            ? await emailJobExtractionProvider.ExtractAsync(subject, snippet, cancellationToken)
+            : null;
         if (extraction is null)
         {
             return; // couldn't confidently read a company name + job title — stay silent, don't guess
@@ -512,7 +545,7 @@ internal sealed class EmailForwardingService(
             .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.NotificationDismissedAt, now), cancellationToken);
     }
 
-    private async Task<EmailClassificationResult> ClassifyAsync(string senderEmail, string subject, string snippet,
+    private async Task<EmailClassificationResult> ClassifyAsync(Guid userId, string senderEmail, string subject, string snippet,
         string? senderDomain, bool hasApplicationMatch, IReadOnlyList<string> linkDomains, bool isKnownSender,
         CancellationToken cancellationToken)
     {
@@ -541,6 +574,11 @@ internal sealed class EmailForwardingService(
         if (analysis.Score < intelligence.LlmThreshold)
         {
             logger.LogDebug("Skipping LLM classification: recruitment signal score is below the LLM threshold.");
+            return classification;
+        }
+
+        if (!await TryReservePaidCallAsync(userId))
+        {
             return classification;
         }
 

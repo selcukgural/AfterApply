@@ -52,6 +52,11 @@ internal sealed class CvTextExtractor(IOptions<CvScanOptions> options) : ICvText
 
     private ExtractedCv ExtractPdf(byte[] bytes, Stopwatch deadline, CancellationToken cancellationToken)
     {
+        if (PdfInflationGuard.InflatesBeyond(bytes, options.Value.MaxPdfInflatedBytes))
+        {
+            throw new CvExtractionException(CvExtractionFailure.TooExpensive);
+        }
+
         PdfDocument document;
         try
         {
@@ -259,6 +264,13 @@ internal sealed class CvTextExtractor(IOptions<CvScanOptions> options) : ICvText
             var declared = archive.Entries.Sum(entry => entry.Length);
 
             if (declared > options.Value.MaxUncompressedBytes)
+            {
+                throw new CvExtractionException(CvExtractionFailure.TooExpensive);
+            }
+
+            // Each XML part is parsed into an object tree many times its size; see MaxXmlPartBytes.
+            if (archive.Entries.Any(entry => entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
+                                             && entry.Length > options.Value.MaxXmlPartBytes))
             {
                 throw new CvExtractionException(CvExtractionFailure.TooExpensive);
             }

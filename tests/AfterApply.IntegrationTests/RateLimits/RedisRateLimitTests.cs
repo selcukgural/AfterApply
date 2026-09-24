@@ -102,4 +102,49 @@ public class RedisRateLimitTests(ApiHost<DefaultProfile> host) : IClassFixture<A
 
     private static Task<HttpResponseMessage> FailedLoginAsync(HttpClient client) =>
         client.PostAsJsonAsync("/api/auth/login", new LoginRequest("no-such-user@example.com", "whatever"), JsonOptions);
+
+    /// <summary>A server-side render names the visitor it renders for; with the render key the API
+    /// counts each visitor on their own, without it every such request is the web service's one
+    /// address (2026-09-24, ClientPartition).</summary>
+    [Fact]
+    public async Task A_Render_With_The_Key_Counts_Each_Visitor_Apart_And_Without_It_Does_Not()
+    {
+        await using var limited = host.Standalone(builder =>
+        {
+            RateLimitingOn(builder);
+            builder.UseSetting("RateLimiting:ServerRenderKey", "test-render-key");
+        });
+        var client = limited.CreateClient();
+
+        Task<HttpResponseMessage> AsVisitor(string? key, string visitor)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login")
+            {
+                Content = JsonContent.Create(new LoginRequest("no-such-user@example.com", "whatever"), options: JsonOptions)
+            };
+            if (key is not null)
+            {
+                request.Headers.Add("X-Render-Key", key);
+            }
+
+            request.Headers.Add("X-Render-Client", visitor);
+            return client.SendAsync(request);
+        }
+
+        for (var i = 0; i < 5; i++)
+        {
+            (await AsVisitor("test-render-key", "198.51.100.1")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+
+        (await AsVisitor("test-render-key", "198.51.100.1")).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+        (await AsVisitor("test-render-key", "198.51.100.2")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+
+        // A wrong key names nobody: all such requests share the connection's bucket.
+        for (var i = 0; i < 5; i++)
+        {
+            (await AsVisitor("guessed", $"203.0.113.{i}")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+
+        (await AsVisitor("guessed", "203.0.113.99")).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+    }
 }

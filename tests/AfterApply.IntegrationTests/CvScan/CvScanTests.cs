@@ -286,4 +286,24 @@ public class CvScanTests(ApiHost<CvScanProfile> host) : IClassFixture<ApiHost<Cv
         (await ScanAsync(bytes, "cv.pdf", client: client)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await ScanAsync(bytes, "cv.pdf", client: client)).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
     }
+
+    /// <summary>A small upload that inflates to far more than it is (2026-09-24): refused before the
+    /// parser inflates it in a single call. The 5 MB upload cap bounds the compressed bytes only.</summary>
+    [Fact]
+    public async Task A_Pdf_Whose_Streams_Inflate_Past_The_Budget_Is_Refused()
+    {
+        var response = await ScanAsync(CvFixtures.PdfBomb(), "cv.pdf");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync()).ShouldContain("okunması çok uzun sürüyor");
+    }
+
+    [Fact]
+    public async Task A_Docx_Whose_Document_Part_Is_Oversized_Is_Refused()
+    {
+        var response = await ScanAsync(CvFixtures.DocxWithOversizedDocumentPart(), "cv.docx");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync()).ShouldContain("okunması çok uzun sürüyor");
+    }
 }

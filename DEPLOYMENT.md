@@ -262,6 +262,10 @@ printf '%s' "<github-client-secret-veya-bos>" | gcloud secrets create afterapply
 # deploy-web run; step 4 shows how to update this in place afterward. Also used as
 # App:WebBaseUrl (see deploy.yml) — same value, used to build links in outbound email.
 printf '%s' "https://REPLACE-ONCE-DEPLOYED" | gcloud secrets create afterapply-web-origin --data-file=-
+# Shared by the API (RateLimiting:ServerRenderKey) and the web service (API_SERVER_RENDER_KEY): a
+# server-side render that presents it may name the visitor it renders for, so the API rate limits
+# that visitor instead of the web service's shared egress address (api/RateLimits/ClientPartition.cs).
+openssl rand -base64 32 | tr -d '\n' | gcloud secrets create afterapply-server-render-key --data-file=-
 
 for s in afterapply-postgres-connection afterapply-redis-connection \
          afterapply-jwt-signing-key afterapply-sentry-dsn afterapply-openai-api-key \
@@ -269,7 +273,7 @@ for s in afterapply-postgres-connection afterapply-redis-connection \
          afterapply-google-client-id afterapply-google-client-secret \
          afterapply-linkedin-client-id afterapply-linkedin-client-secret \
          afterapply-github-client-id afterapply-github-client-secret \
-         afterapply-web-origin; do
+         afterapply-web-origin afterapply-server-render-key; do
   gcloud secrets add-iam-policy-binding "$s" \
     --member="serviceAccount:${RUNTIME_SA}" --role="roles/secretmanager.secretAccessor"
 done

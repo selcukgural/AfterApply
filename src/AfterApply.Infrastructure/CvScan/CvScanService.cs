@@ -1,3 +1,4 @@
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Application.CvScan;
 using AfterApply.Application.CvScan.Contracts;
 using AfterApply.Application.Documents;
@@ -31,6 +32,7 @@ internal sealed class CvScanService(
     IOptions<CvScanOptions> options,
     IOptions<StorageOptions> storageOptions,
     IStringLocalizer<SharedStrings> localizer,
+    PaidCallBudget paidCalls,
     ILogger<CvScanService> logger)
     : ICvScanService
 {
@@ -138,20 +140,13 @@ internal sealed class CvScanService(
             return (CvReviewStatus.NotRequested, []);
         }
 
-        // The day's ceiling, counted from the rows this feature writes rather than from a provider
-        // dashboard nobody is watching. Reaching it degrades layer B and leaves layer A alone,
-        // which is the behaviour DEVELOPMENT_PLAN.md asks for.
-        // Built as an explicit UTC offset. DateTimeOffset.UtcNow.Date returns a DateTime with an
-        // unspecified kind, and letting that convert implicitly would silently mean "midnight in
-        // whatever timezone this process happens to run in" — a three-hour shift on a developer's
-        // machine and a different day's ceiling than the one the row was counted into.
-        var since = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
-        var todaysRequests = await dbContext.CvScanResults
-            .CountAsync(result => result.ContentNotesRequested && result.ScannedAt >= since, cancellationToken);
-
-        if (todaysRequests >= options.Value.Review.DailyRequestCeiling)
+        // The day's ceiling, reserved before the call (PaidCallBudget, 2026-09-24). It used to be
+        // counted from the rows this feature writes, which are only written after the call, so
+        // concurrent scans all read the same count and all went ahead. Reaching it degrades layer
+        // B and leaves layer A alone, which is the behaviour DEVELOPMENT_PLAN.md asks for.
+        if (!await paidCalls.TryReserveAsync("cv-scan-notes", options.Value.Review.DailyRequestCeiling))
         {
-            logger.LogWarning("CV scan content notes skipped: the daily ceiling of {Ceiling} was reached.",
+            logger.LogWarning("CV scan content notes skipped: the daily ceiling of {Ceiling} was reached or cannot be counted.",
                 options.Value.Review.DailyRequestCeiling);
             return (CvReviewStatus.Unavailable, []);
         }

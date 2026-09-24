@@ -70,11 +70,12 @@ public static class RateLimiting
                     context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
                 }
 
+                // The path only: a caller's address is recorded in RequestAudits and nowhere else
+                // (CLAUDE.md, "Request audit"), log lines included.
                 var logger = context.HttpContext.RequestServices
                     .GetRequiredService<ILoggerFactory>()
                     .CreateLogger("RateLimiting");
-                logger.LogWarning("Rate limit exceeded for {RemoteIp} on {Path}",
-                    context.HttpContext.Connection.RemoteIpAddress, context.HttpContext.Request.Path);
+                logger.LogWarning("Rate limit exceeded on {Path}", context.HttpContext.Request.Path);
                 return ValueTask.CompletedTask;
             };
 
@@ -88,6 +89,16 @@ public static class RateLimiting
             // Partitioned by user where there is one and by IP otherwise, the same split the named
             // policies below use. This runs after UseAuthentication (see Program.cs's pipeline
             // order), so the sub claim is already available here.
+            // See ClientPartition: an IPv6 caller counts as its /64, and a server-side render counts
+            // as the visitor it names when it carries the render key.
+            string IpPartitionKey(HttpContext httpContext) =>
+                ClientPartition.ForAddress(ClientPartition.ClientAddress(httpContext, sizes.ServerRenderKey));
+
+            // The authenticated user where there is one, the caller's address otherwise. That address
+            // is the real client's only because UseForwardedHeaders runs first (Program.cs).
+            string PartitionKey(HttpContext httpContext) =>
+                httpContext.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? IpPartitionKey(httpContext);
+
             var globalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 Partition("global", PartitionKey(httpContext), sizes.Global));
             options.GlobalLimiter = globalLimiter;
@@ -223,16 +234,4 @@ public static class RateLimiting
 
         return services;
     }
-
-    /// <summary>The authenticated user where there is one, the caller's IP otherwise. The IP is the
-    /// real client's only because UseForwardedHeaders runs first (Program.cs) — without that every
-    /// anonymous caller behind Cloud Run's frontend shares a single partition.</summary>
-    private static string PartitionKey(HttpContext httpContext) =>
-        httpContext.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? IpPartitionKey(httpContext);
-
-    /// <summary>The IP alone, for the anonymous policies that must not key a signed-in visitor by
-    /// their id (see each policy's comment).</summary>
-    private static string IpPartitionKey(HttpContext httpContext) =>
-        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 }

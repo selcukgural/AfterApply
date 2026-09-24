@@ -14,6 +14,12 @@ public sealed class RateLimitingOptions
     /// <summary>Exists for the integration suite (see Program.cs); nothing deployed sets it.</summary>
     public bool Enabled { get; init; } = true;
 
+    /// <summary>The secret the web app's server-side rendering presents so its requests count
+    /// against the visitor they render for rather than the web service's own address (see
+    /// ClientPartition). Empty — the default, and every environment without the secret — means no
+    /// request can name its visitor.</summary>
+    public string? ServerRenderKey { get; init; }
+
     /// <summary>Backstop over every endpoint, per user (or per IP when anonymous).</summary>
     public FixedWindowPolicy Global { get; init; } = new() { PermitLimit = 300, WindowSeconds = 60 };
 

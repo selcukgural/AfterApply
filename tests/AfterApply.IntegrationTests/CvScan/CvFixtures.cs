@@ -155,4 +155,47 @@ internal static class CvFixtures
     }
 
     private static string Trim(string line, int length) => line.Length <= length ? line : line[..length];
+
+    /// <summary>A one-page PDF whose content stream is ~64 MB of zeros compressed to well under a
+    /// megabyte — a decompression bomb inside the upload cap (2026-09-24).</summary>
+    public static byte[] PdfBomb()
+    {
+        using var compressed = new MemoryStream();
+        using (var zlib = new System.IO.Compression.ZLibStream(compressed, System.IO.Compression.CompressionLevel.SmallestSize, leaveOpen: true))
+        {
+            zlib.Write(new byte[64 * 1024 * 1024]);
+        }
+
+        var data = compressed.ToArray();
+        using var pdf = new MemoryStream();
+        void Write(string text) => pdf.Write(System.Text.Encoding.ASCII.GetBytes(text));
+        Write("%PDF-1.7\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+        Write("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+        Write("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R >>\nendobj\n");
+        Write($"4 0 obj\n<< /Length {data.Length} /Filter /FlateDecode >>\nstream\r\n");
+        pdf.Write(data);
+        Write("\r\nendstream\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n");
+        return pdf.ToArray();
+    }
+
+    /// <summary>A .docx whose document.xml alone is past the per-part cap (4 MB), small once zipped.</summary>
+    public static byte[] DocxWithOversizedDocumentPart()
+    {
+        using var stream = new MemoryStream();
+        using (var document = WordprocessingDocument.Create(stream, WordprocessingDocumentType.Document))
+        {
+            var mainPart = document.AddMainDocumentPart();
+            var body = new Word.Body();
+            var line = new string('a', 200);
+            for (var i = 0; i < 30_000; i++)
+            {
+                body.AppendChild(new Word.Paragraph(new Word.Run(new Word.Text(line))));
+            }
+
+            mainPart.Document = new Word.Document(body);
+            mainPart.Document.Save();
+        }
+
+        return stream.ToArray();
+    }
 }
