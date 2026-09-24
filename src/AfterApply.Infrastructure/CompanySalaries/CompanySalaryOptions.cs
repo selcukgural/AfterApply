@@ -28,4 +28,11 @@ public sealed class CompanySalaryOptions
     public int CurrentWindowYears { get; init; } = 2;
 
     public int PageSize { get; init; } = 10;
+
+    /// <summary>How many current entries in the author's currency a company needs before the
+    /// author is shown where their own salary sits among them (contribution loop #9, 2026-09-24).
+    /// Higher than <see cref="MinimumEntriesForStats"/> on purpose: at three rows the minimum,
+    /// median and maximum are every row, and a person who also knows their own amount learns the
+    /// other two outright. Raising it is always safe.</summary>
+    public int PersonalBandMinimumEntries { get; init; } = 5;
 }

@@ -2448,3 +2448,35 @@ export interface BlogMediaResponse {
   height: number | null;
 }
 
+
+// ---- Contribution loop (2026-09-24) -----------------------------------------------------------
+
+/** One ended process the dashboard invites the caller to rate — one per company, at most three,
+ *  four weeks to a year after it closed (`GET /api/experience-invites`). */
+export interface ExperienceInvite {
+  applicationId: string;
+  companyId: string;
+  companyName: string;
+  companySlug: string;
+  jobTitle: string;
+  outcome: Extract<ApplicationStatus, "Rejected" | "Ghosted" | "Accepted">;
+  endedAt: string;
+}
+
+/** Where the caller's own salary entry sits in its company's current band. The figures are null
+ *  until `count` reaches `minimumEntries`. */
+export interface SalaryPosition {
+  entryId: string;
+  companyName: string;
+  companySlug: string;
+  currency: SalaryCurrency;
+  monthlyNetAmount: number;
+  count: number;
+  minimumEntries: number;
+  windowYears: number;
+  includesOwn: boolean;
+  medianMonthlyNet: number | null;
+  minMonthlyNet: number | null;
+  maxMonthlyNet: number | null;
+  percentFromMedian: number | null;
+}

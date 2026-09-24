@@ -41,6 +41,11 @@ export default async function CompanySalariesHelpPage({ params }: PageProps<"/[l
         <Screenshot src="/help/screenshots/salary-form.png" alt={t("write.title")} />
       </section>
 
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("position.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("position.body")}</p>
+      </section>
+
       <Callout variant="info" label={tCommon("note")} title={t("calloutAnonymous.title")}>
         {t("calloutAnonymous.body")}
       </Callout>

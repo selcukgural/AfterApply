@@ -65,6 +65,24 @@ public static class CandidateExperienceEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status429TooManyRequests);
 
+        // The dashboard's "ended processes" card (contribution loop #10). No rate limit on the
+        // dismiss, like a reminder's: it is idempotent and writes at most one row per company.
+        group.MapGet("/experience-invites", async (ClaimsPrincipal user, IExperienceInviteService service,
+                CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListAsync(user.GetUserId(), cancellationToken)))
+            .WithSummary("Ended processes the caller may want to rate")
+            .WithDescription("Applications that closed as Rejected, Ghosted or Accepted between " +
+                             "CandidateExperiences:InviteDelayDays and InviteMaxAgeDays ago, one per company, newest " +
+                             "first, at most InviteLimit — leaving out companies the caller already rated or dismissed.")
+            .Produces<IReadOnlyList<ExperienceInviteResponse>>();
+
+        group.MapPost("/experience-invites/{companyId:guid}/dismiss", async (Guid companyId, ClaimsPrincipal user,
+                IExperienceInviteService service, CancellationToken cancellationToken) =>
+            await service.DismissAsync(user.GetUserId(), companyId, cancellationToken) ? Results.NoContent() : Results.NotFound())
+            .WithSummary("Stop asking the caller to rate a company's process")
+            .WithDescription("Idempotent. A company the caller never applied to is 404.")
+            .Produces(StatusCodes.Status204NoContent);
+
         group.MapGet("/candidate-experiences/mine", async (ClaimsPrincipal user, ICandidateExperienceService service,
                 CancellationToken cancellationToken) =>
             Results.Ok(await service.ListMineAsync(user.GetUserId(), cancellationToken)))

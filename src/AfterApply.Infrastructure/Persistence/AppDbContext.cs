@@ -99,6 +99,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<CandidateExperienceHelpfulMark> CandidateExperienceHelpfulMarks => Set<CandidateExperienceHelpfulMark>();
 
+    public DbSet<ExperienceInviteDismissal> ExperienceInviteDismissals => Set<ExperienceInviteDismissal>();
+
     public DbSet<CompanyReviewCategoryRating> CompanyReviewCategoryRatings => Set<CompanyReviewCategoryRating>();
 
     public DbSet<CompanyReviewStatementPick> CompanyReviewStatementPicks => Set<CompanyReviewStatementPick>();

@@ -28,6 +28,8 @@ import { CandidateExperienceForm } from "@/components/candidateExperiences/Candi
 import { ExperienceGuidelines } from "@/components/candidateExperiences/ExperienceGuidelines";
 import { ContributeSwitch } from "@/components/contribute/ContributeSwitch";
 import { ContributionBanner } from "@/components/contribute/ContributionBanner";
+import { SalaryPositionPanel } from "@/components/companySalaries/SalaryPositionPanel";
+import { EXPERIENCE_INVITES_QUERY_KEY } from "@/components/dashboard/EndedProcessesCard";
 
 /**
  * One page for everything a signed-in person can say about a company (design canvas 2B,
@@ -63,6 +65,7 @@ function ContributeContent() {
   const [picked, setPicked] = useState<ResolvedCompany | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [banner, setBanner] = useState<{ saved: ContributeTab; next: ContributeTab } | null>(null);
+  const [savedSalaryId, setSavedSalaryId] = useState<string | null>(null);
 
   const fromSlug = useQuery({
     queryKey: ["companies", "public", slug],
@@ -116,6 +119,8 @@ function ContributeContent() {
       queryClient.invalidateQueries({ queryKey: ["companies", company!.id, "salaries"] }),
       queryClient.invalidateQueries({ queryKey: ["companies", company!.id, "experienceViewer"] }),
       queryClient.invalidateQueries({ queryKey: ["companies", company!.slug, "experiences"] }),
+      // A rated company leaves the dashboard's ended-processes card.
+      queryClient.invalidateQueries({ queryKey: EXPERIENCE_INVITES_QUERY_KEY }),
     ]);
 
   // What the other side can still offer, after this save is counted. The viewer queries are
@@ -157,8 +162,9 @@ function ContributeContent() {
 
   const createSalary = useMutation({
     mutationFn: (request: CompanySalaryRequest) => companySalariesApi.create(company!.id, request),
-    onSuccess: async () => {
+    onSuccess: async (created) => {
       await invalidate();
+      setSavedSalaryId(created.id);
       afterSave("salary");
     },
     onError: (err) => setServerError(err instanceof ApiError ? err.message : tSalary("error")),
@@ -190,6 +196,11 @@ function ContributeContent() {
       </div>
 
       {banner && company && <ContributionBanner saved={banner.saved} next={banner.next} company={company.name} />}
+
+      {/* Right after a salary is saved: where it sits in the company's current band. When there
+          is nothing left to contribute the page moves on to the contributions list instead, and
+          the same view is on the entry's card there. */}
+      {banner?.saved === "salary" && savedSalaryId && <SalaryPositionPanel entryId={savedSalaryId} variant="saved" />}
 
       {!company && (
         <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">

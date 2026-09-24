@@ -66,6 +66,19 @@ public static class CompanySalaryEndpoints
             .WithSummary("The caller's salary entries, with quota")
             .Produces<MySalariesResponse>();
 
+        group.MapGet("/company-salaries/{entryId:guid}/position", async (Guid entryId, ClaimsPrincipal user,
+                ICompanySalaryService service, CancellationToken cancellationToken) =>
+            {
+                var position = await service.GetPositionAsync(user.GetUserId(), entryId, cancellationToken);
+                return position is null ? Results.NotFound() : Results.Ok(position);
+            })
+            .WithSummary("Where the caller's own salary entry sits in its company's current band")
+            .WithDescription("The author only — another account's entry is 404. The company-wide median, minimum and " +
+                             "maximum in the entry's currency over current rows (every occupation), and the entry's " +
+                             "percent from the median. The figures are null until CompanySalaries:PersonalBandMinimumEntries " +
+                             "rows exist, which is set above the company page's threshold on purpose.")
+            .Produces<SalaryPositionResponse>();
+
         group.MapPut("/company-salaries/{entryId:guid}", async (Guid entryId, CompanySalaryRequest request,
                 ClaimsPrincipal user, ICompanySalaryService service, CancellationToken cancellationToken) =>
             {

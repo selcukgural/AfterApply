@@ -108,3 +108,25 @@ public sealed record CompanySalaryViewerStateResponse(
     SalaryQuotaResponse Quota,
     /// <summary>The entries at this company the caller has marked helpful — lights their buttons.</summary>
     IReadOnlyList<Guid> HelpfulMarkedEntryIds);
+
+/// <summary>
+/// Where the caller's own entry sits in its company's current band (contribution loop #9,
+/// 2026-09-24): the company-wide median and range in the entry's currency, over current rows only
+/// — the figures the company page already shows signed-in readers — plus the entry's own amount.
+/// Below <c>MinimumEntries</c> the figures are null and only the count comes back. Never a rank,
+/// never anyone else's row: compared with the norm, not with people.
+/// </summary>
+public sealed record SalaryPositionResponse(
+    Guid EntryId,
+    string CompanyName,
+    string CompanySlug,
+    SalaryCurrency Currency,
+    decimal MonthlyNetAmount,
+    int Count,
+    int MinimumEntries,
+    int WindowYears,
+    bool IncludesOwn,
+    decimal? MedianMonthlyNet,
+    decimal? MinMonthlyNet,
+    decimal? MaxMonthlyNet,
+    int? PercentFromMedian);

@@ -650,6 +650,7 @@ public static class DependencyInjection
         services.AddScoped<CandidateExperienceQueries>();
         services.AddScoped<ICandidateExperienceService, CandidateExperienceService>();
         services.AddScoped<ICandidateExperienceAdminService, CandidateExperienceAdminService>();
+        services.AddScoped<IExperienceInviteService, ExperienceInviteService>();
         services.AddScoped<ICompanyContributionService, CompanyContributionService>();
         services.AddScoped<IOccupationSearchService, OccupationSearchService>();
         services.AddHttpClient<IGitHubIssueMirror, GitHubIssueMirror>(client =>

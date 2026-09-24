@@ -30,6 +30,10 @@ public interface ICompanySalaryService
 
     Task<SalaryQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>Where the caller's own entry sits in its company's current band. Null when the
+    /// entry does not exist or is not the caller's.</summary>
+    Task<SalaryPositionResponse?> GetPositionAsync(Guid userId, Guid entryId, CancellationToken cancellationToken);
+
     /// <summary>Helpful on, then off — the review toggle. Null when there is no such entry; the
     /// author's own entry throws <see cref="CompanySalaryNotMarkableException"/>.</summary>
     Task<HelpfulToggleResponse?> ToggleHelpfulAsync(Guid userId, Guid entryId, CancellationToken cancellationToken);

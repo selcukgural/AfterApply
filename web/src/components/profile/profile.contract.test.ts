@@ -89,9 +89,12 @@ describe("the profile page", () => {
       expect(Object.keys(messages.profile.break.length)).toEqual(["7", "14", "30"]);
     }
 
-    // The dashboard hides exactly the two things a break is about, and nothing else, and the
-    // way back is the profile — the gate never starts a break itself.
-    expect(dashboard).toContain("<ReminderBreakGate>\n            <StaleApplicationsBanner />\n            <RemindersPanel />\n          </ReminderBreakGate>");
+    // The dashboard hides exactly the things a break is about — the two reminder surfaces and,
+    // since 2026-09-24, the invitation to rate ended processes — and nothing else, and the way
+    // back is the profile — the gate never starts a break itself.
+    expect(dashboard).toContain(
+      "<ReminderBreakGate>\n            <StaleApplicationsBanner />\n            <RemindersPanel />\n            <EndedProcessesCard />\n          </ReminderBreakGate>",
+    );
     expect(gate).toContain('href="/profile"');
     expect(gate).not.toContain("useStartBreak");
   });
