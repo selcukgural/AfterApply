@@ -18,12 +18,26 @@ showing the old logo. Prefer a shared asset over a copied glyph here.
 
 ## Regenerating them
 
-Last shot 2026-09-22 for `0.9.0` — `options-light.png` only, for the "Sites you allowed" section
-Settings gained with the per-site runtime permission. **The two popup shots were left alone on
-purpose, and the reasoning is worth keeping**: `0.9.0` adds a provenance badge to the popup's form,
-but `buildForm()` renders it only for `foundBy === "jsonld"` or `"meta"`. The scene shows a
-LinkedIn job, whose strategy reports `foundBy: "linkedin"` — so the badge does not appear there and
-the shot is still accurate. A future scene built on an ATS posting would need it.
+Last shot 2026-09-22 for `0.9.0` — `options-light.png` only.
+
+The help centre's two extension images (below) were reshot 2026-09-24 when `0.9.1` went live in
+the Store: both footers still read an old build — Settings `0.9.0`, the popup `0.6.0`. Windows
+1280×1052 (Settings, which grew by the allowed-sites list) and 1280×870 (popup).
+
+The two popup shots were reshot once, on an ATS posting with the provenance badge, and then put
+back. `0.9.0` was rejected for keyword spam over the six ATS names in its description
+(PUBLISHING_CHECKLIST.md), and the rule that came out of it covers screenshots too: Store metadata
+does not carry third-party brands. A shot of the popup over `jobs.lever.co` is a third-party brand
+in metadata, so the scene stays on the LinkedIn posting — which is also still accurate, since
+`buildForm()` renders the provenance badge only for `foundBy === "jsonld"`/`"meta"` and LinkedIn
+reports `"linkedin"`. The site's own landing mock follows the scene because a contract test pins
+the pair; the site's *text* is free to name the systems, and does.
+
+**The one reshoot did catch a real styling bug**, which is why it was worth doing anyway:
+`buildForm()` renders the provenance note as `<span class="site-badge muted-badge">` and
+`muted-badge` did not exist in `popup.css`, so the note rendered in the accent pill, identical to
+the site badge beside it — "Greenhouse · sayfadan okundu" read as two site names. The modifier is
+in `popup.css` now. Reviewing the markup would not have shown it; rendering it did.
 
 `scene-options.html` had to lose two rows to fit: the "Not connected yet." status and the "Enter a
 key by hand" row. The canvas is a fixed 1280×800 and the card grew by a whole section; without that

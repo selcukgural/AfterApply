@@ -96,6 +96,13 @@ export default async function ChromeExtensionHelpPage({ params }: PageProps<"/[l
       <Callout variant="info" label={tCommon("note")} title={t("calloutDedupe.title")}>
         {t("calloutDedupe.body")}
       </Callout>
+
+      {/* 0.9.0 asks for a host permission per site, so the help centre has to say what that grant
+          covers and where it is taken back — the extension privacy page says it too, and the two
+          must not drift. */}
+      <Callout variant="info" label={tCommon("note")} title={t("calloutPermission.title")}>
+        {t("calloutPermission.body")}
+      </Callout>
     </div>
   );
 }

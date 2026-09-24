@@ -229,9 +229,9 @@
       "cvTitle": "CV Scan",
       "cvBody": "Drop your CV and see what applicant tracking systems read from it, with an ATS readability score.",
       "cvCta": "Scan my CV",
-      "extensionPill": "LinkedIn + kariyer.net",
+      "extensionPill": "LinkedIn, kariyer.net + ATS",
       "extensionTitle": "Chrome Extension",
-      "extensionBody": "One click on LinkedIn or kariyer.net: log the application without leaving the job page.",
+      "extensionBody": "One click on the job page you have open: LinkedIn and kariyer.net right away, Greenhouse/Lever/Workday the moment you allow them.",
       "extensionCta": "Add to Chrome",
       "benchmarkTitle": "Reply rate benchmark",
       "benchmarkBody": "Enter two numbers, see your own reply rate and compare it with the median in your field.",
@@ -242,11 +242,11 @@
       "newBadge": "New",
       "panels": {
         "extension": {
-          "eyebrow": "Chrome extension · LinkedIn + kariyer.net",
+          "eyebrow": "Chrome extension · LinkedIn, kariyer.net + ATS",
           "title": "You applied. One click, and it's on record.",
-          "body": "Open the extension on the job page: company, title and location fill themselves in, and you just say \"I Applied\".",
+          "body": "Open the extension on the job page: company, title and location fill themselves in, and you just say \"I Applied\". On a site it does not know yet it asks for that one site first; allow it and it works there the same way.",
           "bullet1": "Company, title and location are filled in automatically — edit anything before sending",
-          "bullet2": "The recruiter who posted the job is captured too",
+          "bullet2": "On LinkedIn postings, the recruiter who posted the job is captured too",
           "bullet3": "Click the same job twice and your existing application opens — no duplicates",
           "cta": "Add to Chrome",
           "help": "How to set it up"
@@ -1975,7 +1975,7 @@
           "description": "Data export, extension token, plan and payments, deleting your account."
         },
         "chromeExtension": {
-          "description": "One-click \"I Applied\" on LinkedIn and kariyer.net."
+          "description": "One click, \"I Applied\", on the posting you have open."
         },
         "faq": {
           "description": "Common questions and known limitations."
@@ -2359,8 +2359,8 @@
     },
     "chromeExtension": {
       "eyebrow": "Chrome Extension",
-      "title": "One-click application logging on LinkedIn and kariyer.net",
-      "intro": "The e-kariyerim Chrome extension turns a LinkedIn or kariyer.net job posting into a tracked application with one click — just press \"I Applied\".",
+      "title": "Turn the posting you have open into an application, in one click",
+      "intro": "The e-kariyerim Chrome extension turns a job posting into a tracked application with one click — just press \"I Applied\". LinkedIn and kariyer.net work the moment it is installed; for Greenhouse, Lever, Ashby, Workday, Workable, SmartRecruiters and any company's own careers page it asks to read that one site first, and works there the same way for as long as you allow it.",
       "install": {
         "title": "Installation",
         "storeIntro": "The e-kariyerim extension is live on the Chrome Web Store — one-click install, no developer mode needed.",
@@ -2407,7 +2407,8 @@
       "use": {
         "title": "Using it",
         "step1": {
-          "title": "Open a LinkedIn or kariyer.net job posting page"
+          "title": "Open a job posting page",
+          "body": "LinkedIn and kariyer.net work straight away. Anywhere else the extension shows an \"Allow\" button; Chrome asks you to confirm that one site, and never asks again."
         },
         "step2": {
           "title": "Click the extension icon",
@@ -2424,7 +2425,7 @@
       },
       "calloutScraping": {
         "title": "Auto-fill is best-effort",
-        "body": "LinkedIn and kariyer.net occasionally change their page layout, which can leave some fields empty. That shows up as a blank field for you to fill in by hand, rather than submitting wrong data."
+        "body": "Sites change their page layouts, and beyond LinkedIn and kariyer.net the extension reads the page's own schema.org job markup — which not every site publishes (on Greenhouse boards, for instance, only the title comes through). A field it cannot read stays blank for you to fill in, rather than sending wrong data. If nothing can be read at all, \"Add it by hand\" lets you type the two fields yourself and still log the application."
       },
       "calloutDedupe": {
         "title": "Clicking the same job again is safe",
@@ -2435,7 +2436,10 @@
         "body": "If you turn on Gmail Scanning on the extension's settings page, emails you open in Gmail that look like hiring correspondence (an interview invitation, a rejection, an offer) are recognised, and only the sender, subject, a short snippet and the date are sent to e-kariyerim — never the whole email. It ships off; until you turn it on, the extension never touches Gmail.",
         "next": "Every recognised email becomes a card on the Suggestions page, where you decide what to do with it. The details are on the Suggestions help page."
       },
-      "calloutPermission": {}
+      "calloutPermission": {
+        "title": "The sites you allow stay yours",
+        "body": "The extension only reads the page you have open, only when you click its icon; it runs on no site in the background. Every site you allow is listed on the extension's Settings page with a \"Remove\" button next to it, and removing one stops it reading that site immediately."
+      }
     },
     "faq": {
       "eyebrow": "FAQ",
