@@ -1,3 +1,4 @@
+using AfterApply.Domain.Applications;
 using AfterApply.Domain.CandidateExperiences;
 
 namespace AfterApply.Application.CandidateExperiences.Contracts;
@@ -114,3 +115,15 @@ public sealed record CandidateExperienceViewerStateResponse(
     ExperienceQuotaResponse Quota,
     /// <summary>The experiences at this company the caller has marked helpful — lights their buttons.</summary>
     IReadOnlyList<Guid> HelpfulMarkedExperienceIds);
+
+/// <summary>One ended process the caller may want to rate. <paramref name="Outcome"/> is the
+/// application's closing status (Rejected, Ghosted or Accepted — a withdrawal is the candidate's
+/// own call and is never asked about); <paramref name="EndedAt"/> is when it moved there.</summary>
+public sealed record ExperienceInviteResponse(
+    Guid ApplicationId,
+    Guid CompanyId,
+    string CompanyName,
+    string CompanySlug,
+    string JobTitle,
+    ApplicationStatus Outcome,
+    DateTimeOffset EndedAt);

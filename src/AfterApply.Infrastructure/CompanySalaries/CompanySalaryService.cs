@@ -136,6 +136,50 @@ internal sealed class CompanySalaryService(
         }, ListCacheOptions, tags: [CacheKeys.Company.Tag(companyId)], cancellationToken: cancellationToken);
     }
 
+    public async Task<SalaryPositionResponse?> GetPositionAsync(Guid userId, Guid entryId, CancellationToken cancellationToken)
+    {
+        // Filtered on the caller: someone else's entry is "not found", never "forbidden".
+        var entry = await dbContext.CompanySalaryEntries
+            .Where(s => s.Id == entryId && s.UserId == userId)
+            .Join(dbContext.Companies, s => s.CompanyId, c => c.Id, (s, c) => new
+            {
+                s.CompanyId, s.Currency, s.MonthlyNetAmount, s.PeriodStartYear, s.PeriodEndYear, c.Name, c.Slug
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (entry is null)
+        {
+            return null;
+        }
+
+        var settings = options.Value;
+        var cutoffYear = SalaryPeriods.CutoffYear(_timeProvider.GetUtcNow().Year, settings.CurrentWindowYears);
+
+        // The same rows the company page's band is made of: current, in this currency, every
+        // occupation. The author's own row is one of them when it is current, and the page says so.
+        var amounts = await dbContext.CompanySalaryEntries
+            .Where(s => s.CompanyId == entry.CompanyId && s.Currency == entry.Currency)
+            .Where(s => s.PeriodStartYear != null && (s.PeriodEndYear == null || s.PeriodEndYear >= cutoffYear))
+            .Select(s => s.MonthlyNetAmount)
+            .ToListAsync(cancellationToken);
+
+        var includesOwn = SalaryPeriods.IsCurrent(entry.PeriodStartYear, entry.PeriodEndYear, cutoffYear);
+        var minimum = settings.PersonalBandMinimumEntries;
+        decimal? median = null, low = null, high = null;
+        int? percent = null;
+        if (amounts.Count >= minimum)
+        {
+            median = SalaryStats.Median(amounts);
+            low = amounts.Min();
+            high = amounts.Max();
+            percent = median > 0
+                ? (int)Math.Round((entry.MonthlyNetAmount - median.Value) / median.Value * 100m, MidpointRounding.AwayFromZero)
+                : null;
+        }
+
+        return new SalaryPositionResponse(entryId, entry.Name, entry.Slug ?? string.Empty, entry.Currency, entry.MonthlyNetAmount,
+            amounts.Count, minimum, settings.CurrentWindowYears, includesOwn, median, low, high, percent);
+    }
+
     public async Task<MyCompanySalaryResponse?> CreateAsync(Guid userId, Guid companyId, CompanySalaryRequest request, CancellationToken cancellationToken)
     {
         if (!await dbContext.Companies.AnyAsync(c => c.Id == companyId, cancellationToken))

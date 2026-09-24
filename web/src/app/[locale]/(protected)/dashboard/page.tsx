@@ -16,6 +16,7 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { HeroTile } from "@/components/dashboard/HeroTile";
 import { OutcomeCard } from "@/components/dashboard/OutcomeCard";
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
+import { EndedProcessesCard } from "@/components/dashboard/EndedProcessesCard";
 import { ReminderBreakGate } from "@/components/dashboard/ReminderBreakGate";
 import { WeeklyJobsAnnouncement } from "@/components/dashboard/WeeklyJobsAnnouncement";
 import { StaleApplicationsBanner } from "@/components/dashboard/StaleApplicationsBanner";
@@ -94,9 +95,12 @@ export default function DashboardPage() {
           {/* Above the board, not beside it: these are the two things here that ask for an action.
               The stale question first — one answer covers an entire old import, and it is the
               reason the reminders card below stays short. */}
+          {/* The ended-processes card (2026-09-24) sits inside the break too: a person who asked
+              for a pause from reminders is not asked to rate anything either. */}
           <ReminderBreakGate>
             <StaleApplicationsBanner />
             <RemindersPanel />
+            <EndedProcessesCard />
           </ReminderBreakGate>
           {/*
             Every row is the same two-column split with the same gap, so one uninterrupted vertical

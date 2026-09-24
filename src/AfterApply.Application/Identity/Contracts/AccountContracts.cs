@@ -175,7 +175,11 @@ public sealed record AccountExportResponse(
     IReadOnlyList<Guid>? HelpfulMarkedExperienceIds = null,
     IReadOnlyList<ContributionNotificationExportItem>? ContributionNotifications = null,
     IReadOnlyList<HelpfulMarkCountedExportItem>? HelpfulMarksCounted = null,
-    NotificationPreferencesResponse? NotificationPreferences = null);
+    NotificationPreferencesResponse? NotificationPreferences = null,
+    IReadOnlyList<ExperienceInviteDismissalExportItem>? ExperienceInviteDismissals = null);
+
+/// <summary>A company the account asked the dashboard to stop inviting it to rate (2026-09-24).</summary>
+public sealed record ExperienceInviteDismissalExportItem(Guid CompanyId, string CompanyName, DateTimeOffset DismissedAt);
 
 /// <summary>A "your contribution was found helpful" row as the author holds it: which of their
 /// contributions, which day, how many marks. It never knew who made them, so neither does this.</summary>

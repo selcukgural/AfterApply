@@ -9250,3 +9250,34 @@ blog yazısında dil değiştirmek diğer dilde olmayan bir slug'a (404) gidiyor
 - Doğrulama: prod build, giriş yapmış hâlde yardım → araç → TR (`/tr/teklif-karsilastirma`), TR blog yazısı → EN
   (`/en/blog`), `/en/contribute?tab=salary` → TR (sorgu korunuyor); giriş yapmadan `/en/cv-scan` → Türkçe
   (`/tr/cv-tarama`).
+
+## Katkı döngüsü: biten süreç daveti (#10) + bantta yerin (#9) — DECIDED (2026-09-24)
+
+Rakip araştırmasının "Önerilen sıra" 3. maddesi. Canvas: https://claude.ai/artifact/D3BRAUGtpaWsYc8DCxT6YL
+("Son hâli" sayfası; #10 için A hatırlatıcı satırı ve C bildirim zili, #9 için 2 yalnızca yön reddedildi).
+
+- **#10 · Panelde "Biten süreçlerin" kartı (B):** Olumsuz / dönüşsüz / kabul edilmiş teklifle kapanmış
+  başvurular, kapanıştan **4 hafta** sonra (`CandidateExperiences:InviteDelayDays=28`) ve en fazla 1 yıl
+  (`InviteMaxAgeDays=365`) içinde; şirket başına tek satır, en fazla 3 (`InviteLimit`). Geri çekilen başvuru
+  davet almaz (T6 ile aynı gerekçe). Kapanış anı = durum geçmişinde şu anki duruma geçilen son satır.
+  - Hatırlatıcı tablosu **kullanılmadı**: liste sorgusu, gece taraması ve `RetireRemindersIfTerminalAsync`
+    kapanmış başvuruları bilerek düşürüyor; davet her okumada hesaplanıyor (`ExperienceInviteService`).
+  - Aday deneyimi şirkete bağlı (kişi başına şirket başına tek kayıt), o yüzden "değerlendirdi mi" = o
+    şirkete deneyimi var mı; kapatma da **şirket başına** (`ExperienceInviteDismissals`, (UserId, CompanyId)
+    tekil, hesapla ve şirketle cascade, dışa aktarmada `experienceInviteDismissals`). Kapatılan şirketin
+    sonraki süreci de sorulmaz.
+  - Kart "ara ver" kapısının içinde (T5 profil sözleşme testi güncellendi): hatırlatmalara ara veren kişiye
+    değerlendirme de sorulmaz. E-posta yok, sayaç yok, renk yok — "teklif, dürtme değil".
+  - `GET /api/experience-invites`, `POST /api/experience-invites/{companyId}/dismiss` (başvurmadığın şirket
+    404; hız sınırı yok, hatırlatıcı kapatma gibi idempotent). Özellik bayrağı kapalıyken ikisi de 404.
+- **#9 · Bantta yerin (1 + 4 + 3):** maaş kaydedildikten hemen sonra katkı sayfasında panel, Katkılarım'daki
+  maaş kartında kalıcı satır, eşik altında "n / 5" durumu. `GET /api/company-salaries/{entryId}/position`
+  yalnızca kaydın sahibine (başkasınınki 404).
+  - Bant = şirket sayfasındaki bandın aynısı: şirket geneli (pozisyona göre ayrılmaz), kaydın para birimi,
+    güncel satırlar (2 yıl penceresi); kendi kaydın güncelse dahil ve metin bunu söylüyor.
+  - Kişisel görünüm eşiği **5** (`CompanySalaries:PersonalBandMinimumEntries`), şirket sayfasının 3'ünün
+    üstünde: 3 satırda min/medyan/maks herkesin tutarıdır ve kendi tutarını bilen biri diğer ikisini öğrenir.
+    Yükseltmek her zaman güvenli.
+  - Normla kıyas, kişilerle değil: medyana yüzde uzaklık + aralık çubuğu, sıralama/yüzdelik yok.
+- Yolda düzeltilen eski hata: `Pagination` İngilizce dört düğmeyle 390px ekranı yana taşırıyordu (Katkılarım,
+  paneldeki hatırlatıcılar) → satır kırılabiliyor.

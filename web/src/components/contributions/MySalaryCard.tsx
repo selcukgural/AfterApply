@@ -11,6 +11,7 @@ import { formatAmount, formatSalaryPeriod, occupationName } from "@/lib/companyS
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ContributionKindBadge } from "@/components/contributions/ContributionKindBadge";
+import { SalaryPositionPanel } from "@/components/companySalaries/SalaryPositionPanel";
 
 interface MySalaryCardProps {
   entry: MyCompanySalary;
@@ -69,6 +70,10 @@ export function MySalaryCard({ entry, onDeleted }: MySalaryCardProps) {
           </span>
         </div>
       </div>
+
+      {/* Where this salary sits in the company's current band — or how far the band is from
+          opening (contribution loop #9). */}
+      <SalaryPositionPanel entryId={entry.id} variant="card" />
 
       {/* A row from before the period existed: readers see it as history until this is fixed. */}
       {period === null && <p className="text-xs text-amber-700 dark:text-amber-300">{t("periodMissingHint")}</p>}

@@ -5,6 +5,7 @@ import type {
   CompanySalaryViewerState,
   MyCompanySalary,
   MySalariesResponse,
+  SalaryPosition,
 } from "@/types/api";
 import { apiFetch } from "./httpClient";
 
@@ -30,4 +31,7 @@ export const companySalariesApi = {
     apiFetch<HelpfulToggleResponse>(`/api/company-salaries/${entryId}/helpful`, { method: "POST" }),
 
   listMine: () => apiFetch<MySalariesResponse>("/api/company-salaries/mine"),
+
+  /** Where the caller's own entry sits in its company's current band; 404 for anyone else's. */
+  position: (entryId: string) => apiFetch<SalaryPosition>(`/api/company-salaries/${entryId}/position`),
 };

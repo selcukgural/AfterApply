@@ -41,6 +41,11 @@ export default async function CandidateExperiencesHelpPage({ params }: PageProps
         <Screenshot src="/help/screenshots/experience-form.png" alt={t("write.title")} />
       </section>
 
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("invite.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("invite.body")}</p>
+      </section>
+
       <Callout variant="info" label={tCommon("note")} title={t("calloutAnonymous.title")}>
         {t("calloutAnonymous.body")}
       </Callout>

@@ -711,6 +711,22 @@
       "notNow": "Not now",
       "ok": "OK",
       "error": "That didn't go through. Try again."
+    },
+    "endedProcesses": {
+      "title": "Your ended processes",
+      "intro": "Let the next candidate know what to expect at these companies. Your rating shows on the company page without your name, the role or a date — just the quarter.",
+      "rate": "Rate it",
+      "dismiss": "Don't ask about {company} again",
+      "outcome": {
+        "Rejected": "Ended in a rejection",
+        "Ghosted": "No reply",
+        "Accepted": "You accepted the offer"
+      },
+      "elapsed": {
+        "week": "{count, plural, one {# week ago} other {# weeks ago}}",
+        "month": "{count, plural, one {# month ago} other {# months ago}}"
+      },
+      "note": "A company you rate or dismiss leaves this list and is not asked about again."
     }
   },
   "applications": {
@@ -2676,6 +2692,10 @@
       "manage": {
         "title": "Editing and deleting",
         "body": "The My contributions page shows every entry you shared with its full figures, in the same list as your reviews and experiences. Edit changes the amounts and the period; Delete removes it entirely. An entry shared before the period was asked is listed under \"previous periods\" until you edit it."
+      },
+      "position": {
+        "title": "Where you sit in the band",
+        "body": "When you save a salary, and on your entry under My contributions, you see where it sits in the company's current band: a bar from the lowest to the highest amount with the median and yours marked on it, and how far from the median you are in percent. The band is made of the company's entries in the same currency from the last two years, across all roles, and includes yours. Nobody's individual amount is shown and you are not ranked against anyone. The view opens at 5 current entries — above the 3 that open the band on the company page — because with fewer, the lowest, median and highest amounts could give away other people's salaries."
       }
     },
     "cvScan": {
@@ -2884,6 +2904,10 @@
       "manage": {
         "title": "Managing your entries",
         "body": "On My contributions you see, edit or delete your entries on the same list as your reviews and salary entries. They are deleted with your account and included in your data export."
+      },
+      "invite": {
+        "title": "The invitation on your dashboard",
+        "body": "When one of your applications ends in a rejection, closes without a reply, or you accept the offer, four weeks later the \"Your ended processes\" card on your dashboard invites you to rate that company. The four weeks are there so a rating cannot be matched to the week the process ended. The card holds at most three companies; one you rate or dismiss with × leaves and is not asked about again. An application you withdrew yourself brings no invitation. While you are on a break from reminders, the card stays hidden too."
       }
     }
   },
@@ -5066,6 +5090,22 @@
       "TwoToFour": "2–4 years",
       "FiveToNine": "5–9 years",
       "TenPlus": "10+ years"
+    },
+    "position": {
+      "title": "Where you sit in the current band · {company}",
+      "sentence": {
+        "above": "{amount} net a month — {percent}% above the median of {count} current entries.",
+        "below": "{amount} net a month — {percent}% below the median of {count} current entries.",
+        "equal": "{amount} net a month — the same as the median of {count} current entries."
+      },
+      "medianLabel": "median {amount}",
+      "note": "The band is made of the company's {currency} entries from the last {years} years, across all roles, and includes yours. Nobody's individual amount is shown.",
+      "noteWithoutOwn": "The band is made of the company's {currency} entries from the last {years} years, across all roles; yours is outside that period, so it is not part of it. Nobody's individual amount is shown.",
+      "closedTitle": "The band has not opened yet",
+      "closedBody": "{company} has {count} current {currency} entries, yours included; the personal band opens at {minimum}. Once it does, you will see where you sit on your entry under My contributions.",
+      "cardLabel": "Where you sit in the current band · {count} entries",
+      "cardClosed": "The band opens at {minimum} entries ({count}/{minimum}).",
+      "companyLink": "Go to the company page"
     }
   },
   "contribute": {

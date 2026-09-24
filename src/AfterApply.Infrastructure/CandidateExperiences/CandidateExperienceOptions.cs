@@ -25,4 +25,16 @@ public sealed class CandidateExperienceOptions
     public int PriorWeight { get; init; } = 5;
 
     public int PageSize { get; init; } = 10;
+
+    /// <summary>How long after a process ends the dashboard first asks about it (contribution loop
+    /// #10, 2026-09-24). Four weeks, so that a rating does not land in the week of the rejection:
+    /// the company knows whom it turned down that week, and the public entry shows only a quarter.</summary>
+    public int InviteDelayDays { get; init; } = 28;
+
+    /// <summary>A process older than this is no longer asked about — a year on, the memory is not
+    /// what the next candidate needs.</summary>
+    public int InviteMaxAgeDays { get; init; } = 365;
+
+    /// <summary>At most this many ended processes on the card at once.</summary>
+    public int InviteLimit { get; init; } = 3;
 }

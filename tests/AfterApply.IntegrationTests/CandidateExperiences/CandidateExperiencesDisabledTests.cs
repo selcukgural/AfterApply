@@ -62,6 +62,9 @@ public class CandidateExperiencesDisabledTests(ApiHost<CandidateExperiencesDisab
         (await client.GetAsync("/api/candidate-experiences/mine")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await client.PutAsJsonAsync($"/api/candidate-experiences/{Guid.NewGuid()}", request, JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await client.DeleteAsync($"/api/candidate-experiences/{Guid.NewGuid()}")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        // The dashboard's ended-processes card goes dark with the feature it invites to.
+        (await client.GetAsync("/api/experience-invites")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await client.PostAsync($"/api/experience-invites/{company.Id}/dismiss", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
         var page = await client.GetFromJsonAsync<CompanyPublicResponse>($"/api/companies/public/{company.Slug}", JsonOptions);
         page!.CandidateExperienceCount.ShouldBe(0);

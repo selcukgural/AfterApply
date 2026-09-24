@@ -2,6 +2,7 @@ import type {
   CandidateExperiencePage,
   CandidateExperienceRequest,
   CandidateExperienceViewerState,
+  ExperienceInvite,
   HelpfulToggleResponse,
   MyCandidateExperience,
   MyCandidateExperiencesResponse,
@@ -31,4 +32,11 @@ export const candidateExperiencesApi = {
   /** On, then off. The author's own experience is refused with a 400. */
   toggleHelpful: (experienceId: string) =>
     apiFetch<HelpfulToggleResponse>(`/api/candidate-experiences/${experienceId}/helpful`, { method: "POST" }),
+
+  /** The dashboard's ended processes: closed four weeks to a year ago, not yet rated or dismissed. */
+  invites: () => apiFetch<ExperienceInvite[]>("/api/experience-invites"),
+
+  /** Stop asking about this company — idempotent. */
+  dismissInvite: (companyId: string) =>
+    apiFetch<void>(`/api/experience-invites/${companyId}/dismiss`, { method: "POST" }),
 };

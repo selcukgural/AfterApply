@@ -711,6 +711,22 @@
       "notNow": "Şimdi değil",
       "ok": "Tamam",
       "error": "İşlem tamamlanamadı. Tekrar dene."
+    },
+    "endedProcesses": {
+      "title": "Biten süreçlerin",
+      "intro": "Bir sonraki aday bu şirkete ne beklediğini bilerek girsin. Değerlendirmen şirket sayfasında adın, pozisyon ve tarih olmadan, çeyrek olarak görünür.",
+      "rate": "Değerlendir",
+      "dismiss": "{company} için bir daha sorma",
+      "outcome": {
+        "Rejected": "Olumsuz sonuçlandı",
+        "Ghosted": "Dönüş yok",
+        "Accepted": "Teklifi kabul ettin"
+      },
+      "elapsed": {
+        "week": "{count} hafta önce",
+        "month": "{count} ay önce"
+      },
+      "note": "Değerlendirdiğin ya da kapattığın şirket buradan kalkar ve bir daha sorulmaz."
     }
   },
   "applications": {
@@ -2676,6 +2692,10 @@
       "manage": {
         "title": "Düzenleme ve silme",
         "body": "Katkılarım sayfası paylaştığınız her kaydı tam figürleriyle, değerlendirme ve deneyimlerinizle aynı listede gösterir. Düzenle tutarları ve dönemi değiştirir; Sil tamamen kaldırır. Dönem sorulmadan önce paylaştığınız bir kayıt, siz düzenleyene kadar \"önceki dönemler\"de listelenir."
+      },
+      "position": {
+        "title": "Bantta yerin",
+        "body": "Maaşını kaydettiğinde ve Katkılarım'daki kaydında, maaşının şirketin güncel bandında nerede durduğunu görürsün: en düşük ve en yüksek tutar arasında bir çubuk, üstünde medyan ve senin tutarın, yanında medyandan yüzde kaç uzakta olduğun. Bant şirketin son iki yıldaki aynı para birimindeki kayıtlarından oluşur, tüm pozisyonları kapsar ve senin kaydın da içindedir. Kimsenin tek tek tutarı gösterilmez ve kimseyle sıralanmazsın. Bu görünüm, şirket sayfasındaki bandın açıldığı 3 kaydın üstünde, 5 güncel kayıtta açılır: az kayıtta en düşük, medyan ve en yüksek tutar başkalarının maaşını ele verebilir."
       }
     },
     "cvScan": {
@@ -2884,6 +2904,10 @@
       "manage": {
         "title": "Kayıtlarınızı yönetmek",
         "body": "Katkılarım sayfasında kayıtlarınızı değerlendirme ve maaş kayıtlarınızla aynı listede görür, düzenler ya da silersiniz. Kayıtlar hesabınızla birlikte silinir ve veri dışa aktarımınıza dâhildir."
+      },
+      "invite": {
+        "title": "Panelde değerlendirme daveti",
+        "body": "Bir başvurun olumsuz sonuçlandığında, dönüş gelmeden kapandığında ya da teklifi kabul ettiğinde, dört hafta sonra panelde \"Biten süreçlerin\" kartında o şirket için bir değerlendirme daveti görürsün. Dört hafta beklenmesi, değerlendirmenin sürecin bittiği haftayla eşleştirilmemesi içindir. Kartta en fazla üç şirket yer alır; değerlendirdiğin ya da × ile kapattığın şirket kalkar ve bir daha sorulmaz. Başvuruyu kendin geri çektiysen davet gelmez. Hatırlatmalara ara verdiysen kart da arada görünmez."
       }
     }
   },
@@ -5066,6 +5090,22 @@
       "TwoToFour": "2–4 yıl",
       "FiveToNine": "5–9 yıl",
       "TenPlus": "10+ yıl"
+    },
+    "position": {
+      "title": "Güncel bantta yerin · {company}",
+      "sentence": {
+        "above": "Aylık net {amount} — güncel {count} kaydın medyanından %{percent} yukarıda.",
+        "below": "Aylık net {amount} — güncel {count} kaydın medyanından %{percent} aşağıda.",
+        "equal": "Aylık net {amount} — güncel {count} kaydın medyanıyla aynı."
+      },
+      "medianLabel": "medyan {amount}",
+      "note": "Bant, şirketin son {years} yıldaki {currency} kayıtlarından; tüm pozisyonları kapsar ve senin kaydın da içinde. Kimsenin tek tek tutarı gösterilmez.",
+      "noteWithoutOwn": "Bant, şirketin son {years} yıldaki {currency} kayıtlarından ve tüm pozisyonları kapsar; senin kaydın bu dönemin dışında olduğu için bantta değil. Kimsenin tek tek tutarı gösterilmez.",
+      "closedTitle": "Bant henüz açılmadı",
+      "closedBody": "{company} için senin kaydınla birlikte {count} güncel {currency} kaydı var; kişisel bant {minimum} kayıtta açılır. Açıldığında yerini Katkılarım'daki kaydında göreceksin.",
+      "cardLabel": "Güncel bantta yerin · {count} kayıt",
+      "cardClosed": "Bant {minimum} kayıtta açılır ({count}/{minimum}).",
+      "companyLink": "Şirket sayfasına git"
     }
   },
   "contribute": {

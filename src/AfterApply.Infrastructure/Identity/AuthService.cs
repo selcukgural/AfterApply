@@ -912,6 +912,13 @@ internal sealed class AuthService(
             .Select(e => new HelpfulMarkCountedExportItem(e.Type, e.TargetId, e.CountedAt))
             .ToListAsync(cancellationToken);
 
+        var experienceInviteDismissals = await dbContext.ExperienceInviteDismissals
+            .Where(d => d.UserId == userId)
+            .Join(dbContext.Companies, d => d.CompanyId, c => c.Id, (d, c) => new { d, c.Name })
+            .OrderByDescending(x => x.d.DismissedAt)
+            .Select(x => new ExperienceInviteDismissalExportItem(x.d.CompanyId, x.Name, x.d.DismissedAt))
+            .ToListAsync(cancellationToken);
+
         var notificationPreferences = new NotificationPreferencesResponse(
             user.NotifyContributions, user.NotifyReviewHelpful, user.NotifySalaryHelpful,
             user.NotifyExperienceHelpful, user.NotifyBlogCommentHelpful, user.NotifyGmailUpdates);
@@ -919,7 +926,7 @@ internal sealed class AuthService(
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
             DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks, companySalaries, payments, proEntitlement,
             candidateExperiences, blogComments, helpfulMarkedSalaryIds, helpfulMarkedExperienceIds, contributionNotifications,
-            helpfulMarksCounted, notificationPreferences);
+            helpfulMarksCounted, notificationPreferences, experienceInviteDismissals);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)
