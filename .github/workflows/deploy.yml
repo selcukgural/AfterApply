@@ -20,8 +20,10 @@ on:
         options: [both, backend, web]
         default: both
 
+# Read-only by default. Only deploy-backend and deploy-web ask for an OIDC token (Workload Identity
+# Federation — no long-lived JSON key stored in secrets): the test and contract jobs run npm ci /
+# dotnet restore, i.e. third-party code, and must not be able to mint cloud credentials.
 permissions:
-  id-token: write # Workload Identity Federation — no long-lived JSON key stored in secrets
   contents: read
 
 env:
@@ -147,13 +149,12 @@ jobs:
           fetch-depth: 0 # full history — needed to diff against the deploy/api-latest tag below
 
       - id: auth
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - uses: google-github-actions/setup-gcloud@v3
-
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
 
@@ -243,7 +244,7 @@ jobs:
       # starting together that exhausted the slots. One warm instance absorbs
       # that burst on its own; it costs roughly $8–10/month of idle time.
       - name: Deploy to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v3
+        uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d # v3.0.1
         with:
           service: afterapply-api
           region: ${{ env.GCP_REGION }}
@@ -415,13 +416,12 @@ jobs:
           fetch-depth: 0 # full history — needed to diff against the deploy/web-latest tag below
 
       - id: auth
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - uses: google-github-actions/setup-gcloud@v3
-
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
 
@@ -452,7 +452,7 @@ jobs:
       # The public pages now prerender statically, so a warm instance answers them from disk;
       # one idle instance is the same ~$8–10/month the API already pays for the same reason.
       - name: Deploy to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v3
+        uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d # v3.0.1
         with:
           service: afterapply-web
           region: ${{ env.GCP_REGION }}
@@ -505,7 +505,7 @@ jobs:
           BACKEND_COMMITS: ${{ needs.deploy-backend.outputs.commits }}
           WEB_DEPLOYED: ${{ needs.deploy-web.result == 'success' && needs.deploy-web.outputs.count != '0' }}
           WEB_COMMITS: ${{ needs.deploy-web.outputs.commits }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const backendDeployed = process.env.BACKEND_DEPLOYED === 'true';
@@ -533,7 +533,7 @@ jobs:
 
       - name: Post to #deployments
         if: steps.build.outputs.shouldPost == 'true'
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
