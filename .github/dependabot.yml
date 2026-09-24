@@ -10,6 +10,11 @@ updates:
     schedule:
       interval: weekly
     groups:
+      # init and analyze must run the same version (analyze refuses a config written by another),
+      # so they move together, majors included. Listed first: a dependency joins the first group
+      # that matches.
+      codeql:
+        patterns: ["github/codeql-action*"]
       actions:
         update-types: [minor, patch]
 
@@ -26,6 +31,11 @@ updates:
     directory: /web
     schedule:
       interval: weekly
+    ignore:
+      # eslint-config-next bundles an eslint-plugin-react that ESLint 10 cannot load
+      # (2026-09-24). Lift once Next's config supports it.
+      - dependency-name: eslint
+        versions: [">=10"]
     groups:
       web:
         update-types: [minor, patch]
@@ -55,6 +65,12 @@ updates:
       - /web
     schedule:
       interval: weekly
+    ignore:
+      # A Node major is a decision, not a routine bump: only even-numbered (LTS) lines, and the
+      # image moves together with CI's setup-node version so tests run what production runs.
+      # Dependabot offered 25-alpine, a line already past end of life (2026-06-01).
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
     groups:
       images:
         update-types: [minor, patch]
