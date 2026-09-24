@@ -1,4 +1,4 @@
-import type { ImportAcceptedResponse, ImportSummaryResponse } from "@/types/api";
+import type { HubTicketResponse, ImportAcceptedResponse, ImportSummaryResponse } from "@/types/api";
 import { apiFetch } from "./httpClient";
 
 export const importsApi = {
@@ -12,4 +12,9 @@ export const importsApi = {
   },
 
   getImportStatus: (id: string) => apiFetch<ImportSummaryResponse>(`/api/imports/${id}`),
+
+  /** What the progress hub connection authenticates with — never the session token, which the
+   * WebSocket handshake would have to carry in its URL. */
+  getProgressTicket: () =>
+    apiFetch<HubTicketResponse>("/api/imports/progress-ticket", { method: "POST" }).then((r) => r.ticket),
 };

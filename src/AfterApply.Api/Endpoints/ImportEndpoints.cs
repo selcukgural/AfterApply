@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 using AfterApply.Api.Extensions;
+using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
 using AfterApply.Application.Imports.Contracts;
 using AfterApply.Application.Localization;
@@ -17,6 +18,17 @@ public static class ImportEndpoints
     {
         var group = app.MapGroup("/api/imports").WithTags("Imports").RequireAuthorization()
             .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        // What the progress hub connection authenticates with instead of the session token, which
+        // would otherwise ride in the WebSocket URL (HubTicketDefaults). Session only: the default
+        // policy keeps personal access tokens out.
+        group.MapPost("/progress-ticket", (ClaimsPrincipal user, ITokenService tokens, HttpContext httpContext) =>
+            {
+                httpContext.Response.Headers.CacheControl = "no-store";
+                return Results.Ok(new HubTicketResponse(tokens.CreateHubTicket(user.GetUserId())));
+            })
+            .WithSummary("Mint a one-minute ticket for connecting to /hubs/import-progress")
+            .Produces<HubTicketResponse>();
 
         group.MapPost("/csv", async ([FromForm] IFormFile file, [FromForm] string? columnMapping,
             ClaimsPrincipal user, IImportService service, IBackgroundJobClient jobClient,

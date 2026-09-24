@@ -103,6 +103,12 @@ public class PasswordResetTests(ApiHost<PasswordResetProfile> host) : IClassFixt
             new ForgotPasswordRequest(email), JsonOptions);
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
+        // Job arguments are stored as plain text: the queued job names the account, and the address
+        // and the reset token are only produced when it runs.
+        var job = host.Jobs.Pending.ShouldHaveSingleItem();
+        job.TargetType.ShouldBe(typeof(IAccountEmailJobs));
+        job.Job.Args.ShouldNotContain(arg => arg is string && ((string)arg).Contains('@'));
+
         var resetLink = await WaitForResetLinkAsync();
         resetLink.ShouldContain("/reset-password");
         _emailSender.LastLocale.ShouldBe("tr");

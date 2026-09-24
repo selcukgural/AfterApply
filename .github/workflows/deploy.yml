@@ -60,7 +60,7 @@ jobs:
       backend: ${{ steps.decide.outputs.backend }}
       web: ${{ steps.decide.outputs.web }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         if: github.event_name == 'push'
         with:
           fetch-depth: 0 # full history — the tag can be many commits behind HEAD
@@ -144,7 +144,7 @@ jobs:
       commits: ${{ steps.deploy-commits.outputs.commits }}
       count: ${{ steps.deploy-commits.outputs.count }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0 # full history — needed to diff against the deploy/api-latest tag below
 
@@ -412,7 +412,7 @@ jobs:
       commits: ${{ steps.deploy-commits.outputs.commits }}
       count: ${{ steps.deploy-commits.outputs.count }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0 # full history — needed to diff against the deploy/web-latest tag below
 
@@ -431,6 +431,9 @@ jobs:
       # URLs are stable for the life of the service, so this doesn't need
       # to be rediscovered on every run). See DEPLOYMENT.md step 4/5.
       - name: Build and push image
+        # A BuildKit secret, not a build arg: see web/Dockerfile.
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/afterapply-web:${GITHUB_SHA}"
           docker build -f web/Dockerfile \
@@ -438,7 +441,7 @@ jobs:
             --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ secrets.SENTRY_DSN_WEB }}" \
             --build-arg SENTRY_ORG="${{ secrets.SENTRY_ORG }}" \
             --build-arg SENTRY_PROJECT="${{ secrets.SENTRY_PROJECT_WEB }}" \
-            --build-arg SENTRY_AUTH_TOKEN="${{ secrets.SENTRY_AUTH_TOKEN }}" \
+            --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
             -t "$IMAGE" ./web
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"

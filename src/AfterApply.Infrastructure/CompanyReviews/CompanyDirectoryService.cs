@@ -71,7 +71,7 @@ internal sealed class CompanyDirectoryService(
         if (!string.IsNullOrEmpty(q))
         {
             var pattern = NamePattern(q);
-            companies = companies.Where(c => EF.Functions.ILike(c.NormalizedName, pattern));
+            companies = companies.Where(c => EF.Functions.ILike(c.NormalizedName, pattern, LikePattern.EscapeCharacter));
         }
 
         // The two feature-gated counts are always computed in SQL and zeroed in memory when the
@@ -131,7 +131,7 @@ internal sealed class CompanyDirectoryService(
         // applications to the same firm are still one person.
         return await dbContext.Companies
             .Where(c => c.Slug != null
-                        && EF.Functions.ILike(c.NormalizedName, pattern)
+                        && EF.Functions.ILike(c.NormalizedName, pattern, LikePattern.EscapeCharacter)
                         && !contributions.Any(x => x.CompanyId == c.Id)
                         && dbContext.Applications.Where(a => a.CompanyId == c.Id).Select(a => a.UserId).Distinct().Count() >= minimum)
             .OrderBy(c => c.Name).ThenBy(c => c.Id)
@@ -162,7 +162,7 @@ internal sealed class CompanyDirectoryService(
         return contributions;
     }
 
-    private static string NamePattern(string q) => $"%{TurkishTextNormalizer.FoldCase(q).ToUpperInvariant()}%";
+    private static string NamePattern(string q) => LikePattern.Contains(TurkishTextNormalizer.FoldCase(q).ToUpperInvariant());
 
     private sealed class ContributionRow
     {

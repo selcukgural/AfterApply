@@ -168,6 +168,62 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
         after.GetProperty("hasReceivedSignal").GetBoolean().ShouldBeTrue();
     }
 
+    /// <summary>A job's arguments are stored as plain text for as long as the job row lives. The
+    /// queued job carries the staged row's id and nothing of the email; the row is gone once the
+    /// job has run.</summary>
+    [Fact]
+    public async Task A_Signal_Is_Queued_By_Id_And_Its_Staged_Text_Is_Deleted_Once_Processed()
+    {
+        var (client, _) = await host.RegisterAsync("email-signal.staged@example.com", "Signal", "Test");
+
+        var response = await client.PostAsJsonAsync("/api/email-forwarding/extension-signal", new
+        {
+            senderEmail = "recruiter@staged-signal-co.com", senderDisplayName = "Staged Signal Recruiting",
+            subject = "Interview invitation", snippet = "We'd like to invite you to an interview.",
+            receivedAt = DateTimeOffset.UtcNow, linkDomains = Array.Empty<string>(), gmailMessageId = "thread-staged-1"
+        }, JsonOptions);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var job = host.Jobs.Pending.ShouldHaveSingleItem();
+        job.MethodName.ShouldBe(nameof(IEmailForwardingService.ProcessPendingExtensionSignalAsync));
+        job.Job.Args.ShouldAllBe(arg => arg is Guid || arg is CancellationToken);
+
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.PendingEmailSignals.CountAsync()).ShouldBe(1);
+        }
+
+        await host.RunJobsAsync();
+
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.PendingEmailSignals.CountAsync()).ShouldBe(0);
+        }
+    }
+
+    [Fact]
+    public async Task A_Staged_Signal_Whose_Job_Never_Succeeded_Is_Purged_After_The_Retry_Window()
+    {
+        var (_, auth) = await host.RegisterAsync("email-signal.purge@example.com", "Signal", "Test");
+
+        await using var scope = host.Services.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<IEmailForwardingService>();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var request = new ExtensionEmailSignalRequest("hr@purge-co.com", "Purge Co", "Interview", "Snippet",
+            DateTimeOffset.UtcNow, [], "thread-purge-1");
+
+        var staleId = await service.StageExtensionSignalAsync(auth.User.Id, request, CancellationToken.None);
+        var freshId = await service.StageExtensionSignalAsync(auth.User.Id, request with { GmailMessageId = "thread-purge-2" },
+            CancellationToken.None);
+        await db.PendingEmailSignals.Where(s => s.Id == staleId)
+            .ExecuteUpdateAsync(u => u.SetProperty(s => s.CreatedAt, DateTimeOffset.UtcNow.AddDays(-4)));
+
+        (await service.PurgeStalePendingSignalsAsync(CancellationToken.None)).ShouldBe(1);
+        (await db.PendingEmailSignals.Select(s => s.Id).ToListAsync()).ShouldBe([freshId]);
+    }
+
     /// <summary>The extension can deliver one message twice (a retry, two tabs), and with several
     /// instances both copies can pass the "already processed" check before either commits. The
     /// unique index on (EmailConnectionId, ProviderMessageId) decides; the loser has to end

@@ -1,3 +1,6 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Api.Imports;
 using AfterApply.Application.Imports.Contracts;
@@ -28,7 +31,7 @@ public class SignalRBackplaneTests(ApiHost<DefaultProfile> host) : IClassFixture
     public async Task A_Group_Send_On_One_Instance_Reaches_A_Socket_On_Another()
     {
         var socketInstance = host.Variant("socket-instance", _ => { });
-        var (_, auth) = await host.RegisterAsync("backplane@example.com", on: socketInstance);
+        var (client, auth) = await host.RegisterAsync("backplane@example.com", on: socketInstance);
 
         // JoinBatch only admits the batch's owner, so there has to be a real batch row.
         var batchId = await host.WithDbAsync(async db =>
@@ -39,16 +42,7 @@ public class SignalRBackplaneTests(ApiHost<DefaultProfile> host) : IClassFixture
             return batch.Id;
         });
 
-        await using var connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(socketInstance.Server.BaseAddress, "/hubs/import-progress"), options =>
-            {
-                options.HttpMessageHandlerFactory = _ => socketInstance.Server.CreateHandler();
-                options.AccessTokenProvider = () => Task.FromResult<string?>(auth.AccessToken);
-            })
-            // The hub serialises enums as strings (Program.cs); the client has to read them back
-            // the same way or the handler silently never fires.
-            .AddJsonProtocol(options => options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
-            .Build();
+        await using var connection = Connect(socketInstance, () => MintTicketAsync(client));
 
         var received = new TaskCompletionSource<ImportSummaryResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
         connection.On<ImportSummaryResponse>("importStatusChanged", status => received.TrySetResult(status));
@@ -68,4 +62,63 @@ public class SignalRBackplaneTests(ApiHost<DefaultProfile> host) : IClassFixture
         status.Id.ShouldBe(batchId);
         status.ProcessedRows.ShouldBe(3);
     }
+
+    /// <summary>The URL carries whatever the hub accepts, so the session token must not open it:
+    /// only a ticket does.</summary>
+    [Fact]
+    public async Task The_Hub_Refuses_A_Session_Access_Token()
+    {
+        var (_, auth) = await host.RegisterAsync("hub-session-token@example.com");
+
+        await using var connection = Connect(host, () => Task.FromResult<string?>(auth.AccessToken));
+
+        var failure = await Should.ThrowAsync<HttpRequestException>(() => connection.StartAsync());
+        failure.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task A_Hub_Ticket_Opens_The_Hub_And_Nothing_Else()
+    {
+        var (client, _) = await host.RegisterAsync("hub-ticket@example.com");
+        var ticket = await MintTicketAsync(client);
+
+        await using var connection = Connect(host, () => Task.FromResult<string?>(ticket));
+        await connection.StartAsync();
+        connection.State.ShouldBe(HubConnectionState.Connected);
+
+        var api = host.CreateClient();
+        api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ticket);
+        (await api.GetAsync("/api/applications")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Minting_A_Ticket_Needs_A_Session()
+    {
+        var response = await host.CreateClient().PostAsync("/api/imports/progress-ticket", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    /// <summary>A fresh ticket per call, like the web client: tickets live a minute, and a
+    /// long-polling connection presents one on every request.</summary>
+    private static async Task<string?> MintTicketAsync(HttpClient client)
+    {
+        var response = await client.PostAsync("/api/imports/progress-ticket", null);
+        response.EnsureSuccessStatusCode();
+        response.Headers.CacheControl?.NoStore.ShouldBeTrue();
+        return (await response.Content.ReadFromJsonAsync<HubTicketResponse>(ApiHost.JsonOptions))!.Ticket;
+    }
+
+    private static HubConnection Connect(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> instance,
+        Func<Task<string?>> accessTokenProvider) =>
+        new HubConnectionBuilder()
+            .WithUrl(new Uri(instance.Server.BaseAddress, "/hubs/import-progress"), options =>
+            {
+                options.HttpMessageHandlerFactory = _ => instance.Server.CreateHandler();
+                options.AccessTokenProvider = accessTokenProvider;
+            })
+            // The hub serialises enums as strings (Program.cs); the client has to read them back
+            // the same way or the handler silently never fires.
+            .AddJsonProtocol(options => options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
+            .Build();
 }

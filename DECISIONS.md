@@ -9402,3 +9402,33 @@ başkalarına ancak şu kurallarla ulaşıyor.
 - 429 log satırından IP çıkarıldı (RequestAudit kuralı).
 - `/local-filter-config` eşikleri yayımlanmaya devam ediyor: eklenti onları kullanıyor ve
   `/from-extension` gibi geriye dönük uyum kuralı altında; hesap başına tavan bunu dengeliyor.
+
+## Hijyen sıkılaştırmaları: iş argümanları, URL'deki kimlik bilgileri, bağımlılık sabitleme — DECIDED (2026-09-24)
+
+- **Hangfire argümanları kimlik taşır, içerik taşımaz.** Şifre sıfırlama/değişti e-postaları
+  `IAccountEmailJobs` (hesap id'si; sıfırlama token'ı ve bağlantı iş çalışırken üretilir), ödeme
+  e-postaları `IPaymentEmailJobs` (sipariş id'si; adres ve iade notu satırdan okunur). Gmail sinyali
+  önce `PendingEmailSignals` tablosuna yazılır (hesapla cascade), iş yalnızca satır id'sini alır ve
+  işledikten sonra satırı siler; başarıya ulaşamayan satırlar 3 gün sonra `email-signal-purge`
+  (günlük) ile silinir. Eski imzalı metotlar, deploy anında kuyrukta bekleyen işler için duruyor.
+- **Başarısız işler süresiz kalmaz.** Global retry filtresi 10 denemeden sonra işi Failed yerine
+  Deleted'a alır; Hangfire onu diğer biten işler gibi 1 gün sonra siler (`HangfireJobRetention`).
+  Dashboard yok, son hata zaten loglanıyor.
+- **SignalR artık oturum token'ını URL'de taşımaz.** `/hubs/import-progress` yalnızca
+  `POST /api/imports/progress-ticket` ile alınan, 60 saniyelik, yalnızca hub'lar için geçerli bir
+  bilet kabul eder (`HubTicketDefaults`, ayrı audience). Tek kullanımlık değil: long-polling/SSE yedek
+  taşıyıcıları aynı bileti her istekte sunar. İstemci her bağlantı ve yeniden bağlantıda yeni bilet alır.
+- **Sentry'ye URL'deki gizli değerler gitmez.** Web (tarayıcı/Node/edge) ve API `beforeSend` /
+  `beforeBreadcrumb` ile `token`, `access_token`, `id_token`, `ticket`, `code`, `state`, `email`
+  parametre değerlerini `[Filtered]` yapar. Şifre sıfırlama sayfası token'ı okuduktan sonra adres
+  çubuğundan siler.
+- **Geri bildirim → GitHub:** başlıkta `@` ve `#` sonrası görünmez kelime birleştirici (bahsetme ve
+  issue bağlantısı oluşmaz); tablo hücreleri code span içinde.
+- **LIKE aramaları** `%`, `_`, `\` karakterlerini harfiyen arar (`LikePattern`); tüm ILike çağrıları.
+- **Tedarik zinciri:** GitHub'ın kendi action'ları da commit SHA'ya sabitlendi; base imajlar digest'e
+  sabitlendi; `.github/dependabot.yml` (actions, nuget, npm web/extension/postman, docker) eklendi;
+  web imajında `SENTRY_AUTH_TOKEN` build arg değil BuildKit secret; migration imajı non-root (`app`).
+- **Kapsam dışı bırakılan:** OG kartının `t`/`k` metni için imza/izin listesi ayrı bir işe kaldı
+  (başlıklar build sırasında üretiliyor, anahtar yalnızca çalışma anında var; blog önizlemesi
+  tarayıcıda serbest metinle URL kuruyor). `newman` CI'da kilit dosyası yerine sabit sürümle kuruluyor:
+  postman paketindeki faker override'ı newman'ın dinamik değişkenlerini bozabileceği için taşınmadı.

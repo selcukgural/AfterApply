@@ -665,17 +665,15 @@ internal sealed class AuthService(
             return;
         }
 
-        var token = await userManager.GeneratePasswordResetTokenAsync(user);
-        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
         var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        var resetLink = $"{_appOptions.WebBaseUrl}/{locale}/reset-password" +
-                         $"?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(encodedToken)}";
 
         // Enqueued, not awaited: keeps this response's timing identical to the "no such user"
         // branch above regardless of how long Resend takes, and gets Hangfire's automatic retry
         // (10 attempts, backoff) for free on a transient send failure — see ResendEmailSender.
-        var email = user.Email!;
-        jobClient.Enqueue<IEmailSender>(s => s.SendPasswordResetEmailAsync(email, resetLink, locale, CancellationToken.None));
+        // By account id: the job mints the token and reads the address itself, so neither is
+        // written into the job's stored arguments (see IAccountEmailJobs).
+        var userId = user.Id;
+        jobClient.Enqueue<IAccountEmailJobs>(s => s.SendPasswordResetAsync(userId, locale, CancellationToken.None));
         logger.LogInformation("Password reset requested for user {UserId}", user.Id);
     }
 
@@ -730,8 +728,8 @@ internal sealed class AuthService(
         await RevokePersonalAccessTokensAsync(user.Id, cancellationToken);
 
         var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        var email = user.Email!;
-        jobClient.Enqueue<IEmailSender>(s => s.SendPasswordChangedEmailAsync(email, locale, CancellationToken.None));
+        var userId = user.Id;
+        jobClient.Enqueue<IAccountEmailJobs>(s => s.SendPasswordChangedAsync(userId, locale, CancellationToken.None));
         logger.LogInformation("Password reset completed for user {UserId}", user.Id);
 
         return PasswordResetResult.Success();

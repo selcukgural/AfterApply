@@ -575,6 +575,11 @@ export interface ImportRowErrorResponse {
 
 export type ImportBatchStatus = "Pending" | "Processing" | "Completed" | "Failed";
 
+/** See HubTicketDefaults on the API: a one-minute credential for the progress hub only. */
+export interface HubTicketResponse {
+  ticket: string;
+}
+
 export interface ImportAcceptedResponse {
   id: string;
 }

@@ -25,7 +25,6 @@ namespace AfterApply.Infrastructure.Payments;
 internal sealed class PayTrCallbackService(
     AppDbContext dbContext,
     IOptions<PayTrOptions> options,
-    IOptions<AppOptions> appOptions,
     IProEntitlementService entitlements,
     IBackgroundJobClient jobClient,
     IServiceScopeFactory scopeFactory,
@@ -176,14 +175,8 @@ internal sealed class PayTrCallbackService(
 
     private void EnqueueReceipt(PaymentOrder order, DateTimeOffset activeUntil)
     {
-        var locale = PaymentFormatting.NormalizeLocale(order.Locale);
-        var receipt = new PaymentReceipt(
-            PaymentFormatting.PlanName(order.Plan, locale),
-            PaymentFormatting.Amount(order.PaidAmountMinor, locale),
-            PaymentFormatting.Date(activeUntil, locale),
-            $"{appOptions.Value.WebBaseUrl.TrimEnd('/')}/{locale}/pro");
-        var email = order.Email;
-        jobClient.Enqueue<IEmailSender>(s => s.SendPaymentReceivedEmailAsync(email, locale, receipt, CancellationToken.None));
+        var orderId = order.Id;
+        jobClient.Enqueue<IPaymentEmailJobs>(s => s.SendReceiptAsync(orderId, activeUntil, CancellationToken.None));
     }
 
     // Written in its own scope and never allowed to throw: the evidence row must exist whether

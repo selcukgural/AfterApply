@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# Base images are pinned by digest (tag kept for readability); Dependabot's docker updates move
+# the digest forward.
+FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:35d40304542c8689331f8cab17c65926cdf48fe711e289321d71924b230a7d29 AS build
 WORKDIR /src
 COPY Directory.Build.props Directory.Packages.props ./
 COPY src/AfterApply.Domain/AfterApply.Domain.csproj src/AfterApply.Domain/
@@ -10,7 +12,7 @@ RUN dotnet restore src/AfterApply.Api/AfterApply.Api.csproj
 COPY src/ src/
 RUN dotnet publish src/AfterApply.Api/AfterApply.Api.csproj -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:2d584d8147faddb0d678c5748d47953e5b8e18621ed4fb7049a91381d9d7746f AS runtime
 WORKDIR /app
 COPY --from=build /app .
 EXPOSE 8080

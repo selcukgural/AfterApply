@@ -39,19 +39,19 @@ internal sealed class OccupationSearchService(AppDbContext dbContext, IOptions<O
             normalizedQuery,
             async (nq, ct) =>
             {
-                var contains = $"%{nq}%";
-                var prefix = $"{nq}%";
+                var contains = LikePattern.Contains(nq);
+                var prefix = LikePattern.StartsWith(nq);
 
                 // A name that starts with what was typed outranks a mid-word hit, which outranks a
                 // fuzzy one; ties settle on the higher similarity of the two names.
                 return (IReadOnlyList<OccupationSearchResultResponse>)await dbContext.Occupations
                     .Where(o => o.IsActive)
-                    .Where(o => EF.Functions.ILike(o.NormalizedNameTr, contains)
-                        || EF.Functions.ILike(o.NormalizedNameEn, contains)
+                    .Where(o => EF.Functions.ILike(o.NormalizedNameTr, contains, LikePattern.EscapeCharacter)
+                        || EF.Functions.ILike(o.NormalizedNameEn, contains, LikePattern.EscapeCharacter)
                         || EF.Functions.TrigramsAreSimilar(o.NormalizedNameTr, nq)
                         || EF.Functions.TrigramsAreSimilar(o.NormalizedNameEn, nq))
-                    .OrderByDescending(o => EF.Functions.ILike(o.NormalizedNameTr, prefix) || EF.Functions.ILike(o.NormalizedNameEn, prefix))
-                    .ThenByDescending(o => EF.Functions.ILike(o.NormalizedNameTr, contains) || EF.Functions.ILike(o.NormalizedNameEn, contains))
+                    .OrderByDescending(o => EF.Functions.ILike(o.NormalizedNameTr, prefix, LikePattern.EscapeCharacter) || EF.Functions.ILike(o.NormalizedNameEn, prefix, LikePattern.EscapeCharacter))
+                    .ThenByDescending(o => EF.Functions.ILike(o.NormalizedNameTr, contains, LikePattern.EscapeCharacter) || EF.Functions.ILike(o.NormalizedNameEn, contains, LikePattern.EscapeCharacter))
                     .ThenByDescending(o => Math.Max(
                         EF.Functions.TrigramsSimilarity(o.NormalizedNameTr, nq),
                         EF.Functions.TrigramsSimilarity(o.NormalizedNameEn, nq)))

@@ -94,6 +94,27 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, TimeProvider? 
         return Hash(secret);
     }
 
+    public string CreateHubTicket(Guid userId)
+    {
+        var now = _timeProvider.GetUtcNow();
+        var descriptor = new SecurityTokenDescriptor
+        {
+            Issuer = _options.Issuer,
+            Audience = HubTicketDefaults.Audience,
+            IssuedAt = now.UtcDateTime,
+            NotBefore = now.UtcDateTime,
+            Expires = now.Add(HubTicketDefaults.Lifetime).UtcDateTime,
+            SigningCredentials = SigningCredentials(),
+            Claims = new Dictionary<string, object>
+            {
+                [JwtRegisteredClaimNames.Sub] = userId.ToString(),
+                [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString("N")
+            }
+        };
+
+        return new JsonWebTokenHandler().CreateToken(descriptor);
+    }
+
     public string CreateGoogleSignupToken(GoogleIdentity identity)
     {
         var now = _timeProvider.GetUtcNow();

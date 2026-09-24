@@ -20,6 +20,8 @@ using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
+using AfterApply.Api.Telemetry;
+using AfterApply.Application.EmailIntegrations;
 using Hangfire;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
@@ -36,6 +38,9 @@ builder.WebHost.UseSentry(options =>
 {
     options.Dsn = builder.Configuration["Sentry:Dsn"];
     options.Environment = builder.Environment.EnvironmentName;
+    // A hub ticket rides in the WebSocket URL; no query-string credential goes to Sentry.
+    options.SetBeforeSend((sentryEvent, _) => SentryScrubbing.Scrub(sentryEvent));
+    options.SetBeforeBreadcrumb((breadcrumb, _) => SentryScrubbing.Scrub(breadcrumb));
 });
 
 builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -235,6 +240,12 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "unverified-account-purge",
         service => service.PurgeAsync(CancellationToken.None),
         emailVerificationOptions.CleanupCronExpression);
+    // Gmail signals whose processing job never succeeded (IEmailForwardingService). Daily is plenty:
+    // the retention it enforces is days long.
+    recurringJobManager.AddOrUpdate<IEmailForwardingService>(
+        "email-signal-purge",
+        service => service.PurgeStalePendingSignalsAsync(CancellationToken.None),
+        Cron.Daily(4));
     // Registered whether or not JobSources:Enabled is on — the sweep checks the flag itself and
     // returns at once while it is off, so turning the feature on needs no redeploy for the schedule.
     recurringJobManager.AddOrUpdate<IJobSourceSweepService>(

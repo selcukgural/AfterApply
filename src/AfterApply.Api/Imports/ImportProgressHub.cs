@@ -1,4 +1,5 @@
 using AfterApply.Api.Extensions;
+using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -11,7 +12,7 @@ namespace AfterApply.Api.Imports;
 /// after verifying (server-side, here) that the batch actually belongs to them — the batch id
 /// alone isn't a secret worth trusting as an access token.
 /// </summary>
-[Authorize]
+[Authorize(AuthenticationSchemes = HubTicketDefaults.AuthenticationScheme)]
 public sealed class ImportProgressHub(AppDbContext dbContext) : Hub
 {
     public static string GroupName(Guid batchId) => $"import-batch-{batchId}";

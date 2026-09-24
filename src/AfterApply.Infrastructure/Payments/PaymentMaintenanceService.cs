@@ -12,7 +12,6 @@ namespace AfterApply.Infrastructure.Payments;
 internal sealed class PaymentMaintenanceService(
     AppDbContext dbContext,
     IOptions<PayTrOptions> options,
-    IOptions<AppOptions> appOptions,
     IBackgroundJobClient jobClient,
     ILogger<PaymentMaintenanceService> logger,
     TimeProvider? timeProvider = null) : IPaymentMaintenanceService
@@ -57,7 +56,7 @@ internal sealed class PaymentMaintenanceService(
 
         var due = await dbContext.ProEntitlements
             .Where(e => e.RevokedAt == null && e.ActiveUntil > now && e.ActiveUntil <= horizon && e.ExpiryReminderSentFor != e.ActiveUntil)
-            .Join(dbContext.Users, e => e.UserId, u => u.Id, (e, u) => new { Entitlement = e, u.Email, u.PreferredLanguage })
+            .Join(dbContext.Users, e => e.UserId, u => u.Id, (e, u) => new { Entitlement = e, u.Email })
             .ToListAsync(cancellationToken);
 
         var sent = 0;
@@ -68,16 +67,13 @@ internal sealed class PaymentMaintenanceService(
                 continue;
             }
 
-            var locale = PaymentFormatting.NormalizeLocale(row.PreferredLanguage);
-            var activeUntilText = PaymentFormatting.Date(row.Entitlement.ActiveUntil, locale);
-            var renewLink = $"{appOptions.Value.WebBaseUrl.TrimEnd('/')}/{locale}/pro";
-            var email = row.Email;
+            var (userId, activeUntil) = (row.Entitlement.UserId, row.Entitlement.ActiveUntil);
 
             // Marked before the e-mail is queued: a reminder that is lost is a smaller failure
             // than one sent every day until the period ends.
             row.Entitlement.MarkExpiryReminderSent();
             await dbContext.SaveChangesAsync(cancellationToken);
-            jobClient.Enqueue<IEmailSender>(s => s.SendProExpiringEmailAsync(email, locale, activeUntilText, renewLink, CancellationToken.None));
+            jobClient.Enqueue<IPaymentEmailJobs>(s => s.SendProExpiringAsync(userId, activeUntil, CancellationToken.None));
             sent++;
         }
 
