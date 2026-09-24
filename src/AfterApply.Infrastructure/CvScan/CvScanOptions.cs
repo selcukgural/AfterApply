@@ -57,7 +57,22 @@ public sealed class CvScanOptions
     /// uncompressed content; the sizes are read from the archive's own directory before a byte is
     /// decompressed, so the refusal costs nothing.
     /// </summary>
-    public long MaxUncompressedBytes { get; init; } = 60 * 1024 * 1024;
+    public long MaxUncompressedBytes { get; init; } = 20 * 1024 * 1024;
+
+    /// <summary>
+    /// Ceiling on any one XML part of a .docx (2026-09-24). The package cap above bounds the bytes;
+    /// this bounds the parse, because the OpenXml SDK loads a part into an object tree many times
+    /// its size — and a CV's document.xml is a few hundred kilobytes, images living in their own
+    /// parts.
+    /// </summary>
+    public long MaxXmlPartBytes { get; init; } = 4 * 1024 * 1024;
+
+    /// <summary>
+    /// Ceiling on what a PDF's compressed streams may inflate to, measured before the file reaches
+    /// the parser (2026-09-24, see PdfInflationGuard). The page cap and the deadline cannot bound
+    /// this: a single page's content stream can inflate to gigabytes inside one parser call.
+    /// </summary>
+    public long MaxPdfInflatedBytes { get; init; } = 40 * 1024 * 1024;
 
     /// <summary>
     /// Where the content notes come from and what they are allowed to cost.

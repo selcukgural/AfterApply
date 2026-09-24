@@ -1349,4 +1349,36 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
         var created = await response.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
         return created!.Id;
     }
+
+    // A message that produced no suggestion is not stored anywhere, so without a separate record of
+    // what was seen, sending it again paid for the same classification again (2026-09-24).
+    [Fact]
+    public async Task ExtensionSignal_The_Same_Message_Again_Does_Not_Pay_For_A_Second_Classification()
+    {
+        _fakeClassificationProvider.Result = new EmailClassificationResult(null, 0.2, "Llm:None");
+
+        await SendExtensionSignalAsync("jobs-noreply@linkedin.com", "LinkedIn",
+            "Your application status changed", "There's an update on your recent application.", "thread-replayed");
+        await SendExtensionSignalAsync("jobs-noreply@linkedin.com", "LinkedIn",
+            "Your application status changed", "There's an update on your recent application.", "thread-replayed");
+
+        _fakeClassificationProvider.CallCount.ShouldBe(1);
+    }
+
+    // One account's Gmail scanning has a daily number of paid calls; past it the free rules still
+    // run, the model does not.
+    [Fact]
+    public async Task ExtensionSignal_Past_The_Accounts_Daily_Budget_The_Model_Is_Not_Called()
+    {
+        var capped = host.Variant("paid-call-cap", builder => builder.UseSetting("PaidCalls:EmailSignals:PerUserDaily", "1"));
+        var (client, _) = await host.RegisterAsync("capped.signals@example.com", on: capped);
+        _fakeClassificationProvider.Result = new EmailClassificationResult(null, 0.2, "Llm:None");
+
+        await SendExtensionSignalAsync("jobs-noreply@linkedin.com", "LinkedIn",
+            "Your application status changed", "There's an update on your recent application.", "thread-cap-1", client);
+        await SendExtensionSignalAsync("jobs-noreply@linkedin.com", "LinkedIn",
+            "Your application status changed", "Another update on your recent application.", "thread-cap-2", client);
+
+        _fakeClassificationProvider.CallCount.ShouldBe(1);
+    }
 }

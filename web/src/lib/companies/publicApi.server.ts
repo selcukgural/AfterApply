@@ -1,5 +1,6 @@
-// Server-side only by convention (called from server components and the sitemap); it holds no
-// secret, so the `server-only` guard package is not pulled in for it.
+// Server-side only by convention (called from server components and the sitemap). The one secret a
+// fetch carries comes from renderHeaders, which reads it from a server-only environment variable.
+import { renderHeaders } from "@/lib/api/renderHeaders.server";
 import type {
   CompanyPublicResponse,
   CompanyReviewPublic,
@@ -30,8 +31,10 @@ const REVALIDATE_SECONDS = 60;
 type Freshness = "fresh" | "revalidate";
 
 async function fetchPublic<T>(path: string, locale: string, freshness: Freshness): Promise<T | null> {
+  // A fresh fetch runs per request, so it names the visitor it renders for (see renderHeaders).
+  const visitor = freshness === "fresh" ? await renderHeaders() : {};
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { Accept: "application/json", "Accept-Language": locale },
+    headers: { Accept: "application/json", "Accept-Language": locale, ...visitor },
     ...(freshness === "fresh" ? { cache: "no-store" } : { next: { revalidate: REVALIDATE_SECONDS } }),
   });
   if (response.status === 404) {

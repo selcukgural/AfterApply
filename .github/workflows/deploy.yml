@@ -355,6 +355,7 @@ jobs:
             PayTr__MerchantId=afterapply-paytr-merchant-id:latest
             PayTr__MerchantKey=afterapply-paytr-merchant-key:latest
             PayTr__MerchantSalt=afterapply-paytr-merchant-salt:latest
+            RateLimiting__ServerRenderKey=afterapply-server-render-key:latest
 
       # High-water-mark tag for the notify-deploy job below: moves deploy/api-latest to the
       # commit that was just deployed, so the *next* backend deploy can compute exactly which
@@ -459,6 +460,12 @@ jobs:
           image: ${{ env.IMAGE }}
           flags: >-
             --min-instances=1
+          # The web app's server-side renders name the visitor they render for, so the API rate
+          # limits the visitor rather than this service's shared egress address; the API trusts
+          # the name only with this key, which it holds as RateLimiting__ServerRenderKey
+          # (DEPLOYMENT.md §3, api/ClientPartition.cs).
+          secrets: |-
+            API_SERVER_RENDER_KEY=afterapply-server-render-key:latest
 
       # Same high-water-mark pattern as deploy-backend's own step above, just against
       # deploy/web-latest — see that step's comment for the full rationale.

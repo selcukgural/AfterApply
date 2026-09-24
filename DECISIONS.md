@@ -9379,3 +9379,26 @@ başkalarına ancak şu kurallarla ulaşıyor.
 - **Bilinen sınır:** katkı sayfasındaki şirket adı, şirket henüz listelenmemişken de şirket sayfasına
   bağlantı veriyor (ilk katkı kaydedilince sayfa oluşur). Trigram eşleşmesiyle başka birinin açtığı
   şirkete bağlanan kayıt o şirketin adını görür; kapsam dışı bırakıldı.
+
+## Kötüye kullanım ve maliyet sınırları — DECIDED (2026-09-24)
+
+- **Ücretli çağrı bütçesi (`PaidCallBudget`).** Her ücretli çağrı, yapılmadan önce Redis'te
+  atomik sayılan günlük bir bütçeden ayrılır; Redis yoksa çağrı yapılmaz, özellik ücretsiz yoldan
+  devam eder. Gmail taraması (OpenAI sınıflandırma, ret nedeni, ilan çıkarma): `PaidCalls:EmailSignals`
+  toplam 1000/gün, hesap başına 60/gün. CV taraması içerik notları: `CvScan:Review:DailyRequestCeiling`
+  (200) artık sonradan satır sayarak değil, önceden ayrılarak uygulanıyor.
+- **Tekrar gönderilen e-posta sinyali** ücretli çağrıdan önce elenir: görülen mesaj kimlikleri 30 gün
+  Redis'te tutulur; iş hata verirse işaret geri alınır ki Hangfire yeniden denemesi atlanmasın.
+- **Dosya bombaları.** 5 MB yükleme sınırı sıkıştırılmış boyutu sınırlıyor; açılmış boyut için:
+  PDF'in Flate akışları ayrıştırıcıdan önce sayılarak açılır, toplam `CvScan:MaxPdfInflatedBytes`
+  (40 MB) aşılırsa dosya reddedilir (`PdfInflationGuard`); DOCX toplamı `MaxUncompressedBytes`
+  60 → 20 MB, tek XML parçası `MaxXmlPartBytes` 4 MB.
+- **IPv6.** Anonim sınırlarda ve sessizlik bildiriminin tekrar kontrolünde IPv6 adresi /64 bloğu
+  olarak sayılır (`ClientPartition`).
+- **Sunucu tarafı render.** Web'in render sırasında yaptığı taze API istekleri, paylaşılan bir
+  anahtarla (`afterapply-server-render-key`; API'de `RateLimiting:ServerRenderKey`, web'de
+  `API_SERVER_RENDER_KEY`) ziyaretçinin adresini iletir; API sınırı web servisinin ortak adresine
+  değil ziyaretçiye uygular. Anahtarsız başlık yok sayılır.
+- 429 log satırından IP çıkarıldı (RequestAudit kuralı).
+- `/local-filter-config` eşikleri yayımlanmaya devam ediyor: eklenti onları kullanıyor ve
+  `/from-extension` gibi geriye dönük uyum kuralı altında; hesap başına tavan bunu dengeliyor.

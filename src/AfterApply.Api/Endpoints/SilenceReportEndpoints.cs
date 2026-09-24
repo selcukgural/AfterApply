@@ -1,3 +1,4 @@
+using AfterApply.Api.RateLimits;
 using AfterApply.Api.Extensions;
 using AfterApply.Api.Filters;
 using AfterApply.Application.SilenceReports;
@@ -21,7 +22,8 @@ public static class SilenceReportEndpoints
             {
                 // The connection address only derives the repeat-block key in Redis; the report row
                 // never holds it. RequestAuditMiddleware records it separately, as for every write.
-                var requesterKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                // An IPv6 caller is its /64, or a fresh address per report would pass the block.
+                var requesterKey = ClientPartition.ForAddress(httpContext.Connection.RemoteIpAddress);
                 var stored = await service.SubmitAsync(slug, request, requesterKey, cancellationToken);
                 return stored ? Results.NoContent() : Results.NotFound();
             })
