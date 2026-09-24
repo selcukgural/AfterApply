@@ -141,15 +141,15 @@ export default function MyContributionsPage() {
         <ul className="flex flex-col gap-3">
           {data.items.map((item) => {
             if (item.kind === "Salary" && item.salary) {
-              return <MySalaryCard key={`salary-${item.salary.id}`} entry={item.salary} onDeleted={onDeleted} />;
+              return <MySalaryCard key={`salary-${item.salary.id}`} entry={item.salary} backed={item.backedByApplication} onDeleted={onDeleted} />;
             }
             if (item.kind === "Experience" && item.experience) {
-              return <MyExperienceCard key={`experience-${item.experience.id}`} entry={item.experience} onDeleted={onDeleted} />;
+              return <MyExperienceCard key={`experience-${item.experience.id}`} entry={item.experience} backed={item.backedByApplication} onDeleted={onDeleted} />;
             }
             if (item.kind === "BlogComment" && item.blogComment) {
               return <MyBlogCommentCard key={`comment-${item.blogComment.id}`} comment={item.blogComment} onEdited={onCommentEdited} />;
             }
-            return item.review ? <MyReviewCard key={`review-${item.review.id}`} review={item.review} onDeleted={onDeleted} /> : null;
+            return item.review ? <MyReviewCard key={`review-${item.review.id}`} review={item.review} backed={item.backedByApplication} onDeleted={onDeleted} /> : null;
           })}
         </ul>
       )}

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { CompanySalaryPublic } from "@/types/api";
 import { formatAmount, formatSalaryMonth, formatSalaryPeriod, occupationName } from "@/lib/companySalaries/salaryDraft";
+import { ProofChip } from "@/components/contributions/ProofLabel";
 
 /**
  * One shared salary as a reader sees it: the occupation (a catalogue name, in the reader's
@@ -47,6 +48,7 @@ export function SalaryRow({ entry, footer }: { entry: CompanySalaryPublic; foote
               {period ?? t("periodUnknown")}
             </span>
           )}
+          {entry.backedByApplication ? <ProofChip kind="accepted" /> : null}
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {[

@@ -7,6 +7,7 @@ using AfterApply.Domain.CompanyReviews;
 using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Companies;
+using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +22,8 @@ internal sealed class CandidateExperienceService(
     CompanySlugAllocator slugAllocator,
     HybridCache cache,
     IOptions<CandidateExperienceOptions> options,
-    ContributionNotificationWriter notifications)
+    ContributionNotificationWriter notifications,
+    ContributionProofQueries proof)
     : ICandidateExperienceService
 {
     private static readonly HybridCacheEntryOptions GlobalAverageCacheOptions = new()
@@ -94,6 +96,7 @@ internal sealed class CandidateExperienceService(
                 })
                 .ToListAsync(ct);
             var children = await queries.LoadChildrenAsync(rows.Select(r => r.Id), ct);
+            var backed = await proof.BackedExperienceIdsAsync(rows.Select(r => r.Id).ToList(), ct);
 
             var items = rows.Select(e => new CandidateExperiencePublicResponse(
                 e.Id, e.OverallRating,
@@ -103,7 +106,8 @@ internal sealed class CandidateExperienceService(
                 e.Outcome, e.Duration, e.Stages,
                 children.Types[e.Id].OrderBy(t => t).ToList(),
                 CandidateExperienceStats.Quarter(e.SubmittedAt),
-                e.HelpfulCount)).ToList();
+                e.HelpfulCount,
+                backed.Contains(e.Id))).ToList();
             return new CachedExperiencePage(items, total);
         }, ListCacheOptions, tags: [CacheKeys.Company.Tag(companyId.Value)], cancellationToken: cancellationToken);
 

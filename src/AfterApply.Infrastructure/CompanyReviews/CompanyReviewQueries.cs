@@ -18,7 +18,8 @@ internal sealed class CompanyReviewQueries(
     AppDbContext dbContext,
     HybridCache cache,
     ICompanyCacheInvalidator invalidator,
-    IOptions<CompanyReviewOptions> options)
+    IOptions<CompanyReviewOptions> options,
+    ContributionProofQueries proof)
 {
     private const int TopStatements = 3;
 
@@ -208,6 +209,7 @@ internal sealed class CompanyReviewQueries(
             .ToListAsync(cancellationToken);
 
         var children = await LoadChildrenAsync(rows.Select(r => r.Id), cancellationToken);
+        var backed = await proof.BackedReviewIdsAsync(rows.Select(r => r.Id).ToList(), cancellationToken);
 
         return rows.Select(r =>
         {
@@ -216,7 +218,7 @@ internal sealed class CompanyReviewQueries(
                 r.Id, r.Format, r.EmploymentStatus, r.OverallRating,
                 c.CategoryRatings, c.LegacySalaryAndBenefits, c.Liked, c.Improvable,
                 // Month precision on purpose — see CompanyReviewPublicResponse.
-                r.SubmittedAt.ToString("yyyy-MM"), r.HelpfulCount);
+                r.SubmittedAt.ToString("yyyy-MM"), r.HelpfulCount, backed.Contains(r.Id));
         }).ToList();
     }
 

@@ -23,7 +23,10 @@ public sealed record CandidateExperiencePublicResponse(
     /// <summary><c>yyyy-Qn</c> of the submission — quarter precision on purpose.</summary>
     string SubmittedQuarter,
     /// <summary>How many readers marked it helpful (2026-09-23). A count, never who.</summary>
-    int HelpfulCount);
+    int HelpfulCount,
+    /// <summary>The author tracked an application at this company here at least 14 days before
+    /// writing (2026-09-24). A yes/no only — never which application or when.</summary>
+    bool BackedByApplication = false);
 
 /// <summary>The aggregate a public company page shows. <see cref="Count"/> is always real;
 /// <see cref="AverageOverall"/> and <see cref="Distribution"/> follow the review summary (shown

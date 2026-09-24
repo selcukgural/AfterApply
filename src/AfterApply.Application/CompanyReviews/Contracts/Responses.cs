@@ -76,7 +76,10 @@ public sealed record CompanyReviewPublicResponse(
     IReadOnlyList<string> LikedStatements,
     IReadOnlyList<string> ImprovableStatements,
     string SubmittedMonth,
-    int HelpfulCount);
+    int HelpfulCount,
+    /// <summary>The author tracked an application at this company here at least 14 days before
+    /// writing, and it ended Accepted (2026-09-24). A yes/no only — never which application or when.</summary>
+    bool BackedByApplication = false);
 
 /// <summary>For the sitemap: which company pages are worth a crawler's visit — those with a
 /// published review or a public candidate experience (salaries sit behind sign-in, so they do not

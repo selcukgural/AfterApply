@@ -16,6 +16,7 @@ import { Pagination } from "@/components/applications/Pagination";
 import { ReviewCard } from "@/components/companyReviews/ReviewCard";
 import { ReportReviewDialog } from "@/components/companyReviews/ReportReviewDialog";
 import { ReviewStatusBadge } from "@/components/companyReviews/ReviewStatusBadge";
+import { ProofNote } from "@/components/contributions/ProofLabel";
 
 interface CompanyReviewsSectionProps {
   company: CompanyPublicResponse;
@@ -172,6 +173,8 @@ export function CompanyReviewsSection({ company, initialReviews }: CompanyReview
           ))}
         </ul>
       )}
+
+      {reviews?.items.some((item) => item.backedByApplication) ? <ProofNote kind="accepted" /> : null}
 
       {reviews && (
         <Pagination page={reviews.page} pageSize={reviews.pageSize} totalCount={reviews.totalCount} unit="companies" onPageChange={setPage} />

@@ -9281,3 +9281,31 @@ Rakip araştırmasının "Önerilen sıra" 3. maddesi. Canvas: https://claude.ai
   - Normla kıyas, kişilerle değil: medyana yüzde uzaklık + aralık çubuğu, sıralama/yüzdelik yok.
 - Yolda düzeltilen eski hata: `Pagination` İngilizce dört düğmeyle 390px ekranı yana taşırıyordu (Katkılarım,
   paneldeki hatırlatıcılar) → satır kırılabiliyor.
+
+## Katkıya kanıt etiketi (#7) — DECIDED (2026-09-24)
+
+Rakip araştırmasının "Önerilen sıra" 4. maddesi. Canvas: https://claude.ai/artifact/WJD2uBDXxBhpbUSLWnEszR
+("Son hâli" sayfası; B olgu satırında düz metin ve C özet satırı + süzgeç reddedildi, süzgeç veri
+çoğalınca yeniden düşünülebilir).
+
+- **Görünüm (A):** kartta küçük "✓ Takip edilen başvuru" / "✓ Kabul edilen başvuru" çipi. Listenin altında,
+  yalnızca sayfada en az bir çip varken, ne anlama geldiğini ve neyi kanıtlamadığını söyleyen tek satır
+  var. Katkılarım'da her şirket kartı etiketin olup olmadığını, yoksa nedenini söylüyor.
+- **Kapsam:** aday deneyimi = yazarın o şirkete e-kariyerim'de takip ettiği **herhangi** bir başvuru;
+  maaş ve değerlendirme = yalnızca **kabul edildi** ile kapanmış başvuru (adaylık orada çalışıldığını
+  göstermez). Sessizlik bildirimi kapsam dışı (UserId yok, bilerek).
+- **Kural: 14 gün, sunucu damgasıyla.** Başvurunun `CreatedAt`'i katkının ilk oluşturulma anından
+  (`CreatedAt`, düzenlemede değişmez) en az 14 gün önce olmalı. Başvuru tarihi, kaynak (`Source`) ve durum
+  değişikliği tarihleri istemciden geliyor ve geri tarihlenebiliyor; sayılmıyor. Böylece yazmadan hemen
+  önce elle başvuru eklemek etiket getirmiyor. 14 gün sabit (`ContributionProofQueries.LeadTime`),
+  web metinleri sayıyı tekrar ediyor, birlikte değişir.
+- **Okumada hesaplanıyor, saklanmıyor:** başvuru silinince etiket kalkar (şirket sayfasında önbellek
+  süresi kadar, en fazla 10 dk gecikmeyle). Yanıtta yalnızca `backedByApplication` evet/hayır var;
+  hangi başvuru olduğu, tarihi, durumu dışarı çıkmıyor (entegrasyon testi JSON'da kontrol ediyor).
+- **"Doğrulanmış" kelimesi kullanılmıyor.** Kullanım koşullarındaki "doğrulanmaz" satırları doğru kalıyor:
+  etiket içeriği değil, yazarın o şirkete başvurusunu takip ettiğini söylüyor. Metin testi TR/EN'de
+  "doğrulanmış/verified" geçmediğini kontrol ediyor.
+- **Anonimlik:** etiket deneyim kartında sonuç + çeyreğin yanına "bu kişi e-kariyerim'de takip ediyordu"
+  bilgisini ekliyor; az aday alan küçük şirkette küçük bir ek ipucu. Kullanıcı kabul etti. Gizlilik
+  sayfasına üç tür için birer satır, yardım sayfalarına birer bölüm eklendi.
+- Admin deneyim tablosu etiketi göstermiyor (moderatör içeriğe bakar, yazara değil).

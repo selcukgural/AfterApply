@@ -30,7 +30,8 @@ internal sealed class CompanyContributionService(
     IOptions<CompanyReviewOptions> options,
     IOptions<CompanySalaryOptions> salaryOptions,
     IOptions<CandidateExperienceOptions> experienceOptions,
-    IOptions<BlogOptions> blogOptions) : ICompanyContributionService
+    IOptions<BlogOptions> blogOptions,
+    ContributionProofQueries proof) : ICompanyContributionService
 {
     public async Task<MyContributionsResponse> ListMineAsync(Guid userId, MyContributionsQuery query, CancellationToken cancellationToken)
     {
@@ -89,16 +90,24 @@ internal sealed class CompanyContributionService(
         var commentRows = await HydrateAsync(page, ContributionKind.BlogComment,
             ids => blogComments.ListMineByIdsAsync(userId, ids, cancellationToken), c => c.Id);
 
+        // The label the company pages show on each row, so the author sees it on their own card.
+        var backedReviews = await proof.BackedReviewIdsAsync(reviewRows.Keys, cancellationToken);
+        var backedSalaries = await proof.BackedSalaryIdsAsync(salaryRows.Keys, cancellationToken);
+        var backedExperiences = await proof.BackedExperienceIdsAsync(experienceRows.Keys, cancellationToken);
+
         // A row deleted between the stamp read and the hydration simply drops out of the page.
         var items = page
             .Select(stamp => stamp.Kind switch
             {
                 ContributionKind.Review when reviewRows.TryGetValue(stamp.Id, out var review) =>
-                    new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, review, null, null),
+                    new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, review, null, null,
+                        BackedByApplication: backedReviews.Contains(stamp.Id)),
                 ContributionKind.Salary when salaryRows.TryGetValue(stamp.Id, out var salary) =>
-                    new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, null, salary, null),
+                    new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, null, salary, null,
+                        BackedByApplication: backedSalaries.Contains(stamp.Id)),
                 ContributionKind.Experience when experienceRows.TryGetValue(stamp.Id, out var experience) =>
-                    new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, null, null, experience),
+                    new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, null, null, experience,
+                        BackedByApplication: backedExperiences.Contains(stamp.Id)),
                 ContributionKind.BlogComment when commentRows.TryGetValue(stamp.Id, out var comment) =>
                     new MyContributionResponse(stamp.Kind, stamp.SubmittedAt, null, null, null, comment),
                 _ => null

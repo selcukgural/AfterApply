@@ -14,16 +14,19 @@ import { StarRating } from "@/components/companyReviews/StarRating";
 import { ReviewStatusBadge } from "@/components/companyReviews/ReviewStatusBadge";
 import { ReviewPicks } from "@/components/companyReviews/ReviewPicks";
 import { ContributionKindBadge } from "@/components/contributions/ContributionKindBadge";
+import { MyProofLine } from "@/components/contributions/ProofLabel";
 
 interface MyReviewCardProps {
   review: MyCompanyReview;
   /** Called once the row is gone on the server; the list decides what to refetch. */
   onDeleted: () => Promise<void>;
+  /** Whether the company page shows the "tracked application" label on this row. */
+  backed: boolean;
 }
 
 /** The author's own review on the merged contributions list: status, picks or legacy text, and
  *  the edit/delete pair. Deleting is confirmed here; the list only learns that it happened. */
-export function MyReviewCard({ review, onDeleted }: MyReviewCardProps) {
+export function MyReviewCard({ review, backed, onDeleted }: MyReviewCardProps) {
   const t = useTranslations("companyReviews.mine");
   const locale = useLocale();
   const [confirming, setConfirming] = useState(false);
@@ -89,6 +92,8 @@ export function MyReviewCard({ review, onDeleted }: MyReviewCardProps) {
         </p>
       )}
       {review.status === "Pending" && <p className="text-xs text-gray-500 dark:text-gray-400">{t("pendingHint")}</p>}
+
+      <MyProofLine kind="accepted" backed={backed} />
 
       {error && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">

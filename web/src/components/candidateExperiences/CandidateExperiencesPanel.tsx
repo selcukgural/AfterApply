@@ -14,6 +14,7 @@ import { ExperienceCard } from "@/components/candidateExperiences/ExperienceCard
 import { HelpfulPill } from "@/components/contributions/HelpfulPill";
 import { ApiError } from "@/lib/api/httpClient";
 import { ExperienceSummaryPanel } from "@/components/candidateExperiences/ExperienceSummaryPanel";
+import { ProofNote } from "@/components/contributions/ProofLabel";
 
 /**
  * The candidate-experience tab of a company page. Public, like the reviews: the list is fetched
@@ -135,6 +136,8 @@ export function CandidateExperiencesPanel({ company }: { company: CompanyPublicR
           ))}
         </ul>
       )}
+
+      {list?.items.some((item) => item.backedByApplication) ? <ProofNote kind="tracked" /> : null}
 
       {list && list.items.length > 0 && !ownEntry && canShare ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-800 dark:bg-gray-900/60">

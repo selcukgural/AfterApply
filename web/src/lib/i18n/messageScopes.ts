@@ -97,6 +97,8 @@ export const PUBLIC_MESSAGE_SCOPE = [
   "processDuration",
   "stageCount",
   "interviewType",
+  // The "tracked / accepted application" label on those three tabs' cards (2026-09-24).
+  "contributionProof",
   "reviewReportReason",
   "reviewModerationStatus",
   "help.sidebar",
