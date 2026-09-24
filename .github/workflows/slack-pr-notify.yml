@@ -17,6 +17,10 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -27,7 +31,7 @@ jobs:
       # pull_request events, but needs real git history checked out to diff a push.
       - uses: actions/checkout@v5
         if: github.event_name == 'push'
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
         id: filter
         with:
           filters: |
@@ -48,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Post to #pr-backend
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -79,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Post to #pr-backend-merged
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -109,7 +113,7 @@ jobs:
     steps:
       - name: Check whether this commit belongs to a merged PR
         id: pr-check
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const { data } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
@@ -129,7 +133,7 @@ jobs:
 
       - name: Post to #pr-backend-merged
         if: steps.pr-check.outputs.from-merged-pr == 'false'
-        uses: slackapi/slack-github-action@v2.0.0
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}

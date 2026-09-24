@@ -14,6 +14,9 @@ on:
       POSTMAN_API_KEY:
         required: false
 
+permissions:
+  contents: read
+
 jobs:
   contract-check:
     runs-on: ubuntu-latest
@@ -72,7 +75,7 @@ jobs:
           done
           echo "::error::API never became healthy" && exit 1
 
-      - run: npm install -g newman
+      - run: npm install -g newman@6.2.2
 
       - name: Run Postman collection against the live API
         run: newman run postman/collection.json -e postman/environments/ci.json --bail
