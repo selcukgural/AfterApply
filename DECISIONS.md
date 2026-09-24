@@ -9432,3 +9432,21 @@ başkalarına ancak şu kurallarla ulaşıyor.
   (başlıklar build sırasında üretiliyor, anahtar yalnızca çalışma anında var; blog önizlemesi
   tarayıcıda serbest metinle URL kuruyor). `newman` CI'da kilit dosyası yerine sabit sürümle kuruluyor:
   postman paketindeki faker override'ı newman'ın dinamik değişkenlerini bozabileceği için taşınmadı.
+
+## Dependabot ayarı ve Slack PR bildirimlerinin kaldırılması — DECIDED (2026-09-24)
+
+- **Slack PR bildirimleri kaldırıldı:** `slack-pr-notify.yml` silindi (#pr-backend review isteği,
+  #pr-backend-merged merge ve "main'e doğrudan push" mesajları). Deploy özeti (`deploy.yml`,
+  #deployments) duruyor.
+- **Node major sürümü Dependabot'tan alınmaz:** ilk öneri 25-alpine oldu, destek süresi 2026-06-01'de
+  bitmiş tek sayılı bir sürüm. Node yükseltmesi bilinçli yapılır: yalnızca çift sayılı (LTS) sürümler,
+  Dockerfile ve CI'daki `setup-node` birlikte. Sıradaki hedef Node 24.
+- **ESLint 10 bekletiliyor:** `eslint-config-next` içindeki `eslint-plugin-react` ESLint 10'da
+  yüklenmiyor; Next'in config'i destekleyince ignore kaldırılır.
+- **CodeQL action'ları tek grupta:** `init` ve `analyze` farklı sürümde çalışamıyor; Dependabot ikisini
+  ayrı PR'larda güncelleyince CodeQL kırıldı (#123).
+- **Ek (aynı gün): Dependabot major sürüm önermez.** Tüm ekosistemlerde `semver-major` yok sayılıyor ve
+  ekosistem başına en fazla 2 açık PR var. Major yükseltmeler planlı yapılır (Node imajı + CI
+  `setup-node`, codeql init + analyze, StackExchange.Redis ve ona bağlı paketler birlikte). Güvenlik
+  güncellemeleri bu ayardan etkilenmez. İlk turda açılan major PR'lar (#126, #127, #130–#134, #137) ve
+  27'lik NuGet grubu (#129) kapatıldı.
