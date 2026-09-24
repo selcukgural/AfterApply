@@ -98,10 +98,8 @@ public class CvGoogleCloudStorageTests(ApiHost<FakeGcsProfile> host)
     {
         var client = _factory.CreateClient();
 
-        var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Gcs", "Owner", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "Gcs", "Owner", true));
 
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
         return client;

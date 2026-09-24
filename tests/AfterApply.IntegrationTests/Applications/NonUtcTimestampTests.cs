@@ -37,10 +37,8 @@ public class NonUtcTimestampTests(ApiHost<DefaultProfile> host) : IClassFixture<
         await host.ResetAsync();
 
         _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("nonutc.test@example.com", "P@ssw0rd123!", "Non", "Utc", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory.Services,
+            new RegisterRequest("nonutc.test@example.com", "P@ssw0rd123!", "Non", "Utc", true));
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 

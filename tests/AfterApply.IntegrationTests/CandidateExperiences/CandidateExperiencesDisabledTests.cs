@@ -44,10 +44,8 @@ public class CandidateExperiencesDisabledTests(ApiHost<CandidateExperiencesDisab
     public async Task Every_Route_Is_Not_Found_And_Config_Reports_The_Flag()
     {
         var client = _factory.CreateClient();
-        var register = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("dark.experiences@example.com", "P@ssw0rd123!", "Dark", "Launch", true), JsonOptions);
-        register.EnsureSuccessStatusCode();
-        var auth = await register.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory.Services,
+            new RegisterRequest("dark.experiences@example.com", "P@ssw0rd123!", "Dark", "Launch", true));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
 
         // Reviews still work, and give us a real company to aim at.

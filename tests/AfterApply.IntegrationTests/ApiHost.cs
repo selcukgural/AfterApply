@@ -175,18 +175,20 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
     /// </summary>
     public WebApplicationFactory<Program> Standalone(Action<IWebHostBuilder> configure) => WithWebHostBuilder(configure);
 
-    /// <summary>Registers a user on the given host (the fixture's own by default) and returns a
-    /// client carrying its bearer token.</summary>
+    /// <summary>Registers a verified user on the given host (the fixture's own by default) and
+    /// returns a client carrying its bearer token. See <see cref="TestAccounts.RegisterVerifiedAsync" />;
+    /// the verification-code email the sign-up enqueued is dropped, so it never shows up in a test's
+    /// <c>Jobs.Pending</c>.</summary>
     public async Task<(HttpClient Client, AuthResponse Auth)> RegisterAsync(
         string email, string firstName = "Test", string lastName = "User", bool consentAccepted = true,
         WebApplicationFactory<Program>? on = null)
     {
-        var client = (on ?? this).CreateClient();
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, DefaultPassword, firstName, lastName, consentAccepted), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
+        var host = on ?? this;
+        var client = host.CreateClient();
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, host.Services,
+            new RegisterRequest(email, DefaultPassword, firstName, lastName, consentAccepted));
+        Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         return (client, auth);
     }
 

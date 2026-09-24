@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import type {
   AuthResponse,
+  EmailVerificationPendingResponse,
   GitHubSignInResponse,
   GoogleSignInResponse,
   LinkedInSignInResponse,
@@ -10,6 +11,9 @@ import type {
 } from "@/types/api";
 import {
   authApi,
+  isVerificationPending,
+  type SignInOutcome,
+  type VerifyEmailRequest,
   type GoogleSignInRequest,
   type GoogleSignupRequest,
   type GitHubSignInRequest,
@@ -27,25 +31,36 @@ interface AuthContextValue {
   isLoading: boolean;
   // Return the full auth response (not void) so callers can read
   // `user.preferredLanguage` right after login/register and redirect to the
-  // account's saved language — see login/register pages.
-  login: (request: LoginRequest) => Promise<AuthResponse>;
-  register: (request: RegisterRequest) => Promise<AuthResponse>;
+  // account's saved language — see login/register pages. Since 2026-09-24 the answer can instead
+  // be a pending email verification (nothing stored): the page shows EmailVerificationStep, whose
+  // verifyEmail stores the session once the emailed code comes back.
+  login: (request: LoginRequest) => Promise<SignInOutcome>;
+  register: (request: RegisterRequest) => Promise<EmailVerificationPendingResponse>;
+  verifyEmail: (request: VerifyEmailRequest) => Promise<AuthResponse>;
   // Stores the session only when the response carries one; a `pendingSignup` result leaves the
   // store untouched until completeGoogleSignup creates the account.
   signInWithGoogle: (request: GoogleSignInRequest) => Promise<GoogleSignInResponse>;
-  completeGoogleSignup: (request: GoogleSignupRequest) => Promise<AuthResponse>;
+  completeGoogleSignup: (request: GoogleSignupRequest) => Promise<SignInOutcome>;
   // Same contract as the Google pair above, for Sign in with LinkedIn.
   signInWithLinkedIn: (request: LinkedInSignInRequest) => Promise<LinkedInSignInResponse>;
-  completeLinkedInSignup: (request: LinkedInSignupRequest) => Promise<AuthResponse>;
+  completeLinkedInSignup: (request: LinkedInSignupRequest) => Promise<SignInOutcome>;
   // Same contract again, for Sign in with GitHub.
   signInWithGitHub: (request: GitHubSignInRequest) => Promise<GitHubSignInResponse>;
-  completeGitHubSignup: (request: GitHubSignupRequest) => Promise<AuthResponse>;
+  completeGitHubSignup: (request: GitHubSignupRequest) => Promise<SignInOutcome>;
   logout: () => Promise<void>;
   // password is omitted for an account that has none (user.hasPassword === false).
   deleteAccount: (password?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+// Only a session is stored; a pending verification is handed back for the page to show.
+function storeUnlessPending(outcome: SignInOutcome): SignInOutcome {
+  if (!isVerificationPending(outcome)) {
+    authStore.setAuth(outcome);
+  }
+  return outcome;
+}
 
 function getServerSnapshot(): UserProfileResponse | null {
   return null;
@@ -76,14 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void validate();
   }, []);
 
-  const login = useCallback(async (request: LoginRequest) => {
-    const auth = await authApi.login(request);
-    authStore.setAuth(auth);
-    return auth;
-  }, []);
+  const login = useCallback(async (request: LoginRequest) => storeUnlessPending(await authApi.login(request)), []);
 
-  const register = useCallback(async (request: RegisterRequest) => {
-    const auth = await authApi.register(request);
+  const register = useCallback((request: RegisterRequest) => authApi.register(request), []);
+
+  const verifyEmail = useCallback(async (request: VerifyEmailRequest) => {
+    const auth = await authApi.verifyEmail(request);
     authStore.setAuth(auth);
     return auth;
   }, []);
@@ -96,11 +109,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return result;
   }, []);
 
-  const completeGoogleSignup = useCallback(async (request: GoogleSignupRequest) => {
-    const auth = await authApi.googleSignup(request);
-    authStore.setAuth(auth);
-    return auth;
-  }, []);
+  const completeGoogleSignup = useCallback(
+    async (request: GoogleSignupRequest) => storeUnlessPending(await authApi.googleSignup(request)),
+    [],
+  );
 
   const signInWithLinkedIn = useCallback(async (request: LinkedInSignInRequest) => {
     const result = await authApi.linkedInSignIn(request);
@@ -110,11 +122,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return result;
   }, []);
 
-  const completeLinkedInSignup = useCallback(async (request: LinkedInSignupRequest) => {
-    const auth = await authApi.linkedInSignup(request);
-    authStore.setAuth(auth);
-    return auth;
-  }, []);
+  const completeLinkedInSignup = useCallback(
+    async (request: LinkedInSignupRequest) => storeUnlessPending(await authApi.linkedInSignup(request)),
+    [],
+  );
 
   const signInWithGitHub = useCallback(async (request: GitHubSignInRequest) => {
     const result = await authApi.githubSignIn(request);
@@ -124,11 +135,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return result;
   }, []);
 
-  const completeGitHubSignup = useCallback(async (request: GitHubSignupRequest) => {
-    const auth = await authApi.githubSignup(request);
-    authStore.setAuth(auth);
-    return auth;
-  }, []);
+  const completeGitHubSignup = useCallback(
+    async (request: GitHubSignupRequest) => storeUnlessPending(await authApi.githubSignup(request)),
+    [],
+  );
 
   const logout = useCallback(async () => {
     const refreshToken = authStore.getRefreshToken();
@@ -154,6 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         login,
         register,
+        verifyEmail,
         signInWithGoogle,
         completeGoogleSignup,
         signInWithLinkedIn,

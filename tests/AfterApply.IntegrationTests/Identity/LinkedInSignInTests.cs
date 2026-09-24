@@ -5,6 +5,7 @@ using System.Text.Json;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Application.Mailing;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -32,15 +33,26 @@ public sealed class LinkedInSignInProfile : IHostProfile
 
     public FakeLinkedInAuthClient LinkedIn { get; } = new();
 
+    /// <summary>Where a typed-in address's verification code lands.</summary>
+    public CapturingEmailSender Emails { get; } = new();
+
     public void Configure(IWebHostBuilder builder)
     {
         builder.UseSetting("App:WebBaseUrl", "http://localhost:3000");
         builder.UseSetting("LinkedInAuth:ClientId", ClientId);
         builder.UseSetting("LinkedInAuth:ClientSecret", "test-secret");
-        builder.ConfigureTestServices(services => services.AddSingleton<ILinkedInAuthClient>(LinkedIn));
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<ILinkedInAuthClient>(LinkedIn);
+            services.AddSingleton<IEmailSender>(Emails);
+        });
     }
 
-    public void Reset() => LinkedIn.Exchanges.Clear();
+    public void Reset()
+    {
+        LinkedIn.Exchanges.Clear();
+        Emails.Reset();
+    }
 }
 
 [Collection(IntegrationTestCollection.Name)]
@@ -237,7 +249,7 @@ public class LinkedInSignInTests(ApiHost<LinkedInSignInProfile> host) : IClassFi
     }
 
     [Fact]
-    public async Task An_Emailless_Identity_Registers_Successfully_With_A_Fresh_Manual_Email_And_Stays_Unconfirmed()
+    public async Task An_Emailless_Identity_Registers_With_A_Manual_Email_And_Signs_In_Once_The_Code_Comes_Back()
     {
         var client = _factory.CreateClient();
         var identity = new LinkedInIdentity("li-noemail-2", null, false, "Grace", "Hopper");
@@ -247,16 +259,20 @@ public class LinkedInSignInTests(ApiHost<LinkedInSignInProfile> host) : IClassFi
 
         var signup = await client.PostAsJsonAsync("/api/auth/linkedin/signup",
             new LinkedInSignupRequest(pending.SignupToken, "Grace", "Hopper", "grace.manual@example.com", true), JsonOptions);
-        signup.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var auth = (await signup.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
+        // LinkedIn never vouched for this address, so it gets a code like a password sign-up's —
+        // and no session until the code comes back.
+        signup.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        var verification = (await signup.Content.ReadFromJsonAsync<EmailVerificationPendingResponse>(JsonOptions))!;
+        verification.Email.ShouldBe("grace.manual@example.com");
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.Users.SingleAsync(u => u.Email == "grace.manual@example.com")).EmailConfirmed.ShouldBeFalse();
+        }
+
+        var auth = await VerifyAsync(client, verification);
         auth.User.Email.ShouldBe("grace.manual@example.com");
         auth.User.HasPassword.ShouldBeFalse();
-
-        await using var scope = _factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var user = await db.Users.SingleAsync(u => u.Id == auth.User.Id);
-        // LinkedIn never vouched for this address and neither do we — same as a password sign-up.
-        user.EmailConfirmed.ShouldBeFalse();
     }
 
     [Fact]
@@ -293,7 +309,7 @@ public class LinkedInSignInTests(ApiHost<LinkedInSignInProfile> host) : IClassFi
 
         var signup = await client.PostAsJsonAsync("/api/auth/linkedin/signup",
             new LinkedInSignupRequest(pending.SignupToken, "U", "V", "unverified@example.com", true), JsonOptions);
-        signup.StatusCode.ShouldBe(HttpStatusCode.Created);
+        signup.StatusCode.ShouldBe(HttpStatusCode.Accepted);
     }
 
     [Fact]
@@ -303,11 +319,22 @@ public class LinkedInSignInTests(ApiHost<LinkedInSignInProfile> host) : IClassFi
 
         var pending = (await (await SignInAsync(_factory.CreateClient(), identity))
             .Content.ReadFromJsonAsync<LinkedInSignInResponse>(JsonOptions))!.PendingSignup!;
-        var signup = await _factory.CreateClient().PostAsJsonAsync("/api/auth/linkedin/signup",
+        var client = _factory.CreateClient();
+        var signup = await client.PostAsJsonAsync("/api/auth/linkedin/signup",
             new LinkedInSignupRequest(pending.SignupToken, "Return", "User", "return.user@example.com", true), JsonOptions);
-        var firstUserId = (await signup.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!.User.Id;
+        var verification = (await signup.Content.ReadFromJsonAsync<EmailVerificationPendingResponse>(JsonOptions))!;
 
-        // Still no email from LinkedIn on the second visit — the subject alone is enough to recognise
+        // Before the code comes back, a second visit is recognised but gets no session either.
+        var early = (await (await SignInAsync(_factory.CreateClient(), identity))
+            .Content.ReadFromJsonAsync<LinkedInSignInResponse>(JsonOptions))!;
+        early.Auth.ShouldBeNull();
+        early.PendingSignup.ShouldBeNull();
+        early.PendingVerification.ShouldNotBeNull();
+
+        // The earlier visit's ticket was replaced by the second one; the code still goes with it.
+        var firstUserId = (await VerifyAsync(client, early.PendingVerification)).User.Id;
+
+        // Still no email from LinkedIn on the next visit — the subject alone is enough to recognise
         // the account; it must not be sent through the sign-up step again.
         var again = await SignInAsync(_factory.CreateClient(), identity);
         var againBody = (await again.Content.ReadFromJsonAsync<LinkedInSignInResponse>(JsonOptions))!;
@@ -319,12 +346,24 @@ public class LinkedInSignInTests(ApiHost<LinkedInSignInProfile> host) : IClassFi
         client.PostAsJsonAsync("/api/auth/linkedin",
             new LinkedInSignInRequest(_linkedIn.IssueCode(identity), RedirectUri), JsonOptions);
 
-    private static async Task<AuthResponse> RegisterAsync(HttpClient client, string email)
+    /// <summary>A verified password account, signed in.</summary>
+    private async Task<AuthResponse> RegisterAsync(HttpClient client, string email)
     {
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, Password, "Pass", "Word", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory.Services,
+            new RegisterRequest(email, Password, "Pass", "Word", true));
+        host.Jobs.DiscardWhere(TestAccounts.IsVerificationCodeJob);
+        return auth;
+    }
+
+    /// <summary>Sends the code, reads it out of the captured email, and posts it back.</summary>
+    private async Task<AuthResponse> VerifyAsync(HttpClient client, EmailVerificationPendingResponse pending)
+    {
+        await host.RunJobsAsync();
+        host.Jobs.Failed.ShouldBeEmpty();
+        var code = host.Profile.Emails.LastCodeFor(pending.Email).ShouldNotBeNull();
+        var verified = await client.PostAsJsonAsync("/api/auth/verify-email", new VerifyEmailRequest(pending.VerificationTicket, code), JsonOptions);
+        verified.StatusCode.ShouldBe(HttpStatusCode.OK);
+        return (await verified.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
     }
 
     private static Task<HttpResponseMessage> DeleteAccountAsync(HttpClient client, string? password)

@@ -50,10 +50,8 @@ public class ExtensionPairingTests(ApiHost<ExtensionPairingProfile> host) : ICla
         _client = _factory.CreateClient();
         _anonymous = _factory.CreateClient();
 
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("pairing.test@example.com", "P@ssw0rd123!", "Pairing", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory.Services,
+            new RegisterRequest("pairing.test@example.com", "P@ssw0rd123!", "Pairing", "Test", true));
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 

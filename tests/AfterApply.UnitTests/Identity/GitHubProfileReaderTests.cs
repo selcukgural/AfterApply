@@ -32,15 +32,16 @@ public class GitHubProfileReaderTests
     }
 
     [Fact]
-    public void Falls_Back_To_Another_Verified_Address_When_The_Primary_Is_Not_Verified()
+    public void Never_Falls_Back_To_A_Secondary_Address_When_The_Primary_Is_Not_Verified()
     {
         var email = GitHubProfileReader.SelectEmail([
             new GitHubEmail("unverified@example.com", Primary: true, Verified: false),
             new GitHubEmail("verified@example.com", Primary: false, Verified: true)
         ]);
 
-        // Just as proven as a primary one — GitHub verified it either way.
-        email.ShouldBe("verified@example.com");
+        // A secondary address can be an old one the owner no longer controls, still marked verified;
+        // matching on it would link into the account its new owner opened (2026-09-24).
+        email.ShouldBeNull();
     }
 
     [Fact]
@@ -69,14 +70,15 @@ public class GitHubProfileReaderTests
     }
 
     [Fact]
-    public void Falls_Back_Past_A_Noreply_Address_To_A_Real_One()
+    public void A_Noreply_Primary_Means_No_Email_Even_With_A_Real_Secondary()
     {
         var email = GitHubProfileReader.SelectEmail([
             new GitHubEmail("4241+ada@users.noreply.github.com", Primary: true, Verified: true),
             new GitHubEmail("ada@example.com", Primary: false, Verified: true)
         ]);
 
-        email.ShouldBe("ada@example.com");
+        // The emailless sign-up path: the form asks for an address and verifies it by code.
+        email.ShouldBeNull();
     }
 
     [Fact]

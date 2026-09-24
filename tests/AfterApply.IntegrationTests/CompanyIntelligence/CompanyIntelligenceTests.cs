@@ -66,10 +66,8 @@ public class CompanyIntelligenceTests(ApiHost<CompanyIntelligenceProfile> host) 
     private static async Task<HttpClient> CreateAuthenticatedClientAsync(WebApplicationFactory<Program> factory, string email)
     {
         var client = factory.CreateClient();
-        var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "CI", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, factory.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "CI", "Test", true));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
         return client;
     }

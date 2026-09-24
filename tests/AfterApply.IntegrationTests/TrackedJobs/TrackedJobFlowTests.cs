@@ -30,10 +30,8 @@ public class TrackedJobFlowTests(ApiHost<DefaultProfile> host) : IClassFixture<A
     {
         var client = _factory!.CreateClient();
 
-        var registerResponse = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Tracked", "Job", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory!.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "Tracked", "Job", true));
         auth.ShouldNotBeNull();
 
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);

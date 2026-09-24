@@ -4,9 +4,24 @@ namespace AfterApply.Application.Identity;
 
 public interface IAuthService
 {
+    /// <summary>Creates the account unverified and emails a code: the result is always
+    /// <see cref="AuthResult.PendingVerification"/> on success, never tokens (2026-09-24). A sign-up
+    /// that was never verified (and never signed in) does not hold its address — registering the
+    /// same address again replaces it.</summary>
     Task<AuthResult> RegisterAsync(RegisterRequest request, string? ipAddress, CancellationToken cancellationToken);
 
+    /// <summary>Tokens for a verified account; <see cref="AuthResult.PendingVerification"/> for a
+    /// correct password on an account whose address was never verified.</summary>
     Task<AuthResult> LoginAsync(LoginRequest request, string? ipAddress, CancellationToken cancellationToken);
+
+    /// <summary>Finishes a pending verification: the ticket from the pending response plus the
+    /// emailed code. Signs the user in on success.</summary>
+    Task<AuthResult> VerifyEmailAsync(VerifyEmailRequest request, string? ipAddress, CancellationToken cancellationToken);
+
+    /// <summary>Emails a new code for a pending verification, unless the throttle says it is too
+    /// soon; either way the answer says when the next one can go.</summary>
+    Task<(ResendVerificationCodeResponse? Response, string? Error)> ResendVerificationCodeAsync(
+        ResendVerificationCodeRequest request, CancellationToken cancellationToken);
 
     Task<AuthResult> RefreshAsync(string refreshToken, string? ipAddress, CancellationToken cancellationToken);
 

@@ -180,14 +180,15 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
     {
         var (owner, _) = await host.RegisterAsync("pat.owner@example.com");
         var created = await owner.PostAsJsonAsync("/api/personal-access-tokens",
-            new CreatePersonalAccessTokenRequest("Scripting", PersonalAccessTokenScope.Full), JsonOptions);
+            new CreatePersonalAccessTokenRequest("Chrome Extension"), JsonOptions);
         created.EnsureSuccessStatusCode();
         var token = (await created.Content.ReadFromJsonAsync<CreatedPersonalAccessTokenResponse>(JsonOptions))!;
 
-        // B validates the token and caches the result; the revoke lands on A.
+        // B validates the token and caches the result; the revoke lands on A. Search is one of the
+        // extension's endpoints, the only ones a token reaches.
         using var tokenOnB = _b.CreateClient();
         tokenOnB.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-        (await tokenOnB.GetAsync("/api/applications")).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await tokenOnB.GetAsync("/api/companies/search?q=acme")).StatusCode.ShouldBe(HttpStatusCode.OK);
 
         (await owner.DeleteAsync($"/api/personal-access-tokens/{token.Id}")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
@@ -195,7 +196,7 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
         // which is a pub/sub hop — milliseconds, not zero. Wait for that hop rather than assume
         // it (it lost the race once on the 2026-09-19 deploy run), bounded so a broken backplane
         // still fails here.
-        await EventuallyAsync(async () => (await tokenOnB.GetAsync("/api/applications")).StatusCode == HttpStatusCode.Unauthorized,
+        await EventuallyAsync(async () => (await tokenOnB.GetAsync("/api/companies/search?q=acme")).StatusCode == HttpStatusCode.Unauthorized,
             "the revoked token still authenticates on the other instance");
     }
 

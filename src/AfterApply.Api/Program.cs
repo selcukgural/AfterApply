@@ -6,6 +6,7 @@ using AfterApply.Api.ExceptionHandling;
 using AfterApply.Api.Imports;
 using AfterApply.Api.Middleware;
 using AfterApply.Application.Auditing;
+using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.Payments;
@@ -14,6 +15,7 @@ using AfterApply.Application.Notifications;
 using AfterApply.Infrastructure;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Auditing;
+using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Metrics;
@@ -228,6 +230,11 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "request-audit-purge",
         service => service.PurgeAnonymousAsync(CancellationToken.None),
         requestAuditOptions.PurgeCronExpression);
+    var emailVerificationOptions = scope.ServiceProvider.GetRequiredService<IOptions<EmailVerificationOptions>>().Value;
+    recurringJobManager.AddOrUpdate<IUnverifiedAccountCleanupService>(
+        "unverified-account-purge",
+        service => service.PurgeAsync(CancellationToken.None),
+        emailVerificationOptions.CleanupCronExpression);
     // Registered whether or not JobSources:Enabled is on — the sweep checks the flag itself and
     // returns at once while it is off, so turning the feature on needs no redeploy for the schedule.
     recurringJobManager.AddOrUpdate<IJobSourceSweepService>(

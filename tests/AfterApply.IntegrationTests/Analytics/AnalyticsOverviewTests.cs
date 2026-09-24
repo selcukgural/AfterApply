@@ -27,10 +27,8 @@ public class AnalyticsOverviewTests(ApiHost<DefaultProfile> host) : IClassFixtur
         await host.ResetAsync();
 
         _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("analytics.test@example.com", "P@ssw0rd123!", "Analytics", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory.Services,
+            new RegisterRequest("analytics.test@example.com", "P@ssw0rd123!", "Analytics", "Test", true));
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 
@@ -198,10 +196,8 @@ public class AnalyticsOverviewTests(ApiHost<DefaultProfile> host) : IClassFixtur
         await CreateApplicationAsync("Mine Co", DateTimeOffset.UtcNow.AddDays(-2));
 
         var other = _factory.CreateClient();
-        var registerResponse = await other.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("analytics.flow.other@example.com", "P@ssw0rd123!", "Other", "User", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(other, _factory.Services,
+            new RegisterRequest("analytics.flow.other@example.com", "P@ssw0rd123!", "Other", "User", true));
         other.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
 
         var response = await other.GetAsync("/api/analytics/flow?period=all");

@@ -51,6 +51,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
 
+    public DbSet<EmailVerificationChallenge> EmailVerificationChallenges => Set<EmailVerificationChallenge>();
+
+    public DbSet<AuthEmailDispatch> AuthEmailDispatches => Set<AuthEmailDispatch>();
+
     public DbSet<ExtensionPairingRequest> ExtensionPairingRequests => Set<ExtensionPairingRequest>();
 
     public DbSet<ImportBatch> ImportBatches => Set<ImportBatch>();

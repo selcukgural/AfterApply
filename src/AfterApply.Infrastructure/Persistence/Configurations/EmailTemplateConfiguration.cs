@@ -23,6 +23,8 @@ public sealed class EmailTemplateConfiguration : IEntityTypeConfiguration<EmailT
     private static readonly Guid RefundCompletedEnId = new("5a1e0000-0000-4000-8000-00000000000c");
     private static readonly Guid RefundRejectedTrId = new("5a1e0000-0000-4000-8000-00000000000d");
     private static readonly Guid RefundRejectedEnId = new("5a1e0000-0000-4000-8000-00000000000e");
+    private static readonly Guid EmailVerificationCodeTrId = new("5a1e0000-0000-4000-8000-00000000000f");
+    private static readonly Guid EmailVerificationCodeEnId = new("5a1e0000-0000-4000-8000-000000000010");
 
     public void Configure(EntityTypeBuilder<EmailTemplate> builder)
     {
@@ -283,6 +285,39 @@ public sealed class EmailTemplateConfiguration : IEntityTypeConfiguration<EmailT
                       <p>We reviewed your refund request and cannot refund this payment. The reason given:</p>
                       <blockquote style="margin:0;padding:8px 12px;border-left:3px solid #ccc;color:#333;">{{Note}}</blockquote>
                       <p style="color:#555;font-size:13px;">Your Pro plan stays active until it ends. If you have a question, you can reply to this e-mail.</p>
+                    </div>
+                    """
+            },
+            // The sign-up verification code (2026-09-24). {{Code}} is six digits we generated.
+            new
+            {
+                Id = EmailVerificationCodeTrId,
+                Key = EmailTemplateKey.EmailVerificationCode,
+                Locale = "tr",
+                Subject = "e-kariyerim doğrulama kodunuz: {{Code}}",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>E-posta adresinizi doğrulayın</h2>
+                      <p>e-kariyerim hesabınızı açmak için bu kodu, kaydı başlattığınız sayfaya girin:</p>
+                      <p style="font-size:28px;font-weight:600;letter-spacing:6px;margin:16px 0;">{{Code}}</p>
+                      <p>Kod 15 dakika geçerlidir.</p>
+                      <p style="color:#555;font-size:13px;">Bu kaydı siz başlatmadıysanız bu e-postayı yok sayın ve kodu kimseyle paylaşmayın. Doğrulanmayan hesap 7 gün içinde silinir.</p>
+                    </div>
+                    """
+            },
+            new
+            {
+                Id = EmailVerificationCodeEnId,
+                Key = EmailTemplateKey.EmailVerificationCode,
+                Locale = "en",
+                Subject = "Your e-kariyerim verification code: {{Code}}",
+                HtmlBody = """
+                    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111;">
+                      <h2>Verify your email address</h2>
+                      <p>To open your e-kariyerim account, enter this code on the page where you started signing up:</p>
+                      <p style="font-size:28px;font-weight:600;letter-spacing:6px;margin:16px 0;">{{Code}}</p>
+                      <p>The code works for 15 minutes.</p>
+                      <p style="color:#555;font-size:13px;">If you did not start this sign-up, ignore this email and don't share the code with anyone. An account that is never verified is deleted within 7 days.</p>
                     </div>
                     """
             });

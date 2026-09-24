@@ -35,6 +35,15 @@
   <data name="AUTH_INVALID_CREDENTIALS" xml:space="preserve">
     <value>E-posta veya şifre hatalı.</value>
   </data>
+  <data name="AUTH_VERIFICATION_EXPIRED" xml:space="preserve">
+    <value>Bu doğrulamanın süresi doldu. Yeni bir kod almak için lütfen tekrar giriş yapın.</value>
+  </data>
+  <data name="AUTH_VERIFICATION_CODE_EXPIRED" xml:space="preserve">
+    <value>Bu kod artık geçerli değil. Lütfen yeni bir kod isteyip tekrar deneyin.</value>
+  </data>
+  <data name="AUTH_VERIFICATION_CODE_INVALID" xml:space="preserve">
+    <value>Kod hatalı. Lütfen e-postayı kontrol edip tekrar deneyin.</value>
+  </data>
   <data name="AUTH_INVALID_REFRESH_TOKEN" xml:space="preserve">
     <value>Geçersiz oturum yenileme jetonu.</value>
   </data>

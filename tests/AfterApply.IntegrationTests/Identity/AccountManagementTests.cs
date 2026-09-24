@@ -45,10 +45,8 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
     private async Task<HttpClient> RegisterAsync(string email, bool consentAccepted = true)
     {
         var client = _factory!.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest(email, "P@ssw0rd123!", "Account", "Test", consentAccepted), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(client, _factory!.Services,
+            new RegisterRequest(email, "P@ssw0rd123!", "Account", "Test", consentAccepted));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
         return client;
     }
@@ -92,8 +90,16 @@ public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixtur
 
         var register = await client.PostAsJsonAsync("/api/auth/register",
             new RegisterRequest("noname@example.com", "P@ssw0rd123!", "", "", true), JsonOptions);
-        register.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var auth = await register.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        register.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        var pending = await register.Content.ReadFromJsonAsync<EmailVerificationPendingResponse>(JsonOptions);
+        pending!.Email.ShouldBe("noname@example.com");
+
+        // Sign-up hands out no tokens until the code comes back; stand in for the inbox and sign in.
+        await TestAccounts.MarkVerifiedAsync(_factory.Services, "noname@example.com");
+        var login = await client.PostAsJsonAsync("/api/auth/login",
+            new LoginRequest("noname@example.com", "P@ssw0rd123!"), JsonOptions);
+        login.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var auth = await login.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
         auth!.User.FirstName.ShouldBe("");
         auth.User.LastName.ShouldBe("");
 

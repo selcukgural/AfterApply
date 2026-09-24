@@ -41,10 +41,8 @@ public class CompanyAutoAttachThresholdTests(ApiHost<CompanyAutoAttachThresholdP
         await host.ResetAsync();
 
         _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("threshold.test@example.com", "P@ssw0rd123!", "Threshold", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory.Services,
+            new RegisterRequest("threshold.test@example.com", "P@ssw0rd123!", "Threshold", "Test", true));
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 

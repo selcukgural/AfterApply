@@ -2521,6 +2521,8 @@ yetki yok).
 
 ## E-posta doğrulaması bilinçli olarak ertelendi — Resend free plan kotası (2026-09-03)
 
+> **Yerine geçti (2026-09-24):** "Kayıtta e-posta doğrulaması devreye alındı" kaydına bakın.
+
 **Karar:** Yukarıdaki güvenlik incelemesinin **M1** bulgusu (kayıt sırasında e-posta doğrulaması
 yok) bu turda **kasıtlı olarak düzeltilmiyor**. Gelecekte yapılacaklar listesine alındı.
 
@@ -9309,3 +9311,40 @@ Rakip araştırmasının "Önerilen sıra" 4. maddesi. Canvas: https://claude.ai
   bilgisini ekliyor; az aday alan küçük şirkette küçük bir ek ipucu. Kullanıcı kabul etti. Gizlilik
   sayfasına üç tür için birer satır, yardım sayfalarına birer bölüm eklendi.
 - Admin deneyim tablosu etiketi göstermiyor (moderatör içeriğe bakar, yazara değil).
+
+## Kayıtta e-posta doğrulaması devreye alındı — DECIDED (2026-09-24)
+
+2026-09-03 tarihli "E-posta doğrulaması bilinçli olarak ertelendi" kaydının yerini alıyor. Kota riski,
+doğrulamanın kendisinden önce hesap başına ve toplam gönderim sınırlarıyla karşılandı; Resend free plan
+ile devam (kullanıcı kararı).
+
+- **Kod, bağlantı değil.** Kayıt 202 + `verificationTicket` döner, token dönmez; adrese 6 haneli kod
+  gider. `POST /api/auth/verify-email` ticket + kodu birlikte ister ve başarıda oturum açar. Ticket
+  kaydı başlatan tarayıcıda, kod gelen kutusunda — ikisi ayrı ayrı işe yaramaz. Kod 15 dk, ticket 60 dk
+  geçerli; kod başına 5 deneme. Kod Hangfire argümanına yazılmaz: iş challenge id'si alır, kodu kendisi
+  üretip hash'ini saklar.
+- **Doğrulanmamış hesap giriş yapamaz.** Doğru şifreyle giriş 202 + yeni ticket döner (yeni kod yalnızca
+  bekleme süresi geçtiyse gider; önceki kod yeni ticket'la da geçerli). Doğrulanmamış hesabın refresh
+  token'ı yenilenmez.
+- **Adres, doğrulanmış ya da daha önce oturum açmış hesaba aittir.** Hiç oturum açmamış doğrulanmamış bir
+  kayıt adresi tutmaz: aynı adresle yeniden kayıt onu değiştirir (şifre, ad, sağlayıcı girişleri, bekleyen
+  doğrulama). Bu tür kayıtlar 7 gün sonra `unverified-account-purge` işiyle silinir. Doğrulama öncesinden
+  kalan, oturum açmış hesaplar silinmez; bir sonraki girişte doğrular.
+- **Sağlayıcılar:** Google/LinkedIn `email_verified`, GitHub yalnızca **birincil** doğrulanmış adres
+  doğrulanmış sayılır. Elle yazılan adres (LinkedIn/GitHub) kodla doğrulanır. Sağlayıcının doğruladığı
+  adres doğrulanmamış bir hesaba denk gelirse bağlamadan önce o hesabın şifresi, diğer girişleri, refresh
+  token'ları, PAT'leri ve bekleyen doğrulaması kaldırılır; veri hesapta kalır. Doğrulanmış hesaba bağlama
+  eskisi gibi (şifre korunur, PAT'lere dokunulmaz).
+- **Şifre sıfırlama** artık PAT'leri de iptal ediyor; doğrulanmamış hesapta sıfırlama adresi doğrulanmış
+  sayar ve sağlayıcı girişlerini kaldırır.
+- **Gönderim sınırları** (`EmailVerification` bölümü, `AuthEmailDispatches` tablosu, 2 gün saklanır):
+  doğrulama kodu 60 sn bekleme / hesap başına günde 5 / toplam günde 60; şifre sıfırlama 5 dk / 3 / 30.
+  Toplam 90, free plan'in 100'ünün altında. Sınıra takılan istek dışarıdan aynı cevabı alır.
+- **PAT:** yalnızca `Extension` kapsamı üretilebilir; kapsam iddiası taşıyan her token (eski `Full` dahil)
+  sadece eklenti uçlarına ulaşır. Oturum (JWT) etkilenmez.
+- **Web:** doğrulama adımı kayıt/giriş/sağlayıcı callback sayfasının içinde gösteriliyor; ticket tarayıcı
+  deposuna yazılmıyor (çerez politikası envanteri değişmedi), sayfa yenilenirse tekrar giriş yeni ticket verir.
+- Gizlilik metni (hesap bilgileri, saklama süresi, üç sağlayıcının bağlama ve e-posta satırları) aynı
+  değişiklikte güncellendi.
+- **Bilinen sınır:** Postman sözleşme koşusu kayıttan token alamadığı için korumalı uçlarda 401 görüyor
+  (temel test 401'i kabul ediyor); koşu için doğrulanmış bir test hesabı ayrı bir iş.

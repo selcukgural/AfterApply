@@ -8,8 +8,9 @@ namespace AfterApply.Application.Identity;
 public enum PersonalAccessTokenScope
 {
     /// <summary>Everything the owning user can do through a normal browser session. What every
-    /// token issued before scoping existed was implicitly granted, so the migration backfills
-    /// existing rows with this value rather than silently narrowing tokens already in the wild.</summary>
+    /// token issued before scoping existed was implicitly granted, so the migration backfilled
+    /// existing rows with this value. No longer issued, and no longer honoured (2026-09-24): a Full
+    /// token reaches only the extension's endpoints, like an Extension one.</summary>
     Full = 0,
 
     /// <summary>Only the endpoints the browser extension actually calls (see

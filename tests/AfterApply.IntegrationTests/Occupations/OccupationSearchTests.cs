@@ -36,10 +36,8 @@ public class OccupationSearchTests(ApiHost<OccupationSearchProfile> host) : ICla
     {
         await host.ResetAsync();
         _client = _factory!.CreateClient();
-        var response = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("occupation.search@example.com", "P@ssw0rd123!", "Occupation", "Tester", true), JsonOptions);
-        response.EnsureSuccessStatusCode();
-        var auth = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory!.Services,
+            new RegisterRequest("occupation.search@example.com", "P@ssw0rd123!", "Occupation", "Tester", true));
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
     }
 

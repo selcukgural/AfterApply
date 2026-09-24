@@ -11,6 +11,9 @@ public interface IEmailSender
 
     Task SendPasswordChangedEmailAsync(string toEmail, string locale, CancellationToken cancellationToken);
 
+    /// <summary>The sign-up verification code (<paramref name="code"/> is six digits we generated).</summary>
+    Task SendEmailVerificationCodeAsync(string toEmail, string code, string locale, CancellationToken cancellationToken);
+
     /// <summary>The Monday digest of the weekly job matching. Values in <paramref name="digest"/>
     /// that came from a job site (title, company) are HTML-encoded by the sender before they
     /// reach the template.</summary>

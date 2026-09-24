@@ -1,8 +1,10 @@
 import type {
   AuthResponse,
+  EmailVerificationPendingResponse,
   GitHubSignInResponse,
   GoogleSignInResponse,
   LinkedInSignInResponse,
+  ResendVerificationCodeResponse,
   UserPlanResponse,
   UserProfileResponse,
 } from "@/types/api";
@@ -91,17 +93,43 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
+export interface VerifyEmailRequest {
+  verificationTicket: string;
+  code: string;
+}
+
+// What register/login/the provider sign-up steps answer: a session, or — while the address is
+// unverified — a ticket for the emailed code.
+export type SignInOutcome = AuthResponse | EmailVerificationPendingResponse;
+
+export function isVerificationPending(outcome: SignInOutcome): outcome is EmailVerificationPendingResponse {
+  return "verificationTicket" in outcome;
+}
+
 export const authApi = {
+  // Always a pending verification on success since 2026-09-24: no tokens until the code comes back.
   register: (request: RegisterRequest) =>
-    apiFetch<AuthResponse>("/api/auth/register", {
+    apiFetch<EmailVerificationPendingResponse>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(request),
     }),
 
   login: (request: LoginRequest) =>
-    apiFetch<AuthResponse>("/api/auth/login", {
+    apiFetch<SignInOutcome>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(request),
+    }),
+
+  verifyEmail: (request: VerifyEmailRequest) =>
+    apiFetch<AuthResponse>("/api/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  resendVerificationCode: (verificationTicket: string) =>
+    apiFetch<ResendVerificationCodeResponse>("/api/auth/verify-email/resend", {
+      method: "POST",
+      body: JSON.stringify({ verificationTicket }),
     }),
 
   googleSignIn: (request: GoogleSignInRequest) =>
@@ -111,7 +139,7 @@ export const authApi = {
     }),
 
   googleSignup: (request: GoogleSignupRequest) =>
-    apiFetch<AuthResponse>("/api/auth/google/signup", {
+    apiFetch<SignInOutcome>("/api/auth/google/signup", {
       method: "POST",
       body: JSON.stringify(request),
     }),
@@ -123,7 +151,7 @@ export const authApi = {
     }),
 
   linkedInSignup: (request: LinkedInSignupRequest) =>
-    apiFetch<AuthResponse>("/api/auth/linkedin/signup", {
+    apiFetch<SignInOutcome>("/api/auth/linkedin/signup", {
       method: "POST",
       body: JSON.stringify(request),
     }),
@@ -135,7 +163,7 @@ export const authApi = {
     }),
 
   githubSignup: (request: GitHubSignupRequest) =>
-    apiFetch<AuthResponse>("/api/auth/github/signup", {
+    apiFetch<SignInOutcome>("/api/auth/github/signup", {
       method: "POST",
       body: JSON.stringify(request),
     }),

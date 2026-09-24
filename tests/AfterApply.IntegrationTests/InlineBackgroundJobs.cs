@@ -82,6 +82,26 @@ public sealed class InlineJobQueue
         }
     }
 
+    /// <summary>Drops the pending jobs matching <paramref name="predicate"/>, keeping the order of
+    /// the rest — for a helper that enqueues something as a side effect no test asked about (the
+    /// verification-code email a sign-up sends).</summary>
+    public void DiscardWhere(Func<PendingJob, bool> predicate)
+    {
+        var keep = new List<PendingJob>();
+        while (_pending.TryDequeue(out var item))
+        {
+            if (!predicate(item))
+            {
+                keep.Add(item);
+            }
+        }
+
+        foreach (var item in keep)
+        {
+            _pending.Enqueue(item);
+        }
+    }
+
     /// <summary>
     /// Performs every pending job in enqueue order, including the ones a job enqueues while it
     /// runs (the weekly sweep enqueues one digest per user), until the queue is empty.

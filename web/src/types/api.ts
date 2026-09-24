@@ -90,6 +90,19 @@ export interface AuthResponse {
   user: UserProfileResponse;
 }
 
+// 202 from register, login and the provider sign-up steps (2026-09-24): the account's email is not
+// verified yet, a six-digit code has been emailed, and the ticket plus that code go to
+// POST /api/auth/verify-email. No tokens until then.
+export interface EmailVerificationPendingResponse {
+  verificationTicket: string;
+  email: string;
+  resendAvailableAt: string;
+}
+
+export interface ResendVerificationCodeResponse {
+  resendAvailableAt: string;
+}
+
 export interface ApplicationSummaryResponse {
   id: string;
   companyId: string;
@@ -748,7 +761,7 @@ export interface ResponseRatesConfig {
   enabled: boolean;
 }
 
-// POST /api/auth/google: exactly one of the two is set.
+// POST /api/auth/google: exactly one of the three is set.
 export interface GoogleSignupPrefill {
   signupToken: string;
   email: string;
@@ -759,9 +772,11 @@ export interface GoogleSignupPrefill {
 export interface GoogleSignInResponse {
   auth: AuthResponse | null;
   pendingSignup: GoogleSignupPrefill | null;
+  // Set instead of the other two when the account exists but its email was never verified.
+  pendingVerification?: EmailVerificationPendingResponse | null;
 }
 
-// POST /api/auth/linkedin: exactly one of the two is set. `email` is LinkedIn's verified address
+// POST /api/auth/linkedin: exactly one of the three is set. `email` is LinkedIn's verified address
 // (shown read-only), or null when LinkedIn provided none — LinkedIn's OpenID Connect response makes
 // it optional — in which case the complete-your-sign-up form must collect and require one.
 export interface LinkedInSignupPrefill {
@@ -774,9 +789,11 @@ export interface LinkedInSignupPrefill {
 export interface LinkedInSignInResponse {
   auth: AuthResponse | null;
   pendingSignup: LinkedInSignupPrefill | null;
+  // Set instead of the other two when the account exists but its email was never verified.
+  pendingVerification?: EmailVerificationPendingResponse | null;
 }
 
-// POST /api/auth/github: exactly one of the two is set. `email` is a GitHub-verified address (shown
+// POST /api/auth/github: exactly one of the three is set. `email` is a GitHub-verified address (shown
 // read-only), or null when GitHub exposed none we can both verify and deliver to — a private-email
 // account, a noreply-only one, or a grant without the user:email scope — in which case the
 // complete-your-sign-up form must collect and require one. The two names are a best-effort split of
@@ -791,6 +808,8 @@ export interface GitHubSignupPrefill {
 export interface GitHubSignInResponse {
   auth: AuthResponse | null;
   pendingSignup: GitHubSignupPrefill | null;
+  // Set instead of the other two when the account exists but its email was never verified.
+  pendingVerification?: EmailVerificationPendingResponse | null;
 }
 
 export type FeedbackCategory = "Bug" | "Idea" | "Question";

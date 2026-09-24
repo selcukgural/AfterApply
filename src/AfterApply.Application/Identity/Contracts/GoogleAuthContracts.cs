@@ -16,10 +16,12 @@ public sealed record GoogleSignupRequest(string SignupToken, string FirstName, s
 /// exactly as a password sign-up requires. Email/names are Google's values, shown pre-filled.</summary>
 public sealed record GoogleSignupPrefill(string SignupToken, string Email, string FirstName, string LastName);
 
-/// <summary>Exactly one of the two is non-null: <see cref="Auth"/> when an account was found (or
+/// <summary>Exactly one of the three is non-null: <see cref="Auth"/> when an account was found (or
 /// linked by verified email) and the user is signed in, <see cref="PendingSignup"/> when the
-/// client has to show the complete-your-sign-up step first.</summary>
-public sealed record GoogleSignInResponse(AuthResponse? Auth, GoogleSignupPrefill? PendingSignup);
+/// client has to show the complete-your-sign-up step first. <see cref="PendingVerification"/>
+/// when the account exists but its email is unverified and the emailed code must come back first.</summary>
+public sealed record GoogleSignInResponse(AuthResponse? Auth, GoogleSignupPrefill? PendingSignup,
+    EmailVerificationPendingResponse? PendingVerification = null);
 
 public sealed record GoogleSignInResult
 {
@@ -34,6 +36,11 @@ public sealed record GoogleSignInResult
 
     public static GoogleSignInResult SignupRequired(GoogleSignupPrefill prefill) =>
         new() { Succeeded = true, Response = new GoogleSignInResponse(null, prefill) };
+
+    /// <summary>The identity maps to an account whose email address was never verified — the
+    /// manual-email sign-up path, or an account from before verification existed.</summary>
+    public static GoogleSignInResult VerificationRequired(EmailVerificationPendingResponse pending) =>
+        new() { Succeeded = true, Response = new GoogleSignInResponse(null, null, pending) };
 
     public static GoogleSignInResult Failure(params IReadOnlyCollection<string> errors) =>
         new() { Succeeded = false, Errors = errors };

@@ -31,10 +31,8 @@ public class CompanySearchEndpointTests(ApiHost<DefaultProfile> host) : IClassFi
         await host.ResetAsync();
 
         _client = _factory.CreateClient();
-        var registerResponse = await _client.PostAsJsonAsync("/api/auth/register",
-            new RegisterRequest("company.search.test@example.com", "P@ssw0rd123!", "Search", "Test", true), JsonOptions);
-        registerResponse.EnsureSuccessStatusCode();
-        var auth = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions);
+        var auth = await TestAccounts.RegisterVerifiedAsync(_client, _factory.Services,
+            new RegisterRequest("company.search.test@example.com", "P@ssw0rd123!", "Search", "Test", true));
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
 
         // Seed via the manual create endpoint — Company has no dedicated create endpoint of its
