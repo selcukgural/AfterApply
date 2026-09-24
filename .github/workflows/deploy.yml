@@ -59,7 +59,7 @@ jobs:
       backend: ${{ steps.decide.outputs.backend }}
       web: ${{ steps.decide.outputs.web }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: github.event_name == 'push'
         with:
           fetch-depth: 0 # full history — the tag can be many commits behind HEAD
@@ -143,7 +143,7 @@ jobs:
       commits: ${{ steps.deploy-commits.outputs.commits }}
       count: ${{ steps.deploy-commits.outputs.count }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # full history — needed to diff against the deploy/api-latest tag below
 
@@ -411,7 +411,7 @@ jobs:
       commits: ${{ steps.deploy-commits.outputs.commits }}
       count: ${{ steps.deploy-commits.outputs.count }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # full history — needed to diff against the deploy/web-latest tag below
 
