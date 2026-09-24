@@ -9445,3 +9445,8 @@ başkalarına ancak şu kurallarla ulaşıyor.
   yüklenmiyor; Next'in config'i destekleyince ignore kaldırılır.
 - **CodeQL action'ları tek grupta:** `init` ve `analyze` farklı sürümde çalışamıyor; Dependabot ikisini
   ayrı PR'larda güncelleyince CodeQL kırıldı (#123).
+- **Ek (aynı gün): Dependabot major sürüm önermez.** Tüm ekosistemlerde `semver-major` yok sayılıyor ve
+  ekosistem başına en fazla 2 açık PR var. Major yükseltmeler planlı yapılır (Node imajı + CI
+  `setup-node`, codeql init + analyze, StackExchange.Redis ve ona bağlı paketler birlikte). Güvenlik
+  güncellemeleri bu ayardan etkilenmez. İlk turda açılan major PR'lar (#126, #127, #130–#134, #137) ve
+  27'lik NuGet grubu (#129) kapatıldı.
