@@ -9450,3 +9450,15 @@ başkalarına ancak şu kurallarla ulaşıyor.
   `setup-node`, codeql init + analyze, StackExchange.Redis ve ona bağlı paketler birlikte). Güvenlik
   güncellemeleri bu ayardan etkilenmez. İlk turda açılan major PR'lar (#126, #127, #130–#134, #137) ve
   27'lik NuGet grubu (#129) kapatıldı.
+
+## Node 24'e geçiş — DECIDED (2026-09-25)
+
+- Web artık Node 24 (LTS; bakım 2026-10-20'den, destek 2028-04-30'a kadar) üzerinde: `web/Dockerfile`
+  (`node:24-alpine`, digest sabit), CI'daki tüm `setup-node` adımları (`tests.yml`, `api-contract.yml`) ve
+  `@types/node` `^24` aynı değişiklikte taşındı. Kural: bu üçü her zaman birlikte hareket eder;
+  tipler çalışan Node'dan yeni olmaz (`^26` tipleri Node 22'de olmayan API'lere izin veriyordu).
+- Doğrulama: Node 24.21 / npm 11.19 ile `npm ci`, vitest (web 1127, extension 71), `next typegen` + tsc,
+  eslint, `next build`; imaj derlenip container'da açıldı (`node` kullanıcısı, OG kartı çiziliyor);
+  Node 24'teki `next start` üzerinde panel, başvurular, şirketler, LinkedIn içe aktarma (hub bileti ile
+  WebSocket) ve şifre sıfırlama tarayıcıda yürütüldü.
+- Sonraki geçiş Node 26 (LTS 2026-10-28) olur; Node 24'ün desteği bitmeden, aynı üçlüyle.
