@@ -52,6 +52,8 @@ public class CandidateExperiencesDisabledTests(ApiHost<CandidateExperiencesDisab
         var resolve = await client.PostAsJsonAsync("/api/companies/resolve", new ResolveCompanyRequest("Dark Experience Co"), JsonOptions);
         resolve.EnsureSuccessStatusCode();
         var company = (await resolve.Content.ReadFromJsonAsync<ResolvedCompanyResponse>(JsonOptions))!;
+        // The public page below exists only for a listed company (CompanyVisibility, 2026-09-24).
+        await TestCompanies.MakeListedAsync(_factory!.Services, company.Id);
 
         var request = new CandidateExperienceRequest(4);
         (await client.GetAsync($"/api/companies/public/{company.Slug}/experiences")).StatusCode.ShouldBe(HttpStatusCode.NotFound);

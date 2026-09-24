@@ -91,4 +91,15 @@ public class KariyerNetCompanyProfileParserTests
         const string html = """<script type="application/json" id="__NUXT_DATA__">[{"companySectors":99},[1]]</script>""";
         KariyerNetCompanyProfileParser.ExtractSector(html).ShouldBeNull();
     }
+
+    [Fact]
+    public void Reads_The_Company_Name_From_The_Page_Heading() =>
+        KariyerNetCompanyProfileParser.ExtractCompanyName("<h1 class=\"text-lg font-medium\">Borusan Lojistik\n    </h1>")
+            .ShouldBe("Borusan Lojistik");
+
+    [Fact]
+    public void Falls_Back_To_The_Og_Title_Without_Its_Listings_Tail() =>
+        KariyerNetCompanyProfileParser.ExtractCompanyName(
+                """<meta property="og:title" content="Borusan Lojistik İş İlanları - İş Başvurusu">""")
+            .ShouldBe("Borusan Lojistik");
 }

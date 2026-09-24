@@ -13,6 +13,11 @@ import { apiFetch } from "./httpClient";
 export const companiesApi = {
   search: (q: string) => apiFetch<CompanySearchResult[]>(`/api/companies/search?q=${encodeURIComponent(q)}`),
 
+  /** The company behind a page slug, for the contribution page. Signed-in only, and answers for a
+   *  company that has no public page yet as long as the caller applied to or tracks it — which is
+   *  how an accepted application's card opens that page (2026-09-24). */
+  bySlug: (slug: string) => apiFetch<ResolvedCompany>(`/api/companies/by-slug/${encodeURIComponent(slug)}`),
+
   /** Find-or-create by name, for a company that has no page yet. Signed-in only. */
   resolve: (name: string) =>
     apiFetch<ResolvedCompany>("/api/companies/resolve", { method: "POST", body: JSON.stringify({ name }) }),

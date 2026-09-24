@@ -701,7 +701,7 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
             var company = await db.Companies.SingleAsync(c => c.Id == application.CompanyId);
-            company.EnrichFrom("https://website-match-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            company.EnrichFrom(Source.LinkedIn, "https://website-match-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 
@@ -783,7 +783,7 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == applicationId);
             var company = await db.Companies.SingleAsync(c => c.Id == applicationForEnrichment.CompanyId);
-            company.EnrichFrom("https://auto-apply-rule-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            company.EnrichFrom(Source.LinkedIn, "https://auto-apply-rule-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 
@@ -835,7 +835,7 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
             var company = await db.Companies.SingleAsync(c => c.Id == application.CompanyId);
-            company.EnrichFrom("https://auto-apply-lowconf-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            company.EnrichFrom(Source.LinkedIn, "https://auto-apply-lowconf-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 
@@ -867,7 +867,7 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
             var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == applicationId);
             userId = applicationForEnrichment.UserId;
             var company = await db.Companies.SingleAsync(c => c.Id == applicationForEnrichment.CompanyId);
-            company.EnrichFrom("https://shadow-mode-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            company.EnrichFrom(Source.LinkedIn, "https://shadow-mode-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 
@@ -921,7 +921,7 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var applicationForEnrichment = await db.Applications.SingleAsync(a => a.Id == autoAppliedAppId);
             var company = await db.Companies.SingleAsync(c => c.Id == applicationForEnrichment.CompanyId);
-            company.EnrichFrom("https://notifications-auto-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            company.EnrichFrom(Source.LinkedIn, "https://notifications-auto-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 
@@ -1159,7 +1159,7 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
             var company = await db.Companies.SingleAsync(c => c.Id == application.CompanyId);
-            company.EnrichFrom("https://ext-autoapply-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
+            company.EnrichFrom(Source.LinkedIn, "https://ext-autoapply-test.com", industry: null, country: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 
@@ -1288,7 +1288,7 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var application = await db.Applications.SingleAsync(a => a.Id == applicationId);
             var company = await db.Companies.SingleAsync(c => c.Id == application.CompanyId);
-            company.EnrichFrom($"https://{domain}", industry: null, country: null, DateTimeOffset.UtcNow);
+            company.EnrichFrom(Source.LinkedIn, $"https://{domain}", industry: null, country: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 

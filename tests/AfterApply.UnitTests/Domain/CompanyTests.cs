@@ -1,3 +1,4 @@
+using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
 using Shouldly;
 
@@ -57,7 +58,7 @@ public class CompanyTests
         // also publishes no country, so it always passes null there.
         var company = Company.Create("Acme", Now, website: "https://acme.example", industry: null, country: "TR");
 
-        company.EnrichFrom("https://other.example", "Lojistik", country: null, Now);
+        company.EnrichFrom(Source.LinkedIn, "https://other.example", "Lojistik", country: null, Now);
 
         company.Website.ShouldBe("https://acme.example");
         company.Industry.ShouldBe("Lojistik");

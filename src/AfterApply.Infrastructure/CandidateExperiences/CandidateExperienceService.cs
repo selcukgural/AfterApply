@@ -23,7 +23,8 @@ internal sealed class CandidateExperienceService(
     HybridCache cache,
     IOptions<CandidateExperienceOptions> options,
     ContributionNotificationWriter notifications,
-    ContributionProofQueries proof)
+    ContributionProofQueries proof,
+    CompanyVisibility visibility)
     : ICandidateExperienceService
 {
     private static readonly HybridCacheEntryOptions GlobalAverageCacheOptions = new()
@@ -67,7 +68,9 @@ internal sealed class CandidateExperienceService(
 
     public async Task<CandidateExperiencePageResponse?> ListForCompanyAsync(string slug, CandidateExperienceListQuery query, CancellationToken cancellationToken)
     {
-        var companyId = await dbContext.Companies
+        // Only a listed company has a public page (see CompanyVisibility); for any other the slug
+        // answers like one that does not exist.
+        var companyId = await visibility.Listed(dbContext.Companies)
             .Where(c => c.Slug == slug)
             .Select(c => (Guid?)c.Id)
             .FirstOrDefaultAsync(cancellationToken);

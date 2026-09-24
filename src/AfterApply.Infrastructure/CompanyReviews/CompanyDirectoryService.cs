@@ -1,3 +1,4 @@
+using AfterApply.Infrastructure.Companies;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.CompanyReviews;
 using AfterApply.Application.CompanyReviews.Contracts;
@@ -22,7 +23,8 @@ internal sealed class CompanyDirectoryService(
     HybridCache cache,
     IOptions<CompanyReviewOptions> options,
     IOptions<CompanySalaryOptions> salaryOptions,
-    IOptions<CandidateExperienceOptions> experienceOptions) : ICompanyDirectoryService
+    IOptions<CandidateExperienceOptions> experienceOptions,
+    CompanyVisibility visibility) : ICompanyDirectoryService
 {
     // Every entry in this service sits under a tag — the company's for its own page and review
     // pages, the directory's for the lists that span companies — and every contribution write
@@ -185,6 +187,12 @@ internal sealed class CompanyDirectoryService(
                 .Where(c => c.Id == companyId)
                 .Select(c => new { c.Name, c.Website })
                 .FirstAsync(ct);
+            // Read from a page one user's capture pointed at; public only once enough different
+            // people pointed at the same page (CompanyVisibility). The page's cache is dropped when
+            // a new one does (CompanyResolver.RecordProfileSubmissionsAsync).
+            var website = (await visibility.ConfirmedWebsitesAsync([companyId.Value], ct)).Contains(companyId.Value)
+                ? company.Website
+                : null;
             var summary = await queries.GetSummaryAsync(companyId.Value, ct);
             // A count is not sensitive, and it is what lets the public page label its "Salaries"
             // tab before the reader signs in. One indexed COUNT each.
@@ -195,12 +203,14 @@ internal sealed class CompanyDirectoryService(
             var experienceCount = experienceOptions.Value.Enabled
                 ? await dbContext.CandidateExperiences.CountAsync(e => e.CompanyId == companyId, ct)
                 : 0;
-            return new CompanyPublicResponse(companyId.Value, slug, company.Name, company.Website, summary, salaryCount, experienceCount);
+            return new CompanyPublicResponse(companyId.Value, slug, company.Name, website, summary, salaryCount, experienceCount);
         }, CompanyCacheOptions, tags: [CacheKeys.Company.Tag(companyId.Value)], cancellationToken: cancellationToken);
     }
 
+    // Only a listed company has a public page (see CompanyVisibility): any other slug answers like
+    // one that does not exist, so the page cannot say "somebody applied here".
     private Task<Guid?> CompanyIdBySlugAsync(string slug, CancellationToken cancellationToken) =>
-        dbContext.Companies
+        visibility.Listed(dbContext.Companies)
             .Where(c => c.Slug == slug)
             .Select(c => (Guid?)c.Id)
             .FirstOrDefaultAsync(cancellationToken);

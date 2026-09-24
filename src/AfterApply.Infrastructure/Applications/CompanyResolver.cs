@@ -1,5 +1,7 @@
+using AfterApply.Domain.Common;
 using AfterApply.Application.Applications;
 using AfterApply.Domain.Companies;
+using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +9,8 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace AfterApply.Infrastructure.Applications;
 
-internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache, CompanySlugAllocator slugAllocator) : ICompanyResolver
+internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache, CompanySlugAllocator slugAllocator,
+    ICompanyCacheInvalidator invalidator) : ICompanyResolver
 {
     private static readonly HybridCacheEntryOptions LookupCacheOptions = new()
     {
@@ -137,6 +140,64 @@ internal sealed class CompanyResolver(AppDbContext dbContext, HybridCache cache,
             // wanted — this is a backfill, not something the caller is waiting on a result from.
             dbContext.ChangeTracker.Clear();
         }
+    }
+
+    public async Task RecordProfileSubmissionsAsync(Guid companyId, CompanyProfileLinks profileLinks, CancellationToken cancellationToken)
+    {
+        if (profileLinks.SubmittedBy is not { } userId)
+        {
+            return;
+        }
+
+        var submitted = new List<(Source Platform, string Url)>();
+        if (profileLinks.LinkedInUrl is not null)
+        {
+            submitted.Add((Source.LinkedIn, profileLinks.LinkedInUrl));
+        }
+
+        if (profileLinks.KariyerNetUrl is not null)
+        {
+            submitted.Add((Source.KariyerNet, profileLinks.KariyerNetUrl));
+        }
+
+        if (submitted.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var platforms = submitted.Select(s => s.Platform).ToList();
+        var existing = await dbContext.CompanyProfileSubmissions
+            .Where(s => s.CompanyId == companyId && s.UserId == userId && platforms.Contains(s.Platform))
+            .ToListAsync(cancellationToken);
+
+        foreach (var (platform, url) in submitted)
+        {
+            var mine = existing.FirstOrDefault(s => s.Platform == platform);
+            if (mine is null)
+            {
+                dbContext.CompanyProfileSubmissions.Add(CompanyProfileSubmission.Create(companyId, platform, url, userId, now));
+            }
+            else
+            {
+                mine.Replace(url, now);
+            }
+        }
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+        {
+            // The same user's two captures of this company landing at once; one of them is recorded.
+            dbContext.ChangeTracker.Clear();
+            return;
+        }
+
+        // Another person pointing at the same page can be what makes the website public, and the
+        // public page is cached under the company's tag.
+        await invalidator.InvalidateCompanyAsync(companyId, cancellationToken);
     }
 
     private static bool IsProfileLinkCollision(DbUpdateException exception) =>

@@ -13,11 +13,14 @@ namespace AfterApply.Application.Applications;
 /// <paramref name="AtsPlatform"/> saying which one. Unlike the pair above this does not land in a
 /// column on Companies — it becomes a <c>CompanyProfileLink</c> row, because the set of platforms
 /// is open-ended (see that entity). Both are set together or not at all.</param>
+/// <param name="SubmittedBy">The user whose capture carried these links. Recorded per company and
+/// platform, so the public page can tell how many different people pointed at the same page.</param>
 public sealed record CompanyProfileLinks(
     string? LinkedInUrl = null,
     string? KariyerNetUrl = null,
     string? AtsUrl = null,
-    Source? AtsPlatform = null)
+    Source? AtsPlatform = null,
+    Guid? SubmittedBy = null)
 {
     public bool HasAny => LinkedInUrl is not null || KariyerNetUrl is not null || HasAts;
 
@@ -28,4 +31,9 @@ public interface ICompanyResolver
 {
     Task<Guid> ResolveOrCreateAsync(string companyName, CancellationToken cancellationToken,
         CompanyProfileLinks? profileLinks = null);
+
+    /// <summary>Records which LinkedIn/kariyer.net page <see cref="CompanyProfileLinks.SubmittedBy"/>
+    /// pointed this company at — whichever way the company was found, trigram match included. A
+    /// no-op without a submitter or without either link.</summary>
+    Task RecordProfileSubmissionsAsync(Guid companyId, CompanyProfileLinks profileLinks, CancellationToken cancellationToken);
 }

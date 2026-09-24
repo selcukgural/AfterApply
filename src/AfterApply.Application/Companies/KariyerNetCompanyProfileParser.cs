@@ -122,6 +122,40 @@ public static partial class KariyerNetCompanyProfileParser
         return null;
     }
 
+    /// <summary>
+    /// The name the profile gives the company: the page heading, or failing that the
+    /// <c>og:title</c> without its " İş İlanları - İş Başvurusu" tail (both verified against a live
+    /// profile on 2026-09-24). Compared against the company's own name before anything on the page
+    /// is trusted (see <see cref="CompanyPageIdentity"/>).
+    /// </summary>
+    public static string? ExtractCompanyName(string html)
+    {
+        var heading = HeadingRegex().Match(html);
+        if (heading.Success)
+        {
+            var name = WebUtility.HtmlDecode(TagRegex().Replace(heading.Groups[1].Value, string.Empty)).Trim();
+            if (name.Length > 0)
+            {
+                return name;
+            }
+        }
+
+        var ogTitle = OgTitleRegex().Match(html);
+        if (!ogTitle.Success)
+        {
+            return null;
+        }
+
+        var title = WebUtility.HtmlDecode(ogTitle.Groups[1].Value).Trim();
+        const string tail = "İş İlanları - İş Başvurusu";
+        if (title.EndsWith(tail, StringComparison.OrdinalIgnoreCase))
+        {
+            title = title[..^tail.Length].TrimEnd();
+        }
+
+        return title.Length == 0 ? null : title;
+    }
+
     // Every value inside the payload is an index into the payload's own flat array. Out-of-range
     // (and the -1 that stands in for "absent") yields null rather than throwing.
     private static JsonElement? Dereference(JsonElement entries, JsonElement reference)
@@ -142,6 +176,15 @@ public static partial class KariyerNetCompanyProfileParser
 
     [GeneratedRegex(@"href\s*=\s*[""']([^""']*)[""']", RegexOptions.IgnoreCase)]
     private static partial Regex HrefAttributeRegex();
+
+    [GeneratedRegex(@"<h1[^>]*>(.*?)</h1>", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    private static partial Regex HeadingRegex();
+
+    [GeneratedRegex(@"<[^>]+>")]
+    private static partial Regex TagRegex();
+
+    [GeneratedRegex(@"<meta\s+property=""og:title""\s+content=""([^""]*)""", RegexOptions.IgnoreCase)]
+    private static partial Regex OgTitleRegex();
 
     [GeneratedRegex(@"<script[^>]*id\s*=\s*[""']__NUXT_DATA__[""'][^>]*>(.*?)</script>",
         RegexOptions.IgnoreCase | RegexOptions.Singleline)]

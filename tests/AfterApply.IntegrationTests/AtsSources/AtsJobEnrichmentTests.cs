@@ -1,3 +1,4 @@
+using AfterApply.Application.AtsSources;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -103,31 +104,23 @@ public class AtsJobEnrichmentTests(ApiHost<AtsEnrichmentProfile> host) : IClassF
     }
 
     [Fact]
-    public async Task A_Posting_The_Extension_Already_Read_In_Full_Is_Left_Alone()
+    public async Task A_Posting_Is_Read_From_The_Ats_Once_However_Much_The_Capture_Read()
     {
-        // The scrape is the primary source: the user was looking at that page. Re-reading a
-        // posting we already have buys nothing and costs the ATS a request.
+        // Since 2026-09-24 a capture's description stays on the user's own application and never
+        // reaches the shared Job row, so the Job's description comes from the ATS — once: after
+        // that the row has one, and another run for the same posting fetches nothing.
         var scraped = new string('x', 500);
 
         var job = await CaptureAsync("https://job-boards.greenhouse.io/stripe/jobs/4512346", scraped);
 
-        _handler.Requested.ShouldBeEmpty();
-        job.Description.ShouldBe(scraped);
-    }
+        _handler.Requested.Count.ShouldBe(1);
+        job.Description.ShouldNotBe(scraped);
+        job.Description.ShouldNotBeNull();
+        job.Description.ShouldContain("investigate abuse across the payments network");
 
-    [Fact]
-    public async Task A_Stub_Length_Description_Is_Treated_As_Missing()
-    {
-        // "Apply on the company site" and friends: present, but not something CV scanning or
-        // job-fit scoring can work with.
-        var job = await CaptureAsync("https://job-boards.greenhouse.io/stripe/jobs/4512347", "Apply on our careers page.");
-
-        // Fill-if-missing, so the short original wins the Description field...
-        job.Description.ShouldBe("Apply on our careers page.");
-        // ...but the fields it never had are filled from the API, which is the point.
-        _handler.Requested.ShouldNotBeEmpty();
-        job.Location.ShouldBe("Seattle, San Francisco");
-        job.DescriptionHtml.ShouldContain("Five years of experience");
+        await host.WithScopeAsync(services =>
+            services.GetRequiredService<IAtsJobEnrichmentService>().EnrichAsync(job.Id, CancellationToken.None));
+        _handler.Requested.Count.ShouldBe(1);
     }
 
     [Fact]

@@ -68,8 +68,8 @@ function ContributeContent() {
   const [savedSalaryId, setSavedSalaryId] = useState<string | null>(null);
 
   const fromSlug = useQuery({
-    queryKey: ["companies", "public", slug],
-    queryFn: () => companiesApi.getPublic(slug!),
+    queryKey: ["companies", "by-slug", slug],
+    queryFn: () => companiesApi.bySlug(slug!),
     enabled: !!slug && !picked,
   });
 

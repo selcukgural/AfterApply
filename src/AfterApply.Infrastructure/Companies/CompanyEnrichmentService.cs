@@ -1,3 +1,5 @@
+using AfterApply.Domain.Companies;
+using AfterApply.Domain.Common;
 using System.Net;
 using AfterApply.Application.Common;
 using AfterApply.Application.Companies;
@@ -99,9 +101,10 @@ internal sealed class CompanyEnrichmentService(
         if (TryParseAllowed(company.LinkedInUrl, LinkedInHost, out var linkedInUri))
         {
             var html = await FetchAsync(linkedInUri, companyId, cancellationToken);
-            if (html is not null)
+            if (html is not null && IsTheCompanysOwnPage(company, Source.LinkedIn, LinkedInCompanyProfileParser.ExtractCompanyName(html)))
             {
                 company.EnrichFrom(
+                    Source.LinkedIn,
                     LinkedInCompanyProfileParser.ExtractWebsite(html),
                     LinkedInCompanyProfileParser.ExtractIndustry(html),
                     LinkedInCompanyProfileParser.ExtractCountryCode(html),
@@ -115,9 +118,10 @@ internal sealed class CompanyEnrichmentService(
             && TryParseAllowed(company.KariyerNetUrl, KariyerNetHost, out var kariyerNetUri))
         {
             var html = await FetchAsync(kariyerNetUri, companyId, cancellationToken);
-            if (html is not null)
+            if (html is not null && IsTheCompanysOwnPage(company, Source.KariyerNet, KariyerNetCompanyProfileParser.ExtractCompanyName(html)))
             {
                 company.EnrichFrom(
+                    Source.KariyerNet,
                     KariyerNetCompanyProfileParser.ExtractWebsite(html),
                     KariyerNetCompanyProfileParser.ExtractSector(html),
                     country: null,
@@ -130,6 +134,25 @@ internal sealed class CompanyEnrichmentService(
         {
             await invalidator.InvalidateCompanyAsync(companyId, cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// The profile URL came from one user's capture and the company is shared, so nothing on the
+    /// page is used unless the page names this company (see <see cref="CompanyPageIdentity"/>). A
+    /// page that names another one loses its link, which frees the slot for a capture that points
+    /// at the right page.
+    /// </summary>
+    private bool IsTheCompanysOwnPage(Company company, Source platform, string? pageName)
+    {
+        if (CompanyPageIdentity.Matches(company.Name, pageName))
+        {
+            return true;
+        }
+
+        logger.LogWarning("{Platform} profile of company {CompanyId} names a different company; link dropped, nothing taken from it",
+            platform, company.Id);
+        company.ClearProfileLink(platform, DateTimeOffset.UtcNow);
+        return false;
     }
 
     private async Task<string?> FetchAsync(AllowedUri allowed, Guid companyId, CancellationToken cancellationToken)

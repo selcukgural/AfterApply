@@ -40,6 +40,11 @@ public sealed class Application : AuditableEntity
 
     public string? HrLinkedInUrl { get; private set; }
 
+    /// <summary>The posting's description as this user's own capture read it (allow-listed HTML,
+    /// re-sanitized before display). Kept on the application rather than the shared Job row since
+    /// 2026-09-24, so one person's capture never becomes the description someone else reads.</summary>
+    public string? CapturedJobDescriptionHtml { get; private set; }
+
     /// <summary>Null exactly when HrEmail is null. See HrEmailSource for why the distinction is
     /// surfaced rather than kept internal.</summary>
     public HrEmailSource? HrEmailSource { get; private set; }
@@ -81,7 +86,7 @@ public sealed class Application : AuditableEntity
         string? location, EmploymentType employmentType, DateTimeOffset appliedAt, Source source,
         string? notes, DateTimeOffset now, Guid? jobId = null,
         string? hrName = null, string? hrEmail = null, string? hrLinkedInUrl = null,
-        Guid? cvDocumentId = null)
+        Guid? cvDocumentId = null, string? capturedJobDescriptionHtml = null)
     {
         var application = new Application
         {
@@ -100,6 +105,7 @@ public sealed class Application : AuditableEntity
             HrEmailSource = hrEmail is null ? null : Applications.HrEmailSource.Manual,
             HrLinkedInUrl = hrLinkedInUrl,
             CvDocumentId = cvDocumentId,
+            CapturedJobDescriptionHtml = capturedJobDescriptionHtml,
             Status = ApplicationStatus.Applied,
             CreatedAt = now,
             UpdatedAt = now
