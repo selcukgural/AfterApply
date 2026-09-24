@@ -47,7 +47,16 @@ public sealed class AuthEmailThrottle(AppDbContext dbContext, IOptions<EmailVeri
             .CountAsync(d => d.Kind == kind && d.SentAt >= dayStart, cancellationToken);
         if (globalSends >= limit.GlobalDaily)
         {
-            logger.LogWarning("Daily ceiling of {Limit} {Kind} emails reached; not sending more today", limit.GlobalDaily, kind);
+            // One fixed message per kind rather than the enum as a log value: nothing about the
+            // account goes into the line, and a scanner cannot mistake a kind name for a secret.
+            if (kind == AuthEmailKind.EmailVerification)
+            {
+                logger.LogWarning("Daily ceiling of {Limit} verification-code emails reached; not sending more today", limit.GlobalDaily);
+            }
+            else
+            {
+                logger.LogWarning("Daily ceiling of {Limit} account-recovery emails reached; not sending more today", limit.GlobalDaily);
+            }
             return new Decision(false, dayStart.AddDays(1));
         }
 

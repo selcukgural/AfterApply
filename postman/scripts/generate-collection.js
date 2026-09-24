@@ -177,7 +177,7 @@ function annotateCollection(collection) {
       exec: [
         "pm.test('Status code is documented', function () {",
         '    pm.expect(pm.response.code).to.be.oneOf(',
-        '        [200, 201, 204, 400, 401, 403, 404, 409, 422]',
+        '        [200, 201, 202, 204, 400, 401, 403, 404, 409, 422]',
         '    );',
         '});',
         '',
