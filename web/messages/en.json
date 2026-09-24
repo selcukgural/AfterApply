@@ -1320,6 +1320,7 @@
       "intro": "Writing a review of a company is optional and needs an account. When you do:",
       "what": "Your review — your overall rating, the optional area ratings, the ready-made statements you picked and your relationship to the company (current employee, former employee, intern) — is stored against your account, together with its moderation status and any note a moderator wrote. There is no free text in a review since 16 September 2026; if you wrote one before then, its title, pros and cons stay stored for you and are no longer shown to anyone else.",
       "anonymous": "Published reviews never show your name, email or account; readers see the ratings, the statements, your relationship to the company and the month it was written. The month rather than the day, on purpose: a date is one more clue to who wrote it.",
+      "proof": "If an application to this company you track on e-kariyerim ended \"accepted\" and was added at least 14 days before your review, the review shows an \"Accepted application\" label. Readers get only that yes/no — not which application or its dates. Delete the application and the label goes with it.",
       "admin": "A moderator who looks at your review — after a report, or for a review from before the switch — can see the account behind it. That is what makes moderation possible, and it is the only place your identity meets your review.",
       "reports": "If you report someone else's review, the report (reason, your note, the time) is stored against your account and shown to the moderator. The review's author never sees who reported it.",
       "helpful": "Marking a review helpful is stored as one row per review per account, so it can be undone and cannot be counted twice. Nobody sees who marked what — the review's author included: the author is told in the app only how many people found it helpful that day (they can switch this off). So that one person toggling a mark on and off is not counted twice, the fact that an account first marked a contribution is kept for 90 days.",
@@ -1345,6 +1346,7 @@
       "whoSees": "Entries are shown only to signed-in users; the public company page says only how many entries there are.",
       "band": "Readers see an experience band (0–1, 2–4, 5–9, 10+) rather than your exact years, and the period of the salary in years rather than a date or a month. Deliberately: together with an occupation, the exact years and date would give away who wrote it at a small company.",
       "noAuthor": "A published entry never shows your name, e-mail or account, and contains nothing you typed. Only we can see the account behind an entry. If a reader finds your entry helpful you are told only how many did, never who; and the author of an entry you mark is never told it was you.",
+      "proof": "If an application to this company you track on e-kariyerim ended \"accepted\" and was added at least 14 days before your entry, the entry shows an \"Accepted application\" label. Readers get only that yes/no — not which application or its dates. Delete the application and the label goes with it.",
       "storage": "Entries are stored in our own database and are not sent to any third party.",
       "deletion": "You can delete an entry from My contributions at any time. Deleting your account deletes all of them; your data export includes them with the exact years.",
       "legalBasis": "Legal basis: your explicit action — you choose to share."
@@ -1356,6 +1358,7 @@
       "whoSees": "Entries are shown on the public company page: the ratings, the statements and the process tags. The score, the area averages and the process statistics appear once a company has at least three entries.",
       "quarter": "Readers see the quarter only (2026 Q3), never the day or the month; a job title, an interviewer or a team name is never asked. Deliberately: a company knows whom it interviewed, and a month with a title would give away who wrote it at a small company.",
       "noAuthor": "A published entry never shows your name, e-mail or account. Only we can see the account behind it. If a reader finds your entry helpful you are told only how many did, never who; and the author of an entry you mark is never told it was you.",
+      "proof": "If an application to this company you track on e-kariyerim was added at least 14 days before your entry, the entry shows a \"Tracked application\" label. Readers get only that yes/no — not which application, its dates or its status. Delete the application and the label goes with it.",
       "storage": "Entries are kept in our own database; nothing is sent to any third party.",
       "deletion": "You can delete an entry at any time from My contributions. Deleting your account deletes all of them; your data export includes them with their exact dates.",
       "legalBasis": "Legal basis: your explicit action — you choose to share."
@@ -2626,6 +2629,10 @@
         },
         "guideLink": "How to write a fair and useful review →"
       },
+      "proof": {
+        "title": "The \"Accepted application\" label",
+        "body": "This label next to a review says its author tracked an application to that company on e-kariyerim that ended \"accepted\", added at least 14 days before the review. Only an accepted application counts: having applied somewhere does not show you worked there. The label does not verify what the review says and does not show which application it is. Your own reviews show whether they carry it on the My contributions page."
+      },
       "calloutAnonymous": {
         "title": "Reviews are anonymous",
         "body": "A published review shows neither your name, your email nor the day; only the month and your relationship appear. Only moderators can see who wrote it, and only for moderation."
@@ -2680,6 +2687,10 @@
           "title": "Share",
           "body": "The entry is visible to signed-in readers immediately. You are then invited to review the same company; you can skip that."
         }
+      },
+      "proof": {
+        "title": "The \"Accepted application\" label",
+        "body": "This label next to a salary says its author tracked an application to that company on e-kariyerim that ended \"accepted\", added at least 14 days before the entry. Only an accepted application counts: having applied somewhere does not show you worked there. The label does not verify the amount and does not show which application it is. Your own entries show whether they carry it on the My contributions page."
       },
       "calloutAnonymous": {
         "title": "Entries are anonymous",
@@ -2892,6 +2903,10 @@
           "title": "Publish",
           "body": "The entry is published the moment you save. You are then invited to leave a review or share a salary for the same company; you can skip."
         }
+      },
+      "proof": {
+        "title": "The \"Tracked application\" label",
+        "body": "This label next to an entry says its author started tracking their application to that company on e-kariyerim at least 14 days before writing. It does not verify the entry and does not show which application it is. The 14 days are there so an application added just before writing does not earn the label — which is why the moment the application was added to e-kariyerim counts, not the applied date you entered. Your own entries show whether they carry it on the My contributions page."
       },
       "calloutAnonymous": {
         "title": "Entries are anonymous",
@@ -6769,6 +6784,27 @@
       "body": "e-kariyerim keeps your applications in one place, matches the replies in your Gmail to them and shows which ones went unanswered. Create a free account to see your own flow.",
       "cta": "Start free",
       "secondary": "What is e-kariyerim?"
+    }
+  },
+  "contributionProof": {
+    "chip": {
+      "tracked": "Tracked application",
+      "accepted": "Accepted application"
+    },
+    "title": {
+      "tracked": "The author tracked their application to this company on e-kariyerim at least 14 days before writing.",
+      "accepted": "The author tracked an application to this company on e-kariyerim, added at least 14 days before writing, that ended \"accepted\"."
+    },
+    "note": {
+      "tracked": "<strong>Tracked application:</strong> the author started tracking their application to this company on e-kariyerim at least 14 days before writing. It does not verify the content, and which application it is is never shown.",
+      "accepted": "<strong>Accepted application:</strong> the author tracked an application to this company on e-kariyerim, added at least 14 days before writing, that ended \"accepted\". It does not verify the content, and which application it is is never shown."
+    },
+    "mine": {
+      "on": "Shown with this label on the company page.",
+      "off": {
+        "tracked": "No label: an application to this company you track here must have been added at least 14 days before this entry. Adding one afterwards does not bring the label.",
+        "accepted": "No label: an application to this company you track here, ended \"accepted\", must have been added at least 14 days before this entry. Adding one afterwards does not bring the label."
+      }
     }
   }
 }

@@ -7,6 +7,7 @@ import { formatSubmittedMonth } from "@/lib/companyReviews/score";
 import { StarRating } from "@/components/companyReviews/StarRating";
 import { StatementTag } from "@/components/companyReviews/StatementChip";
 import { HelpfulPill } from "@/components/contributions/HelpfulPill";
+import { ProofChip } from "@/components/contributions/ProofLabel";
 
 interface ReviewCardProps {
   review: CompanyReviewPublic;
@@ -51,7 +52,10 @@ export function ReviewCard({ review, helpfulMarked, onToggleHelpful, onReport, s
     <article className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{tStatus(review.employmentStatus)}</h3>
+          <h3 className="flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {tStatus(review.employmentStatus)}
+            {review.backedByApplication ? <ProofChip kind="accepted" /> : null}
+          </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {formatSubmittedMonth(review.submittedMonth, locale)}
             {ratedCount > 0 ? ` · ${t("ratedCategories", { count: ratedCount })}` : null}

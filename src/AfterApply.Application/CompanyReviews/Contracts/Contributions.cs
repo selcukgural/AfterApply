@@ -30,7 +30,10 @@ public sealed record MyContributionResponse(
     MyCompanyReviewResponse? Review,
     MyCompanySalaryResponse? Salary,
     MyCandidateExperienceResponse? Experience,
-    MyBlogCommentResponse? BlogComment = null);
+    MyBlogCommentResponse? BlogComment = null,
+    /// <summary>Whether the company pages show the "backed by a tracked application" label on
+    /// this row (2026-09-24); always false for a blog comment.</summary>
+    bool BackedByApplication = false);
 
 /// <summary>One page, newest first. A quota is null while its feature is off — the page then
 /// shows neither the line nor the call to action for that kind.</summary>

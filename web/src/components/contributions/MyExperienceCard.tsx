@@ -11,16 +11,19 @@ import { Button, buttonClassName } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { StarRating } from "@/components/companyReviews/StarRating";
 import { ContributionKindBadge } from "@/components/contributions/ContributionKindBadge";
+import { MyProofLine } from "@/components/contributions/ProofLabel";
 
 interface MyExperienceCardProps {
   entry: MyCandidateExperience;
   /** Called once the row is gone on the server; the list decides what to refetch. */
   onDeleted: () => Promise<void>;
+  /** Whether the company page shows the "tracked application" label on this row. */
+  backed: boolean;
 }
 
 /** The author's own candidate experience on the merged contributions list, with the exact date
  *  they gave (readers see a quarter), and the edit/delete pair. */
-export function MyExperienceCard({ entry, onDeleted }: MyExperienceCardProps) {
+export function MyExperienceCard({ entry, backed, onDeleted }: MyExperienceCardProps) {
   const t = useTranslations("candidateExperiences.mine");
   const tCard = useTranslations("candidateExperiences.card");
   const tOutcome = useTranslations("hiringOutcome");
@@ -67,6 +70,8 @@ export function MyExperienceCard({ entry, onDeleted }: MyExperienceCardProps) {
           <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{entry.overallRating}</span>
         </div>
       </div>
+
+      <MyProofLine kind="tracked" backed={backed} />
 
       {error && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">

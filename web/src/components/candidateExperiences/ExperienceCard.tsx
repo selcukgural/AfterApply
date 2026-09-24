@@ -8,6 +8,7 @@ import { formatQuarter } from "@/lib/candidateExperiences/experienceDraft";
 import { categoryMessageKey } from "@/lib/statements/catalogue";
 import { StarRating } from "@/components/companyReviews/StarRating";
 import { StatementTag } from "@/components/companyReviews/StatementChip";
+import { ProofChip } from "@/components/contributions/ProofLabel";
 
 /**
  * One published candidate experience: the overall stars, a line of short facts (outcome, length,
@@ -51,7 +52,10 @@ export function ExperienceCard({ experience, footer }: { experience: CandidateEx
     <article className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
-          <p className="text-sm text-gray-700 dark:text-gray-300">{facts.join(" · ")}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {experience.backedByApplication ? <ProofChip kind="tracked" /> : null}
+            <p className="text-sm text-gray-700 dark:text-gray-300">{facts.join(" · ")}</p>
+          </div>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {experience.categoryRatings.length > 0 ? t("ratedCategories", { count: experience.categoryRatings.length }) : null}
             {experience.interviewTypes.length > 0

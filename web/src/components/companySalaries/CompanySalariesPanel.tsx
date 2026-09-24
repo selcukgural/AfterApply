@@ -14,6 +14,7 @@ import { SalaryRow } from "@/components/companySalaries/SalaryRow";
 import { HelpfulPill } from "@/components/contributions/HelpfulPill";
 import { ApiError } from "@/lib/api/httpClient";
 import { SalaryStatsStrip } from "@/components/companySalaries/SalaryStatsStrip";
+import { ProofNote } from "@/components/contributions/ProofLabel";
 
 // Two rows behind the sign-in card, so a visitor sees the shape of what they would get. Sample
 // figures, not real ones: the real list is never in a public response.
@@ -32,6 +33,7 @@ const SAMPLE_ROWS: CompanySalaryPublic[] = [
     periodEndYear: null,
     isCurrentPeriod: true,
     helpfulCount: 0,
+    backedByApplication: false,
   },
   {
     id: "sample-2",
@@ -47,6 +49,7 @@ const SAMPLE_ROWS: CompanySalaryPublic[] = [
     periodEndYear: 2025,
     isCurrentPeriod: true,
     helpfulCount: 0,
+    backedByApplication: false,
   },
 ];
 
@@ -217,6 +220,8 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
           ))}
         </ul>
       )}
+
+      {list?.items.some((item) => item.backedByApplication) ? <ProofNote kind="accepted" /> : null}
 
       {list && <Pagination page={list.page} pageSize={list.pageSize} totalCount={list.total} unit="salaries" onPageChange={setPage} />}
     </section>

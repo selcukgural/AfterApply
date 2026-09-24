@@ -11,17 +11,20 @@ import { formatAmount, formatSalaryPeriod, occupationName } from "@/lib/companyS
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ContributionKindBadge } from "@/components/contributions/ContributionKindBadge";
+import { MyProofLine } from "@/components/contributions/ProofLabel";
 import { SalaryPositionPanel } from "@/components/companySalaries/SalaryPositionPanel";
 
 interface MySalaryCardProps {
   entry: MyCompanySalary;
   /** Called once the row is gone on the server; the list decides what to refetch. */
   onDeleted: () => Promise<void>;
+  /** Whether the company page shows the "tracked application" label on this row. */
+  backed: boolean;
 }
 
 /** The author's own salary entry on the merged contributions list, with the exact figures they
  *  gave (readers see a band), and the edit/delete pair. */
-export function MySalaryCard({ entry, onDeleted }: MySalaryCardProps) {
+export function MySalaryCard({ entry, backed, onDeleted }: MySalaryCardProps) {
   const t = useTranslations("companySalaries.mine");
   const tType = useTranslations("employmentType");
   const tStatus = useTranslations("salaryEmploymentStatus");
@@ -77,6 +80,8 @@ export function MySalaryCard({ entry, onDeleted }: MySalaryCardProps) {
 
       {/* A row from before the period existed: readers see it as history until this is fixed. */}
       {period === null && <p className="text-xs text-amber-700 dark:text-amber-300">{t("periodMissingHint")}</p>}
+
+      <MyProofLine kind="accepted" backed={backed} />
 
       {error && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">

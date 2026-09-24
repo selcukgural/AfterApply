@@ -642,6 +642,7 @@ public static class DependencyInjection
         services.AddScoped<IFeedbackService, FeedbackService>();
         services.AddScoped<CompanySlugAllocator>();
         services.AddScoped<CompanyReviewQueries>();
+        services.AddScoped<ContributionProofQueries>();
         services.AddScoped<ICompanyReviewService, CompanyReviewService>();
         services.AddScoped<ICompanyDirectoryService, CompanyDirectoryService>();
         services.AddScoped<ICompanyReviewModerationService, CompanyReviewModerationService>();

@@ -1320,6 +1320,7 @@
       "intro": "Bir şirket hakkında değerlendirme yazmak isteğe bağlıdır ve hesap gerektirir. Yazdığında:",
       "what": "Değerlendirmen — genel puanın, isteğe bağlı alan puanların, seçtiğin hazır maddeler ve şirketle ilişkin (mevcut çalışan, eski çalışan, stajyer) — moderasyon durumu ve varsa moderatörün yazdığı notla birlikte hesabına bağlı saklanır. 16 Eylül 2026'dan beri değerlendirmede serbest metin yok; daha önce yazdıysan başlığı, artıları ve eksileri senin için saklı kalır ve başka kimseye gösterilmez.",
       "anonymous": "Yayımlanan değerlendirmeler adını, e-postanı ya da hesabını asla göstermez; okuyucular puanları, maddeleri, şirketle ilişkini ve yazıldığı ayı görür. Gün değil ay, bilerek: tarih kimin yazdığına dair bir ipucu daha olurdu.",
+      "proof": "Bu şirkete e-kariyerim'de takip ettiğin ve \"kabul edildi\" ile kapanan bir başvuru, değerlendirmenden en az 14 gün önce eklenmişse değerlendirmenin yanında \"Kabul edilen başvuru\" etiketi görünür. Okuyucuya yalnızca bu evet/hayır gider; hangi başvuru olduğu ya da tarihi gitmez. Başvuruyu silersen etiket de kalkar.",
       "admin": "Değerlendirmene bakan bir moderatör — bir şikayetten sonra ya da geçiş öncesi bir değerlendirme için — arkasındaki hesabı görebilir. Moderasyonu mümkün kılan budur ve kimliğinin değerlendirmenle buluştuğu tek yerdir.",
       "reports": "Başkasının değerlendirmesini bildirirsen, bildirim (gerekçe, notun, zaman) hesabına bağlı olarak saklanır ve moderatöre gösterilir. Değerlendirmenin yazarı kimin bildirdiğini asla görmez.",
       "helpful": "Bir değerlendirmeyi faydalı olarak işaretlemek, değerlendirme ve hesap başına tek satır olarak saklanır; böylece geri alınabilir ve iki kez sayılamaz. Kimin neyi işaretlediğini kimse görmez — değerlendirmenin yazarı da: yazara uygulama içinde yalnızca o gün kaç kişinin faydalı bulduğu bildirilir (ayarlardan kapatılabilir). Aynı kişinin açıp kapatıp tekrar işaretlemesi iki kez sayılmasın diye, bir hesabın bir katkıyı ilk işaretlediği kayıt 90 gün tutulur.",
@@ -1345,6 +1346,7 @@
       "whoSees": "Kayıtlar yalnızca giriş yapmış kullanıcılara gösterilir; herkese açık şirket sayfası yalnızca kaç kayıt olduğunu söyler.",
       "band": "Okuyucular tam tecrübe yılını değil bir bant (0–1, 2–4, 5–9, 10+) ve maaşın dönemini gün ya da ay olarak değil yıl olarak görür. Bilerek: meslekle birlikte tam yıl ve tam tarih küçük bir şirkette kimin yazdığını ele verirdi.",
       "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez; içinde senin yazdığın hiçbir metin de yoktur. Kaydın arkasındaki hesabı yalnızca biz görürüz. Bir okur kaydını faydalı bulursa sana yalnızca kaç kişinin bulduğu bildirilir, kim olduğu değil; senin işaretlediğin kayıtların yazarına da senin kim olduğun söylenmez.",
+      "proof": "Bu şirkete e-kariyerim'de takip ettiğin ve \"kabul edildi\" ile kapanan bir başvuru, kaydından en az 14 gün önce eklenmişse kaydın yanında \"Kabul edilen başvuru\" etiketi görünür. Okuyucuya yalnızca bu evet/hayır gider; hangi başvuru olduğu ya da tarihi gitmez. Başvuruyu silersen etiket de kalkar.",
       "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Kaydı Katkılarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam yılıyla içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
@@ -1356,6 +1358,7 @@
       "whoSees": "Kayıtlar herkese açık şirket sayfasında gösterilir: puanlar, maddeler ve süreç etiketleri. Puan, alan ortalamaları ve süreç istatistiği bir şirkette en az üç kayıt toplanınca görünür.",
       "quarter": "Okuyucular günü ya da ayı değil yalnızca çeyreği görür (2026 Ç3 gibi); pozisyon, görüşmeci ya da ekip adı hiç sorulmaz. Bilerek: şirket kimle görüştüğünü bilir, ay ve pozisyon küçük bir şirkette kimin yazdığını ele verirdi.",
       "noAuthor": "Yayımlanan kayıt adını, e-postanı ya da hesabını asla göstermez. Kaydın arkasındaki hesabı yalnızca biz görürüz. Bir okur kaydını faydalı bulursa sana yalnızca kaç kişinin bulduğu bildirilir, kim olduğu değil; senin işaretlediğin kayıtların yazarına da senin kim olduğun söylenmez.",
+      "proof": "Bu şirkete e-kariyerim'de takip ettiğin bir başvuru, kaydından en az 14 gün önce eklenmişse kaydın yanında \"Takip edilen başvuru\" etiketi görünür. Okuyucuya yalnızca bu evet/hayır gider; hangi başvuru olduğu, tarihi ya da durumu gitmez. Başvuruyu silersen etiket de kalkar.",
       "storage": "Kayıtlar kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Kaydı Katkılarım sayfasından istediğin zaman silebilirsin. Hesabını silmek tüm kayıtlarını siler; veri dışa aktarımın da bunları tam tarihiyle içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — paylaşmayı sen seçersin."
@@ -2626,6 +2629,10 @@
         },
         "guideLink": "Adil ve faydalı bir değerlendirme nasıl yazılır? →"
       },
+      "proof": {
+        "title": "\"Kabul edilen başvuru\" etiketi",
+        "body": "Bir değerlendirmenin yanındaki bu etiket, yazan kişinin o şirkete e-kariyerim'de takip ettiği bir başvurusunun \"kabul edildi\" ile kapandığını ve bu başvurunun değerlendirmeden en az 14 gün önce eklendiğini söyler. Yalnızca kabul edilen başvuru sayılır: bir şirkete başvurmuş olmak orada çalışıldığını göstermez. Etiket değerlendirmenin içeriğini doğrulamaz ve hangi başvuru olduğunu göstermez. Kendi değerlendirmenin etiketi olup olmadığını Katkılarım sayfasında görürsün."
+      },
       "calloutAnonymous": {
         "title": "Değerlendirmeler anonimdir",
         "body": "Yayımlanan değerlendirme adınızı, e-postanızı ya da gününü göstermez; yalnızca ay ve çalışan ilişkisi görünür. Kimin yazdığını yalnızca moderatörler görür, o da yalnızca moderasyon için."
@@ -2680,6 +2687,10 @@
           "title": "Paylaşın",
           "body": "Kayıt anında giriş yapmış okuyuculara açılır. Ardından aynı şirket için değerlendirme yazmanız önerilir; atlayabilirsiniz."
         }
+      },
+      "proof": {
+        "title": "\"Kabul edilen başvuru\" etiketi",
+        "body": "Bir maaş kaydının yanındaki bu etiket, yazan kişinin o şirkete e-kariyerim'de takip ettiği bir başvurusunun \"kabul edildi\" ile kapandığını ve bu başvurunun kayıttan en az 14 gün önce eklendiğini söyler. Yalnızca kabul edilen başvuru sayılır: bir şirkete başvurmuş olmak orada çalışıldığını göstermez. Etiket tutarı doğrulamaz ve hangi başvuru olduğunu göstermez. Kendi kaydının etiketi olup olmadığını Katkılarım sayfasında görürsün."
       },
       "calloutAnonymous": {
         "title": "Kayıtlar anonimdir",
@@ -2892,6 +2903,10 @@
           "title": "Yayımlayın",
           "body": "Kayıt anında yayımlanır. Ardından aynı şirket için değerlendirme ya da maaş paylaşmanız önerilir; atlayabilirsiniz."
         }
+      },
+      "proof": {
+        "title": "\"Takip edilen başvuru\" etiketi",
+        "body": "Bir kaydın yanındaki bu etiket, yazan kişinin o şirkete yaptığı başvuruyu kaydı yazmadan en az 14 gün önce e-kariyerim'de takibe aldığını söyler. Kaydın içeriğini doğrulamaz ve hangi başvuru olduğunu göstermez. 14 gün şartı, değerlendirmeden hemen önce eklenen bir başvurunun etiket getirmemesi içindir; bu yüzden tarih olarak senin girdiğin başvuru tarihi değil, başvurunun e-kariyerim'e eklendiği an sayılır. Kendi kaydının etiketi olup olmadığını Katkılarım sayfasında görürsün."
       },
       "calloutAnonymous": {
         "title": "Kayıtlar anonimdir",
@@ -6769,6 +6784,27 @@
       "body": "e-kariyerim başvurularını tek yerde toplar, Gmail'deki cevapları başvurularla eşleştirir ve hangilerinin cevapsız kaldığını gösterir. Kendi akışını görmek için ücretsiz hesap aç.",
       "cta": "Ücretsiz başla",
       "secondary": "e-kariyerim nedir?"
+    }
+  },
+  "contributionProof": {
+    "chip": {
+      "tracked": "Takip edilen başvuru",
+      "accepted": "Kabul edilen başvuru"
+    },
+    "title": {
+      "tracked": "Yazan kişi bu şirkete yaptığı başvuruyu, kaydı yazmadan en az 14 gün önce e-kariyerim'de takibe almış.",
+      "accepted": "Yazan kişinin bu şirkete e-kariyerim'de takip ettiği bir başvurusu, kaydı yazmadan en az 14 gün önce eklenmiş ve \"kabul edildi\" ile kapanmış."
+    },
+    "note": {
+      "tracked": "<strong>Takip edilen başvuru:</strong> yazan kişi bu şirkete yaptığı başvuruyu, kaydı yazmadan en az 14 gün önce e-kariyerim'de takibe almış. İçeriği doğrulamaz; hangi başvuru olduğu gösterilmez.",
+      "accepted": "<strong>Kabul edilen başvuru:</strong> yazan kişinin bu şirkete e-kariyerim'de takip ettiği bir başvurusu, kaydı yazmadan en az 14 gün önce eklenmiş ve \"kabul edildi\" ile kapanmış. İçeriği doğrulamaz; hangi başvuru olduğu gösterilmez."
+    },
+    "mine": {
+      "on": "Şirket sayfasında bu etiketle görünüyor.",
+      "off": {
+        "tracked": "Etiket yok: bu şirkete takip ettiğin bir başvuru, kaydından en az 14 gün önce eklenmiş olmalı. Başvuruyu sonradan eklemek etiketi getirmez.",
+        "accepted": "Etiket yok: bu şirkete takip ettiğin ve \"kabul edildi\" ile kapanan bir başvuru, kaydından en az 14 gün önce eklenmiş olmalı. Başvuruyu sonradan eklemek etiketi getirmez."
+      }
     }
   }
 }

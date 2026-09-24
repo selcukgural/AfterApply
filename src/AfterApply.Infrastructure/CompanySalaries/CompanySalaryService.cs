@@ -6,6 +6,7 @@ using AfterApply.Domain.CompanySalaries;
 using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Companies;
+using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ internal sealed class CompanySalaryService(
     ICompanyCacheInvalidator invalidator,
     IOptions<CompanySalaryOptions> options,
     ContributionNotificationWriter notifications,
+    ContributionProofQueries proof,
     TimeProvider? timeProvider = null)
     : ICompanySalaryService
 {
@@ -100,6 +102,7 @@ internal sealed class CompanySalaryService(
                     HelpfulCount = dbContext.CompanySalaryHelpfulMarks.Count(m => m.EntryId == s.Id)
                 })
                 .ToListAsync(ct);
+            var backed = await proof.BackedSalaryIdsAsync(rows.Select(r => r.Id).ToList(), ct);
 
             var items = rows.Select(s => new CompanySalaryPublicResponse(
                 s.Id, s.Occupation, ExperienceBands.From(s.YearsOfExperience), s.EmploymentType, s.EmploymentStatus,
@@ -108,7 +111,8 @@ internal sealed class CompanySalaryService(
                 s.SubmittedAt.ToString("yyyy-MM"),
                 s.PeriodStartYear, s.PeriodEndYear,
                 SalaryPeriods.IsCurrent(s.PeriodStartYear, s.PeriodEndYear, cutoffYear),
-                s.HelpfulCount)).ToList();
+                s.HelpfulCount,
+                backed.Contains(s.Id))).ToList();
 
             // The whole company's current amounts, not the page's: a median of page two is not a
             // median, and a median over a 2012 salary is not what the company pays. Bounded by

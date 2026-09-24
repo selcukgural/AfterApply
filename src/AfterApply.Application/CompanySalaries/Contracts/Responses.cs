@@ -32,7 +32,10 @@ public sealed record CompanySalaryPublicResponse(
     /// The list puts current rows first; the page draws the rest under a "previous periods" line.</summary>
     bool IsCurrentPeriod = true,
     /// <summary>How many readers marked it helpful (2026-09-23). A count, never who.</summary>
-    int HelpfulCount = 0);
+    int HelpfulCount = 0,
+    /// <summary>The author tracked an application at this company here at least 14 days before
+    /// writing, and it ended Accepted (2026-09-24). A yes/no only — never which application or when.</summary>
+    bool BackedByApplication = false);
 
 /// <summary>Per currency, because a median across TRY and EUR rows means nothing, and over the
 /// current rows only — a 2012 salary is not what the company pays. The three figures are null

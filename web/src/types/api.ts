@@ -1362,6 +1362,9 @@ export interface CompanyReviewPublic extends StructuredReviewFields {
   /** yyyy-MM — month precision on purpose. */
   submittedMonth: string;
   helpfulCount: number;
+  /** The author tracked an Accepted application at this company here at least 14 days before
+   *  writing (2026-09-24). A yes/no only. */
+  backedByApplication: boolean;
 }
 
 export interface ReviewedCompanySlug {
@@ -1415,6 +1418,8 @@ export interface MyContribution {
   salary: MyCompanySalary | null;
   experience: MyCandidateExperience | null;
   blogComment: MyBlogComment | null;
+  /** Whether the company page shows the "tracked application" label on this row; false for a blog comment. */
+  backedByApplication: boolean;
 }
 
 /** Newest first, ten per page. A quota is null while its feature is off. */
@@ -1907,6 +1912,9 @@ export interface CompanySalaryPublic {
   isCurrentPeriod: boolean;
   /** How many readers marked it helpful. A count, never who. */
   helpfulCount: number;
+  /** The author tracked an Accepted application at this company here at least 14 days before
+   *  writing (2026-09-24). A yes/no only. */
+  backedByApplication: boolean;
 }
 
 /** Per currency; the three figures are null below `minimumForStats`. */
@@ -2050,6 +2058,9 @@ export interface CandidateExperiencePublic {
   submittedQuarter: string;
   /** How many readers marked it helpful. A count, never who. */
   helpfulCount: number;
+  /** The author tracked an application at this company here at least 14 days before writing
+   *  (2026-09-24). A yes/no only. */
+  backedByApplication: boolean;
 }
 
 export interface ExperienceCategoryAverage {

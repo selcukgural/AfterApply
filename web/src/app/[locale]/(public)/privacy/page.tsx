@@ -120,6 +120,7 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
           <ul className="mt-2 list-disc flex flex-col gap-1 pl-5">
             <li>{t("companyReviews.what")}</li>
             <li>{t("companyReviews.anonymous")}</li>
+            <li>{t("companyReviews.proof")}</li>
             <li>{t("companyReviews.admin")}</li>
             <li>{t("companyReviews.reports")}</li>
             <li>{t("companyReviews.helpful")}</li>
@@ -137,6 +138,7 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
             <li>{t("companySalaries.whoSees")}</li>
             <li>{t("companySalaries.band")}</li>
             <li>{t("companySalaries.noAuthor")}</li>
+            <li>{t("companySalaries.proof")}</li>
             <li>{t("companySalaries.storage")}</li>
             <li>{t("companySalaries.deletion")}</li>
           </ul>
@@ -151,6 +153,7 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
             <li>{t("candidateExperiences.whoSees")}</li>
             <li>{t("candidateExperiences.quarter")}</li>
             <li>{t("candidateExperiences.noAuthor")}</li>
+            <li>{t("candidateExperiences.proof")}</li>
             <li>{t("candidateExperiences.storage")}</li>
             <li>{t("candidateExperiences.deletion")}</li>
           </ul>
