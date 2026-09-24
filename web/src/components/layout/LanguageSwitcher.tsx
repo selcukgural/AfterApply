@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { authApi } from "@/lib/api/auth";
+import { localeSwitchPath, readAlternates } from "@/lib/i18n/localeSwitchPath";
 
 export type Locale = (typeof routing.locales)[number];
 
@@ -18,7 +19,11 @@ export function useSwitchLanguage(): (code: Locale) => void {
   const { isAuthenticated } = useAuth();
 
   return (code) => {
-    router.replace(pathname, { locale: code });
+    // The page's address in the target language, not this one's with the prefix swapped — the
+    // translated slugs and blog posts differ per language (localeSwitchPath). The query string
+    // is kept: /contribute?tab=salary is the same form in either language.
+    const target = localeSwitchPath(pathname, code, readAlternates(document));
+    router.replace(`${target}${window.location.search}`, { locale: code });
     if (isAuthenticated) {
       // Persists the choice to the account so it's applied on the next
       // login from any device/browser, not just remembered via this

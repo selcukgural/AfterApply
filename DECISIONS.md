@@ -9229,3 +9229,24 @@ hâli" sayfası; A tablo ve C adım adım "İlk seçenekler"de, reddedildi). Adr
     listesi + tema düğmesi) reddedildi; dil/temayı birleştirmenin tek başına yer kazandırmadığı ölçüldü.
   - Bulunup düzeltilen eski hata: araç şeridi panelinin telefonda örtük grid kolonu eklenti demosunun
     genişliğine (≈400px) büyüyor, sayfa yana kayıyordu → `grid-cols-1`.
+
+## Dil değiştirici çevrilmiş adrese gider — FIXED (2026-09-24)
+
+Kullanıcı canlıda (giriş yapmış, EN): Yardım → Offer Comparison → dili TR yapınca adres `/tr/offer-comparison`
+kaldı. Kök neden: `LanguageSwitcher` yolu olduğu gibi tutup yalnızca dil önekini değiştiriyordu; çevrilmiş
+slug'lı sayfalarda Türkçe adres ancak proxy'nin 301'iyle düzeliyordu ve istemci tarafı geçiş bu yönlendirmeyi
+her zaman izlemiyor. Aynı kusur CV tarama (+ puan kartı), akış kartı, hakkımızda ve rehber yazılarında vardı;
+blog yazısında dil değiştirmek diğer dilde olmayan bir slug'a (404) gidiyordu; sorgu (`?tab=salary`) düşüyordu.
+
+- `lib/i18n/localeSwitchPath.ts`: hedef adres gitmeden önce hesaplanır — önce sayfanın kendi `hreflang`
+  alternatifi (blog yazısının eşini bulmanın tek yolu), sonra çevrilmiş slug tablosu (proxy'nin kullandığı
+  aynı `*RedirectForPath` fonksiyonları), eşi olmayan blog yazısı → o dilin blog dizini, geri kalan yol aynen.
+  Sorgu korunur. Hem giriş yapmış kullanıcı menüsü hem Tercihler aynı hook'u (`useSwitchLanguage`) kullanır.
+- **Gelecek sayfalar için tripwire:** `localeSwitchPath.test.ts` (1) sitemap'teki (`PUBLIC_PATHS`) her
+  dile göre değişen adresi iki yönde, hreflang'a güvenmeden dener; (2) `proxy.ts`'in kullandığı her
+  `*RedirectForPath` fonksiyonunun `TRANSLATED_SLUGS`'ta olduğunu kontrol eder (blog slug düzeltmesi hariç).
+  Listeden bir girdi çıkarılınca 5 test kırıldığı denendi. Aynı adresli yeni sayfalar ve `pageMetadata`
+  kullanan sayfalar zaten hreflang ile otomatik çalışır.
+- Doğrulama: prod build, giriş yapmış hâlde yardım → araç → TR (`/tr/teklif-karsilastirma`), TR blog yazısı → EN
+  (`/en/blog`), `/en/contribute?tab=salary` → TR (sorgu korunuyor); giriş yapmadan `/en/cv-scan` → Türkçe
+  (`/tr/cv-tarama`).
