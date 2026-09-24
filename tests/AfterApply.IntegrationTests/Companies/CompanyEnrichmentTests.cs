@@ -53,6 +53,7 @@ public class CompanyEnrichmentTests(ApiHost<CompanyEnrichmentProfile> host) : IC
     // for where these came from and why the payload is index-encoded.
     internal const string KariyerNetProfileHtml = """
         <html><body>
+        <h1 class="text-lg font-medium">Acme Lojistik</h1>
         <div class="flex gap-2">
           <a href="https://www.acme-lojistik.com.tr" title="Acme Lojistik Web Sitesi" rel="nofollow" target="_blank"></a>
         </div>
@@ -76,7 +77,7 @@ public class CompanyEnrichmentTests(ApiHost<CompanyEnrichmentProfile> host) : IC
         <dd><a href="https://www.linkedin.com/redir/redirect?url=https%3A%2F%2Facme%2Eexample%2F&amp;urlhash=x">acme.example</a></dd>
         <dt>Industry</dt>
         <dd>Software Development</dd>
-        <script type="application/ld+json">{"@type":"Organization","address":{"addressCountry":"TR"}}</script>
+        <script type="application/ld+json">{"@type":"Organization","name":"Acme Software","address":{"addressCountry":"TR"}}</script>
         </body></html>
         """;
 
@@ -146,7 +147,7 @@ public class CompanyEnrichmentTests(ApiHost<CompanyEnrichmentProfile> host) : IC
         // enrichment exists for: until 2026-09-07 Industry, Country and KariyerNetUrl were written
         // and then reached no response at all, so the work was invisible (DEVELOPMENT_PLAN.md, K4).
         var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
-            new CreateFromExtensionRequest("Detail Fields Co", "Backend Engineer",
+            new CreateFromExtensionRequest("Acme Software Teknoloji", "Backend Engineer",
                 "https://www.linkedin.com/jobs/view/6666666666/", "Istanbul", null, null, null,
                 CompanyLinkedInUrl: "https://www.linkedin.com/company/acme-software/"),
             JsonOptions);
@@ -220,6 +221,77 @@ public class CompanyEnrichmentTests(ApiHost<CompanyEnrichmentProfile> host) : IC
         using var scope = _factory.Services.CreateScope();
         await scope.ServiceProvider.GetRequiredService<ICompanyEnrichmentService>().EnrichAsync(companyId, CancellationToken.None);
         _handler.Requested.ShouldContain(uri => uri.Host.EndsWith("linkedin.com"));
+    }
+
+    // The page's company name is checked before anything on it is used (2026-09-24): a capture
+    // that points a company at somebody else's page fills nothing in, and loses the link, so a
+    // later capture pointing at the right page can take the slot.
+    [Fact]
+    public async Task A_Profile_Page_Naming_Another_Company_Fills_Nothing_And_Loses_Its_Link()
+    {
+        var response = await _client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Globex Holding", "Backend Engineer",
+                "https://www.linkedin.com/jobs/view/7777777777/", "Istanbul", null, null, null,
+                CompanyLinkedInUrl: "https://www.linkedin.com/company/acme-software/"),
+            JsonOptions);
+        response.EnsureSuccessStatusCode();
+        var created = await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions);
+
+        await host.RunJobsAsync();
+        host.Jobs.Failed.ShouldBeEmpty();
+
+        var company = await host.WithDbAsync(db => db.Companies.SingleAsync(c => c.Id == created!.Application.CompanyId));
+        _handler.Requested.ShouldContain(uri => uri.Host == "www.linkedin.com");
+        company.Website.ShouldBeNull();
+        company.Industry.ShouldBeNull();
+        company.Country.ShouldBeNull();
+        company.LinkedInUrl.ShouldBeNull();
+    }
+
+    // One user's capture fills the website in, and that user sees it on their own application. The
+    // public page shows it only once two different people pointed the company at the same page.
+    [Fact]
+    public async Task The_Website_Is_Public_Only_Once_Two_People_Point_At_The_Same_Page()
+    {
+        const string companyLink = "https://www.linkedin.com/company/acme-software/";
+        var first = await CaptureAsync(_client, "https://www.linkedin.com/jobs/view/8000000001/", companyLink);
+        var company = await PollUntilEnrichedAsync(first.Application.CompanyId);
+        first.Application.CompanyId.ShouldBe(company.Id);
+
+        // Three different applicants make the company listed, so it has a public page at all.
+        var (second, _) = await host.RegisterAsync("second.applicant@example.com");
+        var (third, _) = await host.RegisterAsync("third.applicant@example.com");
+        await CaptureAsync(second, "https://www.linkedin.com/jobs/view/8000000002/", companyLink: null);
+        await CaptureAsync(third, "https://www.linkedin.com/jobs/view/8000000003/", companyLink: null);
+
+        var detail = await (await _client.GetAsync($"/api/applications/{first.Application.Id}"))
+            .Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+        detail!.CompanyWebsite.ShouldBe("https://acme.example/");
+        (await PublicWebsiteAsync(company.Slug!)).ShouldBeNull();
+
+        // The second person points at the same page — through a tracking link, spelled differently.
+        await CaptureAsync(second, "https://www.linkedin.com/jobs/view/8000000004/", "https://linkedin.com/company/Acme-Software?trk=x");
+        await host.RunJobsAsync();
+
+        (await PublicWebsiteAsync(company.Slug!)).ShouldBe("https://acme.example/");
+    }
+
+    private async Task<ExtensionApplicationResponse> CaptureAsync(HttpClient client, string jobUrl, string? companyLink)
+    {
+        var response = await client.PostAsJsonAsync("/api/applications/from-extension",
+            new CreateFromExtensionRequest("Acme Software", "Backend Engineer", jobUrl, "Istanbul", null, null, null,
+                CompanyLinkedInUrl: companyLink),
+            JsonOptions);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<ExtensionApplicationResponse>(JsonOptions))!;
+    }
+
+    private async Task<string?> PublicWebsiteAsync(string slug)
+    {
+        using var anonymous = _factory.CreateClient();
+        var response = await anonymous.GetAsync($"/api/companies/public/{slug}");
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions)).GetProperty("website").GetString();
     }
 
     // The enrichment runs out of band as a background job; it runs here, inline, and the row is

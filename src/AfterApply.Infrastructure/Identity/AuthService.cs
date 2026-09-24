@@ -1074,6 +1074,13 @@ internal sealed class AuthService(
             .Select(x => new ExperienceInviteDismissalExportItem(x.d.CompanyId, x.Name, x.d.DismissedAt))
             .ToListAsync(cancellationToken);
 
+        var companyProfileSubmissions = await dbContext.CompanyProfileSubmissions
+            .Where(s => s.UserId == userId)
+            .Join(dbContext.Companies, s => s.CompanyId, c => c.Id, (s, c) => new { s, c.Name })
+            .OrderByDescending(x => x.s.SubmittedAt)
+            .Select(x => new { x.s.CompanyId, x.Name, x.s.Platform, x.s.Url, x.s.SubmittedAt })
+            .ToListAsync(cancellationToken);
+
         var notificationPreferences = new NotificationPreferencesResponse(
             user.NotifyContributions, user.NotifyReviewHelpful, user.NotifySalaryHelpful,
             user.NotifyExperienceHelpful, user.NotifyBlogCommentHelpful, user.NotifyGmailUpdates);
@@ -1081,7 +1088,9 @@ internal sealed class AuthService(
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
             DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks, companySalaries, payments, proEntitlement,
             candidateExperiences, blogComments, helpfulMarkedSalaryIds, helpfulMarkedExperienceIds, contributionNotifications,
-            helpfulMarksCounted, notificationPreferences, experienceInviteDismissals);
+            helpfulMarksCounted, notificationPreferences, experienceInviteDismissals,
+            companyProfileSubmissions.Select(x => new CompanyProfileSubmissionExportItem(
+                x.CompanyId, x.Name, x.Platform.ToString(), x.Url, x.SubmittedAt)).ToList());
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

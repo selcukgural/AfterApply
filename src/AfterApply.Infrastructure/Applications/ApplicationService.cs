@@ -279,10 +279,12 @@ internal sealed class ApplicationService(
             request.CompanyLinkedInUrl,
             request.CompanyKariyerNetUrl,
             JobPostingSourceResolver.IsAts(atsPlatform) ? request.CompanyAtsUrl : null,
-            JobPostingSourceResolver.IsAts(atsPlatform) ? atsPlatform : null);
+            JobPostingSourceResolver.IsAts(atsPlatform) ? atsPlatform : null,
+            SubmittedBy: userId);
 
         var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
             ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken, profileLinks);
+        await companyResolver.RecordProfileSubmissionsAsync(companyId, profileLinks, cancellationToken);
 
         // Only worth queuing when this submission actually carries a profile URL — a company
         // matched via the trigram/high-confidence path above, or one whose posting linked to
@@ -300,8 +302,10 @@ internal sealed class ApplicationService(
         // was created, consistent with how Source is used elsewhere (Job.Source = data
         // provenance, Application.Source = entry-creation channel).
         var (jobSource, externalId) = JobPostingSourceResolver.Resolve(normalizedUrl);
+        // No description onto the shared Job: it is this user's capture, and it goes on their own
+        // application below (see IJobResolver).
         var jobId = await jobResolver.ResolveOrCreateAsync(companyId, request.JobTitle, jobSource, normalizedUrl,
-            externalId, request.Location, cancellationToken, request.Description, request.PublishedAt, request.DescriptionHtml);
+            externalId, request.Location, cancellationToken, request.PublishedAt);
 
         // An ATS posting can be read back from that ATS's own public API, which is worth doing
         // when the page scrape came back without a usable description — the field CV scanning and
@@ -319,7 +323,8 @@ internal sealed class ApplicationService(
             userId, companyId, request.JobTitle, normalizedUrl, request.Location,
             EmploymentType.FullTime, DateTimeOffset.UtcNow, Source.BrowserExtension,
             notes: null, DateTimeOffset.UtcNow, jobId,
-            request.HrName, request.HrEmail, request.HrLinkedInUrl);
+            request.HrName, request.HrEmail, request.HrLinkedInUrl,
+            capturedJobDescriptionHtml: request.DescriptionHtml);
 
         dbContext.Applications.Add(application);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -889,12 +894,15 @@ internal sealed class ApplicationService(
             .Select(c => new { c.Name, c.Website, c.LinkedInUrl, c.KariyerNetUrl, c.Industry, c.Country, c.Slug })
             .FirstAsync(cancellationToken);
 
-        var jobDescriptionHtml = application.JobId is null
-            ? null
-            : await dbContext.Jobs
-                .Where(j => j.Id == application.JobId)
-                .Select(j => j.DescriptionHtml)
-                .FirstOrDefaultAsync(cancellationToken);
+        // What this user's own capture read, else what the server read from the ATS itself — never
+        // another user's capture (see IJobResolver).
+        var jobDescriptionHtml = application.CapturedJobDescriptionHtml
+            ?? (application.JobId is null
+                ? null
+                : await dbContext.Jobs
+                    .Where(j => j.Id == application.JobId)
+                    .Select(j => j.DescriptionHtml)
+                    .FirstOrDefaultAsync(cancellationToken));
 
         // Scoped to the owner as well as to the id. The stored id is already ownership-checked on
         // the way in, but a read that only matched on id would silently start leaking file names

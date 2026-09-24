@@ -9348,3 +9348,34 @@ ile devam (kullanıcı kararı).
   değişiklikte güncellendi.
 - **Bilinen sınır:** Postman sözleşme koşusu kayıttan token alamadığı için korumalı uçlarda 401 görüyor
   (temel test 401'i kabul ediyor); koşu için doğrulanmış bir test hesabı ayrı bir iş.
+
+## Paylaşılan şirket ve ilan verisinin korunması — DECIDED (2026-09-24)
+
+Şirket ve ilan satırları kullanıcılar arasında ortak; bir kullanıcının eklentiyle getirdiği bilgi
+başkalarına ancak şu kurallarla ulaşıyor.
+
+- **Profil sayfası adı eşleşmeli.** Zenginleştirme LinkedIn/kariyer.net sayfasındaki şirket adını
+  okur (LinkedIn: JSON-LD `Organization.name`, yoksa `og:title`; kariyer.net: `h1`, yoksa `og:title`)
+  ve şirketin adıyla kelime bazında karşılaştırır (`CompanyPageIdentity`: normalleştirme, noktalama
+  ayırıcı, eşitlik ya da ≥4 karakterlik ad için kelime öneki). Şirket adları artık her ilan
+  sitesinden (schema.org `hiringOrganization`) geldiği için "TRENDYOL TEKNOLOJİ A.Ş." / "Trendyol |
+  Careers" gibi yazımlar eşleşir. Eşleşmeyen sayfadan hiçbir alan alınmaz ve bağlantı temizlenir.
+- **Herkese açık web sitesi iki kişi onayıyla (kullanıcı kararı: "Ad eşleşmesi + web sitesi onayı").**
+  Her kullanıcının gösterdiği sayfa `CompanyProfileSubmissions`'a yazılır (kullanıcı başına platform
+  başına bir satır, hesapla silinir, dışa aktarımda var). Web sitesi, okunduğu sayfayı
+  (`Company.WebsiteSource`) en az `CompanyProfiles:MinimumConfirmingUsers` (2) farklı kişi
+  gösterince herkese açık sayfada ve aramada görünür; kişinin kendi başvurusunda hep görünür.
+  Eski web siteleri kaynağı bilinmediği için onay gelene kadar herkese açık gösterilmez.
+- **İlan açıklaması başvuruya ait.** Eklentinin okuduğu açıklama `Applications.CapturedJobDescriptionHtml`
+  alanında; ortak `Jobs` satırına yalnızca sunucunun ATS'den okuduğu açıklama yazılır (bir kez okunur,
+  `AtsSources:MinDescriptionChars` kaldırıldı). Migration mevcut açıklamayı o ilana bağlı her başvuruya
+  kopyalayıp ortak satırı boşalttı — kimse bugün gördüğü metni kaybetmedi.
+- **Listelenmiş şirket.** Katkısı (reddedilmemiş değerlendirme, maaş, aday deneyimi) olan ya da en az
+  `KnownCompanyMinimumApplicants` (3) farklı kişinin başvurduğu şirketin herkese açık sayfası var;
+  diğer adresler 404 (sayfa, değerlendirmeler, deneyimler, sessizlik bildirimi). Şirket araması
+  listelenmiş şirketlerle kişinin kendi başvurduğu/takip ettiği şirketleri gösterir; katkı sayfası
+  adresle şirketi `GET /api/companies/by-slug/{slug}` ile bulur. `CompanyVisibility` tek kaynak.
+- Aramada yazılan `%`/`_` joker sayılmaz. Gizlilik metnine profil sayfası kaydı eklendi.
+- **Bilinen sınır:** katkı sayfasındaki şirket adı, şirket henüz listelenmemişken de şirket sayfasına
+  bağlantı veriyor (ilk katkı kaydedilince sayfa oluşur). Trigram eşleşmesiyle başka birinin açtığı
+  şirkete bağlanan kayıt o şirketin adını görür; kapsam dışı bırakıldı.

@@ -18,9 +18,4 @@ public sealed class AtsSourceOptions
     /// there is no account, no cookie and no identifier of ours in it.</summary>
     public bool Enabled { get; init; }
 
-    /// <summary>A job is only enriched when its description is missing or shorter than this — the
-    /// extension's own scrape is the primary source and a real description is left alone. Short
-    /// enough to catch "Apply on the company site" stubs, long enough not to re-fetch a real
-    /// posting that happens to be terse.</summary>
-    public int MinDescriptionChars { get; init; } = 400;
 }

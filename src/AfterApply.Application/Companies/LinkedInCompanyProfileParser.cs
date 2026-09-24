@@ -35,7 +35,51 @@ public static partial class LinkedInCompanyProfileParser
 
         var href = WebUtility.HtmlDecode(hrefMatch.Groups[1].Value);
         var target = ExtractQueryParam(href, "url");
-        return target is null ? null : WebUtility.HtmlDecode(target);
+        if (target is null)
+        {
+            return null;
+        }
+
+        // Copied from a third-party page into a column we render as a link: anything but a plain
+        // http(s) URL is dropped here, like the kariyer.net parser does.
+        var url = WebUtility.HtmlDecode(target).Trim();
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+               && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
+            ? url
+            : null;
+    }
+
+    /// <summary>
+    /// The name the page gives the company — the schema.org Organization block's <c>name</c>, or
+    /// failing that the <c>og:title</c> without its " | LinkedIn" tail. Compared against the
+    /// company's own name before anything on the page is trusted (see <see cref="CompanyPageIdentity"/>).
+    /// </summary>
+    public static string? ExtractCompanyName(string html)
+    {
+        var jsonLd = OrganizationNameRegex().Match(html);
+        if (jsonLd.Success)
+        {
+            var name = Regex.Unescape(jsonLd.Groups[1].Value).Trim();
+            if (name.Length > 0)
+            {
+                return name;
+            }
+        }
+
+        var ogTitle = OgTitleRegex().Match(html);
+        if (!ogTitle.Success)
+        {
+            return null;
+        }
+
+        var title = WebUtility.HtmlDecode(ogTitle.Groups[1].Value).Trim();
+        const string tail = "| LinkedIn";
+        if (title.EndsWith(tail, StringComparison.OrdinalIgnoreCase))
+        {
+            title = title[..^tail.Length].TrimEnd();
+        }
+
+        return title.Length == 0 ? null : title;
     }
 
     /// <summary>
@@ -100,4 +144,10 @@ public static partial class LinkedInCompanyProfileParser
 
     [GeneratedRegex(@"""addressCountry""\s*:\s*""([A-Za-z]{2})""")]
     private static partial Regex AddressCountryRegex();
+
+    [GeneratedRegex(@"""@type""\s*:\s*""Organization""\s*,\s*""name""\s*:\s*""((?:[^""\\]|\\.)*)""")]
+    private static partial Regex OrganizationNameRegex();
+
+    [GeneratedRegex(@"<meta\s+property=""og:title""\s+content=""([^""]*)""", RegexOptions.IgnoreCase)]
+    private static partial Regex OgTitleRegex();
 }

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { buildMetadata } from "@/lib/seo/pageMetadata";
 import { SITE_URL } from "@/lib/seo/routes";
+import { safeExternalUrl } from "@/lib/url/externalLink";
 import { ShareRow } from "@/components/share/ShareRow";
 import { fetchApprovedReviews, fetchCompanyBySlug } from "@/lib/companies/publicApi.server";
 import { ReviewSummaryPanel } from "@/components/companyReviews/ReviewSummaryPanel";
@@ -67,9 +68,10 @@ export default async function CompanyPage({ params }: PageProps<"/[locale]/compa
           label={t("share")}
           content={{ text: t("shareText", { company: company.name }), url: `${SITE_URL}/${locale}/companies/${slug}` }}
         />
-        {company.website && (
+        {/* http(s) only, whatever the column holds: it was read off a third-party page. */}
+        {safeExternalUrl(company.website) && (
           <a
-            href={company.website}
+            href={safeExternalUrl(company.website)!}
             rel="noopener noreferrer nofollow"
             target="_blank"
             className="text-sm text-accent-ink underline-offset-2 hover:underline"

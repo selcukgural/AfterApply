@@ -61,4 +61,26 @@ public class LinkedInCompanyProfileParserTests
         LinkedInCompanyProfileParser.ExtractWebsite("<html><body>No overview here.</body></html>").ShouldBeNull();
         LinkedInCompanyProfileParser.ExtractCountryCode("<html><body>No overview here.</body></html>").ShouldBeNull();
     }
+
+    [Fact]
+    public void Reads_The_Company_Name_From_The_Organization_Block() =>
+        LinkedInCompanyProfileParser.ExtractCompanyName(JsonLdHtml).ShouldBe("Microsoft");
+
+    [Fact]
+    public void Falls_Back_To_The_Og_Title_Without_Its_LinkedIn_Tail() =>
+        LinkedInCompanyProfileParser.ExtractCompanyName("""<meta property="og:title" content="Trendyol Group | LinkedIn">""")
+            .ShouldBe("Trendyol Group");
+
+    [Fact]
+    public void Reports_No_Name_When_The_Page_Gives_None() =>
+        LinkedInCompanyProfileParser.ExtractCompanyName("<html></html>").ShouldBeNull();
+
+    [Fact]
+    public void Drops_A_Website_That_Is_Not_Http()
+    {
+        const string html = """
+            <dt>Website</dt><dd><a href="https://www.linkedin.com/redir/redirect?url=javascript%3Aalert(1)&amp;urlhash=x">x</a></dd>
+            """;
+        LinkedInCompanyProfileParser.ExtractWebsite(html).ShouldBeNull();
+    }
 }

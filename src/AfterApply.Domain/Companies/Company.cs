@@ -10,6 +10,11 @@ public sealed class Company : AuditableEntity
 
     public string? Website { get; private set; }
 
+    /// <summary>Which profile page <see cref="Website"/> was read from (LinkedIn or KariyerNet), so
+    /// the public page can show it only once enough different people pointed at that same page
+    /// (2026-09-24). Null for a website stored before this was recorded.</summary>
+    public Source? WebsiteSource { get; private set; }
+
     public string? LinkedInUrl { get; private set; }
 
     /// <summary>The company's kariyer.net profile page (kariyer.net/firma-profil/...), read off
@@ -126,13 +131,14 @@ public sealed class Company : AuditableEntity
     // Fills in only the fields still missing — CompanyEnrichmentService's best-effort fetch of the
     // LinkedIn company page never overwrites a value that already got set some other way (manual
     // entry, a prior successful enrichment).
-    public void EnrichFrom(string? website, string? industry, string? country, DateTimeOffset now)
+    public void EnrichFrom(Source source, string? website, string? industry, string? country, DateTimeOffset now)
     {
         var changed = false;
 
         if (Website is null && website is not null)
         {
             Website = website;
+            WebsiteSource = source;
             changed = true;
         }
 
@@ -152,5 +158,27 @@ public sealed class Company : AuditableEntity
         {
             Touch(now);
         }
+    }
+
+    /// <summary>
+    /// Drops a profile link whose page turned out to name a different company (2026-09-24). The
+    /// link came from one user's capture; clearing it lets a later capture that points at the right
+    /// page fill the slot, where keeping it would lock the wrong page in for good.
+    /// </summary>
+    public void ClearProfileLink(Source platform, DateTimeOffset now)
+    {
+        switch (platform)
+        {
+            case Source.LinkedIn when LinkedInUrl is not null:
+                LinkedInUrl = null;
+                break;
+            case Source.KariyerNet when KariyerNetUrl is not null:
+                KariyerNetUrl = null;
+                break;
+            default:
+                return;
+        }
+
+        Touch(now);
     }
 }

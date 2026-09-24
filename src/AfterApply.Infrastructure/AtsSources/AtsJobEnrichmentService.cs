@@ -79,9 +79,11 @@ internal sealed class AtsJobEnrichmentService(
             return;
         }
 
-        // The scrape is the primary source. Only a missing or stub-length description is worth a
-        // request — re-reading a posting we already have in full buys nothing and costs the ATS.
-        if (job.Description is { Length: > 0 } description && description.Length >= options.Value.MinDescriptionChars)
+        // Since 2026-09-24 a capture's description stays on the user's own application (see
+        // IJobResolver), so a description on this shared row can only have come from an earlier run
+        // of this job: the posting has been read once, and reading it again costs the ATS a request
+        // for the same text.
+        if (job.Description is not null)
         {
             return;
         }

@@ -76,6 +76,8 @@ public class SilenceReportTests(ApiHost<SilenceReportProfile> host) : IClassFixt
         var company = Company.Create(name, DateTimeOffset.UtcNow);
         db.Companies.Add(company);
         await db.SaveChangesAsync();
+        // Reports arrive through the public page, which only a listed company has.
+        await TestCompanies.MakeListedAsync(_factory.Services, company.Id);
         return company;
     }
 

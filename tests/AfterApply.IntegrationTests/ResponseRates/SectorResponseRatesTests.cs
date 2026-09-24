@@ -72,7 +72,7 @@ public class SectorResponseRatesTests(ApiHost<SectorResponseRatesProfile> host)
         using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var company = await db.Companies.SingleAsync(c => c.Id == companyId);
-        company.EnrichFrom(null, industry, null, DateTimeOffset.UtcNow);
+        company.EnrichFrom(Source.LinkedIn, null, industry, null, DateTimeOffset.UtcNow);
         await db.SaveChangesAsync();
     }
 

@@ -595,7 +595,10 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         detail.Reports.Count.ShouldBe(2);
         detail.Reports.ShouldAllBe(r => r.Status == ReviewReportStatus.Resolved && r.Resolution == ReviewReportResolution.Removed);
 
-        (await PublicReviewsAsync(company.Slug)).Items.ShouldBeEmpty();
+        // Its only review removed, the company is not listed any more and has no public page
+        // (CompanyVisibility, 2026-09-24) — let alone the removed review on it.
+        (await _factory!.CreateClient().GetAsync($"/api/companies/public/{company.Slug}/reviews"))
+            .StatusCode.ShouldBe(System.Net.HttpStatusCode.NotFound);
 
         // The author cannot undo a removal by saving again: the edit lands in the human queue.
         var edited = await (await author.PutAsJsonAsync($"/api/company-reviews/{review.Id}", Update(), JsonOptions))

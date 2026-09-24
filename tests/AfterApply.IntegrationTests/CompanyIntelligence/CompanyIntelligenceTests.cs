@@ -388,7 +388,7 @@ public class CompanyIntelligenceTests(ApiHost<CompanyIntelligenceProfile> host) 
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var company = await db.Companies.SingleAsync(c => c.Id == companyId);
-            company.EnrichFrom(null, "Software Development", null, DateTimeOffset.UtcNow);
+            company.EnrichFrom(Source.LinkedIn, null, "Software Development", null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }
 

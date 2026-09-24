@@ -9,7 +9,8 @@ using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.Companies;
 
-internal sealed class CompanySearchService(AppDbContext dbContext, IOptions<CompanySearchOptions> options, HybridCache cache) : ICompanySearchService
+internal sealed class CompanySearchService(AppDbContext dbContext, IOptions<CompanySearchOptions> options, HybridCache cache,
+    CompanyVisibility visibility) : ICompanySearchService
 {
     private static readonly HybridCacheEntryOptions SearchCacheOptions = new()
     {
@@ -17,7 +18,7 @@ internal sealed class CompanySearchService(AppDbContext dbContext, IOptions<Comp
         LocalCacheExpiration = TimeSpan.FromSeconds(30)
     };
 
-    public Task<IReadOnlyList<CompanySearchResultResponse>> SearchAsync(string query, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<CompanySearchResultResponse>> SearchAsync(Guid userId, string query, CancellationToken cancellationToken)
     {
         var trimmed = query.Trim();
         if (trimmed.Length < options.Value.MinQueryLength)
@@ -32,25 +33,32 @@ internal sealed class CompanySearchService(AppDbContext dbContext, IOptions<Comp
 
         // No invalidation: a newly-added company not showing up in autocomplete for up to 30s is
         // a non-issue, and this only saves repeated identical keystrokes/retries hitting Postgres.
+        // Per caller, since what a caller may see includes their own applications.
         return cache.GetOrCreateAsync(
-            $"company-search:{normalizedQuery}",
+            $"company-search:{userId:N}:{normalizedQuery}",
             normalizedQuery,
             async (nq, ct) =>
             {
-                var pattern = $"%{nq}%";
+                var pattern = $"%{EscapeLike(nq)}%";
 
                 // ILIKE substring recall covers short prefixes, where trigram similarity() alone is a
                 // weak signal (too few 3-char n-grams); TrigramsAreSimilar (the pg_trgm `%` operator)
                 // adds a fuzzy net for typo'd/reordered names that don't substring-match. Both candidate
                 // sets are then ranked together by actual similarity.
-                return (IReadOnlyList<CompanySearchResultResponse>)await dbContext.Companies
-                    .Where(c => EF.Functions.ILike(c.NormalizedName, pattern)
+                var matches = await visibility.VisibleTo(dbContext.Companies, userId)
+                    .Where(c => EF.Functions.ILike(c.NormalizedName, pattern, @"\")
                         || EF.Functions.TrigramsAreSimilar(c.NormalizedName, nq))
                     .OrderByDescending(c => EF.Functions.TrigramsSimilarity(c.NormalizedName, nq))
                     .ThenBy(c => c.Name)
                     .Take(options.Value.MaxResults)
-                    .Select(c => new CompanySearchResultResponse(c.Id, c.Name, c.Website))
+                    .Select(c => new { c.Id, c.Name, c.Website })
                     .ToListAsync(ct);
+
+                // The website only where it may be shown to anyone (CompanyVisibility).
+                var confirmed = await visibility.ConfirmedWebsitesAsync(matches.Select(m => m.Id).ToList(), ct);
+                return (IReadOnlyList<CompanySearchResultResponse>)matches
+                    .Select(m => new CompanySearchResultResponse(m.Id, m.Name, confirmed.Contains(m.Id) ? m.Website : null))
+                    .ToList();
             },
             SearchCacheOptions,
             cancellationToken: cancellationToken).AsTask();
@@ -67,4 +75,14 @@ internal sealed class CompanySearchService(AppDbContext dbContext, IOptions<Comp
             .Select(c => (Guid?)c.Id)
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    public Task<CompanyReferenceResponse?> FindVisibleBySlugAsync(Guid userId, string slug, CancellationToken cancellationToken) =>
+        visibility.VisibleTo(dbContext.Companies, userId)
+            .Where(c => c.Slug == slug)
+            .Select(c => new CompanyReferenceResponse(c.Id, c.Slug!, c.Name))
+            .FirstOrDefaultAsync(cancellationToken);
+
+    /// <summary>A typed "%" or "_" is a character to find, not a wildcard.</summary>
+    private static string EscapeLike(string value) =>
+        value.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
 }

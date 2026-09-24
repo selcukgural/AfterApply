@@ -51,6 +51,9 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
     {
         var (authorOnB, _) = await host.RegisterAsync("experience.b@example.com", on: _b);
         var company = await ResolveCompanyAsync(authorOnB, "Cross Instance Experience Co");
+        // A public page exists only for a listed company (CompanyVisibility, 2026-09-24); these tests
+        // read it before and after the contribution they are about.
+        await TestCompanies.MakeListedAsync(host.Services, company.Id);
 
         // A caches the empty page (items, total and summary) before B writes.
         var before = await ExperiencesAsync(_a, company.Slug);
@@ -80,6 +83,9 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
     {
         var (authorOnB, _) = await host.RegisterAsync("experience.delete.b@example.com", on: _b);
         var company = await ResolveCompanyAsync(authorOnB, "Cross Instance Deleted Experience Co");
+        // A public page exists only for a listed company (CompanyVisibility, 2026-09-24); these tests
+        // read it before and after the contribution they are about.
+        await TestCompanies.MakeListedAsync(host.Services, company.Id);
         var mine = await ShareExperienceAsync(authorOnB, company.Id);
 
         (await PublicPageAsync(_a, company.Slug)).CandidateExperienceCount.ShouldBe(1);
@@ -96,6 +102,9 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
     {
         var (authorOnB, _) = await host.RegisterAsync("review.b@example.com", on: _b);
         var company = await ResolveCompanyAsync(authorOnB, "Cross Instance Review Co");
+        // A public page exists only for a listed company (CompanyVisibility, 2026-09-24); these tests
+        // read it before and after the contribution they are about.
+        await TestCompanies.MakeListedAsync(host.Services, company.Id);
 
         (await PublicPageAsync(_a, company.Slug)).Summary.ApprovedCount.ShouldBe(0);
         (await ReviewsAsync(_a, company.Slug)).TotalCount.ShouldBe(0);
@@ -112,6 +121,9 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
         var (author, _) = await host.RegisterAsync("review.author@example.com");
         var (readerOnB, _) = await host.RegisterAsync("review.reader.b@example.com", on: _b);
         var company = await ResolveCompanyAsync(author, "Cross Instance Helpful Co");
+        // A public page exists only for a listed company (CompanyVisibility, 2026-09-24); these tests
+        // read it before and after the contribution they are about.
+        await TestCompanies.MakeListedAsync(host.Services, company.Id);
         var reviewId = await WriteReviewAsync(author, company.Id);
 
         (await ReviewsAsync(_a, company.Slug)).Items.Single().HelpfulCount.ShouldBe(0);
@@ -130,6 +142,9 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
         var (readerOnA, _) = await host.RegisterAsync("salary.reader.a@example.com");
         var (authorOnB, _) = await host.RegisterAsync("salary.author.b@example.com", on: _b);
         var company = await ResolveCompanyAsync(authorOnB, "Cross Instance Salary Co");
+        // A public page exists only for a listed company (CompanyVisibility, 2026-09-24); these tests
+        // read it before and after the contribution they are about.
+        await TestCompanies.MakeListedAsync(host.Services, company.Id);
 
         (await SalariesAsync(readerOnA, company.Id)).Total.ShouldBe(0);
 
@@ -149,6 +164,9 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
     {
         var (authorOnB, _) = await host.RegisterAsync("directory.b@example.com", on: _b);
         var company = await ResolveCompanyAsync(authorOnB, "Cross Instance Directory Co");
+        // A public page exists only for a listed company (CompanyVisibility, 2026-09-24); these tests
+        // read it before and after the contribution they are about.
+        await TestCompanies.MakeListedAsync(host.Services, company.Id);
 
         (await DirectoryAsync(_a)).Items.ShouldNotContain(item => item.Id == company.Id);
 
@@ -235,6 +253,9 @@ public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : ICla
     {
         var (authorOnB, _) = await host.RegisterAsync("deleted.author.b@example.com", on: _b);
         var company = await ResolveCompanyAsync(authorOnB, "Cross Instance Deleted Account Co");
+        // A public page exists only for a listed company (CompanyVisibility, 2026-09-24); these tests
+        // read it before and after the contribution they are about.
+        await TestCompanies.MakeListedAsync(host.Services, company.Id);
         await ShareExperienceAsync(authorOnB, company.Id);
         await WriteReviewAsync(authorOnB, company.Id);
 

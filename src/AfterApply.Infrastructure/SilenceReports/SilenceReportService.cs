@@ -1,3 +1,4 @@
+using AfterApply.Infrastructure.Companies;
 using System.Security.Cryptography;
 using System.Text;
 using AfterApply.Application.SilenceReports;
@@ -12,7 +13,8 @@ namespace AfterApply.Infrastructure.SilenceReports;
 internal sealed class SilenceReportService(
     AppDbContext dbContext,
     IConnectionMultiplexer redis,
-    IOptions<SilenceReportOptions> options)
+    IOptions<SilenceReportOptions> options,
+    CompanyVisibility visibility)
     : ISilenceReportService
 {
     /// <summary>A random secret generated once and kept in Redis beside the keys it salts, so the
@@ -26,7 +28,8 @@ internal sealed class SilenceReportService(
     public async Task<bool> SubmitAsync(string slug, SubmitSilenceReportRequest request, string requesterKey,
         CancellationToken cancellationToken)
     {
-        var companyId = await dbContext.Companies
+        // Reports reach a company through its public page, which only a listed company has.
+        var companyId = await visibility.Listed(dbContext.Companies)
             .Where(c => c.Slug == slug)
             .Select(c => (Guid?)c.Id)
             .FirstOrDefaultAsync(cancellationToken);

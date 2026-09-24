@@ -52,6 +52,8 @@ public class CompanySalariesDisabledTests(ApiHost<CompanySalariesDisabledProfile
         var resolve = await client.PostAsJsonAsync("/api/companies/resolve", new ResolveCompanyRequest("Dark Salary Co"), JsonOptions);
         resolve.EnsureSuccessStatusCode();
         var company = (await resolve.Content.ReadFromJsonAsync<ResolvedCompanyResponse>(JsonOptions))!;
+        // The public page below exists only for a listed company (CompanyVisibility, 2026-09-24).
+        await TestCompanies.MakeListedAsync(_factory!.Services, company.Id);
 
         var request = new CompanySalaryRequest(Occupation.IdFor("2512"), 3, EmploymentType.FullTime, SalaryEmploymentStatus.CurrentEmployee,
             50_000m, SalaryCurrency.TRY, false, PeriodStartYear: 2024);

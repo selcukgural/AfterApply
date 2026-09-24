@@ -39,6 +39,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<CompanyProfileLink> CompanyProfileLinks => Set<CompanyProfileLink>();
 
+    public DbSet<CompanyProfileSubmission> CompanyProfileSubmissions => Set<CompanyProfileSubmission>();
+
     public DbSet<Job> Jobs => Set<Job>();
 
     public DbSet<DomainApplication> Applications => Set<DomainApplication>();

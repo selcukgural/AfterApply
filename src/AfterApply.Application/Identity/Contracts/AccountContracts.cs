@@ -176,7 +176,12 @@ public sealed record AccountExportResponse(
     IReadOnlyList<ContributionNotificationExportItem>? ContributionNotifications = null,
     IReadOnlyList<HelpfulMarkCountedExportItem>? HelpfulMarksCounted = null,
     NotificationPreferencesResponse? NotificationPreferences = null,
-    IReadOnlyList<ExperienceInviteDismissalExportItem>? ExperienceInviteDismissals = null);
+    IReadOnlyList<ExperienceInviteDismissalExportItem>? ExperienceInviteDismissals = null,
+    IReadOnlyList<CompanyProfileSubmissionExportItem>? CompanyProfileSubmissions = null);
+
+/// <summary>Which LinkedIn/kariyer.net page the account's captures pointed a company at (2026-09-24);
+/// counted towards showing that company's website publicly.</summary>
+public sealed record CompanyProfileSubmissionExportItem(Guid CompanyId, string CompanyName, string Platform, string Url, DateTimeOffset SubmittedAt);
 
 /// <summary>A company the account asked the dashboard to stop inviting it to rate (2026-09-24).</summary>
 public sealed record ExperienceInviteDismissalExportItem(Guid CompanyId, string CompanyName, DateTimeOffset DismissedAt);

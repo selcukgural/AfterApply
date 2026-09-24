@@ -85,7 +85,7 @@ public class TrackedJobFlowTests(ApiHost<DefaultProfile> host) : IClassFixture<A
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var company = await db.Companies.SingleAsync(c => c.Id == created.CompanyId);
-            company.EnrichFrom("https://linkedco.example", null, null, DateTimeOffset.UtcNow);
+            company.EnrichFrom(Source.LinkedIn, "https://linkedco.example", null, null, DateTimeOffset.UtcNow);
             company.SetProfileLinksIfMissing("https://www.linkedin.com/company/linked-co/", kariyerNetUrl: null, DateTimeOffset.UtcNow);
             await db.SaveChangesAsync();
         }

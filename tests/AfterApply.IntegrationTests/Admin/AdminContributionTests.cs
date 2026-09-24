@@ -190,6 +190,8 @@ public class AdminContributionTests(ApiHost<AdminContributionProfile> host) : IC
     {
         var author = await RegisterAsync("delete.salary@example.com");
         var company = await ResolveAsync(author, "Delete Salary Co");
+        // Listed by its applicants, so the page outlives the deleted contribution (CompanyVisibility).
+        await TestCompanies.MakeListedAsync(_factory.Services, company.Id);
         var entry = await ShareSalaryAsync(author, company.Id);
 
         (await _admin.DeleteAsync($"/api/admin/company-salaries/{entry.Id}")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -212,6 +214,8 @@ public class AdminContributionTests(ApiHost<AdminContributionProfile> host) : IC
     {
         var author = await RegisterAsync("delete.experience@example.com");
         var company = await ResolveAsync(author, "Delete Experience Co");
+        // Listed by its applicants, so the page outlives the deleted contribution (CompanyVisibility).
+        await TestCompanies.MakeListedAsync(_factory.Services, company.Id);
         var entry = await ShareExperienceAsync(author, company.Id);
         var anonymous = _factory.CreateClient();
 

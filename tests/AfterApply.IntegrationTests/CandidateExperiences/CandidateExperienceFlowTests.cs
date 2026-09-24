@@ -191,7 +191,10 @@ public class CandidateExperienceFlowTests(ApiHost<CandidateExperienceFlowProfile
         mine!.Items.Select(i => i.CompanyName).ShouldBe(["Quota Three Co", "Quota Two Co"]);
         mine.Quota.Used.ShouldBe(2);
         mine.Quota.Limit.ShouldBe(2);
-        (await ListAsync(first.Slug)).Total.ShouldBe(0);
+        // Its one experience gone and nobody else having applied, the first company is no longer
+        // listed, so it has no public page to list anything on (CompanyVisibility, 2026-09-24).
+        (await _factory.CreateClient().GetAsync($"/api/companies/public/{first.Slug}/experiences"))
+            .StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]

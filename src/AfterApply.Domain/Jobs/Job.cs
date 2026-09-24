@@ -46,7 +46,9 @@ public sealed class Job : AuditableEntity
     /// ATS's own API (see <c>AtsJobEnrichmentService</c>). Fill-if-missing throughout, like
     /// <c>Company.EnrichFrom</c>: the extension read the page the user was actually looking at, so
     /// a value it produced outranks one fetched afterwards — the API is a backstop for the fields
-    /// the scrape could not reach, not a correction of the ones it could.
+    /// the scrape could not reach, not a correction of the ones it could. The description is the
+    /// exception since 2026-09-24: a capture's description stays on its own application (see
+    /// <c>IJobResolver</c>), so on this shared row it only ever comes from here.
     ///
     /// Title is the one exception and is never touched: it is what the person sees on their own
     /// application row, it was editable in the popup before they submitted it, and quietly
