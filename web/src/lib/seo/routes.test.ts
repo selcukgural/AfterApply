@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -27,6 +27,17 @@ describe("disallowedPaths", () => {
     for (const path of disallowedPaths(routing.locales, PROTECTED_PATHS)) {
       expect(path).toMatch(/^\/(tr|en)\//);
     }
+  });
+
+  // /weekly-jobs shipped without a line here and sat crawlable (found 2026-09-25): the list is
+  // read against the (protected) route group itself, so a new signed-in area cannot be missed.
+  it("covers every signed-in area the app actually has", () => {
+    const protectedDir = fileURLToPath(new URL("../../app/[locale]/(protected)", import.meta.url));
+    const areas = readdirSync(protectedDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => `/${entry.name}`);
+    expect(areas.length).toBeGreaterThan(0);
+    expect([...PROTECTED_PATHS].sort()).toEqual(areas.sort());
   });
 });
 
@@ -296,6 +307,20 @@ describe("visit counter allowlist", () => {
 // rewrite changed the second and kept the first, and that is exactly the pairing a later copy pass
 // would collapse by "cleaning up" the title — undoing the SEO work of the day before, silently,
 // because nothing renders a title where a reviewer would notice it missing.
+// Two pages with one <title> leave a search engine to guess which of them answers the query
+// (developers.google.com/search/docs/appearance/title-link: "It's important to have distinct text
+// that describes the content of the page in the <title> element for each page on your site").
+// /benchmark and /help/benchmark shared one until 2026-09-25.
+describe("page titles", () => {
+  it.each([["tr", tr], ["en", en]] as const)("are distinct across every page in %s", (_, catalogue) => {
+    const titles = Object.values(catalogue.metadata.pages as Record<string, { title?: string }>)
+      .map((page) => page.title)
+      .filter((title): title is string => title !== undefined);
+    const repeated = titles.filter((title, index) => titles.indexOf(title) !== index);
+    expect(repeated).toEqual([]);
+  });
+});
+
 describe("landing page title", () => {
   it("still carries the term people actually search for", () => {
     // "takip" or its inflected "takibi" — the 2026-09-18 title says "iş başvuru takibi".

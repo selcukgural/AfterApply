@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import type { CompanyReviewPublic } from "@/types/api";
 import { categoryMessageKey, findStatement } from "@/lib/companyReviews/statementCatalogue";
 import { formatSubmittedMonth } from "@/lib/companyReviews/score";
@@ -124,11 +125,11 @@ export function ReviewCard({ review, helpfulMarked, onToggleHelpful, onReport, s
           <button type="button" onClick={onReport} disabled={busy} className="text-gray-500 underline-offset-2 hover:underline dark:text-gray-400">
             {t("report")}
           </button>
-        ) : (
-          <a href={signInHref} className="text-gray-500 underline-offset-2 hover:underline dark:text-gray-400">
+        ) : signInHref ? (
+          <Link href={signInHref} className="text-gray-500 underline-offset-2 hover:underline dark:text-gray-400">
             {t("report")}
-          </a>
-        )}
+          </Link>
+        ) : null}
       </footer>
     </article>
   );

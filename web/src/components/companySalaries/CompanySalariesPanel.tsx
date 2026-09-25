@@ -117,9 +117,9 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400">{t("lockedBody", { count, company: company.name })}</p>
             <div className="flex gap-2">
-              <a href={signInHref} className={buttonClassName("primary")}>
+              <Link href={signInHref} className={buttonClassName("primary")}>
                 {t("signIn")}
-              </a>
+              </Link>
               <Link href="/register" className={buttonClassName("outline")}>
                 {t("register")}
               </Link>

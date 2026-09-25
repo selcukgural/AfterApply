@@ -91,6 +91,7 @@ export const PROTECTED_PATHS = [
   "/contribute",
   "/admin",
   "/pro",
+  "/weekly-jobs",
 ];
 
 /**

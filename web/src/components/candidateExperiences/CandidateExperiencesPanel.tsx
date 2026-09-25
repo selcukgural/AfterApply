@@ -67,9 +67,9 @@ export function CandidateExperiencesPanel({ company }: { company: CompanyPublicR
         {label}
       </Link>
     ) : (
-      <a href={signInHref} className={buttonClassName(variant)}>
+      <Link href={signInHref} className={buttonClassName(variant)}>
         {t("signInToShare")}
-      </a>
+      </Link>
     );
 
   return (
