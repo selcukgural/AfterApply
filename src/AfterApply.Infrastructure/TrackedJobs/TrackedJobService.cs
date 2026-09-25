@@ -4,6 +4,7 @@ using AfterApply.Application.TrackedJobs;
 using AfterApply.Application.TrackedJobs.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.TrackedJobs;
+using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,8 @@ using DomainApplication = AfterApply.Domain.Applications.Application;
 namespace AfterApply.Infrastructure.TrackedJobs;
 
 internal sealed class TrackedJobService(
-    AppDbContext dbContext, ICompanyResolver companyResolver, HybridCache cache) : ITrackedJobService
+    AppDbContext dbContext, ICompanyResolver companyResolver, ExtensionCaptureResolver captureResolver,
+    HybridCache cache) : ITrackedJobService
 {
     public async Task<IReadOnlyCollection<TrackedJobResponse>> GetAllAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -51,6 +53,33 @@ internal sealed class TrackedJobService(
             trackedJob.HrName, trackedJob.HrEmail, trackedJob.HrLinkedInUrl);
     }
 
+    public async Task<ExtensionTrackedJobResponse> CreateFromExtensionAsync(Guid userId, CreateFromExtensionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var normalizedUrl = request.JobUrl.Trim();
+
+        if (await dbContext.Applications.AnyAsync(a => a.UserId == userId && a.JobUrl == normalizedUrl, cancellationToken))
+        {
+            return new ExtensionTrackedJobResponse(ExtensionTrackedJobOutcome.AlreadyApplied);
+        }
+
+        if (await dbContext.TrackedJobs.AnyAsync(t => t.UserId == userId && t.JobUrl == normalizedUrl, cancellationToken))
+        {
+            return new ExtensionTrackedJobResponse(ExtensionTrackedJobOutcome.AlreadySaved);
+        }
+
+        var (companyId, jobId) = await captureResolver.ResolveAsync(userId, request, normalizedUrl, cancellationToken);
+
+        var trackedJob = TrackedJob.Create(userId, companyId, request.JobTitle, normalizedUrl, request.Location,
+            notes: null, DateTimeOffset.UtcNow, request.HrName, request.HrEmail, request.HrLinkedInUrl,
+            jobId, request.DescriptionHtml);
+
+        dbContext.TrackedJobs.Add(trackedJob);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return new ExtensionTrackedJobResponse(ExtensionTrackedJobOutcome.Saved);
+    }
+
     public async Task<bool> DeleteAsync(Guid userId, Guid trackedJobId, CancellationToken cancellationToken)
     {
         var trackedJob = await FindOwnedAsync(userId, trackedJobId, cancellationToken);
@@ -79,7 +108,8 @@ internal sealed class TrackedJobService(
         var application = DomainApplication.Create(
             userId, trackedJob.CompanyId, trackedJob.JobTitle, trackedJob.JobUrl, trackedJob.Location,
             request.EmploymentType, request.AppliedAt, Source.Manual, request.Notes ?? trackedJob.Notes, now,
-            jobId: null, trackedJob.HrName, trackedJob.HrEmail, trackedJob.HrLinkedInUrl);
+            trackedJob.JobId, trackedJob.HrName, trackedJob.HrEmail, trackedJob.HrLinkedInUrl,
+            capturedJobDescriptionHtml: trackedJob.CapturedJobDescriptionHtml);
 
         dbContext.Applications.Add(application);
         dbContext.TrackedJobs.Remove(trackedJob);
@@ -92,7 +122,7 @@ internal sealed class TrackedJobService(
             application.Id, application.CompanyId, company.Name, company.Website, company.LinkedInUrl,
             application.JobTitle, application.JobUrl, application.Location, application.EmploymentType,
             application.AppliedAt, application.Status, application.Source, application.Notes,
-            application.CreatedAt, application.UpdatedAt, JobDescriptionHtml: null,
+            application.CreatedAt, application.UpdatedAt, JobDescriptionHtml: application.CapturedJobDescriptionHtml,
             application.HrName, application.HrEmail, application.HrLinkedInUrl);
     }
 

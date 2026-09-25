@@ -12,7 +12,20 @@ the repo can only show what was committed, not what was shipped.
 a working Gmail Scanning reach every user. The paragraph above is kept as the history of how the
 item got here; `0.6.0` is no longer what anyone is running.
 
-Current package version: **0.9.1** — the resubmission of the release that stops the extension
+Current package version: **0.9.2** — a bug fix on top of the live `0.9.1`: LinkedIn changed the
+marker on the "People you can reach out to" block (`data-sdui-component` → `componentkey=
+"JobDetailsPeopleWhoCanHelpSlot_<id>"`), so the "Meet the hiring team" poster stopped being read
+into the HR contact fields. The same release renames the item: **"e-kariyerim — Save Job
+Applications" / "e-kariyerim — Başvurunu Kaydet"**, localized through `_locales/{en,tr}` (the name and
+summary now come from the package per language, so check both language tabs in the Dashboard after
+upload). It also adds **"Apply later"** (saves the posting to Tracked Jobs through the new
+`/api/tracked-jobs/from-extension`; same data as "I Applied", same destination) and a local-only
+**"What's new" notice** (toolbar dot + banner, `whats-new.js`). No new permission: the badge is
+`chrome.action`, the update events are `chrome.runtime`. `PRIVACY_POLICY.md` + `/extension-privacy`,
+`PERMISSIONS_JUSTIFICATION.md`, `LISTING.md` and both popup screenshots (plus the help-centre popup
+image) were updated in the same change. Rebuild the zip only when the whole batch is in.
+
+`0.9.1` was the resubmission of the release that stops the extension
 being a two-site tool: an adapter table plus a generic schema.org reader, six adapters for the
 common applicant-tracking systems, and a per-site runtime permission so any other job board can be
 added by the user from the popup.

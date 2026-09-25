@@ -4,6 +4,7 @@ using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.TrackedJobs;
 using AfterApply.Application.TrackedJobs.Contracts;
 using AfterApply.Infrastructure;
+using AfterApply.Infrastructure.Identity;
 
 namespace AfterApply.Api.Endpoints;
 
@@ -28,6 +29,25 @@ public static class TrackedJobEndpoints
             .WithValidation<CreateTrackedJobRequest>()
             .WithSummary("Manually save a job to track")
             .Produces<TrackedJobResponse>(StatusCodes.Status201Created);
+
+        // The extension's "Apply later". Takes exactly what "I Applied" takes (same validator, so
+        // the same URL allow-lists), and answers with an outcome only — see ExtensionTrackedJobResponse.
+        group.MapPost("/from-extension", async (CreateFromExtensionRequest request, ClaimsPrincipal user,
+                ITrackedJobService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.CreateFromExtensionAsync(user.GetUserId(), request, cancellationToken);
+                return result.Outcome == ExtensionTrackedJobOutcome.Saved
+                    ? Results.Created((string?)null, result)
+                    : Results.Ok(result);
+            })
+            .WithValidation<CreateFromExtensionRequest>()
+            .AllowExtensionToken()
+            .WithSummary("Save a job for later from the browser extension's \"Apply later\" action")
+            .WithDescription("Deduplicates by JobUrl for this user: a URL already saved, or already an application, " +
+                             "writes nothing and says which (200). \"I Applied\" on a saved URL later turns it into " +
+                             "the application.")
+            .Produces<ExtensionTrackedJobResponse>(StatusCodes.Status201Created)
+            .Produces<ExtensionTrackedJobResponse>();
 
         group.MapDelete("/{id:guid}", async (Guid id, ClaimsPrincipal user, ITrackedJobService service, CancellationToken cancellationToken) =>
         {

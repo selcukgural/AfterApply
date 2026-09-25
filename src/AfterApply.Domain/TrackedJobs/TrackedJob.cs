@@ -27,13 +27,25 @@ public sealed class TrackedJob : AuditableEntity
 
     public DateTimeOffset AddedAt { get; private set; }
 
+    /// <summary>The shared Job row, when the posting came from the browser extension (which resolves
+    /// one the same way "I Applied" does). Null for a manually typed entry. Carried onto the
+    /// Application on conversion.</summary>
+    public Guid? JobId { get; private set; }
+
+    /// <summary>The posting's formatted description as the extension captured it — the main reason
+    /// to save a posting before applying is that it disappears once the job closes. Same
+    /// per-user, untrusted-HTML semantics as Application.CapturedJobDescriptionHtml, onto which it
+    /// moves on conversion.</summary>
+    public string? CapturedJobDescriptionHtml { get; private set; }
+
     private TrackedJob()
     {
     }
 
     public static TrackedJob Create(Guid userId, Guid companyId, string jobTitle, string? jobUrl,
         string? location, string? notes, DateTimeOffset now,
-        string? hrName = null, string? hrEmail = null, string? hrLinkedInUrl = null)
+        string? hrName = null, string? hrEmail = null, string? hrLinkedInUrl = null,
+        Guid? jobId = null, string? capturedJobDescriptionHtml = null)
     {
         return new TrackedJob
         {
@@ -47,6 +59,8 @@ public sealed class TrackedJob : AuditableEntity
             HrEmail = hrEmail,
             HrLinkedInUrl = hrLinkedInUrl,
             AddedAt = now,
+            JobId = jobId,
+            CapturedJobDescriptionHtml = capturedJobDescriptionHtml,
             CreatedAt = now,
             UpdatedAt = now
         };

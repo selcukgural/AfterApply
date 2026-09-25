@@ -1,4 +1,5 @@
 using AfterApply.Domain.Companies;
+using AfterApply.Domain.Jobs;
 using AfterApply.Domain.TrackedJobs;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +21,12 @@ public sealed class TrackedJobConfiguration : IEntityTypeConfiguration<TrackedJo
         builder.Property(t => t.HrName).HasMaxLength(200);
         builder.Property(t => t.HrEmail).HasMaxLength(320);
         builder.Property(t => t.HrLinkedInUrl).HasMaxLength(500);
+        builder.Property(t => t.CapturedJobDescriptionHtml).HasColumnType("text");
 
         builder.HasIndex(t => t.UserId);
+        // The extension's "save for later" and "I Applied" both look a posting up by its URL within
+        // one user's rows (dedup, and turning a saved posting into an application).
+        builder.HasIndex(t => new { t.UserId, t.JobUrl });
 
         // Cascade from the account — see ApplicationConfiguration for why this is a foreign key
         // and not a line in DeleteAccountAsync.
@@ -34,5 +39,11 @@ public sealed class TrackedJobConfiguration : IEntityTypeConfiguration<TrackedJo
             .WithMany()
             .HasForeignKey(t => t.CompanyId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // SetNull like Application.JobId: the shared Job row is not this user's to keep alive.
+        builder.HasOne<Job>()
+            .WithMany()
+            .HasForeignKey(t => t.JobId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

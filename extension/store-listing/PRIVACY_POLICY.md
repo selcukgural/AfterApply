@@ -9,7 +9,7 @@ change here that never reaches that page is a policy that doesn't exist as far a
 review is concerned, and vice versa. The published page is bilingual; this file is the English
 text._
 
-**Last updated:** 8 September 2026
+**Last updated:** 25 September 2026
 
 ## What this extension is
 
@@ -110,6 +110,9 @@ The extension stores the following locally on your device, using the browser's o
 - Whether you've turned on Gmail Scanning (off unless you explicitly enable it), a cached copy of
   the (non-personal) keyword/domain table it scores against, and a short list of email thread IDs
   already submitted, so the same email isn't sent twice.
+- Which version's "What's new" notes you have seen, and the version number of an update Chrome has
+  downloaded but not applied yet — so the popup can show what changed after an update and offer a
+  restart. Nothing about this is sent anywhere.
 
 This data never leaves your device except as described in "What data the extension sends" below.
 
@@ -121,12 +124,13 @@ that code. Neither request carries any personal data — the extension has no ac
 credential at that point. The only thing that comes back is the access token, once, after you
 confirm. If you refuse on that page, or the code runs out of time, nothing is issued at all.
 
-When you click "I Applied," the extension sends the job title, company, location, job URL,
-description and contact details shown in the popup to the e-kariyerim API, authenticated with your
-personal access token, so it can be saved to **your own e-kariyerim account**. A contact saved this
+When you click "I Applied" or "Apply later," the extension sends the job title, company, location,
+job URL, description and contact details shown in the popup to the e-kariyerim API, authenticated
+with your personal access token, so it can be saved to **your own e-kariyerim account** — as an
+application, or as a posting saved to apply to later. A contact saved this
 way is your own note of who to approach about that application: only you can see it, it is never
 shown to other users or included in any analytics, e-kariyerim never emails or messages that person
-on your behalf, and it is deleted along with the application or your account. Company-name autocomplete similarly
+on your behalf, and it is deleted along with the application (or saved posting) or your account. Company-name autocomplete similarly
 queries the e-kariyerim API with the text you've typed. If
 you've turned on Gmail Scanning, an opened email that scores as job-related sends its sender,
 subject, and a capped snippet to your own e-kariyerim account (see the Gmail Scanning section

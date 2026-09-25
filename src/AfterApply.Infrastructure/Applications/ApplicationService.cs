@@ -18,8 +18,8 @@ using DomainApplication = AfterApply.Domain.Applications.Application;
 namespace AfterApply.Infrastructure.Applications;
 
 internal sealed class ApplicationService(
-    AppDbContext dbContext, ICompanyResolver companyResolver, IJobResolver jobResolver,
-    ICompanySearchService companySearchService, HybridCache cache, IBackgroundJobClient jobClient,
+    AppDbContext dbContext, ICompanyResolver companyResolver, ExtensionCaptureResolver captureResolver,
+    HybridCache cache,
     IOptions<ApplicationBulkOptions> bulkOptions, IOptions<NotificationOptions> notificationOptions) : IApplicationService
 {
     private static readonly HybridCacheEntryOptions SummaryCountsCacheOptions = new()
@@ -261,76 +261,40 @@ internal sealed class ApplicationService(
             return new ExtensionApplicationResponse(await ToDetailAsync(existing, cancellationToken), WasDuplicate: true);
         }
 
-        // Scraped names are often near-duplicates of an existing Company (typos, "Corp" vs
-        // "Corporation") rather than a genuinely new one — a high-confidence trigram match is
-        // silently attached to first, falling back to the unchanged exact-match-or-create
-        // resolver only when no such match exists. Manual entry (CreateAsync) is unaffected: it
-        // still calls ResolveOrCreateAsync directly, since the autocomplete UI already steers
-        // users to type an existing company's exact name when one applies.
-        //
-        // CompanyAtsUrl arrives as a URL, not a platform name — the platform is whatever the
-        // resolver says that host is, so a client cannot mislabel a Greenhouse board as a Workday
-        // one. IsAts filters out the case where a validator-allowed host somehow resolves to
-        // something else, rather than storing a link under a platform it does not belong to.
-        var (atsPlatform, _) = request.CompanyAtsUrl is null
-            ? (Source.Other, null)
-            : JobPostingSourceResolver.Resolve(request.CompanyAtsUrl);
-        var profileLinks = new CompanyProfileLinks(
-            request.CompanyLinkedInUrl,
-            request.CompanyKariyerNetUrl,
-            JobPostingSourceResolver.IsAts(atsPlatform) ? request.CompanyAtsUrl : null,
-            JobPostingSourceResolver.IsAts(atsPlatform) ? atsPlatform : null,
-            SubmittedBy: userId);
+        var (companyId, jobId) = await captureResolver.ResolveAsync(userId, request, normalizedUrl, cancellationToken);
 
-        var companyId = await companySearchService.FindHighConfidenceMatchAsync(request.CompanyName, cancellationToken)
-            ?? await companyResolver.ResolveOrCreateAsync(request.CompanyName, cancellationToken, profileLinks);
-        await companyResolver.RecordProfileSubmissionsAsync(companyId, profileLinks, cancellationToken);
-
-        // Only worth queuing when this submission actually carries a profile URL — a company
-        // matched via the trigram/high-confidence path above, or one whose posting linked to
-        // neither profile, has nothing new for CompanyEnrichmentService to fetch from. Safe to
-        // enqueue immediately: by this point the Company row is already committed, either from an
-        // earlier request or by CompanyResolver's own SaveChangesAsync just above — the enqueued
-        // job only touches Company, never this method's own not-yet-saved Application.
-        if (profileLinks.HasAny)
-        {
-            jobClient.Enqueue<ICompanyEnrichmentService>(s => s.EnrichAsync(companyId, CancellationToken.None));
-        }
-
-        // The job posting's own site (LinkedIn, kariyer.net, ...) tags Job.Source — data
-        // provenance — while Source.BrowserExtension always tags how this Application row itself
-        // was created, consistent with how Source is used elsewhere (Job.Source = data
-        // provenance, Application.Source = entry-creation channel).
-        var (jobSource, externalId) = JobPostingSourceResolver.Resolve(normalizedUrl);
-        // No description onto the shared Job: it is this user's capture, and it goes on their own
-        // application below (see IJobResolver).
-        var jobId = await jobResolver.ResolveOrCreateAsync(companyId, request.JobTitle, jobSource, normalizedUrl,
-            externalId, request.Location, cancellationToken, request.PublishedAt);
-
-        // An ATS posting can be read back from that ATS's own public API, which is worth doing
-        // when the page scrape came back without a usable description — the field CV scanning and
-        // job-fit scoring both need. The service re-checks the flag, the length and the source
-        // itself, so this is only a cheap "might be worth a look", and it runs after the Job row
-        // is committed by the resolver above.
-        if (JobPostingSourceResolver.IsAts(jobSource) && externalId is not null)
-        {
-            jobClient.Enqueue<IAtsJobEnrichmentService>(s => s.EnrichAsync(jobId, CancellationToken.None));
-        }
+        // The same posting saved earlier with "Apply later": this click is the moment the user
+        // applied, so the saved row becomes the application rather than sitting next to it. What
+        // the form holds now wins (the user may have corrected a field since); what only the saved
+        // row knows — notes, an HR contact typed then, the description if this page no longer
+        // shows it — is carried over.
+        var trackedJob = await dbContext.TrackedJobs
+            .FirstOrDefaultAsync(t => t.UserId == userId && t.JobUrl == normalizedUrl, cancellationToken);
 
         // The extension doesn't scrape employment type (spec §11's field list omits it) — same
         // known limitation as generic CSV import (DECISIONS.md Sprint 4), defaults to FullTime.
+        //
+        // The job posting's own site tags Job.Source (data provenance, see the resolver), while
+        // Source.BrowserExtension always tags how this Application row itself was created.
         var application = DomainApplication.Create(
             userId, companyId, request.JobTitle, normalizedUrl, request.Location,
             EmploymentType.FullTime, DateTimeOffset.UtcNow, Source.BrowserExtension,
-            notes: null, DateTimeOffset.UtcNow, jobId,
-            request.HrName, request.HrEmail, request.HrLinkedInUrl,
-            capturedJobDescriptionHtml: request.DescriptionHtml);
+            notes: trackedJob?.Notes, DateTimeOffset.UtcNow, jobId,
+            request.HrName ?? trackedJob?.HrName, request.HrEmail ?? trackedJob?.HrEmail,
+            request.HrLinkedInUrl ?? trackedJob?.HrLinkedInUrl,
+            capturedJobDescriptionHtml: request.DescriptionHtml ?? trackedJob?.CapturedJobDescriptionHtml);
 
         dbContext.Applications.Add(application);
+        if (trackedJob is not null)
+        {
+            dbContext.TrackedJobs.Remove(trackedJob);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
 
-        return new ExtensionApplicationResponse(await ToDetailAsync(application, cancellationToken), WasDuplicate: false);
+        return new ExtensionApplicationResponse(await ToDetailAsync(application, cancellationToken), WasDuplicate: false,
+            FromTrackedJob: trackedJob is not null);
     }
 
     public async Task AttachHrEmailFromIncomingEmailAsync(Guid userId, Guid applicationId, string email, CancellationToken cancellationToken)

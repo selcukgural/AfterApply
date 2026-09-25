@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "e-kariyerim — Save Job Applications",
+    "description": "Extension name in chrome://extensions and the Web Store. Must match store-listing/LISTING.md. No third-party brand names: 0.9.0 was rejected for keyword spam."
+  },
+  "appDescription": {
+    "message": "Get your job applications into e-kariyerim — one click from LinkedIn, kariyer.net and the job sites you allow.",
+    "description": "Manifest description; the Web Store summary. Max 132 characters. Must match store-listing/LISTING.md."
+  }
+}

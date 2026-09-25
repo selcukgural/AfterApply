@@ -214,4 +214,44 @@ describe("the site-specific readers", () => {
     expect(result.hrName).toBeNull();
     expect(result.hrLinkedInUrl).toBeNull();
   });
+
+  // Trimmed from the live split view (2026-09): the umbrella block is keyed by componentkey, with
+  // the hiring team as its first sub-block, then the alumni list.
+  function peopleBlock(marker, hiringTeam) {
+    return `
+      <p><a href="/jobs/view/4242">Backend Engineer</a></p>
+      <a href="/company/acme/">Acme</a>
+      <div ${marker}>
+        <p>People you can reach out to</p>
+        ${hiringTeam}
+        <div><p>Alumni who work here</p><a href="/in/some-alum">Some Alum</a></div>
+      </div>`;
+  }
+
+  const HIRING_TEAM = `
+    <div>
+      <p>Meet the hiring team</p>
+      <a href="https://www.linkedin.com/in/jane-recruiter/">
+        <p>Jane Recruiter</p><p>Recruitment Consultant at Acme</p><p>Job poster</p>
+      </a>
+    </div>`;
+
+  it.each([
+    ["componentkey", 'componentkey="JobDetailsPeopleWhoCanHelpSlot_4242" id="JobDetailsPeopleWhoCanHelpSlot_4242"'],
+    ["data-sdui-component", 'data-sdui-component="com.linkedin.sdui.peopleWhoCanHelp"'],
+  ])("linkedin reads the job poster from the hiring team block marked by %s", async (_, marker) => {
+    setBody(peopleBlock(marker, HIRING_TEAM));
+
+    const result = await scrapeJobPosting({ strategy: "linkedin", jobId: "4242" });
+    expect(result.hrLinkedInUrl).toBe("https://www.linkedin.com/in/jane-recruiter/");
+    expect(result.hrName).toBe("Jane Recruiter");
+  });
+
+  it("linkedin takes no hr contact from the alumni list when there is no hiring team", async () => {
+    setBody(peopleBlock('componentkey="JobDetailsPeopleWhoCanHelpSlot_4242"', ""));
+
+    const result = await scrapeJobPosting({ strategy: "linkedin", jobId: "4242" });
+    expect(result.hrName).toBeNull();
+    expect(result.hrLinkedInUrl).toBeNull();
+  });
 });

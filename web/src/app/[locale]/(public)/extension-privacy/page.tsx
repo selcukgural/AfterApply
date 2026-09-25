@@ -79,6 +79,7 @@ export default async function ExtensionPrivacyPage({ params }: PageProps<"/[loca
             <li>{t("stored.item3")}</li>
             <li>{t("stored.item4")}</li>
             <li>{t("stored.item5")}</li>
+            <li>{t("stored.item6")}</li>
           </ul>
           <p className="mt-2">{t("stored.outro")}</p>
         </section>

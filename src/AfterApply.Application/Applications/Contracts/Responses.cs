@@ -105,7 +105,12 @@ public sealed record ApplicationDetailResponse(
     // rejection came in as the company's email).
     RejectionNotice? RejectionNotice = null);
 
-public sealed record ExtensionApplicationResponse(ApplicationDetailResponse Application, bool WasDuplicate);
+public sealed record ExtensionApplicationResponse(
+    ApplicationDetailResponse Application,
+    bool WasDuplicate,
+    // True when this "I Applied" turned a posting the user had saved with "Apply later" into the
+    // application (the saved row is gone). Additive: builds before 0.9.2 ignore it.
+    bool FromTrackedJob = false);
 
 public sealed record ApplicationEventResponse(
     Guid Id,

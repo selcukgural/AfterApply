@@ -4,6 +4,7 @@ import { t, setUpLanguageToggle } from "./i18n.js";
 import { renderVersion } from "./version.js";
 import { detectJob, scrapeConfigFor } from "./adapters.js";
 import { scrapeJobPosting } from "./scraper.js";
+import { WHATS_NEW_KEY, PENDING_UPDATE_KEY, noticeState } from "./whats-new.js";
 
 const content = document.getElementById("content");
 
@@ -33,6 +34,8 @@ const state = {
   tabId: null,
   // Days left on the connection when it is close to lapsing, null otherwise. See main().
   expiryWarningDays: null,
+  // What whats-new.js reads: the recorded update and a downloaded-but-waiting version.
+  notices: { whatsNew: null, pendingUpdate: null },
 };
 
 // LinkedIn's company anchor href carries the canonical /company/<slug>/ path but is sometimes
@@ -247,6 +250,7 @@ function relabelForm() {
   setText("hrEmailLabelEl", "popup.hrEmailLabel");
   setText("hrLinkedInLabelEl", "popup.hrLinkedInLabel");
   setText("submit", "popup.applyButton");
+  setText("laterLabelEl", "popup.laterButton");
 
   const expiryEl = document.getElementById("expiryWarning");
   if (expiryEl) {
@@ -266,12 +270,140 @@ function relabelForm() {
   renderStatus();
 }
 
+// ---- Update notices (0.9.2) ----------------------------------------------------------------------
+// Built with DOM APIs, never innerHTML: the text is ours today, but this is the one part of the
+// popup that shows a version string read back out of storage.
+
+const CURRENT_VERSION = chrome.runtime.getManifest().version;
+
+async function loadNotices() {
+  try {
+    const stored = await chrome.storage.local.get([WHATS_NEW_KEY, PENDING_UPDATE_KEY]);
+    state.notices = { whatsNew: stored[WHATS_NEW_KEY] ?? null, pendingUpdate: stored[PENDING_UPDATE_KEY] ?? null };
+
+    // Opening the popup is what the dot asked for: take it off, keep the banner until it is closed.
+    if (noticeState(state.notices, CURRENT_VERSION, state.lang).clearBadge) {
+      await saveWhatsNew({ ...state.notices.whatsNew, badge: false });
+      await chrome.action.setBadgeText({ text: "" });
+    }
+  } catch (error) {
+    // A nicety: a storage hiccup here must never stand between the user and the form.
+    console.warn("[e-kariyerim] could not read the update notices", error);
+  }
+}
+
+async function saveWhatsNew(whatsNew) {
+  state.notices = { ...state.notices, whatsNew };
+  await chrome.storage.local.set({ [WHATS_NEW_KEY]: whatsNew });
+}
+
+async function setBannerOpen(open) {
+  try {
+    await saveWhatsNew({ version: CURRENT_VERSION, dismissed: !open, badge: false });
+  } catch (error) {
+    console.warn("[e-kariyerim] could not save the notice state", error);
+  }
+  renderNotices();
+}
+
+function closeIcon() {
+  const svgNs = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNs, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(svgNs, "path");
+  path.setAttribute("d", "M6 6l12 12M18 6L6 18");
+  svg.appendChild(path);
+  return svg;
+}
+
+function buildWhatsNew(notes) {
+  const lang = state.lang;
+  const section = document.createElement("section");
+  section.className = "notice";
+  section.setAttribute("aria-label", t(lang, "popup.whatsNewLink"));
+
+  const head = document.createElement("div");
+  head.className = "notice-head";
+  const title = document.createElement("p");
+  title.className = "notice-title";
+  title.textContent = t(lang, "popup.whatsNewTitle").replace("{version}", CURRENT_VERSION);
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "notice-close";
+  close.setAttribute("aria-label", t(lang, "popup.close"));
+  close.appendChild(closeIcon());
+  close.addEventListener("click", () => setBannerOpen(false));
+  head.append(title, close);
+
+  const list = document.createElement("ul");
+  for (const note of notes) {
+    const item = document.createElement("li");
+    item.textContent = note;
+    list.appendChild(item);
+  }
+
+  section.append(head, list);
+  return section;
+}
+
+function buildUpdateRow(version) {
+  const lang = state.lang;
+  const row = document.createElement("section");
+  row.className = "update-row";
+  row.setAttribute("aria-label", t(lang, "popup.updateReady").replace("{version}", version));
+
+  const text = document.createElement("div");
+  text.className = "update-row-text";
+  const title = document.createElement("strong");
+  title.textContent = t(lang, "popup.updateReady").replace("{version}", version);
+  const hint = document.createElement("span");
+  hint.textContent = t(lang, "popup.updateReadyHint");
+  text.append(title, hint);
+
+  const restart = document.createElement("button");
+  restart.type = "button";
+  restart.textContent = t(lang, "popup.updateRestart");
+  // Restarts into the downloaded build; the popup closes with it.
+  restart.addEventListener("click", () => chrome.runtime.reload());
+
+  row.append(text, restart);
+  return row;
+}
+
+function renderNotices() {
+  const container = document.getElementById("notices");
+  const link = document.getElementById("whatsNewLink");
+  if (!container || !link) {
+    return;
+  }
+
+  const notices = noticeState(state.notices, CURRENT_VERSION, state.lang);
+  container.replaceChildren();
+  if (notices.pendingVersion) {
+    container.appendChild(buildUpdateRow(notices.pendingVersion));
+  }
+  if (notices.bannerOpen) {
+    container.appendChild(buildWhatsNew(notices.notes));
+  }
+  container.hidden = container.childElementCount === 0;
+
+  link.textContent = t(state.lang, "popup.whatsNewLink");
+  link.hidden = !notices.notes || notices.bannerOpen;
+}
+
 function render() {
   const lang = state.lang;
   document.title = t(lang, "popup.pageTitle");
   // Outside the screen branches below: the footer is there on every screen, including "no job
   // here" and "no token yet", which are exactly the moments someone checks their version.
   renderVersion(lang);
+  // Same: an update is worth mentioning whichever screen the popup opened on.
+  renderNotices();
 
   if (state.screen === "form") {
     relabelForm();
@@ -369,81 +501,164 @@ function buildForm() {
     <label id="hrLinkedInLabelEl" for="hrLinkedInUrl">${escapeHtml(t(lang, "popup.hrLinkedInLabel"))}</label>
     <input id="hrLinkedInUrl" type="text" value="${escapeHtml(scraped.hrLinkedInUrl ?? "")}" />
 
-    <button id="submit">${escapeHtml(t(lang, "popup.applyButton"))}</button>
+    <div id="actionRow" class="action-row"></div>
     <p id="status" class="status" hidden></p>
   `);
 
+  buildActionRow();
+
   setUpCompanyAutocomplete(settings);
+}
 
-  document.getElementById("submit").addEventListener("click", async () => {
-    const submitButton = document.getElementById("submit");
-    submitButton.disabled = true;
-    state.statusKey = null;
-    document.getElementById("status").hidden = true;
+function bookmarkIcon() {
+  const svgNs = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNs, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(svgNs, "path");
+  path.setAttribute("d", "M6 3h12v18l-6-4-6 4z");
+  svg.appendChild(path);
+  return svg;
+}
 
-    const companyName = document.getElementById("companyName").value.trim();
-    const jobTitle = document.getElementById("jobTitle").value.trim();
-    const location = document.getElementById("location").value.trim();
-    const hrName = document.getElementById("hrName").value.trim();
-    const hrEmail = document.getElementById("hrEmail").value.trim();
-    const hrLinkedInUrl = document.getElementById("hrLinkedInUrl").value.trim();
+/** "Apply later" and "I Applied", side by side (0.9.2, canvas variant B). Built with DOM APIs. */
+function buildActionRow() {
+  const row = document.getElementById("actionRow");
 
-    if (!companyName || !jobTitle) {
-      setStatus("popup.requiredFields", "error");
-      submitButton.disabled = false;
+  const later = document.createElement("button");
+  later.id = "saveLater";
+  later.type = "button";
+  later.className = "outline";
+  const laterLabel = document.createElement("span");
+  laterLabel.id = "laterLabelEl";
+  laterLabel.textContent = t(state.lang, "popup.laterButton");
+  later.append(bookmarkIcon(), laterLabel);
+
+  const apply = document.createElement("button");
+  apply.id = "submit";
+  apply.type = "button";
+  apply.textContent = t(state.lang, "popup.applyButton");
+
+  row.append(later, apply);
+
+  later.addEventListener("click", () => submitCapture("later"));
+  apply.addEventListener("click", () => submitCapture("apply"));
+}
+
+// What each "Apply later" outcome says. Anything unrecognised reads as saved: the request
+// succeeded, and a newer backend adding an outcome must not turn into an error here.
+const LATER_STATUS = {
+  Saved: "popup.savedForLater",
+  AlreadySaved: "popup.alreadySaved",
+  AlreadyApplied: "popup.alreadyApplied",
+};
+
+/**
+ * Sends the form. Both buttons send the same capture; only the route and the reading of the answer
+ * differ. "later" saves it as a TrackedJob; "apply" logs the application, which on the server also
+ * turns a posting saved earlier with "later" into that application.
+ */
+async function submitCapture(kind) {
+  const { scraped, settings } = state;
+  const laterButton = document.getElementById("saveLater");
+  const applyButton = document.getElementById("submit");
+  const setBusy = (busy) => {
+    laterButton.disabled = busy;
+    applyButton.disabled = busy;
+  };
+
+  setBusy(true);
+  state.statusKey = null;
+  document.getElementById("status").hidden = true;
+
+  const companyName = document.getElementById("companyName").value.trim();
+  const jobTitle = document.getElementById("jobTitle").value.trim();
+  const location = document.getElementById("location").value.trim();
+  const hrName = document.getElementById("hrName").value.trim();
+  const hrEmail = document.getElementById("hrEmail").value.trim();
+  const hrLinkedInUrl = document.getElementById("hrLinkedInUrl").value.trim();
+
+  if (!companyName || !jobTitle) {
+    setStatus("popup.requiredFields", "error");
+    setBusy(false);
+    return;
+  }
+
+  const path = kind === "later" ? "/api/tracked-jobs/from-extension" : "/api/applications/from-extension";
+
+  try {
+    const response = await fetch(`${settings.apiBaseUrl}${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${settings.token}`,
+      },
+      body: JSON.stringify({
+        companyName,
+        jobTitle,
+        jobUrl: state.jobUrl,
+        location: location || null,
+        description: scraped.description,
+        descriptionHtml: scraped.descriptionHtml,
+        publishedAt: scraped.publishedAt,
+        companyLinkedInUrl: scraped.companyLinkedInUrl,
+        companyKariyerNetUrl: scraped.companyKariyerNetUrl,
+        // Derived from the posting URL rather than scraped (adapters.js), and pinned server-side
+        // to the ATS allow-list because the enrichment job fetches it.
+        companyAtsUrl: state.job.companyAtsUrl ?? null,
+        hrName: hrName || null,
+        hrEmail: hrEmail || null,
+        hrLinkedInUrl: hrLinkedInUrl || null,
+      }),
+    });
+
+    if (response.status === 401) {
+      // Not a network problem and not a bad payload: the token is gone, revoked or past its
+      // ninety days. Says so, instead of blaming the connection.
+      setStatus("popup.unauthorized", "error");
+      setBusy(false);
       return;
     }
 
-    try {
-      const response = await fetch(`${settings.apiBaseUrl}/api/applications/from-extension`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${settings.token}`,
-        },
-        body: JSON.stringify({
-          companyName,
-          jobTitle,
-          jobUrl: state.jobUrl,
-          location: location || null,
-          description: scraped.description,
-          descriptionHtml: scraped.descriptionHtml,
-          publishedAt: scraped.publishedAt,
-          companyLinkedInUrl: scraped.companyLinkedInUrl,
-          companyKariyerNetUrl: scraped.companyKariyerNetUrl,
-          // Derived from the posting URL rather than scraped (adapters.js), and pinned server-side
-          // to the ATS allow-list because the enrichment job fetches it.
-          companyAtsUrl: state.job.companyAtsUrl ?? null,
-          hrName: hrName || null,
-          hrEmail: hrEmail || null,
-          hrLinkedInUrl: hrLinkedInUrl || null,
-        }),
-      });
-
-      if (response.status === 401) {
-        // Not a network problem and not a bad payload: the token is gone, revoked or past its
-        // ninety days. Says so, instead of blaming the connection.
-        setStatus("popup.unauthorized", "error");
-        submitButton.disabled = false;
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(`Request failed (${response.status})`);
-      }
-
-      const result = await response.json();
-      setStatus(result.wasDuplicate ? "popup.alreadyTracked" : "popup.added", "success");
-    } catch {
-      setStatus("popup.networkError", "error");
-      submitButton.disabled = false;
+    if (!response.ok) {
+      throw new Error(`Request failed (${response.status})`);
     }
-  });
+
+    const result = await response.json();
+
+    if (kind === "later") {
+      setStatus(LATER_STATUS[result.outcome] ?? LATER_STATUS.Saved, "success");
+      // "I Applied" stays available — saving now and applying a minute later is the point —
+      // unless the posting is already an application and there is nothing left to press.
+      laterButton.disabled = true;
+      applyButton.disabled = result.outcome === "AlreadyApplied";
+      return;
+    }
+
+    let key = "popup.added";
+    if (result.wasDuplicate) {
+      key = "popup.alreadyTracked";
+    } else if (result.fromTrackedJob) {
+      key = "popup.movedFromSaved";
+    }
+    setStatus(key, "success");
+  } catch {
+    setStatus("popup.networkError", "error");
+    setBusy(false);
+  }
 }
 
 async function main() {
   setUpThemeToggle("themeToggle");
   document.getElementById("openOptionsBtn")?.addEventListener("click", () => chrome.runtime.openOptionsPage());
+  document.getElementById("whatsNewLink")?.addEventListener("click", () => setBannerOpen(true));
+  // Before the first render, so the banner is there from the first frame rather than popping in.
+  await loadNotices();
   await setUpLanguageToggle("langToggle", (lang) => {
     state.lang = lang;
     render();

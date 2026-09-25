@@ -9,6 +9,14 @@ public interface ITrackedJobService
 
     Task<TrackedJobResponse> CreateAsync(Guid userId, CreateTrackedJobRequest request, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The browser extension's "Apply later": the same capture "I Applied" submits, saved as a
+    /// TrackedJob. Deduplicated by JobUrl against both the user's tracked jobs and their
+    /// applications.
+    /// </summary>
+    Task<ExtensionTrackedJobResponse> CreateFromExtensionAsync(Guid userId, CreateFromExtensionRequest request,
+        CancellationToken cancellationToken);
+
     Task<bool> DeleteAsync(Guid userId, Guid trackedJobId, CancellationToken cancellationToken);
 
     /// <summary>

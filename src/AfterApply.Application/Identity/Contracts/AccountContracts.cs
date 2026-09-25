@@ -177,7 +177,15 @@ public sealed record AccountExportResponse(
     IReadOnlyList<HelpfulMarkCountedExportItem>? HelpfulMarksCounted = null,
     NotificationPreferencesResponse? NotificationPreferences = null,
     IReadOnlyList<ExperienceInviteDismissalExportItem>? ExperienceInviteDismissals = null,
-    IReadOnlyList<CompanyProfileSubmissionExportItem>? CompanyProfileSubmissions = null);
+    IReadOnlyList<CompanyProfileSubmissionExportItem>? CompanyProfileSubmissions = null,
+    IReadOnlyList<TrackedJobExportItem>? TrackedJobs = null);
+
+/// <summary>A posting saved to apply to later — typed on the site or saved from the extension.
+/// Listed in the export's description since it was written but missing from the file until
+/// 2026-09-25.</summary>
+public sealed record TrackedJobExportItem(
+    Guid Id, string CompanyName, string JobTitle, string? JobUrl, string? Location, string? Notes,
+    DateTimeOffset AddedAt, string? HrName, string? HrEmail, string? HrLinkedInUrl);
 
 /// <summary>Which LinkedIn/kariyer.net page the account's captures pointed a company at (2026-09-24);
 /// counted towards showing that company's website publicly.</summary>
