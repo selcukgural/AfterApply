@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The CV scan's calibration corpus: generates labelled synthetic CVs and scores them with the
+    production extractor and checks. Deliberately not in AfterApply.slnx — it drives a local Chrome
+    and is run by hand while tuning the checks, never in CI or in the container build. Usage is in
+    Program.cs.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AfterApply.Application\AfterApply.Application.csproj" />
+    <ProjectReference Include="..\..\src\AfterApply.Infrastructure\AfterApply.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" />
+  </ItemGroup>
+
+</Project>
