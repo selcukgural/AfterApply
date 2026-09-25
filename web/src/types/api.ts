@@ -1193,7 +1193,8 @@ export type CvScanFindingCode =
   | "SectionsOrDatesUnreadable"
   | "ContactUnreadable"
   | "LengthOutOfRange"
-  | "InconsistentFormatting";
+  | "InconsistentFormatting"
+  | "ReadingOrderScrambled";
 
 /** Where the finding can be seen in the reader's own file. At least one of the two is always
  *  present — a finding that can point at nothing is dropped server-side. */

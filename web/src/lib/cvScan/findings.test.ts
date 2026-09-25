@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CvScanFinding, CvScanResponse } from "@/types/api";
-import { findingDetails, fixList, inspectScanFile, pointsAtStake, scoreBand } from "./findings";
+import { findingDetails, fixList, inspectScanFile, isNoTextConsequence, pointsAtStake, scoreBand } from "./findings";
 
 function finding(overrides: Partial<CvScanFinding> = {}): CvScanFinding {
   return {
@@ -123,6 +123,38 @@ describe("findingDetails", () => {
     );
 
     expect(details.map((detail) => detail.key)).toEqual(["noEmail", "onlyInHeaderFooter"]);
+  });
+
+  it("counts the headings that arrived without their content", () => {
+    expect(
+      findingDetails(
+        finding({ code: "ReadingOrderScrambled", category: "MachineReadability", metrics: { orphanHeadingCount: 3 } }),
+      ),
+    ).toEqual([{ key: "orphanHeadings", args: { count: 3 } }]);
+  });
+
+  it("names the text order climbing back up the page, alone or next to stacked headings", () => {
+    expect(
+      findingDetails(finding({ code: "ReadingOrderScrambled", metrics: { orphanHeadingCount: 0, backtrackCount: 5 } })),
+    ).toEqual([{ key: "backtracks", args: { count: 5 } }]);
+    expect(
+      findingDetails(finding({ code: "ReadingOrderScrambled", metrics: { orphanHeadingCount: 3, backtrackCount: 4 } })).map(
+        (detail) => detail.key,
+      ),
+    ).toEqual(["orphanHeadings", "backtracks"]);
+  });
+
+  /** When nothing could be read, sections and contact details are missing as a consequence. They
+   *  say so, and nothing else — their own fixes would send the reader after the wrong thing. */
+  it("explains sections and contact as consequences when the file has no text", () => {
+    const sections = finding({ code: "SectionsOrDatesUnreadable", metrics: { noText: 1 } });
+    const contact = finding({ code: "ContactUnreadable", metrics: { noText: 1 } });
+
+    expect(findingDetails(sections)).toEqual([{ key: "noText" }]);
+    expect(findingDetails(contact)).toEqual([{ key: "noText" }]);
+    expect(isNoTextConsequence(sections)).toBe(true);
+    expect(isNoTextConsequence(finding({ code: "NoTextLayer", metrics: { wordCount: 0 } }))).toBe(false);
+    expect(isNoTextConsequence(finding({ code: "ContactUnreadable", metrics: { emailFound: 0 } }))).toBe(false);
   });
 
   /** A .docx page count is an estimate, and the copy has to say so — an invented number next to an

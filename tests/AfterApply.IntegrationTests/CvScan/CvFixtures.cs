@@ -103,6 +103,48 @@ internal static class CvFixtures
         return builder.Build();
     }
 
+    /// <summary>
+    /// A sidebar template as a design tool exports it: every section label is its own text box,
+    /// drawn in one go before the text it labels. The page looks right; the content stream — the
+    /// order a parser reads — stacks "LANGUAGES", "CONTACT" and "EXPERIENCE" with nothing between
+    /// them and puts their contents somewhere else.
+    /// </summary>
+    public static byte[] SidebarPdf()
+    {
+        using var builder = new PdfDocumentBuilder();
+        var font = builder.AddStandard14Font(Standard14Font.Helvetica);
+        var bold = builder.AddStandard14Font(Standard14Font.HelveticaBold);
+        var page = builder.AddPage(PageSize.A4);
+
+        page.AddText("LANGUAGES", 10, new PdfPoint(400, 300), bold);
+        page.AddText("CONTACT", 10, new PdfPoint(400, 796), bold);
+        page.AddText("EXPERIENCE", 10, new PdfPoint(40, 812), bold);
+
+        page.AddText("ahmet.yilmaz@example.com", 7, new PdfPoint(400, 782), font);
+        page.AddText("+90 532 123 45 67", 7, new PdfPoint(400, 766), font);
+        page.AddText("English C1", 7, new PdfPoint(400, 280), font);
+
+        var y = 780.0;
+        page.AddText("Senior Software Engineer, Acme Software 01/2021 - present", 8, new PdfPoint(40, y), font);
+        foreach (var line in Body)
+        {
+            y -= 16;
+            page.AddText(Trim(line, 50), 8, new PdfPoint(40, y), font);
+        }
+
+        page.AddText("EDUCATION", 10, new PdfPoint(40, y - 30), bold);
+        page.AddText("Bogazici University, Computer Engineering, 2014 - 2018", 8, new PdfPoint(40, y - 46), font);
+
+        var sidebar = 740.0;
+        foreach (var skill in new[] { "SKILLS", "C#", ".NET", "PostgreSQL", "Docker", "Kubernetes", "React" })
+        {
+            page.AddText(skill, 8, new PdfPoint(400, sidebar), font);
+            sidebar -= 14;
+        }
+
+        return builder.Build();
+    }
+
     /// <summary>A page with no text on it at all — what a scan, a photo or an exported image
     /// looks like to a reader that can only read text.</summary>
     public static byte[] TextlessPdf()
@@ -155,6 +197,43 @@ internal static class CvFixtures
     }
 
     private static string Trim(string line, int length) => line.Length <= length ? line : line[..length];
+
+    /// <summary>
+    /// A Word file whose core-properties part is declared with the wrong content type
+    /// (application/xml). It opens; the SDK throws only when the main part is first asked for.
+    /// Seen in the wild in a calibration set of real-world .docx files.
+    /// </summary>
+    public static byte[] DocxWithMistypedCoreProperties()
+    {
+        using var output = new MemoryStream();
+        using (var zip = new System.IO.Compression.ZipArchive(output, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true))
+        {
+            void Entry(string name, string content)
+            {
+                using var writer = new StreamWriter(zip.CreateEntry(name).Open());
+                writer.Write(content);
+            }
+
+            Entry("[Content_Types].xml",
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">" +
+                "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>" +
+                "<Default Extension=\"xml\" ContentType=\"application/xml\"/>" +
+                "<Override PartName=\"/word/document.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml\"/>" +
+                "</Types>");
+            Entry("_rels/.rels",
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">" +
+                "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"word/document.xml\"/>" +
+                "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties\" Target=\"docProps/core.xml\"/>" +
+                "</Relationships>");
+            Entry("docProps/core.xml",
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\"/>");
+            Entry("word/document.xml",
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">" +
+                "<w:body><w:p><w:r><w:t>Ahmet Yilmaz</w:t></w:r></w:p></w:body></w:document>");
+        }
+
+        return output.ToArray();
+    }
 
     /// <summary>A one-page PDF whose content stream is ~64 MB of zeros compressed to well under a
     /// megabyte — a decompression bomb inside the upload cap (2026-09-24).</summary>

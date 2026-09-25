@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { formatCount } from "@/lib/dashboard/format";
-import { findingDetails, fixList, pointsAtStake } from "@/lib/cvScan/findings";
+import { findingDetails, fixList, isNoTextConsequence, pointsAtStake } from "@/lib/cvScan/findings";
 import type { CvScanCategoryScore, CvScanDocumentSummary, CvScanFinding } from "@/types/api";
 
 /**
@@ -132,16 +132,18 @@ function FindingCard({ finding }: { finding: CvScanFinding }) {
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-2 border-t border-gray-100 pt-3 text-sm dark:border-gray-800">
-        <p className="text-gray-600 dark:text-gray-400">
-          <span className="font-medium text-gray-800 dark:text-gray-200">{t("result.why")}: </span>
-          {t(`findings.${finding.code}.why`)}
-        </p>
-        <p className="text-gray-600 dark:text-gray-400">
-          <span className="font-medium text-gray-800 dark:text-gray-200">{t("result.fix")}: </span>
-          {t(`findings.${finding.code}.fix`)}
-        </p>
-      </div>
+      {isNoTextConsequence(finding) ? null : (
+        <div className="flex flex-col gap-2 border-t border-gray-100 pt-3 text-sm dark:border-gray-800">
+          <p className="text-gray-600 dark:text-gray-400">
+            <span className="font-medium text-gray-800 dark:text-gray-200">{t("result.why")}: </span>
+            {t(`findings.${finding.code}.why`)}
+          </p>
+          <p className="text-gray-600 dark:text-gray-400">
+            <span className="font-medium text-gray-800 dark:text-gray-200">{t("result.fix")}: </span>
+            {t(`findings.${finding.code}.fix`)}
+          </p>
+        </div>
+      )}
     </li>
   );
 }

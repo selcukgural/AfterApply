@@ -9462,3 +9462,105 @@ başkalarına ancak şu kurallarla ulaşıyor.
   Node 24'teki `next start` üzerinde panel, başvurular, şirketler, LinkedIn içe aktarma (hub bileti ile
   WebSocket) ve şifre sıfırlama tarayıcıda yürütüldü.
 - Sonraki geçiş Node 26 (LTS 2026-10-28) olur; Node 24'ün desteği bitmeden, aynı üçlüyle.
+
+## CV tarama: okuma sırası kontrolü, kalibrasyon korpusu — DECIDED (2026-09-25)
+
+Tetikleyen: bir İK profesyonelinin geri bildirimi. Hem ATS hem işe alımcı için sorunlu bir Canva
+tarzı iki sütunlu CV %98 aldı. Üretimdeki çıkarıcıyla ölçüldü: kesilen tek puan "8 farklı punto"
+(-2). Asıl sorun (ayrıştırıcının okuduğu sıra karışık, isim ~27. satırda, başlıklar içeriksiz üst üste,
+ilk işin maddeleri Sertifikalar'ın altında) hiçbir kontrole takılmadı.
+
+- **Sütun boşluğu eşiği %6 → %1,5.** Kelime aralıkları artık nokta hassasiyetiyle birleştiriliyor
+  (yüzde dilimlere yuvarlamak ~%3,5'lik gerçek boşluğu %2'ye indiriyordu). Boşluk yine sayfadaki her
+  satır boyunca açık olmalı, iki tarafta ≥15 kelime / ≥4 satır. **Bilinen sınır:** 4–6 pt (~2 mm)
+  boşluklu iki sütun yakalanmıyor; daha düşük eşik tek sütunda hizalanmış kelime aralıklarıyla
+  karışır. Gerçek tasarımlarda nadir, bilinçli bırakıldı.
+- **Yeni bulgu `ReadingOrderScrambled` (Makine okunabilirliği, -25).** İki bağımsız belirtiden biri
+  yeter: (1) ardından kendi içeriği değil başka başlık gelen ≥2 başlık (aynı satıra birleşmiş
+  "CONTACT WORK EXPERIENCE" dahil; "Education & Certifications" gibi bağlaçlı başlık tek sayılır);
+  (2) bir sayfada dosyadaki metin sırasının sayfanın 1/5'inden uzun **≥3 kez yukarı dönmesi**
+  (`ExtractedCvPage.Backtracks`, PdfPig harfleri — kelimeler konuma göre yeniden sıralandığı için
+  harf kullanılır). Eşik ölçüldü: 2.484 gerçek CV'nin tamamı ve tüm tek sütun/kenar çubuklu korpus
+  düzenleri ≤2; kutuları karışık kaydedilmiş tasarım aracı çıktıları 3–6. -25: tek sütunlu ama
+  karışık sıralı bir CV 80 alıp "iyi" görünmesin diye.
+- **Metin katmanı hiç yoksa** bölümler (-25) ve iletişim (-15) de düşer (`noText` metriği). Görsel
+  CV 60 ("orta") alıyordu; ayrıştırıcıya hiçbir şey ulaşmıyorsa bant "zayıf" olmalı. Sayfa bu iki
+  bulguyu ayrı sorun gibi değil sonuç olarak gösterir (kendi neden/çözüm metinleri gizlenir).
+- **Boş sayfa taranmış sayfa değildir:** metni de görseli de olmayan sayfa (dışa aktarımdan kalan boş
+  son sayfa) artık ceza almaz (`ExtractedCvPage.ImageCount`).
+- **Tarih aralığı:** "Aug 2007 to Current", "December 2014 to May 2015", "Mart 2019 – Mayıs 2021",
+  "2019-03 / 2021-05", Unicode tireler (U+2010–2012, U+2212, U+FF0D). Eski kalıp yalnızca tireyi ve
+  sayısal bitişi kabul ediyordu; Kaggle setinde CV'lerin %82'sine "tarih aralığı yok" diyordu (→ %5).
+- **Kısa CV eşiği 150 → 100 kelime.** İki iş + özetli 148 kelimelik bir CV'ye -12 kesmek kısalığı
+  ayrıştırma sorunu gibi gösteriyordu.
+- **Sonuç:** o CV 98 → 59 (okuma sırası -25, sütun -14, punto -2). Makinedeki 11 tek sütunlu gerçek
+  CV'nin skorları değişmedi. Gizlilik metnindeki "yedi kontrol" → "sekiz".
+- **Kalibrasyon korpusu (`tools/CvScanCorpus`, slnx dışında, çıktılar `artifacts/` git-ignored):**
+  `generate` sabit tohumla 100 etiketli sentetik CV üretir (Chrome headless: klasik, bant, kenar
+  çubuğu, Canva tarzı "başlıklar önce"/karışık sıra, görsel CV, görsel iletişim, düzleşmiş Türkçe,
+  yaratıcı başlık, süre yazılmış tarih, uzun/kısa, çok font; OpenXml ile DOCX temiz/tablo/üstbilgi).
+  Etiketler "gerçek bir ATS ne yapar" iddiasıdır, kontrollerin bugünkü davranışının kopyası değil.
+  `eval` %20'lik sınav setini yalnızca sayı olarak raporlar (ayarlama geliştirme setine bakılarak
+  yapılır). `scan <klasör>` etiketsiz dış set için bulgu oranlarını verir; `text <dosya>` kontrollerin
+  okuduğu metni gösterir. Dış set: Kaggle "Resume Dataset" (livecareer.com, 24 sektör, 2.484 PDF,
+  anonim — iletişim bulgusu %99 beklenen), repoya girmez.
+- **Döngü sonucu:** korpus dev 59/80 → 77/80, sınav 14/20 → 19/20; kalanlar yukarıdaki 4–6 pt
+  sütun sınırı. Kaggle ortalaması 79,4 → 84,3, yeni kurallar orada yanlış alarm üretmedi.
+- **3. tur, gerçek şablonlar (`cv-templates/`, git-ignored; 15 Canva TR şablonu, 10 LaTeX, 100 DOCX):**
+  - **PDF'te sayfa üst/alt şeridi artık "üstbilgi" sayılmıyor.** PDF'in üstbilgisi yoktur; en üst satır
+    ayrıştırıcının ilk okuduğu sıradan metindir ve iletişim satırının en yaygın yeri orasıdır. 10/10
+    LaTeX CV doğru yeri kullandığı için ceza alıyordu. Kural yalnızca Word'ün kendi header/footer
+    parçası için geçerli.
+  - **Font ailesi:** TeX Computer Modern kesimleri (CMR10, CMBX12, CMTI10, CMCSC10, SFRM1000…) tek
+    aile; "ArialMT"/"Arial-BoldMT" gibi PostScript kuyrukları siliniyor.
+  - **Kısa CV kademeli:** <60 kelime -12, 60–99 -6 (99 ile 100 arasında uçurum yoktu artık).
+  - **Başlık sözlüğü:** Canva'nın Türkçe başlıkları (Deneyimler, Eğitim Geçmişi, İş/Staj Deneyimi,
+    Temel Beceriler, Uzmanlık Alanları, Dil Becerileri, Üyelikler, Gönüllü Aktiviteler, Hedef…).
+    Tek başına "expertise" bilerek yok: bölüm kontrolü başlığı satır içinde aradığı için cümleleri
+    başlık sayardı.
+  - Sonuç: Canva şablonlarının 15/15'inde okuma sırası gerçekten karışık (elle doğrulandı; ör.
+    "etiket: değer" görünümlü bir şablonda önce 9 etiket, sonra içerikler, tarihler işlerden kopuk).
+    Skorlar 51–75. LaTeX 90 → 100. Sentetik korpus ve Kaggle'da gerileme yok.
+  - **Sıradaki aday:** üst üste iki kez çizilmiş metin (bir Canva şablonunda ad "AVERYAVERY
+    DAVISDAVIS" okunuyor) — henüz kontrol yok.
+- **4. tur, arefinnomi (5.159 dosya; kullanıcı: veriler elle değiştirilmiş, lisans açık):**
+  - **Üretim hatası düzeltildi:** core-properties bölümünün içerik türü yanlış olan bir .docx
+    açılıyor ama ilk bölüm istenince OpenXml istisnası fırlatıyordu. Yakalanmadığı için kullanıcıya
+    500 dönüyordu. Artık çıkarıcıdaki tek bir koruma her iki formatta, tembel yüklemeden kaynaklanan
+    her istisnayı "bozuk dosya" (400) yapıyor (`CvFixtures.DocxWithMistypedCoreProperties`).
+  - **İlke (kullanıcı, 2026-09-25):** hedef her CV'yi okunur saymak değil, sektör ortalamasında
+    kalmak. Belirsiz durumda gerçek ATS'lerden daha hoşgörülü olmayız; yüksek-yanlış puan İK geri
+    bildirimindeki vakanın kendisi. Bu yüzden "2015-16", "Jul-2015 - Mar-2016", "DEC’ 2016" tarih aralığı
+    **sayılmıyor** (eklenip geri alındı, testle sabitlendi); "to/until", ay adı ve Unicode tireler
+    standart biçim olduğu için kalıyor.
+  - Başlık sözlüğü: "Educational Qualification(s)", "Academic Profile", "Computer Proficiency"…
+    Tek başına "qualification"/"educational"/"address" yok (tablo başlığı ve etiket satırlarını
+    başlık sayıyordu).
+  - **Satır içi "iki başlık yan yana" kuralı kaldırıldı:** 5.159 gerçek CV'de yalnızca
+    "EDUCATIONAL QUALIFICATION", "EMPLOYMENT OBJECTIVE" gibi ifadeleri yakaladı (252 yanlış alarm);
+    gerçek karışıklıkları konum sinyali zaten yakalıyor. Aynı başlığın art arda iki kez gelmesi
+    (üst üste çizilmiş metin) okuma sırası sayılmıyor. Okuma sırası bulgusu arefinnomi'de %5 → %3,
+    Canva 15/15 korundu, İK geri bildirimindeki CV 59.
+  - **Açık:** arefinnomi'de "bölümler/tarihler" %56 (çoğu yeni mezun CV'si: deneyim yok, tek
+    yıllar). Sektör bunu cezalandırıyor mu, bilinmiyor — dış referansla karar verilecek. Word
+    tablolarında sütun bulgusu %57 (eğitim ızgaraları); veri tablosu ile düzen tablosu ayrımı açık.
+- **5. tur, dış referansla kalibrasyon (kullanıcı izin alıp elle yükledi):** 60 CV'lik katmanlı örneklem
+  `cv-templates/_reference/` (git-ignored; `reference`/`compare` komutları, `compare` bizim puanı her
+  seferinde güncel kurallarla yeniden hesaplar). Veri noktaları: Enhancv (REF-002, 005), Resume Worded
+  (REF-002; REF-005'i hiç okuyamadı), OwlApply (REF-034, 037, 040, 047).
+  - **Genel puanlar karşılaştırılmaz:** aynı CV Enhancv'de 73, Resume Worded'de 37 — ikisinin genel
+    puanı büyük ölçüde içerik kalitesi (yazım, sayısallaştırma, tekrar). Yalnızca okunabilirlik alt
+    ölçümleri (Enhancv Parse/ATS Essentials/Sections, Resume Worded Dates/Contact/Length) ve OwlApply'ın
+    genel puanı (ayrıştırma odaklı) kullanılır.
+  - **Okuma sırası cezası -25 → -15.** Konuma göre yeniden dizen ayrıştırıcılar (OwlApply önizlemesi
+    karışık bir Canva dosyasını doğru sırayla çiziyor; Enhancv parse oranı karışık dosyalarda da
+    %86–90) bu dosyaların çoğunu toparlıyor; dosya sırasıyla okuyanlar (İK geri bildirimindeki vaka) toparlamıyor.
+    Sektör ikisinin karışımı. OwlApply'a göre ortalama fark -9'dan **+1**'e indi (4 dosya, Spearman
+    0,77, bant 3/4). Bulgu metni "bazı ayrıştırıcılar" diye yumuşatıldı; sentetik "canva-single"
+    etiketi iyi/orta oldu. İK geri bildirimindeki CV 59 → 69 (orta, 98'den uzak); iki sütunlu Canva ~61 (OwlApply 68).
+  - Döngü bundan sonra kullanıcı/İK geri bildirimiyle sürer: her vaka korpusa sentetik olarak eklenir,
+    dört set (sentetik, Kaggle, arefinnomi, şablonlar) + `compare` gerileme ağı olarak koşar.
+- **Açık kalan:** etiketler bizim iddiamız; dışarıdan doğrulama için ticari bir ayrıştırıcının denemesi
+  (Textkernel önerildi, kıyaslama için yazılı onay alınarak) aynı korpusa koşturulacak. Geri
+  bildirim gelen CV'nin kendisi repoya girmez; düzeni sahte verilerle yeniden üretilir
+  (`CvFixtures.SidebarPdf`, korpustaki `canva-*` grupları).

@@ -48,3 +48,9 @@ dump.rdb
 # graphify knowledge graph: regenerated locally by the git hooks / `graphify update .`, not versioned
 graphify-out/
 TestResults/
+
+# CV scan calibration corpus (tools/CvScanCorpus): generated, reproducible from the tool.
+/artifacts/
+
+# Local CV templates for the scan calibration loop (tools/CvScanCorpus scan cv-templates). Never committed.
+/cv-templates/

@@ -7,6 +7,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using Microsoft.Extensions.Options;
 using UglyToad.PdfPig;
+using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 using UglyToad.PdfPig.Exceptions;
 using Word = DocumentFormat.OpenXml.Wordprocessing;
@@ -42,12 +43,23 @@ internal sealed class CvTextExtractor(IOptions<CvScanOptions> options) : ICvText
         // thread for longer than CvScan:ParseTimeoutSeconds.
         var deadline = Stopwatch.StartNew();
 
-        return format switch
+        try
         {
-            CvFileFormat.Pdf => ExtractPdf(buffer.ToArray(), deadline, cancellationToken),
-            CvFileFormat.Docx => ExtractDocx(buffer, deadline, cancellationToken),
-            _ => throw new CvExtractionException(CvExtractionFailure.UnsupportedLegacyFormat)
-        };
+            return format switch
+            {
+                CvFileFormat.Pdf => ExtractPdf(buffer.ToArray(), deadline, cancellationToken),
+                CvFileFormat.Docx => ExtractDocx(buffer, deadline, cancellationToken),
+                _ => throw new CvExtractionException(CvExtractionFailure.UnsupportedLegacyFormat)
+            };
+        }
+        // Both libraries load lazily: a file can open cleanly and fail on its first part or page.
+        // The OpenXml SDK does exactly that for a .docx whose core-properties part carries the
+        // wrong content type — it opens, then throws the moment the main part is asked for — and
+        // before this guard that reached the caller as a 500 instead of "this file is damaged".
+        catch (Exception exception) when (exception is not (CvExtractionException or OperationCanceledException))
+        {
+            throw new CvExtractionException(CvExtractionFailure.Corrupt);
+        }
     }
 
     private ExtractedCv ExtractPdf(byte[] bytes, Stopwatch deadline, CancellationToken cancellationToken)
@@ -135,7 +147,8 @@ internal sealed class CvTextExtractor(IOptions<CvScanOptions> options) : ICvText
                 var (kept, wasTruncated) = Append(text, pageText);
                 truncated |= wasTruncated;
 
-                pages.Add(new ExtractedCvPage(number, page.Width, page.Height, kept, words));
+                pages.Add(new ExtractedCvPage(number, page.Width, page.Height, kept, words, page.GetImages().Count(),
+                    Backtracks(page)));
             }
 
             return new ExtractedCv(CvFileFormat.Pdf, document.NumberOfPages, wordCount, text.ToString(),
@@ -143,6 +156,38 @@ internal sealed class CvTextExtractor(IOptions<CvScanOptions> options) : ICvText
                 fonts.Select(entry => new ExtractedCvFont(entry.Key.Name, entry.Key.Size,
                     entry.Value.GlyphCount, entry.Value.Page, entry.Value.Sample)).ToList());
         }
+    }
+
+    /// <summary>
+    /// Counts the long climbs in content-stream order. Letters are the one thing PdfPig reports in
+    /// the order the file stores them (its words are regrouped by position), so this walks letters:
+    /// each time the next glyph sits more than a fifth of the page above the last one, the text has
+    /// gone back up the page. Short climbs — the next column of a two-column bullet list — are left
+    /// out on purpose; parsers read those lists without trouble.
+    /// </summary>
+    private static int Backtracks(Page page)
+    {
+        var threshold = page.Height * 0.2;
+        var count = 0;
+        Letter? previous = null;
+
+        foreach (var letter in page.Letters)
+        {
+            if (string.IsNullOrWhiteSpace(letter.Value))
+            {
+                continue;
+            }
+
+            if (previous is not null && letter.StartBaseLine.Y > previous.StartBaseLine.Y +
+                Math.Max(2 * previous.GlyphRectangle.Height, threshold))
+            {
+                count++;
+            }
+
+            previous = letter;
+        }
+
+        return count;
     }
 
     private ExtractedCv ExtractDocx(MemoryStream buffer, Stopwatch deadline, CancellationToken cancellationToken)

@@ -1,11 +1,12 @@
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using AfterApply.Domain.Documents;
 
 namespace AfterApply.Application.CvScan;
 
 /// <summary>
-/// The seven checks the score is made of. All of them are pure functions over
+/// The eight checks the score is made of. All of them are pure functions over
 /// <see cref="ExtractedCv"/>: no I/O, no clock, no model, no configuration. That is what lets the
 /// unit tests state a case as a handful of words with coordinates rather than as a fixture file,
 /// and it is what makes the score reproducible — the same CV scores the same number tomorrow.
@@ -13,7 +14,7 @@ namespace AfterApply.Application.CvScan;
 /// Every candidate carries evidence a reader can go and look at, because a scan that says
 /// "your CV is hard to read" without pointing at anything is indistinguishable from a guess.
 /// </summary>
-public static class CvScanChecks
+public static partial class CvScanChecks
 {
     /// <summary>Below this, there is no text layer worth the name — a scanned page, a photo, or
     /// text drawn as vector outlines. A real one-page CV runs to several hundred words.</summary>
@@ -24,19 +25,26 @@ public static class CvScanChecks
     private const int MinimumWordsPerPage = 5;
 
     /// <summary>Shorter than this and the machine has almost nothing to work with, whatever the
-    /// page count says.</summary>
-    private const int MinimumCvWords = 150;
+    /// page count says. It was 150, which charged real, parseable one-page CVs of two roles and a
+    /// summary; brevity is a content question, and this check is about there being enough for a
+    /// parser to fill a profile with.</summary>
+    private const int MinimumCvWords = 100;
+
+    /// <summary>Below this the short CV costs the full amount: a few dozen words is a design with
+    /// almost no text in it, not a concise writer.</summary>
+    private const int VeryShortCvWords = 60;
 
     /// <summary>Words per page when the format will not say (a .docx has no pagination until
     /// something renders it). Conservative on purpose: it should not invent a page.</summary>
     private const int EstimatedWordsPerPage = 450;
 
-    /// <summary>How much of a page's height counts as its header and its footer. PDF has no header
-    /// concept at all — only ink near an edge — and this is the band inside which a parser is
-    /// likely to skip what it finds.</summary>
-    private const double HeaderFooterBand = 0.08;
-
     private const int QuoteLength = 120;
+
+    /// <summary>Long climbs back up one page before its order counts as scrambled. Measured, not
+    /// guessed (DECISIONS.md 2026-09-25): 2,484 real CVs and every one-column and sidebar layout in
+    /// the calibration corpus stay at two or fewer; design-tool exports with boxes out of order
+    /// start at three.</summary>
+    private const int MinimumBacktracks = 3;
 
     /// <summary>U+FFFD — what a decoder writes when it gave up on a byte sequence.</summary>
     private const char ReplacementCharacter = '\uFFFD';
@@ -50,8 +58,9 @@ public static class CvScanChecks
                 TextLayer(cv),
                 TurkishCharacters(cv),
                 ColumnsAndTables(cv, geometry),
+                ReadingOrder(cv),
                 SectionsAndDates(cv),
-                Contact(cv, geometry),
+                Contact(cv),
                 Length(cv),
                 Formatting(cv)
             }
@@ -61,9 +70,11 @@ public static class CvScanChecks
 
     /// <summary>
     /// Is there text at all. This one check can cost the whole machine-readability category,
-    /// and should: when the answer is no, every other check downstream is reading an empty
-    /// document, and reporting "no sections found" about a scanned page would be six ways of
-    /// saying the same thing.
+    /// and should. It cannot be the whole story, though: a picture of a CV reaches the recruiter's
+    /// system with no sections and no contact details either, and scoring it 60 said "fair" about
+    /// a file a parser gets nothing from. So the sections and contact checks charge their
+    /// categories too, marked as consequences (metric <c>noText</c>) so the page explains them as
+    /// one cause rather than three problems; the remaining checks stay quiet.
     /// </summary>
     private static CvScanFindingCandidate? TextLayer(ExtractedCv cv)
     {
@@ -86,8 +97,11 @@ public static class CvScanChecks
 
         // A digital document with one scanned page in it — someone signed a page, printed it and
         // photographed it back in. The rest of the CV is readable, so this costs a fraction.
+        // Only a page with a picture on it: a page with neither text nor image is blank — a stray
+        // page break at the end of an export — and a parser loses nothing on it.
         var emptyPages = cv.Pages
-            .Where(page => page.Words.Count < MinimumWordsPerPage && page.Text.Trim().Length < 40)
+            .Where(page => page.Words.Count < MinimumWordsPerPage && page.Text.Trim().Length < 40 &&
+                           (page.ImageCount > 0 || cv.Format is not CvFileFormat.Pdf))
             .ToList();
 
         if (emptyPages.Count == 0 || emptyPages.Count == cv.Pages.Count)
@@ -210,6 +224,134 @@ public static class CvScanChecks
     }
 
     /// <summary>
+    /// Did the text arrive in the order it was written. The column check above infers this from
+    /// where the words sit; this one reads the result itself, which is what a parser actually gets
+    /// and what fills (or misfills) the candidate's form.
+    ///
+    /// The symptom it counts is a heading with no content of its own: the next line the machine
+    /// reads is another heading. On a sidebar template that is what the braid looks like —
+    /// "LANGUAGES", "CONTACT", "WORK EXPERIENCE" in a row, their contents somewhere else entirely,
+    /// and a parser that indexes by heading files every one of those sections empty. One such
+    /// heading happens in honest CVs (a "Skills" heading over a "Languages" subheading); two is a
+    /// scramble.
+    /// </summary>
+    private static CvScanFindingCandidate? ReadingOrder(ExtractedCv cv)
+    {
+        if (cv.WordCount < MinimumWords)
+        {
+            return null;
+        }
+
+        var orphans = 0;
+        (int Page, List<string> Headings)? evidence = null;
+
+        foreach (var page in cv.Pages)
+        {
+            var run = new List<string>();
+
+            // A trailing empty line closes the last run of the page, so a heading stack at the very
+            // bottom is counted the same way as one in the middle.
+            foreach (var line in SplitLines(page.Text).Where(line => line.Length > 0).Append(string.Empty))
+            {
+                if (line.Length > 0 && IsHeading(line))
+                {
+                    // The same heading twice in a row is one heading drawn twice — a text effect —
+                    // and says nothing about order.
+                    if (run.Count == 0 || CvScanVocabulary.Fold(run[^1]) != CvScanVocabulary.Fold(line))
+                    {
+                        run.Add(line);
+                    }
+
+                    continue;
+                }
+
+                // Every heading in a run but the last is followed by another heading. The last one
+                // is followed by content — or by the end of the page, where the section may simply
+                // continue overleaf, which is a typographic choice and not a parsing failure.
+                if (run.Count > 1)
+                {
+                    orphans += run.Count - 1;
+                    evidence ??= (page.Number, [.. run]);
+                }
+
+                run.Clear();
+            }
+        }
+
+        // The second symptom, read from positions rather than from words: the file's own text order
+        // climbing back up the page again and again. One climb is a second column; a shuffle of
+        // boxes climbs on every other block, whatever its headings are called.
+        var scrambledPage = cv.Pages.OrderByDescending(page => page.Backtracks).FirstOrDefault();
+        var backtracks = scrambledPage?.Backtracks ?? 0;
+
+        if (orphans < 2 && backtracks < MinimumBacktracks)
+        {
+            return null;
+        }
+
+        // -15, not the whole category: measured against outside tools (DECISIONS.md 2026-09-25).
+        // Layout-aware parsers re-sort the words by position and recover most of these files — a
+        // two-column Canva export that cost 25 here scored "fair" there — while systems that read
+        // the file's own order misfill the form, as the HR complaint that started this showed. The
+        // industry is a mix of both; so is this cost.
+        return new CvScanFindingCandidate(CvScanFindingCode.ReadingOrderScrambled,
+            CvScanCategory.MachineReadability, 15,
+            evidence is { } stacked
+                // The headings exactly as they arrived, side by side: the reader sees their own
+                // section names stacked with nothing between them, which says more than any
+                // explanation.
+                ? [new CvScanEvidence(stacked.Page, Quote(string.Join(" / ", stacked.Headings)))]
+                // Otherwise the page's opening as the machine reads it — on a shuffled page, rarely
+                // the line the reader put at the top.
+                : [new CvScanEvidence(scrambledPage!.Number, Quote(FirstNonEmptyLine(scrambledPage.Text)))],
+            new Dictionary<string, double>
+            {
+                ["orphanHeadingCount"] = orphans,
+                ["backtrackCount"] = backtracks
+            });
+    }
+
+    /// <summary>
+    /// Whether a line is a heading and nothing else: "Deneyim", "WORK EXPERIENCE:", or several
+    /// known headings joined ("Education &amp; Certifications", "Skills / Languages") — as opposed to
+    /// a sentence that merely mentions one. A line of several headings counts once. An earlier
+    /// version counted "CONTACT WORK EXPERIENCE" as two headings braided from two columns; on five
+    /// thousand real CVs that rule found only phrases like "EDUCATIONAL QUALIFICATION" and
+    /// "EMPLOYMENT OBJECTIVE", and the position-based signal already catches the real braids.
+    /// </summary>
+    private static bool IsHeading(string line)
+    {
+        const int MaximumHeadingWords = 3;
+
+        if (line.Length > 60)
+        {
+            return false;
+        }
+
+        var words = CvScanVocabulary.Fold(line).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length == 0)
+        {
+            return false;
+        }
+
+        // splittable[i]: whether the first i words split into known headings of up to three words.
+        var splittable = new bool[words.Length + 1];
+        splittable[0] = true;
+
+        for (var end = 1; end <= words.Length; end++)
+        {
+            for (var size = 1; size <= Math.Min(MaximumHeadingWords, end) && !splittable[end]; size++)
+            {
+                var start = end - size;
+                splittable[end] = splittable[start] &&
+                                  CvScanVocabulary.AllHeadings.Contains(string.Join(' ', words[start..end]));
+            }
+        }
+
+        return splittable[^1];
+    }
+
+    /// <summary>
     /// Can a parser find the shape of a career: the section headings it indexes by, and dates it
     /// can turn into a timeline. Years alone are not dates — "2019" beside a certificate name is
     /// not a span anyone can order — so a CV with no readable range is missing the thing every
@@ -219,7 +361,12 @@ public static class CvScanChecks
     {
         if (cv.WordCount < MinimumWords)
         {
-            return null;
+            // Nothing was read, so nothing was found — and a parser fills this part of the profile
+            // with nothing too. Scored in full, and marked, so the page explains it as a consequence
+            // of the missing text rather than as a second problem with its own fix.
+            return new CvScanFindingCandidate(CvScanFindingCode.SectionsOrDatesUnreadable,
+                CvScanCategory.SectionsAndDates, CvScanScoring.Weights[CvScanCategory.SectionsAndDates],
+                [new CvScanEvidence(1, null)], new Dictionary<string, double> { ["noText"] = 1 });
         }
 
         var found = new List<(CvSection Section, int Page, string Line)>();
@@ -295,25 +442,30 @@ public static class CvScanChecks
 
     /// <summary>
     /// Can the machine reach you. Two failures: contact details it cannot read at all, and
-    /// contact details that exist only in a header or footer — a real place in a Word file and a
-    /// band of ink near the paper's edge in a PDF, and in both cases somewhere a parser routinely
-    /// skips as furniture.
+    /// contact details that exist only in a Word file's header or footer part — somewhere a parser
+    /// routinely skips as furniture.
+    ///
+    /// Only Word's own parts, not the top and bottom of a PDF page. A PDF has no header; its top
+    /// line is ordinary text a parser reads first, and it is where most CVs put the contact line
+    /// — every one of ten LaTeX CVs in the calibration set was charged for doing exactly the right
+    /// thing (DECISIONS.md 2026-09-25).
     /// </summary>
-    private static CvScanFindingCandidate? Contact(ExtractedCv cv, CvPageGeometry geometry)
+    private static CvScanFindingCandidate? Contact(ExtractedCv cv)
     {
         if (cv.WordCount < MinimumWords)
         {
-            return null;
+            // Same reasoning as the sections check: an unreadable file reaches the recruiter's
+            // system with no way to reply to it.
+            return new CvScanFindingCandidate(CvScanFindingCode.ContactUnreadable,
+                CvScanCategory.Contact, CvScanScoring.Weights[CvScanCategory.Contact],
+                [new CvScanEvidence(1, null)], new Dictionary<string, double> { ["noText"] = 1 });
         }
 
         // A .docx keeps its header and footer in their own parts, so they are not in the document
-        // text at all; a PDF has them inline, and the band they sit in is the only thing that says
-        // so. Hence two strings rather than one: everything, and everything outside the bands.
-        var bandText = string.Join('\n', new[] { cv.HeaderFooterText, geometry.HeaderFooterText }
+        // text at all. Hence two strings: everything, and the body alone.
+        var fullText = string.Join('\n', new[] { cv.Text, cv.HeaderFooterText }
             .Where(text => !string.IsNullOrWhiteSpace(text)));
-        var fullText = string.Join('\n', new[] { cv.Text, bandText }
-            .Where(text => !string.IsNullOrWhiteSpace(text)));
-        var bodyText = geometry.BodyText ?? cv.Text;
+        var bodyText = cv.Text;
 
         var emailFound = CvScanVocabulary.Email.IsMatch(fullText);
         var phoneFound = CvScanVocabulary.Phone.IsMatch(fullText);
@@ -374,8 +526,11 @@ public static class CvScanChecks
 
         if (cv.WordCount is >= MinimumWords and < MinimumCvWords)
         {
+            // Graded rather than a cliff: 99 words and 100 words are the same CV, and a file with
+            // a few dozen words is a different problem from one that is merely spare.
             return new CvScanFindingCandidate(CvScanFindingCode.LengthOutOfRange,
-                CvScanCategory.FormatAndLength, 12, LastLineEvidence(cv), metrics);
+                CvScanCategory.FormatAndLength, cv.WordCount < VeryShortCvWords ? 12 : 6,
+                LastLineEvidence(cv), metrics);
         }
 
         var cost = pages switch
@@ -442,8 +597,14 @@ public static class CvScanChecks
 
     /// <summary>
     /// Strips what a PDF producer adds to a font name and a word processor does not: the six-letter
-    /// subset prefix ("ABCDEE+Calibri") and the style suffix ("Calibri-Bold", "Calibri,BoldItalic").
-    /// Without this, one typeface in four weights reads as four typefaces.
+    /// subset prefix ("ABCDEE+Calibri"), the style suffix ("Calibri-Bold", "Calibri,BoldItalic")
+    /// and the PostScript "MT"/"PSMT" tail ("ArialMT", "TimesNewRomanPS-BoldMT"). Without this, one
+    /// typeface in four weights reads as four typefaces.
+    ///
+    /// TeX's Computer Modern is the other case: its cuts are separate fonts named by abbreviation
+    /// and design size (CMR10 roman, CMBX12 bold, CMTI10 italic, CMCSC10 small caps; SFRM1000 and
+    /// friends in the EC encoding), and every LaTeX CV in the calibration set was charged for "four
+    /// typefaces" that are one.
     /// </summary>
     private static string NormalizeFontFamily(string name)
     {
@@ -460,8 +621,27 @@ public static class CvScanChecks
             value = value[..cut];
         }
 
-        return value.Trim().ToLowerInvariant();
+        value = value.Trim().ToLowerInvariant();
+
+        if (TexComputerModern().IsMatch(value))
+        {
+            return "computer modern";
+        }
+
+        foreach (var tail in (string[])["psmt", "mt", "ps"])
+        {
+            if (value.Length > tail.Length + 2 && value.EndsWith(tail, StringComparison.Ordinal))
+            {
+                return value[..^tail.Length];
+            }
+        }
+
+        return value;
     }
+
+    [GeneratedRegex(@"^(cm|sf)(r|b|bx|bxti|ti|sl|csc|cc|ss|ssbx|ssi|mi|sy|ex|u|tt)\d*$",
+        RegexOptions.None, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex TexComputerModern();
 
     private static IReadOnlyList<CvScanEvidence> FindEvidence(ExtractedCv cv, Func<string, bool> predicate)
     {
@@ -534,15 +714,11 @@ public static class CvScanChecks
 }
 
 /// <summary>
-/// What can only be known from where the words sit: the two-column pages, and the text that lives
-/// in the top and bottom bands of a page. Both are PDF questions — a .docx answers them itself
-/// (see <see cref="ExtractedCv.TableCount"/> and <see cref="ExtractedCv.HeaderFooterText"/>) — so
-/// this is empty for a document with no geometry, and the checks fall back accordingly.
+/// What can only be known from where the words sit: the two-column pages. A PDF question — a .docx
+/// answers it itself (see <see cref="ExtractedCv.TableCount"/>) — so this is empty for a document
+/// with no geometry.
 /// </summary>
-/// <param name="BodyText">Everything outside those bands, or null for a format that answers the
-/// header question itself. It is what "the e-mail is only in the footer" is decided against.</param>
-internal sealed record CvPageGeometry(IReadOnlyList<CvColumnLayout> Columns, string HeaderFooterText,
-    string? BodyText)
+internal sealed record CvPageGeometry(IReadOnlyList<CvColumnLayout> Columns)
 {
     /// <summary>A page with too few words tells you nothing: a cover page has white space down the
     /// middle and is not a two-column layout.</summary>
@@ -556,33 +732,25 @@ internal sealed record CvPageGeometry(IReadOnlyList<CvColumnLayout> Columns, str
     private const int MinimumLinesPerColumn = 4;
 
     /// <summary>Narrower than this and it is the space between two words, not between two
-    /// columns.</summary>
-    private const double MinimumGutterRatio = 0.06;
-
-    private const double BandRatio = 0.08;
+    /// columns. About nine points on A4 — wider than any word space, and narrower than the gutter of
+    /// the tightest sidebar template seen in the wild (a real CV whose columns sat 3.5% apart scored
+    /// 98 when this was 6%). What keeps a narrow threshold honest is the rest of the test: the band
+    /// has to run the height of every line on the page, with real text on both sides of it.</summary>
+    private const double MinimumGutterRatio = 0.015;
 
     public static CvPageGeometry From(ExtractedCv cv)
     {
         if (cv.Format is not CvFileFormat.Pdf)
         {
-            return new CvPageGeometry([], string.Empty, BodyText: null);
+            return new CvPageGeometry([]);
         }
 
         var columns = new List<CvColumnLayout>();
-        var band = new StringBuilder();
-        var body = new StringBuilder();
 
         foreach (var page in cv.Pages)
         {
             var words = page.Words.Where(word => !string.IsNullOrWhiteSpace(word.Text)).ToList();
-            if (words.Count == 0 || page.Width <= 0 || page.Height <= 0)
-            {
-                continue;
-            }
-
-            AppendBands(band, body, page, words);
-
-            if (words.Count < MinimumWordsToJudge)
+            if (words.Count < MinimumWordsToJudge || page.Width <= 0 || page.Height <= 0)
             {
                 continue;
             }
@@ -593,86 +761,52 @@ internal sealed record CvPageGeometry(IReadOnlyList<CvColumnLayout> Columns, str
             }
         }
 
-        // Null rather than empty when no page carried words: "the e-mail is not in the body" is
-        // only worth asserting when a body was actually read, and an empty string here would
-        // otherwise report every contact detail as header furniture.
-        return new CvPageGeometry(columns, band.ToString(),
-            body.Length > 0 ? body.ToString() : null);
-    }
-
-    private static void AppendBands(StringBuilder band, StringBuilder body, ExtractedCvPage page,
-        List<ExtractedCvWord> words)
-    {
-        var top = page.Height * (1 - BandRatio);
-        var bottom = page.Height * BandRatio;
-
-        foreach (var group in words.GroupBy(word => word.Bottom >= top || word.Top <= bottom))
-        {
-            var line = string.Join(' ', group
-                .OrderByDescending(word => word.Bottom)
-                .ThenBy(word => word.Left)
-                .Select(word => word.Text));
-
-            (group.Key ? band : body).AppendLine(line);
-        }
+        return new CvPageGeometry(columns);
     }
 
     /// <summary>
-    /// Looks for a vertical band down the middle of the page that no word crosses. The page is cut
-    /// into hundredths and each word marks the hundredths it covers; the longest unmarked run whose
-    /// centre lies in the middle half of the page is the candidate gutter.
+    /// Looks for a vertical band down the middle of the page that no word crosses. Every word's
+    /// horizontal extent is an interval; the intervals are merged, and the widest gap between them
+    /// whose centre lies in the middle half of the page is the candidate gutter.
+    ///
+    /// Measured in points rather than in coarse slices of the page on purpose: template sites set
+    /// the sidebar a few millimetres from the body, and rounding every word outwards to the next
+    /// hundredth of the width used to close exactly that kind of gutter and report a two-column CV
+    /// as one column.
     /// </summary>
     private static CvColumnLayout? FindGutter(ExtractedCvPage page, List<ExtractedCvWord> words)
     {
-        const int Bins = 100;
-        var occupied = new bool[Bins];
+        var spans = words
+            .Select(word => (From: Math.Max(word.Left, 0), To: Math.Min(word.Right, page.Width)))
+            .Where(span => span.To > span.From)
+            .OrderBy(span => span.From)
+            .ToList();
 
-        foreach (var word in words)
+        var gutterFrom = 0.0;
+        var gutterTo = 0.0;
+        var reach = double.NegativeInfinity;
+
+        foreach (var (from, to) in spans)
         {
-            var from = (int)Math.Floor(word.Left / page.Width * Bins);
-            var to = (int)Math.Ceiling(word.Right / page.Width * Bins);
-
-            for (var bin = Math.Max(from, 0); bin < Math.Min(to, Bins); bin++)
+            if (reach > double.NegativeInfinity && from > reach)
             {
-                occupied[bin] = true;
-            }
-        }
-
-        var bestStart = -1;
-        var bestLength = 0;
-        var start = -1;
-
-        for (var bin = 0; bin <= Bins; bin++)
-        {
-            var empty = bin < Bins && !occupied[bin];
-            if (empty && start < 0)
-            {
-                start = bin;
-            }
-            else if (!empty && start >= 0)
-            {
-                var length = bin - start;
-                var center = (start + bin) / 2.0 / Bins;
-
                 // Only the middle half of the page: the margins are empty by definition and a gap
                 // at 12% of the width is an indent.
-                if (length > bestLength && center is > 0.25 and < 0.75)
+                var center = (reach + from) / 2 / page.Width;
+                if (from - reach > gutterTo - gutterFrom && center is > 0.25 and < 0.75)
                 {
-                    bestStart = start;
-                    bestLength = length;
+                    gutterFrom = reach;
+                    gutterTo = from;
                 }
-
-                start = -1;
             }
+
+            reach = Math.Max(reach, to);
         }
 
-        if (bestStart < 0 || (double)bestLength / Bins < MinimumGutterRatio)
+        if ((gutterTo - gutterFrom) / page.Width < MinimumGutterRatio)
         {
             return null;
         }
-
-        var gutterFrom = (double)bestStart / Bins * page.Width;
-        var gutterTo = (double)(bestStart + bestLength) / Bins * page.Width;
 
         var left = words.Where(word => word.Right <= gutterFrom).ToList();
         var right = words.Where(word => word.Left >= gutterTo).ToList();
@@ -692,7 +826,7 @@ internal sealed record CvPageGeometry(IReadOnlyList<CvColumnLayout> Columns, str
             return null;
         }
 
-        return new CvColumnLayout(page.Number, (bestStart + bestLength / 2.0) / Bins);
+        return new CvColumnLayout(page.Number, (gutterFrom + gutterTo) / 2 / page.Width);
     }
 }
 
