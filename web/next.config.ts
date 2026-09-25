@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import createMDX from "@next/mdx";
 import { withSentryConfig } from "@sentry/nextjs";
+import { UNSERVED_ROOT_FILE_REWRITE } from "./src/lib/http/canonicalHost";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -148,7 +149,8 @@ const nextConfig: NextConfig = {
         // the cache headers (a year, immutable, for a published post's image); Next passes them on.
         { source: "/api/blog/media/:id", destination: `${apiOrigin}/api/blog/media/:id` },
       ],
-      afterFiles: [],
+      // A root-level file nothing serves (/llms.txt) gets the 404, not a 500 — see canonicalHost.ts.
+      afterFiles: [UNSERVED_ROOT_FILE_REWRITE],
       fallback: [],
     };
   },

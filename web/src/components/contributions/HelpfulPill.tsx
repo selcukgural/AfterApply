@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 interface HelpfulPillProps {
   count: number;
@@ -49,8 +50,8 @@ export function HelpfulPill({ count, marked = false, busy = false, onToggle, sig
   }
 
   return signInHref ? (
-    <a href={signInHref} className={`${base} ${idle}`}>
+    <Link href={signInHref} className={`${base} ${idle}`}>
       {label}
-    </a>
+    </Link>
   ) : null;
 }

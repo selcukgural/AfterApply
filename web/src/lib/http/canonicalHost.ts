@@ -62,3 +62,18 @@ export function stripIndexHtml(pathname: string): string {
 export function isFileRequest(pathname: string): boolean {
   return /\/[^/]+\.[^/]+$/.test(pathname);
 }
+
+/**
+ * A root-level file nothing serves — /llms.txt, /ads.txt, /.well-known/security.txt — sent to the
+ * site's own 404 (next.config.ts, `afterFiles`).
+ *
+ * Without it the first segment lands on [locale] as the locale, the root layout calls notFound()
+ * with no 404 boundary above it, and the answer is a bare 500; the proxy never sees these paths,
+ * because its matcher skips dotted ones. `afterFiles` runs after every real file (robots.txt,
+ * sitemap.xml, icon.png, public/) and before the dynamic routes, so only what nothing serves
+ * reaches this. The destination is any address the locale's catch-all claims.
+ */
+export const UNSERVED_ROOT_FILE_REWRITE = {
+  source: "/:file([^/]*\\.[^/]*)/:rest*",
+  destination: "/tr/__not-found",
+} as const;

@@ -138,9 +138,9 @@ export function CompanyReviewsSection({ company, initialReviews }: CompanyReview
               {t("writeReview")}
             </Link>
           ) : (
-            <a href={signInHref} className={buttonClassName("primary")}>
+            <Link href={signInHref} className={buttonClassName("primary")}>
               {t("signInToWrite")}
-            </a>
+            </Link>
           )}
         </div>
       )}

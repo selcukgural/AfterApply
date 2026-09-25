@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { apexRedirectUrl, isFileRequest, stripIndexHtml } from "./canonicalHost";
+// @ts-expect-error — Next's bundled copy ships no types; it is the matcher the rewrite actually runs through.
+import { match } from "next/dist/compiled/path-to-regexp";
+import { UNSERVED_ROOT_FILE_REWRITE, apexRedirectUrl, isFileRequest, stripIndexHtml } from "./canonicalHost";
 
 describe("apexRedirectUrl", () => {
   it("sends a www request to the apex, keeping path and query", () => {
@@ -80,5 +82,30 @@ describe("isFileRequest", () => {
     expect(isFileRequest("/tr/guide")).toBe(false);
     expect(isFileRequest("/tr/guide/kariyer-net-basvurularim-nerede")).toBe(false);
     expect(isFileRequest("/en/help/chrome-extension")).toBe(false);
+  });
+});
+
+describe("UNSERVED_ROOT_FILE_REWRITE", () => {
+  const claims = (path: string) => Boolean(match(UNSERVED_ROOT_FILE_REWRITE.source)(path));
+
+  // These answered 500 before (2026-09-25): the file name became the locale.
+  it("catches a dotted first segment, with or without more after it", () => {
+    expect(claims("/llms.txt")).toBe(true);
+    expect(claims("/ads.txt")).toBe(true);
+    expect(claims("/favicon.ico")).toBe(true);
+    expect(claims("/.well-known/security.txt")).toBe(true);
+  });
+
+  // afterFiles also sees locale pages that no static file claimed; it must leave all of them to
+  // their routes, or every dynamic page (a company, a blog post) would become the 404.
+  it("leaves every locale path alone, dotted or not", () => {
+    expect(claims("/tr")).toBe(false);
+    expect(claims("/en/help/chrome-extension")).toBe(false);
+    expect(claims("/tr/companies/acme")).toBe(false);
+    expect(claims("/tr/guide/is-basvuru-takip-sablonu.xlsx")).toBe(false);
+  });
+
+  it("lands on a locale address, where the site's own 404 page renders", () => {
+    expect(UNSERVED_ROOT_FILE_REWRITE.destination).toMatch(/^\/(tr|en)\//);
   });
 });
