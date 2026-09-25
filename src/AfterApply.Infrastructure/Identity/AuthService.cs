@@ -1079,6 +1079,12 @@ internal sealed class AuthService(
             .Select(x => new { x.s.CompanyId, x.Name, x.s.Platform, x.s.Url, x.s.SubmittedAt })
             .ToListAsync(cancellationToken);
 
+        var trackedJobs = await dbContext.TrackedJobs
+            .Where(t => t.UserId == userId)
+            .Join(dbContext.Companies, t => t.CompanyId, c => c.Id, (t, c) => new TrackedJobExportItem(
+                t.Id, c.Name, t.JobTitle, t.JobUrl, t.Location, t.Notes, t.AddedAt, t.HrName, t.HrEmail, t.HrLinkedInUrl))
+            .ToListAsync(cancellationToken);
+
         var notificationPreferences = new NotificationPreferencesResponse(
             user.NotifyContributions, user.NotifyReviewHelpful, user.NotifySalaryHelpful,
             user.NotifyExperienceHelpful, user.NotifyBlogCommentHelpful, user.NotifyGmailUpdates);
@@ -1088,7 +1094,8 @@ internal sealed class AuthService(
             candidateExperiences, blogComments, helpfulMarkedSalaryIds, helpfulMarkedExperienceIds, contributionNotifications,
             helpfulMarksCounted, notificationPreferences, experienceInviteDismissals,
             companyProfileSubmissions.Select(x => new CompanyProfileSubmissionExportItem(
-                x.CompanyId, x.Name, x.Platform.ToString(), x.Url, x.SubmittedAt)).ToList());
+                x.CompanyId, x.Name, x.Platform.ToString(), x.Url, x.SubmittedAt)).ToList(),
+            trackedJobs);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

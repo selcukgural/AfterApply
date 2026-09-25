@@ -6,11 +6,21 @@ Turkish users automatically; Chrome shows whichever matches the visitor's browse
 
 ## Item name
 
+**EN**
 ```
-e-kariyerim — Job Import
+e-kariyerim — Save Job Applications
 ```
 
-Matches `manifest.json`'s `name` field; the Web Store requires these to be identical.
+**TR**
+```
+e-kariyerim — Başvurunu Kaydet
+```
+
+Since 0.9.2 the name is localized: `manifest.json` carries `__MSG_appName__` and the text lives in
+`_locales/{en,tr}/messages.json`, which the Web Store reads per listing language, so these two
+blocks and those files must stay identical (`tests/manifest.test.js` checks it). Until 0.9.1 it was
+the English-only "e-kariyerim — Job Import": "import" is not what anyone searches for, and Turkish
+users saw an English name. No third-party brand in the name, same rule as the description.
 
 ## Summary (short description, max 132 characters)
 
@@ -28,8 +38,8 @@ Başvurularınızı e-kariyerim'e aktarın — LinkedIn, kariyer.net ve izin ver
 
 **EN**
 ```
-e-kariyerim — Job Import turns a job posting you are looking at into a tracked application in
-your e-kariyerim account, in one click.
+e-kariyerim — Save Job Applications turns a job posting you are looking at into a tracked
+application in your e-kariyerim account, in one click.
 
 WHERE IT WORKS
 LinkedIn and kariyer.net work the moment you install it. On any other job page — a company's own
@@ -46,6 +56,8 @@ HOW IT WORKS
    wrong entry.
 4. Click "I Applied." Done — it's now tracked in e-kariyerim, matched to the job description for
    later reference.
+5. Not applied yet? "Apply later" saves the posting with its description instead. When you apply,
+   click "I Applied" on the same page and it moves to your applications.
 
 On a site with no dedicated support, the popup reads the page's own schema.org job markup — the
 same structured data the page publishes for search engines — so most job boards fill themselves in
@@ -93,7 +105,7 @@ Corporation, kariyer.net or Google.
 
 **TR**
 ```
-e-kariyerim — Job Import, baktığınız bir iş ilanını tek tıkla e-kariyerim hesabınıza kaydedilmiş
+e-kariyerim — Başvurunu Kaydet, baktığınız bir iş ilanını tek tıkla e-kariyerim hesabınıza kaydedilmiş
 bir başvuruya dönüştürür.
 
 NEREDE ÇALIŞIR
@@ -111,6 +123,8 @@ NASIL ÇALIŞIR
    kayda dönüşmez.
 4. "Başvurdum"a tıklayın. Bu kadar — başvurunuz artık e-kariyerim'de, ileride bakmak üzere ilan
    metniyle birlikte kayıtlı.
+5. Henüz başvurmadınız mı? "Sonra başvur" ilanı metniyle birlikte kaydeder. Başvurduğunuzda aynı
+   sayfada "Başvurdum"a tıklayın; kayıt başvurularınıza taşınır.
 
 Özel desteği olmayan bir sitede pencere, sayfanın kendi schema.org ilan işaretlemesini okur —
 sayfanın arama motorları için yayımladığı yapılandırılmış veri — yani çoğu iş sitesi yine de

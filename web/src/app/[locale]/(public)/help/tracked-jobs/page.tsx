@@ -54,6 +54,10 @@ export default async function TrackedJobsHelpPage({ params }: PageProps<"/[local
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("remove.body")}</p>
       </section>
 
+      <Callout variant="info" label={tCommon("note")} title={t("calloutExtension.title")}>
+        {t("calloutExtension.body")}
+      </Callout>
+
       <Callout variant="info" label={tCommon("note")} title={t("calloutNoEdit.title")}>
         {t("calloutNoEdit.body")}
       </Callout>

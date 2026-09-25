@@ -624,6 +624,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ICompanyResolver, CompanyResolver>();
         services.AddScoped<ICompanySearchService, CompanySearchService>();
+        services.AddScoped<ExtensionCaptureResolver>();
         services.AddScoped<IApplicationService, ApplicationService>();
         services.AddScoped<ITrackedJobService, TrackedJobService>();
         services.AddHttpClient<IJobLinkPreviewService, JobLinkPreviewService>(client => client.Timeout = TimeSpan.FromSeconds(5))

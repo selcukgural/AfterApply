@@ -18,7 +18,13 @@ showing the old logo. Prefer a shared asset over a copied glyph here.
 
 ## Regenerating them
 
-Last shot 2026-09-22 for `0.9.0` — `options-light.png` only.
+Last shot 2026-09-25 for `0.9.2` — `popup-light.png` and `popup-dark.png`, for the "Apply later" /
+"I Applied" button row (the scene's markup copied, footer moved from `0.6.0` to `0.9.2`), and the
+help centre's `chrome-extension-popup.png` from the real popup through the stub (window 1280×812;
+measure the frame from `body`, not `documentElement`, or the popup gets a band of empty space at
+the bottom). The landing page's `ExtensionPopupMock` got the same row.
+
+Before that, 2026-09-22 for `0.9.0` — `options-light.png` only.
 
 The help centre's two extension images (below) were reshot 2026-09-24 when `0.9.1` went live in
 the Store: both footers still read an old build — Settings `0.9.0`, the popup `0.6.0`. Windows

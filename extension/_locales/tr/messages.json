@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "e-kariyerim — Başvurunu Kaydet",
+    "description": "Extension name in chrome://extensions and the Web Store. Must match store-listing/LISTING.md. No third-party brand names: 0.9.0 was rejected for keyword spam."
+  },
+  "appDescription": {
+    "message": "Başvurularınızı e-kariyerim'e aktarın — LinkedIn, kariyer.net ve izin verdiğiniz iş sitelerinde tek tıkla.",
+    "description": "Manifest description; the Web Store summary. Max 132 characters. Must match store-listing/LISTING.md."
+  }
+}

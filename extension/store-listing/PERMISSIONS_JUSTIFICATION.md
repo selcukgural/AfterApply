@@ -24,7 +24,8 @@ email.
 Stores the user's e-kariyerim API base URL, the access token their account issued to this
 extension (with the date it expires, so the extension can warn before it lapses), and their
 light/dark theme and language preferences locally on the device (chrome.storage.local), so they
-aren't re-entered on every use. Never synced, never sent anywhere except as this extension's own
+aren't re-entered on every use. Also which version's "What's new" notes were seen and the version
+of a downloaded update awaiting a restart (0.9.2), so the popup can show them once. Never synced, never sent anywhere except as this extension's own
 Authorization header.
 ```
 
@@ -63,7 +64,7 @@ extension asks for one host at a time, only the host the user is on, only when t
 button. Each granted site is listed in the extension's Settings page with a Remove button next to
 it. What happens after the grant is exactly what happens on LinkedIn and kariyer.net today: one
 click-triggered read of that page's visible job details and schema.org markup, shown in the popup,
-editable, and sent only when the user presses "I Applied". No background access, no content script
+editable, and sent only when the user presses "I Applied" or "Apply later". No background access, no content script
 registered on those sites, nothing read on any later visit without another click.
 ```
 
@@ -140,7 +141,7 @@ Chrome's form asks what data the item handles and how. Based on what `popup.js` 
 |---|---|---|
 | Personally identifiable information | Yes | Not about the user: the extension does not collect their name, address, or similar. But on a LinkedIn posting that publicly shows a hiring-team card, the popup reads the job poster's name and public profile URL and offers them as the application's contact — visible and editable in the popup before anything is sent, stored only on the user's own account as their own note of who to contact, never shown to anyone else and never used to contact that person. |
 | Authentication information | Yes | The user's own e-kariyerim access token, stored locally, used only to authenticate the extension's own requests to their account. Obtained by the user pressing Connect and confirming a code on their own account page (or, for a custom API address, entered by hand); the extension holds a random secret for the duration of that handshake and nothing else. |
-| Website content | Yes | Job title, company name, location, and job description text read from the job posting the user opened — on LinkedIn or kariyer.net, or on any other site the user granted this extension access to, one site at a time — and sent to the user's own e-kariyerim account. |
+| Website content | Yes | Job title, company name, location, and job description text read from the job posting the user opened — on LinkedIn or kariyer.net, or on any other site the user granted this extension access to, one site at a time — and sent to the user's own e-kariyerim account, as an application or as a posting saved to apply to later. |
 | Personal communications | Yes, opt-in only | Only if the user turns on Gmail Scanning in Settings (off by default): the sender, subject, and body text of an email the user personally opens in Gmail are read in the browser to score local relevance; only a short extracted summary (sender, subject, capped snippet — never the full email) is sent, and only for a message that scores as job-application-related, to the user's own e-kariyerim account. No other message is read or sent. |
 | Location, financial, health | No | — |
 

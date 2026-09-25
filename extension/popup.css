@@ -479,3 +479,173 @@ button.secondary:hover {
     background-position: 0 50%;
   }
 }
+
+/* ---- Update notices (0.9.2, whats-new.js) ------------------------------------------------------
+   Above the form, never instead of it: someone opened the popup to save a posting, so the notes
+   push the form down a little and go away with one click. */
+#notices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 0;
+}
+
+.notice {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--accent-subtle-bg);
+  color: var(--accent-subtle-text);
+}
+
+.notice-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notice-title {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.notice-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.notice-close:hover {
+  background: var(--secondary-bg-hover);
+}
+
+.notice-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.notice ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.update-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.update-row-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.update-row-text strong {
+  font-size: 12px;
+}
+
+.update-row-text span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.update-row button {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: var(--secondary-bg);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.update-row button:hover {
+  background: var(--secondary-bg-hover);
+}
+
+/* "What's new" in the footer, once the banner is closed — how it is opened again. */
+.link-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  /* Not --accent: #2563eb on the dark background is under 4.5:1 at this size. */
+  color: var(--accent-subtle-text);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.version-line .link-button::before {
+  content: "·";
+  display: inline-block;
+  margin: 0 6px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+/* ---- "Apply later" + "I Applied" (0.9.2, canvas variant B) --------------------------------------
+   Side by side, equal width; "I Applied" keeps the filled primary look, "Apply later" is outlined so
+   the two read as a choice with one default rather than two equal calls. */
+.action-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* button#submit / button.primary carry their own margin-top for the single-button layout; the row
+   spaces itself. (.primary is the store-listing scene's copy of the same button.) */
+.action-row button#submit,
+.action-row button.primary {
+  margin-top: 0;
+}
+
+button.outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+button.outline:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+button.outline:disabled {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+button.outline svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}

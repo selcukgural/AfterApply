@@ -77,8 +77,13 @@ export function ExtensionPopupMock({ className = "" }: { className?: string }) {
                     </div>
                   </div>
                 ))}
-                <div className="mt-1 rounded-lg bg-accent px-3 py-2 text-center text-[13px] font-semibold text-white">
-                  {t("submit")}
+                <div className="mt-1 grid grid-cols-2 gap-2">
+                  <div className="rounded-lg border border-gray-300 px-3 py-2 text-center text-[13px] font-semibold text-gray-900 dark:border-gray-700 dark:text-gray-100">
+                    {t("later")}
+                  </div>
+                  <div className="rounded-lg bg-accent px-3 py-2 text-center text-[13px] font-semibold text-white">
+                    {t("submit")}
+                  </div>
                 </div>
               </div>
             </div>

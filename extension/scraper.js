@@ -112,7 +112,12 @@ export async function scrapeJobPosting(config) {
         return classic;
       }
 
-      const peopleBlock = document.querySelector('[data-sdui-component*="peopleWhoCanHelp"]');
+      // The umbrella block's marker has changed once already: it was data-sdui-component, and
+      // since 2026-09 it is componentkey="JobDetailsPeopleWhoCanHelpSlot_<jobId>" with the old
+      // attribute gone. Both stay listed, because both layouts may still be served.
+      const peopleBlock = document.querySelector(
+        '[data-sdui-component*="peopleWhoCanHelp"], [componentkey^="JobDetailsPeopleWhoCanHelpSlot"]',
+      );
       if (!peopleBlock) {
         return null;
       }

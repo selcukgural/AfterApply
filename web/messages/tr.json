@@ -354,13 +354,14 @@
     },
     "extension": {
       "mock": {
-        "ariaLabel": "Örnek: bir LinkedIn ilanının üzerinde açılmış e-kariyerim eklentisi; şirket, pozisyon, konum ve İK kontağı otomatik dolmuş, altta Başvurdum düğmesi.",
+        "ariaLabel": "Örnek: bir LinkedIn ilanının üzerinde açılmış e-kariyerim eklentisi; şirket, pozisyon, konum ve İK kontağı otomatik dolmuş, altta Sonra başvur ve Başvurdum düğmeleri.",
         "company": "Şirket",
         "jobTitle": "Pozisyon",
         "location": "Konum",
         "contact": "İK kontağı",
         "optional": "isteğe bağlı",
-        "submit": "Başvurdum"
+        "submit": "Başvurdum",
+        "later": "Sonra başvur"
       }
     },
     "privacy": {
@@ -1499,7 +1500,7 @@
   },
   "extensionPrivacy": {
     "title": "Tarayıcı Eklentisi Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 22 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 25 Eylül 2026",
     "scope": {
       "title": "Bu politika neyi kapsar",
       "body": "Bu sayfa yalnızca e-kariyerim Tarayıcı Eklentisi'ni (\"eklenti\") anlatır. Eklenti, e-kariyerim web uygulamasının (ekariyerim.com) bir tamamlayıcısıdır: oturum açmış bir kullanıcının o an görüntülediği bir iş ilanını — LinkedIn'de, kariyer.net'te ya da izin verdiği başka herhangi bir iş sitesinde — kendi hesabına takip edilen bir başvuru olarak kaydetmesini sağlar; ayrıca isteğe bağlı bir \"Gmail Taraması\" özelliği sunar: Gmail'de açtığınız bir maili kendi cihazınızda kontrol eder ve yalnızca iş maili gibi görünüyorsa kısa bir özet gönderir. Hesabınıza kaydedilmiş veriler (geçmiş başvurularınız) bu belgeye değil, e-kariyerim'in kendi gizlilik politikasına tabidir."
@@ -1545,11 +1546,12 @@
       "item3": "Eklentinin kendi penceresi için açık/koyu tema tercihiniz.",
       "item4": "Eklentinin sayfaları için dil tercihiniz (Türkçe/İngilizce).",
       "item5": "Gmail Taraması'nı açıp açmadığınız (siz açıkça etkinleştirmedikçe kapalı), puanlamada kullanılan (kişisel olmayan) anahtar kelime/alan adı tablosunun yerel bir kopyası ve aynı mailin iki kez gönderilmemesi için daha önce gönderilmiş mail konuşma kimliklerinin kısa bir listesi.",
+      "item6": "Hangi sürümün \"Yenilikler\" notlarını gördüğünüz ve Chrome'un indirip henüz uygulamadığı bir güncellemenin sürüm numarası — böylece pencere bir güncellemeden sonra neyin değiştiğini gösterebilir ve yeniden başlatmayı önerebilir. Bunlarla ilgili hiçbir şey bir yere gönderilmez.",
       "outro": "Bu veriler, aşağıdaki \"Eklenti neyi, kime gönderir\" bölümünde anlatılanlar dışında cihazınızdan hiç çıkmaz."
     },
     "sent": {
       "title": "Eklenti neyi, kime gönderir",
-      "body": "\"Başvurdum\"a tıkladığınızda eklenti, açılan pencerede gördüğünüz ilan başlığını, şirketi, konumu, ilan adresini, açıklamayı ve iletişim bilgilerini kişisel erişim anahtarınızla doğrulanmış olarak e-kariyerim API'sine gönderir; böylece kendi e-kariyerim hesabınıza kaydedilir. Şirket adı tamamlama özelliği de benzer şekilde, yazdığınız metinle e-kariyerim API'sini sorgular.",
+      "body": "\"Başvurdum\"a ya da \"Sonra başvur\"a tıkladığınızda eklenti, açılan pencerede gördüğünüz ilan başlığını, şirketi, konumu, ilan adresini, açıklamayı ve iletişim bilgilerini kişisel erişim anahtarınızla doğrulanmış olarak e-kariyerim API'sine gönderir; böylece kendi e-kariyerim hesabınıza bir başvuru ya da sonra başvurmak üzere kaydedilmiş bir ilan olarak kaydedilir. Şirket adı tamamlama özelliği de benzer şekilde, yazdığınız metinle e-kariyerim API'sini sorgular.",
       "hrNote": "Bu şekilde kaydedilen bir iletişim kişisi, o başvuru için kime ulaşacağınıza dair kendi notunuzdur: yalnızca siz görürsünüz, başka kullanıcılara hiçbir zaman gösterilmez, hiçbir analitiğe dahil edilmez, e-kariyerim sizin adınıza o kişiye hiçbir zaman mail atmaz veya mesaj göndermez, ve başvuruyla ya da hesabınızla birlikte silinir.",
       "gmailNote": "Gmail Taraması'nı açtıysanız, açtığınız ve iş başvurusuyla ilgili puan alan bir mailin göndereni, konusu ve sınırlı bir özeti kendi e-kariyerim hesabınıza gönderilir (yukarıdaki Gmail Taraması bölümüne bakın) — bu yalnızca sizin açtığınız mailer için, yalnızca ayarı etkinleştirdikten sonra ve yalnızca cihaz üzerindeki puan uygun olduğunda gerçekleşir.",
       "noOther": "Eklenti başka hiçbir hedefe veri göndermez. Analitik, reklam veya takip hizmetleri kullanmaz; verilerinizi üçüncü taraflarla paylaşmaz veya satmaz.",
@@ -1560,7 +1562,7 @@
       "item1": "İlan kaydetme penceresi yalnızca siz simgesine tıkladığınızda çalışır — izin verdikleriniz dahil hiçbir sitede arka planda çalışan bir tarama veya yoklama yoktur.",
       "item2": "Gmail Taraması varsayılan olarak kapalıdır ve Ayarlar'dan açana kadar hiçbir şey yapmaz; açtıktan sonra da yalnızca Gmail'de kendiniz bir maili açtığınızda o maili okur — gelen kutunuzu arka planda taramaz ve başka hiçbir sitede hiçbir şey yapmaz. Ayarlar'dan istediğiniz zaman, aynı anda etkili olacak şekilde kapatabilirsiniz.",
       "item3": "Erişim anahtarınızı istediğiniz zaman eklentinin Ayarlar sayfasından kaldırabilir veya e-kariyerim'in Ayarlar → Tarayıcı Eklentisi sayfasından iptal edebilirsiniz; iptal anahtarı anında geçersiz kılar. Anahtar ayrıca siz hiçbir şey yapmasanız da 90 gün sonra kendiliğinden sona erer.",
-      "item4": "Eklentiyi kaldırmak, chrome.storage.local'in eklenti için tuttuğu her şeyi (anahtar, API adresi, tema, dil tercihi, Gmail Taraması ayarı ve yerel önbellekleri) cihazınızdan siler.",
+      "item4": "Eklentiyi kaldırmak, chrome.storage.local'in eklenti için tuttuğu her şeyi (anahtar, API adresi, tema, dil tercihi, Gmail Taraması ayarı, güncelleme bildirimi durumu ve yerel önbellekleri) cihazınızdan siler.",
       "item5": "Bir bağlantı kodu yalnızca bir tekliftir: giriş yapmış hâlde onaylamadıkça hiçbir şey vermez ve onay sayfasında, kendi üretmediğiniz bir kod için \"Bu ben değilim\" düğmesi vardır.",
       "item6": "İzin verdiğiniz bir siteyi, hepsini listeleyen eklenti Ayarlar sayfasından ya da Chrome'un kendi eklenti ayarlarından istediğiniz zaman geri alabilirsiniz."
     },
@@ -2140,6 +2142,10 @@
       "calloutNoEdit": {
         "title": "Doğrudan düzenleme yok",
         "body": "Takip edilen bir ilanın bilgilerini değiştirmenin bir yolu şu an yok. Bilgi hatalıysa ilanı kaldırıp yeniden ekleyin; başvurduysanız zaten \"Başvurdum\" ile dönüştürüp bilgileri orada (Başvuru Düzenle sayfasında) güncelleyebilirsiniz."
+      },
+      "calloutExtension": {
+        "title": "Eklentiden kaydetmek",
+        "body": "Bir ilan sayfasında Chrome eklentisinin \"Sonra başvur\" düğmesi ilanı ilan metniyle birlikte buraya kaydeder; ilan yayından kalksa da elinizde kalır. Sonra aynı sayfada \"Başvurdum\"a basınca başvurularınıza taşınır."
       }
     },
     "applications": {
@@ -2471,6 +2477,10 @@
       "calloutPermission": {
         "title": "İzin verdiğiniz siteler sizde kalır",
         "body": "Eklenti yalnızca siz açtığınız sayfayı, yalnızca siz simgesine bastığınızda okur; arka planda hiçbir sitede çalışmaz. İzin verdiğiniz her site eklentinin Ayarlar sayfasında listelenir ve yanındaki \"Kaldır\" ile geri alınır; kaldırdığınız an o siteyi okumayı bırakır."
+      },
+      "calloutLater": {
+        "title": "Henüz başvurmadınız mı? \"Sonra başvur\"",
+        "body": "\"Başvurdum\"un yanında \"Sonra başvur\" var: ilanı, ilan metniyle birlikte başvuru kaydı açmadan Takip Edilen İlanlar'a kaydeder. Başvurduğunuzda aynı ilanı açıp \"Başvurdum\"a basın — kayıtlı ilan ikinci kez eklenmez, başvurularınıza taşınır. Zaten başvurduğunuz bir ilan yeniden kaydedilmez."
       }
     },
     "faq": {

@@ -16,6 +16,9 @@
     <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme"></button>
   </header>
 
+  <!-- Update notices (whats-new.js): built with DOM APIs in popup.js, empty and hidden otherwise. -->
+  <section id="notices" hidden></section>
+
   <main id="content">
     <div class="skeleton" style="height: 14px; width: 60%; margin-bottom: 8px;"></div>
     <div class="skeleton" style="height: 32px;"></div>
@@ -23,6 +26,7 @@
 
   <footer class="version-line">
     <span id="versionLabel"></span>
+    <button id="whatsNewLink" class="link-button" type="button" hidden></button>
   </footer>
 
   <script type="module" src="popup.js"></script>

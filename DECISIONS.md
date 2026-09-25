@@ -9564,3 +9564,48 @@ ilk işin maddeleri Sertifikalar'ın altında) hiçbir kontrole takılmadı.
   (Textkernel önerildi, kıyaslama için yazılı onay alınarak) aynı korpusa koşturulacak. Geri
   bildirim gelen CV'nin kendisi repoya girmez; düzeni sahte verilerle yeniden üretilir
   (`CvFixtures.SidebarPdf`, korpustaki `canva-*` grupları).
+
+## Eklentinin mağaza adı: "Başvurunu Kaydet" — DECIDED (2026-09-25)
+
+- 2026-09-22'de ertelenen mağaza adı kararı (0.3 dizin kartı maddesi) kapandı. 0.9.2 ile ad
+  **EN "e-kariyerim — Save Job Applications" / TR "e-kariyerim — Başvurunu Kaydet"**
+  (eskisi yalnızca İngilizce "e-kariyerim — Job Import").
+- Sebep çoklu kaynak değil: eski ad zaten kaynaktan bağımsızdı. Değişimin iki sebebi var: "import"
+  kimsenin arattığı kelime değil, ve Türk kullanıcı İngilizce ad görüyordu.
+- **"Tracker / Takibi" bilinçli olarak seçilmedi.** Önce "Job Application Tracker / İş Başvurusu
+  Takibi" seçilmişti; V serisi kararıyla (2026-09-08: "takip ürün değil, veri toplama mekanizması",
+  vaat "Başvuruların nereye gidiyor?") çeliştiği için aynı gün geri alındı. Eklentinin yaptığı şeyi
+  söyleyen ad: kaydetmek.
+- Ad artık yerelleştirilmiş: `manifest.json` `__MSG_appName__` / `__MSG_appDescription__`,
+  `default_locale: "en"`, metin `extension/_locales/{en,tr}/messages.json` içinde. Özet de aynı
+  yoldan TR/EN ayrıldı. `LISTING.md` ile birebir aynı kalmaları `tests/manifest.test.js` ile
+  kontrol ediliyor.
+- Kural (0.9.0 reddinden): adda üçüncü-taraf marka yok. Raporun önerdiği "LinkedIn ve kariyer.net
+  başvuru takibi" bu yüzden alınmadı.
+
+## Eklenti 0.9.2: "Sonra başvur" ve güncelleme bildirimi — DECIDED (2026-09-25)
+
+- **"Sonra başvur" (canvas varyant B, "Başvurdum"un solunda, çerçeveli).** Aynı yakalama, yeni uç:
+  `POST /api/tracked-jobs/from-extension` — `CreateFromExtensionRequest` ve doğrulayıcısı aynen
+  (URL allow-list'leri dahil), `AllowExtensionToken`. **Yanıt yalnızca sonuç**
+  (`Saved`/`AlreadySaved`/`AlreadyApplied`), kayıt dönmez: uzun ömürlü dar token satır okumaya
+  dönüşmesin. Aynı URL başvuruysa kaydedilmez (aynı ilan iki listede, biri "başvurmadım" demesin).
+- **Kayıtlı ilanda "Başvurdum" = dönüştürme.** `/api/applications/from-extension` aynı URL'de bir
+  TrackedJob bulursa başvuruyu açar ve kaydı siler; formdaki güncel değerler kazanır, yalnız kaydın
+  bildiği (notlar, o gün yazılan İK, sayfada artık olmayan ilan metni) taşınır. Yanıta eklenen
+  `FromTrackedJob` alanı eklemeli — eski sürümler görmezden gelir; dönüştürme onlarda da çalışır.
+- Şirket/iş çözümü `ExtensionCaptureResolver`'a taşındı (iki düğme aynı Company/Job'a düşsün).
+  TrackedJob'a `JobId` + `CapturedJobDescriptionHtml` eklendi (ilanı sonraya saklamanın asıl
+  sebebi, yayından kalkınca metnin kaybolmaması); sitedeki "dönüştür" de bunları taşır.
+- **KVKK bulgusu:** `/me/export` açıklaması "tracked jobs" diyordu ama dosyada yoktu; eklendi.
+- **Ölçüm notu:** "ölçemeden değiştirme" kuralına rağmen prod `TrackedJobs` kullanımına bakılmadan
+  yapıldı (kullanıcı kararı, Store incelemesi uzun sürdüğü için aynı sürüme girdi). Başlangıç
+  ölçümü sonradan alınmalı: kaydedilen / dönüştürülen oranı.
+- **Güncelleme bildirimi (varyant A + nokta rozet):** `onInstalled(update)` sürümü yerelde kaydeder
+  ve ikona boş metinli rozet (turuncu nokta) koyar; popup açılınca nokta kalkar, formun üstündeki
+  bant kapatılana kadar kalır, sonra alt satırdaki "Yenilikler" ile yeniden açılır. İndirilmiş ama
+  uygulanmamış güncelleme için "Yeniden başlat" satırı (`onUpdateAvailable` + `runtime.reload`).
+  Hiçbir şey sunucuya gitmez; yeni kurulumda bant çıkmaz. Notlar `whats-new.js`'teki
+  `RELEASE_NOTES`'ta; manifest sürümünün notu yoksa test kırılır.
+- **Web'de "eklentin eski" bildirimi ertelendi:** sürüm başlığı + `LatestVersion` ayarı yeni veri
+  toplamak demek ve ancak takılı kalan kullanıcı görülünce değer; Chrome güncellemeyi kendisi yapıyor.

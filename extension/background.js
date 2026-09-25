@@ -1,5 +1,7 @@
-// MV3 background service worker. It exists for exactly one reason: to make the API calls that the
-// Gmail content scripts (gmail-scan.js, local-filter-config.js) cannot make themselves.
+// MV3 background service worker. It exists for two reasons: to make the API calls that the Gmail
+// content scripts (gmail-scan.js, local-filter-config.js) cannot make themselves, and (0.9.2) to
+// notice an update the moment it lands, which only the worker is running for — see the end of the
+// file and whats-new.js.
 //
 // A content script's fetch() is issued on behalf of the page it was injected into — mail.google.com
 // here — and is therefore subject to that page's CORS, which host_permissions does NOT exempt it
@@ -132,4 +134,49 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     .catch(() => sendResponse({ ok: false, status: 0, reason: "worker-error" }));
 
   return true; // response is async
+});
+
+// ---- Update notices (0.9.2, see whats-new.js) -------------------------------------------------
+// Keys duplicated from whats-new.js, which this plain script cannot import.
+const AFTERAPPLY_WHATS_NEW_KEY = "afterapply_whats_new";
+const AFTERAPPLY_PENDING_UPDATE_KEY = "afterapply_pending_update";
+const AFTERAPPLY_BADGE_COLOR = "#f59e0b";
+
+// A badge with a blank text is the smallest thing Chrome draws: a dot-sized pill in this colour.
+async function afterApplyShowUpdateDot() {
+  await chrome.action.setBadgeBackgroundColor({ color: AFTERAPPLY_BADGE_COLOR });
+  await chrome.action.setBadgeText({ text: " " });
+}
+
+chrome.runtime.onInstalled.addListener(({ reason, previousVersion }) => {
+  const currentVersion = chrome.runtime.getManifest().version;
+  // Only an update to a different version: a fresh install is not "what's new" to anyone, and a
+  // reload of the same version (development, chrome://extensions) is not an update.
+  if (reason !== "update" || previousVersion === currentVersion) {
+    return;
+  }
+
+  chrome.storage.local
+    .set({ [AFTERAPPLY_WHATS_NEW_KEY]: { version: currentVersion, dismissed: false, badge: true } })
+    // Whatever was waiting for a restart is now what is running.
+    .then(() => chrome.storage.local.remove(AFTERAPPLY_PENDING_UPDATE_KEY))
+    .then(afterApplyShowUpdateDot)
+    .catch((error) => console.warn("[e-kariyerim] could not record the update", error));
+});
+
+// The badge does not survive a browser restart, the stored flag does: put the dot back until the
+// popup has been opened once.
+chrome.runtime.onStartup.addListener(() => {
+  chrome.storage.local
+    .get(AFTERAPPLY_WHATS_NEW_KEY)
+    .then((result) => (result[AFTERAPPLY_WHATS_NEW_KEY]?.badge ? afterApplyShowUpdateDot() : undefined))
+    .catch((error) => console.warn("[e-kariyerim] could not restore the update dot", error));
+});
+
+// A newer build is downloaded but waits until the extension is idle (an open popup counts as
+// busy). Remembered so the popup can offer to restart into it now; runtime.reload() applies it.
+chrome.runtime.onUpdateAvailable.addListener(({ version }) => {
+  chrome.storage.local
+    .set({ [AFTERAPPLY_PENDING_UPDATE_KEY]: version })
+    .catch((error) => console.warn("[e-kariyerim] could not record the pending update", error));
 });
