@@ -1,6 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <!-- The calibration corpus (tools/CvScanCorpus) scores files with the production extractor
+         itself, which is internal; a copy of it would calibrate the checks against the wrong reader. -->
+    <InternalsVisibleTo Include="CvScanCorpus" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AfterApply.Application\AfterApply.Application.csproj" />
     <ProjectReference Include="..\AfterApply.Domain\AfterApply.Domain.csproj" />
   </ItemGroup>

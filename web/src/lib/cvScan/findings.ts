@@ -66,6 +66,15 @@ export interface FindingDetail {
  * in the reader's own language — a server that returned "2 columns detected" would be returning
  * English to a Turkish page.
  */
+/**
+ * A finding that exists only because no text could be read at all. Its own "why" and "fix" would
+ * send the reader after headings or an e-mail address that are not the problem; the text-layer
+ * finding above it already carries the one fix that matters.
+ */
+export function isNoTextConsequence(finding: CvScanFinding): boolean {
+  return finding.code !== "NoTextLayer" && Boolean(finding.metrics.noText);
+}
+
 export function findingDetails(finding: CvScanFinding): FindingDetail[] {
   const metrics = finding.metrics;
 
@@ -85,7 +94,19 @@ export function findingDetails(finding: CvScanFinding): FindingDetail[] {
         ? [{ key: "tables", args: { count: metrics.tableCount } }]
         : [{ key: "columns", args: { position: Math.round(metrics.gutterPositionPercent ?? 50) } }];
 
+    case "ReadingOrderScrambled": {
+      const details: FindingDetail[] = [];
+      if (metrics.orphanHeadingCount && metrics.orphanHeadingCount >= 2) {
+        details.push({ key: "orphanHeadings", args: { count: metrics.orphanHeadingCount } });
+      }
+      if (metrics.backtrackCount && metrics.backtrackCount >= 3) {
+        details.push({ key: "backtracks", args: { count: metrics.backtrackCount } });
+      }
+      return details;
+    }
+
     case "SectionsOrDatesUnreadable": {
+      if (metrics.noText) return [{ key: "noText" }];
       const details: FindingDetail[] = [];
       if (metrics.missingExperience) details.push({ key: "missingExperience" });
       if (metrics.missingEducation) details.push({ key: "missingEducation" });
@@ -95,6 +116,7 @@ export function findingDetails(finding: CvScanFinding): FindingDetail[] {
     }
 
     case "ContactUnreadable": {
+      if (metrics.noText) return [{ key: "noText" }];
       const details: FindingDetail[] = [];
       if (!metrics.emailFound) details.push({ key: "noEmail" });
       if (!metrics.phoneFound) details.push({ key: "noPhone" });

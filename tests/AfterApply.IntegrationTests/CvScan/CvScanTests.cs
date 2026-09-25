@@ -126,6 +126,27 @@ public class CvScanTests(ApiHost<CvScanProfile> host) : IClassFixture<ApiHost<Cv
         result.Score.ShouldBeLessThan(100);
     }
 
+    /// <summary>The finding the column check could only infer, read off the real content stream
+    /// of a real file: the headings arrive stacked, and the page quotes them back as such.</summary>
+    [Fact]
+    public async Task A_Sidebar_Cv_Whose_Headings_Arrive_Stacked_Is_Reported_As_Scrambled()
+    {
+        var result = await ReadAsync(await ScanAsync(CvFixtures.SidebarPdf(), "cv.pdf"));
+
+        var finding = result.Findings.Single(item => item.Code == CvScanFindingCode.ReadingOrderScrambled);
+        finding.Category.ShouldBe(CvScanCategory.MachineReadability);
+        finding.Metrics["orphanHeadingCount"].ShouldBeGreaterThanOrEqualTo(2);
+        finding.Evidence.Single().Quote.ShouldBe("LANGUAGES / CONTACT / EXPERIENCE");
+    }
+
+    [Fact]
+    public async Task A_Readable_Cv_Is_Not_Called_Scrambled()
+    {
+        var result = await ReadAsync(await ScanAsync(CvFixtures.ReadablePdf(), "cv.pdf"));
+
+        result.Findings.ShouldNotContain(item => item.Code == CvScanFindingCode.ReadingOrderScrambled);
+    }
+
     [Fact]
     public async Task A_Scanned_Cv_Loses_The_Whole_Machine_Readability_Category()
     {
@@ -135,6 +156,19 @@ public class CvScanTests(ApiHost<CvScanProfile> host) : IClassFixture<ApiHost<Cv
         result.Categories
             .Single(category => category.Category == CvScanCategory.MachineReadability)
             .Score.ShouldBe(0);
+        // Nothing is read, so a parser finds no sections and no contact details either: the file
+        // lands in the poor band rather than at 60.
+        result.Score.ShouldBeLessThan(55);
+    }
+
+    /// <summary>A .docx that opens and then fails on its first part must be reported as damaged,
+    /// like any other unreadable file — not escape as a server error.</summary>
+    [Fact]
+    public async Task A_Docx_That_Fails_After_Opening_Is_Refused_As_Damaged_Rather_Than_Crashing()
+    {
+        var response = await ScanAsync(CvFixtures.DocxWithMistypedCoreProperties(), "cv.docx");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]

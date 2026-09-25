@@ -33,12 +33,21 @@ public sealed record ExtractedCv(
 
 /// <param name="Words">Empty when the page carries no text layer — a scanned image is exactly this
 /// case, and it is the single most valuable thing this scan can tell someone.</param>
+/// <param name="ImageCount">Pictures drawn on the page. A page with no text and no picture is a
+/// blank page — a stray page break — and not a scan; only the second is text the machine cannot
+/// reach. Zero for formats that do not report it.</param>
+/// <param name="Backtracks">How many times the file's own text order climbs back up the page by
+/// more than a fifth of its height. A page read top to bottom has none; a sidebar layout has one
+/// (the jump to the top of the second column); a design-tool export that stores its boxes in no
+/// particular order has several. Zero for formats that have no positions.</param>
 public sealed record ExtractedCvPage(
     int Number,
     double Width,
     double Height,
     string Text,
-    IReadOnlyList<ExtractedCvWord> Words);
+    IReadOnlyList<ExtractedCvWord> Words,
+    int ImageCount = 0,
+    int Backtracks = 0);
 
 /// <summary>One word with the box it occupies, in the format's own coordinate space. The origin is
 /// the bottom-left corner (PDF's convention, kept rather than flipped so the numbers match anything

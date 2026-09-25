@@ -1302,7 +1302,7 @@
       "intro": "Herkese açık CV tarama sayfasında bir PDF veya Word dosyası yükleyip, başvuru sistemlerinin ondan ne okuduğunu görebilirsiniz. Bu, yukarıdaki \"Yüklediğiniz CV'ler\" bölümünden ayrı ve farklı bir işlemdir:",
       "noStorage": "Dosya hiçbir yere kaydedilmez. Sunucuda diske yazılmaz, depolama alanına konmaz; yalnızca isteğin süresi boyunca bellekte bulunur ve yanıt döndükten sonra ortadan kalkar. CV'nizin metni de saklanmaz.",
       "retained": "Taramadan geriye üç şey kalır: IP adresiniz (tarama sınırı için 2 saat bellekte; ayrıca yukarıdaki \"İşlem kayıtları\" maddesinde anlatılan güvenlik kaydı olarak 12 ay — puanla ilişkilendirilmez), isimsiz bir puan (0-100 arası bir sayı; hangi dosyadan geldiği, kimin olduğu kayıtlı değildir) ve bir tarama sayacı.",
-      "noTransfer": "Puanı üreten yedi kontrolün tamamı bizim sunucumuzda çalışır: puan hiçbir yapay zekâ modeline sorulmaz, dolayısıyla CV'nin içine yazılmış bir talimatla şişirilemez. Kutuyu işaretlemediğiniz sürece CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez.",
+      "noTransfer": "Puanı üreten sekiz kontrolün tamamı bizim sunucumuzda çalışır: puan hiçbir yapay zekâ modeline sorulmaz, dolayısıyla CV'nin içine yazılmış bir talimatla şişirilemez. Kutuyu işaretlemediğiniz sürece CV'nizin içeriği hiçbir üçüncü tarafa gönderilmez.",
       "contentNotes": "Yazım hakkında da not isterseniz (ikinci, isteğe bağlı kutu): CV'nizin metni Google Cloud Vertex AI'a gönderilir — altyapımızın zaten çalıştığı AB bölgesinde ve aynı işleyicide; yeni bir ülkeye veri çıkmaz. Ücretli Vertex kullanıldığı için metin model eğitiminde kullanılmaz. Notlar puanı etkilemez, metin yine hiçbir yere kaydedilmez ve kutuyu işaretlemezseniz hiçbir model devreye girmez.",
       "output": "Sonuç ekranında gördüğünüz alıntılar ve ham metin, yalnızca sizin isteğinize verilen yanıtın içindedir; kayıt altına alınmaz, kayıtlara (log) yazılmaz.",
       "consent": "Hukuki sebep açık rızanızdır ve her tarama için ayrıca alınır: onay kutusu hiçbir zaman önceden işaretli gelmez ve her taramadan sonra yeniden boşalır. İçerik notları için istenen ikinci kutu ayrı ve isteğe bağlıdır — işaretlemeden de tarama tam olarak çalışır, puanınız birebir aynı çıkar. Saklanan bir dosya olmadığı için geri çekilecek bir saklama da yoktur; taramayı yapmamak yeterlidir."
@@ -3499,6 +3499,7 @@
         "why": "Ayrıştırıcı önce başlıkları arar, sonra tarih aralıklarını. Başlık tanınmazsa deneyimin hiçbir alana yazılmaz; tarih aralığı yoksa kronoloji kurulamaz.",
         "fix": "Bölümleri alışılmış adlarıyla yaz: Deneyim, Eğitim, Yetenekler. Her iş için \"03/2021 - halen\" gibi açık bir tarih aralığı bırak.",
         "details": {
+          "noText": "Dosyadan metin okunamadığı için hiçbir bölüm ve tarih de bulunamadı. Çözüm, yukarıdaki “okunabilir metin yok” maddesinde.",
           "missingExperience": "Deneyim başlığı bulunamadı.",
           "missingEducation": "Eğitim başlığı bulunamadı.",
           "missingSkills": "Yetenekler başlığı bulunamadı.",
@@ -3510,6 +3511,7 @@
         "why": "Sisteme giren kayıtta e-posta ya da telefon alanı boş kalır. CV insan tarafından beğenilse bile geri dönecek bir adres yoktur.",
         "fix": "E-posta ve telefonu CV'nin ilk sayfasında, normal metin olarak yaz. Üstbilgi/altbilgiye, resmin içine ya da bir simgenin arkasına koyma.",
         "details": {
+          "noText": "Dosyadan metin okunamadığı için iletişim bilgisi de bulunamadı. Çözüm, yukarıdaki “okunabilir metin yok” maddesinde.",
           "noEmail": "Okunabilir bir e-posta adresi bulunamadı.",
           "noPhone": "Okunabilir bir telefon numarası bulunamadı.",
           "onlyInHeaderFooter": "İletişim bilgisi yalnızca üstbilgi/altbilgide — birçok ayrıştırıcı orayı hiç okumaz."
@@ -3531,6 +3533,15 @@
         "fix": "Bir, en fazla iki yazı tipiyle kal; vurguyu kalın ve büyüklükle yap.",
         "details": {
           "fonts": "{families} farklı yazı tipi, {sizes} farklı punto kullanılmış."
+        }
+      },
+      "ReadingOrderScrambled": {
+        "title": "Metin yazıldığı sırayla okunmuyor",
+        "why": "Ayrıştırıcıların bir kısmı CV'ni senin gördüğün sırayla değil, dosyanın içindeki sırayla okur. Bu dosyada o sıra karışık: bölüm başlıkları içeriklerinden kopuk ya da metin sayfada sürekli yukarı geri dönüyor. Metni sayfadaki konumuna göre yeniden dizen yeni sistemler bunu büyük ölçüde toparlar; dosya sırasıyla okuyanlar ise başvuru formunu yanlış doldurur ya da deneyimini boş bırakır.",
+        "fix": "Metin kutusu kullanmayan tek sütunlu bir şablona geç ya da CV'yi Word veya Google Docs'ta düz paragraflarla yeniden kur. Tasarım araçlarında her başlık ayrı bir kutu olduğu için sıra dosyada kaybolur. Kendin kontrol etmek için PDF'teki metnin tamamını seçip bir not dosyasına yapıştır: yukarıdan aşağı, yazdığın sırayla okunmalı.",
+        "details": {
+          "orphanHeadings": "{count} bölüm başlığının hemen ardından kendi içeriği yerine başka bir başlık geliyor.",
+          "backtracks": "Dosyadaki metin sırası sayfada {count} kez yukarı geri dönüyor: kutular, sayfadaki yerlerinden farklı bir sırayla kaydedilmiş."
         }
       }
     },

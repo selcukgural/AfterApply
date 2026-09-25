@@ -44,7 +44,12 @@ public enum CvScanFindingCode
     LengthOutOfRange,
 
     /// <summary>Too many typefaces and sizes for one document.</summary>
-    InconsistentFormatting
+    InconsistentFormatting,
+
+    /// <summary>The text arrives out of the order it was written — section headings stacked with
+    /// nothing between them, their contents elsewhere. What a parser's autofill is built on.
+    /// Appended last: codes travel as strings, but nothing should depend on that to stay stable.</summary>
+    ReadingOrderScrambled
 }
 
 /// <param name="Page">1-based, and null only when the finding is about the document as a whole
