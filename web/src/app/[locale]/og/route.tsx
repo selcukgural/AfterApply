@@ -107,7 +107,7 @@ export async function GET(request: NextRequest, context: RouteContext<"/[locale]
 
     const t = await getTranslations({ locale, namespace: "metadata.pages" });
     return new ImageResponse(
-      <BlogCoverCard mode="og" text={coverText(card.title, card.hook)} icon={coverIconNode(card.icon)} eyebrow={t("blog.title")} />,
+      <BlogCoverCard mode="og" text={coverText(card.title, card.hook)} icon={coverIconNode(card.icon)} iconName={card.icon} eyebrow={t("blog.title")} />,
       {
         width: OG_IMAGE_WIDTH,
         height: OG_IMAGE_HEIGHT,

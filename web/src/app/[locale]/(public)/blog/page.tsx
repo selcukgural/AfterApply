@@ -109,7 +109,7 @@ export default async function BlogListPage({ params, searchParams }: PageProps<"
                     className="aspect-[1200/630] w-full rounded-xl border border-gray-200 object-cover dark:border-gray-800"
                   />
                 ) : (
-                  <BlogCoverCard text={coverText(post.title, post.coverHook)} icon={coverIconNode(post.coverIcon)} eyebrow={t("title")} />
+                  <BlogCoverCard text={coverText(post.title, post.coverHook)} icon={coverIconNode(post.coverIcon)} iconName={post.coverIcon} eyebrow={t("title")} />
                 )}
               </Link>
               <div className="flex min-w-0 flex-col gap-2">

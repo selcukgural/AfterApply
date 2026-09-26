@@ -9768,3 +9768,9 @@ atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test et
 - **Kapsam dışı bırakılan:** blog/rehber listesinde arama kutusu (5 blog, 10 rehber; bir liste ~30
   yazıyı geçince tekrar bakılacak; sayfalama zaten var, sayfa başı 10). Instagram/hikâye için
   dikey kapak (bağlantı önizlemesi olmayan platformlar); istenirse ayrı iş.
+- **Otomatik kapak D3 tarzına geçti (2026-09-27):** koyu temada beş aynı açık mavi kart kasvetli
+  duruyordu. Kullanıcı canvas'ta (Covers2 çerçevesi) D1 canlı / D2 pastel / D3 sıcak kâğıt
+  arasından D3'ü seçti. Krem zemin (#fff6ec), köşede büyük renkli bir daire ve üzerinde beyaz
+  simge, lacivert metin. Renk simgeden türetiliyor (`coverTone`): aynı simge her zaman aynı renk,
+  yani TR/EN eşleri aynı. İlk beş yazının simgeleri, yüklenen kapaklarındaki renge sabitlendi.
+  Mevcut 10 blog yazısına aynı tasarımla üretilmiş PNG'ler kapak olarak yüklendi (alt metinli).

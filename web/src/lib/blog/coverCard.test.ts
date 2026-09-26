@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import iconNodes from "lucide-static/icon-nodes.json";
 import {
   COVER_TEXT_MAX,
+  COVER_TONES,
+  coverTone,
   DEFAULT_COVER_ICON,
   coverText,
   coverTextSize,
@@ -29,11 +31,37 @@ describe("coverText", () => {
 
 describe("coverTextSize", () => {
   it("sets a short line large and a title-length one smaller", () => {
-    expect(coverTextSize("İletildi ≠ okundu")).toBe(88);
-    expect(coverTextSize("Yoran zaman değil, zihinsel yük")).toBe(76);
-    expect(coverTextSize("a".repeat(60))).toBe(64);
-    expect(coverTextSize("a".repeat(85))).toBe(54);
-    expect(coverTextSize("a".repeat(110))).toBe(46);
+    expect(coverTextSize("İletildi ≠ okundu")).toBe(80);
+    expect(coverTextSize("Yoran zaman değil, zihinsel yük")).toBe(72);
+    expect(coverTextSize("a".repeat(60))).toBe(56);
+    expect(coverTextSize("a".repeat(85))).toBe(44);
+    expect(coverTextSize("a".repeat(110))).toBe(36);
+  });
+});
+
+describe("coverTone", () => {
+  it("gives the first posts' icons the colour of their uploaded covers", () => {
+    expect(coverTone("mail")).toEqual(COVER_TONES[0]);
+    expect(coverTone("list-checks")).toEqual(COVER_TONES[1]);
+    expect(coverTone("battery-low")).toEqual(COVER_TONES[2]);
+    expect(coverTone("hourglass")).toEqual(COVER_TONES[3]);
+    expect(coverTone("repeat")).toEqual(COVER_TONES[4]);
+  });
+
+  it("is the same for the same icon, so a post and its translation match", () => {
+    expect(coverTone("calendar-check")).toBe(coverTone("calendar-check"));
+    expect(COVER_TONES).toContain(coverTone("calendar-check"));
+  });
+
+  it("treats no icon, an unknown shape and a prototype name as the default icon", () => {
+    expect(coverTone(null)).toBe(coverTone(DEFAULT_COVER_ICON));
+    expect(coverTone("Not An Icon")).toBe(coverTone(DEFAULT_COVER_ICON));
+    expect(COVER_TONES).toContain(coverTone("constructor"));
+  });
+
+  it("spreads different icons over more than one colour", () => {
+    const names = ["calendar", "clock", "banknote", "users", "building", "search", "flag", "target", "newspaper", "send"];
+    expect(new Set(names.map((n) => coverTone(n).sun)).size).toBeGreaterThan(2);
   });
 });
 
