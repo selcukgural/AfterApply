@@ -5431,7 +5431,21 @@
         "tooSmall": "Paylaşım kartı için küçük (en az {width}×{height} px) — paylaşımda başlık kartı çıkar.",
         "wrongRatio": "Paylaşım kartı için yatay olmalı (≈1,9:1) — paylaşımda başlık kartı çıkar.",
         "unknownSize": "Boyutu okunamadı — paylaşımda başlık kartı çıkar."
-      }
+      },
+      "coverAuto": "Kapak yüklemezsen yazının otomatik kapağı kullanılır: listede ve paylaşımda bu görünür. Yüklersen onun yerine geçer, kaldırırsan otomatik kapak geri gelir.",
+      "coverAutoBehindUpload": "Otomatik kapak, yüklenen görsel kaldırılınca ya da paylaşım kartı boyutunun altında kaldığında kullanılır.",
+      "coverHook": "Kapak cümlesi",
+      "coverHookPlaceholder": "Boşsa başlık kullanılır",
+      "coverHookHint": "Başlıktan kısa, yazının ana fikrini söyleyen bir cümle; en çok {max} karakter.",
+      "coverIcon": "Simge",
+      "coverIconDefault": "varsayılan",
+      "coverIconChange": "Değiştir",
+      "coverShareAuto": {
+        "tooSmall": "Paylaşım kartı için küçük (en az {width}×{height} px) — paylaşımda otomatik kapak çıkar.",
+        "wrongRatio": "Paylaşım kartı için yatay olmalı (≈1,9:1) — paylaşımda otomatik kapak çıkar.",
+        "unknownSize": "Boyutu okunamadı — paylaşımda otomatik kapak çıkar."
+      },
+      "coverRequirementAuto": "Paylaşım kartında kullanılması için en az {width}×{height} px ve yatay (≈1,9:1) olmalı; küçük ya da dikey kapak listede ve yazıda görünür, paylaşımda otomatik kapak çıkar."
     },
     "seo": {
       "heading": "SEO",
@@ -5496,7 +5510,8 @@
       },
       "shareKicker": "Blog",
       "shareUsesCover": "Paylaşımda kapak görseli kullanılır.",
-      "shareUsesCard": "Paylaşımda sitenin ürettiği başlık kartı kullanılır — kapak yoksa ya da kart boyutunun altındaysa."
+      "shareUsesCard": "Paylaşımda sitenin ürettiği başlık kartı kullanılır — kapak yoksa ya da kart boyutunun altındaysa.",
+      "shareUsesAutoCover": "Paylaşımda yazının otomatik kapağı kullanılır — kapak yoksa ya da kart boyutunun altındaysa."
     },
     "autosave": {
       "saved": "Kaydedildi · {time}",
@@ -5561,6 +5576,19 @@
       "unsupported": "Yalnızca PNG, JPEG, GIF ve WebP yüklenebilir.",
       "tooLarge": "Görsel 5 MB sınırını aşıyor.",
       "needsTextFirst": "Görsel eklemeden önce bir şey yazın — başlık ya da bir satır metin; taslak o zaman oluşur."
+    },
+    "iconPicker": {
+      "title": "Simge seç",
+      "search": "Ara",
+      "searchPlaceholder": "maaş, mülakat, takvim, mail…",
+      "featured": "Sık kullanılanlar · {count} simge içinde Türkçe ya da İngilizce ara",
+      "results": "{total, plural, one {# sonuç} other {# sonuç}}",
+      "resultsCapped": "{total} sonuç · ilk {shown} gösteriliyor",
+      "empty": "Sonuç yok. İngilizce bir kelime de deneyebilirsin (ör. money, calendar).",
+      "loading": "Simgeler yükleniyor…",
+      "loadError": "Simgeler yüklenemedi. Sayfayı yenileyip tekrar dene.",
+      "cancel": "Vazgeç",
+      "use": "Bu simgeyi kullan"
     }
   },
   "adminComments": {

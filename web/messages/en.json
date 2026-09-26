@@ -5431,7 +5431,21 @@
         "tooSmall": "Too small for the share card (at least {width}×{height} px) — the title card is shared instead.",
         "wrongRatio": "Must be landscape for the share card (≈1.9:1) — the title card is shared instead.",
         "unknownSize": "Size could not be read — the title card is shared instead."
-      }
+      },
+      "coverAuto": "Without an uploaded cover the post's generated cover is used: on the list and when shared. An upload takes its place; remove it and the generated cover comes back.",
+      "coverAutoBehindUpload": "The generated cover is used once the uploaded image is removed, or when it is below share-card size.",
+      "coverHook": "Cover line",
+      "coverHookPlaceholder": "Blank uses the title",
+      "coverHookHint": "Shorter than the title: one line that says the post's main point; at most {max} characters.",
+      "coverIcon": "Icon",
+      "coverIconDefault": "default",
+      "coverIconChange": "Change",
+      "coverShareAuto": {
+        "tooSmall": "Too small for the share card (at least {width}×{height} px) — the generated cover is shared instead.",
+        "wrongRatio": "Must be landscape for the share card (≈1.9:1) — the generated cover is shared instead.",
+        "unknownSize": "Size could not be read — the generated cover is shared instead."
+      },
+      "coverRequirementAuto": "To be the share card it must be at least {width}×{height} px and landscape (≈1.9:1); a smaller or portrait cover shows on the list and the post, the generated cover is shared instead."
     },
     "seo": {
       "heading": "SEO",
@@ -5496,7 +5510,8 @@
       },
       "shareKicker": "Blog",
       "shareUsesCover": "The cover is used when the link is shared.",
-      "shareUsesCard": "The site's generated title card is used when shared — no cover, or one below card size."
+      "shareUsesCard": "The site's generated title card is used when shared — no cover, or one below card size.",
+      "shareUsesAutoCover": "The post's generated cover is used when shared — no cover, or one below card size."
     },
     "autosave": {
       "saved": "Saved · {time}",
@@ -5561,6 +5576,19 @@
       "unsupported": "Only PNG, JPEG, GIF and WebP can be uploaded.",
       "tooLarge": "The image exceeds the 5 MB limit.",
       "needsTextFirst": "Write something first — a title or a line of text — and the draft will be created; then add the image."
+    },
+    "iconPicker": {
+      "title": "Choose an icon",
+      "search": "Search",
+      "searchPlaceholder": "salary, interview, calendar, mail…",
+      "featured": "Common picks · search {count} icons in Turkish or English",
+      "results": "{total, plural, one {# result} other {# results}}",
+      "resultsCapped": "{total} results · showing the first {shown}",
+      "empty": "Nothing found. Try an English word too (e.g. money, calendar).",
+      "loading": "Loading icons…",
+      "loadError": "The icons could not be loaded. Reload the page and try again.",
+      "cancel": "Cancel",
+      "use": "Use this icon"
     }
   },
   "adminComments": {

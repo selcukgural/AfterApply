@@ -5,7 +5,7 @@ import { routing } from "@/i18n/routing";
 import type { BlogLanguage } from "@/types/api";
 import { buildMetadata } from "@/lib/seo/pageMetadata";
 import { SITE_NAME, SITE_URL } from "@/lib/seo/routes";
-import { ogImagePath } from "@/lib/seo/ogImage";
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, blogCoverImagePath } from "@/lib/seo/ogImage";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd } from "@/lib/seo/jsonLd";
 import { BLOG_PATH, blogAlternates, blogPostPath } from "@/lib/blog/blogPaths";
@@ -40,11 +40,12 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/blog/[sl
     description: post.excerpt || post.title,
     article: { publishedTime: post.publishedAt, modifiedTime: post.updatedAt },
     kicker: tSection("blog.title"),
-    // The cover is the share image when it is big and wide enough for a card; a small or tall
-    // one would render worse than the generated card (2026-09-21).
-    ...(post.coverImageUrl && coverIsShareImage(coverSize)
-      ? { image: { url: `${SITE_URL}${post.coverImageUrl}`, width: post.coverWidth!, height: post.coverHeight!, alt: post.coverAlt ?? post.title } }
-      : {}),
+    // The cover is the share image when it is big and wide enough for a card (2026-09-21); else
+    // the post's generated cover is (2026-09-27) — a small or tall upload renders worse than it.
+    image:
+      post.coverImageUrl && coverIsShareImage(coverSize)
+        ? { url: `${SITE_URL}${post.coverImageUrl}`, width: post.coverWidth!, height: post.coverHeight!, alt: post.coverAlt ?? post.title }
+        : { url: `${SITE_URL}${blogCoverImagePath(locale, post.slug)}`, width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: post.title },
   });
 }
 
@@ -64,7 +65,7 @@ export default async function BlogPostPage({ params }: PageProps<"/[locale]/blog
   const [tSection, comments] = await Promise.all([getTranslations("metadata.pages"), fetchBlogComments(post.id, locale)]);
   const path = blogPostPath(post.slug);
   const url = `${SITE_URL}/${locale}${path}`;
-  const image = post.coverImageUrl ? `${SITE_URL}${post.coverImageUrl}` : `${SITE_URL}${ogImagePath(locale, post.title, tSection("blog.title"))}`;
+  const image = post.coverImageUrl ? `${SITE_URL}${post.coverImageUrl}` : `${SITE_URL}${blogCoverImagePath(locale, post.slug)}`;
 
   return (
     <>

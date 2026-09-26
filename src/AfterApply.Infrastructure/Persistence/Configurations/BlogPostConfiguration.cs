@@ -31,6 +31,11 @@ public sealed class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
         builder.Property(p => p.PrimaryKeyword).HasMaxLength(BlogSeo.MaxKeywordLength);
         builder.Property(p => p.DraftCoverAlt).HasMaxLength(BlogSeo.MaxCoverAltLength);
         builder.Property(p => p.CoverAlt).HasMaxLength(BlogSeo.MaxCoverAltLength);
+        // The generated cover's line and icon (2026-09-27), one pair per slot.
+        builder.Property(p => p.DraftCoverHook).HasMaxLength(BlogCoverCard.MaxHookLength);
+        builder.Property(p => p.CoverHook).HasMaxLength(BlogCoverCard.MaxHookLength);
+        builder.Property(p => p.DraftCoverIcon).HasMaxLength(BlogCoverCard.MaxIconLength);
+        builder.Property(p => p.CoverIcon).HasMaxLength(BlogCoverCard.MaxIconLength);
         // The editor's documents as jsonb: not queried today, but a jsonb column is validated on
         // write (a truncated document cannot be stored) and is what a later query would want.
         builder.Property(p => p.DraftContentJson).HasColumnType("jsonb");

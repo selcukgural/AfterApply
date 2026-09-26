@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useState, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { BlogLanguage, BlogPostKind, BlogSeo, BlogSeoSuggestion } from "@/types/api";
 import { Button } from "@/components/ui/Button";
@@ -46,6 +46,14 @@ export interface BlogSeoSectionProps {
   contentHtml: string;
   /** Asks the model, after the draft is saved so it reads what is on screen. Null: no post yet. */
   onSuggest: (() => Promise<BlogSeoSuggestion>) | null;
+  /** Told of every suggestion that arrives — the cover block shows its own two proposals (2026-09-27). */
+  onSuggestion?: (suggestion: BlogSeoSuggestion) => void;
+  /** "Fill the empty ones" for fields outside this section (the cover line and icon): `pending`
+   *  says whether there is anything to fill, so the button shows when only those have proposals. */
+  applyEmptyElsewhere?: { pending: boolean; apply: () => void };
+  /** The share picture when no card-sized cover is uploaded: a blog post's generated cover
+   *  (2026-09-27). Absent: the site's title card, as before. */
+  generatedShareImage?: ReactNode;
 }
 
 const SCORE_CLASS: Record<SeoScore["band"], string> = {
@@ -134,7 +142,9 @@ export function BlogSeoSection(props: BlogSeoSectionProps) {
     setSuggesting(true);
     setSuggestError(null);
     try {
-      setSuggestion(await props.onSuggest());
+      const next = await props.onSuggest();
+      setSuggestion(next);
+      props.onSuggestion?.(next);
     } catch (err) {
       setSuggestError(err instanceof Error && err.message ? err.message : t("suggestError"));
     } finally {
@@ -167,6 +177,7 @@ export function BlogSeoSection(props: BlogSeoSectionProps) {
     if (hasCover && !(seo.coverAlt ?? "").trim() && proposals.coverAlt) next.coverAlt = proposals.coverAlt;
     onSeoChange(next);
     if (!excerpt.trim() && proposals.excerpt) onExcerptChange(proposals.excerpt);
+    props.applyEmptyElsewhere?.apply();
   };
 
   const onKeywordKey = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -193,7 +204,7 @@ export function BlogSeoSection(props: BlogSeoSectionProps) {
                 {suggesting ? t("suggesting") : suggestion ? t("suggestAgain") : t("suggest")}
               </Button>
             )}
-            {proposals && Object.values(proposals).some(Boolean) && (
+            {proposals && (Object.values(proposals).some(Boolean) || props.applyEmptyElsewhere?.pending) && (
               <Button variant="outline" onClick={applyEmpty}>
                 {t("applyEmpty")}
               </Button>
@@ -367,16 +378,23 @@ export function BlogSeoSection(props: BlogSeoSectionProps) {
               <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{t("shareHeading")}</span>
               <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
                 {/* The picture a shared link shows, as it is: the cover when it is card-sized, else
-                    the site's generated card rendered by its own route (2026-09-21). */}
-                {/* eslint-disable-next-line @next/next/no-img-element -- a preview of a generated image, sized by its box */}
-                <img src={coverUrl ?? ogImagePath(language, shownTitle || title || SITE_NAME, shareKicker)} alt="" className="aspect-[1200/630] w-full object-cover" />
+                    a blog post's generated cover (2026-09-27), else the site's title card rendered
+                    by its own route (2026-09-21). */}
+                {!coverUrl && props.generatedShareImage ? (
+                  props.generatedShareImage
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element -- a preview of a generated image, sized by its box
+                  <img src={coverUrl ?? ogImagePath(language, shownTitle || title || SITE_NAME, shareKicker)} alt="" className="aspect-[1200/630] w-full object-cover" />
+                )}
                 <div className="px-2.5 py-2 text-xs">
                   <div className="truncate font-medium text-gray-900 dark:text-gray-100">{fullTitle}</div>
                   <div className="truncate text-gray-500 dark:text-gray-400">{excerpt.trim() || "…"}</div>
                   <div className="text-gray-500 dark:text-gray-400">ekariyerim.com</div>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{coverUrl ? t("shareUsesCover") : t("shareUsesCard")}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {coverUrl ? t("shareUsesCover") : props.generatedShareImage ? t("shareUsesAutoCover") : t("shareUsesCard")}
+              </p>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -414,7 +432,7 @@ export function BlogSeoSection(props: BlogSeoSectionProps) {
 }
 
 /** One proposal under its field: what the model said, and "apply" to take it. */
-function Proposal({ value, label, apply, onApply }: { value: string | null; label: string; apply: string; onApply: () => void }) {
+export function Proposal({ value, label, apply, onApply }: { value: string | null; label: string; apply: string; onApply: () => void }) {
   if (!value) return null;
   return (
     <div className="mt-1.5 flex items-start gap-2 rounded-md bg-accent-wash px-2.5 py-1.5 text-xs text-accent-ink">

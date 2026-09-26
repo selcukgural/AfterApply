@@ -477,6 +477,9 @@
   <data name="VALIDATION_BLOG_SEO_KEYWORDS_INVALID" xml:space="preserve">
     <value>En fazla 8 yan anahtar kelime, her biri en çok 80 karakter.</value>
   </data>
+  <data name="VALIDATION_BLOG_COVER_ICON_INVALID" xml:space="preserve">
+    <value>Kapak simgesini listeden seç.</value>
+  </data>
   <data name="BLOG_SEO_SUGGEST_NOT_CONFIGURED" xml:space="preserve">
     <value>SEO önerisi bu sunucuda kurulu değil.</value>
   </data>

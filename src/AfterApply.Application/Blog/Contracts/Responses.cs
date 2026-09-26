@@ -18,7 +18,11 @@ public sealed record BlogPostListItemResponse(
     string? CoverImageUrl,
     DateTimeOffset PublishedAt,
     DateTimeOffset UpdatedAt,
-    int LikeCount);
+    int LikeCount,
+    /// <summary>What the generated cover says and shows (2026-09-27) — the card draws it when
+    /// <paramref name="CoverImageUrl"/> is null. Null hook: the title; null icon: the default.</summary>
+    string? CoverHook = null,
+    string? CoverIcon = null);
 
 /// <summary>The public page. <paramref name="ContentHtml"/> is the sanitized published slot.
 /// <paramref name="LikedByMe"/> is null for an anonymous reader — the route never asks for a
@@ -47,7 +51,17 @@ public sealed record BlogPostPublicResponse(
     BlogPostKind Kind = BlogPostKind.Blog,
     /// <summary>A guide's settings (2026-09-26); false and empty on a blog post.</summary>
     bool HideRegisterCta = false,
-    IReadOnlyList<BlogRelatedLink>? Related = null);
+    IReadOnlyList<BlogRelatedLink>? Related = null,
+    /// <summary>The generated cover's line and icon (2026-09-27), as on the list card.</summary>
+    string? CoverHook = null,
+    string? CoverIcon = null);
+
+/// <summary>
+/// Just enough of a published post to draw its generated cover (2026-09-27): what the share-image
+/// route reads. Its own route rather than the post's, because every fetch of the post counts as a
+/// view and a crawler fetching the picture is not a reader.
+/// </summary>
+public sealed record BlogCoverCardPublicResponse(string Title, string? Hook, string? Icon);
 
 /// <summary>
 /// What the model proposed for the draft (DECISIONS.md 2026-09-21). Every field may be null —
@@ -63,7 +77,13 @@ public sealed record BlogSeoSuggestionResponse(
     IReadOnlyList<string> SecondaryKeywords,
     string? CoverAlt,
     string? Slug,
-    string? IntentNote);
+    string? IntentNote,
+    /// <summary>A line for the generated cover (2026-09-27), at most
+    /// <see cref="BlogCoverCard.MaxHookLength"/> characters.</summary>
+    string? CoverHook = null,
+    /// <summary>One English word or two for the cover's icon. Not an icon's name: the editor runs
+    /// it through the same search as its icon picker and offers the first match.</summary>
+    string? CoverIconKeyword = null);
 
 /// <summary>The draft's SEO fields, as the editor holds them (DECISIONS.md 2026-09-21).</summary>
 public sealed record BlogSeoResponse(
@@ -139,7 +159,11 @@ public sealed record AdminBlogPostResponse(
     int? CoverWidth = null,
     int? CoverHeight = null,
     BlogPostKind Kind = BlogPostKind.Blog,
-    BlogGuideResponse? DraftGuide = null);
+    BlogGuideResponse? DraftGuide = null,
+    BlogCoverCardResponse? DraftCoverCard = null);
+
+/// <summary>The draft's generated-cover fields, as the editor holds them (2026-09-27).</summary>
+public sealed record BlogCoverCardResponse(string? Hook, string? Icon);
 
 /// <summary>The draft's guide settings, as the editor holds them (2026-09-26).</summary>
 public sealed record BlogGuideResponse(bool HideRegisterCta, IReadOnlyList<Guid> RelatedPostIds);

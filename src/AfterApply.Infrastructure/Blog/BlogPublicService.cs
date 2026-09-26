@@ -67,6 +67,16 @@ internal sealed class BlogPublicService(
         return post with { LikedByMe = liked, ViewCount = viewCount };
     }
 
+    public async Task<BlogCoverCardPublicResponse?> GetCoverCardAsync(BlogPostKind kind, string language, string slug,
+        CancellationToken cancellationToken) =>
+        // Not a view (see the response's summary): no increment, and one cache entry per post.
+        await cache.GetOrCreateAsync(CacheKeys.Blog.CoverCard(kind, language, slug),
+            async ct => await Published()
+                .Where(p => p.Kind == kind && p.Language == language && p.Slug == slug)
+                .Select(p => new BlogCoverCardPublicResponse(p.Title, p.CoverHook, p.CoverIcon))
+                .FirstOrDefaultAsync(ct),
+            CacheOptions, tags: [CacheKeys.Blog.Tag], cancellationToken: cancellationToken);
+
     public async Task<IReadOnlyList<BlogSlugResponse>> ListSlugsAsync(BlogPostKind kind, CancellationToken cancellationToken) =>
         await cache.GetOrCreateAsync(CacheKeys.Blog.Slugs(kind),
             async ct => (IReadOnlyList<BlogSlugResponse>)await Published()
@@ -167,13 +177,14 @@ internal sealed class BlogPublicService(
             .Select(p => new
             {
                 p.Id, p.Slug, p.Language, p.Title, p.Excerpt, p.CoverMediaId, p.PublishedAt, p.PublishedUpdatedAt,
+                p.CoverHook, p.CoverIcon,
                 LikeCount = dbContext.BlogPostLikes.Count(l => l.PostId == p.Id)
             })
             .ToListAsync(cancellationToken);
 
         var items = rows.Select(r => new BlogPostListItemResponse(
             r.Id, r.Slug!, r.Language, r.Title, r.Excerpt, CoverUrl(r.CoverMediaId),
-            r.PublishedAt!.Value, r.PublishedUpdatedAt!.Value, r.LikeCount)).ToList();
+            r.PublishedAt!.Value, r.PublishedUpdatedAt!.Value, r.LikeCount, r.CoverHook, r.CoverIcon)).ToList();
 
         return new PagedResult<BlogPostListItemResponse>(items, total, query.Page, pageSize);
     }
@@ -186,7 +197,7 @@ internal sealed class BlogPublicService(
             .Select(p => new
             {
                 p.Id, p.Kind, p.HideRegisterCta, p.RelatedPostIds, p.Slug, p.Language, p.Title, p.Excerpt, p.ContentHtml, p.CoverMediaId, p.PublishedAt, p.PublishedUpdatedAt,
-                p.SeoTitle, p.PrimaryKeyword, p.SecondaryKeywords, p.CoverAlt,
+                p.SeoTitle, p.PrimaryKeyword, p.SecondaryKeywords, p.CoverAlt, p.CoverHook, p.CoverIcon,
                 Cover = dbContext.BlogMedia.Where(m => m.Id == p.CoverMediaId).Select(m => new { m.Width, m.Height }).FirstOrDefault(),
                 LikeCount = dbContext.BlogPostLikes.Count(l => l.PostId == p.Id),
                 Translation = dbContext.BlogPosts
@@ -207,7 +218,8 @@ internal sealed class BlogPublicService(
             ViewCount: 0, row.SeoTitle, row.CoverAlt,
             new BlogSeo(row.SeoTitle, row.PrimaryKeyword, row.SecondaryKeywords, row.CoverAlt).AllKeywords,
             row.Cover?.Width, row.Cover?.Height, row.Kind, row.HideRegisterCta,
-            await BlogRelatedLinks.ResolveAsync(dbContext, row.RelatedPostIds, row.Language, cancellationToken));
+            await BlogRelatedLinks.ResolveAsync(dbContext, row.RelatedPostIds, row.Language, cancellationToken),
+            row.CoverHook, row.CoverIcon);
     }
 
     private static string? CoverUrl(Guid? coverMediaId) =>

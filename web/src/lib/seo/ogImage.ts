@@ -50,3 +50,21 @@ export function ogImagePath(locale: string, title: string, kicker?: string): str
   if (cleanKicker) params.set("k", cleanKicker);
   return `/${locale}/og?${params.toString()}`;
 }
+
+/** A blog slug as the API makes them (`BlogSlugGenerator`): lower-case words joined by dashes. */
+const BLOG_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const BLOG_SLUG_MAX_LENGTH = 100;
+
+/** Whether a `post` value is shaped like a slug — the route asks the API only about ones that are. */
+export function isBlogCoverSlug(value: string | null | undefined): value is string {
+  return typeof value === "string" && value.length <= BLOG_SLUG_MAX_LENGTH && BLOG_SLUG.test(value);
+}
+
+/**
+ * The share image of a blog post that has no card-sized cover of its own: its generated cover
+ * (DECISIONS.md 2026-09-27). Only the slug travels — the route reads the words from the published
+ * post, so this URL cannot be made to draw anything a post does not say.
+ */
+export function blogCoverImagePath(locale: string, slug: string): string {
+  return `/${locale}/og?${new URLSearchParams({ post: slug }).toString()}`;
+}

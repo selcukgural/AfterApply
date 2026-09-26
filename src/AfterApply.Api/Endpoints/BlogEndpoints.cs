@@ -62,6 +62,25 @@ public static class BlogEndpoints
                              "carried a valid token — the token is optional, and a stale one is ignored.")
             .Produces<BlogPostPublicResponse>();
 
+        // The web app's share-image route draws a post's generated cover from this (2026-09-27).
+        // The text comes from the published row, never from the image's URL, so the picture
+        // under our name can only ever say what a published post says.
+        publicGroup.MapGet("/posts/{lang}/{slug}/cover-card", async (string lang, string slug, BlogPostKind? kind,
+                IBlogPublicService service, CancellationToken cancellationToken) =>
+            {
+                if (kind is { } k && !Enum.IsDefined(k))
+                {
+                    return Results.NotFound();
+                }
+
+                var card = await service.GetCoverCardAsync(kind ?? BlogPostKind.Blog, lang, slug, cancellationToken);
+                return card is null ? Results.NotFound() : Results.Ok(card);
+            })
+            .WithSummary("What a published post's generated cover draws")
+            .WithDescription("Public. The title, the cover line (null: the title is drawn) and the icon's name " +
+                             "(null: the default icon). Not counted as a view of the post.")
+            .Produces<BlogCoverCardPublicResponse>();
+
         // Images are served inline — a post's pictures are meant to be looked at — which is why
         // the upload only ever accepts PNG/JPEG/GIF/WebP by their bytes and never SVG (a script
         // host). The API's nosniff header and default-src 'none' CSP cover the rest.

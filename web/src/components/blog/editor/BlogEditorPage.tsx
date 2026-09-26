@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Link, useRouter } from "@/i18n/navigation";
-import type { AdminBlogPost, BlogGuideSettings, BlogLanguage, BlogMediaResponse, BlogPostKind, BlogSeo } from "@/types/api";
+import type { AdminBlogPost, BlogCoverCard as BlogCoverCardValue, BlogGuideSettings, BlogLanguage, BlogMediaResponse, BlogPostKind, BlogSeo } from "@/types/api";
 import { adminBlogApi } from "@/lib/api/blog";
 import { ApiError } from "@/lib/api/httpClient";
 import { adminPostsPath, postPath, postPreviewPath } from "@/lib/blog/blogPaths";
@@ -23,6 +23,11 @@ import { AdminTabs } from "@/components/admin/AdminTabs";
 import { BlogToolbar } from "./BlogToolbar";
 import { BlogSeoSection, SeoScorePill, seoInputOf } from "./BlogSeoSection";
 import { GuideOptionsCard } from "./GuideOptionsCard";
+import { CoverCardFields } from "./CoverCardFields";
+import { BlogCoverCard } from "@/components/blog/BlogCoverCard";
+import { coverText, resolveCoverIcon } from "@/lib/blog/coverCard";
+import { iconForKeyword } from "@/lib/blog/coverIconSearch";
+import { useCoverIconSet } from "@/lib/blog/coverIconSet";
 import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES, buildExtensions } from "./extensions";
 import { useAutosave } from "./useAutosave";
 import { useMediaObjectUrl } from "./useMediaObjectUrl";
@@ -60,6 +65,7 @@ function emptyPost(seed: NewPostSeed, kind: BlogPostKind): AdminBlogPost {
     coverHeight: null,
     kind,
     draftGuide: { hideRegisterCta: false, relatedPostIds: [] },
+    draftCoverCard: { hook: null, icon: null },
   };
 }
 
@@ -164,6 +170,11 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
   const [seo, setSeo] = useState<BlogSeo>(seed.draftSeo);
   // The guide's own settings (2026-09-26); stays empty, and is ignored by the API, on a blog post.
   const [guide, setGuide] = useState<BlogGuideSettings>(seed.draftGuide ?? { hideRegisterCta: false, relatedPostIds: [] });
+  // The generated cover's line and icon (2026-09-27): a blog post's only — a guide has no
+  // generated cover, so its editor neither shows nor loads them.
+  const [coverCard, setCoverCard] = useState<BlogCoverCardValue>(seed.draftCoverCard ?? { hook: null, icon: null });
+  const [coverProposal, setCoverProposal] = useState<BlogCoverCardValue | null>(null);
+  const iconSet = useCoverIconSet(kind === "Blog");
   // The body as HTML for the SEO checks, refreshed a beat after typing stops — `getHTML` on every
   // keystroke of a long post is not free, and the checklist does not need to be that quick.
   const [bodyHtml, setBodyHtml] = useState(seed.draftContentHtml);
@@ -204,6 +215,7 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
       translationOfPostId,
       seo,
       guide,
+      coverCard,
     }),
     onCreated: (post) => {
       setPostId(post.id);
@@ -394,6 +406,9 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
   })();
 
   const busy = publish.isPending || unpublish.isPending || remove.isPending || preview.isPending;
+  const loadedIcons = iconSet && iconSet !== "error" ? iconSet : null;
+  // The cover block's "fill the empty ones": the SEO section's button covers these two as well.
+  const coverFillable = coverProposal !== null && ((!coverCard.hook?.trim() && !!coverProposal.hook) || (coverCard.icon === null && !!coverProposal.icon));
   const score = seoScore(seoChecklist(seoInputOf({ title, excerpt, seo, slug: effectiveSlug, hasCover: coverMediaId !== null, contentHtml: bodyHtml })));
 
   return (
@@ -480,6 +495,34 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
               if (!(await autosave.flush())) throw new Error(tSave("unsaved"));
               return adminBlogApi.suggestSeo(id);
             }}
+            {...(kind === "Blog"
+              ? {
+                  // The model names an object in English; the picker's own search turns it into an
+                  // icon, so the proposal is always one the set has.
+                  onSuggestion: (suggestion) =>
+                    setCoverProposal({
+                      hook: suggestion.coverHook,
+                      icon: loadedIcons ? iconForKeyword(suggestion.coverIconKeyword, loadedIcons) : null,
+                    }),
+                  applyEmptyElsewhere: {
+                    pending: coverFillable,
+                    apply: () => {
+                      if (!coverProposal) return;
+                      edit(setCoverCard)({
+                        hook: coverCard.hook?.trim() ? coverCard.hook : (coverProposal.hook ?? coverCard.hook),
+                        icon: coverCard.icon ?? coverProposal.icon,
+                      });
+                    },
+                  },
+                  generatedShareImage: (
+                    <BlogCoverCard
+                      text={coverText(title || "…", coverCard.hook)}
+                      icon={loadedIcons ? resolveCoverIcon(loadedIcons.nodes, coverCard.icon) : null}
+                      eyebrow={tSeo("shareKicker")}
+                    />
+                  ),
+                }
+              : {})}
           />
         </div>
 
@@ -578,6 +621,13 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
 
             <div className="flex flex-col gap-2">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{tEditor("cover")}</span>
+              {kind === "Blog" && coverMediaId === null && (
+                <BlogCoverCard
+                  text={coverText(title || "…", coverCard.hook)}
+                  icon={loadedIcons ? resolveCoverIcon(loadedIcons.nodes, coverCard.icon) : null}
+                  eyebrow={tSeo("shareKicker")}
+                />
+              )}
               {coverMediaId ? (
                 <>
                   {cover.url ? (
@@ -587,7 +637,9 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
                   )}
                   <p className={`text-xs ${coverVerdict === "cover" ? "text-gray-500 dark:text-gray-400" : "text-warn-ink"}`}>
                     {coverSize?.width && coverSize.height ? `${coverSize.width}×${coverSize.height} px · ` : ""}
-                    {tEditor(`coverShare.${coverVerdict ?? "unknownSize"}`, { width: SHARE_IMAGE_MIN_WIDTH, height: SHARE_IMAGE_MIN_HEIGHT })}
+                    {coverVerdict === "cover" || kind !== "Blog"
+                      ? tEditor(`coverShare.${coverVerdict ?? "unknownSize"}`, { width: SHARE_IMAGE_MIN_WIDTH, height: SHARE_IMAGE_MIN_HEIGHT })
+                      : tEditor(`coverShareAuto.${coverVerdict ?? "unknownSize"}`, { width: SHARE_IMAGE_MIN_WIDTH, height: SHARE_IMAGE_MIN_HEIGHT })}
                   </p>
                   <button
                     type="button"
@@ -602,8 +654,10 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{tEditor("coverNone")}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{tEditor("coverRequirement", { width: SHARE_IMAGE_MIN_WIDTH, height: SHARE_IMAGE_MIN_HEIGHT })}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{kind === "Blog" ? tEditor("coverAuto") : tEditor("coverNone")}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {tEditor(kind === "Blog" ? "coverRequirementAuto" : "coverRequirement", { width: SHARE_IMAGE_MIN_WIDTH, height: SHARE_IMAGE_MIN_HEIGHT })}
+                  </p>
                   <label className={buttonClassName("secondary", "cursor-pointer self-start text-center")}>
                     {tEditor("coverUpload")}
                     <input
@@ -622,6 +676,17 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
                       }}
                     />
                   </label>
+                </>
+              )}
+              {kind === "Blog" && (
+                <>
+                  {coverMediaId && <p className="text-xs text-gray-500 dark:text-gray-400">{tEditor("coverAutoBehindUpload")}</p>}
+                  <CoverCardFields
+                    value={coverCard}
+                    onChange={edit(setCoverCard)}
+                    iconSet={iconSet}
+                    proposal={coverProposal}
+                  />
                 </>
               )}
             </div>

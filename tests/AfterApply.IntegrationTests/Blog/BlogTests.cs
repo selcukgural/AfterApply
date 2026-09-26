@@ -110,9 +110,9 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
 
     private static SaveBlogDraftRequest Draft(AdminBlogPostResponse post, string title = "İşe Alım Sürecinde Ghosting",
         string html = "<p>Merhaba</p>", string? slug = null, string? language = null, Guid? translationOf = null,
-        Guid? cover = null, int? revision = null, BlogSeoRequest? seo = null) =>
+        Guid? cover = null, int? revision = null, BlogSeoRequest? seo = null, BlogCoverCardRequest? coverCard = null) =>
         new(title, "Özet", Doc, html, language ?? post.Language, slug ?? post.Slug, cover ?? post.CoverMediaId,
-            translationOf ?? post.TranslationOfPostId, revision ?? post.Revision, seo);
+            translationOf ?? post.TranslationOfPostId, revision ?? post.Revision, seo, CoverCard: coverCard);
 
     private static async Task<BlogDraftSavedResponse> SaveAsync(HttpClient admin, Guid postId, SaveBlogDraftRequest request)
     {
@@ -780,7 +780,8 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
             LastRequest = request;
             return Task.FromResult(new BlogSeoSuggestionResponse("İşe Alımda Ghosting", "Başvuruların yüzde sekseni yanıtsız kalıyor.",
                 "işe alımda ghosting", ["mülakat sonrası sessizlik"], request.HasCover ? "Soyut gradyan" : null,
-                request.LockedSlug is null ? "ise-alimda-ghosting" : null, "Bilgi arayan aday."));
+                request.LockedSlug is null ? "ise-alimda-ghosting" : null, "Bilgi arayan aday.",
+                "Sessizlik de bir cevap", "bell off"));
         }
     }
 
@@ -800,6 +801,8 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         suggestion.SeoTitle.ShouldBe("İşe Alımda Ghosting");
         suggestion.Slug.ShouldBe("ise-alimda-ghosting");
         suggestion.CoverAlt.ShouldBeNull();
+        suggestion.CoverHook.ShouldBe("Sessizlik de bir cevap");
+        suggestion.CoverIconKeyword.ShouldBe("bell off");
 
         // The body went as text, not markup; no cover, no slug lock on a never-published post.
         provider.LastRequest.ShouldNotBeNull();
@@ -810,7 +813,9 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         provider.LastRequest.Kind.ShouldBe(BlogPostKind.Blog);
 
         // Proposals only: the draft's fields are as they were.
-        ShouldBeSeo((await GetAdminAsync(admin, post.Id)).DraftSeo, null, null, [], null);
+        var untouched = await GetAdminAsync(admin, post.Id);
+        ShouldBeSeo(untouched.DraftSeo, null, null, [], null);
+        untouched.DraftCoverCard.ShouldBe(new BlogCoverCardResponse(null, null));
 
         // After publish the slug is locked, and the provider is told so.
         await PublishAsync(admin, post.Id);
@@ -845,6 +850,93 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         var response = await admin.PostAsync($"/api/admin/blog/posts/{post.Id}/seo-suggestions", null);
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         (await response.Content.ReadFromJsonAsync<ProblemDetails>(JsonOptions))!.Detail.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    // ---- Generated cover (2026-09-27) ----------------------------------------------------------
+
+    private async Task<HttpResponseMessage> GetCoverCardAsync(string language, string slug, string query = "") =>
+        await _factory.CreateClient().GetAsync($"/api/blog/public/posts/{language}/{slug}/cover-card{query}");
+
+    [Fact]
+    public async Task Cover_Card_Rides_The_Draft_And_Reaches_The_List_The_Page_And_The_Card_Route_On_Publish()
+    {
+        var (admin, _) = await RegisterAdminAsync("cover.blog@example.com");
+        var post = await CreateAsync(admin);
+
+        // An editor without the cover section sends none: stored as neither, not refused.
+        var first = await SaveAsync(admin, post.Id, Draft(post));
+        (await GetAdminAsync(admin, post.Id)).DraftCoverCard.ShouldBe(new BlogCoverCardResponse(null, null));
+
+        await SaveAsync(admin, post.Id, Draft(post, revision: first.Revision,
+            coverCard: new BlogCoverCardRequest("  İletildi\n≠ okundu ", " Mail ")));
+        (await GetAdminAsync(admin, post.Id)).DraftCoverCard.ShouldBe(new BlogCoverCardResponse("İletildi ≠ okundu", "mail"));
+        var preview = (await admin.GetFromJsonAsync<BlogPostPublicResponse>($"/api/admin/blog/posts/{post.Id}/preview", JsonOptions))!;
+        preview.CoverHook.ShouldBe("İletildi ≠ okundu");
+        preview.CoverIcon.ShouldBe("mail");
+
+        // Nothing public before the first publish — the card route included.
+        var slugBefore = preview.Slug;
+        (await GetCoverCardAsync("tr", slugBefore)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+        var published = await PublishAsync(admin, post.Id);
+        var item = (await _factory.CreateClient().GetFromJsonAsync<PagedResult<BlogPostListItemResponse>>(
+            "/api/blog/public/posts?lang=tr", JsonOptions))!.Items.Single();
+        item.CoverImageUrl.ShouldBeNull();
+        item.CoverHook.ShouldBe("İletildi ≠ okundu");
+        item.CoverIcon.ShouldBe("mail");
+
+        var cardResponse = await GetCoverCardAsync("tr", published.Slug!);
+        cardResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await cardResponse.Content.ReadFromJsonAsync<BlogCoverCardPublicResponse>(JsonOptions))
+            .ShouldBe(new BlogCoverCardPublicResponse("İşe Alım Sürecinde Ghosting", "İletildi ≠ okundu", "mail"));
+
+        // A crawler fetching the picture is not a reader: the card route counts no view.
+        (await GetAdminAsync(admin, post.Id)).ViewCount.ShouldBe(0);
+
+        var page = (await (await GetPublicAsync("tr", published.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
+        page.CoverHook.ShouldBe("İletildi ≠ okundu");
+        page.CoverIcon.ShouldBe("mail");
+
+        // Clearing the draft's card reaches the public side on the next publish, nothing sooner.
+        await SaveAsync(admin, post.Id, Draft(post, revision: published.Revision, coverCard: new BlogCoverCardRequest("", null)));
+        (await (await GetCoverCardAsync("tr", published.Slug!)).Content.ReadFromJsonAsync<BlogCoverCardPublicResponse>(JsonOptions))!
+            .Hook.ShouldBe("İletildi ≠ okundu");
+        await PublishAsync(admin, post.Id);
+        (await (await GetCoverCardAsync("tr", published.Slug!)).Content.ReadFromJsonAsync<BlogCoverCardPublicResponse>(JsonOptions))
+            .ShouldBe(new BlogCoverCardPublicResponse("İşe Alım Sürecinde Ghosting", null, null));
+
+        // Unpublished, the card is gone with the page.
+        (await admin.PostAsync($"/api/admin/blog/posts/{post.Id}/unpublish", null)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await GetCoverCardAsync("tr", published.Slug!)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Cover_Card_Refuses_An_Icon_That_Is_Not_A_Name_And_Keeps_To_Its_Kind()
+    {
+        var (admin, _) = await RegisterAdminAsync("cover2.blog@example.com");
+        var post = await CreateAsync(admin);
+
+        var response = await admin.PutAsJsonAsync($"/api/admin/blog/posts/{post.Id}/draft",
+            Draft(post, coverCard: new BlogCoverCardRequest(new string('a', BlogCoverCard.MaxHookLength + 1), "../mail")), JsonOptions);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("CoverCard.Hook");
+        body.ShouldContain("CoverCard.Icon");
+
+        // A guide's card is under the guide, not the blog; a kind that is not one is 404.
+        var guideCreated = await admin.PostAsJsonAsync("/api/admin/blog/posts",
+            NewPost(title: "Teşekkür e-postası", html: "<p>Aynı gün gönder.</p>") with
+            {
+                Kind = BlogPostKind.Guide, CoverCard = new BlogCoverCardRequest(null, "mail")
+            }, JsonOptions);
+        guideCreated.StatusCode.ShouldBe(HttpStatusCode.Created, await guideCreated.Content.ReadAsStringAsync());
+        var guide = (await guideCreated.Content.ReadFromJsonAsync<AdminBlogPostResponse>(JsonOptions))!;
+        guide.DraftCoverCard.ShouldBe(new BlogCoverCardResponse(null, "mail"));
+        var publishedGuide = await PublishAsync(admin, guide.Id);
+
+        (await GetCoverCardAsync("tr", publishedGuide.Slug!)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await GetCoverCardAsync("tr", publishedGuide.Slug!, "?kind=Guide")).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await GetCoverCardAsync("tr", publishedGuide.Slug!, "?kind=7")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     // ---- Likes ----------------------------------------------------------------------------------

@@ -12,7 +12,11 @@ import { parseFlowCard } from "@/lib/flowCard/card";
 import { flowCardText } from "@/lib/flowCard/cardText";
 import { FLOW_FORMAT_SPECS, parseFlowFormat } from "@/lib/flowCard/formats";
 import { parseScoreCard } from "@/lib/cvScan/scoreCard";
-import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, OG_KICKER_MAX_LENGTH, OG_TITLE_MAX_LENGTH, sanitizeOgText } from "@/lib/seo/ogImage";
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, OG_KICKER_MAX_LENGTH, OG_TITLE_MAX_LENGTH, isBlogCoverSlug, sanitizeOgText } from "@/lib/seo/ogImage";
+import { BlogCoverCard } from "@/components/blog/BlogCoverCard";
+import { coverText } from "@/lib/blog/coverCard";
+import { coverIconNode } from "@/lib/blog/coverIcons.server";
+import { fetchBlogCoverCard } from "@/lib/blog/publicApi.server";
 
 /**
  * `GET /{locale}/og?t=<title>&k=<kicker>` — the share card for every public page that is not the
@@ -20,6 +24,9 @@ import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, OG_KICKER_MAX_LENGTH, OG_TITLE_MAX_LEN
  * `GET /{locale}/og?flow=<card>&f=link|x|portrait|story[&d=2]` — the shareable application-flow card
  * (`lib/flowCard/card.ts`) at one of its four sizes, at twice the pixels with `d=2`; a card whose
  * columns do not add up is a 404.
+ * `GET /{locale}/og?post=<slug>` — a blog post's generated cover (DECISIONS.md 2026-09-27), its share
+ * image when it has no card-sized cover of its own. The words come from the published post (the
+ * API's cover-card read), never from the URL; a slug that is not a published post is a 404.
  * `GET /{locale}/og?card=88-34-22-13-19` — the shared-score card for a `/cv-tarama/puan/<card>`
  * page (`lib/cvScan/scoreCard.ts`): numbers only, and a card that does not add up is a 404
  * rather than a picture of a score the scan never gave.
@@ -86,6 +93,26 @@ export async function GET(request: NextRequest, context: RouteContext<"/[locale]
         // The card's page is noindex; the picture needs its own header, since it can be linked to
         // on its own (Google: robots meta tag / X-Robots-Tag for non-HTML resources).
         headers: { ...headers, "X-Robots-Tag": "noindex" },
+        fonts: flowFonts,
+      },
+    );
+  }
+
+  const postParam = params.get("post");
+  if (postParam !== null) {
+    const card = isBlogCoverSlug(postParam) ? await fetchBlogCoverCard(locale, postParam) : null;
+    if (!card) {
+      return new Response("Not found", { status: 404 });
+    }
+
+    const t = await getTranslations({ locale, namespace: "metadata.pages" });
+    return new ImageResponse(
+      <BlogCoverCard mode="og" text={coverText(card.title, card.hook)} icon={coverIconNode(card.icon)} eyebrow={t("blog.title")} />,
+      {
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        // An hour, not a day: an edit to the cover line should reach the next crawl the same day.
+        headers: { "Cache-Control": "public, max-age=3600, s-maxage=3600" },
         fonts: flowFonts,
       },
     );

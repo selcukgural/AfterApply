@@ -222,4 +222,26 @@ public class BlogValidatorTests
     {
         new CreateBlogPostRequestValidator(new KeyEchoLocalizer()).Validate(Create(title, excerpt, html: html)).IsValid.ShouldBeTrue();
     }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("İletildi ≠ okundu", "mail")]
+    [InlineData("", "  ")]
+    [InlineData(null, " Chart-Column ")]
+    public void Accepts_A_Cover_Card_Within_The_Rules(string? hook, string? icon)
+    {
+        new SaveBlogDraftRequestValidator(new KeyEchoLocalizer())
+            .Validate(Draft() with { CoverCard = new BlogCoverCardRequest(hook, icon) }).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Refuses_An_Over_Long_Cover_Line_And_An_Icon_That_Is_Not_A_Name()
+    {
+        var validator = new SaveBlogDraftRequestValidator(new KeyEchoLocalizer());
+
+        validator.Validate(Draft() with { CoverCard = new BlogCoverCardRequest(new string('a', BlogCoverCard.MaxHookLength + 1), null) })
+            .Errors.ShouldContain(e => e.PropertyName == "CoverCard.Hook");
+        validator.Validate(Draft() with { CoverCard = new BlogCoverCardRequest(null, "<svg onload=x>") })
+            .Errors.ShouldContain(e => e.PropertyName == "CoverCard.Icon" && e.ErrorMessage == "VALIDATION_BLOG_COVER_ICON_INVALID");
+    }
 }

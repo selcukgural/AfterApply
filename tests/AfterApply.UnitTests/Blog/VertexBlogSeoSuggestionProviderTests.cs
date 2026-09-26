@@ -41,7 +41,8 @@ public class VertexBlogSeoSuggestionProviderTests
         """
         {"seoTitle": " İşe Alımda Ghosting: Neden Cevap Gelmiyor? ", "metaDescription": "Başvuruların yüzde sekseni yanıtsız. Kim susuyor, ne zaman ve ilk haftadan sonra ne bekleyebilirsiniz.",
          "primaryKeyword": "işe alımda ghosting", "secondaryKeywords": ["İşe Alımda Ghosting", "mülakat sonrası sessizlik", "Mülakat Sonrası Sessizlik", "", "ik geri dönüş süresi"],
-         "coverAlt": "Cevapsız başvuruları temsil eden soyut gradyan", "slug": "İşe Alımda Ghosting Neden", "intentNote": "Bilgi arayan aday; ilk H2 doğrudan cevabı versin."}
+         "coverAlt": "Cevapsız başvuruları temsil eden soyut gradyan", "slug": "İşe Alımda Ghosting Neden", "intentNote": "Bilgi arayan aday; ilk H2 doğrudan cevabı versin.",
+         "coverHook": "  Sessizlik\n de bir cevap ", "coverIconKeyword": " Bell Off "}
         """;
 
     [Fact]
@@ -91,6 +92,45 @@ public class VertexBlogSeoSuggestionProviderTests
         // A slug the generator would refuse is generated from what the model said.
         result.Slug.ShouldBe("ise-alimda-ghosting-neden");
         result.IntentNote.ShouldBe("Bilgi arayan aday; ilk H2 doğrudan cevabı versin.");
+        // The cover line is one line; the icon keyword is what the editor's search takes.
+        result.CoverHook.ShouldBe("Sessizlik de bir cevap");
+        result.CoverIconKeyword.ShouldBe("bell off");
+    }
+
+    [Fact]
+    public async Task Asks_For_A_Cover_Line_And_An_Icon_Keyword()
+    {
+        var vertex = new StubVertex(_ => new VertexGenerateContentResult(Answer, 900, 120));
+
+        await Provider(vertex).SuggestAsync(Request, CancellationToken.None);
+
+        vertex.LastCall!.SystemPrompt.ShouldContain("coverHook");
+        vertex.LastCall.SystemPrompt.ShouldContain("coverIconKeyword");
+    }
+
+    [Theory]
+    [InlineData("mail", "mail")]
+    [InlineData(" Money ", "money")]
+    [InlineData("bell-off", "bell off")]
+    [InlineData("three word answer", null)]
+    [InlineData("<svg>", null)]
+    [InlineData("çanta", null)]
+    [InlineData("", null)]
+    public async Task The_Icon_Keyword_Is_One_Or_Two_Plain_Words(string raw, string? expected)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(new { seoTitle = "t", coverIconKeyword = raw });
+        var vertex = new StubVertex(_ => new VertexGenerateContentResult(json, 10, 5));
+
+        (await Provider(vertex).SuggestAsync(Request, CancellationToken.None)).CoverIconKeyword.ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task An_Over_Long_Cover_Line_Is_Cut_To_The_Cap()
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(new { seoTitle = "t", coverHook = new string('a', 80) });
+        var vertex = new StubVertex(_ => new VertexGenerateContentResult(json, 10, 5));
+
+        (await Provider(vertex).SuggestAsync(Request, CancellationToken.None)).CoverHook!.Length.ShouldBe(BlogCoverCard.MaxHookLength);
     }
 
     [Fact]
