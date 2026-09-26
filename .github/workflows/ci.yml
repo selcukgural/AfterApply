@@ -33,3 +33,29 @@ jobs:
       publish: false
     secrets:
       POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+
+  # The proof deploy.yml looks for before it skips re-running the same gates on main. Runs only
+  # when every job above passed (a plain `needs:`), and names the artifact after the tree the run
+  # actually tested — the pull_request checkout is GitHub's merge of the PR into main, so this is
+  # the exact content that will land on main when the PR merges up to date (branch protection is
+  # strict). A tree hash covers every file, workflows included, so an identical tree means an
+  # identical build, identical tests and identical gate definitions. deploy.yml re-checks the run
+  # itself (same repository, this workflow, concluded success) rather than trusting the name.
+  # See DECISIONS.md 2026-09-26.
+  verified-tree:
+    needs: [tests, api-contract]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - id: tree
+        run: |
+          tree=$(git rev-parse 'HEAD^{tree}')
+          echo "tree=$tree" >> "$GITHUB_OUTPUT"
+          printf 'tree=%s\ncommit=%s\nrun=%s\n' "$tree" "$(git rev-parse HEAD)" "$GITHUB_RUN_ID" > verified-tree.txt
+
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: verified-tree-${{ steps.tree.outputs.tree }}
+          path: verified-tree.txt
+          retention-days: 30

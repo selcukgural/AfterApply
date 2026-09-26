@@ -14,8 +14,9 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.ResponseRates;
 
-/// <summary>Thresholds lowered so a handful of seeded accounts can cross them; the cache is one
-/// second so a test sees what it just seeded. The flag stays at its shipped default (on).</summary>
+/// <summary>Thresholds lowered so a handful of seeded accounts can cross them; the cache is kept
+/// short and every read clears it first, so a test sees what it just seeded. The flag stays at its
+/// shipped default (on).</summary>
 public sealed class SectorResponseRatesProfile : IHostProfile
 {
     public void Configure(IWebHostBuilder builder)
@@ -78,8 +79,8 @@ public class SectorResponseRatesTests(ApiHost<SectorResponseRatesProfile> host)
 
     private async Task<SectorResponseRatesResponse> GetTableAsync(string query = "")
     {
-        // The service caches for a second; wait it out so the table reflects what was just seeded.
-        await Task.Delay(1100);
+        // The service caches the table; drop it so the read reflects what was just seeded.
+        await host.ClearCachesAsync();
         var response = await _anonymous.GetAsync($"/api/response-rates/sectors{query}");
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Headers.CacheControl!.Public.ShouldBeTrue();

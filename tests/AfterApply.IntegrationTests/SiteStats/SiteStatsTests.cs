@@ -51,8 +51,8 @@ public class SiteStatsTests(ApiHost<SiteStatsProfile> host) : IClassFixture<ApiH
             await db.SaveChangesAsync();
         }
 
-        // The entry may have been cached empty by another test's request; wait it out.
-        await Task.Delay(TimeSpan.FromSeconds(1.2));
+        // The entry may have been cached empty by another test's request; drop it.
+        await host.ClearCachesAsync();
 
         var client = _factory.CreateClient();
         var response = await client.GetAsync("/api/site-stats");

@@ -28,6 +28,12 @@ jobs:
 
       - run: dotnet build AfterApply.slnx --no-restore --configuration Release
 
+      # Unit tests first, on their own: seconds, and a failure there is reported before the
+      # integration suite spends its minutes.
+      - run: >
+          dotnet test tests/AfterApply.UnitTests --no-build --configuration Release
+          --logger "trx;LogFileName=unit.trx" --results-directory TestResults
+
       # Integration tests use Testcontainers, which manages its own Postgres
       # container lifecycle directly against the Docker daemon ubuntu-latest
       # already ships — no `services:` block here, that's a different
@@ -37,23 +43,41 @@ jobs:
       # --blame-hang: a test that stalls ends the run in 3 minutes with its name in the log,
       # instead of sitting there until the job's timeout-minutes cuts it off with no
       # attribution (which is what a 40-minute local hang looked like on 2026-09-15 — see
-      # DECISIONS.md). Serial (xunit.runner.json, maxParallelThreads=1): the earlier parallel
-      # attempts failed on Hangfire polling deadlines, which no longer exist since jobs run inline;
-      # re-trying parallelism is a separate, measured change.
-      - run: >
-          dotnet test AfterApply.slnx --no-build --configuration Release
-          --blame-hang --blame-hang-timeout 3m --blame-hang-dump-type none
-          --logger "trx;LogFileName=results.trx" --results-directory TestResults
+      # DECISIONS.md).
+      #
+      # Timed against a budget: a suite that creeps back towards the old ~9 minutes gets a
+      # warning on the run rather than going unnoticed until a hotfix has to wait for it.
+      - name: Integration tests
+        env:
+          BUDGET_SECONDS: "240"
+        run: |
+          start=$(date +%s)
+          dotnet test tests/AfterApply.IntegrationTests --no-build --configuration Release \
+            --blame-hang --blame-hang-timeout 3m --blame-hang-dump-type none \
+            --logger "trx;LogFileName=integration.trx" --results-directory TestResults
+          elapsed=$(( $(date +%s) - start ))
+          echo "Integration suite: ${elapsed}s (budget ${BUDGET_SECONDS}s)"
+          if (( elapsed > BUDGET_SECONDS )); then
+            echo "::warning::Integration suite took ${elapsed}s, over its ${BUDGET_SECONDS}s budget — see the per-class table in the job summary."
+          fi
+
+      # Which classes the time went to, on every run, so a regression shows up next to the run
+      # that caused it.
+      - name: Per-class timings
+        if: always() && hashFiles('TestResults/integration.trx') != ''
+        run: python3 scripts/test-timings.py TestResults/integration.trx --markdown >> "$GITHUB_STEP_SUMMARY"
 
       # The console shows a failure's message but not its stack — a fixture-teardown failure
       # ("Test Class Cleanup Failure ... ObjectDisposedException", 2026-09-19) came through as
-      # one line with nothing to chase. The .trx has the full trace; keep it when something failed.
-      - if: failure()
+      # one line with nothing to chase. The .trx has the full trace, and on a green run the
+      # timings; kept on every run.
+      - if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: backend-test-results
           path: TestResults/*.trx
           retention-days: 14
+          if-no-files-found: ignore
 
   frontend:
     runs-on: ubuntu-latest
