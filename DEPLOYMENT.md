@@ -81,6 +81,31 @@ one once the release that always supplies the value is live (expand, then
 contract). The same rule rules out renaming or dropping a column still read by
 the running release.
 
+### Rolling back a bad deploy
+
+The first move when a deploy breaks production is to send traffic back to the
+revision that was serving before it, not to push a fix: nothing is built or
+tested, so it takes about a minute. The fix then ships through the normal
+pipeline.
+
+    gh workflow run deploy.yml -f mode=rollback -f target=backend   # or web, or both
+
+With no `revision`, each service goes back to the ready revision created just
+before the one serving now. To pick one explicitly (one side only):
+
+    gcloud run revisions list --service=afterapply-api --region=<region>
+    gh workflow run deploy.yml -f mode=rollback -f target=backend -f revision=afterapply-api-00140-8fb
+
+It runs inside `deploy.yml` because the Workload Identity trust condition admits
+that workflow file only, and it queues behind a deploy already in progress.
+The rollback pins traffic to the named revision. Every deploy ends with
+`update-traffic --to-latest`, so the next deploy releases the pin.
+
+Migrations are **not** rolled back. Going back is safe exactly as far as the
+rule above has been kept: the previous revision runs against the current
+schema. Before rolling back past a migration that dropped or renamed
+something, check what that revision still reads.
+
 ## What's still missing for a real cloud deployment
 
 This profile deliberately stops short of being cloud-ready:

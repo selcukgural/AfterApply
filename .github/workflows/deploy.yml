@@ -13,11 +13,20 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      mode:
+        description: deploy = build and ship this commit; rollback = send traffic back to an earlier revision
+        type: choice
+        options: [deploy, rollback]
+        default: deploy
       target:
-        description: Which side(s) to deploy
+        description: Which side(s) to deploy or roll back
         type: choice
         options: [both, backend, web]
         default: both
+      revision:
+        description: "Rollback only, one side only: the Cloud Run revision to return to (e.g. afterapply-api-00140-8fb). Empty = the one before what is serving now."
+        type: string
+        required: false
 
 # One deploy at a time, queued rather than cancelled: a cancel could land in the middle of a
 # `gcloud run deploy` or a migration. Two merges minutes apart on 2026-09-26 (#149, #150) ran their
@@ -64,6 +73,8 @@ jobs:
   # anything since what is actually live?", which is the question a deploy gate should ask.
   # A missing tag (first-ever run) means deploy.
   plan:
+    # A rollback dispatch runs only the rollback job; everything below hangs off plan and skips.
+    if: github.event_name != 'workflow_dispatch' || inputs.mode != 'rollback'
     runs-on: ubuntu-latest
     # actions: read for the verified-tree lookup below (artifact and run metadata only).
     permissions:
@@ -524,6 +535,12 @@ jobs:
             PayTr__MerchantSalt=afterapply-paytr-merchant-salt:latest
             RateLimiting__ServerRenderKey=afterapply-server-render-key:latest
 
+      # A rollback pins traffic to one named revision, and a deploy then creates a new revision
+      # that serves nothing: gcloud only moves the traffic that follows "latest". Putting traffic
+      # back on latest after every deploy is a no-op normally and ends a rollback's pin once a fix ships.
+      - name: Send all traffic to the new revision
+        run: gcloud run services update-traffic afterapply-api --to-latest --region="${GCP_REGION}" --quiet
+
       # High-water-mark tag for the notify-deploy job below: moves deploy/api-latest to the
       # commit that was just deployed, so the *next* backend deploy can compute exactly which
       # commits shipped by diffing against it (git log deploy/api-latest..HEAD) — this survives
@@ -620,6 +637,12 @@ jobs:
           secrets: |-
             API_SERVER_RENDER_KEY=afterapply-server-render-key:latest
 
+      # A rollback pins traffic to one named revision, and a deploy then creates a new revision
+      # that serves nothing: gcloud only moves the traffic that follows "latest". Putting traffic
+      # back on latest after every deploy is a no-op normally and ends a rollback's pin once a fix ships.
+      - name: Send all traffic to the new revision
+        run: gcloud run services update-traffic afterapply-web --to-latest --region="${GCP_REGION}" --quiet
+
       # Same high-water-mark pattern as deploy-backend's own step above, just against
       # deploy/web-latest — see that step's comment for the full rationale.
       - name: Compute deployed commit range
@@ -651,6 +674,81 @@ jobs:
   # failed (always()), but only posts if at least one side both succeeded AND shipped new
   # commits — a workflow_dispatch redeploy of an already-deployed SHA (e.g. after a secret
   # rotation) has count == '0' and is silently skipped, so it doesn't spam #deployments.
+  # The way back when a deploy turns out bad: traffic returns to a revision that already ran in
+  # production, so there is nothing to build or test — about a minute, against a full deploy for a
+  # fix. Here and not in a workflow of its own because the WIF trust condition admits this workflow
+  # file only (DEPLOYMENT.md), and so it queues behind a deploy in progress instead of racing it.
+  #
+  # What it does NOT undo: database migrations. The previous revision runs against the current
+  # schema, which is safe only while migrations stay additive (new columns nullable or defaulted,
+  # nothing dropped or renamed in the same deploy that stops using it). Check before rolling back
+  # past a migration that is not. The deploy/*-latest tags stay where they are: the next push is
+  # diffed against the commit that was deployed, and redeploys whatever changed since.
+  rollback:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'rollback'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: Roll back
+        env:
+          TARGET: ${{ inputs.target }}
+          REVISION: ${{ inputs.revision }}
+        run: |
+          case "$TARGET" in
+            backend) services=(afterapply-api) ;;
+            web) services=(afterapply-web) ;;
+            *) services=(afterapply-api afterapply-web) ;;
+          esac
+          if [ -n "$REVISION" ] && [ "${#services[@]}" -ne 1 ]; then
+            echo "::error::A named revision belongs to one service; pick target backend or web."
+            exit 1
+          fi
+
+          for service in "${services[@]}"; do
+            current=$(gcloud run services describe "$service" --region="$GCP_REGION" \
+              --format='value(status.traffic[0].revisionName)')
+            # Newest first, ready ones only.
+            revisions=$(gcloud run revisions list --service="$service" --region="$GCP_REGION" \
+              --sort-by='~metadata.creationTimestamp' --limit=20 \
+              --filter='status.conditions.type=Ready AND status.conditions.status=True' \
+              --format='value(metadata.name)')
+
+            if [ -n "$REVISION" ]; then
+              if ! printf '%s\n' "$revisions" | grep -qx -- "$REVISION"; then
+                echo "::error::$REVISION is not one of $service's last 20 ready revisions."
+                exit 1
+              fi
+              target_revision=$REVISION
+            else
+              # The first ready revision older than the one serving now.
+              target_revision=$(printf '%s\n' "$revisions" | awk -v cur="$current" 'seen && NF { print; exit } $0 == cur { seen = 1 }')
+            fi
+            if [ -z "$target_revision" ]; then
+              echo "::error::No earlier ready revision of $service to return to (serving: $current)."
+              exit 1
+            fi
+            # Naming the revision already serving is allowed on purpose: traffic does not move,
+            # which makes it the way to try this job end to end without touching production.
+            if [ "$target_revision" = "$current" ]; then
+              echo "::notice::$service already serves $current; pinning it changes nothing."
+            fi
+
+            echo "$service: $current -> $target_revision"
+            gcloud run services update-traffic "$service" --region="$GCP_REGION" \
+              --to-revisions="${target_revision}=100" --quiet
+            echo "- \`$service\`: \`$current\` → \`$target_revision\` (traffic pinned; the next deploy moves it back to latest)" >> "$GITHUB_STEP_SUMMARY"
+          done
+
   notify-deploy:
     needs: [deploy-backend, deploy-web]
     if: |

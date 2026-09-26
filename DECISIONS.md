@@ -9712,4 +9712,12 @@ atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test et
   deploy'u yeni commit yaptı) ama sıra tersine dönebilirdi. `deploy.yml`'ye `concurrency`
   (iptalsiz, sıralı) eklendi: bir deploy koşarken gelen push bekler; bekleyen varken gelen daha yeni
   push onun yerini alır, yani her zaman en yeni main deploy edilir.
-- **Sıradaki adım:** Cloud Run revision'ına geri alma workflow'u.
+- **Geri alma (rollback):** `deploy.yml`'e `workflow_dispatch` modu olarak eklendi
+  (`mode=rollback`, `target`, opsiyonel `revision`); ayrı bir workflow değil, çünkü canlı WIF
+  koşulu yalnızca `deploy.yml`'i kabul ediyor (koşulu gevşetmek yerine). Revision verilmezse
+  şu an trafik alanın hemen öncesindeki hazır revision'a döner (canlıda salt okunur denendi:
+  api 00141 → 00140, web 00154 → 00153). Build/test yok, ~1 dk. Deploy'larla aynı concurrency
+  grubunda, yarışmaz. Trafik belirli revision'a sabitlendiği için her deploy'un sonuna
+  `update-traffic --to-latest` eklendi, yoksa sabitlemeden sonraki deploy trafik almazdı.
+  Migration geri alınmaz; güvenlik DEPLOYMENT.md'deki "expand, then contract" kuralına bağlı.
+  `deploy/*-latest` tag'leri yerinde kalır. Runbook: DEPLOYMENT.md "Rolling back a bad deploy".
