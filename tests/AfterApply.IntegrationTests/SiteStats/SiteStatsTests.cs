@@ -22,7 +22,6 @@ public sealed class SiteStatsProfile : IHostProfile
     }
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class SiteStatsTests(ApiHost<SiteStatsProfile> host) : IClassFixture<ApiHost<SiteStatsProfile>>, IAsyncLifetime
 {
     private WebApplicationFactory<Program> _factory => host;

@@ -19,7 +19,6 @@ namespace AfterApply.IntegrationTests.Applications;
 // a 500 from an otherwise valid payload. It is now normalised on the way in (see
 // UtcDateTimeOffsetConverter), so these tests write one through the endpoints that take a timestamp
 // from a caller and check both that the request succeeds and that the instant survived.
-[Collection(IntegrationTestCollection.Name)]
 public class NonUtcTimestampTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

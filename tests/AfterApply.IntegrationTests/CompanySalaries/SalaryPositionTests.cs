@@ -29,7 +29,6 @@ public sealed class SalaryPositionProfile : IHostProfile
 /// the company's current band in its currency — hidden below its own, higher threshold, made of
 /// the same rows as the company page's band, and nobody else's to read.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class SalaryPositionTests(ApiHost<SalaryPositionProfile> host) : IClassFixture<ApiHost<SalaryPositionProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

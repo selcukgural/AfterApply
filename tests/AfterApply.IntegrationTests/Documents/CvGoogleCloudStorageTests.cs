@@ -80,7 +80,6 @@ public sealed class FakeGcsProfile : IHostProfile
 /// provider. Deliberately a single class with a handful of tests: it is here so the GCS path
 /// cannot rot unnoticed, not to re-test the rules CvDocumentFlowTests and BlogTests already cover.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CvGoogleCloudStorageTests(ApiHost<FakeGcsProfile> host)
     : IClassFixture<ApiHost<FakeGcsProfile>>, IAsyncLifetime
 {

@@ -19,7 +19,6 @@ namespace AfterApply.IntegrationTests.Companies;
 /// found by name only once it is listed; a job's description as one user's capture read it is
 /// that user's alone.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class SharedCompanyDataTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

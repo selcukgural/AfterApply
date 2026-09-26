@@ -31,7 +31,6 @@ public sealed class PasswordResetProfile : IHostProfile
     public void Reset() => Emails.Reset();
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class PasswordResetTests(ApiHost<PasswordResetProfile> host) : IClassFixture<ApiHost<PasswordResetProfile>>, IAsyncLifetime
 {
     private const string RegisteredPassword = "P@ssw0rd123!";

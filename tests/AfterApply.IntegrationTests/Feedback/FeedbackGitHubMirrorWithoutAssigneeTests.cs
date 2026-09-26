@@ -47,7 +47,6 @@ public sealed class FeedbackGitHubMirrorWithoutAssigneeProfile : IHostProfile
 /// so getting the omission wrong would break every mirrored issue for the default configuration
 /// while <see cref="FeedbackGitHubMirrorTests"/>, which sets one, stayed green.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class FeedbackGitHubMirrorWithoutAssigneeTests(ApiHost<FeedbackGitHubMirrorWithoutAssigneeProfile> host) : IClassFixture<ApiHost<FeedbackGitHubMirrorWithoutAssigneeProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

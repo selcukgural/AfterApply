@@ -16,7 +16,6 @@ namespace AfterApply.IntegrationTests.Infrastructure;
 /// builds one — nothing configured beyond a database — which is exactly the kind that was reaching
 /// LinkedIn.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class NoOutboundHttpTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private WebApplicationFactory<Program> _factory => host;

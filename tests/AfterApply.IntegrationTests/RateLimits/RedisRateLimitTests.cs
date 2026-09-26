@@ -14,7 +14,6 @@ namespace AfterApply.IntegrationTests.RateLimits;
 /// has no reset within a test class. TestServer reports no client address, so every request is the
 /// same anonymous caller — exactly the shape the assertions need.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class RedisRateLimitTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

@@ -18,7 +18,6 @@ namespace AfterApply.IntegrationTests.JobSources;
 /// user's and the admin's — answers 404 before any service runs, and the recurring sweep returns
 /// without touching the network or the database.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class JobSourceFlagOffTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);

@@ -23,7 +23,6 @@ namespace AfterApply.IntegrationTests.Identity;
 // reaches no more than an Extension one. The tests that just need "a working credential" therefore
 // use GET /api/companies/search, one of those endpoints. The scope boundary itself is covered by
 // its own tests below (allowed endpoint → 200, everything else → 403).
-[Collection(IntegrationTestCollection.Name)]
 public class PersonalAccessTokenTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

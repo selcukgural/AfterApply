@@ -31,7 +31,6 @@ using DomainReminder = AfterApply.Domain.Notifications.Reminder;
 
 namespace AfterApply.IntegrationTests.Identity;
 
-[Collection(IntegrationTestCollection.Name)]
 public class AccountManagementTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

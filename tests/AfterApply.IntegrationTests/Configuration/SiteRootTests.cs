@@ -21,7 +21,6 @@ public sealed class SiteRootProfile : IHostProfile
 /// sends them to the web app permanently and robots.txt keeps them from probing further; neither
 /// is part of the OpenAPI contract.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class SiteRootTests(ApiHost<SiteRootProfile> host) : IClassFixture<ApiHost<SiteRootProfile>>, IAsyncLifetime
 {
     public Task InitializeAsync() => host.ResetAsync();

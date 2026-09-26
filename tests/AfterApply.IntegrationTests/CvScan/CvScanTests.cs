@@ -25,7 +25,6 @@ namespace AfterApply.IntegrationTests.CvScan;
 /// writes no file, and this directory is how that claim is checked rather than asserted.</summary>
 public sealed class CvScanProfile() : LocalStorageProfile("cv-scan-tests");
 
-[Collection(IntegrationTestCollection.Name)]
 public class CvScanTests(ApiHost<CvScanProfile> host) : IClassFixture<ApiHost<CvScanProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

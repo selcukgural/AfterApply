@@ -28,7 +28,6 @@ public sealed class CompanyAutoAttachThresholdProfile : IHostProfile
     }
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class CompanyAutoAttachThresholdTests(ApiHost<CompanyAutoAttachThresholdProfile> host) : IClassFixture<ApiHost<CompanyAutoAttachThresholdProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

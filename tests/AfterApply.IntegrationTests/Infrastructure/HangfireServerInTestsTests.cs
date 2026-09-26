@@ -23,13 +23,14 @@ namespace AfterApply.IntegrationTests.Infrastructure;
 /// PostgresPoolCapTests) that still proves the real client and the real server wire up. It is the
 /// only class that opens a real server per test, and it opens three.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class HangfireServerInTestsTests(SharedInfrastructure shared) : IAsyncLifetime
+// Serial: starts a real Hangfire server, whose workers and shutdown compete with everything else.
+[Collection(SerialTestCollection.Name)]
+public class HangfireServerInTestsTests : IAsyncLifetime
 {
     private IsolatedStores _stores = null!;
 
     public async Task InitializeAsync() =>
-        _stores = await shared.CreateIsolatedStoresAsync(nameof(HangfireServerInTestsTests));
+        _stores = await (await SharedInfrastructure.GetAsync()).CreateIsolatedStoresAsync(nameof(HangfireServerInTestsTests));
 
     public Task DisposeAsync() => Task.CompletedTask;
 

@@ -64,6 +64,10 @@ part of the deliverable, not a follow-up.
 - **Integration tests** go in `tests/AfterApply.IntegrationTests` (Testcontainers-Postgres via
   podman). Add them for new or changed API endpoints, EF/persistence behaviour, Hangfire jobs,
   auth/rate-limit/policy wiring — anything that only proves itself against a real host + DB.
+  The suite runs classes in parallel and has a time budget (CI warns past 150 s), so keep it fast:
+  no `Task.Delay` to wait out a cache or a clock (`host.ClearCachesAsync()`, the profile's
+  `MutableTimeProvider`); a class-level `host.Variant(...)` rather than a per-test `Standalone`
+  host; `SerialTestCollection` only for process-wide state, with a comment saying which.
 - **Frontend / extension** changes: add tests where a test harness exists for that area;
   otherwise state in the summary that no harness exists rather than silently skipping.
 - If a change is genuinely not testable (pure config, docs, infra identifiers), say so

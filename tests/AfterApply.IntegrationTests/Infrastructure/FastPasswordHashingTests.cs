@@ -13,7 +13,6 @@ namespace AfterApply.IntegrationTests.Infrastructure;
 /// startup would quietly put the suite back on the production cost — about a third of a run's
 /// wall clock before 2026-09-26.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class FastPasswordHashingTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     public Task InitializeAsync() => host.ResetAsync();

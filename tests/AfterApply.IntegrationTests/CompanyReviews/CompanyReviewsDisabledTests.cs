@@ -21,7 +21,6 @@ public sealed class CompanyReviewsDisabledProfile : IHostProfile
 
 /// <summary>CompanyReviews:Enabled=false — the feature deployed dark. Every review route is a 404
 /// for everyone, admin included, and /api/config says so.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CompanyReviewsDisabledTests(ApiHost<CompanyReviewsDisabledProfile> host) : IClassFixture<ApiHost<CompanyReviewsDisabledProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

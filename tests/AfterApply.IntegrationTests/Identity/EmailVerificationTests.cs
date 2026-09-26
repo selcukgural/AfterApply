@@ -32,7 +32,6 @@ public sealed class EmailVerificationProfile : IHostProfile
 /// the code arrives by email, the two together sign the user in. And the reason it exists — a
 /// sign-up made under somebody else's address can never be completed by whoever made it.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class EmailVerificationTests(ApiHost<EmailVerificationProfile> host)
     : IClassFixture<ApiHost<EmailVerificationProfile>>, IAsyncLifetime
 {

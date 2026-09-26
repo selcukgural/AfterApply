@@ -18,7 +18,6 @@ namespace AfterApply.IntegrationTests.CompanyReviews;
 /// contribution, shown to a stranger only once enough different people applied to them. The
 /// shipped floor (three people) is kept, so every test builds its applicants through the API.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class KnownCompanySearchTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

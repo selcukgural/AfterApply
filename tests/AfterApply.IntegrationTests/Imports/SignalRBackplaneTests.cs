@@ -20,7 +20,6 @@ namespace AfterApply.IntegrationTests.Imports;
 /// IHubContext — two hosts, two SignalR servers, one Redis backplane between them. Before the
 /// backplane the message never arrived.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class SignalRBackplaneTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     public Task InitializeAsync() => host.ResetAsync();

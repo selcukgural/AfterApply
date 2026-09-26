@@ -17,7 +17,6 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Imports;
 
-[Collection(IntegrationTestCollection.Name)]
 public class LinkedInImportTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private const string JobApplicationsCsv =

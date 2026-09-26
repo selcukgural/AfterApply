@@ -55,7 +55,6 @@ public sealed class LinkedInSignInProfile : IHostProfile
     }
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class LinkedInSignInTests(ApiHost<LinkedInSignInProfile> host) : IClassFixture<ApiHost<LinkedInSignInProfile>>, IAsyncLifetime
 {
     private const string ClientId = LinkedInSignInProfile.ClientId;

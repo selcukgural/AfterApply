@@ -168,12 +168,14 @@ podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod
   `dotnet test` with `--blame-hang` so a stalled test ends the run in two minutes **with its
   name** rather than hanging it, kills the run outright at fifteen, removes any container the
   run left behind, and prints a per-class timing table so a class that got slow is visible.
-  Current shape (2026-09-26): **820 tests, ~3 min 15 s** locally, still serial; the same
-  timing table lands in every CI run's job summary, with a warning past a 4-minute budget.
+  Current shape (2026-09-26): **821 tests, ~55 s** locally, classes in parallel (one thread
+  per logical CPU; `-- xUnit.MaxParallelThreads=4` to imitate the CI runner). The same timing
+  table lands in every CI run's job summary, with a warning past a 150-second budget.
 
-  How the suite is built, in one paragraph (details and history in `DECISIONS.md`, 2026-09-15):
-  one Postgres container per run, its schema migrated once into a template database; **one
-  API host and one cloned database per test class** (`ApiHost<TProfile>` as an
+  How the suite is built, in one paragraph (details and history in `DECISIONS.md`, 2026-09-15
+  and 2026-09-26): one Postgres and one Redis container per run, the schema migrated once into a
+  template database; **one API host, one cloned database and one Redis database per test class**,
+  classes running in parallel (`ApiHost<TProfile>` as an
   `IClassFixture`), emptied between tests by `host.ResetAsync()`; **background jobs recorded
   and run inline** by `await host.RunJobsAsync()` instead of a Hangfire server, so a test that
   asserts what a job did is deterministic and a negative is `host.Jobs.Pending.ShouldBeEmpty()`;
@@ -185,6 +187,8 @@ podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod
   (`host.Standalone(...)`). The two classes that still start a real Hangfire server,
   `HangfireServerInTestsTests` and `PostgresPoolCapTests`, are the wiring guards and stay that
   way on purpose; `HostLifecycleTests` guards that a disposed host can be garbage-collected.
+  Those three are in `SerialTestCollection` and run on their own after the rest; a new class
+  joins it only for process-wide state, with a comment saying which.
 - Everything: `dotnet test AfterApply.slnx`
 
 > **Workflow note (Claude Code sessions):** during active development, only the unit

@@ -59,7 +59,6 @@ public sealed class GitHubSignInProfile : IHostProfile
     }
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class GitHubSignInTests(ApiHost<GitHubSignInProfile> host) : IClassFixture<ApiHost<GitHubSignInProfile>>, IAsyncLifetime
 {
     private const string ClientId = GitHubSignInProfile.ClientId;

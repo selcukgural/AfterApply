@@ -15,7 +15,6 @@ using Shouldly;
 namespace AfterApply.IntegrationTests.Payments;
 
 /// <summary>Refunds through our system (never the merchant panel) and the admin's payments panel API.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class PaymentRefundAndAdminTests(ApiHost<PaymentProfile> host) : IClassFixture<ApiHost<PaymentProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;
@@ -466,7 +465,6 @@ public class PaymentRefundAndAdminTests(ApiHost<PaymentProfile> host) : IClassFi
 }
 
 /// <summary>The two recurring jobs, called directly with a movable clock.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class PaymentMaintenanceTests(ApiHost<PaymentProfile> host) : IClassFixture<ApiHost<PaymentProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;

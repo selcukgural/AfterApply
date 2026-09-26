@@ -9678,6 +9678,19 @@ atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test et
     sabit maliyet yok).
   - CI'da unit ve entegrasyon ayrı adım; entegrasyon adımı 240 sn bütçeyi aşarsa uyarı; en yavaş
     15 sınıf her koşuda job özetinde (`scripts/test-timings.py`, lokal script de aynısını kullanır).
-- **Sıradaki adımlar:** paketi paralel koşturmak (sınıf başına DB klonu ve Redis DB'si zaten
-  izole; `maxParallelThreads: 1` ve tek koleksiyon kalkacak), imajları testlerle paralel build
-  etmek, Cloud Run revision'ına geri alma workflow'u.
+- **Paket hızlandırma, 2. adım: sınıflar paralel** (lokal 195 sn → ~55 sn, 4 thread'le 79 sn;
+  üst üste 3 tam koşu + 1 dört-thread koşusu yeşil). Sınıf başına DB klonu, Redis DB'si ve
+  backplane kanalı zaten izoleydi; engel tek xunit koleksiyonuydu (xunit v2'de assembly fixture
+  yok). Container'lar artık süreç genelinde tek (`SharedInfrastructure.GetAsync()`, süreç
+  çıkışında kapanır), `maxParallelThreads: 0` (mantıksal CPU sayısı).
+  - Global durum düzeltmeleri: her test host'u kendi Hangfire storage'ını kullanır
+    (`HostOwnJobStorage`; yoksa `JobStorage.Current` yarışı bir host'un recurring job'larını
+    başka sınıfın DB'sine yazdırıyordu, `HostOwnJobStorageTests` korur);
+    `HangfireJobRetention.Apply` kilit altında (statik filtre listesi, eşzamanlı boot).
+  - `SerialTestCollection` (en sonda, tek başına): `HostLifecycleTests` (GC + statikler),
+    `HangfireServerInTestsTests` ve `PostgresPoolCapTests` (gerçek Hangfire sunucusu).
+  - Postgres `max_connections` 300 → 500. CI bütçesi 240 → 150 sn, job timeout 15 → 10 dk.
+  - Crash log'daki ~270 `ObjectDisposedException: MemoryCache` (kapanmış host'a gelen backplane
+    mesajı) paralellikten önce de vardı ve testleri etkilemiyor; ayrı iş.
+- **Sıradaki adımlar:** imajları testlerle paralel build etmek, Cloud Run revision'ına geri alma
+  workflow'u.

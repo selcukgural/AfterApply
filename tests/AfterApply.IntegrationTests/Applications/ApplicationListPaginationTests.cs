@@ -13,7 +13,6 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Applications;
 
-[Collection(IntegrationTestCollection.Name)]
 public class ApplicationListPaginationTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

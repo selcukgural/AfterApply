@@ -34,10 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- maxParallelThreads=1 and every class in one collection: the suite runs strictly serially.
-         Since 2026-09-15 each class shares one host (ApiHost) and jobs run inline, so the reasons
-         the earlier parallel attempts failed (DECISIONS.md 2026-09-01, 2026-09-08) are gone; raising
-         the thread count is a separate, measured experiment. diagnosticMessages+longRunningTestSeconds
+    <!-- Classes run in parallel (maxParallelThreads=0: one thread per logical CPU) since
+         2026-09-26; each has its own database clone, Redis database and backplane channel, and
+         the containers are shared process-wide (SharedInfrastructure.GetAsync). Classes that touch
+         process-wide state join SerialTestCollection. diagnosticMessages+longRunningTestSeconds
          make xunit name any test still running after 30 s while the run is in progress. -->
     <None Update="xunit.runner.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

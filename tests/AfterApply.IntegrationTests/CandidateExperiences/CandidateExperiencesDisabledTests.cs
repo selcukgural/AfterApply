@@ -28,7 +28,6 @@ public sealed class CandidateExperiencesDisabledProfile : IHostProfile
 /// <summary>CandidateExperiences:Enabled=false — the feature deployed dark. Every route is a 404,
 /// the public company page reports zero entries, and /api/config says so. Reviews and salaries
 /// are unaffected.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CandidateExperiencesDisabledTests(ApiHost<CandidateExperiencesDisabledProfile> host)
     : IClassFixture<ApiHost<CandidateExperiencesDisabledProfile>>, IAsyncLifetime
 {

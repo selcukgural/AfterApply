@@ -18,7 +18,6 @@ namespace AfterApply.IntegrationTests.Companies;
 // of the suite does it: through the public API (manual application create), not by writing
 // directly to the DbContext, since Company is shared/global reference data with no dedicated
 // create endpoint of its own.
-[Collection(IntegrationTestCollection.Name)]
 public class CompanySearchEndpointTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

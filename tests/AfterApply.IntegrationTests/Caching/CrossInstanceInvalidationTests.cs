@@ -32,7 +32,6 @@ namespace AfterApply.IntegrationTests.Caching;
 /// A read that populates A's L1 first is what makes these tests mean something: without it they
 /// would pass with no invalidation at all.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CrossInstanceInvalidationTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

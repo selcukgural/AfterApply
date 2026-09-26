@@ -15,9 +15,21 @@ public static class HangfireJobRetention
     /// <summary>Hangfire's own default, kept: about a day and a half of back-off.</summary>
     public const int RetryAttempts = 10;
 
+    // GlobalJobFilters.Filters is a plain list; hosts that boot at the same time (the integration
+    // suite runs classes in parallel) would otherwise remove and add on it concurrently.
+    private static readonly Lock Gate = new();
+
     /// <summary>Replaces the default global retry filter. Idempotent — the integration suite builds
     /// many hosts in one process, and <see cref="GlobalJobFilters"/> is static.</summary>
     public static void Apply()
+    {
+        lock (Gate)
+        {
+            ApplyUnderLock();
+        }
+    }
+
+    private static void ApplyUnderLock()
     {
         foreach (var existing in GlobalJobFilters.Filters.Where(f => f.Instance is AutomaticRetryAttribute).ToList())
         {

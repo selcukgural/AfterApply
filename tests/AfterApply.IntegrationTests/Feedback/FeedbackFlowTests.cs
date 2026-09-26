@@ -36,7 +36,6 @@ public sealed class FeedbackFlowProfile : IHostProfile
 /// The in-app feedback panel's endpoint, end to end. The GitHub mirror is deliberately left
 /// unconfigured for this class — see <see cref="FeedbackGitHubMirrorTests"/> for the other half.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class FeedbackFlowTests(ApiHost<FeedbackFlowProfile> host) : IClassFixture<ApiHost<FeedbackFlowProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

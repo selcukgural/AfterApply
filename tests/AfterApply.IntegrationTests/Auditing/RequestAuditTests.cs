@@ -26,7 +26,6 @@ namespace AfterApply.IntegrationTests.Auditing;
 /// few deliberate exceptions leave none, the rows go with the account, and nothing ever hands one
 /// back to a caller. See DECISIONS.md 2026-09-14.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class RequestAuditTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

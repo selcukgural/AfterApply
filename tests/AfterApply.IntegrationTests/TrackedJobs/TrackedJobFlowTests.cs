@@ -15,7 +15,6 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.TrackedJobs;
 
-[Collection(IntegrationTestCollection.Name)]
 public class TrackedJobFlowTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

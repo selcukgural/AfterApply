@@ -56,7 +56,6 @@ public sealed class JobSourceSweepProfile : IHostProfile
     }
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class JobSourceSweepTests(ApiHost<JobSourceSweepProfile> host) : IClassFixture<ApiHost<JobSourceSweepProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

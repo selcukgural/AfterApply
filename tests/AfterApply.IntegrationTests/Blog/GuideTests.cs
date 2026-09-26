@@ -17,7 +17,6 @@ namespace AfterApply.IntegrationTests.Blog;
 /// through the same routes with <c>kind=Guide</c>, kept apart from the blog everywhere a reader
 /// or an admin table could mix them. Likes and the view tally work; comments do not exist.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class GuideTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

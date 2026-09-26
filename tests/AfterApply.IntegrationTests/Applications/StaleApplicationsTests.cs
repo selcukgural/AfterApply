@@ -18,7 +18,6 @@ namespace AfterApply.IntegrationTests.Applications;
 /// The dashboard's one question about an old import: "these N applications are past the horizon
 /// and unanswered — mark them all as ghosted?" (DECISIONS.md 2026-09-13, panel reminders).
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class StaleApplicationsTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

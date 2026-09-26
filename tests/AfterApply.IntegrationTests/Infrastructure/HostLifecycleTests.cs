@@ -16,7 +16,9 @@ namespace AfterApply.IntegrationTests.Infrastructure;
 /// it stays fixed, so the first test builds a host, disposes it, and demands the garbage collector
 /// can actually take it.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
+// Serial: asserts the garbage collector can take a disposed host, and the last host to boot is
+// rooted by process-wide statics — another class booting alongside would decide the outcome.
+[Collection(SerialTestCollection.Name)]
 public class HostLifecycleTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>
 {
     [Fact]

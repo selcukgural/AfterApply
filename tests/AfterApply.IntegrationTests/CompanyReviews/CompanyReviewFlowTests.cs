@@ -33,7 +33,6 @@ public sealed class CompanyReviewFlowProfile : IHostProfile
 /// the quota and the one-per-company rule hold, and the moderation surface is admin-only. One
 /// host for the class; each test uses its own accounts and its own company names.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IClassFixture<ApiHost<CompanyReviewFlowProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

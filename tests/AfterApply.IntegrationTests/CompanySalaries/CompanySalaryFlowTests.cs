@@ -37,7 +37,6 @@ public sealed class CompanySalaryFlowProfile : IHostProfile
 /// still served, and the public company page counts entries. Occupations are the seeded
 /// catalogue rows (ids derived from their codes).
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CompanySalaryFlowTests(ApiHost<CompanySalaryFlowProfile> host) : IClassFixture<ApiHost<CompanySalaryFlowProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

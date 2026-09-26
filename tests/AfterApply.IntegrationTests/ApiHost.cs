@@ -79,13 +79,12 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
 
     public const string DefaultPassword = "P@ssw0rd123!";
 
-    private readonly SharedInfrastructure _shared;
     private readonly Dictionary<string, WebApplicationFactory<Program>> _variants = new(StringComparer.Ordinal);
+    private SharedInfrastructure _shared = null!;
     private IsolatedStores? _stores;
 
-    protected ApiHost(SharedInfrastructure shared, IHostProfile profile)
+    protected ApiHost(IHostProfile profile)
     {
-        _shared = shared;
         Profile = profile;
     }
 
@@ -111,12 +110,17 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
     {
         Stores.Apply(builder);
         builder.UseSetting("Jwt:SigningKey", JwtSigningKey);
-        builder.ConfigureTestServices(services => InlineBackgroundJobs.Register(services, Jobs));
+        builder.ConfigureTestServices(services =>
+        {
+            InlineBackgroundJobs.Register(services, Jobs);
+            HostOwnJobStorage.Register(services);
+        });
         Profile.Configure(builder);
     }
 
     public async Task InitializeAsync()
     {
+        _shared = await SharedInfrastructure.GetAsync();
         await Profile.InitializeAsync();
         _stores = await _shared.CreateIsolatedStoresAsync(GetType().Name);
 
@@ -278,8 +282,8 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
 }
 
 /// <summary>The class fixture form: <c>IClassFixture&lt;ApiHost&lt;MyProfile&gt;&gt;</c>. xunit builds it
-/// once per class, resolving <see cref="SharedInfrastructure" /> from the collection.</summary>
-public sealed class ApiHost<TProfile>(SharedInfrastructure shared) : ApiHost(shared, new TProfile())
+/// once per class; it takes the run's containers from <see cref="SharedInfrastructure.GetAsync" />.</summary>
+public sealed class ApiHost<TProfile>() : ApiHost(new TProfile())
     where TProfile : class, IHostProfile, new()
 {
     public new TProfile Profile => (TProfile)base.Profile;

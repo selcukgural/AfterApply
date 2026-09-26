@@ -16,7 +16,6 @@ namespace AfterApply.IntegrationTests.TrackedJobs;
 // The extension's "Apply later" (POST /api/tracked-jobs/from-extension, 0.9.2) and what "I Applied"
 // does to a posting saved that way: the saved row becomes the application instead of sitting next
 // to it, carrying what only it knew.
-[Collection(IntegrationTestCollection.Name)]
 public class ExtensionTrackedJobTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

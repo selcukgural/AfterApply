@@ -18,7 +18,6 @@ namespace AfterApply.IntegrationTests.Companies;
 /// The stale miss is planted directly in the cache here, and the winning row is inserted
 /// straight into the table, past the cache, to reproduce the window deterministically.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CompanyResolverRaceTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
