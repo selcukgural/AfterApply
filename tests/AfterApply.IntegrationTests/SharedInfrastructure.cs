@@ -166,12 +166,20 @@ public sealed class SharedInfrastructure : IAsyncLifetime
 
     /// <summary>
     /// Empties a clone between two tests of the same class — every table in <c>public</c> in one
-    /// TRUNCATE ... CASCADE, except the four that must survive: the migration history, the
+    /// batch of DELETEs, except the four that must survive: the migration history, the
     /// data-protection key ring the running host already loaded (a host whose keys vanish cannot
     /// read the tokens it issued), and the two seeded tables the app only ever reads —
     /// EmailTemplates (EmailTemplateConfiguration.HasData) and Occupations (the catalogue migration). Hangfire's tables live
     /// in their own schema and are not touched; they hold the recurring-job definitions the host
     /// wrote at boot. Sequences keep counting, which no test depends on.
+    /// <para>
+    /// DELETE rather than TRUNCATE, measured 2026-09-26: a test leaves a handful of rows in a few
+    /// tables, and TRUNCATE pays a fixed cost per table (a new file for each of ~70 relations,
+    /// every time) where DELETE on an empty table is next to free. FK triggers are suspended for
+    /// the batch (<c>session_replication_role = replica</c>; the container's user is a superuser),
+    /// which is what makes table order irrelevant — every table the batch covers ends up empty,
+    /// so nothing is left dangling.
+    /// </para>
     /// </summary>
     public async Task ResetDatabaseAsync(string connectionString)
     {
@@ -182,13 +190,13 @@ public sealed class SharedInfrastructure : IAsyncLifetime
         {
             await using var list = new NpgsqlCommand(
                 """
-                SELECT string_agg(format('%I.%I', schemaname, tablename), ', ')
+                SELECT string_agg(format('DELETE FROM %I.%I;', schemaname, tablename), ' ')
                 FROM pg_tables
                 WHERE schemaname = 'public'
                   AND tablename NOT IN ('__EFMigrationsHistory', 'DataProtectionKeys', 'EmailTemplates', 'Occupations');
                 """, connection);
-            var tables = (string)(await list.ExecuteScalarAsync())!;
-            _resetSql = $"TRUNCATE TABLE {tables} CASCADE;";
+            var deletes = (string)(await list.ExecuteScalarAsync())!;
+            _resetSql = $"SET session_replication_role = replica; {deletes} SET session_replication_role = origin;";
         }
 
         await using var truncate = new NpgsqlCommand(_resetSql, connection);

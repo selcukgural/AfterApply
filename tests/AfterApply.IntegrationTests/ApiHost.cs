@@ -135,6 +135,19 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
         // After the truncate, never before: CompanyResolver caches company name → id,
         // PersonalAccessTokenService caches token → user, CompanySearchService caches results.
         // A cached id pointing at a truncated row is a foreign-key failure two tests later.
+        await ClearCachesAsync();
+
+        Jobs.Clear();
+        Profile.Reset();
+    }
+
+    /// <summary>
+    /// Empties the class's Redis database and every built host's L1. Also for a test that seeds
+    /// rows and then reads a cached figure back: clearing is exact where waiting out the entry's
+    /// lifetime (a <c>Task.Delay</c> past CacheSeconds) is a second of wall clock per read.
+    /// </summary>
+    public async Task ClearCachesAsync()
+    {
         // L2 first, then every host's L1 — in that order, so a lapsed L1 entry cannot be refilled
         // from a not-yet-flushed L2 in between.
         await _shared.FlushRedisAsync(Stores.RedisDatabase);
@@ -142,9 +155,6 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
         {
             ((MemoryCache)host.Services.GetRequiredService<IMemoryCache>()).Clear();
         }
-
-        Jobs.Clear();
-        Profile.Reset();
     }
 
     /// <summary>Performs every job the class's hosts enqueued since the last reset or run.</summary>

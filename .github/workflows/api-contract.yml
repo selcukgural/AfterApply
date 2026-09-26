@@ -1,8 +1,8 @@
 name: API contract check
 
-# Reusable: called from both ci.yml (on every push/PR) and deploy.yml (as a pre-deploy gate,
-# in case someone dispatches a deploy from a commit CI never ran against). Keeping the logic
-# in one place means the two callers can't drift out of sync with each other.
+# Reusable: called from ci.yml (on every pull request) and deploy.yml — as a pre-deploy gate when
+# the commit has no verified CI run behind it, and, with verify off, to publish the collection of
+# what was just deployed. Keeping the logic in one place means the callers can't drift apart.
 on:
   workflow_call:
     inputs:
@@ -10,6 +10,12 @@ on:
         description: Push the regenerated collection to Postman Cloud after a green run
         type: boolean
         default: false
+      verify:
+        # Off only for a publish-only call whose commit already passed this check in CI
+        # (deploy.yml's verified-tree path).
+        description: Run the collection against a live stack before anything is published
+        type: boolean
+        default: true
     secrets:
       POSTMAN_API_KEY:
         required: false
@@ -55,12 +61,14 @@ jobs:
         run: npm run generate
 
       - name: Start API stack
+        if: inputs.verify
         run: docker compose up -d --build
 
       # Program.cs deliberately never calls Database.Migrate() on startup (see
       # DEPLOYMENT.md "Migrations") — docker-compose.yml's postgres container is
       # always schema-less until this runs, in CI same as in a fresh local dev setup.
       - name: Apply EF Core migrations
+        if: inputs.verify
         env:
           ConnectionStrings__Postgres: "Host=localhost;Port=5434;Database=afterapply;Username=afterapply;Password=${{ env.POSTGRES_PASSWORD }}"
         run: |
@@ -68,6 +76,7 @@ jobs:
           dotnet ef database update --project src/AfterApply.Infrastructure --startup-project src/AfterApply.Api
 
       - name: Wait for API to become healthy
+        if: inputs.verify
         run: |
           for _ in $(seq 1 30); do
             curl -sf http://localhost:8080/health && exit 0
@@ -75,17 +84,19 @@ jobs:
           done
           echo "::error::API never became healthy" && exit 1
 
-      - run: npm install -g newman@6.2.2
+      - if: inputs.verify
+        run: npm install -g newman@6.2.2
 
       - name: Run Postman collection against the live API
+        if: inputs.verify
         run: newman run postman/collection.json -e postman/environments/ci.json --bail
 
       - name: Show API logs on failure
-        if: failure()
+        if: failure() && inputs.verify
         run: docker compose logs api
 
       - name: Stop API stack
-        if: always()
+        if: always() && inputs.verify
         run: docker compose down -v
 
       # Only after everything above is green — a broken collection or a failing contract

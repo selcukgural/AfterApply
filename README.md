@@ -168,7 +168,8 @@ podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod
   `dotnet test` with `--blame-hang` so a stalled test ends the run in two minutes **with its
   name** rather than hanging it, kills the run outright at fifteen, removes any container the
   run left behind, and prints a per-class timing table so a class that got slow is visible.
-  Current shape on this branch: **482 tests, ~1 min 50 s**, green, run after run.
+  Current shape (2026-09-26): **820 tests, ~3 min 15 s** locally, still serial; the same
+  timing table lands in every CI run's job summary, with a warning past a 4-minute budget.
 
   How the suite is built, in one paragraph (details and history in `DECISIONS.md`, 2026-09-15):
   one Postgres container per run, its schema migrated once into a template database; **one
@@ -178,7 +179,8 @@ podman compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod
   asserts what a job did is deterministic and a negative is `host.Jobs.Pending.ShouldBeEmpty()`;
   no test talks to the internet (`NoOutboundHttpStartup`). A new test class takes
   `ApiHost<DefaultProfile>` — or its own `IHostProfile` when it needs settings, stubs or a
-  clock — calls `ResetAsync` first, and never builds a `WebApplicationFactory` of its own
+  clock — calls `ResetAsync` first, reads a cached figure after seeding with
+  `host.ClearCachesAsync()` rather than a `Task.Delay`, and never builds a `WebApplicationFactory` of its own
   unless one test genuinely needs configuration its neighbours cannot share
   (`host.Standalone(...)`). The two classes that still start a real Hangfire server,
   `HangfireServerInTestsTests` and `PostgresPoolCapTests`, are the wiring guards and stay that

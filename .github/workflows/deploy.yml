@@ -55,9 +55,14 @@ jobs:
   # A missing tag (first-ever run) means deploy.
   plan:
     runs-on: ubuntu-latest
+    # actions: read for the verified-tree lookup below (artifact and run metadata only).
+    permissions:
+      contents: read
+      actions: read
     outputs:
       backend: ${{ steps.decide.outputs.backend }}
       web: ${{ steps.decide.outputs.web }}
+      verified: ${{ steps.verified.outputs.verified }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         if: github.event_name == 'push'
@@ -103,6 +108,57 @@ jobs:
           echo "backend=$backend" >> "$GITHUB_OUTPUT"
           echo "web=$web" >> "$GITHUB_OUTPUT"
 
+      # Has this exact content already passed every gate? A pull request's CI run tests GitHub's
+      # merge of the PR into main and, when everything passed, leaves an artifact named after that
+      # merge's tree hash (ci.yml's verified-tree job). Branch protection is strict, so a PR only
+      # merges up to date and the commit landing on main has that same tree. A tree hash covers
+      # every file — source, tests, lock files, workflows — so a match means the tests, the
+      # contract check and the audit would run the identical code again; re-running them only
+      # delayed the deploy by ~10 minutes. Anything short of a clean match runs them in full:
+      # a manual dispatch (can point at any commit), no artifact, an expired one, a run from a
+      # fork, from another workflow, or one that did not conclude success. The name alone is not
+      # trusted — the run behind it is checked, and its head commit must have the same tree.
+      # See DECISIONS.md 2026-09-26.
+      - id: verified
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Every lookup failure falls through to verified=false: an API hiccup costs a full gate
+          # run, never a skipped one.
+          verified=false
+          tree=$(git rev-parse 'HEAD^{tree}')
+          echo "HEAD $(git rev-parse HEAD) has tree $tree"
+          runs=$(gh api "repos/$REPO/actions/artifacts?name=verified-tree-$tree&per_page=100" \
+            --jq '.artifacts[] | select(.expired == false) | .workflow_run.id' | sort -u) || runs=""
+          for run in $runs; do
+            # The marker is the run's last job, so a PR merged the moment its required checks
+            # went green can reach here a few seconds before the run itself reports completed.
+            for _ in $(seq 1 18); do
+              status=$(gh api "repos/$REPO/actions/runs/$run" --jq .status) || status=""
+              [ "$status" = "completed" ] && break
+              sleep 10
+            done
+            info=$(gh api "repos/$REPO/actions/runs/$run" \
+              --jq '[.path, .event, .status, .conclusion, .head_sha, .head_repository.full_name] | @tsv') || continue
+            IFS=$'\t' read -r path event status conclusion head_sha head_repo <<< "$info"
+            echo "run $run: $path $event $status/$conclusion head=$head_sha repo=$head_repo"
+            [ "$path" = ".github/workflows/ci.yml" ] || continue
+            [ "$event" = "pull_request" ] || continue
+            [ "$status" = "completed" ] && [ "$conclusion" = "success" ] || continue
+            [ "$head_repo" = "$REPO" ] || continue
+            head_tree=$(gh api "repos/$REPO/git/commits/$head_sha" --jq .tree.sha) || continue
+            [ "$head_tree" = "$tree" ] || continue
+            verified=true
+            echo "::notice::Tree $tree already passed tests, contract check and audit in CI run $run — not re-running them."
+            break
+          done
+          if [ "$verified" != "true" ]; then
+            echo "::notice::No verified CI run for tree $tree — running the full gates."
+          fi
+          echo "verified=$verified" >> "$GITHUB_OUTPUT"
+
   # The full test suite, as the deploy gate. CI used to run this in a separate workflow on the same
   # push event, which meant it gated nothing: Deploy started alongside it and never looked at the
   # result, so a push that broke a test still deployed. ci.yml now only runs on pull requests and
@@ -110,7 +166,9 @@ jobs:
   # Skipped, like contract-check, when neither side is deploying (a docs-only push to main).
   tests:
     needs: plan
-    if: needs.plan.outputs.backend == 'true' || needs.plan.outputs.web == 'true'
+    if: >
+      (needs.plan.outputs.backend == 'true' || needs.plan.outputs.web == 'true') &&
+      needs.plan.outputs.verified != 'true'
     uses: ./.github/workflows/tests.yml
 
   # Re-verifies the API against its own Postman collection right before deploying — a gate on the
@@ -123,16 +181,43 @@ jobs:
   # collection would quietly roll the workspace backwards.
   contract-check:
     needs: plan
-    if: needs.plan.outputs.backend == 'true' || needs.plan.outputs.web == 'true'
+    if: >
+      (needs.plan.outputs.backend == 'true' || needs.plan.outputs.web == 'true') &&
+      needs.plan.outputs.verified != 'true'
     uses: ./.github/workflows/api-contract.yml
     with:
       publish: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     secrets:
       POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
 
+  # The verified-tree path skips contract-check, and with it the Postman publish above. This puts
+  # the publish back, after the deploy and outside the gate: the collection that reaches the shared
+  # workspace is the one now live, and a Postman outage cannot hold up a deploy.
+  publish-collection:
+    needs: [plan, deploy-backend, deploy-web]
+    if: |
+      always() &&
+      needs.plan.outputs.verified == 'true' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      (needs.deploy-backend.result == 'success' || needs.deploy-web.result == 'success')
+    uses: ./.github/workflows/api-contract.yml
+    with:
+      publish: true
+      verify: false
+    secrets:
+      POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+
+  # `always()` because on the verified-tree path tests and contract-check are skipped, and a plain
+  # `needs:` treats a skipped dependency as a reason to skip. The explicit checks keep the gate:
+  # both must have succeeded, or both must have been skipped because the tree was verified.
   deploy-backend:
     needs: [plan, tests, contract-check]
-    if: needs.plan.outputs.backend == 'true'
+    if: |
+      always() &&
+      needs.plan.result == 'success' &&
+      needs.plan.outputs.backend == 'true' &&
+      ((needs.tests.result == 'success' && needs.contract-check.result == 'success') ||
+       (needs.plan.outputs.verified == 'true' && needs.tests.result == 'skipped' && needs.contract-check.result == 'skipped'))
     runs-on: ubuntu-latest
     # contents: write (job-level, overrides the workflow's contents: read) is only for moving
     # the deploy/api-latest tag below — the actual deploy steps still just need id-token: write.
@@ -399,9 +484,10 @@ jobs:
     needs: [plan, tests, contract-check, deploy-backend]
     if: |
       always() &&
+      needs.plan.result == 'success' &&
       needs.plan.outputs.web == 'true' &&
-      needs.tests.result == 'success' &&
-      needs.contract-check.result == 'success' &&
+      ((needs.tests.result == 'success' && needs.contract-check.result == 'success') ||
+       (needs.plan.outputs.verified == 'true' && needs.tests.result == 'skipped' && needs.contract-check.result == 'skipped')) &&
       (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:

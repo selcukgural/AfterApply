@@ -92,53 +92,11 @@ elif [[ ! -s "$AFTERAPPLY_CRASH_LOG" ]]; then
 fi
 
 # Per-class table from the TRX: how long each class's tests took, and how long the class took on
-# the wall (the difference is its host boot plus the per-test resets). Sorted slowest first.
+# the wall (the difference is its host boot plus the per-test resets). Sorted slowest first. The
+# same script writes the table into the CI job summary.
 trx=$RESULTS/integration.trx
 if [[ -f "$trx" ]]; then
-  python3 - "$trx" <<'PY'
-import re, sys, xml.etree.ElementTree as ET
-from collections import defaultdict
-from datetime import datetime
-
-ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
-root = ET.parse(sys.argv[1]).getroot()
-
-def parse(ts):
-    # TRX writes seven fractional digits; fromisoformat takes at most six.
-    ts = re.sub(r"(\.\d{6})\d+", r"\1", ts.replace("Z", "+00:00"))
-    return datetime.fromisoformat(ts)
-
-def duration(d):
-    h, m, s = d.split(":")
-    return int(h) * 3600 + int(m) * 60 + float(s)
-
-classes = defaultdict(lambda: {"tests": 0, "sum": 0.0, "start": None, "end": None, "failed": 0})
-for r in root.iter("{%s}UnitTestResult" % ns["t"]):
-    name = r.get("testName", "")
-    cls = name.rsplit(".", 1)[0].replace("AfterApply.IntegrationTests.", "") if "." in name else name
-    c = classes[cls]
-    c["tests"] += 1
-    c["sum"] += duration(r.get("duration", "00:00:00"))
-    if r.get("outcome") != "Passed":
-        c["failed"] += 1
-    s, e = parse(r.get("startTime")), parse(r.get("endTime"))
-    c["start"] = s if c["start"] is None or s < c["start"] else c["start"]
-    c["end"] = e if c["end"] is None or e > c["end"] else c["end"]
-
-rows = []
-for cls, c in classes.items():
-    wall = (c["end"] - c["start"]).total_seconds() if c["start"] else 0.0
-    rows.append((wall, cls, c["tests"], c["sum"], c["failed"]))
-rows.sort(reverse=True)
-
-total = sum(r[2] for r in rows)
-failed = sum(r[4] for r in rows)
-print(f"[test-integration] {total} tests in {len(rows)} classes, {failed} failed")
-print(f"{'class':58} {'tests':>5} {'tests s':>8} {'wall s':>7}")
-for wall, cls, n, s, f in rows[:15]:
-    flag = "  <- FAILURES" if f else ""
-    print(f"{cls[:58]:58} {n:5d} {s:8.1f} {wall:7.1f}{flag}")
-PY
+  python3 scripts/test-timings.py "$trx"
 fi
 
 exit $status

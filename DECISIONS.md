@@ -9648,3 +9648,36 @@ ilk işin maddeleri Sertifikalar'ın altında) hiçbir kontrole takılmadı.
   tek seferlik taşıma aracı da silindi (git geçmişinde). `public/guide/*.png` bırakıldı: artık
   sayfada değiller ama eski görsel URL'leri indekste olabilir; `.xlsx` şablonları rehberlerden
   bağlanıyor.
+
+## Test süresi ve deploy kapısı: doğrulanmış ağaç — DECIDED (2026-09-26)
+
+Sorun: bir hotfix'in prod'a çıkması ~45 dk sürüyordu (lokal tam paket + PR CI ~10 dk + deploy
+~17 dk; deploy'un 9 dk'sı PR'da zaten geçmiş testlerin aynısını yeniden koşmaktı). Çözüm testleri
+atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test etmemek.
+
+- **Deploy, PR'da doğrulanmış ağacı yeniden test etmez.** CI (pull_request) tüm kapılar geçince
+  test ettiği merge commit'in **tree hash'iyle** adlandırılmış bir artifact bırakır
+  (`verified-tree-<tree>`, ci.yml). Deploy'un `plan` job'ı main'deki commit'in ağacı için bu
+  artifact'ı arar ve arkasındaki run'ı ayrıca kontrol eder: `ci.yml`, `pull_request`, `success`,
+  aynı repo (fork değil), head commit'inin ağacı da aynı. Hepsi tutarsa `tests` ve `contract-check`
+  atlanır; en ufak eksikte (manuel dispatch, artifact yok/süresi geçmiş, API hatası) tam koşar.
+  Neden güvenli: branch protection `strict`, PR ancak main'le güncelken merge olur, merge edilen
+  ağaç test edilen ağaçla birebir aynıdır (2026-09-26, PR #148'de ölçüldü: `9f18e95` iki tarafta
+  da). Tree hash her dosyayı kapsar: kaynak, testler, lock dosyaları, workflow'lar.
+- **Bilinen fark:** atlanan yolda `dependency-audit` da koşmaz; PR ile deploy arasındaki birkaç
+  dakikada yayımlanan bir advisory o deploy'u durdurmaz (bir sonraki PR'ı durdurur).
+- **Postman yayını** atlanan yolda deploy'dan sonra, kapının dışında yapılır (`publish-collection`,
+  `api-contract.yml` `verify: false`): yayınlanan koleksiyon canlıdakiyle aynıdır ve Postman
+  kesintisi deploy'u tutmaz.
+- **Paket hızlandırma, 1. adım** (lokal 350 sn → 195 sn, 820 test):
+  - Test host'ları PBKDF2'yi 1 iterasyonla yapar (`FastPasswordHashingStartup`, prod'da ayar
+    yok). Paket 700+ hesap kaydediyor, her biri iki hash; sürenin en büyük tek kalemiydi.
+    `FastPasswordHashingTests` bunun yerinde olduğunu korur.
+  - Cache süresini `Task.Delay` ile beklemek yerine `host.ClearCachesAsync()` (~12 sn).
+  - Testler arası reset `TRUNCATE` yerine FK tetikleyicileri kapalıyken `DELETE` (tablo başına
+    sabit maliyet yok).
+  - CI'da unit ve entegrasyon ayrı adım; entegrasyon adımı 240 sn bütçeyi aşarsa uyarı; en yavaş
+    15 sınıf her koşuda job özetinde (`scripts/test-timings.py`, lokal script de aynısını kullanır).
+- **Sıradaki adımlar:** paketi paralel koşturmak (sınıf başına DB klonu ve Redis DB'si zaten
+  izole; `maxParallelThreads: 1` ve tek koleksiyon kalkacak), imajları testlerle paralel build
+  etmek, Cloud Run revision'ına geri alma workflow'u.
