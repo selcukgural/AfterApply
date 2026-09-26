@@ -19,9 +19,19 @@ on:
         options: [both, backend, web]
         default: both
 
-# Read-only by default. Only deploy-backend and deploy-web ask for an OIDC token (Workload Identity
+# One deploy at a time, queued rather than cancelled: a cancel could land in the middle of a
+# `gcloud run deploy` or a migration. Two merges minutes apart on 2026-09-26 (#149, #150) ran their
+# deploys side by side — two migration jobs and two Cloud Run rollouts at once, and the older run's
+# tag push rejected — and only the timing decided which commit ended up live. GitHub keeps one
+# pending run per group, the newest, so a burst of pushes deploys the latest main once.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+# Read-only by default. Only the build-* and deploy-* jobs ask for an OIDC token (Workload Identity
 # Federation — no long-lived JSON key stored in secrets): the test and contract jobs run npm ci /
-# dotnet restore, i.e. third-party code, and must not be able to mint cloud credentials.
+# dotnet restore, i.e. third-party code, and must not be able to mint cloud credentials. The build
+# jobs restore too, but inside the Docker build, exactly as the deploy jobs did before they split.
 permissions:
   contents: read
 
@@ -130,30 +140,37 @@ jobs:
           verified=false
           tree=$(git rev-parse 'HEAD^{tree}')
           echo "HEAD $(git rev-parse HEAD) has tree $tree"
-          runs=$(gh api "repos/$REPO/actions/artifacts?name=verified-tree-$tree&per_page=100" \
-            --jq '.artifacts[] | select(.expired == false) | .workflow_run.id' | sort -u) || runs=""
-          for run in $runs; do
-            # The marker is the run's last job, so a PR merged the moment its required checks
-            # went green can reach here a few seconds before the run itself reports completed.
+
+          # Runs first, marker second. The marker is uploaded by the run's last job, 30-40 s after
+          # the required checks go green — and a PR merged at that moment starts this job before it
+          # exists (#149's deploy, 2026-09-26). So: find the PR runs whose head commit has this
+          # tree, wait for such a run to finish, then require its marker.
+          candidates=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?event=pull_request&per_page=30" \
+            --jq ".workflow_runs[] | select(.head_repository.full_name == \"$REPO\") | [.id, .head_sha] | @tsv") || candidates=""
+          while IFS=$'\t' read -r run head_sha; do
+            [ -n "$run" ] || continue
+            head_tree=$(git rev-parse "${head_sha}^{tree}" 2>/dev/null) \
+              || head_tree=$(gh api "repos/$REPO/git/commits/$head_sha" --jq .tree.sha) || continue
+            [ "$head_tree" = "$tree" ] || continue
+
             for _ in $(seq 1 18); do
               status=$(gh api "repos/$REPO/actions/runs/$run" --jq .status) || status=""
               [ "$status" = "completed" ] && break
+              echo "run $run (head $head_sha) is $status, waiting"
               sleep 10
             done
-            info=$(gh api "repos/$REPO/actions/runs/$run" \
-              --jq '[.path, .event, .status, .conclusion, .head_sha, .head_repository.full_name] | @tsv') || continue
-            IFS=$'\t' read -r path event status conclusion head_sha head_repo <<< "$info"
-            echo "run $run: $path $event $status/$conclusion head=$head_sha repo=$head_repo"
-            [ "$path" = ".github/workflows/ci.yml" ] || continue
-            [ "$event" = "pull_request" ] || continue
+            conclusion=$(gh api "repos/$REPO/actions/runs/$run" --jq .conclusion) || continue
+            echo "run $run (head $head_sha): $status/$conclusion"
             [ "$status" = "completed" ] && [ "$conclusion" = "success" ] || continue
-            [ "$head_repo" = "$REPO" ] || continue
-            head_tree=$(gh api "repos/$REPO/git/commits/$head_sha" --jq .tree.sha) || continue
-            [ "$head_tree" = "$tree" ] || continue
+
+            marker=$(gh api "repos/$REPO/actions/runs/$run/artifacts?name=verified-tree-$tree" \
+              --jq '[.artifacts[] | select(.expired == false)] | length') || continue
+            [ "$marker" -gt 0 ] || continue
+
             verified=true
             echo "::notice::Tree $tree already passed tests, contract check and audit in CI run $run — not re-running them."
             break
-          done
+          done <<< "$candidates"
           if [ "$verified" != "true" ]; then
             echo "::notice::No verified CI run for tree $tree — running the full gates."
           fi
@@ -207,15 +224,102 @@ jobs:
     secrets:
       POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
 
+  # The images are built alongside the gates rather than after them: nothing here depends on the
+  # tests passing, and a deploy used to spend ~4.5 minutes building after ~9 minutes of tests.
+  # They are pushed under the commit's SHA but not deployed — the deploy jobs below still wait for
+  # the gates, so a red run leaves an unused image in Artifact Registry and nothing more. Layer
+  # caches live in the GitHub Actions cache, one scope per image, written only from main.
+  # id-token: write for the push; the WIF trust conditions are the same as the deploy jobs'.
+  build-backend:
+    needs: plan
+    if: needs.plan.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        image:
+          - { name: afterapply-api, file: src/AfterApply.Api/Dockerfile }
+          - { name: afterapply-migrate, file: src/AfterApply.Api/Dockerfile.migrate }
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: ${{ matrix.image.file }}
+          push: true
+          tags: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ matrix.image.name }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image.name }}
+
+  # NEXT_PUBLIC_API_BASE_URL is the api Cloud Run service's URL — set once as a repo secret after
+  # that service's first deploy (Cloud Run URLs are stable for the life of the service, so this
+  # doesn't need to be rediscovered on every run). See DEPLOYMENT.md step 4/5. Its own job, not a
+  # third matrix entry: a broken web build must not hold up a backend hotfix.
+  build-web:
+    needs: plan
+    if: needs.plan.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # SENTRY_AUTH_TOKEN as a BuildKit secret, not a build arg: see web/Dockerfile.
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        with:
+          context: ./web
+          file: web/Dockerfile
+          push: true
+          tags: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/afterapply-web:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ secrets.GCP_API_URL }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.SENTRY_DSN_WEB }}
+            SENTRY_ORG=${{ secrets.SENTRY_ORG }}
+            SENTRY_PROJECT=${{ secrets.SENTRY_PROJECT_WEB }}
+          secret-envs: sentry_auth_token=SENTRY_AUTH_TOKEN
+          cache-from: type=gha,scope=afterapply-web
+          cache-to: type=gha,mode=max,scope=afterapply-web
+
   # `always()` because on the verified-tree path tests and contract-check are skipped, and a plain
   # `needs:` treats a skipped dependency as a reason to skip. The explicit checks keep the gate:
   # both must have succeeded, or both must have been skipped because the tree was verified.
   deploy-backend:
-    needs: [plan, tests, contract-check]
+    needs: [plan, tests, contract-check, build-backend]
     if: |
       always() &&
       needs.plan.result == 'success' &&
       needs.plan.outputs.backend == 'true' &&
+      needs.build-backend.result == 'success' &&
       ((needs.tests.result == 'success' && needs.contract-check.result == 'success') ||
        (needs.plan.outputs.verified == 'true' && needs.tests.result == 'skipped' && needs.contract-check.result == 'skipped'))
     runs-on: ubuntu-latest
@@ -239,33 +343,12 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
-
-      - name: Build and push image
+      # Built by build-backend under this commit's SHA.
+      - name: Image names
         run: |
-          IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/afterapply-api:${GITHUB_SHA}"
-          docker build -f src/AfterApply.Api/Dockerfile -t "$IMAGE" .
-          docker push "$IMAGE"
-          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
-
-      # Applies any pending EF Core migrations before the api service below
-      # gets the new image, so new code never sees an old schema. Runs as a
-      # Cloud Run Job (not a GitHub Actions step) specifically so the DB
-      # password never leaves GCP — the job reads
-      # ConnectionStrings__Postgres from Secret Manager itself via its own
-      # runtime identity, the same way the api service already does below.
-      # `dotnet ef database update` (what the bundle runs) is idempotent —
-      # it only applies migrations missing from __EFMigrationsHistory, so
-      # running it on every deploy is a no-op when nothing changed. See
-      # src/AfterApply.Api/Dockerfile.migrate and DEPLOYMENT.md
-      # "Migrations".
-      - name: Build and push migration image
-        run: |
-          MIGRATE_IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/afterapply-migrate:${GITHUB_SHA}"
-          docker build -f src/AfterApply.Api/Dockerfile.migrate -t "$MIGRATE_IMAGE" .
-          docker push "$MIGRATE_IMAGE"
-          echo "MIGRATE_IMAGE=$MIGRATE_IMAGE" >> "$GITHUB_ENV"
+          REGISTRY="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}"
+          echo "IMAGE=${REGISTRY}/afterapply-api:${GITHUB_SHA}" >> "$GITHUB_ENV"
+          echo "MIGRATE_IMAGE=${REGISTRY}/afterapply-migrate:${GITHUB_SHA}" >> "$GITHUB_ENV"
 
       - name: Run pending migrations
         run: |
@@ -481,11 +564,12 @@ jobs:
   # a plain `needs:` would skip this job whenever deploy-backend is skipped. 'skipped' is a pass
   # here (backend had nothing to deploy); 'failure' and 'cancelled' are not.
   deploy-web:
-    needs: [plan, tests, contract-check, deploy-backend]
+    needs: [plan, tests, contract-check, build-web, deploy-backend]
     if: |
       always() &&
       needs.plan.result == 'success' &&
       needs.plan.outputs.web == 'true' &&
+      needs.build-web.result == 'success' &&
       ((needs.tests.result == 'success' && needs.contract-check.result == 'success') ||
        (needs.plan.outputs.verified == 'true' && needs.tests.result == 'skipped' && needs.contract-check.result == 'skipped')) &&
       (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
@@ -508,28 +592,9 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
-
-      # NEXT_PUBLIC_API_BASE_URL is the api Cloud Run service's URL — set
-      # once as a repo secret after that service's first deploy (Cloud Run
-      # URLs are stable for the life of the service, so this doesn't need
-      # to be rediscovered on every run). See DEPLOYMENT.md step 4/5.
-      - name: Build and push image
-        # A BuildKit secret, not a build arg: see web/Dockerfile.
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: |
-          IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/afterapply-web:${GITHUB_SHA}"
-          docker build -f web/Dockerfile \
-            --build-arg NEXT_PUBLIC_API_BASE_URL="${{ secrets.GCP_API_URL }}" \
-            --build-arg NEXT_PUBLIC_SENTRY_DSN="${{ secrets.SENTRY_DSN_WEB }}" \
-            --build-arg SENTRY_ORG="${{ secrets.SENTRY_ORG }}" \
-            --build-arg SENTRY_PROJECT="${{ secrets.SENTRY_PROJECT_WEB }}" \
-            --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
-            -t "$IMAGE" ./web
-          docker push "$IMAGE"
-          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+      # Built by build-web under this commit's SHA.
+      - name: Image name
+        run: echo "IMAGE=${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${AR_REPOSITORY}/afterapply-web:${GITHUB_SHA}" >> "$GITHUB_ENV"
 
       # No --add-cloudsql-instances here — the web service only talks to
       # the api service over HTTPS (NEXT_PUBLIC_API_BASE_URL, baked in
