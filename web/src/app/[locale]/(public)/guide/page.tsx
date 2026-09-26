@@ -58,19 +58,34 @@ export default async function GuideIndexPage({ params, searchParams }: PageProps
 
       <div className="flex flex-col divide-y divide-gray-200 dark:divide-gray-800">
         {list.items.map((guide) => (
-          <article key={guide.id} className="flex flex-col gap-2 py-6 first:pt-0">
-            <h2 className="text-lg font-medium">
-              <Link
-                href={postPath("Guide", guide.slug)}
-                className="text-gray-900 hover:text-blue-700 dark:text-gray-100 dark:hover:text-blue-400"
-              >
-                {guide.title}
+          <article key={guide.id} className="flex flex-col gap-3 py-6 first:pt-0 sm:flex-row sm:gap-6">
+            {/* A guide with a cover shows it the way a blog card does (2026-09-26); one without
+                keeps the plain row the guide has always had. */}
+            {guide.coverImageUrl && (
+              <Link href={postPath("Guide", guide.slug)} className="shrink-0 sm:w-40" tabIndex={-1} aria-hidden="true">
+                {/* Same-origin path (next.config rewrites it to the API); plain <img> like the blog list. */}
+                <img
+                  src={guide.coverImageUrl}
+                  alt=""
+                  loading="lazy"
+                  className="aspect-[16/10] w-full rounded-lg border border-gray-200 object-cover dark:border-gray-800"
+                />
               </Link>
-            </h2>
-            {guide.excerpt && <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{guide.excerpt}</p>}
-            <time dateTime={guide.updatedAt} className="text-xs text-gray-500 dark:text-gray-500">
-              {formatArticleDate(guide.updatedAt.slice(0, 10), locale)}
-            </time>
+            )}
+            <div className="flex min-w-0 flex-col gap-2">
+              <h2 className="text-lg font-medium">
+                <Link
+                  href={postPath("Guide", guide.slug)}
+                  className="text-gray-900 hover:text-blue-700 dark:text-gray-100 dark:hover:text-blue-400"
+                >
+                  {guide.title}
+                </Link>
+              </h2>
+              {guide.excerpt && <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{guide.excerpt}</p>}
+              <time dateTime={guide.updatedAt} className="text-xs text-gray-500 dark:text-gray-500">
+                {formatArticleDate(guide.updatedAt.slice(0, 10), locale)}
+              </time>
+            </div>
           </article>
         ))}
       </div>

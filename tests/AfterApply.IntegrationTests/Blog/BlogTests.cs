@@ -808,6 +808,7 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         provider.LastRequest.Title.ShouldBe("İşe Alım Sürecinde Ghosting");
         provider.LastRequest.HasCover.ShouldBeFalse();
         provider.LastRequest.LockedSlug.ShouldBeNull();
+        provider.LastRequest.Kind.ShouldBe(BlogPostKind.Blog);
 
         // Proposals only: the draft's fields are as they were.
         ShouldBeSeo((await GetAdminAsync(admin, post.Id)).DraftSeo, null, null, [], null);
@@ -824,6 +825,14 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         (await admin.PostAsync($"/api/admin/blog/posts/{theirDraft.Id}/seo-suggestions", null)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         var reader = await RegisterUserAsync("seo.reader@example.com", suggesting);
         (await reader.PostAsync($"/api/admin/blog/posts/{post.Id}/seo-suggestions", null)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+        // A guide (2026-09-26) gets the same tool, and the model is told it is describing a guide.
+        var guideCreated = await admin.PostAsJsonAsync("/api/admin/blog/posts",
+            NewPost(title: "Mülakattan sonra teşekkür e-postası", html: "<p>Aynı gün gönder.</p>") with { Kind = BlogPostKind.Guide }, JsonOptions);
+        guideCreated.StatusCode.ShouldBe(HttpStatusCode.Created, await guideCreated.Content.ReadAsStringAsync());
+        var guide = (await guideCreated.Content.ReadFromJsonAsync<AdminBlogPostResponse>(JsonOptions))!;
+        (await admin.PostAsync($"/api/admin/blog/posts/{guide.Id}/seo-suggestions", null)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        provider.LastRequest!.Kind.ShouldBe(BlogPostKind.Guide);
     }
 
     [Fact]

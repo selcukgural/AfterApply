@@ -4,6 +4,7 @@ using AfterApply.Infrastructure.Ai;
 using AfterApply.Infrastructure.Blog;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using AfterApply.Domain.Blog;
 using Shouldly;
 
 namespace AfterApply.UnitTests.Blog;
@@ -60,6 +61,19 @@ public class VertexBlogSeoSuggestionProviderTests
         call.UserText.ShouldContain("hasCover: true");
         call.UserText.ShouldContain("slugAllowed: true");
         call.UserText.ShouldContain("BODY START\nBaşvuruların yüzde sekseni");
+    }
+
+    [Fact]
+    public async Task Tells_The_Model_Whether_It_Is_Describing_A_Blog_Post_Or_A_Guide()
+    {
+        var vertex = new StubVertex(_ => new VertexGenerateContentResult(Answer, 900, 120));
+
+        await Provider(vertex).SuggestAsync(Request, CancellationToken.None);
+        vertex.LastCall!.SystemPrompt.ShouldContain("metadata for blog posts");
+
+        await Provider(vertex).SuggestAsync(Request with { Kind = BlogPostKind.Guide }, CancellationToken.None);
+        vertex.LastCall!.SystemPrompt.ShouldContain("metadata for guide articles");
+        vertex.LastCall.SystemPrompt.ShouldNotContain("{KIND}");
     }
 
     [Fact]
