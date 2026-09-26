@@ -78,6 +78,13 @@ describe("sanitizeReturnTo", () => {
     }
   });
 
+  it("accepts a guide article, and nothing else under /guide (2026-09-26)", () => {
+    expect(sanitizeReturnTo("/guide/is-basvurusundan-sonra-ne-kadar-beklenir")).toBe("/guide/is-basvurusundan-sonra-ne-kadar-beklenir");
+    for (const path of ["/guide", "/guide/", "/guide/a/b", "/guide/a?x=1", "/tr/guide/a", "/guide/preview/x"]) {
+      expect(sanitizeReturnTo(path), `${path} must not be a destination`).toBeNull();
+    }
+  });
+
   it("rejects a code longer than any code the server issues", () => {
     expect(sanitizeReturnTo(`/pair?code=${"A".repeat(17)}`)).toBeNull();
   });

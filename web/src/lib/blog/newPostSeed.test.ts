@@ -23,3 +23,13 @@ describe("newPostSeedFrom", () => {
     expect(newPostSeedFrom(new URLSearchParams("lang=tr&translationOf="))).toEqual({ language: "tr", translationOfPostId: null });
   });
 });
+
+describe("newTranslationHref", () => {
+  it("opens a blog translation under the blog's editor by default", () => {
+    expect(newTranslationHref("en", id)).toBe(`/admin/blog/new?lang=en&translationOf=${id}`);
+  });
+
+  it("opens a guide's translation under the guide's editor, so it is created as a guide", () => {
+    expect(newTranslationHref("tr", id, "Guide")).toBe(`/admin/guide/new?lang=tr&translationOf=${id}`);
+  });
+});

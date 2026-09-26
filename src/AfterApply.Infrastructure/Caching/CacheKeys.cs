@@ -1,3 +1,5 @@
+using AfterApply.Domain.Blog;
+
 namespace AfterApply.Infrastructure.Caching;
 
 /// <summary>
@@ -72,11 +74,14 @@ internal static class CacheKeys
     {
         public const string Tag = "blog";
 
-        public static string ListPage(string language, int page) => $"blog:list:{language}:p{page}";
+        // Keyed by kind too (2026-09-26): /blog and /guide may use the same slug.
+        public static string ListPage(BlogPostKind kind, string language, int page) => $"blog:list:{Segment(kind)}:{language}:p{page}";
 
-        public static string Post(string language, string slug) => $"blog:post:{language}:{slug}";
+        public static string Post(BlogPostKind kind, string language, string slug) => $"blog:post:{Segment(kind)}:{language}:{slug}";
 
-        public const string Slugs = "blog:slugs";
+        public static string Slugs(BlogPostKind kind) => $"blog:slugs:{Segment(kind)}";
+
+        private static string Segment(BlogPostKind kind) => kind == BlogPostKind.Guide ? "guide" : "blog";
 
         public const string HasPublished = "blog:has-published";
     }

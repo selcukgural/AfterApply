@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import type { BlogPostPublic } from "@/types/api";
+import type { BlogPostKind, BlogPostPublic } from "@/types/api";
 import { adminBlogApi, blogApi } from "@/lib/api/blog";
 import { ApiError } from "@/lib/api/httpClient";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { blogPostPath, blogPreviewPath } from "@/lib/blog/blogPaths";
+import { adminPostsPath, postPath, postPreviewPath } from "@/lib/blog/blogPaths";
 import { mediaSourcesIn, rewriteMediaSources } from "@/lib/blog/previewMedia";
 import { SITE_URL } from "@/lib/seo/routes";
+import { GuideArticle } from "@/components/guide/GuideArticle";
 import { BlogArticle } from "./BlogArticle";
 
 /**
@@ -18,8 +19,11 @@ import { BlogArticle } from "./BlogArticle";
  * public page's component, unchanged — fed the draft from `/preview`, which the API shapes
  * exactly as it shapes the live post. The one thing added is the bar on top saying so; the one
  * thing altered is where a draft's images are fetched from (see `previewMedia`).
+ *
+ * A guide (2026-09-26) is previewed the same way under `/guide/preview/<id>`, with the guide
+ * page's own `GuideArticle`; `kind` is the route's, and the post's own kind wins once it arrives.
  */
-export function BlogPreview({ postId }: { postId: string }) {
+export function BlogPreview({ postId, kind: routeKind = "Blog" }: { postId: string; kind?: BlogPostKind }) {
   const t = useTranslations("blog.preview");
   const locale = useLocale();
   const router = useRouter();
@@ -27,9 +31,9 @@ export function BlogPreview({ postId }: { postId: string }) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.replace(`/login?next=${encodeURIComponent(blogPreviewPath(postId))}`);
+      router.replace(`/login?next=${encodeURIComponent(postPreviewPath(routeKind, postId))}`);
     }
-  }, [isLoading, isAuthenticated, router, postId]);
+  }, [isLoading, isAuthenticated, router, postId, routeKind]);
 
   const query = useQuery({
     queryKey: ["admin", "blog", "preview", postId],
@@ -45,10 +49,10 @@ export function BlogPreview({ postId }: { postId: string }) {
   // The post lives in one language, and the public page is under that locale: a preview opened
   // under the other one is moved, so the chrome around the article is the right one too.
   useEffect(() => {
-    if (query.data && query.data.language !== locale) {
-      router.replace(blogPreviewPath(postId), { locale: query.data.language });
+    if (query.data && (query.data.language !== locale || query.data.kind !== routeKind)) {
+      router.replace(postPreviewPath(query.data.kind, postId), { locale: query.data.language });
     }
-  }, [query.data, locale, router, postId]);
+  }, [query.data, locale, router, postId, routeKind]);
 
   const post = useDraftImages(query.data ?? null);
 
@@ -67,14 +71,14 @@ export function BlogPreview({ postId }: { postId: string }) {
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
           {forbidden ? t("forbidden") : t("notFound")}
         </p>
-        <Link href="/admin/blog" className="text-sm font-medium text-blue-600 dark:text-blue-400">
+        <Link href={adminPostsPath(routeKind)} className="text-sm font-medium text-blue-600 dark:text-blue-400">
           {t("backToAdmin")}
         </Link>
       </div>
     );
   }
 
-  const path = blogPostPath(post.slug);
+  const path = postPath(post.kind, post.slug);
   const url = `${SITE_URL}/${post.language}${path}`;
 
   return (
@@ -85,11 +89,11 @@ export function BlogPreview({ postId }: { postId: string }) {
       >
         <span className="font-semibold">{t("badge")}</span>{" "}
         {post.slug ? t("address", { url }) : t("noAddressYet")}{" "}
-        <Link href={`/admin/blog/${postId}`} className="font-medium underline underline-offset-2">
+        <Link href={`${adminPostsPath(post.kind)}/${postId}`} className="font-medium underline underline-offset-2">
           {t("backToEditor")}
         </Link>
       </div>
-      <BlogArticle post={post} url={url} inert />
+      {post.kind === "Guide" ? <GuideArticle post={post} url={url} inert /> : <BlogArticle post={post} url={url} inert />}
     </>
   );
 }

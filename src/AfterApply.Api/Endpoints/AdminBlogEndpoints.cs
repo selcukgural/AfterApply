@@ -173,7 +173,7 @@ public static class AdminBlogEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status429TooManyRequests);
 
-        group.MapPost("/posts/{postId:guid}/publish", async (Guid postId, ClaimsPrincipal user,
+        group.MapPost("/posts/{postId:guid}/publish", async (Guid postId, [FromBody] PublishBlogPostRequest? request, ClaimsPrincipal user,
                 IAdminAccessService adminAccess, IBlogAdminService service, CancellationToken cancellationToken) =>
             {
                 if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
@@ -181,12 +181,14 @@ public static class AdminBlogEndpoints
                     return Results.Forbid();
                 }
 
-                var post = await service.PublishAsync(user.GetUserId(), postId, cancellationToken);
+                var post = await service.PublishAsync(user.GetUserId(), postId, request, cancellationToken);
                 return post is null ? Results.NotFound() : Results.Ok(post);
             })
             .WithSummary("Publish the draft — first time or as an update to the live version")
             .WithDescription("Copies the draft over the published version and puts the post on the site. The slug is " +
-                             "generated from the title on the first publish unless one was typed; a taken slug is 400.")
+                             "generated from the title on the first publish unless one was typed; a taken slug is 400. " +
+                             "The body is optional: publishedAt back-dates a first publish (the move of the file-based " +
+                             "guides); on a post published before, or in the future, it is 400.")
             .Produces<AdminBlogPostResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);

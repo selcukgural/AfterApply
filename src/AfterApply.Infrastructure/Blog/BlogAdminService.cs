@@ -28,7 +28,8 @@ internal sealed partial class BlogAdminService(
     public async Task<PagedResult<AdminBlogPostListItemResponse>> ListAsync(Guid adminUserId, AdminBlogListQuery query,
         CancellationToken cancellationToken)
     {
-        var posts = Visible(adminUserId);
+        var kind = query.Kind ?? BlogPostKind.Blog;
+        var posts = Visible(adminUserId).Where(p => p.Kind == kind);
         if (query.Status is { } status)
         {
             posts = posts.Where(p => p.Status == status);
@@ -58,7 +59,10 @@ internal sealed partial class BlogAdminService(
     public async Task<PagedResult<AdminBlogPostGroupResponse>> ListGroupedAsync(Guid adminUserId, AdminBlogGroupedListQuery query,
         CancellationToken cancellationToken)
     {
-        var visible = Visible(adminUserId);
+        // One kind per table (2026-09-26): the blog tab and the guide tab never mix, and a pair
+        // is always one kind — LinkTranslationAsync refuses a link across kinds.
+        var kind = query.Kind ?? BlogPostKind.Blog;
+        var visible = Visible(adminUserId).Where(p => p.Kind == kind);
 
         // A pair is keyed by its Turkish side's id: the link is symmetric and always crosses the
         // language line (LinkTranslationAsync), so an English post's key is the post it points
@@ -131,7 +135,7 @@ internal sealed partial class BlogAdminService(
         CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
-        var content = Sanitized(request);
+        var content = Sanitized(request, request.Kind);
 
         // The validator has already refused a request with nothing written; this repeats it on
         // the sanitized body, which is what would be stored — markup the sanitizer strips is not
@@ -141,7 +145,7 @@ internal sealed partial class BlogAdminService(
             throw new BlogPostEmptyException();
         }
 
-        var post = BlogPost.Create(adminUserId, request.Language, now);
+        var post = BlogPost.Create(adminUserId, request.Language, now, request.Kind);
         dbContext.BlogPosts.Add(post);
         await ApplyDraftAsync(adminUserId, post, request, content, now, cancellationToken);
         await SaveHandlingSlugCollisionAsync(cancellationToken);
@@ -172,7 +176,7 @@ internal sealed partial class BlogAdminService(
         // real one. Nothing is written here; a title with no slug-able character has no address
         // yet, and publish would refuse it anyway (no title).
         var slug = post.Slug
-                   ?? (string.IsNullOrWhiteSpace(post.DraftTitle) ? string.Empty : await AllocateSlugAsync(post.Language, post.DraftTitle, cancellationToken));
+                   ?? (string.IsNullOrWhiteSpace(post.DraftTitle) ? string.Empty : await AllocateSlugAsync(post.Kind, post.Language, post.DraftTitle, cancellationToken));
 
         // The same rule as the public query: a twin that is not on the site is not linked.
         var translation = await dbContext.BlogPosts
@@ -186,7 +190,8 @@ internal sealed partial class BlogAdminService(
             post.CoverMediaId is { } coverId ? BlogMediaPath.For(coverId) : null,
             post.PublishedAt ?? now, now, await LikeCountAsync(postId, cancellationToken), LikedByMe: null, translation,
             post.ViewCount, post.DraftSeo.SeoTitle, post.DraftSeo.CoverAlt, post.DraftSeo.AllKeywords,
-            cover?.Width, cover?.Height);
+            cover?.Width, cover?.Height, post.Kind, post.DraftHideRegisterCta,
+            await BlogRelatedLinks.ResolveAsync(dbContext, post.DraftRelatedPostIds, post.Language, cancellationToken));
     }
 
     public async Task<BlogDraftSavedResponse?> SaveDraftAsync(Guid adminUserId, Guid postId, SaveBlogDraftRequest request,
@@ -208,7 +213,7 @@ internal sealed partial class BlogAdminService(
         }
 
         await SetCoverAsync(post, request.CoverMediaId, now, cancellationToken);
-        await ApplyDraftAsync(adminUserId, post, request, Sanitized(request), now, cancellationToken);
+        await ApplyDraftAsync(adminUserId, post, request, Sanitized(request, post.Kind), now, cancellationToken);
 
         var orphans = await CollectOrphanMediaAsync(post, now, cancellationToken);
         await SaveHandlingSlugCollisionAsync(cancellationToken);
@@ -224,7 +229,8 @@ internal sealed partial class BlogAdminService(
         return new BlogDraftSavedResponse(post.Revision, post.DraftUpdatedAt);
     }
 
-    public async Task<AdminBlogPostResponse?> PublishAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken)
+    public async Task<AdminBlogPostResponse?> PublishAsync(Guid adminUserId, Guid postId, PublishBlogPostRequest? request,
+        CancellationToken cancellationToken)
     {
         var post = await Visible(adminUserId).FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
         if (post is null)
@@ -244,14 +250,14 @@ internal sealed partial class BlogAdminService(
                 throw new BlogPostIncompleteException();
             }
 
-            post.AssignGeneratedSlug(await AllocateSlugAsync(post.Language, post.DraftTitle, cancellationToken), now);
+            post.AssignGeneratedSlug(await AllocateSlugAsync(post.Kind, post.Language, post.DraftTitle, cancellationToken), now);
         }
         else if (!post.HasEverBeenPublished && await SlugTakenAsync(post, post.Slug, cancellationToken))
         {
             throw new BlogSlugTakenException();
         }
 
-        post.Publish(now);
+        post.Publish(now, request?.PublishedAt);
         // A publish is when an image dropped from the draft stops being on the site too.
         var orphans = await CollectOrphanMediaAsync(post, now, cancellationToken);
         await SaveHandlingSlugCollisionAsync(cancellationToken);
@@ -383,14 +389,18 @@ internal sealed partial class BlogAdminService(
 
     /// <summary>Sanitized on the way in, so what is stored is what will be rendered — the public
     /// page never runs a sanitizer of its own.</summary>
-    private BlogDraftContent Sanitized(IBlogDraftFields request) => new(
+    private BlogDraftContent Sanitized(IBlogDraftFields request, BlogPostKind kind) => new(
         request.Title.Trim(),
         request.Excerpt?.Trim() ?? string.Empty,
         request.ContentJson,
         sanitizer.Sanitize(request.ContentHtml),
         request.Seo is null
             ? BlogSeo.Empty
-            : BlogSeo.Normalize(request.Seo.SeoTitle, request.Seo.PrimaryKeyword, request.Seo.SecondaryKeywords, request.Seo.CoverAlt));
+            : BlogSeo.Normalize(request.Seo.SeoTitle, request.Seo.PrimaryKeyword, request.Seo.SecondaryKeywords, request.Seo.CoverAlt),
+        // A blog post has no guide settings: whatever an editor sent for one is not stored.
+        kind == BlogPostKind.Guide && request.Guide is { } guide
+            ? new BlogGuideOptions(guide.HideRegisterCta, guide.RelatedPostIds?.ToArray() ?? [])
+            : BlogGuideOptions.Empty);
 
     /// <summary>The form landing on the row — the same steps for the first draft (create) and
     /// every one after (the autosave), so create cannot accept what a save would refuse.</summary>
@@ -414,19 +424,44 @@ internal sealed partial class BlogAdminService(
         }
 
         await LinkTranslationAsync(adminUserId, post, request.TranslationOfPostId, now, cancellationToken);
+        await CheckRelatedAsync(adminUserId, post, content.GuideOrEmpty.RelatedPostIds, cancellationToken);
         post.SaveDraft(content, post.Revision, now);
     }
 
-    private Task<bool> SlugTakenAsync(BlogPost post, string slug, CancellationToken cancellationToken) =>
-        dbContext.BlogPosts.AnyAsync(p => p.Id != post.Id && p.Language == post.Language && p.Slug == slug, cancellationToken);
+    /// <summary>A guide's related list may only name other guides in its own language that the
+    /// caller can see — a draft of their own is fine (it shows once published), another admin's
+    /// draft is as unknown here as everywhere else.</summary>
+    private async Task CheckRelatedAsync(Guid adminUserId, BlogPost post, IReadOnlyList<Guid> relatedIds,
+        CancellationToken cancellationToken)
+    {
+        if (relatedIds.Count == 0)
+        {
+            return;
+        }
 
-    private async Task<string> AllocateSlugAsync(string language, string title, CancellationToken cancellationToken)
+        if (relatedIds.Contains(post.Id))
+        {
+            throw new BlogRelatedInvalidException();
+        }
+
+        var found = await Visible(adminUserId)
+            .CountAsync(p => relatedIds.Contains(p.Id) && p.Kind == BlogPostKind.Guide && p.Language == post.Language, cancellationToken);
+        if (found != relatedIds.Count)
+        {
+            throw new BlogRelatedInvalidException();
+        }
+    }
+
+    private Task<bool> SlugTakenAsync(BlogPost post, string slug, CancellationToken cancellationToken) =>
+        dbContext.BlogPosts.AnyAsync(p => p.Id != post.Id && p.Kind == post.Kind && p.Language == post.Language && p.Slug == slug, cancellationToken);
+
+    private async Task<string> AllocateSlugAsync(BlogPostKind kind, string language, string title, CancellationToken cancellationToken)
     {
         var baseSlug = BlogSlugGenerator.Generate(title);
         var prefix = baseSlug + "-";
 
         var taken = await dbContext.BlogPosts
-            .Where(p => p.Language == language && p.Slug != null && (p.Slug == baseSlug || p.Slug.StartsWith(prefix)))
+            .Where(p => p.Kind == kind && p.Language == language && p.Slug != null && (p.Slug == baseSlug || p.Slug.StartsWith(prefix)))
             .Select(p => p.Slug!)
             .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
 
@@ -464,8 +499,8 @@ internal sealed partial class BlogAdminService(
         && pg.ConstraintName?.Contains("Slug", StringComparison.Ordinal) == true;
 
     /// <summary>Keeps the translation link symmetric: linking A to B links B to A, unlinking A
-    /// unlinks whatever pointed back at it. The target must be a different post, in the other
-    /// language, that the caller may see.</summary>
+    /// unlinks whatever pointed back at it. The target must be a different post of the same kind,
+    /// in the other language, that the caller may see.</summary>
     private async Task LinkTranslationAsync(Guid adminUserId, BlogPost post, Guid? targetId, DateTimeOffset now,
         CancellationToken cancellationToken)
     {
@@ -490,7 +525,7 @@ internal sealed partial class BlogAdminService(
         }
 
         var target = await Visible(adminUserId).FirstOrDefaultAsync(p => p.Id == targetId, cancellationToken);
-        if (target is null || target.Language == post.Language)
+        if (target is null || target.Language == post.Language || target.Kind != post.Kind)
         {
             throw new BlogTranslationInvalidException();
         }
@@ -553,7 +588,8 @@ internal sealed partial class BlogAdminService(
         post.TranslationOfPostId, post.CoverMediaId,
         post.DraftTitle, post.DraftExcerpt, post.DraftContentJson, post.DraftContentHtml, post.DraftUpdatedAt,
         post.Revision, post.Title, post.PublishedAt, post.PublishedUpdatedAt, HasUnpublishedChanges(post), likeCount, post.CreatedAt,
-        post.ViewCount, ToResponse(post.DraftSeo), cover?.Width, cover?.Height);
+        post.ViewCount, ToResponse(post.DraftSeo), cover?.Width, cover?.Height, post.Kind,
+        new BlogGuideResponse(post.DraftHideRegisterCta, post.DraftRelatedPostIds));
 
     private static BlogSeoResponse ToResponse(BlogSeo seo) =>
         new(seo.SeoTitle, seo.PrimaryKeyword, seo.SecondaryKeywords, seo.CoverAlt);

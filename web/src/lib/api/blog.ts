@@ -6,6 +6,7 @@ import type {
   BlogLanguage,
   BlogLikeToggleResponse,
   BlogMediaResponse,
+  BlogPostKind,
   BlogPostPublic,
   BlogPostStatus,
   BlogSeoSuggestion,
@@ -39,6 +40,8 @@ export interface AdminBlogListFilters {
   status?: BlogPostStatus;
   lang?: BlogLanguage;
   page?: number;
+  /** Absent is the blog: the API keeps its tables one kind each (2026-09-26). */
+  kind?: BlogPostKind;
 }
 
 export const adminBlogApi = {
@@ -48,6 +51,7 @@ export const adminBlogApi = {
     if (filters.status) params.set("status", filters.status);
     if (filters.lang) params.set("lang", filters.lang);
     if (filters.page && filters.page > 1) params.set("page", String(filters.page));
+    if (filters.kind && filters.kind !== "Blog") params.set("kind", filters.kind);
     const query = params.toString();
     return apiFetch<PagedResult<AdminBlogPostListItem>>(`/api/admin/blog/posts${query ? `?${query}` : ""}`);
   },
@@ -56,10 +60,11 @@ export const adminBlogApi = {
    * The admin table: one row per post and its translation, most recently touched pair first,
    * paged by pair. The flat `list` stays for the editor's translation picker.
    */
-  listGrouped: (filters: { status?: BlogPostStatus; page?: number } = {}) => {
+  listGrouped: (filters: { status?: BlogPostStatus; page?: number; kind?: BlogPostKind } = {}) => {
     const params = new URLSearchParams();
     if (filters.status) params.set("status", filters.status);
     if (filters.page && filters.page > 1) params.set("page", String(filters.page));
+    if (filters.kind && filters.kind !== "Blog") params.set("kind", filters.kind);
     const query = params.toString();
     return apiFetch<PagedResult<AdminBlogPostGroup>>(`/api/admin/blog/posts/grouped${query ? `?${query}` : ""}`);
   },

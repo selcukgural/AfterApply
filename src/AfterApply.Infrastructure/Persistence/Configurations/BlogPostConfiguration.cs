@@ -13,6 +13,8 @@ public sealed class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
         builder.HasKey(p => p.Id);
 
         builder.Property(p => p.Language).HasMaxLength(BlogLanguage.MaxLength);
+        // Blog or guide (2026-09-26). Existing rows are blog posts, which the migration's default says.
+        builder.Property(p => p.Kind).HasConversion<string>().HasMaxLength(20).HasDefaultValue(BlogPostKind.Blog);
         // A string, as every enum column in this schema (see CompanyReviewConfiguration).
         builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(p => p.Slug).HasMaxLength(BlogSlugGenerator.MaxLength);
@@ -34,15 +36,20 @@ public sealed class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
         builder.Property(p => p.DraftContentJson).HasColumnType("jsonb");
         builder.Property(p => p.PublishedContentJson).HasColumnType("jsonb");
 
-        // The public URL: one slug per language. Filtered because a never-published draft has no
+        // The guide's related list: ids only, never queried by — the public read resolves them.
+        builder.Property(p => p.DraftRelatedPostIds).HasColumnType("uuid[]");
+        builder.Property(p => p.RelatedPostIds).HasColumnType("uuid[]");
+
+        // The public URL: one slug per kind and language (/blog/x and /guide/x are different
+        // pages, 2026-09-26). Filtered because a never-published draft has no
         // slug yet. The name carries "Slug" on purpose — BlogAdminService retries a publish on a
         // 23505 whose constraint name says so (the CompanySlugAllocator convention).
-        builder.HasIndex(p => new { p.Language, p.Slug })
+        builder.HasIndex(p => new { p.Kind, p.Language, p.Slug })
             .IsUnique()
-            .HasDatabaseName("IX_BlogPosts_Language_Slug")
+            .HasDatabaseName("IX_BlogPosts_Kind_Language_Slug")
             .HasFilter("\"Slug\" IS NOT NULL");
-        // The public list: published posts of one language, newest first.
-        builder.HasIndex(p => new { p.Status, p.Language, p.PublishedAt });
+        // The public list: published posts of one kind and language, newest first.
+        builder.HasIndex(p => new { p.Kind, p.Status, p.Language, p.PublishedAt });
         // The author's own drafts in the admin table.
         builder.HasIndex(p => p.AuthorUserId);
 

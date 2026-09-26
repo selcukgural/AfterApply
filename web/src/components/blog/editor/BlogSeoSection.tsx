@@ -2,7 +2,7 @@
 
 import { useState, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
-import type { BlogLanguage, BlogSeo, BlogSeoSuggestion } from "@/types/api";
+import type { BlogLanguage, BlogPostKind, BlogSeo, BlogSeoSuggestion } from "@/types/api";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/dashboard/Card";
 import { FormField } from "@/components/ui/FormField";
@@ -24,6 +24,8 @@ import { SITE_NAME } from "@/lib/seo/routes";
 import { ogImagePath } from "@/lib/seo/ogImage";
 
 export interface BlogSeoSectionProps {
+  /** Blog or guide (2026-09-26): which section the previews put the address and the card under. */
+  kind?: BlogPostKind;
   language: BlogLanguage;
   title: string;
   excerpt: string;
@@ -92,6 +94,9 @@ export function seoInputOf(props: Pick<BlogSeoSectionProps, "title" | "excerpt" 
 export function BlogSeoSection(props: BlogSeoSectionProps) {
   const { language, title, excerpt, onExcerptChange, seo, onSeoChange, slug, slugLocked, slugTouched, onSlugChange, onSlugReset, hasCover, coverUrl } = props;
   const t = useTranslations("adminBlog.seo");
+  const tGuide = useTranslations("adminGuide");
+  const section = props.kind === "Guide" ? "guide" : "blog";
+  const shareKicker = props.kind === "Guide" ? tGuide("kindBadge") : t("shareKicker");
   const [keywordDraft, setKeywordDraft] = useState("");
   const [suggestion, setSuggestion] = useState<BlogSeoSuggestion | null>(null);
   const [suggesting, setSuggesting] = useState(false);
@@ -333,7 +338,7 @@ export function BlogSeoSection(props: BlogSeoSectionProps) {
                 {slug && (
                   <>
                     {" "}
-                    <code className="text-gray-700 dark:text-gray-300">{t("slugPreview", { language, slug })}</code>
+                    <code className="text-gray-700 dark:text-gray-300">{t("slugPreview", { language, section, slug })}</code>
                   </>
                 )}
               </p>
@@ -350,7 +355,7 @@ export function BlogSeoSection(props: BlogSeoSectionProps) {
                 <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
                   <span aria-hidden="true" className="inline-block h-4 w-4 rounded-full bg-accent" />
                   <span className="truncate">
-                    ekariyerim.com › {language} › blog › {slug || "…"}
+                    ekariyerim.com › {language} › {section} › {slug || "…"}
                   </span>
                 </div>
                 <div className="mt-0.5 truncate text-[17px] leading-snug text-[#1a0dab] dark:text-[#8ab4f8]">{fullTitle}</div>
@@ -364,7 +369,7 @@ export function BlogSeoSection(props: BlogSeoSectionProps) {
                 {/* The picture a shared link shows, as it is: the cover when it is card-sized, else
                     the site's generated card rendered by its own route (2026-09-21). */}
                 {/* eslint-disable-next-line @next/next/no-img-element -- a preview of a generated image, sized by its box */}
-                <img src={coverUrl ?? ogImagePath(language, shownTitle || title || SITE_NAME, t("shareKicker"))} alt="" className="aspect-[1200/630] w-full object-cover" />
+                <img src={coverUrl ?? ogImagePath(language, shownTitle || title || SITE_NAME, shareKicker)} alt="" className="aspect-[1200/630] w-full object-cover" />
                 <div className="px-2.5 py-2 text-xs">
                   <div className="truncate font-medium text-gray-900 dark:text-gray-100">{fullTitle}</div>
                   <div className="truncate text-gray-500 dark:text-gray-400">{excerpt.trim() || "…"}</div>

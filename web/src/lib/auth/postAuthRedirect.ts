@@ -41,6 +41,8 @@ const RETURN_TO_PATTERNS = [
   // The fifth shape (2026-09-19): a blog post whose like button asked the reader to sign in. The
   // slug is BlogSlugGenerator's alphabet (lowercase ascii, digits, dashes); no query string.
   /^\/blog\/[a-z0-9][a-z0-9-]{0,99}$/,
+  // The sixth (2026-09-26): the same for a guide, whose page has the blog's like button.
+  /^\/guide\/[a-z0-9][a-z0-9-]{0,99}$/,
 ];
 
 export function sanitizeReturnTo(raw: string | null | undefined): string | null {

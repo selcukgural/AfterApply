@@ -1,4 +1,5 @@
-import type { BlogLanguage } from "@/types/api";
+import type { BlogLanguage, BlogPostKind } from "@/types/api";
+import { adminPostsPath } from "./blogPaths";
 
 /**
  * Where a new post starts (2026-09-20): the language, and the post it is the translation of when
@@ -12,9 +13,10 @@ export interface NewPostSeed {
 
 const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** The address the table links to for a missing side. */
-export function newTranslationHref(language: BlogLanguage, translationOfPostId: string): string {
-  return `/admin/blog/new?lang=${language}&translationOf=${translationOfPostId}`;
+/** The address the table links to for a missing side — under the table's own kind, so a
+ *  guide's translation opens as a guide. */
+export function newTranslationHref(language: BlogLanguage, translationOfPostId: string, kind: BlogPostKind = "Blog"): string {
+  return `${adminPostsPath(kind)}/new?lang=${language}&translationOf=${translationOfPostId}`;
 }
 
 /**

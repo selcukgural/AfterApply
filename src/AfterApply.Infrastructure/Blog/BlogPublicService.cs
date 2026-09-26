@@ -32,17 +32,17 @@ internal sealed class BlogPublicService(
     };
 
     public async Task<PagedResult<BlogPostListItemResponse>> ListAsync(PublicBlogListQuery query, CancellationToken cancellationToken) =>
-        await cache.GetOrCreateAsync(CacheKeys.Blog.ListPage(query.Lang, query.Page),
+        await cache.GetOrCreateAsync(CacheKeys.Blog.ListPage(query.Kind ?? BlogPostKind.Blog, query.Lang, query.Page),
             ct => new ValueTask<PagedResult<BlogPostListItemResponse>>(QueryListAsync(query, ct)),
             CacheOptions, tags: [CacheKeys.Blog.Tag], cancellationToken: cancellationToken);
 
-    public async Task<BlogPostPublicResponse?> GetBySlugAsync(string language, string slug, Guid? viewerUserId,
+    public async Task<BlogPostPublicResponse?> GetBySlugAsync(BlogPostKind kind, string language, string slug, Guid? viewerUserId,
         CancellationToken cancellationToken)
     {
         // The page body is one cache entry for everyone; the one per-reader bit — did *I* like
         // it — is read outside the cache and stamped on afterwards.
-        var post = await cache.GetOrCreateAsync(CacheKeys.Blog.Post(language, slug),
-            ct => new ValueTask<BlogPostPublicResponse?>(QueryPostAsync(language, slug, ct)),
+        var post = await cache.GetOrCreateAsync(CacheKeys.Blog.Post(kind, language, slug),
+            ct => new ValueTask<BlogPostPublicResponse?>(QueryPostAsync(kind, language, slug, ct)),
             CacheOptions, tags: [CacheKeys.Blog.Tag], cancellationToken: cancellationToken);
 
         if (post is null)
@@ -67,9 +67,10 @@ internal sealed class BlogPublicService(
         return post with { LikedByMe = liked, ViewCount = viewCount };
     }
 
-    public async Task<IReadOnlyList<BlogSlugResponse>> ListSlugsAsync(CancellationToken cancellationToken) =>
-        await cache.GetOrCreateAsync(CacheKeys.Blog.Slugs,
+    public async Task<IReadOnlyList<BlogSlugResponse>> ListSlugsAsync(BlogPostKind kind, CancellationToken cancellationToken) =>
+        await cache.GetOrCreateAsync(CacheKeys.Blog.Slugs(kind),
             async ct => (IReadOnlyList<BlogSlugResponse>)await Published()
+                .Where(p => p.Kind == kind)
                 .OrderByDescending(p => p.PublishedAt)
                 .Select(p => new BlogSlugResponse(p.Language, p.Slug!, p.PublishedAt!.Value, p.PublishedUpdatedAt!.Value,
                     dbContext.BlogPosts
@@ -84,7 +85,7 @@ internal sealed class BlogPublicService(
         try
         {
             return await cache.GetOrCreateAsync(CacheKeys.Blog.HasPublished,
-                ct => new ValueTask<bool>(Published().AnyAsync(ct)),
+                ct => new ValueTask<bool>(Published().AnyAsync(p => p.Kind == BlogPostKind.Blog, ct)),
                 CacheOptions, tags: [CacheKeys.Blog.Tag], cancellationToken: cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
@@ -152,7 +153,8 @@ internal sealed class BlogPublicService(
 
     private async Task<PagedResult<BlogPostListItemResponse>> QueryListAsync(PublicBlogListQuery query, CancellationToken cancellationToken)
     {
-        var posts = Published().Where(p => p.Language == query.Lang);
+        var kind = query.Kind ?? BlogPostKind.Blog;
+        var posts = Published().Where(p => p.Kind == kind && p.Language == query.Lang);
         var total = await posts.CountAsync(cancellationToken);
         var pageSize = options.Value.PageSize;
 
@@ -176,13 +178,14 @@ internal sealed class BlogPublicService(
         return new PagedResult<BlogPostListItemResponse>(items, total, query.Page, pageSize);
     }
 
-    private async Task<BlogPostPublicResponse?> QueryPostAsync(string language, string slug, CancellationToken cancellationToken)
+    private async Task<BlogPostPublicResponse?> QueryPostAsync(BlogPostKind kind, string language, string slug,
+        CancellationToken cancellationToken)
     {
         var row = await Published()
-            .Where(p => p.Language == language && p.Slug == slug)
+            .Where(p => p.Kind == kind && p.Language == language && p.Slug == slug)
             .Select(p => new
             {
-                p.Id, p.Slug, p.Language, p.Title, p.Excerpt, p.ContentHtml, p.CoverMediaId, p.PublishedAt, p.PublishedUpdatedAt,
+                p.Id, p.Kind, p.HideRegisterCta, p.RelatedPostIds, p.Slug, p.Language, p.Title, p.Excerpt, p.ContentHtml, p.CoverMediaId, p.PublishedAt, p.PublishedUpdatedAt,
                 p.SeoTitle, p.PrimaryKeyword, p.SecondaryKeywords, p.CoverAlt,
                 Cover = dbContext.BlogMedia.Where(m => m.Id == p.CoverMediaId).Select(m => new { m.Width, m.Height }).FirstOrDefault(),
                 LikeCount = dbContext.BlogPostLikes.Count(l => l.PostId == p.Id),
@@ -193,14 +196,18 @@ internal sealed class BlogPublicService(
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        return row is null
-            ? null
-            : new BlogPostPublicResponse(
-                row.Id, row.Slug!, row.Language, row.Title, row.Excerpt, row.ContentHtml, CoverUrl(row.CoverMediaId),
-                row.PublishedAt!.Value, row.PublishedUpdatedAt!.Value, row.LikeCount, LikedByMe: null, row.Translation,
-                ViewCount: 0, row.SeoTitle, row.CoverAlt,
-                new BlogSeo(row.SeoTitle, row.PrimaryKeyword, row.SecondaryKeywords, row.CoverAlt).AllKeywords,
-                row.Cover?.Width, row.Cover?.Height);
+        if (row is null)
+        {
+            return null;
+        }
+
+        return new BlogPostPublicResponse(
+            row.Id, row.Slug!, row.Language, row.Title, row.Excerpt, row.ContentHtml, CoverUrl(row.CoverMediaId),
+            row.PublishedAt!.Value, row.PublishedUpdatedAt!.Value, row.LikeCount, LikedByMe: null, row.Translation,
+            ViewCount: 0, row.SeoTitle, row.CoverAlt,
+            new BlogSeo(row.SeoTitle, row.PrimaryKeyword, row.SecondaryKeywords, row.CoverAlt).AllKeywords,
+            row.Cover?.Width, row.Cover?.Height, row.Kind, row.HideRegisterCta,
+            await BlogRelatedLinks.ResolveAsync(dbContext, row.RelatedPostIds, row.Language, cancellationToken));
     }
 
     private static string? CoverUrl(Guid? coverMediaId) =>

@@ -380,7 +380,10 @@ internal sealed class BlogCommentService(
     // ---- helpers -------------------------------------------------------------------------------
 
     private Task<bool> IsPublishedAsync(Guid postId, CancellationToken cancellationToken) =>
-        dbContext.BlogPosts.AnyAsync(p => p.Id == postId && p.Status == BlogPostStatus.Published, cancellationToken);
+        // Guides take no comments (DECISIONS.md 2026-09-26): to this service a guide is a post
+        // that is not there, so every comment route answers it with 404.
+        dbContext.BlogPosts.AnyAsync(p => p.Id == postId && p.Status == BlogPostStatus.Published && p.Kind == BlogPostKind.Blog,
+            cancellationToken);
 
     private Task<List<BlogCommentReport>> OpenReportsAsync(Guid commentId, CancellationToken cancellationToken) =>
         dbContext.BlogCommentReports

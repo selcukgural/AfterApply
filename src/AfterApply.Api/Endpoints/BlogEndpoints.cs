@@ -4,12 +4,14 @@ using AfterApply.Api.Filters;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Blog;
 using AfterApply.Application.Blog.Contracts;
+using AfterApply.Domain.Blog;
 using AfterApply.Infrastructure;
 
 namespace AfterApply.Api.Endpoints;
 
 /// <summary>The reader's side of the blog (DECISIONS.md 2026-09-19): the public list, the post,
-/// the sitemap feed, the images, and the one thing a signed-in reader can do — like.</summary>
+/// the sitemap feed, the images, and the one thing a signed-in reader can do — like. The guide
+/// reads through the same routes with <c>kind=Guide</c> (2026-09-26); no kind is the blog.</summary>
 public static class BlogEndpoints
 {
     public static IEndpointRouteBuilder MapBlogEndpoints(this IEndpointRouteBuilder app)
@@ -28,23 +30,34 @@ public static class BlogEndpoints
             Results.Ok(await service.ListAsync(query, cancellationToken)))
             .WithValidation<PublicBlogListQuery>()
             .WithSummary("Published posts in one language, newest first")
-            .WithDescription("Public. lang is tr or en; a post lives in exactly one language. Only the published " +
-                             "version of a post is ever on the wire — never the draft being edited.")
+            .WithDescription("Public. lang is tr or en; a post lives in exactly one language. kind is Blog (the " +
+                             "default) or Guide. Only the published version of a post is ever on the wire — never " +
+                             "the draft being edited.")
             .Produces<PagedResult<BlogPostListItemResponse>>();
 
-        publicGroup.MapGet("/slugs", async (IBlogPublicService service, CancellationToken cancellationToken) =>
-            Results.Ok(await service.ListSlugsAsync(cancellationToken)))
+        publicGroup.MapGet("/slugs", async ([AsParameters] PublicBlogSlugsQuery query, IBlogPublicService service,
+                CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListSlugsAsync(query.Kind ?? BlogPostKind.Blog, cancellationToken)))
+            .WithValidation<PublicBlogSlugsQuery>()
             .WithSummary("Every published post's language, slug and dates, for the sitemap")
+            .WithDescription("Public. One kind per call: Blog (the default) or Guide.")
             .Produces<IReadOnlyList<BlogSlugResponse>>();
 
-        publicGroup.MapGet("/posts/{lang}/{slug}", async (string lang, string slug, ClaimsPrincipal user,
+        publicGroup.MapGet("/posts/{lang}/{slug}", async (string lang, string slug, BlogPostKind? kind, ClaimsPrincipal user,
                 IBlogPublicService service, CancellationToken cancellationToken) =>
             {
-                var post = await service.GetBySlugAsync(lang, slug, user.TryGetUserId(), cancellationToken);
+                // An undefined number is not a section; answered like any post that is not there.
+                if (kind is { } k && !Enum.IsDefined(k))
+                {
+                    return Results.NotFound();
+                }
+
+                var post = await service.GetBySlugAsync(kind ?? BlogPostKind.Blog, lang, slug, user.TryGetUserId(), cancellationToken);
                 return post is null ? Results.NotFound() : Results.Ok(post);
             })
             .WithSummary("A published post")
-            .WithDescription("Public. contentHtml is the sanitized published version, rendered as-is by the web " +
+            .WithDescription("Public. kind is Blog (the default) or Guide; a guide's slug under the blog is 404. " +
+                             "contentHtml is the sanitized published version, rendered as-is by the web " +
                              "app. likedByMe is null for an anonymous reader and a boolean when the request " +
                              "carried a valid token — the token is optional, and a stale one is ignored.")
             .Produces<BlogPostPublicResponse>();

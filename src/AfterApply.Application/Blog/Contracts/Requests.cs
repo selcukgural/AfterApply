@@ -16,7 +16,14 @@ public interface IBlogDraftFields
     /// <summary>Null from an editor build that predates the SEO fields (2026-09-21): stored as
     /// "none of them", never as an error.</summary>
     BlogSeoRequest? Seo { get; }
+    /// <summary>A guide's own settings (2026-09-26). Null — and ignored on a blog post — from an
+    /// editor that has none to send.</summary>
+    BlogGuideRequest? Guide { get; }
 }
+
+/// <summary>A guide's own settings (DECISIONS.md 2026-09-26): hide the page's sign-up box, and
+/// up to two other guides in the same language to show as related, in order.</summary>
+public sealed record BlogGuideRequest(bool HideRegisterCta, IReadOnlyList<Guid>? RelatedPostIds);
 
 /// <summary>The SEO fields of the form (DECISIONS.md 2026-09-21). Every one optional.</summary>
 public sealed record BlogSeoRequest(
@@ -40,7 +47,11 @@ public sealed record CreateBlogPostRequest(
     string Language,
     string? Slug,
     Guid? TranslationOfPostId,
-    BlogSeoRequest? Seo = null) : IBlogDraftFields;
+    BlogSeoRequest? Seo = null,
+    BlogGuideRequest? Guide = null,
+    /// <summary>Blog or guide; fixed from here on. Absent from an editor that predates guides —
+    /// a blog post, which is all it could write.</summary>
+    BlogPostKind Kind = BlogPostKind.Blog) : IBlogDraftFields;
 
 /// <summary>
 /// The autosave. Everything editable on a post travels together: the editor does not know which
@@ -58,14 +69,27 @@ public sealed record SaveBlogDraftRequest(
     Guid? CoverMediaId,
     Guid? TranslationOfPostId,
     int Revision,
-    BlogSeoRequest? Seo = null) : IBlogDraftFields;
+    BlogSeoRequest? Seo = null,
+    BlogGuideRequest? Guide = null) : IBlogDraftFields;
 
-/// <summary>The public list of one language, newest first.</summary>
-public sealed record PublicBlogListQuery(string Lang, int Page = 1);
+/// <summary>
+/// Publish's optional body. <paramref name="PublishedAt"/> back-dates a first publish — only the
+/// move of the guides that were files in the web app uses it, so they keep their original date
+/// (2026-09-26). No body is an ordinary publish.
+/// </summary>
+public sealed record PublishBlogPostRequest(DateTimeOffset? PublishedAt);
 
-/// <summary>The admin table: optionally one status or one language, newest first.</summary>
-public sealed record AdminBlogListQuery(BlogPostStatus? Status = null, string? Lang = null, int Page = 1);
+/// <summary>The public list of one kind and language, newest first. No kind: the blog, as
+/// before guides existed.</summary>
+public sealed record PublicBlogListQuery(string Lang, int Page = 1, BlogPostKind? Kind = null);
+
+/// <summary>The admin table: one kind (the blog when absent), optionally one status or one
+/// language, newest first.</summary>
+public sealed record AdminBlogListQuery(BlogPostStatus? Status = null, string? Lang = null, int Page = 1, BlogPostKind? Kind = null);
 
 /// <summary>The admin table's query: one row per post-and-translation pair. No language — a row
 /// shows both. A status filter keeps a row when either side matches, and the row still shows both.</summary>
-public sealed record AdminBlogGroupedListQuery(BlogPostStatus? Status = null, int Page = 1);
+public sealed record AdminBlogGroupedListQuery(BlogPostStatus? Status = null, int Page = 1, BlogPostKind? Kind = null);
+
+/// <summary>The sitemap feed of one kind. No kind: the blog.</summary>
+public sealed record PublicBlogSlugsQuery(BlogPostKind? Kind = null);

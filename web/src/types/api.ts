@@ -2198,6 +2198,22 @@ export type BlogLanguage = "tr" | "en";
 
 export type BlogPostStatus = "Draft" | "Published";
 
+/** Which section a post belongs to (2026-09-26): `/blog` or `/guide`. Fixed at creation. */
+export type BlogPostKind = "Blog" | "Guide";
+
+/** A guide shown under another as related: published, same language, in the author's order. */
+export interface BlogRelatedLink {
+  slug: string;
+  title: string;
+  excerpt: string;
+}
+
+/** A guide's own settings (2026-09-26); false and empty on a blog post. */
+export interface BlogGuideSettings {
+  hideRegisterCta: boolean;
+  relatedPostIds: string[];
+}
+
 /** Where the same post lives in the other language, when the author linked one. */
 export interface BlogTranslationLink {
   language: BlogLanguage;
@@ -2235,6 +2251,11 @@ export interface BlogPostPublic extends BlogPostListItem {
   /** The cover's pixel size when the upload could read it — decides cover vs generated card as the share image. */
   coverWidth: number | null;
   coverHeight: number | null;
+  kind: BlogPostKind;
+  /** A guide hides its sign-up box when it talks to readers who already have an account. */
+  hideRegisterCta: boolean;
+  /** Guides only; empty on a blog post. */
+  related: BlogRelatedLink[];
 }
 
 /** What the model proposed for a draft (2026-09-21): proposals only, applied field by field by the author. */
@@ -2439,6 +2460,9 @@ export interface AdminBlogPost {
   draftSeo: BlogSeo;
   coverWidth: number | null;
   coverHeight: number | null;
+  kind: BlogPostKind;
+  /** The draft's guide settings (2026-09-26); false and empty on a blog post. */
+  draftGuide: BlogGuideSettings;
 }
 
 /** Create, from the first draft: sent once the author has typed at least one character into the
@@ -2452,6 +2476,11 @@ export interface CreateBlogPostRequest {
   language: BlogLanguage;
   slug: string | null;
   translationOfPostId: string | null;
+  seo?: BlogSeo;
+  /** Ignored by the API on a blog post. */
+  guide?: BlogGuideSettings;
+  /** Absent is a blog post — what every editor before guides wrote. */
+  kind?: BlogPostKind;
 }
 
 /** The autosave. Everything editable travels every time; `revision` is the one the editor last
@@ -2467,6 +2496,8 @@ export interface SaveBlogDraftRequest {
   translationOfPostId: string | null;
   revision: number;
   seo: BlogSeo;
+  /** Ignored by the API on a blog post. */
+  guide: BlogGuideSettings;
 }
 
 export interface BlogDraftSaved {

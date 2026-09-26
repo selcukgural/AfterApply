@@ -6,10 +6,10 @@ import { useLocale, useTranslations } from "next-intl";
 import type { JSONContent } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Link, useRouter } from "@/i18n/navigation";
-import type { AdminBlogPost, BlogLanguage, BlogMediaResponse, BlogSeo } from "@/types/api";
+import type { AdminBlogPost, BlogGuideSettings, BlogLanguage, BlogMediaResponse, BlogPostKind, BlogSeo } from "@/types/api";
 import { adminBlogApi } from "@/lib/api/blog";
 import { ApiError } from "@/lib/api/httpClient";
-import { blogPostPath, blogPreviewPath } from "@/lib/blog/blogPaths";
+import { adminPostsPath, postPath, postPreviewPath } from "@/lib/blog/blogPaths";
 import type { NewPostSeed } from "@/lib/blog/newPostSeed";
 import { seoChecklist, seoScore, slugFromTitle } from "@/lib/blog/seoChecks";
 import { SHARE_IMAGE_MIN_HEIGHT, SHARE_IMAGE_MIN_WIDTH, shareImageVerdict, type ImageSize } from "@/lib/seo/shareImage";
@@ -22,6 +22,7 @@ import { Modal } from "@/components/ui/Modal";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { BlogToolbar } from "./BlogToolbar";
 import { BlogSeoSection, SeoScorePill, seoInputOf } from "./BlogSeoSection";
+import { GuideOptionsCard } from "./GuideOptionsCard";
 import { IMAGE_MAX_BYTES, IMAGE_MIME_TYPES, buildExtensions } from "./extensions";
 import { useAutosave } from "./useAutosave";
 import { useMediaObjectUrl } from "./useMediaObjectUrl";
@@ -30,7 +31,7 @@ const OTHER_LANGUAGE: Record<BlogLanguage, BlogLanguage> = { tr: "en", en: "tr" 
 
 /** What the editor opens on for a new post: nothing, in the seed's language (the UI's by
  *  default). The id is empty until the first non-empty autosave creates the row (see `useAutosave`). */
-function emptyPost(seed: NewPostSeed): AdminBlogPost {
+function emptyPost(seed: NewPostSeed, kind: BlogPostKind): AdminBlogPost {
   const now = new Date().toISOString();
   return {
     id: "",
@@ -57,6 +58,8 @@ function emptyPost(seed: NewPostSeed): AdminBlogPost {
     draftSeo: { seoTitle: null, primaryKeyword: null, secondaryKeywords: [], coverAlt: null },
     coverWidth: null,
     coverHeight: null,
+    kind,
+    draftGuide: { hideRegisterCta: false, relatedPostIds: [] },
   };
 }
 
@@ -70,8 +73,18 @@ function emptyPost(seed: NewPostSeed): AdminBlogPost {
  * new id. That URL change reaches this component as a new `postId`, which is ignored on purpose
  * — refetching would remount the form and drop the caret mid-sentence.
  */
-export function BlogEditorPage({ postId, newPostSeed }: { postId: string | null; newPostSeed?: NewPostSeed }) {
+export function BlogEditorPage({
+  kind,
+  postId,
+  newPostSeed,
+}: {
+  /** Blog or guide (2026-09-26): the same editor, opened from either tab. */
+  kind: BlogPostKind;
+  postId: string | null;
+  newPostSeed?: NewPostSeed;
+}) {
   const t = useTranslations("adminBlog");
+  const tGuide = useTranslations("adminGuide");
   // Fixed at mount: the form, not the URL, owns a post that was opened as new.
   const [openedNew] = useState(postId === null);
   const query = useQuery({
@@ -85,7 +98,7 @@ export function BlogEditorPage({ postId, newPostSeed }: { postId: string | null;
   });
 
   if (openedNew) {
-    return <BlogEditorForm initial={null} newPostSeed={newPostSeed} />;
+    return <BlogEditorForm kind={kind} initial={null} newPostSeed={newPostSeed} />;
   }
 
   if (query.error instanceof ApiError && query.error.status === 403) {
@@ -104,8 +117,8 @@ export function BlogEditorPage({ postId, newPostSeed }: { postId: string | null;
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
           {query.error instanceof ApiError && query.error.status === 404 ? t("editor.notFound") : t("error")}
         </p>
-        <Link href="/admin/blog" className="text-sm font-medium text-blue-600 dark:text-blue-400">
-          {t("editor.back")}
+        <Link href={adminPostsPath(kind)} className="text-sm font-medium text-blue-600 dark:text-blue-400">
+          {kind === "Guide" ? tGuide("back") : t("editor.back")}
         </Link>
       </div>
     );
@@ -115,11 +128,14 @@ export function BlogEditorPage({ postId, newPostSeed }: { postId: string | null;
     return <p className="text-sm text-gray-500 dark:text-gray-400">{t("loading")}</p>;
   }
 
-  return <BlogEditorForm initial={query.data} />;
+  // A post opened from the other tab's address (a guide at /admin/blog/<id>) is edited as what it
+  // is: the stored kind wins over the route's.
+  return <BlogEditorForm kind={query.data.kind} initial={query.data} />;
 }
 
-function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | null; newPostSeed?: NewPostSeed }) {
+function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; initial: AdminBlogPost | null; newPostSeed?: NewPostSeed }) {
   const t = useTranslations("adminBlog");
+  const tGuide = useTranslations("adminGuide");
   const tEditor = useTranslations("adminBlog.editor");
   const tSave = useTranslations("adminBlog.autosave");
   const tUpload = useTranslations("adminBlog.upload");
@@ -130,7 +146,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
 
   // A new post starts from nothing and has no id until its first save creates it.
   const [seed] = useState(
-    () => initial ?? emptyPost(newPostSeed ?? { language: locale === "en" ? "en" : "tr", translationOfPostId: null }),
+    () => initial ?? emptyPost(newPostSeed ?? { language: locale === "en" ? "en" : "tr", translationOfPostId: null }, kind),
   );
   const [postId, setPostId] = useState<string | null>(initial?.id ?? null);
 
@@ -146,6 +162,8 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   // publish, or typed earlier — starts as touched (2026-09-21).
   const [slugTouched, setSlugTouched] = useState(seed.slug !== null);
   const [seo, setSeo] = useState<BlogSeo>(seed.draftSeo);
+  // The guide's own settings (2026-09-26); stays empty, and is ignored by the API, on a blog post.
+  const [guide, setGuide] = useState<BlogGuideSettings>(seed.draftGuide ?? { hideRegisterCta: false, relatedPostIds: [] });
   // The body as HTML for the SEO checks, refreshed a beat after typing stops — `getHTML` on every
   // keystroke of a long post is not free, and the checklist does not need to be that quick.
   const [bodyHtml, setBodyHtml] = useState(seed.draftContentHtml);
@@ -170,6 +188,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   // the uploader). `buildRequest` mentions `editor` from further down, which is fine: the hook
   // only calls it at save time, long after this render has finished.
   const autosave = useAutosave({
+    kind,
     postId,
     initialRevision: seed.revision,
     buildRequest: () => ({
@@ -184,6 +203,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
       coverMediaId,
       translationOfPostId,
       seo,
+      guide,
     }),
     onCreated: (post) => {
       setPostId(post.id);
@@ -276,8 +296,10 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
   }, [editor, language]);
 
   const translationCandidates = useQuery({
-    queryKey: ["admin", "blog", "translation-candidates", OTHER_LANGUAGE[language]],
-    queryFn: () => adminBlogApi.list({ lang: OTHER_LANGUAGE[language] }),
+    // A translation is the same kind of post in the other language — the API refuses a link
+    // across kinds, so the picker does not offer one.
+    queryKey: ["admin", "blog", "translation-candidates", kind, OTHER_LANGUAGE[language]],
+    queryFn: () => adminBlogApi.list({ lang: OTHER_LANGUAGE[language], kind }),
   });
 
   const cover = useMediaObjectUrl(coverMediaId ? `/api/blog/media/${coverMediaId}` : null);
@@ -317,7 +339,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
         const id = await ensurePost();
         if (!id) throw new Error(tEditor("nothingWritten"));
         if (!(await autosave.flush())) throw new Error(tSave("unsaved"));
-        const target = `${window.location.origin}/${language}${blogPreviewPath(id)}`;
+        const target = `${window.location.origin}/${language}${postPreviewPath(kind, id)}`;
         if (tab) tab.location.href = target;
         else window.open(target, "_blank");
       } catch (err) {
@@ -332,7 +354,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
     mutationFn: () => adminBlogApi.remove(postId!),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "blog"] });
-      router.push("/admin/blog");
+      router.push(adminPostsPath(kind));
     },
     onError: (err) => setActionError(err instanceof ApiError ? err.message : t("error")),
   });
@@ -378,9 +400,12 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Link href="/admin/blog" className="text-sm font-medium text-blue-600 dark:text-blue-400">
-            {tEditor("back")}
+          <Link href={adminPostsPath(kind)} className="text-sm font-medium text-blue-600 dark:text-blue-400">
+            {kind === "Guide" ? tGuide("back") : tEditor("back")}
           </Link>
+          {kind === "Guide" && (
+            <span className="rounded-full bg-accent-wash px-2 py-0.5 text-xs font-medium text-accent-ink">{tGuide("kindBadge")}</span>
+          )}
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               meta.status === "Published" ? "bg-good-wash text-good-ink" : "bg-muted-wash text-muted-ink"
@@ -389,7 +414,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
             {t(`status.${meta.status}`)}
           </span>
           {meta.status === "Published" && meta.slug && (
-            <Link href={blogPostPath(meta.slug)} locale={meta.language} target="_blank" className="text-xs text-blue-600 underline-offset-2 hover:underline dark:text-blue-400">
+            <Link href={postPath(kind, meta.slug)} locale={meta.language} target="_blank" className="text-xs text-blue-600 underline-offset-2 hover:underline dark:text-blue-400">
               {tEditor("viewPublic")}
             </Link>
           )}
@@ -427,6 +452,7 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
           )}
 
           <BlogSeoSection
+            kind={kind}
             language={language}
             title={title}
             excerpt={excerpt}
@@ -498,6 +524,10 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
             )}
           </Card>
 
+          {kind === "Guide" && (
+            <GuideOptionsCard postId={postId} language={language} value={guide} onChange={edit(setGuide)} />
+          )}
+
           <Card className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{tSeo("scoreCard")}</span>
@@ -519,6 +549,8 @@ function BlogEditorForm({ initial, newPostSeed }: { initial: AdminBlogPost | nul
                   edit(setLanguage)(e.target.value as BlogLanguage);
                   // A translation link is a link to the other language; the language moved.
                   setTranslationOfPostId(null);
+                  // Related guides are in the post's own language; the language moved.
+                  setGuide((current) => ({ ...current, relatedPostIds: [] }));
                 }}
               >
                 <option value="tr">{t("language.tr")}</option>

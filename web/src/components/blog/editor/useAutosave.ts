@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AdminBlogPost, SaveBlogDraftRequest } from "@/types/api";
+import type { AdminBlogPost, BlogPostKind, SaveBlogDraftRequest } from "@/types/api";
 import { adminBlogApi } from "@/lib/api/blog";
 import { ApiError } from "@/lib/api/httpClient";
 import { hasDraftText } from "@/lib/blog/draftText";
@@ -22,6 +22,8 @@ interface UseAutosaveOptions {
   initialRevision: number;
   /** Everything the draft save carries, read at save time (never stale). */
   buildRequest: () => Omit<SaveBlogDraftRequest, "revision">;
+  /** What the first save creates — a blog post unless the editor was opened on a guide. */
+  kind?: BlogPostKind;
   /** The post the first save created — the caller takes its id and the URL from here. */
   onCreated: (post: AdminBlogPost) => void;
 }
@@ -50,7 +52,7 @@ export interface Autosave {
  * tick finds nothing to send and the machine returns to clean, so a "new post" that is opened
  * and abandoned leaves no row (2026-09-19).
  */
-export function useAutosave({ postId, initialRevision, buildRequest, onCreated }: UseAutosaveOptions): Autosave {
+export function useAutosave({ postId, initialRevision, buildRequest, onCreated, kind = "Blog" }: UseAutosaveOptions): Autosave {
   const [state, setState] = useState(() => initialAutosaveState(initialRevision));
   // The reducer is applied eagerly onto a ref, so a continuation that runs right after an awaited
   // save (flush) reads the post-save state without waiting for React to re-render.
@@ -96,6 +98,8 @@ export function useAutosave({ postId, initialRevision, buildRequest, onCreated }
               language: fields.language,
               slug: fields.slug,
               translationOfPostId: fields.translationOfPostId,
+              guide: fields.guide,
+              kind,
             })
             .then((post) => {
               postIdRef.current = post.id;
@@ -121,7 +125,7 @@ export function useAutosave({ postId, initialRevision, buildRequest, onCreated }
       });
     inFlight.current = request;
     return request;
-  }, [dispatch]);
+  }, [dispatch, kind]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
