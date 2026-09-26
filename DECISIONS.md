@@ -9721,3 +9721,15 @@ atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test et
   `update-traffic --to-latest` eklendi, yoksa sabitlemeden sonraki deploy trafik almazdı.
   Migration geri alınmaz; güvenlik DEPLOYMENT.md'deki "expand, then contract" kuralına bağlı.
   `deploy/*-latest` tag'leri yerinde kalır. Runbook: DEPLOYMENT.md "Rolling back a bad deploy".
+- **Kapanan host'un FusionCache'i dispose edilmiyordu (2026-09-26, düzeltildi):** crash log'daki
+  ~270 `ObjectDisposedException: MemoryCache` kaydının kaynağı. `AsHybridCache()` FusionCache'i
+  `HybridCache` adaptörünün kendi factory'sinde kuruyor; adaptör `IDisposable` değil ve uygulama
+  yalnızca `HybridCache` çözdüğü için container FusionCache'i hiç dispose etmiyordu. Kapanan
+  host'un Redis backplane bağlantısı ve aboneliği süreç boyunca açık kalıyor, aynı kanaldaki
+  sonraki mesajlar dispose edilmiş MemoryCache'e düşüyordu (testlerde: rate-limit testlerinin
+  standalone host'ları, tek sınıfta 81 kayıt; prod'da: kapanışta kapanmayan bir bağlantı).
+  `HybridCache` artık container'ın `IFusionCache` singleton'ı üzerinden kaydediliyor
+  (`new FusionHybridCache(sp.GetRequiredService<IFusionCache>())`); container onu, bağlı olduğu
+  MemoryCache'ten önce dispose ediyor. `A_Stopped_Host_Receives_No_More_Backplane_Messages`
+  düzeltmeden önce kırmızı, sonra yeşil; tam koşuda kayıt 270 → 0. Kalan 3 kayıt "Redis kapalı"
+  testlerinin (`localhost:1`) SignalR abonelik hataları, beklenen.
