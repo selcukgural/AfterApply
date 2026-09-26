@@ -14,11 +14,16 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:35d40304542c8689331f8cab17c65926cdf48fe711e289321d71924b230a7d29 AS build
 WORKDIR /src
 COPY Directory.Build.props Directory.Packages.props ./
-COPY src/ src/
-RUN dotnet restore src/AfterApply.Api/AfterApply.Api.csproj
-
+# Project files first and restore on their own, like the API's Dockerfile: the restore layer then
+# survives any change that does not touch a package reference, and deploy.yml's layer cache reuses it.
+COPY src/AfterApply.Domain/AfterApply.Domain.csproj src/AfterApply.Domain/
+COPY src/AfterApply.Application/AfterApply.Application.csproj src/AfterApply.Application/
+COPY src/AfterApply.Infrastructure/AfterApply.Infrastructure.csproj src/AfterApply.Infrastructure/
+COPY src/AfterApply.Api/AfterApply.Api.csproj src/AfterApply.Api/
 RUN dotnet tool install --global dotnet-ef --version 10.0.11
 ENV PATH="$PATH:/root/.dotnet/tools"
+RUN dotnet restore src/AfterApply.Api/AfterApply.Api.csproj
+COPY src/ src/
 
 # `migrations bundle` only reads the compiled model/migrations via
 # AppDbContextFactory — it never opens a connection — so this placeholder

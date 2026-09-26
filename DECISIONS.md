@@ -9692,5 +9692,24 @@ atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test et
   - Postgres `max_connections` 300 → 500. CI bütçesi 240 → 150 sn, job timeout 15 → 10 dk.
   - Crash log'daki ~270 `ObjectDisposedException: MemoryCache` (kapanmış host'a gelen backplane
     mesajı) paralellikten önce de vardı ve testleri etkilemiyor; ayrı iş.
-- **Sıradaki adımlar:** imajları testlerle paralel build etmek, Cloud Run revision'ına geri alma
-  workflow'u.
+- **Doğrulanmış ağaç, zamanlama düzeltmesi:** #149'un kendi deploy'unda işaret bulunamadı ve
+  testler tam koştu. İşaret run'ın son job'ı olduğu için zorunlu check'ler yeşile döndükten
+  30-40 sn sonra yükleniyor; PR o anda merge edilince `plan` ondan önce bakıyordu. Arama artık
+  önce aynı ağacı test eden PR run'ını buluyor, bitmesini en fazla 3 dk bekliyor, sonra o run'ın
+  işaretini istiyor. #149'un merge commit'inde `verified=true`, #148'inkinde (işaret yokken)
+  `verified=false` verdiği lokalde gerçek API ile denendi.
+- **İmajlar testlerle paralel build ediliyor.** `build-backend` (API + migration, matrix) ve
+  `build-web` sadece `plan`'ı bekliyor; imajları commit SHA'sıyla push ediyor ama deploy
+  etmiyor. Deploy job'ları kapılardan ve kendi build job'undan sonra hazır imajı deploy ediyor.
+  Web build'i ayrı job: bozulursa backend hotfix'ini tutmaz. Katman cache'i GitHub Actions
+  cache'inde, imaj başına bir scope (buildx `type=gha`). `Dockerfile.migrate` artık önce
+  csproj'ları kopyalayıp restore ediyor (API Dockerfile'ı gibi). Kırmızı bir koşu Artifact
+  Registry'de kullanılmayan bir imaj bırakır, başka bir şey değil.
+- **İlk ölçüm (#150'nin deploy'u, 2026-09-26):** doğrulanmış ağaç yolu çalıştı; testler ve
+  contract-check atlandı, deploy 4 dk 46 sn (önce ~17 dk). Aynı akşam #149 ve #150'nin deploy'ları
+  üst üste bindi: #149'unki tag'i `d9f012b`'ye taşıyamadı (GitHub reddetti; o sırada main zaten
+  `c61018e`'deydi), iki Cloud Run deploy'u ve iki migration aynı anda koştu. Zararsız bitti (son
+  deploy'u yeni commit yaptı) ama sıra tersine dönebilirdi. `deploy.yml`'ye `concurrency`
+  (iptalsiz, sıralı) eklendi: bir deploy koşarken gelen push bekler; bekleyen varken gelen daha yeni
+  push onun yerini alır, yani her zaman en yeni main deploy edilir.
+- **Sıradaki adım:** Cloud Run revision'ına geri alma workflow'u.
