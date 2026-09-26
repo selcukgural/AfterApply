@@ -23,7 +23,6 @@ namespace AfterApply.IntegrationTests.Admin;
 /// row per day behind. Before 2026-09-07 the job computed these numbers and wrote them only to a log
 /// line, so nothing could be compared against last week — see DEVELOPMENT_PLAN.md, K5.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class AdminMetricsTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private const string AdminEmail = "admin.metrics@ekariyerim.com";

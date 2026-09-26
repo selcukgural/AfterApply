@@ -36,7 +36,6 @@ public sealed class AdminContributionProfile : IHostProfile
 /// delete removes the row for everyone at once and leaves the usual request-audit trail. Also
 /// pins the moderation queue's new order — newest first — and the shared page size.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class AdminContributionTests(ApiHost<AdminContributionProfile> host) : IClassFixture<ApiHost<AdminContributionProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

@@ -41,14 +41,42 @@ namespace AfterApply.IntegrationTests;
 /// The template also carries Hangfire's schema, so a host booting on a clone finds it installed
 /// and runs no DDL.
 ///
-/// This deliberately does not touch parallelism. Every class lives in one xunit collection, so they
-/// still run strictly one at a time, and xunit.runner.json keeps maxParallelThreads at 1. The
-/// DOP&gt;1 experiment that was tried and reverted (DECISIONS.md, 2026-09-01) failed on Hangfire jobs
-/// missing their polling deadlines under CPU contention; those deadlines no longer exist (jobs run
-/// inline, see InlineBackgroundJobs), so that experiment can be rerun — separately, measured.
+/// Since 2026-09-26 the classes run in parallel (xunit.runner.json), which is safe because nothing
+/// here is shared between classes but the servers themselves: each class has its own clone, Redis
+/// database and backplane channel. That is also why this is a process-wide instance
+/// (<see cref="GetAsync" />) rather than a collection fixture — xunit v2 has no assembly fixture,
+/// and a collection fixture only reaches the classes of its one collection, which ran serially.
+/// The DOP&gt;1 experiment reverted on 2026-09-01 failed on Hangfire polling deadlines under CPU
+/// contention; those no longer exist (jobs run inline, see InlineBackgroundJobs). The few classes
+/// that touch process-wide state stay serial (<see cref="SerialTestCollection" />).
 /// </summary>
-public sealed class SharedInfrastructure : IAsyncLifetime
+public sealed class SharedInfrastructure
 {
+    private static readonly Lazy<Task<SharedInfrastructure>> Instance = new(StartAsync);
+
+    /// <summary>The run's containers, started by whichever class asks first; every other caller
+    /// awaits the same start.</summary>
+    public static Task<SharedInfrastructure> GetAsync() => Instance.Value;
+
+    private static async Task<SharedInfrastructure> StartAsync()
+    {
+        var shared = new SharedInfrastructure();
+        await shared.InitializeAsync();
+
+        // No assembly-level teardown hook in xunit v2, so the containers are stopped when the test
+        // process exits. ProcessExit handlers are synchronous and this is the last thing the process
+        // does, hence the block (the async-policy exception for shutdown paths). Ryuk, or on podman
+        // TestContainerCleanup's prune and the script's trap, still catch a process that is killed.
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+            shared.DisposeAsync().Wait(TimeSpan.FromSeconds(20));
+
+        return shared;
+    }
+
+    private SharedInfrastructure()
+    {
+    }
+
     // Cloned by every caller, never connected to once it is built. Postgres refuses to use a
     // database as a template while anything else holds a connection to it.
     private const string TemplateDatabase = "aa_template";
@@ -58,14 +86,15 @@ public sealed class SharedInfrastructure : IAsyncLifetime
     // immediately ("53300: sorry, too many clients already"): a test can run up to three
     // WebApplicationFactories, each with an Npgsql pool and a Hangfire server holding connections
     // for its workers, watchdogs and distributed locks. Headroom is the cheap half of the fix;
-    // MaxPoolSize and ClearAllPools below are the half that actually bounds it.
+    // MaxPoolSize and ClearAllPools below are the half that actually bounds it. 500 since classes
+    // run in parallel (2026-09-26): several classes' pools are open at once instead of one.
     //
     // Only the flags, no leading "postgres": the image's docker-entrypoint.sh prepends the binary
     // itself whenever the command starts with a dash. Passing it explicitly makes the entrypoint
     // run `postgres postgres -c ...`, which exits with `invalid argument: "postgres"` before the
     // server ever listens.
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
-        .WithCommand("-c", "max_connections=300")
+        .WithCommand("-c", "max_connections=500")
         .Build();
 
     // Stock Redis ships 16 databases; one per class (~60 hosts) needs more. Database 0 is never
@@ -82,7 +111,7 @@ public sealed class SharedInfrastructure : IAsyncLifetime
 
     private int _nextDatabaseIndex = -1;
 
-    public async Task InitializeAsync()
+    private async Task InitializeAsync()
     {
         await Task.WhenAll(_postgres.StartAsync(), _redis.StartAsync());
         _redisAdmin = await ConnectionMultiplexer.ConnectAsync($"{_redis.GetConnectionString()},allowAdmin=true");
@@ -112,7 +141,7 @@ public sealed class SharedInfrastructure : IAsyncLifetime
         NpgsqlConnection.ClearAllPools();
     }
 
-    public async Task DisposeAsync()
+    private async Task DisposeAsync()
     {
         await _redisAdmin.DisposeAsync();
         await Task.WhenAll(_postgres.DisposeAsync().AsTask(), _redis.DisposeAsync().AsTask());
@@ -286,13 +315,14 @@ public sealed record IsolatedStores(string Postgres, string DatabaseName, string
 }
 
 /// <summary>
-/// Every integration test class belongs to this collection, which is what makes the container
-/// above start once for the whole assembly rather than once per test. It also means the classes run
-/// strictly sequentially — the behaviour maxParallelThreads=1 already gave, now expressed
-/// structurally as well.
+/// The classes that must not overlap with anything else: they start a real Hangfire server, count
+/// connections, or depend on process-wide statics (the garbage collector's view of the hosts,
+/// Hangfire's JobStorage.Current). xunit runs a collection with parallelization disabled on its
+/// own, after the parallel ones. Joining it takes a one-line comment saying why — every class
+/// here makes the run a little longer.
 /// </summary>
-[CollectionDefinition(Name)]
-public sealed class IntegrationTestCollection : ICollectionFixture<SharedInfrastructure>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class SerialTestCollection
 {
-    public const string Name = "integration";
+    public const string Name = "serial";
 }

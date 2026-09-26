@@ -18,7 +18,6 @@ namespace AfterApply.IntegrationTests.Payments;
 /// say OK and when we do not), idempotency on merchant_oid, and that the entitlement moves only
 /// on a verified success.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class PayTrCallbackTests(ApiHost<PaymentProfile> host) : IClassFixture<ApiHost<PaymentProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;

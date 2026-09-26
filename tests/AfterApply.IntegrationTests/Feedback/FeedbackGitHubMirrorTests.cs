@@ -48,7 +48,6 @@ public sealed class FeedbackGitHubMirrorProfile : IHostProfile
 /// copies a redacted version of the stored row into an issue. The database row stays canonical —
 /// these tests exist mostly to pin what does and does not cross that boundary.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class FeedbackGitHubMirrorTests(ApiHost<FeedbackGitHubMirrorProfile> host) : IClassFixture<ApiHost<FeedbackGitHubMirrorProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

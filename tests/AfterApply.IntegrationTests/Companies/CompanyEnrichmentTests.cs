@@ -44,7 +44,6 @@ public sealed class CompanyEnrichmentProfile : IHostProfile
     public void Reset() => Handler.Clear();
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class CompanyEnrichmentTests(ApiHost<CompanyEnrichmentProfile> host) : IClassFixture<ApiHost<CompanyEnrichmentProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

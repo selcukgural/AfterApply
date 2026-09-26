@@ -29,14 +29,16 @@ namespace AfterApply.IntegrationTests.Configuration;
 /// blocking xunit's single worker thread inside <c>host.Start()</c>; it is async now, and its
 /// storage read is bounded so a stall fails in seconds with a message rather than never.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class PostgresPoolCapTests(SharedInfrastructure shared) : IAsyncLifetime
+// Serial: a real Hangfire server under a five-connection cap, with bounded waits; CPU contention
+// from parallel classes is what once turned this class's waits into timeouts.
+[Collection(SerialTestCollection.Name)]
+public class PostgresPoolCapTests : IAsyncLifetime
 {
     private CappedFactory? _factory;
 
     public async Task InitializeAsync()
     {
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(PostgresPoolCapTests));
+        var stores = await (await SharedInfrastructure.GetAsync()).CreateIsolatedStoresAsync(nameof(PostgresPoolCapTests));
         _factory = new CappedFactory(stores);
     }
 

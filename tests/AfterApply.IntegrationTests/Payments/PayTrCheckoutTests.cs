@@ -10,7 +10,6 @@ using Shouldly;
 namespace AfterApply.IntegrationTests.Payments;
 
 /// <summary>Step 1 of the PayTR iFrame flow: the pending order and the token request.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class PayTrCheckoutTests(ApiHost<PaymentProfile> host) : IClassFixture<ApiHost<PaymentProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;
@@ -237,7 +236,6 @@ public class PayTrCheckoutTests(ApiHost<PaymentProfile> host) : IClassFixture<Ap
 
 /// <summary>With the switch off (or the secrets missing) nothing of the checkout is observable —
 /// except the notification endpoint, which only needs the secrets.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class PayTrFlagOffTests(ApiHost<PayTrFlagOffProfile> host) : IClassFixture<ApiHost<PayTrFlagOffProfile>>, IAsyncLifetime
 {
     private PaymentTestHost _host = null!;

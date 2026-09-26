@@ -40,7 +40,6 @@ public sealed class ContributionNotificationProfile() : LocalStorageProfile("con
 /// is the author's alone, it goes quiet when its target leaves the page, and the account's delete,
 /// export and the purge job all know about it. Plus the new salary/experience helpful toggles.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class ContributionNotificationTests(ApiHost<ContributionNotificationProfile> host)
     : IClassFixture<ApiHost<ContributionNotificationProfile>>, IAsyncLifetime
 {

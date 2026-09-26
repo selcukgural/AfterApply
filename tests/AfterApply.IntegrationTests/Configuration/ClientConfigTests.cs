@@ -32,7 +32,6 @@ public sealed class ClientConfigProfile : IHostProfile
     }
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class ClientConfigTests(ApiHost<ClientConfigProfile> host) : IClassFixture<ApiHost<ClientConfigProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

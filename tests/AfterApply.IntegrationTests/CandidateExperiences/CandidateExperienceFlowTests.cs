@@ -30,7 +30,6 @@ public sealed class CandidateExperienceFlowProfile : IHostProfile
 /// account, the total quota holds and deleting frees it, other people's rows are 404 to edit,
 /// the aggregates appear only at the threshold, and the public company page counts entries.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CandidateExperienceFlowTests(ApiHost<CandidateExperienceFlowProfile> host)
     : IClassFixture<ApiHost<CandidateExperienceFlowProfile>>, IAsyncLifetime
 {

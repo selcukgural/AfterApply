@@ -27,7 +27,6 @@ public sealed class SectorResponseRatesProfile : IHostProfile
     }
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class SectorResponseRatesTests(ApiHost<SectorResponseRatesProfile> host)
     : IClassFixture<ApiHost<SectorResponseRatesProfile>>, IAsyncLifetime
 {

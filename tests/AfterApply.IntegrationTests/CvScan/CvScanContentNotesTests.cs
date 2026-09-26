@@ -22,7 +22,6 @@ namespace AfterApply.IntegrationTests.CvScan;
 /// quality of the model's output is a separate question, answered by the eval harness rather than
 /// by a test that would have to call a paid API to run.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CvScanContentNotesTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

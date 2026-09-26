@@ -116,7 +116,6 @@ public sealed class FakeScoringProvider : IJobFitScoringProvider
 /// and the ledger survives the account. The model is the one thing faked — everything from the
 /// CV bytes to the API response is real.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class JobFitScoringTests(ApiHost<JobFitScoringProfile> host) : IClassFixture<ApiHost<JobFitScoringProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

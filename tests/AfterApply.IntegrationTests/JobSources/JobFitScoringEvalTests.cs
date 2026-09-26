@@ -40,8 +40,7 @@ namespace AfterApply.IntegrationTests.JobSources;
 /// the sanity assertion at the end compares "off" against "own"). Nothing from the corpus
 /// or the CV is committed: both are personal or third-party text and live outside the repo.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class JobFitScoringEvalTests(SharedInfrastructure shared, ITestOutputHelper output)
+public class JobFitScoringEvalTests(ITestOutputHelper output)
 {
     private const string EnvironmentSwitch = "JOB_FIT_EVAL";
 
@@ -77,7 +76,7 @@ public class JobFitScoringEvalTests(SharedInfrastructure shared, ITestOutputHelp
 
         // A real database for the same reason CvReviewEvalTests needs one: the host opens a
         // connection for Hangfire at startup before a single test line runs.
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(JobFitScoringEvalTests));
+        var stores = await (await SharedInfrastructure.GetAsync()).CreateIsolatedStoresAsync(nameof(JobFitScoringEvalTests));
         var rows = new List<Row>();
         string cvText;
 

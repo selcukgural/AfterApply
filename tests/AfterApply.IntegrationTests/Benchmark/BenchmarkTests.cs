@@ -25,7 +25,6 @@ public sealed class BenchmarkProfile : IHostProfile
 /// The public benchmark, end to end. The threshold is set to three for these tests so the rule that
 /// matters — nothing is compared below it — can be crossed in a few requests rather than thirty.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class BenchmarkTests(ApiHost<BenchmarkProfile> host) : IClassFixture<ApiHost<BenchmarkProfile>>, IAsyncLifetime
 {
     internal const int Threshold = 3;

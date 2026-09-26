@@ -32,7 +32,6 @@ public sealed class SilenceReportProfile : IHostProfile
 /// X-Forwarded-For — under the in-memory server there is no TCP connection, so this is how the
 /// per-address rate limit and repeat block are exercised, as in RequestAuditTests.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class SilenceReportTests(ApiHost<SilenceReportProfile> host) : IClassFixture<ApiHost<SilenceReportProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

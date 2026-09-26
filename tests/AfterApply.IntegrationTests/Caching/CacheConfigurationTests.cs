@@ -28,7 +28,6 @@ namespace AfterApply.IntegrationTests.Caching;
 /// health check that reports Redis as Degraded rather than Unhealthy. The cross-instance
 /// behaviour — the reason for all of it — is in <see cref="CrossInstanceInvalidationTests" />.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CacheConfigurationTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

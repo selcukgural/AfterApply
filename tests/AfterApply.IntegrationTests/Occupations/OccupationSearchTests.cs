@@ -24,7 +24,6 @@ public sealed class OccupationSearchProfile : IHostProfile
 /// <summary>The catalogue typeahead against the seeded rows: both languages match whatever was
 /// typed, Turkish i-variants fold, prefixes rank first, short queries answer empty, retired rows
 /// are gone, and reading needs an account.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class OccupationSearchTests(ApiHost<OccupationSearchProfile> host) : IClassFixture<ApiHost<OccupationSearchProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

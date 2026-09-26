@@ -15,7 +15,6 @@ namespace AfterApply.IntegrationTests.Applications;
 /// The two answers the status panel and the application page collect — the company's promised
 /// reply date and how a rejection was learned of — through the real endpoints and database.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class ReplyPromiseAndRejectionNoticeTests(ApiHost<DefaultProfile> host)
     : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {

@@ -14,9 +14,10 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
-    # The whole job, restore-to-tests, took ~9 minutes before 2026-09-15 and the suite alone ~2
-    # minutes after; anything past this is a hang, not a slow run.
-    timeout-minutes: 15
+    # The whole job, restore-to-tests, took ~9 minutes before 2026-09-15 and ~10 again by
+    # 2026-09-26; with classes in parallel the suite is well under two minutes. Anything past this
+    # is a hang, not a slow run.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
@@ -49,7 +50,7 @@ jobs:
       # warning on the run rather than going unnoticed until a hotfix has to wait for it.
       - name: Integration tests
         env:
-          BUDGET_SECONDS: "240"
+          BUDGET_SECONDS: "150"
         run: |
           start=$(date +%s)
           dotnet test tests/AfterApply.IntegrationTests --no-build --configuration Release \

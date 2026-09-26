@@ -57,7 +57,6 @@ public sealed class EmailSignalProfile : IHostProfile
 // /api/email-forwarding/extension-signal, the app's only email-signal intake since the earlier
 // forward-all-inbox-to-us design was removed — see DECISIONS.md) and the provider-agnostic
 // suggestion-review/notification routes it feeds.
-[Collection(IntegrationTestCollection.Name)]
 public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<ApiHost<EmailSignalProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

@@ -33,7 +33,6 @@ public sealed class CompanyIntelligenceProfile : IHostProfile
     }
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class CompanyIntelligenceTests(ApiHost<CompanyIntelligenceProfile> host) : IClassFixture<ApiHost<CompanyIntelligenceProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

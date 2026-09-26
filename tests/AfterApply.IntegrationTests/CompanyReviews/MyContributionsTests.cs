@@ -29,7 +29,6 @@ public sealed class MyContributionsProfile : IHostProfile
 /// <summary>GET /api/contributions/mine: the author's reviews, salary entries and candidate
 /// experiences as one newest-first page, each item carrying exactly one per-kind record, with
 /// the three quotas; another account's rows are never in it.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class MyContributionsTests(ApiHost<MyContributionsProfile> host) : IClassFixture<ApiHost<MyContributionsProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

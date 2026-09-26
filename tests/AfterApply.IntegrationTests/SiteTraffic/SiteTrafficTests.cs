@@ -17,7 +17,6 @@ namespace AfterApply.IntegrationTests.SiteTraffic;
 /// that the endpoint takes no credentials at all, and that a repeat of the same visit lands on the
 /// same row instead of a second one — the ON CONFLICT upsert and the unique index agreeing.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class SiteTrafficTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

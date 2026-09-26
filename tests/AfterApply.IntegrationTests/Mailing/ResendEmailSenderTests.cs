@@ -45,7 +45,6 @@ public sealed class ResendEmailSenderProfile : IHostProfile
 /// out entirely) — proves the EmailTemplates table rows are actually read, the right locale is
 /// picked, and "{{ResetLink}}" gets substituted, by capturing the outbound HTTP call instead of the
 /// send itself.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class ResendEmailSenderTests(ApiHost<ResendEmailSenderProfile> host) : IClassFixture<ApiHost<ResendEmailSenderProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

@@ -43,7 +43,6 @@ public sealed class BlogProfile() : LocalStorageProfile("blog")
 /// slug rules, public reading that never answers 401, likes, images whose visibility follows
 /// their post, the config flag, cache eviction across instances and the feature switch.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

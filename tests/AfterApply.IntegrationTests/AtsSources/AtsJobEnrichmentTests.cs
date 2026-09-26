@@ -43,7 +43,6 @@ public sealed class AtsEnrichmentProfile : IHostProfile
     public void Reset() => Handler.Clear();
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class AtsJobEnrichmentTests(ApiHost<AtsEnrichmentProfile> host) : IClassFixture<ApiHost<AtsEnrichmentProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
@@ -210,7 +209,6 @@ public sealed class AtsEnrichmentFlagOffProfile : IHostProfile
     public void Reset() => Handler.Clear();
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class AtsJobEnrichmentFlagOffTests(ApiHost<AtsEnrichmentFlagOffProfile> host)
     : IClassFixture<ApiHost<AtsEnrichmentFlagOffProfile>>, IAsyncLifetime
 {

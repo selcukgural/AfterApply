@@ -17,7 +17,6 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Notifications;
 
-[Collection(IntegrationTestCollection.Name)]
 public class ReminderTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

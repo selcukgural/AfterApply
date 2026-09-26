@@ -50,7 +50,6 @@ public sealed class JobSourceStopProfile : IHostProfile
     }
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class JobSourceStopTests(ApiHost<JobSourceStopProfile> host) : IClassFixture<ApiHost<JobSourceStopProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

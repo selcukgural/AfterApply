@@ -32,7 +32,6 @@ public sealed class CompanyDirectoryProfile : IHostProfile
 /// counts, and the company that got a contribution most recently comes first. The sitemap's slug
 /// list follows the same rule minus salaries, which a crawler cannot read.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CompanyDirectoryTests(ApiHost<CompanyDirectoryProfile> host) : IClassFixture<ApiHost<CompanyDirectoryProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

@@ -18,7 +18,6 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Documents;
 
-[Collection(IntegrationTestCollection.Name)]
 public class CvDocumentFlowTests(ApiHost<LocalStorageProfile> host) : IClassFixture<ApiHost<LocalStorageProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

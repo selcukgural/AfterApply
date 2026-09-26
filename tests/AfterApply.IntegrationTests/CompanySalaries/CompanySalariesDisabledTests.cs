@@ -29,7 +29,6 @@ public sealed class CompanySalariesDisabledProfile : IHostProfile
 
 /// <summary>CompanySalaries:Enabled=false — the feature deployed dark. Every salary route is a 404,
 /// the public company page reports zero entries, and /api/config says so. Reviews are unaffected.</summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CompanySalariesDisabledTests(ApiHost<CompanySalariesDisabledProfile> host) : IClassFixture<ApiHost<CompanySalariesDisabledProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

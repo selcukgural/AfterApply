@@ -16,7 +16,6 @@ namespace AfterApply.IntegrationTests.Applications;
 /// it links out to. The property under test throughout is that the two views never disagree about
 /// which applications exist — only about how they are counted and drawn.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class CompanyGroupingTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

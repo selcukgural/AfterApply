@@ -41,7 +41,6 @@ public sealed class GoogleSignInProfile : IHostProfile
     public void Reset() => Google.Exchanges.Clear();
 }
 
-[Collection(IntegrationTestCollection.Name)]
 public class GoogleSignInTests(ApiHost<GoogleSignInProfile> host) : IClassFixture<ApiHost<GoogleSignInProfile>>, IAsyncLifetime
 {
     private const string ClientId = GoogleSignInProfile.ClientId;

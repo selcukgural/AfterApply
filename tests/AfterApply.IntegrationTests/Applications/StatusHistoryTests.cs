@@ -11,7 +11,6 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Applications;
 
-[Collection(IntegrationTestCollection.Name)]
 public class StatusHistoryTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

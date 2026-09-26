@@ -32,7 +32,6 @@ public sealed class ExperienceInviteProfile : IHostProfile
 /// applications it lists, when, how many, and what takes one off — rating the company,
 /// dismissing it — plus ownership and the account export.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class ExperienceInviteTests(ApiHost<ExperienceInviteProfile> host)
     : IClassFixture<ApiHost<ExperienceInviteProfile>>, IAsyncLifetime
 {

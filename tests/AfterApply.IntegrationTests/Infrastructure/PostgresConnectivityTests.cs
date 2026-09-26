@@ -8,13 +8,12 @@ namespace AfterApply.IntegrationTests.Infrastructure;
 // failing for the same reason and their output is noise. Uses the shared server like everything
 // else — starting a container of its own just to prove a connection works would be the exact cost
 // SharedInfrastructure exists to remove.
-[Collection(IntegrationTestCollection.Name)]
-public class PostgresConnectivityTests(SharedInfrastructure shared)
+public class PostgresConnectivityTests
 {
     [Fact]
     public async Task AppDbContext_Can_Connect_To_Postgres()
     {
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(PostgresConnectivityTests));
+        var stores = await (await SharedInfrastructure.GetAsync()).CreateIsolatedStoresAsync(nameof(PostgresConnectivityTests));
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(stores.Postgres)

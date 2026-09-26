@@ -14,7 +14,6 @@ using Shouldly;
 
 namespace AfterApply.IntegrationTests.Analytics;
 
-[Collection(IntegrationTestCollection.Name)]
 public class AnalyticsOverviewTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

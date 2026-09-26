@@ -31,7 +31,6 @@ public sealed class BlogCommentProfile() : LocalStorageProfile("blog-comments")
 /// page, the author-only pending view and edit window, one-level replies, the helpful toggle,
 /// reports, the admin queue, the contributions list, the export and the rate limit.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class BlogCommentTests(ApiHost<BlogCommentProfile> host) : IClassFixture<ApiHost<BlogCommentProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

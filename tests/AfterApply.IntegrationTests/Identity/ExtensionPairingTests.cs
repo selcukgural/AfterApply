@@ -30,7 +30,6 @@ public sealed class ExtensionPairingProfile : IHostProfile
 /// hand a token to a poll that was never confirmed, hand one out twice, let an extension-scoped
 /// token confirm its own successor, or accept a code after it has expired.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class ExtensionPairingTests(ApiHost<ExtensionPairingProfile> host) : IClassFixture<ApiHost<ExtensionPairingProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

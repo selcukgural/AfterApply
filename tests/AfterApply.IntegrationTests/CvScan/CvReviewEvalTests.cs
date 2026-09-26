@@ -29,8 +29,7 @@ namespace AfterApply.IntegrationTests.CvScan;
 /// unshippable rather than merely disappointing — a fabricated quote, and a clean CV covered in
 /// complaints.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
-public class CvReviewEvalTests(SharedInfrastructure shared, ITestOutputHelper output)
+public class CvReviewEvalTests(ITestOutputHelper output)
 {
     private const string EnvironmentSwitch = "CV_REVIEW_EVAL";
 
@@ -54,7 +53,7 @@ public class CvReviewEvalTests(SharedInfrastructure shared, ITestOutputHelper ou
         // Hangfire's recurring jobs at startup (Program.cs), which opens a connection before a
         // single test line runs. A fake connection string got as far as
         // "role \"unused\" does not exist" and no further.
-        var stores = await shared.CreateIsolatedStoresAsync(nameof(CvReviewEvalTests));
+        var stores = await (await SharedInfrastructure.GetAsync()).CreateIsolatedStoresAsync(nameof(CvReviewEvalTests));
 
         await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {

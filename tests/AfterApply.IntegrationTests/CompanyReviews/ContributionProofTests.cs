@@ -27,7 +27,6 @@ namespace AfterApply.IntegrationTests.CompanyReviews;
 /// and in every case the application must have been recorded here at least 14 days before the
 /// contribution — measured on the server's own timestamps, never on the dates the client sends.
 /// </summary>
-[Collection(IntegrationTestCollection.Name)]
 public class ContributionProofTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;

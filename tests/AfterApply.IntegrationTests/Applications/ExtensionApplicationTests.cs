@@ -18,7 +18,6 @@ namespace AfterApply.IntegrationTests.Applications;
 // resolution via the existing resolvers, the FullTime EmploymentType default (same known
 // limitation as generic CSV import, DECISIONS.md Sprint 4), and same-JobUrl dedup returning the
 // existing row instead of creating a duplicate when the button is effectively clicked twice.
-[Collection(IntegrationTestCollection.Name)]
 public class ExtensionApplicationTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiHost<DefaultProfile>>, IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = ApiHost.JsonOptions;
