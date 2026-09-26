@@ -3,7 +3,7 @@ import { cvScanPath } from "@/lib/cvScan/path";
 import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { GUIDE_PATH } from "@/lib/guide/articles";
+import { GUIDE_PATH } from "@/lib/guide/guideLinks";
 
 /**
  * The 404 page, in the visitor's language and inside the site's chrome. Reached through

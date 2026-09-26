@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { pageMetadata } from "@/lib/seo/pageMetadata";
 import { CompanyDirectory } from "@/components/companyReviews/CompanyDirectory";
-import { guidePath } from "@/lib/guide/articles";
+import { guidePath } from "@/lib/guide/guideLinks";
 import { LandingIcon, type LandingIcon as LandingIconName } from "@/components/landing/landingIcons";
 
 /** What a first-time visitor needs before the search box: what a review holds, and the two promises. */

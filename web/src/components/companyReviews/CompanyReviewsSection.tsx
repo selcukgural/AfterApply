@@ -9,7 +9,7 @@ import { companiesApi } from "@/lib/api/companies";
 import { companyReviewsApi } from "@/lib/api/companyReviews";
 import { ApiError } from "@/lib/api/httpClient";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { guidePath } from "@/lib/guide/articles";
+import { guidePath } from "@/lib/guide/guideLinks";
 import { contributeHref } from "@/lib/contribute/contributeState";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";

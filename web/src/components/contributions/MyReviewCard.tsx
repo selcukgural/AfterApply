@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import type { MyCompanyReview } from "@/types/api";
 import { companyReviewsApi } from "@/lib/api/companyReviews";
 import { ApiError } from "@/lib/api/httpClient";
-import { guidePath } from "@/lib/guide/articles";
+import { guidePath } from "@/lib/guide/guideLinks";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { StarRating } from "@/components/companyReviews/StarRating";

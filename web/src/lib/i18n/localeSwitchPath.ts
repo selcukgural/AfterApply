@@ -1,9 +1,10 @@
 import { aboutRedirectForPath } from "@/lib/about/path";
 import { cvScanRedirectForPath } from "@/lib/cvScan/path";
 import { flowCardRedirectForPath } from "@/lib/flowCard/path";
-import { guideRedirectForPath } from "@/lib/guide/articles";
+import { guideRedirectForPath } from "@/lib/guide/guideLinks";
 import { offerCompareRedirectForPath } from "@/lib/offerCompare/path";
 import { BLOG_PATH } from "@/lib/blog/blogPaths";
+import { GUIDE_PATH } from "@/lib/guide/guideLinks";
 
 /**
  * The pages whose slug differs per language, each able to say where a wrong-language spelling
@@ -37,8 +38,8 @@ function withoutLocale(pathname: string, locale: string): string | null {
  *    counterpart best, and it is the only way to find a blog post's translation, whose slug is
  *    its own;
  * 2. the translated-slug table above;
- * 3. a blog post with no linked translation goes to that language's blog index rather than to a
- *    slug that does not exist there;
+ * 3. a blog post or a guide with no linked translation goes to that language's index rather than
+ *    to a slug that does not exist there;
  * 4. every other path is the same in both languages.
  */
 export function localeSwitchPath(pathname: string, target: string, alternates: Record<string, string> = {}): string {
@@ -55,6 +56,7 @@ export function localeSwitchPath(pathname: string, target: string, alternates: R
   }
 
   if (new RegExp(`^${BLOG_PATH}/[^/]+/?$`).test(pathname)) return BLOG_PATH;
+  if (new RegExp(`^${GUIDE_PATH}/[^/]+/?$`).test(pathname)) return GUIDE_PATH;
   return pathname;
 }
 

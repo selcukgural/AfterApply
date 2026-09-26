@@ -358,7 +358,7 @@ internal sealed partial class BlogAdminService(
     {
         var post = await Visible(adminUserId)
             .Where(p => p.Id == postId)
-            .Select(p => new { p.Language, p.DraftTitle, p.DraftExcerpt, p.DraftContentHtml, p.Slug, p.PublishedAt, p.CoverMediaId })
+            .Select(p => new { p.Kind, p.Language, p.DraftTitle, p.DraftExcerpt, p.DraftContentHtml, p.Slug, p.PublishedAt, p.CoverMediaId })
             .FirstOrDefaultAsync(cancellationToken);
         if (post is null)
         {
@@ -377,7 +377,8 @@ internal sealed partial class BlogAdminService(
         return await seoSuggestions.SuggestAsync(new BlogSeoSuggestionRequest(
             post.Language, post.DraftTitle, post.DraftExcerpt, body,
             LockedSlug: post.PublishedAt is null ? null : post.Slug,
-            HasCover: post.CoverMediaId is not null), cancellationToken);
+            HasCover: post.CoverMediaId is not null,
+            Kind: post.Kind), cancellationToken);
     }
 
     [GeneratedRegex(@"\s+")]

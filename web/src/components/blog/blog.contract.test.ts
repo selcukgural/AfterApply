@@ -163,6 +163,20 @@ describe("the guide in the blog's editor (2026-09-26)", () => {
     expect(article).not.toContain("dangerouslySetInnerHTML");
   });
 
+  it("shows a guide's cover on the index the way the blog list does, and nothing where there is none", () => {
+    const index = read("app/[locale]/(public)/guide/page.tsx");
+    expect(index).toContain("{guide.coverImageUrl && (");
+    expect(index).toContain('src={guide.coverImageUrl}');
+  });
+
+  it("renders the live page with the same component as the preview, laying out nothing of its own", () => {
+    const page = read("app/[locale]/(public)/guide/[slug]/page.tsx");
+    expect(page).toContain("<GuideArticle post={guide} url={url} />");
+    expect(page).not.toContain("<h1");
+    expect(page).not.toContain("<BlogArticleBody");
+    expect(page).not.toContain("CommentSection");
+  });
+
   it("is previewed with its own component under the guide's section, never indexed", () => {
     expect(read("components/blog/BlogPreview.tsx")).toContain("<GuideArticle post={post} url={url} inert />");
     const route = read("app/[locale]/(public)/guide/preview/[id]/page.tsx");

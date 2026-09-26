@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import tr from "../../../messages/tr.json";
 import robots from "@/app/robots";
-import { blogSitemapEntries, companySitemapEntries, staticSitemapEntries } from "@/app/sitemap";
+import { blogSitemapEntries, companySitemapEntries, guideSitemapEntries, staticSitemapEntries } from "@/app/sitemap";
 import { routing } from "@/i18n/routing";
-import { GUIDE_ARTICLES, GUIDE_PATH, articlePath } from "@/lib/guide/articles";
+import { GUIDE_PATH } from "@/lib/guide/guideLinks";
 import { HELP_TOPICS, PROTECTED_PATHS, PUBLIC_PATHS, SITE_URL, alternateLanguages, disallowedPaths, pathFor } from "./routes";
 
 describe("disallowedPaths", () => {
@@ -159,62 +159,53 @@ describe("blog posts in the sitemap", () => {
   });
 });
 
-describe("guide articles in the sitemap", () => {
-  const entries = staticSitemapEntries();
-  const urls = entries.map((entry) => entry.url);
+describe("guide articles in the sitemap (2026-09-26: from the database)", () => {
+  const guides = [
+    {
+      language: "tr" as const,
+      slug: "basvurularim-nereye-gitti",
+      publishedAt: "2026-09-23T09:00:00Z",
+      updatedAt: "2026-09-23T09:00:00Z",
+      translation: { language: "en" as const, slug: "where-did-my-applications-go" },
+    },
+    {
+      language: "en" as const,
+      slug: "where-did-my-applications-go",
+      publishedAt: "2026-09-23T09:00:00Z",
+      updatedAt: "2026-09-23T09:00:00Z",
+      translation: { language: "tr" as const, slug: "basvurularim-nereye-gitti" },
+    },
+  ];
 
-  // Google's image sitemap extension: the picture is tied to the page that explains it, by its
-  // absolute URL, and nothing else in the sitemap claims one.
-  it("lists an article's own picture under that article, in its own locale, and nowhere else", () => {
-    const withImages = entries.filter((entry) => entry.images !== undefined);
-    const expected = GUIDE_ARTICLES.flatMap((article) =>
-      (["tr", "en"] as const)
-        .filter((locale) => article.copy[locale].image)
-        .map((locale) => ({
-          url: `${SITE_URL}/${locale}${articlePath(article, locale)}`,
-          images: [`${SITE_URL}${article.copy[locale].image!.src}`],
-        })),
-    );
-
-    expect(expected.length).toBeGreaterThan(0);
-    expect(withImages.map((entry) => ({ url: entry.url, images: entry.images }))).toEqual(expected);
-  });
-
-  it("gives the application-flow article its example card in each language", () => {
-    const tr = entries.find((entry) => entry.url === `${SITE_URL}/tr/guide/basvurularim-nereye-gitti`);
-    const en = entries.find((entry) => entry.url === `${SITE_URL}/en/guide/where-did-my-applications-go`);
-
-    expect(tr?.images).toEqual([`${SITE_URL}/guide/basvuru-akis-karti-ornegi.png`]);
-    expect(en?.images).toEqual([`${SITE_URL}/guide/job-application-flow-card-example.png`]);
-  });
-
-  it("lists the index and every article under its own locale's slug", () => {
+  it("keeps the index among the static pages, in both locales", () => {
+    const urls = staticSitemapEntries().map((entry) => entry.url);
     expect(urls).toContain(`${SITE_URL}/tr${GUIDE_PATH}`);
     expect(urls).toContain(`${SITE_URL}/en${GUIDE_PATH}`);
-
-    for (const article of GUIDE_ARTICLES) {
-      expect(urls).toContain(`${SITE_URL}/tr${articlePath(article, "tr")}`);
-      expect(urls).toContain(`${SITE_URL}/en${articlePath(article, "en")}`);
-    }
+    expect(urls.filter((url) => url.includes(`${GUIDE_PATH}/`))).toEqual([]);
   });
 
-  // The translated slug is the whole point of the LocalisedPath type: an article's Turkish entry
-  // has to declare the *English* slug as its `en` alternate, not its own slug under /en.
-  it("pairs the two locales' different slugs as each other's alternates", () => {
-    for (const article of GUIDE_ARTICLES) {
-      const entry = entries.find((candidate) => candidate.url === `${SITE_URL}/tr${articlePath(article, "tr")}`);
-      const languages = entry?.alternates?.languages as Record<string, string>;
-
-      expect(languages.en).toBe(`${SITE_URL}/en${articlePath(article, "en")}`);
-      expect(languages.tr).toBe(`${SITE_URL}/tr${articlePath(article, "tr")}`);
-      expect(languages["x-default"]).toBe(languages.tr);
-    }
+  it("lists every guide under its own language with the last publish as lastModified", () => {
+    const entries = guideSitemapEntries(guides);
+    expect(entries.map((entry) => entry.url)).toEqual([
+      `${SITE_URL}/tr/guide/basvurularim-nereye-gitti`,
+      `${SITE_URL}/en/guide/where-did-my-applications-go`,
+    ]);
+    expect(entries[0].lastModified).toEqual(new Date("2026-09-23T09:00:00Z"));
   });
 
-  it("never serves a Turkish slug under /en", () => {
-    for (const article of GUIDE_ARTICLES) {
-      expect(urls).not.toContain(`${SITE_URL}/en${articlePath(article, "tr")}`);
-    }
+  // The translated slug is the whole point: the Turkish entry names the *English* slug as its
+  // `en` alternate, not its own slug under /en.
+  it("pairs the two languages' different slugs as each other's alternates", () => {
+    const languages = guideSitemapEntries(guides)[0].alternates?.languages as Record<string, string>;
+    expect(languages).toEqual({
+      tr: `${SITE_URL}/tr/guide/basvurularim-nereye-gitti`,
+      en: `${SITE_URL}/en/guide/where-did-my-applications-go`,
+      "x-default": `${SITE_URL}/tr/guide/basvurularim-nereye-gitti`,
+    });
+  });
+
+  it("is empty when the API is not there, so the sitemap degrades rather than fails", () => {
+    expect(guideSitemapEntries([])).toEqual([]);
   });
 });
 
@@ -379,13 +370,13 @@ describe("share images", () => {
     expect(existsSync(path.join(process.cwd(), "src/app/[locale]/opengraph-image.tsx"))).toBe(false);
   });
 
-  // …unless the article has a picture of its own (the flow-card guide's example card, 2026-09-23):
-  // then that picture is the share image and the JSON-LD image both, never one of each.
+  // …unless the guide has a card-sized cover of its own: then the cover is the share image, the
+  // same rule as a blog post (2026-09-26).
   it("are the image the guide article's JSON-LD names, next to the Organization it references", () => {
     const page = read("src/app/[locale]/(public)/guide/[slug]/page.tsx");
     expect(page).toContain("organizationJsonLd()");
-    expect(page).toMatch(/image: `\$\{SITE_URL\}\$\{copy\.image\?\.src \?\? ogImagePath\(/);
-    expect(page).toMatch(/image: \{ url: `\$\{SITE_URL\}\$\{image\.src\}`/);
+    expect(page).toContain('ogImagePath(locale, guide.title, tSection("guide.title"))');
+    expect(page).toContain("coverIsShareImage(coverSize)");
   });
 });
 
@@ -394,22 +385,24 @@ describe("a guide slug under the wrong locale prefix", () => {
 
   // Search Console listed /tr/guide/<english slug> and /en/guide/<turkish slug> as 404s. The
   // proxy answers them (and the locale-less /guide/<slug>) with a permanent redirect before the
-  // page runs. Not the page: the article pages are static, and a redirect() from inside one is
-  // "Page changed from static to dynamic at runtime" — a 500 in production (2026-09-16).
-  it("is redirected by the proxy, and the static page never redirects itself", () => {
+  // page runs — for the guides that were files, whose addresses are in GUIDE_LINKS.
+  it("is redirected by the proxy, not by the page", () => {
     const proxy = read("src/proxy.ts");
     expect(proxy).toContain("guideRedirectForPath(request.nextUrl.pathname)");
     expect(proxy).toMatch(/NextResponse\.redirect\(new URL\(`\$\{guideUrl\}\$\{request\.nextUrl\.search\}`, request\.url\), 301\)/);
 
     const page = read("src/app/[locale]/(public)/guide/[slug]/page.tsx");
     expect(page).not.toMatch(/permanentRedirect|redirect\(/);
-    expect(page).not.toContain("force-dynamic");
   });
 
-  // An unknown slug used to be rendered on demand and hit notFound() inside a static page — the
-  // same static-to-dynamic error, so a typo in a guide URL was a 500 rather than a 404.
-  it("makes an unknown slug a 404 before the static page runs", () => {
-    const page = read("src/app/[locale]/(public)/guide/[slug]/page.tsx");
-    expect(page).toContain("export const dynamicParams = false;");
-  });
+  // Since 2026-09-26 the guide is read per request, like the blog: dynamic, so an unknown slug's
+  // notFound() is a 404 and not the static-page 500 of 2026-09-16.
+  for (const page of ["src/app/[locale]/(public)/guide/page.tsx", "src/app/[locale]/(public)/guide/[slug]/page.tsx"]) {
+    it(`${page} stays dynamic`, () => {
+      const source = read(page);
+      expect(source).not.toContain("generateStaticParams");
+      expect(source).not.toContain("force-static");
+      expect(source).not.toContain("dynamicParams");
+    });
+  }
 });

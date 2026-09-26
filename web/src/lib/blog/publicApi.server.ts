@@ -62,3 +62,23 @@ export async function fetchBlogSlugs(): Promise<BlogSlug[]> {
     return [];
   }
 }
+
+// ---- the guide (2026-09-26): the same routes with kind=Guide, read the same way ----
+
+/** Null when the blog — and with it the guide — is switched off (404). */
+export function fetchGuideList(language: BlogLanguage, page: number): Promise<PagedResult<BlogPostListItem> | null> {
+  return fetchPublic<PagedResult<BlogPostListItem>>(`/api/blog/public/posts?lang=${language}&page=${page}&kind=Guide`, language, "fresh");
+}
+
+export function fetchGuide(language: BlogLanguage, slug: string): Promise<BlogPostPublic | null> {
+  return fetchPublic<BlogPostPublic>(`/api/blog/public/posts/${language}/${encodeURIComponent(slug)}?kind=Guide`, language, "fresh");
+}
+
+/** Empty when the API is unreachable: the sitemap degrades, never fails. */
+export async function fetchGuideSlugs(): Promise<BlogSlug[]> {
+  try {
+    return (await fetchPublic<BlogSlug[]>("/api/blog/public/slugs?kind=Guide", "tr", "revalidate")) ?? [];
+  } catch {
+    return [];
+  }
+}
