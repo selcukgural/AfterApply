@@ -518,6 +518,7 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
                     <BlogCoverCard
                       text={coverText(title || "…", coverCard.hook)}
                       icon={loadedIcons ? resolveCoverIcon(loadedIcons.nodes, coverCard.icon) : null}
+                  iconName={coverCard.icon}
                       eyebrow={tSeo("shareKicker")}
                     />
                   ),
@@ -625,6 +626,7 @@ function BlogEditorForm({ kind, initial, newPostSeed }: { kind: BlogPostKind; in
                 <BlogCoverCard
                   text={coverText(title || "…", coverCard.hook)}
                   icon={loadedIcons ? resolveCoverIcon(loadedIcons.nodes, coverCard.icon) : null}
+                  iconName={coverCard.icon}
                   eyebrow={tSeo("shareKicker")}
                 />
               )}

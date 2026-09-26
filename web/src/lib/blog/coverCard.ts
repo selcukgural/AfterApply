@@ -40,14 +40,47 @@ export function coverText(title: string, hook: string | null | undefined): strin
 }
 
 /** The text's size on the 1200-wide grid: a short line is set large, a title-length one smaller, so
- *  every cover reads at list-card size and still fits in three lines. */
+ *  every cover reads at list-card size and still fits beside the circle (a 620 px column, four
+ *  lines at most). */
 export function coverTextSize(text: string): number {
   const length = text.length;
-  if (length <= 24) return 88;
-  if (length <= 40) return 76;
-  if (length <= 60) return 64;
-  if (length <= 85) return 54;
-  return 46;
+  if (length <= 24) return 80;
+  if (length <= 40) return 72;
+  if (length <= 60) return 56;
+  if (length <= 85) return 44;
+  return 36;
+}
+
+/** One colour pair of the cover (D3, 2026-09-27): the circle, and the darker ink for the small
+ *  labels. The text itself is always the same navy, so every pair reads the same on cream. */
+export interface CoverTone {
+  sun: string;
+  ink: string;
+}
+
+export const COVER_TONES: readonly CoverTone[] = [
+  { sun: "#ff8a65", ink: "#c2452a" },
+  { sun: "#26a69a", ink: "#0f7a6b" },
+  { sun: "#9575cd", ink: "#5b3fd0" },
+  { sun: "#ffb300", ink: "#b45309" },
+  { sun: "#42a5f5", ink: "#1d4ed8" },
+];
+
+/** The icons the first posts were drawn with, pinned to the colour their uploaded covers use, so a
+ *  post that loses its upload keeps the colour readers know it by. */
+const PINNED_TONES: Readonly<Record<string, number>> = { mail: 0, "list-checks": 1, "battery-low": 2, hourglass: 3, repeat: 4 };
+
+/**
+ * The cover's colour, from its icon: the same icon always gets the same colour, so a post and its
+ * translation (which share an icon) match, and different topics look different on the list
+ * without anyone choosing a colour.
+ */
+export function coverTone(iconName: string | null | undefined): CoverTone {
+  const name = isCoverIconName(iconName) ? iconName : DEFAULT_COVER_ICON;
+  if (Object.hasOwn(PINNED_TONES, name)) return COVER_TONES[PINNED_TONES[name]];
+  let hash = 0;
+  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  return COVER_TONES[hash % COVER_TONES.length];
 }
 
 /** The icon to draw: the chosen one when the set has it, else the default. A name the set does
