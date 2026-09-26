@@ -5,6 +5,9 @@ namespace AfterApply.Application.Blog.Contracts;
 /// <summary>Where the same post lives in the other language, when the author linked one.</summary>
 public sealed record BlogTranslationLink(string Language, string Slug);
 
+/// <summary>A guide shown under another as related (2026-09-26): published, same language.</summary>
+public sealed record BlogRelatedLink(string Slug, string Title, string Excerpt);
+
 /// <summary>A card on the public list. The published slot only; no author.</summary>
 public sealed record BlogPostListItemResponse(
     Guid Id,
@@ -40,7 +43,11 @@ public sealed record BlogPostPublicResponse(
     /// <summary>The cover's pixel size, when the upload could read it — what decides whether
     /// the cover or the generated card is the share image (2026-09-21).</summary>
     int? CoverWidth = null,
-    int? CoverHeight = null);
+    int? CoverHeight = null,
+    BlogPostKind Kind = BlogPostKind.Blog,
+    /// <summary>A guide's settings (2026-09-26); false and empty on a blog post.</summary>
+    bool HideRegisterCta = false,
+    IReadOnlyList<BlogRelatedLink>? Related = null);
 
 /// <summary>
 /// What the model proposed for the draft (DECISIONS.md 2026-09-21). Every field may be null —
@@ -130,7 +137,12 @@ public sealed record AdminBlogPostResponse(
     int ViewCount = 0,
     BlogSeoResponse? DraftSeo = null,
     int? CoverWidth = null,
-    int? CoverHeight = null);
+    int? CoverHeight = null,
+    BlogPostKind Kind = BlogPostKind.Blog,
+    BlogGuideResponse? DraftGuide = null);
+
+/// <summary>The draft's guide settings, as the editor holds them (2026-09-26).</summary>
+public sealed record BlogGuideResponse(bool HideRegisterCta, IReadOnlyList<Guid> RelatedPostIds);
 
 public sealed record BlogDraftSavedResponse(int Revision, DateTimeOffset DraftUpdatedAt);
 

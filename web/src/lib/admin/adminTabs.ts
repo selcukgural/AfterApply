@@ -9,6 +9,8 @@ export function isAdminTabActive(pathname: string, href: string): boolean {
   // The blog tab stays lit inside an editor (/admin/blog/{id}), the way the reviews tab does on
   // its sibling tables.
   if (href === "/admin/blog") return pathname.startsWith("/admin/blog/");
+  // The guide's tab (2026-09-26) the same way, inside its editor.
+  if (href === "/admin/guide") return pathname.startsWith("/admin/guide/");
   // The comments tab (2026-09-20) stays lit on one comment's page.
   if (href === "/admin/comments") return pathname.startsWith("/admin/comments/");
   return href === "/admin/reviews" && (pathname === "/admin/reviews/salaries" || pathname === "/admin/reviews/experiences");

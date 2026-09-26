@@ -148,3 +148,33 @@ describe("blog images on the web origin", () => {
     expect(config).toMatch(/"img-src": "'self' data: blob:"/);
   });
 });
+
+describe("the guide in the blog's editor (2026-09-26)", () => {
+  const article = read("components/guide/GuideArticle.tsx");
+
+  it("has no comments — the guide takes likes and counts views, nothing else", () => {
+    expect(article).not.toContain("CommentSection");
+    expect(article).toContain("<LikeButton");
+    expect(article).toContain('tBlog("viewCount", { count: post.viewCount })');
+  });
+
+  it("renders the body with the blog's server component, so there is still one place raw HTML is written", () => {
+    expect(article).toContain("<BlogArticleBody html={post.contentHtml}");
+    expect(article).not.toContain("dangerouslySetInnerHTML");
+  });
+
+  it("is previewed with its own component under the guide's section, never indexed", () => {
+    expect(read("components/blog/BlogPreview.tsx")).toContain("<GuideArticle post={post} url={url} inert />");
+    const route = read("app/[locale]/(public)/guide/preview/[id]/page.tsx");
+    expect(route).toContain("robots: { index: false, follow: false }");
+    expect(route).toContain('kind="Guide"');
+  });
+
+  it("is edited in the browser-only editor, opened as a guide", () => {
+    const route = read("app/[locale]/(protected)/admin/guide/[id]/page.tsx");
+    expect(route).toContain('"use client"');
+    expect(route).toContain("ssr: false");
+    expect(route).toContain('kind="Guide"');
+  });
+});
+

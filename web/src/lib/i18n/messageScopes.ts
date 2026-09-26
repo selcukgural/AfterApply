@@ -114,6 +114,10 @@ export const PUBLIC_MESSAGE_SCOPE = [
   // The section name the post's own component puts above the title ("Blog"): on the public page
   // it renders on the server, on the editor's preview in the browser.
   "metadata.pages.blog",
+  // The guide's own article component (2026-09-26): its dates, sign-up box and related list, and
+  // the section name above its title — server-rendered on the page, in the browser on the preview.
+  "guide.article",
+  "metadata.pages.guide",
 ] as const;
 
 type Tree = { [key: string]: unknown };

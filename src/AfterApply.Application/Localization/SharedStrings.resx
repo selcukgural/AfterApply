@@ -450,6 +450,12 @@
   <data name="BLOG_TRANSLATION_INVALID" xml:space="preserve">
     <value>A translation must be a different post in the other language.</value>
   </data>
+  <data name="BLOG_RELATED_INVALID" xml:space="preserve">
+    <value>Related posts must be other guides in the same language.</value>
+  </data>
+  <data name="BLOG_PUBLISHED_AT_INVALID" xml:space="preserve">
+    <value>A publish date can only be set on the first publish, and not in the future.</value>
+  </data>
   <data name="BLOG_POST_CONTENT_INVALID" xml:space="preserve">
     <value>The title, summary or body is longer than allowed.</value>
   </data>

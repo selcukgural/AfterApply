@@ -29,6 +29,9 @@ public sealed class BlogPost : AuditableEntity
     /// slots start with, so the column (jsonb) always holds a document.</summary>
     public const string EmptyDocumentJson = """{"type":"doc","content":[]}""";
 
+    /// <summary>Blog or guide (2026-09-26). Set by <see cref="Create"/> and never changed.</summary>
+    public BlogPostKind Kind { get; private set; }
+
     /// <summary>One of <see cref="BlogLanguage"/>. Fixed once the post has been published.</summary>
     public string Language { get; private set; } = BlogLanguage.Tr;
 
@@ -81,6 +84,14 @@ public sealed class BlogPost : AuditableEntity
 
     public BlogSeo DraftSeo => new(DraftSeoTitle, DraftPrimaryKeyword, DraftSecondaryKeywords, DraftCoverAlt);
 
+    // The guide's own two settings (2026-09-26), draft slot. Always empty on a blog post; read as
+    // one value through <see cref="DraftGuide"/>, mirrored in the published slot below.
+    public bool DraftHideRegisterCta { get; private set; }
+
+    public Guid[] DraftRelatedPostIds { get; private set; } = [];
+
+    public BlogGuideOptions DraftGuide => new(DraftHideRegisterCta, DraftRelatedPostIds);
+
     public DateTimeOffset DraftUpdatedAt { get; private set; }
 
     /// <summary>Bumped on every draft save; the editor sends the one it last saw and a mismatch
@@ -115,6 +126,16 @@ public sealed class BlogPost : AuditableEntity
 
     public BlogSeo Seo => new(SeoTitle, PrimaryKeyword, SecondaryKeywords, CoverAlt);
 
+    /// <summary>A guide that talks to readers who already have an account (the review-writing
+    /// guide) hides the page's "sign up" box.</summary>
+    public bool HideRegisterCta { get; private set; }
+
+    /// <summary>The guides shown under this one as "related", in order. The public read keeps
+    /// only the ones that are published in the same language at the time of the read.</summary>
+    public Guid[] RelatedPostIds { get; private set; } = [];
+
+    public BlogGuideOptions Guide => new(HideRegisterCta, RelatedPostIds);
+
     /// <summary>First time the post went live. Set once; the URL lock (<see cref="SetSlug"/>,
     /// <see cref="SetLanguage"/>) keys off this, not off <see cref="Status"/>, so an unpublished
     /// post keeps its URL too.</summary>
@@ -127,8 +148,13 @@ public sealed class BlogPost : AuditableEntity
     {
     }
 
-    public static BlogPost Create(Guid authorUserId, string language, DateTimeOffset now)
+    public static BlogPost Create(Guid authorUserId, string language, DateTimeOffset now, BlogPostKind kind = BlogPostKind.Blog)
     {
+        if (!Enum.IsDefined(kind))
+        {
+            throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a blog post kind.");
+        }
+
         if (!BlogLanguage.IsSupported(language))
         {
             throw new ArgumentOutOfRangeException(nameof(language), language, "Not a supported blog language.");
@@ -137,6 +163,7 @@ public sealed class BlogPost : AuditableEntity
         return new BlogPost
         {
             AuthorUserId = authorUserId,
+            Kind = kind,
             Language = language,
             Status = BlogPostStatus.Draft,
             Revision = 1,
@@ -168,6 +195,19 @@ public sealed class BlogPost : AuditableEntity
 
         content.Validate();
 
+        var guide = content.GuideOrEmpty;
+        // A blog post has no guide settings to hold — the service never sends any for one, so
+        // a non-empty value here is a bug upstream, not a user's choice.
+        if (Kind != BlogPostKind.Guide && !guide.IsEmpty)
+        {
+            throw new BlogPostContentInvalidException();
+        }
+
+        if (guide.RelatedPostIds.Contains(Id))
+        {
+            throw new BlogRelatedInvalidException();
+        }
+
         DraftTitle = content.Title;
         DraftExcerpt = content.Excerpt;
         DraftContentJson = content.ContentJson;
@@ -176,6 +216,8 @@ public sealed class BlogPost : AuditableEntity
         DraftPrimaryKeyword = content.Seo.PrimaryKeyword;
         DraftSecondaryKeywords = content.Seo.SecondaryKeywords.ToArray();
         DraftCoverAlt = content.Seo.CoverAlt;
+        DraftHideRegisterCta = guide.HideRegisterCta;
+        DraftRelatedPostIds = guide.RelatedPostIds.ToArray();
         DraftUpdatedAt = now;
         Revision++;
         Touch(now);
@@ -275,9 +317,19 @@ public sealed class BlogPost : AuditableEntity
     /// Copies the draft slot over the published slot and puts the post on the site. Works the same
     /// for a first publish and for "update the live version" — the difference is only that
     /// <see cref="PublishedAt"/> is set once. The caller has made sure <see cref="Slug"/> is set.
+    ///
+    /// <paramref name="publishedAt"/> back-dates a first publish (2026-09-26): the guides that were
+    /// files in the web app keep the date they have carried since they first went live, so moving
+    /// them into the editor does not make them look new. Only for a post that has never been
+    /// published, and never in the future; both publish dates take it.
     /// </summary>
-    public void Publish(DateTimeOffset now)
+    public void Publish(DateTimeOffset now, DateTimeOffset? publishedAt = null)
     {
+        if (publishedAt is { } backDate && (HasEverBeenPublished || backDate > now))
+        {
+            throw new BlogPublishedAtInvalidException();
+        }
+
         if (string.IsNullOrWhiteSpace(DraftTitle) || string.IsNullOrWhiteSpace(DraftContentHtml))
         {
             throw new BlogPostIncompleteException();
@@ -296,8 +348,17 @@ public sealed class BlogPost : AuditableEntity
         PrimaryKeyword = DraftPrimaryKeyword;
         SecondaryKeywords = DraftSecondaryKeywords.ToArray();
         CoverAlt = DraftCoverAlt;
-        PublishedAt ??= now;
-        PublishedUpdatedAt = now;
+        HideRegisterCta = DraftHideRegisterCta;
+        RelatedPostIds = DraftRelatedPostIds.ToArray();
+        PublishedAt ??= publishedAt ?? now;
+        PublishedUpdatedAt = publishedAt ?? now;
+        // The draft is the published copy at this moment. With a back date, its clock moves back
+        // with it: "has unpublished changes" is "the draft is newer than the last publish", and a
+        // draft stamped today would read as newer than a publish stamped weeks ago.
+        if (publishedAt is { } date)
+        {
+            DraftUpdatedAt = date;
+        }
         Status = BlogPostStatus.Published;
         Touch(now);
     }
@@ -321,15 +382,24 @@ public sealed class BlogPost : AuditableEntity
 /// request validator says the same things earlier and in the user's language; this is the
 /// boundary that stores the row, so it checks again.
 /// </summary>
-public readonly record struct BlogDraftContent(string Title, string Excerpt, string ContentJson, string ContentHtml, BlogSeo Seo)
+public readonly record struct BlogDraftContent(
+    string Title,
+    string Excerpt,
+    string ContentJson,
+    string ContentHtml,
+    BlogSeo Seo,
+    BlogGuideOptions? Guide = null)
 {
+    public BlogGuideOptions GuideOrEmpty => Guide ?? BlogGuideOptions.Empty;
+
     public void Validate()
     {
         if (Title.Length > BlogPost.MaxTitleLength
             || Excerpt.Length > BlogPost.MaxExcerptLength
             || ContentJson.Length > BlogPost.MaxContentJsonLength
             || ContentHtml.Length > BlogPost.MaxContentHtmlLength
-            || !Seo.IsValid)
+            || !Seo.IsValid
+            || !GuideOrEmpty.IsValid)
         {
             throw new BlogPostContentInvalidException();
         }
@@ -402,5 +472,42 @@ public sealed record BlogSeo(string? SeoTitle, string? PrimaryKeyword, IReadOnly
     {
         var trimmed = value?.Trim();
         return string.IsNullOrEmpty(trimmed) ? null : trimmed;
+    }
+}
+
+/// <summary>
+/// A guide's own settings (DECISIONS.md 2026-09-26), as one value so the draft and the published
+/// slot carry the same shape. Empty on every blog post.
+/// </summary>
+public sealed record BlogGuideOptions(bool HideRegisterCta, IReadOnlyList<Guid> RelatedPostIds)
+{
+    /// <summary>What the guide page has always shown under an article: two links at most.</summary>
+    public const int MaxRelatedPosts = 2;
+
+    public static readonly BlogGuideOptions Empty = new(false, []);
+
+    public bool IsEmpty => !HideRegisterCta && RelatedPostIds.Count == 0;
+
+    public bool IsValid =>
+        RelatedPostIds.Count <= MaxRelatedPosts
+        && RelatedPostIds.Distinct().Count() == RelatedPostIds.Count
+        && !RelatedPostIds.Contains(Guid.Empty);
+
+    // A value, as BlogSeo: the same ids in the same order are the same, whatever list holds them.
+    public bool Equals(BlogGuideOptions? other) =>
+        other is not null
+        && HideRegisterCta == other.HideRegisterCta
+        && RelatedPostIds.SequenceEqual(other.RelatedPostIds);
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(HideRegisterCta);
+        foreach (var id in RelatedPostIds)
+        {
+            hash.Add(id);
+        }
+
+        return hash.ToHashCode();
     }
 }

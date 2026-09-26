@@ -47,6 +47,12 @@ public sealed class BlogDraftFieldsValidator<T> : AbstractValidator<T> where T :
             .OverridePropertyName("Seo.SecondaryKeywords")
             .WithMessage(_ => localizer["VALIDATION_BLOG_SEO_KEYWORDS_INVALID"])
             .When(x => x.Seo is not null);
+        RuleFor(x => x.Guide!.RelatedPostIds)
+            .Must(ids => ids is null
+                         || (ids.Count <= BlogGuideOptions.MaxRelatedPosts && ids.Distinct().Count() == ids.Count && !ids.Contains(Guid.Empty)))
+            .OverridePropertyName("Guide.RelatedPostIds")
+            .WithMessage(_ => localizer["BLOG_RELATED_INVALID"])
+            .When(x => x.Guide is not null);
     }
 
     private static bool BeAnEditorDocument(string? json)
@@ -79,6 +85,7 @@ public sealed class CreateBlogPostRequestValidator : AbstractValidator<CreateBlo
     public CreateBlogPostRequestValidator(IStringLocalizer<SharedStrings> localizer)
     {
         Include(new BlogDraftFieldsValidator<CreateBlogPostRequest>(localizer));
+        RuleFor(x => x.Kind).IsInEnum();
         RuleFor(x => x.Title)
             .Must((request, _) => BlogDraftText.HasAny(request.Title, request.Excerpt, request.ContentHtml))
             .WithMessage(_ => localizer["BLOG_POST_EMPTY"]);
@@ -102,6 +109,17 @@ public sealed class PublicBlogListQueryValidator : AbstractValidator<PublicBlogL
             .Must(BlogLanguage.IsSupported)
             .WithMessage(_ => localizer["VALIDATION_UNSUPPORTED_LANGUAGE"]);
         RuleFor(x => x.Page).InclusiveBetween(1, 1000);
+        RuleFor(x => x.Kind!.Value).IsInEnum().When(x => x.Kind.HasValue)
+            .OverridePropertyName(nameof(PublicBlogListQuery.Kind));
+    }
+}
+
+public sealed class PublicBlogSlugsQueryValidator : AbstractValidator<PublicBlogSlugsQuery>
+{
+    public PublicBlogSlugsQueryValidator()
+    {
+        RuleFor(x => x.Kind!.Value).IsInEnum().When(x => x.Kind.HasValue)
+            .OverridePropertyName(nameof(PublicBlogSlugsQuery.Kind));
     }
 }
 
@@ -115,6 +133,8 @@ public sealed class AdminBlogListQueryValidator : AbstractValidator<AdminBlogLis
             .Must(lang => lang is null || BlogLanguage.IsSupported(lang))
             .WithMessage(_ => localizer["VALIDATION_UNSUPPORTED_LANGUAGE"]);
         RuleFor(x => x.Page).InclusiveBetween(1, 1000);
+        RuleFor(x => x.Kind!.Value).IsInEnum().When(x => x.Kind.HasValue)
+            .OverridePropertyName(nameof(AdminBlogListQuery.Kind));
     }
 }
 
@@ -125,5 +145,7 @@ public sealed class AdminBlogGroupedListQueryValidator : AbstractValidator<Admin
         RuleFor(x => x.Status!.Value).IsInEnum().When(x => x.Status.HasValue)
             .OverridePropertyName(nameof(AdminBlogGroupedListQuery.Status));
         RuleFor(x => x.Page).InclusiveBetween(1, 1000);
+        RuleFor(x => x.Kind!.Value).IsInEnum().When(x => x.Kind.HasValue)
+            .OverridePropertyName(nameof(AdminBlogGroupedListQuery.Kind));
     }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blogAlternates, blogPostPath } from "./blogPaths";
+import { adminPostsPath, blogAlternates, blogPostPath, postPath, postPreviewPath } from "./blogPaths";
 
 describe("blogPostPath", () => {
   it("mounts a slug under /blog", () => {
@@ -23,5 +23,19 @@ describe("blogAlternates", () => {
       tr: "/tr/blog/merhaba",
       "x-default": "/tr/blog/merhaba",
     });
+  });
+});
+
+describe("kind-aware paths (2026-09-26)", () => {
+  it("puts a guide under /guide and a blog post under /blog, for the page and the preview", () => {
+    expect(postPath("Blog", "x")).toBe("/blog/x");
+    expect(postPath("Guide", "x")).toBe("/guide/x");
+    expect(postPreviewPath("Blog", "id")).toBe("/blog/preview/id");
+    expect(postPreviewPath("Guide", "id")).toBe("/guide/preview/id");
+  });
+
+  it("gives each kind its own admin table", () => {
+    expect(adminPostsPath("Blog")).toBe("/admin/blog");
+    expect(adminPostsPath("Guide")).toBe("/admin/guide");
   });
 });

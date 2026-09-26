@@ -40,6 +40,16 @@ public sealed class BlogPostNotPublishedException()
 public sealed class BlogTranslationInvalidException()
     : DomainException("BLOG_TRANSLATION_INVALID", "A translation must be a different post in the other language.");
 
+/// <summary>A guide's "related" list naming a post that cannot be related to it: the guide
+/// itself, a blog post, a guide in the other language, or one the caller cannot see.</summary>
+public sealed class BlogRelatedInvalidException()
+    : DomainException("BLOG_RELATED_INVALID", "Related posts must be other guides in the same language.");
+
+/// <summary>A back-dated first publish on a post that has already been published, or dated in the
+/// future. Only the move of the file-based guides uses the back date (2026-09-26).</summary>
+public sealed class BlogPublishedAtInvalidException()
+    : DomainException("BLOG_PUBLISHED_AT_INVALID", "A publish date can only be set on the first publish, and not in the future.");
+
 /// <summary>Draft content past the length caps — a request the validator should already have
 /// refused; repeated here because this is the boundary that stores the row.</summary>
 public sealed class BlogPostContentInvalidException()

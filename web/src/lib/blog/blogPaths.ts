@@ -1,5 +1,5 @@
 import { routing } from "@/i18n/routing";
-import type { BlogLanguage, BlogTranslationLink } from "@/types/api";
+import type { BlogLanguage, BlogPostKind, BlogTranslationLink } from "@/types/api";
 
 export const BLOG_PATH = "/blog";
 
@@ -13,6 +13,30 @@ export function blogPreviewPath(postId: string): string {
 
 export function blogPostPath(slug: string): string {
   return `${BLOG_PATH}/${slug}`;
+}
+
+/**
+ * The guide is written in the blog's editor (2026-09-26); these are the few places the kind
+ * decides the address. `/guide` is spelled here rather than imported from `lib/guide` so the
+ * editor's bundle does not pull in the guide's article list.
+ */
+const SECTION_PATH: Record<BlogPostKind, string> = { Blog: BLOG_PATH, Guide: "/guide" };
+
+const ADMIN_PATH: Record<BlogPostKind, string> = { Blog: "/admin/blog", Guide: "/admin/guide" };
+
+/** A published post's page: `/blog/<slug>` or `/guide/<slug>`. */
+export function postPath(kind: BlogPostKind, slug: string): string {
+  return `${SECTION_PATH[kind]}/${slug}`;
+}
+
+/** The editor's preview of one post, under its own section and (by the caller) language. */
+export function postPreviewPath(kind: BlogPostKind, postId: string): string {
+  return `${SECTION_PATH[kind]}/preview/${postId}`;
+}
+
+/** The admin table of one kind; the editor lives under it (`/admin/guide/<id>`). */
+export function adminPostsPath(kind: BlogPostKind): string {
+  return ADMIN_PATH[kind];
 }
 
 /** What a post page needs to say where its other-language twin lives, if anywhere. */

@@ -3727,6 +3727,7 @@
     "reports": "Şikayetler",
     "payments": "Ödemeler",
     "blog": "Blog",
+    "guide": "Rehber",
     "comments": "Yorumlar"
   },
   "adminContributionTabs": {
@@ -5333,6 +5334,22 @@
       "deleteBody": "Şirket sayfasından ve dizin sayımlarından hemen düşer; geri alınamaz. Yazara bildirim gitmez."
     }
   },
+  "adminGuide": {
+    "title": "Rehber",
+    "subtitle": "Rehber yazıları blogla aynı editörde yazılır. Taslak yalnızca yazarına görünür; yayımlanan yazıyı her yönetici düzenleyebilir.",
+    "newPost": "Yeni rehber yazısı",
+    "empty": "Henüz rehber yazısı yok. İlkini yazmak için üstteki düğmeyi kullanın.",
+    "back": "← Rehber yazıları",
+    "kindBadge": "Rehber",
+    "options": {
+      "title": "Rehber ayarları",
+      "relatedLabel": "İlgili rehber {n}",
+      "relatedNone": "Seçilmedi",
+      "relatedHint": "Yazının altında “İlgili yazılar” olarak çıkar, en fazla iki tane. Aynı dildeki rehberler listelenir; taslak olan, yayımlandığında görünür.",
+      "hideCta": "Kayıt kutusunu gizle",
+      "hideCtaHint": "Yazı zaten üye olan okura sesleniyorsa işaretleyin (ör. değerlendirme yazma rehberi)."
+    }
+  },
   "adminBlog": {
     "title": "Blog",
     "subtitle": "Taslaklarınız ve yayımlanmış tüm yazılar. Taslak yalnızca yazarına görünür; yayımlanan yazıyı her yönetici düzenleyebilir.",
@@ -5382,7 +5399,7 @@
       "slug": "Adres",
       "slugHint": "Boş bırakırsanız yayımlarken başlıktan üretilir. Küçük harf, rakam ve tire.",
       "slugLocked": "Yayımlanmış bir yazının adresi ve dili değiştirilemez.",
-      "slugPreview": "/{language}/blog/{slug}",
+      "slugPreview": "/{language}/{section}/{slug}",
       "translation": "Diğer dildeki karşılığı",
       "translationNone": "Bağlantı yok",
       "translationHint": "İki yazı birbirine bağlanır; sayfa \"diğer dilde oku\" bağlantısı ve hreflang alır.",
@@ -5437,7 +5454,7 @@
       "slugHint": "Başlıktan kendiliğinden üretilir; isterseniz değiştirin. Küçük harf, rakam ve tire.",
       "slugLocked": "Yayımlanmış bir yazının adresi değiştirilemez.",
       "slugFromTitle": "Başlıktan üret",
-      "slugPreview": "/{language}/blog/{slug}",
+      "slugPreview": "/{language}/{section}/{slug}",
       "serpHeading": "Google'da böyle görünür",
       "shareHeading": "Paylaşım kartı",
       "checklistHeading": "Kontrol listesi",

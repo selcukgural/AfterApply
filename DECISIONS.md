@@ -9609,3 +9609,29 @@ ilk işin maddeleri Sertifikalar'ın altında) hiçbir kontrole takılmadı.
   `RELEASE_NOTES`'ta; manifest sürümünün notu yoksa test kırılır.
 - **Web'de "eklentin eski" bildirimi ertelendi:** sürüm başlığı + `LatestVersion` ayarı yeni veri
   toplamak demek ve ancak takılı kalan kullanıcı görülünce değer; Chrome güncellemeyi kendisi yapıyor.
+
+## Rehber, blog editörüyle yazılıyor — DECIDED (2026-09-26)
+
+- **Model: `BlogPost.Kind` (Blog | Guide), ayrı tablo yok.** Rehber yazısı blogla aynı satır
+  yapısında: taslak/yayın slotları, otomatik kayıt, SEO paneli ve Vertex önerisi, görsel yükleme,
+  önizleme, TR|EN eşleşmesi aynen. Tür oluştururken seçilir, sonra değişmez (adresin parçası).
+  Slug benzersizliği `(Kind, Language, Slug)`: `/blog/x` ve `/guide/x` ayrı sayfalar. Çeviri
+  bağlantısı türü aşamaz.
+- **Okuyucu tarafı: beğeni + görüntülenme var, yorum yok.** Yorum servisi rehberi "yok" sayar;
+  bütün yorum uçları rehbere 404 döner.
+- **Rehbere özel iki ayar** (taslakta tutulur, yayında kopyalanır): en fazla 2 ilgili rehber
+  (aynı dil, sırası yazarın) ve "kayıt kutusunu gizle". İlgili listesi okuma anında çözülür:
+  yayında olmayan ya da silinen rehber kendiliğinden düşer, saklanan liste temizlenmez.
+- **Yönetim: ayrı "Rehber" sekmesi** (canvas varyant B, https://claude.ai/artifact/PtePR2JY24inF5rdxSWtGU).
+  `/admin/guide` + `/admin/guide/<id>`; tablo ve editör blogla ortak bileşen. Önizleme
+  `/guide/preview/<id>`, `GuideArticle` ile (canlı sayfanın bileşeni).
+- **API:** herkese açık uçlar `kind=Guide` alır; parametre yoksa blog, yani mevcut blog istemcisi
+  hiç değişmedi. `hasPublishedPosts` yalnızca blog yazılarını sayar (rehber tek başına "Blog"
+  bağlantısını açmaz). Rehber de `Blog:Enabled` bayrağına bağlı: bayrak kapanırsa rehber de kapanır.
+- **Geçiş iki PR:** (1) backend + yönetim; site hâlâ MDX'ten okur. Aradaki adımda
+  `web/scripts/import-guides.mjs` 10 rehberi (20 dosya) prod'a yazar: aynı slug, aynı yayın tarihi
+  (`publish` isteğindeki `publishedAt`, yalnızca ilk yayında ve geçmiş tarihle), aynı ilgili
+  bağlantılar. (2) Herkese açık sayfalar DB'den okur, MDX silinir.
+- **Dönüştürme bilinçli olarak dar:** MDX'ler düz CommonMark (JSX yok, GFM yok); araç Markdown
+  ağacını doğrudan editör belgesine çevirir, desteklemediği bir düğümde durur (sessizce içerik
+  kaybetmez). Görsel altyazısı editörde yok; görselin altına italik satır olarak taşınır.

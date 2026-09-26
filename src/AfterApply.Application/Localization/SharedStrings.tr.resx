@@ -450,6 +450,12 @@
   <data name="BLOG_TRANSLATION_INVALID" xml:space="preserve">
     <value>Çeviri, diğer dildeki farklı bir yazı olmalıdır.</value>
   </data>
+  <data name="BLOG_RELATED_INVALID" xml:space="preserve">
+    <value>İlgili yazılar, aynı dildeki başka rehber yazıları olmalıdır.</value>
+  </data>
+  <data name="BLOG_PUBLISHED_AT_INVALID" xml:space="preserve">
+    <value>Yayın tarihi yalnızca ilk yayında verilebilir ve ileri bir tarih olamaz.</value>
+  </data>
   <data name="BLOG_POST_CONTENT_INVALID" xml:space="preserve">
     <value>Başlık, özet veya içerik izin verilenden uzun.</value>
   </data>

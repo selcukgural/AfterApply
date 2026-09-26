@@ -44,7 +44,9 @@ public interface IBlogAdminService
     /// <summary>First publish and "update the live version" alike.</summary>
     /// <exception cref="BlogPostIncompleteException">No title or no body.</exception>
     /// <exception cref="BlogSlugTakenException">The hand-typed slug is another post's.</exception>
-    Task<AdminBlogPostResponse?> PublishAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken);
+    /// <exception cref="BlogPublishedAtInvalidException">A back date on a post published before, or in the future.</exception>
+    Task<AdminBlogPostResponse?> PublishAsync(Guid adminUserId, Guid postId, PublishBlogPostRequest? request,
+        CancellationToken cancellationToken);
 
     /// <exception cref="BlogPostNotPublishedException">The post is not on the site.</exception>
     Task<AdminBlogPostResponse?> UnpublishAsync(Guid adminUserId, Guid postId, CancellationToken cancellationToken);
@@ -69,13 +71,14 @@ public interface IBlogPublicService
 
     /// <param name="viewerUserId">The signed-in reader, if the request happened to carry a valid
     /// token — only used to fill <c>LikedByMe</c>. Null for everyone else.</param>
-    Task<BlogPostPublicResponse?> GetBySlugAsync(string language, string slug, Guid? viewerUserId,
+    /// <param name="kind">Which section the URL is in — a guide's slug under <c>/blog</c> is not found.</param>
+    Task<BlogPostPublicResponse?> GetBySlugAsync(BlogPostKind kind, string language, string slug, Guid? viewerUserId,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<BlogSlugResponse>> ListSlugsAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<BlogSlugResponse>> ListSlugsAsync(BlogPostKind kind, CancellationToken cancellationToken);
 
-    /// <summary>Whether the site has any published post at all — what decides if the web app
-    /// shows a "Blog" link. Cached, and never throws: a database hiccup answers false rather than
+    /// <summary>Whether the site has any published blog post (guides do not count) — what decides
+    /// if the web app shows a "Blog" link. Cached, and never throws: a database hiccup answers false rather than
     /// taking <c>/api/config</c> down with it.</summary>
     Task<bool> HasPublishedPostsAsync(CancellationToken cancellationToken);
 

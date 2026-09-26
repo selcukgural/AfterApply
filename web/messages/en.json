@@ -3727,6 +3727,7 @@
     "reports": "Reports",
     "payments": "Payments",
     "blog": "Blog",
+    "guide": "Guide",
     "comments": "Comments"
   },
   "adminContributionTabs": {
@@ -5333,6 +5334,22 @@
       "deleteBody": "It leaves the company page and the directory counts at once; this cannot be undone. The author is not notified."
     }
   },
+  "adminGuide": {
+    "title": "Guide",
+    "subtitle": "Guide articles are written in the blog's editor. A draft is visible to its author only; any admin can edit a published article.",
+    "newPost": "New guide article",
+    "empty": "No guide articles yet. Use the button above to write the first one.",
+    "back": "← Guide articles",
+    "kindBadge": "Guide",
+    "options": {
+      "title": "Guide settings",
+      "relatedLabel": "Related guide {n}",
+      "relatedNone": "None",
+      "relatedHint": "Shown under the article as “Related”, two at most. Guides in the same language are listed; a draft appears once it is published.",
+      "hideCta": "Hide the sign-up box",
+      "hideCtaHint": "Tick this when the article speaks to readers who already have an account (e.g. the review-writing guide)."
+    }
+  },
   "adminBlog": {
     "title": "Blog",
     "subtitle": "Your drafts and every published post. A draft is visible to its author alone; a published post can be edited by any admin.",
@@ -5382,7 +5399,7 @@
       "slug": "Address",
       "slugHint": "Leave empty to generate it from the title on publish. Lowercase letters, digits and dashes.",
       "slugLocked": "A published post's address and language cannot change.",
-      "slugPreview": "/{language}/blog/{slug}",
+      "slugPreview": "/{language}/{section}/{slug}",
       "translation": "Same post in the other language",
       "translationNone": "Not linked",
       "translationHint": "The two posts are linked both ways; the page gets a \"read in the other language\" link and hreflang.",
@@ -5437,7 +5454,7 @@
       "slugHint": "Generated from the title; change it if you like. Lowercase letters, digits and dashes.",
       "slugLocked": "A published post's address cannot change.",
       "slugFromTitle": "From the title",
-      "slugPreview": "/{language}/blog/{slug}",
+      "slugPreview": "/{language}/{section}/{slug}",
       "serpHeading": "How it looks on Google",
       "shareHeading": "Share card",
       "checklistHeading": "Checklist",
