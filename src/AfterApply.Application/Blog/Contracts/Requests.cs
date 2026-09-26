@@ -19,7 +19,14 @@ public interface IBlogDraftFields
     /// <summary>A guide's own settings (2026-09-26). Null — and ignored on a blog post — from an
     /// editor that has none to send.</summary>
     BlogGuideRequest? Guide { get; }
+    /// <summary>The generated cover's line and icon (2026-09-27). Null from an editor that has
+    /// none to send: stored as "neither".</summary>
+    BlogCoverCardRequest? CoverCard { get; }
 }
+
+/// <summary>What the generated cover says and shows (DECISIONS.md 2026-09-27): a line of its own
+/// (blank: the title) and an icon's name from the web app's set (blank: the default icon).</summary>
+public sealed record BlogCoverCardRequest(string? Hook, string? Icon);
 
 /// <summary>A guide's own settings (DECISIONS.md 2026-09-26): hide the page's sign-up box, and
 /// up to two other guides in the same language to show as related, in order.</summary>
@@ -51,7 +58,8 @@ public sealed record CreateBlogPostRequest(
     BlogGuideRequest? Guide = null,
     /// <summary>Blog or guide; fixed from here on. Absent from an editor that predates guides —
     /// a blog post, which is all it could write.</summary>
-    BlogPostKind Kind = BlogPostKind.Blog) : IBlogDraftFields;
+    BlogPostKind Kind = BlogPostKind.Blog,
+    BlogCoverCardRequest? CoverCard = null) : IBlogDraftFields;
 
 /// <summary>
 /// The autosave. Everything editable on a post travels together: the editor does not know which
@@ -70,7 +78,8 @@ public sealed record SaveBlogDraftRequest(
     Guid? TranslationOfPostId,
     int Revision,
     BlogSeoRequest? Seo = null,
-    BlogGuideRequest? Guide = null) : IBlogDraftFields;
+    BlogGuideRequest? Guide = null,
+    BlogCoverCardRequest? CoverCard = null) : IBlogDraftFields;
 
 /// <summary>
 /// Publish's optional body. <paramref name="PublishedAt"/> back-dates a first publish — only the

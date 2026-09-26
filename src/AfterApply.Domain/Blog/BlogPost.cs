@@ -92,6 +92,14 @@ public sealed class BlogPost : AuditableEntity
 
     public BlogGuideOptions DraftGuide => new(DraftHideRegisterCta, DraftRelatedPostIds);
 
+    // The generated cover's line and icon (2026-09-27), draft slot. Read as one value through
+    // <see cref="DraftCoverCard"/>, mirrored in the published slot below.
+    public string? DraftCoverHook { get; private set; }
+
+    public string? DraftCoverIcon { get; private set; }
+
+    public BlogCoverCard DraftCoverCard => new(DraftCoverHook, DraftCoverIcon);
+
     public DateTimeOffset DraftUpdatedAt { get; private set; }
 
     /// <summary>Bumped on every draft save; the editor sends the one it last saw and a mismatch
@@ -135,6 +143,14 @@ public sealed class BlogPost : AuditableEntity
     public Guid[] RelatedPostIds { get; private set; } = [];
 
     public BlogGuideOptions Guide => new(HideRegisterCta, RelatedPostIds);
+
+    /// <summary>The line the generated cover shows instead of the title. Null: the title.</summary>
+    public string? CoverHook { get; private set; }
+
+    /// <summary>The generated cover's icon, by name. Null: the default icon.</summary>
+    public string? CoverIcon { get; private set; }
+
+    public BlogCoverCard CoverCard => new(CoverHook, CoverIcon);
 
     /// <summary>First time the post went live. Set once; the URL lock (<see cref="SetSlug"/>,
     /// <see cref="SetLanguage"/>) keys off this, not off <see cref="Status"/>, so an unpublished
@@ -218,6 +234,8 @@ public sealed class BlogPost : AuditableEntity
         DraftCoverAlt = content.Seo.CoverAlt;
         DraftHideRegisterCta = guide.HideRegisterCta;
         DraftRelatedPostIds = guide.RelatedPostIds.ToArray();
+        DraftCoverHook = content.CoverCardOrEmpty.Hook;
+        DraftCoverIcon = content.CoverCardOrEmpty.Icon;
         DraftUpdatedAt = now;
         Revision++;
         Touch(now);
@@ -350,6 +368,8 @@ public sealed class BlogPost : AuditableEntity
         CoverAlt = DraftCoverAlt;
         HideRegisterCta = DraftHideRegisterCta;
         RelatedPostIds = DraftRelatedPostIds.ToArray();
+        CoverHook = DraftCoverHook;
+        CoverIcon = DraftCoverIcon;
         PublishedAt ??= publishedAt ?? now;
         PublishedUpdatedAt = publishedAt ?? now;
         // The draft is the published copy at this moment. With a back date, its clock moves back
@@ -388,9 +408,12 @@ public readonly record struct BlogDraftContent(
     string ContentJson,
     string ContentHtml,
     BlogSeo Seo,
-    BlogGuideOptions? Guide = null)
+    BlogGuideOptions? Guide = null,
+    BlogCoverCard? CoverCard = null)
 {
     public BlogGuideOptions GuideOrEmpty => Guide ?? BlogGuideOptions.Empty;
+
+    public BlogCoverCard CoverCardOrEmpty => CoverCard ?? BlogCoverCard.Empty;
 
     public void Validate()
     {
@@ -399,7 +422,8 @@ public readonly record struct BlogDraftContent(
             || ContentJson.Length > BlogPost.MaxContentJsonLength
             || ContentHtml.Length > BlogPost.MaxContentHtmlLength
             || !Seo.IsValid
-            || !GuideOrEmpty.IsValid)
+            || !GuideOrEmpty.IsValid
+            || !CoverCardOrEmpty.IsValid)
         {
             throw new BlogPostContentInvalidException();
         }

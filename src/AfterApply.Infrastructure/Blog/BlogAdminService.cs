@@ -191,7 +191,8 @@ internal sealed partial class BlogAdminService(
             post.PublishedAt ?? now, now, await LikeCountAsync(postId, cancellationToken), LikedByMe: null, translation,
             post.ViewCount, post.DraftSeo.SeoTitle, post.DraftSeo.CoverAlt, post.DraftSeo.AllKeywords,
             cover?.Width, cover?.Height, post.Kind, post.DraftHideRegisterCta,
-            await BlogRelatedLinks.ResolveAsync(dbContext, post.DraftRelatedPostIds, post.Language, cancellationToken));
+            await BlogRelatedLinks.ResolveAsync(dbContext, post.DraftRelatedPostIds, post.Language, cancellationToken),
+            post.DraftCoverHook, post.DraftCoverIcon);
     }
 
     public async Task<BlogDraftSavedResponse?> SaveDraftAsync(Guid adminUserId, Guid postId, SaveBlogDraftRequest request,
@@ -401,7 +402,8 @@ internal sealed partial class BlogAdminService(
         // A blog post has no guide settings: whatever an editor sent for one is not stored.
         kind == BlogPostKind.Guide && request.Guide is { } guide
             ? new BlogGuideOptions(guide.HideRegisterCta, guide.RelatedPostIds?.ToArray() ?? [])
-            : BlogGuideOptions.Empty);
+            : BlogGuideOptions.Empty,
+        request.CoverCard is { } card ? BlogCoverCard.Normalize(card.Hook, card.Icon) : BlogCoverCard.Empty);
 
     /// <summary>The form landing on the row — the same steps for the first draft (create) and
     /// every one after (the autosave), so create cannot accept what a save would refuse.</summary>
@@ -590,7 +592,8 @@ internal sealed partial class BlogAdminService(
         post.DraftTitle, post.DraftExcerpt, post.DraftContentJson, post.DraftContentHtml, post.DraftUpdatedAt,
         post.Revision, post.Title, post.PublishedAt, post.PublishedUpdatedAt, HasUnpublishedChanges(post), likeCount, post.CreatedAt,
         post.ViewCount, ToResponse(post.DraftSeo), cover?.Width, cover?.Height, post.Kind,
-        new BlogGuideResponse(post.DraftHideRegisterCta, post.DraftRelatedPostIds));
+        new BlogGuideResponse(post.DraftHideRegisterCta, post.DraftRelatedPostIds),
+        new BlogCoverCardResponse(post.DraftCoverHook, post.DraftCoverIcon));
 
     private static BlogSeoResponse ToResponse(BlogSeo seo) =>
         new(seo.SeoTitle, seo.PrimaryKeyword, seo.SecondaryKeywords, seo.CoverAlt);

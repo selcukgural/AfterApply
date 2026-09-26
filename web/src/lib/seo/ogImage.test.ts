@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OG_KICKER_MAX_LENGTH, OG_TITLE_MAX_LENGTH, ogImagePath, sanitizeOgText } from "./ogImage";
+import { OG_KICKER_MAX_LENGTH, OG_TITLE_MAX_LENGTH, blogCoverImagePath, isBlogCoverSlug, ogImagePath, sanitizeOgText } from "./ogImage";
 
 /**
  * The title reaches the image route through a public query string, so what the route draws is
@@ -60,5 +60,26 @@ describe("ogImagePath", () => {
 
     expect(url.searchParams.get("t")!.length).toBeLessThanOrEqual(OG_TITLE_MAX_LENGTH + 1);
     expect(url.searchParams.get("k")!.length).toBeLessThanOrEqual(OG_KICKER_MAX_LENGTH + 1);
+  });
+});
+
+describe("blogCoverImagePath", () => {
+  it("carries only the slug", () => {
+    const url = new URL(blogCoverImagePath("tr", "basvurun-iletildi-ne-demek"), "https://ekariyerim.com");
+    expect(url.pathname).toBe("/tr/og");
+    expect([...url.searchParams.keys()]).toEqual(["post"]);
+    expect(url.searchParams.get("post")).toBe("basvurun-iletildi-ne-demek");
+  });
+});
+
+describe("isBlogCoverSlug", () => {
+  it("accepts a slug the API could make and nothing else", () => {
+    expect(isBlogCoverSlug("basvurun-iletildi-ne-demek")).toBe(true);
+    expect(isBlogCoverSlug("a".repeat(101))).toBe(false);
+    expect(isBlogCoverSlug("../admin")).toBe(false);
+    expect(isBlogCoverSlug("Başvuru")).toBe(false);
+    expect(isBlogCoverSlug("a b")).toBe(false);
+    expect(isBlogCoverSlug("")).toBe(false);
+    expect(isBlogCoverSlug(null)).toBe(false);
   });
 });

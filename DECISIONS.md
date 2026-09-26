@@ -9733,3 +9733,38 @@ atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test et
   MemoryCache'ten önce dispose ediyor. `A_Stopped_Host_Receives_No_More_Backplane_Messages`
   düzeltmeden önce kırmızı, sonra yeşil; tam koşuda kayıt 270 → 0. Kalan 3 kayıt "Redis kapalı"
   testlerinin (`localhost:1`) SignalR abonelik hataları, beklenen.
+
+## Blog: her yazıya kapak, iki sütunlu liste — DECIDED (2026-09-27)
+
+- **Karar (kullanıcı, canvas https://claude.ai/artifact/HtVdk1NECBfBXnknXFinhX, "Son hâli"
+  çerçeveleri):** blog listesi iki sütunlu ızgara (varyant A, 1024 px; telefonda tek sütun), her
+  kartta kapak. Kapak şablonu K2 (açık mavi zemin, koyu metin, marka mavisi simge). Rehber listesi
+  **değişmedi**: aramadan inen okur başlık tarar, kapak bir şey katmıyor.
+- **Otomatik kapak:** yüklenmiş kapak yoksa yazının kendi kapağı çizilir: "Blog" etiketi, kapak
+  cümlesi (boşsa başlık; uzun başlık küçülür, 3 satır, ~110 karakterde "…"), sağ üstte bir simge,
+  altta "e-kariyerim". Admin görsel yüklerse o kullanılır; kaldırırsa otomatik kapak geri gelir.
+  Yüklenmiş ama paylaşım kartı boyutunun altındaki görsel listede görünür, paylaşımda otomatik
+  kapak çıkar (eskiden başlık kartı çıkıyordu).
+- **Görsel dosyası üretilip saklanmıyor.** Tek bileşen (`BlogCoverCard`) listede HTML olarak
+  (container query birimleriyle ölçeklenir), paylaşım görselinde `next/og` ile 1200×630 PNG olarak
+  çizer. Paylaşım görseli `/{locale}/og?post=<slug>`: URL'de yalnızca slug var, metin yayındaki
+  yazıdan okunur (API `GET /api/blog/public/posts/{lang}/{slug}/cover-card`, görüntülenme saymaz).
+  Yani bu adres bir yazının söylemediği hiçbir şeyi markamızla çizdiremez. Ön bellek 1 saat.
+- **Veri:** `BlogPost`'a taslak/yayın çifti olarak `CoverHook` (≤60) ve `CoverIcon` (≤64, ad biçimi
+  `^[a-z0-9]+(-[a-z0-9]+)*$`) eklendi; yayında kopyalanır. Rehberde de alan var ama editör
+  göstermiyor, kullanılmıyor.
+- **Simge seti: Lucide** (`lucide-static`, ISC, **1.48.0'a sabitlendi**, 1.854 simge). Saklanan
+  şey yalnızca simgenin adı; set web'de. Bilinmeyen ad (ileride Lucide'da yeniden adlandırılırsa)
+  varsayılan simgeyle (`newspaper`) çizilir, hata vermez. Sürüm yükseltilirse
+  `coverIconSearch.test.ts` listelerde adı kaybolan simgeyi yakalar; saklanan adlar için DB'ye
+  bakmak gerekir.
+- **Admin:** kapak kartında canlı önizleme, "Kapak cümlesi" (sayaçlı) ve simge seçici penceresi.
+  Arama: kısa bir Türkçe eşleme listesi (maaş, mülakat, ret, bekleme…) + Lucide'ın İngilizce ad ve
+  etiketleri. Set (~1 MB JSON) yalnızca blog editörü açılınca ayrı parça olarak yüklenir.
+- **Öneri:** mevcut SEO "Öner" çağrısı ek bir model çağrısı yapmadan kapak cümlesi ve bir-iki
+  kelimelik İngilizce simge anahtar kelimesi de öneriyor. Anahtar kelime seçicinin kendi aramasıyla
+  simgeye çevriliyor. Hiçbiri kendiliğinden yazılmaz, admin "Uygula" der ("Boşları doldur" bu
+  ikisini de kapsar).
+- **Kapsam dışı bırakılan:** blog/rehber listesinde arama kutusu (5 blog, 10 rehber; bir liste ~30
+  yazıyı geçince tekrar bakılacak; sayfalama zaten var, sayfa başı 10). Instagram/hikâye için
+  dikey kapak (bağlantı önizlemesi olmayan platformlar); istenirse ayrı iş.

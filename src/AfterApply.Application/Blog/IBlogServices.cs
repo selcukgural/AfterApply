@@ -75,6 +75,11 @@ public interface IBlogPublicService
     Task<BlogPostPublicResponse?> GetBySlugAsync(BlogPostKind kind, string language, string slug, Guid? viewerUserId,
         CancellationToken cancellationToken);
 
+    /// <summary>What the generated cover of a published post draws (2026-09-27): its title, line
+    /// and icon. Null when no published post of that kind has the slug in that language. Unlike
+    /// <see cref="GetBySlugAsync"/> this is not a view.</summary>
+    Task<BlogCoverCardPublicResponse?> GetCoverCardAsync(BlogPostKind kind, string language, string slug, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<BlogSlugResponse>> ListSlugsAsync(BlogPostKind kind, CancellationToken cancellationToken);
 
     /// <summary>Whether the site has any published blog post (guides do not count) — what decides

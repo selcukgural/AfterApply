@@ -11,6 +11,9 @@ import { formatArticleDate } from "@/lib/guide/formatArticleDate";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, jsonLdGraph, organizationJsonLd } from "@/lib/seo/jsonLd";
 import { SITE_NAME } from "@/lib/seo/routes";
+import { BlogCoverCard } from "@/components/blog/BlogCoverCard";
+import { coverText } from "@/lib/blog/coverCard";
+import { coverIconNode } from "@/lib/blog/coverIcons.server";
 
 function isBlogLanguage(locale: string): locale is BlogLanguage {
   return (routing.locales as readonly string[]).includes(locale);
@@ -34,6 +37,10 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/blog">):
  * post lit the link on the English site and the link opened on "This page does not exist". Now
  * it opens on a short note and the way to the posts that do exist. The 404 stays for a blog with
  * nothing in either language (no link points here then) and for a blog that is switched off.
+ *
+ * Two columns of cards since 2026-09-27 (canvas "A + K2 + simge"): every card has a cover — the
+ * uploaded one, else the post's generated cover — so no row mixes a picture with a gap. One
+ * column on a phone.
  */
 export default async function BlogListPage({ params, searchParams }: PageProps<"/[locale]/blog">) {
   const { locale } = await params;
@@ -71,7 +78,7 @@ export default async function BlogListPage({ params, searchParams }: PageProps<"
   if (page > totalPages) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 py-12">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 py-12">
       <JsonLd
         data={jsonLdGraph(
           organizationJsonLd(),
@@ -87,22 +94,24 @@ export default async function BlogListPage({ params, searchParams }: PageProps<"
         <p className="text-lg leading-7 text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
       </header>
 
-      <ul className="flex flex-col divide-y divide-gray-200 dark:divide-gray-800">
+      <ul className="grid gap-x-8 gap-y-12 sm:grid-cols-2">
         {list.items.map((post) => (
-          <li key={post.id} className="py-6 first:pt-0">
-            <article className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-              {post.coverImageUrl && (
-                <Link href={blogPostPath(post.slug)} className="shrink-0 sm:w-40" tabIndex={-1} aria-hidden="true">
-                  {/* Same-origin path (next.config rewrites it to the API); plain <img> like the
-                      rest of the public site. */}
+          <li key={post.id}>
+            <article className="flex flex-col gap-4">
+              <Link href={blogPostPath(post.slug)} className="block" tabIndex={-1} aria-hidden="true">
+                {post.coverImageUrl ? (
+                  // Same-origin path (next.config rewrites it to the API); plain <img> like the rest
+                  // of the public site. Cropped to the generated cover's shape so the grid lines up.
                   <img
                     src={post.coverImageUrl}
                     alt=""
                     loading="lazy"
-                    className="aspect-[16/10] w-full rounded-lg border border-gray-200 object-cover dark:border-gray-800"
+                    className="aspect-[1200/630] w-full rounded-xl border border-gray-200 object-cover dark:border-gray-800"
                   />
-                </Link>
-              )}
+                ) : (
+                  <BlogCoverCard text={coverText(post.title, post.coverHook)} icon={coverIconNode(post.coverIcon)} eyebrow={t("title")} />
+                )}
+              </Link>
               <div className="flex min-w-0 flex-col gap-2">
                 <time dateTime={post.publishedAt} className="text-xs text-gray-500 dark:text-gray-500">
                   {formatArticleDate(post.publishedAt.slice(0, 10), locale)}

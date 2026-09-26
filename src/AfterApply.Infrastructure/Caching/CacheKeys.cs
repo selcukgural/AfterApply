@@ -79,6 +79,8 @@ internal static class CacheKeys
 
         public static string Post(BlogPostKind kind, string language, string slug) => $"blog:post:{Segment(kind)}:{language}:{slug}";
 
+        public static string CoverCard(BlogPostKind kind, string language, string slug) => $"blog:cover-card:{Segment(kind)}:{language}:{slug}";
+
         public static string Slugs(BlogPostKind kind) => $"blog:slugs:{Segment(kind)}";
 
         private static string Segment(BlogPostKind kind) => kind == BlogPostKind.Guide ? "guide" : "blog";

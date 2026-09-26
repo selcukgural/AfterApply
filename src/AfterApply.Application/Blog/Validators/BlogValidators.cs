@@ -53,6 +53,14 @@ public sealed class BlogDraftFieldsValidator<T> : AbstractValidator<T> where T :
             .OverridePropertyName("Guide.RelatedPostIds")
             .WithMessage(_ => localizer["BLOG_RELATED_INVALID"])
             .When(x => x.Guide is not null);
+        RuleFor(x => x.CoverCard!.Hook).MaximumLength(BlogCoverCard.MaxHookLength)
+            .OverridePropertyName("CoverCard.Hook").When(x => x.CoverCard is not null);
+        // Blank is "the default icon"; anything else has to be shaped like a name in the set.
+        RuleFor(x => x.CoverCard!.Icon)
+            .Must(icon => string.IsNullOrWhiteSpace(icon) || BlogCoverCard.IsIconName(icon.Trim().ToLowerInvariant()))
+            .OverridePropertyName("CoverCard.Icon")
+            .WithMessage(_ => localizer["VALIDATION_BLOG_COVER_ICON_INVALID"])
+            .When(x => x.CoverCard is not null);
     }
 
     private static bool BeAnEditorDocument(string? json)

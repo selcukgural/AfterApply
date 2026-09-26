@@ -356,10 +356,13 @@ describe("share images", () => {
     expect(source).toMatch(/twitter:\s*\{[\s\S]*?images,/);
   });
 
-  it("are the post's cover on a blog post when it is card-sized, else the generated card (2026-09-21)", () => {
+  it("are the post's cover on a blog post when it is card-sized, else its generated cover (2026-09-21, 2026-09-27)", () => {
     const page = read("src/app/[locale]/(public)/blog/[slug]/page.tsx");
     expect(page).toContain("coverIsShareImage(coverSize)");
-    expect(page).toMatch(/image:\s*\{\s*url:\s*`\$\{SITE_URL\}\$\{post\.coverImageUrl\}`/);
+    expect(page).toMatch(/\{\s*url:\s*`\$\{SITE_URL\}\$\{post\.coverImageUrl\}`/);
+    // Never the title card: a blog post always has a generated cover to share.
+    expect(page).toContain("blogCoverImagePath(locale, post.slug)");
+    expect(page).not.toContain("ogImagePath(");
     const source = read("src/lib/seo/pageMetadata.ts");
     expect(source).toContain("const images = [image ?? {");
   });

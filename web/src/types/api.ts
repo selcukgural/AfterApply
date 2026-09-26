@@ -2232,6 +2232,10 @@ export interface BlogPostListItem {
   publishedAt: string;
   updatedAt: string;
   likeCount: number;
+  /** What the generated cover draws when there is no uploaded one (2026-09-27): its own line
+   *  (null: the title) and an icon's name from the Lucide set (null or unknown: the default). */
+  coverHook: string | null;
+  coverIcon: string | null;
 }
 
 /** The public page. `contentHtml` is sanitized by the API at write time and rendered as-is;
@@ -2269,6 +2273,23 @@ export interface BlogSeoSuggestion {
   slug: string | null;
   /** One line of advice about the search intent; shown, never stored. */
   intentNote: string | null;
+  /** A line for the generated cover (2026-09-27). */
+  coverHook: string | null;
+  /** One or two English words — not an icon's name: the editor searches the icon set with it. */
+  coverIconKeyword: string | null;
+}
+
+/** The generated cover's two inputs (DECISIONS.md 2026-09-27). Both optional. */
+export interface BlogCoverCard {
+  hook: string | null;
+  icon: string | null;
+}
+
+/** What the share-image route reads to draw a published post's generated cover. Not a view. */
+export interface BlogCoverCardPublic {
+  title: string;
+  hook: string | null;
+  icon: string | null;
 }
 
 /** The four SEO fields of a draft (DECISIONS.md 2026-09-21). Every one optional. */
@@ -2463,6 +2484,8 @@ export interface AdminBlogPost {
   kind: BlogPostKind;
   /** The draft's guide settings (2026-09-26); false and empty on a blog post. */
   draftGuide: BlogGuideSettings;
+  /** The draft's generated-cover fields (2026-09-27). */
+  draftCoverCard: BlogCoverCard;
 }
 
 /** Create, from the first draft: sent once the author has typed at least one character into the
@@ -2481,6 +2504,7 @@ export interface CreateBlogPostRequest {
   guide?: BlogGuideSettings;
   /** Absent is a blog post — what every editor before guides wrote. */
   kind?: BlogPostKind;
+  coverCard?: BlogCoverCard;
 }
 
 /** The autosave. Everything editable travels every time; `revision` is the one the editor last
@@ -2498,6 +2522,7 @@ export interface SaveBlogDraftRequest {
   seo: BlogSeo;
   /** Ignored by the API on a blog post. */
   guide: BlogGuideSettings;
+  coverCard: BlogCoverCard;
 }
 
 export interface BlogDraftSaved {

@@ -1,7 +1,7 @@
 // Server-side only by convention (called from server components and the sitemap). The one secret a
 // fetch carries comes from renderHeaders, which reads it from a server-only environment variable.
 import { renderHeaders } from "@/lib/api/renderHeaders.server";
-import type { BlogCommentList, BlogLanguage, BlogPostListItem, BlogPostPublic, BlogSlug, PagedResult } from "@/types/api";
+import type { BlogCommentList, BlogCoverCardPublic, BlogLanguage, BlogPostListItem, BlogPostPublic, BlogSlug, PagedResult } from "@/types/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5151";
 
@@ -81,4 +81,13 @@ export async function fetchGuideSlugs(): Promise<BlogSlug[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * What a published blog post's generated cover draws (2026-09-27), for the share-image route. On
+ * the one-minute revalidate: a crawler re-fetches the picture every time it re-reads the page, and
+ * this read is not a view (the API's own route for it counts none). Null when there is no such post.
+ */
+export function fetchBlogCoverCard(language: BlogLanguage, slug: string): Promise<BlogCoverCardPublic | null> {
+  return fetchPublic<BlogCoverCardPublic>(`/api/blog/public/posts/${language}/${encodeURIComponent(slug)}/cover-card`, language, "revalidate");
 }
