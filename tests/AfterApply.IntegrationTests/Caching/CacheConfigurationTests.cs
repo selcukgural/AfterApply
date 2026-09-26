@@ -67,6 +67,58 @@ public class CacheConfigurationTests(ApiHost<DefaultProfile> host) : IClassFixtu
         _factory.Services.GetService<IConnectionMultiplexer>().ShouldNotBeNull();
     }
 
+    /// <summary>A stopped host must stop listening. The rate-limit tests' own hosts did not: once
+    /// disposed, their backplane subscription stayed open and every invalidation the class's
+    /// main host published afterwards landed in a disposed MemoryCache — ~270 unobserved
+    /// ObjectDisposedExceptions a run, 81 of them from one class (2026-09-26).</summary>
+    [Fact]
+    public async Task A_Stopped_Host_Receives_No_More_Backplane_Messages()
+    {
+        var disposedAfterStop = 0;
+        void Count(object? sender, UnobservedTaskExceptionEventArgs e)
+        {
+            if (e.Exception.Flatten().InnerExceptions.Any(x => x is ObjectDisposedException))
+            {
+                Interlocked.Increment(ref disposedAfterStop);
+            }
+        }
+
+        await using (var limited = host.Standalone(builder => builder.UseSetting("RateLimiting:Enabled", "true")))
+        {
+            var client = limited.CreateClient();
+            for (var i = 0; i < 6; i++)
+            {
+                await client.PostAsJsonAsync("/api/auth/login",
+                    new LoginRequest("no-such-user@example.com", "whatever"), JsonOptions);
+            }
+        }
+
+        TaskScheduler.UnobservedTaskException += Count;
+        try
+        {
+            // Traffic on the class's channel from the host that is still running.
+            var cache = _factory!.Services.GetRequiredService<HybridCache>();
+            for (var i = 0; i < 20; i++)
+            {
+                await cache.SetAsync($"after-stop-{i}", i, tags: ["after-stop"]);
+                await cache.RemoveAsync($"after-stop-{i}");
+            }
+            await cache.RemoveByTagAsync("after-stop");
+
+            await Task.Delay(500);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+        finally
+        {
+            TaskScheduler.UnobservedTaskException -= Count;
+        }
+
+        disposedAfterStop.ShouldBe(0);
+    }
+
     /// <summary>The L1 is the DI MemoryCache with a SizeLimit: the key space includes
     /// company-search:{query}, whose cardinality comes from user input, so an unbounded L1 is a
     /// memory-exhaustion vector against a Cloud Run container. FusionCache does not stamp entries

@@ -79,6 +79,7 @@ using Microsoft.AspNetCore.Identity;
 using Google.Cloud.Storage.V1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -88,6 +89,7 @@ using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using ZiggyCreatures.Caching.Fusion;
 using ZiggyCreatures.Caching.Fusion.Backplane.StackExchangeRedis;
+using ZiggyCreatures.Caching.Fusion.MicrosoftHybridCache;
 using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
 
 namespace AfterApply.Infrastructure;
@@ -409,8 +411,16 @@ public static class DependencyInjection
             // container disposed after it — the SignalR hub manager's own Dispose then threw
             // ObjectDisposedException out of Host.Dispose (a CI run in three, 2026-09-19/20).
             // Owning its connection, the backplane can only close its own.
-            .WithBackplane(_ => new RedisBackplane(new RedisBackplaneOptions { Configuration = redisConnectionString }))
-            .AsHybridCache();
+            .WithBackplane(_ => new RedisBackplane(new RedisBackplaneOptions { Configuration = redisConnectionString }));
+
+        // HybridCache over the container's IFusionCache singleton, not FusionCache's AsHybridCache().
+        // That one builds the cache inside the adapter's own factory, and the adapter is not
+        // disposable, so the container never disposed the FusionCache: the app only resolves
+        // HybridCache, and a stopped host kept its backplane connection and subscription open for
+        // the life of the process (in the integration suite, messages then landed in the host's
+        // disposed MemoryCache ~270 times a run). Resolved through IFusionCache, the container owns
+        // it and disposes it — before the MemoryCache it depends on. See CacheConfigurationTests.
+        services.AddSingleton<HybridCache>(sp => new FusionHybridCache(sp.GetRequiredService<IFusionCache>()));
         services.AddScoped<ICompanyCacheInvalidator, CompanyCacheInvalidator>();
 
         // Cross-instance mutex, on the same multiplexer. Deliberately narrow in use: Hangfire's
