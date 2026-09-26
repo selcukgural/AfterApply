@@ -203,9 +203,9 @@
 }
 
 /*
- * The blog's prose (2026-09-19). Element selectors rather than utility classes because the body
- * is HTML the API stored (BlogArticleBody), not JSX — the same look mdx-components.tsx gives the
- * guide, written as CSS. Used twice: on the public post and inside the editor's content area, so
+ * The blog's prose (2026-09-19), and the guide's since it moved into the blog's editor
+ * (2026-09-26). Element selectors rather than utility classes because the body is HTML the API
+ * stored (BlogArticleBody), not JSX. Used twice: on the public post and inside the editor's content area, so
  * what the author sees is what the reader gets. Inline styles the sanitizer allows (colour, font
  * family/size, alignment) sit on spans and paragraphs and win over these by specificity as usual.
  */

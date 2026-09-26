@@ -8,7 +8,7 @@ import { parseFlowCard } from "@/lib/flowCard/card";
 import { FLOW_NODE_KEYS } from "@/lib/flowCard/copy";
 import { flowCardPath } from "@/lib/flowCard/path";
 import { buttonClassName } from "@/components/ui/Button";
-import { guidePath } from "@/lib/guide/articles";
+import { guidePath } from "@/lib/guide/guideLinks";
 
 /**
  * Where a shared flow card lands: `/tr/akis/<card>` (`/en/flow/<card>` by rewrite). The card itself

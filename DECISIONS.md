@@ -9635,3 +9635,16 @@ ilk işin maddeleri Sertifikalar'ın altında) hiçbir kontrole takılmadı.
 - **Dönüştürme bilinçli olarak dar:** MDX'ler düz CommonMark (JSX yok, GFM yok); araç Markdown
   ağacını doğrudan editör belgesine çevirir, desteklemediği bir düğümde durur (sessizce içerik
   kaybetmez). Görsel altyazısı editörde yok; görselin altına italik satır olarak taşınır.
+- **2. adım (2026-09-26):** prod'a taşıma yapıldı (20 yazı; başlık, özet, tarih, kayıt kutusu, ilgili
+  bağlantılar, çeviri eşi ve görseller `articles.ts` ile tek tek karşılaştırıldı). Herkese açık
+  `/guide` ve `/guide/<slug>` artık API'den okur (`kind=Guide`, `no-store`, dinamik; bilinmeyen slug
+  gerçek 404). Site haritası rehberleri `/slugs?kind=Guide`'dan alır; `/guide` dizini
+  `PUBLIC_PATHS`'te kalır.
+- **Kodda kalan tek rehber bilgisi `GUIDE_LINKS`:** eskiden dosya olan 10 rehberin anahtar → TR/EN
+  slug tablosu. Ürünün rehbere adla bağlandığı yerler (`guidePath(key)`) ve proxy'nin yanlış dil
+  301'i bunu kullanır. Slug yayından sonra kilitli, tablo DB'den kayamaz. Editörde yeni yazılan
+  rehber bu tabloya girmez: dil değiştirici hreflang'den bulur, çevirisi yoksa `/guide`'a düşer.
+- MDX tamamen kalktı (`@next/mdx`, `@mdx-js/*`, `mdx-components.tsx`, `src/content/guide`);
+  tek seferlik taşıma aracı da silindi (git geçmişinde). `public/guide/*.png` bırakıldı: artık
+  sayfada değiller ama eski görsel URL'leri indekste olabilir; `.xlsx` şablonları rehberlerden
+  bağlanıyor.

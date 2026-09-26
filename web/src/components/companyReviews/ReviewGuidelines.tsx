@@ -1,6 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { guidePath } from "@/lib/guide/articles";
+import { guidePath } from "@/lib/guide/guideLinks";
 
 /** How the structured form works, beside it: what is required, what the picks are, why there is
  *  no free text, and that saving publishes. The full guide article linked underneath goes into

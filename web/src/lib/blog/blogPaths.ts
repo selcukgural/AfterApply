@@ -53,11 +53,16 @@ export interface BlogAlternatesInput {
  * (the site's default locale), else the post's own.
  */
 export function blogAlternates(post: BlogAlternatesInput, base = ""): Record<string, string> {
+  return postAlternates("Blog", post, base);
+}
+
+/** The same for either section: a guide's pair lives under `/guide` (2026-09-26). */
+export function postAlternates(kind: BlogPostKind, post: BlogAlternatesInput, base = ""): Record<string, string> {
   const pages: Record<string, string> = {
-    [post.language]: `${base}/${post.language}${blogPostPath(post.slug)}`,
+    [post.language]: `${base}/${post.language}${postPath(kind, post.slug)}`,
   };
   if (post.translation) {
-    pages[post.translation.language] = `${base}/${post.translation.language}${blogPostPath(post.translation.slug)}`;
+    pages[post.translation.language] = `${base}/${post.translation.language}${postPath(kind, post.translation.slug)}`;
   }
   const xDefault = pages[routing.defaultLocale] ?? pages[post.language];
   return { ...pages, "x-default": xDefault };

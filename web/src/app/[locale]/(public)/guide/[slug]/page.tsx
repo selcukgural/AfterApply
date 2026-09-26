@@ -1,154 +1,90 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Link } from "@/i18n/navigation";
 import { buildMetadata } from "@/lib/seo/pageMetadata";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd } from "@/lib/seo/jsonLd";
 import { ogImagePath } from "@/lib/seo/ogImage";
-import {
-  GUIDE_ARTICLES,
-  GUIDE_PATH,
-  articlePath,
-  articlePaths,
-  findArticleByKey,
-  findArticleBySlug,
-  isGuideLocale,
-} from "@/lib/guide/articles";
-import { loadGuideArticle } from "@/lib/guide/content";
-import { guideImageSize } from "@/lib/guide/images";
+import { coverIsShareImage } from "@/lib/seo/shareImage";
+import { GUIDE_PATH, isGuideLocale } from "@/lib/guide/guideLinks";
+import { postAlternates, postPath } from "@/lib/blog/blogPaths";
+import { fetchGuide } from "@/lib/blog/publicApi.server";
+import { wordCount } from "@/lib/blog/seoChecks";
 import { SITE_NAME, SITE_URL } from "@/lib/seo/routes";
-import { formatArticleDate } from "@/lib/guide/formatArticleDate";
-
-/**
- * Every article is listed in `generateStaticParams`, so a slug that is not there is a 404 by
- * definition — answered by Next before this page runs. Without this, an unknown slug was rendered
- * on demand as a static page, and the `notFound()` it then hit was a runtime static-to-dynamic
- * error: a 500 in production, not a 404 (2026-09-16). The other locale's slug never reaches here
- * either — the proxy redirects it first (`guideRedirectForPath`).
- */
-export const dynamicParams = false;
-
-export function generateStaticParams({ params }: { params: { locale: string } }) {
-  if (!isGuideLocale(params.locale)) return [];
-  return GUIDE_ARTICLES.map((article) => ({ slug: article.copy[params.locale as "tr" | "en"].slug }));
-}
+import { GuideArticle } from "@/components/guide/GuideArticle";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/guide/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
   setRequestLocale(locale);
   if (!isGuideLocale(locale)) return {};
 
-  const article = findArticleBySlug(slug, locale);
-  if (!article) return {};
+  const guide = await fetchGuide(locale, slug);
+  if (!guide) return {};
 
   const tSection = await getTranslations("metadata.pages");
-  const image = article.copy[locale].image;
+  const coverSize = { width: guide.coverWidth, height: guide.coverHeight };
   return buildMetadata({
     locale,
-    // The slug differs per locale, so the hreflang set has to be built from the article rather
-    // than from this page's own path.
-    path: articlePaths(article),
-    title: article.copy[locale].title,
-    description: article.copy[locale].description,
-    article: { publishedTime: article.published, modifiedTime: article.updated },
+    path: postPath("Guide", slug),
+    // The slug differs per language: the hreflang pair is built from the guide and its linked
+    // translation, not from "this path in every locale".
+    languages: postAlternates("Guide", guide),
+    title: guide.seoTitle || guide.title,
+    description: guide.excerpt || guide.title,
+    article: { publishedTime: guide.publishedAt, modifiedTime: guide.updatedAt },
     kicker: tSection("guide.title"),
-    // An article with its own picture shares that picture, not the generated title card.
-    ...(image ? { image: { url: `${SITE_URL}${image.src}`, alt: image.alt, ...guideImageSize(image.src) } } : {}),
+    ...(guide.coverImageUrl && coverIsShareImage(coverSize)
+      ? { image: { url: `${SITE_URL}${guide.coverImageUrl}`, width: guide.coverWidth!, height: guide.coverHeight!, alt: guide.coverAlt ?? guide.title } }
+      : {}),
   });
 }
 
+/**
+ * One guide article (2026-09-26: from the database, written in the blog's editor). Rendered on
+ * every request from a `no-store` fetch — the API caches the published version and evicts on
+ * every publish — so the page is dynamic and `notFound()` is a real 404, not the static-page 500
+ * of 2026-09-16. An address in the wrong language never reaches here for the guides that were
+ * files: the proxy redirects it first (`guideRedirectForPath`). The article is `GuideArticle`,
+ * shared with the editor's preview; this page adds only what a crawler reads.
+ */
 export default async function GuideArticlePage({ params }: PageProps<"/[locale]/guide/[slug]">) {
   const { locale, slug } = await params;
   if (!isGuideLocale(locale)) notFound();
 
-  // A slug the other locale owns is redirected by the proxy before it gets here (see
-  // guideRedirectForPath); this page stays static and only ever sees its own slugs.
-  const article = findArticleBySlug(slug, locale);
-  if (!article) notFound();
+  const guide = await fetchGuide(locale, slug);
+  if (!guide) notFound();
 
-  const copy = article.copy[locale];
-  const Body = await loadGuideArticle(article.key, locale);
-  const t = await getTranslations("guide.article");
   const tSection = await getTranslations("metadata.pages");
-
-  const related = article.related
-    .map((key) => findArticleByKey(key))
-    .filter((entry) => entry !== undefined)
-    .slice(0, 2);
+  const path = postPath("Guide", guide.slug);
+  const url = `${SITE_URL}/${locale}${path}`;
+  const image = guide.coverImageUrl
+    ? `${SITE_URL}${guide.coverImageUrl}`
+    : `${SITE_URL}${ogImagePath(locale, guide.title, tSection("guide.title"))}`;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 py-12">
+    <>
       <JsonLd
         data={jsonLdGraph(
           organizationJsonLd(),
           breadcrumbJsonLd(locale, [
             { name: SITE_NAME, path: "" },
             { name: tSection("guide.title"), path: GUIDE_PATH },
-            { name: copy.title, path: articlePath(article, locale) },
+            { name: guide.title, path },
           ]),
           articleJsonLd({
             locale,
-            path: articlePath(article, locale),
-            headline: copy.title,
-            description: copy.description,
-            datePublished: article.published,
-            dateModified: article.updated,
-            image: `${SITE_URL}${copy.image?.src ?? ogImagePath(locale, copy.title, tSection("guide.title"))}`,
+            path,
+            headline: guide.title,
+            description: guide.excerpt || guide.title,
+            datePublished: guide.publishedAt,
+            dateModified: guide.updatedAt,
+            image,
+            keywords: guide.keywords,
+            wordCount: wordCount(guide.contentHtml),
           }),
         )}
       />
-
-      <header className="flex flex-col gap-3">
-        <Link href={GUIDE_PATH} className="text-sm font-medium text-blue-600 dark:text-blue-400">
-          {tSection("guide.title")}
-        </Link>
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{copy.title}</h1>
-        <p className="text-lg leading-7 text-gray-600 dark:text-gray-400">{copy.description}</p>
-        <time
-          dateTime={article.updated ?? article.published}
-          className="text-xs text-gray-500 dark:text-gray-500"
-        >
-          {article.updated
-            ? t("updatedOn", { date: formatArticleDate(article.updated, locale) })
-            : t("publishedOn", { date: formatArticleDate(article.published, locale) })}
-        </time>
-      </header>
-
-      <div className="border-t border-gray-200 pt-2 dark:border-gray-800">
-        <Body />
-      </div>
-
-      {!article.hideRegisterCta && (
-        <section className="rounded-lg border border-blue-200 bg-blue-50/60 p-6 dark:border-blue-900 dark:bg-blue-950/30">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("cta.title")}</h2>
-          <p className="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">{t("cta.body")}</p>
-          <Link
-            href="/register"
-            className="mt-4 inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            {t("cta.button")}
-          </Link>
-        </section>
-      )}
-
-      {related.length > 0 && (
-        <section className="flex flex-col gap-3 border-t border-gray-200 pt-8 dark:border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("related")}</h2>
-          <ul className="flex flex-col gap-2">
-            {related.map((entry) => (
-              <li key={entry.key}>
-                <Link
-                  href={articlePath(entry, locale)}
-                  className="text-sm font-medium text-blue-600 underline underline-offset-2 dark:text-blue-400"
-                >
-                  {entry.copy[locale].title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </div>
+      <GuideArticle post={guide} url={url} />
+    </>
   );
 }

@@ -2,23 +2,16 @@ import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { PUBLIC_PATHS, SITE_URL, alternateLanguages, pathFor } from "@/lib/seo/routes";
 import { fetchReviewedSlugs } from "@/lib/companies/publicApi.server";
-import { fetchBlogSlugs } from "@/lib/blog/publicApi.server";
-import { BLOG_PATH, blogAlternates, blogPostPath } from "@/lib/blog/blogPaths";
+import { fetchBlogSlugs, fetchGuideSlugs } from "@/lib/blog/publicApi.server";
+import { BLOG_PATH, blogAlternates, blogPostPath, postAlternates, postPath } from "@/lib/blog/blogPaths";
 import type { BlogSlug } from "@/types/api";
-import { guideImageAt } from "@/lib/guide/articles";
 
-/**
- * The static public pages: everything in PUBLIC_PATHS, in every locale. A guide article with a
- * picture of its own lists it as an `<image:image>`, which is how Google's image sitemap extension
- * tells it which picture belongs to which page (developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps).
- */
+/** The static public pages: everything in PUBLIC_PATHS, in every locale. */
 export function staticSitemapEntries(): MetadataRoute.Sitemap {
   return routing.locales.flatMap((locale) =>
     PUBLIC_PATHS.map((path) => {
-      const image = guideImageAt(pathFor(path, locale), locale);
       return {
         url: `${SITE_URL}/${locale}${pathFor(path, locale)}`,
-        ...(image ? { images: [`${SITE_URL}${image.src}`] } : {}),
         // No `lastModified`. This route is rendered per request, so `new Date()` reported every one
         // of these URLs as changed on every crawl — a signal Google learns to ignore outright. An
         // absent lastmod is read as "use your own crawl history", which is the honest answer until
@@ -72,9 +65,22 @@ export function blogSitemapEntries(posts: readonly BlogSlug[]): MetadataRoute.Si
   return [...indexes, ...pages];
 }
 
+/**
+ * The guide's articles (2026-09-26: from the database), each under its own language with the
+ * last publish as `lastModified` and its translation as the hreflang pair. The guide's index is
+ * in PUBLIC_PATHS: unlike the blog's it has always been there, and it stays.
+ */
+export function guideSitemapEntries(guides: readonly BlogSlug[]): MetadataRoute.Sitemap {
+  return guides.map((guide) => ({
+    url: `${SITE_URL}/${guide.language}${postPath("Guide", guide.slug)}`,
+    lastModified: new Date(guide.updatedAt),
+    alternates: { languages: postAlternates("Guide", guide, SITE_URL) },
+  }));
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Both fetchers answer [] when the API is unreachable, so the sitemap degrades to the static
+  // The fetchers answer [] when the API is unreachable, so the sitemap degrades to the static
   // list rather than failing the crawl.
-  const [companies, posts] = await Promise.all([fetchReviewedSlugs(), fetchBlogSlugs()]);
-  return [...staticSitemapEntries(), ...companySitemapEntries(companies), ...blogSitemapEntries(posts)];
+  const [companies, posts, guides] = await Promise.all([fetchReviewedSlugs(), fetchBlogSlugs(), fetchGuideSlugs()]);
+  return [...staticSitemapEntries(), ...companySitemapEntries(companies), ...blogSitemapEntries(posts), ...guideSitemapEntries(guides)];
 }

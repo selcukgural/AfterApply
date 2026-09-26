@@ -41,6 +41,12 @@ describe("localeSwitchPath", () => {
     expect(localeSwitchPath("/blog", "tr")).toBe("/blog");
   });
 
+  it("finds a guide written in the editor through its hreflang, and lands on the guide index without one (2026-09-26)", () => {
+    const alternates = { tr: "https://ekariyerim.com/tr/guide/yeni-rehber", en: "https://ekariyerim.com/en/guide/new-guide" };
+    expect(localeSwitchPath("/guide/new-guide", "tr", alternates)).toBe("/guide/yeni-rehber");
+    expect(localeSwitchPath("/guide/new-guide", "tr", { en: "https://ekariyerim.com/en/guide/new-guide" })).toBe("/guide");
+  });
+
   it("ignores an alternate that points under another locale", () => {
     expect(localeSwitchPath("/offer-comparison", "tr", { tr: "https://ekariyerim.com/en/offer-comparison" })).toBe(
       "/teklif-karsilastirma",

@@ -1,7 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
-import { guideRedirectForPath } from "./lib/guide/articles";
+import { guideRedirectForPath } from "./lib/guide/guideLinks";
 import { cvScanRedirectForPath, cvScanScoreCardOf } from "./lib/cvScan/path";
 import { parseScoreCard } from "./lib/cvScan/scoreCard";
 import { parseFlowCard } from "./lib/flowCard/card";

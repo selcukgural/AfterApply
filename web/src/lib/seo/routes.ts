@@ -1,5 +1,5 @@
 import { routing } from "@/i18n/routing";
-import { GUIDE_ARTICLES, GUIDE_PATH, articlePaths } from "@/lib/guide/articles";
+import { GUIDE_PATH } from "@/lib/guide/guideLinks";
 import { CV_SCAN_PATHS } from "@/lib/cvScan/path";
 import { ABOUT_PATHS } from "@/lib/about/path";
 import { OFFER_COMPARE_PATHS } from "@/lib/offerCompare/path";
@@ -50,7 +50,7 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "/login",
   "/register",
   "/benchmark",
-  // Translated like the guide slugs: /tr/cv-tarama, /en/cv-scan.
+  // Translated per locale: /tr/cv-tarama, /en/cv-scan.
   CV_SCAN_PATHS,
   OFFER_COMPARE_PATHS,
   ABOUT_PATHS,
@@ -64,10 +64,9 @@ export const PUBLIC_PATHS: LocalisedPath[] = [
   "/terms-of-sale",
   "/refund-policy",
   ...HELP_TOPICS.map((topic) => topic.href),
+  // The guide's index. The articles themselves come from the API since 2026-09-26 and are listed
+  // by the sitemap from the guide's slug feed (guideSitemapEntries), like the blog's posts.
   GUIDE_PATH,
-  // The guide articles are the one place where the path itself differs per locale: the slug is
-  // where the search terms live, so it is translated rather than shared.
-  ...GUIDE_ARTICLES.map(articlePaths),
 ];
 
 /**

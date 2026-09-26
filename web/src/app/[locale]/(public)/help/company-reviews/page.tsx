@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { StepList } from "@/components/help/StepList";
 import { Callout } from "@/components/help/Callout";
 import { Screenshot } from "@/components/help/Screenshot";
-import { guidePath } from "@/lib/guide/articles";
+import { guidePath } from "@/lib/guide/guideLinks";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/help/company-reviews">): Promise<Metadata> {
   const { locale } = await params;
