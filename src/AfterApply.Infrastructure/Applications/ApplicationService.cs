@@ -547,7 +547,8 @@ internal sealed class ApplicationService(
         // not a history.
         return ChangeStatusCoreAsync(userId, applicationId, request.NewStatus,
             request.ChangedAt ?? DateTimeOffset.UtcNow, StatusChangeContext.Manual(request.Note),
-            request.PromisedReplyBy, request.RejectionNotice, cancellationToken);
+            request.PromisedReplyBy, request.RejectionNotice, cancellationToken,
+            request.InterviewAt, request.InterviewFormat);
     }
 
     public Task<ApplicationDetailResponse?> ChangeStatusAsync(Guid userId, Guid applicationId,
@@ -559,7 +560,8 @@ internal sealed class ApplicationService(
 
     private async Task<ApplicationDetailResponse?> ChangeStatusCoreAsync(Guid userId, Guid applicationId,
         ApplicationStatus newStatus, DateTimeOffset changedAt, StatusChangeContext context,
-        DateOnly? promisedReplyBy, RejectionNotice? rejectionNotice, CancellationToken cancellationToken)
+        DateOnly? promisedReplyBy, RejectionNotice? rejectionNotice, CancellationToken cancellationToken,
+        DateTimeOffset? interviewAt = null, InterviewFormat? interviewFormat = null)
     {
         var application = await FindOwnedAsync(userId, applicationId, cancellationToken);
         if (application is null)
@@ -577,6 +579,15 @@ internal sealed class ApplicationService(
             application.SetReplyPromise(promisedReplyBy, changedAt, DateTimeOffset.UtcNow);
         }
 
+        // Same reading for an interview given with the change: it belongs to the stage just opened.
+        // It may add an InterviewScheduled event after the change's StatusChanged one, so every
+        // event from the StatusChanged on is added below.
+        var interviewEvents = application.Events.Count;
+        if (interviewAt is not null)
+        {
+            application.SetInterview(interviewAt, interviewFormat, DateTimeOffset.UtcNow);
+        }
+
         // application.Events/StatusHistory were never Included (FindOwnedAsync
         // loads the bare row), so EF has no prior tracking entry to confuse the new
         // items with — explicitly Add()-ing them, rather than relying on EF to
@@ -584,13 +595,20 @@ internal sealed class ApplicationService(
         // issue where DetectChanges can mis-snapshot newly-added items in a loaded
         // collection navigation as Modified (UPDATE) instead of Added (INSERT).
         dbContext.ApplicationStatusHistories.Add(application.StatusHistory.Last());
-        dbContext.ApplicationEvents.Add(application.Events.Last());
+        foreach (var addedEvent in application.Events.Skip(interviewEvents - 1))
+        {
+            dbContext.ApplicationEvents.Add(addedEvent);
+        }
+
         await boardSync.OnStatusChangedAsync(userId, [(applicationId, newStatus)], context.Origin, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
         await RetireRemindersIfTerminalAsync(userId, newStatus, [applicationId], cancellationToken);
         await RetireRemindersIfPromisePendingAsync(application, cancellationToken);
+        // Any stage change reshapes the reminders card, not only a closing one: an interview
+        // question about the stage just left goes, an interview recorded with this change shows up.
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
     }
@@ -616,6 +634,31 @@ internal sealed class ApplicationService(
         application.SetReplyPromise(request.PromisedReplyBy, stageSince, DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
         await RetireRemindersIfPromisePendingAsync(application, cancellationToken);
+
+        return await ToDetailAsync(application, cancellationToken);
+    }
+
+    public async Task<ApplicationDetailResponse?> SetInterviewAsync(Guid userId, Guid applicationId,
+        SetInterviewRequest request, CancellationToken cancellationToken)
+    {
+        var application = await FindOwnedAsync(userId, applicationId, cancellationToken);
+        if (application is null)
+        {
+            return null;
+        }
+
+        var eventsBefore = application.Events.Count;
+        application.SetInterview(request.InterviewAt, request.Format, DateTimeOffset.UtcNow);
+        // Added explicitly for the reason ChangeStatusCoreAsync gives: Events was never Included.
+        foreach (var addedEvent in application.Events.Skip(eventsBefore))
+        {
+            dbContext.ApplicationEvents.Add(addedEvent);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        // The card lists upcoming interviews and asks about past ones; a moved or cleared date has
+        // to show there now, not after the cache's own expiry.
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
         return await ToDetailAsync(application, cancellationToken);
     }
@@ -923,6 +966,7 @@ internal sealed class ApplicationService(
             application.CvDocumentId, cvDocumentFileName,
             company.KariyerNetUrl, company.Industry, company.Country, company.Slug,
             application.PromisedReplyBy, application.PromisedReplyStatus, promiseOutcome,
-            application.RejectionNotice);
+            application.RejectionNotice,
+            application.CurrentInterviewAt, application.CurrentInterviewAt is null ? null : application.InterviewFormat);
     }
 }

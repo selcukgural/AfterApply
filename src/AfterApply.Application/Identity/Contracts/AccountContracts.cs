@@ -36,7 +36,11 @@ public sealed record ApplicationExportItem(
     // rejection?" — theirs, so they leave with the export.
     DateOnly? PromisedReplyBy = null,
     ApplicationStatus? PromisedReplyStatus = null,
-    RejectionNotice? RejectionNotice = null);
+    RejectionNotice? RejectionNotice = null,
+    // The interview the user recorded, with the stage it belongs to.
+    DateTimeOffset? InterviewAt = null,
+    InterviewFormat? InterviewFormat = null,
+    ApplicationStatus? InterviewStatus = null);
 
 public sealed record ImportBatchExportItem(
     Guid Id,
@@ -52,7 +56,8 @@ public sealed record ReminderExportItem(
     ReminderType Type,
     DateTimeOffset ReferenceAt,
     DateTimeOffset CreatedAt,
-    DateTimeOffset? DismissedAt);
+    DateTimeOffset? DismissedAt,
+    DateTimeOffset? SnoozedUntil = null);
 
 /// <summary>Metadata only. The CV files themselves are not inlined into the export — they are
 /// already downloadable one by one from the CV page, and base64-ing up to ten documents into a
@@ -179,7 +184,14 @@ public sealed record AccountExportResponse(
     IReadOnlyList<ExperienceInviteDismissalExportItem>? ExperienceInviteDismissals = null,
     IReadOnlyList<CompanyProfileSubmissionExportItem>? CompanyProfileSubmissions = null,
     IReadOnlyList<TrackedJobExportItem>? TrackedJobs = null,
-    IReadOnlyList<BoardCardExportItem>? BoardCards = null);
+    IReadOnlyList<BoardCardExportItem>? BoardCards = null,
+    IReadOnlyList<InterviewNotificationExportItem>? InterviewNotifications = null);
+
+/// <summary>A bell row about one of the user's interviews (2026-09-27): which application, which
+/// moment, and whether it was read or cleared.</summary>
+public sealed record InterviewNotificationExportItem(
+    Guid ApplicationId, InterviewNotificationKind Kind, DateTimeOffset InterviewAt, DateTimeOffset CreatedAt,
+    DateTimeOffset? ReadAt, DateTimeOffset? DismissedAt);
 
 /// <summary>One card on the applications board (2026-09-27): which application or saved posting
 /// it stands for, its place in its column, how it got there and when.</summary>

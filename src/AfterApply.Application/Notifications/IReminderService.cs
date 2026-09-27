@@ -38,6 +38,32 @@ public interface IReminderService
     /// </summary>
     Task<BulkChangeStatusResponse> BulkMarkGhostedAsync(Guid userId, BulkReminderRequest request, CancellationToken cancellationToken);
 
+    /// <summary>Takes one reminder off the list for <see cref="SnoozeReminderRequest.Days"/> days. False
+    /// when it is not the caller's or is already closed.</summary>
+    Task<bool> SnoozeAsync(Guid userId, Guid reminderId, SnoozeReminderRequest request, CancellationToken cancellationToken);
+
+    /// <summary>The undo of a snooze: the row is back on the list now. False when it is not the
+    /// caller's.</summary>
+    Task<bool> UnsnoozeAsync(Guid userId, Guid reminderId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Answers an InterviewHeld reminder: moves the application to the next stage, records the
+    /// reply date the company gave, or marks it rejected — and closes the row. Null when the
+    /// reminder is not the caller's or is already closed; a reminder of another type is refused
+    /// with a domain error.
+    /// </summary>
+    Task<InterviewOutcomeResponse?> AnswerInterviewAsync(Guid userId, Guid reminderId, InterviewOutcomeRequest request,
+        CancellationToken cancellationToken);
+
+    /// <summary>Puts back what <see cref="AnswerInterviewAsync"/> did and reopens the row. False when
+    /// the reminder is not the caller's interview question.</summary>
+    Task<bool> UndoInterviewAnswerAsync(Guid userId, Guid reminderId, UndoInterviewOutcomeRequest request,
+        CancellationToken cancellationToken);
+
+    /// <summary>The caller's interviews of the next two weeks (and one that began within the last
+    /// couple of hours), soonest first, at most ten.</summary>
+    Task<IReadOnlyList<UpcomingInterviewResponse>> GetUpcomingInterviewsAsync(Guid userId, CancellationToken cancellationToken);
+
     /// <summary>
     /// Scans applications across all users and persists new Reminder rows for
     /// applications that have crossed a follow-up or ghosting threshold, and retires

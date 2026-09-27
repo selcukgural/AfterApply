@@ -16,6 +16,7 @@ import type {
   ApplicationStatusHistoryResponse,
   ApplicationSummaryResponse,
   ChangeStatusRequest,
+  SetInterviewRequest,
   SetReplyPromiseRequest,
   CreateApplicationRequest,
   PagedResult,
@@ -84,6 +85,13 @@ export const applicationsApi = {
     }),
 
   /** Records, moves or (null) clears the company's promised reply date. */
+  /** Records, moves or (null) clears the interview of the current stage. */
+  setInterview: (id: string, request: SetInterviewRequest) =>
+    apiFetch<ApplicationDetailResponse>(`/api/applications/${id}/interview`, {
+      method: "PUT",
+      body: JSON.stringify(request),
+    }),
+
   setReplyPromise: (id: string, request: SetReplyPromiseRequest) =>
     apiFetch<ApplicationDetailResponse>(`/api/applications/${id}/reply-promise`, {
       method: "PUT",

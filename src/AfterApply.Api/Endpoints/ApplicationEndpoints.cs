@@ -211,6 +211,20 @@ public static class ApplicationEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPut("/{id:guid}/interview", async (Guid id, SetInterviewRequest request, ClaimsPrincipal user,
+                IApplicationService service, CancellationToken cancellationToken) =>
+            {
+                var updated = await service.SetInterviewAsync(user.GetUserId(), id, request, cancellationToken);
+                return updated is not null ? Results.Ok(updated) : Results.NotFound();
+            })
+            .WithValidation<SetInterviewRequest>()
+            .WithSummary("Record, move or clear the interview of the current stage")
+            .WithDescription("A null InterviewAt clears it. Only a screening or interview stage can be given one. " +
+                             "The meeting link is deliberately not part of the request.")
+            .Produces<ApplicationDetailResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         group.MapGet("/{id:guid}/status-history", async (Guid id, ClaimsPrincipal user, IApplicationService service, CancellationToken cancellationToken) =>
         {
             var history = await service.GetStatusHistoryAsync(user.GetUserId(), id, cancellationToken);

@@ -18,6 +18,10 @@ public sealed class Reminder : Entity
 
     public DateTimeOffset? DismissedAt { get; private set; }
 
+    /// <summary>"Not now": the reminder stays open but is off the list until this moment. Chosen
+    /// from a few fixed lengths on the row, never a date — see SnoozeReminderRequest.</summary>
+    public DateTimeOffset? SnoozedUntil { get; private set; }
+
     private Reminder()
     {
     }
@@ -39,5 +43,18 @@ public sealed class Reminder : Entity
     public void Dismiss(DateTimeOffset now)
     {
         DismissedAt = now;
+    }
+
+    public void Snooze(DateTimeOffset until)
+    {
+        SnoozedUntil = until;
+    }
+
+    /// <summary>The undo of both a snooze and an answer that closed the row: back on the list as it
+    /// was.</summary>
+    public void Reopen()
+    {
+        DismissedAt = null;
+        SnoozedUntil = null;
     }
 }

@@ -1,4 +1,5 @@
 using AfterApply.Application.EmailIntegrations.Contracts;
+using AfterApply.Domain.Applications;
 using AfterApply.Domain.Notifications;
 
 namespace AfterApply.Application.Notifications.Contracts;
@@ -10,7 +11,8 @@ public sealed record GetNotificationFeedQuery(int Page = 1, int PageSize = 10);
 public enum NotificationFeedKind
 {
     Contribution,
-    Email
+    Email,
+    Interview
 }
 
 /// <summary>
@@ -25,7 +27,19 @@ public sealed record NotificationFeedItemResponse(
     DateTimeOffset OccurredAt,
     bool IsRead,
     ContributionNotificationResponse? Contribution,
-    EmailNotificationResponse? Email);
+    EmailNotificationResponse? Email,
+    InterviewNotificationResponse? Interview = null);
+
+/// <summary>"Tomorrow at 14:00 — your interview with …" or "How did the interview with … go?". The
+/// user's own application, so its company, title and stage are theirs to see; the row links to it
+/// (Upcoming) or to the reminders card that asks the question (Held).</summary>
+public sealed record InterviewNotificationResponse(
+    InterviewNotificationKind Kind,
+    Guid ApplicationId,
+    string CompanyName,
+    string JobTitle,
+    ApplicationStatus Status,
+    DateTimeOffset InterviewAt);
 
 /// <summary>
 /// "Your … was found helpful N times." Only what the author can already see on the public page:
@@ -52,7 +66,8 @@ public sealed record NotificationPreferencesResponse(
     bool SalaryHelpful,
     bool ExperienceHelpful,
     bool BlogCommentHelpful,
-    bool GmailUpdates);
+    bool GmailUpdates,
+    bool Interviews = true);
 
 public sealed record UpdateNotificationPreferencesRequest(
     bool Contributions,
@@ -60,4 +75,6 @@ public sealed record UpdateNotificationPreferencesRequest(
     bool SalaryHelpful,
     bool ExperienceHelpful,
     bool BlogCommentHelpful,
-    bool GmailUpdates);
+    bool GmailUpdates,
+    // Defaulted so a client that predates the switch leaves it as it was rather than failing.
+    bool? Interviews = null);

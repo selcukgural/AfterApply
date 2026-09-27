@@ -5,10 +5,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { applicationsApi } from "@/lib/api/applications";
-import type { ApplicationEventType, ApplicationStatus } from "@/types/api";
+import type { ApplicationEventType, ApplicationStatus, InterviewFormat } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusChangeSelect, type StatusChangeExtras } from "@/components/applications/StatusChangeSelect";
 import { ReplyPromiseField } from "@/components/applications/ReplyPromiseField";
+import { InterviewField } from "@/components/applications/InterviewField";
 import { ShareExperienceInvite } from "@/components/applications/ShareExperienceInvite";
 import { AcceptedClosingNote } from "@/components/applications/AcceptedClosingNote";
 import { ApplicationTimeline } from "@/components/applications/ApplicationTimeline";
@@ -66,6 +67,8 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         changedAt: null,
         promisedReplyBy: variables.extras.promisedReplyBy,
         rejectionNotice: variables.extras.rejectionNotice,
+        interviewAt: variables.extras.interviewAt,
+        interviewFormat: variables.extras.interviewFormat,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
@@ -78,6 +81,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
     mutationFn: (promisedReplyBy: string | null) => applicationsApi.setReplyPromise(id, { promisedReplyBy }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
+    },
+  });
+
+  const interviewMutation = useMutation({
+    mutationFn: (variables: { interviewAt: string | null; format: InterviewFormat | null }) =>
+      applicationsApi.setInterview(id, { interviewAt: variables.interviewAt, format: variables.format }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      // The dashboard card lists upcoming interviews and asks about past ones.
       queryClient.invalidateQueries({ queryKey: ["reminders"] });
     },
   });
@@ -174,6 +187,14 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               <dt className="text-gray-500 dark:text-gray-400">{t("createdAt")}</dt>
               <dd className="text-gray-900 dark:text-gray-100">{new Date(application.createdAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}</dd>
             </div>
+            <InterviewField
+              application={application}
+              isSaving={interviewMutation.isPending}
+              error={interviewMutation.error instanceof Error ? interviewMutation.error.message : null}
+              onSave={async (interviewAt, format) => {
+                await interviewMutation.mutateAsync({ interviewAt, format });
+              }}
+            />
             <ReplyPromiseField
               application={application}
               isSaving={replyPromiseMutation.isPending}

@@ -2,11 +2,14 @@ import type {
   BulkChangeStatusResponse,
   BulkReminderRequest,
   BulkReminderResponse,
+  InterviewOutcomeRequest,
+  InterviewOutcomeResponse,
   PagedResult,
   ReminderPauseResponse,
   ReminderResponse,
   UndoBulkStatusEntry,
   UndoBulkStatusResponse,
+  UpcomingInterviewResponse,
 } from "@/types/api";
 import { apiFetch } from "./httpClient";
 
@@ -47,6 +50,26 @@ export const remindersApi = {
       body: JSON.stringify({ entries }),
     }),
 
+  /** "Not now" on one row: off the list for `days` days (SNOOZE_DAYS), still open underneath. */
+  snooze: (id: string, days: SnoozeDays) =>
+    apiFetch<void>(`/api/reminders/${id}/snooze`, { method: "POST", body: JSON.stringify({ days }) }),
+
+  unsnooze: (id: string) => apiFetch<void>(`/api/reminders/${id}/unsnooze`, { method: "POST" }),
+
+  /** Answers "how did the interview go?" on an InterviewHeld row; the response is what
+   *  undoInterviewAnswer takes back. */
+  answerInterview: (id: string, request: InterviewOutcomeRequest) =>
+    apiFetch<InterviewOutcomeResponse>(`/api/reminders/${id}/interview-outcome`, {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  undoInterviewAnswer: (id: string, outcome: InterviewOutcomeResponse) =>
+    apiFetch<void>(`/api/reminders/${id}/interview-outcome/undo`, { method: "POST", body: JSON.stringify(outcome) }),
+
+  /** The next two weeks' interviews, soonest first — the top rows of the card. */
+  upcomingInterviews: () => apiFetch<UpcomingInterviewResponse[]>("/api/reminders/interviews"),
+
   /** The break (T5): where it stands, start one, end one early, and the two answers to the
    *  question that greets the return. */
   getPause: () => apiFetch<ReminderPauseResponse>("/api/reminders/pause"),
@@ -65,3 +88,6 @@ export const remindersApi = {
 /** The three lengths the API accepts (PauseRemindersRequestValidator). */
 export const BREAK_LENGTHS = [7, 14, 30] as const;
 export type BreakLength = (typeof BREAK_LENGTHS)[number];
+
+/** The snooze lengths the API accepts (SnoozeReminderRequestValidator). */
+export type SnoozeDays = 1 | 3 | 7 | 14;

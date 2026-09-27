@@ -104,6 +104,17 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<DateTimeOffset?>("InterviewAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InterviewFormat")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("InterviewStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<Guid?>("JobId")
                         .HasColumnType("uuid");
 
@@ -2686,6 +2697,45 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.ToTable("HelpfulNotificationLedger", (string)null);
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.Notifications.InterviewNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DismissedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("InterviewAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("ApplicationId", "Kind", "InterviewAt")
+                        .IsUnique();
+
+                    b.ToTable("InterviewNotifications", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.Notifications.Reminder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2705,6 +2755,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("ReferenceAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("SnoozedUntil")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Type")
@@ -3285,6 +3338,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("NotifyGmailUpdates")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyInterviews")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("NotifyReviewHelpful")
@@ -4217,6 +4273,21 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("VoterUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Notifications.InterviewNotification", b =>
+                {
+                    b.HasOne("AfterApply.Domain.Applications.Application", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

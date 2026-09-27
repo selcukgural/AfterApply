@@ -690,7 +690,41 @@
       "clearSelection": "Temizle",
       "countMismatch": "Bu ekran açıkken liste değişti — şu an {count} hatırlatıcın var. Hiçbir şey değiştirilmedi; listeye tekrar bak.",
       "promiseMissed": "Söz verilen tarih geçti",
-      "promiseMissedSince": "{date} tarihinden bu yana {count} gün"
+      "promiseMissedSince": "{date} tarihinden bu yana {count} gün",
+      "interviewHeld": "Görüşme sonrası",
+      "interviewWas": "{status} · {when}, {time}",
+      "upcomingBadge": {
+        "today": "Görüşme bugün",
+        "tomorrow": "Görüşme yarın",
+        "onDate": "Görüşme {date}"
+      },
+      "change": "Değiştir",
+      "howDidItGo": "Nasıl geçti? Tek tıkla başvurunu güncelle.",
+      "answerNext": "Sonraki aşamaya geçtim",
+      "answerWaiting": "Dönüş bekliyorum",
+      "answerRejected": "Olumsuz döndüler",
+      "whichStage": "Hangi aşamaya geçtin?",
+      "whenReply": "Ne zaman döneceklerini söylediler mi?",
+      "waitDays": "{count, plural, one {# gün içinde} other {# gün içinde}}",
+      "waitWeeks": "{count, plural, one {1 hafta içinde} other {# hafta içinde}}",
+      "waitUnknown": "Söylemediler",
+      "back": "Geri",
+      "doneStatus": "Durum güncellendi: {status}",
+      "doneStatusHint": "Bir sonraki görüşmenin tarihini eklersen bir gün önce hatırlatırız.",
+      "doneStatusLink": "Tarih ekle",
+      "donePromise": "Dönüş tarihi kaydedildi: {date}",
+      "donePromiseHint": "O tarih geçerse “Söz verilen tarih geçti” olarak geri gelir.",
+      "doneWaiting": "Tamam, bekliyoruz",
+      "doneWaitingHint": "Görüşmeden bir hafta sonra hâlâ ses yoksa takip mesajı zamanı diye hatırlatırız.",
+      "doneRejected": "Durum güncellendi: Reddedildi",
+      "doneRejectedHint": "Süreci nasıl bulduğunu paylaşmak istersen:",
+      "undo": "Geri al",
+      "snooze": "Ertele",
+      "snoozeTitle": "Bu hatırlatıcıyı ertele",
+      "snoozeAskTomorrow": "Yarın sor",
+      "snoozeAskIn": "{count} gün sonra sor",
+      "snoozeFor": "{count, plural, =7 {1 hafta} =14 {2 hafta} other {# gün}}",
+      "snoozed": "{company} hatırlatıcısı ertelendi — {date} tarihinde geri gelir."
     },
     "stale": {
       "title": "{count} başvuru {threshold} günden eski ve yanıtsız",
@@ -919,6 +953,16 @@
         "CompanyNotified": "e-postayla / mesajla bildirildi",
         "SeenOnPortal": "portalda görüldü",
         "OtherOrInferred": "başka yoldan / tahmin"
+      },
+      "interview": {
+        "label": "Görüşme",
+        "add": "+ Görüşme tarihi ekle",
+        "change": "Değiştir",
+        "remove": "Kaldır",
+        "save": "Kaydet",
+        "saving": "Kaydediliyor...",
+        "cancel": "Vazgeç",
+        "past": "Yapıldı"
       }
     },
     "statusChange": {
@@ -935,7 +979,12 @@
         "CompanyNotified": "E-posta ya da mesajla bana bildirdiler",
         "SeenOnPortal": "Portalda / başvuru sayfasında gördüm",
         "OtherOrInferred": "Başka yoldan duydum / tahmin ediyorum"
-      }
+      },
+      "interviewLegend": "Görüşme ne zaman? (opsiyonel)",
+      "interviewHint": "Girersen bir gün önce hatırlatırız, ertesi gün de nasıl geçtiğini sorarız.",
+      "interviewDate": "Tarih",
+      "interviewTime": "Saat",
+      "interviewFormat": "Nasıl"
     },
     "statusHistory": {
       "empty": "Henüz bir durum değişikliği yok.",
@@ -1144,6 +1193,24 @@
         "dropped": "{title} {column} sütununa bırakıldı.",
         "cancelled": "Taşıma iptal edildi."
       }
+    },
+    "interview": {
+      "format": {
+        "Online": "Online",
+        "InPerson": "Yerinde",
+        "Phone": "Telefon"
+      },
+      "calendarTitle": "{status} — {company}",
+      "calendarDescription": "{jobTitle} · {format} · e-kariyerim",
+      "addToCalendar": "Takvimime ekle",
+      "googleCalendar": "Google Takvim’e ekle",
+      "icsDownload": ".ics indir (Outlook, Apple)",
+      "calendarNote": "Takvimine biz yazmıyoruz; eklemek senin elinde.",
+      "day": {
+        "today": "bugün",
+        "tomorrow": "yarın",
+        "yesterday": "dün"
+      }
     }
   },
   "settings": {
@@ -1173,6 +1240,10 @@
       "gmailUpdates": {
         "label": "Gmail taraması başvurumu güncellediğinde",
         "hint": "Kapatırsan bu satırlar zilde görünmez; tarama ve yaptığı değişiklikler aynen sürer."
+      },
+      "interviews": {
+        "label": "Görüşme hatırlatmaları",
+        "hint": "Girdiğin görüşmeden bir gün önce, ertesi gün de “nasıl geçti?” diye zile düşer."
       }
     },
     "export": {
@@ -1304,11 +1375,22 @@
       "SalaryHelpful": "Maaşlara git",
       "ExperienceHelpful": "Aday deneyimlerine git",
       "BlogCommentHelpful": "Yorumlara git"
+    },
+    "interview": {
+      "upcoming": "Yaklaşan görüşme: <company></company> · {status} · {when}, {time}",
+      "held": "<company></company> görüşmen nasıl geçti?",
+      "linkUpcoming": "Başvuruya git",
+      "linkHeld": "Yanıtla",
+      "day": {
+        "today": "bugün",
+        "tomorrow": "yarın",
+        "yesterday": "dün"
+      }
     }
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 24 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 27 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -1342,7 +1424,7 @@
       "intro": "e-kariyerim, iş başvurularınızı takip etmenize yardımcı olan kişisel bir araçtır. Hizmeti sağlayabilmek için şu verileri işleriz:",
       "item1": "Hesap bilgileri: e-posta adresi ve şifre (hash'lenmiş olarak saklanır); ad ve soyad isteğe bağlıdır — kayıt formu sormaz, isterseniz Ayarlar'dan eklersiniz. Google, LinkedIn veya GitHub ile giriş yapıyorsanız şifre yerine o hesabın kimliği saklanır (aşağıya bakın). Kayıt olduğunuzda adresinizi doğrulamak için o adrese 6 haneli bir kod göndeririz; kod girilene kadar hesap kullanılamaz.",
       "item2": "Girdiğiniz veya içe aktardığınız başvuru verileri: şirket, iş ilanı, başvuru durumu, tarihler ve notlar. Tarayıcı eklentisiyle kaydettiğiniz bir ilanda şirketin LinkedIn veya kariyer.net sayfası da okunduysa, o sayfanın adresi hesabınıza bağlı olarak saklanır; aynı sayfayı en az iki farklı kişi gösterdiğinde o sayfadaki şirket web sitesi herkese açık şirket sayfasında görünür. Kimin gösterdiği hiçbir yerde görünmez ve kaydı hesabınızla birlikte silinir.",
-      "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları).",
+      "item3": "Bu verilerden türetilen hatırlatmalar (takip önerileri, yanıtsız başvuru uyarıları, girdiğiniz görüşme tarihi için bir gün önceki hatırlatma ve ertesi gün “nasıl geçti?” sorusu).",
       "item4": "Tarayıcı eklentisinde Gmail Taraması'nı (isteğe bağlı) açarsanız, tespit edilen statü güncellemesi e-postalarının konu satırı ve kısa bir özeti — bir statü değişikliğini tespit etmek ve henüz takip edilmeyen bir iş ilanı için şirket/pozisyon bilgisini okumak amacıyla — hesabınızda saklanır ve bu tespit için OpenAI'a gönderilir. Bu içerik önce tarayıcınızda, cihazınızda değerlendirilir; yalnızca iş başvurusuyla ilgili göründüğünde bize ulaşır. Aşağıdaki \"Yurt dışına veri aktarımı\" bölümüne bakın.",
       "outro": "Bu veriler, işlem kayıtları dışında, yalnızca size başvuru takibi ve kişisel analiz özelliklerini sunmak için kullanılır; işlem kayıtları yalnızca yukarıda sayılan güvenlik ve hukuki amaçlara hizmet eder.",
       "item5": "Bir başvuru veya takip ettiğiniz ilan için isteğe bağlı olarak tuttuğunuz İK kontağı: ad, e-posta adresi ve LinkedIn profil adresi. Bunları siz girebilirsiniz; ayrıca bir statü güncellemesi e-postasını o başvuruyla eşleştirip onayladığınızda, e-postanın gönderen adresi İK e-postası olarak doldurulabilir — otomatik yanıt kutuları (no-reply gibi) ve iş ilanı platformlarının adresleri bu kapsamda hiç saklanmaz, ve bu şekilde dolan bir adres arayüzde \"gelen e-postadan alındı\" diye işaretlenir. Bu bilgiyi yalnızca siz görürsünüz; başka kullanıcılara gösterilmez, hiçbir analize dahil edilmez, hiçbir yere gönderilmez ve ilgili başvuruyu ya da hesabınızı sildiğinizde birlikte silinir. Bu adrese kendiliğinden e-posta göndermeyiz — arayüzde yalnızca bir bağlantı olarak görünür.",
@@ -1516,7 +1598,7 @@
     "aggregates": {
       "title": "Toplu yanıt verisi (sektör tablosu ve şirket sayfasındaki \"Yanıt\" sekmesi)",
       "intro": "Takip ettiğin başvurular, kimliğinden ayrılmış toplu sayılara katılır: bir sektör ya da bir şirket için yanıt oranı, ilk dönüş süresi, mülakat sonrası sessizlik, kayıp oranı, sözünü tutma ve reddi bildirme oranı. Bunu yaparken:",
-      "what": "Toplulaşan alanlar yalnızca şirket, başvuru tarihi, durum, durum değişikliği tarihleri ve verirsen iki isteğe bağlı cevaptır: şirketin söz verdiği dönüş tarihi ve reddi nasıl öğrendiğin. Notların, İK kontağın, CV'n, e-postaların ve adın hiçbir toplu sayıya girmez.",
+      "what": "Toplulaşan alanlar yalnızca şirket, başvuru tarihi, durum, durum değişikliği tarihleri ve verirsen iki isteğe bağlı cevaptır: şirketin söz verdiği dönüş tarihi ve reddi nasıl öğrendiğin. Notların, görüşme tarihin, İK kontağın, CV'n, e-postaların ve adın hiçbir toplu sayıya girmez.",
       "sector": "Sektör tablosu herkese açıktır ve şirket adı içermez. Bir sektör satırı, en az 5 farklı kişinin toplam 30 başvurusu birikmeden gösterilmez; tek bir kişi başvuruların yarısından fazlasını oluşturuyorsa satır kapalı kalır.",
       "company": "Şirket sayfasındaki \"Yanıt\" sekmesi, o şirkete son 12 ayda en az 50 başvuru yapılmadan ve tek bir kişi bunların üçte birinden fazlasını oluşturuyorsa hiçbir sayı göstermez; eşiğin altında kaç başvuru eksik olduğu da yazılmaz. Bu sekme, hukuki değerlendirme tamamlanana kadar kapalı tutulur.",
       "silenceReports": "Şirket sayfasındaki \"Dönüş alamadım\" bildirimi hesap gerektirmez ve hiçbir hesaba bağlanmaz: saklanan yalnızca şirket, aşama, bekleme süresi, verdiysen dönüş sözü ve ay. Bildirimde ad, e-posta, serbest metin ve IP adresi tutulmaz. Aynı şirketin aynı bağlantıdan 30 gün içinde tekrar bildirilmesini önlemek için, bağlantı adresinden türetilen ve geri çözülemeyen bir anahtar 30 gün boyunca geçici bellekte tutulur, sonra kendiliğinden silinir. Bildirimler oranlara karışmaz; bir şirket için en az 5 bildirim en az iki farklı çeyrekten gelmeden sayı gösterilmez ve bu sayı \"Yanıt\" sekmesiyle birlikte kapalıdır.",
@@ -2228,6 +2310,10 @@
       "break": {
         "title": "Ara vermek",
         "body": "Profil sayfasındaki \"Ara ver\" kartından bir hafta, iki hafta ya da bir ay mola alabilirsin. Mola boyunca hatırlatıcı kartı ve bayat başvuru sorusu panoda görünmez; verin olduğu yerde durur ve günlük tarama arkada çalışmaya devam eder. Döndüğünde seni bir yığın değil, tek bir soru karşılar: molada sessizleşen başvuruları topluca kapatmak isteyip istemediğin. Kapatırsan geri alınabilir; \"Şimdi değil\" dersen kart olduğu gibi geri gelir. Molayı istediğin an profilden bitirebilirsin."
+      },
+      "snooze": {
+        "title": "Hatırlatıcıyı ertelemek",
+        "body": "Takip zamanı kartındaki her satırda \"Ertele\" var: takip ve sessizlik hatırlatıcıları 3 gün, 1 hafta ya da 2 hafta, görüşme sorusu yarına ya da 3 gün sonraya ertelenir. Ertelenen hatırlatıcı açık kalır ve seçtiğiniz gün karta geri döner; yanlışlıkla ertelediyseniz kartın üstündeki \"Geri al\" ile hemen geri getirirsiniz. Tüm hatırlatıcılara uzun bir ara vermek içinse aşağıdaki molayı kullanın."
       }
     },
     "trackedJobs": {
@@ -2380,6 +2466,10 @@
       "promise": {
         "title": "Söz verilen dönüş tarihi",
         "body": "\"Cumaya kadar döneriz\" dendiyse tarihi, durum değiştirirken ya da detaydaki \"+ Tarih ekle\" ile kaydedin. Bu tarihe kadar takip hatırlatması gelmez; tarih geçer ve başvuru ilerlemezse panelde \"Söz verilen tarih geçti\" hatırlatması çıkar. Başvuru ilerlediğinde söz \"Sözünü tuttu\" ya da \"Geç döndüler\" olarak kalır. Bu cevaplar ve reddi nasıl öğrendiğiniz, adınız olmadan yalnızca toplu oranlara (sektör tablosu) katılır; en az 3 kişiden 5 cevap birikmeden hiçbir oran gösterilmez."
+      },
+      "interview": {
+        "title": "Görüşme tarihi ve \"Nasıl geçti?\"",
+        "body": "Başvuru Ön Değerlendirme ya da bir mülakat aşamasına geçerken görüşmenin tarihini, saatini ve nasıl yapılacağını (Online, Yerinde, Telefon) girebilirsiniz; sonradan gelen ya da değişen bir tarih için detaydaki \"Görüşme\" satırını kullanın. \"Takvimime ekle\" ile Google Takvim'e ya da .ics dosyasıyla Outlook ve Apple Takvim'e eklersiniz; takviminize biz yazmayız ve görüşme bağlantısını saklamayız. Görüşmeden bir gün önce zil hatırlatır, görüşmeden sonra panelde \"Nasıl geçti?\" sorusu çıkar: sonraki aşamaya geçtiyseniz aşamayı, dönüş bekliyorsanız söylenen süreyi seçersiniz, olumsuz döndülerse başvuru reddedildi olarak kapanır. Her cevap geri alınabilir. Görüşme tarihi hiçbir toplu orana katılmaz."
       }
     },
     "board": {

@@ -1,8 +1,14 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { applicationsApi } from "@/lib/api/applications";
-import { remindersApi } from "@/lib/api/reminders";
+import { remindersApi, type SnoozeDays } from "@/lib/api/reminders";
 import { ApiError } from "@/lib/api/httpClient";
-import type { BulkReminderRequest, ReminderResponse, UndoBulkStatusEntry } from "@/types/api";
+import type {
+  BulkReminderRequest,
+  InterviewOutcomeRequest,
+  InterviewOutcomeResponse,
+  ReminderResponse,
+  UndoBulkStatusEntry,
+} from "@/types/api";
 
 /** Prefix of every page's key, so one invalidation drops the whole list. */
 export const remindersQueryKey = ["reminders"] as const;
@@ -94,6 +100,52 @@ export function useUndoBulkGhostReminders() {
   const invalidate = useInvalidateAfterStatusChange();
   return useMutation({
     mutationFn: (entries: UndoBulkStatusEntry[]) => remindersApi.bulkGhostUndo(entries),
+    onSuccess: invalidate,
+  });
+}
+
+/** The interviews of the next two weeks, for the top of the reminders card. Same retry policy as
+ *  the list: an API without the route is an environment without the feature. */
+export function useUpcomingInterviews() {
+  return useQuery({
+    queryKey: [...remindersQueryKey, "interviews"],
+    queryFn: () => remindersApi.upcomingInterviews(),
+    refetchInterval: 60_000,
+    retry: (failureCount, error) => !(error instanceof ApiError && error.status === 404) && failureCount < 1,
+  });
+}
+
+export function useSnoozeReminder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, days }: { id: string; days: SnoozeDays }) => remindersApi.snooze(id, days),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: remindersQueryKey }),
+  });
+}
+
+export function useUnsnoozeReminder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => remindersApi.unsnooze(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: remindersQueryKey }),
+  });
+}
+
+/** "How did it go?" — a status change or a reply date behind it, so it invalidates like one. */
+export function useAnswerInterview() {
+  const invalidate = useInvalidateAfterStatusChange();
+  return useMutation({
+    mutationFn: ({ id, request }: { id: string; request: InterviewOutcomeRequest }) =>
+      remindersApi.answerInterview(id, request),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUndoInterviewAnswer() {
+  const invalidate = useInvalidateAfterStatusChange();
+  return useMutation({
+    mutationFn: ({ id, outcome }: { id: string; outcome: InterviewOutcomeResponse }) =>
+      remindersApi.undoInterviewAnswer(id, outcome),
     onSuccess: invalidate,
   });
 }

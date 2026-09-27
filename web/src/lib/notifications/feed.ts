@@ -17,6 +17,14 @@ export function contributionTarget(c: ContributionNotificationResponse): { href:
   }
 }
 
+/** Where an interview row leads: the application for one still to come, the dashboard — where the
+ *  "how did it go?" question waits on the reminders card — for one that is over. */
+export function interviewTarget(item: NotificationFeedItemResponse): string | null {
+  const i = item.interview;
+  if (!i) return null;
+  return i.kind === "Upcoming" ? `/applications/${i.applicationId}` : "/dashboard";
+}
+
 /** Where a Gmail row leads: its application, when it has one. */
 export function emailTarget(item: NotificationFeedItemResponse): string | null {
   return item.email?.applicationId ? `/applications/${item.email.applicationId}` : null;

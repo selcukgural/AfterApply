@@ -74,6 +74,22 @@ public sealed class Application : AuditableEntity
     /// Rejected, and null there too when they did not say.</summary>
     public RejectionNotice? RejectionNotice { get; private set; }
 
+    /// <summary>When the interview of <see cref="InterviewStatus"/> takes place, when the candidate
+    /// recorded one. Kept, not cleared, when the status moves on: an undo that puts the stage back
+    /// brings its interview back with it. Read it through <see cref="CurrentInterviewAt"/>, which
+    /// only answers while the application is still in that stage.</summary>
+    public DateTimeOffset? InterviewAt { get; private set; }
+
+    /// <summary>Null exactly when <see cref="InterviewAt"/> is.</summary>
+    public InterviewFormat? InterviewFormat { get; private set; }
+
+    /// <summary>The stage the interview belongs to. Null exactly when <see cref="InterviewAt"/> is.</summary>
+    public ApplicationStatus? InterviewStatus { get; private set; }
+
+    /// <summary>The interview of the stage the application is in now, or null — one recorded for an
+    /// earlier stage has already happened as far as anything downstream is concerned.</summary>
+    public DateTimeOffset? CurrentInterviewAt => InterviewStatus == Status ? InterviewAt : null;
+
     public IReadOnlyCollection<ApplicationEvent> Events => _events;
 
     public IReadOnlyCollection<ApplicationStatusHistory> StatusHistory => _statusHistory;
@@ -228,6 +244,43 @@ public sealed class Application : AuditableEntity
         Touch(now);
     }
 
+    /// <summary>
+    /// Records, moves or (null) clears the interview of the current stage. Setting one is only
+    /// possible in a stage that has interviews (<see cref="InterviewStages"/>); clearing is always
+    /// allowed, it is the user's record. A new or moved date is an InterviewScheduled event on the
+    /// timeline; the format alone changing is not.
+    /// </summary>
+    public void SetInterview(DateTimeOffset? interviewAt, InterviewFormat? format, DateTimeOffset now)
+    {
+        if (interviewAt is null)
+        {
+            InterviewAt = null;
+            InterviewFormat = null;
+            InterviewStatus = null;
+            Touch(now);
+            return;
+        }
+
+        if (!InterviewStages.Values.Contains(Status))
+        {
+            throw new InterviewOutsideInterviewStageException();
+        }
+
+        // Stored as UTC: the column is timestamptz, which keeps the instant and not the offset the
+        // browser sent it with (and Npgsql refuses a non-zero offset outright).
+        var at = interviewAt.Value.ToUniversalTime();
+        var moved = CurrentInterviewAt != at;
+        InterviewAt = at;
+        InterviewFormat = format ?? Applications.InterviewFormat.Online;
+        InterviewStatus = Status;
+        Touch(now);
+
+        if (moved)
+        {
+            _events.Add(ApplicationEvent.Create(Id, ApplicationEventType.InterviewScheduled, now, Source.Manual, metadata: null));
+        }
+    }
+
     /// <summary>The origin implied by the Source a brand-new application was created with. Only used
     /// for the seed "→ Applied" history row: Create() has no separate origin argument because the
     /// caller's Source already says everything there is to say about how the row appeared.</summary>
@@ -253,6 +306,9 @@ public sealed class Application : AuditableEntity
 
 public sealed class ApplicationAlreadyInStatusException()
     : DomainException("APPLICATION_ALREADY_IN_STATUS", "Application is already in this status.");
+
+public sealed class InterviewOutsideInterviewStageException()
+    : DomainException("INTERVIEW_OUTSIDE_INTERVIEW_STAGE", "An interview date can only be recorded in a screening or interview stage.");
 
 public sealed class ReplyPromiseOnClosedApplicationException()
     : DomainException("REPLY_PROMISE_ON_CLOSED_APPLICATION", "A closed application cannot be given a reply date.");

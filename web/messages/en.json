@@ -690,7 +690,41 @@
       "clearSelection": "Clear",
       "countMismatch": "The list changed while this was open — you now have {count} reminders. Nothing was changed; look again.",
       "promiseMissed": "The promised date has passed",
-      "promiseMissedSince": "{count} days since {date}"
+      "promiseMissedSince": "{count} days since {date}",
+      "interviewHeld": "After the interview",
+      "interviewWas": "{status} · {when}, {time}",
+      "upcomingBadge": {
+        "today": "Interview today",
+        "tomorrow": "Interview tomorrow",
+        "onDate": "Interview {date}"
+      },
+      "change": "Change",
+      "howDidItGo": "How did it go? Update the application in one click.",
+      "answerNext": "I moved on to the next stage",
+      "answerWaiting": "Waiting to hear back",
+      "answerRejected": "They said no",
+      "whichStage": "Which stage did you move on to?",
+      "whenReply": "Did they say when they would get back to you?",
+      "waitDays": "{count, plural, one {Within # day} other {Within # days}}",
+      "waitWeeks": "{count, plural, one {Within a week} other {Within # weeks}}",
+      "waitUnknown": "They didn't say",
+      "back": "Back",
+      "doneStatus": "Status updated: {status}",
+      "doneStatusHint": "Add the next interview's date and we'll remind you the day before.",
+      "doneStatusLink": "Add date",
+      "donePromise": "Reply date saved: {date}",
+      "donePromiseHint": "If it passes, this comes back as “Promised date passed”.",
+      "doneWaiting": "OK, we'll wait",
+      "doneWaitingHint": "If there's still no word a week after the interview, we'll remind you to follow up.",
+      "doneRejected": "Status updated: Rejected",
+      "doneRejectedHint": "If you'd like to share how the process went:",
+      "undo": "Undo",
+      "snooze": "Snooze",
+      "snoozeTitle": "Snooze this reminder",
+      "snoozeAskTomorrow": "Ask tomorrow",
+      "snoozeAskIn": "Ask in {count} days",
+      "snoozeFor": "{count, plural, =7 {1 week} =14 {2 weeks} other {# days}}",
+      "snoozed": "{company} reminder snoozed — back on {date}."
     },
     "stale": {
       "title": "{count, plural, one {# application is} other {# applications are}} older than {threshold} days with no reply",
@@ -919,6 +953,16 @@
         "CompanyNotified": "told by e-mail / message",
         "SeenOnPortal": "seen on the portal",
         "OtherOrInferred": "heard another way / assumed"
+      },
+      "interview": {
+        "label": "Interview",
+        "add": "+ Add interview date",
+        "change": "Change",
+        "remove": "Remove",
+        "save": "Save",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "past": "Done"
       }
     },
     "statusChange": {
@@ -935,7 +979,12 @@
         "CompanyNotified": "They told me by e-mail or message",
         "SeenOnPortal": "I saw it on the portal / application page",
         "OtherOrInferred": "I heard another way / I'm assuming"
-      }
+      },
+      "interviewLegend": "When is the interview? (optional)",
+      "interviewHint": "Add it and we remind you the day before, then ask how it went the day after.",
+      "interviewDate": "Date",
+      "interviewTime": "Time",
+      "interviewFormat": "How"
     },
     "statusHistory": {
       "empty": "No status changes yet.",
@@ -1144,6 +1193,24 @@
         "dropped": "{title} was dropped in the {column} column.",
         "cancelled": "Move cancelled."
       }
+    },
+    "interview": {
+      "format": {
+        "Online": "Online",
+        "InPerson": "In person",
+        "Phone": "Phone"
+      },
+      "calendarTitle": "{status} — {company}",
+      "calendarDescription": "{jobTitle} · {format} · e-kariyerim",
+      "addToCalendar": "Add to calendar",
+      "googleCalendar": "Add to Google Calendar",
+      "icsDownload": "Download .ics (Outlook, Apple)",
+      "calendarNote": "We never write to your calendar; adding it is up to you.",
+      "day": {
+        "today": "today",
+        "tomorrow": "tomorrow",
+        "yesterday": "yesterday"
+      }
     }
   },
   "settings": {
@@ -1173,6 +1240,10 @@
       "gmailUpdates": {
         "label": "When Gmail Scanning updates an application",
         "hint": "Off hides these rows from the bell; the scan and the changes it makes carry on."
+      },
+      "interviews": {
+        "label": "Interview reminders",
+        "hint": "A bell row the day before an interview you entered, and a “how did it go?” the day after."
       }
     },
     "export": {
@@ -1304,11 +1375,22 @@
       "SalaryHelpful": "Go to the salaries",
       "ExperienceHelpful": "Go to the candidate experiences",
       "BlogCommentHelpful": "Go to the comments"
+    },
+    "interview": {
+      "upcoming": "Upcoming interview: <company></company> · {status} · {when}, {time}",
+      "held": "How did your interview with <company></company> go?",
+      "linkUpcoming": "Open application",
+      "linkHeld": "Answer",
+      "day": {
+        "today": "today",
+        "tomorrow": "tomorrow",
+        "yesterday": "yesterday"
+      }
     }
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 24 September 2026",
+    "lastUpdated": "Last updated: 27 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -1342,7 +1424,7 @@
       "intro": "e-kariyerim is a personal tool that helps you track your job applications. To provide the service, we process the following data:",
       "item1": "Account details: email address and password (stored hashed); first and last name are optional — the sign-up form does not ask for them, you can add them under Settings. If you sign in with Google, LinkedIn or GitHub, that account's identifier is stored instead of a password (see below). When you sign up, we send a 6-digit code to your address to verify it; the account cannot be used until the code is entered.",
       "item2": "Application data you enter or import: company, job listing, application status, dates, and notes. If a posting you save with the browser extension also carried the company's LinkedIn or kariyer.net page, that page's address is stored with your account; once at least two different people point at the same page, the company website read from it is shown on the public company page. Who pointed at it is never shown anywhere, and the record is deleted with your account.",
-      "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts).",
+      "item3": "Reminders derived from this data (follow-up suggestions, no-response alerts, and for an interview date you enter, a reminder the day before and a “how did it go?” question the day after).",
       "item4": "If you turn on Gmail Scanning (an opt-in browser-extension feature), the subject line and a short snippet of a detected status-update email — used to detect a status change and, for a job not yet tracked, to read off the company/role — are stored on your account and, for that detection, sent to OpenAI. This content is first evaluated locally in your browser; only a message that looks job-application-related ever reaches us. See \"Cross-border data transfer\" below.",
       "outro": "Apart from the request log, this data is used solely to provide you with application tracking and personal analytics features; the request log serves only the security and legal purposes listed above.",
       "item5": "An HR contact you keep for an application or a job you track: name, email address and LinkedIn profile URL. You can enter these yourself; in addition, when you match a status-update email to an application and confirm it, that email's sender address may be filled in as the HR email — automated mailboxes (no-reply and the like) and job-platform addresses are never stored for this, and an address filled this way is labelled \"from an incoming email\" in the interface. Only you can see it; it is never shown to other users, never included in any analytics, never sent anywhere, and it is deleted along with the application or your account. We never email that address on our own — in the interface it is only a link.",
@@ -1516,7 +1598,7 @@
     "aggregates": {
       "title": "Aggregate response data (the sector table and a company page's \"Response\" tab)",
       "intro": "The applications you track feed aggregate figures detached from your identity: a sector's or a company's response rate, first-reply time, post-interview silence, ghosting rate, promise keeping and rejection notice rate. When they do:",
-      "what": "Only the company, the application date, the status, the dates of status changes and, if you give them, two optional answers are aggregated: the reply date the company promised and how you learned of a rejection. Your notes, HR contact, CV, e-mails and name never enter any aggregate.",
+      "what": "Only the company, the application date, the status, the dates of status changes and, if you give them, two optional answers are aggregated: the reply date the company promised and how you learned of a rejection. Your notes, interview dates, HR contact, CV, e-mails and name never enter any aggregate.",
       "sector": "The sector table is public and names no company. A sector row is not shown until at least 5 different people have 30 applications between them, and it stays closed while one person accounts for more than half of them.",
       "company": "A company page's \"Response\" tab shows nothing until that company has at least 50 applications in the last 12 months, and nothing if one person accounts for more than a third of them; below the threshold it does not say how many are missing either. This tab stays off until the legal review is complete.",
       "silenceReports": "The \"I heard nothing back\" report on a company page needs no account and is tied to none: only the company, stage, wait, any reply promise and the month are stored. The report holds no name, email, free text or IP address. To stop the same company being reported from the same connection within 30 days, a one-way key derived from the connection address is held in temporary memory for 30 days and then expires by itself. Reports are never mixed into the rates; no figure is shown for a company until it has at least 5 reports from at least two different quarters, and that figure stays off together with the \"Response\" tab.",
@@ -2228,6 +2310,10 @@
       "break": {
         "title": "Taking a break",
         "body": "The \"Take a break\" card on your profile gives you a week, two weeks or a month off. During the break the reminders card and the stale-applications question stay off the dashboard; your data stays where it is and the daily scan keeps running underneath. When you come back, one question greets you rather than a pile: whether to close, in one go, the applications that went quiet while you were away. Closing them is reversible; \"Not now\" brings the card back as it was. You can end the break from your profile at any time."
+      },
+      "snooze": {
+        "title": "Snoozing a reminder",
+        "body": "Every row of the Follow-up card has \"Snooze\": follow-up and silence reminders move 3 days, a week or two weeks ahead, the interview question to tomorrow or three days later. A snoozed reminder stays open and comes back on the day you picked; if you snoozed it by mistake, \"Undo\" at the top of the card brings it back at once. For a longer break from every reminder, use the break below."
       }
     },
     "trackedJobs": {
@@ -2380,6 +2466,10 @@
       "promise": {
         "title": "Promised reply date",
         "body": "If they said \"we'll get back to you by Friday\", record the date when you change the status, or with \"+ Add a date\" on the detail page. No follow-up reminder comes before that date; if it passes and the application hasn't moved, the dashboard shows a \"The promised date has passed\" reminder. Once the application moves, the promise stays as \"Kept their word\" or \"Replied late\". These answers and how you learned of a rejection enter only aggregate rates (the sector table), without your name; no rate is shown until 5 answers from at least 3 people are in."
+      },
+      "interview": {
+        "title": "Interview date and \"How did it go?\"",
+        "body": "When an application moves into screening or an interview stage you can enter the interview's date, time and format (Online, In person, Phone); for a date that arrives or changes later, use the \"Interview\" row on the details page. \"Add to calendar\" adds it to Google Calendar, or to Outlook and Apple Calendar with an .ics file; we never write to your calendar and never store the meeting link. The bell reminds you the day before, and after the interview the dashboard asks \"How did it go?\": pick the stage you moved on to, the reply time they gave you, or close the application as rejected. Every answer can be undone. Interview dates never enter any aggregate."
       }
     },
     "board": {
