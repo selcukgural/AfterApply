@@ -110,23 +110,24 @@ export default function ApplicationsListPage() {
       setSelection(EMPTY_SELECTION);
       router.push(`/applications?${params.toString()}`);
     },
-    [router, searchParams],
+    [router, searchParams, setSelection],
   );
 
-  const flatQuery = useQuery({
-    queryKey: ["applications", "list", { page, search, status, companyId, sortBy: flatSortBy, sortDirection }],
+  const flatListQuery = (listPage: number, listSearch: string) => ({
+    queryKey: ["applications", "list", { page: listPage, search: listSearch, status, companyId, sortBy: flatSortBy, sortDirection }],
     queryFn: () =>
       applicationsApi.getAll({
-        page,
+        page: listPage,
         pageSize: PAGE_SIZE,
-        search: search || undefined,
+        search: listSearch || undefined,
         status: status || undefined,
         companyId: companyId || undefined,
         sortBy: flatSortBy,
         sortDirection,
       }),
-    enabled: view === "flat",
   });
+
+  const flatQuery = useQuery({ ...flatListQuery(page, search), enabled: view === "flat" });
 
   const groupedQuery = useQuery({
     queryKey: ["applications", "grouped", { page, search, status, sortBy: companySortBy, sortDirection }],
@@ -161,6 +162,28 @@ export default function ApplicationsListPage() {
   // The company narrowing is only reachable from the flat list (the company view's "show the
   // remaining N" link), so it never travels with a grouped selection.
   const filter: ListFilter = { search, status, companyId: isCompanyView ? "" : companyId };
+  // Pasting a posting link is asking "where is this one?": when exactly one application matches it
+  // opens straight away, otherwise the list filters to the link like any search. Decided before any
+  // navigation — two pushes in a row let the second swallow the first. The fetch uses the flat
+  // list's own query, so a filtered list renders from the same answer.
+  const jumpToPastedLink = async (link: string) => {
+    if (!isCompanyView) {
+      try {
+        const result = await queryClient.fetchQuery(flatListQuery(1, link));
+        if (result.totalCount === 1) {
+          router.push(`/applications/${result.items[0].id}`);
+          return;
+        }
+      } catch {
+        // Fall through: the filtered list shows the same query's error state.
+      }
+    }
+    updateParams({ search: link });
+  };
+  const hasActiveFilter = search !== "" || status !== "" || filter.companyId !== "";
+  const clearFilters = hasActiveFilter
+    ? () => updateParams({ search: null, status: null, companyId: null })
+    : undefined;
   const filterCompanyName = companyId ? items.find((item) => item.companyId === companyId)?.companyName : undefined;
 
   /** Everything a bulk operation invalidates: the list itself and the status counts the dashboard
@@ -323,6 +346,7 @@ export default function ApplicationsListPage() {
         sortBy={isCompanyView ? companySortBy : flatSortBy}
         sortDirection={sortDirection}
         onSearchChange={(value) => updateParams({ search: value })}
+        onLinkPasted={(link) => void jumpToPastedLink(link)}
         onStatusChange={(value) => updateParams({ status: value })}
         onSortByChange={(value) => updateParams({ sortBy: value })}
         onSortDirectionChange={(value) => updateParams({ sortDirection: value })}
@@ -371,6 +395,7 @@ export default function ApplicationsListPage() {
           {isCompanyView ? (
             <CompanyGroupTable
               groups={groups}
+              onClearFilters={clearFilters}
               selection={{
                 isRowSelected: (id) => isRowSelected(selection, id),
                 isGroupSelected: (group: CompanyGroupResponse) => isGroupSelected(selection, group),
@@ -388,6 +413,7 @@ export default function ApplicationsListPage() {
           ) : (
             <ApplicationTable
               items={items}
+              onClearFilters={clearFilters}
               selection={{
                 isRowSelected: (id) => isRowSelected(selection, id),
                 isWholePageSelected: isWholePageSelected(selection, pageIds),

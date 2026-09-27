@@ -12,6 +12,7 @@ import {
   todayDateOnly,
 } from "@/lib/applications/replyPromise";
 import { asksForInterview, INTERVIEW_FORMATS, toInterviewInstant } from "@/lib/applications/interview";
+import { suggestedNextStatus } from "@/lib/applications/nextStatus";
 import { Select } from "@/components/ui/Select";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -37,7 +38,7 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
   const t = useTranslations("applications.statusChange");
   const tStatus = useTranslations("status");
   const otherStatuses = APPLICATION_STATUSES.filter((s) => s !== currentStatus);
-  const [selected, setSelected] = useState<ApplicationStatus>(otherStatuses[0]);
+  const [selected, setSelected] = useState<ApplicationStatus>(() => suggestedNextStatus(currentStatus));
   const [note, setNote] = useState("");
   const [promisedReplyBy, setPromisedReplyBy] = useState("");
   const [rejectionNotice, setRejectionNotice] = useState<RejectionNotice | null>(null);
@@ -48,7 +49,15 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
 
   if (!isOpen) {
     return (
-      <Button variant="secondary" onClick={() => setIsOpen(true)}>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          // Re-derived on every open: after a change the status moved on, and the old pick would
+          // now be the current status itself.
+          setSelected(suggestedNextStatus(currentStatus));
+          setIsOpen(true);
+        }}
+      >
         {t("changeStatus")}
       </Button>
     );

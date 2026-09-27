@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { ApplicationStatus, SortDirection } from "@/types/api";
 import type { ListView } from "@/lib/applications/listView";
 import { COMPANY_SORT_OPTIONS, FLAT_SORT_OPTIONS } from "@/lib/applications/listView";
 import { APPLICATION_STATUSES } from "@/lib/constants/applicationStatus";
+import { looksLikeJobLink } from "@/lib/applications/pastedLink";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 
@@ -23,6 +24,9 @@ interface ApplicationFiltersProps {
   sortBy: string;
   sortDirection: SortDirection;
   onSearchChange: (search: string) => void;
+  /** A posting link was pasted into search: searched at once, without the typing debounce, so
+   *  the page can jump to the application when exactly one matches. */
+  onLinkPasted?: (link: string) => void;
   onStatusChange: (status: ApplicationStatus | "") => void;
   /** Raw, because the two views have different sort unions; the page validates it back into the
    *  one its own view accepts. */
@@ -38,6 +42,7 @@ export function ApplicationFilters({
   sortBy,
   sortDirection,
   onSearchChange,
+  onLinkPasted,
   onStatusChange,
   onSortByChange,
   onSortDirectionChange,
@@ -65,9 +70,13 @@ export function ApplicationFilters({
     setSearchInput(search);
   }
 
+  // A pasted link is handed to the page at once (onLinkPasted), which decides between opening the
+  // application and filtering; the debounce must not send it a second time behind that decision.
+  const pastedLinkRef = useRef<string | null>(null);
+
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (searchInput !== search) {
+      if (searchInput !== search && searchInput !== pastedLinkRef.current) {
         onSearchChange(searchInput);
       }
     }, 300);
@@ -83,6 +92,15 @@ export function ApplicationFilters({
           placeholder={t("searchPlaceholder")}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
+          onPaste={(e) => {
+            const pasted = e.clipboardData.getData("text");
+            if (!onLinkPasted || !looksLikeJobLink(pasted)) return;
+            e.preventDefault();
+            const link = pasted.trim();
+            pastedLinkRef.current = link;
+            setSearchInput(link);
+            onLinkPasted(link);
+          }}
         />
       </div>
       {/* Each select is sized by its wrapper, not by a class on itself: Select hardcodes `w-full`,

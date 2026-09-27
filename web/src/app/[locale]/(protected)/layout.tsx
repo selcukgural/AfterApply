@@ -1,6 +1,7 @@
 import { AuthGuard } from "@/components/layout/AuthGuard";
 import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 import { NavBar } from "@/components/layout/NavBar";
+import { TabTitleCount } from "@/components/layout/TabTitleCount";
 import { NextIntlClientProvider } from "next-intl";
 
 /**
@@ -13,6 +14,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     <NextIntlClientProvider>
     <AuthGuard>
       <NavBar />
+      <TabTitleCount />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
       {/* Mounted once for the whole signed-in app rather than per page: the launcher is meant
           to be reachable from wherever the user got stuck. */}

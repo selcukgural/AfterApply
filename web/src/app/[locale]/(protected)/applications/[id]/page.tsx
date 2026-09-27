@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -19,6 +19,9 @@ import { JobDescriptionCard } from "@/components/applications/JobDescriptionCard
 import { Button } from "@/components/ui/Button";
 import { ExternalLinkPill } from "@/components/ui/ExternalLinkPill";
 import { externalUrlLabel, safeExternalUrl, safeMailtoUrl } from "@/lib/url/externalLink";
+import { daysAgo } from "@/lib/applications/daysAgo";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { DeleteApplicationDialog } from "@/components/applications/DeleteApplicationDialog";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -95,6 +98,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
     },
   });
 
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const deleteMutation = useMutation({
     mutationFn: () => applicationsApi.remove(id),
     onSuccess: () => {
@@ -136,16 +140,26 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           </Link>
           <Button
             variant="danger"
-            onClick={() => {
-              if (confirm(t("deleteConfirm"))) {
-                deleteMutation.mutate();
-              }
-            }}
+            onClick={() => setConfirmingDelete(true)}
           >
             {t("delete")}
           </Button>
         </div>
       </div>
+
+      {confirmingDelete && (
+        <DeleteApplicationDialog
+          companyName={application.companyName}
+          jobTitle={application.jobTitle}
+          isSubmitting={deleteMutation.isPending}
+          hasError={deleteMutation.isError}
+          onConfirm={() => deleteMutation.mutate()}
+          onClose={() => {
+            setConfirmingDelete(false);
+            deleteMutation.reset();
+          }}
+        />
+      )}
 
       <div className="flex flex-col gap-6">
         {/* Above the details, not under the status control: once the offer is accepted the
@@ -181,7 +195,10 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             </div>
             <div>
               <dt className="text-gray-500 dark:text-gray-400">{t("appliedAt")}</dt>
-              <dd className="text-gray-900 dark:text-gray-100">{new Date(application.appliedAt).toLocaleDateString(locale)}</dd>
+              <dd className="text-gray-900 dark:text-gray-100">
+                {new Date(application.appliedAt).toLocaleDateString(locale)}
+                <span className="text-gray-500 dark:text-gray-400"> · {daysAgo(application.appliedAt, locale)}</span>
+              </dd>
             </div>
             <div>
               <dt className="text-gray-500 dark:text-gray-400">{t("createdAt")}</dt>
@@ -231,7 +248,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             {safeExternalUrl(application.jobUrl) && (
               <div>
                 <dt className="text-gray-500 dark:text-gray-400">{t("jobUrl")}</dt>
-                <dd>
+                <dd className="flex items-center gap-1">
                   <a
                     href={safeExternalUrl(application.jobUrl)!}
                     target="_blank"
@@ -240,6 +257,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
                   >
                     {t("openLink")}
                   </a>
+                  <CopyButton value={safeExternalUrl(application.jobUrl)!} label={t("copyJobUrl")} />
                 </dd>
               </div>
             )}
@@ -295,13 +313,18 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
                 icon="linkedin"
                 title={t("hrLinkedIn")}
               />
-              <ExternalLinkPill
-                href={application.hrEmail}
-                label={application.hrEmail ?? ""}
-                icon="mail"
-                kind="email"
-                title={t("hrEmail")}
-              />
+              {safeMailtoUrl(application.hrEmail) && (
+                <span className="inline-flex items-center gap-0.5">
+                  <ExternalLinkPill
+                    href={application.hrEmail}
+                    label={application.hrEmail ?? ""}
+                    icon="mail"
+                    kind="email"
+                    title={t("hrEmail")}
+                  />
+                  <CopyButton value={application.hrEmail!.trim()} label={t("copyHrEmail")} />
+                </span>
+              )}
             </div>
             {application.hrName && !application.hrLinkedInUrl && (
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t("hrNamed", { name: application.hrName })}</p>

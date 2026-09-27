@@ -724,7 +724,11 @@
       "snoozeAskTomorrow": "Ask tomorrow",
       "snoozeAskIn": "Ask in {count} days",
       "snoozeFor": "{count, plural, =7 {1 week} =14 {2 weeks} other {# days}}",
-      "snoozed": "{company} reminder snoozed — back on {date}."
+      "snoozed": "{company} reminder snoozed — back on {date}.",
+      "allDone": "All caught up. Anything new will show up here.",
+      "heldDismissed": "{company} reminder dismissed.",
+      "heldFollowedUp": "{company}: marked as followed up.",
+      "heldGhosted": "{company} application marked as ghosted."
     },
     "stale": {
       "title": "{count, plural, one {# application is} other {# applications are}} older than {threshold} days with no reply",
@@ -787,7 +791,7 @@
       "newApplication": "New Application"
     },
     "filters": {
-      "searchPlaceholder": "Search company or position...",
+      "searchPlaceholder": "Search company or position, or paste a posting link...",
       "allStatuses": "All Statuses",
       "sortAppliedAt": "Applied Date",
       "sortUpdatedAt": "Last Updated",
@@ -807,8 +811,11 @@
       "appliedAt": "Applied Date",
       "selectPage": "Select every application on this page",
       "selectRow": "Select {company} — {position}",
-      "emptyBody": "Every application you add by hand, import from LinkedIn or save with the extension is listed here. If a filter is on, try clearing it first.",
-      "emptyCta": "Add an application"
+      "emptyBody": "Every application you add by hand, import from LinkedIn or save with the extension is listed here.",
+      "emptyCta": "Add an application",
+      "noMatch": "No applications match this filter.",
+      "noMatchBody": "The one you are looking for may be in another status or spelled differently.",
+      "clearFilters": "Clear filters"
     },
     "pagination": {
       "pageInfo": "Page {page} / {totalPages} ({totalCount} applications)",
@@ -858,7 +865,6 @@
     "detail": {
       "edit": "Edit",
       "delete": "Delete",
-      "deleteConfirm": "Are you sure you want to delete this application?",
       "location": "Location",
       "employmentType": "Employment Type",
       "appliedAt": "Applied Date",
@@ -963,6 +969,16 @@
         "saving": "Saving...",
         "cancel": "Cancel",
         "past": "Done"
+      },
+      "copyHrEmail": "Copy HR email address",
+      "copyJobUrl": "Copy posting link",
+      "deleteDialog": {
+        "title": "Delete this application?",
+        "body": "The <application></application> application is deleted for good, together with its status history, notes and reminders. This cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete permanently",
+        "deleting": "Deleting…",
+        "error": "Couldn't delete it. Try again in a moment."
       }
     },
     "statusChange": {

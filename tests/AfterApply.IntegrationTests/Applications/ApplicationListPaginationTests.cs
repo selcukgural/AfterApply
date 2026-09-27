@@ -82,6 +82,53 @@ public class ApplicationListPaginationTests(ApiHost<DefaultProfile> host) : ICla
     }
 
     [Theory]
+    [InlineData("https://www.linkedin.com/jobs/view/4012345678/?refId=abc&trackingId=xyz")]
+    [InlineData("https://www.linkedin.com/jobs/search/?currentJobId=4012345678&keywords=dotnet")]
+    public async Task A_Pasted_Posting_Link_Finds_The_Application_Despite_Tracking_Parameters(string pasted)
+    {
+        await CreateApplicationWithUrlAsync("Linked Co", "https://www.linkedin.com/jobs/view/4012345678/");
+        await CreateApplicationWithUrlAsync("Other Linked Co", "https://www.linkedin.com/jobs/view/4099999999/");
+
+        var page = await SearchAsync(_client, pasted);
+
+        page.TotalCount.ShouldBe(1);
+        page.Items.Single().CompanyName.ShouldBe("Linked Co");
+    }
+
+    [Fact]
+    public async Task A_Pasted_Posting_Link_Never_Finds_Another_Users_Application()
+    {
+        const string url = "https://www.kariyer.net/is-ilani/acme-yazilim-123456";
+        var other = _factory.CreateClient();
+        var otherAuth = await TestAccounts.RegisterVerifiedAsync(other, _factory.Services,
+            new RegisterRequest("pagination.other@example.com", "P@ssw0rd123!", "Other", "User", true));
+        other.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", otherAuth!.AccessToken);
+        var created = await other.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
+            "Someone Elses Co", "Engineer", url, null, EmploymentType.FullTime, DateTimeOffset.UtcNow.AddDays(-1), null, null), JsonOptions);
+        created.EnsureSuccessStatusCode();
+
+        var mine = await SearchAsync(_client, url + "?utm_source=share");
+        mine.TotalCount.ShouldBe(0);
+
+        var theirs = await SearchAsync(other, url + "?utm_source=share");
+        theirs.TotalCount.ShouldBe(1);
+    }
+
+    private async Task CreateApplicationWithUrlAsync(string companyName, string jobUrl)
+    {
+        var response = await _client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
+            companyName, "Engineer", jobUrl, null, EmploymentType.FullTime, DateTimeOffset.UtcNow.AddDays(-1), null, null), JsonOptions);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static async Task<PagedResult<ApplicationSummaryResponse>> SearchAsync(HttpClient client, string search)
+    {
+        var response = await client.GetAsync($"/api/applications?search={Uri.EscapeDataString(search)}");
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<PagedResult<ApplicationSummaryResponse>>(JsonOptions))!;
+    }
+
+    [Theory]
     [InlineData("_")]
     [InlineData("%")]
     public async Task A_Wildcard_Typed_Into_Search_Is_Matched_Literally(string wildcard)
