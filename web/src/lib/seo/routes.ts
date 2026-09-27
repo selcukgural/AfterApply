@@ -14,6 +14,7 @@ export const HELP_TOPICS = [
   { href: "/help/dashboard", key: "dashboard" },
   { href: "/help/tracked-jobs", key: "trackedJobs" },
   { href: "/help/applications", key: "applications" },
+  { href: "/help/board", key: "board" },
   { href: "/help/cv", key: "cv" },
   { href: "/help/suggestions", key: "suggestions" },
   { href: "/help/import", key: "import" },
