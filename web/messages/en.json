@@ -12,8 +12,8 @@
         "description": "The job hunt from the applicant's side: exporting your LinkedIn history, tracking applications, reply times and rejection emails."
       },
       "blog": {
-        "title": "Blog",
-        "description": "Stories of looking for a job, not of finding one."
+        "title": "Job Search Blog: Applications, Waiting and Motivation",
+        "description": "Articles about the job search itself: what \"application submitted\" means, how to read a posting, why replies take so long and how to stay motivated."
       },
       "login": {
         "title": "Log In",
@@ -3377,6 +3377,8 @@
   "blog": {
     "title": "Blog",
     "subtitle": "Stories of looking for a job, not of finding one.",
+    "heading": "Job search blog",
+    "intro": "These articles are about searching for a job rather than finding one: what happens after you send an application, how to read a posting, why the reply takes so long and how to keep going through a long search.",
     "emptyInLanguage": "Nothing in English yet; {count, plural, =1 {one post is} other {# posts are}} up in {language, select, tr {Turkish} other {the other language}}.",
     "readListInOtherLanguage": "{language, select, tr {Go to the Turkish posts →} other {Go to the other language →}}",
     "readMore": "Read more",
