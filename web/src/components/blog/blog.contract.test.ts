@@ -145,7 +145,8 @@ describe("blog images on the web origin", () => {
     const config = readFileSync(join(root, "../next.config.ts"), "utf8");
     expect(config).toContain('source: "/api/blog/media/:id"');
     expect(config).toContain("${apiOrigin}/api/blog/media/:id");
-    expect(config).toMatch(/"img-src": "'self' data: blob:"/);
+    const csp = readFileSync(join(root, "lib/http/contentSecurityPolicy.ts"), "utf8");
+    expect(csp).toMatch(/"img-src": "'self' data: blob:"/);
   });
 });
 

@@ -10074,3 +10074,39 @@ Dar sürümün asıl kazancı veride: "nasıl geçti?" cevabı aşama zamanları
 - Entegrasyon test host'unda varsayılan kapalı: gerçek saatle tarayan test sınıfları hafta sonunda ya da tatilde kırılmasın diye. `ReminderDeferralTests` kendi saatiyle açar.
 - `ReminderService` artık `TimeProvider`'dan okur; canlıda sistem saati kullanılır.
 - **Dışa aktarım:** hatırlatmanın `DeferredFor` alanı eklendi.
+
+## CSP: `script-src`'te `'unsafe-inline'` yerine istek başına nonce — DECIDED (2026-09-27)
+
+Refresh token'ın HttpOnly cookie'ye taşınmasının (PR #170) tamamlayıcısı. `'unsafe-inline'` açıkken sayfaya enjekte edilen bir inline script ya da `onerror=` gibi bir olay handler'ı çalışabiliyordu. Token'ı çalamasa bile sayfa açıkken API'yi kullanıcı adına çağırabilirdi.
+
+**Değerlendirilen seçenekler** (production build ve tarayıcıyla ölçüldü):
+- **Nonce, her sayfada:** seçildi.
+- **Deneysel SRI (`experimental.sri`):** elendi. Yalnızca harici script'lere `integrity` ekliyor. Sayfadaki 18 inline script'e (tema script'i ve 17 `self.__next_f.push` RSC verisi) dokunmuyor. `script-src 'self'` ile `/tr/login` hydrate olmadı, form çalışmadı.
+- **Karma** (oturumlu ve dinamik sayfalar nonce'lu, statik public sayfalar `'unsafe-inline'`): elendi. Refresh cookie aynı site içinde gidiyor; statik bir sayfadaki XSS de `/refresh` çağırıp oturumu kullanabilir. Koruma, origin'deki en zayıf sayfa kadar güçlü olurdu.
+- **Build sonrası sayfa başına hash:** Next desteklemiyor, kırılgan.
+
+**Model:**
+- `src/lib/http/contentSecurityPolicy.ts`, `buildCsp` ile politikayı kuruyor: `script-src 'self' 'nonce-…' 'strict-dynamic'`. Geliştirmede ek olarak `'unsafe-eval'` var; React hata stack'leri için gerekiyor ve dev overlay'deki eski "1 issue" uyarısını da kaldırıyor.
+- `proxy.ts` her render edilen yanıt için 128 bitlik yeni bir nonce üretiyor. CSP'yi isteğe (Next nonce'u buradan okuyor; ayrıca `x-nonce`) ve yanıta yazıyor.
+- next-intl isteğin başlıklarını kendi yanıtına kopyaladığı için nonce, `new NextRequest(request, { headers })` ile geçiriliyor.
+- Kök layout tema script'ine nonce'u veriyor. PayTR'ın `next/script`'i `'strict-dynamic'` kapsamında.
+- `next.config.ts` artık CSP basmıyor. Diğer güvenlik başlıkları orada kalıyor.
+- PayTR dönüş sayfasının `frame-ancestors 'self' https://www.paytr.com` istisnası ve X-Frame-Options'suz oluşu korunuyor.
+- `style-src 'unsafe-inline'` kalıyor. React style attribute'ları ve kütüphanelerin enjekte ettiği stillerin nonce yolu yok; enjekte edilen bir stil sayfayı bozabilir ama kod çalıştıramaz.
+
+**Matcher:**
+- Proxy matcher'ına "ilk segmentinde nokta olan" yollar eklendi (`/:file([^/]*\.[^/]*)/:rest*`). Yoksa `/llms.txt` gibi sunulmayan kök dosyaların 404'ü (`UNSERVED_ROOT_FILE_REWRITE`) hiç CSP almıyordu.
+- Bu yollar proxy'den CSP ile ama başka dokunuş olmadan geçiyor (`hasDottedFirstSegment`). `/foo.php/bar` eskisi gibi doğrudan 404, locale önekine yönlenmiyor.
+- İç içe asset'ler (`/_next`, `/vendor`, `/brand`) proxy'ye hâlâ girmiyor.
+
+**Bedel:** 2026-09-14'teki "genel sayfalar statik prerender" kararı geri alındı: build'de sayfalar ● → ƒ. Statik kalanlar yalnızca ikonlar, `robots.txt`, `sitemap.xml` ve kök `_not-found`.
+- Yerel TTFB 2 → 7–8 ms. Canlıda statik `/tr` (~250 ms) ile zaten dinamik `/tr/blog` (~295 ms) arasındaki fark ~30–50 ms.
+- 14 Eylül'deki soğuk başlangıç kaygısı geri gelmiyor: web'de `--min-instances=1` o karardan beri açık.
+- Sunucu tarafı veri çağrıları (`siteStats`, `publicConfig`, blog ve şirket public API) `next: { revalidate }` ile önbellekte kalıyor. HTML her istekte render ediliyor ama API'ye binen yük artmıyor.
+
+**Doğrulama** (`next build` + `next start` ve tarayıcı):
+- Her sayfada bütün script'ler nonce'lu ve nonce her istekte değişiyor.
+- `/tr`, `/tr/help`, `/tr/blog`, `/tr/cv-tarama`, `/en/about`, `/tr/login`, giriş sonrası `/tr/dashboard` ve `/llms.txt` 404'ü hydrate oluyor. İstemci tarafı gezinmede ihlal yok.
+- Karanlık tema script'i çalışıyor.
+- Enjekte edilen `<img onerror>` handler'ı engellendi (`script-src-attr` ihlali).
+- PayTR ödeme adımı (`next/script` ile resizer yüklemesi) uçtan uca denenmedi; o akış PayTR test hesabı istiyor. Yalnızca başlıklar (`frame-src`, `frame-ancestors`, X-Frame-Options) kontrol edildi.

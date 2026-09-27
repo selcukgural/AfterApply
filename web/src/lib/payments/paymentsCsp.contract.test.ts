@@ -10,22 +10,22 @@ import { describe, expect, it } from "vitest";
  */
 const root = path.resolve(__dirname, "../../..");
 const nextConfig = readFileSync(path.join(root, "next.config.ts"), "utf8");
+const csp = readFileSync(path.join(root, "src/lib/http/contentSecurityPolicy.ts"), "utf8");
 const returnPage = readFileSync(path.join(root, "src/app/[locale]/pro/return/[orderId]/page.tsx"), "utf8");
 const frame = readFileSync(path.join(root, "src/components/pro/PayTrFrame.tsx"), "utf8");
 
 describe("PayTR content security policy", () => {
   it("allows paytr.com as a frame source everywhere and never as a script source", () => {
-    expect(nextConfig).toContain('const PAYTR_ORIGIN = "https://www.paytr.com"');
+    expect(csp).toContain('export const PAYTR_ORIGIN = "https://www.paytr.com"');
     // In the global policy: the checkout is reached by client-side navigation, so the document's
     // CSP is whatever page was loaded first.
-    expect(nextConfig).toContain('"frame-src": PAYTR_ORIGIN');
-    expect(nextConfig).toContain(`"script-src": "'self' 'unsafe-inline'"`);
-    expect(nextConfig).not.toMatch(/script-src[^\n]*PAYTR_ORIGIN/);
-    expect(nextConfig).not.toMatch(/script-src[^\n]*paytr\.com/);
+    expect(csp).toContain('"frame-src": PAYTR_ORIGIN');
+    expect(csp).not.toMatch(/"script-src"[^\n]*PAYTR_ORIGIN/);
+    expect(csp).not.toMatch(/"script-src"[^\n]*paytr\.com/);
   });
 
   it("lets paytr.com frame the return route and keeps X-Frame-Options off it", () => {
-    expect(nextConfig).toContain("`'self' ${PAYTR_ORIGIN}`");
+    expect(csp).toContain("`'self' ${PAYTR_ORIGIN}`");
     expect(nextConfig).toContain('source: "/:path((?!(?:tr|en)/pro/return/).*)", headers: securityHeaders');
     expect(nextConfig).toContain('source: "/:locale(tr|en)/pro/return/:path*", headers: paytrReturnSecurityHeaders');
     const returnBlock = nextConfig.slice(nextConfig.indexOf("const paytrReturnSecurityHeaders"), nextConfig.indexOf("const nextConfig"));
