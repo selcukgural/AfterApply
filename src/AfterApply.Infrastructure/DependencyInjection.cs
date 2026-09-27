@@ -15,6 +15,7 @@ using AfterApply.Application.Imports;
 using AfterApply.Application.Mailing;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Benchmark;
+using AfterApply.Application.Board;
 using AfterApply.Application.SilenceReports;
 using AfterApply.Application.Blog;
 using AfterApply.Application.CvScan;
@@ -50,6 +51,7 @@ using AfterApply.Application.Pro;
 using AfterApply.Infrastructure.Mailing;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Benchmark;
+using AfterApply.Infrastructure.Board;
 using AfterApply.Infrastructure.SilenceReports;
 using AfterApply.Infrastructure.Blog;
 using AfterApply.Infrastructure.Caching;
@@ -168,6 +170,7 @@ public static class DependencyInjection
         services.Configure<ProductMetricsOptions>(configuration.GetSection(ProductMetricsOptions.SectionName));
         services.Configure<BenchmarkOptions>(configuration.GetSection(BenchmarkOptions.SectionName));
         services.Configure<SilenceReportOptions>(configuration.GetSection(SilenceReportOptions.SectionName));
+        services.Configure<BoardOptions>(configuration.GetSection(BoardOptions.SectionName));
         services.Configure<SiteStatsOptions>(configuration.GetSection(SiteStatsOptions.SectionName));
         services.Configure<CvScanOptions>(configuration.GetSection(CvScanOptions.SectionName));
         services.Configure<EmailForwardingOptions>(configuration.GetSection("EmailForwarding"));
@@ -637,6 +640,10 @@ public static class DependencyInjection
         services.AddScoped<ExtensionCaptureResolver>();
         services.AddScoped<IApplicationService, ApplicationService>();
         services.AddScoped<ITrackedJobService, TrackedJobService>();
+        services.AddScoped<BoardSync>();
+        services.AddScoped<BoardService>();
+        services.AddScoped<IBoardService>(provider => provider.GetRequiredService<BoardService>());
+        services.AddScoped<IBoardMaintenanceService>(provider => provider.GetRequiredService<BoardService>());
         services.AddHttpClient<IJobLinkPreviewService, JobLinkPreviewService>(client => client.Timeout = TimeSpan.FromSeconds(5))
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddHttpClient<ICompanyEnrichmentService, CompanyEnrichmentService>(client => client.Timeout = TimeSpan.FromSeconds(5))

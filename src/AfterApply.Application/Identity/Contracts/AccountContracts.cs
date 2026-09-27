@@ -178,7 +178,14 @@ public sealed record AccountExportResponse(
     NotificationPreferencesResponse? NotificationPreferences = null,
     IReadOnlyList<ExperienceInviteDismissalExportItem>? ExperienceInviteDismissals = null,
     IReadOnlyList<CompanyProfileSubmissionExportItem>? CompanyProfileSubmissions = null,
-    IReadOnlyList<TrackedJobExportItem>? TrackedJobs = null);
+    IReadOnlyList<TrackedJobExportItem>? TrackedJobs = null,
+    IReadOnlyList<BoardCardExportItem>? BoardCards = null);
+
+/// <summary>One card on the applications board (2026-09-27): which application or saved posting
+/// it stands for, its place in its column, how it got there and when.</summary>
+public sealed record BoardCardExportItem(
+    Guid? ApplicationId, Guid? TrackedJobId, long Position, string Origin, DateTimeOffset AddedAt,
+    DateTimeOffset? SeenAt, DateTimeOffset? ClosedAt);
 
 /// <summary>A posting saved to apply to later — typed on the site or saved from the extension.
 /// Listed in the export's description since it was written but missing from the file until

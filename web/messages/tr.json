@@ -811,7 +811,8 @@
       "cvDocumentEmptyLink": "CV yükle"
     },
     "new": {
-      "title": "Yeni Başvuru"
+      "title": "Yeni Başvuru",
+      "stage": "Aşama"
     },
     "edit": {
       "title": "Başvuruyu Düzenle"
@@ -1012,7 +1013,8 @@
     "view": {
       "label": "Görünüm",
       "flat": "Liste",
-      "company": "Şirket"
+      "company": "Şirket",
+      "board": "Pano"
     },
     "groups": {
       "distribution": "Durum dağılımı",
@@ -1025,6 +1027,119 @@
       "expandAll": "Tümünü genişlet",
       "collapseAll": "Tümünü daralt",
       "clearCompanyFilter": "Şirket filtresini kaldır"
+    },
+    "board": {
+      "addFromList": "Listeden panoya ekle",
+      "searchLabel": "Panoda ara",
+      "searchPlaceholder": "Panoda şirket veya pozisyon ara",
+      "filters": "Filtreler",
+      "filterNote": "Filtre yalnızca görünümü daraltır, panodaki kartlara dokunmaz.",
+      "arrivals": "{count, plural, one {# kart sana sormadan geldi} other {# kart sana sormadan geldi}}",
+      "showArrivals": "Göster",
+      "markAllSeen": "Hepsini gördüm",
+      "loadError": "Pano yüklenemedi.",
+      "retry": "Yeniden dene",
+      "columns": {
+        "Saved": "Kaydedilenler",
+        "Applied": "Başvuruldu",
+        "InProgress": "Süreçte",
+        "Offer": "Teklif",
+        "Closed": "Sonuçlananlar"
+      },
+      "closedNote": "Sonuçlanan kart {days} gün sonra panodan kendiliğinden düşer; listede kalır.",
+      "loaded": "{shown} / {total} yüklendi",
+      "loadMore": "Daha fazla yükle",
+      "loading": "Yükleniyor…",
+      "emptyColumn": "Bu sütunda kart yok",
+      "addSaved": "İlan kaydet",
+      "addApplication": "Başvuru ekle",
+      "age": {
+        "saved": "{days, plural, =0 {Bugün kaydedildi} other {# gün önce kaydedildi}}",
+        "leaves": "{days, plural, =0 {Bugün panodan düşer} other {# gün sonra panodan düşer}}",
+        "moved": "{days, plural, =0 {Bugün hareket} other {# gün önce hareket}}",
+        "silent": "{days, plural, other {# gündür ses yok}}"
+      },
+      "origin": {
+        "Email": "E-postadan güncellendi",
+        "EmailReturned": "E-postadan geri geldi",
+        "Extension": "Eklentiden eklendi",
+        "Later": "Eklentiden “Sonra başvur”"
+      },
+      "source": {
+        "linkedIn": "LinkedIn",
+        "kariyerNet": "kariyer.net",
+        "otherSites": "Diğer site",
+        "manual": "Elle eklendi"
+      },
+      "menu": {
+        "label": "{title} için işlemler",
+        "open": "Başvuruyu aç",
+        "openPosting": "Kayıtlı ilanı aç",
+        "changeStage": "Aşamayı değiştir",
+        "toTop": "Sütunun en üstüne al",
+        "remove": "Panodan çıkar",
+        "removeNote": "Kaydın kendisi silinmez, yalnızca panodan kalkar."
+      },
+      "dragHandle": "{title} kartını sürükle",
+      "stagePicker": {
+        "title": "Hangi aşamaya taşınsın?",
+        "cancel": "Vazgeç"
+      },
+      "drawer": {
+        "title": "Filtreler",
+        "close": "Kapat",
+        "savedViews": "Kayıtlı görünümler",
+        "allBoard": "Tüm pano",
+        "presetRecent": "Son 7 günde hareket",
+        "presetSilent": "Sessiz kalanlar",
+        "presetArrivals": "Sana sormadan gelenler",
+        "presetPromise": "Dönüş sözü verilenler",
+        "saveView": "+ Bu filtreyi kaydet",
+        "saveViewName": "Görünümün adı",
+        "saveViewConfirm": "Kaydet",
+        "deleteView": "{name} görünümünü sil",
+        "savedViewsNote": "Kaydettiğin görünümler yalnızca bu tarayıcıda tutulur.",
+        "lastActivity": "Son hareket",
+        "window": "{days} gün",
+        "anyTime": "Hepsi",
+        "from": "Başlangıç",
+        "to": "Bitiş",
+        "source": "Kaynak",
+        "state": "Durum",
+        "silent": "{days}+ gündür ses yok",
+        "reminder": "Hatırlatıcısı olan",
+        "promise": "Dönüş sözü verilmiş",
+        "unseen": "Sana sormadan gelenler",
+        "clear": "Temizle",
+        "apply": "Uygula"
+      },
+      "chips": {
+        "remove": "{label} filtresini kaldır",
+        "window": "Son {days} gün",
+        "range": "Özel tarih aralığı"
+      },
+      "addDialog": {
+        "title": "Listeden panoya ekle",
+        "intro": "{count, plural, =0 {Panoda olmayan başvurun yok.} other {Panoda olmayan # başvurun var. Seçtiklerin kendi aşamalarının sütununa, en üste eklenir.}}",
+        "search": "Başvurularında ara",
+        "selected": "{count, plural, other {# seçili}}",
+        "cancel": "Vazgeç",
+        "add": "Panoya ekle",
+        "noMatch": "Aramaya uyan başvuru yok.",
+        "previous": "Önceki",
+        "next": "Sonraki"
+      },
+      "moveFailed": "Kart taşınamadı, pano yenilendi.",
+      "actionFailed": "İşlem yapılamadı. Lütfen yeniden dene.",
+      "stageTabs": "Aşamalar",
+      "onBoard": "Panoda",
+      "dnd": {
+        "instructions": "Kartı tutmak için boşluk ya da Enter tuşuna basın. Ok tuşlarıyla taşıyın; bırakmak için yeniden boşluk ya da Enter, vazgeçmek için Escape tuşuna basın.",
+        "pickedUp": "{title} tutuldu.",
+        "over": "{title}, {column} sütununda.",
+        "dropped": "{title} {column} sütununa bırakıldı.",
+        "cancelled": "Taşıma iptal edildi."
+      }
     }
   },
   "settings": {
@@ -1580,7 +1695,7 @@
   },
   "cookies": {
     "title": "Çerez Politikası",
-    "lastUpdated": "Son güncelleme: 18 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 27 Eylül 2026",
     "intro": {
       "title": "Kısaca",
       "body": "e-kariyerim yalnızca hizmetin çalışması için gereken iki çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok. Tek istisna Pro plan ödeme sayfasıdır: ödeme formu PayTR'ın kendi sayfasında açılır ve PayTR o sayfada kendi zorunlu çerezlerini kullanabilir; bu çerezler sitemizin diğer sayfalarında okunmaz.",
@@ -1605,7 +1720,8 @@
       "intro": "Bunlar çerez değil, ama aynı mantıkla cihazınızda veri sakladıkları için şeffaflık adına burada da sayıyoruz:",
       "item1": "Oturum jetonları — aa_access_token, aa_refresh_token, bunların geçerlilik süreleri ve aa_user (adınız, e-posta adresiniz ve arayüz tercihleriniz). Giriş yaptıktan sonra oturumunuzun açık kalmasını sağlar; localStorage'da tutulur ve çıkış yaptığınızda silinir.",
       "item2": "Giriş güvenliği anahtarları — aa_google_oauth, aa_linkedin_oauth ve aa_github_oauth. Google, LinkedIn veya GitHub ile giriş sırasında araya girme (CSRF) saldırısını engelleyen tek kullanımlık değerlerdir; sessionStorage'da tutulur ve giriş tamamlanır tamamlanmaz silinir.",
-      "outro": "İkisi de hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz."
+      "item3": "Kayıtlı pano görünümleri — aa_board_views. Başvuru panosunda “Bu filtreyi kaydet” dediğinizde, verdiğiniz görünüm adı ve filtre ayarları (tarih aralığı, kaynak, durum seçimleri) localStorage'da tutulur. Sunucumuza gönderilmez, yalnızca bu tarayıcıda kalır; görünümü sildiğinizde silinir.",
+      "outro": "İlk ikisi hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz. Üçüncüsü işlevseldir ve yalnızca siz bir görünüm kaydettiğinizde yazılır."
     },
     "visitCounter": {
       "title": "Ziyaret sayacı",

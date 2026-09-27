@@ -11,7 +11,10 @@ public sealed record ApplicationSummaryResponse(
     string JobTitle,
     ApplicationStatus Status,
     DateTimeOffset AppliedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    // Whether the application has a card on the board — the list's "on board" badge and the
+    // board's "add from list" dialog. Additive (2026-09-27); false while the board is off.
+    bool OnBoard = false);
 
 /// <summary>One bar of a company group's status distribution. Only statuses the company actually
 /// holds appear — a zero-count entry would draw an empty segment the user has to decode.</summary>

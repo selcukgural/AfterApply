@@ -31,10 +31,13 @@ const STORAGE_KEYS = [
   "aa_google_oauth",
   "aa_linkedin_oauth",
   "aa_github_oauth",
+  // Saved board filters (2026-09-27): functional, written only on "Save this filter".
+  "aa_board_views",
 ];
 
 // The subset the policy names verbatim rather than describing as a group ("their expiry times").
 const KEYS_NAMED_IN_POLICY = [
+  "aa_board_views",
   "aa_access_token",
   "aa_refresh_token",
   "aa_user",
@@ -49,6 +52,7 @@ const STORAGE_WRITERS = [
   "lib/auth/githubOAuth.ts",
   "lib/auth/googleOAuth.ts",
   "lib/auth/linkedinOAuth.ts",
+  "lib/board/savedViews.ts",
 ];
 
 // Names that only appear in a codebase because something is being measured, tagged or replayed.

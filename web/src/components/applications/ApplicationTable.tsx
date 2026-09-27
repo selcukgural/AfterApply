@@ -7,6 +7,7 @@ import { SelectionCheckbox } from "@/components/applications/SelectionCheckbox";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { buttonClassName } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useClientConfig } from "@/hooks/useClientConfig";
 
 interface SelectionProps {
   isRowSelected: (id: string) => boolean;
@@ -28,6 +29,9 @@ export function ApplicationTable({
   selection?: SelectionProps;
 }) {
   const t = useTranslations("applications.table");
+  const tBoard = useTranslations("applications.board");
+  const { config } = useClientConfig();
+  const boardEnabled = config.board?.enabled === true;
   const locale = useLocale();
 
   if (items.length === 0) {
@@ -102,7 +106,14 @@ export function ApplicationTable({
                     {item.companyName}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{item.jobTitle}</td>
+                <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                  {item.jobTitle}
+                  {boardEnabled && item.onBoard && (
+                    <span className="ml-2 inline-block rounded-full bg-muted-wash px-2 py-0.5 align-middle text-[11px] font-medium text-muted-ink">
+                      {tBoard("onBoard")}
+                    </span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <StatusBadge status={item.status} />
                 </td>

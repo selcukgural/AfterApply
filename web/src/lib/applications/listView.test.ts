@@ -24,6 +24,10 @@ describe("parseView", () => {
   it("reads the company view back out of the URL", () => {
     expect(parseView("company")).toBe("company");
   });
+
+  it("reads the board back out of the URL", () => {
+    expect(parseView("board")).toBe("board");
+  });
 });
 
 describe("sort parsing", () => {

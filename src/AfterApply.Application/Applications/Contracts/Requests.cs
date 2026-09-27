@@ -139,7 +139,10 @@ public sealed record GetApplicationsQuery(
     // resolves a filter into rows, so a filter-shaped bulk selection inherits it.
     Guid? CompanyId = null,
     ApplicationListSortBy SortBy = ApplicationListSortBy.AppliedAt,
-    SortDirection SortDirection = SortDirection.Descending);
+    SortDirection SortDirection = SortDirection.Descending,
+    // true: only applications on the board; false: only those not on it (the board's "add from
+    // list" dialog). The flat list only — bulk selections resolve filters without it.
+    bool? OnBoard = null);
 
 /// <summary>
 /// The company view's query. Same row filter as <see cref="GetApplicationsQuery"/> — the two views

@@ -6,6 +6,7 @@ using AfterApply.Application.Imports;
 using AfterApply.Application.Notifications;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Common;
+using AfterApply.Infrastructure.Board;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Notifications;
 using AfterApply.Infrastructure.Persistence;
@@ -19,7 +20,7 @@ namespace AfterApply.Infrastructure.Applications;
 
 internal sealed class ApplicationService(
     AppDbContext dbContext, ICompanyResolver companyResolver, ExtensionCaptureResolver captureResolver,
-    HybridCache cache,
+    HybridCache cache, BoardSync boardSync,
     IOptions<ApplicationBulkOptions> bulkOptions, IOptions<NotificationOptions> notificationOptions) : IApplicationService
 {
     private static readonly HybridCacheEntryOptions SummaryCountsCacheOptions = new()
@@ -68,7 +69,13 @@ internal sealed class ApplicationService(
 
     public async Task<PagedResult<ApplicationSummaryResponse>> GetAllAsync(Guid userId, GetApplicationsQuery query, CancellationToken cancellationToken)
     {
-        var joined = FilteredApplications(userId, query.Search, query.Status, query.CompanyId)
+        var filtered = FilteredApplications(userId, query.Search, query.Status, query.CompanyId);
+        if (query.OnBoard is { } onBoard)
+        {
+            filtered = filtered.Where(a => dbContext.BoardCards.Any(c => c.ApplicationId == a.Id) == onBoard);
+        }
+
+        var joined = filtered
             .Join(dbContext.Companies, a => a.CompanyId, c => c.Id, (a, c) => new { a, c.Name });
 
         joined = (query.SortBy, query.SortDirection) switch
@@ -92,7 +99,8 @@ internal sealed class ApplicationService(
         var items = await joined
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => new ApplicationSummaryResponse(x.a.Id, x.a.CompanyId, x.Name, x.a.JobTitle, x.a.Status, x.a.AppliedAt, x.a.UpdatedAt))
+            .Select(x => new ApplicationSummaryResponse(x.a.Id, x.a.CompanyId, x.Name, x.a.JobTitle, x.a.Status, x.a.AppliedAt, x.a.UpdatedAt,
+                dbContext.BoardCards.Any(c => c.ApplicationId == x.a.Id)))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ApplicationSummaryResponse>(items, totalCount, page, pageSize);
@@ -164,7 +172,8 @@ internal sealed class ApplicationService(
             .Where(a => companyIds.Contains(a.CompanyId))
             .Join(dbContext.Companies, a => a.CompanyId, c => c.Id, (a, c) => new { a, c.Name })
             .OrderByDescending(x => x.a.AppliedAt)
-            .Select(x => new ApplicationSummaryResponse(x.a.Id, x.a.CompanyId, x.Name, x.a.JobTitle, x.a.Status, x.a.AppliedAt, x.a.UpdatedAt))
+            .Select(x => new ApplicationSummaryResponse(x.a.Id, x.a.CompanyId, x.Name, x.a.JobTitle, x.a.Status, x.a.AppliedAt, x.a.UpdatedAt,
+                dbContext.BoardCards.Any(c => c.ApplicationId == x.a.Id)))
             .ToListAsync(cancellationToken);
 
         var rowsByCompany = rows.GroupBy(r => r.CompanyId).ToDictionary(g => g.Key, g => g.ToList());
@@ -243,6 +252,7 @@ internal sealed class ApplicationService(
             await ResolveOwnedCvDocumentIdAsync(userId, request.CvDocumentId, cancellationToken));
 
         dbContext.Applications.Add(application);
+        await boardSync.OnApplicationCreatedAsync(application, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
 
@@ -287,7 +297,14 @@ internal sealed class ApplicationService(
         dbContext.Applications.Add(application);
         if (trackedJob is not null)
         {
+            // Card first, posting second: once the posting is marked deleted, EF would cascade the
+            // card with it the moment it was loaded.
+            await boardSync.OnTrackedJobConvertedAsync(trackedJob, application, cancellationToken);
             dbContext.TrackedJobs.Remove(trackedJob);
+        }
+        else
+        {
+            await boardSync.OnApplicationCreatedAsync(application, cancellationToken);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -408,6 +425,8 @@ internal sealed class ApplicationService(
 
         if (changes.Count > 0)
         {
+            await boardSync.OnStatusChangedAsync(userId,
+                changes.Select(c => (c.ApplicationId, request.NewStatus)).ToList(), context.Origin, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
             await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
             await RetireRemindersIfTerminalAsync(userId, request.NewStatus, changes.Select(c => c.ApplicationId).ToList(), cancellationToken);
@@ -444,6 +463,7 @@ internal sealed class ApplicationService(
         var context = new StatusChangeContext(Source.Manual, StatusChangeOrigin.BulkEditReverted);
         var reverted = 0;
         var revertedIntoTerminal = new List<Guid>();
+        var boardChanges = new List<(Guid, ApplicationStatus)>();
 
         foreach (var application in applications)
         {
@@ -460,6 +480,7 @@ internal sealed class ApplicationService(
             application.ChangeStatus(entry.RevertTo, changedAt, context);
             dbContext.ApplicationStatusHistories.Add(application.StatusHistory.Last());
             dbContext.ApplicationEvents.Add(application.Events.Last());
+            boardChanges.Add((application.Id, entry.RevertTo));
             reverted++;
 
             if (TerminalApplicationStatuses.Values.Contains(entry.RevertTo))
@@ -470,6 +491,7 @@ internal sealed class ApplicationService(
 
         if (reverted > 0)
         {
+            await boardSync.OnStatusChangedAsync(userId, boardChanges, context.Origin, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
             await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
             await RetireRemindersAsync(userId, revertedIntoTerminal, cancellationToken);
@@ -563,6 +585,7 @@ internal sealed class ApplicationService(
         // collection navigation as Modified (UPDATE) instead of Added (INSERT).
         dbContext.ApplicationStatusHistories.Add(application.StatusHistory.Last());
         dbContext.ApplicationEvents.Add(application.Events.Last());
+        await boardSync.OnStatusChangedAsync(userId, [(applicationId, newStatus)], context.Origin, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
@@ -733,6 +756,8 @@ internal sealed class ApplicationService(
 
         if (changes.Count > 0)
         {
+            await boardSync.OnStatusChangedAsync(userId,
+                changes.Select(c => (c.ApplicationId, ApplicationStatus.Ghosted)).ToList(), context.Origin, cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
             await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
             await RetireRemindersAsync(userId, changes.Select(c => c.ApplicationId).ToList(), cancellationToken);

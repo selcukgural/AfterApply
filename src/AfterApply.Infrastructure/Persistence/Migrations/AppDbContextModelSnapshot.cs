@@ -709,6 +709,72 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.ToTable("BlogPostLikes", (string)null);
                 });
 
+            modelBuilder.Entity("AfterApply.Domain.Board.BoardCard", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ApplicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<long>("Position")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("SeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TrackedJobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId")
+                        .IsUnique()
+                        .HasFilter("\"ApplicationId\" IS NOT NULL");
+
+                    b.HasIndex("ClosedAt")
+                        .HasFilter("\"ClosedAt\" IS NOT NULL");
+
+                    b.HasIndex("TrackedJobId")
+                        .IsUnique()
+                        .HasFilter("\"TrackedJobId\" IS NOT NULL");
+
+                    b.HasIndex("UserId", "Position", "Id");
+
+                    b.ToTable("BoardCards", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_BoardCards_ExactlyOneItem", "(\"ApplicationId\" IS NULL) <> (\"TrackedJobId\" IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Board.BoardState", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("SeededAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("BoardStates", (string)null);
+                });
+
             modelBuilder.Entity("AfterApply.Domain.CandidateExperiences.CandidateExperience", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3608,6 +3674,34 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Board.BoardCard", b =>
+                {
+                    b.HasOne("AfterApply.Domain.Applications.Application", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("AfterApply.Domain.TrackedJobs.TrackedJob", null)
+                        .WithMany()
+                        .HasForeignKey("TrackedJobId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AfterApply.Domain.Board.BoardState", b =>
+                {
                     b.HasOne("AfterApply.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")

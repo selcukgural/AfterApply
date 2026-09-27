@@ -18,6 +18,7 @@ using AfterApply.Domain.Ai;
 using AfterApply.Domain.JobSources;
 using AfterApply.Domain.Mailing;
 using AfterApply.Domain.Metrics;
+using AfterApply.Domain.Board;
 using AfterApply.Domain.Notifications;
 using AfterApply.Domain.Payments;
 using AfterApply.Domain.Pro;
@@ -79,6 +80,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     public DbSet<TrackedJob> TrackedJobs => Set<TrackedJob>();
+
+    public DbSet<BoardCard> BoardCards => Set<BoardCard>();
+
+    public DbSet<BoardState> BoardStates => Set<BoardState>();
 
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
 

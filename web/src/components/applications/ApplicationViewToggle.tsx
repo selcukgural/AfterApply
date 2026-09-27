@@ -3,19 +3,23 @@
 import { useTranslations } from "next-intl";
 import type { ListView } from "@/lib/applications/listView";
 
-/** Two ways of reading the same applications. A segmented control rather than a dropdown because
- *  there are only two, and which one you are in should be readable without opening anything. */
+/** Ways of reading the same applications. A segmented control rather than a dropdown because
+ *  there are only a few, and which one you are in should be readable without opening anything. The
+ *  board is offered only while Board:Enabled is on. */
 export function ApplicationViewToggle({
   view,
   onViewChange,
+  showBoard = false,
 }: {
   view: ListView;
   onViewChange: (view: ListView) => void;
+  showBoard?: boolean;
 }) {
   const t = useTranslations("applications.view");
   const views: { value: ListView; label: string }[] = [
     { value: "flat", label: t("flat") },
     { value: "company", label: t("company") },
+    ...(showBoard ? [{ value: "board" as const, label: t("board") }] : []),
   ];
 
   return (

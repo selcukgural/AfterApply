@@ -47,6 +47,8 @@ import { BulkStatusDialog } from "@/components/applications/BulkStatusDialog";
 import { CompanyGroupTable } from "@/components/applications/CompanyGroupTable";
 import { Pagination } from "@/components/applications/Pagination";
 import { buttonClassName } from "@/components/ui/Button";
+import { BoardView } from "@/components/applications/board/BoardView";
+import { useClientConfig } from "@/hooks/useClientConfig";
 
 const PAGE_SIZE = 10;
 /** Companies, not applications: each one draws its own applications underneath, so ten groups is
@@ -69,7 +71,11 @@ export default function ApplicationsListPage() {
   // button and a pasted link all land on the same screen. Every one of these is validated rather
   // than cast: the two views share `sortBy`, and a value left over from the other view would
   // otherwise be sent to an endpoint that rejects it.
-  const view = parseView(searchParams.get("view"));
+  const { config, isLoaded: isConfigLoaded } = useClientConfig();
+  const boardEnabled = config.board?.enabled === true;
+  const requestedView = parseView(searchParams.get("view"));
+  // A board link opened while the board is switched off lands on the list rather than on nothing.
+  const view = requestedView === "board" && !boardEnabled ? "flat" : requestedView;
   const page = parsePage(searchParams.get("page"));
   const search = searchParams.get("search") ?? "";
   const status = parseStatus(searchParams.get("status"));
@@ -263,6 +269,39 @@ export default function ApplicationsListPage() {
       />
     ) : undefined;
 
+  const viewToggle = (
+    <ApplicationViewToggle
+      view={view}
+      showBoard={boardEnabled}
+      onViewChange={(next) =>
+        // `sortBy` is dropped rather than carried across: the views order different things, and
+        // the value that made sense in one is not in the other's vocabulary.
+        updateParams({ view: next === "flat" ? null : next, sortBy: null, companyId: null, page: null })
+      }
+    />
+  );
+
+  if (requestedView === "board" && !isConfigLoaded) {
+    return <p className="text-sm text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>;
+  }
+
+  if (view === "board") {
+    return (
+      // Five columns do not fit the app's 64rem reading width, so the board breaks out of it to the
+      // window (up to 88rem), centred on the same axis. Margins rather than a transform: a transform
+      // would become the containing block of the drag overlay's position: fixed.
+      <div className="ml-[calc(50%-min(50vw-1rem,44rem))] flex w-[min(calc(100vw-2rem),88rem)] flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h1>
+          <Link href="/applications/new" className={buttonClassName("primary", "md:hidden")}>
+            {t("newApplication")}
+          </Link>
+        </div>
+        <BoardView toggle={viewToggle} />
+      </div>
+    );
+  }
+
   return (
     // The floating bar sits over the page, so the list has to give it room while a selection is
     // live — otherwise the last rows are covered by the very toolbar acting on them.
@@ -277,17 +316,8 @@ export default function ApplicationsListPage() {
       </div>
 
       <ApplicationFilters
-        view={view}
-        leading={
-          <ApplicationViewToggle
-            view={view}
-            onViewChange={(next) =>
-              // `sortBy` is dropped rather than carried across: the two views order different
-              // things, and the value that made sense in one is not in the other's vocabulary.
-              updateParams({ view: next === "flat" ? null : next, sortBy: null, companyId: null })
-            }
-          />
-        }
+        view={view === "company" ? "company" : "flat"}
+        leading={viewToggle}
         search={search}
         status={status}
         sortBy={isCompanyView ? companySortBy : flatSortBy}

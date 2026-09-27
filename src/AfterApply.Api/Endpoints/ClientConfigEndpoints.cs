@@ -1,6 +1,7 @@
 using AfterApply.Application.Blog;
 using AfterApply.Application.ClientConfig;
 using AfterApply.Infrastructure.Blog;
+using AfterApply.Infrastructure.Board;
 using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.ResponseRates;
@@ -41,6 +42,7 @@ public static class ClientConfigEndpoints
                 IOptions<CompanyIntelligenceOptions> companyIntelligenceOptions,
                 IOptions<ResponseRateOptions> responseRateOptions,
                 IOptions<SilenceReportOptions> silenceReportOptions,
+                IOptions<BoardOptions> boardOptions,
                 IBlogPublicService blog,
                 HttpContext httpContext,
                 CancellationToken cancellationToken) =>
@@ -105,7 +107,8 @@ public static class ClientConfigEndpoints
                     new BlogConfigResponse(blogEnabled, hasPublishedPosts),
                     new CompanyIntelligenceConfigResponse(companyIntelligenceOptions.Value.Enabled),
                     new ResponseRatesConfigResponse(responseRateOptions.Value.Enabled),
-                    new SilenceReportsConfigResponse(silenceReportOptions.Value.Enabled)));
+                    new SilenceReportsConfigResponse(silenceReportOptions.Value.Enabled),
+                    new BoardConfigResponse(boardOptions.Value.Enabled)));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

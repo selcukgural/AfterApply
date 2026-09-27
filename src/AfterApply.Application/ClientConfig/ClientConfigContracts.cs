@@ -20,7 +20,11 @@ public sealed record ClientConfigResponse(
     BlogConfigResponse? Blog = null,
     CompanyIntelligenceConfigResponse? CompanyIntelligence = null,
     ResponseRatesConfigResponse? ResponseRates = null,
-    SilenceReportsConfigResponse? SilenceReports = null);
+    SilenceReportsConfigResponse? SilenceReports = null,
+    BoardConfigResponse? Board = null);
+
+/// <summary>Whether the applications page offers its third view, the board (Board:Enabled).</summary>
+public sealed record BoardConfigResponse(bool Enabled);
 
 /// <summary>Whether a company page has a "Response" tab: the CompanyIntelligence flag, off in
 /// production until the legal read (DEVELOPMENT_PLAN.md K1). The tab is not rendered while off.</summary>

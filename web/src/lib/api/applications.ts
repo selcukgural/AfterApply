@@ -42,6 +42,7 @@ function buildQueryString(query: ApplicationListQuery | GroupedApplicationsQuery
   if ("companyId" in query && query.companyId) params.set("companyId", query.companyId);
   if (query.sortBy) params.set("sortBy", query.sortBy);
   if (query.sortDirection) params.set("sortDirection", query.sortDirection);
+  if ("onBoard" in query && query.onBoard !== undefined) params.set("onBoard", String(query.onBoard));
   const qs = params.toString();
   return qs ? `?${qs}` : "";
 }

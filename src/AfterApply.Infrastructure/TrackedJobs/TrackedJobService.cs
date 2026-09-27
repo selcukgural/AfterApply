@@ -4,7 +4,9 @@ using AfterApply.Application.TrackedJobs;
 using AfterApply.Application.TrackedJobs.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.TrackedJobs;
+using AfterApply.Domain.Board;
 using AfterApply.Infrastructure.Applications;
+using AfterApply.Infrastructure.Board;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +17,7 @@ namespace AfterApply.Infrastructure.TrackedJobs;
 
 internal sealed class TrackedJobService(
     AppDbContext dbContext, ICompanyResolver companyResolver, ExtensionCaptureResolver captureResolver,
-    HybridCache cache) : ITrackedJobService
+    HybridCache cache, BoardSync boardSync) : ITrackedJobService
 {
     public async Task<IReadOnlyCollection<TrackedJobResponse>> GetAllAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -39,6 +41,7 @@ internal sealed class TrackedJobService(
             request.Location, request.Notes, now, request.HrName, request.HrEmail, request.HrLinkedInUrl);
 
         dbContext.TrackedJobs.Add(trackedJob);
+        await boardSync.OnTrackedJobCreatedAsync(trackedJob, BoardCardOrigin.Manual, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         // Read back the resolved row rather than echoing request.CompanyName: the resolver matches
@@ -75,6 +78,7 @@ internal sealed class TrackedJobService(
             jobId, request.DescriptionHtml);
 
         dbContext.TrackedJobs.Add(trackedJob);
+        await boardSync.OnTrackedJobCreatedAsync(trackedJob, BoardCardOrigin.Later, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return new ExtensionTrackedJobResponse(ExtensionTrackedJobOutcome.Saved);
@@ -112,6 +116,8 @@ internal sealed class TrackedJobService(
             capturedJobDescriptionHtml: trackedJob.CapturedJobDescriptionHtml);
 
         dbContext.Applications.Add(application);
+        // Card first, posting second — see ApplicationService.CreateFromExtensionAsync.
+        await boardSync.OnTrackedJobConvertedAsync(trackedJob, application, cancellationToken);
         dbContext.TrackedJobs.Remove(trackedJob);
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveAsync(CacheKeys.ApplicationsSummary(userId), cancellationToken);
