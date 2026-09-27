@@ -56,7 +56,7 @@
         "description": "Hesap oluşturma, giriş yapma ve tema/dil tercihlerinizin nasıl taşındığı."
       },
       "helpDashboard": {
-        "title": "Pano",
+        "title": "Panel",
         "description": "Açık başvurular, haftalık eğilim, dönüşüm hunisi, yanıt süreleri ve sonuç dağılımı — paneli paneline."
       },
       "helpTrackedJobs": {
@@ -66,6 +66,10 @@
       "helpApplications": {
         "title": "Başvurular",
         "description": "Başvuru oluşturma, listeleme, şirkete göre gruplama, toplu işlemler, süreç akışı ve düzenleme/silme."
+      },
+      "helpBoard": {
+        "title": "Pano",
+        "description": "Başvurularınızı aşamalarına göre sütunlarda takip edin: sürükleyip taşıyın, kendi sıranıza dizin, filtreleyin."
       },
       "helpSuggestions": {
         "title": "E-posta Önerileri",
@@ -2054,6 +2058,7 @@
       "dashboard": "Panel",
       "trackedJobs": "Takip Listem",
       "applications": "Başvurular",
+      "board": "Pano",
       "suggestions": "Öneriler",
       "import": "LinkedIn'den İçe Aktar",
       "settings": "Hesap Ayarları",
@@ -2114,6 +2119,9 @@
         },
         "applications": {
           "description": "Başvuru oluşturma, düzenleme, silme ve durum takibi."
+        },
+        "board": {
+          "description": "Başvurularınızı aşamalarına göre sütunlarda sürükleyip takip edin."
         },
         "suggestions": {
           "description": "Gmail Taraması'ndan otomatik durum önerileri."
@@ -2338,7 +2346,7 @@
       },
       "companyView": {
         "title": "Şirkete göre gruplama",
-        "body": "Listenin üstündeki Liste / Şirket anahtarı, aynı başvuruları şirketlerine göre toplar. Şirket görünümünde sayfa başına 10 başvuru değil 10 şirket gelir — yani bir şirketin başvuruları hiçbir zaman iki sayfaya bölünmez. Her şirket başlığı kaç başvurunuz olduğunu, bunların hangi durumlarda dağıldığını ve o şirkette en son ne zaman bir hareket olduğunu gösterir; başlığa tıklayarak grubu katlayabilir, başlıktaki kutuyla o şirketin başvurularının tümünü birden seçebilirsiniz. Arama ve durum filtresi iki görünümde de aynı şekilde çalışır ve seçtiğiniz görünüm adres çubuğuna yansır. Bir şirkette 20'den fazla başvurunuz varsa grubun altındaki bağlantı sizi o şirkete daraltılmış düz listeye götürür."
+        "body": "Listenin üstündeki Liste / Şirket anahtarı, aynı başvuruları şirketlerine göre toplar. Şirket görünümünde sayfa başına 10 başvuru değil 10 şirket gelir — yani bir şirketin başvuruları hiçbir zaman iki sayfaya bölünmez. Her şirket başlığı kaç başvurunuz olduğunu, bunların hangi durumlarda dağıldığını ve o şirkette en son ne zaman bir hareket olduğunu gösterir; başlığa tıklayarak grubu katlayabilir, başlıktaki kutuyla o şirketin başvurularının tümünü birden seçebilirsiniz. Arama ve durum filtresi iki görünümde de aynı şekilde çalışır ve seçtiğiniz görünüm adres çubuğuna yansır. Bir şirkette 20'den fazla başvurunuz varsa grubun altındaki bağlantı sizi o şirkete daraltılmış düz listeye götürür. Üçüncü görünüm olan Pano, başvurularınızı aşamalarına göre sütunlarda gösterir; ayrıntılar için yardım merkezindeki Pano konusuna bakın."
       },
       "bulk": {
         "title": "Birden çok başvuruyu tek seferde işleme",
@@ -2367,6 +2375,114 @@
       "promise": {
         "title": "Söz verilen dönüş tarihi",
         "body": "\"Cumaya kadar döneriz\" dendiyse tarihi, durum değiştirirken ya da detaydaki \"+ Tarih ekle\" ile kaydedin. Bu tarihe kadar takip hatırlatması gelmez; tarih geçer ve başvuru ilerlemezse panelde \"Söz verilen tarih geçti\" hatırlatması çıkar. Başvuru ilerlediğinde söz \"Sözünü tuttu\" ya da \"Geç döndüler\" olarak kalır. Bu cevaplar ve reddi nasıl öğrendiğiniz, adınız olmadan yalnızca toplu oranlara (sektör tablosu) katılır; en az 3 kişiden 5 cevap birikmeden hiçbir oran gösterilmez."
+      }
+    },
+    "board": {
+      "eyebrow": "Pano",
+      "title": "Başvurularınızı aşamalarına göre bir panoda takip edin",
+      "intro": "Pano, Başvurular sayfasının üçüncü görünümü: Liste ve Şirket'in yanındaki \"Pano\" düğmesiyle açılır. Takip etmek istediğiniz başvuruları ve kayıtlı ilanları aşamalarına göre sütunlarda gösterir; kartları sürükleyerek taşır, kendi sıranıza dizersiniz. Pano sizin: neyin üzerinde durduğuna, hangi sırada durduğuna siz karar verirsiniz ve bir sonraki girişinizde onu bıraktığınız gibi bulursunuz.",
+      "screenshots": {
+        "overview": "Başvuru panosu: Kaydedilenler, Başvuruldu, Süreçte, Teklif ve Sonuçlananlar sütunları",
+        "menu": "Bir kartın ⋯ menüsü: başvuruyu aç, aşamayı değiştir, sütunun en üstüne al, panodan çıkar",
+        "filters": "Panonun filtre paneli: kayıtlı görünümler, son hareket, kaynak ve durum filtreleri"
+      },
+      "columns": {
+        "title": "Sütunlar",
+        "body": "Bir kartın hangi sütunda durduğunu başvurunun durumu belirler; bu yüzden pano ile liste hiçbir zaman çelişmez. Kartı başka bir sütuna taşımak, başvurunun durumunu değiştirmek demektir.",
+        "saved": {
+          "title": "Kaydedilenler",
+          "body": "Henüz başvurmadığınız, \"Sonra başvur\" ile ya da Takip Listem'den kaydettiğiniz ilanlar."
+        },
+        "applied": {
+          "title": "Başvuruldu",
+          "body": "Başvurduğunuz ve henüz ses çıkmayan başvurular."
+        },
+        "inProgress": {
+          "title": "Süreçte",
+          "body": "Ön değerlendirme ve mülakat aşamasındakiler; hangi aşamada olduğu kartın üstünde küçük bir etiketle yazar."
+        },
+        "offer": {
+          "title": "Teklif",
+          "body": "Teklif aldığınız başvurular."
+        },
+        "closed": {
+          "title": "Sonuçlananlar",
+          "body": "Kabul, ret, geri çekilme ya da hiç dönülmeyen başvurular. Bir kart burada 14 gün durur, sonra panodan kendiliğinden düşer; listede kalır."
+        }
+      },
+      "firstOpen": {
+        "title": "Pano ilk açıldığında",
+        "body": "Panoyu ilk açtığınızda, sonuçlanmamış ve son 30 günde hareket görmüş başvurularınız ile aynı süre içinde kaydettiğiniz ilanlar panoya gelir. Daha eski başvurular listede kalır; istediğinizi \"Listeden panoya ekle\" ile panoya alabilirsiniz. Her sütun ilk anda 10 kart gösterir, aşağı kaydırdıkça 10'ar kart daha yüklenir."
+      },
+      "move": {
+        "title": "Kartları taşıma ve sıralama",
+        "step1": {
+          "title": "Sürükleyip bırakın",
+          "body": "Bir kartı sütun içinde yukarı-aşağı sürükleyerek kendi sıranıza dizin; bu sıra saklanır. Başka bir sütuna bıraktığınızda başvurunun durumu değişir ve durum geçmişine işlenir."
+        },
+        "step2": {
+          "title": "Aşamayı seçin",
+          "body": "Süreçte ya da Sonuçlananlar birden fazla aşama barındırdığı için, oraya bıraktığınız kart için hangi aşamaya geçtiğini (ör. Teknik Mülakat, Reddedildi) sorulur. Kaydedilenler'den bir başvuru sütununa bırakılan ilan başvuruya dönüşür; bir başvuru Kaydedilenler'e geri götürülemez."
+        },
+        "step3": {
+          "title": "Ya da kartın ⋯ menüsünü kullanın",
+          "body": "Başvuruyu açabilir, aşamasını değiştirebilir, sütunun en üstüne alabilir ya da panodan çıkarabilirsiniz. Sürüklemenin yapabildiği her şey menüden de yapılabilir."
+        },
+        "step4": {
+          "title": "Klavyeyle",
+          "body": "Kartın solundaki tutamaca odaklanıp Boşluk ya da Enter ile kartı tutun, ok tuşlarıyla taşıyın, yeniden Boşluk ya da Enter ile bırakın; Escape taşımayı iptal eder."
+        }
+      },
+      "addRemove": {
+        "title": "Panoya ekleme ve panodan çıkarma",
+        "body": "\"Listeden panoya ekle\" panoda olmayan başvurularınızı listeler; seçtikleriniz kendi aşamalarının sütununa, en üste eklenir. Sütunlardaki \"+ Başvuru ekle\" yeni başvuru formunu o sütunun aşamasıyla açar ve kaydettiğinizde sizi panoya geri getirir. Bir kartı ⋯ menüsündeki \"Panodan çıkar\" ile kaldırdığınızda yalnızca kart gider; başvuru ya da kayıtlı ilan silinmez, listede kalır. Listede panodaki başvuruların yanında \"Panoda\" etiketi görünür."
+      },
+      "arrivals": {
+        "title": "Kendiliğinden gelen kartlar",
+        "body": "Bazı kartlar panoya siz eklemeden gelir. Bunlar, siz bakana kadar üstlerinde nereden geldiklerini söyleyen bir etiketle görünür; üstteki şerit kaç kart geldiğini söyler, \"Göster\" yalnızca onları listeler, \"Hepsini gördüm\" etiketleri kaldırır. Bir karta dokunduğunuzda (açtığınızda ya da taşıdığınızda) etiketi kendiliğinden kalkar.",
+        "extension": {
+          "title": "Chrome eklentisinden",
+          "body": "Eklentiyle \"Başvurdum\" dediğiniz ilan Başvuruldu'ya, \"Sonra başvur\" dediğiniz ilan Kaydedilenler'e en üstten gelir."
+        },
+        "email": {
+          "title": "E-postadan",
+          "body": "Gmail taramasından gelen ve onayladığınız (ya da kendiliğinden uygulanan) bir durum değişikliği, panodaki kartı yeni sütununun en üstüne taşır."
+        },
+        "returned": {
+          "title": "Panodan çıkardığınız bir başvuru için",
+          "body": "Yalnızca ilerleme (ön değerlendirme, mülakat ya da teklif) haberi getiren bir e-posta kartı panoya geri getirir. Ret ya da sessizlik, çıkardığınız bir kartı geri getirmez; başvurunun durumu listede yine güncellenir."
+        }
+      },
+      "line": {
+        "title": "Kartın alt satırı",
+        "silence": {
+          "title": "Son hareket",
+          "body": "Başvurunun son hareketinden bu yana geçen süre: 7 günden yeniyse yeşil nokta, 14 günü geçtiyse turuncu, 30 günü geçtiyse kırmızı. Süre başvuru tarihinden değil son hareketten sayılır; eski bir başvuru dün ses aldıysa sessiz sayılmaz."
+        },
+        "source": {
+          "title": "Kaynak",
+          "body": "İlanın geldiği site (LinkedIn, kariyer.net, diğer bir site) ya da elle eklendiği."
+        },
+        "closed": {
+          "title": "Sonuçlananlarda",
+          "body": "Kartın kaç gün sonra panodan düşeceği."
+        }
+      },
+      "filters": {
+        "title": "Filtreler ve kayıtlı görünümler",
+        "body": "Arama kutusu şirket adında ve pozisyonda arar. \"Filtreler\" panelinde son hareket (7, 30, 90 gün ya da tarih aralığı), kaynak ve durum (\"Sana sormadan gelenler\", \"14+ gündür ses yok\", \"Hatırlatıcısı olan\", \"Dönüş sözü verilmiş\") seçebilirsiniz. Seçtiğiniz filtre adres çubuğuna yazılır, yani sayfayı yenilediğinizde ya da bağlantıyı sakladığınızda aynı görünümle açılır. Sık kullandığınız bir filtreyi \"Bu filtreyi kaydet\" ile adlandırarak saklayabilirsiniz; kayıtlı görünümler yalnızca o tarayıcıda tutulur."
+      },
+      "phone": {
+        "title": "Telefonda",
+        "body": "Dar ekranlarda sütunlar yan yana değil, üstteki aşama sekmeleriyle tek tek görünür. Bir kartı sırasını değiştirmek için basılı tutup sürükleyebilirsiniz; listeyi parmakla kaydırmak kartı taşımaz. Kartı başka bir aşamaya taşımak için ⋯ menüsündeki \"Aşamayı değiştir\"i kullanın."
+      },
+      "calloutLogos": {
+        "title": "Şirket logoları",
+        "body": "Bir şirketin logosu varsa kartta baş harflerin yerine görünür. Logolar şirketin LinkedIn sayfasından bizim sunucumuzca alınır ve yalnızca o şirkete başvurmuş ya da ilanını kaydetmiş kullanıcılara gösterilir. Logosu bulunamayan şirketler baş harfleriyle görünür."
+      },
+      "calloutFilters": {
+        "title": "Filtre panoyu değiştirmez",
+        "body": "Filtreler yalnızca o an gördüğünüzü daraltır; hiçbir kartı panoya eklemez ya da panodan çıkarmaz. Filtreyi kaldırdığınızda panonuz olduğu gibi geri gelir."
       }
     },
     "suggestions": {
