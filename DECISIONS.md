@@ -9856,3 +9856,52 @@ atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test et
 - **Bilinen sınır:** eklenti bir şirketi mevcut kayıtla yüksek güvenle eşleştirdiğinde LinkedIn
   bağlantısını o şirkete yazmaz (paylaşılan alanda ilk-yazan-kazanır zehirlenmesine karşı, bilinçli);
   logo yalnızca LinkedIn bağlantısı zaten kayıtlı şirketlerde çıkar. Bu kural değiştirilmedi.
+
+## Özellik bayrakları çalışma anında: Postgres + Redis, iki adımlı onay — DECIDED (2026-09-27)
+
+**Karar.** Ürün bayrakları artık deploy beklemeden admin panelinden açılıp kapanıyor. 16 bayrak `FeatureFlag` enum'unda:
+- Board, Blog, CompanyReviews, CompanySalaries, CandidateExperiences, CompanyIntelligence, ResponseRates, SilenceReports
+- CvScan, CvScanNotes, EmailSignals, EmailAutoApproval, FeedbackGitHub, AtsSources, JobSources, Payments
+
+Karar sahibin: **hepsi iki yönde de serbest**. Gizlilik metnine ya da paraya bağlı bayraklar kilitli değil; panelde "Notlar" alanında açıkça uyarıyor.
+
+Bu karar `deploy.yml`'deki "reviewed deploy, not a database edit" kuralını bayrakların açık/kapalı durumu için kaldırıyor. Fiyatlar, sırlar ve proje kimlikleri config'te kalıyor.
+
+**Mekanizma.**
+- **Asıl kayıt:** Postgres'te `FeatureFlagOverrides`, bayrak başına bir satır. Satırı olmayan bayrak deploy varsayılanıyla çalışır: options bölümünün `Enabled` değeri, yani appsettings.json + deploy.yml. deploy.yml satırları bu yüzden "varsayılan" olarak kalıyor.
+- **Okuma:** Her instance override'ları bellekte tutuyor (`FeatureFlagStore`). Okuma bir sözlük bakışı; ~45 okuma noktası senkron kaldı. Yalnız bayrak okuyan `IOptions<T>.Value.Enabled` kullanımları `IFeatureFlags.IsEnabled(...)` ile değişti.
+- **Tazeleme:** Başlangıçta bir okuma (5 sn sınırlı; DB yoksa varsayılanlar). Değişiklikte Redis pub/sub duyurusu (`{ChannelPrefix}:feature-flags`, veri taşımaz). Duyuruya ek olarak DB yoklaması, sahibin isteğiyle Redis'in durumuna göre:
+  - abonelik sağlamken 5 dakikada bir (`PollSeconds` 300); yalnız kaybolmuş bir duyuruya karşı sigorta;
+  - abonelik yokken ya da bağlantı koptuğunda 15 saniyede bir (`DegradedPollSeconds`);
+  - bağlantı geri gelince hemen bir okuma, çünkü pub/sub kopukken yayınlananları saklamaz.
+  - Kopma ve geri gelme, StackExchange.Redis'in `ConnectionFailed`/`ConnectionRestored` (Subscription) olaylarından okunuyor.
+- **Arıza:** DB okunamazsa son snapshot, hiç okunamadıysa varsayılanlar geçerli. Redis düşerse değişiklik 15 sn'lik yoklamayla yayılır.
+- **Önbellek:** Override'lar gerçekten değişince her instance kendi yeniden okumasından sonra uygulama önbelleğini (FusionCache, L1+L2+backplane) temizliyor. Önbellekteki sayfalar eski bayraklarla hesaplanmıştı (dizinde maaş sayımı, şirket sekmeleri). Geçişler seyrek; bedeli bir kez soğuk önbellek.
+- **Kurulum yolu kontrolleri:** Başlangıçtaki config doğrulamaları (Blog bucket, PayTR validator) yerinde kaldı. Aynı kurallar çalışma anında "açma" isteğinde ön koşul olarak soruluyor (`FeatureFlagPrerequisites`).
+
+**İki adımlı onay (sahibin isteği).**
+- **1. adım, `POST /api/admin/feature-flags/{flag}/prepare`:** Gerekçe zorunlu (5–500 karakter). Hiçbir şeyi değiştirmez. Değişikliği ve 5 dakikalık bir Data Protection token'ı döndürür. Token şunlara bağlı: admin, bayrak, hedef değer, gerekçe ve o anki override'ın durumu (var mı, değeri, zamanı).
+- **2. adım, `…/confirm`:** Token ile bayrağın adı birebir yazılarak onaylanır (büyük/küçük harf dahil).
+- **Arada biri değiştirdiyse ya da token kullanıldıysa** 409 `FEATURE_FLAG_CHANGED_SINCE_PREPARE` döner; token bu yüzden tek kullanımlık.
+- **Başka admin, başka bayrak, süresi geçmiş ya da bozuk token:** 409 `FEATURE_FLAG_CONFIRMATION_INVALID`.
+- **Yarış:** Eşzamanlı iki onayda `UpdatedAt` concurrency token'ı ve PK sayesinde yalnız biri kazanır.
+- **Ad:** Rota adı yalnızca üye adıyla okunur (`FeatureFlagNames`). "0"/"99" gibi sayılar bayrak sayılmaz.
+
+**Kim, hangi IP.**
+- Her onay `FeatureFlagChanges`'a yazılır: bayrak, yeni override, önce/sonra açık mıydı, gerekçe, zaman, admin.
+- Admin ve IP ayrı `FeatureFlagChangeOrigins` tablosunda. RequestAudits kuralı (2026-09-14) aynen uygulanıyor:
+  - IP hiçbir yanıtta, ekranda ya da log satırında yok;
+  - admin hesabı silinince origin cascade ile gider, değişiklik satırı yazarsız kalır.
+- Log satırı yalnız bayrak, durum ve kullanıcı id taşır.
+
+**Açıklamalar.**
+- Her bayrağın başlığı, ne yaptığı, kapalıyken ne olduğu ve notları `SharedStrings` (tr/en) içinde `FEATURE_FLAG_{AD}_*` anahtarlarında. Admin listesi bunları istek dilinde döndürüyor.
+- Metinler kod okunarak yazıldı: hangi uç 404 olur, ne gizlenir, ne saklanır, açılınca geri gelmeyen ne.
+- Birim testi her bayrağın iki dilde de metni olduğunu ve para/gizlilik bayraklarının notunun bulunduğunu doğruluyor.
+
+**Bilinen boşluklar (PR 2 / sonrası).**
+- Blog kapalıyken menüdeki Rehber linkleri, ResponseRates kapalıyken /response-rates sayfası ve CvScan kapalıyken /cv-tarama linkleri görünür kalıyor.
+- EmailSignals `/api/config`'te yok, web hiçbir şeyi gizlemiyor.
+- Bunlar açıklama metinlerinde açıkça yazılı.
+- `/api/config` önbelleği hâlâ 5 dk; PR 2'de 60 sn'ye iniyor.
+- Admin paneli ("danger zone" uyarılı) PR 2'de, kanvas onayıyla.

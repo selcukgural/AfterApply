@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.Feedback;
 using AfterApply.Application.Feedback.Contracts;
 using AfterApply.Domain.Feedback;
@@ -10,7 +11,8 @@ namespace AfterApply.Infrastructure.Feedback;
 internal sealed class FeedbackService(
     AppDbContext dbContext,
     IBackgroundJobClient jobClient,
-    IOptions<FeedbackGitHubOptions> gitHubOptions) : IFeedbackService
+    IOptions<FeedbackGitHubOptions> gitHubOptions,
+    IFeatureFlags featureFlags) : IFeedbackService
 {
     /// <summary>Long enough for any real browser's string; the column is bounded so a crafted
     /// header cannot be used to write a kilobyte per request.</summary>
@@ -37,7 +39,7 @@ internal sealed class FeedbackService(
         // After the commit, and enqueued rather than awaited: the user's message is already safe,
         // so a slow or unreachable GitHub must not show up as a failed submission. The job re-checks
         // the flag itself — this one only avoids queueing work that would immediately no-op.
-        if (gitHubOptions.Value.IsConfigured)
+        if (featureFlags.IsEnabled(FeatureFlag.FeedbackGitHub) && gitHubOptions.Value.HasTarget)
         {
             jobClient.Enqueue<IGitHubIssueMirror>(m => m.MirrorAsync(entry.Id, CancellationToken.None));
         }

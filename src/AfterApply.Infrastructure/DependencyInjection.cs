@@ -66,7 +66,9 @@ using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.Occupations;
+using AfterApply.Infrastructure.FeatureFlags;
 using AfterApply.Infrastructure.Feedback;
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Infrastructure.TrackedJobs;
 using FluentValidation;
 using Hangfire;
@@ -200,11 +202,35 @@ public static class DependencyInjection
         services.Configure<JobSourceOptions>(configuration.GetSection(JobSourceOptions.SectionName));
         services.Configure<AtsSourceOptions>(configuration.GetSection(AtsSourceOptions.SectionName));
         services.Configure<BlogOptions>(configuration.GetSection(BlogOptions.SectionName));
+        services.AddFeatureFlags(configuration);
         services.AddPayments(configuration);
         services.AddDocumentStorage(configuration);
         services.AddBlog(configuration);
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Runtime feature flags (DECISIONS.md 2026-09-27): overrides in Postgres, held in memory on
+    /// every instance, re-read on a Redis announcement and on a poll. The options sections keep
+    /// their <c>Enabled</c> values as the defaults a flag with no override runs on.
+    /// </summary>
+    private static IServiceCollection AddFeatureFlags(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<FeatureFlagOptions>(configuration.GetSection(FeatureFlagOptions.SectionName));
+        services.AddSingleton<FeatureFlagCatalog>();
+        services.AddSingleton<FeatureFlagStore>();
+        services.AddSingleton<IFeatureFlags>(sp => sp.GetRequiredService<FeatureFlagStore>());
+        services.AddSingleton<FeatureFlagChannel>();
+        services.AddScoped<IFeatureFlagAdminService, FeatureFlagAdminService>();
+
+        // The OpenAPI document build runs this entrypoint with no database or Redis to read.
+        if (!IsOpenApiDocumentGeneration)
+        {
+            services.AddHostedService<FeatureFlagRefresher>();
+        }
 
         return services;
     }

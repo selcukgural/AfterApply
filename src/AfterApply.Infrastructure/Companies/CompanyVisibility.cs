@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.Companies;
 using AfterApply.Domain.CompanyReviews;
@@ -38,15 +39,14 @@ public sealed class CompanyProfileOptions
 internal sealed class CompanyVisibility(
     AppDbContext dbContext,
     IOptions<CompanyReviewOptions> reviewOptions,
-    IOptions<CompanySalaryOptions> salaryOptions,
-    IOptions<CandidateExperienceOptions> experienceOptions,
+    IFeatureFlags featureFlags,
     IOptions<CompanyProfileOptions> profileOptions)
 {
     public IQueryable<Company> Listed(IQueryable<Company> companies)
     {
         var minimumApplicants = reviewOptions.Value.KnownCompanyMinimumApplicants;
-        var salariesOn = salaryOptions.Value.Enabled;
-        var experiencesOn = experienceOptions.Value.Enabled;
+        var salariesOn = featureFlags.IsEnabled(FeatureFlag.CompanySalaries);
+        var experiencesOn = featureFlags.IsEnabled(FeatureFlag.CandidateExperiences);
 
         return companies.Where(c =>
             dbContext.CompanyReviews.Any(r => r.CompanyId == c.Id && r.Status != ReviewModerationStatus.Rejected)

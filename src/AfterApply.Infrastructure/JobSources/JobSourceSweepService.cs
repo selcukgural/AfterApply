@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.Imports;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.JobSources.Contracts;
@@ -39,6 +40,7 @@ internal sealed class JobSourceSweepService(
     IJobFitScoringService scoring,
     IJobSourceDigestService digest,
     IOptions<JobSourceOptions> options,
+    IFeatureFlags featureFlags,
     ILogger<JobSourceSweepService> logger,
     TimeProvider? timeProvider = null) : IJobSourceSweepService
 {
@@ -48,7 +50,7 @@ internal sealed class JobSourceSweepService(
     public async Task SweepAsync(CancellationToken cancellationToken)
     {
         var o = options.Value;
-        if (!o.Enabled)
+        if (!featureFlags.IsEnabled(FeatureFlag.JobSources))
         {
             return;
         }

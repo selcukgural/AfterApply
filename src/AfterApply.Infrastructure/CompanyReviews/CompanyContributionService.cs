@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.Blog;
 using AfterApply.Application.CandidateExperiences;
 using AfterApply.Application.CandidateExperiences.Contracts;
@@ -28,18 +29,16 @@ internal sealed class CompanyContributionService(
     ICandidateExperienceService experiences,
     IBlogCommentService blogComments,
     IOptions<CompanyReviewOptions> options,
-    IOptions<CompanySalaryOptions> salaryOptions,
-    IOptions<CandidateExperienceOptions> experienceOptions,
-    IOptions<BlogOptions> blogOptions,
+    IFeatureFlags featureFlags,
     ContributionProofQueries proof) : ICompanyContributionService
 {
     public async Task<MyContributionsResponse> ListMineAsync(Guid userId, MyContributionsQuery query, CancellationToken cancellationToken)
     {
-        var salariesOn = salaryOptions.Value.Enabled;
-        var experiencesOn = experienceOptions.Value.Enabled;
+        var salariesOn = featureFlags.IsEnabled(FeatureFlag.CompanySalaries);
+        var experiencesOn = featureFlags.IsEnabled(FeatureFlag.CandidateExperiences);
         // The chips: "blog comments" is that kind alone, "company" is everything else.
         var companyKinds = query.Filter != ContributionFilter.BlogComments;
-        var blogOn = blogOptions.Value.Enabled && query.Filter != ContributionFilter.Company;
+        var blogOn = featureFlags.IsEnabled(FeatureFlag.Blog) && query.Filter != ContributionFilter.Company;
 
         var stamps = new List<ContributionStamp>();
         if (companyKinds)

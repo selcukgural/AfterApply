@@ -1,9 +1,9 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Board;
 using AfterApply.Domain.TrackedJobs;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using DomainApplication = AfterApply.Domain.Applications.Application;
 
 namespace AfterApply.Infrastructure.Board;
@@ -18,12 +18,12 @@ namespace AfterApply.Infrastructure.Board;
 /// Nothing happens for a user whose board has never been opened (no <see cref="BoardState"/>):
 /// the first opening picks the same recent applications up anyway.
 /// </summary>
-internal sealed class BoardSync(AppDbContext dbContext, IOptions<BoardOptions> options, TimeProvider? timeProvider = null)
+internal sealed class BoardSync(AppDbContext dbContext, IFeatureFlags featureFlags, TimeProvider? timeProvider = null)
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
     private Task<bool> IsActiveAsync(Guid userId, CancellationToken cancellationToken) =>
-        options.Value.Enabled
+        featureFlags.IsEnabled(FeatureFlag.Board)
             ? dbContext.BoardStates.AnyAsync(s => s.UserId == userId, cancellationToken)
             : Task.FromResult(false);
 

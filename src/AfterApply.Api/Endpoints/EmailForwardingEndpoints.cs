@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using System.Security.Claims;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Applications.Contracts;
@@ -18,13 +19,13 @@ public static class EmailForwardingEndpoints
     public static IEndpointRouteBuilder MapEmailForwardingEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/email-forwarding").WithTags("EmailForwarding")
-            .WithDescription("Hidden behind EmailForwarding:Enabled — every endpoint in this group 404s while the flag is off.")
+            .WithDescription("Hidden behind the EmailSignals feature flag (default EmailForwarding:Enabled) — every endpoint in this group 404s while the flag is off.")
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.AddEndpointFilter(async (context, next) =>
         {
-            var options = context.HttpContext.RequestServices.GetRequiredService<IOptions<EmailForwardingOptions>>();
-            return options.Value.Enabled ? await next(context) : Results.NotFound();
+            var featureFlags = context.HttpContext.RequestServices.GetRequiredService<IFeatureFlags>();
+            return featureFlags.IsEnabled(FeatureFlag.EmailSignals) ? await next(context) : Results.NotFound();
         });
 
         // Anonymous on purpose: the payload (weights/phrases/known-domain list) carries no PII and

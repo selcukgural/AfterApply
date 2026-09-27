@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.JobSources.Contracts;
 using AfterApply.Domain.Ai;
@@ -25,6 +26,7 @@ internal sealed class JobFitScoringService(
     IJobFitScoringProvider provider,
     IUserCvTextReader cvTextReader,
     IOptions<JobSourceOptions> options,
+    IFeatureFlags featureFlags,
     ILogger<JobFitScoringService> logger,
     TimeProvider? timeProvider = null) : IJobFitScoringService
 {
@@ -33,7 +35,7 @@ internal sealed class JobFitScoringService(
     public async Task<int> ScoreWeekAsync(int weekKey, CancellationToken cancellationToken)
     {
         var settings = options.Value.Scoring;
-        if (!options.Value.Enabled || !settings.Enabled)
+        if (!featureFlags.IsEnabled(FeatureFlag.JobSources) || !settings.Enabled)
         {
             return 0;
         }

@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Domain.EmailIntegrations;
@@ -9,7 +10,8 @@ namespace AfterApply.Infrastructure.EmailIntegrations;
 
 internal sealed class AutoApprovalCalibrationService(
     AppDbContext dbContext,
-    IOptions<EmailAutoApprovalOptions> options) : IAutoApprovalCalibrationService
+    IOptions<EmailAutoApprovalOptions> options,
+    IFeatureFlags featureFlags) : IAutoApprovalCalibrationService
 {
     /// <summary>
     /// Band edges, coarse at the bottom and fine at the top. The decision this table exists to
@@ -61,7 +63,7 @@ internal sealed class AutoApprovalCalibrationService(
 
         return new AutoApprovalCalibrationResponse(
             options.Value.ConfidenceThreshold,
-            options.Value.Enabled,
+            featureFlags.IsEnabled(FeatureFlag.EmailAutoApproval),
             options.Value.ShadowModeEnabled,
             rows.Count,
             buckets);

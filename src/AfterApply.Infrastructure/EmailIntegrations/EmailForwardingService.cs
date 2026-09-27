@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -26,6 +27,7 @@ internal sealed class EmailForwardingService(
     IJobBoardDomainMatcher jobBoardDomainMatcher,
     IOptions<EmailIntelligenceOptions> intelligenceOptions,
     IOptions<EmailAutoApprovalOptions> autoApprovalOptions,
+    IFeatureFlags featureFlags,
     PaidCallBudget paidCalls,
     IOptions<PaidCallOptions> paidCallOptions,
     ILogger<EmailForwardingService> logger) : IEmailForwardingService
@@ -386,7 +388,7 @@ internal sealed class EmailForwardingService(
             return;
         }
 
-        if (!autoApprovalOptions.Value.Enabled)
+        if (!featureFlags.IsEnabled(FeatureFlag.EmailAutoApproval))
         {
             if (autoApprovalOptions.Value.ShadowModeEnabled)
             {

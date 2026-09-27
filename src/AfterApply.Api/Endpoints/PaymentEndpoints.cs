@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using System.Globalization;
 using System.Security.Claims;
 using AfterApply.Api.Extensions;
@@ -238,8 +239,11 @@ public static class PaymentEndpoints
 
     private static async ValueTask<object?> EnabledFilter(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        var options = context.HttpContext.RequestServices.GetRequiredService<IOptions<PayTrOptions>>().Value;
-        return options.Enabled && options.IsConfigured ? await next(context) : Results.NotFound();
+        var services = context.HttpContext.RequestServices;
+        var options = services.GetRequiredService<IOptions<PayTrOptions>>().Value;
+        return services.GetRequiredService<IFeatureFlags>().IsEnabled(FeatureFlag.Payments) && options.IsConfigured
+            ? await next(context)
+            : Results.NotFound();
     }
 
     private static async ValueTask<object?> AdminFilter(EndpointFilterInvocationContext context, EndpointFilterDelegate next)

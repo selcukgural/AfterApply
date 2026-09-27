@@ -1,15 +1,10 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.Blog;
 using AfterApply.Application.ClientConfig;
-using AfterApply.Infrastructure.Blog;
-using AfterApply.Infrastructure.Board;
-using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.CompanyReviews;
-using AfterApply.Infrastructure.ResponseRates;
-using AfterApply.Infrastructure.SilenceReports;
 using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.CvScan;
-using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -34,15 +29,10 @@ public static class ClientConfigEndpoints
                 IOptions<GitHubAuthOptions> gitHubAuthOptions,
                 IOptions<CvScanOptions> cvScanOptions,
                 IOptions<CompanyReviewOptions> companyReviewOptions,
-                IOptions<JobSourceOptions> jobSourceOptions,
                 IOptions<PayTrOptions> payTrOptions,
                 IOptions<CompanySalaryOptions> companySalaryOptions,
                 IOptions<CandidateExperienceOptions> candidateExperienceOptions,
-                IOptions<BlogOptions> blogOptions,
-                IOptions<CompanyIntelligenceOptions> companyIntelligenceOptions,
-                IOptions<ResponseRateOptions> responseRateOptions,
-                IOptions<SilenceReportOptions> silenceReportOptions,
-                IOptions<BoardOptions> boardOptions,
+                IFeatureFlags featureFlags,
                 IBlogPublicService blog,
                 HttpContext httpContext,
                 CancellationToken cancellationToken) =>
@@ -62,11 +52,12 @@ public static class ClientConfigEndpoints
                 // The one value here that comes from the database rather than from options. It is
                 // cached in the service and answers false on any failure, so this route keeps its
                 // "never down" property (the sign-in buttons read it).
-                var blogEnabled = blogOptions.Value.Enabled;
+                var blogEnabled = featureFlags.IsEnabled(FeatureFlag.Blog);
                 var hasPublishedPosts = blogEnabled && await blog.HasPublishedPostsAsync(cancellationToken);
 
-                // The values change only with a deploy or a config rollout, so let browsers and the
-                // CDN hold them for a few minutes instead of re-fetching on every form mount.
+                // The values change with a deploy or when an admin switches a flag (the flags are
+                // runtime since 2026-09-27), so let browsers and the CDN hold them for a few minutes
+                // instead of re-fetching on every form mount.
                 httpContext.Response.GetTypedHeaders().CacheControl = new CacheControlHeaderValue
                 {
                     Public = true,
@@ -94,21 +85,22 @@ public static class ClientConfigEndpoints
                     // Both halves have to be true for the box to be worth offering: the feature
                     // flag, and a project to call. A flag on with no project configured would
                     // render a checkbox whose only outcome is "unavailable".
-                    new CvScanConfigResponse(cvScan.Enabled, cvScan.Enabled && cvScan.LlmEnabled
+                    new CvScanConfigResponse(featureFlags.IsEnabled(FeatureFlag.CvScan),
+                        featureFlags.IsEnabled(FeatureFlag.CvScan) && featureFlags.IsEnabled(FeatureFlag.CvScanNotes)
                                              && !string.IsNullOrWhiteSpace(cvScan.Review.ProjectId)),
-                    new CompanyReviewsConfigResponse(reviews.Enabled, reviews.MaxReviewsPerUser,
+                    new CompanyReviewsConfigResponse(featureFlags.IsEnabled(FeatureFlag.CompanyReviews), reviews.MaxReviewsPerUser,
                         reviews.MinimumReviewsForScore, reviews.PriorWeight),
-                    new CompanySalariesConfigResponse(salaries.Enabled, salaries.MaxEntriesPerUser,
+                    new CompanySalariesConfigResponse(featureFlags.IsEnabled(FeatureFlag.CompanySalaries), salaries.MaxEntriesPerUser,
                         salaries.MinimumEntriesForStats),
-                    new JobSourcesConfigResponse(jobSourceOptions.Value.Enabled),
-                    new PaymentsConfigResponse(payTrOptions.Value.Enabled && payTrOptions.Value.IsConfigured),
-                    new CandidateExperiencesConfigResponse(experiences.Enabled, experiences.MaxEntriesPerUser,
+                    new JobSourcesConfigResponse(featureFlags.IsEnabled(FeatureFlag.JobSources)),
+                    new PaymentsConfigResponse(featureFlags.IsEnabled(FeatureFlag.Payments) && payTrOptions.Value.IsConfigured),
+                    new CandidateExperiencesConfigResponse(featureFlags.IsEnabled(FeatureFlag.CandidateExperiences), experiences.MaxEntriesPerUser,
                         experiences.MinimumEntriesForStats, experiences.PriorWeight),
                     new BlogConfigResponse(blogEnabled, hasPublishedPosts),
-                    new CompanyIntelligenceConfigResponse(companyIntelligenceOptions.Value.Enabled),
-                    new ResponseRatesConfigResponse(responseRateOptions.Value.Enabled),
-                    new SilenceReportsConfigResponse(silenceReportOptions.Value.Enabled),
-                    new BoardConfigResponse(boardOptions.Value.Enabled)));
+                    new CompanyIntelligenceConfigResponse(featureFlags.IsEnabled(FeatureFlag.CompanyIntelligence)),
+                    new ResponseRatesConfigResponse(featureFlags.IsEnabled(FeatureFlag.ResponseRates)),
+                    new SilenceReportsConfigResponse(featureFlags.IsEnabled(FeatureFlag.SilenceReports)),
+                    new BoardConfigResponse(featureFlags.IsEnabled(FeatureFlag.Board))));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

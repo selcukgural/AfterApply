@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.ResponseRates;
 using AfterApply.Application.ResponseRates.Contracts;
 using AfterApply.Domain.Benchmark;
@@ -18,12 +19,13 @@ public static class ResponseRateEndpoints
                 BenchmarkPeriod? period,
                 ISectorResponseRateService service,
                 IOptions<ResponseRateOptions> options,
+                IFeatureFlags featureFlags,
                 HttpContext httpContext,
                 CancellationToken cancellationToken) =>
             {
                 // Flag off → 404, the CompanyIntelligence pattern: the route's existence is not
                 // distinguishable from the feature being on.
-                if (!options.Value.Enabled)
+                if (!featureFlags.IsEnabled(FeatureFlag.ResponseRates))
                 {
                     return Results.NotFound();
                 }

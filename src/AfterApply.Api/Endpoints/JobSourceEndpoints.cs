@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using System.Security.Claims;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Admin;
@@ -160,8 +161,8 @@ public static class JobSourceEndpoints
 
     private static async ValueTask<object?> FlagFilter(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        var options = context.HttpContext.RequestServices.GetRequiredService<IOptions<JobSourceOptions>>();
-        return options.Value.Enabled ? await next(context) : Results.NotFound();
+        var featureFlags = context.HttpContext.RequestServices.GetRequiredService<IFeatureFlags>();
+        return featureFlags.IsEnabled(FeatureFlag.JobSources) ? await next(context) : Results.NotFound();
     }
 
     private static async ValueTask<object?> AdminFilter(EndpointFilterInvocationContext context, EndpointFilterDelegate next)

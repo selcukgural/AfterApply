@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Infrastructure.Companies;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.CompanyReviews;
@@ -22,8 +23,7 @@ internal sealed class CompanyDirectoryService(
     CompanyReviewQueries queries,
     HybridCache cache,
     IOptions<CompanyReviewOptions> options,
-    IOptions<CompanySalaryOptions> salaryOptions,
-    IOptions<CandidateExperienceOptions> experienceOptions,
+    IFeatureFlags featureFlags,
     CompanyVisibility visibility) : ICompanyDirectoryService
 {
     // Every entry in this service sits under a tag — the company's for its own page and review
@@ -61,8 +61,8 @@ internal sealed class CompanyDirectoryService(
     private async Task<PagedResult<CompanyPublicListItemResponse>> QueryDirectoryAsync(PublicCompanyListQuery query, CancellationToken cancellationToken)
     {
         var approved = dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved);
-        var salariesOn = salaryOptions.Value.Enabled;
-        var experiencesOn = experienceOptions.Value.Enabled;
+        var salariesOn = featureFlags.IsEnabled(FeatureFlag.CompanySalaries);
+        var experiencesOn = featureFlags.IsEnabled(FeatureFlag.CandidateExperiences);
         var contributions = Contributions(approved);
 
         // Only companies somebody has contributed to (see Contributions).
@@ -149,12 +149,12 @@ internal sealed class CompanyDirectoryService(
     private IQueryable<ContributionRow> Contributions(IQueryable<CompanyReview> approved)
     {
         var contributions = approved.Select(r => new ContributionRow { CompanyId = r.CompanyId, At = r.SubmittedAt });
-        if (salaryOptions.Value.Enabled)
+        if (featureFlags.IsEnabled(FeatureFlag.CompanySalaries))
         {
             contributions = contributions.Concat(dbContext.CompanySalaryEntries.Select(s => new ContributionRow { CompanyId = s.CompanyId, At = s.SubmittedAt }));
         }
 
-        if (experienceOptions.Value.Enabled)
+        if (featureFlags.IsEnabled(FeatureFlag.CandidateExperiences))
         {
             contributions = contributions.Concat(dbContext.CandidateExperiences.Select(e => new ContributionRow { CompanyId = e.CompanyId, At = e.SubmittedAt }));
         }
@@ -196,11 +196,11 @@ internal sealed class CompanyDirectoryService(
             var summary = await queries.GetSummaryAsync(companyId.Value, ct);
             // A count is not sensitive, and it is what lets the public page label its "Salaries"
             // tab before the reader signs in. One indexed COUNT each.
-            var salaryCount = salaryOptions.Value.Enabled
+            var salaryCount = featureFlags.IsEnabled(FeatureFlag.CompanySalaries)
                 ? await dbContext.CompanySalaryEntries.CountAsync(s => s.CompanyId == companyId, ct)
                 : 0;
             // Same shape for the third tab: a count, off → zero.
-            var experienceCount = experienceOptions.Value.Enabled
+            var experienceCount = featureFlags.IsEnabled(FeatureFlag.CandidateExperiences)
                 ? await dbContext.CandidateExperiences.CountAsync(e => e.CompanyId == companyId, ct)
                 : 0;
             return new CompanyPublicResponse(companyId.Value, slug, company.Name, website, summary, salaryCount, experienceCount);
@@ -252,7 +252,7 @@ internal sealed class CompanyDirectoryService(
             // salaries do not — they sit behind sign-in, a crawler sees nothing there.
             var approved = dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved);
             var stamps = approved.Select(r => new { r.CompanyId, At = r.ModeratedAt ?? r.SubmittedAt });
-            if (experienceOptions.Value.Enabled)
+            if (featureFlags.IsEnabled(FeatureFlag.CandidateExperiences))
             {
                 stamps = stamps.Concat(dbContext.CandidateExperiences.Select(e => new { e.CompanyId, At = e.SubmittedAt }));
             }

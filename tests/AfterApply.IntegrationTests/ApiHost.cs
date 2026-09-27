@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Infrastructure.FeatureFlags;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -158,6 +159,13 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
         foreach (var host in BuiltHosts())
         {
             ((MemoryCache)host.Services.GetRequiredService<IMemoryCache>()).Clear();
+        }
+
+        // Every host holds the flag overrides in memory; a previous test's switch must not
+        // outlive the truncate any more than a cached row may.
+        foreach (var host in BuiltHosts())
+        {
+            await host.Services.GetRequiredService<FeatureFlagStore>().ReloadAsync(CancellationToken.None);
         }
     }
 
