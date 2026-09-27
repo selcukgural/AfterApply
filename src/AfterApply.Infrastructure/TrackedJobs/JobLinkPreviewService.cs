@@ -118,7 +118,9 @@ internal sealed class JobLinkPreviewService(HttpClient httpClient, ILogger<JobLi
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
         {
-            logger.LogInformation(ex, "Job link preview fetch failed for {JobUrl}", jobUrl);
+            // The host only: it passed the allow-list above, so it is one of a handful of known
+            // sites. The full address is what the user pasted and has no place in a log line.
+            logger.LogInformation(ex, "Job link preview fetch failed for {Host}", uri.Host);
             return Empty(jobUrl);
         }
     }
