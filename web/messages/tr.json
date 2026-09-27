@@ -12,8 +12,8 @@
         "description": "İş başvurusu sürecinin arka planı: LinkedIn geçmişini dışa aktarma, başvuru takibi, dönüş süreleri ve red mailleri — iş arayanın tarafından anlatılmış."
       },
       "blog": {
-        "title": "Blog",
-        "description": "İş bulmanın değil, iş aramanın hikâyeleri."
+        "title": "İş Arama Blogu: Başvurular, Bekleyiş ve Motivasyon",
+        "description": "İş arama sürecini anlatan yazılar: başvurun iletildi ne demek, ilan nasıl okunur, cevap neden gecikir ve bu sürede motivasyon nasıl korunur."
       },
       "login": {
         "title": "Giriş Yap",
@@ -3377,6 +3377,8 @@
   "blog": {
     "title": "Blog",
     "subtitle": "İş bulmanın değil, iş aramanın hikâyeleri.",
+    "heading": "İş arama blogu",
+    "intro": "Bu yazılar iş bulmayı değil, iş aramanın kendisini anlatıyor: başvurunu gönderdikten sonra neler olduğunu, bir ilanı nasıl okuyacağını, cevabın neden geciktiğini ve bu uzun süreçte nasıl ayakta kalacağını.",
     "emptyInLanguage": "Henüz Türkçe yazı yok; {language, select, en {İngilizce} other {diğer dilde}} {count, plural, =1 {bir yazı} other {# yazı}} var.",
     "readListInOtherLanguage": "{language, select, en {İngilizce yazılara git →} other {Diğer dildeki yazılara git →}}",
     "readMore": "Devamını oku",

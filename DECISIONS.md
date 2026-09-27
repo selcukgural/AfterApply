@@ -10141,3 +10141,20 @@ Refresh token'ın HttpOnly cookie'ye taşınmasının (PR #170) tamamlayıcısı
 - Karanlık tema script'i çalışıyor.
 - Enjekte edilen `<img onerror>` handler'ı engellendi (`script-src-attr` ihlali).
 - PayTR ödeme adımı (`next/script` ile resizer yüklemesi) uçtan uca denenmedi; o akış PayTR test hesabı istiyor. Yalnızca başlıklar (`frame-src`, `frame-ancestors`, X-Frame-Options) kontrol edildi.
+
+## robots.txt: korunan alanlar tam eşleşmeyle; blog dizini konusunu söylüyor — DECIDED (2026-09-28)
+
+Search Console'daki "dizine eklenmeyen sayfalar" raporu incelendi (tr, 2026-09-28):
+
+- **Hata: robots önek çakışması.** `Disallow: /tr/cv` bir önek kuralı. Oturumlu CV sayfasının yanında herkese açık CV taramayı da engelliyordu: `/tr/cv-tarama`, `/en/cv-scan` ve `/…/puan/…` skor kartları. Oysa ikisi de sitemap'te.
+  - Düzeltme: `disallowedPaths` her korunan alan için iki kural üretiyor: `/{locale}{path}$` (sayfanın kendisi; `$` Google ve Bing'de destekleniyor) ve `/{locale}{path}/` (altındakiler).
+  - `routes.test.ts`, Google'ın eşleşme kurallarıyla iki şeyi doğruluyor: sitemap'teki hiçbir URL (statik, şirket, blog) engellenmiyor; her korunan alan hem kendisi hem alt yollarıyla engelleniyor. Test eski kodla kırılıyor.
+- **"Tarandı – dizine eklenmedi" satırındaki `/tr/blog`:** sayfa sağlıklıydı (200, canonical doğru, hreflang var, noindex yok), ama başlığı "Blog", açıklaması tek satırlık bir slogandı.
+  - Yeni başlık ve açıklama konuyu söylüyor: tr "İş Arama Blogu: Başvurular, Bekleyiş ve Motivasyon", en "Job Search Blog: Applications, Waiting and Motivation".
+  - H1 "İş arama blogu / Job search blog" oldu, altına yazıların neyi anlattığını söyleyen bir giriş paragrafı eklendi.
+  - Breadcrumb JSON-LD kısa adda ("Blog") kaldı.
+  - Google'ın başlık ve açıklama rehberine göre (sayfaya özgü, açıklayıcı, sayfayı özetleyen). Kelime sayısı hedefi yok.
+- **Olduğu gibi bırakılanlar:**
+  - "Yönlendirmeli sayfa" (bilerek kurulan 301/307'ler). Doğrulamanın "başarısız" demesi beklenen durum.
+  - "Bulunamadı (404)": 7 URL'nin hepsi artık 301 veriyor (16 Eylül düzeltmesi, taramalar 9–13 Eylül).
+  - "Robots.txt tarafından engellendi": `api.ekariyerim.com/*`, bilerek engelleniyor.
