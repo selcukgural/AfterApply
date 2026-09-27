@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.AtsSources;
 using AfterApply.Application.Imports;
 using AfterApply.Infrastructure.Caching;
@@ -5,7 +6,6 @@ using AfterApply.Infrastructure.Persistence;
 using Medallion.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
 namespace AfterApply.Infrastructure.AtsSources;
@@ -31,12 +31,12 @@ internal sealed class AtsJobEnrichmentService(
     AppDbContext dbContext,
     IDistributedLockProvider locks,
     DistributedLockNames lockNames,
-    IOptions<AtsSourceOptions> options,
+    IFeatureFlags featureFlags,
     ILogger<AtsJobEnrichmentService> logger) : IAtsJobEnrichmentService
 {
     public async Task EnrichAsync(Guid jobId, CancellationToken cancellationToken)
     {
-        if (!options.Value.Enabled)
+        if (!featureFlags.IsEnabled(FeatureFlag.AtsSources))
         {
             // Checked here rather than only at enqueue time, so a job already on the queue when
             // the flag goes off does not fetch anyway. Mirrors JobSourceSweepService.

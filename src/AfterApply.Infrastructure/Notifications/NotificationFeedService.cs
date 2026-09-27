@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Notifications;
@@ -8,14 +9,13 @@ using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.Notifications;
 
 internal sealed class NotificationFeedService(
     AppDbContext dbContext,
     IEmailForwardingService emailForwarding,
-    IOptions<EmailForwardingOptions> emailForwardingOptions,
+    IFeatureFlags featureFlags,
     TimeProvider? timeProvider = null) : INotificationFeedService
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
@@ -147,7 +147,7 @@ internal sealed class NotificationFeedService(
     }
 
     private async Task<bool> ShowsGmailAsync(Guid userId, CancellationToken cancellationToken) =>
-        emailForwardingOptions.Value.Enabled &&
+        featureFlags.IsEnabled(FeatureFlag.EmailSignals) &&
         await dbContext.Users.Where(u => u.Id == userId).Select(u => u.NotifyGmailUpdates).FirstOrDefaultAsync(cancellationToken);
 
     /// <summary>Company or post for each row: one lookup per kind for the page, so the paging above

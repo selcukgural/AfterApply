@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
@@ -19,6 +20,7 @@ internal sealed partial class GitHubIssueMirror(
     HttpClient httpClient,
     AppDbContext dbContext,
     IOptions<FeedbackGitHubOptions> options,
+    IFeatureFlags featureFlags,
     ILogger<GitHubIssueMirror> logger) : IGitHubIssueMirror
 {
     public async Task MirrorAsync(Guid feedbackEntryId, CancellationToken cancellationToken)
@@ -27,7 +29,7 @@ internal sealed partial class GitHubIssueMirror(
 
         // Re-checked here, not just at the enqueue site: a job can outlive the configuration that
         // queued it (a redeploy that turns the mirror off while the queue still has work).
-        if (!settings.IsConfigured)
+        if (!featureFlags.IsEnabled(FeatureFlag.FeedbackGitHub) || !settings.HasTarget)
         {
             return;
         }

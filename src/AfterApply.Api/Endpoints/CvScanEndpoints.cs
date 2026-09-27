@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.CvScan.Contracts;
 using AfterApply.Application.Documents;
 using AfterApply.Infrastructure;
@@ -15,13 +16,13 @@ public static class CvScanEndpoints
         // public benchmark. Someone who has never heard of the product arrives with a file they
         // already have, and gets an answer before being asked for anything.
         var group = app.MapGroup("/api/cv-scan").WithTags("CvScan")
-            .WithDescription("Hidden behind CvScan:Enabled — the route 404s while the flag is off.")
+            .WithDescription("Hidden behind the CvScan feature flag (default CvScan:Enabled) — the route 404s while the flag is off.")
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.AddEndpointFilter(async (context, next) =>
         {
-            var options = context.HttpContext.RequestServices.GetRequiredService<IOptions<CvScanOptions>>();
-            return options.Value.Enabled ? await next(context) : Results.NotFound();
+            var featureFlags = context.HttpContext.RequestServices.GetRequiredService<IFeatureFlags>();
+            return featureFlags.IsEnabled(FeatureFlag.CvScan) ? await next(context) : Results.NotFound();
         });
 
         // consentAccepted is bool? for the same reason it is on the CV upload endpoint: a

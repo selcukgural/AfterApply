@@ -519,4 +519,223 @@
   <data name="ANALYTICS_FLOW_PERIOD_INVALID" xml:space="preserve">
     <value>Dönem 30, 90 ya da all olmalı.</value>
   </data>
+  <data name="FEATURE_FLAG_REASON_REQUIRED" xml:space="preserve">
+    <value>Bu değişikliği neden yaptığınızı yazın (en az 5 karakter). Geçmişte saklanır.</value>
+  </data>
+  <data name="FEATURE_FLAG_REASON_TOO_LONG" xml:space="preserve">
+    <value>Gerekçe en fazla 500 karakter olabilir.</value>
+  </data>
+  <data name="FEATURE_FLAG_CONFIRMATION_INVALID" xml:space="preserve">
+    <value>Bu onayın süresi doldu ya da bu değişikliğe ait değil. Baştan başlayın.</value>
+  </data>
+  <data name="FEATURE_FLAG_PHRASE_MISMATCH" xml:space="preserve">
+    <value>Onaylamak için bayrağın adını gösterildiği gibi yazın.</value>
+  </data>
+  <data name="FEATURE_FLAG_CHANGED_SINCE_PREPARE" xml:space="preserve">
+    <value>Siz başladıktan sonra bu bayrak değişti. Güncel durumuna bakıp baştan başlayın.</value>
+  </data>
+  <data name="FEATURE_FLAG_UNCHANGED" xml:space="preserve">
+    <value>Bayrak zaten bu durumda; değiştirilecek bir şey yok.</value>
+  </data>
+  <data name="FEATURE_FLAG_PREREQUISITE_MISSING" xml:space="preserve">
+    <value>Bu bayrak bu ortamda henüz açılamaz.</value>
+  </data>
+  <data name="BLOG_MEDIA_BUCKET_MISSING" xml:space="preserve">
+    <value>Blog görsel bucket’ı (Storage:BlogMediaBucketName) tanımlı değil.</value>
+  </data>
+  <data name="CV_SCAN_NOTES_PROJECT_MISSING" xml:space="preserve">
+    <value>CV notları için Vertex AI projesi (CvScan:Review:ProjectId) tanımlı değil.</value>
+  </data>
+  <data name="FEEDBACK_GITHUB_TARGET_MISSING" xml:space="preserve">
+    <value>Geri bildirim aynası için GitHub deposu ya da token tanımlı değil.</value>
+  </data>
+  <data name="PAYTR_NOT_CONFIGURED" xml:space="preserve">
+    <value>PayTR mağaza bilgileri ya da plan fiyatları tanımlı değil.</value>
+  </data>
+  <data name="FEATURE_FLAG_BOARD_TITLE" xml:space="preserve">
+    <value>Başvuru panosu (Pano)</value>
+  </data>
+  <data name="FEATURE_FLAG_BOARD_DESCRIPTION" xml:space="preserve">
+    <value>Başvurular sayfasındaki üçüncü görünüm olan kanban panosu. E-postadan ve eklentiden gelen başvuruları panoya kendiliğinden yerleştirir, her gece LinkedIn şirket sayfalarından logo çeker (gecede en çok 50 sayfa).</value>
+  </data>
+  <data name="FEATURE_FLAG_BOARD_WHEN_OFF" xml:space="preserve">
+    <value>Pano görünümü ve listedeki "Panoda" işareti gizlenir, /api/board uçları 404 döner. Kapalıyken gelen başvurular panoya yerleştirilmez, bayrak yeniden açılınca da sonradan eklenmez. Logo çekme durur. Kartlar ve logolar silinmez; sonuçlanan kartları 14 gün sonra panodan kaldıran gece işi bayraktan bağımsız çalışmaya devam eder.</value>
+  </data>
+  <data name="FEATURE_FLAG_BLOG_TITLE" xml:space="preserve">
+    <value>Blog ve Rehber</value>
+  </data>
+  <data name="FEATURE_FLAG_BLOG_DESCRIPTION" xml:space="preserve">
+    <value>Herkese açık blog ve rehber yazıları, yorumlar, beğeniler ve admin yazı editörü (editördeki yapay zekâ ile SEO önerisi dahil).</value>
+  </data>
+  <data name="FEATURE_FLAG_BLOG_WHEN_OFF" xml:space="preserve">
+    <value>/blog ve /guide sayfaları 404 olur, blog linkleri menüden kalkar. Admin editörü de kapanır; adminler de 404 alır. Menüdeki Rehber linkleri görünür kalır ve 404 sayfasına gider. Yazılar, yorumlar ve görseller silinmez.</value>
+  </data>
+  <data name="FEATURE_FLAG_BLOG_NOTES" xml:space="preserve">
+    <value>Google Cloud Storage kullanılan ortamda blog görsel bucket'ı (Storage:BlogMediaBucketName) tanımlı olmadan açılamaz. Editördeki "yapay zekâ ile öner" düğmesi Vertex AI'yi çağırır ve ücretlidir.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_REVIEWS_TITLE" xml:space="preserve">
+    <value>Şirket değerlendirmeleri ve şirket sayfaları</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_REVIEWS_DESCRIPTION" xml:space="preserve">
+    <value>Herkese açık şirket dizini, şirket sayfaları, değerlendirme yazma ve okuma, moderasyon ve Katkılarım listesi. Maaş, aday deneyimi, sessizlik bildirimi ve Yanıt sekmesi bu sayfaların üzerinde durur.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_REVIEWS_WHEN_OFF" xml:space="preserve">
+    <value>Şirket dizini ve şirket sayfaları 404 olur, menüdeki Şirketler grubu gizlenir. Maaş, deneyim, sessizlik bildirimi ve Yanıt sekmesi kendi bayrakları açık olsa bile görünmez. Üst menüdeki /companies linki görünür kalır ama liste yüklenmez; /contribute sayfası çalışmaz. Değerlendirmeler silinmez.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_REVIEWS_NOTES" xml:space="preserve">
+    <value>Maaşlar, Aday deneyimleri, Sessizlik bildirimleri ve Şirket yanıt sekmesi bu bayrağa bağlıdır.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_SALARIES_TITLE" xml:space="preserve">
+    <value>Şirket maaş bilgileri</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_SALARIES_DESCRIPTION" xml:space="preserve">
+    <value>Kullanıcıların şirket bazında maaş paylaşması ve giriş yapmış kullanıcıların şirket sayfasında maaş aralıklarını okuması.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_SALARIES_WHEN_OFF" xml:space="preserve">
+    <value>Şirket sayfasındaki Maaşlar sekmesi, "Maaş paylaş" linkleri, teklif karşılaştırma ve kapanış kartlarındaki maaş davetleri gizlenir; maaş uçları 404 döner. Şirket dizini maaş kayıtlarını saymaz: yalnızca maaş katkısı olan şirketler listeden düşer. Kayıtlar silinmez.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_SALARIES_NOTES" xml:space="preserve">
+    <value>Şirket sayfaları için Şirket değerlendirmeleri bayrağı açık olmalıdır.</value>
+  </data>
+  <data name="FEATURE_FLAG_CANDIDATE_EXPERIENCES_TITLE" xml:space="preserve">
+    <value>Aday deneyimleri</value>
+  </data>
+  <data name="FEATURE_FLAG_CANDIDATE_EXPERIENCES_DESCRIPTION" xml:space="preserve">
+    <value>Başvuru sürecine dair anonim aday deneyimleri: şirket sayfasındaki Deneyimler sekmesi, paylaşım formu ve süreç bitince gelen paylaşım davetleri.</value>
+  </data>
+  <data name="FEATURE_FLAG_CANDIDATE_EXPERIENCES_WHEN_OFF" xml:space="preserve">
+    <value>Deneyimler sekmesi, paylaşım linkleri ve paneldeki ve kapanış kartlarındaki davetler gizlenir; uçlar 404 döner. Şirket dizini deneyimleri saymaz. Kayıtlar silinmez.</value>
+  </data>
+  <data name="FEATURE_FLAG_CANDIDATE_EXPERIENCES_NOTES" xml:space="preserve">
+    <value>Şirket sayfaları için Şirket değerlendirmeleri bayrağı açık olmalıdır.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_INTELLIGENCE_TITLE" xml:space="preserve">
+    <value>Şirket yanıt sekmesi</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_INTELLIGENCE_DESCRIPTION" xml:space="preserve">
+    <value>Şirket sayfasındaki "Yanıt" sekmesi: başvurulardan ve sessizlik bildirimlerinden hesaplanan, şirkete özel yanıt oranları.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_INTELLIGENCE_WHEN_OFF" xml:space="preserve">
+    <value>Yanıt sekmesi gizlenir, /api/company-intelligence 404 döner. Bu özellik veri saklamaz; her şey başvurulardan hesaplanır.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_INTELLIGENCE_NOTES" xml:space="preserve">
+    <value>Hukuki okuma tamamlanmadan açılmaması kararlaştırıldı (DEVELOPMENT_PLAN K1). Şirket sayfaları için Şirket değerlendirmeleri bayrağı açık olmalıdır.</value>
+  </data>
+  <data name="FEATURE_FLAG_RESPONSE_RATES_TITLE" xml:space="preserve">
+    <value>Sektör yanıt oranları tablosu</value>
+  </data>
+  <data name="FEATURE_FLAG_RESPONSE_RATES_DESCRIPTION" xml:space="preserve">
+    <value>Herkese açık /response-rates sayfasındaki, sektör bazında yanıt oranları tablosu.</value>
+  </data>
+  <data name="FEATURE_FLAG_RESPONSE_RATES_WHEN_OFF" xml:space="preserve">
+    <value>Menüdeki ve alt bilgideki linkler kalkar, tablo verisi 404 döner. Sayfanın kendisi açılmaya devam eder ve hata mesajı gösterir. Bu özellik veri saklamaz.</value>
+  </data>
+  <data name="FEATURE_FLAG_SILENCE_REPORTS_TITLE" xml:space="preserve">
+    <value>Sessizlik bildirimleri</value>
+  </data>
+  <data name="FEATURE_FLAG_SILENCE_REPORTS_DESCRIPTION" xml:space="preserve">
+    <value>Şirket sayfasında anonim "dönüş alamadım" bildirimi gönderme kartı.</value>
+  </data>
+  <data name="FEATURE_FLAG_SILENCE_REPORTS_WHEN_OFF" xml:space="preserve">
+    <value>Kart gizlenir, yeni bildirim gönderme ucu 404 döner. Gönderilmiş bildirimler silinmez; Şirket yanıt sekmesi açıksa orada sayılmaya devam eder.</value>
+  </data>
+  <data name="FEATURE_FLAG_SILENCE_REPORTS_NOTES" xml:space="preserve">
+    <value>Şirket sayfaları için Şirket değerlendirmeleri bayrağı açık olmalıdır.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_TITLE" xml:space="preserve">
+    <value>CV taraması</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_DESCRIPTION" xml:space="preserve">
+    <value>CV'nin ATS okunabilirlik taraması: giriş yapmadan kullanılan /cv-tarama ve CV'lerim sayfasında kayıtlı CV'lerin taranması.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_WHEN_OFF" xml:space="preserve">
+    <value>Tarama uçları 404 döner, CV'lerim sayfasındaki tarama paneli gizlenir. /cv-tarama sayfası, açılış sayfasındaki yükleme alanı ve menü linkleri görünür kalır; tarama denemesi hata verir. Kayıtlı tarama sonuçları silinmez.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES" xml:space="preserve">
+    <value>CV taraması notları yalnızca bu bayrak açıkken çalışır.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES_TITLE" xml:space="preserve">
+    <value>CV taraması yapay zekâ notları</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES_DESCRIPTION" xml:space="preserve">
+    <value>Kullanıcı ayrıca onay verirse CV metninin (ilk 15.000 karakter) Google Vertex AI'ye (AB bölgesi) gönderilip yazım üzerine notlar alınması. Notlar puanı hiçbir zaman değiştirmez.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES_WHEN_OFF" xml:space="preserve">
+    <value>Onay kutusu gizlenir, not üretilmez. Puan ve bulgular aynen çalışır.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES_NOTES" xml:space="preserve">
+    <value>Ücretlidir (günlük tavan var). Gizlilik metni (/privacy#cv-scan) Vertex AI'yi alıcı olarak sayar; bayrak ile metin uyumlu tutulmalı. Vertex proje kimliği (CvScan:Review:ProjectId) tanımlı olmadan açılamaz. CV taraması bayrağı açık olmalıdır.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_SIGNALS_TITLE" xml:space="preserve">
+    <value>Gmail taraması (e-posta sinyalleri)</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_SIGNALS_DESCRIPTION" xml:space="preserve">
+    <value>Eklentinin Gmail'deki başvuru e-postalarını okuyup sunucuya göndermesi; bunlardan üretilen durum önerileri ve bildirimler.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_SIGNALS_WHEN_OFF" xml:space="preserve">
+    <value>/api/email-forwarding altındaki bütün uçlar 404 döner: eklentinin gönderimleri reddedilir, Öneriler sayfası yüklenmez, bildirimlerden Gmail güncellemeleri düşer. Web bu bayrağı bilmediği için menüdeki öneriler linki gizlenmez. Öneriler silinmez; bekleyen eski sinyalleri temizleyen gece işi çalışmaya devam eder.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_SIGNALS_NOTES" xml:space="preserve">
+    <value>Kurallar karar veremediğinde e-postanın konusu ve özeti OpenAI'ye (ABD) gönderilir; ücretlidir. Gizlilik metni ve eklenti gizlilik politikası bu akışı anlatır; bayrak ile metin uyumlu tutulmalı.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_AUTO_APPROVAL_TITLE" xml:space="preserve">
+    <value>E-posta önerilerini otomatik uygulama</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_AUTO_APPROVAL_DESCRIPTION" xml:space="preserve">
+    <value>Güveni yüksek e-posta önerilerinin (en az %90 güven, alan adı eşleşmesi, model kararı) kullanıcıya sorulmadan başvuru durumuna uygulanması. Kullanıcı sonradan geri alabilir.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_AUTO_APPROVAL_WHEN_OFF" xml:space="preserve">
+    <value>Öneriler kullanıcının onayını bekler. Gölge mod açıksa sistem yalnızca ne yapacağını log'a yazar. Daha önce uygulanmış değişiklikler geri alınmaz.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_AUTO_APPROVAL_NOTES" xml:space="preserve">
+    <value>Gmail taraması bayrağı kapalıyken etkisi yoktur.</value>
+  </data>
+  <data name="FEATURE_FLAG_FEEDBACK_GIT_HUB_TITLE" xml:space="preserve">
+    <value>Geri bildirimlerin GitHub'a aynalanması</value>
+  </data>
+  <data name="FEATURE_FLAG_FEEDBACK_GIT_HUB_DESCRIPTION" xml:space="preserve">
+    <value>Uygulama içi her geri bildirimin özel GitHub deposuna issue olarak kopyalanması.</value>
+  </data>
+  <data name="FEATURE_FLAG_FEEDBACK_GIT_HUB_WHEN_OFF" xml:space="preserve">
+    <value>Geri bildirimler yalnızca kendi veritabanımızda saklanır. Bayrak kapalıyken gelen geri bildirimler, bayrak yeniden açılınca da aynalanmaz.</value>
+  </data>
+  <data name="FEATURE_FLAG_FEEDBACK_GIT_HUB_NOTES" xml:space="preserve">
+    <value>Gizlilik metni (/privacy#feedback, yurt dışına aktarım) GitHub'ı (ABD) alıcı olarak sayar; bayrak ile metin birlikte değişmeli. Depo ve token tanımlı olmadan açılamaz.</value>
+  </data>
+  <data name="FEATURE_FLAG_ATS_SOURCES_TITLE" xml:space="preserve">
+    <value>ATS ilanlarını kaynağından okuma</value>
+  </data>
+  <data name="FEATURE_FLAG_ATS_SOURCES_DESCRIPTION" xml:space="preserve">
+    <value>Eklentiyle kaydedilen Greenhouse, Lever, Ashby, SmartRecruiters ve Workday ilanlarının açıklamasının, sunucu tarafından o sistemin herkese açık API'sinden okunması. İstek yalnızca ilanın adresini taşır, kullanıcıya dair bir şey taşımaz.</value>
+  </data>
+  <data name="FEATURE_FLAG_ATS_SOURCES_WHEN_OFF" xml:space="preserve">
+    <value>İlan yalnızca eklentinin sayfadan okuduğu kadarıyla kalır; Greenhouse ilanları çoğu zaman açıklamasız kalır. Sırada bekleyen okuma işleri de hiçbir şey yapmaz.</value>
+  </data>
+  <data name="FEATURE_FLAG_ATS_SOURCES_NOTES" xml:space="preserve">
+    <value>Eklenti gizlilik politikası bu ikinci okumayı anlatır; bayrak ile metin birlikte değişmeli.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_SOURCES_TITLE" xml:space="preserve">
+    <value>Haftalık ilan eşleştirme (Pro)</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_SOURCES_DESCRIPTION" xml:space="preserve">
+    <value>Pro planın sunduğu özellik: her hafta LinkedIn ve kariyer.net'ten ilan toplanması, ilanların CV'ye uygunluğunun Vertex AI (Gemini) ile puanlanması ve özet e-postası.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_SOURCES_WHEN_OFF" xml:space="preserve">
+    <value>Haftalık İlanlar sayfaları panele yönlenir, uçlar 404 döner (admin Pro yetki uçları dahil). Haftalık tarama, puanlama, özet e-postası ve eski ilan temizliği durur. Pro satış girişleri gizlenir. Profiller, ilanlar ve Pro hakları silinmez.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_SOURCES_NOTES" xml:space="preserve">
+    <value>Ücretlidir (aylık bütçe). Gizlilik metni (/privacy#job-matching) bu akışı anlatır. Pro satışı yalnızca bu bayrak ve Ödemeler birlikte açıkken görünür.</value>
+  </data>
+  <data name="FEATURE_FLAG_PAYMENTS_TITLE" xml:space="preserve">
+    <value>Ödemeler (PayTR ile Pro satışı)</value>
+  </data>
+  <data name="FEATURE_FLAG_PAYMENTS_DESCRIPTION" xml:space="preserve">
+    <value>Pro planın PayTR üzerinden satın alınması: planlar, ödeme sayfası, siparişler ve iade talebi.</value>
+  </data>
+  <data name="FEATURE_FLAG_PAYMENTS_WHEN_OFF" xml:space="preserve">
+    <value>/api/payments uçları 404 döner, /pro sayfası panele yönlenir, satın alma girişleri gizlenir. PayTR bildirim ucu, admin ödeme ekranı ve sipariş süresi/hatırlatma işleri çalışmaya devam eder; mevcut Pro süreleri sürer.</value>
+  </data>
+  <data name="FEATURE_FLAG_PAYMENTS_NOTES" xml:space="preserve">
+    <value>Gerçek para tahsil eder. PayTR mağaza bilgileri ve plan fiyatları tanımlı olmadan açılamaz. Pro satışı yalnızca Haftalık ilan eşleştirme de açıkken görünür.</value>
+  </data>
 </root>

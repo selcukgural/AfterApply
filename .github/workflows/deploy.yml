@@ -468,6 +468,11 @@ jobs:
           # alone. The three merchant values are Secret Manager secrets below.
           # Prices are kuruş, KDV included; they live here so the sale price is visible next to
           # the flag and changes with a reviewed deploy, not a database edit.
+          #
+          # On every *__Enabled / CvScan__LlmEnabled line below: since 2026-09-27 these are the
+          # DEFAULTS a flag runs on when no admin has switched it (DECISIONS.md, runtime feature
+          # flags). An override set in the admin panel (FeatureFlagOverrides) wins until an admin
+          # resets it — so check the panel before assuming a line here is what production does.
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080

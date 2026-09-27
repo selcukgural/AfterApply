@@ -519,4 +519,223 @@
   <data name="ANALYTICS_FLOW_PERIOD_INVALID" xml:space="preserve">
     <value>Period must be one of: 30, 90, all.</value>
   </data>
+  <data name="FEATURE_FLAG_REASON_REQUIRED" xml:space="preserve">
+    <value>Write why you are making this change (at least 5 characters). It is kept in the history.</value>
+  </data>
+  <data name="FEATURE_FLAG_REASON_TOO_LONG" xml:space="preserve">
+    <value>The reason can be at most 500 characters.</value>
+  </data>
+  <data name="FEATURE_FLAG_CONFIRMATION_INVALID" xml:space="preserve">
+    <value>This confirmation has expired or does not belong to this change. Start again.</value>
+  </data>
+  <data name="FEATURE_FLAG_PHRASE_MISMATCH" xml:space="preserve">
+    <value>Type the flag’s name exactly as shown to confirm.</value>
+  </data>
+  <data name="FEATURE_FLAG_CHANGED_SINCE_PREPARE" xml:space="preserve">
+    <value>This flag changed after you started. Review its current state and start again.</value>
+  </data>
+  <data name="FEATURE_FLAG_UNCHANGED" xml:space="preserve">
+    <value>The flag is already set that way; there is nothing to change.</value>
+  </data>
+  <data name="FEATURE_FLAG_PREREQUISITE_MISSING" xml:space="preserve">
+    <value>This flag cannot be switched on on this deployment yet.</value>
+  </data>
+  <data name="BLOG_MEDIA_BUCKET_MISSING" xml:space="preserve">
+    <value>The blog image bucket (Storage:BlogMediaBucketName) is not configured.</value>
+  </data>
+  <data name="CV_SCAN_NOTES_PROJECT_MISSING" xml:space="preserve">
+    <value>No Vertex AI project (CvScan:Review:ProjectId) is configured for the CV notes.</value>
+  </data>
+  <data name="FEEDBACK_GITHUB_TARGET_MISSING" xml:space="preserve">
+    <value>The GitHub repository or token for the feedback mirror is not configured.</value>
+  </data>
+  <data name="PAYTR_NOT_CONFIGURED" xml:space="preserve">
+    <value>The PayTR merchant details or plan prices are not configured.</value>
+  </data>
+  <data name="FEATURE_FLAG_BOARD_TITLE" xml:space="preserve">
+    <value>Applications board</value>
+  </data>
+  <data name="FEATURE_FLAG_BOARD_DESCRIPTION" xml:space="preserve">
+    <value>The third view on the Applications page, a kanban board. Places applications arriving from e-mail and the extension on the board automatically, and fetches company logos from LinkedIn company pages every night (at most 50 pages a night).</value>
+  </data>
+  <data name="FEATURE_FLAG_BOARD_WHEN_OFF" xml:space="preserve">
+    <value>The board view and the "On board" marker in the list are hidden; /api/board returns 404. Applications arriving while it is off are not placed on the board, and are not added later when it is switched back on. Logo fetching stops. Cards and logos are kept; the nightly job that removes closed cards after 14 days keeps running regardless.</value>
+  </data>
+  <data name="FEATURE_FLAG_BLOG_TITLE" xml:space="preserve">
+    <value>Blog and Guide</value>
+  </data>
+  <data name="FEATURE_FLAG_BLOG_DESCRIPTION" xml:space="preserve">
+    <value>The public blog and guide articles, comments, likes, and the admin editor (including its AI SEO suggestion).</value>
+  </data>
+  <data name="FEATURE_FLAG_BLOG_WHEN_OFF" xml:space="preserve">
+    <value>/blog and /guide return 404 and the blog links leave the menu. The admin editor closes too; admins get 404 as well. The Guide links in the menu stay visible and lead to a 404 page. Posts, comments and images are kept.</value>
+  </data>
+  <data name="FEATURE_FLAG_BLOG_NOTES" xml:space="preserve">
+    <value>On Google Cloud Storage it cannot be switched on without the blog image bucket (Storage:BlogMediaBucketName). The editor's "suggest with AI" button calls Vertex AI and costs money.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_REVIEWS_TITLE" xml:space="preserve">
+    <value>Company reviews and company pages</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_REVIEWS_DESCRIPTION" xml:space="preserve">
+    <value>The public company directory, company pages, writing and reading reviews, moderation and the My contributions list. Salaries, candidate experiences, silence reports and the Response tab sit on these pages.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_REVIEWS_WHEN_OFF" xml:space="preserve">
+    <value>The company directory and company pages return 404 and the Companies menu group is hidden. Salaries, experiences, silence reports and the Response tab disappear even with their own flags on. The /companies link in the top menu stays visible but the list does not load; /contribute stops working. Reviews are kept.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_REVIEWS_NOTES" xml:space="preserve">
+    <value>Salaries, Candidate experiences, Silence reports and the Company response tab depend on this flag.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_SALARIES_TITLE" xml:space="preserve">
+    <value>Company salaries</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_SALARIES_DESCRIPTION" xml:space="preserve">
+    <value>Users sharing salaries per company, and signed-in users reading salary bands on company pages.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_SALARIES_WHEN_OFF" xml:space="preserve">
+    <value>The Salaries tab, the "Share salary" links and the salary prompts on the offer comparison and closing cards are hidden; the salary endpoints return 404. The company directory stops counting salary entries: companies whose only contribution is a salary drop out of the list. Entries are kept.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_SALARIES_NOTES" xml:space="preserve">
+    <value>Company pages need the Company reviews flag on.</value>
+  </data>
+  <data name="FEATURE_FLAG_CANDIDATE_EXPERIENCES_TITLE" xml:space="preserve">
+    <value>Candidate experiences</value>
+  </data>
+  <data name="FEATURE_FLAG_CANDIDATE_EXPERIENCES_DESCRIPTION" xml:space="preserve">
+    <value>Anonymous candidate experiences of a hiring process: the Experiences tab on company pages, the sharing form, and the invitations sent when a process ends.</value>
+  </data>
+  <data name="FEATURE_FLAG_CANDIDATE_EXPERIENCES_WHEN_OFF" xml:space="preserve">
+    <value>The Experiences tab, the sharing links and the invitations on the dashboard and closing cards are hidden; the endpoints return 404. The company directory stops counting experiences. Entries are kept.</value>
+  </data>
+  <data name="FEATURE_FLAG_CANDIDATE_EXPERIENCES_NOTES" xml:space="preserve">
+    <value>Company pages need the Company reviews flag on.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_INTELLIGENCE_TITLE" xml:space="preserve">
+    <value>Company response tab</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_INTELLIGENCE_DESCRIPTION" xml:space="preserve">
+    <value>The "Response" tab on company pages: per-company response rates computed from applications and silence reports.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_INTELLIGENCE_WHEN_OFF" xml:space="preserve">
+    <value>The Response tab is hidden and /api/company-intelligence returns 404. The feature stores nothing; everything is computed from applications.</value>
+  </data>
+  <data name="FEATURE_FLAG_COMPANY_INTELLIGENCE_NOTES" xml:space="preserve">
+    <value>Agreed to stay off until the legal read is done (DEVELOPMENT_PLAN K1). Company pages need the Company reviews flag on.</value>
+  </data>
+  <data name="FEATURE_FLAG_RESPONSE_RATES_TITLE" xml:space="preserve">
+    <value>Sector response-rate table</value>
+  </data>
+  <data name="FEATURE_FLAG_RESPONSE_RATES_DESCRIPTION" xml:space="preserve">
+    <value>The per-sector response-rate table on the public /response-rates page.</value>
+  </data>
+  <data name="FEATURE_FLAG_RESPONSE_RATES_WHEN_OFF" xml:space="preserve">
+    <value>The links in the menu and footer go and the table data returns 404. The page itself still opens and shows an error message. The feature stores nothing.</value>
+  </data>
+  <data name="FEATURE_FLAG_SILENCE_REPORTS_TITLE" xml:space="preserve">
+    <value>Silence reports</value>
+  </data>
+  <data name="FEATURE_FLAG_SILENCE_REPORTS_DESCRIPTION" xml:space="preserve">
+    <value>The card on company pages for sending an anonymous "I never heard back" report.</value>
+  </data>
+  <data name="FEATURE_FLAG_SILENCE_REPORTS_WHEN_OFF" xml:space="preserve">
+    <value>The card is hidden and the endpoint for new reports returns 404. Reports already sent are kept, and still count on the Company response tab when that is on.</value>
+  </data>
+  <data name="FEATURE_FLAG_SILENCE_REPORTS_NOTES" xml:space="preserve">
+    <value>Company pages need the Company reviews flag on.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_TITLE" xml:space="preserve">
+    <value>CV scan</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_DESCRIPTION" xml:space="preserve">
+    <value>The ATS-readability scan of a CV: the sign-in-free /cv-tarama and the scan of stored CVs on the My CVs page.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_WHEN_OFF" xml:space="preserve">
+    <value>The scan endpoints return 404 and the scan panel on My CVs is hidden. The /cv-tarama page, the upload area on the landing page and the menu links stay visible; a scan attempt shows an error. Stored scan results are kept.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES" xml:space="preserve">
+    <value>CV scan notes only work while this flag is on.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES_TITLE" xml:space="preserve">
+    <value>CV scan AI notes</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES_DESCRIPTION" xml:space="preserve">
+    <value>When the user separately consents, the CV text (first 15,000 characters) is sent to Google Vertex AI (EU region) for notes on the writing. The notes never change the score.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES_WHEN_OFF" xml:space="preserve">
+    <value>The consent checkbox is hidden and no notes are produced. The score and findings work as before.</value>
+  </data>
+  <data name="FEATURE_FLAG_CV_SCAN_NOTES_NOTES" xml:space="preserve">
+    <value>Costs money (daily ceiling). The privacy policy (/privacy#cv-scan) names Vertex AI as a recipient; keep the flag and the text in step. Cannot be switched on without a Vertex project id (CvScan:Review:ProjectId). Needs the CV scan flag on.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_SIGNALS_TITLE" xml:space="preserve">
+    <value>Gmail scanning (e-mail signals)</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_SIGNALS_DESCRIPTION" xml:space="preserve">
+    <value>The extension reading job-application e-mails in Gmail and sending them to the server, and the status suggestions and notifications made from them.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_SIGNALS_WHEN_OFF" xml:space="preserve">
+    <value>Every endpoint under /api/email-forwarding returns 404: the extension's submissions are refused, the Suggestions page does not load, and Gmail updates leave the notification feed. The web does not know this flag, so the suggestions link in the menu stays. Suggestions are kept; the nightly job that clears stale pending signals keeps running.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_SIGNALS_NOTES" xml:space="preserve">
+    <value>When the rules cannot decide, the e-mail's subject and snippet go to OpenAI (United States); this costs money. The privacy policy and the extension privacy policy describe this flow; keep the flag and the text in step.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_AUTO_APPROVAL_TITLE" xml:space="preserve">
+    <value>Apply e-mail suggestions automatically</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_AUTO_APPROVAL_DESCRIPTION" xml:space="preserve">
+    <value>Applying high-confidence e-mail suggestions (at least 90% confidence, domain match, model decision) to the application status without asking the user. The user can undo it.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_AUTO_APPROVAL_WHEN_OFF" xml:space="preserve">
+    <value>Suggestions wait for the user. With shadow mode on, the system only logs what it would have done. Changes already applied stay.</value>
+  </data>
+  <data name="FEATURE_FLAG_EMAIL_AUTO_APPROVAL_NOTES" xml:space="preserve">
+    <value>Has no effect while Gmail scanning is off.</value>
+  </data>
+  <data name="FEATURE_FLAG_FEEDBACK_GIT_HUB_TITLE" xml:space="preserve">
+    <value>Mirror feedback to GitHub</value>
+  </data>
+  <data name="FEATURE_FLAG_FEEDBACK_GIT_HUB_DESCRIPTION" xml:space="preserve">
+    <value>Copying every in-app feedback entry into a private GitHub repository as an issue.</value>
+  </data>
+  <data name="FEATURE_FLAG_FEEDBACK_GIT_HUB_WHEN_OFF" xml:space="preserve">
+    <value>Feedback is stored in our own database only. Feedback sent while it is off is not mirrored when it is switched back on.</value>
+  </data>
+  <data name="FEATURE_FLAG_FEEDBACK_GIT_HUB_NOTES" xml:space="preserve">
+    <value>The privacy policy (/privacy#feedback, transfers abroad) names GitHub (United States) as a recipient; the flag and the text change together. Cannot be switched on without the repository and token.</value>
+  </data>
+  <data name="FEATURE_FLAG_ATS_SOURCES_TITLE" xml:space="preserve">
+    <value>Read ATS postings from their source</value>
+  </data>
+  <data name="FEATURE_FLAG_ATS_SOURCES_DESCRIPTION" xml:space="preserve">
+    <value>The server reading the description of Greenhouse, Lever, Ashby, SmartRecruiters and Workday postings saved with the extension from that system's public API. The request carries only the posting's address, nothing about the user.</value>
+  </data>
+  <data name="FEATURE_FLAG_ATS_SOURCES_WHEN_OFF" xml:space="preserve">
+    <value>A posting keeps only what the extension read from the page; Greenhouse postings are often left without a description. Reads already queued do nothing.</value>
+  </data>
+  <data name="FEATURE_FLAG_ATS_SOURCES_NOTES" xml:space="preserve">
+    <value>The extension privacy policy describes this second read; the flag and the text change together.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_SOURCES_TITLE" xml:space="preserve">
+    <value>Weekly job matching (Pro)</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_SOURCES_DESCRIPTION" xml:space="preserve">
+    <value>What the Pro plan buys: postings collected from LinkedIn and kariyer.net every week, scored against the CV with Vertex AI (Gemini), and a digest e-mail.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_SOURCES_WHEN_OFF" xml:space="preserve">
+    <value>The Weekly jobs pages redirect to the dashboard and the endpoints return 404 (the admin Pro entitlement endpoints included). The weekly sweep, scoring, digest e-mail and old-posting cleanup stop. The Pro sales entry points are hidden. Profiles, postings and Pro entitlements are kept.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_SOURCES_NOTES" xml:space="preserve">
+    <value>Costs money (monthly budget). The privacy policy (/privacy#job-matching) describes this flow. Pro is sold only while this flag and Payments are both on.</value>
+  </data>
+  <data name="FEATURE_FLAG_PAYMENTS_TITLE" xml:space="preserve">
+    <value>Payments (Pro sales through PayTR)</value>
+  </data>
+  <data name="FEATURE_FLAG_PAYMENTS_DESCRIPTION" xml:space="preserve">
+    <value>Buying the Pro plan through PayTR: plans, checkout, orders and refund requests.</value>
+  </data>
+  <data name="FEATURE_FLAG_PAYMENTS_WHEN_OFF" xml:space="preserve">
+    <value>/api/payments returns 404, /pro redirects to the dashboard and the purchase entry points are hidden. The PayTR notification endpoint, the admin payments screen and the order expiry/reminder jobs keep working; existing Pro periods continue.</value>
+  </data>
+  <data name="FEATURE_FLAG_PAYMENTS_NOTES" xml:space="preserve">
+    <value>Takes real money. Cannot be switched on without the PayTR merchant details and plan prices. Pro is sold only while Weekly job matching is on too.</value>
+  </data>
 </root>

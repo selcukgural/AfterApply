@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using System.Security.Claims;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Documents;
@@ -117,12 +118,12 @@ public static class CvDocumentEndpoints
         // the file the user already keeps here, with the report kept on the document (growth audit
         // finding 03b, 2026-09-18). Behind the same flag as the public scan — one engine, one switch.
         var scans = group.MapGroup("/{id:guid}/scan")
-            .WithDescription("Hidden behind CvScan:Enabled — the routes 404 while the flag is off.");
+            .WithDescription("Hidden behind the CvScan feature flag (default CvScan:Enabled) — the routes 404 while the flag is off.");
 
         scans.AddEndpointFilter(async (context, next) =>
         {
-            var options = context.HttpContext.RequestServices.GetRequiredService<IOptions<CvScanOptions>>();
-            return options.Value.Enabled ? await next(context) : Results.NotFound();
+            var featureFlags = context.HttpContext.RequestServices.GetRequiredService<IFeatureFlags>();
+            return featureFlags.IsEnabled(FeatureFlag.CvScan) ? await next(context) : Results.NotFound();
         });
 
         scans.MapPost("/", async (Guid id, ClaimsPrincipal user, ICvDocumentService service,

@@ -1,8 +1,9 @@
 namespace AfterApply.Infrastructure.Feedback;
 
 /// <summary>
-/// The GitHub Issues mirror, bound from the <c>Feedback:GitHub</c> section. Off unless all three
-/// values are set, which is why an unconfigured environment — every local run, and production
+/// The GitHub Issues mirror, bound from the <c>Feedback:GitHub</c> section. Off unless the flag
+/// (<c>FeatureFlag.FeedbackGitHub</c>, whose default is <see cref="Enabled"/>) is on and the
+/// target is set, which is why an unconfigured environment — every local run, and production
 /// until the token is in Secret Manager — simply stores feedback and never calls out.
 /// </summary>
 public sealed class FeedbackGitHubOptions
@@ -35,6 +36,6 @@ public sealed class FeedbackGitHubOptions
     /// </summary>
     public string? Assignee { get; init; }
 
-    public bool IsConfigured =>
-        Enabled && !string.IsNullOrWhiteSpace(Repository) && !string.IsNullOrWhiteSpace(Token);
+    /// <summary>Where to mirror to, and with what — without it the switch has nothing to do.</summary>
+    public bool HasTarget => !string.IsNullOrWhiteSpace(Repository) && !string.IsNullOrWhiteSpace(Token);
 }

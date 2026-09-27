@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Infrastructure.Caching;
 using AfterApply.Application.CvScan;
 using AfterApply.Application.CvScan.Contracts;
@@ -30,6 +31,7 @@ internal sealed class CvScanService(
     ICvTextExtractor extractor,
     ICvReviewProvider reviewProvider,
     IOptions<CvScanOptions> options,
+    IFeatureFlags featureFlags,
     IOptions<StorageOptions> storageOptions,
     IStringLocalizer<SharedStrings> localizer,
     PaidCallBudget paidCalls,
@@ -130,7 +132,7 @@ internal sealed class CvScanService(
     private async Task<(CvReviewStatus Status, IReadOnlyList<CvContentNote> Notes)> ReviewAsync(
         CvScanRequest request, ExtractedCv extracted, CancellationToken cancellationToken)
     {
-        if (!options.Value.LlmEnabled)
+        if (!featureFlags.IsEnabled(FeatureFlag.CvScanNotes))
         {
             return (CvReviewStatus.Disabled, []);
         }

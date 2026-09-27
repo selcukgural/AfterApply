@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.CompanyIntelligence.Contracts;
 using AfterApply.Infrastructure.CompanyIntelligence;
@@ -16,13 +17,13 @@ public static class CompanyIntelligenceEndpoints
         var group = app.MapGroup("/api/company-intelligence").WithTags("CompanyIntelligence");
 
         group.MapGet("/{companyId:guid}", async (Guid companyId, ICompanyIntelligenceService service,
-            IOptions<CompanyIntelligenceOptions> options, HttpContext httpContext, CancellationToken cancellationToken) =>
+            IFeatureFlags featureFlags, HttpContext httpContext, CancellationToken cancellationToken) =>
         {
             // Flag off → 404 for every caller, before the service is even called. Same status
             // code as "company not found" below, so the endpoint's mere existence isn't
             // distinguishable while the flag is off — DoD: "flag kapalıyken hiçbir uç noktadan
             // company-level veri sızmaz".
-            if (!options.Value.Enabled)
+            if (!featureFlags.IsEnabled(FeatureFlag.CompanyIntelligence))
             {
                 return Results.NotFound();
             }

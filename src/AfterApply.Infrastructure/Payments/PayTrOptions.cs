@@ -90,6 +90,15 @@ public sealed class PayTrOptionsValidator : IValidateOptions<PayTrOptions>
             return ValidateOptionsResult.Success;
         }
 
+        var failures = ProblemsWhenOn(options);
+        return failures.Count == 0 ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(failures);
+    }
+
+    /// <summary>What would be wrong with these settings if checkout were on, whatever
+    /// <see cref="PayTrOptions.Enabled"/> says — the start-up check when the deploy turns it on,
+    /// and the admin panel's check before a runtime switch does.</summary>
+    public static IReadOnlyList<string> ProblemsWhenOn(PayTrOptions options)
+    {
         var failures = new List<string>();
         if (!options.IsConfigured)
         {
@@ -116,6 +125,6 @@ public sealed class PayTrOptionsValidator : IValidateOptions<PayTrOptions>
             failures.Add("PayTr:Currency must be TL (only Turkish lira is sold)");
         }
 
-        return failures.Count == 0 ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(failures);
+        return failures;
     }
 }

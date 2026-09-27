@@ -11,6 +11,7 @@ using AfterApply.Domain.Occupations;
 using AfterApply.Domain.CvScan;
 using AfterApply.Domain.Documents;
 using AfterApply.Domain.EmailIntegrations;
+using AfterApply.Domain.FeatureFlags;
 using AfterApply.Domain.Feedback;
 using AfterApply.Domain.Imports;
 using AfterApply.Domain.Jobs;
@@ -86,6 +87,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BoardState> BoardStates => Set<BoardState>();
 
     public DbSet<CompanyLogo> CompanyLogos => Set<CompanyLogo>();
+
+    public DbSet<FeatureFlagOverride> FeatureFlagOverrides => Set<FeatureFlagOverride>();
+
+    public DbSet<FeatureFlagChange> FeatureFlagChanges => Set<FeatureFlagChange>();
+
+    public DbSet<FeatureFlagChangeOrigin> FeatureFlagChangeOrigins => Set<FeatureFlagChangeOrigin>();
 
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
 

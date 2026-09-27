@@ -203,6 +203,7 @@ app.MapSilenceReportEndpoints();
 app.MapSiteStatsEndpoints();
 app.MapCvScanEndpoints();
 app.MapAdminEndpoints();
+app.MapAdminFeatureFlagEndpoints();
 app.MapBlogEndpoints();
 app.MapAdminBlogEndpoints();
 app.MapBlogCommentEndpoints();
@@ -249,22 +250,22 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "email-signal-purge",
         service => service.PurgeStalePendingSignalsAsync(CancellationToken.None),
         Cron.Daily(4));
-    // Registered whether or not JobSources:Enabled is on — the sweep checks the flag itself and
-    // returns at once while it is off, so turning the feature on needs no redeploy for the schedule.
+    // Registered whether or not the JobSources flag is on — the sweep checks the flag itself and
+    // returns at once while it is off, so switching the feature on needs no redeploy for the schedule.
     recurringJobManager.AddOrUpdate<IJobSourceSweepService>(
         "job-source-sweep",
         service => service.SweepAsync(CancellationToken.None),
         jobSourceOptions.Cron);
 
     // Closed applications leave the board after Board:ClosedVisibleDays. The board's reads already
-    // hide them; this only removes the rows. Runs regardless of Board:Enabled (a no-op when empty).
+    // hide them; this only removes the rows. Runs regardless of the Board flag (a no-op when empty).
     recurringJobManager.AddOrUpdate<IBoardMaintenanceService>(
         "board-closed-purge",
         service => service.PurgeClosedAsync(CancellationToken.None),
         Cron.Daily(4, 30));
 
     // Company logos for the board: schedules at most a small batch of LinkedIn page fetches a
-    // night, spread out. A no-op while Board:Enabled is off.
+    // night, spread out. A no-op while the Board flag is off.
     recurringJobManager.AddOrUpdate<ICompanyLogoService>(
         "company-logo-backfill",
         service => service.ScheduleBackfillAsync(CancellationToken.None),

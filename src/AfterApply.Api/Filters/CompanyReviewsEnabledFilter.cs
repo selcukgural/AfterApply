@@ -1,5 +1,4 @@
-using AfterApply.Infrastructure.CompanyReviews;
-using Microsoft.Extensions.Options;
+using AfterApply.Application.FeatureFlags;
 
 namespace AfterApply.Api.Filters;
 
@@ -8,8 +7,8 @@ namespace AfterApply.Api.Filters;
 /// company/review", so while the feature is dark its endpoints are not distinguishable from
 /// routes that do not exist — the CompanyIntelligence pattern, applied at the group.
 /// </summary>
-public sealed class CompanyReviewsEnabledFilter(IOptions<CompanyReviewOptions> options) : IEndpointFilter
+public sealed class CompanyReviewsEnabledFilter(IFeatureFlags featureFlags) : IEndpointFilter
 {
     public ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next) =>
-        options.Value.Enabled ? next(context) : ValueTask.FromResult<object?>(Results.NotFound());
+        featureFlags.IsEnabled(FeatureFlag.CompanyReviews) ? next(context) : ValueTask.FromResult<object?>(Results.NotFound());
 }

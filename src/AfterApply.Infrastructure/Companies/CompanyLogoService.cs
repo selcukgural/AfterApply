@@ -1,3 +1,4 @@
+using AfterApply.Application.FeatureFlags;
 using System.Net;
 using AfterApply.Application.Common;
 using AfterApply.Application.Companies;
@@ -7,7 +8,6 @@ using AfterApply.Infrastructure.Persistence;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace AfterApply.Infrastructure.Companies;
 
@@ -28,7 +28,7 @@ internal sealed class CompanyLogoService(
     HttpClient httpClient,
     AppDbContext dbContext,
     IBackgroundJobClient jobClient,
-    IOptions<BoardOptions> boardOptions,
+    IFeatureFlags featureFlags,
     ILogger<CompanyLogoService> logger,
     TimeProvider? timeProvider = null) : ICompanyLogoService
 {
@@ -48,7 +48,7 @@ internal sealed class CompanyLogoService(
 
     public async Task FetchAsync(Guid companyId, CancellationToken cancellationToken)
     {
-        if (!boardOptions.Value.Enabled)
+        if (!featureFlags.IsEnabled(FeatureFlag.Board))
         {
             return;
         }
@@ -113,7 +113,7 @@ internal sealed class CompanyLogoService(
 
     public async Task<int> ScheduleBackfillAsync(CancellationToken cancellationToken)
     {
-        if (!boardOptions.Value.Enabled)
+        if (!featureFlags.IsEnabled(FeatureFlag.Board))
         {
             return 0;
         }
@@ -143,7 +143,7 @@ internal sealed class CompanyLogoService(
 
     public async Task<CompanyLogoFile?> GetForUserAsync(Guid userId, Guid companyId, CancellationToken cancellationToken)
     {
-        if (!boardOptions.Value.Enabled)
+        if (!featureFlags.IsEnabled(FeatureFlag.Board))
         {
             return null;
         }
