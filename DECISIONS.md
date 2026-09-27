@@ -10170,3 +10170,57 @@ yolları bu süzülmüş kümeden beslenir.
 - `Cache-Control: public, max-age=3600`, `Vary: Origin`.
 - Yazma ucu yok, dolayısıyla RequestAudit ve gizlilik metni etkilenmez.
 - Yanıtta ham en küçük / en büyük değer yok; entegrasyon testi ham JSON'da bunları arıyor.
+
+### PR2: public sayfalar, SEO, menüler — 2026-09-27
+
+**Adresler:**
+- Türkçe `/tr/maaslar` ve `/tr/maaslar/<meslek>`; İngilizce `/en/salaries` ve `/en/salaries/<meslek>`.
+- Çevrilmiş adres, teklif karşılaştırmadaki dört adımlı desenle kuruldu: route klasörü Türkçe, `next.config.ts`
+  rewrite, `proxy.ts` 301, `TRANSLATED_SLUGS`.
+- Meslek slug'ı iki dilde aynı (`back-end-developer`).
+- **Yıl başına ya da şehir başına sayfa yok.** Google'ın spam politikası şablonla çoğaltılmış
+  sayfaları sayıyor; yıl sayfanın içindeki bir seçici.
+
+**Render:**
+- İki sayfa da şirket sayfaları gibi dinamik: veri `no-store` ile, render başlıklarıyla alınıyor.
+- Bayrak kapalıyken, bilinmeyen slug'da ya da eşik altı meslekte API 404 döner, sayfa da gerçek 404 olur.
+- Statik sayfalarda `notFound()` çağırınca canlıda 500 veren tuzak bu yüzden yok.
+- Üretim build'inde doğrulandı: `ƒ` route'ları; 200, 301 ve 404 cevapları.
+
+**Tasarım** (kanvastaki Liste A + Detay A):
+- **Liste:**
+  - Satırda ortak ölçekli P25–P75 bandı ve medyan çizgisi.
+  - Her satırda kendi ölçeğinde seyir çizgisi. Yıllar sabit sütunlarda, eksik yıl boşluk olarak kalıyor.
+  - Hover'da yıl + medyan.
+- **Detay:**
+  - Bant + medyan grafiği ya da seviye başına çizgi.
+  - Yıl başına odaklanabilir hedef: hover veya Tab ile kart açılır, dağılım şeridi o yıla geçer.
+  - P10–P90 dağılım şeridi, deneyim çubukları, seviye kartları.
+  - Grafiksiz okuyanlar için tüm rakamlar ayrıca bir tabloda.
+- **Seviye renkleri:** doğrulayıcıdan iki temada da geçti. Açık tema teal #15aab7 / accent #2a5fd6 /
+  amber #e08a00; koyu kartta (#111827) #18a4b0 / #3860d0 / #c98500. Amber "warn" durum rengi değil.
+  Renkler `lib/salaryMarket/levelStyles.ts`'te; client modülden sunucu bileşenine sabit export
+  edilemediği için ayrı dosyada.
+- **Kaynak kutusu:** anket sahibinin adı ve bağlantısı (`safeExternalUrl` ile), izin cümlesi,
+  15 kişi eşiği, aralık ortası, havuzlama, TL + Türkiye filtresi, nominal TL.
+
+**SEO:**
+- Başlık kalıbı "<Meslek> Maaşı <yıl>: Seviye ve Deneyime Göre".
+- Listede `Dataset` JSON-LD: `creator` anket sahibi, `publisher` biz. `license` yok, çünkü izin var ama lisans yok.
+- İki sayfada da `BreadcrumbList`.
+- Sitemap'e API'den gelen liste ve meslek sayfaları giriyor, çevrilmiş hreflang çiftleriyle.
+  Bayrak kapalıyken sitemap'te hiçbiri yok ve `PUBLIC_PATHS`'te değiller.
+
+**Bağlantılar:** Bayrak kapalı geldiği için hepsi yalnızca `salaryMarket.enabled === true` iken görünür:
+- Çıkış yapmış kullanıcının Araçlar menüsünde, Yanıt Oranları'nın ardından.
+- Giriş yapmış kullanıcının Araçlar grubunda.
+- Footer'daki Keşfet sütununda.
+- Şirket maaş sekmesinin boş durumunda.
+- Teklif karşılaştırmadaki `SalaryCta`'da.
+- Yönetim panelindeki bayrak listesi (Şirketler grubu).
+
+**Tarayıcı kontrolü:** üretim build'i `:3001`'de, API `:5152`'de bayrak açık ve Hangfire kapalı çalıştırıldı:
+- TR ve EN liste/detay sayfaları, seyir çizgisi hover'ı, grafik tooltip'i (genel ve seviye), klavye odağı.
+- Karanlık tema.
+- 390px'te taşma ölçümü CDP ile yapıldı. Bulunan beş düzen kusuru düzeltildi: kartların uzaması,
+  mobilde grafiğin taşması, özet kutucuklarının kırılması, "₺"nin alt satıra düşmesi, binlik ayırıcısız kişi sayısı.

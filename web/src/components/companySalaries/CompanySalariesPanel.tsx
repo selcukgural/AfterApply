@@ -15,6 +15,7 @@ import { HelpfulPill } from "@/components/contributions/HelpfulPill";
 import { ApiError } from "@/lib/api/httpClient";
 import { SalaryStatsStrip } from "@/components/companySalaries/SalaryStatsStrip";
 import { ProofNote } from "@/components/contributions/ProofLabel";
+import { SalaryMarketLink } from "@/components/salaryMarket/SalaryMarketLink";
 
 // Two rows behind the sign-in card, so a visitor sees the shape of what they would get. Sample
 // figures, not real ones: the real list is never in a public response.
@@ -184,6 +185,7 @@ export function CompanySalariesPanel({ company }: { company: CompanyPublicRespon
               {t("emptyCta")}
             </Link>
           )}
+          <SalaryMarketLink text={t("marketText")} label={t("marketLink")} />
         </div>
       )}
 

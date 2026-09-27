@@ -3,6 +3,7 @@ import { isActivePath } from "@/components/layout/navLink";
 import { switchedOff, withoutSwitchedOff } from "@/lib/config/switchedOff";
 import { cvScanPath } from "@/lib/cvScan/path";
 import { offerComparePath } from "@/lib/offerCompare/path";
+import { salaryMarketPath } from "@/lib/salaryMarket/path";
 
 /** A `nav.*` catalogue key. */
 export type NavKey =
@@ -20,6 +21,7 @@ export type NavKey =
   | "myReviews"
   | "tools"
   | "responseRates"
+  | "salaryMarket"
   | "weeklyJobs"
   | "cvScan"
   | "offerCompare"
@@ -41,7 +43,7 @@ export type NavEntry = { type: "link"; href: string; key: NavKey } | { type: "gr
 
 export type NavFlags = Pick<
   ClientConfigResponse,
-  "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences" | "blog" | "responseRates"
+  "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences" | "blog" | "responseRates" | "salaryMarket"
 > &
   Partial<Pick<ClientConfigResponse, "cvScan">>;
 
@@ -80,6 +82,7 @@ export function buildNavEntries(flags: NavFlags, locale: string, loaded = true):
   const weeklyJobsOn = flags.jobSources?.enabled === true;
   const blogOn = flags.blog?.enabled === true && flags.blog.hasPublishedPosts === true;
   const responseRatesOn = flags.responseRates?.enabled === true;
+  const salaryMarketOn = flags.salaryMarket?.enabled === true;
   const off = switchedOff(loaded ? flags : null);
 
   const companies: NavItem[] = [
@@ -96,6 +99,8 @@ export function buildNavEntries(flags: NavFlags, locale: string, loaded = true):
     // The sector table reads like a tool (2026-09-22): a public number to look up, not a place to
     // contribute — so it sits with the scan and the benchmark rather than in the companies group.
     ...(responseRatesOn ? [{ href: "/response-rates", key: "responseRates" } as NavItem] : []),
+    // The survey salary pages (2026-09-27): public figures to look up, like the sector table.
+    ...(salaryMarketOn ? [{ href: salaryMarketPath(locale), key: "salaryMarket" } as NavItem] : []),
     { href: cvScanPath(locale), key: "cvScan" },
     { href: "/benchmark", key: "benchmark" },
     { href: offerComparePath(locale), key: "offerCompare" },

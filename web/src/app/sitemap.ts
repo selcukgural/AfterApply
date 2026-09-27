@@ -4,7 +4,9 @@ import { PUBLIC_PATHS, SITE_URL, alternateLanguages, pathFor } from "@/lib/seo/r
 import { fetchReviewedSlugs } from "@/lib/companies/publicApi.server";
 import { fetchBlogSlugs, fetchGuideSlugs } from "@/lib/blog/publicApi.server";
 import { BLOG_PATH, blogAlternates, blogPostPath, postAlternates, postPath } from "@/lib/blog/blogPaths";
-import type { BlogSlug } from "@/types/api";
+import type { BlogSlug, SalaryOccupationsResponse } from "@/types/api";
+import { fetchSalaryOccupationsForSitemap } from "@/lib/salaryMarket/publicApi.server";
+import { SALARY_MARKET_PATHS, salaryOccupationPaths } from "@/lib/salaryMarket/path";
 
 /** The static public pages: everything in PUBLIC_PATHS, in every locale. */
 export function staticSitemapEntries(): MetadataRoute.Sitemap {
@@ -78,9 +80,36 @@ export function guideSitemapEntries(guides: readonly BlogSlug[]): MetadataRoute.
   }));
 }
 
+/**
+ * The survey salary pages (2026-09-27): the list and one page per published occupation, in every
+ * locale under its translated address. Nothing while the SalaryMarket flag is off — the pages
+ * 404 then, which is why they are not in PUBLIC_PATHS.
+ */
+export function salaryMarketSitemapEntries(data: SalaryOccupationsResponse | null): MetadataRoute.Sitemap {
+  if (!data || data.occupations.length === 0) return [];
+  const paths = [SALARY_MARKET_PATHS, ...data.occupations.map((occupation) => salaryOccupationPaths(occupation.slug))];
+  return routing.locales.flatMap((locale) =>
+    paths.map((path) => ({
+      url: `${SITE_URL}/${locale}${pathFor(path, locale)}`,
+      alternates: { languages: alternateLanguages(path, SITE_URL) },
+    })),
+  );
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // The fetchers answer [] when the API is unreachable, so the sitemap degrades to the static
   // list rather than failing the crawl.
-  const [companies, posts, guides] = await Promise.all([fetchReviewedSlugs(), fetchBlogSlugs(), fetchGuideSlugs()]);
-  return [...staticSitemapEntries(), ...companySitemapEntries(companies), ...blogSitemapEntries(posts), ...guideSitemapEntries(guides)];
+  const [companies, posts, guides, salaries] = await Promise.all([
+    fetchReviewedSlugs(),
+    fetchBlogSlugs(),
+    fetchGuideSlugs(),
+    fetchSalaryOccupationsForSitemap(),
+  ]);
+  return [
+    ...staticSitemapEntries(),
+    ...companySitemapEntries(companies),
+    ...blogSitemapEntries(posts),
+    ...guideSitemapEntries(guides),
+    ...salaryMarketSitemapEntries(salaries),
+  ];
 }

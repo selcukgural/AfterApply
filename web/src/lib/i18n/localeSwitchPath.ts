@@ -3,6 +3,7 @@ import { cvScanRedirectForPath } from "@/lib/cvScan/path";
 import { flowCardRedirectForPath } from "@/lib/flowCard/path";
 import { guideRedirectForPath } from "@/lib/guide/guideLinks";
 import { offerCompareRedirectForPath } from "@/lib/offerCompare/path";
+import { salaryMarketRedirectForPath } from "@/lib/salaryMarket/path";
 import { BLOG_PATH } from "@/lib/blog/blogPaths";
 import { GUIDE_PATH } from "@/lib/guide/guideLinks";
 
@@ -18,6 +19,7 @@ export const TRANSLATED_SLUGS: readonly ((pathname: string) => string | null)[] 
   flowCardRedirectForPath,
   aboutRedirectForPath,
   offerCompareRedirectForPath,
+  salaryMarketRedirectForPath,
 ];
 
 /** `/tr/foo` → `/foo` and `/tr` → `/` for the given locale; null when the path is under another one. */

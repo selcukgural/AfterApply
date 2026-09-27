@@ -127,6 +127,9 @@ const nextConfig: NextConfig = {
         { source: "/en/about", destination: "/en/hakkimizda" },
         // The offer comparison, the same way (src/lib/offerCompare/path.ts).
         { source: "/en/offer-comparison", destination: "/en/teklif-karsilastirma" },
+        // The salary pages, the same way (src/lib/salaryMarket/path.ts).
+        { source: "/en/salaries", destination: "/en/maaslar" },
+        { source: "/en/salaries/:slug", destination: "/en/maaslar/:slug" },
         // A shared application-flow card (src/lib/flowCard/path.ts).
         { source: "/en/flow/:card", destination: "/en/akis/:card" },
         // Blog images (2026-09-19). The post's HTML stores the image as the relative path the API

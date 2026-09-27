@@ -23,7 +23,7 @@ describe("the flag list", () => {
     const source = readFileSync(path.join(process.cwd(), "..", "src/AfterApply.Application/FeatureFlags/FeatureFlag.cs"), "utf8");
     const body = source.slice(source.indexOf("public enum FeatureFlag"), source.indexOf("}", source.indexOf("public enum FeatureFlag")));
     const members = [...body.matchAll(/^\s{4}([A-Z][A-Za-z]+),?\s*$/gm)].map((match) => match[1]);
-    expect(members.length).toBe(17);
+    expect(members.length).toBe(18);
     expect([...FEATURE_FLAGS].sort()).toEqual([...members].sort());
   });
 
