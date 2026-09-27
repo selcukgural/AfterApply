@@ -115,8 +115,20 @@ internal sealed class EmailForwardingService(
 
         var connection = EmailConnection.CreateExtension(userId, DateTimeOffset.UtcNow);
         dbContext.EmailConnections.Add(connection);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return connection;
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return connection;
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" } pg
+                                           && pg.ConstraintName == "IX_EmailConnections_UserId_Provider")
+        {
+            // A new user's first two signals arrived together and the other one created the
+            // connection between our read and our insert. Use that row; ours was never written.
+            dbContext.Entry(connection).State = EntityState.Detached;
+            return await dbContext.EmailConnections
+                .SingleAsync(c => c.UserId == userId && c.Provider == EmailProvider.Extension, cancellationToken);
+        }
     }
 
     // Runs once ProcessExtensionSignalAsync has resolved the user's EmailConnection: idempotency,
