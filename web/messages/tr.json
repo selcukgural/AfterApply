@@ -37,7 +37,7 @@
       },
       "cookies": {
         "title": "Çerez Politikası",
-        "description": "e-kariyerim'in kullandığı iki çerez, ne işe yaradıkları, ne kadar kaldıkları — ve neden onay bandı olmadığı."
+        "description": "e-kariyerim'in kullandığı üç çerez, ne işe yaradıkları, ne kadar kaldıkları — ve neden onay bandı olmadığı."
       },
       "terms": {
         "title": "Kullanım Koşulları",
@@ -1866,7 +1866,7 @@
     "lastUpdated": "Son güncelleme: 27 Eylül 2026",
     "intro": {
       "title": "Kısaca",
-      "body": "e-kariyerim yalnızca hizmetin çalışması için gereken iki çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok. Tek istisna Pro plan ödeme sayfasıdır: ödeme formu PayTR'ın kendi sayfasında açılır ve PayTR o sayfada kendi zorunlu çerezlerini kullanabilir; bu çerezler sitemizin diğer sayfalarında okunmaz.",
+      "body": "e-kariyerim yalnızca hizmetin çalışması için gereken üç çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok. Tek istisna Pro plan ödeme sayfasıdır: ödeme formu PayTR'ın kendi sayfasında açılır ve PayTR o sayfada kendi zorunlu çerezlerini kullanabilir; bu çerezler sitemizin diğer sayfalarında okunmaz.",
       "legalNote": "KVKK kapsamında zorunlu ve işlevsel çerezler için açık rıza aranmaz; aranan şey aydınlatmadır. Bu sayfa o aydınlatmadır."
     },
     "table": {
@@ -1881,12 +1881,15 @@
       "themePurpose": "Açık/koyu tema tercihinizi hatırlar. Yalnızca tema düğmesine bastığınızda, ya da giriş yaptığınızda hesabınızdaki tercih uygulanırken yazılır.",
       "themeType": "İşlevsel — birinci taraf",
       "themeDuration": "1 yıl",
-      "note": "İkisi de yalnızca bir tercihi saklar: içlerinde sizi tanımlayan bir kimlik, kullanıcı numarası veya izleme kodu yoktur ve hiçbir üçüncü tarafa gönderilmezler."
+      "sessionPurpose": "Giriş yaptığınızda oturumunuzu açık tutar. İçinde rastgele bir oturum yenileme jetonu vardır; tarayıcınız onu yalnızca API sunucumuzun (api.ekariyerim.com) oturum yenileme ve çıkış adreslerine gönderir. Sayfadaki hiçbir betik bu çerezi okuyamaz (HttpOnly), ve başka bir siteden gelen isteklerle gönderilmez (SameSite=Strict).",
+      "sessionType": "Zorunlu — birinci taraf",
+      "sessionDuration": "30 gün; her kullanımda yenilenir, ama giriş yaptığınız andan en fazla 90 gün. Çıkış yaptığınızda silinir.",
+      "note": "Dil ve tema çerezleri yalnızca bir tercih saklar; içlerinde sizi tanımlayan bir kimlik yoktur. Oturum çerezindeki jeton hesabınızla eşleşir, ama tek işi sizi oturumda tutmaktır: izleme veya ölçüm için kullanılmaz. Üçü de hiçbir üçüncü tarafa gönderilmez."
     },
     "storage": {
       "title": "Tarayıcı deposu (localStorage ve sessionStorage)",
       "intro": "Bunlar çerez değil, ama aynı mantıkla cihazınızda veri sakladıkları için şeffaflık adına burada da sayıyoruz:",
-      "item1": "Oturum jetonları — aa_access_token, aa_refresh_token, bunların geçerlilik süreleri ve aa_user (adınız, e-posta adresiniz ve arayüz tercihleriniz). Giriş yaptıktan sonra oturumunuzun açık kalmasını sağlar; localStorage'da tutulur ve çıkış yaptığınızda silinir.",
+      "item1": "Oturum profili — aa_user (adınız, e-posta adresiniz ve arayüz tercihleriniz). Sayfa yenilendiğinde doğru menünün hemen görünmesini sağlar; tek başına oturum açmaz. localStorage'da tutulur ve çıkış yaptığınızda silinir. Oturum jetonları artık burada değil, yukarıdaki oturum çerezinde tutulur; 27 Eylül 2026'dan önce giriş yapmış bir tarayıcıda kalan eski aa_access_token ve aa_refresh_token değerleri, siteye ilk girişinizde okunup silinir.",
       "item2": "Giriş güvenliği anahtarları — aa_google_oauth, aa_linkedin_oauth ve aa_github_oauth. Google, LinkedIn veya GitHub ile giriş sırasında araya girme (CSRF) saldırısını engelleyen tek kullanımlık değerlerdir; sessionStorage'da tutulur ve giriş tamamlanır tamamlanmaz silinir.",
       "item3": "Kayıtlı pano görünümleri — aa_board_views. Başvuru panosunda “Bu filtreyi kaydet” dediğinizde, verdiğiniz görünüm adı ve filtre ayarları (tarih aralığı, kaynak, durum seçimleri) localStorage'da tutulur. Sunucumuza gönderilmez, yalnızca bu tarayıcıda kalır; görünümü sildiğinizde silinir.",
       "outro": "İlk ikisi hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz. Üçüncüsü işlevseldir ve yalnızca siz bir görünüm kaydettiğinizde yazılır."
@@ -1919,7 +1922,7 @@
     },
     "control": {
       "title": "Çerezleri nasıl silersiniz",
-      "body": "Tarayıcınızın ayarlarından bu sitenin çerezlerini ve site verisini istediğiniz zaman silebilir, çerezleri tümüyle de engelleyebilirsiniz. Sonucu şu olur: dil ve tema tercihiniz varsayılana döner; oturum jetonlarını da silerseniz oturumunuz kapanır ve yeniden giriş yapmanız gerekir. Site bunun dışında çalışmaya devam eder.",
+      "body": "Tarayıcınızın ayarlarından bu sitenin çerezlerini ve site verisini istediğiniz zaman silebilir, çerezleri tümüyle de engelleyebilirsiniz. Sonucu şu olur: dil ve tema tercihiniz varsayılana döner; oturum çerezini de silerseniz oturumunuz kapanır ve yeniden giriş yapmanız gerekir. Site bunun dışında çalışmaya devam eder.",
       "accountNote": "Hesabınızdaki verinin silinmesi ayrı bir konu — bunu Ayarlar sayfasından hesabınızı silerek yapabilirsiniz."
     },
     "changes": {

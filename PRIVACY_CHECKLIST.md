@@ -51,7 +51,7 @@ vb.) eklendiğinde bu liste güncellenmeli.
 
 | Madde | Not |
 |---|---|
-| Token storage (`localStorage`) | Access/refresh token'lar httpOnly cookie yerine `localStorage`'da tutuluyor (`web/src/lib/api/tokenStorage.ts`) — önceki sprintlerden gelen mimari tercih. Değiştirmek `AuthContext`/`authStore`/`tokenStorage`/her `apiFetch` çağrısını etkileyen büyük bir refactor; bu sprintin kapsamında istenmedi, backlog'a not düşüldü. |
+| Token storage (2026-09-27) | Refresh token `__Secure-ek_rt` HttpOnly + Secure + SameSite=Strict cookie'de, `api.ekariyerim.com` host'una ve `/api/auth` yoluna bağlı (`RefreshTokenCookie.cs`); access token yalnızca bellekte (`authStore`). `localStorage`'da yalnızca `aa_user` profil ipucu kalıyor. Eski `aa_*_token` anahtarları ilk ziyarette cookie'ye takas edilip siliniyor. Oturum mutlak ömrü 90 gün (`Jwt:AbsoluteSessionDays`). |
 | Consent versiyonlama / re-consent | `ConsentAcceptedAt` sadece kayıt anında bir kere set ediliyor; privacy policy içerik olarak değişirse mevcut kullanıcılardan yeniden onay istenmesi gereken bir akış yok. Backlog. |
 | Hangfire dashboard auth | `/hangfire` bu sprintte de eklenmedi (Sprint 6'da ertelendi) — hâlâ backlog. |
 
