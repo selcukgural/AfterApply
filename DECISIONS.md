@@ -9906,6 +9906,12 @@ Bu karar `deploy.yml`'deki "reviewed deploy, not a database edit" kuralını bay
 - Bilinmeyen anahtar uyarısı süreç başına bir kez loglanıyor. Abonelik hataları geniş yakalanıyor; tazeleme döngüsü hiçbir hatayla durmuyor.
 - Birinci adım token ömrünü (`ExpiresInSeconds`) de döndürüyor; panelin geri sayımı admin'in saatine bağlı olmasın diye.
 
+**Uçtan uca test turu (aynı gün).** Yerelde aynı Postgres ve Redis üzerinde iki API örneğiyle 16 bayrağın hepsi iki yönde çevrildi: uçlar, `/api/config` ve iki örnek arası yayılma (2–6 ms) doğrulandı, olumsuz yollar reddedildi. Redis gerçekten durdurularak ölçülen ve düzeltilenler:
+- Redis kapalıyken onay 5–6 sn sürüyordu. Duyuru Redis istemcisinin 5 sn'lik zaman aşımını, önbellek temizliği (`ClearAsync`) de Redis'e yazılan temizlik işaretini bekliyordu. Şimdi duyuru bağlantı yoksa hiç denenmiyor, varsa en fazla 1 sn bekliyor. Önbellek temizliği bu instance'ın belleğini hemen temizliyor, paylaşılan tarafı arka planda 1 sn sınırla yapıyor. Onay artık 10 ms.
+- Redis kapalıyken açılış abonelik denemesini bekliyordu. Abonelik artık açılış yolunda değil, tazeleme döngüsünün ilk işi (2 sn sınırlı). Kapanıştaki abonelik iptali bağlantı yoksa atlanıyor, varsa 1 sn sınırlı; Redis kapalıyken kapanış 0,2 sn ölçüldü.
+- İlk bayrak okuması başarısız olan bir instance sonraki başarılı okumada önbelleği temizlemiyordu; o arada varsayılanlarla hesaplanmış sayfalar kalabilirdi. Artık açılış okuması denendikten sonraki her gerçek değişiklik temizliyor (`MarkServing`).
+- Redis kapalıyken ikinci örnek değişikliği 8–9 sn'de yoklamayla gördü; Redis dönünce duyurular hemen çalıştı.
+
 **Geri alma (rollback) uyarısı.** Bu sürümden önceki bir revizyona geri dönülürse eski kod `FeatureFlagOverrides`'ı okumaz; panelden yapılan bütün değişiklikler o revizyon çalıştığı sürece yok sayılır, bayraklar deploy varsayılanına döner. Örneğin panelden kapatılmış ama deploy'da açık olan Ödemeler yeniden açılır. Geri almadan önce panelde değiştirilmiş bayraklara bakılmalı; gerekiyorsa deploy.yml satırı da aynı yönde değiştirilmeli. Tablolar yerinde kalır; yeni revizyona dönülünce değerler yeniden geçerli olur.
 
 **Bilinen boşluklar (PR 2 / sonrası).**

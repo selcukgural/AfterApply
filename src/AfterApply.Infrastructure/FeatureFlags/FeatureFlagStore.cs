@@ -61,12 +61,20 @@ public sealed class FeatureFlagStore(
 {
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private volatile FrozenDictionary<FeatureFlag, bool> _overrides = FrozenDictionary<FeatureFlag, bool>.Empty;
-    private bool _loaded;
+    private volatile bool _serving;
     private readonly HashSet<string> _reportedUnknownKeys = new(StringComparer.Ordinal);
 
     /// <summary>Raised after every successful reload — for the tests that wait on another
     /// instance to pick a change up.</summary>
     public event Action? Reloaded;
+
+    /// <summary>
+    /// From here on this instance answers with whatever the snapshot holds, so any later change to
+    /// it clears the cache — including the first successful read after a start-up read that failed,
+    /// when pages were computed on the deploy defaults. Called by the refresher once its start-up
+    /// read has been attempted, whatever its outcome.
+    /// </summary>
+    public void MarkServing() => _serving = true;
 
     public bool IsEnabled(FeatureFlag flag) =>
         _overrides.TryGetValue(flag, out var enabled) ? enabled : catalog.DefaultOf(flag);
@@ -118,8 +126,10 @@ public sealed class FeatureFlagStore(
 
             var previous = _overrides;
             _overrides = overrides.ToFrozenDictionary();
-            var changed = _loaded && !SameOverrides(previous, _overrides);
-            _loaded = true;
+            // Compared with what this instance has actually been answering with — which, after a
+            // start-up read that failed, is the deploy defaults (the empty snapshot). Only the read
+            // before the instance serves anything skips the clear: nothing was computed yet.
+            var changed = _serving && !SameOverrides(previous, _overrides);
 
             if (changed)
             {
@@ -134,6 +144,23 @@ public sealed class FeatureFlagStore(
         Reloaded?.Invoke();
     }
 
+    /// <summary>
+    /// This instance's memory is cleared at once; the shared layer (the clear marker in Redis, the
+    /// backplane message) goes in the background with a short bound. Measured locally with Redis
+    /// stopped: with the defaults the clear waited out the Redis client's 5 s backlog timeout, and an
+    /// admin's confirmation with it. Each instance clears after its own re-read anyway, so the
+    /// shared half is a courtesy, not the mechanism.
+    /// </summary>
+    private static readonly FusionCacheEntryOptions ClearOptions = new()
+    {
+        AllowBackgroundDistributedCacheOperations = true,
+        AllowBackgroundBackplaneOperations = true,
+        DistributedCacheSoftTimeout = TimeSpan.FromMilliseconds(200),
+        DistributedCacheHardTimeout = TimeSpan.FromSeconds(1),
+        ReThrowDistributedCacheExceptions = false,
+        ReThrowBackplaneExceptions = false
+    };
+
     private static bool SameOverrides(FrozenDictionary<FeatureFlag, bool> a, FrozenDictionary<FeatureFlag, bool> b) =>
         a.Count == b.Count && a.All(pair => b.TryGetValue(pair.Key, out var value) && value == pair.Value);
 
@@ -141,7 +168,7 @@ public sealed class FeatureFlagStore(
     {
         try
         {
-            await cache.ClearAsync(allowFailSafe: false, token: cancellationToken);
+            await cache.ClearAsync(allowFailSafe: false, ClearOptions, cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -165,14 +192,33 @@ public sealed class FeatureFlagChannel(IConnectionMultiplexer redis, IOptions<Ca
     private EventHandler<ConnectionFailedEventArgs>? _failed;
     private EventHandler<ConnectionFailedEventArgs>? _restored;
 
+    private readonly TaskCompletionSource _subscribed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>Completes once this instance listens for announcements — for a caller (a test)
+    /// that must not publish before another instance can hear it.</summary>
+    public Task Subscribed => _subscribed.Task;
+
+    /// <summary>Bounded like the publish: with Redis unreachable the refresher retries on its next
+    /// (short) poll rather than wait out the client's timeout. A subscription that completes after
+    /// the bound only means one more "re-read" signal per announcement, which is harmless.</summary>
     public async Task SubscribeAsync(Action onChanged)
     {
-        await redis.GetSubscriber().SubscribeAsync(Channel, (_, _) => onChanged());
+        await redis.GetSubscriber().SubscribeAsync(Channel, (_, _) => onChanged()).WaitAsync(SubscribeTimeout);
+        _subscribed.TrySetResult();
     }
 
+    private static readonly TimeSpan SubscribeTimeout = TimeSpan.FromSeconds(2);
+
+    /// <summary>Shutdown only. Skipped when Redis is gone and bounded otherwise: the process is
+    /// ending and the multiplexer goes with it, so this must not eat Cloud Run's stop grace period.</summary>
     public async Task UnsubscribeAsync()
     {
-        await redis.GetSubscriber().UnsubscribeAsync(Channel);
+        if (!redis.IsConnected)
+        {
+            return;
+        }
+
+        await redis.GetSubscriber().UnsubscribeAsync(Channel).WaitAsync(PublishTimeout);
     }
 
     /// <summary>
@@ -213,13 +259,25 @@ public sealed class FeatureFlagChannel(IConnectionMultiplexer redis, IOptions<Ca
         }
     }
 
+    /// <summary>How long an announcement may hold up the admin's confirmation. Measured locally with
+    /// Redis stopped: without a bound the publish waited out the client's 5 s timeout on every
+    /// switch.</summary>
+    private static readonly TimeSpan PublishTimeout = TimeSpan.FromSeconds(1);
+
     /// <summary>Best effort: when Redis is unreachable the other instances pick the change up on
-    /// their next poll instead.</summary>
+    /// their next poll instead — so a disconnected client is not even asked, and a slow one is not
+    /// waited for past <see cref="PublishTimeout"/>.</summary>
     public async Task PublishAsync()
     {
+        if (!redis.IsConnected)
+        {
+            logger.LogWarning("Feature flag change not broadcast (Redis unreachable); other instances will see it on their next poll");
+            return;
+        }
+
         try
         {
-            await redis.GetSubscriber().PublishAsync(Channel, "changed");
+            await redis.GetSubscriber().PublishAsync(Channel, "changed").WaitAsync(PublishTimeout);
         }
         catch (Exception ex) when (ex is RedisException or TimeoutException)
         {

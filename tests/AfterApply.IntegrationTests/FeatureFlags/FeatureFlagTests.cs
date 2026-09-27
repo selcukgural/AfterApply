@@ -367,6 +367,8 @@ public class FeatureFlagTests(ApiHost<FeatureFlagProfile> host) : IClassFixture<
         (await BoardInConfigAsync(otherClient)).ShouldBeFalse();
 
         var otherStore = other.Services.GetRequiredService<FeatureFlagStore>();
+        // The subscription is made off the start-up path; publish only once the other side listens.
+        await other.Services.GetRequiredService<FeatureFlagChannel>().Subscribed.WaitAsync(TimeSpan.FromSeconds(10));
         var reloaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         void OnReloaded()
         {
