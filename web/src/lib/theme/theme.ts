@@ -4,10 +4,9 @@ const THEME_COOKIE = "theme";
 
 /**
  * Runs inline in `<head>` before anything paints: reads the theme cookie and stamps the `dark`
- * class on `<html>`. This replaced reading the cookie on the server (2026-09-14) — `cookies()` in
- * the root layout made every page dynamic, this costs nothing and keeps them static. Kept to one
- * expression, no dependencies, wrapped in try/catch so a browser with cookies disabled just gets
- * the light default.
+ * class on `<html>`, so the first paint is already in the right theme. It carries the request's CSP
+ * nonce (see the root layout). Kept to one expression, no dependencies, wrapped in try/catch so a
+ * browser with cookies disabled just gets the light default.
  */
 export const THEME_BOOT_SCRIPT =
   '(function(){try{if(/(?:^|; )theme=dark(?:;|$)/.test(document.cookie))document.documentElement.classList.add("dark")}catch(e){}})()';

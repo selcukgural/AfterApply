@@ -3,87 +3,17 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { withSentryConfig } from "@sentry/nextjs";
 import { UNSERVED_ROOT_FILE_REWRITE } from "./src/lib/http/canonicalHost";
+import { originOf } from "./src/lib/http/contentSecurityPolicy";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-// Both are baked in at build time (see web/Dockerfile) — the browser has to be allowed to reach
-// whichever origins they point at, so the policy below is derived from them rather than
-// hardcoding a production hostname that would silently break local/preview builds.
-function originOf(value: string | undefined): string | null {
-  if (!value) return null;
-  try {
-    return new URL(value).origin;
-  } catch {
-    return null;
-  }
-}
-
+// The API origin is baked in at build time (see web/Dockerfile); the blog-image rewrite below
+// proxies to it.
 const apiOrigin = originOf(process.env.NEXT_PUBLIC_API_BASE_URL) ?? "http://localhost:5151";
-const sentryOrigin = originOf(process.env.NEXT_PUBLIC_SENTRY_DSN);
 
-// SignalR (/hubs/import-progress) upgrades to a WebSocket against the same origin as the API, and
-// ws:/wss: are their own CSP scheme — connect-src 'self' plus the https origin does not cover them.
-const apiWebSocketOrigin = apiOrigin.replace(/^http/, "ws");
-
-// Ordered by how much each one actually buys us here, not alphabetically:
-//
-//  - connect-src is the important one. Tokens are out of script's reach since 2026-09-27 (refresh
-//    token in an HttpOnly cookie, access token in memory), but injected script can still read
-//    whatever the page shows or fetches, and the cheapest exfiltration is a fetch to an
-//    attacker's host; this reduces the reachable set to our own API and Sentry.
-//  - frame-ancestors closes clickjacking on the state-changing screens (suggestion confirm,
-//    account deletion), which had no protection at all before.
-//  - base-uri stops an injected <base> tag from repointing every relative script URL, which is a
-//    standard way to turn a markup injection into script execution.
-//  - object-src/form-action remove two more legacy escape hatches.
-//
-// script-src still needs 'unsafe-inline': Next.js emits inline bootstrap/hydration scripts
-// (self.__next_f.push(...)) with no nonce unless we generate one per request in the proxy and read
-// it back in the root layout — which opts every page, including the statically-rendered landing and
-// help pages, into dynamic rendering. Deliberately deferred; see DECISIONS.md. That means this CSP
-// hardens exfiltration and framing rather than injection itself, and sanitization at the two
-// content dangerouslySetInnerHTML call sites is still the primary XSS control: JobDescriptionCard
-// (untrusted, scraped text — DOMPurify in the browser, right before the write) and BlogArticleBody
-// (admin-authored, sanitized by the API's allowlist on every save and stored clean — the page
-// renders what the sanitizer produced; see that component and DECISIONS.md 2026-09-19).
-// blog.contract.test.ts pins the set of files allowed to use the attribute.
-//
-// The PayTR checkout is the one deliberate exception (DECISIONS.md 2026-09-15):
-//  - frame-src https://www.paytr.com is in the *global* policy, because the checkout is reached by
-//    a client-side navigation and a CSP belongs to the document, not the route — a per-route
-//    header for /pro/checkout only applies on a full page load and left the frame blocked after a
-//    click from /pro. Allowing PayTR as a frame source on every page costs nothing: it only says
-//    which origins may be embedded, and the card form lives inside that frame, never on our origin.
-//  - script-src does NOT widen: PayTR's iframe-resizer parent script is served from our own
-//    origin (public/vendor/paytr-iframeResizer.min.js), so 'self' covers it.
-//  - /{locale}/pro/return/* may be rendered *inside* that frame when PayTR navigates it to our
-//    merchant_ok_url instead of the top window, so that route alone allows paytr.com as a frame
-//    ancestor and drops the legacy X-Frame-Options (which cannot express an allow-list). The page
-//    holds no state and only redirects the top window to the result page.
-const PAYTR_ORIGIN = "https://www.paytr.com";
-
-function buildCsp(overrides: Partial<Record<string, string>> = {}): string {
-  const directives: Record<string, string> = {
-    "default-src": "'self'",
-    "script-src": "'self' 'unsafe-inline'",
-    "style-src": "'self' 'unsafe-inline'",
-    "img-src": "'self' data: blob:",
-    "font-src": "'self' data:",
-    "frame-src": PAYTR_ORIGIN,
-    "connect-src": `'self' ${apiOrigin} ${apiWebSocketOrigin}${sentryOrigin ? ` ${sentryOrigin}` : ""}`,
-    "frame-ancestors": "'none'",
-    "base-uri": "'self'",
-    "form-action": "'self'",
-    "object-src": "'none'",
-    ...overrides,
-  };
-  return Object.entries(directives)
-    .map(([key, value]) => `${key} ${value}`)
-    .join("; ");
-}
-
-const contentSecurityPolicy = buildCsp();
-
+// Content-Security-Policy is not set here: it carries a per-request nonce, so proxy.ts builds it
+// for every rendered page (src/lib/http/contentSecurityPolicy.ts). These are the headers that are
+// the same on every response.
 const commonSecurityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   // Password-reset links arrive as ?email=&token= query strings — strict-origin-when-cross-origin
@@ -99,15 +29,16 @@ const commonSecurityHeaders = [
 ];
 
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: contentSecurityPolicy },
-  // frame-ancestors above already covers this for anything modern; kept for older browsers that
+  // The CSP's frame-ancestors already covers this for anything modern; kept for older browsers that
   // understand the legacy header but not the directive.
   { key: "X-Frame-Options", value: "DENY" },
   ...commonSecurityHeaders,
 ];
 
+// The PayTR return page may be framed by paytr.com (its CSP says so, see
+// contentSecurityPolicy.ts), so it must not carry X-Frame-Options, which cannot express an
+// allow-list.
 const paytrReturnSecurityHeaders = [
-  { key: "Content-Security-Policy", value: buildCsp({ "frame-ancestors": `'self' ${PAYTR_ORIGIN}` }) },
   ...commonSecurityHeaders,
 ];
 

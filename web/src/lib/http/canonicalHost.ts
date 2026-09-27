@@ -64,6 +64,15 @@ export function isFileRequest(pathname: string): boolean {
 }
 
 /**
+ * A path under a dotted first segment — /foo.php/bar, /.well-known/… — is never a page. It passes
+ * the proxy untouched (bar the CSP) so UNSERVED_ROOT_FILE_REWRITE below answers it with the 404,
+ * instead of the locale middleware prefixing it with /tr first.
+ */
+export function hasDottedFirstSegment(pathname: string): boolean {
+  return /^\/[^/]*\.[^/]*(?:\/|$)/.test(pathname);
+}
+
+/**
  * A root-level file nothing serves — /llms.txt, /ads.txt, /.well-known/security.txt — sent to the
  * site's own 404 (next.config.ts, `afterFiles`).
  *
