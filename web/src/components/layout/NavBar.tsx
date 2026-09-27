@@ -20,6 +20,7 @@ import { ProBadge } from "@/components/layout/ProBadge";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
 import { buildNavEntries, isNavItemActive, type NavItem } from "@/components/layout/navGroups";
 import { useClientConfig } from "@/hooks/useClientConfig";
+import { switchedOff } from "@/lib/config/switchedOff";
 import { useProBadge } from "@/hooks/useProBadge";
 
 /**
@@ -40,13 +41,15 @@ export function NavBar() {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const locale = useLocale();
-  const { data: suggestionCount } = useSuggestionCount();
+  const { config, isLoaded } = useClientConfig();
+  // The suggestions come from the Gmail-scanning intake; switched off, their link and counter go.
+  const showSuggestions = !switchedOff(isLoaded ? config : null).suggestions;
+  const { data: suggestionCount } = useSuggestionCount(showSuggestions);
   const { data: notificationCount } = useNotificationCount();
-  const { config } = useClientConfig();
   const { showProBadge } = useProBadge();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const entries = buildNavEntries(config, locale);
+  const entries = buildNavEntries(config, locale, isLoaded);
 
   const handleLogout = async () => {
     await logout();
@@ -161,7 +164,7 @@ export function NavBar() {
 
         <div className="hidden items-center gap-1 md:flex">
           <div className="mr-2">{newApplicationButton(false)}</div>
-          {iconLink("/suggestions", t("suggestions"), suggestionCount, inboxIcon)}
+          {showSuggestions && iconLink("/suggestions", t("suggestions"), suggestionCount, inboxIcon)}
           <NotificationBell badge={badge} icon={bellIcon} />
           {user && (
             <div className="ml-2">
@@ -228,10 +231,12 @@ export function NavBar() {
           </nav>
 
           <nav className="mt-3 flex flex-col gap-1 border-t border-gray-100 pt-3 text-sm dark:border-gray-800">
-            <Link href="/suggestions" onClick={() => setMenuOpen(false)} aria-current={active("/suggestions") ? "page" : undefined} className={mobileLink("/suggestions")}>
-              {t("suggestions")}
-              {badge(suggestionCount)}
-            </Link>
+            {showSuggestions && (
+              <Link href="/suggestions" onClick={() => setMenuOpen(false)} aria-current={active("/suggestions") ? "page" : undefined} className={mobileLink("/suggestions")}>
+                {t("suggestions")}
+                {badge(suggestionCount)}
+              </Link>
+            )}
             <Link href="/notifications" onClick={() => setMenuOpen(false)} aria-current={active("/notifications") ? "page" : undefined} className={mobileLink("/notifications")}>
               {t("notifications")}
               {badge(notificationCount)}

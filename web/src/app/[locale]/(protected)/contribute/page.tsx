@@ -12,6 +12,8 @@ import { candidateExperiencesApi } from "@/lib/api/candidateExperiences";
 import { companySalariesApi } from "@/lib/api/companySalaries";
 import { ApiError } from "@/lib/api/httpClient";
 import { useClientConfig } from "@/hooks/useClientConfig";
+import { useSwitchedOff } from "@/hooks/useSwitchedOff";
+import { FeatureOffNotice } from "@/components/ui/FeatureOffNotice";
 import { EMPTY_REVIEW_DRAFT } from "@/lib/companyReviews/reviewDraft";
 import { EMPTY_SALARY_DRAFT } from "@/lib/companySalaries/salaryDraft";
 import { EMPTY_EXPERIENCE_DRAFT } from "@/lib/candidateExperiences/experienceDraft";
@@ -57,6 +59,8 @@ function ContributeContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { config } = useClientConfig();
+  const companiesOff = useSwitchedOff().companies;
+  const tOff = useTranslations("companyReviews.off");
   const params = useSearchParams();
   const tab = parseContributeTab(params.get("tab"));
   const slug = params.get("company");
@@ -70,7 +74,7 @@ function ContributeContent() {
   const fromSlug = useQuery({
     queryKey: ["companies", "by-slug", slug],
     queryFn: () => companiesApi.bySlug(slug!),
-    enabled: !!slug && !picked,
+    enabled: !!slug && !picked && !companiesOff,
   });
 
   const resolve = useMutation({
@@ -187,6 +191,12 @@ function ContributeContent() {
   const salariesOn = config.companySalaries?.enabled === true;
   const experiencesOn = config.candidateExperiences?.enabled === true;
   const sides: ContributeTab[] = ["review", ...(salariesOn ? ["salary" as const] : []), ...(experiencesOn ? ["experience" as const] : [])];
+
+  // Switched off at runtime (the CompanyReviews flag): every request this page makes answers 404,
+  // so it says the feature is off instead of showing an error (DECISIONS.md 2026-09-27).
+  if (companiesOff) {
+    return <FeatureOffNotice title={tOff("title")} body={tOff("body")} backLabel={tOff("back")} />;
+  }
 
   return (
     <div className="flex flex-col gap-6">

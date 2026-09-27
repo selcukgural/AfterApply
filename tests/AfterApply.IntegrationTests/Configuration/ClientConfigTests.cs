@@ -59,6 +59,8 @@ public class ClientConfigTests(ApiHost<ClientConfigProfile> host) : IClassFixtur
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Headers.CacheControl!.Public.ShouldBeTrue();
+        // A minute: flags switch at runtime (DECISIONS.md 2026-09-27) and the web must follow soon.
+        response.Headers.CacheControl.MaxAge.ShouldBe(TimeSpan.FromSeconds(60));
         // Public cache + CORS must vary on Origin, or an address-bar visit poisons the cache for
         // the web app's cross-origin fetch — see ClientConfigEndpoints.
         response.Headers.Vary.ShouldContain("Origin");
@@ -75,6 +77,8 @@ public class ClientConfigTests(ApiHost<ClientConfigProfile> host) : IClassFixtur
         config.CandidateExperiences.ShouldBe(new CandidateExperiencesConfigResponse(true, 10, 3, 5));
         // The blog is on by default and empty on a fresh database: no link to show yet.
         config.Blog.ShouldBe(new BlogConfigResponse(true, false));
+        // The Gmail-scanning intake is on by default (EmailForwarding:Enabled in appsettings.json).
+        config.EmailSignals.ShouldBe(new EmailSignalsConfigResponse(true));
     }
 
     [Fact]

@@ -21,7 +21,12 @@ public sealed record ClientConfigResponse(
     CompanyIntelligenceConfigResponse? CompanyIntelligence = null,
     ResponseRatesConfigResponse? ResponseRates = null,
     SilenceReportsConfigResponse? SilenceReports = null,
-    BoardConfigResponse? Board = null);
+    BoardConfigResponse? Board = null,
+    EmailSignalsConfigResponse? EmailSignals = null);
+
+/// <summary>Whether the Gmail-scanning intake answers (the EmailSignals flag, default
+/// EmailForwarding:Enabled): while off, the suggestions link and its counter are not offered.</summary>
+public sealed record EmailSignalsConfigResponse(bool Enabled);
 
 /// <summary>Whether the applications page offers its third view, the board (Board:Enabled).</summary>
 public sealed record BoardConfigResponse(bool Enabled);

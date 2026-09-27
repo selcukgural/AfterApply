@@ -9899,24 +9899,36 @@ Bu karar `deploy.yml`'deki "reviewed deploy, not a database edit" kuralını bay
 - Metinler kod okunarak yazıldı: hangi uç 404 olur, ne gizlenir, ne saklanır, açılınca geri gelmeyen ne.
 - Birim testi her bayrağın iki dilde de metni olduğunu ve para/gizlilik bayraklarının notunun bulunduğunu doğruluyor.
 
-**Backend inceleme turu (aynı gün, bağımsız gözden geçirme).** Kritik bulgu çıkmadı; düzeltilenler:
+**PR 2: panel ve web tarafı (aynı gün).**
+- **`/admin/flags`:** Kanvas "Özellik bayrakları paneli", varyant C seçildi. Solda dört grupta liste: Başvuru takibi, Şirket sayfaları, İçerik ve araçlar, Pro ve ödemeler. Sağda seçilen bayrağın API'den gelen metinleri ve son 3 değişikliği, altında kendi "Tehlikeli bölge" kutusu (Kapat…/Aç…, Varsayılana döndür… yalnızca panel değeri varken). Sayfanın tepesinde kırmızı uyarı bandı var, admin sekmelerinde "Bayraklar" kırmızı. Telefonda liste ve ayrıntı sırayla gösteriliyor.
+- **İki adımlı diyalog:** Gerekçe → bayrağın adını yazma ve 5 dakikalık geri sayım. Süresi dolmuş, kullanılmış ya da arada değişmiş bir onay ilk adıma döndürür, liste yeniden okunur.
+- **`/admin/flags/history`:** Bütün geçmiş ve bayrak filtresi. IP gösterilmiyor.
+- **`/api/config`:** `max-age` 5 dk'dan 60 sn'ye indi; `useClientConfig` staleTime da 60 sn. Yeni alan: `emailSignals`, ekleme niteliğinde; eski eklenti ve web sürümleri etkilenmez.
+- **Kapalı bayrakta linkler (`switchedOff`):** Yalnızca sunucu açıkça `false` dediğinde link kaldırılıyor. Yanıt gelmeden ya da API'ye ulaşılamazken her şey görünür kalıyor; varsayılan yapılandırma "kapalı" diye okunmuyor.
+  - Blog kapalı → Rehber linkleri gider (menü, başlık, alt bilgi, 404 kapıları).
+  - CvScan kapalı → CV tarama linkleri gider, `/cv-tarama` form yerine "şu an kapalı" notu gösterir.
+  - CompanyReviews kapalı → başlık ve alt bilgideki Şirketler linki gider.
+  - EmailSignals kapalı → Öneriler linki ve sayacı gider.
+  - ResponseRates kapalı → `/response-rates` tablo yerine not gösterir.
+- **Açıklama metinleri** bu yeni davranışa göre güncellendi.
+- **"Kapalı" notu gösteren sayfalar:** CompanyReviews kapalıyken `/companies` dizini, `/contribute`, Katkılarım (`/my-reviews`) ve değerlendirme düzenleme; EmailSignals kapalıyken `/suggestions`. Katkılarım şirket bölümünün ucuna bağlı olduğu için bu sürede blog yorumları da orada listelenmez; metinde yazıyor.
+- **Bilerek dokunulmayanlar:** Açılış sayfasındaki araç kartları (şirketler, CV tarama) gizlenmiyor, çünkü düzeni değiştirir; artık hata yerine "kapalı" notuna götürüyorlar. Başka sayfalardaki tek tek rehber yazısı linkleri (yardım merkezi, değerlendirme kuralları, akış kartı) Blog kapalıyken 404'e gidiyor. İkisi de metinlerde açıkça yazıyor.
+- **Gecikme:** API tarafı saniyeler içinde değişir. Web'deki linkler bir iki dakika içinde, sayfa yenilendiğinde ya da değiştirildiğinde değişir: tarayıcı `/api/config`'i 60 sn tutar, açık bir sekme yapılandırmayı ancak sayfa değiştirince yeniden ister, sunucu tarafında çizilen alt bilgi de 60 sn'lik revalidate ile gelir.
+
+**İnceleme turu (aynı gün, iki bağımsız gözden geçirme).** Kritik bulgu çıkmadı; düzeltilenler:
 - Kayıttan sonra yerel yeniden okuma hata verse bile duyuru artık önce gidiyor, ikisi de isteğin token'ından bağımsız. Değişiklik veritabanında olup başka hiçbir yerde geçerli olmayan bir durum kalmıyor.
 - Bayrak tazeleyici artık Hangfire'dan önce kayıtlı. Hosted service'ler kayıt sırasıyla başlıyor; yeni bir instance'ta işler bayraklar okunmadan başlamıyor.
 - Token'ın "durum eski hâline döndü" (ABA) açığı değişiklik sayısıyla kapandı (yukarıda).
 - Bilinmeyen anahtar uyarısı süreç başına bir kez loglanıyor. Abonelik hataları geniş yakalanıyor; tazeleme döngüsü hiçbir hatayla durmuyor.
-- Birinci adım token ömrünü (`ExpiresInSeconds`) de döndürüyor; panelin geri sayımı admin'in saatine bağlı olmasın diye.
-
-**Uçtan uca test turu (aynı gün).** Yerelde aynı Postgres ve Redis üzerinde iki API örneğiyle 16 bayrağın hepsi iki yönde çevrildi: uçlar, `/api/config` ve iki örnek arası yayılma (2–6 ms) doğrulandı, olumsuz yollar reddedildi. Redis gerçekten durdurularak ölçülen ve düzeltilenler:
-- Redis kapalıyken onay 5–6 sn sürüyordu. Duyuru Redis istemcisinin 5 sn'lik zaman aşımını, önbellek temizliği (`ClearAsync`) de Redis'e yazılan temizlik işaretini bekliyordu. Şimdi duyuru bağlantı yoksa hiç denenmiyor, varsa en fazla 1 sn bekliyor. Önbellek temizliği bu instance'ın belleğini hemen temizliyor, paylaşılan tarafı arka planda 1 sn sınırla yapıyor. Onay artık 10 ms.
-- Redis kapalıyken açılış abonelik denemesini bekliyordu. Abonelik artık açılış yolunda değil, tazeleme döngüsünün ilk işi (2 sn sınırlı). Kapanıştaki abonelik iptali bağlantı yoksa atlanıyor, varsa 1 sn sınırlı; Redis kapalıyken kapanış 0,2 sn ölçüldü.
-- İlk bayrak okuması başarısız olan bir instance sonraki başarılı okumada önbelleği temizlemiyordu; o arada varsayılanlarla hesaplanmış sayfalar kalabilirdi. Artık açılış okuması denendikten sonraki her gerçek değişiklik temizliyor (`MarkServing`).
-- Redis kapalıyken ikinci örnek değişikliği 8–9 sn'de yoklamayla gördü; Redis dönünce duyurular hemen çalıştı.
+- Geri sayım admin'in saatine bağlı değil: token ömrü (`ExpiresInSeconds`) yanıtın geldiği andan sayılıyor, 5 sn pay bırakılıyor.
+- Diyalogda:
+  - adımlar arasında odak yönetimi;
+  - istek sürerken "Baştan başla" kilitli;
+  - ağ hatası Türkçe gösteriliyor;
+  - ön koşul ikinci adımda kaybolursa ilk adıma dönülüyor;
+  - başka biri aynı değişikliği yaptıysa "zaten yapıldı" deniyor.
+- Geçmiş sayfası hata durumunu gösteriyor.
 
 **Geri alma (rollback) uyarısı.** Bu sürümden önceki bir revizyona geri dönülürse eski kod `FeatureFlagOverrides`'ı okumaz; panelden yapılan bütün değişiklikler o revizyon çalıştığı sürece yok sayılır, bayraklar deploy varsayılanına döner. Örneğin panelden kapatılmış ama deploy'da açık olan Ödemeler yeniden açılır. Geri almadan önce panelde değiştirilmiş bayraklara bakılmalı; gerekiyorsa deploy.yml satırı da aynı yönde değiştirilmeli. Tablolar yerinde kalır; yeni revizyona dönülünce değerler yeniden geçerli olur.
 
-**Bilinen boşluklar (PR 2 / sonrası).**
-- Blog kapalıyken menüdeki Rehber linkleri, ResponseRates kapalıyken /response-rates sayfası ve CvScan kapalıyken /cv-tarama linkleri görünür kalıyor.
-- EmailSignals `/api/config`'te yok, web hiçbir şeyi gizlemiyor.
-- Bunlar açıklama metinlerinde açıkça yazılı.
-- `/api/config` önbelleği hâlâ 5 dk; PR 2'de 60 sn'ye iniyor.
-- Admin paneli ("danger zone" uyarılı) PR 2'de, kanvas onayıyla.
+

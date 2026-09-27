@@ -15,6 +15,9 @@ namespace AfterApply.Api.Endpoints;
 
 public static class ClientConfigEndpoints
 {
+    /// <summary>How long browsers and caches may hold the response; the web's own query cache matches it.</summary>
+    public static readonly TimeSpan MaxAge = TimeSpan.FromSeconds(60);
+
     public static IEndpointRouteBuilder MapClientConfigEndpoints(this IEndpointRouteBuilder app)
     {
         // Anonymous on purpose: the register and reset-password forms need the password rules
@@ -55,13 +58,14 @@ public static class ClientConfigEndpoints
                 var blogEnabled = featureFlags.IsEnabled(FeatureFlag.Blog);
                 var hasPublishedPosts = blogEnabled && await blog.HasPublishedPostsAsync(cancellationToken);
 
-                // The values change with a deploy or when an admin switches a flag (the flags are
-                // runtime since 2026-09-27), so let browsers and the CDN hold them for a few minutes
-                // instead of re-fetching on every form mount.
+                // A minute (2026-09-27): the flags in here switch at runtime from the admin panel, and
+                // a switched-off feature's links should leave the web within that — the API side is
+                // already off everywhere within seconds. Still long enough that a page full of forms
+                // does not re-fetch per mount.
                 httpContext.Response.GetTypedHeaders().CacheControl = new CacheControlHeaderValue
                 {
                     Public = true,
-                    MaxAge = TimeSpan.FromMinutes(5)
+                    MaxAge = MaxAge
                 };
                 // A public, cacheable response that is also CORS-served must vary on Origin: without
                 // this, a copy fetched with no Origin (typing the URL into the address bar to check
@@ -100,7 +104,8 @@ public static class ClientConfigEndpoints
                     new CompanyIntelligenceConfigResponse(featureFlags.IsEnabled(FeatureFlag.CompanyIntelligence)),
                     new ResponseRatesConfigResponse(featureFlags.IsEnabled(FeatureFlag.ResponseRates)),
                     new SilenceReportsConfigResponse(featureFlags.IsEnabled(FeatureFlag.SilenceReports)),
-                    new BoardConfigResponse(featureFlags.IsEnabled(FeatureFlag.Board))));
+                    new BoardConfigResponse(featureFlags.IsEnabled(FeatureFlag.Board)),
+                    new EmailSignalsConfigResponse(featureFlags.IsEnabled(FeatureFlag.EmailSignals))));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

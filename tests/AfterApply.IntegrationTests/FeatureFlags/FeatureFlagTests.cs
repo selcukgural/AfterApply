@@ -292,6 +292,18 @@ public class FeatureFlagTests(ApiHost<FeatureFlagProfile> host) : IClassFixture<
     }
 
     [Fact]
+    public async Task Switching_Gmail_Scanning_Off_Tells_The_Web_To_Hide_The_Suggestions()
+    {
+        var anonymous = host.CreateClient();
+        (await anonymous.GetFromJsonAsync<ClientConfigResponse>("/api/config", Json))!.EmailSignals!.Enabled.ShouldBeTrue();
+
+        await SwitchAsync("EmailSignals", false);
+
+        (await anonymous.GetFromJsonAsync<ClientConfigResponse>("/api/config", Json))!.EmailSignals!.Enabled.ShouldBeFalse();
+        (await _admin.GetAsync("/api/email-forwarding/suggestions/count")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Resetting_Returns_The_Flag_To_Its_Deploy_Default()
     {
         await SwitchAsync("CompanyReviews", false);

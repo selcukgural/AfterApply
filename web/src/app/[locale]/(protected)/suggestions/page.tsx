@@ -12,6 +12,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Link } from "@/i18n/navigation";
 import { suggestionCountQueryKey } from "@/hooks/useSuggestionCount";
 import { useGmailScanStatus } from "@/hooks/useGmailScanStatus";
+import { useSwitchedOff } from "@/hooks/useSwitchedOff";
+import { FeatureOffNotice } from "@/components/ui/FeatureOffNotice";
 import { resolveGmailEmptyState } from "@/lib/emailSuggestions/emptyState";
 
 export default function EmailSuggestionsPage() {
@@ -23,6 +25,7 @@ export default function EmailSuggestionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const gmailScanStatus = useGmailScanStatus();
+  const suggestionsOff = useSwitchedOff().suggestions;
 
   useEffect(() => {
     emailForwardingApi
@@ -59,6 +62,13 @@ export default function EmailSuggestionsPage() {
       setPendingActionId(null);
     }
   };
+
+  // Switched off at runtime (the EmailSignals flag): every call here answers 404 — the page says
+  // so instead of an error line (DECISIONS.md 2026-09-27). Reached by a bookmark or an old link;
+  // the menu no longer offers it.
+  if (suggestionsOff) {
+    return <FeatureOffNotice title={t("off.title")} body={t("off.body")} backLabel={t("off.back")} />;
+  }
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">

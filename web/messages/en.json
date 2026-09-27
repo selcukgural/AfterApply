@@ -1252,7 +1252,12 @@
     },
     "emptyBody": "Suggestions come from the hiring emails you open in your inbox while Gmail Scanning is on in the Chrome extension. If you haven't turned scanning on, nothing shows up here.",
     "emptyCta": "Turn on Gmail Scanning",
-    "emptyBodyScanning": "Gmail Scanning is already talking to this account. When a hiring email you open in your inbox produces a suggestion, it shows up here."
+    "emptyBodyScanning": "Gmail Scanning is already talking to this account. When a hiring email you open in your inbox produces a suggestion, it shows up here.",
+    "off": {
+      "title": "E-mail suggestions are off for now",
+      "body": "We have paused Gmail scanning for a while; no new suggestions arrive meanwhile. Your applications and the changes you confirmed earlier stay as they are.",
+      "back": "Back to the home page"
+    }
   },
   "notifications": {
     "title": "Notifications",
@@ -3795,6 +3800,11 @@
       "tooLarge": "The file exceeds the 5 MB limit.",
       "tooMany": "That is a lot of scans. Wait a little and try again.",
       "generic": "The scan could not be completed. Try again in a moment."
+    },
+    "off": {
+      "title": "The CV scan is off for now",
+      "body": "We have paused the scan for a while. Your stored CVs and earlier results stay where they are; you can pick up here once the scan is back.",
+      "back": "Back to the home page"
     }
   },
   "offerCompare": {
@@ -3960,7 +3970,8 @@
     "payments": "Payments",
     "blog": "Blog",
     "guide": "Guide",
-    "comments": "Comments"
+    "comments": "Comments",
+    "flags": "Flags"
   },
   "adminContributionTabs": {
     "label": "Contribution kinds",
@@ -5261,6 +5272,16 @@
           }
         }
       }
+    },
+    "off": {
+      "title": "Company pages are off for now",
+      "body": "We have taken company reviews, salaries and candidate experiences down for a while. Nothing you wrote was deleted; it will all be back when the section reopens.",
+      "back": "Back to the home page"
+    },
+    "offMine": {
+      "title": "My contributions cannot be opened right now",
+      "body": "We have closed the company section for a while, so your reviews, salaries, candidate experiences and blog comments cannot be listed here meanwhile. None of them was deleted; they will all be here when the section reopens.",
+      "back": "Back to the home page"
     }
   },
   "companySalaries": {
@@ -6995,7 +7016,12 @@
       "button": "Get started free"
     },
     "error": "The table could not be loaded right now.",
-    "subRateRule": "Kept promise and told of rejection come from users' optional answers; they show “—” until 5 answers from at least 3 people are in."
+    "subRateRule": "Kept promise and told of rejection come from users' optional answers; they show “—” until 5 answers from at least 3 people are in.",
+    "off": {
+      "title": "Sector response rates are not published right now",
+      "body": "We have taken the table down for a while. You can still follow your own applications on your dashboard.",
+      "back": "Back to the home page"
+    }
   },
   "helpful": {
     "label": "{count, plural, =0 {Helpful} other {Helpful · #}}",
@@ -7133,6 +7159,132 @@
         "tracked": "No label: an application to this company you track here must have been added at least 14 days before this entry. Adding one afterwards does not bring the label.",
         "accepted": "No label: an application to this company you track here, ended \"accepted\", must have been added at least 14 days before this entry. Adding one afterwards does not bring the label."
       }
+    }
+  },
+  "adminFlags": {
+    "title": "Feature flags",
+    "summary": "{total} flags · {overridden, plural, =0 {none switched in the panel} one {# switched in the panel} other {# switched in the panel}} · the rest run on their deploy default",
+    "historyLink": "Change history",
+    "banner": {
+      "strong": "Danger zone.",
+      "body": "Changes on this page take effect on the live site for every user within seconds; there is no undo button. Every change takes two confirmations and is recorded with your name, your reason and your IP address."
+    },
+    "listLabel": "Flags",
+    "groups": {
+      "tracking": "Application tracking",
+      "companies": "Company pages",
+      "content": "Content and tools",
+      "pro": "Pro and payments"
+    },
+    "state": {
+      "on": "On",
+      "off": "Off"
+    },
+    "stateWord": {
+      "on": "on",
+      "off": "off"
+    },
+    "panelBadge": "panel",
+    "source": {
+      "default": "Deploy default",
+      "override": "From the panel · deploy default: {state}",
+      "updated": "{at} · {by}"
+    },
+    "couplings": {
+      "PrivacyText": "Privacy text",
+      "Money": "Paid / money"
+    },
+    "sections": {
+      "description": "What it does",
+      "whenOff": "What happens while it is off",
+      "notes": "What has to change with it",
+      "recent": "Recent changes",
+      "neverChanged": "This flag has never been switched in the panel.",
+      "allHistory": "Full history"
+    },
+    "missing": {
+      "title": "Cannot be switched on here",
+      "BLOG_MEDIA_BUCKET_MISSING": "The blog image bucket (Storage:BlogMediaBucketName) is not configured.",
+      "CV_SCAN_NOTES_PROJECT_MISSING": "No Vertex AI project (CvScan:Review:ProjectId) is configured for the CV notes.",
+      "FEEDBACK_GITHUB_TARGET_MISSING": "The GitHub repository or token for the feedback mirror is not configured.",
+      "PAYTR_NOT_CONFIGURED": "The PayTR merchant details or plan prices are not configured.",
+      "unknown": "A required setting is missing ({code})."
+    },
+    "danger": {
+      "title": "DANGER ZONE",
+      "turnOff": "Switch this flag off",
+      "turnOn": "Switch this flag on",
+      "actionBody": "Takes effect for every user within seconds. A reason and two confirmations are required.",
+      "turnOffButton": "Switch off…",
+      "turnOnButton": "Switch on…",
+      "resetTitle": "Reset to default",
+      "resetBody": "Removes the panel's value; the flag goes back to its deploy default ({state}). A reason and two confirmations are required.",
+      "resetNone": "No panel value; the flag already runs on its deploy default.",
+      "resetButton": "Reset to default…"
+    },
+    "back": "Flags",
+    "dialog": {
+      "stepOne": {
+        "eyebrow": "STEP 1 / 2 · WHAT WILL HAPPEN",
+        "turnOff": "Switch off {title}?",
+        "turnOn": "Switch on {title}?",
+        "reset": "Reset {title} to its deploy default?",
+        "scope": "for every user, within seconds",
+        "reasonLabel": "Why?",
+        "reasonHint": "(required, at least 5 characters · kept in the history)",
+        "cancel": "Cancel",
+        "continue": "Continue — final confirmation",
+        "preparing": "Preparing…",
+        "overtaken": "Someone else has just made this change; the flag is already where you wanted it. Close this and review its current state.",
+        "becomes": "will become:"
+      },
+      "stepTwo": {
+        "eyebrow": "STEP 2 / 2 · FINAL CONFIRMATION",
+        "turnOff": "{title} will be switched off on the live site",
+        "turnOn": "{title} will be switched on on the live site",
+        "reset": "{title} will go back to its deploy default",
+        "flag": "Flag",
+        "change": "Change",
+        "reason": "Reason",
+        "phraseLabel": "To confirm, type the flag's name:",
+        "phraseHint": "Exactly, case included. This confirmation expires in {time}.",
+        "expired": "This confirmation has expired. Start again.",
+        "back": "Back",
+        "startAgain": "Start again",
+        "cancel": "Cancel",
+        "confirmTurnOff": "Switch off",
+        "confirmTurnOn": "Switch on",
+        "confirmReset": "Reset to default",
+        "confirming": "Applying…"
+      },
+      "done": {
+        "title": "Saved — {title} is now {state}.",
+        "body": "Every server uses the new value within seconds. Menus and links on the site follow within a minute or two, as pages are reloaded or changed. The change is in the history with your name and reason.",
+        "close": "Close"
+      },
+      "networkError": "The server could not be reached. Check your connection and try again; nothing changed meanwhile."
+    },
+    "loading": "Loading the flags…",
+    "error": "The flags could not be loaded. Reload the page and try again.",
+    "forbiddenTitle": "This page is for administrators",
+    "forbiddenBody": "Only administrator accounts can see and switch feature flags.",
+    "history": {
+      "title": "Change history",
+      "subtitle": "Newest first. The connection's IP address is recorded with every change but never shown on any screen.",
+      "filter": "Flag",
+      "all": "All",
+      "columns": {
+        "at": "When",
+        "flag": "Flag",
+        "change": "Change",
+        "reason": "Reason",
+        "by": "Who"
+      },
+      "setTo": "Panel value: {state}",
+      "reset": "Back to the default",
+      "deletedAccount": "deleted account",
+      "empty": "No changes yet.",
+      "error": "The history could not be loaded. Reload the page and try again."
     }
   }
 }

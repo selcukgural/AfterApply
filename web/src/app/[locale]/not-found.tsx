@@ -4,6 +4,8 @@ import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GUIDE_PATH } from "@/lib/guide/guideLinks";
+import { fetchPublicConfig } from "@/lib/config/publicConfig.server";
+import { switchedOff } from "@/lib/config/switchedOff";
 
 /**
  * The 404 page, in the visitor's language and inside the site's chrome. Reached through
@@ -11,19 +13,21 @@ import { GUIDE_PATH } from "@/lib/guide/guideLinks";
  * segment (an unknown company slug, a guide article that does not exist in this language).
  *
  * The four links are the site's front doors, not a sitemap: someone who typed a wrong address or
- * followed a stale link is most likely after one of the tools or the guide.
+ * followed a stale link is most likely after one of the tools or the guide. A door whose feature
+ * an admin switched off is left out — the guide's own 404 must not send the visitor back to it.
  */
 export default async function NotFoundPage() {
   const locale = await getLocale();
   const t = await getTranslations({ locale, namespace: "notFound" });
 
+  const off = switchedOff(await fetchPublicConfig());
   const doors = [
     { href: "/", label: t("home") },
-    { href: cvScanPath(locale), label: t("cvScan") },
-    { href: "/companies", label: t("companies") },
-    { href: GUIDE_PATH, label: t("guide") },
+    ...(off.cvScan ? [] : [{ href: cvScanPath(locale), label: t("cvScan") }]),
+    ...(off.companies ? [] : [{ href: "/companies", label: t("companies") }]),
+    ...(off.guide ? [] : [{ href: GUIDE_PATH, label: t("guide") }]),
     { href: "/help", label: t("help") },
-  ] as const;
+  ];
 
   return (
     <div className="flex min-h-screen flex-col">

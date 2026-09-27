@@ -1252,7 +1252,12 @@
     },
     "emptyBody": "Öneriler, Chrome eklentisinde Gmail Taraması açıkken gelen kutunda açtığın işe alım e-postalarından üretilir. Taramayı açmadıysan burada bir şey görünmez.",
     "emptyCta": "Gmail Taraması'nı aç",
-    "emptyBodyScanning": "Gmail Taraması bu hesapla çalışıyor. Gelen kutunda açtığın yeni bir işe alım e-postası öneri ürettiğinde burada görünür."
+    "emptyBodyScanning": "Gmail Taraması bu hesapla çalışıyor. Gelen kutunda açtığın yeni bir işe alım e-postası öneri ürettiğinde burada görünür.",
+    "off": {
+      "title": "E-posta önerileri şu an kapalı",
+      "body": "Gmail taramasını kısa bir süreliğine durdurduk; bu sırada yeni öneri gelmez. Başvuruların ve daha önce onayladığın değişiklikler yerinde duruyor.",
+      "back": "Ana sayfaya dön"
+    }
   },
   "notifications": {
     "title": "Bildirimler",
@@ -3795,6 +3800,11 @@
       "tooLarge": "Dosya 5 MB sınırını aşıyor.",
       "tooMany": "Çok fazla tarama yaptın. Biraz bekleyip tekrar dene.",
       "generic": "Tarama tamamlanamadı. Biraz sonra tekrar dene."
+    },
+    "off": {
+      "title": "CV taraması şu an kapalı",
+      "body": "Taramayı kısa bir süreliğine durdurduk. Kayıtlı CV'lerin ve önceki sonuçların yerinde duruyor; tarama yeniden açıldığında buradan devam edebilirsin.",
+      "back": "Ana sayfaya dön"
     }
   },
   "offerCompare": {
@@ -3960,7 +3970,8 @@
     "payments": "Ödemeler",
     "blog": "Blog",
     "guide": "Rehber",
-    "comments": "Yorumlar"
+    "comments": "Yorumlar",
+    "flags": "Bayraklar"
   },
   "adminContributionTabs": {
     "label": "Katkı türleri",
@@ -5261,6 +5272,16 @@
           }
         }
       }
+    },
+    "off": {
+      "title": "Şirket sayfaları şu an kapalı",
+      "body": "Şirket değerlendirmelerini, maaşları ve aday deneyimlerini kısa bir süreliğine kaldırdık. Yazdıkların silinmedi; bölüm yeniden açıldığında hepsi yerinde olacak.",
+      "back": "Ana sayfaya dön"
+    },
+    "offMine": {
+      "title": "Katkılarım şu an açılmıyor",
+      "body": "Şirket bölümünü kısa bir süreliğine kapattık; bu sırada değerlendirmelerin, maaşların, aday deneyimlerin ve blog yorumların burada listelenemiyor. Hiçbiri silinmedi; bölüm yeniden açıldığında hepsi burada olacak.",
+      "back": "Ana sayfaya dön"
     }
   },
   "companySalaries": {
@@ -6995,7 +7016,12 @@
       "button": "Ücretsiz başla"
     },
     "error": "Tablo şu an yüklenemedi.",
-    "subRateRule": "Sözünü tutma ve reddi bildirme, kullanıcıların isteğe bağlı cevaplarından hesaplanır; en az 3 kişiden 5 cevap birikmeden “—” yazar."
+    "subRateRule": "Sözünü tutma ve reddi bildirme, kullanıcıların isteğe bağlı cevaplarından hesaplanır; en az 3 kişiden 5 cevap birikmeden “—” yazar.",
+    "off": {
+      "title": "Sektör yanıt oranları şu an yayında değil",
+      "body": "Tabloyu kısa bir süreliğine kaldırdık. Kendi başvurularının durumunu panelinden görmeye devam edebilirsin.",
+      "back": "Ana sayfaya dön"
+    }
   },
   "helpful": {
     "label": "{count, plural, =0 {Faydalı} other {Faydalı · #}}",
@@ -7133,6 +7159,132 @@
         "tracked": "Etiket yok: bu şirkete takip ettiğin bir başvuru, kaydından en az 14 gün önce eklenmiş olmalı. Başvuruyu sonradan eklemek etiketi getirmez.",
         "accepted": "Etiket yok: bu şirkete takip ettiğin ve \"kabul edildi\" ile kapanan bir başvuru, kaydından en az 14 gün önce eklenmiş olmalı. Başvuruyu sonradan eklemek etiketi getirmez."
       }
+    }
+  },
+  "adminFlags": {
+    "title": "Özellik bayrakları",
+    "summary": "{total} bayrak · {overridden, plural, =0 {hiçbiri panelden değiştirilmedi} other {# tanesi panelden değiştirildi}} · değiştirilmeyenler deploy varsayılanıyla çalışır",
+    "historyLink": "Değişiklik geçmişi",
+    "banner": {
+      "strong": "Tehlikeli bölge.",
+      "body": "Bu sayfadaki değişiklikler canlı sitede bütün kullanıcılar için birkaç saniyede geçerli olur; geri alma düğmesi yoktur. Her değişiklik iki onay ister ve adınız, gerekçeniz ve IP adresinizle kaydedilir."
+    },
+    "listLabel": "Bayraklar",
+    "groups": {
+      "tracking": "Başvuru takibi",
+      "companies": "Şirket sayfaları",
+      "content": "İçerik ve araçlar",
+      "pro": "Pro ve ödemeler"
+    },
+    "state": {
+      "on": "Açık",
+      "off": "Kapalı"
+    },
+    "stateWord": {
+      "on": "açık",
+      "off": "kapalı"
+    },
+    "panelBadge": "panel",
+    "source": {
+      "default": "Deploy varsayılanı",
+      "override": "Panelden · deploy varsayılanı: {state}",
+      "updated": "{at} · {by}"
+    },
+    "couplings": {
+      "PrivacyText": "Gizlilik metni",
+      "Money": "Ücretli / para"
+    },
+    "sections": {
+      "description": "Ne yapar",
+      "whenOff": "Kapalıyken ne olur",
+      "notes": "Birlikte değişmesi gerekenler",
+      "recent": "Son değişiklikler",
+      "neverChanged": "Bu bayrak panelden hiç değiştirilmedi.",
+      "allHistory": "Bütün geçmiş"
+    },
+    "missing": {
+      "title": "Bu ortamda açılamaz",
+      "BLOG_MEDIA_BUCKET_MISSING": "Blog görsel bucket'ı (Storage:BlogMediaBucketName) tanımlı değil.",
+      "CV_SCAN_NOTES_PROJECT_MISSING": "CV notları için Vertex AI projesi (CvScan:Review:ProjectId) tanımlı değil.",
+      "FEEDBACK_GITHUB_TARGET_MISSING": "Geri bildirim aynası için GitHub deposu ya da token tanımlı değil.",
+      "PAYTR_NOT_CONFIGURED": "PayTR mağaza bilgileri ya da plan fiyatları tanımlı değil.",
+      "unknown": "Gereken bir ayar tanımlı değil ({code})."
+    },
+    "danger": {
+      "title": "TEHLİKELİ BÖLGE",
+      "turnOff": "Bu bayrağı kapat",
+      "turnOn": "Bu bayrağı aç",
+      "actionBody": "Bütün kullanıcılar için birkaç saniye içinde geçerli olur. Gerekçe ve iki onay istenir.",
+      "turnOffButton": "Kapat…",
+      "turnOnButton": "Aç…",
+      "resetTitle": "Varsayılana döndür",
+      "resetBody": "Panel değerini kaldırır; bayrak deploy varsayılanına ({state}) döner. Gerekçe ve iki onay istenir.",
+      "resetNone": "Panel değeri yok; bayrak zaten deploy varsayılanıyla çalışıyor.",
+      "resetButton": "Varsayılana döndür…"
+    },
+    "back": "Bayraklar",
+    "dialog": {
+      "stepOne": {
+        "eyebrow": "ADIM 1 / 2 · NE OLACAK",
+        "turnOff": "{title} kapatılsın mı?",
+        "turnOn": "{title} açılsın mı?",
+        "reset": "{title} deploy varsayılanına dönsün mü?",
+        "scope": "bütün kullanıcılar için, birkaç saniye içinde",
+        "reasonLabel": "Neden?",
+        "reasonHint": "(zorunlu, en az 5 karakter · geçmişe yazılır)",
+        "cancel": "Vazgeç",
+        "continue": "Devam et — son onay",
+        "preparing": "Hazırlanıyor…",
+        "overtaken": "Bu değişikliği az önce başka biri yaptı; bayrak zaten istediğiniz durumda. Pencereyi kapatıp güncel durumu inceleyebilirsiniz.",
+        "becomes": "şu duruma geçecek:"
+      },
+      "stepTwo": {
+        "eyebrow": "ADIM 2 / 2 · SON ONAY",
+        "turnOff": "{title} canlı sitede kapatılacak",
+        "turnOn": "{title} canlı sitede açılacak",
+        "reset": "{title} deploy varsayılanına dönecek",
+        "flag": "Bayrak",
+        "change": "Değişiklik",
+        "reason": "Gerekçe",
+        "phraseLabel": "Onaylamak için bayrağın adını yazın:",
+        "phraseHint": "Büyük/küçük harf dahil birebir. Bu onayın süresi {time} sonra dolar.",
+        "expired": "Bu onayın süresi doldu. Baştan başlayın.",
+        "back": "Geri",
+        "startAgain": "Baştan başla",
+        "cancel": "Vazgeç",
+        "confirmTurnOff": "Kapat",
+        "confirmTurnOn": "Aç",
+        "confirmReset": "Varsayılana döndür",
+        "confirming": "Uygulanıyor…"
+      },
+      "done": {
+        "title": "Kaydedildi — {title} artık {state}.",
+        "body": "Bütün sunucular birkaç saniye içinde yeni değeri kullanır. Sitedeki menüler ve linkler bir iki dakika içinde, sayfa yenilendiğinde ya da değiştirildiğinde güncellenir. Değişiklik geçmişe adınız ve gerekçenizle yazıldı.",
+        "close": "Kapat"
+      },
+      "networkError": "Sunucuya ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin; bu sırada hiçbir şey değişmedi."
+    },
+    "loading": "Bayraklar yükleniyor…",
+    "error": "Bayraklar yüklenemedi. Sayfayı yenileyip tekrar deneyin.",
+    "forbiddenTitle": "Bu sayfa yöneticilere açık",
+    "forbiddenBody": "Özellik bayraklarını yalnızca yönetici hesapları görebilir ve değiştirebilir.",
+    "history": {
+      "title": "Değişiklik geçmişi",
+      "subtitle": "En yeni üstte. Bağlantı bilgisi (IP) her değişiklikle kaydedilir ama hiçbir ekranda gösterilmez.",
+      "filter": "Bayrak",
+      "all": "Hepsi",
+      "columns": {
+        "at": "Zaman",
+        "flag": "Bayrak",
+        "change": "Değişiklik",
+        "reason": "Gerekçe",
+        "by": "Kim"
+      },
+      "setTo": "Panel değeri: {state}",
+      "reset": "Varsayılana döndü",
+      "deletedAccount": "silinmiş hesap",
+      "empty": "Henüz bir değişiklik yok.",
+      "error": "Geçmiş yüklenemedi. Sayfayı yenileyip tekrar deneyin."
     }
   }
 }

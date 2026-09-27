@@ -1,5 +1,6 @@
 import type { ClientConfigResponse } from "@/types/api";
 import { isActivePath } from "@/components/layout/navLink";
+import { switchedOff, withoutSwitchedOff } from "@/lib/config/switchedOff";
 import { cvScanPath } from "@/lib/cvScan/path";
 import { offerComparePath } from "@/lib/offerCompare/path";
 
@@ -41,7 +42,8 @@ export type NavEntry = { type: "link"; href: string; key: NavKey } | { type: "gr
 export type NavFlags = Pick<
   ClientConfigResponse,
   "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences" | "blog" | "responseRates"
->;
+> &
+  Partial<Pick<ClientConfigResponse, "cvScan">>;
 
 /**
  * The signed-in navigation, as data. The desktop row and the mobile drawer both render from this
@@ -66,14 +68,19 @@ export type NavFlags = Pick<
  * config and appear only once it says the routes exist — the same rule the pages themselves use.
  * The blog follows a stricter one: its link appears only once there is a published post to read
  * (`blog.hasPublishedPosts`), because a "Blog" that opens on nothing is worse than no blog.
+ *
+ * Runtime switches (2026-09-27): the guide and the CV scan go once the server says their flag is
+ * off (`switchedOff`). `loaded` is false while the config has not answered — the built-in default
+ * then stands in for it and must not be read as "switched off".
  */
-export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
+export function buildNavEntries(flags: NavFlags, locale: string, loaded = true): NavEntry[] {
   const reviewsOn = flags.companyReviews?.enabled === true;
   const salariesOn = flags.companySalaries?.enabled === true;
   const experiencesOn = flags.candidateExperiences?.enabled === true;
   const weeklyJobsOn = flags.jobSources?.enabled === true;
   const blogOn = flags.blog?.enabled === true && flags.blog.hasPublishedPosts === true;
   const responseRatesOn = flags.responseRates?.enabled === true;
+  const off = switchedOff(loaded ? flags : null);
 
   const companies: NavItem[] = [
     { href: "/companies", key: "allCompanies" },
@@ -84,7 +91,7 @@ export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
     { href: "/my-reviews", key: "myReviews", dividerBefore: true },
   ];
 
-  const tools: NavItem[] = [
+  const tools: NavItem[] = withoutSwitchedOff<NavItem>([
     ...(weeklyJobsOn ? [{ href: "/weekly-jobs", key: "weeklyJobs", proBadge: true } as NavItem] : []),
     // The sector table reads like a tool (2026-09-22): a public number to look up, not a place to
     // contribute — so it sits with the scan and the benchmark rather than in the companies group.
@@ -93,7 +100,7 @@ export function buildNavEntries(flags: NavFlags, locale: string): NavEntry[] {
     { href: "/benchmark", key: "benchmark" },
     { href: offerComparePath(locale), key: "offerCompare" },
     { href: "/guide", key: "guide" },
-  ];
+  ], off);
 
   return [
     { type: "link", href: "/dashboard", key: "dashboard" },
