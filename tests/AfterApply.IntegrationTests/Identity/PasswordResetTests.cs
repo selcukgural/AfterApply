@@ -159,8 +159,7 @@ public class PasswordResetTests(ApiHost<PasswordResetProfile> host) : IClassFixt
             new ResetPasswordRequest(email, token, "N3wStr0ng!Passw0rd"), JsonOptions);
         resetResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var refreshResponse = await client.PostAsJsonAsync("/api/auth/refresh",
-            new RefreshRequest(oldAuth.RefreshToken), JsonOptions);
+        var refreshResponse = await client.RefreshAsync(oldAuth.RefreshToken);
         refreshResponse.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 

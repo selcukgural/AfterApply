@@ -27,9 +27,10 @@ const apiWebSocketOrigin = apiOrigin.replace(/^http/, "ws");
 
 // Ordered by how much each one actually buys us here, not alphabetically:
 //
-//  - connect-src is the important one. Access and refresh tokens live in localStorage
-//    (web/src/lib/api/tokenStorage.ts), so the cheapest possible exfiltration for injected script
-//    is a fetch to an attacker's host; this reduces the reachable set to our own API and Sentry.
+//  - connect-src is the important one. Tokens are out of script's reach since 2026-09-27 (refresh
+//    token in an HttpOnly cookie, access token in memory), but injected script can still read
+//    whatever the page shows or fetches, and the cheapest exfiltration is a fetch to an
+//    attacker's host; this reduces the reachable set to our own API and Sentry.
 //  - frame-ancestors closes clickjacking on the state-changing screens (suggestion confirm,
 //    account deletion), which had no protection at all before.
 //  - base-uri stops an injected <base> tag from repointing every relative script URL, which is a

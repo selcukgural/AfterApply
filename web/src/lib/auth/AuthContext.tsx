@@ -24,6 +24,8 @@ import {
   type RegisterRequest,
 } from "@/lib/api/auth";
 import { authStore } from "@/lib/api/authStore";
+import { isSessionOver, refreshAccessToken } from "@/lib/api/httpClient";
+import { tokenStorage } from "@/lib/api/tokenStorage";
 
 interface AuthContextValue {
   user: UserProfileResponse | null;
@@ -67,22 +69,29 @@ function getServerSnapshot(): UserProfileResponse | null {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // authStore is an external mutable store (module-level, backed by
-  // localStorage) — useSyncExternalStore is the correct React primitive for
-  // this, rather than mirroring it into local state via setState-in-effect.
+  // authStore is an external mutable store (module-level; the user profile is
+  // mirrored to localStorage) — useSyncExternalStore is the correct React primitive
+  // for this, rather than mirroring it into local state via setState-in-effect.
   const user = useSyncExternalStore(authStore.subscribe, authStore.getUser, getServerSnapshot);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     authStore.hydrate();
 
+    // The access token is never persisted, so every load starts by trading the refresh-token
+    // cookie for one — but only where a session is likely (a stored profile, or a token from before
+    // the cookie), so an anonymous visitor's page doesn't make a pointless call. The answer carries
+    // the current profile too, so no separate /me round trip.
     const validate = async () => {
-      if (authStore.getAccessToken()) {
+      if (authStore.getUser() || tokenStorage.legacyRefreshToken()) {
         try {
-          const profile = await authApi.me();
-          authStore.updateUser(profile);
-        } catch {
-          authStore.clear();
+          await refreshAccessToken();
+        } catch (error) {
+          // Only a refused session signs out; a rate limit or a network blip keeps the stored
+          // profile, and the first API call tries the refresh again.
+          if (isSessionOver(error)) {
+            authStore.clear();
+          }
         }
       }
       setIsLoading(false);
@@ -141,11 +150,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    const refreshToken = authStore.getRefreshToken();
     try {
-      if (refreshToken) {
-        await authApi.logout(refreshToken);
-      }
+      await authApi.logout();
     } finally {
       authStore.clear();
     }

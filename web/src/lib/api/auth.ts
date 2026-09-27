@@ -8,8 +8,7 @@ import type {
   UserPlanResponse,
   UserProfileResponse,
 } from "@/types/api";
-import { API_BASE_URL, apiFetch } from "./httpClient";
-import { authStore } from "./authStore";
+import { apiFetch, apiFetchResponse } from "./httpClient";
 
 export interface RegisterRequest {
   email: string;
@@ -168,10 +167,11 @@ export const authApi = {
       body: JSON.stringify(request),
     }),
 
-  logout: (refreshToken: string) =>
+  // The refresh token rides along as the HttpOnly cookie; the server revokes it and clears it.
+  logout: () =>
     apiFetch<void>("/api/auth/logout", {
       method: "POST",
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify({}),
     }),
 
   me: () => apiFetch<UserProfileResponse>("/api/users/me"),
@@ -218,11 +218,10 @@ export const authApi = {
 
   // Not routed through apiFetch: the response body is a file download (raw
   // bytes), not JSON to parse into a typed object.
+  // Through apiFetchResponse so a tab that has not refreshed since its last reload (no access
+  // token in memory yet) gets one instead of a bare 401.
   exportData: async (): Promise<void> => {
-    const token = authStore.getAccessToken();
-    const response = await fetch(`${API_BASE_URL}/api/users/me/export`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    const response = await apiFetchResponse("/api/users/me/export");
 
     if (!response.ok) {
       // Not an ApiError on purpose: this endpoint returns a raw file body, not

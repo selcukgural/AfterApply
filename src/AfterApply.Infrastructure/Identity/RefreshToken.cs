@@ -12,6 +12,11 @@ public sealed class RefreshToken
 
     public DateTimeOffset CreatedAt { get; private set; }
 
+    /// <summary>When the sign-in this token descends from happened. Carried unchanged through every
+    /// rotation, so a session has an absolute end (<see cref="JwtOptions.AbsoluteSessionDays"/>)
+    /// however often it is refreshed.</summary>
+    public DateTimeOffset SessionStartedAt { get; private set; }
+
     public string? CreatedByIp { get; private set; }
 
     public DateTimeOffset? RevokedAt { get; private set; }
@@ -25,7 +30,7 @@ public sealed class RefreshToken
     }
 
     public static RefreshToken Create(Guid userId, string tokenHash, DateTimeOffset expiresAt,
-        DateTimeOffset now, string? createdByIp)
+        DateTimeOffset now, string? createdByIp, DateTimeOffset? sessionStartedAt = null)
     {
         return new RefreshToken
         {
@@ -33,6 +38,7 @@ public sealed class RefreshToken
             TokenHash = tokenHash,
             ExpiresAt = expiresAt,
             CreatedAt = now,
+            SessionStartedAt = sessionStartedAt ?? now,
             CreatedByIp = createdByIp
         };
     }
