@@ -5,9 +5,9 @@ import { Link } from "@/i18n/navigation";
 import type { ApplicationSummaryResponse } from "@/types/api";
 import { SelectionCheckbox } from "@/components/applications/SelectionCheckbox";
 import { StatusBadge } from "@/components/applications/StatusBadge";
-import { buttonClassName } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { ApplicationsEmptyState } from "@/components/applications/ApplicationsEmptyState";
 import { useClientConfig } from "@/hooks/useClientConfig";
+import { DaysAgo } from "@/components/ui/DaysAgo";
 
 interface SelectionProps {
   isRowSelected: (id: string) => boolean;
@@ -24,9 +24,12 @@ interface SelectionProps {
 export function ApplicationTable({
   items,
   selection,
+  onClearFilters,
 }: {
   items: ApplicationSummaryResponse[];
   selection?: SelectionProps;
+  /** Set while a filter is on, so an empty result offers to clear it instead of "add one". */
+  onClearFilters?: () => void;
 }) {
   const t = useTranslations("applications.table");
   const tBoard = useTranslations("applications.board");
@@ -35,17 +38,7 @@ export function ApplicationTable({
   const locale = useLocale();
 
   if (items.length === 0) {
-    return (
-      <EmptyState
-        title={t("empty")}
-        body={t("emptyBody")}
-        actions={
-          <Link href="/applications/new" className={buttonClassName("primary")}>
-            {t("emptyCta")}
-          </Link>
-        }
-      />
-    );
+    return <ApplicationsEmptyState onClearFilters={onClearFilters} />;
   }
 
   return (
@@ -118,7 +111,7 @@ export function ApplicationTable({
                   <StatusBadge status={item.status} />
                 </td>
                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
-                  {new Date(item.appliedAt).toLocaleDateString(locale)}
+                  <DaysAgo iso={item.appliedAt} locale={locale} />
                 </td>
               </tr>
             );

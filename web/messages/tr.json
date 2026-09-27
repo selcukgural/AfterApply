@@ -724,7 +724,11 @@
       "snoozeAskTomorrow": "Yarın sor",
       "snoozeAskIn": "{count} gün sonra sor",
       "snoozeFor": "{count, plural, =7 {1 hafta} =14 {2 hafta} other {# gün}}",
-      "snoozed": "{company} hatırlatıcısı ertelendi — {date} tarihinde geri gelir."
+      "snoozed": "{company} hatırlatıcısı ertelendi — {date} tarihinde geri gelir.",
+      "allDone": "Hepsini hallettin. Yeni bir şey olursa burada görünür.",
+      "heldDismissed": "{company} hatırlatıcısı yoksayıldı.",
+      "heldFollowedUp": "{company}: takip ettin olarak işaretlendi.",
+      "heldGhosted": "{company} başvurusu sessize alındı."
     },
     "stale": {
       "title": "{count} başvuru {threshold} günden eski ve yanıtsız",
@@ -787,7 +791,7 @@
       "newApplication": "Yeni Başvuru"
     },
     "filters": {
-      "searchPlaceholder": "Şirket veya pozisyon ara...",
+      "searchPlaceholder": "Şirket, pozisyon ara ya da ilan linki yapıştır...",
       "allStatuses": "Tüm Durumlar",
       "sortAppliedAt": "Başvuru Tarihi",
       "sortUpdatedAt": "Son Güncelleme",
@@ -807,8 +811,11 @@
       "appliedAt": "Başvuru Tarihi",
       "selectPage": "Bu sayfadaki tüm başvuruları seç",
       "selectRow": "{company} — {position} başvurusunu seç",
-      "emptyBody": "Elle eklediğin, LinkedIn'den içe aktardığın ya da eklentiyle kaydettiğin her başvuru burada listelenir. Bir filtre açıksa önce onu temizlemeyi dene.",
-      "emptyCta": "Başvuru ekle"
+      "emptyBody": "Elle eklediğin, LinkedIn'den içe aktardığın ya da eklentiyle kaydettiğin her başvuru burada listelenir.",
+      "emptyCta": "Başvuru ekle",
+      "noMatch": "Bu filtreyle eşleşen başvuru yok.",
+      "noMatchBody": "Aradığın başvuru başka bir durumda ya da farklı yazılmış olabilir.",
+      "clearFilters": "Filtreleri temizle"
     },
     "pagination": {
       "pageInfo": "Sayfa {page} / {totalPages} ({totalCount} başvuru)",
@@ -858,7 +865,6 @@
     "detail": {
       "edit": "Düzenle",
       "delete": "Sil",
-      "deleteConfirm": "Bu başvuruyu silmek istediğinize emin misiniz?",
       "location": "Konum",
       "employmentType": "Çalışma Şekli",
       "appliedAt": "Başvuru Tarihi",
@@ -963,6 +969,16 @@
         "saving": "Kaydediliyor...",
         "cancel": "Vazgeç",
         "past": "Yapıldı"
+      },
+      "copyHrEmail": "İK e-posta adresini kopyala",
+      "copyJobUrl": "İlan bağlantısını kopyala",
+      "deleteDialog": {
+        "title": "Başvuru silinsin mi?",
+        "body": "<application></application> başvurusu; durum geçmişi, notları ve hatırlatıcılarıyla birlikte kalıcı olarak silinir. Bu işlem geri alınamaz.",
+        "cancel": "Vazgeç",
+        "confirm": "Kalıcı olarak sil",
+        "deleting": "Siliniyor…",
+        "error": "Silinemedi. Biraz sonra tekrar dene."
       }
     },
     "statusChange": {

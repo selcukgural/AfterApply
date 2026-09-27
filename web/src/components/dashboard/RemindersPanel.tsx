@@ -23,6 +23,7 @@ import {
   useUnsnoozeReminder,
   useUpcomingInterviews,
 } from "@/hooks/useReminders";
+import { useDeferredAction } from "@/hooks/useDeferredAction";
 import {
   InterviewAnsweredRow,
   InterviewHeldMeta,
@@ -87,6 +88,18 @@ interface AnsweredInterview {
  * reports through the same result strip as the applications page, undo included. Dismiss and
  * "followed up" only close rows; the list shrinking is their whole report.
  */
+/** A single-row answer waiting out its undo window. */
+interface HeldAction {
+  reminder: ReminderResponse;
+  kind: "dismiss" | "followUp" | "ghost";
+}
+
+const HELD_LABEL_KEY: Record<HeldAction["kind"], "heldDismissed" | "heldFollowedUp" | "heldGhosted"> = {
+  dismiss: "heldDismissed",
+  followUp: "heldFollowedUp",
+  ghost: "heldGhosted",
+};
+
 export function RemindersPanel() {
   const t = useTranslations("dashboard.reminders");
   const tErrors = useTranslations("errors");
@@ -112,8 +125,33 @@ export function RemindersPanel() {
   const undoInterview = useUndoInterviewAnswer();
   const [answered, setAnswered] = useState<AnsweredInterview[]>([]);
   const [snoozed, setSnoozed] = useState<{ reminder: ReminderResponse; until: Date } | null>(null);
+  // A single-row answer is held for a few seconds behind an undo strip before it is sent, and its
+  // row stays hidden until the request settles so it does not flash back before the refetch.
+  const [committing, setCommitting] = useState<readonly string[]>([]);
+  const held = useDeferredAction<HeldAction>(({ reminder, kind }) => {
+    setCommitting((current) => [...current, reminder.id]);
+    const request =
+      kind === "dismiss"
+        ? dismiss.mutateAsync(reminder.id)
+        : kind === "ghost"
+          ? markGhosted.mutateAsync(reminder)
+          : followUp.mutateAsync(reminder.id);
+    request
+      .catch(() => {
+        // The card's error line reads the mutation's own error state.
+      })
+      .finally(() => setCommitting((current) => current.filter((id) => id !== reminder.id)));
+  });
 
   const totalCount = data?.totalCount ?? 0;
+
+  // Whether this visit started with something to do. Clearing the last row should end on a quiet
+  // "all done" rather than the card silently vanishing, which reads like it broke; someone who
+  // arrived to an empty list sees nothing at all, as before.
+  const [hadWork, setHadWork] = useState(false);
+  if (totalCount > 0 && !hadWork) {
+    setHadWork(true);
+  }
 
   // Answering the last row of the last page leaves the page empty: land on the new last page.
   // Adjusted during render rather than in an effect (react.dev, "adjusting state when a prop
@@ -132,12 +170,22 @@ export function RemindersPanel() {
   // they are not part of the paged list, and repeating them on every page would push its rows down.
   const upcomingRows = page === 1 ? (upcoming ?? []) : [];
   const answeredRows = page === 1 ? answered : [];
-  if (!data || (data.totalCount === 0 && result === null && upcomingRows.length === 0 && answeredRows.length === 0 && snoozed === null)) {
-    return null;
+  if (!data || (data.totalCount === 0 && result === null && upcomingRows.length === 0 && answeredRows.length === 0 && snoozed === null && held.pending === null)) {
+    return data && hadWork ? (
+      <Card>
+        <p role="status" className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" className="size-4 shrink-0 text-emerald-600">
+            <path d="m5 12 5 5 9-10" />
+          </svg>
+          {t("allDone")}
+        </p>
+      </Card>
+    ) : null;
   }
 
   const answeredIds = new Set(answered.map((a) => a.reminder.id));
-  const reminders = data.items.filter((reminder) => !answeredIds.has(reminder.id));
+  const hiddenIds = new Set([...committing, ...(held.pending ? [held.pending.reminder.id] : [])]);
+  const reminders = data.items.filter((reminder) => !answeredIds.has(reminder.id) && !hiddenIds.has(reminder.id));
   const pageIds = reminders.map((reminder) => reminder.id);
   const bulkPending = bulkDismiss.isPending || bulkFollowUp.isPending || bulkGhost.isPending;
   const isBusy = (reminder: ReminderResponse) =>
@@ -148,7 +196,7 @@ export function RemindersPanel() {
     (snooze.isPending && snooze.variables?.id === reminder.id) ||
     (answerInterview.isPending && answerInterview.variables?.id === reminder.id);
   const answer = (reminder: ReminderResponse) =>
-    answersByGhosting(reminder.type) ? markGhosted.mutate(reminder) : followUp.mutate(reminder.id);
+    held.schedule({ reminder, kind: answersByGhosting(reminder.type) ? "ghost" : "followUp" });
   const rowError =
     dismiss.isError || followUp.isError || markGhosted.isError || snooze.isError || unsnooze.isError ||
     answerInterview.isError || undoInterview.isError;
@@ -281,10 +329,28 @@ export function RemindersPanel() {
             </Button>
           </div>
         ) : (
-          <span className="text-xs text-gray-500 dark:text-gray-400">{t("count", { count: formatCount(totalCount, locale) })}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">{t("count", { count: formatCount(Math.max(0, totalCount - hiddenIds.size), locale) })}</span>
         )}
       </div>
       {bulkError ? <p className="mb-3 text-xs text-red-600 dark:text-red-400">{bulkError}</p> : null}
+      {held.pending ? (
+        <div
+          onPointerEnter={held.hold}
+          onPointerLeave={held.release}
+          onFocus={held.hold}
+          onBlur={held.release}
+          className="mb-3 flex items-center justify-between gap-3 rounded-md bg-muted-wash px-3 py-2 text-sm text-gray-700 dark:text-gray-300"
+        >
+          <span role="status">{t(HELD_LABEL_KEY[held.pending.kind], { company: held.pending.reminder.companyName })}</span>
+          <button
+            type="button"
+            onClick={held.cancel}
+            className="shrink-0 px-1.5 py-1 text-sm font-medium text-accent-ink hover:underline"
+          >
+            {t("undo")}
+          </button>
+        </div>
+      ) : null}
       {snoozed ? (
         <div className="mb-3 flex items-center justify-between gap-3 rounded-md bg-muted-wash px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
           <span>
@@ -423,7 +489,7 @@ export function RemindersPanel() {
                   variant="secondary"
                   className="px-3 py-1 text-xs"
                   disabled={isBusy(reminder)}
-                  onClick={() => dismiss.mutate(reminder.id)}
+                  onClick={() => held.schedule({ reminder, kind: "dismiss" })}
                 >
                   {t("dismiss")}
                 </Button>

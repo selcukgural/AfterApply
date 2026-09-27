@@ -14,6 +14,8 @@ import { Combobox } from "@/components/ui/Combobox";
 import { HrContactFields, type HrContactValues } from "@/components/ui/HrContactFields";
 import { companiesApi } from "@/lib/api/companies";
 import { CvSelectField } from "@/components/cv/CvSelectField";
+import { appliedAtInputValue } from "@/lib/applications/appliedDate";
+import { focusFirstInvalidField } from "@/lib/forms/firstInvalidField";
 
 export interface ApplicationFormValues extends HrContactValues {
   companyName: string;
@@ -35,10 +37,6 @@ interface ApplicationFormProps {
   submitLabel: string;
 }
 
-function toDateInputValue(iso: string): string {
-  return iso.slice(0, 10);
-}
-
 export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: ApplicationFormProps) {
   const t = useTranslations("applications.form");
   const tValidation = useTranslations("validation");
@@ -51,7 +49,7 @@ export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: Applic
     jobUrl: initial?.jobUrl ?? "",
     location: initial?.location ?? "",
     employmentType: initial?.employmentType ?? "FullTime",
-    appliedAt: initial ? toDateInputValue(initial.appliedAt) : toDateInputValue(new Date().toISOString()),
+    appliedAt: appliedAtInputValue(initial?.appliedAt),
     source: initial?.source ?? "Manual",
     notes: initial?.notes ?? "",
     hrName: initial?.hrName ?? "",
@@ -76,6 +74,7 @@ export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: Applic
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors as Record<string, string[] | undefined>;
       setErrors(Object.fromEntries(Object.entries(fieldErrors).map(([k, v]) => [k, v?.[0] ?? ""])));
+      focusFirstInvalidField(event.currentTarget as HTMLFormElement, Object.keys(fieldErrors));
       return;
     }
     setErrors({});

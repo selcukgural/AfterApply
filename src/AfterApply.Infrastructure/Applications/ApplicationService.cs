@@ -57,7 +57,14 @@ internal sealed class ApplicationService(
             applications = applications.Where(a => a.CompanyId == companyId);
         }
 
-        if (!string.IsNullOrWhiteSpace(search))
+        if (JobUrlSearchKey.TryCreate(search, out var urlKey))
+        {
+            // A pasted posting link finds the application saved from it, whatever tracking
+            // parameters the copy picked up. Still inside this user's rows (the Where above).
+            var urlPattern = LikePattern.Contains(urlKey);
+            applications = applications.Where(a => a.JobUrl != null && EF.Functions.ILike(a.JobUrl, urlPattern, LikePattern.EscapeCharacter));
+        }
+        else if (!string.IsNullOrWhiteSpace(search))
         {
             var pattern = LikePattern.Contains(search.Trim());
             applications = applications.Where(a => EF.Functions.ILike(a.JobTitle, pattern, LikePattern.EscapeCharacter)

@@ -8,8 +8,8 @@ import { areAllExpanded, groupPageKey, initiallyCollapsed, toggleAllCollapsed } 
 import { SelectionCheckbox } from "@/components/applications/SelectionCheckbox";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { StatusDistribution } from "@/components/applications/StatusDistribution";
-import { buttonClassName } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { ApplicationsEmptyState } from "@/components/applications/ApplicationsEmptyState";
+import { DaysAgo } from "@/components/ui/DaysAgo";
 
 interface GroupSelectionProps {
   isRowSelected: (id: string) => boolean;
@@ -38,9 +38,12 @@ interface GroupSelectionProps {
 export function CompanyGroupTable({
   groups,
   selection,
+  onClearFilters,
 }: {
   groups: CompanyGroupResponse[];
   selection?: GroupSelectionProps;
+  /** Set while a filter is on, so an empty result offers to clear it instead of "add one". */
+  onClearFilters?: () => void;
 }) {
   const t = useTranslations("applications.table");
   const tGroups = useTranslations("applications.groups");
@@ -58,17 +61,7 @@ export function CompanyGroupTable({
   }
 
   if (groups.length === 0) {
-    return (
-      <EmptyState
-        title={t("empty")}
-        body={t("emptyBody")}
-        actions={
-          <Link href="/applications/new" className={buttonClassName("primary")}>
-            {t("emptyCta")}
-          </Link>
-        }
-      />
-    );
+    return <ApplicationsEmptyState onClearFilters={onClearFilters} />;
   }
 
   const toggleCollapsed = (companyId: string) =>
@@ -238,7 +231,7 @@ export function CompanyGroupTable({
                         <StatusBadge status={application.status} />
                       </td>
                       <td className="px-4 py-2.5 text-gray-500 tabular-nums dark:text-gray-400">
-                        {new Date(application.appliedAt).toLocaleDateString(locale)}
+                        <DaysAgo iso={application.appliedAt} locale={locale} />
                       </td>
                     </tr>
                   );
