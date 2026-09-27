@@ -96,6 +96,56 @@ public class FeatureFlagTests(ApiHost<FeatureFlagProfile> host) : IClassFixture<
     }
 
     [Fact]
+    public async Task An_Admins_Extension_Token_Reaches_None_Of_It()
+    {
+        // The extension's token sits in chrome.storage and in the Gmail content script's world; a
+        // leak of it must not switch the product's features, even when its owner is an admin.
+        var created = await _admin.PostAsJsonAsync("/api/personal-access-tokens",
+            new AfterApply.Application.Identity.Contracts.CreatePersonalAccessTokenRequest("Chrome Extension"), Json);
+        created.EnsureSuccessStatusCode();
+        var token = (await created.Content.ReadFromJsonAsync<AfterApply.Application.Identity.Contracts.CreatedPersonalAccessTokenResponse>(Json))!.Token;
+        using var extension = host.CreateClient();
+        extension.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        (await extension.GetAsync("/api/admin/feature-flags")).StatusCode.ShouldBeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden);
+        (await extension.GetAsync("/api/admin/feature-flags/history")).StatusCode.ShouldBeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden);
+        (await extension.PostAsJsonAsync("/api/admin/feature-flags/Board/prepare",
+            new PrepareFeatureFlagChangeRequest(true, "Through the extension token"), Json)).StatusCode
+            .ShouldBeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden);
+
+        var prepared = await PrepareAsync(_admin, "Board", true);
+        (await ConfirmAsync(extension, "Board", prepared.ConfirmationToken, "Board")).StatusCode
+            .ShouldBeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden);
+        (await host.WithDbAsync(db => db.FeatureFlagOverrides.CountAsync())).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task A_Token_Does_Not_Come_Back_To_Life_When_The_Flag_Returns_To_Where_It_Was()
+    {
+        var (other, otherAuth) = await host.RegisterAsync("flags.other@example.com");
+        await host.MakeAdminAsync(otherAuth.User.Id);
+
+        // Prepared while there is no override; used once; then another admin resets the flag, so the
+        // override is gone again — the same state the token was issued in.
+        var prepared = await PrepareAsync(_admin, "Board", true);
+        (await ConfirmAsync(_admin, "Board", prepared.ConfirmationToken, "Board")).StatusCode.ShouldBe(HttpStatusCode.OK);
+        await SwitchAsync("Board", null, other);
+        (await host.WithDbAsync(db => db.FeatureFlagOverrides.CountAsync())).ShouldBe(0);
+
+        var replay = await ConfirmAsync(_admin, "Board", prepared.ConfirmationToken, "Board");
+        replay.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await ProblemCodeAsync(replay)).ShouldBe("FEATURE_FLAG_CHANGED_SINCE_PREPARE");
+        (await host.WithDbAsync(db => db.FeatureFlagOverrides.CountAsync())).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task The_First_Step_Says_How_Long_The_Token_Lives_Without_Relying_On_Clocks()
+    {
+        var prepared = await PrepareAsync(_admin, "Board", true);
+        prepared.ExpiresInSeconds.ShouldBe(300);
+    }
+
+    [Fact]
     public async Task Every_Flag_Is_Listed_On_Its_Default_Until_Someone_Switches_It()
     {
         var flags = (await _admin.GetFromJsonAsync<List<FeatureFlagResponse>>("/api/admin/feature-flags", Json))!;
@@ -242,6 +292,18 @@ public class FeatureFlagTests(ApiHost<FeatureFlagProfile> host) : IClassFixture<
     }
 
     [Fact]
+    public async Task Switching_Gmail_Scanning_Off_Tells_The_Web_To_Hide_The_Suggestions()
+    {
+        var anonymous = host.CreateClient();
+        (await anonymous.GetFromJsonAsync<ClientConfigResponse>("/api/config", Json))!.EmailSignals!.Enabled.ShouldBeTrue();
+
+        await SwitchAsync("EmailSignals", false);
+
+        (await anonymous.GetFromJsonAsync<ClientConfigResponse>("/api/config", Json))!.EmailSignals!.Enabled.ShouldBeFalse();
+        (await _admin.GetAsync("/api/email-forwarding/suggestions/count")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Resetting_Returns_The_Flag_To_Its_Deploy_Default()
     {
         await SwitchAsync("CompanyReviews", false);
@@ -317,6 +379,8 @@ public class FeatureFlagTests(ApiHost<FeatureFlagProfile> host) : IClassFixture<
         (await BoardInConfigAsync(otherClient)).ShouldBeFalse();
 
         var otherStore = other.Services.GetRequiredService<FeatureFlagStore>();
+        // The subscription is made off the start-up path; publish only once the other side listens.
+        await other.Services.GetRequiredService<FeatureFlagChannel>().Subscribed.WaitAsync(TimeSpan.FromSeconds(10));
         var reloaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         void OnReloaded()
         {

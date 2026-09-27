@@ -41,6 +41,9 @@ internal sealed class FeatureFlagRefresher(
             await TryReloadAsync(timeout.Token);
         }
 
+        // Read or not, the instance serves from here on (see MarkServing).
+        store.MarkServing();
+
         channel.WatchConnection(
             onLost: () =>
             {
@@ -60,7 +63,8 @@ internal sealed class FeatureFlagRefresher(
                 _changes.Writer.TryWrite(true);
             });
 
-        await TrySubscribeAsync();
+        // The subscription is the loop's first act, not start-up's: with Redis down it would wait
+        // out the client's timeout and hold the instance back from serving for nothing.
         _loop = RunAsync(_stopping.Token);
     }
 
@@ -88,6 +92,10 @@ internal sealed class FeatureFlagRefresher(
 
     private async Task RunAsync(CancellationToken cancellationToken)
     {
+        // Off the start-up path (StartAsync returns before this first await completes).
+        await Task.Yield();
+        await TrySubscribeAsync();
+
         while (!cancellationToken.IsCancellationRequested)
         {
             // A cancelled wait rather than WaitAsync(timeout): the latter would leave one abandoned
@@ -143,9 +151,10 @@ internal sealed class FeatureFlagRefresher(
             _subscribed = true;
             _schedule.Subscribed();
         }
-        catch (Exception ex) when (ex is RedisException or TimeoutException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            // Retried on every (short) poll; until then changes arrive by polling alone.
+            // Retried on every (short) poll; until then changes arrive by polling alone. Anything
+            // thrown here is caught: an exception escaping would end the refresh loop for good.
             logger.LogWarning(ex, "Feature flag channel subscription failed; relying on polling for now");
         }
     }

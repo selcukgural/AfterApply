@@ -33,7 +33,7 @@ describe("the signed-in navbar", () => {
     // 2026-09-17 (variant A on the navigation canvas): the drawer had grown its own grouping —
     // no "Explore", two headings the row never showed, no "New application". Both surfaces now
     // map over buildNavEntries; nothing here is allowed to hand-list a section again.
-    expect(navBar).toContain("buildNavEntries(config, locale)");
+    expect(navBar).toContain("buildNavEntries(config, locale, isLoaded)");
     expect(navBar.match(/entries\.map\(/g)).toHaveLength(2);
     expect(navBar).not.toContain("ExploreMenu");
     expect(navBar).not.toContain("COMPANY_LINKS");
@@ -43,6 +43,8 @@ describe("the signed-in navbar", () => {
 
   it("shows the two signals as icons with their counts and the primary action as a button", () => {
     expect(navBar).toContain('iconLink("/suggestions"');
+    // …unless the Gmail-scanning intake behind them is switched off (runtime flags, 2026-09-27).
+    expect(navBar).toContain('showSuggestions && iconLink("/suggestions"');
     // The bell opens a panel since 2026-09-23 (canvas variant A); the page is behind "see all"
     // and stays a plain link in the mobile drawer.
     expect(navBar).toContain("<NotificationBell badge={badge} icon={bellIcon} />");
@@ -99,6 +101,14 @@ describe("the signed-out chrome", () => {
     expect(header).not.toContain("links: readonly SiteNavLink[]");
     expect(header.match(/href: "\/#/g)).toHaveLength(1);
     expect(read("app/[locale]/not-found.tsx")).toContain("<SiteHeader />");
+  });
+
+  it("takes a switched-off feature's links away by the one shared rule (2026-09-27)", () => {
+    for (const file of ["components/layout/SiteHeader.tsx", "components/layout/SiteFooter.tsx", "components/layout/navGroups.ts"]) {
+      expect(read(file), file).toMatch(/withoutSwitchedOff(<\w+>)?\(/);
+    }
+    expect(header).toContain("switchedOff(isLoaded ? config : null)");
+    expect(read("app/[locale]/not-found.tsx")).toContain("switchedOff(await fetchPublicConfig())");
   });
 
   it("knows whether the visitor is signed in and offers the right door", () => {

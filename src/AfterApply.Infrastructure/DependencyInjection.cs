@@ -150,6 +150,11 @@ public static class DependencyInjection
         services.AddPersistence(configuration);
         services.AddIdentityAndJwt(configuration);
         services.AddApplicationServices();
+        // Before the background jobs: hosted services start in registration order, and the flag
+        // store's first read has to be attempted before a Hangfire worker picks a job up — a job
+        // gated by a flag an admin switched off (an ATS fetch, the weekly sweep) must not run on a
+        // new instance's deploy default while the overrides are still being read.
+        services.AddFeatureFlags(configuration);
         services.AddBackgroundJobs(configuration);
 
         // Persisting keys to the DB needs a working connection to read the existing key ring
@@ -202,7 +207,6 @@ public static class DependencyInjection
         services.Configure<JobSourceOptions>(configuration.GetSection(JobSourceOptions.SectionName));
         services.Configure<AtsSourceOptions>(configuration.GetSection(AtsSourceOptions.SectionName));
         services.Configure<BlogOptions>(configuration.GetSection(BlogOptions.SectionName));
-        services.AddFeatureFlags(configuration);
         services.AddPayments(configuration);
         services.AddDocumentStorage(configuration);
         services.AddBlog(configuration);

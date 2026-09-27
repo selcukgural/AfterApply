@@ -15,8 +15,9 @@ export function useClientConfig(): { config: ClientConfigResponse; isLoaded: boo
   const query = useQuery({
     queryKey: CLIENT_CONFIG_QUERY_KEY,
     queryFn: configApi.get,
-    // Changes only with a config rollout; no reason to refetch per form mount.
-    staleTime: 5 * 60_000,
+    // A minute, the API's own max-age: the feature flags in here switch at runtime from the admin
+    // panel (2026-09-27), and a switched-off feature's links should leave within that.
+    staleTime: 60_000,
     gcTime: 30 * 60_000,
   });
 

@@ -151,3 +151,19 @@ describe("the scan link follows the locale's slug", () => {
     expect(hrefs("en")).not.toContain("/cv-tarama");
   });
 });
+
+describe("features an admin switched off at runtime (2026-09-27)", () => {
+  const tools = (entries: NavEntry[]) => group(entries, "tools").items.map((item) => item.key);
+
+  it("take the guide and the scan out of the tools once the server says so", () => {
+    const off = { ...ALL_ON, blog: { enabled: false, hasPublishedPosts: true }, cvScan: { enabled: false, contentNotesAvailable: false } };
+    expect(tools(buildNavEntries(off, "tr"))).not.toContain("guide");
+    expect(tools(buildNavEntries(off, "tr"))).not.toContain("cvScan");
+    expect(tools(buildNavEntries(ALL_ON, "tr"))).toEqual(expect.arrayContaining(["guide", "cvScan"]));
+  });
+
+  it("keep both while the config has not answered, whatever the stand-in default says", () => {
+    const standIn = { ...ALL_ON, blog: { enabled: false, hasPublishedPosts: false }, cvScan: { enabled: false, contentNotesAvailable: false } };
+    expect(tools(buildNavEntries(standIn, "tr", false))).toEqual(expect.arrayContaining(["guide", "cvScan"]));
+  });
+});

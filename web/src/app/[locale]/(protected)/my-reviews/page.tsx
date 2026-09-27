@@ -5,6 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { companyReviewsApi } from "@/lib/api/companyReviews";
+import { useSwitchedOff } from "@/hooks/useSwitchedOff";
+import { FeatureOffNotice } from "@/components/ui/FeatureOffNotice";
 import { clampPage } from "@/lib/dashboard/reminders";
 import { Pagination } from "@/components/applications/Pagination";
 import { MyReviewCard } from "@/components/contributions/MyReviewCard";
@@ -30,9 +32,12 @@ export default function MyContributionsPage() {
   // The chips (2026-09-20): everything, the blog comments alone, or the company contributions.
   const [filter, setFilter] = useState<ContributionFilter | null>(null);
 
+  const companiesOff = useSwitchedOff().companies;
+  const tOff = useTranslations("companyReviews.offMine");
   const { data, isLoading, error } = useQuery({
     queryKey: ["contributions", "mine", page, filter],
     queryFn: () => companyReviewsApi.listMyContributions(page, filter ?? undefined),
+    enabled: !companiesOff,
   });
 
   const onCommentEdited = (edited: MyBlogComment) =>
@@ -72,6 +77,12 @@ export default function MyContributionsPage() {
       setPage((current) => clampPage(current, data.totalCount - 1, data.pageSize));
     }
   };
+
+  // Switched off at runtime (the CompanyReviews flag): every request this page makes answers 404,
+  // so it says the feature is off instead of showing an error (DECISIONS.md 2026-09-27).
+  if (companiesOff) {
+    return <FeatureOffNotice title={tOff("title")} body={tOff("body")} backLabel={tOff("back")} />;
+  }
 
   return (
     <div className="flex flex-col gap-6">

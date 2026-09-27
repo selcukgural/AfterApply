@@ -9,6 +9,7 @@ import { CONTACT_EMAIL, SOCIAL_LINKS } from "@/lib/constants/socialLinks";
 import { SocialIcon } from "@/components/layout/SocialIcon";
 import { pathFor, type LocalisedPath } from "@/lib/seo/routes";
 import { fetchPublicConfig } from "@/lib/config/publicConfig.server";
+import { switchedOff, withoutSwitchedOff, type SwitchedOff } from "@/lib/config/switchedOff";
 
 /** The landing page's sections — the anchors resolve from any page — and the store listing.
  *  "Özellikler" / "Features" went on 2026-09-22 with the section it pointed at: the feature grid
@@ -34,8 +35,9 @@ const EXPLORE_LINKS: readonly ExploreLink[] = [
 
 /** The blog, between the guide and the help centre, only once there is a published post — the
  *  header's rule (SiteHeader.siteLinksFor), read here from the server-side config. */
-function exploreLinksFor(hasBlog: boolean, hasResponseRates: boolean): readonly ExploreLink[] {
-  let links: readonly ExploreLink[] = EXPLORE_LINKS;
+function exploreLinksFor(hasBlog: boolean, hasResponseRates: boolean, off: SwitchedOff): readonly ExploreLink[] {
+  // A feature an admin switched off at runtime takes its link with it (runtime flags, 2026-09-27).
+  let links: readonly ExploreLink[] = withoutSwitchedOff(EXPLORE_LINKS, off);
   if (hasResponseRates) {
     const companiesIndex = links.findIndex((link) => link.key === "companies");
     links = [...links.slice(0, companiesIndex + 1), { href: "/response-rates", key: "responseRates" }, ...links.slice(companiesIndex + 1)];
@@ -77,6 +79,7 @@ export async function SiteFooter() {
   const exploreLinks = exploreLinksFor(
     config?.blog?.enabled === true && config.blog.hasPublishedPosts === true,
     config?.responseRates?.enabled === true,
+    switchedOff(config),
   );
 
   const linkClass = "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100";

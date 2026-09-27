@@ -568,7 +568,7 @@
     <value>The public blog and guide articles, comments, likes, and the admin editor (including its AI SEO suggestion).</value>
   </data>
   <data name="FEATURE_FLAG_BLOG_WHEN_OFF" xml:space="preserve">
-    <value>/blog and /guide return 404 and the blog links leave the menu. The admin editor closes too; admins get 404 as well. The Guide links in the menu stay visible and lead to a 404 page. Posts, comments and images are kept.</value>
+    <value>/blog and /guide return 404; the Blog and Guide links leave the menu, the header and the footer. Links to single guide articles on other pages (the help centre, the review guidelines, the flow card page) lead to the 404 page. The admin editor closes too; admins get 404 as well. Posts, comments and images are kept.</value>
   </data>
   <data name="FEATURE_FLAG_BLOG_NOTES" xml:space="preserve">
     <value>On Google Cloud Storage it cannot be switched on without the blog image bucket (Storage:BlogMediaBucketName). The editor's "suggest with AI" button calls Vertex AI and costs money.</value>
@@ -580,7 +580,7 @@
     <value>The public company directory, company pages, writing and reading reviews, moderation and the My contributions list. Salaries, candidate experiences, silence reports and the Response tab sit on these pages.</value>
   </data>
   <data name="FEATURE_FLAG_COMPANY_REVIEWS_WHEN_OFF" xml:space="preserve">
-    <value>The company directory and company pages return 404 and the Companies menu group is hidden. Salaries, experiences, silence reports and the Response tab disappear even with their own flags on. The /companies link in the top menu stays visible but the list does not load; /contribute stops working. Reviews are kept.</value>
+    <value>The company section closes: company pages return 404 and the /companies directory shows an "off" note; the Companies menu group and the Companies link in the header and footer are hidden, and the companies card on the landing page leads to that note. Salaries, experiences, silence reports and the Response tab disappear even with their own flags on. /contribute and My contributions show an "off" note too; the blog comments in My contributions are not listed meanwhile either. Reviews are kept.</value>
   </data>
   <data name="FEATURE_FLAG_COMPANY_REVIEWS_NOTES" xml:space="preserve">
     <value>Salaries, Candidate experiences, Silence reports and the Company response tab depend on this flag.</value>
@@ -628,7 +628,7 @@
     <value>The per-sector response-rate table on the public /response-rates page.</value>
   </data>
   <data name="FEATURE_FLAG_RESPONSE_RATES_WHEN_OFF" xml:space="preserve">
-    <value>The links in the menu and footer go and the table data returns 404. The page itself still opens and shows an error message. The feature stores nothing.</value>
+    <value>The links in the menu and footer go and the table data returns 404; /response-rates shows a "not published right now" note in place of the table. The feature stores nothing.</value>
   </data>
   <data name="FEATURE_FLAG_SILENCE_REPORTS_TITLE" xml:space="preserve">
     <value>Silence reports</value>
@@ -649,7 +649,7 @@
     <value>The ATS-readability scan of a CV: the sign-in-free /cv-tarama and the scan of stored CVs on the My CVs page.</value>
   </data>
   <data name="FEATURE_FLAG_CV_SCAN_WHEN_OFF" xml:space="preserve">
-    <value>The scan endpoints return 404 and the scan panel on My CVs is hidden. The /cv-tarama page, the upload area on the landing page and the menu links stay visible; a scan attempt shows an error. Stored scan results are kept.</value>
+    <value>The scan endpoints return 404; the CV scan links leave the menu, the header and the footer, and the scan panel on My CVs is hidden. /cv-tarama shows an "off for now" note in place of the form; the scan buttons on the landing page lead to that note. Stored scan results are kept.</value>
   </data>
   <data name="FEATURE_FLAG_CV_SCAN_NOTES" xml:space="preserve">
     <value>CV scan notes only work while this flag is on.</value>
@@ -673,7 +673,7 @@
     <value>The extension reading job-application e-mails in Gmail and sending them to the server, and the status suggestions and notifications made from them.</value>
   </data>
   <data name="FEATURE_FLAG_EMAIL_SIGNALS_WHEN_OFF" xml:space="preserve">
-    <value>Every endpoint under /api/email-forwarding returns 404: the extension's submissions are refused, the Suggestions page does not load, and Gmail updates leave the notification feed. The web does not know this flag, so the suggestions link in the menu stays. Suggestions are kept; the nightly job that clears stale pending signals keeps running.</value>
+    <value>Every endpoint under /api/email-forwarding returns 404: the extension's submissions are refused, the Suggestions link and its counter leave the menu, /suggestions shows an "off" note, and Gmail updates leave the notification feed. Suggestions are kept; the nightly job that clears stale pending signals keeps running.</value>
   </data>
   <data name="FEATURE_FLAG_EMAIL_SIGNALS_NOTES" xml:space="preserve">
     <value>When the rules cannot decide, the e-mail's subject and snippet go to OpenAI (United States); this costs money. The privacy policy and the extension privacy policy describe this flow; keep the flag and the text in step.</value>

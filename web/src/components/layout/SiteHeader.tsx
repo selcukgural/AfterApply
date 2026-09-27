@@ -15,6 +15,9 @@ import { LandingIcon, type LandingIcon as LandingIconName } from "@/components/l
 import { CV_SCAN_PATHS } from "@/lib/cvScan/path";
 import { OFFER_COMPARE_PATHS } from "@/lib/offerCompare/path";
 import { pathFor, type LocalisedPath } from "@/lib/seo/routes";
+import { switchedOff, withoutSwitchedOff, type SwitchedOff } from "@/lib/config/switchedOff";
+
+const NOTHING_OFF = switchedOff(null);
 
 export type SiteNavKey = "howItWorks" | "companies" | "tools" | "guide" | "blog" | "help";
 
@@ -50,8 +53,8 @@ export const SITE_TOOLS: readonly SiteTool[] = [
 /** The public sector response-rate table (2026-09-22), first in the menu when its server flag is on. */
 const RESPONSE_RATES_TOOL: SiteTool = { href: "/response-rates", key: "responseRates", icon: "analytics" };
 
-export function siteToolsFor(hasResponseRates: boolean): readonly SiteTool[] {
-  return hasResponseRates ? [RESPONSE_RATES_TOOL, ...SITE_TOOLS] : SITE_TOOLS;
+export function siteToolsFor(hasResponseRates: boolean, off: SwitchedOff = NOTHING_OFF): readonly SiteTool[] {
+  return withoutSwitchedOff(hasResponseRates ? [RESPONSE_RATES_TOOL, ...SITE_TOOLS] : SITE_TOOLS, off);
 }
 
 /**
@@ -76,8 +79,9 @@ export const SITE_LINKS: readonly SiteNavLink[] = [
  *  is worse than no blog, so the header follows the server rather than the route existing. */
 const BLOG_LINK: SiteNavLink = { href: "/blog", key: "blog" };
 
-export function siteLinksFor(hasBlog: boolean): readonly SiteNavLink[] {
-  let result: readonly SiteNavLink[] = SITE_LINKS;
+export function siteLinksFor(hasBlog: boolean, off: SwitchedOff = NOTHING_OFF): readonly SiteNavLink[] {
+  // A feature an admin switched off at runtime takes its link with it (runtime flags, 2026-09-27).
+  let result: readonly SiteNavLink[] = withoutSwitchedOff(SITE_LINKS, off);
   if (hasBlog) {
     const helpIndex = result.findIndex((link) => link.key === "help");
     result = [...result.slice(0, helpIndex), BLOG_LINK, ...result.slice(helpIndex)];
@@ -110,7 +114,7 @@ export function SiteHeader() {
   const t = useTranslations("siteNav");
   const locale = useLocale();
   const { isAuthenticated } = useAuth();
-  const { config } = useClientConfig();
+  const { config, isLoaded } = useClientConfig();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -118,8 +122,9 @@ export function SiteHeader() {
     return <NavBar />;
   }
 
-  const links = siteLinksFor(config.blog?.enabled === true && config.blog.hasPublishedPosts === true);
-  const tools = siteToolsFor(config.responseRates?.enabled === true);
+  const off = switchedOff(isLoaded ? config : null);
+  const links = siteLinksFor(config.blog?.enabled === true && config.blog.hasPublishedPosts === true, off);
+  const tools = siteToolsFor(config.responseRates?.enabled === true, off);
 
   const toolItems = tools.map((tool) => ({
     href: pathFor(tool.href, locale),

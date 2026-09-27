@@ -17,6 +17,9 @@ describe("isAdminTabActive", () => {
     expect(isAdminTabActive("/admin/comments", "/admin/comments")).toBe(true);
     expect(isAdminTabActive("/admin/comments/0199a0a0-0000-7000-8000-000000000001", "/admin/comments")).toBe(true);
     expect(isAdminTabActive("/admin/comments", "/admin/blog")).toBe(false);
+    expect(isAdminTabActive("/admin/flags", "/admin/flags")).toBe(true);
+    expect(isAdminTabActive("/admin/flags/history", "/admin/flags")).toBe(true);
+    expect(isAdminTabActive("/admin/flags/history", "/admin/metrics")).toBe(false);
   });
 
   it("keeps the Guide tab lit inside its editor, and apart from the Blog tab (2026-09-26)", () => {

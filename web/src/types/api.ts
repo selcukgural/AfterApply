@@ -759,6 +759,12 @@ export interface ClientConfigResponse {
   silenceReports?: SilenceReportsConfig;
   // Optional for the same reason (2026-09-27): the applications page's third view.
   board?: BoardConfig;
+  // Optional for the same reason (2026-09-27): the Gmail-scanning intake behind the suggestions.
+  emailSignals?: EmailSignalsConfig;
+}
+
+export interface EmailSignalsConfig {
+  enabled: boolean;
 }
 
 export interface BoardConfig {
@@ -2645,4 +2651,67 @@ export interface MoveBoardCardRequest {
   toStatus: ApplicationStatus | null;
   aboveCardId: string | null;
   belowCardId: string | null;
+}
+
+// Runtime feature flags (admin only, DECISIONS.md 2026-09-27). The member names are what the API
+// stores and what an admin types to confirm a switch.
+export type FeatureFlag =
+  | "Board"
+  | "Blog"
+  | "CompanyReviews"
+  | "CompanySalaries"
+  | "CandidateExperiences"
+  | "CompanyIntelligence"
+  | "ResponseRates"
+  | "SilenceReports"
+  | "CvScan"
+  | "CvScanNotes"
+  | "EmailSignals"
+  | "EmailAutoApproval"
+  | "FeedbackGitHub"
+  | "AtsSources"
+  | "JobSources"
+  | "Payments";
+
+export type FeatureFlagCoupling = "PrivacyText" | "Money";
+
+export interface FeatureFlagResponse {
+  flag: FeatureFlag;
+  /** In the request's language, from the API's catalogue. */
+  title: string;
+  description: string;
+  whenOff: string;
+  notes: string | null;
+  /** What the product does now: the override if any, else the deploy default. */
+  enabled: boolean;
+  default: boolean;
+  override: boolean | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+  couplings: FeatureFlagCoupling[];
+  /** A code naming configuration this deployment lacks; switching on is refused while set. */
+  missingPrerequisite: string | null;
+}
+
+export interface PrepareFeatureFlagChangeResponse {
+  current: FeatureFlagResponse;
+  enabled: boolean | null;
+  willBeOn: boolean;
+  confirmationPhrase: string;
+  confirmationToken: string;
+  expiresAt: string;
+  /** The token's lifetime; the countdown runs from when the response arrived, not from
+   *  `expiresAt`, so an admin's clock that disagrees with the server's cannot break it. */
+  expiresInSeconds: number;
+}
+
+export interface FeatureFlagChangeResponse {
+  id: string;
+  flag: FeatureFlag;
+  enabled: boolean | null;
+  wasOn: boolean;
+  isOn: boolean;
+  reason: string;
+  changedAt: string;
+  changedBy: string | null;
 }

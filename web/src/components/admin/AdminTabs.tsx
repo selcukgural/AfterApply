@@ -16,6 +16,9 @@ const TABS = [
   { href: "/admin/blog", key: "blog" },
   { href: "/admin/guide", key: "guide" },
   { href: "/admin/comments", key: "comments" },
+  // The runtime feature flags (2026-09-27): last, and in red — the one tab whose page changes what
+  // every user sees.
+  { href: "/admin/flags", key: "flags" },
 ] as const;
 
 /**
@@ -53,7 +56,11 @@ export function AdminTabs() {
             key={tab.href}
             href={tab.href}
             aria-current={active ? "page" : undefined}
-            className={navLinkClassName("underline", active, "-mb-px flex items-center gap-1.5 px-3 py-2")}
+            className={navLinkClassName(
+              "underline",
+              active,
+              `-mb-px flex items-center gap-1.5 px-3 py-2${tab.key === "flags" ? " text-red-700! dark:text-red-400!" : ""}`,
+            )}
           >
             {t(tab.key)}
             {badge(tab.key)}

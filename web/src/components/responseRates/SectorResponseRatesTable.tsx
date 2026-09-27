@@ -7,6 +7,8 @@ import type { BenchmarkPeriod, SectorResponseRateRow, SectorResponseRatesRespons
 import { responseRatesApi } from "@/lib/api/responseRates";
 import { formatCount, formatDays, formatRate } from "@/lib/dashboard/format";
 import { splitSectorRows } from "@/lib/responseRates/rows";
+import { useClientConfig } from "@/hooks/useClientConfig";
+import { FeatureOffNotice } from "@/components/ui/FeatureOffNotice";
 
 type Period = Exclude<BenchmarkPeriod, "Longer">;
 const PERIODS: readonly Period[] = ["LastTwelveMonths", "LastSixMonths", "LastThreeMonths"];
@@ -22,12 +24,21 @@ export function SectorResponseRatesTable() {
   const t = useTranslations("responseRates");
   const tPeriods = useTranslations("benchmark.periods");
   const [period, setPeriod] = useState<Period>("LastTwelveMonths");
+  const { config, isLoaded } = useClientConfig();
+  // Switched off at runtime (the ResponseRates flag): the table's route answers 404, so the page
+  // says the feature is off rather than showing its error line.
+  const off = isLoaded && config.responseRates?.enabled === false;
   const query = useQuery({
     queryKey: ["response-rates", "sectors", period],
     queryFn: () => responseRatesApi.sectors(period),
     staleTime: 60 * 60 * 1000,
     retry: false,
+    enabled: !off,
   });
+
+  if (off) {
+    return <FeatureOffNotice title={t("off.title")} body={t("off.body")} backLabel={t("off.back")} />;
+  }
 
   return (
     <div className="flex flex-col gap-4">

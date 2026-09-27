@@ -473,6 +473,8 @@ jobs:
           # DEFAULTS a flag runs on when no admin has switched it (DECISIONS.md, runtime feature
           # flags). An override set in the admin panel (FeatureFlagOverrides) wins until an admin
           # resets it — so check the panel before assuming a line here is what production does.
+          # A rollback past 2026-09-27 ignores those overrides (older code does not read them): look
+          # at /admin/flags first, and move a line here the same way if a switch must hold.
           env_vars: |-
             ASPNETCORE_ENVIRONMENT=Production
             ASPNETCORE_URLS=http://+:8080

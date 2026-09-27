@@ -568,7 +568,7 @@
     <value>Herkese açık blog ve rehber yazıları, yorumlar, beğeniler ve admin yazı editörü (editördeki yapay zekâ ile SEO önerisi dahil).</value>
   </data>
   <data name="FEATURE_FLAG_BLOG_WHEN_OFF" xml:space="preserve">
-    <value>/blog ve /guide sayfaları 404 olur, blog linkleri menüden kalkar. Admin editörü de kapanır; adminler de 404 alır. Menüdeki Rehber linkleri görünür kalır ve 404 sayfasına gider. Yazılar, yorumlar ve görseller silinmez.</value>
+    <value>/blog ve /guide sayfaları 404 olur; Blog ve Rehber linkleri menüden, üst başlıktan ve alt bilgiden kalkar. Başka sayfalardaki tek tek rehber yazısı linkleri (yardım merkezi, değerlendirme kuralları, akış kartı sayfası) 404 sayfasına gider. Admin editörü de kapanır; adminler de 404 alır. Yazılar, yorumlar ve görseller silinmez.</value>
   </data>
   <data name="FEATURE_FLAG_BLOG_NOTES" xml:space="preserve">
     <value>Google Cloud Storage kullanılan ortamda blog görsel bucket'ı (Storage:BlogMediaBucketName) tanımlı olmadan açılamaz. Editördeki "yapay zekâ ile öner" düğmesi Vertex AI'yi çağırır ve ücretlidir.</value>
@@ -580,7 +580,7 @@
     <value>Herkese açık şirket dizini, şirket sayfaları, değerlendirme yazma ve okuma, moderasyon ve Katkılarım listesi. Maaş, aday deneyimi, sessizlik bildirimi ve Yanıt sekmesi bu sayfaların üzerinde durur.</value>
   </data>
   <data name="FEATURE_FLAG_COMPANY_REVIEWS_WHEN_OFF" xml:space="preserve">
-    <value>Şirket dizini ve şirket sayfaları 404 olur, menüdeki Şirketler grubu gizlenir. Maaş, deneyim, sessizlik bildirimi ve Yanıt sekmesi kendi bayrakları açık olsa bile görünmez. Üst menüdeki /companies linki görünür kalır ama liste yüklenmez; /contribute sayfası çalışmaz. Değerlendirmeler silinmez.</value>
+    <value>Şirket bölümü kapanır: şirket sayfaları 404 olur, /companies dizini "kapalı" notu gösterir; Şirketler menüsü ve üst başlıkla alt bilgideki Şirketler linki gizlenir, açılış sayfasındaki şirketler kartı bu nota götürür. Maaş, deneyim, sessizlik bildirimi ve Yanıt sekmesi kendi bayrakları açık olsa bile görünmez. /contribute ve Katkılarım da "kapalı" notu gösterir; Katkılarım'daki blog yorumları da bu sürede listelenmez. Değerlendirmeler silinmez.</value>
   </data>
   <data name="FEATURE_FLAG_COMPANY_REVIEWS_NOTES" xml:space="preserve">
     <value>Maaşlar, Aday deneyimleri, Sessizlik bildirimleri ve Şirket yanıt sekmesi bu bayrağa bağlıdır.</value>
@@ -628,7 +628,7 @@
     <value>Herkese açık /response-rates sayfasındaki, sektör bazında yanıt oranları tablosu.</value>
   </data>
   <data name="FEATURE_FLAG_RESPONSE_RATES_WHEN_OFF" xml:space="preserve">
-    <value>Menüdeki ve alt bilgideki linkler kalkar, tablo verisi 404 döner. Sayfanın kendisi açılmaya devam eder ve hata mesajı gösterir. Bu özellik veri saklamaz.</value>
+    <value>Menüdeki ve alt bilgideki linkler kalkar, tablo verisi 404 döner; /response-rates sayfası tablo yerine "şu an yayında değil" notu gösterir. Bu özellik veri saklamaz.</value>
   </data>
   <data name="FEATURE_FLAG_SILENCE_REPORTS_TITLE" xml:space="preserve">
     <value>Sessizlik bildirimleri</value>
@@ -649,7 +649,7 @@
     <value>CV'nin ATS okunabilirlik taraması: giriş yapmadan kullanılan /cv-tarama ve CV'lerim sayfasında kayıtlı CV'lerin taranması.</value>
   </data>
   <data name="FEATURE_FLAG_CV_SCAN_WHEN_OFF" xml:space="preserve">
-    <value>Tarama uçları 404 döner, CV'lerim sayfasındaki tarama paneli gizlenir. /cv-tarama sayfası, açılış sayfasındaki yükleme alanı ve menü linkleri görünür kalır; tarama denemesi hata verir. Kayıtlı tarama sonuçları silinmez.</value>
+    <value>Tarama uçları 404 döner; menüdeki, üst başlıktaki ve alt bilgideki CV tarama linkleri kalkar, CV'lerim sayfasındaki tarama paneli gizlenir. /cv-tarama sayfası form yerine "şu an kapalı" notu gösterir; açılış sayfasındaki tarama düğmeleri de bu nota götürür. Kayıtlı tarama sonuçları silinmez.</value>
   </data>
   <data name="FEATURE_FLAG_CV_SCAN_NOTES" xml:space="preserve">
     <value>CV taraması notları yalnızca bu bayrak açıkken çalışır.</value>
@@ -673,7 +673,7 @@
     <value>Eklentinin Gmail'deki başvuru e-postalarını okuyup sunucuya göndermesi; bunlardan üretilen durum önerileri ve bildirimler.</value>
   </data>
   <data name="FEATURE_FLAG_EMAIL_SIGNALS_WHEN_OFF" xml:space="preserve">
-    <value>/api/email-forwarding altındaki bütün uçlar 404 döner: eklentinin gönderimleri reddedilir, Öneriler sayfası yüklenmez, bildirimlerden Gmail güncellemeleri düşer. Web bu bayrağı bilmediği için menüdeki öneriler linki gizlenmez. Öneriler silinmez; bekleyen eski sinyalleri temizleyen gece işi çalışmaya devam eder.</value>
+    <value>/api/email-forwarding altındaki bütün uçlar 404 döner: eklentinin gönderimleri reddedilir, menüdeki Öneriler linki ve sayacı gizlenir, /suggestions sayfası "kapalı" notu gösterir, bildirimlerden Gmail güncellemeleri düşer. Öneriler silinmez; bekleyen eski sinyalleri temizleyen gece işi çalışmaya devam eder.</value>
   </data>
   <data name="FEATURE_FLAG_EMAIL_SIGNALS_NOTES" xml:space="preserve">
     <value>Kurallar karar veremediğinde e-postanın konusu ve özeti OpenAI'ye (ABD) gönderilir; ücretlidir. Gizlilik metni ve eklenti gizlilik politikası bu akışı anlatır; bayrak ile metin uyumlu tutulmalı.</value>

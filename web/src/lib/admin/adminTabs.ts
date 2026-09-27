@@ -13,6 +13,8 @@ export function isAdminTabActive(pathname: string, href: string): boolean {
   if (href === "/admin/guide") return pathname.startsWith("/admin/guide/");
   // The comments tab (2026-09-20) stays lit on one comment's page.
   if (href === "/admin/comments") return pathname.startsWith("/admin/comments/");
+  // The flags tab (2026-09-27) stays lit on the change history.
+  if (href === "/admin/flags") return pathname.startsWith("/admin/flags/");
   return href === "/admin/reviews" && (pathname === "/admin/reviews/salaries" || pathname === "/admin/reviews/experiences");
 }
 

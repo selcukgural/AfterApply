@@ -35,6 +35,9 @@ export function Modal({ title, onClose, busy = false, children, footer, wide = f
       return;
     }
     dialog.showModal();
+    // showModal() moves focus itself, after React's own autoFocus has run, and can land on the
+    // dialog rather than the field a form wants first. A field marked data-autofocus wins.
+    dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     return () => dialog.close();
   }, []);
 

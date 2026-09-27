@@ -78,5 +78,8 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
 };
 
 export const configApi = {
-  get: () => apiFetch<ClientConfigResponse>("/api/config"),
+  // no-cache: revalidate with the API instead of taking the browser's copy (the response is
+  // public, max-age 60). The query's own staleTime already limits how often this runs, and a
+  // refetch after an admin switches a flag must see the switch, not a minute-old answer.
+  get: () => apiFetch<ClientConfigResponse>("/api/config", { cache: "no-cache" }),
 };

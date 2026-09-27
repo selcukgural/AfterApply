@@ -20,6 +20,8 @@ import { Input } from "@/components/ui/Input";
 import { buttonClassName } from "@/components/ui/Button";
 import { Pagination } from "@/components/applications/Pagination";
 import { useClientConfig } from "@/hooks/useClientConfig";
+import { useSwitchedOff } from "@/hooks/useSwitchedOff";
+import { FeatureOffNotice } from "@/components/ui/FeatureOffNotice";
 import { StarRating } from "@/components/companyReviews/StarRating";
 
 /** The public directory: companies with at least one published contribution — a review, a salary
@@ -43,9 +45,12 @@ export function CompanyDirectory() {
     return () => clearTimeout(handle);
   }, [search]);
 
+  const companiesOff = useSwitchedOff().companies;
+  const tOff = useTranslations("companyReviews.off");
   const { data, isLoading, error } = useQuery({
     queryKey: ["companies", "public", { query, page }],
     queryFn: () => companiesApi.listPublic(query, page),
+    enabled: !companiesOff,
   });
 
   // The second section (canvas variant A, 2026-09-23): companies that have a page but no
@@ -54,12 +59,18 @@ export function CompanyDirectory() {
   const known = useQuery({
     queryKey: ["companies", "known", query],
     queryFn: () => companiesApi.listKnown(query),
-    enabled: query.length >= KNOWN_MIN_QUERY,
+    enabled: query.length >= KNOWN_MIN_QUERY && !companiesOff,
   });
   const knownItems = query.length >= KNOWN_MIN_QUERY ? (known.data ?? []) : [];
   const knownCta = config.silenceReports?.enabled === true ? t("known.cta") : t("known.ctaNoReport");
 
   const writeHref = isAuthenticated ? "/contribute?tab=review" : `/login?next=${encodeURIComponent("/contribute?tab=review")}`;
+
+  // Switched off at runtime (the CompanyReviews flag): every request this page makes answers 404,
+  // so it says the feature is off instead of showing an error (DECISIONS.md 2026-09-27).
+  if (companiesOff) {
+    return <FeatureOffNotice title={tOff("title")} body={tOff("body")} backLabel={tOff("back")} />;
+  }
 
   return (
     <div className="flex flex-col gap-6">

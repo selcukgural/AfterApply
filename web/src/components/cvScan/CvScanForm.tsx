@@ -12,13 +12,14 @@ import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { useClientConfig } from "@/hooks/useClientConfig";
+import { FeatureOffNotice } from "@/components/ui/FeatureOffNotice";
 import { CvScanResult } from "@/components/cvScan/CvScanResult";
 import type { CvScanResponse } from "@/types/api";
 
 export function CvScanForm() {
   const t = useTranslations("cvScan");
   const locale = useLocale();
-  const { config } = useClientConfig();
+  const { config, isLoaded } = useClientConfig();
   const fileInputRef = useRef<HTMLInputElement>(null);
   // dragenter/dragleave fire for every child the pointer crosses, so a boolean flickers the
   // highlight off mid-drag. Counting enters against leaves is the fix the CV manager and the
@@ -146,6 +147,12 @@ export function CvScanForm() {
 
   if (result) {
     return <CvScanResult result={result} onReset={reset} />;
+  }
+
+  // Switched off at runtime (the CvScan flag): say so instead of offering an upload that would
+  // answer 404. Only once the server has answered — the built-in default says "off" too.
+  if (isLoaded && !config.cvScan.enabled) {
+    return <FeatureOffNotice title={t("off.title")} body={t("off.body")} backLabel={t("off.back")} />;
   }
 
   return (
