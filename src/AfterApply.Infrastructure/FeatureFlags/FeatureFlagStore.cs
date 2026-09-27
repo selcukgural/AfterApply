@@ -62,6 +62,7 @@ public sealed class FeatureFlagStore(
     private readonly SemaphoreSlim _reloadGate = new(1, 1);
     private volatile FrozenDictionary<FeatureFlag, bool> _overrides = FrozenDictionary<FeatureFlag, bool>.Empty;
     private bool _loaded;
+    private readonly HashSet<string> _reportedUnknownKeys = new(StringComparer.Ordinal);
 
     /// <summary>Raised after every successful reload — for the tests that wait on another
     /// instance to pick a change up.</summary>
@@ -106,8 +107,12 @@ public sealed class FeatureFlagStore(
                 else
                 {
                     // A row a newer build wrote, or one whose member was removed: ignored rather
-                    // than guessed at, and the flag it named (if any) runs on its default.
-                    logger.LogWarning("Ignoring feature flag override with unknown key {Key}", row.Key);
+                    // than guessed at, and the flag it named (if any) runs on its default. Said
+                    // once per process, not on every poll.
+                    if (_reportedUnknownKeys.Add(row.Key))
+                    {
+                        logger.LogWarning("Ignoring feature flag override with unknown key {Key}", row.Key);
+                    }
                 }
             }
 

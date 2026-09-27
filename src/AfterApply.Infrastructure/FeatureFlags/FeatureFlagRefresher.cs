@@ -143,9 +143,10 @@ internal sealed class FeatureFlagRefresher(
             _subscribed = true;
             _schedule.Subscribed();
         }
-        catch (Exception ex) when (ex is RedisException or TimeoutException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            // Retried on every (short) poll; until then changes arrive by polling alone.
+            // Retried on every (short) poll; until then changes arrive by polling alone. Anything
+            // thrown here is caught: an exception escaping would end the refresh loop for good.
             logger.LogWarning(ex, "Feature flag channel subscription failed; relying on polling for now");
         }
     }

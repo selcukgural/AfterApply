@@ -45,13 +45,16 @@ public sealed record PrepareFeatureFlagChangeRequest(bool? Enabled, string? Reas
 /// short-lived token that only this admin can redeem for exactly this change.</summary>
 /// <param name="ConfirmationPhrase">What the admin has to type to confirm — the flag's own name.</param>
 /// <param name="WillBeOn">Whether the feature will be on once confirmed (the default included for a reset).</param>
+/// <param name="ExpiresInSeconds">The token's lifetime, for a countdown that must not depend on the
+/// admin's own clock agreeing with the server's (<paramref name="ExpiresAt"/> is the server's clock).</param>
 public sealed record PrepareFeatureFlagChangeResponse(
     FeatureFlagResponse Current,
     bool? Enabled,
     bool WillBeOn,
     string ConfirmationPhrase,
     string ConfirmationToken,
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt,
+    int ExpiresInSeconds);
 
 /// <summary>Second confirmation step.</summary>
 public sealed record ConfirmFeatureFlagChangeRequest(string? ConfirmationToken, string? ConfirmationPhrase);

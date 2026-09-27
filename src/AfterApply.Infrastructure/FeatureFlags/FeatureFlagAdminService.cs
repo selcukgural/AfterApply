@@ -33,10 +33,12 @@ internal sealed class FeatureFlagAdminService(
     private sealed record OverrideRow(string Key, bool Enabled, DateTimeOffset UpdatedAt, string? UpdatedBy);
 
     /// <summary>
-    /// What the token binds: the admin, the flag, the change, the reason, and the override exactly
-    /// as it stood at the first step (present or not, value, time). The last part makes the token
-    /// single-use and makes a change someone else made in between fail the second step instead of
-    /// being silently overwritten.
+    /// What the token binds: the admin, the flag, the change, the reason, the override exactly as it
+    /// stood at the first step (present or not, value, time) and how many changes the flag had had by
+    /// then. The count is what makes the token single-use: the override alone could come back to the
+    /// same state (switched on, then reset by someone else) and let an old token through again, but
+    /// the history only grows, so any change in between — this token's own included — fails the
+    /// second step instead of being silently overwritten or replayed.
     /// </summary>
     private sealed record Ticket(
         Guid AdminId,
@@ -46,6 +48,7 @@ internal sealed class FeatureFlagAdminService(
         bool HadOverride,
         bool? OverrideEnabled,
         long OverrideUpdatedAtTicks,
+        int ChangeCount,
         string Nonce);
 
     public async Task<IReadOnlyList<FeatureFlagResponse>> ListAsync(CancellationToken cancellationToken)
@@ -76,13 +79,15 @@ internal sealed class FeatureFlagAdminService(
             return new PrepareFeatureFlagChangeResult(PrepareFeatureFlagOutcome.Unchanged, current, null);
         }
 
+        var changeCount = await dbContext.FeatureFlagChanges.CountAsync(c => c.Key == key, cancellationToken);
         var ticket = new Ticket(adminId, key, enabled, reason.Trim(), row is not null, row?.Enabled,
-            row?.UpdatedAt.UtcTicks ?? 0, Convert.ToHexString(RandomNumberGenerator.GetBytes(16)));
+            row?.UpdatedAt.UtcTicks ?? 0, changeCount, Convert.ToHexString(RandomNumberGenerator.GetBytes(16)));
         var expiresAt = _timeProvider.GetUtcNow().Add(ConfirmationLifetime);
         var token = Protector().Protect(JsonSerializer.Serialize(ticket), expiresAt);
 
         return new PrepareFeatureFlagChangeResult(PrepareFeatureFlagOutcome.Ready, current,
-            new PrepareFeatureFlagChangeResponse(current, enabled, enabled ?? current.Default, key, token, expiresAt));
+            new PrepareFeatureFlagChangeResponse(current, enabled, enabled ?? current.Default, key, token, expiresAt,
+                (int)ConfirmationLifetime.TotalSeconds));
     }
 
     public async Task<ConfirmFeatureFlagChangeResult> ConfirmAsync(FeatureFlag flag, string token, string phrase,
@@ -109,7 +114,8 @@ internal sealed class FeatureFlagAdminService(
         var unchangedSinceFirstStep = ticket.HadOverride
             ? row is not null && row.Enabled == ticket.OverrideEnabled && row.UpdatedAt.UtcTicks == ticket.OverrideUpdatedAtTicks
             : row is null;
-        if (!unchangedSinceFirstStep)
+        if (!unchangedSinceFirstStep
+            || await dbContext.FeatureFlagChanges.CountAsync(c => c.Key == key, cancellationToken) != ticket.ChangeCount)
         {
             return new ConfirmFeatureFlagChangeResult(ConfirmFeatureFlagOutcome.Stale, null);
         }
@@ -156,11 +162,22 @@ internal sealed class FeatureFlagAdminService(
         logger.LogWarning("Feature flag {Flag} switched {From} -> {To} (override {Override}) by user {UserId}",
             key, wasOn ? "on" : "off", isOn ? "on" : "off", ticket.Enabled?.ToString() ?? "removed", adminId);
 
-        // This instance at once, the others on the announcement (or their next poll).
-        await store.ReloadAsync(cancellationToken);
+        // The change is committed: from here on nothing may stop the other instances hearing of it.
+        // The announcement goes first (best effort; they poll anyway), then this instance's own
+        // re-read — neither on the request's token, so an admin closing the tab mid-request cannot
+        // leave a switch that is in the database but in force nowhere. A failed local re-read is
+        // logged, not thrown: the announcement just sent reaches this instance's refresher too.
         await channel.PublishAsync();
+        try
+        {
+            await store.ReloadAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Feature flag {Flag} saved; this instance will pick it up on its refresher", key);
+        }
 
-        var saved = (await ReadOverridesAsync(cancellationToken)).GetValueOrDefault(key);
+        var saved = (await ReadOverridesAsync(CancellationToken.None)).GetValueOrDefault(key);
         return new ConfirmFeatureFlagChangeResult(ConfirmFeatureFlagOutcome.Changed, ToResponse(flag, saved));
     }
 

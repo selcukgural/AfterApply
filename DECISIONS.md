@@ -9882,7 +9882,7 @@ Bu karar `deploy.yml`'deki "reviewed deploy, not a database edit" kuralını bay
 **İki adımlı onay (sahibin isteği).**
 - **1. adım, `POST /api/admin/feature-flags/{flag}/prepare`:** Gerekçe zorunlu (5–500 karakter). Hiçbir şeyi değiştirmez. Değişikliği ve 5 dakikalık bir Data Protection token'ı döndürür. Token şunlara bağlı: admin, bayrak, hedef değer, gerekçe ve o anki override'ın durumu (var mı, değeri, zamanı).
 - **2. adım, `…/confirm`:** Token ile bayrağın adı birebir yazılarak onaylanır (büyük/küçük harf dahil).
-- **Arada biri değiştirdiyse ya da token kullanıldıysa** 409 `FEATURE_FLAG_CHANGED_SINCE_PREPARE` döner; token bu yüzden tek kullanımlık.
+- **Arada biri değiştirdiyse ya da token kullanıldıysa** 409 `FEATURE_FLAG_CHANGED_SINCE_PREPARE` döner. Token bayrağın o ana kadarki değişiklik sayısına da bağlı; geçmiş yalnız büyüdüğü için durum eski hâline dönse bile (aç → biri varsayılana döndürdü) eski token geçmez. Token bu yüzden gerçekten tek kullanımlık.
 - **Başka admin, başka bayrak, süresi geçmiş ya da bozuk token:** 409 `FEATURE_FLAG_CONFIRMATION_INVALID`.
 - **Yarış:** Eşzamanlı iki onayda `UpdatedAt` concurrency token'ı ve PK sayesinde yalnız biri kazanır.
 - **Ad:** Rota adı yalnızca üye adıyla okunur (`FeatureFlagNames`). "0"/"99" gibi sayılar bayrak sayılmaz.
@@ -9898,6 +9898,15 @@ Bu karar `deploy.yml`'deki "reviewed deploy, not a database edit" kuralını bay
 - Her bayrağın başlığı, ne yaptığı, kapalıyken ne olduğu ve notları `SharedStrings` (tr/en) içinde `FEATURE_FLAG_{AD}_*` anahtarlarında. Admin listesi bunları istek dilinde döndürüyor.
 - Metinler kod okunarak yazıldı: hangi uç 404 olur, ne gizlenir, ne saklanır, açılınca geri gelmeyen ne.
 - Birim testi her bayrağın iki dilde de metni olduğunu ve para/gizlilik bayraklarının notunun bulunduğunu doğruluyor.
+
+**Backend inceleme turu (aynı gün, bağımsız gözden geçirme).** Kritik bulgu çıkmadı; düzeltilenler:
+- Kayıttan sonra yerel yeniden okuma hata verse bile duyuru artık önce gidiyor, ikisi de isteğin token'ından bağımsız. Değişiklik veritabanında olup başka hiçbir yerde geçerli olmayan bir durum kalmıyor.
+- Bayrak tazeleyici artık Hangfire'dan önce kayıtlı. Hosted service'ler kayıt sırasıyla başlıyor; yeni bir instance'ta işler bayraklar okunmadan başlamıyor.
+- Token'ın "durum eski hâline döndü" (ABA) açığı değişiklik sayısıyla kapandı (yukarıda).
+- Bilinmeyen anahtar uyarısı süreç başına bir kez loglanıyor. Abonelik hataları geniş yakalanıyor; tazeleme döngüsü hiçbir hatayla durmuyor.
+- Birinci adım token ömrünü (`ExpiresInSeconds`) de döndürüyor; panelin geri sayımı admin'in saatine bağlı olmasın diye.
+
+**Geri alma (rollback) uyarısı.** Bu sürümden önceki bir revizyona geri dönülürse eski kod `FeatureFlagOverrides`'ı okumaz; panelden yapılan bütün değişiklikler o revizyon çalıştığı sürece yok sayılır, bayraklar deploy varsayılanına döner. Örneğin panelden kapatılmış ama deploy'da açık olan Ödemeler yeniden açılır. Geri almadan önce panelde değiştirilmiş bayraklara bakılmalı; gerekiyorsa deploy.yml satırı da aynı yönde değiştirilmeli. Tablolar yerinde kalır; yeni revizyona dönülünce değerler yeniden geçerli olur.
 
 **Bilinen boşluklar (PR 2 / sonrası).**
 - Blog kapalıyken menüdeki Rehber linkleri, ResponseRates kapalıyken /response-rates sayfası ve CvScan kapalıyken /cv-tarama linkleri görünür kalıyor.
