@@ -1322,8 +1322,9 @@ vermek churn değildi). Hiçbiri kişiye gösterilmez.
 - **Ne var:** `/applications?view=board`, beş sütun, sütun başına 10'arlı sonsuz kaydırma,
   ekle/çıkar/taşı/elle sırala, otomatik yerleşim (e-posta, eklenti), filtre çekmecesi, "Listeden
   panoya ekle". Kararlar DECISIONS.md'de aynı tarihli "Başvuru panosu" girdisinde.
-- **Kalan:** prod'da tarayıcıda yürüyüp `Board:Enabled=true`; yardım merkezine pano konusu ve
-  ekran görüntüsü (bayrak açılırken, aynı değişiklikte).
+- **Kalan:** prod'da tarayıcıda yürüyüp `Board:Enabled=true`.
+- **Yardım merkezi (2026-09-27):** `/help/board` konusu (tr+en) ve üç görsel (`board-overview`,
+  `board-card-menu`, `board-filters`), demo hesaptan çekildi.
 
 ### PR2 — Şirket logoları ✅ (2026-09-27, PR açık)
 - **Yapıldı:** DECISIONS.md'de "Pano: şirket logoları (PR2)". Sapmalar: saklama bucket yerine

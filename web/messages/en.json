@@ -67,6 +67,10 @@
         "title": "Applications",
         "description": "Creating, listing, grouping by company, bulk actions, the timeline, and editing or deleting an application."
       },
+      "helpBoard": {
+        "title": "The Board",
+        "description": "Follow your applications by stage in columns: drag to move them, put them in your own order, filter the view."
+      },
       "helpSuggestions": {
         "title": "Email Suggestions",
         "description": "How Gmail Scanning turns a status-update email into a suggestion you confirm or dismiss."
@@ -2054,6 +2058,7 @@
       "dashboard": "Dashboard",
       "trackedJobs": "Tracked Jobs",
       "applications": "Applications",
+      "board": "Board",
       "suggestions": "Suggestions",
       "import": "Import from LinkedIn",
       "settings": "Account Settings",
@@ -2114,6 +2119,9 @@
         },
         "applications": {
           "description": "Creating, editing, deleting, and tracking the status of applications."
+        },
+        "board": {
+          "description": "Follow your applications by stage in columns you drag cards between."
         },
         "suggestions": {
           "description": "Automatic status suggestions from Gmail Scanning."
@@ -2338,7 +2346,7 @@
       },
       "companyView": {
         "title": "Grouping by company",
-        "body": "The List / Company switch above the list collects the same applications under the company you sent them to. In the company view a page holds 10 companies rather than 10 applications — so a company's applications are never split across two pages. Each company header shows how many applications you have there, how they are spread across statuses, and when something last moved; click the header to fold a group away, or use its checkbox to select all of that company's applications at once. Search and the status filter work the same way in both views, and the view you pick is reflected in the URL. If you have more than 20 applications at one company, the link under the group takes you to the flat list narrowed to it."
+        "body": "The List / Company switch above the list collects the same applications under the company you sent them to. In the company view a page holds 10 companies rather than 10 applications — so a company's applications are never split across two pages. Each company header shows how many applications you have there, how they are spread across statuses, and when something last moved; click the header to fold a group away, or use its checkbox to select all of that company's applications at once. Search and the status filter work the same way in both views, and the view you pick is reflected in the URL. If you have more than 20 applications at one company, the link under the group takes you to the flat list narrowed to it. The third view, the Board, shows your applications in columns by stage; see the Board topic in the help centre for details."
       },
       "bulk": {
         "title": "Acting on many applications at once",
@@ -2367,6 +2375,114 @@
       "promise": {
         "title": "Promised reply date",
         "body": "If they said \"we'll get back to you by Friday\", record the date when you change the status, or with \"+ Add a date\" on the detail page. No follow-up reminder comes before that date; if it passes and the application hasn't moved, the dashboard shows a \"The promised date has passed\" reminder. Once the application moves, the promise stays as \"Kept their word\" or \"Replied late\". These answers and how you learned of a rejection enter only aggregate rates (the sector table), without your name; no rate is shown until 5 answers from at least 3 people are in."
+      }
+    },
+    "board": {
+      "eyebrow": "Board",
+      "title": "Follow your applications by stage on a board",
+      "intro": "The board is the third view of the Applications page: open it with the \"Board\" button next to List and Company. It shows the applications and saved postings you want to keep in front of you in columns by stage; you move cards by dragging and put them in your own order. The board is yours: you decide what is on it and in what order, and you find it as you left it next time.",
+      "screenshots": {
+        "overview": "The applications board: Saved, Applied, In progress, Offer and Closed columns",
+        "menu": "A card's ⋯ menu: open the application, change stage, move to top of column, remove from board",
+        "filters": "The board's filter panel: saved views, last activity, source and state filters"
+      },
+      "columns": {
+        "title": "Columns",
+        "body": "A card's column is decided by the application's status, so the board and the list can never disagree. Moving a card to another column changes the application's status.",
+        "saved": {
+          "title": "Saved",
+          "body": "Postings you have not applied to yet, saved with \"Apply later\" or from your tracked jobs."
+        },
+        "applied": {
+          "title": "Applied",
+          "body": "Applications sent and not answered yet."
+        },
+        "inProgress": {
+          "title": "In progress",
+          "body": "Screening and interviews; the exact stage is written on a small label on the card."
+        },
+        "offer": {
+          "title": "Offer",
+          "body": "Applications you got an offer for."
+        },
+        "closed": {
+          "title": "Closed",
+          "body": "Accepted, rejected, withdrawn or never answered. A card stays here for 14 days, then leaves the board by itself; it stays in the list."
+        }
+      },
+      "firstOpen": {
+        "title": "When you first open the board",
+        "body": "The first time you open the board, your open applications with activity in the last 30 days, and the postings you saved in that time, are put on it. Older applications stay in the list; bring any of them over with \"Add from list\". Each column shows 10 cards at first and loads 10 more as you scroll down."
+      },
+      "move": {
+        "title": "Moving and ordering cards",
+        "step1": {
+          "title": "Drag and drop",
+          "body": "Drag a card up or down within its column to put it in your own order; the order is kept. Dropping it in another column changes the application's status and records it in the status history."
+        },
+        "step2": {
+          "title": "Pick the stage",
+          "body": "In progress and Closed each hold several stages, so a card dropped there asks which one it moves to (e.g. Technical interview, Rejected). A saved posting dropped in an application column becomes an application; an application cannot go back to Saved."
+        },
+        "step3": {
+          "title": "Or use the card's ⋯ menu",
+          "body": "Open the application, change its stage, move it to the top of its column or remove it from the board. Everything a drag can do, the menu can do too."
+        },
+        "step4": {
+          "title": "With the keyboard",
+          "body": "Focus the handle on the left of a card and press Space or Enter to pick it up, move it with the arrow keys, and press Space or Enter again to drop it; Escape cancels the move."
+        }
+      },
+      "addRemove": {
+        "title": "Adding to and removing from the board",
+        "body": "\"Add from list\" lists your applications that are not on the board; the ones you pick go to the top of their stage's column. A column's \"+ Add an application\" opens the new-application form in that column's stage and brings you back to the board when you save. \"Remove from board\" in a card's ⋯ menu removes only the card; the application or saved posting is not deleted and stays in the list. In the list, applications on the board carry an \"On board\" label."
+      },
+      "arrivals": {
+        "title": "Cards that arrive by themselves",
+        "body": "Some cards come onto the board without you adding them. They carry a label saying where they came from until you look at them; the strip at the top counts them, \"Show\" lists only them and \"Mark all seen\" clears the labels. Touching a card (opening or moving it) clears its label too.",
+        "extension": {
+          "title": "From the Chrome extension",
+          "body": "A posting you mark \"I applied\" arrives at the top of Applied; one you mark \"Apply later\" at the top of Saved."
+        },
+        "email": {
+          "title": "From email",
+          "body": "A status change from Gmail scanning that you confirm (or that is applied automatically) moves the card on the board to the top of its new column."
+        },
+        "returned": {
+          "title": "For an application you removed",
+          "body": "Only an email bringing progress (screening, interview or an offer) brings the card back. A rejection or silence does not return a card you removed; the application's status is still updated in the list."
+        }
+      },
+      "line": {
+        "title": "The line at the bottom of a card",
+        "silence": {
+          "title": "Last activity",
+          "body": "Time since the application last moved: a green dot within 7 days, amber past 14 days, red past 30. It counts from the last activity, not the application date, so an old application that heard back yesterday is not silent."
+        },
+        "source": {
+          "title": "Source",
+          "body": "The site the posting came from (LinkedIn, kariyer.net, another site), or that it was added by hand."
+        },
+        "closed": {
+          "title": "In Closed",
+          "body": "How many days until the card leaves the board."
+        }
+      },
+      "filters": {
+        "title": "Filters and saved views",
+        "body": "The search box searches company names and job titles. The \"Filters\" panel lets you pick last activity (7, 30, 90 days or a date range), source and state (\"Arrived without you\", \"No reply for 14+ days\", \"Has a reminder\", \"Reply date promised\"). The filter you pick is written to the address bar, so a reload or a saved link opens the same view. Save a filter you use often by naming it with \"Save this filter\"; saved views are kept in that browser only."
+      },
+      "phone": {
+        "title": "On a phone",
+        "body": "On narrow screens the columns are shown one at a time behind stage tabs at the top instead of side by side. Press and hold a card to drag it into a new place in its column; scrolling the list with your finger does not move cards. To move a card to another stage, use \"Change stage\" in its ⋯ menu."
+      },
+      "calloutLogos": {
+        "title": "Company logos",
+        "body": "When a company has a logo, it shows on the card instead of its initials. Logos are fetched by our server from the company's LinkedIn page and shown only to users who applied to that company or saved one of its postings. Companies without a logo found show their initials."
+      },
+      "calloutFilters": {
+        "title": "Filters do not change the board",
+        "body": "Filters only narrow what you see; they never add a card to the board or take one off. Clear the filter and your board is back as it was."
       }
     },
     "suggestions": {
