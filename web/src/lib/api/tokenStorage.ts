@@ -1,64 +1,61 @@
-import type { AuthResponse, UserProfileResponse } from "@/types/api";
+import type { UserProfileResponse } from "@/types/api";
 
-const KEYS = {
+// Since 2026-09-27 no token is kept where a script can read it: the refresh token is an HttpOnly
+// cookie on the API's host and the access token lives in memory (authStore). What stays here is
+// the signed-in user's profile — a hint that lets a reload render the right header at once and
+// tells the app a session is worth refreshing. It grants nothing on its own.
+const USER_KEY = "aa_user";
+
+// Where sessions were kept before. Read once, so a browser signed in back then trades its refresh
+// token for the cookie instead of being signed out, and then removed. Can go once those tokens
+// have expired (DECISIONS.md 2026-09-27).
+const LEGACY_KEYS = {
   accessToken: "aa_access_token",
   accessTokenExpiresAt: "aa_access_token_expires_at",
   refreshToken: "aa_refresh_token",
   refreshTokenExpiresAt: "aa_refresh_token_expires_at",
-  user: "aa_user",
 } as const;
-
-export interface StoredAuth {
-  accessToken: string;
-  accessTokenExpiresAt: string;
-  refreshToken: string;
-  refreshTokenExpiresAt: string;
-  user: UserProfileResponse;
-}
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
 }
 
 export const tokenStorage = {
-  get(): StoredAuth | null {
+  getUser(): UserProfileResponse | null {
     if (!isBrowser()) return null;
 
-    const accessToken = localStorage.getItem(KEYS.accessToken);
-    const accessTokenExpiresAt = localStorage.getItem(KEYS.accessTokenExpiresAt);
-    const refreshToken = localStorage.getItem(KEYS.refreshToken);
-    const refreshTokenExpiresAt = localStorage.getItem(KEYS.refreshTokenExpiresAt);
-    const userRaw = localStorage.getItem(KEYS.user);
-
-    if (!accessToken || !refreshToken || !userRaw) return null;
+    const raw = localStorage.getItem(USER_KEY);
+    if (!raw) return null;
 
     try {
-      const user = JSON.parse(userRaw) as UserProfileResponse;
-      return {
-        accessToken,
-        accessTokenExpiresAt: accessTokenExpiresAt ?? "",
-        refreshToken,
-        refreshTokenExpiresAt: refreshTokenExpiresAt ?? "",
-        user,
-      };
+      return JSON.parse(raw) as UserProfileResponse;
     } catch {
       return null;
     }
   },
 
-  set(auth: AuthResponse): void {
+  setUser(user: UserProfileResponse): void {
     if (!isBrowser()) return;
 
-    localStorage.setItem(KEYS.accessToken, auth.accessToken);
-    localStorage.setItem(KEYS.accessTokenExpiresAt, auth.accessTokenExpiresAt);
-    localStorage.setItem(KEYS.refreshToken, auth.refreshToken);
-    localStorage.setItem(KEYS.refreshTokenExpiresAt, auth.refreshTokenExpiresAt);
-    localStorage.setItem(KEYS.user, JSON.stringify(auth.user));
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  },
+
+  legacyRefreshToken(): string | null {
+    if (!isBrowser()) return null;
+
+    return localStorage.getItem(LEGACY_KEYS.refreshToken);
+  },
+
+  clearLegacy(): void {
+    if (!isBrowser()) return;
+
+    Object.values(LEGACY_KEYS).forEach((key) => localStorage.removeItem(key));
   },
 
   clear(): void {
     if (!isBrowser()) return;
 
-    Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
+    localStorage.removeItem(USER_KEY);
+    this.clearLegacy();
   },
 };

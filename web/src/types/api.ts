@@ -82,11 +82,11 @@ export interface UserPlanResponse {
   activeUntil: string | null;
 }
 
+// The refresh token is not in here: the API sets it as an HttpOnly cookie that no script can read
+// (2026-09-27).
 export interface AuthResponse {
   accessToken: string;
   accessTokenExpiresAt: string;
-  refreshToken: string;
-  refreshTokenExpiresAt: string;
   user: UserProfileResponse;
 }
 

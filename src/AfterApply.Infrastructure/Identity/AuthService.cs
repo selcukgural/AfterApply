@@ -168,16 +168,34 @@ internal sealed class AuthService(
     public async Task<AuthResult> RefreshAsync(string refreshToken, string? ipAddress, CancellationToken cancellationToken)
     {
         var tokenHash = tokenService.HashRefreshToken(refreshToken);
-        var stored = await dbContext.RefreshTokens.SingleOrDefaultAsync(rt => rt.TokenHash == tokenHash, cancellationToken);
+        var stored = await dbContext.RefreshTokens.AsNoTracking()
+            .SingleOrDefaultAsync(rt => rt.TokenHash == tokenHash, cancellationToken);
 
         if (stored is null)
         {
             return AuthResult.Failure("AUTH_INVALID_REFRESH_TOKEN");
         }
 
+        var now = DateTimeOffset.UtcNow;
+
         if (!stored.IsActive)
         {
+            // Two tabs share one cookie, so two refreshes can race with the same token. The loser
+            // arrives moments after the winner rotated it: not a replay, and the browser already
+            // holds the winner's cookie, so the caller just tries again.
+            if (IsJustRotated(stored, now))
+            {
+                return AuthResult.Failure(AuthResult.RefreshSuperseded);
+            }
+
             await RevokeAllActiveTokensAsync(stored.UserId, cancellationToken);
+            return AuthResult.Failure("AUTH_INVALID_REFRESH_TOKEN");
+        }
+
+        var sessionEndsAt = stored.SessionStartedAt.AddDays(_jwtOptions.AbsoluteSessionDays);
+        if (sessionEndsAt <= now)
+        {
+            await RevokeAsync(stored.Id, now, replacedByTokenHash: null, cancellationToken);
             return AuthResult.Failure("AUTH_INVALID_REFRESH_TOKEN");
         }
 
@@ -187,31 +205,52 @@ internal sealed class AuthService(
             return AuthResult.Failure("AUTH_INVALID_REFRESH_TOKEN");
         }
 
-        var now = DateTimeOffset.UtcNow;
-
         // A session from before verification existed does not renew: the account verifies at its
         // next sign-in like every other.
         if (!user.EmailConfirmed)
         {
-            stored.Revoke(now);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await RevokeAsync(stored.Id, now, replacedByTokenHash: null, cancellationToken);
             return AuthResult.Failure("AUTH_INVALID_REFRESH_TOKEN");
         }
+
         var newRefreshTokenValue = tokenService.GenerateRefreshToken();
         var newRefreshTokenHash = tokenService.HashRefreshToken(newRefreshTokenValue);
 
-        stored.Revoke(now, newRefreshTokenHash);
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
+        // Conditional on the token still being unrevoked, so of two concurrent refreshes exactly one
+        // rotates it; the other sees zero rows and gets the same answer as a just-rotated token.
+        if (await RevokeAsync(stored.Id, now, newRefreshTokenHash, cancellationToken) == 0)
+        {
+            return AuthResult.Failure(AuthResult.RefreshSuperseded);
+        }
+
+        var expiresAt = now.AddDays(_jwtOptions.RefreshTokenDays);
         var newRefreshToken = RefreshToken.Create(user.Id, newRefreshTokenHash,
-            now.AddDays(_jwtOptions.RefreshTokenDays), now, ipAddress);
+            expiresAt < sessionEndsAt ? expiresAt : sessionEndsAt, now, ipAddress, stored.SessionStartedAt);
         dbContext.RefreshTokens.Add(newRefreshToken);
 
         var (accessToken, accessTokenExpiresAt) = tokenService.CreateAccessToken(user.Id, user.Email!);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return AuthResult.Success(new AuthResponse(accessToken, accessTokenExpiresAt, newRefreshTokenValue,
             newRefreshToken.ExpiresAt, ToProfile(user)));
     }
+
+    /// <summary>How long after a rotation the old token is treated as a racing tab rather than a
+    /// replay.</summary>
+    private static readonly TimeSpan RefreshRaceGrace = TimeSpan.FromSeconds(30);
+
+    private static bool IsJustRotated(RefreshToken token, DateTimeOffset now) =>
+        token.ReplacedByTokenHash is not null && token.RevokedAt is { } revokedAt && now - revokedAt < RefreshRaceGrace;
+
+    private Task<int> RevokeAsync(Guid tokenId, DateTimeOffset now, string? replacedByTokenHash, CancellationToken cancellationToken) =>
+        dbContext.RefreshTokens
+            .Where(rt => rt.Id == tokenId && rt.RevokedAt == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(rt => rt.RevokedAt, now)
+                .SetProperty(rt => rt.ReplacedByTokenHash, replacedByTokenHash), cancellationToken);
 
     public async Task LogoutAsync(string refreshToken, CancellationToken cancellationToken)
     {
