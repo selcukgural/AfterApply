@@ -10,7 +10,8 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
-import { Combobox } from "@/components/ui/Combobox";
+import { Combobox, type ComboboxOption } from "@/components/ui/Combobox";
+import { CompanyHistory } from "@/components/applications/CompanyHistory";
 import { HrContactFields, type HrContactValues } from "@/components/ui/HrContactFields";
 import { companiesApi } from "@/lib/api/companies";
 import { CvSelectField } from "@/components/cv/CvSelectField";
@@ -58,6 +59,9 @@ export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: Applic
     cvDocumentId: initial?.cvDocumentId ?? "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  /** The company picked from the suggestions, when one was: its id is what finds the user's
+   *  earlier applications there. A name typed without picking has no id to look up. */
+  const [pickedCompany, setPickedCompany] = useState<ComboboxOption | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,7 +100,12 @@ export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: Applic
           <Combobox
             id="companyName"
             value={values.companyName}
-            onChange={(companyName) => setValues((prev) => ({ ...prev, companyName }))}
+            onChange={(companyName) => {
+              setValues((prev) => ({ ...prev, companyName }));
+              // Typing away from the picked name means another company: forget the pick.
+              if (pickedCompany && companyName !== pickedCompany.label) setPickedCompany(null);
+            }}
+            onSelect={(option) => setPickedCompany(option)}
             onSearch={async (query) =>
               (await companiesApi.search(query)).map((company) => ({ id: company.id, label: company.name }))
             }
@@ -105,6 +114,7 @@ export function ApplicationForm({ mode, initial, onSubmit, submitLabel }: Applic
           />
         </FormField>
       )}
+      {mode === "create" && pickedCompany && <CompanyHistory companyId={pickedCompany.id} />}
       <FormField label={t("jobTitle")} htmlFor="jobTitle" error={errors.jobTitle}>
         <Input id="jobTitle" value={values.jobTitle} onChange={update("jobTitle")} />
       </FormField>

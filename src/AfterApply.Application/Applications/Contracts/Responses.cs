@@ -113,7 +113,22 @@ public sealed record ApplicationDetailResponse(
     InterviewFormat? InterviewFormat = null,
     // When the linked posting stopped taking applications, as the liveness check saw it on the
     // site itself (Job.ClosedAt). Null while it is up, not yet checked, or not checkable.
-    DateTimeOffset? JobClosedAt = null);
+    DateTimeOffset? JobClosedAt = null,
+    // When the linked posting was first published, if the capture or its ATS said (Job.PublishedAt),
+    // so the page can say how old the posting was when the user applied.
+    DateTimeOffset? JobPublishedAt = null,
+    // How long companies usually take to answer this user, in days — only while this application
+    // is still waiting for its first answer (Status Applied), and null below the minimum sample.
+    int? UserMedianResponseDays = null,
+    // Only on a rejected application: the reason that recurs among the user's most recent
+    // reasoned rejections, when it recurs at least RejectionPatterns.MinimumRepeat times. Reasons
+    // come from the e-mail extraction; "not stated" never counts.
+    RejectionReasonCategory? RejectionPatternCategory = null,
+    int? RejectionPatternCount = null,
+    int? RejectionPatternOutOf = null,
+    // Only on an application at the offer stage: how many of the user's other applications are
+    // still in an interview stage, so the offer card can say there are others to tell.
+    int? OtherInterviewingCount = null);
 
 public sealed record ExtensionApplicationResponse(
     ApplicationDetailResponse Application,

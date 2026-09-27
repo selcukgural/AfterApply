@@ -16,6 +16,7 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { HeroTile } from "@/components/dashboard/HeroTile";
 import { OutcomeCard } from "@/components/dashboard/OutcomeCard";
 import { RemindersPanel } from "@/components/dashboard/RemindersPanel";
+import { InterviewMorningCard } from "@/components/dashboard/InterviewMorningCard";
 import { EndedProcessesCard } from "@/components/dashboard/EndedProcessesCard";
 import { ReminderBreakGate } from "@/components/dashboard/ReminderBreakGate";
 import { WeeklyJobsAnnouncement } from "@/components/dashboard/WeeklyJobsAnnouncement";
@@ -97,6 +98,8 @@ export default function DashboardPage() {
               reason the reminders card below stays short. */}
           {/* The ended-processes card (2026-09-24) sits inside the break too: a person who asked
               for a pause from reminders is not asked to rate anything either. */}
+          {/* Outside the reminder break: an interview today is not a nudge the user asked to pause. */}
+          <InterviewMorningCard />
           <ReminderBreakGate>
             <StaleApplicationsBanner />
             <RemindersPanel />

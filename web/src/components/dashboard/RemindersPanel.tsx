@@ -24,6 +24,7 @@ import {
   useUpcomingInterviews,
 } from "@/hooks/useReminders";
 import { useDeferredAction } from "@/hooks/useDeferredAction";
+import { isInterviewMorning } from "@/lib/dashboard/interviewMorning";
 import {
   InterviewAnsweredRow,
   InterviewHeldMeta,
@@ -168,7 +169,8 @@ export function RemindersPanel() {
 
   // Upcoming interviews and just-answered questions sit above the reminders on the first page only:
   // they are not part of the paged list, and repeating them on every page would push its rows down.
-  const upcomingRows = page === 1 ? (upcoming ?? []) : [];
+  // Today's interviews have the morning card above this one; listing them here too would say it twice.
+  const upcomingRows = page === 1 ? (upcoming ?? []).filter((interview) => !isInterviewMorning(interview.interviewAt)) : [];
   const answeredRows = page === 1 ? answered : [];
   if (!data || (data.totalCount === 0 && result === null && upcomingRows.length === 0 && answeredRows.length === 0 && snoozed === null && held.pending === null)) {
     return data && hadWork ? (

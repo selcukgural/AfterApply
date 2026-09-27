@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 
 interface JobDescriptionCardProps {
   descriptionHtml: string;
+  /** Open expanded and scroll into view — set when the page was opened to read the posting. */
+  openOnArrival?: boolean;
 }
 
 // Re-sanitizes independently of the extension's own capture-time allow-list (popup.js) — stored
@@ -17,9 +19,31 @@ const SANITIZE_CONFIG = {
   ALLOWED_ATTR: [],
 };
 
-export function JobDescriptionCard({ descriptionHtml }: JobDescriptionCardProps) {
+/** Where "read the whole posting" lands. */
+const ANCHOR = "job-description";
+
+export function JobDescriptionCard({ descriptionHtml, openOnArrival = false }: JobDescriptionCardProps) {
   const t = useTranslations("applications.detail.jobDescription");
-  const [expanded, setExpanded] = useState(false);
+  // Arriving through "read the whole posting" (the interview-morning card) opens it expanded and
+  // brings it into view. Once now, and once more when the cards above it have loaded and pushed it
+  // down — unless the reader has started scrolling on their own by then.
+  const [expanded, setExpanded] = useState(openOnArrival);
+
+  useEffect(() => {
+    if (!openOnArrival) return;
+    const reveal = () => document.getElementById(ANCHOR)?.scrollIntoView({ block: "start" });
+    const frame = requestAnimationFrame(reveal);
+    let landedAt: number | null = null;
+    const settle = setTimeout(() => {
+      if (landedAt === null || Math.abs(window.scrollY - landedAt) < 2) reveal();
+    }, 700);
+    const note = setTimeout(() => (landedAt = window.scrollY), 50);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(settle);
+      clearTimeout(note);
+    };
+  }, [openOnArrival]);
   // DOMPurify.sanitize needs a real `window` (unavailable during Next.js SSR — see
   // DECISIONS.md) — deferred to an effect so it only ever runs client-side, after hydration.
   const [safeHtml, setSafeHtml] = useState<string | null>(null);
@@ -36,7 +60,7 @@ export function JobDescriptionCard({ descriptionHtml }: JobDescriptionCardProps)
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+    <div id={ANCHOR} className="scroll-mt-20 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h2>
         <span className="text-xs text-gray-500 dark:text-gray-500">{t("source")}</span>

@@ -5,6 +5,7 @@ using AfterApply.Application.Companies;
 using AfterApply.Application.Imports;
 using AfterApply.Application.Notifications;
 using AfterApply.Domain.Applications;
+using AfterApply.Domain.Board;
 using AfterApply.Domain.Common;
 using AfterApply.Infrastructure.Board;
 using AfterApply.Infrastructure.Caching;
@@ -939,7 +940,7 @@ internal sealed class ApplicationService(
             ? null
             : await dbContext.Jobs
                 .Where(j => j.Id == application.JobId)
-                .Select(j => new { j.DescriptionHtml, j.ClosedAt })
+                .Select(j => new { j.DescriptionHtml, j.ClosedAt, j.PublishedAt })
                 .FirstOrDefaultAsync(cancellationToken);
         var jobDescriptionHtml = application.CapturedJobDescriptionHtml ?? job?.DescriptionHtml;
 
@@ -952,6 +953,20 @@ internal sealed class ApplicationService(
                 .Where(d => d.Id == application.CvDocumentId && d.UserId == application.UserId)
                 .Select(d => d.FileName)
                 .FirstOrDefaultAsync(cancellationToken);
+
+        // The status-specific extras (canvas "İnce dokunuşlar — Paket 2"): each is one small query,
+        // run only on the status whose card uses it.
+        var medianResponseDays = application.Status == ApplicationStatus.Applied
+            ? await UserResponseMedian.GetAsync(dbContext, application.UserId, cancellationToken)
+            : null;
+        var rejectionPattern = application.Status == ApplicationStatus.Rejected
+            ? await FindRejectionPatternAsync(application.UserId, cancellationToken)
+            : null;
+        var inProgress = BoardColumns.InProgressStatuses;
+        int? otherInterviewing = application.Status == ApplicationStatus.Offer
+            ? await dbContext.Applications.CountAsync(
+                a => a.UserId == application.UserId && a.Id != application.Id && inProgress.Contains(a.Status), cancellationToken)
+            : null;
 
         ReplyPromiseOutcome? promiseOutcome = null;
         if (application is { PromisedReplyBy: { } promisedBy, PromisedReplySince: { } promisedSince })
@@ -975,6 +990,28 @@ internal sealed class ApplicationService(
             application.PromisedReplyBy, application.PromisedReplyStatus, promiseOutcome,
             application.RejectionNotice,
             application.CurrentInterviewAt, application.CurrentInterviewAt is null ? null : application.InterviewFormat,
-            job?.ClosedAt);
+            job?.ClosedAt, job?.PublishedAt, medianResponseDays,
+            rejectionPattern?.Category, rejectionPattern?.Count, rejectionPattern?.OutOf,
+            otherInterviewing);
+    }
+
+    /// <summary>
+    /// The latest stated reason of each of the user's rejected applications, newest first — the
+    /// same rows the timeline shows — reduced by <see cref="RejectionPatterns.Find"/>.
+    /// </summary>
+    private async Task<RejectionPatterns.Pattern?> FindRejectionPatternAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var reasons = await dbContext.ApplicationStatusHistories
+            .Where(h => h.ToStatus == ApplicationStatus.Rejected && h.RejectionReasonCategory != null)
+            .Join(dbContext.Applications.Where(a => a.UserId == userId && a.Status == ApplicationStatus.Rejected),
+                h => h.ApplicationId, a => a.Id, (h, _) => new { h.ApplicationId, h.ChangedAt, h.RejectionReasonCategory })
+            .OrderByDescending(x => x.ChangedAt)
+            .Take(RejectionPatterns.Window * 4)
+            .ToListAsync(cancellationToken);
+
+        return RejectionPatterns.Find(reasons
+            .GroupBy(x => x.ApplicationId)
+            .Select(g => g.First())
+            .Select(x => x.RejectionReasonCategory!.Value));
     }
 }
