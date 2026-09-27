@@ -43,6 +43,8 @@ using AfterApply.Infrastructure.Imports;
 using AfterApply.Application.AtsSources;
 using AfterApply.Infrastructure.AtsSources;
 using AfterApply.Infrastructure.JobSources;
+using AfterApply.Infrastructure.JobLiveness;
+using AfterApply.Application.JobLiveness;
 using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Pro;
 using AfterApply.Application.JobSources;
@@ -104,6 +106,7 @@ public static class DependencyInjection
 
     public const string AtsJobSourceResiliencePipeline = "ats-job-source";
     public const string KariyerNetJobSourceResiliencePipeline = "kariyernet-job-source";
+    public const string JobLivenessResiliencePipeline = "job-liveness";
 
     public const string CorsPolicyName = "Frontend";
     public const string AuthRateLimitPolicy = "auth-strict";
@@ -206,6 +209,7 @@ public static class DependencyInjection
         services.Configure<RequestAuditOptions>(configuration.GetSection(RequestAuditOptions.SectionName));
         services.Configure<JobSourceOptions>(configuration.GetSection(JobSourceOptions.SectionName));
         services.Configure<AtsSourceOptions>(configuration.GetSection(AtsSourceOptions.SectionName));
+        services.Configure<JobLivenessOptions>(configuration.GetSection(JobLivenessOptions.SectionName));
         services.Configure<BlogOptions>(configuration.GetSection(BlogOptions.SectionName));
         services.AddPayments(configuration);
         services.AddDocumentStorage(configuration);
@@ -827,6 +831,20 @@ public static class DependencyInjection
                 JobSourceResilience.Configure(pipeline,
                     context.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value));
         services.AddScoped<IAtsJobEnrichmentService, AtsJobEnrichmentService>();
+
+        // The posting liveness check: its own client and pipeline, so its traffic never trips the
+        // sweep's breaker or the reverse. Logging removed like the others — the URL carries a
+        // posting someone saved. It reuses the ATS client for the ATS postings.
+        services.AddHttpClient<IJobLivenessClient, JobLivenessClient>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(60);
+            })
+            .RemoveAllLoggers()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddResilienceHandler(JobLivenessResiliencePipeline, (pipeline, context) =>
+                JobSourceResilience.Configure(pipeline,
+                    context.ServiceProvider.GetRequiredService<IOptions<JobSourceOptions>>().Value));
+        services.AddScoped<IJobLivenessService, JobLivenessService>();
 
         return services;
     }

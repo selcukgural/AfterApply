@@ -110,7 +110,10 @@ public sealed record ApplicationDetailResponse(
     // The interview of the current stage, when the user recorded one. One recorded for an earlier
     // stage is not returned: as far as the page is concerned it has happened.
     DateTimeOffset? InterviewAt = null,
-    InterviewFormat? InterviewFormat = null);
+    InterviewFormat? InterviewFormat = null,
+    // When the linked posting stopped taking applications, as the liveness check saw it on the
+    // site itself (Job.ClosedAt). Null while it is up, not yet checked, or not checkable.
+    DateTimeOffset? JobClosedAt = null);
 
 public sealed record ExtensionApplicationResponse(
     ApplicationDetailResponse Application,

@@ -35,10 +35,70 @@ public sealed class Job : AuditableEntity
 
     public DateTimeOffset? PublishedAt { get; private set; }
 
+    /// <summary>
+    /// When the posting stopped taking applications, as observed by <c>JobLivenessService</c>.
+    /// Final: a closed row never reopens. A posting the site puts back up is a new posting (a new
+    /// row, see <c>JobResolver</c>), so everyone who applied to this round keeps seeing it closed.
+    /// Only ever set from the server's own look at the site — never from anything a user reports
+    /// (ghosting is about one application, and this row is shared by everyone who saved it).
+    /// </summary>
     public DateTimeOffset? ClosedAt { get; private set; }
+
+    /// <summary>When the site announces an open posting will close (kariyer.net publishes it).</summary>
+    public DateTimeOffset? ClosesAt { get; private set; }
+
+    /// <summary>The last time the liveness check looked at this posting.</summary>
+    public DateTimeOffset? LivenessCheckedAt { get; private set; }
+
+    /// <summary>The first of two looks that found the posting gone without the site saying why;
+    /// cleared when a later look finds it up.</summary>
+    public DateTimeOffset? LivenessSuspectedAt { get; private set; }
 
     private Job()
     {
+    }
+
+    /// <summary>
+    /// Takes one liveness observation. Returns true when it closed the posting.
+    /// </summary>
+    /// <param name="confirmAfter">How long a "gone" has to persist, between the first look that
+    /// saw it and a later one, before it counts: a bare 404 can be a bad minute on the site's
+    /// side, and a close is permanent.</param>
+    public bool ApplyLiveness(PostingLiveness observation, DateTimeOffset now, TimeSpan confirmAfter)
+    {
+        if (ClosedAt is not null)
+        {
+            return false;
+        }
+
+        LivenessCheckedAt = now;
+        Touch(now);
+
+        switch (observation.Kind)
+        {
+            case PostingLivenessKind.Open:
+                LivenessSuspectedAt = null;
+                ClosesAt = observation.ClosesOn ?? ClosesAt;
+                return false;
+
+            case PostingLivenessKind.Closed:
+                LivenessSuspectedAt = null;
+                ClosedAt = observation.ClosedOn is { } closedOn && closedOn < now ? closedOn : now;
+                return true;
+
+            case PostingLivenessKind.Gone when LivenessSuspectedAt is null:
+                LivenessSuspectedAt = now;
+                return false;
+
+            case PostingLivenessKind.Gone when now - LivenessSuspectedAt >= confirmAfter:
+                // Dated from the first look that saw it gone, which is the closer estimate.
+                ClosedAt = LivenessSuspectedAt;
+                LivenessSuspectedAt = null;
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     /// <summary>

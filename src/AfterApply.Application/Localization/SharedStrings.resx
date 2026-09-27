@@ -750,4 +750,16 @@
   <data name="VALIDATION_INTERVIEW_NEXT_STATUS" xml:space="preserve">
     <value>Choose the stage the process moved on to.</value>
   </data>
+  <data name="FEATURE_FLAG_JOB_LIVENESS_TITLE" xml:space="preserve">
+    <value>Checking whether postings are still up</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_LIVENESS_DESCRIPTION" xml:space="preserve">
+    <value>Once a day the server re-opens the postings of applications still in progress and of postings saved to apply to later (each at most every three days): the public page or API of LinkedIn, kariyer.net and the ATSes. The request carries only the posting's public address, nothing about the user. A closed posting gets its closing date recorded.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_LIVENESS_WHEN_OFF" xml:space="preserve">
+    <value>The check does not run; newly closed postings are not marked. Closing dates already recorded are kept.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_LIVENESS_NOTES" xml:space="preserve">
+    <value>The privacy policy describes this check; the flag and the text change together. A site that answers 429/403 is left alone for the rest of that day.</value>
+  </data>
 </root>

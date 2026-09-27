@@ -22,8 +22,10 @@ public sealed class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.Property(j => j.EmploymentType).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(j => j.CompanyId);
+        // One OPEN row per posting. A closed row stays as it is for the people who applied to that
+        // round; the same posting put back up later is a new row (see JobResolver).
         builder.HasIndex(j => new { j.Source, j.ExternalId })
             .IsUnique()
-            .HasFilter("\"ExternalId\" IS NOT NULL");
+            .HasFilter("\"ExternalId\" IS NOT NULL AND \"ClosedAt\" IS NULL");
     }
 }

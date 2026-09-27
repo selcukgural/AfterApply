@@ -935,13 +935,13 @@ internal sealed class ApplicationService(
 
         // What this user's own capture read, else what the server read from the ATS itself — never
         // another user's capture (see IJobResolver).
-        var jobDescriptionHtml = application.CapturedJobDescriptionHtml
-            ?? (application.JobId is null
-                ? null
-                : await dbContext.Jobs
-                    .Where(j => j.Id == application.JobId)
-                    .Select(j => j.DescriptionHtml)
-                    .FirstOrDefaultAsync(cancellationToken));
+        var job = application.JobId is null
+            ? null
+            : await dbContext.Jobs
+                .Where(j => j.Id == application.JobId)
+                .Select(j => new { j.DescriptionHtml, j.ClosedAt })
+                .FirstOrDefaultAsync(cancellationToken);
+        var jobDescriptionHtml = application.CapturedJobDescriptionHtml ?? job?.DescriptionHtml;
 
         // Scoped to the owner as well as to the id. The stored id is already ownership-checked on
         // the way in, but a read that only matched on id would silently start leaking file names
@@ -974,6 +974,7 @@ internal sealed class ApplicationService(
             company.KariyerNetUrl, company.Industry, company.Country, company.Slug,
             application.PromisedReplyBy, application.PromisedReplyStatus, promiseOutcome,
             application.RejectionNotice,
-            application.CurrentInterviewAt, application.CurrentInterviewAt is null ? null : application.InterviewFormat);
+            application.CurrentInterviewAt, application.CurrentInterviewAt is null ? null : application.InterviewFormat,
+            job?.ClosedAt);
     }
 }

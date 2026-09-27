@@ -523,6 +523,13 @@ jobs:
             # move together — /extension-privacy and PRIVACY_POLICY.md name these recipients, so
             # turning it off again means walking that text back.
             AtsSources__Enabled=true
+            # Whether saved postings are still up (Job.ClosedAt; DECISIONS.md 2026-09-27): once a
+            # day, each posting of an application still in progress or saved with "Apply later"
+            # at most every three days, 150 per run, one request at a time with a pause, a site
+            # that answers 429/403 left alone for the day. The request is the posting's public
+            # address and nothing about the user. This flag and /extension-privacy (serverFetch)
+            # move together.
+            JobLiveness__Enabled=true
             PayTr__Enabled=false
             PayTr__TestMode=false
             PayTr__Plans__Monthly__AmountMinor=29900

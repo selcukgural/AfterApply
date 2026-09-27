@@ -162,6 +162,9 @@ export interface ApplicationDetailResponse {
   /** The interview of the current stage (ISO instant); absent on an API that predates it. */
   interviewAt?: string | null;
   interviewFormat?: InterviewFormat | null;
+  /** When the linked posting stopped taking applications (ISO instant), as the server saw it on
+   *  the site itself; absent on an API that predates it, null while it is up or unchecked. */
+  jobClosedAt?: string | null;
 }
 
 export type HrEmailSource = "Manual" | "IncomingEmail";
@@ -2732,7 +2735,8 @@ export type FeatureFlag =
   | "FeedbackGitHub"
   | "AtsSources"
   | "JobSources"
-  | "Payments";
+  | "Payments"
+  | "JobLiveness";
 
 export type FeatureFlagCoupling = "PrivacyText" | "Money";
 
