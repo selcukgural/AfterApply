@@ -26,6 +26,11 @@ public sealed class RateLimitingOptions
     /// <summary>Per IP: login/register/refresh/forgot/reset run before the caller is authenticated.</summary>
     public FixedWindowPolicy Auth { get; init; } = new() { PermitLimit = 5, WindowSeconds = 60 };
 
+    /// <summary>Per IP: token refresh. Every page load of a signed-in tab spends one (the access
+    /// token is held in memory only), so it can't share the five-a-minute sign-in bucket; the token
+    /// is 256 random bits, so the limit is about volume, not guessing.</summary>
+    public FixedWindowPolicy AuthRefresh { get; init; } = new() { PermitLimit = 60, WindowSeconds = 60 };
+
     public FixedWindowPolicy Upload { get; init; } = new() { PermitLimit = 10, WindowSeconds = 300 };
 
     public FixedWindowPolicy ExtensionSignal { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };

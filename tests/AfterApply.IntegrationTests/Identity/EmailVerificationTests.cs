@@ -226,7 +226,7 @@ public class EmailVerificationTests(ApiHost<EmailVerificationProfile> host)
             .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.EmailConfirmed, false)));
 
         var client = host.CreateClient();
-        (await client.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(auth.RefreshToken), JsonOptions))
+        (await client.RefreshAsync(auth.RefreshToken))
             .StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         (await client.PostAsJsonAsync("/api/auth/login", new LoginRequest("legacy@example.com", ApiHost.DefaultPassword), JsonOptions))
             .StatusCode.ShouldBe(HttpStatusCode.Accepted);

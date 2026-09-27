@@ -18,11 +18,14 @@ import tr from "../../../messages/tr.json";
 const WEB_ROOT = fileURLToPath(new URL("../../..", import.meta.url));
 const SRC = path.join(WEB_ROOT, "src");
 
-// The whole inventory, as published on /cookies. `NEXT_LOCALE` is written server-side by
-// next-intl's proxy (src/proxy.ts); `theme` by src/lib/theme/theme.ts.
-const COOKIES = ["NEXT_LOCALE", "theme"];
+// The whole inventory, as published on /cookies. `__Secure-ek_rt` is set by the API on its own
+// host (src/AfterApply.Api/Endpoints/RefreshTokenCookie.cs), `NEXT_LOCALE` server-side by
+// next-intl's proxy (src/proxy.ts), `theme` by src/lib/theme/theme.ts.
+const COOKIES = ["__Secure-ek_rt", "NEXT_LOCALE", "theme"];
 
 const STORAGE_KEYS = [
+  // No longer written since 2026-09-27 (tokens moved to the HttpOnly cookie); tokenStorage.ts still
+  // names them so an older session's values are traded for the cookie once and deleted.
   "aa_access_token",
   "aa_access_token_expires_at",
   "aa_refresh_token",

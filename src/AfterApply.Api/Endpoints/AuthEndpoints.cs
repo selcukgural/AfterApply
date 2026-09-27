@@ -13,7 +13,10 @@ public static class AuthEndpoints
 {
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/auth").WithTags("Auth");
+        // The one route group that sets and reads a cookie, so the one that needs credentialed CORS.
+        var group = app.MapGroup("/api/auth").WithTags("Auth")
+            .RequireCors(DependencyInjection.AuthCookieCorsPolicyName)
+            .AddEndpointFilter<RefreshTokenCookie.Filter>();
 
         group.MapPost("/register", async (RegisterRequest request, IAuthService authService,
                 HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -273,24 +276,56 @@ public static class AuthEndpoints
             .ProducesValidationProblem()
             .Produces(StatusCodes.Status429TooManyRequests);
 
-        group.MapPost("/refresh", async (RefreshRequest request, IAuthService authService,
-                IStringLocalizer<SharedStrings> localizer, HttpContext httpContext, CancellationToken cancellationToken) =>
+        group.MapPost("/refresh", async (RefreshRequest? request, IAuthService authService,
+                IStringLocalizer<SharedStrings> localizer, IConfiguration configuration, HttpContext httpContext,
+                CancellationToken cancellationToken) =>
             {
-                var result = await authService.RefreshAsync(request.RefreshToken, httpContext.GetClientIpAddress(), cancellationToken);
-                return result.Succeeded
-                    ? Results.Ok(result.Response)
-                    : Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
+                if (RefreshTokenCookie.IsForeignOrigin(httpContext, configuration))
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status403Forbidden);
+                }
+
+                // The body token is the one-time trade for a browser still holding a localStorage-era
+                // token; the cookie wins whenever both are there.
+                var refreshToken = RefreshTokenCookie.Read(httpContext.Request) ?? request?.RefreshToken;
+                if (refreshToken is null)
+                {
+                    return Results.Problem(detail: localizer["AUTH_INVALID_REFRESH_TOKEN"], statusCode: StatusCodes.Status401Unauthorized);
+                }
+
+                var result = await authService.RefreshAsync(refreshToken, httpContext.GetClientIpAddress(), cancellationToken);
+                if (result.Succeeded)
+                {
+                    return Results.Ok(result.Response);
+                }
+
+                // Leave the cookie alone: the request that won the race has already set its successor,
+                // and deleting here could arrive after it and sign every tab out.
+                if (result.Errors.Contains(AuthResult.RefreshSuperseded))
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status409Conflict,
+                        extensions: new Dictionary<string, object?> { ["code"] = AuthResult.RefreshSuperseded });
+                }
+
+                RefreshTokenCookie.Delete(httpContext.Response);
+                return Results.Problem(detail: TranslateErrors(result.Errors, localizer), statusCode: StatusCodes.Status401Unauthorized);
             })
             .WithValidation<RefreshRequest>()
             // Not user input: the client rotates the token on its own schedule, and the IP of every
             // rotation is already on the RefreshTokens row it creates (CreatedByIp), tied to the
             // account — a request-audit row would say the same thing without the user id.
             .WithoutRequestAudit()
-            .RequireRateLimiting(DependencyInjection.AuthRateLimitPolicy)
-            .WithSummary("Exchange a refresh token for a new access/refresh token pair")
-            .WithDescription("Rotates the refresh token — the one submitted here stops working, use the new one from the response.")
+            // Its own bucket, not the strict sign-in one: every page load of a signed-in tab refreshes
+            // (the access token lives in memory only), and a 256-bit token has nothing to brute-force.
+            .RequireRateLimiting(DependencyInjection.RefreshRateLimitPolicy)
+            .WithSummary("Exchange the refresh-token cookie for a new access token")
+            .WithDescription("Reads the HttpOnly refresh-token cookie, rotates it (the response sets its successor) " +
+                              "and returns a new access token. 409 with code AUTH_REFRESH_SUPERSEDED when another tab " +
+                              "rotated the same cookie a moment ago — retry once. 403 for a request from a foreign Origin.")
             .Produces<AuthResponse>()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .Produces(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("/forgot-password", async (ForgotPasswordRequest request, IAuthService authService,
@@ -327,17 +362,30 @@ public static class AuthEndpoints
             .ProducesValidationProblem()
             .Produces(StatusCodes.Status429TooManyRequests);
 
-        group.MapPost("/logout", async (LogoutRequest request, IAuthService authService, CancellationToken cancellationToken) =>
+        group.MapPost("/logout", async (LogoutRequest? request, IAuthService authService, IConfiguration configuration,
+                HttpContext httpContext, CancellationToken cancellationToken) =>
             {
-                await authService.LogoutAsync(request.RefreshToken, cancellationToken);
+                if (RefreshTokenCookie.IsForeignOrigin(httpContext, configuration))
+                {
+                    return Results.Problem(statusCode: StatusCodes.Status403Forbidden);
+                }
+
+                var refreshToken = RefreshTokenCookie.Read(httpContext.Request) ?? request?.RefreshToken;
+                if (refreshToken is not null)
+                {
+                    await authService.LogoutAsync(refreshToken, cancellationToken);
+                }
+
+                RefreshTokenCookie.Delete(httpContext.Response);
                 return Results.NoContent();
             })
             .WithValidation<LogoutRequest>()
             .RequireAuthorization()
-            .WithSummary("Revoke a refresh token")
+            .WithSummary("Revoke the refresh-token cookie")
             .WithDescription("Always returns 204, even if the token was already revoked or unknown — logout is idempotent by design.")
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status401Unauthorized);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         return app;
     }

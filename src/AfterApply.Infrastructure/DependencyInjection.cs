@@ -109,7 +109,9 @@ public static class DependencyInjection
     public const string JobLivenessResiliencePipeline = "job-liveness";
 
     public const string CorsPolicyName = "Frontend";
+    public const string AuthCookieCorsPolicyName = "FrontendAuthCookie";
     public const string AuthRateLimitPolicy = "auth-strict";
+    public const string RefreshRateLimitPolicy = "auth-refresh";
     public const string UploadRateLimitPolicy = "upload";
     public const string ExtensionSignalRateLimitPolicy = "extension-signal";
     public const string LinkPreviewRateLimitPolicy = "link-preview";
@@ -359,10 +361,22 @@ public static class DependencyInjection
     {
         var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
-        services.AddCors(options => options.AddPolicy(CorsPolicyName, policy => policy
-            .WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod()));
+        services.AddCors(options =>
+        {
+            options.AddPolicy(CorsPolicyName, policy => policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod());
+
+            // /api/auth only: the refresh-token cookie is set and read there, and a browser keeps a
+            // cross-origin Set-Cookie (and sends the cookie back) only on a credentialed request.
+            // Every other route stays on the Bearer header and the credential-less policy above.
+            options.AddPolicy(AuthCookieCorsPolicyName, policy => policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials());
+        });
 
         return services;
     }
@@ -491,7 +505,8 @@ public static class DependencyInjection
             Issuer = configuration["Jwt:Issuer"] ?? "AfterApply",
             Audience = configuration["Jwt:Audience"] ?? "AfterApply.Api",
             AccessTokenMinutes = configuration.GetValue("Jwt:AccessTokenMinutes", 20),
-            RefreshTokenDays = configuration.GetValue("Jwt:RefreshTokenDays", 30)
+            RefreshTokenDays = configuration.GetValue("Jwt:RefreshTokenDays", 30),
+            AbsoluteSessionDays = configuration.GetValue("Jwt:AbsoluteSessionDays", 90)
         };
 
         services.AddSingleton(Options.Create(jwtOptions));

@@ -10074,3 +10074,34 @@ Dar sürümün asıl kazancı veride: "nasıl geçti?" cevabı aşama zamanları
 - Entegrasyon test host'unda varsayılan kapalı: gerçek saatle tarayan test sınıfları hafta sonunda ya da tatilde kırılmasın diye. `ReminderDeferralTests` kendi saatiyle açar.
 - `ReminderService` artık `TimeProvider`'dan okur; canlıda sistem saati kullanılır.
 - **Dışa aktarım:** hatırlatmanın `DeferredFor` alanı eklendi.
+
+## Refresh token HttpOnly cookie'de, access token yalnızca bellekte — DECIDED (2026-09-27)
+
+Sprint 2'nin "Token storage: localStorage + single-flight refresh" kararının yerine geçer. O karar bir güvenlik değerlendirmesi olmadan alınmıştı. CSP'de `script-src 'unsafe-inline'` hâlâ açıkken, herhangi bir XSS localStorage'daki token'ları okuyup hesabı kalıcı olarak ele geçirebiliyordu. `PRIVACY_CHECKLIST.md` de bunu "backlog" olarak not etmişti.
+
+**Model:**
+- Refresh token `__Secure-ek_rt` cookie'sinde tutuluyor: `HttpOnly; Secure; SameSite=Strict; Path=/api/auth`, `Domain` yok (yalnızca `api.ekariyerim.com`).
+- Web ve API aynı site (`ekariyerim.com` / `api.ekariyerim.com`, geliştirmede `localhost`). Bu yüzden Strict yeterli, üçüncü taraf çerez kısıtlarına takılmıyor.
+- `AuthResponse.RefreshToken` artık `[JsonIgnore]`; hiçbir yanıt gövdesinde dönmüyor.
+- `/api/auth` grubundaki `RefreshTokenCookie.Filter`, `AuthResponse` dönen her yanıtta (Google/LinkedIn/GitHub'ın iç içe `auth`'u dahil) cookie'yi set ediyor. Yeni bir giriş yolu cookie'yi unutamaz.
+- Access token yalnızca `authStore` belleğinde duruyor. Her sayfa yüklemesinde `/refresh` çağrılıyor, ama sadece `aa_user` ipucu varsa; anonim ziyaretçi boşuna istek atmıyor. localStorage'da yalnızca `aa_user` profil ipucu kalıyor.
+- `/refresh` ve `/logout`, `Origin` başlığı varsa ve `Cors:AllowedOrigins` dışındaysa 403 veriyor. Bu, SameSite'ın yanında ikinci katman.
+- CORS: yalnızca `/api/auth` grubunda credentialed ayrı bir politika var (`FrontendAuthCookie`). Diğer her yol Bearer ile, credential'sız politikada kalıyor.
+
+**Rotasyon:**
+- Rotasyon artık atomik: `WHERE Id=@id AND RevokedAt IS NULL` koşullu güncelleme, transaction içinde.
+- İki sekme aynı cookie'yi harcarsa, kaybeden 30 saniyelik grace içinde **409 `AUTH_REFRESH_SUPERSEDED`** alıyor. Bu durumda toplu iptal yok, istemci bir kez yeniden deniyor. Grace dışındaki yeniden kullanım eskisi gibi hesabın tüm oturumlarını iptal ediyor.
+- 409'da cookie silinmiyor. Silinseydi, kazanan isteğin yeni cookie'sinin üzerine yazılabilirdi.
+- Tarayıcı tarafında `navigator.locks` (`ek-auth-refresh`) refresh'i sekmeler arasında seri hâle getiriyor.
+- **Mutlak oturum ömrü:** yeni `RefreshTokens.SessionStartedAt` kolonu rotasyonlar boyunca taşınıyor. `Jwt:AbsoluteSessionDays` (varsayılan 90) dolunca refresh reddediliyor. Mevcut satırlarda başlangıç olarak kendi `CreatedAt` değeri alındı.
+- **Rate limit:** `/refresh`, login'le aynı 5/dk/IP kovasından ayrıldı ve kendi `auth-refresh` kovasına alındı (60/dk/IP). Her sayfa yüklemesi bir refresh olduğu için eski kova birkaç sekmede 429'a düşüp oturumu kapatırdı.
+- İstemci yalnızca 401'de oturumu kapatıyor. 429, 5xx ya da ağ hatası oturumu kapatmıyor.
+
+**Geçiş:**
+- 2026-09-27'den önce giriş yapmış bir tarayıcı, ilk ziyarette eski `aa_refresh_token` değerini `/refresh` gövdesinde bir kez gönderiyor. Sunucu cookie'yi set ediyor, istemci eski `aa_*_token` anahtarlarını siliyor. Kimse zorla çıkış yapmıyor.
+- Gövde yolu (`RefreshRequest.RefreshToken`, `LogoutRequest.RefreshToken`) ve `tokenStorage`'daki legacy anahtarlar, eski token'ların süresi dolduktan sonra kaldırılabilir: 30 günlük refresh ömrü → **2026-10-28'den sonra**.
+- Deploy sırasında açık kalan eski sürüm sekmeleri bir kez yeniden giriş ister. Kabul edildi.
+
+**Metinler:** `/cookies` artık üç çerez listeliyor (tr + en), localStorage maddesi güncellendi. `browserStorage.test.ts` envanteri ve `PRIVACY_CHECKLIST.md` de güncellendi.
+
+**Açık kalan:** `script-src 'unsafe-inline'` hâlâ var. XSS artık token'ı çalamıyor ama sayfa açıkken API'yi kullanıcı adına çağırabilir. Nonce tabanlı CSP ayrı bir PR'da ele alınacak.

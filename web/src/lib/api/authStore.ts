@@ -5,6 +5,9 @@ import { tokenStorage } from "./tokenStorage";
  * Module-level singleton (not React state) so httpClient.ts can read the
  * current access token synchronously without a render cycle. AuthContext
  * subscribes to this for UI-facing reads.
+ *
+ * The access token is held here and nowhere else — not in localStorage, where any injected script
+ * could read it. A reload starts without one and gets a fresh one from the refresh-token cookie.
  */
 let currentAccessToken: string | null = null;
 let currentUser: UserProfileResponse | null = null;
@@ -16,14 +19,12 @@ function notify(): void {
 
 export const authStore = {
   hydrate(): void {
-    const stored = tokenStorage.get();
-    currentAccessToken = stored?.accessToken ?? null;
-    currentUser = stored?.user ?? null;
+    currentUser = tokenStorage.getUser();
     notify();
   },
 
   setAuth(auth: AuthResponse): void {
-    tokenStorage.set(auth);
+    tokenStorage.setUser(auth.user);
     currentAccessToken = auth.accessToken;
     currentUser = auth.user;
     notify();
@@ -31,10 +32,7 @@ export const authStore = {
 
   updateUser(user: UserProfileResponse): void {
     currentUser = user;
-    const stored = tokenStorage.get();
-    if (stored) {
-      tokenStorage.set({ ...stored, user });
-    }
+    tokenStorage.setUser(user);
     notify();
   },
 
@@ -47,10 +45,6 @@ export const authStore = {
 
   getAccessToken(): string | null {
     return currentAccessToken;
-  },
-
-  getRefreshToken(): string | null {
-    return tokenStorage.get()?.refreshToken ?? null;
   },
 
   getUser(): UserProfileResponse | null {

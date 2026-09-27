@@ -74,6 +74,26 @@ public class RedisRateLimitTests(ApiHost<DefaultProfile> host) : IClassFixture<A
         (await client.GetAsync("/api/companies/public/")).StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    /// <summary>Every page load of a signed-in tab refreshes (the access token is held in memory
+    /// only), so refresh must not share the five-a-minute sign-in window (2026-09-27).</summary>
+    [Fact]
+    public async Task Refresh_Has_Its_Own_Window_Apart_From_Sign_In()
+    {
+        await using var limited = host.Standalone(RateLimitingOn);
+        var client = limited.CreateClient();
+
+        for (var i = 0; i < 5; i++)
+        {
+            await FailedLoginAsync(client);
+        }
+        (await FailedLoginAsync(client)).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+
+        for (var i = 0; i < 6; i++)
+        {
+            (await client.PostAsJsonAsync("/api/auth/refresh", new { }, JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+    }
+
     /// <summary>A Redis outage must degrade to the old per-instance window, not to a 500 on every
     /// rate-limited endpoint and not to an open door.</summary>
     [Fact]

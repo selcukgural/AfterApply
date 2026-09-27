@@ -37,7 +37,7 @@
       },
       "cookies": {
         "title": "Cookie Policy",
-        "description": "The two cookies e-kariyerim uses, what they do, how long they last — and why there is no consent banner."
+        "description": "The three cookies e-kariyerim uses, what they do, how long they last — and why there is no consent banner."
       },
       "terms": {
         "title": "Terms of Use",
@@ -1866,7 +1866,7 @@
     "lastUpdated": "Last updated: 27 September 2026",
     "intro": {
       "title": "In short",
-      "body": "e-kariyerim uses only the two cookies the service needs to work. No advertising cookies, tracking pixels, analytics tools like Google Analytics, or any third-party cookies. That is why no cookie banner appears: there is no optional cookie to ask your consent for. The one exception is the Pro plan checkout: the payment form opens on PayTR's own page and PayTR may use its own strictly necessary cookies there; those cookies are not read on any other page of this site.",
+      "body": "e-kariyerim uses only the three cookies the service needs to work. No advertising cookies, tracking pixels, analytics tools like Google Analytics, or any third-party cookies. That is why no cookie banner appears: there is no optional cookie to ask your consent for. The one exception is the Pro plan checkout: the payment form opens on PayTR's own page and PayTR may use its own strictly necessary cookies there; those cookies are not read on any other page of this site.",
       "legalNote": "Under Turkish data protection law (KVKK), strictly necessary and functional cookies do not require explicit consent — what they require is disclosure. This page is that disclosure."
     },
     "table": {
@@ -1881,12 +1881,15 @@
       "themePurpose": "Remembers your light/dark theme preference. Written only when you press the theme button, or when you sign in and the preference stored on your account is applied.",
       "themeType": "Functional — first party",
       "themeDuration": "1 year",
-      "note": "Both store nothing but a preference: neither contains an identifier, a user number or a tracking code, and neither is sent to any third party."
+      "sessionPurpose": "Keeps you signed in. It holds a random session-renewal token that your browser sends only to our API server's (api.ekariyerim.com) session-renewal and sign-out addresses. No script on the page can read it (HttpOnly), and it is not sent with requests coming from another site (SameSite=Strict).",
+      "sessionType": "Strictly necessary — first party",
+      "sessionDuration": "30 days, renewed on each use, but never more than 90 days from when you signed in. Deleted when you sign out.",
+      "note": "The language and theme cookies store nothing but a preference and contain no identifier. The token in the session cookie matches your account, but its only job is keeping you signed in: it is not used for tracking or measurement. None of the three is sent to any third party."
     },
     "storage": {
       "title": "Browser storage (localStorage and sessionStorage)",
       "intro": "These are not cookies, but they store data on your device in the same way, so we list them here too:",
-      "item1": "Session tokens — aa_access_token, aa_refresh_token, their expiry times, and aa_user (your name, email address and interface preferences). They keep you signed in; they live in localStorage and are deleted when you sign out.",
+      "item1": "Session profile — aa_user (your name, email address and interface preferences). It lets the right menu appear at once when a page reloads; on its own it signs nobody in. It lives in localStorage and is deleted when you sign out. Session tokens are no longer kept here but in the session cookie above; the old aa_access_token and aa_refresh_token values left in a browser signed in before 27 September 2026 are read and deleted on your first visit.",
       "item2": "Sign-in security keys — aa_google_oauth, aa_linkedin_oauth and aa_github_oauth. These are single-use values that block a CSRF attack during a Google, LinkedIn or GitHub sign-in; they live in sessionStorage and are deleted the moment the sign-in completes.",
       "item3": "Saved board views — aa_board_views. When you choose “Save this filter” on the applications board, the name you give the view and its filter settings (date range, source and state choices) are kept in localStorage. They are never sent to our server and stay in this browser only; deleting the view deletes them.",
       "outro": "The first two are required for the service to work — without them you cannot sign in. The third is functional and is written only when you save a view."
@@ -1919,7 +1922,7 @@
     },
     "control": {
       "title": "How to remove cookies",
-      "body": "You can delete this site's cookies and site data from your browser's settings at any time, and you can block cookies entirely. The effect: your language and theme preferences fall back to the defaults, and if you also delete the session tokens you are signed out and have to sign in again. Nothing else about the site stops working.",
+      "body": "You can delete this site's cookies and site data from your browser's settings at any time, and you can block cookies entirely. The effect: your language and theme preferences fall back to the defaults, and if you also delete the session cookie you are signed out and have to sign in again. Nothing else about the site stops working.",
       "accountNote": "Deleting the data held in your account is a separate matter — you can do that by deleting your account from the Settings page."
     },
     "changes": {
