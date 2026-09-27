@@ -22,7 +22,11 @@ public sealed record ReminderResponse(
     // Where the application stands now — an InterviewHeld row offers only the stages after it.
     ApplicationStatus? ApplicationStatus = null,
     // The interview an InterviewHeld row asks about; null on every other type.
-    DateTimeOffset? InterviewAt = null);
+    DateTimeOffset? InterviewAt = null,
+    // Set when the scan held this reminder back from a weekend or public holiday, with the morning
+    // it was moved to — so the row can say "moved to today because of the feast" on that day.
+    ReminderDeferral? DeferredFor = null,
+    DateTimeOffset? DeferredUntil = null);
 
 /// <summary>What an answer to "how did the interview go?" changed, so the row's undo can put exactly
 /// that back: the status move (both ends) and the reply date it recorded, each null when the answer

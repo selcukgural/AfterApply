@@ -17,6 +17,13 @@ public sealed class NotificationOptions
 
     public string ScanCronExpression { get; init; } = "0 3 * * *";
 
+    /// <summary>
+    /// Hold a follow-up or missed-promise reminder that falls due on a weekend or a Turkish public
+    /// holiday back to the next working morning (BusinessCalendar). On by default; also the switch
+    /// to turn the behaviour off without a deploy of code.
+    /// </summary>
+    public bool HoldOutreachOnDaysOff { get; init; } = true;
+
     /// <summary>How long a contribution notification the user has read or cleared — and a reader's
     /// entry in the first-mark ledger — is kept. Unread rows are never purged.</summary>
     public int ContributionRetentionDays { get; init; } = 90;

@@ -728,7 +728,19 @@
       "allDone": "All caught up. Anything new will show up here.",
       "heldDismissed": "{company} reminder dismissed.",
       "heldFollowedUp": "{company}: marked as followed up.",
-      "heldGhosted": "{company} application marked as ghosted."
+      "heldGhosted": "{company} application marked as ghosted.",
+      "deferred": {
+        "Weekend": "Moved to today — it fell on the weekend.",
+        "NewYear": "Moved to today — it fell on New Year’s Day.",
+        "NationalSovereigntyDay": "Moved to today — it fell on the 23 April holiday.",
+        "LabourDay": "Moved to today — it fell on Labour Day.",
+        "YouthDay": "Moved to today — it fell on the 19 May holiday.",
+        "DemocracyDay": "Moved to today — it fell on the 15 July holiday.",
+        "VictoryDay": "Moved to today — it fell on Victory Day.",
+        "RepublicDay": "Moved to today — it fell on Republic Day.",
+        "RamadanFeast": "Moved to today — it fell on the Ramadan Feast.",
+        "SacrificeFeast": "Moved to today — it fell on the Feast of Sacrifice."
+      }
     },
     "stale": {
       "title": "{count, plural, one {# application is} other {# applications are}} older than {threshold} days with no reply",

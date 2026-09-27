@@ -25,6 +25,7 @@ import {
 } from "@/hooks/useReminders";
 import { useDeferredAction } from "@/hooks/useDeferredAction";
 import { isInterviewMorning } from "@/lib/dashboard/interviewMorning";
+import { deferralNote } from "@/lib/dashboard/reminderDeferral";
 import {
   InterviewAnsweredRow,
   InterviewHeldMeta,
@@ -468,6 +469,9 @@ export function RemindersPanel() {
                     </>
                   )}
                 </p>
+                {deferralNote(reminder) ? (
+                  <p className="mt-0.5 text-xs text-accent-ink">{t(`deferred.${deferralNote(reminder)}`)}</p>
+                ) : null}
               </div>
             </div>
             <div className="flex items-center gap-2">

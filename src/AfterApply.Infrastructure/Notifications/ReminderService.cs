@@ -14,8 +14,15 @@ using Microsoft.Extensions.Options;
 namespace AfterApply.Infrastructure.Notifications;
 
 internal sealed class ReminderService(AppDbContext dbContext, IOptions<NotificationOptions> options, HybridCache cache,
-    IApplicationService applicationService) : IReminderService
+    IApplicationService applicationService, TimeProvider? timeProvider = null) : IReminderService
 {
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
+
+    /// <summary>The reminders that ask the user to write to someone — the ones held back from a
+    /// weekend or public holiday. A ghosting question or an interview question asks nothing of
+    /// the company, so it appears on the day it is due.</summary>
+    private static readonly HashSet<ReminderType> OutreachTypes = [ReminderType.FollowUp, ReminderType.PromiseMissed];
+
     // Same set as AnalyticsService.RespondedStatuses — "responded" is defined once,
     // reused here rather than redefined (DECISIONS.md).
     private static readonly HashSet<ApplicationStatus> RespondedStatuses =
@@ -63,7 +70,9 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
                 null,
                 x.r.Type == ReminderType.PromiseMissed ? x.PromisedReplyBy : null,
                 x.Status,
-                x.r.Type == ReminderType.InterviewHeld ? x.InterviewAt : null));
+                x.r.Type == ReminderType.InterviewHeld ? x.InterviewAt : null,
+                x.r.DeferredFor,
+                x.r.DeferredFor == null ? null : x.r.SnoozedUntil));
     }
 
     public Task<PagedResult<ReminderResponse>> GetActiveRemindersAsync(Guid userId, GetRemindersQuery query,
@@ -74,7 +83,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             (userId, query),
             async (state, ct) =>
             {
-                var active = ActiveReminders(state.userId, DateTimeOffset.UtcNow);
+                var active = ActiveReminders(state.userId, _timeProvider.GetUtcNow());
                 var totalCount = await active.CountAsync(ct);
                 var items = await active
                     .Skip((state.query.Page - 1) * state.query.PageSize)
@@ -110,7 +119,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             return false;
         }
 
-        reminder.Dismiss(DateTimeOffset.UtcNow);
+        reminder.Dismiss(_timeProvider.GetUtcNow());
         await dbContext.SaveChangesAsync(cancellationToken);
         await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
@@ -138,7 +147,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             return false;
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         application.AddEvent(ApplicationEventType.FollowUpSent, now, Source.Manual, metadata: null);
         // Added explicitly, not left to change tracking: Events was never Included, so EF has no
         // prior snapshot of the collection — see ApplicationService.ChangeStatusAsync.
@@ -178,7 +187,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             return;
         }
 
-        var actualCount = await ActiveReminders(userId, DateTimeOffset.UtcNow).CountAsync(cancellationToken);
+        var actualCount = await ActiveReminders(userId, _timeProvider.GetUtcNow()).CountAsync(cancellationToken);
         if (actualCount != request.ExpectedCount.Value)
         {
             throw new BulkCountMismatchException(request.ExpectedCount.Value, actualCount);
@@ -191,7 +200,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
         // Set-based: nothing is loaded, so the size of an "all" selection costs one UPDATE
         // however many rows it covers.
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         var affected = await ResolveSelection(userId, request.Selection)
             .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.DismissedAt, now), cancellationToken);
 
@@ -220,7 +229,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             .Where(a => a.UserId == userId && applicationIds.Contains(a.Id))
             .ToListAsync(cancellationToken);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         foreach (var application in applications)
         {
             application.AddEvent(ApplicationEventType.FollowUpSent, now, Source.Manual, metadata: null);
@@ -256,10 +265,12 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
     public async Task<bool> SnoozeAsync(Guid userId, Guid reminderId, SnoozeReminderRequest request,
         CancellationToken cancellationToken)
     {
-        var until = DateTimeOffset.UtcNow.AddDays(request.Days);
+        var until = _timeProvider.GetUtcNow().AddDays(request.Days);
         var affected = await dbContext.Reminders
             .Where(r => r.Id == reminderId && r.UserId == userId && r.DismissedAt == null)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.SnoozedUntil, until), cancellationToken);
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(r => r.SnoozedUntil, until)
+                .SetProperty(r => r.DeferredFor, (ReminderDeferral?)null), cancellationToken);
 
         if (affected == 0)
         {
@@ -274,7 +285,9 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
     {
         var affected = await dbContext.Reminders
             .Where(r => r.Id == reminderId && r.UserId == userId)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.SnoozedUntil, (DateTimeOffset?)null), cancellationToken);
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(r => r.SnoozedUntil, (DateTimeOffset?)null)
+                .SetProperty(r => r.DeferredFor, (ReminderDeferral?)null), cancellationToken);
 
         if (affected == 0)
         {
@@ -344,7 +357,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         // the application's reminders alone, and "they did not say when" changes nothing at all.
         await dbContext.Reminders
             .Where(r => r.Id == reminderId && r.UserId == userId)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.DismissedAt, DateTimeOffset.UtcNow), cancellationToken);
+            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.DismissedAt, _timeProvider.GetUtcNow()), cancellationToken);
         await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
         return outcome;
@@ -388,7 +401,8 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             .Where(r => r.Id == reminderId && r.UserId == userId)
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(r => r.DismissedAt, (DateTimeOffset?)null)
-                .SetProperty(r => r.SnoozedUntil, (DateTimeOffset?)null), cancellationToken);
+                .SetProperty(r => r.SnoozedUntil, (DateTimeOffset?)null)
+                .SetProperty(r => r.DeferredFor, (ReminderDeferral?)null), cancellationToken);
         await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
 
         return true;
@@ -397,7 +411,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
     public async Task<IReadOnlyList<UpcomingInterviewResponse>> GetUpcomingInterviewsAsync(Guid userId,
         CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         var from = now - ReminderCalculations.InterviewDuration;
         var to = now.AddDays(UpcomingInterviewDays);
 
@@ -431,7 +445,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             return new ReminderPauseResponse(ReminderPauseState.None, null, null, 0);
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         if (now < pause.RemindersPausedUntil)
         {
             return new ReminderPauseResponse(ReminderPauseState.Paused, pause.RemindersPausedFrom, pause.RemindersPausedUntil, 0);
@@ -443,7 +457,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
     public async Task<ReminderPauseResponse> PauseAsync(Guid userId, PauseRemindersRequest request, CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         var until = now.AddDays(request.Days);
         await dbContext.Users
             .Where(u => u.Id == userId)
@@ -456,7 +470,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
     public async Task<ReminderPauseResponse> EndPauseAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         // Only a running break is cut short; an ended one keeps its real end date so the return
         // question still describes the break the user actually took.
         await dbContext.Users
@@ -517,7 +531,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
     public async Task<int> ScanAndGenerateRemindersAsync(CancellationToken cancellationToken)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         var created = await ScanRemindersAsync(now, cancellationToken);
         // After the reminders, so a "how did it go?" row created in this very run rings the bell.
         await WriteInterviewNotificationsAsync(now, cancellationToken);
@@ -580,7 +594,11 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
 
         var applications = await dbContext.Applications
             .Where(a => !TerminalApplicationStatuses.Values.Contains(a.Status))
-            .Select(a => new { a.Id, a.UserId, a.AppliedAt, a.Status, a.PromisedReplyBy, a.PromisedReplySince, a.InterviewAt, a.InterviewStatus })
+            .Select(a => new
+            {
+                a.Id, a.UserId, a.AppliedAt, a.Status, a.PromisedReplyBy, a.PromisedReplySince, a.InterviewAt, a.InterviewStatus,
+                CompanyCountry = dbContext.Companies.Where(c => c.Id == a.CompanyId).Select(c => c.Country).FirstOrDefault()
+            })
             .ToListAsync(cancellationToken);
 
         // Every open reminder, across users like the application scan above: the sweep that
@@ -730,9 +748,24 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             .Select(k => (k.ApplicationId, k.Type, k.ReferenceAt))
             .ToHashSet();
 
+        var countryByApplication = applications.ToDictionary(a => a.Id, a => a.CompanyCountry);
         var newReminders = candidates
             .Where(c => !existingKeySet.Contains((c.ApplicationId, c.Type, c.ReferenceAt)))
-            .Select(c => Reminder.Create(c.UserId, c.ApplicationId, c.Type, c.ReferenceAt, c.DaysElapsed, now))
+            .Select(c =>
+            {
+                var reminder = Reminder.Create(c.UserId, c.ApplicationId, c.Type, c.ReferenceAt, c.DaysElapsed, now);
+                // Due on a weekend or public holiday: held back to the next working morning, and
+                // the row says why (BusinessCalendar).
+                if (options.Value.HoldOutreachOnDaysOff
+                    && OutreachTypes.Contains(c.Type)
+                    && BusinessCalendar.DeferralFor(now, BusinessCalendar.UsesTurkishHolidays(countryByApplication.GetValueOrDefault(c.ApplicationId)))
+                        is { } deferral)
+                {
+                    reminder.Defer(deferral.Until, deferral.Reason);
+                }
+
+                return reminder;
+            })
             .ToList();
 
         if (newReminders.Count == 0)

@@ -10044,3 +10044,33 @@ Dar sürümün asıl kazancı veride: "nasıl geçti?" cevabı aşama zamanları
 - kariyer.net'in ileriki kapanış tarihi (`ClosesAt`) saklanıyor ama henüz gösterilmiyor ("kaydettiğin ilan 3 gün sonra kapanıyor" uyarısı sonra gelecek).
 - Schema.org `validThrough` okunmuyor ve bilinmeyen sitelerdeki ilanlar kontrol edilmiyor.
 - Ashby, Workday, Workable ve SmartRecruiters'ın kapanan ilana verdiği yanıt ölçülmedi.
+
+## Hafta sonu ve resmî tatile denk gelen hatırlatmalar iş gününe kayar — DECIDED (2026-09-27)
+
+"İnce dokunuşlar" 3. paketi. Takip hatırlatması cumartesi, pazar ya da bayram sabahı çıkınca, o gün kimsenin okumayacağı bir e-postaya davet ediyordu.
+
+**Kural:**
+- Gece taraması yeni bir **takip** (`FollowUp`) ya da **"söz tarihi geçti"** (`PromiseMissed`) hatırlatması oluşturuyorsa ve İstanbul takvimine göre o gün iş günü değilse:
+  - hatırlatma, mevcut erteleme alanı `SnoozedUntil` ile bir sonraki iş gününe, 09:00 İstanbul'a ertelenir;
+  - nedeni `Reminder.DeferredFor` alanına yazılır.
+- Nedenin seçimi: atlanan günlerde bir tatil varsa tatil yazılır (bayram hafta sonuna uzansa bile); tatil yoksa "hafta sonu" yazılır.
+- Kart, hatırlatmanın çıktığı sabah bir not gösterir: "Hafta sonuna denk geldiği için bugüne aldık", "Ramazan Bayramı'na denk geldiği için bugüne aldık". Sonraki günlerde not görünmez.
+- `PossiblyGhosted` ve `InterviewHeld` ertelenmez, çünkü şirkete yazmayı istemiyorlar; kullanıcıya soru soruyorlar.
+- Kullanıcı hatırlatmayı kendisi erteler ya da geri alırsa neden temizlenir.
+
+**Takvim (`BusinessCalendar`):**
+- **Sabit resmî tatiller** (2429 sayılı Kanun): 1 Ocak, 23 Nisan, 1 Mayıs, 19 Mayıs, 15 Temmuz, 30 Ağustos, 29 Ekim.
+- **İş günü sayılan yarım günler:** arife günleri ve 28 Ekim 13:00'te başlar. Sabahları çalışma saati olduğu için listede yoklar.
+- **Dini bayram tarihleri:** Diyanet'in resmî "Dini Günler Listesi" sayfalarından alındı (vakithesaplama.diyanet.gov.tr, 2026–2030, 2026-09-27'de kontrol edildi).
+  - Ramazan Bayramı: 2026 → 20–22 Mart; 2027 → 9–11 Mart; 2028 → 26–28 Şubat; 2029 → 14–16 Şubat; 2030 → 4–6 Şubat.
+  - Kurban Bayramı: 2026 → 27–30 Mayıs; 2027 → 16–19 Mayıs; 2028 → 5–8 Mayıs; 2029 → 24–27 Nisan; 2030 → 13–16 Nisan.
+- Tablo bitince yalnızca hafta sonu ve sabit tatiller uygulanır.
+- Bir birim testi, tablo "bu yıl + 1"i kapsamadığı gün kırılır; yani tablo 2029'da uzatılmalı.
+- **Türkiye tatilleri** yalnızca şirketin ülkesi Türkiye (`TR`) ya da bilinmiyorsa uygulanır; bugün şirketlerin çoğunda ülke bilgisi boş. Ülkesi bilinen yabancı bir şirket için yalnızca hafta sonu kuralı geçerlidir.
+- **Cuma akşamı kuralı** planda vardı ama yapılmadı: tarama her sabah 06:00'da (İstanbul) çalıştığı için cuma akşamı yeni bir hatırlatma oluşmuyor.
+
+**Ayar ve test:**
+- `Notifications:HoldOutreachOnDaysOff` ayarı varsayılan açık; canlıda kapatma anahtarı olarak da kullanılabilir.
+- Entegrasyon test host'unda varsayılan kapalı: gerçek saatle tarayan test sınıfları hafta sonunda ya da tatilde kırılmasın diye. `ReminderDeferralTests` kendi saatiyle açar.
+- `ReminderService` artık `TimeProvider`'dan okur; canlıda sistem saati kullanılır.
+- **Dışa aktarım:** hatırlatmanın `DeferredFor` alanı eklendi.
