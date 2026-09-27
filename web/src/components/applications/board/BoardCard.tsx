@@ -145,7 +145,7 @@ export function BoardCardBody({
           />
         </div>
         <div className="flex min-w-0 items-center gap-2">
-          <CompanyMark companyId={card.companyId} companyName={card.companyName} />
+          <CompanyMark companyId={card.companyId} companyName={card.companyName} hasLogo={card.hasCompanyLogo === true} />
           <span className="truncate text-xs font-medium text-gray-700 dark:text-gray-300">{card.companyName}</span>
         </div>
         {showStage && card.status && (

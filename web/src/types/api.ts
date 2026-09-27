@@ -2610,6 +2610,8 @@ export interface BoardCardResponse {
   unseen: boolean;
   /** For a closed application, when it drops off the board. */
   leavesBoardAt: string | null;
+  /** Whether the company has a logo to fetch. Optional: an API from before logos answers without it. */
+  hasCompanyLogo?: boolean;
 }
 
 export interface BoardColumnPage {

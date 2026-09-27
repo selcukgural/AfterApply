@@ -9829,3 +9829,30 @@ atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test et
   host allowlist + boyut sınırı + magic byte (PNG/JPEG/WebP; SVG asla), kendi origin'imizden ve
   yalnızca o şirketle ilişkisi olan kullanıcıya sunulur (paylaşılan alan zehirlenmesi). O zamana
   kadar baş harf + renk.
+
+## Pano: şirket logoları (PR2) — DECIDED (2026-09-27)
+
+- **Kaynak:** yalnızca şirketin LinkedIn sayfasındaki `og:image`, yalnızca `media.licdn.com`'dan ve
+  `company-logo_` yolundan (LinkedIn'in gri yer tutucusu ve kapak görselleri alınmaz). Sayfa bu
+  şirketi adlandırmıyorsa (`CompanyPageIdentity`) hiçbir şey alınmaz. https, yönlendirmeler elle
+  ve her adımda aynı host'a karşı, sayfa 200 KB'ta kesilir, görsel 256 KB'ı geçerse reddedilir.
+  Tür baytlardan: yalnızca PNG/JPEG/WebP, SVG asla.
+- **Saklama: veritabanı (`CompanyLogos`, bytea), bucket değil.** Logolar 5–30 KB; CV bucket'ı
+  kişisel belgeler, blog bucket'ı herkese açık içerik için — ikisine de ait değil, yeni bucket
+  altyapı işi. Ayrı tablo, şirket okumaları ağırlaşmasın diye. İçeriği boş satır = "bakıldı,
+  yok" (30 gün sonra yeniden bakılır); `Blocked` = admin indirdi, bir daha çekilmez.
+- **Geçici hatalar kaydedilmez:** LinkedIn'in bot duvarı (999), 429, 5xx ve bağlantı hatası bir
+  sonraki gece yeniden denenir (yerel denemede LinkedIn birkaç istekten sonra 999 döndü).
+- **Tetik:** eklenti yakalaması LinkedIn bağlantısı taşıyorsa job; ayrıca gece `company-logo-backfill`
+  en fazla 50 şirketi 20 sn arayla zamanlar — yalnızca birinin başvurduğu/kaydettiği şirketler.
+  Pano bayrağı kapalıyken hepsi no-op.
+- **Sunum:** `GET /api/board/company-logos/{companyId}` — oturumlu, pano bayrağının arkasında,
+  yalnızca o şirkete başvurusu ya da kaydı olan kullanıcıya; `private` önbellek, `nosniff`,
+  `attachment`. Web, `<img>` başlık taşıyamadığı için oturumla `fetch` edip `blob:` URL'iyle
+  gösterir (CSP `img-src` zaten `blob:`'a izin veriyor); şirket başına tek istek, hata/yoksa baş harf.
+  Kartta `hasCompanyLogo` (eklemeli alan) olmayan logo için istek atılmasın diye.
+- **Admin sıfırlama:** yalnızca API — `POST /api/admin/companies/{id}/logo/block`. Şirketler için
+  admin ekranı yok; kurmak bu işin kapsamını aşar.
+- **Bilinen sınır:** eklenti bir şirketi mevcut kayıtla yüksek güvenle eşleştirdiğinde LinkedIn
+  bağlantısını o şirkete yazmaz (paylaşılan alanda ilk-yazan-kazanır zehirlenmesine karşı, bilinçli);
+  logo yalnızca LinkedIn bağlantısı zaten kayıtlı şirketlerde çıkar. Bu kural değiştirilmedi.

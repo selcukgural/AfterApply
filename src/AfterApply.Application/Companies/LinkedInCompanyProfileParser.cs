@@ -1,4 +1,5 @@
 using System.Net;
+using AfterApply.Application.Common;
 using System.Text.RegularExpressions;
 
 namespace AfterApply.Application.Companies;
@@ -150,4 +151,30 @@ public static partial class LinkedInCompanyProfileParser
 
     [GeneratedRegex(@"<meta\s+property=""og:title""\s+content=""([^""]*)""", RegexOptions.IgnoreCase)]
     private static partial Regex OgTitleRegex();
+
+    /// <summary>The company's logo, as the page's og:image names it — LinkedIn serves it from
+    /// media.licdn.com under a <c>company-logo_</c> path (seen 2026-09-27). Anything else there (the
+    /// grey placeholder a company without a logo gets, from static.licdn.com; a cover image) is not
+    /// a logo and comes back null. The caller still re-checks the host before fetching.</summary>
+    public static string? ExtractLogoUrl(string html)
+    {
+        var match = OgImageRegex().Match(html);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var url = WebUtility.HtmlDecode(match.Groups[1].Value).Trim();
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+               && HostRules.IsHttpsHost(uri, LogoHost)
+               && uri.AbsolutePath.Contains("/company-logo_", StringComparison.Ordinal)
+            ? url
+            : null;
+    }
+
+    /// <summary>The only host a company logo is ever fetched from.</summary>
+    public const string LogoHost = "media.licdn.com";
+
+    [GeneratedRegex(@"<meta\s+property=""og:image""\s+content=""([^""]*)""", RegexOptions.IgnoreCase)]
+    private static partial Regex OgImageRegex();
 }

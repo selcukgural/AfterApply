@@ -1325,8 +1325,10 @@ vermek churn değildi). Hiçbiri kişiye gösterilmez.
 - **Kalan:** prod'da tarayıcıda yürüyüp `Board:Enabled=true`; yardım merkezine pano konusu ve
   ekran görüntüsü (bayrak açılırken, aynı değişiklikte).
 
-### PR2 — Şirket logoları
-- **Yapılacak:** `Company.LogoObjectName`/`LogoFetchedAt`, zenginleştirme job'ında LinkedIn
+### PR2 — Şirket logoları ✅ (2026-09-27, PR açık)
+- **Yapıldı:** DECISIONS.md'de "Pano: şirket logoları (PR2)". Sapmalar: saklama bucket yerine
+  veritabanı; admin sıfırlaması yalnızca API.
+- **Plan:** `Company.LogoObjectName`/`LogoFetchedAt`, zenginleştirme job'ında LinkedIn
   `og:image` (host allowlist, 256 KB, magic byte PNG/JPEG/WebP), `IFileStorage`, sahiplik
   kontrollü `GET /api/companies/{id}/logo` (`nosniff`, `private`), günlük backfill, admin'de
   "logoyu sıfırla", `CompanyMark` logo → baş harf düşüşü.

@@ -28,6 +28,7 @@ public class NoOutboundHttpTests(ApiHost<DefaultProfile> host) : IClassFixture<A
     // The clients that fetch on behalf of user data, which is how the calls got out: a company's
     // LinkedIn/kariyer.net page and a job link's preview are both fetched from a URL a test created.
     [InlineData("ICompanyEnrichmentService")]
+    [InlineData("ICompanyLogoService")]
     [InlineData("IJobLinkPreviewService")]
     [InlineData("LinkedInJwks")]
     [InlineData("ILinkedInJobSourceClient")]

@@ -55,6 +55,12 @@ internal sealed class ExtensionCaptureResolver(
         if (profileLinks.HasAny)
         {
             jobClient.Enqueue<ICompanyEnrichmentService>(s => s.EnrichAsync(companyId, CancellationToken.None));
+            // The logo comes from the same LinkedIn page; the job looks only once, returns at once
+            // for a company it has already seen, and does nothing while the board is off.
+            if (profileLinks.LinkedInUrl is not null)
+            {
+                jobClient.Enqueue<ICompanyLogoService>(s => s.FetchAsync(companyId, CancellationToken.None));
+            }
         }
 
         // The job posting's own site (LinkedIn, kariyer.net, ...) tags Job.Source — data

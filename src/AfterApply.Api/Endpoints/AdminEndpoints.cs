@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using AfterApply.Api.Extensions;
 using AfterApply.Application.Admin;
+using AfterApply.Application.Companies;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.EmailIntegrations.Contracts;
 using AfterApply.Application.Metrics;
@@ -23,6 +24,22 @@ public static class AdminEndpoints
         var group = app.MapGroup("/api/admin").WithTags("Admin").RequireAuthorization()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden);
+
+        group.MapPost("/companies/{companyId:guid}/logo/block", async (Guid companyId, ClaimsPrincipal user,
+                IAdminAccessService adminAccess, ICompanyLogoService logos, CancellationToken cancellationToken) =>
+            {
+                if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
+                {
+                    return Results.Forbid();
+                }
+
+                return await logos.BlockAsync(companyId, cancellationToken) ? Results.NoContent() : Results.NotFound();
+            })
+            .WithSummary("Take a company's logo down for good")
+            .WithDescription("Internal. The logo comes from a page one user's capture pointed the shared company at; " +
+                             "this removes it and keeps it from being fetched again.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapGet("/metrics", async (int? days, ClaimsPrincipal user, IAdminAccessService adminAccess,
                 IProductMetricsService metrics, CancellationToken cancellationToken) =>

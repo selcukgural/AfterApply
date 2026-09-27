@@ -9,6 +9,7 @@ using AfterApply.Application.Auditing;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
 using AfterApply.Application.Board;
+using AfterApply.Application.Companies;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.Payments;
 using AfterApply.Application.Metrics;
@@ -261,6 +262,13 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "board-closed-purge",
         service => service.PurgeClosedAsync(CancellationToken.None),
         Cron.Daily(4, 30));
+
+    // Company logos for the board: schedules at most a small batch of LinkedIn page fetches a
+    // night, spread out. A no-op while Board:Enabled is off.
+    recurringJobManager.AddOrUpdate<ICompanyLogoService>(
+        "company-logo-backfill",
+        service => service.ScheduleBackfillAsync(CancellationToken.None),
+        Cron.Daily(5));
 
     // Payments: close pending PayTR orders whose window passed, and remind users whose prepaid
     // Pro period is about to end. Both are no-ops on an empty table, so they run regardless of

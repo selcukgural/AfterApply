@@ -3,6 +3,8 @@ using AfterApply.Api.Extensions;
 using AfterApply.Api.Filters;
 using AfterApply.Application.Board;
 using AfterApply.Application.Board.Contracts;
+using AfterApply.Application.Companies;
+using Microsoft.Net.Http.Headers;
 using AfterApply.Domain.Board;
 using AfterApply.Infrastructure.Identity;
 
@@ -77,6 +79,33 @@ public static class BoardEndpoints
             .WithSummary("Clear the \"arrived without you\" mark")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        group.MapGet("/company-logos/{companyId:guid}", async (Guid companyId, ClaimsPrincipal user,
+                ICompanyLogoService logos, HttpContext httpContext, CancellationToken cancellationToken) =>
+            {
+                var logo = await logos.GetForUserAsync(user.GetUserId(), companyId, cancellationToken);
+                if (logo is null)
+                {
+                    return Results.NotFound();
+                }
+
+                // Private: the answer depends on who asks. Attachment: an image we did not draw is
+                // never rendered as a page of ours if someone opens the address directly (an <img>
+                // ignores the disposition). The type is the one read from the bytes when stored.
+                httpContext.Response.GetTypedHeaders().CacheControl = new CacheControlHeaderValue
+                {
+                    Private = true,
+                    MaxAge = TimeSpan.FromDays(1)
+                };
+                httpContext.Response.Headers.XContentTypeOptions = "nosniff";
+                httpContext.Response.Headers.ContentDisposition = "attachment; filename=\"logo\"";
+                return Results.Bytes(logo.Content, logo.ContentType);
+            })
+            .WithSummary("A company's logo, for a board card")
+            .WithDescription("Only to a user with an application or saved posting at the company; 404 otherwise, and " +
+                             "when the company has no logo. Fetched server-side from the company's LinkedIn page " +
+                             "(PNG/JPEG/WebP, at most 256 KB), stored and served by us.")
+            .Produces(StatusCodes.Status200OK, contentType: "image/png");
 
         return app;
     }
