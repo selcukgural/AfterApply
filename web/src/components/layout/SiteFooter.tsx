@@ -5,6 +5,7 @@ import { CHROME_WEB_STORE_URL } from "@/lib/constants/chromeWebStore";
 import { CV_SCAN_PATHS } from "@/lib/cvScan/path";
 import { ABOUT_PATHS } from "@/lib/about/path";
 import { OFFER_COMPARE_PATHS } from "@/lib/offerCompare/path";
+import { SALARY_MARKET_PATHS } from "@/lib/salaryMarket/path";
 import { CONTACT_EMAIL, SOCIAL_LINKS } from "@/lib/constants/socialLinks";
 import { SocialIcon } from "@/components/layout/SocialIcon";
 import { pathFor, type LocalisedPath } from "@/lib/seo/routes";
@@ -20,7 +21,7 @@ const PRODUCT_LINKS = [
 ] as const;
 
 /** Every public page a visitor can browse, under the same names the header uses. */
-type ExploreLink = { href: LocalisedPath; key: "companies" | "responseRates" | "cvScan" | "benchmark" | "offerCompare" | "guide" | "blog" | "help" | "about" };
+type ExploreLink = { href: LocalisedPath; key: "companies" | "responseRates" | "salaryMarket" | "cvScan" | "benchmark" | "offerCompare" | "guide" | "blog" | "help" | "about" };
 
 const EXPLORE_LINKS: readonly ExploreLink[] = [
   { href: "/companies", key: "companies" },
@@ -35,12 +36,18 @@ const EXPLORE_LINKS: readonly ExploreLink[] = [
 
 /** The blog, between the guide and the help centre, only once there is a published post — the
  *  header's rule (SiteHeader.siteLinksFor), read here from the server-side config. */
-function exploreLinksFor(hasBlog: boolean, hasResponseRates: boolean, off: SwitchedOff): readonly ExploreLink[] {
+function exploreLinksFor(hasBlog: boolean, hasResponseRates: boolean, off: SwitchedOff, hasSalaryMarket = false): readonly ExploreLink[] {
   // A feature an admin switched off at runtime takes its link with it (runtime flags, 2026-09-27).
   let links: readonly ExploreLink[] = withoutSwitchedOff(EXPLORE_LINKS, off);
-  if (hasResponseRates) {
+  // The public figures after the company directory, each once its flag is on: response rates,
+  // then the survey salary pages (2026-09-27).
+  const figures: ExploreLink[] = [
+    ...(hasResponseRates ? [{ href: "/response-rates", key: "responseRates" } as ExploreLink] : []),
+    ...(hasSalaryMarket ? [{ href: SALARY_MARKET_PATHS, key: "salaryMarket" } as ExploreLink] : []),
+  ];
+  if (figures.length > 0) {
     const companiesIndex = links.findIndex((link) => link.key === "companies");
-    links = [...links.slice(0, companiesIndex + 1), { href: "/response-rates", key: "responseRates" }, ...links.slice(companiesIndex + 1)];
+    links = [...links.slice(0, companiesIndex + 1), ...figures, ...links.slice(companiesIndex + 1)];
   }
   if (hasBlog) {
     const helpIndex = links.findIndex((link) => link.key === "help");
@@ -80,6 +87,7 @@ export async function SiteFooter() {
     config?.blog?.enabled === true && config.blog.hasPublishedPosts === true,
     config?.responseRates?.enabled === true,
     switchedOff(config),
+    config?.salaryMarket?.enabled === true,
   );
 
   const linkClass = "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100";

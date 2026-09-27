@@ -18,6 +18,8 @@ describe("localeSwitchPath", () => {
     ["/about", "tr", "/hakkimizda"],
     ["/hakkimizda", "en", "/about"],
     ["/flow/abc", "tr", "/akis/abc"],
+    ["/salaries", "tr", "/maaslar"],
+    ["/maaslar/back-end-developer", "en", "/salaries/back-end-developer"],
     ["/guide/where-did-my-applications-go", "tr", "/guide/basvurularim-nereye-gitti"],
     ["/guide/basvurularim-nereye-gitti", "en", "/guide/where-did-my-applications-go"],
   ])("sends %s to its %s address %s (the 2026-09-24 bug: /tr/offer-comparison)", (path, target, expected) => {

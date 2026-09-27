@@ -804,6 +804,77 @@ export interface ClientConfigResponse {
   board?: BoardConfig;
   // Optional for the same reason (2026-09-27): the Gmail-scanning intake behind the suggestions.
   emailSignals?: EmailSignalsConfig;
+  // Optional for the same reason (2026-09-27): the public occupation salary pages (/maaslar).
+  salaryMarket?: SalaryMarketConfig;
+}
+
+export interface SalaryMarketConfig {
+  enabled: boolean;
+}
+
+/** GET /api/salary-market/*: monthly net TRY at five percentiles. `atLeast` names the
+ *  percentiles that only have a floor (the answer fell in an open top range such as "15.000 TL
+ *  ve üzeri"). The raw lowest/highest answers are never sent. */
+export interface SalaryStats {
+  count: number;
+  p10: number;
+  p25: number;
+  p50: number;
+  p75: number;
+  p90: number;
+  atLeast: ("P10" | "P25" | "P50" | "P75" | "P90")[];
+}
+
+export interface SalarySurveyEdition {
+  year: number;
+  sourceCode: string;
+  sourceName: string;
+  sourceUrl: string;
+  /** "2026-03": when the results went up. */
+  publishedMonth: string;
+  responses: number;
+  used: number;
+}
+
+export interface SalaryTrendPoint {
+  year: number;
+  count: number;
+  p50: number;
+}
+
+export interface SalaryOccupationSummary {
+  slug: string;
+  nameTr: string;
+  nameEn: string;
+  latestYear: number;
+  latest: SalaryStats;
+  previousYearP50: number | null;
+  trend: SalaryTrendPoint[];
+}
+
+export interface SalaryOccupationsResponse {
+  minimumResponses: number;
+  editions: SalarySurveyEdition[];
+  occupations: SalaryOccupationSummary[];
+}
+
+export type SalaryLevel = "Junior" | "Middle" | "Senior";
+export type SalaryExperience = "ZeroToTwo" | "ThreeToFive" | "SixToTen" | "TenPlus";
+
+export interface SalaryOccupationYear {
+  year: number;
+  overall: SalaryStats;
+  levels: { level: SalaryLevel; stats: SalaryStats }[];
+  experience: { experience: SalaryExperience; stats: SalaryStats }[];
+}
+
+export interface SalaryOccupationResponse {
+  slug: string;
+  nameTr: string;
+  nameEn: string;
+  minimumResponses: number;
+  years: SalaryOccupationYear[];
+  editions: SalarySurveyEdition[];
 }
 
 export interface EmailSignalsConfig {

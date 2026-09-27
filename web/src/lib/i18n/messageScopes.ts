@@ -88,6 +88,8 @@ export const PUBLIC_MESSAGE_SCOPE = [
   "companyReviews",
   // The public sector response-rate page.
   "responseRates",
+  // The survey salary pages (2026-09-27): the list's sparklines and the occupation chart run in the browser.
+  "salaryMarket",
   // The company page's salary tab: its rows name the employment type, status and currency.
   "companySalaries",
   "salaryEmploymentStatus",

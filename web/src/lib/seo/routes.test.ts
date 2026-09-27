@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import tr from "../../../messages/tr.json";
 import robots from "@/app/robots";
-import { blogSitemapEntries, companySitemapEntries, guideSitemapEntries, staticSitemapEntries } from "@/app/sitemap";
+import { blogSitemapEntries, companySitemapEntries, guideSitemapEntries, salaryMarketSitemapEntries, staticSitemapEntries } from "@/app/sitemap";
 import { routing } from "@/i18n/routing";
 import { GUIDE_PATH } from "@/lib/guide/guideLinks";
 import { HELP_TOPICS, PROTECTED_PATHS, PUBLIC_PATHS, SITE_URL, alternateLanguages, disallowedPaths, pathFor } from "./routes";
@@ -118,6 +118,36 @@ describe("company pages in the sitemap", () => {
 
   it("lists nothing when no company has a published review", () => {
     expect(companySitemapEntries([])).toEqual([]);
+  });
+});
+
+describe("salary pages in the sitemap", () => {
+  const stats = { count: 40, p10: 1, p25: 2, p50: 3, p75: 4, p90: 5, atLeast: [] };
+  const data = {
+    minimumResponses: 15,
+    editions: [],
+    occupations: [{ slug: "cto", nameTr: "CTO", nameEn: "CTO", latestYear: 2026, latest: stats, previousYearP50: null, trend: [] }],
+  };
+
+  it("lists the list and each occupation under its translated address, with the pair as hreflang", () => {
+    const entries = salaryMarketSitemapEntries(data);
+    expect(entries.map((entry) => entry.url)).toEqual([
+      `${SITE_URL}/tr/maaslar`,
+      `${SITE_URL}/tr/maaslar/cto`,
+      `${SITE_URL}/en/salaries`,
+      `${SITE_URL}/en/salaries/cto`,
+    ]);
+    expect(entries[1].alternates?.languages).toEqual({
+      tr: `${SITE_URL}/tr/maaslar/cto`,
+      en: `${SITE_URL}/en/salaries/cto`,
+      "x-default": `${SITE_URL}/tr/maaslar/cto`,
+    });
+  });
+
+  it("lists nothing while the pages are off — they 404 then, so they are not static paths either", () => {
+    expect(salaryMarketSitemapEntries(null)).toEqual([]);
+    expect(salaryMarketSitemapEntries({ ...data, occupations: [] })).toEqual([]);
+    expect(PUBLIC_PATHS).not.toContainEqual({ tr: "/maaslar", en: "/salaries" });
   });
 });
 

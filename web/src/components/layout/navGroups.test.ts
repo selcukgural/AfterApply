@@ -57,6 +57,14 @@ describe("buildNavEntries", () => {
     expect(group(buildNavEntries(ALL_ON, "tr"), "tools").items[0].proBadge).toBe(true);
   });
 
+  it("adds the survey salary pages after response rates only once the server says they are on", () => {
+    const tools = (flags: object, locale = "tr") => group(buildNavEntries(flags, locale), "tools").items.map((item) => item.href);
+    expect(tools(ALL_ON)).not.toContain("/maaslar");
+    expect(tools({ ...ALL_ON, responseRates: { enabled: true }, salaryMarket: { enabled: true } }).slice(1, 3)).toEqual(["/response-rates", "/maaslar"]);
+    expect(tools({ salaryMarket: { enabled: true } }, "en")[0]).toBe("/salaries");
+    expect(tools({ salaryMarket: { enabled: false } })).not.toContain("/maaslar");
+  });
+
   it("offers the blog only once something is published, not merely when the feature is on", () => {
     const on = { ...ALL_ON, blog: { enabled: true, hasPublishedPosts: false } };
     expect(hrefs(buildNavEntries(on, "tr"))).not.toContain("/blog");
@@ -127,6 +135,8 @@ describe("one name per destination", () => {
       expect(m.siteNav.toolsMenu.offerCompare.title).toBe(m.nav.offerCompare);
       expect(m.siteNav.toolsMenu.cvScan.title).toBe(m.nav.cvScan);
       expect(m.siteNav.toolsMenu.responseRates.title).toBe(m.nav.responseRates);
+      expect(m.siteNav.toolsMenu.salaryMarket.title).toBe(m.nav.salaryMarket);
+      expect(m.landing.footer.salaryMarket).toBe(m.nav.salaryMarket);
       expect(m.landing.footer.benchmark).toBe(m.nav.benchmark);
       expect(m.landing.footer.offerCompare).toBe(m.nav.offerCompare);
       expect(m.siteNav.guide).toBe(m.nav.guide);
