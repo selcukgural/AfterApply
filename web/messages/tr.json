@@ -783,6 +783,20 @@
         "month": "{count} ay önce"
       },
       "note": "Değerlendirdiğin ya da kapattığın şirket buradan kalkar ve bir daha sorulmaz."
+    },
+    "interviewMorning": {
+      "when": "Bugün {time} · {left}",
+      "left": "{hours, plural, =0 {} other {# sa }}{minutes} dk kaldı",
+      "started": "başladı",
+      "applied": "{ago} başvurdun",
+      "cv": "Gönderdiğin CV",
+      "hr": "İK kontağı",
+      "note": "Notun",
+      "posting": "Başvurduğun ilan",
+      "saved": "Kaydettiğin gün saklandı — ilan yayından kalksa da burada",
+      "readAll": "İlanın tamamını oku",
+      "goTo": "Başvuruya git",
+      "copyHrEmail": "İK e-posta adresini kopyala"
     }
   },
   "applications": {
@@ -853,7 +867,12 @@
       "cvDocument": "Kullanılan CV",
       "cvDocumentNone": "Belirtilmedi",
       "cvDocumentEmpty": "Henüz kayıtlı CV'n yok.",
-      "cvDocumentEmptyLink": "CV yükle"
+      "cvDocumentEmptyLink": "CV yükle",
+      "companyHistory": {
+        "title": "Bu şirketteki geçmişin",
+        "reassure": "Tekrar başvurmak sorun değil — sadece bil diye.",
+        "seeAll": "Hepsini gör ({count})"
+      }
     },
     "new": {
       "title": "Yeni Başvuru",
@@ -979,6 +998,35 @@
         "confirm": "Kalıcı olarak sil",
         "deleting": "Siliniyor…",
         "error": "Silinemedi. Biraz sonra tekrar dene."
+      },
+      "reminderBox": {
+        "title": "Hatırlatayım",
+        "patienceEarly": "<b>Henüz erken.</b> {day, plural, =0 {Bugün başvurdun} other {Başvurunun üzerinden # gün geçti}}; sana genelde ~{median} günde dönülüyor.",
+        "patienceLate": "<b>Genelde bu kadar sürüyordu.</b> Başvurunun üzerinden {day} gün geçti; sana genelde ~{median} günde dönülüyor — takip zamanı olabilir.",
+        "postingAge": "İlan başvurduğunda <b>{days} günlüktü</b>.",
+        "closedNoReply": "İlan <b>{when}</b> yayından kalktı ve sana henüz dönülmedi — büyük ihtimalle başka bir adayla ilerlediler.",
+        "closed": "İlan <b>{when}</b> yayından kalktı.",
+        "earlier": "Bu şirkete daha önce de başvurmuştun: <b>{title}</b>, {month} · {status}.",
+        "earlierLink": "O başvuruya git"
+      },
+      "rejectionNote": {
+        "closed": "Bu süreç kapandı.",
+        "reason": "Bu süreç kapandı. Gerekçe olarak <b>{reason}</b> yazmışlar.",
+        "pattern": "Gerekçesi yazan son {outOf} retinin {count} tanesinde aynı gerekçe var: <b>{reason}</b>.",
+        "tips": {
+          "experience": "Bir sonraki başvuruda ilandaki deneyim yılı şartına bakmak işe yarayabilir.",
+          "language": "Bir sonraki başvuruda ilandaki dil şartına bakmak işe yarayabilir.",
+          "location": "Bir sonraki başvuruda ilanın konumuna ve çalışma şekline (uzaktan / ofis) bakmak işe yarayabilir.",
+          "skills": "Bir sonraki başvuruda ilanda istenen teknolojilerin CV’nde görünüp görünmediğine bakmak işe yarayabilir.",
+          "salary": "Bir sonraki başvuruda maaş beklentini ilanın seviyesiyle karşılaştırmak işe yarayabilir."
+        },
+        "seeRejected": "Reddedilen başvurularını gör"
+      },
+      "offerCard": {
+        "title": "Teklif geldi — emeğinin karşılığı.",
+        "body": "Karar vermeden önce brüt teklifi nete çevirip elindeki diğer tekliflerle yan yana koymak işe yarar.",
+        "compare": "Teklifleri karşılaştır",
+        "others": "{count, plural, one {Görüşme sürecinde # başvurun daha var} other {Görüşme sürecinde # başvurun daha var}} — onlara teklifi haber vermek süreci hızlandırabilir."
       }
     },
     "statusChange": {

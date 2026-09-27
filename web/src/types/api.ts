@@ -165,6 +165,16 @@ export interface ApplicationDetailResponse {
   /** When the linked posting stopped taking applications (ISO instant), as the server saw it on
    *  the site itself; absent on an API that predates it, null while it is up or unchecked. */
   jobClosedAt?: string | null;
+  /** When the linked posting was first published (ISO instant), if known. */
+  jobPublishedAt?: string | null;
+  /** Days companies usually take to answer this user; only while this application is Applied. */
+  userMedianResponseDays?: number | null;
+  /** Only when Rejected: a stated reason that recurs among the user's latest reasoned rejections. */
+  rejectionPatternCategory?: RejectionReasonCategory | null;
+  rejectionPatternCount?: number | null;
+  rejectionPatternOutOf?: number | null;
+  /** Only when Offer: the user's other applications still in screening or an interview stage. */
+  otherInterviewingCount?: number | null;
 }
 
 export type HrEmailSource = "Manual" | "IncomingEmail";

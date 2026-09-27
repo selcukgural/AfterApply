@@ -783,6 +783,20 @@
         "month": "{count, plural, one {# month ago} other {# months ago}}"
       },
       "note": "A company you rate or dismiss leaves this list and is not asked about again."
+    },
+    "interviewMorning": {
+      "when": "Today {time} · {left}",
+      "left": "{hours, plural, =0 {} other {# h }}{minutes} min left",
+      "started": "started",
+      "applied": "You applied {ago}",
+      "cv": "CV you sent",
+      "hr": "HR contact",
+      "note": "Your note",
+      "posting": "The posting you applied to",
+      "saved": "Kept from the day you saved it — here even if the posting comes down",
+      "readAll": "Read the whole posting",
+      "goTo": "Go to the application",
+      "copyHrEmail": "Copy HR email address"
     }
   },
   "applications": {
@@ -853,7 +867,12 @@
       "cvDocument": "CV used",
       "cvDocumentNone": "Not specified",
       "cvDocumentEmpty": "You have no stored CVs yet.",
-      "cvDocumentEmptyLink": "Upload a CV"
+      "cvDocumentEmptyLink": "Upload a CV",
+      "companyHistory": {
+        "title": "Your history with this company",
+        "reassure": "Applying again is fine — just so you know.",
+        "seeAll": "See all ({count})"
+      }
     },
     "new": {
       "title": "New Application",
@@ -979,6 +998,35 @@
         "confirm": "Delete permanently",
         "deleting": "Deleting…",
         "error": "Couldn't delete it. Try again in a moment."
+      },
+      "reminderBox": {
+        "title": "A quick reminder",
+        "patienceEarly": "<b>Still early.</b> {day, plural, =0 {You applied today} one {It has been # day} other {It has been # days}}; companies usually answer you in ~{median} days.",
+        "patienceLate": "<b>This is about how long it usually takes.</b> It has been {day} days; companies usually answer you in ~{median} days — it may be time to follow up.",
+        "postingAge": "The posting was <b>{days} days old</b> when you applied.",
+        "closedNoReply": "The posting came down <b>{when}</b> and nobody has answered you yet — they have most likely moved on with another candidate.",
+        "closed": "The posting came down <b>{when}</b>.",
+        "earlier": "You applied to this company before: <b>{title}</b>, {month} · {status}.",
+        "earlierLink": "Go to that application"
+      },
+      "rejectionNote": {
+        "closed": "This process has ended.",
+        "reason": "This process has ended. The reason they gave: <b>{reason}</b>.",
+        "pattern": "{count} of your last {outOf} rejections that gave a reason gave the same one: <b>{reason}</b>.",
+        "tips": {
+          "experience": "Before the next application, checking the posting’s years-of-experience requirement may help.",
+          "language": "Before the next application, checking the posting’s language requirement may help.",
+          "location": "Before the next application, checking the posting’s location and way of working (remote / office) may help.",
+          "skills": "Before the next application, checking whether the technologies the posting asks for show on your CV may help.",
+          "salary": "Before the next application, comparing your salary expectation with the posting’s level may help."
+        },
+        "seeRejected": "See your rejected applications"
+      },
+      "offerCard": {
+        "title": "An offer came in — your effort paid off.",
+        "body": "Before deciding, it helps to turn the gross offer into net pay and put it next to any others you have.",
+        "compare": "Compare offers",
+        "others": "{count, plural, one {You have # other application in interviews} other {You have # other applications in interviews}} — telling them about the offer can speed things up."
       }
     },
     "statusChange": {

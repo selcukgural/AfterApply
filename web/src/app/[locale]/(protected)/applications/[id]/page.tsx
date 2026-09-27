@@ -4,6 +4,7 @@ import { use, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { applicationsApi } from "@/lib/api/applications";
 import type { ApplicationEventType, ApplicationStatus, InterviewFormat } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
@@ -12,6 +13,9 @@ import { ReplyPromiseField } from "@/components/applications/ReplyPromiseField";
 import { InterviewField } from "@/components/applications/InterviewField";
 import { ShareExperienceInvite } from "@/components/applications/ShareExperienceInvite";
 import { AcceptedClosingNote } from "@/components/applications/AcceptedClosingNote";
+import { OfferCard } from "@/components/applications/OfferCard";
+import { RejectionNote } from "@/components/applications/RejectionNote";
+import { ReminderBox } from "@/components/applications/ReminderBox";
 import { ApplicationTimeline } from "@/components/applications/ApplicationTimeline";
 import { AddEventForm } from "@/components/applications/AddEventForm";
 import { writeEventNote } from "@/lib/applications/timeline";
@@ -31,6 +35,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
 
   const { data: application, isLoading } = useQuery({
     queryKey: ["applications", "detail", id],
@@ -175,6 +180,11 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           appliedAt={application.appliedAt}
           statusHistory={statusHistory}
         />
+        {/* The status moments and the "Hatırlatayım" box (canvas "İnce dokunuşlar — Paket 2"):
+            each renders nothing unless its status and data call for it. */}
+        <OfferCard application={application} />
+        <RejectionNote application={application} statusHistory={statusHistory} />
+        <ReminderBox application={application} />
         <div className="flex flex-col gap-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
           <div className="flex items-center gap-2">
             <StatusBadge status={application.status} />
@@ -353,7 +363,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {application.jobDescriptionHtml && <JobDescriptionCard descriptionHtml={application.jobDescriptionHtml} />}
+      {application.jobDescriptionHtml && <JobDescriptionCard descriptionHtml={application.jobDescriptionHtml}  openOnArrival={searchParams.get("open") === "posting"} />}
     </div>
   );
 }
