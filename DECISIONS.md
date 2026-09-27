@@ -10074,3 +10074,99 @@ Dar sürümün asıl kazancı veride: "nasıl geçti?" cevabı aşama zamanları
 - Entegrasyon test host'unda varsayılan kapalı: gerçek saatle tarayan test sınıfları hafta sonunda ya da tatilde kırılmasın diye. `ReminderDeferralTests` kendi saatiyle açar.
 - `ReminderService` artık `TimeProvider`'dan okur; canlıda sistem saati kullanılır.
 - **Dışa aktarım:** hatırlatmanın `DeferredFor` alanı eklendi.
+
+## Dış maaş verisi: Önceki Yazılımcı anketleri için kullanım izni — DECIDED (2026-09-27), uygulama OPEN
+
+**Neden.** Şirket maaşı sekmesi çoğu pozisyonda boş: sıfır kullanıcı aşamasında eşiği geçen kayıt yok.
+Türkiye'de yazılım maaşı için en büyük açık veri, Önceki Yazılımcı'nın yıllık anketleri
+(github.com/oncekiyazilimci, 2018–2026; 2026 anketi 5.002 kişi, Mart 2026'da kapandı).
+
+**İzin.** Depolarda lisans yok (GitHub API `license: null`). Lisans olmayınca "tüm hakları saklı"
+geçerli olduğu için kullanıcı anketin sahibine LinkedIn'den yazdı. 2026-09-27'de gelen cevap:
+destek oluyor, "dilediğiniz gibi kullanabilirsiniz". Yazılı teyit LinkedIn yazışmasında duruyor;
+ekran görüntüsünü kullanıcı saklıyor (repo'ya konmaz).
+
+**Verinin içeriği (2026 dosyası incelendi).** Satır başına: seviye (Junior/Middle/Senior), 37 pozisyon,
+deneyim aralığı, teknolojiler, cinsiyet, sektör (52 değer), şirket büyüklüğü, çalışma düzeni,
+şehir/ülke, para birimi (TRY/EUR/USD/GBP), aylık **net** gelir aralığı (bant), yılda kaç zam.
+**Şirket adı yok**: şirket bazlı maaş kayıtlarını (`CompanySalaryEntries`) beslemez, yalnızca
+pozisyon × seviye (× şehir/sektör) düzeyinde bir piyasa referansı verir.
+
+**İzin geniş olsa da kendi koyduğumuz kurallar:**
+- **Ayrı kaynak.** Kullanıcılarımızın bildirdiği maaşlarla karıştırılmaz, kendi sayılarımıza eklenmez.
+  Her gösterimde "Piyasa referansı · Önceki Yazılımcı <yıl> Maaş Anketi (n=…)" etiketi ve ankete bağlantı yer alır.
+- **Satır değil, toplam.** İçe aktarımda yalnızca toplu hücreler (P25/medyan/P75, n) saklanır; eşiğin
+  altındaki hücreler atılır. Cinsiyet ve teknoloji alanları hiç alınmaz. Ham satırlarda şehir, cinsiyet,
+  sektör, büyüklük ve pozisyon birlikte küçük gruplarda kişiyi teşhis edebilir.
+- **Dönem etiketi.** Anket tarihi her gösterimde yazar; enflasyon yüzünden aylar içinde eskir.
+- **Pozisyon eşlemesi.** 37 pozisyon meslek kataloğuna (ISCO) elle, bir kez eşlenir.
+
+**Kapsam kararları (kullanıcı, 2026-09-27):**
+- **Dokuz yılın hepsi** içe alınır (2018–2026; yaklaşık 40 bin yanıt).
+- **Public sayfalar:** meslekler listesi ve her meslek için bir sayfa. Tasarım kanvası
+  https://claude.ai/artifact/QjbXkRFuNmWED9y4ZWK5h4 — **Liste A** (tablo) ve **Detay A**
+  (zaman çizgisi önce, hover'lı) seçildi; Liste B ve Detay B elendi.
+- **Eşik: hücre başına en az 15 kişi** (30 önerilmişti, kullanıcı 15 dedi).
+- **"En düşük / en yüksek" P10/P90 olarak gösterilir**, ham en küçük / en büyük değer asla gösterilmez.
+  Uçlar ya hatalı yanıt (2024'te ve 2025'te 1.500 ₺) ya da tek bir kişi (2026'da 365.000 ₺).
+- **Aynı yılın başka anketleri tek havuzda birleştirilir.** Önerilen yan yana gösterim yerine
+  kullanıcının kararı; gerekçesi daha çok katılım. Kabul edilen bedeller:
+  - iki anketin kitle farkı: Şubat 2026'da yazilimcimaaslari.org medyanı 95.000 ₺,
+    Mart 2026'da Önceki Yazılımcı medyanı 132.500 ₺;
+  - anonim yanıtlarda ayıklanamayan olası çift katılım;
+  - seviye ve deneyim ölçeklerinin zorla eşlenmesi.
+  Sayfa, birleştirilen her kaynağı adıyla ve katılım sayısıyla gösterir.
+- **Kaynak adayları (2026-09-27 taraması):**
+  - yazilimcimaaslari.org (Berkay Derin, Şubat 2026, 1.223 kişi, ham veri herkese açık bir tabloda,
+    lisans yok): **izin alınınca** havuza girer.
+  - berkayderin/yazilimci-maaslari-2025: Önceki Yazılımcı 2025 dosyasının kopyası (aynı byte boyutu),
+    **alınmaz**, aksi hâlde çift sayılır.
+  - BT Maaş Endeksi (türetilmiş; Levels.fyi içeriyor), Frontend İstanbul 2019 (yalnızca PDF),
+    Coderspace (kapalı veri): **alınmaz**.
+
+### PR1: veri, içe aktarım aracı, API — 2026-09-27
+
+**Veri tabloda değil, uygulamaya gömülü (plandan sapma, gerekçeli).** Plan domain + migration
+diyordu. Hiçbir tablo bu veriye bağlanmadığı ve veri yılda bir kez değiştiği için özetler iki CSV
+olarak Infrastructure'a gömüldü: `SalaryMarket/Seed/salary-market-editions.csv` ve
+`salary-market-cells.csv`. `SalaryMarketService` (singleton) bunları süreç başında bir kez okur ve
+bellekten cevap verir. Migration, tablo ve önbellek yok. Yeni anket yılı: araç yeniden çalışır,
+diff okunur, commit + deploy. Yayın geçmişi git geçmişidir.
+
+**Araç `tools/SalarySurveyImport`** (slnx dışında, `tools/CvScanCorpus` gibi):
+- `fetch`: dokuz yılın dosyasını `artifacts/salary-surveys/` altına indirir (git-ignored).
+- `build`: normalleştirir, aynı yılın kaynaklarını havuzlar, özetler, seed'i yazar.
+- Rapor (eşlenmeyen ham etiketler dahil) indirmelerin yanında kalır, repoya girmez.
+- Okuyucu cinsiyet, teknoloji ve şirket tipi alanlarını hiç okumaz.
+
+**Normalleştirme** (`Application/SalaryMarket/Import`):
+- **Pozisyon:** kelime sınırlı kurallar, ilk eşleşen kazanır.
+  - Etiketler kültürden bağımsız küçültülür: Türkçe küçültme "AI"yı "aı" yapıp AI Engineer'ı
+    düşürüyordu. İlk çalıştırmada yakalandı.
+  - Cloud ve Platform Engineer DevOps grubuna girer, katalogdaki EK-0018 ve EK-0019 ile aynı.
+- **Maaş:** aralığın ortası. Üst sınır 9 ile bitiyorsa (104.999) bir eklenir; 2018'in bitişik
+  aralıkları ("5.000 - 7.500") olduğu gibi alınır.
+  - "X ve üzeri" tabandan sayılır. Percentile oraya düşerse `atLeast` işaretlenir; 26 hücrede var,
+    hepsi erken yıllarda.
+  - "X ve aşağısı" X'in yarısı sayılır.
+- **Seviye:** Mid → Middle, Guru → Senior.
+- **Deneyim:** aralığın ilk sayısına göre 4 aralık (0–2 / 3–5 / 6–10 / 10+).
+- **Filtre:** yalnızca TL ve Türkiye.
+- **Percentile:** en yakın sıra, 500 TL'ye yuvarlanır.
+
+**Sonuç (Önceki Yazılımcı, 2018–2026):**
+- 40.459 yanıttan 36.733'ü kullanıldı; 767 hücre yazıldı.
+- 24 meslekten 24'ü yayında. AI Engineer 2025–2026, Siber Güvenlik 2025–2026.
+- Back-end 2026: medyan 132.500 ₺, P25–P75 97.500–177.500 ₺, 909 kişi.
+
+**Eşik iki kez uygulanır:** araç 15'in altındaki hücreyi hiç yazmaz,
+`SalaryMarketService` yüklerken `SalaryMarket:MinimumResponses` ile yeniden süzer. Tüm okuma
+yolları bu süzülmüş kümeden beslenir.
+
+**API** (anonim, salt okunur):
+- Uçlar: `GET /api/salary-market/occupations` ve `GET /api/salary-market/occupations/{slug}`.
+- Bayrak `SalaryMarket`, **varsayılan kapalı**. Kapalıyken iki uç da 404 döner,
+  `/api/config.salaryMarket.enabled` false olur.
+- `Cache-Control: public, max-age=3600`, `Vary: Origin`.
+- Yazma ucu yok, dolayısıyla RequestAudit ve gizlilik metni etkilenmez.
+- Yanıtta ham en küçük / en büyük değer yok; entegrasyon testi ham JSON'da bunları arıyor.

@@ -15,6 +15,7 @@ using AfterApply.Infrastructure.Feedback;
 using AfterApply.Infrastructure.JobSources;
 using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.ResponseRates;
+using AfterApply.Infrastructure.SalaryMarket;
 using AfterApply.Infrastructure.SilenceReports;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -75,7 +76,9 @@ public sealed class FeatureFlagCatalog
         [FeatureFlag.Payments] = new(s => Get<PayTrOptions>(s).Enabled,
             s => PayTrOptionsValidator.ProblemsWhenOn(Get<PayTrOptions>(s)).Count == 0 ? null : FeatureFlagPrerequisites.PayTrConfiguration,
             FeatureFlagCoupling.Money),
-        [FeatureFlag.JobLiveness] = new(s => Get<JobLivenessOptions>(s).Enabled, None, FeatureFlagCoupling.PrivacyText)
+        [FeatureFlag.JobLiveness] = new(s => Get<JobLivenessOptions>(s).Enabled, None, FeatureFlagCoupling.PrivacyText),
+        // Read-only figures from surveys other people ran: no input, no personal data, no cost.
+        [FeatureFlag.SalaryMarket] = new(s => Get<SalaryMarketOptions>(s).Enabled, None)
     };
 
     private readonly IReadOnlyDictionary<FeatureFlag, bool> _defaults;
