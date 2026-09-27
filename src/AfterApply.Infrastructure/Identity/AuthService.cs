@@ -928,7 +928,7 @@ internal sealed class AuthService(
         var reminders = await dbContext.Reminders
             .Where(r => r.UserId == userId)
             .Select(r => new ReminderExportItem(r.Id, r.ApplicationId, r.Type, r.ReferenceAt, r.CreatedAt, r.DismissedAt,
-                r.SnoozedUntil))
+                r.SnoozedUntil, r.DeferredFor))
             .ToListAsync(cancellationToken);
 
         var cvDocuments = await dbContext.CvDocuments

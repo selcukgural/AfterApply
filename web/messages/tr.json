@@ -728,7 +728,19 @@
       "allDone": "Hepsini hallettin. Yeni bir şey olursa burada görünür.",
       "heldDismissed": "{company} hatırlatıcısı yoksayıldı.",
       "heldFollowedUp": "{company}: takip ettin olarak işaretlendi.",
-      "heldGhosted": "{company} başvurusu sessize alındı."
+      "heldGhosted": "{company} başvurusu sessize alındı.",
+      "deferred": {
+        "Weekend": "Hafta sonuna denk geldiği için bugüne aldık.",
+        "NewYear": "Yılbaşına denk geldiği için bugüne aldık.",
+        "NationalSovereigntyDay": "23 Nisan’a denk geldiği için bugüne aldık.",
+        "LabourDay": "1 Mayıs’a denk geldiği için bugüne aldık.",
+        "YouthDay": "19 Mayıs’a denk geldiği için bugüne aldık.",
+        "DemocracyDay": "15 Temmuz’a denk geldiği için bugüne aldık.",
+        "VictoryDay": "30 Ağustos’a denk geldiği için bugüne aldık.",
+        "RepublicDay": "29 Ekim’e denk geldiği için bugüne aldık.",
+        "RamadanFeast": "Ramazan Bayramı’na denk geldiği için bugüne aldık.",
+        "SacrificeFeast": "Kurban Bayramı’na denk geldiği için bugüne aldık."
+      }
     },
     "stale": {
       "title": "{count} başvuru {threshold} günden eski ve yanıtsız",

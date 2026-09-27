@@ -1623,6 +1623,18 @@ export interface StaleApplicationsSummaryResponse {
 export type ReminderType = "FollowUp" | "PossiblyGhosted" | "PromiseMissed" | "InterviewHeld";
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.ReminderResponse. */
+export type ReminderDeferral =
+  | "Weekend"
+  | "NewYear"
+  | "NationalSovereigntyDay"
+  | "LabourDay"
+  | "YouthDay"
+  | "DemocracyDay"
+  | "VictoryDay"
+  | "RepublicDay"
+  | "RamadanFeast"
+  | "SacrificeFeast";
+
 export interface ReminderResponse {
   id: string;
   applicationId: string;
@@ -1641,6 +1653,11 @@ export interface ReminderResponse {
   applicationStatus?: ApplicationStatus | null;
   /** The interview an InterviewHeld row asks about (ISO instant). */
   interviewAt?: string | null;
+  /** Set when the scan held this reminder back from a weekend or public holiday; absent on an API
+   *  that predates it. */
+  deferredFor?: ReminderDeferral | null;
+  /** The morning it was moved to (ISO instant). */
+  deferredUntil?: string | null;
 }
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.UpcomingInterviewResponse. */

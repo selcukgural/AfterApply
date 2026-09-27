@@ -22,6 +22,11 @@ public sealed class Reminder : Entity
     /// from a few fixed lengths on the row, never a date — see SnoozeReminderRequest.</summary>
     public DateTimeOffset? SnoozedUntil { get; private set; }
 
+    /// <summary>Set when the scan held the reminder back from a weekend or public holiday to the
+    /// next working day (SnoozedUntil is then that morning), so the row can say why it is showing
+    /// today. Cleared the moment the user snoozes or reopens it themselves.</summary>
+    public ReminderDeferral? DeferredFor { get; private set; }
+
     private Reminder()
     {
     }
@@ -48,6 +53,14 @@ public sealed class Reminder : Entity
     public void Snooze(DateTimeOffset until)
     {
         SnoozedUntil = until;
+        DeferredFor = null;
+    }
+
+    /// <summary>Held back by the scan to a working day — not the user's snooze.</summary>
+    public void Defer(DateTimeOffset until, ReminderDeferral reason)
+    {
+        SnoozedUntil = until;
+        DeferredFor = reason;
     }
 
     /// <summary>The undo of both a snooze and an answer that closed the row: back on the list as it
@@ -56,5 +69,6 @@ public sealed class Reminder : Entity
     {
         DismissedAt = null;
         SnoozedUntil = null;
+        DeferredFor = null;
     }
 }

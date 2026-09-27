@@ -14,6 +14,7 @@ public sealed class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
         builder.HasKey(r => r.Id);
 
         builder.Property(r => r.Type).HasConversion<string>().HasMaxLength(50);
+        builder.Property(r => r.DeferredFor).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(r => r.UserId);
         builder.HasIndex(r => new { r.ApplicationId, r.Type, r.ReferenceAt }).IsUnique();

@@ -111,6 +111,10 @@ public abstract class ApiHost : WebApplicationFactory<Program>, IAsyncLifetime
     {
         Stores.Apply(builder);
         builder.UseSetting("Jwt:SigningKey", JwtSigningKey);
+        // The reminder scan runs on the real clock in most classes, and a run on a weekend or a
+        // public holiday would hold every new follow-up back to the next working morning — off the
+        // list the test then reads. ReminderDeferralTests turns it back on under its own clock.
+        builder.UseSetting("Notifications:HoldOutreachOnDaysOff", "false");
         builder.ConfigureTestServices(services =>
         {
             InlineBackgroundJobs.Register(services, Jobs);

@@ -57,7 +57,9 @@ public sealed record ReminderExportItem(
     DateTimeOffset ReferenceAt,
     DateTimeOffset CreatedAt,
     DateTimeOffset? DismissedAt,
-    DateTimeOffset? SnoozedUntil = null);
+    DateTimeOffset? SnoozedUntil = null,
+    // Why the scan held it back to a working day (weekend or a public holiday), when it did.
+    ReminderDeferral? DeferredFor = null);
 
 /// <summary>Metadata only. The CV files themselves are not inlined into the export — they are
 /// already downloadable one by one from the CV page, and base64-ing up to ten documents into a
