@@ -738,4 +738,16 @@
   <data name="FEATURE_FLAG_PAYMENTS_NOTES" xml:space="preserve">
     <value>Gerçek para tahsil eder. PayTR mağaza bilgileri ve plan fiyatları tanımlı olmadan açılamaz. Pro satışı yalnızca Haftalık ilan eşleştirme de açıkken görünür.</value>
   </data>
+  <data name="INTERVIEW_OUTSIDE_INTERVIEW_STAGE" xml:space="preserve">
+    <value>Görüşme tarihi yalnızca ön değerlendirme ya da mülakat aşamasında kaydedilebilir.</value>
+  </data>
+  <data name="VALIDATION_INTERVIEW_RANGE" xml:space="preserve">
+    <value>Görüşme tarihi en fazla bir ay önce ya da bir yıl sonra olabilir.</value>
+  </data>
+  <data name="REMINDER_NOT_AN_INTERVIEW" xml:space="preserve">
+    <value>Bu hatırlatıcı bir görüşmeyle ilgili değil.</value>
+  </data>
+  <data name="VALIDATION_INTERVIEW_NEXT_STATUS" xml:space="preserve">
+    <value>Sürecin geçtiği aşamayı seç.</value>
+  </data>
 </root>

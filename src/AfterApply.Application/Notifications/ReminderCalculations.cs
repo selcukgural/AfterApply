@@ -73,6 +73,21 @@ public static class ReminderCalculations
         return !hasResponded && daysElapsed >= ghostingThresholdDays;
     }
 
+    /// <summary>How long after its start an interview counts as over: the question "how did it go?"
+    /// is not asked while the candidate may still be in the room.</summary>
+    public static readonly TimeSpan InterviewDuration = TimeSpan.FromHours(1);
+
+    /// <summary>
+    /// Whether "how did the interview go?" is due: the interview is over, and it is still inside
+    /// the follow-up window after it. Past the window the question has gone stale and the ordinary
+    /// follow-up takes over — a week after an interview, "have you written to them?" is the better
+    /// nudge.
+    /// </summary>
+    public static bool IsInterviewQuestionDue(DateTimeOffset interviewAt, DateTimeOffset now, int followUpThresholdDays)
+    {
+        return now >= interviewAt + InterviewDuration && now < interviewAt.AddDays(followUpThresholdDays);
+    }
+
     /// <summary>
     /// Past the horizon nothing is a reminder any more — see NotificationOptions.StaleThresholdDays.
     /// Applies to both types: a follow-up on an interview that went quiet a year ago is as

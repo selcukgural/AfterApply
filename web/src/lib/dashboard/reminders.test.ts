@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_SELECTION, selectAllMatching } from "@/lib/applications/bulkSelection";
-import { REMINDER_ANSWER_KEY, REMINDER_LABEL_KEY, answersByGhosting, clampPage, lastPage, toReminderSelection } from "./reminders";
+import {
+  REMINDER_ANSWER_KEY,
+  REMINDER_LABEL_KEY,
+  answersByGhosting,
+  clampPage,
+  hasSingleAnswer,
+  lastPage,
+  toReminderSelection,
+} from "./reminders";
 
 describe("REMINDER_LABEL_KEY", () => {
   it("covers every reminder type", () => {
@@ -59,5 +67,14 @@ describe("clampPage", () => {
   it("falls back to the last page once the list has shrunk under the current one", () => {
     expect(clampPage(245, 1220, 5)).toBe(244);
     expect(clampPage(2, 0, 5)).toBe(1);
+  });
+});
+
+describe("InterviewHeld", () => {
+  it("has a label but no single answer button: its row asks its own question", () => {
+    expect(REMINDER_LABEL_KEY.InterviewHeld).toBe("interviewHeld");
+    expect(hasSingleAnswer("InterviewHeld")).toBe(false);
+    expect(hasSingleAnswer("FollowUp")).toBe(true);
+    expect(answersByGhosting("InterviewHeld")).toBe(false);
   });
 });

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import type { ApplicationStatus, RejectionNotice } from "@/types/api";
+import type { ApplicationStatus, InterviewFormat, RejectionNotice } from "@/types/api";
 import { APPLICATION_STATUSES } from "@/lib/constants/applicationStatus";
 import {
   asksForPromise,
@@ -11,6 +11,7 @@ import {
   REJECTION_NOTICE_OPTIONS,
   todayDateOnly,
 } from "@/lib/applications/replyPromise";
+import { asksForInterview, INTERVIEW_FORMATS, toInterviewInstant } from "@/lib/applications/interview";
 import { Select } from "@/components/ui/Select";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -21,6 +22,9 @@ import { Button } from "@/components/ui/Button";
 export interface StatusChangeExtras {
   promisedReplyBy: string | null;
   rejectionNotice: RejectionNotice | null;
+  /** ISO instant of the new stage's interview, when one was given (interview canvas, 2026-09-27). */
+  interviewAt: string | null;
+  interviewFormat: InterviewFormat | null;
 }
 
 interface StatusChangeSelectProps {
@@ -37,6 +41,9 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
   const [note, setNote] = useState("");
   const [promisedReplyBy, setPromisedReplyBy] = useState("");
   const [rejectionNotice, setRejectionNotice] = useState<RejectionNotice | null>(null);
+  const [interviewDate, setInterviewDate] = useState("");
+  const [interviewTime, setInterviewTime] = useState("");
+  const [interviewFormat, setInterviewFormat] = useState<InterviewFormat>("Online");
   const [isOpen, setIsOpen] = useState(false);
 
   if (!isOpen) {
@@ -49,6 +56,8 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
 
   const showPromise = asksForPromise(selected);
   const showRejectionNotice = asksForRejectionNotice(selected);
+  const showInterview = asksForInterview(selected);
+  const interviewAt = showInterview ? toInterviewInstant(interviewDate, interviewTime) : null;
   const bounds = promiseDateBounds(todayDateOnly());
 
   const reset = () => {
@@ -56,6 +65,9 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
     setNote("");
     setPromisedReplyBy("");
     setRejectionNotice(null);
+    setInterviewDate("");
+    setInterviewTime("");
+    setInterviewFormat("Online");
   };
 
   const handleConfirm = async () => {
@@ -64,6 +76,8 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
     await onChangeStatus(selected, note.trim() || null, {
       promisedReplyBy: showPromise && promisedReplyBy ? promisedReplyBy : null,
       rejectionNotice: showRejectionNotice ? rejectionNotice : null,
+      interviewAt,
+      interviewFormat: interviewAt ? interviewFormat : null,
     });
     reset();
   };
@@ -104,6 +118,41 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
           })}
         </fieldset>
       )}
+      {showInterview && (
+        <fieldset className="flex flex-col gap-2 rounded-md border border-accent/30 bg-white p-3 dark:bg-gray-900">
+          <legend className="px-1 text-sm text-gray-700 dark:text-gray-300">{t("interviewLegend")}</legend>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t("interviewHint")}</p>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="status-change-interview-date" className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                {t("interviewDate")}
+              </label>
+              <div className="w-44">
+                <Input
+                  id="status-change-interview-date"
+                  type="date"
+                  value={interviewDate}
+                  onChange={(e) => setInterviewDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="status-change-interview-time" className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                {t("interviewTime")}
+              </label>
+              <div className="w-32">
+                <Input
+                  id="status-change-interview-time"
+                  type="time"
+                  value={interviewTime}
+                  onChange={(e) => setInterviewTime(e.target.value)}
+                />
+              </div>
+            </div>
+            <InterviewFormatPicker label={t("interviewFormat")} value={interviewFormat} onChange={setInterviewFormat} />
+          </div>
+        </fieldset>
+      )}
       <Input placeholder={t("notePlaceholder")} value={note} onChange={(e) => setNote(e.target.value)} />
       {showPromise && (
         <div className="flex flex-col gap-1">
@@ -130,6 +179,45 @@ export function StatusChangeSelect({ currentStatus, onChangeStatus, isSubmitting
         <Button variant="secondary" onClick={reset} disabled={isSubmitting}>
           {t("cancel")}
         </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Online / In person / Phone as three pressable buttons — the same control on the status panel and
+ *  the application page's interview cell. */
+export function InterviewFormatPicker({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: InterviewFormat;
+  onChange: (format: InterviewFormat) => void;
+}) {
+  const t = useTranslations("applications.interview");
+  return (
+    <div className="flex flex-col gap-1" role="group" aria-label={label}>
+      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{label}</span>
+      <div className="flex gap-1.5">
+        {INTERVIEW_FORMATS.map((format) => {
+          const pressed = value === format;
+          return (
+            <button
+              key={format}
+              type="button"
+              aria-pressed={pressed}
+              onClick={() => onChange(format)}
+              className={
+                pressed
+                  ? "min-h-10 rounded-md border border-accent bg-accent-wash px-3 text-sm font-medium text-accent-ink"
+                  : "min-h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+              }
+            >
+              {t(`format.${format}`)}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

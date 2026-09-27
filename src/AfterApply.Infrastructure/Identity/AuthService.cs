@@ -888,7 +888,8 @@ internal sealed class AuthService(
                 (a, c) => new
                 {
                     a.Id, CompanyName = c.Name, a.JobTitle, a.Status, a.AppliedAt, a.CreatedAt, a.UpdatedAt,
-                    a.PromisedReplyBy, a.PromisedReplyStatus, a.RejectionNotice
+                    a.PromisedReplyBy, a.PromisedReplyStatus, a.RejectionNotice,
+                    a.InterviewAt, a.InterviewFormat, a.InterviewStatus
                 })
             .ToListAsync(cancellationToken);
 
@@ -915,7 +916,8 @@ internal sealed class AuthService(
                 historyByApplication[a.Id]
                     .Select(h => new StatusHistoryExportItem(h.FromStatus, h.ToStatus, h.ChangedAt, h.Note, h.Origin))
                     .ToList(),
-                a.PromisedReplyBy, a.PromisedReplyStatus, a.RejectionNotice))
+                a.PromisedReplyBy, a.PromisedReplyStatus, a.RejectionNotice,
+                a.InterviewAt, a.InterviewFormat, a.InterviewStatus))
             .ToList();
 
         var importBatches = await dbContext.ImportBatches
@@ -925,7 +927,8 @@ internal sealed class AuthService(
 
         var reminders = await dbContext.Reminders
             .Where(r => r.UserId == userId)
-            .Select(r => new ReminderExportItem(r.Id, r.ApplicationId, r.Type, r.ReferenceAt, r.CreatedAt, r.DismissedAt))
+            .Select(r => new ReminderExportItem(r.Id, r.ApplicationId, r.Type, r.ReferenceAt, r.CreatedAt, r.DismissedAt,
+                r.SnoozedUntil))
             .ToListAsync(cancellationToken);
 
         var cvDocuments = await dbContext.CvDocuments
@@ -1091,9 +1094,15 @@ internal sealed class AuthService(
             .Select(c => new { c.ApplicationId, c.TrackedJobId, c.Position, c.Origin, c.AddedAt, c.SeenAt, c.ClosedAt })
             .ToListAsync(cancellationToken);
 
+        var interviewNotifications = await dbContext.InterviewNotifications
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .Select(n => new InterviewNotificationExportItem(n.ApplicationId, n.Kind, n.InterviewAt, n.CreatedAt, n.ReadAt, n.DismissedAt))
+            .ToListAsync(cancellationToken);
+
         var notificationPreferences = new NotificationPreferencesResponse(
             user.NotifyContributions, user.NotifyReviewHelpful, user.NotifySalaryHelpful,
-            user.NotifyExperienceHelpful, user.NotifyBlogCommentHelpful, user.NotifyGmailUpdates);
+            user.NotifyExperienceHelpful, user.NotifyBlogCommentHelpful, user.NotifyGmailUpdates, user.NotifyInterviews);
 
         return new AccountExportResponse(ToProfile(user), applicationItems, importBatches, reminders,
             DateTimeOffset.UtcNow, cvDocuments, feedback, companyReviews, reviewReports, helpfulMarks, companySalaries, payments, proEntitlement,
@@ -1103,7 +1112,8 @@ internal sealed class AuthService(
                 x.CompanyId, x.Name, x.Platform.ToString(), x.Url, x.SubmittedAt)).ToList(),
             trackedJobs,
             boardCards.Select(c => new BoardCardExportItem(c.ApplicationId, c.TrackedJobId, c.Position,
-                c.Origin.ToString(), c.AddedAt, c.SeenAt, c.ClosedAt)).ToList());
+                c.Origin.ToString(), c.AddedAt, c.SeenAt, c.ClosedAt)).ToList(),
+            interviewNotifications);
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

@@ -45,6 +45,63 @@ public static class ReminderEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPost("/{id:guid}/snooze", async (Guid id, SnoozeReminderRequest request, ClaimsPrincipal user,
+                IReminderService service, CancellationToken cancellationToken) =>
+            {
+                var snoozed = await service.SnoozeAsync(user.GetUserId(), id, request, cancellationToken);
+                return snoozed ? Results.NoContent() : Results.NotFound();
+            })
+            .WithValidation<SnoozeReminderRequest>()
+            .WithSummary("Snooze a reminder")
+            .WithDescription("Takes the reminder off the list for 1, 3, 7 or 14 days; it stays open underneath. 404 when " +
+                             "the reminder is not the caller's or is already closed.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{id:guid}/unsnooze", async (Guid id, ClaimsPrincipal user, IReminderService service,
+                CancellationToken cancellationToken) =>
+            {
+                var unsnoozed = await service.UnsnoozeAsync(user.GetUserId(), id, cancellationToken);
+                return unsnoozed ? Results.NoContent() : Results.NotFound();
+            })
+            .WithSummary("Undo a snooze")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{id:guid}/interview-outcome", async (Guid id, InterviewOutcomeRequest request, ClaimsPrincipal user,
+                IReminderService service, CancellationToken cancellationToken) =>
+            {
+                var outcome = await service.AnswerInterviewAsync(user.GetUserId(), id, request, cancellationToken);
+                return outcome is not null ? Results.Ok(outcome) : Results.NotFound();
+            })
+            .WithValidation<InterviewOutcomeRequest>()
+            .WithSummary("Answer \"how did the interview go?\"")
+            .WithDescription("NextStage moves the application to NextStatus, Waiting records the reply date the company " +
+                             "gave (if any), Rejected marks it rejected; the reminder is closed either way. The response " +
+                             "is what POST /{id}/interview-outcome/undo takes back.")
+            .Produces<InterviewOutcomeResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{id:guid}/interview-outcome/undo", async (Guid id, UndoInterviewOutcomeRequest request,
+                ClaimsPrincipal user, IReminderService service, CancellationToken cancellationToken) =>
+            {
+                var undone = await service.UndoInterviewAnswerAsync(user.GetUserId(), id, request, cancellationToken);
+                return undone ? Results.NoContent() : Results.NotFound();
+            })
+            .WithValidation<UndoInterviewOutcomeRequest>()
+            .WithSummary("Take an interview answer back")
+            .WithDescription("Reverts the status move compare-and-set, clears the reply date only while it is still the one " +
+                             "the answer recorded, and reopens the reminder.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapGet("/interviews", async (ClaimsPrincipal user, IReminderService service, CancellationToken cancellationToken) =>
+                Results.Ok(await service.GetUpcomingInterviewsAsync(user.GetUserId(), cancellationToken)))
+            .WithSummary("The current user's upcoming interviews")
+            .WithDescription("Interviews of the applications' current stages in the next 14 days, soonest first, at most ten.")
+            .Produces<IReadOnlyList<UpcomingInterviewResponse>>();
+
         // Bulk answers. Under /bulk for the reason the applications routes are: "bulk" is not a
         // Guid, so the single-reminder routes above can never catch these. Every one takes the
         // same selection — the ticked ids, or "all" with the count the user was shown — and every

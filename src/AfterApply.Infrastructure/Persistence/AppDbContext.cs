@@ -72,6 +72,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<ContributionNotification> ContributionNotifications => Set<ContributionNotification>();
 
+    public DbSet<InterviewNotification> InterviewNotifications => Set<InterviewNotification>();
+
     public DbSet<HelpfulNotificationLedgerEntry> HelpfulNotificationLedger => Set<HelpfulNotificationLedgerEntry>();
 
     public DbSet<EmailConnection> EmailConnections => Set<EmailConnection>();

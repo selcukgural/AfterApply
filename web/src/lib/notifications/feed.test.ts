@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ContributionNotificationResponse, NotificationFeedItemResponse } from "@/types/api";
-import { contributionTarget, emailTarget, formatNotificationTime } from "./feed";
+import { contributionTarget, emailTarget, formatNotificationTime, interviewTarget } from "./feed";
 
 const contribution = (overrides: Partial<ContributionNotificationResponse>): ContributionNotificationResponse => ({
   type: "ReviewHelpful",
@@ -74,5 +74,35 @@ describe("formatNotificationTime", () => {
 
   it("speaks the reader's language", () => {
     expect(formatNotificationTime("2026-09-23T11:32:00Z", "tr")).toMatch(/Eylül/);
+  });
+});
+
+describe("interviewTarget", () => {
+  const base = {
+    id: "n1",
+    kind: "Interview" as const,
+    occurredAt: "2026-09-27T06:00:00Z",
+    isRead: false,
+    contribution: null,
+    email: null,
+  };
+  const interview = {
+    applicationId: "app-1",
+    companyName: "Kuzey Yazılım",
+    jobTitle: "Backend Developer",
+    status: "TechnicalInterview" as const,
+    interviewAt: "2026-09-28T11:00:00Z",
+  };
+
+  it("leads an upcoming interview to its application", () => {
+    expect(interviewTarget({ ...base, interview: { ...interview, kind: "Upcoming" } })).toBe("/applications/app-1");
+  });
+
+  it("leads a held interview to the dashboard, where the question waits", () => {
+    expect(interviewTarget({ ...base, interview: { ...interview, kind: "Held" } })).toBe("/dashboard");
+  });
+
+  it("leads nowhere for a row that is not an interview", () => {
+    expect(interviewTarget({ ...base, kind: "Contribution", interview: null })).toBeNull();
   });
 });

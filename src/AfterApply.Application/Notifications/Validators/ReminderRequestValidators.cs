@@ -1,5 +1,9 @@
+using AfterApply.Application.Applications.Validators;
+using AfterApply.Application.Localization;
 using AfterApply.Application.Notifications.Contracts;
+using AfterApply.Domain.Applications;
 using FluentValidation;
+using Microsoft.Extensions.Localization;
 
 namespace AfterApply.Application.Notifications.Validators;
 
@@ -49,5 +53,54 @@ public sealed class PauseRemindersRequestValidator : AbstractValidator<PauseRemi
         RuleFor(x => x.Days)
             .Must(days => AllowedDays.Contains(days))
             .WithMessage($"Days must be one of {string.Join(", ", AllowedDays)}.");
+    }
+}
+
+public sealed class SnoozeReminderRequestValidator : AbstractValidator<SnoozeReminderRequest>
+{
+    /// <summary>What the row's menu offers: "ask tomorrow" and "in 3 days" on an interview question,
+    /// 3 days / a week / a fortnight on the rest.</summary>
+    public static readonly IReadOnlyCollection<int> AllowedDays = [1, 3, 7, 14];
+
+    public SnoozeReminderRequestValidator()
+    {
+        RuleFor(x => x.Days)
+            .Must(days => AllowedDays.Contains(days))
+            .WithMessage($"Days must be one of {string.Join(", ", AllowedDays)}.");
+    }
+}
+
+public sealed class InterviewOutcomeRequestValidator : AbstractValidator<InterviewOutcomeRequest>
+{
+    /// <summary>Where a process can go after an interview. Screening is not among them: it comes
+    /// before interviews, and "moved on to screening" would be a step back recorded as progress.</summary>
+    public static readonly HashSet<ApplicationStatus> NextStatuses =
+    [
+        ApplicationStatus.Interview, ApplicationStatus.TechnicalInterview, ApplicationStatus.FinalInterview,
+        ApplicationStatus.Offer, ApplicationStatus.Accepted
+    ];
+
+    public InterviewOutcomeRequestValidator(IStringLocalizer<SharedStrings> localizer)
+    {
+        RuleFor(x => x.Outcome).IsInEnum();
+        RuleFor(x => x.NextStatus)
+            .Must(status => status is { } s && NextStatuses.Contains(s))
+            .When(x => x.Outcome == InterviewOutcome.NextStage)
+            .WithMessage(_ => localizer["VALIDATION_INTERVIEW_NEXT_STATUS"]);
+        RuleFor(x => x.NextStatus).Null().When(x => x.Outcome != InterviewOutcome.NextStage);
+        RuleFor(x => x.PromisedReplyBy).MustBeAReasonableReplyDate(localizer);
+        RuleFor(x => x.PromisedReplyBy).Null().When(x => x.Outcome != InterviewOutcome.Waiting);
+    }
+}
+
+public sealed class UndoInterviewOutcomeRequestValidator : AbstractValidator<UndoInterviewOutcomeRequest>
+{
+    public UndoInterviewOutcomeRequestValidator()
+    {
+        RuleFor(x => x.FromStatus).IsInEnum();
+        RuleFor(x => x.ToStatus).IsInEnum();
+        // A status move is undone from both of its ends or not at all.
+        RuleFor(x => x.ToStatus).NotNull().When(x => x.FromStatus is not null);
+        RuleFor(x => x.FromStatus).NotNull().When(x => x.ToStatus is not null);
     }
 }

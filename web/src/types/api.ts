@@ -159,6 +159,9 @@ export interface ApplicationDetailResponse {
   promisedReplyOutcome?: ReplyPromiseOutcome | null;
   /** How the user learned of the rejection; null unless the status is Rejected and they said. */
   rejectionNotice?: RejectionNotice | null;
+  /** The interview of the current stage (ISO instant); absent on an API that predates it. */
+  interviewAt?: string | null;
+  interviewFormat?: InterviewFormat | null;
 }
 
 export type HrEmailSource = "Manual" | "IncomingEmail";
@@ -358,6 +361,19 @@ export interface ChangeStatusRequest {
   promisedReplyBy?: string | null;
   /** Only with Rejected. */
   rejectionNotice?: RejectionNotice | null;
+  /** ISO instant; only with a screening or interview stage. */
+  interviewAt?: string | null;
+  interviewFormat?: InterviewFormat | null;
+}
+
+/** Mirrors AfterApply.Domain.Applications.InterviewFormat. The meeting link is never stored. */
+export type InterviewFormat = "Online" | "InPerson" | "Phone";
+
+/** Mirrors AfterApply.Application.Applications.Contracts.SetInterviewRequest. */
+export interface SetInterviewRequest {
+  /** ISO instant, or null to clear. */
+  interviewAt: string | null;
+  format?: InterviewFormat | null;
 }
 
 export interface SetReplyPromiseRequest {
@@ -501,9 +517,20 @@ export interface ContributionNotificationResponse {
   blogPostLanguage: string | null;
 }
 
-export type NotificationFeedKind = "Contribution" | "Email";
+export type NotificationFeedKind = "Contribution" | "Email" | "Interview";
 
-/** Exactly one of `contribution` / `email` is set, as `kind` says. */
+/** Mirrors AfterApply.Application.Notifications.Contracts.InterviewNotificationResponse: an
+ *  interview of the user's own coming up, or over and waiting for "how did it go?". */
+export interface InterviewNotificationResponse {
+  kind: "Upcoming" | "Held";
+  applicationId: string;
+  companyName: string;
+  jobTitle: string;
+  status: ApplicationStatus;
+  interviewAt: string;
+}
+
+/** Exactly one of `contribution` / `email` / `interview` is set, as `kind` says. */
 export interface NotificationFeedItemResponse {
   id: string;
   kind: NotificationFeedKind;
@@ -511,6 +538,7 @@ export interface NotificationFeedItemResponse {
   isRead: boolean;
   contribution: ContributionNotificationResponse | null;
   email: EmailNotificationResponse | null;
+  interview?: InterviewNotificationResponse | null;
 }
 
 export interface NotificationPreferences {
@@ -520,6 +548,8 @@ export interface NotificationPreferences {
   experienceHelpful: boolean;
   blogCommentHelpful: boolean;
   gmailUpdates: boolean;
+  /** The day-before and "how did it go?" rows; absent on an API that predates them. */
+  interviews?: boolean;
 }
 
 export type PersonalAccessTokenScope = "Full" | "Extension";
@@ -1577,7 +1607,7 @@ export interface StaleApplicationsSummaryResponse {
 // --- Reminders ---------------------------------------------------------------------------------
 
 /** Mirrors AfterApply.Domain.Notifications.ReminderType. */
-export type ReminderType = "FollowUp" | "PossiblyGhosted" | "PromiseMissed";
+export type ReminderType = "FollowUp" | "PossiblyGhosted" | "PromiseMissed" | "InterviewHeld";
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.ReminderResponse. */
 export interface ReminderResponse {
@@ -1594,6 +1624,37 @@ export interface ReminderResponse {
   userMedianResponseDays?: number | null;
   /** The date the company said it would answer by (YYYY-MM-DD); set on PromiseMissed rows only. */
   promisedReplyBy?: string | null;
+  /** Where the application stands now; an InterviewHeld row offers the stages after it. */
+  applicationStatus?: ApplicationStatus | null;
+  /** The interview an InterviewHeld row asks about (ISO instant). */
+  interviewAt?: string | null;
+}
+
+/** Mirrors AfterApply.Application.Notifications.Contracts.UpcomingInterviewResponse. */
+export interface UpcomingInterviewResponse {
+  applicationId: string;
+  companyName: string;
+  jobTitle: string;
+  status: ApplicationStatus;
+  interviewAt: string;
+  format: InterviewFormat;
+}
+
+/** Mirrors AfterApply.Application.Notifications.Contracts.InterviewOutcome. */
+export type InterviewOutcome = "NextStage" | "Waiting" | "Rejected";
+
+export interface InterviewOutcomeRequest {
+  outcome: InterviewOutcome;
+  nextStatus?: ApplicationStatus | null;
+  /** YYYY-MM-DD; only with Waiting. */
+  promisedReplyBy?: string | null;
+}
+
+/** What an answer changed; sent back as it came to take the answer back. */
+export interface InterviewOutcomeResponse {
+  fromStatus: ApplicationStatus | null;
+  toStatus: ApplicationStatus | null;
+  promisedReplyBy: string | null;
 }
 
 /** Mirrors AfterApply.Application.Notifications.Contracts.ReminderPauseState. */

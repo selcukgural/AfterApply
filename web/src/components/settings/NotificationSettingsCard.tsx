@@ -46,7 +46,7 @@ export function NotificationSettingsCard() {
       setError(t("saveError"));
     },
     onSuccess: (saved) => queryClient.setQueryData(preferencesQueryKey, saved),
-    // Gmail rows appear or vanish from the bell with their switch.
+    // Gmail and interview rows appear or vanish from the bell with their switches.
     onSettled: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: notificationsQueryKey }),
@@ -98,6 +98,12 @@ export function NotificationSettingsCard() {
               />
             );
           })}
+          <SwitchRow
+            label={t("interviews.label")}
+            hint={t("interviews.hint")}
+            on={preferences.interviews !== false}
+            onToggle={() => save.mutate({ ...preferences, interviews: preferences.interviews === false })}
+          />
           <SwitchRow
             label={t("gmailUpdates.label")}
             hint={t("gmailUpdates.hint")}

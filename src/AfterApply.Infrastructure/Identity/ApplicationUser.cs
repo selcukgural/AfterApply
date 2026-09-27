@@ -105,4 +105,8 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     public bool NotifyBlogCommentHelpful { get; set; } = true;
 
     public bool NotifyGmailUpdates { get; set; } = true;
+
+    /// <summary>The day-before reminder and the "how did it go?" row in the bell (2026-09-27). Off
+    /// means none are written; the reminders card still asks, it is not a notification.</summary>
+    public bool NotifyInterviews { get; set; } = true;
 }

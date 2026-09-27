@@ -106,7 +106,11 @@ public sealed record ApplicationDetailResponse(
     ReplyPromiseOutcome? PromisedReplyOutcome = null,
     // How the user learned of the rejection; null unless Status is Rejected and they said (or the
     // rejection came in as the company's email).
-    RejectionNotice? RejectionNotice = null);
+    RejectionNotice? RejectionNotice = null,
+    // The interview of the current stage, when the user recorded one. One recorded for an earlier
+    // stage is not returned: as far as the page is concerned it has happened.
+    DateTimeOffset? InterviewAt = null,
+    InterviewFormat? InterviewFormat = null);
 
 public sealed record ExtensionApplicationResponse(
     ApplicationDetailResponse Application,

@@ -124,4 +124,23 @@ public class ReminderCalculationsTests
     {
         ReminderCalculations.UserMedianResponseDays(days).ShouldBe(expected);
     }
+
+    [Theory]
+    // Still in the room: no question yet.
+    [InlineData(0.5, false)]
+    // Over an hour later, and on through the window.
+    [InlineData(1, true)]
+    [InlineData(24, true)]
+    [InlineData(6 * 24 + 23, true)]
+    // A week on, the ordinary follow-up takes over.
+    [InlineData(7 * 24, false)]
+    // Not yet happened.
+    [InlineData(-5, false)]
+    public void IsInterviewQuestionDue_Asks_After_The_Interview_Until_The_Follow_Up_Window_Closes(double hoursAfter, bool due)
+    {
+        var interviewAt = new DateTimeOffset(2026, 9, 28, 11, 0, 0, TimeSpan.Zero);
+
+        ReminderCalculations.IsInterviewQuestionDue(interviewAt, interviewAt.AddHours(hoursAfter), followUpThresholdDays: 7)
+            .ShouldBe(due);
+    }
 }

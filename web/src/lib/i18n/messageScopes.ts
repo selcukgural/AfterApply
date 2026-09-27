@@ -41,6 +41,9 @@ export const ROOT_MESSAGE_SCOPE = [
   "notifications.seeAll",
   "notifications.unread",
   "notifications.contribution",
+  // Interview rows in the same panel (2026-09-27): their sentence and its own copy of the day
+  // words, since the applications namespace stays out of public pages.
+  "notifications.interview",
   // The status badge on a Gmail row in that panel — the key is dynamic, so the scope test cannot see it.
   "status",
   // The "Helpful · N" pill, under reviews, salaries and experiences on the public company page.

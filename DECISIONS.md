@@ -9932,3 +9932,70 @@ Bu karar `deploy.yml`'deki "reviewed deploy, not a database edit" kuralını bay
 **Geri alma (rollback) uyarısı.** Bu sürümden önceki bir revizyona geri dönülürse eski kod `FeatureFlagOverrides`'ı okumaz; panelden yapılan bütün değişiklikler o revizyon çalıştığı sürece yok sayılır, bayraklar deploy varsayılanına döner. Örneğin panelden kapatılmış ama deploy'da açık olan Ödemeler yeniden açılır. Geri almadan önce panelde değiştirilmiş bayraklara bakılmalı; gerekiyorsa deploy.yml satırı da aynı yönde değiştirilmeli. Tablolar yerinde kalır; yeni revizyona dönülünce değerler yeniden geçerli olur.
 
 
+
+## Görüşme tarihi, "nasıl geçti?" ve erteleme (takvimin dar sürümü) — DECIDED (2026-09-27)
+
+**Soru:** Kullanıcının aksiyonlarını, görüşmelerini gösteren, düzenlenebilen, bildirim veren, erteleme ve durum değiştirmeyi takvimden yapan bir takvim uygulaması eklensin mi?
+
+**Karar:** Tam takvim yok. Yapılan dar sürüm:
+- Takvim ızgarası yok.
+- Google/Outlook ile iki yönlü senkron yok.
+- Takvimde sürükleyerek durum değiştirme yok.
+
+**Neden tam takvim değil:**
+- Başvuruların saati yok. Haftada birkaç görüşmeyle takvim çoğu gün boş kalıyor.
+- Görüşme daveti zaten kullanıcının kendi takviminde duruyor. İkinci bir takvim onunla yarışır.
+- İki yönlü senkron Google'ın hassas izin doğrulamasını ister.
+- V serisinin kararı hâlâ geçerli: takip ürünün kendisi değil, veri toplama mekanizması.
+
+Dar sürümün asıl kazancı veride: "nasıl geçti?" cevabı aşama zamanlarını tahmin olmaktan çıkarıp gerçek zamana çeviriyor.
+
+**Tasarım kanvası:** https://claude.ai/artifact/CeLJFXsXDtLtJVkueG3wV6. Seçilen A: her şey "Takip zamanı" kartında. B (ayrı "Yaklaşanlar" kartı) elendi.
+
+**Ne yapıldı:**
+- **Görüşme tarihi.** Başvuruya isteğe bağlı görüşme zamanı, türü (Online / Yerinde / Telefon) ve ait olduğu aşama eklendi.
+  - Yalnızca Ön Değerlendirme ve mülakat aşamalarında girilebiliyor.
+  - İki yerden girilir: durum değiştirme panelinde (aşamayla birlikte) ya da başvuru sayfasındaki "Görüşme" hücresinde.
+  - Aşama değişince tarih silinmiyor, gizleniyor (`CurrentInterviewAt`). Durum değişikliği geri alınınca görüşme de geri geliyor.
+  - Görüşme bağlantısı (Zoom/Meet linki) **hiç saklanmıyor**. Başkasının toplantısına giriş anahtarıdır ve davette zaten var.
+  - Yeni ya da taşınan tarih zaman çizelgesine `InterviewScheduled` olarak yazılıyor.
+- **Takvimime ekle.**
+  - Google Takvim şablon linki ve tek etkinlikli `.ics` dosyası; ikisi de tarayıcıda üretiliyor.
+  - Sunucuda endpoint yok, takvim izni yok, URL'de token yok.
+  - Kullanıcının takvimine biz yazmıyoruz.
+- **Takip zamanı kartı.**
+  - En üstte önümüzdeki 14 günün görüşmeleri listeleniyor (en fazla 10). Seçilemiyorlar, cevaplanmıyorlar.
+  - Görüşmeden bir saat sonra, takip eşiği (7 gün) boyunca `InterviewHeld` hatırlatıcısı çıkıyor: "Nasıl geçti?".
+  - Üç cevap var:
+    - **Sonraki aşama:** ikinci adımda hangi aşama olduğu soruluyor, tahminle durum yazılmıyor.
+    - **Dönüş bekliyorum:** 3 gün / 1 hafta / 2 hafta söz tarihi ya da "Söylemediler".
+    - **Olumsuz döndüler.**
+  - Her cevap geri alınabiliyor. Durum compare-and-set ile geri alınıyor; söz tarihi yalnızca hâlâ cevabın yazdığı tarihse siliniyor.
+  - Bu satırda "Yoksay" yok: soru ya cevaplanıyor ya erteleniyor.
+- **Hatırlatıcı öncelikleri.**
+  - `InterviewHeld`, takip hatırlatıcısının yerine geçiyor.
+  - Kayıtlı bir söz tarihi zaten cevap sayılıyor, soru sorulmuyor.
+  - Görüşme taşınır, aşama değişir ya da pencere kapanırsa gece taraması satırı emekliye ayırıyor.
+  - Başka yerden yapılan bir durum değişikliği satırı listeden hemen düşürüyor. Bunun için her tekil durum değişikliği artık hatırlatıcı cache'ini de temizliyor.
+- **Erteleme.**
+  - Her hatırlatıcıda var. Görüşme sorusunda 1 gün / 3 gün, diğerlerinde 3 gün / 1 hafta / 2 hafta.
+  - Tarih seçici yok; mola (T5) ile aynı gerekçe.
+  - Ertelenen satır açık kalıyor, tarama onu yeniden yaratmıyor. "Geri al" satırı hemen geri getiriyor.
+- **Zil.**
+  - Ayrı bir `InterviewNotifications` tablosu var, gece taramasında yazılıyor.
+  - "Yaklaşan görüşme" satırı 36 saatlik pencerede yazılıyor: sabah taraması bugünün ve yarının görüşmelerini yakalıyor.
+  - "Nasıl geçti?" satırı açık her `InterviewHeld` için yazılıyor.
+  - Taşınan ya da cevaplanan görüşmenin satırı zilden kendiliğinden düşüyor.
+  - Ayarlar'da "Görüşme hatırlatmaları" anahtarı var, varsayılan açık (mevcut hesaplar da açık başlıyor).
+    - Kapalıyken satır hiç yazılmıyor. Kart yine soruyor, çünkü kart bir bildirim değil.
+    - Anahtarı bilmeyen eski istemci onu değiştirmiyor (`Interviews` null gelirse eski değer kalıyor).
+- **Dışa aktarım:** görüşme zamanı, türü ve aşaması; hatırlatıcının `SnoozedUntil` alanı; zil satırları eklendi.
+- **Gizlilik metni:**
+  - `privacy.dataCollection.item3`'e görüşme hatırlatmaları eklendi.
+  - `privacy.aggregates.what`'e "görüşme tarihin hiçbir toplu sayıya girmez" eklendi.
+  - Son güncelleme tarihi 27 Eylül 2026 oldu.
+  - Görüşme tarihi yanıt oranı ya da benchmark hesaplarına **girmiyor**. Bu vaadi bozmadan kullanmak istersek önce metin değişmeli.
+
+**Ertelenenler:**
+- Canvas'taki zil içi cevap düğmeleri yapılmadı; zil satırı panoya götürüyor, soru orada cevaplanıyor.
+- E-posta bildirimi yok, yalnızca zil. E-posta gelecekse hesap başına sınır ve kota birlikte gelir.

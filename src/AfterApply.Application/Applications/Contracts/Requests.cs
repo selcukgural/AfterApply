@@ -91,11 +91,19 @@ public sealed record ChangeStatusRequest(
     string? Note,
     DateTimeOffset? ChangedAt,
     DateOnly? PromisedReplyBy = null,
-    RejectionNotice? RejectionNotice = null);
+    RejectionNotice? RejectionNotice = null,
+    // The interview of the stage this change opens, when the user gave one with it — the date
+    // fields under the status select. Only for a screening or interview stage.
+    DateTimeOffset? InterviewAt = null,
+    InterviewFormat? InterviewFormat = null);
 
 // Sets, moves or (null) clears the company's promised reply date without a status change — the
 // "+ add a date / change" cell on the application page.
 public sealed record SetReplyPromiseRequest(DateOnly? PromisedReplyBy);
+
+// Sets, moves or (null InterviewAt) clears the interview of the current stage without a status
+// change. The instant carries the user's own offset, so 14:00 in Istanbul stays 14:00 in Istanbul.
+public sealed record SetInterviewRequest(DateTimeOffset? InterviewAt, InterviewFormat? Format = null);
 
 public sealed record CreateEventRequest(
     ApplicationEventType Type,

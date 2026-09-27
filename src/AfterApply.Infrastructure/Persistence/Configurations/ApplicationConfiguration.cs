@@ -32,6 +32,9 @@ public sealed class ApplicationConfiguration : IEntityTypeConfiguration<DomainAp
         // A calendar date, not an instant: "by the 10th" has no time of day and no zone.
         builder.Property(a => a.PromisedReplyBy).HasColumnType("date");
         builder.Property(a => a.PromisedReplyStatus).HasConversion<string>().HasMaxLength(50);
+        builder.Property(a => a.InterviewFormat).HasConversion<string>().HasMaxLength(20);
+        builder.Property(a => a.InterviewStatus).HasConversion<string>().HasMaxLength(50);
+        builder.Ignore(a => a.CurrentInterviewAt);
         builder.Property(a => a.RejectionNotice).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(a => a.UserId);

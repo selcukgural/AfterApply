@@ -15,9 +15,21 @@ import {
   useDismissReminder,
   useFollowUpReminder,
   useMarkReminderGhosted,
+  useAnswerInterview,
   useReminders,
+  useSnoozeReminder,
   useUndoBulkGhostReminders,
+  useUndoInterviewAnswer,
+  useUnsnoozeReminder,
+  useUpcomingInterviews,
 } from "@/hooks/useReminders";
+import {
+  InterviewAnsweredRow,
+  InterviewHeldMeta,
+  InterviewQuestion,
+  SnoozeMenu,
+  UpcomingInterviewRow,
+} from "@/components/dashboard/InterviewRows";
 import { useStaleSummary } from "@/hooks/useStaleApplications";
 import { REMINDER_PAGE_SIZE } from "@/lib/api/reminders";
 import { ApiError } from "@/lib/api/httpClient";
@@ -36,10 +48,26 @@ import {
   toUndoEntries,
   type SelectionState,
 } from "@/lib/applications/bulkSelection";
-import { REMINDER_ANSWER_KEY, REMINDER_LABEL_KEY, answersByGhosting, clampPage, toReminderSelection } from "@/lib/dashboard/reminders";
+import {
+  REMINDER_ANSWER_KEY,
+  REMINDER_LABEL_KEY,
+  answersByGhosting,
+  clampPage,
+  hasSingleAnswer,
+  toReminderSelection,
+} from "@/lib/dashboard/reminders";
 import { formatPromiseDate } from "@/lib/applications/replyPromise";
 import { formatCount } from "@/lib/dashboard/format";
-import type { BulkReminderRequest, ReminderResponse } from "@/types/api";
+import type { SnoozeDays } from "@/lib/api/reminders";
+import { snoozedUntil } from "@/lib/applications/interview";
+import type { BulkReminderRequest, InterviewOutcomeResponse, ReminderResponse } from "@/types/api";
+
+/** An interview question the user just answered: kept on the card, with its undo, after the row
+ *  itself has left the server's list. */
+interface AnsweredInterview {
+  reminder: ReminderResponse;
+  outcome: InterviewOutcomeResponse;
+}
 
 /**
  * The reminders the API has always generated (a follow-up is due, or an application has gone quiet
@@ -77,6 +105,13 @@ export function RemindersPanel() {
   const bulkFollowUp = useBulkFollowUpReminders();
   const bulkGhost = useBulkGhostReminders();
   const undoGhost = useUndoBulkGhostReminders();
+  const { data: upcoming } = useUpcomingInterviews();
+  const snooze = useSnoozeReminder();
+  const unsnooze = useUnsnoozeReminder();
+  const answerInterview = useAnswerInterview();
+  const undoInterview = useUndoInterviewAnswer();
+  const [answered, setAnswered] = useState<AnsweredInterview[]>([]);
+  const [snoozed, setSnoozed] = useState<{ reminder: ReminderResponse; until: Date } | null>(null);
 
   const totalCount = data?.totalCount ?? 0;
 
@@ -93,19 +128,45 @@ export function RemindersPanel() {
     setSelection(EMPTY_SELECTION);
   };
 
-  if (!data || (data.totalCount === 0 && result === null)) return null;
+  // Upcoming interviews and just-answered questions sit above the reminders on the first page only:
+  // they are not part of the paged list, and repeating them on every page would push its rows down.
+  const upcomingRows = page === 1 ? (upcoming ?? []) : [];
+  const answeredRows = page === 1 ? answered : [];
+  if (!data || (data.totalCount === 0 && result === null && upcomingRows.length === 0 && answeredRows.length === 0 && snoozed === null)) {
+    return null;
+  }
 
-  const reminders = data.items;
+  const answeredIds = new Set(answered.map((a) => a.reminder.id));
+  const reminders = data.items.filter((reminder) => !answeredIds.has(reminder.id));
   const pageIds = reminders.map((reminder) => reminder.id);
   const bulkPending = bulkDismiss.isPending || bulkFollowUp.isPending || bulkGhost.isPending;
   const isBusy = (reminder: ReminderResponse) =>
     bulkPending ||
     (dismiss.isPending && dismiss.variables === reminder.id) ||
     (followUp.isPending && followUp.variables === reminder.id) ||
-    (markGhosted.isPending && markGhosted.variables?.id === reminder.id);
+    (markGhosted.isPending && markGhosted.variables?.id === reminder.id) ||
+    (snooze.isPending && snooze.variables?.id === reminder.id) ||
+    (answerInterview.isPending && answerInterview.variables?.id === reminder.id);
   const answer = (reminder: ReminderResponse) =>
     answersByGhosting(reminder.type) ? markGhosted.mutate(reminder) : followUp.mutate(reminder.id);
-  const rowError = dismiss.isError || followUp.isError || markGhosted.isError;
+  const rowError =
+    dismiss.isError || followUp.isError || markGhosted.isError || snooze.isError || unsnooze.isError ||
+    answerInterview.isError || undoInterview.isError;
+
+  const snoozeRow = (reminder: ReminderResponse, days: SnoozeDays) =>
+    snooze.mutate({ id: reminder.id, days }, { onSuccess: () => setSnoozed({ reminder, until: snoozedUntil(days) }) });
+
+  const answerRow = (reminder: ReminderResponse, request: Parameters<typeof answerInterview.mutate>[0]["request"]) =>
+    answerInterview.mutate(
+      { id: reminder.id, request },
+      { onSuccess: (outcome) => setAnswered((current) => [{ reminder, outcome }, ...current]) },
+    );
+
+  const undoAnswer = (entry: AnsweredInterview) =>
+    undoInterview.mutate(
+      { id: entry.reminder.id, outcome: entry.outcome },
+      { onSuccess: () => setAnswered((current) => current.filter((a) => a.reminder.id !== entry.reminder.id)) },
+    );
   const showStaleNote = stale !== undefined && stale.count > 0 && !stale.suggest;
   const hasSelection = !isSelectionEmpty(selection);
   const count = selectionCount(selection);
@@ -224,6 +285,24 @@ export function RemindersPanel() {
         )}
       </div>
       {bulkError ? <p className="mb-3 text-xs text-red-600 dark:text-red-400">{bulkError}</p> : null}
+      {snoozed ? (
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-md bg-muted-wash px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+          <span>
+            {t("snoozed", {
+              company: snoozed.reminder.companyName,
+              date: snoozed.until.toLocaleDateString(locale, { day: "numeric", month: "long" }),
+            })}
+          </span>
+          <button
+            type="button"
+            disabled={unsnooze.isPending}
+            onClick={() => unsnooze.mutate(snoozed.reminder.id, { onSuccess: () => setSnoozed(null) })}
+            className="shrink-0 px-1.5 py-1 text-sm font-medium text-accent-ink hover:underline disabled:opacity-50"
+          >
+            {t("undo")}
+          </button>
+        </div>
+      ) : null}
       {result ? (
         // The result strip outlives the selection that produced it: the undo has to stay until it
         // is closed, even once every row on the page has moved.
@@ -264,6 +343,18 @@ export function RemindersPanel() {
         </div>
       ) : null}
       <ul className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
+        {upcomingRows.map((interview) => (
+          <UpcomingInterviewRow key={`upcoming-${interview.applicationId}`} interview={interview} />
+        ))}
+        {answeredRows.map((entry) => (
+          <InterviewAnsweredRow
+            key={`answered-${entry.reminder.id}`}
+            reminder={entry.reminder}
+            outcome={entry.outcome}
+            busy={undoInterview.isPending}
+            onUndo={() => undoAnswer(entry)}
+          />
+        ))}
         {reminders.map((reminder) => (
           <li key={reminder.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5 first:pt-0 last:pb-0">
             <div className="flex min-w-0 items-center gap-3">
@@ -281,6 +372,10 @@ export function RemindersPanel() {
                   {reminder.companyName} — {reminder.jobTitle}
                 </Link>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {reminder.type === "InterviewHeld" ? (
+                    <InterviewHeldMeta reminder={reminder} />
+                  ) : (
+                    <>
                   {t(REMINDER_LABEL_KEY[reminder.type])} ·{" "}
                   {/* A missed promise is read against the date they gave, not against a count of
                       silent days — that date is the whole reason to write to them now. */}
@@ -302,29 +397,47 @@ export function RemindersPanel() {
                       </span>
                     </>
                   ) : null}
+                    </>
+                  )}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="px-3 py-1 text-xs"
-                disabled={isBusy(reminder)}
-                onClick={() => answer(reminder)}
-              >
-                {t(REMINDER_ANSWER_KEY[reminder.type])}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                className="px-3 py-1 text-xs"
-                disabled={isBusy(reminder)}
-                onClick={() => dismiss.mutate(reminder.id)}
-              >
-                {t("dismiss")}
-              </Button>
+              {hasSingleAnswer(reminder.type) ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="px-3 py-1 text-xs"
+                  disabled={isBusy(reminder)}
+                  onClick={() => answer(reminder)}
+                >
+                  {t(REMINDER_ANSWER_KEY[reminder.type])}
+                </Button>
+              ) : null}
+              <SnoozeMenu reminder={reminder} disabled={isBusy(reminder)} onSnooze={(days) => snoozeRow(reminder, days)} />
+              {/* An interview question is answered or snoozed, not waved away: "dismiss" would
+                  throw away the one moment the answer is easy. */}
+              {hasSingleAnswer(reminder.type) ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="px-3 py-1 text-xs"
+                  disabled={isBusy(reminder)}
+                  onClick={() => dismiss.mutate(reminder.id)}
+                >
+                  {t("dismiss")}
+                </Button>
+              ) : null}
             </div>
+            {reminder.type === "InterviewHeld" ? (
+              <div className="basis-full">
+                <InterviewQuestion
+                  reminder={reminder}
+                  busy={isBusy(reminder)}
+                  onAnswer={(request) => answerRow(reminder, request)}
+                />
+              </div>
+            ) : null}
           </li>
         ))}
       </ul>

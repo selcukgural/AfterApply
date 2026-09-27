@@ -6,7 +6,9 @@ import type { NotificationFeedItemResponse } from "@/types/api";
 import { StatusBadge } from "@/components/applications/StatusBadge";
 import { ContributionNotificationText, HelpfulIcon } from "@/components/notifications/ContributionNotificationText";
 import { Link } from "@/i18n/navigation";
-import { contributionTarget, formatNotificationTime } from "@/lib/notifications/feed";
+import { contributionTarget, formatNotificationTime, interviewTarget } from "@/lib/notifications/feed";
+import { InterviewNotificationText } from "@/components/notifications/InterviewNotificationText";
+import { CalendarIcon } from "@/components/ui/CalendarIcon";
 import { isHorizontalIntent, resolveSwipeGesture, swipeStyle } from "@/lib/notifications/swipe";
 
 interface NotificationCardProps {
@@ -93,7 +95,9 @@ export function NotificationCard({ item, locale, reverted, reverting, onRevert, 
 
   const c = item.kind === "Contribution" ? item.contribution : null;
   const e = item.kind === "Email" ? item.email : null;
+  const i = item.kind === "Interview" ? (item.interview ?? null) : null;
   const target = c ? contributionTarget(c) : null;
+  const interviewHref = interviewTarget(item);
 
   const dragging = drag !== null;
   const style: CSSProperties = drag
@@ -151,6 +155,34 @@ export function NotificationCard({ item, locale, reverted, reverting, onRevert, 
         </button>
       </div>
         </>
+      ) : i ? (
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+          <CalendarIcon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm leading-relaxed text-gray-900 dark:text-gray-100">
+            <InterviewNotificationText interview={i} />
+          </p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{formatNotificationTime(item.occurredAt, locale)}</p>
+          {interviewHref && (
+            <Link href={interviewHref} className="mt-2 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">
+              {t(i.kind === "Upcoming" ? "interview.linkUpcoming" : "interview.linkHeld")}
+            </Link>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => leave("right")}
+          aria-label={t("dismiss")}
+          title={t("dismiss")}
+          className="-mr-1 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+        >
+          <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M5 5l10 10M15 5L5 15" />
+          </svg>
+        </button>
+      </div>
       ) : e ? (
         <>
       <div className="mb-2 flex items-start justify-between gap-3">

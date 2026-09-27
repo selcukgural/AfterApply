@@ -9,7 +9,9 @@ import { ContributionNotificationText, HelpfulIcon, MailIcon } from "@/component
 import { notificationCountQueryKey, useNotificationCount } from "@/hooks/useNotificationCount";
 import { notificationsQueryKey, useNotifications } from "@/hooks/useNotifications";
 import { NOTIFICATION_PANEL_SIZE, notificationsApi } from "@/lib/api/notifications";
-import { contributionTarget, emailTarget, formatNotificationTime } from "@/lib/notifications/feed";
+import { contributionTarget, emailTarget, formatNotificationTime, interviewTarget } from "@/lib/notifications/feed";
+import { InterviewNotificationText } from "@/components/notifications/InterviewNotificationText";
+import { CalendarIcon } from "@/components/ui/CalendarIcon";
 import type { NotificationFeedItemResponse } from "@/types/api";
 
 interface NotificationBellProps {
@@ -148,8 +150,9 @@ function PanelRow({ item, locale, onNavigate }: { item: NotificationFeedItemResp
   const t = useTranslations("notifications");
   const c = item.kind === "Contribution" ? item.contribution : null;
   const e = item.kind === "Email" ? item.email : null;
+  const i = item.kind === "Interview" ? (item.interview ?? null) : null;
   const contribution = c ? contributionTarget(c) : null;
-  const href = contribution?.href ?? emailTarget(item) ?? "/notifications";
+  const href = contribution?.href ?? emailTarget(item) ?? interviewTarget(item) ?? "/notifications";
 
   return (
     <li className="border-b border-gray-100 last:border-b-0 dark:border-gray-800">
@@ -164,12 +167,14 @@ function PanelRow({ item, locale, onNavigate }: { item: NotificationFeedItemResp
             c ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
           }`}
         >
-          {c ? <HelpfulIcon /> : <MailIcon />}
+          {c ? <HelpfulIcon /> : i ? <CalendarIcon className="h-4 w-4" /> : <MailIcon />}
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="text-sm leading-snug text-gray-900 dark:text-gray-100">
             {c ? (
               <ContributionNotificationText contribution={c} />
+            ) : i ? (
+              <InterviewNotificationText interview={i} />
             ) : e ? (
               <>
                 <strong className="font-semibold">{e.companyName}</strong> — {e.jobTitle}

@@ -3,6 +3,7 @@ using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Notifications;
 using AfterApply.Application.Notifications.Contracts;
+using AfterApply.Domain.Applications;
 using AfterApply.Domain.Blog;
 using AfterApply.Domain.CompanyReviews;
 using AfterApply.Domain.Notifications;
@@ -38,6 +39,45 @@ internal sealed class NotificationFeedService(
              dbContext.BlogComments.Any(c => c.Id == n.TargetId && c.Status == BlogCommentStatus.Approved &&
                                              dbContext.BlogPosts.Any(p => p.Id == c.PostId && p.Status == BlogPostStatus.Published)))));
 
+    /// <summary>
+    /// The interview rows the bell shows: not cleared, about the interview the application is
+    /// still waiting on (a moved date or a later stage makes a row old news), an "upcoming" one
+    /// only until the interview begins, and a "how did it go?" one only while that question is
+    /// still open on the reminders card.
+    /// </summary>
+    private IQueryable<InterviewFeedRow> Interviews(Guid userId, DateTimeOffset now) =>
+        dbContext.InterviewNotifications
+            .Where(n => n.UserId == userId && n.DismissedAt == null)
+            .Join(dbContext.Applications, n => n.ApplicationId, a => a.Id, (n, a) => new { n, a })
+            .Where(x => x.a.UserId == userId && x.a.InterviewStatus == x.a.Status && x.a.InterviewAt == x.n.InterviewAt)
+            .Where(x => x.n.Kind != InterviewNotificationKind.Upcoming || x.n.InterviewAt > now)
+            .Where(x => x.n.Kind != InterviewNotificationKind.Held || dbContext.Reminders.Any(r =>
+                r.ApplicationId == x.n.ApplicationId && r.Type == ReminderType.InterviewHeld &&
+                r.ReferenceAt == x.n.InterviewAt && r.DismissedAt == null))
+            .Join(dbContext.Companies, x => x.a.CompanyId, c => c.Id,
+                (x, c) => new InterviewFeedRow
+                {
+                    Id = x.n.Id, Kind = x.n.Kind, ApplicationId = x.n.ApplicationId, CompanyName = c.Name,
+                    JobTitle = x.a.JobTitle, Status = x.a.Status, InterviewAt = x.n.InterviewAt,
+                    CreatedAt = x.n.CreatedAt, ReadAt = x.n.ReadAt
+                });
+
+    // Init properties rather than a positional record: EF can only keep composing (order, count,
+    // filter) over a projection whose members it can map back to columns, which a constructor's
+    // parameters are not.
+    private sealed class InterviewFeedRow
+    {
+        public Guid Id { get; init; }
+        public InterviewNotificationKind Kind { get; init; }
+        public Guid ApplicationId { get; init; }
+        public string CompanyName { get; init; } = string.Empty;
+        public string JobTitle { get; init; } = string.Empty;
+        public ApplicationStatus Status { get; init; }
+        public DateTimeOffset InterviewAt { get; init; }
+        public DateTimeOffset CreatedAt { get; init; }
+        public DateTimeOffset? ReadAt { get; init; }
+    }
+
     public async Task<PagedResult<NotificationFeedItemResponse>> ListAsync(Guid userId, GetNotificationFeedQuery query,
         CancellationToken cancellationToken)
     {
@@ -64,13 +104,35 @@ internal sealed class NotificationFeedService(
                 e.Id, NotificationFeedKind.Email, e.CreatedAt, e.IsRead || !e.WasAutoApplied, null, e)));
         }
 
-        var page = NotificationFeedPaging.Page(contributionItems, emailItems, query.Page, query.PageSize);
-        return new PagedResult<NotificationFeedItemResponse>(page, contributionTotal + emailTotal, query.Page, query.PageSize);
+        var interviewItems = new List<NotificationFeedItemResponse>();
+        var interviewTotal = 0;
+        if (await ShowsInterviewsAsync(userId, cancellationToken))
+        {
+            var interviews = Interviews(userId, _timeProvider.GetUtcNow());
+            interviewTotal = await interviews.CountAsync(cancellationToken);
+            var rows = await interviews
+                .OrderByDescending(r => r.CreatedAt).ThenByDescending(r => r.Id)
+                .Take(reach)
+                .ToListAsync(cancellationToken);
+            interviewItems.AddRange(rows.Select(r => new NotificationFeedItemResponse(
+                r.Id, NotificationFeedKind.Interview, r.CreatedAt, r.ReadAt != null, null, null,
+                new InterviewNotificationResponse(r.Kind, r.ApplicationId, r.CompanyName, r.JobTitle, r.Status, r.InterviewAt))));
+        }
+
+        // Interview rows ride with the contributions: the merge orders the union by time either way.
+        var page = NotificationFeedPaging.Page(contributionItems.Concat(interviewItems), emailItems, query.Page, query.PageSize);
+        return new PagedResult<NotificationFeedItemResponse>(page, contributionTotal + emailTotal + interviewTotal, query.Page,
+            query.PageSize);
     }
 
     public async Task<int> CountUnreadAsync(Guid userId, CancellationToken cancellationToken)
     {
         var count = await Contributions(userId).CountAsync(n => n.ReadAt == null, cancellationToken);
+        if (await ShowsInterviewsAsync(userId, cancellationToken))
+        {
+            count += await Interviews(userId, _timeProvider.GetUtcNow()).CountAsync(r => r.ReadAt == null, cancellationToken);
+        }
+
         if (await ShowsGmailAsync(userId, cancellationToken))
         {
             count += await emailForwarding.GetUnreadNotificationCountAsync(userId, cancellationToken);
@@ -83,6 +145,9 @@ internal sealed class NotificationFeedService(
     {
         var now = _timeProvider.GetUtcNow();
         await dbContext.ContributionNotifications
+            .Where(n => n.UserId == userId && n.ReadAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.ReadAt, now), cancellationToken);
+        await dbContext.InterviewNotifications
             .Where(n => n.UserId == userId && n.ReadAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.ReadAt, now), cancellationToken);
 
@@ -105,6 +170,15 @@ internal sealed class NotificationFeedService(
             return true;
         }
 
+        var interview = await dbContext.InterviewNotifications
+            .FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId, cancellationToken);
+        if (interview is not null)
+        {
+            interview.Dismiss(_timeProvider.GetUtcNow());
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
         return await ShowsGmailAsync(userId, cancellationToken)
                && await emailForwarding.DismissNotificationAsync(userId, id, cancellationToken);
     }
@@ -113,6 +187,9 @@ internal sealed class NotificationFeedService(
     {
         var now = _timeProvider.GetUtcNow();
         await dbContext.ContributionNotifications
+            .Where(n => n.UserId == userId && n.DismissedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.DismissedAt, now), cancellationToken);
+        await dbContext.InterviewNotifications
             .Where(n => n.UserId == userId && n.DismissedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.DismissedAt, now), cancellationToken);
 
@@ -128,7 +205,7 @@ internal sealed class NotificationFeedService(
             .Where(u => u.Id == userId)
             .Select(u => new NotificationPreferencesResponse(
                 u.NotifyContributions, u.NotifyReviewHelpful, u.NotifySalaryHelpful,
-                u.NotifyExperienceHelpful, u.NotifyBlogCommentHelpful, u.NotifyGmailUpdates))
+                u.NotifyExperienceHelpful, u.NotifyBlogCommentHelpful, u.NotifyGmailUpdates, u.NotifyInterviews))
             .SingleAsync(cancellationToken);
 
     public async Task<NotificationPreferencesResponse> UpdatePreferencesAsync(Guid userId,
@@ -142,9 +219,13 @@ internal sealed class NotificationFeedService(
                 .SetProperty(u => u.NotifySalaryHelpful, request.SalaryHelpful)
                 .SetProperty(u => u.NotifyExperienceHelpful, request.ExperienceHelpful)
                 .SetProperty(u => u.NotifyBlogCommentHelpful, request.BlogCommentHelpful)
-                .SetProperty(u => u.NotifyGmailUpdates, request.GmailUpdates), cancellationToken);
+                .SetProperty(u => u.NotifyGmailUpdates, request.GmailUpdates)
+                .SetProperty(u => u.NotifyInterviews, u => request.Interviews ?? u.NotifyInterviews), cancellationToken);
         return await GetPreferencesAsync(userId, cancellationToken);
     }
+
+    private async Task<bool> ShowsInterviewsAsync(Guid userId, CancellationToken cancellationToken) =>
+        await dbContext.Users.Where(u => u.Id == userId).Select(u => u.NotifyInterviews).FirstOrDefaultAsync(cancellationToken);
 
     private async Task<bool> ShowsGmailAsync(Guid userId, CancellationToken cancellationToken) =>
         featureFlags.IsEnabled(FeatureFlag.EmailSignals) &&

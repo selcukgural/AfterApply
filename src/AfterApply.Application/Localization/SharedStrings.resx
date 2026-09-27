@@ -738,4 +738,16 @@
   <data name="FEATURE_FLAG_PAYMENTS_NOTES" xml:space="preserve">
     <value>Takes real money. Cannot be switched on without the PayTR merchant details and plan prices. Pro is sold only while Weekly job matching is on too.</value>
   </data>
+  <data name="INTERVIEW_OUTSIDE_INTERVIEW_STAGE" xml:space="preserve">
+    <value>An interview date can only be recorded in a screening or interview stage.</value>
+  </data>
+  <data name="VALIDATION_INTERVIEW_RANGE" xml:space="preserve">
+    <value>The interview date can be at most a month in the past or a year ahead.</value>
+  </data>
+  <data name="REMINDER_NOT_AN_INTERVIEW" xml:space="preserve">
+    <value>This reminder is not about an interview.</value>
+  </data>
+  <data name="VALIDATION_INTERVIEW_NEXT_STATUS" xml:space="preserve">
+    <value>Choose the stage the process moved on to.</value>
+  </data>
 </root>

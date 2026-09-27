@@ -30,32 +30,40 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         LocalCacheExpiration = TimeSpan.FromSeconds(20)
     };
 
-    /// <summary>Every reminder the list is allowed to show, before paging: open, the caller's own,
-    /// and about an application that is still open — see the terminal filter below.</summary>
-    private IQueryable<ReminderResponse> ActiveReminders(Guid userId)
+    /// <summary>Every reminder the list is allowed to show, before paging: open, not snoozed past
+    /// <paramref name="now"/>, the caller's own, and about an application that is still open — see
+    /// the terminal filter below.</summary>
+    private IQueryable<ReminderResponse> ActiveReminders(Guid userId, DateTimeOffset now)
     {
         return dbContext.Reminders
-            .Where(r => r.UserId == userId && r.DismissedAt == null)
+            .Where(r => r.UserId == userId && r.DismissedAt == null && (r.SnoozedUntil == null || r.SnoozedUntil <= now))
             .Join(dbContext.Applications, r => r.ApplicationId, a => a.Id,
-                (r, a) => new { r, a.CompanyId, a.JobTitle, a.Status, a.PromisedReplyBy })
+                (r, a) => new { r, a.CompanyId, a.JobTitle, a.Status, a.PromisedReplyBy, a.InterviewAt, a.InterviewStatus })
             // A closed application has nothing left to remind about. Status changes retire
             // reminders as they happen (ApplicationService) and the nightly scan sweeps up the
             // rest; this filter is the guarantee that neither has to be perfect for the list
             // to be right.
             .Where(x => !TerminalApplicationStatuses.Values.Contains(x.Status))
+            // An interview question is about the stage it was asked in; a status change made
+            // anywhere else has answered it, and the nightly scan retires the row.
+            .Where(x => x.r.Type != ReminderType.InterviewHeld || x.InterviewStatus == x.Status)
             .Join(dbContext.Companies, x => x.CompanyId, c => c.Id,
-                (x, c) => new { x.r, x.JobTitle, x.PromisedReplyBy, CompanyName = c.Name })
-            // The application that has waited longest first, and among equals the reminder
-            // created first: the one that actually needs attention is on page one, not the
-            // freshest nudge. Ordered here rather than on the client because the client only
-            // ever sees one page.
-            .OrderByDescending(x => x.r.DaysElapsedAtCreation)
+                (x, c) => new { x.r, x.JobTitle, x.PromisedReplyBy, x.Status, x.InterviewAt, CompanyName = c.Name })
+            // An interview question first: it is about yesterday, and its answer is only easy while
+            // the interview is fresh. Then the application that has waited longest, and among
+            // equals the reminder created first: the one that actually needs attention is on page
+            // one, not the freshest nudge. Ordered here rather than on the client because the
+            // client only ever sees one page.
+            .OrderByDescending(x => x.r.Type == ReminderType.InterviewHeld)
+            .ThenByDescending(x => x.r.DaysElapsedAtCreation)
             .ThenBy(x => x.r.CreatedAt)
             .ThenBy(x => x.r.Id)
             .Select(x => new ReminderResponse(
                 x.r.Id, x.r.ApplicationId, x.CompanyName, x.JobTitle, x.r.Type, x.r.DaysElapsedAtCreation, x.r.CreatedAt,
                 null,
-                x.r.Type == ReminderType.PromiseMissed ? x.PromisedReplyBy : null));
+                x.r.Type == ReminderType.PromiseMissed ? x.PromisedReplyBy : null,
+                x.Status,
+                x.r.Type == ReminderType.InterviewHeld ? x.InterviewAt : null));
     }
 
     public Task<PagedResult<ReminderResponse>> GetActiveRemindersAsync(Guid userId, GetRemindersQuery query,
@@ -66,7 +74,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             (userId, query),
             async (state, ct) =>
             {
-                var active = ActiveReminders(state.userId);
+                var active = ActiveReminders(state.userId, DateTimeOffset.UtcNow);
                 var totalCount = await active.CountAsync(ct);
                 var items = await active
                     .Skip((state.query.Page - 1) * state.query.PageSize)
@@ -194,7 +202,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
             return;
         }
 
-        var actualCount = await ActiveReminders(userId).CountAsync(cancellationToken);
+        var actualCount = await ActiveReminders(userId, DateTimeOffset.UtcNow).CountAsync(cancellationToken);
         if (actualCount != request.ExpectedCount.Value)
         {
             throw new BulkCountMismatchException(request.ExpectedCount.Value, actualCount);
@@ -268,6 +276,172 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         // (RetireRemindersAsync) exactly as it does for a single "mark as ghosted" on the row.
         return await applicationService.GhostApplicationsAsync(userId, applicationIds, cancellationToken);
     }
+
+    public async Task<bool> SnoozeAsync(Guid userId, Guid reminderId, SnoozeReminderRequest request,
+        CancellationToken cancellationToken)
+    {
+        var until = DateTimeOffset.UtcNow.AddDays(request.Days);
+        var affected = await dbContext.Reminders
+            .Where(r => r.Id == reminderId && r.UserId == userId && r.DismissedAt == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.SnoozedUntil, until), cancellationToken);
+
+        if (affected == 0)
+        {
+            return false;
+        }
+
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> UnsnoozeAsync(Guid userId, Guid reminderId, CancellationToken cancellationToken)
+    {
+        var affected = await dbContext.Reminders
+            .Where(r => r.Id == reminderId && r.UserId == userId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.SnoozedUntil, (DateTimeOffset?)null), cancellationToken);
+
+        if (affected == 0)
+        {
+            return false;
+        }
+
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
+        return true;
+    }
+
+    public async Task<InterviewOutcomeResponse?> AnswerInterviewAsync(Guid userId, Guid reminderId,
+        InterviewOutcomeRequest request, CancellationToken cancellationToken)
+    {
+        var reminder = await dbContext.Reminders
+            .Where(r => r.Id == reminderId && r.UserId == userId && r.DismissedAt == null)
+            .Select(r => new { r.ApplicationId, r.Type })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (reminder is null)
+        {
+            return null;
+        }
+
+        if (reminder.Type != ReminderType.InterviewHeld)
+        {
+            throw new ReminderNotAnInterviewException();
+        }
+
+        var fromStatus = await dbContext.Applications
+            .Where(a => a.Id == reminder.ApplicationId && a.UserId == userId)
+            .Select(a => (ApplicationStatus?)a.Status)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (fromStatus is null)
+        {
+            return null;
+        }
+
+        // Every answer goes through the application service, the one place a status or a reply
+        // date is written: the history row, the board, the reminder sweep behind a terminal status
+        // all happen exactly as they do for the same change made on the application page.
+        InterviewOutcomeResponse outcome;
+        switch (request.Outcome)
+        {
+            case InterviewOutcome.NextStage:
+                await applicationService.ChangeStatusAsync(userId, reminder.ApplicationId,
+                    new ChangeStatusRequest(request.NextStatus!.Value, Note: null, ChangedAt: null), cancellationToken);
+                outcome = new InterviewOutcomeResponse(fromStatus, request.NextStatus, null);
+                break;
+            case InterviewOutcome.Rejected:
+                await applicationService.ChangeStatusAsync(userId, reminder.ApplicationId,
+                    new ChangeStatusRequest(ApplicationStatus.Rejected, Note: null, ChangedAt: null), cancellationToken);
+                outcome = new InterviewOutcomeResponse(fromStatus, ApplicationStatus.Rejected, null);
+                break;
+            default:
+                if (request.PromisedReplyBy is not null)
+                {
+                    await applicationService.SetReplyPromiseAsync(userId, reminder.ApplicationId,
+                        new SetReplyPromiseRequest(request.PromisedReplyBy), cancellationToken);
+                }
+
+                outcome = new InterviewOutcomeResponse(null, null, request.PromisedReplyBy);
+                break;
+        }
+
+        // Closed here whatever the answer: a status change to a stage that is not terminal leaves
+        // the application's reminders alone, and "they did not say when" changes nothing at all.
+        await dbContext.Reminders
+            .Where(r => r.Id == reminderId && r.UserId == userId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.DismissedAt, DateTimeOffset.UtcNow), cancellationToken);
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
+
+        return outcome;
+    }
+
+    public async Task<bool> UndoInterviewAnswerAsync(Guid userId, Guid reminderId, UndoInterviewOutcomeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var reminder = await dbContext.Reminders
+            .Where(r => r.Id == reminderId && r.UserId == userId && r.Type == ReminderType.InterviewHeld)
+            .Select(r => new { r.ApplicationId })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (reminder is null)
+        {
+            return false;
+        }
+
+        if (request is { FromStatus: { } revertTo, ToStatus: { } expected })
+        {
+            // The same compare-and-set as every other undo: a status the user has since moved on
+            // by hand keeps the newer decision.
+            await applicationService.UndoBulkStatusAsync(userId,
+                new UndoBulkStatusRequest([new UndoBulkStatusEntry(reminder.ApplicationId, expected, revertTo)]),
+                cancellationToken);
+        }
+
+        if (request.PromisedReplyBy is { } promised)
+        {
+            var stillThatPromise = await dbContext.Applications
+                .AnyAsync(a => a.Id == reminder.ApplicationId && a.UserId == userId && a.PromisedReplyBy == promised,
+                    cancellationToken);
+            if (stillThatPromise)
+            {
+                await applicationService.SetReplyPromiseAsync(userId, reminder.ApplicationId,
+                    new SetReplyPromiseRequest(null), cancellationToken);
+            }
+        }
+
+        await dbContext.Reminders
+            .Where(r => r.Id == reminderId && r.UserId == userId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(r => r.DismissedAt, (DateTimeOffset?)null)
+                .SetProperty(r => r.SnoozedUntil, (DateTimeOffset?)null), cancellationToken);
+        await cache.RemoveByTagAsync(CacheKeys.Reminders.ActiveTag(userId), cancellationToken);
+
+        return true;
+    }
+
+    public async Task<IReadOnlyList<UpcomingInterviewResponse>> GetUpcomingInterviewsAsync(Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var from = now - ReminderCalculations.InterviewDuration;
+        var to = now.AddDays(UpcomingInterviewDays);
+
+        return await dbContext.Applications
+            .Where(a => a.UserId == userId && a.InterviewAt != null && a.InterviewStatus == a.Status
+                        && a.InterviewAt >= from && a.InterviewAt <= to)
+            .Join(dbContext.Companies, a => a.CompanyId, c => c.Id,
+                (a, c) => new { a.Id, CompanyName = c.Name, a.JobTitle, a.Status, a.InterviewAt, a.InterviewFormat })
+            .OrderBy(x => x.InterviewAt)
+            .Take(MaxUpcomingInterviews)
+            .Select(x => new UpcomingInterviewResponse(x.Id, x.CompanyName, x.JobTitle, x.Status,
+                x.InterviewAt!.Value, x.InterviewFormat ?? InterviewFormat.Online))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>How far ahead the card looks: two weeks covers every interview a candidate would
+    /// still want in front of them, and nothing so far out that it is noise.</summary>
+    private const int UpcomingInterviewDays = 14;
+
+    private const int MaxUpcomingInterviews = 10;
 
     public async Task<ReminderPauseResponse> GetPauseAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -368,10 +542,69 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
     public async Task<int> ScanAndGenerateRemindersAsync(CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
+        var created = await ScanRemindersAsync(now, cancellationToken);
+        // After the reminders, so a "how did it go?" row created in this very run rings the bell.
+        await WriteInterviewNotificationsAsync(now, cancellationToken);
+        return created;
+    }
+
+    /// <summary>How far ahead an interview is announced in the bell. The scan runs once a night (early
+    /// morning in Türkiye), so a day and a half catches today's interviews and tomorrow's.</summary>
+    private static readonly TimeSpan UpcomingNotificationWindow = TimeSpan.FromHours(36);
+
+    /// <summary>
+    /// The bell's two interview rows: "coming up" for an interview inside
+    /// <see cref="UpcomingNotificationWindow"/>, and "how did it go?" for every open InterviewHeld
+    /// reminder. One row per interview per kind (the unique index is the backstop), and none at all
+    /// for a user who switched interview notifications off — not written, rather than hidden.
+    /// </summary>
+    private async Task WriteInterviewNotificationsAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var horizon = now + UpcomingNotificationWindow;
+        var upcoming = await dbContext.Applications
+            .Where(a => a.InterviewAt != null && a.InterviewStatus == a.Status && a.InterviewAt > now && a.InterviewAt <= horizon)
+            .Where(a => dbContext.Users.Any(u => u.Id == a.UserId && u.NotifyInterviews))
+            .Select(a => new { a.UserId, ApplicationId = a.Id, InterviewAt = a.InterviewAt!.Value, Kind = InterviewNotificationKind.Upcoming })
+            .ToListAsync(cancellationToken);
+
+        var held = await dbContext.Reminders
+            .Where(r => r.Type == ReminderType.InterviewHeld && r.DismissedAt == null)
+            .Where(r => dbContext.Users.Any(u => u.Id == r.UserId && u.NotifyInterviews))
+            .Select(r => new { r.UserId, r.ApplicationId, InterviewAt = r.ReferenceAt, Kind = InterviewNotificationKind.Held })
+            .ToListAsync(cancellationToken);
+
+        var due = upcoming.Concat(held).ToList();
+        if (due.Count == 0)
+        {
+            return;
+        }
+
+        var applicationIds = due.Select(d => d.ApplicationId).Distinct().ToList();
+        var existing = (await dbContext.InterviewNotifications
+                .Where(n => applicationIds.Contains(n.ApplicationId))
+                .Select(n => new { n.ApplicationId, n.Kind, n.InterviewAt })
+                .ToListAsync(cancellationToken))
+            .Select(n => (n.ApplicationId, n.Kind, n.InterviewAt))
+            .ToHashSet();
+
+        var fresh = due
+            .Where(d => !existing.Contains((d.ApplicationId, d.Kind, d.InterviewAt)))
+            .Select(d => InterviewNotification.Create(d.UserId, d.ApplicationId, d.Kind, d.InterviewAt, now))
+            .ToList();
+
+        if (fresh.Count > 0)
+        {
+            dbContext.InterviewNotifications.AddRange(fresh);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task<int> ScanRemindersAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
 
         var applications = await dbContext.Applications
             .Where(a => !TerminalApplicationStatuses.Values.Contains(a.Status))
-            .Select(a => new { a.Id, a.UserId, a.AppliedAt, a.PromisedReplyBy, a.PromisedReplySince })
+            .Select(a => new { a.Id, a.UserId, a.AppliedAt, a.Status, a.PromisedReplyBy, a.PromisedReplySince, a.InterviewAt, a.InterviewStatus })
             .ToListAsync(cancellationToken);
 
         // Every open reminder, across users like the application scan above: the sweep that
@@ -427,6 +660,19 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
                 continue;
             }
 
+            // An interview of this stage that is over and has not been answered asks "how did it
+            // go?" in place of any follow-up. Only while no reply date is recorded: a promise is
+            // itself an answer, and the promise rules above and below govern from then on.
+            if (promise is null
+                && application is { InterviewAt: { } interviewAt } && application.InterviewStatus == application.Status
+                && ReminderCalculations.IsInterviewQuestionDue(interviewAt, now, options.Value.FollowUpThresholdDays))
+            {
+                candidates.Add((application.Id, application.UserId, ReminderType.InterviewHeld, interviewAt,
+                    ReminderCalculations.DaysElapsed(interviewAt, now)));
+                candidateTypeByApplication[application.Id] = ReminderType.InterviewHeld;
+                continue;
+            }
+
             // Ghosting takes precedence: an application eligible for both never
             // surfaces both suggestions at once (product decision, Sprint 6 plan).
             if (ReminderCalculations.IsPossiblyGhosted(hasResponded, daysElapsed, options.Value.GhostingThresholdDays))
@@ -459,6 +705,9 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         var promisedAtByApplication = applications
             .Where(a => a.PromisedReplyBy is not null)
             .ToDictionary(a => a.Id, a => PromisedAt(a.PromisedReplyBy!.Value));
+        var interviewAtByApplication = applications
+            .Where(a => a.InterviewAt is not null)
+            .ToDictionary(a => a.Id, a => a.InterviewAt!.Value);
         var retired = activeReminders
             .Where(r => !openApplicationIds.Contains(r.ApplicationId)
                 || beyondHorizon.Contains(r.ApplicationId)
@@ -467,7 +716,12 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
                     && Outranks(candidateType, r.Type))
                 || (r.Type == ReminderType.PromiseMissed
                     && (candidateTypeByApplication.GetValueOrDefault(r.ApplicationId) != ReminderType.PromiseMissed
-                        || promisedAtByApplication.GetValueOrDefault(r.ApplicationId) != r.ReferenceAt)))
+                        || promisedAtByApplication.GetValueOrDefault(r.ApplicationId) != r.ReferenceAt))
+                // An interview question whose interview is no longer the one due a question — the
+                // window closed, the date moved, the stage changed — goes the same way.
+                || (r.Type == ReminderType.InterviewHeld
+                    && (candidateTypeByApplication.GetValueOrDefault(r.ApplicationId) != ReminderType.InterviewHeld
+                        || interviewAtByApplication.GetValueOrDefault(r.ApplicationId) != r.ReferenceAt)))
             .ToList();
 
         if (retired.Count > 0)
@@ -527,6 +781,7 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
     {
         (ReminderType.PossiblyGhosted, ReminderType.FollowUp or ReminderType.PromiseMissed) => true,
         (ReminderType.PromiseMissed, ReminderType.FollowUp) => true,
+        (ReminderType.InterviewHeld, ReminderType.FollowUp) => true,
         _ => false
     };
 
@@ -538,3 +793,6 @@ internal sealed class ReminderService(AppDbContext dbContext, IOptions<Notificat
         }
     }
 }
+
+public sealed class ReminderNotAnInterviewException()
+    : DomainException("REMINDER_NOT_AN_INTERVIEW", "This reminder is not about an interview.");

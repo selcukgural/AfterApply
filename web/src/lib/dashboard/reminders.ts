@@ -2,11 +2,20 @@ import type { SelectionState } from "@/lib/applications/bulkSelection";
 import type { ReminderSelection, ReminderType } from "@/types/api";
 
 /** Message key under `dashboard.reminders` for each reminder type. */
-export const REMINDER_LABEL_KEY: Record<ReminderType, "followUp" | "possiblyGhosted" | "promiseMissed"> = {
+export const REMINDER_LABEL_KEY: Record<ReminderType, "followUp" | "possiblyGhosted" | "promiseMissed" | "interviewHeld"> = {
   FollowUp: "followUp",
   PossiblyGhosted: "possiblyGhosted",
   PromiseMissed: "promiseMissed",
+  InterviewHeld: "interviewHeld",
 };
+
+/** The one type whose row asks its own question ("how did it go?") instead of offering a single
+ *  answer button: its answers are the stages, the reply date, the rejection. */
+export type SingleAnswerReminderType = Exclude<ReminderType, "InterviewHeld">;
+
+export function hasSingleAnswer(type: ReminderType): type is SingleAnswerReminderType {
+  return type !== "InterviewHeld";
+}
 
 /**
  * The answer each reminder type asks for, as a message key under `dashboard.reminders`. A reminder
@@ -14,7 +23,7 @@ export const REMINDER_LABEL_KEY: Record<ReminderType, "followUp" | "possiblyGhos
  * was "dismiss", which is not an answer to either. "Followed up" records the event; "mark ghosted"
  * changes the status. Both close the reminder.
  */
-export const REMINDER_ANSWER_KEY: Record<ReminderType, "followedUp" | "markGhosted"> = {
+export const REMINDER_ANSWER_KEY: Record<SingleAnswerReminderType, "followedUp" | "markGhosted"> = {
   FollowUp: "followedUp",
   PossiblyGhosted: "markGhosted",
   // A missed date is a reason to write to them, not to close the application: the answer is the
@@ -24,7 +33,7 @@ export const REMINDER_ANSWER_KEY: Record<ReminderType, "followedUp" | "markGhost
 
 /** Whether a row's own answer is "mark as ghosted" (a status change) rather than "followed up". */
 export function answersByGhosting(type: ReminderType): boolean {
-  return REMINDER_ANSWER_KEY[type] === "markGhosted";
+  return hasSingleAnswer(type) && REMINDER_ANSWER_KEY[type] === "markGhosted";
 }
 
 /**

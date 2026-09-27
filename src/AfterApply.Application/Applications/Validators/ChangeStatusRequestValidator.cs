@@ -25,5 +25,12 @@ public sealed class ChangeStatusRequestValidator : AbstractValidator<ChangeStatu
             .Null()
             .When(x => x.NewStatus != ApplicationStatus.Rejected)
             .WithMessage(_ => localizer["VALIDATION_REJECTION_NOTICE_NOT_REJECTED"]);
+
+        RuleFor(x => x.InterviewAt).MustBeAReasonableInterviewDate(localizer);
+        RuleFor(x => x.InterviewAt)
+            .Null()
+            .When(x => !InterviewStages.Values.Contains(x.NewStatus))
+            .WithMessage(_ => localizer["INTERVIEW_OUTSIDE_INTERVIEW_STAGE"]);
+        RuleFor(x => x.InterviewFormat).IsInEnum();
     }
 }
