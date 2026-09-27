@@ -15,7 +15,9 @@ internal sealed class JobResolver(AppDbContext dbContext) : IJobResolver
         if (externalId is not null)
         {
             var existingId = await dbContext.Jobs
-                .Where(j => j.Source == source && j.ExternalId == externalId)
+                // A closed posting is final: capturing it again means the site put it back up,
+                // which is a new posting (see Job.ClosedAt).
+                .Where(j => j.Source == source && j.ExternalId == externalId && j.ClosedAt == null)
                 .Select(j => (Guid?)j.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 

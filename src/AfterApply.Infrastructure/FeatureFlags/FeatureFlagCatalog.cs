@@ -1,6 +1,7 @@
 using AfterApply.Application.FeatureFlags;
 using AfterApply.Application.FeatureFlags.Contracts;
 using AfterApply.Infrastructure.AtsSources;
+using AfterApply.Infrastructure.JobLiveness;
 using AfterApply.Infrastructure.Blog;
 using AfterApply.Infrastructure.Board;
 using AfterApply.Infrastructure.CandidateExperiences;
@@ -73,7 +74,8 @@ public sealed class FeatureFlagCatalog
             FeatureFlagCoupling.PrivacyText, FeatureFlagCoupling.Money),
         [FeatureFlag.Payments] = new(s => Get<PayTrOptions>(s).Enabled,
             s => PayTrOptionsValidator.ProblemsWhenOn(Get<PayTrOptions>(s)).Count == 0 ? null : FeatureFlagPrerequisites.PayTrConfiguration,
-            FeatureFlagCoupling.Money)
+            FeatureFlagCoupling.Money),
+        [FeatureFlag.JobLiveness] = new(s => Get<JobLivenessOptions>(s).Enabled, None, FeatureFlagCoupling.PrivacyText)
     };
 
     private readonly IReadOnlyDictionary<FeatureFlag, bool> _defaults;

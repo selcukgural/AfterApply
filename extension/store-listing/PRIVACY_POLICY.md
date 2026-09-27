@@ -9,7 +9,7 @@ change here that never reaches that page is a policy that doesn't exist as far a
 review is concerned, and vice versa. The published page is bilingual; this file is the English
 text._
 
-**Last updated:** 25 September 2026
+**Last updated:** 27 September 2026
 
 ## What this extension is
 
@@ -66,6 +66,14 @@ browser, and only for these systems:
 - Ashby (`api.ashbyhq.com`)
 - SmartRecruiters (`api.smartrecruiters.com`)
 - Workday (the employer's own `myworkdayjobs.com` / `myworkdaysite.com` address)
+
+The same servers also check whether the postings behind your applications that are still in
+progress, and the postings you saved with "Apply later", are still up: once a day, at most every
+three days per posting, the posting's public page (LinkedIn, kariyer.net) or the API of the systems
+above is opened. This request, too, carries only the posting's public address — no account, no
+cookie, nothing that identifies you. The only result kept is the date the posting closed, which
+your application then shows. A site that refuses the request is left alone for the rest of that
+day.
 
 ### Gmail Scanning (opt-in)
 

@@ -11,6 +11,7 @@ using AfterApply.Application.Imports;
 using AfterApply.Application.Board;
 using AfterApply.Application.Companies;
 using AfterApply.Application.JobSources;
+using AfterApply.Application.JobLiveness;
 using AfterApply.Application.Payments;
 using AfterApply.Application.Metrics;
 using AfterApply.Application.Notifications;
@@ -19,6 +20,7 @@ using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.Auditing;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.JobSources;
+using AfterApply.Infrastructure.JobLiveness;
 using AfterApply.Infrastructure.Payments;
 using AfterApply.Infrastructure.Metrics;
 using AfterApply.Infrastructure.Notifications;
@@ -256,6 +258,13 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "job-source-sweep",
         service => service.SweepAsync(CancellationToken.None),
         jobSourceOptions.Cron);
+
+    // Whether the postings people are still waiting on are still up (Job.ClosedAt). A no-op while
+    // the JobLiveness flag is off.
+    recurringJobManager.AddOrUpdate<IJobLivenessService>(
+        "job-liveness",
+        service => service.RunAsync(CancellationToken.None),
+        scope.ServiceProvider.GetRequiredService<IOptions<JobLivenessOptions>>().Value.Cron);
 
     // Closed applications leave the board after Board:ClosedVisibleDays. The board's reads already
     // hide them; this only removes the rows. Runs regardless of the Board flag (a no-op when empty).

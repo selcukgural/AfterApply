@@ -750,4 +750,16 @@
   <data name="VALIDATION_INTERVIEW_NEXT_STATUS" xml:space="preserve">
     <value>Sürecin geçtiği aşamayı seç.</value>
   </data>
+  <data name="FEATURE_FLAG_JOB_LIVENESS_TITLE" xml:space="preserve">
+    <value>İlanların hâlâ yayında olup olmadığını kontrol</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_LIVENESS_DESCRIPTION" xml:space="preserve">
+    <value>Süreci açık başvuruların ve 'Sonra başvur' listesindeki ilanların, sunucu tarafından günde bir kez (her ilan en fazla üç günde bir) yeniden açılması: LinkedIn, kariyer.net ve ATS'lerin herkese açık sayfası ya da API'si. İstek yalnızca ilanın herkese açık adresini taşır, kullanıcıya dair bir şey taşımaz. Kapanan ilanın kapanış tarihi kaydedilir.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_LIVENESS_WHEN_OFF" xml:space="preserve">
+    <value>Kontrol çalışmaz; yeni kapanan ilan işaretlenmez. Daha önce kaydedilen kapanış tarihleri kalır.</value>
+  </data>
+  <data name="FEATURE_FLAG_JOB_LIVENESS_NOTES" xml:space="preserve">
+    <value>Gizlilik politikası bu kontrolü anlatır; bayrak ile metin birlikte değişmeli. Bir site 429/403 verirse o gün o siteye bir daha gidilmez.</value>
+  </data>
 </root>

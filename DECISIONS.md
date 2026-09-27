@@ -9999,3 +9999,48 @@ Dar sürümün asıl kazancı veride: "nasıl geçti?" cevabı aşama zamanları
 **Ertelenenler:**
 - Canvas'taki zil içi cevap düğmeleri yapılmadı; zil satırı panoya götürüyor, soru orada cevaplanıyor.
 - E-posta bildirimi yok, yalnızca zil. E-posta gelecekse hesap başına sınır ve kota birlikte gelir.
+
+## İlanın kapandığını sunucudan görmek (`Job.ClosedAt`) — DECIDED (2026-09-27)
+
+`Job.ClosedAt` alanı vardı ama hiçbir kod onu doldurmuyordu. "İnce dokunuşlar" 2. paketindeki "ilan yayından kalktı" satırı ve ghosting sinyali için bu alanın gerçek veriyle dolması gerekiyordu.
+
+**Ölçüm (2026-09-27, düz HTTP, dürüst bot User-Agent, tarayıcı yok):**
+- **LinkedIn `/jobs/view/{id}/`:**
+  - Açık ilan 200 döner.
+  - Kapanıp hâlâ görünen ilan 200 döner ve sayfada `<figure class="closed-job …">` bulunur ("Artık başvuru kabul etmiyor"). Metne değil sınıfa bakılır.
+  - Süresi dolmuş ilan 301 döner; Location'da `trk=expired_jd_redirect` bulunur.
+  - Hiç var olmamış kimlik 404 döner.
+- **kariyer.net:**
+  - Sayfanın içindeki veride `closingDateNumeric:"dd.MM.yyyy"` hem açık hem kapalı ilanda bulunur. Geçmişse ilan kapalıdır, ilerideyse ilanın ilan edilmiş kapanış tarihidir.
+  - `passiveReason` alanı açık ilanda da aynı cümleyi taşır, **sinyal değildir**.
+  - Silinmiş ilan 302 ile `/is-ilanlari` sayfasına gider.
+- **Greenhouse / Lever API'leri:** açık ilan 200, kaldırılmış ilan 404 döner ("Job not found" / "Document not found"). Diğer dört ATS ölçülmedi.
+
+**Kararlar:**
+- **Ghosting `ClosedAt` yazmaz** (kullanıcı kararı). `ClosedAt`, ortak Job satırında sunucunun sitede gördüğü bir gerçektir. Ghosting ise tek bir başvuruya aittir. Bir kullanıcının girdisi herkesin gördüğü satırı değiştiremez. İkisi ileride birleştirilerek kullanılacak ("ilan kapandı ve dönülmedi").
+- **Yeniden yayına giren ilan yeni bir ilandır** (kullanıcı kararı).
+  - `ClosedAt` hiç temizlenmez.
+  - `(Source, ExternalId)` benzersizlik kuralı `ClosedAt IS NULL` ile daraltıldı: aynı ilan kimliğiyle en fazla bir açık satır olabilir.
+  - `JobResolver` açık satırı bulur ya da yeni satır açar.
+  - Eski başvurular kapalı satırda kalır.
+- **Kapanma kalıcı olduğu için eşik yüksek tutuldu:**
+  - Tek gözlem yeterli olan sinyaller: `expired_jd_redirect`, `closed-job`, geçmiş kapanış tarihi, Greenhouse/Lever 404.
+  - Düz 404, kariyer.net'in listeye yönlendirmesi ve ölçülmemiş ATS'lerin 404'ü "gone" sayılır. Bunlar en az 36 saat arayla ikinci bir gözlem ister. Kapanış tarihi olarak ilk gözlem yazılır.
+  - 429, 403, 999, login duvarı, 5xx ve zaman aşımı hiçbir şeyi kapatmaz. 429/403/999 ve login duvarı, o siteyi o çalıştırma boyunca durdurur.
+- **Kapsam:**
+  - Yalnızca süreci açık başvuruların (bitmiş durumlar hariç, son 90 gün) ve "Sonra başvur" kayıtlarının ilanları kontrol edilir.
+  - Her ilan en fazla 3 günde bir, çalıştırma başına en fazla 150 ilan. İstekler arasında 2–4 saniye beklenir. İş her gün 03:00 UTC'de çalışır.
+- **SSRF:**
+  - LinkedIn ve kariyer.net adresleri kayıtlı URL'den değil ilanın sayısal kimliğinden kurulur.
+  - Yönlendirmeler elle ve yalnızca aynı site içinde izlenir.
+  - ATS'ler mevcut `IAtsJobClient` üzerinden, onun host kontrolleriyle istenir.
+- **Flag:** yeni runtime flag `JobLiveness` eklendi.
+  - Kodda varsayılan kapalı, üretimde `deploy.yml` ile açık.
+  - Gizlilik metniyle eşleştirildi: `/extension-privacy` sayfasının `serverFetch.liveness` bölümü ve `PRIVACY_POLICY.md`.
+- **API:** `ApplicationDetailResponse.JobClosedAt` eklendi; yeni ve isteğe bağlı bir alan. Arayüzü 2. pakette gelecek.
+- **Robots.txt:** LinkedIn'in otomatik erişimi yasaklaması 2026-09-12'de düşük hacim koşuluyla kabul edilmişti. Bu iş aynı duruşu sürdürür: günde en fazla 150 istek, "dur" denince durur, User-Agent'ı ayrıdır (`EKariyerimJobCheck/1.0`).
+
+**Ertelenenler:**
+- kariyer.net'in ileriki kapanış tarihi (`ClosesAt`) saklanıyor ama henüz gösterilmiyor ("kaydettiğin ilan 3 gün sonra kapanıyor" uyarısı sonra gelecek).
+- Schema.org `validThrough` okunmuyor ve bilinmeyen sitelerdeki ilanlar kontrol edilmiyor.
+- Ashby, Workday, Workable ve SmartRecruiters'ın kapanan ilana verdiği yanıt ölçülmedi.

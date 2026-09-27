@@ -1722,7 +1722,7 @@
   },
   "extensionPrivacy": {
     "title": "Browser Extension Privacy Policy",
-    "lastUpdated": "Last updated: 25 September 2026",
+    "lastUpdated": "Last updated: 27 September 2026",
     "scope": {
       "title": "What this policy covers",
       "body": "This page describes the e-kariyerim Browser Extension (\"the extension\") only. The extension is a companion to the e-kariyerim web application (ekariyerim.com): it lets a signed-in user save a job posting they are viewing — on LinkedIn, on kariyer.net, or on any other job site they choose to allow it on — as a tracked application in their own account, and offers an opt-in \"Gmail Scanning\" feature that checks an email you open in Gmail on your own device and only sends a short summary when it looks job-related. Data already saved to your account (your past applications) is governed by e-kariyerim's own privacy policy, not this document."
@@ -1749,7 +1749,8 @@
       "item2": "Lever (api.lever.co)",
       "item3": "Ashby (api.ashbyhq.com)",
       "item4": "SmartRecruiters (api.smartrecruiters.com)",
-      "item5": "Workday (the employer's own myworkdayjobs.com / myworkdaysite.com address)"
+      "item5": "Workday (the employer's own myworkdayjobs.com / myworkdaysite.com address)",
+      "liveness": "The same servers also check whether the postings behind your applications that are still in progress, and the postings you saved with \"Apply later\", are still up: once a day, at most every three days per posting, the posting's public page (LinkedIn, kariyer.net) or the API of the systems above is opened. This request, too, carries only the posting's public address — no account, no cookie, nothing that identifies you. The only result kept is the date the posting closed, which your application then shows. A site that refuses the request is left alone for the rest of that day."
     },
     "gmail": {
       "title": "Gmail Scanning (opt-in)",

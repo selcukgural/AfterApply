@@ -54,7 +54,10 @@ public enum FeatureFlag
     JobSources,
 
     /// <summary><c>PayTr:Enabled</c> — the Pro checkout.</summary>
-    Payments
+    Payments,
+
+    /// <summary><c>JobLiveness:Enabled</c> — the daily look at whether saved postings are still up.</summary>
+    JobLiveness
 }
 
 /// <summary>
