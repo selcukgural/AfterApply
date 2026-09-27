@@ -9774,3 +9774,58 @@ atlamak değil; hem paketi hızlandırmak hem de aynı içeriği iki kez test et
   simge, lacivert metin. Renk simgeden türetiliyor (`coverTone`): aynı simge her zaman aynı renk,
   yani TR/EN eşleri aynı. İlk beş yazının simgeleri, yüklenen kapaklarındaki renge sabitlendi.
   Mevcut 10 blog yazısına aynı tasarımla üretilmiş PNG'ler kapak olarak yüklendi (alt metinli).
+
+## Başvuru panosu (Pano, üçüncü görünüm) — DECIDED (2026-09-27)
+
+- **Karar (kullanıcı, canvas https://claude.ai/artifact/GH6zFaGNKJZMELgbbngs4Y, "Son hâl"
+  çerçeveleri):** huntr.co'daki kanban esinli, Liste/Şirket'in yanına üçüncü görünüm "Pano".
+  Gövde A (araç çubuğu + kartlar), filtreler C'nin paneli olarak sağdan açılan çekmece, kartlarda
+  küçük şirket işareti. Beş sütun: Kaydedilenler (TrackedJob) / Başvuruldu / Süreçte (Screening +
+  üç mülakat türü, kartta çip) / Teklif / Sonuçlananlar (terminal dört durum).
+- **Pano bir filtre değil, kalıcı bir liste** (ilk tasarımdaki 50 kart tavanı kullanıcı isteğiyle
+  kaldırıldı). Kullanıcı kart ekler, çıkarır, sütunlar arası taşır ve **sütun içinde elle sıralar**;
+  döndüğünde aynı düzeni bulur. "Panodan çıkar" yalnızca kartı siler, başvuru listede kalır.
+- **Sütun saklanmıyor, durumdan türetiliyor** (`BoardColumns`): liste ile pano hiçbir zaman
+  çelişmez. Sütunlar arası taşıma = mevcut `ChangeStatus` yolu (Manual origin, geçmiş satırı,
+  hatırlatıcılar); Süreçte/Sonuçlananlar'a bırakınca aşama seçici açılır. Kaydedilenler'den
+  çıkan kart önce başvuruya dönüşür (kart korunur); başvuru Kaydedilenler'e geri gidemez.
+- **Sayfalama:** her sütun açılışta 10 kart, kaydırdıkça 10 daha. Sütun başına keyset
+  (`Position`, `Id`) ve opak cursor, çünkü kullanıcı kaydırırken üste kart gelebilir; offset
+  kartı iki kez gösterirdi. `Position` seyrek (2^20 aralık); aralık bitince yalnızca o sütun
+  yeniden numaralanır (~20 aynı noktaya ekleme).
+- **İlk dolum (kullanıcı seçti):** pano ilk açıldığında sonuçlanmamış ve son 30 günde hareket
+  görmüş başvurular + aynı pencerede kaydedilen ilanlar girer (`Board:SeedWindowDays`). Tembel,
+  kullanıcı başına bir kez (`BoardStates` satırı + advisory lock; iki sekme aynı anda açsa da tek
+  dolum). Panoyu hiç açmayan kullanıcı için hiçbir olay kart üretmez.
+- **Otomatik yerleşim (`BoardAutoPlacement` tablosu):** eklentiden "Başvurdum" ve "Sonra başvur",
+  e-postadan yeni başvuru ve e-posta ile durum değişikliği kartı en üste koyar ve "sana sormadan
+  geldi" işaretiyle gösterir; işaret karta dokununca (açma, menü, taşıma) ya da "Hepsini gördüm"
+  ile kalkar. **Panodan çıkarılmış kart yalnızca ilerleme e-postasıyla** (ön değerlendirme,
+  mülakat, teklif) geri gelir; ret ve sessizlik getirmez (kullanıcı seçti). İçe aktarmalar panoya
+  dokunmaz. Geri almalar (bulk/e-posta revert) kartın yerini değiştirmez.
+- **Sonuçlananlar (kullanıcı seçti):** kart `Board:ClosedVisibleDays` (14) gün görünür, sonra
+  panodan düşer (listede kalır). Süre, durum değişikliğinin kendi tarihinden değil panonun onu
+  öğrendiği andan (`ClosedAt`) sayılır: bugün girilen geçen ayki ret bugün haberdir. Satırları
+  gece `board-closed-purge` job'ı siler; okumalar zaten gizliyor.
+- **Kaynak** kartta ve filtrede ilanın sitesi: eklentiden gelen başvurunun kendi kaynağı hep
+  `BrowserExtension`, bu yüzden Job satırının kaynağı öncelikli.
+- **Kayıtlı görünümler** yalnızca tarayıcıda (`aa_board_views`, localStorage). Hesap verisi değil;
+  çerez politikasına "işlevsel" olarak eklendi (storage.item3, tr+en) ve depolama tripwire testi
+  güncellendi.
+- **Bayrak:** `Board:Enabled`, varsayılan kapalı. Prod'da tarayıcıda yürününce açılacak.
+  Mobil: aşama sekmeleri + tek sütun; sürükleme basılı tutunca.
+- **Veri ve gizlilik:** yeni kişisel veri kategorisi yok (üyelik, sıra, zaman damgaları). Hesap
+  silinince cascade; `/me/export`'a `BoardCards` eklendi. Yazma istekleri RequestAudit'e düşer.
+- **Sütunun "+ Başvuru ekle"si** formu o sütunun aşamasıyla açar (`?from=board&status=`; Süreçte
+  Ön değerlendirme ile başlar, formda değiştirilebilir), kayıttan sonra panoya döner. Başlıktaki
+  "+ Yeni başvuru" eskisi gibi.
+- **Tarayıcı turunda düzeltilenler (2026-09-27, masaüstü + mobil):** bırakma hedefini imlecin
+  altındaki sütun belirler (son kartın altı = sütunun sonu); fare ve dokunma ayrı sensör
+  (dokunmada basılı tutma, kaydırma sürükleme başlatmaz); otomatik kaydırma bölgesi dar ve yavaş
+  (mobilde kart hedefi aşıyordu); pano sorgusu önbelleksiz (30 sn'lik genel önbellek, filtre
+  kapatılınca taşımadan önceki panoyu gösteriyordu); kart menüsü portal + fixed (sütunda
+  kesiliyordu); ekran okuyucu etiketleri unvan + şirket.
+- **Kapsam dışı (ayrı PR):** şirket logoları. Sunucu tarafında LinkedIn şirket sayfasının görseli,
+  host allowlist + boyut sınırı + magic byte (PNG/JPEG/WebP; SVG asla), kendi origin'imizden ve
+  yalnızca o şirketle ilişkisi olan kullanıcıya sunulur (paylaşılan alan zehirlenmesi). O zamana
+  kadar baş harf + renk.

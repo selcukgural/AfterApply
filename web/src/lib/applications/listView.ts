@@ -2,13 +2,14 @@ import type { ApplicationListSortBy, ApplicationStatus, CompanyGroupSortBy, Sort
 import { APPLICATION_STATUSES } from "@/lib/constants/applicationStatus";
 
 /**
- * Which shape the applications list is in: one row per application, or one group per company.
+ * Which shape the applications list is in: one row per application, one group per company, or
+ * the board (2026-09-27; only while Board:Enabled — the page falls back to the list otherwise).
  *
  * It lives in the URL rather than in component state so the view survives a reload, the back button
  * and a pasted link — the same reason the filters already do. "flat" is the default, so today's
  * link to /applications keeps opening today's list.
  */
-export type ListView = "flat" | "company";
+export type ListView = "flat" | "company" | "board";
 
 export const FLAT_SORT_OPTIONS: readonly ApplicationListSortBy[] = [
   "AppliedAt",
@@ -27,7 +28,7 @@ export const COMPANY_SORT_OPTIONS: readonly CompanyGroupSortBy[] = [
 ];
 
 export function parseView(raw: string | null): ListView {
-  return raw === "company" ? "company" : "flat";
+  return raw === "company" || raw === "board" ? raw : "flat";
 }
 
 /**

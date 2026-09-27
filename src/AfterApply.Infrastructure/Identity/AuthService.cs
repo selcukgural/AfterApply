@@ -1085,6 +1085,12 @@ internal sealed class AuthService(
                 t.Id, c.Name, t.JobTitle, t.JobUrl, t.Location, t.Notes, t.AddedAt, t.HrName, t.HrEmail, t.HrLinkedInUrl))
             .ToListAsync(cancellationToken);
 
+        var boardCards = await dbContext.BoardCards
+            .Where(c => c.UserId == userId)
+            .OrderBy(c => c.Position).ThenBy(c => c.Id)
+            .Select(c => new { c.ApplicationId, c.TrackedJobId, c.Position, c.Origin, c.AddedAt, c.SeenAt, c.ClosedAt })
+            .ToListAsync(cancellationToken);
+
         var notificationPreferences = new NotificationPreferencesResponse(
             user.NotifyContributions, user.NotifyReviewHelpful, user.NotifySalaryHelpful,
             user.NotifyExperienceHelpful, user.NotifyBlogCommentHelpful, user.NotifyGmailUpdates);
@@ -1095,7 +1101,9 @@ internal sealed class AuthService(
             helpfulMarksCounted, notificationPreferences, experienceInviteDismissals,
             companyProfileSubmissions.Select(x => new CompanyProfileSubmissionExportItem(
                 x.CompanyId, x.Name, x.Platform.ToString(), x.Url, x.SubmittedAt)).ToList(),
-            trackedJobs);
+            trackedJobs,
+            boardCards.Select(c => new BoardCardExportItem(c.ApplicationId, c.TrackedJobId, c.Position,
+                c.Origin.ToString(), c.AddedAt, c.SeenAt, c.ClosedAt)).ToList());
     }
 
     private async Task RevokeAllActiveTokensAsync(Guid userId, CancellationToken cancellationToken)

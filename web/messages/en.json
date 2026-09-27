@@ -811,7 +811,8 @@
       "cvDocumentEmptyLink": "Upload a CV"
     },
     "new": {
-      "title": "New Application"
+      "title": "New Application",
+      "stage": "Stage"
     },
     "edit": {
       "title": "Edit Application"
@@ -1012,7 +1013,8 @@
     "view": {
       "label": "View",
       "flat": "List",
-      "company": "Company"
+      "company": "Company",
+      "board": "Board"
     },
     "groups": {
       "distribution": "Status breakdown",
@@ -1025,6 +1027,119 @@
       "expandAll": "Expand all",
       "collapseAll": "Collapse all",
       "clearCompanyFilter": "Clear the company filter"
+    },
+    "board": {
+      "addFromList": "Add from list",
+      "searchLabel": "Search the board",
+      "searchPlaceholder": "Search the board by company or role",
+      "filters": "Filters",
+      "filterNote": "Filters only narrow what you see; they never change what is on the board.",
+      "arrivals": "{count, plural, one {# card arrived without you} other {# cards arrived without you}}",
+      "showArrivals": "Show",
+      "markAllSeen": "Mark all seen",
+      "loadError": "The board could not be loaded.",
+      "retry": "Try again",
+      "columns": {
+        "Saved": "Saved",
+        "Applied": "Applied",
+        "InProgress": "In progress",
+        "Offer": "Offer",
+        "Closed": "Closed"
+      },
+      "closedNote": "A closed card leaves the board by itself after {days} days; it stays in the list.",
+      "loaded": "{shown} / {total} loaded",
+      "loadMore": "Load more",
+      "loading": "Loading…",
+      "emptyColumn": "No cards in this column",
+      "addSaved": "Save a posting",
+      "addApplication": "Add an application",
+      "age": {
+        "saved": "{days, plural, =0 {Saved today} one {Saved # day ago} other {Saved # days ago}}",
+        "leaves": "{days, plural, =0 {Leaves the board today} one {Leaves the board in # day} other {Leaves the board in # days}}",
+        "moved": "{days, plural, =0 {Moved today} one {Moved # day ago} other {Moved # days ago}}",
+        "silent": "{days, plural, one {No reply for # day} other {No reply for # days}}"
+      },
+      "origin": {
+        "Email": "Updated from email",
+        "EmailReturned": "Brought back by email",
+        "Extension": "Added from the extension",
+        "Later": "Extension “Apply later”"
+      },
+      "source": {
+        "linkedIn": "LinkedIn",
+        "kariyerNet": "kariyer.net",
+        "otherSites": "Other site",
+        "manual": "Added by hand"
+      },
+      "menu": {
+        "label": "Actions for {title}",
+        "open": "Open application",
+        "openPosting": "Open saved posting",
+        "changeStage": "Change stage",
+        "toTop": "Move to top of column",
+        "remove": "Remove from board",
+        "removeNote": "Only the card goes; the application or posting itself stays."
+      },
+      "dragHandle": "Drag the {title} card",
+      "stagePicker": {
+        "title": "Move to which stage?",
+        "cancel": "Cancel"
+      },
+      "drawer": {
+        "title": "Filters",
+        "close": "Close",
+        "savedViews": "Saved views",
+        "allBoard": "Whole board",
+        "presetRecent": "Moved in the last 7 days",
+        "presetSilent": "Gone quiet",
+        "presetArrivals": "Arrived without you",
+        "presetPromise": "Reply date promised",
+        "saveView": "+ Save this filter",
+        "saveViewName": "View name",
+        "saveViewConfirm": "Save",
+        "deleteView": "Delete the {name} view",
+        "savedViewsNote": "Views you save are kept in this browser only.",
+        "lastActivity": "Last activity",
+        "window": "{days} days",
+        "anyTime": "Any time",
+        "from": "From",
+        "to": "To",
+        "source": "Source",
+        "state": "State",
+        "silent": "No reply for {days}+ days",
+        "reminder": "Has a reminder",
+        "promise": "Reply date promised",
+        "unseen": "Arrived without you",
+        "clear": "Clear",
+        "apply": "Apply"
+      },
+      "chips": {
+        "remove": "Remove the {label} filter",
+        "window": "Last {days} days",
+        "range": "Custom date range"
+      },
+      "addDialog": {
+        "title": "Add from list",
+        "intro": "{count, plural, =0 {Every application is already on the board.} one {# application is not on the board. The ones you pick go to the top of their stage's column.} other {# applications are not on the board. The ones you pick go to the top of their stage's column.}}",
+        "search": "Search your applications",
+        "selected": "{count, plural, other {# selected}}",
+        "cancel": "Cancel",
+        "add": "Add to board",
+        "noMatch": "No application matches the search.",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "moveFailed": "The card could not be moved; the board was refreshed.",
+      "actionFailed": "That did not work. Please try again.",
+      "stageTabs": "Stages",
+      "onBoard": "On board",
+      "dnd": {
+        "instructions": "Press space or Enter to pick up a card. Move it with the arrow keys; press space or Enter again to drop it, or Escape to cancel.",
+        "pickedUp": "Picked up {title}.",
+        "over": "{title} is over the {column} column.",
+        "dropped": "{title} was dropped in the {column} column.",
+        "cancelled": "Move cancelled."
+      }
     }
   },
   "settings": {
@@ -1580,7 +1695,7 @@
   },
   "cookies": {
     "title": "Cookie Policy",
-    "lastUpdated": "Last updated: 18 September 2026",
+    "lastUpdated": "Last updated: 27 September 2026",
     "intro": {
       "title": "In short",
       "body": "e-kariyerim uses only the two cookies the service needs to work. No advertising cookies, tracking pixels, analytics tools like Google Analytics, or any third-party cookies. That is why no cookie banner appears: there is no optional cookie to ask your consent for. The one exception is the Pro plan checkout: the payment form opens on PayTR's own page and PayTR may use its own strictly necessary cookies there; those cookies are not read on any other page of this site.",
@@ -1605,7 +1720,8 @@
       "intro": "These are not cookies, but they store data on your device in the same way, so we list them here too:",
       "item1": "Session tokens — aa_access_token, aa_refresh_token, their expiry times, and aa_user (your name, email address and interface preferences). They keep you signed in; they live in localStorage and are deleted when you sign out.",
       "item2": "Sign-in security keys — aa_google_oauth, aa_linkedin_oauth and aa_github_oauth. These are single-use values that block a CSRF attack during a Google, LinkedIn or GitHub sign-in; they live in sessionStorage and are deleted the moment the sign-in completes.",
-      "outro": "Both are required for the service to work — without them you cannot sign in."
+      "item3": "Saved board views — aa_board_views. When you choose “Save this filter” on the applications board, the name you give the view and its filter settings (date range, source and state choices) are kept in localStorage. They are never sent to our server and stay in this browser only; deleting the view deletes them.",
+      "outro": "The first two are required for the service to work — without them you cannot sign in. The third is functional and is written only when you save a view."
     },
     "visitCounter": {
       "title": "Visit counter",

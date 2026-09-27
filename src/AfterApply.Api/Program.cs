@@ -8,6 +8,7 @@ using AfterApply.Api.Middleware;
 using AfterApply.Application.Auditing;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
+using AfterApply.Application.Board;
 using AfterApply.Application.JobSources;
 using AfterApply.Application.Payments;
 using AfterApply.Application.Metrics;
@@ -176,6 +177,7 @@ app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapApplicationEndpoints();
 app.MapTrackedJobEndpoints();
+app.MapBoardEndpoints();
 app.MapAnalyticsEndpoints();
 app.MapImportEndpoints();
 app.MapCvDocumentEndpoints();
@@ -252,6 +254,13 @@ if (!DependencyInjection.IsOpenApiDocumentGeneration)
         "job-source-sweep",
         service => service.SweepAsync(CancellationToken.None),
         jobSourceOptions.Cron);
+
+    // Closed applications leave the board after Board:ClosedVisibleDays. The board's reads already
+    // hide them; this only removes the rows. Runs regardless of Board:Enabled (a no-op when empty).
+    recurringJobManager.AddOrUpdate<IBoardMaintenanceService>(
+        "board-closed-purge",
+        service => service.PurgeClosedAsync(CancellationToken.None),
+        Cron.Daily(4, 30));
 
     // Payments: close pending PayTR orders whose window passed, and remind users whose prepaid
     // Pro period is about to end. Both are no-ops on an empty table, so they run regardless of

@@ -1315,3 +1315,19 @@ vermek churn değildi). Hiçbiri kişiye gösterilmez.
   aykırı.
 - Ruh hâli takibi, günlük, "bugün nasılsın" — terapi taklidi, yok.
 - Kullanıcılar arası kıyas, rozetler, streak — yok.
+
+## Başvuru panosu (2026-09-27)
+
+### PR1 — Pano ✅ (2026-09-27, bayrak kapalı)
+- **Ne var:** `/applications?view=board`, beş sütun, sütun başına 10'arlı sonsuz kaydırma,
+  ekle/çıkar/taşı/elle sırala, otomatik yerleşim (e-posta, eklenti), filtre çekmecesi, "Listeden
+  panoya ekle". Kararlar DECISIONS.md'de aynı tarihli "Başvuru panosu" girdisinde.
+- **Kalan:** prod'da tarayıcıda yürüyüp `Board:Enabled=true`; yardım merkezine pano konusu ve
+  ekran görüntüsü (bayrak açılırken, aynı değişiklikte).
+
+### PR2 — Şirket logoları
+- **Yapılacak:** `Company.LogoObjectName`/`LogoFetchedAt`, zenginleştirme job'ında LinkedIn
+  `og:image` (host allowlist, 256 KB, magic byte PNG/JPEG/WebP), `IFileStorage`, sahiplik
+  kontrollü `GET /api/companies/{id}/logo` (`nosniff`, `private`), günlük backfill, admin'de
+  "logoyu sıfırla", `CompanyMark` logo → baş harf düşüşü.
+- **Kilidi:** yok.

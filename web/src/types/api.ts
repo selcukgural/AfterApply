@@ -111,6 +111,9 @@ export interface ApplicationSummaryResponse {
   status: ApplicationStatus;
   appliedAt: string;
   updatedAt: string;
+  /** Whether the application has a card on the board. Optional: an API from before the board
+   *  (2026-09-27) answers without it. */
+  onBoard?: boolean;
 }
 
 export interface ApplicationDetailResponse {
@@ -370,6 +373,8 @@ export interface ApplicationListQuery {
   companyId?: string;
   sortBy?: ApplicationListSortBy;
   sortDirection?: SortDirection;
+  /** true: only applications on the board; false: only those not on it. */
+  onBoard?: boolean;
 }
 
 export interface GroupedApplicationsQuery {
@@ -752,6 +757,12 @@ export interface ClientConfigResponse {
   responseRates?: ResponseRatesConfig;
   // Optional for the same reason (2026-09-23): the company page's anonymous "no reply" report.
   silenceReports?: SilenceReportsConfig;
+  // Optional for the same reason (2026-09-27): the applications page's third view.
+  board?: BoardConfig;
+}
+
+export interface BoardConfig {
+  enabled: boolean;
 }
 
 export interface SilenceReportsConfig {
@@ -2571,4 +2582,65 @@ export interface SalaryPosition {
   minMonthlyNet: number | null;
   maxMonthlyNet: number | null;
   percentFromMedian: number | null;
+}
+
+// --- Applications board (2026-09-27) ---------------------------------------------------------
+
+export type BoardColumn = "Saved" | "Applied" | "InProgress" | "Offer" | "Closed";
+
+export type BoardCardOrigin = "Seed" | "Manual" | "Email" | "EmailReturned" | "Extension" | "Later";
+
+export type BoardCardKind = "Application" | "SavedPosting";
+
+export interface BoardCardResponse {
+  /** The card's own id — what move, remove and seen act on. */
+  id: string;
+  kind: BoardCardKind;
+  /** The application's or the saved posting's id. */
+  itemId: string;
+  jobTitle: string;
+  companyId: string;
+  companyName: string;
+  /** Null for a saved posting. */
+  status: ApplicationStatus | null;
+  source: Source | null;
+  lastActivityAt: string;
+  origin: BoardCardOrigin;
+  /** True while the "arrived without you" mark is shown. */
+  unseen: boolean;
+  /** For a closed application, when it drops off the board. */
+  leavesBoardAt: string | null;
+}
+
+export interface BoardColumnPage {
+  column: BoardColumn;
+  /** Cards in the column that match the filter, across every page. */
+  total: number;
+  cards: BoardCardResponse[];
+  /** Null when this page reached the end of the column. */
+  nextCursor: string | null;
+}
+
+export interface BoardResponse {
+  columns: BoardColumnPage[];
+  unseenCount: number;
+  closedVisibleDays: number;
+  silentDays: number;
+}
+
+export interface BoardFilter {
+  search?: string;
+  sources?: Source[];
+  activeFrom?: string;
+  activeTo?: string;
+  silentOnly?: boolean;
+  withReminder?: boolean;
+  withPromise?: boolean;
+  unseenOnly?: boolean;
+}
+
+export interface MoveBoardCardRequest {
+  toStatus: ApplicationStatus | null;
+  aboveCardId: string | null;
+  belowCardId: string | null;
 }
