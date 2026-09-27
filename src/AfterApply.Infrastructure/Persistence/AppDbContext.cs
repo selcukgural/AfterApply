@@ -85,6 +85,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
 
     public DbSet<BoardState> BoardStates => Set<BoardState>();
 
+    public DbSet<CompanyLogo> CompanyLogos => Set<CompanyLogo>();
+
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
 
     public DbSet<CvDocument> CvDocuments => Set<CvDocument>();

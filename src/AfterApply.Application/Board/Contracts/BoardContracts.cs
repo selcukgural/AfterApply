@@ -61,6 +61,8 @@ public enum BoardCardKind
 /// <param name="LastActivityAt">The last change to the application or posting.</param>
 /// <param name="Unseen">True while the arrival mark is shown.</param>
 /// <param name="LeavesBoardAt">For a closed application, when it drops off the board.</param>
+/// <param name="HasCompanyLogo">Whether GET /api/board/company-logos/{CompanyId} has an image —
+/// so the client asks only for logos that exist.</param>
 public sealed record BoardCardResponse(
     Guid Id,
     BoardCardKind Kind,
@@ -73,7 +75,8 @@ public sealed record BoardCardResponse(
     DateTimeOffset LastActivityAt,
     BoardCardOrigin Origin,
     bool Unseen,
-    DateTimeOffset? LeavesBoardAt);
+    DateTimeOffset? LeavesBoardAt,
+    bool HasCompanyLogo = false);
 
 /// <param name="Total">Cards in the column that match the filter, across every page.</param>
 /// <param name="NextCursor">Null when this page reached the end of the column.</param>

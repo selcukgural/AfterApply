@@ -5,7 +5,7 @@ import type {
   BoardResponse,
   MoveBoardCardRequest,
 } from "@/types/api";
-import { apiFetch } from "./httpClient";
+import { apiFetch, apiFetchBlob } from "./httpClient";
 
 /** Cards per column on each read — the board opens with this many and loads this many more per
  *  scroll. */
@@ -47,6 +47,10 @@ export const boardApi = {
 
   move: (cardId: string, request: MoveBoardCardRequest) =>
     apiFetch<void>(`/api/board/cards/${cardId}/move`, { method: "POST", body: JSON.stringify(request) }),
+
+  /** The company's logo as an image blob — fetched with the session, since only users who applied
+   *  there may see it, then shown through an object URL (the CSP allows blob: images). */
+  companyLogo: (companyId: string) => apiFetchBlob(`/api/board/company-logos/${companyId}`),
 
   markSeen: (request: { cardIds: string[] | null; all: boolean }) =>
     apiFetch<void>("/api/board/cards/seen", { method: "POST", body: JSON.stringify(request) }),

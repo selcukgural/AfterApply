@@ -322,7 +322,8 @@ internal sealed class BoardService(
         var cards = page.Select(r => new BoardCardResponse(
                 r.CardId, r.Kind, r.ItemId, r.JobTitle, r.CompanyId, r.CompanyName, r.Status, r.Source,
                 r.LastActivityAt, r.Origin, r.SeenAt == null,
-                column == BoardColumn.Closed && r.ClosedAt is { } closedAt ? closedAt.AddDays(visibleDays) : null))
+                column == BoardColumn.Closed && r.ClosedAt is { } closedAt ? closedAt.AddDays(visibleDays) : null,
+                r.HasCompanyLogo))
             .ToList();
 
         var nextCursor = hasMore ? new BoardCursor(page[^1].Position, page[^1].CardId).Encode() : null;
@@ -408,7 +409,8 @@ internal sealed class BoardService(
             LastActivityAt = x.a.UpdatedAt,
             Origin = x.c.Origin,
             SeenAt = x.c.SeenAt,
-            ClosedAt = x.c.ClosedAt
+            ClosedAt = x.c.ClosedAt,
+            HasCompanyLogo = dbContext.CompanyLogos.Any(l => l.CompanyId == x.a.CompanyId && l.Content != null && !l.Blocked)
         });
     }
 
@@ -463,7 +465,8 @@ internal sealed class BoardService(
             LastActivityAt = x.t.UpdatedAt,
             Origin = x.c.Origin,
             SeenAt = x.c.SeenAt,
-            ClosedAt = null
+            ClosedAt = null,
+            HasCompanyLogo = dbContext.CompanyLogos.Any(l => l.CompanyId == x.t.CompanyId && l.Content != null && !l.Blocked)
         });
     }
 
@@ -553,5 +556,6 @@ internal sealed class BoardService(
         public BoardCardOrigin Origin { get; init; }
         public DateTimeOffset? SeenAt { get; init; }
         public DateTimeOffset? ClosedAt { get; init; }
+        public bool HasCompanyLogo { get; init; }
     }
 }
