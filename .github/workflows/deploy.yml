@@ -491,6 +491,12 @@ jobs:
             # so the launch state is visible next to the other flags.
             ResponseRates__Enabled=true
             CompanyIntelligence__Enabled=false
+            # The applications board (DECISIONS.md 2026-09-27, PR #156/#157): the third view on
+            # /applications, automatic card placement from email and the extension, and the nightly
+            # company-logo backfill (at most 50 LinkedIn page fetches, 20 s apart). Turning it off
+            # hides all of it and keeps the BoardCards/CompanyLogos rows; the help topic (#158)
+            # ships together with this line.
+            Board__Enabled=true
             CvScan__Review__ProjectId=${{ env.GCP_PROJECT_ID }}
             # The blog editor's "suggest with AI" (DECISIONS.md 2026-09-21): the same Vertex
             # project, region and runtime service account as the CV review, its own key so the
