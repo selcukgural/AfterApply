@@ -2763,7 +2763,8 @@ export type FeatureFlag =
   | "AtsSources"
   | "JobSources"
   | "Payments"
-  | "JobLiveness";
+  | "JobLiveness"
+  | "SalaryMarket";
 
 export type FeatureFlagCoupling = "PrivacyText" | "Money";
 

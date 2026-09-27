@@ -762,4 +762,13 @@
   <data name="FEATURE_FLAG_JOB_LIVENESS_NOTES" xml:space="preserve">
     <value>The privacy policy describes this check; the flag and the text change together. A site that answers 429/403 is left alone for the rest of that day.</value>
   </data>
+  <data name="FEATURE_FLAG_SALARY_MARKET_TITLE" xml:space="preserve">
+    <value>Software salary pages</value>
+  </data>
+  <data name="FEATURE_FLAG_SALARY_MARKET_DESCRIPTION" xml:space="preserve">
+    <value>The public /maaslar list and occupation pages: yearly monthly-net salary summaries of groups of at least 15 people, built from the Önceki Yazılımcı salary surveys (2018–2026, with permission). The data is compiled into the app; nothing per person is kept.</value>
+  </data>
+  <data name="FEATURE_FLAG_SALARY_MARKET_WHEN_OFF" xml:space="preserve">
+    <value>/api/salary-market returns 404; the pages and their menu links go. Nothing is deleted.</value>
+  </data>
 </root>

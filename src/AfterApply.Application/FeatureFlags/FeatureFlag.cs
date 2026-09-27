@@ -57,7 +57,10 @@ public enum FeatureFlag
     Payments,
 
     /// <summary><c>JobLiveness:Enabled</c> — the daily look at whether saved postings are still up.</summary>
-    JobLiveness
+    JobLiveness,
+
+    /// <summary><c>SalaryMarket:Enabled</c> — the public occupation salary pages built from outside surveys.</summary>
+    SalaryMarket
 }
 
 /// <summary>
