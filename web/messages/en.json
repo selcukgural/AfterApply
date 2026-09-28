@@ -2744,10 +2744,14 @@
       "intro": "Settings is where you choose your notifications, export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "profile": {
         "title": "My Profile",
-        "body": "My Profile in the avatar menu shows whose account this is and what it holds: your first and last name (editable), your e-mail address (cannot be changed; sign-in and notifications are tied to it), the date you joined, your plan, your latest reviews and salary entries, and your application, tracked-job and CV counts.",
+        "body": "My Profile in the avatar menu shows whose account this is and what it holds: your profile photo, your first and last name (editable), your e-mail address (cannot be changed; sign-in and notifications are tied to it), the date you joined, your plan, your latest reviews and salary entries, and your application, tracked-job and CV counts.",
         "calloutName": {
           "title": "The name is optional",
           "body": "Sign-up does not ask for a name. Add one under My Profile and the top bar and our e-mails address you by it; leave it empty and the part of your e-mail before the @ is shown instead."
+        },
+        "calloutPhoto": {
+          "title": "Where does my profile photo appear?",
+          "body": "Use the camera button on the corner of the photo to choose a picture and position it in the circle; the same button changes or removes it. The photo appears in the top bar and on My Profile. On blog comments it appears only if you turn on \"Show my photo on my blog comments\". Salaries, company reviews and candidate experiences are always anonymous; your photo never appears there."
         }
       },
       "notifications": {

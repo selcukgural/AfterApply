@@ -43,6 +43,9 @@ export default async function SettingsHelpPage({ params }: PageProps<"/[locale]/
         <Callout variant="info" label={tCommon("note")} title={t("profile.calloutName.title")}>
           {t("profile.calloutName.body")}
         </Callout>
+        <Callout variant="info" label={tCommon("note")} title={t("profile.calloutPhoto.title")}>
+          {t("profile.calloutPhoto.body")}
+        </Callout>
       </section>
 
       <section id="notifications" className="flex scroll-mt-20 flex-col gap-4">

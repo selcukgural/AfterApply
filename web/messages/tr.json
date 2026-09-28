@@ -2744,10 +2744,14 @@
       "intro": "Ayarlar sayfasından bildirimlerinizi seçebilir, verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir, Pro plan ödemelerinizi görüp iade talebi açabilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "profile": {
         "title": "Profilim",
-        "body": "Avatar menüsündeki Profilim, hesabın kime ait olduğunu ve neler bıraktığını gösterir: adın ve soyadın (düzenlenebilir), e-posta adresin (değiştirilemez; giriş ve bildirimler ona bağlı), üye olduğun tarih, planın, son değerlendirme ve maaş kayıtların ile başvuru, takip listesi ve CV sayıların.",
+        "body": "Avatar menüsündeki Profilim, hesabın kime ait olduğunu ve neler bıraktığını gösterir: profil fotoğrafın, adın ve soyadın (düzenlenebilir), e-posta adresin (değiştirilemez; giriş ve bildirimler ona bağlı), üye olduğun tarih, planın, son değerlendirme ve maaş kayıtların ile başvuru, takip listesi ve CV sayıların.",
         "calloutName": {
           "title": "Ad ve soyad isteğe bağlı",
           "body": "Kayıt olurken ad sorulmaz. Profilim'de eklersen üst çubukta ve e-postalarda adınla hitap ederiz; boş bırakırsan e-posta adresinin @ öncesi görünür."
+        },
+        "calloutPhoto": {
+          "title": "Profil fotoğrafı nerede görünür?",
+          "body": "Fotoğrafın köşesindeki kamera düğmesiyle bir fotoğraf seçip dairenin içinde konumlandırırsın; aynı düğmeden değiştirir ya da kaldırırsın. Fotoğraf üst çubukta ve Profilim'de görünür. Blog yorumlarında yalnızca \"Blog yorumlarımda fotoğrafımı göster\"i açarsan görünür. Maaşlar, şirket değerlendirmeleri ve aday deneyimleri her zaman anonimdir; fotoğrafın oralarda hiçbir koşulda görünmez."
         }
       },
       "notifications": {
