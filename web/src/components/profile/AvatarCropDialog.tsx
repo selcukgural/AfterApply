@@ -16,43 +16,68 @@ interface AvatarCropDialogProps {
   onSave: (photo: Blob) => Promise<void>;
 }
 
+/** Paints the part of the photo the crop shows onto a square canvas of the given side. */
+function paint(canvas: HTMLCanvasElement, bitmap: ImageBitmap, crop: CropState, side: number) {
+  const context = canvas.getContext("2d");
+  if (!context) return false;
+  const rect = sourceRect(crop, bitmap.width, bitmap.height, VIEWPORT);
+  // JPEG has no transparency: a transparent PNG lands on white rather than black.
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, side, side);
+  context.imageSmoothingQuality = "high";
+  context.drawImage(bitmap, rect.sx, rect.sy, rect.size, rect.size, 0, 0, side, side);
+  return true;
+}
+
 /**
  * Positions a chosen photo in the circle (canvas variant A, DECISIONS.md 2026-09-28). The crop is
  * the browser's job: the server takes the square it is given, re-encodes it at 256 px, and keeps
  * nothing else — so there is no original to re-crop later, and "change" means choosing again.
- * The photo is read through a blob: URL (the CSP allows it) and never leaves the page uncropped.
+ *
+ * The file is decoded with createImageBitmap and only ever painted onto canvases: no URL made
+ * from the chosen file reaches the DOM, and the preview is drawn by the same call that draws the
+ * square sent to the server, so what is seen is exactly what is saved.
  */
 export function AvatarCropDialog({ file, onCancel, onSave }: AvatarCropDialogProps) {
   const t = useTranslations("profile.avatar");
-  const imageRef = useRef<HTMLImageElement>(null);
+  const previewRef = useRef<HTMLCanvasElement>(null);
   const drag = useRef<{ pointerId: number; x: number; y: number } | null>(null);
-  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  const [bitmap, setBitmap] = useState<ImageBitmap | null>(null);
   const [crop, setCrop] = useState<CropState | null>(null);
   const [unreadable, setUnreadable] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const size = bitmap ? { width: bitmap.width, height: bitmap.height } : null;
 
-  // The blob: URL is handed to the <img> element directly rather than through state: it is a
-  // resource with a lifetime (revoked on cleanup), and React's double-run of effects in development
-  // must create a fresh one rather than render a revoked one.
   useEffect(() => {
-    const image = imageRef.current;
-    if (!image) return;
-    const objectUrl = URL.createObjectURL(file);
-    image.src = objectUrl;
-    return () => URL.revokeObjectURL(objectUrl);
+    let cancelled = false;
+    let decoded: ImageBitmap | null = null;
+    createImageBitmap(file).then(
+      (result) => {
+        if (cancelled) {
+          result.close();
+          return;
+        }
+        decoded = result;
+        setBitmap(result);
+        setCrop(initialCrop(result.width, result.height, VIEWPORT));
+      },
+      () => {
+        if (!cancelled) setUnreadable(true);
+      },
+    );
+    return () => {
+      cancelled = true;
+      decoded?.close();
+    };
   }, [file]);
 
-  const handleLoad = () => {
-    const image = imageRef.current;
-    if (!image || image.naturalWidth === 0) {
-      setUnreadable(true);
-      return;
-    }
-    const natural = { width: image.naturalWidth, height: image.naturalHeight };
-    setSize(natural);
-    setCrop(initialCrop(natural.width, natural.height, VIEWPORT));
-  };
+  // Redrawn on every pan and zoom; the canvas is the DOM this effect keeps in step with the crop.
+  useEffect(() => {
+    const canvas = previewRef.current;
+    if (!canvas || !bitmap || !crop) return;
+    paint(canvas, bitmap, crop, canvas.width);
+  }, [bitmap, crop]);
 
   const move = (dx: number, dy: number) => {
     if (!crop || !size) return;
@@ -90,21 +115,14 @@ export function AvatarCropDialog({ file, onCancel, onSave }: AvatarCropDialogPro
   };
 
   const handleSave = async () => {
-    const image = imageRef.current;
-    if (!image || !crop || !size) return;
+    if (!bitmap || !crop) return;
     setError(null);
     setSaving(true);
     try {
-      const rect = sourceRect(crop, size.width, size.height, VIEWPORT);
       const canvas = document.createElement("canvas");
       canvas.width = OUTPUT_SIZE;
       canvas.height = OUTPUT_SIZE;
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("no-canvas");
-      // JPEG has no transparency: a transparent PNG lands on white rather than black.
-      context.fillStyle = "#ffffff";
-      context.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
-      context.drawImage(image, rect.sx, rect.sy, rect.size, rect.size, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+      if (!paint(canvas, bitmap, crop, OUTPUT_SIZE)) throw new Error("no-canvas");
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
       if (!blob) throw new Error("no-blob");
       await onSave(blob);
@@ -113,8 +131,6 @@ export function AvatarCropDialog({ file, onCancel, onSave }: AvatarCropDialogPro
       setSaving(false);
     }
   };
-
-  const scale = crop && size ? (VIEWPORT / Math.min(size.width, size.height)) * crop.zoom : 1;
 
   return (
     <Modal
@@ -150,22 +166,15 @@ export function AvatarCropDialog({ file, onCancel, onSave }: AvatarCropDialogPro
             className="relative cursor-grab touch-none select-none overflow-hidden rounded-md bg-gray-900 outline-none focus-visible:ring-2 focus-visible:ring-accent active:cursor-grabbing"
             style={{ width: VIEWPORT, height: VIEWPORT }}
           >
-            {
-              // eslint-disable-next-line @next/next/no-img-element -- a local blob: URL being cropped, not a served image
-              <img
-                ref={imageRef}
-                alt=""
-                draggable={false}
-                onLoad={handleLoad}
-                onError={() => setUnreadable(true)}
-                className="absolute left-0 top-0 max-w-none origin-top-left"
-                style={
-                  crop && size
-                    ? { width: size.width * scale, height: size.height * scale, transform: `translate(${crop.x}px, ${crop.y}px)` }
-                    : { visibility: "hidden" }
-                }
-              />
-            }
+            {/* Twice the CSS size, so the preview stays sharp on a high-density screen. */}
+            <canvas
+              ref={previewRef}
+              width={VIEWPORT * 2}
+              height={VIEWPORT * 2}
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full"
+              style={bitmap ? undefined : { visibility: "hidden" }}
+            />
             {/* The circle the photo will be shown in; the corners are dimmed, not cut, because
                 the square is what is sent. */}
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full shadow-[0_0_0_400px_rgba(17,24,39,0.55)] ring-2 ring-white" />
