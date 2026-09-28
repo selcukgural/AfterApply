@@ -10191,3 +10191,40 @@ Kullanıcı profil fotoğrafı yükleyip değiştirebiliyor ve kaldırabiliyor. 
   - Dışa aktarmadaki profil bölümünde fotoğrafın URL'si ve "yorumlarda göster" tercihi yer alıyor.
   - Gizlilik metnine profil fotoğrafı bölümü eklendi (tr + en).
 - Yazma istekleri `RequestAudit` kapsamında (otomatik).
+
+## Şirket logosu: önce şirketin sitesi, sonra LinkedIn — DECIDED (2026-09-28)
+
+2026-09-27 kaydındaki "yalnızca LinkedIn" ve "geçici hatalar kaydedilmez" maddelerinin yerine geçer.
+
+**Neden:** `company-logo-backfill` 28 Eylül sabahı ilk kez çalıştı. 24 şirketin yalnızca 6'sında logo alındı: 11'i LinkedIn'in bot duvarına (999), 7'si 5 sn zaman aşımına takıldı. İkisinde de hiçbir şey kaydedilmediği için aynı şirketler her gece LinkedIn'e yeniden gidecekti.
+
+**Değerlendirilen dış servisler:**
+- **Clearbit Logo API:** Aralık 2025'te kapandı.
+- **Brandfetch** (ücretsiz, ayda 1M istek) **ve Logo.dev** (ayda 500K istek): elendi. İkisi de görselin kullanıcının tarayıcısından doğrudan kendi sunucularından yüklenmesini şart koşuyor; Brandfetch sunucudan çekmeyi ve önbelleklemeyi açıkça yasaklıyor. Bu, "bu IP şu şirketlere başvuruyor" bilgisini üçüncü tarafa verir ve CSP'de `img-src`'yi açmayı gerektirir.
+- **GitHub veri setleri:** simple-icons ve gilbarbara/logos neredeyse yalnızca küresel teknoloji markalarını kapsıyor, Türk şirketi yok ve dosyalar SVG. Wikidata/Commons'ta kapsam düşük, lisanslar görsel görsel değişiyor.
+
+**Model:**
+- **Kaynak sırası:**
+  1. Şirketin kendi sitesi (`Company.Website`): ana sayfanın `apple-touch-icon` ve `<link rel="icon">` etiketleri, büyükten küçüğe. En fazla 4 aday denenir, son aday geleneksel `/apple-touch-icon.png` yolu. SVG ve ICO asla alınmaz.
+  2. Siteden bir şey çıkmazsa eski yol: LinkedIn `og:image`.
+- **Sitedeki ikonun boyutu:** en az 64 px (favicon logo sayılmaz), en fazla 2048 px. Boyut ImageSharp ile yalnızca başlıktan okunur. Tür baytlardan belirlenir (PNG/JPEG/WebP), bayt sınırı 256 KB.
+- **SSRF:** site herhangi bir host olabildiği için kontrol, soketin bağlandığı adreste yapılıyor (`PublicAddressGuard`, `SocketsHttpHandler.ConnectCallback`).
+  - Ad bir kez çözülür. Döndürdüğü adreslerin hepsi public değilse bağlanılmaz: loopback, özel ağlar, link-local (metadata sunucusu dahil), CGNAT, çoklu yayın, dokümantasyon blokları ve bunların IPv4-mapped, NAT64 ve 6to4 biçimleri reddedilir.
+  - Bağlantı tam o adreslerden birine yapılır; araya ikinci bir DNS sorgusu girmediği için DNS rebinding'e yer kalmaz.
+  - Yalnızca https (Website sütunundaki http bağlantısı https'e yükseltilir). IP literal, `localhost` ve noktasız ad reddedilir.
+  - Yönlendirmeler elle izlenir, her adımda aynı kurallar uygulanır. Proxy ve cookie kullanılmaz.
+  - Korumanın reddi bir "cevap" sayılır: 30 gün beklenir, tekrar denemede aralık artmaz.
+- **Zehirleme:** `Website` alanı, kimliği `CompanyPageIdentity` ile doğrulanmış LinkedIn ya da Kariyer.net sayfasından okunuyor. Dolayısıyla güven düzeyi eski LinkedIn yoluyla aynı. Logo yalnızca o şirkete başvuranların panosunda görünüyor ve admin engeli (`logo/block`) aynen geçerli.
+- **Tekrar deneme:** `CompanyLogos` tablosuna `NextCheckAt` ve `DeferCount` eklendi.
+  - Cevap geldiyse ("logo yok"): 30 gün sonra yeniden bakılır.
+  - Cevap gelmediyse (999, 429, 5xx, zaman aşımı, bağlantı hatası): 1, 2, 4, 8, 16 gün, en fazla 30 gün sonra.
+  - Logo bulunduğunda sayaç sıfırlanır.
+  - Migration, eski "bulunamadı" satırlarına `CheckedAt + 30 gün` yazıyor; böylece o şirketler bu gece topluca yeniden sorulmuyor.
+- **Zaman aşımı:** 5 sn → 10 sn (LinkedIn ve site).
+- **Log:** ertelemede istisnanın kendisi değil yalnızca sebebi yazılıyor (`… deferred (2): website timeout; LinkedIn HTTP 999`). Eskiden her şirket için bir stack trace basılıyor, gece logları bununla doluyordu.
+
+**Gerçek sitelerde yerel deneme (15 şirket):**
+- 6'sında temiz logo çıktı: Toyota, Trendyol, Insider, Peak, Migros, Aselsan (152–512 px).
+- Diğerleri: yalnızca `.ico` (GDZ Elektrik, Logo Yazılım), ana sayfada bot koruması (Getir 403, Hepsiburada, Arçelik), ikon etiketi olmayan istemci tarafı sayfa (Turkcell), küçük favicon (Computershare). Bunlar LinkedIn yedeğine düşüyor.
+
+**Gizlilik metni:** şirket logosu kişisel veri değil ve istek sunucudan çıkıyor; `/privacy` değişmedi. Yardım merkezindeki pano notu kaynağı ve "tarayıcın başka siteye gitmez" bilgisini söyleyecek şekilde güncellendi (tr + en).

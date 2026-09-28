@@ -2666,7 +2666,7 @@
       },
       "calloutLogos": {
         "title": "Şirket logoları",
-        "body": "Bir şirketin logosu varsa kartta baş harflerin yerine görünür. Logolar şirketin LinkedIn sayfasından bizim sunucumuzca alınır ve yalnızca o şirkete başvurmuş ya da ilanını kaydetmiş kullanıcılara gösterilir. Logosu bulunamayan şirketler baş harfleriyle görünür."
+        "body": "Bir şirketin logosu varsa kartta baş harflerin yerine görünür. Logoyu sunucumuz önce şirketin kendi web sitesinden, orada bulamazsa LinkedIn sayfasından alır ve kendi sunucumuzda saklar; tarayıcın logo için başka bir siteye gitmez. Logolar yalnızca o şirkete başvurmuş ya da ilanını kaydetmiş kullanıcılara gösterilir. Logosu bulunamayan şirketler baş harfleriyle görünür."
       },
       "calloutFilters": {
         "title": "Filtre panoyu değiştirmez",

@@ -2666,7 +2666,7 @@
       },
       "calloutLogos": {
         "title": "Company logos",
-        "body": "When a company has a logo, it shows on the card instead of its initials. Logos are fetched by our server from the company's LinkedIn page and shown only to users who applied to that company or saved one of its postings. Companies without a logo found show their initials."
+        "body": "If a company has a logo, it replaces the initials on its card. Our server takes it from the company's own website first and from its LinkedIn page if the site has none, and keeps a copy on our own server; your browser never goes to another site for it. Logos are shown only to users who applied to that company or saved one of its postings. Companies without a logo show their initials."
       },
       "calloutFilters": {
         "title": "Filters do not change the board",

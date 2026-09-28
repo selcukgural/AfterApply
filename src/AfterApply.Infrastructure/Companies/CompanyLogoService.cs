@@ -3,46 +3,72 @@ using System.Net;
 using AfterApply.Application.Common;
 using AfterApply.Application.Companies;
 using AfterApply.Domain.Companies;
-using AfterApply.Infrastructure.Board;
 using AfterApply.Infrastructure.Persistence;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace AfterApply.Infrastructure.Companies;
 
 /// <summary>
-/// Finds a company's logo on its LinkedIn page and keeps a copy, for the applications board.
+/// Finds a company's logo and keeps a copy, for the applications board. Two sources, in order
+/// (DECISIONS.md 2026-09-28, "Şirket logosu: önce şirketin sitesi"):
+/// <list type="number">
+/// <item>the company's own website — the icon its home page declares (<see cref="WebsiteIconParser"/>);</item>
+/// <item>its LinkedIn page's og:image, when the website gave nothing.</item>
+/// </list>
 ///
-/// Every URL involved is untrusted: the profile URL came from one user's extension capture, and the
-/// image URL from that page. So: the page is fetched only from linkedin.com and the image only from
-/// media.licdn.com, both over https, with every redirect hop re-checked against the same host; the
-/// page must name this company (<see cref="CompanyPageIdentity"/>) or nothing on it is used; the
-/// image is capped at <see cref="CompanyLogoImage.MaxBytes"/> while it is read, not after; and its
-/// type is read from its bytes — PNG, JPEG or WebP only, never SVG.
+/// Every URL involved is untrusted: the website and the LinkedIn URL came from one user's capture
+/// (the website read off the company's LinkedIn or kariyer.net page), and the image URLs from those
+/// pages. So: everything over https, every redirect hop re-checked; LinkedIn only from linkedin.com
+/// and media.licdn.com, and the page must name this company (<see cref="CompanyPageIdentity"/>);
+/// a website on any host, but only through <see cref="Http.PublicAddressGuard"/>, which refuses to
+/// connect anywhere but the public internet; images capped at <see cref="CompanyLogoImage.MaxBytes"/>
+/// while read, typed from their bytes (PNG, JPEG, WebP — never SVG), and a website's icon checked
+/// for a logo's size, not a favicon's. The logo is served back from our own origin, so the viewer's
+/// browser never asks a third party which companies they applied to.
 ///
-/// Best-effort like <see cref="CompanyEnrichmentService"/>: a page that is gone, blocked or changed
-/// records "not found" and is looked at again after <see cref="RetryAfter"/>.
+/// Best-effort like <see cref="CompanyEnrichmentService"/>: "no logo there" is looked at again after
+/// a month; "no answer" (LinkedIn's bot wall, a timeout, a 5xx) after 1, 2, 4… days
+/// (<see cref="CompanyLogo.Deferred"/>).
 /// </summary>
 internal sealed class CompanyLogoService(
     HttpClient httpClient,
+    IHttpClientFactory httpClientFactory,
     AppDbContext dbContext,
     IBackgroundJobClient jobClient,
     IFeatureFlags featureFlags,
     ILogger<CompanyLogoService> logger,
     TimeProvider? timeProvider = null) : ICompanyLogoService
 {
+    /// <summary>The client for company websites: any host, through the public-address guard.</summary>
+    public const string WebsiteClientName = "company-website-icons";
+
     private const int MaxRedirectHops = 5;
-    private const int MaxPageBytes = 200_000;
+    private const int MaxLinkedInPageBytes = 200_000;
+    private const int MaxWebsitePageBytes = 300_000;
     private const string LinkedInHost = "linkedin.com";
 
-    /// <summary>How long a "no logo found" stands before the company is looked at again.</summary>
-    internal static readonly TimeSpan RetryAfter = TimeSpan.FromDays(30);
+    /// <summary>A website icon smaller than this is a favicon, not a logo; larger than
+    /// <see cref="MaxWebsiteIconSide"/> is not an icon at all.</summary>
+    internal const int MinWebsiteIconSide = 64;
+
+    internal const int MaxWebsiteIconSide = 2048;
 
     /// <summary>Companies scheduled per nightly run, one every <see cref="BackfillSpacing"/>.</summary>
     internal const int BackfillBatchSize = 50;
 
     internal static readonly TimeSpan BackfillSpacing = TimeSpan.FromSeconds(20);
+
+    private static readonly DecoderOptions IdentifyOptions = new()
+    {
+        Configuration = new Configuration(new PngConfigurationModule(), new JpegConfigurationModule(), new WebpConfigurationModule())
+    };
 
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
@@ -55,34 +81,54 @@ internal sealed class CompanyLogoService(
 
         var company = await dbContext.Companies
             .Where(c => c.Id == companyId)
-            .Select(c => new { c.Name, c.LinkedInUrl })
+            .Select(c => new { c.Name, c.LinkedInUrl, c.Website })
             .FirstOrDefaultAsync(cancellationToken);
-        if (company is null || !TryAllowed(company.LinkedInUrl, LinkedInHost, out var pageUri))
+        if (company is null)
         {
-            // No LinkedIn page yet: nothing is recorded, so a later capture that brings one is
-            // picked up by the backfill.
+            return;
+        }
+
+        var websiteHome = WebsiteIconParser.HomePage(company.Website);
+        var hasLinkedIn = TryAllowed(company.LinkedInUrl, LinkedInHost, out var pageUri);
+        if (websiteHome is null && !hasLinkedIn)
+        {
+            // Nowhere to look yet: nothing is recorded, so a later capture that brings a website
+            // or a LinkedIn page is picked up by the backfill.
             return;
         }
 
         var now = _timeProvider.GetUtcNow();
         var logo = await dbContext.CompanyLogos.FirstOrDefaultAsync(l => l.CompanyId == companyId, cancellationToken);
-        if (logo is { Blocked: true } || logo?.Content is not null || (logo is not null && logo.CheckedAt > now - RetryAfter))
+        if (logo is not null && !logo.IsDue(now))
         {
             return;
         }
 
-        CompanyLogoFile? found;
-        try
+        CompanyLogoFile? found = null;
+        var noAnswer = new List<string>();
+
+        if (websiteHome is not null)
         {
-            found = await FindLogoAsync(company.Name, pageUri, companyId, cancellationToken);
+            try
+            {
+                found = await FindOnWebsiteAsync(websiteHome, cancellationToken);
+            }
+            catch (TransientFetchException ex)
+            {
+                noAnswer.Add($"website {ex.Message}");
+            }
         }
-        catch (TransientFetchException ex)
+
+        if (found is null && hasLinkedIn)
         {
-            // LinkedIn throttling (its 999, or a 429), a 5xx or a dropped connection says nothing
-            // about the company. Nothing is recorded, so the next nightly run asks again instead
-            // of a month from now.
-            logger.LogInformation(ex, "Logo fetch for {CompanyId} deferred: {Reason}", companyId, ex.Message);
-            return;
+            try
+            {
+                found = await FindOnLinkedInAsync(company.Name, pageUri, companyId, cancellationToken);
+            }
+            catch (TransientFetchException ex)
+            {
+                noAnswer.Add($"LinkedIn {ex.Message}");
+            }
         }
 
         if (logo is null)
@@ -94,6 +140,16 @@ internal sealed class CompanyLogoService(
         if (found is { } image)
         {
             logo.Found(image.Content, image.ContentType, now);
+        }
+        else if (noAnswer.Count > 0)
+        {
+            // A source that did not answer says nothing about the company; it is asked again soon,
+            // and sooner than a month, but not every night.
+            logo.Deferred(now);
+            // The reason alone: a throttled fetch is expected, and a stack trace per company buried
+            // the nightly logs.
+            logger.LogInformation("Logo fetch for {CompanyId} deferred ({DeferCount}): {Reason}",
+                companyId, logo.DeferCount, string.Join("; ", noAnswer));
         }
         else
         {
@@ -118,15 +174,15 @@ internal sealed class CompanyLogoService(
             return 0;
         }
 
-        var retryBefore = _timeProvider.GetUtcNow() - RetryAfter;
+        var now = _timeProvider.GetUtcNow();
 
         // Only companies someone applied to or saved a posting at — the board is the only place a
-        // logo is shown, so a company nobody tracks is not worth a request to LinkedIn.
+        // logo is shown, so a company nobody tracks is not worth a request.
         var companyIds = await dbContext.Companies
-            .Where(c => c.LinkedInUrl != null
+            .Where(c => (c.Website != null || c.LinkedInUrl != null)
                 && (dbContext.Applications.Any(a => a.CompanyId == c.Id) || dbContext.TrackedJobs.Any(t => t.CompanyId == c.Id))
                 && !dbContext.CompanyLogos.Any(l => l.CompanyId == c.Id
-                    && (l.Blocked || l.Content != null || l.CheckedAt > retryBefore)))
+                    && (l.Blocked || l.Content != null || (l.NextCheckAt != null && l.NextCheckAt > now))))
             .OrderBy(c => c.Id)
             .Select(c => c.Id)
             .Take(BackfillBatchSize)
@@ -182,18 +238,77 @@ internal sealed class CompanyLogoService(
         return true;
     }
 
-    private async Task<CompanyLogoFile?> FindLogoAsync(string companyName, Uri pageUri, Guid companyId,
-        CancellationToken cancellationToken)
+    // ---- the company's own website -------------------------------------------------------------
+
+    private async Task<CompanyLogoFile?> FindOnWebsiteAsync(Uri home, CancellationToken cancellationToken)
     {
-        // The page is cut at the cap rather than refused: a company page runs to ~350 KB, and the
-        // og:image and og:title it is read for sit in the first few kilobytes.
-        var page = await FetchAsync(pageUri, LinkedInHost, MaxPageBytes, truncate: true, companyId, cancellationToken);
+        var client = httpClientFactory.CreateClient(WebsiteClientName);
+        var page = await GetAsync(client, home, IsPublicHttpsName, MaxWebsitePageBytes, truncate: true, cancellationToken);
         if (page is null)
         {
             return null;
         }
 
-        var html = System.Text.Encoding.UTF8.GetString(page);
+        var html = System.Text.Encoding.UTF8.GetString(page.Value.Body);
+        foreach (var candidate in WebsiteIconParser.Candidates(html, page.Value.Url))
+        {
+            var iconUri = candidate.Scheme == Uri.UriSchemeHttps ? candidate : new UriBuilder(candidate) { Scheme = Uri.UriSchemeHttps, Port = -1 }.Uri;
+            byte[]? bytes;
+            try
+            {
+                bytes = (await GetAsync(client, iconUri, IsPublicHttpsName, CompanyLogoImage.MaxBytes, truncate: false, cancellationToken))?.Body;
+            }
+            catch (TransientFetchException)
+            {
+                // The page answered; one of its icons not answering is not worth waiting a day for.
+                continue;
+            }
+
+            if (bytes is null || CompanyLogoImage.DetectContentType(bytes) is not { } contentType
+                || !await IsLogoSizedAsync(bytes, cancellationToken))
+            {
+                continue;
+            }
+
+            return new CompanyLogoFile(bytes, contentType);
+        }
+
+        return null;
+    }
+
+    private static async Task<bool> IsLogoSizedAsync(byte[] bytes, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var stream = new MemoryStream(bytes, writable: false);
+            var info = await Image.IdentifyAsync(IdentifyOptions, stream, cancellationToken);
+            return info.Width >= MinWebsiteIconSide && info.Height >= MinWebsiteIconSide
+                && info.Width <= MaxWebsiteIconSide && info.Height <= MaxWebsiteIconSide;
+        }
+        catch (Exception ex) when (ex is UnknownImageFormatException or ImageFormatException or InvalidImageContentException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsPublicHttpsName(Uri uri) =>
+        uri.Scheme == Uri.UriSchemeHttps && uri.HostNameType == UriHostNameType.Dns;
+
+    // ---- LinkedIn ------------------------------------------------------------------------------
+
+    private async Task<CompanyLogoFile?> FindOnLinkedInAsync(string companyName, Uri pageUri, Guid companyId,
+        CancellationToken cancellationToken)
+    {
+        // The page is cut at the cap rather than refused: a company page runs to ~350 KB, and the
+        // og:image and og:title it is read for sit in the first few kilobytes.
+        var page = await GetAsync(httpClient, pageUri, uri => HostRules.IsHttpsHost(uri, LinkedInHost), MaxLinkedInPageBytes,
+            truncate: true, cancellationToken);
+        if (page is null)
+        {
+            return null;
+        }
+
+        var html = System.Text.Encoding.UTF8.GetString(page.Value.Body);
         if (!CompanyPageIdentity.Matches(companyName, LinkedInCompanyProfileParser.ExtractCompanyName(html)))
         {
             logger.LogInformation("LinkedIn page of company {CompanyId} names another company; no logo taken", companyId);
@@ -205,8 +320,8 @@ internal sealed class CompanyLogoService(
             return null;
         }
 
-        var bytes = await FetchAsync(imageUri, LinkedInCompanyProfileParser.LogoHost, CompanyLogoImage.MaxBytes, truncate: false,
-            companyId, cancellationToken);
+        var bytes = (await GetAsync(httpClient, imageUri, uri => HostRules.IsHttpsHost(uri, LinkedInCompanyProfileParser.LogoHost),
+            CompanyLogoImage.MaxBytes, truncate: false, cancellationToken))?.Body;
         if (bytes is null)
         {
             return null;
@@ -216,15 +331,23 @@ internal sealed class CompanyLogoService(
         return contentType is null ? null : new CompanyLogoFile(bytes, contentType);
     }
 
+    // ---- fetching ------------------------------------------------------------------------------
+
     /// <summary>
-    /// GET with manual redirects (each hop re-checked against <paramref name="host"/>) and a hard
-    /// ceiling on the body: reading stops at <paramref name="maxBytes"/> + 1. A body past it is
-    /// cut there when <paramref name="truncate"/> (a page), refused otherwise (an image, where a
-    /// partial file is no file). Null for anything but a clean 200.
+    /// GET with manual redirects (each hop re-checked with <paramref name="allowed"/>) and a hard
+    /// ceiling on the body: reading stops at <paramref name="maxBytes"/> + 1. A body past it is cut
+    /// there when <paramref name="truncate"/> (a page), refused otherwise (an image, where a partial
+    /// file is no file). Null for anything but a clean 200; the URL that answered comes back with
+    /// the body, for resolving the page's relative links.
     /// </summary>
-    private async Task<byte[]?> FetchAsync(Uri uri, string host, int maxBytes, bool truncate, Guid companyId,
-        CancellationToken cancellationToken)
+    private static async Task<(byte[] Body, Uri Url)?> GetAsync(HttpClient client, Uri uri, Func<Uri, bool> allowed, int maxBytes,
+        bool truncate, CancellationToken cancellationToken)
     {
+        if (!allowed(uri))
+        {
+            return null;
+        }
+
         try
         {
             var current = uri;
@@ -233,11 +356,11 @@ internal sealed class CompanyLogoService(
                 using var request = new HttpRequestMessage(HttpMethod.Get, current);
                 request.Headers.UserAgent.ParseAdd("EKariyerimLinkPreview/1.0 (+https://ekariyerim.com)");
 
-                using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 if (IsRedirect(response.StatusCode) && response.Headers.Location is { } location)
                 {
                     var next = location.IsAbsoluteUri ? location : new Uri(current, location);
-                    if (!HostRules.IsHttpsHost(next, host))
+                    if (!allowed(next))
                     {
                         return null;
                     }
@@ -267,17 +390,22 @@ internal sealed class CompanyLogoService(
 
                 if (total > maxBytes)
                 {
-                    return truncate ? buffer[..maxBytes] : null;
+                    return truncate ? (buffer[..maxBytes], current) : null;
                 }
 
-                return buffer[..total];
+                return (buffer[..total], current);
             }
 
             return null;
         }
+        catch (HttpRequestException ex) when (Http.PublicAddressGuard.IsRefusal(ex))
+        {
+            // A website that points at a private or internal address has no logo for us, now or later.
+            return null;
+        }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
         {
-            throw new TransientFetchException(ex.GetType().Name, ex);
+            throw new TransientFetchException(ex is TaskCanceledException ? "timeout" : ex.GetType().Name, ex);
         }
     }
 

@@ -29,6 +29,7 @@ public class NoOutboundHttpTests(ApiHost<DefaultProfile> host) : IClassFixture<A
     // LinkedIn/kariyer.net page and a job link's preview are both fetched from a URL a test created.
     [InlineData("ICompanyEnrichmentService")]
     [InlineData("ICompanyLogoService")]
+    [InlineData("company-website-icons")]
     [InlineData("IJobLinkPreviewService")]
     [InlineData("LinkedInJwks")]
     [InlineData("ILinkedInJobSourceClient")]
