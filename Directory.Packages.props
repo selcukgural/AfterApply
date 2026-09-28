@@ -70,6 +70,12 @@
          its allowlists name — tags, attributes, CSS properties, URL schemes — which is the one
          control between the editor's markup and the public page's dangerouslySetInnerHTML. -->
     <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
+    <!-- Profile photos (2026-09-28). Pure managed code, so an uploaded image is decoded in-process
+         with no native codec underneath; configured with the JPEG/PNG/WebP decoders only. Six Labors
+         Split License: Apache 2.0 for open-source software and for companies under 1M USD revenue,
+         both of which hold today (DECISIONS.md, "Profil fotoğrafı"). Held on 3.1.x: 4.x validates a
+         Six Labors license key at build time and fails a Release build without one. -->
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" />
     <!-- Vertex AI is called over its REST endpoint (see VertexCvReviewProvider), so the only
          Google package needed is the one that turns Application Default Credentials into a
          bearer token. Referenced directly rather than leant on transitively through

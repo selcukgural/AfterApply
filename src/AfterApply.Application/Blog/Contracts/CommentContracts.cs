@@ -27,6 +27,8 @@ public sealed record AdminBlogCommentListQuery(BlogCommentStatus? Status = null,
 /// One comment as the page shows it. <paramref name="AuthorName"/> is the first name plus the
 /// last initial ("Selin Y."), or null when the account has no name — the page then says "a
 /// reader"; the address, the id and anything else about the account never travel.
+/// <paramref name="AuthorAvatarUrl"/> is the author's photo only when they chose to show it on
+/// their comments (DECISIONS.md 2026-09-28), else null — the page then draws the initials.
 /// <paramref name="Status"/> is Approved for everyone else's comment and whatever it is for the
 /// viewer's own (a pending one is on the list for its author alone). <paramref name="HelpfulByMe"/>
 /// is null for an anonymous reader.
@@ -38,6 +40,7 @@ public sealed record BlogCommentResponse(
     string Content,
     BlogCommentStatus Status,
     string? AuthorName,
+    string? AuthorAvatarUrl,
     bool IsMine,
     DateTimeOffset CreatedAt,
     DateTimeOffset? EditedAt,
@@ -78,6 +81,9 @@ public sealed record MyBlogCommentResponse(
 
 // ---- the admin's side --------------------------------------------------------------------------
 
+/// <summary>A comment in the moderation table. <paramref name="AuthorAvatarUrl"/> is the author's
+/// current photo whether or not they show it on comments: a profile-photo report is judged on the
+/// photo itself, and the admin's removal acts on it either way.</summary>
 public sealed record AdminBlogCommentListItemResponse(
     Guid Id,
     Guid PostId,
@@ -88,6 +94,7 @@ public sealed record AdminBlogCommentListItemResponse(
     string? ParentAuthorName,
     string? AuthorName,
     string? AuthorEmail,
+    string? AuthorAvatarUrl,
     string Content,
     BlogCommentStatus Status,
     int OpenReportCount,

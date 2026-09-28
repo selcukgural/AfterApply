@@ -27,6 +27,9 @@ public sealed class FakeGcsProfile : IHostProfile
     /// storage bindings are proven to point at different places.</summary>
     public const string BlogMediaBucketName = "afterapply-blog-media-test";
 
+    /// <summary>The profile photos' bucket (2026-09-28) — a third one, as in production.</summary>
+    public const string AvatarBucketName = "afterapply-avatars-test";
+
     // Pinned, like the Postgres image: the parameterless builder is obsolete, and an
     // unpinned emulator is a test that can start failing without anything here changing.
     private readonly FakeGcsServerContainer _container =
@@ -56,7 +59,7 @@ public sealed class FakeGcsProfile : IHostProfile
         // fake-gcs-server starts empty and object writes to an unknown bucket fail, so the bucket
         // is created the same way the real one is: once, out of band, before anything uploads.
         using var client = new HttpClient();
-        foreach (var bucket in new[] { BucketName, BlogMediaBucketName })
+        foreach (var bucket in new[] { BucketName, BlogMediaBucketName, AvatarBucketName })
         {
             var response = await client.PostAsJsonAsync($"{BaseUri}b?project=afterapply-test", new { name = bucket });
             response.EnsureSuccessStatusCode();
@@ -68,6 +71,7 @@ public sealed class FakeGcsProfile : IHostProfile
         builder.UseSetting("Storage:Provider", "GoogleCloudStorage");
         builder.UseSetting("Storage:BucketName", BucketName);
         builder.UseSetting("Storage:BlogMediaBucketName", BlogMediaBucketName);
+        builder.UseSetting("Storage:AvatarBucketName", AvatarBucketName);
         builder.UseSetting("Storage:EmulatorBaseUri", BaseUri);
     }
 
@@ -165,6 +169,36 @@ public class CvGoogleCloudStorageTests(ApiHost<FakeGcsProfile> host)
         (await client.DeleteAsync($"/api/admin/blog/posts/{post.Id}")).EnsureSuccessStatusCode();
         (await gcs.GetAsync($"{host.Profile.BaseUri}b/{FakeGcsProfile.BlogMediaBucketName}/o/{Uri.EscapeDataString(objectName)}"))
             .StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task A_Profile_Photo_Lands_In_Its_Own_Bucket_And_Leaves_It_When_Removed()
+    {
+        var client = await AuthenticatedClientAsync("gcs.avatar@example.com");
+        using var image = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>(320, 320);
+        using var png = new MemoryStream();
+        await SixLabors.ImageSharp.ImageExtensions.SaveAsPngAsync(image, png);
+
+        using var content = new MultipartFormDataContent { { new ByteArrayContent(png.ToArray()), "file", "me.png" } };
+        var upload = await client.PutAsync("/api/users/me/avatar", content);
+        upload.StatusCode.ShouldBe(HttpStatusCode.OK, await upload.Content.ReadAsStringAsync());
+        var profile = (await upload.Content.ReadFromJsonAsync<UserProfileResponse>(JsonOptions))!;
+        (await _factory.CreateClient().GetAsync(profile.AvatarUrl)).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        // In the avatar bucket and nowhere else.
+        using var gcs = new HttpClient();
+        async Task<int> CountAsync(string bucket)
+        {
+            var listing = await gcs.GetFromJsonAsync<JsonElement>($"{host.Profile.BaseUri}b/{bucket}/o?prefix=avatars/");
+            return listing.TryGetProperty("items", out var items) ? items.GetArrayLength() : 0;
+        }
+
+        (await CountAsync(FakeGcsProfile.AvatarBucketName)).ShouldBe(1);
+        (await CountAsync(FakeGcsProfile.BucketName)).ShouldBe(0);
+        (await CountAsync(FakeGcsProfile.BlogMediaBucketName)).ShouldBe(0);
+
+        (await client.DeleteAsync("/api/users/me/avatar")).EnsureSuccessStatusCode();
+        (await CountAsync(FakeGcsProfile.AvatarBucketName)).ShouldBe(0);
     }
 
     private static readonly byte[] PngBytes =

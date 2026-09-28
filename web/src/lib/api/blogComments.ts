@@ -71,4 +71,8 @@ export const adminBlogCommentsApi = {
 
   dismissReports: (commentId: string) =>
     apiFetch<AdminBlogComment>(`/api/admin/blog/comments/${commentId}/reports/dismiss`, { method: "POST" }),
+
+  /** Takes the author's profile photo away (DECISIONS.md 2026-09-28); the comment stays. */
+  removeAuthorAvatar: (commentId: string) =>
+    apiFetch<AdminBlogComment>(`/api/admin/blog/comments/${commentId}/author-avatar/remove`, { method: "POST" }),
 };

@@ -762,4 +762,16 @@
   <data name="FEATURE_FLAG_JOB_LIVENESS_NOTES" xml:space="preserve">
     <value>The privacy policy describes this check; the flag and the text change together. A site that answers 429/403 is left alone for the rest of that day.</value>
   </data>
+  <data name="AVATAR_EMPTY" xml:space="preserve">
+    <value>The photo is empty.</value>
+  </data>
+  <data name="AVATAR_TOO_LARGE" xml:space="preserve">
+    <value>The photo exceeds the {0} MB size limit.</value>
+  </data>
+  <data name="AVATAR_UNSUPPORTED" xml:space="preserve">
+    <value>Only JPEG, PNG and WebP photos can be uploaded.</value>
+  </data>
+  <data name="AVATAR_TOO_MANY_PIXELS" xml:space="preserve">
+    <value>The photo is too large in pixels. Please choose a smaller one.</value>
+  </data>
 </root>

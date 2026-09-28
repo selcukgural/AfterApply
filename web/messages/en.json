@@ -1466,7 +1466,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 27 September 2026",
+    "lastUpdated": "Last updated: 28 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -1670,6 +1670,19 @@
       "storage": "Comments, reports and helpful marks are kept in our own database and sent to no third party.",
       "deletion": "Deleting your account deletes all your comments — and the replies they received; your data export includes your comments.",
       "legalBasis": "Legal basis: your own explicit action — you choose to comment."
+    },
+    "profilePhoto": {
+      "title": "Your profile photo",
+      "intro": "Adding a profile photo is optional. When you add one:",
+      "what": "You crop the photo in your browser; our server saves it again as a 256×256 pixel image and keeps only that. The file you uploaded is not kept, and file details such as location (GPS), device and capture data are removed.",
+      "where": "Your photo appears in the menu in the top bar and on your profile page. On blog comments it appears next to your name, to everyone, only if you turn on \"Show my photo on my blog comments\"; that setting is off by default.",
+      "never": "Salaries, company reviews, candidate experiences, silence reports and response rates are anonymous: your photo is never shown there, under any setting.",
+      "address": "Your photo is served from a random address unrelated to your account. When you change or remove it, or stop showing it on comments, the address changes and the old one stops working; a browser that already saw it may keep it in its cache for up to a day.",
+      "moderation": "A photo on a blog comment can be reported as \"Inappropriate profile photo\". An admin can remove the photo; your comment stays.",
+      "audit": "Every request that uploads or removes your photo or changes where it is shown records the connection's IP address in the request log (the \"Request log\" item above). It is never shown anywhere.",
+      "storage": "The photo is kept in our own cloud storage, in a space closed to the public, and sent to no third party.",
+      "deletion": "You can remove the photo at any time; deleting your account deletes it too. Your data export includes the photo's address and where you chose to show it.",
+      "legalBasis": "Legal basis: your own explicit action — you choose to add a photo and to show it on comments."
     },
     "aggregates": {
       "title": "Aggregate response data (the sector table and a company page's \"Response\" tab)",
@@ -3474,6 +3487,7 @@
       "Spam": "Spam",
       "Insult": "Insult or abusive content",
       "Inappropriate": "Inappropriate content",
+      "ProfilePhoto": "Inappropriate profile photo",
       "Advertising": "Advertising or promotion",
       "Other": "Other"
     },
@@ -6074,7 +6088,14 @@
       "dismissHint": "Reject closes every open report as \"action taken\"; \"Dismiss reports\" closes them and keeps the comment.",
       "inReplyTo": "In reply to",
       "rootComment": "— (root comment)",
-      "actionError": "The action could not be completed. Try again."
+      "actionError": "The action could not be completed. Try again.",
+      "photo": {
+        "title": "The author's profile photo",
+        "hint": "The photo is deleted, every comment of the author falls back to initials and \"show on my comments\" is turned off. The comment stays; open photo reports are closed as acted on.",
+        "remove": "Remove photo",
+        "confirm": "Yes, remove the photo",
+        "cancel": "Cancel"
+      }
     }
   },
   "adminExperiences": {
@@ -6664,6 +6685,25 @@
       "returned": "Your break is over. A short question is waiting on the dashboard.",
       "goToDashboard": "Go to the dashboard",
       "error": "That didn't go through. Try again."
+    },
+    "avatar": {
+      "uploadLabel": "Upload a profile photo",
+      "changeLabel": "Change your profile photo",
+      "change": "Change photo",
+      "remove": "Remove photo",
+      "removeError": "The photo could not be removed. Please try again.",
+      "cropTitle": "Position your photo",
+      "positionLabel": "Photo position. Drag it or use the arrow keys to move it.",
+      "zoom": "Zoom",
+      "cropHint": "The photo is saved again at 256×256; file details such as location are removed.",
+      "unreadable": "This file could not be read. Choose a JPEG, PNG or WebP photo.",
+      "cancel": "Cancel",
+      "savePhoto": "Save photo",
+      "saving": "Saving…",
+      "saveError": "The photo could not be saved. Please try again.",
+      "showInComments": "Show my photo on my blog comments",
+      "showInCommentsHint": "If you turn this on, everyone sees your photo next to your name on your comments. Salaries, company reviews and candidate experiences are always anonymous; your photo never appears there.",
+      "visibilityError": "The setting could not be saved. Please try again."
     }
   },
   "candidateExperiences": {

@@ -228,6 +228,9 @@ public static class RateLimiting
             options.AddPolicy(DependencyInjection.BlogCommentHelpfulRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.BlogCommentHelpfulRateLimitPolicy, PartitionKey(httpContext), sizes.BlogCommentHelpful));
 
+            options.AddPolicy(DependencyInjection.AvatarWriteRateLimitPolicy, httpContext =>
+                Partition(DependencyInjection.AvatarWriteRateLimitPolicy, PartitionKey(httpContext), sizes.AvatarWrite));
+
             options.AddPolicy(DependencyInjection.BlogSeoSuggestRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.BlogSeoSuggestRateLimitPolicy, PartitionKey(httpContext), sizes.BlogSeoSuggest));
 

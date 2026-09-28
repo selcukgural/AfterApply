@@ -1,6 +1,7 @@
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Blog;
 using AfterApply.Application.Blog.Contracts;
+using AfterApply.Application.Identity;
 using AfterApply.Domain.Blog;
 using AfterApply.Domain.Notifications;
 using AfterApply.Infrastructure.Notifications;
@@ -54,7 +55,7 @@ internal sealed class BlogCommentService(
 
         var all = pageRoots.Concat(replies).ToList();
         var allIds = all.Select(c => c.Id).ToList();
-        var authors = await AuthorNamesAsync(all.Select(c => c.UserId), cancellationToken);
+        var authors = await AuthorsAsync(all.Select(c => c.UserId), cancellationToken);
         var helpful = await HelpfulCountsAsync(allIds, cancellationToken);
         var mine = viewerUserId is { } viewer
             ? (await dbContext.BlogCommentHelpfulVotes
@@ -65,7 +66,8 @@ internal sealed class BlogCommentService(
 
         BlogCommentResponse Map(BlogComment c, IReadOnlyList<BlogCommentResponse> children) => new(
             c.Id, c.PostId, c.ParentCommentId, c.Content, c.Status,
-            authors.GetValueOrDefault(c.UserId), viewerUserId == c.UserId, c.CreatedAt, c.EditedAt,
+            authors.GetValueOrDefault(c.UserId)?.Name, authors.GetValueOrDefault(c.UserId)?.AvatarUrl, viewerUserId == c.UserId,
+            c.CreatedAt, c.EditedAt,
             helpful.GetValueOrDefault(c.Id), mine?.Contains(c.Id), children);
 
         var items = pageRoots
@@ -121,13 +123,14 @@ internal sealed class BlogCommentService(
 
         // An admin's own comment skips the queue they would be approving it from.
         var author = await dbContext.Users.Where(u => u.Id == userId)
-            .Select(u => new { u.IsAdmin, u.FirstName, u.LastName })
+            .Select(u => new { u.IsAdmin, u.FirstName, u.LastName, u.ShowAvatarInComments, u.AvatarPublicId })
             .FirstAsync(cancellationToken);
         var comment = BlogComment.Create(postId, userId, parentCommentId, normalized, approved: author.IsAdmin, DateTimeOffset.UtcNow);
         dbContext.BlogComments.Add(comment);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return ToResponse(comment, BlogCommentAuthorName.Format(author.FirstName, author.LastName), isMine: true, helpfulCount: 0, helpfulByMe: false);
+        return ToResponse(comment, new CommentAuthor(BlogCommentAuthorName.Format(author.FirstName, author.LastName),
+            CommentAvatarUrl(author.ShowAvatarInComments, author.AvatarPublicId)), isMine: true, helpfulCount: 0, helpfulByMe: false);
     }
 
     public async Task<BlogCommentResponse?> EditAsync(Guid userId, Guid commentId, EditBlogCommentRequest request,
@@ -143,8 +146,8 @@ internal sealed class BlogCommentService(
         comment.Edit(request.Content, DateTimeOffset.UtcNow);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var name = await AuthorNamesAsync([userId], cancellationToken);
-        return ToResponse(comment, name.GetValueOrDefault(userId), isMine: true,
+        var author = await AuthorsAsync([userId], cancellationToken);
+        return ToResponse(comment, author.GetValueOrDefault(userId), isMine: true,
             await HelpfulCountAsync(commentId, cancellationToken), helpfulByMe: false);
     }
 
@@ -266,10 +269,10 @@ internal sealed class BlogCommentService(
             })
             .ToListAsync(cancellationToken);
 
-        var authors = await AuthorNamesAsync(rows.Where(r => r.ParentUserId != null).Select(r => r.ParentUserId!.Value), cancellationToken);
+        var authors = await AuthorsAsync(rows.Where(r => r.ParentUserId != null).Select(r => r.ParentUserId!.Value), cancellationToken);
         return rows.Select(r => new MyBlogCommentResponse(
             r.Comment.Id, r.Comment.PostId, r.Post.Title, r.Post.Slug ?? string.Empty, r.Post.Language,
-            r.Comment.ParentCommentId, r.ParentUserId is { } parentUser ? authors.GetValueOrDefault(parentUser) : null,
+            r.Comment.ParentCommentId, r.ParentUserId is { } parentUser ? authors.GetValueOrDefault(parentUser)?.Name : null,
             r.Comment.Content, r.Comment.Status, r.Comment.CreatedAt, r.Comment.EditedAt, r.HelpfulCount, r.ReplyCount)).ToList();
     }
 
@@ -408,9 +411,10 @@ internal sealed class BlogCommentService(
             .ToDictionaryAsync(g => g.Key, g => g.Count, cancellationToken);
     }
 
-    /// <summary>The page name of each author — first name and last initial, or null. Only the
-    /// name columns are read; the address never leaves the query.</summary>
-    private async Task<Dictionary<Guid, string?>> AuthorNamesAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
+    /// <summary>How each author appears on the page: first name and last initial (or null), and
+    /// their photo when they chose to show it on comments. Only those columns are read; the
+    /// address never leaves the query.</summary>
+    private async Task<Dictionary<Guid, CommentAuthor>> AuthorsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
     {
         var ids = userIds.Distinct().ToList();
         if (ids.Count == 0)
@@ -420,13 +424,20 @@ internal sealed class BlogCommentService(
 
         var rows = await dbContext.Users
             .Where(u => ids.Contains(u.Id))
-            .Select(u => new { u.Id, u.FirstName, u.LastName })
+            .Select(u => new { u.Id, u.FirstName, u.LastName, u.ShowAvatarInComments, u.AvatarPublicId })
             .ToListAsync(cancellationToken);
-        return rows.ToDictionary(u => u.Id, u => BlogCommentAuthorName.Format(u.FirstName, u.LastName));
+        return rows.ToDictionary(u => u.Id, u => new CommentAuthor(BlogCommentAuthorName.Format(u.FirstName, u.LastName),
+            CommentAvatarUrl(u.ShowAvatarInComments, u.AvatarPublicId)));
     }
 
-    private static BlogCommentResponse ToResponse(BlogComment c, string? authorName, bool isMine, int helpfulCount, bool? helpfulByMe) =>
-        new(c.Id, c.PostId, c.ParentCommentId, c.Content, c.Status, authorName, isMine, c.CreatedAt, c.EditedAt,
+    /// <summary>The photo a comment may carry: only one its author chose to show there.</summary>
+    private static string? CommentAvatarUrl(bool showInComments, Guid? publicId) =>
+        showInComments ? AvatarPath.For(publicId) : null;
+
+    private sealed record CommentAuthor(string? Name, string? AvatarUrl);
+
+    private static BlogCommentResponse ToResponse(BlogComment c, CommentAuthor? author, bool isMine, int helpfulCount, bool? helpfulByMe) =>
+        new(c.Id, c.PostId, c.ParentCommentId, c.Content, c.Status, author?.Name, author?.AvatarUrl, isMine, c.CreatedAt, c.EditedAt,
             helpfulCount, helpfulByMe, []);
 
     private sealed record AdminRowData(
@@ -437,6 +448,7 @@ internal sealed class BlogCommentService(
         string? AuthorFirstName,
         string? AuthorLastName,
         string? AuthorEmail,
+        Guid? AuthorAvatarPublicId,
         string? ParentFirstName,
         string? ParentLastName,
         int OpenReportCount,
@@ -451,6 +463,7 @@ internal sealed class BlogCommentService(
         dbContext.Users.Where(u => u.Id == c.UserId).Select(u => u.FirstName).FirstOrDefault(),
         dbContext.Users.Where(u => u.Id == c.UserId).Select(u => u.LastName).FirstOrDefault(),
         dbContext.Users.Where(u => u.Id == c.UserId).Select(u => u.Email).FirstOrDefault(),
+        dbContext.Users.Where(u => u.Id == c.UserId).Select(u => u.AvatarPublicId).FirstOrDefault(),
         dbContext.BlogComments.Where(p => p.Id == c.ParentCommentId).Join(dbContext.Users, p => p.UserId, u => u.Id, (p, u) => u.FirstName).FirstOrDefault(),
         dbContext.BlogComments.Where(p => p.Id == c.ParentCommentId).Join(dbContext.Users, p => p.UserId, u => u.Id, (p, u) => u.LastName).FirstOrDefault(),
         dbContext.BlogCommentReports.Count(r => r.CommentId == c.Id && r.Status == BlogCommentReportStatus.Open),
@@ -460,7 +473,7 @@ internal sealed class BlogCommentService(
     private static AdminBlogCommentListItemResponse ToAdminItem(AdminRowData r) => new(
         r.Comment.Id, r.Comment.PostId, r.PostTitle, r.PostSlug, r.PostLanguage, r.Comment.ParentCommentId,
         r.Comment.ParentCommentId is null ? null : BlogCommentAuthorName.Format(r.ParentFirstName, r.ParentLastName),
-        BlogCommentAuthorName.Format(r.AuthorFirstName, r.AuthorLastName), r.AuthorEmail,
+        BlogCommentAuthorName.Format(r.AuthorFirstName, r.AuthorLastName), r.AuthorEmail, AvatarPath.For(r.AuthorAvatarPublicId),
         r.Comment.Content, r.Comment.Status, r.OpenReportCount, r.HelpfulCount, r.ReplyCount,
         r.Comment.CreatedAt, r.Comment.EditedAt);
 }

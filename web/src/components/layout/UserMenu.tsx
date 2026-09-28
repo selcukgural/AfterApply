@@ -7,10 +7,13 @@ import { ADMIN_NAV_HREF } from "@/lib/auth/adminNav";
 import { PRO_NAV_HREF } from "@/lib/payments/proNav";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface UserMenuProps {
   name: string;
   initials: string;
+  /** The profile photo, drawn instead of the initials when there is one. */
+  avatarUrl: string | null;
   onLogout: () => void;
   /** Renders the admin entry. Decided by the caller from the profile — see canSeeAdminNav. */
   showAdmin: boolean;
@@ -22,7 +25,7 @@ interface UserMenuProps {
 // theme, logout) behind one fixed-width trigger instead of listing them inline, so it can never
 // push the primary nav onto a second line no matter how long a locale's labels get. Content does
 // not belong here: what a person wrote lives next to what it is about, in the row's groups.
-export function UserMenu({ name, initials, onLogout, showAdmin, showPro }: UserMenuProps) {
+export function UserMenu({ name, initials, avatarUrl, onLogout, showAdmin, showPro }: UserMenuProps) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -56,9 +59,11 @@ export function UserMenu({ name, initials, onLogout, showAdmin, showPro }: UserM
         aria-haspopup="menu"
         className="flex items-center gap-2 rounded-md py-1.5 pl-1.5 pr-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-          {initials}
-        </span>
+        <Avatar
+          src={avatarUrl}
+          initials={initials}
+          className="h-7 w-7 bg-gray-200 text-xs font-semibold text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+        />
         <span className="max-w-[9rem] truncate">{name}</span>
         <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
