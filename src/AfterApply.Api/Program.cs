@@ -178,6 +178,7 @@ app.MapSiteRootEndpoints();
 app.MapClientConfigEndpoints();
 app.MapAuthEndpoints();
 app.MapUserEndpoints();
+app.MapAvatarEndpoints();
 app.MapApplicationEndpoints();
 app.MapTrackedJobEndpoints();
 app.MapBoardEndpoints();

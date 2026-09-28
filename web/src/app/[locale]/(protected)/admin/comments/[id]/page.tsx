@@ -11,6 +11,7 @@ import { ApiError } from "@/lib/api/httpClient";
 import { blogPostPath } from "@/lib/blog/blogPaths";
 import { Card } from "@/components/dashboard/Card";
 import { Button } from "@/components/ui/Button";
+import { Avatar } from "@/components/ui/Avatar";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 
 /**
@@ -49,7 +50,9 @@ export default function AdminCommentPage() {
   const approve = useAction(() => adminBlogCommentsApi.approve(id));
   const reject = useAction(() => adminBlogCommentsApi.reject(id));
   const dismiss = useAction(() => adminBlogCommentsApi.dismissReports(id));
-  const busy = approve.isPending || reject.isPending || dismiss.isPending;
+  const removePhoto = useAction(() => adminBlogCommentsApi.removeAuthorAvatar(id));
+  const [confirmingPhoto, setConfirmingPhoto] = useState(false);
+  const busy = approve.isPending || reject.isPending || dismiss.isPending || removePhoto.isPending;
 
   const formatDate = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
   const statusClass = (status: BlogCommentStatus) =>
@@ -179,6 +182,39 @@ export default function AdminCommentPage() {
             )}
             {reports.length > 0 && <p className="text-xs text-gray-500 dark:text-gray-400">{t("dismissHint")}</p>}
           </Card>
+
+          {/* The author's photo, whether or not it is shown on comments: a photo report is judged
+              on the photo, and removing it acts on it either way (DECISIONS.md 2026-09-28). Two
+              steps, because the author gets no notice and cannot be asked first. */}
+          {comment.authorAvatarUrl && (
+            <Card className="flex flex-col gap-3">
+              <h2 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">{t("photo.title")}</h2>
+              <div className="flex items-center gap-4">
+                <Avatar src={comment.authorAvatarUrl} initials="?" className="h-16 w-16 bg-gray-200 text-lg text-gray-600" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t("photo.hint")}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {confirmingPhoto ? (
+                  <>
+                    <Button
+                      variant="danger"
+                      onClick={() => removePhoto.mutate(undefined, { onSettled: () => setConfirmingPhoto(false) })}
+                      disabled={busy}
+                    >
+                      {removePhoto.isPending ? t("working") : t("photo.confirm")}
+                    </Button>
+                    <Button variant="secondary" onClick={() => setConfirmingPhoto(false)} disabled={busy}>
+                      {t("photo.cancel")}
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="danger" onClick={() => setConfirmingPhoto(true)} disabled={busy}>
+                    {t("photo.remove")}
+                  </Button>
+                )}
+              </div>
+            </Card>
+          )}
 
           <Card className="flex flex-col gap-2">
             <h2 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">{t("inReplyTo")}</h2>

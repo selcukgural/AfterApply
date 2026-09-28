@@ -67,6 +67,9 @@ const nextConfig: NextConfig = {
         // img-src stays 'self', and a share card's image URL is on our own origin. The API sets
         // the cache headers (a year, immutable, for a published post's image); Next passes them on.
         { source: "/api/blog/media/:id", destination: `${apiOrigin}/api/blog/media/:id` },
+        // Profile photos (2026-09-28), the same way and for the same reasons: the profile and the
+        // blog comments carry a relative /api/avatars/{id}, and img-src stays 'self'.
+        { source: "/api/avatars/:id", destination: `${apiOrigin}/api/avatars/:id` },
       ],
       // A root-level file nothing serves (/llms.txt) gets the 404, not a 500 — see canonicalHost.ts.
       afterFiles: [UNSERVED_ROOT_FILE_REWRITE],

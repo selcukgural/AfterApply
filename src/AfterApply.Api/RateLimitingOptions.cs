@@ -138,6 +138,10 @@ public sealed class RateLimitingOptions
 
     /// <summary>Per admin — the SEO suggestion button, a model call each (2026-09-21). Twenty an
     /// hour is many posts' worth of "suggest again"; it bounds a stuck retry, not an author.</summary>
+    /// <summary>Per user — uploading, removing or showing/hiding the profile photo (2026-09-28).
+    /// Each upload decodes an image; twenty an hour is a person trying a few crops, not a loop.</summary>
+    public FixedWindowPolicy AvatarWrite { get; init; } = new() { PermitLimit = 20, WindowSeconds = 3600 };
+
     public FixedWindowPolicy BlogSeoSuggest { get; init; } = new() { PermitLimit = 20, WindowSeconds = 3600 };
 
     /// <summary>Per IP, anonymous — the public company directory search: a trigram scan per

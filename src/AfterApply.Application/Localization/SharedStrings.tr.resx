@@ -762,4 +762,16 @@
   <data name="FEATURE_FLAG_JOB_LIVENESS_NOTES" xml:space="preserve">
     <value>Gizlilik politikası bu kontrolü anlatır; bayrak ile metin birlikte değişmeli. Bir site 429/403 verirse o gün o siteye bir daha gidilmez.</value>
   </data>
+  <data name="AVATAR_EMPTY" xml:space="preserve">
+    <value>Fotoğraf boş.</value>
+  </data>
+  <data name="AVATAR_TOO_LARGE" xml:space="preserve">
+    <value>Fotoğraf {0} MB boyut sınırını aşıyor.</value>
+  </data>
+  <data name="AVATAR_UNSUPPORTED" xml:space="preserve">
+    <value>Yalnızca JPEG, PNG ve WebP fotoğraflar yüklenebilir.</value>
+  </data>
+  <data name="AVATAR_TOO_MANY_PIXELS" xml:space="preserve">
+    <value>Fotoğrafın çözünürlüğü çok yüksek. Lütfen daha küçük bir fotoğraf seçin.</value>
+  </data>
 </root>

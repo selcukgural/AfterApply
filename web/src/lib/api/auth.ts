@@ -184,6 +184,23 @@ export const authApi = {
       body: JSON.stringify(request),
     }),
 
+  /** The cropped photo from the profile card. The server re-encodes it to a 256 px WebP and keeps
+   *  nothing else; the answer carries the new avatarUrl. */
+  uploadAvatar: (photo: Blob) => {
+    const body = new FormData();
+    body.append("file", photo, "avatar.jpg");
+    // No Content-Type header: the browser sets multipart/form-data with its own boundary.
+    return apiFetch<UserProfileResponse>("/api/users/me/avatar", { method: "PUT", body });
+  },
+
+  deleteAvatar: () => apiFetch<UserProfileResponse>("/api/users/me/avatar", { method: "DELETE" }),
+
+  setAvatarVisibility: (showInComments: boolean) =>
+    apiFetch<UserProfileResponse>("/api/users/me/avatar/visibility", {
+      method: "PUT",
+      body: JSON.stringify({ showInComments }),
+    }),
+
   updateLanguage: (language: string) =>
     apiFetch<UserProfileResponse>("/api/users/me/language", {
       method: "PUT",

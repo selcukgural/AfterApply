@@ -139,6 +139,7 @@ public static class DependencyInjection
     public const string BlogCommentReportRateLimitPolicy = "blog-comment-report";
     public const string BlogCommentHelpfulRateLimitPolicy = "blog-comment-helpful";
     public const string BlogSeoSuggestRateLimitPolicy = "blog-seo-suggest";
+    public const string AvatarWriteRateLimitPolicy = "avatar-write";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -216,6 +217,7 @@ public static class DependencyInjection
         services.AddPayments(configuration);
         services.AddDocumentStorage(configuration);
         services.AddBlog(configuration);
+        services.AddAvatars(configuration);
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
 
@@ -353,6 +355,42 @@ public static class DependencyInjection
         services.AddScoped<IBlogPublicService, BlogPublicService>();
         services.AddScoped<IBlogCommentService, BlogCommentService>();
         services.AddScoped<IBlogMediaService, BlogMediaService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Profile photos (DECISIONS.md 2026-09-28): a storage binding of their own over the same two
+    /// implementations, and the same Production rule — Cloud Storage with a named bucket, or fail at
+    /// startup rather than on the first upload.
+    /// </summary>
+    private static IServiceCollection AddAvatars(this IServiceCollection services, IConfiguration configuration)
+    {
+        var storageOptions = configuration.GetSection(StorageOptions.SectionName).Get<StorageOptions>()
+            ?? new StorageOptions();
+
+        if (storageOptions.Provider == FileStorageProvider.GoogleCloudStorage)
+        {
+            if (string.IsNullOrWhiteSpace(storageOptions.AvatarBucketName) && !IsOpenApiDocumentGeneration)
+            {
+                throw new InvalidOperationException(
+                    "Storage:AvatarBucketName is required when Storage:Provider is GoogleCloudStorage. Set " +
+                    "Storage__AvatarBucketName to the profile photo bucket's name (see DEPLOYMENT.md §17).");
+            }
+
+            // The StorageClient singleton is registered by AddDocumentStorage.
+            services.AddScoped<IAvatarStorage>(sp =>
+                new GoogleCloudStorageFileStorage(sp.GetRequiredService<StorageClient>(),
+                    sp.GetRequiredService<IOptions<StorageOptions>>().Value.AvatarBucketName));
+        }
+        else
+        {
+            // Production is already refused by AddDocumentStorage for this provider.
+            services.AddScoped<IAvatarStorage>(sp =>
+                new FileSystemFileStorage(sp.GetRequiredService<IOptions<StorageOptions>>().Value.AvatarLocalRootPath));
+        }
+
+        services.AddScoped<IAvatarService, AvatarService>();
 
         return services;
     }

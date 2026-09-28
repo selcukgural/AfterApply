@@ -109,4 +109,22 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     /// <summary>The day-before reminder and the "how did it go?" row in the bell (2026-09-27). Off
     /// means none are written; the reminders card still asks, it is not a notification.</summary>
     public bool NotifyInterviews { get; set; } = true;
+
+    /// <summary>
+    /// The profile photo (DECISIONS.md 2026-09-28): where the re-encoded 256 px WebP lives in the
+    /// avatar bucket, and the random id its URL carries. Both null: no photo. The public id is not
+    /// the user id on purpose — a photo seen on a blog comment must not lead to anything else about
+    /// the account — and it is replaced on every upload and whenever
+    /// <see cref="ShowAvatarInComments"/> is turned off, so an old URL stops resolving.
+    /// </summary>
+    public string? AvatarObjectName { get; set; }
+
+    public Guid? AvatarPublicId { get; set; }
+
+    public DateTimeOffset? AvatarUpdatedAt { get; set; }
+
+    /// <summary>Whether the photo also appears next to the user's blog comments. Off by default: a
+    /// face beside "Selin Y." identifies the writer, so showing it is the user's own choice. Salary,
+    /// review, experience and silence-report surfaces never show it, whatever this says.</summary>
+    public bool ShowAvatarInComments { get; set; }
 }

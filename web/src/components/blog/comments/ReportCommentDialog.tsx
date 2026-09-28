@@ -8,10 +8,25 @@ import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { Textarea } from "@/components/ui/Textarea";
 
-export const COMMENT_REPORT_REASONS: readonly BlogCommentReportReason[] = ["Spam", "Insult", "Inappropriate", "Advertising", "Other"];
+export const COMMENT_REPORT_REASONS: readonly BlogCommentReportReason[] = [
+  "Spam",
+  "Insult",
+  "Inappropriate",
+  "ProfilePhoto",
+  "Advertising",
+  "Other",
+];
 export const COMMENT_REPORT_NOTE_MAX_LENGTH = 500;
 
+/** The reasons offered for one comment: the photo one only where a photo is shown. */
+export function commentReportReasons(hasPhoto: boolean): readonly BlogCommentReportReason[] {
+  return hasPhoto ? COMMENT_REPORT_REASONS : COMMENT_REPORT_REASONS.filter((reason) => reason !== "ProfilePhoto");
+}
+
 interface ReportCommentDialogProps {
+  /** Whether the comment shows its author's photo — which is what "Inappropriate profile photo"
+   *  would be about (DECISIONS.md 2026-09-28). */
+  hasPhoto: boolean;
   onClose: () => void;
   /** Resolves when the report is in; throws to keep the dialog open with the error. */
   onSubmit: (reason: BlogCommentReportReason, note: string | null) => Promise<void>;
@@ -19,8 +34,8 @@ interface ReportCommentDialogProps {
 }
 
 /** "Bildir": one reason from the fixed list, a note required only for "Other" — the
- *  `ReportReviewDialog` shape with radios instead of a select, since there are only five. */
-export function ReportCommentDialog({ onClose, onSubmit, error }: ReportCommentDialogProps) {
+ *  `ReportReviewDialog` shape with radios instead of a select, since there are only a handful. */
+export function ReportCommentDialog({ hasPhoto, onClose, onSubmit, error }: ReportCommentDialogProps) {
   const t = useTranslations("blogComments.reportDialog");
   const tReasons = useTranslations("blogComments.reasons");
   const tCommon = useTranslations("blogComments");
@@ -66,7 +81,7 @@ export function ReportCommentDialog({ onClose, onSubmit, error }: ReportCommentD
         </div>
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">{t("reason")}</legend>
-          {COMMENT_REPORT_REASONS.map((option) => (
+          {commentReportReasons(hasPhoto).map((option) => (
             <label
               key={option}
               className={`flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 text-sm ${

@@ -12,10 +12,66 @@ import type { UserProfileResponse } from "@/types/api";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { ProfileAvatarControl } from "./ProfileAvatarControl";
 
 /**
- * Who the account belongs to and since when, with the one thing about it a person can change:
- * the name. The e-mail is drawn as text, never as an input — there is no endpoint to change it,
+ * "Show my photo on my blog comments" (DECISIONS.md 2026-09-28). Off by default, and saved the
+ * moment it is flipped rather than with the name form below it: it is a permission, not a field.
+ * The copy says outright where the photo never appears, because that is what a person deciding
+ * this needs to know.
+ */
+function AvatarVisibilitySwitch({ user }: { user: UserProfileResponse }) {
+  const t = useTranslations("profile.avatar");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const on = user.showAvatarInComments ?? false;
+
+  const toggle = async () => {
+    setError(null);
+    setPending(true);
+    try {
+      authStore.updateUser(await authApi.setAvatarVisibility(!on));
+    } catch (err) {
+      setError(err instanceof ApiError && err.message ? err.message : t("visibilityError"));
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3.5 dark:border-gray-800 dark:bg-gray-950">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-labelledby="avatar-visibility-label"
+        aria-describedby="avatar-visibility-hint"
+        onClick={toggle}
+        disabled={pending}
+        className={`relative mt-0.5 h-[26px] w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${on ? "bg-accent" : "bg-gray-400 dark:bg-gray-600"}`}
+      >
+        <span className={`absolute top-[3px] h-5 w-5 rounded-full bg-white transition-all ${on ? "left-[21px]" : "left-[3px]"}`} />
+      </button>
+      <div className="flex flex-col gap-1">
+        <span id="avatar-visibility-label" className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          {t("showInComments")}
+        </span>
+        <span id="avatar-visibility-hint" className="text-sm leading-snug text-gray-600 dark:text-gray-400">
+          {t("showInCommentsHint")}
+        </span>
+        {error && (
+          <span role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Who the account belongs to and since when, with what a person can change about it: the photo
+ * (and whether it shows on their blog comments) and the name. The e-mail is drawn as text, never as an input — there is no endpoint to change it,
  * and sign-in, the extension pairing and every notification hang off it. A saved name goes into
  * the auth store straight away so the navbar's avatar and label follow without a reload.
  */
@@ -71,12 +127,7 @@ export function ProfileIdentityCard({ user }: { user: UserProfileResponse }) {
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
       <div className="flex items-start gap-4">
-        <span
-          aria-hidden="true"
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent-wash text-lg font-semibold text-accent-ink"
-        >
-          {initials}
-        </span>
+        <ProfileAvatarControl user={user} initials={initials} />
         <div className="min-w-0">
           <h2 className="truncate text-lg font-semibold text-gray-900 dark:text-gray-100">{name}</h2>
           <p className="truncate text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
@@ -87,6 +138,8 @@ export function ProfileIdentityCard({ user }: { user: UserProfileResponse }) {
       {!hasName && (
         <p className="rounded-lg bg-accent-wash px-3 py-2 text-sm text-accent-ink">{t("noNameHint")}</p>
       )}
+
+      <AvatarVisibilitySwitch user={user} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="grid gap-3 sm:grid-cols-2">

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using AfterApply.Api.Extensions;
 using AfterApply.Api.Filters;
 using AfterApply.Application.Admin;
+using AfterApply.Application.Identity;
 using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Blog;
 using AfterApply.Application.Blog.Contracts;
@@ -222,6 +223,30 @@ public static class BlogCommentEndpoints
                 return comment is null ? Results.NotFound() : Results.Ok(comment);
             })
             .WithSummary("Close a comment's open reports and keep the comment")
+            .Produces<AdminBlogCommentResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        adminGroup.MapPost("/{commentId:guid}/author-avatar/remove", async (Guid commentId, ClaimsPrincipal user,
+                IAdminAccessService adminAccess, IAvatarService avatarService, IBlogCommentService service,
+                CancellationToken cancellationToken) =>
+            {
+                if (!await adminAccess.IsAdminAsync(user.GetUserId(), cancellationToken))
+                {
+                    return Results.Forbid();
+                }
+
+                if (!await avatarService.RemoveForCommentAuthorAsync(user.GetUserId(), commentId, cancellationToken))
+                {
+                    return Results.NotFound();
+                }
+
+                var comment = await service.GetForAdminAsync(commentId, cancellationToken);
+                return comment is null ? Results.NotFound() : Results.Ok(comment);
+            })
+            .WithSummary("Remove the profile photo of a comment's author")
+            .WithDescription("Admin only (DECISIONS.md 2026-09-28). Deletes the author's photo, turns their " +
+                             "showAvatarInComments off and closes every open ProfilePhoto report on their comments as " +
+                             "acted on. The comment itself stays as it is.")
             .Produces<AdminBlogCommentResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 

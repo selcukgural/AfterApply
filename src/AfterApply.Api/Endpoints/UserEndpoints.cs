@@ -5,6 +5,8 @@ using AfterApply.Application.Identity;
 using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.Localization;
 using AfterApply.Application.Pro;
+using AfterApply.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
@@ -13,6 +15,8 @@ namespace AfterApply.Api.Endpoints;
 
 public static class UserEndpoints
 {
+    private const long AvatarRequestSizeLimitBytes = 6 * 1024 * 1024;
+
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/users").WithTags("Users").RequireAuthorization()
@@ -51,6 +55,63 @@ public static class UserEndpoints
                              "anything to buy. A revoked or expired period comes back inactive with its end date kept.")
             .Produces<UserPlanResponse>();
 
+        // ---- profile photo (DECISIONS.md 2026-09-28) ---------------------------------------------
+        // 6 MB for the whole multipart body: the 5 MB file cap plus the form's framing. Anything
+        // larger is cut off by the server before the handler reads a byte.
+        group.MapPut("/me/avatar", async ([FromForm] IFormFile file, ClaimsPrincipal user,
+                IAvatarService avatarService, CancellationToken cancellationToken) =>
+            {
+                try
+                {
+                    await using var stream = file.OpenReadStream();
+                    var profile = await avatarService.UploadAsync(user.GetUserId(), stream, file.Length, cancellationToken);
+                    return profile is not null ? Results.Ok(profile) : Results.NotFound();
+                }
+                catch (AvatarUploadValidationException exception)
+                {
+                    return Results.ValidationProblem(new Dictionary<string, string[]> { [exception.Field] = [exception.Error] });
+                }
+            })
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(AvatarRequestSizeLimitBytes))
+            .RequireRateLimiting(DependencyInjection.AvatarWriteRateLimitPolicy)
+            .WithSummary("Upload or replace the current user's profile photo")
+            .WithDescription("multipart/form-data with a 'file' part: JPEG, PNG or WebP, judged by its bytes, up to 5 MB and " +
+                             "25 megapixels. The server re-encodes it to a 256×256 WebP with no metadata (EXIF, GPS " +
+                             "included) and keeps only that; the upload itself is not stored. Answers the updated " +
+                             "profile, whose avatarUrl is new on every upload.")
+            .Produces<UserProfileResponse>()
+            .ProducesValidationProblem()
+            .Produces(StatusCodes.Status429TooManyRequests)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapDelete("/me/avatar", async (ClaimsPrincipal user, IAvatarService avatarService, CancellationToken cancellationToken) =>
+            {
+                var profile = await avatarService.DeleteAsync(user.GetUserId(), cancellationToken);
+                return profile is not null ? Results.Ok(profile) : Results.NotFound();
+            })
+            .RequireRateLimiting(DependencyInjection.AvatarWriteRateLimitPolicy)
+            .WithSummary("Remove the current user's profile photo")
+            .WithDescription("Deletes the stored photo and turns showAvatarInComments off. Succeeds when there was no photo.")
+            .Produces<UserProfileResponse>()
+            .Produces(StatusCodes.Status429TooManyRequests)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPut("/me/avatar/visibility", async (UpdateAvatarVisibilityRequest request, ClaimsPrincipal user,
+                IAvatarService avatarService, CancellationToken cancellationToken) =>
+            {
+                var profile = await avatarService.SetShowInCommentsAsync(user.GetUserId(), request.ShowInComments, cancellationToken);
+                return profile is not null ? Results.Ok(profile) : Results.NotFound();
+            })
+            .RequireRateLimiting(DependencyInjection.AvatarWriteRateLimitPolicy)
+            .WithSummary("Show or hide the profile photo on the current user's blog comments")
+            .WithDescription("Off by default. Turning it off also changes avatarUrl, so the address readers already " +
+                             "loaded stops resolving. Salary, review, experience and silence-report pages never show " +
+                             "the photo, whatever this says.")
+            .Produces<UserProfileResponse>()
+            .Produces(StatusCodes.Status429TooManyRequests)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         group.MapPut("/me/language", async (UpdateLanguageRequest request, ClaimsPrincipal user,
                 IAuthService authService, CancellationToken cancellationToken) =>
             {
@@ -73,7 +134,7 @@ public static class UserEndpoints
             .Produces<UserProfileResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapDelete("/me", async ([Microsoft.AspNetCore.Mvc.FromBody] DeleteAccountRequest request, ClaimsPrincipal user,
+        group.MapDelete("/me", async ([FromBody] DeleteAccountRequest request, ClaimsPrincipal user,
                 IAuthService authService, IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
             {
                 var deleted = await authService.DeleteAccountAsync(user.GetUserId(), request.Password, cancellationToken);
@@ -89,7 +150,7 @@ public static class UserEndpoints
             .Produces(StatusCodes.Status204NoContent);
 
         group.MapGet("/me/export", async (ClaimsPrincipal user, IAuthService authService,
-            IOptions<JsonOptions> jsonOptions, CancellationToken cancellationToken) =>
+            IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions> jsonOptions, CancellationToken cancellationToken) =>
         {
             var export = await authService.ExportAccountDataAsync(user.GetUserId(), cancellationToken);
             var bytes = JsonSerializer.SerializeToUtf8Bytes(export, jsonOptions.Value.SerializerOptions);

@@ -352,6 +352,8 @@ In GitHub → repo Settings → Secrets and variables → Actions, add:
 - `GCP_BLOG_MEDIA_BUCKET` — the blog images bucket's name
   (`afterapply-blog-media`; §16 creates it). Same reasoning as the CV
   bucket below: an address, not a credential.
+- `GCP_AVATAR_BUCKET` — the profile photos bucket's name
+  (`afterapply-avatars`; §17 creates it). An address, not a credential.
 - `GCP_CV_BUCKET` — the CV bucket's name (`afterapply-cvs`; §11 creates
   it). Not sensitive either, and for the same kind of reason: the bucket
   is protected by `public_access_prevention=enforced` plus IAM, not by
@@ -1069,3 +1071,43 @@ the bucket as its own runtime identity. Local development and tests use the
 `FileSystem` provider under `Storage:BlogLocalRootPath` (a temp directory
 separate from the CVs'), and Production refuses that provider as before.
 
+### 17. Cloud Storage bucket for profile photos (2026-09-28)
+
+Profile photos (DECISIONS.md, "Profil fotoğrafı") live in a third bucket,
+`afterapply-avatars`, for the same reason the blog has its own: a photo is
+reachable by anyone who holds its URL, a CV by its owner alone, and the two
+must never share an access policy. Built exactly like §16 — private at the
+bucket level, soft delete off, the runtime service account alone holding an
+object role — because the bytes are proxied by the API
+(`GET /api/avatars/{publicId}`), which is what lets a replaced, removed or
+hidden photo answer 404 at once.
+
+```bash
+PROJECT_ID="$(gcloud config get-value project)"
+REGION=europe-west1
+
+gcloud storage buckets create "gs://afterapply-avatars" \
+  --project="$PROJECT_ID" \
+  --location="$REGION" \
+  --default-storage-class=STANDARD \
+  --uniform-bucket-level-access \
+  --public-access-prevention
+
+# A replaced or removed photo is deleted; nothing to keep for a week.
+gcloud storage buckets update "gs://afterapply-avatars" --clear-soft-delete
+gcloud storage buckets describe "gs://afterapply-avatars" \
+  --format='yaml(name,location,softDeletePolicy,iamConfiguration)'
+
+RUNTIME_SA="$(gcloud iam service-accounts list \
+  --filter='email~compute@developer' --format='value(email)')"
+gcloud storage buckets add-iam-policy-binding "gs://afterapply-avatars" \
+  --member="serviceAccount:${RUNTIME_SA}" \
+  --role="roles/storage.objectAdmin"
+```
+
+Do not skip the binding (see §16's 2026-09-19 note). Then add the GitHub
+Actions secret `GCP_AVATAR_BUCKET=afterapply-avatars` (§4): `deploy.yml`
+passes it as `Storage__AvatarBucketName`, and the API refuses to start on
+Cloud Storage without it (`AddAvatars` in `DependencyInjection.cs`). There is
+no flag to switch the feature off, so **the bucket, the binding and the
+secret must all exist before the first deploy that carries it**.

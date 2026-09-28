@@ -10158,3 +10158,36 @@ Search Console'daki "dizine eklenmeyen sayfalar" raporu incelendi (tr, 2026-09-2
   - "Yönlendirmeli sayfa" (bilerek kurulan 301/307'ler). Doğrulamanın "başarısız" demesi beklenen durum.
   - "Bulunamadı (404)": 7 URL'nin hepsi artık 301 veriyor (16 Eylül düzeltmesi, taramalar 9–13 Eylül).
   - "Robots.txt tarafından engellendi": `api.ekariyerim.com/*`, bilerek engelleniyor.
+
+## Profil fotoğrafı — DECIDED (2026-09-28)
+
+Kullanıcı profil fotoğrafı yükleyip değiştirebiliyor ve kaldırabiliyor. Tasarım kanvası: https://claude.ai/artifact/7DT7sB5bUhdEjzn6LogdQ4 (A varyantı seçildi, B ve C elendi).
+
+**Görünürlük (kullanıcı kararı):**
+- Fotoğraf kullanıcının kendi menüsünde ve profil kartında görünüyor.
+- **Blog yorumlarında** da görünebiliyor, ama yalnızca kullanıcı "Blog yorumlarımda fotoğrafımı göster" seçeneğini açarsa. Seçenek varsayılan olarak kapalı. Yorumdaki "Selin Y." ile fotoğraf yan yana gelince kişi tanınabilir oluyor; bunu açmak kullanıcının açık tercihi olmalı.
+- **Hassas yüzeylerde asla görünmüyor:** maaşlar, şirket değerlendirmeleri, aday deneyimleri, sessizlik raporları ve yanıt oranları anonim kalıyor. Bu, arayüz kuralı olarak değil yapısal olarak garanti ediliyor:
+  - Fotoğrafın URL'si (`/api/avatars/{publicId}`) kullanıcı kimliğini taşımıyor. `AvatarPublicId` rastgele üretiliyor; her yüklemede ve "yorumlarda göster" kapatıldığında yenileniyor. Eski URL 404 veriyor.
+  - Avatar alanı yalnızca üç yanıt tipinde bulunabiliyor: `UserProfileResponse`, `BlogCommentResponse` ve admin yorum satırı. `AvatarExposureTests` Application assembly'sindeki bütün tipleri tarıyor; listede olmayan bir tipe avatar alanı eklenirse test kırılıyor.
+- **Moderasyon (kullanıcı kararı): önce yayın, sonra şikâyet.**
+  - Yorum bildirme gerekçelerine "Uygunsuz profil fotoğrafı" (`ProfilePhoto`) eklendi.
+  - Admin, yorum detayından yazarın fotoğrafını kaldırabiliyor. Fotoğraf siliniyor, "yorumlarda göster" kapanıyor, o yorumdaki açık `ProfilePhoto` bildirimleri "işlem yapıldı" olarak kapanıyor. Yorumun kendisi yerinde kalıyor.
+  - Kullanıcıya bildirim gitmiyor (MVP).
+- **OAuth fotoğrafını içe aktarma** (Google, GitHub, LinkedIn) MVP'de yok; sonraki adım.
+
+**Teknik:**
+- **Kırpma tarayıcıda** yapılıyor (kare seçim, dairesel önizleme). "Konumu yeniden ayarla" seçeneği yok, çünkü orijinal dosya saklanmıyor.
+- **Sunucu gelen dosyayı asla olduğu gibi saklamıyor.** ImageSharp ile çözüyor, kareye kırpıyor, 256×256 WebP olarak yeniden kodluyor. EXIF, ICC ve XMP siliniyor; GPS konumu dahil hiçbir dosya bilgisi kalmıyor. Yalnızca JPEG, PNG ve WebP kabul ediliyor; bunlar dışındaki decoder'lar yapılandırmada hiç yok.
+- **Decompression bomb koruması:**
+  - Çözmeden önce başlıktaki boyutlar okunuyor; 25 megapiksel ya da kenar başına 10.000 pikselden büyük görsel reddediliyor.
+  - Yalnızca tek kare çözülüyor.
+  - İstek gövdesi 6 MB ile sınırlı; dosya sınırı 5 MB (`Storage:MaxFileSizeBytes`).
+- **Lisans:** ImageSharp Six Labors Split License ile dağıtılıyor. Repo MIT lisanslı ve açık kaynak, gelir de 1M USD'nin altında, dolayısıyla Apache 2.0 kapsamında ücretsiz. İkisinden biri değişirse lisans yeniden değerlendirilmeli. 3.1.x hattında kalındı: 4.x, derleme sırasında Six Labors lisans anahtarı arıyor ve anahtar yoksa Release derlemesini kırıyor.
+- **Depolama:** ayrı bucket, `afterapply-avatars` (DEPLOYMENT.md §17). CV ve blog bucket'larıyla aynı model: bucket seviyesinde private, baytlar API üzerinden servis ediliyor. Next rewrite'ı sayesinde `img-src 'self'` değişmiyor.
+- **Önbellek:** `public, max-age=86400`. URL her değişiklikte yenilendiği için güncelleme hemen görünüyor. Admin fotoğrafı kaldırdığında, fotoğrafı daha önce görmüş tarayıcılarda en fazla bir gün önbellekte kalabiliyor; yeni ziyaretçiler görmüyor.
+- **Rate limit:** yükleme, silme ve görünürlük değişikliği için hesap başına saatte 20 (`avatar-write`).
+- **Diğer akışlar:**
+  - Hesap silindiğinde nesne commit'ten sonra siliniyor (CV'lerle aynı sıra).
+  - Dışa aktarmadaki profil bölümünde fotoğrafın URL'si ve "yorumlarda göster" tercihi yer alıyor.
+  - Gizlilik metnine profil fotoğrafı bölümü eklendi (tr + en).
+- Yazma istekleri `RequestAudit` kapsamında (otomatik).

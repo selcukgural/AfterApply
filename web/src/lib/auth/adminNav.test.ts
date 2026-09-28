@@ -14,6 +14,8 @@ function profile(overrides: Partial<UserProfileResponse> = {}): UserProfileRespo
     preferredTheme: "light",
     hasPassword: true,
     isAdmin: false,
+    avatarUrl: null,
+    showAvatarInComments: false,
     ...overrides,
   };
 }

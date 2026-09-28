@@ -1466,7 +1466,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 27 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 28 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -1670,6 +1670,19 @@
       "storage": "Yorumlar, bildirimler ve faydalı işaretleri kendi veritabanımızda saklanır; hiçbir üçüncü tarafa gönderilmez.",
       "deletion": "Hesabını silmek tüm yorumlarını — ve onlara verilmiş yanıtları — siler; veri dışa aktarımın yorumlarını içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — yorum yazmayı sen seçersin."
+    },
+    "profilePhoto": {
+      "title": "Profil fotoğrafın",
+      "intro": "Profil fotoğrafı eklemek isteğe bağlıdır. Eklediğinde:",
+      "what": "Seçtiğin fotoğrafı tarayıcında kırparsın; sunucumuz onu 256×256 piksel bir görsele yeniden kaydeder ve yalnızca bunu saklar. Yüklediğin dosyanın kendisi saklanmaz; konum (GPS), cihaz ve çekim bilgisi gibi dosya bilgileri silinir.",
+      "where": "Fotoğrafın üst çubuktaki menünde ve profil sayfanda görünür. Blog yorumlarında yalnızca \"Blog yorumlarımda fotoğrafımı göster\" seçeneğini açarsan, adının yanında herkese görünür; bu seçenek varsayılan olarak kapalıdır.",
+      "never": "Maaşlar, şirket değerlendirmeleri, aday deneyimleri, sessizlik bildirimleri ve yanıt oranları anonimdir: fotoğrafın buralarda hiçbir koşulda gösterilmez.",
+      "address": "Fotoğrafın, hesabınla ilişkisi olmayan rastgele bir adresten sunulur. Fotoğrafı değiştirdiğinde, kaldırdığında ya da yorumlarda göstermeyi kapattığında bu adres değişir ve eskisi çalışmaz; daha önce görmüş bir tarayıcının önbelleğinde en fazla bir gün kalabilir.",
+      "moderation": "Bir blog yorumundaki fotoğraf \"Uygunsuz profil fotoğrafı\" gerekçesiyle bildirilebilir. Yönetici fotoğrafı kaldırabilir; yorumun yerinde kalır.",
+      "audit": "Fotoğrafı yüklediğin, kaldırdığın ya da gösterme ayarını değiştirdiğin her istekte bağlantının IP adresi işlem kayıtlarına yazılır (yukarıdaki \"İşlem kayıtları\" maddesi). Hiçbir yerde gösterilmez.",
+      "storage": "Fotoğraf kendi bulut depolamamızda, dışarıya kapalı bir alanda saklanır; hiçbir üçüncü tarafa gönderilmez.",
+      "deletion": "Fotoğrafı istediğin zaman kaldırabilirsin; hesabını silmek onu da siler. Veri dışa aktarımın fotoğrafının adresini ve gösterme tercihini içerir.",
+      "legalBasis": "Hukuki sebep: açık eylemin — fotoğraf eklemeyi ve yorumlarda göstermeyi sen seçersin."
     },
     "aggregates": {
       "title": "Toplu yanıt verisi (sektör tablosu ve şirket sayfasındaki \"Yanıt\" sekmesi)",
@@ -2731,10 +2744,14 @@
       "intro": "Ayarlar sayfasından bildirimlerinizi seçebilir, verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir, Pro plan ödemelerinizi görüp iade talebi açabilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "profile": {
         "title": "Profilim",
-        "body": "Avatar menüsündeki Profilim, hesabın kime ait olduğunu ve neler bıraktığını gösterir: adın ve soyadın (düzenlenebilir), e-posta adresin (değiştirilemez; giriş ve bildirimler ona bağlı), üye olduğun tarih, planın, son değerlendirme ve maaş kayıtların ile başvuru, takip listesi ve CV sayıların.",
+        "body": "Avatar menüsündeki Profilim, hesabın kime ait olduğunu ve neler bıraktığını gösterir: profil fotoğrafın, adın ve soyadın (düzenlenebilir), e-posta adresin (değiştirilemez; giriş ve bildirimler ona bağlı), üye olduğun tarih, planın, son değerlendirme ve maaş kayıtların ile başvuru, takip listesi ve CV sayıların.",
         "calloutName": {
           "title": "Ad ve soyad isteğe bağlı",
           "body": "Kayıt olurken ad sorulmaz. Profilim'de eklersen üst çubukta ve e-postalarda adınla hitap ederiz; boş bırakırsan e-posta adresinin @ öncesi görünür."
+        },
+        "calloutPhoto": {
+          "title": "Profil fotoğrafı nerede görünür?",
+          "body": "Fotoğrafın köşesindeki kamera düğmesiyle bir fotoğraf seçip dairenin içinde konumlandırırsın; aynı düğmeden değiştirir ya da kaldırırsın. Fotoğraf üst çubukta ve Profilim'de görünür. Blog yorumlarında yalnızca \"Blog yorumlarımda fotoğrafımı göster\"i açarsan görünür. Maaşlar, şirket değerlendirmeleri ve aday deneyimleri her zaman anonimdir; fotoğrafın oralarda hiçbir koşulda görünmez."
         }
       },
       "notifications": {
@@ -3474,6 +3491,7 @@
       "Spam": "Spam",
       "Insult": "Hakaret veya saldırgan içerik",
       "Inappropriate": "Uygunsuz içerik",
+      "ProfilePhoto": "Uygunsuz profil fotoğrafı",
       "Advertising": "Reklam veya tanıtım",
       "Other": "Diğer"
     },
@@ -6074,7 +6092,14 @@
       "dismissHint": "Reddetmek açık şikayetleri \"işlem yapıldı\" olarak kapatır; \"Şikayetleri kapat\" yorumu yerinde bırakır.",
       "inReplyTo": "Yanıtladığı yorum",
       "rootComment": "— (kök yorum)",
-      "actionError": "İşlem tamamlanamadı. Tekrar deneyin."
+      "actionError": "İşlem tamamlanamadı. Tekrar deneyin.",
+      "photo": {
+        "title": "Yazarın profil fotoğrafı",
+        "hint": "Fotoğraf silinir, yazarın tüm yorumlarında baş harflere döner ve \"yorumlarımda göster\" kapanır. Yorum yerinde kalır; açık fotoğraf şikayetleri \"işlem yapıldı\" olarak kapanır.",
+        "remove": "Fotoğrafı kaldır",
+        "confirm": "Evet, fotoğrafı kaldır",
+        "cancel": "Vazgeç"
+      }
     }
   },
   "adminExperiences": {
@@ -6664,6 +6689,25 @@
       "returned": "Molan bitti. Panoda seni kısa bir soru bekliyor.",
       "goToDashboard": "Panoya git",
       "error": "İşlem tamamlanamadı. Tekrar dene."
+    },
+    "avatar": {
+      "uploadLabel": "Profil fotoğrafı yükle",
+      "changeLabel": "Profil fotoğrafını değiştir",
+      "change": "Fotoğrafı değiştir",
+      "remove": "Fotoğrafı kaldır",
+      "removeError": "Fotoğraf kaldırılamadı. Lütfen tekrar dene.",
+      "cropTitle": "Fotoğrafı konumlandır",
+      "positionLabel": "Fotoğrafın konumu. Sürükleyerek ya da ok tuşlarıyla kaydır.",
+      "zoom": "Yakınlaştır",
+      "cropHint": "Fotoğraf 256×256 boyutunda yeniden kaydedilir; konum gibi dosya bilgileri silinir.",
+      "unreadable": "Bu dosya okunamadı. JPEG, PNG ya da WebP bir fotoğraf seç.",
+      "cancel": "Vazgeç",
+      "savePhoto": "Fotoğrafı kaydet",
+      "saving": "Kaydediliyor…",
+      "saveError": "Fotoğraf kaydedilemedi. Lütfen tekrar dene.",
+      "showInComments": "Blog yorumlarımda fotoğrafımı göster",
+      "showInCommentsHint": "Açarsan fotoğrafın yorumlarında adının yanında herkese görünür. Maaşlar, şirket değerlendirmeleri ve aday deneyimleri her zaman anonimdir; fotoğrafın oralarda asla görünmez.",
+      "visibilityError": "Ayar kaydedilemedi. Lütfen tekrar dene."
     }
   },
   "candidateExperiences": {
