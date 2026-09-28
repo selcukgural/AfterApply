@@ -89,16 +89,20 @@ public sealed class CompanyLogoProfile : IHostProfile
             ["Board:Enabled"] = "true"
         }));
         builder.ConfigureServices(services =>
-            services.AddHttpClient(nameof(ICompanyLogoService)).ConfigurePrimaryHttpMessageHandler(() => Web));
+        {
+            services.AddHttpClient(nameof(ICompanyLogoService)).ConfigurePrimaryHttpMessageHandler(() => Web);
+            // The company-website client: in production it connects through PublicAddressGuard.
+            services.AddHttpClient("company-website-icons").ConfigurePrimaryHttpMessageHandler(() => Web);
+        });
     }
 
     public void Reset() => Web.Reset();
 }
 
 /// <summary>
-/// Company logos for the board (DECISIONS.md 2026-09-27): fetched from the company's LinkedIn page
-/// with the fetch rules an untrusted URL needs, stored by us, and shown only to users who applied
-/// there.
+/// Company logos for the board (DECISIONS.md 2026-09-27, 2026-09-28): fetched from the company's
+/// own website first and its LinkedIn page second, with the fetch rules an untrusted URL needs,
+/// stored by us, and shown only to users who applied there.
 /// </summary>
 public class CompanyLogoTests(ApiHost<CompanyLogoProfile> host) : IClassFixture<ApiHost<CompanyLogoProfile>>, IAsyncLifetime
 {
@@ -228,14 +232,120 @@ public class CompanyLogoTests(ApiHost<CompanyLogoProfile> host) : IClassFixture<
     [InlineData(999)] // LinkedIn's bot wall
     [InlineData(429)]
     [InlineData(503)]
-    public async Task Throttling_Or_A_Server_Error_Records_Nothing_So_The_Next_Run_Asks_Again(int status)
+    public async Task Throttling_Or_A_Server_Error_Defers_The_Company_For_A_Day_Then_Two(int status)
     {
         Web.Fail(PageUrl, (HttpStatusCode)status);
 
         await FetchAsync();
 
-        (await host.WithDbAsync(db => db.CompanyLogos.AnyAsync(l => l.CompanyId == _companyId))).ShouldBeFalse();
+        var logo = await host.WithDbAsync(db => db.CompanyLogos.AsNoTracking().SingleAsync(l => l.CompanyId == _companyId));
+        logo.Content.ShouldBeNull();
+        logo.DeferCount.ShouldBe(1);
+        (logo.NextCheckAt!.Value - logo.CheckedAt).ShouldBe(TimeSpan.FromDays(1));
+
+        // Not tonight again, and a direct fetch inside the window does not ask either.
+        (await ScheduleAsync()).ShouldBe(0);
+        await FetchAsync();
+        Web.Requested.Count(u => u.Host == "www.linkedin.com").ShouldBe(1);
+
+        // Once the day is up it is asked again, and a second "no answer" waits two.
+        await host.WithDbAsync(db => db.CompanyLogos.ExecuteUpdateAsync(s => s.SetProperty(l => l.NextCheckAt, DateTimeOffset.UtcNow.AddMinutes(-1))));
         (await ScheduleAsync()).ShouldBe(1);
+        await FetchAsync();
+        logo = await host.WithDbAsync(db => db.CompanyLogos.AsNoTracking().SingleAsync(l => l.CompanyId == _companyId));
+        logo.DeferCount.ShouldBe(2);
+        (logo.NextCheckAt!.Value - logo.CheckedAt).ShouldBe(TimeSpan.FromDays(2));
+    }
+
+    // ---- the company's own website ------------------------------------------------------------
+
+    private const string Website = "http://www.acme.com.tr/hakkimizda";
+    private const string Home = "https://www.acme.com.tr/";
+
+    private static byte[] RealPng(int side)
+    {
+        using var image = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>(side, side);
+        using var stream = new MemoryStream();
+        SixLabors.ImageSharp.ImageExtensions.SaveAsPng(image, stream);
+        return stream.ToArray();
+    }
+
+    private static byte[] HomePage(string head) => System.Text.Encoding.UTF8.GetBytes($"<html><head>{head}</head><body>Acme</body></html>");
+
+    private Task SetWebsiteAsync(string website) => host.WithDbAsync(db => db.Companies.Where(c => c.Id == _companyId)
+        .ExecuteUpdateAsync(s => s.SetProperty(c => c.Website, website)));
+
+    [Fact]
+    public async Task The_Companys_Own_Site_Comes_First_And_LinkedIn_Is_Not_Asked()
+    {
+        await SetWebsiteAsync(Website);
+        var icon = RealPng(180);
+        Web.Serve(Home, HomePage("""<link rel="icon" sizes="32x32" href="/f32.png"><link rel="apple-touch-icon" href="/img/touch.png">"""), "text/html");
+        Web.Serve("https://www.acme.com.tr/img/touch.png", icon, "image/png");
+        Web.Serve(PageUrl, PageNaming("Acme Yazılım", LogoUrl));
+        Web.Serve(LogoUrl, Png, "image/png");
+
+        await FetchAsync();
+
+        var stored = await host.WithDbAsync(db => db.CompanyLogos.AsNoTracking().SingleAsync(l => l.CompanyId == _companyId));
+        stored.Content.ShouldBe(icon);
+        stored.ContentType.ShouldBe("image/png");
+        // The site was asked over https even though the column says http, and LinkedIn not at all.
+        Web.Requested.ShouldNotContain(u => u.Scheme == "http");
+        Web.Requested.ShouldNotContain(u => u.Host.EndsWith("linkedin.com") || u.Host == "media.licdn.com");
+    }
+
+    [Fact]
+    public async Task A_Favicon_Sized_Icon_Is_Passed_Over_And_LinkedIn_Fills_In()
+    {
+        await SetWebsiteAsync(Website);
+        Web.Serve(Home, HomePage("""<link rel="icon" href="/f32.png">"""), "text/html");
+        Web.Serve("https://www.acme.com.tr/f32.png", RealPng(32), "image/png");
+        Web.Serve(PageUrl, PageNaming("Acme Yazılım", LogoUrl));
+        Web.Serve(LogoUrl, Png, "image/png");
+
+        await FetchAsync();
+
+        (await host.WithDbAsync(db => db.CompanyLogos.AsNoTracking().SingleAsync(l => l.CompanyId == _companyId))).Content.ShouldBe(Png);
+    }
+
+    [Fact]
+    public async Task A_Site_Icon_Is_Held_To_The_Same_Rules_As_Any_Image()
+    {
+        await SetWebsiteAsync(Website);
+        await host.WithDbAsync(db => db.Companies.Where(c => c.Id == _companyId).ExecuteUpdateAsync(s => s.SetProperty(c => c.LinkedInUrl, (string?)null)));
+        Web.Serve(Home, HomePage("""
+            <link rel="apple-touch-icon" href="/fake.png">
+            <link rel="icon" sizes="512x512" href="/huge.png">
+            <link rel="icon" sizes="256x256" href="/moved.png">
+            """), "text/html");
+        // An SVG claiming to be a PNG, an image past the byte cap, and a redirect down to http.
+        Web.Serve("https://www.acme.com.tr/fake.png", "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>"u8.ToArray(), "image/png");
+        Web.Serve("https://www.acme.com.tr/huge.png", [.. RealPng(200), .. new byte[CompanyLogoImage.MaxBytes]], "image/png");
+        Web.Redirect("https://www.acme.com.tr/moved.png", "http://cdn.acme.com.tr/moved.png");
+
+        await FetchAsync();
+
+        var logo = await host.WithDbAsync(db => db.CompanyLogos.AsNoTracking().SingleAsync(l => l.CompanyId == _companyId));
+        logo.Content.ShouldBeNull();
+        logo.DeferCount.ShouldBe(0); // an answer, not an outage: a month until the next look
+        Web.Requested.ShouldNotContain(u => u.Host == "cdn.acme.com.tr");
+    }
+
+    [Fact]
+    public async Task A_Company_With_Only_A_Website_Is_In_The_Nightly_Backfill()
+    {
+        await SetWebsiteAsync(Website);
+        await host.WithDbAsync(db => db.Companies.Where(c => c.Id == _companyId).ExecuteUpdateAsync(s => s.SetProperty(c => c.LinkedInUrl, (string?)null)));
+        host.Jobs.Clear();
+
+        (await ScheduleAsync()).ShouldBe(1);
+        Web.Serve(Home, HomePage("""<link rel="apple-touch-icon" href="/touch.png">"""), "text/html");
+        Web.Serve("https://www.acme.com.tr/touch.png", RealPng(180), "image/png");
+        await host.RunJobsAsync();
+
+        (await StoredAsync()).ShouldBeTrue();
+        (await ScheduleAsync()).ShouldBe(0);
     }
 
     [Fact]

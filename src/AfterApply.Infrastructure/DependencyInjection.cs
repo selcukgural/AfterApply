@@ -38,6 +38,7 @@ using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.ResponseRates;
 using AfterApply.Infrastructure.Documents;
 using AfterApply.Infrastructure.EmailIntegrations;
+using AfterApply.Infrastructure.Http;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
 using AfterApply.Application.AtsSources;
@@ -736,9 +737,14 @@ public static class DependencyInjection
         services.AddHttpClient<ICompanyEnrichmentService, CompanyEnrichmentService>(client => client.Timeout = TimeSpan.FromSeconds(5))
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         // Redirects followed by hand, each hop re-checked against the one allowed host (see
-        // CompanyLogoService) — the handler must never follow one on its own.
-        services.AddHttpClient<ICompanyLogoService, CompanyLogoService>(client => client.Timeout = TimeSpan.FromSeconds(5))
+        // CompanyLogoService) — the handler must never follow one on its own. Ten seconds: a
+        // LinkedIn company page often took longer than five, and a timeout only defers the company.
+        services.AddHttpClient<ICompanyLogoService, CompanyLogoService>(client => client.Timeout = TimeSpan.FromSeconds(10))
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        // Company websites (DECISIONS.md 2026-09-28): any host, so the check is on the address the
+        // socket actually connects to, not on the name (PublicAddressGuard).
+        services.AddHttpClient(CompanyLogoService.WebsiteClientName, client => client.Timeout = TimeSpan.FromSeconds(10))
+            .ConfigurePrimaryHttpMessageHandler(PublicAddressGuard.CreateHandler);
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IJobResolver, JobResolver>();
         services.AddScoped<IImportService, ImportService>();
