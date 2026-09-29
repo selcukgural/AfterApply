@@ -122,8 +122,32 @@ public class ScenarioRulesTests
             .ShouldHaveSingleItem().ShouldStartWith("voice.name is required for google");
         ScenarioRules.Validate(Valid() with { Voice = new VoiceSettings { Provider = "piper" } })
             .ShouldHaveSingleItem().ShouldStartWith("voice.model");
-        ScenarioRules.Validate(Valid() with { Voice = new VoiceSettings { Provider = "elevenlabs" } })
+        ScenarioRules.Validate(Valid() with { Voice = new VoiceSettings { Provider = "azure" } })
             .ShouldHaveSingleItem().ShouldStartWith("voice.provider must be one of");
+    }
+
+    [Fact]
+    public void A_Style_Prompt_Needs_Google_With_A_Gemini_Model()
+    {
+        ScenarioRules.Validate(Valid() with
+        {
+            Voice = new VoiceSettings { Provider = "google", Name = "Charon", Model = "gemini-2.5-pro-tts", Prompt = "calm" }
+        }).ShouldBeEmpty();
+        ScenarioRules.Validate(Valid() with { Voice = new VoiceSettings { Provider = "google", Name = "Charon", Prompt = "calm" } })
+            .ShouldHaveSingleItem().ShouldStartWith("voice.prompt only works");
+        ScenarioRules.Validate(Valid() with { Voice = new VoiceSettings { Provider = "elevenlabs", Name = "v", Model = "m", Prompt = "calm" } })
+            .ShouldHaveSingleItem().ShouldStartWith("voice.prompt only works");
+    }
+
+    [Fact]
+    public void ElevenLabs_Needs_A_Voice_Id_And_A_Speed_It_Accepts()
+    {
+        ScenarioRules.Validate(Valid() with { Voice = new VoiceSettings { Provider = "elevenlabs" } })
+            .ShouldHaveSingleItem().ShouldStartWith("voice.name (the ElevenLabs voice id) is required");
+        ScenarioRules.Validate(Valid() with { Voice = new VoiceSettings { Provider = "elevenlabs", Name = "v", Rate = 1.2 } })
+            .ShouldBeEmpty();
+        ScenarioRules.Validate(Valid() with { Voice = new VoiceSettings { Provider = "elevenlabs", Name = "v", Rate = 1.5 } })
+            .ShouldHaveSingleItem().ShouldStartWith("voice.rate must be between 0.7 and 1.2");
     }
 
     [Fact]

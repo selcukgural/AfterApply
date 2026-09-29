@@ -8,7 +8,7 @@ using PromoVideo.Voice;
 //   dotnet run --project tools/PromoVideo -- render   <scenario.json> [voice overrides] [--show-browser] [--burn-captions] [--keep-frames]
 //   dotnet run --project tools/PromoVideo -- voices   [--language tr-TR]
 //
-// Voice overrides: --provider say|google|piper  --voice <name>  --model <piper .onnx>  --rate <0.5-2>
+// Voice overrides: --provider say|google|elevenlabs|piper  --voice <name or id>  --model <piper .onnx | elevenlabs or Gemini-TTS model>  --prompt <Gemini-TTS style>  --rate <0.5-2>
 //
 // Output lands in artifacts/promo-video/<scenario name>/ (git-ignored), synthesised narration is
 // cached in artifacts/promo-video/.voice-cache/.
@@ -60,7 +60,7 @@ try
                 """);
             if (scenario.Voice.Provider == "say")
             {
-                Console.WriteLine("Note: the 'say' voice is for drafts — Apple's licence is personal, non-commercial. Publish with google or piper.");
+                Console.WriteLine("Note: the 'say' voice is for drafts — Apple's licence is personal, non-commercial. Publish with google, elevenlabs or piper.");
             }
 
             return 0;
@@ -108,7 +108,9 @@ static async Task<Scenario> LoadAsync(List<string> arguments, CancellationToken 
     {
         Provider = Option(arguments, "--provider") ?? scenario.Voice.Provider,
         Name = Option(arguments, "--voice") ?? (Option(arguments, "--provider") is null ? scenario.Voice.Name : null),
-        Model = Option(arguments, "--model") ?? scenario.Voice.Model,
+        // Name, model and prompt belong to the provider, so switching providers drops the file's ones.
+        Model = Option(arguments, "--model") ?? (Option(arguments, "--provider") is null ? scenario.Voice.Model : null),
+        Prompt = Option(arguments, "--prompt") ?? (Option(arguments, "--provider") is null ? scenario.Voice.Prompt : null),
         Rate = Option(arguments, "--rate") is { } rate
             ? double.Parse(rate, System.Globalization.CultureInfo.InvariantCulture)
             : scenario.Voice.Rate

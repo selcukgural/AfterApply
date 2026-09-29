@@ -1,0 +1,116 @@
+// The English version of genel-tanitim-tr.json, scene for scene: opening card, the question the
+// product answers, how applications get in, the dashboard, one application, a company page, the CV
+// scan, closing card. Same voice as the Turkish one (Gemini-TTS "Charon") with an English style prompt.
+// Music: the tool's own ambient bed (no licence to worry about).
+{
+  "title": "e-kariyerim — introduction",
+  "language": "en",
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 720, "deviceScaleFactor": 2 },
+  // 1440p, not 1080p: it is the viewport's native 2x capture (no downscale), and YouTube gives a
+  // 1440p upload its better codec, which also sharpens the 1080p most viewers watch.
+  "output": { "width": 2560, "height": 1440, "fps": 30 },
+  "colorScheme": "light",
+  "signIn": true,
+  "voice": {
+    "provider": "google",
+    "name": "Charon",
+    "model": "gemini-2.5-pro-tts",
+    "prompt": "Read in a calm, warm and friendly product-tour voice, at a natural pace.",
+    "rate": 1.0
+  },
+  "music": { "generate": "ambient", "volume": 0.18 },
+  // The brand read as a name, the address as it is said aloud; the subtitles keep the spelling.
+  "pronounce": {
+    "ekariyerim.com": "e kariyerim dot com",
+    "e-kariyerim": "e kariyerim"
+  },
+  "hide": ["button.fixed.bottom-4.right-4"],
+  "scenes": [
+    {
+      "id": "acilis",
+      "chapter": "Intro",
+      "minSeconds": 4.5,
+      "steps": [
+        { "action": "goto", "path": "/en" },
+        { "action": "card", "title": "e-kariyerim", "text": "Where do your applications go?" }
+      ]
+    },
+    {
+      "id": "soru",
+      "narration": "You applied. Then what happened? Most applications never get a reply, and you rarely find out where each one got lost. e-kariyerim makes that visible, in numbers.",
+      "steps": [
+        { "action": "hideCard" },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 520 }
+      ]
+    },
+    {
+      "id": "toplama",
+      "chapter": "Bring your applications in",
+      // YouTube drops every chapter when one is under 10 s; the voice alone leaves this one at 9.7.
+      "minSeconds": 10.5,
+      "narration": "To get started, import your LinkedIn application history or install the browser extension. There is no need to type in your applications one by one.",
+      "steps": [
+        { "action": "goto", "path": "/en/import" },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 350 }
+      ]
+    },
+    {
+      "id": "panel",
+      "chapter": "Dashboard",
+      "narration": "The dashboard shows how many applications got an answer, how many quietly disappeared, and at which stage the process stalls. The funnel sums up every step, from application to offer, in numbers.",
+      "steps": [
+        { "action": "goto", "path": "/en/dashboard" },
+        { "action": "wait", "seconds": 2 },
+        { "action": "scroll", "by": 620 },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 420 }
+      ]
+    },
+    {
+      "id": "basvuru",
+      "chapter": "Applications",
+      "minSeconds": 10.5,
+      "narration": "Every application has its own page: the stage history, the interview date, the person you were in touch with, and the CV you used, all in one place.",
+      "steps": [
+        { "action": "goto", "path": "/en/applications" },
+        { "action": "wait", "seconds": 1.5 },
+        { "action": "click", "target": "text=Hepsiburada" },
+        { "action": "wait", "seconds": 2.5 },
+        { "action": "scroll", "by": 280 }
+      ]
+    },
+    {
+      "id": "sirketler",
+      "chapter": "Companies",
+      "minSeconds": 10.5,
+      "narration": "On company pages you see other candidates' experiences, salaries and reviews. All of it is shared anonymously.",
+      "steps": [
+        { "action": "goto", "path": "/en/companies/beta-a-s" },
+        { "action": "wait", "seconds": 2.5 },
+        { "action": "scroll", "by": 450 }
+      ]
+    },
+    {
+      "id": "cv-tarama",
+      "chapter": "CV scan",
+      "narration": "And the CV scan scores, for free, how applicant tracking systems, the ATS, read your résumé, and tells you exactly what to fix.",
+      "steps": [
+        { "action": "goto", "path": "/en/cv-scan" },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 160 }
+      ]
+    },
+    {
+      "id": "kapanis",
+      "narration": "e-kariyerim is free. To see where your applications go, start today at ekariyerim.com.",
+      "leadIn": 1.0,
+      "tail": 3.0,
+      "steps": [
+        { "action": "card", "title": "e-kariyerim", "text": "Free · ekariyerim.com" }
+      ]
+    }
+  ]
+}

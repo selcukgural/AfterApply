@@ -10306,3 +10306,19 @@ harf değil "sivi" okunmalı; yalnız sese uygulanır, altyazı yazıldığı gi
 eşleşmesi). Senaryo: `scenarios/genel-tanitim-tr.json` (~86 sn, 8 sahne). Mesaj V-serisine
 uygun: "takip et" değil, "başvuruların nereye gidiyor". Yayın render'ı web'in üretim
 derlemesine karşı alınır (dev sunucusu köşeye Next.js simgesi basıyor).
+
+**Ek 2 (aynı gün): ses Gemini-TTS'e geçti, görüntü YouTube ayarlarına çekildi.** Chirp3-HD
+Charon kısaltmalarda ("ATS'lerde", "ey ti es" gibi okunuş yazımları) yapay duyuluyordu.
+Yan yana dinleme: Chirp3-HD, ElevenLabs (George/Brian, `eleven_multilingual_v2` ve `eleven_v3`)
+ve Gemini-TTS (`gemini-2.5-pro-tts`, `gemini-2.5-flash-tts`, `gemini-3.1-flash-tts-preview`).
+Kullanıcı önce ElevenLabs George v3'ü beğendi ama ücretli plana geçemiyor (ücretsiz plan ticari
+değil); son seçim **Gemini-TTS `gemini-2.5-pro-tts` + Charon + stil talimatı**, okunuş sözlüğü
+olmadan (CV/ATS/LinkedIn'i kendisi doğru okuyor; sözlükte yalnız e-kariyerim/ekariyerim.com
+kaldı). Aynı `google` sağlayıcısı, `voice.model` + `voice.prompt` ile; Cloud şartlarında ticari
+kullanım serbest. `elevenlabs` sağlayıcısı ileride ücretli plan için araçta kaldı (anahtar
+yalnızca `ELEVENLABS_API_KEY`'den, sadece Text to Speech yetkili). İlk yüklemede YouTube'un
+360p göstermesi normal işleme sırasıydı; yine de dosya `yuvj420p` (tam aralık etiketi) çıkıyordu:
+encode artık BT.601 tam aralık JPEG kareleri sınırlı aralık BT.709'a çeviriyor ve etiketliyor,
+High profil, kapalı GOP (fps/2), 2 B-kare, CRF 16. Çıktı 2560×1440: viewport'un 2x doğal
+çözünürlüğü (küçültme yok) ve YouTube 1440p yüklemeye daha iyi kodek veriyor, 1080p izleyen de
+bundan faydalanıyor.
