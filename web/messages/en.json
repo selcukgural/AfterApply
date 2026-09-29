@@ -7539,9 +7539,9 @@
       "title": "Software occupations and salaries, {first}–{last}",
       "keywords": "software developer salary Turkey, software engineer salary, developer salary survey, Turkey tech salaries",
       "eyebrow": "Salary data",
-      "lead": "See what each occupation earns according to the yearly open salary surveys, and how it changes with level and experience. Amounts are monthly net, in Turkish lira.",
-      "statResponses": "Total answers, {years} years",
-      "statOccupations": "Occupations",
+      "lead": "See what each occupation earns according to the open salary surveys <link>{name}</link> runs every year, and how it changes with level and experience. Amounts are monthly net, in Turkish lira.",
+      "statResponses": "salary answers",
+      "statOccupations": "occupations",
       "participantsTitle": "How many people answered each year?",
       "footnote": "Sorted by the latest year's median. Each trend line has its own scale; a missing year means the occupation was not in that year's survey or had fewer than {minimum} answers.",
       "table": {
@@ -7555,7 +7555,13 @@
         "rangeTitle": "Lower quartile {p25}, upper quartile {p75}",
         "trendLabel": "{occupation} median pay over the years",
         "medianShort": "median"
-      }
+      },
+      "statResponsesNote": "from {years} years of surveys",
+      "statOccupationsNote": "in groups of at least {minimum}",
+      "statTopMedian": "highest median",
+      "statTopMedianNote": "{year} · {occupation}",
+      "statsLabel": "Summary",
+      "latestSurvey": "Latest survey: {month}"
     },
     "chart": {
       "title": "Monthly net pay by year",
@@ -7630,9 +7636,30 @@
       "threshold": "Only groups of at least {minimum} people are shown; no figure of a smaller group is published.",
       "method": {
         "band": "The survey asks for a range; each value is the middle of its range, rounded to 500 lira. A value that falls in an open top range is written with \"≥\".",
-        "pooled": "When a year has more than one survey, their answers are pooled; the same person may have answered both.",
         "currency": "Only answers from people working in Turkey and paid in Turkish lira count.",
         "nominal": "Amounts are each year's nominal lira, not adjusted for inflation."
+      },
+      "strip": {
+        "title": "Data and method",
+        "source": "Source: the <link>{name}</link> salary surveys, {first}–{last}, used with the author's permission. We keep nothing per person, only group summaries.",
+        "facts": {
+          "threshold": {
+            "title": "≥ {minimum} people",
+            "text": "No figure of a smaller group is published"
+          },
+          "band": {
+            "title": "Range midpoint",
+            "text": "The survey asks for a range; its middle, rounded to 500 lira, an open top marked ≥"
+          },
+          "currency": {
+            "title": "Turkey · lira",
+            "text": "Only people working in Turkey and paid in lira"
+          },
+          "nominal": {
+            "title": "Nominal lira",
+            "text": "Each year's money, not adjusted for inflation"
+          }
+        }
       }
     }
   }

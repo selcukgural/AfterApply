@@ -130,7 +130,7 @@ export async function SalarySources({ editions, minimum }: { editions: readonly 
     bySource.set(edition.sourceCode, [...(bySource.get(edition.sourceCode) ?? []), edition]);
   }
   const format = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-GB");
-  const methods = ["band", "pooled", "currency", "nominal"] as const;
+  const methods = ["band", "currency", "nominal"] as const;
 
   return (
     <section id="method" className="flex scroll-mt-24 flex-col gap-3 rounded-xl bg-accent-wash p-5 text-sm leading-relaxed text-gray-800 sm:p-6 dark:text-gray-200">
@@ -169,6 +169,60 @@ export async function SalarySources({ editions, minimum }: { editions: readonly 
           <li key={key}>{t(`method.${key}`)}</li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/**
+ * The list page's short version of `SalarySources` (canvas variant A, 2026-09-29), at the foot of
+ * the page under the table: the threshold and the three method points as a four-column grid, then
+ * one line naming each survey with its link and the permission. The long box sat beside the
+ * participants chart and ran twice its height; the detail page keeps it.
+ */
+export async function SalarySourceStrip({ editions, minimum }: { editions: readonly SalarySurveyEdition[]; minimum: number }) {
+  const t = await getTranslations("salaryMarket.sources.strip");
+  const bySource = new Map<string, SalarySurveyEdition[]>();
+  for (const edition of editions) {
+    bySource.set(edition.sourceCode, [...(bySource.get(edition.sourceCode) ?? []), edition]);
+  }
+  const facts = ["threshold", "band", "currency", "nominal"] as const;
+
+  return (
+    <section id="method" aria-labelledby="method-title" className="flex scroll-mt-24 flex-col gap-4 border-t border-gray-200 pt-6 dark:border-gray-800">
+      <h2 id="method-title" className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        {t("title")}
+      </h2>
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+        {facts.map((key) => (
+          <div key={key} className="flex flex-col gap-1">
+            <dt className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t(`facts.${key}.title`, { minimum })}</dt>
+            <dd className="text-sm leading-snug text-gray-600 dark:text-gray-400">{t(`facts.${key}.text`)}</dd>
+          </div>
+        ))}
+      </dl>
+      {[...bySource.values()].map((list) => {
+        const first = list[0];
+        const years = list.map((e) => e.year);
+        // The survey author's profile (the repository's parent), through the site's http(s)-only guard.
+        const href = safeExternalUrl(first.sourceUrl.replace(/\/[^/]+$/, ""));
+        return (
+          <p key={first.sourceCode} className="text-sm text-gray-500 dark:text-gray-400">
+            {t.rich("source", {
+              name: first.sourceName,
+              first: Math.min(...years),
+              last: Math.max(...years),
+              link: (chunks) =>
+                href ? (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-accent-ink underline-offset-2 hover:underline">
+                    {chunks}
+                  </a>
+                ) : (
+                  chunks
+                ),
+            })}
+          </p>
+        );
+      })}
     </section>
   );
 }

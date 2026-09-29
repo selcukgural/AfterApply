@@ -65,7 +65,7 @@ internal static class SurveyEditions
             CurrencyKey: "Hangi para birimi ile maaş alıyorsunuz?",
             // The 2026 salary question is a long sentence; the reader matches it by this prefix.
             SalaryKey: "Aylık [NET] geliriniz nedir?"),
-        // yazilimcimaaslari.org (Şubat 2026, 1.223 kişi) joins the 2026 pool once its author has
-        // agreed (DECISIONS.md 2026-09-27); its file and keys go here then.
+        // Önceki Yazılımcı is the only source (DECISIONS.md 2026-09-27): yazilimcimaaslari.org was
+        // dropped, so no year pools two surveys. The pooling code stays as a capability only.
     ];
 }

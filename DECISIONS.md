@@ -10225,6 +10225,27 @@ yolları bu süzülmüş kümeden beslenir.
 - 390px'te taşma ölçümü CDP ile yapıldı. Bulunan beş düzen kusuru düzeltildi: kartların uzaması,
   mobilde grafiğin taşması, özet kutucuklarının kırılması, "₺"nin alt satıra düşmesi, binlik ayırıcısız kişi sayısı.
 
+### Tek kaynak ve liste sayfasının üst bölümü — 2026-09-29
+
+**Tek kaynak.** Kullanıcı 2026-09-27'de yalnızca Önceki Yazılımcı ile devam etme kararı verdi
+("oradan bir şey almayalım sadece önceki yazılımcıdan devam ediyoruz"). yazilimcimaaslari.org
+bırakıldı; izin istenmedi, hiçbir yıl iki anketi birleştirmiyor. Yukarıdaki "aynı yılın başka
+anketleri tek havuzda" kararı kodda yalnızca bir yetenek olarak kalıyor. Sayfalardaki havuzlama
+maddesi (`sources.method.pooled`) ve kopya testindeki anahtarı kaldırıldı.
+
+**Liste sayfasının üst bölümü yeniden tasarlandı** (kanvas "Maaşlar sayfası üst bölüm",
+https://claude.ai/artifact/SPLeDB5Hu1d9KDzzqNE4qH, **A** seçildi; B "rakamlar solda" ve C
+"koyu vitrin" elendi). Kullanıcının itirazı: kaynak kutusu grafiğin iki katı uzundu, grafik küçük
+kalıyordu, iki özet kutucuğu göze çarpmıyordu.
+- **Rakam şeridi:** başlığın altında üç büyük rakam. Toplam yanıt (accent renkte), meslek sayısı,
+  son yılın en yüksek medyanı ve kimin olduğu. Rakamlar yalnızca sayfanın kendi verisinden,
+  türetilmiş bir "genel medyan" yok: hücre medyanlarından genel medyan hesaplanamaz.
+- **Katılım grafiği** tam genişlikte, sütunlar 170 px'e kadar; yanında son anketin ayı.
+- **Kaynak** giriş metninde, anket sahibinin bağlantısıyla adı geçiyor. Sayfanın dibinde, tablonun
+  altında "Veri ve yöntem" bölümü var: dört madde (eşik, aralık ortası, Türkiye·TL, nominal TL) dört
+  sütunda, altında kaynak ve izin satırı. Kullanıcı önce grafiğin altına konan hap sırasını
+  dağınık buldu; aşağı taşındı. Uzun kutu (`SalarySources`) meslek sayfasında olduğu gibi kalıyor.
+
 ## Refresh token HttpOnly cookie'de, access token yalnızca bellekte — DECIDED (2026-09-27)
 
 Sprint 2'nin "Token storage: localStorage + single-flight refresh" kararının yerine geçer. O karar bir güvenlik değerlendirmesi olmadan alınmıştı. CSP'de `script-src 'unsafe-inline'` hâlâ açıkken, herhangi bir XSS localStorage'daki token'ları okuyup hesabı kalıcı olarak ele geçirebiliyordu. `PRIVACY_CHECKLIST.md` de bunu "backlog" olarak not etmişti.

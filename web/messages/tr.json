@@ -7539,9 +7539,9 @@
       "title": "Yazılım meslekleri ve maaşları, {first}–{last}",
       "keywords": "yazılımcı maaşları, yazılım mühendisi maaşı, developer maaşı, maaş anketi, yazılım sektörü maaşları",
       "eyebrow": "Maaş verisi",
-      "lead": "Her yıl düzenlenen açık maaş anketlerine göre hangi meslekte ne kadar kazanıldığını, seviyeye ve deneyime göre nasıl değiştiğini gör. Tutarlar aylık net ve Türk lirası.",
-      "statResponses": "Toplam katılım, {years} yıl",
-      "statOccupations": "Meslek",
+      "lead": "<link>{name}</link>'nın her yıl düzenlediği açık maaş anketlerine göre hangi meslekte ne kadar kazanıldığını, seviyeye ve deneyime göre nasıl değiştiğini gör. Tutarlar aylık net ve Türk lirası.",
+      "statResponses": "maaş yanıtı",
+      "statOccupations": "meslek",
       "participantsTitle": "Her yıl kaç kişi katıldı?",
       "footnote": "Sıralama son yılın medyanına göre. Seyir çizgisi her meslekte kendi ölçeğinde; bir yıl eksikse o meslek o yıl ankette yoktu ya da {minimum} kişinin altında kaldı.",
       "table": {
@@ -7555,7 +7555,13 @@
         "rangeTitle": "Alt çeyrek {p25}, üst çeyrek {p75}",
         "trendLabel": "{occupation} medyan maaş seyri",
         "medianShort": "medyan"
-      }
+      },
+      "statResponsesNote": "{years} yılın anketlerinden",
+      "statOccupationsNote": "en az {minimum} kişilik gruplarla",
+      "statTopMedian": "en yüksek medyan",
+      "statTopMedianNote": "{year} · {occupation}",
+      "statsLabel": "Özet",
+      "latestSurvey": "Son anket: {month}"
     },
     "chart": {
       "title": "Yıllara göre aylık net maaş",
@@ -7630,9 +7636,30 @@
       "threshold": "En az {minimum} kişinin düştüğü gruplar gösterilir; daha küçük bir grubun hiçbir rakamı yayınlanmaz.",
       "method": {
         "band": "Anket maaşı aralık olarak soruyor; değerler aralığın ortası, 500 TL'ye yuvarlanmış. Üstü açık bir aralığa düşen değer \"≥\" ile yazılır.",
-        "pooled": "Aynı yıl birden fazla anket varsa yanıtları tek havuzda birleştirilir; aynı kişi iki ankete de katılmış olabilir.",
         "currency": "Yalnızca Türkiye'de çalışan ve maaşını Türk lirası ile alanların yanıtları sayılır.",
         "nominal": "Tutarlar o yılın nominal TL'si, enflasyona göre düzeltilmemiştir."
+      },
+      "strip": {
+        "title": "Veri ve yöntem",
+        "source": "Kaynak: <link>{name}</link> maaş anketleri, {first}–{last} · anket sahibinin izniyle. Kişi bazında veri tutmuyoruz, yalnızca grupların özeti var.",
+        "facts": {
+          "threshold": {
+            "title": "≥ {minimum} kişi",
+            "text": "Daha küçük grupların hiçbir rakamı yayınlanmaz"
+          },
+          "band": {
+            "title": "Aralık ortası",
+            "text": "Anket aralık soruyor; değer ortası, 500 ₺'ye yuvarlı, açık uç ≥ ile"
+          },
+          "currency": {
+            "title": "Türkiye · TL",
+            "text": "Yalnızca Türkiye'de TL ile maaş alanlar"
+          },
+          "nominal": {
+            "title": "Nominal TL",
+            "text": "O yılın parası, enflasyon düzeltmesi yok"
+          }
+        }
       }
     }
   }
