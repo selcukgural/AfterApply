@@ -30,6 +30,12 @@ public sealed class StorageOptions
     /// GoogleCloudStorage and <c>Blog:Enabled</c> is true.</summary>
     public string BlogMediaBucketName { get; init; } = string.Empty;
 
+    /// <summary>The GCS bucket holding profile photos (2026-09-28) — a third bucket, for the same
+    /// reason the blog has its own: a photo is reachable by anyone holding its URL, a CV by its
+    /// owner alone, and the two must never share a policy. Same trust model: private at the bucket
+    /// level, bytes proxied by the API. Required when <see cref="Provider"/> is GoogleCloudStorage.</summary>
+    public string AvatarBucketName { get; init; } = string.Empty;
+
     /// <summary>Points the GCS client at a fake server instead of Google's. Set only by the
     /// integration suite; unset everywhere else, which is what makes the real client authenticate
     /// with Application Default Credentials.</summary>
@@ -42,6 +48,9 @@ public sealed class StorageOptions
     /// <summary>The blog images' directory under <see cref="FileStorageProvider.FileSystem"/> —
     /// separate from the CVs' for the same reason the buckets are.</summary>
     public string BlogLocalRootPath { get; init; } = Path.Combine(Path.GetTempPath(), "afterapply-blog-media");
+
+    /// <summary>The profile photos' directory under <see cref="FileStorageProvider.FileSystem"/>.</summary>
+    public string AvatarLocalRootPath { get; init; } = Path.Combine(Path.GetTempPath(), "afterapply-avatars");
 
     /// <summary>Per-file cap. 5 MB is already generous for a CV — a text-heavy PDF is well under
     /// 1 MB, and a design-led one with embedded images rarely passes 3 — and it is far below Cloud

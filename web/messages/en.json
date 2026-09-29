@@ -12,8 +12,8 @@
         "description": "The job hunt from the applicant's side: exporting your LinkedIn history, tracking applications, reply times and rejection emails."
       },
       "blog": {
-        "title": "Blog",
-        "description": "Stories of looking for a job, not of finding one."
+        "title": "Job Search Blog: Applications, Waiting and Motivation",
+        "description": "Articles about the job search itself: what \"application submitted\" means, how to read a posting, why replies take so long and how to stay motivated."
       },
       "login": {
         "title": "Log In",
@@ -37,7 +37,7 @@
       },
       "cookies": {
         "title": "Cookie Policy",
-        "description": "The two cookies e-kariyerim uses, what they do, how long they last — and why there is no consent banner."
+        "description": "The three cookies e-kariyerim uses, what they do, how long they last — and why there is no consent banner."
       },
       "terms": {
         "title": "Terms of Use",
@@ -1468,7 +1468,7 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: 27 September 2026",
+    "lastUpdated": "Last updated: 28 September 2026",
     "cookiesSection": {
       "title": "Cookies",
       "before": "We only use cookies the service needs in order to work; there are no advertising or analytics cookies, which is why you never see a cookie consent banner. What each cookie does, how long it is kept and how to delete it is listed one by one in the",
@@ -1673,6 +1673,19 @@
       "deletion": "Deleting your account deletes all your comments — and the replies they received; your data export includes your comments.",
       "legalBasis": "Legal basis: your own explicit action — you choose to comment."
     },
+    "profilePhoto": {
+      "title": "Your profile photo",
+      "intro": "Adding a profile photo is optional. When you add one:",
+      "what": "You crop the photo in your browser; our server saves it again as a 256×256 pixel image and keeps only that. The file you uploaded is not kept, and file details such as location (GPS), device and capture data are removed.",
+      "where": "Your photo appears in the menu in the top bar and on your profile page. On blog comments it appears next to your name, to everyone, only if you turn on \"Show my photo on my blog comments\"; that setting is off by default.",
+      "never": "Salaries, company reviews, candidate experiences, silence reports and response rates are anonymous: your photo is never shown there, under any setting.",
+      "address": "Your photo is served from a random address unrelated to your account. When you change or remove it, or stop showing it on comments, the address changes and the old one stops working; a browser that already saw it may keep it in its cache for up to a day.",
+      "moderation": "A photo on a blog comment can be reported as \"Inappropriate profile photo\". An admin can remove the photo; your comment stays.",
+      "audit": "Every request that uploads or removes your photo or changes where it is shown records the connection's IP address in the request log (the \"Request log\" item above). It is never shown anywhere.",
+      "storage": "The photo is kept in our own cloud storage, in a space closed to the public, and sent to no third party.",
+      "deletion": "You can remove the photo at any time; deleting your account deletes it too. Your data export includes the photo's address and where you chose to show it.",
+      "legalBasis": "Legal basis: your own explicit action — you choose to add a photo and to show it on comments."
+    },
     "aggregates": {
       "title": "Aggregate response data (the sector table and a company page's \"Response\" tab)",
       "intro": "The applications you track feed aggregate figures detached from your identity: a sector's or a company's response rate, first-reply time, post-interview silence, ghosting rate, promise keeping and rejection notice rate. When they do:",
@@ -1868,7 +1881,7 @@
     "lastUpdated": "Last updated: 27 September 2026",
     "intro": {
       "title": "In short",
-      "body": "e-kariyerim uses only the two cookies the service needs to work. No advertising cookies, tracking pixels, analytics tools like Google Analytics, or any third-party cookies. That is why no cookie banner appears: there is no optional cookie to ask your consent for. The one exception is the Pro plan checkout: the payment form opens on PayTR's own page and PayTR may use its own strictly necessary cookies there; those cookies are not read on any other page of this site.",
+      "body": "e-kariyerim uses only the three cookies the service needs to work. No advertising cookies, tracking pixels, analytics tools like Google Analytics, or any third-party cookies. That is why no cookie banner appears: there is no optional cookie to ask your consent for. The one exception is the Pro plan checkout: the payment form opens on PayTR's own page and PayTR may use its own strictly necessary cookies there; those cookies are not read on any other page of this site.",
       "legalNote": "Under Turkish data protection law (KVKK), strictly necessary and functional cookies do not require explicit consent — what they require is disclosure. This page is that disclosure."
     },
     "table": {
@@ -1883,12 +1896,15 @@
       "themePurpose": "Remembers your light/dark theme preference. Written only when you press the theme button, or when you sign in and the preference stored on your account is applied.",
       "themeType": "Functional — first party",
       "themeDuration": "1 year",
-      "note": "Both store nothing but a preference: neither contains an identifier, a user number or a tracking code, and neither is sent to any third party."
+      "sessionPurpose": "Keeps you signed in. It holds a random session-renewal token that your browser sends only to our API server's (api.ekariyerim.com) session-renewal and sign-out addresses. No script on the page can read it (HttpOnly), and it is not sent with requests coming from another site (SameSite=Strict).",
+      "sessionType": "Strictly necessary — first party",
+      "sessionDuration": "30 days, renewed on each use, but never more than 90 days from when you signed in. Deleted when you sign out.",
+      "note": "The language and theme cookies store nothing but a preference and contain no identifier. The token in the session cookie matches your account, but its only job is keeping you signed in: it is not used for tracking or measurement. None of the three is sent to any third party."
     },
     "storage": {
       "title": "Browser storage (localStorage and sessionStorage)",
       "intro": "These are not cookies, but they store data on your device in the same way, so we list them here too:",
-      "item1": "Session tokens — aa_access_token, aa_refresh_token, their expiry times, and aa_user (your name, email address and interface preferences). They keep you signed in; they live in localStorage and are deleted when you sign out.",
+      "item1": "Session profile — aa_user (your name, email address and interface preferences). It lets the right menu appear at once when a page reloads; on its own it signs nobody in. It lives in localStorage and is deleted when you sign out. Session tokens are no longer kept here but in the session cookie above; the old aa_access_token and aa_refresh_token values left in a browser signed in before 27 September 2026 are read and deleted on your first visit.",
       "item2": "Sign-in security keys — aa_google_oauth, aa_linkedin_oauth and aa_github_oauth. These are single-use values that block a CSRF attack during a Google, LinkedIn or GitHub sign-in; they live in sessionStorage and are deleted the moment the sign-in completes.",
       "item3": "Saved board views — aa_board_views. When you choose “Save this filter” on the applications board, the name you give the view and its filter settings (date range, source and state choices) are kept in localStorage. They are never sent to our server and stay in this browser only; deleting the view deletes them.",
       "outro": "The first two are required for the service to work — without them you cannot sign in. The third is functional and is written only when you save a view."
@@ -1921,7 +1937,7 @@
     },
     "control": {
       "title": "How to remove cookies",
-      "body": "You can delete this site's cookies and site data from your browser's settings at any time, and you can block cookies entirely. The effect: your language and theme preferences fall back to the defaults, and if you also delete the session tokens you are signed out and have to sign in again. Nothing else about the site stops working.",
+      "body": "You can delete this site's cookies and site data from your browser's settings at any time, and you can block cookies entirely. The effect: your language and theme preferences fall back to the defaults, and if you also delete the session cookie you are signed out and have to sign in again. Nothing else about the site stops working.",
       "accountNote": "Deleting the data held in your account is a separate matter — you can do that by deleting your account from the Settings page."
     },
     "changes": {
@@ -2652,7 +2668,7 @@
       },
       "calloutLogos": {
         "title": "Company logos",
-        "body": "When a company has a logo, it shows on the card instead of its initials. Logos are fetched by our server from the company's LinkedIn page and shown only to users who applied to that company or saved one of its postings. Companies without a logo found show their initials."
+        "body": "If a company has a logo, it replaces the initials on its card. Our server takes it from the company's own website first and from its LinkedIn page if the site has none, and keeps a copy on our own server; your browser never goes to another site for it. Logos are shown only to users who applied to that company or saved one of its postings. Companies without a logo show their initials."
       },
       "calloutFilters": {
         "title": "Filters do not change the board",
@@ -2730,10 +2746,14 @@
       "intro": "Settings is where you choose your notifications, export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "profile": {
         "title": "My Profile",
-        "body": "My Profile in the avatar menu shows whose account this is and what it holds: your first and last name (editable), your e-mail address (cannot be changed; sign-in and notifications are tied to it), the date you joined, your plan, your latest reviews and salary entries, and your application, tracked-job and CV counts.",
+        "body": "My Profile in the avatar menu shows whose account this is and what it holds: your profile photo, your first and last name (editable), your e-mail address (cannot be changed; sign-in and notifications are tied to it), the date you joined, your plan, your latest reviews and salary entries, and your application, tracked-job and CV counts.",
         "calloutName": {
           "title": "The name is optional",
           "body": "Sign-up does not ask for a name. Add one under My Profile and the top bar and our e-mails address you by it; leave it empty and the part of your e-mail before the @ is shown instead."
+        },
+        "calloutPhoto": {
+          "title": "Where does my profile photo appear?",
+          "body": "Use the camera button on the corner of the photo to choose a picture and position it in the circle; the same button changes or removes it. The photo appears in the top bar and on My Profile. On blog comments it appears only if you turn on \"Show my photo on my blog comments\". Salaries, company reviews and candidate experiences are always anonymous; your photo never appears there."
         }
       },
       "notifications": {
@@ -3376,6 +3396,8 @@
   "blog": {
     "title": "Blog",
     "subtitle": "Stories of looking for a job, not of finding one.",
+    "heading": "Job search blog",
+    "intro": "These articles are about searching for a job rather than finding one: what happens after you send an application, how to read a posting, why the reply takes so long and how to keep going through a long search.",
     "emptyInLanguage": "Nothing in English yet; {count, plural, =1 {one post is} other {# posts are}} up in {language, select, tr {Turkish} other {the other language}}.",
     "readListInOtherLanguage": "{language, select, tr {Go to the Turkish posts →} other {Go to the other language →}}",
     "readMore": "Read more",
@@ -3471,6 +3493,7 @@
       "Spam": "Spam",
       "Insult": "Insult or abusive content",
       "Inappropriate": "Inappropriate content",
+      "ProfilePhoto": "Inappropriate profile photo",
       "Advertising": "Advertising or promotion",
       "Other": "Other"
     },
@@ -6075,7 +6098,14 @@
       "dismissHint": "Reject closes every open report as \"action taken\"; \"Dismiss reports\" closes them and keeps the comment.",
       "inReplyTo": "In reply to",
       "rootComment": "— (root comment)",
-      "actionError": "The action could not be completed. Try again."
+      "actionError": "The action could not be completed. Try again.",
+      "photo": {
+        "title": "The author's profile photo",
+        "hint": "The photo is deleted, every comment of the author falls back to initials and \"show on my comments\" is turned off. The comment stays; open photo reports are closed as acted on.",
+        "remove": "Remove photo",
+        "confirm": "Yes, remove the photo",
+        "cancel": "Cancel"
+      }
     }
   },
   "adminExperiences": {
@@ -6669,6 +6699,25 @@
       "returned": "Your break is over. A short question is waiting on the dashboard.",
       "goToDashboard": "Go to the dashboard",
       "error": "That didn't go through. Try again."
+    },
+    "avatar": {
+      "uploadLabel": "Upload a profile photo",
+      "changeLabel": "Change your profile photo",
+      "change": "Change photo",
+      "remove": "Remove photo",
+      "removeError": "The photo could not be removed. Please try again.",
+      "cropTitle": "Position your photo",
+      "positionLabel": "Photo position. Drag it or use the arrow keys to move it.",
+      "zoom": "Zoom",
+      "cropHint": "The photo is saved again at 256×256; file details such as location are removed.",
+      "unreadable": "This file could not be read. Choose a JPEG, PNG or WebP photo.",
+      "cancel": "Cancel",
+      "savePhoto": "Save photo",
+      "saving": "Saving…",
+      "saveError": "The photo could not be saved. Please try again.",
+      "showInComments": "Show my photo on my blog comments",
+      "showInCommentsHint": "If you turn this on, everyone sees your photo next to your name on your comments. Salaries, company reviews and candidate experiences are always anonymous; your photo never appears there.",
+      "visibilityError": "The setting could not be saved. Please try again."
     }
   },
   "candidateExperiences": {

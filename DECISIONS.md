@@ -10224,3 +10224,251 @@ yolları bu süzülmüş kümeden beslenir.
 - Karanlık tema.
 - 390px'te taşma ölçümü CDP ile yapıldı. Bulunan beş düzen kusuru düzeltildi: kartların uzaması,
   mobilde grafiğin taşması, özet kutucuklarının kırılması, "₺"nin alt satıra düşmesi, binlik ayırıcısız kişi sayısı.
+
+## Refresh token HttpOnly cookie'de, access token yalnızca bellekte — DECIDED (2026-09-27)
+
+Sprint 2'nin "Token storage: localStorage + single-flight refresh" kararının yerine geçer. O karar bir güvenlik değerlendirmesi olmadan alınmıştı. CSP'de `script-src 'unsafe-inline'` hâlâ açıkken, herhangi bir XSS localStorage'daki token'ları okuyup hesabı kalıcı olarak ele geçirebiliyordu. `PRIVACY_CHECKLIST.md` de bunu "backlog" olarak not etmişti.
+
+**Model:**
+- Refresh token `__Secure-ek_rt` cookie'sinde tutuluyor: `HttpOnly; Secure; SameSite=Strict; Path=/api/auth`, `Domain` yok (yalnızca `api.ekariyerim.com`).
+- Web ve API aynı site (`ekariyerim.com` / `api.ekariyerim.com`, geliştirmede `localhost`). Bu yüzden Strict yeterli, üçüncü taraf çerez kısıtlarına takılmıyor.
+- `AuthResponse.RefreshToken` artık `[JsonIgnore]`; hiçbir yanıt gövdesinde dönmüyor.
+- `/api/auth` grubundaki `RefreshTokenCookie.Filter`, `AuthResponse` dönen her yanıtta (Google/LinkedIn/GitHub'ın iç içe `auth`'u dahil) cookie'yi set ediyor. Yeni bir giriş yolu cookie'yi unutamaz.
+- Access token yalnızca `authStore` belleğinde duruyor. Her sayfa yüklemesinde `/refresh` çağrılıyor, ama sadece `aa_user` ipucu varsa; anonim ziyaretçi boşuna istek atmıyor. localStorage'da yalnızca `aa_user` profil ipucu kalıyor.
+- `/refresh` ve `/logout`, `Origin` başlığı varsa ve `Cors:AllowedOrigins` dışındaysa 403 veriyor. Bu, SameSite'ın yanında ikinci katman.
+- CORS: yalnızca `/api/auth` grubunda credentialed ayrı bir politika var (`FrontendAuthCookie`). Diğer her yol Bearer ile, credential'sız politikada kalıyor.
+
+**Rotasyon:**
+- Rotasyon artık atomik: `WHERE Id=@id AND RevokedAt IS NULL` koşullu güncelleme, transaction içinde.
+- İki sekme aynı cookie'yi harcarsa, kaybeden 30 saniyelik grace içinde **409 `AUTH_REFRESH_SUPERSEDED`** alıyor. Bu durumda toplu iptal yok, istemci bir kez yeniden deniyor. Grace dışındaki yeniden kullanım eskisi gibi hesabın tüm oturumlarını iptal ediyor.
+- 409'da cookie silinmiyor. Silinseydi, kazanan isteğin yeni cookie'sinin üzerine yazılabilirdi.
+- Tarayıcı tarafında `navigator.locks` (`ek-auth-refresh`) refresh'i sekmeler arasında seri hâle getiriyor.
+- **Mutlak oturum ömrü:** yeni `RefreshTokens.SessionStartedAt` kolonu rotasyonlar boyunca taşınıyor. `Jwt:AbsoluteSessionDays` (varsayılan 90) dolunca refresh reddediliyor. Mevcut satırlarda başlangıç olarak kendi `CreatedAt` değeri alındı.
+- **Rate limit:** `/refresh`, login'le aynı 5/dk/IP kovasından ayrıldı ve kendi `auth-refresh` kovasına alındı (60/dk/IP). Her sayfa yüklemesi bir refresh olduğu için eski kova birkaç sekmede 429'a düşüp oturumu kapatırdı.
+- İstemci yalnızca 401'de oturumu kapatıyor. 429, 5xx ya da ağ hatası oturumu kapatmıyor.
+
+**Geçiş:**
+- 2026-09-27'den önce giriş yapmış bir tarayıcı, ilk ziyarette eski `aa_refresh_token` değerini `/refresh` gövdesinde bir kez gönderiyor. Sunucu cookie'yi set ediyor, istemci eski `aa_*_token` anahtarlarını siliyor. Kimse zorla çıkış yapmıyor.
+- Gövde yolu (`RefreshRequest.RefreshToken`, `LogoutRequest.RefreshToken`) ve `tokenStorage`'daki legacy anahtarlar, eski token'ların süresi dolduktan sonra kaldırılabilir: 30 günlük refresh ömrü → **2026-10-28'den sonra**.
+- Deploy sırasında açık kalan eski sürüm sekmeleri bir kez yeniden giriş ister. Kabul edildi.
+
+**Metinler:** `/cookies` artık üç çerez listeliyor (tr + en), localStorage maddesi güncellendi. `browserStorage.test.ts` envanteri ve `PRIVACY_CHECKLIST.md` de güncellendi.
+
+**Açık kalan (kapandı):** `script-src 'unsafe-inline'` bu değişiklikte hâlâ vardı. XSS token'ı çalamıyordu ama sayfa açıkken API'yi kullanıcı adına çağırabilirdi. Nonce tabanlı CSP ile kapatıldı; aşağıdaki 2026-09-27 CSP kaydına bakın (PR #172).
+
+## CSP: `script-src`'te `'unsafe-inline'` yerine istek başına nonce — DECIDED (2026-09-27)
+
+Refresh token'ın HttpOnly cookie'ye taşınmasının (PR #170) tamamlayıcısı. `'unsafe-inline'` açıkken sayfaya enjekte edilen bir inline script ya da `onerror=` gibi bir olay handler'ı çalışabiliyordu. Token'ı çalamasa bile sayfa açıkken API'yi kullanıcı adına çağırabilirdi.
+
+**Değerlendirilen seçenekler** (production build ve tarayıcıyla ölçüldü):
+- **Nonce, her sayfada:** seçildi.
+- **Deneysel SRI (`experimental.sri`):** elendi. Yalnızca harici script'lere `integrity` ekliyor. Sayfadaki 18 inline script'e (tema script'i ve 17 `self.__next_f.push` RSC verisi) dokunmuyor. `script-src 'self'` ile `/tr/login` hydrate olmadı, form çalışmadı.
+- **Karma** (oturumlu ve dinamik sayfalar nonce'lu, statik public sayfalar `'unsafe-inline'`): elendi. Refresh cookie aynı site içinde gidiyor; statik bir sayfadaki XSS de `/refresh` çağırıp oturumu kullanabilir. Koruma, origin'deki en zayıf sayfa kadar güçlü olurdu.
+- **Build sonrası sayfa başına hash:** Next desteklemiyor, kırılgan.
+
+**Model:**
+- `src/lib/http/contentSecurityPolicy.ts`, `buildCsp` ile politikayı kuruyor: `script-src 'self' 'nonce-…' 'strict-dynamic'`. Geliştirmede ek olarak `'unsafe-eval'` var; React hata stack'leri için gerekiyor ve dev overlay'deki eski "1 issue" uyarısını da kaldırıyor.
+- `proxy.ts` her render edilen yanıt için 128 bitlik yeni bir nonce üretiyor. CSP'yi isteğe (Next nonce'u buradan okuyor; ayrıca `x-nonce`) ve yanıta yazıyor.
+- next-intl isteğin başlıklarını kendi yanıtına kopyaladığı için nonce, `new NextRequest(request, { headers })` ile geçiriliyor.
+- Kök layout tema script'ine nonce'u veriyor. PayTR'ın `next/script`'i `'strict-dynamic'` kapsamında.
+- `next.config.ts` artık CSP basmıyor. Diğer güvenlik başlıkları orada kalıyor.
+- PayTR dönüş sayfasının `frame-ancestors 'self' https://www.paytr.com` istisnası ve X-Frame-Options'suz oluşu korunuyor.
+- `style-src 'unsafe-inline'` kalıyor. React style attribute'ları ve kütüphanelerin enjekte ettiği stillerin nonce yolu yok; enjekte edilen bir stil sayfayı bozabilir ama kod çalıştıramaz.
+
+**Matcher:**
+- Proxy matcher'ına "ilk segmentinde nokta olan" yollar eklendi (`/:file([^/]*\.[^/]*)/:rest*`). Yoksa `/llms.txt` gibi sunulmayan kök dosyaların 404'ü (`UNSERVED_ROOT_FILE_REWRITE`) hiç CSP almıyordu.
+- Bu yollar proxy'den CSP ile ama başka dokunuş olmadan geçiyor (`hasDottedFirstSegment`). `/foo.php/bar` eskisi gibi doğrudan 404, locale önekine yönlenmiyor.
+- İç içe asset'ler (`/_next`, `/vendor`, `/brand`) proxy'ye hâlâ girmiyor.
+
+**Bedel:** 2026-09-14'teki "genel sayfalar statik prerender" kararı geri alındı: build'de sayfalar ● → ƒ. Statik kalanlar yalnızca ikonlar, `robots.txt`, `sitemap.xml` ve kök `_not-found`.
+- Yerel TTFB 2 → 7–8 ms. Canlıda statik `/tr` (~250 ms) ile zaten dinamik `/tr/blog` (~295 ms) arasındaki fark ~30–50 ms.
+- 14 Eylül'deki soğuk başlangıç kaygısı geri gelmiyor: web'de `--min-instances=1` o karardan beri açık.
+- Sunucu tarafı veri çağrıları (`siteStats`, `publicConfig`, blog ve şirket public API) `next: { revalidate }` ile önbellekte kalıyor. HTML her istekte render ediliyor ama API'ye binen yük artmıyor.
+
+**Doğrulama** (`next build` + `next start` ve tarayıcı):
+- Her sayfada bütün script'ler nonce'lu ve nonce her istekte değişiyor.
+- `/tr`, `/tr/help`, `/tr/blog`, `/tr/cv-tarama`, `/en/about`, `/tr/login`, giriş sonrası `/tr/dashboard` ve `/llms.txt` 404'ü hydrate oluyor. İstemci tarafı gezinmede ihlal yok.
+- Karanlık tema script'i çalışıyor.
+- Enjekte edilen `<img onerror>` handler'ı engellendi (`script-src-attr` ihlali).
+- PayTR ödeme adımı (`next/script` ile resizer yüklemesi) uçtan uca denenmedi; o akış PayTR test hesabı istiyor. Yalnızca başlıklar (`frame-src`, `frame-ancestors`, X-Frame-Options) kontrol edildi.
+
+## robots.txt: korunan alanlar tam eşleşmeyle; blog dizini konusunu söylüyor — DECIDED (2026-09-28)
+
+Search Console'daki "dizine eklenmeyen sayfalar" raporu incelendi (tr, 2026-09-28):
+
+- **Hata: robots önek çakışması.** `Disallow: /tr/cv` bir önek kuralı. Oturumlu CV sayfasının yanında herkese açık CV taramayı da engelliyordu: `/tr/cv-tarama`, `/en/cv-scan` ve `/…/puan/…` skor kartları. Oysa ikisi de sitemap'te.
+  - Düzeltme: `disallowedPaths` her korunan alan için iki kural üretiyor: `/{locale}{path}$` (sayfanın kendisi; `$` Google ve Bing'de destekleniyor) ve `/{locale}{path}/` (altındakiler).
+  - `routes.test.ts`, Google'ın eşleşme kurallarıyla iki şeyi doğruluyor: sitemap'teki hiçbir URL (statik, şirket, blog) engellenmiyor; her korunan alan hem kendisi hem alt yollarıyla engelleniyor. Test eski kodla kırılıyor.
+- **"Tarandı – dizine eklenmedi" satırındaki `/tr/blog`:** sayfa sağlıklıydı (200, canonical doğru, hreflang var, noindex yok), ama başlığı "Blog", açıklaması tek satırlık bir slogandı.
+  - Yeni başlık ve açıklama konuyu söylüyor: tr "İş Arama Blogu: Başvurular, Bekleyiş ve Motivasyon", en "Job Search Blog: Applications, Waiting and Motivation".
+  - H1 "İş arama blogu / Job search blog" oldu, altına yazıların neyi anlattığını söyleyen bir giriş paragrafı eklendi.
+  - Breadcrumb JSON-LD kısa adda ("Blog") kaldı.
+  - Google'ın başlık ve açıklama rehberine göre (sayfaya özgü, açıklayıcı, sayfayı özetleyen). Kelime sayısı hedefi yok.
+- **Olduğu gibi bırakılanlar:**
+  - "Yönlendirmeli sayfa" (bilerek kurulan 301/307'ler). Doğrulamanın "başarısız" demesi beklenen durum.
+  - "Bulunamadı (404)": 7 URL'nin hepsi artık 301 veriyor (16 Eylül düzeltmesi, taramalar 9–13 Eylül).
+  - "Robots.txt tarafından engellendi": `api.ekariyerim.com/*`, bilerek engelleniyor.
+
+## Profil fotoğrafı — DECIDED (2026-09-28)
+
+Kullanıcı profil fotoğrafı yükleyip değiştirebiliyor ve kaldırabiliyor. Tasarım kanvası: https://claude.ai/artifact/7DT7sB5bUhdEjzn6LogdQ4 (A varyantı seçildi, B ve C elendi).
+
+**Görünürlük (kullanıcı kararı):**
+- Fotoğraf kullanıcının kendi menüsünde ve profil kartında görünüyor.
+- **Blog yorumlarında** da görünebiliyor, ama yalnızca kullanıcı "Blog yorumlarımda fotoğrafımı göster" seçeneğini açarsa. Seçenek varsayılan olarak kapalı. Yorumdaki "Selin Y." ile fotoğraf yan yana gelince kişi tanınabilir oluyor; bunu açmak kullanıcının açık tercihi olmalı.
+- **Hassas yüzeylerde asla görünmüyor:** maaşlar, şirket değerlendirmeleri, aday deneyimleri, sessizlik raporları ve yanıt oranları anonim kalıyor. Bu, arayüz kuralı olarak değil yapısal olarak garanti ediliyor:
+  - Fotoğrafın URL'si (`/api/avatars/{publicId}`) kullanıcı kimliğini taşımıyor. `AvatarPublicId` rastgele üretiliyor; her yüklemede ve "yorumlarda göster" kapatıldığında yenileniyor. Eski URL 404 veriyor.
+  - Avatar alanı yalnızca üç yanıt tipinde bulunabiliyor: `UserProfileResponse`, `BlogCommentResponse` ve admin yorum satırı. `AvatarExposureTests` Application assembly'sindeki bütün tipleri tarıyor; listede olmayan bir tipe avatar alanı eklenirse test kırılıyor.
+- **Moderasyon (kullanıcı kararı): önce yayın, sonra şikâyet.**
+  - Yorum bildirme gerekçelerine "Uygunsuz profil fotoğrafı" (`ProfilePhoto`) eklendi.
+  - Admin, yorum detayından yazarın fotoğrafını kaldırabiliyor. Fotoğraf siliniyor, "yorumlarda göster" kapanıyor, o yorumdaki açık `ProfilePhoto` bildirimleri "işlem yapıldı" olarak kapanıyor. Yorumun kendisi yerinde kalıyor.
+  - Kullanıcıya bildirim gitmiyor (MVP).
+- **OAuth fotoğrafını içe aktarma** (Google, GitHub, LinkedIn) MVP'de yok; sonraki adım.
+
+**Teknik:**
+- **Kırpma tarayıcıda** yapılıyor (kare seçim, dairesel önizleme). "Konumu yeniden ayarla" seçeneği yok, çünkü orijinal dosya saklanmıyor.
+- **Sunucu gelen dosyayı asla olduğu gibi saklamıyor.** ImageSharp ile çözüyor, kareye kırpıyor, 256×256 WebP olarak yeniden kodluyor. EXIF, ICC ve XMP siliniyor; GPS konumu dahil hiçbir dosya bilgisi kalmıyor. Yalnızca JPEG, PNG ve WebP kabul ediliyor; bunlar dışındaki decoder'lar yapılandırmada hiç yok.
+- **Decompression bomb koruması:**
+  - Çözmeden önce başlıktaki boyutlar okunuyor; 25 megapiksel ya da kenar başına 10.000 pikselden büyük görsel reddediliyor.
+  - Yalnızca tek kare çözülüyor.
+  - İstek gövdesi 6 MB ile sınırlı; dosya sınırı 5 MB (`Storage:MaxFileSizeBytes`).
+- **Lisans:** ImageSharp Six Labors Split License ile dağıtılıyor. Repo MIT lisanslı ve açık kaynak, gelir de 1M USD'nin altında, dolayısıyla Apache 2.0 kapsamında ücretsiz. İkisinden biri değişirse lisans yeniden değerlendirilmeli. 3.1.x hattında kalındı: 4.x, derleme sırasında Six Labors lisans anahtarı arıyor ve anahtar yoksa Release derlemesini kırıyor.
+- **Depolama:** ayrı bucket, `afterapply-avatars` (DEPLOYMENT.md §17). CV ve blog bucket'larıyla aynı model: bucket seviyesinde private, baytlar API üzerinden servis ediliyor. Next rewrite'ı sayesinde `img-src 'self'` değişmiyor.
+- **Önbellek:** `public, max-age=86400`. URL her değişiklikte yenilendiği için güncelleme hemen görünüyor. Admin fotoğrafı kaldırdığında, fotoğrafı daha önce görmüş tarayıcılarda en fazla bir gün önbellekte kalabiliyor; yeni ziyaretçiler görmüyor.
+- **Rate limit:** yükleme, silme ve görünürlük değişikliği için hesap başına saatte 20 (`avatar-write`).
+- **Diğer akışlar:**
+  - Hesap silindiğinde nesne commit'ten sonra siliniyor (CV'lerle aynı sıra).
+  - Dışa aktarmadaki profil bölümünde fotoğrafın URL'si ve "yorumlarda göster" tercihi yer alıyor.
+  - Gizlilik metnine profil fotoğrafı bölümü eklendi (tr + en).
+- Yazma istekleri `RequestAudit` kapsamında (otomatik).
+
+## Şirket logosu: önce şirketin sitesi, sonra LinkedIn — DECIDED (2026-09-28)
+
+2026-09-27 kaydındaki "yalnızca LinkedIn" ve "geçici hatalar kaydedilmez" maddelerinin yerine geçer.
+
+**Neden:** `company-logo-backfill` 28 Eylül sabahı ilk kez çalıştı. 24 şirketin yalnızca 6'sında logo alındı: 11'i LinkedIn'in bot duvarına (999), 7'si 5 sn zaman aşımına takıldı. İkisinde de hiçbir şey kaydedilmediği için aynı şirketler her gece LinkedIn'e yeniden gidecekti.
+
+**Değerlendirilen dış servisler:**
+- **Clearbit Logo API:** Aralık 2025'te kapandı.
+- **Brandfetch** (ücretsiz, ayda 1M istek) **ve Logo.dev** (ayda 500K istek): elendi. İkisi de görselin kullanıcının tarayıcısından doğrudan kendi sunucularından yüklenmesini şart koşuyor; Brandfetch sunucudan çekmeyi ve önbelleklemeyi açıkça yasaklıyor. Bu, "bu IP şu şirketlere başvuruyor" bilgisini üçüncü tarafa verir ve CSP'de `img-src`'yi açmayı gerektirir.
+- **GitHub veri setleri:** simple-icons ve gilbarbara/logos neredeyse yalnızca küresel teknoloji markalarını kapsıyor, Türk şirketi yok ve dosyalar SVG. Wikidata/Commons'ta kapsam düşük, lisanslar görsel görsel değişiyor.
+
+**Model:**
+- **Kaynak sırası:**
+  1. Şirketin kendi sitesi (`Company.Website`): ana sayfanın `apple-touch-icon` ve `<link rel="icon">` etiketleri, büyükten küçüğe. En fazla 4 aday denenir, son aday geleneksel `/apple-touch-icon.png` yolu. SVG ve ICO asla alınmaz.
+  2. Siteden bir şey çıkmazsa eski yol: LinkedIn `og:image`.
+- **Sitedeki ikonun boyutu:** en az 64 px (favicon logo sayılmaz), en fazla 2048 px. Boyut ImageSharp ile yalnızca başlıktan okunur. Tür baytlardan belirlenir (PNG/JPEG/WebP), bayt sınırı 256 KB.
+- **SSRF:** site herhangi bir host olabildiği için kontrol, soketin bağlandığı adreste yapılıyor (`PublicAddressGuard`, `SocketsHttpHandler.ConnectCallback`).
+  - Ad bir kez çözülür. Döndürdüğü adreslerin hepsi public değilse bağlanılmaz: loopback, özel ağlar, link-local (metadata sunucusu dahil), CGNAT, çoklu yayın, dokümantasyon blokları ve bunların IPv4-mapped, NAT64 ve 6to4 biçimleri reddedilir.
+  - Bağlantı tam o adreslerden birine yapılır; araya ikinci bir DNS sorgusu girmediği için DNS rebinding'e yer kalmaz.
+  - Yalnızca https (Website sütunundaki http bağlantısı https'e yükseltilir). IP literal, `localhost` ve noktasız ad reddedilir.
+  - Yönlendirmeler elle izlenir, her adımda aynı kurallar uygulanır. Proxy ve cookie kullanılmaz.
+  - Korumanın reddi bir "cevap" sayılır: 30 gün beklenir, tekrar denemede aralık artmaz.
+- **Zehirleme:** `Website` alanı, kimliği `CompanyPageIdentity` ile doğrulanmış LinkedIn ya da Kariyer.net sayfasından okunuyor. Dolayısıyla güven düzeyi eski LinkedIn yoluyla aynı. Logo yalnızca o şirkete başvuranların panosunda görünüyor ve admin engeli (`logo/block`) aynen geçerli.
+- **Tekrar deneme:** `CompanyLogos` tablosuna `NextCheckAt` ve `DeferCount` eklendi.
+  - Cevap geldiyse ("logo yok"): 30 gün sonra yeniden bakılır.
+  - Cevap gelmediyse (999, 429, 5xx, zaman aşımı, bağlantı hatası): 1, 2, 4, 8, 16 gün, en fazla 30 gün sonra.
+  - Logo bulunduğunda sayaç sıfırlanır.
+  - Migration, eski "bulunamadı" satırlarına `CheckedAt + 30 gün` yazıyor; böylece o şirketler bu gece topluca yeniden sorulmuyor.
+- **Zaman aşımı:** 5 sn → 10 sn (LinkedIn ve site).
+- **Log:** ertelemede istisnanın kendisi değil yalnızca sebebi yazılıyor (`… deferred (2): website timeout; LinkedIn HTTP 999`). Eskiden her şirket için bir stack trace basılıyor, gece logları bununla doluyordu.
+
+**Gerçek sitelerde yerel deneme (15 şirket):**
+- 6'sında temiz logo çıktı: Toyota, Trendyol, Insider, Peak, Migros, Aselsan (152–512 px).
+- Diğerleri: yalnızca `.ico` (GDZ Elektrik, Logo Yazılım), ana sayfada bot koruması (Getir 403, Hepsiburada, Arçelik), ikon etiketi olmayan istemci tarafı sayfa (Turkcell), küçük favicon (Computershare). Bunlar LinkedIn yedeğine düşüyor.
+
+**Gizlilik metni:** şirket logosu kişisel veri değil ve istek sunucudan çıkıyor; `/privacy` değişmedi. Yardım merkezindeki pano notu kaynağı ve "tarayıcın başka siteye gitmez" bilgisini söyleyecek şekilde güncellendi (tr + en).
+
+## Blog/rehber görüntülenme sayısı gerçek okuyucudan gelir — DECIDED (2026-09-29)
+
+**İstek.** Kullanıcı: blog ve rehber sayfalarının altındaki ve `/admin/blog`, `/admin/guide`
+tablolarındaki görüntülenme sayıları gerçek kullanıcılardan gelsin, mevcut sayılar korunsun.
+
+**Sorun.** 2026-09-20'den beri `BlogPosts.ViewCount`, `GetBySlugAsync`'in her public fetch'inde
++1 oluyordu. Sayfa SSR olduğu için bu fetch'i crawler'lar, link önizlemeleri (Slack, WhatsApp,
+LinkedIn), audit/Lighthouse koşuları ve admin'in kendi ziyaretleri de yapıyordu — sayı "okuyucu"
+değil "sunucu render'ı" sayıyordu.
+
+**Karar.** Sayaç, zaten var olan çerezsiz ziyaret sayacına (`/api/site-traffic/events`,
+`SiteTrafficReporter`) bağlandı; yeni endpoint yok:
+
+- `SiteTrafficNormalizer`: `/blog` `ExactPaths`'e ve `SlugSections`'a eklendi (o güne kadar
+  blog hiç sayılmıyordu). Preview (`/blog/preview/{id}`) üç segment → sayılmaz.
+- `SiteTrafficService.RecordAsync`: kabul edilen bir `page_view` `/blog/{slug}` ya da
+  `/guide/{slug}` ise, o dil + tür + slug'daki **yayımlanmış** yazının `ViewCount`'u yerinde +1
+  (`ExecuteUpdate`, `UpdatedAt`/revizyon değişmez).
+- `GetBySlugAsync` artık artırmıyor; sayıyı yalnızca taze okuyor (önbellekteki gövde bayat olurdu).
+- "Gerçek okuyucu" tanımı ziyaret sayacınınkiyle aynı: sayfanın JS'ini çalıştıran bir tarayıcı,
+  `navigator.webdriver` değil, admin değil, DNT kapalı, UA crawler/headless listesinde değil.
+  Yenilemeler hâlâ sayılır (sayaç ziyaretçi kimliği tutmaz — Çerez Politikası sözü).
+- **Mevcut sayılar korundu:** kolon sıfırlanmadı, migration yok; yeni sayımlar eskilerin üstüne
+  eklenir.
+- Çerez/gizlilik metni değişmedi: sayaç zaten "hangi yazının işe yaradığını" görmek için
+  tanımlı, yeni veri tutulmuyor, IP yine yazılmıyor (endpoint'in `WithoutRequestAudit` gerekçesi
+  aynen geçerli).
+
+**Açık risk (not).** Endpoint anonim ve IP başına 120/5 dk sınırlı; sahte tarayıcı UA'sıyla
+bir script sayıyı şişirebilir. Önceki hâlde (sınırsız anonim GET) de böyleydi; yazı başına
+günlük tavan gerekirse ayrı iş.
+
+**Test.** Unit: normalizer blog/guide yolları kabul, preview reddi. Integration (`BlogTests`,
+`GuideTests`): SSR fetch saymaz; tarayıcı page_view sayar; crawler UA, diğer dil, yanlış bölüm,
+index sayfası, `share_clicked` ve yayından kaldırılmış yazı saymaz; admin liste/gruplu/detay/
+preview aynı sayıyı görür.
+
+## Tanıtım videosu aracı (`tools/PromoVideo`) — DECIDED (2026-09-29)
+
+**İstek.** Kullanıcı YouTube için tanıtım videoları istiyor ama kendisi konuşmak ya da anlatmak
+istemiyor; ücretsiz bir yapay zekâ yolu arıyor. Clipchamp gibi elle kurgu yerine repoya bir araç
+olarak eklenmesini seçti: arayüz değişince video tek komutla yeniden çekilsin.
+
+**Karar.**
+- Diğer araçlar gibi (`CvScanCorpus`) bir .NET konsol aracı; slnx'te yok, elle çalıştırılır.
+  **Paket bağımlılığı yok:** Chrome'u CDP ile `ClientWebSocket` üzerinden sürer (Playwright yok),
+  kayıt `Page.startScreencast` kareleriyle yapılır, ffmpeg birleştirir.
+- Senaryo JSON: sahne = anlatım + adımlar (`goto/click/hover/type/press/scroll/wait/waitFor`).
+  Önce ses üretilir, her sahne en az sesi kadar sürer. Altyazı (SRT, uzunluğa göre zamanlanmış),
+  YouTube bölümleri (`chapters.txt`, YouTube kurallarına göre uyarılı) ve isteğe bağlı ekrana
+  basılı altyazı üretir. Ekrana basma sayfanın içine çizilir, çünkü yereldeki ffmpeg libass'sız.
+- Ses sağlayıcıları: `say` (taslak; Apple lisansı ticari olmayan kullanım → yayın için değil),
+  **`google`** (Cloud TTS, yayın için; `gcloud` token'ı, anahtar dosyası yok, aylık ücretsiz kota),
+  `piper` (çevrimdışı; model lisansı modele göre değişir). ElevenLabs'in ücretsiz planı ticari
+  kullanıma izin vermediği, edge-tts ise resmî olmayan bir uç kullandığı için alınmadı.
+  Seslendirme önbelleği metin + ses parmak izine göre tutulur, ücretli ses bir kez ödenir.
+- Gizlilik: `signIn` yalnızca yerel adreslerde (localhost/127.0.0.1/::1/*.localhost/*.test) kabul
+  edilir. Kimlik bilgileri `PROMO_EMAIL/PROMO_PASSWORD` ortam değişkenlerinden okunur, oturum
+  açma kayda girmez. Her çalıştırmada temiz bir Chrome profili açılır. `goto` yalnızca yol alır,
+  başka siteye gidemez. Çıktı `artifacts/promo-video/` altında (gitignore).
+
+**Test.** Unit (`tests/AfterApply.UnitTests/PromoVideo`, UnitTests araca ProjectReference
+veriyor): senaryo kuralları, `scenarios/` altındaki dosyaların geçerliliği, cümle/altyazı bölme,
+SRT, bölümler, ses karıştırma, WAV başlığı, kare listesi. Uçtan uca: yerel stack + demo hesapla
+`tanitim-tr.json` 51 sn / 1080p üretildi (ses ve görüntü eşit uzunlukta; ekrana basılı altyazı
+ve imleç karelerde doğrulandı).
+
+**Ek (aynı gün): genel tanıtım videosu.** Kullanıcı Google `tr-TR-Chirp3-HD-Charon` sesini seçti
+(10 örnek arasından). Text-to-Speech API `ekariyerim` projesinde kullanıcı onayıyla açıldı.
+Eklenenler: `card`/`hideCard` adımları (logolu tam ekran açılış/kapanış kartı, logo sitenin
+kendi `/brand/logo-mark.png`'si), `music` (`generate: "ambient"`: aracın kendi bestelediği pad,
+telif riski yok; ya da `file`: örneğin YouTube Ses Kitaplığı), sidechain ile müziğin anlatım
+altında kısılması + −16 LUFS normalizasyon, `pronounce` sözlüğü (kullanıcı isteği: "CV" harf
+harf değil "sivi" okunmalı; yalnız sese uygulanır, altyazı yazıldığı gibi kalır; tam kelime
+eşleşmesi). Senaryo: `scenarios/genel-tanitim-tr.json` (~86 sn, 8 sahne). Mesaj V-serisine
+uygun: "takip et" değil, "başvuruların nereye gidiyor". Yayın render'ı web'in üretim
+derlemesine karşı alınır (dev sunucusu köşeye Next.js simgesi basıyor).
+
+**Ek 2 (aynı gün): ses Gemini-TTS'e geçti, görüntü YouTube ayarlarına çekildi.** Chirp3-HD
+Charon kısaltmalarda ("ATS'lerde", "ey ti es" gibi okunuş yazımları) yapay duyuluyordu.
+Yan yana dinleme: Chirp3-HD, ElevenLabs (George/Brian, `eleven_multilingual_v2` ve `eleven_v3`)
+ve Gemini-TTS (`gemini-2.5-pro-tts`, `gemini-2.5-flash-tts`, `gemini-3.1-flash-tts-preview`).
+Kullanıcı önce ElevenLabs George v3'ü beğendi ama ücretli plana geçemiyor (ücretsiz plan ticari
+değil); son seçim **Gemini-TTS `gemini-2.5-pro-tts` + Charon + stil talimatı**, okunuş sözlüğü
+olmadan (CV/ATS/LinkedIn'i kendisi doğru okuyor; sözlükte yalnız e-kariyerim/ekariyerim.com
+kaldı). Aynı `google` sağlayıcısı, `voice.model` + `voice.prompt` ile; Cloud şartlarında ticari
+kullanım serbest. `elevenlabs` sağlayıcısı ileride ücretli plan için araçta kaldı (anahtar
+yalnızca `ELEVENLABS_API_KEY`'den, sadece Text to Speech yetkili). İlk yüklemede YouTube'un
+360p göstermesi normal işleme sırasıydı; yine de dosya `yuvj420p` (tam aralık etiketi) çıkıyordu:
+encode artık BT.601 tam aralık JPEG kareleri sınırlı aralık BT.709'a çeviriyor ve etiketliyor,
+High profil, kapalı GOP (fps/2), 2 B-kare, CRF 16. Çıktı 2560×1440: viewport'un 2x doğal
+çözünürlüğü (küçültme yok) ve YouTube 1440p yüklemeye daha iyi kodek veriyor, 1080p izleyen de
+bundan faydalanıyor.

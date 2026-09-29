@@ -52,9 +52,11 @@ public sealed class BlogPost : AuditableEntity
 
     public Guid? CoverMediaId { get; private set; }
 
-    /// <summary>How many times the published post was fetched by a reader (2026-09-20). A plain
-    /// tally: every public fetch counts, bots and reloads included, and nothing about who fetched
-    /// it is kept. Bumped in place by the public service (<c>ExecuteUpdate</c>), never through the
+    /// <summary>How many times a reader opened the published post (2026-09-20). Since 2026-09-29
+    /// it counts the visit counter's page views of the post — a real browser, not automated, not an
+    /// admin, not a crawler's user agent — instead of every server-side fetch; the tally from before
+    /// was kept as the starting point. Reloads still count, and nothing about who read it is kept.
+    /// Bumped in place by <c>SiteTrafficService</c> (<c>ExecuteUpdate</c>), never through the
     /// aggregate, so a read does not touch <see cref="UpdatedAt"/> or the revision.</summary>
     public int ViewCount { get; private set; }
 

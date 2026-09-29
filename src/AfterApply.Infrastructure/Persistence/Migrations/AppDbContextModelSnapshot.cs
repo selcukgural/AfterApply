@@ -1041,6 +1041,12 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<int>("DeferCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("NextCheckAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("CompanyId");
 
                     b.ToTable("CompanyLogos", (string)null);
@@ -3297,6 +3303,16 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AvatarObjectName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("AvatarPublicId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AvatarUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -3391,6 +3407,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
+                    b.Property<bool>("ShowAvatarInComments")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("StaleSuggestionDismissedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -3405,6 +3424,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AvatarPublicId")
+                        .IsUnique();
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -3599,6 +3621,9 @@ namespace AfterApply.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("SessionStartedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("TokenHash")

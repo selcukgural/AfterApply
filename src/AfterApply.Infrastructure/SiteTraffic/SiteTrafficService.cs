@@ -1,5 +1,7 @@
 using AfterApply.Application.SiteTraffic;
 using AfterApply.Application.SiteTraffic.Contracts;
+using AfterApply.Domain.Blog;
+using AfterApply.Domain.SiteTraffic;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,7 +45,49 @@ internal sealed class SiteTrafficService(AppDbContext dbContext) : ISiteTrafficS
              """,
             cancellationToken);
 
+        await CountPostViewAsync(normalized, cancellationToken);
+
         return affected > 0;
+    }
+
+    /// <summary>
+    /// A page view of a published blog or guide post is also one on that post's own tally
+    /// (2026-09-29) — the number under the article and in the admin tables. Until then the tally
+    /// grew on every server-side fetch of the post, crawlers and link previews included; counting
+    /// it here gives it the counter's definition of a reader instead: a browser that ran the page's
+    /// script, is not automated, is not an admin, and whose user agent is not a crawler's. Nothing
+    /// about the visitor is stored here either — the same in-place increment as before.
+    /// </summary>
+    private async Task CountPostViewAsync(NormalizedSiteTrafficEvent normalized, CancellationToken cancellationToken)
+    {
+        if (normalized.Event != SiteTrafficEvent.PageView)
+        {
+            return;
+        }
+
+        // The normalizer has already reduced the path to "/{section}/{slug}" with a slug-shaped
+        // slug, or to something that is not a post at all.
+        var segments = normalized.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length != 2)
+        {
+            return;
+        }
+
+        BlogPostKind? kind = segments[0] switch
+        {
+            "blog" => BlogPostKind.Blog,
+            "guide" => BlogPostKind.Guide,
+            _ => null
+        };
+        if (kind is null)
+        {
+            return;
+        }
+
+        var slug = segments[1];
+        await dbContext.BlogPosts
+            .Where(p => p.Kind == kind && p.Language == normalized.Locale && p.Slug == slug && p.Status == BlogPostStatus.Published)
+            .ExecuteUpdateAsync(set => set.SetProperty(p => p.ViewCount, p => p.ViewCount + 1), cancellationToken);
     }
 
     public async Task<IReadOnlyList<SiteTrafficCounterResponse>> GetRecentAsync(

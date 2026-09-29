@@ -99,6 +99,8 @@ public static class SiteTrafficNormalizer
         "/forgot-password",
         "/reset-password",
         "/guide",
+        // The blog's index (2026-09-29): out of the list until then, so no post was ever counted.
+        "/blog",
         "/help",
         "/benchmark",
         // The scan's slug is translated: /tr/cv-tarama, /en/cv-scan (web/src/lib/cvScan/path.ts).
@@ -129,8 +131,9 @@ public static class SiteTrafficNormalizer
     /// <summary>Sections with one page per slug. The slug itself is what the guide section exists to
     /// measure — which article brings anyone in — so it is kept, bounded by
     /// <see cref="SlugPattern"/> rather than by a list the Application layer would have to keep in
-    /// step with the MDX files.</summary>
-    private static readonly HashSet<string> SlugSections = new(StringComparer.Ordinal) { "/guide", "/help", "/companies" };
+    /// step with the posts. A page view of a blog or guide post is also that post's reader count
+    /// (2026-09-29, SiteTrafficService) — the same visitor rules, so one definition of "a reader".</summary>
+    private static readonly HashSet<string> SlugSections = new(StringComparer.Ordinal) { "/guide", "/blog", "/help", "/companies" };
 
     /// <summary>The shared-score pages (<c>/cv-tarama/puan/88-28-22-20-18</c>, <c>/cv-scan/score/…</c>).
     /// Counted as their section, with the card dropped: the number of people who arrive through a

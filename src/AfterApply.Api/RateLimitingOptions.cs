@@ -26,6 +26,11 @@ public sealed class RateLimitingOptions
     /// <summary>Per IP: login/register/refresh/forgot/reset run before the caller is authenticated.</summary>
     public FixedWindowPolicy Auth { get; init; } = new() { PermitLimit = 5, WindowSeconds = 60 };
 
+    /// <summary>Per IP: token refresh. Every page load of a signed-in tab spends one (the access
+    /// token is held in memory only), so it can't share the five-a-minute sign-in bucket; the token
+    /// is 256 random bits, so the limit is about volume, not guessing.</summary>
+    public FixedWindowPolicy AuthRefresh { get; init; } = new() { PermitLimit = 60, WindowSeconds = 60 };
+
     public FixedWindowPolicy Upload { get; init; } = new() { PermitLimit = 10, WindowSeconds = 300 };
 
     public FixedWindowPolicy ExtensionSignal { get; init; } = new() { PermitLimit = 60, WindowSeconds = 300 };
@@ -133,6 +138,10 @@ public sealed class RateLimitingOptions
 
     /// <summary>Per admin — the SEO suggestion button, a model call each (2026-09-21). Twenty an
     /// hour is many posts' worth of "suggest again"; it bounds a stuck retry, not an author.</summary>
+    /// <summary>Per user — uploading, removing or showing/hiding the profile photo (2026-09-28).
+    /// Each upload decodes an image; twenty an hour is a person trying a few crops, not a loop.</summary>
+    public FixedWindowPolicy AvatarWrite { get; init; } = new() { PermitLimit = 20, WindowSeconds = 3600 };
+
     public FixedWindowPolicy BlogSeoSuggest { get; init; } = new() { PermitLimit = 20, WindowSeconds = 3600 };
 
     /// <summary>Per IP, anonymous — the public company directory search: a trigram scan per

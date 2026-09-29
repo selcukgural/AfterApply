@@ -120,6 +120,8 @@ public class GoogleSignInTests(ApiHost<GoogleSignInProfile> host) : IClassFixtur
         var signup = await client.PostAsJsonAsync("/api/auth/google/signup",
             new GoogleSignupRequest(body.PendingSignup.SignupToken, "Augusta Ada", "King", ConsentAccepted: true), JsonOptions);
         signup.StatusCode.ShouldBe(HttpStatusCode.Created);
+        RefreshCookie.From(signup).ShouldNotBeNull();
+        (await signup.Content.ReadAsStringAsync()).ShouldNotContain("refreshToken", Case.Insensitive);
         var auth = (await signup.Content.ReadFromJsonAsync<AuthResponse>(JsonOptions))!;
         auth.User.Email.ShouldBe("new.google@example.com");
         auth.User.FirstName.ShouldBe("Augusta Ada");
@@ -234,13 +236,16 @@ public class GoogleSignInTests(ApiHost<GoogleSignInProfile> host) : IClassFixtur
 
         var signIn = await SignInAsync(_factory.CreateClient(), new GoogleIdentity("g-legacy", "legacy.claim@example.com", true, "L", "C"));
         signIn.StatusCode.ShouldBe(HttpStatusCode.OK);
+        // The nested `auth` of a returning sign-in gets the same treatment as a top-level one.
+        RefreshCookie.From(signIn).ShouldNotBeNull();
+        (await signIn.Content.ReadAsStringAsync()).ShouldNotContain("refreshToken", Case.Insensitive);
         var body = (await signIn.Content.ReadFromJsonAsync<GoogleSignInResponse>(JsonOptions))!;
         body.Auth!.User.Id.ShouldBe(registered.User.Id);
         body.Auth.User.HasPassword.ShouldBeFalse();
 
         (await earlier.PostAsJsonAsync("/api/auth/login", new LoginRequest("legacy.claim@example.com", Password), JsonOptions))
             .StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-        (await earlier.PostAsJsonAsync("/api/auth/refresh", new RefreshRequest(registered.RefreshToken), JsonOptions))
+        (await earlier.RefreshAsync(registered.RefreshToken))
             .StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         using var patClient = _factory.CreateClient();
         patClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", pat.Token);

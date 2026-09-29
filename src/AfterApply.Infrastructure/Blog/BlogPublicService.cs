@@ -50,12 +50,10 @@ internal sealed class BlogPublicService(
             return null;
         }
 
-        // Every fetch of a published post is a view (2026-09-20): one in-place increment, no
-        // record of who, and no cache eviction — the tally is read back fresh here instead of
-        // from the cached body, so the page shows the number it just became.
-        await dbContext.BlogPosts
-            .Where(p => p.Id == post.Id && p.Status == BlogPostStatus.Published)
-            .ExecuteUpdateAsync(set => set.SetProperty(p => p.ViewCount, p => p.ViewCount + 1), cancellationToken);
+        // A fetch is not a view (2026-09-29): the page is server-rendered, so this call is made
+        // for crawlers and link previews as often as for readers. The reader's browser reports the
+        // view through the visit counter (SiteTrafficService); the tally is only read here, fresh
+        // rather than from the cached body, which every view would otherwise leave stale.
         var viewCount = await dbContext.BlogPosts
             .Where(p => p.Id == post.Id)
             .Select(p => p.ViewCount)

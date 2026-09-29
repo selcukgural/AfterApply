@@ -171,6 +171,7 @@ export function NavBar() {
               <UserMenu
                 name={fullName}
                 initials={initials}
+                avatarUrl={user.avatarUrl ?? null}
                 onLogout={handleLogout}
                 showAdmin={showAdmin}
                 showPro={showPro}

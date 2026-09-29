@@ -8,8 +8,7 @@ import type {
   UserPlanResponse,
   UserProfileResponse,
 } from "@/types/api";
-import { API_BASE_URL, apiFetch } from "./httpClient";
-import { authStore } from "./authStore";
+import { apiFetch, apiFetchResponse } from "./httpClient";
 
 export interface RegisterRequest {
   email: string;
@@ -168,10 +167,11 @@ export const authApi = {
       body: JSON.stringify(request),
     }),
 
-  logout: (refreshToken: string) =>
+  // The refresh token rides along as the HttpOnly cookie; the server revokes it and clears it.
+  logout: () =>
     apiFetch<void>("/api/auth/logout", {
       method: "POST",
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify({}),
     }),
 
   me: () => apiFetch<UserProfileResponse>("/api/users/me"),
@@ -182,6 +182,23 @@ export const authApi = {
     apiFetch<UserProfileResponse>("/api/users/me", {
       method: "PUT",
       body: JSON.stringify(request),
+    }),
+
+  /** The cropped photo from the profile card. The server re-encodes it to a 256 px WebP and keeps
+   *  nothing else; the answer carries the new avatarUrl. */
+  uploadAvatar: (photo: Blob) => {
+    const body = new FormData();
+    body.append("file", photo, "avatar.jpg");
+    // No Content-Type header: the browser sets multipart/form-data with its own boundary.
+    return apiFetch<UserProfileResponse>("/api/users/me/avatar", { method: "PUT", body });
+  },
+
+  deleteAvatar: () => apiFetch<UserProfileResponse>("/api/users/me/avatar", { method: "DELETE" }),
+
+  setAvatarVisibility: (showInComments: boolean) =>
+    apiFetch<UserProfileResponse>("/api/users/me/avatar/visibility", {
+      method: "PUT",
+      body: JSON.stringify({ showInComments }),
     }),
 
   updateLanguage: (language: string) =>
@@ -218,11 +235,10 @@ export const authApi = {
 
   // Not routed through apiFetch: the response body is a file download (raw
   // bytes), not JSON to parse into a typed object.
+  // Through apiFetchResponse so a tab that has not refreshed since its last reload (no access
+  // token in memory yet) gets one instead of a bare 401.
   exportData: async (): Promise<void> => {
-    const token = authStore.getAccessToken();
-    const response = await fetch(`${API_BASE_URL}/api/users/me/export`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    const response = await apiFetchResponse("/api/users/me/export");
 
     if (!response.ok) {
       // Not an ApiError on purpose: this endpoint returns a raw file body, not

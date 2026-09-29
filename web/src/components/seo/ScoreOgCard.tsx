@@ -7,18 +7,21 @@ export interface ScoreOgCardProps {
   kicker: string;
   title: string;
   footer: string;
+  /** The brand mark as a data URI (the route reads `public/brand/logo-mark-og.png` once). */
+  logoSrc: string;
 }
 
 /**
  * The share card behind a `/cv-tarama/puan/<card>` page: the brand card's ground and mark (OgCard),
  * with the score where the page title normally goes and the four subtotals under the question.
- * Same satori constraints — flexbox only, every multi-child element `display: flex`, no assets.
+ * Same satori constraints — flexbox only, every multi-child element `display: flex`, no assets
+ * beyond the data-URI mark.
  *
  * One number, one colour. The result screen tints the score by band; the card does not, on
  * purpose: a person who chose to share a 61 should not have it carried around the internet in
  * red (DEVELOPMENT_PLAN.md, T-series standing rules).
  */
-export function ScoreOgCard({ score, categories, kicker, title, footer }: ScoreOgCardProps) {
+export function ScoreOgCard({ score, categories, kicker, title, footer, logoSrc }: ScoreOgCardProps) {
   return (
     <div
       style={{
@@ -34,18 +37,20 @@ export function ScoreOgCard({ score, categories, kicker, title, footer }: ScoreO
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        {/* The mark's blue stroke disappears on the navy ground, so it sits on a white tile. */}
         <div
           style={{
-            width: 52,
-            height: 52,
-            borderRadius: 14,
-            background: "#2b62d9",
+            width: 60,
+            height: 60,
+            borderRadius: 16,
+            background: "#ffffff",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <div style={{ width: 22, height: 22, borderRadius: 6, background: "#f3f5f9", display: "flex" }} />
+          {/* eslint-disable-next-line @next/next/no-img-element -- satori renders <img>, not next/image */}
+          <img src={logoSrc} width={52} height={52} alt="" />
         </div>
         <div style={{ display: "flex", fontSize: 40, fontWeight: 600, letterSpacing: -1 }}>e-kariyerim</div>
       </div>

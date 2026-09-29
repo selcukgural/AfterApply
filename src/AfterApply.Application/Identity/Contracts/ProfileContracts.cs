@@ -21,7 +21,11 @@ public sealed record UserPlanResponse(bool IsActive, DateTimeOffset? ActiveUntil
 /// the admin link to the handful of accounts it belongs to instead of leaving those pages reachable
 /// by typed URL only. It is a rendering hint and never an authorisation decision: every /api/admin
 /// endpoint re-reads Users.IsAdmin from the database on each request (see AdminAccessService), so a
-/// client that flips this to true in memory gains nothing but a link that 403s.</para></summary>
+/// client that flips this to true in memory gains nothing but a link that 403s.</para>
+///
+/// <para><paramref name="AvatarUrl"/> is the caller's own photo (null: none), and
+/// <paramref name="ShowAvatarInComments"/> whether it also appears on their blog comments
+/// (DECISIONS.md 2026-09-28).</para></summary>
 public sealed record UserProfileResponse(
     Guid Id,
     string Email,
@@ -32,4 +36,8 @@ public sealed record UserProfileResponse(
     string PreferredLanguage,
     string PreferredTheme,
     bool HasPassword,
-    bool IsAdmin);
+    bool IsAdmin,
+    string? AvatarUrl,
+    bool ShowAvatarInComments);
+
+public sealed record UpdateAvatarVisibilityRequest(bool ShowInComments);

@@ -1,3 +1,4 @@
+using AfterApply.Application.Identity;
 using AfterApply.Application.Blog;
 using AfterApply.Application.Documents;
 using Microsoft.Extensions.Options;
@@ -8,7 +9,7 @@ namespace AfterApply.Infrastructure.Documents;
 /// Stores CV files under a directory on the local disk. Development and tests only — see
 /// <see cref="FileStorageProvider.FileSystem"/> for why Production refuses it.
 /// </summary>
-internal sealed class FileSystemFileStorage(string rootPath) : IFileStorage, IBlogMediaStorage
+internal sealed class FileSystemFileStorage(string rootPath) : IFileStorage, IBlogMediaStorage, IAvatarStorage
 {
     /// <summary>The CV directory — the DI-constructed instance behind <see cref="IFileStorage"/>.
     /// The blog media directory is the same class over a different root (see AddBlogMediaStorage).</summary>

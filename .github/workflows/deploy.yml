@@ -61,6 +61,10 @@ env:
   # at the bucket level, bytes proxied by the API, name is an address not a credential.
   # See DEPLOYMENT.md §16.
   BLOG_MEDIA_BUCKET: ${{ secrets.GCP_BLOG_MEDIA_BUCKET }}
+  # Profile photos (2026-09-28): a third bucket, same model. The API refuses to start on Cloud
+  # Storage without it, so the secret must exist before the first deploy that carries the feature.
+  # See DEPLOYMENT.md §17.
+  AVATAR_BUCKET: ${{ secrets.GCP_AVATAR_BUCKET }}
 
 jobs:
   # Decides which side(s) should deploy. On a manual dispatch the `target` input states intent
@@ -481,6 +485,7 @@ jobs:
             Storage__Provider=GoogleCloudStorage
             Storage__BucketName=${{ env.CV_BUCKET }}
             Storage__BlogMediaBucketName=${{ env.BLOG_MEDIA_BUCKET }}
+            Storage__AvatarBucketName=${{ env.AVATAR_BUCKET }}
             # The blog (2026-09-19) launches on: the bucket and the GCP_BLOG_MEDIA_BUCKET secret
             # exist (DEPLOYMENT.md §16). The API refuses to start with this on and no bucket
             # name, so the line above and this one move together.

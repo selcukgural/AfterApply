@@ -1,6 +1,7 @@
 import type { AuthResponse } from "@/types/api";
 import { routing } from "@/i18n/routing";
 import { authStore } from "./authStore";
+import { tokenStorage } from "./tokenStorage";
 import enMessages from "../../../messages/en.json";
 import trMessages from "../../../messages/tr.json";
 
@@ -53,10 +54,9 @@ export class ApiError extends Error {
   }
 }
 
-// Single-flight refresh: dedupes concurrent 401-triggered refresh attempts
-// within this tab. Necessary because the backend revokes ALL of a user's
-// refresh tokens if an already-rotated one is reused — firing two parallel
-// refresh calls with the same token would lock the user out.
+// Single-flight refresh: dedupes concurrent 401-triggered refresh attempts within this tab, and a
+// Web Lock (below) serialises them across tabs. Every tab spends the same cookie, and the backend
+// treats an already-rotated token as stolen once its short grace period is over.
 let refreshPromise: Promise<AuthResponse> | null = null;
 
 // This module sits below the React tree (no hook access), so it can't call
@@ -124,33 +124,62 @@ async function performFetch(path: string, options: RequestInit): Promise<Respons
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  return fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  // The refresh-token cookie lives on the API's host under /api/auth; a cross-origin response may
+  // only set it, and a request only carry it, when the request is credentialed. Nothing else needs
+  // cookies, so nothing else sends them.
+  const credentials = path.startsWith("/api/auth/") ? "include" : options.credentials;
+
+  return fetch(`${API_BASE_URL}${path}`, { ...options, headers, credentials });
 }
 
-async function refreshAccessToken(): Promise<AuthResponse> {
+// One refresh at a time across every tab of this browser. Without it two tabs waking up together
+// spend the same cookie; the server forgives that (409, retry), but the lock means it rarely has
+// to. Browsers without Web Locks fall back to the per-tab single flight above.
+async function withRefreshLock<T>(work: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== "undefined" && navigator.locks) {
+    return await navigator.locks.request("ek-auth-refresh", work);
+  }
+  return await work();
+}
+
+async function requestRefresh(retryOnRace: boolean): Promise<AuthResponse> {
+  // A browser signed in before the cookie existed still holds its token in localStorage; it is
+  // traded for the cookie once, then dropped.
+  const legacyRefreshToken = tokenStorage.legacyRefreshToken();
+  const response = await performFetch("/api/auth/refresh", {
+    method: "POST",
+    body: JSON.stringify(legacyRefreshToken ? { refreshToken: legacyRefreshToken } : {}),
+  });
+
+  // Another tab rotated the cookie a moment ago; the browser already holds its successor.
+  if (response.status === 409 && retryOnRace) {
+    return requestRefresh(false);
+  }
+
+  if (response.ok || response.status === 401) {
+    tokenStorage.clearLegacy();
+  }
+
+  if (!response.ok) {
+    throw new ApiError(response.status, "Refresh failed");
+  }
+
+  const auth = (await response.json()) as AuthResponse;
+  authStore.setAuth(auth);
+  return auth;
+}
+
+/**
+ * A fresh access token from the refresh-token cookie. AuthContext calls it on load (the access
+ * token is not persisted); apiFetch calls it on a 401. Rejects with the refresh's own status —
+ * only a 401 means the session is over.
+ */
+export async function refreshAccessToken(): Promise<AuthResponse> {
   if (refreshPromise) {
     return refreshPromise;
   }
 
-  refreshPromise = (async () => {
-    const refreshToken = authStore.getRefreshToken();
-    if (!refreshToken) {
-      throw new ApiError(401, "No refresh token available");
-    }
-
-    const response = await performFetch("/api/auth/refresh", {
-      method: "POST",
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(response.status, "Refresh failed");
-    }
-
-    const auth = (await response.json()) as AuthResponse;
-    authStore.setAuth(auth);
-    return auth;
-  })();
+  refreshPromise = withRefreshLock(() => requestRefresh(true));
 
   try {
     return await refreshPromise;
@@ -159,11 +188,15 @@ async function refreshAccessToken(): Promise<AuthResponse> {
   }
 }
 
+export function isSessionOver(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
+
 // Everything apiFetch does before it decides what the body is: the request, the single
 // refresh-and-retry on a 401, and the forced sign-out when that refresh fails. Split out so a
 // caller that wants bytes rather than JSON (apiFetchBlob, for CV downloads and previews) gets the
 // same session handling instead of a second, subtly different copy of it.
-async function apiFetchResponse(path: string, options: RequestInit): Promise<Response> {
+export async function apiFetchResponse(path: string, options: RequestInit = {}): Promise<Response> {
   const response = await performFetch(path, options);
 
   if (response.status !== 401 || isNoAuthEndpoint(path)) {
@@ -173,7 +206,13 @@ async function apiFetchResponse(path: string, options: RequestInit): Promise<Res
   try {
     await refreshAccessToken();
     return await performFetch(path, options);
-  } catch {
+  } catch (error) {
+    // A refresh that failed for any reason but a dead session (rate limit, network, a 5xx) is not
+    // a sign-out: the next request tries again.
+    if (!isSessionOver(error)) {
+      throw new ApiError(401, getFallbackMessage("generic"));
+    }
+
     authStore.clear();
     if (typeof window !== "undefined") {
       // Hard navigation is intentional here (not a React event handler, no

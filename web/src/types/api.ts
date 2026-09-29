@@ -72,6 +72,11 @@ export interface UserProfileResponse {
   // shows the admin link and nothing else: the /api/admin endpoints check the column themselves on
   // every request, so editing this in devtools buys a link that answers 403.
   isAdmin: boolean;
+  // The profile photo (DECISIONS.md 2026-09-28): a relative /api/avatars/{id} path the web proxies
+  // to the API, or null. The id is random and changes on every upload, so it doubles as a cache key.
+  avatarUrl: string | null;
+  // Whether the photo also appears next to this user's blog comments. Off by default.
+  showAvatarInComments: boolean;
 }
 
 /** GET /api/users/me/plan — the caller's own Pro status, readable whether or not the checkout or
@@ -82,11 +87,11 @@ export interface UserPlanResponse {
   activeUntil: string | null;
 }
 
+// The refresh token is not in here: the API sets it as an HttpOnly cookie that no script can read
+// (2026-09-27).
 export interface AuthResponse {
   accessToken: string;
   accessTokenExpiresAt: string;
-  refreshToken: string;
-  refreshTokenExpiresAt: string;
   user: UserProfileResponse;
 }
 
@@ -2482,14 +2487,15 @@ export interface BlogSeo {
 // ---- blog comments (2026-09-20) ----
 
 export type BlogCommentStatus = "Pending" | "Approved" | "Rejected";
-export type BlogCommentReportReason = "Spam" | "Insult" | "Inappropriate" | "Advertising" | "Other";
+export type BlogCommentReportReason = "Spam" | "Insult" | "Inappropriate" | "Advertising" | "Other" | "ProfilePhoto";
 export type BlogCommentReportStatus = "Open" | "Dismissed" | "ActionTaken";
 
 /**
  * One comment as the page shows it. `authorName` is the first name and last initial ("Selin
  * Y."), or null for an account with no name — the page then says "a reader". `status` is Approved
  * for everyone else's comment and whatever it is for the viewer's own (a pending one is on the
- * list for its author alone). `helpfulByMe` is null for an anonymous reader.
+ * list for its author alone). `helpfulByMe` is null for an anonymous reader. `authorAvatarUrl` is
+ * the author's photo only when they chose to show it on their comments, else null (initials).
  */
 export interface BlogComment {
   id: string;
@@ -2498,6 +2504,7 @@ export interface BlogComment {
   content: string;
   status: BlogCommentStatus;
   authorName: string | null;
+  authorAvatarUrl: string | null;
   isMine: boolean;
   createdAt: string;
   editedAt: string | null;
@@ -2562,6 +2569,8 @@ export interface AdminBlogCommentListItem {
   parentAuthorName: string | null;
   authorName: string | null;
   authorEmail: string | null;
+  // The author's current photo, shown on comments or not: a photo report is judged on the photo.
+  authorAvatarUrl: string | null;
   content: string;
   status: BlogCommentStatus;
   openReportCount: number;

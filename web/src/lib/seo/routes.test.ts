@@ -14,13 +14,42 @@ describe("disallowedPaths", () => {
   // The bug this replaces: robots.txt disallowed "/dashboard", but `localePrefix: "always"` means
   // the only URL that exists is "/tr/dashboard" — so the rule matched nothing and the signed-in
   // areas were, in robots.txt terms, wide open.
-  it("prefixes every path with every locale", () => {
+  it("prefixes every path with every locale, as the page and what is under it", () => {
     expect(disallowedPaths(["tr", "en"], ["/dashboard", "/settings"])).toEqual([
-      "/tr/dashboard",
-      "/tr/settings",
-      "/en/dashboard",
-      "/en/settings",
+      "/tr/dashboard$",
+      "/tr/dashboard/",
+      "/tr/settings$",
+      "/tr/settings/",
+      "/en/dashboard$",
+      "/en/dashboard/",
+      "/en/settings$",
+      "/en/settings/",
     ]);
+  });
+
+  // The bug this exists for (2026-09-28): "Disallow: /tr/cv" is a prefix, so it also kept Google
+  // off the public CV scan (/tr/cv-tarama, /en/cv-scan) that the sitemap was asking it to index.
+  it("blocks the signed-in areas and nothing the sitemap lists", () => {
+    const rules = robots().rules;
+    const disallow = (Array.isArray(rules) ? rules : [rules]).flatMap((rule) => rule.disallow ?? []);
+    const blocked = (url: string) => disallow.some((rule) => matchesRobotsRule(rule, new URL(url).pathname));
+
+    const listed = [
+      ...staticSitemapEntries(),
+      ...companySitemapEntries([{ slug: "acme", lastApprovedAt: "2026-09-01T00:00:00Z" }]),
+      ...blogSitemapEntries([{ slug: "a-post", language: "tr", updatedAt: "2026-09-01T00:00:00Z" } as never]),
+    ].map((entry) => entry.url);
+    expect(listed.filter(blocked)).toEqual([]);
+    for (const url of ["https://ekariyerim.com/tr/cv-tarama", "https://ekariyerim.com/en/cv-scan", "https://ekariyerim.com/tr/cv-tarama/puan/80", "https://ekariyerim.com/tr/profile-guide"]) {
+      expect(blocked(url), url).toBe(false);
+    }
+
+    for (const area of PROTECTED_PATHS) {
+      for (const locale of routing.locales) {
+        expect(blocked(`${SITE_URL}/${locale}${area}`), `${locale}${area}`).toBe(true);
+        expect(blocked(`${SITE_URL}/${locale}${area}/anything`), `${locale}${area}/…`).toBe(true);
+      }
+    }
   });
 
   it("leaves no unprefixed path behind", () => {
@@ -64,11 +93,12 @@ describe("robots", () => {
     const { rules } = robots();
     const disallow = (Array.isArray(rules) ? rules[0] : rules).disallow as string[];
 
-    expect(disallow).toContain("/tr/dashboard");
-    expect(disallow).toContain("/en/dashboard");
-    expect(disallow).toContain("/tr/applications");
-    expect(disallow).toContain("/en/settings");
-    expect(disallow).toHaveLength(routing.locales.length * PROTECTED_PATHS.length);
+    expect(disallow).toContain("/tr/dashboard$");
+    expect(disallow).toContain("/tr/dashboard/");
+    expect(disallow).toContain("/en/dashboard$");
+    expect(disallow).toContain("/tr/applications/");
+    expect(disallow).toContain("/en/settings$");
+    expect(disallow).toHaveLength(routing.locales.length * PROTECTED_PATHS.length * 2);
   });
 
   it("points at the sitemap on the canonical host", () => {
@@ -439,3 +469,16 @@ describe("a guide slug under the wrong locale prefix", () => {
     });
   }
 });
+
+/**
+ * Google's robots.txt matching (RFC 9309 plus Google's documented `*` and `$`): the rule is a
+ * prefix of the path, `*` matches any run of characters and a trailing `$` anchors the end.
+ */
+function matchesRobotsRule(rule: string, pathname: string): boolean {
+  const anchored = rule.endsWith("$");
+  const body = (anchored ? rule.slice(0, -1) : rule)
+    .split("*")
+    .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&"))
+    .join(".*");
+  return new RegExp(`^${body}${anchored ? "$" : ""}`).test(pathname);
+}

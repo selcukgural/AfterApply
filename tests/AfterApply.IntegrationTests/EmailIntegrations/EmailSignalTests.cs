@@ -245,6 +245,32 @@ public class EmailSignalTests(ApiHost<EmailSignalProfile> host) : IClassFixture<
         suggestions.EnumerateArray().Count().ShouldBe(1);
     }
 
+    /// <summary>A new user's first two signals — different emails — can both find no connection and
+    /// both create one; the unique index on (UserId, Provider) turns the second insert into a 23505
+    /// that used to fail the job. The loser must pick up the winner's connection instead. The window
+    /// between the read and the insert is narrow, so the pair runs for several fresh users: before
+    /// the fix at least one of them hit it on most runs, after it none may.</summary>
+    [Fact]
+    public async Task A_New_Users_First_Two_Signals_At_Once_Share_One_Connection_And_Both_Land()
+    {
+        for (var i = 0; i < 10; i++)
+        {
+            var (client, auth) = await host.RegisterAsync($"email-signal.first-pair-{i}@example.com", "Signal", "Test");
+            await CreateApplicationAsync($"First Pair Alpha {i}", client);
+            await CreateApplicationAsync($"First Pair Beta {i}", client);
+
+            await Task.WhenAll(
+                ProcessExtensionSignalDirectlyAsync(host, auth.User.Id, $"hr@first-pair-alpha-{i}.com", $"First Pair Alpha {i}",
+                    "Interview invitation", "We'd like to invite you to an interview.", $"thread-first-pair-{i}-a"),
+                ProcessExtensionSignalDirectlyAsync(host, auth.User.Id, $"hr@first-pair-beta-{i}.com", $"First Pair Beta {i}",
+                    "Interview invitation", "We'd like to invite you to an interview.", $"thread-first-pair-{i}-b"));
+
+            var userId = auth.User.Id;
+            (await host.WithDbAsync(db => db.EmailConnections.CountAsync(c => c.UserId == userId))).ShouldBe(1);
+            (await host.WithDbAsync(db => db.EmailSuggestions.CountAsync(s => s.UserId == userId))).ShouldBe(2);
+        }
+    }
+
     [Fact]
     public async Task SuggestionCount_Reflects_Pending_Suggestions_And_Drops_After_Confirm()
     {

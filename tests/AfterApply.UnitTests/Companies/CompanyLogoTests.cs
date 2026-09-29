@@ -77,5 +77,45 @@ public class CompanyLogoEntityTests
         logo.Content.ShouldBeNull();
         logo.ContentType.ShouldBeNull();
         logo.CheckedAt.ShouldBe(Now.AddDays(1));
+        logo.IsDue(Now.AddYears(1)).ShouldBeFalse();
     }
+
+    [Fact]
+    public void No_Answer_Waits_One_Two_Four_Days_And_Never_More_Than_A_Month()
+    {
+        var logo = CompanyLogo.For(Guid.NewGuid());
+        var waits = new List<double>();
+
+        for (var i = 0; i < 8; i++)
+        {
+            logo.Deferred(Now);
+            waits.Add((logo.NextCheckAt!.Value - Now).TotalDays);
+        }
+
+        waits.ShouldBe([1, 2, 4, 8, 16, 30, 30, 30]);
+        logo.DeferCount.ShouldBe(8);
+        logo.IsDue(Now.AddDays(29)).ShouldBeFalse();
+        logo.IsDue(Now.AddDays(30)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void An_Answer_Ends_The_Backoff()
+    {
+        var logo = CompanyLogo.For(Guid.NewGuid());
+        logo.Deferred(Now);
+        logo.Deferred(Now);
+
+        logo.NotFound(Now);
+        logo.DeferCount.ShouldBe(0);
+        logo.NextCheckAt.ShouldBe(Now + CompanyLogo.MaxRecheckDelay);
+
+        logo.Deferred(Now);
+        logo.Found([1, 2, 3], "image/png", Now.AddDays(1));
+        logo.DeferCount.ShouldBe(0);
+        logo.NextCheckAt.ShouldBeNull();
+        logo.IsDue(Now.AddYears(1)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void A_New_Row_Is_Due_At_Once() => CompanyLogo.For(Guid.NewGuid()).IsDue(Now).ShouldBeTrue();
 }

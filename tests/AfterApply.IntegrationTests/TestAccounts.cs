@@ -25,7 +25,15 @@ public static class TestAccounts
 
         var login = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest(request.Email, request.Password), ApiHost.JsonOptions);
         login.EnsureSuccessStatusCode();
-        return (await login.Content.ReadFromJsonAsync<AuthResponse>(ApiHost.JsonOptions))!;
+        return await ReadAuthAsync(login);
+    }
+
+    /// <summary>The sign-in response with its refresh token put back from the cookie — the body
+    /// never carries it, but tests that exercise refresh/logout need the value.</summary>
+    public static async Task<AuthResponse> ReadAuthAsync(HttpResponseMessage response)
+    {
+        var auth = (await response.Content.ReadFromJsonAsync<AuthResponse>(ApiHost.JsonOptions))!;
+        return auth with { RefreshToken = RefreshCookie.From(response) ?? throw new InvalidOperationException("No refresh-token cookie on the sign-in response.") };
     }
 
     public static async Task MarkVerifiedAsync(IServiceProvider services, string email)

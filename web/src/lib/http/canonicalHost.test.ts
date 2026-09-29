@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error — Next's bundled copy ships no types; it is the matcher the rewrite actually runs through.
 import { match } from "next/dist/compiled/path-to-regexp";
-import { UNSERVED_ROOT_FILE_REWRITE, apexRedirectUrl, isFileRequest, stripIndexHtml } from "./canonicalHost";
+import { UNSERVED_ROOT_FILE_REWRITE, apexRedirectUrl, hasDottedFirstSegment, isFileRequest, stripIndexHtml } from "./canonicalHost";
 
 describe("apexRedirectUrl", () => {
   it("sends a www request to the apex, keeping path and query", () => {
@@ -82,6 +82,23 @@ describe("isFileRequest", () => {
     expect(isFileRequest("/tr/guide")).toBe(false);
     expect(isFileRequest("/tr/guide/kariyer-net-basvurularim-nerede")).toBe(false);
     expect(isFileRequest("/en/help/chrome-extension")).toBe(false);
+  });
+});
+
+// The proxy lets exactly these through to the rewrite below (with the CSP), and only these: a
+// locale page must still go to the locale middleware.
+describe("hasDottedFirstSegment", () => {
+  it("is true for the paths UNSERVED_ROOT_FILE_REWRITE answers", () => {
+    for (const path of ["/llms.txt", "/foo.php/bar", "/.well-known/security.txt", "/robots.txt"]) {
+      expect(hasDottedFirstSegment(path), path).toBe(true);
+      expect(Boolean(match(UNSERVED_ROOT_FILE_REWRITE.source)(path)), path).toBe(true);
+    }
+  });
+
+  it("is false for every locale page, dotted further down or not", () => {
+    for (const path of ["/", "/tr", "/en/help", "/tr/guide/is-basvuru-takip-sablonu.xlsx", "/xyz"]) {
+      expect(hasDottedFirstSegment(path), path).toBe(false);
+    }
   });
 });
 

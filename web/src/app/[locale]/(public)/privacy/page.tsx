@@ -175,6 +175,22 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
           <p className="mt-2">{t("blogComments.legalBasis")}</p>
         </section>
 
+        <section id="profile-photo">
+          <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("profilePhoto.title")}</h2>
+          <p>{t("profilePhoto.intro")}</p>
+          <ul className="mt-2 list-disc flex flex-col gap-1 pl-5">
+            <li>{t("profilePhoto.what")}</li>
+            <li>{t("profilePhoto.where")}</li>
+            <li>{t("profilePhoto.never")}</li>
+            <li>{t("profilePhoto.address")}</li>
+            <li>{t("profilePhoto.moderation")}</li>
+            <li>{t("profilePhoto.audit")}</li>
+            <li>{t("profilePhoto.storage")}</li>
+            <li>{t("profilePhoto.deletion")}</li>
+          </ul>
+          <p className="mt-2">{t("profilePhoto.legalBasis")}</p>
+        </section>
+
         <section id="google-sign-in">
           <h2 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">{t("googleSignIn.title")}</h2>
           <p>{t("googleSignIn.intro")}</p>

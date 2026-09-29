@@ -175,8 +175,7 @@ public class RequestAuditTests(ApiHost<DefaultProfile> host) : IClassFixture<Api
         (await anonymous.PostAsJsonAsync("/api/extension-pairing/poll",
             new PollExtensionPairingRequest(pairing!.DeviceSecret), JsonOptions)).EnsureSuccessStatusCode();
 
-        (await client.PostAsJsonAsync("/api/auth/refresh",
-            new RefreshRequest(auth.RefreshToken), JsonOptions)).EnsureSuccessStatusCode();
+        (await client.RefreshAsync(auth.RefreshToken)).EnsureSuccessStatusCode();
 
         // Register above did leave a row — that is the control showing the pipeline is on.
         (await RowsForPathAsync("/api/auth/register")).ShouldNotBeEmpty();

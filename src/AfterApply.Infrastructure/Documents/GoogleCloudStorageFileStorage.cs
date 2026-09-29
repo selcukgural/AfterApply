@@ -1,3 +1,4 @@
+using AfterApply.Application.Identity;
 using System.Net;
 using AfterApply.Application.Blog;
 using AfterApply.Application.Documents;
@@ -21,7 +22,7 @@ namespace AfterApply.Infrastructure.Documents;
 /// ownership check as every other endpoint, and the bucket can stay closed to the internet.
 /// </remarks>
 internal sealed class GoogleCloudStorageFileStorage(StorageClient client, string bucket)
-    : IFileStorage, IBlogMediaStorage
+    : IFileStorage, IBlogMediaStorage, IAvatarStorage
 {
     /// <summary>The CV bucket — the DI-constructed instance behind <see cref="IFileStorage"/>.
     /// The blog media bucket is the same class over a different name (see AddBlogMediaStorage).</summary>

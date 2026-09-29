@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { hasLocale } from "next-intl";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import "../globals.css";
 import { routing } from "@/i18n/routing";
@@ -36,17 +37,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Two things about this layout are the reason the public pages prerender statically instead of
- * being rendered on every request (2026-09-14):
+ * Every page under this layout is rendered per request (since 2026-09-27): the CSP carries a fresh
+ * nonce on each response and only a script that repeats it may run (proxy.ts,
+ * lib/http/contentSecurityPolicy.ts). Next.js stamps the nonce on its own scripts; the theme boot
+ * script below gets it here, which is also what makes the layout dynamic — a prerendered page
+ * could not carry a per-response nonce.
  *
- * 1. **The theme is not read from the cookie here.** `cookies()` in a root layout opts every route
- *    under it out of static rendering, which is what put `cache-control: no-store` on the landing
- *    page and every help article, and left each first visit waiting on a Cloud Run cold start. The
- *    inline script in `<head>` reads the same cookie in the browser and stamps the `dark` class
- *    before first paint, so there is still no flash; `suppressHydrationWarning` on `<html>` is what
- *    lets React accept the class the script added. Next's own guide recommends exactly this.
- * 2. **Only the shared chrome's messages are provided here.** See messageScopes.ts — the nested
- *    layouts add what their pages need, the signed-in one the whole catalogue.
+ * - **The theme is still applied by the inline script**, not read from the cookie on the server:
+ *   it stamps the `dark` class before first paint, so there is no flash, and
+ *   `suppressHydrationWarning` on `<html>` lets React accept the class the script added.
+ * - **Only the shared chrome's messages are provided here.** See messageScopes.ts — the nested
+ *   layouts add what their pages need, the signed-in one the whole catalogue.
  */
 export default async function LocaleLayout({ children, params }: LayoutProps<"/[locale]">) {
   const { locale } = await params;
@@ -55,11 +56,12 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   }
   setRequestLocale(locale);
   const messages = pickMessages(await getMessages(), ROOT_MESSAGE_SCOPE);
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
         <PreconnectApi />

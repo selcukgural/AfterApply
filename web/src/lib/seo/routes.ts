@@ -99,9 +99,13 @@ export const PROTECTED_PATHS = [
  *
  * `routing.localePrefix` is "always", so every URL that exists is `/tr/…` or `/en/…`. The bare
  * "/dashboard" this file used to disallow matched no real URL at all — the rule was inert.
+ *
+ * Each area is two rules, the page itself (`$` anchors the end) and everything under it, because a
+ * robots.txt rule is a prefix: a plain "/tr/cv" also blocked the public CV scan at "/tr/cv-tarama"
+ * and "/en/cv-scan" (found 2026-09-28). Google and Bing both honour `$`.
  */
 export function disallowedPaths(locales: readonly string[], paths: readonly string[]): string[] {
-  return locales.flatMap((locale) => paths.map((path) => `/${locale}${path}`));
+  return locales.flatMap((locale) => paths.flatMap((path) => [`/${locale}${path}$`, `/${locale}${path}/`]));
 }
 
 /**

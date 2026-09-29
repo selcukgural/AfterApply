@@ -9,6 +9,9 @@
     <ProjectReference Include="..\..\src\AfterApply.Application\AfterApply.Application.csproj" />
     <ProjectReference Include="..\..\src\AfterApply.Infrastructure\AfterApply.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\AfterApply.Api\AfterApply.Api.csproj" />
+    <!-- The promo video tool's pure parts (scenario rules, timeline, captions); the tool itself is
+         run by hand and stays out of AfterApply.slnx. -->
+    <ProjectReference Include="..\..\tools\PromoVideo\PromoVideo.csproj" />
   </ItemGroup>
 
   <ItemGroup>

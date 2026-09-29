@@ -1,5 +1,5 @@
 import createMiddleware from "next-intl/middleware";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
 import { guideRedirectForPath } from "./lib/guide/guideLinks";
 import { cvScanRedirectForPath, cvScanScoreCardOf } from "./lib/cvScan/path";
@@ -10,9 +10,12 @@ import { aboutRedirectForPath } from "./lib/about/path";
 import { offerCompareRedirectForPath } from "./lib/offerCompare/path";
 import { salaryMarketRedirectForPath } from "./lib/salaryMarket/path";
 import { blogSlugRedirectForPath } from "./lib/blog/slugRedirects";
-import { apexRedirectUrl, isFileRequest, stripIndexHtml } from "./lib/http/canonicalHost";
+import { apexRedirectUrl, hasDottedFirstSegment, isFileRequest, stripIndexHtml } from "./lib/http/canonicalHost";
+import { buildCsp, createNonce, cspOriginsFromEnv } from "./lib/http/contentSecurityPolicy";
 
 const withLocale = createMiddleware(routing);
+
+const CSP_ORIGINS = cspOriginsFromEnv();
 
 export function proxy(request: NextRequest) {
   const pathname = stripIndexHtml(request.nextUrl.pathname);
@@ -29,8 +32,11 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, request.url), 301);
   }
 
-  if (isFileRequest(pathname)) {
-    return NextResponse.next();
+  // A file is served as it is — but a root-level file nothing serves (/llms.txt) is rewritten to the
+  // site's 404 page after this proxy has run (UNSERVED_ROOT_FILE_REWRITE), and that page needs the
+  // nonce like any other.
+  if (isFileRequest(pathname) || hasDottedFirstSegment(pathname)) {
+    return rendered(request, (headers) => NextResponse.next({ request: { headers } }));
   }
 
   // A guide article at the wrong address — the other locale's slug under /tr or /en, or no locale
@@ -86,23 +92,48 @@ export function proxy(request: NextRequest) {
   // the locale's own catch-all renders the site's 404 page under the original address.
   const scoreCard = cvScanScoreCardOf(request.nextUrl.pathname);
   if (scoreCard && !parseScoreCard(scoreCard.card)) {
-    return NextResponse.rewrite(new URL(`/${scoreCard.locale}/404`, request.url));
+    return rendered(request, (headers) => NextResponse.rewrite(new URL(`/${scoreCard.locale}/404`, request.url), { request: { headers } }));
   }
 
   // A flow card that does not add up is a 404 the same way, before the page renders.
   const flowCard = flowCardOf(request.nextUrl.pathname);
   if (flowCard && !parseFlowCard(flowCard.card)) {
-    return NextResponse.rewrite(new URL(`/${flowCard.locale}/404`, request.url));
+    return rendered(request, (headers) => NextResponse.rewrite(new URL(`/${flowCard.locale}/404`, request.url), { request: { headers } }));
   }
 
-  return withLocale(request);
+  // next-intl copies the request's headers into the response it builds, so the nonce reaches the
+  // page through a request carrying them.
+  return rendered(request, (headers) => withLocale(new NextRequest(request, { headers })));
+}
+
+/**
+ * Every response that renders a page gets a fresh nonce and the CSP that names it: on the request,
+ * where Next.js reads the nonce for its own scripts and the root layout reads `x-nonce`, and on the
+ * response, where the browser enforces it. See lib/http/contentSecurityPolicy.ts.
+ */
+function rendered(request: NextRequest, respond: (headers: Headers) => NextResponse): NextResponse {
+  const nonce = createNonce();
+  const csp = buildCsp({
+    nonce,
+    pathname: request.nextUrl.pathname,
+    origins: CSP_ORIGINS,
+    isDev: process.env.NODE_ENV === "development",
+  });
+
+  const headers = new Headers(request.headers);
+  headers.set("x-nonce", nonce);
+  headers.set("Content-Security-Policy", csp);
+
+  const response = respond(headers);
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
 }
 
 export const config = {
-  // The first pattern is the original one: every page, minus Next's internals and anything with a
-  // dot in it. /sitemap.xml and /robots.txt are then added back by name — not by widening the first
-  // pattern, which would put this proxy in front of every image and font for no benefit — so that
-  // the www redirect covers the two files a search engine asks for by URL. /index.html is the
-  // third: a crawler's guess at the front page, folded onto the root above.
-  matcher: ["/((?!api|_next|.*\\..*).*)", "/sitemap.xml", "/robots.txt", "/index.html"],
+  // The first pattern is every page, minus Next's internals and anything with a dot in it. The
+  // second adds back paths whose *first* segment has a dot — /sitemap.xml, /robots.txt, /index.html,
+  // /llms.txt, /.well-known/… — so the www redirect covers the files a search engine asks for by
+  // URL, and the 404 an unserved one is rewritten to gets its CSP nonce. Nested assets
+  // (/_next/…, /vendor/…, /brand/…) still never reach the proxy.
+  matcher: ["/((?!api|_next|.*\\..*).*)", "/:file([^/]*\\.[^/]*)/:rest*"],
 };

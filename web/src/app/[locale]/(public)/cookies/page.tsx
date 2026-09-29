@@ -9,8 +9,9 @@ import { Link } from "@/i18n/navigation";
 // /extension-privacy does: it is the document a reader is sent to when they ask the narrow
 // question "what do you put on my device", and /privacy would bury it.
 //
-// The two rows below are the whole inventory: `NEXT_LOCALE`, written server-side by next-intl's
-// proxy (web/src/proxy.ts), and `theme`, written by web/src/lib/theme/theme.ts. Anything that
+// The three rows below are the whole inventory: `__Secure-ek_rt`, the HttpOnly refresh-token
+// cookie the API sets on its own host (RefreshTokenCookie.cs), `NEXT_LOCALE`, written server-side
+// by next-intl's proxy (web/src/proxy.ts), and `theme`, written by web/src/lib/theme/theme.ts. Anything that
 // widens that list has to update this page too — browserStorage.test.ts fails otherwise.
 export async function generateMetadata({ params }: PageProps<"/[locale]/cookies">): Promise<Metadata> {
   const { locale } = await params;
@@ -23,6 +24,12 @@ export default async function CookiesPage({ params }: PageProps<"/[locale]/cooki
   const t = await getTranslations("cookies");
 
   const rows = [
+    {
+      name: "__Secure-ek_rt",
+      purpose: t("table.sessionPurpose"),
+      type: t("table.sessionType"),
+      duration: t("table.sessionDuration"),
+    },
     {
       name: "NEXT_LOCALE",
       purpose: t("table.localePurpose"),

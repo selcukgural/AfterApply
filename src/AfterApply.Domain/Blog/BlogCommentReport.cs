@@ -8,7 +8,12 @@ public enum BlogCommentReportReason
     Insult,
     Inappropriate,
     Advertising,
-    Other
+    Other,
+
+    /// <summary>The author's profile photo shown next to the comment (DECISIONS.md 2026-09-28).
+    /// An admin acts on it by removing the photo, not the comment. Last on purpose: stored as a
+    /// string, but the order is what the web lists.</summary>
+    ProfilePhoto
 }
 
 public enum BlogCommentReportStatus

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Scripted promo/demo videos of e-kariyerim: a scenario file drives a local Chrome through the
+    product, a text-to-speech voice reads the narration, ffmpeg joins them. Not in AfterApply.slnx —
+    it drives a browser and is run by hand, never in the container build. The unit tests reference
+    it for its pure parts (scenario rules, timeline, captions). Usage: README.md next to this file.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+</Project>

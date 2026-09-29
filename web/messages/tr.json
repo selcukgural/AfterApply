@@ -12,8 +12,8 @@
         "description": "İş başvurusu sürecinin arka planı: LinkedIn geçmişini dışa aktarma, başvuru takibi, dönüş süreleri ve red mailleri — iş arayanın tarafından anlatılmış."
       },
       "blog": {
-        "title": "Blog",
-        "description": "İş bulmanın değil, iş aramanın hikâyeleri."
+        "title": "İş Arama Blogu: Başvurular, Bekleyiş ve Motivasyon",
+        "description": "İş arama sürecini anlatan yazılar: başvurun iletildi ne demek, ilan nasıl okunur, cevap neden gecikir ve bu sürede motivasyon nasıl korunur."
       },
       "login": {
         "title": "Giriş Yap",
@@ -37,7 +37,7 @@
       },
       "cookies": {
         "title": "Çerez Politikası",
-        "description": "e-kariyerim'in kullandığı iki çerez, ne işe yaradıkları, ne kadar kaldıkları — ve neden onay bandı olmadığı."
+        "description": "e-kariyerim'in kullandığı üç çerez, ne işe yaradıkları, ne kadar kaldıkları — ve neden onay bandı olmadığı."
       },
       "terms": {
         "title": "Kullanım Koşulları",
@@ -1468,7 +1468,7 @@
   },
   "privacy": {
     "title": "Gizlilik Politikası",
-    "lastUpdated": "Son güncelleme: 27 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 28 Eylül 2026",
     "cookiesSection": {
       "title": "Çerezler",
       "before": "Yalnızca hizmetin çalışması için gereken çerezleri kullanıyoruz; reklam veya analitik çerezi yok, bu yüzden bir çerez onay penceresi de göstermiyoruz. Hangi çerezin ne işe yaradığı, ne kadar saklandığı ve nasıl silineceği",
@@ -1673,6 +1673,19 @@
       "deletion": "Hesabını silmek tüm yorumlarını — ve onlara verilmiş yanıtları — siler; veri dışa aktarımın yorumlarını içerir.",
       "legalBasis": "Hukuki sebep: açık eylemin — yorum yazmayı sen seçersin."
     },
+    "profilePhoto": {
+      "title": "Profil fotoğrafın",
+      "intro": "Profil fotoğrafı eklemek isteğe bağlıdır. Eklediğinde:",
+      "what": "Seçtiğin fotoğrafı tarayıcında kırparsın; sunucumuz onu 256×256 piksel bir görsele yeniden kaydeder ve yalnızca bunu saklar. Yüklediğin dosyanın kendisi saklanmaz; konum (GPS), cihaz ve çekim bilgisi gibi dosya bilgileri silinir.",
+      "where": "Fotoğrafın üst çubuktaki menünde ve profil sayfanda görünür. Blog yorumlarında yalnızca \"Blog yorumlarımda fotoğrafımı göster\" seçeneğini açarsan, adının yanında herkese görünür; bu seçenek varsayılan olarak kapalıdır.",
+      "never": "Maaşlar, şirket değerlendirmeleri, aday deneyimleri, sessizlik bildirimleri ve yanıt oranları anonimdir: fotoğrafın buralarda hiçbir koşulda gösterilmez.",
+      "address": "Fotoğrafın, hesabınla ilişkisi olmayan rastgele bir adresten sunulur. Fotoğrafı değiştirdiğinde, kaldırdığında ya da yorumlarda göstermeyi kapattığında bu adres değişir ve eskisi çalışmaz; daha önce görmüş bir tarayıcının önbelleğinde en fazla bir gün kalabilir.",
+      "moderation": "Bir blog yorumundaki fotoğraf \"Uygunsuz profil fotoğrafı\" gerekçesiyle bildirilebilir. Yönetici fotoğrafı kaldırabilir; yorumun yerinde kalır.",
+      "audit": "Fotoğrafı yüklediğin, kaldırdığın ya da gösterme ayarını değiştirdiğin her istekte bağlantının IP adresi işlem kayıtlarına yazılır (yukarıdaki \"İşlem kayıtları\" maddesi). Hiçbir yerde gösterilmez.",
+      "storage": "Fotoğraf kendi bulut depolamamızda, dışarıya kapalı bir alanda saklanır; hiçbir üçüncü tarafa gönderilmez.",
+      "deletion": "Fotoğrafı istediğin zaman kaldırabilirsin; hesabını silmek onu da siler. Veri dışa aktarımın fotoğrafının adresini ve gösterme tercihini içerir.",
+      "legalBasis": "Hukuki sebep: açık eylemin — fotoğraf eklemeyi ve yorumlarda göstermeyi sen seçersin."
+    },
     "aggregates": {
       "title": "Toplu yanıt verisi (sektör tablosu ve şirket sayfasındaki \"Yanıt\" sekmesi)",
       "intro": "Takip ettiğin başvurular, kimliğinden ayrılmış toplu sayılara katılır: bir sektör ya da bir şirket için yanıt oranı, ilk dönüş süresi, mülakat sonrası sessizlik, kayıp oranı, sözünü tutma ve reddi bildirme oranı. Bunu yaparken:",
@@ -1868,7 +1881,7 @@
     "lastUpdated": "Son güncelleme: 27 Eylül 2026",
     "intro": {
       "title": "Kısaca",
-      "body": "e-kariyerim yalnızca hizmetin çalışması için gereken iki çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok. Tek istisna Pro plan ödeme sayfasıdır: ödeme formu PayTR'ın kendi sayfasında açılır ve PayTR o sayfada kendi zorunlu çerezlerini kullanabilir; bu çerezler sitemizin diğer sayfalarında okunmaz.",
+      "body": "e-kariyerim yalnızca hizmetin çalışması için gereken üç çerezi kullanır. Reklam çerezi, izleme pikseli, Google Analytics benzeri bir analitik aracı ya da herhangi bir üçüncü taraf çerezi kullanmayız. Bu yüzden karşınıza bir çerez onay penceresi çıkmaz: onayınıza bırakılacak isteğe bağlı bir çerez yok. Tek istisna Pro plan ödeme sayfasıdır: ödeme formu PayTR'ın kendi sayfasında açılır ve PayTR o sayfada kendi zorunlu çerezlerini kullanabilir; bu çerezler sitemizin diğer sayfalarında okunmaz.",
       "legalNote": "KVKK kapsamında zorunlu ve işlevsel çerezler için açık rıza aranmaz; aranan şey aydınlatmadır. Bu sayfa o aydınlatmadır."
     },
     "table": {
@@ -1883,12 +1896,15 @@
       "themePurpose": "Açık/koyu tema tercihinizi hatırlar. Yalnızca tema düğmesine bastığınızda, ya da giriş yaptığınızda hesabınızdaki tercih uygulanırken yazılır.",
       "themeType": "İşlevsel — birinci taraf",
       "themeDuration": "1 yıl",
-      "note": "İkisi de yalnızca bir tercihi saklar: içlerinde sizi tanımlayan bir kimlik, kullanıcı numarası veya izleme kodu yoktur ve hiçbir üçüncü tarafa gönderilmezler."
+      "sessionPurpose": "Giriş yaptığınızda oturumunuzu açık tutar. İçinde rastgele bir oturum yenileme jetonu vardır; tarayıcınız onu yalnızca API sunucumuzun (api.ekariyerim.com) oturum yenileme ve çıkış adreslerine gönderir. Sayfadaki hiçbir betik bu çerezi okuyamaz (HttpOnly), ve başka bir siteden gelen isteklerle gönderilmez (SameSite=Strict).",
+      "sessionType": "Zorunlu — birinci taraf",
+      "sessionDuration": "30 gün; her kullanımda yenilenir, ama giriş yaptığınız andan en fazla 90 gün. Çıkış yaptığınızda silinir.",
+      "note": "Dil ve tema çerezleri yalnızca bir tercih saklar; içlerinde sizi tanımlayan bir kimlik yoktur. Oturum çerezindeki jeton hesabınızla eşleşir, ama tek işi sizi oturumda tutmaktır: izleme veya ölçüm için kullanılmaz. Üçü de hiçbir üçüncü tarafa gönderilmez."
     },
     "storage": {
       "title": "Tarayıcı deposu (localStorage ve sessionStorage)",
       "intro": "Bunlar çerez değil, ama aynı mantıkla cihazınızda veri sakladıkları için şeffaflık adına burada da sayıyoruz:",
-      "item1": "Oturum jetonları — aa_access_token, aa_refresh_token, bunların geçerlilik süreleri ve aa_user (adınız, e-posta adresiniz ve arayüz tercihleriniz). Giriş yaptıktan sonra oturumunuzun açık kalmasını sağlar; localStorage'da tutulur ve çıkış yaptığınızda silinir.",
+      "item1": "Oturum profili — aa_user (adınız, e-posta adresiniz ve arayüz tercihleriniz). Sayfa yenilendiğinde doğru menünün hemen görünmesini sağlar; tek başına oturum açmaz. localStorage'da tutulur ve çıkış yaptığınızda silinir. Oturum jetonları artık burada değil, yukarıdaki oturum çerezinde tutulur; 27 Eylül 2026'dan önce giriş yapmış bir tarayıcıda kalan eski aa_access_token ve aa_refresh_token değerleri, siteye ilk girişinizde okunup silinir.",
       "item2": "Giriş güvenliği anahtarları — aa_google_oauth, aa_linkedin_oauth ve aa_github_oauth. Google, LinkedIn veya GitHub ile giriş sırasında araya girme (CSRF) saldırısını engelleyen tek kullanımlık değerlerdir; sessionStorage'da tutulur ve giriş tamamlanır tamamlanmaz silinir.",
       "item3": "Kayıtlı pano görünümleri — aa_board_views. Başvuru panosunda “Bu filtreyi kaydet” dediğinizde, verdiğiniz görünüm adı ve filtre ayarları (tarih aralığı, kaynak, durum seçimleri) localStorage'da tutulur. Sunucumuza gönderilmez, yalnızca bu tarayıcıda kalır; görünümü sildiğinizde silinir.",
       "outro": "İlk ikisi hizmetin çalışması için zorunludur — bunlar olmadan oturum açılamaz. Üçüncüsü işlevseldir ve yalnızca siz bir görünüm kaydettiğinizde yazılır."
@@ -1921,7 +1937,7 @@
     },
     "control": {
       "title": "Çerezleri nasıl silersiniz",
-      "body": "Tarayıcınızın ayarlarından bu sitenin çerezlerini ve site verisini istediğiniz zaman silebilir, çerezleri tümüyle de engelleyebilirsiniz. Sonucu şu olur: dil ve tema tercihiniz varsayılana döner; oturum jetonlarını da silerseniz oturumunuz kapanır ve yeniden giriş yapmanız gerekir. Site bunun dışında çalışmaya devam eder.",
+      "body": "Tarayıcınızın ayarlarından bu sitenin çerezlerini ve site verisini istediğiniz zaman silebilir, çerezleri tümüyle de engelleyebilirsiniz. Sonucu şu olur: dil ve tema tercihiniz varsayılana döner; oturum çerezini de silerseniz oturumunuz kapanır ve yeniden giriş yapmanız gerekir. Site bunun dışında çalışmaya devam eder.",
       "accountNote": "Hesabınızdaki verinin silinmesi ayrı bir konu — bunu Ayarlar sayfasından hesabınızı silerek yapabilirsiniz."
     },
     "changes": {
@@ -2652,7 +2668,7 @@
       },
       "calloutLogos": {
         "title": "Şirket logoları",
-        "body": "Bir şirketin logosu varsa kartta baş harflerin yerine görünür. Logolar şirketin LinkedIn sayfasından bizim sunucumuzca alınır ve yalnızca o şirkete başvurmuş ya da ilanını kaydetmiş kullanıcılara gösterilir. Logosu bulunamayan şirketler baş harfleriyle görünür."
+        "body": "Bir şirketin logosu varsa kartta baş harflerin yerine görünür. Logoyu sunucumuz önce şirketin kendi web sitesinden, orada bulamazsa LinkedIn sayfasından alır ve kendi sunucumuzda saklar; tarayıcın logo için başka bir siteye gitmez. Logolar yalnızca o şirkete başvurmuş ya da ilanını kaydetmiş kullanıcılara gösterilir. Logosu bulunamayan şirketler baş harfleriyle görünür."
       },
       "calloutFilters": {
         "title": "Filtre panoyu değiştirmez",
@@ -2730,10 +2746,14 @@
       "intro": "Ayarlar sayfasından bildirimlerinizi seçebilir, verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir, Pro plan ödemelerinizi görüp iade talebi açabilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "profile": {
         "title": "Profilim",
-        "body": "Avatar menüsündeki Profilim, hesabın kime ait olduğunu ve neler bıraktığını gösterir: adın ve soyadın (düzenlenebilir), e-posta adresin (değiştirilemez; giriş ve bildirimler ona bağlı), üye olduğun tarih, planın, son değerlendirme ve maaş kayıtların ile başvuru, takip listesi ve CV sayıların.",
+        "body": "Avatar menüsündeki Profilim, hesabın kime ait olduğunu ve neler bıraktığını gösterir: profil fotoğrafın, adın ve soyadın (düzenlenebilir), e-posta adresin (değiştirilemez; giriş ve bildirimler ona bağlı), üye olduğun tarih, planın, son değerlendirme ve maaş kayıtların ile başvuru, takip listesi ve CV sayıların.",
         "calloutName": {
           "title": "Ad ve soyad isteğe bağlı",
           "body": "Kayıt olurken ad sorulmaz. Profilim'de eklersen üst çubukta ve e-postalarda adınla hitap ederiz; boş bırakırsan e-posta adresinin @ öncesi görünür."
+        },
+        "calloutPhoto": {
+          "title": "Profil fotoğrafı nerede görünür?",
+          "body": "Fotoğrafın köşesindeki kamera düğmesiyle bir fotoğraf seçip dairenin içinde konumlandırırsın; aynı düğmeden değiştirir ya da kaldırırsın. Fotoğraf üst çubukta ve Profilim'de görünür. Blog yorumlarında yalnızca \"Blog yorumlarımda fotoğrafımı göster\"i açarsan görünür. Maaşlar, şirket değerlendirmeleri ve aday deneyimleri her zaman anonimdir; fotoğrafın oralarda hiçbir koşulda görünmez."
         }
       },
       "notifications": {
@@ -3376,6 +3396,8 @@
   "blog": {
     "title": "Blog",
     "subtitle": "İş bulmanın değil, iş aramanın hikâyeleri.",
+    "heading": "İş arama blogu",
+    "intro": "Bu yazılar iş bulmayı değil, iş aramanın kendisini anlatıyor: başvurunu gönderdikten sonra neler olduğunu, bir ilanı nasıl okuyacağını, cevabın neden geciktiğini ve bu uzun süreçte nasıl ayakta kalacağını.",
     "emptyInLanguage": "Henüz Türkçe yazı yok; {language, select, en {İngilizce} other {diğer dilde}} {count, plural, =1 {bir yazı} other {# yazı}} var.",
     "readListInOtherLanguage": "{language, select, en {İngilizce yazılara git →} other {Diğer dildeki yazılara git →}}",
     "readMore": "Devamını oku",
@@ -3471,6 +3493,7 @@
       "Spam": "Spam",
       "Insult": "Hakaret veya saldırgan içerik",
       "Inappropriate": "Uygunsuz içerik",
+      "ProfilePhoto": "Uygunsuz profil fotoğrafı",
       "Advertising": "Reklam veya tanıtım",
       "Other": "Diğer"
     },
@@ -6075,7 +6098,14 @@
       "dismissHint": "Reddetmek açık şikayetleri \"işlem yapıldı\" olarak kapatır; \"Şikayetleri kapat\" yorumu yerinde bırakır.",
       "inReplyTo": "Yanıtladığı yorum",
       "rootComment": "— (kök yorum)",
-      "actionError": "İşlem tamamlanamadı. Tekrar deneyin."
+      "actionError": "İşlem tamamlanamadı. Tekrar deneyin.",
+      "photo": {
+        "title": "Yazarın profil fotoğrafı",
+        "hint": "Fotoğraf silinir, yazarın tüm yorumlarında baş harflere döner ve \"yorumlarımda göster\" kapanır. Yorum yerinde kalır; açık fotoğraf şikayetleri \"işlem yapıldı\" olarak kapanır.",
+        "remove": "Fotoğrafı kaldır",
+        "confirm": "Evet, fotoğrafı kaldır",
+        "cancel": "Vazgeç"
+      }
     }
   },
   "adminExperiences": {
@@ -6669,6 +6699,25 @@
       "returned": "Molan bitti. Panoda seni kısa bir soru bekliyor.",
       "goToDashboard": "Panoya git",
       "error": "İşlem tamamlanamadı. Tekrar dene."
+    },
+    "avatar": {
+      "uploadLabel": "Profil fotoğrafı yükle",
+      "changeLabel": "Profil fotoğrafını değiştir",
+      "change": "Fotoğrafı değiştir",
+      "remove": "Fotoğrafı kaldır",
+      "removeError": "Fotoğraf kaldırılamadı. Lütfen tekrar dene.",
+      "cropTitle": "Fotoğrafı konumlandır",
+      "positionLabel": "Fotoğrafın konumu. Sürükleyerek ya da ok tuşlarıyla kaydır.",
+      "zoom": "Yakınlaştır",
+      "cropHint": "Fotoğraf 256×256 boyutunda yeniden kaydedilir; konum gibi dosya bilgileri silinir.",
+      "unreadable": "Bu dosya okunamadı. JPEG, PNG ya da WebP bir fotoğraf seç.",
+      "cancel": "Vazgeç",
+      "savePhoto": "Fotoğrafı kaydet",
+      "saving": "Kaydediliyor…",
+      "saveError": "Fotoğraf kaydedilemedi. Lütfen tekrar dene.",
+      "showInComments": "Blog yorumlarımda fotoğrafımı göster",
+      "showInCommentsHint": "Açarsan fotoğrafın yorumlarında adının yanında herkese görünür. Maaşlar, şirket değerlendirmeleri ve aday deneyimleri her zaman anonimdir; fotoğrafın oralarda asla görünmez.",
+      "visibilityError": "Ayar kaydedilemedi. Lütfen tekrar dene."
     }
   },
   "candidateExperiences": {

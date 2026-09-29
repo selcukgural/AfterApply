@@ -52,7 +52,6 @@ export default async function BlogListPage({ params, searchParams }: PageProps<"
   if (!list) notFound();
 
   const t = await getTranslations("blog");
-  const tSection = await getTranslations("metadata.pages");
 
   if (list.totalCount === 0) {
     const other = OTHER_LANGUAGE[locale];
@@ -61,7 +60,7 @@ export default async function BlogListPage({ params, searchParams }: PageProps<"
     return (
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-12">
         <header className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{t("title")}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{t("heading")}</h1>
           <p className="text-lg leading-7 text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
         </header>
         <p className="leading-7 text-gray-700 dark:text-gray-300">
@@ -84,14 +83,18 @@ export default async function BlogListPage({ params, searchParams }: PageProps<"
           organizationJsonLd(),
           breadcrumbJsonLd(locale, [
             { name: SITE_NAME, path: "" },
-            { name: tSection("blog.title"), path: BLOG_PATH },
+            // The short name, not the page title — a breadcrumb reads "e-kariyerim › Blog".
+            { name: t("title"), path: BLOG_PATH },
           ]),
         )}
       />
 
+      {/* A heading and a line that say what the posts are about (2026-09-28): the index said only
+          "Blog", and Search Console left it "crawled — currently not indexed". */}
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{t("title")}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{t("heading")}</h1>
         <p className="text-lg leading-7 text-gray-600 dark:text-gray-400">{t("subtitle")}</p>
+        <p className="max-w-3xl leading-7 text-gray-700 dark:text-gray-300">{t("intro")}</p>
       </header>
 
       <ul className="grid gap-x-8 gap-y-12 sm:grid-cols-2">

@@ -8,6 +8,7 @@ import { blogCommentsApi } from "@/lib/api/blogComments";
 import { ApiError } from "@/lib/api/httpClient";
 import { relativeTime } from "@/lib/blog/commentDraft";
 import { VotePill } from "@/components/blog/VotePill";
+import { Avatar } from "@/components/ui/Avatar";
 import { CommentForm } from "./CommentForm";
 import { ReportCommentDialog } from "./ReportCommentDialog";
 
@@ -79,12 +80,13 @@ export function CommentItem({ comment, rootId, isAuthenticated, signInHref, now,
     <>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div
-            aria-hidden="true"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted-wash text-xs font-semibold text-muted-ink"
-          >
-            {initialsOf(comment.authorName)}
-          </div>
+          {/* The author's photo only when they chose to show it on their comments (the API sends
+              null otherwise), the initials in every other case. */}
+          <Avatar
+            src={comment.authorAvatarUrl}
+            initials={initialsOf(comment.authorName)}
+            className="h-8 w-8 bg-muted-wash text-xs font-semibold text-muted-ink"
+          />
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{name}</span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -212,7 +214,14 @@ export function CommentItem({ comment, rootId, isAuthenticated, signInHref, now,
         </div>
       )}
 
-      {reporting && <ReportCommentDialog onClose={() => setReporting(false)} onSubmit={report} error={reportError} />}
+      {reporting && (
+        <ReportCommentDialog
+          hasPhoto={Boolean(comment.authorAvatarUrl)}
+          onClose={() => setReporting(false)}
+          onSubmit={report}
+          error={reportError}
+        />
+      )}
     </>
   );
 

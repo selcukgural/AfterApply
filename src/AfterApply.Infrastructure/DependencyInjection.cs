@@ -40,6 +40,7 @@ using AfterApply.Infrastructure.ResponseRates;
 using AfterApply.Infrastructure.SalaryMarket;
 using AfterApply.Infrastructure.Documents;
 using AfterApply.Infrastructure.EmailIntegrations;
+using AfterApply.Infrastructure.Http;
 using AfterApply.Infrastructure.Identity;
 using AfterApply.Infrastructure.Imports;
 using AfterApply.Application.AtsSources;
@@ -111,7 +112,9 @@ public static class DependencyInjection
     public const string JobLivenessResiliencePipeline = "job-liveness";
 
     public const string CorsPolicyName = "Frontend";
+    public const string AuthCookieCorsPolicyName = "FrontendAuthCookie";
     public const string AuthRateLimitPolicy = "auth-strict";
+    public const string RefreshRateLimitPolicy = "auth-refresh";
     public const string UploadRateLimitPolicy = "upload";
     public const string ExtensionSignalRateLimitPolicy = "extension-signal";
     public const string LinkPreviewRateLimitPolicy = "link-preview";
@@ -139,6 +142,7 @@ public static class DependencyInjection
     public const string BlogCommentReportRateLimitPolicy = "blog-comment-report";
     public const string BlogCommentHelpfulRateLimitPolicy = "blog-comment-helpful";
     public const string BlogSeoSuggestRateLimitPolicy = "blog-seo-suggest";
+    public const string AvatarWriteRateLimitPolicy = "avatar-write";
 
     // dotnet build's OpenAPI GetDocument step (postman/scripts/generate-collection.js's
     // input) runs this entrypoint via a mock server that never serves real traffic, so it
@@ -217,6 +221,7 @@ public static class DependencyInjection
         services.AddPayments(configuration);
         services.AddDocumentStorage(configuration);
         services.AddBlog(configuration);
+        services.AddAvatars(configuration);
         services.AddValidatorsFromAssemblyContaining<CreateApplicationRequestValidator>();
         services.AddCorsPolicy(configuration);
 
@@ -358,14 +363,62 @@ public static class DependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Profile photos (DECISIONS.md 2026-09-28): a storage binding of their own over the same two
+    /// implementations, and the same Production rule — Cloud Storage with a named bucket, or fail at
+    /// startup rather than on the first upload.
+    /// </summary>
+    private static IServiceCollection AddAvatars(this IServiceCollection services, IConfiguration configuration)
+    {
+        var storageOptions = configuration.GetSection(StorageOptions.SectionName).Get<StorageOptions>()
+            ?? new StorageOptions();
+
+        if (storageOptions.Provider == FileStorageProvider.GoogleCloudStorage)
+        {
+            if (string.IsNullOrWhiteSpace(storageOptions.AvatarBucketName) && !IsOpenApiDocumentGeneration)
+            {
+                throw new InvalidOperationException(
+                    "Storage:AvatarBucketName is required when Storage:Provider is GoogleCloudStorage. Set " +
+                    "Storage__AvatarBucketName to the profile photo bucket's name (see DEPLOYMENT.md §17).");
+            }
+
+            // The StorageClient singleton is registered by AddDocumentStorage.
+            services.AddScoped<IAvatarStorage>(sp =>
+                new GoogleCloudStorageFileStorage(sp.GetRequiredService<StorageClient>(),
+                    sp.GetRequiredService<IOptions<StorageOptions>>().Value.AvatarBucketName));
+        }
+        else
+        {
+            // Production is already refused by AddDocumentStorage for this provider.
+            services.AddScoped<IAvatarStorage>(sp =>
+                new FileSystemFileStorage(sp.GetRequiredService<IOptions<StorageOptions>>().Value.AvatarLocalRootPath));
+        }
+
+        services.AddScoped<IAvatarService, AvatarService>();
+
+        return services;
+    }
+
     private static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
     {
         var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
-        services.AddCors(options => options.AddPolicy(CorsPolicyName, policy => policy
-            .WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod()));
+        services.AddCors(options =>
+        {
+            options.AddPolicy(CorsPolicyName, policy => policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod());
+
+            // /api/auth only: the refresh-token cookie is set and read there, and a browser keeps a
+            // cross-origin Set-Cookie (and sends the cookie back) only on a credentialed request.
+            // Every other route stays on the Bearer header and the credential-less policy above.
+            options.AddPolicy(AuthCookieCorsPolicyName, policy => policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials());
+        });
 
         return services;
     }
@@ -494,7 +547,8 @@ public static class DependencyInjection
             Issuer = configuration["Jwt:Issuer"] ?? "AfterApply",
             Audience = configuration["Jwt:Audience"] ?? "AfterApply.Api",
             AccessTokenMinutes = configuration.GetValue("Jwt:AccessTokenMinutes", 20),
-            RefreshTokenDays = configuration.GetValue("Jwt:RefreshTokenDays", 30)
+            RefreshTokenDays = configuration.GetValue("Jwt:RefreshTokenDays", 30),
+            AbsoluteSessionDays = configuration.GetValue("Jwt:AbsoluteSessionDays", 90)
         };
 
         services.AddSingleton(Options.Create(jwtOptions));
@@ -686,9 +740,14 @@ public static class DependencyInjection
         services.AddHttpClient<ICompanyEnrichmentService, CompanyEnrichmentService>(client => client.Timeout = TimeSpan.FromSeconds(5))
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         // Redirects followed by hand, each hop re-checked against the one allowed host (see
-        // CompanyLogoService) — the handler must never follow one on its own.
-        services.AddHttpClient<ICompanyLogoService, CompanyLogoService>(client => client.Timeout = TimeSpan.FromSeconds(5))
+        // CompanyLogoService) — the handler must never follow one on its own. Ten seconds: a
+        // LinkedIn company page often took longer than five, and a timeout only defers the company.
+        services.AddHttpClient<ICompanyLogoService, CompanyLogoService>(client => client.Timeout = TimeSpan.FromSeconds(10))
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        // Company websites (DECISIONS.md 2026-09-28): any host, so the check is on the address the
+        // socket actually connects to, not on the name (PublicAddressGuard).
+        services.AddHttpClient(CompanyLogoService.WebsiteClientName, client => client.Timeout = TimeSpan.FromSeconds(10))
+            .ConfigurePrimaryHttpMessageHandler(PublicAddressGuard.CreateHandler);
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IJobResolver, JobResolver>();
         services.AddScoped<IImportService, ImportService>();

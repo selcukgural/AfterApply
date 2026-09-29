@@ -124,6 +124,9 @@ public static class RateLimiting
             options.AddPolicy(DependencyInjection.AuthRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.AuthRateLimitPolicy, IpPartitionKey(httpContext), sizes.Auth));
 
+            options.AddPolicy(DependencyInjection.RefreshRateLimitPolicy, httpContext =>
+                Partition(DependencyInjection.RefreshRateLimitPolicy, IpPartitionKey(httpContext), sizes.AuthRefresh));
+
             // User-based: upload endpoints already require auth, so this is more precise
             // than IP-based (avoids penalizing legitimate users sharing a NAT'd IP).
             options.AddPolicy(DependencyInjection.UploadRateLimitPolicy, httpContext =>
@@ -224,6 +227,9 @@ public static class RateLimiting
 
             options.AddPolicy(DependencyInjection.BlogCommentHelpfulRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.BlogCommentHelpfulRateLimitPolicy, PartitionKey(httpContext), sizes.BlogCommentHelpful));
+
+            options.AddPolicy(DependencyInjection.AvatarWriteRateLimitPolicy, httpContext =>
+                Partition(DependencyInjection.AvatarWriteRateLimitPolicy, PartitionKey(httpContext), sizes.AvatarWrite));
 
             options.AddPolicy(DependencyInjection.BlogSeoSuggestRateLimitPolicy, httpContext =>
                 Partition(DependencyInjection.BlogSeoSuggestRateLimitPolicy, PartitionKey(httpContext), sizes.BlogSeoSuggest));
