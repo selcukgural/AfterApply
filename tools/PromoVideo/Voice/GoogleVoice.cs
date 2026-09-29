@@ -15,11 +15,23 @@ namespace PromoVideo.Voice;
 /// key file is created or stored; the project to bill comes from GOOGLE_CLOUD_PROJECT or gcloud's
 /// configured project.
 /// </summary>
-internal sealed class GoogleVoice(string voice, string languageCode, double rate) : ITextToSpeech
+/// <remarks>
+/// With a <c>model</c> (e.g. gemini-2.5-pro-tts) the voice is one of the Gemini-TTS voices ("Charon",
+/// "Kore", ...), which read from the sentence's meaning — abbreviations with suffixes included — and
+/// take a plain-language style <c>prompt</c>. Without one, the name is a full voice name such as
+/// tr-TR-Chirp3-HD-Charon.
+/// </remarks>
+internal sealed class GoogleVoice(string voice, string languageCode, double rate, string? model = null, string? prompt = null) : ITextToSpeech
 {
     private const string Endpoint = "https://texttospeech.googleapis.com/v1/";
 
-    public string Fingerprint => $"google|{voice}|{rate.ToString(CultureInfo.InvariantCulture)}";
+    // A Chirp request carries no model or prompt at all rather than explicit nulls.
+    private static readonly JsonSerializerOptions OmitNulls =
+        new(JsonSerializerDefaults.Web) { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
+
+    // The model and the prompt only join the key when set, so the Chirp clips already cached keep theirs.
+    public string Fingerprint => $"google|{voice}|{rate.ToString(CultureInfo.InvariantCulture)}"
+                                 + (model is null ? "" : $"|{model}|{prompt}");
 
     public async Task SynthesizeAsync(string text, string outputFile, CancellationToken cancellationToken)
     {
@@ -27,10 +39,10 @@ internal sealed class GoogleVoice(string voice, string languageCode, double rate
         // "./" matters: a bare "text:synthesize" parses as a URI whose scheme is "text".
         using var response = await client.PostAsJsonAsync("./text:synthesize", new
         {
-            input = new { text },
-            voice = new { languageCode, name = voice },
+            input = new { text, prompt },
+            voice = new { languageCode, name = voice, model_name = model },
             audioConfig = new { audioEncoding = "LINEAR16", sampleRateHertz = Timeline.SampleRate, speakingRate = rate }
-        }, cancellationToken);
+        }, OmitNulls, cancellationToken);
         await EnsureSuccessAsync(response, cancellationToken);
 
         using var body = JsonDocument.Parse(await response.Content.ReadAsStreamAsync(cancellationToken));

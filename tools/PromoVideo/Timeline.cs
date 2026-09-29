@@ -172,7 +172,7 @@ public static partial class Timeline
     public static double Seconds(short[] samples) => (double)samples.Length / SampleRate;
 
     /// <summary>A mono 16-bit PCM WAV file around the samples.</summary>
-    public static byte[] ToWav(short[] samples)
+    public static byte[] ToWav(short[] samples, int sampleRate = SampleRate)
     {
         var dataBytes = samples.Length * 2;
         using var stream = new MemoryStream(44 + dataBytes);
@@ -184,8 +184,8 @@ public static partial class Timeline
         writer.Write(16);
         writer.Write((short)1);
         writer.Write((short)1);
-        writer.Write(SampleRate);
-        writer.Write(SampleRate * 2);
+        writer.Write(sampleRate);
+        writer.Write(sampleRate * 2);
         writer.Write((short)2);
         writer.Write((short)16);
         writer.Write("data"u8);
@@ -197,6 +197,30 @@ public static partial class Timeline
 
         writer.Flush();
         return stream.ToArray();
+    }
+
+    /// <summary>
+    /// The ffmpeg filter and H.264 settings for the picture, following YouTube's upload
+    /// recommendations: progressive High profile, closed GOP of half the frame rate, two B-frames,
+    /// and 4:2:0 in limited ("tv") range tagged BT.709. The screencast frames are full-range BT.601
+    /// JPEGs; without the explicit conversion the file keeps a full-range tag (yuvj420p) that
+    /// YouTube's re-encode can read as washed-out or crushed colours.
+    /// </summary>
+    public static IReadOnlyList<string> VideoEncodeArguments(OutputSettings output)
+    {
+        var size = string.Create(CultureInfo.InvariantCulture, $"{output.Width}:{output.Height}");
+        var fps = output.Fps.ToString(CultureInfo.InvariantCulture);
+        return
+        [
+            "-vf", $"fps={fps},scale={size}:force_original_aspect_ratio=decrease:flags=lanczos" +
+                   ":in_range=pc:out_range=tv:in_color_matrix=bt601:out_color_matrix=bt709" +
+                   $",pad={size}:(ow-iw)/2:(oh-ih)/2:color=white,format=yuv420p" +
+                   // Output flags alone leave primaries/transfer unset; setparams tags the frames themselves.
+                   ",setparams=range=tv:colorspace=bt709:color_primaries=bt709:color_trc=bt709",
+            "-c:v", "libx264", "-preset", "slow", "-crf", "16", "-profile:v", "high",
+            "-g", Math.Max(1, output.Fps / 2).ToString(CultureInfo.InvariantCulture), "-bf", "2", "-flags", "+cgop",
+            "-r", fps
+        ];
     }
 
     /// <summary>The ffconcat list that turns screencast frames (which arrive only when the screen

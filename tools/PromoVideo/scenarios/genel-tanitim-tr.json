@@ -1,21 +1,27 @@
 // The general Turkish introduction for YouTube: opening card, the question the product answers,
 // how applications get in, the dashboard, one application, a company page, the CV scan, closing card.
-// Voice: Google Chirp3-HD Charon. Music: the tool's own ambient bed (no licence to worry about).
+// Voice: Google Gemini-TTS (gemini-2.5-pro-tts) "Charon", chosen in a side-by-side listen over Chirp3-HD
+// Charon and ElevenLabs; it reads CV, ATS and LinkedIn right on its own, so they are no longer respelled. Music: the tool's own ambient bed (no licence to worry about).
 {
   "title": "e-kariyerim — genel tanıtım",
   "language": "tr",
   "baseUrl": "http://localhost:3000",
   "viewport": { "width": 1280, "height": 720, "deviceScaleFactor": 2 },
-  "output": { "width": 1920, "height": 1080, "fps": 30 },
+  // 1440p, not 1080p: it is the viewport's native 2x capture (no downscale), and YouTube gives a
+  // 1440p upload its better codec, which also sharpens the 1080p most viewers watch.
+  "output": { "width": 2560, "height": 1440, "fps": 30 },
   "colorScheme": "light",
   "signIn": true,
-  "voice": { "provider": "google", "name": "tr-TR-Chirp3-HD-Charon", "rate": 1.0 },
+  "voice": {
+    "provider": "google",
+    "name": "Charon",
+    "model": "gemini-2.5-pro-tts",
+    "prompt": "Sakin, sıcak ve samimi bir ürün tanıtımı sesiyle, doğal bir hızda oku.",
+    "rate": 1.0
+  },
   "music": { "generate": "ambient", "volume": 0.18 },
   // Loanwords said the way people say them, not letter by letter; the subtitles keep the spelling.
   "pronounce": {
-    "CV": "sivi",
-    "ATS": "ey ti es",
-    "LinkedIn": "Linktin",
     "ekariyerim.com": "e kariyerim nokta kom",
     "e-kariyerim": "e kariyerim"
   },

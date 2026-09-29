@@ -172,12 +172,10 @@ internal sealed class Renderer(Scenario scenario, string outputDirectory, string
 
         await File.WriteAllTextAsync(Path.Combine(frameDirectory, "frames.txt"), Timeline.FrameList(frames, end), cancellationToken);
         var video = Path.Combine(outputDirectory, "video-only.mp4");
-        var size = string.Create(CultureInfo.InvariantCulture, $"{output.Width}:{output.Height}");
         await Processes.RunAsync("ffmpeg",
         [
             "-hide_banner", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", Path.Combine(frameDirectory, "frames.txt"),
-            "-vf", $"fps={output.Fps},scale={size}:force_original_aspect_ratio=decrease:flags=lanczos,pad={size}:(ow-iw)/2:(oh-ih)/2:color=white,format=yuv420p",
-            "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-r", output.Fps.ToString(CultureInfo.InvariantCulture),
+            .. Timeline.VideoEncodeArguments(output),
             // The concat list repeats its last frame (see FrameList), which some ffmpeg builds count
             // for a second duration; the recording's own length is the video's length.
             "-t", end.ToString("0.###", CultureInfo.InvariantCulture), video

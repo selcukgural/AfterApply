@@ -108,6 +108,29 @@ public class TimelineTests
     }
 
     [Fact]
+    public void The_Picture_Is_Encoded_The_Way_YouTube_Asks_For()
+    {
+        var arguments = Timeline.VideoEncodeArguments(new OutputSettings { Width = 2560, Height = 1440, Fps = 30 });
+        var filter = arguments[arguments.ToList().IndexOf("-vf") + 1];
+
+        // Full-range BT.601 JPEG frames become limited-range BT.709, and the file says so.
+        filter.ShouldContain("scale=2560:1440:");
+        filter.ShouldContain("in_range=pc:out_range=tv:in_color_matrix=bt601:out_color_matrix=bt709");
+        filter.ShouldContain("format=yuv420p,setparams=range=tv:colorspace=bt709:color_primaries=bt709:color_trc=bt709");
+        string.Join(' ', arguments).ShouldContain("-profile:v high -g 15 -bf 2 -flags +cgop");
+    }
+
+    [Fact]
+    public void The_Wav_Header_Can_Carry_Another_Rate_For_A_Provider_Clip()
+    {
+        // ElevenLabs sends raw 24 kHz PCM; the header has to say so or the clip plays at double speed.
+        var wav = Timeline.ToWav([1, -1], 24000);
+
+        BitConverter.ToInt32(wav, 24).ShouldBe(24000);
+        BitConverter.ToInt32(wav, 28).ShouldBe(48000);
+    }
+
+    [Fact]
     public void Each_Frame_Is_Shown_Until_The_Next_And_The_Last_Until_The_End()
     {
         var list = Timeline.FrameList([("f0.jpg", 0), ("f1.jpg", 0.5)], end: 2);

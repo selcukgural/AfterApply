@@ -63,7 +63,7 @@ public sealed record OutputSettings
 
 public sealed record VoiceSettings
 {
-    /// <summary>say (macOS, drafts), google (Cloud Text-to-Speech) or piper (offline, open source).</summary>
+    /// <summary>say (macOS, drafts), google (Cloud Text-to-Speech), elevenlabs or piper (offline, open source).</summary>
     public string Provider { get; init; } = "say";
 
     /// <summary>Voice name in the provider's own terms; null takes the provider's default for the language.</summary>
@@ -72,8 +72,12 @@ public sealed record VoiceSettings
     /// <summary>1.0 is the voice's normal speed.</summary>
     public double Rate { get; init; } = 1.0;
 
-    /// <summary>piper only: path to the .onnx voice model.</summary>
+    /// <summary>piper: path to the .onnx voice model. elevenlabs: the model id (default eleven_multilingual_v2).
+    /// google: a Gemini-TTS model (e.g. gemini-2.5-pro-tts), with a Gemini voice name such as "Charon".</summary>
     public string? Model { get; init; }
+
+    /// <summary>google with a Gemini-TTS model only: how to read, in plain words ("calm, warm product tour").</summary>
+    public string? Prompt { get; init; }
 }
 
 public sealed record MusicSettings
@@ -163,7 +167,7 @@ public static class ScenarioRules
         new HashSet<string>(StringComparer.Ordinal) { "Enter", "Escape", "Tab", "ArrowDown", "ArrowUp", "Backspace" };
 
     public static readonly IReadOnlySet<string> Providers =
-        new HashSet<string>(StringComparer.Ordinal) { "say", "google", "piper" };
+        new HashSet<string>(StringComparer.Ordinal) { "say", "google", "elevenlabs", "piper" };
 
     /// <summary>Every problem in the scenario, empty when it can be rendered.</summary>
     public static IReadOnlyList<string> Validate(Scenario scenario)
@@ -219,6 +223,22 @@ public static class ScenarioRules
         if (scenario.Voice.Provider == "google" && string.IsNullOrWhiteSpace(scenario.Voice.Name))
         {
             errors.Add("voice.name is required for google (list them with the 'voices' command).");
+        }
+
+        if (scenario.Voice.Prompt is not null && (scenario.Voice.Provider != "google" || scenario.Voice.Model is null))
+        {
+            errors.Add("voice.prompt only works with google and a Gemini-TTS voice.model.");
+        }
+
+        if (scenario.Voice.Provider == "elevenlabs" && string.IsNullOrWhiteSpace(scenario.Voice.Name))
+        {
+            errors.Add("voice.name (the ElevenLabs voice id) is required for elevenlabs.");
+        }
+
+        // ElevenLabs takes speed only between 0.7 and 1.2.
+        if (scenario.Voice.Provider == "elevenlabs" && scenario.Voice.Rate is < 0.7 or > 1.2)
+        {
+            errors.Add("voice.rate must be between 0.7 and 1.2 for elevenlabs.");
         }
 
         if (scenario.Voice.Provider == "piper" && string.IsNullOrWhiteSpace(scenario.Voice.Model))
