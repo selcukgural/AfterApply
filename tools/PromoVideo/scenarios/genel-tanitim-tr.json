@@ -1,0 +1,108 @@
+// The general Turkish introduction for YouTube: opening card, the question the product answers,
+// how applications get in, the dashboard, one application, a company page, the CV scan, closing card.
+// Voice: Google Chirp3-HD Charon. Music: the tool's own ambient bed (no licence to worry about).
+{
+  "title": "e-kariyerim — genel tanıtım",
+  "language": "tr",
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 720, "deviceScaleFactor": 2 },
+  "output": { "width": 1920, "height": 1080, "fps": 30 },
+  "colorScheme": "light",
+  "signIn": true,
+  "voice": { "provider": "google", "name": "tr-TR-Chirp3-HD-Charon", "rate": 1.0 },
+  "music": { "generate": "ambient", "volume": 0.18 },
+  // Loanwords said the way people say them, not letter by letter; the subtitles keep the spelling.
+  "pronounce": {
+    "CV": "sivi",
+    "ATS": "ey ti es",
+    "LinkedIn": "Linktin",
+    "ekariyerim.com": "e kariyerim nokta kom",
+    "e-kariyerim": "e kariyerim"
+  },
+  "hide": ["button.fixed.bottom-4.right-4"],
+  "scenes": [
+    {
+      "id": "acilis",
+      "chapter": "Giriş",
+      "minSeconds": 4.5,
+      "steps": [
+        { "action": "goto", "path": "/tr" },
+        { "action": "card", "title": "e-kariyerim", "text": "Başvuruların nereye gidiyor?" }
+      ]
+    },
+    {
+      "id": "soru",
+      "narration": "Başvurdun. Peki sonra ne oldu? Çoğu başvuru cevapsız kalır ve hangisinin nerede kaybolduğunu çoğu zaman hiç öğrenemezsin. e-kariyerim bunu sayılarla görünür kılar.",
+      "steps": [
+        { "action": "hideCard" },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 520 }
+      ]
+    },
+    {
+      "id": "toplama",
+      "chapter": "Başvurularını topla",
+      "narration": "Başlamak için LinkedIn başvuru geçmişini içe aktarman ya da tarayıcı eklentisini kurman yeterli. Başvurularını tek tek yazmana gerek yok.",
+      "steps": [
+        { "action": "goto", "path": "/tr/import" },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 350 }
+      ]
+    },
+    {
+      "id": "panel",
+      "chapter": "Panel",
+      "narration": "Panel, kaç başvurunun cevaplandığını, kaçının sessizce kaybolduğunu ve sürecin hangi aşamada tıkandığını gösterir. Dönüşüm hunisi, başvurudan teklife kadar her adımı sayılarla özetler.",
+      "steps": [
+        { "action": "goto", "path": "/tr/dashboard" },
+        { "action": "wait", "seconds": 2 },
+        { "action": "scroll", "by": 620 },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 420 }
+      ]
+    },
+    {
+      "id": "basvuru",
+      "chapter": "Başvurular",
+      "minSeconds": 10.5,
+      "narration": "Her başvurunun kendi sayfası var: aşama geçmişi, görüşme tarihi, iletişim kurduğun kişi ve kullandığın CV bir arada durur.",
+      "steps": [
+        { "action": "goto", "path": "/tr/applications" },
+        { "action": "wait", "seconds": 1.5 },
+        { "action": "click", "target": "text=Hepsiburada" },
+        { "action": "wait", "seconds": 2.5 },
+        { "action": "scroll", "by": 280 }
+      ]
+    },
+    {
+      "id": "sirketler",
+      "chapter": "Şirketler",
+      "minSeconds": 10.5,
+      "narration": "Şirket sayfalarında diğer adayların deneyimlerini, maaş bilgilerini ve değerlendirmelerini görürsün. Hepsi anonim olarak paylaşılır.",
+      "steps": [
+        { "action": "goto", "path": "/tr/companies/beta-a-s" },
+        { "action": "wait", "seconds": 2.5 },
+        { "action": "scroll", "by": 450 }
+      ]
+    },
+    {
+      "id": "cv-tarama",
+      "chapter": "CV tarama",
+      "narration": "CV tarama ise özgeçmişinin işe alım sistemlerinde, yani ATS'lerde nasıl okunduğunu ücretsiz puanlar ve neyi düzeltmen gerektiğini tek tek söyler.",
+      "steps": [
+        { "action": "goto", "path": "/tr/cv-tarama" },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 160 }
+      ]
+    },
+    {
+      "id": "kapanis",
+      "narration": "e-kariyerim ücretsiz. Başvurularının nereye gittiğini görmek için ekariyerim.com adresinden hemen başla.",
+      "leadIn": 1.0,
+      "tail": 3.0,
+      "steps": [
+        { "action": "card", "title": "e-kariyerim", "text": "Ücretsiz · ekariyerim.com" }
+      ]
+    }
+  ]
+}

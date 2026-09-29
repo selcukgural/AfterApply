@@ -10265,3 +10265,44 @@ günlük tavan gerekirse ayrı iş.
 `GuideTests`): SSR fetch saymaz; tarayıcı page_view sayar; crawler UA, diğer dil, yanlış bölüm,
 index sayfası, `share_clicked` ve yayından kaldırılmış yazı saymaz; admin liste/gruplu/detay/
 preview aynı sayıyı görür.
+
+## Tanıtım videosu aracı (`tools/PromoVideo`) — DECIDED (2026-09-29)
+
+**İstek.** Kullanıcı YouTube için tanıtım videoları istiyor ama kendisi konuşmak ya da anlatmak
+istemiyor; ücretsiz bir yapay zekâ yolu arıyor. Clipchamp gibi elle kurgu yerine repoya bir araç
+olarak eklenmesini seçti: arayüz değişince video tek komutla yeniden çekilsin.
+
+**Karar.**
+- Diğer araçlar gibi (`CvScanCorpus`) bir .NET konsol aracı; slnx'te yok, elle çalıştırılır.
+  **Paket bağımlılığı yok:** Chrome'u CDP ile `ClientWebSocket` üzerinden sürer (Playwright yok),
+  kayıt `Page.startScreencast` kareleriyle yapılır, ffmpeg birleştirir.
+- Senaryo JSON: sahne = anlatım + adımlar (`goto/click/hover/type/press/scroll/wait/waitFor`).
+  Önce ses üretilir, her sahne en az sesi kadar sürer. Altyazı (SRT, uzunluğa göre zamanlanmış),
+  YouTube bölümleri (`chapters.txt`, YouTube kurallarına göre uyarılı) ve isteğe bağlı ekrana
+  basılı altyazı üretir. Ekrana basma sayfanın içine çizilir, çünkü yereldeki ffmpeg libass'sız.
+- Ses sağlayıcıları: `say` (taslak; Apple lisansı ticari olmayan kullanım → yayın için değil),
+  **`google`** (Cloud TTS, yayın için; `gcloud` token'ı, anahtar dosyası yok, aylık ücretsiz kota),
+  `piper` (çevrimdışı; model lisansı modele göre değişir). ElevenLabs'in ücretsiz planı ticari
+  kullanıma izin vermediği, edge-tts ise resmî olmayan bir uç kullandığı için alınmadı.
+  Seslendirme önbelleği metin + ses parmak izine göre tutulur, ücretli ses bir kez ödenir.
+- Gizlilik: `signIn` yalnızca yerel adreslerde (localhost/127.0.0.1/::1/*.localhost/*.test) kabul
+  edilir. Kimlik bilgileri `PROMO_EMAIL/PROMO_PASSWORD` ortam değişkenlerinden okunur, oturum
+  açma kayda girmez. Her çalıştırmada temiz bir Chrome profili açılır. `goto` yalnızca yol alır,
+  başka siteye gidemez. Çıktı `artifacts/promo-video/` altında (gitignore).
+
+**Test.** Unit (`tests/AfterApply.UnitTests/PromoVideo`, UnitTests araca ProjectReference
+veriyor): senaryo kuralları, `scenarios/` altındaki dosyaların geçerliliği, cümle/altyazı bölme,
+SRT, bölümler, ses karıştırma, WAV başlığı, kare listesi. Uçtan uca: yerel stack + demo hesapla
+`tanitim-tr.json` 51 sn / 1080p üretildi (ses ve görüntü eşit uzunlukta; ekrana basılı altyazı
+ve imleç karelerde doğrulandı).
+
+**Ek (aynı gün): genel tanıtım videosu.** Kullanıcı Google `tr-TR-Chirp3-HD-Charon` sesini seçti
+(10 örnek arasından). Text-to-Speech API `ekariyerim` projesinde kullanıcı onayıyla açıldı.
+Eklenenler: `card`/`hideCard` adımları (logolu tam ekran açılış/kapanış kartı, logo sitenin
+kendi `/brand/logo-mark.png`'si), `music` (`generate: "ambient"`: aracın kendi bestelediği pad,
+telif riski yok; ya da `file`: örneğin YouTube Ses Kitaplığı), sidechain ile müziğin anlatım
+altında kısılması + −16 LUFS normalizasyon, `pronounce` sözlüğü (kullanıcı isteği: "CV" harf
+harf değil "sivi" okunmalı; yalnız sese uygulanır, altyazı yazıldığı gibi kalır; tam kelime
+eşleşmesi). Senaryo: `scenarios/genel-tanitim-tr.json` (~86 sn, 8 sahne). Mesaj V-serisine
+uygun: "takip et" değil, "başvuruların nereye gidiyor". Yayın render'ı web'in üretim
+derlemesine karşı alınır (dev sunucusu köşeye Next.js simgesi basıyor).
