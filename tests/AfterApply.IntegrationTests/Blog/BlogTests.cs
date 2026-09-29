@@ -6,6 +6,7 @@ using AfterApply.Application.Applications.Contracts;
 using AfterApply.Application.Blog;
 using AfterApply.Application.Blog.Contracts;
 using AfterApply.Application.ClientConfig;
+using AfterApply.Application.SiteTraffic.Contracts;
 using AfterApply.Domain.Blog;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -619,10 +620,10 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         (await _factory.CreateClient().GetAsync("/api/admin/blog/posts/grouped")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    // ---- Views (2026-09-20) --------------------------------------------------------------------
+    // ---- Views (2026-09-20; from the reader's browser since 2026-09-29) --------------------------
 
     [Fact]
-    public async Task A_Public_Read_Counts_A_View_That_Reaches_The_Admin_Without_Touching_The_Post()
+    public async Task A_Reader_Page_View_Counts_A_View_That_Reaches_The_Admin_Without_Touching_The_Post()
     {
         var (admin, _) = await RegisterAdminAsync("views.blog@example.com");
         var post = await PublishedPostAsync(admin);
@@ -631,12 +632,28 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         before.ViewCount.ShouldBe(0);
         before.LikeCount.ShouldBe(0);
 
-        var first = (await (await GetPublicAsync("tr", post.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
-        first.ViewCount.ShouldBe(1);
+        // The server-rendered page's own fetch is not a view: crawlers and link previews make it too.
+        (await (await GetPublicAsync("tr", post.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!
+            .ViewCount.ShouldBe(0);
+
+        var anonymous = _factory.CreateClient();
+        await ReaderViews.ReportAsync(anonymous, $"/tr/blog/{post.Slug}");
+        (await (await GetPublicAsync("tr", post.Slug!)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!
+            .ViewCount.ShouldBe(1);
+        await ReaderViews.ReportAsync(anonymous, $"/tr/blog/{post.Slug}?utm_source=x");
         var reader = await RegisterUserAsync("viewer.blog@example.com");
         var second = (await (await GetPublicAsync("tr", post.Slug!, reader)).Content.ReadFromJsonAsync<BlogPostPublicResponse>(JsonOptions))!;
         second.ViewCount.ShouldBe(2);
         second.LikedByMe.ShouldBe(false);
+
+        // Not a reader of this post: a crawler, the same slug in the other language or section, the
+        // index page, and any event that is not a page view.
+        await ReaderViews.ReportAsync(anonymous, $"/tr/blog/{post.Slug}", ReaderViews.CrawlerUserAgent);
+        await ReaderViews.ReportAsync(anonymous, $"/en/blog/{post.Slug}");
+        await ReaderViews.ReportAsync(anonymous, $"/tr/guide/{post.Slug}");
+        await ReaderViews.ReportAsync(anonymous, "/tr/blog");
+        (await anonymous.PostAsJsonAsync("/api/site-traffic/events",
+            new RecordSiteTrafficEventRequest("share_clicked", $"/tr/blog/{post.Slug}", null), JsonOptions)).EnsureSuccessStatusCode();
 
         // The tally is on the admin's side too, and a read is not an edit: the post's own clock
         // and revision stay where they were, and the preview does not count.
@@ -651,6 +668,18 @@ public class BlogTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogPr
         var preview = await admin.GetFromJsonAsync<BlogPostPublicResponse>($"/api/admin/blog/posts/{post.Id}/preview", JsonOptions);
         preview!.ViewCount.ShouldBe(2);
         (await GetAdminAsync(admin, post.Id)).ViewCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task A_Page_View_Of_A_Draft_Counts_Nothing()
+    {
+        var (admin, _) = await RegisterAdminAsync("views.draft.blog@example.com");
+        var post = await PublishedPostAsync(admin);
+        (await admin.PostAsync($"/api/admin/blog/posts/{post.Id}/unpublish", null)).EnsureSuccessStatusCode();
+
+        await ReaderViews.ReportAsync(_factory.CreateClient(), $"/tr/blog/{post.Slug}");
+
+        (await GetAdminAsync(admin, post.Id)).ViewCount.ShouldBe(0);
     }
 
     // ---- Public reading -------------------------------------------------------------------------

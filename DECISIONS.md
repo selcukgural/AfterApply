@@ -10228,3 +10228,40 @@ Kullanıcı profil fotoğrafı yükleyip değiştirebiliyor ve kaldırabiliyor. 
 - Diğerleri: yalnızca `.ico` (GDZ Elektrik, Logo Yazılım), ana sayfada bot koruması (Getir 403, Hepsiburada, Arçelik), ikon etiketi olmayan istemci tarafı sayfa (Turkcell), küçük favicon (Computershare). Bunlar LinkedIn yedeğine düşüyor.
 
 **Gizlilik metni:** şirket logosu kişisel veri değil ve istek sunucudan çıkıyor; `/privacy` değişmedi. Yardım merkezindeki pano notu kaynağı ve "tarayıcın başka siteye gitmez" bilgisini söyleyecek şekilde güncellendi (tr + en).
+
+## Blog/rehber görüntülenme sayısı gerçek okuyucudan gelir — DECIDED (2026-09-29)
+
+**İstek.** Kullanıcı: blog ve rehber sayfalarının altındaki ve `/admin/blog`, `/admin/guide`
+tablolarındaki görüntülenme sayıları gerçek kullanıcılardan gelsin, mevcut sayılar korunsun.
+
+**Sorun.** 2026-09-20'den beri `BlogPosts.ViewCount`, `GetBySlugAsync`'in her public fetch'inde
++1 oluyordu. Sayfa SSR olduğu için bu fetch'i crawler'lar, link önizlemeleri (Slack, WhatsApp,
+LinkedIn), audit/Lighthouse koşuları ve admin'in kendi ziyaretleri de yapıyordu — sayı "okuyucu"
+değil "sunucu render'ı" sayıyordu.
+
+**Karar.** Sayaç, zaten var olan çerezsiz ziyaret sayacına (`/api/site-traffic/events`,
+`SiteTrafficReporter`) bağlandı; yeni endpoint yok:
+
+- `SiteTrafficNormalizer`: `/blog` `ExactPaths`'e ve `SlugSections`'a eklendi (o güne kadar
+  blog hiç sayılmıyordu). Preview (`/blog/preview/{id}`) üç segment → sayılmaz.
+- `SiteTrafficService.RecordAsync`: kabul edilen bir `page_view` `/blog/{slug}` ya da
+  `/guide/{slug}` ise, o dil + tür + slug'daki **yayımlanmış** yazının `ViewCount`'u yerinde +1
+  (`ExecuteUpdate`, `UpdatedAt`/revizyon değişmez).
+- `GetBySlugAsync` artık artırmıyor; sayıyı yalnızca taze okuyor (önbellekteki gövde bayat olurdu).
+- "Gerçek okuyucu" tanımı ziyaret sayacınınkiyle aynı: sayfanın JS'ini çalıştıran bir tarayıcı,
+  `navigator.webdriver` değil, admin değil, DNT kapalı, UA crawler/headless listesinde değil.
+  Yenilemeler hâlâ sayılır (sayaç ziyaretçi kimliği tutmaz — Çerez Politikası sözü).
+- **Mevcut sayılar korundu:** kolon sıfırlanmadı, migration yok; yeni sayımlar eskilerin üstüne
+  eklenir.
+- Çerez/gizlilik metni değişmedi: sayaç zaten "hangi yazının işe yaradığını" görmek için
+  tanımlı, yeni veri tutulmuyor, IP yine yazılmıyor (endpoint'in `WithoutRequestAudit` gerekçesi
+  aynen geçerli).
+
+**Açık risk (not).** Endpoint anonim ve IP başına 120/5 dk sınırlı; sahte tarayıcı UA'sıyla
+bir script sayıyı şişirebilir. Önceki hâlde (sınırsız anonim GET) de böyleydi; yazı başına
+günlük tavan gerekirse ayrı iş.
+
+**Test.** Unit: normalizer blog/guide yolları kabul, preview reddi. Integration (`BlogTests`,
+`GuideTests`): SSR fetch saymaz; tarayıcı page_view sayar; crawler UA, diğer dil, yanlış bölüm,
+index sayfası, `share_clicked` ve yayından kaldırılmış yazı saymaz; admin liste/gruplu/detay/
+preview aynı sayıyı görür.
