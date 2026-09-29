@@ -36,9 +36,9 @@ import { fetchBlogCoverCard } from "@/lib/blog/publicApi.server";
  * card. A day of caching: a crawler re-fetches the image every time it re-reads the page, and the
  * card for a given title never changes.
  */
-// The flow card carries the real brand mark (the dark cards draw theirs with boxes). Read once per
-// server process from public/, which the Docker image ships next to the standalone server.
-const flowLogoSrc = `data:image/png;base64,${await readFile(join(process.cwd(), "public/brand/logo-mark-og.png"), "base64")}`;
+// Every card carries the real brand mark. Read once per server process from public/, which the
+// Docker image ships next to the standalone server.
+const logoSrc = `data:image/png;base64,${await readFile(join(process.cwd(), "public/brand/logo-mark-og.png"), "base64")}`;
 
 // And the site's own typeface: satori's bundled font has one weight, so the card's bold headline
 // and counts would render regular. Geist (SIL OFL, public/fonts/geist/OFL.txt) in the three weights
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest, context: RouteContext<"/[locale]
         <FlowOgCard
           format={format}
           counts={card.counts}
-          logoSrc={flowLogoSrc}
+          logoSrc={logoSrc}
           {...flowCardText(card, locale, t)}
           density={density}
         />
@@ -138,6 +138,7 @@ export async function GET(request: NextRequest, context: RouteContext<"/[locale]
           kicker={t("shared.card.kicker")}
           title={t("shared.card.title")}
           footer={t("shared.card.footer")}
+          logoSrc={logoSrc}
         />
       ),
       { width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, headers },
@@ -147,7 +148,7 @@ export async function GET(request: NextRequest, context: RouteContext<"/[locale]
   const title = sanitizeOgText(params.get("t"), OG_TITLE_MAX_LENGTH) || "e-kariyerim";
   const kicker = sanitizeOgText(params.get("k"), OG_KICKER_MAX_LENGTH) || undefined;
 
-  return new ImageResponse(<OgCard title={title} kicker={kicker} />, {
+  return new ImageResponse(<OgCard title={title} kicker={kicker} logoSrc={logoSrc} />, {
     width: OG_IMAGE_WIDTH,
     height: OG_IMAGE_HEIGHT,
     headers,
