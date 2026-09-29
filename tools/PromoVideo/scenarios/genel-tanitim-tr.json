@@ -48,6 +48,8 @@
     {
       "id": "toplama",
       "chapter": "Başvurularını topla",
+      // YouTube drops every chapter when one is under 10 s; the voice alone leaves this one at 9.7.
+      "minSeconds": 10.5,
       "narration": "Başlamak için LinkedIn başvuru geçmişini içe aktarman ya da tarayıcı eklentisini kurman yeterli. Başvurularını tek tek yazmana gerek yok.",
       "steps": [
         { "action": "goto", "path": "/tr/import" },
