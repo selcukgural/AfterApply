@@ -456,6 +456,16 @@
     "responseRates": "Response Rates",
     "salaryMarket": "Software Salaries"
   },
+  "navDescriptions": {
+    "allApplications": "Track them as a list or a board",
+    "trackedJobs": "Postings you haven't applied to",
+    "import": "Bring in your LinkedIn history",
+    "allCompanies": "Reviews, salaries, experiences",
+    "writeReview": "Describe a company you know",
+    "shareSalary": "Add your salary anonymously",
+    "shareExperience": "Rate an interview anonymously",
+    "myReviews": "Everything you've written"
+  },
   "auth": {
     "login": {
       "title": "Log In",
@@ -6207,23 +6217,31 @@
     "toolsMenu": {
       "responseRates": {
         "title": "Response Rates",
-        "description": "How often companies reply, by sector"
+        "description": "Reply rates by sector"
       },
       "benchmark": {
         "title": "Benchmark",
-        "description": "Compare your reply rate with your field's median"
+        "description": "Your reply rate vs your field"
       },
       "offerCompare": {
         "title": "Offer Comparison",
-        "description": "Put job offers side by side, net over a year"
+        "description": "Offers side by side, net per year"
       },
       "cvScan": {
         "title": "CV Scan",
-        "description": "See what applicant tracking systems read from your CV"
+        "description": "What hiring software reads"
       },
       "salaryMarket": {
         "title": "Software Salaries",
-        "description": "Pay by occupation, level and experience, year by year"
+        "description": "Pay by occupation and level"
+      },
+      "weeklyJobs": {
+        "title": "Weekly Jobs",
+        "description": "Weekly postings scored on your CV"
+      },
+      "guide": {
+        "title": "Guide",
+        "description": "Answers on how hiring works"
       }
     },
     "preferences": "Preferences",

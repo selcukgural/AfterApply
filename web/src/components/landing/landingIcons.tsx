@@ -58,6 +58,26 @@ export const LANDING_ICON_PATHS = {
   weeklyJobs: (
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z" />
   ),
+  // An open book: the guide, in the signed-in Tools menu (2026-09-29).
+  guide: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6.04A8.97 8.97 0 006 3.75c-1.05 0-2.06.18-3 .51v14.25A8.99 8.99 0 016 18c2.3 0 4.4.87 6 2.29m0-14.25a8.97 8.97 0 016-2.29c1.05 0 2.06.18 3 .51v14.25A8.99 8.99 0 0018 18a8.97 8.97 0 00-6 2.29m0-14.25v14.25"
+    />
+  ),
+  // The signed-in menus' other items (2026-09-29), drawn like the Tools menu.
+  bookmark: <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 21L12 17.25 6.75 21V4.5A1.5 1.5 0 018.25 3h7.5a1.5 1.5 0 011.5 1.5z" />,
+  import: <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />,
+  review: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M11.48 3.5a.56.56 0 011.04 0l2.12 5.11a.56.56 0 00.47.35l5.52.44c.5.04.7.66.32.99l-4.2 3.6a.56.56 0 00-.18.56l1.28 5.39a.56.56 0 01-.84.61l-4.73-2.89a.56.56 0 00-.59 0l-4.73 2.89a.56.56 0 01-.84-.61l1.28-5.39a.56.56 0 00-.18-.56l-4.2-3.6a.56.56 0 01.32-.99l5.52-.44a.56.56 0 00.47-.35z"
+    />
+  ),
+  experience: <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8M8 14h5M21 12a8 8 0 01-11.8 7.04L4 20l1-4.2A8 8 0 1121 12z" />,
+  person: <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.1a7.5 7.5 0 0115 0" />,
 } as const;
 
 export type LandingIcon = keyof typeof LANDING_ICON_PATHS;

@@ -26,6 +26,9 @@ export const ROOT_MESSAGE_SCOPE = [
   "common",
   "nav",
   "siteNav",
+  // The line under each item of the signed-in header's menus (2026-09-29): that header shows on
+  // public pages too, for a signed-in visitor.
+  "navDescriptions",
   "theme",
   "notFound",
   // The share row's two labels ("copy link" / "copied") — the row sits on the CV result, which

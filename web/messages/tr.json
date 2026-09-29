@@ -456,6 +456,16 @@
     "responseRates": "Yanıt Oranları",
     "salaryMarket": "Yazılımcı Maaşları"
   },
+  "navDescriptions": {
+    "allApplications": "Liste ya da panoda takip et",
+    "trackedJobs": "Henüz başvurmadığın ilanlar",
+    "import": "LinkedIn geçmişini içeri al",
+    "allCompanies": "Değerlendirme, maaş, deneyim",
+    "writeReview": "Tanıdığın bir şirketi anlat",
+    "shareSalary": "Maaşını anonim olarak ekle",
+    "shareExperience": "Mülakat sürecini anonim anlat",
+    "myReviews": "Yazdığın her şey tek yerde"
+  },
   "auth": {
     "login": {
       "title": "Giriş Yap",
@@ -6207,23 +6217,31 @@
     "toolsMenu": {
       "responseRates": {
         "title": "Yanıt Oranları",
-        "description": "Sektörlere göre şirketlerin geri dönüş oranı"
+        "description": "Sektörlere göre geri dönüş oranı"
       },
       "benchmark": {
         "title": "Kıyaslama",
-        "description": "Geri dönüş oranını alanının medyanıyla kıyasla"
+        "description": "Geri dönüşünü alanınla kıyasla"
       },
       "offerCompare": {
         "title": "Teklif Karşılaştırma",
-        "description": "İş tekliflerini yıllık net olarak yan yana koy"
+        "description": "Teklifleri yıllık net kıyasla"
       },
       "cvScan": {
         "title": "CV Tarama",
-        "description": "Başvuru sistemi CV'nden ne okuyor, hemen gör"
+        "description": "Başvuru sistemi CV'nden ne okur"
       },
       "salaryMarket": {
         "title": "Yazılımcı Maaşları",
-        "description": "Meslek, seviye ve deneyime göre yıllık maaş verisi"
+        "description": "Meslek ve seviyeye göre maaşlar"
+      },
+      "weeklyJobs": {
+        "title": "Haftalık İlanlar",
+        "description": "CV'ne göre puanlı haftalık ilanlar"
+      },
+      "guide": {
+        "title": "Rehber",
+        "description": "Başvuru sürecine dair cevaplar"
       }
     },
     "preferences": "Tercihler",
