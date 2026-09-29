@@ -243,7 +243,11 @@ public class GuideTests(ApiHost<BlogProfile> host) : IClassFixture<ApiHost<BlogP
         var admin = await RegisterAdminAsync("reader.guide@example.com");
         var guide = await PublishedAsync(admin, BlogPostKind.Guide, "Okunan rehber");
 
-        (await PublicGuideAsync("tr", guide.Slug!))!.ViewCount.ShouldBe(1);
+        // The guide's reader is counted from the browser's page view, not from the page's fetch.
+        (await PublicGuideAsync("tr", guide.Slug!))!.ViewCount.ShouldBe(0);
+        await ReaderViews.ReportAsync(host.CreateClient(), $"/tr/guide/{guide.Slug}");
+        await ReaderViews.ReportAsync(host.CreateClient(), $"/tr/guide/{guide.Slug}");
+        await ReaderViews.ReportAsync(host.CreateClient(), $"/tr/blog/{guide.Slug}");
         (await PublicGuideAsync("tr", guide.Slug!))!.ViewCount.ShouldBe(2);
 
         var (reader, _) = await host.RegisterAsync("reader.of.guide@example.com");

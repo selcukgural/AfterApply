@@ -86,6 +86,27 @@ public class SiteTrafficNormalizerTests
         result.Path.ShouldBe(expected);
     }
 
+    // The blog was missing until 2026-09-29; its posts' reader tally now rides on these reports.
+    [Theory]
+    [InlineData("/tr/blog", "/blog")]
+    [InlineData("/en/blog/job-search-ghosting", "/blog/job-search-ghosting")]
+    [InlineData("/tr/guide/basvuru-takibi", "/guide/basvuru-takibi")]
+    public void The_Blog_And_Guide_Posts_Are_Countable(string path, string expected)
+    {
+        var result = SiteTrafficNormalizer.Normalize("page_view", path, null);
+
+        result.ShouldNotBeNull();
+        result.Path.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("/tr/blog/preview/0192e5c1-6f3a-7c2b-9a11-4f0d2e8b5a77")]
+    [InlineData("/tr/guide/preview/0192e5c1-6f3a-7c2b-9a11-4f0d2e8b5a77")]
+    public void An_Admin_Preview_Of_A_Draft_Is_Not_Countable(string path)
+    {
+        SiteTrafficNormalizer.Normalize("page_view", path, null).ShouldBeNull();
+    }
+
     [Theory]
     [InlineData("/tr/cv-tarama/puan")]
     [InlineData("/tr/cv-tarama/puan/abc")]
