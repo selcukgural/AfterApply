@@ -3,6 +3,8 @@ import { isActivePath } from "@/components/layout/navLink";
 import { switchedOff, withoutSwitchedOff } from "@/lib/config/switchedOff";
 import { cvScanPath } from "@/lib/cvScan/path";
 import { offerComparePath } from "@/lib/offerCompare/path";
+import { salaryMarketPath } from "@/lib/salaryMarket/path";
+import type { LandingIcon } from "@/components/landing/landingIcons";
 
 /** A `nav.*` catalogue key. */
 export type NavKey =
@@ -20,6 +22,7 @@ export type NavKey =
   | "myReviews"
   | "tools"
   | "responseRates"
+  | "salaryMarket"
   | "weeklyJobs"
   | "cvScan"
   | "offerCompare"
@@ -34,6 +37,10 @@ export interface NavItem {
   dividerBefore?: boolean;
   /** Carries the "Pro" badge while the plan is on sale and the account is not Pro. */
   proBadge?: boolean;
+  /** Every menu item is drawn with an icon and a line of description (variant A, 2026-09-29), the
+   *  way the signed-out header draws its Tools menu. The line is `siteNav.toolsMenu.<key>.description`
+   *  for a tool — the same words the signed-out menu shows — and `navDescriptions.<key>` otherwise. */
+  icon?: LandingIcon;
 }
 
 /** One position in the signed-in row: a plain link, or a trigger with a menu under it. */
@@ -41,7 +48,7 @@ export type NavEntry = { type: "link"; href: string; key: NavKey } | { type: "gr
 
 export type NavFlags = Pick<
   ClientConfigResponse,
-  "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences" | "blog" | "responseRates"
+  "jobSources" | "companyReviews" | "companySalaries" | "candidateExperiences" | "blog" | "responseRates" | "salaryMarket"
 > &
   Partial<Pick<ClientConfigResponse, "cvScan">>;
 
@@ -80,26 +87,29 @@ export function buildNavEntries(flags: NavFlags, locale: string, loaded = true):
   const weeklyJobsOn = flags.jobSources?.enabled === true;
   const blogOn = flags.blog?.enabled === true && flags.blog.hasPublishedPosts === true;
   const responseRatesOn = flags.responseRates?.enabled === true;
+  const salaryMarketOn = flags.salaryMarket?.enabled === true;
   const off = switchedOff(loaded ? flags : null);
 
   const companies: NavItem[] = [
-    { href: "/companies", key: "allCompanies" },
-    { href: "/contribute?tab=review", key: "writeReview", dividerBefore: true },
-    ...(salariesOn ? [{ href: "/contribute?tab=salary", key: "shareSalary" } as NavItem] : []),
-    ...(experiencesOn ? [{ href: "/contribute?tab=experience", key: "shareExperience" } as NavItem] : []),
+    { href: "/companies", key: "allCompanies", icon: "companies" },
+    { href: "/contribute?tab=review", key: "writeReview", dividerBefore: true, icon: "review" },
+    ...(salariesOn ? [{ href: "/contribute?tab=salary", key: "shareSalary", icon: "salary" } as NavItem] : []),
+    ...(experiencesOn ? [{ href: "/contribute?tab=experience", key: "shareExperience", icon: "experience" } as NavItem] : []),
     // One "mine" page since 2026-09-18: reviews, salaries and experiences are one list there.
-    { href: "/my-reviews", key: "myReviews", dividerBefore: true },
+    { href: "/my-reviews", key: "myReviews", dividerBefore: true, icon: "person" },
   ];
 
   const tools: NavItem[] = withoutSwitchedOff<NavItem>([
-    ...(weeklyJobsOn ? [{ href: "/weekly-jobs", key: "weeklyJobs", proBadge: true } as NavItem] : []),
+    ...(weeklyJobsOn ? [{ href: "/weekly-jobs", key: "weeklyJobs", proBadge: true, icon: "weeklyJobs" } as NavItem] : []),
     // The sector table reads like a tool (2026-09-22): a public number to look up, not a place to
     // contribute — so it sits with the scan and the benchmark rather than in the companies group.
-    ...(responseRatesOn ? [{ href: "/response-rates", key: "responseRates" } as NavItem] : []),
-    { href: cvScanPath(locale), key: "cvScan" },
-    { href: "/benchmark", key: "benchmark" },
-    { href: offerComparePath(locale), key: "offerCompare" },
-    { href: "/guide", key: "guide" },
+    ...(responseRatesOn ? [{ href: "/response-rates", key: "responseRates", icon: "analytics" } as NavItem] : []),
+    // The survey salary pages (2026-09-27): public figures to look up, like the sector table.
+    ...(salaryMarketOn ? [{ href: salaryMarketPath(locale), key: "salaryMarket", icon: "salary" } as NavItem] : []),
+    { href: cvScanPath(locale), key: "cvScan", icon: "cv" },
+    { href: "/benchmark", key: "benchmark", icon: "analytics" },
+    { href: offerComparePath(locale), key: "offerCompare", icon: "offer" },
+    { href: "/guide", key: "guide", icon: "guide" },
   ], off);
 
   return [
@@ -108,9 +118,9 @@ export function buildNavEntries(flags: NavFlags, locale: string, loaded = true):
       type: "group",
       key: "applicationsMenu",
       items: [
-        { href: "/applications", key: "allApplications" },
-        { href: "/tracked-jobs", key: "trackedJobs" },
-        { href: "/import", key: "import" },
+        { href: "/applications", key: "allApplications", icon: "tracking" },
+        { href: "/tracked-jobs", key: "trackedJobs", icon: "bookmark" },
+        { href: "/import", key: "import", icon: "import" },
       ],
     },
     ...(reviewsOn ? [{ type: "group", key: "companies", items: companies } as NavEntry] : []),

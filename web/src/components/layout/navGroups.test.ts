@@ -57,6 +57,55 @@ describe("buildNavEntries", () => {
     expect(group(buildNavEntries(ALL_ON, "tr"), "tools").items[0].proBadge).toBe(true);
   });
 
+  it("adds the survey salary pages after response rates only once the server says they are on", () => {
+    const tools = (flags: object, locale = "tr") => group(buildNavEntries(flags, locale), "tools").items.map((item) => item.href);
+    expect(tools(ALL_ON)).not.toContain("/maaslar");
+    expect(tools({ ...ALL_ON, responseRates: { enabled: true }, salaryMarket: { enabled: true } }).slice(1, 3)).toEqual(["/response-rates", "/maaslar"]);
+    expect(tools({ salaryMarket: { enabled: true } }, "en")[0]).toBe("/salaries");
+    expect(tools({ salaryMarket: { enabled: false } })).not.toContain("/maaslar");
+  });
+
+  // 2026-09-29: signed in, the Tools menu shrank to bare links while the signed-out header drew
+  // the same tools with an icon and a line of description.
+  it("gives every tool an icon and a description line in both languages, like the signed-out menu", () => {
+    const items = group(buildNavEntries({ ...ALL_ON, responseRates: { enabled: true }, salaryMarket: { enabled: true } }, "tr"), "tools").items;
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      expect(item.icon, item.key).toBeDefined();
+      for (const m of [tr, en]) {
+        const entry = (m.siteNav.toolsMenu as Record<string, { title: string; description: string }>)[item.key];
+        expect(entry?.description, `${item.key} description`).toBeTruthy();
+        expect(entry.title).toBe((m.nav as Record<string, string>)[item.key]);
+      }
+    }
+  });
+
+  // Variant A (2026-09-29): the Applications and Companies menus look like the Tools menu too, so
+  // no open menu is a bare list next to one with icons.
+  it("gives every item of every menu an icon and a description line in both languages", () => {
+    const groups = buildNavEntries({ ...ALL_ON, responseRates: { enabled: true } }, "tr").filter((entry) => entry.type === "group");
+    expect(groups.map((entry) => entry.key)).toEqual(["applicationsMenu", "companies", "tools"]);
+    for (const entry of groups) {
+      if (entry.type !== "group" || entry.key === "tools") continue;
+      for (const item of entry.items) {
+        expect(item.icon, item.key).toBeDefined();
+        for (const m of [tr, en]) expect((m.navDescriptions as Record<string, string>)[item.key], `${item.key} description`).toBeTruthy();
+      }
+    }
+  });
+
+  // 2026-09-29: two-line descriptions made the menus too tall and wide. At the menu's 20rem width
+  // a line of 13px text holds about 34 characters, so every description stays within that.
+  it("keeps every menu description to one line", () => {
+    for (const m of [tr, en]) {
+      const lines = [
+        ...Object.values(m.navDescriptions),
+        ...Object.values(m.siteNav.toolsMenu as Record<string, { description: string }>).map((tool) => tool.description),
+      ];
+      for (const line of lines) expect(line.length, line).toBeLessThanOrEqual(34);
+    }
+  });
+
   it("offers the blog only once something is published, not merely when the feature is on", () => {
     const on = { ...ALL_ON, blog: { enabled: true, hasPublishedPosts: false } };
     expect(hrefs(buildNavEntries(on, "tr"))).not.toContain("/blog");
@@ -127,6 +176,8 @@ describe("one name per destination", () => {
       expect(m.siteNav.toolsMenu.offerCompare.title).toBe(m.nav.offerCompare);
       expect(m.siteNav.toolsMenu.cvScan.title).toBe(m.nav.cvScan);
       expect(m.siteNav.toolsMenu.responseRates.title).toBe(m.nav.responseRates);
+      expect(m.siteNav.toolsMenu.salaryMarket.title).toBe(m.nav.salaryMarket);
+      expect(m.landing.footer.salaryMarket).toBe(m.nav.salaryMarket);
       expect(m.landing.footer.benchmark).toBe(m.nav.benchmark);
       expect(m.landing.footer.offerCompare).toBe(m.nav.offerCompare);
       expect(m.siteNav.guide).toBe(m.nav.guide);

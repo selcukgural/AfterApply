@@ -16,6 +16,9 @@
          (OccupationSeedReader), so a fresh database always gets exactly the rows that migration
          was written against. -->
     <EmbeddedResource Include="Occupations\Seed\occupations.v*.csv" LogicalName="AfterApply.Infrastructure.Occupations.Seed.%(Filename)%(Extension)" />
+    <!-- The public salary pages' figures: aggregates only, written by tools/SalarySurveyImport
+         (SalaryMarketSeed). -->
+    <EmbeddedResource Include="SalaryMarket\Seed\salary-market-*.csv" LogicalName="AfterApply.Infrastructure.SalaryMarket.Seed.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

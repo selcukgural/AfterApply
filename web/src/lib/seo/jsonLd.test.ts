@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleJsonLd, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd, serializeJsonLd, webApplicationJsonLd } from "./jsonLd";
+import { articleJsonLd, breadcrumbJsonLd, datasetJsonLd, jsonLdGraph, organizationJsonLd, serializeJsonLd, webApplicationJsonLd } from "./jsonLd";
 
 describe("serializeJsonLd", () => {
   // A literal "</script>" in a value would close the script element early and let the rest of the
@@ -136,5 +136,29 @@ describe("organizationJsonLd", () => {
     for (const href of node.sameAs as string[]) {
       expect(href).toMatch(/\/(company\/)?ekariyerim\/?$/);
     }
+  });
+});
+
+describe("datasetJsonLd", () => {
+  const node = datasetJsonLd({
+    locale: "tr",
+    path: "/maaslar",
+    name: "Yazılımcı maaşları",
+    description: "Özet",
+    creators: [{ name: "Önceki Yazılımcı", url: "https://github.com/oncekiyazilimci" }],
+    temporalCoverage: "2018/2026",
+    keywords: ["yazılımcı maaşı", "maaş anketi"],
+  });
+
+  it("names the survey authors as creators and the site as publisher", () => {
+    expect(node["@type"]).toBe("Dataset");
+    expect(node.url).toBe("https://ekariyerim.com/tr/maaslar");
+    expect(node.creator).toEqual([{ "@type": "Person", name: "Önceki Yazılımcı", url: "https://github.com/oncekiyazilimci" }]);
+    expect(node.publisher).toEqual({ "@id": "https://ekariyerim.com/#organization" });
+    expect(node.keywords).toBe("yazılımcı maaşı, maaş anketi");
+  });
+
+  it("claims no licence it does not have", () => {
+    expect(node).not.toHaveProperty("license");
   });
 });

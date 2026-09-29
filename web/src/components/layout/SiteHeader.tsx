@@ -11,9 +11,11 @@ import { PreferencesControls, PreferencesMenu } from "@/components/layout/Prefer
 import { NavBar } from "@/components/layout/NavBar";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
 import { NavMenu } from "@/components/layout/NavMenu";
-import { LandingIcon, type LandingIcon as LandingIconName } from "@/components/landing/landingIcons";
+import type { LandingIcon as LandingIconName } from "@/components/landing/landingIcons";
+import { ToolMenuLabel } from "@/components/layout/ToolMenuLabel";
 import { CV_SCAN_PATHS } from "@/lib/cvScan/path";
 import { OFFER_COMPARE_PATHS } from "@/lib/offerCompare/path";
+import { SALARY_MARKET_PATHS } from "@/lib/salaryMarket/path";
 import { pathFor, type LocalisedPath } from "@/lib/seo/routes";
 import { switchedOff, withoutSwitchedOff, type SwitchedOff } from "@/lib/config/switchedOff";
 
@@ -28,7 +30,7 @@ export interface SiteNavLink {
   key: SiteNavKey;
 }
 
-export type SiteToolKey = "responseRates" | "benchmark" | "offerCompare" | "cvScan";
+export type SiteToolKey = "responseRates" | "salaryMarket" | "benchmark" | "offerCompare" | "cvScan";
 
 export interface SiteTool {
   href: LocalisedPath;
@@ -53,8 +55,15 @@ export const SITE_TOOLS: readonly SiteTool[] = [
 /** The public sector response-rate table (2026-09-22), first in the menu when its server flag is on. */
 const RESPONSE_RATES_TOOL: SiteTool = { href: "/response-rates", key: "responseRates", icon: "analytics" };
 
-export function siteToolsFor(hasResponseRates: boolean, off: SwitchedOff = NOTHING_OFF): readonly SiteTool[] {
-  return withoutSwitchedOff(hasResponseRates ? [RESPONSE_RATES_TOOL, ...SITE_TOOLS] : SITE_TOOLS, off);
+/** The survey salary pages (2026-09-27): they ship dark, so they join the menu only once the
+ *  server says their flag is on — right after response rates, the other public figures. */
+const SALARY_MARKET_TOOL: SiteTool = { href: SALARY_MARKET_PATHS, key: "salaryMarket", icon: "salary" };
+
+export function siteToolsFor(hasResponseRates: boolean, off: SwitchedOff = NOTHING_OFF, hasSalaryMarket = false): readonly SiteTool[] {
+  return withoutSwitchedOff(
+    [...(hasResponseRates ? [RESPONSE_RATES_TOOL] : []), ...(hasSalaryMarket ? [SALARY_MARKET_TOOL] : []), ...SITE_TOOLS],
+    off,
+  );
 }
 
 /**
@@ -124,23 +133,11 @@ export function SiteHeader() {
 
   const off = switchedOff(isLoaded ? config : null);
   const links = siteLinksFor(config.blog?.enabled === true && config.blog.hasPublishedPosts === true, off);
-  const tools = siteToolsFor(config.responseRates?.enabled === true, off);
+  const tools = siteToolsFor(config.responseRates?.enabled === true, off, config.salaryMarket?.enabled === true);
 
   const toolItems = tools.map((tool) => ({
     href: pathFor(tool.href, locale),
-    label: (
-      <span className="flex items-start gap-3 py-0.5">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent-wash text-accent-ink">
-          <LandingIcon name={tool.icon} className="h-[18px] w-[18px]" />
-        </span>
-        <span className="flex flex-col gap-0.5">
-          <span className="font-semibold text-gray-900 dark:text-gray-100">{t(`toolsMenu.${tool.key}.title`)}</span>
-          <span className="text-[13px] leading-snug font-normal text-gray-600 dark:text-gray-400">
-            {t(`toolsMenu.${tool.key}.description`)}
-          </span>
-        </span>
-      </span>
-    ),
+    label: <ToolMenuLabel icon={tool.icon} title={t(`toolsMenu.${tool.key}.title`)} description={t(`toolsMenu.${tool.key}.description`)} />,
   }));
 
   // Anchors are never "active": the landing page is one page, and underlining a section name

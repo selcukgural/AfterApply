@@ -409,7 +409,8 @@
       "terms": "Kullanım Koşulları",
       "termsOfSale": "Mesafeli Satış Sözleşmesi",
       "refundPolicy": "İptal ve İade Koşulları",
-      "responseRates": "Yanıt Oranları"
+      "responseRates": "Yanıt Oranları",
+      "salaryMarket": "Yazılımcı Maaşları"
     }
   },
   "common": {
@@ -452,7 +453,18 @@
     "account": "Hesap",
     "profile": "Profilim",
     "shareExperience": "Deneyim paylaş",
-    "responseRates": "Yanıt Oranları"
+    "responseRates": "Yanıt Oranları",
+    "salaryMarket": "Yazılımcı Maaşları"
+  },
+  "navDescriptions": {
+    "allApplications": "Liste ya da panoda takip et",
+    "trackedJobs": "Henüz başvurmadığın ilanlar",
+    "import": "LinkedIn geçmişini içeri al",
+    "allCompanies": "Değerlendirme, maaş, deneyim",
+    "writeReview": "Tanıdığın bir şirketi anlat",
+    "shareSalary": "Maaşını anonim olarak ekle",
+    "shareExperience": "Mülakat sürecini anonim anlat",
+    "myReviews": "Yazdığın her şey tek yerde"
   },
   "auth": {
     "login": {
@@ -4060,7 +4072,9 @@
     "salaryCta": {
       "title": "Teklifi kabul ettin mi?",
       "body": "Maaşını şirket sayfasına anonim ekle; bir sonraki aday pazarlığa elinde bir bantla girsin. Adın ve tam tutarın hiçbir yerde görünmez.",
-      "button": "Maaşını anonim ekle"
+      "button": "Maaşını anonim ekle",
+      "marketText": "Teklifin piyasanın neresinde, önce ona bakmak istersen:",
+      "marketLink": "Yazılımcı maaşları"
     },
     "method": {
       "title": "Nasıl hesaplıyoruz",
@@ -5586,7 +5600,9 @@
       "lockedBody": "{company} için {count, plural, =0 {henüz paylaşılmış maaş yok} =1 {1 anonim maaş kaydı var} other {# anonim maaş kaydı var}}. Görmek ve kendi kaydını eklemek için giriş yap.",
       "signIn": "Giriş yap",
       "register": "Kayıt ol",
-      "helpfulError": "İşaret kaydedilemedi. Lütfen tekrar dene."
+      "helpfulError": "İşaret kaydedilemedi. Lütfen tekrar dene.",
+      "marketText": "Mesleğe göre piyasa maaşlarını görmek istersen:",
+      "marketLink": "Yazılımcı maaşları"
     },
     "stats": {
       "median": "Medyan aylık net",
@@ -6201,19 +6217,31 @@
     "toolsMenu": {
       "responseRates": {
         "title": "Yanıt Oranları",
-        "description": "Sektörlere göre şirketlerin geri dönüş oranı"
+        "description": "Sektörlere göre geri dönüş oranı"
       },
       "benchmark": {
         "title": "Kıyaslama",
-        "description": "Geri dönüş oranını alanının medyanıyla kıyasla"
+        "description": "Geri dönüşünü alanınla kıyasla"
       },
       "offerCompare": {
         "title": "Teklif Karşılaştırma",
-        "description": "İş tekliflerini yıllık net olarak yan yana koy"
+        "description": "Teklifleri yıllık net kıyasla"
       },
       "cvScan": {
         "title": "CV Tarama",
-        "description": "Başvuru sistemi CV'nden ne okuyor, hemen gör"
+        "description": "Başvuru sistemi CV'nden ne okur"
+      },
+      "salaryMarket": {
+        "title": "Yazılımcı Maaşları",
+        "description": "Meslek ve seviyeye göre maaşlar"
+      },
+      "weeklyJobs": {
+        "title": "Haftalık İlanlar",
+        "description": "CV'ne göre puanlı haftalık ilanlar"
+      },
+      "guide": {
+        "title": "Rehber",
+        "description": "Başvuru sürecine dair cevaplar"
       }
     },
     "preferences": "Tercihler",
@@ -7501,6 +7529,138 @@
       "deletedAccount": "silinmiş hesap",
       "empty": "Henüz bir değişiklik yok.",
       "error": "Geçmiş yüklenemedi. Sayfayı yenileyip tekrar deneyin."
+    }
+  },
+  "salaryMarket": {
+    "list": {
+      "metaTitle": "Yazılımcı Maaşları {last}: Mesleklere Göre Aylık Net Maaş",
+      "metaDescription": "{first}–{last} yazılım sektörü maaş anketlerinden {count} meslek için aylık net medyan maaş, alt ve üst çeyrek, seviye ve deneyime göre kırılım.",
+      "breadcrumb": "Yazılımcı maaşları",
+      "title": "Yazılım meslekleri ve maaşları, {first}–{last}",
+      "keywords": "yazılımcı maaşları, yazılım mühendisi maaşı, developer maaşı, maaş anketi, yazılım sektörü maaşları",
+      "eyebrow": "Maaş verisi",
+      "lead": "<link>{name}</link>'nın her yıl düzenlediği açık maaş anketlerine göre hangi meslekte ne kadar kazanıldığını, seviyeye ve deneyime göre nasıl değiştiğini gör. Tutarlar aylık net ve Türk lirası.",
+      "statResponses": "maaş yanıtı",
+      "statOccupations": "meslek",
+      "participantsTitle": "Her yıl kaç kişi katıldı?",
+      "footnote": "Sıralama son yılın medyanına göre. Seyir çizgisi her meslekte kendi ölçeğinde; bir yıl eksikse o meslek o yıl ankette yoktu ya da {minimum} kişinin altında kaldı.",
+      "table": {
+        "occupation": "Meslek",
+        "median": "{year} medyan",
+        "middleHalf": "Ortadaki %50 (P25–P75)",
+        "lastYear": "Son 1 yıl",
+        "trend": "{first}–{last} seyri",
+        "responses": "{year} katılım",
+        "asOf": "{year} verisi",
+        "rangeTitle": "Alt çeyrek {p25}, üst çeyrek {p75}",
+        "trendLabel": "{occupation} medyan maaş seyri",
+        "medianShort": "medyan"
+      },
+      "statResponsesNote": "{years} yılın anketlerinden",
+      "statOccupationsNote": "en az {minimum} kişilik gruplarla",
+      "statTopMedian": "en yüksek medyan",
+      "statTopMedianNote": "{year} · {occupation}",
+      "statsLabel": "Özet",
+      "latestSurvey": "Son anket: {month}"
+    },
+    "chart": {
+      "title": "Yıllara göre aylık net maaş",
+      "viewLabel": "Görünüm",
+      "viewAll": "Genel",
+      "viewLevels": "Seviyeye göre",
+      "median": "Medyan",
+      "middleHalf": "Ortadaki %50 (P25–P75)",
+      "chartLabel": "Aylık net medyan maaş, {first}–{last}",
+      "thousands": "{value} bin",
+      "yearLabel": "{year}: medyan {median}, {count, number} kişi",
+      "people": "{count, number} kişi",
+      "p75": "Üst çeyrek (P75)",
+      "p50": "Medyan",
+      "p25": "Alt çeyrek (P25)",
+      "notEnough": "Yeterli veri yok",
+      "changeFromPrevious": "Önceki yıla göre medyan",
+      "changesLabel": "Önceki yıla göre medyan değişimi",
+      "nominalNote": "Tutarlar o yılın nominal TL'si; yüksek enflasyon yıllarında artışın büyük kısmı fiyat artışıdır, satın alma gücü değil.",
+      "distributionTitle": "{year} dağılımı",
+      "distributionHint": "grafikte bir yılın üzerine gel",
+      "bottomTenth": "Alt %10",
+      "topTenth": "Üst %10",
+      "extremesNote": "En düşük ve en yüksek tek yanıt yerine alt ve üst %10 gösteriliyor: uçlardaki yanıtlar ya hatalı ya da tek bir kişiye ait, ve tek bir yanıtı göstermek o kişiyi tanınır kılar."
+    },
+    "levels": {
+      "Junior": "Junior",
+      "Middle": "Middle",
+      "Senior": "Senior"
+    },
+    "experience": {
+      "ZeroToTwo": "0–2 yıl",
+      "ThreeToFive": "3–5 yıl",
+      "SixToTen": "6–10 yıl",
+      "TenPlus": "10+ yıl"
+    },
+    "detail": {
+      "metaTitle": "{occupation} Maaşı {year}: Seviye ve Deneyime Göre",
+      "metaDescription": "{year} anketinde {count} kişinin yanıtına göre {occupation} aylık net medyan maaşı {median}; ortadaki %50 {p25}–{p75}. Yıllara, seviyeye ve deneyime göre kırılım.",
+      "kicker": "Yazılımcı maaşları",
+      "breadcrumbLabel": "Sayfa konumu",
+      "title": "{occupation} maaşları",
+      "lead": "{first}'den bu yana {total} yanıta göre aylık net maaş. {year}'da medyan <strong>{median}</strong>; ortadaki %50'lik grup {p25}–{p75} arasında.",
+      "statMedian": "{year} medyan",
+      "statChange": "Son 1 yıl",
+      "statResponses": "{year} katılım",
+      "offerCompare": "Elinde bir teklif varsa, yıllık net karşılığını teklif karşılaştırma aracında hesaplayabilirsin.",
+      "offerCompareLink": "Teklifleri karşılaştır",
+      "tableTitle": "Tüm yıllar",
+      "allOccupations": "Tüm meslekler",
+      "byExperience": "{year}, deneyime göre",
+      "notEnoughSlices": "Bu yıl kırılım için yeterli yanıt yok.",
+      "rangeTitle": "Alt çeyrek {p25}, üst çeyrek {p75}, {count, number} kişi",
+      "barLegend": "Çizgi medyan, açık bant ortadaki %50.",
+      "byLevel": "{year}, seviyeye göre",
+      "people": "{count, number} kişi",
+      "levelNote": "Seviye, katılımcının kendi beyanı.",
+      "table": {
+        "caption": "Yıllara göre aylık net maaş",
+        "year": "Yıl",
+        "responses": "Katılım",
+        "p25": "Alt çeyrek",
+        "median": "Medyan",
+        "p75": "Üst çeyrek",
+        "change": "Önceki yıla göre"
+      }
+    },
+    "sources": {
+      "title": "Veri nereden geliyor?",
+      "source": "{first}–{last} arasında her yıl düzenlenen <link>{name}</link> maaş anketleri, toplam {count} yanıt.",
+      "permission": "Anket sahibinin izniyle kullanılıyor. Kişi bazında veri tutmuyoruz; burada yalnızca grupların özeti var.",
+      "threshold": "En az {minimum} kişinin düştüğü gruplar gösterilir; daha küçük bir grubun hiçbir rakamı yayınlanmaz.",
+      "method": {
+        "band": "Anket maaşı aralık olarak soruyor; değerler aralığın ortası, 500 TL'ye yuvarlanmış. Üstü açık bir aralığa düşen değer \"≥\" ile yazılır.",
+        "currency": "Yalnızca Türkiye'de çalışan ve maaşını Türk lirası ile alanların yanıtları sayılır.",
+        "nominal": "Tutarlar o yılın nominal TL'si, enflasyona göre düzeltilmemiştir."
+      },
+      "strip": {
+        "title": "Veri ve yöntem",
+        "source": "Kaynak: <link>{name}</link> maaş anketleri, {first}–{last} · anket sahibinin izniyle. Kişi bazında veri tutmuyoruz, yalnızca grupların özeti var.",
+        "facts": {
+          "threshold": {
+            "title": "≥ {minimum} kişi",
+            "text": "Daha küçük grupların hiçbir rakamı yayınlanmaz"
+          },
+          "band": {
+            "title": "Aralık ortası",
+            "text": "Anket aralık soruyor; değer ortası, 500 ₺'ye yuvarlı, açık uç ≥ ile"
+          },
+          "currency": {
+            "title": "Türkiye · TL",
+            "text": "Yalnızca Türkiye'de TL ile maaş alanlar"
+          },
+          "nominal": {
+            "title": "Nominal TL",
+            "text": "O yılın parası, enflasyon düzeltmesi yok"
+          }
+        }
+      }
     }
   }
 }

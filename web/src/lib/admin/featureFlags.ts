@@ -15,6 +15,7 @@ export const FEATURE_FLAGS = [
   "SilenceReports",
   "CompanyIntelligence",
   "ResponseRates",
+  "SalaryMarket",
   "Blog",
   "CvScan",
   "CvScanNotes",
@@ -33,7 +34,7 @@ export type FlagGroupKey = "tracking" | "companies" | "content" | "pro";
 /** The panel's four groups (canvas "Özellik bayrakları paneli", variant C, 2026-09-27). */
 export const FLAG_GROUPS: readonly { key: FlagGroupKey; flags: readonly FeatureFlag[] }[] = [
   { key: "tracking", flags: ["Board", "EmailSignals", "EmailAutoApproval", "AtsSources", "JobLiveness"] },
-  { key: "companies", flags: ["CompanyReviews", "CompanySalaries", "CandidateExperiences", "SilenceReports", "CompanyIntelligence", "ResponseRates"] },
+  { key: "companies", flags: ["CompanyReviews", "CompanySalaries", "CandidateExperiences", "SilenceReports", "CompanyIntelligence", "ResponseRates", "SalaryMarket"] },
   { key: "content", flags: ["Blog", "CvScan", "CvScanNotes", "FeedbackGitHub"] },
   { key: "pro", flags: ["JobSources", "Payments"] },
 ];

@@ -26,6 +26,9 @@ export const ROOT_MESSAGE_SCOPE = [
   "common",
   "nav",
   "siteNav",
+  // The line under each item of the signed-in header's menus (2026-09-29): that header shows on
+  // public pages too, for a signed-in visitor.
+  "navDescriptions",
   "theme",
   "notFound",
   // The share row's two labels ("copy link" / "copied") — the row sits on the CV result, which
@@ -88,6 +91,8 @@ export const PUBLIC_MESSAGE_SCOPE = [
   "companyReviews",
   // The public sector response-rate page.
   "responseRates",
+  // The survey salary pages (2026-09-27): the list's sparklines and the occupation chart run in the browser.
+  "salaryMarket",
   // The company page's salary tab: its rows name the employment type, status and currency.
   "companySalaries",
   "salaryEmploymentStatus",

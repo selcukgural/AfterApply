@@ -409,7 +409,8 @@
       "terms": "Terms of Use",
       "termsOfSale": "Distance Sales Agreement",
       "refundPolicy": "Cancellation and Refund Policy",
-      "responseRates": "Response Rates"
+      "responseRates": "Response Rates",
+      "salaryMarket": "Software Salaries"
     }
   },
   "common": {
@@ -452,7 +453,18 @@
     "account": "Account",
     "profile": "My Profile",
     "shareExperience": "Share an experience",
-    "responseRates": "Response Rates"
+    "responseRates": "Response Rates",
+    "salaryMarket": "Software Salaries"
+  },
+  "navDescriptions": {
+    "allApplications": "Track them as a list or a board",
+    "trackedJobs": "Postings you haven't applied to",
+    "import": "Bring in your LinkedIn history",
+    "allCompanies": "Reviews, salaries, experiences",
+    "writeReview": "Describe a company you know",
+    "shareSalary": "Add your salary anonymously",
+    "shareExperience": "Rate an interview anonymously",
+    "myReviews": "Everything you've written"
   },
   "auth": {
     "login": {
@@ -4060,7 +4072,9 @@
     "salaryCta": {
       "title": "Accepted the offer?",
       "body": "Add your salary to the company’s page anonymously, so the next candidate negotiates with a range in hand. Your name and the exact amount are never shown.",
-      "button": "Add your salary anonymously"
+      "button": "Add your salary anonymously",
+      "marketText": "To see where an offer sits in the market first, see",
+      "marketLink": "Software salaries"
     },
     "method": {
       "title": "How we calculate",
@@ -5586,7 +5600,9 @@
       "lockedBody": "{company} has {count, plural, =0 {no salary entries yet} =1 {1 anonymous salary entry} other {# anonymous salary entries}}. Sign in to see them and add your own.",
       "signIn": "Sign in",
       "register": "Register",
-      "helpfulError": "Couldn't save the mark. Please try again."
+      "helpfulError": "Couldn't save the mark. Please try again.",
+      "marketText": "For market pay by occupation, see",
+      "marketLink": "Software salaries"
     },
     "stats": {
       "median": "Median monthly net",
@@ -6201,19 +6217,31 @@
     "toolsMenu": {
       "responseRates": {
         "title": "Response Rates",
-        "description": "How often companies reply, by sector"
+        "description": "Reply rates by sector"
       },
       "benchmark": {
         "title": "Benchmark",
-        "description": "Compare your reply rate with your field's median"
+        "description": "Your reply rate vs your field"
       },
       "offerCompare": {
         "title": "Offer Comparison",
-        "description": "Put job offers side by side, net over a year"
+        "description": "Offers side by side, net per year"
       },
       "cvScan": {
         "title": "CV Scan",
-        "description": "See what applicant tracking systems read from your CV"
+        "description": "What hiring software reads"
+      },
+      "salaryMarket": {
+        "title": "Software Salaries",
+        "description": "Pay by occupation and level"
+      },
+      "weeklyJobs": {
+        "title": "Weekly Jobs",
+        "description": "Weekly postings scored on your CV"
+      },
+      "guide": {
+        "title": "Guide",
+        "description": "Answers on how hiring works"
       }
     },
     "preferences": "Preferences",
@@ -7501,6 +7529,138 @@
       "deletedAccount": "deleted account",
       "empty": "No changes yet.",
       "error": "The history could not be loaded. Reload the page and try again."
+    }
+  },
+  "salaryMarket": {
+    "list": {
+      "metaTitle": "Software Salaries in Turkey {last}: Monthly Net Pay by Occupation",
+      "metaDescription": "Monthly net median pay, lower and upper quartile, by level and experience, for {count} software occupations from the {first}–{last} salary surveys.",
+      "breadcrumb": "Software salaries",
+      "title": "Software occupations and salaries, {first}–{last}",
+      "keywords": "software developer salary Turkey, software engineer salary, developer salary survey, Turkey tech salaries",
+      "eyebrow": "Salary data",
+      "lead": "See what each occupation earns according to the open salary surveys <link>{name}</link> runs every year, and how it changes with level and experience. Amounts are monthly net, in Turkish lira.",
+      "statResponses": "salary answers",
+      "statOccupations": "occupations",
+      "participantsTitle": "How many people answered each year?",
+      "footnote": "Sorted by the latest year's median. Each trend line has its own scale; a missing year means the occupation was not in that year's survey or had fewer than {minimum} answers.",
+      "table": {
+        "occupation": "Occupation",
+        "median": "{year} median",
+        "middleHalf": "Middle 50% (P25–P75)",
+        "lastYear": "Last year",
+        "trend": "{first}–{last} trend",
+        "responses": "{year} answers",
+        "asOf": "{year} data",
+        "rangeTitle": "Lower quartile {p25}, upper quartile {p75}",
+        "trendLabel": "{occupation} median pay over the years",
+        "medianShort": "median"
+      },
+      "statResponsesNote": "from {years} years of surveys",
+      "statOccupationsNote": "in groups of at least {minimum}",
+      "statTopMedian": "highest median",
+      "statTopMedianNote": "{year} · {occupation}",
+      "statsLabel": "Summary",
+      "latestSurvey": "Latest survey: {month}"
+    },
+    "chart": {
+      "title": "Monthly net pay by year",
+      "viewLabel": "View",
+      "viewAll": "Overall",
+      "viewLevels": "By level",
+      "median": "Median",
+      "middleHalf": "Middle 50% (P25–P75)",
+      "chartLabel": "Monthly net median pay, {first}–{last}",
+      "thousands": "{value}k",
+      "yearLabel": "{year}: median {median}, {count, plural, one {# person} other {# people}}",
+      "people": "{count, plural, one {# person} other {# people}}",
+      "p75": "Upper quartile (P75)",
+      "p50": "Median",
+      "p25": "Lower quartile (P25)",
+      "notEnough": "Not enough data",
+      "changeFromPrevious": "Median against the year before",
+      "changesLabel": "Change in the median against the year before",
+      "nominalNote": "Amounts are in each year's nominal lira; in years of high inflation most of the rise is prices, not purchasing power.",
+      "distributionTitle": "{year} distribution",
+      "distributionHint": "point at a year on the chart",
+      "bottomTenth": "Bottom 10%",
+      "topTenth": "Top 10%",
+      "extremesNote": "The bottom and top tenth are shown instead of the single lowest and highest answer: the extremes are either mistakes or one person, and showing one answer makes that person recognisable."
+    },
+    "levels": {
+      "Junior": "Junior",
+      "Middle": "Middle",
+      "Senior": "Senior"
+    },
+    "experience": {
+      "ZeroToTwo": "0–2 years",
+      "ThreeToFive": "3–5 years",
+      "SixToTen": "6–10 years",
+      "TenPlus": "10+ years"
+    },
+    "detail": {
+      "metaTitle": "{occupation} Salary in Turkey {year}: by Level and Experience",
+      "metaDescription": "From {count} answers in the {year} survey, the monthly net median pay of a {occupation} in Turkey is {median}; the middle half earns {p25}–{p75}. By year, level and experience.",
+      "kicker": "Software salaries",
+      "breadcrumbLabel": "You are here",
+      "title": "{occupation} salaries",
+      "lead": "Monthly net pay from {total} answers since {first}. In {year} the median is <strong>{median}</strong>; the middle half earns {p25}–{p75}.",
+      "statMedian": "{year} median",
+      "statChange": "Last year",
+      "statResponses": "{year} answers",
+      "offerCompare": "Holding an offer? The offer comparison works out what it comes to, net, over a year.",
+      "offerCompareLink": "Compare offers",
+      "tableTitle": "Every year",
+      "allOccupations": "All occupations",
+      "byExperience": "{year}, by experience",
+      "notEnoughSlices": "Not enough answers this year for a breakdown.",
+      "rangeTitle": "Lower quartile {p25}, upper quartile {p75}, {count, plural, one {# person} other {# people}}",
+      "barLegend": "The line is the median, the light band the middle half.",
+      "byLevel": "{year}, by level",
+      "people": "{count, plural, one {# person} other {# people}}",
+      "levelNote": "The level is the respondent's own answer.",
+      "table": {
+        "caption": "Monthly net pay by year",
+        "year": "Year",
+        "responses": "Answers",
+        "p25": "Lower quartile",
+        "median": "Median",
+        "p75": "Upper quartile",
+        "change": "Against the year before"
+      }
+    },
+    "sources": {
+      "title": "Where do the numbers come from?",
+      "source": "The <link>{name}</link> salary surveys, run every year from {first} to {last}: {count} answers in all.",
+      "permission": "Used with the survey author's permission. We keep nothing per person; this page only holds group summaries.",
+      "threshold": "Only groups of at least {minimum} people are shown; no figure of a smaller group is published.",
+      "method": {
+        "band": "The survey asks for a range; each value is the middle of its range, rounded to 500 lira. A value that falls in an open top range is written with \"≥\".",
+        "currency": "Only answers from people working in Turkey and paid in Turkish lira count.",
+        "nominal": "Amounts are each year's nominal lira, not adjusted for inflation."
+      },
+      "strip": {
+        "title": "Data and method",
+        "source": "Source: the <link>{name}</link> salary surveys, {first}–{last}, used with the author's permission. We keep nothing per person, only group summaries.",
+        "facts": {
+          "threshold": {
+            "title": "≥ {minimum} people",
+            "text": "No figure of a smaller group is published"
+          },
+          "band": {
+            "title": "Range midpoint",
+            "text": "The survey asks for a range; its middle, rounded to 500 lira, an open top marked ≥"
+          },
+          "currency": {
+            "title": "Turkey · lira",
+            "text": "Only people working in Turkey and paid in lira"
+          },
+          "nominal": {
+            "title": "Nominal lira",
+            "text": "Each year's money, not adjusted for inflation"
+          }
+        }
+      }
     }
   }
 }

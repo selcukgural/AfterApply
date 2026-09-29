@@ -55,6 +55,34 @@ export function findMessageUsages(file: string, rawSource: string): MessageUsage
   return usages;
 }
 
+/**
+ * The calls `findMessageUsages` has to skip — `t(item.key)`, `t(\`toolsMenu.${key}.title\`)` — as
+ * the part of the catalogue each one can reach: the bound namespace plus a template's static
+ * dotted prefix ("siteNav.toolsMenu"). The key itself is unknowable, but a client scope that does
+ * not carry that branch renders raw keys all the same (the signed-in menus' descriptions,
+ * 2026-09-29, were missed exactly so).
+ */
+export function findDynamicMessagePrefixes(file: string, rawSource: string): MessageUsage[] {
+  const source = stripComments(rawSource);
+  const namespaces = new Map<string, string[]>();
+  for (const match of source.matchAll(BINDING)) {
+    const [, variable, namespace] = match;
+    namespaces.set(variable, [...(namespaces.get(variable) ?? []), namespace]);
+  }
+
+  const usages: MessageUsage[] = [];
+  for (const [variable, boundNamespaces] of namespaces) {
+    const dynamicCall = new RegExp(`(?<![A-Za-z0-9_.$])${variable}(?:\\.rich)?\\(\\s*(\`([^\`$]*)\\$\\{|[A-Za-z_$][\\w$.]*\\s*[,)])`, "g");
+    for (const call of source.matchAll(dynamicCall)) {
+      const staticPart = call[2] ?? "";
+      const prefix = staticPart.includes(".") ? staticPart.slice(0, staticPart.lastIndexOf(".")) : "";
+      const candidates = boundNamespaces.map((ns) => [ns, prefix].filter(Boolean).join("."));
+      usages.push({ file, key: candidates.join(" | ") });
+    }
+  }
+  return usages;
+}
+
 /** True when at least one of the `a | b` alternatives in a resolved usage exists. */
 export function isResolvable(usage: MessageUsage, known: Set<string>): boolean {
   return usage.key.split(" | ").some((candidate) => known.has(candidate));

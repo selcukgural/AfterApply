@@ -22,7 +22,8 @@ public sealed record ClientConfigResponse(
     ResponseRatesConfigResponse? ResponseRates = null,
     SilenceReportsConfigResponse? SilenceReports = null,
     BoardConfigResponse? Board = null,
-    EmailSignalsConfigResponse? EmailSignals = null);
+    EmailSignalsConfigResponse? EmailSignals = null,
+    SalaryMarketConfigResponse? SalaryMarket = null);
 
 /// <summary>Whether the Gmail-scanning intake answers (the EmailSignals flag, default
 /// EmailForwarding:Enabled): while off, the suggestions link and its counter are not offered.</summary>
@@ -34,6 +35,9 @@ public sealed record BoardConfigResponse(bool Enabled);
 /// <summary>Whether a company page has a "Response" tab: the CompanyIntelligence flag, off in
 /// production until the legal read (DEVELOPMENT_PLAN.md K1). The tab is not rendered while off.</summary>
 public sealed record CompanyIntelligenceConfigResponse(bool Enabled);
+
+/// <summary>Whether the public occupation salary pages (/maaslar) and their nav links exist.</summary>
+public sealed record SalaryMarketConfigResponse(bool Enabled);
 
 /// <summary>Whether the public sector response-rate page and its nav links exist.</summary>
 public sealed record ResponseRatesConfigResponse(bool Enabled);

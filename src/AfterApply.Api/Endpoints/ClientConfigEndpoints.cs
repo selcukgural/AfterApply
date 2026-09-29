@@ -105,7 +105,8 @@ public static class ClientConfigEndpoints
                     new ResponseRatesConfigResponse(featureFlags.IsEnabled(FeatureFlag.ResponseRates)),
                     new SilenceReportsConfigResponse(featureFlags.IsEnabled(FeatureFlag.SilenceReports)),
                     new BoardConfigResponse(featureFlags.IsEnabled(FeatureFlag.Board)),
-                    new EmailSignalsConfigResponse(featureFlags.IsEnabled(FeatureFlag.EmailSignals))));
+                    new EmailSignalsConfigResponse(featureFlags.IsEnabled(FeatureFlag.EmailSignals)),
+                    new SalaryMarketConfigResponse(featureFlags.IsEnabled(FeatureFlag.SalaryMarket))));
             })
             .WithTags("Config")
             .WithSummary("Public client configuration")

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Builds the public salary pages' seed (src/AfterApply.Infrastructure/SalaryMarket/Seed) from the
+    outside surveys' published files. Run by hand once a year when a new survey comes out; not in
+    AfterApply.slnx, CI or the container build. The raw answers it reads stay in artifacts/ (git-
+    ignored) — only the aggregates it writes are committed. Usage is in Program.cs.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\AfterApply.Application\AfterApply.Application.csproj" />
+    <ProjectReference Include="..\..\src\AfterApply.Infrastructure\AfterApply.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" />
+  </ItemGroup>
+
+</Project>

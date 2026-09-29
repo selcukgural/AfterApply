@@ -115,6 +115,43 @@ export function articleJsonLd({
   };
 }
 
+export type DatasetJsonLdInput = {
+  locale: string;
+  path: string;
+  name: string;
+  description: string;
+  /** Who ran each survey the figures come from, with the address a reader can check. */
+  creators: readonly { name: string; url: string }[];
+  /** "2018/2026". */
+  temporalCoverage: string;
+  keywords?: string[];
+};
+
+/**
+ * A page of published figures built from other people's surveys (the salary pages, 2026-09-27):
+ * Google lists Dataset among its structured-data features, for Dataset Search. `creator` names
+ * the survey authors, not us — they collected the answers; the site is the `publisher` of the
+ * summaries. No `license` field: the figures are used with the author's permission, not under a
+ * licence a reader could rely on for their own reuse.
+ */
+export function datasetJsonLd({ locale, path, name, description, creators, temporalCoverage, keywords }: DatasetJsonLdInput): JsonLdNode {
+  const url = `${SITE_URL}/${locale}${path}`;
+  return {
+    "@type": "Dataset",
+    "@id": `${url}#dataset`,
+    name,
+    description,
+    url,
+    inLanguage: locale,
+    temporalCoverage,
+    spatialCoverage: { "@type": "Place", name: "Türkiye" },
+    creator: creators.map((creator) => ({ "@type": "Person", name: creator.name, url: creator.url })),
+    publisher: { "@id": ORGANIZATION_ID },
+    isAccessibleForFree: true,
+    ...(keywords && keywords.length > 0 ? { keywords: keywords.join(", ") } : {}),
+  };
+}
+
 /** Wraps the nodes of one page into a single `@graph`, so `@id` references resolve between them. */
 export function jsonLdGraph(...nodes: JsonLdNode[]): JsonLdNode {
   return { "@context": "https://schema.org", "@graph": nodes };

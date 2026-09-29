@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useClientConfig } from "@/hooks/useClientConfig";
 import { buttonClassName } from "@/components/ui/Button";
+import { SalaryMarketLink } from "@/components/salaryMarket/SalaryMarketLink";
 
 const SALARY_FORM = "/contribute?tab=salary";
 
@@ -27,6 +28,7 @@ export function SalaryCta() {
       <Link href={href} className={buttonClassName("primary", "self-start")}>
         {t("button")}
       </Link>
+      <SalaryMarketLink text={t("marketText")} label={t("marketLink")} />
     </section>
   );
 }

@@ -762,6 +762,15 @@
   <data name="FEATURE_FLAG_JOB_LIVENESS_NOTES" xml:space="preserve">
     <value>Gizlilik politikası bu kontrolü anlatır; bayrak ile metin birlikte değişmeli. Bir site 429/403 verirse o gün o siteye bir daha gidilmez.</value>
   </data>
+  <data name="FEATURE_FLAG_SALARY_MARKET_TITLE" xml:space="preserve">
+    <value>Yazılımcı maaşları sayfaları</value>
+  </data>
+  <data name="FEATURE_FLAG_SALARY_MARKET_DESCRIPTION" xml:space="preserve">
+    <value>Herkese açık /maaslar listesi ve meslek sayfaları: Önceki Yazılımcı maaş anketlerinden (2018–2026, izinle) üretilmiş, en az 15 kişilik grupların yıllık aylık net maaş özetleri. Veri uygulamaya gömülüdür; kişi bazında hiçbir kayıt tutulmaz.</value>
+  </data>
+  <data name="FEATURE_FLAG_SALARY_MARKET_WHEN_OFF" xml:space="preserve">
+    <value>/api/salary-market uçları 404 döner; sayfalar ve menüdeki bağlantılar görünmez. Hiçbir veri silinmez.</value>
+  </data>
   <data name="AVATAR_EMPTY" xml:space="preserve">
     <value>Fotoğraf boş.</value>
   </data>

@@ -9,6 +9,7 @@ using AfterApply.Application.Companies;
 using AfterApply.Application.Documents;
 using AfterApply.Application.CompanyIntelligence;
 using AfterApply.Application.ResponseRates;
+using AfterApply.Application.SalaryMarket;
 using AfterApply.Application.EmailIntegrations;
 using AfterApply.Application.Identity;
 using AfterApply.Application.Imports;
@@ -36,6 +37,7 @@ using AfterApply.Infrastructure.Applications;
 using AfterApply.Infrastructure.Companies;
 using AfterApply.Infrastructure.CompanyIntelligence;
 using AfterApply.Infrastructure.ResponseRates;
+using AfterApply.Infrastructure.SalaryMarket;
 using AfterApply.Infrastructure.Documents;
 using AfterApply.Infrastructure.EmailIntegrations;
 using AfterApply.Infrastructure.Http;
@@ -205,6 +207,7 @@ public static class DependencyInjection
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
         services.Configure<ResponseRateOptions>(configuration.GetSection("ResponseRates"));
+        services.Configure<SalaryMarketOptions>(configuration.GetSection(SalaryMarketOptions.SectionName));
         services.Configure<CompanySearchOptions>(configuration.GetSection("Companies"));
         services.Configure<CompanyReviewOptions>(configuration.GetSection(CompanyReviewOptions.SectionName));
         services.Configure<CompanySalaryOptions>(configuration.GetSection(CompanySalaryOptions.SectionName));
@@ -779,6 +782,8 @@ public static class DependencyInjection
         services.AddSingleton<IJobBoardDomainMatcher, JobBoardDomainMatcher>();
         services.AddScoped<ICompanyIntelligenceService, CompanyIntelligenceService>();
         services.AddScoped<ISectorResponseRateService, SectorResponseRateService>();
+        // Singleton: it parses the compiled-in seed once and answers from memory after that.
+        services.AddSingleton<ISalaryMarketService, SalaryMarketService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
         services.AddScoped<CompanySlugAllocator>();
         services.AddScoped<CompanyReviewQueries>();

@@ -192,6 +192,7 @@ app.MapPersonalAccessTokenEndpoints();
 app.MapExtensionPairingEndpoints();
 app.MapCompanyIntelligenceEndpoints();
 app.MapResponseRateEndpoints();
+app.MapSalaryMarketEndpoints();
 app.MapCompanyEndpoints();
 app.MapCompanyReviewEndpoints();
 app.MapAdminCompanyReviewEndpoints();

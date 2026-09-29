@@ -31,6 +31,14 @@ export const LANDING_ICON_PATHS = {
       d="M9 12.75h4.5m-4.5 3h6m3-10.5v13.5a1.5 1.5 0 01-1.5 1.5h-9a1.5 1.5 0 01-1.5-1.5V5.25a1.5 1.5 0 011.5-1.5h5.379a1.5 1.5 0 011.06.44l3.122 3.12a1.5 1.5 0 01.439 1.061z"
     />
   ),
+  // A banknote: the survey salary pages (2026-09-27).
+  salary: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+  ),
   // A pair of scales: the offer comparison (2026-09-24).
   offer: (
     <path
@@ -50,6 +58,26 @@ export const LANDING_ICON_PATHS = {
   weeklyJobs: (
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z" />
   ),
+  // An open book: the guide, in the signed-in Tools menu (2026-09-29).
+  guide: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6.04A8.97 8.97 0 006 3.75c-1.05 0-2.06.18-3 .51v14.25A8.99 8.99 0 016 18c2.3 0 4.4.87 6 2.29m0-14.25a8.97 8.97 0 016-2.29c1.05 0 2.06.18 3 .51v14.25A8.99 8.99 0 0018 18a8.97 8.97 0 00-6 2.29m0-14.25v14.25"
+    />
+  ),
+  // The signed-in menus' other items (2026-09-29), drawn like the Tools menu.
+  bookmark: <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 21L12 17.25 6.75 21V4.5A1.5 1.5 0 018.25 3h7.5a1.5 1.5 0 011.5 1.5z" />,
+  import: <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />,
+  review: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M11.48 3.5a.56.56 0 011.04 0l2.12 5.11a.56.56 0 00.47.35l5.52.44c.5.04.7.66.32.99l-4.2 3.6a.56.56 0 00-.18.56l1.28 5.39a.56.56 0 01-.84.61l-4.73-2.89a.56.56 0 00-.59 0l-4.73 2.89a.56.56 0 01-.84-.61l1.28-5.39a.56.56 0 00-.18-.56l-4.2-3.6a.56.56 0 01.32-.99l5.52-.44a.56.56 0 00.47-.35z"
+    />
+  ),
+  experience: <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8M8 14h5M21 12a8 8 0 01-11.8 7.04L4 20l1-4.2A8 8 0 1121 12z" />,
+  person: <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.1a7.5 7.5 0 0115 0" />,
 } as const;
 
 export type LandingIcon = keyof typeof LANDING_ICON_PATHS;

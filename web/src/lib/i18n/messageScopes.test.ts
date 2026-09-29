@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import tr from "../../../messages/tr.json";
 import { LANDING_MESSAGE_SCOPE, PUBLIC_MESSAGE_SCOPE, ROOT_MESSAGE_SCOPE, pickMessages } from "./messageScopes";
-import { findMessageUsages } from "./messageUsage";
+import { findDynamicMessagePrefixes, findMessageUsages } from "./messageUsage";
 
 describe("pickMessages", () => {
   const catalogue = { a: { x: "1", y: { z: "2" } }, b: "3", c: { d: "4" } };
@@ -84,7 +84,8 @@ function clientMessageKeysFrom(entries: string[]): Map<string, string[]> {
     const source = stripComments(readFileSync(file, "utf8"));
 
     if (/^\s*["']use client["']/m.test(source)) {
-      for (const usage of findMessageUsages(path.relative(SRC, file), source)) {
+      // A dynamic key counts as the branch it can reach: its namespace, or a template's static prefix.
+      for (const usage of [...findMessageUsages(path.relative(SRC, file), source), ...findDynamicMessagePrefixes(path.relative(SRC, file), source)]) {
         found.set(usage.key, [...(found.get(usage.key) ?? []), usage.file]);
       }
     }
@@ -111,9 +112,9 @@ function covers(scope: readonly string[], usage: string): boolean {
   return usage.split(" | ").some((key) => scope.some((entry) => key === entry || key.startsWith(`${entry}.`)));
 }
 
-function expectCovered(reached: Map<string, string[]>, scope: readonly string[]) {
+function expectCovered(reached: Map<string, string[]>, scope: readonly string[], leftOut: readonly string[] = []) {
   const missing = [...reached]
-    .filter(([key]) => !covers(scope, key))
+    .filter(([key]) => !covers(scope, key) && !leftOut.includes(key))
     .map(([key, files]) => `${key} (${[...new Set(files)].join(", ")})`);
   expect(missing, "client components reach messages their layout does not provide").toEqual([]);
 }
@@ -125,7 +126,9 @@ describe("message scopes cover what their client components ask for", () => {
   });
 
   it("landing page", () => {
-    expectCovered(clientMessageKeysFrom([path.join(SRC, "app/[locale]/page.tsx")]), LANDING_MESSAGE_SCOPE);
+    // The review statements are left out on purpose (messageScopes.ts): the landing's sample
+    // summary has no "most picked" statements, so its dynamic lookup never runs there.
+    expectCovered(clientMessageKeysFrom([path.join(SRC, "app/[locale]/page.tsx")]), LANDING_MESSAGE_SCOPE, ["companyReviews.statements"]);
   });
 
   it("every signed-out page and layout", () => {

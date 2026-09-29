@@ -16,6 +16,7 @@ import { displayName } from "@/lib/auth/displayName";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { NavMenu, type NavMenuItem } from "@/components/layout/NavMenu";
+import { ToolMenuLabel } from "@/components/layout/ToolMenuLabel";
 import { ProBadge } from "@/components/layout/ProBadge";
 import { isActivePath, navLinkClassName } from "@/components/layout/navLink";
 import { buildNavEntries, isNavItemActive, type NavItem } from "@/components/layout/navGroups";
@@ -40,6 +41,8 @@ export function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const tSite = useTranslations("siteNav");
+  const tDescription = useTranslations("navDescriptions");
   const locale = useLocale();
   const { config, isLoaded } = useClientConfig();
   // The suggestions come from the Gmail-scanning intake; switched off, their link and counter go.
@@ -80,8 +83,23 @@ export function NavBar() {
       t(item.key)
     );
 
-  const menuItems = (items: NavItem[]): NavMenuItem[] =>
-    items.map((item) => ({ href: item.href, label: itemLabel(item), dividerBefore: item.dividerBefore }));
+  // Every menu item gets an icon and a line of description, the way the signed-out header draws its
+  // Tools menu (variant A, 2026-09-29): signing in no longer turns the menus into bare links. A
+  // tool's line is the signed-out menu's own. The phone drawer keeps plain labels.
+  const menuItems = (groupKey: string, items: NavItem[]): NavMenuItem[] =>
+    items.map((item) => ({
+      href: item.href,
+      label: item.icon ? (
+        <ToolMenuLabel
+          icon={item.icon}
+          title={itemLabel(item)}
+          description={groupKey === "tools" ? tSite(`toolsMenu.${item.key}.description`) : tDescription(item.key)}
+        />
+      ) : (
+        itemLabel(item)
+      ),
+      dividerBefore: item.dividerBefore,
+    }));
 
   const badge = (count: number | undefined) =>
     count ? (
@@ -156,7 +174,12 @@ export function NavBar() {
                   {t(entry.key)}
                 </Link>
               ) : (
-                <NavMenu key={entry.key} label={t(entry.key)} items={menuItems(entry.items)} />
+                <NavMenu
+                  key={entry.key}
+                  label={t(entry.key)}
+                  items={menuItems(entry.key, entry.items)}
+                  menuClassName={entry.items.some((item) => item.icon) ? "w-80 p-1.5" : undefined}
+                />
               ),
             )}
           </nav>
