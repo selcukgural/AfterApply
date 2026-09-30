@@ -1,0 +1,110 @@
+// Feature video 5 of the series: the dashboard. Dark theme (the series alternates). Signed in as the
+// persistent "Deniz Aydın" video account (see memory: project-video-demo-account) — 40 imported
+// applications at invented companies with back-dated histories, reminders from one notification
+// scan. The account's own theme preference must be "dark" (PUT /api/users/me/theme): once signed in
+// the site applies it over the theme cookie.
+// The "Sessize alındı" click changes the account: undo it after each render with
+// POST /api/reminders/bulk/ghost/undo (Kalvera Sağlık · Senior .NET Developer, Ghosted → Applied).
+{
+  "title": "e-kariyerim — Panel",
+  "language": "tr",
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 720, "deviceScaleFactor": 2 },
+  "output": { "width": 2560, "height": 1440, "fps": 30 },
+  "colorScheme": "dark",
+  "signIn": true,
+  "voice": {
+    "provider": "google",
+    "name": "Charon",
+    "model": "gemini-2.5-pro-tts",
+    "prompt": "Sakin, sıcak ve samimi bir ürün tanıtımı sesiyle, doğal bir hızda oku.",
+    "rate": 1.0
+  },
+  "music": { "generate": "ambient", "volume": 0.18 },
+  // Gemini-TTS cut "…nerede takıldı?" inside its last syllable on every take; a trailing pause in
+  // the spoken text lets the question finish. Subtitles keep the plain question mark.
+  "pronounce": {
+    "takıldı?": "takıldı?..",
+    "ekariyerim.com": "e kariyerim nokta kom",
+    "e-kariyerim": "e kariyerim"
+  },
+  "hide": ["button.fixed.bottom-4.right-4"],
+  "scenes": [
+    {
+      "id": "acilis",
+      "chapter": "Giriş",
+      "minSeconds": 4.5,
+      "steps": [
+        { "action": "goto", "path": "/tr/dashboard" },
+        { "action": "card", "title": "Panel", "text": "Başvuruların nereye gidiyor?" }
+      ]
+    },
+    {
+      "id": "soru",
+      "narration": "Kırk başvuru yaptın. Kaçı cevap verdi, kaçı sessizce kayboldu, hangisi nerede takıldı?",
+      "steps": [
+        { "action": "hideCard" },
+        { "action": "wait", "seconds": 2 },
+        { "action": "hover", "target": "h1" }
+      ]
+    },
+    {
+      "id": "huni",
+      "chapter": "Dönüşüm hunisi",
+      "narration": "Panel bunu tek ekranda gösterir. Dönüşüm hunisi başvurudan teklife kadar her aşamada kaç başvurunun kaldığını sayar.",
+      "steps": [
+        { "action": "scroll", "target": "ol.flex.flex-col" },
+        { "action": "hover", "target": "ol.flex.flex-col > li:nth-child(1)" },
+        { "action": "wait", "seconds": 1.2 },
+        { "action": "hover", "target": "ol.flex.flex-col > li:nth-child(2)" },
+        { "action": "wait", "seconds": 1.2 },
+        { "action": "hover", "target": "ol.flex.flex-col > li:nth-child(3)" },
+        { "action": "wait", "seconds": 1.2 },
+        { "action": "hover", "target": "ol.flex.flex-col > li:nth-child(4)" }
+      ]
+    },
+    {
+      "id": "dagilim",
+      "narration": "Yanıt süresi şirketlerin sana kaç günde döndüğünü, durum dağılımı ise başvurularının şu an nerede beklediğini gösterir.",
+      "steps": [
+        { "action": "scroll", "by": 260 }
+      ]
+    },
+    {
+      "id": "takip",
+      "chapter": "Takip zamanı",
+      "narration": "Uzun süredir yanıtsız kalan başvurular ayrıca işaretlenir. Takip zamanı gelenleri de panel sana kendisi hatırlatır.",
+      "steps": [
+        { "action": "scroll", "target": "text=Takvimime ekle" },
+        { "action": "hover", "target": "text=Sessize alındı" },
+        { "action": "wait", "seconds": 1.5 },
+        // Held behind an undo strip for 6 s, then sent; the Kayboldu tile counts it after the refetch.
+        { "action": "click", "target": "text=Sessize alındı" },
+        { "action": "wait", "seconds": 7.5 },
+        { "action": "scroll", "by": 600 },
+        { "action": "wait", "seconds": 2.5 }
+      ]
+    },
+    {
+      "id": "paylas",
+      "chapter": "Paylaş",
+      "narration": "Tüm akışı tek bir kartta görüp paylaşabilirsin. Kartta şirket adı yer almaz.",
+      "minSeconds": 10.5,
+      "steps": [
+        { "action": "scroll", "target": "text=Akışını paylaş" },
+        { "action": "click", "target": "text=Akışını paylaş" },
+        { "action": "wait", "seconds": 5 },
+        { "action": "click", "target": "text=Kapat" }
+      ]
+    },
+    {
+      "id": "kapanis",
+      "narration": "e-kariyerim ücretsiz. ekariyerim.com adresinden hemen dene.",
+      "leadIn": 1.0,
+      "tail": 3.0,
+      "steps": [
+        { "action": "card", "title": "e-kariyerim", "text": "Ücretsiz · ekariyerim.com" }
+      ]
+    }
+  ]
+}

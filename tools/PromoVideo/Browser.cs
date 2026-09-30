@@ -128,6 +128,29 @@ internal sealed class Browser : IAsyncDisposable
         {
             features = new[] { new { name = "prefers-color-scheme", value = _scenario.ColorScheme } }
         }, cancellationToken);
+        // The hide list before the first paint of every page: installed only after load, a hidden
+        // element (the feedback button) flashed on screen for the first frames of each navigation.
+        var hide = JsonSerializer.Serialize(string.Join(",", _scenario.Hide.Append("nextjs-portal")) + "{display:none !important}");
+        await SendAsync("Page.addScriptToEvaluateOnNewDocument", new
+        {
+            // It runs before the document has a root element, so the observer puts the style in as soon as
+            // there is one, and again whenever hydration drops it.
+            source = "(() => { const put = () => { if (document.getElementById('__promo_hide')) return; " +
+                     "const root = document.head || document.documentElement; if (!root) return; " +
+                     "const s = document.createElement('style'); s.id = '__promo_hide'; s.textContent = " + hide + "; " +
+                     "root.appendChild(s); }; put(); " +
+                     "new MutationObserver(put).observe(document, { childList: true, subtree: true }); })()"
+        }, cancellationToken);
+
+        // The site does not follow prefers-color-scheme: its boot script reads the `theme` cookie
+        // the theme switcher writes (web/src/lib/theme/theme.ts), so set that too.
+        await SendAsync("Network.setCookie", new
+        {
+            name = "theme",
+            value = _scenario.ColorScheme,
+            url = new Uri(_scenario.BaseUrl).GetLeftPart(UriPartial.Authority),
+            path = "/"
+        }, cancellationToken);
         await SendAsync("Emulation.setLocaleOverride", new { locale = _scenario.Language == "tr" ? "tr-TR" : "en-US" }, cancellationToken);
     }
 
@@ -168,9 +191,19 @@ internal sealed class Browser : IAsyncDisposable
         await MoveCursorAsync(x, y, cancellationToken);
     }
 
-    public async Task TypeAsync(string target, string text, int delayMs, CancellationToken cancellationToken)
+    /// <summary>Per-character delay when a step gives none: slow enough that a viewer can read the
+    /// value as it goes in (the user found faster typing hard to follow).</summary>
+    public const int ReadableTypingDelayMs = 120;
+
+    public async Task TypeAsync(string target, string text, int delayMs, bool clear, CancellationToken cancellationToken)
     {
         await ClickAsync(target, cancellationToken);
+        if (clear)
+        {
+            // Inserted text replaces a selection, so the old value goes the way it would by hand.
+            await EvaluateAsync($"(() => {{ const el = {FindScript(target)}; if (el && el.select) el.select(); }})()", cancellationToken);
+        }
+
         foreach (var character in text)
         {
             await SendAsync("Input.insertText", new { text = character.ToString() }, cancellationToken);
@@ -178,6 +211,13 @@ internal sealed class Browser : IAsyncDisposable
             {
                 await Task.Delay(delayMs, cancellationToken);
             }
+        }
+
+        // A beat on the finished value before the cursor moves on, so it can be read; not for the
+        // off-camera sign-in, which types with no delay.
+        if (delayMs > 0)
+        {
+            await Task.Delay(600, cancellationToken);
         }
     }
 
@@ -210,6 +250,69 @@ internal sealed class Browser : IAsyncDisposable
         await Task.Delay(1200, cancellationToken);
     }
 
+    /// <summary>Picks up <paramref name="target"/>, carries it to <paramref name="to"/> and lets go —
+    /// real mouse events with the button held, so drag-and-drop libraries (the board's dnd-kit, which
+    /// starts a drag after 6 px) see a person dragging. Slow enough for a viewer to follow.</summary>
+    public async Task DragAsync(string target, string to, CancellationToken cancellationToken)
+    {
+        var (fromX, fromY) = await LocateAsync(target, cancellationToken);
+        await MoveCursorAsync(fromX, fromY, cancellationToken);
+        var (toX, toY) = await CenterOfAsync(to, cancellationToken);
+
+        await SendAsync("Input.dispatchMouseEvent", new { type = "mousePressed", x = fromX, y = fromY, button = "left", buttons = 1, clickCount = 1 },
+            cancellationToken);
+        await Task.Delay(250, cancellationToken);
+        const int steps = 40;
+        for (var i = 1; i <= steps; i++)
+        {
+            var t = (double)i / steps;
+            var eased = t * t * (3 - 2 * t);
+            var (x, y) = (fromX + (toX - fromX) * eased, fromY + (toY - fromY) * eased);
+            await EvaluateAsync(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"window.__promo && window.__promo.move({x}, {y})"), cancellationToken);
+            await SendAsync("Input.dispatchMouseEvent", new { type = "mouseMoved", x, y, button = "left", buttons = 1 }, cancellationToken);
+            await Task.Delay(35, cancellationToken);
+        }
+
+        await Task.Delay(300, cancellationToken);
+        await SendAsync("Input.dispatchMouseEvent", new { type = "mouseReleased", x = toX, y = toY, button = "left", buttons = 0, clickCount = 1 },
+            cancellationToken);
+        _cursor = (toX, toY);
+        await Task.Delay(600, cancellationToken);
+        await EnsureOverlayAsync(cancellationToken);
+    }
+
+    /// <summary>The on-screen centre of a target, without scrolling to it (a drop target is already
+    /// in view, and scrolling mid-drag would move what is being carried).</summary>
+    private async Task<(double X, double Y)> CenterOfAsync(string target, CancellationToken cancellationToken)
+    {
+        await WaitForAsync(target, 10, cancellationToken);
+        var box = await EvaluateAsync(
+            $"(() => {{ const r = {FindScript(target)}.getBoundingClientRect(); return [r.left + r.width / 2, r.top + Math.min(r.height / 2, 160)]; }})()",
+            cancellationToken);
+        return (box[0].GetDouble(), box[1].GetDouble());
+    }
+
+    /// <summary>Hands <paramref name="file"/> to a file input, as picking it in the file dialog would.
+    /// The input is usually hidden behind a drop zone, so there is nothing for the cursor to move
+    /// to; a hover on the drop zone before this step reads as the drop.</summary>
+    public async Task UploadAsync(string target, string file, CancellationToken cancellationToken)
+    {
+        var result = await SendAsync("Runtime.evaluate", new
+        {
+            expression = $"(() => {{ const el = {FindScript(target)}; return el instanceof HTMLInputElement && el.type === 'file' ? el : null; }})()",
+            returnByValue = false
+        }, cancellationToken);
+        if (!result.GetProperty("result").TryGetProperty("objectId", out var objectId))
+        {
+            throw new InvalidOperationException($"'{target}' is not a file input on this page.");
+        }
+
+        // Chrome fires the input's change event itself, so the page reacts as it would to a real pick.
+        await SendAsync("DOM.setFileInputFiles", new { files = new[] { file }, objectId = objectId.GetString() }, cancellationToken);
+        await Task.Delay(500, cancellationToken);
+    }
+
     public async Task WaitForAsync(string target, double seconds, CancellationToken cancellationToken)
     {
         var deadline = Now + seconds;
@@ -234,8 +337,8 @@ internal sealed class Browser : IAsyncDisposable
     {
         await GotoAsync($"/{_scenario.Language}/login", cancellationToken);
         await WaitForAsync("input[autocomplete=email]", 15, cancellationToken);
-        await TypeAsync("input[autocomplete=email]", email, 0, cancellationToken);
-        await TypeAsync("input[autocomplete=current-password]", password, 0, cancellationToken);
+        await TypeAsync("input[autocomplete=email]", email, 0, clear: false, cancellationToken);
+        await TypeAsync("input[autocomplete=current-password]", password, 0, clear: false, cancellationToken);
         await ClickAsync("button[type=submit]", cancellationToken);
 
         var deadline = Now + 20;
@@ -269,13 +372,20 @@ internal sealed class Browser : IAsyncDisposable
     /// </summary>
     public async Task ShowCardAsync(string title, string? text, CancellationToken cancellationToken)
     {
+        // The card follows the video's theme, so a dark video does not open on a white flash.
+        var dark = _scenario.ColorScheme == "dark";
+        var background = dark
+            ? "radial-gradient(ellipse at 50% 40%,#1b2536 0%,#111827 55%,#0b1120 100%)"
+            : "radial-gradient(ellipse at 50% 40%,#ffffff 0%,#eef3fe 55%,#dde7fb 100%)";
+        var headingColor = dark ? "#f3f4f6" : "#0f172a";
+        var lineColor = dark ? "#7ea6f4" : "#2a5fd6";
         await EvaluateAsync($$"""
             (() => {
               document.getElementById('__promo_card')?.remove();
               const card = document.createElement('div');
               card.id = '__promo_card';
               card.style.cssText = 'position:fixed;inset:0;z-index:2147483646;display:flex;flex-direction:column;align-items:center;' +
-                'justify-content:center;gap:28px;background:radial-gradient(ellipse at 50% 40%,#ffffff 0%,#eef3fe 55%,#dde7fb 100%);' +
+                'justify-content:center;gap:28px;background:{{background}};' +
                 'font-family:Geist,system-ui,sans-serif;opacity:0;transform:scale(1.02);transition:opacity .7s ease,transform 1.2s ease';
               const logo = document.createElement('img');
               logo.src = '/brand/logo-mark.png';
@@ -283,13 +393,13 @@ internal sealed class Browser : IAsyncDisposable
               logo.style.cssText = 'width:min(22vh,220px);height:auto';
               const heading = document.createElement('div');
               heading.textContent = {{JsonSerializer.Serialize(title)}};
-              heading.style.cssText = 'font-size:min(9vh,88px);font-weight:700;letter-spacing:-.02em;color:#0f172a;text-align:center;padding:0 6vw';
+              heading.style.cssText = 'font-size:min(9vh,88px);font-weight:700;letter-spacing:-.02em;color:{{headingColor}};text-align:center;padding:0 6vw';
               card.append(logo, heading);
               const line = {{JsonSerializer.Serialize(text)}};
               if (line) {
                 const sub = document.createElement('div');
                 sub.textContent = line;
-                sub.style.cssText = 'font-size:min(4vh,38px);font-weight:500;color:#2a5fd6;text-align:center;padding:0 8vw;max-width:1400px';
+                sub.style.cssText = 'font-size:min(4vh,38px);font-weight:500;color:{{lineColor}};text-align:center;padding:0 8vw;max-width:1400px';
                 card.append(sub);
               }
               document.body.appendChild(card);

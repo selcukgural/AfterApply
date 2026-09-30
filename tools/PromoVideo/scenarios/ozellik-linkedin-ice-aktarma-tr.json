@@ -1,0 +1,97 @@
+// Feature video 4 of the series: the LinkedIn import. Light theme (the series alternates).
+// Signed in as a throwaway "Deniz Aydın" account created fresh for each render (an import that has
+// already run would come back "0 new") and deleted afterwards; credentials only in PROMO_EMAIL /
+// PROMO_PASSWORD. The archive is assets/Basic_LinkedInDataExport_09-29-2026.zip — 40 applications at invented companies,
+// no job URLs (see make-linkedin-demo.py for why).
+{
+  "title": "e-kariyerim — LinkedIn'den içe aktarma",
+  "language": "tr",
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 720, "deviceScaleFactor": 2 },
+  "output": { "width": 2560, "height": 1440, "fps": 30 },
+  "colorScheme": "light",
+  "signIn": true,
+  "voice": {
+    "provider": "google",
+    "name": "Charon",
+    "model": "gemini-2.5-pro-tts",
+    "prompt": "Sakin, sıcak ve samimi bir ürün tanıtımı sesiyle, doğal bir hızda oku.",
+    "rate": 1.0
+  },
+  "music": { "generate": "ambient", "volume": 0.18 },
+  "pronounce": {
+    "ekariyerim.com": "e kariyerim nokta kom",
+    "e-kariyerim": "e kariyerim"
+  },
+  "hide": ["button.fixed.bottom-4.right-4"],
+  "scenes": [
+    {
+      "id": "acilis",
+      "chapter": "Giriş",
+      "minSeconds": 4.5,
+      "steps": [
+        { "action": "goto", "path": "/tr/import" },
+        { "action": "card", "title": "LinkedIn'den içe aktar", "text": "Başvurularını tek seferde içeri al" }
+      ]
+    },
+    {
+      "id": "soru",
+      "narration": "LinkedIn'den başvuru yapıyorsan, o başvuruların listesi zaten LinkedIn'de duruyor. Tek tek yazmana gerek yok.",
+      "steps": [
+        { "action": "hideCard" },
+        { "action": "wait", "seconds": 2 },
+        { "action": "hover", "target": "h1" }
+      ]
+    },
+    {
+      "id": "arsiv",
+      "chapter": "Arşivini iste",
+      "narration": "LinkedIn'den verinin bir kopyasını iste. Tüm arşivi değil, sadece iş başvurularını seç. Dosya hazır olunca LinkedIn e-postana bir bağlantı gönderir.",
+      "steps": [
+        { "action": "hover", "target": "header img[src*='logo-mark']" },
+        { "action": "scroll", "by": 300 },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 250 }
+      ]
+    },
+    {
+      "id": "yukle",
+      "chapter": "Yükle",
+      "narration": "İndirdiğin zip dosyasını açmadan olduğu gibi yükle. e-kariyerim başvurularını tarihleri ve şirketleriyle birlikte içeri alır.",
+      // YouTube drops every chapter when one is under 10 s.
+      "minSeconds": 11,
+      "steps": [
+        { "action": "scroll", "by": 350 },
+        { "action": "hover", "target": "label:has(input[type=file])" },
+        { "action": "wait", "seconds": 1 },
+        { "action": "upload", "target": "input[type=file]", "file": "assets/Basic_LinkedInDataExport_09-29-2026.zip" },
+        // No parking on the logo here: the signed-in header does not stick, so reaching it scrolls
+        // the page to the top just as the result appears. The cursor goes to the result instead.
+        { "action": "waitFor", "target": "dl", "seconds": 30 },
+        { "action": "scroll", "target": "dl" },
+        { "action": "hover", "target": "dl" },
+        { "action": "wait", "seconds": 2 }
+      ]
+    },
+    {
+      "id": "liste",
+      "chapter": "Başvuruların",
+      "narration": "Birkaç saniye sonra geçmiş başvuruların tek listede. Artık hangisinin nereye gittiğini görmeye başlayabilirsin.",
+      "minSeconds": 10.5,
+      "steps": [
+        { "action": "goto", "path": "/tr/applications" },
+        { "action": "wait", "seconds": 3 },
+        { "action": "scroll", "by": 400 }
+      ]
+    },
+    {
+      "id": "kapanis",
+      "narration": "e-kariyerim ücretsiz. ekariyerim.com adresinden hemen dene.",
+      "leadIn": 1.0,
+      "tail": 3.0,
+      "steps": [
+        { "action": "card", "title": "e-kariyerim", "text": "Ücretsiz · ekariyerim.com" }
+      ]
+    }
+  ]
+}

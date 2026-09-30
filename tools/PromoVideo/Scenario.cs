@@ -116,8 +116,9 @@ public sealed record Scene
 }
 
 /// <summary>One browser action. Which fields apply depends on <see cref="Action"/>:
-/// goto(path) · click(target) · hover(target) · type(target, text, delayMs) · press(key) ·
-/// scroll(target | by) · wait(seconds) · waitFor(target, seconds) · card(title, text) · hideCard.
+/// goto(path) · click(target) · hover(target) · type(target, text, delayMs, clear) · press(key) ·
+/// scroll(target | by) · wait(seconds) · waitFor(target, seconds) · upload(target, file) · drag(target, to) ·
+/// card(title, text) · hideCard.
 /// A target is a CSS selector, or <c>text=Label</c> for a button/link by its visible text.</summary>
 public sealed record Step
 {
@@ -139,6 +140,17 @@ public sealed record Step
     public int? By { get; init; }
 
     public int? DelayMs { get; init; }
+
+    /// <summary>type only: select what the field already holds so the text replaces it, as a person
+    /// selecting the old value would; otherwise the text is added after it.</summary>
+    public bool Clear { get; init; }
+
+    /// <summary>upload only: the file handed to the file input, relative to the scenario file's folder
+    /// (e.g. <c>assets/cv.pdf</c>). It cannot point outside that folder.</summary>
+    public string? File { get; init; }
+
+    /// <summary>drag only: where the target is dropped (a CSS selector or <c>text=Label</c>).</summary>
+    public string? To { get; init; }
 }
 
 public static class ScenarioFile
@@ -161,7 +173,7 @@ public static class ScenarioFile
 public static class ScenarioRules
 {
     public static readonly IReadOnlySet<string> Actions =
-        new HashSet<string>(StringComparer.Ordinal) { "goto", "click", "hover", "type", "press", "scroll", "wait", "waitFor", "card", "hideCard" };
+        new HashSet<string>(StringComparer.Ordinal) { "goto", "click", "hover", "type", "press", "scroll", "wait", "waitFor", "upload", "drag", "card", "hideCard" };
 
     public static readonly IReadOnlySet<string> Keys =
         new HashSet<string>(StringComparer.Ordinal) { "Enter", "Escape", "Tab", "ArrowDown", "ArrowUp", "Backspace" };
@@ -344,6 +356,19 @@ public static class ScenarioRules
             case "wait" when step.Seconds is null or <= 0 or > 60:
                 yield return "wait needs seconds between 0 and 60.";
                 break;
+            case "drag" when string.IsNullOrWhiteSpace(step.Target) || string.IsNullOrWhiteSpace(step.To):
+                yield return "drag needs a target and a to.";
+                break;
+            case not "type" when step.Clear:
+                yield return "clear only applies to type.";
+                break;
+            case "upload" when string.IsNullOrWhiteSpace(step.Target) || string.IsNullOrWhiteSpace(step.File):
+                yield return "upload needs a target and a file.";
+                break;
+            case "upload" when !IsInsideFolder(step.File!):
+                // The file goes into a page that is being filmed: keep it among the scenario's own assets.
+                yield return "upload file must be a relative path inside the scenario's folder.";
+                break;
         }
     }
 
@@ -355,6 +380,21 @@ public static class ScenarioRules
             System.Text.RegularExpressions.Regex.Replace(text,
                 @"(?<![\p{L}\p{N}])" + System.Text.RegularExpressions.Regex.Escape(p.Key) + @"(?![\p{L}\p{N}])",
                 p.Value.Replace("$", "$$", StringComparison.Ordinal)));
+
+    /// <summary>The full path of an upload step's file, resolved against the scenario file's folder.</summary>
+    public static string ResolveFile(string scenarioDirectory, string file) =>
+        Path.GetFullPath(Path.Combine(scenarioDirectory, file));
+
+    private static bool IsInsideFolder(string file)
+    {
+        if (Path.IsPathRooted(file) || file.StartsWith('~'))
+        {
+            return false;
+        }
+
+        var parts = file.Split('/', '\\');
+        return !parts.Any(part => part is ".." || part.Length == 0);
+    }
 
     public static bool IsLocalHost(string host) =>
         host is "localhost" or "127.0.0.1" or "[::1]" or "::1"

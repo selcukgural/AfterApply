@@ -1,0 +1,99 @@
+// Feature video 6 of the series: one application's page, then the board. Light theme (the series
+// alternates). Signed in as the persistent "Deniz Aydın" video account (memory:
+// project-video-demo-account); its theme preference must be "light" before rendering.
+// The detail page is Tesvora Mobilite · .NET Developer: interview 2 Oct 10:30, reply promised by
+// 9 Oct, HR contact Ece Yıldırım (example.com), CV Deniz_Aydin_CV.pdf — the id below is that
+// account's; re-seeding the account changes it.
+// The drag moves Frenia Sigorta · Senior Backend Developer (final interview) to Teklif. Undo it
+// after each render (POST /api/applications/bulk/status/undo, Offer → FinalInterview) and run the
+// account tidy script, or the next render starts from a different board.
+{
+  "title": "e-kariyerim — Başvuru detayı ve pano",
+  "language": "tr",
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 720, "deviceScaleFactor": 2 },
+  "output": { "width": 2560, "height": 1440, "fps": 30 },
+  "colorScheme": "light",
+  "signIn": true,
+  "voice": {
+    "provider": "google",
+    "name": "Charon",
+    "model": "gemini-2.5-pro-tts",
+    "prompt": "Sakin, sıcak ve samimi bir ürün tanıtımı sesiyle, doğal bir hızda oku.",
+    "rate": 1.0
+  },
+  "music": { "generate": "ambient", "volume": 0.18 },
+  // Question endings get cut by Gemini-TTS; a trailing pause in the spoken text lets it finish.
+  "pronounce": {
+    "CV": "sivi",
+    "ne zaman?": "ne zaman?..",
+    "ekariyerim.com": "e kariyerim nokta kom",
+    "e-kariyerim": "e kariyerim"
+  },
+  "hide": ["button.fixed.bottom-4.right-4"],
+  "scenes": [
+    {
+      "id": "acilis",
+      "chapter": "Giriş",
+      "minSeconds": 4.5,
+      "steps": [
+        { "action": "goto", "path": "/tr/applications/01a0f2ac-13d5-7f6e-b69b-8a7e1686e6cb" },
+        { "action": "card", "title": "Başvurunun hikâyesi", "text": "Tek sayfada, tek panoda" }
+      ]
+    },
+    {
+      "id": "soru",
+      "narration": "Her başvurunun bir hikâyesi var: ne zaman başvurdun, kimle konuştun, mülakat ne zaman?",
+      "steps": [
+        { "action": "hideCard" },
+        { "action": "wait", "seconds": 2 },
+        { "action": "hover", "target": "h1" }
+      ]
+    },
+    {
+      "id": "detay",
+      "chapter": "Başvuru sayfası",
+      "narration": "Başvuru sayfasında aşama geçmişi, görüşme tarihi, iletişim kurduğun kişi ve kullandığın CV bir arada durur.",
+      "steps": [
+        { "action": "hover", "target": "text=Deniz_Aydin_CV.pdf" },
+        { "action": "wait", "seconds": 1.5 },
+        { "action": "scroll", "by": 330 },
+        { "action": "wait", "seconds": 1.5 },
+        { "action": "hover", "target": "text=ece.yildirim@example.com" },
+        { "action": "wait", "seconds": 1.5 }
+      ]
+    },
+    {
+      "id": "takvim",
+      "narration": "Görüşmeyi tek tıkla takvimine ekleyebilirsin. Şirket şu tarihe kadar döneriz dediyse o sözü not et; tarih geçince sana hatırlatılır.",
+      "steps": [
+        { "action": "scroll", "by": -330 },
+        { "action": "hover", "target": "text=Takvimime ekle" },
+        { "action": "wait", "seconds": 4 }
+      ]
+    },
+    {
+      "id": "pano",
+      "chapter": "Pano",
+      "narration": "Pano görünümünde başvuruların aşamalarına göre sütunlarda durur. Bir kartı bir sonraki aşamaya taşımak tek hareket.",
+      "minSeconds": 11,
+      "steps": [
+        { "action": "goto", "path": "/tr/applications" },
+        { "action": "click", "target": "text=Pano" },
+        { "action": "waitFor", "target": "section[aria-label='Teklif']" },
+        { "action": "wait", "seconds": 1.5 },
+        { "action": "drag", "target": "[aria-label='Senior Backend Developer, Frenia Sigorta kartını sürükle']", "to": "section[aria-label='Teklif']" },
+        { "action": "wait", "seconds": 2.5 }
+      ]
+    },
+    {
+      "id": "kapanis",
+      "narration": "e-kariyerim ücretsiz. ekariyerim.com adresinden hemen dene.",
+      "leadIn": 1.0,
+      "tail": 3.0,
+      "steps": [
+        { "action": "card", "title": "e-kariyerim", "text": "Ücretsiz · ekariyerim.com" }
+      ]
+    }
+  ]
+}

@@ -143,11 +143,13 @@ Adımlar (`target` bir CSS seçicisi ya da görünen metinle `text=Pano` olabili
 | `goto` | `path`: sitede bir yol, `/` ile başlar (başka siteye gidilemez) |
 | `click` | `target` |
 | `hover` | `target` |
-| `type` | `target`, `text`, `delayMs` (harf arası, varsayılan 70) |
+| `type` | `target`, `text`, `delayMs` (harf arası, varsayılan 120: izleyici değeri okuyabilsin; alan bitince 0,6 sn bekler), `clear` (alandaki değeri seçip üzerine yazar) |
 | `press` | `key`: Enter, Escape, Tab, ArrowDown, ArrowUp, Backspace |
 | `scroll` | `target` (öğeye kaydır) **ya da** `by` (piksel) |
 | `wait` | `seconds` |
 | `waitFor` | `target`, `seconds` (zaman aşımı, varsayılan 10) |
+| `drag` | `target` (sürüklenen), `to` (bırakılan yer): düğme basılı gerçek fare olaylarıyla yavaş bir sürükle-bırak |
+| `upload` | `target` (dosya alanı, genelde `input[type=file]`), `file`: senaryo klasörüne göre yol (ör. `assets/cv.pdf`); klasörün dışına çıkamaz |
 | `card` | `title`, `text` (isteğe bağlı alt satır): logolu tam ekran kart, yumuşak açılır |
 | `hideCard` | Kartı kapatır (bir sonraki `goto` da kapatır) |
 

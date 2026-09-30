@@ -10493,3 +10493,32 @@ encode artık BT.601 tam aralık JPEG kareleri sınırlı aralık BT.709'a çevi
 High profil, kapalı GOP (fps/2), 2 B-kare, CRF 16. Çıktı 2560×1440: viewport'un 2x doğal
 çözünürlüğü (küçültme yok) ve YouTube 1440p yüklemeye daha iyi kodek veriyor, 1080p izleyen de
 bundan faydalanıyor.
+
+## Özellik tanıtım videoları serisi — DECIDED (2026-09-30)
+
+**İstek.** Genel tanıtımın ardından her özellik için ayrı, kısa (45–90 sn) YouTube videosu. Videolar
+tek tek çekilir; kullanıcı izleyip onaylamadan bir sonrakine geçilmez. Önce TR, EN sürümler sonra
+toplu. Yalnızca yatay 2560×1440.
+
+**Karar.**
+- Dalga 1 (girişsiz araçlar): CV tarama, teklif karşılaştırma, yazılımcı maaşları. Dalga 2 (oturum
+  açık): LinkedIn içe aktarma, panel, başvuru detayı + pano. Kıyas (benchmark) videosu, prod anketi
+  30 cevaplık medyan eşiğini geçene kadar bekler: eşik altında video yalnızca "henüz erken" ekranını
+  gösterir ve local sayaç prod'la tutmaz.
+- Tema videodan videoya açık/koyu dönüşümlü. Site temayı `theme` çerezinden, oturum açıkken hesabın
+  kendi tercihinden okur; araç çerezi kendisi ayarlar, hesabın tercihi render'dan önce API'den set edilir.
+- **Ekrandaki veri kurgusal ve dengeli.** Demo CV (Deniz Aydın, example.com adresi, "Örnek" şirketler),
+  kurgusal LinkedIn arşivi ve 18 uydurma şirket adı. Adlar 2026-09-30'da web aramasıyla kontrol edildi;
+  gerçek bir şirketle çakışanlar elendi (Atlas Yazılım, Mavi Lojistik, Velmora, Zerion...). Gerekçe:
+  videolar ret ve "sessize alındı" gösteriyor; bunu gerçek bir şirkete yüklemek yanlış ve riskli.
+  Arşivde ilan bağlantısı yok, çünkü içe aktarma LinkedIn ilan sayfalarını sunucudan getirir ve
+  uydurma ilan numaraları gerçek ilanlara denk gelebilir.
+- Oturumlu videolar yardım görsellerinin demo hesabından (Elif Yılmaz) değil, ayrı bir local video
+  hesabından çekilir; o hesabın satırlarına yardım görselleri bağlı. Veri API üzerinden (içe aktarma +
+  geçmiş tarihli durum değişiklikleri) kurulur. İçe aktarma videosu her render'da yeni açılıp silinen
+  bir hesap kullanır (ikinci içe aktarma "0 yeni" döner).
+- Araç eklemeleri: `upload` (dosya senaryo klasöründen, dışarı çıkamaz), `type` için `clear`, `drag`
+  (dnd-kit'in gördüğü gerçek fare olayları), okunabilir yazma hızı (120 ms/karakter + alan sonunda
+  0,6 sn), gizleme stilinin ilk boyamadan önce kurulması, Gemini-TTS'in son heceyi kesmesine karşı
+  yeniden deneme (en fazla 3, sonra 40 ms kısma).
+- Kullanıcı kuralı: Türkçede "CV" "sivi" okunur; bir unit test Türkçe senaryolarda bunu zorunlu kılar.

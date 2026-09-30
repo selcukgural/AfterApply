@@ -19,6 +19,40 @@ public static partial class Timeline
     /// <summary>Two subtitle lines of about 42 characters — the usual readable maximum.</summary>
     public const int MaxCaptionLength = 84;
 
+    /// <summary>A clip whose last 20 ms still peak above this (about -30 dBFS) was cut mid-sound:
+    /// Gemini-TTS sometimes returns a clip that stops inside the last syllable.</summary>
+    public const double AbruptEndPeak = 0.03;
+
+    /// <summary>The loudest sample of the clip's last <paramref name="milliseconds"/>, 0–1 of full scale.</summary>
+    public static double TailPeak(short[] samples, int milliseconds = 20)
+    {
+        var count = Math.Min(samples.Length, SampleRate * milliseconds / 1000);
+        var peak = 0;
+        for (var i = samples.Length - count; i < samples.Length; i++)
+        {
+            peak = Math.Max(peak, Math.Abs((int)samples[i]));
+        }
+
+        return peak / 32768.0;
+    }
+
+    public static bool EndsAbruptly(short[] samples) => TailPeak(samples) > AbruptEndPeak;
+
+    /// <summary>A copy with the last <paramref name="milliseconds"/> faded to silence — the fallback
+    /// when every take ends mid-sound, so the cut at least doesn't click.</summary>
+    public static short[] FadeOut(short[] samples, int milliseconds = 40)
+    {
+        var result = (short[])samples.Clone();
+        var count = Math.Min(result.Length, SampleRate * milliseconds / 1000);
+        for (var i = 0; i < count; i++)
+        {
+            var index = result.Length - count + i;
+            result[index] = (short)(result[index] * (1 - (i + 1) / (double)count));
+        }
+
+        return result;
+    }
+
     /// <summary>How long a scene has to last: its voice plus the pauses around it, or its minimum.</summary>
     public static double SceneSeconds(Scene scene, double voiceSeconds) =>
         Math.Max(voiceSeconds > 0 ? scene.LeadIn + voiceSeconds + scene.Tail : 0, scene.MinSeconds ?? 0);
