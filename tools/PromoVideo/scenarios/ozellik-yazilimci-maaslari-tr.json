@@ -1,0 +1,101 @@
+// Feature video 3 of the series: the software salary pages. No account; dark theme (the series
+// alternates). The figures are the embedded survey seed, the same as production — nothing to curate.
+// Back-end Developer is the occupation opened: the CV video's made-up candidate is one.
+{
+  "title": "e-kariyerim — Yazılımcı maaşları",
+  "language": "tr",
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 720, "deviceScaleFactor": 2 },
+  "output": { "width": 2560, "height": 1440, "fps": 30 },
+  "colorScheme": "dark",
+  "signIn": false,
+  "voice": {
+    "provider": "google",
+    "name": "Charon",
+    "model": "gemini-2.5-pro-tts",
+    "prompt": "Sakin, sıcak ve samimi bir ürün tanıtımı sesiyle, doğal bir hızda oku.",
+    "rate": 1.0
+  },
+  "music": { "generate": "ambient", "volume": 0.18 },
+  "pronounce": {
+    "ekariyerim.com": "e kariyerim nokta kom",
+    "e-kariyerim": "e kariyerim"
+  },
+  "hide": ["button.fixed.bottom-4.right-4"],
+  "scenes": [
+    {
+      "id": "acilis",
+      "chapter": "Giriş",
+      "minSeconds": 4.5,
+      "steps": [
+        { "action": "goto", "path": "/tr/maaslar" },
+        { "action": "card", "title": "Yazılımcı maaşları", "text": "Hangi meslek ne kazanıyor?" }
+      ]
+    },
+    {
+      "id": "soru",
+      "narration": "Yazılımda hangi meslek ne kadar kazanıyor, maaşlar yıllar içinde nasıl değişti?",
+      "minSeconds": 6,
+      "steps": [
+        { "action": "hideCard" },
+        { "action": "wait", "seconds": 2 },
+        { "action": "hover", "target": "h1" }
+      ]
+    },
+    {
+      "id": "kaynak",
+      "narration": "e-kariyerim'in maaş sayfası, Önceki Yazılımcı'nın her yıl düzenlediği açık maaş anketlerini tek tabloda toplar. Tutarlar aylık net ve Türk lirası.",
+      "steps": [
+        // The source link, so the viewer sees where the numbers come from.
+        { "action": "hover", "target": "text=Önceki Yazılımcı" },
+        { "action": "wait", "seconds": 4 },
+        { "action": "scroll", "by": 330 }
+      ]
+    },
+    {
+      "id": "tablo",
+      "chapter": "Meslekler",
+      "narration": "Her meslek için son yılın medyanını, ortadaki yüzde ellilik aralığı ve yıllar içindeki seyri görürsün.",
+      // YouTube drops every chapter when one is under 10 s; the voice alone leaves this one at 7.5.
+      "minSeconds": 10.5,
+      "steps": [
+        { "action": "scroll", "target": "a[href$='/maaslar/back-end-developer']" },
+        { "action": "hover", "target": "a[href$='/maaslar/back-end-developer']" }
+      ]
+    },
+    {
+      "id": "detay",
+      "chapter": "Meslek detayı",
+      "narration": "Bir mesleğe tıkladığında maaşın seviyeye ve deneyime göre nasıl değiştiğini görürsün.",
+      "steps": [
+        { "action": "click", "target": "a[href$='/maaslar/back-end-developer']" },
+        { "action": "waitFor", "target": "text=Seviyeye göre" },
+        // Off the row it clicked: after the scroll the chart lands under it and opens a tooltip.
+        { "action": "hover", "target": "header a.shrink-0" },
+        { "action": "wait", "seconds": 1 },
+        { "action": "scroll", "by": 260 },
+        { "action": "click", "target": "text=Seviyeye göre" },
+        { "action": "wait", "seconds": 2 }
+      ]
+    },
+    {
+      "id": "nominal",
+      "narration": "Tutarlar nominal: yüksek enflasyon yıllarında artışın büyük kısmı fiyat artışıdır, satın alma gücü değil.",
+      "steps": [
+        // One year's spread: the panel under the chart switches from 2026 to 2024.
+        { "action": "hover", "target": "rect[aria-label^='2024:']" },
+        { "action": "wait", "seconds": 1.5 },
+        { "action": "scroll", "by": 300 }
+      ]
+    },
+    {
+      "id": "kapanis",
+      "narration": "e-kariyerim ücretsiz. ekariyerim.com adresinden hemen dene.",
+      "leadIn": 1.0,
+      "tail": 3.0,
+      "steps": [
+        { "action": "card", "title": "e-kariyerim", "text": "Ücretsiz · ekariyerim.com/maaslar" }
+      ]
+    }
+  ]
+}

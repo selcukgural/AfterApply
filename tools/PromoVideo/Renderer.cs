@@ -7,8 +7,21 @@ public sealed record RenderOptions(bool ShowBrowser, bool BurnCaptions, bool Kee
 
 /// <summary>Narration first (so every scene knows how long it must last), then one continuous
 /// recording scene by scene, then ffmpeg: frames → video, clips → narration track, + subtitles.</summary>
-internal sealed class Renderer(Scenario scenario, string outputDirectory, string cacheDirectory)
+internal sealed class Renderer(Scenario scenario, string scenarioDirectory, string outputDirectory, string cacheDirectory)
 {
+    /// <summary>Every upload step's file, checked before anything is paid for or recorded.</summary>
+    private void EnsureUploadFilesExist()
+    {
+        foreach (var step in scenario.Scenes.SelectMany(scene => scene.Steps).Where(step => step.Action == "upload"))
+        {
+            var file = ScenarioRules.ResolveFile(scenarioDirectory, step.File!);
+            if (!File.Exists(file))
+            {
+                throw new FileNotFoundException($"Upload file not found: {file}");
+            }
+        }
+    }
+
     public async Task<IReadOnlyList<short[]>> SynthesizeAsync(CancellationToken cancellationToken)
     {
         var cache = new NarrationCache(cacheDirectory, TextToSpeech.Create(scenario));
@@ -46,6 +59,7 @@ internal sealed class Renderer(Scenario scenario, string outputDirectory, string
 
     public async Task<string> RenderAsync(RenderOptions options, CancellationToken cancellationToken)
     {
+        EnsureUploadFilesExist();
         Directory.CreateDirectory(outputDirectory);
         var clips = await SynthesizeAsync(cancellationToken);
 
@@ -149,16 +163,18 @@ internal sealed class Renderer(Scenario scenario, string outputDirectory, string
         }
     }
 
-    private static Task RunStepAsync(Browser browser, Step step, CancellationToken cancellationToken) => step.Action switch
+    private Task RunStepAsync(Browser browser, Step step, CancellationToken cancellationToken) => step.Action switch
     {
         "goto" => browser.GotoAsync(step.Path!, cancellationToken),
         "click" => browser.ClickAsync(step.Target!, cancellationToken),
         "hover" => browser.HoverAsync(step.Target!, cancellationToken),
-        "type" => browser.TypeAsync(step.Target!, step.Text!, step.DelayMs ?? 70, cancellationToken),
+        "type" => browser.TypeAsync(step.Target!, step.Text!, step.DelayMs ?? Browser.ReadableTypingDelayMs, step.Clear, cancellationToken),
         "press" => browser.PressAsync(step.Key!, cancellationToken),
         "scroll" => browser.ScrollAsync(step.Target, step.By, cancellationToken),
         "wait" => Task.Delay(TimeSpan.FromSeconds(step.Seconds!.Value), cancellationToken),
         "waitFor" => browser.WaitForAsync(step.Target!, step.Seconds ?? 10, cancellationToken),
+        "drag" => browser.DragAsync(step.Target!, step.To!, cancellationToken),
+        "upload" => browser.UploadAsync(step.Target!, ScenarioRules.ResolveFile(scenarioDirectory, step.File!), cancellationToken),
         "card" => browser.ShowCardAsync(step.Title!, step.Text, cancellationToken),
         "hideCard" => browser.HideCardAsync(cancellationToken),
         _ => throw new InvalidOperationException($"Unknown action '{step.Action}'.")

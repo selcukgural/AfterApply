@@ -22,6 +22,7 @@
   "music": { "generate": "ambient", "volume": 0.18 },
   // Loanwords said the way people say them, not letter by letter; the subtitles keep the spelling.
   "pronounce": {
+    "CV": "sivi",
     "ekariyerim.com": "e kariyerim nokta kom",
     "e-kariyerim": "e kariyerim"
   },

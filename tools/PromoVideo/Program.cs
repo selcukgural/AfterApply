@@ -90,7 +90,8 @@ catch (Exception exception) when (exception is InvalidOperationException or Inva
 Renderer RendererFor(Scenario scenario, List<string> argumentList)
 {
     var name = Path.GetFileNameWithoutExtension(argumentList[1]);
-    return new Renderer(scenario, Path.Combine(artifacts, name), Path.Combine(artifacts, ".voice-cache"));
+    var scenarioDirectory = Path.GetDirectoryName(Path.GetFullPath(argumentList[1]))!;
+    return new Renderer(scenario, scenarioDirectory, Path.Combine(artifacts, name), Path.Combine(artifacts, ".voice-cache"));
 }
 
 static async Task<Scenario> LoadAsync(List<string> arguments, CancellationToken cancellationToken)

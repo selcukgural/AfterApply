@@ -1,0 +1,111 @@
+// Feature video 2 of the series: the offer comparison. No account; light theme (the series alternates).
+// The page opens on two example offers; both are retyped with full, similar-length values so the
+// verdict bars and breakdown lines read evenly: A is gross with a bonus and office days, B is net
+// and fully remote — the narration's "one gross, one net; one has a bonus, the other remote work".
+// The figures are picked so the office days decide it: with A at 3 office days B leaves ~14k ₺ more a
+// year; moving A to fully remote flips it to A by ~26k ₺ — the verdict changes on screen.
+{
+  "title": "e-kariyerim — İş teklifi karşılaştırma",
+  "language": "tr",
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 720, "deviceScaleFactor": 2 },
+  "output": { "width": 2560, "height": 1440, "fps": 30 },
+  "colorScheme": "light",
+  "signIn": false,
+  "voice": {
+    "provider": "google",
+    "name": "Charon",
+    "model": "gemini-2.5-pro-tts",
+    "prompt": "Sakin, sıcak ve samimi bir ürün tanıtımı sesiyle, doğal bir hızda oku.",
+    "rate": 1.0
+  },
+  "music": { "generate": "ambient", "volume": 0.18 },
+  // BES and SGK are said as words in Turkish ("bes", "se ge ka"), not spelled in English.
+  "pronounce": {
+    "SGK": "se ge ka",
+    "ekariyerim.com": "e kariyerim nokta kom",
+    "e-kariyerim": "e kariyerim"
+  },
+  "hide": ["button.fixed.bottom-4.right-4"],
+  "scenes": [
+    {
+      "id": "acilis",
+      "chapter": "Giriş",
+      "minSeconds": 4.5,
+      "steps": [
+        { "action": "goto", "path": "/tr/teklif-karsilastirma" },
+        { "action": "card", "title": "İş teklifi karşılaştırma", "text": "Hangi teklif daha fazla kazandırır?" }
+      ]
+    },
+    {
+      "id": "soru",
+      "narration": "İki iş teklifin var. Biri brüt, biri net konuşulmuş. Birinde ikramiye var, diğerinde uzaktan çalışma. Hangisi gerçekten daha fazla kazandırır?",
+      "steps": [
+        { "action": "hideCard" },
+        { "action": "wait", "seconds": 2 },
+        { "action": "hover", "target": "#offer-tab-0" }
+      ]
+    },
+    {
+      "id": "teklifler",
+      "chapter": "Teklifleri gir",
+      "narration": "Her teklifin maaşını brüt ya da net olarak yaz. İkramiye, yemek kartı, özel sağlık, BES katkısı ve haftada kaç gün ofise gideceğini ekle.",
+      // Only the fields that differ from the page's own examples are typed (salary 90.000 gross, meal
+      // 330, health 1.500, office cost 250 stay), so the typing fits under the narration.
+      "steps": [
+        { "action": "type", "target": "#offer-panel input[id$='-name']", "text": "Fintech · İstanbul", "clear": true },
+        { "action": "type", "target": "#offer-panel input[id$='-bonusSalaries']", "text": "2", "clear": true },
+        { "action": "type", "target": "#offer-panel input[id$='-remoteDaysPerWeek']", "text": "2", "clear": true },
+        { "action": "click", "target": "#offer-tab-1" },
+        { "action": "type", "target": "#offer-panel input[id$='-name']", "text": "E-ticaret · Uzaktan", "clear": true },
+        // Bonus and salary before the switch to net: switching first would briefly show the example's
+        // 100.000 as net with two bonuses — a nonsense verdict on screen.
+        { "action": "type", "target": "#offer-panel input[id$='-bonusSalaries']", "text": "0", "clear": true },
+        { "action": "type", "target": "#offer-panel input[id$='-salary']", "text": "72500", "clear": true },
+        { "action": "click", "target": "text=Net" },
+        { "action": "type", "target": "#offer-panel input[id$='-mealPerDay']", "text": "300", "clear": true },
+        { "action": "type", "target": "#offer-panel input[id$='-remoteDaysPerWeek']", "text": "5", "clear": true }
+      ]
+    },
+    {
+      "id": "sonuc",
+      "chapter": "Sonuç",
+      "narration": "Araç hepsini 2026 vergi ve SGK kurallarıyla yıllığa çevirir. Hangi teklifin yılda ne kadar fazla bıraktığını tek cümleyle söyler.",
+      "steps": [
+        { "action": "wait", "seconds": 3.5 },
+        { "action": "click", "target": "#offer-tab-0" },
+        { "action": "type", "target": "#offer-panel input[id$='-remoteDaysPerWeek']", "text": "5", "clear": true },
+        { "action": "hover", "target": "header a.shrink-0" },
+        { "action": "wait", "seconds": 3 }
+      ]
+    },
+    {
+      "id": "aylik",
+      "chapter": "Ay ay eline geçen",
+      "narration": "Aylık grafik, brüt anlaşmada vergi dilimi yükseldikçe net maaşının yıl içinde nasıl düştüğünü gösterir.",
+      "steps": [
+        { "action": "scroll", "by": 560 },
+        // June and December of the first offer (two bonuses): the light top of the bar is the bonus.
+        { "action": "hover", "target": "ol.grid-cols-12 li:nth-child(6)" },
+        { "action": "wait", "seconds": 1.5 },
+        { "action": "hover", "target": "ol.grid-cols-12 li:nth-child(12)" }
+      ]
+    },
+    {
+      "id": "gizlilik",
+      "narration": "Giriş gerekmiyor. Hesap tarayıcında yapılıyor ve hiçbir şey kaydedilmiyor. Sonuç bir tahmin, bordro danışmanlığı değil, ama karar vermeden önce resmi netleştirir.",
+      "steps": [
+        { "action": "scroll", "by": 520 }
+      ]
+    },
+    {
+      "id": "kapanis",
+      "narration": "e-kariyerim ücretsiz. ekariyerim.com adresinden hemen dene.",
+      "leadIn": 1.0,
+      "tail": 3.0,
+      "steps": [
+        { "action": "card", "title": "e-kariyerim", "text": "Ücretsiz · ekariyerim.com/teklif-karsilastirma" }
+      ]
+    }
+  ]
+}

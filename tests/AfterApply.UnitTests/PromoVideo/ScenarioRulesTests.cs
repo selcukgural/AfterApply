@@ -170,7 +170,7 @@ public class ScenarioRulesTests
         Should.Throw<System.Text.Json.JsonException>(() => ScenarioFile.Parse("""{ "scenes": [ { "id": "a", "narations": "x" } ] }"""));
     }
 
-    private static string RepositoryRoot()
+    internal static string RepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "AfterApply.slnx")))
@@ -225,5 +225,84 @@ public class ScenarioExtrasTests
         ScenarioRules.Validate(Valid() with { Music = new MusicSettings { Generate = generate, File = file, Volume = volume } })
             .ShouldBe([error]);
         ScenarioRules.Validate(Valid() with { Music = new MusicSettings { Generate = "ambient" } }).ShouldBeEmpty();
+    }
+
+    private static Scenario WithUpload(string? target, string? file) => Valid() with
+    {
+        Scenes = [new Scene { Id = "a", Narration = "x", Steps = [new Step { Action = "upload", Target = target, File = file }] }]
+    };
+
+    [Fact]
+    public void An_Upload_Takes_A_File_From_The_Scenario_Folder()
+    {
+        ScenarioRules.Validate(WithUpload("input[type=file]", "assets/cv.pdf")).ShouldBeEmpty();
+        ScenarioRules.ResolveFile("/repo/scenarios", "assets/cv.pdf").ShouldBe(Path.GetFullPath("/repo/scenarios/assets/cv.pdf"));
+    }
+
+    [Theory]
+    [InlineData(null, "assets/cv.pdf", "upload needs a target and a file.")]
+    [InlineData("input[type=file]", null, "upload needs a target and a file.")]
+    [InlineData("input[type=file]", "../secrets.txt", "upload file must be a relative path inside the scenario's folder.")]
+    [InlineData("input[type=file]", "assets/../../x.pdf", "upload file must be a relative path inside the scenario's folder.")]
+    [InlineData("input[type=file]", "/etc/passwd", "upload file must be a relative path inside the scenario's folder.")]
+    [InlineData("input[type=file]", "~/cv.pdf", "upload file must be a relative path inside the scenario's folder.")]
+    [InlineData("input[type=file]", "assets\\..\\..\\x.pdf", "upload file must be a relative path inside the scenario's folder.")]
+    public void An_Upload_Cannot_Reach_Outside_The_Scenario_Folder(string? target, string? file, string error)
+    {
+        ScenarioRules.Validate(WithUpload(target, file)).ShouldBe([$"scenes[0].steps[0]: {error}"]);
+    }
+
+    [Fact]
+    public void Every_Upload_File_In_The_Shipped_Scenarios_Exists()
+    {
+        var directory = Path.Combine(ScenarioRulesTests.RepositoryRoot(), "tools", "PromoVideo", "scenarios");
+        foreach (var file in Directory.GetFiles(directory, "*.json"))
+        {
+            var uploads = ScenarioFile.Parse(File.ReadAllText(file)).Scenes.SelectMany(s => s.Steps).Where(s => s.Action == "upload");
+            foreach (var upload in uploads)
+            {
+                File.Exists(ScenarioRules.ResolveFile(directory, upload.File!)).ShouldBeTrue($"{file}: {upload.File}");
+            }
+        }
+    }
+
+    [Fact]
+    public void Clear_Only_Applies_To_Typing()
+    {
+        Scenario With(Step step) => Valid() with { Scenes = [new Scene { Id = "a", Narration = "x", Steps = [step] }] };
+
+        ScenarioRules.Validate(With(new Step { Action = "type", Target = "#name", Text = "Fintech", Clear = true })).ShouldBeEmpty();
+        ScenarioRules.Validate(With(new Step { Action = "click", Target = "#name", Clear = true }))
+            .ShouldBe(["scenes[0].steps[0]: clear only applies to type."]);
+    }
+
+    [Fact]
+    public void A_Drag_Needs_Both_Ends()
+    {
+        Scenario With(Step step) => Valid() with { Scenes = [new Scene { Id = "a", Narration = "x", Steps = [step] }] };
+
+        ScenarioRules.Validate(With(new Step { Action = "drag", Target = "[aria-label^='Card']", To = "text=Teklif" })).ShouldBeEmpty();
+        ScenarioRules.Validate(With(new Step { Action = "drag", Target = "[aria-label^='Card']" }))
+            .ShouldBe(["scenes[0].steps[0]: drag needs a target and a to."]);
+        ScenarioRules.Validate(With(new Step { Action = "drag", To = "text=Teklif" }))
+            .ShouldBe(["scenes[0].steps[0]: drag needs a target and a to."]);
+    }
+
+    [Fact]
+    public void Turkish_Scenarios_Say_Cv_As_Sivi()
+    {
+        // The user's rule: in Turkish "CV" is said "sivi", never spelled; without the pronounce entry
+        // Gemini-TTS spells it out wherever it sits next to another word.
+        var directory = Path.Combine(ScenarioRulesTests.RepositoryRoot(), "tools", "PromoVideo", "scenarios");
+        foreach (var file in Directory.GetFiles(directory, "*.json"))
+        {
+            var scenario = ScenarioFile.Parse(File.ReadAllText(file));
+            var saysCv = scenario.Scenes.Any(s => s.Narration is { } n &&
+                                                  System.Text.RegularExpressions.Regex.IsMatch(n, @"(?<![\p{L}\p{N}])CV(?![\p{L}\p{N}])"));
+            if (scenario.Language == "tr" && saysCv)
+            {
+                scenario.Pronounce.GetValueOrDefault("CV").ShouldBe("sivi", file);
+            }
+        }
     }
 }

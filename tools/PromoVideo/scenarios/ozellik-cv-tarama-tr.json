@@ -1,0 +1,115 @@
+// Feature video 1 of the series: the CV scan. No account — the tool works signed out.
+// The CV is a made-up person (assets/Deniz_Aydin_CV.*, example.com address, "Örnek" companies):
+// a clean-looking two-column layout without a phone number, which scores 81 with two fixes. The
+// one-column copy with the phone added (…_v2) scores 100 — the rescan at the end shows the jump.
+// Local scans are rate limited (5 per 2 h per IP) and a render uses two.
+{
+  "title": "e-kariyerim — CV tarama",
+  "language": "tr",
+  "baseUrl": "http://localhost:3000",
+  "viewport": { "width": 1280, "height": 720, "deviceScaleFactor": 2 },
+  "output": { "width": 2560, "height": 1440, "fps": 30 },
+  "colorScheme": "dark",
+  "signIn": false,
+  "voice": {
+    "provider": "google",
+    "name": "Charon",
+    "model": "gemini-2.5-pro-tts",
+    "prompt": "Sakin, sıcak ve samimi bir ürün tanıtımı sesiyle, doğal bir hızda oku.",
+    "rate": 1.0
+  },
+  "music": { "generate": "ambient", "volume": 0.18 },
+  // Gemini-TTS spelled CV letter by letter in "CV tarama" and ran "CV'ni ATS'nin" together, so CV
+  // is said "sivi" everywhere (the user's call) and that one phrase is spelled out whole.
+  "pronounce": {
+    "CV'ni ATS'nin": "sivi'ni ey ti es'in",
+    "CV": "sivi",
+    "ekariyerim.com": "e kariyerim nokta kom",
+    "e-kariyerim": "e kariyerim"
+  },
+  "hide": ["button.fixed.bottom-4.right-4"],
+  "scenes": [
+    {
+      "id": "acilis",
+      "chapter": "Giriş",
+      "minSeconds": 4.5,
+      "steps": [
+        { "action": "goto", "path": "/tr/cv-tarama" },
+        { "action": "card", "title": "CV tarama", "text": "CV'm ATS'den geçiyor mu?" }
+      ]
+    },
+    {
+      "id": "soru",
+      "narration": "Bir ilana başvurduğunda CV'ni çoğu zaman önce bir insan değil, bir başvuru sistemi okur. Buna ATS denir. Peki o sistem senin CV'nden ne görüyor?",
+      "steps": [
+        { "action": "hideCard" },
+        { "action": "wait", "seconds": 2 },
+        { "action": "hover", "target": "text=Dosya seç" }
+      ]
+    },
+    {
+      "id": "yukleme",
+      "chapter": "CV'ni yükle",
+      "narration": "e-kariyerim'in CV tarama aracına PDF ya da Word dosyanı bırak. Hesap açman gerekmiyor. Dosya diske yazılmıyor, tarama biter bitmez siliniyor.",
+      "steps": [
+        { "action": "upload", "target": "input[type=file]", "file": "assets/Deniz_Aydin_CV.pdf" },
+        { "action": "wait", "seconds": 1.5 },
+        { "action": "click", "target": "#cv-scan-consent" },
+        { "action": "wait", "seconds": 1 },
+        { "action": "click", "target": "text=CV'mi tara" },
+        // Park the cursor on the logo: left where the button was, it would sit on the text
+        // the next scenes scroll under it.
+        { "action": "hover", "target": "header a.shrink-0" },
+        { "action": "waitFor", "target": "pre", "seconds": 20 }
+      ]
+    },
+    {
+      "id": "puan",
+      "chapter": "Puan ve düzeltmeler",
+      "narration": "Birkaç saniye içinde yüz üzerinden bir puan alırsın. Bu puanı yapay zekâ vermiyor. Puan dört kategorinin toplamı: metin okunabilirliği, bölümler ve tarihler, iletişim, biçim ve uzunluk.",
+      "steps": [
+        { "action": "wait", "seconds": 4 },
+        { "action": "scroll", "by": 380 }
+      ]
+    },
+    {
+      "id": "duzeltmeler",
+      "narration": "Düzeltme listesi her sorunun hangi sayfada ve hangi satırda olduğunu, sana kaç puana mal olduğunu söyler.",
+      "steps": [
+        { "action": "scroll", "by": 420 }
+      ]
+    },
+    {
+      "id": "ham-metin",
+      "chapter": "ATS'nin gözünden CV'n",
+      "narration": "Ham metin bölümü CV'ni ATS'nin gözüyle gösterir. Metin senin gördüğün sırayla değil, sistemin okuduğu sırayla dizilir.",
+      "steps": [
+        { "action": "scroll", "target": "pre" }
+      ]
+    },
+    {
+      "id": "yeniden-tara",
+      "narration": "Düzelt, yeniden tara, farkı gör.",
+      "minSeconds": 10,
+      "steps": [
+        { "action": "click", "target": "text=Başka bir dosya tara" },
+        { "action": "wait", "seconds": 1 },
+        { "action": "upload", "target": "input[type=file]", "file": "assets/Deniz_Aydin_CV_v2.pdf" },
+        { "action": "click", "target": "#cv-scan-consent" },
+        { "action": "click", "target": "text=CV'mi tara" },
+        { "action": "hover", "target": "header a.shrink-0" },
+        { "action": "waitFor", "target": "pre", "seconds": 20 },
+        { "action": "wait", "seconds": 3.5 }
+      ]
+    },
+    {
+      "id": "kapanis",
+      "narration": "e-kariyerim ücretsiz. ekariyerim.com adresinden hemen dene.",
+      "leadIn": 1.0,
+      "tail": 3.0,
+      "steps": [
+        { "action": "card", "title": "e-kariyerim", "text": "Ücretsiz · ekariyerim.com/cv-tarama" }
+      ]
+    }
+  ]
+}
