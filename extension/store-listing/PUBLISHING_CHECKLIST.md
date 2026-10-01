@@ -12,7 +12,16 @@ the repo can only show what was committed, not what was shipped.
 a working Gmail Scanning reach every user. The paragraph above is kept as the history of how the
 item got here; `0.6.0` is no longer what anyone is running.
 
-Current package version: **0.9.2** — a bug fix on top of the live `0.9.1`: LinkedIn changed the
+Current package version: **0.9.3** — a bug fix on top of `0.9.2`: LinkedIn's standalone job page
+(`/jobs/view/<id>`, 2026-10) renders the title as plain text in a `<p>` instead of a link, and the
+only `/jobs/view/<id>` links left on it are the "On-site"/"Hybrid"/"Full-time" pills, so the title
+was read as "On-site" and the location came back empty. The scraper now only takes a job link inside
+a `<p>` as the title (the split view's layout, unchanged) and otherwise matches the tab title against
+the page's paragraphs. Checked live on five postings. No permission, data, listing copy or UI change:
+`PRIVACY_POLICY.md`, `PERMISSIONS_JUSTIFICATION.md`, `LISTING.md` and the screenshots stay as they
+are; only the "What's new" notes (`whats-new.js`) gained a `0.9.3` entry.
+
+`0.9.2` was a bug fix on top of `0.9.1`: LinkedIn changed the
 marker on the "People you can reach out to" block (`data-sdui-component` → `componentkey=
 "JobDetailsPeopleWhoCanHelpSlot_<id>"`), so the "Meet the hiring team" poster stopped being read
 into the HR contact fields. The same release renames the item: **"e-kariyerim — Save Job

@@ -16,6 +16,14 @@ export const PENDING_UPDATE_KEY = "afterapply_pending_update";
 // manifest's version has none, so a release cannot ship an empty banner or no banner by accident.
 // Plain text only — rendered with textContent.
 export const RELEASE_NOTES = {
+  "0.9.3": {
+    en: [
+      "On a LinkedIn job page, the job title and location are filled in correctly again (the title used to come through as \"On-site\" or \"Hybrid\").",
+    ],
+    tr: [
+      "LinkedIn ilan sayfasında iş unvanı ve konum yine doğru doluyor (unvan yerine \"On-site\" ya da \"Hybrid\" geliyordu).",
+    ],
+  },
   "0.9.2": {
     en: [
       "Save a posting you have not applied to yet with \"Apply later\". When you apply, click \"I Applied\" on the same page and it moves to your applications.",
