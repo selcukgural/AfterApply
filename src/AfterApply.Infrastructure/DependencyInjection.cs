@@ -207,6 +207,7 @@ public static class DependencyInjection
         services.Configure<OpenAiOptions>(configuration.GetSection("OpenAI"));
         services.Configure<CompanyIntelligenceOptions>(configuration.GetSection("CompanyIntelligence"));
         services.Configure<ResponseRateOptions>(configuration.GetSection("ResponseRates"));
+        services.Configure<AggregateEligibilityOptions>(configuration.GetSection(AggregateEligibilityOptions.SectionName));
         services.Configure<SalaryMarketOptions>(configuration.GetSection(SalaryMarketOptions.SectionName));
         services.Configure<CompanySearchOptions>(configuration.GetSection("Companies"));
         services.Configure<CompanyReviewOptions>(configuration.GetSection(CompanyReviewOptions.SectionName));
@@ -690,6 +691,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddSingleton<PaidCallBudget>();
         services.AddScoped<CompanyVisibility>();
+        services.AddScoped<AggregateEligibility>();
         services.AddScoped<AuthEmailThrottle>();
         services.AddScoped<EmailVerificationService>();
         services.AddScoped<IEmailVerificationCodeSender, EmailVerificationCodeSender>();

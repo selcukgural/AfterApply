@@ -16,6 +16,7 @@ function profile(overrides: Partial<UserProfileResponse> = {}): UserProfileRespo
     isAdmin: false,
     avatarUrl: null,
     showAvatarInComments: false,
+    contributesToAggregates: true,
     ...overrides,
   };
 }

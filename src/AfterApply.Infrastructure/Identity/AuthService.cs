@@ -824,6 +824,23 @@ internal sealed class AuthService(
         return ToProfile(user);
     }
 
+    public async Task<UserProfileResponse?> UpdateAggregateContributionAsync(Guid userId, bool contribute,
+        CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return null;
+        }
+
+        // Read at query time by AggregateEligibility; the cached figures (an hour at most) are the
+        // only place the old answer lingers, which the settings text says.
+        user.ExcludeFromAggregates = !contribute;
+        await userManager.UpdateAsync(user);
+
+        return ToProfile(user);
+    }
+
     public async Task<bool> DeleteAccountAsync(Guid userId, string? password, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByIdAsync(userId.ToString());
@@ -1230,5 +1247,6 @@ internal static class UserProfiles
         new(user.Id, user.Email!, user.FirstName, user.LastName, user.CreatedAt, user.ConsentAcceptedAt,
             user.PreferredLanguage, user.PreferredTheme, HasPassword: user.PasswordHash is not null,
             IsAdmin: user.IsAdmin, AvatarUrl: AvatarPath.For(user.AvatarPublicId),
-            ShowAvatarInComments: user.ShowAvatarInComments);
+            ShowAvatarInComments: user.ShowAvatarInComments,
+            ContributesToAggregates: !user.ExcludeFromAggregates);
 }

@@ -4,6 +4,7 @@ using AfterApply.Application.ResponseRates;
 using AfterApply.Application.SilenceReports;
 using AfterApply.Domain.Companies;
 using AfterApply.Infrastructure.Persistence;
+using AfterApply.Infrastructure.ResponseRates;
 using AfterApply.Infrastructure.SilenceReports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -12,6 +13,7 @@ namespace AfterApply.Infrastructure.CompanyIntelligence;
 
 internal sealed class CompanyIntelligenceService(
     AppDbContext dbContext,
+    AggregateEligibility eligibility,
     ISectorResponseRateService sectorResponseRates,
     IOptions<CompanyIntelligenceOptions> options,
     IOptions<SilenceReportOptions> silenceReportOptions)
@@ -31,7 +33,8 @@ internal sealed class CompanyIntelligenceService(
 
         var opts = options.Value;
         var thresholds = new CompanyIntelligenceThresholds(
-            opts.HiddenBelow, opts.MaturityDays, (int)Math.Round(opts.MaxContributorShare * 100));
+            opts.HiddenBelow, opts.MaturityDays, (int)Math.Round(opts.MaxContributorShare * 100),
+            opts.MinimumDistinctContributors);
 
         // Windowed on AppliedAt, which keeps the sample a clean cohort — "applications submitted in
         // this period" — rather than mixing an old application with a recent status change. See
@@ -46,8 +49,10 @@ internal sealed class CompanyIntelligenceService(
             ? null
             : new CompanySectorComparison(sector.Value, await sectorResponseRates.GetSectorFiguresAsync(sector.Value, cancellationToken));
 
-        // No UserId filter — unlike AnalyticsService, this aggregates across ALL users.
-        var applications = await dbContext.Applications
+        // No UserId filter — unlike AnalyticsService, this aggregates across ALL users, as far as
+        // AggregateEligibility lets it: rows entered as they happened, from people who have not
+        // opted out and are still tracking.
+        var applications = await eligibility.Eligible(dbContext.Applications, windowEnd)
             .Where(a => a.CompanyId == companyId && a.AppliedAt >= windowStart && a.AppliedAt <= windowEnd)
             .Select(a => new
             {
@@ -62,7 +67,10 @@ internal sealed class CompanyIntelligenceService(
         var confidence = CompanyIntelligenceCalculations.ClassifyConfidence(
             total, opts.HiddenBelow, opts.VeryLowBelow, opts.LowBelow, opts.MediumBelow);
 
-        if (confidence == ConfidenceBucket.Hidden)
+        // Fewer people than the floor is hidden exactly like too few applications: twenty rows from
+        // three people describe three job searches, not a company.
+        if (confidence == ConfidenceBucket.Hidden
+            || applications.Select(a => a.UserId).Distinct().Count() < opts.MinimumDistinctContributors)
         {
             // Defense in depth: don't even run the history join/grouping below — no
             // per-application response-time data is pulled into memory for a below-threshold
@@ -76,15 +84,17 @@ internal sealed class CompanyIntelligenceService(
         var applicationIds = applications.Select(a => a.Id).ToList();
         var history = await dbContext.ApplicationStatusHistories
             .Where(h => applicationIds.Contains(h.ApplicationId))
-            .Select(h => new { h.ApplicationId, h.ToStatus, h.ChangedAt })
+            .Select(h => new { h.ApplicationId, h.FromStatus, h.ToStatus, h.ChangedAt, h.Origin })
             .ToListAsync(cancellationToken);
         var historyByApplication = history
             .GroupBy(h => h.ApplicationId)
-            .ToDictionary(g => g.Key, g => g.Select(h => (h.ToStatus, h.ChangedAt)).ToList());
+            .ToDictionary(g => g.Key, g => g
+                .Select(h => new ResponseRateTransition(h.FromStatus, h.ToStatus, h.ChangedAt, h.Origin))
+                .ToList());
 
         var samples = applications
             .Select(a => ResponseRateAggregator.ToSample(a.Id, a.UserId, a.Status, a.AppliedAt,
-                historyByApplication.GetValueOrDefault(a.Id) ?? [],
+                historyByApplication.GetValueOrDefault(a.Id) ?? new List<ResponseRateTransition>(),
                 a.PromisedReplyBy, a.PromisedReplySince, a.RejectionNotice, windowEnd))
             .ToList();
         var figures = ResponseRateAggregator.Compute(samples, windowEnd, opts.MaturityDays);

@@ -6,6 +6,10 @@ public sealed record UpdateLanguageRequest(string Language);
 
 public sealed record UpdateThemeRequest(string Theme);
 
+/// <summary>Account settings › Privacy (DECISIONS.md 2026-10-01): whether the caller's applications
+/// count toward the anonymous response figures. True is the default.</summary>
+public sealed record UpdateAggregateContributionRequest(bool Contribute);
+
 /// <summary>The caller's own Pro status for the profile page, readable whether or not the checkout
 /// or weekly job matching is switched on — the two other readers of the entitlement
 /// (/api/payments/plans, /api/job-sources/status) 404 behind their flags. Deliberately the minimum:
@@ -25,7 +29,10 @@ public sealed record UserPlanResponse(bool IsActive, DateTimeOffset? ActiveUntil
 ///
 /// <para><paramref name="AvatarUrl"/> is the caller's own photo (null: none), and
 /// <paramref name="ShowAvatarInComments"/> whether it also appears on their blog comments
-/// (DECISIONS.md 2026-09-28).</para></summary>
+/// (DECISIONS.md 2026-09-28).</para>
+///
+/// <para><paramref name="ContributesToAggregates"/> is the Privacy switch: false when the caller
+/// took their applications out of the anonymous response figures (DECISIONS.md 2026-10-01).</para></summary>
 public sealed record UserProfileResponse(
     Guid Id,
     string Email,
@@ -38,6 +45,7 @@ public sealed record UserProfileResponse(
     bool HasPassword,
     bool IsAdmin,
     string? AvatarUrl,
-    bool ShowAvatarInComments);
+    bool ShowAvatarInComments,
+    bool ContributesToAggregates);
 
 public sealed record UpdateAvatarVisibilityRequest(bool ShowInComments);

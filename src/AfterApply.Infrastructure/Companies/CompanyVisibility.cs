@@ -6,6 +6,7 @@ using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanyReviews;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.Persistence;
+using AfterApply.Infrastructure.ResponseRates;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -40,19 +41,25 @@ internal sealed class CompanyVisibility(
     AppDbContext dbContext,
     IOptions<CompanyReviewOptions> reviewOptions,
     IFeatureFlags featureFlags,
-    IOptions<CompanyProfileOptions> profileOptions)
+    IOptions<CompanyProfileOptions> profileOptions,
+    AggregateEligibility eligibility)
 {
     public IQueryable<Company> Listed(IQueryable<Company> companies)
     {
         var minimumApplicants = reviewOptions.Value.KnownCompanyMinimumApplicants;
         var salariesOn = featureFlags.IsEnabled(FeatureFlag.CompanySalaries);
         var experiencesOn = featureFlags.IsEnabled(FeatureFlag.CandidateExperiences);
+        // Someone who took their applications out of the anonymous figures is not counted as one of
+        // the people who applied here either (DECISIONS.md 2026-10-01). Only the opt-out applies:
+        // listing says "people applied", not anything about how the company answered.
+        var contributing = eligibility.ContributingUserIds();
 
         return companies.Where(c =>
             dbContext.CompanyReviews.Any(r => r.CompanyId == c.Id && r.Status != ReviewModerationStatus.Rejected)
             || (salariesOn && dbContext.CompanySalaryEntries.Any(s => s.CompanyId == c.Id))
             || (experiencesOn && dbContext.CandidateExperiences.Any(e => e.CompanyId == c.Id))
-            || dbContext.Applications.Where(a => a.CompanyId == c.Id).Select(a => a.UserId).Distinct().Count() >= minimumApplicants);
+            || dbContext.Applications.Where(a => a.CompanyId == c.Id && contributing.Contains(a.UserId))
+                .Select(a => a.UserId).Distinct().Count() >= minimumApplicants);
     }
 
     /// <summary><see cref="Listed"/>, plus the companies this user applied to or tracks — they

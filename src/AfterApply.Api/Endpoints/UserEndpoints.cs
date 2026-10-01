@@ -134,6 +134,19 @@ public static class UserEndpoints
             .Produces<UserProfileResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPut("/me/aggregate-contribution", async (UpdateAggregateContributionRequest request, ClaimsPrincipal user,
+                IAuthService authService, CancellationToken cancellationToken) =>
+            {
+                var profile = await authService.UpdateAggregateContributionAsync(user.GetUserId(), request.Contribute, cancellationToken);
+                return profile is not null ? Results.Ok(profile) : Results.NotFound();
+            })
+            .WithSummary("Count, or stop counting, the current user's applications in the anonymous response figures")
+            .WithDescription("On by default. Off takes every one of the caller's applications out of the sector " +
+                             "response-rate table, the company response tab and the applicant count that lists a " +
+                             "company; the caller's own statistics are unaffected. Cached figures catch up within an hour.")
+            .Produces<UserProfileResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         group.MapDelete("/me", async ([FromBody] DeleteAccountRequest request, ClaimsPrincipal user,
                 IAuthService authService, IStringLocalizer<SharedStrings> localizer, CancellationToken cancellationToken) =>
             {

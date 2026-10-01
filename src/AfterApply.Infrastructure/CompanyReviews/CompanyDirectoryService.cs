@@ -9,6 +9,7 @@ using AfterApply.Infrastructure.Caching;
 using AfterApply.Infrastructure.CandidateExperiences;
 using AfterApply.Infrastructure.CompanySalaries;
 using AfterApply.Infrastructure.Persistence;
+using AfterApply.Infrastructure.ResponseRates;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
@@ -24,7 +25,8 @@ internal sealed class CompanyDirectoryService(
     HybridCache cache,
     IOptions<CompanyReviewOptions> options,
     IFeatureFlags featureFlags,
-    CompanyVisibility visibility) : ICompanyDirectoryService
+    CompanyVisibility visibility,
+    AggregateEligibility eligibility) : ICompanyDirectoryService
 {
     // Every entry in this service sits under a tag — the company's for its own page and review
     // pages, the directory's for the lists that span companies — and every contribution write
@@ -125,15 +127,18 @@ internal sealed class CompanyDirectoryService(
         var contributions = Contributions(dbContext.CompanyReviews.Where(r => r.Status == ReviewModerationStatus.Approved));
         var pattern = NamePattern(trimmed);
         var minimum = opts.KnownCompanyMinimumApplicants;
+        var contributing = eligibility.ContributingUserIds();
 
         // The complement of the directory — a page, no contribution — narrowed to the names enough
         // different people applied to. Distinct users, never applications: one person's forty
-        // applications to the same firm are still one person.
+        // applications to the same firm are still one person, and someone who opted out of the
+        // anonymous figures is not counted at all — the same count as CompanyVisibility.Listed.
         return await dbContext.Companies
             .Where(c => c.Slug != null
                         && EF.Functions.ILike(c.NormalizedName, pattern, LikePattern.EscapeCharacter)
                         && !contributions.Any(x => x.CompanyId == c.Id)
-                        && dbContext.Applications.Where(a => a.CompanyId == c.Id).Select(a => a.UserId).Distinct().Count() >= minimum)
+                        && dbContext.Applications.Where(a => a.CompanyId == c.Id && contributing.Contains(a.UserId))
+                            .Select(a => a.UserId).Distinct().Count() >= minimum)
             .OrderBy(c => c.Name).ThenBy(c => c.Id)
             .Take(opts.KnownCompanyResultLimit)
             .Select(c => new KnownCompanyResponse(c.Slug!, c.Name))

@@ -1334,6 +1334,17 @@
         "hint": "Girdiğin görüşmeden bir gün önce, ertesi gün de “nasıl geçti?” diye zile düşer."
       }
     },
+    "privacy": {
+      "title": "Gizlilik",
+      "description": "Başvuruların, adın ve notların olmadan, sektörlerin ve şirketlerin başvurulara ne kadar döndüğünü gösteren toplu sayılara katılır.",
+      "link": "Nasıl çalıştığı →",
+      "contribute": {
+        "label": "Başvurularım anonim yanıt istatistiklerine katılsın",
+        "hintOn": "Açık: başvurduğun gün eklediğin başvuruların durum değişiklikleri, eşikler aşıldığında kimliğinden ayrı olarak sayılır.",
+        "hintOff": "Kapalı: başvuruların hiçbir toplu sayıya girmez. Değişiklik en geç bir saat içinde yansır; kendi istatistiklerin etkilenmez."
+      },
+      "saveError": "Tercih kaydedilemedi. Lütfen tekrar deneyin."
+    },
     "export": {
       "title": "Verilerimi Dışa Aktar",
       "description": "Hesabınıza ait başvurularınızı (durum geçmişiyle), içe aktarımlarınızı, hatırlatmalarınızı, CV kayıtlarınızı, gönderdiğiniz geri bildirimleri, şirket değerlendirmelerinizi (bildirimleriniz ve faydalı işaretlerinizle), paylaştığınız maaş bilgilerini, aday deneyimlerinizi, verdiğiniz faydalı işaretlerini, aldığınız katkı bildirimlerini, bildirim ayarlarınızı ve Pro plan ödeme kayıtlarınızı tek bir JSON dosyası olarak indirin. CV dosyalarının kendisi CV'lerim sayfasından ayrıca indirilir.",
@@ -1700,13 +1711,15 @@
       "title": "Toplu yanıt verisi (sektör tablosu ve şirket sayfasındaki \"Yanıt\" sekmesi)",
       "intro": "Takip ettiğin başvurular, kimliğinden ayrılmış toplu sayılara katılır: bir sektör ya da bir şirket için yanıt oranı, ilk dönüş süresi, mülakat sonrası sessizlik, kayıp oranı, sözünü tutma ve reddi bildirme oranı. Bunu yaparken:",
       "what": "Toplulaşan alanlar yalnızca şirket, başvuru tarihi, durum, durum değişikliği tarihleri ve verirsen iki isteğe bağlı cevaptır: şirketin söz verdiği dönüş tarihi ve reddi nasıl öğrendiğin. Notların, görüşme tarihin, İK kontağın, CV'n, e-postaların ve adın hiçbir toplu sayıya girmez.",
+      "which": "Yalnızca olduğu sırada kaydedilen başvurular sayılır: başvurduğun günden en geç 7 gün sonra eklenenler — elle, eklentiyle, e-posta önerisiyle ya da içe aktarmayla, fark etmez. LinkedIn'den toplu aktarılan eski başvurular toplu sayılara girmez. Sonuçlanmamış bir başvuru da, son 90 günde siteye hiç girmediysen sayılmaz; takibi bırakan birinin açık başvuruları şirketin cevap vermediği anlamına gelmez. Geri aldığın bir otomatik e-posta güncellemesi ya da toplu değişiklik hiç olmamış sayılır.",
       "sector": "Sektör tablosu herkese açıktır ve şirket adı içermez. Bir sektör satırı, en az 5 farklı kişinin toplam 30 başvurusu birikmeden gösterilmez; tek bir kişi başvuruların yarısından fazlasını oluşturuyorsa satır kapalı kalır.",
-      "company": "Şirket sayfasındaki \"Yanıt\" sekmesi, o şirkete son 12 ayda en az 50 başvuru yapılmadan ve tek bir kişi bunların üçte birinden fazlasını oluşturuyorsa hiçbir sayı göstermez; eşiğin altında kaç başvuru eksik olduğu da yazılmaz. Bu sekme, hukuki değerlendirme tamamlanana kadar kapalı tutulur.",
+      "company": "Şirket sayfasındaki \"Yanıt\" sekmesi, o şirkete son 12 ayda en az 20 başvuru, en az 5 farklı kişiden gelmeden hiçbir sayı göstermez; tek bir kişi başvuruların üçte birinden fazlasını oluşturuyorsa da kapalı kalır. Eşiğin altında kaç başvuru ya da kişi eksik olduğu yazılmaz.",
       "silenceReports": "Şirket sayfasındaki \"Dönüş alamadım\" bildirimi hesap gerektirmez ve hiçbir hesaba bağlanmaz: saklanan yalnızca şirket, aşama, bekleme süresi, verdiysen dönüş sözü ve ay. Bildirimde ad, e-posta, serbest metin ve IP adresi tutulmaz. Aynı şirketin aynı bağlantıdan 30 gün içinde tekrar bildirilmesini önlemek için, bağlantı adresinden türetilen ve geri çözülemeyen bir anahtar 30 gün boyunca geçici bellekte tutulur, sonra kendiliğinden silinir. Bildirimler oranlara karışmaz; bir şirket için en az 5 bildirim en az iki farklı çeyrekten gelmeden sayı gösterilmez ve bu sayı \"Yanıt\" sekmesiyle birlikte kapalıdır.",
       "knownCompanies": "Bir şirketin adı, henüz katkı almamış olsa bile, en az üç farklı kişi o şirkete başvurduysa şirket dizininin aramasında görünebilir. Kaç kişinin başvurduğu ve kimin başvurduğu gösterilmez.",
       "noReverse": "Toplu sayılardan tek bir kişinin başvurusuna geri gidilemez: sayfalar yalnızca oran, medyan ve kişi sayısı gösterir, tekil başvuru satırları hiçbir zaman dışarı çıkmaz.",
+      "optOut": "Ayarlar › Gizlilik'teki anahtarla başvurularını toplu sayılardan istediğin zaman çıkarabilirsin; varsayılan olarak açıktır. Kapattığında başvuruların sektör tablosundan, şirketlerin \"Yanıt\" sekmesinden ve bir şirketi dizinde listeleyen başvuran sayısından çıkar (tablolar en fazla bir saat önbellekte kalır). Kendi istatistiklerin etkilenmez.",
       "deletion": "Hesabını sildiğinde başvuruların silinir ve bir sonraki hesaplamada toplu sayılardan da çıkar (tablolar en fazla bir saat önbellekte kalır).",
-      "legalBasis": "Hukuki sebep: meşru menfaat — adayların hangi sektörün ve şirketin başvurulara ne kadar geri döndüğünü görebilmesi; kişisel veri eşiğin altında hiç işlenmez, üstünde yalnızca toplu hâlde gösterilir."
+      "legalBasis": "Hukuki sebep: meşru menfaat — adayların hangi sektörün ve şirketin başvurulara ne kadar geri döndüğünü görebilmesi; kişisel veri eşiğin altında hiç işlenmez, üstünde yalnızca toplu hâlde gösterilir. Bu işlemeye Ayarlar › Gizlilik'teki anahtarla itiraz edebilirsin."
     }
   },
   "terms": {
@@ -2753,7 +2766,7 @@
     "settings": {
       "eyebrow": "Ayarlar",
       "title": "Hesap Ayarları",
-      "intro": "Ayarlar sayfasından bildirimlerinizi seçebilir, verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir, Pro plan ödemelerinizi görüp iade talebi açabilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
+      "intro": "Ayarlar sayfasından bildirimlerinizi seçebilir, başvurularınızın anonim istatistiklere katılıp katılmayacağını belirleyebilir, verilerinizi dışa aktarabilir, tarayıcı eklentisinin bağlantısını yönetebilir, Pro plan ödemelerinizi görüp iade talebi açabilir ve hesabınızı silebilirsiniz. Tema ve dil tercihleri Ayarlar'da değil, üst menüdeki anahtarlardan değiştirilir.",
       "profile": {
         "title": "Profilim",
         "body": "Avatar menüsündeki Profilim, hesabın kime ait olduğunu ve neler bıraktığını gösterir: profil fotoğrafın, adın ve soyadın (düzenlenebilir), e-posta adresin (değiştirilemez; giriş ve bildirimler ona bağlı), üye olduğun tarih, planın, son değerlendirme ve maaş kayıtların ile başvuru, takip listesi ve CV sayıların.",
@@ -2773,6 +2786,10 @@
           "title": "Kimin işaretlediği söylenmez",
           "body": "Bildirim yalnızca o gün kaç kişinin faydalı bulduğunu söyler, kim olduklarını değil. Aynı kişinin işareti kaldırıp yeniden koyması ikinci bir bildirim oluşturmaz. Kapattığınız bir tür için bildirim hiç oluşturulmaz; tekrar açtığınızda aradaki işaretler gelmez."
         }
+      },
+      "privacy": {
+        "title": "Gizlilik",
+        "body": "Gizlilik bölümündeki tek anahtar, başvurularınızın anonim yanıt istatistiklerine — sektör tablosuna ve şirket sayfalarındaki \"Yanıt\" sekmesine — katılıp katılmayacağını belirler. Varsayılan olarak açıktır. Yalnızca başvurduğunuz günden en geç 7 gün sonra eklediğiniz başvurular sayılır; adınız, notlarınız ve İK kontağınız hiçbir sayıya girmez. Kapattığınızda başvurularınız en geç bir saat içinde tüm toplu sayılardan çıkar; kendi istatistikleriniz değişmez."
       },
       "export": {
         "title": "Verilerimi Dışa Aktar",
@@ -4333,8 +4350,8 @@
       "sectorUnavailable": "Sektör medyanı henüz yok",
       "method": {
         "title": "Bu sayılar nereden geliyor?",
-        "source": "e-kariyerim kullanıcılarının bu şirkete son 12 ayda yaptığı başvurular; kullanıcı durumu elle ya da Gmail taramasıyla güncelledikçe sayılır. Bir kişi birden fazla başvuruyla katkı verebilir; tek bir kişinin payı yüzde {share} sınırını aşıyorsa sayfa gösterilmez.",
-        "maturity": "{days} günden genç başvurular yanıt ve sessizlik paydasına girmez — cevap gelmesine vakit tanınır. {floor} başvurunun altında hiçbir sayı gösterilmez.",
+        "source": "e-kariyerim kullanıcılarının bu şirkete son 12 ayda yaptığı ve başvurdukları günden en geç 7 gün sonra kaydettikleri başvurular; durum elle, eklentiyle ya da Gmail taramasıyla güncellendikçe sayılır. Bir kişi birden fazla başvuruyla katkı verebilir; tek bir kişinin payı yüzde {share} sınırını aşıyorsa sayfa gösterilmez.",
+        "maturity": "{days} günden genç başvurular yanıt ve sessizlik paydasına girmez — cevap gelmesine vakit tanınır. {floor} başvurunun ya da {people} farklı kişinin altında hiçbir sayı gösterilmez.",
         "link": "Yöntemin tamamı →"
       },
       "hidden": {
@@ -4342,12 +4359,14 @@
         "body": "{start} – {end} arasında bu şirkete yapılan başvuru sayısı eşiğin altında. Sayı, bir şirketin adıyla anılmasına yetecek kadar insan katkı verdiğinde açılır — kaç kişinin eksik olduğunu söylemiyoruz, çünkü o da bir sayıdır.",
         "threshold": "Eşik",
         "thresholdValue": "Son 12 ayda en az {floor} başvuru",
+        "people": "Kişi",
+        "peopleValue": "En az {people} farklı kişi",
         "diversity": "Çeşitlilik",
         "diversityValue": "Tek kişinin payı yüzde {share} sınırını aşamaz",
         "maturity": "Olgunluk",
         "maturityValue": "{days} günden genç başvurular beklemede",
         "cta": "Bu şirkete başvurunu ekle",
-        "ctaHint": "LinkedIn geçmişini içe aktarırsan eski başvuruların da sayılır."
+        "ctaHint": "Başvurduğun gün — en geç bir hafta içinde — eklediğin başvurular sayılır."
       },
       "sectorStrip": {
         "title": "Bu arada: {sector}",
@@ -7246,7 +7265,7 @@
     "method": {
       "title": "Yöntem",
       "items": {
-        "source": "Kaynak: e-kariyerim'de takip edilen başvurular. Kullanıcı durumu elle ya da Gmail taramasıyla güncelledikçe sayılır; anket cevapları bu tabloya karışmaz.",
+        "source": "Kaynak: e-kariyerim'de takip edilen başvurular — yalnızca başvurulan günden en geç 7 gün sonra kaydedilenler; toplu aktarılan eski geçmiş girmez. Kullanıcı durumu elle, eklentiyle ya da Gmail taramasıyla güncelledikçe sayılır; sonuçlanmamış başvurular, sahibi son 90 günde siteyi kullandıysa sayılır. Anket cevapları bu tabloya karışmaz.",
         "sector": "Sektör: şirketin LinkedIn ya da kariyer.net profilindeki sektör etiketi, kıyaslama aracının 12 sektörüne eşlenir. Okunamayan etiketler hiçbir satıra girmez.",
         "window": "Dönem: başvuru tarihine göre son 3, 6 ya da 12 ay. Eski bir başvuruya yeni gelen durum değişikliği, başvurunun kendi dönemine yazılır.",
         "maturity": "Olgunluk: {days} günden genç başvurular yanıt, kayıp ve sessizlik paydalarına girmez; cevap gelmesine vakit tanınır. İlk dönüş süresi ise cevaplanmış her başvurudan hesaplanır.",

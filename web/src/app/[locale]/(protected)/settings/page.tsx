@@ -15,6 +15,7 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { NotificationSettingsCard } from "@/components/settings/NotificationSettingsCard";
+import { PrivacySettingsCard } from "@/components/settings/PrivacySettingsCard";
 
 export default function SettingsPage() {
   const t = useTranslations("settings");
@@ -128,6 +129,9 @@ export default function SettingsPage() {
 
       {/* `#notifications` is where the bell's gear and the Notifications page link land. */}
       <NotificationSettingsCard />
+
+      {/* `#privacy` is where the privacy page's aggregates section and the company tab point. */}
+      <PrivacySettingsCard />
 
       {/* `#export` is the target of the "download your data" line on an accepted application. */}
       <section id="export" className="scroll-mt-20 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">

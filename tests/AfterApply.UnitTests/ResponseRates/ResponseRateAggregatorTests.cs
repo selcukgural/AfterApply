@@ -280,4 +280,96 @@ public class ResponseRateAggregatorTests
         sample.Promise!.Outcome.ShouldBe(ReplyPromiseOutcome.Kept);
         sample.RejectionNotice.ShouldBeNull();
     }
+
+    private static ResponseRateTransition Move(ApplicationStatus? from, ApplicationStatus to, DateTimeOffset at,
+        StatusChangeOrigin origin = StatusChangeOrigin.Manual) => new(from, to, at, origin);
+
+    private static ResponseRateSample Fold(ApplicationStatus status, DateTimeOffset appliedAt, params ResponseRateTransition[] history) =>
+        ResponseRateAggregator.ToSample(Guid.NewGuid(), UserA, status, appliedAt, history,
+            promisedReplyBy: null, promisedReplySince: null, rejectionNotice: null, Now);
+
+    [Fact]
+    public void An_Email_Auto_Apply_The_User_Reverted_Never_Happened()
+    {
+        // The classifier read a rejection into an email that was not one; the user put it back.
+        var appliedAt = Now.AddDays(-40);
+        var sample = Fold(ApplicationStatus.Applied, appliedAt,
+            Move(null, ApplicationStatus.Applied, appliedAt),
+            Move(ApplicationStatus.Applied, ApplicationStatus.Rejected, appliedAt.AddDays(3), StatusChangeOrigin.EmailAutoApplied),
+            Move(ApplicationStatus.Rejected, ApplicationStatus.Applied, appliedAt.AddDays(4), StatusChangeOrigin.EmailAutoApplyReverted));
+
+        sample.Responded.ShouldBeFalse();
+        sample.FirstRespondedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    public void A_Confirmed_Or_Standing_Email_Change_Counts_Like_Any_Other()
+    {
+        var appliedAt = Now.AddDays(-40);
+        var confirmed = Fold(ApplicationStatus.Interview, appliedAt,
+            Move(ApplicationStatus.Applied, ApplicationStatus.Interview, appliedAt.AddDays(6), StatusChangeOrigin.EmailSuggestionConfirmed));
+        var standing = Fold(ApplicationStatus.Rejected, appliedAt,
+            Move(ApplicationStatus.Applied, ApplicationStatus.Rejected, appliedAt.AddDays(8), StatusChangeOrigin.EmailAutoApplied));
+
+        confirmed.FirstRespondedAt.ShouldBe(appliedAt.AddDays(6));
+        confirmed.ReachedInterview.ShouldBeTrue();
+        standing.FirstRespondedAt.ShouldBe(appliedAt.AddDays(8));
+    }
+
+    [Fact]
+    public void An_Undone_Bulk_Edit_Is_Dropped_But_An_Earlier_Change_To_The_Same_Status_Stays()
+    {
+        // Interview by hand, then a bulk "Ghosted" that was taken back: the interview is still real.
+        var appliedAt = Now.AddDays(-60);
+        var sample = Fold(ApplicationStatus.Interview, appliedAt,
+            Move(ApplicationStatus.Applied, ApplicationStatus.Interview, appliedAt.AddDays(5)),
+            Move(ApplicationStatus.Interview, ApplicationStatus.Ghosted, appliedAt.AddDays(40), StatusChangeOrigin.BulkEdit),
+            Move(ApplicationStatus.Ghosted, ApplicationStatus.Interview, appliedAt.AddDays(41), StatusChangeOrigin.BulkEditReverted));
+
+        sample.FirstRespondedAt.ShouldBe(appliedAt.AddDays(5));
+        sample.ReachedInterview.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void A_Reply_Known_Only_From_An_Import_Counts_As_A_Reply_With_No_Reply_Time()
+    {
+        // The import stamps its rows with the day of the import; a later hand-made change must not
+        // stand in for the first reply either, or the reply time stretches by the import delay.
+        var appliedAt = Now.AddDays(-40);
+        var sample = Fold(ApplicationStatus.Interview, appliedAt,
+            Move(null, ApplicationStatus.Applied, appliedAt, StatusChangeOrigin.Import),
+            Move(ApplicationStatus.Applied, ApplicationStatus.Screening, appliedAt.AddDays(5), StatusChangeOrigin.Import),
+            Move(ApplicationStatus.Screening, ApplicationStatus.Interview, appliedAt.AddDays(12)));
+
+        sample.Responded.ShouldBeTrue();
+        sample.RespondedWithoutDate.ShouldBeTrue();
+        sample.FirstRespondedAt.ShouldBeNull();
+        sample.ReachedInterview.ShouldBeTrue();
+
+        var figures = ResponseRateAggregator.Compute([sample], Now, 30);
+        figures.ResponseRate.ShouldBe(100.0);
+        figures.MedianFirstReplyDays.ShouldBeNull();
+    }
+
+    [Fact]
+    public void An_Imported_Seed_Row_Alone_Is_Not_A_Reply()
+    {
+        var appliedAt = Now.AddDays(-40);
+        var sample = Fold(ApplicationStatus.Applied, appliedAt,
+            Move(null, ApplicationStatus.Applied, appliedAt, StatusChangeOrigin.Import));
+
+        sample.Responded.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void The_Eligibility_Windows_Ship_At_A_Week_And_Ninety_Days()
+    {
+        // A week is the line between "tracked as it happened" and "filled in from memory"
+        // (DECISIONS.md 2026-10-01). Widening it lets imported histories back into a named
+        // company's figures; asserted so that is a decision rather than a diff.
+        var defaults = new AggregateEligibilityOptions();
+
+        defaults.FreshEntryWindowDays.ShouldBeLessThanOrEqualTo(7);
+        defaults.ActiveTrackerWindowDays.ShouldBe(90);
+    }
 }

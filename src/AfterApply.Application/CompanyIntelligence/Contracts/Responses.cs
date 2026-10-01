@@ -73,6 +73,8 @@ public sealed record CompanyIntelligenceResponse(
     CompanySilenceReports? SilenceReports = null,
     SilenceReportThresholds? SilenceReportThresholds = null);
 
-/// <summary>The three rules the "why is nothing shown" card states — the count floor, the age an
-/// application must reach before it is judged, and the largest share one person may hold.</summary>
-public sealed record CompanyIntelligenceThresholds(int HiddenBelow, int MaturityDays, int MaxContributorSharePercent);
+/// <summary>The rules the "why is nothing shown" card states — the count floor, the age an
+/// application must reach before it is judged, the largest share one person may hold, and the
+/// fewest different people the figures may come from.</summary>
+public sealed record CompanyIntelligenceThresholds(int HiddenBelow, int MaturityDays, int MaxContributorSharePercent,
+    int MinimumContributors);

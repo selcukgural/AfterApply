@@ -17,6 +17,10 @@ namespace AfterApply.Application.ResponseRates;
 /// <see cref="ReplyPromises.Evaluate"/>; null when none was recorded.</param>
 /// <param name="RejectionNotice">How the candidate learned of the rejection; null unless the
 /// application is Rejected and they said.</param>
+/// <param name="RespondedWithoutDate">The company did reply, but the only record of it is an
+/// import, whose timestamp is the day of the import rather than the day of the reply: it counts
+/// toward the response rate and stays out of every reply-time figure. Only read when
+/// <see cref="FirstRespondedAt"/> is null.</param>
 public sealed record ResponseRateSample(
     Guid ApplicationId,
     Guid UserId,
@@ -26,4 +30,8 @@ public sealed record ResponseRateSample(
     bool ReachedInterview,
     bool ReachedOffer,
     ReplyPromiseEvaluation? Promise = null,
-    RejectionNotice? RejectionNotice = null);
+    RejectionNotice? RejectionNotice = null,
+    bool RespondedWithoutDate = false)
+{
+    public bool Responded => FirstRespondedAt is not null || RespondedWithoutDate;
+}
