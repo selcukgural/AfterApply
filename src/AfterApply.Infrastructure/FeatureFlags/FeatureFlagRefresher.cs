@@ -32,6 +32,7 @@ internal sealed class FeatureFlagRefresher(
     private readonly FeatureFlagPollSchedule _schedule = new(options.Value);
     private Task? _loop;
     private bool _subscribed;
+    private int _disposed;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -71,7 +72,17 @@ internal sealed class FeatureFlagRefresher(
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         channel.StopWatching();
-        await _stopping.CancelAsync();
+        try
+        {
+            await _stopping.CancelAsync();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The host can dispose its services before (or while) it stops them — seen when a
+            // WebApplicationFactory is torn down twice. DisposeAsync has already cancelled the
+            // loop; there is nothing left to stop.
+        }
+
         if (_loop is not null)
         {
             await _loop.WaitAsync(cancellationToken).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
@@ -161,6 +172,12 @@ internal sealed class FeatureFlagRefresher(
 
     public async ValueTask DisposeAsync()
     {
+        // Once only: a second CancelAsync on the disposed source would throw.
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+        {
+            return;
+        }
+
         await _stopping.CancelAsync();
         _stopping.Dispose();
     }
