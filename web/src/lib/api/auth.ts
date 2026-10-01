@@ -201,6 +201,12 @@ export const authApi = {
       body: JSON.stringify({ showInComments }),
     }),
 
+  setAggregateContribution: (contribute: boolean) =>
+    apiFetch<UserProfileResponse>("/api/users/me/aggregate-contribution", {
+      method: "PUT",
+      body: JSON.stringify({ contribute }),
+    }),
+
   updateLanguage: (language: string) =>
     apiFetch<UserProfileResponse>("/api/users/me/language", {
       method: "PUT",

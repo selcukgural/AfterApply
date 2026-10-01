@@ -57,6 +57,11 @@ export default async function SettingsHelpPage({ params }: PageProps<"/[locale]/
         </Callout>
       </section>
 
+      <section id="privacy" className="flex scroll-mt-20 flex-col gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("privacy.title")}</h2>
+        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("privacy.body")}</p>
+      </section>
+
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("export.title")}</h2>
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">{t("export.body")}</p>

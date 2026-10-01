@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.Identity.Contracts;
 using AfterApply.Application.ResponseRates.Contracts;
 using AfterApply.Domain.Applications;
 using AfterApply.Domain.Benchmark;
@@ -51,12 +52,19 @@ public class SectorResponseRatesTests(ApiHost<SectorResponseRatesProfile> host)
 
     public Task DisposeAsync() => Task.CompletedTask;
 
-    private static async Task<(Guid ApplicationId, Guid CompanyId)> ApplyAsync(HttpClient client, string company, DateTimeOffset appliedAt)
+    private async Task<(Guid ApplicationId, Guid CompanyId)> ApplyAsync(HttpClient client, string company,
+        DateTimeOffset appliedAt, bool enteredOnTheDay = true)
     {
         var response = await client.PostAsJsonAsync("/api/applications", new CreateApplicationRequest(
             company, "Engineer", null, null, EmploymentType.FullTime, appliedAt, null, null), JsonOptions);
         response.EnsureSuccessStatusCode();
         var created = await response.Content.ReadFromJsonAsync<ApplicationDetailResponse>(JsonOptions);
+        // Entered on the day it was sent, unless the test is about that rule (TestApplications).
+        if (enteredOnTheDay)
+        {
+            await TestApplications.EnteredOnAsync(host.Services, created!.Id, appliedAt);
+        }
+
         return (created!.Id, created.CompanyId);
     }
 
@@ -205,6 +213,36 @@ public class SectorResponseRatesTests(ApiHost<SectorResponseRatesProfile> host)
         row.ShouldNotBeNull();
         row!.Applications.ShouldBe(3);
         row.ResponseRate.ShouldBe(100.0);
+    }
+
+    [Fact]
+    public async Task Imported_History_And_Opted_Out_Accounts_Stay_Out_Of_The_Table()
+    {
+        // The same AggregateEligibility as a company page: an application logged months after it
+        // was sent is not counted, nor is anything from an account that turned contribution off.
+        // Two each from A and B, one from C: still a row (and inside the half-share guard) once C
+        // has left.
+        var (_, logistics) = await ApplyAsync(_userA, "Eligible Cargo", Old);
+        await ApplyAsync(_userA, "Eligible Cargo", Old);
+        await ApplyAsync(_userB, "Eligible Cargo", Old);
+        await ApplyAsync(_userB, "Eligible Cargo", Old);
+        await ApplyAsync(_userC, "Eligible Cargo", Old);
+        await ApplyAsync(_userA, "Eligible Cargo", Old, enteredOnTheDay: false); // imported today
+        await SetIndustryAsync(logistics, "Truck Transportation");
+
+        var before = Row(await GetTableAsync(), BenchmarkSector.LogisticsAndTransport).Figures;
+        before.ShouldNotBeNull();
+        before!.Applications.ShouldBe(5);
+        before.Contributors.ShouldBe(3);
+
+        var off = await _userC.PutAsJsonAsync("/api/users/me/aggregate-contribution",
+            new UpdateAggregateContributionRequest(false), JsonOptions);
+        off.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var after = Row(await GetTableAsync(), BenchmarkSector.LogisticsAndTransport).Figures;
+        after.ShouldNotBeNull();
+        after!.Applications.ShouldBe(4);
+        after.Contributors.ShouldBe(2);
     }
 
     [Fact]

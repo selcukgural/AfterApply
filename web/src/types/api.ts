@@ -77,6 +77,9 @@ export interface UserProfileResponse {
   avatarUrl: string | null;
   // Whether the photo also appears next to this user's blog comments. Off by default.
   showAvatarInComments: boolean;
+  // Settings › Privacy (DECISIONS.md 2026-10-01): whether this account's applications count toward
+  // the anonymous response figures. On by default.
+  contributesToAggregates: boolean;
 }
 
 /** GET /api/users/me/plan — the caller's own Pro status, readable whether or not the checkout or
@@ -1085,6 +1088,7 @@ export interface CompanySectorComparison {
 
 export interface CompanyIntelligenceThresholds {
   hiddenBelow: number;
+  minimumContributors: number;
   maturityDays: number;
   maxContributorSharePercent: number;
 }

@@ -111,6 +111,16 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     public bool NotifyInterviews { get; set; } = true;
 
     /// <summary>
+    /// Off by default, meaning the account's applications do count toward the anonymous response
+    /// figures — the sector table and the company tab (Account settings › Privacy, DECISIONS.md
+    /// 2026-10-01). Turning it on takes every one of them out of every cross-user read, and out of
+    /// the "enough people applied here" count that lists a company, through
+    /// <c>AggregateEligibility</c>; the user's own statistics are untouched. The legal basis for
+    /// counting them is legitimate interest, and this is the objection that basis owes the user.
+    /// </summary>
+    public bool ExcludeFromAggregates { get; set; }
+
+    /// <summary>
     /// The profile photo (DECISIONS.md 2026-09-28): where the re-encoded 256 px WebP lives in the
     /// avatar bucket, and the random id its URL carries. Both null: no photo. The public id is not
     /// the user id on purpose — a photo seen on a blog comment must not lead to anything else about

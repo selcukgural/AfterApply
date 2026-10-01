@@ -199,7 +199,11 @@ function MethodCard({ data }: { data: CompanyIntelligenceResponse }) {
       <p className="font-semibold text-gray-800 dark:text-gray-300">{t("method.title")}</p>
       <p>{t("method.source", { share: data.thresholds.maxContributorSharePercent })}</p>
       <p>
-        {t("method.maturity", { days: data.thresholds.maturityDays, floor: data.thresholds.hiddenBelow })}{" "}
+        {t("method.maturity", {
+          days: data.thresholds.maturityDays,
+          floor: data.thresholds.hiddenBelow,
+          people: data.thresholds.minimumContributors,
+        })}{" "}
         <Link href="/response-rates#method" className="text-accent-ink underline-offset-2 hover:underline">
           {t("method.link")}
         </Link>
@@ -233,6 +237,7 @@ function BelowThreshold({ data, company }: { data: CompanyIntelligenceResponse; 
   const sector = data.sectorComparison;
   const rules: { label: string; value: string }[] = [
     { label: t("hidden.threshold"), value: t("hidden.thresholdValue", { floor: data.thresholds.hiddenBelow }) },
+    { label: t("hidden.people"), value: t("hidden.peopleValue", { people: data.thresholds.minimumContributors }) },
     { label: t("hidden.diversity"), value: t("hidden.diversityValue", { share: data.thresholds.maxContributorSharePercent }) },
     { label: t("hidden.maturity"), value: t("hidden.maturityValue", { days: data.thresholds.maturityDays }) },
   ];

@@ -10522,3 +10522,48 @@ toplu. Yalnızca yatay 2560×1440.
   0,6 sn), gizleme stilinin ilk boyamadan önce kurulması, Gemini-TTS'in son heceyi kesmesine karşı
   yeniden deneme (en fazla 3, sonra 40 ms kısma).
 - Kullanıcı kuralı: Türkçede "CV" "sivi" okunur; bir unit test Türkçe senaryolarda bunu zorunlu kılar.
+
+## Yanıt verisi: hangi başvurular sayılır, eşik 20/5, kullanıcı kapatabilir — DECIDED (2026-10-01)
+
+**Bağlam.** Kullanıcılar şirket değerlendirmesi yazmıyor. Kullanıcının önerisi: şirketin işe alım
+sürecini, başvuruların durum geçişlerinden otomatik puanlamak; varsayılan açık, kullanıcı kapatabilsin.
+Algoritma zaten vardı (`ResponseRateAggregator`, `CompanyIntelligenceService`, sektör tablosu); eksik
+olan hangi verinin sayılacağı ve eşikti.
+
+**Karar.**
+- **Hukuki değerlendirme güncellendi (kullanıcı kararı).** Girdi yapılandırılmış (durum, tarih, iki
+  isteğe bağlı cevap); serbest metin yok. 2026-09-22'de şirket sekmesini kilitleyen itibar/haksız
+  rekabet riski artık engel sayılmıyor. Prod'da `CompanyIntelligence:Enabled` bayrağını açmak ayrı
+  adım (`/admin/flags`, kullanıcı onayıyla); bu değişiklik bayrağı açmaz.
+- **Tek uygunluk kuralı: `AggregateEligibility`.** Sektör tablosu, şirket sekmesi ve "≥3 kişi
+  başvurdu" listeleme sayımı aynı predicate'ten geçer:
+  - **Taze kayıt:** `CreatedAt − AppliedAt ≤ 7 gün` (`AggregateEligibility:FreshEntryWindowDays`).
+    Kaynak fark etmez (elle, eklenti, e-posta önerisi, içe aktarma). LinkedIn'den toplu aktarılan
+    eski geçmiş — aynı gün hafızadan doldurulmuş durumlar — şirketin değil kullanıcının hatırladığının
+    kaydıdır. AppliedAt sonradan geriye çekilirse satır da çıkar.
+  - **Aktif takip:** sonuçlanmamış başvuru, sahibinin son 90 günde oturumu (yeni refresh token —
+    iş ilanı taramasının kullandığı aynı sinyal) varsa sayılır; Rejected/Accepted/Ghosted/Withdrawn
+    her zaman sayılır. Takibi bırakan birinin "Applied"da kalan başvuruları "şirket cevap vermedi"
+    diye okunuyordu — adı geçen bir şirket için yapılmaması gereken tek hata.
+  - **Opt-out:** `Users.ExcludeFromAggregates` (varsayılan false). Ayarlar › Gizlilik anahtarı,
+    `PUT /api/users/me/aggregate-contribution`. Meşru menfaat dayanağının borçlu olduğu itiraz hakkı;
+    o güne kadar tek çıkış hesabı silmekti. Listeleme sayımına (`CompanyVisibility.Listed`,
+    `SearchKnownAsync`) yalnız opt-out uygulanır, taze/aktif kuralı değil — listeleme "insanlar başvurdu"
+    der, şirketin nasıl cevap verdiğini değil. Kendi istatistikleri etkilenmez; önbellek ≤ 1 saat.
+- **Geçişlerin okunması (`ToSample`, origin ile).** E-posta önerisinin onaylanması ve geri alınmamış
+  otomatik uygulama her değişiklik gibi sayılır (şirketin kendi e-postası). Geri alınan otomatik
+  uygulama (`EmailAutoApplyReverted`) ve geri alınan toplu değişiklik (`BulkEditReverted`), geri
+  aldıkları satırla birlikte hiç olmamış sayılır. İçe aktarmayla gelen bir yanıt **yanıt oranına
+  girer ama ilk dönüş süresine girmez** (tarih içe aktarma günü); o başvuruda sonraki elle değişiklik
+  de ilk yanıt yerine geçmez, yoksa süre içe aktarma gecikmesi kadar uzardı.
+- **Eşik:** şirket sekmesi `HiddenBelow` 50 → **20**, yeni `MinimumDistinctContributors` = **5**,
+  tek kişi payı ≤ 1/3 aynı; güven merdiveni 20/50/200/1000 (2026-09-07 öncesi değerler). Gerekçe:
+  50'ye çıkarmanın asıl sebebi (içe aktarılmış geçmiş, terk edilmiş hesaplar, tek kişinin ağırlığı)
+  artık uygunluk kuralı ve 5 kişi tabanıyla karşılanıyor. Sektör eşikleri (5 kişi / 30 / %50) aynı.
+  Panelin "neden gösterilmiyor" kartı kişi kuralını da yazar.
+- **Metinler:** gizlilik sayfasında yeni "hangi başvurular" ve "kapatma" maddeleri, şirket eşiği
+  cümlesi, itiraz yolu; şirket panelinde "LinkedIn geçmişini içe aktarırsan eski başvuruların da
+  sayılır" ipucu artık yanlış olduğu için "başvurduğun gün — en geç bir hafta içinde — eklediğin
+  başvurular sayılır" oldu; yardım merkezinde Ayarlar › Gizlilik bölümü.
+- **Bilinçli olarak yapılmayan:** otomatik ghosting. Kullanıcının güncellememesi şirketin cevap
+  vermediği anlamına gelmez; Ghosted yine yalnız kullanıcı eylemiyle set edilir.

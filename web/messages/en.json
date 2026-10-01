@@ -1334,6 +1334,17 @@
         "hint": "A bell row the day before an interview you entered, and a “how did it go?” the day after."
       }
     },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Your applications, without your name or notes, feed the aggregate figures showing how much sectors and companies reply to applications.",
+      "link": "How it works →",
+      "contribute": {
+        "label": "Count my applications in the anonymous response statistics",
+        "hintOn": "On: the status changes of applications you add on the day you apply are counted, apart from your identity, once the thresholds are met.",
+        "hintOff": "Off: your applications enter no aggregate. The change shows within an hour; your own statistics are not affected."
+      },
+      "saveError": "Couldn't save the preference. Please try again."
+    },
     "export": {
       "title": "Export My Data",
       "description": "Download your applications (with their status history), imports, reminders, CV records, the feedback you sent, your company reviews (with your reports and helpful marks), the salary entries you shared, your candidate experiences, the helpful marks you gave, the contribution notifications you received and your notification settings, and your Pro plan payment records as a single JSON file. The CV files themselves are downloaded separately from the My CVs page.",
@@ -1700,13 +1711,15 @@
       "title": "Aggregate response data (the sector table and a company page's \"Response\" tab)",
       "intro": "The applications you track feed aggregate figures detached from your identity: a sector's or a company's response rate, first-reply time, post-interview silence, ghosting rate, promise keeping and rejection notice rate. When they do:",
       "what": "Only the company, the application date, the status, the dates of status changes and, if you give them, two optional answers are aggregated: the reply date the company promised and how you learned of a rejection. Your notes, interview dates, HR contact, CV, e-mails and name never enter any aggregate.",
+      "which": "Only applications recorded as they happened count: those added at most 7 days after the day you applied — by hand, with the extension, from an email suggestion or through an import alike. Older applications brought in from LinkedIn in bulk never enter the aggregates. An application that is still open does not count either if you have not used the site in the last 90 days: the open applications of someone who stopped tracking do not mean the company never answered. An automatic email update or a bulk change you undid counts as never having happened.",
       "sector": "The sector table is public and names no company. A sector row is not shown until at least 5 different people have 30 applications between them, and it stays closed while one person accounts for more than half of them.",
-      "company": "A company page's \"Response\" tab shows nothing until that company has at least 50 applications in the last 12 months, and nothing if one person accounts for more than a third of them; below the threshold it does not say how many are missing either. This tab stays off until the legal review is complete.",
+      "company": "A company page's \"Response\" tab shows nothing until that company has at least 20 applications in the last 12 months from at least 5 different people, and stays closed if one person accounts for more than a third of them. Below the threshold it does not say how many applications or people are missing.",
       "silenceReports": "The \"I heard nothing back\" report on a company page needs no account and is tied to none: only the company, stage, wait, any reply promise and the month are stored. The report holds no name, email, free text or IP address. To stop the same company being reported from the same connection within 30 days, a one-way key derived from the connection address is held in temporary memory for 30 days and then expires by itself. Reports are never mixed into the rates; no figure is shown for a company until it has at least 5 reports from at least two different quarters, and that figure stays off together with the \"Response\" tab.",
       "knownCompanies": "A company's name can come up in the company directory's search even before it has any contribution, once at least three different people have applied to it. How many applied, and who, is never shown.",
       "noReverse": "An aggregate cannot be walked back to one person's application: the pages show only rates, medians and a count of people, and individual application rows never leave the server.",
+      "optOut": "You can take your applications out of the aggregates at any time with the switch in Settings › Privacy; it is on by default. Turned off, your applications leave the sector table, companies' \"Response\" tabs and the applicant count that lists a company in the directory (the tables are cached for at most an hour). Your own statistics are not affected.",
       "deletion": "Deleting your account deletes your applications, and the next calculation drops them from the aggregates too (the tables are cached for at most an hour).",
-      "legalBasis": "Legal basis: legitimate interest — letting candidates see how much a sector or a company replies to applications; below the threshold no personal data is processed at all, above it it is shown only in aggregate."
+      "legalBasis": "Legal basis: legitimate interest — letting candidates see how much a sector or a company replies to applications; below the threshold no personal data is processed at all, above it it is shown only in aggregate. You can object to this processing with the switch in Settings › Privacy."
     }
   },
   "terms": {
@@ -2753,7 +2766,7 @@
     "settings": {
       "eyebrow": "Settings",
       "title": "Account Settings",
-      "intro": "Settings is where you choose your notifications, export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
+      "intro": "Settings is where you choose your notifications, decide whether your applications count toward the anonymous statistics, export your data, manage the browser extension's connection, see your Pro plan payments and open a refund request, and delete your account. Theme and language are switched from the top menu, not from Settings.",
       "profile": {
         "title": "My Profile",
         "body": "My Profile in the avatar menu shows whose account this is and what it holds: your profile photo, your first and last name (editable), your e-mail address (cannot be changed; sign-in and notifications are tied to it), the date you joined, your plan, your latest reviews and salary entries, and your application, tracked-job and CV counts.",
@@ -2773,6 +2786,10 @@
           "title": "Who marked it is never said",
           "body": "A notification says only how many people found something helpful that day, never who they were. One person removing and re-adding a mark does not create a second notification. A kind you switch off is never written; switching it back on does not bring back the marks made meanwhile."
         }
+      },
+      "privacy": {
+        "title": "Privacy",
+        "body": "The single switch under Privacy decides whether your applications count toward the anonymous response statistics — the sector table and the \"Response\" tab on company pages. It is on by default. Only applications you add at most 7 days after the day you applied are counted; your name, notes and HR contact never enter any figure. Turn it off and your applications leave every aggregate within an hour; your own statistics stay the same."
       },
       "export": {
         "title": "Export My Data",
@@ -4333,8 +4350,8 @@
       "sectorUnavailable": "No sector median yet",
       "method": {
         "title": "Where do these numbers come from?",
-        "source": "Applications e-kariyerim users made to this company in the last 12 months, counted as they update the status by hand or through Gmail scanning. One person can contribute several applications; if a single person accounts for more than {share}% of them, the page is not shown.",
-        "maturity": "Applications younger than {days} days are left out of the response and silence denominators — a reply is given time to arrive. Below {floor} applications nothing is shown.",
+        "source": "Applications e-kariyerim users made to this company in the last 12 months and recorded at most 7 days after applying, counted as the status is updated by hand, through the extension or through Gmail scanning. One person can contribute several applications; if a single person accounts for more than {share}% of them, the page is not shown.",
+        "maturity": "Applications younger than {days} days are left out of the response and silence denominators — a reply is given time to arrive. Below {floor} applications or {people} different people nothing is shown.",
         "link": "Full method →"
       },
       "hidden": {
@@ -4342,12 +4359,14 @@
         "body": "The number of applications to this company between {start} and {end} is below the threshold. The figure opens once enough people have contributed for a company to be named on it — we do not say how many are missing, because that is a number too.",
         "threshold": "Threshold",
         "thresholdValue": "At least {floor} applications in the last 12 months",
+        "people": "People",
+        "peopleValue": "At least {people} different people",
         "diversity": "Diversity",
         "diversityValue": "No single person above {share}% of them",
         "maturity": "Maturity",
         "maturityValue": "Applications younger than {days} days wait",
         "cta": "Add your application to this company",
-        "ctaHint": "Import your LinkedIn history and your older applications count too."
+        "ctaHint": "Applications you add on the day you apply — within a week at most — are the ones that count."
       },
       "sectorStrip": {
         "title": "Meanwhile: {sector}",
@@ -7246,7 +7265,7 @@
     "method": {
       "title": "Method",
       "items": {
-        "source": "Source: applications tracked on e-kariyerim, counted as people update the status by hand or through Gmail scanning. Benchmark answers never enter this table.",
+        "source": "Source: applications tracked on e-kariyerim — only those recorded at most 7 days after the day of applying; bulk-imported history does not enter. Counted as people update the status by hand, through the extension or through Gmail scanning; open applications count while their owner has used the site in the last 90 days. Benchmark answers never enter this table.",
         "sector": "Sector: the industry label on the company's LinkedIn or kariyer.net profile, mapped onto the benchmark's 12 sectors. Labels we cannot read go in no row.",
         "window": "Period: the last 3, 6 or 12 months by application date. A status change that arrives late is written to the application's own period.",
         "maturity": "Maturity: applications younger than {days} days are left out of the response, ghosting and silence denominators, so a reply has time to arrive. First-reply time is taken from every answered application.",

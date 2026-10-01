@@ -9,13 +9,13 @@ using Microsoft.Extensions.Options;
 namespace AfterApply.Infrastructure.ResponseRates;
 
 /// <summary>
-/// The public table: every application in the window, grouped by the sector its company's
+/// The public table: every eligible application in the window (<see cref="AggregateEligibility"/>), grouped by the sector its company's
 /// industry maps to, reduced with the same aggregator a company page uses. No UserId filter —
 /// this is the one query in the tracker that reads across every account, which is why what it
 /// returns is thresholds-first: a sector is a row only once enough different people are in it.
 /// </summary>
 internal sealed class SectorResponseRateService(
-    AppDbContext dbContext, HybridCache cache, IOptions<ResponseRateOptions> options)
+    AppDbContext dbContext, AggregateEligibility eligibility, HybridCache cache, IOptions<ResponseRateOptions> options)
     : ISectorResponseRateService
 {
     // One entry per period; the three keys are enumerable so a future invalidation can name them.
@@ -46,7 +46,7 @@ internal sealed class SectorResponseRateService(
         var windowEnd = DateTimeOffset.UtcNow;
         var windowStart = windowEnd.AddMonths(-ResponseRatePeriods.MonthsOf(period));
 
-        var rows = await dbContext.Applications
+        var rows = await eligibility.Eligible(dbContext.Applications, windowEnd)
             .Where(a => a.AppliedAt >= windowStart && a.AppliedAt <= windowEnd)
             .Join(dbContext.Companies, a => a.CompanyId, c => c.Id,
                 (a, c) => new
@@ -59,11 +59,13 @@ internal sealed class SectorResponseRateService(
         var applicationIds = rows.Select(r => r.Id).ToList();
         var history = await dbContext.ApplicationStatusHistories
             .Where(h => applicationIds.Contains(h.ApplicationId))
-            .Select(h => new { h.ApplicationId, h.ToStatus, h.ChangedAt })
+            .Select(h => new { h.ApplicationId, h.FromStatus, h.ToStatus, h.ChangedAt, h.Origin })
             .ToListAsync(cancellationToken);
         var historyByApplication = history
             .GroupBy(h => h.ApplicationId)
-            .ToDictionary(g => g.Key, g => g.Select(h => (h.ToStatus, h.ChangedAt)).ToList());
+            .ToDictionary(g => g.Key, g => g
+                .Select(h => new ResponseRateTransition(h.FromStatus, h.ToStatus, h.ChangedAt, h.Origin))
+                .ToList());
 
         var unclassified = 0;
         var samplesBySector = new Dictionary<BenchmarkSector, List<ResponseRateSample>>();
@@ -76,7 +78,7 @@ internal sealed class SectorResponseRateService(
                 continue;
             }
 
-            var transitions = historyByApplication.GetValueOrDefault(row.Id) ?? [];
+            var transitions = historyByApplication.GetValueOrDefault(row.Id) ?? new List<ResponseRateTransition>();
             var sample = ResponseRateAggregator.ToSample(row.Id, row.UserId, row.Status, row.AppliedAt, transitions,
                 row.PromisedReplyBy, row.PromisedReplySince, row.RejectionNotice, windowEnd);
             if (!samplesBySector.TryGetValue(sector.Value, out var list))

@@ -80,6 +80,10 @@ public interface IAuthService
 
     Task<UserProfileResponse?> UpdateThemeAsync(Guid userId, string theme, CancellationToken cancellationToken);
 
+    /// <summary>Puts the caller's applications into, or takes them out of, the anonymous response
+    /// figures. Null when the account is gone.</summary>
+    Task<UserProfileResponse?> UpdateAggregateContributionAsync(Guid userId, bool contribute, CancellationToken cancellationToken);
+
     /// <summary>Returns false when the supplied password does not match the account (the account owner is
     /// already established via the authenticated userId, so false unambiguously means "wrong password").
     /// An account without a password (created through Google sign-in) is deleted without one — the

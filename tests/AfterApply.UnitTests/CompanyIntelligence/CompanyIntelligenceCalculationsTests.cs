@@ -9,12 +9,12 @@ public class CompanyIntelligenceCalculationsTests
 {
     [Theory]
     [InlineData(0, ConfidenceBucket.Hidden)]
-    [InlineData(49, ConfidenceBucket.Hidden)]
-    [InlineData(50, ConfidenceBucket.VeryLow)]
-    [InlineData(99, ConfidenceBucket.VeryLow)]
-    [InlineData(100, ConfidenceBucket.Low)]
-    [InlineData(249, ConfidenceBucket.Low)]
-    [InlineData(250, ConfidenceBucket.Medium)]
+    [InlineData(19, ConfidenceBucket.Hidden)]
+    [InlineData(20, ConfidenceBucket.VeryLow)]
+    [InlineData(49, ConfidenceBucket.VeryLow)]
+    [InlineData(50, ConfidenceBucket.Low)]
+    [InlineData(199, ConfidenceBucket.Low)]
+    [InlineData(200, ConfidenceBucket.Medium)]
     [InlineData(999, ConfidenceBucket.Medium)]
     [InlineData(1000, ConfidenceBucket.High)]
     [InlineData(50000, ConfidenceBucket.High)]
@@ -29,16 +29,17 @@ public class CompanyIntelligenceCalculationsTests
     }
 
     [Fact]
-    public void The_Shipped_Ladder_Never_Names_A_Company_Below_Fifty_Applications()
+    public void The_Shipped_Floor_Is_Twenty_Applications_From_Five_People()
     {
         // Deliberately asserts the shipped numbers, not just the function's behaviour. These are a
-        // fairness decision, not a tuning knob: below this floor a percentage is one bad hiring
-        // manager away from being a different percentage, and the company is named either way.
-        // Raising these is safe and hides more; lowering them needs the fairness review, and this
-        // test is what makes that a conversation rather than a quiet diff.
+        // fairness decision, not a tuning knob: lowered from fifty to twenty on 2026-10-01 only
+        // together with the five-person floor and AggregateEligibility (fresh entries, active
+        // trackers). Lowering either again needs that conversation, and this test is what makes it
+        // one rather than a quiet diff.
         var defaults = new CompanyIntelligenceOptions();
 
-        defaults.HiddenBelow.ShouldBeGreaterThanOrEqualTo(50);
+        defaults.HiddenBelow.ShouldBeGreaterThanOrEqualTo(20);
+        defaults.MinimumDistinctContributors.ShouldBeGreaterThanOrEqualTo(5);
         defaults.Enabled.ShouldBeFalse();
         defaults.HiddenBelow.ShouldBeLessThan(defaults.VeryLowBelow);
         defaults.VeryLowBelow.ShouldBeLessThan(defaults.LowBelow);

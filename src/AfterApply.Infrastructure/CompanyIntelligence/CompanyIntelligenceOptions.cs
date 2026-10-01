@@ -28,28 +28,34 @@ public sealed class CompanyIntelligenceOptions
     /// <summary>
     /// The largest share (0–1) of a company's applications one person may account for before the
     /// page hides itself. A "company aggregate" that is mostly one person's history is that
-    /// person's job search with a company name on it — fifty applications from two people is
-    /// not fifty opinions. A third: at the fifty-application floor that forces at least three
-    /// contributors, and no one of them is the number. Hidden by this rule looks exactly like
+    /// person's job search with a company name on it — twenty applications from two people is
+    /// not twenty opinions. A third: no one contributor is the number, whatever the count. Hidden by this rule looks exactly like
     /// Hidden by the count, on purpose.
     /// </summary>
     public double MaxContributorShare { get; init; } = 1.0 / 3.0;
 
     /// <summary>
-    /// The confidence ladder, raised (2026-09-07) from 20/50/200/1000. Twenty applications is not a
-    /// sample you can name a company on: it is a handful of people, plausibly from one team or one
-    /// month, and a single bad hiring manager moves every percentage several points. Fifty is still
-    /// not much — it is the floor at which the number stops being an anecdote, which is why nothing
-    /// at all is exposed below it.
-    ///
-    /// Raising this only ever hides more, never less, so it is safe to raise again after seeing
-    /// real distributions and unsafe to lower without one.
+    /// The fewest different people a company's figures may come from (2026-10-01). The share rule
+    /// above only forces three; with the floor at twenty applications, three people is three job
+    /// searches with a company name on them. Five is the sector table's number, and the same
+    /// reason: below it, anyone who knows who applied can read the figure back to them. Hidden by
+    /// this rule looks exactly like Hidden by the count.
     /// </summary>
-    public int HiddenBelow { get; init; } = 50;
+    public int MinimumDistinctContributors { get; init; } = 5;
 
-    public int VeryLowBelow { get; init; } = 100;
+    /// <summary>
+    /// The confidence ladder. Raised on 2026-09-07 from 20/50/200/1000 to 50/100/250/1000, back to
+    /// 20/50/200/1000 on 2026-10-01 together with what made the lower floor defensible:
+    /// <see cref="MinimumDistinctContributors"/>, and AggregateEligibility, which keeps out the rows
+    /// the earlier worry was really about — imported histories filled in from memory and the open
+    /// applications of people who stopped tracking. Twenty is still a small sample, which is what
+    /// the "very low" label below fifty says on the page.
+    /// </summary>
+    public int HiddenBelow { get; init; } = 20;
 
-    public int LowBelow { get; init; } = 250;
+    public int VeryLowBelow { get; init; } = 50;
+
+    public int LowBelow { get; init; } = 200;
 
     public int MediumBelow { get; init; } = 1000;
 

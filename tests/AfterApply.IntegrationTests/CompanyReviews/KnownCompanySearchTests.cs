@@ -91,6 +91,26 @@ public class KnownCompanySearchTests(ApiHost<DefaultProfile> host) : IClassFixtu
     }
 
     [Fact]
+    public async Task Someone_Who_Opted_Out_Of_The_Aggregates_Is_Not_Counted_As_An_Applicant()
+    {
+        // DECISIONS.md 2026-10-01: the switch in Settings › Privacy takes the account out of the
+        // "enough people applied here" count too, not only out of the response figures.
+        var applicants = await ApplicantsAsync(3, "known.optout");
+        foreach (var applicant in applicants)
+        {
+            await ApplyAsync(applicant, "Çekilen Bilişim");
+        }
+
+        (await KnownAsync("çekilen")).ShouldHaveSingleItem();
+
+        var off = await applicants[0].PutAsJsonAsync("/api/users/me/aggregate-contribution",
+            new UpdateAggregateContributionRequest(false), JsonOptions);
+        off.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        (await KnownAsync("çekilen")).ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Two_People_Are_Not_Enough_However_Many_Applications_They_Sent()
     {
         var applicants = await ApplicantsAsync(2, "known.two");
