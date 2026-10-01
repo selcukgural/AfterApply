@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Shouldly;
 using ZiggyCreatures.Caching.Fusion;
 
@@ -433,5 +434,21 @@ public class FeatureFlagTests(ApiHost<FeatureFlagProfile> host) : IClassFixture<
             row.Enabled.ShouldBeTrue();
             row.UpdatedByUserId.ShouldBeNull();
         });
+    }
+
+    [Fact]
+    public async Task The_Refresher_Stops_Cleanly_After_It_Was_Already_Disposed()
+    {
+        // The host can dispose its services before it stops them (a factory torn down twice did,
+        // in CI on 2026-10-01): StopAsync then met a disposed CancellationTokenSource and failed
+        // the run. Its own variant, because the refresher it disposes stops refreshing that host.
+        var variant = host.Variant("refresher-shutdown", _ => { });
+        var refresher = variant.Services.GetServices<IHostedService>()
+            .Single(service => service.GetType().Name == "FeatureFlagRefresher");
+
+        await ((IAsyncDisposable)refresher).DisposeAsync();
+
+        await Should.NotThrowAsync(() => refresher.StopAsync(CancellationToken.None));
+        await Should.NotThrowAsync(async () => await ((IAsyncDisposable)refresher).DisposeAsync());
     }
 }
