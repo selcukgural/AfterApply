@@ -202,6 +202,41 @@ describe("the site-specific readers", () => {
     });
   });
 
+  // Trimmed from the live standalone job page (2026-10): the title is plain text in a <p>, and
+  // the only /jobs/view/<id> links are the workplace-type pills.
+  function standaloneJobPage() {
+    setBody(`
+      <div><p><a href="https://www.linkedin.com/company/acme/life">Acme</a></p></div>
+      <div>
+        <div><div><p>Backend Engineer<span></span><a href="#"><span aria-label="Verified job"></span></a></p></div></div>
+        <div></div>
+        <p><span>Istanbul, Istanbul, Türkiye</span> · <span><strong>16 hours ago</strong></span> · <span>Over 100 applicants</span></p>
+      </div>
+      <div><a href="https://www.linkedin.com/jobs/view/4242/">On-site</a></div>
+      <div><a href="https://www.linkedin.com/jobs/view/4242/">Full-time</a></div>`);
+  }
+
+  it("linkedin reads a plain-text title and its location, not a pill that links to the job", async () => {
+    standaloneJobPage();
+    document.title = "(2) Backend Engineer | Acme | LinkedIn";
+
+    await expect(scrapeJobPosting({ strategy: "linkedin", jobId: "4242" })).resolves.toMatchObject({
+      title: "Backend Engineer",
+      company: "Acme",
+      location: "Istanbul, Istanbul, Türkiye",
+      foundBy: "linkedin",
+    });
+  });
+
+  it("linkedin leaves the title empty when no text on the page matches the tab title", async () => {
+    standaloneJobPage();
+    document.title = "(1) Backend Engineer Jobs | LinkedIn";
+
+    const result = await scrapeJobPosting({ strategy: "linkedin", jobId: "4242" });
+    expect(result.title).toBe("");
+    expect(result.location).toBe("");
+  });
+
   it("linkedin takes no hr contact from an unrelated profile link", async () => {
     // A job page also lists alumni and network suggestions; recording one of them as the HR
     // contact would write a stranger's personal data onto the record.

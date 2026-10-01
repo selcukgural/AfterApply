@@ -84,8 +84,33 @@ export async function scrapeJobPosting(config) {
   // the title, /company/<slug>/ for the company — verified live against both the search-results
   // split view and the plain job card.
   async function scrapeLinkedIn(jobId) {
-    const titleLink = document.querySelector(`a[href*="/jobs/view/${jobId}"]`);
-    const title = textOf(titleLink);
+    function ownText(el) {
+      return Array.from(el.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent)
+        .join("")
+        .trim();
+    }
+
+    // Only a link inside a <p> is the title: the standalone job page (2026-10) also links its
+    // "On-site" / "Full-time" pills to /jobs/view/<id>, and taking the first match recorded a
+    // workplace type as the job title.
+    const titleLink =
+      Array.from(document.querySelectorAll(`a[href*="/jobs/view/${jobId}"]`)).find((a) => a.closest("p")) ?? null;
+    let titleParagraph = titleLink?.closest("p") ?? null;
+    let title = textOf(titleLink);
+
+    // That same page renders the title as plain text in a <p>, with no link at all. The tab title
+    // ("[(3) ]<title> | <company> | LinkedIn") says which text it is; it is only taken when a <p>
+    // on the page carries exactly that text, so a search page's "… Jobs | LinkedIn" never counts.
+    if (!title) {
+      const parts = (document.title || "").replace(/^\(\d+\)\s*/, "").split(" | ");
+      if (parts.length >= 3) {
+        const candidate = parts.slice(0, -2).join(" | ").trim();
+        titleParagraph = Array.from(document.querySelectorAll("p")).find((p) => ownText(p) === candidate) ?? null;
+        title = titleParagraph ? candidate : null;
+      }
+    }
 
     const companyLink = document.querySelector('a[href*="/company/"]');
     const company = textOf(companyLink);
@@ -156,7 +181,6 @@ export async function scrapeJobPosting(config) {
     // for promoted and plain cards — so this walks up and looks for a direct-child <p> that is not
     // the title's own and contains "·".
     let location = null;
-    const titleParagraph = titleLink?.closest("p") ?? null;
     let ancestor = titleParagraph?.parentElement ?? null;
     for (let i = 0; i < 6 && ancestor && !location; i++) {
       const metaParagraph = Array.from(ancestor.children).find(
