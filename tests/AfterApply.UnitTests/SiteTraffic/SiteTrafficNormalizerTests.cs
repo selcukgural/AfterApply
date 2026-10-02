@@ -202,7 +202,10 @@ public class SiteTrafficNormalizerTests
         // A member added to the enum but not to the normaliser's map would be unreportable — dead
         // storage that nothing could ever write.
         string[] wireNames =
-            ["page_view", "cta_get_started", "cv_scan_completed", "register_started", "register_completed", "share_clicked"];
+            [
+                "page_view", "cta_get_started", "cv_scan_completed", "register_started", "register_completed", "share_clicked",
+                "cta_header_get_started", "register_password_rejected", "register_social_started", "register_social_completed"
+            ];
 
         var reachable = wireNames
             .Select(name => SiteTrafficNormalizer.Normalize(name, "/tr", null)!.Event)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -42,6 +42,8 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // A sign-up gets no session until the emailed code comes back (2026-09-24).
   const [pending, setPending] = useState<EmailVerificationPendingResponse | null>(null);
+  // Once per visit: someone who retries three times is one person the rule stopped, not three.
+  const passwordRejectionReported = useRef(false);
 
   // Live "passwords match" feedback. Silent until the user has left the confirm field once
   // (so they aren't shown red text mid-typing), then re-checked on every keystroke in either
@@ -68,6 +70,10 @@ export default function RegisterPage() {
     const result = createRegisterSchema(tValidation, config.passwordPolicy).safeParse(values);
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
+      if (fieldErrors.password && !passwordRejectionReported.current) {
+        passwordRejectionReported.current = true;
+        trackSiteTraffic("register_password_rejected");
+      }
       setErrors({
         email: fieldErrors.email?.[0],
         password: fieldErrors.password?.[0],

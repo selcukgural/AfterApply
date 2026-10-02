@@ -27,7 +27,11 @@ export type SiteTrafficEvent =
   | "cv_scan_completed"
   | "register_started"
   | "register_completed"
-  | "share_clicked";
+  | "share_clicked"
+  | "cta_header_get_started"
+  | "register_password_rejected"
+  | "register_social_started"
+  | "register_social_completed";
 
 export interface SiteTrafficPayload {
   event: SiteTrafficEvent;
@@ -62,6 +66,15 @@ export function buildSiteTrafficPayload(
     path: rawPath.split("?")[0].split("#")[0],
     referrer: originOf(rawReferrer),
   };
+}
+
+/**
+ * Where a social sign-up is reported from. The browser is on the provider's callback route, which
+ * carries the authorization code and is kept off the API's path allowlist on purpose, so the two
+ * social sign-up events are filed under the sign-up page they stand in for.
+ */
+export function socialSignUpReportPath(locale: string): string {
+  return `/${locale}/register`;
 }
 
 /** A referrer reduced to its origin, or null. Never the referring path or its query. */

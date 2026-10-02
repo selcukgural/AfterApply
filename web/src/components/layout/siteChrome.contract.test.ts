@@ -165,8 +165,12 @@ describe("the signed-out chrome", () => {
     expect(footer).not.toContain("payments?.enabled");
   });
 
-  it("adds no traffic event and no hardcoded English menu label", () => {
-    expect(header).not.toContain("trackSiteTraffic");
+  it("reports no page view of its own and no hardcoded English menu label", () => {
+    // The page view belongs to the layout's reporter; a header that counted one would count every
+    // public page twice. Its sign-up button's click is the one event it may send (2026-10-02).
+    expect(header).not.toContain('"page_view"');
+    expect(header.match(/trackSiteTraffic\(/g) ?? []).toHaveLength(1);
+    expect(header).toContain('trackSiteTraffic("cta_header_get_started")');
     expect(header).not.toContain('"Open menu"');
     expect(header).not.toContain('"Close menu"');
   });

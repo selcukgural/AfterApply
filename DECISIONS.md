@@ -10567,3 +10567,25 @@ olan hangi verinin sayılacağı ve eşikti.
   başvurular sayılır" oldu; yardım merkezinde Ayarlar › Gizlilik bölümü.
 - **Bilinçli olarak yapılmayan:** otomatik ghosting. Kullanıcının güncellememesi şirketin cevap
   vermediği anlamına gelmez; Ghosted yine yalnız kullanıcı eylemiyle set edilir.
+
+## Kayıt hunisi ölçümü: menü butonu, şifre reddi, sosyal kayıt — DECIDED (2026-10-02)
+
+**Bağlam:** Search Console + `/admin/metrics` okuması (2026-10-02): 30 günde ana sayfa 556, kayıt sayfası
+55 görüntüleme, "Ücretsiz Başla" 7 tıklama, formla kayıt 5 — ama aynı dönemde ~23 hesap açıldı. Huni
+eksik ölçüyordu: header'daki mavi buton hiç sayılmıyordu, sosyal kayıtlar (hesapların çoğu) hiç
+sayılmıyordu, "Ana sayfa → kayıt" kartı oranı 0–1 kesir olarak `formatRate`'e verdiği için %0,0
+gösteriyordu. Kullanıcının sorusu "şifre politikası mı kaçırıyor?" mevcut veriyle cevaplanamıyordu
+(`RegisterStarted` yalnız geçerli formda sayılır).
+
+- **Yeni olaylar** (kapalı küme, string saklanır, migration yok): `cta_header_get_started` (header
+  butonu; sayfa içi butonlardan ayrı tutuldu), `register_password_rejected` (form şifre kuralına
+  takıldı, ziyaret başına bir kez), `register_social_started` / `register_social_completed`
+  (LinkedIn/Google/GitHub ile yeni hesap formu gösterildi / gönderildi). Sosyal olaylar `/register`
+  yoluna yazılır — callback yolu yetkilendirme kodu taşıdığı için allowlist dışında kalmaya devam eder.
+- **Kart:** "Geliş" ve "Kayıt" satırları; CV taraması (zaten toplanıyordu, gösterilmiyordu), kayıt
+  sayfası görüntüleme, yeni hesap = formla + sosyal. Oran yeni hesap / ana sayfa, yüzde olarak.
+- **Şifre politikası değişmedi:** 12 karakter + 4 farklı karakter (2026-09-14'ten beri bileşim kuralı
+  yok). Formu gönderen 5 kişinin 5'i tamamladı; gevşetme kararı `register_password_rejected` birkaç
+  hafta biriktikten sonra verilecek. NIST 800-63B rev4 tek faktörlü girişte 15 öneriyor; 12'nin
+  altına inmek güvenlik tabanına aykırı.
+- **Gizlilik:** satırlar yine yalnız (olay, yol, dil, referrer host, sayı); yeni hiçbir alan yok.

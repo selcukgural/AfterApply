@@ -32,5 +32,25 @@ public enum SiteTrafficEvent
     /// <summary>A share button was used — a CV score, a benchmark result or a company page handed
     /// to someone else. The one number that says whether the product produces anything a person
     /// wants to pass on (growth audit 2026-09-14, finding 03/14).</summary>
-    ShareClicked
+    ShareClicked,
+
+    /// <summary>The header's "Ücretsiz Başla" button was clicked (2026-10-02). Kept apart from
+    /// CtaGetStarted, which counts the buttons inside the page: the header is the one call to
+    /// action on every public page, and it went uncounted until then, so the page's own number
+    /// read lower than the traffic into /register said it should.</summary>
+    CtaHeaderGetStarted,
+
+    /// <summary>The sign-up form was sent with a password the policy refused, counted once per
+    /// visit to the form. Answers "is the password rule what stops people", which RegisterStarted
+    /// cannot: that one is only counted once the form is valid.</summary>
+    RegisterPasswordRejected,
+
+    /// <summary>A LinkedIn, Google or GitHub sign-in turned out to be a new account and the
+    /// "complete your sign-up" form was shown. Most accounts arrive this way, and none of them
+    /// were in the funnel until 2026-10-02.</summary>
+    RegisterSocialStarted,
+
+    /// <summary>That form was sent and the account was created — the social counterpart of
+    /// RegisterCompleted.</summary>
+    RegisterSocialCompleted
 }

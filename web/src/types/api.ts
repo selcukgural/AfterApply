@@ -1215,7 +1215,7 @@ export interface BenchmarkSummaryResponse {
 export interface SiteTrafficCounterResponse {
   /** The UTC day counted, as `YYYY-MM-DD`. */
   day: string;
-  /** `PageView`, `CtaGetStarted`, `RegisterStarted` or `RegisterCompleted`. */
+  /** A `SiteTrafficEvent` member name on the API — `PageView`, `CtaGetStarted`, `RegisterSocialCompleted`, ... */
   event: string;
   /** Public path with the language prefix removed, e.g. `/guide/how-many-applications`. */
   path: string;

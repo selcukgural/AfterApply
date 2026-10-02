@@ -171,6 +171,12 @@ describe("visit counter", () => {
   // second copy of the API's route allowlist.
   const CALLERS = [
     "app/[locale]/(public)/register/page.tsx",
+    // The three social sign-up callbacks report that a new account began and finished — filed
+    // under /register, because the callback's own path carries the authorization code and the API
+    // refuses it. They are public pages: the visitor has no session yet when they report.
+    "app/[locale]/(public)/auth/github/callback/page.tsx",
+    "app/[locale]/(public)/auth/google/callback/page.tsx",
+    "app/[locale]/(public)/auth/linkedin/callback/page.tsx",
     "components/analytics/SiteTrafficReporter.tsx",
     // The CV scan reports one event of its own — that a scan finished. It carries no more than any
     // other event does (a name and a path), and the file it just read is not part of it.
@@ -181,6 +187,8 @@ describe("visit counter", () => {
     // a CV reports nothing at all — the scan is counted where it happens, on /cv-tarama.
     "components/landing/HeroCtaButtons.tsx",
     "components/landing/WeeklyJobsHeroCtas.tsx",
+    // The header's sign-up button, rendered only for a signed-out visitor (2026-10-02).
+    "components/layout/SiteHeader.tsx",
     // The share row reports one `share_clicked` per use — again a name and a path, never what was
     // shared or with whom. It renders on the CV result, the benchmark result and the company page,
     // all public; a signed-in page that ever mounted it would be caught by the (protected) rule
