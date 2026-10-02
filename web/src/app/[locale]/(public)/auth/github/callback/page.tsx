@@ -11,6 +11,7 @@ import { postAuthDestination, postAuthLocale } from "@/lib/auth/postAuthRedirect
 import { applyTheme, getStoredThemeCookie, type Theme } from "@/lib/theme/theme";
 import { createGitHubSignupSchema } from "@/lib/validation/githubSignupSchema";
 import { ApiError } from "@/lib/api/httpClient";
+import { socialSignUpReportPath, trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 import type { AuthResponse, EmailVerificationPendingResponse, GitHubSignupPrefill } from "@/types/api";
 import { EmailVerificationStep } from "@/components/auth/EmailVerificationStep";
 import { FormField } from "@/components/ui/FormField";
@@ -93,6 +94,8 @@ function GitHubCallback() {
           return { kind: "verify", pending: result.pendingVerification };
         }
         if (result.pendingSignup) {
+          // A provider account we have not seen: this is a sign-up, not a sign-in.
+          trackSiteTraffic("register_social_started", socialSignUpReportPath(locale));
           return { kind: "signup", prefill: result.pendingSignup };
         }
         return { kind: "error", message: t("genericError") };
@@ -155,6 +158,7 @@ function CompleteSignupForm({
   onVerificationRequired: (pending: EmailVerificationPendingResponse) => void;
 }) {
   const t = useTranslations("auth.github.completeSignup");
+  const locale = useLocale();
   const tRegister = useTranslations("auth.register");
   const tValidation = useTranslations("validation");
   const { completeGitHubSignup } = useAuth();
@@ -203,6 +207,8 @@ function CompleteSignupForm({
         // Only when GitHub gave us none — the API ignores it otherwise.
         email: requiresEmail ? result.data.email : undefined,
       });
+      // The account exists from here on, whether or not an emailed code still has to come back.
+      trackSiteTraffic("register_social_completed", socialSignUpReportPath(locale));
       if (isVerificationPending(outcome)) {
         onVerificationRequired(outcome);
         return;

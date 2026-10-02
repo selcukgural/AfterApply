@@ -6,6 +6,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useClientConfig } from "@/hooks/useClientConfig";
 import { buttonClassName } from "@/components/ui/Button";
+import { trackSiteTraffic } from "@/lib/analytics/siteTraffic";
 import { Logo } from "@/components/layout/Logo";
 import { PreferencesControls, PreferencesMenu } from "@/components/layout/PreferencesMenu";
 import { NavBar } from "@/components/layout/NavBar";
@@ -153,7 +154,16 @@ export function SiteHeader() {
       >
         {t("signIn")}
       </Link>
-      <Link href="/register" className={buttonClassName("primary", mobile ? "text-center" : "whitespace-nowrap")} onClick={mobile ? () => setMenuOpen(false) : undefined}>
+      <Link
+        href="/register"
+        className={buttonClassName("primary", mobile ? "text-center" : "whitespace-nowrap")}
+        onClick={() => {
+          // Its own event, not cta_get_started: that one counts the buttons inside a page, and
+          // keeping them apart says which of the two people actually use.
+          trackSiteTraffic("cta_header_get_started");
+          if (mobile) setMenuOpen(false);
+        }}
+      >
         {t("getStarted")}
       </Link>
     </>

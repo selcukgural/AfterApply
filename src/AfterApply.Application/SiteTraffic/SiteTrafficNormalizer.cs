@@ -53,7 +53,11 @@ public static class SiteTrafficNormalizer
             ["cv_scan_completed"] = SiteTrafficEvent.CvScanCompleted,
             ["register_started"] = SiteTrafficEvent.RegisterStarted,
             ["register_completed"] = SiteTrafficEvent.RegisterCompleted,
-            ["share_clicked"] = SiteTrafficEvent.ShareClicked
+            ["share_clicked"] = SiteTrafficEvent.ShareClicked,
+            ["cta_header_get_started"] = SiteTrafficEvent.CtaHeaderGetStarted,
+            ["register_password_rejected"] = SiteTrafficEvent.RegisterPasswordRejected,
+            ["register_social_started"] = SiteTrafficEvent.RegisterSocialStarted,
+            ["register_social_completed"] = SiteTrafficEvent.RegisterSocialCompleted
         };
 
     /// <summary>

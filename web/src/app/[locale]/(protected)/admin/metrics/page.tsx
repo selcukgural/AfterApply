@@ -3,12 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { adminApi } from "@/lib/api/admin";
-import type { SiteTrafficCounterResponse } from "@/types/api";
 import { ApiError } from "@/lib/api/httpClient";
 import { formatCount, formatRate } from "@/lib/dashboard/format";
 import { Card } from "@/components/dashboard/Card";
 import { StatTile } from "@/components/dashboard/StatTile";
 import { AdminTabs } from "@/components/admin/AdminTabs";
+import { summariseTraffic } from "@/lib/admin/siteTrafficSummary";
 
 /** Rates can be null (no cohort old enough yet). "—" is the honest rendering; 0% is not. */
 function rateOrDash(value: number | null, locale: string): string {
@@ -19,48 +19,6 @@ function formatDay(isoDate: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" }).format(
     new Date(`${isoDate}T00:00:00Z`),
   );
-}
-
-/**
- * Folds the raw counter rows into the handful of numbers worth looking at.
- *
- * Note what "landingToRegister" is and is not: completed registrations divided by landing-page
- * views, both counted independently over the same 30 days. Nobody was followed from one to the
- * other — there is no visitor id to follow — so it is a ratio of two totals, not a conversion rate,
- * and a visitor who lands in October and registers in November lands in both numbers anyway. At
- * this traffic it answers the only question being asked: does anybody arrive, and does anybody
- * continue.
- */
-function summariseTraffic(rows: SiteTrafficCounterResponse[] | undefined) {
-  if (!rows || rows.length === 0) {
-    return null;
-  }
-
-  const totalFor = (event: string) =>
-    rows.filter((r) => r.event === event).reduce((sum, r) => sum + r.count, 0);
-
-  const pageViews = rows.filter((r) => r.event === "PageView");
-  const landingViews = pageViews.filter((r) => r.path === "/").reduce((sum, r) => sum + r.count, 0);
-  const registerCompleted = totalFor("RegisterCompleted");
-
-  const byKey = (source: SiteTrafficCounterResponse[], key: (r: SiteTrafficCounterResponse) => string) => {
-    const totals = new Map<string, number>();
-    for (const row of source) {
-      totals.set(key(row), (totals.get(key(row)) ?? 0) + row.count);
-    }
-    return [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
-  };
-
-  return {
-    pageViews: totalFor("PageView"),
-    landingViews,
-    ctaClicks: totalFor("CtaGetStarted"),
-    registerStarted: totalFor("RegisterStarted"),
-    registerCompleted,
-    landingToRegister: landingViews === 0 ? null : registerCompleted / landingViews,
-    topPages: byKey(pageViews, (r) => r.path),
-    topReferrers: byKey(pageViews, (r) => r.referrerHost),
-  };
 }
 
 export default function AdminMetricsPage() {
@@ -279,22 +237,51 @@ export default function AdminMetricsPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400">{t("trafficEmpty")}</p>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              <StatTile label={t("trafficPageViews")} value={formatCount(trafficSummary.pageViews, locale)} />
-              <StatTile label={t("trafficLandingViews")} value={formatCount(trafficSummary.landingViews, locale)} />
-              <StatTile label={t("trafficCtaClicks")} value={formatCount(trafficSummary.ctaClicks, locale)} />
-              <StatTile
-                label={t("trafficRegisterStarted")}
-                value={formatCount(trafficSummary.registerStarted, locale)}
-              />
-              <StatTile
-                label={t("trafficRegisterCompleted")}
-                value={formatCount(trafficSummary.registerCompleted, locale)}
-              />
-              <StatTile
-                label={t("trafficLandingToRegister")}
-                value={rateOrDash(trafficSummary.landingToRegister, locale)}
-              />
+            {/* Two rows, in the order a visitor meets them: arriving and reaching for the sign-up,
+                then the two ways of finishing it. The social row is most of the accounts. */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs font-medium text-gray-600 dark:text-gray-400">{t("trafficArrivalTitle")}</h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                <StatTile label={t("trafficPageViews")} value={formatCount(trafficSummary.pageViews, locale)} />
+                <StatTile label={t("trafficLandingViews")} value={formatCount(trafficSummary.landingViews, locale)} />
+                <StatTile label={t("trafficCvScans")} value={formatCount(trafficSummary.cvScans, locale)} />
+                <StatTile label={t("trafficCtaClicks")} value={formatCount(trafficSummary.ctaClicks, locale)} />
+                <StatTile label={t("trafficHeaderCtaClicks")} value={formatCount(trafficSummary.headerCtaClicks, locale)} />
+                <StatTile label={t("trafficRegisterViews")} value={formatCount(trafficSummary.registerViews, locale)} />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <h3 className="text-xs font-medium text-gray-600 dark:text-gray-400">{t("trafficSignUpTitle")}</h3>
+                <p className="text-xs text-gray-500 tabular-nums dark:text-gray-400">
+                  {t("trafficLandingToRegister", { rate: rateOrDash(trafficSummary.landingToRegister, locale) })}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                <StatTile
+                  label={t("trafficRegisterStarted")}
+                  value={formatCount(trafficSummary.registerStarted, locale)}
+                />
+                <StatTile
+                  label={t("trafficPasswordRejected")}
+                  value={formatCount(trafficSummary.passwordRejected, locale)}
+                />
+                <StatTile
+                  label={t("trafficRegisterCompleted")}
+                  value={formatCount(trafficSummary.registerCompleted, locale)}
+                />
+                <StatTile label={t("trafficSocialStarted")} value={formatCount(trafficSummary.socialStarted, locale)} />
+                <StatTile
+                  label={t("trafficSocialCompleted")}
+                  value={formatCount(trafficSummary.socialCompleted, locale)}
+                />
+                <StatTile
+                  label={t("trafficNewAccounts")}
+                  value={formatCount(trafficSummary.newAccounts, locale)}
+                  tone="accent"
+                />
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">

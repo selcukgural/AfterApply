@@ -197,6 +197,21 @@ public class SiteTrafficTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiH
     }
 
     [Fact]
+    public async Task The_Header_Cta_Password_Rejection_And_Social_Sign_Up_Are_Stored_Too()
+    {
+        // The social sign-up is reported on /register, not on the OAuth callback the browser is on:
+        // the callback carries an authorization code and stays off the path allowlist.
+        await ReportAsync("cta_header_get_started", "/tr/companies");
+        await ReportAsync("register_password_rejected", "/tr/register");
+        await ReportAsync("register_social_started", "/tr/register");
+        await ReportAsync("register_social_completed", "/tr/register");
+
+        var rows = await RowsAsync();
+        rows.Select(r => r.Event).OrderBy(e => e, StringComparer.Ordinal)
+            .ShouldBe(["CtaHeaderGetStarted", "RegisterPasswordRejected", "RegisterSocialCompleted", "RegisterSocialStarted"]);
+    }
+
+    [Fact]
     public async Task Reading_The_Counts_Back_Needs_An_Admin()
     {
         (await _client.GetAsync("/api/admin/site-traffic")).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
