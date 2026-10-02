@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { adminApi } from "@/lib/api/admin";
@@ -9,6 +10,9 @@ import { Card } from "@/components/dashboard/Card";
 import { StatTile } from "@/components/dashboard/StatTile";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { summariseTraffic } from "@/lib/admin/siteTrafficSummary";
+import { trendSeries } from "@/lib/admin/metricTrends";
+import { MetricTrendCard } from "@/components/admin/MetricTrendCard";
+import { Button } from "@/components/ui/Button";
 
 /** Rates can be null (no cohort old enough yet). "—" is the honest rendering; 0% is not. */
 function rateOrDash(value: number | null, locale: string): string {
@@ -44,9 +48,29 @@ export default function AdminMetricsPage() {
     retry: (failureCount, err) => !(err instanceof ApiError && err.status === 403) && failureCount < 2,
   });
 
+  const [showTable, setShowTable] = useState(false);
   const days = data ?? [];
   const latest = days[0];
   const trafficSummary = summariseTraffic(traffic);
+
+  const signed = (text: string, value: number) => (value > 0 ? `+${text}` : value < 0 ? `−${text.replace("-", "")}` : text);
+  const countChange = (value: number) => signed(formatCount(Math.abs(value), locale), value);
+  // Rates move in percentage points; "+2,1 pt" rather than a percentage of a percentage.
+  const pointChange = (value: number) =>
+    signed(
+      `${new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.abs(value))} pt`,
+      value,
+    );
+  const count = (value: number) => formatCount(value, locale);
+  const rate = (value: number) => formatRate(value, locale);
+  const trends = [
+    { key: "users", label: t("colUsers"), series: trendSeries(days, (d) => d.totalUsers), formatValue: count, formatChange: countChange },
+    { key: "activation", label: t("colActivation"), series: trendSeries(days, (d) => d.activationRate), formatValue: rate, formatChange: pointChange },
+    { key: "wau", label: t("colWau"), series: trendSeries(days, (d) => d.weeklyActiveUsers), formatValue: count, formatChange: countChange },
+    { key: "d7", label: t("colD7"), series: trendSeries(days, (d) => d.d7RetentionRate), formatValue: rate, formatChange: pointChange },
+    { key: "d30", label: t("colD30"), series: trendSeries(days, (d) => d.d30RetentionRate), formatValue: rate, formatChange: pointChange },
+    { key: "applications", label: t("colApplications"), series: trendSeries(days, (d) => d.totalApplications), formatValue: count, formatChange: countChange },
+  ];
 
   if (error instanceof ApiError && error.status === 403) {
     return (
@@ -105,8 +129,35 @@ export default function AdminMetricsPage() {
             <StatTile label={t("uniqueCompanies")} value={formatCount(latest.uniqueCompanies, locale)} />
           </div>
 
-          <Card className="flex flex-col gap-3">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("historyTitle")}</h2>
+          <Card className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("historyTitle")}</h2>
+                <p className="max-w-[68ch] text-xs text-gray-500 dark:text-gray-400">{t("trendHint")}</p>
+              </div>
+              <Button variant="secondary" onClick={() => setShowTable((open) => !open)} aria-expanded={showTable}>
+                {showTable ? t("hideTable") : t("showTable")}
+              </Button>
+            </div>
+
+            {/* One card per metric the table had, minus 90. gün: its cohort does not exist yet,
+                so it would be an empty card; the table keeps the column. */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {trends.map((trend) => (
+                <MetricTrendCard
+                  key={trend.key}
+                  label={trend.label}
+                  series={trend.series}
+                  formatValue={trend.formatValue}
+                  formatChange={trend.formatChange}
+                  formatDay={(isoDate) => formatDay(isoDate, locale)}
+                  changeLabel={(change) => t("trendChange", { change })}
+                  emptyLabel={t("trendNoComparison")}
+                />
+              ))}
+            </div>
+
+            {showTable ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[44rem] border-collapse text-sm">
                 <thead>
@@ -153,6 +204,7 @@ export default function AdminMetricsPage() {
                 </tbody>
               </table>
             </div>
+            ) : null}
           </Card>
         </>
       ) : null}
