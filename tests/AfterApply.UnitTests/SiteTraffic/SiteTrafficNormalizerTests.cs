@@ -204,7 +204,8 @@ public class SiteTrafficNormalizerTests
         string[] wireNames =
             [
                 "page_view", "cta_get_started", "cv_scan_completed", "register_started", "register_completed", "share_clicked",
-                "cta_header_get_started", "register_password_rejected", "register_social_started", "register_social_completed"
+                "cta_header_get_started", "register_password_rejected", "register_social_started", "register_social_completed",
+                "cta_hero_social_sign_in"
             ];
 
         var reachable = wireNames

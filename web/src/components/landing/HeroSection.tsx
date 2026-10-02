@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { HeroCtaButtons } from "@/components/landing/HeroCtaButtons";
 import { HeroCvDropzone } from "@/components/landing/HeroCvDropzone";
+import { HeroSignUpCard } from "@/components/landing/HeroSignUpCard";
 
 /**
  * The first screen, and since 2026-09-10 it hands over something rather than asking for something.
@@ -16,6 +17,12 @@ import { HeroCvDropzone } from "@/components/landing/HeroCvDropzone";
  * gradient layer under the content, so it costs nothing to scroll and has nothing to switch off for
  * reduced motion. No negative z-index — the section creates no stacking context, so a `-z-10` child
  * would fall behind the body background and vanish; the content is simply painted after it.
+ *
+ * 2026-10-02 (landing canvas option B): the right-hand side is the sign-up card for a signed-out
+ * visitor — LinkedIn, Google and GitHub on the first screen — and the scan becomes the quieter
+ * button on the left. That reverses the 2026-09-10 "the scan is the primary" call on purpose: the
+ * counter showed visitors reaching for neither the scan nor /register, and most accounts are
+ * social. A signed-in visitor still sees the drop zone (HeroSignUpCard).
  *
  * `band` (2026-09-16): the same content one screen down, when the weekly postings take the first
  * screen (WeeklyJobsHero). Nothing is lost — the drop zone, the scan button, the copy — but it is
@@ -60,11 +67,11 @@ export async function HeroSection({ band = false }: { band?: boolean }) {
               rather than competing with it. It narrows the tone, not the product: the sector list
               in the benchmark form still has all thirteen. */}
           <p className="max-w-xl border-l-2 border-accent/40 pl-3 text-sm text-gray-500 dark:text-gray-400">{t("audience")}</p>
-          <HeroCtaButtons />
+          <HeroCtaButtons signUpInCard />
         </div>
 
         <div className="flex justify-center md:w-1/2">
-          <HeroCvDropzone />
+          <HeroSignUpCard />
         </div>
       </div>
     </section>

@@ -205,10 +205,11 @@ public class SiteTrafficTests(ApiHost<DefaultProfile> host) : IClassFixture<ApiH
         await ReportAsync("register_password_rejected", "/tr/register");
         await ReportAsync("register_social_started", "/tr/register");
         await ReportAsync("register_social_completed", "/tr/register");
+        await ReportAsync("cta_hero_social_sign_in", "/tr");
 
         var rows = await RowsAsync();
         rows.Select(r => r.Event).OrderBy(e => e, StringComparer.Ordinal)
-            .ShouldBe(["CtaHeaderGetStarted", "RegisterPasswordRejected", "RegisterSocialCompleted", "RegisterSocialStarted"]);
+            .ShouldBe(["CtaHeaderGetStarted", "CtaHeroSocialSignIn", "RegisterPasswordRejected", "RegisterSocialCompleted", "RegisterSocialStarted"]);
     }
 
     [Fact]

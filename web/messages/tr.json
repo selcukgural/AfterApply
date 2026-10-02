@@ -201,7 +201,12 @@
       "audience": "Türkiye'de yazılım, ürün ve veri işlerine başvuranlar için. Ayda 20+ başvurun varsa buradaki sayılar seninle ilgili.",
       "ctaPrimary": "CV'mi Tara",
       "ctaSecondary": "Ücretsiz Başla",
-      "ctaHowItWorks": "Nasıl çalışıyor?"
+      "ctaHowItWorks": "Nasıl çalışıyor?",
+      "signUp": {
+        "email": "E-postayla kayıt ol →",
+        "haveAccount": "Zaten hesabın var mı?",
+        "signIn": "Giriş yap"
+      }
     },
     "weeklyHero": {
       "badge": "YENİ · PRO",
@@ -3693,6 +3698,7 @@
     "trafficCvScans": "CV taraması",
     "trafficCtaClicks": "Sayfa içi buton",
     "trafficHeaderCtaClicks": "Menü butonu",
+    "trafficHeroSocialClicks": "Hero sosyal",
     "trafficRegisterViews": "Kayıt sayfası",
     "trafficRegisterStarted": "Form gönderildi",
     "trafficPasswordRejected": "Şifreye takıldı",

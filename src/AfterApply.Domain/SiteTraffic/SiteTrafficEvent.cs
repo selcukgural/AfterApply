@@ -52,5 +52,10 @@ public enum SiteTrafficEvent
 
     /// <summary>That form was sent and the account was created — the social counterpart of
     /// RegisterCompleted.</summary>
-    RegisterSocialCompleted
+    RegisterSocialCompleted,
+
+    /// <summary>A LinkedIn, Google or GitHub button on the landing page's sign-up card was clicked
+    /// (2026-10-02). The card put the providers on the first screen; this says how many of the
+    /// social sign-ups started there rather than on /register.</summary>
+    CtaHeroSocialSignIn
 }

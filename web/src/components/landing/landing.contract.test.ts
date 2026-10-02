@@ -293,6 +293,20 @@ describe("the hero", () => {
     expect(source).toContain("<HeroCvDropzone />");
   });
 
+  /** 2026-10-02 (canvas option B): the first screen signs a visitor up rather than linking to the
+   *  page that does. The card asks no consent itself — the social "complete your sign-up" form and
+   *  /register do — and a signed-in visitor keeps the drop zone. */
+  it("puts the sign-up card on the first screen, without a consent box of its own", () => {
+    expect(source).toContain("<HeroSignUpCard />");
+    expect(source).toContain("<HeroCtaButtons signUpInCard />");
+    const card = stripComments(readLanding("HeroSignUpCard.tsx"));
+    expect(card).toContain("<SocialSignIn onStart=");
+    expect(card).toContain('trackSiteTraffic("cta_hero_social_sign_in")');
+    expect(card).toContain('href="/register"');
+    expect(card).toContain("<HeroCvDropzone />");
+    expect(card).not.toContain("consentAccepted");
+  });
+
   /** 2026-09-22 (report item 0.4): the page addressed everyone and so named nobody. The line is
    *  on both the full hero and the band, because the band is the first screen whenever the weekly
    *  postings lead. It narrows the tone, not the product — so it says who the numbers are about,

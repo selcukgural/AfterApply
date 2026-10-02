@@ -10589,3 +10589,20 @@ gösteriyordu. Kullanıcının sorusu "şifre politikası mı kaçırıyor?" mev
   hafta biriktikten sonra verilecek. NIST 800-63B rev4 tek faktörlü girişte 15 öneriyor; 12'nin
   altına inmek güvenlik tabanına aykırı.
 - **Gizlilik:** satırlar yine yalnız (olay, yol, dil, referrer host, sayı); yeni hiçbir alan yok.
+
+## Ana sayfa ilk ekranı: kayıt kartı (canvas B) — DECIDED (2026-10-02)
+
+**Bağlam:** 30 günde ana sayfa 556, `/register` 55 görüntüleme (~%10); kayıt sayfası görüntülemenin
+~%40'ı hesaba dönüyor, çoğu LinkedIn/Google/GitHub ile. Kayıp sayfalar arası adımdaydı. Tuval
+https://claude.ai/artifact/MeKCeFEh2iB9jgGRzUkYA9 — kullanıcı 0/A/B/C içinden **B**'yi seçti.
+
+- Girişsiz ziyaretçi için hero'nun sağı `HeroSignUpCard`: kayıt sayfasının başlığı ve üç faydası,
+  `SocialSignIn` (aynı sıra), "veya", "E-postayla kayıt ol →" ve giriş bağlantısı. Kartta onay kutusu
+  yok: sosyal yeni hesap "kaydı tamamla" formundan, e-posta yolu `/register`'dan geçer, ikisi de onay
+  alır.
+- **2026-09-10 "ana buton CV taraması" kararı bilerek geri alındı:** "CV'mi Tara" soldaki outline
+  butona indi, sayfa içi "Ücretsiz Başla" kartın yanında tekrar edilmez (header'daki kalır). Girişli
+  ziyaretçi CV kutusunu görmeye devam eder; haftalık ilan bandı (`band`) değişmedi.
+- Yeni sayaç olayı `cta_hero_social_sign_in` (kartta sağlayıcı tıklaması), admin kartında
+  "Hero sosyal". Etki, 2026-10-02 ölçüm satırlarıyla (sosyal başladı/tamamlandı, yeni hesap / ana
+  sayfa) birkaç hafta sonra okunacak.

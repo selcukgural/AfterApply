@@ -201,7 +201,12 @@
       "audience": "For people applying to software, product and data roles in Türkiye. If you send 20+ applications a month, these numbers are about you.",
       "ctaPrimary": "Scan my CV",
       "ctaSecondary": "Get Started Free",
-      "ctaHowItWorks": "See how it works"
+      "ctaHowItWorks": "See how it works",
+      "signUp": {
+        "email": "Sign up with email →",
+        "haveAccount": "Already have an account?",
+        "signIn": "Sign in"
+      }
     },
     "weeklyHero": {
       "badge": "NEW · PRO",
@@ -3693,6 +3698,7 @@
     "trafficCvScans": "CV scans",
     "trafficCtaClicks": "In-page button",
     "trafficHeaderCtaClicks": "Header button",
+    "trafficHeroSocialClicks": "Hero social",
     "trafficRegisterViews": "Sign-up page",
     "trafficRegisterStarted": "Form sent",
     "trafficPasswordRejected": "Password refused",

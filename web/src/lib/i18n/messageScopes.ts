@@ -75,6 +75,14 @@ export const LANDING_MESSAGE_SCOPE = [
   // The category names only: the statement catalogue's 400 strings stay out of the landing
   // bundle (the mock's chips carry landing copy, and its "most picked" lists are empty).
   "companyReviews.categories",
+  // The hero's sign-up card (2026-10-02): the register page's benefit lines and the providers'
+  // button labels — leaves, not the whole auth catalogue with its callback and form copy.
+  "auth.register.title",
+  "auth.register.benefits",
+  "auth.social.or",
+  "auth.linkedin.continueWith",
+  "auth.google.continueWith",
+  "auth.github.continueWith",
 ] as const;
 
 export const PUBLIC_MESSAGE_SCOPE = [
