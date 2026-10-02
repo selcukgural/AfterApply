@@ -31,7 +31,8 @@ export type SiteTrafficEvent =
   | "cta_header_get_started"
   | "register_password_rejected"
   | "register_social_started"
-  | "register_social_completed";
+  | "register_social_completed"
+  | "cta_hero_social_sign_in";
 
 export interface SiteTrafficPayload {
   event: SiteTrafficEvent;

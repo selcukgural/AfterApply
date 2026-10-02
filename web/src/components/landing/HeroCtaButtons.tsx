@@ -20,7 +20,11 @@ import { cvScanPath } from "@/lib/cvScan/path";
  * therefore works before hydration and without JavaScript, which makes the drop zone beside it a
  * pure enhancement rather than the only way in.
  */
-export function HeroCtaButtons() {
+export function HeroCtaButtons({ signUpInCard = false }: {
+  /** The full hero's right-hand side is the sign-up card (2026-10-02): the scan steps down to an
+   *  outline button and the register button is not repeated beside the card that does it. */
+  signUpInCard?: boolean;
+} = {}) {
   const t = useTranslations("landing.hero");
   const locale = useLocale();
   const tNav = useTranslations("siteNav");
@@ -29,11 +33,14 @@ export function HeroCtaButtons() {
   return (
     <div className="flex flex-col items-start gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <Link href={cvScanPath(locale)} className={buttonClassName("primary", "px-6 py-3 text-base")}>
+        <Link
+          href={cvScanPath(locale)}
+          className={buttonClassName(signUpInCard && !isAuthenticated ? "outline" : "primary", "px-6 py-3 text-base")}
+        >
           {t("ctaPrimary")}
         </Link>
 
-        {isAuthenticated ? (
+        {signUpInCard && !isAuthenticated ? null : isAuthenticated ? (
           <Link href="/dashboard" className={buttonClassName("secondary", "px-6 py-3 text-base")}>
             {tNav("goToDashboard")}
           </Link>

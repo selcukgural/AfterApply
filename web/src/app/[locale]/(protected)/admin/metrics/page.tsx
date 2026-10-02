@@ -293,12 +293,13 @@ export default function AdminMetricsPage() {
                 then the two ways of finishing it. The social row is most of the accounts. */}
             <div className="flex flex-col gap-2">
               <h3 className="text-xs font-medium text-gray-600 dark:text-gray-400">{t("trafficArrivalTitle")}</h3>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
                 <StatTile label={t("trafficPageViews")} value={formatCount(trafficSummary.pageViews, locale)} />
                 <StatTile label={t("trafficLandingViews")} value={formatCount(trafficSummary.landingViews, locale)} />
                 <StatTile label={t("trafficCvScans")} value={formatCount(trafficSummary.cvScans, locale)} />
                 <StatTile label={t("trafficCtaClicks")} value={formatCount(trafficSummary.ctaClicks, locale)} />
                 <StatTile label={t("trafficHeaderCtaClicks")} value={formatCount(trafficSummary.headerCtaClicks, locale)} />
+                <StatTile label={t("trafficHeroSocialClicks")} value={formatCount(trafficSummary.heroSocialClicks, locale)} />
                 <StatTile label={t("trafficRegisterViews")} value={formatCount(trafficSummary.registerViews, locale)} />
               </div>
             </div>

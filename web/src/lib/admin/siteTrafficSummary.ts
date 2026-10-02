@@ -45,6 +45,7 @@ export function summariseTraffic(rows: SiteTrafficCounterResponse[] | undefined)
     cvScans: totalFor("CvScanCompleted"),
     ctaClicks: totalFor("CtaGetStarted"),
     headerCtaClicks: totalFor("CtaHeaderGetStarted"),
+    heroSocialClicks: totalFor("CtaHeroSocialSignIn"),
     registerViews: viewsOf("/register"),
     registerStarted: totalFor("RegisterStarted"),
     passwordRejected: totalFor("RegisterPasswordRejected"),

@@ -9,7 +9,8 @@ import { returnToFromLocation } from "@/lib/auth/postAuthRedirect";
 // Renders nothing until GET /api/config says Sign in with LinkedIn is configured on this
 // deployment — the endpoints behind it answer 404 otherwise, so a button would be a dead end.
 // The "or" divider above the social buttons lives in SocialSignIn, not here.
-export function LinkedInSignInButton() {
+/** `onStart` runs as the redirect begins — the landing card counts its clicks with it. */
+export function LinkedInSignInButton({ onStart }: { onStart?: () => void } = {}) {
   const { config } = useClientConfig();
   const locale = useLocale();
   const t = useTranslations("auth.linkedin");
@@ -24,6 +25,7 @@ export function LinkedInSignInButton() {
 
   const handleClick = () => {
     setIsRedirecting(true);
+    onStart?.();
     try {
       // See the Google button: the pairing return survives the redirect.
       beginLinkedInSignIn(clientId, locale, returnToFromLocation());

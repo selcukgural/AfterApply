@@ -19,8 +19,11 @@ import { LinkedInSignInButton } from "./LinkedInSignInButton";
  * Both pages render this one component rather than listing buttons themselves: when LinkedIn was
  * added, login moved here and sign-up kept its lone <GoogleSignInButton />, so you could sign in
  * with LinkedIn but not sign up with it — and the sign-up page had no divider at all.
+ *
+ * `onStart` runs when a provider's redirect begins; the landing page's sign-up card (2026-10-02)
+ * counts its clicks with it.
  */
-export function SocialSignIn() {
+export function SocialSignIn({ onStart }: { onStart?: () => void } = {}) {
   const { config } = useClientConfig();
   const t = useTranslations("auth.social");
 
@@ -31,9 +34,9 @@ export function SocialSignIn() {
 
   return (
     <div className="mb-4 flex flex-col gap-3">
-      <LinkedInSignInButton />
-      <GoogleSignInButton />
-      <GitHubSignInButton />
+      <LinkedInSignInButton onStart={onStart} />
+      <GoogleSignInButton onStart={onStart} />
+      <GitHubSignInButton onStart={onStart} />
       <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
         <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
         {t("or")}

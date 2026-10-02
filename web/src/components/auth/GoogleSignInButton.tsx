@@ -9,7 +9,8 @@ import { returnToFromLocation } from "@/lib/auth/postAuthRedirect";
 // Renders nothing until GET /api/config says Sign in with Google is configured on this
 // deployment — the endpoints behind it answer 404 otherwise, so a button would be a dead end.
 // The "or" divider above the social buttons lives in SocialSignIn, not here.
-export function GoogleSignInButton() {
+/** `onStart` runs as the redirect begins — the landing card counts its clicks with it. */
+export function GoogleSignInButton({ onStart }: { onStart?: () => void } = {}) {
   const { config } = useClientConfig();
   const locale = useLocale();
   const t = useTranslations("auth.google");
@@ -24,6 +25,7 @@ export function GoogleSignInButton() {
 
   const handleClick = async () => {
     setIsRedirecting(true);
+    onStart?.();
     try {
       // Carries the pairing return through the redirect to Google and back — the password
       // form on the same page reads the same parameter.

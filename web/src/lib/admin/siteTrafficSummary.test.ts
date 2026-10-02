@@ -52,6 +52,7 @@ describe("summariseTraffic", () => {
       row("PageView", "/register", 3, "linkedin.com"),
       row("RegisterPasswordRejected", "/register", 2),
       row("CvScanCompleted", "/cv-tarama", 31),
+      row("CtaHeroSocialSignIn", "/", 6),
     ])!;
 
     expect(summary.ctaClicks).toBe(7);
@@ -59,5 +60,6 @@ describe("summariseTraffic", () => {
     expect(summary.registerViews).toBe(58);
     expect(summary.passwordRejected).toBe(2);
     expect(summary.cvScans).toBe(31);
+    expect(summary.heroSocialClicks).toBe(6);
   });
 });
