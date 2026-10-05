@@ -10606,3 +10606,17 @@ https://claude.ai/artifact/MeKCeFEh2iB9jgGRzUkYA9 — kullanıcı 0/A/B/C içind
 - Yeni sayaç olayı `cta_hero_social_sign_in` (kartta sağlayıcı tıklaması), admin kartında
   "Hero sosyal". Etki, 2026-10-02 ölçüm satırlarıyla (sosyal başladı/tamamlandı, yeni hesap / ana
   sayfa) birkaç hafta sonra okunacak.
+
+## npm audit kapısı: yamasız advisory için süreli istisna — DECIDED (2026-10-05)
+
+**Bağlam:** `braces` için GHSA-vfj7-8cjw-p6xm (high) CI'daki `npm audit --audit-level=high`
+adımını kırdı; yamalı sürüm yok (tüm sürümler ≤ 3.0.3), zincir `eslint-config-next` →
+`@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces`, Next'in en son ve canary
+eklentisi de aynı. Lint sırasında repo'nun kendi glob kalıplarını işliyor, dışarıdan girdi yok.
+
+- Kapı gevşetilmedi (`--omit=dev` ya da seviye düşürme yok). `.github/scripts/npm-audit-gate.mjs`
+  high/critical her advisory'de kırar; yalnızca `web/npm-audit-allowlist.json`'da **id + paket +
+  gerekçe + bitiş tarihi** ile yazılmış olanı geçirir. Tarih geçince kapı yeniden kırılır; artık
+  eşleşmeyen kayıt uyarı verir.
+- İlk kayıt: GHSA-vfj7-8cjw-p6xm / `braces`, 2026-11-05'e kadar. Düzeltilmiş `braces`/`micromatch`
+  çıkınca kayıt silinir.
