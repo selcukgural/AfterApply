@@ -762,12 +762,14 @@ export interface PaymentsConfig {
   enabled: boolean;
 }
 
-/** Whether salary entries are switched on, the quota the form counts down from, and the
- *  per-currency threshold under which the company page shows no median. */
+/** Whether salary entries are switched on, the quota the form counts down from, the
+ *  per-currency threshold under which the company page shows no median, and how many entries
+ *  one account may hold at a single company. */
 export interface CompanySalariesConfig {
   enabled: boolean;
   maxEntriesPerUser: number;
   minimumEntriesForStats: number;
+  maxEntriesPerCompanyPerUser: number;
 }
 
 /** Whether candidate experiences are switched on, the quota the form counts down from, the
@@ -1680,11 +1682,14 @@ export interface ModerationCounts {
   pendingComments: number;
 }
 
-export interface UserReviewQuota {
+/** Mirrors AfterApply.Application.CompanyReviews.Contracts.UserContributionQuotaResponse: one
+ *  override for every contribution kind, and each kind's usage under it. */
+export interface UserContributionQuota {
   userId: string;
-  reviewQuotaOverride: number | null;
-  effectiveLimit: number;
-  used: number;
+  quotaOverride: number | null;
+  reviews: ReviewQuota;
+  salaries: SalaryQuota;
+  experiences: ExperienceQuota;
 }
 
 /** Mirrors AfterApply.Application.Applications.Contracts.StaleApplicationsSummaryResponse. */

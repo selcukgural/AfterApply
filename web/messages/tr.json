@@ -1729,7 +1729,7 @@
   },
   "terms": {
     "title": "Kullanım Koşulları",
-    "lastUpdated": "Son güncelleme: 24 Eylül 2026",
+    "lastUpdated": "Son güncelleme: 5 Ekim 2026",
     "intro": "Bu sayfa e-kariyerim'i — web sitesini, Chrome eklentisini ve hesapsız kullanılabilen araçları — kullanırken geçerli olan kuralları anlatır. Siteyi kullanarak bu koşulları kabul etmiş olursun; kabul etmiyorsan lütfen kullanma. Kişisel verilerinin nasıl işlendiği ayrı bir belgede, Gizlilik Politikası'nda anlatılır; iki belge birlikte geçerlidir.",
     "service": {
       "title": "Hizmet nedir",
@@ -1765,7 +1765,7 @@
       "ownData": "Yalnızca kendi maaşını paylaşırsın; başkası adına ya da duyduğunu değil.",
       "accurate": "Verdiğin tutarlar ve seçtiğin meslek gerçeğe uygun olmalı.",
       "signedInOnly": "Kayıtlar giriş yapmış kullanıcılara anonim olarak gösterilir; okuyucular adını değil, mesleği ve tecrübe bandını görür.",
-      "quota": "Hesap başına toplam on kayıt, aynı şirkette meslek başına bir kayıt. Silmek yer açar.",
+      "quota": "Hesap başına toplam 100 kayıt; aynı şirkette en fazla 3 kayıt, meslek başına bir. Silmek yer açar.",
       "opinion": "Kayıtlar kullanıcı beyanıdır; e-kariyerim doğrulamaz ve maaş müzakeresi için tavsiye niteliği taşımaz."
     },
     "experiences": {
@@ -1773,7 +1773,7 @@
       "intro": "Bir şirketin işe alım sürecini puanlarken:",
       "ownProcess": "Yalnızca kendin geçtiğin bir süreci puanlarsın; başkası adına ya da duyduğunu değil.",
       "structured": "Serbest metin yoktur: puan verir ve hazır maddelerden seçersin. Görüşmeci, ekip ya da pozisyon adı sorulmaz; kaydın bir kişiyi işaret etmez.",
-      "onePerCompany": "Şirket başına bir kayıt, hesap başına toplam on. Görüşün değişirse kaydı düzenlersin; silmek yer açar.",
+      "onePerCompany": "Şirket başına bir kayıt, hesap başına toplam 100. Görüşün değişirse kaydı düzenlersin; silmek yer açar.",
       "publication": "Kayıt kaydettiğin anda herkese açık şirket sayfasında yayımlanır; adın, e-postan ya da hesabın gösterilmez, tarih çeyrek hassasiyetindedir.",
       "noManipulation": "Bir şirketi yükseltmek ya da düşürmek için birden fazla hesapla kayıt girmek, karşılığında kayıt istemek ya da bir sürece hiç girmeden puanlamak yasaktır.",
       "opinion": "Kayıtlar adayın kendi sürecine dair görüşüdür; e-kariyerim doğrulamaz ve bir şirket hakkında hüküm niteliği taşımaz."
@@ -3178,8 +3178,8 @@
         "body": "Okuyucular adınızı, e-postanızı ya da tam tecrübe yılınızı görmez; yalnızca meslek, bant, çalışma şekli, ilişki ve dönemin yılları görünür. Tam yıl yalnızca sizin listenizde ve veri dışa aktarımınızdadır."
       },
       "calloutLimits": {
-        "title": "Meslek başına bir kayıt, toplam on",
-        "body": "Aynı şirkete farklı meslekler için birden fazla kayıt girebilirsiniz (terfi gibi); aynı meslek için ikinci kayıt yerine mevcut olanı düzenleyin. Hesap başına toplam on kayıt; silmek yer açar."
+        "title": "Meslek başına bir kayıt, şirket başına en fazla üç",
+        "body": "Aynı şirkete farklı meslekler için en fazla üç kayıt girebilirsiniz (terfi gibi); aynı meslek için ikinci kayıt yerine mevcut olanı düzenleyin. Hesap başına toplam 100 kayıt; silmek yer açar."
       },
       "manage": {
         "title": "Düzenleme ve silme",
@@ -3394,8 +3394,8 @@
         "body": "Okuyucular adınızı, e-postanızı, pozisyonunuzu ya da süreci hangi ay geçirdiğinizi görmez; yalnızca puanlar, maddeler, süreç etiketleri ve çeyrek görünür. Görüşmeci adı ya da ekip adı hiçbir yerde sorulmaz."
       },
       "calloutLimits": {
-        "title": "Şirket başına bir kayıt, toplam on",
-        "body": "Bir şirketin sürecini bir kez puanlarsınız; görüşünüz değişirse kaydı düzenlersiniz. Hesap başına toplam on kayıt; silmek yer açar."
+        "title": "Şirket başına bir kayıt, toplam 100",
+        "body": "Bir şirketin sürecini bir kez puanlarsınız; görüşünüz değişirse kaydı düzenlersiniz. Hesap başına toplam 100 kayıt; silmek yer açar."
       },
       "manage": {
         "title": "Kayıtlarınızı yönetmek",
@@ -5582,7 +5582,7 @@
       "signedIn": "Yalnızca giriş yapmış kullanıcılar okuyabilir.",
       "band": "Tecrübe yılı bant olarak gösterilir: 0–1, 2–4, 5–9, 10+.",
       "month": "Maaşın ait olduğu dönem yıl olarak görünür (2010 – 2012 gibi); ay istenmez. Son iki yıl içinde geçerli olan kayıtlar medyana girer, eskiler ayrı listelenir.",
-      "perTitle": "Aynı şirkete farklı meslekler için birden fazla kayıt girebilirsin; toplamda 10 kayıt.",
+      "perTitle": "Aynı şirkete farklı meslekler için en fazla {perCompany} kayıt girebilirsin; toplamda {limit} kayıt.",
       "editable": "Kaydı Katkılarım sayfasından düzenleyebilir ya da silebilirsin.",
       "fullGuide": "Tam rehber →"
     },
@@ -5749,10 +5749,10 @@
       "approve": "Yayımla",
       "reject": "Reddet",
       "author": "Yazar (yalnızca yöneticiler görür)",
-      "quotaOverride": "Bu hesabın değerlendirme hakkı",
+      "quotaOverride": "Bu hesabın katkı hakkı (değerlendirme, maaş ve aday deneyimi için ayrı ayrı)",
       "quotaPlaceholder": "Boş = varsayılan",
       "setQuota": "Ayarla",
-      "quotaResult": "{limit} haktan {used} kullanıldı.",
+      "quotaResult": "Değerlendirme {reviewsUsed}/{reviewsLimit} · Maaş {salariesUsed}/{salariesLimit} · Aday deneyimi {experiencesUsed}/{experiencesLimit} kullanıldı.",
       "reports": "{count, plural, =1 {1 bildirim} other {# bildirim}}",
       "resolvedAs": "Sonuç: {resolution}",
       "rejectReason": "Ret gerekçesi (yazar bunu okur)",

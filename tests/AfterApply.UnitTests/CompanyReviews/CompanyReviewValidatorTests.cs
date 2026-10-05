@@ -120,11 +120,13 @@ public class CompanyReviewValidatorTests
     [Fact]
     public void Quota_Override_Is_Bounded_And_Null_Is_Allowed()
     {
-        var validator = new SetReviewQuotaRequestValidator();
+        var validator = new SetContributionQuotaRequestValidator();
 
-        validator.Validate(new SetReviewQuotaRequest(null)).IsValid.ShouldBeTrue();
-        validator.Validate(new SetReviewQuotaRequest(0)).IsValid.ShouldBeTrue();
-        validator.Validate(new SetReviewQuotaRequest(1001)).IsValid.ShouldBeFalse();
+        validator.Validate(new SetContributionQuotaRequest(null)).IsValid.ShouldBeTrue();
+        validator.Validate(new SetContributionQuotaRequest(0)).IsValid.ShouldBeTrue();
+        validator.Validate(new SetContributionQuotaRequest(1000)).IsValid.ShouldBeTrue();
+        validator.Validate(new SetContributionQuotaRequest(-1)).IsValid.ShouldBeFalse();
+        validator.Validate(new SetContributionQuotaRequest(1001)).IsValid.ShouldBeFalse();
     }
 
     [Fact]

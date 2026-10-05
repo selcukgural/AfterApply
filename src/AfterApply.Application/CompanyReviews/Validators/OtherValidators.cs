@@ -48,11 +48,11 @@ public sealed class ResolveReviewReportRequestValidator : AbstractValidator<Reso
     }
 }
 
-public sealed class SetReviewQuotaRequestValidator : AbstractValidator<SetReviewQuotaRequest>
+public sealed class SetContributionQuotaRequestValidator : AbstractValidator<SetContributionQuotaRequest>
 {
-    public SetReviewQuotaRequestValidator()
+    public SetContributionQuotaRequestValidator()
     {
-        RuleFor(x => x.ReviewQuotaOverride).InclusiveBetween(0, 1000).When(x => x.ReviewQuotaOverride.HasValue);
+        RuleFor(x => x.QuotaOverride).InclusiveBetween(0, 1000).When(x => x.QuotaOverride.HasValue);
     }
 }
 

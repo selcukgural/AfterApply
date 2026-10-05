@@ -95,7 +95,7 @@ export default function AdminReviewsPage() {
   });
 
   const setQuota = useMutation({
-    mutationFn: ({ userId, value }: { userId: string; value: number | null }) => adminApi.setReviewQuota(userId, value),
+    mutationFn: ({ userId, value }: { userId: string; value: number | null }) => adminApi.setContributionQuota(userId, value),
     onError: (err) => setActionError(err instanceof ApiError ? err.message : t("error")),
   });
 
@@ -330,7 +330,14 @@ export default function AdminReviewsPage() {
                 </div>
                 {setQuota.data && (
                   <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                    {t("detail.quotaResult", { used: setQuota.data.used, limit: setQuota.data.effectiveLimit })}
+                    {t("detail.quotaResult", {
+                      reviewsUsed: setQuota.data.reviews.used,
+                      reviewsLimit: setQuota.data.reviews.limit,
+                      salariesUsed: setQuota.data.salaries.used,
+                      salariesLimit: setQuota.data.salaries.limit,
+                      experiencesUsed: setQuota.data.experiences.used,
+                      experiencesLimit: setQuota.data.experiences.limit,
+                    })}
                   </p>
                 )}
               </div>

@@ -6,7 +6,7 @@ import { buildNavEntries, isNavItemActive, type NavEntry } from "./navGroups";
 const ALL_ON = {
   jobSources: { enabled: true },
   companyReviews: { enabled: true, maxReviewsPerUser: 10, minimumReviewsForScore: 3, priorWeight: 5 },
-  companySalaries: { enabled: true, maxEntriesPerUser: 10, minimumEntriesForStats: 3 },
+  companySalaries: { enabled: true, maxEntriesPerUser: 100, minimumEntriesForStats: 3, maxEntriesPerCompanyPerUser: 3 },
   candidateExperiences: { enabled: true, maxEntriesPerUser: 10, minimumEntriesForStats: 3, priorWeight: 5 },
   blog: { enabled: true, hasPublishedPosts: true },
 };

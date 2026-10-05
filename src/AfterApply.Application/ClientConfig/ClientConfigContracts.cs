@@ -108,8 +108,10 @@ public sealed record CompanyReviewsConfigResponse(bool Enabled, int MaxReviewsPe
 
 /// <summary>What the contribute page and the company page's salary tab need before rendering:
 /// whether the feature is on (off hides the menu links and the tab), the quota the form counts
-/// down from, and the threshold under which no median is shown.</summary>
-public sealed record CompanySalariesConfigResponse(bool Enabled, int MaxEntriesPerUser, int MinimumEntriesForStats);
+/// down from, the threshold under which no median is shown, and how many entries one account may
+/// hold at a single company.</summary>
+public sealed record CompanySalariesConfigResponse(bool Enabled, int MaxEntriesPerUser, int MinimumEntriesForStats,
+    int MaxEntriesPerCompanyPerUser);
 
 /// <summary>What the contribute page and the company page's candidate-experience tab need before
 /// rendering: whether the feature is on (off hides the menu links and the tab), the quota the

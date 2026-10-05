@@ -16,5 +16,9 @@ public sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Appl
         // looked up on every image request — and it must never collide with another account's.
         builder.Property(u => u.AvatarObjectName).HasMaxLength(200);
         builder.HasIndex(u => u.AvatarPublicId).IsUnique();
+
+        // The column keeps the name it had when only reviews read it: renaming a column the
+        // running release still reads breaks that release mid-deploy (DEPLOYMENT.md).
+        builder.Property(u => u.ContributionQuotaOverride).HasColumnName("ReviewQuotaOverride");
     }
 }

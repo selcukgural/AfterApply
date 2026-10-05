@@ -52,20 +52,21 @@ export const DEFAULT_CLIENT_CONFIG: ClientConfigResponse = {
   },
   companyReviews: {
     enabled: false,
-    maxReviewsPerUser: 10,
+    maxReviewsPerUser: 100,
     minimumReviewsForScore: 3,
     priorWeight: 5,
   },
   // Same reason: menu links and the company page's salary tab stay hidden until the server says on.
   companySalaries: {
     enabled: false,
-    maxEntriesPerUser: 10,
+    maxEntriesPerUser: 100,
     minimumEntriesForStats: 3,
+    maxEntriesPerCompanyPerUser: 3,
   },
   // And again for the third tab.
   candidateExperiences: {
     enabled: false,
-    maxEntriesPerUser: 10,
+    maxEntriesPerUser: 100,
     minimumEntriesForStats: 3,
     priorWeight: 5,
   },

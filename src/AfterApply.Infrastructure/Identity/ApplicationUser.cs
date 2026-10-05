@@ -37,13 +37,17 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     public bool IsAdmin { get; set; }
 
     /// <summary>
-    /// How many company reviews this account may hold in total, when an admin has set it for
-    /// this account specifically; null means the global <c>CompanyReviews:MaxReviewsPerUser</c>
-    /// applies. A column for the same reason <see cref="IsAdmin"/> is one: it changes on the next
-    /// request, not on the next deploy — which is what "set a spammer to 0" has to mean. Set through
-    /// the admin moderation endpoint (the one admin write this table has).
+    /// How many contributions of each kind — company reviews, salary entries, candidate
+    /// experiences — this account may hold, when an admin has set it for this account
+    /// specifically; null means each kind's global default applies
+    /// (<c>CompanyReviews:MaxReviewsPerUser</c>, <c>CompanySalaries:MaxEntriesPerUser</c>,
+    /// <c>CandidateExperiences:MaxEntriesPerUser</c>). One value for all three on purpose: raising
+    /// a trusted contributor or setting a spammer to 0 means the account, not one form. A column
+    /// for the same reason <see cref="IsAdmin"/> is one: it changes on the next request, not on
+    /// the next deploy. Set through the admin moderation endpoint (the one admin write this table
+    /// has).
     /// </summary>
-    public int? ReviewQuotaOverride { get; set; }
+    public int? ContributionQuotaOverride { get; set; }
 
     /// <summary>ISO 639-1 code ("tr"/"en") applied to this user's session right after login,
     /// regardless of which device/browser they sign in from. Kept in sync with the frontend's

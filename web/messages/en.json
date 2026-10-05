@@ -1729,7 +1729,7 @@
   },
   "terms": {
     "title": "Terms of Use",
-    "lastUpdated": "Last updated: 24 September 2026",
+    "lastUpdated": "Last updated: 5 October 2026",
     "intro": "This page sets out the rules that apply when you use e-kariyerim — the website, the Chrome extension and the tools that work without an account. By using the site you accept these terms; if you do not accept them, please do not use it. How your personal data is handled is described in a separate document, the Privacy Policy; the two apply together.",
     "service": {
       "title": "What the service is",
@@ -1765,7 +1765,7 @@
       "ownData": "You share only your own salary; not someone else's, and not hearsay.",
       "accurate": "The amounts and the occupation you pick must be truthful.",
       "signedInOnly": "Entries are shown anonymously to signed-in users; readers see the occupation and an experience band, not your name.",
-      "quota": "Ten entries per account in total, one per occupation at the same company. Deleting frees a slot.",
+      "quota": "100 entries per account in total; at most 3 at one company, one per occupation. Deleting frees a slot.",
       "opinion": "Entries are user reports; e-kariyerim does not verify them, and they are not advice for salary negotiation."
     },
     "experiences": {
@@ -1773,7 +1773,7 @@
       "intro": "When you rate a company's hiring process:",
       "ownProcess": "You rate only a process you went through yourself; not on someone's behalf, not from hearsay.",
       "structured": "There is no free text: you rate and pick from ready-made statements. No interviewer, team or job title is asked; your entry does not point at a person.",
-      "onePerCompany": "One entry per company, ten per account in total. If your view changes, you edit the entry; deleting frees a slot.",
+      "onePerCompany": "One entry per company, 100 per account in total. If your view changes, you edit the entry; deleting frees a slot.",
       "publication": "An entry is published on the public company page the moment you save it; your name, e-mail or account is never shown, and the date is a quarter.",
       "noManipulation": "Entering from several accounts to push a company up or down, soliciting entries in return for anything, or rating a process you never went through is not allowed.",
       "opinion": "Entries are a candidate's view of their own process; e-kariyerim does not verify them and they are not a verdict on a company."
@@ -3178,8 +3178,8 @@
         "body": "Readers do not see your name, e-mail or exact years of experience; only the occupation, band, employment type, relationship and the years of the period are shown. The exact years are only in your own list and your data export."
       },
       "calloutLimits": {
-        "title": "One entry per occupation, ten in total",
-        "body": "You can add several entries for one company under different occupations (a promotion, say); for the same occupation, edit the existing entry instead of adding a second. Ten entries per account in total; deleting frees a slot."
+        "title": "One entry per occupation, up to three per company",
+        "body": "You can add up to three entries for one company under different occupations (a promotion, say); for the same occupation, edit the existing entry instead of adding a second. 100 entries per account in total; deleting frees a slot."
       },
       "manage": {
         "title": "Editing and deleting",
@@ -3394,8 +3394,8 @@
         "body": "Readers never see your name, e-mail, job title or the month you went through the process; only the ratings, the statements, the process tags and the quarter. Interviewer or team names are never asked anywhere."
       },
       "calloutLimits": {
-        "title": "One entry per company, ten in total",
-        "body": "You rate a company's process once; if your view changes, you edit the entry. Ten entries per account in total; deleting one frees a slot."
+        "title": "One entry per company, 100 in total",
+        "body": "You rate a company's process once; if your view changes, you edit the entry. 100 entries per account in total; deleting one frees a slot."
       },
       "manage": {
         "title": "Managing your entries",
@@ -5582,7 +5582,7 @@
       "signedIn": "Only signed-in users can read entries.",
       "band": "Years of experience are shown as a band: 0–1, 2–4, 5–9, 10+.",
       "month": "The period a salary belongs to is shown in years (e.g. 2010 – 2012); no month is asked. Entries current within the last two years make the median; older ones are listed separately.",
-      "perTitle": "You can add several entries for one company under different occupations; ten entries in total.",
+      "perTitle": "You can add up to {perCompany} entries for one company under different occupations; {limit} entries in total.",
       "editable": "You can edit or delete an entry from My contributions.",
       "fullGuide": "Full guide →"
     },
@@ -5749,10 +5749,10 @@
       "approve": "Publish",
       "reject": "Reject",
       "author": "Author (visible to admins only)",
-      "quotaOverride": "Review quota for this account",
+      "quotaOverride": "Contribution quota for this account (applies to reviews, salaries and candidate experiences each)",
       "quotaPlaceholder": "Blank = default",
       "setQuota": "Set",
-      "quotaResult": "{used} used of {limit}.",
+      "quotaResult": "Used: reviews {reviewsUsed}/{reviewsLimit} · salaries {salariesUsed}/{salariesLimit} · candidate experiences {experiencesUsed}/{experiencesLimit}.",
       "reports": "{count, plural, =1 {1 report} other {# reports}}",
       "resolvedAs": "Resolved: {resolution}",
       "rejectReason": "Reason for rejecting (the author reads this)",

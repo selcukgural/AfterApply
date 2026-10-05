@@ -13,8 +13,9 @@ public sealed class CompanyReviewOptions
     public bool Enabled { get; init; } = true;
 
     /// <summary>How many reviews one account may hold across all companies, in any status. An
-    /// admin can override it per account (<c>Users.ReviewQuotaOverride</c>).</summary>
-    public int MaxReviewsPerUser { get; init; } = 10;
+    /// admin can override it per account (<c>Users.ContributionQuotaOverride</c>, shared with
+    /// salaries and candidate experiences).</summary>
+    public int MaxReviewsPerUser { get; init; } = 100;
 
     /// <summary>Below this many approved reviews a company shows no score, only the count — the
     /// same asymmetry as the benchmark threshold: raising it hides more and is always safe.</summary>

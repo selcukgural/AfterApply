@@ -300,8 +300,9 @@ internal sealed class CandidateExperienceService(
 
     public async Task<ExperienceQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken)
     {
+        var overrideValue = await dbContext.OverrideAsync(userId, cancellationToken);
         var used = await dbContext.CandidateExperiences.CountAsync(e => e.UserId == userId, cancellationToken);
-        return new ExperienceQuotaResponse(used, options.Value.MaxEntriesPerUser);
+        return new ExperienceQuotaResponse(used, overrideValue ?? options.Value.MaxEntriesPerUser);
     }
 
     private async Task<List<MyCandidateExperienceResponse>> ProjectMineAsync(IQueryable<CandidateExperience> entries, CancellationToken cancellationToken)

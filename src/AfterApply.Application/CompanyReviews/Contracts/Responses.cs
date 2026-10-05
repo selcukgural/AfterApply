@@ -1,3 +1,5 @@
+using AfterApply.Application.CandidateExperiences.Contracts;
+using AfterApply.Application.CompanySalaries.Contracts;
 using AfterApply.Domain.CompanyReviews;
 
 namespace AfterApply.Application.CompanyReviews.Contracts;
@@ -188,7 +190,13 @@ public sealed record AdminReviewReportResponse(
 /// on this response so the tabs stay one request.</summary>
 public sealed record ModerationCountsResponse(int PendingReviews, int OpenReports, int PendingComments = 0);
 
-public sealed record UserReviewQuotaResponse(Guid UserId, int? ReviewQuotaOverride, int EffectiveLimit, int Used);
+/// <summary>The account's override and, per kind, how much of the limit it now has is used.</summary>
+public sealed record UserContributionQuotaResponse(
+    Guid UserId,
+    int? QuotaOverride,
+    ReviewQuotaResponse Reviews,
+    SalaryQuotaResponse Salaries,
+    ExperienceQuotaResponse Experiences);
 
 /// <summary>
 /// A company that has a page but no contribution yet, returned by the directory's search once

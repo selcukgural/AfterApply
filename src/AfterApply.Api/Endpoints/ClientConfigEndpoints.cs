@@ -95,7 +95,7 @@ public static class ClientConfigEndpoints
                     new CompanyReviewsConfigResponse(featureFlags.IsEnabled(FeatureFlag.CompanyReviews), reviews.MaxReviewsPerUser,
                         reviews.MinimumReviewsForScore, reviews.PriorWeight),
                     new CompanySalariesConfigResponse(featureFlags.IsEnabled(FeatureFlag.CompanySalaries), salaries.MaxEntriesPerUser,
-                        salaries.MinimumEntriesForStats),
+                        salaries.MinimumEntriesForStats, salaries.MaxEntriesPerCompanyPerUser),
                     new JobSourcesConfigResponse(featureFlags.IsEnabled(FeatureFlag.JobSources)),
                     new PaymentsConfigResponse(featureFlags.IsEnabled(FeatureFlag.Payments) && payTrOptions.Value.IsConfigured),
                     new CandidateExperiencesConfigResponse(featureFlags.IsEnabled(FeatureFlag.CandidateExperiences), experiences.MaxEntriesPerUser,

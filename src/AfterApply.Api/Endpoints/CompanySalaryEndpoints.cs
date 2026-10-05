@@ -54,8 +54,9 @@ public static class CompanySalaryEndpoints
             .WithSummary("Share a salary for an occupation at a company")
             .WithDescription("Visible to signed-in readers on save. The occupation is a row of the catalogue " +
                              "(/api/occupations/search) — an unknown or retired id is a 400. One entry per occupation " +
-                             "per company per account, and at most " +
-                             "CompanySalaries:MaxEntriesPerUser in total — both refusals are 400s with a coded detail.")
+                             "per company per account, at most CompanySalaries:MaxEntriesPerCompanyPerUser at one company, and at most " +
+                             "CompanySalaries:MaxEntriesPerUser in total (or the account's override) — both refusals " +
+                             "are 400s with a coded detail.")
             .Produces<MyCompanySalaryResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status429TooManyRequests);
