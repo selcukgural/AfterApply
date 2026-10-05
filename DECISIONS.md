@@ -10606,3 +10606,33 @@ https://claude.ai/artifact/MeKCeFEh2iB9jgGRzUkYA9 — kullanıcı 0/A/B/C içind
 - Yeni sayaç olayı `cta_hero_social_sign_in` (kartta sağlayıcı tıklaması), admin kartında
   "Hero sosyal". Etki, 2026-10-02 ölçüm satırlarıyla (sosyal başladı/tamamlandı, yeni hesap / ana
   sayfa) birkaç hafta sonra okunacak.
+
+## Katkı hakkı: tek override üç türe, varsayılan 100 — DECIDED (2026-10-05)
+
+**Bağlam:** Admin bir hesabın "değerlendirme hakkı"nı 100'e çekti ama kullanıcı maaş ve aday
+deneyiminde hâlâ 10'da kaldı. Override (2026-09-12) yalnızca değerlendirmeyi okuyordu; maaş
+(2026-09-16) ve aday deneyimi bilerek override'sız açılmıştı ("gerekirse aynı kalıp").
+
+- **Tek değer, üç tür:** `Users.ContributionQuotaOverride` değerlendirme, maaş ve aday deneyimi
+  kotalarının üçüne de ayrı ayrı uygulanır (100 = her türden 100). Admin'in niyeti hesaptır, form
+  değil: güvenilir katkıcıyı açmak da spam yapanı 0'a çekmek de üçünü birden ister. Üç ayrı kolon
+  gereksiz bir seçim yüzeyi olurdu.
+- **Kolon adı değişmedi:** C# property `ContributionQuotaOverride`, DB kolonu `ReviewQuotaOverride`
+  (`HasColumnName`). Çalışan sürümün okuduğu kolonu yeniden adlandırmak deploy sırasında onu
+  kırar (DEPLOYMENT.md, expand-then-contract). Mevcut override değerleri olduğu gibi kalır ve artık
+  üç türde de geçerli.
+- **Admin ucu:** `PUT /api/admin/users/{id}/contribution-quota` (`{ quotaOverride }`), yanıt üç
+  türün kullanımını döner. Admin panelindeki alan "katkı hakkı" oldu; panel yalnızca değerlendirme
+  detayında (yazar orada görünüyor) — maaş/deneyim admin listelerine eklenmedi.
+- **Varsayılan 10 → 100:** `CompanyReviews:MaxReviewsPerUser`, `CompanySalaries:MaxEntriesPerUser`,
+  `CandidateExperiences:MaxEntriesPerUser`. Spam sınırını artık yazma rate limit'leri,
+  şirket başına tekillik kuralları ve değerlendirme moderasyonu taşıyor. Maaş yönergesindeki
+  "toplamda N kayıt" metni sayıyı `/api/config`'ten okur; koşullar ve yardım sayfalarındaki düzyazı
+  ("toplam on") elle 100'e çekildi, koşulların tarihi 5 Ekim 2026.
+- **Maaşta şirket başına en fazla 3 kayıt** (`CompanySalaries:MaxEntriesPerCompanyPerUser`, kod
+  `COMPANY_SALARY_COMPANY_LIMIT_REACHED`). Bir şirketin medyanı ve aralığı kişiyi değil satırı
+  sayar; limit 100'e çıkınca tek bir hesap farklı meslekler altında bir şirketin maaş verisinin
+  tamamını tek başına yazabilirdi. 3, terfi senaryosunu (aynı şirkette 2–3 pozisyon) karşılıyor.
+  Admin override'ı bu sınırı **kaldırmaz**: override hacim hakkıdır, bu sınır şirketin rakamlarının
+  kime ait olduğuyla ilgili. Eski kayıtlar dokunulmadan kalır (sınır yalnızca yeni kayıtta
+  bakılır); düzenleme serbest. Değer `/api/config`'te (`maxEntriesPerCompanyPerUser`, eklemeli alan).

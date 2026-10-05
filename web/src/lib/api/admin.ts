@@ -11,7 +11,7 @@ import type {
   ReviewReportResolution,
   ReviewReportStatus,
   SiteTrafficCounterResponse,
-  UserReviewQuota,
+  UserContributionQuota,
 } from "@/types/api";
 import type { ModerationListFilters } from "@/lib/companyReviews/moderationListView";
 import { buildModerationQueryString } from "@/lib/companyReviews/moderationListView";
@@ -67,9 +67,9 @@ export const adminApi = {
   deleteExperience: (experienceId: string) =>
     apiFetch<void>(`/api/admin/candidate-experiences/${experienceId}`, { method: "DELETE" }),
 
-  setReviewQuota: (userId: string, reviewQuotaOverride: number | null) =>
-    apiFetch<UserReviewQuota>(`/api/admin/users/${userId}/review-quota`, {
+  setContributionQuota: (userId: string, quotaOverride: number | null) =>
+    apiFetch<UserContributionQuota>(`/api/admin/users/${userId}/contribution-quota`, {
       method: "PUT",
-      body: JSON.stringify({ reviewQuotaOverride }),
+      body: JSON.stringify({ quotaOverride }),
     }),
 };

@@ -12,8 +12,16 @@ public sealed class CompanySalaryOptions
     public bool Enabled { get; init; } = true;
 
     /// <summary>How many salary entries one account may hold across all companies. Deleting one
-    /// frees the slot.</summary>
-    public int MaxEntriesPerUser { get; init; } = 10;
+    /// frees the slot. An admin can override it per account
+    /// (<c>Users.ContributionQuotaOverride</c>).</summary>
+    public int MaxEntriesPerUser { get; init; } = 100;
+
+    /// <summary>How many entries one account may hold at one company, under different occupations
+    /// (2026-10-05). The company's median and range count rows, not people: without this one
+    /// account could write most of a company's salary figures by itself. Not lifted by the
+    /// admin's per-account override — that is a volume allowance, this is about whose numbers a
+    /// company's figures are.</summary>
+    public int MaxEntriesPerCompanyPerUser { get; init; } = 3;
 
     /// <summary>Below this many entries in one currency a company shows no median or range for
     /// it, only the rows — the same asymmetry as the review score threshold: raising it hides

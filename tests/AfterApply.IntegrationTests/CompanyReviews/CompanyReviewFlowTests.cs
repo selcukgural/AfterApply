@@ -3,9 +3,14 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.CandidateExperiences.Contracts;
 using AfterApply.Application.CompanyReviews.Contracts;
+using AfterApply.Application.CompanySalaries.Contracts;
 using AfterApply.Application.Identity.Contracts;
+using AfterApply.Domain.Common;
 using AfterApply.Domain.CompanyReviews;
+using AfterApply.Domain.CompanySalaries;
+using AfterApply.Domain.Occupations;
 using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -21,6 +26,10 @@ public sealed class CompanyReviewFlowProfile : IHostProfile
     {
         // Small on purpose so the quota test does not have to write ten reviews.
         builder.UseSetting("CompanyReviews:MaxReviewsPerUser", "3");
+        // One each, so the shared-override test can show the admin value replacing all three
+        // defaults without writing a pile of rows first.
+        builder.UseSetting("CompanySalaries:MaxEntriesPerUser", "1");
+        builder.UseSetting("CandidateExperiences:MaxEntriesPerUser", "1");
         builder.UseSetting("CompanyReviews:MinimumReviewsForScore", "3");
         builder.UseSetting("CompanyReviews:PriorWeight", "5");
     }
@@ -499,16 +508,57 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
         (await refused.Content.ReadAsStringAsync()).ShouldContain("limit of 3 company reviews");
 
         var userId = (await author.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions))!.Id;
-        var raised = await _admin.PutAsJsonAsync($"/api/admin/users/{userId}/review-quota", new SetReviewQuotaRequest(4), JsonOptions);
+        var raised = await _admin.PutAsJsonAsync($"/api/admin/users/{userId}/contribution-quota", new SetContributionQuotaRequest(4), JsonOptions);
         raised.EnsureSuccessStatusCode();
-        (await raised.Content.ReadFromJsonAsync<UserReviewQuotaResponse>(JsonOptions))!.EffectiveLimit.ShouldBe(4);
+        (await raised.Content.ReadFromJsonAsync<UserContributionQuotaResponse>(JsonOptions))!.Reviews.Limit.ShouldBe(4);
 
         await WriteAsync(author, four.Id);
 
         // Zero is the "this account is done" setting.
-        (await _admin.PutAsJsonAsync($"/api/admin/users/{userId}/review-quota", new SetReviewQuotaRequest(0), JsonOptions)).EnsureSuccessStatusCode();
+        (await _admin.PutAsJsonAsync($"/api/admin/users/{userId}/contribution-quota", new SetContributionQuotaRequest(0), JsonOptions)).EnsureSuccessStatusCode();
         var five = await ResolveAsync(author, "Quota Five Co");
         (await author.PostAsJsonAsync($"/api/companies/{five.Id}/reviews", Review(), JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task One_Admin_Override_Replaces_The_Salary_And_Experience_Limits_Too()
+    {
+        var author = await RegisterAsync("quota.shared@example.com");
+        var first = await ResolveAsync(author, "Shared Quota One Co");
+        var second = await ResolveAsync(author, "Shared Quota Two Co");
+        var salary = new CompanySalaryRequest(Occupation.IdFor("2512"), 6, EmploymentType.FullTime,
+            SalaryEmploymentStatus.CurrentEmployee, 95_000m, SalaryCurrency.TRY, false, null, DateTimeOffset.UtcNow.Year - 1, null);
+        var experience = new CandidateExperienceRequest(4);
+
+        (await author.PostAsJsonAsync($"/api/companies/{first.Id}/salaries", salary, JsonOptions)).EnsureSuccessStatusCode();
+        (await author.PostAsJsonAsync($"/api/companies/{first.Id}/experiences", experience, JsonOptions)).EnsureSuccessStatusCode();
+        (await author.PostAsJsonAsync($"/api/companies/{second.Id}/salaries", salary, JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await author.PostAsJsonAsync($"/api/companies/{second.Id}/experiences", experience, JsonOptions)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        var userId = (await author.GetFromJsonAsync<UserProfileResponse>("/api/users/me", JsonOptions))!.Id;
+        var raised = await _admin.PutAsJsonAsync($"/api/admin/users/{userId}/contribution-quota", new SetContributionQuotaRequest(2), JsonOptions);
+        raised.EnsureSuccessStatusCode();
+        var quota = (await raised.Content.ReadFromJsonAsync<UserContributionQuotaResponse>(JsonOptions))!;
+        quota.QuotaOverride.ShouldBe(2);
+        quota.Reviews.ShouldBe(new ReviewQuotaResponse(0, 2));
+        quota.Salaries.ShouldBe(new SalaryQuotaResponse(1, 2));
+        quota.Experiences.ShouldBe(new ExperienceQuotaResponse(1, 2));
+
+        // The author is held to the new value on the very next request, on every form.
+        (await author.PostAsJsonAsync($"/api/companies/{second.Id}/salaries", salary, JsonOptions)).EnsureSuccessStatusCode();
+        (await author.PostAsJsonAsync($"/api/companies/{second.Id}/experiences", experience, JsonOptions)).EnsureSuccessStatusCode();
+        var mine = (await author.GetFromJsonAsync<MyContributionsResponse>("/api/contributions/mine", JsonOptions))!;
+        mine.ReviewQuota.Limit.ShouldBe(2);
+        mine.SalaryQuota.ShouldBe(new SalaryQuotaResponse(2, 2));
+        mine.ExperienceQuota.ShouldBe(new ExperienceQuotaResponse(2, 2));
+
+        // Null hands every kind back to its own configured default.
+        var cleared = await _admin.PutAsJsonAsync($"/api/admin/users/{userId}/contribution-quota", new SetContributionQuotaRequest(null), JsonOptions);
+        var restored = (await cleared.Content.ReadFromJsonAsync<UserContributionQuotaResponse>(JsonOptions))!;
+        restored.QuotaOverride.ShouldBeNull();
+        restored.Reviews.Limit.ShouldBe(3);
+        restored.Salaries.Limit.ShouldBe(1);
+        restored.Experiences.Limit.ShouldBe(1);
     }
 
     // ---- Helpful and reports ---------------------------------------------------------------
@@ -652,7 +702,7 @@ public class CompanyReviewFlowTests(ApiHost<CompanyReviewFlowProfile> host) : IC
             (HttpMethod.Post, $"/api/admin/company-reviews/{id}/reject", new RejectCompanyReviewRequest("nope")),
             (HttpMethod.Get, "/api/admin/company-review-reports", null),
             (HttpMethod.Post, $"/api/admin/company-review-reports/{id}/resolve", new ResolveReviewReportRequest(ReviewReportResolution.Dismissed)),
-            (HttpMethod.Put, $"/api/admin/users/{id}/review-quota", new SetReviewQuotaRequest(1)),
+            (HttpMethod.Put, $"/api/admin/users/{id}/contribution-quota", new SetContributionQuotaRequest(1)),
             (HttpMethod.Get, "/api/admin/company-salaries", null),
             (HttpMethod.Delete, $"/api/admin/company-salaries/{id}", null),
             (HttpMethod.Get, "/api/admin/candidate-experiences", null),

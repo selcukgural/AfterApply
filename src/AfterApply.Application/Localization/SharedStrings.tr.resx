@@ -384,6 +384,9 @@
   <data name="COMPANY_SALARY_QUOTA_REACHED" xml:space="preserve">
     <value>En fazla {0} maaş kaydı girebilirsiniz. Yenisi için birini silin.</value>
   </data>
+  <data name="COMPANY_SALARY_COMPANY_LIMIT_REACHED" xml:space="preserve">
+    <value>Bir şirkete en fazla {0} maaş kaydı girebilirsiniz. Yenisi için o şirketteki kayıtlarınızdan birini silin.</value>
+  </data>
   <data name="COMPANY_SALARY_OCCUPATION_UNKNOWN" xml:space="preserve">
     <value>Listeden bir meslek seç.</value>
   </data>

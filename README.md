@@ -274,8 +274,10 @@ only once a sector has `MinimumContributors` (5) people and
 
 `CompanyReviews` (company reviews — the public `/companies` pages): `Enabled` (default `true`;
 off → every review endpoint answers 404 and the web app hides the pages, so the feature can ship
-dark), `MaxReviewsPerUser` (10; an admin can override it per account through
-`PUT /api/admin/users/{id}/review-quota`), `MinimumReviewsForScore` (3 — below it a company shows
+dark), `MaxReviewsPerUser` (100; an admin can override it per account through
+`PUT /api/admin/users/{id}/contribution-quota` — one value that replaces this and
+`CompanySalaries:MaxEntriesPerUser` / `CandidateExperiences:MaxEntriesPerUser`, both 100 too),
+`MinimumReviewsForScore` (3 — below it a company shows
 no score), `PriorWeight` (5 — the `m` in the Bayesian average, documented on `/companies/scoring`).
 Rate limits: `RateLimiting:CompanyReviewWrite|CompanyReviewReport|CompanyReviewHelpful|CompanyPublicSearch`.
 

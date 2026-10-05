@@ -201,6 +201,13 @@ internal sealed class CompanySalaryService(
             throw new CompanySalaryAlreadyExistsException();
         }
 
+        // Two requests racing can land one row over; the write rate limit keeps that to one.
+        var perCompany = options.Value.MaxEntriesPerCompanyPerUser;
+        if (await dbContext.CompanySalaryEntries.CountAsync(s => s.UserId == userId && s.CompanyId == companyId, cancellationToken) >= perCompany)
+        {
+            throw new CompanySalaryCompanyLimitReachedException(perCompany);
+        }
+
         var quota = await GetQuotaAsync(userId, cancellationToken);
         if (quota.Used >= quota.Limit)
         {
@@ -337,8 +344,9 @@ internal sealed class CompanySalaryService(
 
     public async Task<SalaryQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken)
     {
+        var overrideValue = await dbContext.OverrideAsync(userId, cancellationToken);
         var used = await dbContext.CompanySalaryEntries.CountAsync(s => s.UserId == userId, cancellationToken);
-        return new SalaryQuotaResponse(used, options.Value.MaxEntriesPerUser);
+        return new SalaryQuotaResponse(used, overrideValue ?? options.Value.MaxEntriesPerUser);
     }
 
     // Anonymous rows mapped in memory, ordered before the projection — see CompanyReviewQueries

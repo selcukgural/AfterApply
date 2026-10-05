@@ -52,6 +52,10 @@ public interface ICompanySalaryAdminService
 public sealed class CompanySalaryQuotaReachedException(int limit)
     : CodedException("COMPANY_SALARY_QUOTA_REACHED", $"A user may hold at most {limit} salary entries.", limit);
 
+/// <summary>The account holds as many entries at this one company as it may. {0} = the limit.</summary>
+public sealed class CompanySalaryCompanyLimitReachedException(int limit)
+    : CodedException("COMPANY_SALARY_COMPANY_LIMIT_REACHED", $"A user may hold at most {limit} salary entries at one company.", limit);
+
 public sealed class CompanySalaryAlreadyExistsException()
     : CodedException("COMPANY_SALARY_ALREADY_EXISTS", "This account already has a salary entry for this occupation at this company; edit that entry instead.");
 

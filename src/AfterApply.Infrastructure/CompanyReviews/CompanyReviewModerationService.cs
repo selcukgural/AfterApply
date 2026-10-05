@@ -1,6 +1,8 @@
 using AfterApply.Application.Applications.Contracts;
+using AfterApply.Application.CandidateExperiences;
 using AfterApply.Application.CompanyReviews;
 using AfterApply.Application.CompanyReviews.Contracts;
+using AfterApply.Application.CompanySalaries;
 using AfterApply.Domain.Blog;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.CompanyReviews;
@@ -15,6 +17,8 @@ namespace AfterApply.Infrastructure.CompanyReviews;
 internal sealed class CompanyReviewModerationService(
     AppDbContext dbContext,
     CompanyReviewQueries queries,
+    ICompanySalaryService salaries,
+    ICandidateExperienceService experiences,
     IOptions<CompanyReviewOptions> options) : ICompanyReviewModerationService
 {
     public async Task<PagedResult<AdminCompanyReviewListItemResponse>> ListAsync(AdminReviewListQuery query, CancellationToken cancellationToken)
@@ -173,7 +177,7 @@ internal sealed class CompanyReviewModerationService(
         return new ModerationCountsResponse(pending, open, pendingComments);
     }
 
-    public async Task<UserReviewQuotaResponse?> SetUserQuotaAsync(Guid userId, int? reviewQuotaOverride, CancellationToken cancellationToken)
+    public async Task<UserContributionQuotaResponse?> SetUserQuotaAsync(Guid userId, int? quotaOverride, CancellationToken cancellationToken)
     {
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user is null)
@@ -181,11 +185,17 @@ internal sealed class CompanyReviewModerationService(
             return null;
         }
 
-        user.ReviewQuotaOverride = reviewQuotaOverride;
+        user.ContributionQuotaOverride = quotaOverride;
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var used = await queries.CountUserReviewsAsync(userId, cancellationToken);
-        return new UserReviewQuotaResponse(userId, reviewQuotaOverride, reviewQuotaOverride ?? options.Value.MaxReviewsPerUser, used);
+        // Each read goes through the same quota code the forms use, so the admin sees what the
+        // author will be held to on the next request.
+        return new UserContributionQuotaResponse(
+            userId,
+            quotaOverride,
+            await queries.GetQuotaAsync(userId, cancellationToken),
+            await salaries.GetQuotaAsync(userId, cancellationToken),
+            await experiences.GetQuotaAsync(userId, cancellationToken));
     }
 
     private async Task<List<AdminReviewReportResponse>> ProjectReportsAsync(IQueryable<CompanyReviewReport> reports,

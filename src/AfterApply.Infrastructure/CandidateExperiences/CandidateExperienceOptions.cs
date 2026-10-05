@@ -13,8 +13,9 @@ public sealed class CandidateExperienceOptions
     public bool Enabled { get; init; } = true;
 
     /// <summary>How many experiences one account may hold across all companies (one per company).
-    /// Deleting one frees the slot.</summary>
-    public int MaxEntriesPerUser { get; init; } = 10;
+    /// Deleting one frees the slot. An admin can override it per account
+    /// (<c>Users.ContributionQuotaOverride</c>).</summary>
+    public int MaxEntriesPerUser { get; init; } = 100;
 
     /// <summary>Below this many entries a company shows the count and the individual cards but no
     /// score, category average, "most picked" list or process statistic — one knob for every

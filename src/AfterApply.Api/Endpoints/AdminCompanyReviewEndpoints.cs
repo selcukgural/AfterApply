@@ -131,7 +131,7 @@ public static class AdminCompanyReviewEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapPut("/users/{userId:guid}/review-quota", async (Guid userId, SetReviewQuotaRequest request,
+        group.MapPut("/users/{userId:guid}/contribution-quota", async (Guid userId, SetContributionQuotaRequest request,
                 ClaimsPrincipal user, IAdminAccessService adminAccess, ICompanyReviewModerationService moderation,
                 CancellationToken cancellationToken) =>
             {
@@ -140,12 +140,14 @@ public static class AdminCompanyReviewEndpoints
                     return Results.Forbid();
                 }
 
-                var quota = await moderation.SetUserQuotaAsync(userId, request.ReviewQuotaOverride, cancellationToken);
+                var quota = await moderation.SetUserQuotaAsync(userId, request.QuotaOverride, cancellationToken);
                 return quota is null ? Results.NotFound() : Results.Ok(quota);
             })
-            .WithValidation<SetReviewQuotaRequest>()
-            .WithSummary("Set (or clear, with null) one account's review quota")
-            .Produces<UserReviewQuotaResponse>()
+            .WithValidation<SetContributionQuotaRequest>()
+            .WithSummary("Set (or clear, with null) one account's contribution quota")
+            .WithDescription("One limit for company reviews, salary entries and candidate experiences alike; null " +
+                             "restores each kind's configured default. The response shows every kind's usage.")
+            .Produces<UserContributionQuotaResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         return app;

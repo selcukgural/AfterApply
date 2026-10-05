@@ -73,8 +73,11 @@ public class ClientConfigTests(ApiHost<ClientConfigProfile> host) : IClassFixtur
         config.GoogleAuth.ShouldBe(new GoogleAuthConfigResponse(false, null));
         config.LinkedInAuth.ShouldBe(new LinkedInAuthConfigResponse(false, null));
         config.GitHubAuth.ShouldBe(new GitHubAuthConfigResponse(false, null));
-        // The candidate-experience slot carries the appsettings defaults: on, ten per account, three for stats.
-        config.CandidateExperiences.ShouldBe(new CandidateExperiencesConfigResponse(true, 10, 3, 5));
+        // The candidate-experience slot carries the appsettings defaults: on, a hundred per account, three for stats.
+        config.CandidateExperiences.ShouldBe(new CandidateExperiencesConfigResponse(true, 100, 3, 5));
+        // Salaries: a hundred per account, three at any one company.
+        config.CompanySalaries.ShouldNotBeNull().MaxEntriesPerUser.ShouldBe(100);
+        config.CompanySalaries!.MaxEntriesPerCompanyPerUser.ShouldBe(3);
         // The blog is on by default and empty on a fresh database: no link to show yet.
         config.Blog.ShouldBe(new BlogConfigResponse(true, false));
         // The Gmail-scanning intake is on by default (EmailForwarding:Enabled in appsettings.json).

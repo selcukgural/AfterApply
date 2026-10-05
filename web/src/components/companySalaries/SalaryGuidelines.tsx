@@ -1,10 +1,16 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { useClientConfig } from "@/hooks/useClientConfig";
+import { DEFAULT_CLIENT_CONFIG } from "@/lib/api/config";
 
 /** How salary sharing works here, beside the form: who sees it, what they see instead of the
  *  exact figures that could identify someone, and the limits. */
 export function SalaryGuidelines() {
   const t = useTranslations("companySalaries.guidelines");
+  // The default limits, read from the server rather than spelled out in copy that would drift.
+  const { config } = useClientConfig();
+  const salaries = (config.companySalaries ?? DEFAULT_CLIENT_CONFIG.companySalaries)!;
+  const limits = { limit: salaries.maxEntriesPerUser, perCompany: salaries.maxEntriesPerCompanyPerUser };
   const items = ["signedIn", "band", "month", "perTitle", "editable"] as const;
 
   return (
@@ -13,7 +19,7 @@ export function SalaryGuidelines() {
       <p className="text-gray-700 dark:text-gray-300">{t("intro")}</p>
       <ul className="flex list-disc flex-col gap-1.5 pl-5 text-gray-700 dark:text-gray-300">
         {items.map((item) => (
-          <li key={item}>{t(item)}</li>
+          <li key={item}>{item === "perTitle" ? t(item, limits) : t(item)}</li>
         ))}
       </ul>
       <Link href="/help/company-salaries" className="font-medium text-accent-ink hover:underline">

@@ -84,7 +84,9 @@ public interface ICompanyReviewModerationService
 
     Task<ModerationCountsResponse> GetCountsAsync(CancellationToken cancellationToken);
 
-    Task<UserReviewQuotaResponse?> SetUserQuotaAsync(Guid userId, int? reviewQuotaOverride, CancellationToken cancellationToken);
+    /// <summary>Sets (or clears, with null) the one limit that applies to every contribution kind
+    /// of the account. Null when the account does not exist.</summary>
+    Task<UserContributionQuotaResponse?> SetUserQuotaAsync(Guid userId, int? quotaOverride, CancellationToken cancellationToken);
 }
 
 /// <summary>The account holds as many reviews as it is allowed to. {0} = the limit that applies to

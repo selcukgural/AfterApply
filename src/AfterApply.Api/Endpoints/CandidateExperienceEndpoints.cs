@@ -59,8 +59,8 @@ public static class CandidateExperienceEndpoints
             .WithSummary("Rate a company's hiring process")
             .WithDescription("Public on save. Only the overall rating is required; category ratings, statement picks " +
                              "(catalogue keys, at most 5 per kind) and the process facts are optional. One entry per " +
-                             "company per account, and at most CandidateExperiences:MaxEntriesPerUser in total — both " +
-                             "refusals are 400s with a coded detail.")
+                             "company per account, and at most CandidateExperiences:MaxEntriesPerUser in total (or the " +
+                             "account's override) — both refusals are 400s with a coded detail.")
             .Produces<MyCandidateExperienceResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status429TooManyRequests);

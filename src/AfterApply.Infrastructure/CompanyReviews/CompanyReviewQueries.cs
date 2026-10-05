@@ -161,10 +161,7 @@ internal sealed class CompanyReviewQueries(
 
     public async Task<ReviewQuotaResponse> GetQuotaAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var overrideValue = await dbContext.Users
-            .Where(u => u.Id == userId)
-            .Select(u => u.ReviewQuotaOverride)
-            .FirstOrDefaultAsync(cancellationToken);
+        var overrideValue = await dbContext.OverrideAsync(userId, cancellationToken);
         var used = await CountUserReviewsAsync(userId, cancellationToken);
         return new ReviewQuotaResponse(used, overrideValue ?? options.Value.MaxReviewsPerUser);
     }

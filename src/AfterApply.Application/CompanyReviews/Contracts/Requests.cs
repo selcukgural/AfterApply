@@ -33,8 +33,9 @@ public sealed record RejectCompanyReviewRequest(string Reason);
 
 public sealed record ResolveReviewReportRequest(ReviewReportResolution Resolution, string? Reason = null);
 
-/// <summary>Null clears the override and the global default applies again.</summary>
-public sealed record SetReviewQuotaRequest(int? ReviewQuotaOverride);
+/// <summary>One limit for reviews, salary entries and candidate experiences alike. Null clears the
+/// override and each kind's global default applies again.</summary>
+public sealed record SetContributionQuotaRequest(int? QuotaOverride);
 
 public sealed record PublicCompanyListQuery(string? Q = null, int Page = 1);
 

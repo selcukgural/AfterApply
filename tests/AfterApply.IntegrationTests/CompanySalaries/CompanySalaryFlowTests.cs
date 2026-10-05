@@ -9,10 +9,12 @@ using AfterApply.Application.Occupations.Contracts;
 using AfterApply.Domain.Common;
 using AfterApply.Domain.CompanySalaries;
 using AfterApply.Domain.Occupations;
+using AfterApply.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace AfterApply.IntegrationTests.CompanySalaries;
@@ -23,6 +25,8 @@ public sealed class CompanySalaryFlowProfile : IHostProfile
     {
         // Small on purpose so the quota test does not have to write ten entries.
         builder.UseSetting("CompanySalaries:MaxEntriesPerUser", "2");
+        // Equal to the total here; the per-company test lifts the total with the account override.
+        builder.UseSetting("CompanySalaries:MaxEntriesPerCompanyPerUser", "2");
         builder.UseSetting("CompanySalaries:MinimumEntriesForStats", "3");
         builder.UseSetting("CompanySalaries:CurrentWindowYears", "2");
     }
@@ -315,6 +319,35 @@ public class CompanySalaryFlowTests(ApiHost<CompanySalaryFlowProfile> host) : IC
         mine!.OwnEntries.Count.ShouldBe(2);
         mine.Quota.Used.ShouldBe(2);
         mine.Quota.Limit.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task One_Company_Takes_At_Most_The_Per_Company_Limit_Even_Under_An_Override()
+    {
+        var author = await RegisterAsync("percompany.salary@example.com");
+        var crowded = await ResolveAsync(author, "Per Company One Co");
+        var other = await ResolveAsync(author, "Per Company Two Co");
+
+        // A raised account allowance lifts the total, never the per-company cap.
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var user = await db.Users.SingleAsync(u => u.Email == "percompany.salary@example.com");
+            user.ContributionQuotaOverride = 10;
+            await db.SaveChangesAsync();
+        }
+
+        var kept = await ShareAsync(author, crowded.Id, Salary(SoftwareDevelopers));
+        await ShareAsync(author, crowded.Id, Salary(WebDevelopers));
+
+        var refused = await author.PostAsJsonAsync($"/api/companies/{crowded.Id}/salaries", Salary(SystemsAnalysts), JsonOptions);
+        refused.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await refused.Content.ReadFromJsonAsync<ProblemDetails>(JsonOptions))!.Detail.ShouldContain("at most 2 salary entries for one company");
+
+        // Another company is unaffected, and deleting one at the full company frees its slot.
+        await ShareAsync(author, other.Id, Salary(SystemsAnalysts));
+        (await author.DeleteAsync($"/api/company-salaries/{kept.Id}")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await ShareAsync(author, crowded.Id, Salary(SystemsAnalysts));
     }
 
     [Fact]

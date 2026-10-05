@@ -384,6 +384,9 @@
   <data name="COMPANY_SALARY_QUOTA_REACHED" xml:space="preserve">
     <value>You have reached your limit of {0} salary entries. Delete one to add another.</value>
   </data>
+  <data name="COMPANY_SALARY_COMPANY_LIMIT_REACHED" xml:space="preserve">
+    <value>You can add at most {0} salary entries for one company. Delete one of your entries there to add another.</value>
+  </data>
   <data name="COMPANY_SALARY_OCCUPATION_UNKNOWN" xml:space="preserve">
     <value>Pick an occupation from the list.</value>
   </data>
